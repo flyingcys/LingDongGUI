@@ -1,13 +1,18 @@
 CCPATH = D:/mingw64/bin
 USE_DEMO = 2
 
-CC = $(CCPATH)/gcc.exe
+ifeq ($(OS),Windows_NT)
+    CC = $(CCPATH)/gcc.exe
+else
+    CC = gcc
+endif
 ifeq ($(OS),Windows_NT)
     SDL2_PATH = $(subst /,\,$(CURDIR))\sdl2\64\bin\SDL2.dll
     OutLibFile = $(subst /,\,$(CURDIR))\build\SDL2.dll
 else
-    SDL2_PATH = $(CURDIR)/sdl2/64/bin/libSDL2.so
-    OutLibFile = $(CURDIR)/build/libSDL2.so
+    # Linux doesn't need to copy SDL2 library, it's installed system-wide
+    SDL2_PATH = 
+    OutLibFile = 
 endif
 
 # 编译选项
@@ -15,7 +20,11 @@ CFLAGS = -fdiagnostics-color=always -w -g -std=gnu11 -MMD -ffunction-sections -f
 LDFLAGS =
 
 # 链接参数
-LIBS = -L./sdl2/64/lib -lSDL2 -lSDL2main -lpthread
+ifeq ($(OS),Windows_NT)
+    LIBS = -L./sdl2/64/lib -lSDL2 -lSDL2main -lpthread
+else
+    LIBS = $(shell pkg-config --libs sdl2) -lpthread
+endif
 
 # 输出目录
 BUILD_DIR = ./build
@@ -74,7 +83,6 @@ INCLUDEPATH = \
     -I$(CURDIR)/../common/math \
     -I$(CURDIR)/../../src/gui \
     -I$(CURDIR)/../../src/misc \
-    -I$(CURDIR)/sdl2/64/include/SDL2 \
     -I$(CURDIR)/../common/demo/startup \
     -I$(CURDIR)/../common/demo/startup/fonts \
     -I$(CURDIR)/../common/demo/startup/images \
@@ -85,15 +93,27 @@ INCLUDEPATH = \
     -I$(CURDIR)/../common/demo/printer/fonts \
     -I$(CURDIR)/../common/demo/printer/images
 
+ifeq ($(OS),Windows_NT)
+    INCLUDEPATH += -I$(CURDIR)/sdl2/64/include/SDL2
+else
+    INCLUDEPATH += $(shell pkg-config --cflags sdl2)
+endif
+
 # 合并编译参数
 CFLAGS += $(DEFINES) $(INCLUDEPATH)
 
-export PATH := $(CCPATH):$(PATH)
+ifeq ($(OS),Windows_NT)
+    export PATH := $(CCPATH):$(PATH)
+endif
 
 all: clean create_dir copy_dll $(TARGET) run
 
 create_dir:
-	@ if not exist "$(BUILD_DIR)" mkdir "$(BUILD_DIR)"
+ifeq ($(OS),Windows_NT)
+	@if not exist "$(BUILD_DIR)" mkdir "$(BUILD_DIR)"
+else
+	@mkdir -p "$(BUILD_DIR)"
+endif
 
 $(TARGET): $(OBJS)
 	$(CC) $(CFLAGS) $^ -o $@ $(LIBS)
@@ -105,12 +125,16 @@ copy_dll:
 ifeq ($(OS),Windows_NT)
 	@-cmd /c if exist "$(SDL2_PATH)" copy /y "$(SDL2_PATH)" "$(OutLibFile)"
 else
-	@-if [ -f "$(SDL2_PATH)" ]; then cp -f "$(SDL2_PATH)" "$(OutLibFile)"; fi
+	@# No need to copy SDL2 library on Linux
 endif
 
 run: $(TARGET)
 	@echo Running $(TARGET)...
+ifeq ($(OS),Windows_NT)
+	$(TARGET)
+else
 	./$(TARGET)
+endif
 
 clean:
 ifeq ($(OS),Windows_NT)
