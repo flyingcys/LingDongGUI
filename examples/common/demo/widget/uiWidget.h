@@ -7,8 +7,9 @@ extern "C" {
 
 #include "ldBase.h"
 
-extern const ldPageFuncGroup_t uiWidgetFunc;
+#include "uiWidgetPage1.h"
 
+#define uiWidgetFunc uiWidgetPage1Func
 
 
 #ifdef __cplusplus

@@ -110,17 +110,17 @@ ifeq ($(OS),Windows_NT)
     export PATH := $(CCPATH):$(PATH)
 endif
 
-create_dir: clean
+create_dir:
 ifeq ($(OS),Windows_NT)
 	@if not exist "$(BUILD_DIR)" mkdir "$(BUILD_DIR)"
 else
 	@mkdir -p "$(BUILD_DIR)"
 endif
 
-$(TARGET): $(OBJS)
+$(TARGET): $(OBJS) | copy_dll
 	$(CC) $(CFLAGS) $^ -o $@ $(LIBS)
 
-$(OBJS): | copy_dll
+$(OBJS): | create_dir
 
 $(BUILD_DIR)/%.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
