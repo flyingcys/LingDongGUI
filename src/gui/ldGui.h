@@ -121,6 +121,8 @@ void __ldGuiJumpPage(ldPageFuncGroup_t *ptFuncGroup,arm_2d_scene_switch_mode_t *
        __ldGuiJumpPage((ldPageFuncGroup_t *)&page,&(mode),ms); })
 #endif
 
+#define ldGuiJumpPageFast(pageFuncGroupName) ldGuiJumpPage(pageFuncGroupName)
+
 #ifdef __cplusplus
 }
 #endif

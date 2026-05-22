@@ -567,7 +567,7 @@ uint8_t ldScrollSelecterGetSelectItemNum(ldScrollSelecter_t *ptWidget)
     assert(NULL != ptWidget);
     if (ptWidget == NULL)
     {
-        return NULL;
+        return 0;
     }
     return ptWidget->itemSelect;
 }
