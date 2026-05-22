@@ -25,6 +25,7 @@
 #include <string.h>
 
 #include "ldWindow.h"
+#include "ldWindowLayoutInternal.h"
 
 #if defined(__clang__)
 #pragma clang diagnostic push
@@ -42,6 +43,213 @@
 #pragma clang diagnostic ignored "-Wmissing-declarations"
 #pragma clang diagnostic ignored "-Wmissing-variable-declarations"
 #endif
+
+static void ldWindowApplyLayoutRegion(ldBase_t *ptItem, arm_2d_region_t tRegion)
+{
+    arm_2d_region_t tOldRegion;
+    int16_t minX;
+    int16_t minY;
+    int16_t maxX;
+    int16_t maxY;
+
+    if (ptItem == NULL)
+    {
+        return;
+    }
+
+    tOldRegion = ptItem->use_as__arm_2d_control_node_t.tRegion;
+    minX = MIN(tOldRegion.tLocation.iX, tRegion.tLocation.iX);
+    minY = MIN(tOldRegion.tLocation.iY, tRegion.tLocation.iY);
+    maxX = MAX(tOldRegion.tLocation.iX + tOldRegion.tSize.iWidth,
+               tRegion.tLocation.iX + tRegion.tSize.iWidth);
+    maxY = MAX(tOldRegion.tLocation.iY + tOldRegion.tSize.iHeight,
+               tRegion.tLocation.iY + tRegion.tSize.iHeight);
+
+    ptItem->isDirtyRegionUpdate = true;
+    ptItem->tTempRegion.tLocation.iX = minX;
+    ptItem->tTempRegion.tLocation.iY = minY;
+    ptItem->tTempRegion.tSize.iWidth = maxX - minX;
+    ptItem->tTempRegion.tSize.iHeight = maxY - minY;
+    ptItem->use_as__arm_2d_control_node_t.tRegion = tRegion;
+}
+
+static void ldWindowMarkLayoutDirty(ldWindow_t *ptWidget)
+{
+    if (ptWidget == NULL)
+    {
+        return;
+    }
+
+    ptWidget->use_as__ldBase_t.isDirtyRegionUpdate = true;
+    ptWidget->isLayoutUpdate = true;
+}
+
+static int16_t ldWindowResolveFlexCrossStart(ldFlexCrossAlign_t align, int16_t innerCrossSize, int16_t itemCrossSize)
+{
+    int16_t remain = innerCrossSize - itemCrossSize;
+
+    switch (align)
+    {
+    case ldFlexCrossAlignCenter:
+        return remain / 2;
+    case ldFlexCrossAlignEnd:
+        return remain;
+    default:
+        return 0;
+    }
+}
+
+static void ldWindowApplyLegacyLayout(ldWindow_t *ptWidget)
+{
+    arm_2d_region_t globalRegion;
+    uint16_t childCount = ldBaseGetChildCount((ldBase_t *)ptWidget);
+
+    if (childCount == 0)
+    {
+        return;
+    }
+
+    arm_2d_helper_control_get_absolute_region((arm_2d_control_node_t *)ptWidget, &globalRegion, true);
+
+    arm_2d_layout(globalRegion)
+    {
+        ldBase_t *children[childCount];
+        arm_2d_size_t itemSize;
+        arm_2d_size_t windowSize = ptWidget->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize;
+        uint16_t count = 0;
+
+        childCount = ldWindowCollectDirectChildren((ldBase_t *)ptWidget, children, childCount, false);
+        while (count < childCount)
+        {
+            ldBase_t *ptItem = children[count];
+            itemSize = ptItem->use_as__arm_2d_control_node_t.tRegion.tSize;
+            if (ptWidget->layoutTpye == layoutHorizontal)
+            {
+                int16_t slotW = windowSize.iWidth / childCount;
+
+                int16_t left = (slotW - itemSize.iWidth) / 2;
+                int16_t top = (windowSize.iHeight - itemSize.iHeight) / 2;
+                int16_t right = left;
+                int16_t bottom = top;
+                LOG_DEBUG("==%d,%d,%d,%d", top, bottom, left, right);
+                if (ptWidget->pLayoutPaddingGroup != NULL)
+                {
+                    top = ptWidget->pLayoutPaddingGroup[count].top;
+                    bottom = ptWidget->pLayoutPaddingGroup[count].bottom;
+                    left = ptWidget->pLayoutPaddingGroup[count].left;
+                    right = ptWidget->pLayoutPaddingGroup[count].right;
+                    LOG_DEBUG("%d,%d,%d,%d", top, bottom, left, right);
+                }
+                __item_line_horizontal(itemSize.iWidth, itemSize.iHeight, left, right, top, bottom) {
+                    __item_region.tLocation.iX -= globalRegion.tLocation.iX;
+                    __item_region.tLocation.iY -= globalRegion.tLocation.iY;
+                    ldWindowApplyLayoutRegion((ldBase_t *)ptItem, __item_region);
+                }
+            }
+            else
+            {
+                int16_t slotH = windowSize.iHeight / childCount;
+                int16_t top = (slotH - itemSize.iHeight) / 2;
+                int16_t left = (windowSize.iWidth - itemSize.iWidth) / 2;
+                int16_t right = left;
+                int16_t bottom = top;
+                if (ptWidget->pLayoutPaddingGroup != NULL)
+                {
+                    top = ptWidget->pLayoutPaddingGroup[count].top;
+                    bottom = ptWidget->pLayoutPaddingGroup[count].bottom;
+                    left = ptWidget->pLayoutPaddingGroup[count].left;
+                    right = ptWidget->pLayoutPaddingGroup[count].right;
+                }
+                __item_line_vertical(itemSize.iWidth, itemSize.iHeight, left, right, top, bottom) {
+                    __item_region.tLocation.iX -= globalRegion.tLocation.iX;
+                    __item_region.tLocation.iY -= globalRegion.tLocation.iY;
+                    ldWindowApplyLayoutRegion(ptItem, __item_region);
+                }
+            }
+            count++;
+        }
+    }
+}
+
+static void ldWindowApplyFlexLayout(ldWindow_t *ptWidget)
+{
+    uint16_t childCount = ldBaseGetChildCount((ldBase_t *)ptWidget);
+    arm_2d_size_t windowSize;
+    int16_t innerWidth;
+    int16_t innerHeight;
+    bool isRow;
+    int16_t innerMainSize;
+    int16_t innerCrossSize;
+    int16_t resolvedGap;
+    int16_t currentMain;
+    int32_t contentMainSize = 0;
+    uint16_t index;
+
+    if (childCount == 0)
+    {
+        return;
+    }
+
+    ldBase_t *children[childCount];
+    childCount = ldWindowCollectDirectChildren((ldBase_t *)ptWidget, children, childCount, true);
+    if (childCount == 0)
+    {
+        return;
+    }
+
+    windowSize = ptWidget->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize;
+    innerWidth = MAX(0, windowSize.iWidth - ptWidget->flexPadding.left - ptWidget->flexPadding.right);
+    innerHeight = MAX(0, windowSize.iHeight - ptWidget->flexPadding.top - ptWidget->flexPadding.bottom);
+    isRow = (ptWidget->flexFlow == ldFlexFlowRow);
+    innerMainSize = isRow ? innerWidth : innerHeight;
+    innerCrossSize = isRow ? innerHeight : innerWidth;
+
+    /* Only visible direct children participate in flex sizing. */
+    for (index = 0; index < childCount; ++index)
+    {
+        arm_2d_size_t itemSize = children[index]->use_as__arm_2d_control_node_t.tRegion.tSize;
+        contentMainSize += isRow ? itemSize.iWidth : itemSize.iHeight;
+    }
+    if (childCount > 1)
+    {
+        contentMainSize += (int32_t)ptWidget->flexGap * (childCount - 1);
+    }
+
+    resolvedGap = ptWidget->flexGap;
+    currentMain = ldFlexResolveMainStart(ptWidget->flexMainAlign,
+                                         innerMainSize,
+                                         (int16_t)contentMainSize,
+                                         childCount,
+                                         ptWidget->flexGap,
+                                         &resolvedGap);
+    currentMain += isRow ? ptWidget->flexPadding.left : ptWidget->flexPadding.top;
+
+    for (index = 0; index < childCount; ++index)
+    {
+        ldBase_t *ptItem = children[index];
+        arm_2d_region_t tRegion = ptItem->use_as__arm_2d_control_node_t.tRegion;
+        int16_t crossBase = isRow ? ptWidget->flexPadding.top : ptWidget->flexPadding.left;
+        int16_t itemMainSize = isRow ? tRegion.tSize.iWidth : tRegion.tSize.iHeight;
+        int16_t itemCrossSize = isRow ? tRegion.tSize.iHeight : tRegion.tSize.iWidth;
+        int16_t crossStart = crossBase + ldWindowResolveFlexCrossStart(ptWidget->flexCrossAlign,
+                                                                       innerCrossSize,
+                                                                       itemCrossSize);
+
+        if (isRow)
+        {
+            tRegion.tLocation.iX = currentMain;
+            tRegion.tLocation.iY = crossStart;
+        }
+        else
+        {
+            tRegion.tLocation.iX = crossStart;
+            tRegion.tLocation.iY = currentMain;
+        }
+
+        ldWindowApplyLayoutRegion(ptItem, tRegion);
+        currentMain += itemMainSize + resolvedGap;
+    }
+}
 
 const ldBaseWidgetFunc_t ldWindowFunc = {
     .depose = (ldDeposeFunc_t)ldWindow_depose,
@@ -160,6 +368,8 @@ void ldWindow_on_load(ld_scene_t *ptScene, ldWindow_t *ptWidget)
 
 void ldWindow_on_frame_start(ld_scene_t *ptScene, ldWindow_t *ptWidget)
 {
+    (void)ptScene;
+
     assert(NULL != ptWidget);
     if(ptWidget == NULL)
     {
@@ -168,68 +378,20 @@ void ldWindow_on_frame_start(ld_scene_t *ptScene, ldWindow_t *ptWidget)
 
     if((ptWidget->isLayoutUpdate)&&(ptWidget->layoutTpye!=layoutNone))
     {
-        ptWidget->isLayoutUpdate=false;
         ptWidget->use_as__ldBase_t.isDirtyRegionUpdate = true;
-        arm_2d_region_t globalRegion;
-        arm_2d_helper_control_get_absolute_region((arm_2d_control_node_t*)ptWidget,&globalRegion,true);
-        arm_2d_layout(globalRegion)
-        {
-            ldBase_t *child=ldBaseGetChildList((ldBase_t*)ptWidget);
-            if(child!=NULL)
-            {
-                arm_2d_size_t itemSize;
-                arm_2d_size_t windowSize=ptWidget->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize;
-                uint16_t count=0;
-                uint16_t childCount=ldBaseGetChildCount((ldBase_t*)ptWidget);
-                arm_ctrl_enum(child, ptItem, PREORDER_TRAVERSAL)
-                {
-                    itemSize=((ldBase_t*)ptItem)->use_as__arm_2d_control_node_t.tRegion.tSize;
-                    if(ptWidget->layoutTpye==layoutHorizontal)
-                    {
-                        int16_t slotW = windowSize.iWidth / childCount;
+        ptWidget->isLayoutUpdate=false;
 
-                        int16_t left  = (slotW - itemSize.iWidth) / 2;
-                        int16_t top    = (windowSize.iHeight - itemSize.iHeight) / 2;
-                        int16_t right = left;
-                        int16_t bottom = top;
-                        LOG_DEBUG("==%d,%d,%d,%d",top,bottom,left,right);
-                        if(ptWidget->pLayoutPaddingGroup!=NULL)
-                        {
-                            top=ptWidget->pLayoutPaddingGroup[count].top;
-                            bottom=ptWidget->pLayoutPaddingGroup[count].bottom;
-                            left=ptWidget->pLayoutPaddingGroup[count].left;
-                            right=ptWidget->pLayoutPaddingGroup[count].right;
-                            LOG_DEBUG("%d,%d,%d,%d",top,bottom,left,right);
-                        }
-                        __item_line_horizontal(itemSize.iWidth, itemSize.iHeight,left, right, top, bottom){
-                            __item_region.tLocation.iX-=globalRegion.tLocation.iX;
-                            __item_region.tLocation.iY-=globalRegion.tLocation.iY;
-                            ldBaseSetRegion((ldBase_t*)ptItem,__item_region);
-                        }
-                    }
-                    else
-                    {
-                        int16_t slotH = windowSize.iHeight / childCount;
-                        int16_t top    = (slotH - itemSize.iHeight) / 2;
-                        int16_t left  = (windowSize.iWidth - itemSize.iWidth) / 2;
-                        int16_t right = left;
-                        int16_t bottom = top;
-                        if(ptWidget->pLayoutPaddingGroup!=NULL)
-                        {
-                            top=ptWidget->pLayoutPaddingGroup[count].top;
-                            bottom=ptWidget->pLayoutPaddingGroup[count].bottom;
-                            left=ptWidget->pLayoutPaddingGroup[count].left;
-                            right=ptWidget->pLayoutPaddingGroup[count].right;
-                        }
-                        __item_line_vertical(itemSize.iWidth, itemSize.iHeight,left, right, top, bottom) {
-                            __item_region.tLocation.iX-=globalRegion.tLocation.iX;
-                            __item_region.tLocation.iY-=globalRegion.tLocation.iY;
-                            ldBaseSetRegion((ldBase_t*)ptItem,__item_region);
-                        }
-                    }
-                    count++;
-                }
-            }
+        switch (ptWidget->layoutTpye)
+        {
+        case layoutHorizontal:
+        case layoutVertical:
+            ldWindowApplyLegacyLayout(ptWidget);
+            break;
+        case layoutFlex:
+            ldWindowApplyFlexLayout(ptWidget);
+            break;
+        default:
+            break;
         }
     }
 }
@@ -350,9 +512,56 @@ void ldWindowSetLayout(ldWindow_t *ptWidget, ldLayoutType_t type)
     {
         return;
     }
-    ptWidget->use_as__ldBase_t.isDirtyRegionUpdate = true;
-    ptWidget->isLayoutUpdate=true;
     ptWidget->layoutTpye=type;
+    ldWindowMarkLayoutDirty(ptWidget);
+}
+
+void ldWindowSetFlexFlow(ldWindow_t *ptWidget, ldFlexFlow_t flow)
+{
+    assert(NULL != ptWidget);
+    if (ptWidget == NULL)
+    {
+        return;
+    }
+    ptWidget->flexFlow = flow;
+    ptWidget->layoutTpye = layoutFlex;
+    ldWindowMarkLayoutDirty(ptWidget);
+}
+
+void ldWindowSetFlexAlign(ldWindow_t *ptWidget,
+                          ldFlexMainAlign_t mainAlign,
+                          ldFlexCrossAlign_t crossAlign)
+{
+    assert(NULL != ptWidget);
+    if (ptWidget == NULL)
+    {
+        return;
+    }
+    ptWidget->flexMainAlign = mainAlign;
+    ptWidget->flexCrossAlign = crossAlign;
+    ldWindowMarkLayoutDirty(ptWidget);
+}
+
+void ldWindowSetPadding(ldWindow_t *ptWidget, ldPadding_t padding)
+{
+    assert(NULL != ptWidget);
+    if (ptWidget == NULL)
+    {
+        return;
+    }
+    ptWidget->flexPadding = padding;
+    ldWindowMarkLayoutDirty(ptWidget);
+}
+
+void ldWindowSetGap(ldWindow_t *ptWidget, int16_t gap)
+{
+    assert(NULL != ptWidget);
+    if (ptWidget == NULL)
+    {
+        return;
+    }
+    ptWidget->flexGap = gap;
+    ldWindowMarkLayoutDirty(ptWidget);
 }
 
 void ldWindowSetPaddingGroup(ldWindow_t *ptWidget, ldPadding_t *pPaddingGroup)
@@ -362,9 +571,8 @@ void ldWindowSetPaddingGroup(ldWindow_t *ptWidget, ldPadding_t *pPaddingGroup)
     {
         return;
     }
-    ptWidget->use_as__ldBase_t.isDirtyRegionUpdate = true;
-    ptWidget->isLayoutUpdate=true;
     ptWidget->pLayoutPaddingGroup=pPaddingGroup;
+    ldWindowMarkLayoutDirty(ptWidget);
 }
 
 #if defined(__clang__)

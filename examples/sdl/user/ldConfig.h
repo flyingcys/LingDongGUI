@@ -234,6 +234,21 @@ extern "C" {
 #endif
 #endif
 
+#if USE_DEMO == 5
+#undef LD_CFG_COLOR_DEPTH
+#define LD_CFG_COLOR_DEPTH                        (16)
+#undef LD_CFG_SCREEN_WIDTH
+#define LD_CFG_SCREEN_WIDTH                        (480)
+#undef LD_CFG_SCREEN_HEIGHT
+#define LD_CFG_SCREEN_HEIGHT                       (272)
+#undef LD_CFG_PFB_WIDTH
+#define LD_CFG_PFB_WIDTH                          (LD_CFG_SCREEN_WIDTH)
+#undef LD_CFG_PFB_HEIGHT
+#define LD_CFG_PFB_HEIGHT                         (LD_CFG_SCREEN_HEIGHT/10)
+#define LD_DEMO_GUI_INCLUDE                       "uiLayout.h"
+#define LD_DEMO_GUI_FUNC                          uiLayoutFunc
+#endif
+
 // <q>view dirty region
 // <i> Opening this mode will refresh the full screen
 #define __DISP0_CFG_DEBUG_DIRTY_REGIONS__         (0)

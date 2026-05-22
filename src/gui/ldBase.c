@@ -19,6 +19,8 @@
 #define __ARM_2D_HELPER_CONTROL_INHERIT__
 #include "ldBase.h"
 #include "ldConfig.h"
+#include "ldWindow.h"
+#include "ldWindowLayoutInternal.h"
 #include <stdarg.h>
 #if LD_MEM_MODE == MEM_MODE_TLFS
 #include "tlsf.h"
@@ -60,6 +62,33 @@ lwmem_region_t lwRegions[] = {
     { NULL, 0},
 };
 #endif
+
+static void ldBaseRegionGetMinimalEnclosure(const arm_2d_region_t *ptRegionA,
+                                            const arm_2d_region_t *ptRegionB,
+                                            arm_2d_region_t *ptOutRegion)
+{
+    int16_t minX;
+    int16_t minY;
+    int16_t maxX;
+    int16_t maxY;
+
+    if ((ptRegionA == NULL) || (ptRegionB == NULL) || (ptOutRegion == NULL))
+    {
+        return;
+    }
+
+    minX = MIN(ptRegionA->tLocation.iX, ptRegionB->tLocation.iX);
+    minY = MIN(ptRegionA->tLocation.iY, ptRegionB->tLocation.iY);
+    maxX = MAX(ptRegionA->tLocation.iX + ptRegionA->tSize.iWidth,
+               ptRegionB->tLocation.iX + ptRegionB->tSize.iWidth);
+    maxY = MAX(ptRegionA->tLocation.iY + ptRegionA->tSize.iHeight,
+               ptRegionB->tLocation.iY + ptRegionB->tSize.iHeight);
+
+    ptOutRegion->tLocation.iX = minX;
+    ptOutRegion->tLocation.iY = minY;
+    ptOutRegion->tSize.iWidth = maxX - minX;
+    ptOutRegion->tSize.iHeight = maxY - minY;
+}
 
 __WEAK void *ldMalloc(uint32_t size)
 {
@@ -189,7 +218,13 @@ bool __ldTimeOut(uint16_t ms, bool isReset, ldTimer_t *pTimer)
 
 void ldBaseNodeAdd(arm_2d_control_node_t *parent, arm_2d_control_node_t *child)
 {
+    if ((parent == NULL) || (child == NULL))
+    {
+        return;
+    }
+
     child->ptParent = parent;
+    child->ptNext = NULL;
     if (parent->ptChildList == NULL)
     {
         parent->ptChildList = child;
@@ -203,26 +238,75 @@ void ldBaseNodeAdd(arm_2d_control_node_t *parent, arm_2d_control_node_t *child)
         }
         sibling->ptNext = child;
     }
+
+    if ((((ldBase_t *)parent)->widgetType == widgetTypeWindow) || (((ldBase_t *)parent)->widgetType == widgetTypeBackground))
+    {
+        ldWindow_t *ptWindow = (ldWindow_t *)parent;
+        if (ptWindow->layoutTpye != layoutNone)
+        {
+            ptWindow->isLayoutUpdate = true;
+        }
+    }
+
+    ldBaseMarkParentLayoutDirty((ldBase_t *)parent);
 }
 
 void ldBaseNodeRemove(arm_2d_control_node_t *ptNode)
 {
-    arm_2d_control_node_t *ptNodeRoot=ldBaseGetRootNode(ptNode);
-    arm_2d_control_node_t *ptNext=ptNode->ptNext;
+    arm_2d_control_node_t *ptSibling;
+    arm_2d_control_node_t *ptNext;
+    arm_2d_control_node_t *ptParent;
 
-    arm_ctrl_enum(ptNodeRoot, ptItem, PREORDER_TRAVERSAL)
+    if (ptNode == NULL)
     {
-        if (ptItem->ptNext == ptNode)
+        return;
+    }
+
+    ptNext = ptNode->ptNext;
+    ptParent = ptNode->ptParent;
+    if (ptParent == NULL)
+    {
+        return;
+    }
+
+    if (ptParent->ptChildList == ptNode)
+    {
+        ptParent->ptChildList = ptNext;
+        ptNode->ptParent = NULL;
+        ptNode->ptNext = NULL;
+        if ((((ldBase_t *)ptParent)->widgetType == widgetTypeWindow) || (((ldBase_t *)ptParent)->widgetType == widgetTypeBackground))
         {
-            ptItem->ptNext = ptNext;
+            ldWindow_t *ptWindow = (ldWindow_t *)ptParent;
+            if (ptWindow->layoutTpye != layoutNone)
+            {
+                ptWindow->isLayoutUpdate = true;
+            }
+        }
+        ldBaseMarkParentLayoutDirty((ldBase_t *)ptParent);
+        return;
+    }
+
+    ptSibling = ptParent->ptChildList;
+    while (ptSibling != NULL)
+    {
+        if (ptSibling->ptNext == ptNode)
+        {
+            ptSibling->ptNext = ptNext;
+            ptNode->ptParent = NULL;
+            ptNode->ptNext = NULL;
+            if ((((ldBase_t *)ptParent)->widgetType == widgetTypeWindow) || (((ldBase_t *)ptParent)->widgetType == widgetTypeBackground))
+            {
+                ldWindow_t *ptWindow = (ldWindow_t *)ptParent;
+                if (ptWindow->layoutTpye != layoutNone)
+                {
+                    ptWindow->isLayoutUpdate = true;
+                }
+            }
+            ldBaseMarkParentLayoutDirty((ldBase_t *)ptParent);
             return;
         }
 
-        if(ptItem->ptChildList == ptNode)
-        {
-            ptItem->ptChildList=ptNext;
-            return;
-        }
+        ptSibling = ptSibling->ptNext;
     }
 }
 
@@ -408,9 +492,9 @@ static void _ldBaseMove(ldBase_t* ptWidget,int16_t x,int16_t y)
     ptWidget->use_as__arm_2d_control_node_t.tRegion.tLocation.iX=x;
     ptWidget->use_as__arm_2d_control_node_t.tRegion.tLocation.iY=y;
 
-    arm_2d_region_get_minimal_enclosure(&ptWidget->tTempRegion,
-                                        &ptWidget->use_as__arm_2d_control_node_t.tRegion,
-                                        &ptWidget->tTempRegion);
+    ldBaseRegionGetMinimalEnclosure(&ptWidget->tTempRegion,
+                                    &ptWidget->use_as__arm_2d_control_node_t.tRegion,
+                                    &ptWidget->tTempRegion);
 }
 
 void ldBaseSetHidden(ldBase_t* ptWidget,bool isHidden)
@@ -440,6 +524,7 @@ void ldBaseSetHidden(ldBase_t* ptWidget,bool isHidden)
     }
     ptWidget->isHidden=isHidden;
     _ldBaseMove(ptWidget,x,y);
+    ldBaseMarkParentLayoutDirty(ptWidget);
 }
 
 void ldBaseMove(ldBase_t* ptWidget,int16_t x,int16_t y)
@@ -724,10 +809,15 @@ ldBase_t* ldBaseGetChildList(ldBase_t* ptWidget)
     return (ldBase_t *)ptWidget->use_as__arm_2d_control_node_t.ptChildList;
 }
 
+ldBase_t* ldBaseGetNextSibling(ldBase_t* ptWidget)
+{
+    return (ldBase_t *)ptWidget->use_as__arm_2d_control_node_t.ptNext;
+}
+
 uint16_t ldBaseGetChildCount(ldBase_t* ptWidget)
 {
     ldBase_t* ptChild = ldBaseGetChildList(ptWidget);
-    uint8_t count = 0;
+    uint16_t count = 0;
     while (ptChild != NULL)
     {
         count++;
@@ -1138,9 +1228,10 @@ void ldBaseResize(ldBase_t* ptWidget,arm_2d_size_t size)
     ptWidget->isDirtyRegionUpdate = true;
     ptWidget->tTempRegion=ptWidget->use_as__arm_2d_control_node_t.tRegion;
     ptWidget->use_as__arm_2d_control_node_t.tRegion.tSize=size;
-    arm_2d_region_get_minimal_enclosure(&ptWidget->tTempRegion,
-                                        &ptWidget->use_as__arm_2d_control_node_t.tRegion,
-                                        &ptWidget->tTempRegion);
+    ldBaseRegionGetMinimalEnclosure(&ptWidget->tTempRegion,
+                                    &ptWidget->use_as__arm_2d_control_node_t.tRegion,
+                                    &ptWidget->tTempRegion);
+    ldBaseMarkParentLayoutDirty(ptWidget);
 }
 
 void ldBaseSetX(ldBase_t* ptWidget,int16_t x)
@@ -1153,9 +1244,10 @@ void ldBaseSetX(ldBase_t* ptWidget,int16_t x)
     ptWidget->isDirtyRegionUpdate = true;
     ptWidget->tTempRegion=ptWidget->use_as__arm_2d_control_node_t.tRegion;
     ptWidget->use_as__arm_2d_control_node_t.tRegion.tLocation.iX=x;
-    arm_2d_region_get_minimal_enclosure(&ptWidget->tTempRegion,
-                                        &ptWidget->use_as__arm_2d_control_node_t.tRegion,
-                                        &ptWidget->tTempRegion);
+    ldBaseRegionGetMinimalEnclosure(&ptWidget->tTempRegion,
+                                    &ptWidget->use_as__arm_2d_control_node_t.tRegion,
+                                    &ptWidget->tTempRegion);
+    ldBaseMarkParentLayoutDirty(ptWidget);
 }
 
 void ldBaseSetY(ldBase_t* ptWidget,int16_t y)
@@ -1168,9 +1260,10 @@ void ldBaseSetY(ldBase_t* ptWidget,int16_t y)
     ptWidget->isDirtyRegionUpdate = true;
     ptWidget->tTempRegion=ptWidget->use_as__arm_2d_control_node_t.tRegion;
     ptWidget->use_as__arm_2d_control_node_t.tRegion.tLocation.iY=y;
-    arm_2d_region_get_minimal_enclosure(&ptWidget->tTempRegion,
-                                        &ptWidget->use_as__arm_2d_control_node_t.tRegion,
-                                        &ptWidget->tTempRegion);
+    ldBaseRegionGetMinimalEnclosure(&ptWidget->tTempRegion,
+                                    &ptWidget->use_as__arm_2d_control_node_t.tRegion,
+                                    &ptWidget->tTempRegion);
+    ldBaseMarkParentLayoutDirty(ptWidget);
 }
 
 void ldBaseSetWidth(ldBase_t* ptWidget,int16_t width)
@@ -1183,9 +1276,10 @@ void ldBaseSetWidth(ldBase_t* ptWidget,int16_t width)
     ptWidget->isDirtyRegionUpdate = true;
     ptWidget->tTempRegion=ptWidget->use_as__arm_2d_control_node_t.tRegion;
     ptWidget->use_as__arm_2d_control_node_t.tRegion.tSize.iWidth=width;
-    arm_2d_region_get_minimal_enclosure(&ptWidget->tTempRegion,
-                                        &ptWidget->use_as__arm_2d_control_node_t.tRegion,
-                                        &ptWidget->tTempRegion);
+    ldBaseRegionGetMinimalEnclosure(&ptWidget->tTempRegion,
+                                    &ptWidget->use_as__arm_2d_control_node_t.tRegion,
+                                    &ptWidget->tTempRegion);
+    ldBaseMarkParentLayoutDirty(ptWidget);
 }
 
 void ldBaseSetHeight(ldBase_t* ptWidget,int16_t height)
@@ -1198,9 +1292,10 @@ void ldBaseSetHeight(ldBase_t* ptWidget,int16_t height)
     ptWidget->isDirtyRegionUpdate = true;
     ptWidget->tTempRegion=ptWidget->use_as__arm_2d_control_node_t.tRegion;
     ptWidget->use_as__arm_2d_control_node_t.tRegion.tSize.iHeight=height;
-    arm_2d_region_get_minimal_enclosure(&ptWidget->tTempRegion,
-                                        &ptWidget->use_as__arm_2d_control_node_t.tRegion,
-                                        &ptWidget->tTempRegion);
+    ldBaseRegionGetMinimalEnclosure(&ptWidget->tTempRegion,
+                                    &ptWidget->use_as__arm_2d_control_node_t.tRegion,
+                                    &ptWidget->tTempRegion);
+    ldBaseMarkParentLayoutDirty(ptWidget);
 }
 
 void ldBaseSetRegion(ldBase_t* ptWidget,arm_2d_region_t region)
@@ -1213,9 +1308,10 @@ void ldBaseSetRegion(ldBase_t* ptWidget,arm_2d_region_t region)
     ptWidget->isDirtyRegionUpdate = true;
     ptWidget->tTempRegion=ptWidget->use_as__arm_2d_control_node_t.tRegion;
     ptWidget->use_as__arm_2d_control_node_t.tRegion=region;
-    arm_2d_region_get_minimal_enclosure(&ptWidget->tTempRegion,
-                                        &ptWidget->use_as__arm_2d_control_node_t.tRegion,
-                                        &ptWidget->tTempRegion);
+    ldBaseRegionGetMinimalEnclosure(&ptWidget->tTempRegion,
+                                    &ptWidget->use_as__arm_2d_control_node_t.tRegion,
+                                    &ptWidget->tTempRegion);
+    ldBaseMarkParentLayoutDirty(ptWidget);
 }
 
 arm_2d_region_t ldBaseGetRegion(ldBase_t* ptWidget)

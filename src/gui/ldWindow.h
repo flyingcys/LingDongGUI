@@ -54,6 +54,24 @@ typedef struct ldPadding_t
     int16_t bottom;
 }ldPadding_t;
 
+typedef enum {
+    ldFlexFlowRow = 0,
+    ldFlexFlowColumn,
+} ldFlexFlow_t;
+
+typedef enum {
+    ldFlexMainAlignStart = 0,
+    ldFlexMainAlignCenter,
+    ldFlexMainAlignEnd,
+    ldFlexMainAlignSpaceBetween,
+} ldFlexMainAlign_t;
+
+typedef enum {
+    ldFlexCrossAlignStart = 0,
+    ldFlexCrossAlignCenter,
+    ldFlexCrossAlignEnd,
+} ldFlexCrossAlign_t;
+
 struct ldWindow_t
 {
     implement(ldBase_t);
@@ -62,7 +80,12 @@ struct ldWindow_t
     arm_2d_tile_t *ptMaskTile;
     bool isTransparent:1;
     ldPadding_t *pLayoutPaddingGroup;
+    ldPadding_t flexPadding;
+    int16_t flexGap;
     ldLayoutType_t layoutTpye:2;
+    ldFlexFlow_t flexFlow:1;
+    ldFlexMainAlign_t flexMainAlign:2;
+    ldFlexCrossAlign_t flexCrossAlign:2;
     bool isLayoutUpdate:1;
 };
 
@@ -79,6 +102,12 @@ void ldWindowSetColor(ldWindow_t *ptWidget,ldColor bgColor);
 void ldWindowSetImage(ldWindow_t *ptWidget, arm_2d_tile_t* ptImgTile, arm_2d_tile_t* ptMaskTile);
 
 void ldWindowSetLayout(ldWindow_t *ptWidget, ldLayoutType_t type);
+void ldWindowSetFlexFlow(ldWindow_t *ptWidget, ldFlexFlow_t flow);
+void ldWindowSetFlexAlign(ldWindow_t *ptWidget,
+                          ldFlexMainAlign_t mainAlign,
+                          ldFlexCrossAlign_t crossAlign);
+void ldWindowSetPadding(ldWindow_t *ptWidget, ldPadding_t padding);
+void ldWindowSetGap(ldWindow_t *ptWidget, int16_t gap);
 void ldWindowSetPaddingGroup(ldWindow_t *ptWidget, ldPadding_t *pPaddingGroup);//Local variables forbidden
 
 ldColor ldWindowGetColor(ldWindow_t *ptWidget);

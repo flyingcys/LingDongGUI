@@ -25,7 +25,13 @@ endif
 
 
 # 输出目录
-BUILD_DIR = ./build
+BUILD_DIR = build
+TEST_LAYOUT_SOURCES = \
+    tests/layout/test_layout_window.c \
+    ../../src/gui/ldWindowLayoutInternal.c \
+    ../../src/gui/ldBase.c \
+    ../../src/gui/ldWindow.c \
+    ../../src/misc/*.c
 
 # 源文件收集
 SOURCES = \
@@ -48,6 +54,7 @@ SOURCES = \
     $(wildcard ../common/demo/widget/*.c) \
     $(wildcard ../common/demo/widget/fonts/*.c) \
     $(wildcard ../common/demo/widget/images/*.c) \
+    $(wildcard ../common/demo/layout/*.c) \
     $(wildcard ../common/demo/printer/*.c) \
     $(wildcard ../common/demo/printer/fonts/*.c) \
     $(wildcard ../common/demo/printer/images/*.c)
@@ -87,6 +94,7 @@ INCLUDEPATH = \
     -I$(CURDIR)/../common/demo/widget \
     -I$(CURDIR)/../common/demo/widget/fonts \
     -I$(CURDIR)/../common/demo/widget/images \
+    -I$(CURDIR)/../common/demo/layout \
     -I$(CURDIR)/../common/demo/printer \
     -I$(CURDIR)/../common/demo/printer/fonts \
     -I$(CURDIR)/../common/demo/printer/images
@@ -111,6 +119,9 @@ ifeq ($(OS),Windows_NT)
 endif
 
 create_dir:
+	@:
+
+$(BUILD_DIR):
 ifeq ($(OS),Windows_NT)
 	@if not exist "$(BUILD_DIR)" mkdir "$(BUILD_DIR)"
 else
@@ -120,12 +131,12 @@ endif
 $(TARGET): $(OBJS) | copy_dll
 	$(CC) $(CFLAGS) $^ -o $@ $(LIBS)
 
-$(OBJS): | create_dir
+create_dir: | $(BUILD_DIR)
 
-$(BUILD_DIR)/%.o: %.c
+$(BUILD_DIR)/%.o: %.c | create_dir
 	$(CC) $(CFLAGS) -c $< -o $@
 
-copy_dll: create_dir
+copy_dll: | create_dir
 ifeq ($(OS),Windows_NT)
 	@-cmd /c if exist "$(SDL2_PATH)" copy /y "$(SDL2_PATH)" "$(OutLibFile)"
 else
@@ -141,6 +152,15 @@ else
 	./$(TARGET)
 endif
 
+test_layout: | create_dir
+	$(CC) $(CFLAGS) $(TEST_LAYOUT_SOURCES) -o $(BUILD_DIR)/test_layout $(LIBS)
+	@echo Running $(BUILD_DIR)/test_layout...
+ifeq ($(OS),Windows_NT)
+	$(BUILD_DIR)/test_layout
+else
+	./$(BUILD_DIR)/test_layout
+endif
+
 clean:
 ifeq ($(OS),Windows_NT)
 	@-cmd /c if exist "$(BUILD_DIR)" rd /s /q "$(BUILD_DIR)"
@@ -149,4 +169,4 @@ else
 endif
 
 # 声明伪目标
-.PHONY: all clean copy_dll create_dir
+.PHONY: all clean copy_dll create_dir test_layout

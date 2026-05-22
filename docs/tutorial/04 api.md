@@ -4143,6 +4143,12 @@ text widget
 window widget 窗体控件可包含其他的控件，实现复合型控件或者控件组合模块
 ### 函数列表
 * ldWindow_t* ldWindowInit(arm_2d_scene_t *pScene,uint16_t nameId, uint16_t parentNameId, int16_t x,int16_t y,int16_t width,int16_t height);
+* void ldWindowSetLayout(ldWindow_t *ptWidget, ldLayoutType_t type);
+* void ldWindowSetPaddingGroup(ldWindow_t *ptWidget, ldPadding_t *pPaddingGroup);
+* void ldWindowSetFlexFlow(ldWindow_t *ptWidget, ldFlexFlow_t flow);
+* void ldWindowSetFlexAlign(ldWindow_t *ptWidget, ldFlexMainAlign_t mainAlign, ldFlexCrossAlign_t crossAlign);
+* void ldWindowSetPadding(ldWindow_t *ptWidget, ldPadding_t padding);
+* void ldWindowSetGap(ldWindow_t *ptWidget, int16_t gap);
 * void ldWindowSetTransparent(ldWindow_t *pWidget,bool isTransparent);
 ### 信号列表
 ### 函数说明
@@ -4188,6 +4194,164 @@ window widget 窗体控件可包含其他的控件，实现复合型控件或者
         <td>返回</td>
         <td>ldWindow_t*</td>
         <td>新控件指针</td>
+    </tr>
+</table>
+<br>
+
+#### ldWindowSetLayout
+<table>
+    <tr>
+        <td>函数</td>
+        <td colspan="2">
+            <pre><code class="language-c">void ldWindowSetLayout(ldWindow_t *ptWidget, ldLayoutType_t type);</code></pre>
+        </td>
+    </tr>
+    <tr>
+        <td>说明</td>
+        <td colspan="2">
+    设置window控件的布局类型        </td>
+    </tr>
+    <tr>
+        <td rowspan="2">参数</td>
+        <td>ptWidget</td>
+        <td>window控件指针</td>
+    </tr>
+    <tr>
+        <td>type</td>
+        <td>布局类型，可选 layoutHorizontal、layoutVertical、layoutFlex</td>
+    </tr>
+</table>
+<br>
+
+#### ldWindowSetPaddingGroup
+<table>
+    <tr>
+        <td>函数</td>
+        <td colspan="2">
+            <pre><code class="language-c">void ldWindowSetPaddingGroup(ldWindow_t *ptWidget, ldPadding_t *pPaddingGroup);</code></pre>
+        </td>
+    </tr>
+    <tr>
+        <td>说明</td>
+        <td colspan="2">
+    为window控件设置四边留白分组        </td>
+    </tr>
+    <tr>
+        <td rowspan="2">参数</td>
+        <td>ptWidget</td>
+        <td>window控件指针</td>
+    </tr>
+    <tr>
+        <td>pPaddingGroup</td>
+        <td>留白结构体指针，结构体成员为 left、top、right、bottom，单位为像素</td>
+    </tr>
+    <tr>
+        <td>注意 ℹ️</td>
+        <td colspan="2">传入的是结构体指针，需保证该变量在控件生命周期内持续有效</td>
+    </tr>
+</table>
+<br>
+
+#### ldWindowSetFlexFlow
+<table>
+    <tr>
+        <td>函数</td>
+        <td colspan="2">
+            <pre><code class="language-c">void ldWindowSetFlexFlow(ldWindow_t *ptWidget, ldFlexFlow_t flow);</code></pre>
+        </td>
+    </tr>
+    <tr>
+        <td>说明</td>
+        <td colspan="2">
+    设置Flex布局的主轴方向        </td>
+    </tr>
+    <tr>
+        <td rowspan="2">参数</td>
+        <td>ptWidget</td>
+        <td>window控件指针</td>
+    </tr>
+    <tr>
+        <td>flow</td>
+        <td>流向类型，可选 ldFlexFlowRow 或 ldFlexFlowColumn</td>
+    </tr>
+</table>
+<br>
+
+#### ldWindowSetFlexAlign
+<table>
+    <tr>
+        <td>函数</td>
+        <td colspan="2">
+            <pre><code class="language-c">void ldWindowSetFlexAlign(ldWindow_t *ptWidget, ldFlexMainAlign_t mainAlign, ldFlexCrossAlign_t crossAlign);</code></pre>
+        </td>
+    </tr>
+    <tr>
+        <td>说明</td>
+        <td colspan="2">
+    设置Flex布局的主轴和交叉轴对齐方式        </td>
+    </tr>
+    <tr>
+        <td rowspan="3">参数</td>
+        <td>ptWidget</td>
+        <td>window控件指针</td>
+    </tr>
+    <tr>
+        <td>mainAlign</td>
+        <td>主轴对齐方式，可选 ldFlexMainAlignStart、ldFlexMainAlignCenter、ldFlexMainAlignEnd、ldFlexMainAlignSpaceBetween</td>
+    </tr>
+    <tr>
+        <td>crossAlign</td>
+        <td>交叉轴对齐方式，可选 ldFlexCrossAlignStart、ldFlexCrossAlignCenter、ldFlexCrossAlignEnd</td>
+    </tr>
+</table>
+<br>
+
+#### ldWindowSetPadding
+<table>
+    <tr>
+        <td>函数</td>
+        <td colspan="2">
+            <pre><code class="language-c">void ldWindowSetPadding(ldWindow_t *ptWidget, ldPadding_t padding);</code></pre>
+        </td>
+    </tr>
+    <tr>
+        <td>说明</td>
+        <td colspan="2">
+    设置Flex布局使用的四边留白        </td>
+    </tr>
+    <tr>
+        <td rowspan="2">参数</td>
+        <td>ptWidget</td>
+        <td>window控件指针</td>
+    </tr>
+    <tr>
+        <td>padding</td>
+        <td>留白结构体，包含 left、top、right、bottom 四个成员，单位为像素</td>
+    </tr>
+</table>
+<br>
+
+#### ldWindowSetGap
+<table>
+    <tr>
+        <td>函数</td>
+        <td colspan="2">
+            <pre><code class="language-c">void ldWindowSetGap(ldWindow_t *ptWidget, int16_t gap);</code></pre>
+        </td>
+    </tr>
+    <tr>
+        <td>说明</td>
+        <td colspan="2">
+    设置Flex布局子项之间的间距        </td>
+    </tr>
+    <tr>
+        <td rowspan="2">参数</td>
+        <td>ptWidget</td>
+        <td>window控件指针</td>
+    </tr>
+    <tr>
+        <td>gap</td>
+        <td>子项间距，单位为像素</td>
     </tr>
 </table>
 <br>
