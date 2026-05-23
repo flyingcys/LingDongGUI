@@ -29,3 +29,5 @@ settings.json
 
 #other
 output
+
+sdl/build*
