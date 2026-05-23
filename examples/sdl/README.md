@@ -1,197 +1,80 @@
-# Qt SDL Demo
+# SDL Demo（CMake）
 
-## 软件准备
+`examples/sdl` 现在只保留 CMake 作为正式构建入口。
 
-### Qt
+## 依赖
 
-当前项目使用Qt 5.14.2(32bit 64bit)编译通过
+### Windows
 
-https://download.qt.io/archive/qt/5.14/5.14.2/qt-opensource-windows-x86-5.14.2.exe
+- CMake 3.16 或更高版本
+- MinGW-w64 或其他兼容 GCC 的 C 编译器
 
-Qt 5.14.2为官方离线安装版的最后一个版本。安装该软件时，***电脑断网***则无需登录即可完成安装。
+Windows 构建会按 `CMAKE_SIZEOF_VOID_P` 自动选择 `sdl2/32` 或 `sdl2/64`，并在构建后自动复制对应的 `SDL2.dll` 到目标目录。
 
-如果出现Download from your IP address is not allowed，可以到QQ群文件中下载。
+### Linux
 
-### git
+- CMake 3.16 或更高版本
+- GCC
+- `pkg-config`
+- SDL2 开发包
 
-安装git，用于下载源码。(也可以手动下载ldgui源码，但不推荐)
+例如在 Debian/Ubuntu 上可安装：
 
-https://git-scm.com/download/win
+```bash
+sudo apt-get install build-essential cmake pkg-config libsdl2-dev
+```
 
-## 下载源码
+## 获取源码
 
-### 方法1
+推荐直接递归拉取子模块：
 
-##### 步骤1
-//gitee
-
-git clone https://gitee.com/gzbkey/LingDongGUI.git
-
-//github 
-
-git clone https://github.com/gzbkey/LingDongGUI.git
-
-##### 步骤2
-
-git submodule init
-
-git submodule update
-
-### 方法2
-
-//gitee
-
-git clone --recursive https://gitee.com/gzbkey/LingDongGUI.git
-
-//github
-
+```bash
 git clone --recursive https://github.com/gzbkey/LingDongGUI.git
+```
 
-## Qt SDL Demo的使用
+如需使用 Gitee：
 
-1. 双击项目qt_sdl.pro，启动Qt。
-
-2. 项目打开后，会自动复制SDL2的dll文件到对应的文件内，无需手动操作。
-
-3. 打开qt_sdl.pro文件，修改宏定义USE_DEMO为对应demo序号。
-
-4. 直接点击左下角三角形，或CTRL+R，进行编译、运行。
-
-# VSCode SDL Demo
-
-## 软件准备
-
-### VSCode
-
-https://code.visualstudio.com/Download
-
-安装插件c/c++、Code Runner
-
-### git
-
-安装git，用于下载源码。(也可以手动下载ldgui源码，但不推荐)
-
-https://git-scm.com/download/win
-
-### 安装 gcc
-
-我使用的是MinGW-w64
-
-https://www.mingw-w64.org/
-
-然后在这网站，找到这里
-
-https://github.com/niXman/mingw-builds-binaries/releases/
-
-i686是32位
-
-x86_64是64位
-
-选择参考
-
-i686-15.1.0-release-posix-dwarf-ucrt-rt_v12-rev0.7z
-
-x86_64-15.1.0-release-posix-seh-ucrt-rt_v12-rev0.7z
-
-demo默认gcc安装位置为：
-
-D:\mingw32
-
-D:\mingw64
-
-根据自己需求选择即可
-
-## 下载源码
-
-### 方法1
-
-##### 步骤1
-//gitee
-
-git clone https://gitee.com/gzbkey/LingDongGUI.git
-
-//github 
-
-git clone https://github.com/gzbkey/LingDongGUI.git
-
-##### 步骤2
-
-git submodule init
-
-git submodule update
-
-### 方法2
-
-//gitee
-
+```bash
 git clone --recursive https://gitee.com/gzbkey/LingDongGUI.git
+```
 
-//github
+## 选择 Demo
 
-git clone --recursive https://github.com/gzbkey/LingDongGUI.git
+通过 `-DUSE_DEMO=<n>` 选择运行的界面：
 
-## VSCode SDL Demo 的使用
+- `1`：Startup
+- `2`：Show all widget
+- `3`：Printer
 
-### 修改配置
+传入其他值会在 CMake 配置阶段直接报错。
 
-gcc安装位置，如果使用以上的默认位置，则跳过本步骤
+## 配置与编译
 
-1. 通过vscode打开项目文件夹
+进入 `examples/sdl` 后直接执行：
 
-2. 修改对应版本的compilerPath
+```bash
+cd examples/sdl
+cmake -S . -B build -DUSE_DEMO=2
+cmake --build build
+```
 
-    .vscode\c_cpp_properties.json
+如果希望使用其他构建目录，可以替换 `-B` 后面的路径，例如 `-B ../../build/sdl-test`。
 
-3. 修改对应版本的miDebuggerPath
+## 运行
 
-    .vscode\launch.json
+单配置生成器下，可执行文件默认位于构建目录根部：
 
-4. 修改对应版本的command
+```bash
+./build/ldgui_sdl_demo
+```
 
-    .vscode\tasks.json
+Windows 下一般为：
 
-### 编译
+```bash
+build\\ldgui_sdl_demo.exe
+```
 
-1. 打开ldConfig.h文件，修改宏定义USE_DEMO为对应demo序号。
+## 平台差异
 
-2. 点击左侧按键"运行和调试"，选择对应编译器版本，按F5编译即可。
-
-3. 项目编译前，会自动复制SDL2的dll文件到对应的文件内，无需手动操作。
-
-# Makefile SDL Demo
-
-## 软件准备
-
-### 安装 gcc
-
-我使用的是MinGW-w64
-
-https://www.mingw-w64.org/
-
-然后在这网站，找到这里
-
-https://github.com/niXman/mingw-builds-binaries/releases/
-
-i686是32位
-
-x86_64是64位
-
-选择参考
-
-i686-15.1.0-release-posix-dwarf-ucrt-rt_v12-rev0.7z
-
-x86_64-15.1.0-release-posix-seh-ucrt-rt_v12-rev0.7z
-
-demo默认gcc安装位置为：
-
-D:\mingw32
-
-D:\mingw64
-
-根据自己需求选择即可
-
-将gcc安装位置添加到环境变量中
-
-### 编译
-
-进入makefile目录下，执行mingw32-make即可进行编译
+- Windows：使用仓库内自带的 SDL2 头文件、库文件和 `SDL2.dll`。
+- Linux：通过 `pkg-config --cflags --libs sdl2` 提供 SDL2 的头文件和链接参数。
