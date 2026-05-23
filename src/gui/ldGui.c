@@ -219,6 +219,14 @@ void ldGuiFrameStart(ld_scene_t *ptScene)
         isFullWidgetUpdate=false;
     }
 
+    if(ptScene->ldGuiFuncGroup!=NULL)
+    {
+        if(ptScene->ldGuiFuncGroup->loop)
+        {
+            ptScene->ldGuiFuncGroup->loop(ptScene);
+        }
+    }
+
     if(ptScene->ptNodeRoot!=NULL)
     {
         arm_ctrl_enum(ptScene->ptNodeRoot, ptItem, PREORDER_TRAVERSAL)
@@ -240,14 +248,6 @@ void ldGuiFrameStart(ld_scene_t *ptScene)
     {
         xBtnTick(SYS_TICK_CYCLE_MS,ptScene);
         cursorBlinkCount++;
-    }
-
-    if(ptScene->ldGuiFuncGroup!=NULL)
-    {
-        if(ptScene->ldGuiFuncGroup->loop)
-        {
-            ptScene->ldGuiFuncGroup->loop(ptScene);
-        }
     }
 }
 

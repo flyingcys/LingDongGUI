@@ -512,7 +512,10 @@ static bool VT_sdl_present_texture(const arm_2d_region_t *ptDirtyRegion)
     if (0 != SDL_UpdateTexture(texture, &tRect, pTextureBase, VT_WIDTH * sizeof(uint32_t))) {
         return false;
     }
-    if (0 != SDL_RenderCopy(renderer, texture, &tRect, &tRect)) {
+    if (0 != SDL_RenderClear(renderer)) {
+        return false;
+    }
+    if (0 != SDL_RenderCopy(renderer, texture, NULL, NULL)) {
         return false;
     }
     SDL_RenderPresent(renderer);
