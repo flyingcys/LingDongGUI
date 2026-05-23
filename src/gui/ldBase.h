@@ -245,6 +245,7 @@ typedef enum{
     layoutHorizontal,
     layoutVertical,
     layoutFlex,
+    layoutGrid,
 }ldLayoutType_t;
 
 typedef int64_t ldTimer_t;

@@ -21,6 +21,7 @@
 #include "./__common.h"
 #include "arm_2d.h"
 #include "arm_2d_helper.h"
+#include "arm_2d_helper_shape.h"
 #include <assert.h>
 #include <string.h>
 
@@ -251,6 +252,88 @@ static void ldWindowApplyFlexLayout(ldWindow_t *ptWidget)
     }
 }
 
+static void ldWindowApplyGridLayout(ldWindow_t *ptWidget)
+{
+    uint16_t childCount = ldBaseGetChildCount((ldBase_t *)ptWidget);
+    arm_2d_size_t windowSize;
+    int16_t innerWidth;
+    uint16_t visibleCount;
+    uint16_t columns;
+    int16_t columnGap;
+    int16_t rowGap;
+    int16_t columnWidth;
+    uint16_t startIndex;
+
+    if (childCount == 0)
+    {
+        return;
+    }
+
+    ldBase_t *children[childCount];
+    visibleCount = ldWindowCollectDirectChildren((ldBase_t *)ptWidget, children, childCount, true);
+    if (visibleCount == 0)
+    {
+        return;
+    }
+
+    windowSize = ptWidget->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize;
+    innerWidth = MAX(0, windowSize.iWidth - ptWidget->gridPadding.left - ptWidget->gridPadding.right);
+    columns = ptWidget->gridColumns > 0 ? ptWidget->gridColumns : 1;
+    columnGap = ptWidget->gridColumnGap;
+    rowGap = ptWidget->gridRowGap;
+
+    if (columns > visibleCount)
+    {
+        columns = visibleCount;
+    }
+
+    if (columns > 1)
+    {
+        int32_t totalGap = (int32_t)columnGap * (columns - 1);
+        columnWidth = (int16_t)MAX(0, innerWidth - totalGap) / (int16_t)columns;
+    }
+    else
+    {
+        columnWidth = innerWidth;
+    }
+
+    startIndex = 0;
+    int16_t currentY = ptWidget->gridPadding.top;
+    while (startIndex < visibleCount)
+    {
+        uint16_t rowItemCount = MIN(columns, visibleCount - startIndex);
+        int16_t rowHeight = 0;
+        uint16_t columnIndex;
+
+        for (columnIndex = 0; columnIndex < rowItemCount; ++columnIndex)
+        {
+            arm_2d_size_t itemSize = children[startIndex + columnIndex]->use_as__arm_2d_control_node_t.tRegion.tSize;
+            rowHeight = MAX(rowHeight, itemSize.iHeight);
+        }
+
+        for (columnIndex = 0; columnIndex < rowItemCount; ++columnIndex)
+        {
+            ldBase_t *ptItem = children[startIndex + columnIndex];
+            arm_2d_region_t tRegion = ptItem->use_as__arm_2d_control_node_t.tRegion;
+            int16_t itemWidth = tRegion.tSize.iWidth;
+            int16_t currentX = ptWidget->gridPadding.left + (int16_t)columnIndex * (columnWidth + columnGap);
+
+            if (columnWidth >= 0)
+            {
+                itemWidth = MIN(itemWidth, columnWidth);
+            }
+
+            tRegion.tLocation.iX = currentX;
+            tRegion.tLocation.iY = currentY;
+            tRegion.tSize.iWidth = MAX(0, itemWidth);
+            ldWindowApplyLayoutRegion(ptItem, tRegion);
+        }
+
+        currentY += rowHeight + rowGap;
+        startIndex += rowItemCount;
+    }
+}
+
 const ldBaseWidgetFunc_t ldWindowFunc = {
     .depose = (ldDeposeFunc_t)ldWindow_depose,
     .load = (ldLoadFunc_t)ldWindow_on_load,
@@ -389,6 +472,9 @@ void ldWindow_on_frame_start(ld_scene_t *ptScene, ldWindow_t *ptWidget)
             break;
         case layoutFlex:
             ldWindowApplyFlexLayout(ptWidget);
+            break;
+        case layoutGrid:
+            ldWindowApplyGridLayout(ptWidget);
             break;
         default:
             break;
@@ -561,6 +647,43 @@ void ldWindowSetGap(ldWindow_t *ptWidget, int16_t gap)
         return;
     }
     ptWidget->flexGap = gap;
+    ldWindowMarkLayoutDirty(ptWidget);
+}
+
+void ldWindowSetGridColumns(ldWindow_t *ptWidget, uint16_t columns)
+{
+    assert(NULL != ptWidget);
+    if (ptWidget == NULL)
+    {
+        return;
+    }
+    ptWidget->gridColumns = columns > 0 ? columns : 1;
+    ptWidget->layoutTpye = layoutGrid;
+    ldWindowMarkLayoutDirty(ptWidget);
+}
+
+void ldWindowSetGridGap(ldWindow_t *ptWidget, int16_t rowGap, int16_t columnGap)
+{
+    assert(NULL != ptWidget);
+    if (ptWidget == NULL)
+    {
+        return;
+    }
+    ptWidget->gridRowGap = rowGap;
+    ptWidget->gridColumnGap = columnGap;
+    ptWidget->layoutTpye = layoutGrid;
+    ldWindowMarkLayoutDirty(ptWidget);
+}
+
+void ldWindowSetGridPadding(ldWindow_t *ptWidget, ldPadding_t padding)
+{
+    assert(NULL != ptWidget);
+    if (ptWidget == NULL)
+    {
+        return;
+    }
+    ptWidget->gridPadding = padding;
+    ptWidget->layoutTpye = layoutGrid;
     ldWindowMarkLayoutDirty(ptWidget);
 }
 

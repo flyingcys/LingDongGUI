@@ -257,6 +257,40 @@ static void test_flex_setters_mark_window_dirty(void)
     assert(window.use_as__ldBase_t.isDirtyRegionUpdate == true);
 }
 
+static void test_grid_setters_mark_window_dirty(void)
+{
+    ldWindow_t window = {0};
+    ldPadding_t padding = {.left = 2, .top = 3, .right = 4, .bottom = 5};
+
+    window.use_as__ldBase_t.isDirtyRegionUpdate = false;
+    window.isLayoutUpdate = false;
+    ldWindowSetGridColumns(&window, 3);
+    assert(window.layoutTpye == layoutGrid);
+    assert(window.gridColumns == 3);
+    assert(window.isLayoutUpdate == true);
+    assert(window.use_as__ldBase_t.isDirtyRegionUpdate == true);
+
+    window.use_as__ldBase_t.isDirtyRegionUpdate = false;
+    window.isLayoutUpdate = false;
+    ldWindowSetGridGap(&window, 6, 7);
+    assert(window.layoutTpye == layoutGrid);
+    assert(window.gridRowGap == 6);
+    assert(window.gridColumnGap == 7);
+    assert(window.isLayoutUpdate == true);
+    assert(window.use_as__ldBase_t.isDirtyRegionUpdate == true);
+
+    window.use_as__ldBase_t.isDirtyRegionUpdate = false;
+    window.isLayoutUpdate = false;
+    ldWindowSetGridPadding(&window, padding);
+    assert(window.layoutTpye == layoutGrid);
+    assert(window.gridPadding.left == 2);
+    assert(window.gridPadding.top == 3);
+    assert(window.gridPadding.right == 4);
+    assert(window.gridPadding.bottom == 5);
+    assert(window.isLayoutUpdate == true);
+    assert(window.use_as__ldBase_t.isDirtyRegionUpdate == true);
+}
+
 static void test_flex_row_layout_skips_hidden_children_and_keeps_size(void)
 {
     ldWindow_t root = {0};
@@ -327,6 +361,56 @@ static void test_flex_column_layout_applies_main_and_cross_alignment(void)
     assert(b.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 70);
 }
 
+static void test_grid_layout_places_visible_children_row_first(void)
+{
+    ldWindow_t root = {0};
+    ldLabel_t a = {0};
+    ldLabel_t hidden = {0};
+    ldLabel_t c = {0};
+    ldLabel_t d = {0};
+
+    root.use_as__ldBase_t.widgetType = widgetTypeWindow;
+    root.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iWidth = 100;
+    root.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iHeight = 80;
+
+    a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion = (arm_2d_region_t){{-1, -1}, {50, 10}};
+    hidden.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion = (arm_2d_region_t){{77, 66}, {12, 12}};
+    c.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion = (arm_2d_region_t){{-2, -2}, {20, 12}};
+    d.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion = (arm_2d_region_t){{-3, -3}, {15, 8}};
+    hidden.use_as__ldBase_t.isHidden = true;
+
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&a);
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&hidden);
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&c);
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&d);
+
+    ldWindowSetGridColumns(&root, 2);
+    ldWindowSetGridGap(&root, 5, 4);
+    ldWindowSetGridPadding(&root, (ldPadding_t){.left = 3, .top = 2, .right = 5, .bottom = 7});
+
+    ldWindow_on_frame_start(NULL, &root);
+
+    assert(a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 3);
+    assert(a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 2);
+    assert(a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iWidth == 44);
+    assert(a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iHeight == 10);
+
+    assert(hidden.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 77);
+    assert(hidden.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 66);
+    assert(hidden.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iWidth == 12);
+    assert(hidden.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iHeight == 12);
+
+    assert(c.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 51);
+    assert(c.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 2);
+    assert(c.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iWidth == 20);
+    assert(c.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iHeight == 12);
+
+    assert(d.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 3);
+    assert(d.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 19);
+    assert(d.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iWidth == 15);
+    assert(d.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iHeight == 8);
+}
+
 int main(void)
 {
     test_collect_direct_children_ignores_grandchildren();
@@ -342,7 +426,9 @@ int main(void)
     test_flex_row_center_applies_gap_and_padding();
     test_flex_space_between_resolves_gap_from_remaining_space();
     test_flex_setters_mark_window_dirty();
+    test_grid_setters_mark_window_dirty();
     test_flex_row_layout_skips_hidden_children_and_keeps_size();
     test_flex_column_layout_applies_main_and_cross_alignment();
+    test_grid_layout_places_visible_children_row_first();
     return 0;
 }

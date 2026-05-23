@@ -8,10 +8,15 @@ extern "C" {
 #include "ldBase.h"
 
 extern const ldPageFuncGroup_t uiLayoutFunc;
+extern const ldPageFuncGroup_t uiGridFunc;
 
 void uiLayoutInit(ld_scene_t *ptScene);
 void uiLayoutLoop(ld_scene_t *ptScene);
 void uiLayoutQuit(ld_scene_t *ptScene);
+
+void uiGridInit(ld_scene_t *ptScene);
+void uiGridLoop(ld_scene_t *ptScene);
+void uiGridQuit(ld_scene_t *ptScene);
 
 #ifdef __cplusplus
 }

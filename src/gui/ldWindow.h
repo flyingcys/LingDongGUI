@@ -82,7 +82,11 @@ struct ldWindow_t
     ldPadding_t *pLayoutPaddingGroup;
     ldPadding_t flexPadding;
     int16_t flexGap;
-    ldLayoutType_t layoutTpye:2;
+    ldPadding_t gridPadding;
+    int16_t gridRowGap;
+    int16_t gridColumnGap;
+    uint16_t gridColumns;
+    ldLayoutType_t layoutTpye:3;
     ldFlexFlow_t flexFlow:1;
     ldFlexMainAlign_t flexMainAlign:2;
     ldFlexCrossAlign_t flexCrossAlign:2;
@@ -108,6 +112,9 @@ void ldWindowSetFlexAlign(ldWindow_t *ptWidget,
                           ldFlexCrossAlign_t crossAlign);
 void ldWindowSetPadding(ldWindow_t *ptWidget, ldPadding_t padding);
 void ldWindowSetGap(ldWindow_t *ptWidget, int16_t gap);
+void ldWindowSetGridColumns(ldWindow_t *ptWidget, uint16_t columns);
+void ldWindowSetGridGap(ldWindow_t *ptWidget, int16_t rowGap, int16_t columnGap);
+void ldWindowSetGridPadding(ldWindow_t *ptWidget, ldPadding_t padding);
 void ldWindowSetPaddingGroup(ldWindow_t *ptWidget, ldPadding_t *pPaddingGroup);//Local variables forbidden
 
 ldColor ldWindowGetColor(ldWindow_t *ptWidget);

@@ -45,7 +45,8 @@ git clone --recursive https://gitee.com/gzbkey/LingDongGUI.git
 - `1`：Startup
 - `2`：Show all widget
 - `3`：Printer
-- `4`：Layout（flex/grid demo）
+- `4`：Layout（flex demo）
+- `5`：Grid demo
 
 传入其他值会在 CMake 配置阶段直接报错。
 
@@ -72,7 +73,7 @@ cmake --build build
 Windows 下一般为：
 
 ```bash
-build\\ldgui_sdl_demo.exe
+build\ldgui_sdl_demo.exe
 ```
 
 ## 平台差异
