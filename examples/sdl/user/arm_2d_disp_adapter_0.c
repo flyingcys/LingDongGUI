@@ -19,6 +19,7 @@
 /*============================ INCLUDES ======================================*/
 
 #include "arm_2d_disp_adapter_0.h"
+#include "Virtual_TFT_Port.h"
 
 #ifdef RTE_Acceleration_Arm_2D_Helper_Disp_Adapter0
 
@@ -388,6 +389,8 @@ IMPL_PFB_ON_LOW_LV_RENDERING(__disp_adapter0_pfb_render_handler)
 
     ARM_2D_PARAM(pTarget);
     ARM_2D_PARAM(bIsNewFrame);
+
+    VT_sdl_mark_dirty_region(&ptTile->tRegion);
 
     if (__arm_2d_helper_3fb_draw_bitmap(&s_tDirectModeHelper,
                                         ptPFB)) {
@@ -1323,5 +1326,4 @@ void __disp_adapter0_vres_buffer_deposer (  uintptr_t pTarget,
 #endif
 
 #endif
-
 

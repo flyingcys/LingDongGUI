@@ -130,7 +130,7 @@ extern "C" {
 //     <1=> Startup
 //     <2=> Show all widget
 //     <3=> Printer
-//     <4=> Serial Tool
+//     <4=> Layout
 #define USE_DEMO                                  (0)
 #endif
 
@@ -221,17 +221,13 @@ extern "C" {
 #undef LD_CFG_SCREEN_WIDTH
 #define LD_CFG_SCREEN_WIDTH                        (480)
 #undef LD_CFG_SCREEN_HEIGHT
-#define LD_CFG_SCREEN_HEIGHT                       (320)
+#define LD_CFG_SCREEN_HEIGHT                       (272)
 #undef LD_CFG_PFB_WIDTH
 #define LD_CFG_PFB_WIDTH                          (LD_CFG_SCREEN_WIDTH)
 #undef LD_CFG_PFB_HEIGHT
 #define LD_CFG_PFB_HEIGHT                         (LD_CFG_SCREEN_HEIGHT/10)
-#define LD_DEMO_GUI_INCLUDE                       "home.h"
-#if __DISP0_CFG_DISABLE_DEFAULT_SCENE__ == 0
-#define LD_DEMO_GUI_FUNC                          homeFunc
-#else
-#define LD_DEMO_GUI_FUNC                          (*(void*)0)
-#endif
+#define LD_DEMO_GUI_INCLUDE                       "uiLayout.h"
+#define LD_DEMO_GUI_FUNC                          uiLayoutFunc
 #endif
 
 // <q>view dirty region

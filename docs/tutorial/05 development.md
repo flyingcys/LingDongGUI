@@ -304,6 +304,29 @@ void uiDemoLoop(ld_scene_t* ptScene)
 |---|---|
 |注意|获取按键状态的函数，可以每个按键对应一个函数，也可以多个按键共用一个函数，即上述例子中的bool vtGetKeyState(uint16_t value)|
 
+##### Window Flex 最小示例
+```c
+#define ID_BG       0
+#define ID_ROW      1
+
+void uiDemoInit(ld_scene_t* ptScene)
+{
+    ldWindow_t *obj;
+
+    // 新建背景window
+    obj = ldWindowInit(ID_BG, ID_BG, 0, 0, LD_CFG_SCREEN_WIDTH, LD_CFG_SCREEN_HEIGHT);
+    ldWindowSetColor(obj, __RGB(255, 255, 255));
+
+    // 新建一行Flex容器
+    obj = ldWindowInit(ID_ROW, ID_BG, 10, 10, 220, 60);
+    ldWindowSetLayout(obj, layoutFlex);
+    ldWindowSetFlexFlow(obj, ldFlexFlowRow);
+    ldWindowSetGap(obj, 8);
+}
+```
+
+上面的示例只演示 Phase 0/1 已开放的最小 Flex 用法：创建 window 容器后切换到 `layoutFlex`，再设置 `ldFlexFlowRow` 和子项间距。
+
 #### queue 队列
 这是一个简单的队列软件库
 

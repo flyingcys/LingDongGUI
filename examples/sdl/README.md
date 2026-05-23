@@ -45,6 +45,7 @@ git clone --recursive https://gitee.com/gzbkey/LingDongGUI.git
 - `1`：Startup
 - `2`：Show all widget
 - `3`：Printer
+- `4`：Layout（flex/grid demo）
 
 传入其他值会在 CMake 配置阶段直接报错。
 

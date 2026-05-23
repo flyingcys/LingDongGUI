@@ -6,13 +6,13 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS ON)
 
-set(USE_DEMO "2" CACHE STRING "SDL demo id (1=startup, 2=widget, 3=printer)")
-set_property(CACHE USE_DEMO PROPERTY STRINGS 1 2 3)
+set(USE_DEMO "2" CACHE STRING "SDL demo id (1=startup, 2=widget, 3=printer, 4=layout)")
+set_property(CACHE USE_DEMO PROPERTY STRINGS 1 2 3 4)
 
-set(SUPPORTED_DEMOS 1 2 3)
+set(SUPPORTED_DEMOS 1 2 3 4)
 list(FIND SUPPORTED_DEMOS "${USE_DEMO}" USE_DEMO_INDEX)
 if(USE_DEMO_INDEX EQUAL -1)
-    message(FATAL_ERROR "Unsupported USE_DEMO=${USE_DEMO}. Supported values: 1, 2, 3.")
+    message(FATAL_ERROR "Unsupported USE_DEMO=${USE_DEMO}. Supported values: 1, 2, 3, 4.")
 endif()
 
 set(SDL_EXAMPLE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
@@ -93,6 +93,14 @@ elseif(USE_DEMO STREQUAL "3")
         "${DEMO_DIR}/printer"
         "${DEMO_DIR}/printer/fonts"
         "${DEMO_DIR}/printer/images"
+    )
+elseif(USE_DEMO STREQUAL "4")
+    file(GLOB DEMO_SOURCES CONFIGURE_DEPENDS
+        "${DEMO_DIR}/layout/*.c"
+    )
+    set(DEMO_INCLUDE_DIRS
+        "${DEMO_DIR}/layout"
+        "${DEMO_DIR}/widget/fonts"
     )
 endif()
 

@@ -53,8 +53,13 @@ extern bool VT_is_request_quit(void);
 extern void VT_deinit(void);
 extern bool VT_sdl_vsync(void);
 extern bool VT_sdl_refresh_task(void);
+extern void VT_sdl_signal_refresh(void);
+extern void VT_sdl_wait(uint32_t timeout_ms);
 extern void VT_enter_global_mutex(void);
 extern void VT_leave_global_mutex(void);
+extern void VT_sdl_mark_dirty_region(const arm_2d_region_t *ptRegion);
+
+/* Pointer motion is committed once per refresh cycle after coalescing. */
 
 /*******************************************************************************
  * @name     :VT_Mouse_Get_Point
