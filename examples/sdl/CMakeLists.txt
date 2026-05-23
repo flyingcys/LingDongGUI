@@ -19,6 +19,11 @@ set(SDL_EXAMPLE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 set(EXAMPLES_DIR "${SDL_EXAMPLE_DIR}/..")
 set(COMMON_DIR "${EXAMPLES_DIR}/common")
 set(REPO_SRC_DIR "${SDL_EXAMPLE_DIR}/../../src")
+set(ARM2D_COMMON_DIR "${COMMON_DIR}/Arm-2D/examples/common")
+set(ARM2D_CONTROLS_DIR "${ARM2D_COMMON_DIR}/controls")
+set(ARM2D_QRCODE_DIR "${ARM2D_CONTROLS_DIR}/qrcode_box")
+set(ARM2D_ASSET_DIR "${ARM2D_COMMON_DIR}/asset")
+set(DEMO_DIR "${COMMON_DIR}/demo")
 
 set(SDL_DEMO_CORE_SOURCES
     "${SDL_EXAMPLE_DIR}/virtualNor/virtualNor.c"
@@ -28,14 +33,15 @@ set(SDL_DEMO_CORE_SOURCES
     "${SDL_EXAMPLE_DIR}/user/arm_2d_disp_adapter_0.c"
 )
 
-file(GLOB ARM2D_CONTROL_SOURCES CONFIGURE_DEPENDS
-    "${COMMON_DIR}/Arm-2D/examples/common/controls/*.c"
+set(ARM2D_CONTROL_SOURCES
+    "${ARM2D_CONTROLS_DIR}/controls.c"
+    "${ARM2D_CONTROLS_DIR}/spinning_wheel.c"
+    "${ARM2D_CONTROLS_DIR}/progress_wheel.c"
+    "${ARM2D_CONTROLS_DIR}/text_box.c"
 )
-file(GLOB ARM2D_QRCODE_SOURCES CONFIGURE_DEPENDS
-    "${COMMON_DIR}/Arm-2D/examples/common/controls/qrcode_box/*.c"
-)
-file(GLOB ARM2D_ASSET_SOURCES CONFIGURE_DEPENDS
-    "${COMMON_DIR}/Arm-2D/examples/common/asset/*.c"
+set(ARM2D_QRCODE_SOURCES
+    "${ARM2D_QRCODE_DIR}/qrcode_box.c"
+    "${ARM2D_QRCODE_DIR}/qrcodegen.c"
 )
 file(GLOB ARM2D_LIBRARY_SOURCES CONFIGURE_DEPENDS
     "${COMMON_DIR}/Arm-2D/Library/Source/*.c"
@@ -52,35 +58,54 @@ file(GLOB GUI_SOURCES CONFIGURE_DEPENDS
 file(GLOB MISC_SOURCES CONFIGURE_DEPENDS
     "${REPO_SRC_DIR}/misc/*.c"
 )
-file(GLOB STARTUP_DEMO_SOURCES CONFIGURE_DEPENDS
-    "${COMMON_DIR}/demo/startup/*.c"
-    "${COMMON_DIR}/demo/startup/fonts/*.c"
-    "${COMMON_DIR}/demo/startup/images/*.c"
-)
-file(GLOB WIDGET_DEMO_SOURCES CONFIGURE_DEPENDS
-    "${COMMON_DIR}/demo/widget/*.c"
-    "${COMMON_DIR}/demo/widget/fonts/*.c"
-    "${COMMON_DIR}/demo/widget/images/*.c"
-)
-file(GLOB PRINTER_DEMO_SOURCES CONFIGURE_DEPENDS
-    "${COMMON_DIR}/demo/printer/*.c"
-    "${COMMON_DIR}/demo/printer/fonts/*.c"
-    "${COMMON_DIR}/demo/printer/images/*.c"
-)
+set(DEMO_SOURCES)
+set(DEMO_INCLUDE_DIRS)
+
+if(USE_DEMO STREQUAL "1")
+    file(GLOB DEMO_SOURCES CONFIGURE_DEPENDS
+        "${DEMO_DIR}/startup/*.c"
+        "${DEMO_DIR}/startup/fonts/*.c"
+        "${DEMO_DIR}/startup/images/*.c"
+    )
+    set(DEMO_INCLUDE_DIRS
+        "${DEMO_DIR}/startup"
+        "${DEMO_DIR}/startup/fonts"
+        "${DEMO_DIR}/startup/images"
+    )
+elseif(USE_DEMO STREQUAL "2")
+    file(GLOB DEMO_SOURCES CONFIGURE_DEPENDS
+        "${DEMO_DIR}/widget/*.c"
+        "${DEMO_DIR}/widget/fonts/*.c"
+        "${DEMO_DIR}/widget/images/*.c"
+    )
+    set(DEMO_INCLUDE_DIRS
+        "${DEMO_DIR}/widget"
+        "${DEMO_DIR}/widget/fonts"
+        "${DEMO_DIR}/widget/images"
+    )
+elseif(USE_DEMO STREQUAL "3")
+    file(GLOB DEMO_SOURCES CONFIGURE_DEPENDS
+        "${DEMO_DIR}/printer/*.c"
+        "${DEMO_DIR}/printer/fonts/*.c"
+        "${DEMO_DIR}/printer/images/*.c"
+    )
+    set(DEMO_INCLUDE_DIRS
+        "${DEMO_DIR}/printer"
+        "${DEMO_DIR}/printer/fonts"
+        "${DEMO_DIR}/printer/images"
+    )
+endif()
 
 add_executable(ldgui_sdl_demo
     ${SDL_DEMO_CORE_SOURCES}
     ${ARM2D_CONTROL_SOURCES}
     ${ARM2D_QRCODE_SOURCES}
-    ${ARM2D_ASSET_SOURCES}
     ${ARM2D_LIBRARY_SOURCES}
     ${ARM2D_HELPER_SOURCES}
     ${MATH_SOURCES}
     ${GUI_SOURCES}
     ${MISC_SOURCES}
-    ${STARTUP_DEMO_SOURCES}
-    ${WIDGET_DEMO_SOURCES}
-    ${PRINTER_DEMO_SOURCES}
+    ${DEMO_SOURCES}
 )
 
 target_include_directories(ldgui_sdl_demo PRIVATE
@@ -90,20 +115,12 @@ target_include_directories(ldgui_sdl_demo PRIVATE
     "${COMMON_DIR}/Arm-2D/Helper/Include"
     "${COMMON_DIR}/Arm-2D/Library/Include"
     "${COMMON_DIR}/Arm-2D/Library/Source"
-    "${COMMON_DIR}/Arm-2D/examples/common/controls"
-    "${COMMON_DIR}/Arm-2D/examples/common/controls/qrcode_box"
+    "${ARM2D_CONTROLS_DIR}"
+    "${ARM2D_QRCODE_DIR}"
     "${COMMON_DIR}/math"
     "${REPO_SRC_DIR}/gui"
     "${REPO_SRC_DIR}/misc"
-    "${COMMON_DIR}/demo/startup"
-    "${COMMON_DIR}/demo/startup/fonts"
-    "${COMMON_DIR}/demo/startup/images"
-    "${COMMON_DIR}/demo/widget"
-    "${COMMON_DIR}/demo/widget/fonts"
-    "${COMMON_DIR}/demo/widget/images"
-    "${COMMON_DIR}/demo/printer"
-    "${COMMON_DIR}/demo/printer/fonts"
-    "${COMMON_DIR}/demo/printer/images"
+    ${DEMO_INCLUDE_DIRS}
 )
 
 target_compile_definitions(ldgui_sdl_demo PRIVATE
