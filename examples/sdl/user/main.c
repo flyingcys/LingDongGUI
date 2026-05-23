@@ -37,11 +37,14 @@
 
 int app_2d_main_thread (void *argument)
 {
+    (void)argument;
+
     while(1) {
         if (VT_is_request_quit()) {
             break;
         }
         ldGuiLoop();
+        VT_sdl_wait(5);
     }
     return 0;
 }

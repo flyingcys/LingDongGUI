@@ -449,6 +449,89 @@ LingDongGUI 当前已经达到这个层级。
    - `pLayoutPaddingGroup` 与未来容器 `padding` 的关系
    - 兼容目标是源码兼容还是结构布局兼容
 
+#### 8.1.1 如果我是作者，我会怎么设计 Phase 0 的 `layout dirty` 机制
+
+如果只从“先把第一版做出来”这个目标出发，我会尽量避免一开始就大改所有基类，而是先做一个**最小、可回收、可验证**的 `layout dirty` 方案。
+
+核心原则有 3 个：
+
+1. **把 `paint dirty` 和 `layout dirty` 分开**
+   - `isDirtyRegionUpdate` 继续表示“这个控件需要重绘”
+   - `isLayoutUpdate` 单独表示“这个容器需要重新排版”
+   - 不要用绘制脏标记去冒充布局失效
+
+2. **第一阶段只让布局容器持有 `layout dirty`**
+   - 当前最现实的做法，是先沿用 `ldWindow_t.isLayoutUpdate`
+   - 不要一开始就把所有 `ldBase_t` 都改成通用布局宿主
+   - 先把“window 作为第一代 layout container”跑通
+
+3. **任何子项变化，只负责向上冒泡到最近的布局容器**
+   - 子项自己仍然标记 `isDirtyRegionUpdate`
+   - 但额外要把父链上最近的布局容器标记成 `isLayoutUpdate = true`
+   - 这样职责才清楚：子项负责“我变了”，容器负责“我要重排”
+
+基于当前仓库，我会优先补一个类似下面语义的辅助函数：
+
+```c
+void ldBaseMarkParentLayoutDirty(ldBase_t *ptWidget);
+```
+
+它要做的事情不是刷新屏幕，而是：
+
+- 从当前节点沿 `ptParent` 向上找
+- 找到最近一个启用了自动布局的 `ldWindow`
+- 把它的 `isLayoutUpdate` 置为 `true`
+- 如果存在更外层的布局容器，也继续向上冒泡
+
+这样设计的好处是：
+
+- 不需要让所有控件都知道 Flex
+- 不需要一开始就在 `ldBase_t` 上扩很多布局字段
+- 可以直接复用当前父子树结构  
+  参考：`src/gui/ldBase.h:200-217`
+
+第一批应当接入这个冒泡逻辑的地方，我建议是：
+
+- 子项几何 setter  
+  例如：`ldBaseSetRegion()`、`ldBaseResize()`、`ldBaseSetX()`、`ldBaseSetY()`、`ldBaseSetWidth()`、`ldBaseSetHeight()`  
+  参考：`src/gui/ldBase.c:1131-1218`
+- 子项显示状态变化  
+  例如：`ldBaseSetHidden()`  
+  参考：`src/gui/ldBase.c:416-447`
+- 节点增删  
+  例如：`ldBaseNodeAdd()`、`ldBaseNodeRemove()`  
+  参考：`src/gui/ldBase.c:166-204`
+- 容器自身尺寸变化或布局参数变化  
+  例如：`ldWindowSetLayout()`、未来的 `ldWindowSetPadding()` / `ldWindowSetGap()`  
+  参考：`src/gui/ldWindow.c:346-366`
+
+然后在容器真正执行布局时，流程应当尽量明确：
+
+1. 容器检测到 `isLayoutUpdate == true`
+2. 重新计算直属子项的新位置
+3. 对发生变化的子项调用几何 setter，让它们各自生成 paint dirty
+4. 容器自身清掉 `isLayoutUpdate`
+
+这里最关键的一点是：
+
+> **布局系统负责“谁该重新排”，绘制系统负责“哪些区域该重绘”，两者要协作，但不能混成一个标志。**
+
+对于第一版，我反而**不建议**一开始就做这些更激进的事情：
+
+- 把 `layout dirty` 下沉成所有控件的公共字段
+- 一次性引入完整的多级布局调度器
+- 一开始就改成完整的 bottom-up 容器更新框架
+
+原因很简单：
+
+- 当前仓库已经有稳定的绘制脏区系统
+- 但还没有稳定的布局失效模型
+- 第一阶段最需要验证的是“父容器会不会在正确的时候重排”
+
+所以从工程策略上讲，Phase 0 的最佳目标不是“设计出完美布局内核”，而是：
+
+> **先把 layout dirty 的触发、冒泡和消费这三件事定义清楚。**
+
 ### 8.2 Phase 1：最小可落地 Flex
 
 第一阶段建议只做一维 Flex 基础版：
