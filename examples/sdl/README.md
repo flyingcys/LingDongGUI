@@ -46,10 +46,19 @@ git clone --recursive https://gitee.com/gzbkey/LingDongGUI.git
 - `1`：Startup
 - `2`：Show all widget
 - `3`：Printer
-- `4`：Layout（flex demo）
+- `4`：Layout（flex wrap/grow/new-track/ignore-layout demo）
 - `5`：Grid demo
 
 传入其他值会在 CMake 配置阶段直接报错。
+
+### `USE_DEMO=4` 布局演示说明
+
+- 左上窗口使用 `ldFlexFlowRowWrap`，并通过 `ldWindowSetFlexGap(6, 4)` 区分同一行卡片间距与不同行之间的 track 间距。
+- 同一窗口还会调用 `ldWindowSetFlexTrackAlign(..., ldFlexTrackAlignCenter)`，让多行内容在交叉轴方向保持居中。
+- 标记为 `D*` 的卡片通过 `ldBaseSetFlexNewTrack(..., true)` 强制从新的一行开始，便于观察 new-track 的效果。
+- 右上窗口演示纵向 flex：`1x` / `2x` 分别通过 `ldBaseSetFlexGrow(..., 1)` 和 `ldBaseSetFlexGrow(..., 2)` 按剩余空间的 1:2 比例扩展。
+- 名为 `free` 的卡片调用 `ldBaseSetIgnoreLayout(..., true)` 后脱离布局槽位，再用 `ldBaseMove` 手动摆放，所以会悬浮在列布局旁边。
+- Demo 运行后左侧 flex 窗口会每 1200ms 在宽版与窄版之间切换，便于直接观察 wrap 后新增 track 的排布变化。
 
 ## 配置与编译
 

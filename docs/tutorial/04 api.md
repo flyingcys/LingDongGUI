@@ -4427,7 +4427,9 @@ window widget 窗体控件可包含其他的控件，实现复合型控件或者
 * void ldWindowSetPaddingGroup(ldWindow_t *ptWidget, ldPadding_t *pPaddingGroup);
 * void ldWindowSetFlexFlow(ldWindow_t *ptWidget, ldFlexFlow_t flow);
 * void ldWindowSetFlexAlign(ldWindow_t *ptWidget, ldFlexMainAlign_t mainAlign, ldFlexCrossAlign_t crossAlign);
+* void ldWindowSetFlexTrackAlign(ldWindow_t *ptWidget, ldFlexTrackAlign_t trackAlign);
 * void ldWindowSetPadding(ldWindow_t *ptWidget, ldPadding_t padding);
+* void ldWindowSetFlexGap(ldWindow_t *ptWidget, int16_t itemGap, int16_t trackGap);
 * void ldWindowSetGap(ldWindow_t *ptWidget, int16_t gap);
 * void ldWindowSetTransparent(ldWindow_t *pWidget,bool isTransparent);
 ### 信号列表
@@ -4552,7 +4554,7 @@ window widget 窗体控件可包含其他的控件，实现复合型控件或者
     </tr>
     <tr>
         <td>flow</td>
-        <td>流向类型，可选 ldFlexFlowRow 或 ldFlexFlowColumn</td>
+        <td>流向类型，可选 ldFlexFlowRow、ldFlexFlowColumn、ldFlexFlowRowWrap、ldFlexFlowColumnWrap、ldFlexFlowRowReverse、ldFlexFlowColumnReverse、ldFlexFlowRowWrapReverse、ldFlexFlowColumnWrapReverse</td>
     </tr>
 </table>
 <br>
@@ -4577,11 +4579,36 @@ window widget 窗体控件可包含其他的控件，实现复合型控件或者
     </tr>
     <tr>
         <td>mainAlign</td>
-        <td>主轴对齐方式，可选 ldFlexMainAlignStart、ldFlexMainAlignCenter、ldFlexMainAlignEnd、ldFlexMainAlignSpaceBetween</td>
+        <td>主轴对齐方式，可选 ldFlexMainAlignStart、ldFlexMainAlignCenter、ldFlexMainAlignEnd、ldFlexMainAlignSpaceBetween、ldFlexMainAlignSpaceEvenly、ldFlexMainAlignSpaceAround</td>
     </tr>
     <tr>
         <td>crossAlign</td>
         <td>交叉轴对齐方式，可选 ldFlexCrossAlignStart、ldFlexCrossAlignCenter、ldFlexCrossAlignEnd</td>
+    </tr>
+</table>
+<br>
+
+#### ldWindowSetFlexTrackAlign
+<table>
+    <tr>
+        <td>函数</td>
+        <td colspan="2">
+            <pre><code class="language-c">void ldWindowSetFlexTrackAlign(ldWindow_t *ptWidget, ldFlexTrackAlign_t trackAlign);</code></pre>
+        </td>
+    </tr>
+    <tr>
+        <td>说明</td>
+        <td colspan="2">
+    设置多条 Flex track 在交叉轴方向上的整体对齐方式；主要用于开启 wrap 之后控制多行/多列内容如何分布        </td>
+    </tr>
+    <tr>
+        <td rowspan="2">参数</td>
+        <td>ptWidget</td>
+        <td>window控件指针</td>
+    </tr>
+    <tr>
+        <td>trackAlign</td>
+        <td>track 对齐方式，可选 ldFlexTrackAlignStart、ldFlexTrackAlignCenter、ldFlexTrackAlignEnd、ldFlexTrackAlignSpaceBetween、ldFlexTrackAlignSpaceAround、ldFlexTrackAlignSpaceEvenly</td>
     </tr>
 </table>
 <br>
@@ -4607,6 +4634,35 @@ window widget 窗体控件可包含其他的控件，实现复合型控件或者
     <tr>
         <td>padding</td>
         <td>留白结构体，包含 left、top、right、bottom 四个成员，单位为像素</td>
+    </tr>
+</table>
+<br>
+
+#### ldWindowSetFlexGap
+<table>
+    <tr>
+        <td>函数</td>
+        <td colspan="2">
+            <pre><code class="language-c">void ldWindowSetFlexGap(ldWindow_t *ptWidget, int16_t itemGap, int16_t trackGap);</code></pre>
+        </td>
+    </tr>
+    <tr>
+        <td>说明</td>
+        <td colspan="2">
+    分别设置 Flex 布局中同一条 track 内子项之间的间距，以及多条 track 之间的间距        </td>
+    </tr>
+    <tr>
+        <td rowspan="3">参数</td>
+        <td>ptWidget</td>
+        <td>window控件指针</td>
+    </tr>
+    <tr>
+        <td>itemGap</td>
+        <td>同一行或同一列内部子项之间的间距，单位为像素</td>
+    </tr>
+    <tr>
+        <td>trackGap</td>
+        <td>不同行或不同列之间的间距，单位为像素</td>
     </tr>
 </table>
 <br>
@@ -4657,6 +4713,91 @@ window widget 窗体控件可包含其他的控件，实现复合型控件或者
     <tr>
         <td>isTransparent</td>
         <td>true=透明 false=不透明</td>
+    </tr>
+</table>
+<br>
+
+---
+# Base
+### 简述
+Base 是所有控件共享的基础能力层，这里补充 flex 布局第一轮新增、直接作用在子控件上的三个布局辅助接口。
+### 函数列表
+* void ldBaseSetFlexGrow(ldBase_t *ptWidget, uint16_t flexGrow);
+* void ldBaseSetFlexNewTrack(ldBase_t *ptWidget, bool flexInNewTrack);
+* void ldBaseSetIgnoreLayout(ldBase_t *ptWidget, bool ignoreLayout);
+### 信号列表
+### 函数说明
+#### ldBaseSetFlexGrow
+<table>
+    <tr>
+        <td>函数</td>
+        <td colspan="2">
+            <pre><code class="language-c">void ldBaseSetFlexGrow(ldBase_t *ptWidget, uint16_t flexGrow);</code></pre>
+        </td>
+    </tr>
+    <tr>
+        <td>说明</td>
+        <td colspan="2">
+    为 Flex 子项设置 grow 权重；当父级 window 还有主轴剩余空间时，权重大于 0 的子项会按比例分配这些空间        </td>
+    </tr>
+    <tr>
+        <td rowspan="2">参数</td>
+        <td>ptWidget</td>
+        <td>目标子控件指针</td>
+    </tr>
+    <tr>
+        <td>flexGrow</td>
+        <td>增长权重；0 表示保持自身基础尺寸，不参与剩余空间分配</td>
+    </tr>
+</table>
+<br>
+
+#### ldBaseSetFlexNewTrack
+<table>
+    <tr>
+        <td>函数</td>
+        <td colspan="2">
+            <pre><code class="language-c">void ldBaseSetFlexNewTrack(ldBase_t *ptWidget, bool flexInNewTrack);</code></pre>
+        </td>
+    </tr>
+    <tr>
+        <td>说明</td>
+        <td colspan="2">
+    指定当前 Flex 子项是否强制从新的 track 开始排布；通常与 wrap 流向一起使用，用来人为切分换行/换列位置        </td>
+    </tr>
+    <tr>
+        <td rowspan="2">参数</td>
+        <td>ptWidget</td>
+        <td>目标子控件指针</td>
+    </tr>
+    <tr>
+        <td>flexInNewTrack</td>
+        <td>true 表示该子项前面立即换到新的 track，false 表示按默认连续排布</td>
+    </tr>
+</table>
+<br>
+
+#### ldBaseSetIgnoreLayout
+<table>
+    <tr>
+        <td>函数</td>
+        <td colspan="2">
+            <pre><code class="language-c">void ldBaseSetIgnoreLayout(ldBase_t *ptWidget, bool ignoreLayout);</code></pre>
+        </td>
+    </tr>
+    <tr>
+        <td>说明</td>
+        <td colspan="2">
+    控制子控件是否跳过父级 layout/flex/grid 的自动排布；忽略布局后，控件保留自己的坐标与尺寸，通常配合 ldBaseMove 或 ldBaseSetX/Y 手动定位        </td>
+    </tr>
+    <tr>
+        <td rowspan="2">参数</td>
+        <td>ptWidget</td>
+        <td>目标子控件指针</td>
+    </tr>
+    <tr>
+        <td>ignoreLayout</td>
+        <td>true 表示脱离父级自动布局，false 表示重新参与父级自动布局</td>
     </tr>
 </table>
 <br>

@@ -1,8 +1,215 @@
 #include <assert.h>
+#include <math.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 
 #include "ldWindow.h"
 #include "ldLabel.h"
 #include "ldWindowLayoutInternal.h"
+
+const arm_2d_control_enumeration_policy_t ARM_2D_CONTROL_ENUMERATION_POLICY_PREORDER_TRAVERSAL = {0};
+const arm_2d_tile_t c_tileWhiteDotMask = {0};
+const arm_2d_tile_t c_tileCircleMask = {0};
+
+void VT_enter_global_mutex(void) {}
+void VT_leave_global_mutex(void) {}
+
+arm_2d_err_t arm_2d_helper_control_enum_init(arm_2d_control_enumerator_t *ptThis,
+                                             const arm_2d_control_enumeration_policy_t *ptPolicy,
+                                             const arm_2d_control_node_t *ptRoot)
+{
+    (void)ptThis;
+    (void)ptPolicy;
+    (void)ptRoot;
+    return ARM_2D_ERR_NONE;
+}
+
+arm_2d_control_node_t *arm_2d_helper_control_enum_get_next_node(arm_2d_control_enumerator_t *ptThis)
+{
+    (void)ptThis;
+    return NULL;
+}
+
+arm_2d_err_t arm_2d_helper_control_enum_depose(arm_2d_control_enumerator_t *ptThis)
+{
+    (void)ptThis;
+    return ARM_2D_ERR_NONE;
+}
+
+bool __arm_2d_helper_pfb_is_region_active0(const arm_2d_tile_t *ptTarget,
+                                           const arm_2d_region_t *ptRegion,
+                                           bool bConsiderDryRun)
+{
+    (void)ptTarget;
+    (void)ptRegion;
+    (void)bConsiderDryRun;
+    return true;
+}
+
+void __draw_round_corner_box(const arm_2d_tile_t *ptTarget,
+                             const arm_2d_region_t *ptRegion,
+                             COLOUR_INT tColour,
+                             uint8_t chOpacity,
+                             const arm_2d_tile_t *ptCircleMask)
+{
+    (void)ptTarget;
+    (void)ptRegion;
+    (void)tColour;
+    (void)chOpacity;
+    (void)ptCircleMask;
+}
+
+void __draw_round_corner_image(const arm_2d_tile_t *ptSource,
+                               const arm_2d_tile_t *ptTarget,
+                               const arm_2d_region_t *ptRegion,
+                               bool bIsNewFrame,
+                               uint8_t chOpacity,
+                               const arm_2d_tile_t *ptCircleMask)
+{
+    (void)ptSource;
+    (void)ptTarget;
+    (void)ptRegion;
+    (void)bIsNewFrame;
+    (void)chOpacity;
+    (void)ptCircleMask;
+}
+
+void __draw_round_corner_border(const arm_2d_tile_t *ptTarget,
+                                const arm_2d_region_t *ptRegion,
+                                COLOUR_INT tColour,
+                                arm_2d_border_opacity_t opacity,
+                                arm_2d_corner_opacity_t cornerOpacity,
+                                const arm_2d_tile_t *ptCircleMask)
+{
+    (void)ptTarget;
+    (void)ptRegion;
+    (void)tColour;
+    (void)opacity;
+    (void)cornerOpacity;
+    (void)ptCircleMask;
+}
+
+void arm_2d_helper_draw_box(const arm_2d_tile_t *ptTarget,
+                            const arm_2d_region_t *ptRegion,
+                            int16_t iBorderWidth,
+                            COLOUR_INT tColour,
+                            uint8_t chOpacity)
+{
+    (void)ptTarget;
+    (void)ptRegion;
+    (void)iBorderWidth;
+    (void)tColour;
+    (void)chOpacity;
+}
+
+int64_t arm_2d_helper_get_system_timestamp(void)
+{
+    return 0;
+}
+
+int64_t arm_2d_helper_convert_ticks_to_ms(int64_t lTick)
+{
+    return lTick;
+}
+
+int64_t arm_2d_helper_convert_ms_to_ticks(int64_t lMS)
+{
+    return lMS;
+}
+
+int8_t arm_lcd_text_set_char_spacing(int8_t chNewSpacing)
+{
+    return chNewSpacing;
+}
+
+void arm_lcd_text_set_target_framebuffer(const arm_2d_tile_t *ptFrameBuffer)
+{
+    (void)ptFrameBuffer;
+}
+
+void arm_lcd_text_set_draw_region(arm_2d_region_t *ptRegion)
+{
+    (void)ptRegion;
+}
+
+void arm_lcd_text_set_colour(COLOUR_INT wForeground, COLOUR_INT wBackground)
+{
+    (void)wForeground;
+    (void)wBackground;
+}
+
+arm_2d_err_t arm_lcd_text_set_font(const arm_2d_font_t *ptFont)
+{
+    (void)ptFont;
+    return ARM_2D_ERR_NONE;
+}
+
+void arm_lcd_text_set_opacity(uint8_t chOpacity)
+{
+    (void)chOpacity;
+}
+
+void arm_lcd_text_location(int16_t iRow, uint16_t iColumn)
+{
+    (void)iRow;
+    (void)iColumn;
+}
+
+void arm_lcd_puts_label(const char *pchString, arm_2d_align_t tAlign)
+{
+    (void)pchString;
+    (void)tAlign;
+}
+
+float32_t arm_sin_f32(float32_t x)
+{
+    return sinf(x);
+}
+
+float32_t arm_cos_f32(float32_t x)
+{
+    return cosf(x);
+}
+
+q31_t arm_sin_q31(q31_t x)
+{
+    (void)x;
+    return 0;
+}
+
+q31_t arm_cos_q31(q31_t x)
+{
+    (void)x;
+    return 0;
+}
+
+void ldGuiUpdateScene(void) {}
+
+void ldMsgDelConnect(void *ptSender)
+{
+    (void)ptSender;
+}
+
+void *pvPortMalloc(size_t xWantedSize)
+{
+    return malloc(xWantedSize);
+}
+
+void vPortFree(void *pv)
+{
+    free(pv);
+}
+
+size_t xPortGetFreeHeapSize(void)
+{
+    return 0;
+}
+
+void *pvPortRealloc(uint8_t *srcaddr, size_t xWantedSize)
+{
+    return realloc(srcaddr, xWantedSize);
+}
 
 arm_2d_region_t *arm_2d_helper_control_get_absolute_region(arm_2d_control_node_t *ptNode,
                                                            arm_2d_region_t *ptOutRegion,
@@ -21,6 +228,40 @@ bool arm_2d_op_wait_async(arm_2d_op_core_t *ptOP)
 {
     (void)ptOP;
     return true;
+}
+
+#define LD_FLEX_FLOW_ROW_WRAP ((ldFlexFlow_t)2)
+#define LD_FLEX_FLOW_COLUMN_WRAP ((ldFlexFlow_t)3)
+#define LD_FLEX_FLOW_ROW_REVERSE ((ldFlexFlow_t)4)
+#define LD_FLEX_FLOW_COLUMN_REVERSE ((ldFlexFlow_t)5)
+#define LD_FLEX_FLOW_ROW_WRAP_REVERSE ((ldFlexFlow_t)6)
+#define LD_FLEX_FLOW_COLUMN_WRAP_REVERSE ((ldFlexFlow_t)7)
+#define LD_FLEX_MAIN_ALIGN_SPACE_AROUND ((ldFlexMainAlign_t)4)
+#define LD_FLEX_MAIN_ALIGN_SPACE_EVENLY ((ldFlexMainAlign_t)5)
+
+#define LD_FLEX_TRACK_ALIGN_START 0
+#define LD_FLEX_TRACK_ALIGN_CENTER 1
+#define LD_FLEX_TRACK_ALIGN_END 2
+#define LD_FLEX_TRACK_ALIGN_SPACE_BETWEEN 3
+#define LD_FLEX_TRACK_ALIGN_SPACE_AROUND 4
+#define LD_FLEX_TRACK_ALIGN_SPACE_EVENLY 5
+
+#if defined(LDGUI_FLEX_API_CONTRACT)
+void ldWindowSetFlexTrackAlign(ldWindow_t *ptWidget, int trackAlign);
+void ldBaseSetFlexGrow(ldBase_t *ptWidget, uint8_t grow);
+void ldBaseSetFlexNewTrack(ldBase_t *ptWidget, bool inNewTrack);
+void ldBaseSetIgnoreLayout(ldBase_t *ptWidget, bool ignoreLayout);
+#endif
+
+static void set_widget_region(ldBase_t *ptWidget, int16_t x, int16_t y, int16_t width, int16_t height)
+{
+    ptWidget->use_as__arm_2d_control_node_t.tRegion = (arm_2d_region_t){{x, y}, {width, height}};
+}
+
+static void init_window_region(ldWindow_t *ptWindow, int16_t width, int16_t height)
+{
+    ptWindow->use_as__ldBase_t.widgetType = widgetTypeWindow;
+    set_widget_region((ldBase_t *)ptWindow, 0, 0, width, height);
 }
 
 static void test_collect_direct_children_ignores_grandchildren(void)
@@ -216,6 +457,42 @@ static void test_flex_space_between_resolves_gap_from_remaining_space(void)
     assert(resolvedGap == 45);
 }
 
+static void test_flex_space_evenly_resolves_start_and_gap(void)
+{
+    int16_t resolvedGap = -1;
+    int16_t start = ldFlexResolveMainStart(LD_FLEX_MAIN_ALIGN_SPACE_EVENLY, 150, 30, 3, 0, &resolvedGap);
+
+    assert(start == 30);
+    assert(resolvedGap == 30);
+}
+
+static void test_flex_space_around_resolves_start_and_gap(void)
+{
+    int16_t resolvedGap = -1;
+    int16_t start = ldFlexResolveMainStart(LD_FLEX_MAIN_ALIGN_SPACE_AROUND, 150, 30, 3, 0, &resolvedGap);
+
+    assert(start == 20);
+    assert(resolvedGap == 40);
+}
+
+static void test_flex_space_around_resolves_outer_padding_and_gap(void)
+{
+    int16_t resolvedGap = -1;
+    int16_t start = ldFlexResolveMainStart(ldFlexMainAlignSpaceAround, 200, 80, 3, 10, &resolvedGap);
+
+    assert(start == 20);
+    assert(resolvedGap == 50);
+}
+
+static void test_flex_space_evenly_resolves_uniform_spacing(void)
+{
+    int16_t resolvedGap = -1;
+    int16_t start = ldFlexResolveMainStart(ldFlexMainAlignSpaceEvenly, 220, 80, 3, 10, &resolvedGap);
+
+    assert(start == 35);
+    assert(resolvedGap == 45);
+}
+
 static void test_flex_setters_mark_window_dirty(void)
 {
     ldWindow_t window = {0};
@@ -252,7 +529,36 @@ static void test_flex_setters_mark_window_dirty(void)
     window.use_as__ldBase_t.isDirtyRegionUpdate = false;
     window.isLayoutUpdate = false;
     ldWindowSetGap(&window, 7);
-    assert(window.flexGap == 7);
+    assert(window.flexItemGap == 7);
+    assert(window.flexTrackGap == 7);
+    assert(window.isLayoutUpdate == true);
+    assert(window.use_as__ldBase_t.isDirtyRegionUpdate == true);
+}
+
+static void test_flex_extended_setters_mark_window_dirty(void)
+{
+    ldWindow_t window = {0};
+
+    window.use_as__ldBase_t.isDirtyRegionUpdate = false;
+    window.isLayoutUpdate = false;
+    ldWindowSetFlexTrackAlign(&window, ldFlexTrackAlignSpaceAround);
+    assert(window.flexTrackAlign == ldFlexTrackAlignSpaceAround);
+    assert(window.isLayoutUpdate == true);
+    assert(window.use_as__ldBase_t.isDirtyRegionUpdate == true);
+
+    window.use_as__ldBase_t.isDirtyRegionUpdate = false;
+    window.isLayoutUpdate = false;
+    ldWindowSetFlexGap(&window, 7, 9);
+    assert(window.flexItemGap == 7);
+    assert(window.flexTrackGap == 9);
+    assert(window.isLayoutUpdate == true);
+    assert(window.use_as__ldBase_t.isDirtyRegionUpdate == true);
+
+    window.use_as__ldBase_t.isDirtyRegionUpdate = false;
+    window.isLayoutUpdate = false;
+    ldWindowSetGap(&window, 5);
+    assert(window.flexItemGap == 5);
+    assert(window.flexTrackGap == 5);
     assert(window.isLayoutUpdate == true);
     assert(window.use_as__ldBase_t.isDirtyRegionUpdate == true);
 }
@@ -361,6 +667,388 @@ static void test_flex_column_layout_applies_main_and_cross_alignment(void)
     assert(b.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 70);
 }
 
+static void test_flex_row_wrap_creates_second_track(void)
+{
+    ldWindow_t root = {0};
+    ldLabel_t a = {0};
+    ldLabel_t b = {0};
+    ldLabel_t c = {0};
+
+    root.use_as__ldBase_t.widgetType = widgetTypeWindow;
+    root.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize = (arm_2d_size_t){100, 80};
+
+    a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize = (arm_2d_size_t){40, 10};
+    b.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize = (arm_2d_size_t){40, 12};
+    c.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize = (arm_2d_size_t){40, 14};
+
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&a);
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&b);
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&c);
+
+    ldWindowSetFlexFlow(&root, ldFlexFlowRowWrap);
+    ldWindowSetFlexGap(&root, 10, 6);
+    ldWindowSetPadding(&root, (ldPadding_t){.left = 5, .top = 4, .right = 5, .bottom = 4});
+
+    ldWindow_on_frame_start(NULL, &root);
+
+    assert(a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 5);
+    assert(a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 4);
+    assert(b.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 55);
+    assert(b.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 4);
+    assert(c.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 5);
+    assert(c.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 22);
+}
+
+static void test_flex_column_wrap_creates_second_track(void)
+{
+    ldWindow_t root = {0};
+    ldLabel_t a = {0};
+    ldLabel_t b = {0};
+    ldLabel_t c = {0};
+
+    root.use_as__ldBase_t.widgetType = widgetTypeWindow;
+    root.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize = (arm_2d_size_t){90, 90};
+
+    a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize = (arm_2d_size_t){20, 30};
+    b.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize = (arm_2d_size_t){24, 30};
+    c.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize = (arm_2d_size_t){28, 30};
+
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&a);
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&b);
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&c);
+
+    ldWindowSetFlexFlow(&root, ldFlexFlowColumnWrap);
+    ldWindowSetFlexGap(&root, 8, 10);
+    ldWindowSetPadding(&root, (ldPadding_t){.left = 4, .top = 5, .right = 4, .bottom = 5});
+
+    ldWindow_on_frame_start(NULL, &root);
+
+    assert(a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 4);
+    assert(a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 5);
+    assert(b.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 4);
+    assert(b.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 43);
+    assert(c.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 38);
+    assert(c.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 5);
+}
+
+static void test_flex_row_reverse_places_items_from_end(void)
+{
+    ldWindow_t root = {0};
+    ldLabel_t a = {0};
+    ldLabel_t b = {0};
+
+    root.use_as__ldBase_t.widgetType = widgetTypeWindow;
+    root.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize = (arm_2d_size_t){120, 50};
+
+    a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize = (arm_2d_size_t){20, 10};
+    b.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize = (arm_2d_size_t){30, 10};
+
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&a);
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&b);
+
+    ldWindowSetFlexFlow(&root, ldFlexFlowRowReverse);
+    ldWindowSetGap(&root, 10);
+
+    ldWindow_on_frame_start(NULL, &root);
+
+    assert(a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 60);
+    assert(b.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 90);
+}
+
+static void test_flex_column_reverse_places_items_from_end(void)
+{
+    ldWindow_t root = {0};
+    ldLabel_t a = {0};
+    ldLabel_t b = {0};
+
+    root.use_as__ldBase_t.widgetType = widgetTypeWindow;
+    root.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize = (arm_2d_size_t){80, 120};
+
+    a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize = (arm_2d_size_t){20, 20};
+    b.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize = (arm_2d_size_t){30, 30};
+
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&a);
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&b);
+
+    ldWindowSetFlexFlow(&root, ldFlexFlowColumnReverse);
+    ldWindowSetGap(&root, 10);
+
+    ldWindow_on_frame_start(NULL, &root);
+
+    assert(a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 60);
+    assert(b.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 90);
+}
+
+static void test_flex_track_align_centers_tracks(void)
+{
+    ldWindow_t root = {0};
+    ldLabel_t a = {0};
+    ldLabel_t b = {0};
+    ldLabel_t c = {0};
+
+    root.use_as__ldBase_t.widgetType = widgetTypeWindow;
+    root.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize = (arm_2d_size_t){90, 100};
+
+    a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize = (arm_2d_size_t){40, 10};
+    b.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize = (arm_2d_size_t){40, 12};
+    c.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize = (arm_2d_size_t){40, 14};
+
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&a);
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&b);
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&c);
+
+    ldWindowSetFlexFlow(&root, ldFlexFlowRowWrap);
+    ldWindowSetFlexGap(&root, 10, 8);
+    ldWindowSetFlexTrackAlign(&root, ldFlexTrackAlignCenter);
+
+    ldWindow_on_frame_start(NULL, &root);
+
+    assert(a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 33);
+    assert(b.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 33);
+    assert(c.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 53);
+}
+
+static void test_base_flex_child_setters_mark_parent_layout_dirty(void)
+{
+    ldWindow_t root = {0};
+    ldLabel_t child = {0};
+
+    root.layoutTpye = layoutFlex;
+    root.use_as__ldBase_t.widgetType = widgetTypeWindow;
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&child);
+
+    root.isLayoutUpdate = false;
+    ldBaseSetFlexGrow((ldBase_t *)&child, 2);
+    assert(child.use_as__ldBase_t.flexGrow == 2);
+    assert(root.isLayoutUpdate == true);
+
+    root.isLayoutUpdate = false;
+    ldBaseSetFlexNewTrack((ldBase_t *)&child, true);
+    assert(child.use_as__ldBase_t.flexInNewTrack == true);
+    assert(root.isLayoutUpdate == true);
+
+    root.isLayoutUpdate = false;
+    ldBaseSetIgnoreLayout((ldBase_t *)&child, true);
+    assert(child.use_as__ldBase_t.ignoreLayout == true);
+    assert(root.isLayoutUpdate == true);
+}
+
+static void test_flex_grow_distributes_remaining_space_by_weight(void)
+{
+    ldWindow_t root = {0};
+    ldLabel_t a = {0};
+    ldLabel_t b = {0};
+
+    root.use_as__ldBase_t.widgetType = widgetTypeWindow;
+    root.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize = (arm_2d_size_t){120, 40};
+
+    a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize = (arm_2d_size_t){20, 10};
+    b.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize = (arm_2d_size_t){20, 10};
+
+    ldBaseSetFlexGrow((ldBase_t *)&a, 1);
+    ldBaseSetFlexGrow((ldBase_t *)&b, 2);
+
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&a);
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&b);
+
+    ldWindowSetFlexFlow(&root, ldFlexFlowRow);
+    ldWindowSetGap(&root, 0);
+
+    ldWindow_on_frame_start(NULL, &root);
+
+    assert(a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iWidth == 46);
+    assert(b.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iWidth == 74);
+    assert(a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 0);
+    assert(b.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 46);
+}
+
+static void test_flex_grow_reset_restores_basis_size(void)
+{
+    ldWindow_t root = {0};
+    ldLabel_t a = {0};
+    ldLabel_t b = {0};
+
+    root.use_as__ldBase_t.widgetType = widgetTypeWindow;
+    root.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize = (arm_2d_size_t){120, 40};
+
+    a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize = (arm_2d_size_t){20, 10};
+    b.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize = (arm_2d_size_t){20, 10};
+
+    ldBaseSetFlexGrow((ldBase_t *)&a, 1);
+    ldBaseSetFlexGrow((ldBase_t *)&b, 2);
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&a);
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&b);
+    ldWindowSetFlexFlow(&root, ldFlexFlowRow);
+    ldWindowSetGap(&root, 0);
+
+    ldWindow_on_frame_start(NULL, &root);
+    assert(a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iWidth == 46);
+    assert(b.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iWidth == 74);
+
+    ldBaseSetFlexGrow((ldBase_t *)&a, 0);
+    ldBaseSetFlexGrow((ldBase_t *)&b, 0);
+    ldWindow_on_frame_start(NULL, &root);
+
+    assert(a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iWidth == 20);
+    assert(b.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iWidth == 20);
+    assert(a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 0);
+    assert(b.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 20);
+}
+
+static void test_flex_wrap_and_grow_expand_last_track_without_overflow(void)
+{
+    ldWindow_t root = {0};
+    ldLabel_t a = {0};
+    ldLabel_t b = {0};
+    ldLabel_t c = {0};
+
+    init_window_region(&root, 100, 60);
+    set_widget_region((ldBase_t *)&a, 0, 0, 40, 10);
+    set_widget_region((ldBase_t *)&b, 0, 0, 40, 10);
+    set_widget_region((ldBase_t *)&c, 0, 0, 20, 10);
+
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&a);
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&b);
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&c);
+
+    ldWindowSetFlexFlow(&root, LD_FLEX_FLOW_ROW_WRAP);
+    ldWindowSetFlexAlign(&root, ldFlexMainAlignStart, ldFlexCrossAlignStart);
+    ldWindowSetGap(&root, 5);
+    ldBaseSetFlexGrow((ldBase_t *)&c, 1);
+
+    ldWindow_on_frame_start(NULL, &root);
+
+    assert(a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 0);
+    assert(a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 0);
+    assert(b.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 45);
+    assert(b.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 0);
+    assert(c.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 0);
+    assert(c.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 15);
+    assert(c.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iWidth == 100);
+}
+
+static void test_flex_min_size_hook_affects_wrap_capacity(void)
+{
+    ldWindow_t root = {0};
+    ldLabel_t a = {0};
+    ldLabel_t b = {0};
+
+    init_window_region(&root, 100, 60);
+    set_widget_region((ldBase_t *)&a, 0, 0, 20, 10);
+    set_widget_region((ldBase_t *)&b, 0, 0, 50, 10);
+
+    a.use_as__ldBase_t.flexMinSize = (arm_2d_size_t){60, 10};
+    a.use_as__ldBase_t.hasFlexMinWidth = true;
+
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&a);
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&b);
+
+    ldWindowSetFlexFlow(&root, ldFlexFlowRowWrap);
+    ldWindowSetFlexAlign(&root, ldFlexMainAlignStart, ldFlexCrossAlignStart);
+    ldWindowSetGap(&root, 5);
+
+    ldWindow_on_frame_start(NULL, &root);
+
+    assert(a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iWidth == 60);
+    assert(a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 0);
+    assert(a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 0);
+    assert(b.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 0);
+    assert(b.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 15);
+}
+
+static void test_flex_max_size_hook_caps_grow_without_overflow(void)
+{
+    ldWindow_t root = {0};
+    ldLabel_t a = {0};
+    ldLabel_t b = {0};
+
+    init_window_region(&root, 140, 40);
+    set_widget_region((ldBase_t *)&a, 0, 0, 20, 10);
+    set_widget_region((ldBase_t *)&b, 0, 0, 20, 10);
+
+    a.use_as__ldBase_t.flexMaxSize = (arm_2d_size_t){40, 10};
+    a.use_as__ldBase_t.hasFlexMaxWidth = true;
+
+    ldBaseSetFlexGrow((ldBase_t *)&a, 1);
+    ldBaseSetFlexGrow((ldBase_t *)&b, 1);
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&a);
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&b);
+
+    ldWindowSetFlexFlow(&root, ldFlexFlowRow);
+    ldWindowSetFlexAlign(&root, ldFlexMainAlignStart, ldFlexCrossAlignStart);
+    ldWindowSetGap(&root, 10);
+
+    ldWindow_on_frame_start(NULL, &root);
+
+    assert(a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iWidth == 40);
+    assert(b.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iWidth == 90);
+    assert(a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 0);
+    assert(b.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 50);
+    assert((b.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX +
+            b.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iWidth) == 140);
+}
+
+static void test_flex_new_track_forces_wrap_before_capacity_runs_out(void)
+{
+    ldWindow_t root = {0};
+    ldLabel_t a = {0};
+    ldLabel_t b = {0};
+    ldLabel_t c = {0};
+
+    root.use_as__ldBase_t.widgetType = widgetTypeWindow;
+    root.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize = (arm_2d_size_t){200, 90};
+
+    a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize = (arm_2d_size_t){40, 10};
+    b.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize = (arm_2d_size_t){40, 12};
+    c.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize = (arm_2d_size_t){40, 14};
+
+    ldBaseSetFlexNewTrack((ldBase_t *)&c, true);
+
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&a);
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&b);
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&c);
+
+    ldWindowSetFlexFlow(&root, ldFlexFlowRowWrap);
+    ldWindowSetFlexGap(&root, 10, 6);
+
+    ldWindow_on_frame_start(NULL, &root);
+
+    assert(a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 0);
+    assert(b.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 0);
+    assert(c.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 18);
+}
+
+static void test_flex_ignore_layout_keeps_manual_position_and_skips_slot(void)
+{
+    ldWindow_t root = {0};
+    ldLabel_t a = {0};
+    ldLabel_t ignored = {0};
+    ldLabel_t c = {0};
+
+    root.use_as__ldBase_t.widgetType = widgetTypeWindow;
+    root.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize = (arm_2d_size_t){120, 50};
+
+    a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion = (arm_2d_region_t){{0, 0}, {20, 10}};
+    ignored.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion = (arm_2d_region_t){{77, 19}, {15, 8}};
+    c.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion = (arm_2d_region_t){{0, 0}, {20, 10}};
+
+    ldBaseSetIgnoreLayout((ldBase_t *)&ignored, true);
+
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&a);
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&ignored);
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&c);
+
+    ldWindowSetFlexFlow(&root, ldFlexFlowRow);
+    ldWindowSetGap(&root, 10);
+
+    ldWindow_on_frame_start(NULL, &root);
+
+    assert(a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 0);
+    assert(c.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 30);
+    assert(ignored.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 77);
+    assert(ignored.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 19);
+}
+
 static void test_grid_layout_places_visible_children_row_first(void)
 {
     ldWindow_t root = {0};
@@ -411,6 +1099,345 @@ static void test_grid_layout_places_visible_children_row_first(void)
     assert(d.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iHeight == 8);
 }
 
+static void test_flex_row_wrap_starts_new_track_when_main_axis_overflows(void)
+{
+    ldWindow_t root = {0};
+    ldLabel_t a = {0};
+    ldLabel_t b = {0};
+    ldLabel_t c = {0};
+
+    init_window_region(&root, 100, 60);
+    set_widget_region((ldBase_t *)&a, 0, 0, 40, 10);
+    set_widget_region((ldBase_t *)&b, 0, 0, 40, 10);
+    set_widget_region((ldBase_t *)&c, 0, 0, 40, 10);
+
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&a);
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&b);
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&c);
+
+    ldWindowSetFlexFlow(&root, LD_FLEX_FLOW_ROW_WRAP);
+    ldWindowSetFlexAlign(&root, ldFlexMainAlignStart, ldFlexCrossAlignStart);
+    ldWindowSetGap(&root, 5);
+
+    ldWindow_on_frame_start(NULL, &root);
+
+    assert(a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 0);
+    assert(a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 0);
+    assert(b.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 45);
+    assert(b.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 0);
+    assert(c.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 0);
+    assert(c.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 15);
+}
+
+static void test_flex_column_wrap_starts_new_track_when_main_axis_overflows(void)
+{
+    ldWindow_t root = {0};
+    ldLabel_t a = {0};
+    ldLabel_t b = {0};
+    ldLabel_t c = {0};
+
+    init_window_region(&root, 80, 60);
+    set_widget_region((ldBase_t *)&a, 0, 0, 30, 20);
+    set_widget_region((ldBase_t *)&b, 0, 0, 30, 20);
+    set_widget_region((ldBase_t *)&c, 0, 0, 30, 20);
+
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&a);
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&b);
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&c);
+
+    ldWindowSetFlexFlow(&root, LD_FLEX_FLOW_COLUMN_WRAP);
+    ldWindowSetFlexAlign(&root, ldFlexMainAlignStart, ldFlexCrossAlignStart);
+    ldWindowSetGap(&root, 5);
+
+    ldWindow_on_frame_start(NULL, &root);
+
+    assert(a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 0);
+    assert(a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 0);
+    assert(b.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 0);
+    assert(b.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 25);
+    assert(c.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 35);
+    assert(c.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 0);
+}
+
+static void test_flex_row_reverse_places_first_child_from_right_edge(void)
+{
+    ldWindow_t root = {0};
+    ldLabel_t a = {0};
+    ldLabel_t b = {0};
+
+    init_window_region(&root, 120, 40);
+    set_widget_region((ldBase_t *)&a, 0, 0, 20, 10);
+    set_widget_region((ldBase_t *)&b, 0, 0, 30, 10);
+
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&a);
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&b);
+
+    ldWindowSetFlexFlow(&root, LD_FLEX_FLOW_ROW_REVERSE);
+    ldWindowSetFlexAlign(&root, ldFlexMainAlignStart, ldFlexCrossAlignStart);
+    ldWindowSetGap(&root, 10);
+
+    ldWindow_on_frame_start(NULL, &root);
+
+    assert(a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 100);
+    assert(a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 0);
+    assert(b.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 60);
+    assert(b.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 0);
+}
+
+static void test_flex_column_reverse_places_first_child_from_bottom_edge(void)
+{
+    ldWindow_t root = {0};
+    ldLabel_t a = {0};
+    ldLabel_t b = {0};
+
+    init_window_region(&root, 40, 100);
+    set_widget_region((ldBase_t *)&a, 0, 0, 20, 10);
+    set_widget_region((ldBase_t *)&b, 0, 0, 20, 20);
+
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&a);
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&b);
+
+    ldWindowSetFlexFlow(&root, LD_FLEX_FLOW_COLUMN_REVERSE);
+    ldWindowSetFlexAlign(&root, ldFlexMainAlignStart, ldFlexCrossAlignStart);
+    ldWindowSetGap(&root, 5);
+
+    ldWindow_on_frame_start(NULL, &root);
+
+    assert(a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 0);
+    assert(a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 90);
+    assert(b.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 0);
+    assert(b.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 65);
+}
+
+static void test_flex_row_wrap_reverse_stacks_tracks_from_bottom(void)
+{
+    ldWindow_t root = {0};
+    ldLabel_t a = {0};
+    ldLabel_t b = {0};
+    ldLabel_t c = {0};
+
+    init_window_region(&root, 100, 60);
+    set_widget_region((ldBase_t *)&a, 0, 0, 40, 10);
+    set_widget_region((ldBase_t *)&b, 0, 0, 40, 10);
+    set_widget_region((ldBase_t *)&c, 0, 0, 40, 10);
+
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&a);
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&b);
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&c);
+
+    ldWindowSetFlexFlow(&root, LD_FLEX_FLOW_ROW_WRAP_REVERSE);
+    ldWindowSetFlexAlign(&root, ldFlexMainAlignStart, ldFlexCrossAlignStart);
+    ldWindowSetGap(&root, 5);
+
+    ldWindow_on_frame_start(NULL, &root);
+
+    assert(c.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 60);
+    assert(c.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 50);
+    assert(b.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 15);
+    assert(b.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 50);
+    assert(a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 60);
+    assert(a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 35);
+}
+
+static void test_flex_column_wrap_reverse_stacks_tracks_from_right(void)
+{
+    ldWindow_t root = {0};
+    ldLabel_t a = {0};
+    ldLabel_t b = {0};
+    ldLabel_t c = {0};
+
+    init_window_region(&root, 80, 60);
+    set_widget_region((ldBase_t *)&a, 0, 0, 30, 20);
+    set_widget_region((ldBase_t *)&b, 0, 0, 30, 20);
+    set_widget_region((ldBase_t *)&c, 0, 0, 30, 20);
+
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&a);
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&b);
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&c);
+
+    ldWindowSetFlexFlow(&root, LD_FLEX_FLOW_COLUMN_WRAP_REVERSE);
+    ldWindowSetFlexAlign(&root, ldFlexMainAlignStart, ldFlexCrossAlignStart);
+    ldWindowSetGap(&root, 5);
+
+    ldWindow_on_frame_start(NULL, &root);
+
+    assert(c.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 50);
+    assert(c.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 40);
+    assert(b.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 50);
+    assert(b.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 15);
+    assert(a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 15);
+    assert(a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 40);
+}
+
+static void test_hidden_and_ignore_layout_have_different_effects(void)
+{
+    ldWindow_t root = {0};
+    ldLabel_t visible = {0};
+    ldLabel_t hidden = {0};
+    ldLabel_t overlay = {0};
+
+    init_window_region(&root, 120, 40);
+    set_widget_region((ldBase_t *)&visible, 0, 0, 30, 10);
+    set_widget_region((ldBase_t *)&hidden, 10, 10, 30, 10);
+    set_widget_region((ldBase_t *)&overlay, 77, 11, 15, 15);
+
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&visible);
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&hidden);
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&overlay);
+
+    ldWindowSetFlexFlow(&root, ldFlexFlowRow);
+    ldWindowSetGap(&root, 5);
+    ldBaseSetHidden((ldBase_t *)&hidden, true);
+    ldBaseSetIgnoreLayout((ldBase_t *)&overlay, true);
+
+    ldWindow_on_frame_start(NULL, &root);
+
+    assert(visible.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 0);
+    assert(hidden.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX != 10);
+    assert(hidden.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY != 10);
+    assert(overlay.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 77);
+    assert(overlay.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 11);
+}
+
+#if defined(LDGUI_FLEX_API_CONTRACT)
+static void test_flex_track_align_centers_tracks_in_cross_axis(void)
+{
+    ldWindow_t root = {0};
+    ldLabel_t a = {0};
+    ldLabel_t b = {0};
+    ldLabel_t c = {0};
+
+    init_window_region(&root, 100, 70);
+    set_widget_region((ldBase_t *)&a, 0, 0, 40, 10);
+    set_widget_region((ldBase_t *)&b, 0, 0, 40, 10);
+    set_widget_region((ldBase_t *)&c, 0, 0, 40, 10);
+
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&a);
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&b);
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&c);
+
+    ldWindowSetFlexFlow(&root, LD_FLEX_FLOW_ROW_WRAP);
+    ldWindowSetFlexAlign(&root, ldFlexMainAlignStart, ldFlexCrossAlignStart);
+    ldWindowSetFlexTrackAlign(&root, LD_FLEX_TRACK_ALIGN_CENTER);
+    ldWindowSetGap(&root, 5);
+
+    ldWindow_on_frame_start(NULL, &root);
+
+    assert(a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 22);
+    assert(b.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 22);
+    assert(c.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 37);
+}
+
+static void test_flex_grow_distributes_remaining_main_size(void)
+{
+    ldWindow_t root = {0};
+    ldLabel_t a = {0};
+    ldLabel_t b = {0};
+
+    init_window_region(&root, 140, 40);
+    set_widget_region((ldBase_t *)&a, 0, 0, 20, 10);
+    set_widget_region((ldBase_t *)&b, 0, 0, 20, 10);
+
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&a);
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&b);
+
+    ldWindowSetFlexFlow(&root, ldFlexFlowRow);
+    ldWindowSetFlexAlign(&root, ldFlexMainAlignStart, ldFlexCrossAlignStart);
+    ldWindowSetGap(&root, 10);
+    ldBaseSetFlexGrow((ldBase_t *)&a, 1);
+    ldBaseSetFlexGrow((ldBase_t *)&b, 2);
+
+    ldWindow_on_frame_start(NULL, &root);
+
+    assert(a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iWidth == 50);
+    assert(b.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iWidth == 80);
+}
+
+static void test_flex_new_track_forces_wrapping_even_when_space_remains(void)
+{
+    ldWindow_t root = {0};
+    ldLabel_t a = {0};
+    ldLabel_t b = {0};
+    ldLabel_t c = {0};
+
+    init_window_region(&root, 120, 60);
+    set_widget_region((ldBase_t *)&a, 0, 0, 30, 10);
+    set_widget_region((ldBase_t *)&b, 0, 0, 30, 10);
+    set_widget_region((ldBase_t *)&c, 0, 0, 30, 10);
+
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&a);
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&b);
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&c);
+
+    ldWindowSetFlexFlow(&root, LD_FLEX_FLOW_ROW_WRAP);
+    ldWindowSetFlexAlign(&root, ldFlexMainAlignStart, ldFlexCrossAlignStart);
+    ldWindowSetGap(&root, 10);
+    ldBaseSetFlexNewTrack((ldBase_t *)&b, true);
+
+    ldWindow_on_frame_start(NULL, &root);
+
+    assert(a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 0);
+    assert(a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 0);
+    assert(b.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 0);
+    assert(b.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 20);
+    assert(c.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 40);
+    assert(c.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 20);
+}
+
+static void test_flex_ignore_layout_keeps_manual_coordinates_and_skips_slot(void)
+{
+    ldWindow_t root = {0};
+    ldLabel_t a = {0};
+    ldLabel_t overlay = {0};
+    ldLabel_t b = {0};
+
+    init_window_region(&root, 120, 40);
+    set_widget_region((ldBase_t *)&a, 0, 0, 30, 10);
+    set_widget_region((ldBase_t *)&overlay, 77, 11, 15, 15);
+    set_widget_region((ldBase_t *)&b, 0, 0, 30, 10);
+
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&a);
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&overlay);
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&b);
+
+    ldWindowSetFlexFlow(&root, ldFlexFlowRow);
+    ldWindowSetFlexAlign(&root, ldFlexMainAlignStart, ldFlexCrossAlignStart);
+    ldWindowSetGap(&root, 5);
+    ldBaseSetIgnoreLayout((ldBase_t *)&overlay, true);
+
+    ldWindow_on_frame_start(NULL, &root);
+
+    assert(a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 0);
+    assert(a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 0);
+    assert(overlay.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 77);
+    assert(overlay.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 11);
+    assert(b.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 35);
+    assert(b.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 0);
+}
+
+static void test_flex_child_metadata_setters_mark_parent_layout_dirty(void)
+{
+    ldWindow_t root = {0};
+    ldLabel_t child = {0};
+
+    init_window_region(&root, 80, 40);
+    root.layoutTpye = layoutFlex;
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&child);
+
+    root.isLayoutUpdate = false;
+    ldBaseSetFlexGrow((ldBase_t *)&child, 2);
+    assert(root.isLayoutUpdate == true);
+
+    root.isLayoutUpdate = false;
+    ldBaseSetFlexNewTrack((ldBase_t *)&child, true);
+    assert(root.isLayoutUpdate == true);
+
+    root.isLayoutUpdate = false;
+    ldBaseSetIgnoreLayout((ldBase_t *)&child, true);
+    assert(root.isLayoutUpdate == true);
+}
+#endif
+
 int main(void)
 {
     test_collect_direct_children_ignores_grandchildren();
@@ -425,10 +1452,29 @@ int main(void)
     test_flex_space_between_preserves_gap_when_space_available();
     test_flex_row_center_applies_gap_and_padding();
     test_flex_space_between_resolves_gap_from_remaining_space();
+    test_flex_space_around_resolves_outer_padding_and_gap();
+    test_flex_space_evenly_resolves_uniform_spacing();
     test_flex_setters_mark_window_dirty();
+    test_flex_extended_setters_mark_window_dirty();
     test_grid_setters_mark_window_dirty();
     test_flex_row_layout_skips_hidden_children_and_keeps_size();
     test_flex_column_layout_applies_main_and_cross_alignment();
+    test_flex_row_wrap_creates_second_track();
+    test_flex_column_wrap_creates_second_track();
+    test_flex_row_reverse_places_items_from_end();
+    test_flex_column_reverse_places_items_from_end();
+    test_flex_row_wrap_reverse_stacks_tracks_from_bottom();
+    test_flex_column_wrap_reverse_stacks_tracks_from_right();
+    test_flex_track_align_centers_tracks();
+    test_base_flex_child_setters_mark_parent_layout_dirty();
+    test_flex_grow_distributes_remaining_space_by_weight();
+    test_flex_grow_reset_restores_basis_size();
+    test_flex_wrap_and_grow_expand_last_track_without_overflow();
+    test_flex_min_size_hook_affects_wrap_capacity();
+    test_flex_max_size_hook_caps_grow_without_overflow();
+    test_flex_new_track_forces_wrap_before_capacity_runs_out();
+    test_flex_ignore_layout_keeps_manual_position_and_skips_slot();
+    test_hidden_and_ignore_layout_have_different_effects();
     test_grid_layout_places_visible_children_row_first();
     return 0;
 }

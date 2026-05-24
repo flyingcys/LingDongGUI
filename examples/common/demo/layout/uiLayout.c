@@ -49,6 +49,10 @@ enum {
     ID_LAYOUT_FLEX_ROW_B_LABEL = 243,
     ID_LAYOUT_FLEX_ROW_C = 244,
     ID_LAYOUT_FLEX_ROW_C_LABEL = 245,
+    ID_LAYOUT_FLEX_ROW_D = 246,
+    ID_LAYOUT_FLEX_ROW_D_LABEL = 247,
+    ID_LAYOUT_FLEX_ROW_E = 248,
+    ID_LAYOUT_FLEX_ROW_E_LABEL = 249,
 
     ID_LAYOUT_FLEX_COLUMN_A = 260,
     ID_LAYOUT_FLEX_COLUMN_A_LABEL = 261,
@@ -56,6 +60,8 @@ enum {
     ID_LAYOUT_FLEX_COLUMN_B_LABEL = 263,
     ID_LAYOUT_FLEX_COLUMN_C = 264,
     ID_LAYOUT_FLEX_COLUMN_C_LABEL = 265,
+    ID_LAYOUT_FLEX_COLUMN_D = 266,
+    ID_LAYOUT_FLEX_COLUMN_D_LABEL = 267,
 
     ID_GRID_BG = 1000,
     ID_GRID_PAGE_TITLE = 1001,
@@ -207,37 +213,45 @@ void uiLayoutInit(ld_scene_t *ptScene)
     ldLabelSetAlign(obj, ARM_2D_ALIGN_LEFT);
 
     obj = ldLabelInit(ID_LAYOUT_PAGE_HINT, ID_LAYOUT_BG, 12, 24, 456, 12, FONT_ARIAL_12);
-    ldLabelSetText(obj, (uint8_t *)"Legacy layout keeps hidden slots; flex reflows visible children and resizes every 1200ms.");
+    ldLabelSetText(obj, (uint8_t *)"Top row now shows row-wrap/new-track and column-grow/ignore-layout; left panel narrows every 1200ms.");
     ldLabelSetTextColor(obj, __RGB(82, 86, 92));
     ldLabelSetAlign(obj, ARM_2D_ALIGN_LEFT);
 
     obj = ldWindowInit(ID_LAYOUT_FLEX_ROW, ID_LAYOUT_BG, 12, 40, 220, 80);
     ldWindowSetColor(obj, __RGB(240, 240, 240));
-    ldWindowSetFlexFlow(obj, ldFlexFlowRow);
+    ldWindowSetFlexFlow(obj, ldFlexFlowRowWrap);
     ldWindowSetPadding(obj, (ldPadding_t){ .left = 8, .top = 8, .right = 8, .bottom = 8 });
-    ldWindowSetGap(obj, 10);
-    ldWindowSetFlexAlign(obj, ldFlexMainAlignCenter, ldFlexCrossAlignCenter);
+    ldWindowSetFlexGap(obj, 6, 4);
+    ldWindowSetFlexAlign(obj, ldFlexMainAlignStart, ldFlexCrossAlignCenter);
+    ldWindowSetFlexTrackAlign(obj, ldFlexTrackAlignCenter);
 
-    uiLayoutCreateCard(ptScene, ID_LAYOUT_FLEX_ROW_A, ID_LAYOUT_FLEX_ROW_A_LABEL, ID_LAYOUT_FLEX_ROW, 52, 26, __RGB(224, 122, 95), "A");
-    uiLayoutCreateCard(ptScene, ID_LAYOUT_FLEX_ROW_B, ID_LAYOUT_FLEX_ROW_B_LABEL, ID_LAYOUT_FLEX_ROW, 52, 26, __RGB(69, 123, 157), "B");
-    uiLayoutCreateCard(ptScene, ID_LAYOUT_FLEX_ROW_C, ID_LAYOUT_FLEX_ROW_C_LABEL, ID_LAYOUT_FLEX_ROW, 52, 26, __RGB(129, 178, 154), "C");
-    ldBaseSetHidden((ldBase_t *)ldBaseGetWidget(ptScene->ptNodeRoot, ID_LAYOUT_FLEX_ROW_B), true);
+    uiLayoutCreateCard(ptScene, ID_LAYOUT_FLEX_ROW_A, ID_LAYOUT_FLEX_ROW_A_LABEL, ID_LAYOUT_FLEX_ROW, 64, 14, __RGB(224, 122, 95), "A");
+    uiLayoutCreateCard(ptScene, ID_LAYOUT_FLEX_ROW_B, ID_LAYOUT_FLEX_ROW_B_LABEL, ID_LAYOUT_FLEX_ROW, 58, 14, __RGB(69, 123, 157), "B");
+    uiLayoutCreateCard(ptScene, ID_LAYOUT_FLEX_ROW_C, ID_LAYOUT_FLEX_ROW_C_LABEL, ID_LAYOUT_FLEX_ROW, 52, 14, __RGB(129, 178, 154), "C");
+    uiLayoutCreateCard(ptScene, ID_LAYOUT_FLEX_ROW_D, ID_LAYOUT_FLEX_ROW_D_LABEL, ID_LAYOUT_FLEX_ROW, 60, 14, __RGB(38, 70, 83), "D*");
+    uiLayoutCreateCard(ptScene, ID_LAYOUT_FLEX_ROW_E, ID_LAYOUT_FLEX_ROW_E_LABEL, ID_LAYOUT_FLEX_ROW, 48, 14, __RGB(244, 162, 97), "E");
+    ldBaseSetFlexNewTrack((ldBase_t *)ldBaseGetWidget(ptScene->ptNodeRoot, ID_LAYOUT_FLEX_ROW_D), true);
 
     obj = ldWindowInit(ID_LAYOUT_FLEX_COLUMN, ID_LAYOUT_BG, 248, 40, 220, 80);
     ldWindowSetColor(obj, __RGB(236, 240, 232));
     ldWindowSetFlexFlow(obj, ldFlexFlowColumn);
     ldWindowSetPadding(obj, (ldPadding_t){ .left = 10, .top = 8, .right = 10, .bottom = 8 });
-    ldWindowSetGap(obj, 8);
-    ldWindowSetFlexAlign(obj, ldFlexMainAlignEnd, ldFlexCrossAlignCenter);
+    ldWindowSetGap(obj, 4);
+    ldWindowSetFlexAlign(obj, ldFlexMainAlignStart, ldFlexCrossAlignCenter);
 
-    uiLayoutCreateCard(ptScene, ID_LAYOUT_FLEX_COLUMN_A, ID_LAYOUT_FLEX_COLUMN_A_LABEL, ID_LAYOUT_FLEX_COLUMN, 76, 16, __RGB(231, 111, 81), "wide");
-    uiLayoutCreateCard(ptScene, ID_LAYOUT_FLEX_COLUMN_B, ID_LAYOUT_FLEX_COLUMN_B_LABEL, ID_LAYOUT_FLEX_COLUMN, 56, 16, __RGB(42, 157, 143), "mid");
-    uiLayoutCreateCard(ptScene, ID_LAYOUT_FLEX_COLUMN_C, ID_LAYOUT_FLEX_COLUMN_C_LABEL, ID_LAYOUT_FLEX_COLUMN, 40, 16, __RGB(38, 70, 83), "thin");
+    uiLayoutCreateCard(ptScene, ID_LAYOUT_FLEX_COLUMN_A, ID_LAYOUT_FLEX_COLUMN_A_LABEL, ID_LAYOUT_FLEX_COLUMN, 68, 10, __RGB(231, 111, 81), "top");
+    uiLayoutCreateCard(ptScene, ID_LAYOUT_FLEX_COLUMN_B, ID_LAYOUT_FLEX_COLUMN_B_LABEL, ID_LAYOUT_FLEX_COLUMN, 72, 10, __RGB(42, 157, 143), "1x");
+    uiLayoutCreateCard(ptScene, ID_LAYOUT_FLEX_COLUMN_C, ID_LAYOUT_FLEX_COLUMN_C_LABEL, ID_LAYOUT_FLEX_COLUMN, 82, 10, __RGB(38, 70, 83), "2x");
+    uiLayoutCreateCard(ptScene, ID_LAYOUT_FLEX_COLUMN_D, ID_LAYOUT_FLEX_COLUMN_D_LABEL, ID_LAYOUT_FLEX_COLUMN, 54, 16, __RGB(87, 117, 144), "free");
+    ldBaseSetFlexGrow((ldBase_t *)ldBaseGetWidget(ptScene->ptNodeRoot, ID_LAYOUT_FLEX_COLUMN_B), 1);
+    ldBaseSetFlexGrow((ldBase_t *)ldBaseGetWidget(ptScene->ptNodeRoot, ID_LAYOUT_FLEX_COLUMN_C), 2);
+    ldBaseSetIgnoreLayout((ldBase_t *)ldBaseGetWidget(ptScene->ptNodeRoot, ID_LAYOUT_FLEX_COLUMN_D), true);
+    ldBaseMove((ldBase_t *)ldBaseGetWidget(ptScene->ptNodeRoot, ID_LAYOUT_FLEX_COLUMN_D), 142, 50);
 
-    uiLayoutCreateInfoLabel(ptScene, ID_LAYOUT_FLEX_ROW_TITLE, 12, 122, 220, GLCD_COLOR_BLACK, "Flex row");
-    uiLayoutCreateInfoLabel(ptScene, ID_LAYOUT_FLEX_ROW_HINT, 12, 136, 220, __RGB(82, 86, 92), "B hidden: A and C close up");
+    uiLayoutCreateInfoLabel(ptScene, ID_LAYOUT_FLEX_ROW_TITLE, 12, 122, 220, GLCD_COLOR_BLACK, "Flex wrap");
+    uiLayoutCreateInfoLabel(ptScene, ID_LAYOUT_FLEX_ROW_HINT, 12, 136, 220, __RGB(82, 86, 92), "D* forces next track; compact width adds row 3");
     uiLayoutCreateInfoLabel(ptScene, ID_LAYOUT_FLEX_COLUMN_TITLE, 248, 122, 220, GLCD_COLOR_BLACK, "Flex column");
-    uiLayoutCreateInfoLabel(ptScene, ID_LAYOUT_FLEX_COLUMN_HINT, 248, 136, 220, __RGB(82, 86, 92), "column + end-center align");
+    uiLayoutCreateInfoLabel(ptScene, ID_LAYOUT_FLEX_COLUMN_HINT, 248, 136, 220, __RGB(82, 86, 92), "center cross-align; 1x/2x grows; 'free' ignores layout");
 
     obj = ldWindowInit(ID_LAYOUT_LEGACY, ID_LAYOUT_BG, 12, 150, 220, 88);
     ldWindowSetColor(obj, __RGB(232, 236, 242));
@@ -285,8 +299,8 @@ void uiLayoutLoop(ld_scene_t *ptScene)
     }
 
     s_layout_compact = !s_layout_compact;
-    ldBaseSetWidth((ldBase_t *)ptFlexRow, s_layout_compact ? 180 : 220);
-    ldWindowSetGap(ptFlexRow, 10);
+    ldBaseSetWidth((ldBase_t *)ptFlexRow, s_layout_compact ? 170 : 220);
+    ldWindowSetFlexGap(ptFlexRow, 6, 4);
 }
 
 void uiLayoutQuit(ld_scene_t *ptScene)

@@ -497,6 +497,17 @@ static void _ldBaseMove(ldBase_t* ptWidget,int16_t x,int16_t y)
                                     &ptWidget->tTempRegion);
 }
 
+static void ldBaseSyncFlexBasisSize(ldBase_t *ptWidget)
+{
+    if (ptWidget == NULL)
+    {
+        return;
+    }
+
+    ptWidget->flexBasisSize = ptWidget->use_as__arm_2d_control_node_t.tRegion.tSize;
+    ptWidget->hasFlexBasisSize = true;
+}
+
 void ldBaseSetHidden(ldBase_t* ptWidget,bool isHidden)
 {
     assert(NULL != ptWidget);
@@ -1228,6 +1239,7 @@ void ldBaseResize(ldBase_t* ptWidget,arm_2d_size_t size)
     ptWidget->isDirtyRegionUpdate = true;
     ptWidget->tTempRegion=ptWidget->use_as__arm_2d_control_node_t.tRegion;
     ptWidget->use_as__arm_2d_control_node_t.tRegion.tSize=size;
+    ldBaseSyncFlexBasisSize(ptWidget);
     ldBaseRegionGetMinimalEnclosure(&ptWidget->tTempRegion,
                                     &ptWidget->use_as__arm_2d_control_node_t.tRegion,
                                     &ptWidget->tTempRegion);
@@ -1276,6 +1288,7 @@ void ldBaseSetWidth(ldBase_t* ptWidget,int16_t width)
     ptWidget->isDirtyRegionUpdate = true;
     ptWidget->tTempRegion=ptWidget->use_as__arm_2d_control_node_t.tRegion;
     ptWidget->use_as__arm_2d_control_node_t.tRegion.tSize.iWidth=width;
+    ldBaseSyncFlexBasisSize(ptWidget);
     ldBaseRegionGetMinimalEnclosure(&ptWidget->tTempRegion,
                                     &ptWidget->use_as__arm_2d_control_node_t.tRegion,
                                     &ptWidget->tTempRegion);
@@ -1292,9 +1305,61 @@ void ldBaseSetHeight(ldBase_t* ptWidget,int16_t height)
     ptWidget->isDirtyRegionUpdate = true;
     ptWidget->tTempRegion=ptWidget->use_as__arm_2d_control_node_t.tRegion;
     ptWidget->use_as__arm_2d_control_node_t.tRegion.tSize.iHeight=height;
+    ldBaseSyncFlexBasisSize(ptWidget);
     ldBaseRegionGetMinimalEnclosure(&ptWidget->tTempRegion,
                                     &ptWidget->use_as__arm_2d_control_node_t.tRegion,
                                     &ptWidget->tTempRegion);
+    ldBaseMarkParentLayoutDirty(ptWidget);
+}
+
+void ldBaseSetFlexGrow(ldBase_t *ptWidget, uint16_t flexGrow)
+{
+    assert(NULL != ptWidget);
+    if (ptWidget == NULL)
+    {
+        return;
+    }
+    if (ptWidget->flexGrow == flexGrow)
+    {
+        return;
+    }
+
+    ptWidget->flexGrow = flexGrow;
+    ptWidget->isDirtyRegionUpdate = true;
+    ldBaseMarkParentLayoutDirty(ptWidget);
+}
+
+void ldBaseSetFlexNewTrack(ldBase_t *ptWidget, bool flexInNewTrack)
+{
+    assert(NULL != ptWidget);
+    if (ptWidget == NULL)
+    {
+        return;
+    }
+    if (ptWidget->flexInNewTrack == flexInNewTrack)
+    {
+        return;
+    }
+
+    ptWidget->flexInNewTrack = flexInNewTrack;
+    ptWidget->isDirtyRegionUpdate = true;
+    ldBaseMarkParentLayoutDirty(ptWidget);
+}
+
+void ldBaseSetIgnoreLayout(ldBase_t *ptWidget, bool ignoreLayout)
+{
+    assert(NULL != ptWidget);
+    if (ptWidget == NULL)
+    {
+        return;
+    }
+    if (ptWidget->ignoreLayout == ignoreLayout)
+    {
+        return;
+    }
+
+    ptWidget->ignoreLayout = ignoreLayout;
+    ptWidget->isDirtyRegionUpdate = true;
     ldBaseMarkParentLayoutDirty(ptWidget);
 }
 
@@ -1308,6 +1373,7 @@ void ldBaseSetRegion(ldBase_t* ptWidget,arm_2d_region_t region)
     ptWidget->isDirtyRegionUpdate = true;
     ptWidget->tTempRegion=ptWidget->use_as__arm_2d_control_node_t.tRegion;
     ptWidget->use_as__arm_2d_control_node_t.tRegion=region;
+    ldBaseSyncFlexBasisSize(ptWidget);
     ldBaseRegionGetMinimalEnclosure(&ptWidget->tTempRegion,
                                     &ptWidget->use_as__arm_2d_control_node_t.tRegion,
                                     &ptWidget->tTempRegion);

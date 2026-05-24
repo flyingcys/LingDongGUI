@@ -8,7 +8,7 @@
 
 LingDongGUI 当前 flex 已经不是空白，而是：
 
-**最小一维 flex 已接进正式运行链路。**
+**最小一维 flex 已接进正式运行链路；第一轮多轨 flex 核心能力已补进主线。**
 
 它已经能做：
 
@@ -19,19 +19,24 @@ LingDongGUI 当前 flex 已经不是空白，而是：
 - hidden child 跳过
 - child / parent 改动后下一帧重排
 
-但它和 LVGL 用户视角里的 flex，仍然差了一整层关键语义：
+截至本轮代码补齐后，下面这些语义已经进入主线：
 
-- wrap
-- reverse
-- 多 track
-- track align
-- grow
-- new track
-- ignore layout
+- row / column / row_wrap / column_wrap / row_reverse / column_reverse / row_wrap_reverse / column_wrap_reverse
+- main align 的 start / center / end / space-between / space-around / space-evenly
+- track align（align-content 的最小等价能力）
+- item gap / track gap 拆分，并保留 `ldWindowSetGap()` 兼容入口
+- child `grow / new track / ignore layout`
+- host-side flex 测试与 `CMake` 接线
+
+但它和 LVGL 用户视角里的 flex，仍然还有一层延期语义：
+
 - RTL
-- gap 的 row/column 细分
+- margin
+- percent translate / percent size
+- content-size 容器联动
+- 更完整的 min/max clamp 与内容驱动尺寸
 
-所以这轮 flex 的重点，不是“再加几个枚举名字”，而是把模型从“单轨一维排队”升级到“多轨 flex 容器”。
+所以这轮 flex 的重点，不是“再加几个枚举名字”，而是把模型从“单轨一维排队”升级到“多轨 flex 容器”。这一步已经完成，后续剩余工作主要是继续把 LVGL 的边缘语义补齐。
 
 ---
 
@@ -43,48 +48,59 @@ LingDongGUI 当前 flex 已经不是空白，而是：
 
 - `ldWindowSetFlexFlow`
 - `ldWindowSetFlexAlign`
+- `ldWindowSetFlexTrackAlign`
 - `ldWindowSetPadding`
+- `ldWindowSetFlexGap`
 - `ldWindowSetGap`
+- `ldBaseSetFlexGrow`
+- `ldBaseSetFlexNewTrack`
+- `ldBaseSetIgnoreLayout`
 
 只要调用 `ldWindowSetFlexFlow()`，容器就会自动切到 `layoutFlex`。
 
 ### 2.2 当前容器侧数据模型
 
-当前 `ldWindow_t` 对 flex 只保存：
+当前 `ldWindow_t` 对 flex 保存：
 
 - `flexFlow`
 - `flexMainAlign`
 - `flexCrossAlign`
+- `flexTrackAlign`
 - `flexPadding`
-- `flexGap`
+- `flexItemGap`
+- `flexTrackGap`
 
-这说明当前实现明确是：
+当前 `ldBase_t` 额外保存：
 
-- 容器有少量 flex 配置
-- child 自身没有任何 flex 元数据
+- `flexGrow`
+- `flexInNewTrack`
+- `ignoreLayout`
+
+这说明当前实现已经不再是纯容器侧语义，而是：
+
+- 容器有 flow / align / gap / track 配置
+- child 有最小 flex 元数据
 
 ### 2.3 当前排布算法在做什么
 
 当前 `ldWindowApplyFlexLayout()` 的逻辑大意是：
 
 1. 收集直属可见 child
-2. 计算 inner box
-3. 累加主轴内容长度
-4. 按主轴对齐算起点
-5. 按交叉轴对齐算每个 child 的 cross 位置
-6. 重写 child 位置
+2. 跳过 `ignoreLayout` child，但保留它们的手工位置
+3. 按 flow + wrap + reverse 把 child 分成 track
+4. 先算 track gap / track align，再在每个 track 内算主轴对齐
+5. 对 grow child 分配剩余主轴空间
+6. 对 `new track` child 强制断轨
+7. 重写参与布局 child 的位置与主轴尺寸
 
-它**不会**做这些事：
+它**现在仍不会**做这些事：
 
-- 不分 track
-- 不 wrap
-- 不 reverse
-- 不 grow
-- 不改 child 尺寸
-- 不看 margin / min / max / percent
-- 不看 child 级 flex 属性
+- 不做 RTL
+- 不看 margin / percent translate / percent size
+- 不支持 content-size 容器联动
+- 不做完整的 min/max 约束闭环
 
-所以当前 flex 本质是“单轨一维定位器”。
+所以当前 flex 已经从“单轨一维定位器”升级成“多轨 flex 容器的第一轮主线版”。
 
 ### 2.4 当前 dirty / 重排基础设施
 
@@ -109,14 +125,28 @@ LingDongGUI 当前 flex 已经不是空白，而是：
 - setter 标脏
 - row hidden reflow
 - column 对齐
+- row / column wrap
+- row / column reverse
+- row_wrap_reverse / column_wrap_reverse
+- track align
+- grow
+- new track
+- ignore layout
+- hidden vs ignore-layout 差异
+- wrap + grow 组合
+- child flex setter 回标父布局
 
-当前 demo 已覆盖：
+当前 demo 已升级覆盖：
 
-- flex row
-- flex column
-- gap / padding
-- hidden reflow
+- row / column 基础流
+- row_wrap + track align
+- align（cross center / track center）
+- grow 权重分配
+- new track
+- ignore-layout overlay
 - 容器宽度变化后重新布局
+
+这说明当前代码主线已经追上文档第一阶段 / 第二阶段，demo 也开始承接第一轮能力面；剩余缺口主要是更完整的 row / column 基础流展示、RTL、以及更细的尺寸联动边界。
 
 这说明 flex 已经“跑进了主线”，但还没有形成 LVGL 那样的能力面与验证面。
 
@@ -157,97 +187,87 @@ LVGL flex 的用户心智，至少包含下面几层：
 
 ## 4. 当前与 LVGL 的关键差距
 
-## 4.1 flow 只完成 2/8
+## 4.1 flow 基本盘已补齐，剩余问题转到更细语义
 
-LingDongGUI 当前只有：
+LingDongGUI 当前已经覆盖：
 
-- row
-- column
+- row / column
+- row_wrap / column_wrap
+- row_reverse / column_reverse
+- row_wrap_reverse / column_wrap_reverse
 
-缺失：
+因此这一层不再是“当前缺失项”，而是本轮已经落地主线的能力。对比 LVGL，flow 维度的主要剩余差距已经不在枚举覆盖面，而在：
 
-- row_wrap
-- column_wrap
-- row_reverse
-- column_reverse
-- row_wrap_reverse
-- column_wrap_reverse
+- RTL 下 start / end 与 reverse 的方向语义
+- wrap 后与 percent / content-size / min/max 叠加时的边界稳定性
 
-这不是“高级特性”，而是 LVGL flex 的基本使用面。
+也就是说，LingDongGUI 现在已经能承接典型 tag / chip / toolbar 这类多行流式布局；后续需要继续补的是更细的方向和尺寸联动语义。
 
-只支持 row / column 的结果是：
+## 4.2 track 骨架已落地，剩余是更完整的边缘语义
 
-- 一旦 child 放不下，LingDongGUI flex 就只能溢出或让用户自己再套容器
-- 典型 tag / chip / toolbar / dashboard 流式布局做不出来
+本轮之后，LingDongGUI 已经不是“只有一条主轴”的状态。当前实现已经会：
 
-## 4.2 没有 track 概念
+- 先按 flow / wrap / reverse 分 track
+- 在多 track 场景里处理 track gap
+- 通过 `ldWindowSetFlexTrackAlign()` 控制多 track 的整体分布
+- 让 `new track` 在 wrap 模式下强制断轨
 
-这是当前 flex 最大的结构性缺口。
+因此 track 本身不再是结构性缺口；真正还欠缺的是：
 
-LVGL flex 内部是“先分 track，再排 child”。  
-LingDongGUI 当前只有一条主轴，没有轨道这个中间层。
+- RTL 参与后的 track 排列方向
+- track 与更复杂尺寸约束叠加时的稳定性
+- 更完整的 demo/教程呈现，而不是能力本身缺位
 
-后果是：
+换句话说，这一层已经从“做不了”转成“已能工作，但离 LVGL 的成熟边角还差一些”。
 
-- wrap 做不了
-- track align 做不了
-- new track 做不了
-- reverse 也只能很难看地打补丁
+## 4.3 align 主能力已到位，剩余差距集中在方向/尺寸联动
 
-如果继续在当前单 for-loop 上堆功能，后面会越修越乱。
+当前 LingDongGUI 已支持：
 
-## 4.3 align 只完成一半
+- 主轴 `start / center / end / space-between / space-around / space-evenly`
+- 交叉轴 `start / center / end`
+- 多 track 的 `track align`
 
-当前 LingDongGUI 主轴支持：
+所以“align 只完成一半”这句已经过期。对齐层当前与 LVGL 的真实差距，主要是：
 
-- start
-- center
-- end
-- space-between
+- RTL 参与后 start / end 的镜像语义
+- 当 grow、wrap、content-size、percent 等语义叠加时的尺寸分配细节
 
-交叉轴支持：
+就第一轮 flex 主线而言，用户已经可以控制多 track 的整体对齐，不再是完全无能为力。
 
-- start
-- center
-- end
+## 4.4 grow 已进入主线，但尺寸约束能力仍偏薄
 
-但缺失：
+当前 LingDongGUI 已经不只是改位置，也会在主轴存在剩余空间时按权重分配给 child。
 
-- `space-evenly`
-- `space-around`
-- track cross align（相当于 LVGL 的 `align-content`）
-
-这会让用户在做“多个 track 的整体对齐”时完全无能为力。
-
-## 4.4 没有 grow
-
-当前 LingDongGUI flex 只改 child 位置，不改 child 尺寸。  
-而 LVGL 的 `grow` 会把主轴剩余空间按权重分配给 child。
-
-没有 grow，用户就做不了这些非常典型的界面：
+这意味着下面这些典型界面已经进入可实现范围：
 
 - 一个按钮占剩余宽度
-- 左边固定、右边自适应拉伸
+- 左边固定、右边按剩余空间拉伸
 - 多个 child 按比例分配空间
 
-所以 grow 不是“锦上添花”，而是 flex 走向可用的重要分界线。
+因此 `grow` 本身不再是缺项；真正仍需记账的是它和更成熟尺寸系统之间的差距，例如：
 
-## 4.5 没有 child 级 `new track` / `ignore layout`
+- absolute `min/max` clamp hook 已接入 flex 尺寸路径，但还没有形成 LVGL 那种完整约束闭环
+- margin / percent / content-size 还未接入 grow 的计算语义
 
-LVGL child 可以：
+所以现在更准确的说法是：grow 已可用，但还没达到 LVGL 那种成熟的尺寸联动层级。
 
-- 强制从新 track 开始
-- 完全跳出 flex 排版但继续显示
+## 4.5 child 级 `new track` / `ignore layout` 已补齐第一轮主线
 
-LingDongGUI 当前 child 除了 hidden 之外，没有别的参与语义。  
-这会影响很多真实 UI：
+当前 LingDongGUI child 已经具备最小 flex 元数据，至少包括：
+
+- `new track`：在 wrap 模式下强制从新 track 开始
+- `ignore layout`：继续显示，但不参与 flex 槽位分配
+- `grow`：按主轴剩余空间做比例扩展
+
+这意味着下面这些真实 UI 已经有落点：
 
 - badge / overlay
 - 漂浮提示
 - 某个 item 强制换行
 - 某个 child 保持绝对定位但又挂在 flex 容器下
 
-如果不补 child 元数据，LingDongGUI flex 永远只是“容器排队器”。
+因此 child 语义这一层也不再是“完全没有”；剩余差距主要在更完整的尺寸、方向与高级约束系统，而不是最小 flex 元数据缺位。
 
 ## 4.6 没有 RTL 方向语义
 
@@ -271,15 +291,19 @@ LingDongGUI 当前只看 `tRegion.tSize` 的裸宽高。
 - 稍微复杂一点的响应式布局就不自然
 - grow 一旦引入，若没有最小尺寸联动，很容易假对齐或溢出
 
-## 4.8 gap 语义还不够细
+## 4.8 gap 语义已拆分，剩余是接口成熟度问题
 
-LingDongGUI 当前只有一个 `flexGap`。  
-LVGL 则区分：
+LingDongGUI 当前已经区分：
 
-- row gap
-- column gap
+- item gap
+- track gap
 
-一旦进入 wrap，多 track 情况下，这个差异会立刻放大。
+并保留 `ldWindowSetGap()` 作为兼容入口，所以“只有一个 `flexGap`”这句也已经过期。和 LVGL 相比，这一层剩余差距更多在：
+
+- 旧兼容接口与新语义并存时的说明清晰度
+- 更复杂布局场景下如何把 gap 与 percent/content-size/min-max 一起讲清楚
+
+也就是说，gap 本身已不是缺实现，而是文档表达和边界说明还可以继续收口。
 
 ---
 
@@ -287,10 +311,10 @@ LVGL 则区分：
 
 这轮不做上层抽象，flex 的合理目标应收敛成：
 
-1. 容器支持完整 flow 基本盘
+1. 容器已支持完整 flow 基本盘
 2. 内部从单轨算法升级成多 track 算法
 3. child 具备最小 flex 元数据
-4. grow / new track / ignore layout 进入主线能力
+4. grow / new track / ignore layout 已进入主线能力
 5. 补齐 flex 行为测试矩阵和 demo 场景
 
 只要做到这 5 条，LingDongGUI flex 就会从“最小演示版”进入“可用于真实 UI 组织”的阶段。

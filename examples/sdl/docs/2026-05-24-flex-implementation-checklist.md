@@ -61,28 +61,28 @@
 
 ### 步骤
 
-- [ ] 扩 `ldFlexFlow_t`
+- [x] 扩 `ldFlexFlow_t`
   - 至少补 `row_wrap`
   - 至少补 `column_wrap`
   - 至少补 `row_reverse`
   - 至少补 `column_reverse`
   - 若一次到位，可直接按 8 种 flow 设计
-- [ ] 扩主轴对齐枚举
+- [x] 扩主轴对齐枚举
   - 增加 `space-evenly`
   - 增加 `space-around`
-- [ ] 增加 track 对齐枚举
+- [x] 增加 track 对齐枚举
   - 相当于多轨情形下的 `align-content`
-- [ ] 拆分 gap 语义
+- [x] 拆分 gap 语义
   - `item gap`
   - `track gap`
-- [ ] 保持旧 `ldWindowSetGap()` 作为兼容入口
+- [x] 保持旧 `ldWindowSetGap()` 作为兼容入口
   - 若内部拆分 gap，旧接口至少要有可解释映射
 
 ### 验证
 
-- [ ] 编译通过
-- [ ] 旧 row / column demo 不回归
-- [ ] setter host-side 测试补齐
+- [x] 编译通过
+- [x] 旧 row / column demo 不回归
+- [x] setter host-side 测试补齐
 
 ## A2. 重写为多 track 算法骨架
 
@@ -92,24 +92,24 @@
 
 ### 步骤
 
-- [ ] 审视当前 `ldWindowApplyFlexLayout()` 单轨算法
-- [ ] 在内部 helper 中拆出 track 计算
+- [x] 审视当前 `ldWindowApplyFlexLayout()` 单轨算法
+- [x] 在内部 helper 中拆出 track 计算
   - `find_track_end`
   - `repos_track_items`
   - `place_track_content`
-- [ ] 让容器先分 track
-- [ ] 再让每个 track 内单独排 child
-- [ ] reverse / wrap / track align 都建立在这套骨架上
-- [ ] 为 grow 预留挂点
+- [x] 让容器先分 track
+- [x] 再让每个 track 内单独排 child
+- [x] reverse / wrap / track align 都建立在这套骨架上
+- [x] 为 grow 预留挂点
   - 即便 A2 阶段先不做 grow，也不要写死成“永不改尺寸”
 
 ### 验证
 
-- [ ] host-side 测试：row_wrap
-- [ ] host-side 测试：column_wrap
-- [ ] host-side 测试：row_reverse
-- [ ] host-side 测试：column_reverse
-- [ ] host-side 测试：track align
+- [x] host-side 测试：row_wrap
+- [x] host-side 测试：column_wrap
+- [x] host-side 测试：row_reverse
+- [x] host-side 测试：column_reverse
+- [x] host-side 测试：track align
 
 ## A3. 容器级语义先形成最小 demo / test 基线
 
@@ -119,8 +119,8 @@
 
 ### 步骤
 
-- [ ] 在测试中形成 flow 子矩阵
-- [ ] 在 demo 中至少增加
+- [x] 在测试中形成 flow 子矩阵
+- [x] 在 demo 中至少增加
   - flow 示例
   - align 示例
   - wrap 示例
@@ -138,20 +138,20 @@
 
 ### 步骤
 
-- [ ] 在 `src/gui/ldBase.h` 增加最小字段
+- [x] 在 `src/gui/ldBase.h` 增加最小字段
   - `flexGrow`
   - `flexInNewTrack`
   - `ignoreLayout`
-- [ ] 新增 `ldBaseSetFlexGrow()`
-- [ ] 新增 `ldBaseSetFlexNewTrack()`
-- [ ] 新增 `ldBaseSetIgnoreLayout()`
-- [ ] 所有 setter 触发父容器 layout dirty
+- [x] 新增 `ldBaseSetFlexGrow()`
+- [x] 新增 `ldBaseSetFlexNewTrack()`
+- [x] 新增 `ldBaseSetIgnoreLayout()`
+- [x] 所有 setter 触发父容器 layout dirty
 
 ### 验证
 
-- [ ] host-side 测试：`SetFlexGrow()` 回标父布局
-- [ ] host-side 测试：`SetFlexNewTrack()` 回标父布局
-- [ ] host-side 测试：`SetIgnoreLayout()` 回标父布局
+- [x] host-side 测试：`SetFlexGrow()` 回标父布局
+- [x] host-side 测试：`SetFlexNewTrack()` 回标父布局
+- [x] host-side 测试：`SetIgnoreLayout()` 回标父布局
 
 ## B2. 实现 grow / new track / ignore layout
 
@@ -161,26 +161,26 @@
 
 ### 步骤
 
-- [ ] `grow`
+- [x] `grow`
   - 按剩余主轴空间按权重分配
   - 真正修改 child 主轴尺寸
-- [ ] `new track`
+- [x] `new track`
   - 仅在 wrap 模式生效
   - 被标记 child 强制成为新轨起点
-- [ ] `ignore layout`
+- [x] `ignore layout`
   - child 保持可见
   - 但不参与 flex 槽位分配
   - 保持手工定位
-- [ ] 明确 hidden 与 ignore-layout 的区别
+- [x] 明确 hidden 与 ignore-layout 的区别
   - hidden：不显示
   - ignore-layout：显示，但不参与布局
 
 ### 验证
 
-- [ ] host-side 测试：两个 grow child 按权重 1:2 分配
-- [ ] host-side 测试：new track 确实强制换轨
-- [ ] host-side 测试：ignore-layout child 不占 flex 槽位
-- [ ] host-side 测试：hidden 与 ignore-layout 行为不同
+- [x] host-side 测试：两个 grow child 按权重 1:2 分配
+- [x] host-side 测试：new track 确实强制换轨
+- [x] host-side 测试：ignore-layout child 不占 flex 槽位
+- [x] host-side 测试：hidden 与 ignore-layout 行为不同
 
 ## B3. 最小尺寸联动闭环
 
@@ -190,16 +190,16 @@
 
 ### 步骤
 
-- [ ] grow 以前，明确 child base size 取值
-- [ ] wrap 计算时把 gap 算进剩余空间
-- [ ] 为 min/max 预留挂点
+- [x] grow 以前，明确 child base size 取值
+- [x] wrap 计算时把 gap 算进剩余空间
+- [x] 为 min/max 预留挂点
   - 即便第一轮只支持绝对值，也要把扩展点留好
-- [ ] 若本轮不做 margin / pct / content-size，必须在文档中明确记账
+- [x] 若本轮不做 margin / pct / content-size，必须在文档中明确记账
 
 ### 验证
 
-- [ ] host-side 测试：grow 后不超过容器主轴空间
-- [ ] host-side 测试：wrap 与 grow 组合时不出错
+- [x] host-side 测试：grow 后不超过容器主轴空间
+- [x] host-side 测试：wrap 与 grow 组合时不出错
 
 ---
 
@@ -209,16 +209,16 @@
 
 ### 最少补齐的用例
 
-- [ ] flow 子集或全量 flow
-- [ ] main align 全枚举
-- [ ] track align
-- [ ] hidden child
-- [ ] wrap
-- [ ] reverse
-- [ ] grow
-- [ ] new track
-- [ ] ignore layout
-- [ ] child 属性变化导致父布局重排
+- [x] flow 子集或全量 flow
+- [x] main align 全枚举
+- [x] track align
+- [x] hidden child
+- [x] wrap
+- [x] reverse
+- [x] grow
+- [x] new track
+- [x] ignore layout
+- [x] child 属性变化导致父布局重排
 
 ### 建议文件
 
@@ -229,16 +229,16 @@
 
 ### 建议场景
 
-- [ ] row / column 基础流
-- [ ] wrap
-- [ ] align
-- [ ] grow
-- [ ] new track
-- [ ] ignore-layout overlay
+- [x] row / column 基础流
+- [x] wrap
+- [x] align
+- [x] grow
+- [x] new track
+- [x] ignore-layout overlay
 
 ### 修改点
 
-- [ ] 继续扩 `examples/common/demo/layout/uiLayout.c`
+- [x] 继续扩 `examples/common/demo/layout/uiLayout.c`
 - [ ] 若 demo 文件已过大，拆出 flex demo helper
 
 ## C3. 文档同步
@@ -249,10 +249,16 @@
 
 ### 步骤
 
-- [ ] 更新 `examples/sdl/docs/2026-05-24-flex-vs-lvgl-gap-analysis.md`
+- [x] 更新 `examples/sdl/docs/2026-05-24-flex-vs-lvgl-gap-analysis.md`
   - 回写已完成项和延期项
-- [ ] 若新增 API，补 README / tutorial 对应说明
-- [ ] 若 RTL / margin / pct 不做，明确记账，不要模糊写成“已支持 flex”
+- [x] README 已补 `USE_DEMO=4` 的 flex wrap/grow/new-track/ignore-layout 说明
+- [x] tutorial 已补 `ldWindowSetFlexTrackAlign()`、`ldBaseSetFlexGrow()`、`ldBaseSetFlexNewTrack()` 等新增 API 说明
+- [x] 若 RTL / margin / pct 不做，明确记账，不要模糊写成“已支持 flex”
+
+## 8. 当前未完成项
+
+- 已补 absolute `min/max` hook：child 可声明内部宽高 clamp 位，flex 会在 base size、wrap 判定与 grow 落地路径上统一经过该挂点
+- README 与 tutorial 已同步新增 API / 示例说明；文档侧剩余工作主要是后续若继续补 RTL、margin、percent、content-size 时再继续记账
 
 ---
 

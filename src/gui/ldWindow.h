@@ -57,6 +57,12 @@ typedef struct ldPadding_t
 typedef enum {
     ldFlexFlowRow = 0,
     ldFlexFlowColumn,
+    ldFlexFlowRowWrap,
+    ldFlexFlowColumnWrap,
+    ldFlexFlowRowReverse,
+    ldFlexFlowColumnReverse,
+    ldFlexFlowRowWrapReverse,
+    ldFlexFlowColumnWrapReverse,
 } ldFlexFlow_t;
 
 typedef enum {
@@ -64,6 +70,8 @@ typedef enum {
     ldFlexMainAlignCenter,
     ldFlexMainAlignEnd,
     ldFlexMainAlignSpaceBetween,
+    ldFlexMainAlignSpaceEvenly,
+    ldFlexMainAlignSpaceAround,
 } ldFlexMainAlign_t;
 
 typedef enum {
@@ -71,6 +79,15 @@ typedef enum {
     ldFlexCrossAlignCenter,
     ldFlexCrossAlignEnd,
 } ldFlexCrossAlign_t;
+
+typedef enum {
+    ldFlexTrackAlignStart = 0,
+    ldFlexTrackAlignCenter,
+    ldFlexTrackAlignEnd,
+    ldFlexTrackAlignSpaceBetween,
+    ldFlexTrackAlignSpaceAround,
+    ldFlexTrackAlignSpaceEvenly,
+} ldFlexTrackAlign_t;
 
 struct ldWindow_t
 {
@@ -81,16 +98,26 @@ struct ldWindow_t
     bool isTransparent:1;
     ldPadding_t *pLayoutPaddingGroup;
     ldPadding_t flexPadding;
-    int16_t flexGap;
+    union {
+        struct {
+            int16_t flexItemGap;
+            int16_t flexTrackGap;
+        };
+        struct {
+            int16_t flexGap;
+            int16_t flexGapCompatTrack;
+        };
+    };
     ldPadding_t gridPadding;
     int16_t gridRowGap;
     int16_t gridColumnGap;
     uint16_t gridColumns;
     ldLayoutType_t layoutTpye:3;
-    ldFlexFlow_t flexFlow:1;
-    ldFlexMainAlign_t flexMainAlign:2;
-    ldFlexCrossAlign_t flexCrossAlign:2;
     bool isLayoutUpdate:1;
+    ldFlexFlow_t flexFlow:3;
+    ldFlexMainAlign_t flexMainAlign:3;
+    ldFlexCrossAlign_t flexCrossAlign:2;
+    ldFlexTrackAlign_t flexTrackAlign:3;
 };
 
 ldWindow_t* ldWindow_init(ld_scene_t *ptScene, ldWindow_t *ptWidget, uint16_t nameId, uint16_t parentNameId, int16_t x, int16_t y, int16_t width, int16_t height);
@@ -110,7 +137,9 @@ void ldWindowSetFlexFlow(ldWindow_t *ptWidget, ldFlexFlow_t flow);
 void ldWindowSetFlexAlign(ldWindow_t *ptWidget,
                           ldFlexMainAlign_t mainAlign,
                           ldFlexCrossAlign_t crossAlign);
+void ldWindowSetFlexTrackAlign(ldWindow_t *ptWidget, ldFlexTrackAlign_t trackAlign);
 void ldWindowSetPadding(ldWindow_t *ptWidget, ldPadding_t padding);
+void ldWindowSetFlexGap(ldWindow_t *ptWidget, int16_t itemGap, int16_t trackGap);
 void ldWindowSetGap(ldWindow_t *ptWidget, int16_t gap);
 void ldWindowSetGridColumns(ldWindow_t *ptWidget, uint16_t columns);
 void ldWindowSetGridGap(ldWindow_t *ptWidget, int16_t rowGap, int16_t columnGap);

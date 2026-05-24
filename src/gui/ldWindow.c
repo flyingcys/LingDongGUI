@@ -100,6 +100,24 @@ static int16_t ldWindowResolveFlexCrossStart(ldFlexCrossAlign_t align, int16_t i
     }
 }
 
+typedef struct
+{
+    ldBase_t *ptItem;
+    arm_2d_region_t tRegion;
+    int16_t baseMainSize;
+    int16_t baseCrossSize;
+    int16_t resolvedMainSize;
+} ldFlexItemLayout_t;
+
+typedef struct
+{
+    uint16_t startOrderIndex;
+    uint16_t count;
+    int16_t crossSize;
+    int32_t baseContentMainSize;
+    uint32_t totalGrow;
+} ldFlexTrackLayout_t;
+
 static void ldWindowApplyLegacyLayout(ldWindow_t *ptWidget)
 {
     arm_2d_region_t globalRegion;
@@ -175,15 +193,18 @@ static void ldWindowApplyLegacyLayout(ldWindow_t *ptWidget)
 static void ldWindowApplyFlexLayout(ldWindow_t *ptWidget)
 {
     uint16_t childCount = ldBaseGetChildCount((ldBase_t *)ptWidget);
+    uint16_t itemCount = 0;
     arm_2d_size_t windowSize;
     int16_t innerWidth;
     int16_t innerHeight;
-    bool isRow;
+    bool isColumn;
+    bool isWrap;
+    bool isReverse;
+    bool isWrapReverse;
     int16_t innerMainSize;
     int16_t innerCrossSize;
-    int16_t resolvedGap;
-    int16_t currentMain;
-    int32_t contentMainSize = 0;
+    int16_t mainPadding;
+    int16_t crossPadding;
     uint16_t index;
 
     if (childCount == 0)
@@ -198,57 +219,256 @@ static void ldWindowApplyFlexLayout(ldWindow_t *ptWidget)
         return;
     }
 
+    ldFlexItemLayout_t items[childCount];
+    uint16_t orderedIndices[childCount];
+    ldFlexTrackLayout_t tracks[childCount];
+
+    for (index = 0; index < childCount; ++index)
+    {
+        ldBase_t *ptChild = children[index];
+
+        if (ptChild->ignoreLayout)
+        {
+            continue;
+        }
+
+        items[itemCount].ptItem = ptChild;
+        items[itemCount].tRegion = ptChild->use_as__arm_2d_control_node_t.tRegion;
+        items[itemCount].resolvedMainSize = 0;
+        if (ptChild->hasFlexBasisSize == false)
+        {
+            ptChild->flexBasisSize = ptChild->use_as__arm_2d_control_node_t.tRegion.tSize;
+            ptChild->hasFlexBasisSize = true;
+        }
+        ptChild->flexBasisSize = ldFlexClampAbsoluteSize(ptChild, ptChild->flexBasisSize);
+        itemCount++;
+    }
+
+    if (itemCount == 0)
+    {
+        return;
+    }
+
     windowSize = ptWidget->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize;
     innerWidth = MAX(0, windowSize.iWidth - ptWidget->flexPadding.left - ptWidget->flexPadding.right);
     innerHeight = MAX(0, windowSize.iHeight - ptWidget->flexPadding.top - ptWidget->flexPadding.bottom);
-    isRow = (ptWidget->flexFlow == ldFlexFlowRow);
-    innerMainSize = isRow ? innerWidth : innerHeight;
-    innerCrossSize = isRow ? innerHeight : innerWidth;
+    isColumn = ldFlexFlowIsColumn(ptWidget->flexFlow);
+    isWrap = ldFlexFlowIsWrap(ptWidget->flexFlow);
+    isReverse = ldFlexFlowIsReverse(ptWidget->flexFlow);
+    isWrapReverse = ldFlexFlowIsWrapReverse(ptWidget->flexFlow);
+    innerMainSize = isColumn ? innerHeight : innerWidth;
+    innerCrossSize = isColumn ? innerWidth : innerHeight;
+    mainPadding = isColumn ? ptWidget->flexPadding.top : ptWidget->flexPadding.left;
+    crossPadding = isColumn ? ptWidget->flexPadding.left : ptWidget->flexPadding.top;
 
-    /* Only visible direct children participate in flex sizing. */
-    for (index = 0; index < childCount; ++index)
+    for (index = 0; index < itemCount; ++index)
     {
-        arm_2d_size_t itemSize = children[index]->use_as__arm_2d_control_node_t.tRegion.tSize;
-        contentMainSize += isRow ? itemSize.iWidth : itemSize.iHeight;
+        arm_2d_size_t tClampedBasis = ldFlexClampAbsoluteSize(items[index].ptItem,
+                                                              items[index].ptItem->flexBasisSize);
+        orderedIndices[index] = isReverse ? (uint16_t)(itemCount - 1 - index) : index;
+        items[index].baseMainSize = isColumn ? tClampedBasis.iHeight : tClampedBasis.iWidth;
+        items[index].baseCrossSize = isColumn ? tClampedBasis.iWidth : tClampedBasis.iHeight;
+        items[index].resolvedMainSize = items[index].baseMainSize;
     }
-    if (childCount > 1)
+
+    uint16_t trackCount = 1;
+    memset(tracks, 0, sizeof(tracks));
+    tracks[0].startOrderIndex = 0;
+    for (index = 0; index < itemCount; ++index)
     {
-        contentMainSize += (int32_t)ptWidget->flexGap * (childCount - 1);
-    }
+        uint16_t itemIndex = orderedIndices[index];
+        ldFlexItemLayout_t *ptItem = &items[itemIndex];
+        ldFlexTrackLayout_t *ptTrack = &tracks[trackCount - 1];
+        int16_t gapBeforeItem = ptTrack->count > 0 ? ptWidget->flexItemGap : 0;
+        bool forceNewTrack = isWrap && (ptTrack->count > 0) && ptItem->ptItem->flexInNewTrack;
+        bool exceedsTrack = false;
 
-    resolvedGap = ptWidget->flexGap;
-    currentMain = ldFlexResolveMainStart(ptWidget->flexMainAlign,
-                                         innerMainSize,
-                                         (int16_t)contentMainSize,
-                                         childCount,
-                                         ptWidget->flexGap,
-                                         &resolvedGap);
-    currentMain += isRow ? ptWidget->flexPadding.left : ptWidget->flexPadding.top;
-
-    for (index = 0; index < childCount; ++index)
-    {
-        ldBase_t *ptItem = children[index];
-        arm_2d_region_t tRegion = ptItem->use_as__arm_2d_control_node_t.tRegion;
-        int16_t crossBase = isRow ? ptWidget->flexPadding.top : ptWidget->flexPadding.left;
-        int16_t itemMainSize = isRow ? tRegion.tSize.iWidth : tRegion.tSize.iHeight;
-        int16_t itemCrossSize = isRow ? tRegion.tSize.iHeight : tRegion.tSize.iWidth;
-        int16_t crossStart = crossBase + ldWindowResolveFlexCrossStart(ptWidget->flexCrossAlign,
-                                                                       innerCrossSize,
-                                                                       itemCrossSize);
-
-        if (isRow)
+        if (isWrap && (ptTrack->count > 0))
         {
-            tRegion.tLocation.iX = currentMain;
-            tRegion.tLocation.iY = crossStart;
+            int32_t nextMainSize = ptTrack->baseContentMainSize + gapBeforeItem + ptItem->baseMainSize;
+            exceedsTrack = nextMainSize > innerMainSize;
+        }
+
+        if (forceNewTrack || exceedsTrack)
+        {
+            trackCount++;
+            ptTrack = &tracks[trackCount - 1];
+            memset(ptTrack, 0, sizeof(*ptTrack));
+            ptTrack->startOrderIndex = index;
+            gapBeforeItem = 0;
+        }
+
+        if (ptTrack->count == 0)
+        {
+            ptTrack->startOrderIndex = index;
+        }
+
+        ptTrack->baseContentMainSize += gapBeforeItem + ptItem->baseMainSize;
+        ptTrack->crossSize = MAX(ptTrack->crossSize, ptItem->baseCrossSize);
+        ptTrack->totalGrow += ptItem->ptItem->flexGrow;
+        ptTrack->count++;
+    }
+
+    if ((!isWrap) && (trackCount == 1))
+    {
+        tracks[0].crossSize = innerCrossSize;
+    }
+
+    int32_t totalTrackCrossSize = 0;
+    for (index = 0; index < trackCount; ++index)
+    {
+        totalTrackCrossSize += tracks[index].crossSize;
+    }
+    if (trackCount > 1)
+    {
+        totalTrackCrossSize += (int32_t)ptWidget->flexTrackGap * (trackCount - 1);
+    }
+
+    int16_t resolvedTrackGap = ptWidget->flexTrackGap;
+    int16_t trackStartOffset = ldFlexResolveMainStart((ldFlexMainAlign_t)ptWidget->flexTrackAlign,
+                                                      innerCrossSize,
+                                                      (int16_t)totalTrackCrossSize,
+                                                      trackCount,
+                                                      ptWidget->flexTrackGap,
+                                                      &resolvedTrackGap);
+    int16_t currentTrackCross = isWrapReverse
+                                    ? (int16_t)(crossPadding + innerCrossSize - trackStartOffset)
+                                    : (int16_t)(crossPadding + trackStartOffset);
+
+    for (index = 0; index < trackCount; ++index)
+    {
+        ldFlexTrackLayout_t *ptTrack = &tracks[index];
+        int32_t contentMainSize = ptTrack->baseContentMainSize;
+        int32_t remainingMainSize = MAX(0, innerMainSize - (int16_t)ptTrack->baseContentMainSize);
+        uint32_t remainingGrow = ptTrack->totalGrow;
+        int16_t resolvedItemGap = ptWidget->flexItemGap;
+        int16_t trackCrossBase;
+        uint16_t orderIndex;
+
+        if (isWrapReverse)
+        {
+            currentTrackCross -= ptTrack->crossSize;
+            trackCrossBase = currentTrackCross;
         }
         else
         {
-            tRegion.tLocation.iX = crossStart;
-            tRegion.tLocation.iY = currentMain;
+            trackCrossBase = currentTrackCross;
         }
 
-        ldWindowApplyLayoutRegion(ptItem, tRegion);
-        currentMain += itemMainSize + resolvedGap;
+        if ((remainingMainSize > 0) && (remainingGrow > 0))
+        {
+            for (orderIndex = ptTrack->startOrderIndex;
+                 orderIndex < (uint16_t)(ptTrack->startOrderIndex + ptTrack->count);
+                 ++orderIndex)
+            {
+                ldFlexItemLayout_t *ptItem = &items[orderedIndices[orderIndex]];
+
+                if (ptItem->ptItem->flexGrow == 0)
+                {
+                    continue;
+                }
+
+                int16_t share = (remainingGrow == ptItem->ptItem->flexGrow)
+                                    ? (int16_t)remainingMainSize
+                                    : (int16_t)((remainingMainSize * ptItem->ptItem->flexGrow) / remainingGrow);
+                int16_t clampedMainSize;
+                int16_t appliedShare;
+
+                if (isColumn)
+                {
+                    arm_2d_size_t tClamped = ldFlexClampAbsoluteSize(ptItem->ptItem,
+                                                                     (arm_2d_size_t){
+                                                                         ptItem->baseCrossSize,
+                                                                         (int16_t)(ptItem->resolvedMainSize + share),
+                                                                     });
+                    clampedMainSize = tClamped.iHeight;
+                }
+                else
+                {
+                    arm_2d_size_t tClamped = ldFlexClampAbsoluteSize(ptItem->ptItem,
+                                                                     (arm_2d_size_t){
+                                                                         (int16_t)(ptItem->resolvedMainSize + share),
+                                                                         ptItem->baseCrossSize,
+                                                                     });
+                    clampedMainSize = tClamped.iWidth;
+                }
+
+                appliedShare = MAX(0, clampedMainSize - ptItem->resolvedMainSize);
+
+                ptItem->resolvedMainSize = clampedMainSize;
+                contentMainSize += appliedShare;
+                remainingMainSize -= appliedShare;
+                remainingGrow -= ptItem->ptItem->flexGrow;
+            }
+        }
+
+        int16_t currentMain = ldFlexResolveMainStart(ptWidget->flexMainAlign,
+                                                     innerMainSize,
+                                                     (int16_t)contentMainSize,
+                                                     ptTrack->count,
+                                                     ptWidget->flexItemGap,
+                                                     &resolvedItemGap);
+
+        if (isReverse)
+        {
+            currentMain = mainPadding + innerMainSize - currentMain;
+        }
+        else
+        {
+            currentMain += mainPadding;
+        }
+
+        for (orderIndex = ptTrack->startOrderIndex;
+             orderIndex < (uint16_t)(ptTrack->startOrderIndex + ptTrack->count);
+             ++orderIndex)
+        {
+            ldFlexItemLayout_t *ptItem = &items[orderedIndices[orderIndex]];
+            arm_2d_region_t tRegion = ptItem->tRegion;
+            int16_t trackCrossSpan = (trackCount > 1) ? ptTrack->crossSize : innerCrossSize;
+            int16_t itemCrossStart = trackCrossBase + ldWindowResolveFlexCrossStart(ptWidget->flexCrossAlign,
+                                                                                    trackCrossSpan,
+                                                                                    ptItem->baseCrossSize);
+
+            if (isReverse)
+            {
+                currentMain -= ptItem->resolvedMainSize;
+            }
+
+            if (isColumn)
+            {
+                tRegion.tLocation.iX = itemCrossStart;
+                tRegion.tLocation.iY = currentMain;
+                tRegion.tSize.iWidth = MAX(0, ptItem->baseCrossSize);
+                tRegion.tSize.iHeight = MAX(0, ptItem->resolvedMainSize);
+            }
+            else
+            {
+                tRegion.tLocation.iX = currentMain;
+                tRegion.tLocation.iY = itemCrossStart;
+                tRegion.tSize.iWidth = MAX(0, ptItem->resolvedMainSize);
+                tRegion.tSize.iHeight = MAX(0, ptItem->baseCrossSize);
+            }
+
+            ldWindowApplyLayoutRegion(ptItem->ptItem, tRegion);
+
+            if (isReverse)
+            {
+                currentMain -= resolvedItemGap;
+            }
+            else
+            {
+                currentMain += ptItem->resolvedMainSize + resolvedItemGap;
+            }
+        }
+
+        if (isWrapReverse)
+        {
+            currentTrackCross -= resolvedTrackGap;
+        }
+        else
+        {
+            currentTrackCross += ptTrack->crossSize + resolvedTrackGap;
+        }
     }
 }
 
@@ -620,6 +840,18 @@ void ldWindowSetFlexAlign(ldWindow_t *ptWidget,
     ldWindowMarkLayoutDirty(ptWidget);
 }
 
+void ldWindowSetFlexTrackAlign(ldWindow_t *ptWidget, ldFlexTrackAlign_t trackAlign)
+{
+    assert(NULL != ptWidget);
+    if (ptWidget == NULL)
+    {
+        return;
+    }
+    ptWidget->flexTrackAlign = trackAlign;
+    ptWidget->layoutTpye = layoutFlex;
+    ldWindowMarkLayoutDirty(ptWidget);
+}
+
 void ldWindowSetPadding(ldWindow_t *ptWidget, ldPadding_t padding)
 {
     assert(NULL != ptWidget);
@@ -631,6 +863,19 @@ void ldWindowSetPadding(ldWindow_t *ptWidget, ldPadding_t padding)
     ldWindowMarkLayoutDirty(ptWidget);
 }
 
+void ldWindowSetFlexGap(ldWindow_t *ptWidget, int16_t itemGap, int16_t trackGap)
+{
+    assert(NULL != ptWidget);
+    if (ptWidget == NULL)
+    {
+        return;
+    }
+    ptWidget->flexItemGap = itemGap;
+    ptWidget->flexTrackGap = trackGap;
+    ptWidget->layoutTpye = layoutFlex;
+    ldWindowMarkLayoutDirty(ptWidget);
+}
+
 void ldWindowSetGap(ldWindow_t *ptWidget, int16_t gap)
 {
     assert(NULL != ptWidget);
@@ -638,7 +883,8 @@ void ldWindowSetGap(ldWindow_t *ptWidget, int16_t gap)
     {
         return;
     }
-    ptWidget->flexGap = gap;
+    ptWidget->flexItemGap = gap;
+    ptWidget->flexTrackGap = gap;
     ldWindowMarkLayoutDirty(ptWidget);
 }
 

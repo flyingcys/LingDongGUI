@@ -18,6 +18,67 @@
 
 #include "ldWindowLayoutInternal.h"
 
+arm_2d_size_t ldFlexClampAbsoluteSize(const ldBase_t *ptWidget, arm_2d_size_t tSize)
+{
+    arm_2d_size_t tResolved = tSize;
+
+    if (ptWidget == NULL)
+    {
+        return tResolved;
+    }
+
+    if (ptWidget->hasFlexMinWidth)
+    {
+        tResolved.iWidth = MAX(tResolved.iWidth, ptWidget->flexMinSize.iWidth);
+    }
+    if (ptWidget->hasFlexMinHeight)
+    {
+        tResolved.iHeight = MAX(tResolved.iHeight, ptWidget->flexMinSize.iHeight);
+    }
+    if (ptWidget->hasFlexMaxWidth)
+    {
+        tResolved.iWidth = MIN(tResolved.iWidth, ptWidget->flexMaxSize.iWidth);
+    }
+    if (ptWidget->hasFlexMaxHeight)
+    {
+        tResolved.iHeight = MIN(tResolved.iHeight, ptWidget->flexMaxSize.iHeight);
+    }
+
+    tResolved.iWidth = MAX(0, tResolved.iWidth);
+    tResolved.iHeight = MAX(0, tResolved.iHeight);
+    return tResolved;
+}
+
+bool ldFlexFlowIsColumn(ldFlexFlow_t flow)
+{
+    return (flow == ldFlexFlowColumn) ||
+           (flow == ldFlexFlowColumnWrap) ||
+           (flow == ldFlexFlowColumnReverse) ||
+           (flow == ldFlexFlowColumnWrapReverse);
+}
+
+bool ldFlexFlowIsWrap(ldFlexFlow_t flow)
+{
+    return (flow == ldFlexFlowRowWrap) ||
+           (flow == ldFlexFlowColumnWrap) ||
+           (flow == ldFlexFlowRowWrapReverse) ||
+           (flow == ldFlexFlowColumnWrapReverse);
+}
+
+bool ldFlexFlowIsReverse(ldFlexFlow_t flow)
+{
+    return (flow == ldFlexFlowRowReverse) ||
+           (flow == ldFlexFlowColumnReverse) ||
+           (flow == ldFlexFlowRowWrapReverse) ||
+           (flow == ldFlexFlowColumnWrapReverse);
+}
+
+bool ldFlexFlowIsWrapReverse(ldFlexFlow_t flow)
+{
+    return (flow == ldFlexFlowRowWrapReverse) ||
+           (flow == ldFlexFlowColumnWrapReverse);
+}
+
 uint16_t ldWindowCollectDirectChildren(ldBase_t *ptWindow, ldBase_t **ppChildren, uint16_t maxCount, bool skipHidden)
 {
     uint16_t count = 0;
@@ -99,6 +160,22 @@ int16_t ldFlexResolveMainStart(ldFlexMainAlign_t align, int16_t innerMainSize, i
         }
         *pResolvedGap = gap;
         return 0;
+    case ldFlexMainAlignSpaceAround:
+        if (visibleCount <= 1)
+        {
+            *pResolvedGap = gap;
+            return remain / 2;
+        }
+        *pResolvedGap = gap + remain / (int16_t)visibleCount;
+        return (remain / (int16_t)visibleCount) / 2;
+    case ldFlexMainAlignSpaceEvenly:
+        if (visibleCount <= 1)
+        {
+            *pResolvedGap = gap;
+            return remain / 2;
+        }
+        *pResolvedGap = gap + remain / (int16_t)(visibleCount + 1);
+        return remain / (int16_t)(visibleCount + 1);
     default:
         *pResolvedGap = gap;
         return 0;

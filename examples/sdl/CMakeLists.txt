@@ -185,6 +185,46 @@ target_compile_options(uiwidget_swipe_logic_test PRIVATE
 
 add_test(NAME uiwidget_swipe_logic_test COMMAND uiwidget_swipe_logic_test)
 
+add_executable(layout_window_test
+    "${SDL_EXAMPLE_DIR}/tests/layout/test_layout_window.c"
+    ${ARM2D_LIBRARY_SOURCES}
+    "${REPO_SRC_DIR}/gui/ldBase.c"
+    "${REPO_SRC_DIR}/gui/ldWindow.c"
+    "${REPO_SRC_DIR}/gui/ldWindowLayoutInternal.c"
+)
+
+target_include_directories(layout_window_test PRIVATE
+    "${SDL_EXAMPLE_DIR}/user"
+    "${COMMON_DIR}/Arm-2D"
+    "${COMMON_DIR}/Arm-2D/Helper/Include"
+    "${COMMON_DIR}/Arm-2D/Library/Include"
+    "${COMMON_DIR}/Arm-2D/Library/Source"
+    "${ARM2D_CONTROLS_DIR}"
+    "${COMMON_DIR}/math"
+    "${REPO_SRC_DIR}/gui"
+    "${REPO_SRC_DIR}/misc"
+)
+
+target_compile_definitions(layout_window_test PRIVATE
+    __va_list=va_list
+    RTE_Acceleration_Arm_2D_Helper_Disp_Adapter0
+    RTE_Acceleration_Arm_2D_Alpha_Blending
+    "-D__ARM_2D_USER_APP_CFG_H__=\"ldConfig.h\""
+    "-DARM_SECTION(x)="
+)
+
+target_compile_options(layout_window_test PRIVATE
+    -fdiagnostics-color=always
+    -g
+    -std=gnu11
+)
+
+if(NOT WIN32)
+    target_link_libraries(layout_window_test PRIVATE m)
+endif()
+
+add_test(NAME layout_window_test COMMAND layout_window_test)
+
 add_test(
     NAME check_use_demo_0_legacy_widget
     COMMAND "${Python3_EXECUTABLE}" "${SDL_EXAMPLE_DIR}/tests/check_use_demo_0_legacy_widget.py"

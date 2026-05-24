@@ -28,6 +28,11 @@ extern "C" {
 uint16_t ldWindowCollectDirectChildren(ldBase_t *ptWindow, ldBase_t **ppChildren, uint16_t maxCount, bool skipHidden);
 void ldBaseMarkParentLayoutDirty(ldBase_t *ptWidget);
 int16_t ldFlexResolveMainStart(ldFlexMainAlign_t align, int16_t innerMainSize, int16_t contentMainSize, uint16_t visibleCount, int16_t gap, int16_t *pResolvedGap);
+arm_2d_size_t ldFlexClampAbsoluteSize(const ldBase_t *ptWidget, arm_2d_size_t tSize);
+bool ldFlexFlowIsColumn(ldFlexFlow_t flow);
+bool ldFlexFlowIsWrap(ldFlexFlow_t flow);
+bool ldFlexFlowIsReverse(ldFlexFlow_t flow);
+bool ldFlexFlowIsWrapReverse(ldFlexFlow_t flow);
 
 #ifdef __cplusplus
 }
