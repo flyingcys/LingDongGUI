@@ -111,8 +111,12 @@ struct ldWindow_t
     ldPadding_t gridPadding;
     int16_t gridRowGap;
     int16_t gridColumnGap;
+    const int16_t *gridColDsc;
+    const int16_t *gridRowDsc;
     uint16_t gridColumns;
     ldLayoutType_t layoutTpye:3;
+    ldGridAlign_t gridColAlign:3;
+    ldGridAlign_t gridRowAlign:3;
     bool isLayoutUpdate:1;
     ldFlexFlow_t flexFlow:3;
     ldFlexMainAlign_t flexMainAlign:3;
@@ -144,6 +148,8 @@ void ldWindowSetGap(ldWindow_t *ptWidget, int16_t gap);
 void ldWindowSetGridColumns(ldWindow_t *ptWidget, uint16_t columns);
 void ldWindowSetGridGap(ldWindow_t *ptWidget, int16_t rowGap, int16_t columnGap);
 void ldWindowSetGridPadding(ldWindow_t *ptWidget, ldPadding_t padding);
+void ldWindowSetGridDscArray(ldWindow_t *ptWidget, const int16_t *pColDsc, const int16_t *pRowDsc);
+void ldWindowSetGridAlign(ldWindow_t *ptWidget, ldGridAlign_t colAlign, ldGridAlign_t rowAlign);
 void ldWindowSetPaddingGroup(ldWindow_t *ptWidget, ldPadding_t *pPaddingGroup);//Local variables forbidden
 
 ldColor ldWindowGetColor(ldWindow_t *ptWidget);

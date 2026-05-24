@@ -233,9 +233,10 @@ add_test(NAME uiwidget_swipe_logic_test COMMAND uiwidget_swipe_logic_test)
 add_executable(layout_window_test
     "${SDL_EXAMPLE_DIR}/tests/layout/test_layout_window.c"
     ${ARM2D_LIBRARY_SOURCES}
+    "${REPO_SRC_DIR}/gui/ldWindowLayoutInternal.c"
     "${REPO_SRC_DIR}/gui/ldBase.c"
     "${REPO_SRC_DIR}/gui/ldWindow.c"
-    "${REPO_SRC_DIR}/gui/ldWindowLayoutInternal.c"
+    ${MISC_SOURCES}
 )
 
 target_include_directories(layout_window_test PRIVATE
@@ -262,7 +263,23 @@ target_compile_options(layout_window_test PRIVATE
     -fdiagnostics-color=always
     -g
     -std=gnu11
+    -ffunction-sections
+    -fdata-sections
+    -fno-ms-extensions
+    -Wno-macro-redefined
+    "-D__ARM_2D_USER_APP_CFG_H__=\"ldConfig.h\""
+    "-DARM_SECTION(x)="
 )
+
+if(APPLE)
+    target_link_options(layout_window_test PRIVATE
+        -Wl,-dead_strip
+    )
+else()
+    target_link_options(layout_window_test PRIVATE
+        -Wl,--gc-sections
+    )
+endif()
 
 if(NOT WIN32)
     target_link_libraries(layout_window_test PRIVATE m)
@@ -275,6 +292,14 @@ add_test(
     COMMAND "${Python3_EXECUTABLE}" "${SDL_EXAMPLE_DIR}/tests/check_use_demo_0_legacy_widget.py"
 )
 set_tests_properties(check_use_demo_0_legacy_widget PROPERTIES
+    WORKING_DIRECTORY "${SDL_EXAMPLE_DIR}"
+)
+
+add_test(
+    NAME check_use_demo_5_grid_widget
+    COMMAND "${Python3_EXECUTABLE}" "${SDL_EXAMPLE_DIR}/tests/check_use_demo_5_grid_widget.py"
+)
+set_tests_properties(check_use_demo_5_grid_widget PROPERTIES
     WORKING_DIRECTORY "${SDL_EXAMPLE_DIR}"
 )
 

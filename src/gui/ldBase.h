@@ -32,6 +32,7 @@ extern "C" {
 #include "ldConfig.h"
 #include "ldMsg.h"
 #include "xQueue.h"
+#include <limits.h>
 
 typedef enum{
     widgetTypeBackground,
@@ -191,6 +192,20 @@ struct ld_scene_t {
     xQueue_t *ptMsgQueue;
 };
 
+typedef enum {
+    ldGridAlignStart = 0,
+    ldGridAlignEnd,
+    ldGridAlignCenter,
+    ldGridAlignStretch,
+    ldGridAlignSpaceEvenly,
+    ldGridAlignSpaceAround,
+    ldGridAlignSpaceBetween,
+} ldGridAlign_t;
+
+#define LD_GRID_TEMPLATE_LAST INT16_MAX
+#define LD_GRID_CONTENT       (INT16_MAX - 1)
+#define LD_GRID_FR(x)         (-(int16_t)(((x) > 0) ? (x) : 1))
+
 typedef struct {
     arm_2d_region_t itemRegion;
     arm_2d_region_t tTempItemRegion;
@@ -213,6 +228,12 @@ typedef struct {
     uint16_t flexGrow;
     uint8_t opacity;
     uint8_t itemCount;
+    uint8_t gridColPos;
+    uint8_t gridRowPos;
+    uint8_t gridColSpan;
+    uint8_t gridRowSpan;
+    ldGridAlign_t gridCellXAlign:3;
+    ldGridAlign_t gridCellYAlign:3;
     bool isDirtyRegionUpdate:1;
     bool isDirtyRegionAutoReset:1;
     bool isHidden:1;
@@ -301,6 +322,13 @@ arm_2d_region_t ldBaseAlignRegionCenter(arm_2d_region_t parentRegion, arm_2d_reg
 
 void ldBaseSetCenter(ldBase_t *ptWidget);
 void ldBaseSetHidden(ldBase_t* ptWidget,bool isHidden);
+void ldBaseSetGridCell(ldBase_t *ptWidget,
+                       ldGridAlign_t xAlign,
+                       int16_t colPos,
+                       int16_t colSpan,
+                       ldGridAlign_t yAlign,
+                       int16_t rowPos,
+                       int16_t rowSpan);
 void ldBaseSetOpacity(ldBase_t *ptWidget, uint8_t opacity);
 void ldBaseSetSelectable(ldBase_t* ptWidget,bool isSelectable);
 void ldBaseSetSelect(ldBase_t* ptWidget,bool isSelect);

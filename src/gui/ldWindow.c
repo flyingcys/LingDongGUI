@@ -472,7 +472,385 @@ static void ldWindowApplyFlexLayout(ldWindow_t *ptWidget)
     }
 }
 
-static void ldWindowApplyGridLayout(ldWindow_t *ptWidget)
+static int16_t ldWindowResolveGridCellSize(ldGridAlign_t align, int16_t cellSize, int16_t itemSize)
+{
+    if (align == ldGridAlignStretch)
+    {
+        return MAX(0, cellSize);
+    }
+    return MAX(0, MIN(cellSize, itemSize));
+}
+
+static int16_t ldWindowResolveGridCellStart(ldGridAlign_t align, int16_t cellSize, int16_t itemSize)
+{
+    int16_t remain = MAX(0, cellSize - itemSize);
+
+    switch (align)
+    {
+    case ldGridAlignCenter:
+        return remain / 2;
+    case ldGridAlignEnd:
+        return remain;
+    default:
+        return 0;
+    }
+}
+
+static uint16_t ldWindowCountGridTracks(const int16_t *pDsc)
+{
+    uint16_t count = 0;
+
+    if (pDsc == NULL)
+    {
+        return 0;
+    }
+
+    while (pDsc[count] != LD_GRID_TEMPLATE_LAST)
+    {
+        count++;
+    }
+
+    return count;
+}
+
+static bool ldWindowGridHasDescriptors(const ldWindow_t *ptWidget)
+{
+    return (ptWidget != NULL) &&
+           (ptWidget->gridColDsc != NULL) &&
+           (ptWidget->gridRowDsc != NULL) &&
+           (ldWindowCountGridTracks(ptWidget->gridColDsc) > 0) &&
+           (ldWindowCountGridTracks(ptWidget->gridRowDsc) > 0);
+}
+
+static bool ldWindowGridTrackIsFr(int16_t dsc)
+{
+    return dsc < 0;
+}
+
+static bool ldWindowGridTrackIsContent(int16_t dsc)
+{
+    return dsc == LD_GRID_CONTENT;
+}
+
+static int16_t ldWindowGridTrackFrWeight(int16_t dsc)
+{
+    return dsc < 0 ? (int16_t)(-dsc) : 0;
+}
+
+static void ldWindowNormalizeGridCell(const ldBase_t *ptItem,
+                                      uint16_t colCount,
+                                      uint16_t rowCount,
+                                      uint16_t *pColPos,
+                                      uint16_t *pColSpan,
+                                      uint16_t *pRowPos,
+                                      uint16_t *pRowSpan)
+{
+    uint16_t colPos = 0;
+    uint16_t rowPos = 0;
+    uint16_t colSpan = 1;
+    uint16_t rowSpan = 1;
+
+    if (ptItem != NULL)
+    {
+        colPos = ptItem->gridColPos;
+        rowPos = ptItem->gridRowPos;
+        colSpan = ptItem->gridColSpan > 0 ? ptItem->gridColSpan : 1;
+        rowSpan = ptItem->gridRowSpan > 0 ? ptItem->gridRowSpan : 1;
+    }
+
+    if (colCount == 0)
+    {
+        colPos = 0;
+        colSpan = 0;
+    }
+    else
+    {
+        if (colPos >= colCount)
+        {
+            colPos = colCount - 1;
+        }
+        if (colSpan > (colCount - colPos))
+        {
+            colSpan = colCount - colPos;
+        }
+    }
+
+    if (rowCount == 0)
+    {
+        rowPos = 0;
+        rowSpan = 0;
+    }
+    else
+    {
+        if (rowPos >= rowCount)
+        {
+            rowPos = rowCount - 1;
+        }
+        if (rowSpan > (rowCount - rowPos))
+        {
+            rowSpan = rowCount - rowPos;
+        }
+    }
+
+    *pColPos = colPos;
+    *pColSpan = colSpan;
+    *pRowPos = rowPos;
+    *pRowSpan = rowSpan;
+}
+
+static int32_t ldWindowGridMeasureSpanRequirement(const int16_t *pDsc,
+                                                  const int16_t *pTrackSizes,
+                                                  uint16_t pos,
+                                                  uint16_t span,
+                                                  int16_t gap,
+                                                  int16_t itemSize)
+{
+    int32_t used = 0;
+    uint16_t contentCount = 0;
+    uint16_t index;
+
+    if (span == 0)
+    {
+        return 0;
+    }
+
+    used += (int32_t)gap * (span - 1);
+
+    for (index = 0; index < span; ++index)
+    {
+        int16_t dsc = pDsc[pos + index];
+
+        if (ldWindowGridTrackIsFr(dsc))
+        {
+            return 0;
+        }
+        if (ldWindowGridTrackIsContent(dsc))
+        {
+            contentCount++;
+        }
+        else
+        {
+            used += pTrackSizes[pos + index];
+        }
+    }
+
+    if ((contentCount == 0) || (itemSize <= used))
+    {
+        return 0;
+    }
+
+    return itemSize - used;
+}
+
+static void ldWindowGridMeasureContentTracks(const int16_t *pDsc,
+                                             int16_t *pTrackSizes,
+                                             ldBase_t **children,
+                                             uint16_t childCount,
+                                             bool isColumnAxis,
+                                             int16_t gap,
+                                             uint16_t colCount,
+                                             uint16_t rowCount)
+{
+    uint16_t childIndex;
+
+    for (childIndex = 0; childIndex < childCount; ++childIndex)
+    {
+        ldBase_t *ptItem = children[childIndex];
+        arm_2d_size_t itemSize = ptItem->use_as__arm_2d_control_node_t.tRegion.tSize;
+        uint16_t colPos;
+        uint16_t colSpan;
+        uint16_t rowPos;
+        uint16_t rowSpan;
+        uint16_t pos;
+        uint16_t span;
+        int32_t required;
+        uint16_t contentCount = 0;
+        uint16_t index;
+        int16_t perTrack;
+        int16_t remainder;
+
+        ldWindowNormalizeGridCell(ptItem, colCount, rowCount, &colPos, &colSpan, &rowPos, &rowSpan);
+        if (isColumnAxis)
+        {
+            pos = colPos;
+            span = colSpan;
+            required = ldWindowGridMeasureSpanRequirement(pDsc, pTrackSizes, pos, span, gap, itemSize.iWidth);
+        }
+        else
+        {
+            pos = rowPos;
+            span = rowSpan;
+            required = ldWindowGridMeasureSpanRequirement(pDsc, pTrackSizes, pos, span, gap, itemSize.iHeight);
+        }
+
+        if (required <= 0)
+        {
+            continue;
+        }
+
+        for (index = 0; index < span; ++index)
+        {
+            if (ldWindowGridTrackIsContent(pDsc[pos + index]))
+            {
+                contentCount++;
+            }
+        }
+        if (contentCount == 0)
+        {
+            continue;
+        }
+
+        perTrack = (int16_t)(required / contentCount);
+        remainder = (int16_t)(required % contentCount);
+        for (index = 0; index < span; ++index)
+        {
+            uint16_t trackIndex = pos + index;
+            int16_t candidate;
+
+            if (!ldWindowGridTrackIsContent(pDsc[trackIndex]))
+            {
+                continue;
+            }
+            candidate = perTrack;
+            if (remainder > 0)
+            {
+                candidate++;
+                remainder--;
+            }
+            pTrackSizes[trackIndex] = MAX(pTrackSizes[trackIndex], candidate);
+        }
+    }
+}
+
+static void ldWindowGridResolveFrTracks(const int16_t *pDsc,
+                                        int16_t *pTrackSizes,
+                                        uint16_t trackCount,
+                                        int16_t gap,
+                                        int16_t innerSize)
+{
+    int32_t used = (int32_t)gap * MAX(0, (int16_t)trackCount - 1);
+    int32_t remaining;
+    int32_t totalWeight = 0;
+    uint16_t index;
+    int16_t lastFr = -1;
+
+    for (index = 0; index < trackCount; ++index)
+    {
+        if (ldWindowGridTrackIsFr(pDsc[index]))
+        {
+            totalWeight += ldWindowGridTrackFrWeight(pDsc[index]);
+            lastFr = (int16_t)index;
+        }
+        else
+        {
+            used += pTrackSizes[index];
+        }
+    }
+
+    remaining = MAX(0, innerSize - used);
+    if ((remaining <= 0) || (totalWeight <= 0))
+    {
+        return;
+    }
+
+    for (index = 0; index < trackCount; ++index)
+    {
+        if (!ldWindowGridTrackIsFr(pDsc[index]))
+        {
+            continue;
+        }
+
+        if ((int16_t)index == lastFr)
+        {
+            pTrackSizes[index] = MAX(0, (int16_t)remaining);
+            break;
+        }
+
+        pTrackSizes[index] = (int16_t)((remaining * ldWindowGridTrackFrWeight(pDsc[index])) / totalWeight);
+        remaining -= pTrackSizes[index];
+        totalWeight -= ldWindowGridTrackFrWeight(pDsc[index]);
+    }
+}
+
+static void ldWindowGridApplyContainerAlignment(ldGridAlign_t align,
+                                                int16_t innerSize,
+                                                int16_t baseGap,
+                                                int16_t *pTrackSizes,
+                                                int16_t *pTrackPos,
+                                                uint16_t trackCount)
+{
+    int32_t contentSize = (int32_t)baseGap * MAX(0, (int16_t)trackCount - 1);
+    int32_t remain;
+    int16_t offset = 0;
+    int16_t gap = baseGap;
+    uint16_t index;
+
+    for (index = 0; index < trackCount; ++index)
+    {
+        contentSize += pTrackSizes[index];
+    }
+
+    remain = innerSize - contentSize;
+    if (remain > 0)
+    {
+        switch (align)
+        {
+        case ldGridAlignCenter:
+            offset = (int16_t)(remain / 2);
+            break;
+        case ldGridAlignEnd:
+            offset = (int16_t)remain;
+            break;
+        case ldGridAlignSpaceEvenly:
+            if (trackCount > 0)
+            {
+                gap += (int16_t)(remain / (trackCount + 1));
+                offset = gap - baseGap;
+            }
+            break;
+        case ldGridAlignSpaceAround:
+            if (trackCount > 0)
+            {
+                int16_t extra = (int16_t)(remain / trackCount);
+                gap += extra;
+                offset = extra / 2;
+            }
+            break;
+        case ldGridAlignSpaceBetween:
+            if (trackCount > 1)
+            {
+                gap += (int16_t)(remain / (trackCount - 1));
+            }
+            break;
+        case ldGridAlignStretch:
+            if (trackCount > 0)
+            {
+                int16_t bonus = (int16_t)(remain / trackCount);
+                int16_t extra = (int16_t)(remain % trackCount);
+                for (index = 0; index < trackCount; ++index)
+                {
+                    pTrackSizes[index] += bonus;
+                    if (extra > 0)
+                    {
+                        pTrackSizes[index]++;
+                        extra--;
+                    }
+                }
+            }
+            break;
+        default:
+            break;
+        }
+    }
+
+    for (index = 0; index < trackCount; ++index)
+    {
+        pTrackPos[index] = offset;
+        offset += pTrackSizes[index] + gap;
+    }
+}
+
+static void ldWindowApplyLegacyGridLayout(ldWindow_t *ptWidget)
 {
     uint16_t childCount = ldBaseGetChildCount((ldBase_t *)ptWidget);
     arm_2d_size_t windowSize;
@@ -551,6 +929,125 @@ static void ldWindowApplyGridLayout(ldWindow_t *ptWidget)
 
         currentY += rowHeight + rowGap;
         startIndex += rowItemCount;
+    }
+}
+
+static void ldWindowApplyGridLayout(ldWindow_t *ptWidget)
+{
+    uint16_t childCount = ldBaseGetChildCount((ldBase_t *)ptWidget);
+
+    if (childCount == 0)
+    {
+        return;
+    }
+
+    if (!ldWindowGridHasDescriptors(ptWidget))
+    {
+        ldWindowApplyLegacyGridLayout(ptWidget);
+        return;
+    }
+
+    ldBase_t *children[childCount];
+    uint16_t visibleCount = ldWindowCollectDirectChildren((ldBase_t *)ptWidget, children, childCount, true);
+    uint16_t colCount = ldWindowCountGridTracks(ptWidget->gridColDsc);
+    uint16_t rowCount = ldWindowCountGridTracks(ptWidget->gridRowDsc);
+    arm_2d_size_t windowSize = ptWidget->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize;
+    int16_t innerWidth = MAX(0, windowSize.iWidth - ptWidget->gridPadding.left - ptWidget->gridPadding.right);
+    int16_t innerHeight = MAX(0, windowSize.iHeight - ptWidget->gridPadding.top - ptWidget->gridPadding.bottom);
+
+    if ((visibleCount == 0) || (colCount == 0) || (rowCount == 0))
+    {
+        return;
+    }
+
+    int16_t colSizes[colCount];
+    int16_t colPos[colCount];
+    int16_t rowSizes[rowCount];
+    int16_t rowPos[rowCount];
+    uint16_t index;
+
+    for (index = 0; index < colCount; ++index)
+    {
+        int16_t dsc = ptWidget->gridColDsc[index];
+        colSizes[index] = (dsc >= 0) && !ldWindowGridTrackIsContent(dsc) ? dsc : 0;
+    }
+    for (index = 0; index < rowCount; ++index)
+    {
+        int16_t dsc = ptWidget->gridRowDsc[index];
+        rowSizes[index] = (dsc >= 0) && !ldWindowGridTrackIsContent(dsc) ? dsc : 0;
+    }
+
+    ldWindowGridMeasureContentTracks(ptWidget->gridColDsc,
+                                     colSizes,
+                                     children,
+                                     visibleCount,
+                                     true,
+                                     ptWidget->gridColumnGap,
+                                     colCount,
+                                     rowCount);
+    ldWindowGridMeasureContentTracks(ptWidget->gridRowDsc,
+                                     rowSizes,
+                                     children,
+                                     visibleCount,
+                                     false,
+                                     ptWidget->gridRowGap,
+                                     colCount,
+                                     rowCount);
+
+    ldWindowGridResolveFrTracks(ptWidget->gridColDsc, colSizes, colCount, ptWidget->gridColumnGap, innerWidth);
+    ldWindowGridResolveFrTracks(ptWidget->gridRowDsc, rowSizes, rowCount, ptWidget->gridRowGap, innerHeight);
+    ldWindowGridApplyContainerAlignment(ptWidget->gridColAlign,
+                                        innerWidth,
+                                        ptWidget->gridColumnGap,
+                                        colSizes,
+                                        colPos,
+                                        colCount);
+    ldWindowGridApplyContainerAlignment(ptWidget->gridRowAlign,
+                                        innerHeight,
+                                        ptWidget->gridRowGap,
+                                        rowSizes,
+                                        rowPos,
+                                        rowCount);
+
+    for (index = 0; index < visibleCount; ++index)
+    {
+        ldBase_t *ptItem = children[index];
+        arm_2d_region_t tRegion = ptItem->use_as__arm_2d_control_node_t.tRegion;
+        uint16_t colIndex;
+        uint16_t rowIndex;
+        uint16_t colStart;
+        uint16_t colSpan;
+        uint16_t rowStart;
+        uint16_t rowSpan;
+        int16_t cellWidth = 0;
+        int16_t cellHeight = 0;
+        int16_t itemWidth;
+        int16_t itemHeight;
+
+        ldWindowNormalizeGridCell(ptItem, colCount, rowCount, &colStart, &colSpan, &rowStart, &rowSpan);
+
+        for (colIndex = 0; colIndex < colSpan; ++colIndex)
+        {
+            cellWidth += colSizes[colStart + colIndex];
+        }
+        cellWidth += (int16_t)(MAX(0, (int16_t)colSpan - 1) * ptWidget->gridColumnGap);
+        for (rowIndex = 0; rowIndex < rowSpan; ++rowIndex)
+        {
+            cellHeight += rowSizes[rowStart + rowIndex];
+        }
+        cellHeight += (int16_t)(MAX(0, (int16_t)rowSpan - 1) * ptWidget->gridRowGap);
+
+        itemWidth = ldWindowResolveGridCellSize(ptItem->gridCellXAlign, cellWidth, tRegion.tSize.iWidth);
+        itemHeight = ldWindowResolveGridCellSize(ptItem->gridCellYAlign, cellHeight, tRegion.tSize.iHeight);
+        tRegion.tLocation.iX = ptWidget->gridPadding.left +
+                               colPos[colStart] +
+                               ldWindowResolveGridCellStart(ptItem->gridCellXAlign, cellWidth, itemWidth);
+        tRegion.tLocation.iY = ptWidget->gridPadding.top +
+                               rowPos[rowStart] +
+                               ldWindowResolveGridCellStart(ptItem->gridCellYAlign, cellHeight, itemHeight);
+        tRegion.tSize.iWidth = itemWidth;
+        tRegion.tSize.iHeight = itemHeight;
+        ldWindowApplyLayoutRegion(ptItem, tRegion);
     }
 }
 
@@ -921,6 +1418,32 @@ void ldWindowSetGridPadding(ldWindow_t *ptWidget, ldPadding_t padding)
         return;
     }
     ptWidget->gridPadding = padding;
+    ptWidget->layoutTpye = layoutGrid;
+    ldWindowMarkLayoutDirty(ptWidget);
+}
+
+void ldWindowSetGridDscArray(ldWindow_t *ptWidget, const int16_t *pColDsc, const int16_t *pRowDsc)
+{
+    assert(NULL != ptWidget);
+    if (ptWidget == NULL)
+    {
+        return;
+    }
+    ptWidget->gridColDsc = pColDsc;
+    ptWidget->gridRowDsc = pRowDsc;
+    ptWidget->layoutTpye = layoutGrid;
+    ldWindowMarkLayoutDirty(ptWidget);
+}
+
+void ldWindowSetGridAlign(ldWindow_t *ptWidget, ldGridAlign_t colAlign, ldGridAlign_t rowAlign)
+{
+    assert(NULL != ptWidget);
+    if (ptWidget == NULL)
+    {
+        return;
+    }
+    ptWidget->gridColAlign = colAlign;
+    ptWidget->gridRowAlign = rowAlign;
     ptWidget->layoutTpye = layoutGrid;
     ldWindowMarkLayoutDirty(ptWidget);
 }

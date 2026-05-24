@@ -21,6 +21,25 @@ LingDongGUI 当前的 `grid` 不是 LVGL 语义上的二维显式网格，而是
 
 所以这轮 grid 的重点，不是“修几个 setter”，而是把模型从“顺排容器”升级成“显式网格容器”。
 
+### 1.1 2026-05-24 当前完成状态回写
+
+本轮实现后，LingDongGUI 的 grid 已经补到下面这一级别：
+
+- `ldWindow` 可声明 column / row descriptor
+- `ldBase` 可声明 child cell 位置、span、cell 内对齐
+- solver 已按 explicit cell 计算，不再只靠 row-first 顺排
+- 轨道已支持 fixed / `CONTENT` / `FR`
+- demo 已从“3 列 dashboard”改成 descriptor + span + center 的组合示例
+- host-side 测试已覆盖 descriptor、`CONTENT`、`FR`、span、container align、cell align、非法输入钳制、legacy fallback
+
+但这不等于和 LVGL 完全对齐；下面这些仍然明确不支持：
+
+- subgrid
+- RTL
+- ignore-layout / floating child
+
+这些边界本轮只记账，不伪装成已支持。
+
 ---
 
 ## 2. 当前 LingDongGUI grid 的真实能力
@@ -246,6 +265,13 @@ LingDongGUI 现在只有平均列宽。
 - 不做的话如何记账
 
 否则后续补 grid 时，边界会反复漂移。
+
+当前回写：
+
+- subgrid：未做
+- RTL：未做
+- ignore-layout：未做
+- 容错：`pos/span` 钳制已补，descriptor 缺失时走 legacy `gridColumns` fallback
 
 ---
 

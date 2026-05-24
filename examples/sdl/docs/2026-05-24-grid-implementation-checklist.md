@@ -4,6 +4,13 @@
 > 目标：把 LingDongGUI 的 grid 从“多列顺排容器”补成“显式二维网格容器”  
 > 范围：只补 grid 能力；**不**做统一 layout/style/property 抽象
 
+## 0. 2026-05-24 实施回写
+
+- 已落地：descriptor 模型、`ldWindowSetGridDscArray()`、`ldWindowSetGridAlign()`、`ldBaseSetGridCell()`、fixed/`CONTENT`/`FR` 轨道、explicit cell、`col_span` / `row_span`、cell `start/center/end/stretch`、legacy `gridColumns` fallback、host-side grid test、`USE_DEMO=5` grid demo 改造
+- 已验证：`layout_window_test` 通过；`USE_DEMO=5` 的 `ldgui_sdl_demo` 编译通过
+- 本轮明确不支持：subgrid、RTL、ignore-layout；文档中已记账，避免误判为已支持
+- 轨道计算器本轮采用 `ldWindow.c` 内部 static helper 收口，没有单拆新源文件
+
 ## 1. 本轮完成标准
 
 完成后，grid 至少需要满足：
