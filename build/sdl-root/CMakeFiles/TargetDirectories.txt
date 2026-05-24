@@ -1,0 +1,9 @@
+/home/share/samba/flyingcys/LingDongGUI/.worktree/gui-test-coverage/build/sdl-root/CMakeFiles/longdonggui_arm2d.dir
+/home/share/samba/flyingcys/LingDongGUI/.worktree/gui-test-coverage/build/sdl-root/CMakeFiles/longdonggui.dir
+/home/share/samba/flyingcys/LingDongGUI/.worktree/gui-test-coverage/build/sdl-root/CMakeFiles/longdonggui_porting_default.dir
+/home/share/samba/flyingcys/LingDongGUI/.worktree/gui-test-coverage/build/sdl-root/CMakeFiles/longdonggui_host.dir
+/home/share/samba/flyingcys/LingDongGUI/.worktree/gui-test-coverage/build/sdl-root/CMakeFiles/edit_cache.dir
+/home/share/samba/flyingcys/LingDongGUI/.worktree/gui-test-coverage/build/sdl-root/CMakeFiles/rebuild_cache.dir
+/home/share/samba/flyingcys/LingDongGUI/.worktree/gui-test-coverage/build/sdl-root/examples/sdl/CMakeFiles/ldgui_sdl_demo.dir
+/home/share/samba/flyingcys/LingDongGUI/.worktree/gui-test-coverage/build/sdl-root/examples/sdl/CMakeFiles/edit_cache.dir
+/home/share/samba/flyingcys/LingDongGUI/.worktree/gui-test-coverage/build/sdl-root/examples/sdl/CMakeFiles/rebuild_cache.dir

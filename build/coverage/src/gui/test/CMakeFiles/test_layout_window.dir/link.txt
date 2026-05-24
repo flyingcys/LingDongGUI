@@ -1,0 +1,1 @@
+/usr/bin/cc --coverage CMakeFiles/test_layout_window.dir/test_support.c.o CMakeFiles/test_layout_window.dir/test_layout_window.c.o -o test_layout_window  ../../../liblongdonggui_host.a ../../../liblongdonggui_arm2d.a 

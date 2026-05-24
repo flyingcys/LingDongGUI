@@ -1,0 +1,1 @@
+/usr/bin/cc --coverage CMakeFiles/test_ldprogressbar.dir/test_support.c.o CMakeFiles/test_ldprogressbar.dir/test_ldprogressbar.c.o -o test_ldprogressbar  ../../../liblongdonggui_host.a ../../../liblongdonggui_arm2d.a 

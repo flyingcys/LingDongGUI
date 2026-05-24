@@ -1,0 +1,2 @@
+/usr/bin/ar qc liblongdonggui_porting_default.a CMakeFiles/longdonggui_porting_default.dir/src/porting/ldConfig.c.o CMakeFiles/longdonggui_porting_default.dir/src/porting/arm_2d_disp_adapter_0.c.o CMakeFiles/longdonggui_porting_default.dir/examples/common/perf_counter/perf_counter.c.o CMakeFiles/longdonggui_porting_default.dir/examples/common/perf_counter/perfc_port_default.c.o
+/usr/bin/ranlib liblongdonggui_porting_default.a

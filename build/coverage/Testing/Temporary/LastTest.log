@@ -1,0 +1,48 @@
+Start testing: May 24 00:26 CST
+----------------------------------------------------------
+1/3 Testing: test_layout_window
+1/3 Test: test_layout_window
+Command: "/home/share/samba/flyingcys/LingDongGUI/.worktree/gui-test-coverage/build/coverage/src/gui/test/test_layout_window"
+Directory: /home/share/samba/flyingcys/LingDongGUI/.worktree/gui-test-coverage/build/coverage/src/gui/test
+"test_layout_window" start time: May 24 00:26 CST
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"test_layout_window" end time: May 24 00:26 CST
+"test_layout_window" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2/3 Testing: test_ldlabel
+2/3 Test: test_ldlabel
+Command: "/home/share/samba/flyingcys/LingDongGUI/.worktree/gui-test-coverage/build/coverage/src/gui/test/test_ldlabel"
+Directory: /home/share/samba/flyingcys/LingDongGUI/.worktree/gui-test-coverage/build/coverage/src/gui/test
+"test_ldlabel" start time: May 24 00:26 CST
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"test_ldlabel" end time: May 24 00:26 CST
+"test_ldlabel" time elapsed: 00:00:00
+----------------------------------------------------------
+
+3/3 Testing: test_ldprogressbar
+3/3 Test: test_ldprogressbar
+Command: "/home/share/samba/flyingcys/LingDongGUI/.worktree/gui-test-coverage/build/coverage/src/gui/test/test_ldprogressbar"
+Directory: /home/share/samba/flyingcys/LingDongGUI/.worktree/gui-test-coverage/build/coverage/src/gui/test
+"test_ldprogressbar" start time: May 24 00:26 CST
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"test_ldprogressbar" end time: May 24 00:26 CST
+"test_ldprogressbar" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: May 24 00:26 CST

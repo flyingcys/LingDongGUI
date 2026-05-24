@@ -1,0 +1,1 @@
+/usr/bin/cc --coverage CMakeFiles/test_ldbase.dir/test_support.c.o CMakeFiles/test_ldbase.dir/test_ldbase.c.o -o test_ldbase  ../../../liblongdonggui_host.a ../../../liblongdonggui_arm2d.a 
