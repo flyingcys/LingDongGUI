@@ -3,11 +3,7 @@
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-<<<<<<< HEAD
-This project is indexed by GitNexus as **LingDongGUI** (111930 symbols, 161424 relationships, 296 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
-=======
-This project is indexed by GitNexus as **LingDongGUI** (111766 symbols, 161821 relationships, 285 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
->>>>>>> fix-demo3
+This project is indexed by GitNexus as **LingDongGUI** (111947 symbols, 161579 relationships, 295 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 

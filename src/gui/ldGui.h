@@ -47,6 +47,7 @@ extern "C" {
 #include "ldDateTime.h"
 #include "ldRadialMenu.h"
 #include "ldSlider.h"
+#include "ldSwitch.h"
 #include "ldText.h"
 #include "ldProgressBar.h"
 #include "ldCheckBox.h"

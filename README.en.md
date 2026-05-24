@@ -72,6 +72,7 @@ widget demo sdl
 | ✅ | radia menu | Rotary selection menu |
 | ✅ | label | Simple text label |
 | ✅ | slider | Drag slider |
+| ✅ | switch | Toggle switch with horizontal/vertical layouts, disabled state, and animated transitions |
 | ✅ | scroll selecter | Scroll-wheel picker |
 | ✅ | date time | Digital clock & date |
 | ✅ | icon slider | Sliding icon bar |

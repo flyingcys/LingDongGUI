@@ -43,6 +43,7 @@ typedef enum{
     widgetTypeGraph,
     widgetTypeCheckBox,
     widgetTypeSlider,
+    widgetTypeSwitch,
     widgetTypeProgressBar,
     widgetTypeGauge,
     widgetTypeQRCode,

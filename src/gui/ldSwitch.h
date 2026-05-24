@@ -1,0 +1,121 @@
+/*
+ * Copyright (c) 2023-2025 Ou Jianbo (59935554@qq.com). All rights reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#ifndef __LD_SWITCH_H__
+#define __LD_SWITCH_H__
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmissing-declarations"
+#pragma clang diagnostic ignored "-Wmicrosoft-anon-tag"
+#pragma clang diagnostic ignored "-Wpadded"
+#endif
+
+/* OOC header, please DO NOT modify  */
+#ifdef __LD_SWITCH_IMPLEMENT__
+#undef __LD_SWITCH_IMPLEMENT__
+#define __ARM_2D_IMPL__
+#elif defined(__LD_SWITCH_INHERIT__)
+#undef __LD_SWITCH_INHERIT__
+#define __ARM_2D_INHERIT__
+#endif
+#include "arm_2d_utils.h"
+#include "ldBase.h"
+
+typedef struct ldSwitch_t ldSwitch_t;
+
+struct ldSwitch_t
+{
+    implement(ldBase_t);
+    ldColor offTrackColor;
+    ldColor onTrackColor;
+    ldColor knobColor;
+    ldColor borderColor;
+    arm_2d_tile_t *ptOffImgTile;
+    arm_2d_tile_t *ptOffMaskTile;
+    arm_2d_tile_t *ptOnImgTile;
+    arm_2d_tile_t *ptOnMaskTile;
+    arm_2d_tile_t *ptKnobImgTile;
+    arm_2d_tile_t *ptKnobMaskTile;
+    uint16_t animProgress;
+    uint16_t animStartProgress;
+    uint16_t animTargetProgress;
+    uint16_t animElapsedMs;
+    uint16_t knobPadding;
+    bool isChecked:1;
+    bool isHorizontal:1;
+    bool isDisabled:1;
+    bool isPressed:1;
+    bool isAnimating:1;
+    bool useImageStyle:1;
+};
+
+ldSwitch_t *ldSwitch_init(ld_scene_t *ptScene,
+                          ldSwitch_t *ptWidget,
+                          uint16_t nameId,
+                          uint16_t parentNameId,
+                          int16_t x,
+                          int16_t y,
+                          int16_t width,
+                          int16_t height);
+void ldSwitch_depose(ld_scene_t *ptScene, ldSwitch_t *ptWidget);
+void ldSwitch_on_load(ld_scene_t *ptScene, ldSwitch_t *ptWidget);
+void ldSwitch_on_frame_start(ld_scene_t *ptScene, ldSwitch_t *ptWidget);
+void ldSwitch_on_frame_complete(ld_scene_t *ptScene, ldSwitch_t *ptWidget);
+void ldSwitch_show(ld_scene_t *ptScene, ldSwitch_t *ptWidget, const arm_2d_tile_t *ptTile, bool bIsNewFrame);
+
+void ldSwitchSetColor(ldSwitch_t *ptWidget, ldColor offTrackColor, ldColor onTrackColor, ldColor knobColor, ldColor borderColor);
+void ldSwitchSetImage(ldSwitch_t *ptWidget,
+                      arm_2d_tile_t *ptOffImgTile,
+                      arm_2d_tile_t *ptOffMaskTile,
+                      arm_2d_tile_t *ptOnImgTile,
+                      arm_2d_tile_t *ptOnMaskTile,
+                      arm_2d_tile_t *ptKnobImgTile,
+                      arm_2d_tile_t *ptKnobMaskTile);
+void _ldSwitchSetChecked(ld_scene_t *ptScene, ldSwitch_t *ptWidget, bool isChecked);
+void ldSwitchSetHorizontal(ldSwitch_t *ptWidget, bool isHorizontal);
+void ldSwitchSetDisabled(ldSwitch_t *ptWidget, bool isDisabled);
+bool ldSwitchIsChecked(ldSwitch_t *ptWidget);
+bool ldSwitchIsHorizontal(ldSwitch_t *ptWidget);
+bool ldSwitchIsDisabled(ldSwitch_t *ptWidget);
+
+#define ldSwitchInit(nameId,parentNameId,x,y,width,height) \
+        ldSwitch_init(ptScene,NULL,nameId,parentNameId,x,y,width,height)
+
+#define ldSwitchSetChecked(ptWidget,isChecked) _ldSwitchSetChecked(ptScene,ptWidget,isChecked)
+#define ldSwitchSetHidden                    ldBaseSetHidden
+#define ldSwitchMove                         ldBaseMove
+#define ldSwitchSetOpacity                   ldBaseSetOpacity
+#define ldSwitchSetSelectable                ldBaseSetSelectable
+#define ldSwitchSetSelect                    ldBaseSetSelect
+#define ldSwitchSetCorner                    ldBaseSetCorner
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
