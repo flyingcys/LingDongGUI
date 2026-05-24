@@ -7,6 +7,7 @@
 #define UI_GRID_PANEL_HEIGHT_SM    54
 #define UI_GRID_PANEL_HEIGHT_MD    64
 #define UI_GRID_PANEL_HEIGHT_LG    74
+#define UI_GRID_PANEL_WIDTH_XS     56
 
 enum {
     ID_LAYOUT_BG = 0,
@@ -108,6 +109,12 @@ static void uiGridCreatePanel(ld_scene_t *ptScene,
                               int16_t width,
                               int16_t height,
                               ldColor color,
+                              ldGridAlign_t xAlign,
+                              int16_t colPos,
+                              int16_t colSpan,
+                              ldGridAlign_t yAlign,
+                              int16_t rowPos,
+                              int16_t rowSpan,
                               const char *title,
                               const char *hint);
 
@@ -169,6 +176,12 @@ static void uiGridCreatePanel(ld_scene_t *ptScene,
                               int16_t width,
                               int16_t height,
                               ldColor color,
+                              ldGridAlign_t xAlign,
+                              int16_t colPos,
+                              int16_t colSpan,
+                              ldGridAlign_t yAlign,
+                              int16_t rowPos,
+                              int16_t rowSpan,
                               const char *title,
                               const char *hint)
 {
@@ -177,6 +190,7 @@ static void uiGridCreatePanel(ld_scene_t *ptScene,
     (void)ptScene;
     obj = ldWindowInit(panelId, ID_GRID_CANVAS, 0, 0, width, height);
     ldWindowSetColor(obj, color);
+    ldBaseSetGridCell((ldBase_t *)obj, xAlign, colPos, colSpan, yAlign, rowPos, rowSpan);
 
     obj = ldLabelInit(titleId, panelId, 10, 8, width - 20, 16, FONT_ARIAL_16_A8);
     ldLabelSetText(obj, (uint8_t *)title);
@@ -299,6 +313,8 @@ void uiLayoutQuit(ld_scene_t *ptScene)
 void uiGridInit(ld_scene_t *ptScene)
 {
     void *obj;
+    static const int16_t s_grid_col_dsc[] = {92, LD_GRID_CONTENT, LD_GRID_FR(1), LD_GRID_TEMPLATE_LAST};
+    static const int16_t s_grid_row_dsc[] = {54, 66, LD_GRID_FR(1), LD_GRID_TEMPLATE_LAST};
 
     obj = ldWindowInit(ID_GRID_BG, ID_GRID_BG, 0, 0, LD_CFG_SCREEN_WIDTH, LD_CFG_SCREEN_HEIGHT);
     ldWindowSetColor(obj, __RGB(246, 247, 250));
@@ -309,25 +325,25 @@ void uiGridInit(ld_scene_t *ptScene)
     ldLabelSetAlign(obj, ARM_2D_ALIGN_LEFT);
 
     obj = ldLabelInit(ID_GRID_PAGE_HINT, ID_GRID_BG, 12, 24, 456, 12, FONT_ARIAL_12);
-    ldLabelSetText(obj, (uint8_t *)"Uses ldWindowSetGridColumns + ldWindowSetGridGap + ldWindowSetGridPadding on a 3-column dashboard.");
+    ldLabelSetText(obj, (uint8_t *)"Shows fixed/content/FR tracks, explicit cell span, and centered cells with the new grid APIs.");
     ldLabelSetTextColor(obj, __RGB(82, 86, 92));
     ldLabelSetAlign(obj, ARM_2D_ALIGN_LEFT);
 
     obj = ldWindowInit(ID_GRID_CANVAS, ID_GRID_BG, 12, 40, 456, 204);
     ldWindowSetColor(obj, __RGB(232, 236, 242));
-    ldWindowSetGridColumns(obj, 3);
+    ldWindowSetGridDscArray(obj, s_grid_col_dsc, s_grid_row_dsc);
     ldWindowSetGridGap(obj, 12, 12);
-    ldWindowSetGridPadding(obj, (ldPadding_t){ .left = 10, .top = 10, .right = 10, .bottom = 10 });
+    ldWindowSetGridPadding(obj, (ldPadding_t){ .left = 12, .top = 12, .right = 12, .bottom = 12 });
 
-    uiGridCreatePanel(ptScene, ID_GRID_CELL_A, ID_GRID_CELL_A_TITLE, ID_GRID_CELL_A_HINT, UI_GRID_PANEL_WIDTH, UI_GRID_PANEL_HEIGHT_SM, __RGB(33, 64, 95), "Overview", "col 0\n54px high\nfirst visible child");
-    uiGridCreatePanel(ptScene, ID_GRID_CELL_B, ID_GRID_CELL_B_TITLE, ID_GRID_CELL_B_HINT, UI_GRID_PANEL_WIDTH, UI_GRID_PANEL_HEIGHT_LG, __RGB(42, 157, 143), "Status", "col 1\n74px high\nsets row 0 height");
-    uiGridCreatePanel(ptScene, ID_GRID_CELL_C, ID_GRID_CELL_C_TITLE, ID_GRID_CELL_C_HINT, UI_GRID_PANEL_WIDTH, UI_GRID_PANEL_HEIGHT_MD, __RGB(231, 111, 81), "Queue", "col 2\n64px high\nrow-first placement");
-    uiGridCreatePanel(ptScene, ID_GRID_CELL_D, ID_GRID_CELL_D_TITLE, ID_GRID_CELL_D_HINT, UI_GRID_PANEL_WIDTH, UI_GRID_PANEL_HEIGHT_MD, __RGB(69, 123, 157), "Events", "next row, col 0\nstarts after row gap");
-    uiGridCreatePanel(ptScene, ID_GRID_CELL_E, ID_GRID_CELL_E_TITLE, ID_GRID_CELL_E_HINT, UI_GRID_PANEL_WIDTH, UI_GRID_PANEL_HEIGHT_SM, __RGB(244, 162, 97), "Logs", "next row, col 1\npadding keeps left inset");
-    uiGridCreatePanel(ptScene, ID_GRID_CELL_F, ID_GRID_CELL_F_TITLE, ID_GRID_CELL_F_HINT, UI_GRID_PANEL_WIDTH, UI_GRID_PANEL_HEIGHT_LG, __RGB(87, 117, 144), "Alerts", "next row, col 2\nrow 1 height follows tallest tile");
+    uiGridCreatePanel(ptScene, ID_GRID_CELL_A, ID_GRID_CELL_A_TITLE, ID_GRID_CELL_A_HINT, 92, UI_GRID_PANEL_HEIGHT_SM, __RGB(33, 64, 95), ldGridAlignStretch, 0, 1, ldGridAlignStretch, 0, 1, "Fixed", "col 0\n92px fixed\nstretch fill");
+    uiGridCreatePanel(ptScene, ID_GRID_CELL_B, ID_GRID_CELL_B_TITLE, ID_GRID_CELL_B_HINT, 112, UI_GRID_PANEL_HEIGHT_SM, __RGB(42, 157, 143), ldGridAlignStretch, 1, 1, ldGridAlignStretch, 0, 1, "Content", "col 1\ncontent width\nsets track size");
+    uiGridCreatePanel(ptScene, ID_GRID_CELL_C, ID_GRID_CELL_C_TITLE, ID_GRID_CELL_C_HINT, UI_GRID_PANEL_WIDTH, UI_GRID_PANEL_HEIGHT_SM, __RGB(231, 111, 81), ldGridAlignStretch, 2, 1, ldGridAlignStretch, 0, 1, "FR", "col 2\n1fr track\nfills leftover");
+    uiGridCreatePanel(ptScene, ID_GRID_CELL_D, ID_GRID_CELL_D_TITLE, ID_GRID_CELL_D_HINT, 180, 66, __RGB(69, 123, 157), ldGridAlignStretch, 0, 2, ldGridAlignStretch, 1, 1, "Span", "col 0-1\nspan two cols\nexplicit cell");
+    uiGridCreatePanel(ptScene, ID_GRID_CELL_E, ID_GRID_CELL_E_TITLE, ID_GRID_CELL_E_HINT, UI_GRID_PANEL_WIDTH, 132, __RGB(244, 162, 97), ldGridAlignStretch, 2, 1, ldGridAlignStretch, 1, 2, "Row Span", "col 2\nrow 1-2\nstretch fill");
+    uiGridCreatePanel(ptScene, ID_GRID_CELL_F, ID_GRID_CELL_F_TITLE, ID_GRID_CELL_F_HINT, UI_GRID_PANEL_WIDTH_XS, 28, __RGB(87, 117, 144), ldGridAlignCenter, 1, 1, ldGridAlignCenter, 2, 1, "Center", "col 1 row 2\ncenter align\nkeeps own size");
 
     obj = ldLabelInit(ID_GRID_GUIDE_TEXT, ID_GRID_BG, 12, 248, 456, 12, FONT_ARIAL_12);
-    ldLabelSetText(obj, (uint8_t *)"Grid container: 3 columns, 12px row/column gap, 10px padding.");
+    ldLabelSetText(obj, (uint8_t *)"Grid descriptors: [92, content, 1fr] x [54, 66, 1fr], plus explicit span and centered cells.");
     ldLabelSetTextColor(obj, __RGB(90, 94, 102));
     ldLabelSetAlign(obj, ARM_2D_ALIGN_LEFT);
 }
