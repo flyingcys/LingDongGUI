@@ -17,7 +17,7 @@
 - Create: `src/gui/ldSwitchInternal.c`
 - Create: `examples/sdl/tests/switch/test_ldswitch_internal.c`
 
-- [ ] **Step 1: 先写内部辅助 API 边界，只定义本轮必须可测的纯逻辑**
+- [x] **Step 1: 先写内部辅助 API 边界，只定义本轮必须可测的纯逻辑**
 
 ```c
 /* src/gui/ldSwitchInternal.h */
@@ -57,7 +57,7 @@ bool ldSwitchAdvanceAnimation(ldSwitchAnimState_t *ptAnim,
 #endif
 ```
 
-- [ ] **Step 2: 先把 failing test 写出来，覆盖横向、纵向、动画推进三个核心语义**
+- [x] **Step 2: 先把 failing test 写出来，覆盖横向、纵向、动画推进三个核心语义**
 
 ```c
 /* examples/sdl/tests/switch/test_ldswitch_internal.c */
@@ -94,7 +94,7 @@ static void test_anim_progress_reaches_target(void)
 }
 ```
 
-- [ ] **Step 3: 给测试加最小 `main()`，保证它能作为独立 host test 运行**
+- [x] **Step 3: 给测试加最小 `main()`，保证它能作为独立 host test 运行**
 
 ```c
 int main(void)
@@ -106,7 +106,7 @@ int main(void)
 }
 ```
 
-- [ ] **Step 4: 先跑测试，确认当前基线必然失败**
+- [x] **Step 4: 先跑测试，确认当前基线必然失败**
 
 Run:
 
@@ -120,7 +120,7 @@ cc -std=gnu11 -I./src/gui \
 
 Expected: 编译失败，提示 `src/gui/ldSwitchInternal.c` 或头文件尚不存在。
 
-- [ ] **Step 5: 写最小桩实现，让测试从“缺文件”推进到“断言失败”**
+- [x] **Step 5: 写最小桩实现，让测试从“缺文件”推进到“断言失败”**
 
 ```c
 /* src/gui/ldSwitchInternal.c */
@@ -157,7 +157,7 @@ bool ldSwitchAdvanceAnimation(ldSwitchAnimState_t *ptAnim,
 }
 ```
 
-- [ ] **Step 6: 再跑测试，确认现在失败在行为断言而不是缺文件**
+- [x] **Step 6: 再跑测试，确认现在失败在行为断言而不是缺文件**
 
 Run:
 
@@ -188,7 +188,7 @@ rtk git commit -m "test: add switch internal contract tests"
 - Modify: `src/gui/ldSwitchInternal.c`
 - Modify: `examples/sdl/tests/switch/test_ldswitch_internal.c`
 
-- [ ] **Step 1: 补齐横向 / 纵向几何计算最小实现**
+- [x] **Step 1: 补齐横向 / 纵向几何计算最小实现**
 
 ```c
 ldSwitchAxisMetrics_t ldSwitchResolveAxisMetrics(int16_t width,
@@ -215,7 +215,7 @@ ldSwitchAxisMetrics_t ldSwitchResolveAxisMetrics(int16_t width,
 }
 ```
 
-- [ ] **Step 2: 实现 knob offset 和动画推进逻辑**
+- [x] **Step 2: 实现 knob offset 和动画推进逻辑**
 
 ```c
 uint16_t ldSwitchResolveKnobOffset(const ldSwitchAxisMetrics_t *ptMetrics,
@@ -272,7 +272,7 @@ bool ldSwitchAdvanceAnimation(ldSwitchAnimState_t *ptAnim,
 }
 ```
 
-- [ ] **Step 3: 扩测试，补 knob offset 边界和反向动画场景**
+- [x] **Step 3: 扩测试，补 knob offset 边界和反向动画场景**
 
 ```c
 static void test_knob_offset_matches_progress(void)
@@ -300,7 +300,7 @@ static void test_anim_progress_supports_reverse_direction(void)
 }
 ```
 
-- [ ] **Step 4: 跑 host tests，确认纯逻辑全部转绿**
+- [x] **Step 4: 跑 host tests，确认纯逻辑全部转绿**
 
 Run:
 
@@ -330,7 +330,7 @@ rtk git commit -m "feat: implement switch internal metrics and animation"
 - Modify: `src/gui/ldBase.h`
 - Modify: `src/gui/ldGui.h`
 
-- [ ] **Step 1: 先在头文件和 widget type 中写出 failing public contract**
+- [x] **Step 1: 先在头文件和 widget type 中写出 failing public contract**
 
 ```c
 /* src/gui/ldBase.h */
@@ -396,7 +396,7 @@ struct ldSwitch_t {
 };
 ```
 
-- [ ] **Step 2: 把 `ldSwitch` 注册到 GUI 聚合头，先让集成点可编译**
+- [x] **Step 2: 把 `ldSwitch` 注册到 GUI 聚合头，先让集成点可编译**
 
 ```c
 /* src/gui/ldGui.h */
@@ -405,7 +405,7 @@ struct ldSwitch_t {
 #include "ldText.h"
 ```
 
-- [ ] **Step 3: 先写最小 `ldSwitch.c` 骨架，把 init / show / frameStart / setters 都声明出来**
+- [x] **Step 3: 先写最小 `ldSwitch.c` 骨架，把 init / show / frameStart / setters 都声明出来**
 
 ```c
 static bool slotSwitchProcess(ld_scene_t *ptScene, ldMsg_t msg);
@@ -469,7 +469,7 @@ ldSwitch_t *ldSwitch_init(ld_scene_t *ptScene,
 }
 ```
 
-- [ ] **Step 4: 实现事件与 setter 语义，只先保证行为正确，不追求画面精细**
+- [x] **Step 4: 实现事件与 setter 语义，只先保证行为正确，不追求画面精细**
 
 ```c
 static void ldSwitchApplyValue(ld_scene_t *ptScene, ldSwitch_t *ptWidget, bool isChecked)
@@ -509,7 +509,7 @@ static bool slotSwitchProcess(ld_scene_t *ptScene, ldMsg_t msg)
 }
 ```
 
-- [ ] **Step 5: 实现颜色模式绘制和 `frameStart` 动画推进**
+- [x] **Step 5: 实现颜色模式绘制和 `frameStart` 动画推进**
 
 ```c
 void ldSwitch_on_frame_start(ld_scene_t *ptScene, ldSwitch_t *ptWidget)
@@ -593,7 +593,7 @@ void ldSwitch_show(ld_scene_t *ptScene, ldSwitch_t *ptWidget, const arm_2d_tile_
 }
 ```
 
-- [ ] **Step 6: 跑最小编译检查，确认 `ldSwitch` 已接入主源码树**
+- [x] **Step 6: 跑最小编译检查，确认 `ldSwitch` 已接入主源码树**
 
 Run:
 
@@ -623,7 +623,7 @@ rtk git commit -m "feat: add native switch widget"
 - Modify: `docs/tutorial/04 api.md`
 - Modify: `LingDongGUI_vs_LVGL_技术对比.md`
 
-- [ ] **Step 1: 先在 widget demo 第 2 页加入三个 switch 示例位**
+- [x] **Step 1: 先在 widget demo 第 2 页加入三个 switch 示例位**
 
 ```c
 /* examples/common/demo/widget/uiWidgetPage2.c */
@@ -657,7 +657,7 @@ ldSwitchSetChecked(obj, true);
 ldSwitchSetDisabled(obj, true);
 ```
 
-- [ ] **Step 2: 给 `ldSwitch.c` 补齐文档注释，并重新生成 API 文档**
+- [x] **Step 2: 给 `ldSwitch.c` 补齐文档注释，并重新生成 API 文档**
 
 ```c
 /**
@@ -672,7 +672,7 @@ cd /Users/cys/embedded/LingDongGUI
 python3 docs/tutorial/generate_api.py
 ```
 
-- [ ] **Step 3: 给 README 中英文列表补 switch 条目，并更新技术对比文档口径**
+- [x] **Step 3: 给 README 中英文列表补 switch 条目，并更新技术对比文档口径**
 
 ```markdown
 | ✅ | switch | 原生拨动开关，支持横向/纵向、禁用态和动画切换 |
@@ -683,7 +683,7 @@ python3 docs/tutorial/generate_api.py
 - 当前仍未覆盖：LVGL 的通用样式分部系统、统一动画引擎、RTL 语义
 ```
 
-- [ ] **Step 4: 构建并运行 SDL smoke，验证 switch 在真实 demo 中可见可交互**
+- [x] **Step 4: 构建并运行 SDL smoke，验证 switch 在真实 demo 中可见可交互**
 
 Run:
 
@@ -701,7 +701,7 @@ Expected:
 - demo 能启动，不因 `ldSwitch` 崩溃退出
 - 日志中不出现明显的空指针、未注册控件或资源缺失致命错误
 
-- [ ] **Step 5: 跑 host tests 和最终构建，确认逻辑与集成都转绿**
+- [x] **Step 5: 跑 host tests 和最终构建，确认逻辑与集成都转绿**
 
 Run:
 

@@ -3271,6 +3271,286 @@ scroll selecter widget
 <br>
 
 ---
+# Switch
+### 简述
+拨动开关控件，支持颜色或图片两种绘制模式，并带有开关动画。
+### 函数列表
+* ldSwitch_t *ldSwitch_init(ld_scene_t *ptScene, ldSwitch_t *ptWidget, uint16_t nameId, uint16_t parentNameId, int16_t x, int16_t y, int16_t width, int16_t height);
+* void ldSwitchSetColor(ldSwitch_t *ptWidget, ldColor offTrackColor, ldColor onTrackColor, ldColor knobColor, ldColor borderColor);
+* void ldSwitchSetImage(ldSwitch_t *ptWidget, arm_2d_tile_t *ptOffImgTile, arm_2d_tile_t *ptOffMaskTile, arm_2d_tile_t *ptOnImgTile, arm_2d_tile_t *ptOnMaskTile, arm_2d_tile_t *ptKnobImgTile, arm_2d_tile_t *ptKnobMaskTile);
+* void ldSwitchSetHorizontal(ldSwitch_t *ptWidget, bool isHorizontal);
+* void ldSwitchSetDisabled(ldSwitch_t *ptWidget, bool isDisabled);
+* bool ldSwitchIsChecked(ldSwitch_t *ptWidget);
+* bool ldSwitchIsHorizontal(ldSwitch_t *ptWidget);
+* bool ldSwitchIsDisabled(ldSwitch_t *ptWidget);
+### 信号列表
+* SIGNAL_VALUE_CHANGED开关状态变化时发送，value为0或1。
+### 函数说明
+#### ldSwitch_init
+<table>
+    <tr>
+        <td>函数</td>
+        <td colspan="2">
+            <pre><code class="language-c">ldSwitch_t *ldSwitch_init(ld_scene_t *ptScene, ldSwitch_t *ptWidget, uint16_t nameId, uint16_t parentNameId, int16_t x, int16_t y, int16_t width, int16_t height);</code></pre>
+        </td>
+    </tr>
+    <tr>
+        <td>说明</td>
+        <td colspan="2">
+    初始化拨动开关控件，默认使用横向布局和颜色绘制模式。        </td>
+    </tr>
+    <tr>
+        <td rowspan="8">参数</td>
+        <td>ptScene</td>
+        <td>场景指针</td>
+    </tr>
+    <tr>
+        <td>ptWidget</td>
+        <td>外部传入的控件实例，传 NULL 时自动分配</td>
+    </tr>
+    <tr>
+        <td>nameId</td>
+        <td>新控件 id</td>
+    </tr>
+    <tr>
+        <td>parentNameId</td>
+        <td>父控件 id</td>
+    </tr>
+    <tr>
+        <td>x</td>
+        <td>相对坐标 x 轴</td>
+    </tr>
+    <tr>
+        <td>y</td>
+        <td>相对坐标 y 轴</td>
+    </tr>
+    <tr>
+        <td>width</td>
+        <td>控件宽度</td>
+    </tr>
+    <tr>
+        <td>height</td>
+        <td>控件高度</td>
+    </tr>
+    <tr>
+        <td>返回</td>
+        <td>ldSwitch_t*</td>
+        <td>新控件指针</td>
+    </tr>
+</table>
+<br>
+
+#### ldSwitchSetColor
+<table>
+    <tr>
+        <td>函数</td>
+        <td colspan="2">
+            <pre><code class="language-c">void ldSwitchSetColor(ldSwitch_t *ptWidget, ldColor offTrackColor, ldColor onTrackColor, ldColor knobColor, ldColor borderColor);</code></pre>
+        </td>
+    </tr>
+    <tr>
+        <td>说明</td>
+        <td colspan="2">
+    设置颜色绘制模式，同时清除当前图片资源配置。        </td>
+    </tr>
+    <tr>
+        <td rowspan="5">参数</td>
+        <td>ptWidget</td>
+        <td>目标控件指针</td>
+    </tr>
+    <tr>
+        <td>offTrackColor</td>
+        <td>未选中时轨道颜色</td>
+    </tr>
+    <tr>
+        <td>onTrackColor</td>
+        <td>选中时轨道颜色</td>
+    </tr>
+    <tr>
+        <td>knobColor</td>
+        <td>滑块颜色</td>
+    </tr>
+    <tr>
+        <td>borderColor</td>
+        <td>轨道和滑块边框颜色</td>
+    </tr>
+</table>
+<br>
+
+#### ldSwitchSetImage
+<table>
+    <tr>
+        <td>函数</td>
+        <td colspan="2">
+            <pre><code class="language-c">void ldSwitchSetImage(ldSwitch_t *ptWidget, arm_2d_tile_t *ptOffImgTile, arm_2d_tile_t *ptOffMaskTile, arm_2d_tile_t *ptOnImgTile, arm_2d_tile_t *ptOnMaskTile, arm_2d_tile_t *ptKnobImgTile, arm_2d_tile_t *ptKnobMaskTile);</code></pre>
+        </td>
+    </tr>
+    <tr>
+        <td>说明</td>
+        <td colspan="2">
+    设置图片绘制模式，分别指定关闭轨道、打开轨道和滑块的图片资源。        </td>
+    </tr>
+    <tr>
+        <td rowspan="7">参数</td>
+        <td>ptWidget</td>
+        <td>目标控件指针</td>
+    </tr>
+    <tr>
+        <td>ptOffImgTile</td>
+        <td>未选中轨道图片</td>
+    </tr>
+    <tr>
+        <td>ptOffMaskTile</td>
+        <td>未选中轨道蒙板图片</td>
+    </tr>
+    <tr>
+        <td>ptOnImgTile</td>
+        <td>选中轨道图片</td>
+    </tr>
+    <tr>
+        <td>ptOnMaskTile</td>
+        <td>选中轨道蒙板图片</td>
+    </tr>
+    <tr>
+        <td>ptKnobImgTile</td>
+        <td>滑块图片</td>
+    </tr>
+    <tr>
+        <td>ptKnobMaskTile</td>
+        <td>滑块蒙板图片</td>
+    </tr>
+</table>
+<br>
+
+#### ldSwitchSetHorizontal
+<table>
+    <tr>
+        <td>函数</td>
+        <td colspan="2">
+            <pre><code class="language-c">void ldSwitchSetHorizontal(ldSwitch_t *ptWidget, bool isHorizontal);</code></pre>
+        </td>
+    </tr>
+    <tr>
+        <td>说明</td>
+        <td colspan="2">
+    设置开关方向，切换为横向或纵向布局。        </td>
+    </tr>
+    <tr>
+        <td rowspan="2">参数</td>
+        <td>ptWidget</td>
+        <td>目标控件指针</td>
+    </tr>
+    <tr>
+        <td>isHorizontal</td>
+        <td>true 表示横向，false 表示纵向</td>
+    </tr>
+</table>
+<br>
+
+#### ldSwitchSetDisabled
+<table>
+    <tr>
+        <td>函数</td>
+        <td colspan="2">
+            <pre><code class="language-c">void ldSwitchSetDisabled(ldSwitch_t *ptWidget, bool isDisabled);</code></pre>
+        </td>
+    </tr>
+    <tr>
+        <td>说明</td>
+        <td colspan="2">
+    设置禁用状态；禁用后控件不再响应点击切换。        </td>
+    </tr>
+    <tr>
+        <td rowspan="2">参数</td>
+        <td>ptWidget</td>
+        <td>目标控件指针</td>
+    </tr>
+    <tr>
+        <td>isDisabled</td>
+        <td>true 表示禁用，false 表示启用</td>
+    </tr>
+</table>
+<br>
+
+#### ldSwitchIsChecked
+<table>
+    <tr>
+        <td>函数</td>
+        <td colspan="2">
+            <pre><code class="language-c">bool ldSwitchIsChecked(ldSwitch_t *ptWidget);</code></pre>
+        </td>
+    </tr>
+    <tr>
+        <td>说明</td>
+        <td colspan="2">
+    获取当前是否为选中状态。        </td>
+    </tr>
+    <tr>
+        <td rowspan="1">参数</td>
+        <td>ptWidget</td>
+        <td>目标控件指针</td>
+    </tr>
+    <tr>
+        <td>返回</td>
+        <td>bool</td>
+        <td>true 表示打开，false 表示关闭</td>
+    </tr>
+</table>
+<br>
+
+#### ldSwitchIsHorizontal
+<table>
+    <tr>
+        <td>函数</td>
+        <td colspan="2">
+            <pre><code class="language-c">bool ldSwitchIsHorizontal(ldSwitch_t *ptWidget);</code></pre>
+        </td>
+    </tr>
+    <tr>
+        <td>说明</td>
+        <td colspan="2">
+    获取当前布局方向。        </td>
+    </tr>
+    <tr>
+        <td rowspan="1">参数</td>
+        <td>ptWidget</td>
+        <td>目标控件指针</td>
+    </tr>
+    <tr>
+        <td>返回</td>
+        <td>bool</td>
+        <td>true 表示横向，false 表示纵向</td>
+    </tr>
+</table>
+<br>
+
+#### ldSwitchIsDisabled
+<table>
+    <tr>
+        <td>函数</td>
+        <td colspan="2">
+            <pre><code class="language-c">bool ldSwitchIsDisabled(ldSwitch_t *ptWidget);</code></pre>
+        </td>
+    </tr>
+    <tr>
+        <td>说明</td>
+        <td colspan="2">
+    获取当前是否为禁用状态。        </td>
+    </tr>
+    <tr>
+        <td rowspan="1">参数</td>
+        <td>ptWidget</td>
+        <td>目标控件指针</td>
+    </tr>
+    <tr>
+        <td>返回</td>
+        <td>bool</td>
+        <td>true 表示禁用，false 表示启用</td>
+    </tr>
+</table>
+<br>
+
+---
 # Table
 ### 简述
 表格控件
