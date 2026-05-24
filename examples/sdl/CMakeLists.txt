@@ -243,6 +243,14 @@ set_tests_properties(check_use_demo_0_legacy_widget PROPERTIES
     WORKING_DIRECTORY "${SDL_EXAMPLE_DIR}"
 )
 
+add_test(
+    NAME check_use_demo_5_grid_widget
+    COMMAND "${Python3_EXECUTABLE}" "${SDL_EXAMPLE_DIR}/tests/check_use_demo_5_grid_widget.py"
+)
+set_tests_properties(check_use_demo_5_grid_widget PROPERTIES
+    WORKING_DIRECTORY "${SDL_EXAMPLE_DIR}"
+)
+
 add_executable(ldgui_sdl_demo
     ${SDL_DEMO_CORE_SOURCES}
     ${ARM2D_CONTROL_SOURCES}
