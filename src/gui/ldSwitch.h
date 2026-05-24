@@ -41,6 +41,7 @@ extern "C"
 #endif
 #include "arm_2d_utils.h"
 #include "ldBase.h"
+#include "ldSwitchInternal.h"
 
 typedef struct ldSwitch_t ldSwitch_t;
 
@@ -62,12 +63,14 @@ struct ldSwitch_t
     uint16_t animTargetProgress;
     uint16_t animElapsedMs;
     uint16_t knobPadding;
+    ldSwitchDirection_t direction;
     bool isChecked:1;
     bool isHorizontal:1;
     bool isDisabled:1;
     bool isPressed:1;
     bool isAnimating:1;
     bool useImageStyle:1;
+    bool hasRenderedFrame:1;
 };
 
 ldSwitch_t *ldSwitch_init(ld_scene_t *ptScene,
@@ -94,9 +97,11 @@ void ldSwitchSetImage(ldSwitch_t *ptWidget,
                       arm_2d_tile_t *ptKnobMaskTile);
 void _ldSwitchSetChecked(ld_scene_t *ptScene, ldSwitch_t *ptWidget, bool isChecked);
 void ldSwitchSetHorizontal(ldSwitch_t *ptWidget, bool isHorizontal);
+void ldSwitchSetDirection(ldSwitch_t *ptWidget, ldSwitchDirection_t direction);
 void ldSwitchSetDisabled(ldSwitch_t *ptWidget, bool isDisabled);
 bool ldSwitchIsChecked(ldSwitch_t *ptWidget);
 bool ldSwitchIsHorizontal(ldSwitch_t *ptWidget);
+ldSwitchDirection_t ldSwitchGetDirection(ldSwitch_t *ptWidget);
 bool ldSwitchIsDisabled(ldSwitch_t *ptWidget);
 
 #define ldSwitchInit(nameId,parentNameId,x,y,width,height) \

@@ -1,5 +1,6 @@
 #include "Virtual_TFT_Port.h"
 #include <assert.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
@@ -462,6 +463,51 @@ static arm_2d_region_t VT_sdl_resolve_redraw_region(bool bHasDirtyRegion,
     return tRegion;
 }
 
+static void VT_sdl_capture_first_present(void)
+{
+    static bool s_bCaptureConfigLoaded = false;
+    static bool s_bCaptureEnabled = false;
+    static bool s_bCaptureSaved = false;
+    static const char *s_pchCapturePath = NULL;
+    FILE *ptFile;
+
+    if (s_bCaptureSaved) {
+        return;
+    }
+    if (!s_bCaptureConfigLoaded) {
+        const char *pchCaptureMatrix = getenv("LD_SWITCH_CAPTURE_MATRIX");
+
+        s_bCaptureEnabled =
+            (pchCaptureMatrix != NULL) &&
+            (pchCaptureMatrix[0] != '\0') &&
+            (pchCaptureMatrix[0] != '0');
+        s_pchCapturePath = getenv("LD_SWITCH_CAPTURE_FILE");
+        s_bCaptureConfigLoaded = true;
+    }
+    if (!s_bCaptureEnabled || (NULL == s_pchCapturePath) || ('\0' == s_pchCapturePath[0])) {
+        return;
+    }
+
+    ptFile = fopen(s_pchCapturePath, "wb");
+    if (NULL == ptFile) {
+        s_bCaptureSaved = true;
+        return;
+    }
+
+    fprintf(ptFile, "P6\n%d %d\n255\n", VT_WIDTH, VT_HEIGHT);
+    for (int32_t y = 0; y < VT_HEIGHT; y++) {
+        for (int32_t x = 0; x < VT_WIDTH; x++) {
+            uint32_t nPixel = tft_fb[y * VT_WIDTH + x];
+            fputc((int)((nPixel >> 16) & 0xFFU), ptFile);
+            fputc((int)((nPixel >> 8) & 0xFFU), ptFile);
+            fputc((int)(nPixel & 0xFFU), ptFile);
+        }
+    }
+
+    fclose(ptFile);
+    s_bCaptureSaved = true;
+}
+
 static bool VT_sdl_present_texture(const arm_2d_region_t *ptDirtyRegion)
 {
     SDL_Rect tRect;
@@ -519,6 +565,7 @@ static bool VT_sdl_present_texture(const arm_2d_region_t *ptDirtyRegion)
         return false;
     }
     SDL_RenderPresent(renderer);
+    VT_sdl_capture_first_present();
 
     SDL_LockMutex(s_ptRefreshMutex);
     s_tLastPresentRegion = *ptDirtyRegion;

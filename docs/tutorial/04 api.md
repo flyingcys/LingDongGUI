@@ -3273,15 +3273,18 @@ scroll selecter widget
 ---
 # Switch
 ### 简述
-拨动开关控件，支持颜色或图片两种绘制模式，并带有开关动画。
+拨动开关控件，支持颜色或图片两种绘制模式，内建 AUTO/横向/纵向方向语义，并带有开关动画。
 ### 函数列表
 * ldSwitch_t *ldSwitch_init(ld_scene_t *ptScene, ldSwitch_t *ptWidget, uint16_t nameId, uint16_t parentNameId, int16_t x, int16_t y, int16_t width, int16_t height);
+* ldSwitchSetChecked(ptWidget, isChecked);
 * void ldSwitchSetColor(ldSwitch_t *ptWidget, ldColor offTrackColor, ldColor onTrackColor, ldColor knobColor, ldColor borderColor);
 * void ldSwitchSetImage(ldSwitch_t *ptWidget, arm_2d_tile_t *ptOffImgTile, arm_2d_tile_t *ptOffMaskTile, arm_2d_tile_t *ptOnImgTile, arm_2d_tile_t *ptOnMaskTile, arm_2d_tile_t *ptKnobImgTile, arm_2d_tile_t *ptKnobMaskTile);
 * void ldSwitchSetHorizontal(ldSwitch_t *ptWidget, bool isHorizontal);
+* void ldSwitchSetDirection(ldSwitch_t *ptWidget, ldSwitchDirection_t direction);
 * void ldSwitchSetDisabled(ldSwitch_t *ptWidget, bool isDisabled);
 * bool ldSwitchIsChecked(ldSwitch_t *ptWidget);
 * bool ldSwitchIsHorizontal(ldSwitch_t *ptWidget);
+* ldSwitchDirection_t ldSwitchGetDirection(ldSwitch_t *ptWidget);
 * bool ldSwitchIsDisabled(ldSwitch_t *ptWidget);
 ### 信号列表
 * SIGNAL_VALUE_CHANGED开关状态变化时发送，value为0或1。
@@ -3297,7 +3300,7 @@ scroll selecter widget
     <tr>
         <td>说明</td>
         <td colspan="2">
-    初始化拨动开关控件，默认使用横向布局和颜色绘制模式。        </td>
+    初始化拨动开关控件，默认使用 AUTO 方向和颜色绘制模式；当方向为 AUTO 时，宽度大于等于高度按横向处理，否则按纵向处理。        </td>
     </tr>
     <tr>
         <td rowspan="8">参数</td>
@@ -3336,6 +3339,31 @@ scroll selecter widget
         <td>返回</td>
         <td>ldSwitch_t*</td>
         <td>新控件指针</td>
+    </tr>
+</table>
+<br>
+
+#### ldSwitchSetChecked
+<table>
+    <tr>
+        <td>函数</td>
+        <td colspan="2">
+            <pre><code class="language-c">ldSwitchSetChecked(ptWidget, isChecked);</code></pre>
+        </td>
+    </tr>
+    <tr>
+        <td>说明</td>
+        <td colspan="2">
+    设置开关状态；对外通过头文件宏 `ldSwitchSetChecked(ptWidget, isChecked)` 使用，底层会调用 `_ldSwitchSetChecked(ptScene, ptWidget, isChecked)`。因此推荐在页面 init / loop / slot 等当前作用域已持有 `ptScene` 的位置调用。        </td>
+    </tr>
+    <tr>
+        <td rowspan="2">参数</td>
+        <td>ptWidget</td>
+        <td>目标控件指针</td>
+    </tr>
+    <tr>
+        <td>isChecked</td>
+        <td>true 表示打开，false 表示关闭</td>
     </tr>
 </table>
 <br>
@@ -3433,7 +3461,7 @@ scroll selecter widget
     <tr>
         <td>说明</td>
         <td colspan="2">
-    设置开关方向，切换为横向或纵向布局。        </td>
+    兼容旧代码的方向设置接口；true 对应 `LD_SWITCH_DIRECTION_HORIZONTAL`，false 对应 `LD_SWITCH_DIRECTION_VERTICAL`。新代码更推荐使用 `ldSwitchSetDirection()` 明确表达 AUTO / HORIZONTAL / VERTICAL 三态。        </td>
     </tr>
     <tr>
         <td rowspan="2">参数</td>
@@ -3443,6 +3471,31 @@ scroll selecter widget
     <tr>
         <td>isHorizontal</td>
         <td>true 表示横向，false 表示纵向</td>
+    </tr>
+</table>
+<br>
+
+#### ldSwitchSetDirection
+<table>
+    <tr>
+        <td>函数</td>
+        <td colspan="2">
+            <pre><code class="language-c">void ldSwitchSetDirection(ldSwitch_t *ptWidget, ldSwitchDirection_t direction);</code></pre>
+        </td>
+    </tr>
+    <tr>
+        <td>说明</td>
+        <td colspan="2">
+    设置开关方向。推荐作为主方向接口使用：`LD_SWITCH_DIRECTION_AUTO` 会按宽高自动解算方向，`LD_SWITCH_DIRECTION_HORIZONTAL` 强制横向，`LD_SWITCH_DIRECTION_VERTICAL` 强制纵向。        </td>
+    </tr>
+    <tr>
+        <td rowspan="2">参数</td>
+        <td>ptWidget</td>
+        <td>目标控件指针</td>
+    </tr>
+    <tr>
+        <td>direction</td>
+        <td>方向枚举值：AUTO / HORIZONTAL / VERTICAL</td>
     </tr>
 </table>
 <br>
@@ -3509,7 +3562,7 @@ scroll selecter widget
     <tr>
         <td>说明</td>
         <td colspan="2">
-    获取当前布局方向。        </td>
+    兼容旧代码的方向查询接口；返回 true 表示当前按横向布局，false 表示当前按纵向布局。若需要知道控件当前配置的是 AUTO / HORIZONTAL / VERTICAL，请使用 `ldSwitchGetDirection()`。        </td>
     </tr>
     <tr>
         <td rowspan="1">参数</td>
@@ -3520,6 +3573,32 @@ scroll selecter widget
         <td>返回</td>
         <td>bool</td>
         <td>true 表示横向，false 表示纵向</td>
+    </tr>
+</table>
+<br>
+
+#### ldSwitchGetDirection
+<table>
+    <tr>
+        <td>函数</td>
+        <td colspan="2">
+            <pre><code class="language-c">ldSwitchDirection_t ldSwitchGetDirection(ldSwitch_t *ptWidget);</code></pre>
+        </td>
+    </tr>
+    <tr>
+        <td>说明</td>
+        <td colspan="2">
+    获取开关当前配置的方向枚举。该接口返回的是配置值本身；若返回 `LD_SWITCH_DIRECTION_AUTO`，实际绘制方向仍会按当前宽高自动解算。        </td>
+    </tr>
+    <tr>
+        <td rowspan="1">参数</td>
+        <td>ptWidget</td>
+        <td>目标控件指针</td>
+    </tr>
+    <tr>
+        <td>返回</td>
+        <td>ldSwitchDirection_t</td>
+        <td>当前方向配置：AUTO / HORIZONTAL / VERTICAL</td>
     </tr>
 </table>
 <br>

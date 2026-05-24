@@ -1,7 +1,7 @@
 # LingDongGUI 原生 Switch 控件设计规格说明
 
 **日期**：2026-05-24  
-**状态**：已确认设计，待实现  
+**状态**：基础版已实现，本文按 2026-05-25 当前代码真值回写
 **范围类型**：新增控件 spec  
 **关联文档**：
 
@@ -16,6 +16,23 @@
 ## 1. 文档目标
 
 本文件用于定义 **LingDongGUI 原生 `ldSwitch` 控件** 的第一轮正式实现范围。
+
+### 1.1 当前状态回写（2026-05-25）
+
+当前仓库里的 `ldSwitch` 基础版已经落地，且本轮 checklist 中的核心能力已对齐到可验证状态：
+
+- `src/gui/ldSwitch.h` / `src/gui/ldSwitch.c` 已提供独立控件实现
+- 方向模型已升级为 `AUTO / HORIZONTAL / VERTICAL`
+- 渲染内部已按 `track / indicator / knob` 三段语义组织
+- 首帧程序设值不再自行动画，运行期设值才推进动画
+- `disabled`、`pressed`、重复设值不重复发事件等行为已有控件级测试覆盖
+- `examples/sdl/tests/check_switch_capture_matrix.py` 已补齐最小截图回归
+
+当前仍保留的边界：
+
+- `ldSwitchSetChecked` 对外仍通过头文件宏使用，底层实现是 `_ldSwitchSetChecked(ptScene, ...)`
+- 仍未引入 LVGL 式通用 part/style/theme 系统
+- `disabled` 仍是 `ldSwitch_t` 私有字段，不是全控件统一能力
 
 本轮目标不是做一个“能切换状态的临时按钮”，而是做一个：
 
@@ -49,7 +66,7 @@
 
 - 控件名：`ldSwitch`
 - 默认样式：圆角轨道 + 圆形滑钮
-- 默认方向：横向
+- 默认方向：`AUTO`（宽 >= 高时按横向，宽 < 高时按纵向）
 - 默认行为：点击后在开 / 关之间切换，并带滑动动画
 
 用户从 SDL demo 侧看到的效果应满足：
@@ -72,7 +89,7 @@
 - 设置颜色模式
 - 设置图片模式
 
-推荐公开接口如下：
+当前头文件对外可用接口如下（其中 `ldSwitchSetChecked` 仍是场景作用域宏入口）：
 
 ```c
 ldSwitch_t *ldSwitch_init(ld_scene_t *ptScene,
@@ -84,11 +101,14 @@ ldSwitch_t *ldSwitch_init(ld_scene_t *ptScene,
                           int16_t width,
                           int16_t height);
 
-void ldSwitchSetChecked(ldSwitch_t *ptWidget, bool isChecked);
+void _ldSwitchSetChecked(ld_scene_t *ptScene, ldSwitch_t *ptWidget, bool isChecked);
+#define ldSwitchSetChecked(ptWidget, isChecked) _ldSwitchSetChecked(ptScene, ptWidget, isChecked)
 bool ldSwitchIsChecked(ldSwitch_t *ptWidget);
 
 void ldSwitchSetHorizontal(ldSwitch_t *ptWidget, bool isHorizontal);
 bool ldSwitchIsHorizontal(ldSwitch_t *ptWidget);
+void ldSwitchSetDirection(ldSwitch_t *ptWidget, ldSwitchDirection_t direction);
+ldSwitchDirection_t ldSwitchGetDirection(ldSwitch_t *ptWidget);
 
 void ldSwitchSetDisabled(ldSwitch_t *ptWidget, bool isDisabled);
 bool ldSwitchIsDisabled(ldSwitch_t *ptWidget);
@@ -113,6 +133,7 @@ void ldSwitchSetImage(ldSwitch_t *ptWidget,
 - 本轮不暴露完整样式系统
 - 本轮不做类似 LVGL `MAIN / INDICATOR / KNOB` 的外部 part 级 API
 - 但内部实现必须按这三层语义组织，方便后续扩展
+- `ldSwitchSetDirection()` / `ldSwitchGetDirection()` 是当前推荐方向接口；`ldSwitchSetHorizontal()` / `ldSwitchIsHorizontal()` 保留给兼容代码
 
 ---
 
@@ -453,7 +474,7 @@ struct ldSwitch_t {
 
 ### 10.2 README / API 文档
 
-本轮需要同步：
+当前应保持同步：
 
 - `README.md` 控件列表新增 switch
 - `README.en.md` 控件列表新增 switch
@@ -461,7 +482,7 @@ struct ldSwitch_t {
 
 ### 10.3 对比文档
 
-`LingDongGUI_vs_LVGL_技术对比.md` 需要更新口径：
+对比文档当前应保持以下口径：
 
 - 从“LingDongGUI 当前无原生 switch”
 - 改成“已新增原生 switch，但样式分部系统和通用动画引擎仍不如 LVGL 完整”

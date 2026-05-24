@@ -53,9 +53,11 @@
 #define LD_SWITCH_ANIM_DURATION_MS     150U
 #define LD_SWITCH_DEFAULT_KNOB_PADDING 2U
 #define LD_SWITCH_FRAME_STEP_MS        10U
+#define LD_SWITCH_PRESSED_KNOB_COLOR   __RGB(255, 243, 202)
 
 static bool slotSwitchProcess(ld_scene_t *ptScene, ldMsg_t msg);
 static void ldSwitchApplyValue(ld_scene_t *ptScene, ldSwitch_t *ptWidget, bool isChecked);
+static arm_2d_region_t ldSwitchRectToRegion(ldSwitchRect_t rect);
 
 const ldBaseWidgetFunc_t ldSwitchFunc = {
     .depose = (ldDeposeFunc_t)ldSwitch_depose,
@@ -68,6 +70,7 @@ const ldBaseWidgetFunc_t ldSwitchFunc = {
 static void ldSwitchApplyValue(ld_scene_t *ptScene, ldSwitch_t *ptWidget, bool isChecked)
 {
     uint16_t target;
+    bool valueChanged;
 
     assert(NULL != ptWidget);
     if (ptWidget == NULL)
@@ -76,7 +79,8 @@ static void ldSwitchApplyValue(ld_scene_t *ptScene, ldSwitch_t *ptWidget, bool i
     }
 
     target = isChecked ? 1000U : 0U;
-    if ((ptWidget->isChecked == isChecked) && (ptWidget->animProgress == target) && (!ptWidget->isAnimating))
+    valueChanged = (ptWidget->isChecked != isChecked);
+    if (!valueChanged)
     {
         return;
     }
@@ -85,7 +89,7 @@ static void ldSwitchApplyValue(ld_scene_t *ptScene, ldSwitch_t *ptWidget, bool i
     ptWidget->animStartProgress = ptWidget->animProgress;
     ptWidget->animTargetProgress = target;
     ptWidget->animElapsedMs = 0;
-    ptWidget->isAnimating = (ptWidget->animProgress != target);
+    ptWidget->isAnimating = ptWidget->hasRenderedFrame && (ptWidget->animProgress != target);
     if (!ptWidget->isAnimating)
     {
         ptWidget->animProgress = target;
@@ -96,6 +100,20 @@ static void ldSwitchApplyValue(ld_scene_t *ptScene, ldSwitch_t *ptWidget, bool i
     {
         ldMsgEmit(ptScene->ptMsgQueue, ptWidget, SIGNAL_VALUE_CHANGED, isChecked ? 1U : 0U);
     }
+}
+
+static arm_2d_region_t ldSwitchRectToRegion(ldSwitchRect_t rect)
+{
+    return (arm_2d_region_t){
+        .tLocation = {
+            .iX = rect.iX,
+            .iY = rect.iY,
+        },
+        .tSize = {
+            .iWidth = rect.iWidth,
+            .iHeight = rect.iHeight,
+        },
+    };
 }
 
 static bool slotSwitchProcess(ld_scene_t *ptScene, ldMsg_t msg)
@@ -189,6 +207,7 @@ ldSwitch_t *ldSwitch_init(ld_scene_t *ptScene,
     ptWidget->knobColor = GLCD_COLOR_WHITE;
     ptWidget->borderColor = __RGB(120, 120, 120);
     ptWidget->knobPadding = LD_SWITCH_DEFAULT_KNOB_PADDING;
+    ptWidget->direction = LD_SWITCH_DIRECTION_AUTO;
     ptWidget->isHorizontal = true;
 
     ldMsgConnect(ptWidget, SIGNAL_PRESS, slotSwitchProcess);
@@ -258,19 +277,25 @@ void ldSwitch_on_frame_complete(ld_scene_t *ptScene, ldSwitch_t *ptWidget)
 {
     (void)ptScene;
     assert(NULL != ptWidget);
+    if (ptWidget == NULL)
+    {
+        return;
+    }
+
+    ptWidget->hasRenderedFrame = true;
 }
 
 void ldSwitch_show(ld_scene_t *ptScene, ldSwitch_t *ptWidget, const arm_2d_tile_t *ptTile, bool bIsNewFrame)
 {
     arm_2d_region_t globalRegion;
-    ldSwitchAxisMetrics_t tMetrics;
+    ldSwitchGeometry_t geometry;
+    arm_2d_region_t tIndicatorRegion;
     arm_2d_region_t tKnobRegion;
-    uint16_t knobOffset;
     uint8_t opacity;
-    ldColor trackColor;
     ldColor knobColor;
-    arm_2d_tile_t *ptTrackImgTile;
-    arm_2d_tile_t *ptTrackMaskTile;
+    bool useOffImageStyle;
+    bool useOnImageStyle;
+    bool useKnobImageStyle;
 
     (void)ptScene;
 
@@ -292,23 +317,37 @@ void ldSwitch_show(ld_scene_t *ptScene, ldSwitch_t *ptWidget, const arm_2d_tile_
             }
 
             opacity = ptWidget->isDisabled ? (uint8_t)(ptWidget->use_as__ldBase_t.opacity / 2U) : ptWidget->use_as__ldBase_t.opacity;
-            trackColor = (ptWidget->animProgress >= 500U) ? ptWidget->onTrackColor : ptWidget->offTrackColor;
-            knobColor = ptWidget->isPressed ? ptWidget->borderColor : ptWidget->knobColor;
-            tMetrics = ldSwitchResolveAxisMetrics(tTarget_canvas.tSize.iWidth,
-                                                  tTarget_canvas.tSize.iHeight,
-                                                  ptWidget->knobPadding,
-                                                  ptWidget->isHorizontal);
-            knobOffset = ldSwitchResolveKnobOffset(&tMetrics, ptWidget->animProgress);
-            ptTrackImgTile = (ptWidget->animProgress >= 500U) ? ptWidget->ptOnImgTile : ptWidget->ptOffImgTile;
-            ptTrackMaskTile = (ptWidget->animProgress >= 500U) ? ptWidget->ptOnMaskTile : ptWidget->ptOffMaskTile;
+            knobColor = ptWidget->isPressed ? LD_SWITCH_PRESSED_KNOB_COLOR : ptWidget->knobColor;
+            geometry = ldSwitchResolveGeometry(tTarget_canvas.tSize.iWidth,
+                                               tTarget_canvas.tSize.iHeight,
+                                               ptWidget->knobPadding,
+                                               ptWidget->direction,
+                                               ptWidget->animProgress);
+            ptWidget->isHorizontal = geometry.isHorizontal;
+            tIndicatorRegion = ldSwitchRectToRegion(geometry.indicator);
+            tKnobRegion = ldSwitchRectToRegion(geometry.knob);
+            useOffImageStyle = ptWidget->useImageStyle
+                && ldSwitchLayerUsesImage(ptWidget->ptOffImgTile, ptWidget->ptOffMaskTile);
+            useOnImageStyle = ptWidget->useImageStyle
+                && ldSwitchLayerUsesImage(ptWidget->ptOnImgTile, ptWidget->ptOnMaskTile);
+            useKnobImageStyle = ptWidget->useImageStyle
+                && ldSwitchLayerUsesImage(ptWidget->ptKnobImgTile, ptWidget->ptKnobMaskTile);
 
-            if (ptWidget->useImageStyle && ((ptTrackImgTile != NULL) || (ptTrackMaskTile != NULL)))
+            if (useOffImageStyle)
             {
-                ldBaseImage(&tTarget, NULL, ptTrackImgTile, ptTrackMaskTile, trackColor, opacity);
+                ldBaseImage(&tTarget, NULL, ptWidget->ptOffImgTile, ptWidget->ptOffMaskTile, ptWidget->offTrackColor, opacity);
             }
             else if (ptWidget->use_as__ldBase_t.isCorner)
             {
-                draw_round_corner_box(&tTarget, NULL, trackColor, opacity, bIsNewFrame);
+                draw_round_corner_box(&tTarget, NULL, ptWidget->offTrackColor, opacity, bIsNewFrame);
+            }
+            else
+            {
+                ldBaseColor(&tTarget, NULL, ptWidget->offTrackColor, opacity);
+            }
+
+            if (ptWidget->use_as__ldBase_t.isCorner)
+            {
                 draw_round_corner_border(&tTarget,
                                          NULL,
                                          ptWidget->borderColor,
@@ -317,38 +356,23 @@ void ldSwitch_show(ld_scene_t *ptScene, ldSwitch_t *ptWidget, const arm_2d_tile_
             }
             else
             {
-                ldBaseColor(&tTarget, NULL, trackColor, opacity);
                 arm_2d_draw_box(&tTarget, NULL, 1, ptWidget->borderColor, opacity);
             }
 
-            if (ptWidget->isHorizontal)
+            if (useOnImageStyle)
             {
-                tKnobRegion = (arm_2d_region_t){
-                    .tLocation = {
-                        .iX = tMetrics.trackStart + (int16_t)knobOffset,
-                        .iY = ptWidget->knobPadding,
-                    },
-                    .tSize = {
-                        .iWidth = tMetrics.knobSize,
-                        .iHeight = tMetrics.knobSize,
-                    },
-                };
+                ldBaseImage(&tTarget, &tIndicatorRegion, ptWidget->ptOnImgTile, ptWidget->ptOnMaskTile, ptWidget->onTrackColor, opacity);
+            }
+            else if (ptWidget->use_as__ldBase_t.isCorner)
+            {
+                draw_round_corner_box(&tTarget, &tIndicatorRegion, ptWidget->onTrackColor, opacity, bIsNewFrame);
             }
             else
             {
-                tKnobRegion = (arm_2d_region_t){
-                    .tLocation = {
-                        .iX = ptWidget->knobPadding,
-                        .iY = tMetrics.trackStart + (tMetrics.trackLength - (int16_t)knobOffset),
-                    },
-                    .tSize = {
-                        .iWidth = tMetrics.knobSize,
-                        .iHeight = tMetrics.knobSize,
-                    },
-                };
+                ldBaseColor(&tTarget, &tIndicatorRegion, ptWidget->onTrackColor, opacity);
             }
 
-            if (ptWidget->useImageStyle && ((ptWidget->ptKnobImgTile != NULL) || (ptWidget->ptKnobMaskTile != NULL)))
+            if (useKnobImageStyle)
             {
                 ldBaseImage(&tTarget,
                             &tKnobRegion,
@@ -360,6 +384,14 @@ void ldSwitch_show(ld_scene_t *ptScene, ldSwitch_t *ptWidget, const arm_2d_tile_
             else if (ptWidget->use_as__ldBase_t.isCorner)
             {
                 draw_round_corner_box(&tTarget, &tKnobRegion, knobColor, opacity, bIsNewFrame);
+            }
+            else
+            {
+                ldBaseColor(&tTarget, &tKnobRegion, knobColor, opacity);
+            }
+
+            if (ptWidget->use_as__ldBase_t.isCorner)
+            {
                 draw_round_corner_border(&tTarget,
                                          &tKnobRegion,
                                          ptWidget->borderColor,
@@ -368,12 +400,12 @@ void ldSwitch_show(ld_scene_t *ptScene, ldSwitch_t *ptWidget, const arm_2d_tile_
             }
             else
             {
-                ldBaseColor(&tTarget, &tKnobRegion, knobColor, opacity);
                 arm_2d_draw_box(&tTarget, &tKnobRegion, 1, ptWidget->borderColor, opacity);
             }
 
             LD_BASE_WIDGET_SELECT;
             arm_2d_op_wait_async(NULL);
+            ptWidget->hasRenderedFrame = true;
         }
     }
 }
@@ -454,13 +486,34 @@ void _ldSwitchSetChecked(ld_scene_t *ptScene, ldSwitch_t *ptWidget, bool isCheck
  */
 void ldSwitchSetHorizontal(ldSwitch_t *ptWidget, bool isHorizontal)
 {
+    ldSwitchSetDirection(ptWidget, isHorizontal ? LD_SWITCH_DIRECTION_HORIZONTAL : LD_SWITCH_DIRECTION_VERTICAL);
+}
+
+/**
+ * @brief 设置开关方向；AUTO 根据控件宽高自动选择横向或纵向。
+ * @param ptWidget 目标控件指针
+ * @param direction AUTO/HORIZONTAL/VERTICAL 三态方向
+ */
+void ldSwitchSetDirection(ldSwitch_t *ptWidget, ldSwitchDirection_t direction)
+{
+    arm_2d_size_t size;
+
     assert(NULL != ptWidget);
     if (ptWidget == NULL)
     {
         return;
     }
 
-    ptWidget->isHorizontal = isHorizontal;
+    if ((direction != LD_SWITCH_DIRECTION_AUTO)
+        && (direction != LD_SWITCH_DIRECTION_HORIZONTAL)
+        && (direction != LD_SWITCH_DIRECTION_VERTICAL))
+    {
+        direction = LD_SWITCH_DIRECTION_AUTO;
+    }
+
+    size = ptWidget->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize;
+    ptWidget->direction = direction;
+    ptWidget->isHorizontal = ldSwitchResolveIsHorizontal(size.iWidth, size.iHeight, direction);
     ptWidget->use_as__ldBase_t.isDirtyRegionUpdate = true;
 }
 
@@ -508,13 +561,33 @@ bool ldSwitchIsChecked(ldSwitch_t *ptWidget)
  */
 bool ldSwitchIsHorizontal(ldSwitch_t *ptWidget)
 {
+    arm_2d_size_t size;
+
     assert(NULL != ptWidget);
     if (ptWidget == NULL)
     {
         return true;
     }
 
+    size = ptWidget->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize;
+    ptWidget->isHorizontal = ldSwitchResolveIsHorizontal(size.iWidth, size.iHeight, ptWidget->direction);
     return ptWidget->isHorizontal;
+}
+
+/**
+ * @brief 获取当前方向配置。
+ * @param ptWidget 目标控件指针
+ * @return ldSwitchDirection_t AUTO/HORIZONTAL/VERTICAL
+ */
+ldSwitchDirection_t ldSwitchGetDirection(ldSwitch_t *ptWidget)
+{
+    assert(NULL != ptWidget);
+    if (ptWidget == NULL)
+    {
+        return LD_SWITCH_DIRECTION_AUTO;
+    }
+
+    return ptWidget->direction;
 }
 
 /**

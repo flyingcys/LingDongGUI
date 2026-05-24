@@ -24,6 +24,15 @@ enum {
     UI_WIDGET_LEGACY_SWITCH_LABEL_HEIGHT = 40,
 };
 
+enum {
+    UI_WIDGET_LEGACY_CAPTURE_H_OFF_ID = 100,
+    UI_WIDGET_LEGACY_CAPTURE_H_ON_ID = 101,
+    UI_WIDGET_LEGACY_CAPTURE_V_OFF_ID = 102,
+    UI_WIDGET_LEGACY_CAPTURE_V_ON_ID = 103,
+    UI_WIDGET_LEGACY_CAPTURE_DISABLED_OFF_ID = 104,
+    UI_WIDGET_LEGACY_CAPTURE_DISABLED_ON_ID = 105,
+};
+
 const ldPageFuncGroup_t uiWidgetLegacyFunc = {
     .init = uiWidgetLegacyInit,
     .loop = uiWidgetLegacyLoop,
@@ -72,9 +81,63 @@ static uint8_t *g_legacy_day_names[] = {
 };
 static uint8_t g_legacy_header_format[] = "yyyy - mm - dd";
 
+static bool uiWidgetLegacyCaptureMatrixEnabled(void)
+{
+    const char *pchEnv = getenv("LD_SWITCH_CAPTURE_MATRIX");
+
+    return (pchEnv != NULL) && (pchEnv[0] != '\0') && (pchEnv[0] != '0');
+}
+
+static ldSwitch_t *uiWidgetLegacyInitCaptureSwitch(ld_scene_t *ptScene,
+                                                   uint16_t nameId,
+                                                   int16_t x,
+                                                   int16_t y,
+                                                   int16_t width,
+                                                   int16_t height)
+{
+    return ldSwitch_init(ptScene, NULL, nameId, 0, x, y, width, height);
+}
+
+static void uiWidgetLegacyInitCaptureMatrix(ld_scene_t *ptScene)
+{
+    void *obj;
+
+    ldBaseFocusNavigateInit();
+
+    obj = ldWindowInit(0, 0, 0, 0, LD_CFG_SCREEN_WIDTH, LD_CFG_SCREEN_HEIGHT);
+    ldWindowSetColor(obj, GLCD_COLOR_BLACK);
+
+    obj = uiWidgetLegacyInitCaptureSwitch(ptScene, UI_WIDGET_LEGACY_CAPTURE_H_OFF_ID, 80, 80, 90, 40);
+    ldSwitchSetChecked(obj, false);
+
+    obj = uiWidgetLegacyInitCaptureSwitch(ptScene, UI_WIDGET_LEGACY_CAPTURE_H_ON_ID, 80, 150, 90, 40);
+    ldSwitchSetChecked(obj, true);
+
+    obj = uiWidgetLegacyInitCaptureSwitch(ptScene, UI_WIDGET_LEGACY_CAPTURE_V_OFF_ID, 250, 60, 40, 90);
+    ldSwitchSetDirection(obj, LD_SWITCH_DIRECTION_VERTICAL);
+    ldSwitchSetChecked(obj, false);
+
+    obj = uiWidgetLegacyInitCaptureSwitch(ptScene, UI_WIDGET_LEGACY_CAPTURE_V_ON_ID, 250, 210, 40, 90);
+    ldSwitchSetDirection(obj, LD_SWITCH_DIRECTION_VERTICAL);
+    ldSwitchSetChecked(obj, true);
+
+    obj = uiWidgetLegacyInitCaptureSwitch(ptScene, UI_WIDGET_LEGACY_CAPTURE_DISABLED_OFF_ID, 80, 290, 90, 40);
+    ldSwitchSetChecked(obj, false);
+    ldSwitchSetDisabled(obj, true);
+
+    obj = uiWidgetLegacyInitCaptureSwitch(ptScene, UI_WIDGET_LEGACY_CAPTURE_DISABLED_ON_ID, 80, 360, 90, 40);
+    ldSwitchSetChecked(obj, true);
+    ldSwitchSetDisabled(obj, true);
+}
+
 static void uiWidgetLegacyInit(ld_scene_t *ptScene)
 {
     void *obj, *list;
+
+    if (uiWidgetLegacyCaptureMatrixEnabled()) {
+        uiWidgetLegacyInitCaptureMatrix(ptScene);
+        return;
+    }
 
     ldBaseFocusNavigateInit();
 

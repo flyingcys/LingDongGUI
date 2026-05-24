@@ -4,6 +4,23 @@
 > 范围：`src/gui/ldSwitch.*`、`src/gui/ldSwitchInternal.*`、相关 demo/test，与 `third_party/lvgl` 的 `lv_switch` 对比  
 > 当前阶段约束：**只补 switch 自身能力，不做上层抽象，不展开通用样式系统、通用动画引擎、统一 part/state/property 框架**
 
+## 0. 当前状态回写（2026-05-25）
+
+本页主体内容保留的是 **2026-05-24 开发前 gap 分析**；下文提到的“缺 AUTO / 缺首帧稳态 / 缺控件级回归”等判断，属于当时的待补项，不是今天的当前状态。
+
+截至 2026-05-25，当前代码真值已经回写到：
+
+- `AUTO / HORIZONTAL / VERTICAL` 方向模型已落地，默认按宽高自动解算方向
+- `track / indicator / knob` 三段渲染语义已落地
+- 首帧程序设值不再播放中间动画，运行期设值才推进动画
+- `disabled`、重复设值不重复发事件、反向动画等行为已有控件级测试覆盖
+- 最小截图回归已覆盖 horizontal/vertical/disabled 的 on/off 六态
+
+当前仍保留的边界只有两类：
+
+- `ldSwitchSetChecked` 对外仍是头文件宏入口，底层实现为 `_ldSwitchSetChecked(ptScene, ...)`
+- 仍未扩展到通用 style/theme/part 抽象，也还不是完整 LVGL property 系统
+
 ## 1. 结论先说
 
 当前 LingDongGUI 的 `switch` 不是空白，而是已经有了一个可运行的独立控件：

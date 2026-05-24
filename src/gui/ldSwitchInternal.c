@@ -20,6 +20,11 @@
 
 #include <stddef.h>
 
+static int16_t ldSwitchClampSize(int16_t value)
+{
+    return (value > 0) ? value : 0;
+}
+
 ldSwitchAxisMetrics_t ldSwitchResolveAxisMetrics(int16_t width,
                                                  int16_t height,
                                                  uint16_t knobPadding,
@@ -47,6 +52,22 @@ ldSwitchAxisMetrics_t ldSwitchResolveAxisMetrics(int16_t width,
     return metrics;
 }
 
+bool ldSwitchResolveIsHorizontal(int16_t width,
+                                 int16_t height,
+                                 ldSwitchDirection_t direction)
+{
+    if (direction == LD_SWITCH_DIRECTION_HORIZONTAL)
+    {
+        return true;
+    }
+    if (direction == LD_SWITCH_DIRECTION_VERTICAL)
+    {
+        return false;
+    }
+
+    return width >= height;
+}
+
 uint16_t ldSwitchResolveKnobOffset(const ldSwitchAxisMetrics_t *ptMetrics,
                                    uint16_t animProgress)
 {
@@ -61,6 +82,86 @@ uint16_t ldSwitchResolveKnobOffset(const ldSwitchAxisMetrics_t *ptMetrics,
     }
 
     return (uint16_t)((ptMetrics->trackLength * animProgress) / 1000);
+}
+
+ldSwitchGeometry_t ldSwitchResolveGeometry(int16_t width,
+                                           int16_t height,
+                                           uint16_t knobPadding,
+                                           ldSwitchDirection_t direction,
+                                           uint16_t animProgress)
+{
+    ldSwitchGeometry_t geometry = {0};
+    ldSwitchAxisMetrics_t metrics;
+    uint16_t knobOffset;
+    int16_t indicatorLength;
+    bool isHorizontal;
+
+    if (animProgress > 1000)
+    {
+        animProgress = 1000;
+    }
+
+    width = ldSwitchClampSize(width);
+    height = ldSwitchClampSize(height);
+    isHorizontal = ldSwitchResolveIsHorizontal(width, height, direction);
+    metrics = ldSwitchResolveAxisMetrics(width, height, knobPadding, isHorizontal);
+    knobOffset = ldSwitchResolveKnobOffset(&metrics, animProgress);
+    indicatorLength = (int16_t)(((uint32_t)(isHorizontal ? width : height) * animProgress) / 1000U);
+
+    geometry.isHorizontal = isHorizontal;
+    geometry.track = (ldSwitchRect_t){
+        .iX = 0,
+        .iY = 0,
+        .iWidth = width,
+        .iHeight = height,
+    };
+
+    if (isHorizontal)
+    {
+        geometry.knob = (ldSwitchRect_t){
+            .iX = (int16_t)(metrics.trackStart + (int16_t)knobOffset),
+            .iY = (int16_t)knobPadding,
+            .iWidth = metrics.knobSize,
+            .iHeight = metrics.knobSize,
+        };
+        geometry.indicator = (ldSwitchRect_t){
+            .iX = 0,
+            .iY = 0,
+            .iWidth = indicatorLength,
+            .iHeight = height,
+        };
+        if (geometry.indicator.iWidth > width)
+        {
+            geometry.indicator.iWidth = width;
+        }
+    }
+    else
+    {
+        geometry.knob = (ldSwitchRect_t){
+            .iX = (int16_t)knobPadding,
+            .iY = (int16_t)(metrics.trackStart + metrics.trackLength - (int16_t)knobOffset),
+            .iWidth = metrics.knobSize,
+            .iHeight = metrics.knobSize,
+        };
+        geometry.indicator = (ldSwitchRect_t){
+            .iX = 0,
+            .iY = (int16_t)(height - indicatorLength),
+            .iWidth = width,
+            .iHeight = indicatorLength,
+        };
+        if (geometry.indicator.iHeight > height)
+        {
+            geometry.indicator.iHeight = height;
+        }
+    }
+
+    return geometry;
+}
+
+bool ldSwitchLayerUsesImage(const void *ptImgTile,
+                            const void *ptMaskTile)
+{
+    return (ptImgTile != NULL) && (ptMaskTile != NULL);
 }
 
 bool ldSwitchAdvanceAnimation(ldSwitchAnimState_t *ptAnim,

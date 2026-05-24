@@ -73,7 +73,7 @@ widget demo sdl
 | ✅ | radia menu | 旋转菜单 |
 | ✅ | label | 简单文本显示 |
 | ✅ | slider | 滑动条 |
-| ✅ | switch | 开关，支持横向/纵向、禁用态、动画切换 |
+| ✅ | switch | 开关，支持 AUTO/横向/纵向方向、禁用态、首帧稳态与动画切换 |
 | ✅ | scroll selecter | 滚动选择器 |
 | ✅ | date time | 日期和时间，数字时钟 |
 | ✅ | icon slider | 滑动图标 |
@@ -109,6 +109,5 @@ widget demo sdl
 🐧 QQ群：187033407
 
 📧 电子邮箱: 59935554@qq.com
-
 
 

@@ -1,6 +1,18 @@
 #include <assert.h>
+#include <stddef.h>
 
 #include "ldSwitchInternal.h"
+
+static void test_image_layer_requires_img_and_mask(void)
+{
+    int img;
+    int mask;
+
+    assert(ldSwitchLayerUsesImage(&img, NULL) == false);
+    assert(ldSwitchLayerUsesImage(NULL, &mask) == false);
+    assert(ldSwitchLayerUsesImage(&img, &mask) == true);
+    assert(ldSwitchLayerUsesImage(NULL, NULL) == false);
+}
 
 static void test_horizontal_metrics_reserve_knob_padding(void)
 {
@@ -16,6 +28,19 @@ static void test_vertical_metrics_reserve_knob_padding(void)
 
     assert(metrics.knobSize == 20);
     assert(metrics.trackLength == 20);
+}
+
+static void test_auto_direction_uses_longer_axis(void)
+{
+    assert(ldSwitchResolveIsHorizontal(44, 24, LD_SWITCH_DIRECTION_AUTO) == true);
+    assert(ldSwitchResolveIsHorizontal(24, 44, LD_SWITCH_DIRECTION_AUTO) == false);
+    assert(ldSwitchResolveIsHorizontal(24, 24, LD_SWITCH_DIRECTION_AUTO) == true);
+}
+
+static void test_forced_direction_overrides_shape(void)
+{
+    assert(ldSwitchResolveIsHorizontal(20, 60, LD_SWITCH_DIRECTION_HORIZONTAL) == true);
+    assert(ldSwitchResolveIsHorizontal(60, 20, LD_SWITCH_DIRECTION_VERTICAL) == false);
 }
 
 static void test_anim_progress_reaches_target(void)
@@ -49,6 +74,41 @@ static void test_knob_offset_matches_progress(void)
     assert(ldSwitchResolveKnobOffset(&metrics, 1000) == 20);
 }
 
+static void test_horizontal_indicator_and_knob_are_continuous(void)
+{
+    ldSwitchGeometry_t start = ldSwitchResolveGeometry(44, 24, 2, LD_SWITCH_DIRECTION_HORIZONTAL, 0);
+    ldSwitchGeometry_t middle = ldSwitchResolveGeometry(44, 24, 2, LD_SWITCH_DIRECTION_HORIZONTAL, 500);
+    ldSwitchGeometry_t end = ldSwitchResolveGeometry(44, 24, 2, LD_SWITCH_DIRECTION_HORIZONTAL, 1000);
+
+    assert(start.isHorizontal == true);
+    assert(start.indicator.iWidth == 0);
+    assert(middle.indicator.iWidth == 22);
+    assert(end.indicator.iWidth == 44);
+    assert(start.knob.iX < middle.knob.iX);
+    assert(middle.knob.iX < end.knob.iX);
+    assert(start.indicator.iWidth < middle.indicator.iWidth);
+    assert(middle.indicator.iWidth < end.indicator.iWidth);
+}
+
+static void test_vertical_indicator_and_knob_are_continuous(void)
+{
+    ldSwitchGeometry_t start = ldSwitchResolveGeometry(24, 44, 2, LD_SWITCH_DIRECTION_VERTICAL, 0);
+    ldSwitchGeometry_t middle = ldSwitchResolveGeometry(24, 44, 2, LD_SWITCH_DIRECTION_VERTICAL, 500);
+    ldSwitchGeometry_t end = ldSwitchResolveGeometry(24, 44, 2, LD_SWITCH_DIRECTION_VERTICAL, 1000);
+
+    assert(start.isHorizontal == false);
+    assert(start.indicator.iY == 44);
+    assert(start.indicator.iHeight == 0);
+    assert(middle.indicator.iY == 22);
+    assert(middle.indicator.iHeight == 22);
+    assert(end.indicator.iY == 0);
+    assert(end.indicator.iHeight == 44);
+    assert(start.knob.iY > middle.knob.iY);
+    assert(middle.knob.iY > end.knob.iY);
+    assert(start.indicator.iHeight < middle.indicator.iHeight);
+    assert(middle.indicator.iHeight < end.indicator.iHeight);
+}
+
 static void test_anim_progress_supports_reverse_direction(void)
 {
     ldSwitchAnimState_t anim = {
@@ -67,10 +127,15 @@ static void test_anim_progress_supports_reverse_direction(void)
 
 int main(void)
 {
+    test_image_layer_requires_img_and_mask();
     test_horizontal_metrics_reserve_knob_padding();
     test_vertical_metrics_reserve_knob_padding();
+    test_auto_direction_uses_longer_axis();
+    test_forced_direction_overrides_shape();
     test_anim_progress_reaches_target();
     test_knob_offset_matches_progress();
+    test_horizontal_indicator_and_knob_are_continuous();
+    test_vertical_indicator_and_knob_are_continuous();
     test_anim_progress_supports_reverse_direction();
     return 0;
 }

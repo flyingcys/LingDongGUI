@@ -26,11 +26,31 @@ extern "C" {
 #include <stdbool.h>
 #include <stdint.h>
 
+typedef enum {
+    LD_SWITCH_DIRECTION_AUTO = 0,
+    LD_SWITCH_DIRECTION_HORIZONTAL,
+    LD_SWITCH_DIRECTION_VERTICAL,
+} ldSwitchDirection_t;
+
+typedef struct {
+    int16_t iX;
+    int16_t iY;
+    int16_t iWidth;
+    int16_t iHeight;
+} ldSwitchRect_t;
+
 typedef struct {
     int16_t trackStart;
     int16_t trackLength;
     int16_t knobSize;
 } ldSwitchAxisMetrics_t;
+
+typedef struct {
+    ldSwitchRect_t track;
+    ldSwitchRect_t indicator;
+    ldSwitchRect_t knob;
+    bool isHorizontal;
+} ldSwitchGeometry_t;
 
 typedef struct {
     uint16_t start;
@@ -46,8 +66,21 @@ ldSwitchAxisMetrics_t ldSwitchResolveAxisMetrics(int16_t width,
                                                  uint16_t knobPadding,
                                                  bool isHorizontal);
 
+bool ldSwitchResolveIsHorizontal(int16_t width,
+                                 int16_t height,
+                                 ldSwitchDirection_t direction);
+
 uint16_t ldSwitchResolveKnobOffset(const ldSwitchAxisMetrics_t *ptMetrics,
                                    uint16_t animProgress);
+
+ldSwitchGeometry_t ldSwitchResolveGeometry(int16_t width,
+                                           int16_t height,
+                                           uint16_t knobPadding,
+                                           ldSwitchDirection_t direction,
+                                           uint16_t animProgress);
+
+bool ldSwitchLayerUsesImage(const void *ptImgTile,
+                            const void *ptMaskTile);
 
 bool ldSwitchAdvanceAnimation(ldSwitchAnimState_t *ptAnim,
                               uint16_t deltaMs,

@@ -161,27 +161,20 @@ def test_use_demo_0_legacy_widget_contains_switch_demo() -> None:
 
     switch_match = _require_call(
         source,
-        rf"ldSwitchInit\(\s*({IDENTIFIER_OR_INT}),\s*0,\s*({IDENTIFIER_OR_INT}),\s*({IDENTIFIER_OR_INT}),\s*({IDENTIFIER_OR_INT}),\s*({IDENTIFIER_OR_INT})\s*\)",
+        rf"ldSwitchInit\(\s*UI_WIDGET_LEGACY_SWITCH_ID,\s*0,\s*({IDENTIFIER_OR_INT}),\s*({IDENTIFIER_OR_INT}),\s*({IDENTIFIER_OR_INT}),\s*({IDENTIFIER_OR_INT})\s*\)",
         "demo0 legacy 页面缺少可解析的 switch 坐标",
     )
     label_match = _require_call(
         source,
-        rf"ldLabelInit\(\s*({IDENTIFIER_OR_INT}),\s*0,\s*({IDENTIFIER_OR_INT}),\s*({IDENTIFIER_OR_INT}),\s*({IDENTIFIER_OR_INT}),\s*({IDENTIFIER_OR_INT}),\s*FONT_ARIAL_16_A8\s*\)",
+        rf"ldLabelInit\(\s*UI_WIDGET_LEGACY_SWITCH_LABEL_ID,\s*0,\s*({IDENTIFIER_OR_INT}),\s*({IDENTIFIER_OR_INT}),\s*({IDENTIFIER_OR_INT}),\s*({IDENTIFIER_OR_INT}),\s*FONT_ARIAL_16_A8\s*\)",
         "demo0 legacy 页面缺少可解析的状态 label 坐标",
     )
 
-    assert switch_match.group(1) == "UI_WIDGET_LEGACY_SWITCH_ID", (
-        "demo0 legacy 页面 switch id 仍应通过具名常量接入"
-    )
-    assert label_match.group(1) == "UI_WIDGET_LEGACY_SWITCH_LABEL_ID", (
-        "demo0 legacy 页面状态 label id 仍应通过具名常量接入"
-    )
-
     switch_x, switch_y, switch_w, switch_h = (
-        _resolve_value(token, named_ints) for token in switch_match.groups()[1:]
+        _resolve_value(token, named_ints) for token in switch_match.groups()
     )
     label_x, label_y, label_w, label_h = (
-        _resolve_value(token, named_ints) for token in label_match.groups()[1:]
+        _resolve_value(token, named_ints) for token in label_match.groups()
     )
 
     text_x, text_y, text_w, text_h = 300, 10, 150, 200
