@@ -132,6 +132,7 @@ extern "C" {
 //     <3=> Printer
 //     <4=> Layout
 //     <5=> Grid
+//     <6=> Widget swipe gallery
 #define USE_DEMO                                  (0)
 #endif
 
@@ -237,6 +238,21 @@ extern "C" {
 #define LD_CFG_PFB_HEIGHT                         (LD_CFG_SCREEN_HEIGHT/10)
 #define LD_DEMO_GUI_INCLUDE                       "uiLayout.h"
 #define LD_DEMO_GUI_FUNC                          uiGridFunc
+#endif
+
+#if USE_DEMO == 6
+#undef LD_CFG_COLOR_DEPTH
+#define LD_CFG_COLOR_DEPTH                        (16)
+#undef LD_CFG_SCREEN_WIDTH
+#define LD_CFG_SCREEN_WIDTH                        (480)
+#undef LD_CFG_SCREEN_HEIGHT
+#define LD_CFG_SCREEN_HEIGHT                       (272)
+#undef LD_CFG_PFB_WIDTH
+#define LD_CFG_PFB_WIDTH                          (LD_CFG_SCREEN_WIDTH)
+#undef LD_CFG_PFB_HEIGHT
+#define LD_CFG_PFB_HEIGHT                         (LD_CFG_SCREEN_HEIGHT/10)
+#define LD_DEMO_GUI_INCLUDE                       "uiWidgetSwipe.h"
+#define LD_DEMO_GUI_FUNC                          uiWidgetSwipeFunc
 #endif
 
 // <q>view dirty region

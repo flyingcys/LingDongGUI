@@ -6,13 +6,13 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS ON)
 
-set(USE_DEMO "2" CACHE STRING "SDL demo id (0=legacy-widget, 1=startup, 2=widget, 3=printer, 4=layout, 5=grid)")
-set_property(CACHE USE_DEMO PROPERTY STRINGS 0 1 2 3 4 5)
+set(USE_DEMO "2" CACHE STRING "SDL demo id (0=legacy-widget, 1=startup, 2=widget, 3=printer, 4=layout, 5=grid, 6=widget-swipe)")
+set_property(CACHE USE_DEMO PROPERTY STRINGS 0 1 2 3 4 5 6)
 
-set(SUPPORTED_DEMOS 0 1 2 3 4 5)
+set(SUPPORTED_DEMOS 0 1 2 3 4 5 6)
 list(FIND SUPPORTED_DEMOS "${USE_DEMO}" USE_DEMO_INDEX)
 if(USE_DEMO_INDEX EQUAL -1)
-    message(FATAL_ERROR "Unsupported USE_DEMO=${USE_DEMO}. Supported values: 0, 1, 2, 3, 4, 5.")
+    message(FATAL_ERROR "Unsupported USE_DEMO=${USE_DEMO}. Supported values: 0, 1, 2, 3, 4, 5, 6.")
 endif()
 
 set(SDL_EXAMPLE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
@@ -58,14 +58,45 @@ file(GLOB GUI_SOURCES CONFIGURE_DEPENDS
 file(GLOB MISC_SOURCES CONFIGURE_DEPENDS
     "${REPO_SRC_DIR}/misc/*.c"
 )
+file(GLOB WIDGET_FONT_SOURCES CONFIGURE_DEPENDS
+    "${DEMO_DIR}/widget/fonts/*.c"
+)
+file(GLOB WIDGET_IMAGE_SOURCES CONFIGURE_DEPENDS
+    "${DEMO_DIR}/widget/images/*.c"
+)
+file(GLOB WIDGET_SWIPE_PAGE_SOURCES CONFIGURE_DEPENDS
+    "${DEMO_DIR}/widget/uiWidgetSwipePage*.c"
+)
+set(WIDGET_BASE_SOURCES
+    "${DEMO_DIR}/widget/uiWidget.c"
+    "${DEMO_DIR}/widget/uiWidgetLogic.c"
+)
+set(WIDGET_DEMO2_SOURCES
+    ${WIDGET_BASE_SOURCES}
+    "${DEMO_DIR}/widget/uiWidgetLegacy.c"
+    "${DEMO_DIR}/widget/uiWidgetPage1.c"
+    "${DEMO_DIR}/widget/uiWidgetPage2.c"
+    "${DEMO_DIR}/widget/uiWidgetPage3.c"
+    "${DEMO_DIR}/widget/uiWidgetPage4.c"
+    ${WIDGET_FONT_SOURCES}
+    ${WIDGET_IMAGE_SOURCES}
+)
+set(WIDGET_DEMO6_SOURCES
+    ${WIDGET_BASE_SOURCES}
+    "${DEMO_DIR}/widget/uiWidgetSwipeCommon.c"
+    "${DEMO_DIR}/widget/uiWidgetSwipeLogic.c"
+    ${WIDGET_SWIPE_PAGE_SOURCES}
+    ${WIDGET_FONT_SOURCES}
+    ${WIDGET_IMAGE_SOURCES}
+)
 set(DEMO_SOURCES)
 set(DEMO_INCLUDE_DIRS)
 
 if(USE_DEMO STREQUAL "0")
-    file(GLOB DEMO_SOURCES CONFIGURE_DEPENDS
-        "${DEMO_DIR}/widget/*.c"
-        "${DEMO_DIR}/widget/fonts/*.c"
-        "${DEMO_DIR}/widget/images/*.c"
+    set(DEMO_SOURCES
+        "${DEMO_DIR}/widget/uiWidgetLegacy.c"
+        ${WIDGET_FONT_SOURCES}
+        ${WIDGET_IMAGE_SOURCES}
     )
     set(DEMO_INCLUDE_DIRS
         "${DEMO_DIR}/widget"
@@ -84,10 +115,8 @@ elseif(USE_DEMO STREQUAL "1")
         "${DEMO_DIR}/startup/images"
     )
 elseif(USE_DEMO STREQUAL "2")
-    file(GLOB DEMO_SOURCES CONFIGURE_DEPENDS
-        "${DEMO_DIR}/widget/*.c"
-        "${DEMO_DIR}/widget/fonts/*.c"
-        "${DEMO_DIR}/widget/images/*.c"
+    set(DEMO_SOURCES
+        ${WIDGET_DEMO2_SOURCES}
     )
     set(DEMO_INCLUDE_DIRS
         "${DEMO_DIR}/widget"
@@ -125,7 +154,35 @@ elseif(USE_DEMO STREQUAL "5")
         "${DEMO_DIR}/layout"
         "${DEMO_DIR}/widget/fonts"
     )
+elseif(USE_DEMO STREQUAL "6")
+    set(DEMO_SOURCES
+        ${WIDGET_DEMO6_SOURCES}
+    )
+    set(DEMO_INCLUDE_DIRS
+        "${DEMO_DIR}/widget"
+        "${DEMO_DIR}/widget/fonts"
+        "${DEMO_DIR}/widget/images"
+    )
 endif()
+
+enable_testing()
+
+add_executable(uiwidget_swipe_logic_test
+    "${SDL_EXAMPLE_DIR}/tests/swipe/test_uiwidget_swipe_logic.c"
+    "${DEMO_DIR}/widget/uiWidgetSwipeLogic.c"
+)
+
+target_include_directories(uiwidget_swipe_logic_test PRIVATE
+    "${DEMO_DIR}/widget"
+)
+
+target_compile_options(uiwidget_swipe_logic_test PRIVATE
+    -fdiagnostics-color=always
+    -g
+    -std=gnu11
+)
+
+add_test(NAME uiwidget_swipe_logic_test COMMAND uiwidget_swipe_logic_test)
 
 add_executable(ldgui_sdl_demo
     ${SDL_DEMO_CORE_SOURCES}
