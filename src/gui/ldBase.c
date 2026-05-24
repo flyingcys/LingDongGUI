@@ -497,32 +497,6 @@ static void _ldBaseMove(ldBase_t* ptWidget,int16_t x,int16_t y)
                                     &ptWidget->tTempRegion);
 }
 
-static uint8_t ldBaseClampGridPos(int16_t value)
-{
-    if (value <= 0)
-    {
-        return 0;
-    }
-    if (value >= UINT8_MAX)
-    {
-        return UINT8_MAX;
-    }
-    return (uint8_t)value;
-}
-
-static uint8_t ldBaseClampGridSpan(int16_t value)
-{
-    if (value <= 1)
-    {
-        return 1;
-    }
-    if (value >= UINT8_MAX)
-    {
-        return UINT8_MAX;
-    }
-    return (uint8_t)value;
-}
-
 static void ldBaseSyncFlexBasisSize(ldBase_t *ptWidget)
 {
     if (ptWidget == NULL)
@@ -561,29 +535,6 @@ void ldBaseSetHidden(ldBase_t* ptWidget,bool isHidden)
     }
     ptWidget->isHidden=isHidden;
     _ldBaseMove(ptWidget,x,y);
-    ldBaseMarkParentLayoutDirty(ptWidget);
-}
-
-void ldBaseSetGridCell(ldBase_t *ptWidget,
-                       ldGridAlign_t xAlign,
-                       int16_t colPos,
-                       int16_t colSpan,
-                       ldGridAlign_t yAlign,
-                       int16_t rowPos,
-                       int16_t rowSpan)
-{
-    assert(NULL != ptWidget);
-    if (ptWidget == NULL)
-    {
-        return;
-    }
-
-    ptWidget->gridCellXAlign = xAlign;
-    ptWidget->gridCellYAlign = yAlign;
-    ptWidget->gridColPos = ldBaseClampGridPos(colPos);
-    ptWidget->gridRowPos = ldBaseClampGridPos(rowPos);
-    ptWidget->gridColSpan = ldBaseClampGridSpan(colSpan);
-    ptWidget->gridRowSpan = ldBaseClampGridSpan(rowSpan);
     ldBaseMarkParentLayoutDirty(ptWidget);
 }
 
@@ -1276,6 +1227,30 @@ void ldBaseSetCorner(ldBase_t* ptWidget,bool isCorner)
     }
     ptWidget->isDirtyRegionUpdate = true;
     ptWidget->isCorner=isCorner;
+}
+
+void ldBaseSetGridCell(ldBase_t *ptWidget,
+                       ldGridAlign_t xAlign,
+                       int16_t colPos,
+                       int16_t colSpan,
+                       ldGridAlign_t yAlign,
+                       int16_t rowPos,
+                       int16_t rowSpan)
+{
+    assert(NULL != ptWidget);
+    if (ptWidget == NULL)
+    {
+        return;
+    }
+
+    ptWidget->gridCellXAlign = xAlign;
+    ptWidget->gridCellYAlign = yAlign;
+    ptWidget->gridColPos = colPos;
+    ptWidget->gridRowPos = rowPos;
+    ptWidget->gridColSpan = MAX(1, colSpan);
+    ptWidget->gridRowSpan = MAX(1, rowSpan);
+    ptWidget->isGridCellSet = true;
+    ldBaseMarkParentLayoutDirty(ptWidget);
 }
 
 void ldBaseResize(ldBase_t* ptWidget,arm_2d_size_t size)

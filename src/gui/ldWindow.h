@@ -146,10 +146,10 @@ void ldWindowSetPadding(ldWindow_t *ptWidget, ldPadding_t padding);
 void ldWindowSetFlexGap(ldWindow_t *ptWidget, int16_t itemGap, int16_t trackGap);
 void ldWindowSetGap(ldWindow_t *ptWidget, int16_t gap);
 void ldWindowSetGridColumns(ldWindow_t *ptWidget, uint16_t columns);
+void ldWindowSetGridDscArray(ldWindow_t *ptWidget, const int16_t *gridColDsc, const int16_t *gridRowDsc);
+void ldWindowSetGridAlign(ldWindow_t *ptWidget, ldGridAlign_t colAlign, ldGridAlign_t rowAlign);
 void ldWindowSetGridGap(ldWindow_t *ptWidget, int16_t rowGap, int16_t columnGap);
 void ldWindowSetGridPadding(ldWindow_t *ptWidget, ldPadding_t padding);
-void ldWindowSetGridDscArray(ldWindow_t *ptWidget, const int16_t *pColDsc, const int16_t *pRowDsc);
-void ldWindowSetGridAlign(ldWindow_t *ptWidget, ldGridAlign_t colAlign, ldGridAlign_t rowAlign);
 void ldWindowSetPaddingGroup(ldWindow_t *ptWidget, ldPadding_t *pPaddingGroup);//Local variables forbidden
 
 ldColor ldWindowGetColor(ldWindow_t *ptWidget);

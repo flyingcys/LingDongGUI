@@ -32,7 +32,6 @@ extern "C" {
 #include "ldConfig.h"
 #include "ldMsg.h"
 #include "xQueue.h"
-#include <limits.h>
 
 typedef enum{
     widgetTypeBackground,
@@ -192,6 +191,17 @@ struct ld_scene_t {
     xQueue_t *ptMsgQueue;
 };
 
+typedef struct {
+    arm_2d_region_t itemRegion;
+    arm_2d_region_t tTempItemRegion;
+    bool isDRUpdate:1;
+    bool isDRReset:1;
+}ldBaseItemRegion_t;
+
+#define LD_GRID_TEMPLATE_LAST ((int16_t)INT16_MIN)
+#define LD_GRID_CONTENT       ((int16_t)(INT16_MIN + 1))
+#define LD_GRID_FR(x)         ((int16_t)(-((x) + 1)))
+
 typedef enum {
     ldGridAlignStart = 0,
     ldGridAlignEnd,
@@ -201,17 +211,6 @@ typedef enum {
     ldGridAlignSpaceAround,
     ldGridAlignSpaceBetween,
 } ldGridAlign_t;
-
-#define LD_GRID_TEMPLATE_LAST INT16_MAX
-#define LD_GRID_CONTENT       (INT16_MAX - 1)
-#define LD_GRID_FR(x)         (-(int16_t)(((x) > 0) ? (x) : 1))
-
-typedef struct {
-    arm_2d_region_t itemRegion;
-    arm_2d_region_t tTempItemRegion;
-    bool isDRUpdate:1;
-    bool isDRReset:1;
-}ldBaseItemRegion_t;
 
 typedef struct {
     implement(arm_2d_control_node_t);
@@ -226,12 +225,12 @@ typedef struct {
     ldWidgetType_t widgetType;
     uint16_t nameId;
     uint16_t flexGrow;
+    int16_t gridColPos;
+    int16_t gridRowPos;
+    int16_t gridColSpan;
+    int16_t gridRowSpan;
     uint8_t opacity;
     uint8_t itemCount;
-    uint8_t gridColPos;
-    uint8_t gridRowPos;
-    uint8_t gridColSpan;
-    uint8_t gridRowSpan;
     ldGridAlign_t gridCellXAlign:3;
     ldGridAlign_t gridCellYAlign:3;
     bool isDirtyRegionUpdate:1;
@@ -244,6 +243,7 @@ typedef struct {
     bool hasFlexMaxHeight:1;
     bool flexInNewTrack:1;
     bool ignoreLayout:1;
+    bool isGridCellSet:1;
     bool isSelected:1;
     bool isSelectable:1;
     bool isCorner:1;
@@ -322,6 +322,10 @@ arm_2d_region_t ldBaseAlignRegionCenter(arm_2d_region_t parentRegion, arm_2d_reg
 
 void ldBaseSetCenter(ldBase_t *ptWidget);
 void ldBaseSetHidden(ldBase_t* ptWidget,bool isHidden);
+void ldBaseSetOpacity(ldBase_t *ptWidget, uint8_t opacity);
+void ldBaseSetSelectable(ldBase_t* ptWidget,bool isSelectable);
+void ldBaseSetSelect(ldBase_t* ptWidget,bool isSelect);
+void ldBaseSetCorner(ldBase_t* ptWidget,bool isCorner);
 void ldBaseSetGridCell(ldBase_t *ptWidget,
                        ldGridAlign_t xAlign,
                        int16_t colPos,
@@ -329,10 +333,6 @@ void ldBaseSetGridCell(ldBase_t *ptWidget,
                        ldGridAlign_t yAlign,
                        int16_t rowPos,
                        int16_t rowSpan);
-void ldBaseSetOpacity(ldBase_t *ptWidget, uint8_t opacity);
-void ldBaseSetSelectable(ldBase_t* ptWidget,bool isSelectable);
-void ldBaseSetSelect(ldBase_t* ptWidget,bool isSelect);
-void ldBaseSetCorner(ldBase_t* ptWidget,bool isCorner);
 
 void ldBaseSetRegion(ldBase_t* ptWidget,arm_2d_region_t region);
 void ldBaseMove(ldBase_t* ptWidget,int16_t x,int16_t y);

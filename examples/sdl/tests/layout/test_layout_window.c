@@ -1597,6 +1597,43 @@ static void test_grid_layout_resolves_content_tracks_and_hidden_children(void)
     assert(fr_child.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 7);
 }
 
+static void test_grid_descriptor_layout_auto_places_visible_children(void)
+{
+    ldWindow_t root = {0};
+    ldLabel_t a = {0};
+    ldLabel_t hidden = {0};
+    ldLabel_t c = {0};
+    ldLabel_t d = {0};
+    static const int16_t col_dsc[] = {30, 30, LD_GRID_TEMPLATE_LAST};
+    static const int16_t row_dsc[] = {20, 20, LD_GRID_TEMPLATE_LAST};
+
+    init_window_region(&root, 80, 60);
+    set_widget_region((ldBase_t *)&a, -1, -1, 10, 8);
+    set_widget_region((ldBase_t *)&hidden, 77, 66, 12, 12);
+    set_widget_region((ldBase_t *)&c, -2, -2, 10, 8);
+    set_widget_region((ldBase_t *)&d, -3, -3, 10, 8);
+    hidden.use_as__ldBase_t.isHidden = true;
+
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&a);
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&hidden);
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&c);
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&d);
+
+    ldWindowSetGridDscArray(&root, col_dsc, row_dsc);
+    ldWindowSetGridGap(&root, 4, 6);
+
+    ldWindow_on_frame_start(NULL, &root);
+
+    assert(a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 0);
+    assert(a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 0);
+    assert(hidden.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 77);
+    assert(hidden.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 66);
+    assert(c.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 36);
+    assert(c.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 0);
+    assert(d.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 0);
+    assert(d.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 24);
+}
+
 static void test_grid_layout_supports_span_and_container_alignment(void)
 {
     ldWindow_t root = {0};
@@ -1631,6 +1668,112 @@ static void test_grid_layout_supports_span_and_container_alignment(void)
     assert(centered.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 41);
     assert(centered.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iWidth == 8);
     assert(centered.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iHeight == 6);
+}
+
+static void test_grid_layout_space_between_distributes_remaining_gap(void)
+{
+    ldWindow_t root = {0};
+    ldLabel_t left = {0};
+    ldLabel_t right = {0};
+    static const int16_t col_dsc[] = {20, 20, LD_GRID_TEMPLATE_LAST};
+    static const int16_t row_dsc[] = {12, LD_GRID_TEMPLATE_LAST};
+
+    init_window_region(&root, 100, 20);
+    set_widget_region((ldBase_t *)&left, 0, 0, 10, 8);
+    set_widget_region((ldBase_t *)&right, 0, 0, 10, 8);
+
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&left);
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&right);
+
+    ldWindowSetGridDscArray(&root, col_dsc, row_dsc);
+    ldWindowSetGridAlign(&root, ldGridAlignSpaceBetween, ldGridAlignStart);
+    ldBaseSetGridCell((ldBase_t *)&left, ldGridAlignStart, 0, 1, ldGridAlignStart, 0, 1);
+    ldBaseSetGridCell((ldBase_t *)&right, ldGridAlignStart, 1, 1, ldGridAlignStart, 0, 1);
+
+    ldWindow_on_frame_start(NULL, &root);
+
+    assert(left.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 0);
+    assert(right.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 80);
+}
+
+static void test_grid_layout_space_around_distributes_outer_spacing(void)
+{
+    ldWindow_t root = {0};
+    ldLabel_t left = {0};
+    ldLabel_t right = {0};
+    static const int16_t col_dsc[] = {20, 20, LD_GRID_TEMPLATE_LAST};
+    static const int16_t row_dsc[] = {12, LD_GRID_TEMPLATE_LAST};
+
+    init_window_region(&root, 100, 20);
+    set_widget_region((ldBase_t *)&left, 0, 0, 10, 8);
+    set_widget_region((ldBase_t *)&right, 0, 0, 10, 8);
+
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&left);
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&right);
+
+    ldWindowSetGridDscArray(&root, col_dsc, row_dsc);
+    ldWindowSetGridAlign(&root, ldGridAlignSpaceAround, ldGridAlignStart);
+    ldBaseSetGridCell((ldBase_t *)&left, ldGridAlignStart, 0, 1, ldGridAlignStart, 0, 1);
+    ldBaseSetGridCell((ldBase_t *)&right, ldGridAlignStart, 1, 1, ldGridAlignStart, 0, 1);
+
+    ldWindow_on_frame_start(NULL, &root);
+
+    assert(left.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 15);
+    assert(right.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 65);
+}
+
+static void test_grid_layout_space_evenly_distributes_uniform_spacing(void)
+{
+    ldWindow_t root = {0};
+    ldLabel_t left = {0};
+    ldLabel_t right = {0};
+    static const int16_t col_dsc[] = {20, 20, LD_GRID_TEMPLATE_LAST};
+    static const int16_t row_dsc[] = {12, LD_GRID_TEMPLATE_LAST};
+
+    init_window_region(&root, 100, 20);
+    set_widget_region((ldBase_t *)&left, 0, 0, 10, 8);
+    set_widget_region((ldBase_t *)&right, 0, 0, 10, 8);
+
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&left);
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&right);
+
+    ldWindowSetGridDscArray(&root, col_dsc, row_dsc);
+    ldWindowSetGridAlign(&root, ldGridAlignSpaceEvenly, ldGridAlignStart);
+    ldBaseSetGridCell((ldBase_t *)&left, ldGridAlignStart, 0, 1, ldGridAlignStart, 0, 1);
+    ldBaseSetGridCell((ldBase_t *)&right, ldGridAlignStart, 1, 1, ldGridAlignStart, 0, 1);
+
+    ldWindow_on_frame_start(NULL, &root);
+
+    assert(left.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 20);
+    assert(right.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 60);
+}
+
+static void test_grid_layout_stretch_expands_track_sizes(void)
+{
+    ldWindow_t root = {0};
+    ldLabel_t left = {0};
+    ldLabel_t right = {0};
+    static const int16_t col_dsc[] = {20, 20, LD_GRID_TEMPLATE_LAST};
+    static const int16_t row_dsc[] = {12, LD_GRID_TEMPLATE_LAST};
+
+    init_window_region(&root, 100, 20);
+    set_widget_region((ldBase_t *)&left, 0, 0, 10, 8);
+    set_widget_region((ldBase_t *)&right, 0, 0, 10, 8);
+
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&left);
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&right);
+
+    ldWindowSetGridDscArray(&root, col_dsc, row_dsc);
+    ldWindowSetGridAlign(&root, ldGridAlignStretch, ldGridAlignStart);
+    ldBaseSetGridCell((ldBase_t *)&left, ldGridAlignStretch, 0, 1, ldGridAlignStretch, 0, 1);
+    ldBaseSetGridCell((ldBase_t *)&right, ldGridAlignStretch, 1, 1, ldGridAlignStretch, 0, 1);
+
+    ldWindow_on_frame_start(NULL, &root);
+
+    assert(left.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 0);
+    assert(left.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iWidth == 50);
+    assert(right.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 50);
+    assert(right.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iWidth == 50);
 }
 
 static void test_grid_layout_clamps_invalid_cell_settings(void)
@@ -1707,7 +1850,12 @@ int main(void)
     test_grid_layout_uses_fixed_tracks_and_explicit_cells();
     test_grid_layout_resolves_fr_and_cell_alignment();
     test_grid_layout_resolves_content_tracks_and_hidden_children();
+    test_grid_descriptor_layout_auto_places_visible_children();
     test_grid_layout_supports_span_and_container_alignment();
+    test_grid_layout_space_between_distributes_remaining_gap();
+    test_grid_layout_space_around_distributes_outer_spacing();
+    test_grid_layout_space_evenly_distributes_uniform_spacing();
+    test_grid_layout_stretch_expands_track_sizes();
     test_grid_layout_clamps_invalid_cell_settings();
     return 0;
 }
