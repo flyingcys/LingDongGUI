@@ -53,22 +53,42 @@ static void uiWidgetPage4Init(ld_scene_t *ptScene)
     ldBaseFocusNavigateInit();
 
     obj = ldWindowInit(ID_PAGE4_BG, 0, 0, 0, LD_CFG_SCREEN_WIDTH, LD_CFG_SCREEN_HEIGHT);
+    if (NULL == obj) {
+        uiWidgetInitFailed("uiWidgetPage4", ID_PAGE4_BG);
+        return;
+    }
     ldWindowSetColor(obj, __RGB(245, 243, 238));
 
     obj = ldWindowInit(ID_PAGE4_HEADER, ID_PAGE4_BG, 0, 0, LD_CFG_SCREEN_WIDTH, UI_WIDGET_HEADER_HEIGHT);
+    if (NULL == obj) {
+        uiWidgetInitFailed("uiWidgetPage4", ID_PAGE4_HEADER);
+        return;
+    }
     ldWindowSetColor(obj, __RGB(96, 86, 124));
 
     obj = ldLabelInit(ID_PAGE4_TITLE, ID_PAGE4_BG, UI_WIDGET_MARGIN, 5, 220, 20, FONT_ARIAL_16_A8);
+    if (NULL == obj) {
+        uiWidgetInitFailed("uiWidgetPage4", ID_PAGE4_TITLE);
+        return;
+    }
     ldLabelSetText(obj, (uint8_t *)"Page 4  Data");
     ldLabelSetTextColor(obj, GLCD_COLOR_WHITE);
     ldLabelSetAlign(obj, ARM_2D_ALIGN_LEFT);
 
     obj = ldLabelInit(ID_PAGE4_HINT, ID_PAGE4_BG, LD_CFG_SCREEN_WIDTH - 64, 7, 52, 18, FONT_ARIAL_12);
+    if (NULL == obj) {
+        uiWidgetInitFailed("uiWidgetPage4", ID_PAGE4_HINT);
+        return;
+    }
     ldLabelSetText(obj, (uint8_t *)"4 / 4");
     ldLabelSetTextColor(obj, GLCD_COLOR_WHITE);
     ldLabelSetAlign(obj, ARM_2D_ALIGN_RIGHT);
 
     obj = ldGaugeInit(ID_PAGE4_GAUGE, ID_PAGE4_BG, 12, 44, 110, 92, IMAGE_GAUGE_PNG, IMAGE_GAUGE_PNG_Mask, 0, 10);
+    if (NULL == obj) {
+        uiWidgetInitFailed("uiWidgetPage4", ID_PAGE4_GAUGE);
+        return;
+    }
     ldGaugeSetPointerImage(obj, NULL, IMAGE_GAUGEPOINTER_PNG_Mask, 5, 45);
     ldGaugeSetPointerColor(obj, GLCD_COLOR_BLUE);
     ldGaugeSetAngle(obj, s_page4_angle);
@@ -83,27 +103,47 @@ static void uiWidgetPage4Init(ld_scene_t *ptScene)
                     IMAGE_ARC_QUARTER_PNG_Mask,
                     IMAGE_ARC_QUARTER_MASK_PNG_Mask,
                     __RGB(240, 240, 240));
+    if (NULL == obj) {
+        uiWidgetInitFailed("uiWidgetPage4", ID_PAGE4_ARC);
+        return;
+    }
     ldArcSetBackgroundAngle(obj, 0, 350);
     ldArcSetForegroundAngle(obj, 30);
     ldArcSetColor(obj, __RGB(173, 216, 230), __RGB(144, 238, 144));
 
     obj = ldScrollSelecterInit(ID_PAGE4_SCROLL, ID_PAGE4_BG, 236, 46, 34, 76, FONT_ARIAL_12);
+    if (NULL == obj) {
+        uiWidgetInitFailed("uiWidgetPage4", ID_PAGE4_SCROLL);
+        return;
+    }
     ldScrollSelecterSetItems(obj, g_widget_scroll_items, 5);
     ldScrollSelecterSetBackgroundColor(obj, GLCD_COLOR_WHITE);
     ldBaseSetSelectable(obj, true);
     ldBaseSetCorner(obj, true);
 
     obj = ldComboBoxInit(ID_PAGE4_COMBO, ID_PAGE4_BG, 280, 50, 82, 28, FONT_ARIAL_12);
+    if (NULL == obj) {
+        uiWidgetInitFailed("uiWidgetPage4", ID_PAGE4_COMBO);
+        return;
+    }
     ldComboBoxSetStaticItems(obj, g_widget_combo_box_items, 3);
     ldComboBoxSetSelectable(obj, true);
 
     obj = ldLineEditInit(ID_PAGE4_LINE_EDIT, ID_PAGE4_BG, 280, 88, 82, 34, FONT_ARIAL_12, 16);
+    if (NULL == obj) {
+        uiWidgetInitFailed("uiWidgetPage4", ID_PAGE4_LINE_EDIT);
+        return;
+    }
     ldLineEditSetText(obj, (uint8_t *)"123");
     ldLineEditSetKeyboard(obj, UI_WIDGET_KEYBOARD_ID);
     ldBaseSetSelectable(obj, true);
     ldBaseSetCorner(obj, true);
 
     ptGraph = ldGraphInit(ID_PAGE4_GRAPH, ID_PAGE4_BG, 370, 44, 98, 88, 2);
+    if (NULL == ptGraph) {
+        uiWidgetInitFailed("uiWidgetPage4", ID_PAGE4_GRAPH);
+        return;
+    }
     ldGraphSetAxis(ptGraph, 48, 56, 4);
     ldGraphSetGridOffset(ptGraph, 4);
     ldGraphAddSeries(ptGraph, GLCD_COLOR_RED, 2, 8);
@@ -116,6 +156,10 @@ static void uiWidgetPage4Init(ld_scene_t *ptScene)
     ldGraphSetCorner(ptGraph, true);
 
     ptTable = ldTableInit(ID_PAGE4_TABLE, ID_PAGE4_BG, 12, 146, 202, 68, 4, 3, 1);
+    if (NULL == ptTable) {
+        uiWidgetInitFailed("uiWidgetPage4", ID_PAGE4_TABLE);
+        return;
+    }
     ldTableSetExcelType(ptTable, FONT_ARIAL_12);
     ldTableSetKeyboard(ptTable, UI_WIDGET_KEYBOARD_ID);
     ldTableSetItemText(ptTable, 1, 1, (uint8_t *)"id");
@@ -133,6 +177,10 @@ static void uiWidgetPage4Init(ld_scene_t *ptScene)
     ldBaseSetSelectable(ptTable, true);
 
     ptList = ldListInit(ID_PAGE4_LIST, ID_PAGE4_BG, 12, 220, 202, 40);
+    if (NULL == ptList) {
+        uiWidgetInitFailed("uiWidgetPage4", ID_PAGE4_LIST);
+        return;
+    }
     ldListSetItemHeight(ptList, 20);
     ldListSetText(ptList, g_widget_scroll_items, 5, FONT_ARIAL_12);
     ldListSetAlign(ptList, ARM_2D_ALIGN_LEFT);
@@ -140,11 +188,19 @@ static void uiWidgetPage4Init(ld_scene_t *ptScene)
     ldBaseSetCorner(ptList, true);
 
     obj = ldButtonInit(ID_PAGE4_LIST_BUTTON, ID_PAGE4_LIST, 8, 1, 26, 18);
+    if (NULL == obj) {
+        uiWidgetInitFailed("uiWidgetPage4", ID_PAGE4_LIST_BUTTON);
+        return;
+    }
     ldButtonSetFont(obj, FONT_ARIAL_12);
     ldButtonSetText(obj, (uint8_t *)"GO");
     ldListSetItemWidget(ptList, 1, obj);
 
     obj = ldCalendarInit(ID_PAGE4_CALENDAR, ID_PAGE4_BG, 222, 136, 246, 122, FONT_ARIAL_12, 2026, 1, 1);
+    if (NULL == obj) {
+        uiWidgetInitFailed("uiWidgetPage4", ID_PAGE4_CALENDAR);
+        return;
+    }
     ldCalendarSetDayNames(obj, g_widget_day_names);
     ldCalendarSetHeader(obj, true);
     ldCalendarSetHeaderFormat(obj, g_widget_header_format);
@@ -152,6 +208,10 @@ static void uiWidgetPage4Init(ld_scene_t *ptScene)
     ldBaseSetCorner(obj, true);
 
     obj = ldMessageBoxInit(ID_PAGE4_MESSAGE_BOX, ID_PAGE4_BG, 176, 80, FONT_ARIAL_12);
+    if (NULL == obj) {
+        uiWidgetInitFailed("uiWidgetPage4", ID_PAGE4_MESSAGE_BOX);
+        return;
+    }
     ldMessageBoxSetTitle(obj, g_widget_message_title);
     ldMessageBoxSetMsg(obj, g_widget_message_text);
     ldMessageBoxSetBtn(obj, g_widget_message_buttons, 3);
@@ -159,7 +219,10 @@ static void uiWidgetPage4Init(ld_scene_t *ptScene)
     ldMessageBoxSetCorner(obj, true);
     ldMessageBoxSetHidden(obj, true);
 
-    ldKeyboardInit(UI_WIDGET_KEYBOARD_ID, ID_PAGE4_BG, FONT_ARIAL_12);
+    obj = ldKeyboardInit(UI_WIDGET_KEYBOARD_ID, ID_PAGE4_BG, FONT_ARIAL_12);
+    if (NULL == obj) {
+        uiWidgetInitFailed("uiWidgetPage4", UI_WIDGET_KEYBOARD_ID);
+    }
 }
 
 static void uiWidgetPage4Loop(ld_scene_t *ptScene)
@@ -182,8 +245,8 @@ static void uiWidgetPage4Loop(ld_scene_t *ptScene)
         }
     }
 
-    if (ldTimeOut(UI_WIDGET_AUTO_SWITCH_MS, false, &s_page4_switch_timer)) {
-        ldGuiJumpPage(uiWidgetPage1Func, ARM_2D_SCENE_SWITCH_MODE_SLIDE_DOWN, UI_WIDGET_AUTO_SWITCH_MS);
+    if (ldTimeOut(UI_WIDGET_PAGE_DWELL_MS, false, &s_page4_switch_timer)) {
+        ldGuiJumpPage(uiWidgetPage1Func, ARM_2D_SCENE_SWITCH_MODE_SLIDE_DOWN, UI_WIDGET_PAGE_SWITCH_ANIM_MS);
     }
 
     uiWidgetHandleFocusNavigation(ptScene);

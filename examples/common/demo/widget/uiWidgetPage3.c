@@ -37,17 +37,33 @@ static void uiWidgetPage3Init(ld_scene_t *ptScene)
     ldBaseFocusNavigateInit();
 
     obj = ldWindowInit(ID_PAGE3_BG, 0, 0, 0, LD_CFG_SCREEN_WIDTH, LD_CFG_SCREEN_HEIGHT);
+    if (NULL == obj) {
+        uiWidgetInitFailed("uiWidgetPage3", ID_PAGE3_BG);
+        return;
+    }
     ldWindowSetColor(obj, __RGB(240, 246, 244));
 
     obj = ldWindowInit(ID_PAGE3_HEADER, ID_PAGE3_BG, 0, 0, LD_CFG_SCREEN_WIDTH, UI_WIDGET_HEADER_HEIGHT);
+    if (NULL == obj) {
+        uiWidgetInitFailed("uiWidgetPage3", ID_PAGE3_HEADER);
+        return;
+    }
     ldWindowSetColor(obj, __RGB(28, 126, 102));
 
     obj = ldLabelInit(ID_PAGE3_TITLE, ID_PAGE3_BG, UI_WIDGET_MARGIN, 5, 220, 20, FONT_ARIAL_16_A8);
+    if (NULL == obj) {
+        uiWidgetInitFailed("uiWidgetPage3", ID_PAGE3_TITLE);
+        return;
+    }
     ldLabelSetText(obj, (uint8_t *)"Page 3  Showcase");
     ldLabelSetTextColor(obj, GLCD_COLOR_WHITE);
     ldLabelSetAlign(obj, ARM_2D_ALIGN_LEFT);
 
     obj = ldLabelInit(ID_PAGE3_HINT, ID_PAGE3_BG, LD_CFG_SCREEN_WIDTH - 64, 7, 52, 18, FONT_ARIAL_12);
+    if (NULL == obj) {
+        uiWidgetInitFailed("uiWidgetPage3", ID_PAGE3_HINT);
+        return;
+    }
     ldLabelSetText(obj, (uint8_t *)"3 / 4");
     ldLabelSetTextColor(obj, GLCD_COLOR_WHITE);
     ldLabelSetAlign(obj, ARM_2D_ALIGN_RIGHT);
@@ -90,8 +106,8 @@ static void uiWidgetPage3Init(ld_scene_t *ptScene)
 
 static void uiWidgetPage3Loop(ld_scene_t *ptScene)
 {
-    if (ldTimeOut(UI_WIDGET_AUTO_SWITCH_MS, false, &s_page3_switch_timer)) {
-        ldGuiJumpPage(uiWidgetPage4Func, ARM_2D_SCENE_SWITCH_MODE_SLIDE_RIGHT, UI_WIDGET_AUTO_SWITCH_MS);
+    if (ldTimeOut(UI_WIDGET_PAGE_DWELL_MS, false, &s_page3_switch_timer)) {
+        ldGuiJumpPage(uiWidgetPage4Func, ARM_2D_SCENE_SWITCH_MODE_SLIDE_RIGHT, UI_WIDGET_PAGE_SWITCH_ANIM_MS);
     }
 
     uiWidgetHandleFocusNavigation(ptScene);

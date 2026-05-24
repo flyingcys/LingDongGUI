@@ -41,6 +41,7 @@ typedef struct
 
 
 xQueue_t* xQueueCreate(uint32_t length, uint32_t itemSize);
+void xQueueDestroy(xQueue_t *queue);
 
 bool xQueueEnqueue(xQueue_t *queue ,void * pInItem,uint32_t itemSize);
 

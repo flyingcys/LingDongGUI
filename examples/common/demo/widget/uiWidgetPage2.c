@@ -38,22 +38,42 @@ static void uiWidgetPage2Init(ld_scene_t *ptScene)
     ldBaseFocusNavigateInit();
 
     obj = ldWindowInit(ID_PAGE2_BG, 0, 0, 0, LD_CFG_SCREEN_WIDTH, LD_CFG_SCREEN_HEIGHT);
+    if (NULL == obj) {
+        uiWidgetInitFailed("uiWidgetPage2", ID_PAGE2_BG);
+        return;
+    }
     ldWindowSetColor(obj, __RGB(247, 244, 240));
 
     obj = ldWindowInit(ID_PAGE2_HEADER, ID_PAGE2_BG, 0, 0, LD_CFG_SCREEN_WIDTH, UI_WIDGET_HEADER_HEIGHT);
+    if (NULL == obj) {
+        uiWidgetInitFailed("uiWidgetPage2", ID_PAGE2_HEADER);
+        return;
+    }
     ldWindowSetColor(obj, __RGB(150, 88, 41));
 
     obj = ldLabelInit(ID_PAGE2_TITLE, ID_PAGE2_BG, UI_WIDGET_MARGIN, 5, 220, 20, FONT_ARIAL_16_A8);
+    if (NULL == obj) {
+        uiWidgetInitFailed("uiWidgetPage2", ID_PAGE2_TITLE);
+        return;
+    }
     ldLabelSetText(obj, (uint8_t *)"Page 2  Inputs");
     ldLabelSetTextColor(obj, GLCD_COLOR_WHITE);
     ldLabelSetAlign(obj, ARM_2D_ALIGN_LEFT);
 
     obj = ldLabelInit(ID_PAGE2_HINT, ID_PAGE2_BG, LD_CFG_SCREEN_WIDTH - 64, 7, 52, 18, FONT_ARIAL_12);
+    if (NULL == obj) {
+        uiWidgetInitFailed("uiWidgetPage2", ID_PAGE2_HINT);
+        return;
+    }
     ldLabelSetText(obj, (uint8_t *)"2 / 4");
     ldLabelSetTextColor(obj, GLCD_COLOR_WHITE);
     ldLabelSetAlign(obj, ARM_2D_ALIGN_RIGHT);
 
     obj = ldLabelInit(ID_PAGE2_PROGRESS_LABEL, ID_PAGE2_BG, 20, 44, 120, 16, FONT_ARIAL_12);
+    if (NULL == obj) {
+        uiWidgetInitFailed("uiWidgetPage2", ID_PAGE2_PROGRESS_LABEL);
+        return;
+    }
     ldLabelSetText(obj, (uint8_t *)"Progress 45%");
     ldLabelSetTextColor(obj, GLCD_COLOR_BLACK);
     ldLabelSetAlign(obj, ARM_2D_ALIGN_LEFT);
@@ -102,8 +122,8 @@ static void uiWidgetPage2Init(ld_scene_t *ptScene)
 
 static void uiWidgetPage2Loop(ld_scene_t *ptScene)
 {
-    if (ldTimeOut(UI_WIDGET_AUTO_SWITCH_MS, false, &s_page2_switch_timer)) {
-        ldGuiJumpPage(uiWidgetPage3Func, ARM_2D_SCENE_SWITCH_MODE_SLIDE_UP, UI_WIDGET_AUTO_SWITCH_MS);
+    if (ldTimeOut(UI_WIDGET_PAGE_DWELL_MS, false, &s_page2_switch_timer)) {
+        ldGuiJumpPage(uiWidgetPage3Func, ARM_2D_SCENE_SWITCH_MODE_SLIDE_UP, UI_WIDGET_PAGE_SWITCH_ANIM_MS);
     }
 
     uiWidgetHandleFocusNavigation(ptScene);

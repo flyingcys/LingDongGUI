@@ -20,6 +20,21 @@
 #define __ARM_2D_INHERIT__
 #include "arm_2d.h"
 #include "ldGui.h"
+
+static void ldGuiDisposeNodeTree(ld_scene_t *ptScene, ldBase_t *ptWidget)
+{
+    ldBase_t *ptChild;
+
+    if (NULL == ptWidget) {
+        return;
+    }
+
+    while ((ptChild = ldBaseGetChildList(ptWidget)) != NULL) {
+        ldGuiDisposeNodeTree(ptScene, ptChild);
+    }
+
+    ptWidget->ptGuiFunc->depose(ptScene, ptWidget);
+}
 #include "ldScene0.h"
 #include "ldScene1.h"
 
@@ -328,6 +343,8 @@ void ldGuiFrameComplete(ld_scene_t *ptScene)
 
 void ldGuiDespose(ld_scene_t *ptScene)
 {
+    ldBase_t *ptRoot;
+
     if(ptScene->ldGuiFuncGroup!=NULL)
     {
         if(ptScene->ldGuiFuncGroup->quit)
@@ -336,16 +353,14 @@ void ldGuiDespose(ld_scene_t *ptScene)
         }
     }
 
-    if(ptScene->ptNodeRoot!=NULL)
+    ptRoot = (ldBase_t *)ptScene->ptNodeRoot;
+    if(ptRoot != NULL)
     {
-        arm_ctrl_enum(ptScene->ptNodeRoot, ptItem, POSTORDER_TRAVERSAL)
-        {
-            if(((ldBase_t *)ptItem))
-            {
-                ((ldBase_t *)ptItem)->ptGuiFunc->depose(ptScene,ptItem);
-            }
-        }
+        ldGuiDisposeNodeTree(ptScene, ptRoot);
+        ptScene->ptNodeRoot = NULL;
     }
+
+    ldMsgDeinit(&ptScene->ptMsgQueue);
 
     LOG_INFO("[sys] page %s quit",ptScene->ldGuiFuncGroup->pageName);
 }
@@ -353,6 +368,7 @@ void ldGuiDespose(ld_scene_t *ptScene)
 void __ldGuiJumpPage(ldPageFuncGroup_t *ptFuncGroup,arm_2d_scene_switch_mode_t *ptMode,uint16_t switchTimeMs)
 {
 #if USE_SCENE_SWITCHING == 2
+    ldGuiUpdateScene();
 
     if (sysSceneNum ==0)
     {
@@ -393,6 +409,11 @@ static scene_loader_t * const c_SceneLoaders[] = {
 
 void before_scene_switching_handler(void *pTarget,arm_2d_scene_player_t *ptPlayer,arm_2d_scene_t *ptScene)
 {
+    ARM_2D_UNUSED(pTarget);
+    ARM_2D_UNUSED(ptPlayer);
+    ARM_2D_UNUSED(ptScene);
+
+    ldGuiUpdateScene();
     c_SceneLoaders[sysSceneNum]();
 }
 #endif
