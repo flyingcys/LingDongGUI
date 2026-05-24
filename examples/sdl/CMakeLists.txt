@@ -166,6 +166,7 @@ elseif(USE_DEMO STREQUAL "6")
 endif()
 
 enable_testing()
+find_package(Python3 COMPONENTS Interpreter REQUIRED)
 
 add_executable(uiwidget_swipe_logic_test
     "${SDL_EXAMPLE_DIR}/tests/swipe/test_uiwidget_swipe_logic.c"
@@ -183,6 +184,14 @@ target_compile_options(uiwidget_swipe_logic_test PRIVATE
 )
 
 add_test(NAME uiwidget_swipe_logic_test COMMAND uiwidget_swipe_logic_test)
+
+add_test(
+    NAME check_use_demo_0_legacy_widget
+    COMMAND "${Python3_EXECUTABLE}" "${SDL_EXAMPLE_DIR}/tests/check_use_demo_0_legacy_widget.py"
+)
+set_tests_properties(check_use_demo_0_legacy_widget PROPERTIES
+    WORKING_DIRECTORY "${SDL_EXAMPLE_DIR}"
+)
 
 add_executable(ldgui_sdl_demo
     ${SDL_DEMO_CORE_SOURCES}

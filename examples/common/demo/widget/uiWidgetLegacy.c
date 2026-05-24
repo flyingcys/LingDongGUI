@@ -9,6 +9,20 @@
 static void uiWidgetLegacyInit(ld_scene_t *ptScene);
 static void uiWidgetLegacyLoop(ld_scene_t *ptScene);
 static void uiWidgetLegacyQuit(ld_scene_t *ptScene);
+static bool uiWidgetLegacySwitchValueChanged(ld_scene_t *ptScene, ldMsg_t msg);
+
+enum {
+    UI_WIDGET_LEGACY_SWITCH_ID = 30,
+    UI_WIDGET_LEGACY_SWITCH_LABEL_ID = 31,
+    UI_WIDGET_LEGACY_SWITCH_X = 300,
+    UI_WIDGET_LEGACY_SWITCH_Y = 220,
+    UI_WIDGET_LEGACY_SWITCH_WIDTH = 72,
+    UI_WIDGET_LEGACY_SWITCH_HEIGHT = 36,
+    UI_WIDGET_LEGACY_SWITCH_LABEL_X = 380,
+    UI_WIDGET_LEGACY_SWITCH_LABEL_Y = 218,
+    UI_WIDGET_LEGACY_SWITCH_LABEL_WIDTH = 60,
+    UI_WIDGET_LEGACY_SWITCH_LABEL_HEIGHT = 40,
+};
 
 const ldPageFuncGroup_t uiWidgetLegacyFunc = {
     .init = uiWidgetLegacyInit,
@@ -24,6 +38,20 @@ static bool uiWidgetLegacySlotTest(ld_scene_t *ptScene, ldMsg_t msg)
     (void)msg;
     ldImage_t *img = ldBaseGetWidget(ptScene->ptNodeRoot, 1);
     ldBaseSetOpacity((ldBase_t *)img, 128);
+    return false;
+}
+
+static bool uiWidgetLegacySwitchValueChanged(ld_scene_t *ptScene, ldMsg_t msg)
+{
+    ldSwitch_t *sw = ldBaseGetWidget(ptScene->ptNodeRoot, UI_WIDGET_LEGACY_SWITCH_ID);
+    ldLabel_t *label = ldBaseGetWidget(ptScene->ptNodeRoot, UI_WIDGET_LEGACY_SWITCH_LABEL_ID);
+
+    (void)msg;
+    if ((sw == NULL) || (label == NULL)) {
+        return false;
+    }
+
+    ldLabelSetText(label, (uint8_t *)(ldSwitchIsChecked(sw) ? "ON" : "OFF"));
     return false;
 }
 
@@ -90,6 +118,32 @@ static void uiWidgetLegacyInit(ld_scene_t *ptScene)
     obj = ldCheckBoxInit(7, 0, 220, 70, 50, 20);
     ldBaseSetCorner(obj, true);
     ldCheckBoxSetSelectable(obj, true);
+
+    obj = ldSwitchInit(
+        UI_WIDGET_LEGACY_SWITCH_ID,
+        0,
+        UI_WIDGET_LEGACY_SWITCH_X,
+        UI_WIDGET_LEGACY_SWITCH_Y,
+        UI_WIDGET_LEGACY_SWITCH_WIDTH,
+        UI_WIDGET_LEGACY_SWITCH_HEIGHT
+    );
+    ldSwitchSetChecked(obj, false);
+    ldSwitchSetSelectable(obj, true);
+
+    obj = ldLabelInit(
+        UI_WIDGET_LEGACY_SWITCH_LABEL_ID,
+        0,
+        UI_WIDGET_LEGACY_SWITCH_LABEL_X,
+        UI_WIDGET_LEGACY_SWITCH_LABEL_Y,
+        UI_WIDGET_LEGACY_SWITCH_LABEL_WIDTH,
+        UI_WIDGET_LEGACY_SWITCH_LABEL_HEIGHT,
+        FONT_ARIAL_16_A8
+    );
+    ldLabelSetText(obj, (uint8_t *)"OFF");
+    ldLabelSetAlign(obj, ARM_2D_ALIGN_MIDDLE_LEFT);
+    ldBaseSetSelectable(obj, true);
+
+    connect(UI_WIDGET_LEGACY_SWITCH_ID, SIGNAL_VALUE_CHANGED, uiWidgetLegacySwitchValueChanged);
 
     obj = ldProgressBarInit(8, 0, 10, 500, 300, 30);
     ldProgressBarSetPercent(obj, 45);
