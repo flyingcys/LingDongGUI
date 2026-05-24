@@ -42,6 +42,7 @@ git clone --recursive https://gitee.com/gzbkey/LingDongGUI.git
 
 通过 `-DUSE_DEMO=<n>` 选择运行的界面：
 
+- `0`：Legacy show all widget（单页全控件）
 - `1`：Startup
 - `2`：Show all widget
 - `3`：Printer

@@ -136,27 +136,20 @@ extern "C" {
 #endif
 
 #if USE_DEMO == 0
-#ifndef LD_CFG_COLOR_DEPTH
+#undef LD_CFG_COLOR_DEPTH
 #define LD_CFG_COLOR_DEPTH                        (16)
-#endif
-#ifndef LD_CFG_SCREEN_WIDTH
-#define LD_CFG_SCREEN_WIDTH                        (320)
-#endif
-#ifndef LD_CFG_SCREEN_HEIGHT
-#define LD_CFG_SCREEN_HEIGHT                       (240)
-#endif
-#ifndef LD_CFG_PFB_WIDTH
-#define LD_CFG_PFB_WIDTH                          (LD_CFG_SCREEN_WIDTH/4)
-#endif
-#ifndef LD_CFG_PFB_HEIGHT
+#undef LD_CFG_SCREEN_WIDTH
+#define LD_CFG_SCREEN_WIDTH                        (1024)
+#undef LD_CFG_SCREEN_HEIGHT
+#define LD_CFG_SCREEN_HEIGHT                       (600)
+#undef LD_CFG_PFB_WIDTH
+#define LD_CFG_PFB_WIDTH                          (LD_CFG_SCREEN_WIDTH)
+#undef LD_CFG_PFB_HEIGHT
 #define LD_CFG_PFB_HEIGHT                         (LD_CFG_SCREEN_HEIGHT/10)
-#endif
-#ifndef LD_DEMO_GUI_INCLUDE
-#define LD_DEMO_GUI_INCLUDE                       "stdint.h"
-#endif
-#ifndef LD_DEMO_GUI_FUNC
-#define LD_DEMO_GUI_FUNC                          (*(void*)0)
-#endif
+#undef LD_DEMO_GUI_INCLUDE
+#define LD_DEMO_GUI_INCLUDE                       "uiWidgetLegacy.h"
+#undef LD_DEMO_GUI_FUNC
+#define LD_DEMO_GUI_FUNC                          uiWidgetLegacyFunc
 #endif
 
 #if USE_DEMO == 1
