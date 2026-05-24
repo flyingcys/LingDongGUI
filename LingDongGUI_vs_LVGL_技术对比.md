@@ -165,6 +165,126 @@
 | 特殊功能 | 1（QRCode） | 1（arclabel） |
 | **合计** | **26** | **36** |
 
+### 2.4 LingDongGUI 是否支持 switch
+
+结论：**当前 LingDongGUI 没有原生 `switch` 控件实现**。源码里可直接对应的交互控件只有 `ldButton`、`ldCheckBox`、`ldSlider` 等；README 和教程也只公开了 `button`、`check box + radio button`、`slider`，没有 `switch` 条目。
+
+#### 现状证据
+
+| 观察点 | LingDongGUI | LVGL |
+|--------|-------------|------|
+| 控件入口 | `src/gui/ldButton.c`、`src/gui/ldCheckBox.c`、`src/gui/ldSlider.c` | `third_party/lvgl/src/widgets/switch/lv_switch.c` |
+| 公开能力 | README / API 文档只列出 button、check box、slider | 公开 `lv_switch_create()` |
+| 状态模型 | `ldCheckBox_t.isChecked`、`ldButton_t.isPressed` | `LV_STATE_CHECKED` |
+| 值变化通知 | `ldCheckBox` 发 `SIGNAL_VALUE_CHANGED` | `LV_EVENT_STATE_CHANGED` |
+| 专属视觉结构 | 无 track + knob 专用绘制对象 | `LV_PART_INDICATOR` + `LV_PART_KNOB` |
+| 内置切换动画 | 无 | `lv_switch_trigger_anim()` 基于 `lv_anim_t` |
+
+#### LingDongGUI 里最接近 switch 的现有能力
+
+1. **`ldCheckBox` 语义最接近**
+   - 内部有 `isChecked` 状态，点击后切换，并通过 `SIGNAL_VALUE_CHANGED` 对外通知。
+   - 支持 `ldCheckBoxSetChecked()` / `ldCheckBoxIsChecked()`，已经具备“开/关值”的基本读写接口。
+   - 支持 `ldCheckBoxSetImage()`，可以给“选中/未选中”两套图片，适合做一个**静态版 switch**。
+
+2. **`ldButton` 可做自锁按钮，但语义偏弱**
+   - `ldButtonSetCheckable()` 可以让按钮保持按下状态。
+   - 状态字段是 `isPressed`，更偏“按键保持”而不是“开关值”，默认也没有 `SIGNAL_VALUE_CHANGED` 这一类语义化通知。
+   - 更适合做按压态按钮，不适合直接当作 switch API。
+
+3. **`ldSlider` 只有连续值，不是二值开关**
+   - 适合拖动百分比，不适合作为 on/off 控件的直接替代。
+
+#### LVGL switch 的实现拆解
+
+LVGL 的 `switch` 不是简单“两个位图切换”，而是建立在通用对象、状态、样式、动画体系上的专用控件：
+
+1. **对象模型**
+   - `lv_switch_create()` 创建 `lv_switch_class` 实例。
+   - 构造函数里给对象加上 `LV_OBJ_FLAG_CHECKABLE`，所以 switch 直接复用 LVGL 的 checked 状态机。
+
+2. **绘制结构**
+   - `LV_PART_INDICATOR` 负责底部轨道（track）。
+   - `LV_PART_KNOB` 负责滑块圆钮（knob）。
+   - `draw_main()` 根据横向/纵向方向、padding、RTL 设置，实时计算 knob 的位置。
+
+3. **状态切换**
+   - 监听 `LV_EVENT_STATE_CHANGED`。
+   - 当 `LV_STATE_CHECKED` 发生变化时，触发 `lv_switch_trigger_anim()`。
+
+4. **动画机制**
+   - `anim_state` 保存 0~256 的过渡值。
+   - `lv_anim_t` 驱动 knob 在 track 上滑动，不只是瞬时换图。
+   - 动画时长直接取对象样式里的 `anim_duration`，说明它和样式系统深度耦合。
+
+#### 如果在 LingDongGUI 中加入 switch，最现实的三条路线
+
+| 路线 | 做法 | 优点 | 缺点 | 适合阶段 |
+|------|------|------|------|---------|
+| A. 皮肤复用 `ldCheckBox` | 用 `ldCheckBoxSetImage()` 提供开/关两张资源图，把视觉做成开关 | 改动最小，最快落地 | 只有离散两态，没有滑块动画，API 名字也不是 switch | 先验证业务需求 |
+| B. 新增原生 `ldSwitch` 控件 | 参考 `ldCheckBox` 状态接口 + `ldButton` 交互接线，单独做 `ldSwitch.h/.c` | API 清晰，可补齐 track/knob/动画 | 需要新增绘制、资源、文档、示例 | 推荐正式方案 |
+| C. 在 `ldButton` 上继续堆功能 | 把 checkable button 扩成 switch | 代码文件少 | 语义混乱，按钮/开关职责耦合，后续维护差 | 不推荐 |
+
+#### 推荐的 `ldSwitch` 设计草案
+
+如果要做长期可维护实现，建议单独新增 `ldSwitch`，不要继续挤进 `ldButton` 或 `ldCheckBox`：
+
+```c
+typedef struct ldSwitch_t {
+    implement(ldBase_t);
+    ldColor trackOffColor;
+    ldColor trackOnColor;
+    ldColor knobColor;
+    uint16_t knobPadding;
+    uint16_t animProgress;   // 0..1000
+    bool isChecked : 1;
+    bool isAnimating : 1;
+} ldSwitch_t;
+```
+
+建议接口：
+
+```c
+ldSwitch_t *ldSwitch_init(...);
+void ldSwitchSetChecked(ldSwitch_t *ptWidget, bool isChecked);
+bool ldSwitchIsChecked(ldSwitch_t *ptWidget);
+void ldSwitchSetColor(ldSwitch_t *ptWidget, ldColor offColor, ldColor onColor, ldColor knobColor);
+void ldSwitchSetImage(ldSwitch_t *ptWidget, arm_2d_tile_t *ptOffImg, arm_2d_tile_t *ptOnImg, arm_2d_tile_t *ptKnobImg);
+```
+
+#### LingDongGUI 已有基础设施，哪些能复用
+
+- **事件层**：现成 `SIGNAL_PRESS` / `SIGNAL_RELEASE` / `SIGNAL_VALUE_CHANGED`，不用重做输入系统。
+- **状态更新**：现成 `isDirtyRegionUpdate` 脏区刷新机制，适合 switch 小面积局部重绘。
+- **绘制能力**：`ldCheckBox_show()` 已经示范了圆角框、遮罩图、文本绘制；可复用为 track / knob 绘制。
+- **资源模式**：现有控件支持颜色绘制和图片绘制两条路径，switch 也可以保持同样双模式。
+
+#### LingDongGUI 还缺什么
+
+1. **缺少专用 track + knob 几何计算**
+   - 需要像 LVGL `draw_main()` 那样，根据控件宽高和 padding 计算 knob 位置。
+
+2. **缺少通用属性动画**
+   - 当前更像“控件内自带动画”，没有 `lv_anim_t` 这种统一插值层。
+   - 如果要做顺滑拨动，需要在 `ldSwitch_on_frame_start()` 或定时器里推进 `animProgress`。
+
+3. **缺少样式分部机制**
+   - LVGL 可以分别配置 `MAIN / INDICATOR / KNOB`。
+   - LingDongGUI 目前更多是控件私有字段，做 switch 时要自己定义颜色、圆角、padding、资源接口。
+
+#### 实现优先级建议
+
+1. **第一阶段：静态二态版**
+   - 先基于 `ldCheckBox` 资源双态验证视觉和业务交互。
+
+2. **第二阶段：原生 `ldSwitch`**
+   - 抽出单独控件，补 `isChecked`、`SIGNAL_VALUE_CHANGED`、track/knob 绘制。
+
+3. **第三阶段：动画增强**
+   - 增加 knob 滑动动画、按下高亮、禁用态、可选纵向模式。
+
+这意味着：**LingDongGUI 不是“完全做不了 switch”，而是“已有 70% 的二值状态和绘制基础，但还没有 LVGL 那种独立、可动画、可样式化的 switch 控件封装”。**
+
 ---
 
 ## 三、动画与视觉效果对比

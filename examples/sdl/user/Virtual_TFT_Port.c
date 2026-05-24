@@ -527,6 +527,46 @@ static bool VT_sdl_present_texture(const arm_2d_region_t *ptDirtyRegion)
     return true;
 }
 
+static void VT_Fill_Multiple_Colors_WithStride(int32_t x1,
+                                               int32_t y1,
+                                               int32_t x2,
+                                               int32_t y2,
+                                               int32_t nSourceStride,
+                                               color_typedef *color_p)
+{
+    int32_t act_x1;
+    int32_t act_y1;
+    int32_t act_x2;
+    int32_t act_y2;
+    int32_t x;
+    int32_t y;
+    color_typedef *sourceRow;
+
+    if (x2 < 0) return;
+    if (y2 < 0) return;
+    if (x1 > VT_WIDTH - 1) return;
+    if (y1 > VT_HEIGHT - 1) return;
+    if (nSourceStride <= 0) return;
+
+    act_x1 = x1 < 0 ? 0 : x1;
+    act_y1 = y1 < 0 ? 0 : y1;
+    act_x2 = x2 > VT_WIDTH - 1 ? VT_WIDTH - 1 : x2;
+    act_y2 = y2 > VT_HEIGHT - 1 ? VT_HEIGHT - 1 : y2;
+
+    sourceRow = color_p + (act_y1 - y1) * nSourceStride + (act_x1 - x1);
+
+    for (y = act_y1; y <= act_y2; y++) {
+        color_typedef *sourcePixel = sourceRow;
+
+        for (x = act_x1; x <= act_x2; x++) {
+            tft_fb[y * VT_WIDTH + x] = 0xff000000 | DEV_2_VT_RGB(*sourcePixel);
+            sourcePixel++;
+        }
+
+        sourceRow += nSourceStride;
+    }
+}
+
 static void VT_sdl_handle_event(const SDL_Event *ptEvent)
 {
     switch(ptEvent->type) {
@@ -771,11 +811,12 @@ bool VT_sdl_refresh_task(void)
             tDirtyRegion = VT_sdl_full_screen_region();
         } else {
             pColorBuffer += tDirtyRegion.tLocation.iY * VT_WIDTH + tDirtyRegion.tLocation.iX;
-            VT_Fill_Multiple_Colors(tDirtyRegion.tLocation.iX,
-                                    tDirtyRegion.tLocation.iY,
-                                    tDirtyRegion.tLocation.iX + tDirtyRegion.tSize.iWidth - 1,
-                                    tDirtyRegion.tLocation.iY + tDirtyRegion.tSize.iHeight - 1,
-                                    pColorBuffer);
+            VT_Fill_Multiple_Colors_WithStride(tDirtyRegion.tLocation.iX,
+                                               tDirtyRegion.tLocation.iY,
+                                               tDirtyRegion.tLocation.iX + tDirtyRegion.tSize.iWidth - 1,
+                                               tDirtyRegion.tLocation.iY + tDirtyRegion.tSize.iHeight - 1,
+                                               VT_WIDTH,
+                                               pColorBuffer);
         }
     }
 #endif
@@ -883,29 +924,12 @@ void VT_Fill_Single_Color(int32_t x1, int32_t y1, int32_t x2, int32_t y2, color_
 
 void VT_Fill_Multiple_Colors(int32_t x1, int32_t y1, int32_t x2, int32_t y2, color_typedef * color_p)
 {
-    /*Return if the area is out the screen*/
-    if(x2 < 0) return;
-    if(y2 < 0) return;
-    if(x1 > VT_WIDTH - 1) return;
-    if(y1 > VT_HEIGHT - 1) return;
-
-    /*Truncate the area to the screen*/
-    int32_t act_x1 = x1 < 0 ? 0 : x1;
-    int32_t act_y1 = y1 < 0 ? 0 : y1;
-    int32_t act_x2 = x2 > VT_WIDTH - 1 ? VT_WIDTH - 1 : x2;
-    int32_t act_y2 = y2 > VT_HEIGHT - 1 ? VT_HEIGHT - 1 : y2;
-
-    int32_t x;
-    int32_t y;
-
-    for(y = act_y1; y <= act_y2; y++) {
-        for(x = act_x1; x <= act_x2; x++) {
-            tft_fb[y * VT_WIDTH + x] = 0xff000000|DEV_2_VT_RGB(*color_p);
-            color_p++;
-        }
-
-        color_p += x2 - act_x2;
-    }
+    VT_Fill_Multiple_Colors_WithStride(x1,
+                                       y1,
+                                       x2,
+                                       y2,
+                                       x2 - x1 + 1,
+                                       color_p);
 }
 
 void VT_Set_Point(int32_t x, int32_t y, color_typedef color)
