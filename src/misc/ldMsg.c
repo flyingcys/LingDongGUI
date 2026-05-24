@@ -14,6 +14,17 @@ bool ldMsgInit(xQueue_t **pptQueue, uint8_t size)
     return false;
 }
 
+void ldMsgDeinit(xQueue_t **pptQueue)
+{
+    if ((pptQueue == NULL) || (*pptQueue == NULL))
+    {
+        return;
+    }
+
+    xQueueDestroy(*pptQueue);
+    *pptQueue = NULL;
+}
+
 bool ldMsgEmit(xQueue_t *ptQueue, void *ptSender, uint8_t signal, uint64_t value)
 {
     ldMsg_t tMsg;
@@ -67,9 +78,12 @@ void ldMsgDelConnect(void *ptSender)
 
     while (ptAssn != NULL)
     {
+        ldAssn_t *ptNext = ptAssn->ptNext;
         ldFree(ptAssn);
-        ptAssn = ptAssn->ptNext;
+        ptAssn = ptNext;
     }
+
+    ((ldBase_t *)ptSender)->ptAssn = NULL;
 }
 
 void ldMsgProcess(void *ptScene)

@@ -33,6 +33,8 @@
 
 #include "ldGui.h"
 
+extern bool isFullWidgetUpdate;
+
 #if defined(__clang__)
 #   pragma clang diagnostic push
 #   pragma clang diagnostic ignored "-Wunknown-warning-option"
@@ -167,6 +169,14 @@ IMPL_PFB_ON_DRAW(__pfb_draw_scene1_handler)
 
     ARM_2D_UNUSED(tScreenSize);
 
+    if (bIsNewFrame || (ptThis->ptNodeRoot == NULL))
+    {
+        ptCurrentWidget = NULL;
+        itemCount = 0;
+        widgetLoca.iX = 0;
+        widgetLoca.iY = 0;
+    }
+
     ldGuiDraw(pTarget,(arm_2d_tile_t*)ptTile,bIsNewFrame);
 
     if(ptThis->ptNodeRoot!=NULL)
@@ -192,11 +202,21 @@ IMPL_PFB_ON_DRAW(__pfb_draw_scene1_handler)
 
                             if(ptWidget->itemCount) // widget has item
                             {
+                                arm_2d_region_t tRegion = ptWidget->use_as__arm_2d_control_node_t.tRegion;
+
                                 ptCurrentWidget=ptWidget;
                                 itemCount=0;
                                 widgetLoca.iX=0;
                                 widgetLoca.iY=0;
                                 widgetLoca= ldBaseGetAbsoluteLocation(ptWidget,widgetLoca);
+
+                                tRegion.tLocation.iX += widgetLoca.iX;
+                                tRegion.tLocation.iY += widgetLoca.iY;
+                                arm_2d_dynamic_dirty_region_update(
+                                            &ptThis->tDirtyRegionItem,
+                                            (arm_2d_tile_t*)ptTile,
+                                            &tRegion,
+                                            SCENE_DR_UPDATE);
 
                                 break;
                             }
@@ -287,6 +307,25 @@ IMPL_PFB_ON_DRAW(__pfb_draw_scene1_handler)
             break;
         }
         case SCENE_DR_DONE:
+            if (isFullWidgetUpdate)
+            {
+                arm_2d_region_t tRegion = {
+                    .tLocation = {
+                        .iX = 0,
+                        .iY = 0,
+                    },
+                    .tSize = ptTile->tRegion.tSize,
+                };
+
+                arm_2d_dynamic_dirty_region_update(
+                            &ptThis->tDirtyRegionItem,
+                            (arm_2d_tile_t*)ptTile,
+                            &tRegion,
+                            SCENE_DR_UPDATE);
+                arm_2d_dynamic_dirty_region_change_user_region_index_only(
+                            &ptThis->tDirtyRegionItem,
+                            SCENE_DR_UPDATE);
+            }
             break;
         default:
             break;

@@ -61,3 +61,12 @@ void uiWidgetHandleFocusNavigation(ld_scene_t *ptScene)
         ldBaseFocusNavigate(ptScene, NAV_RIGHT);
     }
 }
+
+bool uiWidgetInitFailed(const char *page_name, uint16_t widget_id)
+{
+    LOG_ERROR("[widget demo] %s init failed, widget id:%u, free memory:%zu",
+              page_name,
+              widget_id,
+              ldGetFreeMemory());
+    return true;
+}

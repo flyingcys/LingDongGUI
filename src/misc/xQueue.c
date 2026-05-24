@@ -66,6 +66,16 @@ xQueue_t* xQueueCreate(uint32_t length, uint32_t itemSize)
     return pNewQueue;
 }
 
+void xQueueDestroy(xQueue_t *queue)
+{
+    if (queue == NULL)
+    {
+        return;
+    }
+
+    XFREE(queue);
+}
+
 void xQueueClear(xQueue_t* queue)
 {
     if(queue==NULL)
@@ -164,4 +174,3 @@ bool xQueueDequeue(xQueue_t *queue,void * pOutItem,uint32_t itemSize)
         return false;
     }
 }
-

@@ -30,6 +30,7 @@ struct ldAssn
 };//association
 
 bool ldMsgInit(xQueue_t **pptQueue, uint8_t size);
+void ldMsgDeinit(xQueue_t **pptQueue);
 bool ldMsgEmit(xQueue_t *ptQueue, void *ptSender, uint8_t signal, uint64_t value);
 bool ldMsgConnect(void *ptSender, uint8_t signal, assnFunc pFunc);
 void ldMsgDelConnect(void *ptSender);

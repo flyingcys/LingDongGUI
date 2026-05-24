@@ -14,7 +14,8 @@ extern "C" {
 #define UI_WIDGET_MARGIN               12
 #define UI_WIDGET_GAP                  10
 #define UI_WIDGET_HEADER_HEIGHT        30
-#define UI_WIDGET_AUTO_SWITCH_MS       3000
+#define UI_WIDGET_PAGE_DWELL_MS        3000
+#define UI_WIDGET_PAGE_SWITCH_ANIM_MS  300
 #define UI_WIDGET_DYNAMIC_UPDATE_MS    100
 
 #define UI_WIDGET_KEYBOARD_ID          22
@@ -29,6 +30,7 @@ extern uint8_t *g_widget_day_names[7];
 extern uint8_t g_widget_header_format[];
 
 void uiWidgetHandleFocusNavigation(ld_scene_t *ptScene);
+bool uiWidgetInitFailed(const char *page_name, uint16_t widget_id);
 
 #ifdef __cplusplus
 }

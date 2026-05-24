@@ -423,14 +423,6 @@ void ldWindow_depose(ld_scene_t *ptScene, ldWindow_t *ptWidget)
     }
 #endif
 
-    if(ptWidget->use_as__ldBase_t.use_as__arm_2d_control_node_t.ptChildList!=NULL)
-    {
-        arm_ctrl_enum(ptWidget->use_as__ldBase_t.use_as__arm_2d_control_node_t.ptChildList, ptItem, PREORDER_TRAVERSAL)
-        {
-            ((ldBase_t *)ptItem)->ptGuiFunc->depose(ptScene,ptItem);
-        }
-    }
-
     ldMsgDelConnect(ptWidget);
     ldBaseNodeRemove((arm_2d_control_node_t*)ptWidget);
 #if USE_VIRTUAL_RESOURCE == 1
