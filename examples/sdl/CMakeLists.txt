@@ -235,6 +235,8 @@ add_executable(layout_window_test
     ${ARM2D_LIBRARY_SOURCES}
     "${REPO_SRC_DIR}/gui/ldWindowLayoutInternal.c"
     "${REPO_SRC_DIR}/gui/ldBase.c"
+    "${REPO_SRC_DIR}/gui/ldSwitch.c"
+    "${REPO_SRC_DIR}/gui/ldSwitchInternal.c"
     "${REPO_SRC_DIR}/gui/ldWindow.c"
     ${MISC_SOURCES}
 )

@@ -41,7 +41,7 @@
 - 内部几何与动画：`src/gui/ldSwitchInternal.h`、`src/gui/ldSwitchInternal.c`
 - 焦点/输入接线：`src/gui/ldBase.c`、`examples/common/demo/widget/uiWidgetLegacy.c`
 - demo 接线：`examples/common/demo/widget/uiWidgetLegacy.c`、`examples/common/demo/widget/uiWidgetSwipePage01.c`
-- 测试：`examples/sdl/tests/switch/test_ldswitch_internal.c`、`examples/sdl/tests/switch/test_ldswitch_widget.c`
+- 测试：`examples/sdl/tests/switch/test_ldswitch_internal.c`、`examples/sdl/tests/switch/test_ldswitch_widget.c`、`examples/sdl/tests/layout/test_layout_window.c`
 - 输入路由约束：`examples/sdl/tests/check_switch_focus_routing.py`
 - 边角审计：`examples/sdl/docs/2026-05-25-switch-lvgl-edge-audit.md`
 

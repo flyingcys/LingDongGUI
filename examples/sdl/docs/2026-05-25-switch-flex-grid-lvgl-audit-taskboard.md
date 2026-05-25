@@ -38,6 +38,7 @@
 - 已补 `ldSwitchCanNavigate()`，让通用焦点层只在“这次方向键确实会改值”时把事件交给 switch
 - 已补 knob overhang 几何
 - 已补 indicator ring 几何
+- 已补 host-side 焦点行为断言，证明 no-op / disabled 方向会放行给 peer focus
 - 已接入 demo
 - 已有 internal/widget tests
 

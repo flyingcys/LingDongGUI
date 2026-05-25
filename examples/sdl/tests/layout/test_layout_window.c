@@ -4,37 +4,107 @@
 #include <stdio.h>
 #include <string.h>
 
+#define __ARM_2D_HELPER_CONTROL_INHERIT__
 #include "ldWindow.h"
 #include "ldLabel.h"
+#include "ldSwitch.h"
 #include "ldWindowLayoutInternal.h"
 
-const arm_2d_control_enumeration_policy_t ARM_2D_CONTROL_ENUMERATION_POLICY_PREORDER_TRAVERSAL = {0};
+static arm_2d_err_t test_preorder_enum_init(arm_2d_control_enumerator_t *ptThis,
+                                            const arm_2d_control_node_t *ptRoot);
+static arm_2d_control_node_t *test_preorder_enum_get_next_node(arm_2d_control_enumerator_t *ptThis);
+static arm_2d_err_t test_preorder_enum_depose(arm_2d_control_enumerator_t *ptThis);
+
+const arm_2d_control_enumeration_policy_t ARM_2D_CONTROL_ENUMERATION_POLICY_PREORDER_TRAVERSAL = {
+    .fnInit = test_preorder_enum_init,
+    .fnDepose = test_preorder_enum_depose,
+    .fnGetNextNode = test_preorder_enum_get_next_node,
+};
 const arm_2d_tile_t c_tileWhiteDotMask = {0};
 const arm_2d_tile_t c_tileCircleMask = {0};
 
 void VT_enter_global_mutex(void) {}
 void VT_leave_global_mutex(void) {}
 
+static arm_2d_err_t test_preorder_enum_init(arm_2d_control_enumerator_t *ptThis,
+                                            const arm_2d_control_node_t *ptRoot)
+{
+    assert(ptThis != NULL);
+
+    ptThis->ptPolicy = &ARM_2D_CONTROL_ENUMERATION_POLICY_PREORDER_TRAVERSAL;
+    ptThis->ptRoot = (arm_2d_control_node_t *)ptRoot;
+    ptThis->ptCurrent = (arm_2d_control_node_t *)ptRoot;
+    ptThis->Preorder.bFirstNode = true;
+    return ARM_2D_ERR_NONE;
+}
+
+static arm_2d_control_node_t *test_preorder_enum_get_next_node(arm_2d_control_enumerator_t *ptThis)
+{
+    arm_2d_control_node_t *ptCurrent;
+    ldBase_t *ptBaseCurrent;
+
+    assert(ptThis != NULL);
+    ptCurrent = ptThis->ptCurrent;
+    if (ptCurrent == NULL)
+    {
+        return NULL;
+    }
+
+    if (ptThis->Preorder.bFirstNode)
+    {
+        ptThis->Preorder.bFirstNode = false;
+        return ptCurrent;
+    }
+
+    ptBaseCurrent = (ldBase_t *)ptCurrent;
+    if (ptBaseCurrent->use_as__arm_2d_control_node_t.ptChildList != NULL)
+    {
+        ptThis->ptCurrent = (arm_2d_control_node_t *)ptBaseCurrent->use_as__arm_2d_control_node_t.ptChildList;
+        return ptThis->ptCurrent;
+    }
+
+    while ((ptCurrent != NULL)
+        && (ptCurrent != ptThis->ptRoot)
+        && (((ldBase_t *)ptCurrent)->use_as__arm_2d_control_node_t.ptNext == NULL))
+    {
+        ptCurrent = (arm_2d_control_node_t *)((ldBase_t *)ptCurrent)->use_as__arm_2d_control_node_t.ptParent;
+    }
+
+    if ((ptCurrent == NULL)
+        || (((ldBase_t *)ptCurrent)->use_as__arm_2d_control_node_t.ptNext == NULL))
+    {
+        ptThis->ptCurrent = NULL;
+        return NULL;
+    }
+
+    ptThis->ptCurrent = (arm_2d_control_node_t *)((ldBase_t *)ptCurrent)->use_as__arm_2d_control_node_t.ptNext;
+    return ptThis->ptCurrent;
+}
+
+static arm_2d_err_t test_preorder_enum_depose(arm_2d_control_enumerator_t *ptThis)
+{
+    (void)ptThis;
+    return ARM_2D_ERR_NONE;
+}
+
 arm_2d_err_t arm_2d_helper_control_enum_init(arm_2d_control_enumerator_t *ptThis,
                                              const arm_2d_control_enumeration_policy_t *ptPolicy,
                                              const arm_2d_control_node_t *ptRoot)
 {
-    (void)ptThis;
-    (void)ptPolicy;
-    (void)ptRoot;
-    return ARM_2D_ERR_NONE;
+    assert(ptPolicy != NULL);
+    return ptPolicy->fnInit(ptThis, ptRoot);
 }
 
 arm_2d_control_node_t *arm_2d_helper_control_enum_get_next_node(arm_2d_control_enumerator_t *ptThis)
 {
-    (void)ptThis;
-    return NULL;
+    assert(ptThis != NULL);
+    return ptThis->ptPolicy->fnGetNextNode(ptThis);
 }
 
 arm_2d_err_t arm_2d_helper_control_enum_depose(arm_2d_control_enumerator_t *ptThis)
 {
-    (void)ptThis;
-    return ARM_2D_ERR_NONE;
+    assert(ptThis != NULL);
+    return ptThis->ptPolicy->fnDepose(ptThis);
 }
 
 bool __arm_2d_helper_pfb_is_region_active0(const arm_2d_tile_t *ptTarget,
@@ -186,11 +256,6 @@ q31_t arm_cos_q31(q31_t x)
 
 void ldGuiUpdateScene(void) {}
 
-void ldMsgDelConnect(void *ptSender)
-{
-    (void)ptSender;
-}
-
 void *pvPortMalloc(size_t xWantedSize)
 {
     return malloc(xWantedSize);
@@ -262,6 +327,216 @@ static void init_window_region(ldWindow_t *ptWindow, int16_t width, int16_t heig
 {
     ptWindow->use_as__ldBase_t.widgetType = widgetTypeWindow;
     set_widget_region((ldBase_t *)ptWindow, 0, 0, width, height);
+}
+
+static void init_focus_runtime_scene(ld_scene_t *ptScene,
+                                     ldWindow_t *ptRoot,
+                                     ldLabel_t *ptLeft,
+                                     ldSwitch_t *ptSwitch,
+                                     ldLabel_t *ptRight)
+{
+    memset(ptScene, 0, sizeof(*ptScene));
+    memset(ptRoot, 0, sizeof(*ptRoot));
+    memset(ptLeft, 0, sizeof(*ptLeft));
+    memset(ptSwitch, 0, sizeof(*ptSwitch));
+    memset(ptRight, 0, sizeof(*ptRight));
+
+    init_window_region(ptRoot, 160, 60);
+    ptRoot->use_as__ldBase_t.nameId = 0;
+    ptLeft->use_as__ldBase_t.widgetType = widgetTypeLabel;
+    ptSwitch->use_as__ldBase_t.widgetType = widgetTypeSwitch;
+    ptRight->use_as__ldBase_t.widgetType = widgetTypeLabel;
+
+    set_widget_region((ldBase_t *)ptLeft, 0, 0, 20, 20);
+    set_widget_region((ldBase_t *)ptSwitch, 40, 0, 44, 24);
+    set_widget_region((ldBase_t *)ptRight, 100, 0, 20, 20);
+
+    ldBaseSetSelectable((ldBase_t *)ptLeft, true);
+    ldBaseSetSelectable((ldBase_t *)ptSwitch, true);
+    ldBaseSetSelectable((ldBase_t *)ptRight, true);
+
+    ldBaseNodeAdd((arm_2d_control_node_t *)ptRoot, (arm_2d_control_node_t *)ptLeft);
+    ldBaseNodeAdd((arm_2d_control_node_t *)ptRoot, (arm_2d_control_node_t *)ptSwitch);
+    ldBaseNodeAdd((arm_2d_control_node_t *)ptRoot, (arm_2d_control_node_t *)ptRight);
+
+    ptScene->ptNodeRoot = (arm_2d_control_node_t *)ptRoot;
+    ptScene->ptMsgQueue = NULL;
+    ldBaseFocusNavigateInit();
+}
+
+static void init_focus_runtime_cross_scene(ld_scene_t *ptScene,
+                                           ldWindow_t *ptRoot,
+                                           ldLabel_t *ptLeft,
+                                           ldLabel_t *ptUp,
+                                           ldSwitch_t *ptSwitch,
+                                           ldLabel_t *ptRight,
+                                           ldLabel_t *ptDown)
+{
+    memset(ptScene, 0, sizeof(*ptScene));
+    memset(ptRoot, 0, sizeof(*ptRoot));
+    memset(ptLeft, 0, sizeof(*ptLeft));
+    memset(ptUp, 0, sizeof(*ptUp));
+    memset(ptSwitch, 0, sizeof(*ptSwitch));
+    memset(ptRight, 0, sizeof(*ptRight));
+    memset(ptDown, 0, sizeof(*ptDown));
+
+    init_window_region(ptRoot, 180, 120);
+    ptRoot->use_as__ldBase_t.nameId = 0;
+    ptLeft->use_as__ldBase_t.widgetType = widgetTypeLabel;
+    ptUp->use_as__ldBase_t.widgetType = widgetTypeLabel;
+    ptSwitch->use_as__ldBase_t.widgetType = widgetTypeSwitch;
+    ptRight->use_as__ldBase_t.widgetType = widgetTypeLabel;
+    ptDown->use_as__ldBase_t.widgetType = widgetTypeLabel;
+
+    set_widget_region((ldBase_t *)ptLeft, 0, 40, 20, 20);
+    set_widget_region((ldBase_t *)ptUp, 40, 0, 20, 20);
+    set_widget_region((ldBase_t *)ptSwitch, 40, 40, 44, 24);
+    set_widget_region((ldBase_t *)ptRight, 120, 40, 20, 20);
+    set_widget_region((ldBase_t *)ptDown, 40, 88, 20, 20);
+
+    ldBaseSetSelectable((ldBase_t *)ptLeft, true);
+    ldBaseSetSelectable((ldBase_t *)ptUp, true);
+    ldBaseSetSelectable((ldBase_t *)ptSwitch, true);
+    ldBaseSetSelectable((ldBase_t *)ptRight, true);
+    ldBaseSetSelectable((ldBase_t *)ptDown, true);
+
+    ldBaseNodeAdd((arm_2d_control_node_t *)ptRoot, (arm_2d_control_node_t *)ptLeft);
+    ldBaseNodeAdd((arm_2d_control_node_t *)ptRoot, (arm_2d_control_node_t *)ptUp);
+    ldBaseNodeAdd((arm_2d_control_node_t *)ptRoot, (arm_2d_control_node_t *)ptSwitch);
+    ldBaseNodeAdd((arm_2d_control_node_t *)ptRoot, (arm_2d_control_node_t *)ptRight);
+    ldBaseNodeAdd((arm_2d_control_node_t *)ptRoot, (arm_2d_control_node_t *)ptDown);
+
+    ptScene->ptNodeRoot = (arm_2d_control_node_t *)ptRoot;
+    ptScene->ptMsgQueue = NULL;
+    ldBaseFocusNavigateInit();
+}
+
+static void test_focus_navigation_switch_consumes_only_when_value_changes(void)
+{
+    ld_scene_t scene;
+    ldWindow_t root;
+    ldLabel_t left;
+    ldSwitch_t sw;
+    ldLabel_t right;
+
+    init_focus_runtime_scene(&scene, &root, &left, &sw, &right);
+
+    ldBaseFocusNavigate(&scene, NAV_RIGHT);
+    assert(ldBaseIsSelected((ldBase_t *)&sw) == true);
+    assert(ldBaseIsSelected((ldBase_t *)&right) == false);
+
+    ldBaseFocusNavigate(&scene, NAV_RIGHT);
+    assert(ldSwitchIsChecked(&sw) == true);
+    assert(ldBaseIsSelected((ldBase_t *)&sw) == true);
+
+    ldBaseFocusNavigate(&scene, NAV_RIGHT);
+    assert(ldSwitchIsChecked(&sw) == true);
+    assert(ldBaseIsSelected((ldBase_t *)&sw) == false);
+    assert(ldBaseIsSelected((ldBase_t *)&right) == true);
+}
+
+static void test_focus_navigation_switch_releases_noop_and_disabled_directions(void)
+{
+    ld_scene_t scene;
+    ldWindow_t root;
+    ldLabel_t left;
+    ldSwitch_t sw;
+    ldLabel_t right;
+
+    init_focus_runtime_scene(&scene, &root, &left, &sw, &right);
+
+    ldBaseFocusNavigate(&scene, NAV_RIGHT);
+    ldBaseFocusNavigate(&scene, NAV_RIGHT);
+    assert(ldSwitchIsChecked(&sw) == true);
+    assert(ldBaseIsSelected((ldBase_t *)&sw) == true);
+
+    ldBaseFocusNavigate(&scene, NAV_LEFT);
+    assert(ldSwitchIsChecked(&sw) == false);
+    assert(ldBaseIsSelected((ldBase_t *)&sw) == true);
+
+    ldBaseFocusNavigate(&scene, NAV_LEFT);
+    assert(ldBaseIsSelected((ldBase_t *)&left) == true);
+    assert(ldBaseIsSelected((ldBase_t *)&sw) == false);
+
+    init_focus_runtime_scene(&scene, &root, &left, &sw, &right);
+    ldBaseFocusNavigate(&scene, NAV_RIGHT);
+    ldSwitchSetDisabled(&sw, true);
+
+    ldBaseFocusNavigate(&scene, NAV_RIGHT);
+    assert(ldSwitchIsChecked(&sw) == false);
+    assert(ldBaseIsSelected((ldBase_t *)&right) == true);
+}
+
+static void test_focus_navigation_switch_releases_all_remaining_noop_directions(void)
+{
+    ld_scene_t scene;
+    ldWindow_t root;
+    ldLabel_t left;
+    ldLabel_t up;
+    ldSwitch_t sw;
+    ldLabel_t right;
+    ldLabel_t down;
+
+    init_focus_runtime_cross_scene(&scene, &root, &left, &up, &sw, &right, &down);
+    ldBaseFocusNavigate(&scene, NAV_RIGHT);
+    assert(ldBaseIsSelected((ldBase_t *)&sw) == true);
+
+    ldBaseFocusNavigate(&scene, NAV_LEFT);
+    assert(ldSwitchIsChecked(&sw) == false);
+    assert(ldBaseIsSelected((ldBase_t *)&left) == true);
+
+    init_focus_runtime_cross_scene(&scene, &root, &left, &up, &sw, &right, &down);
+    ldBaseFocusNavigate(&scene, NAV_RIGHT);
+    ldBaseFocusNavigate(&scene, NAV_DOWN);
+    assert(ldSwitchIsChecked(&sw) == false);
+    assert(ldBaseIsSelected((ldBase_t *)&down) == true);
+
+    init_focus_runtime_cross_scene(&scene, &root, &left, &up, &sw, &right, &down);
+    ldBaseFocusNavigate(&scene, NAV_RIGHT);
+    ldBaseFocusNavigate(&scene, NAV_RIGHT);
+    assert(ldSwitchIsChecked(&sw) == true);
+    assert(ldBaseIsSelected((ldBase_t *)&sw) == true);
+
+    ldBaseFocusNavigate(&scene, NAV_UP);
+    assert(ldSwitchIsChecked(&sw) == true);
+    assert(ldBaseIsSelected((ldBase_t *)&up) == true);
+}
+
+static void test_focus_navigation_disabled_switch_releases_all_directions(void)
+{
+    ld_scene_t scene;
+    ldWindow_t root;
+    ldLabel_t left;
+    ldLabel_t up;
+    ldSwitch_t sw;
+    ldLabel_t right;
+    ldLabel_t down;
+
+    init_focus_runtime_cross_scene(&scene, &root, &left, &up, &sw, &right, &down);
+    ldBaseFocusNavigate(&scene, NAV_RIGHT);
+    ldSwitchSetDisabled(&sw, true);
+
+    ldBaseFocusNavigate(&scene, NAV_LEFT);
+    assert(ldBaseIsSelected((ldBase_t *)&left) == true);
+
+    init_focus_runtime_cross_scene(&scene, &root, &left, &up, &sw, &right, &down);
+    ldBaseFocusNavigate(&scene, NAV_RIGHT);
+    ldSwitchSetDisabled(&sw, true);
+    ldBaseFocusNavigate(&scene, NAV_UP);
+    assert(ldBaseIsSelected((ldBase_t *)&up) == true);
+
+    init_focus_runtime_cross_scene(&scene, &root, &left, &up, &sw, &right, &down);
+    ldBaseFocusNavigate(&scene, NAV_RIGHT);
+    ldSwitchSetDisabled(&sw, true);
+    ldBaseFocusNavigate(&scene, NAV_RIGHT);
+    assert(ldBaseIsSelected((ldBase_t *)&right) == true);
+
+    init_focus_runtime_cross_scene(&scene, &root, &left, &up, &sw, &right, &down);
+    ldBaseFocusNavigate(&scene, NAV_RIGHT);
+    ldSwitchSetDisabled(&sw, true);
+    ldBaseFocusNavigate(&scene, NAV_DOWN);
+    assert(ldBaseIsSelected((ldBase_t *)&down) == true);
+    assert(ldSwitchIsChecked(&sw) == false);
 }
 
 static void test_collect_direct_children_ignores_grandchildren(void)
@@ -1964,5 +2239,9 @@ int main(void)
     test_grid_layout_span_with_fr_tracks_preserves_expected_width();
     test_grid_layout_container_center_keeps_track_order_and_offsets();
     test_grid_layout_clamps_invalid_cell_settings();
+    test_focus_navigation_switch_consumes_only_when_value_changes();
+    test_focus_navigation_switch_releases_noop_and_disabled_directions();
+    test_focus_navigation_switch_releases_all_remaining_noop_directions();
+    test_focus_navigation_disabled_switch_releases_all_directions();
     return 0;
 }

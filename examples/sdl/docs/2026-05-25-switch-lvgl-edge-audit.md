@@ -75,6 +75,7 @@ LingDongGUI 的 indicator 现在已经改到 track 内容区内增长，而不�
 - LingDongGUI：`src/gui/ldSwitch.h:99`
 - LingDongGUI：`src/gui/ldSwitch.c:482`
 - LingDongGUI：`src/gui/ldBase.c`
+- LingDongGUI：`examples/sdl/tests/layout/test_layout_window.c`
 - LingDongGUI：`examples/sdl/tests/check_switch_focus_routing.py`
 - LVGL：`third_party/lvgl/src/widgets/switch/lv_switch.c:131`
 - LVGL 文档：`third_party/lvgl/docs/src/widgets/switch.mdx:80`
@@ -93,6 +94,12 @@ LingDongGUI 现在不仅有 `ldSwitchNavigate()`，还补了 `ldSwitchCanNavigat
 - disabled 或重复同值方向：回退到通用 peer focus 导航
 
 因此它不再只存在于 legacy demo 私有接线里，同时也避免了 disabled / no-op 方向把焦点卡死。
+
+现在这条结论也不再只靠源码 grep：`layout_window_test` 已补运行态断言，直接覆盖
+
+- `off + NAV_RIGHT`：留在 switch 并切到 on
+- `on + NAV_RIGHT`：放行给右侧 peer focus
+- `disabled + NAV_RIGHT`：放行给右侧 peer focus
 
 #### 审计结论
 
