@@ -3,7 +3,7 @@
 ## 结论
 
 - `switch`：主线已完成原生控件化，不再是 stub。当前已具备 `AUTO/横向/纵向` 方向、禁用态、首帧稳态、value change 事件、track/indicator/knob 几何与图片 fallback，并补齐了 `ldSwitchNavigate()`、`ldSwitchCanNavigate()`、通用焦点层“只在会改值时才消费方向键”的路由、indicator ring 与可见的 knob overhang 几何；本轮又补上了 `pressed / animation mid-frame / checked ring` 的截图矩阵证据，因此 switch 这条第一轮 parity 线已经从“主路径闭环”推进到“主路径 + 关键视觉证据闭环”。
-- `flex`：Phase 0/1 主线已基本成型。当前已支持 8 种 flow、main/cross/track 对齐、item gap/track gap、`grow`、`new track`、`ignore layout`，更像“可用的一维布局骨架”，但离 LVGL 的完整 flex 体系还有 RTL、margin/percent/content-size 联动等差距。
+- `flex`：Phase 0/1 主线已基本成型。当前已支持 8 种 flow、main/cross/track 对齐、item gap/track gap、`grow`、`new track`、`ignore layout`，并把 absolute `min/max` clamp 从内部 hook 升成了公开 API；它已经是“可用的一维布局骨架”，但离 LVGL 的完整 flex 体系还有 RTL、margin/percent/content-size 联动等差距。
 - `grid`：已经从旧 `gridColumns` 顺排容器升级为显式二维网格。当前稳定支持 descriptor、`fixed/CONTENT/FR`、explicit cell、span、cell align、container align、descriptor-grid 下的 auto placement fallback、`ignoreLayout` overlay，并保留 legacy `gridColumns` fallback。
 
 ## 本轮修复
@@ -24,6 +24,7 @@
 - 删除旧版重复 `ldBaseSetGridCell()` 实现，统一保留 `int16_t + isGridCellSet` 这条新语义。
 - 继续收口 `src/gui/ldWindow.c` 的 descriptor-grid solver，让 auto placement 会跳过已被 span 占用的格子。
 - 让 grid 容器与 flex 一样跳过 `ignoreLayout` child：child 保持可见、保留手工坐标、不参与槽位计算与 auto placement。
+- 把 flex 现有的 absolute `min/max` hook 升成公开 API：`ldBaseSetFlexMinWidth/Height()`、`ldBaseSetFlexMaxWidth/Height()`，并让 host-side 测试改为走公开合同，而不是直接改内部字段。
 - 在 `examples/sdl/tests/layout/test_layout_window.c` 新增回归测试，锁住：
   - `CONTENT` 轨道取最大可见 child
   - descriptor-grid 自动落位
@@ -52,6 +53,7 @@
 
 - 容器 API：`src/gui/ldWindow.h`、`src/gui/ldWindow.c`
 - 子项元数据：`src/gui/ldBase.h`、`src/gui/ldBase.c`
+- host-side 测试：`examples/sdl/tests/layout/test_layout_window.c`
 - demo：`examples/common/demo/layout/uiLayout.c`
 - 差距分析：`examples/sdl/docs/2026-05-24-flex-vs-lvgl-gap-analysis.md`
 
@@ -74,8 +76,8 @@
 
 ### flex
 
-- 当前适合继续补行为细节和与 LVGL 的语义差距。
-- 还不适合宣称“LVGL flex parity 完成”。
+- 当前已经具备公开的 absolute `min/max` 尺寸约束接口，host-side 测试也已从内部字段改为走 API。
+- 还不适合宣称“LVGL flex parity 完成”；剩余差距仍集中在 RTL、margin、percent/content-size 联动。
 
 ### grid
 
@@ -88,7 +90,7 @@
 | 线别 | 已对齐主路径 | 当前未闭环项 | 文档化后的下一步 |
 | --- | --- | --- | --- |
 | switch | 原生控件、方向/禁用/事件、indicator ring、knob overhang、值变更优先的通用焦点导航、pressed/mid-frame/ring 视觉证据 | 若继续深挖，只剩更高置信度像素比对 | 可选补主题矩阵或整图 diff |
-| flex | flow/wrap/reverse、main/cross/track 对齐、gap/grow/new-track | RTL、margin、percent/content-size 联动 | 继续补第二阶段语义差距 |
+| flex | flow/wrap/reverse、main/cross/track 对齐、gap/grow/new-track、公开 min/max clamp API | RTL、margin、percent/content-size 联动 | 继续补第二阶段语义差距 |
 | grid | descriptor、`CONTENT/FR`、span、cell/container align、auto placement、ignore-layout overlay | `subgrid`、RTL | 继续补更大范围语义，不回退主实现 |
 
 ## 本轮验证

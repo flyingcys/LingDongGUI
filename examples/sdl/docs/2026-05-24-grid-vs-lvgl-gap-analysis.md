@@ -32,13 +32,12 @@ LingDongGUI 当前的 `grid` 不是 LVGL 语义上的二维显式网格，而是
 - demo 已从“3 列 dashboard”改成 descriptor + span + center 的组合示例
 - host-side 测试已覆盖 descriptor、`CONTENT`、`FR`、span、container align、cell align、非法输入钳制、legacy fallback
 
-但这不等于和 LVGL 完全对齐；下面这些仍然明确不支持：
+但这不等于和 LVGL 完全对齐；截至 2026-05-26，明确仍未支持的是：
 
 - subgrid
 - RTL
-- ignore-layout / floating child
 
-这些边界本轮只记账，不伪装成已支持。
+`ignore-layout` 已接入当前 grid 主线：descriptor-grid 与 legacy `gridColumns` fallback 都会让 child 继续可见、保留手工坐标、不参与 cell/auto placement、也不占 grid slot。
 
 ---
 
@@ -256,7 +255,7 @@ LingDongGUI 现在只有平均列宽。
 - 表单布局做不出来
 - 左侧标签 / 右侧自适应内容这种典型界面做不出来
 
-## 4.7 subgrid / RTL / ignore-layout / 容错能力都还没开始
+## 4.7 subgrid / RTL 仍未开始，ignore-layout 已补到 grid 主线
 
 这些不一定都要在第一轮完成，但至少要明确：
 
@@ -270,7 +269,7 @@ LingDongGUI 现在只有平均列宽。
 
 - subgrid：未做
 - RTL：未做
-- ignore-layout：未做
+- ignore-layout：已做；descriptor-grid 与 legacy `gridColumns` fallback 都会跳过该 child 的 layout/slot 计算，同时保留手工坐标
 - 容错：`pos/span` 钳制已补，descriptor 缺失时走 legacy `gridColumns` fallback
 
 ---
@@ -387,7 +386,7 @@ setter 统一规则：
 3. 计算它覆盖的区域
 4. 在 cell 内按 start/center/end/stretch 放置
 5. hidden child 跳过
-6. ignore-layout child 跳过并保留手工坐标
+6. ignore-layout child 跳过并保留手工坐标，且不占 auto placement / legacy slot
 
 这一步完成后，LingDongGUI 才算真正拥有 grid 布局，而不是“多列顺排”。
 
@@ -478,7 +477,7 @@ setter 统一规则：
 
 - subgrid
 - RTL
-- 更深的 ignore-layout / floating 语义
+- 更深的 floating / overlay 扩展语义
 - style/property 层映射
 
 但要在文档里明确记账。

@@ -8,7 +8,7 @@
 
 - 已落地：descriptor 模型、`ldWindowSetGridDscArray()`、`ldWindowSetGridAlign()`、`ldBaseSetGridCell()`、fixed/`CONTENT`/`FR` 轨道、explicit cell、`col_span` / `row_span`、cell `start/center/end/stretch`、legacy `gridColumns` fallback、host-side grid test、`USE_DEMO=5` grid demo 改造
 - 已验证：`layout_window_test` 通过；`USE_DEMO=5` 的 `ldgui_sdl_demo` 编译通过
-- 本轮明确不支持：subgrid、RTL、ignore-layout；文档中已记账，避免误判为已支持
+- 截至 2026-05-26：`ignore-layout` 已按现有 `ldBaseSetIgnoreLayout()` 语义接进 grid；仍明确不支持 `subgrid`、RTL
 - 轨道计算器本轮采用 `ldWindow.c` 内部 static helper 收口，没有单拆新源文件
 
 ## 1. 本轮完成标准
@@ -230,7 +230,7 @@
 - [ ] `col_span`
 - [ ] `row_span`
 - [ ] hidden child
-- [ ] ignore-layout（若本轮纳入）
+- [x] ignore-layout overlay：继续可见、保留手工坐标、不占 grid slot
 - [ ] invalid settings
 - [ ] child cell 改变触发父布局重排
 

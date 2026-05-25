@@ -315,6 +315,10 @@ bool arm_2d_op_wait_async(arm_2d_op_core_t *ptOP)
 void ldWindowSetFlexTrackAlign(ldWindow_t *ptWidget, int trackAlign);
 void ldBaseSetFlexGrow(ldBase_t *ptWidget, uint8_t grow);
 void ldBaseSetFlexNewTrack(ldBase_t *ptWidget, bool inNewTrack);
+void ldBaseSetFlexMinWidth(ldBase_t *ptWidget, int16_t minWidth);
+void ldBaseSetFlexMinHeight(ldBase_t *ptWidget, int16_t minHeight);
+void ldBaseSetFlexMaxWidth(ldBase_t *ptWidget, int16_t maxWidth);
+void ldBaseSetFlexMaxHeight(ldBase_t *ptWidget, int16_t maxHeight);
 void ldBaseSetIgnoreLayout(ldBase_t *ptWidget, bool ignoreLayout);
 #endif
 
@@ -1157,6 +1161,18 @@ static void test_base_flex_child_setters_mark_parent_layout_dirty(void)
     ldBaseSetIgnoreLayout((ldBase_t *)&child, true);
     assert(child.use_as__ldBase_t.ignoreLayout == true);
     assert(root.isLayoutUpdate == true);
+
+    root.isLayoutUpdate = false;
+    ldBaseSetFlexMinWidth((ldBase_t *)&child, 40);
+    assert(child.use_as__ldBase_t.hasFlexMinWidth == true);
+    assert(child.use_as__ldBase_t.flexMinSize.iWidth == 40);
+    assert(root.isLayoutUpdate == true);
+
+    root.isLayoutUpdate = false;
+    ldBaseSetFlexMaxHeight((ldBase_t *)&child, 18);
+    assert(child.use_as__ldBase_t.hasFlexMaxHeight == true);
+    assert(child.use_as__ldBase_t.flexMaxSize.iHeight == 18);
+    assert(root.isLayoutUpdate == true);
 }
 
 static void test_flex_grow_distributes_remaining_space_by_weight(void)
@@ -1263,8 +1279,7 @@ static void test_flex_min_size_hook_affects_wrap_capacity(void)
     set_widget_region((ldBase_t *)&a, 0, 0, 20, 10);
     set_widget_region((ldBase_t *)&b, 0, 0, 50, 10);
 
-    a.use_as__ldBase_t.flexMinSize = (arm_2d_size_t){60, 10};
-    a.use_as__ldBase_t.hasFlexMinWidth = true;
+    ldBaseSetFlexMinWidth((ldBase_t *)&a, 60);
 
     ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&a);
     ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&b);
@@ -1292,8 +1307,7 @@ static void test_flex_max_size_hook_caps_grow_without_overflow(void)
     set_widget_region((ldBase_t *)&a, 0, 0, 20, 10);
     set_widget_region((ldBase_t *)&b, 0, 0, 20, 10);
 
-    a.use_as__ldBase_t.flexMaxSize = (arm_2d_size_t){40, 10};
-    a.use_as__ldBase_t.hasFlexMaxWidth = true;
+    ldBaseSetFlexMaxWidth((ldBase_t *)&a, 40);
 
     ldBaseSetFlexGrow((ldBase_t *)&a, 1);
     ldBaseSetFlexGrow((ldBase_t *)&b, 1);

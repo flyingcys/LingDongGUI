@@ -294,7 +294,7 @@ void uiLayoutInit(ld_scene_t *ptScene)
     ldLabelSetAlign(obj, ARM_2D_ALIGN_LEFT);
 
     obj = ldLabelInit(ID_LAYOUT_PAGE_HINT, ID_LAYOUT_BG, 12, 24, 456, 12, FONT_ARIAL_12);
-    ldLabelSetText(obj, (uint8_t *)"Top row now shows row-wrap/new-track and column-grow/ignore-layout; left panel narrows every 1200ms.");
+    ldLabelSetText(obj, (uint8_t *)"Top row now shows row-wrap/new-track, public flex min/max hooks, and column-grow/ignore-layout; left panel narrows every 1200ms.");
     ldLabelSetTextColor(obj, __RGB(82, 86, 92));
     ldLabelSetAlign(obj, ARM_2D_ALIGN_LEFT);
 
@@ -312,6 +312,7 @@ void uiLayoutInit(ld_scene_t *ptScene)
     uiLayoutCreateCard(ptScene, ID_LAYOUT_FLEX_ROW_D, ID_LAYOUT_FLEX_ROW_D_LABEL, ID_LAYOUT_FLEX_ROW, 60, 14, __RGB(38, 70, 83), "D*");
     uiLayoutCreateCard(ptScene, ID_LAYOUT_FLEX_ROW_E, ID_LAYOUT_FLEX_ROW_E_LABEL, ID_LAYOUT_FLEX_ROW, 48, 14, __RGB(244, 162, 97), "E");
     ldBaseSetFlexNewTrack((ldBase_t *)ldBaseGetWidget(ptScene->ptNodeRoot, ID_LAYOUT_FLEX_ROW_D), true);
+    ldBaseSetFlexMinWidth((ldBase_t *)ldBaseGetWidget(ptScene->ptNodeRoot, ID_LAYOUT_FLEX_ROW_E), 48);
 
     obj = ldWindowInit(ID_LAYOUT_FLEX_COLUMN, ID_LAYOUT_BG, 248, 40, 220, 80);
     ldWindowSetColor(obj, __RGB(236, 240, 232));
@@ -330,7 +331,7 @@ void uiLayoutInit(ld_scene_t *ptScene)
     ldBaseMove((ldBase_t *)ldBaseGetWidget(ptScene->ptNodeRoot, ID_LAYOUT_FLEX_COLUMN_D), 142, 50);
 
     uiLayoutCreateInfoLabel(ptScene, ID_LAYOUT_FLEX_ROW_TITLE, 12, 122, 220, GLCD_COLOR_BLACK, "Flex wrap");
-    uiLayoutCreateInfoLabel(ptScene, ID_LAYOUT_FLEX_ROW_HINT, 12, 136, 220, __RGB(82, 86, 92), "D* forces next track; compact width adds row 3");
+    uiLayoutCreateInfoLabel(ptScene, ID_LAYOUT_FLEX_ROW_HINT, 12, 136, 220, __RGB(82, 86, 92), "D* forces next track; E keeps a public min-width contract");
     uiLayoutCreateInfoLabel(ptScene, ID_LAYOUT_FLEX_COLUMN_TITLE, 248, 122, 220, GLCD_COLOR_BLACK, "Flex column");
     uiLayoutCreateInfoLabel(ptScene, ID_LAYOUT_FLEX_COLUMN_HINT, 248, 136, 220, __RGB(82, 86, 92), "center cross-align; 1x/2x grows; 'free' ignores layout");
 

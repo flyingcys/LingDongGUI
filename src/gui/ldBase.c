@@ -1387,6 +1387,98 @@ void ldBaseSetFlexNewTrack(ldBase_t *ptWidget, bool flexInNewTrack)
     ldBaseMarkParentLayoutDirty(ptWidget);
 }
 
+void ldBaseSetFlexMinWidth(ldBase_t *ptWidget, int16_t minWidth)
+{
+    minWidth = MAX(0, minWidth);
+    assert(NULL != ptWidget);
+    if (ptWidget == NULL)
+    {
+        return;
+    }
+    if (ptWidget->hasFlexMinWidth && (ptWidget->flexMinSize.iWidth == minWidth))
+    {
+        return;
+    }
+
+    ptWidget->flexMinSize.iWidth = minWidth;
+    ptWidget->hasFlexMinWidth = true;
+    if (ptWidget->hasFlexMaxWidth && (ptWidget->flexMaxSize.iWidth < minWidth))
+    {
+        ptWidget->flexMaxSize.iWidth = minWidth;
+    }
+    ptWidget->isDirtyRegionUpdate = true;
+    ldBaseMarkParentLayoutDirty(ptWidget);
+}
+
+void ldBaseSetFlexMinHeight(ldBase_t *ptWidget, int16_t minHeight)
+{
+    minHeight = MAX(0, minHeight);
+    assert(NULL != ptWidget);
+    if (ptWidget == NULL)
+    {
+        return;
+    }
+    if (ptWidget->hasFlexMinHeight && (ptWidget->flexMinSize.iHeight == minHeight))
+    {
+        return;
+    }
+
+    ptWidget->flexMinSize.iHeight = minHeight;
+    ptWidget->hasFlexMinHeight = true;
+    if (ptWidget->hasFlexMaxHeight && (ptWidget->flexMaxSize.iHeight < minHeight))
+    {
+        ptWidget->flexMaxSize.iHeight = minHeight;
+    }
+    ptWidget->isDirtyRegionUpdate = true;
+    ldBaseMarkParentLayoutDirty(ptWidget);
+}
+
+void ldBaseSetFlexMaxWidth(ldBase_t *ptWidget, int16_t maxWidth)
+{
+    maxWidth = MAX(0, maxWidth);
+    assert(NULL != ptWidget);
+    if (ptWidget == NULL)
+    {
+        return;
+    }
+    if (ptWidget->hasFlexMaxWidth && (ptWidget->flexMaxSize.iWidth == maxWidth))
+    {
+        return;
+    }
+
+    ptWidget->flexMaxSize.iWidth = maxWidth;
+    ptWidget->hasFlexMaxWidth = true;
+    if (ptWidget->hasFlexMinWidth && (ptWidget->flexMinSize.iWidth > maxWidth))
+    {
+        ptWidget->flexMinSize.iWidth = maxWidth;
+    }
+    ptWidget->isDirtyRegionUpdate = true;
+    ldBaseMarkParentLayoutDirty(ptWidget);
+}
+
+void ldBaseSetFlexMaxHeight(ldBase_t *ptWidget, int16_t maxHeight)
+{
+    maxHeight = MAX(0, maxHeight);
+    assert(NULL != ptWidget);
+    if (ptWidget == NULL)
+    {
+        return;
+    }
+    if (ptWidget->hasFlexMaxHeight && (ptWidget->flexMaxSize.iHeight == maxHeight))
+    {
+        return;
+    }
+
+    ptWidget->flexMaxSize.iHeight = maxHeight;
+    ptWidget->hasFlexMaxHeight = true;
+    if (ptWidget->hasFlexMinHeight && (ptWidget->flexMinSize.iHeight > maxHeight))
+    {
+        ptWidget->flexMinSize.iHeight = maxHeight;
+    }
+    ptWidget->isDirtyRegionUpdate = true;
+    ldBaseMarkParentLayoutDirty(ptWidget);
+}
+
 void ldBaseSetIgnoreLayout(ldBase_t *ptWidget, bool ignoreLayout)
 {
     assert(NULL != ptWidget);

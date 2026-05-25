@@ -4855,10 +4855,14 @@ window widget 窗体控件可包含其他的控件，实现复合型控件或者
 ---
 # Base
 ### 简述
-Base 是所有控件共享的基础能力层，这里补充 flex 布局第一轮新增、直接作用在子控件上的三个布局辅助接口。
+Base 是所有控件共享的基础能力层，这里补充 flex 布局第一轮新增、直接作用在子控件上的布局辅助接口，包括 grow/new-track、public min/max 约束和 ignore-layout。
 ### 函数列表
 * void ldBaseSetFlexGrow(ldBase_t *ptWidget, uint16_t flexGrow);
 * void ldBaseSetFlexNewTrack(ldBase_t *ptWidget, bool flexInNewTrack);
+* void ldBaseSetFlexMinWidth(ldBase_t *ptWidget, int16_t minWidth);
+* void ldBaseSetFlexMinHeight(ldBase_t *ptWidget, int16_t minHeight);
+* void ldBaseSetFlexMaxWidth(ldBase_t *ptWidget, int16_t maxWidth);
+* void ldBaseSetFlexMaxHeight(ldBase_t *ptWidget, int16_t maxHeight);
 * void ldBaseSetIgnoreLayout(ldBase_t *ptWidget, bool ignoreLayout);
 ### 信号列表
 ### 函数说明
@@ -4908,6 +4912,106 @@ Base 是所有控件共享的基础能力层，这里补充 flex 布局第一轮
     <tr>
         <td>flexInNewTrack</td>
         <td>true 表示该子项前面立即换到新的 track，false 表示按默认连续排布</td>
+    </tr>
+</table>
+<br>
+
+#### ldBaseSetFlexMinWidth
+<table>
+    <tr>
+        <td>函数</td>
+        <td colspan="2">
+            <pre><code class="language-c">void ldBaseSetFlexMinWidth(ldBase_t *ptWidget, int16_t minWidth);</code></pre>
+        </td>
+    </tr>
+    <tr>
+        <td>说明</td>
+        <td colspan="2">
+    为 Flex 子项设置绝对最小宽度约束；当前实现会写入 `flexMinSize.iWidth` 与 `hasFlexMinWidth`，并复用既有 `ldFlexClampAbsoluteSize()` 路径参与布局求解        </td>
+    </tr>
+    <tr>
+        <td rowspan="2">参数</td>
+        <td>ptWidget</td>
+        <td>目标子控件指针</td>
+    </tr>
+    <tr>
+        <td>minWidth</td>
+        <td>最小宽度像素值</td>
+    </tr>
+</table>
+<br>
+
+#### ldBaseSetFlexMinHeight
+<table>
+    <tr>
+        <td>函数</td>
+        <td colspan="2">
+            <pre><code class="language-c">void ldBaseSetFlexMinHeight(ldBase_t *ptWidget, int16_t minHeight);</code></pre>
+        </td>
+    </tr>
+    <tr>
+        <td>说明</td>
+        <td colspan="2">
+    为 Flex 子项设置绝对最小高度约束；当前实现会写入 `flexMinSize.iHeight` 与 `hasFlexMinHeight`，并通过既有 absolute clamp hook 参与布局        </td>
+    </tr>
+    <tr>
+        <td rowspan="2">参数</td>
+        <td>ptWidget</td>
+        <td>目标子控件指针</td>
+    </tr>
+    <tr>
+        <td>minHeight</td>
+        <td>最小高度像素值</td>
+    </tr>
+</table>
+<br>
+
+#### ldBaseSetFlexMaxWidth
+<table>
+    <tr>
+        <td>函数</td>
+        <td colspan="2">
+            <pre><code class="language-c">void ldBaseSetFlexMaxWidth(ldBase_t *ptWidget, int16_t maxWidth);</code></pre>
+        </td>
+    </tr>
+    <tr>
+        <td>说明</td>
+        <td colspan="2">
+    为 Flex 子项设置绝对最大宽度约束；当前实现会写入 `flexMaxSize.iWidth` 与 `hasFlexMaxWidth`，并复用既有 `ldFlexClampAbsoluteSize()` 路径参与布局求解        </td>
+    </tr>
+    <tr>
+        <td rowspan="2">参数</td>
+        <td>ptWidget</td>
+        <td>目标子控件指针</td>
+    </tr>
+    <tr>
+        <td>maxWidth</td>
+        <td>最大宽度像素值</td>
+    </tr>
+</table>
+<br>
+
+#### ldBaseSetFlexMaxHeight
+<table>
+    <tr>
+        <td>函数</td>
+        <td colspan="2">
+            <pre><code class="language-c">void ldBaseSetFlexMaxHeight(ldBase_t *ptWidget, int16_t maxHeight);</code></pre>
+        </td>
+    </tr>
+    <tr>
+        <td>说明</td>
+        <td colspan="2">
+    为 Flex 子项设置绝对最大高度约束；当前实现会写入 `flexMaxSize.iHeight` 与 `hasFlexMaxHeight`，并通过既有 absolute clamp hook 参与布局        </td>
+    </tr>
+    <tr>
+        <td rowspan="2">参数</td>
+        <td>ptWidget</td>
+        <td>目标子控件指针</td>
+    </tr>
+    <tr>
+        <td>maxHeight</td>
+        <td>最大高度像素值</td>
     </tr>
 </table>
 <br>

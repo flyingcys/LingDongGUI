@@ -81,6 +81,7 @@
 - `grow`
 - `new track`
 - `ignore layout`
+- 公开的 absolute `min/max` clamp API
 - host-side 测试
 - layout demo 承接
 
@@ -90,25 +91,21 @@
 - margin 相关语义
 - percent translate / percent size
 - content-size 容器联动
-- 更完整的 min/max 约束闭环
+- 更完整的尺寸联动闭环
 
 ## 4.3 当前判断
 
-`flex` 已经可以视为“主干对齐完成、边缘语义待补”的状态。它不再是当前最急的基础能力缺口，但还不能宣称 full LVGL parity。
+`flex` 已经可以视为“主干对齐完成、公开尺寸约束合同已补齐、边缘语义待补”的状态。它不再是当前最急的基础能力缺口，但还不能宣称 full LVGL parity。
 
 ## 4.4 后续任务
 
 ### P1
 
-- 先完成本轮 grid 主干收口，再统一复核 flex 当前主干口径
+- 继续补 `RTL` 或 margin / percent / content-size 语义
 
 ### P2
 
-- 视用户价值，优先补 `RTL` 或尺寸联动语义
-
-### P3
-
-- 若未来需要，可进一步拆出 flex 第二阶段路线文档
+- 若未来需要，再把更完整的尺寸联动闭环单拆成 flex 第二阶段路线文档
 
 ## 5. grid 审计
 
@@ -197,17 +194,18 @@
 - [x] `grid`：补 descriptor-grid auto placement 主路径
 - [x] `grid`：补 ignore-layout overlay
 - [ ] `grid`：补更高阶语义（`subgrid` / RTL）
+- [x] `flex`：把 absolute min/max clamp 升成公开 API
 - [ ] `flex`：补更高阶语义（RTL、margin、percent/content-size）
 
 ## 7. 建议的优先级
 
 ### 先做
 
-- switch 视觉证据补强
+- flex 第二阶段语义差距（RTL、margin、percent/content-size）
 
 ### 再做
 
-- grid / flex 第二阶段语义差距
+- grid 更高阶语义（`subgrid` / RTL）
 
 ### 最后做
 
@@ -215,8 +213,8 @@
 
 原因：
 
-- switch 主逻辑在本轮已经闭环，接下来最短路径是补证据
-- grid / flex 已有主线，不必再和 switch 的主路径问题混写
+- switch 与 grid 当前主干都已闭环，flex 还保留更高用户价值的语义差距
+- grid 剩余项更偏高阶，优先级可以后置
 
 ## 8. 退出条件
 

@@ -54,6 +54,10 @@ LingDongGUI 当前 flex 已经不是空白，而是：
 - `ldWindowSetGap`
 - `ldBaseSetFlexGrow`
 - `ldBaseSetFlexNewTrack`
+- `ldBaseSetFlexMinWidth`
+- `ldBaseSetFlexMinHeight`
+- `ldBaseSetFlexMaxWidth`
+- `ldBaseSetFlexMaxHeight`
 - `ldBaseSetIgnoreLayout`
 
 只要调用 `ldWindowSetFlexFlow()`，容器就会自动切到 `layoutFlex`。
@@ -74,12 +78,13 @@ LingDongGUI 当前 flex 已经不是空白，而是：
 
 - `flexGrow`
 - `flexInNewTrack`
+- `flexMinSize / flexMaxSize`
 - `ignoreLayout`
 
 这说明当前实现已经不再是纯容器侧语义，而是：
 
 - 容器有 flow / align / gap / track 配置
-- child 有最小 flex 元数据
+- child 有最小 flex 元数据，以及公开可配置的 absolute `min/max` clamp
 
 ### 2.3 当前排布算法在做什么
 
@@ -98,7 +103,7 @@ LingDongGUI 当前 flex 已经不是空白，而是：
 - 不做 RTL
 - 不看 margin / percent translate / percent size
 - 不支持 content-size 容器联动
-- 不做完整的 min/max 约束闭环
+- 不做完整的尺寸联动闭环
 
 所以当前 flex 已经从“单轨一维定位器”升级成“多轨 flex 容器的第一轮主线版”。
 
@@ -247,7 +252,7 @@ LingDongGUI 当前已经覆盖：
 
 因此 `grow` 本身不再是缺项；真正仍需记账的是它和更成熟尺寸系统之间的差距，例如：
 
-- absolute `min/max` clamp hook 已接入 flex 尺寸路径，但还没有形成 LVGL 那种完整约束闭环
+- absolute `min/max` clamp 已经不再只是内部 hook，而是通过 `ldBaseSetFlexMinWidth/Height()`、`ldBaseSetFlexMaxWidth/Height()` 进入公开合同；但它还没有形成 LVGL 那种完整尺寸联动闭环
 - margin / percent / content-size 还未接入 grow 的计算语义
 
 所以现在更准确的说法是：grow 已可用，但还没达到 LVGL 那种成熟的尺寸联动层级。
@@ -395,12 +400,15 @@ reverse / wrap / track align / RTL 都应建立在这套骨架上。
 
 - `flexGrow`
 - `flexInNewTrack`
+- `flexMinSize/flexMaxSize` 与对应 flag
 - `ignoreLayout`
 
 建议新增 API：
 
 - `ldBaseSetFlexGrow(ldBase_t *, uint8_t)`
 - `ldBaseSetFlexNewTrack(ldBase_t *, bool)`
+- `ldBaseSetFlexMinWidth/Height(ldBase_t *, int16_t)`
+- `ldBaseSetFlexMaxWidth/Height(ldBase_t *, int16_t)`
 - `ldBaseSetIgnoreLayout(ldBase_t *, bool)`
 
 并保证这些 setter 都能触发父容器 layout dirty。
@@ -427,6 +435,8 @@ reverse / wrap / track align / RTL 都应建立在这套骨架上。
 这 3 项完成后，LingDongGUI flex 的使用体验会和 LVGL 更接近。
 
 ### B3. 补最小尺寸联动闭环
+
+现在这条绝对 min/max clamp hook 已经升成公开合同：host-side 测试改为通过 `ldBaseSetFlexMinWidth/Height()` 和 `ldBaseSetFlexMaxWidth/Height()` 走公开 setter，而不是直接 poking `flexMinSize/flexMaxSize` 内部字段；solver 侧仍复用既有 `ldFlexClampAbsoluteSize()` 路径。
 
 目标：避免 grow 一上来就假对齐或溢出。
 
