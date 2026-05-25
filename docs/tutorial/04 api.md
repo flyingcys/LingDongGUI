@@ -3281,6 +3281,7 @@ scroll selecter widget
 * void ldSwitchSetImage(ldSwitch_t *ptWidget, arm_2d_tile_t *ptOffImgTile, arm_2d_tile_t *ptOffMaskTile, arm_2d_tile_t *ptOnImgTile, arm_2d_tile_t *ptOnMaskTile, arm_2d_tile_t *ptKnobImgTile, arm_2d_tile_t *ptKnobMaskTile);
 * void ldSwitchSetHorizontal(ldSwitch_t *ptWidget, bool isHorizontal);
 * void ldSwitchSetDirection(ldSwitch_t *ptWidget, ldSwitchDirection_t direction);
+* void ldSwitchNavigate(ld_scene_t *ptScene, ldSwitch_t *ptWidget, ldNavDir_t dir);
 * void ldSwitchSetDisabled(ldSwitch_t *ptWidget, bool isDisabled);
 * bool ldSwitchIsChecked(ldSwitch_t *ptWidget);
 * bool ldSwitchIsHorizontal(ldSwitch_t *ptWidget);
@@ -3521,6 +3522,35 @@ scroll selecter widget
     <tr>
         <td>isDisabled</td>
         <td>true 表示禁用，false 表示启用</td>
+    </tr>
+</table>
+<br>
+
+#### ldSwitchNavigate
+<table>
+    <tr>
+        <td>函数</td>
+        <td colspan="2">
+            <pre><code class="language-c">void ldSwitchNavigate(ld_scene_t *ptScene, ldSwitch_t *ptWidget, ldNavDir_t dir);</code></pre>
+        </td>
+    </tr>
+    <tr>
+        <td>说明</td>
+        <td colspan="2">
+    switch 私有导航入口。用于把按键/导航语义翻译成开关状态变更：`NAV_ENTER` 切换当前状态，`NAV_UP / NAV_RIGHT` 设为打开，`NAV_DOWN / NAV_LEFT` 设为关闭。会复用现有 checked / event 语义，因此重复设同值不会重复发 `SIGNAL_VALUE_CHANGED`，disabled 时也不会生效。        </td>
+    </tr>
+    <tr>
+        <td rowspan="3">参数</td>
+        <td>ptScene</td>
+        <td>场景指针；需要发 `SIGNAL_VALUE_CHANGED` 时使用</td>
+    </tr>
+    <tr>
+        <td>ptWidget</td>
+        <td>目标控件指针</td>
+    </tr>
+    <tr>
+        <td>dir</td>
+        <td>导航方向枚举值，支持 `NAV_ENTER / NAV_UP / NAV_RIGHT / NAV_DOWN / NAV_LEFT`</td>
     </tr>
 </table>
 <br>

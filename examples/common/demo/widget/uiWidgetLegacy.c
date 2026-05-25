@@ -10,6 +10,7 @@ static void uiWidgetLegacyInit(ld_scene_t *ptScene);
 static void uiWidgetLegacyLoop(ld_scene_t *ptScene);
 static void uiWidgetLegacyQuit(ld_scene_t *ptScene);
 static bool uiWidgetLegacySwitchValueChanged(ld_scene_t *ptScene, ldMsg_t msg);
+static bool uiWidgetLegacyNavigateSelectedSwitch(ld_scene_t *ptScene, ldSwitch_t *ptSwitch, ldNavDir_t dir);
 
 enum {
     UI_WIDGET_LEGACY_SWITCH_ID = 30,
@@ -62,6 +63,16 @@ static bool uiWidgetLegacySwitchValueChanged(ld_scene_t *ptScene, ldMsg_t msg)
 
     ldLabelSetText(label, (uint8_t *)(ldSwitchIsChecked(sw) ? "ON" : "OFF"));
     return false;
+}
+
+static bool uiWidgetLegacyNavigateSelectedSwitch(ld_scene_t *ptScene, ldSwitch_t *ptSwitch, ldNavDir_t dir)
+{
+    if ((ptSwitch == NULL) || !ldBaseIsSelected((ldBase_t *)ptSwitch)) {
+        return false;
+    }
+
+    ldSwitchNavigate(ptScene, ptSwitch, dir);
+    return true;
 }
 
 static const uint8_t *g_legacy_scroll_items[] = {"1", "10", "123", "99", "7"};
@@ -352,6 +363,7 @@ static void uiWidgetLegacyLoop(ld_scene_t *ptScene)
 {
     static float angle = 120;
     ldGauge_t *ptGauge = ldBaseGetWidgetById(17);
+    ldSwitch_t *ptSwitch = ldBaseGetWidgetById(UI_WIDGET_LEGACY_SWITCH_ID);
 
     if (ldTimeOut(100, true)) {
         ldArcSetRotationAngle(ldBaseGetWidgetById(25), angle);
@@ -363,16 +375,29 @@ static void uiWidgetLegacyLoop(ld_scene_t *ptScene)
     }
 
     if (xBtnGetState(KEY_NUM_UP, BTN_RELEASE)) {
-        ldBaseFocusNavigate(ptScene, NAV_UP);
+        if (!uiWidgetLegacyNavigateSelectedSwitch(ptScene, ptSwitch, NAV_UP)) {
+            ldBaseFocusNavigate(ptScene, NAV_UP);
+        }
     }
     if (xBtnGetState(KEY_NUM_DOWN, BTN_RELEASE)) {
-        ldBaseFocusNavigate(ptScene, NAV_DOWN);
+        if (!uiWidgetLegacyNavigateSelectedSwitch(ptScene, ptSwitch, NAV_DOWN)) {
+            ldBaseFocusNavigate(ptScene, NAV_DOWN);
+        }
     }
     if (xBtnGetState(KEY_NUM_LEFT, BTN_RELEASE)) {
-        ldBaseFocusNavigate(ptScene, NAV_LEFT);
+        if (!uiWidgetLegacyNavigateSelectedSwitch(ptScene, ptSwitch, NAV_LEFT)) {
+            ldBaseFocusNavigate(ptScene, NAV_LEFT);
+        }
     }
     if (xBtnGetState(KEY_NUM_RIGHT, BTN_RELEASE)) {
-        ldBaseFocusNavigate(ptScene, NAV_RIGHT);
+        if (!uiWidgetLegacyNavigateSelectedSwitch(ptScene, ptSwitch, NAV_RIGHT)) {
+            ldBaseFocusNavigate(ptScene, NAV_RIGHT);
+        }
+    }
+    if (xBtnGetState(KEY_NUM_ENTER, BTN_RELEASE)) {
+        if (!uiWidgetLegacyNavigateSelectedSwitch(ptScene, ptSwitch, NAV_ENTER)) {
+            ldBaseFocusNavigate(ptScene, NAV_ENTER);
+        }
     }
 }
 

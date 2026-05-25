@@ -13,6 +13,7 @@ REPO_ROOT = SDL_ROOT.parents[1]
 DEFAULT_CONFIG = SDL_ROOT / "user" / "ldConfig.h"
 CONFIG = Path(os.environ.get("LDGUI_TEST_LDCONFIG", DEFAULT_CONFIG))
 LEGACY_WIDGET_SOURCE = REPO_ROOT / "examples" / "common" / "demo" / "widget" / "uiWidgetLegacy.c"
+SWITCH_HEADER = REPO_ROOT / "src" / "gui" / "ldSwitch.h"
 
 REQUIRED_NAMED_INTS = {
     "UI_WIDGET_LEGACY_SWITCH_ID": 30,
@@ -126,6 +127,7 @@ def test_use_demo_0_legacy_widget_preprocessed_expansions() -> None:
 
 def test_use_demo_0_legacy_widget_contains_switch_demo() -> None:
     source = LEGACY_WIDGET_SOURCE.read_text(encoding="utf-8")
+    switch_header = SWITCH_HEADER.read_text(encoding="utf-8")
     named_ints = {
         name: _extract_named_int(source, name) for name in REQUIRED_NAMED_INTS
     }
@@ -139,6 +141,7 @@ def test_use_demo_0_legacy_widget_contains_switch_demo() -> None:
     named_ints = {name: value for name, value in named_ints.items() if value is not None}
 
     assert "ldSwitchInit(" in source, "demo0 legacy 页面还没有接入 switch"
+    assert "ldSwitchNavigate(" in switch_header, "ldSwitch 头文件缺少键盘/导航 API `ldSwitchNavigate`"
     assert (
         "ldSwitchSetChecked(obj, false);" in source
     ), "demo0 legacy 页面缺少显式默认关闭状态"
@@ -152,6 +155,13 @@ def test_use_demo_0_legacy_widget_contains_switch_demo() -> None:
     assert (
         "ldBaseGetWidget(ptScene->ptNodeRoot, UI_WIDGET_LEGACY_SWITCH_LABEL_ID)" in source
     ), "demo0 legacy 页面缺少状态 label 具名 widget id 查询"
+    assert "KEY_NUM_ENTER" in source, "demo0 legacy 页面缺少 KEY_NUM_ENTER 键盘入口"
+    assert "ldSwitchNavigate(" in source, "demo0 legacy 页面缺少 switch 键盘/导航调用"
+    assert "uiWidgetLegacyNavigateSelectedSwitch" in source, "demo0 legacy 页面缺少 switch 键盘导航 helper"
+    assert "uiWidgetLegacyNavigateSelectedSwitch(ptScene, ptSwitch, NAV_UP)" in source, "demo0 legacy 页面缺少 switch NAV_UP 键盘接线"
+    assert "uiWidgetLegacyNavigateSelectedSwitch(ptScene, ptSwitch, NAV_DOWN)" in source, "demo0 legacy 页面缺少 switch NAV_DOWN 键盘接线"
+    assert "uiWidgetLegacyNavigateSelectedSwitch(ptScene, ptSwitch, NAV_LEFT)" in source, "demo0 legacy 页面缺少 switch NAV_LEFT 键盘接线"
+    assert "uiWidgetLegacyNavigateSelectedSwitch(ptScene, ptSwitch, NAV_RIGHT)" in source, "demo0 legacy 页面缺少 switch NAV_RIGHT 键盘接线"
     assert '"ON"' in source, 'demo0 legacy 页面缺少 "ON" 状态文案'
     assert '"OFF"' in source, 'demo0 legacy 页面缺少 "OFF" 状态文案'
 

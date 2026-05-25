@@ -323,6 +323,70 @@ static void test_set_checked_after_rendered_frame_starts_animation(void)
     assert(g_emit_count == 1);
 }
 
+static void test_navigate_enter_toggles_and_emits_once(void)
+{
+    ldSwitch_t widget = {0};
+    ld_scene_t scene = {0};
+    xQueue_t queue = {0};
+
+    scene.ptMsgQueue = &queue;
+    reset_emit_probe();
+
+    ldSwitchNavigate(&scene, &widget, NAV_ENTER);
+
+    assert(widget.isChecked == true);
+    assert(widget.animProgress == 1000);
+    assert(widget.isAnimating == false);
+    assert(g_emit_count == 1);
+    assert(g_last_signal == SIGNAL_VALUE_CHANGED);
+    assert(g_last_value == 1);
+}
+
+static void test_navigate_direction_sets_on_and_off_without_reemitting_same_value(void)
+{
+    ldSwitch_t widget = {0};
+    ld_scene_t scene = {0};
+    xQueue_t queue = {0};
+
+    scene.ptMsgQueue = &queue;
+    reset_emit_probe();
+
+    ldSwitchNavigate(&scene, &widget, NAV_RIGHT);
+    assert(widget.isChecked == true);
+    assert(g_emit_count == 1);
+    assert(g_last_value == 1);
+
+    ldSwitchNavigate(&scene, &widget, NAV_UP);
+    assert(widget.isChecked == true);
+    assert(g_emit_count == 1);
+
+    ldSwitchNavigate(&scene, &widget, NAV_LEFT);
+    assert(widget.isChecked == false);
+    assert(g_emit_count == 2);
+    assert(g_last_value == 0);
+
+    ldSwitchNavigate(&scene, &widget, NAV_DOWN);
+    assert(widget.isChecked == false);
+    assert(g_emit_count == 2);
+}
+
+static void test_disabled_navigation_does_not_toggle_or_emit(void)
+{
+    ldSwitch_t widget = {0};
+    ld_scene_t scene = {0};
+    xQueue_t queue = {0};
+
+    scene.ptMsgQueue = &queue;
+    ldSwitchSetDisabled(&widget, true);
+    reset_emit_probe();
+
+    ldSwitchNavigate(&scene, &widget, NAV_ENTER);
+    ldSwitchNavigate(&scene, &widget, NAV_RIGHT);
+
+    assert(widget.isChecked == false);
+    assert(g_emit_count == 0);
+}
+
 static void test_show_falls_back_per_layer_when_image_or_mask_missing(void)
 {
     ldSwitch_t widget = {0};
@@ -381,6 +445,9 @@ int main(void)
     test_disabled_press_release_does_not_toggle_or_emit();
     test_auto_direction_uses_tall_region_as_vertical();
     test_set_checked_after_rendered_frame_starts_animation();
+    test_navigate_enter_toggles_and_emits_once();
+    test_navigate_direction_sets_on_and_off_without_reemitting_same_value();
+    test_disabled_navigation_does_not_toggle_or_emit();
     test_show_falls_back_per_layer_when_image_or_mask_missing();
     test_pressed_knob_uses_visible_highlight_not_border_color();
     return 0;

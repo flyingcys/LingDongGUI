@@ -479,6 +479,32 @@ void _ldSwitchSetChecked(ld_scene_t *ptScene, ldSwitch_t *ptWidget, bool isCheck
     ldSwitchApplyValue(ptScene, ptWidget, isChecked);
 }
 
+void ldSwitchNavigate(ld_scene_t *ptScene, ldSwitch_t *ptWidget, ldNavDir_t dir)
+{
+    assert(NULL != ptWidget);
+    if ((ptWidget == NULL) || ptWidget->isDisabled)
+    {
+        return;
+    }
+
+    switch (dir)
+    {
+    case NAV_ENTER:
+        ldSwitchApplyValue(ptScene, ptWidget, !ptWidget->isChecked);
+        break;
+    case NAV_UP:
+    case NAV_RIGHT:
+        ldSwitchApplyValue(ptScene, ptWidget, true);
+        break;
+    case NAV_DOWN:
+    case NAV_LEFT:
+        ldSwitchApplyValue(ptScene, ptWidget, false);
+        break;
+    default:
+        break;
+    }
+}
+
 /**
  * @brief 设置开关方向，切换为横向或纵向布局。
  * @param ptWidget 目标控件指针

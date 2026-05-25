@@ -2,7 +2,7 @@
 
 ## 结论
 
-- `switch`：主线已完成原生控件化，不再是 stub。当前已具备 `AUTO/横向/纵向` 方向、禁用态、首帧稳态、value change 事件、track/indicator/knob 几何与图片 fallback，且已有 demo 与测试覆盖；但经本轮细审，视觉细节和键盘/导航输入语义仍未完全对齐 LVGL。
+- `switch`：主线已完成原生控件化，不再是 stub。当前已具备 `AUTO/横向/纵向` 方向、禁用态、首帧稳态、value change 事件、track/indicator/knob 几何与图片 fallback，并补了 `ldSwitchNavigate()` 与 legacy demo 的 selected-switch `ENTER + 四方向` 接线；但经本轮细审，视觉细节和通用方向键路由仍未完全对齐 LVGL。
 - `flex`：Phase 0/1 主线已基本成型。当前已支持 8 种 flow、main/cross/track 对齐、item gap/track gap、`grow`、`new track`、`ignore layout`，更像“可用的一维布局骨架”，但离 LVGL 的完整 flex 体系还有 RTL、margin/percent/content-size 联动等差距。
 - `grid`：已经从旧 `gridColumns` 顺排容器升级为显式二维网格。当前稳定支持 descriptor、`fixed/CONTENT/FR`、explicit cell、span、cell align、container align、descriptor-grid 下的 auto placement fallback，并保留 legacy `gridColumns` fallback。
 
@@ -66,7 +66,7 @@
 - 当前已证实的剩余差距主要有：
   - knob 还没有 LVGL 常见的 overhang 视觉
   - indicator 还没有保留底轨外圈
-  - 键盘 / 导航切换语义未对齐
+  - `ldSwitchNavigate()` 已有，但通用方向键 routing 仍未对齐
   - pressed / 动画中间帧缺少视觉回归证据
 
 ### flex

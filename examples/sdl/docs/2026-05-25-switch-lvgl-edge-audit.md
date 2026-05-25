@@ -20,7 +20,7 @@
 
 1. knob 还没有 LVGL 那种向轨道外侧 overhang 的视觉语义
 2. indicator 仍然是整块线性填充，没有保留 LVGL 常见的底轨外圈
-3. 没有发现与 LVGL 对齐的键盘 / 导航切换输入路径
+3. 已补出 switch 私有导航 API，但还没有通用焦点层级的方向键路由
 4. 视觉回归只锁了静态 off/on/disabled，pressed 与动画中间帧仍是审计空洞
 
 ## 3. 已证实差距
@@ -71,35 +71,41 @@ LVGL 的 indicator 画在 `lv_obj_get_content_coords()` 上，也就是 `MAIN` �
 
 LingDongGUI 现在属于“三段结构已存在，但三段相对关系还没完全像 LVGL”。这也是为什么现有截图矩阵只能证明 off/on/disabled 颜色态成立，不能证明 LVGL 风格的 ring 语义已经成立。
 
-### 3.3 缺少键盘 / 导航切换语义
+### 3.3 已补 switch 私有导航 API，但还没进入通用焦点路由
 
 #### 代码依据
 
-- LingDongGUI：`src/gui/ldSwitch.c:213`
-- LingDongGUI：`src/gui/ldSwitch.c:214`
+- LingDongGUI：`src/gui/ldSwitch.h:99`
+- LingDongGUI：`src/gui/ldSwitch.c:482`
+- LingDongGUI：`examples/common/demo/widget/uiWidgetLegacy.c:377`
 - LingDongGUI：`src/gui/ldBase.h:374`
-- LingDongGUI demo 导航：`examples/common/demo/widget/uiWidgetLegacy.c:365`
 - LVGL：`third_party/lvgl/src/widgets/switch/lv_switch.c:131`
 - LVGL 文档：`third_party/lvgl/docs/src/widgets/switch.mdx:80`
 
 #### 当前真相
 
-LingDongGUI 的 switch 当前只接了：
+LingDongGUI 现在已经补出 `ldSwitchNavigate()`：
 
-- `SIGNAL_PRESS`
-- `SIGNAL_RELEASE`
+- `NAV_ENTER` => toggle
+- `NAV_UP / NAV_RIGHT` => on
+- `NAV_DOWN / NAV_LEFT` => off
 
-没有看到：
+同时 legacy demo 也已经把 selected switch 的：
 
-- `NAV_ENTER` / 等价确认键切换
-- `UP/RIGHT=ON`
-- `DOWN/LEFT=OFF`
+- `KEY_NUM_ENTER`
+- `KEY_NUM_UP / DOWN / LEFT / RIGHT`
 
-LVGL 文档则明确把这些 key 语义列为 switch 能力的一部分。
+都接到了这条 switch 私有导航入口。
+
+但这仍然不等于 LVGL 那种“group/key routing 已经自然成立”的状态，因为：
+
+- 通用 `ldBaseFocusNavigate()` 仍然只负责焦点树导航
+- 方向键还没有在通用焦点层自动路由给 selected switch
+- 当前这条 key routing 仍然只存在于 legacy demo 这类 host 侧接线里
 
 #### 审计结论
 
-这是一个真实行为差距，不是单纯“测试没写到”。即使 LingDongGUI 全局已有 focus navigate，switch 自身当前也没有实现 LVGL 那条输入模态。
+这说明 switch 已经有了私有导航能力，但距离 LVGL 常见的“通用 group/key 输入就能直接驱动 switch”还差最后一层 host/focus routing。
 
 ## 4. 审计空洞
 
@@ -182,5 +188,5 @@ LVGL 文档则明确把这些 key 语义列为 switch 能力的一部分。
 - 但不应再把它表述成“和 LVGL 已经差不多齐了”
 - 更准确的口径应是：
   - 主干能力已对齐
-  - 输入模态与视觉细节仍有明确边角差距
+  - switch 私有导航 API 已补，但通用输入路由与视觉细节仍有明确边角差距
   - 现有截图/测试对视觉主张的覆盖还不够完整

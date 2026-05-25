@@ -34,6 +34,7 @@
 - 支持首帧稳态
 - 支持 value change 事件
 - 内部具备 track / indicator / knob 语义
+- 已补 switch 私有导航 API 与 legacy demo 的 selected-switch `ENTER + 四方向` 接线
 - 已接入 demo
 - 已有 internal/widget tests
 
@@ -41,20 +42,20 @@
 
 - knob 是否支持 LVGL 常见的 overhang 视觉
 - indicator 是否保留 LVGL 常见的底轨外圈
-- 键盘 / 导航输入是否支持 `ENTER` toggle 与方向键 on/off
+- 方向键是否已进入通用 focus/group routing
 - pressed 与动画中间帧是否已有足够的视觉回归证据
 
 ## 3.3 已证实差距
 
 - knob 仍被约束在轨道内，没有 LVGL 常见的 overhang 语义
 - indicator 仍按整块线性填充，没有 `MAIN padding -> ring` 那种视觉关系
-- 当前未发现 switch 自身的键盘 / 导航切换逻辑
+- switch 已有私有导航 API，但通用方向键 routing 仍未成立
 
 详见：`examples/sdl/docs/2026-05-25-switch-lvgl-edge-audit.md`
 
 ## 3.4 当前判断
 
-`switch` 仍然可以视为“第一轮主干能力已完成”，但不能继续笼统记成“视觉/行为已基本齐”。更准确的状态是：主干能力到位，输入模态与视觉细节仍有边角差距。
+`switch` 仍然可以视为“第一轮主干能力已完成”，但不能继续笼统记成“视觉/行为已基本齐”。更准确的状态是：主干能力到位，私有导航 API 已补，通用输入路由与视觉细节仍有边角差距。
 
 ## 3.5 后续任务
 
@@ -64,7 +65,7 @@
 
 ### P2
 
-- 若继续追交互 parity，补 `ENTER` toggle 与方向键 on/off
+- 若继续追交互 parity，把方向键 routing 接进通用 focus/group 路径
 
 ### P3
 
