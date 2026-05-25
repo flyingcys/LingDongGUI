@@ -1875,8 +1875,8 @@ static void test_grid_layout_container_center_keeps_track_order_and_offsets(void
 
     ldWindow_on_frame_start(NULL, &root);
 
-    assert(left.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 10);
-    assert(right.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 40);
+    assert(left.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 20);
+    assert(right.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 50);
 }
 
 static void test_grid_layout_clamps_invalid_cell_settings(void)

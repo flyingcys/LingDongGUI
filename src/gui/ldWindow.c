@@ -570,37 +570,120 @@ static void ldWindowGridClampCell(int16_t *pPos, int16_t *pSpan, uint16_t trackC
     }
 }
 
-static void ldWindowGridResolveCell(const ldBase_t *ptItem,
-                                    uint16_t itemIndex,
-                                    uint16_t colCount,
-                                    uint16_t rowCount,
-                                    ldWindowGridCell_t *ptCell)
+static bool ldWindowGridCellIsExplicit(const ldBase_t *ptItem)
 {
-    bool hasExplicitCell;
-    int16_t autoColPos;
-    int16_t autoRowPos;
+    if (ptItem == NULL)
+    {
+        return false;
+    }
 
-    if ((ptItem == NULL) || (ptCell == NULL))
+    return ptItem->isGridCellSet
+        || (ptItem->gridColSpan > 0)
+        || (ptItem->gridRowSpan > 0);
+}
+
+static void ldWindowGridFindNextAutoCell(const bool *pOccupied,
+                                         uint16_t slotCount,
+                                         uint16_t colCount,
+                                         int16_t *pColPos,
+                                         int16_t *pRowPos)
+{
+    uint16_t slotIndex;
+
+    if ((pOccupied == NULL) || (pColPos == NULL) || (pRowPos == NULL))
     {
         return;
     }
 
-    hasExplicitCell = ptItem->isGridCellSet
-                   || (ptItem->gridColSpan > 0)
-                   || (ptItem->gridRowSpan > 0);
+    for (slotIndex = 0; slotIndex < slotCount; ++slotIndex)
+    {
+        if (pOccupied[slotIndex] == false)
+        {
+            *pColPos = (colCount > 0) ? (int16_t)(slotIndex % colCount) : 0;
+            *pRowPos = (colCount > 0) ? (int16_t)(slotIndex / colCount) : 0;
+            return;
+        }
+    }
 
-    autoColPos = (colCount > 0) ? (int16_t)(itemIndex % colCount) : 0;
-    autoRowPos = (colCount > 0) ? (int16_t)(itemIndex / colCount) : 0;
+    *pColPos = 0;
+    *pRowPos = 0;
+}
 
-    ptCell->colPos = hasExplicitCell ? ptItem->gridColPos : autoColPos;
-    ptCell->rowPos = hasExplicitCell ? ptItem->gridRowPos : autoRowPos;
-    ptCell->colSpan = hasExplicitCell ? ptItem->gridColSpan : 1;
-    ptCell->rowSpan = hasExplicitCell ? ptItem->gridRowSpan : 1;
-    ptCell->xAlign = hasExplicitCell ? ptItem->gridCellXAlign : ldGridAlignStart;
-    ptCell->yAlign = hasExplicitCell ? ptItem->gridCellYAlign : ldGridAlignStart;
+static void ldWindowGridMarkOccupied(bool *pOccupied,
+                                     uint16_t colCount,
+                                     uint16_t rowCount,
+                                     const ldWindowGridCell_t *ptCell)
+{
+    uint16_t rowIndex;
+    uint16_t colIndex;
 
-    ldWindowGridClampCell(&ptCell->colPos, &ptCell->colSpan, colCount);
-    ldWindowGridClampCell(&ptCell->rowPos, &ptCell->rowSpan, rowCount);
+    if ((pOccupied == NULL) || (ptCell == NULL))
+    {
+        return;
+    }
+
+    for (rowIndex = 0; rowIndex < (uint16_t)ptCell->rowSpan; ++rowIndex)
+    {
+        uint16_t targetRow = (uint16_t)ptCell->rowPos + rowIndex;
+        if (targetRow >= rowCount)
+        {
+            break;
+        }
+
+        for (colIndex = 0; colIndex < (uint16_t)ptCell->colSpan; ++colIndex)
+        {
+            uint16_t targetCol = (uint16_t)ptCell->colPos + colIndex;
+            if (targetCol >= colCount)
+            {
+                break;
+            }
+
+            pOccupied[targetRow * colCount + targetCol] = true;
+        }
+    }
+}
+
+static void ldWindowGridResolveCells(ldBase_t **children,
+                                     uint16_t childCount,
+                                     uint16_t colCount,
+                                     uint16_t rowCount,
+                                     ldWindowGridCell_t *pResolvedCells)
+{
+    uint16_t childIndex;
+    uint16_t slotCount = colCount * rowCount;
+    bool occupied[slotCount > 0 ? slotCount : 1];
+
+    memset(occupied, 0, sizeof(occupied));
+
+    for (childIndex = 0; childIndex < childCount; ++childIndex)
+    {
+        ldBase_t *ptItem = children[childIndex];
+        ldWindowGridCell_t *ptCell = &pResolvedCells[childIndex];
+
+        memset(ptCell, 0, sizeof(*ptCell));
+
+        if (ldWindowGridCellIsExplicit(ptItem))
+        {
+            ptCell->colPos = ptItem->gridColPos;
+            ptCell->rowPos = ptItem->gridRowPos;
+            ptCell->colSpan = ptItem->gridColSpan;
+            ptCell->rowSpan = ptItem->gridRowSpan;
+            ptCell->xAlign = ptItem->gridCellXAlign;
+            ptCell->yAlign = ptItem->gridCellYAlign;
+        }
+        else
+        {
+            ptCell->colSpan = 1;
+            ptCell->rowSpan = 1;
+            ptCell->xAlign = ldGridAlignStart;
+            ptCell->yAlign = ldGridAlignStart;
+            ldWindowGridFindNextAutoCell(occupied, slotCount, colCount, &ptCell->colPos, &ptCell->rowPos);
+        }
+
+        ldWindowGridClampCell(&ptCell->colPos, &ptCell->colSpan, colCount);
+        ldWindowGridClampCell(&ptCell->rowPos, &ptCell->rowSpan, rowCount);
+        ldWindowGridMarkOccupied(occupied, colCount, rowCount, ptCell);
+    }
 }
 
 static int16_t ldWindowGridGetTrackUsage(uint16_t trackCount, const int16_t *pTrackSizes, int16_t gap)
@@ -697,9 +780,8 @@ static void ldWindowGridResolveTrackKinds(const int16_t *ptDsc,
 }
 
 static void ldWindowGridResolveContentTracks(ldBase_t **children,
+                                             const ldWindowGridCell_t *pResolvedCells,
                                              uint16_t childCount,
-                                             uint16_t colCount,
-                                             uint16_t rowCount,
                                              bool isColumnAxis,
                                              uint16_t trackCount,
                                              int16_t gap,
@@ -710,7 +792,6 @@ static void ldWindowGridResolveContentTracks(ldBase_t **children,
 
     for (childIndex = 0; childIndex < childCount; ++childIndex)
     {
-        ldWindowGridCell_t tCell;
         arm_2d_size_t itemSize = children[childIndex]->use_as__arm_2d_control_node_t.tRegion.tSize;
         int16_t desiredSize;
         uint16_t start;
@@ -722,9 +803,9 @@ static void ldWindowGridResolveContentTracks(ldBase_t **children,
         int16_t share;
         int16_t remainder;
 
-        ldWindowGridResolveCell(children[childIndex], childIndex, colCount, rowCount, &tCell);
-        start = isColumnAxis ? (uint16_t)tCell.colPos : (uint16_t)tCell.rowPos;
-        span = isColumnAxis ? (uint16_t)tCell.colSpan : (uint16_t)tCell.rowSpan;
+        const ldWindowGridCell_t *ptCell = &pResolvedCells[childIndex];
+        start = isColumnAxis ? (uint16_t)ptCell->colPos : (uint16_t)ptCell->rowPos;
+        span = isColumnAxis ? (uint16_t)ptCell->colSpan : (uint16_t)ptCell->rowSpan;
         desiredSize = isColumnAxis ? itemSize.iWidth : itemSize.iHeight;
 
         if ((start >= trackCount) || (span == 0))
@@ -1064,18 +1145,20 @@ static void ldWindowApplyGridLayout(ldWindow_t *ptWidget)
     uint8_t rowKinds[rowCount];
     int16_t columnFr[columnCount];
     int16_t rowFr[rowCount];
+    ldWindowGridCell_t resolvedCells[visibleCount];
 
     windowSize = ptWidget->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize;
     innerWidth = MAX(0, windowSize.iWidth - ptWidget->gridPadding.left - ptWidget->gridPadding.right);
     innerHeight = MAX(0, windowSize.iHeight - ptWidget->gridPadding.top - ptWidget->gridPadding.bottom);
     columnGap = MAX(0, ptWidget->gridColumnGap);
     rowGap = MAX(0, ptWidget->gridRowGap);
+    ldWindowGridResolveCells(children, visibleCount, columnCount, rowCount, resolvedCells);
 
     ldWindowGridResolveTrackKinds(ptWidget->gridColDsc, columnCount, columnSizes, columnKinds, columnFr);
     ldWindowGridResolveTrackKinds(ptWidget->gridRowDsc, rowCount, rowSizes, rowKinds, rowFr);
 
-    ldWindowGridResolveContentTracks(children, visibleCount, columnCount, rowCount, true, columnCount, columnGap, columnKinds, columnSizes);
-    ldWindowGridResolveContentTracks(children, visibleCount, columnCount, rowCount, false, rowCount, rowGap, rowKinds, rowSizes);
+    ldWindowGridResolveContentTracks(children, resolvedCells, visibleCount, true, columnCount, columnGap, columnKinds, columnSizes);
+    ldWindowGridResolveContentTracks(children, resolvedCells, visibleCount, false, rowCount, rowGap, rowKinds, rowSizes);
 
     ldWindowGridResolveFrTracks(columnCount, innerWidth, columnGap, columnKinds, columnFr, columnSizes);
     ldWindowGridResolveFrTracks(rowCount, innerHeight, rowGap, rowKinds, rowFr, rowSizes);
@@ -1101,7 +1184,7 @@ static void ldWindowApplyGridLayout(ldWindow_t *ptWidget)
     for (childIndex = 0; childIndex < visibleCount; ++childIndex)
     {
         ldBase_t *ptItem = children[childIndex];
-        ldWindowGridCell_t tCell;
+        const ldWindowGridCell_t *ptCell = &resolvedCells[childIndex];
         arm_2d_region_t tRegion = ptItem->use_as__arm_2d_control_node_t.tRegion;
         int16_t cellWidth;
         int16_t cellHeight;
@@ -1110,15 +1193,14 @@ static void ldWindowApplyGridLayout(ldWindow_t *ptWidget)
         int16_t itemWidth;
         int16_t itemHeight;
 
-        ldWindowGridResolveCell(ptItem, childIndex, columnCount, rowCount, &tCell);
-        cellWidth = ldWindowGridGetCellSize(columnPos, columnSizes, (uint16_t)tCell.colPos, (uint16_t)tCell.colSpan);
-        cellHeight = ldWindowGridGetCellSize(rowPos, rowSizes, (uint16_t)tCell.rowPos, (uint16_t)tCell.rowSpan);
+        cellWidth = ldWindowGridGetCellSize(columnPos, columnSizes, (uint16_t)ptCell->colPos, (uint16_t)ptCell->colSpan);
+        cellHeight = ldWindowGridGetCellSize(rowPos, rowSizes, (uint16_t)ptCell->rowPos, (uint16_t)ptCell->rowSpan);
 
-        ldWindowGridResolveCellAxis(tCell.xAlign, cellWidth, tRegion.tSize.iWidth, &offsetX, &itemWidth);
-        ldWindowGridResolveCellAxis(tCell.yAlign, cellHeight, tRegion.tSize.iHeight, &offsetY, &itemHeight);
+        ldWindowGridResolveCellAxis(ptCell->xAlign, cellWidth, tRegion.tSize.iWidth, &offsetX, &itemWidth);
+        ldWindowGridResolveCellAxis(ptCell->yAlign, cellHeight, tRegion.tSize.iHeight, &offsetY, &itemHeight);
 
-        tRegion.tLocation.iX = ptWidget->gridPadding.left + columnPos[tCell.colPos] + offsetX;
-        tRegion.tLocation.iY = ptWidget->gridPadding.top + rowPos[tCell.rowPos] + offsetY;
+        tRegion.tLocation.iX = ptWidget->gridPadding.left + columnPos[ptCell->colPos] + offsetX;
+        tRegion.tLocation.iY = ptWidget->gridPadding.top + rowPos[ptCell->rowPos] + offsetY;
         tRegion.tSize.iWidth = itemWidth;
         tRegion.tSize.iHeight = itemHeight;
         ldWindowApplyLayoutRegion(ptItem, tRegion);
