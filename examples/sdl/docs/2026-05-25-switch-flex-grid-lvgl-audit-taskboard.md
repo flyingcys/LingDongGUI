@@ -121,6 +121,7 @@
 - 支持 cell align
 - 支持 container align
 - 支持 descriptor-grid 下的 auto placement fallback
+- 支持 grid 下的 `ignoreLayout` overlay
 - 支持 legacy `gridColumns` fallback
 - 已有测试与 demo 基线
 
@@ -129,6 +130,7 @@
 - `FR` 分配主路径
 - `CONTENT` 尺寸传播主路径
 - span + auto placement 组合
+- grid overlay / ignore-layout 不占槽位
 - align 行为测试证据
 - descriptor-grid 下默认自动落位兼容
 - legacy fallback 未回归
@@ -137,7 +139,6 @@
 
 - `subgrid`
 - `RTL`
-- grid 下专门的 `ignore-layout`
 
 ## 5.4 当前判断
 
@@ -194,7 +195,8 @@
 - [x] `switch`：补 indicator ring + knob overhang 几何
 - [x] `switch`：补 pressed / animation / checked ring 视觉证据
 - [x] `grid`：补 descriptor-grid auto placement 主路径
-- [ ] `grid`：补更高阶语义（`subgrid` / RTL / grid ignore-layout）
+- [x] `grid`：补 ignore-layout overlay
+- [ ] `grid`：补更高阶语义（`subgrid` / RTL）
 - [ ] `flex`：补更高阶语义（RTL、margin、percent/content-size）
 
 ## 7. 建议的优先级

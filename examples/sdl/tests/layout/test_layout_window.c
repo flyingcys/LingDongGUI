@@ -1425,6 +1425,39 @@ static void test_grid_layout_places_visible_children_row_first(void)
     assert(d.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iHeight == 8);
 }
 
+static void test_grid_layout_ignore_layout_keeps_manual_coordinates_and_skips_slot(void)
+{
+    ldWindow_t root = {0};
+    ldLabel_t a = {0};
+    ldLabel_t overlay = {0};
+    ldLabel_t b = {0};
+
+    init_window_region(&root, 100, 80);
+    set_widget_region((ldBase_t *)&a, -1, -1, 50, 10);
+    set_widget_region((ldBase_t *)&overlay, 77, 19, 14, 14);
+    set_widget_region((ldBase_t *)&b, -2, -2, 20, 12);
+
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&a);
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&overlay);
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&b);
+
+    ldWindowSetGridColumns(&root, 2);
+    ldWindowSetGridGap(&root, 5, 4);
+    ldWindowSetGridPadding(&root, (ldPadding_t){.left = 3, .top = 2, .right = 5, .bottom = 7});
+    ldBaseSetIgnoreLayout((ldBase_t *)&overlay, true);
+
+    ldWindow_on_frame_start(NULL, &root);
+
+    assert(a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 3);
+    assert(a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 2);
+    assert(overlay.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 77);
+    assert(overlay.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 19);
+    assert(overlay.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iWidth == 14);
+    assert(overlay.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iHeight == 14);
+    assert(b.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 51);
+    assert(b.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 2);
+}
+
 static void test_flex_row_wrap_starts_new_track_when_main_axis_overflows(void)
 {
     ldWindow_t root = {0};
@@ -1909,6 +1942,45 @@ static void test_grid_descriptor_layout_auto_places_visible_children(void)
     assert(d.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 24);
 }
 
+static void test_grid_descriptor_layout_ignore_layout_keeps_manual_coordinates_and_skips_auto_cell(void)
+{
+    ldWindow_t root = {0};
+    ldLabel_t a = {0};
+    ldLabel_t overlay = {0};
+    ldLabel_t c = {0};
+    ldLabel_t d = {0};
+    static const int16_t col_dsc[] = {30, 30, LD_GRID_TEMPLATE_LAST};
+    static const int16_t row_dsc[] = {20, 20, LD_GRID_TEMPLATE_LAST};
+
+    init_window_region(&root, 80, 60);
+    set_widget_region((ldBase_t *)&a, -1, -1, 10, 8);
+    set_widget_region((ldBase_t *)&overlay, 61, 33, 12, 12);
+    set_widget_region((ldBase_t *)&c, -2, -2, 10, 8);
+    set_widget_region((ldBase_t *)&d, -3, -3, 10, 8);
+
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&a);
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&overlay);
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&c);
+    ldBaseNodeAdd((arm_2d_control_node_t *)&root, (arm_2d_control_node_t *)&d);
+
+    ldWindowSetGridDscArray(&root, col_dsc, row_dsc);
+    ldWindowSetGridGap(&root, 4, 6);
+    ldBaseSetIgnoreLayout((ldBase_t *)&overlay, true);
+
+    ldWindow_on_frame_start(NULL, &root);
+
+    assert(a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 0);
+    assert(a.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 0);
+    assert(overlay.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 61);
+    assert(overlay.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 33);
+    assert(overlay.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iWidth == 12);
+    assert(overlay.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iHeight == 12);
+    assert(c.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 36);
+    assert(c.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 0);
+    assert(d.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 0);
+    assert(d.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 24);
+}
+
 static void test_grid_layout_supports_span_and_container_alignment(void)
 {
     ldWindow_t root = {0};
@@ -2225,10 +2297,12 @@ int main(void)
     test_flex_ignore_layout_keeps_manual_position_and_skips_slot();
     test_hidden_and_ignore_layout_have_different_effects();
     test_grid_layout_places_visible_children_row_first();
+    test_grid_layout_ignore_layout_keeps_manual_coordinates_and_skips_slot();
     test_grid_layout_uses_fixed_tracks_and_explicit_cells();
     test_grid_layout_resolves_fr_and_cell_alignment();
     test_grid_layout_resolves_content_tracks_and_hidden_children();
     test_grid_descriptor_layout_auto_places_visible_children();
+    test_grid_descriptor_layout_ignore_layout_keeps_manual_coordinates_and_skips_auto_cell();
     test_grid_layout_supports_span_and_container_alignment();
     test_grid_layout_space_between_distributes_remaining_gap();
     test_grid_layout_space_around_distributes_outer_spacing();

@@ -1012,6 +1012,33 @@ static int16_t ldWindowGridGetCellSize(const int16_t *pTrackPos,
     return (int16_t)(pTrackPos[end] + pTrackSizes[end] - pTrackPos[start]);
 }
 
+static uint16_t ldWindowCollectLayoutChildren(ldWindow_t *ptWidget,
+                                              ldBase_t **children,
+                                              uint16_t childCount)
+{
+    uint16_t visibleCount;
+    uint16_t layoutCount = 0;
+    uint16_t childIndex;
+
+    if ((ptWidget == NULL) || (children == NULL) || (childCount == 0))
+    {
+        return 0;
+    }
+
+    visibleCount = ldWindowCollectDirectChildren((ldBase_t *)ptWidget, children, childCount, true);
+    for (childIndex = 0; childIndex < visibleCount; ++childIndex)
+    {
+        if (children[childIndex]->ignoreLayout)
+        {
+            continue;
+        }
+
+        children[layoutCount++] = children[childIndex];
+    }
+
+    return layoutCount;
+}
+
 static void ldWindowApplyLegacyGridLayout(ldWindow_t *ptWidget)
 {
     uint16_t childCount = ldBaseGetChildCount((ldBase_t *)ptWidget);
@@ -1030,7 +1057,7 @@ static void ldWindowApplyLegacyGridLayout(ldWindow_t *ptWidget)
     }
 
     ldBase_t *children[childCount];
-    visibleCount = ldWindowCollectDirectChildren((ldBase_t *)ptWidget, children, childCount, true);
+    visibleCount = ldWindowCollectLayoutChildren(ptWidget, children, childCount);
     if (visibleCount == 0)
     {
         return;
@@ -1123,7 +1150,7 @@ static void ldWindowApplyGridLayout(ldWindow_t *ptWidget)
     }
 
     ldBase_t *children[childCount];
-    visibleCount = ldWindowCollectDirectChildren((ldBase_t *)ptWidget, children, childCount, true);
+    visibleCount = ldWindowCollectLayoutChildren(ptWidget, children, childCount);
     if (visibleCount == 0)
     {
         return;

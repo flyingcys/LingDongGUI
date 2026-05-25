@@ -91,6 +91,9 @@ enum {
     ID_GRID_CELL_G = 1160,
     ID_GRID_CELL_G_TITLE = 1161,
     ID_GRID_CELL_G_HINT = 1162,
+    ID_GRID_OVERLAY = 1170,
+    ID_GRID_OVERLAY_TITLE = 1171,
+    ID_GRID_OVERLAY_HINT = 1172,
 };
 
 static ldTimer_t s_layout_resize_timer;
@@ -243,6 +246,38 @@ static void uiGridCreateAutoPanel(ld_scene_t *ptScene,
     ldLabelSetTransparent(obj, true);
 }
 
+static void uiGridCreateOverlayPanel(ld_scene_t *ptScene,
+                                     uint16_t panelId,
+                                     uint16_t titleId,
+                                     uint16_t hintId,
+                                     int16_t x,
+                                     int16_t y,
+                                     int16_t width,
+                                     int16_t height,
+                                     ldColor color,
+                                     const char *title,
+                                     const char *hint)
+{
+    void *obj;
+
+    (void)ptScene;
+    obj = ldWindowInit(panelId, ID_GRID_CANVAS, x, y, width, height);
+    ldWindowSetColor(obj, color);
+    ldBaseSetIgnoreLayout((ldBase_t *)obj, true);
+
+    obj = ldLabelInit(titleId, panelId, 10, 6, width - 20, 16, FONT_ARIAL_16_A8);
+    ldLabelSetText(obj, (uint8_t *)title);
+    ldLabelSetTextColor(obj, GLCD_COLOR_WHITE);
+    ldLabelSetAlign(obj, ARM_2D_ALIGN_LEFT);
+    ldLabelSetTransparent(obj, true);
+
+    obj = ldLabelInit(hintId, panelId, 10, 22, width - 20, height - 28, FONT_ARIAL_12);
+    ldLabelSetText(obj, (uint8_t *)hint);
+    ldLabelSetTextColor(obj, __RGB(245, 247, 250));
+    ldLabelSetAlign(obj, ARM_2D_ALIGN_LEFT);
+    ldLabelSetTransparent(obj, true);
+}
+
 void uiLayoutInit(ld_scene_t *ptScene)
 {
     void *obj;
@@ -371,7 +406,7 @@ void uiGridInit(ld_scene_t *ptScene)
     ldLabelSetAlign(obj, ARM_2D_ALIGN_LEFT);
 
     obj = ldLabelInit(ID_GRID_PAGE_HINT, ID_GRID_BG, 12, 24, 456, 12, FONT_ARIAL_12);
-    ldLabelSetText(obj, (uint8_t *)"Shows fixed/content/FR tracks, explicit spans, centered cells, and auto placement with descriptor-grid APIs.");
+    ldLabelSetText(obj, (uint8_t *)"Shows fixed/content/FR tracks, explicit spans, centered cells, auto placement, and ignore-layout overlay on the same grid canvas.");
     ldLabelSetTextColor(obj, __RGB(82, 86, 92));
     ldLabelSetAlign(obj, ARM_2D_ALIGN_LEFT);
 
@@ -388,9 +423,10 @@ void uiGridInit(ld_scene_t *ptScene)
     uiGridCreatePanel(ptScene, ID_GRID_CELL_E, ID_GRID_CELL_E_TITLE, ID_GRID_CELL_E_HINT, UI_GRID_PANEL_WIDTH, 132, __RGB(244, 162, 97), ldGridAlignStretch, 2, 1, ldGridAlignStretch, 1, 2, "Row Span", "col 2\nrow 1-2\nstretch fill");
     uiGridCreatePanel(ptScene, ID_GRID_CELL_F, ID_GRID_CELL_F_TITLE, ID_GRID_CELL_F_HINT, UI_GRID_PANEL_WIDTH_XS, 28, __RGB(87, 117, 144), ldGridAlignCenter, 1, 1, ldGridAlignCenter, 2, 1, "Center", "col 1 row 2\ncenter align\nkeeps own size");
     uiGridCreateAutoPanel(ptScene, ID_GRID_CELL_G, ID_GRID_CELL_G_TITLE, ID_GRID_CELL_G_HINT, 92, 54, __RGB(120, 140, 168), "Auto", "no explicit cell\nauto placement\nskips span");
+    uiGridCreateOverlayPanel(ptScene, ID_GRID_OVERLAY, ID_GRID_OVERLAY_TITLE, ID_GRID_OVERLAY_HINT, 320, 148, 116, 40, __RGB(58, 90, 122), "Overlay", "manual x/y\nignore layout\ndoes not take slot");
 
     obj = ldLabelInit(ID_GRID_GUIDE_TEXT, ID_GRID_BG, 12, 248, 456, 12, FONT_ARIAL_12);
-    ldLabelSetText(obj, (uint8_t *)"Grid descriptors: [92, content, 1fr] x [54, 66, 1fr], plus explicit spans, centered cells, and auto placement fallback.");
+    ldLabelSetText(obj, (uint8_t *)"Grid descriptors: [92, content, 1fr] x [54, 66, 1fr], plus explicit spans, centered cells, auto placement, and one ignore-layout overlay.");
     ldLabelSetTextColor(obj, __RGB(90, 94, 102));
     ldLabelSetAlign(obj, ARM_2D_ALIGN_LEFT);
 }

@@ -365,7 +365,7 @@ setter 统一规则：
 - `gridRowSpan`
 - `gridCellXAlign`
 - `gridCellYAlign`
-- 可选 `ignoreLayout`
+- 可选 `ignoreLayout`（2026-05-26 已补到 descriptor-grid 与 legacy `gridColumns` fallback）
 
 建议新增 `ldBase` 级 API：
 
@@ -387,7 +387,7 @@ setter 统一规则：
 3. 计算它覆盖的区域
 4. 在 cell 内按 start/center/end/stretch 放置
 5. hidden child 跳过
-6. 可选 ignore-layout child 跳过
+6. ignore-layout child 跳过并保留手工坐标
 
 这一步完成后，LingDongGUI 才算真正拥有 grid 布局，而不是“多列顺排”。
 

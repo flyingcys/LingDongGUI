@@ -145,17 +145,17 @@
 
 ### 步骤
 
-- [ ] 在 `src/gui/ldBase.h` 增加最小 grid 字段
+- [x] 在 `src/gui/ldBase.h` 增加最小 grid 字段
   - `gridColPos`
   - `gridRowPos`
   - `gridColSpan`
   - `gridRowSpan`
   - `gridCellXAlign`
   - `gridCellYAlign`
-  - 可选 `ignoreLayout`
-- [ ] 新增 `ldBaseSetGridCell()`
-- [ ] 若纳入 ignore-layout，则新增对应 setter
-- [ ] child 属性改变时，必须回标父容器 layout dirty
+  - 复用现有 `ignoreLayout`
+- [x] 新增 `ldBaseSetGridCell()`
+- [x] 若纳入 ignore-layout，则复用现有 `ldBaseSetIgnoreLayout()`
+- [x] child 属性改变时，必须回标父容器 layout dirty
 
 ### 验证
 
@@ -170,13 +170,14 @@
 
 ### 步骤
 
-- [ ] 保留 hidden child 跳过语义
+- [x] 保留 hidden child 跳过语义
 - [ ] 读取每个 child 的 cell 信息
 - [ ] 计算 child 覆盖的行列范围
 - [ ] 支持单格摆放
 - [ ] 支持 `col_span`
 - [ ] 支持 `row_span`
 - [ ] 支持 cell 内 `start / center / end / stretch`
+- [x] `ignoreLayout` child 保留手工坐标且不占 auto placement 槽位
 - [ ] 保留 child 旧/新 region 合并脏区逻辑
 
 ### 验证
@@ -186,6 +187,8 @@
 - [ ] host-side 测试：跨 2 行
 - [ ] host-side 测试：cell 内 `center`
 - [ ] host-side 测试：cell 内 `stretch`
+- [x] host-side 测试：descriptor-grid ignore-layout overlay
+- [x] host-side 测试：legacy grid fallback ignore-layout overlay
 
 ## B3. 容错与边界语义收口
 
