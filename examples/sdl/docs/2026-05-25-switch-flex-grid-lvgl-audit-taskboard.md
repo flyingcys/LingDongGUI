@@ -39,23 +39,36 @@
 
 ## 3.2 仍需复核项
 
-- 与 LVGL 在视觉细节上的差距是否还存在
-- 程序设值和交互事件的边界是否完全一致
-- 是否还存在“主干已对齐，但 demo 易用性不够”的问题
+- knob 是否支持 LVGL 常见的 overhang 视觉
+- indicator 是否保留 LVGL 常见的底轨外圈
+- 键盘 / 导航输入是否支持 `ENTER` toggle 与方向键 on/off
+- pressed 与动画中间帧是否已有足够的视觉回归证据
 
-## 3.3 当前判断
+## 3.3 已证实差距
 
-`switch` 大概率已经达到第一轮“行为/视觉/测试主干对齐”口径，但仍需要在本轮后统一复核，避免过早把全部差距归零。
+- knob 仍被约束在轨道内，没有 LVGL 常见的 overhang 语义
+- indicator 仍按整块线性填充，没有 `MAIN padding -> ring` 那种视觉关系
+- 当前未发现 switch 自身的键盘 / 导航切换逻辑
 
-## 3.4 后续任务
+详见：`examples/sdl/docs/2026-05-25-switch-lvgl-edge-audit.md`
+
+## 3.4 当前判断
+
+`switch` 仍然可以视为“第一轮主干能力已完成”，但不能继续笼统记成“视觉/行为已基本齐”。更准确的状态是：主干能力到位，输入模态与视觉细节仍有边角差距。
+
+## 3.5 后续任务
 
 ### P1
 
-- 对照现有测试与 demo，补一轮“仍未对齐 LVGL 的边角项”审计
+- 若继续追视觉 parity，优先补 indicator ring 与 knob overhang
 
 ### P2
 
-- 若存在视觉/交互细差距，再单独开小任务收口
+- 若继续追交互 parity，补 `ENTER` toggle 与方向键 on/off
+
+### P3
+
+- 补 pressed / animation mid-frame / checked edge ring 的视觉证据
 
 ## 4. flex 审计
 
