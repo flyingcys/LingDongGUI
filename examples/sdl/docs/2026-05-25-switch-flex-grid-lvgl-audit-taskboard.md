@@ -20,7 +20,7 @@
 
 | 线别 | 当前阶段判断 | 本轮优先级 | 说明 |
 | --- | --- | --- | --- |
-| switch | 第一轮主干对齐已闭环 | 中 | 主路径已齐，转入视觉证据补强 |
+| switch | 第一轮主干与关键视觉证据都已闭环 | 低 | 主路径与关键截图证据已齐，后续只剩更高置信度增强 |
 | flex | 主干已成型，但未 full parity | 中 | 已能覆盖常见主线，一些高级语义待后续 |
 | grid | 主干继续收口后，已接近 LVGL 常用主线 | 高 | 仍需继续审计边角，但本轮主干缺口已明显收窄 |
 
@@ -39,41 +39,32 @@
 - 已补 knob overhang 几何
 - 已补 indicator ring 几何
 - 已补 host-side 焦点行为断言，证明 no-op / disabled 方向会放行给 peer focus
+- 已补 capture matrix，锁住 pressed knob / animation mid-frame / checked ring
 - 已接入 demo
 - 已有 internal/widget tests
 
 ## 3.2 仍需复核项
 
-- pressed 与动画中间帧是否已有足够的视觉回归证据
-- checked 态 ring 是否已有截图矩阵锁定
+- 若继续追更高置信度 parity，是否需要整图截图 diff 或主题组合矩阵
 
 ## 3.3 已证实差距
 
-- 当前剩余差距已不在主逻辑，而在视觉证据：
-  - pressed 没有 screenshot/像素级回归
-  - 动画中间帧没有 capture matrix
-  - checked 态 ring 还没有单独锁图
+- 当前这轮已不再有未补齐的主逻辑 / 关键视觉证据差距
+- 后续若继续做，只是把证据从“关键点采样”升级到“更高置信度像素比对”
 
 详见：`examples/sdl/docs/2026-05-25-switch-lvgl-edge-audit.md`
 
 ## 3.4 当前判断
 
-`switch` 现在可以视为“第一轮主干能力已完成且主路径闭环”。更准确的状态是：行为与几何主路径已经对齐到 LVGL 常见用法，剩余工作集中在视觉回归证据。
+`switch` 现在可以视为“第一轮主干能力已完成且关键视觉证据闭环”。更准确的状态是：行为、几何主路径与关键截图证据都已经对齐到 LVGL 常见用法，后续只剩可选的证据增强。
 
 ## 3.5 后续任务
 
 ### P1
 
-- 补 screenshot matrix：
-  - pressed
-  - animation mid-frame
-  - checked edge ring
-
-### P2
-
 - 若要继续追更高置信度 parity，补主题组合下的像素级断言或截图比对
 
-### P3
+### P2
 
 - 视需要再补 host demo 的显式按键提示，帮助人工验收
 
@@ -201,7 +192,7 @@
 
 - [x] `switch`：补通用焦点层 routing
 - [x] `switch`：补 indicator ring + knob overhang 几何
-- [ ] `switch`：补 pressed / animation / checked ring 视觉证据
+- [x] `switch`：补 pressed / animation / checked ring 视觉证据
 - [x] `grid`：补 descriptor-grid auto placement 主路径
 - [ ] `grid`：补更高阶语义（`subgrid` / RTL / grid ignore-layout）
 - [ ] `flex`：补更高阶语义（RTL、margin、percent/content-size）

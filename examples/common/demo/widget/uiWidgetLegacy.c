@@ -32,6 +32,8 @@ enum {
     UI_WIDGET_LEGACY_CAPTURE_V_ON_ID = 103,
     UI_WIDGET_LEGACY_CAPTURE_DISABLED_OFF_ID = 104,
     UI_WIDGET_LEGACY_CAPTURE_DISABLED_ON_ID = 105,
+    UI_WIDGET_LEGACY_CAPTURE_PRESSED_ID = 106,
+    UI_WIDGET_LEGACY_CAPTURE_MID_ID = 107,
 };
 
 const ldPageFuncGroup_t uiWidgetLegacyFunc = {
@@ -116,6 +118,7 @@ static ldSwitch_t *uiWidgetLegacyInitCaptureSwitch(ld_scene_t *ptScene,
 static void uiWidgetLegacyInitCaptureMatrix(ld_scene_t *ptScene)
 {
     void *obj;
+    ldSwitch_t *ptSwitch;
 
     ldBaseFocusNavigateInit();
 
@@ -143,6 +146,19 @@ static void uiWidgetLegacyInitCaptureMatrix(ld_scene_t *ptScene)
     obj = uiWidgetLegacyInitCaptureSwitch(ptScene, UI_WIDGET_LEGACY_CAPTURE_DISABLED_ON_ID, 80, 360, 90, 40);
     ldSwitchSetChecked(obj, true);
     ldSwitchSetDisabled(obj, true);
+
+    ptSwitch = uiWidgetLegacyInitCaptureSwitch(ptScene, UI_WIDGET_LEGACY_CAPTURE_PRESSED_ID, 80, 430, 90, 40);
+    ldSwitchSetChecked(ptSwitch, false);
+    ptSwitch->isPressed = true;
+
+    ptSwitch = uiWidgetLegacyInitCaptureSwitch(ptScene, UI_WIDGET_LEGACY_CAPTURE_MID_ID, 250, 430, 90, 40);
+    ldSwitchSetChecked(ptSwitch, true);
+    ptSwitch->hasRenderedFrame = true;
+    ptSwitch->animStartProgress = 0;
+    ptSwitch->animTargetProgress = 1000;
+    ptSwitch->animProgress = 500;
+    ptSwitch->animElapsedMs = 75;
+    ptSwitch->isAnimating = true;
 }
 
 static void uiWidgetLegacyInit(ld_scene_t *ptScene)

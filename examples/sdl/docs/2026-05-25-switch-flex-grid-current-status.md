@@ -2,7 +2,7 @@
 
 ## 结论
 
-- `switch`：主线已完成原生控件化，不再是 stub。当前已具备 `AUTO/横向/纵向` 方向、禁用态、首帧稳态、value change 事件、track/indicator/knob 几何与图片 fallback，并补齐了 `ldSwitchNavigate()`、`ldSwitchCanNavigate()`、通用焦点层“只在会改值时才消费方向键”的路由、indicator ring 与可见的 knob overhang 几何；当前剩余差距已经从“行为/视觉主路径缺口”收缩到“pressed / 动画中间帧视觉证据仍不足”。
+- `switch`：主线已完成原生控件化，不再是 stub。当前已具备 `AUTO/横向/纵向` 方向、禁用态、首帧稳态、value change 事件、track/indicator/knob 几何与图片 fallback，并补齐了 `ldSwitchNavigate()`、`ldSwitchCanNavigate()`、通用焦点层“只在会改值时才消费方向键”的路由、indicator ring 与可见的 knob overhang 几何；本轮又补上了 `pressed / animation mid-frame / checked ring` 的截图矩阵证据，因此 switch 这条第一轮 parity 线已经从“主路径闭环”推进到“主路径 + 关键视觉证据闭环”。
 - `flex`：Phase 0/1 主线已基本成型。当前已支持 8 种 flow、main/cross/track 对齐、item gap/track gap、`grow`、`new track`、`ignore layout`，更像“可用的一维布局骨架”，但离 LVGL 的完整 flex 体系还有 RTL、margin/percent/content-size 联动等差距。
 - `grid`：已经从旧 `gridColumns` 顺排容器升级为显式二维网格。当前稳定支持 descriptor、`fixed/CONTENT/FR`、explicit cell、span、cell align、container align、descriptor-grid 下的 auto placement fallback，并保留 legacy `gridColumns` fallback。
 
@@ -66,9 +66,8 @@
 
 - 已进入“可维护主线”，后续不再是补控件存在性，而是补 LVGL 边角语义。
 - 当前已证实的剩余差距主要有：
-  - pressed 缺少 screenshot/像素级证据
-  - 动画中间帧缺少视觉回归证据
-  - checked 态 ring 在真实主题组合下还缺少 capture matrix 锁定
+  - 当前这轮 contract 下，主路径和关键视觉证据已经补齐
+  - 若继续追更高置信度 parity，后续更适合补整图截图比对或主题组合矩阵，而不是继续补基础存在性
 
 ### flex
 
@@ -85,7 +84,7 @@
 
 | 线别 | 已对齐主路径 | 当前未闭环项 | 文档化后的下一步 |
 | --- | --- | --- | --- |
-| switch | 原生控件、方向/禁用/事件、indicator ring、knob overhang、值变更优先的通用焦点导航 | pressed / 中间帧视觉证据 | 补截图矩阵并锁定 checked ring |
+| switch | 原生控件、方向/禁用/事件、indicator ring、knob overhang、值变更优先的通用焦点导航、pressed/mid-frame/ring 视觉证据 | 若继续深挖，只剩更高置信度像素比对 | 可选补主题矩阵或整图 diff |
 | flex | flow/wrap/reverse、main/cross/track 对齐、gap/grow/new-track | RTL、margin、percent/content-size 联动 | 继续补第二阶段语义差距 |
 | grid | descriptor、`CONTENT/FR`、span、cell/container align、auto placement | `subgrid`、RTL、grid ignore-layout | 继续补更大范围语义，不回退主实现 |
 
@@ -100,7 +99,7 @@ rtk ./examples/sdl/build-review/layout_window_test
 rtk ctest --test-dir examples/sdl/build-review --output-on-failure
 ```
 
-结果：`9/9` 测试通过。
+结果：当前主线验证已扩到 `10/10`，其中 `check_switch_capture_matrix` 也已覆盖 `pressed / animation mid-frame / checked ring`。
 
 ### demo 启动 smoke
 

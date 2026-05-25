@@ -17,6 +17,7 @@ OFF_TRACK = (190, 190, 190)
 ON_TRACK = (72, 184, 120)
 DISABLED_OFF_TRACK = (95, 95, 95)
 DISABLED_ON_TRACK = (80, 136, 96)
+PRESSED_KNOB = (255, 243, 202)
 
 SAMPLES = {
     "h_off": ((150, 100), OFF_TRACK),
@@ -25,6 +26,9 @@ SAMPLES = {
     "v_on": ((270, 280), ON_TRACK),
     "disabled_off": ((150, 310), DISABLED_OFF_TRACK),
     "disabled_on": ((100, 380), DISABLED_ON_TRACK),
+    "pressed_knob": ((100, 450), PRESSED_KNOB),
+    "mid_left": ((254, 450), ON_TRACK),
+    "mid_right": ((335, 450), OFF_TRACK),
 }
 
 
@@ -156,12 +160,19 @@ def main() -> int:
             sampled[name] = _pixel(width, height, pixels, point[0], point[1])
             _assert_close(name, sampled[name], expected, 18)
 
+        h_on_ring = _pixel(width, height, pixels, 165, 170)
+        v_on_ring = _pixel(width, height, pixels, 270, 214)
+        if not (_brightness(h_on_ring) > _brightness(sampled["h_on"]) + 60):
+            raise AssertionError(f"h_on checked ring 亮度不够明显: ring={h_on_ring}, track={sampled['h_on']}")
+        if not (_brightness(v_on_ring) > _brightness(sampled["v_on"]) + 60):
+            raise AssertionError(f"v_on checked ring 亮度不够明显: ring={v_on_ring}, track={sampled['v_on']}")
+
         if not (_brightness(sampled["disabled_off"]) < _brightness(sampled["h_off"]) - 40):
             raise AssertionError(f"disabled_off 亮度没有明显低于 h_off: {sampled}")
         if not (_brightness(sampled["disabled_on"]) < _brightness(sampled["h_on"]) - 15):
             raise AssertionError(f"disabled_on 亮度没有明显低于 h_on: {sampled}")
 
-    print("[PASS] switch capture matrix pixels match off/on/vertical/disabled expectations")
+    print("[PASS] switch capture matrix pixels match off/on/vertical/disabled/pressed/mid expectations")
     return 0
 
 

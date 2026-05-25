@@ -14,13 +14,13 @@
 
 ## 2. 总结
 
-当前 `switch` 可以升级为“第一轮主干能力已到位，且行为/几何主路径已经闭环”的判断。
+当前 `switch` 可以升级为“第一轮主干能力已到位，且行为/几何主路径 + 关键视觉证据都已经闭环”的判断。
 
-原因不是它退回 stub，而是还存在 3 个明确证据缺口：
+这意味着前一轮留下的 3 个证据缺口已经补上：
 
-1. pressed 视觉还没有 screenshot/像素级证据
-2. 动画中间帧还没有 capture matrix
-3. checked 态 ring 还没有单独锁图
+1. pressed knob 已有 screenshot/像素级证据
+2. 动画中间帧已有 capture matrix
+3. checked 态 ring 已有单独锁点
 
 ## 3. 已证实差距
 
@@ -66,7 +66,7 @@ LingDongGUI 的 indicator 现在已经改到 track 内容区内增长，而不�
 
 #### 审计结论
 
-这一项主几何已闭环，但还缺截图矩阵来提升证据强度。
+这一项主几何与截图矩阵证据都已闭环。
 
 ### 3.3 已完成：通用焦点路由接线
 
@@ -105,9 +105,9 @@ LingDongGUI 现在不仅有 `ldSwitchNavigate()`，还补了 `ldSwitchCanNavigat
 
 这一项本轮已闭环，不再是主差距。
 
-## 4. 审计空洞
+## 4. 审计收口
 
-### 4.1 pressed 视觉没有截图证据
+### 4.1 pressed / mid-frame / checked ring 证据已补齐
 
 #### 代码依据
 
@@ -115,62 +115,39 @@ LingDongGUI 现在不仅有 `ldSwitchNavigate()`，还补了 `ldSwitchCanNavigat
 - pressed knob 高亮：`src/gui/ldSwitch.c:320`
 - widget 级断言：`examples/sdl/tests/switch/test_ldswitch_widget.c:353`
 
-#### 当前真相
-
-现在只通过 unit test 证明：
-
-- pressed 时 knob 不再回退成 `borderColor`
-- pressed 时 knob 也不再保持原 `knobColor`
-
-但没有 screenshot/像素级证据证明 pressed 在真实渲染里“足够明显”。
-
-#### 审计结论
-
-这不是已证实 bug，但仍是当前最值得补的证据空洞。
-
-### 4.2 动画中间帧没有视觉回归
-
 #### 代码依据
 
-- 现有截图矩阵：`examples/sdl/tests/check_switch_capture_matrix.py:21`
-- 现有截图采样：`examples/sdl/tests/check_switch_capture_matrix.py:155`
+- 采样脚本：`examples/sdl/tests/check_switch_capture_matrix.py`
+- capture 样本：`examples/common/demo/widget/uiWidgetLegacy.c`
 
 #### 当前真相
 
-当前截图矩阵只覆盖：
+当前 capture matrix 已经覆盖：
 
 - horizontal off / on
 - vertical off / on
 - disabled off / on
+- pressed knob
+- animation mid-frame（左侧 fill / 右侧 off-track）
+- checked ring（horizontal / vertical）
 
-没有覆盖：
-
-- pressed
-- 动画中间帧
-- checked 时边缘 ring 是否仍可见
+也就是说，这条视觉回归已经不再只是“静态颜色 smoke”，而是把本轮最关键的 LVGL 风格细节一起锁进去了。
 
 #### 审计结论
 
-当前视觉回归更像“静态颜色 smoke”，还不是“LVGL 风格细节锁定”。
+这轮 scope 内最关键的视觉证据已经补齐；如果还要继续增强，下一步更适合做整图 diff 或主题组合矩阵。
 
 ## 5. 建议的下一步
 
 ### P0
 
-- 回写总状态文档，把 `switch` 状态从“主路径仍有缺口”更新为“主路径已闭环、证据待补”
+- 回写总状态文档，把 `switch` 状态从“证据待补”更新为“关键视觉证据已闭环”
 
 ### P1
 
-- 补 screenshot matrix：
-  - pressed
-  - animation mid-frame
-  - checked edge ring
+- 若继续提高可信度，补像素级断言或整图截图比对
 
 ### P2
-
-- 若继续提高可信度，补像素级断言或截图比对
-
-### P3
 
 - 若后续主题系统继续演进，再复查这套几何和 style 叠加关系
 
@@ -183,4 +160,4 @@ LingDongGUI 现在不仅有 `ldSwitchNavigate()`，还补了 `ldSwitchCanNavigat
 - 更准确的口径应是：
   - 主干能力已对齐
   - 通用输入路由、indicator ring、knob overhang 已落地
-  - 现有截图/测试对视觉主张的覆盖还不够完整
+  - 现有截图/测试已经覆盖 pressed、mid-frame 与 checked ring 这三个关键视觉主张
