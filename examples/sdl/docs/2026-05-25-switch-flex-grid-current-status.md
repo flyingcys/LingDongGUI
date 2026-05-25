@@ -4,7 +4,7 @@
 
 - `switch`：主线已完成原生控件化，不再是 stub。当前已具备 `AUTO/横向/纵向` 方向、禁用态、首帧稳态、value change 事件、track/indicator/knob 几何与图片 fallback，且已有 demo 与测试覆盖。
 - `flex`：Phase 0/1 主线已基本成型。当前已支持 8 种 flow、main/cross/track 对齐、item gap/track gap、`grow`、`new track`、`ignore layout`，更像“可用的一维布局骨架”，但离 LVGL 的完整 flex 体系还有 RTL、margin/percent/content-size 联动等差距。
-- `grid`：已经从旧 `gridColumns` 顺排容器升级为显式二维网格。当前支持 descriptor、`fixed/CONTENT/FR`、explicit cell、span、cell align、container align，并保留 legacy `gridColumns` fallback。
+- `grid`：已经从旧 `gridColumns` 顺排容器升级为显式二维网格。当前稳定支持 descriptor、`fixed/CONTENT/FR`、explicit cell、span、cell align、container align、descriptor-grid 下的 auto placement fallback，并保留 legacy `gridColumns` fallback。
 
 ## 本轮修复
 
@@ -22,12 +22,16 @@
 
 - 删除 `ldWindow_t` 里的重复 grid descriptor 字段与重复 API 原型。
 - 删除旧版重复 `ldBaseSetGridCell()` 实现，统一保留 `int16_t + isGridCellSet` 这条新语义。
+- 继续收口 `src/gui/ldWindow.c` 的 descriptor-grid solver，让 auto placement 会跳过已被 span 占用的格子。
 - 在 `examples/sdl/tests/layout/test_layout_window.c` 新增回归测试，锁住：
+  - `CONTENT` 轨道取最大可见 child
   - descriptor-grid 自动落位
+  - span + `FR`
   - `SpaceBetween`
   - `SpaceAround`
   - `SpaceEvenly`
   - `Stretch`
+- 在 `examples/common/demo/layout/uiLayout.c` 补了 auto placement panel，让 `USE_DEMO=5` 也能直观看到“显式 span 后的自动补位”。
 
 ## 代码真相源
 
@@ -66,8 +70,8 @@
 
 ### grid
 
-- 当前实现已经具备 descriptor-grid 主干能力。
-- 仍明确不支持 `subgrid`、RTL 等更大范围语义。
+- 当前实现已经具备 descriptor-grid 主干能力，并已补齐 auto placement fallback 的主路径证据。
+- 仍明确不支持 `subgrid`、RTL、grid 下专门的 `ignore-layout` 等更大范围语义。
 - `gridColumns` 仍是兼容入口，不应再把它当成 grid 主实现。
 
 ## 本轮验证

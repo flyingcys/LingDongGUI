@@ -22,7 +22,7 @@
 | --- | --- | --- | --- |
 | switch | 基本完成第一轮主干对齐 | 低 | 重点从“补存在性”转为“审边角” |
 | flex | 主干已成型，但未 full parity | 中 | 已能覆盖常见主线，一些高级语义待后续 |
-| grid | 当前主攻方向 | 高 | 主干已建立，仍需继续收口至 LVGL 常用语义 |
+| grid | 主干继续收口后，已接近 LVGL 常用主线 | 高 | 仍需继续审计边角，但本轮主干缺口已明显收窄 |
 
 ## 3. switch 审计
 
@@ -109,17 +109,18 @@
 - 支持 `col_span / row_span`
 - 支持 cell align
 - 支持 container align
+- 支持 descriptor-grid 下的 auto placement fallback
 - 支持 legacy `gridColumns` fallback
 - 已有测试与 demo 基线
 
-## 5.2 本轮必须继续收口的项
+## 5.2 本轮已收口项
 
-- `FR` 分配稳定性
-- `CONTENT` 尺寸传播
+- `FR` 分配主路径
+- `CONTENT` 尺寸传播主路径
 - span + auto placement 组合
-- align 行为的运行态证据
+- align 行为测试证据
 - descriptor-grid 下默认自动落位兼容
-- legacy fallback 不回归
+- legacy fallback 未回归
 
 ## 5.3 明确延期项
 
@@ -129,13 +130,13 @@
 
 ## 5.4 当前判断
 
-`grid` 是三条线里距离“LVGL 常用主干对齐”最近、但也最需要继续收口的一条。它已经不再是旧顺排模型，但仍处于主线强化阶段。
+`grid` 经过本轮后，已经可以视为“LVGL 常用主干基本到位、边缘语义待继续审计”的状态。它不再只是旧顺排模型的增强版，而是以 descriptor-grid 为中心的主实现。
 
 ## 5.5 后续任务
 
 ### P0
 
-- 完成本轮 grid 主干行为收口
+- 复核本轮 grid 主干收口后的剩余边角差距
 
 ### P1
 
@@ -143,7 +144,7 @@
 
 ### P1
 
-- 确保 `USE_DEMO=5` 继续承担 grid 运行态证据
+- 确保 `USE_DEMO=5` 继续承担 grid 运行态证据，并维持 auto placement 展示位
 
 ### P2
 
@@ -153,28 +154,28 @@
 
 ## 6.1 P0：Grid 主干对齐
 
-- [ ] 审核 descriptor-grid solver 当前与 LVGL 的常用行为差距
-- [ ] 收口 `FR`
-- [ ] 收口 `CONTENT`
-- [ ] 收口 span
-- [ ] 收口 container align
-- [ ] 收口 cell align
-- [ ] 收口 descriptor-grid 下 auto placement fallback
+- [x] 审核 descriptor-grid solver 当前与 LVGL 的常用行为差距
+- [x] 收口 `FR`
+- [x] 收口 `CONTENT`
+- [x] 收口 span
+- [x] 收口 container align
+- [x] 收口 cell align
+- [x] 收口 descriptor-grid 下 auto placement fallback
 
 ## 6.2 P1：验证补强
 
-- [ ] 扩 layout host-side 测试
-- [ ] 跑 `examples/sdl` 构建
-- [ ] 跑 `ctest`
-- [ ] 跑 `USE_DEMO=5` smoke
+- [x] 扩 layout host-side 测试
+- [x] 跑 `examples/sdl` 构建
+- [x] 跑 `ctest`
+- [x] 跑 `USE_DEMO=5` smoke
 
 ## 6.3 P2：三线审计回写
 
-- [ ] 复核 `switch`
-- [ ] 复核 `flex`
-- [ ] 回写 `grid`
-- [ ] 更新“已对齐 / 未对齐 / 延期”
-- [ ] 产出下一阶段任务排序
+- [x] 复核 `switch`
+- [x] 复核 `flex`
+- [x] 回写 `grid`
+- [x] 更新“已对齐 / 未对齐 / 延期”
+- [x] 产出下一阶段任务排序
 
 ## 7. 建议的优先级
 
