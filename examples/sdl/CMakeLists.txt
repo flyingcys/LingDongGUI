@@ -296,6 +296,14 @@ set_tests_properties(check_use_demo_0_legacy_widget PROPERTIES
 )
 
 add_test(
+    NAME check_switch_focus_routing
+    COMMAND "${Python3_EXECUTABLE}" "${SDL_EXAMPLE_DIR}/tests/check_switch_focus_routing.py"
+)
+set_tests_properties(check_switch_focus_routing PROPERTIES
+    WORKING_DIRECTORY "${SDL_EXAMPLE_DIR}"
+)
+
+add_test(
     NAME check_use_demo_5_grid_widget
     COMMAND "${Python3_EXECUTABLE}" "${SDL_EXAMPLE_DIR}/tests/check_use_demo_5_grid_widget.py"
 )

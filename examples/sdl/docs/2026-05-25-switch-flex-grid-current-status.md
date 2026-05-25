@@ -2,7 +2,7 @@
 
 ## 结论
 
-- `switch`：主线已完成原生控件化，不再是 stub。当前已具备 `AUTO/横向/纵向` 方向、禁用态、首帧稳态、value change 事件、track/indicator/knob 几何与图片 fallback，并补了 `ldSwitchNavigate()` 与 legacy demo 的 selected-switch `ENTER + 四方向` 接线；但经本轮细审，视觉细节和通用方向键路由仍未完全对齐 LVGL。
+- `switch`：主线已完成原生控件化，不再是 stub。当前已具备 `AUTO/横向/纵向` 方向、禁用态、首帧稳态、value change 事件、track/indicator/knob 几何与图片 fallback，并补齐了 `ldSwitchNavigate()`、`ldSwitchCanNavigate()`、通用焦点层“只在会改值时才消费方向键”的路由、indicator ring 与可见的 knob overhang 几何；当前剩余差距已经从“行为/视觉主路径缺口”收缩到“pressed / 动画中间帧视觉证据仍不足”。
 - `flex`：Phase 0/1 主线已基本成型。当前已支持 8 种 flow、main/cross/track 对齐、item gap/track gap、`grow`、`new track`、`ignore layout`，更像“可用的一维布局骨架”，但离 LVGL 的完整 flex 体系还有 RTL、margin/percent/content-size 联动等差距。
 - `grid`：已经从旧 `gridColumns` 顺排容器升级为显式二维网格。当前稳定支持 descriptor、`fixed/CONTENT/FR`、explicit cell、span、cell align、container align、descriptor-grid 下的 auto placement fallback，并保留 legacy `gridColumns` fallback。
 
@@ -39,8 +39,10 @@
 
 - 控件与公开 API：`src/gui/ldSwitch.h`、`src/gui/ldSwitch.c`
 - 内部几何与动画：`src/gui/ldSwitchInternal.h`、`src/gui/ldSwitchInternal.c`
+- 焦点/输入接线：`src/gui/ldBase.c`、`examples/common/demo/widget/uiWidgetLegacy.c`
 - demo 接线：`examples/common/demo/widget/uiWidgetLegacy.c`、`examples/common/demo/widget/uiWidgetSwipePage01.c`
 - 测试：`examples/sdl/tests/switch/test_ldswitch_internal.c`、`examples/sdl/tests/switch/test_ldswitch_widget.c`
+- 输入路由约束：`examples/sdl/tests/check_switch_focus_routing.py`
 - 边角审计：`examples/sdl/docs/2026-05-25-switch-lvgl-edge-audit.md`
 
 ### flex
@@ -64,10 +66,9 @@
 
 - 已进入“可维护主线”，后续不再是补控件存在性，而是补 LVGL 边角语义。
 - 当前已证实的剩余差距主要有：
-  - knob 还没有 LVGL 常见的 overhang 视觉
-  - indicator 还没有保留底轨外圈
-  - `ldSwitchNavigate()` 已有，但通用方向键 routing 仍未对齐
-  - pressed / 动画中间帧缺少视觉回归证据
+  - pressed 缺少 screenshot/像素级证据
+  - 动画中间帧缺少视觉回归证据
+  - checked 态 ring 在真实主题组合下还缺少 capture matrix 锁定
 
 ### flex
 
@@ -79,6 +80,14 @@
 - 当前实现已经具备 descriptor-grid 主干能力，并已补齐 auto placement fallback 的主路径证据。
 - 仍明确不支持 `subgrid`、RTL、grid 下专门的 `ignore-layout` 等更大范围语义。
 - `gridColumns` 仍是兼容入口，不应再把它当成 grid 主实现。
+
+## 三控件对齐检查
+
+| 线别 | 已对齐主路径 | 当前未闭环项 | 文档化后的下一步 |
+| --- | --- | --- | --- |
+| switch | 原生控件、方向/禁用/事件、indicator ring、knob overhang、值变更优先的通用焦点导航 | pressed / 中间帧视觉证据 | 补截图矩阵并锁定 checked ring |
+| flex | flow/wrap/reverse、main/cross/track 对齐、gap/grow/new-track | RTL、margin、percent/content-size 联动 | 继续补第二阶段语义差距 |
+| grid | descriptor、`CONTENT/FR`、span、cell/container align、auto placement | `subgrid`、RTL、grid ignore-layout | 继续补更大范围语义，不回退主实现 |
 
 ## 本轮验证
 

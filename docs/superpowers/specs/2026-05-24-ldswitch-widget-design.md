@@ -109,6 +109,7 @@ void ldSwitchSetHorizontal(ldSwitch_t *ptWidget, bool isHorizontal);
 bool ldSwitchIsHorizontal(ldSwitch_t *ptWidget);
 void ldSwitchSetDirection(ldSwitch_t *ptWidget, ldSwitchDirection_t direction);
 ldSwitchDirection_t ldSwitchGetDirection(ldSwitch_t *ptWidget);
+bool ldSwitchCanNavigate(ldSwitch_t *ptWidget, ldNavDir_t dir);
 void ldSwitchNavigate(ld_scene_t *ptScene, ldSwitch_t *ptWidget, ldNavDir_t dir);
 
 void ldSwitchSetDisabled(ldSwitch_t *ptWidget, bool isDisabled);
@@ -136,6 +137,7 @@ void ldSwitchSetImage(ldSwitch_t *ptWidget,
 - 但内部实现必须按这三层语义组织，方便后续扩展
 - `ldSwitchSetDirection()` / `ldSwitchGetDirection()` 是当前推荐方向接口；`ldSwitchSetHorizontal()` / `ldSwitchIsHorizontal()` 保留给兼容代码
 - `ldSwitchNavigate()` 是 switch 私有导航入口，用来承接 `ENTER` toggle 与方向键 on/off 语义；它不是通用 focus/group 框架
+- `ldSwitchCanNavigate()` 负责告诉通用 focus 路由“这次导航是否真的该由 switch 消费”，避免 disabled 或 no-op 方向把焦点困在 switch 上
 
 ---
 

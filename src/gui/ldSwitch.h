@@ -96,6 +96,7 @@ void ldSwitchSetImage(ldSwitch_t *ptWidget,
                       arm_2d_tile_t *ptKnobImgTile,
                       arm_2d_tile_t *ptKnobMaskTile);
 void _ldSwitchSetChecked(ld_scene_t *ptScene, ldSwitch_t *ptWidget, bool isChecked);
+bool ldSwitchCanNavigate(ldSwitch_t *ptWidget, ldNavDir_t dir);
 void ldSwitchNavigate(ld_scene_t *ptScene, ldSwitch_t *ptWidget, ldNavDir_t dir);
 void ldSwitchSetHorizontal(ldSwitch_t *ptWidget, bool isHorizontal);
 void ldSwitchSetDirection(ldSwitch_t *ptWidget, ldSwitchDirection_t direction);

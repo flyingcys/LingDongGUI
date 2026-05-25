@@ -20,7 +20,7 @@
 
 | 线别 | 当前阶段判断 | 本轮优先级 | 说明 |
 | --- | --- | --- | --- |
-| switch | 基本完成第一轮主干对齐 | 低 | 重点从“补存在性”转为“审边角” |
+| switch | 第一轮主干对齐已闭环 | 中 | 主路径已齐，转入视觉证据补强 |
 | flex | 主干已成型，但未 full parity | 中 | 已能覆盖常见主线，一些高级语义待后续 |
 | grid | 主干继续收口后，已接近 LVGL 常用主线 | 高 | 仍需继续审计边角，但本轮主干缺口已明显收窄 |
 
@@ -34,42 +34,47 @@
 - 支持首帧稳态
 - 支持 value change 事件
 - 内部具备 track / indicator / knob 语义
-- 已补 switch 私有导航 API 与 legacy demo 的 selected-switch `ENTER + 四方向` 接线
+- 已补 switch 私有导航 API
+- 已补 `ldSwitchCanNavigate()`，让通用焦点层只在“这次方向键确实会改值”时把事件交给 switch
+- 已补 knob overhang 几何
+- 已补 indicator ring 几何
 - 已接入 demo
 - 已有 internal/widget tests
 
 ## 3.2 仍需复核项
 
-- knob 是否支持 LVGL 常见的 overhang 视觉
-- indicator 是否保留 LVGL 常见的底轨外圈
-- 方向键是否已进入通用 focus/group routing
 - pressed 与动画中间帧是否已有足够的视觉回归证据
+- checked 态 ring 是否已有截图矩阵锁定
 
 ## 3.3 已证实差距
 
-- knob 仍被约束在轨道内，没有 LVGL 常见的 overhang 语义
-- indicator 仍按整块线性填充，没有 `MAIN padding -> ring` 那种视觉关系
-- switch 已有私有导航 API，但通用方向键 routing 仍未成立
+- 当前剩余差距已不在主逻辑，而在视觉证据：
+  - pressed 没有 screenshot/像素级回归
+  - 动画中间帧没有 capture matrix
+  - checked 态 ring 还没有单独锁图
 
 详见：`examples/sdl/docs/2026-05-25-switch-lvgl-edge-audit.md`
 
 ## 3.4 当前判断
 
-`switch` 仍然可以视为“第一轮主干能力已完成”，但不能继续笼统记成“视觉/行为已基本齐”。更准确的状态是：主干能力到位，私有导航 API 已补，通用输入路由与视觉细节仍有边角差距。
+`switch` 现在可以视为“第一轮主干能力已完成且主路径闭环”。更准确的状态是：行为与几何主路径已经对齐到 LVGL 常见用法，剩余工作集中在视觉回归证据。
 
 ## 3.5 后续任务
 
 ### P1
 
-- 若继续追视觉 parity，优先补 indicator ring 与 knob overhang
+- 补 screenshot matrix：
+  - pressed
+  - animation mid-frame
+  - checked edge ring
 
 ### P2
 
-- 若继续追交互 parity，把方向键 routing 接进通用 focus/group 路径
+- 若要继续追更高置信度 parity，补主题组合下的像素级断言或截图比对
 
 ### P3
 
-- 补 pressed / animation mid-frame / checked edge ring 的视觉证据
+- 视需要再补 host demo 的显式按键提示，帮助人工验收
 
 ## 4. flex 审计
 
@@ -191,30 +196,40 @@
 - [x] 更新“已对齐 / 未对齐 / 延期”
 - [x] 产出下一阶段任务排序
 
+## 6.4 P3：三控件细化任务
+
+- [x] `switch`：补通用焦点层 routing
+- [x] `switch`：补 indicator ring + knob overhang 几何
+- [ ] `switch`：补 pressed / animation / checked ring 视觉证据
+- [x] `grid`：补 descriptor-grid auto placement 主路径
+- [ ] `grid`：补更高阶语义（`subgrid` / RTL / grid ignore-layout）
+- [ ] `flex`：补更高阶语义（RTL、margin、percent/content-size）
+
 ## 7. 建议的优先级
 
 ### 先做
 
-- grid 主干行为收口
+- switch 视觉证据补强
 
 ### 再做
 
-- layout 测试与 demo 证据补齐
+- grid / flex 第二阶段语义差距
 
 ### 最后做
 
-- `switch / flex / grid` 三线统一审计
+- `switch / flex / grid` 三线统一复审
 
 原因：
 
-- 这样写出来的是“修完后的真相”
-- 避免在代码还没收口前，文档先把状态写死
+- switch 主逻辑在本轮已经闭环，接下来最短路径是补证据
+- grid / flex 已有主线，不必再和 switch 的主路径问题混写
 
 ## 8. 退出条件
 
 满足下面条件，本轮可以结束：
 
 - grid 主干行为收口完成
+- switch 主路径行为/几何闭环
 - layout 测试与 demo 验证通过
 - 三线审计文档回写完成
 - 下一阶段任务板可直接承接后续开发

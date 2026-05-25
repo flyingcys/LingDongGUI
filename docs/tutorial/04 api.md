@@ -3281,6 +3281,7 @@ scroll selecter widget
 * void ldSwitchSetImage(ldSwitch_t *ptWidget, arm_2d_tile_t *ptOffImgTile, arm_2d_tile_t *ptOffMaskTile, arm_2d_tile_t *ptOnImgTile, arm_2d_tile_t *ptOnMaskTile, arm_2d_tile_t *ptKnobImgTile, arm_2d_tile_t *ptKnobMaskTile);
 * void ldSwitchSetHorizontal(ldSwitch_t *ptWidget, bool isHorizontal);
 * void ldSwitchSetDirection(ldSwitch_t *ptWidget, ldSwitchDirection_t direction);
+* bool ldSwitchCanNavigate(ldSwitch_t *ptWidget, ldNavDir_t dir);
 * void ldSwitchNavigate(ld_scene_t *ptScene, ldSwitch_t *ptWidget, ldNavDir_t dir);
 * void ldSwitchSetDisabled(ldSwitch_t *ptWidget, bool isDisabled);
 * bool ldSwitchIsChecked(ldSwitch_t *ptWidget);
@@ -3545,6 +3546,31 @@ scroll selecter widget
         <td>场景指针；需要发 `SIGNAL_VALUE_CHANGED` 时使用</td>
     </tr>
     <tr>
+        <td>ptWidget</td>
+        <td>目标控件指针</td>
+    </tr>
+    <tr>
+        <td>dir</td>
+        <td>导航方向枚举值，支持 `NAV_ENTER / NAV_UP / NAV_RIGHT / NAV_DOWN / NAV_LEFT`</td>
+    </tr>
+</table>
+<br>
+
+#### ldSwitchCanNavigate
+<table>
+    <tr>
+        <td>函数</td>
+        <td colspan="2">
+            <pre><code class="language-c">bool ldSwitchCanNavigate(ldSwitch_t *ptWidget, ldNavDir_t dir);</code></pre>
+        </td>
+    </tr>
+    <tr>
+        <td>说明</td>
+        <td colspan="2">
+    判断当前导航事件是否应该由 switch 自己消费。当前规则是：`NAV_ENTER` 总是可消费；`NAV_UP / NAV_RIGHT` 只在当前值还能切到 on 时消费；`NAV_DOWN / NAV_LEFT` 只在当前值还能切到 off 时消费；disabled 时返回 false。可用于把 switch 私有导航和通用 focus 路由拼起来，避免 disabled / no-op 方向把焦点卡死。        </td>
+    </tr>
+    <tr>
+        <td rowspan="2">参数</td>
         <td>ptWidget</td>
         <td>目标控件指针</td>
     </tr>

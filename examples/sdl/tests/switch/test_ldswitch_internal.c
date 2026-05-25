@@ -18,7 +18,7 @@ static void test_horizontal_metrics_reserve_knob_padding(void)
 {
     ldSwitchAxisMetrics_t metrics = ldSwitchResolveAxisMetrics(44, 24, 2, true);
 
-    assert(metrics.knobSize == 20);
+    assert(metrics.knobSize == 24);
     assert(metrics.trackLength == 20);
 }
 
@@ -26,7 +26,7 @@ static void test_vertical_metrics_reserve_knob_padding(void)
 {
     ldSwitchAxisMetrics_t metrics = ldSwitchResolveAxisMetrics(24, 44, 2, false);
 
-    assert(metrics.knobSize == 20);
+    assert(metrics.knobSize == 24);
     assert(metrics.trackLength == 20);
 }
 
@@ -81,9 +81,17 @@ static void test_horizontal_indicator_and_knob_are_continuous(void)
     ldSwitchGeometry_t end = ldSwitchResolveGeometry(44, 24, 2, LD_SWITCH_DIRECTION_HORIZONTAL, 1000);
 
     assert(start.isHorizontal == true);
+    assert(start.knob.iX == 0);
+    assert(start.knob.iHeight > start.track.iHeight);
+    assert(start.knob.iY == 0);
+    assert(start.indicator.iX == 2);
+    assert(start.indicator.iY == 2);
+    assert(start.indicator.iHeight == 20);
     assert(start.indicator.iWidth == 0);
-    assert(middle.indicator.iWidth == 22);
-    assert(end.indicator.iWidth == 44);
+    assert(middle.knob.iX == 10);
+    assert(end.knob.iX == 20);
+    assert(middle.indicator.iWidth == 20);
+    assert(end.indicator.iWidth == 40);
     assert(start.knob.iX < middle.knob.iX);
     assert(middle.knob.iX < end.knob.iX);
     assert(start.indicator.iWidth < middle.indicator.iWidth);
@@ -97,12 +105,19 @@ static void test_vertical_indicator_and_knob_are_continuous(void)
     ldSwitchGeometry_t end = ldSwitchResolveGeometry(24, 44, 2, LD_SWITCH_DIRECTION_VERTICAL, 1000);
 
     assert(start.isHorizontal == false);
+    assert(start.knob.iY == 20);
+    assert(start.knob.iWidth > start.track.iWidth);
+    assert(start.knob.iX == 0);
+    assert(start.indicator.iX == 2);
+    assert(start.indicator.iWidth == 20);
     assert(start.indicator.iY == 44);
     assert(start.indicator.iHeight == 0);
     assert(middle.indicator.iY == 22);
-    assert(middle.indicator.iHeight == 22);
-    assert(end.indicator.iY == 0);
-    assert(end.indicator.iHeight == 44);
+    assert(middle.knob.iY == 10);
+    assert(middle.indicator.iHeight == 20);
+    assert(end.knob.iY == 0);
+    assert(end.indicator.iY == 2);
+    assert(end.indicator.iHeight == 40);
     assert(start.knob.iY > middle.knob.iY);
     assert(middle.knob.iY > end.knob.iY);
     assert(start.indicator.iHeight < middle.indicator.iHeight);

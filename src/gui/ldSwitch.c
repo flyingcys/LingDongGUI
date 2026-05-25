@@ -479,6 +479,29 @@ void _ldSwitchSetChecked(ld_scene_t *ptScene, ldSwitch_t *ptWidget, bool isCheck
     ldSwitchApplyValue(ptScene, ptWidget, isChecked);
 }
 
+bool ldSwitchCanNavigate(ldSwitch_t *ptWidget, ldNavDir_t dir)
+{
+    assert(NULL != ptWidget);
+    if ((ptWidget == NULL) || ptWidget->isDisabled)
+    {
+        return false;
+    }
+
+    switch (dir)
+    {
+    case NAV_ENTER:
+        return true;
+    case NAV_UP:
+    case NAV_RIGHT:
+        return !ptWidget->isChecked;
+    case NAV_DOWN:
+    case NAV_LEFT:
+        return ptWidget->isChecked;
+    default:
+        return false;
+    }
+}
+
 void ldSwitchNavigate(ld_scene_t *ptScene, ldSwitch_t *ptWidget, ldNavDir_t dir)
 {
     assert(NULL != ptWidget);

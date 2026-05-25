@@ -71,6 +71,10 @@ static bool uiWidgetLegacyNavigateSelectedSwitch(ld_scene_t *ptScene, ldSwitch_t
         return false;
     }
 
+    if (!ldSwitchCanNavigate(ptSwitch, dir)) {
+        return false;
+    }
+
     ldSwitchNavigate(ptScene, ptSwitch, dir);
     return true;
 }

@@ -387,6 +387,35 @@ static void test_disabled_navigation_does_not_toggle_or_emit(void)
     assert(g_emit_count == 0);
 }
 
+static void test_navigation_consumption_prefers_value_change(void)
+{
+    ldSwitch_t switchOff = {0};
+    ldSwitch_t switchOn = {.isChecked = true};
+
+    assert(ldSwitchCanNavigate(&switchOff, NAV_ENTER) == true);
+    assert(ldSwitchCanNavigate(&switchOff, NAV_RIGHT) == true);
+    assert(ldSwitchCanNavigate(&switchOff, NAV_UP) == true);
+    assert(ldSwitchCanNavigate(&switchOff, NAV_LEFT) == false);
+    assert(ldSwitchCanNavigate(&switchOff, NAV_DOWN) == false);
+
+    assert(ldSwitchCanNavigate(&switchOn, NAV_ENTER) == true);
+    assert(ldSwitchCanNavigate(&switchOn, NAV_LEFT) == true);
+    assert(ldSwitchCanNavigate(&switchOn, NAV_DOWN) == true);
+    assert(ldSwitchCanNavigate(&switchOn, NAV_RIGHT) == false);
+    assert(ldSwitchCanNavigate(&switchOn, NAV_UP) == false);
+}
+
+static void test_disabled_switch_does_not_consume_navigation(void)
+{
+    ldSwitch_t widget = {.isDisabled = true, .isChecked = true};
+
+    assert(ldSwitchCanNavigate(&widget, NAV_ENTER) == false);
+    assert(ldSwitchCanNavigate(&widget, NAV_RIGHT) == false);
+    assert(ldSwitchCanNavigate(&widget, NAV_UP) == false);
+    assert(ldSwitchCanNavigate(&widget, NAV_LEFT) == false);
+    assert(ldSwitchCanNavigate(&widget, NAV_DOWN) == false);
+}
+
 static void test_show_falls_back_per_layer_when_image_or_mask_missing(void)
 {
     ldSwitch_t widget = {0};
@@ -448,6 +477,8 @@ int main(void)
     test_navigate_enter_toggles_and_emits_once();
     test_navigate_direction_sets_on_and_off_without_reemitting_same_value();
     test_disabled_navigation_does_not_toggle_or_emit();
+    test_navigation_consumption_prefers_value_change();
+    test_disabled_switch_does_not_consume_navigation();
     test_show_falls_back_per_layer_when_image_or_mask_missing();
     test_pressed_knob_uses_visible_highlight_not_border_color();
     return 0;

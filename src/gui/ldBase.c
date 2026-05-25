@@ -19,6 +19,7 @@
 #define __ARM_2D_HELPER_CONTROL_INHERIT__
 #include "ldBase.h"
 #include "ldConfig.h"
+#include "ldSwitch.h"
 #include "ldWindow.h"
 #include "ldWindowLayoutInternal.h"
 #include <stdarg.h>
@@ -1134,6 +1135,8 @@ void ldBaseFocusNavigateInit(void)
 
 void ldBaseFocusNavigate(ld_scene_t *ptScene, ldNavDir_t tDir)
 {
+    ldSwitch_t *ptSwitch = NULL;
+
     if (!ptCurrentFocus)
     {
         ldBase_t* root=ldBaseGetWidgetById(0);
@@ -1148,11 +1151,20 @@ void ldBaseFocusNavigate(ld_scene_t *ptScene, ldNavDir_t tDir)
     }
 
     ptFocusParent=ldBaseGetParent(ptCurrentFocus);
+    if (ptCurrentFocus->widgetType == widgetTypeSwitch)
+    {
+        ptSwitch = (ldSwitch_t *)ptCurrentFocus;
+    }
 
     switch (tDir)
     {
     case NAV_ENTER:
     {
+        if ((ptSwitch != NULL) && ldSwitchCanNavigate(ptSwitch, tDir))
+        {
+            ldSwitchNavigate(ptScene, ptSwitch, tDir);
+            break;
+        }
         if (ptCurrentFocus->use_as__arm_2d_control_node_t.ptChildList)
         {
             ptFocusParent = ptCurrentFocus;
@@ -1168,6 +1180,11 @@ void ldBaseFocusNavigate(ld_scene_t *ptScene, ldNavDir_t tDir)
     case NAV_LEFT:
     case NAV_RIGHT:
     {
+        if ((ptSwitch != NULL) && ldSwitchCanNavigate(ptSwitch, tDir))
+        {
+            ldSwitchNavigate(ptScene, ptSwitch, tDir);
+            break;
+        }
         ldBase_t *new=(ldBase_t*)navigatePeer((ldBase_t*)ptFocusParent->use_as__arm_2d_control_node_t.ptChildList, ptCurrentFocus, tDir);
         if(ptCurrentFocus!=new)
         {
