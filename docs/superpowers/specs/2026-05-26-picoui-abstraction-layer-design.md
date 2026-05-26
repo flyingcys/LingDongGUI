@@ -1102,3 +1102,73 @@ backend 内部再映射到：
 4. 文档层面仍存在入口与测试分层表述偏差，需要像本轮这样显式更正。  
 
 **结论：代码与测试链路已有明显收敛，但文档口径此前并未完全对齐当前主线真相，因此不能再把当前状态写成“全部完成且文档已完全对齐”。**
+
+---
+
+## 24. A线纠偏结论（2026-05-26）
+
+> 本节是当前 `PicoUI` 主线的纠偏真相源，用于回答“为什么现在能弹窗但 UI 效果仍不对，以及后续应该按什么方向继续开发”。
+
+### 24.1 当前问题不是“SDL 不支持 PicoUI”
+
+当前问题更准确应表述为：
+
+- `SDL` 作为宿主层本身没有问题；
+- `PicoUI` 当前已经能构建、能启动、能在 SDL 窗口内输出画面；
+- 但这条画面输出链，当前仍主要依赖 `picoui/src/backend/ldgui/backend_app.c` 中的**临时 fake renderer**；
+- 因此“窗口起来了”并不等于“`PicoUI -> LingDongGUI` 真实 backend 适配已经成立”。
+
+### 24.2 当前错误方向
+
+当前主线里以下现象应被明确视为**错误方向**，不能继续扩展：
+
+1. `backend_app.c` 用固定坐标、固定行高、固定轨道长度、固定按钮宽度、固定占位线条来“画出像控件的东西”。
+2. `picoui/demo/*/main.c` 通过补 `set_size()`、`set_pos()` 或其他人工摆位来配合 fake renderer。
+3. runtime/capture 测试把“非空画面”错误地外推成“backend 已闭环”。
+
+### 24.3 正确方向
+
+`PicoUI` 后续必须回到以下正确分层：
+
+- `PicoUI public API`
+- `PicoUI backend/ldgui`
+- `LingDongGUI` 真实控件/布局/事件/runtime
+- `SDL host`
+
+也就是说：
+
+1. `PicoUI` 负责统一 API、状态和用户入口；
+2. backend 层负责把 `window/label/button/checkbox/switch/slider/text/image`、`flex/grid`、`theme/event` 映射到真实 `LingDongGUI` 对象；
+3. `LingDongGUI` 负责真实布局、绘制、消息与交互；
+4. SDL 只负责宿主显示，不再为 `PicoUI` 单独维护一套视觉系统。
+
+### 24.4 A线当前口径
+
+从本节开始，`PicoUI` 的当前主线统一记为 **A线**，其正式目标不是“继续把 fake renderer 修漂亮”，而是：
+
+- **A线目标**：把 `PicoUI` 从“临时可视 smoke”纠偏成“真实 `PicoUI -> LingDongGUI` backend 映射主线”。
+
+### 24.5 A线当前禁止项
+
+后续开发中，以下行为默认禁止：
+
+1. 继续在 `picoui/src/backend/ldgui/backend_app.c` 中新增固定坐标、固定尺寸、手工 line/rect/circle 控件画法。
+2. 继续在 `picoui/demo/*/main.c` 里增加为了“看起来像 UI”而写的硬编码尺寸/位置补丁。
+3. 继续把 “能弹窗 / 有 capture / 画面非空” 当成 “backend 映射已完成”。
+4. 借着修 demo 外观，顺手把 `LingDongGUI` 渲染链重写成 `PicoUI` 专属实现。
+
+### 24.6 A线正式入口
+
+后续关于 `PicoUI` 当前该做什么、已做到哪一阶段、哪些不能做，统一以：
+
+- `docs/superpowers/specs/2026-05-26-picoui-abstraction-layer-design.md`
+- `docs/superpowers/plans/2026-05-26-picoui-abstraction-layer-implementation.md`
+- `docs/picoui-serial/A-线计划索引.md`
+
+三者为真相源。
+
+其中：
+
+- 本 `spec` 负责解释设计目标与纠偏原则；
+- `implementation plan` 负责阶段拆分与实施路径；
+- `A-线计划索引` 负责“当前游标在哪、下一步做什么、哪些不做”的快速导航。

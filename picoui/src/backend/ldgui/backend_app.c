@@ -12,6 +12,11 @@
 #define PICOUI_RUNTIME_ROW_HEIGHT 34
 #define PICOUI_RUNTIME_ROW_GAP 10
 
+static void picoui_backend_set_color(SDL_Renderer *renderer, Uint8 r, Uint8 g, Uint8 b)
+{
+    SDL_SetRenderDrawColor(renderer, r, g, b, 0xFF);
+}
+
 struct picoui_backend_runtime_widget {
     struct picoui_backend_widget *widget;
     struct picoui_backend_runtime_widget *next;
@@ -195,9 +200,9 @@ static void picoui_backend_draw_widget(SDL_Renderer *renderer,
                                        int height)
 {
     SDL_Rect rect = {x, y, width, height};
-    SDL_Color fill = {0xD8, 0xDE, 0xE9, 0xFF};
-    SDL_Color border = {0x4C, 0x56, 0x6A, 0xFF};
-    int accent_width = 0;
+    int knob_x;
+    int knob_y;
+    int knob_radius;
 
     if (widget == NULL) {
         return;
@@ -205,46 +210,100 @@ static void picoui_backend_draw_widget(SDL_Renderer *renderer,
 
     switch (widget->kind) {
     case PICOUI_BACKEND_WIDGET_BUTTON:
-        fill = (SDL_Color){0x5E, 0x81, 0xAC, 0xFF};
-        border = (SDL_Color){0x2E, 0x34, 0x40, 0xFF};
-        accent_width = width;
+        rect.w = 160;
+        picoui_backend_set_color(renderer, 0x58, 0x7C, 0xAA);
+        SDL_RenderFillRect(renderer, &rect);
+        picoui_backend_set_color(renderer, 0xA9, 0xC0, 0xE1);
+        SDL_RenderDrawRect(renderer, &rect);
+        picoui_backend_set_color(renderer, 0xE8, 0xF0, 0xFA);
+        SDL_Rect button_text = {x + 18, y + 12, 56, 8};
+        SDL_RenderFillRect(renderer, &button_text);
         break;
-    case PICOUI_BACKEND_WIDGET_SWITCH:
-    case PICOUI_BACKEND_WIDGET_CHECKBOX:
-        fill = picoui_backend_widget_value(widget) ? (SDL_Color){0xA3, 0xBE, 0x8C, 0xFF}
-                                                   : (SDL_Color){0xBF, 0x61, 0x6A, 0xFF};
-        accent_width = width / 2;
+    case PICOUI_BACKEND_WIDGET_SWITCH: {
+        SDL_Rect track = {x + 22, y + 8, 84, height - 16};
+        picoui_backend_set_color(renderer,
+                                 picoui_backend_widget_value(widget) ? 0x68 : 0xA5,
+                                 picoui_backend_widget_value(widget) ? 0xB7 : 0x6D,
+                                 picoui_backend_widget_value(widget) ? 0x7A : 0x7A);
+        SDL_RenderFillRect(renderer, &track);
+        picoui_backend_set_color(renderer, 0xE8, 0xEC, 0xF1);
+        knob_radius = 11;
+        knob_x = picoui_backend_widget_value(widget) ? (track.x + track.w - 18) : (track.x + 18);
+        knob_y = y + height / 2;
+        for (int dy = -knob_radius; dy <= knob_radius; ++dy) {
+            for (int dx = -knob_radius; dx <= knob_radius; ++dx) {
+                if (dx * dx + dy * dy <= knob_radius * knob_radius) {
+                    SDL_RenderDrawPoint(renderer, knob_x + dx, knob_y + dy);
+                }
+            }
+        }
+        picoui_backend_set_color(renderer, 0xCE, 0xD6, 0xE0);
+        SDL_Rect switch_label = {x + 108, y + 14, 92, 6};
+        SDL_RenderFillRect(renderer, &switch_label);
         break;
+    }
+    case PICOUI_BACKEND_WIDGET_CHECKBOX: {
+        SDL_Rect box = {x + 22, y + 4, 24, 24};
+        picoui_backend_set_color(renderer, 0xE9, 0xEE, 0xF3);
+        SDL_RenderFillRect(renderer, &box);
+        picoui_backend_set_color(renderer, 0x6E, 0x7D, 0x91);
+        SDL_RenderDrawRect(renderer, &box);
+        if (picoui_backend_widget_value(widget)) {
+            SDL_Rect fill = {x + 27, y + 9, 14, 14};
+            picoui_backend_set_color(renderer, 0x6F, 0xC2, 0x7A);
+            SDL_RenderFillRect(renderer, &fill);
+        }
+        picoui_backend_set_color(renderer, 0xD7, 0xDF, 0xE8);
+        SDL_Rect checkbox_text = {x + 62, y + 11, 120, 7};
+        SDL_RenderFillRect(renderer, &checkbox_text);
+        break;
+    }
     case PICOUI_BACKEND_WIDGET_SLIDER:
-        fill = (SDL_Color){0x88, 0xC0, 0xD0, 0xFF};
-        accent_width = (width - 8) * picoui_backend_widget_value(widget) / 100;
+        rect.w = 220;
+        picoui_backend_set_color(renderer, 0x73, 0x82, 0x95);
+        SDL_Rect slider_track = {x + 22, y + height / 2 - 2, 168, 4};
+        SDL_RenderFillRect(renderer, &slider_track);
+        picoui_backend_set_color(renderer, 0x7F, 0xD0, 0xDB);
+        knob_x = x + 22 + (168 * picoui_backend_widget_value(widget)) / 100;
+        knob_y = y + height / 2;
+        knob_radius = 10;
+        for (int dy = -knob_radius; dy <= knob_radius; ++dy) {
+            for (int dx = -knob_radius; dx <= knob_radius; ++dx) {
+                if (dx * dx + dy * dy <= knob_radius * knob_radius) {
+                    SDL_RenderDrawPoint(renderer, knob_x + dx, knob_y + dy);
+                }
+            }
+        }
         break;
     case PICOUI_BACKEND_WIDGET_IMAGE:
-        fill = (SDL_Color){0xEB, 0xCB, 0x8B, 0xFF};
-        border = (SDL_Color){0xB4, 0x8E, 0x36, 0xFF};
-        accent_width = width - 12;
+        rect.w = 220;
+        picoui_backend_set_color(renderer, 0xF2, 0xD3, 0x85);
+        SDL_RenderFillRect(renderer, &rect);
+        picoui_backend_set_color(renderer, 0xA8, 0x7F, 0x2D);
+        SDL_RenderDrawRect(renderer, &rect);
+        picoui_backend_set_color(renderer, 0xF8, 0xE7, 0xBA);
+        SDL_RenderDrawLine(renderer, x + 18, y + height - 12, x + 96, y + 14);
+        SDL_RenderDrawLine(renderer, x + 96, y + 14, x + 180, y + height - 18);
         break;
     case PICOUI_BACKEND_WIDGET_TEXT:
-        fill = (SDL_Color){0xE5, 0xE9, 0xF0, 0xFF};
-        accent_width = width - 18;
+        rect.w = 220;
+        picoui_backend_set_color(renderer, 0xEA, 0xEF, 0xF4);
+        SDL_RenderFillRect(renderer, &rect);
+        picoui_backend_set_color(renderer, 0xCE, 0xD6, 0xE0);
+        SDL_Rect text_line = {x + 16, y + 10, 116, 7};
+        SDL_RenderFillRect(renderer, &text_line);
         break;
     case PICOUI_BACKEND_WIDGET_LABEL:
     default:
-        fill = (SDL_Color){0xEC, 0xEF, 0xF4, 0xFF};
-        accent_width = width / 3;
+        rect.w = 220;
+        picoui_backend_set_color(renderer, 0xE2, 0xE8, 0xF2);
+        SDL_RenderFillRect(renderer, &rect);
+        picoui_backend_set_color(renderer, 0xA9, 0xB8, 0xCB);
+        SDL_RenderDrawRect(renderer, &rect);
+        picoui_backend_set_color(renderer, 0xFA, 0xFC, 0xFF);
+        SDL_Rect label_line = {x + 16, y + 11, 104, 7};
+        SDL_RenderFillRect(renderer, &label_line);
         break;
-    }
-
-    SDL_SetRenderDrawColor(renderer, fill.r, fill.g, fill.b, fill.a);
-    SDL_RenderFillRect(renderer, &rect);
-
-    SDL_SetRenderDrawColor(renderer, border.r, border.g, border.b, border.a);
-    SDL_RenderDrawRect(renderer, &rect);
-
-    if (accent_width > 0) {
-        SDL_Rect accent = {x + 4, y + height - 10, accent_width, 6};
-        SDL_SetRenderDrawColor(renderer, border.r, border.g, border.b, border.a);
-        SDL_RenderFillRect(renderer, &accent);
     }
 }
 
@@ -365,22 +424,15 @@ static void picoui_backend_render(struct picoui_backend_runtime_state *state, st
     while (entry != NULL) {
         int height = PICOUI_RUNTIME_ROW_HEIGHT;
         const struct picoui_backend_widget *widget = entry->widget;
-        const char *title = picoui_backend_widget_title(widget);
-        if (title[0] == '\0') {
-            title = "widget";
-        }
+        int draw_width = 220;
 
         if (widget->kind == PICOUI_BACKEND_WIDGET_IMAGE) {
             height = 56;
+        } else if (widget->kind == PICOUI_BACKEND_WIDGET_BUTTON) {
+            draw_width = 160;
         }
 
-        picoui_backend_draw_widget(state->renderer, widget, x, y, width, height);
-
-        if (widget->kind == PICOUI_BACKEND_WIDGET_TEXT || widget->kind == PICOUI_BACKEND_WIDGET_LABEL) {
-            SDL_Rect marker = {x + 8, y + 8, (int)SDL_min((size_t)(width - 16), strlen(title) * 10U), 8};
-            SDL_SetRenderDrawColor(state->renderer, 0x4C, 0x56, 0x6A, 0xFF);
-            SDL_RenderFillRect(state->renderer, &marker);
-        }
+        picoui_backend_draw_widget(state->renderer, widget, x, y, draw_width, height);
 
         y += height + PICOUI_RUNTIME_ROW_GAP;
         entry = entry->next;

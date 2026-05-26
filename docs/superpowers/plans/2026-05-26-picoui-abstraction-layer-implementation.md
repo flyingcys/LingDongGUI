@@ -2,1269 +2,554 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 在不大改 `LingDongGUI` 内核的前提下，落地第一阶段 `PicoUI` 抽象层，让用户能只通过 Linux 风格的 `picoui_*` API、统一 theme 与统一 demo 来使用基础控件和基础布局。
+**Goal:** 把 `PicoUI` 从“能编译、能弹窗、但主要靠假渲染器拼 UI”的状态，纠偏为“真实映射到 LingDongGUI 控件/布局/事件链”的抽象层。
 
-**Architecture:** `PicoUI` 作为 `LingDongGUI` 上层应用抽象，public API 只暴露 `picoui_*` 类型、函数与 props；`picoui/src/backend/ldgui/` 负责把 public 语义映射到 `LingDongGUI` 现有控件、布局和事件系统。第一阶段只覆盖基础控件、`flex/grid`、`theme v0` 和统一 demo，并通过 public-header 泄漏检查、demo 边界检查、基础 C 单测和 SDL runtime smoke 守住边界。
+**Architecture:** `PicoUI` 只负责 public API、状态归一和用户入口；`picoui/src/backend/ldgui/` 必须把 `window/label/button/checkbox/switch/slider/text/image`、`flex/grid`、`theme/event` 真实映射到 `LingDongGUI` 现有对象树与渲染/事件系统。SDL 只作为 `LingDongGUI` 的宿主显示层，不再承担 `PicoUI` 专属假控件绘制职责。
 
-**Tech Stack:** C11、CMake（`examples/sdl/CMakeLists.txt`）、LingDongGUI、ARM-2D（仅 backend 内部可见）、Python3 测试脚本、CTest
-
----
-
-## 文件结构与责任划分
-
-### 新建目录与文件
-
-- Create: `picoui/include/picoui/picoui.h`
-- Create: `picoui/include/picoui/app.h`
-- Create: `picoui/include/picoui/widget.h`
-- Create: `picoui/include/picoui/theme.h`
-- Create: `picoui/include/picoui/layout.h`
-- Create: `picoui/include/picoui/window.h`
-- Create: `picoui/include/picoui/label.h`
-- Create: `picoui/include/picoui/text.h`
-- Create: `picoui/include/picoui/image.h`
-- Create: `picoui/include/picoui/button.h`
-- Create: `picoui/include/picoui/checkbox.h`
-- Create: `picoui/include/picoui/switch.h`
-- Create: `picoui/include/picoui/slider.h`
-- Create: `picoui/src/core/internal.h`
-- Create: `picoui/src/core/app.c`
-- Create: `picoui/src/core/widget.c`
-- Create: `picoui/src/core/event.c`
-- Create: `picoui/src/core/resource.c`
-- Create: `picoui/src/theme/theme.c`
-- Create: `picoui/src/layout/flex.c`
-- Create: `picoui/src/layout/grid.c`
-- Create: `picoui/src/widgets/window.c`
-- Create: `picoui/src/widgets/label.c`
-- Create: `picoui/src/widgets/text.c`
-- Create: `picoui/src/widgets/image.c`
-- Create: `picoui/src/widgets/button.c`
-- Create: `picoui/src/widgets/checkbox.c`
-- Create: `picoui/src/widgets/switch.c`
-- Create: `picoui/src/widgets/slider.c`
-- Create: `picoui/src/backend/ldgui/backend.h`
-- Create: `picoui/src/backend/ldgui/backend_widget.c`
-- Create: `picoui/src/backend/ldgui/backend_theme.c`
-- Create: `picoui/src/backend/ldgui/backend_layout.c`
-- Create: `picoui/src/backend/ldgui/backend_event.c`
-- Create: `picoui/src/backend/ldgui/backend_window.c`
-- Create: `picoui/src/backend/ldgui/backend_label.c`
-- Create: `picoui/src/backend/ldgui/backend_text.c`
-- Create: `picoui/src/backend/ldgui/backend_image.c`
-- Create: `picoui/src/backend/ldgui/backend_button.c`
-- Create: `picoui/src/backend/ldgui/backend_checkbox.c`
-- Create: `picoui/src/backend/ldgui/backend_switch.c`
-- Create: `picoui/src/backend/ldgui/backend_slider.c`
-- Create: `picoui/demo/hello_world/main.c`
-- Create: `picoui/demo/basic_widgets/main.c`
-- Create: `picoui/demo/layout_flex/main.c`
-- Create: `picoui/demo/layout_grid/main.c`
-- Create: `picoui/demo/theme_showcase/main.c`
-- Create: `picoui/demo/settings_panel/main.c`
-- Create: `picoui/docs/quick_start.md`
-- Create: `picoui/docs/api_overview.md`
-- Create: `picoui/docs/demo_guide.md`
-- Create: `examples/sdl/tests/picoui/test_picoui_smoke.c`
-- Create: `examples/sdl/tests/picoui/test_picoui_theme.c`
-- Create: `examples/sdl/tests/picoui/test_picoui_widgets.c`
-- Create: `examples/sdl/tests/picoui/test_picoui_layout.c`
-- Create: `examples/sdl/tests/check_picoui_public_api.py`
-- Create: `examples/sdl/tests/check_picoui_demo_boundary.py`
-- Create: `examples/sdl/tests/check_picoui_runtime.py`
-
-### 需要修改的现有文件
-
-- Modify: `examples/sdl/CMakeLists.txt`
-- Modify: `README.md`
-- Modify: `docs/tutorial/02 get started.md`
-- Modify: `docs/tutorial/04 api.md`
-
-### 责任约束
-
-- `picoui/include/picoui/*.h`：只放 PicoUI public contract，禁止泄漏 `ld*`、`arm_2d_*`
-- `picoui/src/backend/ldgui/*.c`：唯一允许直接碰 `LingDongGUI` / `ARM-2D` 的适配层
-- `picoui/demo/*`：只允许使用 `picoui_*` API
-- `examples/sdl/tests/check_picoui_*.py`：守 public API 与 demo 边界
-- `examples/sdl/tests/picoui/*.c`：守最小 C 行为合同
+**Tech Stack:** C11、CMake、LingDongGUI、ARM-2D、SDL2 host runtime、Python3 验证脚本、CTest、GitNexus
 
 ---
 
-### Task 1: 搭 PicoUI 骨架、public contract 与 CMake 接线
+## 0. 当前状态与纠偏结论
+
+### 0.1 当前主线真相
+
+当前主线已经具备以下能力：
+
+- `picoui_*` 基础 API 已落地。
+- `PicoUI` demo target 已可构建、启动。
+- `tests/picoui/runtime/check_picoui_runtime.py` 已能验证启动/capture。
+- `examples/sdl` 的 `USE_DEMO=0..6` 已有 runtime/capture 级证据。
+
+但这不等于 `PicoUI -> LingDongGUI` 适配已经成立。
+
+### 0.2 当前错误方向
+
+以下内容必须视为**临时 smoke 方案**，不能继续扩展为主实现：
+
+- `picoui/src/backend/ldgui/backend_app.c`
+  - 当前承担了 `PicoUI` 专属 SDL 开窗、假控件绘制、固定行高/间距/按钮宽度/slider 轨道长度等职责。
+  - 这条线的本质是“fake preview renderer”，不是“真实 backend 适配”。
+- `picoui/demo/*/main.c`
+  - 当前为配合假渲染器，已经出现 `set_size(...)` 这类强人工摆位/定尺寸补丁。
+  - 这些补丁不能继续蔓延，否则会把 layout 问题伪装成 demo 代码问题。
+- `tests/picoui/runtime/check_picoui_runtime.py`
+  - 当前更适合做“窗口是否起来 + 是否有非空画面”的 smoke。
+  - 不应继续用它证明“真实 backend 语义已成立”。
+
+### 0.3 纠偏要求
+
+从这一版计划开始，后续实现必须遵守：
+
+1. **停止继续强化 fake renderer。**
+2. **优先做真实 backend 对象映射。**
+3. **layout/theme/event 的闭环要落在 `LingDongGUI` 真实对象树上。**
+4. **SDL 只负责显示 `LingDongGUI` 的输出，不再单独为 `PicoUI` 造一套视觉系统。**
+
+---
+
+## 1. 文件结构与责任重划
+
+### 1.1 保留并继续演进的文件
+
+- `picoui/include/picoui/*.h`
+- `picoui/src/core/*`
+- `picoui/src/widgets/*`
+- `picoui/src/backend/ldgui/backend.h`
+- `picoui/src/backend/ldgui/backend_window.c`
+- `picoui/src/backend/ldgui/backend_label.c`
+- `picoui/src/backend/ldgui/backend_button.c`
+- `picoui/src/backend/ldgui/backend_checkbox.c`
+- `picoui/src/backend/ldgui/backend_switch.c`
+- `picoui/src/backend/ldgui/backend_slider.c`
+- `picoui/src/backend/ldgui/backend_text.c`
+- `picoui/src/backend/ldgui/backend_image.c`
+- `picoui/src/backend/ldgui/backend_layout.c`
+- `picoui/src/backend/ldgui/backend_event.c`
+- `picoui/src/backend/ldgui/backend_theme.c`
+- `tests/picoui/unit/*`
+- `tests/picoui/contract/*`
+- `tests/picoui/runtime/*`
+
+### 1.2 降级为临时过渡层的文件
+
+- `picoui/src/backend/ldgui/backend_app.c`
+
+责任调整：
+
+- 只保留“最小 host smoke/runtime harness”
+- 不再扩展固定控件画法
+- 后续只负责：
+  - demo 进程生命周期
+  - 最小窗口打开/退出 smoke
+  - 必要时的 capture 输出
+
+### 1.3 下一阶段应该新增/拆分的文件
+
+- Create: `picoui/src/backend/ldgui/backend_runtime_bridge.c`
+  - 负责把 PicoUI backend 根对象接到 `LingDongGUI` scene/page lifecycle
+- Create: `picoui/src/backend/ldgui/backend_style_apply.c`
+  - 负责把 `theme/state/part/style` 映射到 `LingDongGUI` 控件属性
+- Create: `picoui/src/backend/ldgui/backend_widget_tree.c`
+  - 负责 parent/child、id、根节点、生命周期绑定
+- Create: `tests/picoui/runtime/check_picoui_backend_mapping.py`
+  - 验证“不是 fake renderer”，而是真实 `LingDongGUI` 对象树
+
+### 1.4 禁止继续做的事情
+
+- 不再在 `backend_app.c` 里新增新的固定坐标、固定尺寸、固定 line/rect/circle 画法。
+- 不再通过修改 `picoui/demo/*/main.c` 去掩盖 backend/layout 缺口。
+- 不再把“窗口能打开”当成“抽象层完成”的证据。
+
+---
+
+## 2. 下一阶段串行工作总览
+
+这是一条**单线程、可连续执行 8 小时以上**的串行工作流。
+
+工作原则：
+
+- 每一步都必须有明确失败测试。
+- 每一步都必须尽量只解决一种能力。
+- 每一步完成后都要回归上一层能力，防止假闭环。
+
+建议分为 7 个串行阶段：
+
+1. **Stage A: 去 fake renderer 依赖，补真实 backend tree**
+2. **Stage B: 真实 window/label/button/text/image 映射**
+3. **Stage C: 真实 checkbox/switch/slider 映射**
+4. **Stage D: 真实 flex/grid layout 映射**
+5. **Stage E: 真实 event/message pipeline**
+6. **Stage F: 真实 theme/state/part/style 映射**
+7. **Stage G: demo/UI 验收、文档能力矩阵、删除临时方案**
+
+---
+
+## 3. 串行阶段详细计划
+
+### Stage A: 去 fake renderer 依赖，补真实 backend tree
+
+**目标：** 先让 PicoUI backend 真正拥有“backend widget -> LingDongGUI widget/root/tree”的结构，而不是单靠 runtime 自己遍历假节点。
 
 **Files:**
-- Create: `picoui/include/picoui/picoui.h`
-- Create: `picoui/include/picoui/app.h`
-- Create: `picoui/include/picoui/widget.h`
-- Create: `picoui/include/picoui/theme.h`
-- Create: `picoui/include/picoui/layout.h`
-- Create: `picoui/src/core/internal.h`
-- Create: `picoui/src/core/app.c`
-- Create: `picoui/src/core/widget.c`
-- Create: `picoui/src/core/event.c`
-- Create: `picoui/src/core/resource.c`
-- Create: `examples/sdl/tests/picoui/test_picoui_smoke.c`
-- Create: `examples/sdl/tests/check_picoui_public_api.py`
-- Modify: `examples/sdl/CMakeLists.txt`
+- Modify: `picoui/src/backend/ldgui/backend.h`
+- Modify: `picoui/src/backend/ldgui/backend_widget.c`
+- Modify: `picoui/src/backend/ldgui/backend_window.c`
+- Create: `picoui/src/backend/ldgui/backend_widget_tree.c`
+- Test: `tests/picoui/unit/test_picoui_widgets.c`
+- Test: `tests/picoui/runtime/check_picoui_runtime.py`
 
-- [ ] **Step 1: 写 public API 泄漏检查与最小 smoke test**
+- [ ] **Step 1: 写失败测试，要求 backend root/tree 有真实 owner/parent/child 关系**
 
-```python
-# examples/sdl/tests/check_picoui_public_api.py
-from pathlib import Path
-import sys
+验证点：
 
-ROOT = Path(__file__).resolve().parents[3]
-PUBLIC_DIR = ROOT / "picoui" / "include" / "picoui"
-FORBIDDEN = ["ld", "arm_2d_", "arm_2d_tile_t", "arm_2d_font_t", "SIGNAL_"]
+- `window` 是唯一根。
+- `label/button/...` 子控件挂在 `window` 下。
+- 子控件顺序稳定。
+- backend tree 不依赖 fake runtime 的线性表。
 
-
-def main() -> int:
-    headers = sorted(PUBLIC_DIR.glob("*.h"))
-    assert headers, "expected PicoUI public headers to exist"
-    for header in headers:
-        text = header.read_text(encoding="utf-8")
-        for needle in FORBIDDEN:
-            assert needle not in text, f"{header.name} leaks forbidden token: {needle}"
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())
-```
-
-```c
-/* examples/sdl/tests/picoui/test_picoui_smoke.c */
-#include "picoui/picoui.h"
-#include <assert.h>
-
-int main(void)
-{
-    struct picoui_app *app = picoui_app_create();
-    assert(app != NULL);
-
-    struct picoui_window *win = picoui_window_create(app, "root_window");
-    assert(win != NULL);
-
-    picoui_app_destroy(app);
-    return 0;
-}
-```
-
-- [ ] **Step 2: 运行检查，确认现在失败**
+- [ ] **Step 2: 跑 unit test，确认当前只靠 `first_child/next_sibling` 的结构不足以表达真实 backend owner 语义**
 
 Run:
 
 ```bash
-python3 examples/sdl/tests/check_picoui_public_api.py
-rtk cmake -S examples/sdl -B examples/sdl/build-picoui-m1 -DUSE_DEMO=0
-rtk cmake --build examples/sdl/build-picoui-m1 --target picoui_smoke_test
+ctest --test-dir build -R test_picoui_widgets --output-on-failure
 ```
 
 Expected:
 
-- Python 脚本失败：`expected PicoUI public headers to exist`
-- CMake 构建失败：找不到 `picoui/picoui.h`、`picoui_app_create` 或 `picoui_window_create`
+- FAIL，原因是 backend tree 只能支撑 fake traversal，不能证明真实 LingDongGUI 绑定
 
-- [ ] **Step 3: 写最小骨架与 CMake 接线**
+- [ ] **Step 3: 实装 `backend_widget_tree.c`，统一树管理**
 
-```c
-/* picoui/include/picoui/app.h */
-#ifndef PICOUI_APP_H
-#define PICOUI_APP_H
+要求：
 
-struct picoui_app;
-struct picoui_window;
+- 把 parent/child 插入逻辑从 `backend_widget.c` 抽出来。
+- 增加 root/owner/backend-kind 校验 helper。
+- 后续 widget create 都通过统一 helper 挂树。
 
-struct picoui_app *picoui_app_create(void);
-void picoui_app_destroy(struct picoui_app *app);
-
-#endif
-```
-
-```c
-/* picoui/include/picoui/widget.h */
-#ifndef PICOUI_WIDGET_H
-#define PICOUI_WIDGET_H
-
-struct picoui_widget;
-
-int picoui_widget_set_pos(struct picoui_widget *widget, int x, int y);
-int picoui_widget_set_size(struct picoui_widget *widget, int width, int height);
-int picoui_widget_set_visible(struct picoui_widget *widget, int visible);
-int picoui_widget_set_enabled(struct picoui_widget *widget, int enabled);
-
-#endif
-```
-
-```c
-/* picoui/include/picoui/picoui.h */
-#ifndef PICOUI_PICOUI_H
-#define PICOUI_PICOUI_H
-
-#include "picoui/app.h"
-#include "picoui/widget.h"
-#include "picoui/theme.h"
-#include "picoui/layout.h"
-#include "picoui/window.h"
-
-#endif
-```
-
-```c
-/* picoui/src/core/internal.h */
-#ifndef PICOUI_INTERNAL_H
-#define PICOUI_INTERNAL_H
-
-struct picoui_app {
-    void *backend_app;
-};
-
-struct picoui_widget {
-    void *backend_widget;
-};
-
-#endif
-```
-
-```c
-/* picoui/src/core/app.c */
-#include "picoui/app.h"
-#include "internal.h"
-#include <stdlib.h>
-
-struct picoui_app *picoui_app_create(void)
-{
-    return calloc(1, sizeof(struct picoui_app));
-}
-
-void picoui_app_destroy(struct picoui_app *app)
-{
-    free(app);
-}
-```
-
-```c
-/* picoui/include/picoui/window.h */
-#ifndef PICOUI_WINDOW_H
-#define PICOUI_WINDOW_H
-
-struct picoui_app;
-struct picoui_window;
-
-struct picoui_window *picoui_window_create(struct picoui_app *app, const char *id);
-
-#endif
-```
-
-```c
-/* picoui/src/widgets/window.c */
-#include "picoui/window.h"
-#include <stdlib.h>
-
-struct picoui_window {
-    void *backend_widget;
-};
-
-struct picoui_window *picoui_window_create(struct picoui_app *app, const char *id)
-{
-    (void)app;
-    (void)id;
-    return calloc(1, sizeof(struct picoui_window));
-}
-```
-
-```cmake
-# examples/sdl/CMakeLists.txt 追加
-file(GLOB PICOUI_CORE_SOURCES CONFIGURE_DEPENDS
-    "${SDL_EXAMPLE_DIR}/../../picoui/src/core/*.c"
-    "${SDL_EXAMPLE_DIR}/../../picoui/src/widgets/window.c"
-)
-
-add_executable(picoui_smoke_test
-    "${SDL_EXAMPLE_DIR}/tests/picoui/test_picoui_smoke.c"
-    ${PICOUI_CORE_SOURCES}
-)
-
-target_include_directories(picoui_smoke_test PRIVATE
-    "${SDL_EXAMPLE_DIR}/../../picoui/include"
-)
-
-add_test(NAME picoui_smoke_test COMMAND picoui_smoke_test)
-add_test(NAME check_picoui_public_api COMMAND "${Python3_EXECUTABLE}" "${SDL_EXAMPLE_DIR}/tests/check_picoui_public_api.py")
-set_tests_properties(check_picoui_public_api PROPERTIES WORKING_DIRECTORY "${SDL_EXAMPLE_DIR}")
-```
-
-- [ ] **Step 4: 跑测试，确认骨架成立**
+- [ ] **Step 4: 跑 unit test，确认树结构通过**
 
 Run:
 
 ```bash
-python3 examples/sdl/tests/check_picoui_public_api.py
-rtk cmake -S examples/sdl -B examples/sdl/build-picoui-m1 -DUSE_DEMO=0
-rtk cmake --build examples/sdl/build-picoui-m1 --target picoui_smoke_test
-rtk ctest --test-dir examples/sdl/build-picoui-m1 -R 'picoui_smoke_test|check_picoui_public_api' --output-on-failure
+ctest --test-dir build -R test_picoui_widgets --output-on-failure
 ```
 
 Expected:
 
-- `check_picoui_public_api` PASS
-- `picoui_smoke_test` PASS
+- PASS
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add picoui/include/picoui/picoui.h \
-        picoui/include/picoui/app.h \
-        picoui/include/picoui/widget.h \
-        picoui/include/picoui/theme.h \
-        picoui/include/picoui/layout.h \
-        picoui/include/picoui/window.h \
-        picoui/src/core/internal.h \
-        picoui/src/core/app.c \
-        picoui/src/core/widget.c \
-        picoui/src/core/event.c \
-        picoui/src/core/resource.c \
-        picoui/src/widgets/window.c \
-        examples/sdl/tests/picoui/test_picoui_smoke.c \
-        examples/sdl/tests/check_picoui_public_api.py \
-        examples/sdl/CMakeLists.txt
-
-git commit -m "feat(picoui): add public api skeleton"
-```
-
-### Task 2: 落地 theme v0、资源句柄与 window/label/button 最小桥接
-
-**Files:**
-- Create: `picoui/include/picoui/label.h`
-- Create: `picoui/include/picoui/button.h`
-- Create: `picoui/src/theme/theme.c`
-- Create: `picoui/src/widgets/label.c`
-- Create: `picoui/src/widgets/button.c`
-- Create: `picoui/src/backend/ldgui/backend.h`
-- Create: `picoui/src/backend/ldgui/backend_theme.c`
-- Create: `picoui/src/backend/ldgui/backend_window.c`
-- Create: `picoui/src/backend/ldgui/backend_label.c`
-- Create: `picoui/src/backend/ldgui/backend_button.c`
-- Create: `examples/sdl/tests/picoui/test_picoui_theme.c`
-- Create: `picoui/demo/hello_world/main.c`
-- Modify: `examples/sdl/CMakeLists.txt`
-
-- [ ] **Step 1: 写失败的 theme / button / label 合同测试**
-
-```c
-/* examples/sdl/tests/picoui/test_picoui_theme.c */
-#include "picoui/picoui.h"
-#include <assert.h>
-
-int main(void)
-{
-    struct picoui_theme *theme = picoui_theme_create();
-    assert(theme != NULL);
-
-    assert(picoui_theme_set_color(theme, PICOUI_COLOR_ACCENT, 0x112233) == 0);
-    assert(picoui_theme_set_metric(theme, PICOUI_METRIC_RADIUS, 6) == 0);
-
-    struct picoui_app *app = picoui_app_create();
-    assert(app != NULL);
-    assert(picoui_app_set_theme(app, theme) == 0);
-
-    struct picoui_window *win = picoui_window_create(app, "root");
-    struct picoui_label *label = picoui_label_create(win, "title");
-    struct picoui_button *button = picoui_button_create(win, "ok");
-    assert(label != NULL);
-    assert(button != NULL);
-
-    assert(picoui_label_set_text(label, "hello") == 0);
-    assert(picoui_button_set_text(button, "OK") == 0);
-
-    picoui_app_destroy(app);
-    picoui_theme_destroy(theme);
-    return 0;
-}
-```
-
-- [ ] **Step 2: 运行，确认缺少 theme / label / button API**
-
-Run:
-
-```bash
-rtk cmake -S examples/sdl -B examples/sdl/build-picoui-m1 -DUSE_DEMO=0
-rtk cmake --build examples/sdl/build-picoui-m1 --target picoui_theme_test
-```
-
-Expected:
-
-- 编译失败：缺少 `picoui_theme_create`、`picoui_label_create`、`picoui_button_create`
-
-- [ ] **Step 3: 写最小实现与 backend 映射骨架**
-
-```c
-/* picoui/include/picoui/theme.h */
-#ifndef PICOUI_THEME_H
-#define PICOUI_THEME_H
-
-enum picoui_color_id {
-    PICOUI_COLOR_TEXT_PRIMARY,
-    PICOUI_COLOR_BG,
-    PICOUI_COLOR_PANEL,
-    PICOUI_COLOR_BORDER,
-    PICOUI_COLOR_ACCENT,
-    PICOUI_COLOR_DISABLED,
-};
-
-enum picoui_metric_id {
-    PICOUI_METRIC_PADDING,
-    PICOUI_METRIC_RADIUS,
-    PICOUI_METRIC_BORDER_WIDTH,
-    PICOUI_METRIC_CONTROL_HEIGHT,
-};
-
-struct picoui_theme;
-
-struct picoui_theme *picoui_theme_create(void);
-void picoui_theme_destroy(struct picoui_theme *theme);
-int picoui_theme_set_color(struct picoui_theme *theme, enum picoui_color_id id, unsigned int rgb);
-int picoui_theme_set_metric(struct picoui_theme *theme, enum picoui_metric_id id, int value);
-int picoui_app_set_theme(struct picoui_app *app, struct picoui_theme *theme);
-
-#endif
-```
-
-```c
-/* picoui/include/picoui/label.h */
-#ifndef PICOUI_LABEL_H
-#define PICOUI_LABEL_H
-
-struct picoui_window;
-struct picoui_label;
-
-struct picoui_label *picoui_label_create(struct picoui_window *parent, const char *id);
-int picoui_label_set_text(struct picoui_label *label, const char *text);
-
-#endif
-```
-
-```c
-/* picoui/include/picoui/button.h */
-#ifndef PICOUI_BUTTON_H
-#define PICOUI_BUTTON_H
-
-struct picoui_window;
-struct picoui_button;
-
-struct picoui_button *picoui_button_create(struct picoui_window *parent, const char *id);
-int picoui_button_set_text(struct picoui_button *button, const char *text);
-
-#endif
-```
-
-```c
-/* picoui/src/backend/ldgui/backend.h */
-#ifndef PICOUI_BACKEND_LDGUI_H
-#define PICOUI_BACKEND_LDGUI_H
-
-struct picoui_app;
-struct picoui_widget;
-struct picoui_theme;
-
-int picoui_backend_apply_theme(struct picoui_app *app, struct picoui_theme *theme);
-void *picoui_backend_create_window(struct picoui_app *app, const char *id);
-void *picoui_backend_create_label(void *parent, const char *id);
-void *picoui_backend_create_button(void *parent, const char *id);
-int picoui_backend_set_text(void *backend_widget, const char *text);
-
-#endif
-```
-
-```c
-/* picoui/demo/hello_world/main.c */
-#include "picoui/picoui.h"
-
-static void build_demo(struct picoui_app *app)
-{
-    struct picoui_window *win = picoui_window_create(app, "root");
-    struct picoui_label *label = picoui_label_create(win, "title");
-    struct picoui_button *button = picoui_button_create(win, "ok");
-
-    picoui_label_set_text(label, "Hello PicoUI");
-    picoui_button_set_text(button, "OK");
-}
-```
-
-```cmake
-# examples/sdl/CMakeLists.txt 追加
-add_executable(picoui_theme_test
-    "${SDL_EXAMPLE_DIR}/tests/picoui/test_picoui_theme.c"
-    ${PICOUI_CORE_SOURCES}
-    "${SDL_EXAMPLE_DIR}/../../picoui/src/theme/theme.c"
-    "${SDL_EXAMPLE_DIR}/../../picoui/src/widgets/label.c"
-    "${SDL_EXAMPLE_DIR}/../../picoui/src/widgets/button.c"
-    "${SDL_EXAMPLE_DIR}/../../picoui/src/backend/ldgui/backend_theme.c"
-    "${SDL_EXAMPLE_DIR}/../../picoui/src/backend/ldgui/backend_window.c"
-    "${SDL_EXAMPLE_DIR}/../../picoui/src/backend/ldgui/backend_label.c"
-    "${SDL_EXAMPLE_DIR}/../../picoui/src/backend/ldgui/backend_button.c"
-)
-add_test(NAME picoui_theme_test COMMAND picoui_theme_test)
-```
-
-- [ ] **Step 4: 跑 theme / hello_world 验证**
-
-Run:
-
-```bash
-rtk cmake -S examples/sdl -B examples/sdl/build-picoui-m1 -DUSE_DEMO=0
-rtk cmake --build examples/sdl/build-picoui-m1 --target picoui_theme_test
-rtk ctest --test-dir examples/sdl/build-picoui-m1 -R 'picoui_theme_test' --output-on-failure
-```
-
-Expected:
-
-- `picoui_theme_test` PASS
-- `hello_world` demo 至少能编译链接（若单独做 target，也应 PASS）
-
-- [ ] **Step 5: Commit**
-
-```bash
-git add picoui/include/picoui/theme.h \
-        picoui/include/picoui/label.h \
-        picoui/include/picoui/button.h \
-        picoui/src/theme/theme.c \
-        picoui/src/widgets/label.c \
-        picoui/src/widgets/button.c \
-        picoui/src/backend/ldgui/backend.h \
-        picoui/src/backend/ldgui/backend_theme.c \
+git add picoui/src/backend/ldgui/backend.h \
+        picoui/src/backend/ldgui/backend_widget.c \
         picoui/src/backend/ldgui/backend_window.c \
+        picoui/src/backend/ldgui/backend_widget_tree.c \
+        tests/picoui/unit/test_picoui_widgets.c
+git commit -m "refactor(picoui): add backend widget tree helpers"
+```
+
+### Stage B: 真实 window/label/button/text/image 映射
+
+**目标：** 先打通最容易落地的静态控件，证明 `PicoUI` 可以生成真实 `LingDongGUI` 对象，而不是画假 panel。
+
+**Files:**
+- Modify: `picoui/src/backend/ldgui/backend_window.c`
+- Modify: `picoui/src/backend/ldgui/backend_label.c`
+- Modify: `picoui/src/backend/ldgui/backend_button.c`
+- Modify: `picoui/src/backend/ldgui/backend_text.c`
+- Modify: `picoui/src/backend/ldgui/backend_image.c`
+- Modify: `picoui/src/backend/ldgui/backend_app.c`
+- Create: `tests/picoui/runtime/check_picoui_backend_mapping.py`
+- Test: `tests/picoui/runtime/check_picoui_runtime.py`
+
+- [ ] **Step 1: 写失败检查，证明 `hello_world/theme_showcase/settings_panel` 仍主要依赖 fake renderer**
+
+建议方法：
+
+- runtime 输出中增加一个 debug marker，区分：
+  - `fake renderer path`
+  - `real ldgui widget path`
+- 当前应当仍走 fake path
+
+- [ ] **Step 2: 运行检查，确认失败**
+
+Run:
+
+```bash
+python3 tests/picoui/runtime/check_picoui_backend_mapping.py
+```
+
+Expected:
+
+- FAIL，提示 demo 仍由 fake renderer 输出
+
+- [ ] **Step 3: 在 backend create 阶段真实创建 `ldWindow/ldLabel/ldButton/ldText/ldImage`**
+
+要求：
+
+- `backend_window.c` 创建真实 root/container
+- `backend_label.c` 创建真实 label
+- `backend_button.c` 创建真实 button
+- `backend_text.c` 创建真实 text
+- `backend_image.c` 创建真实 image
+
+限制：
+
+- 不要为了过图去在 runtime 里补坐标
+- 坐标/尺寸仍通过 widget/layout 语义传递
+
+- [ ] **Step 4: 让 `backend_app.c` 优先走真实 backend 输出，只保留 fake path 作为临时 fallback**
+
+- [ ] **Step 5: 跑 runtime/capture 验证**
+
+Run:
+
+```bash
+python3 tests/picoui/runtime/check_picoui_backend_mapping.py
+python3 tests/picoui/runtime/check_picoui_runtime.py
+```
+
+Expected:
+
+- `backend_mapping` PASS
+- `check_picoui_runtime` PASS
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add picoui/src/backend/ldgui/backend_window.c \
         picoui/src/backend/ldgui/backend_label.c \
         picoui/src/backend/ldgui/backend_button.c \
-        picoui/demo/hello_world/main.c \
-        examples/sdl/tests/picoui/test_picoui_theme.c \
-        examples/sdl/CMakeLists.txt
-
-git commit -m "feat(picoui): add theme and basic widget bridge"
+        picoui/src/backend/ldgui/backend_text.c \
+        picoui/src/backend/ldgui/backend_image.c \
+        picoui/src/backend/ldgui/backend_app.c \
+        tests/picoui/runtime/check_picoui_backend_mapping.py \
+        tests/picoui/runtime/check_picoui_runtime.py
+git commit -m "feat(picoui): map static widgets to ldgui"
 ```
 
-### Task 3: 落地 checkbox/switch/slider 与统一事件桥接
+### Stage C: 真实 checkbox/switch/slider 映射
+
+**目标：** 消灭 `basic_widgets` 当前“几条色块”问题，把交互控件映射到真实 `LingDongGUI` 控件。
 
 **Files:**
-- Create: `picoui/include/picoui/checkbox.h`
-- Create: `picoui/include/picoui/switch.h`
-- Create: `picoui/include/picoui/slider.h`
-- Create: `picoui/src/widgets/checkbox.c`
-- Create: `picoui/src/widgets/switch.c`
-- Create: `picoui/src/widgets/slider.c`
-- Create: `picoui/src/backend/ldgui/backend_event.c`
-- Create: `picoui/src/backend/ldgui/backend_checkbox.c`
-- Create: `picoui/src/backend/ldgui/backend_switch.c`
-- Create: `picoui/src/backend/ldgui/backend_slider.c`
-- Create: `examples/sdl/tests/picoui/test_picoui_widgets.c`
-- Create: `picoui/demo/basic_widgets/main.c`
-- Modify: `examples/sdl/CMakeLists.txt`
+- Modify: `picoui/src/backend/ldgui/backend_checkbox.c`
+- Modify: `picoui/src/backend/ldgui/backend_switch.c`
+- Modify: `picoui/src/backend/ldgui/backend_slider.c`
+- Modify: `picoui/src/backend/ldgui/backend_event.c`
+- Modify: `picoui/demo/basic_widgets/main.c`
+- Modify: `tests/picoui/runtime/check_picoui_runtime.py`
+- Test: `tests/picoui/unit/test_picoui_widgets.c`
 
-- [ ] **Step 1: 写失败的事件/值变化合同测试**
+- [ ] **Step 1: 写失败测试，要求 `basic_widgets` 不再只是同质 panel 条块**
 
-```c
-/* examples/sdl/tests/picoui/test_picoui_widgets.c */
-#include "picoui/picoui.h"
-#include <assert.h>
+要求：
 
-static int toggled_value = -1;
-static int slider_value = -1;
+- checkbox/switch/slider 截图必须有可辨认内部结构
+- 不能只验证“行颜色不同”
 
-static void on_toggle(struct picoui_widget *widget, int value, void *user_data)
-{
-    (void)widget;
-    (void)user_data;
-    toggled_value = value;
-}
-
-static void on_slider(struct picoui_widget *widget, int value, void *user_data)
-{
-    (void)widget;
-    (void)user_data;
-    slider_value = value;
-}
-
-int main(void)
-{
-    struct picoui_app *app = picoui_app_create();
-    struct picoui_window *win = picoui_window_create(app, "root");
-    struct picoui_switch *sw = picoui_switch_create(win, "wifi");
-    struct picoui_checkbox *cb = picoui_checkbox_create(win, "agree");
-    struct picoui_slider *slider = picoui_slider_create(win, "volume");
-
-    assert(sw && cb && slider);
-    assert(picoui_switch_set_on_toggled(sw, on_toggle, NULL) == 0);
-    assert(picoui_checkbox_set_on_toggled(cb, on_toggle, NULL) == 0);
-    assert(picoui_slider_set_on_value_changed(slider, on_slider, NULL) == 0);
-
-    assert(picoui_switch_set_checked(sw, 1) == 0);
-    assert(picoui_checkbox_set_checked(cb, 1) == 0);
-    assert(picoui_slider_set_value(slider, 42) == 0);
-    assert(picoui_slider_get_value(slider) == 42);
-
-    picoui_app_destroy(app);
-    return 0;
-}
-```
-
-- [ ] **Step 2: 运行，确认 switch/checkbox/slider API 缺失**
+- [ ] **Step 2: 运行失败测试**
 
 Run:
 
 ```bash
-rtk cmake -S examples/sdl -B examples/sdl/build-picoui-m2 -DUSE_DEMO=0
-rtk cmake --build examples/sdl/build-picoui-m2 --target picoui_widgets_test
+python3 tests/picoui/runtime/check_picoui_runtime.py
 ```
 
 Expected:
 
-- 编译失败：缺少 `picoui_switch_create`、`picoui_checkbox_create`、`picoui_slider_create` 与统一 callback 接口
+- FAIL，指出 `basic_widgets` 仍是占位外观
 
-- [ ] **Step 3: 实现控件桥与统一事件回调适配**
+- [ ] **Step 3: 真实创建 `ldCheckBox/ldSwitch/ldSlider` 并接值同步**
 
-```c
-/* picoui/include/picoui/switch.h */
-#ifndef PICOUI_SWITCH_H
-#define PICOUI_SWITCH_H
+要求：
 
-struct picoui_window;
-struct picoui_switch;
-struct picoui_widget;
+- `set_checked/set_value` 更新真实底层控件
+- runtime 截图来自真实 `LingDongGUI` 形态
+- 不再靠 `backend_app.c` 手动画 knob/track/checkmark
 
-typedef void (*picoui_value_changed_cb)(struct picoui_widget *widget,
-                                        int value,
-                                        void *user_data);
-
-struct picoui_switch *picoui_switch_create(struct picoui_window *parent, const char *id);
-int picoui_switch_set_checked(struct picoui_switch *sw, int checked);
-int picoui_switch_is_checked(struct picoui_switch *sw);
-int picoui_switch_set_on_toggled(struct picoui_switch *sw,
-                                 picoui_value_changed_cb cb,
-                                 void *user_data);
-
-#endif
-```
-
-```c
-/* picoui/include/picoui/checkbox.h */
-#ifndef PICOUI_CHECKBOX_H
-#define PICOUI_CHECKBOX_H
-
-struct picoui_window;
-struct picoui_checkbox;
-struct picoui_widget;
-
-typedef void (*picoui_value_changed_cb)(struct picoui_widget *widget,
-                                        int value,
-                                        void *user_data);
-
-struct picoui_checkbox *picoui_checkbox_create(struct picoui_window *parent, const char *id);
-int picoui_checkbox_set_checked(struct picoui_checkbox *checkbox, int checked);
-int picoui_checkbox_is_checked(struct picoui_checkbox *checkbox);
-int picoui_checkbox_set_on_toggled(struct picoui_checkbox *checkbox,
-                                   picoui_value_changed_cb cb,
-                                   void *user_data);
-
-#endif
-```
-
-```c
-/* picoui/include/picoui/slider.h */
-#ifndef PICOUI_SLIDER_H
-#define PICOUI_SLIDER_H
-
-struct picoui_window;
-struct picoui_slider;
-struct picoui_widget;
-
-typedef void (*picoui_value_changed_cb)(struct picoui_widget *widget,
-                                        int value,
-                                        void *user_data);
-
-struct picoui_slider *picoui_slider_create(struct picoui_window *parent, const char *id);
-int picoui_slider_set_value(struct picoui_slider *slider, int value);
-int picoui_slider_get_value(struct picoui_slider *slider);
-int picoui_slider_set_range(struct picoui_slider *slider, int min_value, int max_value);
-int picoui_slider_set_on_value_changed(struct picoui_slider *slider,
-                                       picoui_value_changed_cb cb,
-                                       void *user_data);
-
-#endif
-```
-
-```c
-/* picoui/demo/basic_widgets/main.c */
-static void on_wifi_changed(struct picoui_widget *widget, int value, void *user_data)
-{
-    (void)widget;
-    (void)user_data;
-    (void)value;
-}
-
-static void build_demo(struct picoui_window *win)
-{
-    struct picoui_switch *sw = picoui_switch_create(win, "wifi");
-    struct picoui_checkbox *cb = picoui_checkbox_create(win, "agree");
-    struct picoui_slider *slider = picoui_slider_create(win, "volume");
-
-    picoui_switch_set_on_toggled(sw, on_wifi_changed, NULL);
-    picoui_checkbox_set_on_toggled(cb, on_wifi_changed, NULL);
-    picoui_slider_set_on_value_changed(slider, on_wifi_changed, NULL);
-}
-```
-
-- [ ] **Step 4: 跑 widgets 合同测试**
+- [ ] **Step 4: 跑 `basic_widgets` 回归**
 
 Run:
 
 ```bash
-rtk cmake -S examples/sdl -B examples/sdl/build-picoui-m2 -DUSE_DEMO=0
-rtk cmake --build examples/sdl/build-picoui-m2 --target picoui_widgets_test
-rtk ctest --test-dir examples/sdl/build-picoui-m2 -R 'picoui_widgets_test' --output-on-failure
+python3 tests/picoui/runtime/check_picoui_runtime.py
+ctest --test-dir build -R test_picoui_widgets --output-on-failure
 ```
 
 Expected:
 
-- `picoui_widgets_test` PASS
+- PASS
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add picoui/include/picoui/checkbox.h \
-        picoui/include/picoui/switch.h \
-        picoui/include/picoui/slider.h \
+git add picoui/src/backend/ldgui/backend_checkbox.c \
+        picoui/src/backend/ldgui/backend_switch.c \
+        picoui/src/backend/ldgui/backend_slider.c \
+        picoui/src/backend/ldgui/backend_event.c \
+        picoui/demo/basic_widgets/main.c \
+        tests/picoui/runtime/check_picoui_runtime.py \
+        tests/picoui/unit/test_picoui_widgets.c
+git commit -m "feat(picoui): map interactive widgets to ldgui"
+```
+
+### Stage D: 真实 flex/grid layout 映射
+
+**目标：** 去掉 demo 里用 `set_size(...)` 硬撑画面的补丁，让 `layout_flex/layout_grid/settings_panel` 真实依赖 `LingDongGUI` layout。
+
+**Files:**
+- Modify: `picoui/src/backend/ldgui/backend_layout.c`
+- Modify: `picoui/src/widgets/window.c`
+- Modify: `picoui/src/core/widget.c`
+- Modify: `picoui/demo/layout_flex/main.c`
+- Modify: `picoui/demo/layout_grid/main.c`
+- Modify: `picoui/demo/settings_panel/main.c`
+- Modify: `tests/picoui/unit/test_picoui_layout.c`
+- Modify: `examples/sdl/tests/check_use_demo_capture.py`
+
+- [ ] **Step 1: 写失败测试，要求 layout demo 不依赖 demo 侧硬编码尺寸补丁**
+- [ ] **Step 2: 运行，确认当前失败**
+- [ ] **Step 3: backend_layout 真实映射到 `ldWindowSetFlex*` / `ldWindowSetGrid*` / grid cell 语义**
+- [ ] **Step 4: 删除不必要的 demo 强人工尺寸补丁**
+- [ ] **Step 5: 回归 layout unit/runtime/capture**
+
+Run:
+
+```bash
+ctest --test-dir build -R test_picoui_layout --output-on-failure
+python3 tests/picoui/runtime/check_picoui_runtime.py
+python3 examples/sdl/tests/check_use_demo_capture.py --demo 4 --build-dir build/capture-demo-4
+python3 examples/sdl/tests/check_use_demo_capture.py --demo 5 --build-dir build/capture-demo-5
+```
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add picoui/src/backend/ldgui/backend_layout.c \
+        picoui/src/widgets/window.c \
+        picoui/src/core/widget.c \
+        picoui/demo/layout_flex/main.c \
+        picoui/demo/layout_grid/main.c \
+        picoui/demo/settings_panel/main.c \
+        tests/picoui/unit/test_picoui_layout.c \
+        examples/sdl/tests/check_use_demo_capture.py
+git commit -m "feat(picoui): map flex and grid to ldgui layout"
+```
+
+### Stage E: 真实 event/message pipeline
+
+**目标：** 把当前大量“setter 触发 callback”的伪事件语义，收敛成真实底层事件上送。
+
+**Files:**
+- Modify: `picoui/src/backend/ldgui/backend_event.c`
+- Modify: `picoui/src/widgets/button.c`
+- Modify: `picoui/src/widgets/checkbox.c`
+- Modify: `picoui/src/widgets/switch.c`
+- Modify: `picoui/src/widgets/slider.c`
+- Modify: `tests/picoui/unit/test_picoui_button_events.c`
+- Modify: `tests/picoui/unit/test_picoui_widgets.c`
+
+- [ ] **Step 1: 写失败测试，区分 setter-path 与 native-event-path**
+- [ ] **Step 2: 运行，确认当前事件主要还是 setter-path**
+- [ ] **Step 3: backend_event 接真实消息队列/控件事件**
+- [ ] **Step 4: 保留 setter 同步状态，但不再把它当唯一事件来源**
+- [ ] **Step 5: 跑事件测试**
+
+Run:
+
+```bash
+ctest --test-dir build -R 'test_picoui_widgets|test_picoui_button_events' --output-on-failure
+```
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add picoui/src/backend/ldgui/backend_event.c \
+        picoui/src/widgets/button.c \
         picoui/src/widgets/checkbox.c \
         picoui/src/widgets/switch.c \
         picoui/src/widgets/slider.c \
-        picoui/src/backend/ldgui/backend_event.c \
-        picoui/src/backend/ldgui/backend_checkbox.c \
-        picoui/src/backend/ldgui/backend_switch.c \
-        picoui/src/backend/ldgui/backend_slider.c \
-        picoui/demo/basic_widgets/main.c \
-        examples/sdl/tests/picoui/test_picoui_widgets.c \
-        examples/sdl/CMakeLists.txt
-
-git commit -m "feat(picoui): add interactive widgets and events"
+        tests/picoui/unit/test_picoui_button_events.c \
+        tests/picoui/unit/test_picoui_widgets.c
+git commit -m "feat(picoui): route native widget events through backend"
 ```
 
-### Task 4: 落地 flex/grid Public API 与布局测试
+### Stage F: 真实 theme/state/part/style 映射
+
+**目标：** 把现在 mostly contract-level 的 `theme/state/part` 变成真实样式应用。
 
 **Files:**
-- Create: `picoui/src/layout/flex.c`
-- Create: `picoui/src/layout/grid.c`
-- Create: `picoui/src/backend/ldgui/backend_layout.c`
-- Create: `examples/sdl/tests/picoui/test_picoui_layout.c`
-- Create: `picoui/demo/layout_flex/main.c`
-- Create: `picoui/demo/layout_grid/main.c`
-- Modify: `picoui/include/picoui/layout.h`
-- Modify: `picoui/include/picoui/widget.h`
-- Modify: `examples/sdl/CMakeLists.txt`
+- Modify: `picoui/src/theme/theme.c`
+- Create: `picoui/src/backend/ldgui/backend_style_apply.c`
+- Modify: `picoui/src/backend/ldgui/backend_theme.c`
+- Modify: `tests/picoui/unit/test_picoui_theme.c`
 
-- [ ] **Step 1: 写失败的 flex/grid 合同测试**
-
-```c
-/* examples/sdl/tests/picoui/test_picoui_layout.c */
-#include "picoui/picoui.h"
-#include <assert.h>
-
-int main(void)
-{
-    struct picoui_app *app = picoui_app_create();
-    struct picoui_window *win = picoui_window_create(app, "root");
-    struct picoui_button *a = picoui_button_create(win, "a");
-    struct picoui_button *b = picoui_button_create(win, "b");
-
-    assert(picoui_flex_set_flow(win, PICOUI_FLEX_FLOW_ROW_WRAP) == 0);
-    assert(picoui_flex_set_align(win,
-                                 PICOUI_ALIGN_START,
-                                 PICOUI_ALIGN_CENTER,
-                                 PICOUI_ALIGN_SPACE_BETWEEN) == 0);
-    assert(picoui_flex_set_gap(win, 8, 12) == 0);
-    assert(picoui_widget_set_flex_grow((struct picoui_widget *)a, 1) == 0);
-
-    assert(picoui_grid_set_columns(win, (int[]){80, -1, 0}, 3) == 0);
-    assert(picoui_grid_set_rows(win, (int[]){24, -1, 0}, 3) == 0);
-    assert(picoui_widget_set_grid_cell((struct picoui_widget *)b,
-                                       1, 0, 1, 1,
-                                       PICOUI_ALIGN_CENTER,
-                                       PICOUI_ALIGN_CENTER) == 0);
-
-    picoui_app_destroy(app);
-    return 0;
-}
-```
-
-- [ ] **Step 2: 运行，确认布局 API 缺失**
+- [ ] **Step 1: 写失败测试，要求 style 改变能反映到真实 backend 控件**
+- [ ] **Step 2: 运行，确认当前只改本地字段**
+- [ ] **Step 3: 实装 style apply 路径**
+- [ ] **Step 4: 跑 theme 测试与 demo smoke**
 
 Run:
 
 ```bash
-rtk cmake -S examples/sdl -B examples/sdl/build-picoui-m3 -DUSE_DEMO=0
-rtk cmake --build examples/sdl/build-picoui-m3 --target picoui_layout_test
+ctest --test-dir build -R test_picoui_theme --output-on-failure
+python3 tests/picoui/runtime/check_picoui_runtime.py
 ```
-
-Expected:
-
-- 编译失败：缺少 `picoui_flex_set_flow`、`picoui_grid_set_columns` 等布局接口
-
-- [ ] **Step 3: 实现布局 API 与 backend 映射**
-
-```c
-/* picoui/include/picoui/layout.h */
-#ifndef PICOUI_LAYOUT_H
-#define PICOUI_LAYOUT_H
-
-enum picoui_align {
-    PICOUI_ALIGN_START,
-    PICOUI_ALIGN_CENTER,
-    PICOUI_ALIGN_END,
-    PICOUI_ALIGN_STRETCH,
-    PICOUI_ALIGN_SPACE_EVENLY,
-    PICOUI_ALIGN_SPACE_AROUND,
-    PICOUI_ALIGN_SPACE_BETWEEN,
-};
-
-enum picoui_flex_flow {
-    PICOUI_FLEX_FLOW_ROW,
-    PICOUI_FLEX_FLOW_COLUMN,
-    PICOUI_FLEX_FLOW_ROW_WRAP,
-    PICOUI_FLEX_FLOW_COLUMN_WRAP,
-    PICOUI_FLEX_FLOW_ROW_REVERSE,
-    PICOUI_FLEX_FLOW_COLUMN_REVERSE,
-    PICOUI_FLEX_FLOW_ROW_WRAP_REVERSE,
-    PICOUI_FLEX_FLOW_COLUMN_WRAP_REVERSE,
-};
-
-struct picoui_window;
-
-int picoui_flex_set_flow(struct picoui_window *window, enum picoui_flex_flow flow);
-int picoui_flex_set_align(struct picoui_window *window,
-                          enum picoui_align main_align,
-                          enum picoui_align cross_align,
-                          enum picoui_align track_align);
-int picoui_flex_set_gap(struct picoui_window *window, int item_gap, int track_gap);
-
-int picoui_grid_set_columns(struct picoui_window *window, const int *tracks, int count);
-int picoui_grid_set_rows(struct picoui_window *window, const int *tracks, int count);
-int picoui_grid_set_gap(struct picoui_window *window, int row_gap, int col_gap);
-int picoui_grid_set_align(struct picoui_window *window,
-                          enum picoui_align col_align,
-                          enum picoui_align row_align);
-
-#endif
-```
-
-```c
-/* picoui/include/picoui/widget.h 追加 */
-int picoui_widget_set_flex_grow(struct picoui_widget *widget, int grow);
-int picoui_widget_set_flex_new_track(struct picoui_widget *widget, int new_track);
-int picoui_widget_set_ignore_layout(struct picoui_widget *widget, int ignore_layout);
-int picoui_widget_set_grid_cell(struct picoui_widget *widget,
-                                int col,
-                                int row,
-                                int col_span,
-                                int row_span,
-                                enum picoui_align x_align,
-                                enum picoui_align y_align);
-```
-
-```c
-/* picoui/demo/layout_flex/main.c */
-static void build_demo(struct picoui_window *win)
-{
-    picoui_flex_set_flow(win, PICOUI_FLEX_FLOW_ROW_WRAP);
-    picoui_flex_set_align(win,
-                          PICOUI_ALIGN_START,
-                          PICOUI_ALIGN_CENTER,
-                          PICOUI_ALIGN_SPACE_AROUND);
-    picoui_flex_set_gap(win, 8, 12);
-}
-```
-
-```c
-/* picoui/demo/layout_grid/main.c */
-static const int cols[] = {80, -2, 0};
-static const int rows[] = {32, -2, 0};
-
-static void build_demo(struct picoui_window *win)
-{
-    picoui_grid_set_columns(win, cols, 3);
-    picoui_grid_set_rows(win, rows, 3);
-    picoui_grid_set_gap(win, 8, 8);
-}
-```
-
-- [ ] **Step 4: 跑布局合同测试**
-
-Run:
-
-```bash
-rtk cmake -S examples/sdl -B examples/sdl/build-picoui-m3 -DUSE_DEMO=0
-rtk cmake --build examples/sdl/build-picoui-m3 --target picoui_layout_test
-rtk ctest --test-dir examples/sdl/build-picoui-m3 -R 'picoui_layout_test' --output-on-failure
-```
-
-Expected:
-
-- `picoui_layout_test` PASS
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add picoui/include/picoui/layout.h \
-        picoui/include/picoui/widget.h \
-        picoui/src/layout/flex.c \
-        picoui/src/layout/grid.c \
-        picoui/src/backend/ldgui/backend_layout.c \
-        picoui/demo/layout_flex/main.c \
-        picoui/demo/layout_grid/main.c \
-        examples/sdl/tests/picoui/test_picoui_layout.c \
-        examples/sdl/CMakeLists.txt
-
-git commit -m "feat(picoui): add flex and grid api"
+git add picoui/src/theme/theme.c \
+        picoui/src/backend/ldgui/backend_style_apply.c \
+        picoui/src/backend/ldgui/backend_theme.c \
+        tests/picoui/unit/test_picoui_theme.c
+git commit -m "feat(picoui): apply theme state and part to ldgui widgets"
 ```
 
-### Task 5: 加 props struct 双入口、text/image、demo 边界检查与 runtime smoke
+### Stage G: 文档/能力矩阵/删除临时方案
+
+**目标：** 在真实 backend 映射完成后，把文档与代码重新对齐，并把 fake renderer 退回纯 smoke。
 
 **Files:**
-- Create: `picoui/include/picoui/text.h`
-- Create: `picoui/include/picoui/image.h`
-- Create: `picoui/src/widgets/text.c`
-- Create: `picoui/src/widgets/image.c`
-- Create: `picoui/src/backend/ldgui/backend_text.c`
-- Create: `picoui/src/backend/ldgui/backend_image.c`
-- Create: `examples/sdl/tests/check_picoui_demo_boundary.py`
-- Create: `examples/sdl/tests/check_picoui_runtime.py`
-- Create: `picoui/demo/theme_showcase/main.c`
-- Create: `picoui/demo/settings_panel/main.c`
-- Modify: `picoui/include/picoui/button.h`
-- Modify: `picoui/include/picoui/checkbox.h`
-- Modify: `picoui/include/picoui/switch.h`
-- Modify: `picoui/include/picoui/slider.h`
-- Modify: `examples/sdl/CMakeLists.txt`
-
-- [ ] **Step 1: 写失败的 demo 边界检查与 runtime smoke**
-
-```python
-# examples/sdl/tests/check_picoui_demo_boundary.py
-from pathlib import Path
-
-ROOT = Path(__file__).resolve().parents[3]
-DEMO_DIR = ROOT / "picoui" / "demo"
-FORBIDDEN = ["ld", "arm_2d_", "SIGNAL_"]
-
-
-def main() -> int:
-    demo_sources = sorted(DEMO_DIR.glob("**/*.c"))
-    assert demo_sources, "expected PicoUI demo sources"
-    for source in demo_sources:
-        text = source.read_text(encoding="utf-8")
-        for needle in FORBIDDEN:
-            assert needle not in text, f"{source.name} leaks forbidden token: {needle}"
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())
-```
-
-```python
-# examples/sdl/tests/check_picoui_runtime.py
-import subprocess
-from pathlib import Path
-
-ROOT = Path(__file__).resolve().parents[1]
-BUILD = ROOT / "build-picoui-runtime"
-
-subprocess.run([
-    "rtk", "cmake", "-S", str(ROOT), "-B", str(BUILD), "-DUSE_DEMO=0"
-], check=True)
-subprocess.run([
-    "rtk", "cmake", "--build", str(BUILD), "--target", "picoui_settings_panel_demo"
-], check=True)
-```
-
-- [ ] **Step 2: 运行，确认 demo 尚不存在或泄漏检查失败**
-
-Run:
-
-```bash
-python3 examples/sdl/tests/check_picoui_demo_boundary.py
-python3 examples/sdl/tests/check_picoui_runtime.py
-```
-
-Expected:
-
-- 失败：缺少 demo 源码或缺少 demo target
-
-- [ ] **Step 3: 实现 props 双入口与完整 demo 组**
-
-```c
-/* picoui/include/picoui/button.h 追加 */
-struct picoui_button_props {
-    const char *id;
-    const char *text;
-    int width;
-    int height;
-    picoui_event_cb on_clicked;
-    void *user_data;
-};
-
-struct picoui_button *picoui_button_create_with_props(
-    struct picoui_window *parent,
-    const struct picoui_button_props *props);
-```
-
-```c
-/* picoui/include/picoui/text.h */
-#ifndef PICOUI_TEXT_H
-#define PICOUI_TEXT_H
-
-struct picoui_window;
-struct picoui_text;
-
-struct picoui_text *picoui_text_create(struct picoui_window *parent, const char *id);
-int picoui_text_set_text(struct picoui_text *text, const char *value);
-
-#endif
-```
-
-```c
-/* picoui/include/picoui/image.h */
-#ifndef PICOUI_IMAGE_H
-#define PICOUI_IMAGE_H
-
-struct picoui_window;
-struct picoui_image;
-struct picoui_image_source;
-
-struct picoui_image *picoui_image_create(struct picoui_window *parent, const char *id);
-int picoui_image_set_source(struct picoui_image *image, struct picoui_image_source *source);
-
-#endif
-```
-
-```c
-/* picoui/demo/settings_panel/main.c */
-static void build_demo(struct picoui_window *win)
-{
-    struct picoui_button_props apply_props = {
-        .id = "apply",
-        .text = "Apply",
-        .width = 96,
-        .height = 36,
-    };
-
-    picoui_flex_set_flow(win, PICOUI_FLEX_FLOW_COLUMN);
-    picoui_flex_set_gap(win, 12, 12);
-
-    struct picoui_label *title = picoui_label_create(win, "title");
-    struct picoui_switch *wifi = picoui_switch_create(win, "wifi");
-    struct picoui_slider *brightness = picoui_slider_create(win, "brightness");
-    struct picoui_button *apply = picoui_button_create_with_props(win, &apply_props);
-
-    picoui_label_set_text(title, "Settings");
-    picoui_switch_set_checked(wifi, 1);
-    picoui_slider_set_value(brightness, 75);
-    (void)apply;
-}
-```
-
-```cmake
-# examples/sdl/CMakeLists.txt 追加
-add_test(NAME check_picoui_demo_boundary COMMAND "${Python3_EXECUTABLE}" "${SDL_EXAMPLE_DIR}/tests/check_picoui_demo_boundary.py")
-set_tests_properties(check_picoui_demo_boundary PROPERTIES WORKING_DIRECTORY "${SDL_EXAMPLE_DIR}")
-
-add_test(NAME check_picoui_runtime COMMAND "${Python3_EXECUTABLE}" "${SDL_EXAMPLE_DIR}/tests/check_picoui_runtime.py")
-set_tests_properties(check_picoui_runtime PROPERTIES WORKING_DIRECTORY "${SDL_EXAMPLE_DIR}")
-```
-
-- [ ] **Step 4: 跑边界检查和 runtime smoke**
-
-Run:
-
-```bash
-python3 examples/sdl/tests/check_picoui_demo_boundary.py
-rtk cmake -S examples/sdl -B examples/sdl/build-picoui-runtime -DUSE_DEMO=0
-rtk cmake --build examples/sdl/build-picoui-runtime --target picoui_settings_panel_demo
-SDL_VIDEODRIVER=dummy rtk ./examples/sdl/build-picoui-runtime/picoui_settings_panel_demo
-rtk ctest --test-dir examples/sdl/build-picoui-runtime -R 'check_picoui_demo_boundary|check_picoui_runtime' --output-on-failure
-```
-
-Expected:
-
-- `check_picoui_demo_boundary` PASS
-- `check_picoui_runtime` PASS
-- `picoui_settings_panel_demo` 在 dummy SDL 下可启动
-
-- [ ] **Step 5: Commit**
-
-```bash
-git add picoui/include/picoui/text.h \
-        picoui/include/picoui/image.h \
-        picoui/include/picoui/button.h \
-        picoui/include/picoui/checkbox.h \
-        picoui/include/picoui/switch.h \
-        picoui/include/picoui/slider.h \
-        picoui/src/widgets/text.c \
-        picoui/src/widgets/image.c \
-        picoui/src/backend/ldgui/backend_text.c \
-        picoui/src/backend/ldgui/backend_image.c \
-        picoui/demo/theme_showcase/main.c \
-        picoui/demo/settings_panel/main.c \
-        examples/sdl/tests/check_picoui_demo_boundary.py \
-        examples/sdl/tests/check_picoui_runtime.py \
-        examples/sdl/CMakeLists.txt
-
-git commit -m "feat(picoui): add props api and demo suite"
-```
-
-### Task 6: 回写用户文档与仓库入口
-
-**Files:**
-- Create: `picoui/docs/quick_start.md`
-- Create: `picoui/docs/api_overview.md`
-- Create: `picoui/docs/demo_guide.md`
+- Modify: `docs/superpowers/specs/2026-05-26-picoui-abstraction-layer-design.md`
+- Modify: `docs/superpowers/specs/2026-05-26-picoui-lingdonggui-test-architecture-design.md`
+- Modify: `docs/superpowers/plans/2026-05-26-picoui-abstraction-layer-implementation.md`
 - Modify: `README.md`
-- Modify: `docs/tutorial/02 get started.md`
-- Modify: `docs/tutorial/04 api.md`
+- Modify: `README.en.md`
+- Modify: `picoui/docs/demo_guide.md`
+- Modify: `picoui/src/backend/ldgui/backend_app.c`
 
-- [ ] **Step 1: 写失败的文档边界检查**
-
-```python
-# 可直接复用 check_picoui_public_api.py / check_picoui_demo_boundary.py
-# 这里不新增脚本，直接把文档更新作为缺失项暴露在 review 中
-```
-
-先写出文档必须包含的最小片段：
-
-```markdown
-## PicoUI 快速开始
-
-```c
-struct picoui_app *app = picoui_app_create();
-struct picoui_window *win = picoui_window_create(app, "root");
-struct picoui_label *label = picoui_label_create(win, "title");
-picoui_label_set_text(label, "Hello PicoUI");
-```
-```
-
-- [ ] **Step 2: 运行检查，确认当前 README/tutorial 还没有 PicoUI 入口**
+- [ ] **Step 1: 写完成门禁检查清单**
+- [ ] **Step 2: 明确文档中的“临时方案”与“真实 backend 完成态”**
+- [ ] **Step 3: 把 `backend_app.c` 收缩成纯 host smoke/capture**
+- [ ] **Step 4: 跑最终全量回归**
 
 Run:
 
 ```bash
-rtk rg -n "PicoUI|picoui_" README.md docs/tutorial
+python3 tests/picoui/runtime/check_picoui_runtime.py
+ctest --test-dir build -L picoui --output-on-failure
+python3 examples/sdl/tests/check_use_demo_runtime.py --demo 0 --build-dir build/verify-demo-0
+python3 examples/sdl/tests/check_use_demo_runtime.py --demo 6 --build-dir build/verify-demo-6
+python3 examples/sdl/tests/check_switch_capture_matrix.py --build-dir build/switch-capture-verify
+python3 examples/sdl/tests/check_use_demo_capture.py --demo 1 --build-dir build/capture-demo-1
+python3 examples/sdl/tests/check_use_demo_capture.py --demo 2 --build-dir build/capture-demo-2
+python3 examples/sdl/tests/check_use_demo_capture.py --demo 3 --build-dir build/capture-demo-3
+python3 examples/sdl/tests/check_use_demo_capture.py --demo 4 --build-dir build/capture-demo-4
+python3 examples/sdl/tests/check_use_demo_capture.py --demo 5 --build-dir build/capture-demo-5
 ```
-
-Expected:
-
-- 在更新前，PicoUI 入口为空或不完整
-
-- [ ] **Step 3: 写最小用户文档与入口回写**
-
-```markdown
-<!-- README.md 追加 -->
-## PicoUI
-
-PicoUI 是构建在 LingDongGUI 之上的应用层抽象，提供统一的 Linux 风格 `picoui_*` API。
-
-- 用户不需要直接使用 `ld*`
-- 用户不需要直接使用 `ARM-2D`
-- 推荐从 `picoui/demo/hello_world` 开始
-```
-
-```markdown
-<!-- picoui/docs/quick_start.md -->
-# PicoUI 快速开始
-
-1. 创建 `app`
-2. 创建 `window`
-3. 创建基础控件
-4. 设置布局与 theme
-5. 绑定事件
-6. 运行 demo
-```
-
-```markdown
-<!-- docs/tutorial/04 api.md 追加 -->
-## PicoUI API
-
-第一阶段 PicoUI 提供：
-
-- `window`
-- `label`
-- `text`
-- `image`
-- `button`
-- `checkbox`
-- `switch`
-- `slider`
-- `flex`
-- `grid`
-```
-
-- [ ] **Step 4: 复跑核心测试，确认文档更新没有破坏构建链**
-
-Run:
-
-```bash
-python3 examples/sdl/tests/check_picoui_public_api.py
-python3 examples/sdl/tests/check_picoui_demo_boundary.py
-rtk ctest --test-dir examples/sdl/build-picoui-runtime --output-on-failure
-```
-
-Expected:
-
-- 所有 PicoUI 边界与 smoke 测试继续 PASS
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add picoui/docs/quick_start.md \
-        picoui/docs/api_overview.md \
-        picoui/docs/demo_guide.md \
+git add docs/superpowers/specs/2026-05-26-picoui-abstraction-layer-design.md \
+        docs/superpowers/specs/2026-05-26-picoui-lingdonggui-test-architecture-design.md \
+        docs/superpowers/plans/2026-05-26-picoui-abstraction-layer-implementation.md \
         README.md \
-        docs/tutorial/02\ get\ started.md \
-        docs/tutorial/04\ api.md
-
-git commit -m "docs(picoui): add quick start and api guide"
+        README.en.md \
+        picoui/docs/demo_guide.md \
+        picoui/src/backend/ldgui/backend_app.c
+git commit -m "docs(picoui): align plan with real backend direction"
 ```
 
 ---
 
-## 自检
+## 4. 这条串行工作为什么可以连续做 8 小时以上
 
-### Spec coverage
+因为它不是一个点状 patch，而是一条明确的能力链：
 
-- `PicoUI` 作为上层抽象：Task 1、Task 2、Task 3、Task 4 完成 public API 与 backend 分层
-- Linux 风格命名/函数规则：Task 1 public header 骨架与 `check_picoui_public_api.py`
-- 用户不关心 `LingDongGUI` / `ARM-2D`：Task 1、Task 5 的 public/demo 边界检查
-- 基础控件范围：Task 2、Task 3、Task 5
-- `flex/grid`：Task 4
-- `theme v0`：Task 2
-- 统一 demo：Task 2、Task 3、Task 4、Task 5
-- 用户文档入口：Task 6
+1. backend tree
+2. static widget mapping
+3. interactive widget mapping
+4. layout mapping
+5. native event pipeline
+6. theme/style application
+7. docs cleanup and fake-renderer rollback
 
-### Placeholder scan
-
-- 已清除占位词与延期标记
-- 每个代码步骤都给了明确文件与最小代码片段
-- 每个验证步骤都给了明确命令与预期
-
-### Type consistency
-
-- public 对外统一使用 `struct picoui_*`
-- 事件签名统一为 `picoui_event_cb` / `picoui_value_changed_cb`
-- `create + set` 与 `create_with_props` 形态在各任务中保持一致
+每个阶段都能单独失败、单独验证、单独提交。  
+即使中途暂停，也不会丢失上下文边界。
 
 ---
 
-Plan complete and saved to `docs/superpowers/plans/2026-05-26-picoui-abstraction-layer-implementation.md`. Two execution options:
+## 5. 当前执行建议
 
-**1. Subagent-Driven (recommended)** - I dispatch a fresh subagent per task, review between tasks, fast iteration
+当前建议不要继续往 `backend_app.c` 增加新的固定坐标/固定绘制逻辑。  
+下一步应直接从 **Stage A** 开始，按顺序串行推进。
 
-**2. Inline Execution** - Execute tasks in this session using executing-plans, batch execution with checkpoints
+---
 
-**Which approach?**
+## 6. 自检结论
+
+### 6.1 Spec coverage
+
+这版计划已经覆盖：
+
+- 为什么当前方向错
+- 哪些文件应降级为临时方案
+- 下一阶段真实 backend 映射路径
+- 串行工作拆分
+- 最终验收门禁
+
+### 6.2 Placeholder scan
+
+已避免：
+
+- `TODO/TBD`
+- “类似前一步”这类省略
+- 不带文件路径的抽象步骤
+
+### 6.3 类型/术语一致性
+
+本计划统一使用：
+
+- fake renderer / 临时 smoke
+- 真实 backend 映射
+- `PicoUI -> backend/ldgui -> LingDongGUI -> SDL host`
+
+---
+
+Plan updated in place: `docs/superpowers/plans/2026-05-26-picoui-abstraction-layer-implementation.md`

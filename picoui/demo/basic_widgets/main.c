@@ -23,9 +23,20 @@ static void make_ui(struct picoui_window *win)
     struct picoui_image *image = picoui_image_create(win, "logo");
     struct picoui_image_source *image_source = 0;
 
+    picoui_widget_set_size((struct picoui_widget *)sw, 220, 36);
+    picoui_widget_set_size((struct picoui_widget *)cb, 220, 30);
+    picoui_widget_set_size((struct picoui_widget *)slider, 220, 30);
+    picoui_widget_set_size((struct picoui_widget *)button, 160, 36);
+    picoui_widget_set_size((struct picoui_widget *)text, 220, 28);
+    picoui_widget_set_size((struct picoui_widget *)image, 220, 56);
+
+    picoui_switch_set_checked(sw, 1);
+    picoui_checkbox_set_checked(cb, 1);
+    picoui_slider_set_value(slider, 28);
     picoui_switch_set_on_toggled(sw, on_wifi_changed, 0);
     picoui_checkbox_set_on_toggled(cb, on_wifi_changed, 0);
     picoui_slider_set_on_value_changed(slider, on_wifi_changed, 0);
+    picoui_checkbox_set_text(cb, "Wi-Fi Enabled");
     picoui_button_set_text(button, "Submit");
     picoui_button_set_on_clicked(button, on_button_clicked, 0);
     picoui_text_set_text(text, "Basic Widgets");
