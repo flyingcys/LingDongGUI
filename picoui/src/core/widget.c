@@ -28,6 +28,92 @@ int picoui_widget_set_size(struct picoui_widget *widget, int width, int height)
     return 0;
 }
 
+int picoui_widget_set_text(struct picoui_widget *widget, const char *text)
+{
+    if (!picoui_widget_is_valid(widget) || text == 0) {
+        return -1;
+    }
+
+    widget->text = text;
+    return 0;
+}
+
+int picoui_widget_set_style_class(struct picoui_widget *widget, const char *style_class)
+{
+    if (!picoui_widget_is_valid(widget)) {
+        return -1;
+    }
+
+    widget->style_class = style_class;
+    if (widget->backend_widget != 0) {
+        return picoui_backend_widget_set_style_class(widget->backend_widget, style_class);
+    }
+    return 0;
+}
+
+int picoui_widget_set_user_data(struct picoui_widget *widget, void *user_data)
+{
+    if (!picoui_widget_is_valid(widget)) {
+        return -1;
+    }
+
+    widget->user_data = user_data;
+    if (widget->backend_widget != 0) {
+        return picoui_backend_widget_set_user_data(widget->backend_widget, user_data);
+    }
+    return 0;
+}
+
+int picoui_widget_set_bg_color(struct picoui_widget *widget, unsigned int rgb)
+{
+    if (!picoui_widget_is_valid(widget)) {
+        return -1;
+    }
+
+    widget->bg_color = rgb;
+    return 0;
+}
+
+int picoui_widget_set_text_color(struct picoui_widget *widget, unsigned int rgb)
+{
+    if (!picoui_widget_is_valid(widget)) {
+        return -1;
+    }
+
+    widget->text_color = rgb;
+    return 0;
+}
+
+int picoui_widget_set_border_color(struct picoui_widget *widget, unsigned int rgb)
+{
+    if (!picoui_widget_is_valid(widget)) {
+        return -1;
+    }
+
+    widget->border_color = rgb;
+    return 0;
+}
+
+int picoui_widget_set_radius(struct picoui_widget *widget, int radius)
+{
+    if (!picoui_widget_is_valid(widget) || radius < 0) {
+        return -1;
+    }
+
+    widget->radius = radius;
+    return 0;
+}
+
+int picoui_widget_set_padding(struct picoui_widget *widget, int padding)
+{
+    if (!picoui_widget_is_valid(widget) || padding < 0) {
+        return -1;
+    }
+
+    widget->padding = padding;
+    return 0;
+}
+
 int picoui_widget_set_visible(struct picoui_widget *widget, int visible)
 {
     if (!picoui_widget_is_valid(widget)) {

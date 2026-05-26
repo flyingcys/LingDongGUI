@@ -27,7 +27,7 @@ static void make_ui(struct picoui_window *win)
     (void)apply;
 }
 
-int main(void)
+static int run_demo(void)
 {
     struct picoui_theme *theme = picoui_theme_create();
     struct picoui_app *app = picoui_app_create();
@@ -56,4 +56,9 @@ int main(void)
     picoui_app_destroy(app);
     picoui_theme_destroy(theme);
     return 0;
+}
+
+int main(void)
+{
+    return run_demo();
 }

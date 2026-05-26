@@ -19,5 +19,14 @@ struct picoui_button *picoui_button_create(struct picoui_window *parent, const c
 struct picoui_button *picoui_button_create_with_props(struct picoui_window *parent,
                                                       const struct picoui_button_props *props);
 int picoui_button_set_text(struct picoui_button *button, const char *text);
+int picoui_button_set_on_clicked(struct picoui_button *button,
+                                 picoui_event_cb cb,
+                                 void *user_data);
+int picoui_button_set_on_pressed(struct picoui_button *button,
+                                 picoui_event_cb cb,
+                                 void *user_data);
+int picoui_button_set_on_released(struct picoui_button *button,
+                                  picoui_event_cb cb,
+                                  void *user_data);
 
 #endif

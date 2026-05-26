@@ -17,5 +17,7 @@ void *picoui_backend_create_button(void *parent, const char *id)
 
     widget->parent = parent;
     widget->id = id;
+    widget->kind = PICOUI_BACKEND_WIDGET_BUTTON;
+    widget->theme = ((struct picoui_backend_widget *)parent)->theme;
     return widget;
 }

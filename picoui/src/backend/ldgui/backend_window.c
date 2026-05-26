@@ -1,4 +1,4 @@
-#include "backend.h"
+#include "internal.h"
 
 #include <stdlib.h>
 
@@ -16,5 +16,6 @@ void *picoui_backend_create_window(struct picoui_app *app, const char *id)
     }
 
     widget->id = id;
+    widget->theme = app->theme;
     return widget;
 }

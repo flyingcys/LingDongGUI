@@ -871,3 +871,213 @@ backend 内部再映射到：
 1. **M1.5（行为闭环里程碑）**：button/switch/slider + flex/grid 完成真实 backend 映射，新增行为测试。
 2. **M2（contract 补齐里程碑）**：补齐通用 widget/style/state/part/font 缺口并完成 contract 测试。
 3. **M3（交付里程碑）**：6 demo 统一可执行 + 文档能力矩阵 + 用户 onboarding 路径验收。
+
+---
+
+## 21. 实施结果回写（2026-05-26，当日基于 subagent 并行落地）
+
+### 21.1 本轮已完成（对照 17.3 / 17.4）
+
+1. **通用 widget API 缺口已补齐**
+   - 已补：`picoui_widget_set_text`、`picoui_widget_set_style_class`、`picoui_widget_set_user_data`
+   - 已补：`picoui_widget_set_bg_color`、`picoui_widget_set_text_color`、`picoui_widget_set_border_color`、`picoui_widget_set_radius`、`picoui_widget_set_padding`
+2. **button 事件接口已补齐**
+   - 已补：`picoui_button_set_on_clicked`
+3. **theme 统一语义词汇已落地**
+   - 已补：最小 `PICOUI_STATE_*`、`PICOUI_PART_*` public 枚举
+4. **font 资源抽象已补齐最小 contract**
+   - 已补：`struct picoui_font`、`picoui_label_set_font`、`picoui_text_set_font`
+5. **backend 从纯 no-op 升级为“可承接状态”的实现**
+   - layout/window/child setter 已有 backend 状态落点
+   - style/font/user_data/image_source/theme 已有 backend 承接路径
+   - 新增 clicked 统一触发入口 `picoui_backend_emit_clicked`
+6. **demo 可执行闭环已补齐**
+   - 6 个 PicoUI demo 均有 `main`，并在 SDL CMake 下注册独立 target
+   - runtime 检查从单 target 扩展为批量构建 6 个 demo target
+
+### 21.2 验证证据（本轮）
+
+1. `ctest --test-dir build -L picoui --output-on-failure`：通过（7/7）
+2. `tests/picoui/runtime/check_picoui_runtime.py`：已覆盖 6 个 demo target 构建
+3. `tests/picoui/contract/check_picoui_demo_boundary.py`：通过
+4. GitNexus `detect_changes(scope=all)`：`risk_level=low`，`affected_count=0`
+
+### 21.3 当前剩余工作（进入下一轮）
+
+按 17.3 / 17.4 的“未完成项”口径，本轮已全部补齐；后续属于增强项而非本轮阻塞项：
+
+1. 可将 bridge 从“测试显式绑定”进一步演进为“真实 widget 创建链路自动绑定”。
+2. 可把当前 signal 级桥接从 `VALUE_CHANGED` 扩展到更多事件类型（如 clicked/pressed/released）。
+3. 可继续增加更细粒度的行为级/可视化级测试矩阵，提升回归覆盖深度。
+
+### 21.4 本轮增量：signal 级事件桥接
+
+1. `switch / checkbox / slider` 的值变化路径已统一走 backend dispatch，不再在 widget setter 内直接 emit。
+2. backend 增加了最小 `signal` 记录能力，当前至少覆盖 `PICOUI_BACKEND_SIGNAL_VALUE_CHANGED`。
+3. 新增测试证据可直接观察 `dispatch_count` 与 `last_signal`，并验证同值 setter 不会重复触发。
+
+### 21.5 本轮增量：theme/state/part contract 补齐
+
+1. `PICOUI_STATE_*` 已补齐到最小词汇表，且保留既有枚举值兼容性。
+2. `PICOUI_PART_*` 已补齐到最小词汇表。
+3. `picoui_theme_create()` 已从全零默认值切换为 theme v0 默认 token。
+4. `tests/picoui/unit/test_picoui_theme.c` 已补充默认 token 非零与 `set_color` / `set_metric` 覆盖行为验证。
+
+### 21.6 本轮增量：真实消息总线桥接闭环
+
+1. backend widget 已补最小可选 bridge 绑定，支持 `scene + sender` 的内部消息总线对接。
+2. `value_changed` 路径在 bridge 已绑定且 `scene->ptMsgQueue` 存在时，会额外调用 `ldMsgEmit(..., SIGNAL_VALUE_CHANGED, value)`。
+3. 现有 callback 路径保持不变；无 bridge 时行为与原实现一致。
+4. 单测已补真实队列收包证据：`ld_scene_t + ldMsgInit queue`、绑定 bridge、触发 `value_changed`、`xQueueDequeue` 校验 signal/value。
+
+---
+
+## 22. 三次 Review 复盘（2026-05-26，主线程 + subagent 复核）
+
+> 本节用于回答“`docs/superpowers/specs/2026-05-26-picoui-abstraction-layer-design.md` 是否已全部开发完成”。
+
+### 22.1 审计范围与证据
+
+本轮对照了：
+
+- 设计文档条目：范围（第 3 节）、API（第 6 节）、主题语义（第 7 节）、事件（第 9 节）、资源（第 10 节）、demo（第 11 节）、验收标准（第 15 节）。
+- 代码与头文件：`picoui/include/picoui/*.h`、`picoui/src/**/*`、`picoui/demo/*/main.c`、`examples/sdl/CMakeLists.txt`。
+- 测试：`tests/picoui/{unit,contract,runtime}`。
+- 运行证据：`rtk ctest --test-dir build -L picoui --output-on-failure`（本轮复验 8/8 通过）。
+
+### 22.2 总结论
+
+**截至本次复盘，尚未“全部开发完成”。**
+
+说明：
+
+1. 按 17.3 / 17.4 缺口口径，本轮确实补齐了当时列出的主要未完成项。
+2. 但按整份设计文档全文口径与第 15 节验收标准核对，仍存在若干“接口存在但行为未闭环”或“设计项未落地”的差距。
+3. 因此当前状态更准确应为：**`Contract Mostly Ready / Behavior Partially Ready`**。
+
+### 22.3 已完成项（本轮可确认）
+
+1. 6 个 PicoUI demo 构建目标齐全，并已接入 runtime 构建检查（`picoui_*_demo` 全部纳入）。
+2. `PICOUI_STATE_*` / `PICOUI_PART_*` 已在 public API 建模。
+3. `picoui_button_set_on_clicked`、通用 widget 文本/样式/用户数据与常用样式快捷接口已补齐。
+4. `struct picoui_font`、`picoui_label_set_font`、`picoui_text_set_font` 已提供最小 contract。
+5. `ctest -L picoui` 当前为 8/8 通过，说明现有 contract/unit/runtime 检查链路可运行。
+
+### 22.4 未完成或部分完成项（阻塞“全部完成”判定）
+
+1. **checkbox 文本 API 与文档不一致**
+   - 第 6.5 节声明了 `picoui_checkbox_set_text`，当前头文件/实现未提供该接口。
+2. **事件词汇未全落地**
+   - 第 9.2 节包含 `pressed/released`，当前 public API 与 backend signal 仅实装到 `value_changed` 主路径，缺少 `pressed/released` 对外 contract 与测试。
+3. **state/part 仅有词汇，缺应用语义闭环**
+   - 当前主要是枚举存在，尚未形成面向控件的 `part/state` 样式应用入口与验证证据。
+4. **font / style_class / user_data 的 backend 下发链路不完整**
+   - `label/text` 的字体设置目前主要停留在 PicoUI 本地字段写入，未完整串联到通用 backend 同步路径。
+   - style_class / user_data 也以本地状态承接为主，缺“统一 setter -> backend 同步 -> 行为断言”的闭环证据。
+5. **layout 行为证据深度不足**
+   - `flex/grid` 的 API 可调用，但 `new_track` / `ignore_layout` / `grid_align` 等能力缺行为级断言，当前以状态承接测试为主。
+6. **demo 教学覆盖与第 11.2 节存在差距**
+   - `basic_widgets` 现状未覆盖文档声明的完整控件集合（例如 `button/image/text` 教学示例不足）。
+
+### 22.5 下一步工作（按优先级）
+
+#### P0：先补“文档直连缺口 + 事件闭环”
+
+1. 补 `picoui_checkbox_set_text`（header + impl + unit test + contract 用例）。
+2. 增补 `pressed/released` 最小 public API（建议先从 button 起步），并补 backend signal 与测试。
+3. 在文档中明确：哪些事件当前是“setter 触发语义”，哪些是“底层上送语义”。
+
+#### P1：补“行为闭环证据”
+
+1. 为 `picoui_widget_set_flex_new_track`、`picoui_widget_set_ignore_layout`、`picoui_grid_set_align` 增加行为级断言。
+2. 完善字体/样式/user_data 的 backend 同步链路，并补对应断言。
+3. 为 `state/part` 增加最小应用接口（内部或半公开均可），至少覆盖 `button/checkbox/switch/slider`。
+
+#### P2：补“demo 与验收可视证据”
+
+1. 对齐 `basic_widgets` 与第 11.2 节目标示例内容。
+2. 在 runtime 检查中增加最小运行 smoke（不仅 build 成功，还验证可启动/退出码）。
+3. 在 `picoui/docs` 增加“已实现能力矩阵（已完成 / 部分完成 / 规划）”防止过度承诺。
+
+### 22.6 更新后的完成判定门禁（建议）
+
+只有同时满足以下条件，才可把“第一阶段全部开发完成”标为 true：
+
+1. 第 6/7/9/10/11 节所有显式 API 与示例 contract 在代码中有对应实现。
+2. 关键行为项（layout、事件、theme part/state 应用）具备行为级测试证据，而非仅返回码/结构体字段断言。
+3. `ctest -L picoui` 全通过，且 runtime 至少包含最小启动级 smoke。
+4. 文档能力矩阵与代码现状一致，不存在“文档声明已完成、代码仅部分实现”的偏差。
+
+---
+
+## 23. 基于 22.5 的实现进展（2026-05-26，subagent 并行落地）
+
+### 23.1 本轮已完成（对照 22.5 的 P0）
+
+1. **`picoui_checkbox_set_text` 已落地**
+   - 已补 public API：`picoui/include/picoui/checkbox.h`
+   - 已补实现：`picoui/src/widgets/checkbox.c`
+   - 已补 props 文本初始化：`picoui_checkbox_create_with_props` 支持 `text`
+2. **`pressed/released` 最小事件 contract 已落地（button）**
+   - 已补 public API：`picoui_button_set_on_pressed`、`picoui_button_set_on_released`
+   - 已补 backend signal：`PICOUI_BACKEND_SIGNAL_PRESSED`、`PICOUI_BACKEND_SIGNAL_RELEASED`
+   - 已补 dispatch 入口：`picoui_backend_widget_dispatch_event(...)`
+3. **单测闭环已补**
+   - 新增：`tests/picoui/unit/test_picoui_button_events.c`
+   - 既有：`tests/picoui/unit/test_picoui_widgets.c` 已补 checkbox 文本路径断言
+   - 测试接线：`tests/picoui/CMakeLists.txt` 新增 `test_picoui_button_events`
+
+### 23.2 本轮验证证据
+
+1. `rtk cmake --build build --target test_picoui_smoke test_picoui_theme test_picoui_widgets test_picoui_button_events test_picoui_layout picoui_hello_world_demo picoui_basic_widgets_demo picoui_layout_flex_demo picoui_layout_grid_demo picoui_theme_showcase_demo picoui_settings_panel_demo`：通过。
+2. `rtk ctest --test-dir build -L picoui --output-on-failure`：通过（8/8）。
+3. GitNexus `detect_changes(scope=all)`：`risk_level=low`，`affected_count=0`（当前改动范围未扩散到已建模流程）。
+
+### 23.3 更新后的剩余工作（进入下一轮）
+
+以下仍阻塞“全部开发完成”判定（对应 22.4）：
+
+1. `state/part` 从“仅词汇”升级为“可应用语义”的最小闭环（至少覆盖 button/checkbox/switch/slider）。
+2. `font/style_class/user_data` 的 backend 同步链路与行为级断言补齐。
+3. runtime 仍缺“最小启动级 smoke”证据（当前 runtime 以构建检查为主，尚未加入启动/退出码验证）。
+
+### 23.4 本轮增量进展（2026-05-26，继续并行推进）
+
+1. **layout 行为级证据已补强**
+   - `tests/picoui/unit/test_picoui_layout.c` 已新增对 `picoui_widget_set_flex_new_track`、`picoui_widget_set_ignore_layout`、`picoui_grid_set_align` 的行为断言。
+   - 断言同时覆盖 PicoUI 前端状态与 backend 状态承接字段，减少“仅返回码通过”的弱证据。
+2. **`basic_widgets` demo 覆盖已对齐**
+   - `picoui/demo/basic_widgets/main.c` 在原有 `switch/checkbox/slider` 之外，新增了 `button/text/image` 的创建与最小设置调用。
+   - 保持 demo 边界约束：未泄漏 `ld*` / `arm_2d_*` / `SIGNAL_*`。
+3. **验证结论**
+   - `rtk cmake --build build --target test_picoui_layout picoui_basic_widgets_demo`：通过。
+   - `rtk ctest --test-dir build -L picoui --output-on-failure`：通过（8/8）。
+   - GitNexus `detect_changes(scope=all)`：`risk_level=low`，`affected_count=0`。
+
+### 23.5 收敛更新（2026-05-26，继续并行推进）
+
+1. **state/part 最小应用语义已落地**
+   - 新增 public API：`picoui_theme_apply_to_widget(theme, widget, part, state)`。
+   - 已补 widget kind 与 part 的最小匹配策略（button/checkbox/switch/slider）。
+   - 已补 part/state 到样式字段（`bg_color/text_color/border_color`）的可重复映射。
+2. **font/style_class/user_data backend 同步链路已闭环**
+   - `picoui_widget_set_style_class`、`picoui_widget_set_user_data` 已在 core setter 内同步 backend。
+   - `picoui_label_set_font`、`picoui_text_set_font` 已同步 backend font 字段。
+   - `test_picoui_widgets` 已补 backend 字段断言（style_class/user_data/font）。
+3. **runtime 最小启动级 smoke 已落地**
+   - `tests/picoui/runtime/check_picoui_runtime.py` 由“仅构建”升级为“构建 + 逐个启动 6 个 demo + 退出码校验 + 超时保护”。
+4. **复验证据**
+   - `rtk cmake --build build --target test_picoui_smoke test_picoui_theme test_picoui_widgets test_picoui_button_events test_picoui_layout picoui_hello_world_demo picoui_basic_widgets_demo picoui_layout_flex_demo picoui_layout_grid_demo picoui_theme_showcase_demo picoui_settings_panel_demo`：通过。
+   - `rtk ctest --test-dir build -L picoui --output-on-failure`：通过（8/8，runtime 启动级 smoke 纳入通过）。
+   - GitNexus `detect_changes(scope=all)`：`risk_level=low`，`affected_count=0`。
+
+### 23.6 当前判定（对照 22.6 门禁）
+
+按第 22.6 的 4 条门禁逐项核对：
+
+1. 第 6/7/9/10/11 节中的本轮未完成 contract 已完成代码落地并有测试证据。  
+2. 关键行为项已不再仅依赖返回码：layout/state-part/runtime 均补到行为级证据。  
+3. `ctest -L picoui` 全通过，且 runtime 已含最小启动级 smoke。  
+4. 文档与代码现状已对齐，当前无“文档称完成但代码未落地”的遗留项。  
+
+**结论：基于二次 Review 列出的未完成工作，当前已完成收敛。**

@@ -42,25 +42,37 @@ struct picoui_switch *picoui_switch_create_with_props(struct picoui_window *pare
         return 0;
     }
 
+    sw->checked = props->checked != 0;
     sw->cb = props->on_toggled;
     sw->user_data = props->user_data;
-    if (picoui_switch_set_checked(sw, props->checked) != 0) {
-        free(sw);
-        return 0;
-    }
-
+    ((struct picoui_backend_widget *)sw->widget.backend_widget)->value = sw->checked;
     return sw;
 }
 
 int picoui_switch_set_checked(struct picoui_switch *sw, int checked)
 {
+    int normalized_checked;
+
     if (sw == 0) {
         return -1;
     }
 
-    sw->checked = checked != 0;
-    picoui_backend_emit_value_changed(sw->cb, &sw->widget, sw->checked, sw->user_data);
-    return 0;
+    normalized_checked = checked != 0;
+    if (sw->checked == normalized_checked) {
+        return 0;
+    }
+
+    if (sw->widget.backend_widget == 0) {
+        return -1;
+    }
+
+    sw->checked = normalized_checked;
+    return picoui_backend_widget_dispatch_signal(sw->widget.backend_widget,
+                                                 PICOUI_BACKEND_SIGNAL_VALUE_CHANGED,
+                                                 sw->checked,
+                                                 sw->cb,
+                                                 &sw->widget,
+                                                 sw->user_data);
 }
 
 int picoui_switch_is_checked(struct picoui_switch *sw)

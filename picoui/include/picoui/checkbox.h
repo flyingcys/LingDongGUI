@@ -8,6 +8,7 @@ struct picoui_checkbox;
 
 struct picoui_checkbox_props {
     const char *id;
+    const char *text;
     int checked;
     picoui_value_changed_cb on_toggled;
     void *user_data;
@@ -18,6 +19,7 @@ struct picoui_checkbox *picoui_checkbox_create_with_props(struct picoui_window *
                                                           const struct picoui_checkbox_props *props);
 int picoui_checkbox_set_checked(struct picoui_checkbox *checkbox, int checked);
 int picoui_checkbox_is_checked(struct picoui_checkbox *checkbox);
+int picoui_checkbox_set_text(struct picoui_checkbox *checkbox, const char *text);
 int picoui_checkbox_set_on_toggled(struct picoui_checkbox *checkbox,
                                    picoui_value_changed_cb cb,
                                    void *user_data);

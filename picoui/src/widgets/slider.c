@@ -44,14 +44,19 @@ struct picoui_slider *picoui_slider_create_with_props(struct picoui_window *pare
         return 0;
     }
 
-    slider->cb = props->on_value_changed;
-    slider->user_data = props->user_data;
-    if (picoui_slider_set_range(slider, props->min_value, props->max_value) != 0
-        || picoui_slider_set_value(slider, props->value) != 0) {
+    if (props->min_value > props->max_value
+        || props->value < props->min_value
+        || props->value > props->max_value) {
         free(slider);
         return 0;
     }
 
+    slider->min_value = props->min_value;
+    slider->max_value = props->max_value;
+    slider->value = props->value;
+    slider->cb = props->on_value_changed;
+    slider->user_data = props->user_data;
+    ((struct picoui_backend_widget *)slider->widget.backend_widget)->value = slider->value;
     return slider;
 }
 
@@ -61,9 +66,21 @@ int picoui_slider_set_value(struct picoui_slider *slider, int value)
         return -1;
     }
 
+    if (slider->value == value) {
+        return 0;
+    }
+
+    if (slider->widget.backend_widget == 0) {
+        return -1;
+    }
+
     slider->value = value;
-    picoui_backend_emit_value_changed(slider->cb, &slider->widget, value, slider->user_data);
-    return 0;
+    return picoui_backend_widget_dispatch_signal(slider->widget.backend_widget,
+                                                 PICOUI_BACKEND_SIGNAL_VALUE_CHANGED,
+                                                 slider->value,
+                                                 slider->cb,
+                                                 &slider->widget,
+                                                 slider->user_data);
 }
 
 int picoui_slider_get_value(struct picoui_slider *slider)

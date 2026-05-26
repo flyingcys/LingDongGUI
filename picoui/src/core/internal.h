@@ -6,12 +6,23 @@
 
 #define PICOUI_LAYOUT_MAX_TRACKS 16
 
+struct picoui_font;
+
 struct picoui_widget {
     void *backend_widget;
     int x;
     int y;
     int width;
     int height;
+    const char *text;
+    const char *style_class;
+    void *user_data;
+    unsigned int bg_color;
+    unsigned int text_color;
+    unsigned int border_color;
+    int radius;
+    int padding;
+    const struct picoui_font *font;
     int visible;
     int enabled;
     int flex_grow;
@@ -57,15 +68,17 @@ struct picoui_window {
 struct picoui_label {
     struct picoui_widget widget;
     const char *id;
-    const char *text;
 };
 
 struct picoui_button {
     struct picoui_widget widget;
     const char *id;
-    const char *text;
     picoui_event_cb on_clicked;
     void *user_data;
+    picoui_event_cb on_pressed;
+    void *on_pressed_user_data;
+    picoui_event_cb on_released;
+    void *on_released_user_data;
 };
 
 struct picoui_checkbox {
@@ -97,7 +110,6 @@ struct picoui_slider {
 struct picoui_text {
     struct picoui_widget widget;
     const char *id;
-    const char *text;
 };
 
 struct picoui_image_source {

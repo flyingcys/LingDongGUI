@@ -8,11 +8,78 @@ struct picoui_app;
 struct picoui_theme;
 struct picoui_window;
 struct picoui_image_source;
+struct ld_scene_t;
+
+#define PICOUI_BACKEND_LAYOUT_MAX_TRACKS 16
+
+enum picoui_backend_widget_kind {
+    PICOUI_BACKEND_WIDGET_WINDOW = 0,
+    PICOUI_BACKEND_WIDGET_LABEL,
+    PICOUI_BACKEND_WIDGET_BUTTON,
+    PICOUI_BACKEND_WIDGET_CHECKBOX,
+    PICOUI_BACKEND_WIDGET_SWITCH,
+    PICOUI_BACKEND_WIDGET_SLIDER,
+    PICOUI_BACKEND_WIDGET_TEXT,
+    PICOUI_BACKEND_WIDGET_IMAGE,
+};
+
+enum picoui_backend_signal {
+    PICOUI_BACKEND_SIGNAL_NONE = 0,
+    PICOUI_BACKEND_SIGNAL_VALUE_CHANGED,
+    PICOUI_BACKEND_SIGNAL_PRESSED,
+    PICOUI_BACKEND_SIGNAL_RELEASED,
+};
+
+struct picoui_backend_layout_window_state {
+    enum picoui_flex_flow flex_flow;
+    enum picoui_align flex_main_align;
+    enum picoui_align flex_cross_align;
+    enum picoui_align flex_track_align;
+    int flex_item_gap;
+    int flex_track_gap;
+    int grid_cols[PICOUI_BACKEND_LAYOUT_MAX_TRACKS];
+    int grid_rows[PICOUI_BACKEND_LAYOUT_MAX_TRACKS];
+    int grid_col_count;
+    int grid_row_count;
+    int grid_row_gap;
+    int grid_col_gap;
+    enum picoui_align grid_col_align;
+    enum picoui_align grid_row_align;
+};
+
+struct picoui_backend_layout_child_state {
+    int flex_grow;
+    int flex_new_track;
+    int ignore_layout;
+    int grid_col;
+    int grid_row;
+    int grid_col_span;
+    int grid_row_span;
+    enum picoui_align grid_x_align;
+    enum picoui_align grid_y_align;
+};
 
 struct picoui_backend_widget {
     void *parent;
     const char *id;
+    enum picoui_backend_widget_kind kind;
     const char *text;
+    const char *style_class;
+    const void *font;
+    void *user_data;
+    struct ld_scene_t *ld_event_bridge_scene;
+    void *ld_event_bridge_sender;
+    struct picoui_image_source *image_source;
+    int value;
+    enum picoui_backend_signal last_signal;
+    int dispatch_count;
+    struct picoui_theme *theme;
+    struct picoui_backend_layout_window_state window_layout;
+    struct picoui_backend_layout_child_state child_layout;
+};
+
+struct picoui_backend_app_state {
+    struct picoui_theme *theme;
 };
 
 int picoui_backend_apply_theme(struct picoui_app *app, struct picoui_theme *theme);
@@ -25,6 +92,12 @@ void *picoui_backend_create_slider(void *parent, const char *id);
 void *picoui_backend_create_text(void *parent, const char *id);
 void *picoui_backend_create_image(void *parent, const char *id);
 int picoui_backend_set_text(void *backend_widget, const char *text);
+int picoui_backend_widget_set_style_class(void *backend_widget, const char *style_class);
+int picoui_backend_widget_set_font(void *backend_widget, const void *font);
+int picoui_backend_widget_set_user_data(void *backend_widget, void *user_data);
+int picoui_backend_widget_bind_ld_event_bridge(void *backend_widget,
+                                               struct ld_scene_t *scene,
+                                               void *sender);
 int picoui_backend_set_image_source(void *backend_widget, struct picoui_image_source *source);
 int picoui_backend_window_set_flex_flow(struct picoui_window *window, enum picoui_flex_flow flow);
 int picoui_backend_window_set_flex_align(struct picoui_window *window,
@@ -52,5 +125,27 @@ void picoui_backend_emit_value_changed(picoui_value_changed_cb cb,
                                        struct picoui_widget *widget,
                                        int value,
                                        void *user_data);
+void picoui_backend_emit_event(picoui_event_cb cb,
+                               struct picoui_widget *widget,
+                               void *user_data);
+int picoui_backend_widget_dispatch_signal(void *backend_widget,
+                                          enum picoui_backend_signal signal,
+                                          int value,
+                                          picoui_value_changed_cb cb,
+                                          struct picoui_widget *widget,
+                                          void *user_data);
+int picoui_backend_widget_dispatch_event(void *backend_widget,
+                                         enum picoui_backend_signal signal,
+                                         picoui_event_cb cb,
+                                         struct picoui_widget *widget,
+                                         void *user_data);
+int picoui_backend_widget_update_value(void *backend_widget,
+                                       int value,
+                                       picoui_value_changed_cb cb,
+                                       struct picoui_widget *widget,
+                                       void *user_data);
+void picoui_backend_emit_clicked(picoui_event_cb cb,
+                                 struct picoui_widget *widget,
+                                 void *user_data);
 
 #endif

@@ -42,28 +42,41 @@ struct picoui_checkbox *picoui_checkbox_create_with_props(struct picoui_window *
         return 0;
     }
 
+    checkbox->checked = props->checked != 0;
     checkbox->cb = props->on_toggled;
     checkbox->user_data = props->user_data;
-    if (picoui_checkbox_set_checked(checkbox, props->checked) != 0) {
+    if (props->text != 0 && picoui_checkbox_set_text(checkbox, props->text) != 0) {
         free(checkbox);
         return 0;
     }
-
+    ((struct picoui_backend_widget *)checkbox->widget.backend_widget)->value = checkbox->checked;
     return checkbox;
 }
 
 int picoui_checkbox_set_checked(struct picoui_checkbox *checkbox, int checked)
 {
+    int normalized_checked;
+
     if (checkbox == 0) {
         return -1;
     }
 
-    checkbox->checked = checked != 0;
-    picoui_backend_emit_value_changed(checkbox->cb,
-                                      &checkbox->widget,
-                                      checkbox->checked,
-                                      checkbox->user_data);
-    return 0;
+    normalized_checked = checked != 0;
+    if (checkbox->checked == normalized_checked) {
+        return 0;
+    }
+
+    if (checkbox->widget.backend_widget == 0) {
+        return -1;
+    }
+
+    checkbox->checked = normalized_checked;
+    return picoui_backend_widget_dispatch_signal(checkbox->widget.backend_widget,
+                                                 PICOUI_BACKEND_SIGNAL_VALUE_CHANGED,
+                                                 checkbox->checked,
+                                                 checkbox->cb,
+                                                 &checkbox->widget,
+                                                 checkbox->user_data);
 }
 
 int picoui_checkbox_is_checked(struct picoui_checkbox *checkbox)
@@ -73,6 +86,18 @@ int picoui_checkbox_is_checked(struct picoui_checkbox *checkbox)
     }
 
     return checkbox->checked;
+}
+
+int picoui_checkbox_set_text(struct picoui_checkbox *checkbox, const char *text)
+{
+    if (checkbox == 0 || text == 0) {
+        return -1;
+    }
+
+    if (picoui_widget_set_text(&checkbox->widget, text) != 0) {
+        return -1;
+    }
+    return picoui_backend_set_text(checkbox->widget.backend_widget, text);
 }
 
 int picoui_checkbox_set_on_toggled(struct picoui_checkbox *checkbox,

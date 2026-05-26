@@ -459,8 +459,27 @@ else()
     endif()
 endif()
 
-add_executable(picoui_settings_panel_demo
+function(add_picoui_demo target source)
+    add_executable(${target} ${source})
+    target_link_libraries(${target} PRIVATE picoui_backend_ldgui)
+    ld_apply_common_target_config(${target})
+endfunction()
+
+add_picoui_demo(picoui_hello_world_demo
+    "${SDL_EXAMPLE_DIR}/../../picoui/demo/hello_world/main.c"
+)
+add_picoui_demo(picoui_basic_widgets_demo
+    "${SDL_EXAMPLE_DIR}/../../picoui/demo/basic_widgets/main.c"
+)
+add_picoui_demo(picoui_layout_flex_demo
+    "${SDL_EXAMPLE_DIR}/../../picoui/demo/layout_flex/main.c"
+)
+add_picoui_demo(picoui_layout_grid_demo
+    "${SDL_EXAMPLE_DIR}/../../picoui/demo/layout_grid/main.c"
+)
+add_picoui_demo(picoui_theme_showcase_demo
+    "${SDL_EXAMPLE_DIR}/../../picoui/demo/theme_showcase/main.c"
+)
+add_picoui_demo(picoui_settings_panel_demo
     "${SDL_EXAMPLE_DIR}/../../picoui/demo/settings_panel/main.c"
 )
-target_link_libraries(picoui_settings_panel_demo PRIVATE picoui_backend_ldgui)
-ld_apply_common_target_config(picoui_settings_panel_demo)

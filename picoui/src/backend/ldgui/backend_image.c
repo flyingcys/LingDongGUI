@@ -17,6 +17,8 @@ void *picoui_backend_create_image(void *parent, const char *id)
 
     widget->parent = parent;
     widget->id = id;
+    widget->kind = PICOUI_BACKEND_WIDGET_IMAGE;
+    widget->theme = ((struct picoui_backend_widget *)parent)->theme;
     return widget;
 }
 
@@ -28,5 +30,6 @@ int picoui_backend_set_image_source(void *backend_widget, struct picoui_image_so
         return -1;
     }
 
+    widget->image_source = source;
     return 0;
 }

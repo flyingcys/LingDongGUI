@@ -62,12 +62,62 @@ struct picoui_button *picoui_button_create_with_props(struct picoui_window *pare
     return button;
 }
 
+static int picoui_button_set_event(struct picoui_button *button,
+                                   picoui_event_cb cb,
+                                   void *user_data,
+                                   int kind)
+{
+    if (button == 0) {
+        return -1;
+    }
+
+    if (kind == 0) {
+        button->on_pressed = cb;
+        button->on_pressed_user_data = user_data;
+    } else if (kind == 1) {
+        button->on_released = cb;
+        button->on_released_user_data = user_data;
+    } else {
+        return -1;
+    }
+    return 0;
+}
+
 int picoui_button_set_text(struct picoui_button *button, const char *text)
 {
     if (button == 0 || text == 0) {
         return -1;
     }
 
-    button->text = text;
+    if (picoui_widget_set_text(&button->widget, text) != 0) {
+        return -1;
+    }
     return picoui_backend_set_text(button->widget.backend_widget, text);
+}
+
+int picoui_button_set_on_clicked(struct picoui_button *button,
+                                 picoui_event_cb cb,
+                                 void *user_data)
+{
+    if (button == 0) {
+        return -1;
+    }
+
+    button->on_clicked = cb;
+    button->user_data = user_data;
+    return 0;
+}
+
+int picoui_button_set_on_pressed(struct picoui_button *button,
+                                 picoui_event_cb cb,
+                                 void *user_data)
+{
+    return picoui_button_set_event(button, cb, user_data, 0);
+}
+
+int picoui_button_set_on_released(struct picoui_button *button,
+                                  picoui_event_cb cb,
+                                  void *user_data)
+{
+    return picoui_button_set_event(button, cb, user_data, 1);
 }

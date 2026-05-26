@@ -34,6 +34,18 @@ int picoui_text_set_text(struct picoui_text *text, const char *value)
         return -1;
     }
 
-    text->text = value;
+    if (picoui_widget_set_text(&text->widget, value) != 0) {
+        return -1;
+    }
     return picoui_backend_set_text(text->widget.backend_widget, value);
+}
+
+int picoui_text_set_font(struct picoui_text *text, const struct picoui_font *font)
+{
+    if (text == 0) {
+        return -1;
+    }
+
+    text->widget.font = font;
+    return picoui_backend_widget_set_font(text->widget.backend_widget, font);
 }
