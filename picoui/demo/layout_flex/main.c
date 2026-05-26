@@ -19,6 +19,9 @@ static void make_ui(struct picoui_window *win)
     picoui_button_set_text(a, "One");
     picoui_button_set_text(b, "Two");
     picoui_button_set_text(c, "Three");
+    picoui_widget_set_flex_grow((struct picoui_widget *)a, 1);
+    picoui_widget_set_flex_grow((struct picoui_widget *)b, 1);
+    picoui_widget_set_flex_new_track((struct picoui_widget *)c, 1);
 }
 
 static int run_demo(void)

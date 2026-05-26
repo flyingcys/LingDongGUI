@@ -1,6 +1,6 @@
 # PicoUI Demo 运行指南
 
-本文说明 `picoui/demo` 下各个 demo 的构建方式、启动方式和适用场景。
+本文说明 `picoui/demo` 下各个 demo 的构建方式、启动方式和适用场景，并明确哪些证据属于真实 backend 能力，哪些只属于 smoke/capture。
 
 ## 一、先说明入口
 
@@ -40,24 +40,35 @@ sudo apt-get install build-essential cmake pkg-config libsdl2-dev
 
 ```bash
 cd /Users/cys/embedded/LingDongGUI
-cmake -S examples/sdl -B examples/sdl/build
-cmake --build examples/sdl/build -j8 --target picoui_hello_world_demo
+rtk cmake -S . -B build
+rtk cmake --build build -j8 --target picoui_hello_world_demo
 ```
 
 如果要指定其他 demo，只需要替换目标名。
+
+如果只想跑 runtime smoke 脚本，则使用仓库既有入口：
+
+```bash
+python3 tests/picoui/runtime/check_picoui_runtime.py
+```
+
+注意：
+
+- 该脚本会使用独立的 `build/picoui-runtime` 目录
+- 它属于 smoke / 启动 / capture 回归检查，不等于 backend 已完全闭环
 
 ## 四、运行方式
 
 ### Linux
 
 ```bash
-./examples/sdl/build/picoui_hello_world_demo
+./build/picoui-runtime/examples/sdl/picoui_hello_world_demo
 ```
 
 ### Windows
 
 ```bash
-examples\sdl\build\picoui_hello_world_demo.exe
+build\picoui-runtime\examples\sdl\picoui_hello_world_demo.exe
 ```
 
 ## 五、各 demo 说明
@@ -70,6 +81,7 @@ examples\sdl\build\picoui_hello_world_demo.exe
 
 - 确认环境能编译和启动
 - 看 PicoUI 最小生命周期
+- 看 static widget 的真实 backend 映射最小闭环
 
 ### `picoui/demo/basic_widgets`
 
@@ -88,6 +100,12 @@ examples\sdl\build\picoui_hello_world_demo.exe
 - 看事件回调绑定方式
 - 看控件 API 的基本形态
 
+当前口径：
+
+- `button/text/image` 已有真实 backend 对象映射
+- `checkbox/switch/slider` 已有真实对象映射与 native event
+- 但 demo 运行结果仍通过 host smoke/capture 路径呈现，不应把截图本身直接表述成最终 UI 完成证据
+
 ### `picoui/demo/layout_flex`
 
 只演示 `flex` 相关布局配置：
@@ -100,6 +118,7 @@ examples\sdl\build\picoui_hello_world_demo.exe
 
 - 理解窗口布局如何配置
 - 看 flex 参数如何传给窗口
+- 看 layout 语义如何走真实 backend，而不是靠 demo 硬编码补丁顶住
 
 ### `picoui/demo/layout_grid`
 
@@ -113,6 +132,7 @@ examples\sdl\build\picoui_hello_world_demo.exe
 
 - 理解网格布局的基本写法
 - 看固定轨道和自动轨道的配置方式
+- 看 grid cell 语义如何传到底层 `LingDongGUI`
 
 ### `picoui/demo/theme_showcase`
 
@@ -122,6 +142,11 @@ examples\sdl\build\picoui_hello_world_demo.exe
 
 - 理解 theme 的生命周期
 - 看统一主题如何影响控件外观
+
+当前口径：
+
+- `window/button/checkbox/switch/slider/label/text` 已有真实 backend style apply
+- `image` 当前**不支持** theme/style apply；A6 口径是明确拒绝 `PICOUI_PART_MAIN`，不是默认支持
 
 ### `picoui/demo/settings_panel`
 
@@ -139,7 +164,24 @@ examples\sdl\build\picoui_hello_world_demo.exe
 - 看真实面板类页面的组织方式
 - 看 props 创建控件的方式
 
-## 六、推荐阅读顺序
+当前口径：
+
+- 该 demo 当前暴露的 fallback boundary marker 只用于说明阶段桥接/兼容路径，不再构成 `PicoUI` A 线是否收口的 blocker
+
+## 六、证据层级说明
+
+1. `ctest` / unit test：证明 contract、backend 字段同步、事件桥接等实现约束。
+2. `tests/picoui/runtime/check_picoui_runtime.py`：证明 demo 可 build、可启动、可 capture、可回归。
+3. demo 画面本身：当前仍属于 host smoke/capture 证据，不能单独外推成“`backend_app.c` 已完全退出临时职责”。
+
+换句话说：
+
+- `runtime smoke = 已启动`
+- `backend 完成态 = 真实对象/布局/事件/theme 已闭环`
+
+两者不是同一层证据。
+
+## 七、推荐阅读顺序
 
 1. `hello_world`
 2. `basic_widgets`
@@ -148,28 +190,28 @@ examples\sdl\build\picoui_hello_world_demo.exe
 5. `theme_showcase`
 6. `settings_panel`
 
-## 七、最常用命令
+## 八、最常用命令
 
 构建某个 demo：
 
 ```bash
-cmake --build examples/sdl/build -j8 --target picoui_basic_widgets_demo
+rtk cmake --build build -j8 --target picoui_basic_widgets_demo
 ```
 
 运行某个 demo：
 
 ```bash
-./examples/sdl/build/picoui_basic_widgets_demo
+./build/picoui-runtime/examples/sdl/picoui_basic_widgets_demo
 ```
 
 重新配置后再编译：
 
 ```bash
-cmake -S examples/sdl -B examples/sdl/build
-cmake --build examples/sdl/build -j8
+rtk cmake -S . -B build
+rtk cmake --build build -j8
 ```
 
-## 八、常见问题
+## 九、常见问题
 
 ### 1. 我传了 `-DUSE_DEMO=2`，为什么没跑 `picoui` demo
 
@@ -188,4 +230,4 @@ cmake --build examples/sdl/build -j8
 - 运行的是对应的 demo target
 - 构建目录里的可执行文件是否最新
 
-如果要，我可以继续补一版“每个 demo 的源码入口和界面表现”说明，直接贴到 `README.md` 里。 
+如果后续继续扩展 PicoUI，请基于当前已收口主线另开新阶段或新计划，而不是回到 `backend_app.c` 继续堆积过渡逻辑。

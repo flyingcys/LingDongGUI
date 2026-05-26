@@ -1,30 +1,69 @@
 #include "internal.h"
 #include "picoui/widget.h"
 
+#include <stdint.h>
+
+typedef struct ldBase_t ldBase_t;
+
+void ldBaseSetX(ldBase_t *ptWidget, int16_t x);
+void ldBaseSetY(ldBase_t *ptWidget, int16_t y);
+void ldBaseSetWidth(ldBase_t *ptWidget, int16_t width);
+void ldBaseSetHeight(ldBase_t *ptWidget, int16_t height);
+
 static int picoui_widget_is_valid(struct picoui_widget *widget)
 {
     return widget != 0;
 }
 
+static ldBase_t *picoui_widget_get_ld_base(struct picoui_widget *widget)
+{
+    struct picoui_backend_widget *backend_widget;
+
+    if (!picoui_widget_is_valid(widget) || widget->backend_widget == 0) {
+        return 0;
+    }
+
+    backend_widget = (struct picoui_backend_widget *)widget->backend_widget;
+    if (backend_widget->ld_widget == 0) {
+        return 0;
+    }
+
+    return (ldBase_t *)backend_widget->ld_widget;
+}
+
 int picoui_widget_set_pos(struct picoui_widget *widget, int x, int y)
 {
+    ldBase_t *ld_base;
+
     if (!picoui_widget_is_valid(widget)) {
         return -1;
     }
 
     widget->x = x;
     widget->y = y;
+    ld_base = picoui_widget_get_ld_base(widget);
+    if (ld_base != 0) {
+        ldBaseSetX(ld_base, (int16_t)x);
+        ldBaseSetY(ld_base, (int16_t)y);
+    }
     return 0;
 }
 
 int picoui_widget_set_size(struct picoui_widget *widget, int width, int height)
 {
+    ldBase_t *ld_base;
+
     if (!picoui_widget_is_valid(widget) || width < 0 || height < 0) {
         return -1;
     }
 
     widget->width = width;
     widget->height = height;
+    ld_base = picoui_widget_get_ld_base(widget);
+    if (ld_base != 0) {
+        ldBaseSetWidth(ld_base, (int16_t)width);
+        ldBaseSetHeight(ld_base, (int16_t)height);
+    }
     return 0;
 }
 

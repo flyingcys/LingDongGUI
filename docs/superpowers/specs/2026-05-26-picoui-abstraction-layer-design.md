@@ -775,6 +775,19 @@ backend 内部再映射到：
 4. Linux 风格命名规则在 PicoUI public API 中保持一致
 5. `LingDongGUI` 本体只发生最小必要补洞，不出现大规模重构
 
+### 15.1 当前能力矩阵（按 A1-A6 现态回写）
+
+| 能力 | 当前状态 | 备注 |
+| --- | --- | --- |
+| `window/label/button/text` 真实 backend 映射 | 已完成 | 已建立真实 `LingDongGUI` 对象映射 |
+| `checkbox/switch/slider` 真实 backend 映射 | 已完成 | 已建立真实对象、值同步与 native event |
+| `image` 对象映射与 source 绑定 | 已完成 | `picoui_image_source` 已绑定到底层 `ldImage` |
+| `image` theme/style apply | 当前拒绝 | 当前不是默认支持；`PICOUI_PART_MAIN` 明确拒绝 |
+| `flex/grid` 真实 layout 映射 | 已完成 | 已映射到底层 `ldWindow/ldBase` 语义 |
+| `theme/state/part/style` | 部分完成 | `window/button/checkbox/switch/slider/label/text` 已完成，`image` 仍拒绝 |
+| runtime/capture | smoke 级证据 | 证明启动/capture/回归，不等于最终 backend closeout |
+| `backend_app.c` 角色 | temporary smoke path | 当前仍保留 host runtime/fallback/capture 过渡职责 |
+
 ---
 
 ## 16. 最终结论
@@ -789,6 +802,8 @@ backend 内部再映射到：
 
 这套设计如果按边界执行，`PicoUI` 将更像一个稳定的应用层框架入口，而不是简单的 `ld*` 换前缀包装壳。
 
+> 现态补充（A7 final closeout）：上述“最终结论”现在已对应当前主线真相。`backend_app.c` 仍保留 `temporary smoke path` / host harness 职责，但它已不再承担正式 fake renderer 主输出职责；runtime/capture 仍只属于 smoke 级证据，而不是超出当前范围的额外承诺。
+
 ---
 
 ## 17. 二次 Review 结论（2026-05-26）
@@ -798,6 +813,8 @@ backend 内部再映射到：
 > 文档口径修正：本节之后若出现“已完成收敛”“runtime 已含启动级 smoke”“文档与代码已对齐”之类结论，均应以后续实际代码与测试真相为准。按当前主线核对，`tests/picoui/runtime/check_picoui_runtime.py` 虽然已经会构建并逐个启动 6 个 demo，但它使用独立 build tree `build/picoui-runtime`，且 PicoUI demo 的构建链仍经由根入口默认开启的 SDL 子树，不应被表述为“已完全脱离 SDL、已全部闭环”。
 
 ### 17.1 总结论
+
+> 以下 `17.x` 内容是 2026-05-26 当时的阶段性审计快照，不再代表当前最终完成判定；当前最终口径以上文 `15.1 当前能力矩阵` 与 A 线索引、Stage G closeout 门禁为准。
 
 **未全部完成。**
 
@@ -937,6 +954,10 @@ backend 内部再映射到：
 ## 22. 三次 Review 复盘（2026-05-26，主线程 + subagent 复核）
 
 > 本节用于回答“`docs/superpowers/specs/2026-05-26-picoui-abstraction-layer-design.md` 是否已全部开发完成”。
+>
+> 文档口径修正：以下 `22.x` 内容属于 2026-05-26 当日的阶段性 review 复盘快照，不再代表当前最终完成判定。当前主线真相以第 15.1 节能力矩阵、`docs/picoui-serial/A-线计划索引.md` 的 `A7` 收口状态，以及最新 Stage G 门禁复验结果为准。
+>
+> 现态补充（A7 final closeout）：`backend_app.c` 当前仍保留 `temporary smoke path` / host harness 职责，但已不再承担正式 fake renderer 主输出职责；`runtime/capture` 仍只属于 smoke / 回归证据，不能单独上升为最终 UI 证据。
 
 ### 22.1 审计范围与证据
 
@@ -949,13 +970,17 @@ backend 内部再映射到：
 
 ### 22.2 总结论
 
-**截至本次复盘，尚未“全部开发完成”。**
+> 历史结论（已过时）：以下结论仅描述 2026-05-26 当次复盘时点，不代表当前现态。
+
+**截至该次复盘时点，尚未“全部开发完成”。**
 
 说明：
 
 1. 按 17.3 / 17.4 缺口口径，本轮确实补齐了当时列出的主要未完成项。
 2. 但按整份设计文档全文口径与第 15 节验收标准核对，仍存在若干“接口存在但行为未闭环”或“设计项未落地”的差距。
-3. 因此当前状态更准确应为：**`Contract Mostly Ready / Behavior Partially Ready`**。
+3. 因此该次复盘时点的状态更准确应为：**`Contract Mostly Ready / Behavior Partially Ready`**。
+
+> A7 closeout 更新：上述否定性结论已被后续 `A1-A7` 收口覆盖；当前口径应视为“第一阶段按既定边界已收口，但 `backend_app.c` 仍保留 temporary smoke path / host harness，runtime/capture 仍仅是 smoke 证据”。
 
 ### 22.3 已完成项（本轮可确认）
 
@@ -966,6 +991,8 @@ backend 内部再映射到：
 5. `ctest -L picoui` 当前链路可运行，但其 runtime 子项依赖独立 build tree 与 SDL demo 构建链，文档不能把它简化成“纯 PicoUI、自身完全独立”的闭环。
 
 ### 22.4 未完成或部分完成项（阻塞“全部完成”判定）
+
+> 历史清单（已过时）：以下条目是 2026-05-26 当次 review 时用于阻塞“全部完成”判定的缺口清单；其中与 `A1-A7` closeout 直接相关的项，已由后续实现、门禁复验和索引回写覆盖，不应再被读取为当前仍然成立的现态阻塞项。当前若需判断最终状态，应回到第 15.1 节能力矩阵与 A 线索引。
 
 1. **checkbox 文本 API 与文档不一致**
    - 第 6.5 节声明了 `picoui_checkbox_set_text`，当前头文件/实现未提供该接口。
@@ -1041,11 +1068,13 @@ backend 内部再映射到：
 
 ### 23.3 更新后的剩余工作（进入下一轮）
 
-以下仍阻塞“全部开发完成”判定（对应 22.4）：
-
-1. `state/part` 从“仅词汇”升级为“可应用语义”的最小闭环（至少覆盖 button/checkbox/switch/slider）。
-2. `font/style_class/user_data` 的 backend 同步链路与行为级断言补齐。
-3. runtime 仍缺“最小启动级 smoke”证据（当前 runtime 以构建检查为主，尚未加入启动/退出码验证）。
+> 历史快照（已过时）：以下条目是 2026-05-26 当次 review 结束时，准备进入下一轮时记录的剩余工作清单，对应当时的 `22.4` 阻塞项；它们用于解释那一刻为什么尚不能判定“全部开发完成”，但不再代表当前 A 线 final closeout 的现态 blocker。`A7` 后续收口、门禁复验与索引回写完成后，当前最终状态应以第 `15.1` 节能力矩阵、`docs/picoui-serial/A-线计划索引.md` 的 `A7` 收口状态，以及最新 Stage G 门禁结果为准。
+>
+> 当时记录的剩余工作如下：
+>
+> 1. `state/part` 从“仅词汇”升级为“可应用语义”的最小闭环（至少覆盖 button/checkbox/switch/slider）。
+> 2. `font/style_class/user_data` 的 backend 同步链路与行为级断言补齐。
+> 3. runtime 仍缺“最小启动级 smoke”证据（当前 runtime 以构建检查为主，尚未加入启动/退出码验证）。
 
 ### 23.4 本轮增量进展（2026-05-26，继续并行推进）
 
@@ -1094,6 +1123,9 @@ backend 内部再映射到：
 
 ### 23.6 当前判定（对照 22.6 门禁）
 
+> 历史快照（已过时）：
+> 本小节记录的是 `2026-05-26` 当次 review 对照 `22.6` 门禁时的阶段性判定，不再代表当前 `A线` final closeout 的现态结论。当前应以 `15.1` 能力矩阵、`docs/picoui-serial/A-线计划索引.md` 的 `A7` 收口状态，以及最新 `Stage G` fresh gate 为准。
+
 按第 22.6 的 4 条门禁逐项核对：
 
 1. 第 6/7/9/10/11 节中的主要 contract 缺口已有代码与测试证据。  
@@ -1101,7 +1133,9 @@ backend 内部再映射到：
 3. 但 `ctest -L picoui` 的 runtime 仍依赖独立 build tree 与 SDL demo 构建链。  
 4. 文档层面仍存在入口与测试分层表述偏差，需要像本轮这样显式更正。  
 
-**结论：代码与测试链路已有明显收敛，但文档口径此前并未完全对齐当前主线真相，因此不能再把当前状态写成“全部完成且文档已完全对齐”。**
+**历史结论（已过时）**：代码与测试链路当时虽已明显收敛，但文档口径尚未完全对齐，所以那一时点还不能把状态写成“全部完成且文档已完全对齐”。
+
+**A7 closeout 更新**：上述文档对齐缺口已在后续 `A7` 收口中补齐。当前可以成立的口径是：代码主线、fresh gate 与文档真相源已按最新边界重新对齐；但 `runtime/capture` 仍只应被读取为 smoke / 回归证据，`backend_app.c` 也仍保留 `temporary smoke path` / host harness 职责，而不是“已经完全消失”。
 
 ---
 
@@ -1115,8 +1149,9 @@ backend 内部再映射到：
 
 - `SDL` 作为宿主层本身没有问题；
 - `PicoUI` 当前已经能构建、能启动、能在 SDL 窗口内输出画面；
-- 但这条画面输出链，当前仍主要依赖 `picoui/src/backend/ldgui/backend_app.c` 中的**临时 fake renderer**；
-- 因此“窗口起来了”并不等于“`PicoUI -> LingDongGUI` 真实 backend 适配已经成立”。
+- 当前主输出链已经是 `ldGuiFrameStart() -> ldMsgProcess() -> ldGuiDraw() -> ldGuiFrameComplete()` 的真实 `LingDongGUI` 绘制路径；
+- `picoui/src/backend/ldgui/backend_app.c` 仍然存在，但当前口径应明确为 `temporary smoke path` / host harness：它还负责 SDL host、capture、marker、placeholder 等过渡职责，但不再承担正式 fake renderer 主输出职责；
+- 因此，“窗口起来了”依然不等于“单靠 runtime/capture 就能证明最终 UI 完成”；真正成立的是：`PicoUI -> LingDongGUI` 真实 backend 主线已经建起来，而 `runtime/capture` 继续只承担 smoke / 回归证据角色。
 
 ### 24.2 当前错误方向
 

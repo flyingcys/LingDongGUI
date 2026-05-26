@@ -6,6 +6,8 @@
 
 #define PICOUI_LAYOUT_MAX_TRACKS 16
 
+typedef struct arm_2d_tile_t arm_2d_tile_t;
+
 struct picoui_font;
 
 struct picoui_widget {
@@ -114,7 +116,8 @@ struct picoui_text {
 };
 
 struct picoui_image_source {
-    int reserved;
+    arm_2d_tile_t *img_tile;
+    arm_2d_tile_t *mask_tile;
 };
 
 struct picoui_image {

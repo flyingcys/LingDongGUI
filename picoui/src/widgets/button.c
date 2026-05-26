@@ -25,6 +25,10 @@ static struct picoui_button *picoui_button_alloc(struct picoui_window *parent, c
     button->id = id;
     button->widget.visible = 1;
     button->widget.enabled = 1;
+    if (picoui_backend_widget_bind_host(button->widget.backend_widget, &button->widget) != 0) {
+        free(button);
+        return 0;
+    }
     return button;
 }
 

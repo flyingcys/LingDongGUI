@@ -27,6 +27,10 @@ struct picoui_slider *picoui_slider_create(struct picoui_window *parent, const c
     slider->max_value = 100;
     slider->widget.visible = 1;
     slider->widget.enabled = 1;
+    if (picoui_backend_widget_bind_host(slider->widget.backend_widget, &slider->widget) != 0) {
+        free(slider);
+        return 0;
+    }
     return slider;
 }
 
@@ -34,6 +38,7 @@ struct picoui_slider *picoui_slider_create_with_props(struct picoui_window *pare
                                                       const struct picoui_slider_props *props)
 {
     struct picoui_slider *slider;
+    struct picoui_backend_widget *backend;
 
     if (props == 0) {
         return 0;
@@ -54,9 +59,21 @@ struct picoui_slider *picoui_slider_create_with_props(struct picoui_window *pare
     slider->min_value = props->min_value;
     slider->max_value = props->max_value;
     slider->value = props->value;
+    slider->cb = 0;
+    slider->user_data = 0;
+    backend = (struct picoui_backend_widget *)slider->widget.backend_widget;
+    if (picoui_backend_widget_update_value(backend,
+                                           slider->value,
+                                           0,
+                                           &slider->widget,
+                                           0) != 0) {
+        free(slider);
+        return 0;
+    }
+    backend->last_signal = PICOUI_BACKEND_SIGNAL_NONE;
+    backend->dispatch_count = 0;
     slider->cb = props->on_value_changed;
     slider->user_data = props->user_data;
-    ((struct picoui_backend_widget *)slider->widget.backend_widget)->value = slider->value;
     return slider;
 }
 
@@ -75,12 +92,11 @@ int picoui_slider_set_value(struct picoui_slider *slider, int value)
     }
 
     slider->value = value;
-    return picoui_backend_widget_dispatch_signal(slider->widget.backend_widget,
-                                                 PICOUI_BACKEND_SIGNAL_VALUE_CHANGED,
-                                                 slider->value,
-                                                 slider->cb,
-                                                 &slider->widget,
-                                                 slider->user_data);
+    return picoui_backend_widget_update_value(slider->widget.backend_widget,
+                                              slider->value,
+                                              slider->cb,
+                                              &slider->widget,
+                                              slider->user_data);
 }
 
 int picoui_slider_get_value(struct picoui_slider *slider)

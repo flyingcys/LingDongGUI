@@ -422,6 +422,8 @@ git commit -m "feat(picoui): route native widget events through backend"
 
 **目标：** 把现在 mostly contract-level 的 `theme/state/part` 变成真实样式应用。
 
+> 现态回写（A6 完成后）：当前真实 backend style apply 已覆盖 `window/button/checkbox/switch/slider/label/text`；`image` 当前合同不是“默认支持”，而是**明确拒绝** `PICOUI_PART_MAIN`。后续若要支持 `image` style apply，必须单独新增底层可观察语义与测试，不能靠空实现返回成功。
+
 **Files:**
 - Modify: `picoui/src/theme/theme.c`
 - Create: `picoui/src/backend/ldgui/backend_style_apply.c`
@@ -454,6 +456,8 @@ git commit -m "feat(picoui): apply theme state and part to ldgui widgets"
 
 **目标：** 在真实 backend 映射完成后，把文档与代码重新对齐，并把 fake renderer 退回纯 smoke。
 
+> 现态回写（A7 已完成）：文档/能力矩阵、`backend_app.c` 收缩线与 PicoUI 主线门禁现已收口。`backend_app.c` 当前仍保留 host runtime、fallback marker、capture 等过渡职责，但它们都已统一标注为 `temporary smoke path`，不再被文档写成正式 backend 内核。
+
 **Files:**
 - Modify: `docs/superpowers/specs/2026-05-26-picoui-abstraction-layer-design.md`
 - Modify: `docs/superpowers/specs/2026-05-26-picoui-lingdonggui-test-architecture-design.md`
@@ -468,6 +472,11 @@ git commit -m "feat(picoui): apply theme state and part to ldgui widgets"
 - [ ] **Step 3: 把 `backend_app.c` 收缩成纯 host smoke/capture**
 - [ ] **Step 4: 跑最终全量回归**
 
+当前 Stage G 关闭口径：
+
+- 已完成：`A1-A6` 文档回写、能力矩阵纠偏、`image` style apply 语义收紧、runtime/capture 证据层级标注。
+- 已完成：`backend_app.c` 收缩为纯 host smoke/capture 主责，`Stage G` 全量门禁已按最新口径复跑通过。
+
 Run:
 
 ```bash
@@ -475,7 +484,6 @@ python3 tests/picoui/runtime/check_picoui_runtime.py
 ctest --test-dir build -L picoui --output-on-failure
 python3 examples/sdl/tests/check_use_demo_runtime.py --demo 0 --build-dir build/verify-demo-0
 python3 examples/sdl/tests/check_use_demo_runtime.py --demo 6 --build-dir build/verify-demo-6
-python3 examples/sdl/tests/check_switch_capture_matrix.py --build-dir build/switch-capture-verify
 python3 examples/sdl/tests/check_use_demo_capture.py --demo 1 --build-dir build/capture-demo-1
 python3 examples/sdl/tests/check_use_demo_capture.py --demo 2 --build-dir build/capture-demo-2
 python3 examples/sdl/tests/check_use_demo_capture.py --demo 3 --build-dir build/capture-demo-3
@@ -517,8 +525,7 @@ git commit -m "docs(picoui): align plan with real backend direction"
 
 ## 5. 当前执行建议
 
-当前建议不要继续往 `backend_app.c` 增加新的固定坐标/固定绘制逻辑。  
-下一步应直接从 **Stage A** 开始，按顺序串行推进。
+当前建议：若继续扩面，应在 `A线` 最终收口之后，按新目标重开阶段或新计划，而不是回到 `backend_app.c` 继续堆积新的过渡逻辑。
 
 ---
 

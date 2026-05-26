@@ -1,12 +1,33 @@
 #include "backend.h"
+#include "internal.h"
+#include "ldText.h"
 
 #include <stdlib.h>
+
+static struct picoui_backend_app_state *picoui_backend_text_get_app_state(void *parent)
+{
+    struct picoui_backend_widget *parent_widget = parent;
+
+    if (parent_widget == NULL || parent_widget->owner == NULL || parent_widget->owner->backend_app == NULL) {
+        return NULL;
+    }
+    return (struct picoui_backend_app_state *)parent_widget->owner->backend_app;
+}
 
 void *picoui_backend_create_text(void *parent, const char *id)
 {
     struct picoui_backend_widget *widget;
+    struct picoui_backend_widget *parent_widget = parent;
+    struct picoui_backend_app_state *app_state;
+    ldText_t *ld_text;
+    uint16_t name_id;
 
     if (parent == 0 || id == 0) {
+        return 0;
+    }
+
+    app_state = picoui_backend_text_get_app_state(parent);
+    if (app_state == NULL || app_state->ld_scene == NULL || parent_widget->ld_widget == NULL) {
         return 0;
     }
 
@@ -15,10 +36,29 @@ void *picoui_backend_create_text(void *parent, const char *id)
         return 0;
     }
 
+    name_id = ++app_state->next_ld_name_id;
+    ld_text = ldText_init(app_state->ld_scene,
+                          NULL,
+                          name_id,
+                          parent_widget->ld_name_id,
+                          0,
+                          0,
+                          220,
+                          48,
+                          NULL,
+                          TEXT_BOX_LINE_ALIGN_LEFT,
+                          false);
+    if (ld_text == NULL) {
+        free(widget);
+        return 0;
+    }
+
     widget->parent = parent;
     widget->id = id;
     widget->kind = PICOUI_BACKEND_WIDGET_TEXT;
     widget->theme = ((struct picoui_backend_widget *)parent)->theme;
+    widget->ld_widget = ld_text;
+    widget->ld_name_id = name_id;
     if (picoui_backend_widget_attach_child(parent, widget) != 0) {
         free(widget);
         return 0;

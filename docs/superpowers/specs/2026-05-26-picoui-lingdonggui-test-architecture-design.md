@@ -22,6 +22,10 @@
 4. **推荐使用入口**
    - 常规开发、测试、PicoUI demo 构建建议统一从仓库根入口执行。
    - `examples/sdl` 子目录 configure 目前仍可用，但更适合作为 SDL demo 定向调试或历史兼容路径，而不是主推荐路径。
+5. **当前证据层级**
+   - `tests/picoui/unit` / `contract` 用于证明 public API、backend contract、style/event/layout 语义。
+   - `tests/picoui/runtime/check_picoui_runtime.py` 用于证明 build、启动、capture、退出码与基本回归。
+   - runtime/capture 不是“真实 backend 已全部完成”的单独证据，不能替代能力矩阵与单元测试口径。
 
 ---
 
@@ -267,6 +271,20 @@ examples/sdl/tests/
 
 - 仓库级 configure/build 流程能构建 PicoUI runtime/demo target
 - `PicoUI` 不只是“头文件过了”，而是至少具备最小 buildable runtime 闭环
+- 当前还要明确：这层只证明 smoke / 启动 / capture / 回归，不直接证明 `backend_app.c` 已完全退出正式职责
+
+### 6.5 当前 PicoUI 能力矩阵与测试映射
+
+| 能力 | 当前状态 | 主要证据层 |
+| --- | --- | --- |
+| static widget 真实 backend 映射 | 已完成 | `tests/picoui/unit/test_picoui_widgets.c` + `check_picoui_backend_mapping.py` |
+| interactive widget 真实 backend 映射 | 已完成 | `tests/picoui/unit/test_picoui_widgets.c` + runtime marker |
+| flex/grid 真实 layout 映射 | 已完成 | `tests/picoui/unit/test_picoui_layout.c` |
+| native event/message pipeline | 已完成 | `tests/picoui/unit/test_picoui_button_events.c` + `test_picoui_widgets.c` |
+| `window/button/checkbox/switch/slider/label/text` theme/style apply | 已完成 | `tests/picoui/unit/test_picoui_theme.c` |
+| `image` theme/style apply | 当前拒绝 | `tests/picoui/unit/test_picoui_theme.c` 明确锁定拒绝语义 |
+| demo 启动 / capture / smoke | 已完成 | `tests/picoui/runtime/check_picoui_runtime.py` |
+| `backend_app.c` 最终退场 | 已收缩为 temporary smoke path | `A7` 当前要求是去掉 fake renderer 主职责，不要求文件完全消失 |
 
 ---
 

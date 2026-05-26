@@ -1,5 +1,96 @@
 #include "backend.h"
+#include "internal.h"
 #include "../../../../src/gui/ldBase.h"
+#include "../../../../src/gui/ldButton.h"
+#include "../../../../src/gui/ldCheckBox.h"
+#include "../../../../src/gui/ldSlider.h"
+#include "../../../../src/gui/ldSwitch.h"
+#include "../../../../src/misc/ldMsg.h"
+
+static int picoui_backend_slider_percent_to_value(struct picoui_slider *slider, int permille)
+{
+    int range;
+    int scaled;
+
+    if (slider == NULL) {
+        return permille;
+    }
+
+    if (permille < 0) {
+        permille = 0;
+    }
+    if (permille > 1000) {
+        permille = 1000;
+    }
+
+    range = slider->max_value - slider->min_value;
+    if (range <= 0) {
+        return slider->min_value;
+    }
+
+    scaled = slider->min_value + ((range * permille) / 1000);
+    if (scaled < slider->min_value) {
+        return slider->min_value;
+    }
+    if (scaled > slider->max_value) {
+        return slider->max_value;
+    }
+    return scaled;
+}
+
+static int picoui_backend_slider_value_to_percent(struct picoui_slider *slider, int value)
+{
+    int range;
+
+    if (slider == NULL) {
+        return value;
+    }
+
+    range = slider->max_value - slider->min_value;
+    if (range <= 0) {
+        return value;
+    }
+
+    return ((value - slider->min_value) * 100) / range;
+}
+
+static void picoui_backend_sync_ld_value(struct picoui_backend_widget *backend,
+                                         struct picoui_widget *widget,
+                                         int value)
+{
+    if (backend == NULL || backend->ld_widget == NULL) {
+        return;
+    }
+
+    switch (backend->kind) {
+    case PICOUI_BACKEND_WIDGET_CHECKBOX: {
+        ldCheckBox_t *ld_checkbox = (ldCheckBox_t *)backend->ld_widget;
+        ld_checkbox->isChecked = value != 0;
+        ld_checkbox->use_as__ldBase_t.isDirtyRegionUpdate = true;
+        break;
+    }
+    case PICOUI_BACKEND_WIDGET_SWITCH: {
+        ldSwitch_t *ld_switch = (ldSwitch_t *)backend->ld_widget;
+        uint16_t progress = value != 0 ? 1000U : 0U;
+        ld_switch->isChecked = value != 0;
+        ld_switch->animProgress = progress;
+        ld_switch->animStartProgress = progress;
+        ld_switch->animTargetProgress = progress;
+        ld_switch->animElapsedMs = 0U;
+        ld_switch->isAnimating = false;
+        ld_switch->use_as__ldBase_t.isDirtyRegionUpdate = true;
+        break;
+    }
+    case PICOUI_BACKEND_WIDGET_SLIDER: {
+        ldSlider_t *ld_slider = (ldSlider_t *)backend->ld_widget;
+        int percent = picoui_backend_slider_value_to_percent((struct picoui_slider *)widget, value);
+        ldSliderSetPercent(ld_slider, (float)percent);
+        break;
+    }
+    default:
+        break;
+    }
+}
 
 static void picoui_backend_emit_ld_event_bridge(struct picoui_backend_widget *backend,
                                                 enum picoui_backend_signal signal,
@@ -23,6 +114,83 @@ static void picoui_backend_emit_ld_event_bridge(struct picoui_backend_widget *ba
               (uint64_t)value);
 }
 
+static bool picoui_backend_ld_event_bridge_slot(struct ld_scene_t *scene, ldMsg_t msg)
+{
+    struct picoui_backend_widget *backend = NULL;
+
+    (void)scene;
+
+    if (msg.ptSender == NULL) {
+        return false;
+    }
+
+    backend = (struct picoui_backend_widget *)((ldBase_t *)msg.ptSender)->pInfo;
+    if (backend == NULL) {
+        return false;
+    }
+
+    picoui_backend_widget_dispatch_native_signal(backend, msg.signal, msg.value);
+    return false;
+}
+
+static int picoui_backend_widget_connect_native_events(struct picoui_backend_widget *backend)
+{
+    uint8_t primary_signal = SIGNAL_NO_OPERATION;
+    uint8_t secondary_signal = SIGNAL_NO_OPERATION;
+    ldBase_t *sender = NULL;
+    ldAssn_t *assn = NULL;
+
+    if (backend == NULL || backend->ld_widget == NULL) {
+        return -1;
+    }
+
+    sender = (ldBase_t *)backend->ld_widget;
+    sender->pInfo = backend;
+
+    switch (backend->kind) {
+    case PICOUI_BACKEND_WIDGET_BUTTON:
+        primary_signal = SIGNAL_PRESS;
+        secondary_signal = SIGNAL_RELEASE;
+        break;
+    case PICOUI_BACKEND_WIDGET_CHECKBOX:
+    case PICOUI_BACKEND_WIDGET_SWITCH:
+    case PICOUI_BACKEND_WIDGET_SLIDER:
+        primary_signal = SIGNAL_VALUE_CHANGED;
+        break;
+    default:
+        return 0;
+    }
+
+    assn = sender->ptAssn;
+    while (assn != NULL) {
+        if (assn->signal == primary_signal && assn->pFunc == picoui_backend_ld_event_bridge_slot) {
+            primary_signal = SIGNAL_NO_OPERATION;
+            break;
+        }
+        assn = assn->ptNext;
+    }
+    if (primary_signal != SIGNAL_NO_OPERATION &&
+        !ldMsgConnect(sender, primary_signal, picoui_backend_ld_event_bridge_slot)) {
+        return -1;
+    }
+    if (secondary_signal != SIGNAL_NO_OPERATION) {
+        assn = sender->ptAssn;
+        while (assn != NULL) {
+            if (assn->signal == secondary_signal && assn->pFunc == picoui_backend_ld_event_bridge_slot) {
+                secondary_signal = SIGNAL_NO_OPERATION;
+                break;
+            }
+            assn = assn->ptNext;
+        }
+        if (secondary_signal != SIGNAL_NO_OPERATION &&
+            !ldMsgConnect(sender, secondary_signal, picoui_backend_ld_event_bridge_slot)) {
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
 void picoui_backend_emit_value_changed(picoui_value_changed_cb cb,
                                        struct picoui_widget *widget,
                                        int value,
@@ -42,6 +210,29 @@ void picoui_backend_emit_event(picoui_event_cb cb,
     }
 }
 
+int picoui_backend_widget_bind_host(void *backend_widget, struct picoui_widget *widget)
+{
+    struct picoui_backend_widget *backend = backend_widget;
+    struct picoui_backend_app_state *app_state = NULL;
+
+    if (backend == 0 || widget == 0) {
+        return -1;
+    }
+
+    backend->host_widget = widget;
+    if (backend->owner != NULL && backend->owner->backend_app != NULL) {
+        app_state = (struct picoui_backend_app_state *)backend->owner->backend_app;
+    }
+    if (app_state != NULL && app_state->ld_scene != NULL && backend->ld_widget != NULL) {
+        if (picoui_backend_widget_bind_ld_event_bridge(backend,
+                                                       app_state->ld_scene,
+                                                       backend->ld_widget) != 0) {
+            return -1;
+        }
+    }
+    return 0;
+}
+
 int picoui_backend_widget_bind_ld_event_bridge(void *backend_widget,
                                                struct ld_scene_t *scene,
                                                void *sender)
@@ -54,6 +245,9 @@ int picoui_backend_widget_bind_ld_event_bridge(void *backend_widget,
 
     backend->ld_event_bridge_scene = scene;
     backend->ld_event_bridge_sender = sender;
+    if (picoui_backend_widget_connect_native_events(backend) != 0) {
+        return -1;
+    }
     return 0;
 }
 
@@ -76,10 +270,13 @@ int picoui_backend_widget_dispatch_signal(void *backend_widget,
         }
 
         backend->value = value;
+        picoui_backend_sync_ld_value(backend, widget, value);
         backend->last_signal = signal;
         backend->dispatch_count++;
         picoui_backend_emit_ld_event_bridge(backend, signal, value);
-        picoui_backend_emit_value_changed(cb, widget, value, user_data);
+        if (cb != 0) {
+            picoui_backend_emit_value_changed(cb, widget, value, user_data);
+        }
         return 0;
     }
 
@@ -108,18 +305,144 @@ int picoui_backend_widget_dispatch_event(void *backend_widget,
     return -1;
 }
 
+int picoui_backend_widget_dispatch_native_signal(void *backend_widget,
+                                                 uint32_t native_signal,
+                                                 uint64_t native_value)
+{
+    struct picoui_backend_widget *backend = backend_widget;
+    struct picoui_widget *host_widget;
+
+    if (backend == 0) {
+        return -1;
+    }
+
+    host_widget = backend->host_widget;
+    if (host_widget == 0) {
+        return -1;
+    }
+
+    switch (backend->kind) {
+    case PICOUI_BACKEND_WIDGET_BUTTON: {
+        struct picoui_button *button = (struct picoui_button *)host_widget;
+
+        if (native_signal == SIGNAL_PRESS) {
+            return picoui_backend_widget_dispatch_event(backend,
+                                                        PICOUI_BACKEND_SIGNAL_PRESSED,
+                                                        button->on_pressed,
+                                                        host_widget,
+                                                        button->on_pressed_user_data);
+        }
+        if (native_signal == SIGNAL_RELEASE) {
+            int rc;
+
+            rc = picoui_backend_widget_dispatch_event(backend,
+                                                      PICOUI_BACKEND_SIGNAL_RELEASED,
+                                                      button->on_released,
+                                                      host_widget,
+                                                      button->on_released_user_data);
+            if (rc != 0) {
+                return rc;
+            }
+
+            if (button->on_clicked != 0) {
+                picoui_backend_emit_clicked(button->on_clicked,
+                                            host_widget,
+                                            button->user_data);
+            }
+            return 0;
+        }
+        return -1;
+    }
+    case PICOUI_BACKEND_WIDGET_CHECKBOX: {
+        struct picoui_checkbox *checkbox = (struct picoui_checkbox *)host_widget;
+        int normalized_value;
+
+        if (native_signal != SIGNAL_VALUE_CHANGED) {
+            return -1;
+        }
+
+        normalized_value = native_value != 0;
+        checkbox->checked = normalized_value;
+        backend->value = normalized_value;
+        picoui_backend_sync_ld_value(backend, host_widget, normalized_value);
+        backend->last_signal = PICOUI_BACKEND_SIGNAL_VALUE_CHANGED;
+        backend->dispatch_count++;
+        picoui_backend_emit_value_changed(checkbox->cb,
+                                          host_widget,
+                                          normalized_value,
+                                          checkbox->user_data);
+        return 0;
+    }
+    case PICOUI_BACKEND_WIDGET_SWITCH: {
+        struct picoui_switch *sw = (struct picoui_switch *)host_widget;
+        int normalized_value;
+
+        if (native_signal != SIGNAL_VALUE_CHANGED) {
+            return -1;
+        }
+
+        normalized_value = native_value != 0;
+        sw->checked = normalized_value;
+        backend->value = normalized_value;
+        picoui_backend_sync_ld_value(backend, host_widget, normalized_value);
+        backend->last_signal = PICOUI_BACKEND_SIGNAL_VALUE_CHANGED;
+        backend->dispatch_count++;
+        picoui_backend_emit_value_changed(sw->cb,
+                                          host_widget,
+                                          normalized_value,
+                                          sw->user_data);
+        return 0;
+    }
+    case PICOUI_BACKEND_WIDGET_SLIDER: {
+        struct picoui_slider *slider = (struct picoui_slider *)host_widget;
+        int widget_value;
+
+        if (native_signal != SIGNAL_VALUE_CHANGED) {
+            return -1;
+        }
+
+        widget_value = picoui_backend_slider_percent_to_value(slider, (int)native_value);
+        slider->value = widget_value;
+        backend->value = widget_value;
+        picoui_backend_sync_ld_value(backend, host_widget, widget_value);
+        backend->last_signal = PICOUI_BACKEND_SIGNAL_VALUE_CHANGED;
+        backend->dispatch_count++;
+        picoui_backend_emit_value_changed(slider->cb,
+                                          host_widget,
+                                          widget_value,
+                                          slider->user_data);
+        return 0;
+    }
+    default:
+        break;
+    }
+
+    return -1;
+}
+
 int picoui_backend_widget_update_value(void *backend_widget,
                                        int value,
                                        picoui_value_changed_cb cb,
                                        struct picoui_widget *widget,
                                        void *user_data)
 {
-    return picoui_backend_widget_dispatch_signal(backend_widget,
-                                                 PICOUI_BACKEND_SIGNAL_VALUE_CHANGED,
-                                                 value,
-                                                 cb,
-                                                 widget,
-                                                 user_data);
+    struct picoui_backend_widget *backend = backend_widget;
+
+    if (backend == 0) {
+        return -1;
+    }
+
+    if (cb == 0 && user_data == 0 && backend->dispatch_count == 0) {
+        backend->value = value;
+        picoui_backend_sync_ld_value(backend, widget, value);
+        return 0;
+    }
+
+    backend->value = value;
+    picoui_backend_sync_ld_value(backend, widget, value);
+    (void)cb;
+    (void)user_data;
+    return 0;
 }
 
 void picoui_backend_emit_clicked(picoui_event_cb cb,

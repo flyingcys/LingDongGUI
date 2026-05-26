@@ -19,6 +19,18 @@ static void make_ui(struct picoui_window *win)
     picoui_label_set_text(title, "Grid");
     picoui_button_set_text(left, "A");
     picoui_button_set_text(right, "B");
+    picoui_widget_set_grid_cell((struct picoui_widget *)title,
+                                0, 0, 2, 1,
+                                PICOUI_ALIGN_START,
+                                PICOUI_ALIGN_CENTER);
+    picoui_widget_set_grid_cell((struct picoui_widget *)left,
+                                0, 1, 1, 1,
+                                PICOUI_ALIGN_STRETCH,
+                                PICOUI_ALIGN_STRETCH);
+    picoui_widget_set_grid_cell((struct picoui_widget *)right,
+                                1, 1, 1, 1,
+                                PICOUI_ALIGN_STRETCH,
+                                PICOUI_ALIGN_STRETCH);
 }
 
 static int run_demo(void)

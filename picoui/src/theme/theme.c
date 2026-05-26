@@ -32,6 +32,11 @@ static int picoui_theme_part_is_valid(enum picoui_part part)
 static int picoui_theme_part_supported(enum picoui_backend_widget_kind kind, enum picoui_part part)
 {
     switch (kind) {
+        case PICOUI_BACKEND_WIDGET_WINDOW:
+            return part == PICOUI_PART_MAIN;
+        case PICOUI_BACKEND_WIDGET_LABEL:
+        case PICOUI_BACKEND_WIDGET_TEXT:
+            return part == PICOUI_PART_MAIN || part == PICOUI_PART_TEXT;
         case PICOUI_BACKEND_WIDGET_BUTTON:
             return part == PICOUI_PART_MAIN || part == PICOUI_PART_TEXT;
         case PICOUI_BACKEND_WIDGET_CHECKBOX:
@@ -156,7 +161,12 @@ int picoui_theme_apply_to_widget(struct picoui_theme *theme,
     widget->bg_color = bg_color;
     widget->text_color = text_color;
     widget->border_color = border_color;
-    return 0;
+    return picoui_backend_widget_apply_style(widget->backend_widget,
+                                             part,
+                                             state,
+                                             bg_color,
+                                             text_color,
+                                             border_color);
 }
 
 int picoui_app_set_theme(struct picoui_app *app, struct picoui_theme *theme)

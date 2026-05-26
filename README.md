@@ -113,6 +113,19 @@ PicoUI 是构建在 LingDongGUI 之上的应用层抽象，提供统一的 Linux
 - 推荐从 `picoui/demo/hello_world` 开始
 - 进一步可查看 `picoui/docs/quick_start.md` 与 `picoui/docs/api_overview.md`
 
+### 当前能力矩阵
+
+| 能力 | 当前状态 | 说明 |
+| --- | --- | --- |
+| `window/label/button/text` 真实 backend 映射 | 已完成 | 已创建并驱动真实 `LingDongGUI` 对象，不再只是本地 shadow |
+| `checkbox/switch/slider` 真实 backend 映射 | 已完成 | 值同步与 native event 已接入真实消息链 |
+| `image` 对象映射与 source 绑定 | 已完成 | `picoui_image_source` 已能绑定到底层 `ldImage` |
+| `image` 的 theme/style apply | 当前拒绝 | A6 当前明确拒绝 `PICOUI_PART_MAIN`，不能写成默认支持 |
+| `flex/grid` 布局映射 | 已完成 | 已映射到底层 `ldWindow/ldBase` layout 语义 |
+| `theme/state/part/style` | 部分完成 | `window/button/checkbox/switch/slider/label/text` 已有真实 apply，`image` 仍明确拒绝 |
+| runtime/capture | smoke 级证据 | 只能证明 build、启动、capture、回归，不等于 backend 最终闭环 |
+| `backend_app.c` | temporary smoke path | 当前仍承担 host runtime/fallback/capture 相关过渡职责，不是正式渲染内核 |
+
 ### 当前推荐构建入口
 
 - 推荐从仓库根目录执行：`rtk cmake -S . -B build`
@@ -120,6 +133,12 @@ PicoUI 是构建在 LingDongGUI 之上的应用层抽象，提供统一的 Linux
 - 当前默认构建仍会因为 `LD_BUILD_SDL_DEMO=ON` 进入 `examples/sdl`，因此 SDL 依赖仍会参与默认构建
 - `tests/picoui/runtime/check_picoui_runtime.py` 会使用独立的 `build/picoui-runtime` 目录做 PicoUI demo runtime 检查
 - `examples/sdl` 子目录 configure 仍可用于 SDL demo 定向调试，但不再是主推荐入口
+
+### 当前口径提醒
+
+- `PicoUI` 的主线目标已经收口到“真实 `PicoUI -> LingDongGUI` backend 映射”，不是把 SDL host 做成第二套 GUI 渲染器
+- `tests/picoui/runtime/check_picoui_runtime.py` 与 capture 结果仍只属于 smoke / 回归证据
+- `backend_app.c` 当前仍是 `temporary smoke path` / host harness，但已不再承担正式 fake renderer 主输出职责
 
 ## 技术交流
 

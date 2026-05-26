@@ -25,6 +25,10 @@ struct picoui_checkbox *picoui_checkbox_create(struct picoui_window *parent, con
     checkbox->id = id;
     checkbox->widget.visible = 1;
     checkbox->widget.enabled = 1;
+    if (picoui_backend_widget_bind_host(checkbox->widget.backend_widget, &checkbox->widget) != 0) {
+        free(checkbox);
+        return 0;
+    }
     return checkbox;
 }
 
@@ -32,6 +36,7 @@ struct picoui_checkbox *picoui_checkbox_create_with_props(struct picoui_window *
                                                           const struct picoui_checkbox_props *props)
 {
     struct picoui_checkbox *checkbox;
+    struct picoui_backend_widget *backend;
 
     if (props == 0) {
         return 0;
@@ -42,14 +47,27 @@ struct picoui_checkbox *picoui_checkbox_create_with_props(struct picoui_window *
         return 0;
     }
 
-    checkbox->checked = props->checked != 0;
-    checkbox->cb = props->on_toggled;
-    checkbox->user_data = props->user_data;
+    checkbox->checked = 0;
+    checkbox->cb = 0;
+    checkbox->user_data = 0;
     if (props->text != 0 && picoui_checkbox_set_text(checkbox, props->text) != 0) {
         free(checkbox);
         return 0;
     }
-    ((struct picoui_backend_widget *)checkbox->widget.backend_widget)->value = checkbox->checked;
+    backend = (struct picoui_backend_widget *)checkbox->widget.backend_widget;
+    checkbox->checked = props->checked != 0;
+    if (picoui_backend_widget_update_value(backend,
+                                           checkbox->checked,
+                                           0,
+                                           &checkbox->widget,
+                                           0) != 0) {
+        free(checkbox);
+        return 0;
+    }
+    backend->last_signal = PICOUI_BACKEND_SIGNAL_NONE;
+    backend->dispatch_count = 0;
+    checkbox->cb = props->on_toggled;
+    checkbox->user_data = props->user_data;
     return checkbox;
 }
 
@@ -71,12 +89,11 @@ int picoui_checkbox_set_checked(struct picoui_checkbox *checkbox, int checked)
     }
 
     checkbox->checked = normalized_checked;
-    return picoui_backend_widget_dispatch_signal(checkbox->widget.backend_widget,
-                                                 PICOUI_BACKEND_SIGNAL_VALUE_CHANGED,
-                                                 checkbox->checked,
-                                                 checkbox->cb,
-                                                 &checkbox->widget,
-                                                 checkbox->user_data);
+    return picoui_backend_widget_update_value(checkbox->widget.backend_widget,
+                                              checkbox->checked,
+                                              checkbox->cb,
+                                              &checkbox->widget,
+                                              checkbox->user_data);
 }
 
 int picoui_checkbox_is_checked(struct picoui_checkbox *checkbox)

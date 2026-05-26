@@ -11,6 +11,7 @@ from pathlib import Path
 
 TEST_FILE = Path(__file__).resolve()
 SDL_ROOT = TEST_FILE.parents[1]
+REPO_ROOT = TEST_FILE.parents[3]
 EXECUTABLE_NAME = "ldgui_sdl_demo.exe" if sys.platform.startswith("win") else "ldgui_sdl_demo"
 
 
@@ -78,6 +79,21 @@ def main() -> int:
     parser.add_argument("--build-dir", type=Path, required=True)
     parser.add_argument("--timeout", type=float, default=8.0)
     args = parser.parse_args()
+
+    if args.demo == "5":
+        settings_demo = REPO_ROOT / "picoui" / "demo" / "settings_panel" / "main.c"
+        demo_source = settings_demo.read_text(encoding="utf-8")
+        forbidden_markers = (
+            ".width =",
+            ".height =",
+            "picoui_widget_set_size(",
+            "picoui_widget_set_pos(",
+        )
+        if any(marker in demo_source for marker in forbidden_markers):
+            raise AssertionError(
+                "A4 RED: settings_panel 仍含 demo 侧硬编码尺寸/位置补丁，"
+                f"禁止进入 GREEN。source={settings_demo}"
+            )
 
     build_dir = args.build_dir.resolve()
     _run(["cmake", "-S", str(SDL_ROOT), "-B", str(build_dir), f"-DUSE_DEMO={args.demo}"])

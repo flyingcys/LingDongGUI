@@ -114,10 +114,27 @@ PicoUI is the application-level abstraction built on top of LingDongGUI and expo
 - `tests/picoui/runtime/check_picoui_runtime.py` uses a separate build tree at `build/picoui-runtime`
 - Direct `examples/sdl` configure is still useful for focused SDL demo debugging, but it is no longer the primary recommended path
 
+### PicoUI 当前能力矩阵
+
+| 能力 | 当前状态 | 说明 |
+| --- | --- | --- |
+| `window/label/button/text` 真实 backend 映射 | 已完成 | 已映射到真实 `LingDongGUI` 控件对象 |
+| `checkbox/switch/slider` 真实 backend 映射 | 已完成 | 已接入真实值同步与 native event |
+| `image` 对象映射与 source 绑定 | 已完成 | 已可把 `picoui_image_source` 绑定到底层 `ldImage` |
+| `image` 的 theme/style apply | 当前拒绝 | 当前明确拒绝 `PICOUI_PART_MAIN`，不能写成默认支持 |
+| `flex/grid` 布局映射 | 已完成 | 已映射到底层 layout 语义 |
+| `theme/state/part/style` | 部分完成 | `window/button/checkbox/switch/slider/label/text` 已有真实 apply，`image` 仍拒绝 |
+| runtime/capture | smoke 级证据 | 只能证明 build、启动、capture、回归，不等于 backend 最终闭环 |
+| `backend_app.c` | temporary smoke path | 当前仍是 host runtime/fallback/capture 过渡层，不是正式渲染内核 |
+
+### 当前口径提醒
+
+- `PicoUI` 当前主线已收口为“真实 backend 映射”，不是继续扩写 SDL 假渲染器
+- runtime/capture 测试只提供 smoke / 回归证据
+- `backend_app.c` 当前仍是 `temporary smoke path` / host harness，但已不再承担正式 fake renderer 主输出职责
+
 ## Contact Information
 
 🐧 QQ Group：187033407
 
 📧 E-Mail: 59935554@qq.com
-
-

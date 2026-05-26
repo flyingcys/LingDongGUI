@@ -154,7 +154,9 @@ function(ld_define_core_targets)
     add_library(picoui_backend_ldgui STATIC
         ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_app.c
         ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_widget.c
+        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_widget_tree.c
         ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_theme.c
+        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_style_apply.c
         ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_layout.c
         ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_event.c
         ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_window.c
@@ -171,7 +173,7 @@ function(ld_define_core_targets)
         ${LD_REPO_ROOT}/picoui/src/core
         ${LD_REPO_ROOT}/picoui/src/backend/ldgui
     )
-    target_link_libraries(picoui_backend_ldgui PUBLIC picoui_core longdonggui)
+    target_link_libraries(picoui_backend_ldgui PUBLIC picoui_core longdonggui longdonggui_porting_default)
     if(WIN32)
         if(CMAKE_SIZEOF_VOID_P EQUAL 8)
             set(LD_SDL2_ROOT "${LD_EXAMPLES_DIR}/sdl/sdl2/64")

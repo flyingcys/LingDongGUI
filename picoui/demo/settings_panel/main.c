@@ -2,29 +2,43 @@
 
 static void make_ui(struct picoui_window *win)
 {
-    struct picoui_button_props apply_props = {
-        .id = "apply",
-        .text = "Apply",
-        .width = 96,
-        .height = 36,
-    };
     struct picoui_label *title;
     struct picoui_switch *wifi;
     struct picoui_slider *brightness;
     struct picoui_button *apply;
+    static const int cols[] = {-2, -1, 0};
+    static const int rows[] = {32, 36, 40, 0};
 
-    picoui_flex_set_flow(win, PICOUI_FLEX_FLOW_COLUMN);
-    picoui_flex_set_gap(win, 12, 12);
+    picoui_grid_set_columns(win, cols, 3);
+    picoui_grid_set_rows(win, rows, 4);
+    picoui_grid_set_gap(win, 12, 12);
+    picoui_grid_set_align(win, PICOUI_ALIGN_STRETCH, PICOUI_ALIGN_START);
 
     title = picoui_label_create(win, "title");
     wifi = picoui_switch_create(win, "wifi");
     brightness = picoui_slider_create(win, "brightness");
-    apply = picoui_button_create_with_props(win, &apply_props);
+    apply = picoui_button_create(win, "apply");
 
     picoui_label_set_text(title, "Settings");
     picoui_switch_set_checked(wifi, 1);
     picoui_slider_set_value(brightness, 75);
-    (void)apply;
+    picoui_button_set_text(apply, "Apply");
+    picoui_widget_set_grid_cell((struct picoui_widget *)title,
+                                0, 0, 2, 1,
+                                PICOUI_ALIGN_START,
+                                PICOUI_ALIGN_CENTER);
+    picoui_widget_set_grid_cell((struct picoui_widget *)wifi,
+                                0, 1, 2, 1,
+                                PICOUI_ALIGN_STRETCH,
+                                PICOUI_ALIGN_CENTER);
+    picoui_widget_set_grid_cell((struct picoui_widget *)brightness,
+                                0, 2, 2, 1,
+                                PICOUI_ALIGN_STRETCH,
+                                PICOUI_ALIGN_CENTER);
+    picoui_widget_set_grid_cell((struct picoui_widget *)apply,
+                                1, 3, 1, 1,
+                                PICOUI_ALIGN_END,
+                                PICOUI_ALIGN_CENTER);
 }
 
 static int run_demo(void)

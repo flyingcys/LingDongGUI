@@ -27,5 +27,11 @@ struct picoui_window *picoui_window_create(struct picoui_app *app, const char *i
     window->widget.backend_widget = backend_widget;
     window->widget.visible = 1;
     window->widget.enabled = 1;
+    window->flex_flow = PICOUI_FLEX_FLOW_ROW;
+    window->flex_main_align = PICOUI_ALIGN_START;
+    window->flex_cross_align = PICOUI_ALIGN_START;
+    window->flex_track_align = PICOUI_ALIGN_START;
+    window->grid_col_align = PICOUI_ALIGN_START;
+    window->grid_row_align = PICOUI_ALIGN_START;
     return window;
 }
