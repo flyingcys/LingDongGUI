@@ -29,3 +29,16 @@ vscode sdl 电脑端模拟运行，开放性强，大佬首选，配置复杂。
 移植并不复杂，可以参照sdl项目。其中关键点是要适配math文件。
 
 移植请参考 [移植说明](./03%20porting.md)
+
+## PicoUI 快速开始
+
+如果你希望以统一的上层 API 使用 LingDongGUI，推荐直接从 PicoUI 开始。
+
+```c
+struct picoui_app *app = picoui_app_create();
+struct picoui_window *win = picoui_window_create(app, "root");
+struct picoui_label *label = picoui_label_create(win, "title");
+picoui_label_set_text(label, "Hello PicoUI");
+```
+
+更多说明见 `picoui/docs/quick_start.md`。

@@ -104,10 +104,18 @@ widget demo sdl
 
 📖 [中文教程](https://ldgui-doc-cn.readthedocs.io)
 
+## PicoUI
+
+PicoUI 是构建在 LingDongGUI 之上的应用层抽象，提供统一的 Linux 风格 `picoui_*` API。
+
+- 用户不需要直接使用 `ld*`
+- 用户不需要直接使用 `ARM-2D`
+- 推荐从 `picoui/demo/hello_world` 开始
+- 进一步可查看 `picoui/docs/quick_start.md` 与 `picoui/docs/api_overview.md`
+
 ## 技术交流
 
 🐧 QQ群：187033407
 
 📧 电子邮箱: 59935554@qq.com
-
 

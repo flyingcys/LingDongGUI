@@ -434,3 +434,181 @@ else()
         target_link_libraries(ldgui_sdl_demo PRIVATE Threads::Threads)
     endif()
 endif()
+
+file(GLOB PICOUI_CORE_SOURCES CONFIGURE_DEPENDS
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/core/*.c"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/widgets/window.c"
+)
+
+add_executable(picoui_smoke_test
+    "${SDL_EXAMPLE_DIR}/tests/picoui/test_picoui_smoke.c"
+    ${PICOUI_CORE_SOURCES}
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/backend/ldgui/backend_window.c"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/backend/ldgui/backend_layout.c"
+)
+
+target_include_directories(picoui_smoke_test PRIVATE
+    "${SDL_EXAMPLE_DIR}/../../picoui/include"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/core"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/backend/ldgui"
+)
+
+target_compile_options(picoui_smoke_test PRIVATE
+    -fdiagnostics-color=always
+    -g
+    -std=gnu11
+)
+
+add_test(NAME picoui_smoke_test COMMAND picoui_smoke_test)
+add_test(
+    NAME check_picoui_public_api
+    COMMAND "${Python3_EXECUTABLE}" "${SDL_EXAMPLE_DIR}/tests/check_picoui_public_api.py"
+)
+set_tests_properties(check_picoui_public_api PROPERTIES
+    WORKING_DIRECTORY "${SDL_EXAMPLE_DIR}"
+)
+
+add_executable(picoui_theme_test
+    "${SDL_EXAMPLE_DIR}/tests/picoui/test_picoui_theme.c"
+    ${PICOUI_CORE_SOURCES}
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/theme/theme.c"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/widgets/label.c"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/widgets/button.c"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/backend/ldgui/backend_theme.c"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/backend/ldgui/backend_window.c"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/backend/ldgui/backend_layout.c"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/backend/ldgui/backend_label.c"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/backend/ldgui/backend_button.c"
+)
+
+target_include_directories(picoui_theme_test PRIVATE
+    "${SDL_EXAMPLE_DIR}/../../picoui/include"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/core"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/backend/ldgui"
+)
+
+target_compile_options(picoui_theme_test PRIVATE
+    -fdiagnostics-color=always
+    -g
+    -std=gnu11
+)
+
+add_test(NAME picoui_theme_test COMMAND picoui_theme_test)
+
+add_executable(picoui_widgets_test
+    "${SDL_EXAMPLE_DIR}/tests/picoui/test_picoui_widgets.c"
+    ${PICOUI_CORE_SOURCES}
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/backend/ldgui/backend_window.c"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/backend/ldgui/backend_layout.c"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/widgets/checkbox.c"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/widgets/switch.c"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/widgets/slider.c"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/backend/ldgui/backend_event.c"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/backend/ldgui/backend_checkbox.c"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/backend/ldgui/backend_switch.c"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/backend/ldgui/backend_slider.c"
+)
+
+target_include_directories(picoui_widgets_test PRIVATE
+    "${SDL_EXAMPLE_DIR}/../../picoui/include"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/core"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/backend/ldgui"
+)
+
+target_compile_options(picoui_widgets_test PRIVATE
+    -fdiagnostics-color=always
+    -g
+    -std=gnu11
+)
+
+add_test(NAME picoui_widgets_test COMMAND picoui_widgets_test)
+
+add_executable(picoui_layout_test
+    "${SDL_EXAMPLE_DIR}/tests/picoui/test_picoui_layout.c"
+    ${PICOUI_CORE_SOURCES}
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/layout/flex.c"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/layout/grid.c"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/theme/theme.c"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/widgets/label.c"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/widgets/button.c"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/widgets/checkbox.c"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/widgets/switch.c"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/widgets/slider.c"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/backend/ldgui/backend_theme.c"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/backend/ldgui/backend_window.c"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/backend/ldgui/backend_layout.c"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/backend/ldgui/backend_label.c"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/backend/ldgui/backend_button.c"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/backend/ldgui/backend_event.c"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/backend/ldgui/backend_checkbox.c"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/backend/ldgui/backend_switch.c"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/backend/ldgui/backend_slider.c"
+)
+
+target_include_directories(picoui_layout_test PRIVATE
+    "${SDL_EXAMPLE_DIR}/../../picoui/include"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/core"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/backend/ldgui"
+)
+
+target_compile_options(picoui_layout_test PRIVATE
+    -fdiagnostics-color=always
+    -g
+    -std=gnu11
+)
+
+add_test(NAME picoui_layout_test COMMAND picoui_layout_test)
+
+add_executable(picoui_settings_panel_demo
+    "${SDL_EXAMPLE_DIR}/../../picoui/demo/settings_panel/main.c"
+    ${PICOUI_CORE_SOURCES}
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/layout/flex.c"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/layout/grid.c"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/theme/theme.c"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/widgets/label.c"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/widgets/text.c"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/widgets/image.c"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/widgets/button.c"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/widgets/checkbox.c"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/widgets/switch.c"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/widgets/slider.c"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/backend/ldgui/backend_theme.c"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/backend/ldgui/backend_window.c"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/backend/ldgui/backend_layout.c"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/backend/ldgui/backend_label.c"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/backend/ldgui/backend_text.c"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/backend/ldgui/backend_image.c"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/backend/ldgui/backend_button.c"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/backend/ldgui/backend_event.c"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/backend/ldgui/backend_checkbox.c"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/backend/ldgui/backend_switch.c"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/backend/ldgui/backend_slider.c"
+)
+
+target_include_directories(picoui_settings_panel_demo PRIVATE
+    "${SDL_EXAMPLE_DIR}/../../picoui/include"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/core"
+    "${SDL_EXAMPLE_DIR}/../../picoui/src/backend/ldgui"
+)
+
+target_compile_options(picoui_settings_panel_demo PRIVATE
+    -fdiagnostics-color=always
+    -g
+    -std=gnu11
+)
+
+add_test(
+    NAME check_picoui_demo_boundary
+    COMMAND "${Python3_EXECUTABLE}" "${SDL_EXAMPLE_DIR}/tests/check_picoui_demo_boundary.py"
+)
+set_tests_properties(check_picoui_demo_boundary PROPERTIES
+    WORKING_DIRECTORY "${SDL_EXAMPLE_DIR}"
+)
+
+add_test(
+    NAME check_picoui_runtime
+    COMMAND "${Python3_EXECUTABLE}" "${SDL_EXAMPLE_DIR}/tests/check_picoui_runtime.py"
+)
+set_tests_properties(check_picoui_runtime PROPERTIES
+    WORKING_DIRECTORY "${SDL_EXAMPLE_DIR}"
+)
