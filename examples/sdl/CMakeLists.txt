@@ -9,6 +9,11 @@ set(CMAKE_C_EXTENSIONS ON)
 set(USE_DEMO "2" CACHE STRING "SDL demo id (0=legacy-widget, 1=startup, 2=widget, 3=printer, 4=layout, 5=grid, 6=widget-swipe)")
 set_property(CACHE USE_DEMO PROPERTY STRINGS 0 1 2 3 4 5 6)
 
+if(NOT COMMAND ld_apply_common_target_config)
+    include("${CMAKE_CURRENT_LIST_DIR}/../../cmake/LingDongGUI.cmake")
+    ld_define_core_targets()
+endif()
+
 set(SUPPORTED_DEMOS 0 1 2 3 4 5 6)
 list(FIND SUPPORTED_DEMOS "${USE_DEMO}" USE_DEMO_INDEX)
 if(USE_DEMO_INDEX EQUAL -1)
@@ -184,6 +189,7 @@ target_compile_options(ldswitch_internal_test PRIVATE
 )
 
 add_test(NAME ldswitch_internal_test COMMAND ldswitch_internal_test)
+set_tests_properties(ldswitch_internal_test PROPERTIES LABELS "sdl;unit")
 
 add_executable(ldswitch_widget_test
     "${SDL_EXAMPLE_DIR}/tests/switch/test_ldswitch_widget.c"
@@ -212,6 +218,7 @@ target_compile_options(ldswitch_widget_test PRIVATE
 )
 
 add_test(NAME ldswitch_widget_test COMMAND ldswitch_widget_test)
+set_tests_properties(ldswitch_widget_test PROPERTIES LABELS "sdl;unit")
 
 add_executable(uiwidget_swipe_logic_test
     "${SDL_EXAMPLE_DIR}/tests/swipe/test_uiwidget_swipe_logic.c"
@@ -229,6 +236,7 @@ target_compile_options(uiwidget_swipe_logic_test PRIVATE
 )
 
 add_test(NAME uiwidget_swipe_logic_test COMMAND uiwidget_swipe_logic_test)
+set_tests_properties(uiwidget_swipe_logic_test PROPERTIES LABELS "sdl;unit")
 
 add_executable(layout_window_test
     "${SDL_EXAMPLE_DIR}/tests/layout/test_layout_window.c"
@@ -288,6 +296,7 @@ if(NOT WIN32)
 endif()
 
 add_test(NAME layout_window_test COMMAND layout_window_test)
+set_tests_properties(layout_window_test PROPERTIES LABELS "sdl;unit")
 
 add_test(
     NAME check_use_demo_0_legacy_widget
@@ -295,6 +304,7 @@ add_test(
 )
 set_tests_properties(check_use_demo_0_legacy_widget PROPERTIES
     WORKING_DIRECTORY "${SDL_EXAMPLE_DIR}"
+    LABELS "sdl;contract"
 )
 
 add_test(
@@ -303,6 +313,7 @@ add_test(
 )
 set_tests_properties(check_switch_focus_routing PROPERTIES
     WORKING_DIRECTORY "${SDL_EXAMPLE_DIR}"
+    LABELS "sdl;contract"
 )
 
 add_test(
@@ -311,6 +322,16 @@ add_test(
 )
 set_tests_properties(check_use_demo_5_grid_widget PROPERTIES
     WORKING_DIRECTORY "${SDL_EXAMPLE_DIR}"
+    LABELS "sdl;contract"
+)
+
+add_test(
+    NAME check_use_demo_6_widget_swipe
+    COMMAND "${Python3_EXECUTABLE}" "${SDL_EXAMPLE_DIR}/tests/check_use_demo_6_widget_swipe.py"
+)
+set_tests_properties(check_use_demo_6_widget_swipe PROPERTIES
+    WORKING_DIRECTORY "${SDL_EXAMPLE_DIR}"
+    LABELS "sdl;contract"
 )
 
 add_test(
@@ -321,6 +342,7 @@ add_test(
 )
 set_tests_properties(check_use_demo_0_runtime PROPERTIES
     WORKING_DIRECTORY "${SDL_EXAMPLE_DIR}"
+    LABELS "sdl;runtime"
 )
 
 add_test(
@@ -331,6 +353,7 @@ add_test(
 )
 set_tests_properties(check_use_demo_6_runtime PROPERTIES
     WORKING_DIRECTORY "${SDL_EXAMPLE_DIR}"
+    LABELS "sdl;runtime"
 )
 
 add_test(
@@ -340,6 +363,7 @@ add_test(
 )
 set_tests_properties(check_switch_capture_matrix PROPERTIES
     WORKING_DIRECTORY "${SDL_EXAMPLE_DIR}"
+    LABELS "sdl;runtime"
 )
 
 add_executable(ldgui_sdl_demo
@@ -440,4 +464,3 @@ add_executable(picoui_settings_panel_demo
 )
 target_link_libraries(picoui_settings_panel_demo PRIVATE picoui_backend_ldgui)
 ld_apply_common_target_config(picoui_settings_panel_demo)
-

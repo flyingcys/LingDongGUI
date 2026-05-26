@@ -47,7 +47,7 @@ def main() -> int:
 
     build_dir = args.build_dir.resolve()
     _run(["cmake", "-S", str(SDL_ROOT), "-B", str(build_dir), f"-DUSE_DEMO={args.demo}"])
-    _run(["cmake", "--build", str(build_dir)])
+    _run(["cmake", "--build", str(build_dir), "--target", "ldgui_sdl_demo"])
 
     demo_path = build_dir / EXECUTABLE_NAME
     if not demo_path.is_file():
