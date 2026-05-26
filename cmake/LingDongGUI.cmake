@@ -123,6 +123,52 @@ function(ld_define_core_targets)
     target_include_directories(longdonggui_host PUBLIC ${LD_COMMON_INCLUDE_DIRS})
     target_link_libraries(longdonggui_host PUBLIC longdonggui_arm2d)
     ld_apply_common_target_config(longdonggui_host)
+
+    add_library(picoui_core STATIC
+        ${LD_REPO_ROOT}/picoui/src/core/app.c
+        ${LD_REPO_ROOT}/picoui/src/core/widget.c
+        ${LD_REPO_ROOT}/picoui/src/core/event.c
+        ${LD_REPO_ROOT}/picoui/src/core/resource.c
+        ${LD_REPO_ROOT}/picoui/src/theme/theme.c
+        ${LD_REPO_ROOT}/picoui/src/layout/flex.c
+        ${LD_REPO_ROOT}/picoui/src/layout/grid.c
+        ${LD_REPO_ROOT}/picoui/src/widgets/window.c
+        ${LD_REPO_ROOT}/picoui/src/widgets/label.c
+        ${LD_REPO_ROOT}/picoui/src/widgets/text.c
+        ${LD_REPO_ROOT}/picoui/src/widgets/image.c
+        ${LD_REPO_ROOT}/picoui/src/widgets/button.c
+        ${LD_REPO_ROOT}/picoui/src/widgets/checkbox.c
+        ${LD_REPO_ROOT}/picoui/src/widgets/switch.c
+        ${LD_REPO_ROOT}/picoui/src/widgets/slider.c
+    )
+    target_include_directories(picoui_core PUBLIC
+        ${LD_REPO_ROOT}/picoui/include
+        ${LD_REPO_ROOT}/picoui/src/core
+        ${LD_REPO_ROOT}/picoui/src/backend/ldgui
+    )
+    ld_apply_common_target_config(picoui_core)
+
+    add_library(picoui_backend_ldgui STATIC
+        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_widget.c
+        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_theme.c
+        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_layout.c
+        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_event.c
+        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_window.c
+        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_label.c
+        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_text.c
+        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_image.c
+        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_button.c
+        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_checkbox.c
+        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_switch.c
+        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_slider.c
+    )
+    target_include_directories(picoui_backend_ldgui PUBLIC
+        ${LD_REPO_ROOT}/picoui/include
+        ${LD_REPO_ROOT}/picoui/src/core
+        ${LD_REPO_ROOT}/picoui/src/backend/ldgui
+    )
+    target_link_libraries(picoui_backend_ldgui PUBLIC picoui_core longdonggui)
+    ld_apply_common_target_config(picoui_backend_ldgui)
 endfunction()
 
 function(ld_add_c_unit_test target)
