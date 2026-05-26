@@ -71,6 +71,23 @@
 </table>
 <br>
 
+# PicoUI API
+
+第一阶段 PicoUI 提供：
+
+- `window`
+- `label`
+- `text`
+- `image`
+- `button`
+- `checkbox`
+- `switch`
+- `slider`
+- `flex`
+- `grid`
+
+PicoUI 对外统一暴露 `picoui_*`，用户不需要直接使用 `ld*` 或 `ARM-2D`。
+
 #### ldArcSetBgAngle
 <table>
     <tr>
