@@ -23,10 +23,13 @@ file(GLOB LD_ARM2D_LIBRARY_SOURCES CONFIGURE_DEPENDS "${LD_ARM2D_LIBRARY_DIR}/So
 file(GLOB LD_ARM2D_HELPER_SOURCES CONFIGURE_DEPENDS "${LD_ARM2D_HELPER_DIR}/Source/*.c")
 file(GLOB LD_MATH_SOURCES CONFIGURE_DEPENDS "${LD_MATH_DIR}/*.c")
 
-set(LD_PERF_COUNTER_SOURCES
-    "${LD_COMMON_DIR}/perf_counter/perf_counter.c"
-    "${LD_COMMON_DIR}/perf_counter/perfc_port_default.c"
-)
+set(LD_PERF_COUNTER_SOURCES)
+if(NOT APPLE)
+    list(APPEND LD_PERF_COUNTER_SOURCES
+        "${LD_COMMON_DIR}/perf_counter/perf_counter.c"
+        "${LD_COMMON_DIR}/perf_counter/perfc_port_default.c"
+    )
+endif()
 set(LD_ARM2D_CONTROL_SOURCES
     "${LD_ARM2D_CONTROLS_DIR}/controls.c"
     "${LD_ARM2D_CONTROLS_DIR}/spinning_wheel.c"

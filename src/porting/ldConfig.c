@@ -5,6 +5,7 @@
 #if defined(__PERF_COUNTER__)
 #include "perf_counter.h"
 #endif
+#include <time.h>
 
 __WEAK void __aeabi_assert(const char *chCond, const char *chLine, int wErrCode)
 {
