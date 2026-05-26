@@ -1,2 +1,8 @@
 add_library(ldgui_test_support STATIC ldgui_test_support.c)
+target_include_directories(ldgui_test_support PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(ldgui_test_support PUBLIC longdonggui_host)
+ld_apply_common_target_config(ldgui_test_support)
+
 add_library(picoui_test_support STATIC picoui_test_support.c)
+target_include_directories(picoui_test_support PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+ld_apply_common_target_config(picoui_test_support)
