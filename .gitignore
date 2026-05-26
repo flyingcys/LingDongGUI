@@ -56,3 +56,4 @@ dkms.conf
 
 #other
 uiPageOutput/
+third_party/lvgl/
