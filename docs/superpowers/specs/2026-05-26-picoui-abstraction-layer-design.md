@@ -788,3 +788,86 @@ backend 内部再映射到：
 - 以最小改动方式显著降低学习成本
 
 这套设计如果按边界执行，`PicoUI` 将更像一个稳定的应用层框架入口，而不是简单的 `ld*` 换前缀包装壳。
+
+---
+
+## 17. 二次 Review 结论（2026-05-26）
+
+> 本节基于当前仓库代码与测试现状复盘，用于回答“是否已全部开发完成”。
+
+### 17.1 总结论
+
+**未全部完成。**
+
+当前状态是：`PicoUI` 的目录骨架、public API 基础形态、contract 检查和最小编译闭环已经落地；但“真正完成抽象层并映射到 LingDongGUI 行为”这件事仍未闭环，核心差距集中在 backend 实映射、事件链路、theme 真实下发和 demo 可运行闭环。
+
+### 17.2 已完成项（可确认）
+
+1. 目录结构与主要文件已落地（`picoui/include`、`picoui/src`、`picoui/demo`、`picoui/docs`、`tests/picoui`）。
+2. public header 边界已建立：`picoui/include/picoui/*.h` 未泄漏 `ld*` / `arm_2d_*` / `SIGNAL_*`。
+3. 第一阶段声明的 8 个基础控件 + `flex/grid` + `theme v0` 基础 API 已有最小接口外形。
+4. PicoUI 测试分层已落地到 `tests/picoui/{unit,contract,runtime}`，并可通过 `ctest -L picoui` 跑通。
+5. `README.md` 与教程已加入 PicoUI 入口，具备最小文档导航。
+
+### 17.3 部分完成项（有接口，但未形成真实能力）
+
+1. backend 当前是“占位实现”为主：`picoui/src/backend/ldgui/*.c` 主要做空校验或本地结构体赋值，尚未完成对 `LingDongGUI` 控件、布局、事件系统的真实映射。
+2. 事件 contract 未闭环：`switch/checkbox/slider` 回调主要由 setter 主动触发，非来自底层事件；`button` 缺少 `picoui_button_set_on_clicked` 对外接口。
+3. 布局 contract 未闭环：`flex/grid` 的 public setter 可调用，但 backend 仍是 no-op 形态，尚未证明真实布局行为生效。
+4. theme v0 未闭环：已能存储 token，但缺“默认主题创建 + 控件级样式下发 + state/part 语义映射”。
+5. demo 闭环未完成：6 个 demo 源码目录存在，但当前构建目标只明确覆盖 `settings_panel`，其余 demo 未形成统一可执行入口。
+
+### 17.4 未完成项（与设计文档直接不一致）
+
+1. 通用 widget API 存在缺口：设计中的 `picoui_widget_set_text`、`picoui_widget_set_style_class`、`picoui_widget_set_user_data` 未落地。
+2. style 快捷接口未落地：`picoui_widget_set_bg_color`、`picoui_widget_set_text_color`、`picoui_widget_set_border_color`、`picoui_widget_set_radius`、`picoui_widget_set_padding` 未落地。
+3. 主题语义缺口：`PICOUI_STATE_*` / `PICOUI_PART_*` 词汇未在 public API 中建模。
+4. 资源抽象缺口：`struct picoui_font`、`picoui_label_set_font`、`picoui_text_set_font` 未落地（当前仅有 `image_source` 最小占位）。
+5. 验收标准第 1 条（新用户仅靠 PicoUI 文档与 demo 即可完成完整页面搭建）当前证据不足。
+
+---
+
+## 18. 现阶段建议验收口径
+
+为避免“接口齐了就算完成”的误判，建议把当前状态定性为：
+
+- **P1（第一阶段）完成度：约 60%**
+- **状态标签：`Skeleton Ready / Behavior Not Ready`**
+
+建议把“已完成”与“已闭环”拆开：
+
+1. **已完成（结构层）**：目录、头文件、最小 API、测试骨架、文档入口。
+2. **未闭环（行为层）**：backend 映射、事件链路、theme 下发、demo 真实运行。
+
+---
+
+## 19. 下一步工作（按优先级）
+
+### P0：先把“抽象层真实成立”做实
+
+1. **backend 映射实装**：逐个控件把 `create/set/layout/event` 映射到 `LingDongGUI` 实体，不再只停留在本地占位结构体。
+2. **事件链路改造**：回调触发来源从“setter 触发”改为“底层事件上送”；补齐 `button clicked` 对外接口。
+3. **布局行为闭环**：让 `flex/grid` setter 真实驱动窗口布局，并补至少 1 条行为级测试（不是只测返回码）。
+
+### P1：补齐设计 contract 缺口
+
+1. 补齐通用 widget API：`set_text`、`set_style_class`、`set_user_data`。
+2. 补齐 theme v0 常用样式接口：`bg/text/border/radius/padding`。
+3. 引入最小 `state/part` public 词汇并建立映射策略。
+4. 补齐 font 资源句柄与 `label/text` 字体接口。
+
+### P2：统一 demo 与文档交付
+
+1. 为 6 个 PicoUI demo 建立统一可执行目标（至少可批量 build）。
+2. 增加 demo 运行级检查（不仅构建成功，还要最小运行返回）。
+3. 在 `picoui/docs` 增加“当前已实现 vs 规划能力”矩阵，明确已知边界，避免过度承诺。
+
+---
+
+## 20. 建议的近期里程碑重排
+
+为保证每一步都有可验证证据，建议把后续里程碑调整为：
+
+1. **M1.5（行为闭环里程碑）**：button/switch/slider + flex/grid 完成真实 backend 映射，新增行为测试。
+2. **M2（contract 补齐里程碑）**：补齐通用 widget/style/state/part/font 缺口并完成 contract 测试。
+3. **M3（交付里程碑）**：6 demo 统一可执行 + 文档能力矩阵 + 用户 onboarding 路径验收。
