@@ -1,0 +1,2 @@
+add_library(ldgui_test_support STATIC ldgui_test_support.c)
+add_library(picoui_test_support STATIC picoui_test_support.c)
