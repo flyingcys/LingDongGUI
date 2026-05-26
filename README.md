@@ -113,9 +113,16 @@ PicoUI 是构建在 LingDongGUI 之上的应用层抽象，提供统一的 Linux
 - 推荐从 `picoui/demo/hello_world` 开始
 - 进一步可查看 `picoui/docs/quick_start.md` 与 `picoui/docs/api_overview.md`
 
+### 当前推荐构建入口
+
+- 推荐从仓库根目录执行：`rtk cmake -S . -B build`
+- 默认测试入口同样基于仓库根 `CMakeLists.txt` 与 `ctest`
+- 当前默认构建仍会因为 `LD_BUILD_SDL_DEMO=ON` 进入 `examples/sdl`，因此 SDL 依赖仍会参与默认构建
+- `tests/picoui/runtime/check_picoui_runtime.py` 会使用独立的 `build/picoui-runtime` 目录做 PicoUI demo runtime 检查
+- `examples/sdl` 子目录 configure 仍可用于 SDL demo 定向调试，但不再是主推荐入口
+
 ## 技术交流
 
 🐧 QQ群：187033407
 
 📧 电子邮箱: 59935554@qq.com
-

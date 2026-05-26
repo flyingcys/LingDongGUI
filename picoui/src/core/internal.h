@@ -39,6 +39,7 @@ struct picoui_widget {
 struct picoui_app {
     void *backend_app;
     struct picoui_theme *theme;
+    struct picoui_window *root_window;
 };
 
 struct picoui_theme {

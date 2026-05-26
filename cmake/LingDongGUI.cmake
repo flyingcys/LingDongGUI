@@ -152,6 +152,7 @@ function(ld_define_core_targets)
     ld_apply_common_target_config(picoui_core)
 
     add_library(picoui_backend_ldgui STATIC
+        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_app.c
         ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_widget.c
         ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_theme.c
         ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_layout.c
@@ -171,6 +172,24 @@ function(ld_define_core_targets)
         ${LD_REPO_ROOT}/picoui/src/backend/ldgui
     )
     target_link_libraries(picoui_backend_ldgui PUBLIC picoui_core longdonggui)
+    if(WIN32)
+        if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+            set(LD_SDL2_ROOT "${LD_EXAMPLES_DIR}/sdl/sdl2/64")
+        else()
+            set(LD_SDL2_ROOT "${LD_EXAMPLES_DIR}/sdl/sdl2/32")
+        endif()
+        target_include_directories(picoui_backend_ldgui PUBLIC "${LD_SDL2_ROOT}/include/SDL2")
+        target_link_directories(picoui_backend_ldgui PUBLIC "${LD_SDL2_ROOT}/lib")
+        target_link_libraries(picoui_backend_ldgui PUBLIC SDL2 SDL2main)
+    else()
+        find_package(PkgConfig REQUIRED)
+        pkg_check_modules(SDL2 REQUIRED sdl2)
+        target_include_directories(picoui_backend_ldgui PUBLIC ${SDL2_INCLUDE_DIRS})
+        target_link_directories(picoui_backend_ldgui PUBLIC ${SDL2_LIBRARY_DIRS})
+        target_compile_options(picoui_backend_ldgui PRIVATE ${SDL2_CFLAGS_OTHER})
+        target_link_options(picoui_backend_ldgui PRIVATE ${SDL2_LDFLAGS_OTHER})
+        target_link_libraries(picoui_backend_ldgui PUBLIC ${SDL2_LIBRARIES})
+    endif()
     ld_apply_common_target_config(picoui_backend_ldgui)
 endfunction()
 

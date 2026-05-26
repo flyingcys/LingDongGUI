@@ -20,5 +20,9 @@ void *picoui_backend_create_slider(void *parent, const char *id)
     widget->kind = PICOUI_BACKEND_WIDGET_SLIDER;
     widget->theme = ((struct picoui_backend_widget *)parent)->theme;
     widget->last_signal = PICOUI_BACKEND_SIGNAL_NONE;
+    if (picoui_backend_widget_attach_child(parent, widget) != 0) {
+        free(widget);
+        return 0;
+    }
     return widget;
 }

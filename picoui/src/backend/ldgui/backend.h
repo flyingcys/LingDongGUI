@@ -61,6 +61,8 @@ struct picoui_backend_layout_child_state {
 
 struct picoui_backend_widget {
     void *parent;
+    struct picoui_backend_widget *first_child;
+    struct picoui_backend_widget *next_sibling;
     const char *id;
     enum picoui_backend_widget_kind kind;
     const char *text;
@@ -82,7 +84,11 @@ struct picoui_backend_app_state {
     struct picoui_theme *theme;
 };
 
+int picoui_backend_app_init(struct picoui_app *app);
+int picoui_backend_app_run(struct picoui_app *app, struct picoui_window *window);
+void picoui_backend_app_shutdown(struct picoui_app *app);
 int picoui_backend_apply_theme(struct picoui_app *app, struct picoui_theme *theme);
+int picoui_backend_widget_attach_child(void *parent, void *child);
 void *picoui_backend_create_window(struct picoui_app *app, const char *id);
 void *picoui_backend_create_label(void *parent, const char *id);
 void *picoui_backend_create_button(void *parent, const char *id);

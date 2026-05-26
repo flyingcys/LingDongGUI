@@ -19,6 +19,10 @@ void *picoui_backend_create_label(void *parent, const char *id)
     widget->id = id;
     widget->kind = PICOUI_BACKEND_WIDGET_LABEL;
     widget->theme = ((struct picoui_backend_widget *)parent)->theme;
+    if (picoui_backend_widget_attach_child(parent, widget) != 0) {
+        free(widget);
+        return 0;
+    }
     return widget;
 }
 

@@ -104,11 +104,20 @@ widget demo sdl
 
 📖 [中文教程](https://ldgui-doc-cn.readthedocs.io)
 
+## PicoUI
+
+PicoUI is the application-level abstraction built on top of LingDongGUI and exposes a unified Linux-style `picoui_*` API.
+
+- Start from the repository root CMake entrypoint: `rtk cmake -S . -B build`
+- The default test entrypoint also lives at the repository root via `CTest`
+- The current default build still enables `LD_BUILD_SDL_DEMO=ON`, so SDL dependencies remain part of the default build path
+- `tests/picoui/runtime/check_picoui_runtime.py` uses a separate build tree at `build/picoui-runtime`
+- Direct `examples/sdl` configure is still useful for focused SDL demo debugging, but it is no longer the primary recommended path
+
 ## Contact Information
 
 🐧 QQ Group：187033407
 
 📧 E-Mail: 59935554@qq.com
-
 
 

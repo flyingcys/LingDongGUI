@@ -2,12 +2,23 @@
 
 static void make_ui(struct picoui_window *win)
 {
+    struct picoui_button *a;
+    struct picoui_button *b;
+    struct picoui_button *c;
+
     picoui_flex_set_flow(win, PICOUI_FLEX_FLOW_ROW_WRAP);
     picoui_flex_set_align(win,
                           PICOUI_ALIGN_START,
                           PICOUI_ALIGN_CENTER,
                           PICOUI_ALIGN_SPACE_AROUND);
     picoui_flex_set_gap(win, 8, 12);
+
+    a = picoui_button_create(win, "first");
+    b = picoui_button_create(win, "second");
+    c = picoui_button_create(win, "third");
+    picoui_button_set_text(a, "One");
+    picoui_button_set_text(b, "Two");
+    picoui_button_set_text(c, "Three");
 }
 
 static int run_demo(void)
@@ -26,6 +37,10 @@ static int run_demo(void)
     }
 
     make_ui(win);
+    if (picoui_app_run(app, win) != 0) {
+        picoui_app_destroy(app);
+        return 1;
+    }
     picoui_app_destroy(app);
     return 0;
 }

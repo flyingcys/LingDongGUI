@@ -53,6 +53,11 @@ static int run_demo(void)
     }
 
     make_ui(win);
+    if (picoui_app_run(app, win) != 0) {
+        picoui_app_destroy(app);
+        picoui_theme_destroy(theme);
+        return 1;
+    }
     picoui_app_destroy(app);
     picoui_theme_destroy(theme);
     return 0;

@@ -795,6 +795,8 @@ backend 内部再映射到：
 
 > 本节基于当前仓库代码与测试现状复盘，用于回答“是否已全部开发完成”。
 
+> 文档口径修正：本节之后若出现“已完成收敛”“runtime 已含启动级 smoke”“文档与代码已对齐”之类结论，均应以后续实际代码与测试真相为准。按当前主线核对，`tests/picoui/runtime/check_picoui_runtime.py` 虽然已经会构建并逐个启动 6 个 demo，但它使用独立 build tree `build/picoui-runtime`，且 PicoUI demo 的构建链仍经由根入口默认开启的 SDL 子树，不应被表述为“已完全脱离 SDL、已全部闭环”。
+
 ### 17.1 总结论
 
 **未全部完成。**
@@ -961,7 +963,7 @@ backend 内部再映射到：
 2. `PICOUI_STATE_*` / `PICOUI_PART_*` 已在 public API 建模。
 3. `picoui_button_set_on_clicked`、通用 widget 文本/样式/用户数据与常用样式快捷接口已补齐。
 4. `struct picoui_font`、`picoui_label_set_font`、`picoui_text_set_font` 已提供最小 contract。
-5. `ctest -L picoui` 当前为 8/8 通过，说明现有 contract/unit/runtime 检查链路可运行。
+5. `ctest -L picoui` 当前链路可运行，但其 runtime 子项依赖独立 build tree 与 SDL demo 构建链，文档不能把它简化成“纯 PicoUI、自身完全独立”的闭环。
 
 ### 22.4 未完成或部分完成项（阻塞“全部完成”判定）
 
@@ -978,6 +980,10 @@ backend 内部再映射到：
    - `flex/grid` 的 API 可调用，但 `new_track` / `ignore_layout` / `grid_align` 等能力缺行为级断言，当前以状态承接测试为主。
 6. **demo 教学覆盖与第 11.2 节存在差距**
    - `basic_widgets` 现状未覆盖文档声明的完整控件集合（例如 `button/image/text` 教学示例不足）。
+7. **测试与入口文档仍有表述偏差**
+   - 根 `CMakeLists.txt` 是当前推荐入口，但默认 `LD_BUILD_SDL_DEMO=ON`，所以默认构建仍与 SDL 子树耦合。
+   - runtime 只是 label 分层，不是默认排除。
+   - `picoui/docs/demo_guide.md` 仍把 `examples/sdl` 子目录 configure 描述为主路径，这与当前推荐入口不一致。
 
 ### 22.5 下一步工作（按优先级）
 
@@ -1071,13 +1077,28 @@ backend 内部再映射到：
    - `rtk ctest --test-dir build -L picoui --output-on-failure`：通过（8/8，runtime 启动级 smoke 纳入通过）。
    - GitNexus `detect_changes(scope=all)`：`risk_level=low`，`affected_count=0`。
 
+### 23.5A 当前文档口径修正（2026-05-26，基于主线真相）
+
+1. **runtime 的真实含义**
+   - 当前 runtime 已具备“构建 + 启动”检查能力，这一点是已完成项。
+   - 但 runtime 仍通过 `build/picoui-runtime` 独立 build tree 执行，不是复用常规 `build/`。
+2. **入口的真实含义**
+   - 当前推荐 configure/build 入口是仓库根 `CMakeLists.txt`。
+   - 但由于 `LD_BUILD_SDL_DEMO=ON` 默认开启，根入口默认仍会进入 SDL 子树，不能写成“根测试入口已与 SDL 解耦”。
+3. **分层的真实含义**
+   - `tests/picoui/runtime` 与 `ctest -L runtime` 说明 runtime 已分层。
+   - 这只代表“可以按 label 单独执行”，不代表 runtime 默认不注册或默认被排除。
+4. **demo 文档的真实含义**
+   - `picoui/docs/demo_guide.md` 当前仍保留 `cmake -S examples/sdl -B examples/sdl/build` 作为主要示例。
+   - 该文件现有用户脏改未提交，因此本轮只在上层文档中提示偏差，不直接修改该文件。
+
 ### 23.6 当前判定（对照 22.6 门禁）
 
 按第 22.6 的 4 条门禁逐项核对：
 
-1. 第 6/7/9/10/11 节中的本轮未完成 contract 已完成代码落地并有测试证据。  
-2. 关键行为项已不再仅依赖返回码：layout/state-part/runtime 均补到行为级证据。  
-3. `ctest -L picoui` 全通过，且 runtime 已含最小启动级 smoke。  
-4. 文档与代码现状已对齐，当前无“文档称完成但代码未落地”的遗留项。  
+1. 第 6/7/9/10/11 节中的主要 contract 缺口已有代码与测试证据。  
+2. 关键行为项已不再只依赖返回码，runtime 也已包含最小启动级 smoke。  
+3. 但 `ctest -L picoui` 的 runtime 仍依赖独立 build tree 与 SDL demo 构建链。  
+4. 文档层面仍存在入口与测试分层表述偏差，需要像本轮这样显式更正。  
 
-**结论：基于二次 Review 列出的未完成工作，当前已完成收敛。**
+**结论：代码与测试链路已有明显收敛，但文档口径此前并未完全对齐当前主线真相，因此不能再把当前状态写成“全部完成且文档已完全对齐”。**

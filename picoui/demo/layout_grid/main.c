@@ -5,9 +5,20 @@ static const int rows[] = {32, -2, 0};
 
 static void make_ui(struct picoui_window *win)
 {
+    struct picoui_label *title;
+    struct picoui_button *left;
+    struct picoui_button *right;
+
     picoui_grid_set_columns(win, cols, 3);
     picoui_grid_set_rows(win, rows, 3);
     picoui_grid_set_gap(win, 8, 8);
+
+    title = picoui_label_create(win, "title");
+    left = picoui_button_create(win, "left");
+    right = picoui_button_create(win, "right");
+    picoui_label_set_text(title, "Grid");
+    picoui_button_set_text(left, "A");
+    picoui_button_set_text(right, "B");
 }
 
 static int run_demo(void)
@@ -26,6 +37,10 @@ static int run_demo(void)
     }
 
     make_ui(win);
+    if (picoui_app_run(app, win) != 0) {
+        picoui_app_destroy(app);
+        return 1;
+    }
     picoui_app_destroy(app);
     return 0;
 }

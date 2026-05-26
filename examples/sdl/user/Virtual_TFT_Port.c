@@ -91,6 +91,7 @@ static volatile bool sdl_quit_qry = false;
 static volatile bool sdl_joined = false;
 static volatile bool sdl_refresh_pending = false;
 static volatile bool sdl_redraw_pending = false;
+static volatile bool s_bFirstFramePending = true;
 static SDL_mutex *s_ptRefreshMutex = NULL;
 static SDL_cond *s_ptRefreshCond = NULL;
 static Uint32 s_nRefreshEvent = SDL_USEREVENT;
@@ -475,13 +476,19 @@ static void VT_sdl_capture_first_present(void)
         return;
     }
     if (!s_bCaptureConfigLoaded) {
+        const char *pchCaptureFile = getenv("LD_CAPTURE_FILE");
         const char *pchCaptureMatrix = getenv("LD_SWITCH_CAPTURE_MATRIX");
 
-        s_bCaptureEnabled =
-            (pchCaptureMatrix != NULL) &&
-            (pchCaptureMatrix[0] != '\0') &&
-            (pchCaptureMatrix[0] != '0');
-        s_pchCapturePath = getenv("LD_SWITCH_CAPTURE_FILE");
+        s_pchCapturePath = pchCaptureFile;
+        if ((NULL != pchCaptureFile) && ('\0' != pchCaptureFile[0])) {
+            s_bCaptureEnabled = true;
+        } else {
+            s_bCaptureEnabled =
+                (pchCaptureMatrix != NULL) &&
+                (pchCaptureMatrix[0] != '\0') &&
+                (pchCaptureMatrix[0] != '0');
+            s_pchCapturePath = getenv("LD_SWITCH_CAPTURE_FILE");
+        }
         s_bCaptureConfigLoaded = true;
     }
     if (!s_bCaptureEnabled || (NULL == s_pchCapturePath) || ('\0' == s_pchCapturePath[0])) {
@@ -801,6 +808,7 @@ static void monitor_sdl_init(void)
     /*Initialize the frame buffer to gray (77 is an empirical value) */
     memset(tft_fb, 77, VT_WIDTH * VT_HEIGHT * sizeof(uint32_t));
     SDL_UpdateTexture(texture, NULL, tft_fb, VT_WIDTH * sizeof(uint32_t));
+    s_bFirstFramePending = true;
     sdl_inited = true;
 }
 
@@ -847,6 +855,9 @@ bool VT_sdl_refresh_task(void)
     if (!bNeedPresent) {
         bNeedRedraw = false;
     }
+    if (s_bFirstFramePending) {
+        bNeedExposeRedraw = true;
+    }
     VT_sdl_commit_pending_pointer(bNeedRedraw);
 
 #if __DISP0_CFG_ENABLE_3FB_HELPER_SERVICE__
@@ -873,6 +884,7 @@ bool VT_sdl_refresh_task(void)
                                        ? tDirtyRegion
                                        : VT_sdl_resolve_redraw_region(bHasDirtyRegion, &tDirtyRegion);
         (void)VT_sdl_present_texture(&tPresentRegion);
+        s_bFirstFramePending = false;
     }
 
     if (bNeedPresent) {

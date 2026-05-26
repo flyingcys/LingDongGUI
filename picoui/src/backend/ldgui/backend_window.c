@@ -16,6 +16,7 @@ void *picoui_backend_create_window(struct picoui_app *app, const char *id)
     }
 
     widget->id = id;
+    widget->kind = PICOUI_BACKEND_WIDGET_WINDOW;
     widget->theme = app->theme;
     return widget;
 }
