@@ -3,8 +3,8 @@ import subprocess
 from pathlib import Path
 
 
-ROOT = Path(__file__).resolve().parents[1]
-BUILD = ROOT / "build-picoui-runtime"
+ROOT = Path(__file__).resolve().parents[3]
+BUILD = ROOT / "build" / "picoui-runtime"
 RTK = shutil.which("rtk") or "rtk"
 
 subprocess.run([

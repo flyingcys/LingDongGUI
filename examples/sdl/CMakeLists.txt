@@ -435,59 +435,9 @@ else()
     endif()
 endif()
 
-add_executable(picoui_smoke_test
-    "${SDL_EXAMPLE_DIR}/tests/picoui/test_picoui_smoke.c"
-)
-target_link_libraries(picoui_smoke_test PRIVATE picoui_backend_ldgui)
-ld_apply_common_target_config(picoui_smoke_test)
-add_test(NAME picoui_smoke_test COMMAND picoui_smoke_test)
-add_test(
-    NAME check_picoui_public_api
-    COMMAND "${Python3_EXECUTABLE}" "${SDL_EXAMPLE_DIR}/tests/check_picoui_public_api.py"
-)
-set_tests_properties(check_picoui_public_api PROPERTIES
-    WORKING_DIRECTORY "${SDL_EXAMPLE_DIR}"
-)
-
-add_executable(picoui_theme_test
-    "${SDL_EXAMPLE_DIR}/tests/picoui/test_picoui_theme.c"
-)
-target_link_libraries(picoui_theme_test PRIVATE picoui_backend_ldgui)
-ld_apply_common_target_config(picoui_theme_test)
-add_test(NAME picoui_theme_test COMMAND picoui_theme_test)
-
-add_executable(picoui_widgets_test
-    "${SDL_EXAMPLE_DIR}/tests/picoui/test_picoui_widgets.c"
-)
-target_link_libraries(picoui_widgets_test PRIVATE picoui_backend_ldgui)
-ld_apply_common_target_config(picoui_widgets_test)
-add_test(NAME picoui_widgets_test COMMAND picoui_widgets_test)
-
-add_executable(picoui_layout_test
-    "${SDL_EXAMPLE_DIR}/tests/picoui/test_picoui_layout.c"
-)
-target_link_libraries(picoui_layout_test PRIVATE picoui_backend_ldgui)
-ld_apply_common_target_config(picoui_layout_test)
-add_test(NAME picoui_layout_test COMMAND picoui_layout_test)
-
 add_executable(picoui_settings_panel_demo
     "${SDL_EXAMPLE_DIR}/../../picoui/demo/settings_panel/main.c"
 )
 target_link_libraries(picoui_settings_panel_demo PRIVATE picoui_backend_ldgui)
 ld_apply_common_target_config(picoui_settings_panel_demo)
 
-add_test(
-    NAME check_picoui_demo_boundary
-    COMMAND "${Python3_EXECUTABLE}" "${SDL_EXAMPLE_DIR}/tests/check_picoui_demo_boundary.py"
-)
-set_tests_properties(check_picoui_demo_boundary PROPERTIES
-    WORKING_DIRECTORY "${SDL_EXAMPLE_DIR}"
-)
-
-add_test(
-    NAME check_picoui_runtime
-    COMMAND "${Python3_EXECUTABLE}" "${SDL_EXAMPLE_DIR}/tests/check_picoui_runtime.py"
-)
-set_tests_properties(check_picoui_runtime PROPERTIES
-    WORKING_DIRECTORY "${SDL_EXAMPLE_DIR}"
-)
