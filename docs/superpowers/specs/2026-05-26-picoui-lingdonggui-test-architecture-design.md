@@ -266,12 +266,44 @@ examples/sdl/tests/
 迁移：
 
 - `check_picoui_runtime.py`
+- `check_picoui_visible_ui.py`
 
 这层主要守：
 
 - 仓库级 configure/build 流程能构建 PicoUI runtime/demo target
 - `PicoUI` 不只是“头文件过了”，而是至少具备最小 buildable runtime 闭环
 - 当前还要明确：这层只证明 smoke / 启动 / capture / 回归，不直接证明 `backend_app.c` 已完全退出正式职责
+
+#### 6.4.1 backend correctness gate
+
+`backend correctness gate` 证明 `PicoUI -> LingDongGUI` 的对象、属性、事件、布局、theme 映射语义成立。主要证据来自：
+
+- `tests/picoui/unit/test_picoui_widgets.c`
+- `tests/picoui/unit/test_picoui_layout.c`
+- `tests/picoui/unit/test_picoui_theme.c`
+- `tests/picoui/runtime/check_picoui_backend_mapping.py`
+
+这层回答“有没有落到真实 LingDongGUI 对象和行为”，不回答“真实窗口里是否已经可读、可判定”。
+
+#### 6.4.2 smoke gate
+
+`smoke gate` 证明 demo target 能构建、能进入 runtime loop、能退出、能产出非空 capture。主要证据来自：
+
+- `tests/picoui/runtime/check_picoui_runtime.py`
+
+这层只能证明启动链、capture 链和最小回归链成立。`capture` 非空、像素非空、marker 出现，都不能直接外推为 `visible correctness`。
+
+#### 6.4.3 visible gate
+
+`visible gate` 证明真实可见结果达到“可正常显示、可读、可判定”的最低门槛，并且显示内容与预期控件树不出现明显错位。当前 `B线 Task 1 / G2` 先建立独立入口：
+
+```bash
+python3 tests/picoui/runtime/check_picoui_visible_ui.py --demo basic_widgets
+```
+
+当前该入口是 `B1` 的 RED 基线：必须先失败在 visible correctness 语义上，例如近黑/可读性异常、结构覆盖不足、重复列或控件树呈现不一致；失败原因不应是无法构建、无法启动、无 capture 或无像素。
+
+在 `B2/B3` 修正显示链、颜色链与 `basic_widgets` 可见正确性之前，`check_picoui_visible_ui.py` 不注册进默认 `CTest` 绿灯集合，避免把预期失败的 visible 基线混入 smoke/runtime 通过口径。
 
 ### 6.5 当前 PicoUI 能力矩阵与测试映射
 
@@ -284,6 +316,7 @@ examples/sdl/tests/
 | `window/button/checkbox/switch/slider/label/text` theme/style apply | 已完成 | `tests/picoui/unit/test_picoui_theme.c` |
 | `image` theme/style apply | 当前拒绝 | `tests/picoui/unit/test_picoui_theme.c` 明确锁定拒绝语义 |
 | demo 启动 / capture / smoke | 已完成 | `tests/picoui/runtime/check_picoui_runtime.py` |
+| `basic_widgets` visible correctness | B1 RED 基线已建立，当前未收口 | `tests/picoui/runtime/check_picoui_visible_ui.py --demo basic_widgets` |
 | `backend_app.c` 最终退场 | 已收缩为 temporary smoke path | `A7` 当前要求是去掉 fake renderer 主职责，不要求文件完全消失 |
 
 ---
