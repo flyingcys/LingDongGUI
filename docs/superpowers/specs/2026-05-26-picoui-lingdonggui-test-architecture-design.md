@@ -387,6 +387,34 @@ ctest --test-dir build -L picoui --output-on-failure
 
 这些 gate 都不能单独证明“PicoUI 全部适配完成”。尤其是 `smoke gate` 不证明可见正确性，`visible gate` 不证明人工窗口验收，`backend mapping gate` 不证明脚本 marker 之外的控件和 demo 已覆盖。
 
+#### 6.4.7 新增能力的 gate 同步规则
+
+后续新增 demo、新增 widget、新增 layout 或新增 theme 能力时，必须同时维护测试入口、gate matrix 和 serial 文档状态。不能只改 demo 或只改 backend 后，把 `ctest -L picoui` 通过当作完整回归。
+
+新增 demo 时，必须同步：
+
+- `tests/picoui/runtime/check_picoui_runtime.py`：加入 runtime smoke 覆盖，或在 serial 文档中写明豁免原因。
+- `tests/picoui/runtime/check_picoui_visible_ui.py`：加入 visible matrix，或写明该 demo 不适合 visible readback 的原因。
+- `tests/picoui/runtime/check_picoui_backend_mapping.py`：加入 mapping matrix，或在脚本矩阵与文档中写明豁免原因。
+- `picoui/docs/demo_guide.md`：加入 demo 用途、证据层级、运行方式和 gate 同步口径。
+- 对应 serial 文档阶段状态：说明该 demo 是否已经进入 smoke、visible、mapping、manual artifact 证据层。
+
+新增 widget 时，必须同步：
+
+- public API contract，确认 public header 只暴露 `picoui_*` API，不泄漏 `ld*`、`arm_2d_*`、`SIGNAL_*`。
+- backend mapping test，确认 widget 走真实 `LingDongGUI` backend 对象、字段、事件或明确拒绝。
+- visible gate 样本，或明确不可见理由和替代证据层。
+- theme/style 支持或拒绝说明，不能把未实现能力默认为支持。
+
+新增 layout 或新增 theme 能力时，必须同步：
+
+- unit/contract test，锁定参数语义、拒绝语义和 backend 映射。
+- runtime demo 样本，证明真实 demo 链路会使用该能力。
+- visible gate，或明确该能力不可由 readback 判定的原因。
+- gate matrix 文档，说明该能力落在哪些 smoke、visible、mapping、manual artifact 层。
+
+这些同步项是同一项变更的验收边界，不是可选文档补充。`ctest --test-dir build -L picoui --output-on-failure` 不能单独替代 `visible`、`mapping`、standalone runtime 脚本或 manual artifact 层级；汇报时必须分别说明每一层是否执行、能证明什么、不能证明什么。
+
 ### 6.5 当前 PicoUI 能力矩阵与测试映射
 
 | 能力 | 当前状态 | 主要证据层 |

@@ -255,7 +255,45 @@ ctest --test-dir build -L picoui --output-on-failure
 
 因此，`ctest --test-dir build -L picoui --output-on-failure` 不能单独替代 `visible` 和 `mapping` label，也不能替代 standalone runtime 脚本的完整本地门禁。
 
-## 八、推荐阅读顺序
+## 八、新增 demo/widget/layout/theme 的 gate 同步规则
+
+后续新增 demo、新增 widget、新增 layout 或新增 theme 能力时，必须同步维护 gate matrix，不能只改 demo 或只改 backend 后用 `ctest -L picoui` 代替 visible/mapping/manual artifact 层级。
+
+### 新增 demo
+
+新增 demo 必须同步：
+
+- `tests/picoui/runtime/check_picoui_runtime.py`：加入 smoke 覆盖，或写明该 demo 不适合 runtime smoke 的豁免原因。
+- `tests/picoui/runtime/check_picoui_visible_ui.py`：加入 visible matrix，或写明不可见理由。
+- `tests/picoui/runtime/check_picoui_backend_mapping.py`：加入 mapping matrix，或在脚本和文档里写明豁免说明。
+- 本文档：加入 demo 名称、目标、用途、运行方式、当前证据层级。
+- 对应 serial 文档阶段状态：说明该 demo 是否已经进入 smoke、visible、mapping、manual artifact 证据层。
+
+### 新增 widget
+
+新增 widget 必须同步：
+
+- public API contract，确认 public header 仍只暴露 `picoui_*` API。
+- backend mapping test，证明 widget 进入真实 `LingDongGUI` backend，或明确拒绝/暂不支持。
+- visible gate 样本，或明确该 widget 不可见、不可由 readback 判定的理由。
+- theme/style 支持或拒绝说明，避免把未实现 style 能力误写成默认支持。
+
+### 新增 layout / 新增 theme
+
+新增 layout 或新增 theme 能力必须同步：
+
+- unit/contract test，锁定 public API、参数语义、拒绝语义和 backend 字段映射。
+- runtime demo 样本，证明真实 demo 链路会用到该能力。
+- visible gate，或明确不可见理由。
+- gate matrix 文档，说明该能力落在哪些 smoke、visible、mapping、manual artifact 层。
+
+### 禁止替代关系
+
+- 禁止只改 demo，不更新 runtime/visible/mapping matrix。
+- 禁止只改 backend，不更新 demo、public contract、visible 样本和 gate matrix。
+- 禁止用 `ctest --test-dir build -L picoui --output-on-failure` 单独替代 `ctest -L visible`、`ctest -L mapping`、standalone runtime 脚本或 manual artifact gate。
+
+## 九、推荐阅读顺序
 
 1. `hello_world`
 2. `basic_widgets`
@@ -264,7 +302,7 @@ ctest --test-dir build -L picoui --output-on-failure
 5. `theme_showcase`
 6. `settings_panel`
 
-## 九、最常用命令
+## 十、最常用命令
 
 构建某个 demo：
 
@@ -285,7 +323,7 @@ rtk cmake -S . -B build
 rtk cmake --build build -j8
 ```
 
-## 十、常见问题
+## 十一、常见问题
 
 ### 1. 我传了 `-DUSE_DEMO=2`，为什么没跑 `picoui` demo
 

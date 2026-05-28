@@ -40,14 +40,14 @@
 
 ## 当前游标
 
-- 当前活跃游标：`C6` 可选人工窗口 artifact gate
-- 当前允许进入：`C6` review
+- 当前活跃游标：`C7` 长期回归规则与新增 demo 规则
+- 当前允许进入：`C7` review
 - 当前禁止进入：
   - 先扩 `PicoUI` 新 public API
   - 先扩新控件
   - 先做复杂 theme/style 能力
   - 继续用“真实窗口”宽泛表述覆盖不同证据层级
-  - 在 `C6` review 收口前进入 `C7` 长期回归规则与新增 demo 规则
+  - 在 `C7` review 收口前进入 `C8` closeout review 与收口
 
 ## 阶段导航
 
@@ -366,21 +366,47 @@ python3 tests/picoui/runtime/check_picoui_manual_window_artifact.py --demo setti
     - `check_picoui_visible_ui.py`
     - `check_picoui_backend_mapping.py` 的适用矩阵或豁免说明
     - demo guide
+    - 对应 serial 文档阶段状态
   - 新增 widget 时，必须同步：
     - public API contract
     - backend mapping test
-    - visible gate 样本
-    - theme/style 适用性说明
+    - visible gate 样本或明确不可见理由
+    - theme/style 支持或拒绝说明
   - 新增 layout/theme 能力时，必须同步：
     - unit/contract test
     - runtime demo 样本
     - visible gate 或明确的不可见理由
+    - gate matrix 文档
+  - 明确不能只改 demo 或只改 backend 而不更新 gate matrix。
+  - 明确新增规则不能用 `ctest -L picoui` 单独替代 visible/mapping/manual artifact 层级。
+- C7 gate 同步清单：
+  - **新增 demo**：
+    - 必须加入 `tests/picoui/runtime/check_picoui_runtime.py` 的 runtime smoke 覆盖，或在 serial 文档中写明为什么该 demo 不属于 runtime smoke。
+    - 必须加入 `tests/picoui/runtime/check_picoui_visible_ui.py` 的 visible matrix，或写明不可见理由与替代证据。
+    - 必须加入 `tests/picoui/runtime/check_picoui_backend_mapping.py` 的 mapping matrix，或在脚本矩阵与文档中写明豁免原因。
+    - 必须更新 `picoui/docs/demo_guide.md` 的 demo 列表、用途、证据层级和 gate 同步要求。
+    - 必须更新对应 serial 文档阶段状态，说明该 demo 是否已经进入 smoke、visible、mapping、manual artifact 证据层。
+  - **新增 widget**：
+    - 必须同步 public API contract，避免 `picoui_*` public header 泄漏 `ld*`、`arm_2d_*`、`SIGNAL_*`。
+    - 必须同步 backend mapping test，证明该 widget 已落到真实 `LingDongGUI` 对象或明确仍不支持。
+    - 必须提供 visible gate 样本；若 widget 本身不可见，必须写明不可见理由和由哪个可见父对象、manual artifact 或 contract gate 覆盖。
+    - 必须写明 theme/style 支持或拒绝说明，不能默认把未实现能力写成支持。
+  - **新增 layout/theme 能力**：
+    - 必须同步 unit/contract test，锁定 public API、参数、拒绝语义和 backend 字段映射。
+    - 必须提供 runtime demo 样本，证明真实 demo 链路会使用该能力。
+    - 必须进入 visible gate，或写明为什么该能力不可由 readback 判定。
+    - 必须更新 gate matrix 文档，说明对应能力落在哪些 smoke、visible、mapping、manual artifact 层。
+  - **禁止事项**：
+    - 禁止只改 demo 让页面“看起来用了新能力”，却不更新 runtime/visible/mapping matrix。
+    - 禁止只改 backend 或底层字段，却不更新 demo、public contract 和 gate matrix。
+    - 禁止用 `ctest --test-dir build -L picoui --output-on-failure` 单独替代 `visible`、`mapping`、manual artifact 或 standalone runtime 脚本层级。
 - 阶段完成判定：
   - 后续开发不会只改 demo 或只改 backend，却忘记更新 gate matrix。
   - 每类新增工作都有固定验收路径。
+  - 当前游标只推进到 `C7 / C7 review`，禁止 `C7 review` 收口前进入 `C8`。
 - 收口证据：
   - 文档存在“新增 demo/widget/layout/theme 的 gate 同步清单”。
-  - `rg -n "新增 demo|新增 widget|gate 同步|visible matrix|mapping matrix" docs picoui/docs` 能找到唯一口径。
+  - `rg -n "新增 demo|新增 widget|gate 同步|visible matrix|mapping matrix|新增 layout|新增 theme" docs picoui/docs` 能找到唯一口径。
 
 ### C8 C线 closeout review 与收口
 
