@@ -40,14 +40,14 @@
 
 ## 当前游标
 
-- 当前活跃游标：`C5` backend mapping matrix 扩展
-- 当前允许进入：`C5` review
+- 当前活跃游标：`C6` 可选人工窗口 artifact gate
+- 当前允许进入：`C6` review
 - 当前禁止进入：
   - 先扩 `PicoUI` 新 public API
   - 先扩新控件
   - 先做复杂 theme/style 能力
   - 继续用“真实窗口”宽泛表述覆盖不同证据层级
-  - 在 `C5` review 收口前进入 `C6` 可选人工窗口 artifact gate
+  - 在 `C6` review 收口前进入 `C7` 长期回归规则与新增 demo 规则
 
 ## 阶段导航
 
@@ -311,9 +311,9 @@ python3 tests/picoui/runtime/check_picoui_visible_ui.py --all
 - 当前目标：
   - 若后续需要继续使用“真实窗口”表述，补一条可复现的人工窗口 artifact gate。
 - 必须修改的文件：
-  - 新增或修改 `tests/picoui/runtime/check_picoui_manual_window_artifact.py`
-  - 必要时修改 `picoui/docs/demo_guide.md`
-  - 必要时新增 `docs/picoui-serial/C-线人工窗口验收记录.md`
+  - 新增 `tests/picoui/runtime/check_picoui_manual_window_artifact.py`
+  - 修改 `picoui/docs/demo_guide.md`
+  - 新增 `docs/picoui-serial/C-线人工窗口验收记录.md`
 - 必须完成的事情：
   - 定义非 dummy SDL 运行方式，默认不在无窗口 CI 中强制执行。
   - 产出 artifact 路径，例如：
@@ -348,6 +348,8 @@ python3 tests/picoui/runtime/check_picoui_manual_window_artifact.py --demo setti
   - artifact 文件存在。
   - 验收记录文档包含平台、命令、artifact 路径和结论。
   - CI 默认不因缺少窗口环境失败。
+  - 本轮只新增可选人工 artifact gate；未接入 CTest，未修改 CI。
+  - 当前游标只推进到 `C6 / C6 review`，禁止 `C6 review` 收口前进入 `C7`。
 
 ### C7 长期回归规则与新增 demo 规则
 

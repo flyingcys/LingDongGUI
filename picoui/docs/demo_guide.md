@@ -200,6 +200,31 @@ build\picoui-runtime\examples\sdl\picoui_hello_world_demo.exe
 - 自动 visible gate：脚本设置 dummy SDL，通过 PPM readback 做可重复判定，适合 CI/回归。
 - 人工窗口观察：需要真实窗口环境和 artifact 记录，只有 `C6 / manual window artifact gate` 才能支撑“人工窗口验收通过”。
 
+### manual window artifact gate
+
+`C6 / manual window artifact gate` 只在需要人工 OS 窗口证据时单独运行，默认不接入 CTest，也不让无窗口 CI 因缺少桌面环境失败。
+
+```bash
+rtk cmake -S . -B build -DUSE_DEMO=0
+rtk cmake --build build --target picoui_basic_widgets_demo picoui_settings_panel_demo
+python3 tests/picoui/runtime/check_picoui_manual_window_artifact.py --demo basic_widgets
+python3 tests/picoui/runtime/check_picoui_manual_window_artifact.py --demo settings_panel
+```
+
+脚本会记录并输出平台、SDL video driver、demo target、构建目录、运行命令和 artifact 路径。默认 artifact 路径为：
+
+```text
+artifacts/picoui/manual-window/<demo-name>/frame.ppm
+```
+
+只有同时满足以下条件，才允许写“人工窗口验收通过”：
+
+- 使用非 `dummy` 的 SDL video driver，并且脚本没有输出 `SKIP`。
+- 运行时确实出现 OS 窗口，人工观察结果符合 demo 预期。
+- `docs/picoui-serial/C-线人工窗口验收记录.md` 已记录日期、平台、SDL video driver、demo target、构建目录、运行命令、artifact 路径、人工结论和已知限制。
+
+如果脚本输出 `PICOUI_MANUAL_WINDOW_ARTIFACT=SKIP`，只能说明当前环境不适合执行人工窗口验收；如果使用 `SDL_VIDEODRIVER=dummy` 生成 PPM，也只能作为 readback artifact，不能写成人工窗口结论。该 gate 也不能替代 `ctest`、backend mapping gate 或 automatic visible gate。
+
 ## 七、PicoUI 本地门禁矩阵
 
 当前主项目存在 `.github/workflows/cmake-single-platform.yml`，但它是 `workflow_dispatch` / `release published` 触发的 `build pack` workflow，执行 `gen_pack.sh` 与 `Open-CMSIS-Pack/gen-pack-action`，不是现有测试 workflow，也不适合在 `C4` 内低风险最小接入 PicoUI gate。因此当前只固定本地运行口径，不改 workflow、不新造 CI 框架。以后若给主项目 CI 接入 PicoUI gate，应复用本节同一矩阵，不另开一套说法。
