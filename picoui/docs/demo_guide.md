@@ -182,15 +182,23 @@ build\picoui-runtime\examples\sdl\picoui_hello_world_demo.exe
 1. `ctest` / unit test：证明 contract、backend 字段同步、事件桥接等实现约束。
 2. `tests/picoui/runtime/check_picoui_runtime.py`：证明 demo 可 build、可启动、可 capture、可回归。
 3. `tests/picoui/runtime/check_picoui_backend_mapping.py`：证明 demo 的真实 backend 映射与 fallback marker 口径。
-4. `tests/picoui/runtime/check_picoui_visible_ui.py --all`：证明 6 个 demo 的 visible correctness。
+4. `tests/picoui/runtime/check_picoui_visible_ui.py --all`：证明 6 个 demo 在 `SDL_VIDEODRIVER=dummy + PPM readback` 下的 automatic visible correctness。
+5. `manual window artifact gate`：证明人工 OS 窗口验收通过；这属于 `C线` 的 `C6`，需要单独运行并记录 artifact。
 
 换句话说：
 
 - `runtime smoke = 已启动`
 - `backend 完成态 = 真实对象/布局/事件/theme 已闭环`
-- `visible gate = 真实可见结果可显示、可读、可判定`
+- `automatic visible gate = dummy SDL + PPM readback 下可显示、可读、可判定`
+- `manual window artifact gate = 有平台、SDL video driver、demo target、artifact 路径和人工结论记录`
 
-三者不是同一层证据。`capture` 非空仍不能单独证明 UI 正常显示。
+这些不是同一层证据。`capture` 非空仍不能单独证明 UI 正常显示；automatic visible gate 通过也不能写成人工窗口验收通过，除非已经执行 `C6 / manual window artifact gate`。
+
+运行 demo、自动 visible gate、人工窗口观察也不是同一件事：
+
+- 直接运行 demo：用于本地观察交互和窗口行为，不自动生成可追溯验收结论。
+- 自动 visible gate：脚本设置 dummy SDL，通过 PPM readback 做可重复判定，适合 CI/回归。
+- 人工窗口观察：需要真实窗口环境和 artifact 记录，只有 `C6 / manual window artifact gate` 才能支撑“人工窗口验收通过”。
 
 ## 七、推荐阅读顺序
 

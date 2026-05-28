@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 把 `PicoUI` 的 demo 验收从“smoke 可出图”推进到“真实窗口里可正常显示、可读、可判定”，先完成 `picoui_basic_widgets_demo` 的 visible baseline，再推广到其他 demos。
+**Goal:** 把 `PicoUI` 的 demo 验收从“smoke 可出图”推进到“自动 visible gate 已证明 dummy SDL + PPM readback 下可显示、可读、可判定”，先完成 `picoui_basic_widgets_demo` 的 visible baseline，再推广到其他 demos。
 
-**Architecture:** `B线` 不再继续优先扩新的 backend 能力面，而是围绕 visible correctness 建立一条新主线：先建立真实可见证据链，再纠正窗口显示链与颜色链，再收口 `basic_widgets`，最后铺开到其他 demos，并把 visible gate 固化进文档和测试。
+**Architecture:** `B线` 不再继续优先扩新的 backend 能力面，而是围绕 automatic visible correctness 建立一条新主线：先建立 dummy SDL + PPM readback 证据链，再纠正 host present/readback 显示链与颜色链，再收口 `basic_widgets`，最后铺开到其他 demos，并把 automatic visible gate 固化进文档和测试。人工 OS 窗口验收不属于 `B线` 完成结论，必须等 `C6 / manual window artifact gate`。
 
 **Tech Stack:** C11、CMake、LingDongGUI、SDL2 host runtime、Python3 验证脚本、CTest、GitNexus、PicoUI demo targets
 
@@ -37,7 +37,7 @@
 职责：
 
 - 定义 smoke 与 visible gate 的边界
-- 为 `basic_widgets` 建立真实可见证据入口
+- 为 `basic_widgets` 建立 automatic visible evidence 入口
 
 ### G3 host present/readback 显示链组
 
@@ -46,7 +46,7 @@
 
 职责：
 
-- 查清并纠正真实窗口显示链与 capture/readback 链的偏差
+- 查清并纠正 host present 显示链与 capture/readback 链的偏差
 - `backend_app.c` 只允许这一组 subagent 改动，避免与其他组冲突
 
 ### G4 theme/颜色/可读性链组
@@ -126,7 +126,7 @@
 
 ## 2. 任务拆分
 
-### Task 1: 建立 visible evidence 基线（对应 `G2`，`G1` 可并行回写文档边界）
+### Task 1: 建立 automatic visible evidence 基线（对应 `G2`，`G1` 可并行回写文档边界）
 
 **Files:**
 - Modify: `tests/picoui/runtime/check_picoui_runtime.py`
@@ -158,7 +158,9 @@ Expected:
 
 - 写清：
   - smoke gate
-  - visible gate
+  - backend mapping gate
+  - automatic visible gate
+  - manual window artifact gate
   - backend correctness gate
 
 - [ ] **Step 4: 复跑检查，确认脚本与文档同步**
@@ -196,7 +198,7 @@ git commit -m "test(picoui): add visible ui gate baseline"
 
 检查点：
 
-- `backend_app.c` 的真实窗口 present 路径
+- `backend_app.c` 的 host present 路径
 - `PICOUI_CAPTURE_FILE` 读回路径
 - 当前像素格式/颜色语义转换
 
@@ -452,16 +454,17 @@ git commit -m "docs(picoui): close b-line visible ui plan"
 
 ### 3.1 Spec coverage
 
-- `B线` 的核心目标“真实窗口里 UI 可正常显示、可读、可判定”已覆盖到：
+- `B线` 的核心目标“自动 visible gate 已证明 dummy SDL + PPM readback 下可显示、可读、可判定”已覆盖到：
   - visible evidence
   - 显示/颜色链
   - `basic_widgets` baseline
   - multi-demo 推广
   - 文档 closeout
+- 人工窗口验收未包含在 `B线` closeout 中；需要 `C6 / manual window artifact gate` 后才能声称通过。
 
 ### 3.2 Placeholder scan
 
-- 没有保留 `TODO/TBD`
+- 没有保留占位项
 - 每个任务都列出了具体文件与命令
 
 ### 3.3 串并边界

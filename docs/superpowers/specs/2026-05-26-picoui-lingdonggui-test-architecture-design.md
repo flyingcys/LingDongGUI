@@ -283,7 +283,7 @@ examples/sdl/tests/
 - `tests/picoui/unit/test_picoui_theme.c`
 - `tests/picoui/runtime/check_picoui_backend_mapping.py`
 
-这层回答“有没有落到真实 LingDongGUI 对象和行为”，不回答“真实窗口里是否已经可读、可判定”。
+这层回答“有没有落到真实 LingDongGUI 对象和行为”，不回答“automatic visible gate 是否通过”，也不回答“人工 OS 窗口验收是否通过”。
 
 #### 6.4.2 smoke gate
 
@@ -293,9 +293,17 @@ examples/sdl/tests/
 
 这层只能证明启动链、capture 链和最小回归链成立。`capture` 非空、像素非空、marker 出现，都不能直接外推为 `visible correctness`。
 
-#### 6.4.3 visible gate
+#### 6.4.3 backend mapping gate
 
-`visible gate` 证明真实可见结果达到“可正常显示、可读、可判定”的最低门槛，并且显示内容与预期控件树不出现明显错位。`B线` 已建立全量入口：
+`backend mapping gate` 证明 runtime marker 能观察到指定 demo 的真实 backend 映射状态。主要证据来自：
+
+- `tests/picoui/runtime/check_picoui_backend_mapping.py`
+
+这层回答“marker 覆盖到的对象是否走真实 LingDongGUI backend、是否没有落回 `FAKE_FALLBACK`”。它不能替代 automatic visible gate，因为 marker 通过不代表读回图像可读；它也不能替代 manual window artifact gate，因为 marker 不包含人工 OS 窗口观察和 artifact。
+
+#### 6.4.4 automatic visible gate
+
+`automatic visible gate` 证明在 `SDL_VIDEODRIVER=dummy + PPM readback` 下，读回结果达到“可正常显示、可读、可判定”的最低门槛，并且显示内容与预期控件树不出现明显错位。`B线` 已建立全量入口：
 
 ```bash
 python3 tests/picoui/runtime/check_picoui_visible_ui.py --all
@@ -310,7 +318,13 @@ python3 tests/picoui/runtime/check_picoui_visible_ui.py --all
 - `theme_showcase`
 - `settings_panel`
 
-它会区分 `SMOKE FAIL` 与 `VISIBLE FAIL`，并检查背景色/亮度/内容 bounds/颜色或面积/ fallback marker。`capture` 非空、像素非空、marker 出现仍不能单独外推为 `visible correctness`。
+它会区分 `SMOKE FAIL` 与 `VISIBLE FAIL`，并检查背景色/亮度/内容 bounds/颜色或面积/ fallback marker。`capture` 非空、像素非空、marker 出现仍不能单独外推为 `automatic visible correctness`。该 gate 也不等同于人工 OS 窗口验收。
+
+#### 6.4.5 manual window artifact gate
+
+`manual window artifact gate` 证明人工 OS 窗口验收通过，属于 `C线` 的 `C6`。它必须在非 dummy 或明确记录的窗口环境下运行，并留下可追溯 artifact，例如平台、SDL video driver、demo target、截图/PPM 路径和人工结论。
+
+没有 `C6 / manual window artifact gate` 记录时，文档和汇报只能说 automatic visible gate 通过，不能说人工窗口验收通过。manual gate 也不替代 smoke、backend mapping 或 automatic visible gate；它只是为“人工窗口验收”这类结论提供额外证据。
 
 ### 6.5 当前 PicoUI 能力矩阵与测试映射
 
@@ -323,7 +337,8 @@ python3 tests/picoui/runtime/check_picoui_visible_ui.py --all
 | `window/button/checkbox/switch/slider/label/text` theme/style apply | 已完成 | `tests/picoui/unit/test_picoui_theme.c` |
 | `image` theme/style apply | 当前拒绝 | `tests/picoui/unit/test_picoui_theme.c` 明确锁定拒绝语义 |
 | demo 启动 / capture / smoke | 已完成 | `tests/picoui/runtime/check_picoui_runtime.py` |
-| 6 个 `picoui` demo visible correctness | 已完成 | `tests/picoui/runtime/check_picoui_visible_ui.py --all` |
+| 6 个 `picoui` demo automatic visible correctness | 已完成 | `tests/picoui/runtime/check_picoui_visible_ui.py --all` |
+| 人工 OS 窗口验收 | 未由 B线证明 | 需要 `C6 / manual window artifact gate` |
 | `backend_app.c` 最终退场 | 已收缩为 temporary smoke path | `A7` 当前要求是去掉 fake renderer 主职责，不要求文件完全消失 |
 
 ---

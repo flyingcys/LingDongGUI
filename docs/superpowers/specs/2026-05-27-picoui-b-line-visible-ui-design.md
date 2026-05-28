@@ -2,7 +2,7 @@
 
 > 日期：2026-05-27  
 > 适用仓库：`/Users/cys/embedded/LingDongGUI`  
-> 目标：把 `PicoUI` 从“backend 主线已通、smoke 可出图”的状态，推进到“真实窗口里 UI 可正常显示、可读、可判定”的状态。
+> 目标：把 `PicoUI` 从“backend 主线已通、smoke 可出图”的状态，推进到“自动 visible gate 已证明 dummy SDL + PPM readback 下可显示、可读、可判定”的状态。
 
 ---
 
@@ -14,7 +14,7 @@
 - `runtime/capture` 已能证明 demo 可启动、可出首帧、可回归
 - `backend_app.c` 已收缩到 `temporary smoke path / host harness`
 
-但 `A线` 的成功边界从一开始就不是“真实窗口里 UI 已经达到用户可接受的显示质量”。`A线` 证明的是：
+但 `A线` 的成功边界从一开始就不是“自动 visible gate 或人工窗口验收已经成立”。`A线` 证明的是：
 
 1. `PicoUI` 不再主要依赖 fake renderer 主输出
 2. demo 能启动
@@ -23,7 +23,7 @@
 
 这不等于：
 
-1. 真实窗口里没有黑屏/近黑屏/错色问题
+1. automatic visible gate 已经排除黑屏/近黑屏/错色问题
 2. 用户看到的 UI 已经可读
 3. 显示结果与控件树语义一致
 4. smoke 证据已经上升为 visible correctness
@@ -34,12 +34,12 @@
 
 `2026-05-27` 对 `picoui_basic_widgets_demo` 的复核，给出了 `A线` 之后必须切到 `B线` 的直接证据：
 
-1. 用户在真实运行时反馈“UI 一片黑”。
+1. 用户在真实运行时反馈“UI 一片黑”，这是 `B线` 启动背景，不是已有人工窗口验收 artifact。
 2. dummy runtime capture 证明该 demo 并非完全无像素。
 3. 首帧图像显示：
    - 画面存在重复列/重复控件现象
    - 画面配色与可读性异常
-4. 这说明当前问题已从“backend 主线是否存在”切换为“真实可见结果是否可信”。
+4. 这说明当前问题已从“backend 主线是否存在”切换为“可见结果证据是否可信”。
 
 因此，下一条主线不应继续优先扩控件/API/theme 能力面，而应先把可见 UI 收口成稳定基线。
 
@@ -47,15 +47,17 @@
 
 ## 3. B线唯一目标
 
-**B线唯一目标**：建立并收口 `PicoUI` 的 visible correctness，使 demo 在真实窗口里达到“可显示、可读、可判定”的状态。
+**B线唯一目标**：建立并收口 `PicoUI` 的 visible correctness，使 demo 在 `SDL_VIDEODRIVER=dummy + PPM readback` 的自动 visible gate 下达到“可显示、可读、可判定”的状态。
+
+若要声称人工 OS 窗口验收通过，必须执行 `C线` 的 `C6 / manual window artifact gate` 并留下 artifact 记录；`B线` 自动 gate 本身不支撑这个结论。
 
 这里的“visible correctness”至少包含三层：
 
 1. **能显示**
    - 不是纯黑/纯空/只有背景色
-   - 不是只在 capture 里有内容、真实窗口里近黑或不可见
+   - 不是只在 smoke capture 里有内容、自动 visible readback 下近黑或不可见
 2. **可读**
-   - 文字、按钮、控件边界、状态对比可被人眼区分
+   - 文字、按钮、控件边界、状态对比可被自动 readback 判定为足够区分
    - 颜色组合不会造成“虽然有像素，但看起来像坏图/脏图/黑屏”
 3. **可判定**
    - 显示结果与预期控件树和布局语义一致
@@ -68,9 +70,9 @@
 当前最容易误判的方向，是把 `A线` 的 smoke 绿灯继续外推成“可以开始做更多 PicoUI 功能”。这在 `B线` 启动时是错误顺序，原因有四个：
 
 1. **用户感知已经给出反证**
-   - 用户直接运行 `picoui_basic_widgets_demo` 时看到的是“黑屏感”，这比脚本绿灯更接近真实产品输入。
+   - 用户直接运行 `picoui_basic_widgets_demo` 时看到的是“黑屏感”，这是启动 `B线` 的真实窗口反馈。
 2. **当前 visible 证据与 smoke 证据错位**
-   - capture 非空、runtime 通过，并不能解释“为什么用户看到近黑或不可读画面”。
+   - capture 非空、runtime 通过，并不能解释“为什么可见结果仍可能近黑或不可读”。
 3. **如果先扩能力面，会把 visible correctness 问题扩散到更多 demos**
    - 新控件、新主题、新 demo 都会建立在不稳定的显示基线上。
 4. **B线 是后续任何更高层能力的基础门**
@@ -97,7 +99,7 @@
 `B线` 当前主要风险集中在三类：
 
 1. **显示链风险**
-   - 真实窗口显示链
+   - host present 显示链
    - capture/readback 链
    - SDL host present 链
    - 这些路径可能并不完全同构
@@ -108,7 +110,7 @@
    - SDL 呈现/读回格式
 3. **布局/对象树呈现风险**
    - 控件树逻辑上正确，但最终呈现重复或错位
-   - dummy capture 能看见像素，但实际窗口结果不可信
+   - dummy capture 能看见像素，但 automatic visible gate 结果仍可能不可信
 
 ---
 
@@ -159,17 +161,17 @@
   - smoke evidence
   - visible correctness
 
-### 7.2 `B1` 真实可见证据链建立
+### 7.2 `B1` 自动 visible 证据链建立
 
 目的：
 
-- 建立专门面向“人眼可见结果”的验证链
+- 建立专门面向“自动可见结果”的验证链
 
 设计要求：
 
 - 不能只看 `capture` 是否非空
 - 必须能回答：
-  - 真实窗口是否有可读内容
+  - dummy SDL + PPM readback 下是否有可读内容
   - 显示结果是否和预期结构一致
   - 哪些异常属于黑屏、近黑、错色、重复列、错误布局
 
@@ -178,11 +180,11 @@
 - `basic_widgets` 有统一 visible evidence 入口
 - 之后所有 demos 都可以复用同一 visible 检查框架
 
-### 7.3 `B2` 窗口显示链与颜色链纠偏
+### 7.3 `B2` host present 显示链与颜色链纠偏
 
 目的：
 
-- 查清真实窗口与 capture 之间的偏差
+- 查清 host present 与 capture/readback 之间的偏差
 - 修正颜色/显示语义错位
 
 设计要求：
@@ -193,7 +195,7 @@
 
 完成标志：
 
-- 不再出现“capture 看起来有东西，但真实窗口像黑屏/近黑屏”的系统性分裂
+- 不再出现“capture 看起来有东西，但 automatic visible readback 像黑屏/近黑屏”的系统性分裂
 
 ### 7.4 `B3` `basic_widgets` visible baseline 收口
 
@@ -209,7 +211,7 @@
 
 完成标志：
 
-- 用户不再把 `basic_widgets` 描述成黑屏/近黑屏/不可读
+- `basic_widgets` 不再被 automatic visible gate 判定为黑屏/近黑屏/不可读
 
 ### 7.5 `B4` 多 demo visible correctness 铺开
 
@@ -297,7 +299,7 @@
 
 `B线` 的验收原则比 `A线` 更接近用户真实体验：
 
-1. **用户看到什么，比脚本看到什么更重要**
+1. **真实窗口反馈可以启动 B 线，但通过结论必须按证据层级表述**
 2. **capture 非空，不等于显示正确**
 3. **有颜色，不等于可读**
 4. **可见 UI 必须和预期控件树一致**
@@ -306,17 +308,18 @@
 
 ## 10. 最终结论
 
-`B线` 已完成。`A线` 之后最应该优先处理的 visible correctness 已经收口，不再需要先回头解决“窗口看起来像黑屏/近黑屏/错色”的基础问题。
+`B线` 已完成。`A线` 之后最应该优先处理的 automatic visible correctness 已经收口，不再需要先回头解决“dummy SDL + PPM readback 下看起来像黑屏/近黑屏/错色”的基础问题。
 
 最终 gate 分层如下：
 
 - `backend correctness gate`：证明 `PicoUI -> LingDongGUI` 对象、布局、事件、theme 映射成立，主要证据是 `tests/picoui/unit/*` 与 `tests/picoui/runtime/check_picoui_backend_mapping.py`。
 - `smoke gate`：证明 demo 可构建、可启动、可 capture、可回归，主要证据是 `tests/picoui/runtime/check_picoui_runtime.py`。
-- `visible gate`：证明真实可见结果可显示、可读、可判定，主要证据是 `tests/picoui/runtime/check_picoui_visible_ui.py --all`。
+- `automatic visible gate`：证明 dummy SDL + PPM readback 下可显示、可读、可判定，主要证据是 `tests/picoui/runtime/check_picoui_visible_ui.py --all`。
+- `manual window artifact gate`：证明人工 OS 窗口验收通过；这属于 `C6`，需要独立 artifact 记录，不能由 `B线` automatic visible gate 代替。
 
 `B线` 收口后的 visible matrix：
 
-| demo | visible gate | backend/fallback 口径 |
+| demo | automatic visible gate | backend/fallback 口径 |
 | --- | --- | --- |
 | `hello_world` | PASS | `title/ok` 为真实 backend |
 | `basic_widgets` | PASS | `wifi/agree/volume/submit/title/logo` 为真实 backend，`image` 使用真实 `ldImage` 对象与显式占位 mask |
@@ -325,4 +328,4 @@
 | `theme_showcase` | PASS | `title/body/accent` 为真实 backend |
 | `settings_panel` | PASS | `title/wifi/brightness/apply` 为真实 backend，不再输出 `FAKE_FALLBACK` marker |
 
-后续新能力线可以继续推进，但必须把 `check_picoui_visible_ui.py --all` 作为 visible baseline；不能再用 capture 非空或 smoke 绿灯替代真实可见 UI 结论。
+后续新能力线可以继续推进，但必须把 `check_picoui_visible_ui.py --all` 作为 automatic visible baseline；不能再用 capture 非空或 smoke 绿灯替代 automatic visible correctness。若要写“人工窗口验收通过”，必须等 `C6 / manual window artifact gate`。
