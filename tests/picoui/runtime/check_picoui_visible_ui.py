@@ -11,7 +11,12 @@ BUILD = ROOT / "build" / "picoui-runtime"
 RTK = shutil.which("rtk") or "rtk"
 DEMO_TIMEOUT_SECONDS = 6
 DEMOS = {
+    "hello_world": "picoui_hello_world_demo",
     "basic_widgets": "picoui_basic_widgets_demo",
+    "layout_flex": "picoui_layout_flex_demo",
+    "layout_grid": "picoui_layout_grid_demo",
+    "theme_showcase": "picoui_theme_showcase_demo",
+    "settings_panel": "picoui_settings_panel_demo",
 }
 THEME_BG = (0xF6, 0xF8, 0xFA)
 
@@ -84,11 +89,8 @@ def _column_signature(width: int, height: int, pixels: bytes, x0: int, x1: int) 
     return tuple(signature)
 
 
-def _assert_basic_widgets_visible(path: Path) -> None:
+def _capture_visible_metrics(path: Path) -> tuple[int, int, tuple[int, int, int], tuple[int, int, int, int], int, int, float, float]:
     width, height, pixels = _read_ppm(path)
-    if width != 480 or height != 320:
-        raise AssertionError(f"VISIBLE FAIL: unexpected basic_widgets capture size: {width}x{height}")
-
     sampled_luma = _sample_luma(width, height, pixels)
     p90 = _percentile(sampled_luma, 0.90)
     p99 = _percentile(sampled_luma, 0.99)
@@ -96,6 +98,23 @@ def _assert_basic_widgets_visible(path: Path) -> None:
     bounds = _non_background_bounds(width, height, pixels, bg)
     if bounds is None:
         raise AssertionError("SMOKE FAIL: capture has no non-background pixels")
+
+    non_bg_colors: set[tuple[int, int, int]] = set()
+    for y in range(0, height, 4):
+        for x in range(0, width, 4):
+            color = _pixel(width, pixels, x, y)
+            if color != bg:
+                non_bg_colors.add(color)
+
+    min_x, min_y, max_x, max_y = bounds
+    non_bg_area = (max_x - min_x + 1) * (max_y - min_y + 1)
+    return width, height, bg, bounds, non_bg_area, len(non_bg_colors), p90, p99
+
+
+def _assert_common_visible(path: Path, demo: str) -> None:
+    width, height, bg, bounds, non_bg_area, non_bg_color_count, p90, p99 = _capture_visible_metrics(path)
+    if width != 480 or height != 320:
+        raise AssertionError(f"VISIBLE FAIL: unexpected {demo} capture size: {width}x{height}")
 
     min_x, min_y, max_x, max_y = bounds
     visible_width = max_x - min_x + 1
@@ -113,6 +132,41 @@ def _assert_basic_widgets_visible(path: Path) -> None:
             "near-black/readability check failed: "
             f"p90_luma={p90:.1f}, p99_luma={p99:.1f}, expected p90>=55 and p99>=95"
         )
+
+    if visible_width < 40 or visible_height < 20:
+        failures.append(
+            "structure coverage check failed: "
+            f"content_bounds=({min_x},{min_y})-({max_x},{max_y}), "
+            "expected visible content to occupy at least 40x20 pixels"
+        )
+
+    if non_bg_color_count < 2 and non_bg_area < 20000:
+        failures.append(
+            "readability check failed: "
+            f"non_bg_color_count={non_bg_color_count}, non_bg_area={non_bg_area}, "
+            "expected >=2 colors or >=20000 px content area"
+        )
+
+    if failures:
+        joined = "\n  - ".join(failures)
+        raise AssertionError(
+            f"VISIBLE FAIL: {demo} capture is non-empty, but visible correctness is not established.\n"
+            f"  - {joined}"
+        )
+
+
+def _assert_basic_widgets_visible(path: Path) -> None:
+    _assert_common_visible(path, "basic_widgets")
+    width, height, pixels = _read_ppm(path)
+    bg = _pixel(width, pixels, 8, 8)
+    bounds = _non_background_bounds(width, height, pixels, bg)
+    if bounds is None:
+        raise AssertionError("SMOKE FAIL: capture has no non-background pixels")
+
+    min_x, min_y, max_x, max_y = bounds
+    visible_width = max_x - min_x + 1
+    visible_height = max_y - min_y + 1
+    failures: list[str] = []
 
     if visible_width < 220 or visible_height < 180:
         failures.append(
@@ -168,40 +222,55 @@ def _run_demo(target: str, capture_path: Path) -> subprocess.CompletedProcess[st
     )
 
 
+def _assert_no_unexpected_fallback(demo: str, stdout: str) -> None:
+    if "PICOUI_BACKEND_INTERACTIVE_BOUNDARY=FAKE_FALLBACK" not in stdout:
+        return
+    raise AssertionError(
+        f"VISIBLE FAIL: {demo} still uses backend fallback widgets.\n"
+        f"stdout:\n{stdout}"
+    )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Check PicoUI visible correctness evidence for selected demos."
     )
     parser.add_argument("--demo", choices=sorted(DEMOS), default="basic_widgets")
+    parser.add_argument("--all", action="store_true", help="check every PicoUI demo visible gate")
     args = parser.parse_args()
-    target = DEMOS[args.demo]
+    selected = sorted(DEMOS) if args.all else [args.demo]
 
     subprocess.run([RTK, "cmake", "-S", str(ROOT), "-B", str(BUILD), "-DUSE_DEMO=0"], check=True)
-    subprocess.run([RTK, "cmake", "--build", str(BUILD), "--target", target], check=True)
+    subprocess.run([RTK, "cmake", "--build", str(BUILD), "--target", *(DEMOS[demo] for demo in selected)], check=True)
 
-    with tempfile.TemporaryDirectory(prefix=f"{target}-visible-") as tmpdir:
-        capture_path = Path(tmpdir) / "frame.ppm"
-        completed = _run_demo(target, capture_path)
-        if completed.returncode != 0:
-            raise RuntimeError(
-                f"SMOKE FAIL: demo '{target}' exited with {completed.returncode}.\n"
-                f"stdout:\n{completed.stdout}\n"
-                f"stderr:\n{completed.stderr}"
-            )
-        if "PICOUI_RUNTIME_READY" not in completed.stdout:
-            raise AssertionError(
-                f"SMOKE FAIL: demo '{target}' did not report entering a runtime loop.\n"
-                f"stdout:\n{completed.stdout}\n"
-                f"stderr:\n{completed.stderr}"
-            )
-        if not capture_path.is_file() or capture_path.stat().st_size <= 32:
-            raise AssertionError(
-                f"SMOKE FAIL: demo '{target}' did not produce a capture frame.\n"
-                f"stdout:\n{completed.stdout}\n"
-                f"stderr:\n{completed.stderr}"
-            )
-        if args.demo == "basic_widgets":
-            _assert_basic_widgets_visible(capture_path)
+    for demo in selected:
+        target = DEMOS[demo]
+        with tempfile.TemporaryDirectory(prefix=f"{target}-visible-") as tmpdir:
+            capture_path = Path(tmpdir) / "frame.ppm"
+            completed = _run_demo(target, capture_path)
+            if completed.returncode != 0:
+                raise RuntimeError(
+                    f"SMOKE FAIL: demo '{target}' exited with {completed.returncode}.\n"
+                    f"stdout:\n{completed.stdout}\n"
+                    f"stderr:\n{completed.stderr}"
+                )
+            if "PICOUI_RUNTIME_READY" not in completed.stdout:
+                raise AssertionError(
+                    f"SMOKE FAIL: demo '{target}' did not report entering a runtime loop.\n"
+                    f"stdout:\n{completed.stdout}\n"
+                    f"stderr:\n{completed.stderr}"
+                )
+            if not capture_path.is_file() or capture_path.stat().st_size <= 32:
+                raise AssertionError(
+                    f"SMOKE FAIL: demo '{target}' did not produce a capture frame.\n"
+                    f"stdout:\n{completed.stdout}\n"
+                    f"stderr:\n{completed.stderr}"
+                )
+            if demo == "basic_widgets":
+                _assert_basic_widgets_visible(capture_path)
+            else:
+                _assert_common_visible(capture_path, demo)
+            _assert_no_unexpected_fallback(demo, completed.stdout)
 
 
 if __name__ == "__main__":

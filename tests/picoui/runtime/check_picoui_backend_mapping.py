@@ -19,8 +19,8 @@ STATIC_TARGETS = [
 ]
 INTERACTIVE_TARGETS = {
     "picoui_settings_panel_demo": {
-        "real_ids": ["title", "apply"],
-        "fallback_ids": ["wifi", "brightness"],
+        "real_ids": ["title", "wifi", "brightness", "apply"],
+        "fallback_ids": [],
     }
 }
 
@@ -114,25 +114,17 @@ for target in TARGETS:
                 f"stdout:\n{completed.stdout}\n"
                 f"stderr:\n{completed.stderr}"
             )
-        if "PICOUI_BACKEND_INTERACTIVE_BOUNDARY=FAKE_FALLBACK" not in completed.stdout:
+        if "PICOUI_BACKEND_INTERACTIVE_BOUNDARY=FAKE_FALLBACK" in completed.stdout:
             raise AssertionError(
-                f"Interactive demo '{target}' should still expose A3 fallback boundary.\n"
+                f"Interactive demo '{target}' should not expose fallback boundary after B4 real mapping.\n"
                 f"stdout:\n{completed.stdout}\n"
                 f"stderr:\n{completed.stderr}"
             )
         real_ids = _parse_marker_ids(completed.stdout, "PICOUI_BACKEND_REAL_WIDGET_IDS")
-        fallback_ids = _parse_marker_ids(completed.stdout, "PICOUI_BACKEND_FALLBACK_WIDGET_IDS")
         for widget_id in expected["real_ids"]:
             if widget_id not in real_ids:
                 raise AssertionError(
                     f"Interactive demo '{target}' missing real-mapped widget id '{widget_id}' in REAL set {sorted(real_ids)}.\n"
-                    f"stdout:\n{completed.stdout}\n"
-                    f"stderr:\n{completed.stderr}"
-                )
-        for widget_id in expected["fallback_ids"]:
-            if widget_id not in fallback_ids:
-                raise AssertionError(
-                    f"Interactive demo '{target}' missing fallback widget id '{widget_id}' in FALLBACK set {sorted(fallback_ids)}.\n"
                     f"stdout:\n{completed.stdout}\n"
                     f"stderr:\n{completed.stderr}"
                 )

@@ -78,33 +78,11 @@ static uint8_t picoui_backend_placeholder_mask_value(int x, int y, int width, in
     return 0;
 }
 
-static int picoui_backend_window_uses_layout_bridge(const struct picoui_backend_widget *root)
-{
-    if (root == NULL) {
-        return 0;
-    }
-
-    if (root->window_layout.flex_flow != PICOUI_FLEX_FLOW_ROW ||
-        root->window_layout.flex_item_gap != 0 ||
-        root->window_layout.flex_track_gap != 0 ||
-        root->window_layout.grid_col_count > 0 ||
-        root->window_layout.grid_row_count > 0 ||
-        root->window_layout.grid_row_gap != 0 ||
-        root->window_layout.grid_col_gap != 0) {
-        return 1;
-    }
-
-    return 0;
-}
-
 static int picoui_backend_widget_is_supported_real(const struct picoui_backend_widget *widget)
 {
-    const struct picoui_backend_widget *root;
-
     if (widget == NULL) {
         return 1;
     }
-    root = widget->root != NULL ? widget->root : widget;
 
     switch (widget->kind) {
     case PICOUI_BACKEND_WIDGET_WINDOW:
@@ -113,10 +91,9 @@ static int picoui_backend_widget_is_supported_real(const struct picoui_backend_w
     case PICOUI_BACKEND_WIDGET_CHECKBOX:
     case PICOUI_BACKEND_WIDGET_TEXT:
     case PICOUI_BACKEND_WIDGET_IMAGE:
-        return 1;
     case PICOUI_BACKEND_WIDGET_SWITCH:
     case PICOUI_BACKEND_WIDGET_SLIDER:
-        return !picoui_backend_window_uses_layout_bridge(root);
+        return 1;
     default:
         return 0;
     }
