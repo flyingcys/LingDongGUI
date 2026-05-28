@@ -44,10 +44,32 @@
 - `C8` closeout review：通过。
 - 最终验证命令：通过。
 - 后续允许进入新能力线，但必须继续遵守本文的 gate 分层和新增能力同步规则。
+- `2026-05-29` post-review：当前工作树无未提交变更；`C线` 代码和文档口径一致，未发现阻断 D 线启动的问题。
+- 下一阶段入口：`docs/picoui-serial/D-线计划索引.md`。
 - 后续仍禁止：
   - 用 `ctest --test-dir build -L picoui --output-on-failure` 单独替代 `visible` / `mapping` / manual artifact 层级。
   - 把 `dummy SDL + PPM readback` 说成人工 OS 窗口验收。
   - 为了让 mapping marker 通过而改 demo 表达的用户意图。
+
+## 2026-05-29 review 收口结论
+
+- 代码侧：
+  - `tests/picoui/CMakeLists.txt` 已注册 `check_picoui_visible_ui` 和 `check_picoui_backend_mapping`。
+  - `check_picoui_backend_mapping.py` 已覆盖 6 个 `picoui` demo，并为每个 demo 写明 `PICOUI_BACKEND_REAL_WIDGET_IDS` 期望。
+  - `check_picoui_visible_ui.py --all` 仍是 automatic visible gate，覆盖 6 个 demo。
+  - `check_picoui_manual_window_artifact.py` 是可选人工窗口 artifact gate，未接入 CTest，未替代自动 gate。
+- 文档侧：
+  - `A/B/C` 三线均已区分 `smoke gate`、`backend mapping gate`、`automatic visible gate`、`manual window artifact gate`。
+  - `C-线人工窗口验收记录.md` 当前只记录 artifact 已生成，未声称人工 OS 窗口验收通过。
+  - 新增 demo/widget/layout/theme 的 gate 同步规则已写入 C 线、测试架构文档和 demo guide。
+- 仍需保持的边界：
+  - `backend_app.c` 仍是 host harness / temporary smoke path 的承载点；不要把它扩回 PicoUI 专属 fake renderer。
+  - `backend_app.c` 当前 runtime present 前仍通过 `picoui_backend_apply_real_widget_layout()` 做固定 padding / row height / cursor 线性排布；这不阻断 C 线门禁工程化，但会阻断“真实 flex/grid 可见语义闭环”的更高声明。
+  - `ctest -L picoui` 可以作为总入口，但汇报时仍要单独说明 `visible` 和 `mapping` 是否执行。
+  - `manual artifact` 只能支持 artifact 存在和人工记录，不能替代 automatic visible correctness。
+- 推进判断：
+  - 可以启动 D 线新能力推进。
+  - D 线第一优先级不是快速堆新控件数量，而是先消除 runtime present 的线性布局覆盖，再把当前已暴露控件做完整合同收口；新控件探索可以并行，但不得阻塞或稀释当前控件完整性主线。
 
 ## 阶段导航
 
