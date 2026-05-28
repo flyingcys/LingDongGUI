@@ -38,16 +38,16 @@
 - `C线` 不用 demo 侧硬编码来弥补 backend/layout/theme 缺口。
 - `C线` 不把 `dummy SDL + PPM readback` 说成等同于人工肉眼窗口验收。
 
-## 当前游标
+## 当前状态
 
-- 当前活跃游标：`C7` 长期回归规则与新增 demo 规则
-- 当前允许进入：`C7` review
-- 当前禁止进入：
-  - 先扩 `PicoUI` 新 public API
-  - 先扩新控件
-  - 先做复杂 theme/style 能力
-  - 继续用“真实窗口”宽泛表述覆盖不同证据层级
-  - 在 `C7` review 收口前进入 `C8` closeout review 与收口
+- `C线` 已按 `C0 -> C8` 顺序完成。
+- `C8` closeout review：通过。
+- 最终验证命令：通过。
+- 后续允许进入新能力线，但必须继续遵守本文的 gate 分层和新增能力同步规则。
+- 后续仍禁止：
+  - 用 `ctest --test-dir build -L picoui --output-on-failure` 单独替代 `visible` / `mapping` / manual artifact 层级。
+  - 把 `dummy SDL + PPM readback` 说成人工 OS 窗口验收。
+  - 为了让 mapping marker 通过而改 demo 表达的用户意图。
 
 ## 阶段导航
 
@@ -440,6 +440,16 @@ git diff --check
     - 自动 gate 完成
     - 是否有人工窗口 artifact
     - 后续新能力线是否可以启动
+  - 本轮 closeout review：通过，无阻塞问题。
+  - 本轮最终验证通过：
+    - `git status --short`
+    - `python3 tests/picoui/runtime/check_picoui_runtime.py`
+    - `python3 tests/picoui/runtime/check_picoui_visible_ui.py --all`
+    - `python3 tests/picoui/runtime/check_picoui_backend_mapping.py`
+    - `ctest --test-dir build -L picoui --output-on-failure`
+    - `ctest --test-dir build -L visible --output-on-failure`
+    - `ctest --test-dir build -L mapping --output-on-failure`
+    - `git diff --check`
 
 ## 当前明确做什么
 
