@@ -40,13 +40,14 @@
 
 ## 当前游标
 
-- 当前活跃游标：`C1` 证据口径收紧
-- 当前允许进入：`C1` 文档口径收紧；完成并 review 后才允许进入 `C2`
+- 当前活跃游标：`C2` visible gate 接入 CTest
+- 当前允许进入：`C2` review
 - 当前禁止进入：
   - 先扩 `PicoUI` 新 public API
   - 先扩新控件
   - 先做复杂 theme/style 能力
   - 继续用“真实窗口”宽泛表述覆盖不同证据层级
+  - 在 `C2` review 通过前进入 `C3` backend mapping gate 接入 CTest
 
 ## 阶段导航
 
@@ -168,6 +169,13 @@ ctest --test-dir build -L visible --output-on-failure
 - 收口证据：
   - `check_picoui_visible_ui` 在 CTest 中可见并通过。
   - `python3 tests/picoui/runtime/check_picoui_visible_ui.py --all` 仍可独立通过。
+  - 本轮已接入 `tests/picoui/CMakeLists.txt`，CTest 名称为 `check_picoui_visible_ui`，固定参数为 `--all`，labels 为 `picoui;runtime;visible`。
+  - 本轮验证通过：
+    - `rtk cmake -S . -B build -DUSE_DEMO=0`
+    - `ctest --test-dir build -N -R check_picoui_visible_ui`
+    - `ctest --test-dir build -R check_picoui_visible_ui --output-on-failure`
+    - `ctest --test-dir build -L visible --output-on-failure`
+    - `python3 tests/picoui/runtime/check_picoui_visible_ui.py --all`
 
 ### C3 backend mapping gate 接入 CTest
 

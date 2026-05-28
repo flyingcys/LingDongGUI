@@ -31,4 +31,11 @@ if(LD_BUILD_RUNTIME_TESTS)
         SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/runtime/check_picoui_runtime.py"
         LABELS "picoui;runtime"
     )
+
+    find_package(Python3 COMPONENTS Interpreter REQUIRED)
+    add_test(
+        NAME check_picoui_visible_ui
+        COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/runtime/check_picoui_visible_ui.py" --all
+    )
+    set_tests_properties(check_picoui_visible_ui PROPERTIES LABELS "picoui;runtime;visible")
 endif()

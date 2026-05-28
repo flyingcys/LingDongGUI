@@ -309,6 +309,13 @@ examples/sdl/tests/
 python3 tests/picoui/runtime/check_picoui_visible_ui.py --all
 ```
 
+`C2` 已把该入口接入 CTest，正式门禁名称为 `check_picoui_visible_ui`，固定参数为 `--all`，labels 为 `picoui;runtime;visible`。因此本地可用以下入口验证：
+
+```bash
+ctest --test-dir build -R check_picoui_visible_ui --output-on-failure
+ctest --test-dir build -L visible --output-on-failure
+```
+
 该入口覆盖：
 
 - `hello_world`
@@ -337,7 +344,7 @@ python3 tests/picoui/runtime/check_picoui_visible_ui.py --all
 | `window/button/checkbox/switch/slider/label/text` theme/style apply | 已完成 | `tests/picoui/unit/test_picoui_theme.c` |
 | `image` theme/style apply | 当前拒绝 | `tests/picoui/unit/test_picoui_theme.c` 明确锁定拒绝语义 |
 | demo 启动 / capture / smoke | 已完成 | `tests/picoui/runtime/check_picoui_runtime.py` |
-| 6 个 `picoui` demo automatic visible correctness | 已完成 | `tests/picoui/runtime/check_picoui_visible_ui.py --all` |
+| 6 个 `picoui` demo automatic visible correctness | 已接入 CTest | `check_picoui_visible_ui` / `tests/picoui/runtime/check_picoui_visible_ui.py --all` |
 | 人工 OS 窗口验收 | 未由 B线证明 | 需要 `C6 / manual window artifact gate` |
 | `backend_app.c` 最终退场 | 已收缩为 temporary smoke path | `A7` 当前要求是去掉 fake renderer 主职责，不要求文件完全消失 |
 
@@ -402,10 +409,13 @@ rtk cmake --build build
 - `rtk ctest --test-dir build -L unit`
 - `rtk ctest --test-dir build -L contract`
 - `rtk ctest --test-dir build -L runtime`
+- `rtk ctest --test-dir build -L visible`
 - `rtk ctest --test-dir build -L lingdonggui`
 - `rtk ctest --test-dir build -L picoui`
 
 默认常规开发建议以 `unit + contract` 为主；`runtime` 单独触发。当前 `runtime` 测试会被注册，且 `check_picoui_runtime.py` 会在独立的 `build/picoui-runtime` 目录中执行 configure/build/run。
+
+`visible` 是 automatic visible gate 的专用 label。当前 `ctest --test-dir build -L visible --output-on-failure` 会执行 `check_picoui_visible_ui`，但它仍然只证明 dummy SDL + PPM readback 下的自动 visible correctness，不证明人工 OS 窗口验收。
 
 ---
 
