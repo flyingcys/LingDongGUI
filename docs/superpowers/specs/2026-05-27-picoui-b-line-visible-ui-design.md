@@ -306,10 +306,23 @@
 
 ## 10. 最终结论
 
-`A线` 之后，最应该做的事情已经不是继续扩 `PicoUI` 的功能面，而是建立并收口 `B线`：
+`B线` 已完成。`A线` 之后最应该优先处理的 visible correctness 已经收口，不再需要先回头解决“窗口看起来像黑屏/近黑屏/错色”的基础问题。
 
-- 先解决 visible correctness
-- 先修真实窗口显示链与颜色链
-- 先把 `basic_widgets` 收成可信样板
+最终 gate 分层如下：
 
-在 `B线` 完成之前，任何“继续做更多 PicoUI 能力”的投入，都会建立在不稳定、不可见、不可读或不可判定的基础上，优先级都应后置。
+- `backend correctness gate`：证明 `PicoUI -> LingDongGUI` 对象、布局、事件、theme 映射成立，主要证据是 `tests/picoui/unit/*` 与 `tests/picoui/runtime/check_picoui_backend_mapping.py`。
+- `smoke gate`：证明 demo 可构建、可启动、可 capture、可回归，主要证据是 `tests/picoui/runtime/check_picoui_runtime.py`。
+- `visible gate`：证明真实可见结果可显示、可读、可判定，主要证据是 `tests/picoui/runtime/check_picoui_visible_ui.py --all`。
+
+`B线` 收口后的 visible matrix：
+
+| demo | visible gate | backend/fallback 口径 |
+| --- | --- | --- |
+| `hello_world` | PASS | `title/ok` 为真实 backend |
+| `basic_widgets` | PASS | `wifi/agree/volume/submit/title/logo` 为真实 backend，`image` 使用真实 `ldImage` 对象与显式占位 mask |
+| `layout_flex` | PASS | `first/second/third` 为真实 backend |
+| `layout_grid` | PASS | `title/left/right` 为真实 backend |
+| `theme_showcase` | PASS | `title/body/accent` 为真实 backend |
+| `settings_panel` | PASS | `title/wifi/brightness/apply` 为真实 backend，不再输出 `FAKE_FALLBACK` marker |
+
+后续新能力线可以继续推进，但必须把 `check_picoui_visible_ui.py --all` 作为 visible baseline；不能再用 capture 非空或 smoke 绿灯替代真实可见 UI 结论。

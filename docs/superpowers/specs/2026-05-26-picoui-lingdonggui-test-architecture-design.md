@@ -295,15 +295,22 @@ examples/sdl/tests/
 
 #### 6.4.3 visible gate
 
-`visible gate` 证明真实可见结果达到“可正常显示、可读、可判定”的最低门槛，并且显示内容与预期控件树不出现明显错位。当前 `B线 Task 1 / G2` 先建立独立入口：
+`visible gate` 证明真实可见结果达到“可正常显示、可读、可判定”的最低门槛，并且显示内容与预期控件树不出现明显错位。`B线` 已建立全量入口：
 
 ```bash
-python3 tests/picoui/runtime/check_picoui_visible_ui.py --demo basic_widgets
+python3 tests/picoui/runtime/check_picoui_visible_ui.py --all
 ```
 
-当前该入口是 `B1` 的 RED 基线：必须先失败在 visible correctness 语义上，例如近黑/可读性异常、结构覆盖不足、重复列或控件树呈现不一致；失败原因不应是无法构建、无法启动、无 capture 或无像素。
+该入口覆盖：
 
-在 `B2/B3` 修正显示链、颜色链与 `basic_widgets` 可见正确性之前，`check_picoui_visible_ui.py` 不注册进默认 `CTest` 绿灯集合，避免把预期失败的 visible 基线混入 smoke/runtime 通过口径。
+- `hello_world`
+- `basic_widgets`
+- `layout_flex`
+- `layout_grid`
+- `theme_showcase`
+- `settings_panel`
+
+它会区分 `SMOKE FAIL` 与 `VISIBLE FAIL`，并检查背景色/亮度/内容 bounds/颜色或面积/ fallback marker。`capture` 非空、像素非空、marker 出现仍不能单独外推为 `visible correctness`。
 
 ### 6.5 当前 PicoUI 能力矩阵与测试映射
 
@@ -316,7 +323,7 @@ python3 tests/picoui/runtime/check_picoui_visible_ui.py --demo basic_widgets
 | `window/button/checkbox/switch/slider/label/text` theme/style apply | 已完成 | `tests/picoui/unit/test_picoui_theme.c` |
 | `image` theme/style apply | 当前拒绝 | `tests/picoui/unit/test_picoui_theme.c` 明确锁定拒绝语义 |
 | demo 启动 / capture / smoke | 已完成 | `tests/picoui/runtime/check_picoui_runtime.py` |
-| `basic_widgets` visible correctness | B1 RED 基线已建立，当前未收口 | `tests/picoui/runtime/check_picoui_visible_ui.py --demo basic_widgets` |
+| 6 个 `picoui` demo visible correctness | 已完成 | `tests/picoui/runtime/check_picoui_visible_ui.py --all` |
 | `backend_app.c` 最终退场 | 已收缩为 temporary smoke path | `A7` 当前要求是去掉 fake renderer 主职责，不要求文件完全消失 |
 
 ---

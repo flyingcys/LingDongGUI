@@ -399,25 +399,27 @@ git commit -m "fix(picoui): extend visible ui baseline"
 - Modify: `docs/picoui-serial/B-线计划索引.md`
 - Modify: `docs/superpowers/specs/2026-05-27-picoui-b-line-visible-ui-design.md`
 - Modify: `docs/superpowers/plans/2026-05-27-picoui-b-line-visible-ui-implementation.md`
+- Modify: `docs/superpowers/specs/2026-05-26-picoui-lingdonggui-test-architecture-design.md`
 - Modify: `picoui/docs/demo_guide.md`
 
-- [ ] **Step 1: 回写 visible gate 结果与最终边界**
+- [x] **Step 1: 回写 visible gate 结果与最终边界**
 
 要求：
 
 - 写清哪些门禁只证明 smoke
 - 写清哪些门禁证明 visible correctness
 
-- [ ] **Step 2: 更新 demo guide，避免继续误导用户把 smoke 当 visible**
+- [x] **Step 2: 更新 demo guide，避免继续误导用户把 smoke 当 visible**
 
-- [ ] **Step 3: 复核 B线索引的当前游标、退出口径和下一步入口**
+- [x] **Step 3: 复核 B线索引的当前游标、退出口径和下一步入口**
 
-- [ ] **Step 4: 运行最终收口验证**
+- [x] **Step 4: 运行最终收口验证**
 
 Run:
 
 ```bash
 python3 tests/picoui/runtime/check_picoui_visible_ui.py --all
+python3 tests/picoui/runtime/check_picoui_backend_mapping.py
 python3 tests/picoui/runtime/check_picoui_runtime.py
 ctest --test-dir build -L picoui --output-on-failure
 ```
@@ -426,12 +428,20 @@ Expected:
 
 - 全部 PASS
 
+实际收口 gate：
+
+- `python3 tests/picoui/runtime/check_picoui_visible_ui.py --all`：PASS
+- `python3 tests/picoui/runtime/check_picoui_backend_mapping.py`：PASS
+- `python3 tests/picoui/runtime/check_picoui_runtime.py`：PASS
+- `ctest --test-dir build -L picoui --output-on-failure`：PASS
+
 - [ ] **Step 5: Commit**
 
 ```bash
 git add docs/picoui-serial/B-线计划索引.md \
         docs/superpowers/specs/2026-05-27-picoui-b-line-visible-ui-design.md \
         docs/superpowers/plans/2026-05-27-picoui-b-line-visible-ui-implementation.md \
+        docs/superpowers/specs/2026-05-26-picoui-lingdonggui-test-architecture-design.md \
         picoui/docs/demo_guide.md
 git commit -m "docs(picoui): close b-line visible ui plan"
 ```

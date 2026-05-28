@@ -55,7 +55,13 @@ python3 tests/picoui/runtime/check_picoui_runtime.py
 注意：
 
 - 该脚本会使用独立的 `build/picoui-runtime` 目录
-- 它属于 smoke / 启动 / capture 回归检查，不等于 backend 已完全闭环
+- 它属于 smoke / 启动 / capture 回归检查，不等于 visible correctness
+
+如果要验证真实可见结果，使用：
+
+```bash
+python3 tests/picoui/runtime/check_picoui_visible_ui.py --all
+```
 
 ## 四、运行方式
 
@@ -104,7 +110,8 @@ build\picoui-runtime\examples\sdl\picoui_hello_world_demo.exe
 
 - `button/text/image` 已有真实 backend 对象映射
 - `checkbox/switch/slider` 已有真实对象映射与 native event
-- 但 demo 运行结果仍通过 host smoke/capture 路径呈现，不应把截图本身直接表述成最终 UI 完成证据
+- `image` 当前使用真实 `ldImage` 对象；无真实图片源时，以显式占位 mask 进入 visible evidence
+- 可见正确性由 `check_picoui_visible_ui.py --demo basic_widgets` 验证
 
 ### `picoui/demo/layout_flex`
 
@@ -166,20 +173,24 @@ build\picoui-runtime\examples\sdl\picoui_hello_world_demo.exe
 
 当前口径：
 
-- 该 demo 当前暴露的 fallback boundary marker 只用于说明阶段桥接/兼容路径，不再构成 `PicoUI` A 线是否收口的 blocker
+- `title/wifi/brightness/apply` 均走真实 backend 映射
+- 该 demo 不再输出 `PICOUI_BACKEND_INTERACTIVE_BOUNDARY=FAKE_FALLBACK`
+- 可见正确性由 `check_picoui_visible_ui.py --demo settings_panel` 验证
 
 ## 六、证据层级说明
 
 1. `ctest` / unit test：证明 contract、backend 字段同步、事件桥接等实现约束。
 2. `tests/picoui/runtime/check_picoui_runtime.py`：证明 demo 可 build、可启动、可 capture、可回归。
-3. demo 画面本身：当前仍属于 host smoke/capture 证据，不能单独外推成“`backend_app.c` 已完全退出临时职责”。
+3. `tests/picoui/runtime/check_picoui_backend_mapping.py`：证明 demo 的真实 backend 映射与 fallback marker 口径。
+4. `tests/picoui/runtime/check_picoui_visible_ui.py --all`：证明 6 个 demo 的 visible correctness。
 
 换句话说：
 
 - `runtime smoke = 已启动`
 - `backend 完成态 = 真实对象/布局/事件/theme 已闭环`
+- `visible gate = 真实可见结果可显示、可读、可判定`
 
-两者不是同一层证据。
+三者不是同一层证据。`capture` 非空仍不能单独证明 UI 正常显示。
 
 ## 七、推荐阅读顺序
 
