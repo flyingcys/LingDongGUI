@@ -40,14 +40,14 @@
 
 ## 当前游标
 
-- 当前活跃游标：`C4` gate 执行矩阵与 CI/本地运行口径
-- 当前允许进入：`C4` review
+- 当前活跃游标：`C5` backend mapping matrix 扩展
+- 当前允许进入：`C5` review
 - 当前禁止进入：
   - 先扩 `PicoUI` 新 public API
   - 先扩新控件
   - 先做复杂 theme/style 能力
   - 继续用“真实窗口”宽泛表述覆盖不同证据层级
-  - 在 `C4` review 收口前进入 `C5` backend mapping matrix 扩展
+  - 在 `C5` review 收口前进入 `C6` 可选人工窗口 artifact gate
 
 ## 阶段导航
 
@@ -295,6 +295,16 @@ python3 tests/picoui/runtime/check_picoui_visible_ui.py --all
 - 收口证据：
   - backend mapping 脚本输出失败时能指出具体 demo 与具体缺失 marker/id。
   - visible gate 仍覆盖 6 个 demo 并通过。
+  - 本轮已把脚本矩阵显式拆成 `static_mapping_targets`、`interactive_mapping_targets`、`layout_mapping_targets`、`theme_mapping_targets`。
+  - 6 个 demo 均要求 `PICOUI_BACKEND_REAL_WIDGET_IDS`，没有为了 marker 修改 demo 或 backend：
+    - `picoui_hello_world_demo`：`title`, `ok`
+    - `picoui_basic_widgets_demo`：`wifi`, `agree`, `volume`, `submit`, `title`, `logo`
+    - `picoui_layout_flex_demo`：`first`, `second`, `third`
+    - `picoui_layout_grid_demo`：`title`, `left`, `right`
+    - `picoui_theme_showcase_demo`：`title`, `body`, `accent`
+    - `picoui_settings_panel_demo`：`title`, `wifi`, `brightness`, `apply`
+  - layout/theme demo 的 marker 只证明命名对象进入真实 backend tree，不证明 layout solver、theme/style readback 或人工窗口验收；这些仍分别由 unit test、visible gate、C6 artifact gate 证明。
+  - 当前游标只推进到 `C5 / C5 review`，禁止 `C5 review` 收口前进入 `C6`。
 
 ### C6 可选人工窗口 artifact gate
 

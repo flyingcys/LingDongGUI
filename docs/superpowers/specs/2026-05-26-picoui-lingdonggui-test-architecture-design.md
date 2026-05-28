@@ -301,6 +301,26 @@ examples/sdl/tests/
 
 这层回答“marker 覆盖到的对象是否走真实 LingDongGUI backend、是否没有落回 `FAKE_FALLBACK`”。它不能替代 automatic visible gate，因为 marker 通过不代表读回图像可读；它也不能替代 manual window artifact gate，因为 marker 不包含人工 OS 窗口观察和 artifact。
 
+`C5` 后，backend mapping gate 的覆盖矩阵与 6 个 demo 的 visible matrix 对齐，但证明范围仍按 marker 收窄。脚本内矩阵显式分成：
+
+- `static_mapping_targets`
+- `interactive_mapping_targets`
+- `layout_mapping_targets`
+- `theme_mapping_targets`
+
+当前 6 个 demo 的 `PICOUI_BACKEND_REAL_WIDGET_IDS` 要求如下：
+
+| demo target | mapping 分类 | 是否要求 `PICOUI_BACKEND_REAL_WIDGET_IDS` | 要求的 id | 证明边界 |
+| --- | --- | --- | --- | --- |
+| `picoui_hello_world_demo` | `static_mapping_targets` | 是 | `title`, `ok` | 证明静态 label/button 样本是真实 backend 对象 |
+| `picoui_basic_widgets_demo` | `interactive_mapping_targets` | 是 | `wifi`, `agree`, `volume`, `submit`, `title`, `logo` | 证明 basic widget 样本对象进入真实 backend，且没有 fallback marker |
+| `picoui_layout_flex_demo` | `layout_mapping_targets` | 是 | `first`, `second`, `third` | 只证明 flex demo 子控件进入真实 backend tree；layout solver 语义仍由 layout unit test 和 visible gate 证明 |
+| `picoui_layout_grid_demo` | `layout_mapping_targets` | 是 | `title`, `left`, `right` | 只证明 grid demo 命名单元进入真实 backend tree；grid placement 正确性仍由 layout unit test 和 visible gate 证明 |
+| `picoui_theme_showcase_demo` | `static_mapping_targets`, `theme_mapping_targets` | 是 | `title`, `body`, `accent` | 证明 theme showcase 样本控件是真实 backend 对象；theme/style 颜色和读回仍由 theme unit test 和 visible gate 证明 |
+| `picoui_settings_panel_demo` | `interactive_mapping_targets` | 是 | `title`, `wifi`, `brightness`, `apply` | 证明 settings panel 关键交互控件是真实 backend 对象，且没有 fallback marker |
+
+当前没有 demo 被豁免 `PICOUI_BACKEND_REAL_WIDGET_IDS`。如果后续新增 demo 不适合要求具体 id，必须在脚本矩阵和本文说明原因，例如 demo 只验证进程生命周期、没有稳定用户意图层面的 widget id，或该行为应由 visible/manual artifact gate 而不是 mapping marker 证明。不能为了让 marker 好看而修改 demo 用户意图。
+
 #### 6.4.4 automatic visible gate
 
 `automatic visible gate` 证明在 `SDL_VIDEODRIVER=dummy + PPM readback` 下，读回结果达到“可正常显示、可读、可判定”的最低门槛，并且显示内容与预期控件树不出现明显错位。`B线` 已建立全量入口：
