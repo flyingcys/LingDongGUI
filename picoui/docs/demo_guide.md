@@ -200,7 +200,37 @@ build\picoui-runtime\examples\sdl\picoui_hello_world_demo.exe
 - 自动 visible gate：脚本设置 dummy SDL，通过 PPM readback 做可重复判定，适合 CI/回归。
 - 人工窗口观察：需要真实窗口环境和 artifact 记录，只有 `C6 / manual window artifact gate` 才能支撑“人工窗口验收通过”。
 
-## 七、推荐阅读顺序
+## 七、PicoUI 本地门禁矩阵
+
+当前主项目存在 `.github/workflows/cmake-single-platform.yml`，但它是 `workflow_dispatch` / `release published` 触发的 `build pack` workflow，执行 `gen_pack.sh` 与 `Open-CMSIS-Pack/gen-pack-action`，不是现有测试 workflow，也不适合在 `C4` 内低风险最小接入 PicoUI gate。因此当前只固定本地运行口径，不改 workflow、不新造 CI 框架。以后若给主项目 CI 接入 PicoUI gate，应复用本节同一矩阵，不另开一套说法。
+
+每次 PicoUI 改动后的最小本地门禁是：
+
+```bash
+ctest --test-dir build -L picoui --output-on-failure
+ctest --test-dir build -L visible --output-on-failure
+ctest --test-dir build -L mapping --output-on-failure
+```
+
+需要完整本地门禁时，运行：
+
+```bash
+python3 tests/picoui/runtime/check_picoui_runtime.py
+python3 tests/picoui/runtime/check_picoui_visible_ui.py --all
+python3 tests/picoui/runtime/check_picoui_backend_mapping.py
+ctest --test-dir build -L picoui --output-on-failure
+```
+
+汇报规则固定为：
+
+- `smoke gate` 通过：只能说可启动、可进入 runtime loop。
+- `visible gate` 通过：只能说自动 visible correctness 通过。
+- `backend mapping gate` 通过：只能说 marker 覆盖的 backend 映射通过。
+- `manual artifact gate` 通过后：才允许说人工窗口验收通过。
+
+因此，`ctest --test-dir build -L picoui --output-on-failure` 不能单独替代 `visible` 和 `mapping` label，也不能替代 standalone runtime 脚本的完整本地门禁。
+
+## 八、推荐阅读顺序
 
 1. `hello_world`
 2. `basic_widgets`
@@ -209,7 +239,7 @@ build\picoui-runtime\examples\sdl\picoui_hello_world_demo.exe
 5. `theme_showcase`
 6. `settings_panel`
 
-## 八、最常用命令
+## 九、最常用命令
 
 构建某个 demo：
 
@@ -230,7 +260,7 @@ rtk cmake -S . -B build
 rtk cmake --build build -j8
 ```
 
-## 九、常见问题
+## 十、常见问题
 
 ### 1. 我传了 `-DUSE_DEMO=2`，为什么没跑 `picoui` demo
 

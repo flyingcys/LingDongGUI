@@ -40,14 +40,14 @@
 
 ## 当前游标
 
-- 当前活跃游标：`C3` backend mapping gate 接入 CTest
-- 当前允许进入：`C3` review
+- 当前活跃游标：`C4` gate 执行矩阵与 CI/本地运行口径
+- 当前允许进入：`C4` review
 - 当前禁止进入：
   - 先扩 `PicoUI` 新 public API
   - 先扩新控件
   - 先做复杂 theme/style 能力
   - 继续用“真实窗口”宽泛表述覆盖不同证据层级
-  - 在 `C3` review 收口前进入 `C4` gate 执行矩阵与 CI/本地运行口径
+  - 在 `C4` review 收口前进入 `C5` backend mapping matrix 扩展
 
 ## 阶段导航
 
@@ -226,8 +226,12 @@ ctest --test-dir build -L mapping --output-on-failure
   - `docs/superpowers/specs/2026-05-26-picoui-lingdonggui-test-architecture-design.md`
   - `docs/picoui-serial/C-线计划索引.md`
   - `picoui/docs/demo_guide.md`
-  - 如仓库已有 CI 配置，再按现有结构补 CI；没有 CI 时只写本地口径，不新造复杂 CI 框架。
+  - 当前存在 `.github/workflows/cmake-single-platform.yml`，但它是 pack/release workflow，不在 `C4` 内改动。
 - 必须完成的事情：
+  - 明确主项目当前存在 `.github/workflows/cmake-single-platform.yml`。
+  - 明确该 workflow 是 `workflow_dispatch` / `release published` 触发的 `build pack` workflow，执行 `gen_pack.sh` 与 `Open-CMSIS-Pack/gen-pack-action`，不是现有测试 workflow。
+  - 明确 `C4` 只记录本地 gate 矩阵，不改 workflow、不新造 CI 框架。
+  - 若以后给主项目 CI 接入 PicoUI gate，必须复用本阶段固定的同一 gate 矩阵，不另开一套说法。
   - 明确最小本地门禁：
 
 ```bash
@@ -253,7 +257,9 @@ ctest --test-dir build -L picoui --output-on-failure
 - 阶段完成判定：
   - 后续执行者不会再只跑 `ctest -L picoui` 就声称完整 B/C 线通过。
   - 文档中每个 gate 都有命令、用途和不能证明的边界。
+  - 当前游标只推进到 `C4 / C4 review`，禁止 `C4 review` 收口前进入 `C5`。
 - 收口证据：
+  - `.github/workflows/cmake-single-platform.yml` 的 pack/release workflow 现状已写清；后续 CI 若接入 PicoUI gate，必须复用同一矩阵。
   - `rg -n "smoke gate|visible gate|backend mapping gate|manual artifact gate|ctest --test-dir build -L" docs picoui/docs` 输出清晰。
   - `git diff --check` 通过。
 

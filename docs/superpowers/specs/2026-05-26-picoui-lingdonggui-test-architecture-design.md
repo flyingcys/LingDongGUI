@@ -333,6 +333,40 @@ ctest --test-dir build -L visible --output-on-failure
 
 没有 `C6 / manual window artifact gate` 记录时，文档和汇报只能说 automatic visible gate 通过，不能说人工窗口验收通过。manual gate 也不替代 smoke、backend mapping 或 automatic visible gate；它只是为“人工窗口验收”这类结论提供额外证据。
 
+#### 6.4.6 PicoUI 本地 gate 执行矩阵
+
+当前主项目存在 `.github/workflows/cmake-single-platform.yml`，但它是 `workflow_dispatch` / `release published` 触发的 `build pack` workflow，执行 `gen_pack.sh` 与 `Open-CMSIS-Pack/gen-pack-action`，不是现有测试 workflow，也不适合在 `C4` 内低风险最小接入 PicoUI gate。因此 `C4` 不修改 workflow、不新造 CI 框架，只固定本地运行口径。以后若给主项目 CI 接入 PicoUI gate，必须复用本节同一矩阵和同一汇报规则，不能另开一套说法。
+
+每次 PicoUI 改动后的最小本地门禁是：
+
+```bash
+ctest --test-dir build -L picoui --output-on-failure
+ctest --test-dir build -L visible --output-on-failure
+ctest --test-dir build -L mapping --output-on-failure
+```
+
+这组命令的含义是：`picoui` label 跑 PicoUI 已注册的 CTest 集合，`visible` label 单独跑 automatic visible gate，`mapping` label 单独跑 backend mapping gate。不能只跑 `ctest --test-dir build -L picoui --output-on-failure` 就声称 visible gate 和 mapping gate 已按本矩阵完整执行。
+
+需要完整本地门禁时，运行：
+
+```bash
+python3 tests/picoui/runtime/check_picoui_runtime.py
+python3 tests/picoui/runtime/check_picoui_visible_ui.py --all
+python3 tests/picoui/runtime/check_picoui_backend_mapping.py
+ctest --test-dir build -L picoui --output-on-failure
+```
+
+这组命令同时保留 standalone 脚本入口和 CTest label 入口，避免 CTest 注册与脚本真实行为再次分裂。
+
+汇报规则固定为：
+
+- `smoke gate` 通过：只能说可启动、可进入 runtime loop。
+- `visible gate` 通过：只能说自动 visible correctness 通过。
+- `backend mapping gate` 通过：只能说 marker 覆盖的 backend 映射通过。
+- `manual artifact gate` 通过后：才允许说人工窗口验收通过。
+
+这些 gate 都不能单独证明“PicoUI 全部适配完成”。尤其是 `smoke gate` 不证明可见正确性，`visible gate` 不证明人工窗口验收，`backend mapping gate` 不证明脚本 marker 之外的控件和 demo 已覆盖。
+
 ### 6.5 当前 PicoUI 能力矩阵与测试映射
 
 | 能力 | 当前状态 | 主要证据层 |
@@ -416,6 +450,8 @@ rtk cmake --build build
 默认常规开发建议以 `unit + contract` 为主；`runtime` 单独触发。当前 `runtime` 测试会被注册，且 `check_picoui_runtime.py` 会在独立的 `build/picoui-runtime` 目录中执行 configure/build/run。
 
 `visible` 是 automatic visible gate 的专用 label。当前 `ctest --test-dir build -L visible --output-on-failure` 会执行 `check_picoui_visible_ui`，但它仍然只证明 dummy SDL + PPM readback 下的自动 visible correctness，不证明人工 OS 窗口验收。
+
+`mapping` 是 backend mapping gate 的专用 label。当前 `ctest --test-dir build -L mapping --output-on-failure` 会执行 `check_picoui_backend_mapping`，但它仍然只证明 marker 覆盖的 backend 映射通过，不证明 mapping matrix 已覆盖所有 demo 的所有 widget id。
 
 ---
 
