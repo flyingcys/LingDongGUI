@@ -38,4 +38,9 @@ if(LD_BUILD_RUNTIME_TESTS)
         COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/runtime/check_picoui_visible_ui.py" --all
     )
     set_tests_properties(check_picoui_visible_ui PROPERTIES LABELS "picoui;runtime;visible")
+
+    ld_add_python_test(check_picoui_backend_mapping
+        SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/runtime/check_picoui_backend_mapping.py"
+        LABELS "picoui;runtime;backend;mapping"
+    )
 endif()

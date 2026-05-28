@@ -40,14 +40,14 @@
 
 ## 当前游标
 
-- 当前活跃游标：`C2` visible gate 接入 CTest
-- 当前允许进入：`C2` review
+- 当前活跃游标：`C3` backend mapping gate 接入 CTest
+- 当前允许进入：`C3` review
 - 当前禁止进入：
   - 先扩 `PicoUI` 新 public API
   - 先扩新控件
   - 先做复杂 theme/style 能力
   - 继续用“真实窗口”宽泛表述覆盖不同证据层级
-  - 在 `C2` review 通过前进入 `C3` backend mapping gate 接入 CTest
+  - 在 `C3` review 收口前进入 `C4` gate 执行矩阵与 CI/本地运行口径
 
 ## 阶段导航
 
@@ -65,7 +65,7 @@
 
 - `C1` 未完成前，不进入 `C2`
 - `C2` 未完成前，不进入 `C3`
-- `C3` 未完成前，不进入 `C4`
+- `C3` review 未收口前，不进入 `C4`
 - `C4` 未完成前，不进入 `C5`
 - `C5` 未完成前，不进入 `C6`
 - `C6` 未完成前，不进入 `C7`
@@ -211,6 +211,12 @@ ctest --test-dir build -L mapping --output-on-failure
 - 收口证据：
   - `check_picoui_backend_mapping` 在 CTest 中可见并通过。
   - `python3 tests/picoui/runtime/check_picoui_backend_mapping.py` 仍可独立通过。
+  - 本轮已接入 `tests/picoui/CMakeLists.txt`，CTest 名称为 `check_picoui_backend_mapping`，labels 为 `picoui;runtime;backend;mapping`。
+  - 本轮验证命令：
+    - `ctest --test-dir build -N -R check_picoui_backend_mapping`
+    - `ctest --test-dir build -R check_picoui_backend_mapping --output-on-failure`
+    - `ctest --test-dir build -L mapping --output-on-failure`
+    - `python3 tests/picoui/runtime/check_picoui_backend_mapping.py`
 
 ### C4 gate 执行矩阵与 CI/本地运行口径
 
