@@ -62,8 +62,8 @@ def _non_background_bounds(
 ) -> tuple[int, int, int, int] | None:
     xs: list[int] = []
     ys: list[int] = []
-    for y in range(0, height, 2):
-        for x in range(0, width, 2):
+    for y in range(height):
+        for x in range(width):
             if _pixel(width, pixels, x, y) != bg:
                 xs.append(x)
                 ys.append(y)
