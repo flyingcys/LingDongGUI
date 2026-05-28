@@ -13,6 +13,7 @@ DEMO_TIMEOUT_SECONDS = 6
 DEMOS = {
     "basic_widgets": "picoui_basic_widgets_demo",
 }
+THEME_BG = (0xF6, 0xF8, 0xFA)
 
 
 def _read_ppm(path: Path) -> tuple[int, int, bytes]:
@@ -47,6 +48,10 @@ def _percentile(values: list[float], percent: float) -> float:
     ordered = sorted(values)
     index = min(len(ordered) - 1, int((len(ordered) - 1) * percent))
     return ordered[index]
+
+
+def _color_distance(lhs: tuple[int, int, int], rhs: tuple[int, int, int]) -> int:
+    return sum(abs(a - b) for a, b in zip(lhs, rhs))
 
 
 def _non_background_bounds(
@@ -96,6 +101,12 @@ def _assert_basic_widgets_visible(path: Path) -> None:
     visible_width = max_x - min_x + 1
     visible_height = max_y - min_y + 1
     failures: list[str] = []
+
+    if _color_distance(bg, THEME_BG) > 24:
+        failures.append(
+            "color/readback check failed: "
+            f"background={bg}, expected near theme bg={THEME_BG}"
+        )
 
     if p90 < 55.0 or p99 < 95.0:
         failures.append(

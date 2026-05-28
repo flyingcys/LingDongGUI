@@ -34,6 +34,7 @@ struct picoui_backend_runtime_state {
     SDL_Renderer *renderer;
     SDL_Texture *texture;
     COLOUR_INT *real_pixels;
+    uint32_t *present_pixels;
     uint8_t *image_mask_pixels;
     arm_2d_tile_t real_tile;
     arm_2d_tile_t image_placeholder_mask_tile;
@@ -236,16 +237,39 @@ static Uint32 picoui_backend_parse_auto_quit_ms(void)
     return (Uint32)parsed;
 }
 
+static uint32_t picoui_backend_pixel_to_rgb888(COLOUR_INT pixel)
+{
+#if __DISP0_CFG_COLOUR_DEPTH__ == 16
+    uint32_t red = ((uint32_t)pixel >> 11) & 0x1FU;
+    uint32_t green = ((uint32_t)pixel >> 5) & 0x3FU;
+    uint32_t blue = (uint32_t)pixel & 0x1FU;
+
+    red = (red << 3) | (red >> 2);
+    green = (green << 2) | (green >> 4);
+    blue = (blue << 3) | (blue >> 2);
+    return (red << 16) | (green << 8) | blue;
+#elif __DISP0_CFG_COLOUR_DEPTH__ == 32
+    return (uint32_t)pixel & 0x00FFFFFFU;
+#elif __DISP0_CFG_COLOUR_DEPTH__ == 8
+    return ((uint32_t)pixel << 16) | ((uint32_t)pixel << 8) | (uint32_t)pixel;
+#else
+    return 0U;
+#endif
+}
+
+static uint32_t picoui_backend_pixel_to_argb8888(COLOUR_INT pixel)
+{
+    return 0xFF000000U | picoui_backend_pixel_to_rgb888(pixel);
+}
+
 static int picoui_backend_write_capture(struct picoui_backend_runtime_state *state)
 {
     const char *path = getenv("PICOUI_CAPTURE_FILE");
     FILE *fp;
-    unsigned char *pixels;
-    int pitch;
     int x;
     int y;
 
-    if (state == NULL || state->renderer == NULL || state->capture_written) {
+    if (state == NULL || state->real_pixels == NULL || state->capture_written) {
         return 0;
     }
 
@@ -253,42 +277,26 @@ static int picoui_backend_write_capture(struct picoui_backend_runtime_state *sta
         return 0;
     }
 
-    pitch = PICOUI_RUNTIME_WIDTH * 4;
-    pixels = malloc((size_t)pitch * (size_t)PICOUI_RUNTIME_HEIGHT);
-    if (pixels == NULL) {
-        return -1;
-    }
-
-    if (SDL_RenderReadPixels(state->renderer,
-                             NULL,
-                             SDL_PIXELFORMAT_ARGB8888,
-                             pixels,
-                             pitch) != 0) {
-        free(pixels);
-        return -1;
-    }
-
     fp = fopen(path, "wb");
     if (fp == NULL) {
-        free(pixels);
         return -1;
     }
 
     fprintf(fp, "P6\n%d %d\n255\n", PICOUI_RUNTIME_WIDTH, PICOUI_RUNTIME_HEIGHT);
     for (y = 0; y < PICOUI_RUNTIME_HEIGHT; ++y) {
         for (x = 0; x < PICOUI_RUNTIME_WIDTH; ++x) {
-            const unsigned char *src = pixels + (size_t)y * (size_t)pitch + (size_t)x * 4u;
+            COLOUR_INT pixel = state->real_pixels[(size_t)y * (size_t)PICOUI_RUNTIME_WIDTH + (size_t)x];
+            uint32_t rgb888 = picoui_backend_pixel_to_rgb888(pixel);
             unsigned char rgb[3];
 
-            rgb[0] = src[1];
-            rgb[1] = src[2];
-            rgb[2] = src[3];
+            rgb[0] = (unsigned char)((rgb888 >> 16) & 0xFFU);
+            rgb[1] = (unsigned char)((rgb888 >> 8) & 0xFFU);
+            rgb[2] = (unsigned char)(rgb888 & 0xFFU);
             fwrite(rgb, 1, 3, fp);
         }
     }
 
     fclose(fp);
-    free(pixels);
     state->capture_written = 1;
     return 0;
 }
@@ -426,12 +434,29 @@ static int picoui_backend_ensure_window(struct picoui_backend_runtime_state *sta
         return -1;
     }
 
-    state->image_mask_pixels = calloc((size_t)220 * (size_t)56, sizeof(*state->image_mask_pixels));
-    if (state->image_mask_pixels == NULL) {
+    state->present_pixels = calloc((size_t)PICOUI_RUNTIME_WIDTH * (size_t)PICOUI_RUNTIME_HEIGHT,
+                                   sizeof(*state->present_pixels));
+    if (state->present_pixels == NULL) {
         free(state->real_pixels);
         SDL_DestroyTexture(state->texture);
         SDL_DestroyRenderer(state->renderer);
         SDL_DestroyWindow(state->window);
+        state->real_pixels = NULL;
+        state->texture = NULL;
+        state->renderer = NULL;
+        state->window = NULL;
+        SDL_Quit();
+        return -1;
+    }
+
+    state->image_mask_pixels = calloc((size_t)220 * (size_t)56, sizeof(*state->image_mask_pixels));
+    if (state->image_mask_pixels == NULL) {
+        free(state->present_pixels);
+        free(state->real_pixels);
+        SDL_DestroyTexture(state->texture);
+        SDL_DestroyRenderer(state->renderer);
+        SDL_DestroyWindow(state->window);
+        state->present_pixels = NULL;
         state->real_pixels = NULL;
         state->texture = NULL;
         state->renderer = NULL;
@@ -493,14 +518,25 @@ static int picoui_backend_ensure_window(struct picoui_backend_runtime_state *sta
 
 static void picoui_backend_present_real_frame(struct picoui_backend_runtime_state *state)
 {
-    if (state == NULL || state->renderer == NULL || state->texture == NULL || state->real_pixels == NULL) {
+    int x;
+    int y;
+
+    if (state == NULL || state->renderer == NULL || state->texture == NULL || state->real_pixels == NULL
+        || state->present_pixels == NULL) {
         return;
+    }
+
+    for (y = 0; y < PICOUI_RUNTIME_HEIGHT; ++y) {
+        for (x = 0; x < PICOUI_RUNTIME_WIDTH; ++x) {
+            size_t index = (size_t)y * (size_t)PICOUI_RUNTIME_WIDTH + (size_t)x;
+            state->present_pixels[index] = picoui_backend_pixel_to_argb8888(state->real_pixels[index]);
+        }
     }
 
     SDL_UpdateTexture(state->texture,
                       NULL,
-                      state->real_pixels,
-                      (int)(PICOUI_RUNTIME_WIDTH * sizeof(*state->real_pixels)));
+                      state->present_pixels,
+                      (int)(PICOUI_RUNTIME_WIDTH * sizeof(*state->present_pixels)));
     SDL_RenderCopy(state->renderer, state->texture, NULL, NULL);
 }
 
@@ -657,6 +693,7 @@ void picoui_backend_app_shutdown(struct picoui_app *app)
     SDL_Quit();
     if (state != NULL) {
         free(state->image_mask_pixels);
+        free(state->present_pixels);
         free(state->real_pixels);
         free(state);
     }

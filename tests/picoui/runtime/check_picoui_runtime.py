@@ -69,7 +69,7 @@ def _assert_basic_widgets_capture(path: Path, stdout: str) -> None:
 
     bg = _pixel(width, pixels, 8, 8)
     switch_colors = _region_colors(width, pixels, 16, 32, 120, 72, bg)
-    checkbox_colors = _region_colors(width, pixels, 8, 90, 16, 104, bg)
+    checkbox_colors = _region_colors(width, pixels, 16, 80, 80, 118, bg)
     slider_colors = _region_colors(width, pixels, 24, 120, 160, 144, bg)
     button_fill = _pixel(width, pixels, 40, 170)
     text_fill = _pixel(width, pixels, 40, 220)
