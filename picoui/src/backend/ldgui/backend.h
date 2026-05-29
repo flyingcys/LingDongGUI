@@ -21,6 +21,7 @@ enum picoui_backend_widget_kind {
     PICOUI_BACKEND_WIDGET_CHECKBOX,
     PICOUI_BACKEND_WIDGET_SWITCH,
     PICOUI_BACKEND_WIDGET_SLIDER,
+    PICOUI_BACKEND_WIDGET_LIST,
     PICOUI_BACKEND_WIDGET_TEXT,
     PICOUI_BACKEND_WIDGET_IMAGE,
 };
@@ -116,9 +117,15 @@ void *picoui_backend_create_button(void *parent, const char *id);
 void *picoui_backend_create_checkbox(void *parent, const char *id);
 void *picoui_backend_create_switch(void *parent, const char *id);
 void *picoui_backend_create_slider(void *parent, const char *id);
+void *picoui_backend_create_list(void *parent, const char *id);
 void *picoui_backend_create_text(void *parent, const char *id);
 void *picoui_backend_create_image(void *parent, const char *id);
 int picoui_backend_set_text(void *backend_widget, const char *text);
+int picoui_backend_list_set_items(void *backend_widget,
+                                  const unsigned char *const *items,
+                                  int item_count);
+int picoui_backend_list_set_selected_index(void *backend_widget, int index);
+int picoui_backend_list_get_selected_index(void *backend_widget);
 int picoui_backend_widget_set_style_class(void *backend_widget, const char *style_class);
 int picoui_backend_widget_set_font(void *backend_widget, const void *font);
 int picoui_backend_widget_set_user_data(void *backend_widget, void *user_data);

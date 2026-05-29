@@ -177,12 +177,33 @@ build\picoui-runtime\examples\sdl\picoui_hello_world_demo.exe
 - 该 demo 不再输出 `PICOUI_BACKEND_INTERACTIVE_BOUNDARY=FAKE_FALLBACK`
 - 可见正确性由 `check_picoui_visible_ui.py --demo settings_panel` 验证
 
+### `picoui/demo/list_basic`
+
+`F线` 新控件 vertical slice 示例。包含：
+
+- `label`
+- `list`
+- 三个 list item：`item_wifi`、`item_bluetooth`、`item_display`
+
+适合用途：
+
+- 看 `picoui_list` 的最小 API 写法
+- 看 list demo 如何接入 runtime、mapping、visible matrix
+
+当前口径：
+
+- `picoui_list` 的 public API、unit test 和真实 `ldList` backend mapping 已接入
+- `picoui_list_basic_demo` 已能 build、run，并进入 runtime smoke
+- mapping/visible gate 当前未完成：runtime marker 仍把 `list` 输出为 fallback
+- blocker 位于 `D线` 禁止写面 `picoui/src/backend/ldgui/backend_app.c` 的 supported-real marker 分类
+- 该 demo 不证明 multi-select、virtualization、drag reorder、keyboard navigation
+
 ## 六、证据层级说明
 
 1. `ctest` / unit test：证明 contract、backend 字段同步、事件桥接等实现约束。
 2. `tests/picoui/runtime/check_picoui_runtime.py`：证明 demo 可 build、可启动、可 capture、可回归。
 3. `tests/picoui/runtime/check_picoui_backend_mapping.py`：证明 demo 的真实 backend 映射与 fallback marker 口径。
-4. `tests/picoui/runtime/check_picoui_visible_ui.py --all`：证明 6 个 demo 在 `SDL_VIDEODRIVER=dummy + PPM readback` 下的 automatic visible correctness。
+4. `tests/picoui/runtime/check_picoui_visible_ui.py --all`：证明 visible-gate demo 在 `SDL_VIDEODRIVER=dummy + PPM readback` 下的 automatic visible correctness。
 5. `manual window artifact gate`：证明人工 OS 窗口验收通过；这属于 `C线` 的 `C6`，需要单独运行并记录 artifact。
 
 换句话说：

@@ -8,6 +8,7 @@
 #include "picoui/checkbox.h"
 #include "picoui/image.h"
 #include "picoui/label.h"
+#include "picoui/list.h"
 #include "picoui/slider.h"
 #include "picoui/switch.h"
 #include "picoui/text.h"

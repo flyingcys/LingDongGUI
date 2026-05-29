@@ -17,6 +17,7 @@ DEMOS = {
     "layout_grid": "picoui_layout_grid_demo",
     "theme_showcase": "picoui_theme_showcase_demo",
     "settings_panel": "picoui_settings_panel_demo",
+    "list_basic": "picoui_list_basic_demo",
 }
 THEME_BG = (0xF6, 0xF8, 0xFA)
 
@@ -192,6 +193,56 @@ def _assert_basic_widgets_visible(path: Path) -> None:
         )
 
 
+def _assert_list_basic_visible(path: Path) -> None:
+    _assert_common_visible(path, "list_basic")
+    width, height, pixels = _read_ppm(path)
+    bg = _pixel(width, pixels, 8, 8)
+    bounds = _non_background_bounds(width, height, pixels, bg)
+    if bounds is None:
+        raise AssertionError("SMOKE FAIL: capture has no non-background pixels")
+
+    min_x, min_y, max_x, max_y = bounds
+    visible_width = max_x - min_x + 1
+    visible_height = max_y - min_y + 1
+    failures: list[str] = []
+
+    if visible_width < 180 or visible_height < 80:
+        failures.append(
+            "list structure check failed: "
+            f"content_bounds=({min_x},{min_y})-({max_x},{max_y}), "
+            "expected readable list content to occupy at least 180x80 pixels"
+        )
+
+    row_bands = [
+        (min_y + 32, min_y + 56),
+        (min_y + 56, min_y + 80),
+        (min_y + 80, min_y + 104),
+    ]
+    readable_rows = 0
+    for y0, y1 in row_bands:
+        colors: set[tuple[int, int, int]] = set()
+        for y in range(max(0, y0), min(height, y1), 4):
+            for x in range(max(0, min_x), min(width, min_x + 220), 4):
+                color = _pixel(width, pixels, x, y)
+                if color != bg:
+                    colors.add(color)
+        if len(colors) >= 2:
+            readable_rows += 1
+
+    if readable_rows < 2:
+        failures.append(
+            "list row contrast check failed: "
+            f"readable_rows={readable_rows}, expected at least 2 rows with visible contrast"
+        )
+
+    if failures:
+        joined = "\n  - ".join(failures)
+        raise AssertionError(
+            "VISIBLE FAIL: list_basic capture is non-empty, but visible correctness is not established.\n"
+            f"  - {joined}"
+        )
+
+
 def _find_executable(target: str) -> Path:
     candidates = [
         BUILD / "examples" / "sdl" / target,
@@ -268,6 +319,8 @@ def main() -> None:
                 )
             if demo == "basic_widgets":
                 _assert_basic_widgets_visible(capture_path)
+            elif demo == "list_basic":
+                _assert_list_basic_visible(capture_path)
             else:
                 _assert_common_visible(capture_path, demo)
             _assert_no_unexpected_fallback(demo, completed.stdout)

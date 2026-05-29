@@ -27,6 +27,10 @@ interactive_mapping_targets = {
         "real_ids": ["title", "wifi", "brightness", "apply"],
         "reason": "settings panel has stable interactive widget ids that previously risked fallback behavior.",
     },
+    "picoui_list_basic_demo": {
+        "real_ids": ["list", "item_wifi", "item_bluetooth", "item_display"],
+        "reason": "list demo proves the list and item ids are backed by real LingDongGUI list mapping.",
+    },
 }
 layout_mapping_targets = {
     "picoui_layout_flex_demo": {
@@ -106,12 +110,13 @@ def _assert_target_matrix_complete(target_matrix: dict[str, dict[str, object]]) 
         "picoui_layout_grid_demo",
         "picoui_theme_showcase_demo",
         "picoui_settings_panel_demo",
+        "picoui_list_basic_demo",
     }
     missing_targets = sorted(expected_targets - set(target_matrix))
     unexpected_targets = sorted(set(target_matrix) - expected_targets)
     if missing_targets or unexpected_targets:
         raise AssertionError(
-            "Backend mapping matrix must explicitly cover the six visible-gate demos.\n"
+            "Backend mapping matrix must explicitly cover the seven visible-gate demos.\n"
             f"missing demos: {missing_targets}\n"
             f"unexpected demos: {unexpected_targets}"
         )

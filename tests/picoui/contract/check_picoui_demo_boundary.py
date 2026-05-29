@@ -11,6 +11,7 @@ REQUIRED_DEMOS = {
     "layout_grid",
     "theme_showcase",
     "settings_panel",
+    "list_basic",
 }
 
 

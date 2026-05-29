@@ -143,6 +143,7 @@ function(ld_define_core_targets)
         ${LD_REPO_ROOT}/picoui/src/widgets/checkbox.c
         ${LD_REPO_ROOT}/picoui/src/widgets/switch.c
         ${LD_REPO_ROOT}/picoui/src/widgets/slider.c
+        ${LD_REPO_ROOT}/picoui/src/widgets/list.c
     )
     target_include_directories(picoui_core PUBLIC
         ${LD_REPO_ROOT}/picoui/include
@@ -167,6 +168,7 @@ function(ld_define_core_targets)
         ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_checkbox.c
         ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_switch.c
         ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_slider.c
+        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_list.c
     )
     target_include_directories(picoui_backend_ldgui PUBLIC
         ${LD_REPO_ROOT}/picoui/include

@@ -483,3 +483,6 @@ add_picoui_demo(picoui_theme_showcase_demo
 add_picoui_demo(picoui_settings_panel_demo
     "${SDL_EXAMPLE_DIR}/../../picoui/demo/settings_panel/main.c"
 )
+add_picoui_demo(picoui_list_basic_demo
+    "${SDL_EXAMPLE_DIR}/../../picoui/demo/list_basic/main.c"
+)

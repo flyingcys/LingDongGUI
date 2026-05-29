@@ -5,6 +5,7 @@
 #include "picoui/theme.h"
 
 #define PICOUI_LAYOUT_MAX_TRACKS 16
+#define PICOUI_LIST_MAX_ITEMS 16
 
 typedef struct arm_2d_tile_t arm_2d_tile_t;
 
@@ -107,6 +108,22 @@ struct picoui_slider {
     int min_value;
     int max_value;
     picoui_value_changed_cb cb;
+    void *user_data;
+};
+
+struct picoui_list_item {
+    const char *id;
+    const char *text;
+};
+
+struct picoui_list {
+    struct picoui_widget widget;
+    const char *id;
+    struct picoui_list_item items[PICOUI_LIST_MAX_ITEMS];
+    const unsigned char *backend_item_texts[PICOUI_LIST_MAX_ITEMS];
+    int item_count;
+    int selected_index;
+    void (*cb)(struct picoui_list *list, int index, void *user_data);
     void *user_data;
 };
 

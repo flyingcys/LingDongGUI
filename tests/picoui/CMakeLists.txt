@@ -4,6 +4,7 @@ set(PICOUI_UNIT_TESTS
     unit/test_picoui_widgets.c
     unit/test_picoui_button_events.c
     unit/test_picoui_layout.c
+    unit/test_picoui_list.c
 )
 
 foreach(test_src IN LISTS PICOUI_UNIT_TESTS)
