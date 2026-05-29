@@ -61,7 +61,7 @@ int picoui_backend_set_image_source(void *backend_widget, struct picoui_image_so
     struct picoui_backend_widget *widget = backend_widget;
     ldImage_t *ld_image;
 
-    if (widget == 0 || source == 0) {
+    if (widget == 0 || (source != 0 && source->img_tile == NULL)) {
         return -1;
     }
     if (widget->kind != PICOUI_BACKEND_WIDGET_IMAGE || widget->ld_widget == NULL) {
@@ -70,6 +70,8 @@ int picoui_backend_set_image_source(void *backend_widget, struct picoui_image_so
 
     ld_image = widget->ld_widget;
     widget->image_source = source;
-    ldImageSetImage(ld_image, source->img_tile, source->mask_tile);
+    ldImageSetImage(ld_image,
+                    source != NULL ? source->img_tile : NULL,
+                    source != NULL ? source->mask_tile : NULL);
     return 0;
 }

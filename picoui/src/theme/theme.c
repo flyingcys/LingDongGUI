@@ -2,6 +2,10 @@
 #include "picoui/theme.h"
 
 #include <stdlib.h>
+#include <stdint.h>
+
+typedef struct ldBase_t ldBase_t;
+void ldBaseSetHeight(ldBase_t *ptWidget, int16_t height);
 
 static const unsigned int PICOUI_THEME_V0_COLORS[PICOUI_COLOR_COUNT] = {
     [PICOUI_COLOR_TEXT_PRIMARY] = 0x1F2328U,
@@ -89,6 +93,40 @@ static void picoui_theme_map_widget_colors(const struct picoui_theme *theme,
     *border = border_color;
 }
 
+static int picoui_theme_apply_widget_metrics(const struct picoui_theme *theme,
+                                             struct picoui_widget *widget,
+                                             enum picoui_backend_widget_kind kind)
+{
+    struct picoui_backend_widget *backend_widget = (struct picoui_backend_widget *)widget->backend_widget;
+
+    if (kind == PICOUI_BACKEND_WIDGET_IMAGE) {
+        return -1;
+    }
+
+    if (kind != PICOUI_BACKEND_WIDGET_WINDOW) {
+        widget->height = theme->metrics[PICOUI_METRIC_CONTROL_HEIGHT];
+        if (backend_widget != 0 && backend_widget->ld_widget != 0) {
+            ldBaseSetHeight((ldBase_t *)backend_widget->ld_widget,
+                            (int16_t)theme->metrics[PICOUI_METRIC_CONTROL_HEIGHT]);
+        }
+    }
+
+    if (picoui_widget_set_radius(widget, theme->metrics[PICOUI_METRIC_RADIUS]) != 0
+        || picoui_widget_set_padding(widget, theme->metrics[PICOUI_METRIC_PADDING]) != 0) {
+        return -1;
+    }
+
+    return 0;
+}
+
+static int picoui_theme_backend_can_apply_style(const struct picoui_backend_widget *backend_widget)
+{
+    return backend_widget != 0
+        && backend_widget->ld_widget != 0
+        && backend_widget->theme != 0
+        && backend_widget->kind != PICOUI_BACKEND_WIDGET_IMAGE;
+}
+
 struct picoui_theme *picoui_theme_create(void)
 {
     struct picoui_theme *theme = calloc(1, sizeof(struct picoui_theme));
@@ -156,8 +194,15 @@ int picoui_theme_apply_to_widget(struct picoui_theme *theme,
     if (!picoui_theme_part_supported(backend_widget->kind, part)) {
         return -1;
     }
+    if (!picoui_theme_backend_can_apply_style(backend_widget)) {
+        return -1;
+    }
 
     picoui_theme_map_widget_colors(theme, part, state, &bg_color, &text_color, &border_color);
+    if (picoui_theme_apply_widget_metrics(theme, widget, backend_widget->kind) != 0) {
+        return -1;
+    }
+
     widget->bg_color = bg_color;
     widget->text_color = text_color;
     widget->border_color = border_color;

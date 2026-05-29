@@ -60,6 +60,16 @@ def _color_distance(lhs: tuple[int, int, int], rhs: tuple[int, int, int]) -> int
     return sum(abs(a - b) for a, b in zip(lhs, rhs))
 
 
+def _background_color(width: int, height: int, pixels: bytes) -> tuple[int, int, int]:
+    samples = [
+        _pixel(width, pixels, width - 8, 8),
+        _pixel(width, pixels, 8, height - 8),
+        _pixel(width, pixels, width - 8, height - 8),
+        _pixel(width, pixels, width // 2, height - 8),
+    ]
+    return min(samples, key=lambda color: _color_distance(color, THEME_BG))
+
+
 def _non_background_bounds(
     width: int,
     height: int,
@@ -90,12 +100,163 @@ def _column_signature(width: int, height: int, pixels: bytes, x0: int, x1: int) 
     return tuple(signature)
 
 
+def _active_rows_and_columns(
+    width: int,
+    height: int,
+    pixels: bytes,
+    bg: tuple[int, int, int],
+) -> tuple[list[int], list[int]]:
+    active_rows: list[int] = []
+    active_columns: list[int] = []
+
+    for y in range(height):
+        count = 0
+        for x in range(width):
+            if _pixel(width, pixels, x, y) != bg:
+                count += 1
+        if count >= 4:
+            active_rows.append(y)
+
+    for x in range(width):
+        count = 0
+        for y in range(height):
+            if _pixel(width, pixels, x, y) != bg:
+                count += 1
+        if count >= 4:
+            active_columns.append(x)
+
+    return active_rows, active_columns
+
+
+def _runs(values: list[int]) -> list[tuple[int, int]]:
+    if not values:
+        return []
+
+    runs: list[tuple[int, int]] = []
+    start = values[0]
+    previous = values[0]
+    for value in values[1:]:
+        if value == previous + 1:
+            previous = value
+            continue
+        runs.append((start, previous))
+        start = value
+        previous = value
+    runs.append((start, previous))
+    return runs
+
+
+def _column_runs_in_band(
+    width: int,
+    pixels: bytes,
+    bg: tuple[int, int, int],
+    y0: int,
+    y1: int,
+) -> list[tuple[int, int]]:
+    columns: list[int] = []
+    sample_height = max(1, y1 - y0 + 1)
+    threshold = max(4, min(18, sample_height // 3))
+
+    for x in range(width):
+        count = 0
+        for y in range(y0, y1 + 1):
+            if _pixel(width, pixels, x, y) != bg:
+                count += 1
+        if count >= threshold:
+            columns.append(x)
+
+    return _runs(columns)
+
+
+def _find_grid_column_groups(
+    width: int,
+    height: int,
+    pixels: bytes,
+    bg: tuple[int, int, int],
+) -> list[tuple[int, int]]:
+    best_runs: list[tuple[int, int]] = []
+    window_height = 44
+
+    for y0 in range(0, max(1, height - window_height + 1), 8):
+        y1 = min(height - 1, y0 + window_height - 1)
+        runs = [
+            run
+            for run in _column_runs_in_band(width, pixels, bg, y0, y1)
+            if run[1] - run[0] + 1 >= 45
+        ]
+        if len(runs) > len(best_runs):
+            best_runs = runs
+        if len(runs) >= 2:
+            return runs
+
+    return best_runs
+
+
+def _assert_layout_flex_visible(path: Path) -> None:
+    _assert_common_visible(path, "layout_flex")
+    width, height, pixels = _read_ppm(path)
+    bg = _background_color(width, height, pixels)
+    active_rows, active_columns = _active_rows_and_columns(width, height, pixels, bg)
+    row_runs = _runs(active_rows)
+    column_runs = _runs(active_columns)
+    failures: list[str] = []
+
+    wide_columns = [run for run in column_runs if run[1] - run[0] + 1 >= 120]
+    if len(wide_columns) < 2:
+        failures.append(
+            "flex main-axis distribution failed: "
+            f"wide_column_runs={column_runs}, expected at least two separated horizontal groups"
+        )
+
+    if not any((end - start + 1) >= 32 for start, end in row_runs):
+        failures.append(
+            "flex wrapped-track visibility failed: "
+            f"row_runs={row_runs}, expected a visibly occupied row track"
+        )
+
+    if failures:
+        joined = "\n  - ".join(failures)
+        raise AssertionError(
+            "VISIBLE FAIL: layout_flex capture is non-empty, but flex layout structure is not established.\n"
+            f"  - {joined}"
+        )
+
+
+def _assert_layout_grid_visible(path: Path) -> None:
+    _assert_common_visible(path, "layout_grid")
+    width, height, pixels = _read_ppm(path)
+    bg = _background_color(width, height, pixels)
+    active_rows, active_columns = _active_rows_and_columns(width, height, pixels, bg)
+    row_runs = _runs(active_rows)
+    column_runs = _find_grid_column_groups(width, height, pixels, bg)
+    failures: list[str] = []
+
+    cell_rows = [run for run in row_runs if run[1] - run[0] + 1 >= 24]
+    if len(cell_rows) < 2:
+        failures.append(
+            "grid row separation failed: "
+            f"row_runs={row_runs}, expected title and cell rows to occupy independent visible rows"
+        )
+    if len(column_runs) < 2:
+        failures.append(
+            "grid column separation failed: "
+            f"best_column_runs={column_runs}, expected at least two independent visible columns"
+        )
+
+    if failures:
+        joined = "\n  - ".join(failures)
+        raise AssertionError(
+            "VISIBLE FAIL: layout_grid capture is non-empty, but grid layout structure is not established.\n"
+            f"  - {joined}"
+        )
+
+
 def _capture_visible_metrics(path: Path) -> tuple[int, int, tuple[int, int, int], tuple[int, int, int, int], int, int, float, float]:
     width, height, pixels = _read_ppm(path)
     sampled_luma = _sample_luma(width, height, pixels)
     p90 = _percentile(sampled_luma, 0.90)
     p99 = _percentile(sampled_luma, 0.99)
-    bg = _pixel(width, pixels, 8, 8)
+    bg = _background_color(width, height, pixels)
     bounds = _non_background_bounds(width, height, pixels, bg)
     if bounds is None:
         raise AssertionError("SMOKE FAIL: capture has no non-background pixels")
@@ -159,7 +320,7 @@ def _assert_common_visible(path: Path, demo: str) -> None:
 def _assert_basic_widgets_visible(path: Path) -> None:
     _assert_common_visible(path, "basic_widgets")
     width, height, pixels = _read_ppm(path)
-    bg = _pixel(width, pixels, 8, 8)
+    bg = _background_color(width, height, pixels)
     bounds = _non_background_bounds(width, height, pixels, bg)
     if bounds is None:
         raise AssertionError("SMOKE FAIL: capture has no non-background pixels")
@@ -282,6 +443,17 @@ def _assert_no_unexpected_fallback(demo: str, stdout: str) -> None:
     )
 
 
+def _assert_basic_widgets_image_source_boundary(stdout: str) -> None:
+    expected = "PICOUI_BACKEND_IMAGE_SOURCE=logo:img=null,mask=null"
+
+    if expected not in stdout:
+        raise AssertionError(
+            "VISIBLE FAIL: basic_widgets image source boundary changed during runtime render.\n"
+            f"expected marker: {expected}\n"
+            f"stdout:\n{stdout}"
+        )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Check PicoUI visible correctness evidence for selected demos."
@@ -319,8 +491,13 @@ def main() -> None:
                 )
             if demo == "basic_widgets":
                 _assert_basic_widgets_visible(capture_path)
+                _assert_basic_widgets_image_source_boundary(completed.stdout)
             elif demo == "list_basic":
                 _assert_list_basic_visible(capture_path)
+            elif demo == "layout_flex":
+                _assert_layout_flex_visible(capture_path)
+            elif demo == "layout_grid":
+                _assert_layout_grid_visible(capture_path)
             else:
                 _assert_common_visible(capture_path, demo)
             _assert_no_unexpected_fallback(demo, completed.stdout)

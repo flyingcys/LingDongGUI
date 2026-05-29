@@ -110,7 +110,10 @@ build\picoui-runtime\examples\sdl\picoui_hello_world_demo.exe
 
 - `button/text/image` 已有真实 backend 对象映射
 - `checkbox/switch/slider` 已有真实对象映射与 native event
-- `image` 当前使用真实 `ldImage` 对象；无真实图片源时，以显式占位 mask 进入 visible evidence
+- `image` 当前创建真实 `ldImage` 对象；`picoui_image_set_source()` 只绑定调用方提供的 tile 指针，不做资源加载
+- `image` 允许空 source/清空 source，此时 backend 保持真实 `ldImage` 对象，`img_tile/mask_tile` 均为空
+- `image` 无 source 时 visible gate 只能证明 demo 中 image 区域或真实对象路径可见、可捕获；不证明占位资源绑定，也不证明真实图片加载完成
+- `image` 非空 source 必须提供 `img_tile`；`mask_tile` 可为空，表示无遮罩图片
 - 可见正确性由 `check_picoui_visible_ui.py --demo basic_widgets` 验证
 
 ### `picoui/demo/layout_flex`
@@ -153,7 +156,7 @@ build\picoui-runtime\examples\sdl\picoui_hello_world_demo.exe
 当前口径：
 
 - `window/button/checkbox/switch/slider/label/text` 已有真实 backend style apply
-- `image` 当前**不支持** theme/style apply；A6 口径是明确拒绝 `PICOUI_PART_MAIN`，不是默认支持
+- `image` 当前**不支持** theme/style apply；口径是明确拒绝 `PICOUI_PART_MAIN`，不会借 theme/style 改写 image source 或 backend tile
 
 ### `picoui/demo/settings_panel`
 

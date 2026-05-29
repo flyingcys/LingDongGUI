@@ -13,6 +13,14 @@ struct picoui_slider_props {
     int value;
     picoui_value_changed_cb on_value_changed;
     void *user_data;
+    const char *style_class;
+    int width;
+    int height;
+    unsigned int bg_color;
+    unsigned int text_color;
+    unsigned int border_color;
+    int radius;
+    int padding;
 };
 
 struct picoui_slider *picoui_slider_create(struct picoui_window *parent, const char *id);

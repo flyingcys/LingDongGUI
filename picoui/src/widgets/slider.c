@@ -3,6 +3,19 @@
 
 #include <stdlib.h>
 
+static int picoui_slider_props_are_valid(const struct picoui_slider_props *props)
+{
+    return props != 0
+        && props->id != 0
+        && props->min_value <= props->max_value
+        && props->value >= props->min_value
+        && props->value <= props->max_value
+        && props->width >= 0
+        && props->height >= 0
+        && props->radius >= 0
+        && props->padding >= 0;
+}
+
 struct picoui_slider *picoui_slider_create(struct picoui_window *parent, const char *id)
 {
     struct picoui_slider *slider;
@@ -40,19 +53,12 @@ struct picoui_slider *picoui_slider_create_with_props(struct picoui_window *pare
     struct picoui_slider *slider;
     struct picoui_backend_widget *backend;
 
-    if (props == 0) {
+    if (!picoui_slider_props_are_valid(props)) {
         return 0;
     }
 
     slider = picoui_slider_create(parent, props->id);
     if (slider == 0) {
-        return 0;
-    }
-
-    if (props->min_value > props->max_value
-        || props->value < props->min_value
-        || props->value > props->max_value) {
-        free(slider);
         return 0;
     }
 
@@ -74,6 +80,28 @@ struct picoui_slider *picoui_slider_create_with_props(struct picoui_window *pare
     backend->dispatch_count = 0;
     slider->cb = props->on_value_changed;
     slider->user_data = props->user_data;
+    if (picoui_widget_set_user_data(&slider->widget, props->user_data) != 0) {
+        free(slider);
+        return 0;
+    }
+    if (props->style_class != 0
+        && picoui_widget_set_style_class(&slider->widget, props->style_class) != 0) {
+        free(slider);
+        return 0;
+    }
+    if ((props->width > 0 || props->height > 0)
+        && picoui_widget_set_size(&slider->widget, props->width, props->height) != 0) {
+        free(slider);
+        return 0;
+    }
+    if (picoui_widget_set_bg_color(&slider->widget, props->bg_color) != 0
+        || picoui_widget_set_text_color(&slider->widget, props->text_color) != 0
+        || picoui_widget_set_border_color(&slider->widget, props->border_color) != 0
+        || picoui_widget_set_radius(&slider->widget, props->radius) != 0
+        || picoui_widget_set_padding(&slider->widget, props->padding) != 0) {
+        free(slider);
+        return 0;
+    }
     return slider;
 }
 

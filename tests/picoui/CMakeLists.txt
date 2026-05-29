@@ -27,6 +27,11 @@ ld_add_python_test(check_picoui_demo_boundary
     LABELS "picoui;contract"
 )
 
+ld_add_python_test(check_picoui_widget_contract_matrix
+    SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/contract/check_picoui_widget_contract_matrix.py"
+    LABELS "picoui;contract"
+)
+
 if(LD_BUILD_RUNTIME_TESTS)
     ld_add_python_test(check_picoui_runtime
         SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/runtime/check_picoui_runtime.py"
