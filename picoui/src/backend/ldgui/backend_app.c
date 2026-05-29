@@ -35,9 +35,7 @@ struct picoui_backend_runtime_state {
     SDL_Texture *texture;
     COLOUR_INT *real_pixels;
     uint32_t *present_pixels;
-    uint8_t *image_mask_pixels;
     arm_2d_tile_t real_tile;
-    arm_2d_tile_t image_placeholder_mask_tile;
     Uint32 start_ticks;
     Uint32 auto_quit_ms;
     int ready_logged;
@@ -58,25 +56,6 @@ static const ldPageFuncGroup_t g_picoui_backend_runtime_page = {
 #endif
     .pointer = NULL,
 };
-
-static uint8_t picoui_backend_placeholder_mask_value(int x, int y, int width, int height)
-{
-    int fill_left = 20;
-    int fill_right = width - 20;
-    int fill_top = 4;
-    int fill_bottom = height - 4;
-
-    if (x < 0 || y < 0 || x >= width || y >= height) {
-        return 0;
-    }
-    if (x >= fill_left && x < fill_right && y >= fill_top && y < fill_bottom) {
-        return 255;
-    }
-    if (x >= fill_left - 2 && x < fill_left + 1 && y >= fill_top + 8 && y < fill_bottom) {
-        return 255;
-    }
-    return 0;
-}
 
 static int picoui_backend_widget_is_supported_real(const struct picoui_backend_widget *widget)
 {
@@ -112,6 +91,18 @@ static int picoui_backend_widget_needs_fallback(const struct picoui_backend_widg
     return widget != NULL &&
            widget->kind != PICOUI_BACKEND_WIDGET_WINDOW &&
            (!picoui_backend_widget_is_supported_real(widget) || widget->ld_widget == NULL);
+}
+
+static int picoui_backend_window_has_real_layout(const struct picoui_backend_widget *widget)
+{
+    ldWindow_t *ld_window;
+
+    if (widget == NULL || widget->kind != PICOUI_BACKEND_WIDGET_WINDOW || widget->ld_widget == NULL) {
+        return 0;
+    }
+
+    ld_window = (ldWindow_t *)widget->ld_widget;
+    return ld_window->layoutTpye == layoutFlex || ld_window->layoutTpye == layoutGrid;
 }
 
 static void picoui_backend_append_widget_ids(const struct picoui_backend_widget *widget,
@@ -190,6 +181,26 @@ static void picoui_backend_log_mapping_markers(struct picoui_backend_runtime_sta
         printf("PICOUI_BACKEND_FALLBACK_WIDGET_IDS=%s\n", fallback_ids);
         fflush(stdout);
         state->fallback_boundary_logged = 1;
+    }
+}
+
+static void picoui_backend_log_image_source_marker(const struct picoui_backend_widget *widget)
+{
+    while (widget != NULL) {
+        if (widget->kind == PICOUI_BACKEND_WIDGET_IMAGE && widget->id != NULL && widget->ld_widget != NULL) {
+            ldImage_t *ld_image = (ldImage_t *)widget->ld_widget;
+
+            printf("PICOUI_BACKEND_IMAGE_SOURCE=%s:img=%s,mask=%s\n",
+                   widget->id,
+                   ld_image->ptImgTile != NULL ? "set" : "null",
+                   ld_image->ptMaskTile != NULL ? "set" : "null");
+        }
+
+        if (widget->first_child != NULL) {
+            picoui_backend_log_image_source_marker(widget->first_child);
+        }
+
+        widget = widget->next_sibling;
     }
 }
 
@@ -426,29 +437,6 @@ static int picoui_backend_ensure_window(struct picoui_backend_runtime_state *sta
         return -1;
     }
 
-    state->image_mask_pixels = calloc((size_t)220 * (size_t)56, sizeof(*state->image_mask_pixels));
-    if (state->image_mask_pixels == NULL) {
-        free(state->present_pixels);
-        free(state->real_pixels);
-        SDL_DestroyTexture(state->texture);
-        SDL_DestroyRenderer(state->renderer);
-        SDL_DestroyWindow(state->window);
-        state->present_pixels = NULL;
-        state->real_pixels = NULL;
-        state->texture = NULL;
-        state->renderer = NULL;
-        state->window = NULL;
-        SDL_Quit();
-        return -1;
-    }
-
-    for (int y = 0; y < 56; ++y) {
-        for (int x = 0; x < 220; ++x) {
-            state->image_mask_pixels[(size_t)y * 220u + (size_t)x] =
-                picoui_backend_placeholder_mask_value(x, y, 220, 56);
-        }
-    }
-
     state->real_tile = (arm_2d_tile_t) {
         .tRegion = {
             .tLocation = {
@@ -468,25 +456,6 @@ static int picoui_backend_ensure_window(struct picoui_backend_runtime_state *sta
             },
         },
         .pchBuffer = (uint8_t *)state->real_pixels,
-    };
-    state->image_placeholder_mask_tile = (arm_2d_tile_t) {
-        .tRegion = {
-            .tLocation = {
-                .iX = 0,
-                .iY = 0,
-            },
-            .tSize = {
-                .iWidth = 220,
-                .iHeight = 56,
-            },
-        },
-        .tInfo = {
-            .bIsRoot = true,
-            .tColourInfo = {
-                .chScheme = ARM_2D_COLOUR_8BIT,
-            },
-        },
-        .pchBuffer = state->image_mask_pixels,
     };
 
     state->start_ticks = SDL_GetTicks();
@@ -535,13 +504,6 @@ static void picoui_backend_apply_real_widget_layout(struct picoui_backend_runtim
                 region.tLocation.iX = (int16_t)x;
                 region.tLocation.iY = (int16_t)(*cursor_y);
                 ldBaseSetRegion((ldBase_t *)widget->ld_widget, region);
-                if (widget->kind == PICOUI_BACKEND_WIDGET_IMAGE) {
-                    ldImage_t *ld_image = (ldImage_t *)widget->ld_widget;
-                    if (ld_image->ptImgTile == NULL && ld_image->ptMaskTile == NULL && state != NULL) {
-                        ldImageSetMaskColor(ld_image, __RGB(168, 127, 45));
-                        ldImageSetImage(ld_image, NULL, &state->image_placeholder_mask_tile);
-                    }
-                }
                 height = region.tSize.iHeight > 0 ? region.tSize.iHeight : height;
             }
 
@@ -554,6 +516,19 @@ static void picoui_backend_apply_real_widget_layout(struct picoui_backend_runtim
 
         widget = widget->next_sibling;
     }
+}
+
+static void picoui_backend_apply_smoke_cursor_layout(struct picoui_backend_runtime_state *state,
+                                                     const struct picoui_backend_widget *root,
+                                                     int x,
+                                                     int *cursor_y)
+{
+    if (root == NULL || root->first_child == NULL || picoui_backend_window_has_real_layout(root)) {
+        return;
+    }
+
+    /* temporary smoke path: non-layout demos still need default root-child placement. */
+    picoui_backend_apply_real_widget_layout(state, root->first_child, x, cursor_y);
 }
 
 static void picoui_backend_render(struct picoui_backend_runtime_state *state, struct picoui_window *window)
@@ -576,11 +551,12 @@ static void picoui_backend_render(struct picoui_backend_runtime_state *state, st
             memset(state->real_pixels,
                    0,
                    (size_t)PICOUI_RUNTIME_WIDTH * (size_t)PICOUI_RUNTIME_HEIGHT * sizeof(*state->real_pixels));
-            picoui_backend_apply_real_widget_layout(state, root->first_child, x, &y);
+            picoui_backend_apply_smoke_cursor_layout(state, root_widget, x, &y);
             ldGuiFrameStart(app_state->ld_scene);
             ldMsgProcess(app_state->ld_scene);
             ldGuiDraw(app_state->ld_scene, &state->real_tile, true);
             ldGuiFrameComplete(app_state->ld_scene);
+            picoui_backend_log_image_source_marker(root->first_child);
             picoui_backend_present_real_frame(state);
         }
     }
@@ -669,7 +645,6 @@ void picoui_backend_app_shutdown(struct picoui_app *app)
     }
     SDL_Quit();
     if (state != NULL) {
-        free(state->image_mask_pixels);
         free(state->present_pixels);
         free(state->real_pixels);
         free(state);

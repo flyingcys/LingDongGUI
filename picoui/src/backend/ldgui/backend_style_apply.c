@@ -46,12 +46,11 @@ static void picoui_backend_apply_button_style(struct picoui_backend_widget *back
                                               unsigned int border_color)
 {
     ldButton_t *ld_button = (ldButton_t *)backend_widget->ld_widget;
-    ldColor release_color = picoui_backend_rgb_to_ld_color(backend_widget->theme->colors[PICOUI_COLOR_PANEL]);
+    ldColor release_color = picoui_backend_rgb_to_ld_color(bg_color);
     ldColor press_color = picoui_backend_rgb_to_ld_color(bg_color);
 
     (void)border_color;
     if (state != PICOUI_STATE_PRESSED) {
-        release_color = picoui_backend_rgb_to_ld_color(bg_color);
         press_color = picoui_backend_rgb_to_ld_color(backend_widget->theme->colors[PICOUI_COLOR_ACCENT]);
     }
 
@@ -87,7 +86,7 @@ static void picoui_backend_apply_switch_style(struct picoui_backend_widget *back
     ldSwitch_t *ld_switch = (ldSwitch_t *)backend_widget->ld_widget;
     unsigned int off_track = backend_widget->theme->colors[PICOUI_COLOR_BORDER];
     unsigned int on_track = backend_widget->theme->colors[PICOUI_COLOR_ACCENT];
-    unsigned int knob_color = backend_widget->theme->colors[PICOUI_COLOR_PANEL];
+    unsigned int knob_color = bg_color;
     unsigned int edge_color = backend_widget->theme->colors[PICOUI_COLOR_BORDER];
 
     switch (part) {

@@ -3,6 +3,16 @@
 
 #include <stdlib.h>
 
+static int picoui_button_props_are_valid(const struct picoui_button_props *props)
+{
+    return props != 0
+        && props->id != 0
+        && props->width >= 0
+        && props->height >= 0
+        && props->radius >= 0
+        && props->padding >= 0;
+}
+
 static struct picoui_button *picoui_button_alloc(struct picoui_window *parent, const char *id)
 {
     struct picoui_button *button;
@@ -42,7 +52,7 @@ struct picoui_button *picoui_button_create_with_props(struct picoui_window *pare
 {
     struct picoui_button *button;
 
-    if (props == 0) {
+    if (!picoui_button_props_are_valid(props)) {
         return 0;
     }
 
@@ -53,12 +63,29 @@ struct picoui_button *picoui_button_create_with_props(struct picoui_window *pare
 
     button->on_clicked = props->on_clicked;
     button->user_data = props->user_data;
+    if (picoui_widget_set_user_data(&button->widget, props->user_data) != 0) {
+        free(button);
+        return 0;
+    }
     if (props->text != 0 && picoui_button_set_text(button, props->text) != 0) {
         free(button);
         return 0;
     }
     if ((props->width > 0 || props->height > 0)
         && picoui_widget_set_size(&button->widget, props->width, props->height) != 0) {
+        free(button);
+        return 0;
+    }
+    if (props->style_class != 0
+        && picoui_widget_set_style_class(&button->widget, props->style_class) != 0) {
+        free(button);
+        return 0;
+    }
+    if (picoui_widget_set_bg_color(&button->widget, props->bg_color) != 0
+        || picoui_widget_set_text_color(&button->widget, props->text_color) != 0
+        || picoui_widget_set_border_color(&button->widget, props->border_color) != 0
+        || picoui_widget_set_radius(&button->widget, props->radius) != 0
+        || picoui_widget_set_padding(&button->widget, props->padding) != 0) {
         free(button);
         return 0;
     }

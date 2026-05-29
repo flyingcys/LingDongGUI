@@ -210,6 +210,11 @@ void picoui_backend_emit_event(picoui_event_cb cb,
     }
 }
 
+static int picoui_backend_widget_accepts_event(const struct picoui_widget *widget)
+{
+    return widget != 0 && widget->enabled != 0 && widget->visible != 0;
+}
+
 int picoui_backend_widget_bind_host(void *backend_widget, struct picoui_widget *widget)
 {
     struct picoui_backend_widget *backend = backend_widget;
@@ -264,6 +269,10 @@ int picoui_backend_widget_dispatch_signal(void *backend_widget,
         return -1;
     }
 
+    if (!picoui_backend_widget_accepts_event(widget)) {
+        return 0;
+    }
+
     if (signal == PICOUI_BACKEND_SIGNAL_VALUE_CHANGED) {
         if (backend->value == value) {
             return 0;
@@ -295,6 +304,10 @@ int picoui_backend_widget_dispatch_event(void *backend_widget,
         return -1;
     }
 
+    if (!picoui_backend_widget_accepts_event(widget)) {
+        return 0;
+    }
+
     if (signal == PICOUI_BACKEND_SIGNAL_PRESSED || signal == PICOUI_BACKEND_SIGNAL_RELEASED) {
         backend->last_signal = signal;
         backend->dispatch_count++;
@@ -319,6 +332,9 @@ int picoui_backend_widget_dispatch_native_signal(void *backend_widget,
     host_widget = backend->host_widget;
     if (host_widget == 0) {
         return -1;
+    }
+    if (!picoui_backend_widget_accepts_event(host_widget)) {
+        return 0;
     }
 
     switch (backend->kind) {

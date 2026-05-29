@@ -1,14 +1,18 @@
 #include "internal.h"
 #include "picoui/widget.h"
 
+#include <stdbool.h>
 #include <stdint.h>
 
 typedef struct ldBase_t ldBase_t;
+typedef struct ldSwitch_t ldSwitch_t;
 
 void ldBaseSetX(ldBase_t *ptWidget, int16_t x);
 void ldBaseSetY(ldBase_t *ptWidget, int16_t y);
 void ldBaseSetWidth(ldBase_t *ptWidget, int16_t width);
 void ldBaseSetHeight(ldBase_t *ptWidget, int16_t height);
+void ldBaseSetHidden(ldBase_t *ptWidget, bool isHidden);
+void ldSwitchSetDisabled(ldSwitch_t *ptWidget, bool isDisabled);
 
 static int picoui_widget_is_valid(struct picoui_widget *widget)
 {
@@ -150,26 +154,43 @@ int picoui_widget_set_padding(struct picoui_widget *widget, int padding)
     }
 
     widget->padding = padding;
+    if (widget->backend_widget != 0) {
+        return picoui_backend_widget_set_padding(widget->backend_widget, padding);
+    }
     return 0;
 }
 
 int picoui_widget_set_visible(struct picoui_widget *widget, int visible)
 {
+    ldBase_t *ld_base;
+
     if (!picoui_widget_is_valid(widget)) {
         return -1;
     }
 
     widget->visible = visible != 0;
+    ld_base = picoui_widget_get_ld_base(widget);
+    if (ld_base != 0) {
+        ldBaseSetHidden(ld_base, widget->visible == 0);
+    }
     return 0;
 }
 
 int picoui_widget_set_enabled(struct picoui_widget *widget, int enabled)
 {
+    struct picoui_backend_widget *backend_widget;
+
     if (!picoui_widget_is_valid(widget)) {
         return -1;
     }
 
     widget->enabled = enabled != 0;
+    if (widget->backend_widget != 0) {
+        backend_widget = (struct picoui_backend_widget *)widget->backend_widget;
+        if (backend_widget->kind == PICOUI_BACKEND_WIDGET_SWITCH && backend_widget->ld_widget != 0) {
+            ldSwitchSetDisabled((ldSwitch_t *)backend_widget->ld_widget, widget->enabled == 0);
+        }
+    }
     return 0;
 }
 

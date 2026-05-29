@@ -17,7 +17,7 @@
 - `A线` 已完成真实 `PicoUI -> LingDongGUI` backend 主线。
 - `B线` 已完成 6 个 demo 的 automatic visible gate。
 - `C线` 已完成门禁工程化、CTest 接入、mapping matrix、可选 manual artifact gate 和长期新增规则。
-- 当前可进入 `D线`：PicoUI 能力完整性与扩展主线。
+- `D线` 已完成当前控件完整性主线：runtime layout、合同矩阵、props、state/event、image 边界、theme token v1 和 closeout gate 均已收口；后续新控件继续归 `F线` 或后续独立任务。
 
 ## D线目标
 
@@ -96,10 +96,15 @@
 ### P0-1 runtime present 真实 layout 闭环
 
 - 目标：让 runtime present 路径使用真实 `LingDongGUI` flex/grid 布局结果，而不是在 `backend_app.c` 里用固定 padding、row height、row gap 和 cursor 线性重排所有 widget；随后补齐 flex/grid 的用户语义边界。
-- 当前证据：
-  - `picoui/src/backend/ldgui/backend_app.c` 的 `picoui_backend_apply_real_widget_layout()` 会在渲染前改写 `ldBase` region。
-  - `picoui_backend_render()` 在 `ldGuiFrameStart()` / `ldMsgProcess()` / `ldGuiDraw()` 前调用该线性布局 helper。
-  - C 线 mapping marker 只证明对象进入真实 backend tree，不证明 flex/grid 可见语义已由 runtime present 真实体现。
+- 当前状态：已完成。
+- 完成证据：
+  - `picoui/src/backend/ldgui/backend_app.c` 已把全局 cursor fallback 收缩为 `temporary smoke path`，当 root 是真实 `layoutFlex` / `layoutGrid` 时不再覆盖 flex/grid 布局结果。
+  - `picoui_backend_render()` 仍保持 `ldGuiFrameStart()` / `ldMsgProcess()` / `ldGuiDraw()` / `ldGuiFrameComplete()` 真实绘制链。
+  - `tests/picoui/runtime/check_picoui_visible_ui.py` 已为 `layout_flex` / `layout_grid` 增加结构断言；`layout_grid` 使用多 y 窗口扫描独立 column groups，不再只依赖非黑、bounds 或 marker。
+  - `tests/picoui/unit/test_picoui_layout.c` 已覆盖 padding / gap / grid cell span / align / layout dirty / relayout；`picoui_widget_set_padding()` 已同步到真实 backend，并覆盖 flex/grid layout type 切换后的 padding 保持。
+  - D1 fresh 验证通过：`ctest --test-dir build -R test_picoui_layout --output-on-failure`、`python3 tests/picoui/runtime/check_picoui_visible_ui.py --demo layout_flex`、`python3 tests/picoui/runtime/check_picoui_visible_ui.py --demo layout_grid`、`ctest --test-dir build -L visible --output-on-failure`、`python3 tests/picoui/runtime/check_picoui_backend_mapping.py`、`git diff --check`。
+  - D1 spec review 和 code quality review 已通过。
+  - GitNexus impact / detect_changes 当前未能映射该 linked worktree 的 static backend 写面；本阶段以源码 diff、独立 review 和 targeted tests 作为权威证据。
 - 验收：
   - `layout_flex` 和 `layout_grid` 的可见结构断言不再只依赖非黑、bounds、marker。
   - runtime present 不再用一条全局线性 cursor 覆盖容器级 flex/grid 布局。
@@ -133,6 +138,12 @@
 ### P0-3 当前控件 props 补齐
 
 - 目标：先补当前控件的 `create_with_props` 一致性，而不是先加新控件。
+- 当前状态：已完成。
+- 完成证据：
+  - `window/label/text/image` 已新增 props struct 与 `create_with_props`；`button/checkbox/switch/slider` props 字段已补齐。
+  - `tests/picoui/unit/test_picoui_widgets.c` 覆盖 8 个当前控件 props 初值、direct style 字段、size/padding/user_data、交互控件 callback/user_data，以及 invalid props 不污染 backend tree。
+  - public header 仍只暴露 `picoui_*` API/类型，未泄漏 `ld*`、`arm_2d_*`、`SIGNAL_*`。
+  - D3 spec review 和 code quality review 已通过。
 - 优先顺序：
   - `label/text/image/window`
   - `checkbox/switch/slider`
@@ -150,6 +161,12 @@
 ### P0-4 enabled / visible / state 语义闭环
 
 - 目标：把通用 widget state 从“字段存在”推进到可测、可见、可映射的行为合同。
+- 当前状态：已完成。
+- 完成证据：
+  - `picoui_widget_set_visible()` 同步真实 `ldBaseSetHidden()`，`picoui_widget_set_enabled()` 保留通用 PicoUI state，并对 switch 同步真实 disabled 字段。
+  - backend direct/native event dispatch 对 disabled/hidden 控件返回 no-op，不触发 callback、不推进 `dispatch_count`。
+  - `tests/picoui/unit/test_picoui_button_events.c` 覆盖 disabled/hidden event gate、checkbox/switch/slider native callback user_data、setter-path 与 native-event-path 区分。
+  - D4 spec review 首轮发现 hidden event gate 覆盖不足，已由原 subagent 修复；D4 spec/code quality review 已通过。
 - 范围：
   - `picoui_widget_set_enabled`
   - `picoui_widget_set_visible`
@@ -170,6 +187,11 @@
 ### P0-5 事件合同扩展
 
 - 目标：把事件合同从当前 button/widgets 样本扩展到所有交互控件。
+- 当前状态：已完成。
+- 完成证据：
+  - `tests/picoui/unit/test_picoui_button_events.c` 覆盖 button pressed/released/clicked，以及 checkbox/switch/slider value changed 的 native event path 和 user_data。
+  - setter-path 只同步状态，不触发 callback；native-event-path 触发 callback 并传递对应 user_data。
+  - disabled/hidden 控件事件被 backend event bridge 拦截。
 - 范围：
   - `checkbox` toggled
   - `switch` toggled
@@ -191,6 +213,14 @@
 
 - 目标：决定 `image` 是继续保持“source 绑定 + 占位可见”，还是进入真实图片资源加载线。
 - 推荐：先收口当前边界，不直接做复杂资源系统。
+- 当前状态：已完成，口径为 source 指针绑定边界，不进入资源加载系统。
+- 完成证据：
+  - `picoui_image_create()` / `picoui_image_create_with_props()` 均允许空 source 创建未绑定 image。
+  - `picoui_image_set_source(image, NULL)` 清空绑定；非空 source 必须提供 `img_tile`，`mask_tile == NULL` 表示无遮罩。
+  - backend 同步真实 `ldImage` 的 `ptImgTile/ptMaskTile`；runtime render 不再为无 source image 注入 placeholder mask。
+  - `tests/picoui/unit/test_picoui_widgets.c` 覆盖空 source、清空 source、无效 source、无遮罩 source、image theme reject 不污染 source/backend tile。
+  - `check_picoui_visible_ui.py --demo basic_widgets` 锁定 runtime 后 `logo:img=null,mask=null`，避免 visible gate 误把占位资源当作真实 source。
+  - 文档明确 automatic visible gate 不证明占位资源绑定，也不证明真实图片加载完成。
 - 必须明确：
   - 支持哪些 source 类型。
   - 不支持时返回什么错误或保持什么 no-op。
@@ -210,6 +240,13 @@
 ### P1-7 theme token v1
 
 - 目标：把 theme 从最小可测语义推进到稳定 token v1。
+- 当前状态：已完成。
+- 完成证据：
+  - `picoui_theme_apply_to_widget()` 在支持控件上应用 `text/bg/panel/border/accent/disabled` color token，以及 `padding/radius/control_height` metric token。
+  - `PICOUI_METRIC_BORDER_WIDTH` 当前仅存储/校验，backend 同步 deferred，未写成真实边框宽度已闭环。
+  - `tests/picoui/unit/test_picoui_theme.c` 读取真实 `ld*` 字段验证 window/label/text/button/checkbox/switch/slider 的 backend style/metric 同步，并锁定不支持 part/state 和 image theme reject。
+  - `theme_showcase` demo 只表达 theme 用户意图，不承担 backend 补丁。
+  - D6 spec/code quality review 已通过。
 - 范围：
   - 文本/背景/边框/强调/禁用/错误色。
   - 默认间距和控件高度。

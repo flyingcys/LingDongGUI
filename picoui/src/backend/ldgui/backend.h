@@ -37,6 +37,7 @@ struct picoui_backend_layout_window_state {
     enum picoui_align flex_main_align;
     enum picoui_align flex_cross_align;
     enum picoui_align flex_track_align;
+    int padding;
     int flex_item_gap;
     int flex_track_gap;
     int16_t grid_cols[PICOUI_BACKEND_LAYOUT_MAX_TRACKS];
@@ -122,6 +123,7 @@ int picoui_backend_set_text(void *backend_widget, const char *text);
 int picoui_backend_widget_set_style_class(void *backend_widget, const char *style_class);
 int picoui_backend_widget_set_font(void *backend_widget, const void *font);
 int picoui_backend_widget_set_user_data(void *backend_widget, void *user_data);
+int picoui_backend_widget_set_padding(void *backend_widget, int padding);
 int picoui_backend_widget_bind_ld_event_bridge(void *backend_widget,
                                                struct ld_scene_t *scene,
                                                void *sender);

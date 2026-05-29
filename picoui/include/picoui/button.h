@@ -13,6 +13,12 @@ struct picoui_button_props {
     int height;
     picoui_event_cb on_clicked;
     void *user_data;
+    const char *style_class;
+    unsigned int bg_color;
+    unsigned int text_color;
+    unsigned int border_color;
+    int radius;
+    int padding;
 };
 
 struct picoui_button *picoui_button_create(struct picoui_window *parent, const char *id);
