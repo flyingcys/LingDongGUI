@@ -120,6 +120,7 @@ struct picoui_list {
     struct picoui_widget widget;
     const char *id;
     struct picoui_list_item items[PICOUI_LIST_MAX_ITEMS];
+    const char *backend_item_ids[PICOUI_LIST_MAX_ITEMS];
     const unsigned char *backend_item_texts[PICOUI_LIST_MAX_ITEMS];
     int item_count;
     int selected_index;

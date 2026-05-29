@@ -68,10 +68,12 @@ int picoui_list_add_item(struct picoui_list *list, const char *id, const char *t
     index = list->item_count;
     list->items[index].id = id;
     list->items[index].text = text;
+    list->backend_item_ids[index] = id;
     list->backend_item_texts[index] = (const unsigned char *)text;
     list->item_count++;
 
     return picoui_backend_list_set_items(list->widget.backend_widget,
+                                         list->backend_item_ids,
                                          list->backend_item_texts,
                                          list->item_count);
 }

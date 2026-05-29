@@ -93,6 +93,7 @@ static int picoui_backend_widget_is_supported_real(const struct picoui_backend_w
     case PICOUI_BACKEND_WIDGET_IMAGE:
     case PICOUI_BACKEND_WIDGET_SWITCH:
     case PICOUI_BACKEND_WIDGET_SLIDER:
+    case PICOUI_BACKEND_WIDGET_LIST:
         return 1;
     default:
         return 0;
@@ -105,6 +106,46 @@ static int picoui_backend_widget_is_real_mapped(const struct picoui_backend_widg
            widget->kind != PICOUI_BACKEND_WIDGET_WINDOW &&
            picoui_backend_widget_is_supported_real(widget) &&
            widget->ld_widget != NULL;
+}
+
+static int picoui_backend_list_items_are_real_mapped(const struct picoui_backend_widget *widget)
+{
+    return widget != NULL &&
+           widget->kind == PICOUI_BACKEND_WIDGET_LIST &&
+           widget->ld_widget != NULL &&
+           widget->list_item_count > 0;
+}
+
+static void picoui_backend_append_id(const char *id,
+                                     char *buffer,
+                                     size_t buffer_size,
+                                     size_t *used)
+{
+    int written;
+
+    if (id == NULL || id[0] == '\0') {
+        return;
+    }
+
+    if (*used > 0 && *used + 1 < buffer_size) {
+        buffer[*used] = ',';
+        *used += 1;
+        buffer[*used] = '\0';
+    }
+
+    if (*used + 1 >= buffer_size) {
+        return;
+    }
+
+    written = snprintf(buffer + *used, buffer_size - *used, "%s", id);
+    if (written > 0) {
+        size_t advance = (size_t)written;
+        if (advance >= buffer_size - *used) {
+            *used = buffer_size - 1;
+        } else {
+            *used += advance;
+        }
+    }
 }
 
 static int picoui_backend_widget_needs_fallback(const struct picoui_backend_widget *widget)
@@ -122,24 +163,15 @@ static void picoui_backend_append_widget_ids(const struct picoui_backend_widget 
 {
     while (widget != NULL) {
         if (predicate(widget) && widget->id != NULL && widget->id[0] != '\0') {
-            int written;
+            picoui_backend_append_id(widget->id, buffer, buffer_size, used);
+        }
 
-            if (*used > 0 && *used + 1 < buffer_size) {
-                buffer[*used] = ',';
-                *used += 1;
-                buffer[*used] = '\0';
-            }
+        if (predicate == picoui_backend_widget_is_real_mapped &&
+            picoui_backend_list_items_are_real_mapped(widget)) {
+            int i;
 
-            if (*used + 1 < buffer_size) {
-                written = snprintf(buffer + *used, buffer_size - *used, "%s", widget->id);
-                if (written > 0) {
-                    size_t advance = (size_t)written;
-                    if (advance >= buffer_size - *used) {
-                        *used = buffer_size - 1;
-                    } else {
-                        *used += advance;
-                    }
-                }
+            for (i = 0; i < widget->list_item_count; ++i) {
+                picoui_backend_append_id(widget->list_item_ids[i], buffer, buffer_size, used);
             }
         }
 

@@ -13,6 +13,7 @@ struct picoui_image_source;
 struct ld_scene_t;
 
 #define PICOUI_BACKEND_LAYOUT_MAX_TRACKS 16
+#define PICOUI_BACKEND_LIST_MAX_ITEMS 16
 
 enum picoui_backend_widget_kind {
     PICOUI_BACKEND_WIDGET_WINDOW = 0,
@@ -85,6 +86,8 @@ struct picoui_backend_widget {
     struct picoui_theme *theme;
     void *ld_widget;
     uint16_t ld_name_id;
+    const char *list_item_ids[PICOUI_BACKEND_LIST_MAX_ITEMS];
+    int list_item_count;
     struct picoui_backend_layout_window_state window_layout;
     struct picoui_backend_layout_child_state child_layout;
 };
@@ -122,6 +125,7 @@ void *picoui_backend_create_text(void *parent, const char *id);
 void *picoui_backend_create_image(void *parent, const char *id);
 int picoui_backend_set_text(void *backend_widget, const char *text);
 int picoui_backend_list_set_items(void *backend_widget,
+                                  const char *const *item_ids,
                                   const unsigned char *const *items,
                                   int item_count);
 int picoui_backend_list_set_selected_index(void *backend_widget, int index);

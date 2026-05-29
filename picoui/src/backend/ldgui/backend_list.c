@@ -67,17 +67,20 @@ void *picoui_backend_create_list(void *parent, const char *id)
 }
 
 int picoui_backend_list_set_items(void *backend_widget,
+                                  const char *const *item_ids,
                                   const unsigned char *const *items,
                                   int item_count)
 {
     struct picoui_backend_widget *widget = backend_widget;
+    int i;
 
     if (widget == 0 ||
         widget->kind != PICOUI_BACKEND_WIDGET_LIST ||
         widget->ld_widget == 0 ||
+        item_ids == 0 ||
         items == 0 ||
         item_count < 0 ||
-        item_count > PICOUI_LIST_MAX_ITEMS) {
+        item_count > PICOUI_BACKEND_LIST_MAX_ITEMS) {
         return -1;
     }
 
@@ -85,6 +88,10 @@ int picoui_backend_list_set_items(void *backend_widget,
                   (const uint8_t **)items,
                   (uint8_t)item_count,
                   NULL);
+    for (i = 0; i < item_count; ++i) {
+        widget->list_item_ids[i] = item_ids[i];
+    }
+    widget->list_item_count = item_count;
     return 0;
 }
 
@@ -96,7 +103,7 @@ int picoui_backend_list_set_selected_index(void *backend_widget, int index)
         widget->kind != PICOUI_BACKEND_WIDGET_LIST ||
         widget->ld_widget == 0 ||
         index < 0 ||
-        index >= PICOUI_LIST_MAX_ITEMS) {
+        index >= PICOUI_BACKEND_LIST_MAX_ITEMS) {
         return -1;
     }
 
