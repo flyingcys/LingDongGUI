@@ -194,8 +194,10 @@ build\picoui-runtime\examples\sdl\picoui_hello_world_demo.exe
 
 - `picoui_list` 的 public API、unit test 和真实 `ldList` backend mapping 已接入
 - `picoui_list_basic_demo` 已能 build、run，并进入 runtime smoke
-- mapping/visible gate 当前未完成：runtime marker 仍把 `list` 输出为 fallback
-- blocker 位于 `D线` 禁止写面 `picoui/src/backend/ldgui/backend_app.c` 的 supported-real marker 分类
+- backend mapping gate 覆盖 `list/item_wifi/item_bluetooth/item_display`：
+  `PICOUI_BACKEND_REAL_WIDGET_IDS` 应包含这些 id，且不应把 `list` 或 item 输出为 fallback
+- automatic visible gate 已接入 `check_picoui_visible_ui.py --all`；该证据只证明 dummy SDL + PPM readback 下的 automatic visible correctness
+- manual window artifact gate 仍按 `C线` 证据层级单独记录；不能由 smoke、mapping 或 automatic visible gate 代替
 - 该 demo 不证明 multi-select、virtualization、drag reorder、keyboard navigation
 
 ## 六、证据层级说明
