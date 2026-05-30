@@ -316,6 +316,36 @@ static void test_list_style_class_and_user_data_are_metadata_only_contract(struc
     assert(backend->user_data == &widget_cookie);
 }
 
+static void test_list_item_ids_are_picoui_data_not_backend_widget_identity(struct picoui_window *win)
+{
+    struct picoui_widget *parent = (struct picoui_widget *)win;
+    struct picoui_list *list = picoui_list_create(parent, "list_item_contract");
+    struct picoui_backend_widget *backend;
+
+    assert(list != 0);
+    backend = (struct picoui_backend_widget *)list->widget.backend_widget;
+    assert(backend != 0);
+    assert(backend->ld_widget != 0);
+
+    assert(picoui_list_add_item(list, "item_wifi", "Wi-Fi") == 0);
+    assert(picoui_list_add_item(list, "item_bluetooth", "Bluetooth") == 0);
+
+    assert(list->item_count == 2);
+    assert(backend->list_item_count == 2);
+
+    assert(list->items[0].id == list->backend_item_ids[0]);
+    assert(list->items[0].id == backend->list_item_ids[0]);
+    assert(list->items[1].id == list->backend_item_ids[1]);
+    assert(list->items[1].id == backend->list_item_ids[1]);
+
+    assert(list->items[0].id != list->id);
+    assert(list->items[0].id != backend->id);
+    assert(list->items[0].id != (const char *)backend->ld_widget);
+    assert(list->items[1].id != list->id);
+    assert(list->items[1].id != backend->id);
+    assert(list->items[1].id != (const char *)backend->ld_widget);
+}
+
 static void test_rejects_invalid_inputs(struct picoui_window *win)
 {
     struct picoui_widget *parent = (struct picoui_widget *)win;
@@ -356,6 +386,7 @@ int main(void)
     test_items_selection_and_callback_contract(win);
     test_list_widget_user_data_is_distinct_from_on_selected_cookie(win);
     test_list_style_class_and_user_data_are_metadata_only_contract(win);
+    test_list_item_ids_are_picoui_data_not_backend_widget_identity(win);
     test_enabled_contract_and_native_selected_bridge(win);
     test_rejects_invalid_inputs(win);
 

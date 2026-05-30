@@ -1,0 +1,650 @@
+{
+  "schema_version": "h2-draft-v2",
+  "line": "H",
+  "stage": "H2",
+  "purpose": "PicoUI first release capability matrix draft",
+  "truth_source_note": "This JSON is the machine-readable truth source for H-line release matrix design. It does not encode manual review approval.",
+  "status_enums": {
+    "widget_status": [
+      "wrapped",
+      "not_wrapped",
+      "deferred"
+    ],
+    "capability_status": [
+      "support",
+      "reject",
+      "incomplete_contract",
+      "deferred"
+    ],
+    "release_judgement": [
+      "internal_v0_1_blocker",
+      "internal_v0_1_known_limitation",
+      "post_h_candidate"
+    ]
+  },
+  "evidence_enums": [
+    "unit",
+    "contract",
+    "mapping",
+    "visible",
+    "manual_artifact"
+  ],
+  "manual_artifact_policy": {
+    "scope": "widget_level_only",
+    "artifact_entry_exists": false,
+    "manual_review_required": true,
+    "note": "manual_artifact in this matrix is widget-level only. Demo-level artifact entries remain tracked in docs/picoui-serial/C-线人工窗口验收记录.md and are not implied by widget.manual_artifact.artifact_entry_exists.",
+    "demo_artifact_truth_source": "docs/picoui-serial/C-线人工窗口验收记录.md"
+  },
+  "summary": {
+    "ldgui_wrappable_widget_total": 26,
+    "picoui_wrapped_widget_total": 9,
+    "picoui_not_wrapped_widget_total": 17,
+    "capability_entry_total": 44,
+    "capability_status_counts": {
+      "support": 35,
+      "reject": 4,
+      "incomplete_contract": 4,
+      "deferred": 1
+    }
+  },
+  "widgets": [
+    {
+      "name": "window",
+      "backend_widget": "ldWindow",
+      "widget_status": "wrapped",
+      "widget_release_judgement": "internal_v0_1_known_limitation",
+      "evidence_layers": {
+        "unit": "present",
+        "contract": "present",
+        "mapping": "present",
+        "visible": "present",
+        "manual_artifact": "manual_review_required"
+      },
+      "manual_artifact": {
+        "scope": "widget_level_only",
+        "artifact_entry_exists": false,
+        "manual_review_required": true,
+        "note": "False here only means this widget row does not claim its own widget-level artifact entry. It does not deny that a containing demo already has an artifact entry."
+      },
+      "capabilities": [
+        {
+          "name": "create_and_props",
+          "status": "support",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        },
+        {
+          "name": "flex_layout",
+          "status": "support",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        },
+        {
+          "name": "grid_layout",
+          "status": "support",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        },
+        {
+          "name": "padding_gap_align",
+          "status": "support",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        },
+        {
+          "name": "bg_color",
+          "status": "support",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        }
+      ]
+    },
+    {
+      "name": "label",
+      "backend_widget": "ldLabel",
+      "widget_status": "wrapped",
+      "widget_release_judgement": "internal_v0_1_known_limitation",
+      "evidence_layers": {
+        "unit": "present",
+        "contract": "present",
+        "mapping": "present",
+        "visible": "present",
+        "manual_artifact": "manual_review_required"
+      },
+      "manual_artifact": {
+        "scope": "widget_level_only",
+        "artifact_entry_exists": false,
+        "manual_review_required": true,
+        "note": "False here only means this widget row does not claim its own widget-level artifact entry. It does not deny that a containing demo already has an artifact entry."
+      },
+      "capabilities": [
+        {
+          "name": "create_and_props",
+          "status": "support",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        },
+        {
+          "name": "text",
+          "status": "support",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        },
+        {
+          "name": "font",
+          "status": "support",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        },
+        {
+          "name": "bg_and_text_color",
+          "status": "support",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        }
+      ]
+    },
+    {
+      "name": "button",
+      "backend_widget": "ldButton",
+      "widget_status": "wrapped",
+      "widget_release_judgement": "internal_v0_1_known_limitation",
+      "evidence_layers": {
+        "unit": "present",
+        "contract": "present",
+        "mapping": "present",
+        "visible": "present",
+        "manual_artifact": "manual_review_required"
+      },
+      "manual_artifact": {
+        "scope": "widget_level_only",
+        "artifact_entry_exists": false,
+        "manual_review_required": true,
+        "note": "False here only means this widget row does not claim its own widget-level artifact entry. It does not deny that a containing demo already has an artifact entry."
+      },
+      "capabilities": [
+        {
+          "name": "create_and_props",
+          "status": "support",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        },
+        {
+          "name": "text",
+          "status": "support",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        },
+        {
+          "name": "clicked_pressed_released_callbacks",
+          "status": "support",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        },
+        {
+          "name": "bg_text_border_radius_padding_subset",
+          "status": "support",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        }
+      ]
+    },
+    {
+      "name": "checkbox",
+      "backend_widget": "ldCheckBox",
+      "widget_status": "wrapped",
+      "widget_release_judgement": "internal_v0_1_known_limitation",
+      "evidence_layers": {
+        "unit": "present",
+        "contract": "present",
+        "mapping": "present",
+        "visible": "present",
+        "manual_artifact": "manual_review_required"
+      },
+      "manual_artifact": {
+        "scope": "widget_level_only",
+        "artifact_entry_exists": false,
+        "manual_review_required": true,
+        "note": "False here only means this widget row does not claim its own widget-level artifact entry. It does not deny that a containing demo already has an artifact entry."
+      },
+      "capabilities": [
+        {
+          "name": "create_and_props",
+          "status": "support",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        },
+        {
+          "name": "text",
+          "status": "support",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        },
+        {
+          "name": "checked_and_is_checked",
+          "status": "support",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        },
+        {
+          "name": "on_toggled",
+          "status": "support",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        }
+      ]
+    },
+    {
+      "name": "switch",
+      "backend_widget": "ldSwitch",
+      "widget_status": "wrapped",
+      "widget_release_judgement": "internal_v0_1_known_limitation",
+      "evidence_layers": {
+        "unit": "present",
+        "contract": "present",
+        "mapping": "present",
+        "visible": "present",
+        "manual_artifact": "manual_review_required"
+      },
+      "manual_artifact": {
+        "scope": "widget_level_only",
+        "artifact_entry_exists": false,
+        "manual_review_required": true,
+        "note": "False here only means this widget row does not claim its own widget-level artifact entry. It does not deny that a containing demo already has an artifact entry."
+      },
+      "capabilities": [
+        {
+          "name": "create_and_props",
+          "status": "support",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        },
+        {
+          "name": "checked_and_is_checked",
+          "status": "support",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        },
+        {
+          "name": "on_toggled",
+          "status": "support",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        },
+        {
+          "name": "enabled_and_style_subset",
+          "status": "support",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        }
+      ]
+    },
+    {
+      "name": "slider",
+      "backend_widget": "ldSlider",
+      "widget_status": "wrapped",
+      "widget_release_judgement": "internal_v0_1_known_limitation",
+      "evidence_layers": {
+        "unit": "present",
+        "contract": "present",
+        "mapping": "present",
+        "visible": "present",
+        "manual_artifact": "manual_review_required"
+      },
+      "manual_artifact": {
+        "scope": "widget_level_only",
+        "artifact_entry_exists": false,
+        "manual_review_required": true,
+        "note": "False here only means this widget row does not claim its own widget-level artifact entry. It does not deny that a containing demo already has an artifact entry."
+      },
+      "capabilities": [
+        {
+          "name": "create_and_props",
+          "status": "support",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        },
+        {
+          "name": "value_and_get_value",
+          "status": "support",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        },
+        {
+          "name": "range",
+          "status": "support",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        },
+        {
+          "name": "on_value_changed",
+          "status": "support",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        }
+      ]
+    },
+    {
+      "name": "text",
+      "backend_widget": "ldText",
+      "widget_status": "wrapped",
+      "widget_release_judgement": "internal_v0_1_known_limitation",
+      "evidence_layers": {
+        "unit": "present",
+        "contract": "present",
+        "mapping": "present",
+        "visible": "present",
+        "manual_artifact": "manual_review_required"
+      },
+      "manual_artifact": {
+        "scope": "widget_level_only",
+        "artifact_entry_exists": false,
+        "manual_review_required": true,
+        "note": "False here only means this widget row does not claim its own widget-level artifact entry. It does not deny that a containing demo already has an artifact entry."
+      },
+      "capabilities": [
+        {
+          "name": "create_and_props",
+          "status": "support",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        },
+        {
+          "name": "text",
+          "status": "support",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        },
+        {
+          "name": "font_minimal_mapping",
+          "status": "support",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        },
+        {
+          "name": "bg_and_text_color",
+          "status": "support",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        }
+      ]
+    },
+    {
+      "name": "image",
+      "backend_widget": "ldImage",
+      "widget_status": "wrapped",
+      "widget_release_judgement": "internal_v0_1_known_limitation",
+      "evidence_layers": {
+        "unit": "present",
+        "contract": "present",
+        "mapping": "present",
+        "visible": "present",
+        "manual_artifact": "manual_review_required"
+      },
+      "manual_artifact": {
+        "scope": "widget_level_only",
+        "artifact_entry_exists": false,
+        "manual_review_required": true,
+        "note": "False here only means this widget row does not claim its own widget-level artifact entry. It does not deny that a containing demo already has an artifact entry."
+      },
+      "capabilities": [
+        {
+          "name": "create_and_props",
+          "status": "support",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        },
+        {
+          "name": "source_and_layout_base_capabilities",
+          "status": "support",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        },
+        {
+          "name": "theme",
+          "status": "reject",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        },
+        {
+          "name": "style_class",
+          "status": "incomplete_contract",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        },
+        {
+          "name": "user_data",
+          "status": "incomplete_contract",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        },
+        {
+          "name": "bg_text_border_radius_colors",
+          "status": "reject",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        },
+        {
+          "name": "padding",
+          "status": "deferred",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        },
+        {
+          "name": "enabled",
+          "status": "reject",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        }
+      ]
+    },
+    {
+      "name": "list",
+      "backend_widget": "ldList",
+      "widget_status": "wrapped",
+      "widget_release_judgement": "internal_v0_1_known_limitation",
+      "evidence_layers": {
+        "unit": "present",
+        "contract": "present",
+        "mapping": "present",
+        "visible": "present",
+        "manual_artifact": "manual_review_required"
+      },
+      "manual_artifact": {
+        "scope": "widget_level_only",
+        "artifact_entry_exists": false,
+        "manual_review_required": true,
+        "note": "False here only means this widget row does not claim its own widget-level artifact entry. It does not deny that a containing demo already has an artifact entry."
+      },
+      "capabilities": [
+        {
+          "name": "create_and_props",
+          "status": "support",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        },
+        {
+          "name": "add_item",
+          "status": "support",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        },
+        {
+          "name": "selected_index",
+          "status": "support",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        },
+        {
+          "name": "on_selected_callback_cookie",
+          "status": "support",
+          "capability_release_judgement": "internal_v0_1_known_limitation",
+          "note": "callback cookie is intentionally separate from widget-level user_data"
+        },
+        {
+          "name": "item_marker",
+          "status": "reject",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        },
+        {
+          "name": "style_class",
+          "status": "incomplete_contract",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        },
+        {
+          "name": "widget_level_user_data",
+          "status": "incomplete_contract",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        }
+      ]
+    },
+    {
+      "name": "line_edit",
+      "backend_widget": "ldLineEdit",
+      "widget_status": "not_wrapped",
+      "widget_release_judgement": "post_h_candidate",
+      "manual_artifact": {
+        "artifact_entry_exists": false,
+        "manual_review_required": true
+      },
+      "capabilities": []
+    },
+    {
+      "name": "keyboard",
+      "backend_widget": "ldKeyboard",
+      "widget_status": "not_wrapped",
+      "widget_release_judgement": "post_h_candidate",
+      "manual_artifact": {
+        "artifact_entry_exists": false,
+        "manual_review_required": true
+      },
+      "capabilities": []
+    },
+    {
+      "name": "combo_box",
+      "backend_widget": "ldComboBox",
+      "widget_status": "not_wrapped",
+      "widget_release_judgement": "post_h_candidate",
+      "manual_artifact": {
+        "artifact_entry_exists": false,
+        "manual_review_required": true
+      },
+      "capabilities": []
+    },
+    {
+      "name": "scroll_selecter",
+      "backend_widget": "ldScrollSelecter",
+      "widget_status": "not_wrapped",
+      "widget_release_judgement": "post_h_candidate",
+      "manual_artifact": {
+        "artifact_entry_exists": false,
+        "manual_review_required": true
+      },
+      "capabilities": []
+    },
+    {
+      "name": "progress_bar",
+      "backend_widget": "ldProgressBar",
+      "widget_status": "not_wrapped",
+      "widget_release_judgement": "post_h_candidate",
+      "manual_artifact": {
+        "artifact_entry_exists": false,
+        "manual_review_required": true
+      },
+      "capabilities": []
+    },
+    {
+      "name": "progress_wheel",
+      "backend_widget": "ldProgressWheel",
+      "widget_status": "not_wrapped",
+      "widget_release_judgement": "post_h_candidate",
+      "manual_artifact": {
+        "artifact_entry_exists": false,
+        "manual_review_required": true
+      },
+      "capabilities": []
+    },
+    {
+      "name": "arc",
+      "backend_widget": "ldArc",
+      "widget_status": "not_wrapped",
+      "widget_release_judgement": "post_h_candidate",
+      "manual_artifact": {
+        "artifact_entry_exists": false,
+        "manual_review_required": true
+      },
+      "capabilities": []
+    },
+    {
+      "name": "gauge",
+      "backend_widget": "ldGauge",
+      "widget_status": "not_wrapped",
+      "widget_release_judgement": "post_h_candidate",
+      "manual_artifact": {
+        "artifact_entry_exists": false,
+        "manual_review_required": true
+      },
+      "capabilities": []
+    },
+    {
+      "name": "graph",
+      "backend_widget": "ldGraph",
+      "widget_status": "not_wrapped",
+      "widget_release_judgement": "post_h_candidate",
+      "manual_artifact": {
+        "artifact_entry_exists": false,
+        "manual_review_required": true
+      },
+      "capabilities": []
+    },
+    {
+      "name": "table",
+      "backend_widget": "ldTable",
+      "widget_status": "not_wrapped",
+      "widget_release_judgement": "post_h_candidate",
+      "manual_artifact": {
+        "artifact_entry_exists": false,
+        "manual_review_required": true
+      },
+      "capabilities": []
+    },
+    {
+      "name": "calendar",
+      "backend_widget": "ldCalendar",
+      "widget_status": "not_wrapped",
+      "widget_release_judgement": "post_h_candidate",
+      "manual_artifact": {
+        "artifact_entry_exists": false,
+        "manual_review_required": true
+      },
+      "capabilities": []
+    },
+    {
+      "name": "date_time",
+      "backend_widget": "ldDateTime",
+      "widget_status": "not_wrapped",
+      "widget_release_judgement": "post_h_candidate",
+      "manual_artifact": {
+        "artifact_entry_exists": false,
+        "manual_review_required": true
+      },
+      "capabilities": []
+    },
+    {
+      "name": "clock",
+      "backend_widget": "ldClock",
+      "widget_status": "not_wrapped",
+      "widget_release_judgement": "post_h_candidate",
+      "manual_artifact": {
+        "artifact_entry_exists": false,
+        "manual_review_required": true
+      },
+      "capabilities": []
+    },
+    {
+      "name": "qr_code",
+      "backend_widget": "ldQRCode",
+      "widget_status": "not_wrapped",
+      "widget_release_judgement": "post_h_candidate",
+      "manual_artifact": {
+        "artifact_entry_exists": false,
+        "manual_review_required": true
+      },
+      "capabilities": []
+    },
+    {
+      "name": "icon_slider",
+      "backend_widget": "ldIconSlider",
+      "widget_status": "not_wrapped",
+      "widget_release_judgement": "post_h_candidate",
+      "manual_artifact": {
+        "artifact_entry_exists": false,
+        "manual_review_required": true
+      },
+      "capabilities": []
+    },
+    {
+      "name": "radial_menu",
+      "backend_widget": "ldRadialMenu",
+      "widget_status": "not_wrapped",
+      "widget_release_judgement": "post_h_candidate",
+      "manual_artifact": {
+        "artifact_entry_exists": false,
+        "manual_review_required": true
+      },
+      "capabilities": []
+    },
+    {
+      "name": "message_box",
+      "backend_widget": "ldMessageBox",
+      "widget_status": "not_wrapped",
+      "widget_release_judgement": "post_h_candidate",
+      "manual_artifact": {
+        "artifact_entry_exists": false,
+        "manual_review_required": true
+      },
+      "capabilities": []
+    }
+  ]
+}

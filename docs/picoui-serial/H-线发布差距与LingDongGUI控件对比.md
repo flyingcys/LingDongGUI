@@ -13,6 +13,8 @@
 
 当前结论：**还没有到发布第一版本的时候**。本文不是 release closeout，而是发布前串行任务的差距基线。
 
+从 H2 起，`tests/picoui/contract/picoui_release_capability_matrix.json` 是 release matrix 的机器可读真相源；本文负责解释口径、差距和发布判断，不再承担机器解析职责。该 matrix 只记录自动可维护事实，不负责表达“人工是否已验收通过”。
+
 ## 统计口径
 
 ### 计入 LingDongGUI 可封装控件
@@ -55,6 +57,33 @@ PicoUI “已覆盖”不等于“镜像 LingDongGUI 全能力”。本文把覆
 2. `真实 backend 覆盖`：是否落到真实 `ld*` 对象或真实 `ldBase` 能力。
 3. `能力合同覆盖`：某个具体能力是否有 public API、真实 backend 行为和证据层。
 
+### release matrix schema 口径
+
+H2 新增的机器可读 release matrix 使用以下固定字段：
+
+- 控件状态：`wrapped / not_wrapped / deferred`
+- 能力状态：`support / reject / incomplete_contract / deferred`
+- 发布判断：`internal_v0_1_blocker / internal_v0_1_known_limitation / post_h_candidate`
+- JSON 路径：
+  - `status_enums.widget_status`
+  - `status_enums.capability_status`
+  - `status_enums.release_judgement`
+  - `evidence_enums`
+  - `widgets[].widget_release_judgement`
+  - `widgets[].capabilities[].capability_release_judgement`
+- manual artifact：`artifact_entry_exists` 与 `manual_review_required` 分开记录，且 scope 固定为 `widget_level_only`
+
+边界约束：
+
+- release matrix 要表达的是“当前机器可维护的发布事实”，不是“人工验收已经通过”的布尔 gate。
+- `widget_release_judgement` 按控件级发布桶理解，不等于该控件每一条 capability 都是同一状态；当前 `internal v0.1` 讨论范围内的 wrapped 控件，若不属于 blocker，就归到 `internal_v0_1_known_limitation`，表示“在当前发布面内，但仍需配套 known limitations 文案”。
+- `capability_release_judgement` 只用于当前 H2 聚合 capability 条目对应的发布判断；它和 widget 级字段共享同一套枚举值，但粒度不同。当前属于 `support` 的 capability 也统一归到 `internal_v0_1_known_limitation` 这一发布桶，表示“属于当前 internal v0.1 发布面，需要随 release notes / known limitations 一起发布”，不是说该 capability 本身是 limitation。
+- `evidence_enums` 先定义 `unit / contract / mapping / visible / manual_artifact` 五层；当前 H2 仅要求 wrapped 控件提供最小 `evidence_layers`，不代表 44 条 capability 已逐项绑到证据层。
+- 当前 capability 名称仍保留聚合粒度，这是 H2 最小初稿的有意选择；若 H3/H4 需要更细 gate，可再继续拆分，不影响当前真相源口径。
+- release matrix 的 `manual_artifact` 只表达 widget-level 粒度；demo-level artifact entry 是否存在，统一以 `docs/picoui-serial/C-线人工窗口验收记录.md` 为真相源。
+- `artifact_entry_exists = true` 只代表已经登记对应粒度的 artifact 条目，不代表人工 reviewer 已确认通过。
+- `manual_review_required = true` 代表该项仍需人工复核；即使已有自动 visible/mapping 证据，也不能把它自动折叠成人工验收结论。
+
 ## 总体距离
 
 | 指标 | 当前数量 | 说明 |
@@ -63,10 +92,10 @@ PicoUI “已覆盖”不等于“镜像 LingDongGUI 全能力”。本文把覆
 | PicoUI public 控件 | 9 | `window/label/button/checkbox/switch/slider/text/image/list` |
 | 未覆盖原生控件 | 17 | 见后文分组 |
 | 控件数量覆盖率 | 34.6% | `9 / 26` |
-| PicoUI 当前能力矩阵行 | 43 | 当前 9 控件合同项 |
+| PicoUI 当前能力矩阵行 | 44 | 当前 9 控件合同项 |
 | 能力项 `support` | 35 | 有 public API / backend / 证据共同支撑 |
 | 能力项 `reject` | 4 | 明确不支持 |
-| 能力项 `incomplete_contract` | 3 | 有入口或存储，但合同/真实语义不完整 |
+| 能力项 `incomplete_contract` | 4 | 有入口或存储，但合同/真实语义不完整 |
 | 能力项 `deferred` | 1 | 方向合理，但当前不承诺 |
 
 ### 距离判断
@@ -117,336 +146,61 @@ PicoUI “已覆盖”不等于“镜像 LingDongGUI 全能力”。本文把覆
 | 复合菜单 | `ldRadialMenu` | 未覆盖 | 后置 |
 | 对话框 | `ldMessageBox` | 未覆盖 | 第二批；依赖 modal / callback 口径 |
 
-## 已覆盖控件逐项差距
+上表对应到 release matrix 时：
 
-### `window` vs `ldWindow`
+- 当前 `9` 个 PicoUI 控件全部标为 `wrapped`。
+- 其余 `17` 个 LingDongGUI 可封装控件在 H2 初稿里全部标为 `not_wrapped`。
+- `17` 个未覆盖控件在 H2 初稿里全部标为 `not_wrapped`。
+- `line_edit` / `combo_box` / `progress_bar` 与其余未覆盖控件一样，当前统一记为 `post_h_candidate`：它们是 `H线` closeout 之后的新线候选，不并入当前 H 线，也不表达“已经支持”。
 
-当前 PicoUI 支持：
+## 已覆盖控件差距摘要
 
-- `picoui_window_create()`
-- `picoui_window_create_with_props()`
-- flex layout
-- grid layout
-- padding / gap / align
-- 背景色
-- 通用 visible / enabled state
-- theme token 子集
+逐控件 release contract 已收口到 `docs/picoui-serial/H-线当前9控件发布合同.md`。本文只保留 H1/H4 需要的摘要级差距基线，避免对比文档与合同文档双写完整合同。
 
-LingDongGUI 主要能力：
+### 基础可发布子集
 
-- `ldWindowSetColor`
-- `ldWindowSetImage`
-- `ldWindowSetLayout`
-- `ldWindowSetFlexFlow`
-- `ldWindowSetFlexAlign`
-- `ldWindowSetFlexTrackAlign`
-- `ldWindowSetPadding`
-- `ldWindowSetFlexGap`
-- `ldWindowSetGridColumns`
-- `ldWindowSetGridDscArray`
-- `ldWindowSetGridAlign`
-- `ldWindowSetGridGap`
-- `ldWindowSetGridPadding`
-- `ldWindowSetPaddingGroup`
+以下 `7` 个控件可作为当前 `internal v0.1` 的基础发布面，但都只承诺 PicoUI 子集，不承诺完整镜像对应 `ld*` 控件：
 
-差距：
+- `window`：容器、flex/grid、padding/gap/align、背景色；不承诺 background image 与更底层布局选项。
+- `label`：文本、最小 font 映射、背景色、文字色；不承诺 transparent、align、background image、完整 getters。
+- `text`：文本、最小 font fallback、背景色、文字色；不承诺完整字体系统、scroll seek/move、background image、transparent。
+- `button`：文本、clicked/pressed/released、基础样式子集；不承诺 press/release image、checkable、完整 button skin。
+- `checkbox`：文本、checked state、toggle callback、基础样式子集；不承诺 image mode、radio group、string left space。
+- `switch`：checked state、toggle callback、enabled、基础样式子集；不承诺方向、导航、image mode、完整 track/knob skin。
+- `slider`：value、range、value changed callback、基础样式子集；不承诺 horizontal、image skin、indicator width/slim size。
 
-- PicoUI 当前没有暴露 window background image。
-- PicoUI 没有暴露 `PaddingGroup` 这种更底层的分组 padding。
-- PicoUI grid/flex 是上层稳定合同，不应承诺完全等价所有 `ldWindow` 内部布局选项。
+### 高风险已覆盖控件
 
-第一版判断：
+`image` 与 `list` 虽已覆盖，但它们的 first-release 风险显著高于其余 `7` 个控件，必须按显式限制发布，不能弱化成“部分支持”。
 
-- `window` 可发布。
-- 需要在发布说明中写明：支持的是 PicoUI layout subset，不是 `ldWindow` 全 API。
+#### `image` 摘要差距
 
-### `label` vs `ldLabel`
+- 当前发布面只承认基础 source 绑定与 `ldBase` 布局/可见性子集。
+- 明确限制：
+  - `theme`: `reject`
+  - `style_class / user_data`: `incomplete_contract`
+  - `bg_color / text_color / border_color / radius`: `reject`
+  - `padding`: `deferred`
+  - `enabled`: `reject`
+- 仍不承诺完整资源加载系统与 mask color。
+- 在 H2 release matrix 初稿中，上述非 `support` 项统一记为 `internal_v0_1_known_limitation`，不得误写成 `support`，也不得把 manual artifact 写成自动通过。
 
-当前 PicoUI 支持：
+#### `list` 摘要差距
 
-- create / create_with_props
-- text
-- font
-- bg color
-- text color
-- layout / visible / enabled / theme 子集
+- 当前发布面只承认基础 add item、selected index、真实 `ldList` 文本/选择映射与 callback cookie。
+- 明确限制：
+  - `item marker`: `reject`
+  - `style_class`: `incomplete_contract`
+  - `widget-level user_data`: `incomplete_contract`
+- 必须明确：
+  - item id / marker 不是独立 backend widget support
+  - `on_selected(..., user_data)` callback cookie 与 widget-level `user_data` 分开记录
+- 仍不承诺 item child widget、item height、text align、padding、margin。
+- 在 H2 release matrix 初稿中，list 的非 `support` 项统一记为 `internal_v0_1_known_limitation`。
 
-LingDongGUI 主要能力：
+### 合同文档入口
 
-- transparent
-- text
-- text color
-- align
-- background image
-- background color
-- font
-- getters
-
-差距：
-
-- PicoUI 未暴露 transparent。
-- PicoUI 未暴露 align。
-- PicoUI 未暴露 background image。
-- PicoUI 缺少 getters。
-
-第一版判断：
-
-- 可发布。
-- transparent / align / background image / getters 可作为 known limitations。
-
-### `text` vs `ldText`
-
-当前 PicoUI 支持：
-
-- create / create_with_props
-- text
-- font 描述值最小映射/fallback
-- bg color
-- text color
-- layout / visible / enabled / theme 子集
-
-LingDongGUI 主要能力：
-
-- transparent
-- dynamic/static text
-- text color
-- runtime font
-- consumed font
-- background image
-- background color
-- scroll seek
-- scroll move
-
-差距：
-
-- PicoUI font 只支持最小内置映射/fallback，不支持完整 family/size 解析或动态字体资源加载。
-- PicoUI 未暴露 static text 区分。
-- PicoUI 未暴露 scroll seek / scroll move。
-- PicoUI 未暴露 background image。
-- PicoUI 未暴露 transparent。
-
-第一版判断：
-
-- 可发布。
-- 必须写清楚 font 边界，不得宣称完整字体系统。
-
-### `button` vs `ldButton`
-
-当前 PicoUI 支持：
-
-- create / create_with_props
-- text
-- clicked / pressed / released callbacks
-- bg / text / border / radius / padding 子集
-- visible / enabled
-- layout / theme 子集
-
-LingDongGUI 主要能力：
-
-- release / press color
-- release / press image
-- transparent
-- font
-- text
-- text color
-- checkable
-- key value
-- press state
-- getters
-
-差距：
-
-- PicoUI 未暴露 press/release image。
-- PicoUI 未暴露 transparent。
-- PicoUI 未暴露 button font。
-- PicoUI 未暴露 checkable / key value / press getter。
-- PicoUI theme 不等价 `ldButton` 完整 pressed/released skin。
-
-第一版判断：
-
-- 可发布为基础按钮。
-- 不应发布为完整 button skin / checkable button。
-
-### `checkbox` vs `ldCheckBox`
-
-当前 PicoUI 支持：
-
-- create / create_with_props
-- text
-- checked / is_checked
-- on_toggled
-- bg / text / border / radius / padding 子集
-- visible / enabled
-- layout / theme 子集
-
-LingDongGUI 主要能力：
-
-- bg / fg color
-- unchecked / checked image
-- text + font
-- radio button group
-- string left space
-- checked getter
-
-差距：
-
-- PicoUI 未暴露 image mode。
-- PicoUI 未暴露 radio group。
-- PicoUI 未暴露 string left space。
-- PicoUI font 只作为较高层描述，不暴露底层 font pointer。
-
-第一版判断：
-
-- 可发布为基础 checkbox。
-- radio group 应作为后续专线，而不是第一版默认承诺。
-
-### `switch` vs `ldSwitch`
-
-当前 PicoUI 支持：
-
-- create / create_with_props
-- checked / is_checked
-- on_toggled
-- enabled 同步到底层 disabled
-- bg / text / border / radius / padding 子集
-- layout / theme 子集
-
-LingDongGUI 主要能力：
-
-- off/on track color
-- knob color
-- border color
-- image mode
-- checked
-- horizontal
-- direction
-- disabled
-- navigation
-
-差距：
-
-- PicoUI 未暴露 horizontal / direction。
-- PicoUI 未暴露 navigation。
-- PicoUI 未暴露 image mode。
-- PicoUI style 只覆盖颜色 token 子集。
-
-第一版判断：
-
-- 可发布为基础 switch。
-- 方向、导航、图片皮肤后置。
-
-### `slider` vs `ldSlider`
-
-当前 PicoUI 支持：
-
-- create / create_with_props
-- value / get_value
-- range
-- on_value_changed
-- bg / text / border / radius / padding 子集
-- visible / enabled
-- layout / theme 子集
-
-LingDongGUI 主要能力：
-
-- percent
-- horizontal
-- bg / indicator image
-- bg / frame / indicator color
-- indicator width
-- slim size
-
-差距：
-
-- PicoUI 的 range 是 min/max/value 到 percent 的上层归一化，不是底层独立 range 模型。
-- PicoUI 未暴露 horizontal。
-- PicoUI 未暴露 image skin。
-- PicoUI 未暴露 indicator width / slim size。
-
-第一版判断：
-
-- 可发布为基础 slider。
-- 必须说明 range 语义是 PicoUI 归一化合同。
-
-### `image` vs `ldImage`
-
-当前 PicoUI 支持：
-
-- create / create_with_props
-- source 绑定
-- pos / size / visible / flex / grid / ignore_layout 等通用 `ldBase` 能力
-
-LingDongGUI 主要能力：
-
-- image tile
-- mask tile
-- mask color
-
-当前非 support 项：
-
-- theme：`reject`
-- style_class / user_data：`incomplete_contract`
-- bg_color / text_color / border_color / radius：`reject`
-- padding：`deferred`
-- enabled：`reject`
-
-差距：
-
-- PicoUI image source 还不是完整资源加载系统。
-- PicoUI 未暴露 mask color。
-- PicoUI 未定义 image padding 真实语义。
-- PicoUI 明确不支持 image style/theme/enabled。
-
-第一版判断：
-
-- 可发布为基础图片显示。
-- 这是第一版最高风险已覆盖控件之一。发布说明必须列出限制。
-
-### `list` vs `ldList`
-
-当前 PicoUI 支持：
-
-- create / create_with_props
-- add_item
-- selected index
-- on_selected native bridge
-- theme main
-- visible
-- enabled selectable / interactive gate
-
-LingDongGUI 主要能力：
-
-- item height
-- text array + font
-- text color
-- align
-- background color
-- select color
-- item child widget
-- selected item getter/setter
-- padding
-- margin
-
-当前非 support 项：
-
-- item marker：`reject`
-- style_class：`incomplete_contract`
-- widget-level user_data：`incomplete_contract`
-
-差距：
-
-- PicoUI list item 不是独立 backend widget。
-- PicoUI 未暴露 item child widget。
-- PicoUI 未暴露 item height。
-- PicoUI 未暴露 text align。
-- PicoUI 未暴露 padding / margin。
-- PicoUI style_class 只是 wrapper metadata，没有真实 `ldList` 消费链。
-- widget-level user_data 不等于 `on_selected(..., user_data)` callback cookie。
-
-第一版判断：
-
-- 可发布为基础列表。
-- 这是第一版另一高风险已覆盖控件。必须禁止把 item id 写成真实 widget/marker support。
+若要看 `9` 个控件的 `supported APIs / backed by ld* entries / evidence layers / known limitations / first-release wording`，统一以 `docs/picoui-serial/H-线当前9控件发布合同.md` 为准。
 
 ## H线外后续候选控件分组
 
@@ -590,12 +344,24 @@ PicoUI 当前 getter 较少，主要集中在 value/checked/selected index。第
 第一版若对外发布，应补：
 
 - 人工窗口验收记录。
-- 每个 demo 的 artifact 路径和观察结论。
+- 当前最小 manual artifact 范围内每个 demo 的 artifact 路径和观察结论。
 - 明确 artifact existence 不等于验收通过。
 
-## 第一版 blocker
+当前 `H8` 与现实对齐后的最小范围固定为两个 demo：
 
-以下问题若不处理，不能对外宣称“PicoUI 完整支持当前控件”：
+- `picoui_basic_widgets_demo`
+- `picoui_settings_panel_demo`
+
+说明：
+
+- 这是因为当前 `tests/picoui/runtime/check_picoui_manual_window_artifact.py` 只支持这两个 demo。
+- `docs/picoui-serial/C-线人工窗口验收记录.md` 是当前唯一人工记录真相源。
+- 这两个 demo 的 artifact existence 只能表达“条目已存在、仍需人工复核”，不能表达“人工已验收通过”。
+- 若后续要扩张到 `hello_world / layout_flex / layout_grid / theme_showcase / list_basic` 等更多 demo，只能作为 `post-H candidate`，不并入当前 `H8` 完成条件。
+
+## 若要宣称“完整支持当前控件”，以下是 blocker
+
+前提：这里讨论的是更强表述，即对外宣称 “PicoUI 已完整支持当前已覆盖控件” 或接近 “完整镜像对应 LingDongGUI 控件”。在这个前提下，以下问题不处理就不能这样宣称：
 
 1. `image` 的 style/enabled/theme/padding 仍不是 support。
 2. `list` 的 item marker/style_class/widget user_data 仍不是 support。
@@ -608,9 +374,9 @@ PicoUI 当前 getter 较少，主要集中在 value/checked/selected index。第
 9. 尚未完成 demo catalog 与 release notes。
 10. 尚未完成独立发布 review。
 
-## 第一版 non-blocker
+## 若目标是保守的 `internal v0.1`，以下可作为 known limitations / non-blocker
 
-以下可以作为 known limitations，不必阻塞后续 `internal v0.1`，但前提是 H 线 release matrix、known limitations 和发布文档包已经完成：
+前提：这里讨论的是更保守的 first-release 口径，即 “当前 `9` 控件可内部试用，但只承诺明确子集并附带 known limitations”。在这个前提下，以下事项可以不阻塞 `internal v0.1`，但前提仍是 H 线 release matrix、known limitations 和发布文档包已经完成：
 
 1. 未覆盖 17 个原生控件。
 2. image style/theme/enabled/padding。
@@ -621,6 +387,13 @@ PicoUI 当前 getter 较少，主要集中在 value/checked/selected index。第
 7. manual artifact 未全部人工验收。
 
 条件是发布说明必须明确写出这些限制。
+
+H2 release matrix 初稿把上述 known limitations 机器可读化后，文档与 JSON 必须保持同口径：
+
+- `image` / `list` 的非 `support` 项写为 `internal_v0_1_known_limitation`。
+- `17` 个未覆盖控件写为 `not_wrapped`；`line_edit` / `combo_box` / `progress_bar` 当前与其余未覆盖控件一样记为 `post_h_candidate`，表示它们属于 `H线` 之后的新线候选，而不是当前 H 线 blocker。
+- manual artifact 只表达条目是否存在、是否仍需人工复核，不能被文档或后续 gate 解释成“人工已验收通过”。
+- 当前 `H8` 最小 manual artifact 范围只有 `picoui_basic_widgets_demo` 与 `picoui_settings_panel_demo`；任何 7-demo 扩张都属于 `post-H candidate`，不是当前内部 `v0.1` 的完成条件。
 
 ## 发布前串行路线
 
@@ -642,7 +415,7 @@ PicoUI 当前 getter 较少，主要集中在 value/checked/selected index。第
 3. 当前 9 控件 release contract。
 4. `image` / `list` 发布限制硬化。
 5. demo catalog。
-6. manual artifact 记录。
+6. 两个 demo 的最小 manual artifact 记录。
 7. release notes / known limitations。
 8. 独立发布 review。
 9. 顺序跑 `ctest -L picoui`、`ctest -L visible`、`ctest -L mapping`。

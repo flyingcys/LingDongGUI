@@ -32,6 +32,11 @@ ld_add_python_test(check_picoui_widget_contract_matrix
     LABELS "picoui;contract"
 )
 
+ld_add_python_test(check_picoui_release_capability_matrix
+    SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/contract/check_picoui_release_capability_matrix.py"
+    LABELS "picoui;contract;release"
+)
+
 if(LD_BUILD_RUNTIME_TESTS)
     ld_add_python_test(check_picoui_runtime
         SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/runtime/check_picoui_runtime.py"

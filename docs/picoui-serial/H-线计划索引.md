@@ -13,6 +13,12 @@
 详细对比真相源：
 
 - `docs/picoui-serial/H-线发布差距与LingDongGUI控件对比.md`
+- `docs/picoui-serial/H-线第一版发布说明.md`
+- `docs/picoui-serial/H-线已支持控件清单.md`
+- `docs/picoui-serial/H-线demo-catalog.md`
+- `docs/picoui-serial/H-线发布测试矩阵.md`
+- `docs/picoui-serial/C-线人工窗口验收记录.md`
+- `tests/picoui/contract/picoui_release_capability_matrix.json`
 - `docs/superpowers/specs/2026-05-30-picoui-h-line-first-release-preparation-design.md`
 - `docs/superpowers/plans/2026-05-30-picoui-h-line-first-release-preparation-implementation.md`
 
@@ -57,16 +63,16 @@ PicoUI 当前 9 个控件都已有真实 LingDongGUI backend mapping，并且至
 
 按当前能力矩阵统计：
 
-- 能力行总数：`43`
+- 能力行总数：`44`
 - `support`：`35`
 - `reject`：`4`
-- `incomplete_contract`：`3`
+- `incomplete_contract`：`4`
 - `deferred`：`1`
 
 当前非 `support` 能力集中在两个控件：
 
 - `image`：`6` 项
-- `list`：`2` 项
+- `list`：`3` 项
 
 ### 第一版本距离
 
@@ -100,6 +106,7 @@ PicoUI 当前 9 个控件都已有真实 LingDongGUI backend mapping，并且至
 
 - 第一版本名称：建议暂称 `PicoUI first release`，不提前承诺 `v1.0`。
 - 第一版本最低发布门槛：release matrix gate、demo catalog、known limitations、manual artifact 记录、closeout review 全部完成。
+- 四层证据边界保持不变；新增自动桌面窗口截图时，只能算 `visible` 层补强，不能写成 `manual artifact` 完成或人工验收补齐。
 - 禁止发布口径：
   - “PicoUI 已完整支持 LingDongGUI。”
   - “PicoUI 已覆盖 LingDongGUI 全控件。”
@@ -132,7 +139,7 @@ PicoUI 当前 9 个控件都已有真实 LingDongGUI backend mapping，并且至
 
 - `docs/picoui-serial/H-线发布差距与LingDongGUI控件对比.md` 成为对比真相源。
 - 对比文档不使用 G 线文件名。
-- 对比文档明确：26 个 LingDongGUI 可封装控件、9 个 PicoUI 已覆盖控件、17 个未覆盖控件、43 条当前能力项。
+- 对比文档明确：26 个 LingDongGUI 可封装控件、9 个 PicoUI 已覆盖控件、17 个未覆盖控件、44 条当前能力项。
 
 ### H2：第一版 release matrix 设计
 
@@ -140,6 +147,16 @@ PicoUI 当前 9 个控件都已有真实 LingDongGUI backend mapping，并且至
 
 设计内容：
 
+- 机器可读真相源：
+  - `tests/picoui/contract/picoui_release_capability_matrix.json`
+- schema 顶层要求：
+  - `status_enums.widget_status`
+  - `status_enums.capability_status`
+  - `status_enums.release_judgement`
+  - `evidence_enums`
+  - `manual_artifact_policy`
+  - `summary`
+  - `widgets`
 - 控件维度：
   - `wrapped`
   - `not_wrapped`
@@ -156,15 +173,38 @@ PicoUI 当前 9 个控件都已有真实 LingDongGUI backend mapping，并且至
   - `visible`
   - `manual_artifact`
 - 发布维度：
-  - `release_blocker`
-  - `known_limitation`
-  - `post_release_candidate`
+  - `internal_v0_1_blocker`
+  - `internal_v0_1_known_limitation`
+  - `post_h_candidate`
+
+schema 约束：
+
+- `status_enums` 是状态枚举容器；H2 不把状态枚举平铺到 JSON 顶层，避免无谓 schema 抖动。
+- widget 级字段使用 `widget_release_judgement`；capability 级字段使用 `capability_release_judgement`；两者共享 `status_enums.release_judgement` 这一套枚举值。
+- 当前 `support` capability 也统一归到 `internal_v0_1_known_limitation` 这一发布桶，表示“属于当前 internal v0.1 发布面，需随 release notes / known limitations 一起发布”，不表示该 capability 本身是 limitation；`post_h_candidate` 只保留给 `H线` 之后的新线候选。
+- `evidence_enums` 固定列出 `unit / contract / mapping / visible / manual_artifact` 五层证据维度。
+- 后续如果补入真实桌面环境下的自动窗口截图，它仍只属于 `visible` 层补强，不新增新的 acceptance 层，也不改变 `C-线人工窗口验收记录.md` 作为人工结论真相源的边界。
+- 当前 H2 只要求 wrapped 控件提供最小 `evidence_layers` 机器可读表达，用控件级粒度说明哪些自动证据已存在、哪些仍需人工；不要求 44 条 capability 在本阶段逐项绑证据。
+- `manual_artifact_policy.scope` 与 `widgets[].manual_artifact.scope` 固定为 `widget_level_only`；这层 JSON 不记录 demo-level artifact entry。
+- `manual_artifact` 必须拆成：
+  - `scope`
+  - `artifact_entry_exists`
+  - `manual_review_required`
+- demo-level artifact entry 真相源继续放在 `docs/picoui-serial/C-线人工窗口验收记录.md`；不能把 `widget.manual_artifact.artifact_entry_exists = false` 读成“当前根本没有任何 artifact 条目”。
+- `widget_release_judgement` 是控件级粗粒度发布归类：当前 `internal v0.1` 讨论范围内的 wrapped 控件，若不是 blocker，默认归到 `internal_v0_1_known_limitation`，避免误表达成 `post_h_candidate`。
+- release matrix 只负责表达条目存在与是否仍需人工复核，不负责编码“人工验收已通过/未通过”。
+- 当前 H2 初稿至少要覆盖：
+  - 当前 `9` 个已覆盖控件。
+  - `image` / `list` 的全部非 `support` 项。
+  - `17` 个未覆盖控件，且都必须明确标为 `not_wrapped`。
 
 完成条件：
 
-- 写出 release matrix schema 文档。
-- 明确 `image` / `list` 的非 support 项在第一版中属于 blocker 还是 known limitation。
-- 明确 17 个未覆盖控件的发布状态。
+- `tests/picoui/contract/picoui_release_capability_matrix.json` 成为 H 线 release matrix 的机器可读真相源。
+- 文档与 JSON 对齐使用同一套状态枚举，不再靠 Markdown 自由表述推断。
+- evidence 维度在 H2 先以控件级最小表达入库，不再让 `unit / contract / mapping / visible / manual_artifact` 在机器语义里完全缺位。
+- 明确 `image` / `list` 的非 `support` 项在第一版中属于 `internal_v0_1_known_limitation`。
+- 明确 `17` 个未覆盖控件在 H2 初稿里全部标为 `not_wrapped`，其中 `line_edit` / `combo_box` / `progress_bar` 作为 `H线` closeout 后的新线候选，记为 `post_h_candidate`，不并入当前 H 线 blocker。
 
 ### H3：release matrix gate 落地
 
@@ -266,7 +306,7 @@ PicoUI 当前 9 个控件都已有真实 LingDongGUI backend mapping，并且至
 完成条件：
 
 - 新增或更新 demo catalog 文档。
-- 7 个 visible demo 每个都写明：
+- 当前可见 demo 目录中的相关 demo 需写明：
   - 证明的控件。
   - 证明的能力。
   - 不证明的能力。
@@ -278,18 +318,21 @@ PicoUI 当前 9 个控件都已有真实 LingDongGUI backend mapping，并且至
 
 最小范围：
 
-- `picoui_hello_world_demo`
 - `picoui_basic_widgets_demo`
-- `picoui_layout_flex_demo`
-- `picoui_layout_grid_demo`
-- `picoui_theme_showcase_demo`
 - `picoui_settings_panel_demo`
-- `picoui_list_basic_demo`
+
+边界约束：
+
+- 当前 `H8` 最小 manual artifact 范围只锁定这两个 demo，因为现有 `tests/picoui/runtime/check_picoui_manual_window_artifact.py` 只支持 `basic_widgets / settings_panel`。
+- `docs/picoui-serial/C-线人工窗口验收记录.md` 继续作为人工记录真相源，不新建平行记录文件。
+- `artifact existence` 只代表已有 artifact 条目和路径，不代表人工已观察 OS 窗口，更不代表人工验收通过。
+- 若后续讨论扩张到 `hello_world / layout_flex / layout_grid / theme_showcase / list_basic` 等更多 demo，只能记为 `post-H candidate`，不并入当前 `H8` 完成条件。
 
 完成条件：
 
-- 每个 demo 有 artifact。
-- 每个 demo 有人工观察记录。
+- `picoui_basic_widgets_demo` 与 `picoui_settings_panel_demo` 各有 artifact 条目。
+- 这两个 demo 在 `docs/picoui-serial/C-线人工窗口验收记录.md` 中各有人工观察记录槽位。
+- 若人工尚未观察 OS 窗口，记录必须明确写成“待人工观察并填写最终结论”，不得伪造通过。
 - 文档明确 artifact existence 不等于人工验收通过。
 
 ### H9：public API 边界冻结
@@ -408,6 +451,7 @@ git diff --check
 5. style/theme 更完整的 `v1` 边界。
 6. 资源与字体系统更完整的 release contract。
 7. 未覆盖控件的后续路线冻结。
+8. 扩张到 2-demo 以上的 manual artifact 覆盖面。
 
 当前不建议直接对外宣称：
 

@@ -2,6 +2,8 @@
 
 本文说明 `picoui/demo` 下各个 demo 的构建方式、启动方式和适用场景，并明确哪些证据属于真实 backend 能力，哪些只属于 smoke/capture。
 
+发布视角下的 demo catalog 另见 [../../docs/picoui-serial/H-线demo-catalog.md](../../docs/picoui-serial/H-%E7%BA%BFdemo-catalog.md)。该文档只负责说明 7 个 visible demo 各自证明什么、不证明什么，以及它们对应的 gate；本页继续作为运行指南和证据层入口，不把 runtime、automatic visible 和 manual artifact 混写成同一层结论。
+
 ## 一、先说明入口
 
 `picoui/demo` 不走顶层 `USE_DEMO` 入口。它们在 `examples/sdl/CMakeLists.txt` 中被单独编成独立目标，目标名如下：
@@ -113,7 +115,7 @@ build\picoui-runtime\examples\sdl\picoui_hello_world_demo.exe
 - `checkbox/switch/slider` 已有真实对象映射与 native event
 - `image` 当前创建真实 `ldImage` 对象；`picoui_image_set_source()` 只绑定调用方提供的 tile 指针，不做资源加载
 - `image` 允许空 source/清空 source，此时 backend 保持真实 `ldImage` 对象，`img_tile/mask_tile` 均为空
-- `image` 无 source 时 visible gate 只能证明 demo 中 image 区域或真实对象路径可见、可捕获；不证明占位资源绑定，也不证明真实图片加载完成
+- `image` 无 source 时 `automatic visible gate` 只能证明 demo 中 image 区域或真实对象路径可见、可捕获；不证明占位资源绑定，也不证明真实图片加载完成
 - `image` 非空 source 必须提供 `img_tile`；`mask_tile` 可为空，表示无遮罩图片
 - 可见正确性由 `check_picoui_visible_ui.py --demo basic_widgets` 验证
 
@@ -187,7 +189,6 @@ build\picoui-runtime\examples\sdl\picoui_hello_world_demo.exe
 
 - `label`
 - `list`
-- 三个 list item：`item_wifi`、`item_bluetooth`、`item_display`
 
 适合用途：
 
@@ -196,41 +197,39 @@ build\picoui-runtime\examples\sdl\picoui_hello_world_demo.exe
 
 当前口径：
 
-- `picoui_list` 的 public API、unit test 和真实 `ldList` backend mapping 已接入
-- `picoui_list_basic_demo` 已能 build、run，并进入 runtime smoke
-- backend mapping gate 现在只把 `list` 纳入 `PICOUI_BACKEND_REAL_WIDGET_IDS`，用于证明 list 本体进入真实 `ldList` backend
-- `item_wifi/item_bluetooth/item_display` 不再出现在 runtime mapping marker 里，避免把 list item id 误读成真实 widget/object id 或 marker contract
-- 因此当前 runtime mapping gate 不再对 item 侧给出任何强/弱 marker 结论；`list item marker` 仍必须按 `reject` 处理
-- automatic visible gate 已接入 `check_picoui_visible_ui.py --all`；该证据只证明 dummy SDL + PPM readback 下的 automatic visible correctness
-- manual window artifact gate 仍按 `C线` 证据层级单独记录；不能由 smoke、mapping 或 automatic visible gate 代替
-- 该 demo 不证明 multi-select、virtualization、drag reorder、keyboard navigation
+- 该 demo 为 `list` 提供真实 widget 样本
+- `picoui_list_basic_demo` 已进入 `runtime smoke`
+- `backend mapping gate` 已覆盖该 demo 的真实 backend 映射样本
+- `automatic visible gate` 已接入 `check_picoui_visible_ui.py --all`；该证据只证明 dummy SDL + PPM readback 下的 automatic visible correctness
+- manual artifact gate 仍按 `C线` 证据层级单独记录；不能由 `runtime smoke`、`backend mapping gate` 或 `automatic visible gate` 代替
+- 该 demo 不证明更细粒度 item 行为或更高阶交互模式
 
 ## 六、证据层级说明
 
 1. `ctest` / unit test：证明 contract、backend 字段同步、事件桥接等实现约束。
 2. `tests/picoui/runtime/check_picoui_runtime.py`：证明 demo 可 build、可启动、可 capture、可回归。
 3. `tests/picoui/runtime/check_picoui_backend_mapping.py`：证明 demo 的真实 backend 映射与 fallback marker 口径。
-4. `tests/picoui/runtime/check_picoui_visible_ui.py --all`：证明 visible-gate demo 在 `SDL_VIDEODRIVER=dummy + PPM readback` 下的 automatic visible correctness。
-5. `manual window artifact gate`：证明人工 OS 窗口验收通过；这属于 `C线` 的 `C6`，需要单独运行并记录 artifact。
+4. `tests/picoui/runtime/check_picoui_visible_ui.py --all`：证明 `automatic visible gate` 覆盖的 demo 在 `SDL_VIDEODRIVER=dummy + PPM readback` 下可显示、可读、可判定。
+5. `manual artifact gate`：证明人工 OS 窗口验收通过；这属于 `C线` 的 `C6`，需要单独运行并记录 artifact。
 
 换句话说：
 
 - `runtime smoke = 已启动`
-- `backend 完成态 = 真实对象/布局/事件/theme 已闭环`
+- `backend mapping gate = marker 覆盖的真实 backend 映射或布局/事件/theme 路径已进入正式 gate`
 - `automatic visible gate = dummy SDL + PPM readback 下可显示、可读、可判定`
-- `manual window artifact gate = 有平台、SDL video driver、demo target、artifact 路径和人工结论记录`
+- `manual artifact gate = 有平台、SDL video driver、demo target、artifact 路径和人工结论记录`
 
-这些不是同一层证据。`capture` 非空仍不能单独证明 UI 正常显示；automatic visible gate 通过也不能写成人工窗口验收通过，除非已经执行 `C6 / manual window artifact gate`。
+这些不是同一层证据。`capture` 非空仍不能单独证明 UI 正常显示；`automatic visible gate` 通过也不能写成人工窗口验收通过，除非已经执行 `C6 / manual artifact gate`。
 
-运行 demo、自动 visible gate、人工窗口观察也不是同一件事：
+运行 demo、`automatic visible gate`、人工窗口观察也不是同一件事：
 
 - 直接运行 demo：用于本地观察交互和窗口行为，不自动生成可追溯验收结论。
-- 自动 visible gate：脚本设置 dummy SDL，通过 PPM readback 做可重复判定，适合 CI/回归。
-- 人工窗口观察：需要真实窗口环境和 artifact 记录，只有 `C6 / manual window artifact gate` 才能支撑“人工窗口验收通过”。
+- `automatic visible gate`：脚本设置 dummy SDL，通过 PPM readback 做可重复判定，适合 CI/回归。
+- 人工窗口观察：需要真实窗口环境和 artifact 记录，只有 `C6 / manual artifact gate` 才能支撑“人工窗口验收通过”。
 
-### manual window artifact gate
+### manual artifact gate
 
-`C6 / manual window artifact gate` 只在需要人工 OS 窗口证据时单独运行，默认不接入 CTest，也不让无窗口 CI 因缺少桌面环境失败。
+`C6 / manual artifact gate` 只在需要人工 OS 窗口证据时单独运行，默认不接入 CTest，也不让无窗口 CI 因缺少桌面环境失败。
 
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
@@ -276,8 +275,8 @@ ctest --test-dir build -L picoui --output-on-failure
 
 汇报规则固定为：
 
-- `smoke gate` 通过：只能说可启动、可进入 runtime loop。
-- `visible gate` 通过：只能说自动 visible correctness 通过。
+- `runtime smoke` 通过：只能说可启动、可进入 runtime loop。
+- `automatic visible gate` 通过：只能说自动 visible correctness 通过。
 - `backend mapping gate` 通过：只能说 marker 覆盖的 backend 映射通过。
 - `manual artifact gate` 通过后：才允许说人工窗口验收通过。
 
@@ -291,7 +290,7 @@ ctest --test-dir build -L picoui --output-on-failure
 
 新增 demo 必须同步：
 
-- `tests/picoui/runtime/check_picoui_runtime.py`：加入 smoke 覆盖，或写明该 demo 不适合 runtime smoke 的豁免原因。
+- `tests/picoui/runtime/check_picoui_runtime.py`：加入 `runtime smoke` 覆盖，或写明该 demo 不适合 `runtime smoke` 的豁免原因。
 - `tests/picoui/runtime/check_picoui_visible_ui.py`：加入 visible matrix，或写明不可见理由。
 - `tests/picoui/runtime/check_picoui_backend_mapping.py`：加入 mapping matrix，或在脚本和文档里写明豁免说明。
 - 本文档：加入 demo 名称、目标、用途、运行方式、当前证据层级。
@@ -303,7 +302,7 @@ ctest --test-dir build -L picoui --output-on-failure
 
 - public API contract，确认 public header 仍只暴露 `picoui_*` API。
 - backend mapping test，证明 widget 进入真实 `LingDongGUI` backend，或明确拒绝/暂不支持。
-- visible gate 样本，或明确该 widget 不可见、不可由 readback 判定的理由。
+- `automatic visible gate` 样本，或明确该 widget 不可见、不可由 readback 判定的理由。
 - theme/style 支持或拒绝说明，避免把未实现 style 能力误写成默认支持。
 
 ### 新增 layout / 新增 theme
@@ -312,7 +311,7 @@ ctest --test-dir build -L picoui --output-on-failure
 
 - unit/contract test，锁定 public API、参数语义、拒绝语义和 backend 字段映射。
 - runtime demo 样本，证明真实 demo 链路会用到该能力。
-- visible gate，或明确不可见理由。
+- `automatic visible gate`，或明确不可见理由。
 - gate matrix 文档，说明该能力落在哪些 smoke、visible、mapping、manual artifact 层。
 
 ### 禁止替代关系
