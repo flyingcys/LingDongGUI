@@ -28,8 +28,8 @@ interactive_mapping_targets = {
         "reason": "settings panel has stable interactive widget ids that previously risked fallback behavior.",
     },
     "picoui_list_basic_demo": {
-        "real_ids": ["list", "item_wifi", "item_bluetooth", "item_display"],
-        "reason": "list demo proves the list and item ids are backed by real LingDongGUI list mapping.",
+        "real_ids": ["list"],
+        "reason": "list demo proves the list object itself is a real LingDongGUI widget; item ids are intentionally excluded from the real widget marker contract.",
     },
 }
 layout_mapping_targets = {

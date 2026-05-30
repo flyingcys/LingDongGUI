@@ -3,6 +3,7 @@
 #include "ldButton.h"
 #include "ldCheckBox.h"
 #include "ldLabel.h"
+#include "ldList.h"
 #include "ldSlider.h"
 #include "ldSwitch.h"
 #include "ldText.h"
@@ -149,6 +150,25 @@ static void picoui_backend_apply_slider_style(struct picoui_backend_widget *back
                      picoui_backend_rgb_to_ld_color(slider_indic));
 }
 
+static void picoui_backend_apply_list_style(struct picoui_backend_widget *backend_widget,
+                                            enum picoui_part part,
+                                            unsigned int bg_color,
+                                            unsigned int text_color,
+                                            unsigned int border_color)
+{
+    ldList_t *ld_list = (ldList_t *)backend_widget->ld_widget;
+
+    switch (part) {
+    case PICOUI_PART_MAIN:
+        ldListSetBackgroundColor(ld_list, picoui_backend_rgb_to_ld_color(bg_color));
+        ldListSetSelectColor(ld_list, picoui_backend_rgb_to_ld_color(border_color));
+        break;
+    default:
+        (void)text_color;
+        break;
+    }
+}
+
 int picoui_backend_widget_apply_style(void *backend_widget_ptr,
                                       enum picoui_part part,
                                       enum picoui_state state,
@@ -183,6 +203,9 @@ int picoui_backend_widget_apply_style(void *backend_widget_ptr,
         break;
     case PICOUI_BACKEND_WIDGET_SLIDER:
         picoui_backend_apply_slider_style(backend_widget, part, bg_color, border_color);
+        break;
+    case PICOUI_BACKEND_WIDGET_LIST:
+        picoui_backend_apply_list_style(backend_widget, part, bg_color, text_color, border_color);
         break;
     case PICOUI_BACKEND_WIDGET_IMAGE:
         return -1;

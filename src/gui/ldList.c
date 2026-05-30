@@ -56,6 +56,13 @@ const ldBaseWidgetFunc_t ldListFunc = {
 static bool slotListScroll(ld_scene_t *ptScene,ldMsg_t msg)
 {
     ldList_t *ptWidget = msg.ptSender;
+    bool isSelectable = ldBaseIsSelectable((ldBase_t *)ptWidget);
+
+    if (!isSelectable && msg.signal != SIGNAL_RELEASE)
+    {
+        return false;
+    }
+
     switch (msg.signal)
     {
     case SIGNAL_PRESS:
@@ -75,6 +82,14 @@ static bool slotListScroll(ld_scene_t *ptScene,ldMsg_t msg)
     }
     case SIGNAL_RELEASE:
     {
+        if(!isSelectable)
+        {
+            ptWidget->isHoldMove = false;
+            ptWidget->isMoveReset = false;
+            ptWidget->offset = ptWidget->_offset;
+            break;
+        }
+
         if(ptWidget->isHoldMove)
         {
             ptWidget->isHoldMove=false;
@@ -88,7 +103,6 @@ static bool slotListScroll(ld_scene_t *ptScene,ldMsg_t msg)
         }
         else
         {
-
             ptWidget->clickItemPos.iX=0;
             ptWidget->clickItemPos.iY=0;
             ptWidget->clickItemPos=ldBaseGetAbsoluteLocation((ldBase_t*)ptWidget,ptWidget->clickItemPos);
@@ -144,6 +158,7 @@ ldList_t* ldList_init(ld_scene_t *ptScene, ldList_t *ptWidget, uint16_t nameId, 
     ptWidget->use_as__ldBase_t.opacity=255;
     ptWidget->use_as__ldBase_t.tTempRegion=ptWidget->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion;
     ptWidget->use_as__ldBase_t.isCorner=true;
+    ptWidget->use_as__ldBase_t.isSelectable = true;
 
     ptWidget->itemHeight=30;
     ptWidget->bgColor=GLCD_COLOR_WHITE;

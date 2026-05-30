@@ -12,6 +12,7 @@ void ldBaseSetY(ldBase_t *ptWidget, int16_t y);
 void ldBaseSetWidth(ldBase_t *ptWidget, int16_t width);
 void ldBaseSetHeight(ldBase_t *ptWidget, int16_t height);
 void ldBaseSetHidden(ldBase_t *ptWidget, bool isHidden);
+void ldBaseSetSelectable(ldBase_t *ptWidget, bool isSelectable);
 void ldSwitchSetDisabled(ldSwitch_t *ptWidget, bool isDisabled);
 
 static int picoui_widget_is_valid(struct picoui_widget *widget)
@@ -184,9 +185,19 @@ int picoui_widget_set_enabled(struct picoui_widget *widget, int enabled)
         return -1;
     }
 
+    if (widget->backend_widget != 0) {
+        backend_widget = (struct picoui_backend_widget *)widget->backend_widget;
+        if (backend_widget->kind == PICOUI_BACKEND_WIDGET_IMAGE) {
+            return -1;
+        }
+    }
+
     widget->enabled = enabled != 0;
     if (widget->backend_widget != 0) {
         backend_widget = (struct picoui_backend_widget *)widget->backend_widget;
+        if (backend_widget->kind == PICOUI_BACKEND_WIDGET_LIST && backend_widget->ld_widget != 0) {
+            ldBaseSetSelectable((ldBase_t *)backend_widget->ld_widget, widget->enabled != 0);
+        }
         if (backend_widget->kind == PICOUI_BACKEND_WIDGET_SWITCH && backend_widget->ld_widget != 0) {
             ldSwitchSetDisabled((ldSwitch_t *)backend_widget->ld_widget, widget->enabled == 0);
         }

@@ -87,14 +87,6 @@ static int picoui_backend_widget_is_real_mapped(const struct picoui_backend_widg
            widget->ld_widget != NULL;
 }
 
-static int picoui_backend_list_items_are_real_mapped(const struct picoui_backend_widget *widget)
-{
-    return widget != NULL &&
-           widget->kind == PICOUI_BACKEND_WIDGET_LIST &&
-           widget->ld_widget != NULL &&
-           widget->list_item_count > 0;
-}
-
 static void picoui_backend_append_id(const char *id,
                                      char *buffer,
                                      size_t buffer_size,
@@ -155,15 +147,6 @@ static void picoui_backend_append_widget_ids(const struct picoui_backend_widget 
     while (widget != NULL) {
         if (predicate(widget) && widget->id != NULL && widget->id[0] != '\0') {
             picoui_backend_append_id(widget->id, buffer, buffer_size, used);
-        }
-
-        if (predicate == picoui_backend_widget_is_real_mapped &&
-            picoui_backend_list_items_are_real_mapped(widget)) {
-            int i;
-
-            for (i = 0; i < widget->list_item_count; ++i) {
-                picoui_backend_append_id(widget->list_item_ids[i], buffer, buffer_size, used);
-            }
         }
 
         if (widget->first_child != NULL) {

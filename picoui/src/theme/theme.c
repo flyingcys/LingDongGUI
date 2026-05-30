@@ -41,6 +41,8 @@ static int picoui_theme_part_supported(enum picoui_backend_widget_kind kind, enu
         case PICOUI_BACKEND_WIDGET_LABEL:
         case PICOUI_BACKEND_WIDGET_TEXT:
             return part == PICOUI_PART_MAIN || part == PICOUI_PART_TEXT;
+        case PICOUI_BACKEND_WIDGET_LIST:
+            return part == PICOUI_PART_MAIN;
         case PICOUI_BACKEND_WIDGET_BUTTON:
             return part == PICOUI_PART_MAIN || part == PICOUI_PART_TEXT;
         case PICOUI_BACKEND_WIDGET_CHECKBOX:
