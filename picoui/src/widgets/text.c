@@ -101,6 +101,10 @@ int picoui_text_set_font(struct picoui_text *text, const struct picoui_font *fon
         return -1;
     }
 
+    if (picoui_backend_widget_set_font(text->widget.backend_widget, font) != 0) {
+        return -1;
+    }
+
     text->widget.font = font;
-    return picoui_backend_widget_set_font(text->widget.backend_widget, font);
+    return 0;
 }

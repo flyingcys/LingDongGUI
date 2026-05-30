@@ -68,6 +68,8 @@ struct ldText_t
     bool _isBottomScroll:1;
     bool _isStatic:1;
     bool bDownScrolling:1;
+    bool ownsFont:1;
+    bool ownsConsumedFont:1;
 };
 
 ldText_t* ldText_init(ld_scene_t *ptScene, ldText_t *ptWidget, uint16_t nameId, uint16_t parentNameId, int16_t x, int16_t y, int16_t width, int16_t height, arm_2d_font_t *ptFont, text_box_line_alignment_t align, bool isScroll);
@@ -81,6 +83,8 @@ void ldTextSetTransparent(ldText_t* ptWidget,bool isTransparent);
 void ldTextSetText(ldText_t* ptWidget,uint8_t *pStr);
 void ldTextSetStaticText(ldText_t* ptWidget,const uint8_t *pStr);
 void ldTextSetTextColor(ldText_t* ptWidget,ldColor textColor);
+int ldTextSetFont(ldText_t *ptWidget, arm_2d_font_t *ptFont);
+int ldTextSetConsumedFont(ldText_t *ptWidget, arm_2d_font_t *ptFont);
 void ldTextSetBackgroundImage(ldText_t *ptWidget, arm_2d_tile_t *ptImgTile, arm_2d_tile_t *ptMaskTile);
 void ldTextSetBackgroundColor(ldText_t *ptWidget, ldColor bgColor);
 void ldTextScrollSeek(ldText_t *ptWidget,int16_t offset);

@@ -3,6 +3,7 @@
 #include "ldButton.h"
 #include "ldCheckBox.h"
 #include "ldLabel.h"
+#include "ldList.h"
 #include "ldSlider.h"
 #include "ldSwitch.h"
 #include "ldText.h"
@@ -192,6 +193,22 @@ static void assert_text_backend_style(const struct picoui_text *text,
     assert(ld_text->textColor == picoui_test_rgb_to_ld_color(text_color));
 }
 
+static void assert_list_backend_style(const struct picoui_list *list,
+                                      unsigned int bg_color,
+                                      unsigned int text_color,
+                                      unsigned int select_color)
+{
+    const struct picoui_backend_widget *backend = (const struct picoui_backend_widget *)list->widget.backend_widget;
+    const ldList_t *ld_list;
+
+    assert(backend != NULL);
+    assert(backend->ld_widget != NULL);
+    ld_list = (const ldList_t *)backend->ld_widget;
+    assert(ld_list->bgColor == picoui_test_rgb_to_ld_color(bg_color));
+    assert(ld_list->textColor == picoui_test_rgb_to_ld_color(text_color));
+    assert(ld_list->selectColor == picoui_test_rgb_to_ld_color(select_color));
+}
+
 int main(void)
 {
     struct picoui_theme *theme = picoui_theme_create();
@@ -203,6 +220,7 @@ int main(void)
     struct picoui_switch *sw;
     struct picoui_slider *slider;
     struct picoui_text *text;
+    struct picoui_list *list;
     struct picoui_image *image;
     struct picoui_label *failed_label;
     struct picoui_backend_widget *failed_backend;
@@ -235,6 +253,7 @@ int main(void)
     sw = picoui_switch_create(win, "switch");
     slider = picoui_slider_create(win, "slider");
     text = picoui_text_create(win, "text");
+    list = picoui_list_create(win, "list");
     image = picoui_image_create(win, "image");
     failed_label = picoui_label_create(win, "failed_label");
     assert(win != NULL);
@@ -244,6 +263,7 @@ int main(void)
     assert(sw != NULL);
     assert(slider != NULL);
     assert(text != NULL);
+    assert(list != NULL);
     assert(image != NULL);
     assert(failed_label != NULL);
 
@@ -285,6 +305,24 @@ int main(void)
     assert_widget_style(&text->widget, 0x333333U, 0x555555U, 0x444444U, 3, 5);
     assert_backend_height(&text->widget, 19);
     assert_text_backend_style(text, 0x333333U, 0x555555U);
+
+    assert(picoui_theme_apply_to_widget(theme,
+                                        &list->widget,
+                                        PICOUI_PART_MAIN,
+                                        PICOUI_STATE_FOCUSED)
+           == 0);
+    assert_widget_style(&list->widget, 0x555555U, 0x111111U, 0x555555U, 3, 5);
+    assert_backend_height(&list->widget, 19);
+    assert_list_backend_style(list, 0x555555U, 0x000000U, 0x555555U);
+
+    assert(picoui_theme_apply_to_widget(theme,
+                                        &list->widget,
+                                        PICOUI_PART_TEXT,
+                                        PICOUI_STATE_DISABLED)
+           == -1);
+    assert_widget_style(&list->widget, 0x555555U, 0x111111U, 0x555555U, 3, 5);
+    assert_backend_height(&list->widget, 19);
+    assert_list_backend_style(list, 0x555555U, 0x000000U, 0x555555U);
 
     assert(picoui_theme_apply_to_widget(theme,
                                         &button->widget,
@@ -351,6 +389,13 @@ int main(void)
                                         PICOUI_STATE_DEFAULT)
            == -1);
     assert_widget_style(&slider->widget, 0x555555U, 0x111111U, 0x444444U, 3, 5);
+
+    assert(picoui_theme_apply_to_widget(theme,
+                                        &list->widget,
+                                        PICOUI_PART_INDICATOR,
+                                        PICOUI_STATE_DEFAULT)
+           == -1);
+    assert_widget_style(&list->widget, 0x555555U, 0x111111U, 0x555555U, 3, 5);
 
     assert(picoui_theme_apply_to_widget(theme,
                                         &slider->widget,

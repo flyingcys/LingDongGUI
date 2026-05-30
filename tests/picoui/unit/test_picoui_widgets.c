@@ -4,10 +4,12 @@
 #include "../../../src/gui/ldImage.h"
 #include "../../../src/gui/ldSlider.h"
 #include "../../../src/gui/ldSwitch.h"
+#include "../../../src/gui/ldText.h"
 #include "../../../src/misc/ldMsg.h"
 #include "internal.h"
 
 #include <assert.h>
+#include <string.h>
 
 static int switch_toggled_count = 0;
 static int switch_toggled_value = -1;
@@ -16,6 +18,21 @@ static int checkbox_toggled_value = -1;
 static int slider_value_count = 0;
 static int slider_value = -1;
 static int button_clicked = -1;
+
+struct test_text_box_prefix_view {
+    text_box_cfg_t tCFG;
+};
+
+void picoui_backend_text_test_fail_next_set_font(void);
+
+static arm_2d_font_t *test_text_consumed_font(const ldText_t *ld_text)
+{
+    const struct test_text_box_prefix_view *view;
+
+    assert(ld_text != 0);
+    view = (const struct test_text_box_prefix_view *)&ld_text->tTextPanel;
+    return (arm_2d_font_t *)view->tCFG.ptFont;
+}
 
 static void on_switch_toggle(struct picoui_widget *widget, int value, void *user_data)
 {
@@ -303,6 +320,141 @@ static void test_image_theme_apply_is_rejected(struct picoui_theme *theme,
     assert(backend->image_source == source);
     assert(ld_image->ptImgTile == img_tile);
     assert(ld_image->ptMaskTile == mask_tile);
+}
+
+static void test_text_font_null_falls_back_to_default_contract(struct picoui_window *parent)
+{
+    struct picoui_text *text = picoui_text_create(parent, "text_font_null_fallback");
+    struct picoui_backend_widget *backend;
+    ldText_t *ld_text;
+    arm_2d_font_t *initial_font;
+
+    assert(text != 0);
+    backend = text->widget.backend_widget;
+    assert(backend != 0);
+    ld_text = (ldText_t *)backend->ld_widget;
+    assert(ld_text != 0);
+
+    initial_font = test_text_consumed_font(ld_text);
+    assert(initial_font != 0);
+    assert(picoui_text_set_font(text, 0) == 0);
+    assert(text->widget.font == 0);
+    assert(backend->font == 0);
+    assert(test_text_consumed_font(ld_text) != 0);
+    assert(test_text_consumed_font(ld_text) == initial_font);
+}
+
+static void test_text_font_runtime_rebind_updates_real_ldtext(struct picoui_window *parent)
+{
+    struct picoui_font small_font = {"Sans", 8};
+    struct picoui_font large_font = {"Sans", 24};
+    struct picoui_text *text = picoui_text_create(parent, "text_font_rebind");
+    struct picoui_backend_widget *backend;
+    ldText_t *ld_text;
+    arm_2d_font_t *small_real_font;
+    arm_2d_font_t *large_real_font;
+
+    assert(text != 0);
+    backend = text->widget.backend_widget;
+    assert(backend != 0);
+    ld_text = (ldText_t *)backend->ld_widget;
+    assert(ld_text != 0);
+
+    assert(picoui_text_set_font(text, &small_font) == 0);
+    small_real_font = test_text_consumed_font(ld_text);
+    assert(small_real_font != 0);
+    assert(small_real_font != (arm_2d_font_t *)&small_font);
+    assert(text->widget.font == &small_font);
+    assert(backend->font == &small_font);
+
+    assert(picoui_text_set_font(text, &large_font) == 0);
+    large_real_font = test_text_consumed_font(ld_text);
+    assert(large_real_font != 0);
+    assert(large_real_font != (arm_2d_font_t *)&large_font);
+    assert(large_real_font != small_real_font);
+    assert(ld_text->ptFont == large_real_font);
+    assert(text->widget.font == &large_font);
+    assert(backend->font == &large_font);
+}
+
+static void test_text_font_backend_failure_does_not_split_state(struct picoui_window *parent)
+{
+    struct picoui_font good_font = {"Sans", 24};
+    struct picoui_font failed_font = {"Sans", 8};
+    struct picoui_text *text = picoui_text_create(parent, "text_font_failure_atomicity");
+    struct picoui_backend_widget *backend;
+    ldText_t *ld_text;
+    arm_2d_font_t *old_real_font;
+
+    assert(text != 0);
+    backend = text->widget.backend_widget;
+    assert(backend != 0);
+    ld_text = (ldText_t *)backend->ld_widget;
+    assert(ld_text != 0);
+
+    assert(picoui_text_set_font(text, &good_font) == 0);
+    old_real_font = test_text_consumed_font(ld_text);
+    assert(old_real_font != 0);
+
+    picoui_backend_text_test_fail_next_set_font();
+    assert(picoui_text_set_font(text, &failed_font) == -1);
+    assert(text->widget.font == &good_font);
+    assert(backend->font == &good_font);
+    assert(test_text_consumed_font(ld_text) == old_real_font);
+    assert(ld_text->ptFont == old_real_font);
+}
+
+static void test_image_style_class_and_user_data_are_metadata_only_contract(struct picoui_window *parent)
+{
+    struct picoui_image *image = picoui_image_create(parent, "image_metadata_only");
+    struct picoui_backend_widget *backend;
+    const char *style_class = "image-metadata-only";
+    int cookie = 41;
+
+    assert(image != 0);
+    backend = image->widget.backend_widget;
+    assert(backend != 0);
+
+    assert(picoui_widget_set_style_class(&image->widget, style_class) == 0);
+    assert(picoui_widget_set_user_data(&image->widget, &cookie) == 0);
+    assert(image->widget.style_class != 0);
+    assert(strcmp(image->widget.style_class, style_class) == 0);
+    assert(image->widget.user_data == &cookie);
+    assert(backend->style_class != 0);
+    assert(strcmp(backend->style_class, style_class) == 0);
+    assert(backend->user_data == &cookie);
+}
+
+static void test_image_theme_style_parts_remain_explicitly_rejected(struct picoui_theme *theme,
+                                                                    struct picoui_window *parent)
+{
+    struct picoui_image *image = picoui_image_create(parent, "image_theme_text_reject");
+    unsigned int bg_color_before;
+    unsigned int text_color_before;
+    unsigned int border_color_before;
+
+    assert(image != 0);
+    bg_color_before = image->widget.bg_color;
+    text_color_before = image->widget.text_color;
+    border_color_before = image->widget.border_color;
+    assert(picoui_theme_apply_to_widget(theme,
+                                        &image->widget,
+                                        PICOUI_PART_TEXT,
+                                        PICOUI_STATE_DEFAULT)
+           == -1);
+    assert(image->widget.bg_color == bg_color_before);
+    assert(image->widget.text_color == text_color_before);
+    assert(image->widget.border_color == border_color_before);
+}
+
+static void test_image_enabled_remains_rejected_contract(struct picoui_window *parent)
+{
+    struct picoui_image *image = picoui_image_create(parent, "image_enabled_reject");
+
+    assert(image != 0);
+    assert(image->widget.enabled == 1);
+    assert(picoui_widget_set_enabled(&image->widget, 0) == -1);
+    assert(image->widget.enabled == 1);
 }
 
 static void test_props_invalid_values_do_not_attach_backend_children(struct picoui_window *parent,
@@ -718,6 +870,12 @@ int main(void)
     test_props_initial_values(app, &font, &image_source, &button_cookie, &common_cookie);
     test_image_source_boundary(win, &image_source);
     test_image_theme_apply_is_rejected(theme, image, &image_source);
+    test_image_style_class_and_user_data_are_metadata_only_contract(win);
+    test_image_theme_style_parts_remain_explicitly_rejected(theme, win);
+    test_image_enabled_remains_rejected_contract(win);
+    test_text_font_null_falls_back_to_default_contract(win);
+    test_text_font_runtime_rebind_updates_real_ldtext(win);
+    test_text_font_backend_failure_does_not_split_state(win);
 
     assert(picoui_switch_set_checked(sw, 1) == 0);
     assert(switch_toggled_count == 0);
@@ -815,7 +973,6 @@ int main(void)
     assert(text->widget.text == (const char *)"world");
     assert(text->widget.font == &font);
     assert(text_backend->font == &font);
-
     assert(picoui_image_set_source(image, &image_source) == 0);
     assert_image_has_bound_source(image, &image_source);
 

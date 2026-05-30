@@ -138,18 +138,31 @@ int picoui_slider_get_value(struct picoui_slider *slider)
 
 int picoui_slider_set_range(struct picoui_slider *slider, int min_value, int max_value)
 {
+    int clamped_value;
+
     if (slider == 0 || min_value > max_value) {
         return -1;
     }
 
     slider->min_value = min_value;
     slider->max_value = max_value;
-    if (slider->value < min_value) {
-        slider->value = min_value;
+    clamped_value = slider->value;
+    if (clamped_value < min_value) {
+        clamped_value = min_value;
     }
-    if (slider->value > max_value) {
-        slider->value = max_value;
+    if (clamped_value > max_value) {
+        clamped_value = max_value;
     }
+
+    slider->value = clamped_value;
+    if (slider->widget.backend_widget != 0) {
+        return picoui_backend_widget_update_value(slider->widget.backend_widget,
+                                                  slider->value,
+                                                  0,
+                                                  &slider->widget,
+                                                  0);
+    }
+
     return 0;
 }
 

@@ -6,6 +6,8 @@
 
 #include <stdlib.h>
 
+int picoui_backend_text_set_font(void *backend_widget, const void *font);
+
 static struct picoui_backend_app_state *picoui_backend_label_get_app_state(void *parent)
 {
     struct picoui_backend_widget *parent_widget = parent;
@@ -103,6 +105,10 @@ int picoui_backend_widget_set_font(void *backend_widget, const void *font)
 
     if (widget == 0) {
         return -1;
+    }
+
+    if (widget->kind == PICOUI_BACKEND_WIDGET_TEXT) {
+        return picoui_backend_text_set_font(backend_widget, font);
     }
 
     widget->font = font;

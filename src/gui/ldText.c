@@ -54,6 +54,97 @@ const ldBaseWidgetFunc_t ldTextFunc = {
     .show = (ldShowFunc_t)ldText_show,
 };
 
+struct ld_text_text_box_prefix_view {
+    text_box_cfg_t tCFG;
+};
+
+static arm_2d_font_t *ldTextGetConsumedFont(const ldText_t *ptWidget)
+{
+    const struct ld_text_text_box_prefix_view *view;
+
+    if (ptWidget == NULL) {
+        return NULL;
+    }
+
+    view = (const struct ld_text_text_box_prefix_view *)&ptWidget->tTextPanel;
+    return view->tCFG.ptFont;
+}
+
+static void ldTextReleaseOwnedFont(arm_2d_font_t *ptFont, bool ownsFont)
+{
+#if USE_VIRTUAL_RESOURCE == 1
+    if (ownsFont && ptFont != NULL) {
+        ldFree(ptFont);
+    }
+#else
+    ARM_2D_UNUSED(ptFont);
+    ARM_2D_UNUSED(ownsFont);
+#endif
+}
+
+static int ldTextApplyFontTransaction(ldText_t *ptWidget,
+                                      arm_2d_font_t *runtimeFont,
+                                      bool ownsRuntimeFont,
+                                      arm_2d_font_t *consumedFont,
+                                      bool ownsConsumedFont)
+{
+    struct ld_text_text_box_prefix_view *view;
+    arm_2d_font_t *oldRuntimeFont;
+    arm_2d_font_t *oldConsumedFont;
+    bool oldOwnsRuntimeFont;
+    bool oldOwnsConsumedFont;
+    bool oldDirtyState;
+    int16_t oldStrHeight;
+
+    assert(NULL != ptWidget);
+    if (ptWidget == NULL || runtimeFont == NULL || consumedFont == NULL)
+    {
+        return -1;
+    }
+
+    view = (struct ld_text_text_box_prefix_view *)&ptWidget->tTextPanel;
+    oldRuntimeFont = ptWidget->ptFont;
+    oldConsumedFont = view->tCFG.ptFont;
+    oldOwnsRuntimeFont = ptWidget->ownsFont;
+    oldOwnsConsumedFont = ptWidget->ownsConsumedFont;
+    oldDirtyState = ptWidget->use_as__ldBase_t.isDirtyRegionUpdate;
+    oldStrHeight = ptWidget->strHeight;
+
+    ptWidget->ptFont = runtimeFont;
+    ptWidget->ownsFont = ownsRuntimeFont;
+    view->tCFG.ptFont = consumedFont;
+    ptWidget->ownsConsumedFont = ownsConsumedFont;
+    ptWidget->strHeight = -1;
+    ptWidget->use_as__ldBase_t.isDirtyRegionUpdate = true;
+    text_box_set_scale(&ptWidget->tTextPanel, text_box_get_scale(&ptWidget->tTextPanel));
+    text_box_update(&ptWidget->tTextPanel);
+
+    if (runtimeFont == ptWidget->ptFont && consumedFont == view->tCFG.ptFont) {
+        if (oldRuntimeFont != runtimeFont || oldOwnsRuntimeFont != ownsRuntimeFont) {
+            ldTextReleaseOwnedFont(oldRuntimeFont, oldOwnsRuntimeFont);
+        }
+        if (oldConsumedFont != consumedFont || oldOwnsConsumedFont != ownsConsumedFont) {
+            ldTextReleaseOwnedFont(oldConsumedFont, oldOwnsConsumedFont);
+        }
+        return 0;
+    }
+
+    ptWidget->ptFont = oldRuntimeFont;
+    ptWidget->ownsFont = oldOwnsRuntimeFont;
+    view->tCFG.ptFont = oldConsumedFont;
+    ptWidget->ownsConsumedFont = oldOwnsConsumedFont;
+    ptWidget->strHeight = oldStrHeight;
+    ptWidget->use_as__ldBase_t.isDirtyRegionUpdate = oldDirtyState;
+
+    if (runtimeFont != oldRuntimeFont || ownsRuntimeFont != oldOwnsRuntimeFont) {
+        ldTextReleaseOwnedFont(runtimeFont, ownsRuntimeFont);
+    }
+    if (consumedFont != oldConsumedFont || ownsConsumedFont != oldOwnsConsumedFont) {
+        ldTextReleaseOwnedFont(consumedFont, ownsConsumedFont);
+    }
+    return 0;
+}
+
 static bool slotTextVerticalScroll(ld_scene_t *ptScene,ldMsg_t msg)
 {
     ldText_t *ptWidget = msg.ptSender;
@@ -233,8 +324,11 @@ void ldText_depose(ld_scene_t *ptScene, ldText_t *ptWidget)
 #if USE_VIRTUAL_RESOURCE == 1
     ldFree(ptWidget->ptImgTile);
     ldFree(ptWidget->ptMaskTile);
-    ldFree(ptWidget->ptFont);
 #endif
+    ldTextReleaseOwnedFont(ldTextGetConsumedFont(ptWidget), ptWidget->ownsConsumedFont);
+    if (ldTextGetConsumedFont(ptWidget) != ptWidget->ptFont) {
+        ldTextReleaseOwnedFont(ptWidget->ptFont, ptWidget->ownsFont);
+    }
     ldFree(ptWidget);
 }
 
@@ -490,6 +584,27 @@ void ldTextSetTextColor(ldText_t* ptWidget,ldColor textColor)
     }
     ptWidget->use_as__ldBase_t.isDirtyRegionUpdate = true;
     ptWidget->textColor=textColor;
+}
+
+int ldTextSetFont(ldText_t *ptWidget, arm_2d_font_t *ptFont)
+{
+    return ldTextApplyFontTransaction(ptWidget, ptFont, false, ptFont, false);
+}
+
+int ldTextSetConsumedFont(ldText_t *ptWidget, arm_2d_font_t *ptFont)
+{
+    arm_2d_font_t *runtimeFont;
+
+    if (ptWidget == NULL || ptFont == NULL) {
+        return -1;
+    }
+
+    runtimeFont = ptWidget->ptFont != NULL ? ptWidget->ptFont : ptFont;
+    return ldTextApplyFontTransaction(ptWidget,
+                                      runtimeFont,
+                                      ptWidget->ownsFont,
+                                      ptFont,
+                                      false);
 }
 
 void ldTextSetBackgroundImage(ldText_t *ptWidget, arm_2d_tile_t *ptImgTile, arm_2d_tile_t *ptMaskTile)

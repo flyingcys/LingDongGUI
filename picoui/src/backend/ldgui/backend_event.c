@@ -3,6 +3,7 @@
 #include "../../../../src/gui/ldBase.h"
 #include "../../../../src/gui/ldButton.h"
 #include "../../../../src/gui/ldCheckBox.h"
+#include "../../../../src/gui/ldList.h"
 #include "../../../../src/gui/ldSlider.h"
 #include "../../../../src/gui/ldSwitch.h"
 #include "../../../../src/misc/ldMsg.h"
@@ -48,7 +49,7 @@ static int picoui_backend_slider_value_to_percent(struct picoui_slider *slider, 
 
     range = slider->max_value - slider->min_value;
     if (range <= 0) {
-        return value;
+        return 0;
     }
 
     return ((value - slider->min_value) * 100) / range;
@@ -151,6 +152,9 @@ static int picoui_backend_widget_connect_native_events(struct picoui_backend_wid
     case PICOUI_BACKEND_WIDGET_BUTTON:
         primary_signal = SIGNAL_PRESS;
         secondary_signal = SIGNAL_RELEASE;
+        break;
+    case PICOUI_BACKEND_WIDGET_LIST:
+        primary_signal = SIGNAL_CLICKED_ITEM;
         break;
     case PICOUI_BACKEND_WIDGET_CHECKBOX:
     case PICOUI_BACKEND_WIDGET_SWITCH:
@@ -427,6 +431,31 @@ int picoui_backend_widget_dispatch_native_signal(void *backend_widget,
                                           host_widget,
                                           widget_value,
                                           slider->user_data);
+        return 0;
+    }
+    case PICOUI_BACKEND_WIDGET_LIST: {
+        struct picoui_list *list = (struct picoui_list *)host_widget;
+        int selected_index;
+
+        if (native_signal != SIGNAL_CLICKED_ITEM) {
+            return -1;
+        }
+
+        selected_index = (int)native_value;
+        if (selected_index < 0 || selected_index >= list->item_count) {
+            return 0;
+        }
+        if (list->selected_index == selected_index && backend->value == selected_index) {
+            return 0;
+        }
+
+        list->selected_index = selected_index;
+        backend->value = selected_index;
+        backend->last_signal = PICOUI_BACKEND_SIGNAL_VALUE_CHANGED;
+        backend->dispatch_count++;
+        if (list->cb != 0) {
+            list->cb(list, selected_index, list->user_data);
+        }
         return 0;
     }
     default:
