@@ -40,7 +40,7 @@
 
 ## 4. 非目标
 
-- 不修改 `backend_app.c`、`backend_layout.c`、`backend_event.c`、`backend_style_apply.c`、`backend_theme.c`。
+- F 线实现期不抢占 `backend_app.c`、`backend_layout.c`、`backend_event.c`、`backend_style_apply.c`、`backend_theme.c`；合并后的当前主线可在 `backend_app.c` 接入 list marker 分类，用于证明真实 mapping。
 - 不实现 `line_edit`、`combo_box`、`table`、`keyboard`、`arc`。
 - 不实现复杂 list virtualization、multi-select、drag reorder、filtering。
 - 不通过修改现有 demo 绕过 D 线缺口。
@@ -77,6 +77,7 @@ void picoui_list_set_on_selected(struct picoui_list *list,
 - virtualized list
 - keyboard navigation
 - text editing
+- native list selection event bridge
 
 ## 6. Gate 要求
 
@@ -94,6 +95,12 @@ void picoui_list_set_on_selected(struct picoui_list *list,
 - `PICOUI_BACKEND_STATIC_MAPPING=REAL_LDGUI`
 - `PICOUI_BACKEND_REAL_WIDGET_IDS=list,title,item_wifi,item_bluetooth,item_display`
 - 不得输出 `PICOUI_BACKEND_INTERACTIVE_BOUNDARY=FAKE_FALLBACK`
+
+当前主线补充口径：
+
+- `PICOUI_BACKEND_WIDGET_LIST` 已进入真实 mapping marker 分类。
+- `item_wifi/item_bluetooth/item_display` 是 list item marker，不是独立 PicoUI child widget，也不是独立 `LingDongGUI` backend widget。
+- `picoui_list_set_on_selected()` 当前只保存 callback/user_data；尚未接入 `ldList` native selection event bridge，因此该公开 API 当前仍是 incomplete contract。
 
 ## 7. D/F 并行边界
 
@@ -115,3 +122,4 @@ ctest --test-dir build -L picoui --output-on-failure
 git diff --check
 ```
 
+验收通过仍只代表 `picoui_list` 最小 vertical slice 完成，不代表 `ldList` 全部能力已 100% 暴露到 PicoUI，也不代表 `picoui_list_set_on_selected()` 已有真实 native selection 事件闭环。

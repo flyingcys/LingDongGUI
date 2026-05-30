@@ -4,6 +4,7 @@
 - `B线` 收口索引：`docs/picoui-serial/B-线计划索引.md`
 - `C线` 收口索引：`docs/picoui-serial/C-线计划索引.md`
 - `F线` 并行索引：`docs/picoui-serial/F-线计划索引.md`
+- `G线` 收口索引：`docs/picoui-serial/G-线计划索引.md`
 - `PicoUI` 总设计真相源：`docs/superpowers/specs/2026-05-26-picoui-abstraction-layer-design.md`
 - `PicoUI` 测试架构真相源：`docs/superpowers/specs/2026-05-26-picoui-lingdonggui-test-architecture-design.md`
 - `D线` 总设计真相源：`docs/superpowers/specs/2026-05-29-picoui-d-line-current-widget-completeness-design.md`
@@ -17,7 +18,9 @@
 - `A线` 已完成真实 `PicoUI -> LingDongGUI` backend 主线。
 - `B线` 已完成 6 个 demo 的 automatic visible gate。
 - `C线` 已完成门禁工程化、CTest 接入、mapping matrix、可选 manual artifact gate 和长期新增规则。
-- `D线` 已完成当前控件完整性主线：runtime layout、合同矩阵、props、state/event、image 边界、theme token v1 和 closeout gate 均已收口；后续新控件继续归 `F线` 或后续独立任务。
+- `D线` 已完成当前控件完整性主线：runtime layout、合同矩阵、props、state/event、image 边界、theme token v1 和 closeout gate 均已收口。
+- `F线` 已完成 `picoui_list` 最小 vertical slice，并在当前主线代码中通过 backend mapping 与 automatic visible gate。
+- 当前完成态不等于“PicoUI 100% 支持 LingDongGUI 对应控件全部能力”；它表示已完成控件都有真实 `LingDongGUI` backend 对象和已记录、可测试的 PicoUI 合同子集。
 
 ## D线目标
 
@@ -323,7 +326,7 @@
 1. 串行做 `P0-1`，先解决 runtime present 线性布局覆盖真实 flex/grid 结果的问题。
 2. 做 `P0-2`，冻结当前控件合同矩阵。
 3. 根据矩阵拆 `P0-3`、`P0-4`、`P0-5`、`P1-6`，但同一批源文件不得并行写。
-4. `P1-8` 可以作为只读 spec subagent 并行启动，用来准备下一批控件，但不能抢 D 线主线。
+4. `P1-8` 已通过 F线落地 `picoui_list` 最小 vertical slice；后续新控件继续按独立线推进，不能抢 D 线主线。
 5. 当前控件合同稳定后，再进入 `P1-7` 和 `P1-9`。
 6. `P2-10` 放到 D 线后段，避免 CI 先行导致门禁和能力矩阵反复改。
 
@@ -357,3 +360,22 @@
 - 新控件候选已有 spec，但未抢跑实现主线。
 - 6 个 demo 的 smoke、mapping、visible gate 仍全部通过。
 - 文档继续区分 smoke、backend mapping、automatic visible、manual artifact。
+
+## D/F 后当前总口径
+
+当前已完成 PicoUI 控件：`window`、`label`、`button`、`checkbox`、`switch`、`slider`、`text`、`image`、`list`。
+
+这些控件均应按“PicoUI 上层合同子集 + 真实 LingDongGUI backend 映射”理解，不应按“逐项完整复制底层 `ld*` 控件 API”理解。下一阶段若目标是“完整当前控件”，必须先建立逐控件能力差距矩阵：
+
+- 对每个 `picoui_*` 控件列出对应 `ld*` 控件已有能力。
+- 标记 PicoUI 已封装、明确拒绝、暂缓、缺测试的能力。
+- 对缺口按用户价值排序，优先补事件、输入、focus、动态 item、资源加载、theme/style 这类会影响真实应用的能力。
+- 每新增一个能力，都必须同步 public API、backend 映射、unit/contract、mapping/visible gate 和文档，不能只用 demo 外观证明完成。
+
+已知优先缺口：
+
+- `list`：拆分 list item marker 语义，补或明确拒绝 native selection event bridge。
+- `slider`：补 `picoui_slider_set_range()` clamp 后同步底层 `ldSlider` percent 的实现和测试，或在合同矩阵中降级为 deferred。
+- `style_value`：继续保持“PicoUI 字段合同”口径；若要变成实时 backend style setter，必须补真实 `ld*` 字段同步和 visible/theme 证据。
+- `button/checkbox/switch/slider/label/text/image/list`：基于对应 `ld*` header 建 capability gap matrix，避免把当前合同子集写成 100% 全量封装。
+- 上述缺口进入 `G线` 统一收口；`G线` 真相源负责回答“哪些能力已封装、哪些只是子集、哪些公开 API 仍未兑现合同”。

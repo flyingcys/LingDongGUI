@@ -2,7 +2,7 @@
 
 > **给 agentic workers:** REQUIRED SUB-SKILL: 使用 `superpowers:subagent-driven-development`（推荐）或 `superpowers:executing-plans` 按任务执行本计划。步骤使用 checkbox（`- [ ]`）格式跟踪。
 
-**目标:** 新增 `picoui_list` 的最小完整 vertical slice，同时不抢占 D 线 shared backend/layout/event/theme 写面。
+**目标:** 新增 `picoui_list` 的最小完整 vertical slice，同时不抢占 D 线 shared backend/layout/event/theme 写面。当前主线代码已完成该 vertical slice；本计划保留为执行记录和后续复核依据。
 
 **架构:** F 线在 `.worktree/picoui-f-new-widgets` 串行推进。先做 list public contract，再做 widget/backend/demo/gate，最后只读 review 和主线程合并。`line_edit` 只保留为后续候选，不在本计划实现。
 
@@ -15,7 +15,7 @@
 - 创建 worktree：`.worktree/picoui-f-new-widgets`。
 - 创建或切换后必须同步并更新 submodule。
 - F 线内部严格串行：`F0 -> F1 -> F2 -> F3 -> F4 -> F5`。
-- 不修改 D 线 shared files：`backend_app.c`、`backend_layout.c`、`backend_event.c`、`backend_style_apply.c`、`backend_theme.c`。
+- F 线实现期不修改 D 线 shared files：`backend_app.c`、`backend_layout.c`、`backend_event.c`、`backend_style_apply.c`、`backend_theme.c`。当前主线合并态已在 `backend_app.c` 接入 list marker 分类，用于解除 F3 旧 blocker。
 - 修改符号前必须运行 GitNexus impact。
 - 每个 Task 后运行 `gitnexus_detect_changes(scope="all")`。
 - 每个 Task 后做独立 review；review 不通过时回原 subagent 修复。
@@ -143,7 +143,7 @@ python3 tests/picoui/contract/check_picoui_public_api.py
 git diff --check
 ```
 
-期望: 全部通过。
+期望: 全部通过。当前主线状态：已通过。
 
 ### Task F3: list demo 和 runtime gate
 
@@ -175,7 +175,7 @@ git diff --check
 要求：
 
 - runtime smoke 包含 `picoui_list_basic_demo`。
-- backend mapping 要求 `PICOUI_BACKEND_REAL_WIDGET_IDS=list,item_wifi,item_bluetooth,item_display`。
+- backend mapping 当前要求 `PICOUI_BACKEND_REAL_WIDGET_IDS=list,item_wifi,item_bluetooth,item_display`，但应把 `item_*` 理解为 list item marker，不是独立 backend widget id。
 - visible gate 对 list demo 做非黑、bounds、结构可读检查。
 
 - [ ] **Step 4: 验证 F3**
@@ -269,3 +269,20 @@ gitnexus_detect_changes(scope="all", repo="LingDongGUI")
 ```
 
 期望: affected scope 只包含 `picoui_list`、list demo 和 runtime matrix。
+
+## 3. 当前 closeout 补充
+
+截至当前主线，`F0 -> F5` 已收口：
+
+- `picoui_list` public API、unit test、真实 `ldList` backend mapping、`list_basic` demo、runtime/mapping/visible matrix 已接入。
+- `python3 tests/picoui/runtime/check_picoui_backend_mapping.py` 通过。
+- `python3 tests/picoui/runtime/check_picoui_visible_ui.py --demo list_basic` 通过。
+- `python3 tests/picoui/contract/check_picoui_public_api.py` 通过。
+- `python3 tests/picoui/contract/check_picoui_widget_contract_matrix.py` 通过。
+
+能力边界：
+
+- 支持：create、create_with_props、add item、selected index setter/getter（PicoUI shadow state）、真实 `ldListSetText`、`ldListSetSelectItem` backend 映射。
+- 暂不支持：multi-select、virtualization、drag reorder、keyboard navigation、item remove/reorder、native list selection event bridge。
+- `picoui_list_set_on_selected()` 当前只保存 callback/user_data，不能写成 native selection 事件已闭环；该公开 API 当前仍是 incomplete contract。
+- 当前 mapping gate 用 `PICOUI_BACKEND_REAL_WIDGET_IDS` 同时承载 list widget id 和 list item marker；后续应拆分出 list item 专用 marker，避免把 item 数据项误读为独立 backend widget。
