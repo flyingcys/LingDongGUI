@@ -13,6 +13,7 @@
 详细对比真相源：
 
 - `docs/picoui-serial/H-线发布差距与LingDongGUI控件对比.md`
+- `docs/picoui-serial/J-线计划索引.md`
 - `docs/picoui-serial/H-线第一版发布说明.md`
 - `docs/picoui-serial/H-线已支持控件清单.md`
 - `docs/picoui-serial/H-线demo-catalog.md`
@@ -116,6 +117,15 @@ PicoUI 当前 9 个控件都已有真实 LingDongGUI backend mapping，并且至
 - 建立更完整的 style/theme/image skin 边界。
 - 补 manual artifact 或人工验收记录的发布级证据。
 - 补 release checklist、demo catalog、known limitations。
+
+如果第一版本定义改成“`H线` 之后先把一部分已做控件真正做实对齐再发 `v0.1`”，后续执行入口不再留在 `H线`，而是转到：
+
+- `docs/picoui-serial/J-线计划索引.md`
+
+`J线` 当前固定口径是：
+
+- `v0.1 = window / label / button / slider`
+- `v0.2 backlog = checkbox / switch / text / image / list`
 
 ## H线任务拆分
 

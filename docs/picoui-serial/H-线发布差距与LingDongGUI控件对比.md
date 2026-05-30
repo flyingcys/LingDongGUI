@@ -219,6 +219,171 @@ H2 新增的机器可读 release matrix 使用以下固定字段：
 
 若要看 `9` 个控件的 `supported APIs / backed by ld* entries / evidence layers / known limitations / first-release wording`，统一以 `docs/picoui-serial/H-线当前9控件发布合同.md` 为准。
 
+## 若第一版本改定义为“当前 9 控件完全对齐版”
+
+本节是对前述 `internal v0.1` 保守发布口径的补充分支。若当前决策改为：
+
+- 第一版本不以“尽快内部发布”优先，
+- 不以“先补 `progress_bar / line_edit / combo_box`”优先，
+- 而是以“当前已经做出来的 `9` 个控件，必须先和对应 `LingDongGUI` 控件功能尽量对齐，再发布第一版本”为硬门槛，
+
+则下面这些事项都应从 `known limitations / post-H candidate` 升级为**首版发布前必须完成**的工作清单。
+
+### 范围约束
+
+这里讨论的“完全对齐”只针对当前已做出的 `9` 个控件：
+
+- `window -> ldWindow`
+- `label -> ldLabel`
+- `button -> ldButton`
+- `checkbox -> ldCheckBox`
+- `switch -> ldSwitch`
+- `slider -> ldSlider`
+- `text -> ldText`
+- `image -> ldImage`
+- `list -> ldList`
+
+它不要求首版同时补齐剩余 `17` 个未覆盖控件；但要求这 `9` 个控件各自的能力面，不再停留在“最小可发布子集”。
+
+### 共性必做项
+
+若按“9 控件完全对齐版”发布，除逐控件差距外，还必须先补下面这些横向能力：
+
+1. **公共 API 覆盖策略冻结**
+   - 对每个控件都要明确：`LingDongGUI` 已有而 PicoUI 还没暴露的能力，是要新增 PicoUI public API 直接暴露，还是以更高层合同映射。
+   - 不能继续停留在“底层有能力，但 PicoUI 暂不承诺”的过渡态。
+2. **style / theme / image-skin 分层重做**
+   - 当前 `theme token + 通用颜色/metric` 只覆盖了子集。
+   - 凡是底层控件依赖 `image / mask / transparent / stateful colors / per-part visuals` 的，都要补成真实合同，不能继续留在 `reject / incomplete_contract / deferred`。
+3. **getter / readback 补齐**
+   - 当前 PicoUI 以 setter 为主，readback 很薄。
+   - 若要宣称“对齐”，必须补足底层已有的关键 getter，或给出等价 readback 合同，避免只能写不能读。
+4. **资源与生命周期合同补齐**
+   - 字符串、字体、image source、mask tile 的 ownership / fallback / rollback 规则要固定。
+   - 不能继续依赖“当前测试刚好没炸”的隐式约定。
+5. **事件与交互语义补齐**
+   - 当前主要只闭环了常用 clicked/toggled/value_changed。
+   - 底层已有的 pressed state、navigation、disabled interactive、selected item、scroll move 等交互语义，要么补上，要么明确说明不是“完全对齐版”。
+6. **证据层升级**
+   - 每个新增对齐项都要同时具备 `unit / contract / mapping / visible / manual artifact` 证据。
+   - 不能只补 API 或只补 backend 映射，再把“可运行”写成“已对齐”。
+
+### 逐控件必做项
+
+| 控件 | 当前已知未对齐点 | 首版若要按“完全对齐”发布，必须完成 |
+| --- | --- | --- |
+| `window` | 仅覆盖背景色与常用 layout；未覆盖背景图、`PaddingGroup` 粒度语义、readback | 补 `background image/mask` 合同；补 `PaddingGroup` 或定义等价高层 padding 组语义；补最少 `get_color`/readback 口径 |
+| `label` | 未覆盖 `transparent`、`align`、`background image`、getter 系列 | 补 `transparent`、`align`、`background image/mask`；补 `text / text_color / align / bg_color / font / transparent` readback |
+| `button` | 未覆盖 `press/release image`、`transparent`、`font`、`checkable`、`key_value`、pressed state readback | 补 button 双态 image skin、transparent、font 合同；补 `checkable`、`key_value`、`pressed` 状态读写；补 release/press 双态视觉与交互一致性测试 |
+| `checkbox` | 未覆盖 image mode、radio group、image mode spacing、font 语义补齐 | 补 `unchecked/checked image+mask`；补 `radio group` 与 `get selected` 语义；补 `string left space`；补 text/font/image mode 的组合合同 |
+| `switch` | 未覆盖方向、朝向、navigation、image style、完整 disabled/readback | 补 `horizontal`、`direction`、`can_navigate/navigate` 等价合同；补 off/on/knob image skin；补 `is_disabled/is_horizontal/get_direction` readback 与交互测试 |
+| `slider` | 未覆盖 horizontal、image skin、indicator width、slim size | 补 `horizontal` 切换；补 background/indicator image+mask；补 `indicator width`、`slim size`；补 `value/range/percent/方向` 一致性与 visible 证据 |
+| `text` | 仅最小 font fallback；未覆盖 `transparent`、`static text`、`background image`、`scroll seek/move`、完整字体合同 | 补 `transparent`、`static text` 与 owned/borrowed text 合同；补 background image/mask；补 `scroll_seek/scroll_move`；把 font 从“最小 fallback”提升到明确 family/size/resource 映射合同 |
+| `image` | 仅 source 绑定；`mask color` 未进发布面；通用 style/theme/enabled/padding 语义悬空 | 至少补 `mask color`；补清 `image source` ownership/lifetime；若保留通用 `widget` style/theme/enabled/padding API 在 image 上可调用，就必须给出真实 backend 语义，否则应收紧 public contract，避免假对齐 |
+| `list` | 仅 text array + selected index；未覆盖 item height、align、bg/text/select color、item widget、padding、margin | 补 `item_height`、`align`、`background/text/select color`、`item child widget`、`padding`、`margin`；明确 item model 与 callback/user_data 的边界；补 per-item/selection visible + manual 证据 |
+
+### 按实现层拆分后的必做工作
+
+#### A. 公共基座层
+
+1. 重新审视 `picoui_widget_set_*` 这批通用 setter 在 `9` 个控件上的真实语义。
+2. 对当前仍是 metadata-only 的 `style_class / user_data` 做二选一决策：
+   - 要么补成真实 backend 可消费合同；
+   - 要么把它们从“可用于对齐判断的能力面”中剥离，不再伪装成统一可用能力。
+3. 补齐公共 getter / readback 设计，至少覆盖 text、颜色、visible/enabled、布局关键状态。
+4. 扩 visible / manual artifact 样本，不再只停在两个 demo 对总体发布做背书。
+
+#### B. 样式与资源层
+
+1. 建立 `color style`、`image skin`、`mask`、`transparent` 的统一映射口径。
+2. 为 `button / checkbox / switch / slider / image / label / text / window` 分别补齐缺失的 tile/mask/transparent 路径。
+3. 固定字体、图片、字符串的 ownership / rollback / fallback 合同，避免 public state 与 backend state 分裂。
+
+#### C. 交互与 readback 层
+
+1. 补足 `button pressed`、`checkbox radio`、`switch navigation/direction`、`slider orientation`、`text scroll`、`list item widget` 等交互语义。
+2. 每补一项交互，都要同步补 readback 与 native-event 互相一致的合同测试。
+3. 不能只补 setter，不补 getter / callback / native bridge。
+
+### 建议执行顺序
+
+如果首版目标正式改成“当前 `9` 控件完全对齐”，推荐顺序不再是先扩新控件，而是：
+
+1. 先补公共基座：通用 setter/getter、style/theme/image-skin、资源生命周期合同。
+2. 再补低耦合控件：`window / label / button / slider / image`。
+3. 再补交互更复杂控件：`checkbox / switch / text / list`。
+4. 最后统一补 release matrix、逐控件 contract、visible/manual artifact 和人工验收结论。
+
+### 若接受分阶段发布：推荐拆成 `v0.1` / `v0.2`
+
+如果确认“当前 `9` 个控件全部在首版完全对齐”风险太高，推荐不要把首版继续定义成“9 控件全部完成”，而是改成：
+
+- `v0.1`：先发布一组**相对简单、可较快做实对齐**的控件；
+- `v0.2`：继续收口当前已做但未完全对齐的高复杂控件；
+- 这两个版本都仍然只围绕现有 `9` 控件，不引入 `progress_bar / line_edit / combo_box`。
+
+#### 推荐 `v0.1` 对齐子集
+
+推荐先做这 `4` 个：
+
+1. `window`
+2. `label`
+3. `button`
+4. `slider`
+
+原因：
+
+- `window` 缺口主要集中在 background image、padding group、少量 readback，结构最清晰。
+- `label` 缺口集中在 transparent、align、background image、getter，都是单控件内闭环问题。
+- `button` 虽然还有 image/checkable/key_value/pressed state，但没有 `radio group`、`navigation`、`scroll`、`item model` 这类跨对象合同。
+- `slider` 的缺口也较集中：orientation、image skin、indicator/slim size，主要是单控件参数与视觉映射。
+
+#### 推荐放入 `v0.2` 的当前已做控件
+
+推荐后置这 `5` 个：
+
+1. `checkbox`
+2. `switch`
+3. `text`
+4. `image`
+5. `list`
+
+后置原因：
+
+- `checkbox`：牵涉 `radio group`、image mode、文本与图片组合排版，不只是补几个 setter。
+- `switch`：牵涉 `direction`、`navigation`、disabled 交互、track/knob image skin，交互链更长。
+- `text`：牵涉 font resource、static/owned text、scroll seek/move、background image，资源与行为耦合最高。
+- `image`：当前最大问题不是单个 API 缺口，而是“通用 widget style/theme/enabled 在 image 上到底有没有真实语义”还没定死。
+- `list`：牵涉 item model、item widget、padding/margin、select 视觉、callback/user_data 边界，是当前 9 控件里结构最重的一类。
+
+#### `v0.1` / `v0.2` 的文档口径要求
+
+如果采用这个拆分，文档里要同步改口径：
+
+1. `v0.1` 只能宣称 `window / label / button / slider` 已完成对齐，不得顺带把其余 `5` 个 wrapped 控件也写成“已对齐”。
+2. `checkbox / switch / text / image / list` 要明确写成：
+   - `wrapped but not yet parity-complete`
+   - 或中文等价表述：`已接入 PicoUI，但未完成与对应 LingDongGUI 控件的功能对齐`
+3. release matrix 需要新增或显式区分：
+   - `当前已 wrapped`
+   - `已达 v0.1 parity`
+   - `已转入 v0.2 parity backlog`
+4. `H-线当前9控件发布合同.md` 也要按 `v0.1 已对齐` / `v0.2 待补齐` 重写对应结论，避免继续把所有 `9` 个控件混在同一个 first-release wording 里。
+
+后续若正式按这一路线执行，串行入口应切到：
+
+- `docs/picoui-serial/J-线计划索引.md`
+
+### 完成判定
+
+只有同时满足以下条件，才能把首版写成“当前已做 9 控件与对应 LingDongGUI 控件已完成对齐”：
+
+1. `H-线当前9控件发布合同.md` 中不再保留上述对齐项的 `reject / incomplete_contract / deferred`。
+2. 逐控件文档不再使用“最小子集”“仅基础能力”“metadata-only”描述这些能力。
+3. 对应单元测试、contract gate、mapping gate、visible gate、manual artifact 全部补齐并 fresh 通过。
+4. 人工窗口验收记录不是只有 artifact existence，而是已经填写完最终观察结论。
+5. 发布说明不再依赖“known limitations”去掩盖这 `9` 个控件本身的功能缺口。
+
 ## H线外后续候选控件分组
 
 本节只用于说明 `H线` 收口后，若要继续朝更强的对外版本推进，哪些未覆盖控件更值得优先考虑。它不是当前 `H线` 的串行开发清单。
@@ -459,12 +624,12 @@ H2 release matrix 初稿把上述 known limitations 机器可读化后，文档�
 
 ## 当前推荐结论
 
-建议当前先不发布第一版本，先按 H 线串行任务推进。
+建议把“第一版本定义”先明确，然后按对应路线推进，不要混写。
 
 理由：
 
 - 当前 9 个控件已有真实 backend mapping 和自动 gate，适合内部试用。
 - 当前数量覆盖率只有 34.6%，不适合宣传成 LingDongGUI 主流控件完整覆盖。
-- 当前能力差距已经可控地集中在 image/list 的非 support 项，以及发布口径/证据层文档尚未冻结。
-- H 线最有价值的下一步不是马上发布，也不是立刻扩新控件，而是先把发布矩阵、known limitations、manual artifact、发布文档和 closeout review 做完，防止发布口径失真。
-- `progress_bar / line_edit / combo_box` 应作为 `H线` 之后的新线候选，而不是当前 H 线 blocker。
+- 若目标仍是保守 `internal v0.1`，下一步仍是先把发布矩阵、known limitations、manual artifact、发布文档和 closeout review 做完，防止发布口径失真。
+- 若目标改成“首版必须把已做 9 控件尽量完全对齐”，则优先级应切换为本节新增的“9 控件完全对齐版”清单，先补当前控件能力，再讨论 `progress_bar / line_edit / combo_box`。
+- 若资源不足以一次吃完 `9` 个控件，推荐改成：`v0.1 = window / label / button / slider`，`v0.2 = checkbox / switch / text / image / list`。
