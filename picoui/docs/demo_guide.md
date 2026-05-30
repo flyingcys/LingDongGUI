@@ -12,6 +12,7 @@
 - `picoui_layout_grid_demo`
 - `picoui_theme_showcase_demo`
 - `picoui_settings_panel_demo`
+- `picoui_list_basic_demo`
 
 ## 二、依赖环境
 
