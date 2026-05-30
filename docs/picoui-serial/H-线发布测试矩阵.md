@@ -30,7 +30,7 @@
 - 它是脚本入口，不在强制 CTest 内；发布前若要补人工窗口证据，需要人工显式运行。
 - 它要求可用窗口环境。`SDL_VIDEODRIVER=dummy` 只能生成 readback artifact，不能支撑人工 OS 窗口验收。
 - `ARTIFACT_READY` 只表示 `frame.ppm` 等 artifact 已生成，不表示人工已经观察窗口，更不表示人工验收通过。
-- 当前 `Darwin + cocoa` 主机上，还额外确认过 `ffmpeg -f avfoundation -i "0:none"` 可抓到真实桌面窗口内容；这条路径若被使用，应归到 `visible` 层自动证据补强，不并入 `manual artifact`。
+- 若后续补入真实桌面窗口截图脚本、固定命令与 artifact 记录，这条路径只能归到 `visible` 层自动证据补强，不并入 `manual artifact`。当前 H10 真相源不把它记成已固定、可复现的现状证据。
 
 ## 执行顺序与互斥
 

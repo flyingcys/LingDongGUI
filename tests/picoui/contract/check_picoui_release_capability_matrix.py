@@ -95,6 +95,17 @@ def _assert_expected_widgets(by_name: dict[str, dict]) -> None:
     missing_not_wrapped = sorted(EXPECTED_NOT_WRAPPED_WIDGETS - set(by_name))
     assert not missing_not_wrapped, f"release matrix missing not_wrapped widgets: {missing_not_wrapped}"
 
+    for widget_name in sorted(EXPECTED_WRAPPED_WIDGETS):
+        widget = by_name[widget_name]
+        actual_status = widget.get("widget_status")
+        assert actual_status == "wrapped", (
+            f"{widget_name} must remain wrapped in release matrix, got {actual_status!r}"
+        )
+        actual_judgement = widget.get("widget_release_judgement")
+        assert actual_judgement == "internal_v0_1_known_limitation", (
+            f"{widget_name} must remain internal_v0_1_known_limitation, got {actual_judgement!r}"
+        )
+
     for widget_name in sorted(EXPECTED_NOT_WRAPPED_WIDGETS):
         actual = by_name[widget_name].get("widget_status")
         assert actual == "not_wrapped", (
@@ -178,12 +189,69 @@ def _assert_manual_artifact_fields(by_name: dict[str, dict]) -> None:
         )
 
 
+def _assert_summary_counts(matrix: dict, by_name: dict[str, dict]) -> None:
+    summary = matrix.get("summary")
+    if not isinstance(summary, dict):
+        raise AssertionError("release matrix missing summary object")
+
+    capability_status_counts = summary.get("capability_status_counts")
+    if not isinstance(capability_status_counts, dict):
+        raise AssertionError("release matrix summary missing capability_status_counts object")
+
+    derived_widget_total = len(by_name)
+    derived_wrapped_total = sum(
+        1 for widget in by_name.values() if widget.get("widget_status") == "wrapped"
+    )
+    derived_not_wrapped_total = sum(
+        1 for widget in by_name.values() if widget.get("widget_status") == "not_wrapped"
+    )
+    derived_capability_entry_total = 0
+    derived_capability_status_counts = {
+        "support": 0,
+        "reject": 0,
+        "incomplete_contract": 0,
+        "deferred": 0,
+    }
+
+    for widget in by_name.values():
+        for capability in widget.get("capabilities", []):
+            status = capability.get("status")
+            if status not in derived_capability_status_counts:
+                raise AssertionError(
+                    f"{widget.get('name')} has capability with unexpected status: {status!r}"
+                )
+            derived_capability_entry_total += 1
+            derived_capability_status_counts[status] += 1
+
+    assert summary.get("ldgui_wrappable_widget_total") == derived_widget_total, (
+        "summary.ldgui_wrappable_widget_total must match actual widget row count, "
+        f"got {summary.get('ldgui_wrappable_widget_total')!r} vs {derived_widget_total}"
+    )
+    assert summary.get("picoui_wrapped_widget_total") == derived_wrapped_total, (
+        "summary.picoui_wrapped_widget_total must match wrapped widget row count, "
+        f"got {summary.get('picoui_wrapped_widget_total')!r} vs {derived_wrapped_total}"
+    )
+    assert summary.get("picoui_not_wrapped_widget_total") == derived_not_wrapped_total, (
+        "summary.picoui_not_wrapped_widget_total must match not_wrapped widget row count, "
+        f"got {summary.get('picoui_not_wrapped_widget_total')!r} vs {derived_not_wrapped_total}"
+    )
+    assert summary.get("capability_entry_total") == derived_capability_entry_total, (
+        "summary.capability_entry_total must match actual capability row count, "
+        f"got {summary.get('capability_entry_total')!r} vs {derived_capability_entry_total}"
+    )
+    assert capability_status_counts == derived_capability_status_counts, (
+        "summary.capability_status_counts must match actual capability status counts, "
+        f"got {capability_status_counts!r} vs {derived_capability_status_counts!r}"
+    )
+
+
 def main() -> int:
     matrix = _load_matrix()
     by_name = _widgets_by_name(matrix)
     _assert_expected_widgets(by_name)
     _assert_known_limitations(by_name)
     _assert_manual_artifact_fields(by_name)
+    _assert_summary_counts(matrix, by_name)
     return 0
 
 

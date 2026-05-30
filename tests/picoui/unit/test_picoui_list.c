@@ -333,11 +333,6 @@ static void test_list_item_ids_are_picoui_data_not_backend_widget_identity(struc
     assert(list->item_count == 2);
     assert(backend->list_item_count == 2);
 
-    assert(list->items[0].id == list->backend_item_ids[0]);
-    assert(list->items[0].id == backend->list_item_ids[0]);
-    assert(list->items[1].id == list->backend_item_ids[1]);
-    assert(list->items[1].id == backend->list_item_ids[1]);
-
     assert(list->items[0].id != list->id);
     assert(list->items[0].id != backend->id);
     assert(list->items[0].id != (const char *)backend->ld_widget);

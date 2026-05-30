@@ -15,6 +15,23 @@
 
 从 H2 起，`tests/picoui/contract/picoui_release_capability_matrix.json` 是 release matrix 的机器可读真相源；本文负责解释口径、差距和发布判断，不再承担机器解析职责。该 matrix 只记录自动可维护事实，不负责表达“人工是否已验收通过”。
 
+## 2026-05-30 当前状态补记
+
+- 当前文档包、release matrix JSON、release matrix gate、当前 9 控件 release contract、demo catalog、发布说明与测试矩阵文档都已入库。
+- 当前已实测通过：
+  - `ctest --test-dir build --output-on-failure -L picoui`
+  - `ctest --test-dir build --output-on-failure -L visible`
+  - `ctest --test-dir build --output-on-failure -L mapping`
+  - `python3 tests/picoui/contract/check_picoui_public_api.py`
+  - `python3 tests/picoui/contract/check_picoui_demo_boundary.py`
+  - `python3 tests/picoui/runtime/check_picoui_manual_window_artifact.py --demo basic_widgets`
+  - `python3 tests/picoui/runtime/check_picoui_manual_window_artifact.py --demo settings_panel`
+- 当前两条 manual artifact 脚本路径都能生成 artifact，但人工观察结论仍未填写完成，因此只能认定 `artifact existence` 成立，不能认定人工窗口验收通过。
+- 本轮独立 review 暴露的 code/doc blockers 已修复：
+  - `check_picoui_release_capability_matrix.py` 现在会校验 `wrapped` 状态与 `summary` 统计一致性。
+  - `test_picoui_list.c` 已移除 backend 内部指针别名假合同。
+  - 发布文档不再把 `Darwin + cocoa` 自动桌面窗口截图写成仓库内已固定现状证据。
+
 ## 统计口径
 
 ### 计入 LingDongGUI 可封装控件
@@ -365,14 +382,14 @@ PicoUI 当前 getter 较少，主要集中在 value/checked/selected index。第
 
 1. `image` 的 style/enabled/theme/padding 仍不是 support。
 2. `list` 的 item marker/style_class/widget user_data 仍不是 support。
-3. G 线矩阵还没有独立 release gate 接管。
+3. release matrix gate 已接入并完成 `wrapped` 状态与 `summary` 统计一致性校验，但它仍不能替代人工观察结论。
 4. manual artifact 仍不是人工验收通过。
 5. 未覆盖 17 个原生控件，不能宣传成 LingDongGUI 全控件覆盖。
 6. style/theme 不是 LingDongGUI image/mask skin 系统。
 7. font 仅最小内置映射/fallback，不是完整字体解析系统。
-8. 尚未完成 release matrix gate。
+8. release matrix gate 已达到当前 H 线自动合同校验所需强度，但不替代 manual artifact / 人工观察。
 9. 尚未完成 demo catalog 与 release notes。
-10. 尚未完成独立发布 review。
+10. 独立发布 review 的当前 blocking 已修复，但人工观察与 closeout 仍未完成。
 
 ## 若目标是保守的 `internal v0.1`，以下可作为 known limitations / non-blocker
 
@@ -417,7 +434,7 @@ H2 release matrix 初稿把上述 known limitations 机器可读化后，文档�
 5. demo catalog。
 6. 两个 demo 的最小 manual artifact 记录。
 7. release notes / known limitations。
-8. 独立发布 review。
+8. 独立发布 review 收口。
 9. 顺序跑 `ctest -L picoui`、`ctest -L visible`、`ctest -L mapping`。
 
 ### H线后的对外第一版候选 `v1.0`

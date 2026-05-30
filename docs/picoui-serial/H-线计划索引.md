@@ -39,6 +39,29 @@
 
 H 线后续必须按串行任务推进：`H0` 未完成前不进入 `H1`，`H1` 未完成前不进入 `H2`，依此类推。每个阶段都要有文档、测试或证据产物，不能只做口头判断。
 
+### 2026-05-30 当前真实状态
+
+- `H0-H11` 所需的发布口径文档、release matrix JSON/gate、当前 9 控件 release contract、demo catalog、发布说明与测试矩阵文档已经入库。
+- `tests/picoui/contract/check_picoui_release_capability_matrix.py` 已接入 CTest，当前可被 `ctest --test-dir build -R check_picoui_release_capability_matrix` 正式执行。
+- 当前实测通过：
+  - `ctest --test-dir build --output-on-failure -L picoui`：`13/13` 通过
+  - `ctest --test-dir build --output-on-failure -L visible`：通过
+  - `ctest --test-dir build --output-on-failure -L mapping`：通过
+  - `python3 tests/picoui/contract/check_picoui_public_api.py`：通过
+  - `python3 tests/picoui/contract/check_picoui_demo_boundary.py`：通过
+  - `git diff --check`：通过
+- `python3 tests/picoui/runtime/check_picoui_manual_window_artifact.py --demo basic_widgets`
+  与
+  `python3 tests/picoui/runtime/check_picoui_manual_window_artifact.py --demo settings_panel`
+  当前都能在 `Darwin 25.3.0 (arm64) + cocoa` 下输出 `PICOUI_MANUAL_WINDOW_ARTIFACT=ARTIFACT_READY` 并生成 artifact。
+- 上述 `ARTIFACT_READY` 只代表 artifact existence；`docs/picoui-serial/C-线人工窗口验收记录.md` 里的人工结论仍是“待人工观察”，不能写成“人工窗口验收通过”。
+- 本轮 review blockers 已完成修复并通过当前验证：
+  - `check_picoui_release_capability_matrix.py` 现在会断言 `9` 个已覆盖控件保持 `wrapped`，并校验 `summary.capability_entry_total` 与 `capability_status_counts` 和实际 capability 条目一致。
+  - `test_picoui_list.c` 已删除跨层指针同一性假合同，只保留 “item id 不是 list/backend/widget identity” 这一层发布口径。
+  - 发布说明与测试矩阵已收紧为“桌面截图仅是未来可选补强路径”，不再写成仓库内已固定现状证据。
+- 因此当前可认定：H12 blocking 已修复；但人工观察结论和 H13 closeout 仍未完成，不能写成已发布。
+- `H13` 自动 closeout 前状态已单独收口到 `docs/picoui-serial/H-线发布closeout前状态.md`；当前剩余唯一未完成项是两条 manual artifact 记录的人眼观察结论。
+
 ### 控件数量距离
 
 - LingDongGUI 当前可封装原生控件按 H 线口径统计为 `26` 个。
@@ -407,6 +430,20 @@ review 必须检查：
 
 - 独立 review 无 blocking。
 - 若有 blocking，由原实现 subagent 修，不在主线程顺手修。
+
+### H12 当前 blocking（2026-05-30）
+
+本轮独立 review 暴露的 blocking 已完成修复，当前结论如下：
+
+1. `tests/picoui/contract/check_picoui_release_capability_matrix.py`
+   - 已新增 `wrapped` 控件状态断言。
+   - 已新增 `summary.capability_entry_total` 与 `capability_status_counts` 的实际条目一致性校验。
+2. `tests/picoui/unit/test_picoui_list.c`
+   - 已删除 backend 内部指针别名假合同。
+   - 当前只保留 item id 不是 `list/backend/widget identity` 的最小合同。
+3. 发布文档口径
+   - `H-线第一版发布说明.md` 与 `H-线发布测试矩阵.md` 已去掉“Darwin + cocoa 自动桌面窗口截图已是当前固定证据”的表述。
+   - 当前只保留“若未来补入脚本/产物记录，它仍属于 `visible` 层补强”这一边界。
 
 ### H13：发布 closeout
 

@@ -77,3 +77,27 @@ artifacts/picoui/manual-window/<demo-name>/frame.ppm
 - artifact 路径：`/Users/cys/embedded/LingDongGUI/artifacts/picoui/manual-window/settings_panel/frame.ppm`
 - 人工结论：待人工观察 OS 窗口并填写最终结论
 - 已知限制：该 gate 是可选人工窗口证据，不接入 CTest，不替代 automatic visible gate
+
+### 2026-05-30 basic_widgets
+
+- 日期：2026-05-30
+- 平台：Darwin 25.3.0 (arm64)
+- SDL video driver：cocoa
+- demo target：`picoui_basic_widgets_demo`
+- 构建目录：`/Users/cys/embedded/LingDongGUI/build`
+- 运行命令：`python3 tests/picoui/runtime/check_picoui_manual_window_artifact.py --demo basic_widgets`
+- artifact 路径：`/Users/cys/embedded/LingDongGUI/artifacts/picoui/manual-window/basic_widgets/frame.ppm`
+- 人工结论：待人工观察 OS 窗口并填写最终结论
+- 已知限制：本次仅确认脚本输出 `PICOUI_MANUAL_WINDOW_ARTIFACT=ARTIFACT_READY`；artifact existence 不等于人工窗口验收通过
+
+### 2026-05-30 settings_panel
+
+- 日期：2026-05-30
+- 平台：Darwin 25.3.0 (arm64)
+- SDL video driver：cocoa
+- demo target：`picoui_settings_panel_demo`
+- 构建目录：`/Users/cys/embedded/LingDongGUI/build`
+- 运行命令：`python3 tests/picoui/runtime/check_picoui_manual_window_artifact.py --demo settings_panel`
+- artifact 路径：`/Users/cys/embedded/LingDongGUI/artifacts/picoui/manual-window/settings_panel/frame.ppm`
+- 人工结论：待人工观察 OS 窗口并填写最终结论
+- 已知限制：本次仅确认脚本输出 `PICOUI_MANUAL_WINDOW_ARTIFACT=ARTIFACT_READY`；artifact existence 不等于人工窗口验收通过
