@@ -20,9 +20,9 @@
 | 控件 | 当前支持子集摘要 | 详细合同 |
 | --- | --- | --- |
 | `window` | 容器、flex/grid、padding/gap/align、背景色、background image/mask、`padding_group` | [window 合同](/Users/cys/embedded/LingDongGUI/docs/picoui-serial/H-线当前9控件发布合同.md) |
-| `label` | 文本、font 映射、背景色、文字色、transparent、align、background image/mask、诚实 readback | [label 合同](/Users/cys/embedded/LingDongGUI/docs/picoui-serial/H-线当前9控件发布合同.md) |
+| `label` | 文本、font 映射、背景色、文字色、transparent、align、background image/mask、诚实 readback，且 `create_with_props` 已覆盖 `transparent/align/background_source` | [label 合同](/Users/cys/embedded/LingDongGUI/docs/picoui-serial/H-线当前9控件发布合同.md) |
 | `button` | 文本、clicked/pressed/released、release/press image、transparent、font、checkable、key_value、pressed state | [button 合同](/Users/cys/embedded/LingDongGUI/docs/picoui-serial/H-线当前9控件发布合同.md) |
-| `slider` | value/range 归一化合同、value changed callback、horizontal、background/indicator image+mask、indicator/slim size、percent/orientation readback | [slider 合同](/Users/cys/embedded/LingDongGUI/docs/picoui-serial/H-线当前9控件发布合同.md) |
+| `slider` | `set_value/range` 归一化合同、value changed callback、horizontal、background/indicator image+mask、indicator/slim size、percent/orientation readback；不承认 `get_value` public API | [slider 合同](/Users/cys/embedded/LingDongGUI/docs/picoui-serial/H-线当前9控件发布合同.md) |
 
 ## 已 wrapped、转入 `v0.2` backlog 的控件
 

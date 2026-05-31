@@ -551,6 +551,38 @@ static void test_label_parity_contract(struct picoui_label *label,
     assert_label_has_no_background_source(label);
 }
 
+static void test_label_props_j3_contract(struct picoui_window *parent,
+                                         struct picoui_image_source *image_source,
+                                         const struct picoui_font *font)
+{
+    struct picoui_label_props transparent_props = {
+        .id = "label_j3_transparent_props",
+        .transparent = 1,
+        .align = PICOUI_ALIGN_START,
+    };
+    struct picoui_label_props background_props = {
+        .id = "label_j3_background_props",
+        .align = PICOUI_ALIGN_END,
+        .background_source = image_source,
+    };
+    struct picoui_label *transparent_label = picoui_label_create_with_props(parent, &transparent_props);
+    struct picoui_backend_widget *backend;
+    ldLabel_t *ld_label;
+    int transparent = -1;
+
+    assert(transparent_label != 0);
+    assert(background_props.align == PICOUI_ALIGN_END);
+    assert(background_props.background_source == image_source);
+
+    backend = transparent_label->widget.backend_widget;
+    assert(backend != 0);
+    ld_label = (ldLabel_t *)backend->ld_widget;
+    assert(ld_label != 0);
+    assert(picoui_label_get_transparent(transparent_label, &transparent) == 0);
+    assert(transparent == 1);
+    (void)font;
+}
+
 static void test_image_source_boundary(struct picoui_window *parent,
                                        struct picoui_image_source *image_source)
 {
@@ -1518,6 +1550,7 @@ int main(void)
     assert(picoui_checkbox_create_with_props(win, 0) == 0);
 
     test_label_parity_contract(label, &image_source, &font);
+    test_label_props_j3_contract(win, &image_source, &font);
     assert(label_backend->font == &font);
 
     assert(picoui_text_set_text(text, "world") == 0);

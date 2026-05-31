@@ -15,6 +15,13 @@
 
 `J线` 是 `H线` 之后的**首版功能对齐发布线**。
 
+## 2026-05-31 review 补记
+
+- 独立代码 review 抓出的两个 blocker 已修复并通过当前 targeted 验证：
+  - `label` 的 `create_with_props` 路径现已覆盖 `transparent / align / background_source`。
+  - `slider` 的 release matrix 已回调到真实 public API 边界，不再把不存在的 `get_value` 写成 `support`。
+- 因此当前 `J线` 可以恢复按“`window / label / button / slider` 已完成首版对齐”这条实现口径继续收口；但这仍不等于 `release ready`，因为 manual artifact 边界还在。
+
 它的唯一目标不是“把当前 9 个控件全部一次性做满”，而是：
 
 1. 把 `v0.1` 发布范围固定为当前 `9` 个已做控件里**相对简单、适合先做实对齐**的一组控件。

@@ -13,7 +13,7 @@
 
 当前结论已经收紧为：
 
-- `v0.1` 只能宣称 `window / label / button / slider` 已完成首版对齐。
+- `v0.1` 现在可以宣称 `window / label / button / slider` 已完成首版对齐。
 - `checkbox / switch / text / image / list` 已 wrapped，但仍在 `v0.2 parity backlog`。
 
 本文不是 release closeout，而是 `H线` 现状与 `J线` 分流口径的对比真相源。
@@ -33,10 +33,9 @@
   - `python3 tests/picoui/runtime/check_picoui_manual_window_artifact.py --demo settings_panel`
 - 当前两条 manual artifact 脚本路径都能生成 artifact，且 `C-线人工窗口验收记录.md` 已补入基于 `frame.ppm` 的人眼观察结论。
 - 因此当前可以认定最小范围的 `artifact-based visual observation` 已补齐，但不能认定 `live OS window acceptance passed`，也不能据此认定 `release ready`。
-- 本轮独立 review 暴露的 code/doc blockers 已修复：
-  - `check_picoui_release_capability_matrix.py` 现在会校验 `wrapped` 状态与 `summary` 统计一致性。
-  - `test_picoui_list.c` 已移除 backend 内部指针别名假合同。
-  - 发布文档不再把 `Darwin + cocoa` 自动桌面窗口截图写成仓库内已固定现状证据。
+- 本轮独立 review 抓出的 blocker 已修复：
+  - `label`：`picoui_label_props` / `picoui_label_create_with_props()` 已补齐 `transparent / align / background_source` 路径。
+  - `slider`：release matrix 已回调到真实 public API 边界，不再把不存在的 `picoui_slider_get_value()` 对应能力写成 `support`。
 
 ## 统计口径
 
@@ -108,12 +107,13 @@ PicoUI “已覆盖”不等于“镜像 LingDongGUI 全能力”。本文把覆
 
 - release matrix 要表达的是“当前机器可维护的发布事实”，不是“人工验收已经通过”的布尔 gate。
 - `wrapped` 只回答“这个控件是否已经接入 PicoUI public widget + 真实 backend mapping”；它不单独等于 parity 完成。
-- `parity_complete` 只用于 `window / label / button / slider` 这四个控件，前提是对应 capability rows 已显式覆盖其 `J2-J5` 收口合同，而不是靠纯标签硬编码。
-- 当前这四个控件的 capability rows 已经显式承接以下完成事实：
+- `parity_complete` 只用于 `window / label / button / slider` 这四个控件，前提是对应 capability rows 已显式覆盖其 `J2-J5` 收口合同，而且 public API / props 路径 / tests / matrix 真正一致，而不是靠纯标签硬编码。
+- 当前 capability rows 的已实现口径是：
   - `window`：`background_image_and_mask`、`padding_group_contract`、`honest_minimal_readback`
   - `label`：`transparent`、`align`、`background_image_and_mask`、`text_color_bg_color_align_transparent_readback`
   - `button`：`release_and_press_image`、`transparent`、`font`、`checkable`、`key_value`、`pressed_state`
-  - `slider`：`horizontal`、`background_and_indicator_image_mask`、`indicator_width`、`slim_size`、`percent_and_orientation_readback_consistency`
+  - `slider`：`value`、`horizontal`、`background_and_indicator_image_mask`、`indicator_width`、`slim_size`、`percent_and_orientation_readback_consistency`
+- `slider` 当前 public API 仍然不包含 `get_value`；这不再是 blocker，而是已被 matrix/合同诚实表达的边界。
 - `widget_release_judgement` 按控件级发布桶理解，不等于该控件每一条 capability 都是同一状态；当前讨论范围内的 wrapped 控件，若不属于 blocker，就归到 `internal_v0_1_known_limitation`，表示“在当前发布面内，但仍需配套 known limitations 文案”。
 - `capability_release_judgement` 只用于当前 capability 条目对应的发布判断；它和 widget 级字段共享同一套枚举值，但粒度不同。当前属于 `support` 的 capability 也统一归到 `internal_v0_1_known_limitation` 这一发布桶，表示“属于当前 `v0.1 parity` 发布面，需要随 release notes / known limitations 一起发布”，不是说该 capability 本身是 limitation。
 - `evidence_enums` 仍保持 `unit / contract / mapping / visible / manual_artifact` 五层；当前 matrix 记录的是 capability 与 parity 的机器可读完成事实，不把 artifact-based visual observation 折叠成 live OS window acceptance。
@@ -199,9 +199,9 @@ PicoUI “已覆盖”不等于“镜像 LingDongGUI 全能力”。本文把覆
 以下 `4` 个控件已经达到当前首版对齐口径：
 
 - `window`：容器、flex/grid、padding/gap/align、背景色、background image/mask、`padding_group` 高层合同。
-- `label`：文本、font 映射、背景色、文字色、transparent、align、background image/mask、诚实 readback。
+- `label`：文本、font 映射、背景色、文字色、transparent、align、background image/mask、诚实 readback；`create_with_props` 也已覆盖 `transparent / align / background_source`。
 - `button`：文本、clicked/pressed/released、release/press image、transparent、font、checkable、key_value、pressed state。
-- `slider`：value/range 归一化合同、value changed callback、horizontal、background/indicator image+mask、indicator/slim size、诚实 `percent/orientation` readback。
+- `slider`：`set_value/range` 归一化合同、value changed callback、horizontal、background/indicator image+mask、indicator/slim size、诚实 `percent/orientation` readback；同时诚实保留“无 `get_value` public API”边界。
 
 它们仍不等价于“完整镜像对应 `ld*` 控件”，但已经不再属于当前 `v0.1` 的功能缺口控件。
 

@@ -380,7 +380,7 @@
           "capability_release_judgement": "internal_v0_1_known_limitation"
         },
         {
-          "name": "value_and_get_value",
+          "name": "value",
           "status": "support",
           "capability_release_judgement": "internal_v0_1_known_limitation"
         },

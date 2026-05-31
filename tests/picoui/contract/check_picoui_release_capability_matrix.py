@@ -103,7 +103,7 @@ EXPECTED_V0_1_PARITY_CAPABILITIES = {
     },
     "slider": {
         "create_and_props",
-        "value_and_get_value",
+        "value",
         "range",
         "on_value_changed",
         "horizontal",

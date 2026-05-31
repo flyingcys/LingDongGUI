@@ -9,7 +9,7 @@
 1. 当前哪些自动 gate 已在最新一轮验证中通过。
 2. 当前还剩哪些证据边界，导致 `H13` 仍不能写成完成或发布就绪。
 
-## 2026-05-30 最新自动验证
+## 2026-05-31 最新自动验证
 
 本轮按 `H-线发布测试矩阵.md` 的 closeout 命令顺序重跑，结果如下：
 
@@ -19,6 +19,8 @@
   - 结果：通过，`1/1` 通过
 - `ctest --test-dir build --output-on-failure -L mapping`
   - 结果：通过，`1/1` 通过
+- `python3 tests/picoui/contract/check_picoui_release_capability_matrix.py`
+  - 结果：通过
 - `python3 tests/picoui/contract/check_picoui_public_api.py`
   - 结果：通过
 - `python3 tests/picoui/contract/check_picoui_demo_boundary.py`
@@ -37,9 +39,14 @@
   - `v0_1_parity_target / v0_2_parity_backlog / parity_complete` 分流会被正式断言
   - `window / label / button / slider` 的关键 parity capability rows 会被正式断言
   - `summary.capability_entry_total` 与 `capability_status_counts` 会和实际 capability 条目对账
+- `label` 的 `create_with_props` 已补齐当前 `v0.1 parity` 合同内的 props 落点：
+  - `transparent`
+  - `align`
+  - `background_source`
+- `slider` 的 release matrix 已回到当前真实 public API 边界，不再把不存在的 `get_value` 写成 `support`。
 - `list` 合同单测已收紧到当前 H 线发布口径，不再把 backend 内部存储策略写成跨层合同。
 - 发布文档、测试矩阵、差距文档、manual artifact 记录已经与当前自动验证状态同步。
-- `C-线人工窗口验收记录.md` 的 `2026-05-30 basic_widgets/settings_panel` 两条记录已补成 artifact-based visual observation 结论。
+- `C-线人工窗口验收记录.md` 的 `2026-05-30 basic_widgets/settings_panel` 两条记录已补成 `artifact-based visual observation` 结论。
 
 ## 当前未闭环项
 

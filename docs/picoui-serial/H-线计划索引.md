@@ -55,13 +55,15 @@ H 线后续必须按串行任务推进：`H0` 未完成前不进入 `H1`，`H1` 
   与
   `python3 tests/picoui/runtime/check_picoui_manual_window_artifact.py --demo settings_panel`
   当前都能在 `Darwin 25.3.0 (arm64) + cocoa` 下输出 `PICOUI_MANUAL_WINDOW_ARTIFACT=ARTIFACT_READY` 并生成 artifact。
-- 上述 `ARTIFACT_READY` 只代表 artifact existence；`docs/picoui-serial/C-线人工窗口验收记录.md` 里的人工结论仍是“待人工观察”，不能写成“人工窗口验收通过”。
+- 上述 `ARTIFACT_READY` 只代表 artifact existence；`docs/picoui-serial/C-线人工窗口验收记录.md` 里的人工结论当前已补到 `artifact-based visual observation`，但仍不能写成“人工窗口验收通过”。
 - 本轮 review blockers 已完成修复并通过当前验证：
   - `check_picoui_release_capability_matrix.py` 现在会断言 `9` 个已覆盖控件保持 `wrapped`，并校验 `summary.capability_entry_total` 与 `capability_status_counts` 和实际 capability 条目一致。
+  - `label` 的 `create_with_props` 已补齐当前 `v0.1 parity` 合同需要的 `transparent / align / background_source`。
+  - `slider` 的 release matrix 已回调到真实 public API 边界，不再把不存在的 `get_value` 记成 `support`。
   - `test_picoui_list.c` 已删除跨层指针同一性假合同，只保留 “item id 不是 list/backend/widget identity” 这一层发布口径。
   - 发布说明与测试矩阵已收紧为“桌面截图仅是未来可选补强路径”，不再写成仓库内已固定现状证据。
-- 因此当前可认定：H12 blocking 已修复；但人工观察结论和 H13 closeout 仍未完成，不能写成已发布。
-- `H13` 自动 closeout 前状态已单独收口到 `docs/picoui-serial/H-线发布closeout前状态.md`；当前剩余唯一未完成项是两条 manual artifact 记录的人眼观察结论。
+- 因此当前可认定：H12 blocking 已修复；但当前人工层仍只有 artifact-based visual observation，H13 closeout 仍未完成，不能写成已发布。
+- `H13` 自动 closeout 前状态已单独收口到 `docs/picoui-serial/H-线发布closeout前状态.md`；当前剩余边界不是“没有人工记录”，而是“只有 artifact-based visual observation，没有 live OS window acceptance”。
 
 ### 控件数量距离
 

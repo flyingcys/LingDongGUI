@@ -24,7 +24,8 @@ static int picoui_label_props_are_valid(const struct picoui_label_props *props)
         && props->width >= 0
         && props->height >= 0
         && props->radius >= 0
-        && props->padding >= 0;
+        && props->padding >= 0
+        && (props->background_source == 0 || props->background_source->img_tile != 0);
 }
 
 struct picoui_label *picoui_label_create(struct picoui_window *parent, const char *id)
@@ -92,7 +93,10 @@ struct picoui_label *picoui_label_create_with_props(struct picoui_window *parent
         return 0;
     }
     if (picoui_label_set_bg_color(label, props->bg_color) != 0
-        || picoui_label_set_text_color(label, props->text_color) != 0) {
+        || picoui_label_set_text_color(label, props->text_color) != 0
+        || picoui_label_set_background_source(label, props->background_source) != 0
+        || picoui_label_set_transparent(label, props->transparent) != 0
+        || picoui_label_set_align(label, props->align) != 0) {
         free(label);
         return 0;
     }

@@ -24,11 +24,10 @@
   - `git diff --check`
 - 当前两个 manual artifact 脚本都能产出 `ARTIFACT_READY` 和对应 `frame.ppm`，且 `C-线人工窗口验收记录.md` 已补入基于 artifact 的人眼观察结论。
 - 该结论只能认定 `artifact-based visual observation` 已补齐，不能上抬成 `live OS window acceptance passed`，也不能单靠这一层写成 `release ready`。
-- 本轮 review blockers 已修复：
-  - release matrix gate 现在会校验 `9` 个已覆盖控件保持 `wrapped`、`v0.1/v0.2` parity 分流一致，并校验 `window / label / button / slider` 的关键 parity capability rows 与 `summary` 对账一致。
-  - `list` 合同单测已删除跨层指针同一性假合同，只保留当前发布口径需要的 identity 边界。
-  - “Darwin + cocoa 自动桌面窗口截图” 不再写成仓库内当前固定证据，只保留为未来可选补强路径。
-- 因此当前状态是：自动 gate 主路径已跑通，review blockers 已收口，且最小范围的 artifact-based visual observation 已补齐；但这仍不等于 live OS 窗口验收通过，也不等于发布完成。
+- 本轮独立 review 抓出的 blocker 已修复：
+  - `label`：`picoui_label_create_with_props()` 已补齐 `transparent / align / background_source`。
+  - `slider`：release matrix 已回调到真实 public API 边界，不再把不存在的 `picoui_slider_get_value()` 写成 `support`。
+- 因此当前状态是：自动 gate 主路径已跑通，review blocker 已收口，且最小范围的 artifact-based visual observation 已补齐；但这仍不等于 live OS 窗口验收通过，也不等于发布完成。
 - `H13` 的 latest closeout 前状态可见：
   - [H-线发布closeout前状态](/Users/cys/embedded/LingDongGUI/docs/picoui-serial/H-线发布closeout前状态.md)
 
@@ -42,6 +41,11 @@
 - `label`
 - `button`
 - `slider`
+
+说明：
+
+- 这是当前已完成首版对齐的范围。
+- 这仍不等于 `release ready`；manual artifact 证据边界依然保留。
 
 ### `v0.2 parity backlog`
 

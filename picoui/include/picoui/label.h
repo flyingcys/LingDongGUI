@@ -20,6 +20,9 @@ struct picoui_label_props {
     unsigned int border_color;
     int radius;
     int padding;
+    int transparent;
+    enum picoui_align align;
+    struct picoui_image_source *background_source;
 };
 
 struct picoui_label *picoui_label_create(struct picoui_window *parent, const char *id);

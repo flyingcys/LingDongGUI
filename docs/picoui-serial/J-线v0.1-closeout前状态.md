@@ -2,14 +2,14 @@
 
 ## 文档定位
 
-本文记录 `J7 closeout` 之前、当前工作树下关于 `v0.1 parity = window / label / button / slider` 的最新自动验证证据，以及仍未闭环的人工项。
+本文记录 `J7 closeout` 之前、当前工作树下关于 `v0.1 parity = window / label / button / slider` 的最新证据状态，以及当前仍需保留的人工证据边界。
 
 本文不是 closeout 结论文档，不写“已完成发布”或“人工验收通过”；它只回答两件事：
 
 1. 当前哪些自动 gate 已经能为 `window / label / button / slider` 提供证据。
-2. 当前还剩哪些必须由人工补完的证据，导致 `J7` 不能直接写成完成。
+2. 当前人工层已经补到什么边界，以及为什么这仍不等于发布完成。
 
-## 2026-05-30 当前自动证据
+## 2026-05-30 当前自动 gate 与 artifact 入口
 
 围绕 `v0.1` 四控件，当前已经可用的自动证据是：
 
@@ -30,13 +30,14 @@
 
 ## 当前已闭环项
 
-- `window / label / button / slider` 的代码合同已经完成 J2/J3/J4/J5 收口。
+- `label` props 路径已补齐 `transparent / align / background_source`，对应 unit 已覆盖。
+- `slider` release matrix 已回调到真实 public API 边界，不再要求不存在的 `get_value`。
 - `H-线当前9控件发布合同.md`、`H-线已支持控件清单.md`、`H-线第一版发布说明.md`、`H-线发布差距与LingDongGUI控件对比.md` 已经改成：
   - `v0.1 parity = window / label / button / slider`
   - `v0.2 parity backlog = checkbox / switch / text / image / list`
 - `manual artifact` 条目已经登记到 `C-线人工窗口验收记录.md`，且 `basic_widgets` / `settings_panel` 两条脚本入口能生成 artifact。
 
-## 当前剩余边界
+## 当前人工证据边界
 
 当前已经没有“待补填的人工结论”这一类文档空洞，但仍必须保留以下证据边界：
 
@@ -53,12 +54,14 @@
 当前 J 线 `v0.1` 状态应写成：
 
 - `window / label / button / slider` 的 `unit / contract / mapping / visible / manual artifact` 五层证据已经补齐
+- `artifact-based visual observation` 已补齐，但它仍只是人工证据边界的一部分
 - `checkbox / switch / text / image / list` 已明确转入 `v0.2 parity backlog`
 - 当前人工层结论是“artifact-based visual observation 已补齐”，而不是“live OS 窗口验收通过”
 
 因此当前最多只能写成：
 
 - `v0.1 parity evidence complete`
+- `artifact-based visual observation complete`
 - `not release ready by manual-artifact evidence alone`
 
 不能写成：
