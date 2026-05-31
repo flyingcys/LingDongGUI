@@ -386,10 +386,8 @@ git diff --check
 
 ## 4. 执行交接
 
-Plan complete and saved to `docs/superpowers/plans/2026-05-31-picoui-a-0-3-truth-source-and-current-15-implementation.md`. Two execution options:
+当前执行模式固定：
 
-**1. Subagent-Driven (recommended)** - I dispatch a fresh subagent per task, review between tasks, fast iteration
-
-**2. Inline Execution** - Execute tasks in this session using executing-plans, batch execution with checkpoints
-
-Which approach?
+1. `R1 / R2 / R4 / R5` 由主线程严格串行执行。
+2. `R3` 只允许按 `J / a01 / a02` 三组并行 subagent 拆分。
+3. 最终 closeout 以 `docs/picoui-serial/a-0.3/a-0.3-closeout-标准.md` 与 fresh verification 为准。

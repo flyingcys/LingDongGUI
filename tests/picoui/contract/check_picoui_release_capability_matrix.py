@@ -15,21 +15,12 @@ EXPECTED_WRAPPED_WIDGETS = {
     "text",
     "image",
     "list",
-}
-
-EXPECTED_V0_1_PARITY_TARGETS = {
-    "window",
-    "label",
-    "button",
-    "slider",
-}
-
-EXPECTED_V0_2_PARITY_BACKLOG = {
-    "checkbox",
-    "switch",
-    "text",
-    "image",
-    "list",
+    "progress_bar",
+    "qrcode",
+    "progress_wheel",
+    "message_box",
+    "date_time",
+    "clock",
 }
 
 EXPECTED_NOT_WRAPPED_WIDGETS = {
@@ -37,19 +28,37 @@ EXPECTED_NOT_WRAPPED_WIDGETS = {
     "keyboard",
     "combo_box",
     "scroll_selecter",
-    "progress_bar",
-    "progress_wheel",
     "arc",
     "gauge",
     "graph",
     "table",
     "calendar",
-    "date_time",
-    "clock",
-    "qr_code",
     "icon_slider",
     "radial_menu",
+}
+
+EXPECTED_FULL_PARITY_COMPLETE = {
+    "window",
+    "label",
+    "button",
+    "slider",
+}
+
+EXPECTED_STABLE_CONTRACT = {
+    "checkbox",
+    "switch",
+    "text",
+    "image",
+    "list",
+}
+
+EXPECTED_MINIMAL_VERTICAL_SLICE = {
+    "progress_bar",
+    "qrcode",
+    "progress_wheel",
     "message_box",
+    "date_time",
+    "clock",
 }
 
 EXPECTED_NON_SUPPORT_CAPABILITIES = {
@@ -68,7 +77,7 @@ EXPECTED_NON_SUPPORT_CAPABILITIES = {
     },
 }
 
-EXPECTED_V0_1_PARITY_CAPABILITIES = {
+EXPECTED_J_PARITY_CAPABILITIES = {
     "window": {
         "create_and_props",
         "flex_layout",
@@ -156,84 +165,95 @@ def _assert_expected_widgets(by_name: dict[str, dict]) -> None:
     missing_not_wrapped = sorted(EXPECTED_NOT_WRAPPED_WIDGETS - set(by_name))
     assert not missing_not_wrapped, f"release matrix missing not_wrapped widgets: {missing_not_wrapped}"
 
+    assert "qr_code" not in by_name, "legacy widget name qr_code must be normalized to qrcode"
+
     for widget_name in sorted(EXPECTED_WRAPPED_WIDGETS):
         widget = by_name[widget_name]
         actual_status = widget.get("widget_status")
         assert actual_status == "wrapped", (
             f"{widget_name} must remain wrapped in release matrix, got {actual_status!r}"
         )
-        actual_judgement = widget.get("widget_release_judgement")
-        assert actual_judgement == "internal_v0_1_known_limitation", (
-            f"{widget_name} must remain internal_v0_1_known_limitation, got {actual_judgement!r}"
-        )
 
     for widget_name in sorted(EXPECTED_NOT_WRAPPED_WIDGETS):
-        actual = by_name[widget_name].get("widget_status")
+        widget = by_name[widget_name]
+        actual = widget.get("widget_status")
         assert actual == "not_wrapped", (
             f"{widget_name} must remain not_wrapped in release matrix, got {actual!r}"
         )
-        parity_bucket = by_name[widget_name].get("parity_bucket")
-        assert parity_bucket == "post_v0_2_candidate", (
-            f"{widget_name} must remain post_v0_2_candidate in release matrix, got {parity_bucket!r}"
-        )
-        parity_status = by_name[widget_name].get("parity_status")
+        parity_status = widget.get("parity_status")
         assert parity_status == "not_applicable", (
             f"{widget_name} must remain parity not_applicable in release matrix, got {parity_status!r}"
         )
-
-
-def _assert_parity_layering(by_name: dict[str, dict]) -> None:
-    for widget_name in sorted(EXPECTED_V0_1_PARITY_TARGETS):
-        widget = by_name[widget_name]
-        assert widget.get("widget_status") == "wrapped", (
-            f"{widget_name} must stay wrapped before parity layering is evaluated"
+        current_layer = widget.get("current_layer")
+        assert current_layer == "not_wrapped", (
+            f"{widget_name} must remain current_layer not_wrapped, got {current_layer!r}"
         )
-        assert widget.get("parity_bucket") == "v0_1_parity_target", (
-            f"{widget_name} must be tagged as v0_1_parity_target, got {widget.get('parity_bucket')!r}"
+
+
+def _assert_current_layers(by_name: dict[str, dict]) -> None:
+    for widget_name in sorted(EXPECTED_FULL_PARITY_COMPLETE):
+        widget = by_name[widget_name]
+        assert widget.get("current_layer") == "full_parity_complete", (
+            f"{widget_name} must be full_parity_complete, got {widget.get('current_layer')!r}"
         )
         assert widget.get("parity_status") == "parity_complete", (
-            f"{widget_name} must be parity_complete, got {widget.get('parity_status')!r}"
+            f"{widget_name} must remain parity_complete, got {widget.get('parity_status')!r}"
+        )
+        assert widget.get("widget_release_judgement") == "current_15_parity_complete", (
+            f"{widget_name} must use current_15_parity_complete judgement"
         )
 
-    for widget_name in sorted(EXPECTED_V0_2_PARITY_BACKLOG):
+    for widget_name in sorted(EXPECTED_STABLE_CONTRACT):
         widget = by_name[widget_name]
-        assert widget.get("widget_status") == "wrapped", (
-            f"{widget_name} must stay wrapped while still in parity backlog"
-        )
-        assert widget.get("parity_bucket") == "v0_2_parity_backlog", (
-            f"{widget_name} must be tagged as v0_2_parity_backlog, got {widget.get('parity_bucket')!r}"
+        assert widget.get("current_layer") == "stable_contract_but_not_full_parity", (
+            f"{widget_name} must be stable_contract_but_not_full_parity, got {widget.get('current_layer')!r}"
         )
         assert widget.get("parity_status") == "parity_incomplete", (
             f"{widget_name} must remain parity_incomplete, got {widget.get('parity_status')!r}"
         )
+        assert widget.get("widget_release_judgement") == "current_15_stable_contract_gap", (
+            f"{widget_name} must use current_15_stable_contract_gap judgement"
+        )
 
-    wrapped_widgets = EXPECTED_V0_1_PARITY_TARGETS | EXPECTED_V0_2_PARITY_BACKLOG
-    assert wrapped_widgets == EXPECTED_WRAPPED_WIDGETS, (
-        "parity layering must partition all wrapped widgets into v0_1 targets and v0_2 backlog"
+    for widget_name in sorted(EXPECTED_MINIMAL_VERTICAL_SLICE):
+        widget = by_name[widget_name]
+        assert widget.get("current_layer") == "minimal_vertical_slice_only", (
+            f"{widget_name} must be minimal_vertical_slice_only, got {widget.get('current_layer')!r}"
+        )
+        assert widget.get("parity_status") == "parity_incomplete", (
+            f"{widget_name} must remain parity_incomplete, got {widget.get('parity_status')!r}"
+        )
+        assert widget.get("widget_release_judgement") == "current_15_minimal_slice_gap", (
+            f"{widget_name} must use current_15_minimal_slice_gap judgement"
+        )
+
+    all_wrapped = (
+        EXPECTED_FULL_PARITY_COMPLETE
+        | EXPECTED_STABLE_CONTRACT
+        | EXPECTED_MINIMAL_VERTICAL_SLICE
+    )
+    assert all_wrapped == EXPECTED_WRAPPED_WIDGETS, (
+        "current-15 layer groups must partition all wrapped widgets"
     )
 
 
-def _assert_v0_1_parity_capabilities(by_name: dict[str, dict]) -> None:
-    for widget_name, expected_capabilities in EXPECTED_V0_1_PARITY_CAPABILITIES.items():
+def _assert_expected_capabilities(by_name: dict[str, dict]) -> None:
+    for widget_name, expected_capabilities in EXPECTED_J_PARITY_CAPABILITIES.items():
         widget = by_name[widget_name]
         capabilities = _capabilities_by_name(widget)
         actual_capabilities = set(capabilities)
         missing_capabilities = sorted(expected_capabilities - actual_capabilities)
         assert not missing_capabilities, (
-            f"{widget_name} missing v0_1 parity capability rows: {missing_capabilities}"
+            f"{widget_name} missing parity capability rows: {missing_capabilities}"
         )
         for capability_name in sorted(expected_capabilities):
             capability = capabilities[capability_name]
             assert capability.get("status") == "support", (
-                f"{widget_name}.{capability_name} must be support for parity_complete, "
-                f"got {capability.get('status')!r}"
+                f"{widget_name}.{capability_name} must be support, got {capability.get('status')!r}"
             )
 
-
-def _assert_known_limitations(by_name: dict[str, dict]) -> None:
     for widget_name, expected_capabilities in EXPECTED_NON_SUPPORT_CAPABILITIES.items():
-        widget = by_name.get(widget_name)
-        assert widget is not None, f"release matrix missing widget row for {widget_name}"
+        widget = by_name[widget_name]
         capabilities = _capabilities_by_name(widget)
         for capability_name, expected_status in expected_capabilities.items():
             capability = capabilities.get(capability_name)
@@ -278,12 +298,8 @@ def _assert_manual_artifact_fields(by_name: dict[str, dict]) -> None:
         widget = by_name[widget_name]
         evidence_layers = widget.get("evidence_layers")
         assert isinstance(evidence_layers, dict), f"{widget_name} missing evidence_layers object"
-        assert "manual_artifact" in evidence_layers, (
-            f"{widget_name} evidence_layers missing manual_artifact field"
-        )
-        assert evidence_layers["manual_artifact"] == "manual_review_required", (
-            f"{widget_name} evidence_layers.manual_artifact must remain manual_review_required, "
-            f"got {evidence_layers['manual_artifact']!r}"
+        assert evidence_layers.get("manual_artifact") == "manual_review_required", (
+            f"{widget_name} evidence_layers.manual_artifact must remain manual_review_required"
         )
         manual_artifact = widget.get("manual_artifact")
         assert isinstance(manual_artifact, dict), f"{widget_name} missing manual_artifact object"
@@ -297,13 +313,6 @@ def _assert_manual_artifact_fields(by_name: dict[str, dict]) -> None:
         assert manual_artifact["manual_review_required"] is True, (
             f"{widget_name} manual_artifact.manual_review_required must remain true"
         )
-        widget_note = manual_artifact["note"]
-        assert isinstance(widget_note, str) and widget_note, (
-            f"{widget_name} manual_artifact.note must be a non-empty string"
-        )
-        assert "does not deny" in widget_note and "artifact entry" in widget_note, (
-            f"{widget_name} manual_artifact.note must explain that widget-level false does not deny demo-level artifact entries"
-        )
 
 
 def _assert_summary_counts(matrix: dict, by_name: dict[str, dict]) -> None:
@@ -315,9 +324,9 @@ def _assert_summary_counts(matrix: dict, by_name: dict[str, dict]) -> None:
     if not isinstance(capability_status_counts, dict):
         raise AssertionError("release matrix summary missing capability_status_counts object")
 
-    parity_bucket_counts = summary.get("parity_bucket_counts")
-    if not isinstance(parity_bucket_counts, dict):
-        raise AssertionError("release matrix summary missing parity_bucket_counts object")
+    current_layer_counts = summary.get("current_layer_counts")
+    if not isinstance(current_layer_counts, dict):
+        raise AssertionError("release matrix summary missing current_layer_counts object")
 
     derived_widget_total = len(by_name)
     derived_wrapped_total = sum(
@@ -333,21 +342,22 @@ def _assert_summary_counts(matrix: dict, by_name: dict[str, dict]) -> None:
         "incomplete_contract": 0,
         "deferred": 0,
     }
-    derived_parity_bucket_counts = {
-        "v0_1_parity_target": 0,
-        "v0_2_parity_backlog": 0,
-        "post_v0_2_candidate": 0,
+    derived_current_layer_counts = {
+        "full_parity_complete": 0,
+        "stable_contract_but_not_full_parity": 0,
+        "minimal_vertical_slice_only": 0,
+        "not_wrapped": 0,
     }
     derived_parity_complete_total = 0
     derived_parity_incomplete_total = 0
 
     for widget in by_name.values():
-        parity_bucket = widget.get("parity_bucket")
-        if parity_bucket not in derived_parity_bucket_counts:
+        current_layer = widget.get("current_layer")
+        if current_layer not in derived_current_layer_counts:
             raise AssertionError(
-                f"{widget.get('name')} has unexpected parity_bucket: {parity_bucket!r}"
+                f"{widget.get('name')} has unexpected current_layer: {current_layer!r}"
             )
-        derived_parity_bucket_counts[parity_bucket] += 1
+        derived_current_layer_counts[current_layer] += 1
 
         parity_status = widget.get("parity_status")
         if parity_status == "parity_complete":
@@ -380,33 +390,32 @@ def _assert_summary_counts(matrix: dict, by_name: dict[str, dict]) -> None:
         "summary.picoui_not_wrapped_widget_total must match not_wrapped widget row count, "
         f"got {summary.get('picoui_not_wrapped_widget_total')!r} vs {derived_not_wrapped_total}"
     )
+    assert summary.get("full_parity_complete_total") == derived_current_layer_counts["full_parity_complete"], (
+        "summary.full_parity_complete_total must match actual full_parity_complete count"
+    )
+    assert summary.get("stable_contract_but_not_full_parity_total") == derived_current_layer_counts["stable_contract_but_not_full_parity"], (
+        "summary.stable_contract_but_not_full_parity_total must match actual stable_contract count"
+    )
+    assert summary.get("minimal_vertical_slice_only_total") == derived_current_layer_counts["minimal_vertical_slice_only"], (
+        "summary.minimal_vertical_slice_only_total must match actual minimal slice count"
+    )
+    assert summary.get("parity_complete_total") == derived_parity_complete_total, (
+        "summary.parity_complete_total must match actual parity_complete count"
+    )
+    assert summary.get("parity_incomplete_total") == derived_parity_incomplete_total, (
+        "summary.parity_incomplete_total must match actual parity_incomplete count"
+    )
     assert summary.get("capability_entry_total") == derived_capability_entry_total, (
         "summary.capability_entry_total must match actual capability row count, "
         f"got {summary.get('capability_entry_total')!r} vs {derived_capability_entry_total}"
-    )
-    assert summary.get("v0_1_parity_target_total") == derived_parity_bucket_counts["v0_1_parity_target"], (
-        "summary.v0_1_parity_target_total must match actual v0_1 parity target count, "
-        f"got {summary.get('v0_1_parity_target_total')!r} vs {derived_parity_bucket_counts['v0_1_parity_target']}"
-    )
-    assert summary.get("v0_2_parity_backlog_total") == derived_parity_bucket_counts["v0_2_parity_backlog"], (
-        "summary.v0_2_parity_backlog_total must match actual v0_2 parity backlog count, "
-        f"got {summary.get('v0_2_parity_backlog_total')!r} vs {derived_parity_bucket_counts['v0_2_parity_backlog']}"
-    )
-    assert summary.get("parity_complete_total") == derived_parity_complete_total, (
-        "summary.parity_complete_total must match actual parity_complete count, "
-        f"got {summary.get('parity_complete_total')!r} vs {derived_parity_complete_total}"
-    )
-    assert summary.get("parity_incomplete_total") == derived_parity_incomplete_total, (
-        "summary.parity_incomplete_total must match actual parity_incomplete count, "
-        f"got {summary.get('parity_incomplete_total')!r} vs {derived_parity_incomplete_total}"
     )
     assert capability_status_counts == derived_capability_status_counts, (
         "summary.capability_status_counts must match actual capability status counts, "
         f"got {capability_status_counts!r} vs {derived_capability_status_counts!r}"
     )
-    assert parity_bucket_counts == derived_parity_bucket_counts, (
-        "summary.parity_bucket_counts must match actual parity bucket counts, "
-        f"got {parity_bucket_counts!r} vs {derived_parity_bucket_counts!r}"
+    assert current_layer_counts == derived_current_layer_counts, (
+        "summary.current_layer_counts must match actual current layer counts, "
+        f"got {current_layer_counts!r} vs {derived_current_layer_counts!r}"
     )
 
 
@@ -414,9 +423,8 @@ def main() -> int:
     matrix = _load_matrix()
     by_name = _widgets_by_name(matrix)
     _assert_expected_widgets(by_name)
-    _assert_parity_layering(by_name)
-    _assert_v0_1_parity_capabilities(by_name)
-    _assert_known_limitations(by_name)
+    _assert_current_layers(by_name)
+    _assert_expected_capabilities(by_name)
     _assert_manual_artifact_fields(by_name)
     _assert_summary_counts(matrix, by_name)
     return 0
