@@ -3,7 +3,9 @@
 #include "../../../src/gui/ldButton.h"
 #include "../../../src/gui/ldCheckBox.h"
 #include "../../../src/gui/ldImage.h"
+#include "../../../src/gui/ldKeyboard.h"
 #include "../../../src/gui/ldLabel.h"
+#include "../../../src/gui/ldLineEdit.h"
 #include "../../../src/gui/ldSlider.h"
 #include "../../../src/gui/ldSwitch.h"
 #include "../../../src/gui/ldText.h"
@@ -20,6 +22,8 @@ static int checkbox_toggled_value = -1;
 static int slider_value_count = 0;
 static int slider_value = -1;
 static int button_clicked = -1;
+static int button_pressed_count = 0;
+static int button_released_count = 0;
 
 struct test_text_box_prefix_view {
     text_box_cfg_t tCFG;
@@ -105,6 +109,322 @@ static void on_button_clicked(struct picoui_widget *widget, void *user_data)
 {
     (void)widget;
     button_clicked = user_data != 0 ? *(const int *)user_data : 0;
+}
+
+static void on_button_pressed(struct picoui_widget *widget, void *user_data)
+{
+    (void)widget;
+    (void)user_data;
+    button_pressed_count++;
+}
+
+static void on_button_released(struct picoui_widget *widget, void *user_data)
+{
+    (void)widget;
+    (void)user_data;
+    button_released_count++;
+}
+
+static void test_focus_owner_switches_between_widgets(struct picoui_app *app,
+                                                      struct picoui_button *button,
+                                                      struct picoui_switch *sw,
+                                                      struct picoui_checkbox *cb,
+                                                      struct picoui_slider *slider,
+                                                      struct ld_scene_t *scene)
+{
+    int button_enter_before;
+    int button_leave_before;
+    int button_change_before;
+    int switch_enter_before;
+    int switch_leave_before;
+    int switch_change_before;
+    int checkbox_enter_before;
+    int checkbox_leave_before;
+    int checkbox_change_before;
+    int slider_enter_before;
+    int slider_leave_before;
+    int slider_change_before;
+    struct picoui_backend_widget *sw_backend;
+    struct picoui_backend_widget *cb_backend;
+    struct picoui_backend_widget *slider_backend;
+
+    assert(app != 0);
+    assert(button != 0);
+    assert(sw != 0);
+    assert(cb != 0);
+    assert(slider != 0);
+    assert(scene != 0);
+    assert(scene->ptMsgQueue != 0);
+    assert(button->widget.backend_widget != 0);
+    assert(sw->widget.backend_widget != 0);
+    assert(cb->widget.backend_widget != 0);
+    assert(slider->widget.backend_widget != 0);
+    if (app->focus_owner != 0) {
+        assert(picoui_widget_release_focus(app->focus_owner) == 0);
+    }
+    sw_backend = (struct picoui_backend_widget *)sw->widget.backend_widget;
+    cb_backend = (struct picoui_backend_widget *)cb->widget.backend_widget;
+    slider_backend = (struct picoui_backend_widget *)slider->widget.backend_widget;
+
+    button_enter_before = button->widget.focus_enter_count;
+    button_leave_before = button->widget.focus_leave_count;
+    button_change_before = button->widget.focus_change_count;
+    switch_enter_before = sw->widget.focus_enter_count;
+    switch_leave_before = sw->widget.focus_leave_count;
+    switch_change_before = sw->widget.focus_change_count;
+    checkbox_enter_before = cb->widget.focus_enter_count;
+    checkbox_leave_before = cb->widget.focus_leave_count;
+    checkbox_change_before = cb->widget.focus_change_count;
+    slider_enter_before = slider->widget.focus_enter_count;
+    slider_leave_before = slider->widget.focus_leave_count;
+    slider_change_before = slider->widget.focus_change_count;
+
+    button_pressed_count = 0;
+    button_released_count = 0;
+    assert(picoui_button_set_on_pressed(button, on_button_pressed, 0) == 0);
+
+    assert(app->focus_owner == 0);
+    assert(picoui_backend_widget_dispatch_native_signal(button->widget.backend_widget, SIGNAL_PRESS, 0) == 0);
+    assert(app->focus_owner == &button->widget);
+    assert(button->widget.has_focus == 1);
+    assert(button->widget.focus_enter_count == button_enter_before + 1);
+    assert(button->widget.focus_leave_count == button_leave_before);
+    assert(button->widget.focus_change_count == button_change_before + 1);
+    assert(button->widget.last_focus_event == PICOUI_FOCUS_EVENT_ENTER);
+    assert(button_pressed_count == 1);
+
+    assert(ldMsgEmit(scene->ptMsgQueue, sw_backend->ld_widget, SIGNAL_VALUE_CHANGED, 1) == true);
+    ldMsgProcess(scene);
+    assert(app->focus_owner == &sw->widget);
+    assert(button->widget.has_focus == 0);
+    assert(button->widget.focus_enter_count == button_enter_before + 1);
+    assert(button->widget.focus_leave_count == button_leave_before + 1);
+    assert(button->widget.focus_change_count == button_change_before + 2);
+    assert(sw->widget.has_focus == 1);
+    assert(sw->widget.focus_enter_count == switch_enter_before + 1);
+    assert(sw->widget.focus_leave_count == switch_leave_before);
+    assert(sw->widget.focus_change_count == switch_change_before + 1);
+    assert(sw->widget.last_focus_event == PICOUI_FOCUS_EVENT_ENTER);
+
+    assert(ldMsgEmit(scene->ptMsgQueue, cb_backend->ld_widget, SIGNAL_VALUE_CHANGED, 0) == true);
+    ldMsgProcess(scene);
+    assert(app->focus_owner == &cb->widget);
+    assert(sw->widget.has_focus == 0);
+    assert(sw->widget.focus_enter_count == switch_enter_before + 1);
+    assert(sw->widget.focus_leave_count == switch_leave_before + 1);
+    assert(sw->widget.focus_change_count == switch_change_before + 2);
+    assert(cb->widget.has_focus == 1);
+    assert(cb->widget.focus_enter_count == checkbox_enter_before + 1);
+    assert(cb->widget.focus_leave_count == checkbox_leave_before);
+    assert(cb->widget.focus_change_count == checkbox_change_before + 1);
+    assert(cb->widget.last_focus_event == PICOUI_FOCUS_EVENT_ENTER);
+
+    assert(ldMsgEmit(scene->ptMsgQueue, slider_backend->ld_widget, SIGNAL_VALUE_CHANGED, 625) == true);
+    ldMsgProcess(scene);
+    assert(app->focus_owner == &slider->widget);
+    assert(cb->widget.has_focus == 0);
+    assert(cb->widget.focus_enter_count == checkbox_enter_before + 1);
+    assert(cb->widget.focus_leave_count == checkbox_leave_before + 1);
+    assert(cb->widget.focus_change_count == checkbox_change_before + 2);
+    assert(cb->widget.last_focus_event == PICOUI_FOCUS_EVENT_LEAVE);
+    assert(slider->widget.has_focus == 1);
+    assert(slider->widget.focus_enter_count == slider_enter_before + 1);
+    assert(slider->widget.focus_leave_count == slider_leave_before);
+    assert(slider->widget.focus_change_count == slider_change_before + 1);
+    assert(slider->widget.last_focus_event == PICOUI_FOCUS_EVENT_ENTER);
+}
+
+static void test_hidden_or_disabled_widget_cannot_keep_focus(struct picoui_app *app,
+                                                             struct picoui_button *button)
+{
+    struct picoui_backend_widget *backend;
+    int focus_enter_before;
+    int focus_leave_before;
+
+    assert(app != 0);
+    assert(button != 0);
+
+    backend = (struct picoui_backend_widget *)button->widget.backend_widget;
+    assert(backend != 0);
+    if (app->focus_owner != 0) {
+        assert(picoui_widget_release_focus(app->focus_owner) == 0);
+    }
+
+    focus_enter_before = button->widget.focus_enter_count;
+    focus_leave_before = button->widget.focus_leave_count;
+
+    assert(picoui_backend_widget_dispatch_native_signal(backend, SIGNAL_PRESS, 0) == 0);
+    assert(app->focus_owner == &button->widget);
+    assert(button->widget.has_focus == 1);
+    assert(button->widget.focus_enter_count == focus_enter_before + 1);
+    assert(button->widget.focus_leave_count == focus_leave_before);
+
+    assert(picoui_widget_set_visible(&button->widget, 0) == 0);
+    assert(app->focus_owner == 0);
+    assert(button->widget.has_focus == 0);
+    assert(button->widget.focus_leave_count == focus_leave_before + 1);
+    assert(button->widget.last_focus_event == PICOUI_FOCUS_EVENT_LEAVE);
+
+    assert(picoui_widget_set_visible(&button->widget, 1) == 0);
+    assert(picoui_backend_widget_dispatch_native_signal(backend, SIGNAL_PRESS, 0) == 0);
+    assert(app->focus_owner == &button->widget);
+    assert(button->widget.has_focus == 1);
+    assert(button->widget.focus_enter_count == focus_enter_before + 2);
+    assert(button->widget.focus_leave_count == focus_leave_before + 1);
+
+    assert(picoui_widget_set_enabled(&button->widget, 0) == 0);
+    assert(app->focus_owner == 0);
+    assert(button->widget.has_focus == 0);
+    assert(button->widget.focus_leave_count == focus_leave_before + 2);
+    assert(button->widget.last_focus_event == PICOUI_FOCUS_EVENT_LEAVE);
+    assert(picoui_backend_widget_dispatch_native_signal(backend, SIGNAL_PRESS, 0) == 0);
+    assert(app->focus_owner == 0);
+    assert(button->widget.has_focus == 0);
+    assert(button->widget.focus_enter_count == focus_enter_before + 2);
+}
+
+static void test_model_readback_policy_is_explicit_for_data_widgets(struct picoui_switch *sw,
+                                                                    struct picoui_checkbox *cb,
+                                                                    struct picoui_slider *slider)
+{
+    struct picoui_backend_widget *sw_backend;
+    struct picoui_backend_widget *cb_backend;
+    struct picoui_backend_widget *slider_backend;
+
+    assert(sw != 0);
+    assert(cb != 0);
+    assert(slider != 0);
+
+    sw_backend = (struct picoui_backend_widget *)sw->widget.backend_widget;
+    cb_backend = (struct picoui_backend_widget *)cb->widget.backend_widget;
+    slider_backend = (struct picoui_backend_widget *)slider->widget.backend_widget;
+    assert(sw_backend != 0);
+    assert(cb_backend != 0);
+    assert(slider_backend != 0);
+
+    assert(sw_backend->data_truth_policy == PICOUI_BACKEND_DATA_TRUTH_BACKEND_VALUE);
+    assert(cb_backend->data_truth_policy == PICOUI_BACKEND_DATA_TRUTH_BACKEND_VALUE);
+    assert(slider_backend->data_truth_policy == PICOUI_BACKEND_DATA_TRUTH_BACKEND_VALUE);
+}
+
+static void test_item_model_identity_survives_frame_update(struct picoui_switch *sw,
+                                                           struct picoui_checkbox *cb,
+                                                           struct picoui_slider *slider,
+                                                           struct ld_scene_t *scene)
+{
+    struct picoui_backend_widget *sw_backend;
+    struct picoui_backend_widget *cb_backend;
+    struct picoui_backend_widget *slider_backend;
+    unsigned int sw_identity_before;
+    unsigned int cb_identity_before;
+    unsigned int slider_identity_before;
+
+    assert(sw != 0);
+    assert(cb != 0);
+    assert(slider != 0);
+    assert(scene != 0);
+    assert(scene->ptMsgQueue != 0);
+
+    sw_backend = (struct picoui_backend_widget *)sw->widget.backend_widget;
+    cb_backend = (struct picoui_backend_widget *)cb->widget.backend_widget;
+    slider_backend = (struct picoui_backend_widget *)slider->widget.backend_widget;
+    assert(sw_backend != 0);
+    assert(cb_backend != 0);
+    assert(slider_backend != 0);
+
+    assert(sw_backend->data_model_identity != 0);
+    assert(cb_backend->data_model_identity != 0);
+    assert(slider_backend->data_model_identity != 0);
+    assert(sw_backend->data_model_identity != cb_backend->data_model_identity);
+    assert(sw_backend->data_model_identity != slider_backend->data_model_identity);
+    assert(cb_backend->data_model_identity != slider_backend->data_model_identity);
+
+    sw_identity_before = sw_backend->data_model_identity;
+    cb_identity_before = cb_backend->data_model_identity;
+    slider_identity_before = slider_backend->data_model_identity;
+
+    assert(picoui_switch_set_checked(sw, 0) == 0);
+    assert(sw_backend->last_data_source == PICOUI_BACKEND_DATA_SOURCE_SETTER);
+    assert(sw_backend->data_model_epoch > 0);
+
+    assert(ldMsgEmit(scene->ptMsgQueue, sw_backend->ld_widget, SIGNAL_VALUE_CHANGED, 1) == true);
+    ldMsgProcess(scene);
+    assert(sw_backend->last_data_source == PICOUI_BACKEND_DATA_SOURCE_NATIVE_EVENT);
+    assert(sw_backend->data_model_identity == sw_identity_before);
+
+    assert(picoui_checkbox_set_checked(cb, 1) == 0);
+    assert(cb_backend->last_data_source == PICOUI_BACKEND_DATA_SOURCE_SETTER);
+    assert(cb_backend->data_model_epoch > 0);
+    assert(cb_backend->data_model_identity == cb_identity_before);
+
+    assert(picoui_slider_set_value(slider, 28) == 0);
+    assert(slider_backend->last_data_source == PICOUI_BACKEND_DATA_SOURCE_SETTER);
+    assert(slider_backend->data_model_epoch > 0);
+    assert(slider_backend->data_model_identity == slider_identity_before);
+
+    assert(ldMsgEmit(scene->ptMsgQueue, slider_backend->ld_widget, SIGNAL_VALUE_CHANGED, 350) == true);
+    ldMsgProcess(scene);
+    assert(slider_backend->last_data_source == PICOUI_BACKEND_DATA_SOURCE_NATIVE_EVENT);
+    assert(slider_backend->data_model_identity == slider_identity_before);
+}
+
+static void test_native_duplicate_value_does_not_advance_data_model(struct picoui_switch *sw,
+                                                                    struct picoui_checkbox *cb,
+                                                                    struct picoui_slider *slider,
+                                                                    struct ld_scene_t *scene)
+{
+    struct picoui_backend_widget *sw_backend;
+    struct picoui_backend_widget *cb_backend;
+    struct picoui_backend_widget *slider_backend;
+    unsigned int sw_epoch_before;
+    unsigned int cb_epoch_before;
+    unsigned int slider_epoch_before;
+    int sw_dispatch_before;
+    int cb_dispatch_before;
+    int slider_dispatch_before;
+
+    assert(sw != 0);
+    assert(cb != 0);
+    assert(slider != 0);
+    assert(scene != 0);
+    assert(scene->ptMsgQueue != 0);
+
+    sw_backend = (struct picoui_backend_widget *)sw->widget.backend_widget;
+    cb_backend = (struct picoui_backend_widget *)cb->widget.backend_widget;
+    slider_backend = (struct picoui_backend_widget *)slider->widget.backend_widget;
+    assert(sw_backend != 0);
+    assert(cb_backend != 0);
+    assert(slider_backend != 0);
+
+    switch_toggled_count = 0;
+    checkbox_toggled_count = 0;
+    slider_value_count = 0;
+
+    assert(picoui_switch_set_checked(sw, 1) == 0);
+    assert(picoui_checkbox_set_checked(cb, 0) == 0);
+    assert(picoui_slider_set_value(slider, 35) == 0);
+
+    sw_epoch_before = sw_backend->data_model_epoch;
+    cb_epoch_before = cb_backend->data_model_epoch;
+    slider_epoch_before = slider_backend->data_model_epoch;
+    sw_dispatch_before = sw_backend->dispatch_count;
+    cb_dispatch_before = cb_backend->dispatch_count;
+    slider_dispatch_before = slider_backend->dispatch_count;
+
+    assert(ldMsgEmit(scene->ptMsgQueue, sw_backend->ld_widget, SIGNAL_VALUE_CHANGED, 1) == true);
+    assert(ldMsgEmit(scene->ptMsgQueue, cb_backend->ld_widget, SIGNAL_VALUE_CHANGED, 0) == true);
+    assert(ldMsgEmit(scene->ptMsgQueue, slider_backend->ld_widget, SIGNAL_VALUE_CHANGED, 375) == true);
+    ldMsgProcess(scene);
+
+    assert(sw_backend->data_model_epoch == sw_epoch_before);
+    assert(cb_backend->data_model_epoch == cb_epoch_before);
+    assert(slider_backend->data_model_epoch == slider_epoch_before);
+    assert(sw_backend->dispatch_count == sw_dispatch_before);
+    assert(cb_backend->dispatch_count == cb_dispatch_before);
+    assert(slider_backend->dispatch_count == slider_dispatch_before);
+    assert(switch_toggled_count == 0);
+    assert(checkbox_toggled_count == 0);
+    assert(slider_value_count == 0);
 }
 
 static void test_slider_j5_contract(struct picoui_slider *slider,
@@ -1321,9 +1641,9 @@ int main(void)
 {
     arm_2d_tile_t image_tile = {0};
     arm_2d_tile_t image_mask_tile = {0};
-    struct picoui_app *app = picoui_app_create();
-    struct picoui_theme *theme = picoui_theme_create();
-    struct picoui_window *win = picoui_window_create(app, "root");
+    struct picoui_app *app;
+    struct picoui_theme *theme;
+    struct picoui_window *win;
     struct picoui_switch_props sw_props = {
         .id = "wifi",
         .checked = 1,
@@ -1397,6 +1717,10 @@ int main(void)
     struct picoui_backend_app_state *app_state;
     int button_cookie = 7;
     int common_cookie = 9;
+
+    app = picoui_app_create();
+    theme = picoui_theme_create();
+    win = picoui_window_create(app, "root");
 
     sw = picoui_switch_create_with_props(win, &sw_props);
     cb = picoui_checkbox_create_with_props(win, &cb_props);
@@ -1561,6 +1885,11 @@ int main(void)
     assert(picoui_image_set_source(image, &image_source) == 0);
     assert_image_has_bound_source(image, &image_source);
     test_slider_j5_contract(slider, &button_release_source, &button_press_source);
+    test_focus_owner_switches_between_widgets(app, button, sw, cb, slider, app_state->ld_scene);
+    test_hidden_or_disabled_widget_cannot_keep_focus(app, button);
+    test_model_readback_policy_is_explicit_for_data_widgets(sw, cb, slider);
+    test_item_model_identity_survives_frame_update(sw, cb, slider, app_state->ld_scene);
+    test_native_duplicate_value_does_not_advance_data_model(sw, cb, slider, app_state->ld_scene);
 
     ldMsgDeinit(&app_state->ld_scene->ptMsgQueue);
     picoui_theme_destroy(theme);

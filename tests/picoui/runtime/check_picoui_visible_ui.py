@@ -25,6 +25,12 @@ DEMOS = {
     "message_box_basic": "picoui_message_box_basic_demo",
     "date_time_basic": "picoui_date_time_basic_demo",
     "clock_basic": "picoui_clock_basic_demo",
+    "line_edit_basic": "picoui_line_edit_basic_demo",
+    "combo_box_basic": "picoui_combo_box_basic_demo",
+    "scroll_selecter_basic": "picoui_scroll_selecter_basic_demo",
+    "table_basic": "picoui_table_basic_demo",
+    "graph_basic": "picoui_graph_basic_demo",
+    "calendar_basic": "picoui_calendar_basic_demo",
 }
 THEME_BG = (0xF6, 0xF8, 0xFA)
 WHITE_BG = (0xFF, 0xFF, 0xFF)
@@ -1030,6 +1036,98 @@ def _assert_clock_basic_visible(path: Path) -> None:
         )
 
 
+def _assert_calendar_basic_visible(path: Path) -> None:
+    width, height, pixels = _read_ppm(path)
+    bg = _background_color(width, height, pixels)
+    bounds = _non_background_bounds(width, height, pixels, bg)
+    failures: list[str] = []
+    active_rows: list[int] = []
+    dense_rows: list[int] = []
+
+    if width != 480 or height != 320:
+        raise AssertionError(f"VISIBLE FAIL: unexpected calendar_basic capture size: {width}x{height}")
+    if bounds is None:
+        raise AssertionError("SMOKE FAIL: capture has no non-background pixels")
+
+    min_x, min_y, max_x, max_y = bounds
+    visible_width = max_x - min_x + 1
+    visible_height = max_y - min_y + 1
+
+    if _color_distance(bg, THEME_BG) > 24:
+        failures.append(
+            "calendar color/readback check failed: "
+            f"background={bg}, expected near theme bg={THEME_BG}"
+        )
+    if visible_width < 220 or visible_height < 140:
+        failures.append(
+            "calendar coverage failed: "
+            f"content_bounds=({min_x},{min_y})-({max_x},{max_y}), expected at least 220x140"
+        )
+
+    for y in range(min_y, max_y + 1):
+        active = 0
+        for x in range(min_x, max_x + 1):
+            if not _is_background(_pixel(width, pixels, x, y), bg):
+                active += 1
+        if active >= 14:
+            active_rows.append(y)
+        if active >= 70:
+            dense_rows.append(y)
+
+    row_runs = _runs(active_rows)
+    dense_row_runs = _runs(dense_rows)
+    if not dense_row_runs:
+        failures.append(
+            "calendar header text-band failed: "
+            f"dense_row_runs={dense_row_runs}, expected a visible header text band"
+        )
+    if len(row_runs) < 6:
+        failures.append(
+            "calendar row-band structure failed: "
+            f"row_runs={row_runs}, expected at least six visible row bands"
+        )
+
+    if len(row_runs) >= 2:
+        weekday_y0, weekday_y1 = row_runs[1]
+        date_y0 = row_runs[2][0] if len(row_runs) >= 3 else min(max_y, weekday_y1 + 8)
+        date_y1 = row_runs[-2][1] if len(row_runs) >= 4 else min(max_y, date_y0 + 96)
+        span = max_x - min_x + 1
+        weekday_bins = []
+        date_bins = []
+        for index in range(7):
+            x0 = min_x + (span * index) // 7
+            x1 = min_x + (span * (index + 1)) // 7 - 1
+            weekday_count = 0
+            date_count = 0
+            for y in range(weekday_y0, weekday_y1 + 1):
+                for x in range(x0, x1 + 1):
+                    if not _is_background(_pixel(width, pixels, x, y), bg):
+                        weekday_count += 1
+            for y in range(date_y0, date_y1 + 1):
+                for x in range(x0, x1 + 1):
+                    if not _is_background(_pixel(width, pixels, x, y), bg):
+                        date_count += 1
+            weekday_bins.append((x0, x1, weekday_count))
+            date_bins.append((x0, x1, date_count))
+        if sum(1 for _, _, count in weekday_bins if count >= 8) < 7:
+            failures.append(
+                "calendar weekday-grid failed: "
+                f"weekday_bins={weekday_bins}, expected seven weekday buckets with visible text"
+            )
+        if sum(1 for _, _, count in date_bins if count >= 24) < 7:
+            failures.append(
+                "calendar date-grid failed: "
+                f"date_bins={date_bins}, expected seven date buckets with visible content"
+            )
+
+    if failures:
+        joined = "\n  - ".join(failures)
+        raise AssertionError(
+            "VISIBLE FAIL: calendar_basic capture is non-empty, but calendar header/date grid structure is not established.\n"
+            f"  - {joined}"
+        )
+
+
 def _find_executable(target: str) -> Path:
     candidates = [
         BUILD / "examples" / "sdl" / target,
@@ -1065,6 +1163,17 @@ def _assert_no_unexpected_fallback(demo: str, stdout: str) -> None:
         return
     raise AssertionError(
         f"VISIBLE FAIL: {demo} still uses backend fallback widgets.\n"
+        f"stdout:\n{stdout}"
+    )
+
+
+def _assert_temporary_smoke_path_honesty(demo: str, stdout: str) -> None:
+    expected = "PICOUI_BACKEND_TEMPORARY_SMOKE_PATH=EXCLUDED_FORMAL_MAPPING"
+    if expected in stdout:
+        return
+    raise AssertionError(
+        f"VISIBLE FAIL: {demo} no longer reports its temporary smoke-path honesty marker.\n"
+        f"expected marker: {expected}\n"
         f"stdout:\n{stdout}"
     )
 
@@ -1130,10 +1239,15 @@ def main() -> None:
                 _assert_qrcode_basic_visible(capture_path)
             elif demo == "message_box_basic":
                 _assert_message_box_basic_visible(capture_path)
+                _assert_temporary_smoke_path_honesty(demo, completed.stdout)
             elif demo == "date_time_basic":
                 _assert_date_time_basic_visible(capture_path)
             elif demo == "clock_basic":
                 _assert_clock_basic_visible(capture_path)
+            elif demo == "calendar_basic":
+                _assert_calendar_basic_visible(capture_path)
+            elif demo == "line_edit_basic":
+                _assert_common_visible(capture_path, demo)
             elif demo == "layout_flex":
                 _assert_layout_flex_visible(capture_path)
             elif demo == "layout_grid":

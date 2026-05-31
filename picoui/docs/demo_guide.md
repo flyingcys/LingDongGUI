@@ -18,9 +18,13 @@
  - `picoui_progress_bar_basic_demo`
  - `picoui_progress_wheel_basic_demo`
  - `picoui_qrcode_basic_demo`
- - `picoui_message_box_basic_demo`
- - `picoui_date_time_basic_demo`
- - `picoui_clock_basic_demo`
+- `picoui_message_box_basic_demo`
+- `picoui_date_time_basic_demo`
+- `picoui_clock_basic_demo`
+- `picoui_keyboard_basic_demo`
+- `picoui_line_edit_basic_demo`
+- `picoui_combo_box_basic_demo`
+- `picoui_scroll_selecter_basic_demo`
 
 ## 二、依赖环境
 
@@ -211,6 +215,137 @@ build\picoui-runtime\examples\sdl\picoui_hello_world_demo.exe
 - manual artifact gate 仍按 `C线` 证据层级单独记录；不能由 `runtime smoke`、`backend mapping gate` 或 `automatic visible gate` 代替
 - 该 demo 不证明更细粒度 item 行为或更高阶交互模式
 - widget-level `user_data` 与 `on_selected(..., user_data)` callback cookie 是两套语义，不应混写成同一合同
+
+### `picoui/demo/line_edit_basic`
+
+`a-0.4` editable text contract 示例。包含：
+
+- `line_edit`
+
+适合用途：
+
+- 看 `picoui_line_edit` 的 public API 与 props
+- 看 text/type/keyboard binding/readback 如何走真实 `ldLineEdit`
+
+当前口径：
+
+- `line_edit` 已走真实 backend mapping
+- public getter 以 backend truth/readback 为准
+- 当前只承诺 `editing/finished boundary`，不承诺 `submit/cancel reason`
+
+### `picoui/demo/keyboard_basic`
+
+`a-0.4` keyboard bridge 示例。包含：
+
+- `keyboard`
+- `line_edit`
+
+适合用途：
+
+- 看 keyboard bridge 如何把输入发给 focus/editing owner
+- 看 keyboard runtime gate 如何证明 bridge 已接通
+
+当前口径：
+
+- `keyboard` 已进入 PicoUI public widget 集
+- `keyboard_basic` 主要由 runtime gate 证明 bridge/ownership 路径，不承担 visible correctness gate
+- 该 demo 不证明完整视觉/theme parity
+
+### `picoui/demo/combo_box_basic`
+
+`a-0.4` dropdown contract 示例。包含：
+
+- `label`
+- `combo_box`
+
+适合用途：
+
+- 看 `picoui_combo_box` 的 item/selected/open-close API
+- 看 dropdown contract 如何落到真实 `ldComboBox`
+
+当前口径：
+
+- `combo_box` 已走真实 backend mapping，不再记为 fallback widget
+- `selected item` getter 以 backend truth/readback 为准
+- `automatic visible gate` 已覆盖 `combo_box_basic`
+- 该 demo 不证明完整 theme/skin parity
+
+### `picoui/demo/scroll_selecter_basic`
+
+`a-0.4` selection/edit-mode 示例。包含：
+
+- `label`
+- `scroll_selecter`
+
+适合用途：
+
+- 看 `picoui_scroll_selecter` 的 item/selected/edit-mode API
+- 看 `ldScrollSelecter` 的真实 backend mapping
+
+当前口径：
+
+- `scroll_selecter` 已走真实 backend mapping
+- selected item getter 以 backend truth/readback 为准
+- `edit mode` 与 `navigation mode` 已有最小合同边界
+- `automatic visible gate` 已覆盖 `scroll_selecter_basic`
+
+### `picoui/demo/table_basic`
+
+`a-0.5` data-model 首控件示例。包含：
+
+- `table`
+
+适合用途：
+
+- 看 `picoui_table` 的 rows/columns/current cell/cell text API
+- 看 editable cell contract 如何复用 `a-0.4` 的 line_edit/keyboard shared-core
+
+当前口径：
+
+- `table` 已走真实 backend mapping
+- current row/column 与 cell text getter 以 backend truth/readback 为准
+- editable cell 的 commit 边界复用 shared edit model，不靠 demo 私有状态
+- `automatic visible gate` 已覆盖 `table_basic`
+- 该 demo 不证明完整表格主题、复杂编辑器类型或更高阶交互
+
+### `picoui/demo/graph_basic`
+
+`a-0.5` series/value model 示例。包含：
+
+- `label`
+- `graph`
+
+适合用途：
+
+- 看 `picoui_graph` 的 series/value/move_add API
+- 看 `ldGraph` 的真实 backend mapping 与 readback 合同
+
+当前口径：
+
+- `graph` 已走真实 backend mapping
+- series count 与 value getter 以 backend truth/readback 为准
+- `move_add` 的移位语义已进入 unit 合同
+- `automatic visible gate` 已覆盖 `graph_basic`
+- 该 demo 不证明完整图表皮肤、轴格式化或高级资源系统
+
+### `picoui/demo/calendar_basic`
+
+`a-0.5` date/header/grid contract 示例。包含：
+
+- `label`
+- `calendar`
+
+适合用途：
+
+- 看 `picoui_calendar` 的 date/header/grid API
+- 看 `ldCalendar` 的真实 backend mapping 与 grid readback 合同
+
+当前口径：
+
+- `calendar` 已走真实 backend mapping
+- date/header visible/header format/grid value/current-month flag 都以 backend truth/readback 为准
+- `automatic visible gate` 证明 header、weekday 行和 date grid 在 dummy SDL + PPM readback 下可判定
+- 该 demo 不证明完整日历主题、国际化 weekday/month 文案或高级交互能力
 
 ### `picoui/demo/progress_bar_basic`
 

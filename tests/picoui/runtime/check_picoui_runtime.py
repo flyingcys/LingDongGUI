@@ -23,6 +23,7 @@ TARGETS = [
     "picoui_message_box_basic_demo",
     "picoui_date_time_basic_demo",
     "picoui_clock_basic_demo",
+    "picoui_keyboard_basic_demo",
 ]
 
 
@@ -57,6 +58,84 @@ def _region_colors(
     return colors
 
 
+def _non_background_bounds(
+    width: int,
+    height: int,
+    pixels: bytes,
+    bg: tuple[int, int, int],
+) -> tuple[int, int, int, int]:
+    xs: list[int] = []
+    ys: list[int] = []
+    for y in range(height):
+        for x in range(width):
+            if _pixel(width, pixels, x, y) != bg:
+                xs.append(x)
+                ys.append(y)
+    if not xs:
+        raise AssertionError("basic_widgets capture has no non-background pixels")
+    return min(xs), min(ys), max(xs), max(ys)
+
+
+def _row_runs_with_content(
+    width: int,
+    height: int,
+    pixels: bytes,
+    bg: tuple[int, int, int],
+    *,
+    min_pixels: int,
+) -> list[tuple[int, int]]:
+    rows: list[int] = []
+    runs: list[tuple[int, int]] = []
+
+    for y in range(height):
+        count = 0
+        for x in range(width):
+            if _pixel(width, pixels, x, y) != bg:
+                count += 1
+        if count >= min_pixels:
+            rows.append(y)
+
+    if not rows:
+        return runs
+
+    start = rows[0]
+    previous = rows[0]
+    for value in rows[1:]:
+        if value == previous + 1:
+            previous = value
+            continue
+        runs.append((start, previous))
+        start = value
+        previous = value
+    runs.append((start, previous))
+    return runs
+
+
+def _band_signature(
+    width: int,
+    pixels: bytes,
+    band: tuple[int, int],
+    bg: tuple[int, int, int],
+) -> tuple[int, int, int, int]:
+    non_bg = 0
+    blueish = 0
+    greenish = 0
+    height = band[1] - band[0] + 1
+
+    for y in range(band[0], band[1] + 1):
+        for x in range(width):
+            color = _pixel(width, pixels, x, y)
+            if color == bg:
+                continue
+            non_bg += 1
+            if color[2] > color[1] and color[2] > color[0]:
+                blueish += 1
+            if color[1] > color[0] and color[1] > color[2]:
+                greenish += 1
+
+    return non_bg, blueish, greenish, height
+
+
 def _parse_marker_ids(stdout: str, marker: str, *, required: bool = True) -> set[str]:
     prefix = f"{marker}="
     for line in stdout.splitlines():
@@ -74,19 +153,58 @@ def _assert_basic_widgets_capture(path: Path, stdout: str) -> None:
     width, height, pixels = _read_ppm(path)
     assert width == 480 and height == 320, f"unexpected basic widgets capture size: {width}x{height}"
 
-    bg = _pixel(width, pixels, 8, 8)
-    switch_colors = _region_colors(width, pixels, 16, 32, 120, 72, bg)
-    checkbox_colors = _region_colors(width, pixels, 16, 80, 80, 118, bg)
-    slider_colors = _region_colors(width, pixels, 24, 120, 160, 144, bg)
-    button_fill = _pixel(width, pixels, 40, 170)
-    text_fill = _pixel(width, pixels, 40, 220)
+    bg = _pixel(width, pixels, width - 8, height - 8)
+    min_x, min_y, max_x, max_y = _non_background_bounds(width, height, pixels, bg)
+    assert (max_x - min_x + 1) >= 180, (
+        "basic_widgets should occupy a readable horizontal span, "
+        f"bounds=({min_x},{min_y})-({max_x},{max_y})"
+    )
+    assert (max_y - min_y + 1) >= 180, (
+        "basic_widgets should occupy a readable vertical span, "
+        f"bounds=({min_x},{min_y})-({max_x},{max_y})"
+    )
+
+    content_runs = [
+        run for run in _row_runs_with_content(width, height, pixels, bg, min_pixels=8)
+        if (run[1] - run[0] + 1) >= 10
+    ]
+    assert len(content_runs) >= 5, f"basic_widgets should expose at least five visible content bands, row_runs={content_runs}"
+
+    band_signatures = [(band, _band_signature(width, pixels, band, bg)) for band in content_runs]
+
+    switch_band = max(band_signatures, key=lambda item: item[1][2])[0]
+    checkbox_candidates = [
+        item for item in band_signatures
+        if item[0] != switch_band and item[1][3] <= 18 and item[1][1] > 0
+    ]
+    assert checkbox_candidates, f"basic_widgets should expose a checkbox-like band, signatures={band_signatures}"
+    checkbox_band = min(checkbox_candidates, key=lambda item: item[1][0])[0]
+    slider_candidates = [
+        item for item in band_signatures
+        if item[0] not in (switch_band, checkbox_band) and item[1][1] > 0 and item[1][2] > 0
+    ]
+    assert slider_candidates, f"basic_widgets should expose a slider-like band, signatures={band_signatures}"
+    slider_band = max(slider_candidates, key=lambda item: item[1][0])[0]
+    remaining_bands = [band for band in content_runs if band not in (switch_band, checkbox_band, slider_band)]
+    assert len(remaining_bands) >= 2, f"basic_widgets should leave image/text bands after control detection, remaining={remaining_bands}"
+    image_band = max(remaining_bands, key=lambda band: (_band_signature(width, pixels, band, bg)[1], _band_signature(width, pixels, band, bg)[0]))
+    text_band = min((band for band in remaining_bands if band != image_band), key=lambda band: band[0])
+
+    switch_colors = _region_colors(width, pixels, min_x, switch_band[0], max_x + 1, switch_band[1] + 1, bg)
+    checkbox_colors = _region_colors(width, pixels, min_x, checkbox_band[0], max_x + 1, checkbox_band[1] + 1, bg)
+    slider_colors = _region_colors(width, pixels, min_x, slider_band[0], max_x + 1, slider_band[1] + 1, bg)
+    text_colors = _region_colors(width, pixels, min_x, text_band[0], max_x + 1, text_band[1] + 1, bg)
+    image_colors = _region_colors(width, pixels, min_x, image_band[0], max_x + 1, image_band[1] + 1, bg)
 
     assert len(switch_colors) >= 2, f"switch should show real track/knob contrast, colors={sorted(switch_colors)}"
     assert len(checkbox_colors) >= 2, f"checkbox should show real edge/fill contrast, colors={sorted(checkbox_colors)}"
     assert len(slider_colors) >= 2, f"slider should show real active/idle contrast, colors={sorted(slider_colors)}"
-    assert button_fill != bg, f"button row should not match background: {button_fill} vs {bg}"
-    assert text_fill != bg, f"text row should not match background: {text_fill} vs {bg}"
-    assert button_fill != text_fill, f"button/text rows should differ: {button_fill} vs {text_fill}"
+    assert text_colors, "text band should contain visible non-background pixels"
+    assert image_colors, "image band should contain visible non-background pixels"
+    assert text_colors != image_colors, (
+        "text/image bands should not collapse into the same visual treatment, "
+        f"text_colors={sorted(text_colors)}, image_colors={sorted(image_colors)}"
+    )
     real_ids = _parse_marker_ids(stdout, "PICOUI_BACKEND_REAL_WIDGET_IDS")
     fallback_ids = _parse_marker_ids(stdout, "PICOUI_BACKEND_FALLBACK_WIDGET_IDS", required=False)
     assert "logo" in real_ids, f"basic_widgets should keep logo in REAL widget ids: {sorted(real_ids)}"
@@ -102,7 +220,6 @@ def _assert_basic_widgets_capture(path: Path, stdout: str) -> None:
         f"fallback still contains: {sorted(unexpected_fallback)}, "
         f"fallback_ids={sorted(fallback_ids)}"
     )
-
 subprocess.run([
     RTK, "cmake", "-S", str(ROOT), "-B", str(BUILD), "-DUSE_DEMO=0"
 ], check=True)

@@ -5,6 +5,13 @@ static void make_ui(struct picoui_window *win)
     struct picoui_label *label = picoui_label_create(win, "title");
     struct picoui_button *button = picoui_button_create(win, "ok");
 
+    picoui_flex_set_flow(win, PICOUI_FLEX_FLOW_COLUMN);
+    picoui_flex_set_align(win,
+                          PICOUI_ALIGN_CENTER,
+                          PICOUI_ALIGN_CENTER,
+                          PICOUI_ALIGN_CENTER);
+    picoui_flex_set_gap(win, 12, 12);
+
     picoui_label_set_text(label, "Hello PicoUI");
     picoui_button_set_text(button, "OK");
 }

@@ -504,3 +504,24 @@ add_picoui_demo(picoui_date_time_basic_demo
 add_picoui_demo(picoui_clock_basic_demo
     "${SDL_EXAMPLE_DIR}/../../picoui/demo/clock_basic/main.c"
 )
+add_picoui_demo(picoui_keyboard_basic_demo
+    "${SDL_EXAMPLE_DIR}/../../picoui/demo/keyboard_basic/main.c"
+)
+add_picoui_demo(picoui_line_edit_basic_demo
+    "${SDL_EXAMPLE_DIR}/../../picoui/demo/line_edit_basic/main.c"
+)
+add_picoui_demo(picoui_combo_box_basic_demo
+    "${SDL_EXAMPLE_DIR}/../../picoui/demo/combo_box_basic/main.c"
+)
+add_picoui_demo(picoui_scroll_selecter_basic_demo
+    "${SDL_EXAMPLE_DIR}/../../picoui/demo/scroll_selecter_basic/main.c"
+)
+add_picoui_demo(picoui_table_basic_demo
+    "${SDL_EXAMPLE_DIR}/../../picoui/demo/table_basic/main.c"
+)
+add_picoui_demo(picoui_graph_basic_demo
+    "${SDL_EXAMPLE_DIR}/../../picoui/demo/graph_basic/main.c"
+)
+add_picoui_demo(picoui_calendar_basic_demo
+    "${SDL_EXAMPLE_DIR}/../../picoui/demo/calendar_basic/main.c"
+)

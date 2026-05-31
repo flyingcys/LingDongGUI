@@ -42,6 +42,7 @@ struct picoui_backend_runtime_state {
     int capture_written;
     int static_mapping_logged;
     int fallback_boundary_logged;
+    int temporary_smoke_logged;
 };
 
 static const ldPageFuncGroup_t g_picoui_backend_runtime_page = {
@@ -76,6 +77,10 @@ static int picoui_backend_widget_is_supported_real(const struct picoui_backend_w
     case PICOUI_BACKEND_WIDGET_QRCODE:
     case PICOUI_BACKEND_WIDGET_PROGRESS_WHEEL:
     case PICOUI_BACKEND_WIDGET_LIST:
+    case PICOUI_BACKEND_WIDGET_COMBO_BOX:
+    case PICOUI_BACKEND_WIDGET_TABLE:
+    case PICOUI_BACKEND_WIDGET_GRAPH:
+    case PICOUI_BACKEND_WIDGET_CALENDAR:
     case PICOUI_BACKEND_WIDGET_DATE_TIME:
     case PICOUI_BACKEND_WIDGET_MESSAGE_BOX:
     case PICOUI_BACKEND_WIDGET_CLOCK:
@@ -144,6 +149,34 @@ static int picoui_backend_window_has_real_layout(const struct picoui_backend_wid
     return ld_window->layoutTpye == layoutFlex || ld_window->layoutTpye == layoutGrid;
 }
 
+static int picoui_backend_widget_excludes_formal_mapping(const struct picoui_backend_widget *widget)
+{
+    while (widget != NULL) {
+        if ((widget->runtime_evidence_flags & PICOUI_BACKEND_EVIDENCE_EXCLUDE_FORMAL_MAPPING) != 0U) {
+            return 1;
+        }
+        if (widget->first_child != NULL && picoui_backend_widget_excludes_formal_mapping(widget->first_child)) {
+            return 1;
+        }
+        widget = widget->next_sibling;
+    }
+    return 0;
+}
+
+static int picoui_backend_widget_allows_smoke_layout(const struct picoui_backend_widget *widget)
+{
+    while (widget != NULL) {
+        if ((widget->runtime_evidence_flags & PICOUI_BACKEND_EVIDENCE_ALLOW_SMOKE_LAYOUT) != 0U) {
+            return 1;
+        }
+        if (widget->first_child != NULL && picoui_backend_widget_allows_smoke_layout(widget->first_child)) {
+            return 1;
+        }
+        widget = widget->next_sibling;
+    }
+    return 0;
+}
+
 static void picoui_backend_append_widget_ids(const struct picoui_backend_widget *widget,
                                              int (*predicate)(const struct picoui_backend_widget *widget),
                                              char *buffer,
@@ -190,11 +223,20 @@ static void picoui_backend_log_mapping_markers(struct picoui_backend_runtime_sta
                                      sizeof(fallback_ids),
                                      &fallback_used);
 
-    if (real_used > 0 && !state->static_mapping_logged) {
+    if (real_used > 0 &&
+        !picoui_backend_widget_excludes_formal_mapping(root->first_child) &&
+        !state->static_mapping_logged) {
         printf("PICOUI_BACKEND_STATIC_MAPPING=REAL_LDGUI\n");
         printf("PICOUI_BACKEND_REAL_WIDGET_IDS=%s\n", real_ids);
         fflush(stdout);
         state->static_mapping_logged = 1;
+    }
+
+    if (picoui_backend_widget_excludes_formal_mapping(root->first_child) &&
+        !state->temporary_smoke_logged) {
+        printf("PICOUI_BACKEND_TEMPORARY_SMOKE_PATH=EXCLUDED_FORMAL_MAPPING\n");
+        fflush(stdout);
+        state->temporary_smoke_logged = 1;
     }
 
     if (fallback_used > 0 && !state->fallback_boundary_logged) {
@@ -380,6 +422,7 @@ int picoui_backend_app_init(struct picoui_app *app)
     state->ready_logged = 0;
     state->static_mapping_logged = 0;
     state->fallback_boundary_logged = 0;
+    state->temporary_smoke_logged = 0;
     app->backend_app = app_state;
     return 0;
 }
@@ -544,11 +587,12 @@ static void picoui_backend_apply_smoke_cursor_layout(struct picoui_backend_runti
                                                      int x,
                                                      int *cursor_y)
 {
-    if (root == NULL || root->first_child == NULL || picoui_backend_window_has_real_layout(root)) {
+    if (root == NULL || root->first_child == NULL || picoui_backend_window_has_real_layout(root) ||
+        !picoui_backend_widget_allows_smoke_layout(root->first_child)) {
         return;
     }
 
-    /* temporary smoke path: non-layout demos still need default root-child placement. */
+    /* Explicit opt-in only: keep temporary smoke layout out of generic non-layout demos. */
     picoui_backend_apply_real_widget_layout(state, root->first_child, x, cursor_y);
 }
 
@@ -618,6 +662,10 @@ int picoui_backend_app_run(struct picoui_app *app, struct picoui_window *window)
     }
 
     if (!state->ready_logged) {
+        if (app->focus_owner == NULL) {
+            printf("PICOUI_FOCUS_RUNTIME_READY=1\n");
+            fflush(stdout);
+        }
         printf("PICOUI_RUNTIME_READY\n");
         fflush(stdout);
         state->ready_logged = 1;

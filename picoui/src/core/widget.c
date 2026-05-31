@@ -170,6 +170,9 @@ int picoui_widget_set_visible(struct picoui_widget *widget, int visible)
     }
 
     widget->visible = visible != 0;
+    if (widget->visible == 0) {
+        (void)picoui_widget_release_focus(widget);
+    }
     ld_base = picoui_widget_get_ld_base(widget);
     if (ld_base != 0) {
         ldBaseSetHidden(ld_base, widget->visible == 0);
@@ -193,6 +196,9 @@ int picoui_widget_set_enabled(struct picoui_widget *widget, int enabled)
     }
 
     widget->enabled = enabled != 0;
+    if (widget->enabled == 0) {
+        (void)picoui_widget_release_focus(widget);
+    }
     if (widget->backend_widget != 0) {
         backend_widget = (struct picoui_backend_widget *)widget->backend_widget;
         if (backend_widget->kind == PICOUI_BACKEND_WIDGET_LIST && backend_widget->ld_widget != 0) {

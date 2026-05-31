@@ -15,24 +15,24 @@ EXPECTED_WRAPPED_WIDGETS = {
     "text",
     "image",
     "list",
+    "line_edit",
     "progress_bar",
     "qrcode",
     "progress_wheel",
     "message_box",
     "date_time",
     "clock",
-}
-
-EXPECTED_NOT_WRAPPED_WIDGETS = {
-    "line_edit",
     "keyboard",
     "combo_box",
     "scroll_selecter",
-    "arc",
-    "gauge",
     "graph",
     "table",
     "calendar",
+}
+
+EXPECTED_NOT_WRAPPED_WIDGETS = {
+    "arc",
+    "gauge",
     "icon_slider",
     "radial_menu",
 }
@@ -50,6 +50,13 @@ EXPECTED_STABLE_CONTRACT = {
     "text",
     "image",
     "list",
+    "line_edit",
+    "keyboard",
+    "combo_box",
+    "scroll_selecter",
+    "graph",
+    "table",
+    "calendar",
 }
 
 EXPECTED_MINIMAL_VERTICAL_SLICE = {

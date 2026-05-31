@@ -102,6 +102,8 @@ void *picoui_backend_create_message_box(void *parent, const char *id)
     widget->theme = ((struct picoui_backend_widget *)parent)->theme;
     widget->ld_widget = ld_message_box;
     widget->ld_name_id = name_id;
+    widget->runtime_evidence_flags = PICOUI_BACKEND_EVIDENCE_EXCLUDE_FORMAL_MAPPING |
+                                     PICOUI_BACKEND_EVIDENCE_ALLOW_SMOKE_LAYOUT;
     if (picoui_backend_widget_attach_child(parent, widget) != 0) {
         free(widget);
         return 0;

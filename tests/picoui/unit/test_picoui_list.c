@@ -52,6 +52,18 @@ static void reset_list_signal_counters(struct picoui_backend_widget *backend)
     backend->last_signal = PICOUI_BACKEND_SIGNAL_NONE;
 }
 
+static struct picoui_backend_app_state *list_app_state(struct picoui_list *list)
+{
+    struct picoui_backend_widget *backend;
+
+    assert(list != 0);
+    backend = (struct picoui_backend_widget *)list->widget.backend_widget;
+    assert(backend != 0);
+    assert(backend->owner != 0);
+    assert(backend->owner->backend_app != 0);
+    return (struct picoui_backend_app_state *)backend->owner->backend_app;
+}
+
 static void assert_list_selectable_state(struct picoui_list *list, int expected_enabled)
 {
     struct picoui_backend_widget *backend;
@@ -266,6 +278,293 @@ static void test_enabled_contract_and_native_selected_bridge(struct picoui_windo
     picoui_app_destroy(app);
 }
 
+static void test_selected_index_readback_matches_native_queue_after_preselected_state(struct picoui_window *win)
+{
+    struct picoui_app *app;
+    struct picoui_window *owned_win;
+    struct picoui_widget *parent;
+    struct picoui_list *list;
+    struct picoui_backend_widget *backend;
+    struct picoui_backend_app_state *app_state;
+    ldList_t *ld_list;
+    int user_cookie = 71;
+
+    (void)win;
+    app = picoui_app_create();
+    owned_win = picoui_window_create(app, "list_readback_truth_root");
+    assert(app != 0);
+    assert(owned_win != 0);
+    parent = (struct picoui_widget *)owned_win;
+    list = picoui_list_create(parent, "list_readback_truth");
+    assert(list != 0);
+    assert(picoui_list_add_item(list, "item_wifi", "Wi-Fi") == 0);
+    assert(picoui_list_add_item(list, "item_bluetooth", "Bluetooth") == 0);
+    assert(picoui_list_add_item(list, "item_display", "Display") == 0);
+    picoui_list_set_on_selected(list, on_list_selected, &user_cookie);
+    assert(picoui_list_set_selected_index(list, 1) == 0);
+    assert(picoui_list_get_selected_index(list) == 1);
+
+    backend = (struct picoui_backend_widget *)list->widget.backend_widget;
+    assert(backend != 0);
+    app_state = (struct picoui_backend_app_state *)backend->owner->backend_app;
+    assert(app_state != 0);
+    assert(app_state->ld_scene != 0);
+    assert(ldMsgInit(&app_state->ld_scene->ptMsgQueue, 8) == true);
+    ld_list = (ldList_t *)backend->ld_widget;
+    assert(ld_list != 0);
+    assert(ldMsgConnect(backend->ld_widget, SIGNAL_CLICKED_ITEM, on_native_list_clicked_probe) == true);
+
+    reset_list_signal_counters(backend);
+    assert(ldMsgEmit(app_state->ld_scene->ptMsgQueue,
+                     backend->ld_widget,
+                     SIGNAL_PRESS,
+                     make_signal_value_xy(10, 10)) == true);
+    ldMsgProcess(app_state->ld_scene);
+    assert(ldMsgEmit(app_state->ld_scene->ptMsgQueue,
+                     backend->ld_widget,
+                     SIGNAL_RELEASE,
+                     make_signal_value_xy(10, 10)) == true);
+    ldMsgProcess(app_state->ld_scene);
+    {
+        int backend_selected = picoui_backend_list_get_selected_index(list->widget.backend_widget);
+        int public_selected = picoui_list_get_selected_index(list);
+        assert(native_list_clicked_count == 1);
+        assert(native_list_clicked_index == 0);
+        assert(backend_selected == 0);
+        assert(list->selected_index == 0);
+        assert(public_selected == 0);
+        assert(list_selected_count == 1);
+        assert(list_selected_index == 0);
+        assert(list_selected_user_data == &user_cookie);
+        assert(backend->value == 0);
+        assert(backend->dispatch_count == 1);
+    }
+
+    picoui_app_destroy(app);
+}
+
+static void test_selected_index_getter_resynchronizes_internal_and_backend_cache_from_native_truth(
+    struct picoui_window *win)
+{
+    struct picoui_app *app;
+    struct picoui_window *owned_win;
+    struct picoui_widget *parent;
+    struct picoui_list *list;
+    struct picoui_backend_widget *backend;
+    ldList_t *ld_list;
+
+    (void)win;
+    app = picoui_app_create();
+    owned_win = picoui_window_create(app, "list_sync_truth_root");
+    assert(app != 0);
+    assert(owned_win != 0);
+    parent = (struct picoui_widget *)owned_win;
+    list = picoui_list_create(parent, "list_sync_truth");
+    assert(list != 0);
+    assert(picoui_list_add_item(list, "item_wifi", "Wi-Fi") == 0);
+    assert(picoui_list_add_item(list, "item_bluetooth", "Bluetooth") == 0);
+    assert(picoui_list_set_selected_index(list, 0) == 0);
+
+    backend = (struct picoui_backend_widget *)list->widget.backend_widget;
+    assert(backend != 0);
+    ld_list = (ldList_t *)backend->ld_widget;
+    assert(ld_list != 0);
+
+    ldListSetSelectItem(ld_list, 1);
+    list->selected_index = 0;
+    backend->value = 0;
+
+    assert(picoui_list_get_selected_index(list) == 1);
+    assert(list->selected_index == 1);
+    assert(backend->value == 1);
+
+    picoui_app_destroy(app);
+}
+
+static void test_hidden_or_disabled_list_releases_focus_and_rejects_native_selection(struct picoui_window *win)
+{
+    struct picoui_app *app;
+    struct picoui_window *owned_win;
+    struct picoui_widget *parent;
+    struct picoui_list *list;
+    struct picoui_backend_widget *backend;
+    struct picoui_backend_app_state *app_state;
+    ldList_t *ld_list;
+
+    (void)win;
+    app = picoui_app_create();
+    owned_win = picoui_window_create(app, "list_focus_hidden_disabled_root");
+    assert(app != 0);
+    assert(owned_win != 0);
+    parent = (struct picoui_widget *)owned_win;
+    list = picoui_list_create(parent, "list_focus_hidden_disabled");
+    assert(list != 0);
+    assert(picoui_list_add_item(list, "item_wifi", "Wi-Fi") == 0);
+    assert(picoui_list_add_item(list, "item_bluetooth", "Bluetooth") == 0);
+
+    backend = (struct picoui_backend_widget *)list->widget.backend_widget;
+    assert(backend != 0);
+    app_state = list_app_state(list);
+    assert(app_state->ld_scene != 0);
+    assert(ldMsgInit(&app_state->ld_scene->ptMsgQueue, 8) == true);
+    ld_list = (ldList_t *)backend->ld_widget;
+    assert(ld_list != 0);
+
+    assert(ldMsgEmit(app_state->ld_scene->ptMsgQueue,
+                     backend->ld_widget,
+                     SIGNAL_CLICKED_ITEM,
+                     0) == true);
+    ldMsgProcess(app_state->ld_scene);
+    assert(picoui_widget_is_focus_owner(&list->widget) == 1);
+    assert(picoui_list_get_selected_index(list) == 0);
+    assert(list->selected_index == 0);
+    assert(backend->value == 0);
+
+    assert(picoui_widget_set_visible(&list->widget, 0) == 0);
+    assert(picoui_widget_is_focus_owner(&list->widget) == 0);
+    assert(ldMsgEmit(app_state->ld_scene->ptMsgQueue,
+                     backend->ld_widget,
+                     SIGNAL_CLICKED_ITEM,
+                     1) == true);
+    ldMsgProcess(app_state->ld_scene);
+    assert(picoui_list_get_selected_index(list) == 0);
+    assert(list->selected_index == 0);
+    assert(backend->value == 0);
+    assert(ldListGetSelectItem(ld_list) == 0);
+
+    assert(picoui_widget_set_visible(&list->widget, 1) == 0);
+    assert(picoui_widget_set_enabled(&list->widget, 0) == 0);
+    assert(picoui_widget_is_focus_owner(&list->widget) == 0);
+    ldListSetSelectItem(ld_list, 0);
+    list->selected_index = 0;
+    backend->value = 0;
+    assert(ldMsgEmit(app_state->ld_scene->ptMsgQueue,
+                     backend->ld_widget,
+                     SIGNAL_CLICKED_ITEM,
+                     1) == true);
+    ldMsgProcess(app_state->ld_scene);
+    assert(picoui_list_get_selected_index(list) == 0);
+    assert(list->selected_index == 0);
+    assert(backend->value == 0);
+    assert(ldListGetSelectItem(ld_list) == 0);
+
+    assert(picoui_widget_set_enabled(&list->widget, 1) == 0);
+    assert(ldMsgEmit(app_state->ld_scene->ptMsgQueue,
+                     backend->ld_widget,
+                     SIGNAL_CLICKED_ITEM,
+                     1) == true);
+    assert(picoui_widget_set_visible(&list->widget, 0) == 0);
+    ldMsgProcess(app_state->ld_scene);
+    assert(picoui_list_get_selected_index(list) == 0);
+    assert(list->selected_index == 0);
+    assert(backend->value == 0);
+    assert(ldListGetSelectItem(ld_list) == 0);
+
+    assert(picoui_widget_set_visible(&list->widget, 1) == 0);
+    assert(ldMsgEmit(app_state->ld_scene->ptMsgQueue,
+                     backend->ld_widget,
+                     SIGNAL_CLICKED_ITEM,
+                     1) == true);
+    assert(picoui_widget_set_enabled(&list->widget, 0) == 0);
+    ldMsgProcess(app_state->ld_scene);
+    assert(picoui_list_get_selected_index(list) == 0);
+    assert(list->selected_index == 0);
+    assert(backend->value == 0);
+    assert(ldListGetSelectItem(ld_list) == 0);
+
+    picoui_app_destroy(app);
+}
+
+static void test_selected_index_getter_clears_to_backend_unselected_truth(struct picoui_window *win)
+{
+    struct picoui_app *app;
+    struct picoui_window *owned_win;
+    struct picoui_widget *parent;
+    struct picoui_list *list;
+    struct picoui_backend_widget *backend;
+    ldList_t *ld_list;
+
+    (void)win;
+    app = picoui_app_create();
+    owned_win = picoui_window_create(app, "list_sync_unselected_truth_root");
+    assert(app != 0);
+    assert(owned_win != 0);
+    parent = (struct picoui_widget *)owned_win;
+    list = picoui_list_create(parent, "list_sync_unselected_truth");
+    assert(list != 0);
+    assert(picoui_list_add_item(list, "item_wifi", "Wi-Fi") == 0);
+    assert(picoui_list_add_item(list, "item_bluetooth", "Bluetooth") == 0);
+    assert(picoui_list_set_selected_index(list, 1) == 0);
+
+    backend = (struct picoui_backend_widget *)list->widget.backend_widget;
+    assert(backend != 0);
+    ld_list = (ldList_t *)backend->ld_widget;
+    assert(ld_list != 0);
+
+    ldListSetSelectItem(ld_list, -1);
+    list->selected_index = 1;
+    backend->value = 1;
+
+    assert(picoui_list_get_selected_index(list) == -1);
+    assert(list->selected_index == -1);
+    assert(backend->value == -1);
+
+    picoui_app_destroy(app);
+}
+
+static void test_repeated_native_clicked_item_same_index_is_noop_contract(struct picoui_window *win)
+{
+    struct picoui_app *app;
+    struct picoui_window *owned_win;
+    struct picoui_widget *parent;
+    struct picoui_list *list;
+    struct picoui_backend_widget *backend;
+    struct picoui_backend_app_state *app_state;
+    int user_cookie = 61;
+
+    (void)win;
+    app = picoui_app_create();
+    owned_win = picoui_window_create(app, "list_repeat_click_root");
+    assert(app != 0);
+    assert(owned_win != 0);
+    parent = (struct picoui_widget *)owned_win;
+    list = picoui_list_create(parent, "list_repeat_click");
+    assert(list != 0);
+    assert(picoui_list_add_item(list, "item_wifi", "Wi-Fi") == 0);
+    assert(picoui_list_add_item(list, "item_bluetooth", "Bluetooth") == 0);
+    picoui_list_set_on_selected(list, on_list_selected, &user_cookie);
+
+    backend = (struct picoui_backend_widget *)list->widget.backend_widget;
+    assert(backend != 0);
+    app_state = list_app_state(list);
+    assert(app_state->ld_scene != 0);
+    assert(ldMsgInit(&app_state->ld_scene->ptMsgQueue, 8) == true);
+
+    reset_list_signal_counters(backend);
+    assert(ldMsgEmit(app_state->ld_scene->ptMsgQueue,
+                     backend->ld_widget,
+                     SIGNAL_CLICKED_ITEM,
+                     0) == true);
+    ldMsgProcess(app_state->ld_scene);
+    assert(list_selected_count == 1);
+    assert(list_selected_index == 0);
+    assert(picoui_list_get_selected_index(list) == 0);
+
+    reset_list_signal_counters(backend);
+    assert(ldMsgEmit(app_state->ld_scene->ptMsgQueue,
+                     backend->ld_widget,
+                     SIGNAL_CLICKED_ITEM,
+                     0) == true);
+    ldMsgProcess(app_state->ld_scene);
+    assert(list_selected_count == 0);
+    assert(list_selected_index == -1);
+    assert(picoui_list_get_selected_index(list) == 0);
+    assert(list->selected_index == 0);
+    assert(backend->value == 0);
+
+    picoui_app_destroy(app);
+}
+
 static void test_list_widget_user_data_is_distinct_from_on_selected_cookie(struct picoui_window *win)
 {
     int widget_cookie = 101;
@@ -383,6 +682,11 @@ int main(void)
     test_list_style_class_and_user_data_are_metadata_only_contract(win);
     test_list_item_ids_are_picoui_data_not_backend_widget_identity(win);
     test_enabled_contract_and_native_selected_bridge(win);
+    test_selected_index_readback_matches_native_queue_after_preselected_state(win);
+    test_selected_index_getter_resynchronizes_internal_and_backend_cache_from_native_truth(win);
+    test_selected_index_getter_clears_to_backend_unselected_truth(win);
+    test_hidden_or_disabled_list_releases_focus_and_rejects_native_selection(win);
+    test_repeated_native_clicked_item_same_index_is_noop_contract(win);
     test_rejects_invalid_inputs(win);
 
     picoui_app_destroy(app);

@@ -50,25 +50,25 @@
   },
   "summary": {
     "ldgui_wrappable_widget_total": 26,
-    "picoui_wrapped_widget_total": 15,
-    "picoui_not_wrapped_widget_total": 11,
+    "picoui_wrapped_widget_total": 22,
+    "picoui_not_wrapped_widget_total": 4,
     "full_parity_complete_total": 4,
-    "stable_contract_but_not_full_parity_total": 5,
+    "stable_contract_but_not_full_parity_total": 12,
     "minimal_vertical_slice_only_total": 6,
     "parity_complete_total": 4,
-    "parity_incomplete_total": 11,
-    "capability_entry_total": 89,
+    "parity_incomplete_total": 18,
+    "capability_entry_total": 126,
     "capability_status_counts": {
-      "support": 72,
+      "support": 107,
       "reject": 4,
       "incomplete_contract": 6,
-      "deferred": 7
+      "deferred": 9
     },
     "current_layer_counts": {
       "full_parity_complete": 4,
-      "stable_contract_but_not_full_parity": 5,
+      "stable_contract_but_not_full_parity": 12,
       "minimal_vertical_slice_only": 6,
-      "not_wrapped": 11
+      "not_wrapped": 4
     }
   },
   "widgets": [
@@ -573,7 +573,8 @@
         {
           "name": "selected_index",
           "status": "support",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
+          "capability_release_judgement": "internal_v0_1_known_limitation",
+          "note": "R4 closes list selected_index on a backend-truth-first contract, including the unselected -1 state. Native CLICKED_ITEM first synchronizes backend selection, then public/internal/cache state converge to the same index. Hidden or disabled lists release focus and rejected queued/native selection is rolled back to the current backend truth instead of leaving split-brain state. Repeated CLICKED_ITEM on the same index is a no-op and does not define a stronger confirm API."
         },
         {
           "name": "on_selected_callback_cookie",
@@ -881,58 +882,212 @@
     {
       "name": "line_edit",
       "backend_widget": "ldLineEdit",
-      "widget_status": "not_wrapped",
+      "widget_status": "wrapped",
       "parity_bucket": "post_v0_2_candidate",
-      "parity_status": "not_applicable",
-      "widget_release_judgement": "current_15_not_covered",
+      "parity_status": "parity_incomplete",
+      "widget_release_judgement": "current_15_stable_contract_gap",
+      "evidence_layers": {
+        "unit": "present",
+        "contract": "present",
+        "mapping": "present",
+        "visible": "present",
+        "manual_artifact": "manual_review_required"
+      },
       "manual_artifact": {
         "artifact_entry_exists": false,
-        "manual_review_required": true
+        "manual_review_required": true,
+        "scope": "widget_level_only",
+        "note": "False here only means this widget row does not claim its own widget-level artifact entry. It does not deny that a containing demo already has an artifact entry."
       },
-      "capabilities": [],
-      "current_layer": "not_wrapped"
+      "capabilities": [
+        {
+          "name": "create_and_props",
+          "status": "support",
+          "capability_release_judgement": "current_15_stable_contract_gap"
+        },
+        {
+          "name": "text_readback_backend_truth",
+          "status": "support",
+          "capability_release_judgement": "current_15_stable_contract_gap"
+        },
+        {
+          "name": "type",
+          "status": "support",
+          "capability_release_judgement": "current_15_stable_contract_gap"
+        },
+        {
+          "name": "keyboard_binding",
+          "status": "support",
+          "capability_release_judgement": "current_15_stable_contract_gap"
+        },
+        {
+          "name": "editing_and_finished_boundary_without_reason",
+          "status": "deferred",
+          "capability_release_judgement": "current_15_stable_contract_gap"
+        },
+        {
+          "name": "editing_commit_cancel_contract",
+          "status": "support",
+          "capability_release_judgement": "current_15_stable_contract_gap"
+        },
+        {
+          "name": "submit_cancel_reason",
+          "status": "deferred",
+          "capability_release_judgement": "current_15_stable_contract_gap"
+        },
+        {
+          "name": "visible_runtime_mapping",
+          "status": "support",
+          "capability_release_judgement": "current_15_stable_contract_gap"
+        }
+      ],
+      "current_layer": "stable_contract_but_not_full_parity",
+      "audit_note": "R1 now distinguishes shared commit versus cancel exit paths for editable cells, but LingDongGUI still exposes only SIGNAL_FINISHED without a richer submit/cancel reason payload."
     },
     {
       "name": "keyboard",
       "backend_widget": "ldKeyboard",
-      "widget_status": "not_wrapped",
+      "widget_status": "wrapped",
       "parity_bucket": "post_v0_2_candidate",
-      "parity_status": "not_applicable",
-      "widget_release_judgement": "current_15_not_covered",
+      "parity_status": "parity_incomplete",
+      "widget_release_judgement": "current_15_stable_contract_gap",
+      "evidence_layers": {
+        "unit": "present",
+        "contract": "present",
+        "mapping": "present",
+        "visible": "present",
+        "manual_artifact": "manual_review_required"
+      },
       "manual_artifact": {
         "artifact_entry_exists": false,
-        "manual_review_required": true
+        "manual_review_required": true,
+        "scope": "widget_level_only",
+        "note": "False here only means this widget row does not claim its own widget-level artifact entry. It does not deny that a containing demo already has an artifact entry."
       },
-      "capabilities": [],
-      "current_layer": "not_wrapped"
+      "capabilities": [
+        {
+          "name": "create_and_props",
+          "status": "support",
+          "capability_release_judgement": "current_15_stable_contract_gap"
+        },
+        {
+          "name": "ascii_input_to_edit_target",
+          "status": "support",
+          "capability_release_judgement": "current_15_stable_contract_gap"
+        },
+        {
+          "name": "navigation_click_exit_bridge",
+          "status": "support",
+          "capability_release_judgement": "current_15_stable_contract_gap"
+        },
+        {
+          "name": "editing_owner_priority_over_focus_owner",
+          "status": "support",
+          "capability_release_judgement": "current_15_stable_contract_gap"
+        },
+        {
+          "name": "runtime_bridge_evidence",
+          "status": "support",
+          "capability_release_judgement": "current_15_stable_contract_gap"
+        }
+      ],
+      "current_layer": "stable_contract_but_not_full_parity",
+      "audit_note": "R3 currently establishes keyboard bridge and ownership routing, but does not claim full visual/theme parity."
     },
     {
       "name": "combo_box",
       "backend_widget": "ldComboBox",
-      "widget_status": "not_wrapped",
+      "widget_status": "wrapped",
       "parity_bucket": "post_v0_2_candidate",
-      "parity_status": "not_applicable",
-      "widget_release_judgement": "current_15_not_covered",
+      "parity_status": "parity_incomplete",
+      "widget_release_judgement": "current_15_stable_contract_gap",
+      "evidence_layers": {
+        "unit": "present",
+        "contract": "present",
+        "mapping": "present",
+        "visible": "present",
+        "manual_artifact": "manual_review_required"
+      },
       "manual_artifact": {
         "artifact_entry_exists": false,
-        "manual_review_required": true
+        "manual_review_required": true,
+        "scope": "widget_level_only",
+        "note": "False here only means this widget row does not claim its own widget-level artifact entry. It does not deny that a containing demo already has an artifact entry."
       },
-      "capabilities": [],
-      "current_layer": "not_wrapped"
+      "capabilities": [
+        {
+          "name": "create_props_and_items",
+          "status": "support",
+          "capability_release_judgement": "current_15_stable_contract_gap"
+        },
+        {
+          "name": "selected_item_backend_truth",
+          "status": "support",
+          "capability_release_judgement": "current_15_stable_contract_gap"
+        },
+        {
+          "name": "open_close_boundary",
+          "status": "support",
+          "capability_release_judgement": "current_15_stable_contract_gap"
+        },
+        {
+          "name": "disabled_reuses_selection_contract",
+          "status": "support",
+          "capability_release_judgement": "current_15_stable_contract_gap"
+        },
+        {
+          "name": "visible_runtime_mapping",
+          "status": "support",
+          "capability_release_judgement": "current_15_stable_contract_gap"
+        }
+      ],
+      "current_layer": "stable_contract_but_not_full_parity",
+      "audit_note": "R5 currently closes dropdown truth and real mapping, but does not claim full theme/visual parity."
     },
     {
       "name": "scroll_selecter",
       "backend_widget": "ldScrollSelecter",
-      "widget_status": "not_wrapped",
+      "widget_status": "wrapped",
       "parity_bucket": "post_v0_2_candidate",
-      "parity_status": "not_applicable",
-      "widget_release_judgement": "current_15_not_covered",
+      "parity_status": "parity_incomplete",
+      "widget_release_judgement": "current_15_stable_contract_gap",
+      "evidence_layers": {
+        "unit": "present",
+        "contract": "present",
+        "mapping": "present",
+        "visible": "present",
+        "manual_artifact": "manual_review_required"
+      },
       "manual_artifact": {
         "artifact_entry_exists": false,
-        "manual_review_required": true
+        "manual_review_required": true,
+        "scope": "widget_level_only",
+        "note": "False here only means this widget row does not claim its own widget-level artifact entry. It does not deny that a containing demo already has an artifact entry."
       },
-      "capabilities": [],
-      "current_layer": "not_wrapped"
+      "capabilities": [
+        {
+          "name": "create_props_and_items",
+          "status": "support",
+          "capability_release_judgement": "current_15_stable_contract_gap"
+        },
+        {
+          "name": "selected_item_backend_truth",
+          "status": "support",
+          "capability_release_judgement": "current_15_stable_contract_gap"
+        },
+        {
+          "name": "edit_mode_boundary",
+          "status": "support",
+          "capability_release_judgement": "current_15_stable_contract_gap"
+        },
+        {
+          "name": "visible_runtime_mapping",
+          "status": "support",
+          "capability_release_judgement": "current_15_stable_contract_gap"
+        }
+      ],
+      "current_layer": "stable_contract_but_not_full_parity",
+      "audit_note": "R6 currently closes selected-item truth and edit-mode boundary, but does not claim full visual/theme parity."
     },
     {
       "name": "arc",
@@ -965,44 +1120,152 @@
     {
       "name": "graph",
       "backend_widget": "ldGraph",
-      "widget_status": "not_wrapped",
+      "widget_status": "wrapped",
       "parity_bucket": "post_v0_2_candidate",
-      "parity_status": "not_applicable",
-      "widget_release_judgement": "current_15_not_covered",
+      "parity_status": "parity_incomplete",
+      "widget_release_judgement": "current_15_stable_contract_gap",
+      "evidence_layers": {
+        "unit": "present",
+        "contract": "present",
+        "mapping": "present",
+        "visible": "present",
+        "manual_artifact": "manual_review_required"
+      },
       "manual_artifact": {
         "artifact_entry_exists": false,
-        "manual_review_required": true
+        "manual_review_required": true,
+        "scope": "widget_level_only",
+        "note": "False here only means this widget row does not claim its own widget-level artifact entry. It does not deny that a containing demo already has an artifact entry."
       },
-      "capabilities": [],
-      "current_layer": "not_wrapped"
+      "capabilities": [
+        {
+          "name": "create_props_and_series_limit",
+          "status": "support",
+          "capability_release_judgement": "current_15_stable_contract_gap"
+        },
+        {
+          "name": "series_add_and_value_write",
+          "status": "support",
+          "capability_release_judgement": "current_15_stable_contract_gap"
+        },
+        {
+          "name": "series_count_and_value_readback",
+          "status": "support",
+          "capability_release_judgement": "current_15_stable_contract_gap"
+        },
+        {
+          "name": "move_add_shift_contract",
+          "status": "support",
+          "capability_release_judgement": "current_15_stable_contract_gap"
+        },
+        {
+          "name": "visible_runtime_mapping",
+          "status": "support",
+          "capability_release_judgement": "current_15_stable_contract_gap"
+        }
+      ],
+      "current_layer": "stable_contract_but_not_full_parity",
+      "audit_note": "R3 proves graph series/value truth and real backend mapping, but does not claim full theme or advanced chart parity."
     },
     {
       "name": "table",
       "backend_widget": "ldTable",
-      "widget_status": "not_wrapped",
+      "widget_status": "wrapped",
       "parity_bucket": "post_v0_2_candidate",
-      "parity_status": "not_applicable",
-      "widget_release_judgement": "current_15_not_covered",
+      "parity_status": "parity_incomplete",
+      "widget_release_judgement": "current_15_stable_contract_gap",
+      "evidence_layers": {
+        "unit": "present",
+        "contract": "present",
+        "mapping": "present",
+        "visible": "present",
+        "manual_artifact": "manual_review_required"
+      },
       "manual_artifact": {
         "artifact_entry_exists": false,
-        "manual_review_required": true
+        "manual_review_required": true,
+        "scope": "widget_level_only",
+        "note": "False here only means this widget row does not claim its own widget-level artifact entry. It does not deny that a containing demo already has an artifact entry."
       },
-      "capabilities": [],
-      "current_layer": "not_wrapped"
+      "capabilities": [
+        {
+          "name": "create_props_and_dimensions",
+          "status": "support",
+          "capability_release_judgement": "current_15_stable_contract_gap"
+        },
+        {
+          "name": "cell_text_and_current_cell_backend_truth",
+          "status": "support",
+          "capability_release_judgement": "current_15_stable_contract_gap"
+        },
+        {
+          "name": "editable_cell_contract_reuses_shared_core",
+          "status": "support",
+          "capability_release_judgement": "current_15_stable_contract_gap"
+        },
+        {
+          "name": "keyboard_binding_and_edit_finish_boundary",
+          "status": "support",
+          "capability_release_judgement": "current_15_stable_contract_gap"
+        },
+        {
+          "name": "visible_runtime_mapping",
+          "status": "support",
+          "capability_release_judgement": "current_15_stable_contract_gap"
+        }
+      ],
+      "current_layer": "stable_contract_but_not_full_parity",
+      "audit_note": "R2 proves table item model and editable cell contract reuse the shared core, but does not claim full table feature parity."
     },
     {
       "name": "calendar",
       "backend_widget": "ldCalendar",
-      "widget_status": "not_wrapped",
+      "widget_status": "wrapped",
       "parity_bucket": "post_v0_2_candidate",
-      "parity_status": "not_applicable",
-      "widget_release_judgement": "current_15_not_covered",
+      "parity_status": "parity_incomplete",
+      "widget_release_judgement": "current_15_stable_contract_gap",
+      "evidence_layers": {
+        "unit": "present",
+        "contract": "present",
+        "mapping": "present",
+        "visible": "present",
+        "manual_artifact": "manual_review_required"
+      },
       "manual_artifact": {
         "artifact_entry_exists": false,
-        "manual_review_required": true
+        "manual_review_required": true,
+        "scope": "widget_level_only",
+        "note": "False here only means this widget row does not claim its own widget-level artifact entry. It does not deny that a containing demo already has an artifact entry."
       },
-      "capabilities": [],
-      "current_layer": "not_wrapped"
+      "capabilities": [
+        {
+          "name": "create_props_and_date_write",
+          "status": "support",
+          "capability_release_judgement": "current_15_stable_contract_gap"
+        },
+        {
+          "name": "date_readback_backend_truth",
+          "status": "support",
+          "capability_release_judgement": "current_15_stable_contract_gap"
+        },
+        {
+          "name": "header_visible_and_format_readback",
+          "status": "support",
+          "capability_release_judgement": "current_15_stable_contract_gap"
+        },
+        {
+          "name": "grid_value_and_current_month_flags",
+          "status": "support",
+          "capability_release_judgement": "current_15_stable_contract_gap"
+        },
+        {
+          "name": "visible_runtime_mapping",
+          "status": "support",
+          "capability_release_judgement": "current_15_stable_contract_gap"
+        }
+      ],
+      "current_layer": "stable_contract_but_not_full_parity",
+      "audit_note": "R4 proves calendar date/header/grid truth and real backend mapping, but does not claim full calendar feature or theme parity."
     },
     {
       "name": "icon_slider",

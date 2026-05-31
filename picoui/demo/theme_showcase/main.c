@@ -6,6 +6,13 @@ static void make_ui(struct picoui_window *win)
     struct picoui_text *body = picoui_text_create(win, "body");
     struct picoui_button *accent = picoui_button_create(win, "accent");
 
+    picoui_flex_set_flow(win, PICOUI_FLEX_FLOW_COLUMN);
+    picoui_flex_set_align(win,
+                          PICOUI_ALIGN_CENTER,
+                          PICOUI_ALIGN_CENTER,
+                          PICOUI_ALIGN_CENTER);
+    picoui_flex_set_gap(win, 12, 12);
+
     picoui_label_set_text(title, "Theme");
     picoui_text_set_text(body, "Accent preview");
     picoui_button_set_text(accent, "Primary");

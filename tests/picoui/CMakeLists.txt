@@ -11,6 +11,13 @@ set(PICOUI_UNIT_TESTS
     unit/test_picoui_message_box.c
     unit/test_picoui_date_time.c
     unit/test_picoui_clock.c
+    unit/test_picoui_line_edit.c
+    unit/test_picoui_keyboard.c
+    unit/test_picoui_combo_box.c
+    unit/test_picoui_scroll_selecter.c
+    unit/test_picoui_table.c
+    unit/test_picoui_graph.c
+    unit/test_picoui_calendar.c
 )
 
 foreach(test_src IN LISTS PICOUI_UNIT_TESTS)

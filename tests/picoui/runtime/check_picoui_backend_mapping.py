@@ -43,10 +43,6 @@ interactive_mapping_targets = {
         "real_ids": ["title", "qrcode"],
         "reason": "qrcode demo proves the QR code widget is a real LingDongGUI widget.",
     },
-    "picoui_message_box_basic_demo": {
-        "real_ids": ["title", "message_box"],
-        "reason": "message box demo proves the message box host widget is a real LingDongGUI widget.",
-    },
     "picoui_date_time_basic_demo": {
         "real_ids": ["title", "date_time"],
         "reason": "date_time demo proves the date-time widget is a real LingDongGUI widget.",
@@ -54,6 +50,30 @@ interactive_mapping_targets = {
     "picoui_clock_basic_demo": {
         "real_ids": ["clock"],
         "reason": "clock demo proves the clock widget itself is a real LingDongGUI widget.",
+    },
+    "picoui_line_edit_basic_demo": {
+        "real_ids": ["title", "line_edit"],
+        "reason": "line_edit demo proves the editable text widget is a real LingDongGUI widget.",
+    },
+    "picoui_combo_box_basic_demo": {
+        "real_ids": ["title", "combo_box"],
+        "reason": "combo_box demo proves the dropdown widget is a real LingDongGUI widget.",
+    },
+    "picoui_scroll_selecter_basic_demo": {
+        "real_ids": ["title", "scroll_selecter"],
+        "reason": "scroll_selecter demo proves the scroll selecter widget is a real LingDongGUI widget.",
+    },
+    "picoui_table_basic_demo": {
+        "real_ids": ["table"],
+        "reason": "table demo proves the table widget itself is a real LingDongGUI widget.",
+    },
+    "picoui_graph_basic_demo": {
+        "real_ids": ["title", "graph"],
+        "reason": "graph demo proves the graph widget itself is a real LingDongGUI widget.",
+    },
+    "picoui_calendar_basic_demo": {
+        "real_ids": ["title", "calendar"],
+        "reason": "calendar demo proves the calendar widget itself is a real LingDongGUI widget.",
     },
 }
 layout_mapping_targets = {
@@ -138,9 +158,14 @@ def _assert_target_matrix_complete(target_matrix: dict[str, dict[str, object]]) 
         "picoui_progress_bar_basic_demo",
         "picoui_progress_wheel_basic_demo",
         "picoui_qrcode_basic_demo",
-        "picoui_message_box_basic_demo",
         "picoui_date_time_basic_demo",
         "picoui_clock_basic_demo",
+        "picoui_line_edit_basic_demo",
+        "picoui_combo_box_basic_demo",
+        "picoui_scroll_selecter_basic_demo",
+        "picoui_table_basic_demo",
+        "picoui_graph_basic_demo",
+        "picoui_calendar_basic_demo",
     }
     missing_targets = sorted(expected_targets - set(target_matrix))
     unexpected_targets = sorted(set(target_matrix) - expected_targets)
@@ -200,6 +225,28 @@ def _assert_real_mapping(target: str, expected: dict[str, object], stdout: str, 
         )
 
 
+def _assert_demo_excluded_from_formal_mapping(target: str, stdout: str, stderr: str) -> None:
+    if "PICOUI_RUNTIME_READY" not in stdout:
+        raise AssertionError(
+            f"Demo '{target}' no longer reports runtime-ready state.\n"
+            f"stdout:\n{stdout}\n"
+            f"stderr:\n{stderr}"
+        )
+    if "PICOUI_BACKEND_STATIC_MAPPING=REAL_LDGUI" in stdout:
+        raise AssertionError(
+            f"Demo '{target}' still emits formal REAL_LDGUI mapping markers.\n"
+            "R0 honesty requires this demo to stay outside the formal mapping conclusion until the temporary smoke path is isolated.\n"
+            f"stdout:\n{stdout}\n"
+            f"stderr:\n{stderr}"
+        )
+    if "PICOUI_BACKEND_TEMPORARY_SMOKE_PATH=EXCLUDED_FORMAL_MAPPING" not in stdout:
+        raise AssertionError(
+            f"Demo '{target}' must explicitly report temporary smoke-path evidence.\n"
+            f"stdout:\n{stdout}\n"
+            f"stderr:\n{stderr}"
+        )
+
+
 target_matrix = _merge_target_matrix()
 _assert_target_matrix_complete(target_matrix)
 TARGETS = sorted(target_matrix)
@@ -211,6 +258,12 @@ subprocess.run(
 )
 subprocess.run(
     [RTK, "cmake", "--build", str(BUILD), "--target", *TARGETS],
+    check=True,
+)
+
+excluded_targets = ["picoui_message_box_basic_demo"]
+subprocess.run(
+    [RTK, "cmake", "--build", str(BUILD), "--target", *excluded_targets],
     check=True,
 )
 
@@ -242,3 +295,23 @@ for target in TARGETS:
 
     _assert_no_fallback(target, completed.stdout, completed.stderr)
     _assert_real_mapping(target, target_matrix[target], completed.stdout, completed.stderr)
+
+for target in excluded_targets:
+    env = os.environ.copy()
+    env["SDL_VIDEODRIVER"] = env.get("SDL_VIDEODRIVER", "dummy")
+    env["PICOUI_DEMO_AUTO_QUIT_MS"] = "1200"
+    completed = subprocess.run(
+        [str(_find_executable(target))],
+        check=False,
+        timeout=DEMO_TIMEOUT_SECONDS,
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+    if completed.returncode != 0:
+        raise RuntimeError(
+            f"Demo '{target}' exited with {completed.returncode}.\n"
+            f"stdout:\n{completed.stdout}\n"
+            f"stderr:\n{completed.stderr}"
+        )
+    _assert_demo_excluded_from_formal_mapping(target, completed.stdout, completed.stderr)

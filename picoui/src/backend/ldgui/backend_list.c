@@ -124,3 +124,29 @@ int picoui_backend_list_get_selected_index(void *backend_widget)
 
     return ldListGetSelectItem((ldList_t *)widget->ld_widget);
 }
+
+int picoui_backend_list_sync_selected_index(struct picoui_list *list, int *selected_index_out)
+{
+    struct picoui_backend_widget *backend;
+    int selected_index;
+
+    if (list == NULL || list->widget.backend_widget == NULL) {
+        return -1;
+    }
+
+    backend = (struct picoui_backend_widget *)list->widget.backend_widget;
+    selected_index = picoui_backend_list_get_selected_index(backend);
+    if (selected_index < -1) {
+        return -1;
+    }
+    if (selected_index >= list->item_count) {
+        return -1;
+    }
+
+    list->selected_index = selected_index;
+    backend->value = selected_index;
+    if (selected_index_out != NULL) {
+        *selected_index_out = selected_index;
+    }
+    return 0;
+}

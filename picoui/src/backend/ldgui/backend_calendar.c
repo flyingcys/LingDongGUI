@@ -1,0 +1,253 @@
+#include "backend.h"
+#include "internal.h"
+#include "ldCalendar.h"
+
+#include <stdlib.h>
+
+extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
+
+static uint8_t g_picoui_calendar_day_name_0[] = "Su";
+static uint8_t g_picoui_calendar_day_name_1[] = "Mo";
+static uint8_t g_picoui_calendar_day_name_2[] = "Tu";
+static uint8_t g_picoui_calendar_day_name_3[] = "We";
+static uint8_t g_picoui_calendar_day_name_4[] = "Th";
+static uint8_t g_picoui_calendar_day_name_5[] = "Fr";
+static uint8_t g_picoui_calendar_day_name_6[] = "Sa";
+static uint8_t *g_picoui_calendar_day_names[7] = {
+    g_picoui_calendar_day_name_0,
+    g_picoui_calendar_day_name_1,
+    g_picoui_calendar_day_name_2,
+    g_picoui_calendar_day_name_3,
+    g_picoui_calendar_day_name_4,
+    g_picoui_calendar_day_name_5,
+    g_picoui_calendar_day_name_6,
+};
+
+static struct picoui_backend_app_state *picoui_backend_calendar_get_app_state(void *parent)
+{
+    struct picoui_backend_widget *parent_widget = parent;
+
+    if (parent_widget == NULL || parent_widget->owner == NULL || parent_widget->owner->backend_app == NULL) {
+        return NULL;
+    }
+    return (struct picoui_backend_app_state *)parent_widget->owner->backend_app;
+}
+
+static ldCalendar_t *picoui_backend_calendar_get_ld(void *backend_widget)
+{
+    struct picoui_backend_widget *widget = backend_widget;
+
+    if (widget == NULL || widget->ld_widget == NULL) {
+        return NULL;
+    }
+
+    return (ldCalendar_t *)widget->ld_widget;
+}
+
+static int picoui_backend_calendar_sync_host_cache(struct picoui_backend_widget *backend)
+{
+    struct picoui_calendar *calendar;
+    ldCalendar_t *ld_calendar;
+    uint16_t year = 0;
+    uint8_t month = 0;
+    uint8_t day = 0;
+    int index;
+
+    if (backend == NULL || backend->host_widget == NULL) {
+        return -1;
+    }
+
+    ld_calendar = picoui_backend_calendar_get_ld(backend);
+    if (ld_calendar == NULL) {
+        return -1;
+    }
+
+    calendar = (struct picoui_calendar *)backend->host_widget;
+    ldCalendarGetDate(ld_calendar, &year, &month, &day);
+    calendar->year = (int)year;
+    calendar->month = (int)month;
+    calendar->day = (int)day;
+    calendar->show_header = ld_calendar->isHeader ? 1 : 0;
+    calendar->header_format = (const char *)ld_calendar->headerNameFormat;
+    for (index = 0; index < 42; ++index) {
+        uint8_t day_num = ld_calendar->calBuf[index];
+        calendar->grid_values[index] = (unsigned char)(day_num & 0x7FU);
+        calendar->grid_flags[index] = (unsigned char)((day_num & 0x80U) != 0U);
+    }
+    return 0;
+}
+
+void *picoui_backend_create_calendar(void *parent, const char *id)
+{
+    struct picoui_backend_widget *widget;
+    struct picoui_backend_widget *parent_widget = parent;
+    struct picoui_backend_app_state *app_state;
+    ldCalendar_t *ld_calendar;
+    uint16_t name_id;
+
+    if (parent == 0 || id == 0) {
+        return 0;
+    }
+
+    app_state = picoui_backend_calendar_get_app_state(parent);
+    if (app_state == NULL || app_state->ld_scene == NULL || parent_widget->ld_widget == NULL) {
+        return 0;
+    }
+
+    widget = calloc(1, sizeof(*widget));
+    if (widget == 0) {
+        return 0;
+    }
+
+    name_id = ++app_state->next_ld_name_id;
+    ld_calendar = ldCalendar_init(app_state->ld_scene,
+                                  NULL,
+                                  name_id,
+                                  parent_widget->ld_name_id,
+                                  0,
+                                  0,
+                                  280,
+                                  180,
+                                  (arm_2d_font_t *)&ARM_2D_FONT_6x8,
+                                  2026,
+                                  6,
+                                  15);
+    if (ld_calendar == NULL) {
+        free(widget);
+        return 0;
+    }
+
+    ldCalendarSetDayNames(ld_calendar, g_picoui_calendar_day_names);
+    ldCalendarSetHeader(ld_calendar, true);
+    ldCalendarSetHeaderFormat(ld_calendar, (uint8_t *)"yyyy-mm-dd");
+    widget->parent = parent;
+    widget->id = id;
+    widget->kind = PICOUI_BACKEND_WIDGET_CALENDAR;
+    widget->theme = parent_widget->theme;
+    widget->ld_widget = ld_calendar;
+    widget->ld_name_id = name_id;
+    if (picoui_backend_widget_attach_child(parent, widget) != 0) {
+        free(widget);
+        return 0;
+    }
+    return widget;
+}
+
+int picoui_backend_calendar_set_date(void *backend_widget, int year, int month, int day)
+{
+    struct picoui_backend_widget *backend = backend_widget;
+    ldCalendar_t *ld_calendar = picoui_backend_calendar_get_ld(backend_widget);
+
+    if (backend == NULL || ld_calendar == NULL || month < 1 || month > 12 || day < 1 || day > 31) {
+        return -1;
+    }
+
+    ldCalendarSetDate(ld_calendar, (uint16_t)year, (uint8_t)month, (uint8_t)day);
+    return picoui_backend_calendar_sync_host_cache(backend);
+}
+
+int picoui_backend_calendar_get_date(void *backend_widget, int *year, int *month, int *day)
+{
+    struct picoui_backend_widget *backend = backend_widget;
+    struct picoui_calendar *calendar;
+
+    if (backend == NULL || picoui_backend_calendar_sync_host_cache(backend) != 0) {
+        return -1;
+    }
+
+    calendar = (struct picoui_calendar *)backend->host_widget;
+    if (year != NULL) {
+        *year = calendar->year;
+    }
+    if (month != NULL) {
+        *month = calendar->month;
+    }
+    if (day != NULL) {
+        *day = calendar->day;
+    }
+    return 0;
+}
+
+int picoui_backend_calendar_set_header_visible(void *backend_widget, int visible)
+{
+    struct picoui_backend_widget *backend = backend_widget;
+    ldCalendar_t *ld_calendar = picoui_backend_calendar_get_ld(backend_widget);
+
+    if (backend == NULL || ld_calendar == NULL) {
+        return -1;
+    }
+
+    ldCalendarSetHeader(ld_calendar, visible != 0);
+    return picoui_backend_calendar_sync_host_cache(backend);
+}
+
+int picoui_backend_calendar_get_header_visible(void *backend_widget)
+{
+    struct picoui_backend_widget *backend = backend_widget;
+    struct picoui_calendar *calendar;
+
+    if (backend == NULL || picoui_backend_calendar_sync_host_cache(backend) != 0) {
+        return -1;
+    }
+
+    calendar = (struct picoui_calendar *)backend->host_widget;
+    return calendar->show_header;
+}
+
+int picoui_backend_calendar_set_header_format(void *backend_widget, const char *format)
+{
+    struct picoui_backend_widget *backend = backend_widget;
+    ldCalendar_t *ld_calendar = picoui_backend_calendar_get_ld(backend_widget);
+
+    if (backend == NULL || ld_calendar == NULL || format == NULL) {
+        return -1;
+    }
+
+    ldCalendarSetHeaderFormat(ld_calendar, (uint8_t *)format);
+    return picoui_backend_calendar_sync_host_cache(backend);
+}
+
+const char *picoui_backend_calendar_get_header_format(void *backend_widget)
+{
+    struct picoui_backend_widget *backend = backend_widget;
+    struct picoui_calendar *calendar;
+
+    if (backend == NULL || picoui_backend_calendar_sync_host_cache(backend) != 0) {
+        return NULL;
+    }
+
+    calendar = (struct picoui_calendar *)backend->host_widget;
+    return calendar->header_format;
+}
+
+int picoui_backend_calendar_get_grid_value(void *backend_widget, int week, int weekday)
+{
+    struct picoui_backend_widget *backend = backend_widget;
+    struct picoui_calendar *calendar;
+    int index;
+
+    if (backend == NULL || week < 0 || week >= 6 || weekday < 0 || weekday >= 7 ||
+        picoui_backend_calendar_sync_host_cache(backend) != 0) {
+        return -1;
+    }
+
+    calendar = (struct picoui_calendar *)backend->host_widget;
+    index = week * 7 + weekday;
+    return (int)calendar->grid_values[index];
+}
+
+int picoui_backend_calendar_is_current_month_cell(void *backend_widget, int week, int weekday)
+{
+    struct picoui_backend_widget *backend = backend_widget;
+    struct picoui_calendar *calendar;
+    int index;
+
+    if (backend == NULL || week < 0 || week >= 6 || weekday < 0 || weekday >= 7 ||
+        picoui_backend_calendar_sync_host_cache(backend) != 0) {
+        return -1;
+    }
+
+    calendar = (struct picoui_calendar *)backend->host_widget;
+    index = week * 7 + weekday;
+    return calendar->grid_flags[index] != 0 ? 1 : 0;
+}

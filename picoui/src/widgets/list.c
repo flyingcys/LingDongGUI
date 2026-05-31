@@ -101,9 +101,16 @@ int picoui_list_set_selected_index(struct picoui_list *list, int index)
 
 int picoui_list_get_selected_index(const struct picoui_list *list)
 {
+    int backend_selected_index;
+
     if (list == 0) {
         return -1;
     }
+
+    if (picoui_backend_list_sync_selected_index((struct picoui_list *)list, &backend_selected_index) == 0) {
+        return backend_selected_index;
+    }
+
     return list->selected_index;
 }
 

@@ -219,6 +219,51 @@ static int picoui_backend_widget_accepts_event(const struct picoui_widget *widge
     return widget != 0 && widget->enabled != 0 && widget->visible != 0;
 }
 
+static void picoui_backend_restore_rejected_list_selection(struct picoui_backend_widget *backend)
+{
+    struct picoui_list *list;
+
+    if (backend == NULL || backend->kind != PICOUI_BACKEND_WIDGET_LIST || backend->host_widget == NULL) {
+        return;
+    }
+
+    list = (struct picoui_list *)backend->host_widget;
+    if (list->selected_index >= 0 && list->selected_index < list->item_count) {
+        (void)picoui_backend_list_set_selected_index(backend, list->selected_index);
+        return;
+    }
+
+    if (backend->ld_widget != NULL) {
+        ldListSetSelectItem((ldList_t *)backend->ld_widget, -1);
+    }
+    backend->value = -1;
+}
+
+static int picoui_backend_widget_claim_focus_for_signal(struct picoui_backend_widget *backend,
+                                                        enum picoui_backend_signal signal)
+{
+    if (backend == 0) {
+        return -1;
+    }
+
+    if (signal != PICOUI_BACKEND_SIGNAL_PRESSED &&
+        signal != PICOUI_BACKEND_SIGNAL_RELEASED &&
+        signal != PICOUI_BACKEND_SIGNAL_VALUE_CHANGED) {
+        return 0;
+    }
+
+    return picoui_backend_widget_claim_focus(backend);
+}
+
+static struct picoui_backend_widget *picoui_backend_widget_get_editing_backend(struct picoui_app *app)
+{
+    if (app == NULL || app->editing_owner == NULL || app->editing_owner->backend_widget == NULL) {
+        return NULL;
+    }
+
+    return (struct picoui_backend_widget *)app->editing_owner->backend_widget;
+}
+
 int picoui_backend_widget_bind_host(void *backend_widget, struct picoui_widget *widget)
 {
     struct picoui_backend_widget *backend = backend_widget;
@@ -229,6 +274,8 @@ int picoui_backend_widget_bind_host(void *backend_widget, struct picoui_widget *
     }
 
     backend->host_widget = widget;
+    backend->edit_result_on_finish = PICOUI_EDIT_RESULT_NONE;
+    picoui_backend_widget_init_data_model(backend);
     if (backend->owner != NULL && backend->owner->backend_app != NULL) {
         app_state = (struct picoui_backend_app_state *)backend->owner->backend_app;
     }
@@ -283,6 +330,8 @@ int picoui_backend_widget_dispatch_signal(void *backend_widget,
         }
 
         backend->value = value;
+        backend->data_model_epoch++;
+        backend->last_data_source = PICOUI_BACKEND_DATA_SOURCE_SETTER;
         picoui_backend_sync_ld_value(backend, widget, value);
         backend->last_signal = signal;
         backend->dispatch_count++;
@@ -309,10 +358,14 @@ int picoui_backend_widget_dispatch_event(void *backend_widget,
     }
 
     if (!picoui_backend_widget_accepts_event(widget)) {
+        (void)picoui_backend_widget_release_focus(backend_widget);
         return 0;
     }
 
     if (signal == PICOUI_BACKEND_SIGNAL_PRESSED || signal == PICOUI_BACKEND_SIGNAL_RELEASED) {
+        if (picoui_backend_widget_claim_focus_for_signal(backend, signal) != 0) {
+            return -1;
+        }
         backend->last_signal = signal;
         backend->dispatch_count++;
         picoui_backend_emit_event(cb, widget, user_data);
@@ -338,6 +391,8 @@ int picoui_backend_widget_dispatch_native_signal(void *backend_widget,
         return -1;
     }
     if (!picoui_backend_widget_accepts_event(host_widget)) {
+        picoui_backend_restore_rejected_list_selection(backend);
+        (void)picoui_backend_widget_release_focus(backend);
         return 0;
     }
 
@@ -382,8 +437,17 @@ int picoui_backend_widget_dispatch_native_signal(void *backend_widget,
         }
 
         normalized_value = native_value != 0;
+        if (picoui_backend_widget_claim_focus_for_signal(backend,
+                                                         PICOUI_BACKEND_SIGNAL_VALUE_CHANGED) != 0) {
+            return -1;
+        }
+        if (checkbox->checked == normalized_value && backend->value == normalized_value) {
+            return 0;
+        }
         checkbox->checked = normalized_value;
         backend->value = normalized_value;
+        backend->data_model_epoch++;
+        backend->last_data_source = PICOUI_BACKEND_DATA_SOURCE_NATIVE_EVENT;
         picoui_backend_sync_ld_value(backend, host_widget, normalized_value);
         backend->last_signal = PICOUI_BACKEND_SIGNAL_VALUE_CHANGED;
         backend->dispatch_count++;
@@ -402,8 +466,17 @@ int picoui_backend_widget_dispatch_native_signal(void *backend_widget,
         }
 
         normalized_value = native_value != 0;
+        if (picoui_backend_widget_claim_focus_for_signal(backend,
+                                                         PICOUI_BACKEND_SIGNAL_VALUE_CHANGED) != 0) {
+            return -1;
+        }
+        if (sw->checked == normalized_value && backend->value == normalized_value) {
+            return 0;
+        }
         sw->checked = normalized_value;
         backend->value = normalized_value;
+        backend->data_model_epoch++;
+        backend->last_data_source = PICOUI_BACKEND_DATA_SOURCE_NATIVE_EVENT;
         picoui_backend_sync_ld_value(backend, host_widget, normalized_value);
         backend->last_signal = PICOUI_BACKEND_SIGNAL_VALUE_CHANGED;
         backend->dispatch_count++;
@@ -422,8 +495,17 @@ int picoui_backend_widget_dispatch_native_signal(void *backend_widget,
         }
 
         widget_value = picoui_backend_slider_percent_to_value(slider, (int)native_value);
+        if (picoui_backend_widget_claim_focus_for_signal(backend,
+                                                         PICOUI_BACKEND_SIGNAL_VALUE_CHANGED) != 0) {
+            return -1;
+        }
+        if (slider->value == widget_value && backend->value == widget_value) {
+            return 0;
+        }
         slider->value = widget_value;
         backend->value = widget_value;
+        backend->data_model_epoch++;
+        backend->last_data_source = PICOUI_BACKEND_DATA_SOURCE_NATIVE_EVENT;
         picoui_backend_sync_ld_value(backend, host_widget, widget_value);
         backend->last_signal = PICOUI_BACKEND_SIGNAL_VALUE_CHANGED;
         backend->dispatch_count++;
@@ -436,6 +518,8 @@ int picoui_backend_widget_dispatch_native_signal(void *backend_widget,
     case PICOUI_BACKEND_WIDGET_LIST: {
         struct picoui_list *list = (struct picoui_list *)host_widget;
         int selected_index;
+        int was_selected_index;
+        int was_backend_value;
 
         if (native_signal != SIGNAL_CLICKED_ITEM) {
             return -1;
@@ -445,12 +529,24 @@ int picoui_backend_widget_dispatch_native_signal(void *backend_widget,
         if (selected_index < 0 || selected_index >= list->item_count) {
             return 0;
         }
-        if (list->selected_index == selected_index && backend->value == selected_index) {
-            return 0;
+        was_selected_index = list->selected_index;
+        was_backend_value = backend->value;
+        if (picoui_backend_widget_claim_focus_for_signal(backend,
+                                                         PICOUI_BACKEND_SIGNAL_VALUE_CHANGED) != 0) {
+            return -1;
         }
 
-        list->selected_index = selected_index;
-        backend->value = selected_index;
+        if (picoui_backend_list_set_selected_index(backend, selected_index) != 0) {
+            return -1;
+        }
+        if (picoui_backend_list_sync_selected_index(list, &selected_index) != 0) {
+            return -1;
+        }
+        if (was_selected_index == selected_index && was_backend_value == selected_index) {
+            return 0;
+        }
+        backend->data_model_epoch++;
+        backend->last_data_source = PICOUI_BACKEND_DATA_SOURCE_NATIVE_EVENT;
         backend->last_signal = PICOUI_BACKEND_SIGNAL_VALUE_CHANGED;
         backend->dispatch_count++;
         if (list->cb != 0) {
@@ -479,11 +575,15 @@ int picoui_backend_widget_update_value(void *backend_widget,
 
     if (cb == 0 && user_data == 0 && backend->dispatch_count == 0) {
         backend->value = value;
+        backend->data_model_epoch++;
+        backend->last_data_source = PICOUI_BACKEND_DATA_SOURCE_SETTER;
         picoui_backend_sync_ld_value(backend, widget, value);
         return 0;
     }
 
     backend->value = value;
+    backend->data_model_epoch++;
+    backend->last_data_source = PICOUI_BACKEND_DATA_SOURCE_SETTER;
     picoui_backend_sync_ld_value(backend, widget, value);
     (void)cb;
     (void)user_data;
