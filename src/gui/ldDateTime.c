@@ -93,6 +93,7 @@ ldDateTime_t* ldDateTime_init(ld_scene_t *ptScene, ldDateTime_t *ptWidget, uint1
     ptWidget->second=0;
     strcpy((char*)ptWidget->formatStr,"yyyy-mm-dd hh:nn:ss");
     memset(ptWidget->formatStrTemp,0,DATE_TIME_BUFFER_SIZE);
+    strcpy((char *)ptWidget->formatStrTemp, (char *)ptWidget->formatStr);
 
     ptWidget->isAutoSysTime=true;
 
@@ -140,6 +141,10 @@ static inline void uitoa(uint32_t val, char *buf, uint8_t width)
 void ldDateTime_on_frame_start(ld_scene_t *ptScene, ldDateTime_t *ptWidget)
 {
     assert(NULL != ptWidget);
+    if (!ptWidget->isAutoSysTime)
+    {
+        return;
+    }
     int64_t lTimeStampInMs = arm_2d_helper_convert_ticks_to_ms(arm_2d_helper_get_system_timestamp());
     lTimeStampInMs=lTimeStampInMs/1000;
 
@@ -269,6 +274,8 @@ void ldDateTimeSetFormat(ldDateTime_t* ptWidget,const uint8_t *pStr)
     }
     ptWidget->use_as__ldBase_t.isDirtyRegionUpdate = true;
     strcpy((char*)ptWidget->formatStr,(char*)pStr);
+    strcpy((char*)ptWidget->formatStrTemp,(char*)pStr);
+    ptWidget->isAutoSysTime=false;
 }
 
 void ldDateTimeSetTextColor(ldDateTime_t* ptWidget,ldColor textColor)
@@ -312,6 +319,40 @@ void ldDateTimeSetDate(ldDateTime_t *ptWidget, uint16_t year, uint8_t month, uin
     ptWidget->year=year;
     ptWidget->month=month;
     ptWidget->day=day;
+    ptWidget->isAutoSysTime=false;
+
+    char *addr;
+    strcpy((char *)ptWidget->formatStrTemp,(char *)ptWidget->formatStr);
+    addr=strstr((char *)ptWidget->formatStrTemp,"yyyy");
+    if(addr)
+    {
+        uitoa(ptWidget->year, addr, 4);
+    }
+    addr=strstr((char *)ptWidget->formatStrTemp,"mm");
+    if(addr)
+    {
+        uitoa(ptWidget->month, addr, 2);
+    }
+    addr=strstr((char *)ptWidget->formatStrTemp,"dd");
+    if(addr)
+    {
+        uitoa(ptWidget->day, addr, 2);
+    }
+    addr=strstr((char *)ptWidget->formatStrTemp,"hh");
+    if(addr)
+    {
+        uitoa(ptWidget->hour, addr, 2);
+    }
+    addr=strstr((char *)ptWidget->formatStrTemp,"nn");
+    if(addr)
+    {
+        uitoa(ptWidget->minute, addr, 2);
+    }
+    addr=strstr((char *)ptWidget->formatStrTemp,"ss");
+    if(addr)
+    {
+        uitoa(ptWidget->second, addr, 2);
+    }
 }
 
 void ldDateTimeSetTime(ldDateTime_t *ptWidget, uint8_t hour, uint8_t minute, uint8_t second)
@@ -324,6 +365,40 @@ void ldDateTimeSetTime(ldDateTime_t *ptWidget, uint8_t hour, uint8_t minute, uin
     ptWidget->hour=hour;
     ptWidget->minute=minute;
     ptWidget->second=second;
+    ptWidget->isAutoSysTime=false;
+
+    char *addr;
+    strcpy((char *)ptWidget->formatStrTemp,(char *)ptWidget->formatStr);
+    addr=strstr((char *)ptWidget->formatStrTemp,"yyyy");
+    if(addr)
+    {
+        uitoa(ptWidget->year, addr, 4);
+    }
+    addr=strstr((char *)ptWidget->formatStrTemp,"mm");
+    if(addr)
+    {
+        uitoa(ptWidget->month, addr, 2);
+    }
+    addr=strstr((char *)ptWidget->formatStrTemp,"dd");
+    if(addr)
+    {
+        uitoa(ptWidget->day, addr, 2);
+    }
+    addr=strstr((char *)ptWidget->formatStrTemp,"hh");
+    if(addr)
+    {
+        uitoa(ptWidget->hour, addr, 2);
+    }
+    addr=strstr((char *)ptWidget->formatStrTemp,"nn");
+    if(addr)
+    {
+        uitoa(ptWidget->minute, addr, 2);
+    }
+    addr=strstr((char *)ptWidget->formatStrTemp,"ss");
+    if(addr)
+    {
+        uitoa(ptWidget->second, addr, 2);
+    }
 }
 
 #if defined(__clang__)

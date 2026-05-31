@@ -31,6 +31,30 @@ interactive_mapping_targets = {
         "real_ids": ["list"],
         "reason": "list demo proves the list object itself is a real LingDongGUI widget; item ids are intentionally excluded from the real widget marker contract.",
     },
+    "picoui_progress_bar_basic_demo": {
+        "real_ids": ["primary", "secondary", "title"],
+        "reason": "progress bar demo proves both horizontal and vertical progress bars are real LingDongGUI widgets.",
+    },
+    "picoui_progress_wheel_basic_demo": {
+        "real_ids": ["title", "wheel"],
+        "reason": "progress wheel demo proves the progress wheel widget is a real LingDongGUI widget.",
+    },
+    "picoui_qrcode_basic_demo": {
+        "real_ids": ["title", "qrcode"],
+        "reason": "qrcode demo proves the QR code widget is a real LingDongGUI widget.",
+    },
+    "picoui_message_box_basic_demo": {
+        "real_ids": ["title", "message_box"],
+        "reason": "message box demo proves the message box host widget is a real LingDongGUI widget.",
+    },
+    "picoui_date_time_basic_demo": {
+        "real_ids": ["title", "date_time"],
+        "reason": "date_time demo proves the date-time widget is a real LingDongGUI widget.",
+    },
+    "picoui_clock_basic_demo": {
+        "real_ids": ["clock"],
+        "reason": "clock demo proves the clock widget itself is a real LingDongGUI widget.",
+    },
 }
 layout_mapping_targets = {
     "picoui_layout_flex_demo": {
@@ -111,6 +135,12 @@ def _assert_target_matrix_complete(target_matrix: dict[str, dict[str, object]]) 
         "picoui_theme_showcase_demo",
         "picoui_settings_panel_demo",
         "picoui_list_basic_demo",
+        "picoui_progress_bar_basic_demo",
+        "picoui_progress_wheel_basic_demo",
+        "picoui_qrcode_basic_demo",
+        "picoui_message_box_basic_demo",
+        "picoui_date_time_basic_demo",
+        "picoui_clock_basic_demo",
     }
     missing_targets = sorted(expected_targets - set(target_matrix))
     unexpected_targets = sorted(set(target_matrix) - expected_targets)

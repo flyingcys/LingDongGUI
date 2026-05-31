@@ -79,9 +79,10 @@ ldProgressWheel_t* ldProgressWheel_init(ld_scene_t *ptScene,ldProgressWheel_t *p
     ptWidget->use_as__ldBase_t.nameId = nameId;
     ptWidget->use_as__ldBase_t.widgetType = widgetTypeProgressWheel;
     ptWidget->use_as__ldBase_t.ptGuiFunc = &ldProgressWheelFunc;
-    ptWidget->use_as__ldBase_t.isDirtyRegionUpdate = false;
-    ptWidget->use_as__ldBase_t.isDirtyRegionAutoReset = false;
+    ptWidget->use_as__ldBase_t.isDirtyRegionUpdate = true;
+    ptWidget->use_as__ldBase_t.isDirtyRegionAutoReset = true;
     ptWidget->use_as__ldBase_t.opacity=255;
+    ptWidget->use_as__ldBase_t.tTempRegion=ptWidget->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion;
 
 
     progress_wheel_cfg_t tCFG = {
@@ -91,7 +92,7 @@ ldProgressWheel_t* ldProgressWheel_init(ld_scene_t *ptScene,ldProgressWheel_t *p
         .bUseDirtyRegions = true,
     };
 
-    progress_wheel_init(&ptWidget->tWheel,(arm_2d_scene_t*)&ptScene,&tCFG);
+    progress_wheel_init(&ptWidget->tWheel, &ptScene->use_as__arm_2d_scene_t, &tCFG);
 
     LOG_INFO("[init][progressWheel] id:%d, size:%d", nameId,(int)sizeof (*ptWidget));
     return ptWidget;
@@ -194,6 +195,9 @@ void ldProgressWheelSetProgress(ldProgressWheel_t *ptWidget,int16_t value)//0-10
     }
     ptWidget->use_as__ldBase_t.isDirtyRegionUpdate = true;
     ptWidget->iProgress=value;
+    ptWidget->tWheel.iProgress = value;
+    ptWidget->tWheel.iNewProgress = value;
+    ptWidget->tWheel.iLastProgress = value;
 }
 
 void ldProgressWheelSetWheelColor(ldProgressWheel_t *ptWidget,ldColor wheelColor)

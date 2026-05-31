@@ -486,3 +486,21 @@ add_picoui_demo(picoui_settings_panel_demo
 add_picoui_demo(picoui_list_basic_demo
     "${SDL_EXAMPLE_DIR}/../../picoui/demo/list_basic/main.c"
 )
+add_picoui_demo(picoui_progress_bar_basic_demo
+    "${SDL_EXAMPLE_DIR}/../../picoui/demo/progress_bar_basic/main.c"
+)
+add_picoui_demo(picoui_progress_wheel_basic_demo
+    "${SDL_EXAMPLE_DIR}/../../picoui/demo/progress_wheel_basic/main.c"
+)
+add_picoui_demo(picoui_qrcode_basic_demo
+    "${SDL_EXAMPLE_DIR}/../../picoui/demo/qrcode_basic/main.c"
+)
+add_picoui_demo(picoui_message_box_basic_demo
+    "${SDL_EXAMPLE_DIR}/../../picoui/demo/message_box_basic/main.c"
+)
+add_picoui_demo(picoui_date_time_basic_demo
+    "${SDL_EXAMPLE_DIR}/../../picoui/demo/date_time_basic/main.c"
+)
+add_picoui_demo(picoui_clock_basic_demo
+    "${SDL_EXAMPLE_DIR}/../../picoui/demo/clock_basic/main.c"
+)

@@ -2,6 +2,7 @@
 #include "internal.h"
 #include "ldButton.h"
 #include "ldLabel.h"
+#include "ldQRCode.h"
 #include "ldText.h"
 
 #include <stdlib.h>
@@ -120,6 +121,9 @@ int picoui_backend_set_text(void *backend_widget, const char *text)
             break;
         case PICOUI_BACKEND_WIDGET_TEXT:
             ldTextSetText((ldText_t *)widget->ld_widget, (uint8_t *)text);
+            break;
+        case PICOUI_BACKEND_WIDGET_QRCODE:
+            ldQRCodeSetText((ldQRCode_t *)widget->ld_widget, (uint8_t *)text);
             break;
         case PICOUI_BACKEND_WIDGET_BUTTON:
             ldButtonSetText((ldButton_t *)widget->ld_widget, (uint8_t *)text);

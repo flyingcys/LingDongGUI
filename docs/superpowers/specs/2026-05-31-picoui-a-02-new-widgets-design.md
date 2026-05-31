@@ -195,7 +195,97 @@
 5. `date_time`
    - 用轻量文本显示控件补覆盖率
 6. `clock`
+
+## 6.4 当前执行状态
+
+截至 `2026-05-31` 当前 worktree 真相：
+
+- `a-02-B1 progress_bar` 已完成并收口
+- `a-02-B2 qrcode` 已完成并收口
+- `a-02-B3 progress_wheel` 已完成并收口
+- `a-02-B4 message_box` 已完成并收口
+- `a-02-B5 date_time` 已完成并收口
+- `a-02-B6 clock` 已完成并收口
+- `a-02-B7 closeout` 已完成并收口
+- 后续阶段仍按既定固定顺序串行推进
+
+`B1 progress_bar` 的当前收口口径仅限：
+
+1. public API、widget、backend、demo、unit 已落地
+2. runtime / mapping / visible / contract 入口已接通并通过当前 targeted 验证
+3. fresh 独立 review 无 findings
+
+它不等于：
+
+1. `a-02` 整线完成
+2. 所有后续控件能力已验证
+3. PicoUI 发布能力已经整体 closeout
+
+`B2 qrcode` 的当前收口口径仅限：
+
+1. public API、widget、backend、demo、unit 已落地
+2. runtime / mapping / visible / contract 入口已接通并通过当前 targeted 验证
+3. fresh 独立 review 无 findings
+
+它同样不等于：
+
+1. `a-02` 整线完成
+2. `progress_wheel / message_box / date_time / clock` 已验证
+3. PicoUI 发布能力已经整体 closeout
+
+`B3 progress_wheel` 的当前收口口径仅限：
+
+1. public API、widget、backend、demo、unit 已落地
+2. runtime / mapping / visible / contract 入口已接通并通过当前 targeted 验证
+3. release-only crash 根因已修到 `ldProgressWheel_init()` 的 scene 参数传递
+4. fresh 独立 review 无 findings
+
+它同样不等于：
+
+1. `a-02` 整线完成
+2. `message_box / date_time / clock` 已验证
+3. PicoUI 发布能力已经整体 closeout
    - 最后处理更重的显示型图片/指针控件
+
+`B4 message_box` 的当前收口口径仅限：
+
+1. public API、widget、backend、demo、unit 已落地
+2. runtime / mapping / visible / contract 入口已接通并通过当前 targeted 验证
+3. `confirm` callback 合同已真实接到底层 `ldMessageBoxSetCallback()`
+4. fresh 独立 review 无 findings
+
+它同样不等于：
+
+1. `a-02` 整线完成
+2. `date_time / clock` 已验证
+3. PicoUI 发布能力已经整体 closeout
+   - 最后处理更重的显示型图片/指针控件
+
+`B5 date_time` 的当前收口口径仅限：
+
+1. public API、widget、backend、demo、unit 已落地
+2. runtime / mapping / visible / contract 入口已接通并通过当前 targeted 验证
+3. `ldDateTime` 手动时间显示合同已修正，runtime 中不再被 `frame_start` 强制覆盖回系统时间
+4. 当前回合受工具策略约束未再新开独立 reviewer；已补做主线程本地 review，未见新的阻断项
+
+它同样不等于：
+
+1. `a-02` 整线完成
+2. `clock` 已验证
+3. PicoUI 发布能力已经整体 closeout
+
+`B6 clock` 的当前收口口径仅限：
+
+1. public API、widget、backend、demo、unit 已落地
+2. runtime / mapping / visible / contract 入口已接通并通过当前 targeted 验证
+3. 当前 PicoUI 只承诺最小 `step_second` 指针显示合同，不承诺背景资源或高级动画系统
+4. 当前回合受工具策略约束未再新开独立 reviewer；已补做主线程本地 review，未见新的阻断项
+
+它同样不等于：
+
+1. PicoUI 整体发布能力已经 closeout
+2. 更高耦合输入类 backlog 已完成
+3. 所有 LingDongGUI 原生时钟资源语义都已对 PicoUI 暴露
 
 ---
 

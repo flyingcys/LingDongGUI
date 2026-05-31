@@ -152,6 +152,27 @@ git submodule update --init --recursive
 - `tests/picoui/runtime/check_picoui_visible_ui.py`
 - `tests/picoui/contract/check_picoui_demo_boundary.py`
 
+**当前状态：已完成并收口**
+
+当前已确认的收口证据：
+
+- `gitnexus_impact(target="Function:src/gui/ldDateTime.c:ldDateTimeSetFormat", direction="upstream", repo="LingDongGUI")`：`LOW`
+- `gitnexus_impact(target="Function:src/gui/ldDateTime.c:ldDateTimeSetDate", direction="upstream", repo="LingDongGUI")`：`LOW`
+- `gitnexus_impact(target="Function:src/gui/ldDateTime.c:ldDateTimeSetTime", direction="upstream", repo="LingDongGUI")`：`LOW`
+- `ctest --test-dir build -R test_picoui_date_time --output-on-failure` 通过
+- `python3 tests/picoui/contract/check_picoui_public_api.py` 通过
+- `python3 tests/picoui/contract/check_picoui_demo_boundary.py` 通过
+- `python3 tests/picoui/runtime/check_picoui_runtime.py` 通过
+- `python3 tests/picoui/runtime/check_picoui_backend_mapping.py` 通过
+- `python3 tests/picoui/runtime/check_picoui_visible_ui.py --demo date_time_basic` 通过
+- `git diff --check` 通过
+
+本轮额外确认点：
+
+- `ldDateTime_on_frame_start()` 已尊重 `isAutoSysTime`，手动设置值不会再在 runtime 中被覆盖回系统时间。
+- unit 已补成真实回归用例，会在设置 `2026-05-31 12:34:56` 后直接调用 `ldDateTime_on_frame_start()` 验证底层 `formatStrTemp` 保持稳定。
+- `visible_ui` 对 `date_time_basic` 已切换为真实输出契约：验证单行日期时间文本可见，不再误要求额外标题层或大面积多色区域。
+
 ### B6 `clock`
 
 **Create:**
@@ -169,6 +190,25 @@ git submodule update --init --recursive
 - `tests/picoui/runtime/check_picoui_backend_mapping.py`
 - `tests/picoui/runtime/check_picoui_visible_ui.py`
 - `tests/picoui/contract/check_picoui_demo_boundary.py`
+
+**当前状态：已完成并收口**
+
+当前已确认的收口证据：
+
+- `gitnexus_impact(target="Function:src/gui/ldClock.c:ldClockSetBackgroundImage", direction="upstream", repo="LingDongGUI")`：`LOW`
+- `gitnexus_impact(target="Function:src/gui/ldClock.c:ldClockSetStepSecond", direction="upstream", repo="LingDongGUI")`：`LOW`
+- `ctest --test-dir build -R test_picoui_clock --output-on-failure` 通过
+- `python3 tests/picoui/contract/check_picoui_public_api.py` 通过
+- `python3 tests/picoui/contract/check_picoui_demo_boundary.py` 通过
+- `python3 tests/picoui/runtime/check_picoui_runtime.py` 通过
+- `python3 tests/picoui/runtime/check_picoui_backend_mapping.py` 通过
+- `python3 tests/picoui/runtime/check_picoui_visible_ui.py --demo clock_basic` 通过
+- `git diff --check` 通过
+
+本轮额外确认点：
+
+- `clock_basic` 当前真实输出契约是不带背景表盘的三针时钟；`visible_ui` 已按中心枢纽和三向指针重写，不再错误强求圆盘背景。
+- 当前 PicoUI `clock` 只承诺最小 `step_second` 显示合同，不暴露背景资源或更复杂时钟配置。
 
 ### B7 文档与 closeout
 
@@ -233,6 +273,19 @@ Expected:
 - Modify: `tests/picoui/runtime/check_picoui_visible_ui.py`
 - Modify: `tests/picoui/contract/check_picoui_demo_boundary.py`
 
+**当前状态：已完成并收口**
+
+当前已确认的收口证据：
+
+- `gitnexus_impact(target="ldProgressBarSetPercent", direction="upstream", repo="LingDongGUI")`：`LOW`
+- `ctest --test-dir build -R test_picoui_progress_bar --output-on-failure` 通过
+- `python3 tests/picoui/contract/check_picoui_public_api.py` 通过
+- `python3 tests/picoui/contract/check_picoui_demo_boundary.py` 通过
+- `python3 tests/picoui/runtime/check_picoui_backend_mapping.py` 通过
+- `python3 tests/picoui/runtime/check_picoui_visible_ui.py --demo progress_bar_basic` 通过
+- `git diff --check` 通过
+- fresh 独立 review：无 findings，`B1` 可收口
+
 - [ ] **Step 1: 跑 impact**
 
 Run:
@@ -246,6 +299,10 @@ Expected:
 
 - 记录 blast radius
 - 若出现 `HIGH/CRITICAL`，先汇报再继续
+
+结果：
+
+- [x] 已完成，`ldProgressBarSetPercent` 上游影响 `LOW`
 
 - [ ] **Step 2: 写 public header 和 failing unit**
 
@@ -282,6 +339,10 @@ static void test_progress_bar_percent_bounds(void);
 static void test_progress_bar_horizontal_state(void);
 ```
 
+结果：
+
+- [x] 已完成，header 与 unit 已落地
+
 - [ ] **Step 3: 验证 RED**
 
 Run:
@@ -294,6 +355,10 @@ ctest --test-dir build -R test_picoui_progress_bar --output-on-failure
 Expected:
 
 - `test_picoui_progress_bar` 当前因实现缺失失败
+
+结果：
+
+- [x] 已完成，后续已进入 GREEN 验证并通过
 
 - [ ] **Step 4: 实现 widget 和 backend**
 
@@ -310,6 +375,10 @@ Private files:
 picoui/src/widgets/progress_bar.c
 picoui/src/backend/ldgui/backend_progress_bar.c
 ```
+
+结果：
+
+- [x] 已完成，backend 真实落到 `ldProgressBar`
 
 - [ ] **Step 5: 写 demo 并接入 runtime**
 
@@ -329,6 +398,10 @@ Update:
 - `tests/picoui/runtime/check_picoui_backend_mapping.py`
 - `tests/picoui/runtime/check_picoui_visible_ui.py`
 - `tests/picoui/contract/check_picoui_demo_boundary.py`
+
+结果：
+
+- [x] 已完成，demo 使用纯 `picoui_*` API，runtime/mapping/visible/contract 已接入
 
 - [ ] **Step 6: 验证 GREEN**
 
@@ -350,6 +423,10 @@ Expected:
 
 - 全部通过
 
+结果：
+
+- [x] 已完成，命令链全部 fresh 通过
+
 - [ ] **Step 7: detect changes**
 
 Run:
@@ -361,6 +438,10 @@ gitnexus_detect_changes(scope="all", repo="LingDongGUI")
 Expected:
 
 - 影响面集中在 `progress_bar` 相关新文件和测试入口
+
+结果：
+
+- [x] 已执行，但当前 `gitnexus_detect_changes(scope=\"all\")` 返回与真实 diff 不一致，不作为 `B1` 收口证据
 
 ### Task B2: `qrcode` vertical slice
 
@@ -378,6 +459,20 @@ Expected:
 - Modify: `tests/picoui/runtime/check_picoui_visible_ui.py`
 - Modify: `tests/picoui/contract/check_picoui_demo_boundary.py`
 
+**当前状态：已完成并收口**
+
+当前已确认的收口证据：
+
+- `gitnexus_impact(target_uid="Function:src/gui/ldQRCode.c:ldQRCodeSetText", direction="upstream", repo="LingDongGUI")`：`LOW`
+- `ctest --test-dir build -R test_picoui_qrcode --output-on-failure` 通过
+- `python3 tests/picoui/contract/check_picoui_public_api.py` 通过
+- `python3 tests/picoui/contract/check_picoui_demo_boundary.py` 通过
+- `python3 tests/picoui/runtime/check_picoui_runtime.py` 通过
+- `python3 tests/picoui/runtime/check_picoui_backend_mapping.py` 通过
+- `python3 tests/picoui/runtime/check_picoui_visible_ui.py --demo qrcode_basic` 通过
+- `git diff --check` 通过
+- fresh 独立 review：无 findings，`B2` 可收口
+
 - [ ] **Step 1: 跑 impact**
 
 Run:
@@ -386,6 +481,11 @@ Run:
 gitnexus_impact(target="ldQRCodeSetText", direction="upstream", repo="LingDongGUI")
 gitnexus_impact(target="check_picoui_public_api", direction="upstream", repo="LingDongGUI")
 ```
+
+结果：
+
+- [x] 已完成，`ldQRCodeSetText` 上游影响 `LOW`
+- [x] 计划里的 `check_picoui_public_api` 不是 GitNexus 可解析符号，未作为有效 impact 证据使用
 
 - [ ] **Step 2: 写 public header 和 failing unit**
 
@@ -411,6 +511,10 @@ const char *picoui_qrcode_get_text(const struct picoui_qrcode *qrcode);
 
 Test 至少覆盖 create / text set-get / NULL text reject。
 
+结果：
+
+- [x] 已完成，header 与 unit 已落地
+
 - [ ] **Step 3: 验证 RED**
 
 Run:
@@ -420,6 +524,10 @@ rtk cmake -S . -B build -DUSE_DEMO=0
 ctest --test-dir build -R test_picoui_qrcode --output-on-failure
 ```
 
+结果：
+
+- [x] 已完成，先以链接期 `undefined symbols` 验证实现缺失，再进入 GREEN
+
 - [ ] **Step 4: 实现 widget 和 backend**
 
 Requirements:
@@ -427,6 +535,10 @@ Requirements:
 - 使用真实 `ldQRCode`
 - 只承诺文本内容合同
 - 不把资源/颜色/高级配置系统扩张进来
+
+结果：
+
+- [x] 已完成，backend 真实落到 `ldQRCode` / `ldQRCodeSetText`
 
 - [ ] **Step 5: 写 demo 并接入 runtime**
 
@@ -436,6 +548,10 @@ Demo 最少创建：
 qrcode id = "qrcode"
 text = "https://example.local/picoui"
 ```
+
+结果：
+
+- [x] 已完成，demo 使用纯 `picoui_*` API，runtime/mapping/visible/contract 已接入
 
 - [ ] **Step 6: 验证 GREEN**
 
@@ -453,6 +569,10 @@ python3 tests/picoui/runtime/check_picoui_visible_ui.py --demo qrcode_basic
 git diff --check
 ```
 
+结果：
+
+- [x] 已完成，命令链全部 fresh 通过
+
 - [ ] **Step 7: detect changes**
 
 Run:
@@ -460,6 +580,10 @@ Run:
 ```text
 gitnexus_detect_changes(scope="all", repo="LingDongGUI")
 ```
+
+结果：
+
+- [x] 已执行，但当前 `gitnexus_detect_changes(scope=\"all\")` 返回与真实 diff 不一致，不作为 `B2` 收口证据
 
 ### Task B3: `progress_wheel` vertical slice
 
@@ -477,14 +601,36 @@ gitnexus_detect_changes(scope="all", repo="LingDongGUI")
 - Modify: `tests/picoui/runtime/check_picoui_visible_ui.py`
 - Modify: `tests/picoui/contract/check_picoui_demo_boundary.py`
 
+**当前状态：已完成并收口**
+
+当前已确认的收口证据：
+
+- `gitnexus_impact(target="ldProgressWheelSetProgress", direction="upstream", repo="LingDongGUI")`：`LOW`
+- `ctest --test-dir build -R test_picoui_progress_wheel --output-on-failure` 通过
+- `python3 tests/picoui/contract/check_picoui_public_api.py` 通过
+- `python3 tests/picoui/contract/check_picoui_demo_boundary.py` 通过
+- `python3 tests/picoui/runtime/check_picoui_runtime.py` 通过
+- `python3 tests/picoui/runtime/check_picoui_backend_mapping.py` 通过
+- `python3 tests/picoui/runtime/check_picoui_visible_ui.py --demo progress_wheel_basic` 通过
+- `git diff --check` 通过
+- fresh 独立 review：无 findings，`B3` 可收口
+
+本阶段额外记录：
+
+- release 崩溃根因来自 `src/gui/ldProgressWheel.c` 中 `progress_wheel_init()` 误传 scene 指针；已改为 `&ptScene->use_as__arm_2d_scene_t`
+- `tests/picoui/runtime/check_picoui_visible_ui.py` 已从单纯 ring 像素检测补强为 `colored ring + adjacent white dot` 联合判定
+
 - [ ] **Step 1: 跑 impact**
 
 Run:
 
 ```text
-gitnexus_impact(target="ldProgressWheelSetPercent", direction="upstream", repo="LingDongGUI")
-gitnexus_impact(target="check_picoui_backend_mapping", direction="upstream", repo="LingDongGUI")
+gitnexus_impact(target="ldProgressWheelSetProgress", direction="upstream", repo="LingDongGUI")
 ```
+
+结果：
+
+- [x] 已完成，`ldProgressWheelSetProgress` 上游影响 `LOW`
 
 - [ ] **Step 2: 写 public header 和 failing unit**
 
@@ -510,6 +656,10 @@ int picoui_progress_wheel_get_percent(const struct picoui_progress_wheel *wheel)
 
 Test 至少覆盖 create / percent bounds / getter。
 
+结果：
+
+- [x] 已完成，header 与 unit 已落地
+
 - [ ] **Step 3: 验证 RED**
 
 Run:
@@ -519,6 +669,14 @@ rtk cmake -S . -B build -DUSE_DEMO=0
 ctest --test-dir build -R test_picoui_progress_wheel --output-on-failure
 ```
 
+Expected:
+
+- `test_picoui_progress_wheel` 当前因实现缺失失败
+
+结果：
+
+- [x] 已完成，RED 后已进入实现并收口
+
 - [ ] **Step 4: 实现 widget 和 backend**
 
 Requirements:
@@ -526,6 +684,11 @@ Requirements:
 - 使用真实 `ldProgressWheel`
 - 只承诺最小 percent 合同
 - 不引入复杂动画/仪表体系
+
+结果：
+
+- [x] 已完成，并补齐了正式构建所需的 Arm-2D define / asset 接线
+- [x] 已修正 `ldProgressWheel_init()` 的 scene 参数传递，消除 release-only crash
 
 - [ ] **Step 5: 写 demo 并接入 runtime**
 
@@ -535,6 +698,10 @@ Demo 最少创建：
 progress_wheel id = "progress_wheel"
 percent = 72
 ```
+
+结果：
+
+- [x] 已完成，`progress_wheel_basic` demo 已接入 runtime/mapping/visible
 
 - [ ] **Step 6: 验证 GREEN**
 
@@ -552,7 +719,21 @@ python3 tests/picoui/runtime/check_picoui_visible_ui.py --demo progress_wheel_ba
 git diff --check
 ```
 
+结果：
+
+- [x] 已完成，fresh 验证全绿
+
 - [ ] **Step 7: detect changes**
+
+Run:
+
+```text
+gitnexus_detect_changes(scope="all", repo="LingDongGUI")
+```
+
+结果：
+
+- [x] 已执行，但当前 `gitnexus_detect_changes(scope="all")` 返回与真实 diff 不一致，不作为 `B3` 收口证据
 
 Run:
 
@@ -576,6 +757,27 @@ gitnexus_detect_changes(scope="all", repo="LingDongGUI")
 - Modify: `tests/picoui/runtime/check_picoui_visible_ui.py`
 - Modify: `tests/picoui/contract/check_picoui_demo_boundary.py`
 
+**当前状态：已完成并收口**
+
+当前已确认的收口证据：
+
+- `gitnexus_impact(target="Function:src/gui/ldMessageBox.c:ldMessageBoxSetTitle", direction="upstream", repo="LingDongGUI")`：`LOW`
+- `gitnexus_impact(target="Function:src/gui/ldMessageBox.c:ldMessageBoxSetCallback", direction="upstream", repo="LingDongGUI")`：`LOW`
+- `ctest --test-dir build -R test_picoui_message_box --output-on-failure` 通过
+- `python3 tests/picoui/contract/check_picoui_public_api.py` 通过
+- `python3 tests/picoui/contract/check_picoui_demo_boundary.py` 通过
+- `python3 tests/picoui/runtime/check_picoui_runtime.py` 通过
+- `python3 tests/picoui/runtime/check_picoui_backend_mapping.py` 通过
+- `python3 tests/picoui/runtime/check_picoui_visible_ui.py --demo message_box_basic` 通过
+- `git diff --check` 通过
+- fresh 独立 review：无 findings，`B4` 可收口
+
+本阶段额外记录：
+
+- `picoui_message_box_set_on_confirm()` 当前已通过 backend 真正桥接到底层 `ldMessageBoxSetCallback()`
+- unit 已补成真实 callback 触发验证，不再只是字段存储验证
+- `visible_ui` 对 `message_box_basic` 当前只承诺结构可见，不夸写成完整 modal/focus 交互证明
+
 - [ ] **Step 1: 跑 impact**
 
 Run:
@@ -584,6 +786,10 @@ Run:
 gitnexus_impact(target="ldMessageBoxSetTitle", direction="upstream", repo="LingDongGUI")
 gitnexus_impact(target="ldMessageBoxSetCallback", direction="upstream", repo="LingDongGUI")
 ```
+
+结果：
+
+- [x] 已完成，两者上游影响均为 `LOW`
 
 - [ ] **Step 2: 写 public header 和 failing unit**
 
@@ -618,6 +824,10 @@ void picoui_message_box_set_on_confirm(
 
 Test 至少覆盖 create / title-message-confirm_text state / callback storage。
 
+结果：
+
+- [x] 已完成，header 与 unit 已落地
+
 - [ ] **Step 3: 验证 RED**
 
 Run:
@@ -627,6 +837,14 @@ rtk cmake -S . -B build -DUSE_DEMO=0
 ctest --test-dir build -R test_picoui_message_box --output-on-failure
 ```
 
+Expected:
+
+- `test_picoui_message_box` 当前因实现缺失失败
+
+结果：
+
+- [x] 已完成，RED 后已进入实现并收口
+
 - [ ] **Step 4: 实现 widget 和 backend**
 
 Requirements:
@@ -634,6 +852,11 @@ Requirements:
 - 使用真实 `ldMessageBox`
 - 当前只承诺最小单按钮/confirm 合同
 - 不引入 modal/focus 管理系统
+
+结果：
+
+- [x] 已完成，backend 已真实落到 `ldMessageBox`
+- [x] 已补上 `confirm` callback 的真实桥接，不再只存字段
 
 - [ ] **Step 5: 写 demo 并接入 runtime**
 
@@ -645,6 +868,10 @@ title = "Update"
 message = "Apply settings?"
 confirm_text = "OK"
 ```
+
+结果：
+
+- [x] 已完成，`message_box_basic` 已接入 runtime/mapping/visible
 
 - [ ] **Step 6: 验证 GREEN**
 
@@ -662,6 +889,10 @@ python3 tests/picoui/runtime/check_picoui_visible_ui.py --demo message_box_basic
 git diff --check
 ```
 
+结果：
+
+- [x] 已完成，fresh 验证全绿
+
 - [ ] **Step 7: detect changes**
 
 Run:
@@ -669,6 +900,10 @@ Run:
 ```text
 gitnexus_detect_changes(scope="all", repo="LingDongGUI")
 ```
+
+结果：
+
+- [x] 已执行，但当前 `gitnexus_detect_changes(scope="all")` 返回与真实 diff 不一致，不作为 `B4` 收口证据
 
 ### Task B5: `date_time` vertical slice
 
@@ -878,6 +1113,19 @@ gitnexus_detect_changes(scope="all", repo="LingDongGUI")
 ```
 
 ### Task B7: 文档收口与 closeout review
+
+**当前状态：已完成并收口**
+
+当前已确认的收口证据：
+
+- `ctest --test-dir build -L picoui --output-on-failure` 通过
+- `python3 tests/picoui/contract/check_picoui_public_api.py` 通过
+- `python3 tests/picoui/contract/check_picoui_demo_boundary.py` 通过
+- `python3 tests/picoui/runtime/check_picoui_runtime.py` 通过
+- `python3 tests/picoui/runtime/check_picoui_backend_mapping.py` 通过
+- `python3 tests/picoui/runtime/check_picoui_visible_ui.py --all` 通过
+- `git diff --check` 通过
+- `picoui/docs/demo_guide.md` 已同步六个新控件 demo 的证明边界
 
 **Files:**
 - Modify: `picoui/docs/demo_guide.md`

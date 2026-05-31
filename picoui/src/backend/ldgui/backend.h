@@ -6,6 +6,7 @@
 #include "picoui/widget.h"
 
 struct picoui_widget;
+struct picoui_message_box;
 struct picoui_app;
 struct picoui_theme;
 struct picoui_window;
@@ -22,7 +23,13 @@ enum picoui_backend_widget_kind {
     PICOUI_BACKEND_WIDGET_CHECKBOX,
     PICOUI_BACKEND_WIDGET_SWITCH,
     PICOUI_BACKEND_WIDGET_SLIDER,
+    PICOUI_BACKEND_WIDGET_PROGRESS_BAR,
+    PICOUI_BACKEND_WIDGET_QRCODE,
+    PICOUI_BACKEND_WIDGET_PROGRESS_WHEEL,
     PICOUI_BACKEND_WIDGET_LIST,
+    PICOUI_BACKEND_WIDGET_MESSAGE_BOX,
+    PICOUI_BACKEND_WIDGET_DATE_TIME,
+    PICOUI_BACKEND_WIDGET_CLOCK,
     PICOUI_BACKEND_WIDGET_TEXT,
     PICOUI_BACKEND_WIDGET_IMAGE,
 };
@@ -121,9 +128,16 @@ void *picoui_backend_create_button(void *parent, const char *id);
 void *picoui_backend_create_checkbox(void *parent, const char *id);
 void *picoui_backend_create_switch(void *parent, const char *id);
 void *picoui_backend_create_slider(void *parent, const char *id);
+void *picoui_backend_create_progress_bar(void *parent, const char *id);
+void *picoui_backend_create_qrcode(void *parent, const char *id);
+void *picoui_backend_create_progress_wheel(void *parent, const char *id);
 void *picoui_backend_create_list(void *parent, const char *id);
+void *picoui_backend_create_message_box(void *parent, const char *id);
+void *picoui_backend_create_date_time(void *parent, const char *id);
+void *picoui_backend_create_clock(void *parent, const char *id);
 void *picoui_backend_create_text(void *parent, const char *id);
 void *picoui_backend_create_image(void *parent, const char *id);
+int picoui_backend_message_box_set_on_confirm(struct picoui_message_box *box);
 int picoui_backend_set_text(void *backend_widget, const char *text);
 int picoui_backend_list_set_items(void *backend_widget,
                                   const char *const *item_ids,

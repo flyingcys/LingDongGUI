@@ -1,4 +1,5 @@
 import argparse
+import math
 import os
 import shutil
 import subprocess
@@ -18,8 +19,16 @@ DEMOS = {
     "theme_showcase": "picoui_theme_showcase_demo",
     "settings_panel": "picoui_settings_panel_demo",
     "list_basic": "picoui_list_basic_demo",
+    "progress_bar_basic": "picoui_progress_bar_basic_demo",
+    "progress_wheel_basic": "picoui_progress_wheel_basic_demo",
+    "qrcode_basic": "picoui_qrcode_basic_demo",
+    "message_box_basic": "picoui_message_box_basic_demo",
+    "date_time_basic": "picoui_date_time_basic_demo",
+    "clock_basic": "picoui_clock_basic_demo",
 }
 THEME_BG = (0xF6, 0xF8, 0xFA)
+WHITE_BG = (0xFF, 0xFF, 0xFF)
+BACKGROUND_TOLERANCE = 20
 
 
 def _read_ppm(path: Path) -> tuple[int, int, bytes]:
@@ -70,6 +79,14 @@ def _background_color(width: int, height: int, pixels: bytes) -> tuple[int, int,
     return min(samples, key=lambda color: _color_distance(color, THEME_BG))
 
 
+def _is_background(color: tuple[int, int, int], bg: tuple[int, int, int]) -> bool:
+    return (
+        _color_distance(color, bg) <= BACKGROUND_TOLERANCE
+        or _color_distance(color, THEME_BG) <= BACKGROUND_TOLERANCE
+        or _color_distance(color, WHITE_BG) <= BACKGROUND_TOLERANCE
+    )
+
+
 def _non_background_bounds(
     width: int,
     height: int,
@@ -80,7 +97,7 @@ def _non_background_bounds(
     ys: list[int] = []
     for y in range(height):
         for x in range(width):
-            if _pixel(width, pixels, x, y) != bg:
+            if not _is_background(_pixel(width, pixels, x, y), bg):
                 xs.append(x)
                 ys.append(y)
     if not xs:
@@ -108,11 +125,13 @@ def _active_rows_and_columns(
 ) -> tuple[list[int], list[int]]:
     active_rows: list[int] = []
     active_columns: list[int] = []
+    cell_band_top = 0
+    cell_band_bottom = height - 1
 
     for y in range(height):
         count = 0
         for x in range(width):
-            if _pixel(width, pixels, x, y) != bg:
+            if not _is_background(_pixel(width, pixels, x, y), bg):
                 count += 1
         if count >= 4:
             active_rows.append(y)
@@ -120,7 +139,7 @@ def _active_rows_and_columns(
     for x in range(width):
         count = 0
         for y in range(height):
-            if _pixel(width, pixels, x, y) != bg:
+            if not _is_background(_pixel(width, pixels, x, y), bg):
                 count += 1
         if count >= 4:
             active_columns.append(x)
@@ -160,7 +179,7 @@ def _column_runs_in_band(
     for x in range(width):
         count = 0
         for y in range(y0, y1 + 1):
-            if _pixel(width, pixels, x, y) != bg:
+            if not _is_background(_pixel(width, pixels, x, y), bg):
                 count += 1
         if count >= threshold:
             columns.append(x)
@@ -222,25 +241,110 @@ def _assert_layout_flex_visible(path: Path) -> None:
         )
 
 
-def _assert_layout_grid_visible(path: Path) -> None:
-    _assert_common_visible(path, "layout_grid")
+def _assert_hello_world_visible(path: Path) -> None:
     width, height, pixels = _read_ppm(path)
     bg = _background_color(width, height, pixels)
-    active_rows, active_columns = _active_rows_and_columns(width, height, pixels, bg)
-    row_runs = _runs(active_rows)
-    column_runs = _find_grid_column_groups(width, height, pixels, bg)
+    bounds = _non_background_bounds(width, height, pixels, bg)
     failures: list[str] = []
 
-    cell_rows = [run for run in row_runs if run[1] - run[0] + 1 >= 24]
-    if len(cell_rows) < 2:
+    if width != 480 or height != 320:
+        raise AssertionError(f"VISIBLE FAIL: unexpected hello_world capture size: {width}x{height}")
+
+    if bounds is None:
+        raise AssertionError("SMOKE FAIL: capture has no non-background pixels")
+
+    min_x, min_y, max_x, max_y = bounds
+    visible_width = max_x - min_x + 1
+    visible_height = max_y - min_y + 1
+    colors: set[tuple[int, int, int]] = set()
+
+    if _color_distance(bg, THEME_BG) > 24:
+        failures.append(
+            "hello_world color/readback check failed: "
+            f"background={bg}, expected near theme bg={THEME_BG}"
+        )
+    if visible_width < 120 or visible_height < 28:
+        failures.append(
+            "hello_world structure coverage failed: "
+            f"content_bounds=({min_x},{min_y})-({max_x},{max_y}), expected at least 120x28"
+        )
+
+    for y in range(min_y, max_y + 1, 2):
+        for x in range(min_x, max_x + 1, 2):
+            color = _pixel(width, pixels, x, y)
+            if not _is_background(color, bg):
+                colors.add(color)
+
+    if len(colors) < 1:
+        failures.append(
+            "hello_world content visibility failed: "
+            "expected at least one non-background content color"
+        )
+
+    if failures:
+        joined = "\n  - ".join(failures)
+        raise AssertionError(
+            "VISIBLE FAIL: hello_world capture is non-empty, but hello_world structure is not established.\n"
+            f"  - {joined}"
+        )
+
+
+def _assert_layout_grid_visible(path: Path) -> None:
+    width, height, pixels = _read_ppm(path)
+    bg = _background_color(width, height, pixels)
+    failures: list[str] = []
+    active_rows: list[int] = []
+    active_columns: list[int] = []
+
+    if width != 480 or height != 320:
+        raise AssertionError(f"VISIBLE FAIL: unexpected layout_grid capture size: {width}x{height}")
+
+    if _color_distance(bg, THEME_BG) > 24:
+        failures.append(
+            "grid color/readback check failed: "
+            f"background={bg}, expected near theme bg={THEME_BG}"
+        )
+
+    for y in range(height):
+        count = 0
+        for x in range(width):
+            if _color_distance(_pixel(width, pixels, x, y), bg) > BACKGROUND_TOLERANCE:
+                count += 1
+        if count >= 12:
+            active_rows.append(y)
+
+    row_runs = _runs(active_rows)
+    title_rows = [run for run in row_runs if 20 <= (run[1] - run[0] + 1) <= 40]
+    if len(row_runs) >= 2:
+        cell_band_top = row_runs[1][0]
+        cell_band_bottom = row_runs[1][1]
+    elif title_rows:
+        cell_band_top = title_rows[0][1] + 1
+        cell_band_bottom = row_runs[-1][1] if row_runs else height - 1
+    elif row_runs:
+        cell_band_top = row_runs[0][0]
+        cell_band_bottom = row_runs[-1][1]
+
+    for x in range(width):
+        count = 0
+        for y in range(cell_band_top, cell_band_bottom + 1):
+            if _color_distance(_pixel(width, pixels, x, y), bg) > BACKGROUND_TOLERANCE:
+                count += 1
+        if count >= 8:
+            active_columns.append(x)
+
+    column_runs = _runs(active_columns)
+    cell_columns = [run for run in column_runs if (run[1] - run[0] + 1) >= 40]
+
+    if len(title_rows) < 2:
         failures.append(
             "grid row separation failed: "
-            f"row_runs={row_runs}, expected title and cell rows to occupy independent visible rows"
+            f"row_runs={row_runs}, expected separate title and cell bands"
         )
-    if len(column_runs) < 2:
+    if len(cell_columns) < 2:
         failures.append(
             "grid column separation failed: "
-            f"best_column_runs={column_runs}, expected at least two independent visible columns"
+            f"column_runs={column_runs}, expected at least two independent visible columns"
         )
 
     if failures:
@@ -265,7 +369,7 @@ def _capture_visible_metrics(path: Path) -> tuple[int, int, tuple[int, int, int]
     for y in range(0, height, 4):
         for x in range(0, width, 4):
             color = _pixel(width, pixels, x, y)
-            if color != bg:
+            if not _is_background(color, bg):
                 non_bg_colors.add(color)
 
     min_x, min_y, max_x, max_y = bounds
@@ -355,9 +459,8 @@ def _assert_basic_widgets_visible(path: Path) -> None:
 
 
 def _assert_list_basic_visible(path: Path) -> None:
-    _assert_common_visible(path, "list_basic")
     width, height, pixels = _read_ppm(path)
-    bg = _pixel(width, pixels, 8, 8)
+    bg = _background_color(width, height, pixels)
     bounds = _non_background_bounds(width, height, pixels, bg)
     if bounds is None:
         raise AssertionError("SMOKE FAIL: capture has no non-background pixels")
@@ -366,40 +469,563 @@ def _assert_list_basic_visible(path: Path) -> None:
     visible_width = max_x - min_x + 1
     visible_height = max_y - min_y + 1
     failures: list[str] = []
+    sampled_luma = _sample_luma(width, height, pixels)
+    p90 = _percentile(sampled_luma, 0.90)
+    p99 = _percentile(sampled_luma, 0.99)
 
-    if visible_width < 180 or visible_height < 80:
+    if width != 480 or height != 320:
+        raise AssertionError(f"VISIBLE FAIL: unexpected list_basic capture size: {width}x{height}")
+
+    if _color_distance(bg, THEME_BG) > 24:
+        failures.append(
+            "list color/readback check failed: "
+            f"background={bg}, expected near theme bg={THEME_BG}"
+        )
+
+    if p90 < 55.0 or p99 < 95.0:
+        failures.append(
+            "list readability check failed: "
+            f"p90_luma={p90:.1f}, p99_luma={p99:.1f}, expected p90>=55 and p99>=95"
+        )
+
+    if visible_width < 180 or visible_height < 24:
         failures.append(
             "list structure check failed: "
             f"content_bounds=({min_x},{min_y})-({max_x},{max_y}), "
-            "expected readable list content to occupy at least 180x80 pixels"
+            "expected visible list content to occupy at least 180x24 pixels"
         )
 
-    row_bands = [
-        (min_y + 32, min_y + 56),
-        (min_y + 56, min_y + 80),
-        (min_y + 80, min_y + 104),
-    ]
-    readable_rows = 0
-    for y0, y1 in row_bands:
-        colors: set[tuple[int, int, int]] = set()
-        for y in range(max(0, y0), min(height, y1), 4):
-            for x in range(max(0, min_x), min(width, min_x + 220), 4):
-                color = _pixel(width, pixels, x, y)
-                if color != bg:
-                    colors.add(color)
-        if len(colors) >= 2:
-            readable_rows += 1
+    active_rows: list[int] = []
+    for y in range(min_y, max_y + 1):
+        count = 0
+        for x in range(min_x, max_x + 1):
+            if not _is_background(_pixel(width, pixels, x, y), bg):
+                count += 1
+        if count >= 160:
+            active_rows.append(y)
 
-    if readable_rows < 2:
+    row_runs = _runs(active_rows)
+    wide_bands = [run for run in row_runs if (run[1] - run[0] + 1) >= 20]
+    if not wide_bands:
         failures.append(
-            "list row contrast check failed: "
-            f"readable_rows={readable_rows}, expected at least 2 rows with visible contrast"
+            "list band continuity check failed: "
+            f"row_runs={row_runs}, expected at least one wide horizontal list band"
+        )
+
+    band_colors: set[tuple[int, int, int]] = set()
+    for y in range(min_y, max_y + 1, 2):
+        for x in range(min_x, max_x + 1, 2):
+            color = _pixel(width, pixels, x, y)
+            if not _is_background(color, bg):
+                band_colors.add(color)
+
+    if len(band_colors) < 3:
+        failures.append(
+            "list band contrast check failed: "
+            f"band_colors={sorted(band_colors)}, expected at least 3 visible band shades"
         )
 
     if failures:
         joined = "\n  - ".join(failures)
         raise AssertionError(
             "VISIBLE FAIL: list_basic capture is non-empty, but visible correctness is not established.\n"
+            f"  - {joined}"
+        )
+
+
+def _assert_progress_bar_basic_visible(path: Path) -> None:
+    _assert_common_visible(path, "progress_bar_basic")
+    width, height, pixels = _read_ppm(path)
+    bg = _background_color(width, height, pixels)
+    bounds = _non_background_bounds(width, height, pixels, bg)
+    failures: list[str] = []
+    horizontal_colors: set[tuple[int, int, int]] = set()
+    vertical_colors: set[tuple[int, int, int]] = set()
+    horizontal_runs: list[tuple[int, int]] = []
+    vertical_runs: list[tuple[int, int]] = []
+    horizontal_span: tuple[int, int] | None = None
+
+    if bounds is None:
+        raise AssertionError("SMOKE FAIL: capture has no non-background pixels")
+
+    min_x, min_y, max_x, max_y = bounds
+
+    candidate_rows: list[int] = []
+    row_spans: dict[int, tuple[int, int]] = {}
+    for y in range(64, min(height, 97)):
+        xs: list[int] = []
+        for x in range(112, min(width, 433)):
+            if not _is_background(_pixel(width, pixels, x, y), bg):
+                xs.append(x)
+        if len(xs) >= 180:
+            candidate_rows.append(y)
+            row_spans[y] = (xs[0], xs[-1])
+
+    for row_start, row_end in _runs(candidate_rows):
+        if row_end - row_start + 1 < 2 or row_end - row_start + 1 > 12:
+            continue
+        span_start = min(row_spans[y][0] for y in range(row_start, row_end + 1) if y in row_spans)
+        span_end = max(row_spans[y][1] for y in range(row_start, row_end + 1) if y in row_spans)
+        if span_end - span_start + 1 < 180:
+            continue
+        horizontal_runs = [(row_start, row_end)]
+        horizontal_span = (span_start, span_end)
+        for y in range(row_start, row_end + 1):
+            for x in range(span_start, span_end + 1, 4):
+                color = _pixel(width, pixels, x, y)
+                if not _is_background(color, bg):
+                    horizontal_colors.add(color)
+        break
+
+    candidate_columns: list[int] = []
+    for x in range(min_x, max_x + 1):
+        active = 0
+        for y in range(min_y, max_y + 1):
+            if not _is_background(_pixel(width, pixels, x, y), bg):
+                active += 1
+        if active >= 72:
+            candidate_columns.append(x)
+
+    for col_start, col_end in _runs(candidate_columns):
+        if col_end - col_start + 1 < 20 or col_end - col_start + 1 > 80:
+            continue
+        row_hits: list[int] = []
+        for y in range(min_y, max_y + 1):
+            active = 0
+            for x in range(col_start, col_end + 1):
+                if not _is_background(_pixel(width, pixels, x, y), bg):
+                    active += 1
+            if active >= 12:
+                row_hits.append(y)
+        tall_runs = [run for run in _runs(row_hits) if run[1] - run[0] + 1 >= 96]
+        if not tall_runs:
+            continue
+        vertical_runs = tall_runs
+        for y in range(tall_runs[0][0], tall_runs[0][1] + 1, 4):
+            for x in range(col_start, col_end + 1, 2):
+                color = _pixel(width, pixels, x, y)
+                if not _is_background(color, bg):
+                    vertical_colors.add(color)
+        break
+
+    if horizontal_span is None or horizontal_span[1] - horizontal_span[0] + 1 < 180:
+        failures.append(
+            "horizontal progress bar direction failed: "
+            f"row_runs={horizontal_runs}, span={horizontal_span}, expected a thin row band with a long horizontal span"
+        )
+    if len(vertical_colors) < 2:
+        failures.append(
+            "vertical progress bar contrast failed: "
+            f"colors={sorted(vertical_colors)}"
+        )
+    if not any((end - start + 1) >= 96 for start, end in vertical_runs):
+        failures.append(
+            "vertical progress bar direction failed: "
+            f"row_runs={vertical_runs}, expected a tall vertical occupancy band"
+        )
+
+    if failures:
+        joined = "\n  - ".join(failures)
+        raise AssertionError(
+            "VISIBLE FAIL: progress_bar_basic capture is non-empty, but progress bar structure is not established.\n"
+            f"  - {joined}"
+        )
+
+
+def _assert_progress_wheel_basic_visible(path: Path) -> None:
+    width, height, pixels = _read_ppm(path)
+    bg = _background_color(width, height, pixels)
+    failures: list[str] = []
+    sampled_luma = _sample_luma(width, height, pixels)
+    p90 = _percentile(sampled_luma, 0.90)
+    p99 = _percentile(sampled_luma, 0.99)
+    wheel_pixels: list[tuple[int, int, tuple[int, int, int]]] = []
+    white_pixels: set[tuple[int, int]] = set()
+
+    if width != 480 or height != 320:
+        raise AssertionError(f"VISIBLE FAIL: unexpected progress_wheel_basic capture size: {width}x{height}")
+
+    if _color_distance(bg, THEME_BG) > 24:
+        failures.append(
+            "progress wheel color/readback check failed: "
+            f"background={bg}, expected near theme bg={THEME_BG}"
+        )
+    if p90 < 55.0 or p99 < 95.0:
+        failures.append(
+            "progress wheel readability check failed: "
+            f"p90_luma={p90:.1f}, p99_luma={p99:.1f}, expected p90>=55 and p99>=95"
+        )
+
+    for y in range(56, height):
+        for x in range(width):
+            color = _pixel(width, pixels, x, y)
+            if _color_distance(color, WHITE_BG) <= BACKGROUND_TOLERANCE:
+                white_pixels.add((x, y))
+                continue
+            if _is_background(color, bg):
+                continue
+            wheel_pixels.append((x, y, color))
+
+    if not wheel_pixels:
+        failures.append("progress wheel structure coverage failed: no non-background wheel pixels found below the title band")
+        joined = "\n  - ".join(failures)
+        raise AssertionError(
+            "VISIBLE FAIL: progress_wheel_basic capture is non-empty, but progress wheel structure is not established.\n"
+            f"  - {joined}"
+        )
+
+    xs = [x for x, _, _ in wheel_pixels]
+    ys = [y for _, y, _ in wheel_pixels]
+    min_x, min_y, max_x, max_y = min(xs), min(ys), max(xs), max(ys)
+    visible_width = max_x - min_x + 1
+    visible_height = max_y - min_y + 1
+    center_x = (min_x + max_x) // 2
+    center_y = (min_y + max_y) // 2
+    ring_colors: set[tuple[int, int, int]] = set()
+    interior_colors: set[tuple[int, int, int]] = set()
+    ring_samples = 0
+    interior_samples = 0
+    white_near_count = 0
+    white_near_bounds: tuple[int, int, int, int] | None = None
+
+    if visible_width < 24 or visible_height < 24:
+        failures.append(
+            "progress wheel structure coverage failed: "
+            f"content_bounds=({min_x},{min_y})-({max_x},{max_y}), expected at least 24x24 visible wheel pixels"
+        )
+
+    sample_radius = min(visible_width, visible_height) // 2
+    outer_radius_sq = max(1, sample_radius * sample_radius)
+    inner_radius_sq = max(1, (sample_radius // 3) * (sample_radius // 3))
+    ring_pixel_coords: set[tuple[int, int]] = set()
+
+    for y in range(min_y, max_y + 1, 2):
+        for x in range(min_x, max_x + 1, 2):
+            color = _pixel(width, pixels, x, y)
+            if _is_background(color, bg) or _color_distance(color, WHITE_BG) <= BACKGROUND_TOLERANCE:
+                continue
+            dx = x - center_x
+            dy = y - center_y
+            distance_sq = dx * dx + dy * dy
+            if distance_sq >= inner_radius_sq and distance_sq <= outer_radius_sq:
+                ring_colors.add(color)
+                ring_samples += 1
+                ring_pixel_coords.add((x, y))
+            elif distance_sq < inner_radius_sq:
+                interior_colors.add(color)
+                interior_samples += 1
+
+    if ring_pixel_coords and white_pixels:
+        white_xs: list[int] = []
+        white_ys: list[int] = []
+        for white_x, white_y in white_pixels:
+            is_near_ring = False
+            for dx in range(-6, 7):
+                if is_near_ring:
+                    break
+                for dy in range(-6, 7):
+                    if (white_x + dx, white_y + dy) in ring_pixel_coords:
+                        is_near_ring = True
+                        break
+            if not is_near_ring:
+                continue
+            white_near_count += 1
+            white_xs.append(white_x)
+            white_ys.append(white_y)
+        if white_xs and white_ys:
+            white_near_bounds = (min(white_xs), min(white_ys), max(white_xs), max(white_ys))
+
+    if ring_samples < 10:
+        failures.append(
+            "progress wheel ring occupancy failed: "
+            f"ring_samples={ring_samples}, expected >=10 sampled ring pixels"
+        )
+    if len(ring_colors) < 1:
+        failures.append(
+            "progress wheel contrast failed: "
+            f"ring_colors={sorted(ring_colors)}, expected at least one visible wheel color"
+        )
+    if interior_samples < 1:
+        failures.append(
+            "progress wheel interior visibility failed: "
+            f"interior_samples={interior_samples}, expected at least one visible wheel interior sample"
+        )
+    if white_near_count < 4:
+        failures.append(
+            "progress wheel dot visibility failed: "
+            f"white_near_count={white_near_count}, white_near_bounds={white_near_bounds}, "
+            "expected nearby white dot pixels adjacent to the colored ring"
+        )
+
+    if failures:
+        joined = "\n  - ".join(failures)
+        raise AssertionError(
+            "VISIBLE FAIL: progress_wheel_basic capture is non-empty, but progress wheel structure is not established.\n"
+            f"  - {joined}"
+        )
+
+
+def _assert_qrcode_basic_visible(path: Path) -> None:
+    width, height, pixels = _read_ppm(path)
+    bg = _background_color(width, height, pixels)
+    bounds = _non_background_bounds(width, height, pixels, bg)
+    failures: list[str] = []
+    sampled_luma = _sample_luma(width, height, pixels)
+    p90 = _percentile(sampled_luma, 0.90)
+    p99 = _percentile(sampled_luma, 0.99)
+
+    if bounds is None:
+        raise AssertionError("SMOKE FAIL: capture has no non-background pixels")
+
+    min_x, min_y, max_x, max_y = bounds
+    visible_width = max_x - min_x + 1
+    visible_height = max_y - min_y + 1
+    dark_pixels = 0
+    light_pixels = 0
+    module_x0 = max(0, min_x - 8)
+    module_y0 = max(0, min_y - 8)
+    module_x1 = min(width - 1, max_x + 8)
+    module_y1 = min(height - 1, max_y + 8)
+
+    if visible_width < 96 or visible_height < 96:
+        failures.append(
+            "qrcode structure coverage failed: "
+            f"content_bounds=({min_x},{min_y})-({max_x},{max_y}), expected at least 96x96 pixels"
+        )
+    if _color_distance(bg, THEME_BG) > 24:
+        failures.append(
+            "qrcode color/readback check failed: "
+            f"background={bg}, expected near theme bg={THEME_BG}"
+        )
+    if p90 < 55.0 or p99 < 95.0:
+        failures.append(
+            "qrcode readability check failed: "
+            f"p90_luma={p90:.1f}, p99_luma={p99:.1f}, expected p90>=55 and p99>=95"
+        )
+
+    for y in range(module_y0, module_y1 + 1, 2):
+        for x in range(module_x0, module_x1 + 1, 2):
+            color = _pixel(width, pixels, x, y)
+            if _luma(color) < 90:
+                dark_pixels += 1
+            else:
+                light_pixels += 1
+
+    if dark_pixels < 300:
+        failures.append(
+            "qrcode dark-module coverage failed: "
+            f"dark_pixels={dark_pixels}, expected >=300 sampled dark pixels"
+        )
+    if light_pixels < 300:
+        failures.append(
+            "qrcode light-module coverage failed: "
+            f"light_pixels={light_pixels}, expected >=300 sampled light pixels"
+        )
+
+    if failures:
+        joined = "\n  - ".join(failures)
+        raise AssertionError(
+            "VISIBLE FAIL: qrcode_basic capture is non-empty, but qrcode structure is not established.\n"
+            f"  - {joined}"
+        )
+
+
+def _assert_message_box_basic_visible(path: Path) -> None:
+    _assert_common_visible(path, "message_box_basic")
+    width, height, pixels = _read_ppm(path)
+    bg = _background_color(width, height, pixels)
+    bounds = _non_background_bounds(width, height, pixels, bg)
+    failures: list[str] = []
+
+    if bounds is None:
+        raise AssertionError("SMOKE FAIL: capture has no non-background pixels")
+
+    min_x, min_y, max_x, max_y = bounds
+    if max_y < height // 2:
+        failures.append(
+            "message box lower-half placement failed: "
+            f"content_bounds=({min_x},{min_y})-({max_x},{max_y}), expected visible lower-half structure"
+        )
+
+    active_rows: list[int] = []
+    x0 = min_x
+    x1 = max_x
+    y0 = min_y
+    y1 = min(max_y, height - 16)
+    for y in range(y0, y1 + 1):
+        count = 0
+        for x in range(x0, x1 + 1):
+            if not _is_background(_pixel(width, pixels, x, y), bg):
+                count += 1
+        if count >= 4:
+            active_rows.append(y)
+
+    band_runs = _runs(active_rows)
+    thin_runs = [run for run in band_runs if run[1] - run[0] + 1 >= 4]
+    thick_runs = [run for run in band_runs if run[1] - run[0] + 1 >= 12]
+    if len(thin_runs) < 3 or len(thick_runs) < 1:
+        failures.append(
+            "message box vertical-band layering failed: "
+            f"row_runs={band_runs}, expected two thin text bands plus one thicker button band"
+        )
+
+    if (max_x - min_x + 1) < 140 or (max_y - min_y + 1) < 90:
+        failures.append(
+            "message box rectangle coverage failed: "
+            f"content_bounds=({min_x},{min_y})-({max_x},{max_y}), expected at least 140x90"
+        )
+
+    if failures:
+        joined = "\n  - ".join(failures)
+        raise AssertionError(
+            "VISIBLE FAIL: message_box_basic capture is non-empty, but message box structure is not established.\n"
+            f"  - {joined}"
+        )
+
+
+def _assert_date_time_basic_visible(path: Path) -> None:
+    width, height, pixels = _read_ppm(path)
+    bg = _background_color(width, height, pixels)
+    bounds = _non_background_bounds(width, height, pixels, bg)
+    failures: list[str] = []
+
+    if width != 480 or height != 320:
+        raise AssertionError(f"VISIBLE FAIL: unexpected date_time_basic capture size: {width}x{height}")
+
+    if bounds is None:
+        raise AssertionError("SMOKE FAIL: capture has no non-background pixels")
+
+    min_x, min_y, max_x, max_y = bounds
+    visible_width = max_x - min_x + 1
+    visible_height = max_y - min_y + 1
+
+    if _color_distance(bg, THEME_BG) > 24:
+        failures.append(
+            "date_time color/readback check failed: "
+            f"background={bg}, expected near theme bg={THEME_BG}"
+        )
+
+    if visible_width < 100 or visible_height < 6:
+        failures.append(
+            "date_time coverage failed: "
+            f"content_bounds=({min_x},{min_y})-({max_x},{max_y}), expected at least 100x6"
+        )
+
+    active_rows: list[int] = []
+    for y in range(min_y, max_y + 1):
+        count = 0
+        for x in range(min_x, max_x + 1):
+            if not _is_background(_pixel(width, pixels, x, y), bg):
+                count += 1
+        if count >= 8:
+            active_rows.append(y)
+
+    row_runs = _runs(active_rows)
+    text_runs = [run for run in row_runs if 4 <= (run[1] - run[0] + 1) <= 12]
+    if not text_runs:
+        failures.append(
+            "date_time text-band check failed: "
+            f"row_runs={row_runs}, expected a thin readable datetime text band"
+        )
+
+    if failures:
+        joined = "\n  - ".join(failures)
+        raise AssertionError(
+            "VISIBLE FAIL: date_time_basic capture is non-empty, but date_time structure is not established.\n"
+            f"  - {joined}"
+        )
+
+
+def _assert_clock_basic_visible(path: Path) -> None:
+    width, height, pixels = _read_ppm(path)
+    bg = _background_color(width, height, pixels)
+    failures: list[str] = []
+    sampled_luma = _sample_luma(width, height, pixels)
+    p90 = _percentile(sampled_luma, 0.90)
+    p99 = _percentile(sampled_luma, 0.99)
+    bounds = _non_background_bounds(width, height, pixels, bg)
+
+    if width != 480 or height != 320:
+        raise AssertionError(f"VISIBLE FAIL: unexpected clock_basic capture size: {width}x{height}")
+
+    if bounds is None:
+        raise AssertionError("SMOKE FAIL: capture has no non-background pixels")
+
+    min_x, min_y, max_x, max_y = bounds
+    visible_width = max_x - min_x + 1
+    visible_height = max_y - min_y + 1
+
+    if _color_distance(bg, THEME_BG) > 24:
+        failures.append(
+            "clock color/readback check failed: "
+            f"background={bg}, expected near theme bg={THEME_BG}"
+        )
+    if p90 < 55.0 or p99 < 95.0:
+        failures.append(
+            "clock readability check failed: "
+            f"p90_luma={p90:.1f}, p99_luma={p99:.1f}, expected p90>=55 and p99>=95"
+        )
+    if visible_width < 60 or visible_height < 80:
+        failures.append(
+            "clock structure coverage failed: "
+            f"content_bounds=({min_x},{min_y})-({max_x},{max_y}), expected at least 60x80 visible clock pixels"
+        )
+
+    best_center_hits = 0
+    best_center: tuple[int, int] | None = None
+    ray_hits = 0
+    direction_bins: dict[int, int] = {}
+
+    for center_y in range(min_y + 8, max_y - 7, 2):
+        for center_x in range(min_x + 8, max_x - 7, 2):
+            center_hits = 0
+            for y in range(center_y - 6, center_y + 7):
+                for x in range(center_x - 6, center_x + 7):
+                    if not _is_background(_pixel(width, pixels, x, y), bg):
+                        center_hits += 1
+            if center_hits > best_center_hits:
+                best_center_hits = center_hits
+                best_center = (center_x, center_y)
+
+    if best_center is not None:
+        center_x, center_y = best_center
+        for y in range(min_y, max_y + 1):
+            for x in range(min_x, max_x + 1):
+                if _is_background(_pixel(width, pixels, x, y), bg):
+                    continue
+                dx = x - center_x
+                dy = y - center_y
+                if dx == 0 and dy == 0:
+                    continue
+                if dx * dx + dy * dy < 100:
+                    continue
+                ray_hits += 1
+                angle = (math.degrees(math.atan2(-dy, dx)) + 360.0) % 360.0
+                direction = int(angle // 30) * 30
+                direction_bins[direction] = direction_bins.get(direction, 0) + 1
+
+    strong_directions = sorted(direction for direction, count in direction_bins.items() if count >= 20)
+
+    if best_center_hits < 12:
+        failures.append(
+            "clock hub visibility failed: "
+            f"center_hits={best_center_hits}, expected a visible center hub region"
+        )
+    if ray_hits < 80 or len(strong_directions) < 3:
+        failures.append(
+            "clock pointer spread failed: "
+            f"ray_hits={ray_hits}, strong_directions={strong_directions}, expected at least three stable pointer directions"
+        )
+    if (visible_width + visible_height) < 180:
+        failures.append(
+            "clock pointer span failed: "
+            f"visible_width={visible_width}, visible_height={visible_height}, expected combined span >= 180"
+        )
+
+    if failures:
+        joined = "\n  - ".join(failures)
+        raise AssertionError(
+            "VISIBLE FAIL: clock_basic capture is non-empty, but clock structure is not established.\n"
             f"  - {joined}"
         )
 
@@ -492,8 +1118,22 @@ def main() -> None:
             if demo == "basic_widgets":
                 _assert_basic_widgets_visible(capture_path)
                 _assert_basic_widgets_image_source_boundary(completed.stdout)
+            elif demo == "hello_world":
+                _assert_hello_world_visible(capture_path)
             elif demo == "list_basic":
                 _assert_list_basic_visible(capture_path)
+            elif demo == "progress_bar_basic":
+                _assert_progress_bar_basic_visible(capture_path)
+            elif demo == "progress_wheel_basic":
+                _assert_progress_wheel_basic_visible(capture_path)
+            elif demo == "qrcode_basic":
+                _assert_qrcode_basic_visible(capture_path)
+            elif demo == "message_box_basic":
+                _assert_message_box_basic_visible(capture_path)
+            elif demo == "date_time_basic":
+                _assert_date_time_basic_visible(capture_path)
+            elif demo == "clock_basic":
+                _assert_clock_basic_visible(capture_path)
             elif demo == "layout_flex":
                 _assert_layout_flex_visible(capture_path)
             elif demo == "layout_grid":

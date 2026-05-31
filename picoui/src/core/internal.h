@@ -2,6 +2,7 @@
 #define PICOUI_INTERNAL_H
 
 #include "backend.h"
+#include "picoui/message_box.h"
 #include "picoui/theme.h"
 
 #define PICOUI_LAYOUT_MAX_TRACKS 16
@@ -10,6 +11,9 @@
 typedef struct arm_2d_tile_t arm_2d_tile_t;
 
 struct picoui_font;
+struct picoui_message_box;
+
+typedef void (*picoui_message_box_callback_t)(struct picoui_message_box *box, void *user_data);
 
 struct picoui_widget {
     void *backend_widget;
@@ -111,6 +115,43 @@ struct picoui_slider {
     void *user_data;
 };
 
+struct picoui_progress_bar {
+    struct picoui_widget widget;
+    const char *id;
+    int percent;
+    int horizontal;
+};
+
+struct picoui_qrcode {
+    struct picoui_widget widget;
+    const char *id;
+    const char *text;
+};
+
+struct picoui_progress_wheel {
+    struct picoui_widget widget;
+    const char *id;
+    int percent;
+};
+
+struct picoui_date_time {
+    struct picoui_widget widget;
+    const char *id;
+    const char *format;
+    int year;
+    int month;
+    int day;
+    int hour;
+    int minute;
+    int second;
+};
+
+struct picoui_clock {
+    struct picoui_widget widget;
+    const char *id;
+    int step_second;
+};
+
 struct picoui_list_item {
     const char *id;
     const char *text;
@@ -126,6 +167,16 @@ struct picoui_list {
     int selected_index;
     void (*cb)(struct picoui_list *list, int index, void *user_data);
     void *user_data;
+};
+
+struct picoui_message_box {
+    struct picoui_widget widget;
+    const char *id;
+    const char *title;
+    const char *message;
+    const char *confirm_text;
+    picoui_message_box_callback_t on_confirm;
+    void *on_confirm_user_data;
 };
 
 struct picoui_text {

@@ -13,6 +13,7 @@ set(LD_ARM2D_HELPER_DIR "${LD_ARM2D_DIR}/Helper")
 set(LD_ARM2D_COMMON_DIR "${LD_COMMON_DIR}/Arm-2D/examples/common")
 set(LD_ARM2D_CONTROLS_DIR "${LD_ARM2D_COMMON_DIR}/controls")
 set(LD_ARM2D_QRCODE_DIR "${LD_ARM2D_CONTROLS_DIR}/qrcode_box")
+set(LD_ARM2D_ASSET_DIR "${LD_ARM2D_COMMON_DIR}/asset")
 set(LD_MATH_DIR "${LD_COMMON_DIR}/math")
 set(LD_DEMO_DIR "${LD_COMMON_DIR}/demo")
 set(LD_TESTS_DIR "${LD_REPO_ROOT}/tests")
@@ -40,6 +41,13 @@ set(LD_ARM2D_QRCODE_SOURCES
     "${LD_ARM2D_QRCODE_DIR}/qrcode_box.c"
     "${LD_ARM2D_QRCODE_DIR}/qrcodegen.c"
 )
+set(LD_ARM2D_PROGRESS_WHEEL_ASSET_SOURCES
+    "${LD_ARM2D_ASSET_DIR}/arm_2d_asset_QuaterArc.c"
+    "${LD_ARM2D_ASSET_DIR}/arm_2d_asset_WhiteDotSmall.c"
+)
+set(LD_ARM2D_CLOCK_ASSET_SOURCES
+    "${LD_ARM2D_ASSET_DIR}/arm_2d_asset_pointer_sec.c"
+)
 
 set(LD_COMMON_INCLUDE_DIRS
     "${LD_GUI_DIR}"
@@ -58,9 +66,12 @@ set(LD_COMMON_INCLUDE_DIRS
 function(ld_apply_common_target_config target)
     target_compile_definitions(${target}
         PUBLIC
+            RTE_Acceleration_Arm_2D
             __va_list=va_list
             RTE_Acceleration_Arm_2D_Helper_Disp_Adapter0
             RTE_Acceleration_Arm_2D_Alpha_Blending
+            RTE_Acceleration_Arm_2D_Transform
+            RTE_Acceleration_Arm_2D_Filter
     )
 
     target_compile_options(${target}
@@ -96,6 +107,8 @@ function(ld_define_core_targets)
         ${LD_ARM2D_LIBRARY_SOURCES}
         ${LD_ARM2D_HELPER_SOURCES}
         ${LD_ARM2D_CONTROL_SOURCES}
+        ${LD_ARM2D_PROGRESS_WHEEL_ASSET_SOURCES}
+        ${LD_ARM2D_CLOCK_ASSET_SOURCES}
         ${LD_ARM2D_QRCODE_SOURCES}
         ${LD_MATH_SOURCES}
     )
@@ -143,7 +156,13 @@ function(ld_define_core_targets)
         ${LD_REPO_ROOT}/picoui/src/widgets/checkbox.c
         ${LD_REPO_ROOT}/picoui/src/widgets/switch.c
         ${LD_REPO_ROOT}/picoui/src/widgets/slider.c
+        ${LD_REPO_ROOT}/picoui/src/widgets/progress_bar.c
+        ${LD_REPO_ROOT}/picoui/src/widgets/progress_wheel.c
+        ${LD_REPO_ROOT}/picoui/src/widgets/qrcode.c
+        ${LD_REPO_ROOT}/picoui/src/widgets/date_time.c
+        ${LD_REPO_ROOT}/picoui/src/widgets/clock.c
         ${LD_REPO_ROOT}/picoui/src/widgets/list.c
+        ${LD_REPO_ROOT}/picoui/src/widgets/message_box.c
     )
     target_include_directories(picoui_core PUBLIC
         ${LD_REPO_ROOT}/picoui/include
@@ -168,7 +187,13 @@ function(ld_define_core_targets)
         ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_checkbox.c
         ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_switch.c
         ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_slider.c
+        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_progress_bar.c
+        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_progress_wheel.c
+        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_qrcode.c
+        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_date_time.c
+        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_clock.c
         ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_list.c
+        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_message_box.c
     )
     target_include_directories(picoui_backend_ldgui PUBLIC
         ${LD_REPO_ROOT}/picoui/include

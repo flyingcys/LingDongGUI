@@ -17,6 +17,12 @@ TARGETS = [
     "picoui_theme_showcase_demo",
     "picoui_settings_panel_demo",
     "picoui_list_basic_demo",
+    "picoui_progress_bar_basic_demo",
+    "picoui_progress_wheel_basic_demo",
+    "picoui_qrcode_basic_demo",
+    "picoui_message_box_basic_demo",
+    "picoui_date_time_basic_demo",
+    "picoui_clock_basic_demo",
 ]
 
 
