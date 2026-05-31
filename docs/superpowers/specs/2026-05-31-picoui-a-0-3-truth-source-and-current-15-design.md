@@ -253,7 +253,7 @@
 2. current-15 全部进入 truth-source。
 3. current-15 每个控件都有诚实 capability audit。
 4. machine-readable matrix、gate、中文文档三者一致。
-5. `a-0.3` closeout 标准冻结完成。
+5. `a-0.3` closeout 标准冻结完成，并以 `docs/picoui-serial/a-0.3/a-0.3-closeout-标准.md` 为最终判定入口。
 
 ## 10. 失败判定
 

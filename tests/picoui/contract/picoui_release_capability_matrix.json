@@ -1,9 +1,9 @@
 {
-  "schema_version": "j1-parity-layered-v1",
-  "line": "J",
-  "stage": "J1",
-  "purpose": "PicoUI wrapped and parity-layered release capability matrix",
-  "truth_source_note": "This JSON is the machine-readable truth source for PicoUI wrapped coverage plus J0/J1 parity layering. It does not encode manual review approval or release-ready status.",
+  "schema_version": "a-0.3-current-15-layered-v1",
+  "line": "a-0.3",
+  "stage": "R2",
+  "purpose": "PicoUI current-15 truth source and layered capability matrix",
+  "truth_source_note": "This JSON is the machine-readable truth source for current-15 PicoUI public widget coverage. It distinguishes full parity complete, stable contract but not full parity, and minimal vertical slice only. It does not encode release-ready approval.",
   "status_enums": {
     "widget_status": [
       "wrapped",
@@ -22,14 +22,16 @@
       "deferred"
     ],
     "release_judgement": [
-      "internal_v0_1_blocker",
-      "internal_v0_1_known_limitation",
-      "post_h_candidate"
+      "current_15_parity_complete",
+      "current_15_stable_contract_gap",
+      "current_15_minimal_slice_gap",
+      "current_15_not_covered"
     ],
-    "parity_bucket": [
-      "v0_1_parity_target",
-      "v0_2_parity_backlog",
-      "post_v0_2_candidate"
+    "current_layer": [
+      "full_parity_complete",
+      "stable_contract_but_not_full_parity",
+      "minimal_vertical_slice_only",
+      "not_wrapped"
     ]
   },
   "evidence_enums": [
@@ -48,23 +50,25 @@
   },
   "summary": {
     "ldgui_wrappable_widget_total": 26,
-    "picoui_wrapped_widget_total": 9,
-    "picoui_not_wrapped_widget_total": 17,
-    "v0_1_parity_target_total": 4,
-    "v0_2_parity_backlog_total": 5,
+    "picoui_wrapped_widget_total": 15,
+    "picoui_not_wrapped_widget_total": 11,
+    "full_parity_complete_total": 4,
+    "stable_contract_but_not_full_parity_total": 5,
+    "minimal_vertical_slice_only_total": 6,
     "parity_complete_total": 4,
-    "parity_incomplete_total": 5,
-    "capability_entry_total": 62,
+    "parity_incomplete_total": 11,
+    "capability_entry_total": 89,
     "capability_status_counts": {
-      "support": 53,
+      "support": 72,
       "reject": 4,
-      "incomplete_contract": 4,
-      "deferred": 1
+      "incomplete_contract": 6,
+      "deferred": 7
     },
-    "parity_bucket_counts": {
-      "v0_1_parity_target": 4,
-      "v0_2_parity_backlog": 5,
-      "post_v0_2_candidate": 17
+    "current_layer_counts": {
+      "full_parity_complete": 4,
+      "stable_contract_but_not_full_parity": 5,
+      "minimal_vertical_slice_only": 6,
+      "not_wrapped": 11
     }
   },
   "widgets": [
@@ -72,9 +76,9 @@
       "name": "window",
       "backend_widget": "ldWindow",
       "widget_status": "wrapped",
-      "parity_bucket": "v0_1_parity_target",
+      "current_layer": "full_parity_complete",
       "parity_status": "parity_complete",
-      "widget_release_judgement": "internal_v0_1_known_limitation",
+      "widget_release_judgement": "current_15_parity_complete",
       "evidence_layers": {
         "unit": "present",
         "contract": "present",
@@ -129,15 +133,16 @@
           "status": "support",
           "capability_release_judgement": "internal_v0_1_known_limitation"
         }
-      ]
+      ],
+      "audit_note": "Current-15 audit keeps this widget at the old parity-complete tier."
     },
     {
       "name": "label",
       "backend_widget": "ldLabel",
       "widget_status": "wrapped",
-      "parity_bucket": "v0_1_parity_target",
+      "current_layer": "full_parity_complete",
       "parity_status": "parity_complete",
-      "widget_release_judgement": "internal_v0_1_known_limitation",
+      "widget_release_judgement": "current_15_parity_complete",
       "evidence_layers": {
         "unit": "present",
         "contract": "present",
@@ -192,15 +197,16 @@
           "status": "support",
           "capability_release_judgement": "internal_v0_1_known_limitation"
         }
-      ]
+      ],
+      "audit_note": "Current-15 audit keeps this widget at the old parity-complete tier."
     },
     {
       "name": "button",
       "backend_widget": "ldButton",
       "widget_status": "wrapped",
-      "parity_bucket": "v0_1_parity_target",
+      "current_layer": "full_parity_complete",
       "parity_status": "parity_complete",
-      "widget_release_judgement": "internal_v0_1_known_limitation",
+      "widget_release_judgement": "current_15_parity_complete",
       "evidence_layers": {
         "unit": "present",
         "contract": "present",
@@ -265,15 +271,16 @@
           "status": "support",
           "capability_release_judgement": "internal_v0_1_known_limitation"
         }
-      ]
+      ],
+      "audit_note": "Current-15 audit keeps this widget at the old parity-complete tier."
     },
     {
       "name": "checkbox",
       "backend_widget": "ldCheckBox",
       "widget_status": "wrapped",
-      "parity_bucket": "v0_2_parity_backlog",
+      "current_layer": "stable_contract_but_not_full_parity",
       "parity_status": "parity_incomplete",
-      "widget_release_judgement": "internal_v0_1_known_limitation",
+      "widget_release_judgement": "current_15_stable_contract_gap",
       "evidence_layers": {
         "unit": "present",
         "contract": "present",
@@ -308,15 +315,16 @@
           "status": "support",
           "capability_release_judgement": "internal_v0_1_known_limitation"
         }
-      ]
+      ],
+      "audit_note": "Current-15 audit marks this widget as contract-stable but not full parity."
     },
     {
       "name": "switch",
       "backend_widget": "ldSwitch",
       "widget_status": "wrapped",
-      "parity_bucket": "v0_2_parity_backlog",
+      "current_layer": "stable_contract_but_not_full_parity",
       "parity_status": "parity_incomplete",
-      "widget_release_judgement": "internal_v0_1_known_limitation",
+      "widget_release_judgement": "current_15_stable_contract_gap",
       "evidence_layers": {
         "unit": "present",
         "contract": "present",
@@ -351,15 +359,16 @@
           "status": "support",
           "capability_release_judgement": "internal_v0_1_known_limitation"
         }
-      ]
+      ],
+      "audit_note": "Current-15 audit marks this widget as contract-stable but not full parity."
     },
     {
       "name": "slider",
       "backend_widget": "ldSlider",
       "widget_status": "wrapped",
-      "parity_bucket": "v0_1_parity_target",
+      "current_layer": "full_parity_complete",
       "parity_status": "parity_complete",
-      "widget_release_judgement": "internal_v0_1_known_limitation",
+      "widget_release_judgement": "current_15_parity_complete",
       "evidence_layers": {
         "unit": "present",
         "contract": "present",
@@ -419,15 +428,16 @@
           "status": "support",
           "capability_release_judgement": "internal_v0_1_known_limitation"
         }
-      ]
+      ],
+      "audit_note": "Current-15 audit keeps this widget at the old parity-complete tier."
     },
     {
       "name": "text",
       "backend_widget": "ldText",
       "widget_status": "wrapped",
-      "parity_bucket": "v0_2_parity_backlog",
+      "current_layer": "stable_contract_but_not_full_parity",
       "parity_status": "parity_incomplete",
-      "widget_release_judgement": "internal_v0_1_known_limitation",
+      "widget_release_judgement": "current_15_stable_contract_gap",
       "evidence_layers": {
         "unit": "present",
         "contract": "present",
@@ -462,15 +472,16 @@
           "status": "support",
           "capability_release_judgement": "internal_v0_1_known_limitation"
         }
-      ]
+      ],
+      "audit_note": "Current-15 audit marks this widget as contract-stable but not full parity."
     },
     {
       "name": "image",
       "backend_widget": "ldImage",
       "widget_status": "wrapped",
-      "parity_bucket": "v0_2_parity_backlog",
+      "current_layer": "stable_contract_but_not_full_parity",
       "parity_status": "parity_incomplete",
-      "widget_release_judgement": "internal_v0_1_known_limitation",
+      "widget_release_judgement": "current_15_stable_contract_gap",
       "evidence_layers": {
         "unit": "present",
         "contract": "present",
@@ -525,15 +536,16 @@
           "status": "reject",
           "capability_release_judgement": "internal_v0_1_known_limitation"
         }
-      ]
+      ],
+      "audit_note": "Current-15 audit marks this widget as contract-stable but not full parity."
     },
     {
       "name": "list",
       "backend_widget": "ldList",
       "widget_status": "wrapped",
-      "parity_bucket": "v0_2_parity_backlog",
+      "current_layer": "stable_contract_but_not_full_parity",
       "parity_status": "parity_incomplete",
-      "widget_release_judgement": "internal_v0_1_known_limitation",
+      "widget_release_judgement": "current_15_stable_contract_gap",
       "evidence_layers": {
         "unit": "present",
         "contract": "present",
@@ -584,7 +596,287 @@
           "status": "incomplete_contract",
           "capability_release_judgement": "internal_v0_1_known_limitation"
         }
-      ]
+      ],
+      "audit_note": "Current-15 audit marks this widget as contract-stable but not full parity."
+    },
+    {
+      "name": "progress_bar",
+      "backend_widget": "ldProgressBar",
+      "widget_status": "wrapped",
+      "current_layer": "minimal_vertical_slice_only",
+      "parity_status": "parity_incomplete",
+      "widget_release_judgement": "current_15_minimal_slice_gap",
+      "evidence_layers": {
+        "unit": "present",
+        "contract": "present",
+        "mapping": "present",
+        "visible": "present",
+        "manual_artifact": "manual_review_required"
+      },
+      "manual_artifact": {
+        "artifact_entry_exists": false,
+        "manual_review_required": true,
+        "scope": "widget_level_only",
+        "note": "False here only means this widget row does not claim its own widget-level artifact entry. It does not deny that a containing demo already has an artifact entry."
+      },
+      "capabilities": [
+        {
+          "name": "create_and_props",
+          "status": "support",
+          "capability_release_judgement": "current_15_minimal_slice_gap"
+        },
+        {
+          "name": "percent",
+          "status": "support",
+          "capability_release_judgement": "current_15_minimal_slice_gap"
+        },
+        {
+          "name": "horizontal",
+          "status": "support",
+          "capability_release_judgement": "current_15_minimal_slice_gap"
+        },
+        {
+          "name": "percent_and_horizontal_readback",
+          "status": "support",
+          "capability_release_judgement": "current_15_minimal_slice_gap"
+        },
+        {
+          "name": "advanced_skin_and_theme",
+          "status": "deferred",
+          "capability_release_judgement": "current_15_minimal_slice_gap"
+        }
+      ],
+      "audit_note": "Current-15 audit marks this widget as minimal vertical slice only."
+    },
+    {
+      "name": "qrcode",
+      "backend_widget": "ldQRCode",
+      "widget_status": "wrapped",
+      "current_layer": "minimal_vertical_slice_only",
+      "parity_status": "parity_incomplete",
+      "widget_release_judgement": "current_15_minimal_slice_gap",
+      "evidence_layers": {
+        "unit": "present",
+        "contract": "present",
+        "mapping": "present",
+        "visible": "present",
+        "manual_artifact": "manual_review_required"
+      },
+      "manual_artifact": {
+        "artifact_entry_exists": false,
+        "manual_review_required": true,
+        "scope": "widget_level_only",
+        "note": "False here only means this widget row does not claim its own widget-level artifact entry. It does not deny that a containing demo already has an artifact entry."
+      },
+      "capabilities": [
+        {
+          "name": "create_and_props",
+          "status": "support",
+          "capability_release_judgement": "current_15_minimal_slice_gap"
+        },
+        {
+          "name": "text",
+          "status": "support",
+          "capability_release_judgement": "current_15_minimal_slice_gap"
+        },
+        {
+          "name": "text_readback",
+          "status": "support",
+          "capability_release_judgement": "current_15_minimal_slice_gap"
+        },
+        {
+          "name": "advanced_qrcode_configuration",
+          "status": "deferred",
+          "capability_release_judgement": "current_15_minimal_slice_gap"
+        }
+      ],
+      "audit_note": "Current-15 audit marks this widget as minimal vertical slice only."
+    },
+    {
+      "name": "progress_wheel",
+      "backend_widget": "ldProgressWheel",
+      "widget_status": "wrapped",
+      "current_layer": "minimal_vertical_slice_only",
+      "parity_status": "parity_incomplete",
+      "widget_release_judgement": "current_15_minimal_slice_gap",
+      "evidence_layers": {
+        "unit": "present",
+        "contract": "present",
+        "mapping": "present",
+        "visible": "present",
+        "manual_artifact": "manual_review_required"
+      },
+      "manual_artifact": {
+        "artifact_entry_exists": false,
+        "manual_review_required": true,
+        "scope": "widget_level_only",
+        "note": "False here only means this widget row does not claim its own widget-level artifact entry. It does not deny that a containing demo already has an artifact entry."
+      },
+      "capabilities": [
+        {
+          "name": "create_and_props",
+          "status": "support",
+          "capability_release_judgement": "current_15_minimal_slice_gap"
+        },
+        {
+          "name": "percent",
+          "status": "support",
+          "capability_release_judgement": "current_15_minimal_slice_gap"
+        },
+        {
+          "name": "percent_readback",
+          "status": "support",
+          "capability_release_judgement": "current_15_minimal_slice_gap"
+        },
+        {
+          "name": "advanced_animation_and_theme",
+          "status": "deferred",
+          "capability_release_judgement": "current_15_minimal_slice_gap"
+        }
+      ],
+      "audit_note": "Current-15 audit marks this widget as minimal vertical slice only."
+    },
+    {
+      "name": "message_box",
+      "backend_widget": "ldMessageBox",
+      "widget_status": "wrapped",
+      "current_layer": "minimal_vertical_slice_only",
+      "parity_status": "parity_incomplete",
+      "widget_release_judgement": "current_15_minimal_slice_gap",
+      "evidence_layers": {
+        "unit": "present",
+        "contract": "present",
+        "mapping": "present",
+        "visible": "present",
+        "manual_artifact": "manual_review_required"
+      },
+      "manual_artifact": {
+        "artifact_entry_exists": false,
+        "manual_review_required": true,
+        "scope": "widget_level_only",
+        "note": "False here only means this widget row does not claim its own widget-level artifact entry. It does not deny that a containing demo already has an artifact entry."
+      },
+      "capabilities": [
+        {
+          "name": "create_and_props",
+          "status": "support",
+          "capability_release_judgement": "current_15_minimal_slice_gap"
+        },
+        {
+          "name": "title_message_confirm_text",
+          "status": "support",
+          "capability_release_judgement": "current_15_minimal_slice_gap"
+        },
+        {
+          "name": "confirm_callback_bridge",
+          "status": "support",
+          "capability_release_judgement": "current_15_minimal_slice_gap"
+        },
+        {
+          "name": "host_cached_readback_only",
+          "status": "incomplete_contract",
+          "capability_release_judgement": "current_15_minimal_slice_gap"
+        },
+        {
+          "name": "multi_button_and_modal_behavior",
+          "status": "deferred",
+          "capability_release_judgement": "current_15_minimal_slice_gap"
+        }
+      ],
+      "audit_note": "Current-15 audit marks this widget as minimal vertical slice only."
+    },
+    {
+      "name": "date_time",
+      "backend_widget": "ldDateTime",
+      "widget_status": "wrapped",
+      "current_layer": "minimal_vertical_slice_only",
+      "parity_status": "parity_incomplete",
+      "widget_release_judgement": "current_15_minimal_slice_gap",
+      "evidence_layers": {
+        "unit": "present",
+        "contract": "present",
+        "mapping": "present",
+        "visible": "present",
+        "manual_artifact": "manual_review_required"
+      },
+      "manual_artifact": {
+        "artifact_entry_exists": false,
+        "manual_review_required": true,
+        "scope": "widget_level_only",
+        "note": "False here only means this widget row does not claim its own widget-level artifact entry. It does not deny that a containing demo already has an artifact entry."
+      },
+      "capabilities": [
+        {
+          "name": "create_and_props",
+          "status": "support",
+          "capability_release_judgement": "current_15_minimal_slice_gap"
+        },
+        {
+          "name": "format_date_time_write",
+          "status": "support",
+          "capability_release_judgement": "current_15_minimal_slice_gap"
+        },
+        {
+          "name": "format_readback",
+          "status": "support",
+          "capability_release_judgement": "current_15_minimal_slice_gap"
+        },
+        {
+          "name": "date_time_public_readback",
+          "status": "incomplete_contract",
+          "capability_release_judgement": "current_15_minimal_slice_gap"
+        },
+        {
+          "name": "advanced_datetime_modes",
+          "status": "deferred",
+          "capability_release_judgement": "current_15_minimal_slice_gap"
+        }
+      ],
+      "audit_note": "Current-15 audit marks this widget as minimal vertical slice only."
+    },
+    {
+      "name": "clock",
+      "backend_widget": "ldClock",
+      "widget_status": "wrapped",
+      "current_layer": "minimal_vertical_slice_only",
+      "parity_status": "parity_incomplete",
+      "widget_release_judgement": "current_15_minimal_slice_gap",
+      "evidence_layers": {
+        "unit": "present",
+        "contract": "present",
+        "mapping": "present",
+        "visible": "present",
+        "manual_artifact": "manual_review_required"
+      },
+      "manual_artifact": {
+        "artifact_entry_exists": false,
+        "manual_review_required": true,
+        "scope": "widget_level_only",
+        "note": "False here only means this widget row does not claim its own widget-level artifact entry. It does not deny that a containing demo already has an artifact entry."
+      },
+      "capabilities": [
+        {
+          "name": "create_and_props",
+          "status": "support",
+          "capability_release_judgement": "current_15_minimal_slice_gap"
+        },
+        {
+          "name": "step_second",
+          "status": "support",
+          "capability_release_judgement": "current_15_minimal_slice_gap"
+        },
+        {
+          "name": "step_second_readback",
+          "status": "support",
+          "capability_release_judgement": "current_15_minimal_slice_gap"
+        },
+        {
+          "name": "advanced_clock_configuration",
+          "status": "deferred",
+          "capability_release_judgement": "current_15_minimal_slice_gap"
+        }
+      ],
+      "audit_note": "Current-15 audit marks this widget as minimal vertical slice only."
     },
     {
       "name": "line_edit",
@@ -592,12 +884,13 @@
       "widget_status": "not_wrapped",
       "parity_bucket": "post_v0_2_candidate",
       "parity_status": "not_applicable",
-      "widget_release_judgement": "post_h_candidate",
+      "widget_release_judgement": "current_15_not_covered",
       "manual_artifact": {
         "artifact_entry_exists": false,
         "manual_review_required": true
       },
-      "capabilities": []
+      "capabilities": [],
+      "current_layer": "not_wrapped"
     },
     {
       "name": "keyboard",
@@ -605,12 +898,13 @@
       "widget_status": "not_wrapped",
       "parity_bucket": "post_v0_2_candidate",
       "parity_status": "not_applicable",
-      "widget_release_judgement": "post_h_candidate",
+      "widget_release_judgement": "current_15_not_covered",
       "manual_artifact": {
         "artifact_entry_exists": false,
         "manual_review_required": true
       },
-      "capabilities": []
+      "capabilities": [],
+      "current_layer": "not_wrapped"
     },
     {
       "name": "combo_box",
@@ -618,12 +912,13 @@
       "widget_status": "not_wrapped",
       "parity_bucket": "post_v0_2_candidate",
       "parity_status": "not_applicable",
-      "widget_release_judgement": "post_h_candidate",
+      "widget_release_judgement": "current_15_not_covered",
       "manual_artifact": {
         "artifact_entry_exists": false,
         "manual_review_required": true
       },
-      "capabilities": []
+      "capabilities": [],
+      "current_layer": "not_wrapped"
     },
     {
       "name": "scroll_selecter",
@@ -631,38 +926,13 @@
       "widget_status": "not_wrapped",
       "parity_bucket": "post_v0_2_candidate",
       "parity_status": "not_applicable",
-      "widget_release_judgement": "post_h_candidate",
+      "widget_release_judgement": "current_15_not_covered",
       "manual_artifact": {
         "artifact_entry_exists": false,
         "manual_review_required": true
       },
-      "capabilities": []
-    },
-    {
-      "name": "progress_bar",
-      "backend_widget": "ldProgressBar",
-      "widget_status": "not_wrapped",
-      "parity_bucket": "post_v0_2_candidate",
-      "parity_status": "not_applicable",
-      "widget_release_judgement": "post_h_candidate",
-      "manual_artifact": {
-        "artifact_entry_exists": false,
-        "manual_review_required": true
-      },
-      "capabilities": []
-    },
-    {
-      "name": "progress_wheel",
-      "backend_widget": "ldProgressWheel",
-      "widget_status": "not_wrapped",
-      "parity_bucket": "post_v0_2_candidate",
-      "parity_status": "not_applicable",
-      "widget_release_judgement": "post_h_candidate",
-      "manual_artifact": {
-        "artifact_entry_exists": false,
-        "manual_review_required": true
-      },
-      "capabilities": []
+      "capabilities": [],
+      "current_layer": "not_wrapped"
     },
     {
       "name": "arc",
@@ -670,12 +940,13 @@
       "widget_status": "not_wrapped",
       "parity_bucket": "post_v0_2_candidate",
       "parity_status": "not_applicable",
-      "widget_release_judgement": "post_h_candidate",
+      "widget_release_judgement": "current_15_not_covered",
       "manual_artifact": {
         "artifact_entry_exists": false,
         "manual_review_required": true
       },
-      "capabilities": []
+      "capabilities": [],
+      "current_layer": "not_wrapped"
     },
     {
       "name": "gauge",
@@ -683,12 +954,13 @@
       "widget_status": "not_wrapped",
       "parity_bucket": "post_v0_2_candidate",
       "parity_status": "not_applicable",
-      "widget_release_judgement": "post_h_candidate",
+      "widget_release_judgement": "current_15_not_covered",
       "manual_artifact": {
         "artifact_entry_exists": false,
         "manual_review_required": true
       },
-      "capabilities": []
+      "capabilities": [],
+      "current_layer": "not_wrapped"
     },
     {
       "name": "graph",
@@ -696,12 +968,13 @@
       "widget_status": "not_wrapped",
       "parity_bucket": "post_v0_2_candidate",
       "parity_status": "not_applicable",
-      "widget_release_judgement": "post_h_candidate",
+      "widget_release_judgement": "current_15_not_covered",
       "manual_artifact": {
         "artifact_entry_exists": false,
         "manual_review_required": true
       },
-      "capabilities": []
+      "capabilities": [],
+      "current_layer": "not_wrapped"
     },
     {
       "name": "table",
@@ -709,12 +982,13 @@
       "widget_status": "not_wrapped",
       "parity_bucket": "post_v0_2_candidate",
       "parity_status": "not_applicable",
-      "widget_release_judgement": "post_h_candidate",
+      "widget_release_judgement": "current_15_not_covered",
       "manual_artifact": {
         "artifact_entry_exists": false,
         "manual_review_required": true
       },
-      "capabilities": []
+      "capabilities": [],
+      "current_layer": "not_wrapped"
     },
     {
       "name": "calendar",
@@ -722,51 +996,13 @@
       "widget_status": "not_wrapped",
       "parity_bucket": "post_v0_2_candidate",
       "parity_status": "not_applicable",
-      "widget_release_judgement": "post_h_candidate",
+      "widget_release_judgement": "current_15_not_covered",
       "manual_artifact": {
         "artifact_entry_exists": false,
         "manual_review_required": true
       },
-      "capabilities": []
-    },
-    {
-      "name": "date_time",
-      "backend_widget": "ldDateTime",
-      "widget_status": "not_wrapped",
-      "parity_bucket": "post_v0_2_candidate",
-      "parity_status": "not_applicable",
-      "widget_release_judgement": "post_h_candidate",
-      "manual_artifact": {
-        "artifact_entry_exists": false,
-        "manual_review_required": true
-      },
-      "capabilities": []
-    },
-    {
-      "name": "clock",
-      "backend_widget": "ldClock",
-      "widget_status": "not_wrapped",
-      "parity_bucket": "post_v0_2_candidate",
-      "parity_status": "not_applicable",
-      "widget_release_judgement": "post_h_candidate",
-      "manual_artifact": {
-        "artifact_entry_exists": false,
-        "manual_review_required": true
-      },
-      "capabilities": []
-    },
-    {
-      "name": "qr_code",
-      "backend_widget": "ldQRCode",
-      "widget_status": "not_wrapped",
-      "parity_bucket": "post_v0_2_candidate",
-      "parity_status": "not_applicable",
-      "widget_release_judgement": "post_h_candidate",
-      "manual_artifact": {
-        "artifact_entry_exists": false,
-        "manual_review_required": true
-      },
-      "capabilities": []
+      "capabilities": [],
+      "current_layer": "not_wrapped"
     },
     {
       "name": "icon_slider",
@@ -774,12 +1010,13 @@
       "widget_status": "not_wrapped",
       "parity_bucket": "post_v0_2_candidate",
       "parity_status": "not_applicable",
-      "widget_release_judgement": "post_h_candidate",
+      "widget_release_judgement": "current_15_not_covered",
       "manual_artifact": {
         "artifact_entry_exists": false,
         "manual_review_required": true
       },
-      "capabilities": []
+      "capabilities": [],
+      "current_layer": "not_wrapped"
     },
     {
       "name": "radial_menu",
@@ -787,25 +1024,13 @@
       "widget_status": "not_wrapped",
       "parity_bucket": "post_v0_2_candidate",
       "parity_status": "not_applicable",
-      "widget_release_judgement": "post_h_candidate",
+      "widget_release_judgement": "current_15_not_covered",
       "manual_artifact": {
         "artifact_entry_exists": false,
         "manual_review_required": true
       },
-      "capabilities": []
-    },
-    {
-      "name": "message_box",
-      "backend_widget": "ldMessageBox",
-      "widget_status": "not_wrapped",
-      "parity_bucket": "post_v0_2_candidate",
-      "parity_status": "not_applicable",
-      "widget_release_judgement": "post_h_candidate",
-      "manual_artifact": {
-        "artifact_entry_exists": false,
-        "manual_review_required": true
-      },
-      "capabilities": []
+      "capabilities": [],
+      "current_layer": "not_wrapped"
     }
   ]
 }

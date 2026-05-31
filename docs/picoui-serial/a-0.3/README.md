@@ -6,6 +6,9 @@
 - 当前 backlog 收口线：`docs/picoui-serial/a-01-线计划索引.md`
 - 当前低耦合扩面线：`docs/picoui-serial/a-02-线计划索引.md`
 - 当前机器可读 matrix：`tests/picoui/contract/picoui_release_capability_matrix.json`
+- 当前 truth-source：`docs/picoui-serial/a-0.3/current-15-覆盖与分层真相源.md`
+- 当前 capability audit：`docs/picoui-serial/a-0.3/current-15-capability-audit.md`
+- 当前 closeout 标准：`docs/picoui-serial/a-0.3/a-0.3-closeout-标准.md`
 - 本目录设计 spec：`docs/superpowers/specs/2026-05-31-picoui-a-0-3-truth-source-and-current-15-design.md`
 - 本目录执行 plan：`docs/superpowers/plans/2026-05-31-picoui-a-0-3-truth-source-and-current-15-implementation.md`
 - 后续 `0.4-0.6` 记录：`docs/picoui-serial/a-0.3/a-0.4-a-0.6-后续版本记录.md`
@@ -24,15 +27,17 @@
 
 截至 2026-05-31，代码与文档共同表明：
 
-1. 旧 matrix 仍只记录 `9` 个 wrapped 控件、`17` 个未覆盖控件。
-2. `a-01` 文档已经声明 `image / text / checkbox / switch / list` 五个 backlog 控件已按当前口径收口。
-3. `a-02` 文档已经声明 `progress_bar / qrcode / progress_wheel / message_box / date_time / clock` 六个新控件已完成最小 vertical slice。
+1. current PicoUI public widget 已达 `15` 个，不再是旧 `9` 控件世界。
+2. `J线 4` 仍是当前唯一可维持 `full parity complete` 口径的控件组。
+3. `a-01` 五控件当前应诚实归为 `stable contract but not full parity`。
+4. `a-02` 六控件当前应诚实归为 `minimal vertical slice only`。
+5. 当前仍有 `11` 个 LingDongGUI 控件尚未进入 PicoUI public widget。
 
 因此当前最保守、最诚实的工程判断是：
 
-- PicoUI 已接入 public widget 的控件数，已经不止 `9`。
-- 但 release truth、parity bucket、capability audit 仍停留在旧 `J1` 结构。
-- 如果不先修 truth-source，就无法继续快速扩面而不把文档/测试/代码三者写散。
+- PicoUI current public widget 总数当前是 `15`。
+- machine-readable truth-source 已不应继续沿用旧 `J1 v0.1/v0.2` 结构。
+- 如果不先把 current-15 truth-source、audit、gate 写实，后面继续扩面只会再次失真。
 
 ## 最终大目标
 
@@ -133,6 +138,11 @@
    - 当前属于什么中间层级
 4. machine-readable matrix、中文文档、gate 用词完全一致。
 5. `a-0.3` closeout 标准冻结完成。
+
+当前 `R1 / R2` 真相源入口：
+
+1. `docs/picoui-serial/a-0.3/current-15-覆盖与分层真相源.md`
+2. `docs/picoui-serial/a-0.3/current-15-capability-audit.md`
 
 ## a-0.3 不做什么
 
