@@ -11,7 +11,10 @@
 - 当前 closeout 标准：`docs/picoui-serial/a-0.3/a-0.3-closeout-标准.md`
 - 本目录设计 spec：`docs/superpowers/specs/2026-05-31-picoui-a-0-3-truth-source-and-current-15-design.md`
 - 本目录执行 plan：`docs/superpowers/plans/2026-05-31-picoui-a-0-3-truth-source-and-current-15-implementation.md`
-- 后续 `0.4-0.6` 记录：`docs/picoui-serial/a-0.3/a-0.4-a-0.6-后续版本记录.md`
+- 当前 closeout review：`docs/superpowers/reviews/2026-05-31-picoui-a-0-3-closeout-review.md`
+- 后续 `0.4-0.6` 记录：`docs/picoui-serial/a-0.4-a-0.6-后续版本记录.md`
+- `a-0.4` 串行索引：`docs/picoui-serial/a-0.4-线计划索引.md`
+- `a-0.5` 串行索引：`docs/picoui-serial/a-0.5-线计划索引.md`
 
 ## 为什么开 a-0.3 目录
 
