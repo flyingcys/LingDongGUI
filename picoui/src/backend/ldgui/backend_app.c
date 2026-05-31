@@ -72,7 +72,13 @@ static int picoui_backend_widget_is_supported_real(const struct picoui_backend_w
     case PICOUI_BACKEND_WIDGET_IMAGE:
     case PICOUI_BACKEND_WIDGET_SWITCH:
     case PICOUI_BACKEND_WIDGET_SLIDER:
+    case PICOUI_BACKEND_WIDGET_PROGRESS_BAR:
+    case PICOUI_BACKEND_WIDGET_QRCODE:
+    case PICOUI_BACKEND_WIDGET_PROGRESS_WHEEL:
     case PICOUI_BACKEND_WIDGET_LIST:
+    case PICOUI_BACKEND_WIDGET_DATE_TIME:
+    case PICOUI_BACKEND_WIDGET_MESSAGE_BOX:
+    case PICOUI_BACKEND_WIDGET_CLOCK:
         return 1;
     default:
         return 0;

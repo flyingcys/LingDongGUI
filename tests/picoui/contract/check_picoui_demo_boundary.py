@@ -12,6 +12,12 @@ REQUIRED_DEMOS = {
     "theme_showcase",
     "settings_panel",
     "list_basic",
+    "progress_bar_basic",
+    "progress_wheel_basic",
+    "qrcode_basic",
+    "message_box_basic",
+    "date_time_basic",
+    "clock_basic",
 }
 
 

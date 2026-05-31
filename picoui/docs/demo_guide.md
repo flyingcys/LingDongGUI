@@ -15,6 +15,12 @@
 - `picoui_theme_showcase_demo`
 - `picoui_settings_panel_demo`
 - `picoui_list_basic_demo`
+ - `picoui_progress_bar_basic_demo`
+ - `picoui_progress_wheel_basic_demo`
+ - `picoui_qrcode_basic_demo`
+ - `picoui_message_box_basic_demo`
+ - `picoui_date_time_basic_demo`
+ - `picoui_clock_basic_demo`
 
 ## 二、依赖环境
 
@@ -205,6 +211,120 @@ build\picoui-runtime\examples\sdl\picoui_hello_world_demo.exe
 - manual artifact gate 仍按 `C线` 证据层级单独记录；不能由 `runtime smoke`、`backend mapping gate` 或 `automatic visible gate` 代替
 - 该 demo 不证明更细粒度 item 行为或更高阶交互模式
 - widget-level `user_data` 与 `on_selected(..., user_data)` callback cookie 是两套语义，不应混写成同一合同
+
+### `picoui/demo/progress_bar_basic`
+
+`a-02` 新控件 vertical slice 示例。包含：
+
+- `progress_bar`
+
+适合用途：
+
+- 看横向和纵向进度条的最小 API 写法
+- 看进度类控件如何进入 runtime、mapping、visible gate
+
+当前口径：
+
+- 证明 `primary/secondary` 两个进度条都真实落到 LingDongGUI backend
+- `runtime smoke` 证明 demo 可启动、可 capture
+- `backend mapping gate` 证明 `primary/secondary/title` 的真实 backend 对象路径
+- `automatic visible gate` 证明一条长横向进度条和一条高纵向进度条在 dummy SDL + PPM readback 下都可见
+- 不证明复杂主题皮肤、动画过渡或完整交互能力
+
+### `picoui/demo/progress_wheel_basic`
+
+`a-02` 新控件 vertical slice 示例。包含：
+
+- `progress_wheel`
+
+适合用途：
+
+- 看进度轮控件的最小 API 写法
+- 看进度类旋转控件如何进入 runtime、mapping、visible gate
+
+当前口径：
+
+- 证明 `wheel` 真实落到 LingDongGUI backend
+- `runtime smoke` 证明 demo 可启动、可 capture
+- `backend mapping gate` 证明 `wheel` 的真实 backend 对象路径
+- `automatic visible gate` 证明彩色环和邻接白点在 dummy SDL + PPM readback 下可判定
+- 不证明更复杂的动画调度或完整资源系统
+
+### `picoui/demo/qrcode_basic`
+
+`a-02` 新控件 vertical slice 示例。包含：
+
+- `qrcode`
+
+适合用途：
+
+- 看二维码控件的最小 API 写法
+- 看显示型控件如何进入 runtime、mapping、visible gate
+
+当前口径：
+
+- 证明 `qrcode` 真实落到 LingDongGUI backend
+- `runtime smoke` 证明 demo 可启动、可 capture
+- `backend mapping gate` 证明 `qrcode` 的真实 backend 对象路径
+- `automatic visible gate` 证明二维码模块结构在 dummy SDL + PPM readback 下可判定
+- 不证明扫码内容被外部设备读取，也不证明更高阶资源加载语义
+
+### `picoui/demo/message_box_basic`
+
+`a-02` 新控件 vertical slice 示例。包含：
+
+- `message_box`
+
+适合用途：
+
+- 看复合显示控件和 confirm callback 合同的最小 API 写法
+- 看复合结构控件如何进入 runtime、mapping、visible gate
+
+当前口径：
+
+- 证明 `message_box` 宿主真实落到 LingDongGUI backend
+- `runtime smoke` 证明 demo 可启动、可 capture
+- `backend mapping gate` 证明 `message_box` 的真实 backend 对象路径
+- `automatic visible gate` 证明文本层和按钮层在 dummy SDL + PPM readback 下可判定
+- 不证明多按钮、多动作或更复杂对话框流程
+
+### `picoui/demo/date_time_basic`
+
+`a-02` 新控件 vertical slice 示例。包含：
+
+- `date_time`
+
+适合用途：
+
+- 看轻量日期时间显示控件的最小 API 写法
+- 看手动 `set_format/set_date/set_time` 合同如何进入 runtime、mapping、visible gate
+
+当前口径：
+
+- 证明 `date_time` 真实落到 LingDongGUI backend
+- `runtime smoke` 证明 demo 可启动、可 capture
+- `backend mapping gate` 证明 `date_time` 的真实 backend 对象路径
+- `automatic visible gate` 证明单行日期时间文本在 dummy SDL + PPM readback 下可判定
+- 不证明完整日期编辑、时区、日历或输入系统
+
+### `picoui/demo/clock_basic`
+
+`a-02` 新控件 vertical slice 示例。包含：
+
+- `clock`
+
+适合用途：
+
+- 看时钟控件的最小 `step_second` 显示合同
+- 看指针型显示控件如何进入 runtime、mapping、visible gate
+
+当前口径：
+
+- 证明 `clock` 真实落到 LingDongGUI backend
+- `runtime smoke` 证明 demo 可启动、可 capture
+- `backend mapping gate` 证明 `clock` 的真实 backend 对象路径
+- `automatic visible gate` 证明中心枢纽和三向指针在 dummy SDL + PPM readback 下可判定
+- 不证明背景表盘资源、复杂主题资源系统或高级动画控制
 
 ## 六、证据层级说明
 
