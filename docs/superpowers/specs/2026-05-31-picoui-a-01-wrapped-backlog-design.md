@@ -349,3 +349,48 @@ git diff --check
 3. `a-01` 把新控件扩张工作顺手吸进来。
 4. `a-01` 频繁提前改聚合文件，导致与 `a-02` merge 冲突暴涨。
 5. shared-owner 文件被 `a-02` 或其他线同时重写，且未先通过主线程收敛边界。
+
+---
+
+## 13. 实施后结论
+
+当前 `.worktree/a-01` 已按本设计把 `image / text / checkbox / switch / list` 五个 backlog 控件收口到稳定实现口径。
+
+### 13.1 image
+
+- `theme`、`bg/text/border/radius colors`、`enabled` 保持明确 `reject`
+- `style_class / user_data` 保持 metadata-only，合同状态仍是 `incomplete_contract`
+- backend 不新增 fake style 或 fake disabled 路径
+
+### 13.2 text
+
+- `text/font/bg/text_color/align` 当前合同已由 unit + contract 证据稳定
+- `font` 不是纯字段缓存，backend readback 路径已接通
+
+### 13.3 checkbox / switch
+
+- `checked` 与 native state 同步
+- native bridge 优先，不把 callback 建在 shadow state 自转上
+- `switch disabled` 是真实语义，不再靠伪状态近似
+
+### 13.4 list
+
+- `selected_index / callback / backend value` 语义一致
+- `on_selected(..., user_data)` 的 callback cookie 与 widget-level `user_data` 保持分离
+- `item_marker` 明确维持 `reject`，不把 payload marker 写成独立 backend widget
+
+### 13.5 runtime gate 约束
+
+- `check_picoui_backend_mapping`
+- `check_picoui_visible_ui`
+- `check_picoui_runtime`
+
+三个 gate 共用 `build/picoui-runtime`，必须串行运行。
+
+### 13.6 仍然不是的结论
+
+本线完成后，当前 backlog 五控件的合同边界、shared 语义和自动证据层已经收紧，但这仍然不等于：
+
+- `release ready`
+- `public v1.0 parity complete`
+- `manual artifact gate` 已自动完成
