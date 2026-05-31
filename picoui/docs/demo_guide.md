@@ -206,9 +206,11 @@ build\picoui-runtime\examples\sdl\picoui_hello_world_demo.exe
 - 该 demo 为 `list` 提供真实 widget 样本
 - `picoui_list_basic_demo` 已进入 `runtime smoke`
 - `backend mapping gate` 已覆盖该 demo 的真实 backend 映射样本
+- `PICOUI_BACKEND_REAL_WIDGET_IDS` 当前只把 `list` 记为真实 backend widget；`item_*` 只是 PicoUI payload marker，不是独立 backend widget id
 - `automatic visible gate` 已接入 `check_picoui_visible_ui.py --all`；该证据只证明 dummy SDL + PPM readback 下的 automatic visible correctness
 - manual artifact gate 仍按 `C线` 证据层级单独记录；不能由 `runtime smoke`、`backend mapping gate` 或 `automatic visible gate` 代替
 - 该 demo 不证明更细粒度 item 行为或更高阶交互模式
+- widget-level `user_data` 与 `on_selected(..., user_data)` callback cookie 是两套语义，不应混写成同一合同
 
 ### `picoui/demo/progress_bar_basic`
 
