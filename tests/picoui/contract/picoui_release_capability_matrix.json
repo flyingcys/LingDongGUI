@@ -1,14 +1,19 @@
 {
-  "schema_version": "h2-draft-v2",
-  "line": "H",
-  "stage": "H2",
-  "purpose": "PicoUI first release capability matrix draft",
-  "truth_source_note": "This JSON is the machine-readable truth source for H-line release matrix design. It does not encode manual review approval.",
+  "schema_version": "j1-parity-layered-v1",
+  "line": "J",
+  "stage": "J1",
+  "purpose": "PicoUI wrapped and parity-layered release capability matrix",
+  "truth_source_note": "This JSON is the machine-readable truth source for PicoUI wrapped coverage plus J0/J1 parity layering. It does not encode manual review approval or release-ready status.",
   "status_enums": {
     "widget_status": [
       "wrapped",
       "not_wrapped",
       "deferred"
+    ],
+    "parity_status": [
+      "parity_complete",
+      "parity_incomplete",
+      "not_applicable"
     ],
     "capability_status": [
       "support",
@@ -20,6 +25,11 @@
       "internal_v0_1_blocker",
       "internal_v0_1_known_limitation",
       "post_h_candidate"
+    ],
+    "parity_bucket": [
+      "v0_1_parity_target",
+      "v0_2_parity_backlog",
+      "post_v0_2_candidate"
     ]
   },
   "evidence_enums": [
@@ -40,12 +50,21 @@
     "ldgui_wrappable_widget_total": 26,
     "picoui_wrapped_widget_total": 9,
     "picoui_not_wrapped_widget_total": 17,
-    "capability_entry_total": 44,
+    "v0_1_parity_target_total": 4,
+    "v0_2_parity_backlog_total": 5,
+    "parity_complete_total": 4,
+    "parity_incomplete_total": 5,
+    "capability_entry_total": 62,
     "capability_status_counts": {
-      "support": 35,
+      "support": 53,
       "reject": 4,
       "incomplete_contract": 4,
       "deferred": 1
+    },
+    "parity_bucket_counts": {
+      "v0_1_parity_target": 4,
+      "v0_2_parity_backlog": 5,
+      "post_v0_2_candidate": 17
     }
   },
   "widgets": [
@@ -53,6 +72,8 @@
       "name": "window",
       "backend_widget": "ldWindow",
       "widget_status": "wrapped",
+      "parity_bucket": "v0_1_parity_target",
+      "parity_status": "parity_complete",
       "widget_release_judgement": "internal_v0_1_known_limitation",
       "evidence_layers": {
         "unit": "present",
@@ -92,6 +113,21 @@
           "name": "bg_color",
           "status": "support",
           "capability_release_judgement": "internal_v0_1_known_limitation"
+        },
+        {
+          "name": "background_image_and_mask",
+          "status": "support",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        },
+        {
+          "name": "padding_group_contract",
+          "status": "support",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        },
+        {
+          "name": "honest_minimal_readback",
+          "status": "support",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
         }
       ]
     },
@@ -99,6 +135,8 @@
       "name": "label",
       "backend_widget": "ldLabel",
       "widget_status": "wrapped",
+      "parity_bucket": "v0_1_parity_target",
+      "parity_status": "parity_complete",
       "widget_release_judgement": "internal_v0_1_known_limitation",
       "evidence_layers": {
         "unit": "present",
@@ -133,6 +171,26 @@
           "name": "bg_and_text_color",
           "status": "support",
           "capability_release_judgement": "internal_v0_1_known_limitation"
+        },
+        {
+          "name": "transparent",
+          "status": "support",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        },
+        {
+          "name": "align",
+          "status": "support",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        },
+        {
+          "name": "background_image_and_mask",
+          "status": "support",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        },
+        {
+          "name": "text_color_bg_color_align_transparent_readback",
+          "status": "support",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
         }
       ]
     },
@@ -140,6 +198,8 @@
       "name": "button",
       "backend_widget": "ldButton",
       "widget_status": "wrapped",
+      "parity_bucket": "v0_1_parity_target",
+      "parity_status": "parity_complete",
       "widget_release_judgement": "internal_v0_1_known_limitation",
       "evidence_layers": {
         "unit": "present",
@@ -174,6 +234,36 @@
           "name": "bg_text_border_radius_padding_subset",
           "status": "support",
           "capability_release_judgement": "internal_v0_1_known_limitation"
+        },
+        {
+          "name": "release_and_press_image",
+          "status": "support",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        },
+        {
+          "name": "transparent",
+          "status": "support",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        },
+        {
+          "name": "font",
+          "status": "support",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        },
+        {
+          "name": "checkable",
+          "status": "support",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        },
+        {
+          "name": "key_value",
+          "status": "support",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        },
+        {
+          "name": "pressed_state",
+          "status": "support",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
         }
       ]
     },
@@ -181,6 +271,8 @@
       "name": "checkbox",
       "backend_widget": "ldCheckBox",
       "widget_status": "wrapped",
+      "parity_bucket": "v0_2_parity_backlog",
+      "parity_status": "parity_incomplete",
       "widget_release_judgement": "internal_v0_1_known_limitation",
       "evidence_layers": {
         "unit": "present",
@@ -222,6 +314,8 @@
       "name": "switch",
       "backend_widget": "ldSwitch",
       "widget_status": "wrapped",
+      "parity_bucket": "v0_2_parity_backlog",
+      "parity_status": "parity_incomplete",
       "widget_release_judgement": "internal_v0_1_known_limitation",
       "evidence_layers": {
         "unit": "present",
@@ -263,6 +357,8 @@
       "name": "slider",
       "backend_widget": "ldSlider",
       "widget_status": "wrapped",
+      "parity_bucket": "v0_1_parity_target",
+      "parity_status": "parity_complete",
       "widget_release_judgement": "internal_v0_1_known_limitation",
       "evidence_layers": {
         "unit": "present",
@@ -297,6 +393,31 @@
           "name": "on_value_changed",
           "status": "support",
           "capability_release_judgement": "internal_v0_1_known_limitation"
+        },
+        {
+          "name": "horizontal",
+          "status": "support",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        },
+        {
+          "name": "background_and_indicator_image_mask",
+          "status": "support",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        },
+        {
+          "name": "indicator_width",
+          "status": "support",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        },
+        {
+          "name": "slim_size",
+          "status": "support",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
+        },
+        {
+          "name": "percent_and_orientation_readback_consistency",
+          "status": "support",
+          "capability_release_judgement": "internal_v0_1_known_limitation"
         }
       ]
     },
@@ -304,6 +425,8 @@
       "name": "text",
       "backend_widget": "ldText",
       "widget_status": "wrapped",
+      "parity_bucket": "v0_2_parity_backlog",
+      "parity_status": "parity_incomplete",
       "widget_release_judgement": "internal_v0_1_known_limitation",
       "evidence_layers": {
         "unit": "present",
@@ -345,6 +468,8 @@
       "name": "image",
       "backend_widget": "ldImage",
       "widget_status": "wrapped",
+      "parity_bucket": "v0_2_parity_backlog",
+      "parity_status": "parity_incomplete",
       "widget_release_judgement": "internal_v0_1_known_limitation",
       "evidence_layers": {
         "unit": "present",
@@ -406,6 +531,8 @@
       "name": "list",
       "backend_widget": "ldList",
       "widget_status": "wrapped",
+      "parity_bucket": "v0_2_parity_backlog",
+      "parity_status": "parity_incomplete",
       "widget_release_judgement": "internal_v0_1_known_limitation",
       "evidence_layers": {
         "unit": "present",
@@ -463,6 +590,8 @@
       "name": "line_edit",
       "backend_widget": "ldLineEdit",
       "widget_status": "not_wrapped",
+      "parity_bucket": "post_v0_2_candidate",
+      "parity_status": "not_applicable",
       "widget_release_judgement": "post_h_candidate",
       "manual_artifact": {
         "artifact_entry_exists": false,
@@ -474,6 +603,8 @@
       "name": "keyboard",
       "backend_widget": "ldKeyboard",
       "widget_status": "not_wrapped",
+      "parity_bucket": "post_v0_2_candidate",
+      "parity_status": "not_applicable",
       "widget_release_judgement": "post_h_candidate",
       "manual_artifact": {
         "artifact_entry_exists": false,
@@ -485,6 +616,8 @@
       "name": "combo_box",
       "backend_widget": "ldComboBox",
       "widget_status": "not_wrapped",
+      "parity_bucket": "post_v0_2_candidate",
+      "parity_status": "not_applicable",
       "widget_release_judgement": "post_h_candidate",
       "manual_artifact": {
         "artifact_entry_exists": false,
@@ -496,6 +629,8 @@
       "name": "scroll_selecter",
       "backend_widget": "ldScrollSelecter",
       "widget_status": "not_wrapped",
+      "parity_bucket": "post_v0_2_candidate",
+      "parity_status": "not_applicable",
       "widget_release_judgement": "post_h_candidate",
       "manual_artifact": {
         "artifact_entry_exists": false,
@@ -507,6 +642,8 @@
       "name": "progress_bar",
       "backend_widget": "ldProgressBar",
       "widget_status": "not_wrapped",
+      "parity_bucket": "post_v0_2_candidate",
+      "parity_status": "not_applicable",
       "widget_release_judgement": "post_h_candidate",
       "manual_artifact": {
         "artifact_entry_exists": false,
@@ -518,6 +655,8 @@
       "name": "progress_wheel",
       "backend_widget": "ldProgressWheel",
       "widget_status": "not_wrapped",
+      "parity_bucket": "post_v0_2_candidate",
+      "parity_status": "not_applicable",
       "widget_release_judgement": "post_h_candidate",
       "manual_artifact": {
         "artifact_entry_exists": false,
@@ -529,6 +668,8 @@
       "name": "arc",
       "backend_widget": "ldArc",
       "widget_status": "not_wrapped",
+      "parity_bucket": "post_v0_2_candidate",
+      "parity_status": "not_applicable",
       "widget_release_judgement": "post_h_candidate",
       "manual_artifact": {
         "artifact_entry_exists": false,
@@ -540,6 +681,8 @@
       "name": "gauge",
       "backend_widget": "ldGauge",
       "widget_status": "not_wrapped",
+      "parity_bucket": "post_v0_2_candidate",
+      "parity_status": "not_applicable",
       "widget_release_judgement": "post_h_candidate",
       "manual_artifact": {
         "artifact_entry_exists": false,
@@ -551,6 +694,8 @@
       "name": "graph",
       "backend_widget": "ldGraph",
       "widget_status": "not_wrapped",
+      "parity_bucket": "post_v0_2_candidate",
+      "parity_status": "not_applicable",
       "widget_release_judgement": "post_h_candidate",
       "manual_artifact": {
         "artifact_entry_exists": false,
@@ -562,6 +707,8 @@
       "name": "table",
       "backend_widget": "ldTable",
       "widget_status": "not_wrapped",
+      "parity_bucket": "post_v0_2_candidate",
+      "parity_status": "not_applicable",
       "widget_release_judgement": "post_h_candidate",
       "manual_artifact": {
         "artifact_entry_exists": false,
@@ -573,6 +720,8 @@
       "name": "calendar",
       "backend_widget": "ldCalendar",
       "widget_status": "not_wrapped",
+      "parity_bucket": "post_v0_2_candidate",
+      "parity_status": "not_applicable",
       "widget_release_judgement": "post_h_candidate",
       "manual_artifact": {
         "artifact_entry_exists": false,
@@ -584,6 +733,8 @@
       "name": "date_time",
       "backend_widget": "ldDateTime",
       "widget_status": "not_wrapped",
+      "parity_bucket": "post_v0_2_candidate",
+      "parity_status": "not_applicable",
       "widget_release_judgement": "post_h_candidate",
       "manual_artifact": {
         "artifact_entry_exists": false,
@@ -595,6 +746,8 @@
       "name": "clock",
       "backend_widget": "ldClock",
       "widget_status": "not_wrapped",
+      "parity_bucket": "post_v0_2_candidate",
+      "parity_status": "not_applicable",
       "widget_release_judgement": "post_h_candidate",
       "manual_artifact": {
         "artifact_entry_exists": false,
@@ -606,6 +759,8 @@
       "name": "qr_code",
       "backend_widget": "ldQRCode",
       "widget_status": "not_wrapped",
+      "parity_bucket": "post_v0_2_candidate",
+      "parity_status": "not_applicable",
       "widget_release_judgement": "post_h_candidate",
       "manual_artifact": {
         "artifact_entry_exists": false,
@@ -617,6 +772,8 @@
       "name": "icon_slider",
       "backend_widget": "ldIconSlider",
       "widget_status": "not_wrapped",
+      "parity_bucket": "post_v0_2_candidate",
+      "parity_status": "not_applicable",
       "widget_release_judgement": "post_h_candidate",
       "manual_artifact": {
         "artifact_entry_exists": false,
@@ -628,6 +785,8 @@
       "name": "radial_menu",
       "backend_widget": "ldRadialMenu",
       "widget_status": "not_wrapped",
+      "parity_bucket": "post_v0_2_candidate",
+      "parity_status": "not_applicable",
       "widget_release_judgement": "post_h_candidate",
       "manual_artifact": {
         "artifact_entry_exists": false,
@@ -639,6 +798,8 @@
       "name": "message_box",
       "backend_widget": "ldMessageBox",
       "widget_status": "not_wrapped",
+      "parity_bucket": "post_v0_2_candidate",
+      "parity_status": "not_applicable",
       "widget_release_judgement": "post_h_candidate",
       "manual_artifact": {
         "artifact_entry_exists": false,

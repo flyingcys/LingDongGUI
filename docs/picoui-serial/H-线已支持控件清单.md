@@ -4,7 +4,10 @@
 
 本文是 `H11` 的 supported controls 真相源，只回答当前 first release discussion 范围内，哪些 PicoUI public 控件可以被列入支持清单，以及每个控件当前承认的支持子集。
 
-当前口径仍然是 `internal v0.1 candidate`，不是 `public v1.0`。
+当前口径已经按 `J线` 分流为：
+
+- `v0.1 parity`：`window / label / button / slider`
+- `v0.2 parity backlog`：`checkbox / switch / text / image / list`
 
 完整合同与限制仍以以下文档为准：
 
@@ -12,25 +15,31 @@
 - [H-线发布差距与LingDongGUI控件对比](/Users/cys/embedded/LingDongGUI/docs/picoui-serial/H-线发布差距与LingDongGUI控件对比.md)
 - [H-线第一版发布说明](/Users/cys/embedded/LingDongGUI/docs/picoui-serial/H-线第一版发布说明.md)
 
-## 当前 9 个已支持控件
+## `v0.1` 已对齐控件
 
 | 控件 | 当前支持子集摘要 | 详细合同 |
 | --- | --- | --- |
-| `window` | 容器、flex/grid、padding/gap/align、背景色 | [window 合同](/Users/cys/embedded/LingDongGUI/docs/picoui-serial/H-线当前9控件发布合同.md) |
-| `label` | 文本、最小 font 映射、背景色、文字色 | [label 合同](/Users/cys/embedded/LingDongGUI/docs/picoui-serial/H-线当前9控件发布合同.md) |
-| `button` | 文本、clicked/pressed/released、基础样式子集 | [button 合同](/Users/cys/embedded/LingDongGUI/docs/picoui-serial/H-线当前9控件发布合同.md) |
+| `window` | 容器、flex/grid、padding/gap/align、背景色、background image/mask、`padding_group` | [window 合同](/Users/cys/embedded/LingDongGUI/docs/picoui-serial/H-线当前9控件发布合同.md) |
+| `label` | 文本、font 映射、背景色、文字色、transparent、align、background image/mask、诚实 readback | [label 合同](/Users/cys/embedded/LingDongGUI/docs/picoui-serial/H-线当前9控件发布合同.md) |
+| `button` | 文本、clicked/pressed/released、release/press image、transparent、font、checkable、key_value、pressed state | [button 合同](/Users/cys/embedded/LingDongGUI/docs/picoui-serial/H-线当前9控件发布合同.md) |
+| `slider` | value/range 归一化合同、value changed callback、horizontal、background/indicator image+mask、indicator/slim size、percent/orientation readback | [slider 合同](/Users/cys/embedded/LingDongGUI/docs/picoui-serial/H-线当前9控件发布合同.md) |
+
+## 已 wrapped、转入 `v0.2` backlog 的控件
+
+| 控件 | 当前支持子集摘要 | 详细合同 |
+| --- | --- | --- |
 | `checkbox` | 文本、checked state、toggle callback、基础样式子集 | [checkbox 合同](/Users/cys/embedded/LingDongGUI/docs/picoui-serial/H-线当前9控件发布合同.md) |
 | `switch` | checked state、toggle callback、enabled、基础样式子集 | [switch 合同](/Users/cys/embedded/LingDongGUI/docs/picoui-serial/H-线当前9控件发布合同.md) |
-| `slider` | value、range、value changed callback、基础样式子集 | [slider 合同](/Users/cys/embedded/LingDongGUI/docs/picoui-serial/H-线当前9控件发布合同.md) |
 | `text` | 文本、最小 font fallback、背景色、文字色 | [text 合同](/Users/cys/embedded/LingDongGUI/docs/picoui-serial/H-线当前9控件发布合同.md) |
 | `image` | 基础 source 绑定、布局显示、真实 `ldImage` backend 路径；仅基础子集，`style_class/user_data` 仅 metadata-only，详见限制 | [image 合同](/Users/cys/embedded/LingDongGUI/docs/picoui-serial/H-线当前9控件发布合同.md) |
 | `list` | add item、selected index、真实 `ldList` 文本/选择映射、`on_selected` callback cookie；高风险控件，非 support 项与 metadata-only 限制见合同 | [list 合同](/Users/cys/embedded/LingDongGUI/docs/picoui-serial/H-线当前9控件发布合同.md) |
 
-## 当前不在支持清单里的内容
+## 当前不在 `v0.1` 对齐支持清单里的内容
 
 - `image` 的 `theme`、`enabled`、颜色/边框/radius style 与 `padding` 扩展能力不在当前支持清单中；其中 `style_class` 与 `user_data` 只承认 metadata-only 合同，不是真实 backend support。
 - `list` 的 `item marker`、更细粒度 per-item widget 语义、advanced style 不在当前支持清单中；其中 `style_class` 与 widget-level `user_data` 都是 metadata-only `incomplete_contract`。
 - `list` 的 `on_selected(..., user_data)` 中 `user_data` 只是 callback cookie；它与 widget-level `user_data` 分离，不能混写成“list 已支持 user_data”。
+- `checkbox / switch / text / image / list` 虽然都已 wrapped，但当前仍不应写成 `v0.1 parity-complete`。
 - 完整字体系统、完整 theme/skin 系统、人工窗口验收通过结论。
 - 其余 `17` 个未覆盖的 `LingDongGUI` 可封装控件。
 

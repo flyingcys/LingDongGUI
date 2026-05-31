@@ -1,7 +1,9 @@
 #include "picoui/picoui.h"
 #include "../../../src/gui/ldBase.h"
+#include "../../../src/gui/ldButton.h"
 #include "../../../src/gui/ldCheckBox.h"
 #include "../../../src/gui/ldImage.h"
+#include "../../../src/gui/ldLabel.h"
 #include "../../../src/gui/ldSlider.h"
 #include "../../../src/gui/ldSwitch.h"
 #include "../../../src/gui/ldText.h"
@@ -24,6 +26,7 @@ struct test_text_box_prefix_view {
 };
 
 void picoui_backend_text_test_fail_next_set_font(void);
+extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
 
 static arm_2d_font_t *test_text_consumed_font(const ldText_t *ld_text)
 {
@@ -32,6 +35,46 @@ static arm_2d_font_t *test_text_consumed_font(const ldText_t *ld_text)
     assert(ld_text != 0);
     view = (const struct test_text_box_prefix_view *)&ld_text->tTextPanel;
     return (arm_2d_font_t *)view->tCFG.ptFont;
+}
+
+static void assert_button_has_no_bound_images(const struct picoui_button *button)
+{
+    const struct picoui_backend_widget *backend = button->widget.backend_widget;
+    const ldButton_t *ld_button = (const ldButton_t *)backend->ld_widget;
+
+    assert(ld_button != 0);
+    assert(ld_button->ptReleaseImgTile == 0);
+    assert(ld_button->ptReleaseMaskTile == 0);
+    assert(ld_button->ptPressImgTile == 0);
+    assert(ld_button->ptPressMaskTile == 0);
+}
+
+static void assert_button_has_bound_images(const struct picoui_button *button,
+                                           const struct picoui_image_source *release_source,
+                                           const struct picoui_image_source *press_source)
+{
+    const struct picoui_backend_widget *backend = button->widget.backend_widget;
+    const ldButton_t *ld_button = (const ldButton_t *)backend->ld_widget;
+
+    assert(ld_button != 0);
+    assert(ld_button->ptReleaseImgTile == (release_source != 0 ? release_source->img_tile : 0));
+    assert(ld_button->ptReleaseMaskTile == (release_source != 0 ? release_source->mask_tile : 0));
+    assert(ld_button->ptPressImgTile == (press_source != 0 ? press_source->img_tile : 0));
+    assert(ld_button->ptPressMaskTile == (press_source != 0 ? press_source->mask_tile : 0));
+}
+
+static void assert_slider_has_bound_images(const struct picoui_slider *slider,
+                                           const struct picoui_image_source *background_source,
+                                           const struct picoui_image_source *indicator_source)
+{
+    const struct picoui_backend_widget *backend = slider->widget.backend_widget;
+    const ldSlider_t *ld_slider = (const ldSlider_t *)backend->ld_widget;
+
+    assert(ld_slider != 0);
+    assert(ld_slider->ptBgImgTile == (background_source != 0 ? background_source->img_tile : 0));
+    assert(ld_slider->ptBgMaskTile == (background_source != 0 ? background_source->mask_tile : 0));
+    assert(ld_slider->ptIndicImgTile == (indicator_source != 0 ? indicator_source->img_tile : 0));
+    assert(ld_slider->ptIndicMaskTile == (indicator_source != 0 ? indicator_source->mask_tile : 0));
 }
 
 static void on_switch_toggle(struct picoui_widget *widget, int value, void *user_data)
@@ -64,20 +107,106 @@ static void on_button_clicked(struct picoui_widget *widget, void *user_data)
     button_clicked = user_data != 0 ? *(const int *)user_data : 0;
 }
 
-static void test_backend_value_changed_bridge_keeps_setter_sync_only(struct picoui_slider *slider,
-                                                                     struct picoui_backend_widget *slider_backend)
+static void test_slider_j5_contract(struct picoui_slider *slider,
+                                    struct picoui_image_source *background_source,
+                                    struct picoui_image_source *indicator_source)
 {
-    ld_scene_t scene = {0};
+    struct picoui_backend_widget *backend;
+    ldSlider_t *ld_slider;
+    int horizontal = -1;
+    int percent = -1;
+    struct picoui_image_source invalid_source = {
+        .img_tile = 0,
+        .mask_tile = background_source->mask_tile,
+    };
+
+    assert(slider != 0);
+    backend = slider->widget.backend_widget;
+    ld_slider = (ldSlider_t *)backend->ld_widget;
+    assert(ld_slider != 0);
+
+    assert(picoui_slider_set_range(slider, -20, 80) == 0);
+    assert(picoui_slider_set_value(slider, 30) == 0);
+    assert(picoui_slider_set_horizontal(slider, 0) == 0);
+    assert(picoui_slider_set_background_source(slider, background_source) == 0);
+    assert(picoui_slider_set_indicator_source(slider, indicator_source) == 0);
+    assert(picoui_slider_set_indicator_width(slider, 18) == 0);
+    assert(picoui_slider_set_slim_size(slider, 6) == 0);
+
+    assert(picoui_slider_get_horizontal(slider, &horizontal) == 0);
+    assert(horizontal == 0);
+    assert(ld_slider->isHorizontal == false);
+    assert_slider_has_bound_images(slider, background_source, indicator_source);
+    assert(ld_slider->indicWidth == 18);
+    assert(ld_slider->slimSize == 6);
+    assert(picoui_slider_get_percent(slider, &percent) == 0);
+    assert(percent == 50);
+    assert(ld_slider->permille == 500);
+
+    assert(picoui_slider_set_horizontal(slider, 1) == 0);
+    assert(picoui_slider_get_horizontal(slider, &horizontal) == 0);
+    assert(horizontal == 1);
+    assert(ld_slider->isHorizontal == true);
+
+    assert(picoui_slider_set_background_source(slider, 0) == 0);
+    assert_slider_has_bound_images(slider, 0, indicator_source);
+    assert(picoui_slider_set_indicator_source(slider, 0) == 0);
+    assert_slider_has_bound_images(slider, 0, 0);
+    assert(picoui_slider_set_background_source(slider, background_source) == 0);
+    assert(picoui_slider_set_indicator_source(slider, indicator_source) == 0);
+    assert_slider_has_bound_images(slider, background_source, indicator_source);
+
+    assert(picoui_slider_set_indicator_width(slider, 22) == 0);
+    assert(ld_slider->indicWidth == 22);
+    assert(picoui_slider_set_slim_size(slider, 8) == 0);
+    assert(ld_slider->slimSize == 8);
+    assert(picoui_slider_set_indicator_width(slider, 256) == -1);
+    assert(ld_slider->indicWidth == 22);
+    assert(picoui_slider_set_slim_size(slider, 256) == -1);
+    assert(ld_slider->slimSize == 8);
+
+    assert(picoui_slider_set_value(slider, 80) == 0);
+    assert(ld_slider->permille == 1000);
+    assert(picoui_slider_get_percent(slider, &percent) == 0);
+    assert(percent == 100);
+
+    assert(picoui_slider_set_range(slider, 20, 60) == 0);
+    assert(ld_slider->permille == 1000);
+    assert(picoui_slider_get_percent(slider, &percent) == 0);
+    assert(percent == 100);
+
+    assert(picoui_slider_set_value(slider, 40) == 0);
+    assert(ld_slider->permille == 500);
+    assert(picoui_slider_get_percent(slider, &percent) == 0);
+    assert(percent == 50);
+
+    assert(picoui_slider_set_background_source(0, background_source) == -1);
+    assert(picoui_slider_set_indicator_source(0, indicator_source) == -1);
+    assert(picoui_slider_set_indicator_width(0, 10) == -1);
+    assert(picoui_slider_set_slim_size(0, 4) == -1);
+    assert(picoui_slider_set_horizontal(0, 1) == -1);
+    assert(picoui_slider_get_horizontal(0, &horizontal) == -1);
+    assert(picoui_slider_get_horizontal(slider, 0) == -1);
+    assert(picoui_slider_get_percent(0, &percent) == -1);
+    assert(picoui_slider_get_percent(slider, 0) == -1);
+    assert(picoui_slider_set_background_source(slider, &invalid_source) == -1);
+    assert(picoui_slider_set_indicator_source(slider, &invalid_source) == -1);
+}
+
+static void test_backend_value_changed_bridge_keeps_setter_sync_only(struct picoui_slider *slider,
+                                                                     struct picoui_backend_widget *slider_backend,
+                                                                     struct ld_scene_t *scene)
+{
     ldBase_t sender = {0};
     ldMsg_t msg = {0};
 
-    assert(ldMsgInit(&scene.ptMsgQueue, 4) == true);
-    assert(picoui_backend_widget_bind_ld_event_bridge(slider_backend, &scene, &sender) == 0);
+    assert(scene != 0);
+    assert(scene->ptMsgQueue != 0);
+    assert(picoui_backend_widget_bind_ld_event_bridge(slider_backend, scene, &sender) == 0);
     assert(picoui_slider_set_value(slider, 12) == 0);
     assert(slider_value_count == 0);
     assert(slider_value == -1);
-    assert(xQueueDequeue(scene.ptMsgQueue, &msg, sizeof(msg)) == false);
-    ldMsgDeinit(&scene.ptMsgQueue);
+    assert(xQueueDequeue(scene->ptMsgQueue, &msg, sizeof(msg)) == false);
 }
 
 static void test_native_event_bridge_prefers_native_path(struct picoui_switch *sw,
@@ -128,7 +257,12 @@ static void test_native_event_bridge_prefers_native_path(struct picoui_switch *s
 
     assert(ldMsgEmit(scene->ptMsgQueue, slider_backend->ld_widget, SIGNAL_VALUE_CHANGED, 625) == true);
     ldMsgProcess(scene);
-    assert(picoui_slider_get_value(slider) == 35);
+    assert(slider_backend->value == 35);
+    {
+        int percent = -1;
+        assert(picoui_slider_get_percent(slider, &percent) == 0);
+        assert(percent == 62);
+    }
     assert(slider_value_count == 1);
     assert(slider_value == 35);
     assert(ld_slider->permille == 620);
@@ -261,6 +395,160 @@ static void assert_image_has_bound_source(const struct picoui_image *image,
     assert(backend->image_source == source);
     assert(ld_image->ptImgTile == source->img_tile);
     assert(ld_image->ptMaskTile == source->mask_tile);
+}
+
+static unsigned int quantize_rgb_to_ld_roundtrip(unsigned int rgb)
+{
+    unsigned int encoded = (unsigned int)__RGB((rgb >> 16) & 0xFFU,
+                                               (rgb >> 8) & 0xFFU,
+                                               rgb & 0xFFU);
+    unsigned int red = (encoded >> 11) & 0x1FU;
+    unsigned int green = (encoded >> 5) & 0x3FU;
+    unsigned int blue = encoded & 0x1FU;
+
+    red = (red << 3) | (red >> 2);
+    green = (green << 2) | (green >> 4);
+    blue = (blue << 3) | (blue >> 2);
+    return (red << 16) | (green << 8) | blue;
+}
+
+static void assert_label_has_no_background_source(const struct picoui_label *label)
+{
+    const struct picoui_backend_widget *backend = label->widget.backend_widget;
+    const ldLabel_t *ld_label = (const ldLabel_t *)backend->ld_widget;
+
+    assert(ld_label != 0);
+    assert(ld_label->ptImgTile == 0);
+    assert(ld_label->ptMaskTile == 0);
+}
+
+static void assert_label_has_background_source(const struct picoui_label *label,
+                                               const struct picoui_image_source *source)
+{
+    const struct picoui_backend_widget *backend = label->widget.backend_widget;
+    const ldLabel_t *ld_label = (const ldLabel_t *)backend->ld_widget;
+
+    assert(ld_label != 0);
+    assert(ld_label->ptImgTile == source->img_tile);
+    assert(ld_label->ptMaskTile == source->mask_tile);
+}
+
+static void test_label_parity_contract(struct picoui_label *label,
+                                       struct picoui_image_source *image_source,
+                                       const struct picoui_font *font)
+{
+    unsigned int rgb = 0;
+    int transparent = -1;
+    enum picoui_align align = (enum picoui_align)-1;
+    struct picoui_image_source invalid_source = {
+        .img_tile = 0,
+        .mask_tile = image_source->mask_tile,
+    };
+    struct picoui_image_source unmasked_source = {
+        .img_tile = image_source->img_tile,
+        .mask_tile = 0,
+    };
+    struct picoui_backend_widget *backend = label->widget.backend_widget;
+    ldLabel_t *ld_label = (ldLabel_t *)backend->ld_widget;
+
+    assert(label != 0);
+    assert(ld_label != 0);
+
+    assert(picoui_label_set_text(label, "hello") == 0);
+    assert(picoui_label_get_text(label) != 0);
+    assert(strcmp(picoui_label_get_text(label), "hello") == 0);
+    assert(label->widget.text == (const char *)"hello");
+    assert(ldLabelGetText(ld_label) != 0);
+    assert(strcmp((const char *)ldLabelGetText(ld_label), "hello") == 0);
+
+    assert(picoui_label_set_font(label, font) == 0);
+    assert(label->widget.font == font);
+    assert(ldLabelGetFont(ld_label) != 0);
+
+    assert(picoui_label_set_text_color(label, 0x445566U) == 0);
+    assert(picoui_label_get_text_color(label, &rgb) == 0);
+    assert(rgb == quantize_rgb_to_ld_roundtrip(0x445566U));
+    assert(ldLabelGetTextColor(ld_label) == __RGB(0x44, 0x55, 0x66));
+    assert(picoui_label_get_text_color(0, &rgb) == -1);
+    assert(picoui_label_get_text_color(label, 0) == -1);
+
+    assert(picoui_label_set_bg_color(label, 0x112233U) == 0);
+    assert(picoui_label_get_bg_color(label, &rgb) == 0);
+    assert(rgb == quantize_rgb_to_ld_roundtrip(0x112233U));
+    assert(ldLabelGetBackgroundColor(ld_label) == __RGB(0x11, 0x22, 0x33));
+    assert(picoui_label_get_bg_color(0, &rgb) == -1);
+    assert(picoui_label_get_bg_color(label, 0) == -1);
+    assert(picoui_label_get_transparent(label, &transparent) == 0);
+    assert(transparent == 0);
+    assert(ldLabelGetTransparent(ld_label) == false);
+    assert_label_has_no_background_source(label);
+
+    assert(picoui_label_get_transparent(label, &transparent) == 0);
+    assert(transparent == 0);
+    assert(ldLabelGetTransparent(ld_label) == false);
+    assert(picoui_label_set_transparent(label, 1) == 0);
+    assert(picoui_label_get_transparent(label, &transparent) == 0);
+    assert(transparent == 1);
+    assert(ldLabelGetTransparent(ld_label) == true);
+    assert(picoui_label_set_transparent(label, 0) == 0);
+    assert(picoui_label_get_transparent(label, &transparent) == 0);
+    assert(transparent == 0);
+    assert(ldLabelGetTransparent(ld_label) == false);
+    assert(picoui_label_get_transparent(0, &transparent) == -1);
+    assert(picoui_label_get_transparent(label, 0) == -1);
+
+    assert(picoui_label_set_align(label, PICOUI_ALIGN_START) == 0);
+    assert(picoui_label_get_align(label, &align) == 0);
+    assert(align == PICOUI_ALIGN_START);
+    assert(ldLabelGetAlign(ld_label) == ARM_2D_ALIGN_LEFT);
+    assert(picoui_label_set_align(label, PICOUI_ALIGN_CENTER) == 0);
+    assert(picoui_label_get_align(label, &align) == 0);
+    assert(align == PICOUI_ALIGN_CENTER);
+    assert(ldLabelGetAlign(ld_label) == ARM_2D_ALIGN_CENTRE);
+    assert(picoui_label_set_align(label, PICOUI_ALIGN_END) == 0);
+    assert(picoui_label_get_align(label, &align) == 0);
+    assert(align == PICOUI_ALIGN_END);
+    assert(ldLabelGetAlign(ld_label) == ARM_2D_ALIGN_RIGHT);
+    assert(picoui_label_set_align(label, (enum picoui_align)99) == -1);
+    assert(picoui_label_get_align(label, &align) == 0);
+    assert(align == PICOUI_ALIGN_END);
+    assert(ldLabelGetAlign(ld_label) == ARM_2D_ALIGN_RIGHT);
+    assert(picoui_label_get_align(0, &align) == -1);
+    assert(picoui_label_get_align(label, 0) == -1);
+
+    assert_label_has_no_background_source(label);
+    assert(picoui_label_set_background_source(label, 0) == 0);
+    assert_label_has_no_background_source(label);
+    assert(picoui_label_set_background_source(label, &invalid_source) == -1);
+    assert_label_has_no_background_source(label);
+    assert(picoui_label_set_transparent(label, 1) == 0);
+    assert(picoui_label_get_transparent(label, &transparent) == 0);
+    assert(transparent == 1);
+    assert(ldLabelGetTransparent(ld_label) == true);
+    assert(picoui_label_set_background_source(label, image_source) == 0);
+    assert_label_has_background_source(label, image_source);
+    assert(picoui_label_get_transparent(label, &transparent) == 0);
+    assert(transparent == 0);
+    assert(ldLabelGetTransparent(ld_label) == false);
+    assert(picoui_label_set_background_source(label, &unmasked_source) == 0);
+    assert_label_has_background_source(label, &unmasked_source);
+    assert(picoui_label_get_transparent(label, &transparent) == 0);
+    assert(transparent == 0);
+    assert(ldLabelGetTransparent(ld_label) == false);
+    assert(picoui_label_set_transparent(label, 1) == 0);
+    assert(picoui_label_get_transparent(label, &transparent) == 0);
+    assert(transparent == 1);
+    assert(ldLabelGetTransparent(ld_label) == true);
+    assert(picoui_label_set_bg_color(label, 0x334455U) == 0);
+    assert(picoui_label_get_bg_color(label, &rgb) == 0);
+    assert(rgb == quantize_rgb_to_ld_roundtrip(0x334455U));
+    assert(ldLabelGetBackgroundColor(ld_label) == __RGB(0x33, 0x44, 0x55));
+    assert(picoui_label_get_transparent(label, &transparent) == 0);
+    assert(transparent == 0);
+    assert(ldLabelGetTransparent(ld_label) == false);
+    assert_label_has_no_background_source(label);
+    assert(picoui_label_set_background_source(label, 0) == 0);
+    assert_label_has_no_background_source(label);
 }
 
 static void test_image_source_boundary(struct picoui_window *parent,
@@ -457,6 +745,144 @@ static void test_image_enabled_remains_rejected_contract(struct picoui_window *p
     assert(image->widget.enabled == 1);
 }
 
+static void test_button_j4_contract(struct picoui_window *parent,
+                                    struct picoui_backend_app_state *app_state,
+                                    struct picoui_image_source *release_source,
+                                    struct picoui_image_source *press_source,
+                                    const struct picoui_font *font)
+{
+    struct picoui_button_props props = {
+        .id = "button_j4_props",
+        .text = "Button J4",
+        .release_image = release_source,
+        .press_image = press_source,
+        .transparent = 1,
+        .font = font,
+        .checkable = 1,
+        .key_value = 0x1234U,
+        .pressed = 1,
+    };
+    struct picoui_button *button = picoui_button_create(parent, "button_j4");
+    struct picoui_button *props_button = picoui_button_create_with_props(parent, &props);
+    struct picoui_image_source invalid_source = {
+        .img_tile = 0,
+        .mask_tile = release_source->mask_tile,
+    };
+    struct picoui_backend_widget *backend;
+    ldButton_t *ld_button;
+    int transparent = -1;
+    int checkable = -1;
+    int pressed = -1;
+    unsigned int key_value = 0;
+
+    assert(button != 0);
+    assert(props_button != 0);
+    backend = button->widget.backend_widget;
+    ld_button = (ldButton_t *)backend->ld_widget;
+    assert(ld_button != 0);
+
+    assert_button_has_no_bound_images(button);
+    assert(picoui_button_set_release_image(button, 0) == 0);
+    assert(picoui_button_set_press_image(button, 0) == 0);
+    assert_button_has_no_bound_images(button);
+    assert(picoui_button_set_release_image(button, &invalid_source) == -1);
+    assert(picoui_button_set_press_image(button, &invalid_source) == -1);
+    assert_button_has_no_bound_images(button);
+    assert(picoui_button_set_release_image(button, release_source) == 0);
+    assert_button_has_bound_images(button, release_source, 0);
+    assert(picoui_button_set_press_image(button, press_source) == 0);
+    assert_button_has_bound_images(button, release_source, press_source);
+
+    assert(picoui_button_set_transparent(button, 1) == 0);
+    assert(picoui_button_get_transparent(button, &transparent) == 0);
+    assert(transparent == 1);
+    assert(ldButtonGetTransparent(ld_button) == true);
+    assert(picoui_button_set_transparent(button, 0) == 0);
+    assert(picoui_button_get_transparent(button, &transparent) == 0);
+    assert(transparent == 0);
+    assert(ldButtonGetTransparent(ld_button) == false);
+    assert(picoui_button_get_transparent(0, &transparent) == -1);
+    assert(picoui_button_get_transparent(button, 0) == -1);
+
+    assert(picoui_button_set_font(button, font) == 0);
+    assert(ldButtonGetFont(ld_button) == (arm_2d_font_t *)&ARM_2D_FONT_6x8);
+
+    assert(picoui_button_set_checkable(button, 1) == 0);
+    assert(picoui_button_get_checkable(button, &checkable) == 0);
+    assert(checkable == 1);
+    assert(ldButtonGetCheckable(ld_button) == true);
+    assert(picoui_button_set_checkable(button, 0) == 0);
+    assert(picoui_button_get_checkable(button, &checkable) == 0);
+    assert(checkable == 0);
+    assert(ldButtonGetCheckable(ld_button) == false);
+    assert(picoui_button_get_checkable(0, &checkable) == -1);
+    assert(picoui_button_get_checkable(button, 0) == -1);
+
+    assert(picoui_button_set_key_value(button, 0x55AAU) == 0);
+    assert(picoui_button_get_key_value(button, &key_value) == 0);
+    assert(key_value == 0x55AAU);
+    assert(ldButtonGetKeyValue(ld_button) == 0x55AAU);
+    assert(picoui_button_get_key_value(0, &key_value) == -1);
+    assert(picoui_button_get_key_value(button, 0) == -1);
+
+    assert(picoui_button_set_pressed(button, 1) == 0);
+    assert(picoui_button_get_pressed(button, &pressed) == 0);
+    assert(pressed == 1);
+    assert(ldButtonGetPress(ld_button) == true);
+    assert(picoui_button_set_pressed(button, 0) == 0);
+    assert(picoui_button_get_pressed(button, &pressed) == 0);
+    assert(pressed == 0);
+    assert(ldButtonGetPress(ld_button) == false);
+    assert(picoui_button_get_pressed(0, &pressed) == -1);
+    assert(picoui_button_get_pressed(button, 0) == -1);
+
+    assert(props_button->widget.text == (const char *)"Button J4");
+    assert_button_has_bound_images(props_button, release_source, press_source);
+    assert(picoui_button_get_transparent(props_button, &transparent) == 0);
+    assert(transparent == 1);
+    assert(picoui_button_get_checkable(props_button, &checkable) == 0);
+    assert(checkable == 1);
+    assert(picoui_button_get_key_value(props_button, &key_value) == 0);
+    assert(key_value == 0x1234U);
+    assert(picoui_button_get_pressed(props_button, &pressed) == 0);
+    assert(pressed == 1);
+    assert(ldButtonGetFont((ldButton_t *)((struct picoui_backend_widget *)props_button->widget.backend_widget)->ld_widget)
+           == (arm_2d_font_t *)&ARM_2D_FONT_6x8);
+
+    assert(picoui_button_set_checkable(button, 0) == 0);
+    assert(picoui_button_set_pressed(button, 0) == 0);
+    assert(ldMsgEmit(app_state->ld_scene->ptMsgQueue, backend->ld_widget, SIGNAL_PRESS, 0) == true);
+    ldMsgProcess(app_state->ld_scene);
+    assert(picoui_button_get_pressed(button, &pressed) == 0);
+    assert(pressed == 1);
+    assert(ldMsgEmit(app_state->ld_scene->ptMsgQueue, backend->ld_widget, SIGNAL_RELEASE, 0) == true);
+    ldMsgProcess(app_state->ld_scene);
+    assert(picoui_button_get_pressed(button, &pressed) == 0);
+    assert(pressed == 0);
+
+    assert(picoui_button_set_checkable(button, 1) == 0);
+    assert(picoui_button_set_pressed(button, 0) == 0);
+    assert(ldMsgEmit(app_state->ld_scene->ptMsgQueue, backend->ld_widget, SIGNAL_PRESS, 0) == true);
+    ldMsgProcess(app_state->ld_scene);
+    assert(picoui_button_get_pressed(button, &pressed) == 0);
+    assert(pressed == 1);
+    assert(ldMsgEmit(app_state->ld_scene->ptMsgQueue, backend->ld_widget, SIGNAL_RELEASE, 0) == true);
+    ldMsgProcess(app_state->ld_scene);
+    assert(picoui_button_get_pressed(button, &pressed) == 0);
+    assert(pressed == 1);
+    assert(ldMsgEmit(app_state->ld_scene->ptMsgQueue, backend->ld_widget, SIGNAL_PRESS, 0) == true);
+    ldMsgProcess(app_state->ld_scene);
+    assert(picoui_button_get_pressed(button, &pressed) == 0);
+    assert(pressed == 0);
+
+    assert(picoui_button_set_release_image(0, release_source) == -1);
+    assert(picoui_button_set_press_image(0, press_source) == -1);
+    assert(picoui_button_set_font(0, font) == -1);
+    assert(picoui_button_set_checkable(0, 1) == -1);
+    assert(picoui_button_set_key_value(0, 1) == -1);
+    assert(picoui_button_set_pressed(0, 1) == -1);
+}
+
 static void test_props_invalid_values_do_not_attach_backend_children(struct picoui_window *parent,
                                                                      struct picoui_image_source *image_source)
 {
@@ -499,12 +925,54 @@ static void test_props_invalid_values_do_not_attach_backend_children(struct pico
         .id = 0,
         .source = image_source,
     };
+    struct picoui_slider_props bad_slider_indicator_width = {
+        .id = "bad_slider_indicator_width",
+        .has_indicator_width = 1,
+        .indicator_width = -1,
+    };
+    struct picoui_slider_props bad_slider_indicator_width_oversize = {
+        .id = "bad_slider_indicator_width_oversize",
+        .has_indicator_width = 1,
+        .indicator_width = 256,
+    };
+    struct picoui_slider_props bad_slider_slim_size = {
+        .id = "bad_slider_slim_size",
+        .has_slim_size = 1,
+        .slim_size = -1,
+    };
+    struct picoui_slider_props bad_slider_slim_size_oversize = {
+        .id = "bad_slider_slim_size_oversize",
+        .has_slim_size = 1,
+        .slim_size = 256,
+    };
+    struct picoui_slider_props bad_slider_background = {
+        .id = "bad_slider_background",
+        .has_background_source = 1,
+        .background_source = &bad_image_source,
+    };
+    struct picoui_slider_props bad_slider_indicator = {
+        .id = "bad_slider_indicator",
+        .has_indicator_source = 1,
+        .indicator_source = &bad_image_source,
+    };
 
     assert(picoui_label_create_with_props(parent, &bad_label_padding) == 0);
     assert_backend_tree_unchanged(parent, child_count);
     assert(picoui_slider_create_with_props(parent, &bad_slider_range) == 0);
     assert_backend_tree_unchanged(parent, child_count);
     assert(picoui_slider_create_with_props(parent, &bad_slider_value) == 0);
+    assert_backend_tree_unchanged(parent, child_count);
+    assert(picoui_slider_create_with_props(parent, &bad_slider_indicator_width) == 0);
+    assert_backend_tree_unchanged(parent, child_count);
+    assert(picoui_slider_create_with_props(parent, &bad_slider_indicator_width_oversize) == 0);
+    assert_backend_tree_unchanged(parent, child_count);
+    assert(picoui_slider_create_with_props(parent, &bad_slider_slim_size) == 0);
+    assert_backend_tree_unchanged(parent, child_count);
+    assert(picoui_slider_create_with_props(parent, &bad_slider_slim_size_oversize) == 0);
+    assert_backend_tree_unchanged(parent, child_count);
+    assert(picoui_slider_create_with_props(parent, &bad_slider_background) == 0);
+    assert_backend_tree_unchanged(parent, child_count);
+    assert(picoui_slider_create_with_props(parent, &bad_slider_indicator) == 0);
     assert_backend_tree_unchanged(parent, child_count);
     assert(picoui_button_create_with_props(parent, &bad_button_size) == 0);
     assert_backend_tree_unchanged(parent, child_count);
@@ -603,24 +1071,35 @@ static void test_props_initial_values(struct picoui_app *app,
         .padding = 14,
     };
     struct picoui_slider_props slider_props = {
-        .id = "props_slider",
-        .min_value = 10,
-        .max_value = 60,
-        .value = 45,
-        .on_value_changed = on_slider,
-        .user_data = common_cookie,
-        .style_class = "slider-row",
-        .width = 106,
-        .height = 26,
-        .bg_color = 0x717273,
-        .text_color = 0x747576,
-        .border_color = 0x777879,
-        .radius = 15,
-        .padding = 16,
+        "props_slider",
+        10,
+        60,
+        45,
+        on_slider,
+        common_cookie,
+        "slider-row",
+        106,
+        26,
+        0x717273,
+        0x747576,
+        0x777879,
+        15,
+        16,
+        0,
+        image_source,
+        image_source,
+        12,
+        5,
+        1,
+        1,
+        1,
+        1,
+        1,
     };
     struct picoui_button_props button_props = {
         .id = "props_button",
         .text = "Props button",
+        .font = font,
         .width = 107,
         .height = 27,
         .on_clicked = on_button_clicked,
@@ -631,6 +1110,12 @@ static void test_props_initial_values(struct picoui_app *app,
         .border_color = 0x878889,
         .radius = 17,
         .padding = 18,
+        .release_image = image_source,
+        .press_image = image_source,
+        .transparent = 1,
+        .checkable = 1,
+        .key_value = 0x3344U,
+        .pressed = 1,
     };
     struct picoui_window *props_win = picoui_window_create_with_props(app, &win_props);
     struct picoui_label *props_label = picoui_label_create_with_props(props_win, &label_props);
@@ -640,6 +1125,9 @@ static void test_props_initial_values(struct picoui_app *app,
     struct picoui_switch *props_sw = picoui_switch_create_with_props(props_win, &sw_props);
     struct picoui_slider *props_slider = picoui_slider_create_with_props(props_win, &slider_props);
     struct picoui_button *props_button = picoui_button_create_with_props(props_win, &button_props);
+    unsigned int rgb = 0;
+    int horizontal = -1;
+    int percent = -1;
 
     assert(props_win && props_label && props_text && props_image);
     assert(props_cb && props_sw && props_slider && props_button);
@@ -670,6 +1158,10 @@ static void test_props_initial_values(struct picoui_app *app,
                         0x272829,
                         5,
                         6);
+    assert(picoui_label_get_text_color(props_label, &rgb) == 0);
+    assert(rgb == quantize_rgb_to_ld_roundtrip(0x242526U));
+    assert(picoui_label_get_bg_color(props_label, &rgb) == 0);
+    assert(rgb == quantize_rgb_to_ld_roundtrip(0x212223U));
     assert_widget_props(&props_text->widget,
                         props_text->widget.backend_widget,
                         "text-body",
@@ -757,17 +1249,29 @@ static void test_props_initial_values(struct picoui_app *app,
 
     assert(props_slider->min_value == 10);
     assert(props_slider->max_value == 60);
-    assert(picoui_slider_get_value(props_slider) == 45);
+    assert(picoui_slider_get_horizontal(props_slider, &horizontal) == 0);
+    assert(horizontal == 0);
+    assert(picoui_slider_get_percent(props_slider, &percent) == 0);
+    assert(percent == 70);
     assert(props_slider->cb == on_slider);
     assert(props_slider->user_data == common_cookie);
     assert(props_slider->widget.width == 106);
     assert(props_slider->widget.height == 26);
-
+    assert_slider_has_bound_images(props_slider, image_source, image_source);
+    assert(((ldSlider_t *)((struct picoui_backend_widget *)props_slider->widget.backend_widget)->ld_widget)->isHorizontal == false);
+    assert(((ldSlider_t *)((struct picoui_backend_widget *)props_slider->widget.backend_widget)->ld_widget)->indicWidth == 12);
+    assert(((ldSlider_t *)((struct picoui_backend_widget *)props_slider->widget.backend_widget)->ld_widget)->slimSize == 5);
     assert(props_button->widget.text == (const char *)"Props button");
     assert(props_button->on_clicked == on_button_clicked);
     assert(props_button->user_data == button_cookie);
+    assert(props_button->widget.font == font);
     assert(props_button->widget.width == 107);
     assert(props_button->widget.height == 27);
+    assert_button_has_bound_images(props_button, image_source, image_source);
+    assert(ldButtonGetTransparent((ldButton_t *)((struct picoui_backend_widget *)props_button->widget.backend_widget)->ld_widget) == true);
+    assert(ldButtonGetCheckable((ldButton_t *)((struct picoui_backend_widget *)props_button->widget.backend_widget)->ld_widget) == true);
+    assert(ldButtonGetKeyValue((ldButton_t *)((struct picoui_backend_widget *)props_button->widget.backend_widget)->ld_widget) == 0x3344U);
+    assert(ldButtonGetPress((ldButton_t *)((struct picoui_backend_widget *)props_button->widget.backend_widget)->ld_widget) == true);
 
     test_props_invalid_values_do_not_attach_backend_children(props_win, image_source);
 
@@ -801,26 +1305,56 @@ int main(void)
         .on_toggled = on_checkbox_toggle,
         .user_data = 0,
     };
-    struct picoui_slider_props slider_props = {
-        .id = "volume",
-        .min_value = 10,
-        .max_value = 50,
-        .value = 42,
-        .on_value_changed = on_slider,
-        .user_data = 0,
-    };
-    struct picoui_switch *sw = picoui_switch_create_with_props(win, &sw_props);
-    struct picoui_checkbox *cb = picoui_checkbox_create_with_props(win, &cb_props);
-    struct picoui_slider *slider = picoui_slider_create_with_props(win, &slider_props);
-    struct picoui_button *button = picoui_button_create(win, "ok");
-    struct picoui_label *label = picoui_label_create(win, "title");
-    struct picoui_text *text = picoui_text_create(win, "body");
-    struct picoui_image *image = picoui_image_create(win, "logo");
+    struct picoui_switch *sw;
+    struct picoui_checkbox *cb;
+    struct picoui_slider *slider;
+    struct picoui_button *button;
+    struct picoui_label *label;
+    struct picoui_text *text;
+    struct picoui_image *image;
     struct picoui_image_source image_source = {
         .img_tile = &image_tile,
         .mask_tile = &image_mask_tile,
     };
+    struct picoui_slider_props slider_props = {
+        "volume",
+        10,
+        50,
+        42,
+        on_slider,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        &image_source,
+        &image_source,
+        123,
+        17,
+        0,
+        0,
+        0,
+        0,
+        0,
+    };
     struct picoui_font font = {"Sans", 14};
+    arm_2d_tile_t button_release_tile = {0};
+    arm_2d_tile_t button_release_mask_tile = {0};
+    arm_2d_tile_t button_press_tile = {0};
+    arm_2d_tile_t button_press_mask_tile = {0};
+    struct picoui_image_source button_release_source = {
+        .img_tile = &button_release_tile,
+        .mask_tile = &button_release_mask_tile,
+    };
+    struct picoui_image_source button_press_source = {
+        .img_tile = &button_press_tile,
+        .mask_tile = &button_press_mask_tile,
+    };
     struct picoui_backend_widget *sw_backend;
     struct picoui_backend_widget *cb_backend;
     struct picoui_backend_widget *slider_backend;
@@ -831,6 +1365,14 @@ int main(void)
     struct picoui_backend_app_state *app_state;
     int button_cookie = 7;
     int common_cookie = 9;
+
+    sw = picoui_switch_create_with_props(win, &sw_props);
+    cb = picoui_checkbox_create_with_props(win, &cb_props);
+    slider = picoui_slider_create_with_props(win, &slider_props);
+    button = picoui_button_create(win, "ok");
+    label = picoui_label_create(win, "title");
+    text = picoui_text_create(win, "body");
+    image = picoui_image_create(win, "logo");
 
     assert(theme && sw && cb && slider && button && label && text && image);
     sw_backend = sw->widget.backend_widget;
@@ -851,7 +1393,8 @@ int main(void)
     assert(picoui_switch_is_checked(sw) == 1);
     assert(picoui_checkbox_is_checked(cb) == 0);
     assert(cb->widget.text == (const char *)"I agree");
-    assert(picoui_slider_get_value(slider) == 42);
+    assert(picoui_slider_get_percent(slider, &button_cookie) == 0);
+    assert(button_cookie == 80);
     assert(sw_backend->value == 1);
     assert(sw_backend->last_signal == PICOUI_BACKEND_SIGNAL_NONE);
     assert(sw_backend->dispatch_count == 0);
@@ -866,6 +1409,13 @@ int main(void)
     assert(slider_backend->last_signal == PICOUI_BACKEND_SIGNAL_NONE);
     assert(slider_backend->dispatch_count == 0);
     assert(((ldSlider_t *)slider_backend->ld_widget)->permille == 800);
+    assert(((ldSlider_t *)slider_backend->ld_widget)->isHorizontal == true);
+    assert(((ldSlider_t *)slider_backend->ld_widget)->ptBgImgTile == 0);
+    assert(((ldSlider_t *)slider_backend->ld_widget)->ptBgMaskTile == 0);
+    assert(((ldSlider_t *)slider_backend->ld_widget)->ptIndicImgTile == 0);
+    assert(((ldSlider_t *)slider_backend->ld_widget)->ptIndicMaskTile == 0);
+    assert(((ldSlider_t *)slider_backend->ld_widget)->indicWidth == 10);
+    assert(((ldSlider_t *)slider_backend->ld_widget)->slimSize == 4);
 
     test_props_initial_values(app, &font, &image_source, &button_cookie, &common_cookie);
     test_image_source_boundary(win, &image_source);
@@ -876,6 +1426,11 @@ int main(void)
     test_text_font_null_falls_back_to_default_contract(win);
     test_text_font_runtime_rebind_updates_real_ldtext(win);
     test_text_font_backend_failure_does_not_split_state(win);
+    test_button_j4_contract(win,
+                            app_state,
+                            &button_release_source,
+                            &button_press_source,
+                            &font);
 
     assert(picoui_switch_set_checked(sw, 1) == 0);
     assert(switch_toggled_count == 0);
@@ -925,7 +1480,7 @@ int main(void)
     assert(slider_value_count == 0);
     assert(slider_backend->value == 11);
     assert(slider_backend->dispatch_count == 0);
-    test_backend_value_changed_bridge_keeps_setter_sync_only(slider, slider_backend);
+    test_backend_value_changed_bridge_keeps_setter_sync_only(slider, slider_backend, app_state->ld_scene);
     test_native_event_bridge_prefers_native_path(sw, cb, slider, app_state->ld_scene);
 
     assert(picoui_switch_set_on_toggled(sw, on_switch_toggle, 0) == 0);
@@ -962,10 +1517,7 @@ int main(void)
     assert(picoui_checkbox_set_text(cb, 0) == -1);
     assert(picoui_checkbox_create_with_props(win, 0) == 0);
 
-    assert(picoui_label_set_text(label, "hello") == 0);
-    assert(picoui_label_set_font(label, &font) == 0);
-    assert(label->widget.text == (const char *)"hello");
-    assert(label->widget.font == &font);
+    test_label_parity_contract(label, &image_source, &font);
     assert(label_backend->font == &font);
 
     assert(picoui_text_set_text(text, "world") == 0);
@@ -975,6 +1527,7 @@ int main(void)
     assert(text_backend->font == &font);
     assert(picoui_image_set_source(image, &image_source) == 0);
     assert_image_has_bound_source(image, &image_source);
+    test_slider_j5_contract(slider, &button_release_source, &button_press_source);
 
     ldMsgDeinit(&app_state->ld_scene->ptMsgQueue);
     picoui_theme_destroy(theme);

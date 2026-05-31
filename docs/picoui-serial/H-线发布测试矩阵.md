@@ -1,8 +1,11 @@
-# PicoUI H10 发布测试矩阵冻结
+# PicoUI H10 / J7 发布测试矩阵冻结
 
 ## 范围与非范围
 
-本文档只冻结 `H10` 阶段“发布前必须跑什么测试、从哪里跑、哪些不能并行”的真相源。
+本文档冻结两件事：
+
+1. `H10` 阶段“发布前必须跑什么测试、从哪里跑、哪些不能并行”的真相源。
+2. `J7` 阶段 `v0.1 parity = window / label / button / slider` 的五层证据对照表。
 
 本文档不做以下事项：
 
@@ -82,3 +85,19 @@ python3 tests/picoui/runtime/check_picoui_manual_window_artifact.py --demo setti
 - `visible` 与 `mapping` 仍单独列出，是因为这两层证据在发布 closeout 中需要被显式单跑确认，而且两者都共享 `build/picoui-runtime`，必须串行执行，不能只把它们淹没在总集里。
 - `check_picoui_public_api.py` 与 `check_picoui_demo_boundary.py` 仍单独列出，是因为它们分别对应 public API 边界与 demo boundary 两个发布口径检查点；虽然已包含在 `ctest -L picoui` 内，但 closeout 需要把这两个 contract 入口单独复核出来。
 - `manual artifact` 继续维持脚本入口，不并入强制 CTest；单独列出是为了明确它仍是发布前需要人工补跑、但不属于自动强制 gate 的证据层。
+
+## J7 `v0.1` 四控件证据矩阵
+
+以下矩阵只回答 `window / label / button / slider` 当前由哪些证据承担 `unit / contract / mapping / visible / manual artifact` 结论。
+
+| 控件 | unit | contract | mapping | visible | manual artifact |
+| --- | --- | --- | --- | --- | --- |
+| `window` | `tests/picoui/unit/test_picoui_widgets.c` 中 `window` J2 相关断言 | `check_picoui_public_api.py`、`check_picoui_demo_boundary.py`、`check_picoui_release_capability_matrix.py` | `check_picoui_backend_mapping.py` + `basic_widgets/settings_panel` backend tree | `check_picoui_visible_ui.py --all`，样本 demo 为 `basic_widgets` / `settings_panel` | `C-线人工窗口验收记录.md` 中 `basic_widgets` 与 `settings_panel` 条目承担人工结论 |
+| `label` | `tests/picoui/unit/test_picoui_widgets.c` 中 `test_label_parity_contract()` | `check_picoui_public_api.py`、`check_picoui_demo_boundary.py`、`check_picoui_release_capability_matrix.py` | `check_picoui_backend_mapping.py` + `basic_widgets` / `settings_panel` 中真实 `ldLabel` 路径 | `check_picoui_visible_ui.py --all`，当前 visible 样本仍依赖 `basic_widgets` / `settings_panel` | `C-线人工窗口验收记录.md` 中 `basic_widgets` 与 `settings_panel` 条目承担人工结论 |
+| `button` | `tests/picoui/unit/test_picoui_widgets.c` 中 `test_button_j4_contract()`；`tests/picoui/unit/test_picoui_button_events.c` | `check_picoui_public_api.py`、`check_picoui_demo_boundary.py`、`check_picoui_release_capability_matrix.py` | `check_picoui_backend_mapping.py` + `basic_widgets` / `settings_panel` 中真实 `ldButton` 路径 | `check_picoui_visible_ui.py --all`，当前 visible 样本仍依赖 `basic_widgets` / `settings_panel` | `C-线人工窗口验收记录.md` 中 `basic_widgets` 与 `settings_panel` 条目承担人工结论 |
+| `slider` | `tests/picoui/unit/test_picoui_widgets.c` 中 J5 合同断言；`tests/picoui/unit/test_picoui_button_events.c` | `check_picoui_public_api.py`、`check_picoui_demo_boundary.py`、`check_picoui_release_capability_matrix.py` | `check_picoui_backend_mapping.py` + `basic_widgets` / `settings_panel` 中真实 `ldSlider` 路径 | `check_picoui_visible_ui.py --all`，当前 visible 样本仍依赖 `basic_widgets` / `settings_panel` | `C-线人工窗口验收记录.md` 中 `basic_widgets` 与 `settings_panel` 条目承担人工结论 |
+
+说明：
+
+- 当前 `visible` 与 `manual artifact` 仍以 `basic_widgets` / `settings_panel` 两个 demo 为主样本，不是四控件一控件一 demo 的拆分证据。
+- `manual artifact` 当前只能证明 artifact 条目存在且可被人工复核；未填写人眼观察结论前，不得写成 `manual passed`。

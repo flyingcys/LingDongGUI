@@ -17,6 +17,21 @@ EXPECTED_WRAPPED_WIDGETS = {
     "list",
 }
 
+EXPECTED_V0_1_PARITY_TARGETS = {
+    "window",
+    "label",
+    "button",
+    "slider",
+}
+
+EXPECTED_V0_2_PARITY_BACKLOG = {
+    "checkbox",
+    "switch",
+    "text",
+    "image",
+    "list",
+}
+
 EXPECTED_NOT_WRAPPED_WIDGETS = {
     "line_edit",
     "keyboard",
@@ -50,6 +65,52 @@ EXPECTED_NON_SUPPORT_CAPABILITIES = {
         "item_marker": "reject",
         "style_class": "incomplete_contract",
         "widget_level_user_data": "incomplete_contract",
+    },
+}
+
+EXPECTED_V0_1_PARITY_CAPABILITIES = {
+    "window": {
+        "create_and_props",
+        "flex_layout",
+        "grid_layout",
+        "padding_gap_align",
+        "bg_color",
+        "background_image_and_mask",
+        "padding_group_contract",
+        "honest_minimal_readback",
+    },
+    "label": {
+        "create_and_props",
+        "text",
+        "font",
+        "bg_and_text_color",
+        "transparent",
+        "align",
+        "background_image_and_mask",
+        "text_color_bg_color_align_transparent_readback",
+    },
+    "button": {
+        "create_and_props",
+        "text",
+        "clicked_pressed_released_callbacks",
+        "bg_text_border_radius_padding_subset",
+        "release_and_press_image",
+        "transparent",
+        "font",
+        "checkable",
+        "key_value",
+        "pressed_state",
+    },
+    "slider": {
+        "create_and_props",
+        "value_and_get_value",
+        "range",
+        "on_value_changed",
+        "horizontal",
+        "background_and_indicator_image_mask",
+        "indicator_width",
+        "slim_size",
+        "percent_and_orientation_readback_consistency",
     },
 }
 
@@ -111,6 +172,62 @@ def _assert_expected_widgets(by_name: dict[str, dict]) -> None:
         assert actual == "not_wrapped", (
             f"{widget_name} must remain not_wrapped in release matrix, got {actual!r}"
         )
+        parity_bucket = by_name[widget_name].get("parity_bucket")
+        assert parity_bucket == "post_v0_2_candidate", (
+            f"{widget_name} must remain post_v0_2_candidate in release matrix, got {parity_bucket!r}"
+        )
+        parity_status = by_name[widget_name].get("parity_status")
+        assert parity_status == "not_applicable", (
+            f"{widget_name} must remain parity not_applicable in release matrix, got {parity_status!r}"
+        )
+
+
+def _assert_parity_layering(by_name: dict[str, dict]) -> None:
+    for widget_name in sorted(EXPECTED_V0_1_PARITY_TARGETS):
+        widget = by_name[widget_name]
+        assert widget.get("widget_status") == "wrapped", (
+            f"{widget_name} must stay wrapped before parity layering is evaluated"
+        )
+        assert widget.get("parity_bucket") == "v0_1_parity_target", (
+            f"{widget_name} must be tagged as v0_1_parity_target, got {widget.get('parity_bucket')!r}"
+        )
+        assert widget.get("parity_status") == "parity_complete", (
+            f"{widget_name} must be parity_complete, got {widget.get('parity_status')!r}"
+        )
+
+    for widget_name in sorted(EXPECTED_V0_2_PARITY_BACKLOG):
+        widget = by_name[widget_name]
+        assert widget.get("widget_status") == "wrapped", (
+            f"{widget_name} must stay wrapped while still in parity backlog"
+        )
+        assert widget.get("parity_bucket") == "v0_2_parity_backlog", (
+            f"{widget_name} must be tagged as v0_2_parity_backlog, got {widget.get('parity_bucket')!r}"
+        )
+        assert widget.get("parity_status") == "parity_incomplete", (
+            f"{widget_name} must remain parity_incomplete, got {widget.get('parity_status')!r}"
+        )
+
+    wrapped_widgets = EXPECTED_V0_1_PARITY_TARGETS | EXPECTED_V0_2_PARITY_BACKLOG
+    assert wrapped_widgets == EXPECTED_WRAPPED_WIDGETS, (
+        "parity layering must partition all wrapped widgets into v0_1 targets and v0_2 backlog"
+    )
+
+
+def _assert_v0_1_parity_capabilities(by_name: dict[str, dict]) -> None:
+    for widget_name, expected_capabilities in EXPECTED_V0_1_PARITY_CAPABILITIES.items():
+        widget = by_name[widget_name]
+        capabilities = _capabilities_by_name(widget)
+        actual_capabilities = set(capabilities)
+        missing_capabilities = sorted(expected_capabilities - actual_capabilities)
+        assert not missing_capabilities, (
+            f"{widget_name} missing v0_1 parity capability rows: {missing_capabilities}"
+        )
+        for capability_name in sorted(expected_capabilities):
+            capability = capabilities[capability_name]
+            assert capability.get("status") == "support", (
+                f"{widget_name}.{capability_name} must be support for parity_complete, "
+                f"got {capability.get('status')!r}"
+            )
 
 
 def _assert_known_limitations(by_name: dict[str, dict]) -> None:
@@ -198,6 +315,10 @@ def _assert_summary_counts(matrix: dict, by_name: dict[str, dict]) -> None:
     if not isinstance(capability_status_counts, dict):
         raise AssertionError("release matrix summary missing capability_status_counts object")
 
+    parity_bucket_counts = summary.get("parity_bucket_counts")
+    if not isinstance(parity_bucket_counts, dict):
+        raise AssertionError("release matrix summary missing parity_bucket_counts object")
+
     derived_widget_total = len(by_name)
     derived_wrapped_total = sum(
         1 for widget in by_name.values() if widget.get("widget_status") == "wrapped"
@@ -212,8 +333,32 @@ def _assert_summary_counts(matrix: dict, by_name: dict[str, dict]) -> None:
         "incomplete_contract": 0,
         "deferred": 0,
     }
+    derived_parity_bucket_counts = {
+        "v0_1_parity_target": 0,
+        "v0_2_parity_backlog": 0,
+        "post_v0_2_candidate": 0,
+    }
+    derived_parity_complete_total = 0
+    derived_parity_incomplete_total = 0
 
     for widget in by_name.values():
+        parity_bucket = widget.get("parity_bucket")
+        if parity_bucket not in derived_parity_bucket_counts:
+            raise AssertionError(
+                f"{widget.get('name')} has unexpected parity_bucket: {parity_bucket!r}"
+            )
+        derived_parity_bucket_counts[parity_bucket] += 1
+
+        parity_status = widget.get("parity_status")
+        if parity_status == "parity_complete":
+            derived_parity_complete_total += 1
+        elif parity_status == "parity_incomplete":
+            derived_parity_incomplete_total += 1
+        elif parity_status != "not_applicable":
+            raise AssertionError(
+                f"{widget.get('name')} has unexpected parity_status: {parity_status!r}"
+            )
+
         for capability in widget.get("capabilities", []):
             status = capability.get("status")
             if status not in derived_capability_status_counts:
@@ -239,9 +384,29 @@ def _assert_summary_counts(matrix: dict, by_name: dict[str, dict]) -> None:
         "summary.capability_entry_total must match actual capability row count, "
         f"got {summary.get('capability_entry_total')!r} vs {derived_capability_entry_total}"
     )
+    assert summary.get("v0_1_parity_target_total") == derived_parity_bucket_counts["v0_1_parity_target"], (
+        "summary.v0_1_parity_target_total must match actual v0_1 parity target count, "
+        f"got {summary.get('v0_1_parity_target_total')!r} vs {derived_parity_bucket_counts['v0_1_parity_target']}"
+    )
+    assert summary.get("v0_2_parity_backlog_total") == derived_parity_bucket_counts["v0_2_parity_backlog"], (
+        "summary.v0_2_parity_backlog_total must match actual v0_2 parity backlog count, "
+        f"got {summary.get('v0_2_parity_backlog_total')!r} vs {derived_parity_bucket_counts['v0_2_parity_backlog']}"
+    )
+    assert summary.get("parity_complete_total") == derived_parity_complete_total, (
+        "summary.parity_complete_total must match actual parity_complete count, "
+        f"got {summary.get('parity_complete_total')!r} vs {derived_parity_complete_total}"
+    )
+    assert summary.get("parity_incomplete_total") == derived_parity_incomplete_total, (
+        "summary.parity_incomplete_total must match actual parity_incomplete count, "
+        f"got {summary.get('parity_incomplete_total')!r} vs {derived_parity_incomplete_total}"
+    )
     assert capability_status_counts == derived_capability_status_counts, (
         "summary.capability_status_counts must match actual capability status counts, "
         f"got {capability_status_counts!r} vs {derived_capability_status_counts!r}"
+    )
+    assert parity_bucket_counts == derived_parity_bucket_counts, (
+        "summary.parity_bucket_counts must match actual parity bucket counts, "
+        f"got {parity_bucket_counts!r} vs {derived_parity_bucket_counts!r}"
     )
 
 
@@ -249,6 +414,8 @@ def main() -> int:
     matrix = _load_matrix()
     by_name = _widgets_by_name(matrix)
     _assert_expected_widgets(by_name)
+    _assert_parity_layering(by_name)
+    _assert_v0_1_parity_capabilities(by_name)
     _assert_known_limitations(by_name)
     _assert_manual_artifact_fields(by_name)
     _assert_summary_counts(matrix, by_name)

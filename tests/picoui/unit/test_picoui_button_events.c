@@ -325,7 +325,7 @@ int main(void)
     assert(last_value == 75);
     assert(last_value_cookie == slider_cookie);
     assert(slider_backend->dispatch_count == 1);
-    assert(picoui_slider_get_value(slider) == 75);
+    assert(slider_backend->value == 75);
     assert(picoui_widget_set_visible(&slider->widget, 1) == 0);
 
     ldMsgDeinit(&app_state->ld_scene->ptMsgQueue);

@@ -4,12 +4,36 @@
 
 #include <stdlib.h>
 
+struct picoui_image_source;
+
+int picoui_backend_window_set_background_source(struct picoui_window *window,
+                                                struct picoui_image_source *source);
+int picoui_backend_window_set_bg_color(struct picoui_window *window, unsigned int rgb);
+int picoui_backend_window_set_padding_group(struct picoui_window *window,
+                                            int left,
+                                            int top,
+                                            int right,
+                                            int bottom);
+int picoui_backend_window_get_padding_left(struct picoui_window *window);
+int picoui_backend_window_get_padding_top(struct picoui_window *window);
+int picoui_backend_window_get_padding_right(struct picoui_window *window);
+int picoui_backend_window_get_padding_bottom(struct picoui_window *window);
+
+static int picoui_window_is_valid(struct picoui_window *window)
+{
+    return window != 0 && window->widget.backend_widget != 0;
+}
+
 static int picoui_window_props_are_valid(const struct picoui_window_props *props)
 {
     return props != 0
         && props->id != 0
         && props->radius >= 0
-        && props->padding >= 0;
+        && props->padding >= 0
+        && props->padding_left >= 0
+        && props->padding_top >= 0
+        && props->padding_right >= 0
+        && props->padding_bottom >= 0;
 }
 
 struct picoui_window *picoui_window_create(struct picoui_app *app, const char *id)
@@ -66,13 +90,80 @@ struct picoui_window *picoui_window_create_with_props(struct picoui_app *app,
     }
     if (picoui_widget_set_user_data(&window->widget, props->user_data) != 0
         || picoui_widget_set_bg_color(&window->widget, props->bg_color) != 0
+        || picoui_backend_window_set_bg_color(window, props->bg_color) != 0
         || picoui_widget_set_text_color(&window->widget, props->text_color) != 0
         || picoui_widget_set_border_color(&window->widget, props->border_color) != 0
         || picoui_widget_set_radius(&window->widget, props->radius) != 0
-        || picoui_widget_set_padding(&window->widget, props->padding) != 0) {
+        || picoui_widget_set_padding(&window->widget, props->padding) != 0
+        || picoui_window_set_background_source(window, props->background_source) != 0
+        || (props->has_padding_group != 0
+            && picoui_window_set_padding_group(window,
+                                               props->padding_left,
+                                               props->padding_top,
+                                               props->padding_right,
+                                               props->padding_bottom) != 0)) {
         free(window);
         return 0;
     }
 
     return window;
+}
+
+int picoui_window_set_background_source(struct picoui_window *window,
+                                        struct picoui_image_source *source)
+{
+    if (!picoui_window_is_valid(window)) {
+        return -1;
+    }
+
+    return picoui_backend_window_set_background_source(window, source);
+}
+
+int picoui_window_set_padding_group(struct picoui_window *window,
+                                    int left,
+                                    int top,
+                                    int right,
+                                    int bottom)
+{
+    if (!picoui_window_is_valid(window)
+        || left < 0
+        || top < 0
+        || right < 0
+        || bottom < 0) {
+        return -1;
+    }
+
+    return picoui_backend_window_set_padding_group(window, left, top, right, bottom);
+}
+
+int picoui_window_get_padding_left(struct picoui_window *window)
+{
+    if (!picoui_window_is_valid(window)) {
+        return -1;
+    }
+    return picoui_backend_window_get_padding_left(window);
+}
+
+int picoui_window_get_padding_top(struct picoui_window *window)
+{
+    if (!picoui_window_is_valid(window)) {
+        return -1;
+    }
+    return picoui_backend_window_get_padding_top(window);
+}
+
+int picoui_window_get_padding_right(struct picoui_window *window)
+{
+    if (!picoui_window_is_valid(window)) {
+        return -1;
+    }
+    return picoui_backend_window_get_padding_right(window);
+}
+
+int picoui_window_get_padding_bottom(struct picoui_window *window)
+{
+    if (!picoui_window_is_valid(window)) {
+        return -1;
+    }
+    return picoui_backend_window_get_padding_bottom(window);
 }

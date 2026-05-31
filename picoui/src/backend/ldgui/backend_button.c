@@ -3,6 +3,10 @@
 #include "ldButton.h"
 
 #include <stdlib.h>
+#include <string.h>
+
+extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
+extern const arm_2d_a1_font_t ARM_2D_FONT_16x24;
 
 static struct picoui_backend_app_state *picoui_backend_button_get_app_state(void *parent)
 {
@@ -12,6 +16,40 @@ static struct picoui_backend_app_state *picoui_backend_button_get_app_state(void
         return NULL;
     }
     return (struct picoui_backend_app_state *)parent_widget->owner->backend_app;
+}
+
+static ldButton_t *picoui_backend_button_get_ld(struct picoui_button *button)
+{
+    struct picoui_backend_widget *backend;
+
+    if (button == NULL || button->widget.backend_widget == NULL) {
+        return NULL;
+    }
+
+    backend = (struct picoui_backend_widget *)button->widget.backend_widget;
+    if (backend->kind != PICOUI_BACKEND_WIDGET_BUTTON || backend->ld_widget == NULL) {
+        return NULL;
+    }
+
+    return (ldButton_t *)backend->ld_widget;
+}
+
+static arm_2d_font_t *picoui_backend_button_default_font(void)
+{
+    return (arm_2d_font_t *)&ARM_2D_FONT_6x8;
+}
+
+static arm_2d_font_t *picoui_backend_button_resolve_font(const struct picoui_font *font)
+{
+    if (font == NULL || font->family == NULL || font->size <= 0) {
+        return picoui_backend_button_default_font();
+    }
+
+    if (strcmp(font->family, "Sans") == 0 && font->size >= 20) {
+        return (arm_2d_font_t *)&ARM_2D_FONT_16x24;
+    }
+
+    return picoui_backend_button_default_font();
 }
 
 void *picoui_backend_create_button(void *parent, const char *id)
@@ -54,4 +92,152 @@ void *picoui_backend_create_button(void *parent, const char *id)
         return 0;
     }
     return widget;
+}
+
+int picoui_backend_button_set_font(struct picoui_button *button, const struct picoui_font *font)
+{
+    ldButton_t *ld_button = picoui_backend_button_get_ld(button);
+    arm_2d_font_t *resolved_font;
+
+    if (ld_button == NULL) {
+        return -1;
+    }
+
+    resolved_font = picoui_backend_button_resolve_font(font);
+    if (resolved_font == NULL) {
+        return -1;
+    }
+
+    ldButtonSetFont(ld_button, resolved_font);
+    return 0;
+}
+
+int picoui_backend_button_set_release_image(struct picoui_button *button,
+                                            struct picoui_image_source *source)
+{
+    ldButton_t *ld_button = picoui_backend_button_get_ld(button);
+
+    if (ld_button == NULL) {
+        return -1;
+    }
+
+    ldButtonSetImage(ld_button,
+                     source != NULL ? source->img_tile : NULL,
+                     source != NULL ? source->mask_tile : NULL,
+                     ld_button->ptPressImgTile,
+                     ld_button->ptPressMaskTile);
+    return 0;
+}
+
+int picoui_backend_button_set_press_image(struct picoui_button *button,
+                                          struct picoui_image_source *source)
+{
+    ldButton_t *ld_button = picoui_backend_button_get_ld(button);
+
+    if (ld_button == NULL) {
+        return -1;
+    }
+
+    ldButtonSetImage(ld_button,
+                     ld_button->ptReleaseImgTile,
+                     ld_button->ptReleaseMaskTile,
+                     source != NULL ? source->img_tile : NULL,
+                     source != NULL ? source->mask_tile : NULL);
+    return 0;
+}
+
+int picoui_backend_button_set_transparent(struct picoui_button *button, int transparent)
+{
+    ldButton_t *ld_button = picoui_backend_button_get_ld(button);
+
+    if (ld_button == NULL) {
+        return -1;
+    }
+
+    ldButtonSetTransparent(ld_button, transparent != 0);
+    return 0;
+}
+
+int picoui_backend_button_get_transparent(struct picoui_button *button, int *transparent)
+{
+    ldButton_t *ld_button = picoui_backend_button_get_ld(button);
+
+    if (ld_button == NULL || transparent == NULL) {
+        return -1;
+    }
+
+    *transparent = ldButtonGetTransparent(ld_button) ? 1 : 0;
+    return 0;
+}
+
+int picoui_backend_button_set_checkable(struct picoui_button *button, int checkable)
+{
+    ldButton_t *ld_button = picoui_backend_button_get_ld(button);
+
+    if (ld_button == NULL) {
+        return -1;
+    }
+
+    ldButtonSetCheckable(ld_button, checkable != 0);
+    return 0;
+}
+
+int picoui_backend_button_get_checkable(struct picoui_button *button, int *checkable)
+{
+    ldButton_t *ld_button = picoui_backend_button_get_ld(button);
+
+    if (ld_button == NULL || checkable == NULL) {
+        return -1;
+    }
+
+    *checkable = ldButtonGetCheckable(ld_button) ? 1 : 0;
+    return 0;
+}
+
+int picoui_backend_button_set_key_value(struct picoui_button *button, unsigned int key_value)
+{
+    ldButton_t *ld_button = picoui_backend_button_get_ld(button);
+
+    if (ld_button == NULL) {
+        return -1;
+    }
+
+    ldButtonSetKeyValue(ld_button, (uint32_t)key_value);
+    return 0;
+}
+
+int picoui_backend_button_get_key_value(struct picoui_button *button, unsigned int *key_value)
+{
+    ldButton_t *ld_button = picoui_backend_button_get_ld(button);
+
+    if (ld_button == NULL || key_value == NULL) {
+        return -1;
+    }
+
+    *key_value = (unsigned int)ldButtonGetKeyValue(ld_button);
+    return 0;
+}
+
+int picoui_backend_button_set_pressed(struct picoui_button *button, int pressed)
+{
+    ldButton_t *ld_button = picoui_backend_button_get_ld(button);
+
+    if (ld_button == NULL) {
+        return -1;
+    }
+
+    ldButtonSetPress(ld_button, pressed != 0);
+    return 0;
+}
+
+int picoui_backend_button_get_pressed(struct picoui_button *button, int *pressed)
+{
+    ldButton_t *ld_button = picoui_backend_button_get_ld(button);
+
+    if (ld_button == NULL || pressed == NULL) {
+        return -1;
+    }
+
+    *pressed = ldButtonGetPress(ld_button) ? 1 : 0;
+    return 0;
 }

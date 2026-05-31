@@ -3,6 +3,16 @@
 
 #include <stdlib.h>
 
+int picoui_backend_slider_set_horizontal(struct picoui_slider *slider, int horizontal);
+int picoui_backend_slider_get_horizontal(struct picoui_slider *slider, int *horizontal);
+int picoui_backend_slider_set_background_source(struct picoui_slider *slider,
+                                                struct picoui_image_source *background_source);
+int picoui_backend_slider_set_indicator_source(struct picoui_slider *slider,
+                                               struct picoui_image_source *indicator_source);
+int picoui_backend_slider_set_indicator_width(struct picoui_slider *slider, int indicator_width);
+int picoui_backend_slider_set_slim_size(struct picoui_slider *slider, int slim_size);
+int picoui_backend_slider_get_percent(struct picoui_slider *slider, int *percent);
+
 static int picoui_slider_props_are_valid(const struct picoui_slider_props *props)
 {
     return props != 0
@@ -10,6 +20,16 @@ static int picoui_slider_props_are_valid(const struct picoui_slider_props *props
         && props->min_value <= props->max_value
         && props->value >= props->min_value
         && props->value <= props->max_value
+        && (props->has_background_source == 0
+            || props->background_source == 0
+            || props->background_source->img_tile != 0)
+        && (props->has_indicator_source == 0
+            || props->indicator_source == 0
+            || props->indicator_source->img_tile != 0)
+        && (props->has_indicator_width == 0
+            || (props->indicator_width >= 0 && props->indicator_width <= 255))
+        && (props->has_slim_size == 0
+            || (props->slim_size >= 0 && props->slim_size <= 255))
         && props->width >= 0
         && props->height >= 0
         && props->radius >= 0
@@ -51,7 +71,6 @@ struct picoui_slider *picoui_slider_create_with_props(struct picoui_window *pare
                                                       const struct picoui_slider_props *props)
 {
     struct picoui_slider *slider;
-    struct picoui_backend_widget *backend;
 
     if (!picoui_slider_props_are_valid(props)) {
         return 0;
@@ -64,44 +83,40 @@ struct picoui_slider *picoui_slider_create_with_props(struct picoui_window *pare
 
     slider->min_value = props->min_value;
     slider->max_value = props->max_value;
-    slider->value = props->value;
     slider->cb = 0;
     slider->user_data = 0;
-    backend = (struct picoui_backend_widget *)slider->widget.backend_widget;
-    if (picoui_backend_widget_update_value(backend,
-                                           slider->value,
-                                           0,
-                                           &slider->widget,
-                                           0) != 0) {
+    if (picoui_slider_set_range(slider, props->min_value, props->max_value) != 0
+        || picoui_slider_set_value(slider, props->value) != 0
+        || (props->has_horizontal != 0
+            && picoui_slider_set_horizontal(slider, props->horizontal) != 0)
+        || (props->has_background_source != 0
+            && picoui_slider_set_background_source(slider, props->background_source) != 0)
+        || (props->has_indicator_source != 0
+            && picoui_slider_set_indicator_source(slider, props->indicator_source) != 0)
+        || (props->has_indicator_width != 0
+            && picoui_slider_set_indicator_width(slider, props->indicator_width) != 0)
+        || (props->has_slim_size != 0
+            && picoui_slider_set_slim_size(slider, props->slim_size) != 0)) {
         free(slider);
         return 0;
     }
-    backend->last_signal = PICOUI_BACKEND_SIGNAL_NONE;
-    backend->dispatch_count = 0;
+
+    /* Under the validated props contract, the remaining widget metadata/style updates
+     * do not expose a real failure path for a valid non-window slider backend. */
     slider->cb = props->on_value_changed;
     slider->user_data = props->user_data;
-    if (picoui_widget_set_user_data(&slider->widget, props->user_data) != 0) {
-        free(slider);
-        return 0;
+    (void)picoui_widget_set_user_data(&slider->widget, props->user_data);
+    if (props->style_class != 0) {
+        (void)picoui_widget_set_style_class(&slider->widget, props->style_class);
     }
-    if (props->style_class != 0
-        && picoui_widget_set_style_class(&slider->widget, props->style_class) != 0) {
-        free(slider);
-        return 0;
+    if (props->width > 0 || props->height > 0) {
+        (void)picoui_widget_set_size(&slider->widget, props->width, props->height);
     }
-    if ((props->width > 0 || props->height > 0)
-        && picoui_widget_set_size(&slider->widget, props->width, props->height) != 0) {
-        free(slider);
-        return 0;
-    }
-    if (picoui_widget_set_bg_color(&slider->widget, props->bg_color) != 0
-        || picoui_widget_set_text_color(&slider->widget, props->text_color) != 0
-        || picoui_widget_set_border_color(&slider->widget, props->border_color) != 0
-        || picoui_widget_set_radius(&slider->widget, props->radius) != 0
-        || picoui_widget_set_padding(&slider->widget, props->padding) != 0) {
-        free(slider);
-        return 0;
-    }
+    (void)picoui_widget_set_bg_color(&slider->widget, props->bg_color);
+    (void)picoui_widget_set_text_color(&slider->widget, props->text_color);
+    (void)picoui_widget_set_border_color(&slider->widget, props->border_color);
+    (void)picoui_widget_set_radius(&slider->widget, props->radius);
+    (void)picoui_widget_set_padding(&slider->widget, props->padding);
     return slider;
 }
 
@@ -125,15 +140,6 @@ int picoui_slider_set_value(struct picoui_slider *slider, int value)
                                               slider->cb,
                                               &slider->widget,
                                               slider->user_data);
-}
-
-int picoui_slider_get_value(struct picoui_slider *slider)
-{
-    if (slider == 0) {
-        return 0;
-    }
-
-    return slider->value;
 }
 
 int picoui_slider_set_range(struct picoui_slider *slider, int min_value, int max_value)
@@ -164,6 +170,70 @@ int picoui_slider_set_range(struct picoui_slider *slider, int min_value, int max
     }
 
     return 0;
+}
+int picoui_slider_set_horizontal(struct picoui_slider *slider, int horizontal)
+{
+    if (slider == 0) {
+        return -1;
+    }
+
+    return picoui_backend_slider_set_horizontal(slider, horizontal != 0);
+}
+
+int picoui_slider_get_horizontal(struct picoui_slider *slider, int *horizontal)
+{
+    if (slider == 0 || horizontal == 0) {
+        return -1;
+    }
+
+    return picoui_backend_slider_get_horizontal(slider, horizontal);
+}
+
+int picoui_slider_set_background_source(struct picoui_slider *slider,
+                                        struct picoui_image_source *source)
+{
+    if (slider == 0 || (source != 0 && source->img_tile == 0)) {
+        return -1;
+    }
+
+    return picoui_backend_slider_set_background_source(slider, source);
+}
+
+int picoui_slider_set_indicator_source(struct picoui_slider *slider,
+                                       struct picoui_image_source *source)
+{
+    if (slider == 0 || (source != 0 && source->img_tile == 0)) {
+        return -1;
+    }
+
+    return picoui_backend_slider_set_indicator_source(slider, source);
+}
+
+int picoui_slider_set_indicator_width(struct picoui_slider *slider, int indicator_width)
+{
+    if (slider == 0 || indicator_width < 0) {
+        return -1;
+    }
+
+    return picoui_backend_slider_set_indicator_width(slider, indicator_width);
+}
+
+int picoui_slider_set_slim_size(struct picoui_slider *slider, int slim_size)
+{
+    if (slider == 0 || slim_size < 0) {
+        return -1;
+    }
+
+    return picoui_backend_slider_set_slim_size(slider, slim_size);
+}
+
+int picoui_slider_get_percent(struct picoui_slider *slider, int *percent)
+{
+    if (slider == 0 || percent == 0) {
+        return -1;
+    }
+
+    return picoui_backend_slider_get_percent(slider, percent);
 }
 
 int picoui_slider_set_on_value_changed(struct picoui_slider *slider,

@@ -4,6 +4,22 @@
 
 #include <stdlib.h>
 
+static ldSlider_t *picoui_backend_slider_get_ld(struct picoui_slider *slider)
+{
+    struct picoui_backend_widget *backend;
+
+    if (slider == NULL || slider->widget.backend_widget == NULL) {
+        return NULL;
+    }
+
+    backend = (struct picoui_backend_widget *)slider->widget.backend_widget;
+    if (backend->kind != PICOUI_BACKEND_WIDGET_SLIDER || backend->ld_widget == NULL) {
+        return NULL;
+    }
+
+    return (ldSlider_t *)backend->ld_widget;
+}
+
 static struct picoui_backend_app_state *picoui_backend_slider_get_app_state(void *parent)
 {
     struct picoui_backend_widget *parent_widget = parent;
@@ -62,4 +78,98 @@ void *picoui_backend_create_slider(void *parent, const char *id)
         return 0;
     }
     return widget;
+}
+
+int picoui_backend_slider_set_horizontal(struct picoui_slider *slider, int horizontal)
+{
+    ldSlider_t *ld_slider = picoui_backend_slider_get_ld(slider);
+
+    if (ld_slider == NULL) {
+        return -1;
+    }
+
+    ldSliderSetHorizontal(ld_slider, horizontal != 0);
+    return 0;
+}
+
+int picoui_backend_slider_get_horizontal(struct picoui_slider *slider, int *horizontal)
+{
+    ldSlider_t *ld_slider = picoui_backend_slider_get_ld(slider);
+
+    if (ld_slider == NULL || horizontal == NULL) {
+        return -1;
+    }
+
+    *horizontal = ld_slider->isHorizontal ? 1 : 0;
+    return 0;
+}
+
+int picoui_backend_slider_set_background_source(struct picoui_slider *slider,
+                                                struct picoui_image_source *background_source)
+{
+    ldSlider_t *ld_slider = picoui_backend_slider_get_ld(slider);
+
+    if (ld_slider == NULL) {
+        return -1;
+    }
+
+    ldSliderSetImage(ld_slider,
+                     background_source != NULL ? background_source->img_tile : NULL,
+                     background_source != NULL ? background_source->mask_tile : NULL,
+                     ld_slider->ptIndicImgTile,
+                     ld_slider->ptIndicMaskTile);
+    return 0;
+}
+
+int picoui_backend_slider_set_indicator_source(struct picoui_slider *slider,
+                                               struct picoui_image_source *indicator_source)
+{
+    ldSlider_t *ld_slider = picoui_backend_slider_get_ld(slider);
+
+    if (ld_slider == NULL) {
+        return -1;
+    }
+
+    ldSliderSetImage(ld_slider,
+                     ld_slider->ptBgImgTile,
+                     ld_slider->ptBgMaskTile,
+                     indicator_source != NULL ? indicator_source->img_tile : NULL,
+                     indicator_source != NULL ? indicator_source->mask_tile : NULL);
+    return 0;
+}
+
+int picoui_backend_slider_set_indicator_width(struct picoui_slider *slider, int indicator_width)
+{
+    ldSlider_t *ld_slider = picoui_backend_slider_get_ld(slider);
+
+    if (ld_slider == NULL || indicator_width < 0 || indicator_width > 255) {
+        return -1;
+    }
+
+    ldSliderSetIndicatorWidth(ld_slider, (uint8_t)indicator_width);
+    return 0;
+}
+
+int picoui_backend_slider_set_slim_size(struct picoui_slider *slider, int slim_size)
+{
+    ldSlider_t *ld_slider = picoui_backend_slider_get_ld(slider);
+
+    if (ld_slider == NULL || slim_size < 0 || slim_size > 255) {
+        return -1;
+    }
+
+    ldSliderSetSlimSize(ld_slider, (uint8_t)slim_size);
+    return 0;
+}
+
+int picoui_backend_slider_get_percent(struct picoui_slider *slider, int *percent)
+{
+    ldSlider_t *ld_slider = picoui_backend_slider_get_ld(slider);
+
+    if (ld_slider == NULL || percent == NULL) {
+        return -1;
+    }
+
+    *percent = (int)(ld_slider->permille / 10U);
+    return 0;
 }
