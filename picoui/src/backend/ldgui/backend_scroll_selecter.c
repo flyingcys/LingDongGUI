@@ -66,7 +66,7 @@ void *picoui_backend_create_scroll_selecter(void *parent, const char *id)
 
     widget->parent = parent;
     widget->id = id;
-    widget->kind = PICOUI_BACKEND_WIDGET_TEXT;
+    widget->kind = PICOUI_BACKEND_WIDGET_SCROLL_SELECTER;
     widget->theme = parent_widget->theme;
     widget->ld_widget = ld_scroll_selecter;
     widget->ld_name_id = name_id;
@@ -89,7 +89,7 @@ int picoui_backend_scroll_selecter_set_items(void *backend_widget,
     int i;
 
     if (widget == NULL ||
-        widget->kind != PICOUI_BACKEND_WIDGET_TEXT ||
+        widget->kind != PICOUI_BACKEND_WIDGET_SCROLL_SELECTER ||
         widget->ld_widget == NULL ||
         item_ids == NULL ||
         items == NULL ||
@@ -117,7 +117,7 @@ int picoui_backend_scroll_selecter_set_selected_index(void *backend_widget, int 
     ldScrollSelecter_t *ld_scroll_selecter;
 
     if (widget == NULL ||
-        widget->kind != PICOUI_BACKEND_WIDGET_TEXT ||
+        widget->kind != PICOUI_BACKEND_WIDGET_SCROLL_SELECTER ||
         widget->ld_widget == NULL ||
         index < 0 ||
         index >= widget->list_item_count) {

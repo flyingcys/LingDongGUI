@@ -5,9 +5,10 @@
 - 当前旧 parity 真相源：`docs/picoui-serial/J-线计划索引.md`
 - 当前 backlog 收口线：`docs/picoui-serial/a-01-线计划索引.md`
 - 当前低耦合扩面线：`docs/picoui-serial/a-02-线计划索引.md`
-- 当前机器可读 matrix：`tests/picoui/contract/picoui_release_capability_matrix.json`
-- 当前 truth-source：`docs/picoui-serial/a-0.3/current-15-覆盖与分层真相源.md`
-- 当前 capability audit：`docs/picoui-serial/a-0.3/current-15-capability-audit.md`
+- 当前机器可读 truth-source：`tests/picoui/contract/picoui_release_capability_matrix.json`
+- 当前 deep review：`docs/superpowers/reviews/2026-06-01-picoui-a-0-3-a-0-4-a-0-5-deep-review.md`
+- 当前 `a-0.3` 历史快照：`docs/picoui-serial/a-0.3/current-15-覆盖与分层真相源.md`
+- 当前 `a-0.3` 历史 capability audit：`docs/picoui-serial/a-0.3/current-15-capability-audit.md`
 - 当前 closeout 标准：`docs/picoui-serial/a-0.3/a-0.3-closeout-标准.md`
 - 本目录设计 spec：`docs/superpowers/specs/2026-05-31-picoui-a-0-3-truth-source-and-current-15-design.md`
 - 本目录执行 plan：`docs/superpowers/plans/2026-05-31-picoui-a-0-3-truth-source-and-current-15-implementation.md`
@@ -28,19 +29,19 @@
 
 ## 当前真实基线
 
-截至 2026-05-31，代码与文档共同表明：
+截至 2026-06-01，代码与机器真相源共同表明：
 
-1. current PicoUI public widget 已达 `15` 个，不再是旧 `9` 控件世界。
+1. current PicoUI public widget 已达 `22` 个，不再是旧 `9` 控件世界，也不再停在 `15` 控件世界。
 2. `J线 4` 仍是当前唯一可维持 `full parity complete` 口径的控件组。
-3. `a-01` 五控件当前应诚实归为 `stable contract but not full parity`。
-4. `a-02` 六控件当前应诚实归为 `minimal vertical slice only`。
-5. 当前仍有 `11` 个 LingDongGUI 控件尚未进入 PicoUI public widget。
+3. `a-01 5 + a-0.4 4 + a-0.5 3` 当前都应诚实归为 `stable contract but not full parity`。
+4. `a-02` 六控件当前仍应诚实归为 `minimal vertical slice only`。
+5. 当前仍有 `4` 个 LingDongGUI 控件尚未进入 PicoUI public widget。
 
 因此当前最保守、最诚实的工程判断是：
 
-- PicoUI current public widget 总数当前是 `15`。
-- machine-readable truth-source 已不应继续沿用旧 `J1 v0.1/v0.2` 结构。
-- 如果不先把 current-15 truth-source、audit、gate 写实，后面继续扩面只会再次失真。
+- PicoUI current public widget 总数当前是 `22`。
+- `tests/picoui/contract/picoui_release_capability_matrix.json` 才是当前主仓 truth-source 入口。
+- `a-0.3/current-15-*` 文档现在只能视为 2026-05-31 的阶段审计快照，不能再被引用为“当前 truth-source”。
 
 ## 最终大目标
 
@@ -56,11 +57,10 @@
 
 `a-0.3` 只做三件事：
 
-1. 重建 current truth-source
-   - 诚实回答当前 PicoUI 到底已经接入多少 public widget
-   - 把旧 `9` 控件 matrix 升级到 current truth
-2. 审计 current-15
-   - 对 `J线 4`、`a-01 5`、`a-02 6` 共 `15` 个已接入控件逐个做 capability audit
+1. 重建当时的 current truth-source
+   - 先把旧 `9` 控件 matrix 升级到当时的 `current-15` 真相
+2. 审计当时的 current-15
+   - 对 `J线 4`、`a-01 5`、`a-02 6` 共 `15` 个当时已接入控件逐个做 capability audit
    - 明确哪些已 full parity，哪些只是过渡态，哪些还差什么
 3. 冻结 `a-0.3` closeout 标准
    - 规定 `0.3` 完成时必须交付哪些 truth-source、matrix、文档、gate
@@ -133,8 +133,8 @@
 
 `a-0.3` 完成时必须满足：
 
-1. 当前覆盖面不再含糊，能够准确回答 current PicoUI public widget 总数。
-2. `15` 个已接入控件全部进入新的 truth-source。
+1. 当时覆盖面不再含糊，能够准确回答 2026-05-31 时点的 PicoUI public widget 总数。
+2. 当时 `15` 个已接入控件全部进入新的 truth-source。
 3. 每个 current-15 控件都有明确 capability audit：
    - 已完成什么
    - 未完成什么

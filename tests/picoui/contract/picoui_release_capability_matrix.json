@@ -32,6 +32,10 @@
       "stable_contract_but_not_full_parity",
       "minimal_vertical_slice_only",
       "not_wrapped"
+    ],
+    "evidence_layer_status": [
+      "present",
+      "not_present"
     ]
   },
   "evidence_enums": [
@@ -210,8 +214,8 @@
       "evidence_layers": {
         "unit": "present",
         "contract": "present",
-        "mapping": "present",
-        "visible": "present",
+        "mapping": "not_present",
+        "visible": "not_present",
         "manual_artifact": "manual_review_required"
       },
       "manual_artifact": {
@@ -992,7 +996,7 @@
         }
       ],
       "current_layer": "stable_contract_but_not_full_parity",
-      "audit_note": "R3 currently establishes keyboard bridge and ownership routing, but does not claim full visual/theme parity."
+      "audit_note": "R3 currently establishes keyboard bridge and ownership routing through runtime evidence, but does not claim dedicated mapping/visible gate coverage or full visual/theme parity."
     },
     {
       "name": "combo_box",
@@ -1199,7 +1203,7 @@
           "capability_release_judgement": "current_15_stable_contract_gap"
         },
         {
-          "name": "editable_cell_contract_reuses_shared_core",
+          "name": "editable_cell_commit_boundary_reuses_shared_core",
           "status": "support",
           "capability_release_judgement": "current_15_stable_contract_gap"
         },
@@ -1215,7 +1219,7 @@
         }
       ],
       "current_layer": "stable_contract_but_not_full_parity",
-      "audit_note": "R2 proves table item model and editable cell contract reuse the shared core, but does not claim full table feature parity."
+      "audit_note": "R2 proves table item model and editable-cell commit boundary reuse the shared core, but does not yet claim a richer cancel/abort public contract or full table feature parity."
     },
     {
       "name": "calendar",

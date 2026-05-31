@@ -248,7 +248,7 @@ build\picoui-runtime\examples\sdl\picoui_hello_world_demo.exe
 当前口径：
 
 - `keyboard` 已进入 PicoUI public widget 集
-- `keyboard_basic` 主要由 runtime gate 证明 bridge/ownership 路径，不承担 visible correctness gate
+- `keyboard_basic` 主要由 runtime gate 证明 bridge/ownership 路径，当前没有 dedicated backend mapping gate，也没有 dedicated visible correctness gate
 - 该 demo 不证明完整视觉/theme parity
 
 ### `picoui/demo/combo_box_basic`
@@ -298,13 +298,14 @@ build\picoui-runtime\examples\sdl\picoui_hello_world_demo.exe
 适合用途：
 
 - 看 `picoui_table` 的 rows/columns/current cell/cell text API
-- 看 editable cell contract 如何复用 `a-0.4` 的 line_edit/keyboard shared-core
+- 看 editable cell commit boundary 如何复用 `a-0.4` 的 line_edit/keyboard shared-core
 
 当前口径：
 
 - `table` 已走真实 backend mapping
 - current row/column 与 cell text getter 以 backend truth/readback 为准
 - editable cell 的 commit 边界复用 shared edit model，不靠 demo 私有状态
+- 当前不宣称 cancel/abort reason 已形成稳定 public contract
 - `automatic visible gate` 已覆盖 `table_basic`
 - 该 demo 不证明完整表格主题、复杂编辑器类型或更高阶交互
 
