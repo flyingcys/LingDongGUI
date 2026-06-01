@@ -152,3 +152,27 @@ const char *picoui_date_time_get_format(const struct picoui_date_time *dt)
 
     return picoui_backend_date_time_get_format((struct picoui_date_time *)dt);
 }
+
+int picoui_date_time_get_date(const struct picoui_date_time *dt, int *year, int *month, int *day)
+{
+    if (dt == 0 || year == 0 || month == 0 || day == 0) {
+        return -1;
+    }
+
+    *year = dt->year;
+    *month = dt->month;
+    *day = dt->day;
+    return 0;
+}
+
+int picoui_date_time_get_time(const struct picoui_date_time *dt, int *hour, int *minute, int *second)
+{
+    if (dt == 0 || hour == 0 || minute == 0 || second == 0) {
+        return -1;
+    }
+
+    *hour = dt->hour;
+    *minute = dt->minute;
+    *second = dt->second;
+    return 0;
+}

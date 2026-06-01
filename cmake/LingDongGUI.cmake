@@ -163,6 +163,10 @@ function(ld_define_core_targets)
         ${LD_REPO_ROOT}/picoui/src/widgets/checkbox.c
         ${LD_REPO_ROOT}/picoui/src/widgets/switch.c
         ${LD_REPO_ROOT}/picoui/src/widgets/slider.c
+        ${LD_REPO_ROOT}/picoui/src/widgets/arc.c
+        ${LD_REPO_ROOT}/picoui/src/widgets/gauge.c
+        ${LD_REPO_ROOT}/picoui/src/widgets/icon_slider.c
+        ${LD_REPO_ROOT}/picoui/src/widgets/radial_menu.c
         ${LD_REPO_ROOT}/picoui/src/widgets/progress_bar.c
         ${LD_REPO_ROOT}/picoui/src/widgets/progress_wheel.c
         ${LD_REPO_ROOT}/picoui/src/widgets/qrcode.c
@@ -201,6 +205,10 @@ function(ld_define_core_targets)
         ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_checkbox.c
         ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_switch.c
         ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_slider.c
+        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_arc.c
+        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_gauge.c
+        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_icon_slider.c
+        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_radial_menu.c
         ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_progress_bar.c
         ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_progress_wheel.c
         ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_qrcode.c

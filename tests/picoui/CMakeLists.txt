@@ -4,6 +4,10 @@ set(PICOUI_UNIT_TESTS
     unit/test_picoui_widgets.c
     unit/test_picoui_button_events.c
     unit/test_picoui_layout.c
+    unit/test_picoui_arc.c
+    unit/test_picoui_gauge.c
+    unit/test_picoui_icon_slider.c
+    unit/test_picoui_radial_menu.c
     unit/test_picoui_list.c
     unit/test_picoui_progress_bar.c
     unit/test_picoui_progress_wheel.c

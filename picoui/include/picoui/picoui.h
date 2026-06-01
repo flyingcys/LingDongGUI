@@ -2,6 +2,7 @@
 #define PICOUI_PICOUI_H
 
 #include "picoui/app.h"
+#include "picoui/arc.h"
 #include "picoui/layout.h"
 #include "picoui/widget.h"
 #include "picoui/button.h"
@@ -11,6 +12,8 @@
 #include "picoui/combo_box.h"
 #include "picoui/date_time.h"
 #include "picoui/graph.h"
+#include "picoui/gauge.h"
+#include "picoui/icon_slider.h"
 #include "picoui/image.h"
 #include "picoui/keyboard.h"
 #include "picoui/label.h"
@@ -20,6 +23,7 @@
 #include "picoui/progress_bar.h"
 #include "picoui/progress_wheel.h"
 #include "picoui/qrcode.h"
+#include "picoui/radial_menu.h"
 #include "picoui/scroll_selecter.h"
 #include "picoui/slider.h"
 #include "picoui/switch.h"

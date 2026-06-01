@@ -110,6 +110,54 @@ static void test_date_time_rejects_invalid_inputs(struct picoui_window *win)
     assert(picoui_date_time_set_time(dt, 12, 34, 60) == -1);
 }
 
+static void test_date_time_final_release_contract_covers_public_readback_and_modes(
+    struct picoui_window *win)
+{
+    struct picoui_date_time *dt =
+        picoui_date_time_create((struct picoui_widget *)win, "date_time_release_ready");
+    struct picoui_backend_widget *backend;
+    ldDateTime_t *ld_date_time;
+    int year = 0;
+    int month = 0;
+    int day = 0;
+    int hour = 0;
+    int minute = 0;
+    int second = 0;
+
+    assert(dt != 0);
+    assert(picoui_date_time_set_format(dt, "yyyy/mm/dd hh:nn") == 0);
+    assert(picoui_date_time_set_date(dt, 2026, 6, 1) == 0);
+    assert(picoui_date_time_set_time(dt, 8, 9, 10) == 0);
+
+    backend = (struct picoui_backend_widget *)dt->widget.backend_widget;
+    assert(backend != 0);
+    assert(backend->kind == PICOUI_BACKEND_WIDGET_DATE_TIME);
+    ld_date_time = (ldDateTime_t *)backend->ld_widget;
+    assert(ld_date_time != 0);
+
+    assert(strcmp(picoui_date_time_get_format(dt), "yyyy/mm/dd hh:nn") == 0);
+    assert(picoui_date_time_get_date(dt, &year, &month, &day) == 0);
+    assert(picoui_date_time_get_time(dt, &hour, &minute, &second) == 0);
+    assert(year == 2026);
+    assert(month == 6);
+    assert(day == 1);
+    assert(hour == 8);
+    assert(minute == 9);
+    assert(second == 10);
+    assert(ld_date_time->isAutoSysTime == false);
+    assert(ld_date_time->year == 2026);
+    assert(ld_date_time->month == 6);
+    assert(ld_date_time->day == 1);
+    assert(ld_date_time->hour == 8);
+    assert(ld_date_time->minute == 9);
+    assert(ld_date_time->second == 10);
+    assert(strcmp((const char *)ld_date_time->formatStr, "yyyy/mm/dd hh:nn") == 0);
+    assert(picoui_date_time_get_date(0, &year, &month, &day) == -1);
+    assert(picoui_date_time_get_time(0, &hour, &minute, &second) == -1);
+    assert(picoui_date_time_get_date(dt, 0, &month, &day) == -1);
+    assert(picoui_date_time_get_time(dt, &hour, 0, &second) == -1);
+}
+
 int main(void)
 {
     struct picoui_app *app = picoui_app_create();
@@ -123,6 +171,7 @@ int main(void)
     test_date_time_setters(win);
     test_date_time_manual_values_survive_frame_start(win);
     test_date_time_rejects_invalid_inputs(win);
+    test_date_time_final_release_contract_covers_public_readback_and_modes(win);
 
     picoui_app_destroy(app);
     return 0;

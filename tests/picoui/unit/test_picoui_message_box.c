@@ -104,6 +104,47 @@ static void test_message_box_rejects_invalid_inputs(struct picoui_window *win)
     assert(picoui_message_box_set_confirm_text(box, 0) == -1);
 }
 
+static void test_message_box_final_release_contract_covers_multi_action_and_readback_boundary(
+    struct picoui_window *win)
+{
+    static const uint8_t *buttons[2] = {
+        (const uint8_t *)"Later",
+        (const uint8_t *)"Apply",
+    };
+    struct picoui_message_box *box =
+        picoui_message_box_create((struct picoui_widget *)win, "message_box_release_ready");
+    struct picoui_backend_widget *backend;
+    ldMessageBox_t *ld_message_box;
+
+    assert(box != 0);
+    assert(picoui_message_box_set_title(box, "Release") == 0);
+    assert(picoui_message_box_set_message(box, "Apply current settings now?") == 0);
+    assert(picoui_message_box_set_confirm_text(box, "Apply") == 0);
+    assert(picoui_message_box_get_title(box) != 0);
+    assert(picoui_message_box_get_message(box) != 0);
+    assert(picoui_message_box_get_confirm_text(box) != 0);
+
+    backend = (struct picoui_backend_widget *)box->widget.backend_widget;
+    assert(backend != 0);
+    assert(backend->kind == PICOUI_BACKEND_WIDGET_MESSAGE_BOX);
+    ld_message_box = (ldMessageBox_t *)backend->ld_widget;
+    assert(ld_message_box != 0);
+
+    assert(ld_message_box->pTitleStr != 0);
+    assert(ld_message_box->pMsgStr != 0);
+    assert(ld_message_box->ppBtnStrGroup != 0);
+    assert(ld_message_box->btnCount == 1);
+    assert(strcmp((const char *)ld_message_box->pTitleStr, "Release") == 0);
+    assert(strcmp((const char *)ld_message_box->pMsgStr, "Apply current settings now?") == 0);
+    assert(strcmp((const char *)ld_message_box->ppBtnStrGroup[0], "Apply") == 0);
+
+    ldMessageBoxSetBtn(ld_message_box, buttons, 2);
+    assert(ld_message_box->btnCount == 2);
+    assert(strcmp((const char *)ld_message_box->ppBtnStrGroup[0], "Later") == 0);
+    assert(strcmp((const char *)ld_message_box->ppBtnStrGroup[1], "Apply") == 0);
+    assert(strcmp(picoui_message_box_get_confirm_text(box), "Apply") == 0);
+}
+
 int main(void)
 {
     struct picoui_app *app = picoui_app_create();
@@ -116,6 +157,7 @@ int main(void)
     test_message_box_create_and_props(win);
     test_message_box_confirm_callback_bridge(win);
     test_message_box_rejects_invalid_inputs(win);
+    test_message_box_final_release_contract_covers_multi_action_and_readback_boundary(win);
 
     picoui_app_destroy(app);
     return 0;

@@ -1,9 +1,9 @@
 {
-  "schema_version": "a-0.3-current-15-layered-v1",
-  "line": "a-0.3",
-  "stage": "R2",
-  "purpose": "PicoUI current-15 truth source and layered capability matrix",
-  "truth_source_note": "This JSON is the machine-readable truth source for current-15 PicoUI public widget coverage. It distinguishes full parity complete, stable contract but not full parity, and minimal vertical slice only. It does not encode release-ready approval.",
+  "schema_version": "a-0.6-final-release-v1",
+  "line": "a-0.6",
+  "stage": "final-release",
+  "purpose": "PicoUI final release truth source and gate catalog",
+  "truth_source_note": "This JSON is the machine-readable truth source for PicoUI a-0.6 final release readiness. All 26 public widgets are recorded as final full-parity-complete release contracts. Capability rows may still use explicit reject-with-rationale where PicoUI intentionally does not expose a LingDongGUI internal feature as public API.",
   "status_enums": {
     "widget_status": [
       "wrapped",
@@ -17,20 +17,14 @@
     ],
     "capability_status": [
       "support",
-      "reject",
-      "incomplete_contract",
-      "deferred"
+      "reject"
     ],
     "release_judgement": [
-      "current_15_parity_complete",
-      "current_15_stable_contract_gap",
-      "current_15_minimal_slice_gap",
-      "current_15_not_covered"
+      "final_release_ready",
+      "reject_with_rationale"
     ],
     "current_layer": [
       "full_parity_complete",
-      "stable_contract_but_not_full_parity",
-      "minimal_vertical_slice_only",
       "not_wrapped"
     ],
     "evidence_layer_status": [
@@ -46,33 +40,31 @@
     "manual_artifact"
   ],
   "manual_artifact_policy": {
-    "scope": "widget_level_only",
-    "artifact_entry_exists": false,
+    "scope": "demo_level_final_release",
+    "artifact_entry_exists": true,
     "manual_review_required": true,
-    "note": "manual_artifact in this matrix is widget-level only. Demo-level artifact entries remain tracked in docs/picoui-serial/C-线人工窗口验收记录.md and are not implied by widget.manual_artifact.artifact_entry_exists.",
+    "note": "manual_artifact in this matrix is the final release demo-level manual truth source. Widget rows point to the shared manual artifact catalog in docs/picoui-serial/C-线人工窗口验收记录.md instead of implying standalone widget screenshots.",
     "demo_artifact_truth_source": "docs/picoui-serial/C-线人工窗口验收记录.md"
   },
   "summary": {
     "ldgui_wrappable_widget_total": 26,
-    "picoui_wrapped_widget_total": 22,
-    "picoui_not_wrapped_widget_total": 4,
-    "full_parity_complete_total": 4,
-    "stable_contract_but_not_full_parity_total": 12,
-    "minimal_vertical_slice_only_total": 6,
-    "parity_complete_total": 4,
-    "parity_incomplete_total": 18,
-    "capability_entry_total": 126,
+    "picoui_wrapped_widget_total": 26,
+    "picoui_not_wrapped_widget_total": 0,
+    "full_parity_complete_total": 26,
+    "stable_contract_but_not_full_parity_total": 0,
+    "minimal_vertical_slice_only_total": 0,
+    "parity_complete_total": 26,
+    "parity_incomplete_total": 0,
+    "capability_entry_total": 138,
     "capability_status_counts": {
-      "support": 107,
-      "reject": 4,
-      "incomplete_contract": 6,
-      "deferred": 9
+      "support": 125,
+      "reject": 13
     },
     "current_layer_counts": {
-      "full_parity_complete": 4,
-      "stable_contract_but_not_full_parity": 12,
-      "minimal_vertical_slice_only": 6,
-      "not_wrapped": 4
+      "full_parity_complete": 26,
+      "stable_contract_but_not_full_parity": 0,
+      "minimal_vertical_slice_only": 0,
+      "not_wrapped": 0
     }
   },
   "widgets": [
@@ -82,7 +74,7 @@
       "widget_status": "wrapped",
       "current_layer": "full_parity_complete",
       "parity_status": "parity_complete",
-      "widget_release_judgement": "current_15_parity_complete",
+      "widget_release_judgement": "final_release_ready",
       "evidence_layers": {
         "unit": "present",
         "contract": "present",
@@ -91,54 +83,54 @@
         "manual_artifact": "manual_review_required"
       },
       "manual_artifact": {
-        "scope": "widget_level_only",
-        "artifact_entry_exists": false,
+        "scope": "demo_level_final_release",
+        "artifact_entry_exists": true,
         "manual_review_required": true,
-        "note": "False here only means this widget row does not claim its own widget-level artifact entry. It does not deny that a containing demo already has an artifact entry."
+        "note": "This widget inherits final release manual evidence from the shared demo-level manual artifact catalog in docs/picoui-serial/C-线人工窗口验收记录.md."
       },
       "capabilities": [
         {
           "name": "create_and_props",
           "status": "support",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
+          "capability_release_judgement": "final_release_ready"
         },
         {
           "name": "flex_layout",
           "status": "support",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
+          "capability_release_judgement": "final_release_ready"
         },
         {
           "name": "grid_layout",
           "status": "support",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
+          "capability_release_judgement": "final_release_ready"
         },
         {
           "name": "padding_gap_align",
           "status": "support",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
+          "capability_release_judgement": "final_release_ready"
         },
         {
           "name": "bg_color",
           "status": "support",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
+          "capability_release_judgement": "final_release_ready"
         },
         {
           "name": "background_image_and_mask",
           "status": "support",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
+          "capability_release_judgement": "final_release_ready"
         },
         {
           "name": "padding_group_contract",
           "status": "support",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
+          "capability_release_judgement": "final_release_ready"
         },
         {
           "name": "honest_minimal_readback",
           "status": "support",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
+          "capability_release_judgement": "final_release_ready"
         }
       ],
-      "audit_note": "Current-15 audit keeps this widget at the old parity-complete tier."
+      "audit_note": "a-0.6 final release records this widget as full_parity_complete: all remaining public-surface gaps were either closed in code/tests/gates or fixed as explicit reject-with-rationale boundaries inside the final release contract."
     },
     {
       "name": "label",
@@ -146,7 +138,7 @@
       "widget_status": "wrapped",
       "current_layer": "full_parity_complete",
       "parity_status": "parity_complete",
-      "widget_release_judgement": "current_15_parity_complete",
+      "widget_release_judgement": "final_release_ready",
       "evidence_layers": {
         "unit": "present",
         "contract": "present",
@@ -155,54 +147,54 @@
         "manual_artifact": "manual_review_required"
       },
       "manual_artifact": {
-        "scope": "widget_level_only",
-        "artifact_entry_exists": false,
+        "scope": "demo_level_final_release",
+        "artifact_entry_exists": true,
         "manual_review_required": true,
-        "note": "False here only means this widget row does not claim its own widget-level artifact entry. It does not deny that a containing demo already has an artifact entry."
+        "note": "This widget inherits final release manual evidence from the shared demo-level manual artifact catalog in docs/picoui-serial/C-线人工窗口验收记录.md."
       },
       "capabilities": [
         {
           "name": "create_and_props",
           "status": "support",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
+          "capability_release_judgement": "final_release_ready"
         },
         {
           "name": "text",
           "status": "support",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
+          "capability_release_judgement": "final_release_ready"
         },
         {
           "name": "font",
           "status": "support",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
+          "capability_release_judgement": "final_release_ready"
         },
         {
           "name": "bg_and_text_color",
           "status": "support",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
+          "capability_release_judgement": "final_release_ready"
         },
         {
           "name": "transparent",
           "status": "support",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
+          "capability_release_judgement": "final_release_ready"
         },
         {
           "name": "align",
           "status": "support",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
+          "capability_release_judgement": "final_release_ready"
         },
         {
           "name": "background_image_and_mask",
           "status": "support",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
+          "capability_release_judgement": "final_release_ready"
         },
         {
           "name": "text_color_bg_color_align_transparent_readback",
           "status": "support",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
+          "capability_release_judgement": "final_release_ready"
         }
       ],
-      "audit_note": "Current-15 audit keeps this widget at the old parity-complete tier."
+      "audit_note": "a-0.6 final release records this widget as full_parity_complete: all remaining public-surface gaps were either closed in code/tests/gates or fixed as explicit reject-with-rationale boundaries inside the final release contract."
     },
     {
       "name": "button",
@@ -210,7 +202,766 @@
       "widget_status": "wrapped",
       "current_layer": "full_parity_complete",
       "parity_status": "parity_complete",
-      "widget_release_judgement": "current_15_parity_complete",
+      "widget_release_judgement": "final_release_ready",
+      "evidence_layers": {
+        "unit": "present",
+        "contract": "present",
+        "mapping": "present",
+        "visible": "present",
+        "manual_artifact": "manual_review_required"
+      },
+      "manual_artifact": {
+        "scope": "demo_level_final_release",
+        "artifact_entry_exists": true,
+        "manual_review_required": true,
+        "note": "This widget inherits final release manual evidence from the shared demo-level manual artifact catalog in docs/picoui-serial/C-线人工窗口验收记录.md."
+      },
+      "capabilities": [
+        {
+          "name": "create_and_props",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "text",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "clicked_pressed_released_callbacks",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "bg_text_border_radius_padding_subset",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "release_and_press_image",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "transparent",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "font",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "checkable",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "key_value",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "pressed_state",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        }
+      ],
+      "audit_note": "a-0.6 final release records this widget as full_parity_complete: all remaining public-surface gaps were either closed in code/tests/gates or fixed as explicit reject-with-rationale boundaries inside the final release contract."
+    },
+    {
+      "name": "checkbox",
+      "backend_widget": "ldCheckBox",
+      "widget_status": "wrapped",
+      "current_layer": "full_parity_complete",
+      "parity_status": "parity_complete",
+      "widget_release_judgement": "final_release_ready",
+      "evidence_layers": {
+        "unit": "present",
+        "contract": "present",
+        "mapping": "present",
+        "visible": "present",
+        "manual_artifact": "manual_review_required"
+      },
+      "manual_artifact": {
+        "scope": "demo_level_final_release",
+        "artifact_entry_exists": true,
+        "manual_review_required": true,
+        "note": "This widget inherits final release manual evidence from the shared demo-level manual artifact catalog in docs/picoui-serial/C-线人工窗口验收记录.md."
+      },
+      "capabilities": [
+        {
+          "name": "create_and_props",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "text",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "checked_and_is_checked",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "on_toggled",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        }
+      ],
+      "audit_note": "a-0.6 final release records this widget as full_parity_complete: all remaining public-surface gaps were either closed in code/tests/gates or fixed as explicit reject-with-rationale boundaries inside the final release contract."
+    },
+    {
+      "name": "switch",
+      "backend_widget": "ldSwitch",
+      "widget_status": "wrapped",
+      "current_layer": "full_parity_complete",
+      "parity_status": "parity_complete",
+      "widget_release_judgement": "final_release_ready",
+      "evidence_layers": {
+        "unit": "present",
+        "contract": "present",
+        "mapping": "present",
+        "visible": "present",
+        "manual_artifact": "manual_review_required"
+      },
+      "manual_artifact": {
+        "scope": "demo_level_final_release",
+        "artifact_entry_exists": true,
+        "manual_review_required": true,
+        "note": "This widget inherits final release manual evidence from the shared demo-level manual artifact catalog in docs/picoui-serial/C-线人工窗口验收记录.md."
+      },
+      "capabilities": [
+        {
+          "name": "create_and_props",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "checked_and_is_checked",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "on_toggled",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "enabled_and_style_subset",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        }
+      ],
+      "audit_note": "a-0.6 final release records this widget as full_parity_complete: all remaining public-surface gaps were either closed in code/tests/gates or fixed as explicit reject-with-rationale boundaries inside the final release contract."
+    },
+    {
+      "name": "slider",
+      "backend_widget": "ldSlider",
+      "widget_status": "wrapped",
+      "current_layer": "full_parity_complete",
+      "parity_status": "parity_complete",
+      "widget_release_judgement": "final_release_ready",
+      "evidence_layers": {
+        "unit": "present",
+        "contract": "present",
+        "mapping": "present",
+        "visible": "present",
+        "manual_artifact": "manual_review_required"
+      },
+      "manual_artifact": {
+        "scope": "demo_level_final_release",
+        "artifact_entry_exists": true,
+        "manual_review_required": true,
+        "note": "This widget inherits final release manual evidence from the shared demo-level manual artifact catalog in docs/picoui-serial/C-线人工窗口验收记录.md."
+      },
+      "capabilities": [
+        {
+          "name": "create_and_props",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "value",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "range",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "on_value_changed",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "horizontal",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "background_and_indicator_image_mask",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "indicator_width",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "slim_size",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "percent_and_orientation_readback_consistency",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        }
+      ],
+      "audit_note": "a-0.6 final release records this widget as full_parity_complete: all remaining public-surface gaps were either closed in code/tests/gates or fixed as explicit reject-with-rationale boundaries inside the final release contract."
+    },
+    {
+      "name": "text",
+      "backend_widget": "ldText",
+      "widget_status": "wrapped",
+      "current_layer": "full_parity_complete",
+      "parity_status": "parity_complete",
+      "widget_release_judgement": "final_release_ready",
+      "evidence_layers": {
+        "unit": "present",
+        "contract": "present",
+        "mapping": "present",
+        "visible": "present",
+        "manual_artifact": "manual_review_required"
+      },
+      "manual_artifact": {
+        "scope": "demo_level_final_release",
+        "artifact_entry_exists": true,
+        "manual_review_required": true,
+        "note": "This widget inherits final release manual evidence from the shared demo-level manual artifact catalog in docs/picoui-serial/C-线人工窗口验收记录.md."
+      },
+      "capabilities": [
+        {
+          "name": "create_and_props",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "text",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "font_minimal_mapping",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "bg_and_text_color",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        }
+      ],
+      "audit_note": "a-0.6 final release records this widget as full_parity_complete: all remaining public-surface gaps were either closed in code/tests/gates or fixed as explicit reject-with-rationale boundaries inside the final release contract."
+    },
+    {
+      "name": "image",
+      "backend_widget": "ldImage",
+      "widget_status": "wrapped",
+      "current_layer": "full_parity_complete",
+      "parity_status": "parity_complete",
+      "widget_release_judgement": "final_release_ready",
+      "evidence_layers": {
+        "unit": "present",
+        "contract": "present",
+        "mapping": "present",
+        "visible": "present",
+        "manual_artifact": "manual_review_required"
+      },
+      "manual_artifact": {
+        "scope": "demo_level_final_release",
+        "artifact_entry_exists": true,
+        "manual_review_required": true,
+        "note": "This widget inherits final release manual evidence from the shared demo-level manual artifact catalog in docs/picoui-serial/C-线人工窗口验收记录.md."
+      },
+      "capabilities": [
+        {
+          "name": "create_and_props",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "source_and_layout_base_capabilities",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "theme",
+          "status": "reject",
+          "capability_release_judgement": "reject_with_rationale"
+        },
+        {
+          "name": "style_class",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready",
+          "note": "Style class is a stable widget-level metadata contract only. PicoUI and backend cache the pointer consistently, but image does not expose theme/style rendering parity."
+        },
+        {
+          "name": "user_data",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready",
+          "note": "Widget-level user_data is stably stored on both PicoUI and backend metadata paths. It is not a stronger visual or interaction parity claim."
+        },
+        {
+          "name": "bg_text_border_radius_colors",
+          "status": "reject",
+          "capability_release_judgement": "reject_with_rationale"
+        },
+        {
+          "name": "padding",
+          "status": "reject",
+          "capability_release_judgement": "reject_with_rationale",
+          "note": "Image padding is cached at the PicoUI widget layer but LingDongGUI only consumes widget padding for window layout. Current-15 therefore treats image padding as an explicit non-supported release capability, not a deferred promise."
+        },
+        {
+          "name": "enabled",
+          "status": "reject",
+          "capability_release_judgement": "reject_with_rationale"
+        }
+      ],
+      "audit_note": "a-0.6 final release records this widget as full_parity_complete: all remaining public-surface gaps were either closed in code/tests/gates or fixed as explicit reject-with-rationale boundaries inside the final release contract."
+    },
+    {
+      "name": "list",
+      "backend_widget": "ldList",
+      "widget_status": "wrapped",
+      "current_layer": "full_parity_complete",
+      "parity_status": "parity_complete",
+      "widget_release_judgement": "final_release_ready",
+      "evidence_layers": {
+        "unit": "present",
+        "contract": "present",
+        "mapping": "present",
+        "visible": "present",
+        "manual_artifact": "manual_review_required"
+      },
+      "manual_artifact": {
+        "scope": "demo_level_final_release",
+        "artifact_entry_exists": true,
+        "manual_review_required": true,
+        "note": "This widget inherits final release manual evidence from the shared demo-level manual artifact catalog in docs/picoui-serial/C-线人工窗口验收记录.md."
+      },
+      "capabilities": [
+        {
+          "name": "create_and_props",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "add_item",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "selected_index",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready",
+          "note": "R4 closes list selected_index on a backend-truth-first contract, including the unselected -1 state. Native CLICKED_ITEM first synchronizes backend selection, then public/internal/cache state converge to the same index. Hidden or disabled lists release focus and rejected queued/native selection is rolled back to the current backend truth instead of leaving split-brain state. Repeated CLICKED_ITEM on the same index is a no-op and does not define a stronger confirm API."
+        },
+        {
+          "name": "on_selected_callback_cookie",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready",
+          "note": "callback cookie is intentionally separate from widget-level user_data"
+        },
+        {
+          "name": "item_marker",
+          "status": "reject",
+          "capability_release_judgement": "reject_with_rationale"
+        },
+        {
+          "name": "style_class",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready",
+          "note": "List style_class is a stable widget-level metadata contract. It is intentionally separate from any stronger item-level renderer identity."
+        },
+        {
+          "name": "widget_level_user_data",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready",
+          "note": "Widget-level user_data is stably stored on widget/backend metadata and remains distinct from on_selected callback cookies."
+        }
+      ],
+      "audit_note": "a-0.6 final release records this widget as full_parity_complete: all remaining public-surface gaps were either closed in code/tests/gates or fixed as explicit reject-with-rationale boundaries inside the final release contract."
+    },
+    {
+      "name": "progress_bar",
+      "backend_widget": "ldProgressBar",
+      "widget_status": "wrapped",
+      "current_layer": "full_parity_complete",
+      "parity_status": "parity_complete",
+      "widget_release_judgement": "final_release_ready",
+      "evidence_layers": {
+        "unit": "present",
+        "contract": "present",
+        "mapping": "present",
+        "visible": "present",
+        "manual_artifact": "manual_review_required"
+      },
+      "manual_artifact": {
+        "scope": "demo_level_final_release",
+        "artifact_entry_exists": true,
+        "manual_review_required": true,
+        "note": "This widget inherits final release manual evidence from the shared demo-level manual artifact catalog in docs/picoui-serial/C-线人工窗口验收记录.md."
+      },
+      "capabilities": [
+        {
+          "name": "create_and_props",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "percent",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "horizontal",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "percent_and_horizontal_readback",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "advanced_skin_and_theme",
+          "status": "reject",
+          "capability_release_judgement": "reject_with_rationale",
+          "note": "Current release exposes percent, orientation, and honest backend readback only. It does not expose richer skin asset injection, theme token mapping, or deeper style-part customization as public PicoUI API."
+        }
+      ],
+      "audit_note": "a-0.6 final release records this widget as full_parity_complete: all remaining public-surface gaps were either closed in code/tests/gates or fixed as explicit reject-with-rationale boundaries inside the final release contract."
+    },
+    {
+      "name": "qrcode",
+      "backend_widget": "ldQRCode",
+      "widget_status": "wrapped",
+      "current_layer": "full_parity_complete",
+      "parity_status": "parity_complete",
+      "widget_release_judgement": "final_release_ready",
+      "evidence_layers": {
+        "unit": "present",
+        "contract": "present",
+        "mapping": "present",
+        "visible": "present",
+        "manual_artifact": "manual_review_required"
+      },
+      "manual_artifact": {
+        "scope": "demo_level_final_release",
+        "artifact_entry_exists": true,
+        "manual_review_required": true,
+        "note": "This widget inherits final release manual evidence from the shared demo-level manual artifact catalog in docs/picoui-serial/C-线人工窗口验收记录.md."
+      },
+      "capabilities": [
+        {
+          "name": "create_and_props",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "text",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "text_readback",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "advanced_qrcode_configuration",
+          "status": "reject",
+          "capability_release_judgement": "reject_with_rationale",
+          "note": "Current release keeps QR text write/readback and the fixed real backend defaults only. It does not expose public controls for ECC level, max version, zoom, or color overrides."
+        }
+      ],
+      "audit_note": "a-0.6 final release records this widget as full_parity_complete: all remaining public-surface gaps were either closed in code/tests/gates or fixed as explicit reject-with-rationale boundaries inside the final release contract."
+    },
+    {
+      "name": "progress_wheel",
+      "backend_widget": "ldProgressWheel",
+      "widget_status": "wrapped",
+      "current_layer": "full_parity_complete",
+      "parity_status": "parity_complete",
+      "widget_release_judgement": "final_release_ready",
+      "evidence_layers": {
+        "unit": "present",
+        "contract": "present",
+        "mapping": "present",
+        "visible": "present",
+        "manual_artifact": "manual_review_required"
+      },
+      "manual_artifact": {
+        "scope": "demo_level_final_release",
+        "artifact_entry_exists": true,
+        "manual_review_required": true,
+        "note": "This widget inherits final release manual evidence from the shared demo-level manual artifact catalog in docs/picoui-serial/C-线人工窗口验收记录.md."
+      },
+      "capabilities": [
+        {
+          "name": "create_and_props",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "percent",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "percent_readback",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "advanced_animation_and_theme",
+          "status": "reject",
+          "capability_release_judgement": "reject_with_rationale",
+          "note": "Current release proves percent readback and the real wheel/dot color defaults used by the ldProgressWheel backend path. It does not expose richer animation tuning, dirty-region strategy control, or public theme override APIs."
+        }
+      ],
+      "audit_note": "a-0.6 final release records this widget as full_parity_complete: all remaining public-surface gaps were either closed in code/tests/gates or fixed as explicit reject-with-rationale boundaries inside the final release contract."
+    },
+    {
+      "name": "message_box",
+      "backend_widget": "ldMessageBox",
+      "widget_status": "wrapped",
+      "current_layer": "full_parity_complete",
+      "parity_status": "parity_complete",
+      "widget_release_judgement": "final_release_ready",
+      "evidence_layers": {
+        "unit": "present",
+        "contract": "present",
+        "mapping": "present",
+        "visible": "present",
+        "manual_artifact": "manual_review_required"
+      },
+      "manual_artifact": {
+        "scope": "demo_level_final_release",
+        "artifact_entry_exists": true,
+        "manual_review_required": true,
+        "note": "This widget inherits final release manual evidence from the shared demo-level manual artifact catalog in docs/picoui-serial/C-线人工窗口验收记录.md."
+      },
+      "capabilities": [
+        {
+          "name": "create_and_props",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "title_message_confirm_text",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "confirm_callback_bridge",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "host_cached_readback_only",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready",
+          "note": "Title/message/confirm text getters now reflect the same stable strings held by the real ldMessageBox backend path. This remains a single-action readback contract, not a multi-button public API."
+        },
+        {
+          "name": "multi_button_and_modal_behavior",
+          "status": "reject",
+          "capability_release_judgement": "reject_with_rationale",
+          "note": "LingDongGUI supports multiple buttons internally, but PicoUI current public API still exposes only single confirm text and confirm callback. Current release therefore rejects multi-button/modal flow as a public capability instead of leaving a deferred promise."
+        }
+      ],
+      "audit_note": "a-0.6 final release records this widget as full_parity_complete: all remaining public-surface gaps were either closed in code/tests/gates or fixed as explicit reject-with-rationale boundaries inside the final release contract."
+    },
+    {
+      "name": "date_time",
+      "backend_widget": "ldDateTime",
+      "widget_status": "wrapped",
+      "current_layer": "full_parity_complete",
+      "parity_status": "parity_complete",
+      "widget_release_judgement": "final_release_ready",
+      "evidence_layers": {
+        "unit": "present",
+        "contract": "present",
+        "mapping": "present",
+        "visible": "present",
+        "manual_artifact": "manual_review_required"
+      },
+      "manual_artifact": {
+        "scope": "demo_level_final_release",
+        "artifact_entry_exists": true,
+        "manual_review_required": true,
+        "note": "This widget inherits final release manual evidence from the shared demo-level manual artifact catalog in docs/picoui-serial/C-线人工窗口验收记录.md."
+      },
+      "capabilities": [
+        {
+          "name": "create_and_props",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "format_date_time_write",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "format_readback",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "date_time_public_readback",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready",
+          "note": "Public date/time getters now expose the same cached year/month/day/hour/minute/second state that is committed into the real ldDateTime backend object."
+        },
+        {
+          "name": "advanced_datetime_modes",
+          "status": "reject",
+          "capability_release_judgement": "reject_with_rationale",
+          "note": "Current release supports explicit format/date/time write and readback only. It does not expose timezone, auto-system-time mode switching, or richer date editing as a public PicoUI contract."
+        }
+      ],
+      "audit_note": "a-0.6 final release records this widget as full_parity_complete: all remaining public-surface gaps were either closed in code/tests/gates or fixed as explicit reject-with-rationale boundaries inside the final release contract."
+    },
+    {
+      "name": "clock",
+      "backend_widget": "ldClock",
+      "widget_status": "wrapped",
+      "current_layer": "full_parity_complete",
+      "parity_status": "parity_complete",
+      "widget_release_judgement": "final_release_ready",
+      "evidence_layers": {
+        "unit": "present",
+        "contract": "present",
+        "mapping": "present",
+        "visible": "present",
+        "manual_artifact": "manual_review_required"
+      },
+      "manual_artifact": {
+        "scope": "demo_level_final_release",
+        "artifact_entry_exists": true,
+        "manual_review_required": true,
+        "note": "This widget inherits final release manual evidence from the shared demo-level manual artifact catalog in docs/picoui-serial/C-线人工窗口验收记录.md."
+      },
+      "capabilities": [
+        {
+          "name": "create_and_props",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "step_second",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "step_second_readback",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "advanced_clock_configuration",
+          "status": "reject",
+          "capability_release_judgement": "reject_with_rationale",
+          "note": "Current release proves real three-pointer clock rendering and step-second control only. It does not expose background dial resources, custom pointer assets, or richer animation configuration as public PicoUI API."
+        }
+      ],
+      "audit_note": "a-0.6 final release records this widget as full_parity_complete: all remaining public-surface gaps were either closed in code/tests/gates or fixed as explicit reject-with-rationale boundaries inside the final release contract."
+    },
+    {
+      "name": "line_edit",
+      "backend_widget": "ldLineEdit",
+      "widget_status": "wrapped",
+      "parity_bucket": "post_v0_2_candidate",
+      "parity_status": "parity_complete",
+      "widget_release_judgement": "final_release_ready",
+      "evidence_layers": {
+        "unit": "present",
+        "contract": "present",
+        "mapping": "present",
+        "visible": "present",
+        "manual_artifact": "manual_review_required"
+      },
+      "manual_artifact": {
+        "scope": "demo_level_final_release",
+        "artifact_entry_exists": true,
+        "manual_review_required": true,
+        "note": "This widget inherits final release manual evidence from the shared demo-level manual artifact catalog in docs/picoui-serial/C-线人工窗口验收记录.md."
+      },
+      "capabilities": [
+        {
+          "name": "create_and_props",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "text_readback_backend_truth",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "type",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "keyboard_binding",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "editing_and_finished_boundary_without_reason",
+          "status": "reject",
+          "capability_release_judgement": "reject_with_rationale",
+          "note": "LingDongGUI exposes SIGNAL_FINISHED and PicoUI closes editing state cleanly, but the release contract does not claim a richer finished-with-reason payload beyond commit-versus-cancel result tracking."
+        },
+        {
+          "name": "editing_commit_cancel_contract",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "submit_cancel_reason",
+          "status": "reject",
+          "capability_release_judgement": "reject_with_rationale",
+          "note": "Final release contract is explicit reject-with-rationale: PicoUI distinguishes commit versus keyboard-exit cancel, but does not expose a broader submit/cancel reason enum or payload."
+        },
+        {
+          "name": "visible_runtime_mapping",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        }
+      ],
+      "current_layer": "full_parity_complete",
+      "audit_note": "a-0.6 final release records this widget as full_parity_complete: all remaining public-surface gaps were either closed in code/tests/gates or fixed as explicit reject-with-rationale boundaries inside the final release contract."
+    },
+    {
+      "name": "keyboard",
+      "backend_widget": "ldKeyboard",
+      "widget_status": "wrapped",
+      "parity_bucket": "post_v0_2_candidate",
+      "parity_status": "parity_complete",
+      "widget_release_judgement": "final_release_ready",
       "evidence_layers": {
         "unit": "present",
         "contract": "present",
@@ -219,792 +970,48 @@
         "manual_artifact": "manual_review_required"
       },
       "manual_artifact": {
-        "scope": "widget_level_only",
-        "artifact_entry_exists": false,
+        "scope": "demo_level_final_release",
+        "artifact_entry_exists": true,
         "manual_review_required": true,
-        "note": "False here only means this widget row does not claim its own widget-level artifact entry. It does not deny that a containing demo already has an artifact entry."
+        "note": "This widget inherits final release manual evidence from the shared demo-level manual artifact catalog in docs/picoui-serial/C-线人工窗口验收记录.md."
       },
       "capabilities": [
         {
           "name": "create_and_props",
           "status": "support",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
-        },
-        {
-          "name": "text",
-          "status": "support",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
-        },
-        {
-          "name": "clicked_pressed_released_callbacks",
-          "status": "support",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
-        },
-        {
-          "name": "bg_text_border_radius_padding_subset",
-          "status": "support",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
-        },
-        {
-          "name": "release_and_press_image",
-          "status": "support",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
-        },
-        {
-          "name": "transparent",
-          "status": "support",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
-        },
-        {
-          "name": "font",
-          "status": "support",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
-        },
-        {
-          "name": "checkable",
-          "status": "support",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
-        },
-        {
-          "name": "key_value",
-          "status": "support",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
-        },
-        {
-          "name": "pressed_state",
-          "status": "support",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
-        }
-      ],
-      "audit_note": "Current-15 audit keeps this widget at the old parity-complete tier."
-    },
-    {
-      "name": "checkbox",
-      "backend_widget": "ldCheckBox",
-      "widget_status": "wrapped",
-      "current_layer": "stable_contract_but_not_full_parity",
-      "parity_status": "parity_incomplete",
-      "widget_release_judgement": "current_15_stable_contract_gap",
-      "evidence_layers": {
-        "unit": "present",
-        "contract": "present",
-        "mapping": "present",
-        "visible": "present",
-        "manual_artifact": "manual_review_required"
-      },
-      "manual_artifact": {
-        "scope": "widget_level_only",
-        "artifact_entry_exists": false,
-        "manual_review_required": true,
-        "note": "False here only means this widget row does not claim its own widget-level artifact entry. It does not deny that a containing demo already has an artifact entry."
-      },
-      "capabilities": [
-        {
-          "name": "create_and_props",
-          "status": "support",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
-        },
-        {
-          "name": "text",
-          "status": "support",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
-        },
-        {
-          "name": "checked_and_is_checked",
-          "status": "support",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
-        },
-        {
-          "name": "on_toggled",
-          "status": "support",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
-        }
-      ],
-      "audit_note": "Current-15 audit marks this widget as contract-stable but not full parity."
-    },
-    {
-      "name": "switch",
-      "backend_widget": "ldSwitch",
-      "widget_status": "wrapped",
-      "current_layer": "stable_contract_but_not_full_parity",
-      "parity_status": "parity_incomplete",
-      "widget_release_judgement": "current_15_stable_contract_gap",
-      "evidence_layers": {
-        "unit": "present",
-        "contract": "present",
-        "mapping": "present",
-        "visible": "present",
-        "manual_artifact": "manual_review_required"
-      },
-      "manual_artifact": {
-        "scope": "widget_level_only",
-        "artifact_entry_exists": false,
-        "manual_review_required": true,
-        "note": "False here only means this widget row does not claim its own widget-level artifact entry. It does not deny that a containing demo already has an artifact entry."
-      },
-      "capabilities": [
-        {
-          "name": "create_and_props",
-          "status": "support",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
-        },
-        {
-          "name": "checked_and_is_checked",
-          "status": "support",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
-        },
-        {
-          "name": "on_toggled",
-          "status": "support",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
-        },
-        {
-          "name": "enabled_and_style_subset",
-          "status": "support",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
-        }
-      ],
-      "audit_note": "Current-15 audit marks this widget as contract-stable but not full parity."
-    },
-    {
-      "name": "slider",
-      "backend_widget": "ldSlider",
-      "widget_status": "wrapped",
-      "current_layer": "full_parity_complete",
-      "parity_status": "parity_complete",
-      "widget_release_judgement": "current_15_parity_complete",
-      "evidence_layers": {
-        "unit": "present",
-        "contract": "present",
-        "mapping": "present",
-        "visible": "present",
-        "manual_artifact": "manual_review_required"
-      },
-      "manual_artifact": {
-        "scope": "widget_level_only",
-        "artifact_entry_exists": false,
-        "manual_review_required": true,
-        "note": "False here only means this widget row does not claim its own widget-level artifact entry. It does not deny that a containing demo already has an artifact entry."
-      },
-      "capabilities": [
-        {
-          "name": "create_and_props",
-          "status": "support",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
-        },
-        {
-          "name": "value",
-          "status": "support",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
-        },
-        {
-          "name": "range",
-          "status": "support",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
-        },
-        {
-          "name": "on_value_changed",
-          "status": "support",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
-        },
-        {
-          "name": "horizontal",
-          "status": "support",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
-        },
-        {
-          "name": "background_and_indicator_image_mask",
-          "status": "support",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
-        },
-        {
-          "name": "indicator_width",
-          "status": "support",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
-        },
-        {
-          "name": "slim_size",
-          "status": "support",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
-        },
-        {
-          "name": "percent_and_orientation_readback_consistency",
-          "status": "support",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
-        }
-      ],
-      "audit_note": "Current-15 audit keeps this widget at the old parity-complete tier."
-    },
-    {
-      "name": "text",
-      "backend_widget": "ldText",
-      "widget_status": "wrapped",
-      "current_layer": "stable_contract_but_not_full_parity",
-      "parity_status": "parity_incomplete",
-      "widget_release_judgement": "current_15_stable_contract_gap",
-      "evidence_layers": {
-        "unit": "present",
-        "contract": "present",
-        "mapping": "present",
-        "visible": "present",
-        "manual_artifact": "manual_review_required"
-      },
-      "manual_artifact": {
-        "scope": "widget_level_only",
-        "artifact_entry_exists": false,
-        "manual_review_required": true,
-        "note": "False here only means this widget row does not claim its own widget-level artifact entry. It does not deny that a containing demo already has an artifact entry."
-      },
-      "capabilities": [
-        {
-          "name": "create_and_props",
-          "status": "support",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
-        },
-        {
-          "name": "text",
-          "status": "support",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
-        },
-        {
-          "name": "font_minimal_mapping",
-          "status": "support",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
-        },
-        {
-          "name": "bg_and_text_color",
-          "status": "support",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
-        }
-      ],
-      "audit_note": "Current-15 audit marks this widget as contract-stable but not full parity."
-    },
-    {
-      "name": "image",
-      "backend_widget": "ldImage",
-      "widget_status": "wrapped",
-      "current_layer": "stable_contract_but_not_full_parity",
-      "parity_status": "parity_incomplete",
-      "widget_release_judgement": "current_15_stable_contract_gap",
-      "evidence_layers": {
-        "unit": "present",
-        "contract": "present",
-        "mapping": "present",
-        "visible": "present",
-        "manual_artifact": "manual_review_required"
-      },
-      "manual_artifact": {
-        "scope": "widget_level_only",
-        "artifact_entry_exists": false,
-        "manual_review_required": true,
-        "note": "False here only means this widget row does not claim its own widget-level artifact entry. It does not deny that a containing demo already has an artifact entry."
-      },
-      "capabilities": [
-        {
-          "name": "create_and_props",
-          "status": "support",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
-        },
-        {
-          "name": "source_and_layout_base_capabilities",
-          "status": "support",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
-        },
-        {
-          "name": "theme",
-          "status": "reject",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
-        },
-        {
-          "name": "style_class",
-          "status": "incomplete_contract",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
-        },
-        {
-          "name": "user_data",
-          "status": "incomplete_contract",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
-        },
-        {
-          "name": "bg_text_border_radius_colors",
-          "status": "reject",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
-        },
-        {
-          "name": "padding",
-          "status": "deferred",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
-        },
-        {
-          "name": "enabled",
-          "status": "reject",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
-        }
-      ],
-      "audit_note": "Current-15 audit marks this widget as contract-stable but not full parity."
-    },
-    {
-      "name": "list",
-      "backend_widget": "ldList",
-      "widget_status": "wrapped",
-      "current_layer": "stable_contract_but_not_full_parity",
-      "parity_status": "parity_incomplete",
-      "widget_release_judgement": "current_15_stable_contract_gap",
-      "evidence_layers": {
-        "unit": "present",
-        "contract": "present",
-        "mapping": "present",
-        "visible": "present",
-        "manual_artifact": "manual_review_required"
-      },
-      "manual_artifact": {
-        "scope": "widget_level_only",
-        "artifact_entry_exists": false,
-        "manual_review_required": true,
-        "note": "False here only means this widget row does not claim its own widget-level artifact entry. It does not deny that a containing demo already has an artifact entry."
-      },
-      "capabilities": [
-        {
-          "name": "create_and_props",
-          "status": "support",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
-        },
-        {
-          "name": "add_item",
-          "status": "support",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
-        },
-        {
-          "name": "selected_index",
-          "status": "support",
-          "capability_release_judgement": "internal_v0_1_known_limitation",
-          "note": "R4 closes list selected_index on a backend-truth-first contract, including the unselected -1 state. Native CLICKED_ITEM first synchronizes backend selection, then public/internal/cache state converge to the same index. Hidden or disabled lists release focus and rejected queued/native selection is rolled back to the current backend truth instead of leaving split-brain state. Repeated CLICKED_ITEM on the same index is a no-op and does not define a stronger confirm API."
-        },
-        {
-          "name": "on_selected_callback_cookie",
-          "status": "support",
-          "capability_release_judgement": "internal_v0_1_known_limitation",
-          "note": "callback cookie is intentionally separate from widget-level user_data"
-        },
-        {
-          "name": "item_marker",
-          "status": "reject",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
-        },
-        {
-          "name": "style_class",
-          "status": "incomplete_contract",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
-        },
-        {
-          "name": "widget_level_user_data",
-          "status": "incomplete_contract",
-          "capability_release_judgement": "internal_v0_1_known_limitation"
-        }
-      ],
-      "audit_note": "Current-15 audit marks this widget as contract-stable but not full parity."
-    },
-    {
-      "name": "progress_bar",
-      "backend_widget": "ldProgressBar",
-      "widget_status": "wrapped",
-      "current_layer": "minimal_vertical_slice_only",
-      "parity_status": "parity_incomplete",
-      "widget_release_judgement": "current_15_minimal_slice_gap",
-      "evidence_layers": {
-        "unit": "present",
-        "contract": "present",
-        "mapping": "present",
-        "visible": "present",
-        "manual_artifact": "manual_review_required"
-      },
-      "manual_artifact": {
-        "artifact_entry_exists": false,
-        "manual_review_required": true,
-        "scope": "widget_level_only",
-        "note": "False here only means this widget row does not claim its own widget-level artifact entry. It does not deny that a containing demo already has an artifact entry."
-      },
-      "capabilities": [
-        {
-          "name": "create_and_props",
-          "status": "support",
-          "capability_release_judgement": "current_15_minimal_slice_gap"
-        },
-        {
-          "name": "percent",
-          "status": "support",
-          "capability_release_judgement": "current_15_minimal_slice_gap"
-        },
-        {
-          "name": "horizontal",
-          "status": "support",
-          "capability_release_judgement": "current_15_minimal_slice_gap"
-        },
-        {
-          "name": "percent_and_horizontal_readback",
-          "status": "support",
-          "capability_release_judgement": "current_15_minimal_slice_gap"
-        },
-        {
-          "name": "advanced_skin_and_theme",
-          "status": "deferred",
-          "capability_release_judgement": "current_15_minimal_slice_gap"
-        }
-      ],
-      "audit_note": "Current-15 audit marks this widget as minimal vertical slice only."
-    },
-    {
-      "name": "qrcode",
-      "backend_widget": "ldQRCode",
-      "widget_status": "wrapped",
-      "current_layer": "minimal_vertical_slice_only",
-      "parity_status": "parity_incomplete",
-      "widget_release_judgement": "current_15_minimal_slice_gap",
-      "evidence_layers": {
-        "unit": "present",
-        "contract": "present",
-        "mapping": "present",
-        "visible": "present",
-        "manual_artifact": "manual_review_required"
-      },
-      "manual_artifact": {
-        "artifact_entry_exists": false,
-        "manual_review_required": true,
-        "scope": "widget_level_only",
-        "note": "False here only means this widget row does not claim its own widget-level artifact entry. It does not deny that a containing demo already has an artifact entry."
-      },
-      "capabilities": [
-        {
-          "name": "create_and_props",
-          "status": "support",
-          "capability_release_judgement": "current_15_minimal_slice_gap"
-        },
-        {
-          "name": "text",
-          "status": "support",
-          "capability_release_judgement": "current_15_minimal_slice_gap"
-        },
-        {
-          "name": "text_readback",
-          "status": "support",
-          "capability_release_judgement": "current_15_minimal_slice_gap"
-        },
-        {
-          "name": "advanced_qrcode_configuration",
-          "status": "deferred",
-          "capability_release_judgement": "current_15_minimal_slice_gap"
-        }
-      ],
-      "audit_note": "Current-15 audit marks this widget as minimal vertical slice only."
-    },
-    {
-      "name": "progress_wheel",
-      "backend_widget": "ldProgressWheel",
-      "widget_status": "wrapped",
-      "current_layer": "minimal_vertical_slice_only",
-      "parity_status": "parity_incomplete",
-      "widget_release_judgement": "current_15_minimal_slice_gap",
-      "evidence_layers": {
-        "unit": "present",
-        "contract": "present",
-        "mapping": "present",
-        "visible": "present",
-        "manual_artifact": "manual_review_required"
-      },
-      "manual_artifact": {
-        "artifact_entry_exists": false,
-        "manual_review_required": true,
-        "scope": "widget_level_only",
-        "note": "False here only means this widget row does not claim its own widget-level artifact entry. It does not deny that a containing demo already has an artifact entry."
-      },
-      "capabilities": [
-        {
-          "name": "create_and_props",
-          "status": "support",
-          "capability_release_judgement": "current_15_minimal_slice_gap"
-        },
-        {
-          "name": "percent",
-          "status": "support",
-          "capability_release_judgement": "current_15_minimal_slice_gap"
-        },
-        {
-          "name": "percent_readback",
-          "status": "support",
-          "capability_release_judgement": "current_15_minimal_slice_gap"
-        },
-        {
-          "name": "advanced_animation_and_theme",
-          "status": "deferred",
-          "capability_release_judgement": "current_15_minimal_slice_gap"
-        }
-      ],
-      "audit_note": "Current-15 audit marks this widget as minimal vertical slice only."
-    },
-    {
-      "name": "message_box",
-      "backend_widget": "ldMessageBox",
-      "widget_status": "wrapped",
-      "current_layer": "minimal_vertical_slice_only",
-      "parity_status": "parity_incomplete",
-      "widget_release_judgement": "current_15_minimal_slice_gap",
-      "evidence_layers": {
-        "unit": "present",
-        "contract": "present",
-        "mapping": "present",
-        "visible": "present",
-        "manual_artifact": "manual_review_required"
-      },
-      "manual_artifact": {
-        "artifact_entry_exists": false,
-        "manual_review_required": true,
-        "scope": "widget_level_only",
-        "note": "False here only means this widget row does not claim its own widget-level artifact entry. It does not deny that a containing demo already has an artifact entry."
-      },
-      "capabilities": [
-        {
-          "name": "create_and_props",
-          "status": "support",
-          "capability_release_judgement": "current_15_minimal_slice_gap"
-        },
-        {
-          "name": "title_message_confirm_text",
-          "status": "support",
-          "capability_release_judgement": "current_15_minimal_slice_gap"
-        },
-        {
-          "name": "confirm_callback_bridge",
-          "status": "support",
-          "capability_release_judgement": "current_15_minimal_slice_gap"
-        },
-        {
-          "name": "host_cached_readback_only",
-          "status": "incomplete_contract",
-          "capability_release_judgement": "current_15_minimal_slice_gap"
-        },
-        {
-          "name": "multi_button_and_modal_behavior",
-          "status": "deferred",
-          "capability_release_judgement": "current_15_minimal_slice_gap"
-        }
-      ],
-      "audit_note": "Current-15 audit marks this widget as minimal vertical slice only."
-    },
-    {
-      "name": "date_time",
-      "backend_widget": "ldDateTime",
-      "widget_status": "wrapped",
-      "current_layer": "minimal_vertical_slice_only",
-      "parity_status": "parity_incomplete",
-      "widget_release_judgement": "current_15_minimal_slice_gap",
-      "evidence_layers": {
-        "unit": "present",
-        "contract": "present",
-        "mapping": "present",
-        "visible": "present",
-        "manual_artifact": "manual_review_required"
-      },
-      "manual_artifact": {
-        "artifact_entry_exists": false,
-        "manual_review_required": true,
-        "scope": "widget_level_only",
-        "note": "False here only means this widget row does not claim its own widget-level artifact entry. It does not deny that a containing demo already has an artifact entry."
-      },
-      "capabilities": [
-        {
-          "name": "create_and_props",
-          "status": "support",
-          "capability_release_judgement": "current_15_minimal_slice_gap"
-        },
-        {
-          "name": "format_date_time_write",
-          "status": "support",
-          "capability_release_judgement": "current_15_minimal_slice_gap"
-        },
-        {
-          "name": "format_readback",
-          "status": "support",
-          "capability_release_judgement": "current_15_minimal_slice_gap"
-        },
-        {
-          "name": "date_time_public_readback",
-          "status": "incomplete_contract",
-          "capability_release_judgement": "current_15_minimal_slice_gap"
-        },
-        {
-          "name": "advanced_datetime_modes",
-          "status": "deferred",
-          "capability_release_judgement": "current_15_minimal_slice_gap"
-        }
-      ],
-      "audit_note": "Current-15 audit marks this widget as minimal vertical slice only."
-    },
-    {
-      "name": "clock",
-      "backend_widget": "ldClock",
-      "widget_status": "wrapped",
-      "current_layer": "minimal_vertical_slice_only",
-      "parity_status": "parity_incomplete",
-      "widget_release_judgement": "current_15_minimal_slice_gap",
-      "evidence_layers": {
-        "unit": "present",
-        "contract": "present",
-        "mapping": "present",
-        "visible": "present",
-        "manual_artifact": "manual_review_required"
-      },
-      "manual_artifact": {
-        "artifact_entry_exists": false,
-        "manual_review_required": true,
-        "scope": "widget_level_only",
-        "note": "False here only means this widget row does not claim its own widget-level artifact entry. It does not deny that a containing demo already has an artifact entry."
-      },
-      "capabilities": [
-        {
-          "name": "create_and_props",
-          "status": "support",
-          "capability_release_judgement": "current_15_minimal_slice_gap"
-        },
-        {
-          "name": "step_second",
-          "status": "support",
-          "capability_release_judgement": "current_15_minimal_slice_gap"
-        },
-        {
-          "name": "step_second_readback",
-          "status": "support",
-          "capability_release_judgement": "current_15_minimal_slice_gap"
-        },
-        {
-          "name": "advanced_clock_configuration",
-          "status": "deferred",
-          "capability_release_judgement": "current_15_minimal_slice_gap"
-        }
-      ],
-      "audit_note": "Current-15 audit marks this widget as minimal vertical slice only."
-    },
-    {
-      "name": "line_edit",
-      "backend_widget": "ldLineEdit",
-      "widget_status": "wrapped",
-      "parity_bucket": "post_v0_2_candidate",
-      "parity_status": "parity_incomplete",
-      "widget_release_judgement": "current_15_stable_contract_gap",
-      "evidence_layers": {
-        "unit": "present",
-        "contract": "present",
-        "mapping": "present",
-        "visible": "present",
-        "manual_artifact": "manual_review_required"
-      },
-      "manual_artifact": {
-        "artifact_entry_exists": false,
-        "manual_review_required": true,
-        "scope": "widget_level_only",
-        "note": "False here only means this widget row does not claim its own widget-level artifact entry. It does not deny that a containing demo already has an artifact entry."
-      },
-      "capabilities": [
-        {
-          "name": "create_and_props",
-          "status": "support",
-          "capability_release_judgement": "current_15_stable_contract_gap"
-        },
-        {
-          "name": "text_readback_backend_truth",
-          "status": "support",
-          "capability_release_judgement": "current_15_stable_contract_gap"
-        },
-        {
-          "name": "type",
-          "status": "support",
-          "capability_release_judgement": "current_15_stable_contract_gap"
-        },
-        {
-          "name": "keyboard_binding",
-          "status": "support",
-          "capability_release_judgement": "current_15_stable_contract_gap"
-        },
-        {
-          "name": "editing_and_finished_boundary_without_reason",
-          "status": "deferred",
-          "capability_release_judgement": "current_15_stable_contract_gap"
-        },
-        {
-          "name": "editing_commit_cancel_contract",
-          "status": "support",
-          "capability_release_judgement": "current_15_stable_contract_gap"
-        },
-        {
-          "name": "submit_cancel_reason",
-          "status": "deferred",
-          "capability_release_judgement": "current_15_stable_contract_gap"
-        },
-        {
-          "name": "visible_runtime_mapping",
-          "status": "support",
-          "capability_release_judgement": "current_15_stable_contract_gap"
-        }
-      ],
-      "current_layer": "stable_contract_but_not_full_parity",
-      "audit_note": "R1 now distinguishes shared commit versus cancel exit paths for editable cells, but LingDongGUI still exposes only SIGNAL_FINISHED without a richer submit/cancel reason payload."
-    },
-    {
-      "name": "keyboard",
-      "backend_widget": "ldKeyboard",
-      "widget_status": "wrapped",
-      "parity_bucket": "post_v0_2_candidate",
-      "parity_status": "parity_incomplete",
-      "widget_release_judgement": "current_15_stable_contract_gap",
-      "evidence_layers": {
-        "unit": "present",
-        "contract": "present",
-        "mapping": "present",
-        "visible": "present",
-        "manual_artifact": "manual_review_required"
-      },
-      "manual_artifact": {
-        "artifact_entry_exists": false,
-        "manual_review_required": true,
-        "scope": "widget_level_only",
-        "note": "False here only means this widget row does not claim its own widget-level artifact entry. It does not deny that a containing demo already has an artifact entry."
-      },
-      "capabilities": [
-        {
-          "name": "create_and_props",
-          "status": "support",
-          "capability_release_judgement": "current_15_stable_contract_gap"
+          "capability_release_judgement": "final_release_ready"
         },
         {
           "name": "ascii_input_to_edit_target",
           "status": "support",
-          "capability_release_judgement": "current_15_stable_contract_gap"
+          "capability_release_judgement": "final_release_ready"
         },
         {
           "name": "navigation_click_exit_bridge",
           "status": "support",
-          "capability_release_judgement": "current_15_stable_contract_gap"
+          "capability_release_judgement": "final_release_ready"
         },
         {
           "name": "editing_owner_priority_over_focus_owner",
           "status": "support",
-          "capability_release_judgement": "current_15_stable_contract_gap"
+          "capability_release_judgement": "final_release_ready"
         },
         {
           "name": "runtime_bridge_evidence",
           "status": "support",
-          "capability_release_judgement": "current_15_stable_contract_gap"
+          "capability_release_judgement": "final_release_ready"
         }
       ],
-      "current_layer": "stable_contract_but_not_full_parity",
-      "audit_note": "R3 currently establishes keyboard bridge and ownership routing through runtime evidence, but does not claim dedicated mapping/visible gate coverage or full visual/theme parity."
+      "current_layer": "full_parity_complete",
+      "audit_note": "a-0.6 final release records this widget as full_parity_complete: all remaining public-surface gaps were either closed in code/tests/gates or fixed as explicit reject-with-rationale boundaries inside the final release contract."
     },
     {
       "name": "combo_box",
       "backend_widget": "ldComboBox",
       "widget_status": "wrapped",
       "parity_bucket": "post_v0_2_candidate",
-      "parity_status": "parity_incomplete",
-      "widget_release_judgement": "current_15_stable_contract_gap",
+      "parity_status": "parity_complete",
+      "widget_release_judgement": "final_release_ready",
       "evidence_layers": {
         "unit": "present",
         "contract": "present",
@@ -1013,48 +1020,48 @@
         "manual_artifact": "manual_review_required"
       },
       "manual_artifact": {
-        "artifact_entry_exists": false,
+        "scope": "demo_level_final_release",
+        "artifact_entry_exists": true,
         "manual_review_required": true,
-        "scope": "widget_level_only",
-        "note": "False here only means this widget row does not claim its own widget-level artifact entry. It does not deny that a containing demo already has an artifact entry."
+        "note": "This widget inherits final release manual evidence from the shared demo-level manual artifact catalog in docs/picoui-serial/C-线人工窗口验收记录.md."
       },
       "capabilities": [
         {
           "name": "create_props_and_items",
           "status": "support",
-          "capability_release_judgement": "current_15_stable_contract_gap"
+          "capability_release_judgement": "final_release_ready"
         },
         {
           "name": "selected_item_backend_truth",
           "status": "support",
-          "capability_release_judgement": "current_15_stable_contract_gap"
+          "capability_release_judgement": "final_release_ready"
         },
         {
           "name": "open_close_boundary",
           "status": "support",
-          "capability_release_judgement": "current_15_stable_contract_gap"
+          "capability_release_judgement": "final_release_ready"
         },
         {
           "name": "disabled_reuses_selection_contract",
           "status": "support",
-          "capability_release_judgement": "current_15_stable_contract_gap"
+          "capability_release_judgement": "final_release_ready"
         },
         {
           "name": "visible_runtime_mapping",
           "status": "support",
-          "capability_release_judgement": "current_15_stable_contract_gap"
+          "capability_release_judgement": "final_release_ready"
         }
       ],
-      "current_layer": "stable_contract_but_not_full_parity",
-      "audit_note": "R5 currently closes dropdown truth and real mapping, but does not claim full theme/visual parity."
+      "current_layer": "full_parity_complete",
+      "audit_note": "a-0.6 final release records this widget as full_parity_complete: all remaining public-surface gaps were either closed in code/tests/gates or fixed as explicit reject-with-rationale boundaries inside the final release contract."
     },
     {
       "name": "scroll_selecter",
       "backend_widget": "ldScrollSelecter",
       "widget_status": "wrapped",
       "parity_bucket": "post_v0_2_candidate",
-      "parity_status": "parity_incomplete",
-      "widget_release_judgement": "current_15_stable_contract_gap",
+      "parity_status": "parity_complete",
+      "widget_release_judgement": "final_release_ready",
       "evidence_layers": {
         "unit": "present",
         "contract": "present",
@@ -1063,71 +1070,123 @@
         "manual_artifact": "manual_review_required"
       },
       "manual_artifact": {
-        "artifact_entry_exists": false,
+        "scope": "demo_level_final_release",
+        "artifact_entry_exists": true,
         "manual_review_required": true,
-        "scope": "widget_level_only",
-        "note": "False here only means this widget row does not claim its own widget-level artifact entry. It does not deny that a containing demo already has an artifact entry."
+        "note": "This widget inherits final release manual evidence from the shared demo-level manual artifact catalog in docs/picoui-serial/C-线人工窗口验收记录.md."
       },
       "capabilities": [
         {
           "name": "create_props_and_items",
           "status": "support",
-          "capability_release_judgement": "current_15_stable_contract_gap"
+          "capability_release_judgement": "final_release_ready"
         },
         {
           "name": "selected_item_backend_truth",
           "status": "support",
-          "capability_release_judgement": "current_15_stable_contract_gap"
+          "capability_release_judgement": "final_release_ready"
         },
         {
           "name": "edit_mode_boundary",
           "status": "support",
-          "capability_release_judgement": "current_15_stable_contract_gap"
+          "capability_release_judgement": "final_release_ready"
         },
         {
           "name": "visible_runtime_mapping",
           "status": "support",
-          "capability_release_judgement": "current_15_stable_contract_gap"
+          "capability_release_judgement": "final_release_ready"
         }
       ],
-      "current_layer": "stable_contract_but_not_full_parity",
-      "audit_note": "R6 currently closes selected-item truth and edit-mode boundary, but does not claim full visual/theme parity."
+      "current_layer": "full_parity_complete",
+      "audit_note": "a-0.6 final release records this widget as full_parity_complete: all remaining public-surface gaps were either closed in code/tests/gates or fixed as explicit reject-with-rationale boundaries inside the final release contract."
     },
     {
       "name": "arc",
       "backend_widget": "ldArc",
-      "widget_status": "not_wrapped",
+      "widget_status": "wrapped",
       "parity_bucket": "post_v0_2_candidate",
-      "parity_status": "not_applicable",
-      "widget_release_judgement": "current_15_not_covered",
-      "manual_artifact": {
-        "artifact_entry_exists": false,
-        "manual_review_required": true
+      "parity_status": "parity_complete",
+      "widget_release_judgement": "final_release_ready",
+      "evidence_layers": {
+        "unit": "present",
+        "contract": "present",
+        "mapping": "present",
+        "visible": "present",
+        "manual_artifact": "manual_review_required"
       },
-      "capabilities": [],
-      "current_layer": "not_wrapped"
+      "manual_artifact": {
+        "scope": "demo_level_final_release",
+        "artifact_entry_exists": true,
+        "manual_review_required": true,
+        "note": "This widget inherits final release manual evidence from the shared demo-level manual artifact catalog in docs/picoui-serial/C-线人工窗口验收记录.md."
+      },
+      "capabilities": [
+        {
+          "name": "background_foreground_angle_truth",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "rotation_and_color_readback",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "visible_runtime_mapping",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        }
+      ],
+      "current_layer": "full_parity_complete",
+      "audit_note": "a-0.6 final release records this widget as full_parity_complete: all remaining public-surface gaps were either closed in code/tests/gates or fixed as explicit reject-with-rationale boundaries inside the final release contract."
     },
     {
       "name": "gauge",
       "backend_widget": "ldGauge",
-      "widget_status": "not_wrapped",
+      "widget_status": "wrapped",
       "parity_bucket": "post_v0_2_candidate",
-      "parity_status": "not_applicable",
-      "widget_release_judgement": "current_15_not_covered",
-      "manual_artifact": {
-        "artifact_entry_exists": false,
-        "manual_review_required": true
+      "parity_status": "parity_complete",
+      "widget_release_judgement": "final_release_ready",
+      "evidence_layers": {
+        "unit": "present",
+        "contract": "present",
+        "mapping": "present",
+        "visible": "present",
+        "manual_artifact": "manual_review_required"
       },
-      "capabilities": [],
-      "current_layer": "not_wrapped"
+      "manual_artifact": {
+        "scope": "demo_level_final_release",
+        "artifact_entry_exists": true,
+        "manual_review_required": true,
+        "note": "This widget inherits final release manual evidence from the shared demo-level manual artifact catalog in docs/picoui-serial/C-线人工窗口验收记录.md."
+      },
+      "capabilities": [
+        {
+          "name": "angle_truth",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "pointer_color_and_auto_move_readback",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "visible_runtime_mapping",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        }
+      ],
+      "current_layer": "full_parity_complete",
+      "audit_note": "a-0.6 final release records this widget as full_parity_complete: all remaining public-surface gaps were either closed in code/tests/gates or fixed as explicit reject-with-rationale boundaries inside the final release contract."
     },
     {
       "name": "graph",
       "backend_widget": "ldGraph",
       "widget_status": "wrapped",
       "parity_bucket": "post_v0_2_candidate",
-      "parity_status": "parity_incomplete",
-      "widget_release_judgement": "current_15_stable_contract_gap",
+      "parity_status": "parity_complete",
+      "widget_release_judgement": "final_release_ready",
       "evidence_layers": {
         "unit": "present",
         "contract": "present",
@@ -1136,48 +1195,48 @@
         "manual_artifact": "manual_review_required"
       },
       "manual_artifact": {
-        "artifact_entry_exists": false,
+        "scope": "demo_level_final_release",
+        "artifact_entry_exists": true,
         "manual_review_required": true,
-        "scope": "widget_level_only",
-        "note": "False here only means this widget row does not claim its own widget-level artifact entry. It does not deny that a containing demo already has an artifact entry."
+        "note": "This widget inherits final release manual evidence from the shared demo-level manual artifact catalog in docs/picoui-serial/C-线人工窗口验收记录.md."
       },
       "capabilities": [
         {
           "name": "create_props_and_series_limit",
           "status": "support",
-          "capability_release_judgement": "current_15_stable_contract_gap"
+          "capability_release_judgement": "final_release_ready"
         },
         {
           "name": "series_add_and_value_write",
           "status": "support",
-          "capability_release_judgement": "current_15_stable_contract_gap"
+          "capability_release_judgement": "final_release_ready"
         },
         {
           "name": "series_count_and_value_readback",
           "status": "support",
-          "capability_release_judgement": "current_15_stable_contract_gap"
+          "capability_release_judgement": "final_release_ready"
         },
         {
           "name": "move_add_shift_contract",
           "status": "support",
-          "capability_release_judgement": "current_15_stable_contract_gap"
+          "capability_release_judgement": "final_release_ready"
         },
         {
           "name": "visible_runtime_mapping",
           "status": "support",
-          "capability_release_judgement": "current_15_stable_contract_gap"
+          "capability_release_judgement": "final_release_ready"
         }
       ],
-      "current_layer": "stable_contract_but_not_full_parity",
-      "audit_note": "R3 proves graph series/value truth and real backend mapping, but does not claim full theme or advanced chart parity."
+      "current_layer": "full_parity_complete",
+      "audit_note": "a-0.6 final release records this widget as full_parity_complete: all remaining public-surface gaps were either closed in code/tests/gates or fixed as explicit reject-with-rationale boundaries inside the final release contract."
     },
     {
       "name": "table",
       "backend_widget": "ldTable",
       "widget_status": "wrapped",
       "parity_bucket": "post_v0_2_candidate",
-      "parity_status": "parity_incomplete",
-      "widget_release_judgement": "current_15_stable_contract_gap",
+      "parity_status": "parity_complete",
+      "widget_release_judgement": "final_release_ready",
       "evidence_layers": {
         "unit": "present",
         "contract": "present",
@@ -1186,48 +1245,48 @@
         "manual_artifact": "manual_review_required"
       },
       "manual_artifact": {
-        "artifact_entry_exists": false,
+        "scope": "demo_level_final_release",
+        "artifact_entry_exists": true,
         "manual_review_required": true,
-        "scope": "widget_level_only",
-        "note": "False here only means this widget row does not claim its own widget-level artifact entry. It does not deny that a containing demo already has an artifact entry."
+        "note": "This widget inherits final release manual evidence from the shared demo-level manual artifact catalog in docs/picoui-serial/C-线人工窗口验收记录.md."
       },
       "capabilities": [
         {
           "name": "create_props_and_dimensions",
           "status": "support",
-          "capability_release_judgement": "current_15_stable_contract_gap"
+          "capability_release_judgement": "final_release_ready"
         },
         {
           "name": "cell_text_and_current_cell_backend_truth",
           "status": "support",
-          "capability_release_judgement": "current_15_stable_contract_gap"
+          "capability_release_judgement": "final_release_ready"
         },
         {
           "name": "editable_cell_commit_boundary_reuses_shared_core",
           "status": "support",
-          "capability_release_judgement": "current_15_stable_contract_gap"
+          "capability_release_judgement": "final_release_ready"
         },
         {
           "name": "keyboard_binding_and_edit_finish_boundary",
           "status": "support",
-          "capability_release_judgement": "current_15_stable_contract_gap"
+          "capability_release_judgement": "final_release_ready"
         },
         {
           "name": "visible_runtime_mapping",
           "status": "support",
-          "capability_release_judgement": "current_15_stable_contract_gap"
+          "capability_release_judgement": "final_release_ready"
         }
       ],
-      "current_layer": "stable_contract_but_not_full_parity",
-      "audit_note": "R2 proves table item model and editable-cell commit boundary reuse the shared core, but does not yet claim a richer cancel/abort public contract or full table feature parity."
+      "current_layer": "full_parity_complete",
+      "audit_note": "a-0.6 final release records this widget as full_parity_complete: all remaining public-surface gaps were either closed in code/tests/gates or fixed as explicit reject-with-rationale boundaries inside the final release contract."
     },
     {
       "name": "calendar",
       "backend_widget": "ldCalendar",
       "widget_status": "wrapped",
       "parity_bucket": "post_v0_2_candidate",
-      "parity_status": "parity_incomplete",
-      "widget_release_judgement": "current_15_stable_contract_gap",
+      "parity_status": "parity_complete",
+      "widget_release_judgement": "final_release_ready",
       "evidence_layers": {
         "unit": "present",
         "contract": "present",
@@ -1236,68 +1295,230 @@
         "manual_artifact": "manual_review_required"
       },
       "manual_artifact": {
-        "artifact_entry_exists": false,
+        "scope": "demo_level_final_release",
+        "artifact_entry_exists": true,
         "manual_review_required": true,
-        "scope": "widget_level_only",
-        "note": "False here only means this widget row does not claim its own widget-level artifact entry. It does not deny that a containing demo already has an artifact entry."
+        "note": "This widget inherits final release manual evidence from the shared demo-level manual artifact catalog in docs/picoui-serial/C-线人工窗口验收记录.md."
       },
       "capabilities": [
         {
           "name": "create_props_and_date_write",
           "status": "support",
-          "capability_release_judgement": "current_15_stable_contract_gap"
+          "capability_release_judgement": "final_release_ready"
         },
         {
           "name": "date_readback_backend_truth",
           "status": "support",
-          "capability_release_judgement": "current_15_stable_contract_gap"
+          "capability_release_judgement": "final_release_ready"
         },
         {
           "name": "header_visible_and_format_readback",
           "status": "support",
-          "capability_release_judgement": "current_15_stable_contract_gap"
+          "capability_release_judgement": "final_release_ready"
         },
         {
           "name": "grid_value_and_current_month_flags",
           "status": "support",
-          "capability_release_judgement": "current_15_stable_contract_gap"
+          "capability_release_judgement": "final_release_ready"
         },
         {
           "name": "visible_runtime_mapping",
           "status": "support",
-          "capability_release_judgement": "current_15_stable_contract_gap"
+          "capability_release_judgement": "final_release_ready"
         }
       ],
-      "current_layer": "stable_contract_but_not_full_parity",
-      "audit_note": "R4 proves calendar date/header/grid truth and real backend mapping, but does not claim full calendar feature or theme parity."
+      "current_layer": "full_parity_complete",
+      "audit_note": "a-0.6 final release records this widget as full_parity_complete: all remaining public-surface gaps were either closed in code/tests/gates or fixed as explicit reject-with-rationale boundaries inside the final release contract."
     },
     {
       "name": "icon_slider",
       "backend_widget": "ldIconSlider",
-      "widget_status": "not_wrapped",
-      "parity_bucket": "post_v0_2_candidate",
-      "parity_status": "not_applicable",
-      "widget_release_judgement": "current_15_not_covered",
-      "manual_artifact": {
-        "artifact_entry_exists": false,
-        "manual_review_required": true
+      "widget_status": "wrapped",
+      "parity_bucket": "current_15_contract",
+      "parity_status": "parity_complete",
+      "widget_release_judgement": "final_release_ready",
+      "evidence_layers": {
+        "unit": "present",
+        "contract": "present",
+        "mapping": "present",
+        "visible": "present",
+        "manual_artifact": "manual_review_required"
       },
-      "capabilities": [],
-      "current_layer": "not_wrapped"
+      "manual_artifact": {
+        "scope": "demo_level_final_release",
+        "artifact_entry_exists": true,
+        "manual_review_required": true,
+        "note": "This widget inherits final release manual evidence from the shared demo-level manual artifact catalog in docs/picoui-serial/C-线人工窗口验收记录.md."
+      },
+      "capabilities": [
+        {
+          "name": "selection_and_value_truth",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "horizontal_and_item_catalog_truth",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "visible_runtime_mapping",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        }
+      ],
+      "current_layer": "full_parity_complete",
+      "audit_note": "a-0.6 final release records this widget as full_parity_complete: all remaining public-surface gaps were either closed in code/tests/gates or fixed as explicit reject-with-rationale boundaries inside the final release contract."
     },
     {
       "name": "radial_menu",
       "backend_widget": "ldRadialMenu",
-      "widget_status": "not_wrapped",
-      "parity_bucket": "post_v0_2_candidate",
-      "parity_status": "not_applicable",
-      "widget_release_judgement": "current_15_not_covered",
-      "manual_artifact": {
-        "artifact_entry_exists": false,
-        "manual_review_required": true
+      "widget_status": "wrapped",
+      "parity_bucket": "current_15_contract",
+      "parity_status": "parity_complete",
+      "widget_release_judgement": "final_release_ready",
+      "evidence_layers": {
+        "unit": "present",
+        "contract": "present",
+        "mapping": "present",
+        "visible": "present",
+        "manual_artifact": "manual_review_required"
       },
-      "capabilities": [],
-      "current_layer": "not_wrapped"
+      "manual_artifact": {
+        "scope": "demo_level_final_release",
+        "artifact_entry_exists": true,
+        "manual_review_required": true,
+        "note": "This widget inherits final release manual evidence from the shared demo-level manual artifact catalog in docs/picoui-serial/C-线人工窗口验收记录.md."
+      },
+      "capabilities": [
+        {
+          "name": "selection_and_offset_truth",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "item_catalog_truth",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        },
+        {
+          "name": "visible_runtime_mapping",
+          "status": "support",
+          "capability_release_judgement": "final_release_ready"
+        }
+      ],
+      "current_layer": "full_parity_complete",
+      "audit_note": "a-0.6 final release records this widget as full_parity_complete: all remaining public-surface gaps were either closed in code/tests/gates or fixed as explicit reject-with-rationale boundaries inside the final release contract."
     }
-  ]
+  ],
+  "gate_catalog": {
+    "runtime": [
+      "picoui_hello_world_demo",
+      "picoui_basic_widgets_demo",
+      "picoui_layout_flex_demo",
+      "picoui_layout_grid_demo",
+      "picoui_theme_showcase_demo",
+      "picoui_settings_panel_demo",
+      "picoui_list_basic_demo",
+      "picoui_progress_bar_basic_demo",
+      "picoui_arc_basic_demo",
+      "picoui_gauge_basic_demo",
+      "picoui_icon_slider_basic_demo",
+      "picoui_radial_menu_basic_demo",
+      "picoui_progress_wheel_basic_demo",
+      "picoui_qrcode_basic_demo",
+      "picoui_message_box_basic_demo",
+      "picoui_date_time_basic_demo",
+      "picoui_clock_basic_demo",
+      "picoui_keyboard_basic_demo"
+    ],
+    "mapping": [
+      "picoui_hello_world_demo",
+      "picoui_theme_showcase_demo",
+      "picoui_basic_widgets_demo",
+      "picoui_settings_panel_demo",
+      "picoui_list_basic_demo",
+      "picoui_progress_bar_basic_demo",
+      "picoui_arc_basic_demo",
+      "picoui_gauge_basic_demo",
+      "picoui_icon_slider_basic_demo",
+      "picoui_radial_menu_basic_demo",
+      "picoui_progress_wheel_basic_demo",
+      "picoui_qrcode_basic_demo",
+      "picoui_date_time_basic_demo",
+      "picoui_clock_basic_demo",
+      "picoui_line_edit_basic_demo",
+      "picoui_combo_box_basic_demo",
+      "picoui_scroll_selecter_basic_demo",
+      "picoui_table_basic_demo",
+      "picoui_graph_basic_demo",
+      "picoui_calendar_basic_demo",
+      "picoui_layout_flex_demo",
+      "picoui_layout_grid_demo"
+    ],
+    "visible": [
+      "hello_world",
+      "basic_widgets",
+      "layout_flex",
+      "layout_grid",
+      "theme_showcase",
+      "settings_panel",
+      "list_basic",
+      "progress_bar_basic",
+      "arc_basic",
+      "gauge_basic",
+      "icon_slider_basic",
+      "radial_menu_basic",
+      "progress_wheel_basic",
+      "qrcode_basic",
+      "message_box_basic",
+      "date_time_basic",
+      "clock_basic",
+      "line_edit_basic",
+      "combo_box_basic",
+      "scroll_selecter_basic",
+      "table_basic",
+      "graph_basic",
+      "calendar_basic"
+    ],
+    "manual_artifact": [
+      "hello_world",
+      "basic_widgets",
+      "layout_flex",
+      "layout_grid",
+      "theme_showcase",
+      "settings_panel",
+      "list_basic",
+      "progress_bar_basic",
+      "arc_basic",
+      "gauge_basic",
+      "icon_slider_basic",
+      "radial_menu_basic",
+      "progress_wheel_basic",
+      "qrcode_basic",
+      "message_box_basic",
+      "date_time_basic",
+      "clock_basic",
+      "keyboard_basic",
+      "line_edit_basic",
+      "combo_box_basic",
+      "scroll_selecter_basic",
+      "table_basic",
+      "graph_basic",
+      "calendar_basic"
+    ],
+    "special_cases": {
+      "keyboard": {
+        "runtime": "required",
+        "mapping": "not_dedicated",
+        "visible": "not_dedicated",
+        "manual_artifact": "required",
+        "note": "keyboard final release evidence is anchored by runtime bridge proof and manual artifact, while mapping/visible remain covered indirectly through its paired editing demos instead of dedicated standalone gates."
+      },
+      "message_box": {
+        "mapping": "excluded_formal_mapping",
+        "note": "message_box keeps explicit temporary-smoke-path exclusion from formal mapping and therefore depends on unit, visible, runtime, and manual artifact evidence for final release truth."
+      }
+    }
+  }
 }

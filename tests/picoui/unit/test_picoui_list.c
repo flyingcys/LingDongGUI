@@ -591,7 +591,8 @@ static void test_list_widget_user_data_is_distinct_from_on_selected_cookie(struc
     assert(backend->user_data != list->user_data);
 }
 
-static void test_list_style_class_and_user_data_are_metadata_only_contract(struct picoui_window *win)
+static void test_list_style_class_and_user_data_are_stable_widget_metadata_contract(
+    struct picoui_window *win)
 {
     const char *style_class = "menu";
     int widget_cookie = 303;
@@ -679,7 +680,7 @@ int main(void)
     test_create_and_props(win);
     test_items_selection_and_callback_contract(win);
     test_list_widget_user_data_is_distinct_from_on_selected_cookie(win);
-    test_list_style_class_and_user_data_are_metadata_only_contract(win);
+    test_list_style_class_and_user_data_are_stable_widget_metadata_contract(win);
     test_list_item_ids_are_picoui_data_not_backend_widget_identity(win);
     test_enabled_contract_and_native_selected_bridge(win);
     test_selected_index_readback_matches_native_queue_after_preselected_state(win);

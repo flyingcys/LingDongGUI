@@ -2,6 +2,9 @@
 #include "picoui/clock.h"
 #include "picoui/widget.h"
 #include "picoui/window.h"
+#include "../../../src/gui/ldClock.h"
+#include "backend.h"
+#include "internal.h"
 
 #include <assert.h>
 
@@ -76,6 +79,37 @@ static void test_clock_rejects_invalid_inputs(struct picoui_window *win)
     assert(picoui_clock_get_step_second(clock) == 0);
 }
 
+static void test_clock_release_contract_covers_time_source_and_configuration_boundary(
+    struct picoui_window *win)
+{
+    struct picoui_clock *clock =
+        picoui_clock_create_with_props((struct picoui_widget *)win,
+                                       &(struct picoui_clock_props){
+                                           .id = "clock_release_ready",
+                                           .style_class = "clock-card",
+                                           .step_second = 1,
+                                       });
+    struct picoui_backend_widget *backend;
+    ldClock_t *ld_clock;
+
+    assert(clock != 0);
+    backend = (struct picoui_backend_widget *)clock->widget.backend_widget;
+    assert(backend != 0);
+    assert(backend->kind == PICOUI_BACKEND_WIDGET_CLOCK);
+    assert(backend->style_class == (const char *)"clock-card");
+    ld_clock = (ldClock_t *)backend->ld_widget;
+    assert(ld_clock != 0);
+
+    assert(picoui_clock_get_step_second(clock) == 1);
+    assert(ld_clock->isStepSecond == true);
+    assert(ld_clock->pointerInfo[0].ptImgTile != 0);
+    assert(ld_clock->pointerInfo[1].ptImgTile != 0);
+    assert(ld_clock->pointerInfo[2].ptImgTile != 0);
+    assert(picoui_clock_set_step_second(clock, 0) == 0);
+    assert(picoui_clock_get_step_second(clock) == 0);
+    assert(ld_clock->isStepSecond == false);
+}
+
 int main(void)
 {
     struct picoui_app *app = picoui_app_create();
@@ -88,6 +122,7 @@ int main(void)
     test_clock_create_and_props(win);
     test_clock_step_second_state(win);
     test_clock_rejects_invalid_inputs(win);
+    test_clock_release_contract_covers_time_source_and_configuration_boundary(win);
 
     picoui_app_destroy(app);
     return 0;

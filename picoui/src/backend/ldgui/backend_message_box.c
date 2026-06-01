@@ -138,14 +138,19 @@ int picoui_backend_message_box_set_message(struct picoui_message_box *box, const
 int picoui_backend_message_box_set_confirm_text(struct picoui_message_box *box, const char *text)
 {
     ldMessageBox_t *ld_message_box = picoui_backend_message_box_get_ld(box);
-    const uint8_t *buttons[1];
+    struct picoui_backend_widget *backend;
 
     if (ld_message_box == NULL || text == NULL) {
         return -1;
     }
 
-    buttons[0] = (const uint8_t *)text;
-    ldMessageBoxSetBtn(ld_message_box, buttons, 1);
+    backend = (struct picoui_backend_widget *)box->widget.backend_widget;
+    if (backend == NULL) {
+        return -1;
+    }
+
+    backend->text = text;
+    ldMessageBoxSetBtn(ld_message_box, (const uint8_t **)&backend->text, 1);
     return 0;
 }
 

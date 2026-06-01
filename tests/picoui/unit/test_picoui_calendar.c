@@ -94,9 +94,60 @@ static void test_calendar_header_and_grid_visible_output_match_date_contract(voi
     picoui_app_destroy(app);
 }
 
+static void test_calendar_final_release_contract_covers_full_feature_boundary(void)
+{
+    struct picoui_app *app;
+    struct picoui_window *win;
+    struct picoui_calendar *calendar;
+    struct picoui_backend_widget *backend;
+    ldCalendar_t *ld_calendar;
+
+    app = picoui_app_create();
+    assert(app != 0);
+    win = picoui_window_create(app, "calendar_release_root");
+    assert(win != 0);
+    calendar = picoui_calendar_create_with_props(
+        win,
+        &(struct picoui_calendar_props){
+            .id = "calendar_release_ready",
+            .year = 2024,
+            .month = 2,
+            .day = 29,
+            .width = 300,
+            .height = 200,
+            .show_header = 0,
+            .header_format = "yyyy.mm.dd",
+            .style_class = "calendar-card",
+        });
+    assert(calendar != 0);
+
+    backend = (struct picoui_backend_widget *)calendar->widget.backend_widget;
+    assert(backend != 0);
+    assert(backend->kind == PICOUI_BACKEND_WIDGET_CALENDAR);
+    assert(backend->style_class == (const char *)"calendar-card");
+    ld_calendar = (ldCalendar_t *)backend->ld_widget;
+    assert(ld_calendar != 0);
+
+    assert(picoui_calendar_get_header_visible(calendar) == 0);
+    assert(strcmp(picoui_calendar_get_header_format(calendar), "yyyy.mm.dd") == 0);
+    assert(picoui_calendar_get_grid_value(calendar, 4, 4) == 29);
+    assert(picoui_calendar_is_current_month_cell(calendar, 4, 4) == 1);
+    assert(picoui_calendar_get_grid_value(calendar, 0, 0) >= 0);
+    assert(picoui_calendar_is_current_month_cell(calendar, 0, 0) == 0);
+    assert(picoui_calendar_set_header_visible(calendar, 1) == 0);
+    assert(picoui_calendar_get_header_visible(calendar) == 1);
+    assert(ld_calendar->isHeader == true);
+    assert(picoui_calendar_set_date(calendar, 2024, 3, 1) == 0);
+    assert(picoui_calendar_get_grid_value(calendar, 0, 5) == 1);
+    assert(picoui_calendar_is_current_month_cell(calendar, 0, 5) == 1);
+
+    picoui_app_destroy(app);
+}
+
 int main(void)
 {
     test_calendar_date_readback_matches_backend_truth();
     test_calendar_header_and_grid_visible_output_match_date_contract();
+    test_calendar_final_release_contract_covers_full_feature_boundary();
     return 0;
 }

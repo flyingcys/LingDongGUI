@@ -4,6 +4,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 MATRIX_JSON = ROOT / "tests" / "picoui" / "contract" / "picoui_release_capability_matrix.json"
+LEGACY_SCHEMA_VERSION = "a-0.3-current-15-layered-v1"
+FINAL_SCHEMA_VERSION = "a-0.6-final-release-v1"
 
 EXPECTED_WRAPPED_WIDGETS = {
     "window",
@@ -12,45 +14,20 @@ EXPECTED_WRAPPED_WIDGETS = {
     "checkbox",
     "switch",
     "slider",
-    "text",
-    "image",
-    "list",
-    "line_edit",
-    "progress_bar",
-    "qrcode",
-    "progress_wheel",
-    "message_box",
-    "date_time",
-    "clock",
-    "keyboard",
-    "combo_box",
-    "scroll_selecter",
-    "graph",
-    "table",
-    "calendar",
-}
-
-EXPECTED_NOT_WRAPPED_WIDGETS = {
     "arc",
     "gauge",
     "icon_slider",
     "radial_menu",
-}
-
-EXPECTED_FULL_PARITY_COMPLETE = {
-    "window",
-    "label",
-    "button",
-    "slider",
-}
-
-EXPECTED_STABLE_CONTRACT = {
-    "checkbox",
-    "switch",
     "text",
     "image",
     "list",
     "line_edit",
+    "progress_bar",
+    "qrcode",
+    "progress_wheel",
+    "message_box",
+    "date_time",
+    "clock",
     "keyboard",
     "combo_box",
     "scroll_selecter",
@@ -59,28 +36,30 @@ EXPECTED_STABLE_CONTRACT = {
     "calendar",
 }
 
-EXPECTED_MINIMAL_VERTICAL_SLICE = {
-    "progress_bar",
-    "qrcode",
-    "progress_wheel",
-    "message_box",
-    "date_time",
-    "clock",
-}
+EXPECTED_NOT_WRAPPED_WIDGETS = set()
 
 EXPECTED_NON_SUPPORT_CAPABILITIES = {
     "image": {
         "theme": "reject",
-        "style_class": "incomplete_contract",
-        "user_data": "incomplete_contract",
+        "style_class": "support",
+        "user_data": "support",
         "bg_text_border_radius_colors": "reject",
-        "padding": "deferred",
+        "padding": "reject",
         "enabled": "reject",
     },
     "list": {
         "item_marker": "reject",
-        "style_class": "incomplete_contract",
-        "widget_level_user_data": "incomplete_contract",
+        "style_class": "support",
+        "widget_level_user_data": "support",
+    },
+    "progress_bar": {
+        "advanced_skin_and_theme": "reject",
+    },
+    "qrcode": {
+        "advanced_qrcode_configuration": "reject",
+    },
+    "progress_wheel": {
+        "advanced_animation_and_theme": "reject",
     },
 }
 
@@ -130,9 +109,176 @@ EXPECTED_J_PARITY_CAPABILITIES = {
     },
 }
 
+EXPECTED_FINAL_GATE_CATALOG = {
+    "runtime": {
+        "picoui_hello_world_demo",
+        "picoui_basic_widgets_demo",
+        "picoui_layout_flex_demo",
+        "picoui_layout_grid_demo",
+        "picoui_theme_showcase_demo",
+        "picoui_settings_panel_demo",
+        "picoui_list_basic_demo",
+        "picoui_progress_bar_basic_demo",
+        "picoui_arc_basic_demo",
+        "picoui_gauge_basic_demo",
+        "picoui_icon_slider_basic_demo",
+        "picoui_radial_menu_basic_demo",
+        "picoui_progress_wheel_basic_demo",
+        "picoui_qrcode_basic_demo",
+        "picoui_message_box_basic_demo",
+        "picoui_date_time_basic_demo",
+        "picoui_clock_basic_demo",
+        "picoui_keyboard_basic_demo",
+    },
+    "mapping": {
+        "picoui_hello_world_demo",
+        "picoui_basic_widgets_demo",
+        "picoui_layout_flex_demo",
+        "picoui_layout_grid_demo",
+        "picoui_theme_showcase_demo",
+        "picoui_settings_panel_demo",
+        "picoui_list_basic_demo",
+        "picoui_progress_bar_basic_demo",
+        "picoui_arc_basic_demo",
+        "picoui_gauge_basic_demo",
+        "picoui_icon_slider_basic_demo",
+        "picoui_radial_menu_basic_demo",
+        "picoui_progress_wheel_basic_demo",
+        "picoui_qrcode_basic_demo",
+        "picoui_date_time_basic_demo",
+        "picoui_clock_basic_demo",
+        "picoui_line_edit_basic_demo",
+        "picoui_combo_box_basic_demo",
+        "picoui_scroll_selecter_basic_demo",
+        "picoui_table_basic_demo",
+        "picoui_graph_basic_demo",
+        "picoui_calendar_basic_demo",
+    },
+    "visible": {
+        "hello_world",
+        "basic_widgets",
+        "layout_flex",
+        "layout_grid",
+        "theme_showcase",
+        "settings_panel",
+        "list_basic",
+        "progress_bar_basic",
+        "arc_basic",
+        "gauge_basic",
+        "icon_slider_basic",
+        "radial_menu_basic",
+        "progress_wheel_basic",
+        "qrcode_basic",
+        "message_box_basic",
+        "date_time_basic",
+        "clock_basic",
+        "line_edit_basic",
+        "combo_box_basic",
+        "scroll_selecter_basic",
+        "table_basic",
+        "graph_basic",
+        "calendar_basic",
+    },
+}
+
+EXPECTED_EVIDENCE_LAYERS = {
+    name: {
+        "unit": "present",
+        "contract": "present",
+        "mapping": "present",
+        "visible": "present",
+        "manual_artifact": "manual_review_required",
+    }
+    for name in EXPECTED_WRAPPED_WIDGETS
+}
+EXPECTED_EVIDENCE_LAYERS["keyboard"] = {
+    "unit": "present",
+    "contract": "present",
+    "mapping": "not_present",
+    "visible": "not_present",
+    "manual_artifact": "manual_review_required",
+}
+
 
 def _load_matrix() -> dict:
     return json.loads(MATRIX_JSON.read_text(encoding="utf-8"))
+
+
+def _assert_fail_first_final_release_requirements(matrix: dict, by_name: dict[str, dict]) -> None:
+    schema_version = matrix.get("schema_version")
+    assert schema_version != LEGACY_SCHEMA_VERSION, (
+        "W4-A fail-first: final release matrix must stop using legacy current-15 schema "
+        f"{LEGACY_SCHEMA_VERSION!r}"
+    )
+    assert schema_version == FINAL_SCHEMA_VERSION, (
+        "W4-A fail-first: final release matrix must declare the new final schema version "
+        f"{FINAL_SCHEMA_VERSION!r}, got {schema_version!r}"
+    )
+    assert matrix.get("line") == "a-0.6", (
+        "W4-A fail-first: final release matrix must move line marker to 'a-0.6'"
+    )
+    assert matrix.get("purpose") == "PicoUI final release truth source and gate catalog", (
+        "W4-A fail-first: final release matrix purpose must become final release truth-source"
+    )
+
+    summary = matrix.get("summary")
+    assert isinstance(summary, dict), "release matrix missing summary object"
+    assert summary.get("full_parity_complete_total") == 26, (
+        "W4-A fail-first: final release matrix must prove all 26 widgets are full_parity_complete"
+    )
+    assert summary.get("stable_contract_but_not_full_parity_total") == 0, (
+        "W4-A fail-first: final release matrix cannot keep stable_contract_but_not_full_parity as final state"
+    )
+    assert summary.get("minimal_vertical_slice_only_total") == 0, (
+        "W4-A fail-first: final release matrix cannot keep minimal_vertical_slice_only as final state"
+    )
+
+    for widget_name in sorted(EXPECTED_WRAPPED_WIDGETS):
+        widget = by_name[widget_name]
+        assert widget.get("current_layer") == "full_parity_complete", (
+            f"W4-A fail-first: {widget_name} must be full_parity_complete in final release matrix"
+        )
+        assert widget.get("parity_status") == "parity_complete", (
+            f"W4-A fail-first: {widget_name} must be parity_complete in final release matrix"
+        )
+        widget_release_judgement = widget.get("widget_release_judgement")
+        assert isinstance(widget_release_judgement, str) and not widget_release_judgement.startswith(
+            "current_15_"
+        ), (
+            f"W4-A fail-first: {widget_name} must stop using current_15_* release judgements"
+        )
+
+    gate_catalog = matrix.get("gate_catalog")
+    assert isinstance(gate_catalog, dict), (
+        "W4-A fail-first: final release matrix must embed a machine-readable gate_catalog object"
+    )
+    for gate_name, expected_targets in EXPECTED_FINAL_GATE_CATALOG.items():
+        actual_targets = gate_catalog.get(gate_name)
+        assert isinstance(actual_targets, list), (
+            f"W4-A fail-first: gate_catalog.{gate_name} must be a list, got {type(actual_targets).__name__}"
+        )
+        assert set(actual_targets) == expected_targets, (
+            f"W4-A fail-first: gate_catalog.{gate_name} must align to the final target set.\n"
+            f"expected={sorted(expected_targets)}\nactual={sorted(actual_targets)}"
+        )
+
+    special_cases = gate_catalog.get("special_cases")
+    assert isinstance(special_cases, dict), (
+        "W4-A fail-first: gate_catalog must declare special_cases for evidence-layer exceptions"
+    )
+    keyboard_case = special_cases.get("keyboard")
+    assert isinstance(keyboard_case, dict), (
+        "W4-A fail-first: gate_catalog.special_cases.keyboard must exist"
+    )
+    assert keyboard_case.get("mapping") == "not_dedicated", (
+        "W4-A fail-first: keyboard special-case must explicitly explain mapping boundary"
+    )
+    assert keyboard_case.get("visible") == "not_dedicated", (
+        "W4-A fail-first: keyboard special-case must explicitly explain visible boundary"
+    )
+    assert keyboard_case.get("runtime") == "required", (
+        "W4-A fail-first: keyboard special-case must explicitly require runtime evidence"
+    )
 
 
 def _widgets_by_name(matrix: dict) -> dict[str, dict]:
@@ -198,7 +344,7 @@ def _assert_expected_widgets(by_name: dict[str, dict]) -> None:
 
 
 def _assert_current_layers(by_name: dict[str, dict]) -> None:
-    for widget_name in sorted(EXPECTED_FULL_PARITY_COMPLETE):
+    for widget_name in sorted(EXPECTED_WRAPPED_WIDGETS):
         widget = by_name[widget_name]
         assert widget.get("current_layer") == "full_parity_complete", (
             f"{widget_name} must be full_parity_complete, got {widget.get('current_layer')!r}"
@@ -206,42 +352,9 @@ def _assert_current_layers(by_name: dict[str, dict]) -> None:
         assert widget.get("parity_status") == "parity_complete", (
             f"{widget_name} must remain parity_complete, got {widget.get('parity_status')!r}"
         )
-        assert widget.get("widget_release_judgement") == "current_15_parity_complete", (
-            f"{widget_name} must use current_15_parity_complete judgement"
+        assert widget.get("widget_release_judgement") == "final_release_ready", (
+            f"{widget_name} must use final_release_ready judgement"
         )
-
-    for widget_name in sorted(EXPECTED_STABLE_CONTRACT):
-        widget = by_name[widget_name]
-        assert widget.get("current_layer") == "stable_contract_but_not_full_parity", (
-            f"{widget_name} must be stable_contract_but_not_full_parity, got {widget.get('current_layer')!r}"
-        )
-        assert widget.get("parity_status") == "parity_incomplete", (
-            f"{widget_name} must remain parity_incomplete, got {widget.get('parity_status')!r}"
-        )
-        assert widget.get("widget_release_judgement") == "current_15_stable_contract_gap", (
-            f"{widget_name} must use current_15_stable_contract_gap judgement"
-        )
-
-    for widget_name in sorted(EXPECTED_MINIMAL_VERTICAL_SLICE):
-        widget = by_name[widget_name]
-        assert widget.get("current_layer") == "minimal_vertical_slice_only", (
-            f"{widget_name} must be minimal_vertical_slice_only, got {widget.get('current_layer')!r}"
-        )
-        assert widget.get("parity_status") == "parity_incomplete", (
-            f"{widget_name} must remain parity_incomplete, got {widget.get('parity_status')!r}"
-        )
-        assert widget.get("widget_release_judgement") == "current_15_minimal_slice_gap", (
-            f"{widget_name} must use current_15_minimal_slice_gap judgement"
-        )
-
-    all_wrapped = (
-        EXPECTED_FULL_PARITY_COMPLETE
-        | EXPECTED_STABLE_CONTRACT
-        | EXPECTED_MINIMAL_VERTICAL_SLICE
-    )
-    assert all_wrapped == EXPECTED_WRAPPED_WIDGETS, (
-        "current-15 layer groups must partition all wrapped widgets"
-    )
 
 
 def _assert_expected_capabilities(by_name: dict[str, dict]) -> None:
@@ -258,6 +371,9 @@ def _assert_expected_capabilities(by_name: dict[str, dict]) -> None:
             assert capability.get("status") == "support", (
                 f"{widget_name}.{capability_name} must be support, got {capability.get('status')!r}"
             )
+            assert capability.get("capability_release_judgement") == "final_release_ready", (
+                f"{widget_name}.{capability_name} must use final_release_ready judgement"
+            )
 
     for widget_name, expected_capabilities in EXPECTED_NON_SUPPORT_CAPABILITIES.items():
         widget = by_name[widget_name]
@@ -270,6 +386,13 @@ def _assert_expected_capabilities(by_name: dict[str, dict]) -> None:
             actual_status = capability.get("status")
             assert actual_status == expected_status, (
                 f"{widget_name}.{capability_name} must remain {expected_status}, got {actual_status!r}"
+            )
+            expected_judgement = (
+                "reject_with_rationale" if expected_status == "reject" else "final_release_ready"
+            )
+            assert capability.get("capability_release_judgement") == expected_judgement, (
+                f"{widget_name}.{capability_name} must use {expected_judgement}, got "
+                f"{capability.get('capability_release_judgement')!r}"
             )
 
 
@@ -286,8 +409,11 @@ def _assert_manual_artifact_fields(by_name: dict[str, dict]) -> None:
         "demo_artifact_truth_source",
     ):
         assert field_name in policy, f"manual_artifact_policy missing field: {field_name}"
-    assert policy["scope"] == "widget_level_only", (
-        "manual_artifact_policy.scope must remain widget_level_only"
+    assert policy["scope"] == "demo_level_final_release", (
+        "manual_artifact_policy.scope must remain demo_level_final_release"
+    )
+    assert policy["artifact_entry_exists"] is True, (
+        "manual_artifact_policy.artifact_entry_exists must remain true in final release matrix"
     )
     assert policy["manual_review_required"] is True, (
         "manual_artifact_policy.manual_review_required must remain true"
@@ -297,16 +423,16 @@ def _assert_manual_artifact_fields(by_name: dict[str, dict]) -> None:
     ), "manual_artifact_policy.demo_artifact_truth_source must point to C-line manual record"
     note = policy["note"]
     assert isinstance(note, str) and note, "manual_artifact_policy.note must be a non-empty string"
-    assert "widget-level only" in note and "C-线人工窗口验收记录.md" in note, (
-        "manual_artifact_policy.note must explain widget-level-only scope and point to the demo-level truth source"
+    assert "demo-level" in note and "C-线人工窗口验收记录.md" in note, (
+        "manual_artifact_policy.note must explain demo-level scope and point to the manual truth source"
     )
 
     for widget_name in sorted(EXPECTED_WRAPPED_WIDGETS):
         widget = by_name[widget_name]
         evidence_layers = widget.get("evidence_layers")
         assert isinstance(evidence_layers, dict), f"{widget_name} missing evidence_layers object"
-        assert evidence_layers.get("manual_artifact") == "manual_review_required", (
-            f"{widget_name} evidence_layers.manual_artifact must remain manual_review_required"
+        assert evidence_layers == EXPECTED_EVIDENCE_LAYERS[widget_name], (
+            f"{widget_name} evidence_layers must match final release expectations, got {evidence_layers!r}"
         )
         manual_artifact = widget.get("manual_artifact")
         assert isinstance(manual_artifact, dict), f"{widget_name} missing manual_artifact object"
@@ -314,8 +440,11 @@ def _assert_manual_artifact_fields(by_name: dict[str, dict]) -> None:
             assert field_name in manual_artifact, (
                 f"{widget_name} manual_artifact missing field: {field_name}"
             )
-        assert manual_artifact["scope"] == "widget_level_only", (
-            f"{widget_name} manual_artifact.scope must remain widget_level_only"
+        assert manual_artifact["scope"] == "demo_level_final_release", (
+            f"{widget_name} manual_artifact.scope must remain demo_level_final_release"
+        )
+        assert manual_artifact["artifact_entry_exists"] is True, (
+            f"{widget_name} manual_artifact.artifact_entry_exists must remain true"
         )
         assert manual_artifact["manual_review_required"] is True, (
             f"{widget_name} manual_artifact.manual_review_required must remain true"
@@ -346,8 +475,6 @@ def _assert_summary_counts(matrix: dict, by_name: dict[str, dict]) -> None:
     derived_capability_status_counts = {
         "support": 0,
         "reject": 0,
-        "incomplete_contract": 0,
-        "deferred": 0,
     }
     derived_current_layer_counts = {
         "full_parity_complete": 0,
@@ -425,10 +552,17 @@ def _assert_summary_counts(matrix: dict, by_name: dict[str, dict]) -> None:
         f"got {current_layer_counts!r} vs {derived_current_layer_counts!r}"
     )
 
+    gate_catalog = matrix.get("gate_catalog")
+    assert isinstance(gate_catalog, dict), "release matrix missing gate_catalog object"
+    assert set(gate_catalog.keys()) >= {"runtime", "mapping", "visible", "manual_artifact", "special_cases"}, (
+        "gate_catalog must expose runtime/mapping/visible/manual_artifact/special_cases"
+    )
+
 
 def main() -> int:
     matrix = _load_matrix()
     by_name = _widgets_by_name(matrix)
+    _assert_fail_first_final_release_requirements(matrix, by_name)
     _assert_expected_widgets(by_name)
     _assert_current_layers(by_name)
     _assert_expected_capabilities(by_name)

@@ -86,9 +86,54 @@ static void test_scroll_selecter_edit_mode_and_navigation_mode_are_distinct(void
     picoui_app_destroy(app);
 }
 
+static void test_scroll_selecter_final_visual_and_edit_contract_is_release_ready(void)
+{
+    struct picoui_app *app = picoui_app_create();
+    struct picoui_window *win;
+    struct picoui_scroll_selecter *scroll_selecter;
+    struct picoui_backend_widget *backend;
+    ldScrollSelecter_t *ld_scroll_selecter;
+    int is_edit = -1;
+
+    assert(app != 0);
+    win = picoui_window_create(app, "scroll_release_root");
+    assert(win != 0);
+    scroll_selecter = picoui_scroll_selecter_create(win, "scroll_release_ready");
+    assert(scroll_selecter != 0);
+    assert(picoui_scroll_selecter_add_item(scroll_selecter, "wifi", "Wi-Fi") == 0);
+    assert(picoui_scroll_selecter_add_item(scroll_selecter, "bluetooth", "Bluetooth") == 0);
+    assert(picoui_scroll_selecter_add_item(scroll_selecter, "display", "Display") == 0);
+
+    backend = (struct picoui_backend_widget *)scroll_selecter->widget.backend_widget;
+    assert(backend != 0);
+    assert(backend->kind == PICOUI_BACKEND_WIDGET_SCROLL_SELECTER);
+    assert(backend->ld_widget != 0);
+    ld_scroll_selecter = (ldScrollSelecter_t *)backend->ld_widget;
+    assert(ld_scroll_selecter != 0);
+
+    assert(picoui_scroll_selecter_set_selected_index(scroll_selecter, 2) == 0);
+    assert(picoui_scroll_selecter_get_selected_index(scroll_selecter) == 2);
+    assert(backend->value == 2);
+    assert(ldScrollSelecterGetSelectItemNum(ld_scroll_selecter) == 2);
+
+    assert(picoui_scroll_selecter_get_edit_mode(scroll_selecter, &is_edit) == 0);
+    assert(is_edit == 1);
+    assert(picoui_scroll_selecter_set_edit_mode(scroll_selecter, 0) == 0);
+    assert(picoui_scroll_selecter_get_edit_mode(scroll_selecter, &is_edit) == 0);
+    assert(is_edit == 0);
+    assert(ld_scroll_selecter->isEdit == false);
+    assert(picoui_scroll_selecter_set_edit_mode(scroll_selecter, 1) == 0);
+    assert(picoui_scroll_selecter_get_edit_mode(scroll_selecter, &is_edit) == 0);
+    assert(is_edit == 1);
+    assert(ld_scroll_selecter->isEdit == true);
+
+    picoui_app_destroy(app);
+}
+
 int main(void)
 {
     test_scroll_selecter_selected_item_matches_backend_truth();
     test_scroll_selecter_edit_mode_and_navigation_mode_are_distinct();
+    test_scroll_selecter_final_visual_and_edit_contract_is_release_ready();
     return 0;
 }

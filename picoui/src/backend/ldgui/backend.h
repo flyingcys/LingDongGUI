@@ -13,6 +13,8 @@ struct picoui_window;
 struct picoui_image_source;
 struct picoui_list;
 struct picoui_combo_box;
+struct picoui_icon_slider;
+struct picoui_radial_menu;
 struct picoui_scroll_selecter;
 struct picoui_table;
 struct picoui_calendar;
@@ -29,6 +31,10 @@ enum picoui_backend_widget_kind {
     PICOUI_BACKEND_WIDGET_CHECKBOX,
     PICOUI_BACKEND_WIDGET_SWITCH,
     PICOUI_BACKEND_WIDGET_SLIDER,
+    PICOUI_BACKEND_WIDGET_ARC,
+    PICOUI_BACKEND_WIDGET_GAUGE,
+    PICOUI_BACKEND_WIDGET_ICON_SLIDER,
+    PICOUI_BACKEND_WIDGET_RADIAL_MENU,
     PICOUI_BACKEND_WIDGET_PROGRESS_BAR,
     PICOUI_BACKEND_WIDGET_QRCODE,
     PICOUI_BACKEND_WIDGET_PROGRESS_WHEEL,
@@ -163,6 +169,10 @@ void *picoui_backend_create_button(void *parent, const char *id);
 void *picoui_backend_create_checkbox(void *parent, const char *id);
 void *picoui_backend_create_switch(void *parent, const char *id);
 void *picoui_backend_create_slider(void *parent, const char *id);
+void *picoui_backend_create_arc(void *parent, const char *id);
+void *picoui_backend_create_gauge(void *parent, const char *id);
+void *picoui_backend_create_icon_slider(void *parent, const char *id);
+void *picoui_backend_create_radial_menu(void *parent, const char *id);
 void *picoui_backend_create_progress_bar(void *parent, const char *id);
 void *picoui_backend_create_qrcode(void *parent, const char *id);
 void *picoui_backend_create_progress_wheel(void *parent, const char *id);
@@ -213,6 +223,17 @@ int picoui_backend_combo_box_sync_selected_index(struct picoui_combo_box *combo_
                                                  int *selected_index_out);
 int picoui_backend_combo_box_bind_host(void *backend_widget);
 int picoui_backend_combo_box_get_open(void *backend_widget, int *is_open);
+int picoui_backend_icon_slider_add_item(void *backend_widget, const char *id, const char *text);
+int picoui_backend_icon_slider_set_selected_index(void *backend_widget, int index);
+int picoui_backend_icon_slider_get_selected_index(void *backend_widget);
+int picoui_backend_icon_slider_set_horizontal(void *backend_widget, int horizontal);
+int picoui_backend_icon_slider_get_horizontal(void *backend_widget, int *horizontal);
+int picoui_backend_icon_slider_bind_host(void *backend_widget);
+int picoui_backend_radial_menu_add_item(void *backend_widget, const char *id);
+int picoui_backend_radial_menu_set_selected_index(void *backend_widget, int index);
+int picoui_backend_radial_menu_get_selected_index(void *backend_widget);
+int picoui_backend_radial_menu_offset_selection(void *backend_widget, int offset);
+int picoui_backend_radial_menu_bind_host(void *backend_widget);
 int picoui_backend_scroll_selecter_set_items(void *backend_widget,
                                              const char *const *item_ids,
                                              const unsigned char *const *items,

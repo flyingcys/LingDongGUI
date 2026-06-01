@@ -4,6 +4,8 @@
 
 本文是 `H11` 的第一版发布说明真相源，用于整理当前 `PicoUI first release preparation` 的用户可读文档包。
 
+注意：本文是 `H/J` 历史阶段文档，不是当前 `a-0.6 final release` 真相源。当前最终发布结论以 `tests/picoui/contract/picoui_release_capability_matrix.json`、`picoui/docs/demo_guide.md`、`docs/picoui-serial/C-线人工窗口验收记录.md` 和 `docs/picoui-serial/a-0.6-final-release-closeout.md` 为准。
+
 当前口径已经改成：
 
 - 这是 `J线` 之后的 `v0.1 parity` 发布准备说明，不是 `public v1.0` 宣布文档。

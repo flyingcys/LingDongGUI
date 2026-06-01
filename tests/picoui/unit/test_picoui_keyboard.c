@@ -207,6 +207,23 @@ static void test_keyboard_click_respects_focus_owner(void)
     picoui_app_destroy(app);
 }
 
+static void test_keyboard_has_explicit_final_gate_coverage_contract(void)
+{
+    struct picoui_app *app;
+    struct picoui_window *win;
+    struct picoui_keyboard *keyboard;
+    struct picoui_backend_widget *backend;
+
+    win = test_window_create(&app);
+    keyboard = picoui_keyboard_create(win, "keyboard_gate_contract");
+    assert(keyboard != 0);
+    backend = (struct picoui_backend_widget *)keyboard->widget.backend_widget;
+    assert(backend != 0);
+    assert(backend->kind == PICOUI_BACKEND_WIDGET_KEYBOARD);
+    assert(backend->ld_widget != 0);
+    picoui_app_destroy(app);
+}
+
 int main(void)
 {
     test_keyboard_dispatches_ascii_into_focused_line_edit();
@@ -216,5 +233,6 @@ int main(void)
     test_keyboard_navigation_signal_respects_focus_owner();
     test_keyboard_exit_clears_focus_or_edit_session();
     test_keyboard_click_respects_focus_owner();
+    test_keyboard_has_explicit_final_gate_coverage_contract();
     return 0;
 }

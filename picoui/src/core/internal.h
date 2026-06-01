@@ -8,7 +8,9 @@
 #include "picoui/line_edit.h"
 #include "picoui/message_box.h"
 #include "picoui/graph.h"
+#include "picoui/icon_slider.h"
 #include "picoui/scroll_selecter.h"
+#include "picoui/radial_menu.h"
 #include "picoui/table.h"
 #include "picoui/theme.h"
 
@@ -152,6 +154,59 @@ struct picoui_progress_bar {
     int horizontal;
 };
 
+struct picoui_arc {
+    struct picoui_widget widget;
+    const char *id;
+    float bg_start_angle;
+    float bg_end_angle;
+    float fg_end_angle;
+    float rotation_angle;
+    unsigned int bg_color;
+    unsigned int fg_color;
+};
+
+struct picoui_gauge {
+    struct picoui_widget widget;
+    const char *id;
+    float angle;
+    unsigned int pointer_color;
+    int auto_move;
+};
+
+struct picoui_list_item {
+    const char *id;
+    const char *text;
+};
+
+struct picoui_icon_slider {
+    struct picoui_widget widget;
+    const char *id;
+    struct picoui_list_item items[PICOUI_LIST_MAX_ITEMS];
+    int item_count;
+    int selected_index;
+    int horizontal;
+    int icon_width;
+    int icon_space;
+    int columns;
+    int rows;
+    int pages;
+    void (*cb)(struct picoui_icon_slider *icon_slider, int index, void *user_data);
+    void *user_data;
+};
+
+struct picoui_radial_menu {
+    struct picoui_widget widget;
+    const char *id;
+    struct picoui_list_item items[PICOUI_LIST_MAX_ITEMS];
+    int item_count;
+    int selected_index;
+    int x_axis;
+    int y_axis;
+    int item_max;
+    void (*cb)(struct picoui_radial_menu *radial_menu, int index, void *user_data);
+    void *user_data;
+};
+
 struct picoui_qrcode {
     struct picoui_widget widget;
     const char *id;
@@ -192,11 +247,6 @@ struct picoui_clock {
     struct picoui_widget widget;
     const char *id;
     int step_second;
-};
-
-struct picoui_list_item {
-    const char *id;
-    const char *text;
 };
 
 struct picoui_list {

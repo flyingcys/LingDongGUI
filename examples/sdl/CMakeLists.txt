@@ -489,6 +489,18 @@ add_picoui_demo(picoui_list_basic_demo
 add_picoui_demo(picoui_progress_bar_basic_demo
     "${SDL_EXAMPLE_DIR}/../../picoui/demo/progress_bar_basic/main.c"
 )
+add_picoui_demo(picoui_arc_basic_demo
+    "${SDL_EXAMPLE_DIR}/../../picoui/demo/arc_basic/main.c"
+)
+add_picoui_demo(picoui_gauge_basic_demo
+    "${SDL_EXAMPLE_DIR}/../../picoui/demo/gauge_basic/main.c"
+)
+add_picoui_demo(picoui_icon_slider_basic_demo
+    "${SDL_EXAMPLE_DIR}/../../picoui/demo/icon_slider_basic/main.c"
+)
+add_picoui_demo(picoui_radial_menu_basic_demo
+    "${SDL_EXAMPLE_DIR}/../../picoui/demo/radial_menu_basic/main.c"
+)
 add_picoui_demo(picoui_progress_wheel_basic_demo
     "${SDL_EXAMPLE_DIR}/../../picoui/demo/progress_wheel_basic/main.c"
 )

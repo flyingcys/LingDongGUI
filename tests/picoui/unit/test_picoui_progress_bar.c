@@ -2,6 +2,9 @@
 #include "picoui/progress_bar.h"
 #include "picoui/widget.h"
 #include "picoui/window.h"
+#include "../../../src/gui/ldProgressBar.h"
+#include "backend.h"
+#include "internal.h"
 
 #include <assert.h>
 
@@ -93,6 +96,37 @@ static void test_progress_bar_horizontal_state(struct picoui_window *win)
     assert(picoui_progress_bar_get_horizontal(bar) == 1);
 }
 
+static void test_progress_bar_release_contract_covers_theme_and_config_boundary(
+    struct picoui_window *win)
+{
+    struct picoui_progress_bar *bar = picoui_progress_bar_create_with_props(
+        win,
+        &(struct picoui_progress_bar_props){
+            .id = "progress_release_ready",
+            .style_class = "meter",
+            .percent = 40,
+            .horizontal = 1,
+        });
+    struct picoui_backend_widget *backend;
+    ldProgressBar_t *ld_progress_bar;
+
+    assert(bar != 0);
+    backend = (struct picoui_backend_widget *)bar->widget.backend_widget;
+    assert(backend != 0);
+    assert(backend->kind == PICOUI_BACKEND_WIDGET_PROGRESS_BAR);
+    assert(backend->style_class == (const char *)"meter");
+    ld_progress_bar = (ldProgressBar_t *)backend->ld_widget;
+    assert(ld_progress_bar != 0);
+
+    assert(picoui_progress_bar_get_percent(bar) == 40);
+    assert(picoui_progress_bar_get_horizontal(bar) == 1);
+    assert(ld_progress_bar->permille == 400U);
+    assert(ld_progress_bar->isHorizontal == true);
+    assert(ld_progress_bar->bgColor != ld_progress_bar->fgColor);
+    assert(ld_progress_bar->frameColorSize == 1);
+    assert(ld_progress_bar->frameColor != ld_progress_bar->bgColor);
+}
+
 int main(void)
 {
     struct picoui_app *app = picoui_app_create();
@@ -106,6 +140,7 @@ int main(void)
     test_progress_bar_percent_bounds(win);
     test_progress_bar_horizontal_state(win);
     test_progress_bar_rejects_invalid_inputs(win);
+    test_progress_bar_release_contract_covers_theme_and_config_boundary(win);
 
     picoui_app_destroy(app);
     return 0;

@@ -4,6 +4,9 @@
 
 #include <stdlib.h>
 
+extern const arm_2d_tile_t c_tilePointerSecGRAY8;
+extern const arm_2d_tile_t c_tilePointerSecMask;
+
 static struct picoui_backend_app_state *picoui_backend_clock_get_app_state(void *parent)
 {
     struct picoui_backend_widget *parent_widget = parent;
@@ -36,6 +39,12 @@ void *picoui_backend_create_clock(void *parent, const char *id)
     struct picoui_backend_widget *parent_widget = parent;
     struct picoui_backend_app_state *app_state;
     ldClock_t *ld_clock;
+    arm_2d_tile_t *hour_img_tile;
+    arm_2d_tile_t *hour_mask_tile;
+    arm_2d_tile_t *minute_img_tile;
+    arm_2d_tile_t *minute_mask_tile;
+    arm_2d_tile_t *second_img_tile;
+    arm_2d_tile_t *second_mask_tile;
     uint16_t name_id;
 
     if (parent == 0 || id == 0) {
@@ -52,6 +61,65 @@ void *picoui_backend_create_clock(void *parent, const char *id)
         return 0;
     }
 
+    hour_img_tile = malloc(sizeof(*hour_img_tile));
+    if (hour_img_tile == NULL) {
+        free(widget);
+        return 0;
+    }
+    *hour_img_tile = c_tilePointerSecGRAY8;
+    hour_img_tile->tRegion.tSize.iHeight = 67;
+
+    hour_mask_tile = malloc(sizeof(*hour_mask_tile));
+    if (hour_mask_tile == NULL) {
+        free(hour_img_tile);
+        free(widget);
+        return 0;
+    }
+    *hour_mask_tile = c_tilePointerSecMask;
+    hour_mask_tile->tRegion.tSize.iHeight = 67;
+
+    minute_img_tile = malloc(sizeof(*minute_img_tile));
+    if (minute_img_tile == NULL) {
+        free(hour_mask_tile);
+        free(hour_img_tile);
+        free(widget);
+        return 0;
+    }
+    *minute_img_tile = c_tilePointerSecGRAY8;
+
+    minute_mask_tile = malloc(sizeof(*minute_mask_tile));
+    if (minute_mask_tile == NULL) {
+        free(minute_img_tile);
+        free(hour_mask_tile);
+        free(hour_img_tile);
+        free(widget);
+        return 0;
+    }
+    *minute_mask_tile = c_tilePointerSecMask;
+
+    second_img_tile = malloc(sizeof(*second_img_tile));
+    if (second_img_tile == NULL) {
+        free(minute_mask_tile);
+        free(minute_img_tile);
+        free(hour_mask_tile);
+        free(hour_img_tile);
+        free(widget);
+        return 0;
+    }
+    *second_img_tile = c_tilePointerSecGRAY8;
+
+    second_mask_tile = malloc(sizeof(*second_mask_tile));
+    if (second_mask_tile == NULL) {
+        free(second_img_tile);
+        free(minute_mask_tile);
+        free(minute_img_tile);
+        free(hour_mask_tile);
+        free(hour_img_tile);
+        free(widget);
+        return 0;
+    }
+    *second_mask_tile = c_tilePointerSecMask;
+
     name_id = ++app_state->next_ld_name_id;
     ld_clock = ldClock_init(app_state->ld_scene,
                             NULL,
@@ -62,9 +130,34 @@ void *picoui_backend_create_clock(void *parent, const char *id)
                             200,
                             200);
     if (ld_clock == NULL) {
+        free(second_mask_tile);
+        free(second_img_tile);
+        free(minute_mask_tile);
+        free(minute_img_tile);
+        free(hour_mask_tile);
+        free(hour_img_tile);
         free(widget);
         return 0;
     }
+
+    ldClockSetHourPointerImage(ld_clock,
+                               hour_img_tile,
+                               hour_mask_tile,
+                               0,
+                               (float)(hour_mask_tile->tRegion.tSize.iWidth >> 1),
+                               (float)hour_mask_tile->tRegion.tSize.iHeight);
+    ldClockSetMinutePointerImage(ld_clock,
+                                 minute_img_tile,
+                                 minute_mask_tile,
+                                 0,
+                                 (float)(minute_mask_tile->tRegion.tSize.iWidth >> 1),
+                                 (float)minute_mask_tile->tRegion.tSize.iHeight);
+    ldClockSetSecondPointerImage(ld_clock,
+                                 second_img_tile,
+                                 second_mask_tile,
+                                 0,
+                                 (float)(second_mask_tile->tRegion.tSize.iWidth >> 1),
+                                 100.0f);
 
     widget->parent = parent;
     widget->id = id;

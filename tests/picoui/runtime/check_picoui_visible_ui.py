@@ -20,6 +20,10 @@ DEMOS = {
     "settings_panel": "picoui_settings_panel_demo",
     "list_basic": "picoui_list_basic_demo",
     "progress_bar_basic": "picoui_progress_bar_basic_demo",
+    "arc_basic": "picoui_arc_basic_demo",
+    "gauge_basic": "picoui_gauge_basic_demo",
+    "icon_slider_basic": "picoui_icon_slider_basic_demo",
+    "radial_menu_basic": "picoui_radial_menu_basic_demo",
     "progress_wheel_basic": "picoui_progress_wheel_basic_demo",
     "qrcode_basic": "picoui_qrcode_basic_demo",
     "message_box_basic": "picoui_message_box_basic_demo",
@@ -638,6 +642,162 @@ def _assert_progress_bar_basic_visible(path: Path) -> None:
         )
 
 
+def _assert_arc_basic_visible(path: Path) -> None:
+    _assert_common_visible(path, "arc_basic")
+    width, height, pixels = _read_ppm(path)
+    bg = _background_color(width, height, pixels)
+    bounds = _non_background_bounds(width, height, pixels, bg)
+    failures: list[str] = []
+
+    if bounds is None:
+        raise AssertionError("SMOKE FAIL: capture has no non-background pixels")
+
+    min_x, min_y, max_x, max_y = bounds
+    visible_width = max_x - min_x + 1
+    visible_height = max_y - min_y + 1
+    if visible_width < 100 or visible_height < 100:
+        failures.append(
+            "arc coverage failed: "
+            f"content_bounds=({min_x},{min_y})-({max_x},{max_y}), expected at least 100x100"
+        )
+
+    colors: set[tuple[int, int, int]] = set()
+    for y in range(min_y, max_y + 1, 3):
+        for x in range(min_x, max_x + 1, 3):
+            color = _pixel(width, pixels, x, y)
+            if not _is_background(color, bg):
+                colors.add(color)
+    if len(colors) < 2:
+        failures.append(
+            "arc color contrast failed: "
+            f"colors={sorted(colors)}, expected foreground/background arc contrast"
+        )
+
+    if failures:
+        joined = "\n  - ".join(failures)
+        raise AssertionError(
+            "VISIBLE FAIL: arc_basic capture is non-empty, but arc structure is not established.\n"
+            f"  - {joined}"
+        )
+
+
+def _assert_gauge_basic_visible(path: Path) -> None:
+    _assert_common_visible(path, "gauge_basic")
+    width, height, pixels = _read_ppm(path)
+    bg = _background_color(width, height, pixels)
+    bounds = _non_background_bounds(width, height, pixels, bg)
+    failures: list[str] = []
+
+    if bounds is None:
+        raise AssertionError("SMOKE FAIL: capture has no non-background pixels")
+
+    min_x, min_y, max_x, max_y = bounds
+    visible_width = max_x - min_x + 1
+    visible_height = max_y - min_y + 1
+    if visible_width < 100 or visible_height < 100:
+        failures.append(
+            "gauge coverage failed: "
+            f"content_bounds=({min_x},{min_y})-({max_x},{max_y}), expected at least 100x100"
+        )
+
+    colors: set[tuple[int, int, int]] = set()
+    for y in range(min_y, max_y + 1, 3):
+        for x in range(min_x, max_x + 1, 3):
+            color = _pixel(width, pixels, x, y)
+            if not _is_background(color, bg):
+                colors.add(color)
+    if len(colors) < 2:
+        failures.append(
+            "gauge pointer contrast failed: "
+            f"colors={sorted(colors)}, expected gauge pointer and dial contrast"
+        )
+
+    if failures:
+        joined = "\n  - ".join(failures)
+        raise AssertionError(
+            "VISIBLE FAIL: gauge_basic capture is non-empty, but gauge structure is not established.\n"
+            f"  - {joined}"
+        )
+
+
+def _assert_icon_slider_basic_visible(path: Path) -> None:
+    _assert_common_visible(path, "icon_slider_basic")
+    width, height, pixels = _read_ppm(path)
+    bg = _background_color(width, height, pixels)
+    bounds = _non_background_bounds(width, height, pixels, bg)
+    failures: list[str] = []
+
+    if bounds is None:
+        raise AssertionError("SMOKE FAIL: capture has no non-background pixels")
+
+    min_x, min_y, max_x, max_y = bounds
+    visible_width = max_x - min_x + 1
+    visible_height = max_y - min_y + 1
+    if visible_width < 150 or visible_height < 40:
+        failures.append(
+            "icon slider coverage failed: "
+            f"content_bounds=({min_x},{min_y})-({max_x},{max_y}), expected at least 150x70"
+        )
+
+    colors: set[tuple[int, int, int]] = set()
+    for y in range(min_y, max_y + 1, 3):
+        for x in range(min_x, max_x + 1, 3):
+            color = _pixel(width, pixels, x, y)
+            if not _is_background(color, bg):
+                colors.add(color)
+    if len(colors) < 3:
+        failures.append(
+            "icon slider contrast failed: "
+            f"colors={sorted(colors)}, expected multiple icon/text colors"
+        )
+
+    if failures:
+        joined = "\n  - ".join(failures)
+        raise AssertionError(
+            "VISIBLE FAIL: icon_slider_basic capture is non-empty, but icon slider structure is not established.\n"
+            f"  - {joined}"
+        )
+
+
+def _assert_radial_menu_basic_visible(path: Path) -> None:
+    _assert_common_visible(path, "radial_menu_basic")
+    width, height, pixels = _read_ppm(path)
+    bg = _background_color(width, height, pixels)
+    bounds = _non_background_bounds(width, height, pixels, bg)
+    failures: list[str] = []
+
+    if bounds is None:
+        raise AssertionError("SMOKE FAIL: capture has no non-background pixels")
+
+    min_x, min_y, max_x, max_y = bounds
+    visible_width = max_x - min_x + 1
+    visible_height = max_y - min_y + 1
+    if visible_width < 100 or visible_height < 70:
+        failures.append(
+            "radial menu coverage failed: "
+            f"content_bounds=({min_x},{min_y})-({max_x},{max_y}), expected at least 130x70"
+        )
+
+    colors: set[tuple[int, int, int]] = set()
+    for y in range(min_y, max_y + 1, 3):
+        for x in range(min_x, max_x + 1, 3):
+            color = _pixel(width, pixels, x, y)
+            if not _is_background(color, bg):
+                colors.add(color)
+    if len(colors) < 3:
+        failures.append(
+            "radial menu contrast failed: "
+            f"colors={sorted(colors)}, expected multiple icon colors"
+        )
+
+    if failures:
+        joined = "\n  - ".join(failures)
+        raise AssertionError(
+            "VISIBLE FAIL: radial_menu_basic capture is non-empty, but radial menu structure is not established.\n"
+            f"  - {joined}"
+        )
+
+
 def _assert_progress_wheel_basic_visible(path: Path) -> None:
     width, height, pixels = _read_ppm(path)
     bg = _background_color(width, height, pixels)
@@ -1233,6 +1393,14 @@ def main() -> None:
                 _assert_list_basic_visible(capture_path)
             elif demo == "progress_bar_basic":
                 _assert_progress_bar_basic_visible(capture_path)
+            elif demo == "arc_basic":
+                _assert_arc_basic_visible(capture_path)
+            elif demo == "gauge_basic":
+                _assert_gauge_basic_visible(capture_path)
+            elif demo == "icon_slider_basic":
+                _assert_icon_slider_basic_visible(capture_path)
+            elif demo == "radial_menu_basic":
+                _assert_radial_menu_basic_visible(capture_path)
             elif demo == "progress_wheel_basic":
                 _assert_progress_wheel_basic_visible(capture_path)
             elif demo == "qrcode_basic":

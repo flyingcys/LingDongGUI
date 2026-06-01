@@ -2,10 +2,13 @@
 #include "picoui/progress_wheel.h"
 #include "picoui/widget.h"
 #include "picoui/window.h"
+#include "../../../src/gui/ldProgressWheel.h"
+#include "backend.h"
+#include "internal.h"
 
 #include <assert.h>
 
-static void test_progress_wheel_create_and_props(struct picoui_window *win)
+static struct picoui_progress_wheel *test_progress_wheel_create_and_props(struct picoui_window *win)
 {
     int user_cookie = 9;
     struct picoui_progress_wheel_props props = {
@@ -23,6 +26,8 @@ static void test_progress_wheel_create_and_props(struct picoui_window *win)
     assert(with_props != 0);
     assert(picoui_progress_wheel_get_percent(wheel) == 0);
     assert(picoui_progress_wheel_get_percent(with_props) == props.percent);
+
+    return with_props;
 }
 
 static void test_progress_wheel_percent_bounds(struct picoui_window *win)
@@ -76,18 +81,43 @@ static void test_progress_wheel_rejects_invalid_inputs(struct picoui_window *win
     assert(picoui_progress_wheel_get_percent(wheel) == 0);
 }
 
+static void test_progress_wheel_release_contract_covers_animation_and_style_boundary(
+    struct picoui_progress_wheel *wheel)
+{
+    struct picoui_backend_widget *backend;
+    ldProgressWheel_t *ld_progress_wheel;
+
+    assert(wheel != 0);
+    backend = (struct picoui_backend_widget *)wheel->widget.backend_widget;
+    assert(backend != 0);
+    assert(backend->kind == PICOUI_BACKEND_WIDGET_PROGRESS_WHEEL);
+    assert(backend->style_class == (const char *)"wheel");
+    assert(backend->user_data != 0);
+    ld_progress_wheel = (ldProgressWheel_t *)backend->ld_widget;
+    assert(ld_progress_wheel != 0);
+
+    assert(picoui_progress_wheel_get_percent(wheel) == 72);
+    assert(ld_progress_wheel->iProgress == 720);
+    assert(ld_progress_wheel->tWheel.tCFG.bUseDirtyRegions == false);
+    assert(ld_progress_wheel->tWheel.tCFG.tWheelColour != GLCD_COLOR_WHITE);
+    assert(ld_progress_wheel->tWheel.tCFG.tDotColour == GLCD_COLOR_WHITE);
+    assert(ld_progress_wheel->tWheel.tCFG.bIgnoreDot == false);
+}
+
 int main(void)
 {
     struct picoui_app *app = picoui_app_create();
     struct picoui_window *win;
+    struct picoui_progress_wheel *wheel_with_props;
 
     assert(app != 0);
     win = picoui_window_create(app, "root");
     assert(win != 0);
 
-    test_progress_wheel_create_and_props(win);
+    wheel_with_props = test_progress_wheel_create_and_props(win);
     test_progress_wheel_percent_bounds(win);
     test_progress_wheel_rejects_invalid_inputs(win);
+    test_progress_wheel_release_contract_covers_animation_and_style_boundary(wheel_with_props);
 
     picoui_app_destroy(app);
     return 0;

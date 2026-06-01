@@ -2,6 +2,27 @@
 
 ## 范围
 
+## 后续更新说明
+
+本文是 `2026-06-01` 当时针对 `a-0.3 / a-0.4 / a-0.5` 的深度 review 快照。
+
+后续 `a-0.6` 主线推进后，以下结论已经不再代表当前最新状态：
+
+1. `picoui_wrapped_widget_total = 22`
+2. `picoui_not_wrapped_widget_total = 4`
+3. 当前 machine truth-source 仍是 `a-0.3/current-15`
+
+当前最新入口应以：
+
+1. `tests/picoui/contract/picoui_release_capability_matrix.json`
+2. `picoui/docs/demo_guide.md`
+3. `docs/picoui-serial/C-线人工窗口验收记录.md`
+
+为准。本文保留的价值是：
+
+1. 解释为什么当时必须把 `a-0.3 current-15` 降格成历史快照
+2. 记录 `a-0.4 / a-0.5` 阶段 closeout 不能被误写成 final parity 的原因
+
 本轮 review 只评估当前主仓 `dev` 上与 `a-0.3 / a-0.4 / a-0.5` 直接相关的真实交付：
 
 1. `docs/picoui-serial/a-0.3/*`

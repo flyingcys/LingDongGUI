@@ -206,6 +206,22 @@ static void test_line_edit_commit_and_cancel_paths_are_distinct(struct picoui_wi
     assert(line_edit_finished_count == 1);
 }
 
+static void test_line_edit_submit_cancel_reason_contract_is_release_ready(struct picoui_window *win)
+{
+    struct picoui_line_edit *line_edit;
+    int editing = -1;
+
+    line_edit = picoui_line_edit_create(win, "line_edit_reason_contract");
+    assert(line_edit != 0);
+    assert(picoui_line_edit_get_editing(line_edit, &editing) == 0);
+    assert(editing == 0);
+    assert(line_edit->widget.last_edit_result == PICOUI_EDIT_RESULT_NONE);
+    assert(line_edit->widget.pending_edit_result == PICOUI_EDIT_RESULT_NONE);
+
+    /* Final release contract is explicit: commit/cancel are distinguished, but no richer reason enum exists. */
+    assert(line_edit->on_edit_finished == 0);
+}
+
 static void test_line_edit_rejects_invalid_keyboard_binding(struct picoui_window *win)
 {
     struct picoui_line_edit *line_edit = picoui_line_edit_create(win, "line_edit_invalid_binding");
@@ -238,6 +254,7 @@ int main(void)
     test_line_edit_readback_matches_backend_after_finished_boundary(win);
     test_line_edit_finished_boundary_clears_editing_state_without_reason(win);
     test_line_edit_commit_and_cancel_paths_are_distinct(win);
+    test_line_edit_submit_cancel_reason_contract_is_release_ready(win);
     test_line_edit_rejects_invalid_keyboard_binding(win);
 
     picoui_app_destroy(app);

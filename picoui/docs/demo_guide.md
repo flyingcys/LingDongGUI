@@ -1,8 +1,21 @@
 # PicoUI Demo 运行指南
 
-本文说明 `picoui/demo` 下各个 demo 的构建方式、启动方式和适用场景，并明确哪些证据属于真实 backend 能力，哪些只属于 smoke/capture。
+本文说明 `picoui/demo` 下各个 demo 的构建方式、启动方式、适用场景，以及 `a-0.6 final release` 口径下的 gate 覆盖边界。
 
-发布视角下的 demo catalog 另见 [../../docs/picoui-serial/H-线demo-catalog.md](../../docs/picoui-serial/H-%E7%BA%BFdemo-catalog.md)。该文档只负责说明 7 个 visible demo 各自证明什么、不证明什么，以及它们对应的 gate；本页继续作为运行指南和证据层入口，不把 runtime、automatic visible 和 manual artifact 混写成同一层结论。
+当前真相源分工是：
+
+- `tests/picoui/contract/picoui_release_capability_matrix.json`
+  - 机器可读 final release truth-source
+- `tests/picoui/runtime/check_picoui_runtime.py`
+  - runtime smoke / capture gate
+- `tests/picoui/runtime/check_picoui_backend_mapping.py`
+  - backend mapping gate
+- `tests/picoui/runtime/check_picoui_visible_ui.py --all`
+  - automatic visible gate
+- `docs/picoui-serial/C-线人工窗口验收记录.md`
+  - final release manual artifact truth-source
+
+本页负责把这些 gate 与 demo catalog 对齐，不把 runtime、automatic visible、manual artifact 混写成同一层结论。
 
 ## 一、先说明入口
 
@@ -15,9 +28,13 @@
 - `picoui_theme_showcase_demo`
 - `picoui_settings_panel_demo`
 - `picoui_list_basic_demo`
- - `picoui_progress_bar_basic_demo`
- - `picoui_progress_wheel_basic_demo`
- - `picoui_qrcode_basic_demo`
+- `picoui_progress_bar_basic_demo`
+- `picoui_progress_wheel_basic_demo`
+- `picoui_qrcode_basic_demo`
+- `picoui_arc_basic_demo`
+- `picoui_gauge_basic_demo`
+- `picoui_icon_slider_basic_demo`
+- `picoui_radial_menu_basic_demo`
 - `picoui_message_box_basic_demo`
 - `picoui_date_time_basic_demo`
 - `picoui_clock_basic_demo`
@@ -25,6 +42,9 @@
 - `picoui_line_edit_basic_demo`
 - `picoui_combo_box_basic_demo`
 - `picoui_scroll_selecter_basic_demo`
+- `picoui_graph_basic_demo`
+- `picoui_table_basic_demo`
+- `picoui_calendar_basic_demo`
 
 ## 二、依赖环境
 
@@ -76,6 +96,12 @@ python3 tests/picoui/runtime/check_picoui_runtime.py
 python3 tests/picoui/runtime/check_picoui_visible_ui.py --all
 ```
 
+如果要验证 final release backend mapping 口径，使用：
+
+```bash
+python3 tests/picoui/runtime/check_picoui_backend_mapping.py
+```
+
 ## 四、运行方式
 
 ### Linux
@@ -90,7 +116,92 @@ python3 tests/picoui/runtime/check_picoui_visible_ui.py --all
 build\picoui-runtime\examples\sdl\picoui_hello_world_demo.exe
 ```
 
-## 五、各 demo 说明
+## 五、Final Gate Catalog
+
+`a-0.6 final release` 当前固定四层 gate：
+
+1. `runtime`
+   - `picoui_hello_world_demo`
+   - `picoui_basic_widgets_demo`
+   - `picoui_layout_flex_demo`
+   - `picoui_layout_grid_demo`
+   - `picoui_theme_showcase_demo`
+   - `picoui_settings_panel_demo`
+   - `picoui_list_basic_demo`
+   - `picoui_progress_bar_basic_demo`
+   - `picoui_arc_basic_demo`
+   - `picoui_gauge_basic_demo`
+   - `picoui_icon_slider_basic_demo`
+   - `picoui_radial_menu_basic_demo`
+   - `picoui_progress_wheel_basic_demo`
+   - `picoui_qrcode_basic_demo`
+   - `picoui_message_box_basic_demo`
+   - `picoui_date_time_basic_demo`
+   - `picoui_clock_basic_demo`
+   - `picoui_keyboard_basic_demo`
+2. `mapping`
+   - `picoui_hello_world_demo`
+   - `picoui_theme_showcase_demo`
+   - `picoui_basic_widgets_demo`
+   - `picoui_settings_panel_demo`
+   - `picoui_list_basic_demo`
+   - `picoui_progress_bar_basic_demo`
+   - `picoui_arc_basic_demo`
+   - `picoui_gauge_basic_demo`
+   - `picoui_icon_slider_basic_demo`
+   - `picoui_radial_menu_basic_demo`
+   - `picoui_progress_wheel_basic_demo`
+   - `picoui_qrcode_basic_demo`
+   - `picoui_date_time_basic_demo`
+   - `picoui_clock_basic_demo`
+   - `picoui_line_edit_basic_demo`
+   - `picoui_combo_box_basic_demo`
+   - `picoui_scroll_selecter_basic_demo`
+   - `picoui_table_basic_demo`
+   - `picoui_graph_basic_demo`
+   - `picoui_calendar_basic_demo`
+   - `picoui_layout_flex_demo`
+   - `picoui_layout_grid_demo`
+3. `visible`
+   - `hello_world`
+   - `basic_widgets`
+   - `layout_flex`
+   - `layout_grid`
+   - `theme_showcase`
+   - `settings_panel`
+   - `list_basic`
+   - `progress_bar_basic`
+   - `arc_basic`
+   - `gauge_basic`
+   - `icon_slider_basic`
+   - `radial_menu_basic`
+   - `progress_wheel_basic`
+   - `qrcode_basic`
+   - `message_box_basic`
+   - `date_time_basic`
+   - `clock_basic`
+   - `line_edit_basic`
+   - `combo_box_basic`
+   - `scroll_selecter_basic`
+   - `table_basic`
+   - `graph_basic`
+   - `calendar_basic`
+4. `manual artifact`
+   - 以 `docs/picoui-serial/C-线人工窗口验收记录.md` 为 demo-level truth-source
+   - 当前 final release 目标集包含：
+     `hello_world / basic_widgets / layout_flex / layout_grid / theme_showcase / settings_panel / list_basic / progress_bar_basic / arc_basic / gauge_basic / icon_slider_basic / radial_menu_basic / progress_wheel_basic / qrcode_basic / message_box_basic / date_time_basic / clock_basic / keyboard_basic / line_edit_basic / combo_box_basic / scroll_selecter_basic / table_basic / graph_basic / calendar_basic`
+
+special cases：
+
+- `keyboard`
+  - final release 主要依赖 `runtime` 和 `manual artifact`
+  - 当前没有 dedicated mapping gate，也没有 dedicated visible gate
+  - 其视觉与宿主证据通过配套输入 demo 间接覆盖，不应误写成独立 mapping/visible 已闭环
+- `message_box`
+  - 当前仍保留 formal mapping exclusion
+  - final release 结论依赖 `unit + contract + visible + runtime + manual artifact`
+  - 不能把它写成与普通静态 widget 完全同构的 mapping 证明
+## 六、各 demo 说明
 
 ### `picoui/demo/hello_world`
 
@@ -289,49 +400,123 @@ build\picoui-runtime\examples\sdl\picoui_hello_world_demo.exe
 - `edit mode` 与 `navigation mode` 已有最小合同边界
 - `automatic visible gate` 已覆盖 `scroll_selecter_basic`
 
-### `picoui/demo/table_basic`
+### `picoui/demo/arc_basic`
 
-`a-0.5` data-model 首控件示例。包含：
+`a-0.6` 仪表类显示控件示例。包含：
 
-- `table`
+- `label`
+- `arc`
 
 适合用途：
 
-- 看 `picoui_table` 的 rows/columns/current cell/cell text API
-- 看 editable cell commit boundary 如何复用 `a-0.4` 的 line_edit/keyboard shared-core
+- 看 `picoui_arc` 的背景角度、前景角度、旋转与颜色 API
+- 看仪表类只读显示 contract 如何走真实 `ldArc`
 
 当前口径：
 
-- `table` 已走真实 backend mapping
-- current row/column 与 cell text getter 以 backend truth/readback 为准
-- editable cell 的 commit 边界复用 shared edit model，不靠 demo 私有状态
-- 当前不宣称 cancel/abort reason 已形成稳定 public contract
-- `automatic visible gate` 已覆盖 `table_basic`
-- 该 demo 不证明完整表格主题、复杂编辑器类型或更高阶交互
+- `arc` 已走真实 backend mapping
+- angle/rotation/color readback 以 backend truth 为准
+- `automatic visible gate` 已覆盖 `arc_basic`
+- 该 demo 不证明更复杂资源皮肤或主题注入系统
+
+### `picoui/demo/gauge_basic`
+
+`a-0.6` 仪表指针控件示例。包含：
+
+- `label`
+- `gauge`
+
+适合用途：
+
+- 看 `picoui_gauge` 的 angle、pointer color、auto-move 合同
+- 看仪表指针控件如何走真实 `ldGauge`
+
+当前口径：
+
+- `gauge` 已走真实 backend mapping
+- angle/pointer color/auto-move readback 以 backend truth 为准
+- `automatic visible gate` 已覆盖 `gauge_basic`
+- 该 demo 不证明更复杂表盘资源替换或主题注入系统
+
+### `picoui/demo/icon_slider_basic`
+
+`a-0.6` 复合导航控件示例。包含：
+
+- `label`
+- `icon_slider`
+
+适合用途：
+
+- 看 `picoui_icon_slider` 的 selection/value/item catalog API
+- 看复合导航控件如何走真实 `ldIconSlider`
+
+当前口径：
+
+- `icon_slider` 已走真实 backend mapping
+- selection/value/item catalog 以 backend truth/readback 为准
+- `automatic visible gate` 已覆盖 `icon_slider_basic`
+- 该 demo 不证明完整图标资源系统或更高阶动画能力
+
+### `picoui/demo/radial_menu_basic`
+
+`a-0.6` 径向导航控件示例。包含：
+
+- `label`
+- `radial_menu`
+
+适合用途：
+
+- 看 `picoui_radial_menu` 的 selection/offset/item catalog API
+- 看复合径向导航控件如何走真实 `ldRadialMenu`
+
+当前口径：
+
+- `radial_menu` 已走真实 backend mapping
+- selection/offset/item catalog 以 backend truth/readback 为准
+- `automatic visible gate` 已覆盖 `radial_menu_basic`
+- 该 demo 不证明完整主题资源、分页动画或更复杂菜单系统
 
 ### `picoui/demo/graph_basic`
 
-`a-0.5` series/value model 示例。包含：
+`a-0.5` graph data-model 示例。包含：
 
 - `label`
 - `graph`
 
 适合用途：
 
-- 看 `picoui_graph` 的 series/value/move_add API
-- 看 `ldGraph` 的真实 backend mapping 与 readback 合同
+- 看 `picoui_graph` 的 series/value/move-add API
+- 看 graph readback 如何走真实 `ldGraph`
 
 当前口径：
 
 - `graph` 已走真实 backend mapping
-- series count 与 value getter 以 backend truth/readback 为准
-- `move_add` 的移位语义已进入 unit 合同
+- `series count`、`value readback`、`move_add shift` 以 backend truth 为准
 - `automatic visible gate` 已覆盖 `graph_basic`
-- 该 demo 不证明完整图表皮肤、轴格式化或高级资源系统
+- 该 demo 不证明完整 theme 或更高阶 chart parity
+
+### `picoui/demo/table_basic`
+
+`a-0.5` table shared-core 示例。包含：
+
+- `table`
+
+适合用途：
+
+- 看 `picoui_table` 的 cell/current-cell/editable API
+- 看 editable cell 如何复用 `line_edit/keyboard` shared-core
+
+当前口径：
+
+- `table` 已走真实 backend mapping
+- current cell 与 cell text getter 以 backend truth/readback 为准
+- commit 与 keyboard-exit cancel 边界都已进入最终合同
+- `automatic visible gate` 已覆盖 `table_basic`
+- 该 demo 不证明完整 table feature parity
 
 ### `picoui/demo/calendar_basic`
 
-`a-0.5` date/header/grid contract 示例。包含：
+`a-0.5` calendar data-view 示例。包含：
 
 - `label`
 - `calendar`
@@ -339,18 +524,18 @@ build\picoui-runtime\examples\sdl\picoui_hello_world_demo.exe
 适合用途：
 
 - 看 `picoui_calendar` 的 date/header/grid API
-- 看 `ldCalendar` 的真实 backend mapping 与 grid readback 合同
+- 看 calendar readback 如何走真实 `ldCalendar`
 
 当前口径：
 
 - `calendar` 已走真实 backend mapping
-- date/header visible/header format/grid value/current-month flag 都以 backend truth/readback 为准
-- `automatic visible gate` 证明 header、weekday 行和 date grid 在 dummy SDL + PPM readback 下可判定
-- 该 demo 不证明完整日历主题、国际化 weekday/month 文案或高级交互能力
+- `date/header/grid/current-month flag` 以 backend truth/readback 为准
+- `automatic visible gate` 已覆盖 `calendar_basic`
+- 该 demo 不证明完整 theme parity
 
 ### `picoui/demo/progress_bar_basic`
 
-`a-02` 新控件 vertical slice 示例。包含：
+`a-0.6` final release 进度条示例。包含：
 
 - `progress_bar`
 
@@ -365,11 +550,11 @@ build\picoui-runtime\examples\sdl\picoui_hello_world_demo.exe
 - `runtime smoke` 证明 demo 可启动、可 capture
 - `backend mapping gate` 证明 `primary/secondary/title` 的真实 backend 对象路径
 - `automatic visible gate` 证明一条长横向进度条和一条高纵向进度条在 dummy SDL + PPM readback 下都可见
-- 不证明复杂主题皮肤、动画过渡或完整交互能力
+- 不证明更复杂主题皮肤、动画过渡或资源注入系统
 
 ### `picoui/demo/progress_wheel_basic`
 
-`a-02` 新控件 vertical slice 示例。包含：
+`a-0.6` final release 进度轮示例。包含：
 
 - `progress_wheel`
 
@@ -384,11 +569,11 @@ build\picoui-runtime\examples\sdl\picoui_hello_world_demo.exe
 - `runtime smoke` 证明 demo 可启动、可 capture
 - `backend mapping gate` 证明 `wheel` 的真实 backend 对象路径
 - `automatic visible gate` 证明彩色环和邻接白点在 dummy SDL + PPM readback 下可判定
-- 不证明更复杂的动画调度或完整资源系统
+- 不证明更复杂的动画调度或资源系统
 
 ### `picoui/demo/qrcode_basic`
 
-`a-02` 新控件 vertical slice 示例。包含：
+`a-0.6` final release 二维码示例。包含：
 
 - `qrcode`
 
@@ -407,7 +592,7 @@ build\picoui-runtime\examples\sdl\picoui_hello_world_demo.exe
 
 ### `picoui/demo/message_box_basic`
 
-`a-02` 新控件 vertical slice 示例。包含：
+`a-0.6` final release 对话框示例。包含：
 
 - `message_box`
 
@@ -420,13 +605,14 @@ build\picoui-runtime\examples\sdl\picoui_hello_world_demo.exe
 
 - 证明 `message_box` 宿主真实落到 LingDongGUI backend
 - `runtime smoke` 证明 demo 可启动、可 capture
-- `backend mapping gate` 证明 `message_box` 的真实 backend 对象路径
+- `backend mapping gate` 对该 demo 保持 formal mapping exclusion 口径
 - `automatic visible gate` 证明文本层和按钮层在 dummy SDL + PPM readback 下可判定
+- 单标题/消息/confirm 文案 getter 与 confirm callback bridge 已形成稳定公开合同
 - 不证明多按钮、多动作或更复杂对话框流程
 
 ### `picoui/demo/date_time_basic`
 
-`a-02` 新控件 vertical slice 示例。包含：
+`a-0.6` final release 日期时间示例。包含：
 
 - `date_time`
 
@@ -441,11 +627,12 @@ build\picoui-runtime\examples\sdl\picoui_hello_world_demo.exe
 - `runtime smoke` 证明 demo 可启动、可 capture
 - `backend mapping gate` 证明 `date_time` 的真实 backend 对象路径
 - `automatic visible gate` 证明单行日期时间文本在 dummy SDL + PPM readback 下可判定
+- `format/date/time` 写入与 `get_format/get_date/get_time` 读回已形成稳定公开合同
 - 不证明完整日期编辑、时区、日历或输入系统
 
 ### `picoui/demo/clock_basic`
 
-`a-02` 新控件 vertical slice 示例。包含：
+`a-0.6` final release 时钟示例。包含：
 
 - `clock`
 
@@ -460,34 +647,35 @@ build\picoui-runtime\examples\sdl\picoui_hello_world_demo.exe
 - `runtime smoke` 证明 demo 可启动、可 capture
 - `backend mapping gate` 证明 `clock` 的真实 backend 对象路径
 - `automatic visible gate` 证明中心枢纽和三向指针在 dummy SDL + PPM readback 下可判定
+- `step_second` 开关与读回已形成稳定公开合同，三指针资源链走真实 backend
 - 不证明背景表盘资源、复杂主题资源系统或高级动画控制
 
-## 六、证据层级说明
+## 七、证据层级说明
 
 1. `ctest` / unit test：证明 contract、backend 字段同步、事件桥接等实现约束。
 2. `tests/picoui/runtime/check_picoui_runtime.py`：证明 demo 可 build、可启动、可 capture、可回归。
 3. `tests/picoui/runtime/check_picoui_backend_mapping.py`：证明 demo 的真实 backend 映射与 fallback marker 口径。
 4. `tests/picoui/runtime/check_picoui_visible_ui.py --all`：证明 `automatic visible gate` 覆盖的 demo 在 `SDL_VIDEODRIVER=dummy + PPM readback` 下可显示、可读、可判定。
-5. `manual artifact gate`：证明人工 OS 窗口验收通过；这属于 `C线` 的 `C6`，需要单独运行并记录 artifact。
+5. `manual artifact gate`：证明人工 OS 窗口验收通过；这属于 final release demo-level truth-source，需要单独运行并记录 artifact。
 
 换句话说：
 
 - `runtime smoke = 已启动`
-- `backend mapping gate = marker 覆盖的真实 backend 映射或布局/事件/theme 路径已进入正式 gate`
+- `backend mapping gate = marker 覆盖的真实 backend 映射，或已声明 special-case exclusion 的正式 gate`
 - `automatic visible gate = dummy SDL + PPM readback 下可显示、可读、可判定`
 - `manual artifact gate = 有平台、SDL video driver、demo target、artifact 路径和人工结论记录`
 
-这些不是同一层证据。`capture` 非空仍不能单独证明 UI 正常显示；`automatic visible gate` 通过也不能写成人工窗口验收通过，除非已经执行 `C6 / manual artifact gate`。
+这些不是同一层证据。`capture` 非空仍不能单独证明 UI 正常显示；`automatic visible gate` 通过也不能写成人工窗口验收通过，除非已经执行 final release `manual artifact gate`。
 
 运行 demo、`automatic visible gate`、人工窗口观察也不是同一件事：
 
 - 直接运行 demo：用于本地观察交互和窗口行为，不自动生成可追溯验收结论。
 - `automatic visible gate`：脚本设置 dummy SDL，通过 PPM readback 做可重复判定，适合 CI/回归。
-- 人工窗口观察：需要真实窗口环境和 artifact 记录，只有 `C6 / manual artifact gate` 才能支撑“人工窗口验收通过”。
+- 人工窗口观察：需要真实窗口环境和 artifact 记录，只有 final release `manual artifact gate` 才能支撑“人工窗口验收通过”。
 
 ### manual artifact gate
 
-`C6 / manual artifact gate` 只在需要人工 OS 窗口证据时单独运行，默认不接入 CTest，也不让无窗口 CI 因缺少桌面环境失败。
+final release `manual artifact gate` 只在需要人工 OS 窗口证据时单独运行，默认不接入 CTest，也不让无窗口 CI 因缺少桌面环境失败。
 
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
@@ -510,9 +698,9 @@ artifacts/picoui/manual-window/<demo-name>/frame.ppm
 
 如果脚本输出 `PICOUI_MANUAL_WINDOW_ARTIFACT=SKIP`，只能说明当前环境不适合执行人工窗口验收；如果使用 `SDL_VIDEODRIVER=dummy` 生成 PPM，也只能作为 readback artifact，不能写成人工窗口结论。该 gate 也不能替代 `ctest`、backend mapping gate 或 automatic visible gate。
 
-## 七、PicoUI 本地门禁矩阵
+## 八、PicoUI 本地门禁矩阵
 
-当前主项目存在 `.github/workflows/cmake-single-platform.yml`，但它是 `workflow_dispatch` / `release published` 触发的 `build pack` workflow，执行 `gen_pack.sh` 与 `Open-CMSIS-Pack/gen-pack-action`，不是现有测试 workflow，也不适合在 `C4` 内低风险最小接入 PicoUI gate。因此当前只固定本地运行口径，不改 workflow、不新造 CI 框架。以后若给主项目 CI 接入 PicoUI gate，应复用本节同一矩阵，不另开一套说法。
+当前主项目存在 `.github/workflows/cmake-single-platform.yml`，但它是 `workflow_dispatch` / `release published` 触发的 `build pack` workflow，执行 `gen_pack.sh` 与 `Open-CMSIS-Pack/gen-pack-action`，不是现有测试 workflow，也不适合在当前任务内低风险最小接入 PicoUI gate。因此当前只固定本地运行口径，不改 workflow、不新造 CI 框架。以后若给主项目 CI 接入 PicoUI gate，应复用本节同一矩阵，不另开一套说法。
 
 每次 PicoUI 改动后的最小本地门禁是：
 
@@ -540,7 +728,7 @@ ctest --test-dir build -L picoui --output-on-failure
 
 因此，`ctest --test-dir build -L picoui --output-on-failure` 不能单独替代 `visible` 和 `mapping` label，也不能替代 standalone runtime 脚本的完整本地门禁。
 
-## 八、新增 demo/widget/layout/theme 的 gate 同步规则
+## 九、新增 demo/widget/layout/theme 的 gate 同步规则
 
 后续新增 demo、新增 widget、新增 layout 或新增 theme 能力时，必须同步维护 gate matrix，不能只改 demo 或只改 backend 后用 `ctest -L picoui` 代替 visible/mapping/manual artifact 层级。
 
@@ -578,7 +766,7 @@ ctest --test-dir build -L picoui --output-on-failure
 - 禁止只改 backend，不更新 demo、public contract、visible 样本和 gate matrix。
 - 禁止用 `ctest --test-dir build -L picoui --output-on-failure` 单独替代 `ctest -L visible`、`ctest -L mapping`、standalone runtime 脚本或 manual artifact gate。
 
-## 九、推荐阅读顺序
+## 十、推荐阅读顺序
 
 1. `hello_world`
 2. `basic_widgets`
@@ -587,7 +775,7 @@ ctest --test-dir build -L picoui --output-on-failure
 5. `theme_showcase`
 6. `settings_panel`
 
-## 十、最常用命令
+## 十一、最常用命令
 
 构建某个 demo：
 
@@ -608,7 +796,7 @@ rtk cmake -S . -B build
 rtk cmake --build build -j8
 ```
 
-## 十一、常见问题
+## 十二、常见问题
 
 ### 1. 我传了 `-DUSE_DEMO=2`，为什么没跑 `picoui` demo
 

@@ -35,6 +35,22 @@ interactive_mapping_targets = {
         "real_ids": ["primary", "secondary", "title"],
         "reason": "progress bar demo proves both horizontal and vertical progress bars are real LingDongGUI widgets.",
     },
+    "picoui_arc_basic_demo": {
+        "real_ids": ["title", "arc"],
+        "reason": "arc demo proves the arc widget is a real LingDongGUI widget with named backend ids.",
+    },
+    "picoui_gauge_basic_demo": {
+        "real_ids": ["title", "gauge"],
+        "reason": "gauge demo proves the gauge widget is a real LingDongGUI widget with named backend ids.",
+    },
+    "picoui_icon_slider_basic_demo": {
+        "real_ids": ["title", "icon_slider"],
+        "reason": "icon slider demo proves the composite icon slider widget is a real LingDongGUI widget.",
+    },
+    "picoui_radial_menu_basic_demo": {
+        "real_ids": ["title", "radial_menu"],
+        "reason": "radial menu demo proves the composite radial menu widget is a real LingDongGUI widget.",
+    },
     "picoui_progress_wheel_basic_demo": {
         "real_ids": ["title", "wheel"],
         "reason": "progress wheel demo proves the progress wheel widget is a real LingDongGUI widget.",
@@ -156,6 +172,10 @@ def _assert_target_matrix_complete(target_matrix: dict[str, dict[str, object]]) 
         "picoui_settings_panel_demo",
         "picoui_list_basic_demo",
         "picoui_progress_bar_basic_demo",
+        "picoui_arc_basic_demo",
+        "picoui_gauge_basic_demo",
+        "picoui_icon_slider_basic_demo",
+        "picoui_radial_menu_basic_demo",
         "picoui_progress_wheel_basic_demo",
         "picoui_qrcode_basic_demo",
         "picoui_date_time_basic_demo",

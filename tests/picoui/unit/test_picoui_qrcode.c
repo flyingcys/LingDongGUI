@@ -2,6 +2,9 @@
 #include "picoui/qrcode.h"
 #include "picoui/widget.h"
 #include "picoui/window.h"
+#include "../../../src/gui/ldQRCode.h"
+#include "backend.h"
+#include "internal.h"
 
 #include <assert.h>
 #include <string.h>
@@ -63,6 +66,36 @@ static void test_qrcode_rejects_invalid_inputs(struct picoui_window *win)
     assert(picoui_qrcode_get_text(0) == 0);
 }
 
+static void test_qrcode_release_contract_covers_configuration_boundary(struct picoui_window *win)
+{
+    const char *value = "https://example.local/final-release";
+    struct picoui_qrcode *qrcode = picoui_qrcode_create_with_props(
+        (struct picoui_widget *)win,
+        &(struct picoui_qrcode_props){
+            .id = "qr_release_ready",
+            .style_class = "qr-card",
+            .text = value,
+        });
+    struct picoui_backend_widget *backend;
+    ldQRCode_t *ld_qrcode;
+
+    assert(qrcode != 0);
+    backend = (struct picoui_backend_widget *)qrcode->widget.backend_widget;
+    assert(backend != 0);
+    assert(backend->kind == PICOUI_BACKEND_WIDGET_QRCODE);
+    assert(backend->style_class == (const char *)"qr-card");
+    ld_qrcode = (ldQRCode_t *)backend->ld_widget;
+    assert(ld_qrcode != 0);
+
+    assert(strcmp(picoui_qrcode_get_text(qrcode), value) == 0);
+    assert(strcmp((const char *)ld_qrcode->pStr, value) == 0);
+    assert(ld_qrcode->qrColor == GLCD_COLOR_BLACK);
+    assert(ld_qrcode->bgColor == GLCD_COLOR_WHITE);
+    assert(ld_qrcode->qrEcc == QR_ECC_7);
+    assert(ld_qrcode->qrMaxVersion == 2);
+    assert(ld_qrcode->qrZoom == 4);
+}
+
 int main(void)
 {
     struct picoui_app *app = picoui_app_create();
@@ -75,6 +108,7 @@ int main(void)
     test_qrcode_create_and_props(win);
     test_qrcode_set_get_text(win);
     test_qrcode_rejects_invalid_inputs(win);
+    test_qrcode_release_contract_covers_configuration_boundary(win);
 
     picoui_app_destroy(app);
     return 0;

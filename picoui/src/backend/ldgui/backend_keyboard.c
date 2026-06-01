@@ -195,6 +195,7 @@ int picoui_backend_keyboard_exit(void *backend_widget)
 {
     struct picoui_backend_widget *backend = backend_widget;
     struct picoui_line_edit *line_edit;
+    struct picoui_widget *editing_owner_widget = NULL;
     ldKeyboard_t *ld_keyboard;
     ldLineEdit_t *ld_line_edit = NULL;
 
@@ -207,6 +208,9 @@ int picoui_backend_keyboard_exit(void *backend_widget)
         return -1;
     }
 
+    if (backend->owner != NULL) {
+        editing_owner_widget = backend->owner->editing_owner;
+    }
     line_edit = picoui_backend_keyboard_get_target_line_edit(backend);
     ldKeyboardExit(ld_keyboard);
     if (line_edit != NULL) {
@@ -220,6 +224,9 @@ int picoui_backend_keyboard_exit(void *backend_widget)
             PICOUI_EDIT_RESULT_CANCEL;
         (void)picoui_widget_mark_edit_result(&line_edit->widget, PICOUI_EDIT_RESULT_CANCEL);
         (void)picoui_widget_release_editing(&line_edit->widget);
+    } else if (editing_owner_widget != NULL) {
+        (void)picoui_widget_mark_edit_result(editing_owner_widget, PICOUI_EDIT_RESULT_CANCEL);
+        (void)picoui_widget_release_editing(editing_owner_widget);
     }
     if (backend->host_widget != NULL && picoui_widget_is_focus_owner(backend->host_widget)) {
         return picoui_widget_release_focus(backend->host_widget);

@@ -26,5 +26,7 @@ int picoui_date_time_set_format(struct picoui_date_time *dt, const char *format)
 int picoui_date_time_set_date(struct picoui_date_time *dt, int year, int month, int day);
 int picoui_date_time_set_time(struct picoui_date_time *dt, int hour, int minute, int second);
 const char *picoui_date_time_get_format(const struct picoui_date_time *dt);
+int picoui_date_time_get_date(const struct picoui_date_time *dt, int *year, int *month, int *day);
+int picoui_date_time_get_time(const struct picoui_date_time *dt, int *hour, int *minute, int *second);
 
 #endif

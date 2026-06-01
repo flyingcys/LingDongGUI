@@ -7,11 +7,33 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[3]
-DEFAULT_BUILD = ROOT / "build"
+DEFAULT_BUILD = ROOT / "build" / "picoui-runtime"
 DEMO_TIMEOUT_SECONDS = 8
 DEMOS = {
+    "hello_world": "picoui_hello_world_demo",
     "basic_widgets": "picoui_basic_widgets_demo",
+    "layout_flex": "picoui_layout_flex_demo",
+    "layout_grid": "picoui_layout_grid_demo",
+    "theme_showcase": "picoui_theme_showcase_demo",
     "settings_panel": "picoui_settings_panel_demo",
+    "list_basic": "picoui_list_basic_demo",
+    "progress_bar_basic": "picoui_progress_bar_basic_demo",
+    "arc_basic": "picoui_arc_basic_demo",
+    "gauge_basic": "picoui_gauge_basic_demo",
+    "icon_slider_basic": "picoui_icon_slider_basic_demo",
+    "radial_menu_basic": "picoui_radial_menu_basic_demo",
+    "progress_wheel_basic": "picoui_progress_wheel_basic_demo",
+    "qrcode_basic": "picoui_qrcode_basic_demo",
+    "message_box_basic": "picoui_message_box_basic_demo",
+    "date_time_basic": "picoui_date_time_basic_demo",
+    "clock_basic": "picoui_clock_basic_demo",
+    "keyboard_basic": "picoui_keyboard_basic_demo",
+    "line_edit_basic": "picoui_line_edit_basic_demo",
+    "combo_box_basic": "picoui_combo_box_basic_demo",
+    "scroll_selecter_basic": "picoui_scroll_selecter_basic_demo",
+    "table_basic": "picoui_table_basic_demo",
+    "graph_basic": "picoui_graph_basic_demo",
+    "calendar_basic": "picoui_calendar_basic_demo",
 }
 
 
@@ -37,6 +59,8 @@ def _find_executable(build_dir: Path, target: str) -> Path:
         build_dir / target / f"{target}{suffix}",
         build_dir / f"{target}{suffix}",
         build_dir / "examples" / f"{target}{suffix}",
+        ROOT / "build" / "picoui-runtime" / "examples" / "sdl" / f"{target}{suffix}",
+        ROOT / "build" / "examples" / "sdl" / f"{target}{suffix}",
     ]
     executable = next((path for path in candidates if path.is_file()), None)
     if executable is None:
@@ -63,7 +87,7 @@ def _print_metadata(status: str, metadata: dict[str, str]) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="生成 PicoUI C6 可选人工窗口验收 artifact。"
+        description="生成 PicoUI a-0.6 final release demo-level 人工窗口验收 artifact。"
     )
     parser.add_argument("--demo", choices=sorted(DEMOS), default="basic_widgets")
     parser.add_argument("--build-dir", default=str(DEFAULT_BUILD), help="包含 demo target 的 CMake build 目录")

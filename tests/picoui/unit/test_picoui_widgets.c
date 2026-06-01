@@ -283,9 +283,10 @@ static void test_hidden_or_disabled_widget_cannot_keep_focus(struct picoui_app *
     assert(button->widget.focus_enter_count == focus_enter_before + 2);
 }
 
-static void test_model_readback_policy_is_explicit_for_data_widgets(struct picoui_switch *sw,
-                                                                    struct picoui_checkbox *cb,
-                                                                    struct picoui_slider *slider)
+static void test_checked_and_value_widgets_use_backend_truth_readback_contract(
+    struct picoui_switch *sw,
+    struct picoui_checkbox *cb,
+    struct picoui_slider *slider)
 {
     struct picoui_backend_widget *sw_backend;
     struct picoui_backend_widget *cb_backend;
@@ -984,7 +985,7 @@ static void test_text_font_null_falls_back_to_default_contract(struct picoui_win
     assert(test_text_consumed_font(ld_text) == initial_font);
 }
 
-static void test_text_font_runtime_rebind_updates_real_ldtext(struct picoui_window *parent)
+static void test_text_font_runtime_rebind_updates_real_ldtext_and_public_cache(struct picoui_window *parent)
 {
     struct picoui_font small_font = {"Sans", 8};
     struct picoui_font large_font = {"Sans", 24};
@@ -1044,7 +1045,8 @@ static void test_text_font_backend_failure_does_not_split_state(struct picoui_wi
     assert(ld_text->ptFont == old_real_font);
 }
 
-static void test_image_style_class_and_user_data_are_metadata_only_contract(struct picoui_window *parent)
+static void test_image_style_class_and_user_data_are_stable_widget_metadata_contract(
+    struct picoui_window *parent)
 {
     struct picoui_image *image = picoui_image_create(parent, "image_metadata_only");
     struct picoui_backend_widget *backend;
@@ -1095,6 +1097,20 @@ static void test_image_enabled_remains_rejected_contract(struct picoui_window *p
     assert(image->widget.enabled == 1);
     assert(picoui_widget_set_enabled(&image->widget, 0) == -1);
     assert(image->widget.enabled == 1);
+}
+
+static void test_image_padding_is_cached_only_and_not_native_layout_contract(struct picoui_image *image)
+{
+    struct picoui_backend_widget *backend;
+
+    assert(image != 0);
+    backend = image->widget.backend_widget;
+    assert(backend != 0);
+
+    assert(image->widget.padding == 0);
+    assert(picoui_widget_set_padding(&image->widget, 6) == 0);
+    assert(image->widget.padding == 6);
+    assert(backend->kind == PICOUI_BACKEND_WIDGET_IMAGE);
 }
 
 static void test_button_j4_contract(struct picoui_window *parent,
@@ -1776,11 +1792,12 @@ int main(void)
     test_props_initial_values(app, &font, &image_source, &button_cookie, &common_cookie);
     test_image_source_boundary(win, &image_source);
     test_image_theme_apply_is_rejected(theme, image, &image_source);
-    test_image_style_class_and_user_data_are_metadata_only_contract(win);
+    test_image_style_class_and_user_data_are_stable_widget_metadata_contract(win);
     test_image_theme_style_parts_remain_explicitly_rejected(theme, win);
     test_image_enabled_remains_rejected_contract(win);
+    test_image_padding_is_cached_only_and_not_native_layout_contract(image);
     test_text_font_null_falls_back_to_default_contract(win);
-    test_text_font_runtime_rebind_updates_real_ldtext(win);
+    test_text_font_runtime_rebind_updates_real_ldtext_and_public_cache(win);
     test_text_font_backend_failure_does_not_split_state(win);
     test_button_j4_contract(win,
                             app_state,
@@ -1887,7 +1904,7 @@ int main(void)
     test_slider_j5_contract(slider, &button_release_source, &button_press_source);
     test_focus_owner_switches_between_widgets(app, button, sw, cb, slider, app_state->ld_scene);
     test_hidden_or_disabled_widget_cannot_keep_focus(app, button);
-    test_model_readback_policy_is_explicit_for_data_widgets(sw, cb, slider);
+    test_checked_and_value_widgets_use_backend_truth_readback_contract(sw, cb, slider);
     test_item_model_identity_survives_frame_update(sw, cb, slider, app_state->ld_scene);
     test_native_duplicate_value_does_not_advance_data_model(sw, cb, slider, app_state->ld_scene);
 
