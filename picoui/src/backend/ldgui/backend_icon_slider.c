@@ -25,6 +25,8 @@ static arm_2d_tile_t *const g_icon_slider_masks[] = {
     (arm_2d_tile_t *)&c_tilePointerSecMask,
 };
 
+#define PICOUI_BACKEND_ICON_SLIDER_NATIVE_MAX_ITEMS 8
+
 static struct picoui_backend_app_state *picoui_backend_icon_slider_get_app_state(void *parent)
 {
     struct picoui_backend_widget *parent_widget = parent;
@@ -166,7 +168,7 @@ int picoui_backend_icon_slider_add_item(void *backend_widget, const char *id, co
         widget->ld_widget == NULL ||
         id == NULL ||
         text == NULL ||
-        widget->list_item_count >= PICOUI_BACKEND_LIST_MAX_ITEMS) {
+        widget->list_item_count >= PICOUI_BACKEND_ICON_SLIDER_NATIVE_MAX_ITEMS) {
         return -1;
     }
 

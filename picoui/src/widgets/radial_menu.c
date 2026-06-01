@@ -79,10 +79,8 @@ struct picoui_radial_menu *picoui_radial_menu_create_with_props(
     radial_menu->x_axis = props->x_axis > 0 ? props->x_axis : radial_menu->x_axis;
     radial_menu->y_axis = props->y_axis > 0 ? props->y_axis : radial_menu->y_axis;
     radial_menu->item_max = props->item_max > 0 ? props->item_max : radial_menu->item_max;
-    if (props->default_index >= 0 &&
-        picoui_radial_menu_set_selected_index(radial_menu, props->default_index) != 0) {
-        free(radial_menu);
-        return 0;
+    if (props->default_index >= 0) {
+        radial_menu->selected_index = props->default_index;
     }
     return radial_menu;
 }
@@ -104,6 +102,18 @@ int picoui_radial_menu_add_item(struct picoui_radial_menu *radial_menu, const ch
     radial_menu->items[index].text = id;
     if (radial_menu->selected_index < 0) {
         radial_menu->selected_index = 0;
+    }
+    if (radial_menu->selected_index >= 0 &&
+        radial_menu->selected_index < radial_menu->item_count &&
+        picoui_backend_radial_menu_set_selected_index(radial_menu->widget.backend_widget,
+                                                      radial_menu->selected_index) != 0) {
+        radial_menu->item_count--;
+        radial_menu->items[index].id = 0;
+        radial_menu->items[index].text = 0;
+        if (radial_menu->item_count == 0) {
+            radial_menu->selected_index = -1;
+        }
+        return -1;
     }
     return 0;
 }

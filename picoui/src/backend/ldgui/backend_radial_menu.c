@@ -26,6 +26,8 @@ static arm_2d_tile_t *const g_radial_menu_masks[] = {
     (arm_2d_tile_t *)&c_tileQuaterArcMask,
 };
 
+#define PICOUI_BACKEND_RADIAL_MENU_NATIVE_MAX_ITEMS 5
+
 static struct picoui_backend_app_state *picoui_backend_radial_menu_get_app_state(void *parent)
 {
     struct picoui_backend_widget *parent_widget = parent;
@@ -159,7 +161,7 @@ int picoui_backend_radial_menu_add_item(void *backend_widget, const char *id)
         widget->kind != PICOUI_BACKEND_WIDGET_RADIAL_MENU ||
         widget->ld_widget == NULL ||
         id == NULL ||
-        widget->list_item_count >= PICOUI_BACKEND_LIST_MAX_ITEMS) {
+        widget->list_item_count >= PICOUI_BACKEND_RADIAL_MENU_NATIVE_MAX_ITEMS) {
         return -1;
     }
 

@@ -58,5 +58,10 @@ dkms.conf
 uiPageOutput/
 third_party/lvgl/
 
+# Python cache / intermediates
+__pycache__/
+*.py[cod]
+*.pyo
+
 
 build*
