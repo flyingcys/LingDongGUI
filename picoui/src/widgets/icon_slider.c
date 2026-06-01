@@ -17,7 +17,15 @@ static int picoui_icon_slider_props_are_valid(const struct picoui_icon_slider_pr
            props->pages >= 0;
 }
 
-struct picoui_icon_slider *picoui_icon_slider_create(struct picoui_widget *parent, const char *id)
+static struct picoui_icon_slider *picoui_icon_slider_create_with_backend_config(struct picoui_widget *parent,
+                                                                                const char *id,
+                                                                                int width,
+                                                                                int height,
+                                                                                int icon_width,
+                                                                                int icon_space,
+                                                                                int columns,
+                                                                                int rows,
+                                                                                int pages)
 {
     struct picoui_icon_slider *icon_slider;
 
@@ -30,7 +38,15 @@ struct picoui_icon_slider *picoui_icon_slider_create(struct picoui_widget *paren
         return 0;
     }
 
-    icon_slider->widget.backend_widget = picoui_backend_create_icon_slider(parent->backend_widget, id);
+    icon_slider->widget.backend_widget = picoui_backend_create_icon_slider(parent->backend_widget,
+                                                                           id,
+                                                                           width,
+                                                                           height,
+                                                                           icon_width,
+                                                                           icon_space,
+                                                                           columns,
+                                                                           rows,
+                                                                           pages);
     if (icon_slider->widget.backend_widget == 0) {
         free(icon_slider);
         return 0;
@@ -39,11 +55,11 @@ struct picoui_icon_slider *picoui_icon_slider_create(struct picoui_widget *paren
     icon_slider->id = id;
     icon_slider->selected_index = -1;
     icon_slider->horizontal = 1;
-    icon_slider->icon_width = 48;
-    icon_slider->icon_space = 4;
-    icon_slider->columns = 4;
-    icon_slider->rows = 1;
-    icon_slider->pages = 2;
+    icon_slider->icon_width = icon_width;
+    icon_slider->icon_space = icon_space;
+    icon_slider->columns = columns;
+    icon_slider->rows = rows;
+    icon_slider->pages = pages;
     icon_slider->widget.visible = 1;
     icon_slider->widget.enabled = 1;
     if (picoui_backend_widget_bind_host(icon_slider->widget.backend_widget, &icon_slider->widget) != 0 ||
@@ -53,6 +69,11 @@ struct picoui_icon_slider *picoui_icon_slider_create(struct picoui_widget *paren
     }
 
     return icon_slider;
+}
+
+struct picoui_icon_slider *picoui_icon_slider_create(struct picoui_widget *parent, const char *id)
+{
+    return picoui_icon_slider_create_with_backend_config(parent, id, 220, 86, 48, 4, 4, 1, 2);
 }
 
 struct picoui_icon_slider *picoui_icon_slider_create_with_props(
@@ -66,7 +87,15 @@ struct picoui_icon_slider *picoui_icon_slider_create_with_props(
         return 0;
     }
 
-    icon_slider = picoui_icon_slider_create(parent, props->id);
+    icon_slider = picoui_icon_slider_create_with_backend_config(parent,
+                                                                props->id,
+                                                                props->width > 0 ? props->width : 220,
+                                                                props->height > 0 ? props->height : 86,
+                                                                props->icon_width > 0 ? props->icon_width : 48,
+                                                                props->icon_space,
+                                                                props->columns > 0 ? props->columns : 4,
+                                                                props->rows > 0 ? props->rows : 1,
+                                                                props->pages > 0 ? props->pages : 2);
     if (icon_slider == 0) {
         return 0;
     }
@@ -74,18 +103,10 @@ struct picoui_icon_slider *picoui_icon_slider_create_with_props(
     if (picoui_widget_set_user_data(&icon_slider->widget, props->user_data) != 0 ||
         (props->style_class != 0 &&
          picoui_widget_set_style_class(&icon_slider->widget, props->style_class) != 0) ||
-        ((props->width > 0 || props->height > 0) &&
-         picoui_widget_set_size(&icon_slider->widget, props->width, props->height) != 0) ||
         picoui_icon_slider_set_horizontal(icon_slider, props->horizontal != 0) != 0) {
         free(icon_slider);
         return 0;
     }
-
-    icon_slider->icon_width = props->icon_width > 0 ? props->icon_width : icon_slider->icon_width;
-    icon_slider->icon_space = props->icon_space;
-    icon_slider->columns = props->columns > 0 ? props->columns : icon_slider->columns;
-    icon_slider->rows = props->rows > 0 ? props->rows : icon_slider->rows;
-    icon_slider->pages = props->pages > 0 ? props->pages : icon_slider->pages;
     return icon_slider;
 }
 

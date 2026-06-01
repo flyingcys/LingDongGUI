@@ -100,7 +100,15 @@ static bool picoui_backend_icon_slider_native_slot(struct ld_scene_t *scene, ldM
     return false;
 }
 
-void *picoui_backend_create_icon_slider(void *parent, const char *id)
+void *picoui_backend_create_icon_slider(void *parent,
+                                        const char *id,
+                                        int width,
+                                        int height,
+                                        int icon_width,
+                                        int icon_space,
+                                        int columns,
+                                        int rows,
+                                        int pages)
 {
     struct picoui_backend_widget *widget;
     struct picoui_backend_widget *parent_widget = parent;
@@ -108,8 +116,21 @@ void *picoui_backend_create_icon_slider(void *parent, const char *id)
     ldIconSlider_t *ld_icon_slider;
     uint16_t name_id;
 
-    if (parent == 0 || id == 0) {
+    if (parent == 0 || id == 0 || width <= 0 || height <= 0 || icon_width <= 0) {
         return 0;
+    }
+
+    if (icon_space < 0) {
+        icon_space = 0;
+    }
+    if (columns <= 0) {
+        columns = 1;
+    }
+    if (rows <= 0) {
+        rows = 1;
+    }
+    if (pages <= 0) {
+        pages = 1;
     }
 
     app_state = picoui_backend_icon_slider_get_app_state(parent);
@@ -129,13 +150,13 @@ void *picoui_backend_create_icon_slider(void *parent, const char *id)
                                        parent_widget->ld_name_id,
                                        0,
                                        0,
-                                       220,
-                                       86,
-                                       46,
-                                       2,
-                                       4,
-                                       1,
-                                       2,
+                                       (int16_t)width,
+                                       (int16_t)height,
+                                       (int16_t)icon_width,
+                                       (uint8_t)icon_space,
+                                       (uint8_t)columns,
+                                       (uint8_t)rows,
+                                       (uint8_t)pages,
                                        (arm_2d_font_t *)&ARM_2D_FONT_6x8);
     if (ld_icon_slider == NULL) {
         free(widget);

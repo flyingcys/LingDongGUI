@@ -16,7 +16,13 @@ static int picoui_radial_menu_props_are_valid(const struct picoui_radial_menu_pr
            props->default_index >= -1;
 }
 
-struct picoui_radial_menu *picoui_radial_menu_create(struct picoui_widget *parent, const char *id)
+static struct picoui_radial_menu *picoui_radial_menu_create_with_backend_config(struct picoui_widget *parent,
+                                                                                const char *id,
+                                                                                int width,
+                                                                                int height,
+                                                                                int x_axis,
+                                                                                int y_axis,
+                                                                                int item_max)
 {
     struct picoui_radial_menu *radial_menu;
 
@@ -29,7 +35,13 @@ struct picoui_radial_menu *picoui_radial_menu_create(struct picoui_widget *paren
         return 0;
     }
 
-    radial_menu->widget.backend_widget = picoui_backend_create_radial_menu(parent->backend_widget, id);
+    radial_menu->widget.backend_widget = picoui_backend_create_radial_menu(parent->backend_widget,
+                                                                           id,
+                                                                           width,
+                                                                           height,
+                                                                           x_axis,
+                                                                           y_axis,
+                                                                           item_max);
     if (radial_menu->widget.backend_widget == 0) {
         free(radial_menu);
         return 0;
@@ -37,9 +49,9 @@ struct picoui_radial_menu *picoui_radial_menu_create(struct picoui_widget *paren
 
     radial_menu->id = id;
     radial_menu->selected_index = -1;
-    radial_menu->x_axis = 68;
-    radial_menu->y_axis = 46;
-    radial_menu->item_max = 5;
+    radial_menu->x_axis = x_axis;
+    radial_menu->y_axis = y_axis;
+    radial_menu->item_max = item_max;
     radial_menu->widget.visible = 1;
     radial_menu->widget.enabled = 1;
     if (picoui_backend_widget_bind_host(radial_menu->widget.backend_widget, &radial_menu->widget) != 0 ||
@@ -49,6 +61,11 @@ struct picoui_radial_menu *picoui_radial_menu_create(struct picoui_widget *paren
     }
 
     return radial_menu;
+}
+
+struct picoui_radial_menu *picoui_radial_menu_create(struct picoui_widget *parent, const char *id)
+{
+    return picoui_radial_menu_create_with_backend_config(parent, id, 194, 96, 68, 46, 5);
 }
 
 struct picoui_radial_menu *picoui_radial_menu_create_with_props(
@@ -62,7 +79,13 @@ struct picoui_radial_menu *picoui_radial_menu_create_with_props(
         return 0;
     }
 
-    radial_menu = picoui_radial_menu_create(parent, props->id);
+    radial_menu = picoui_radial_menu_create_with_backend_config(parent,
+                                                                props->id,
+                                                                props->width > 0 ? props->width : 194,
+                                                                props->height > 0 ? props->height : 96,
+                                                                props->x_axis > 0 ? props->x_axis : 68,
+                                                                props->y_axis > 0 ? props->y_axis : 46,
+                                                                props->item_max > 0 ? props->item_max : 5);
     if (radial_menu == 0) {
         return 0;
     }
@@ -76,9 +99,6 @@ struct picoui_radial_menu *picoui_radial_menu_create_with_props(
         return 0;
     }
 
-    radial_menu->x_axis = props->x_axis > 0 ? props->x_axis : radial_menu->x_axis;
-    radial_menu->y_axis = props->y_axis > 0 ? props->y_axis : radial_menu->y_axis;
-    radial_menu->item_max = props->item_max > 0 ? props->item_max : radial_menu->item_max;
     if (props->default_index >= 0) {
         radial_menu->selected_index = props->default_index;
     }

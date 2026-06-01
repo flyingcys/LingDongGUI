@@ -171,8 +171,22 @@ void *picoui_backend_create_switch(void *parent, const char *id);
 void *picoui_backend_create_slider(void *parent, const char *id);
 void *picoui_backend_create_arc(void *parent, const char *id);
 void *picoui_backend_create_gauge(void *parent, const char *id);
-void *picoui_backend_create_icon_slider(void *parent, const char *id);
-void *picoui_backend_create_radial_menu(void *parent, const char *id);
+void *picoui_backend_create_icon_slider(void *parent,
+                                        const char *id,
+                                        int width,
+                                        int height,
+                                        int icon_width,
+                                        int icon_space,
+                                        int columns,
+                                        int rows,
+                                        int pages);
+void *picoui_backend_create_radial_menu(void *parent,
+                                        const char *id,
+                                        int width,
+                                        int height,
+                                        int x_axis,
+                                        int y_axis,
+                                        int item_max);
 void *picoui_backend_create_progress_bar(void *parent, const char *id);
 void *picoui_backend_create_qrcode(void *parent, const char *id);
 void *picoui_backend_create_progress_wheel(void *parent, const char *id);

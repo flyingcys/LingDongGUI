@@ -97,7 +97,13 @@ static bool picoui_backend_radial_menu_native_slot(struct ld_scene_t *scene, ldM
     return false;
 }
 
-void *picoui_backend_create_radial_menu(void *parent, const char *id)
+void *picoui_backend_create_radial_menu(void *parent,
+                                        const char *id,
+                                        int width,
+                                        int height,
+                                        int x_axis,
+                                        int y_axis,
+                                        int item_max)
 {
     struct picoui_backend_widget *widget;
     struct picoui_backend_widget *parent_widget = parent;
@@ -105,8 +111,18 @@ void *picoui_backend_create_radial_menu(void *parent, const char *id)
     ldRadialMenu_t *ld_radial_menu;
     uint16_t name_id;
 
-    if (parent == 0 || id == 0) {
+    if (parent == 0 || id == 0 || width <= 0 || height <= 0) {
         return 0;
+    }
+
+    if (x_axis <= 0) {
+        x_axis = 1;
+    }
+    if (y_axis <= 0) {
+        y_axis = 1;
+    }
+    if (item_max <= 0) {
+        item_max = 1;
     }
 
     app_state = picoui_backend_radial_menu_get_app_state(parent);
@@ -126,11 +142,11 @@ void *picoui_backend_create_radial_menu(void *parent, const char *id)
                                        parent_widget->ld_name_id,
                                        0,
                                        0,
-                                       194,
-                                       96,
-                                       68,
-                                       46,
-                                       5);
+                                       (int16_t)width,
+                                       (int16_t)height,
+                                       (uint16_t)x_axis,
+                                       (uint16_t)y_axis,
+                                       (uint8_t)item_max);
     if (ld_radial_menu == NULL) {
         free(widget);
         return 0;

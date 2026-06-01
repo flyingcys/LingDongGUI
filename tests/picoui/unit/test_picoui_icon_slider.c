@@ -2,6 +2,8 @@
 #include "picoui/icon_slider.h"
 #include "picoui/widget.h"
 #include "picoui/window.h"
+#include "../../../src/gui/ldIconSlider.h"
+#include "internal.h"
 
 #include <assert.h>
 #include <stdio.h>
@@ -70,9 +72,53 @@ static void test_icon_slider_rejects_items_beyond_native_capacity(void)
     picoui_app_destroy(app);
 }
 
+static void test_icon_slider_create_with_props_pushes_backend_dimensions(void)
+{
+    struct picoui_app *app;
+    struct picoui_window *win;
+    struct picoui_icon_slider *icon_slider;
+    struct picoui_backend_widget *backend;
+    ldIconSlider_t *ld_icon_slider;
+    const struct picoui_icon_slider_props props = {
+        .id = "icon_slider",
+        .width = 180,
+        .height = 120,
+        .icon_width = 40,
+        .icon_space = 9,
+        .columns = 2,
+        .rows = 3,
+        .pages = 4,
+        .horizontal = 0,
+    };
+
+    app = picoui_app_create();
+    assert(app != 0);
+    win = picoui_window_create(app, "root");
+    assert(win != 0);
+
+    icon_slider = picoui_icon_slider_create_with_props((struct picoui_widget *)win, &props);
+    assert(icon_slider != 0);
+    backend = (struct picoui_backend_widget *)icon_slider->widget.backend_widget;
+    assert(backend != 0);
+    ld_icon_slider = (ldIconSlider_t *)backend->ld_widget;
+    assert(ld_icon_slider != 0);
+
+    assert(ld_icon_slider->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iWidth == props.width);
+    assert(ld_icon_slider->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iHeight == props.height);
+    assert(ld_icon_slider->iconWidth == props.icon_width);
+    assert(ld_icon_slider->iconSpace == props.icon_space);
+    assert(ld_icon_slider->columnCount == props.columns);
+    assert(ld_icon_slider->rowCount == props.rows);
+    assert(ld_icon_slider->pageMax == props.pages);
+    assert(ld_icon_slider->isHorizontalScroll == false);
+
+    picoui_app_destroy(app);
+}
+
 int main(void)
 {
     test_icon_slider_selection_and_value_follow_backend_truth();
     test_icon_slider_rejects_items_beyond_native_capacity();
+    test_icon_slider_create_with_props_pushes_backend_dimensions();
     return 0;
 }
