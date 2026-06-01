@@ -1,0 +1,141 @@
+#include "backend.h"
+#include "internal.h"
+#include "ldAnimation.h"
+
+#include <stdlib.h>
+
+static struct picoui_backend_app_state *picoui_backend_animation_get_app_state(void *parent)
+{
+    struct picoui_backend_widget *parent_widget = parent;
+
+    if (parent_widget == NULL || parent_widget->owner == NULL || parent_widget->owner->backend_app == NULL) {
+        return NULL;
+    }
+    return (struct picoui_backend_app_state *)parent_widget->owner->backend_app;
+}
+
+static ldAnimation_t *picoui_backend_animation_get_ld(struct picoui_animation *animation)
+{
+    struct picoui_backend_widget *backend;
+
+    if (animation == NULL || animation->widget.backend_widget == NULL) {
+        return NULL;
+    }
+
+    backend = (struct picoui_backend_widget *)animation->widget.backend_widget;
+    if (backend->kind != PICOUI_BACKEND_WIDGET_ANIMATION || backend->ld_widget == NULL) {
+        return NULL;
+    }
+
+    return (ldAnimation_t *)backend->ld_widget;
+}
+
+void *picoui_backend_create_animation(void *parent,
+                                      const char *id,
+                                      int width,
+                                      int height,
+                                      struct picoui_image_source *source,
+                                      int period_ms)
+{
+    struct picoui_backend_widget *widget;
+    struct picoui_backend_widget *parent_widget = parent;
+    struct picoui_backend_app_state *app_state;
+    ldAnimation_t *ld_animation;
+    uint16_t name_id;
+
+    if (parent == 0 || id == 0 || width <= 0 || height <= 0 || period_ms <= 0 ||
+        source == NULL || source->img_tile == NULL) {
+        return 0;
+    }
+
+    app_state = picoui_backend_animation_get_app_state(parent);
+    if (app_state == NULL || app_state->ld_scene == NULL || parent_widget->ld_widget == NULL) {
+        return 0;
+    }
+
+    widget = calloc(1, sizeof(*widget));
+    if (widget == 0) {
+        return 0;
+    }
+
+    name_id = ++app_state->next_ld_name_id;
+    ld_animation = ldAnimation_init(app_state->ld_scene,
+                                    NULL,
+                                    name_id,
+                                    parent_widget->ld_name_id,
+                                    0,
+                                    0,
+                                    (int16_t)width,
+                                    (int16_t)height,
+                                    source->img_tile,
+                                    (uint16_t)period_ms);
+    if (ld_animation == NULL) {
+        free(widget);
+        return 0;
+    }
+
+    widget->parent = parent;
+    widget->id = id;
+    widget->kind = PICOUI_BACKEND_WIDGET_ANIMATION;
+    widget->theme = ((struct picoui_backend_widget *)parent)->theme;
+    widget->ld_widget = ld_animation;
+    widget->ld_name_id = name_id;
+    if (picoui_backend_widget_attach_child(parent, widget) != 0) {
+        free(widget);
+        return 0;
+    }
+    return widget;
+}
+
+int picoui_backend_animation_set_source(struct picoui_animation *animation,
+                                        struct picoui_image_source *source)
+{
+    ldAnimation_t *ld_animation = picoui_backend_animation_get_ld(animation);
+
+    if (ld_animation == NULL || source == NULL || source->img_tile == NULL) {
+        return -1;
+    }
+
+    ld_animation->ptImgTile = source->img_tile;
+    return 0;
+}
+
+int picoui_backend_animation_set_period_ms(struct picoui_animation *animation, int period_ms)
+{
+    ldAnimation_t *ld_animation = picoui_backend_animation_get_ld(animation);
+
+    if (ld_animation == NULL || period_ms <= 0 || period_ms > 0xFFFF) {
+        return -1;
+    }
+
+    ld_animation->periodMs = (uint16_t)period_ms;
+    return 0;
+}
+
+int picoui_backend_animation_show_frame(struct picoui_animation *animation, int frame_index)
+{
+    ldAnimation_t *ld_animation = picoui_backend_animation_get_ld(animation);
+    arm_2d_tile_t *img_tile;
+    int frames_per_row;
+
+    if (ld_animation == NULL || animation->source == NULL || animation->source->img_tile == NULL ||
+        animation->width <= 0 || animation->height <= 0 || frame_index < 0) {
+        return -1;
+    }
+
+    img_tile = (arm_2d_tile_t *)animation->source->img_tile;
+    frames_per_row = img_tile->tRegion.tSize.iWidth / animation->width;
+    if (frames_per_row <= 0) {
+        return -1;
+    }
+
+    if (frame_index >= frames_per_row) {
+        return -1;
+    }
+
+    ld_animation->showRegion.tLocation.iX = (int16_t)(frame_index * animation->width);
+    ld_animation->showRegion.tLocation.iY = 0;
+    ld_animation->showRegion.tSize.iWidth = (int16_t)animation->width;
+    ld_animation->showRegion.tSize.iHeight = (int16_t)animation->height;
+    return 0;
+}

@@ -13,6 +13,32 @@ static int picoui_graph_props_are_valid(const struct picoui_graph_props *props)
            props->height >= 0;
 }
 
+static int picoui_graph_apply_native_geometry(struct picoui_graph *graph)
+{
+    if (graph == 0) {
+        return -1;
+    }
+
+    if (picoui_backend_graph_set_frame_space(graph->widget.backend_widget, graph->frame_space) != 0) {
+        return -1;
+    }
+    if (picoui_backend_graph_set_axis(graph->widget.backend_widget, graph->x_axis, graph->y_axis) != 0) {
+        return -1;
+    }
+    if (picoui_backend_graph_set_axis_offset(graph->widget.backend_widget, graph->axis_offset) != 0) {
+        return -1;
+    }
+    if (picoui_backend_graph_set_grid_offset(graph->widget.backend_widget, graph->grid_offset) != 0) {
+        return -1;
+    }
+    if (graph->point_mask_source != 0 &&
+        picoui_backend_graph_set_point_mask_source(graph->widget.backend_widget, graph->point_mask_source) != 0) {
+        return -1;
+    }
+
+    return 0;
+}
+
 struct picoui_graph *picoui_graph_create(struct picoui_window *parent,
                                          const char *id,
                                          int series_max)
@@ -37,6 +63,11 @@ struct picoui_graph *picoui_graph_create(struct picoui_window *parent,
 
     graph->id = id;
     graph->series_max = series_max;
+    graph->x_axis = 100;
+    graph->y_axis = 100;
+    graph->axis_offset = 5;
+    graph->frame_space = 8;
+    graph->grid_offset = 20;
     graph->widget.visible = 1;
     graph->widget.enabled = 1;
     if (picoui_backend_widget_bind_host(graph->widget.backend_widget, &graph->widget) != 0) {
@@ -76,6 +107,57 @@ struct picoui_graph *picoui_graph_create_with_props(struct picoui_window *parent
     }
 
     return graph;
+}
+
+int picoui_graph_set_axis(struct picoui_graph *graph, int x_axis, int y_axis)
+{
+    if (graph == 0 || x_axis <= 0 || y_axis <= 0) {
+        return -1;
+    }
+
+    graph->x_axis = x_axis;
+    graph->y_axis = y_axis;
+    return picoui_graph_apply_native_geometry(graph);
+}
+
+int picoui_graph_set_axis_offset(struct picoui_graph *graph, int axis_offset)
+{
+    if (graph == 0 || axis_offset < 0) {
+        return -1;
+    }
+
+    graph->axis_offset = axis_offset;
+    return picoui_graph_apply_native_geometry(graph);
+}
+
+int picoui_graph_set_frame_space(struct picoui_graph *graph, int frame_space)
+{
+    if (graph == 0 || frame_space < 0) {
+        return -1;
+    }
+
+    graph->frame_space = frame_space;
+    return picoui_graph_apply_native_geometry(graph);
+}
+
+int picoui_graph_set_grid_offset(struct picoui_graph *graph, int grid_offset)
+{
+    if (graph == 0 || grid_offset <= 0) {
+        return -1;
+    }
+
+    graph->grid_offset = grid_offset;
+    return picoui_graph_apply_native_geometry(graph);
+}
+
+int picoui_graph_set_point_mask_source(struct picoui_graph *graph, struct picoui_image_source *source)
+{
+    if (graph == 0 || source == 0 || source->mask_tile == 0) {
+        return -1;
+    }
+
+    graph->point_mask_source = source;
+    return picoui_graph_apply_native_geometry(graph);
 }
 
 int picoui_graph_add_series(struct picoui_graph *graph,

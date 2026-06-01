@@ -112,3 +112,93 @@ const char *picoui_backend_qrcode_get_text(struct picoui_qrcode *qrcode)
 
     return (const char *)ld_qrcode->pStr;
 }
+
+int picoui_backend_qrcode_set_qr_color(void *backend_widget, unsigned int rgb)
+{
+    ldQRCode_t *ld_qrcode;
+
+    if (backend_widget == NULL || rgb > 0xFFFFFFU) {
+        return -1;
+    }
+
+    ld_qrcode = picoui_backend_qrcode_get_ld((struct picoui_qrcode *)
+        ((struct picoui_backend_widget *)backend_widget)->host_widget);
+    if (ld_qrcode == NULL) {
+        return -1;
+    }
+
+    ld_qrcode->qrColor = (ldColor)rgb;
+    return 0;
+}
+
+int picoui_backend_qrcode_set_bg_color(void *backend_widget, unsigned int rgb)
+{
+    ldQRCode_t *ld_qrcode;
+
+    if (backend_widget == NULL || rgb > 0xFFFFFFU) {
+        return -1;
+    }
+
+    ld_qrcode = picoui_backend_qrcode_get_ld((struct picoui_qrcode *)
+        ((struct picoui_backend_widget *)backend_widget)->host_widget);
+    if (ld_qrcode == NULL) {
+        return -1;
+    }
+
+    ld_qrcode->bgColor = (ldColor)rgb;
+    return 0;
+}
+
+int picoui_backend_qrcode_set_ecc(void *backend_widget, int ecc)
+{
+    ldQRCode_t *ld_qrcode;
+
+    if (backend_widget == NULL || ecc < 0 || ecc > 3) {
+        return -1;
+    }
+
+    ld_qrcode = picoui_backend_qrcode_get_ld((struct picoui_qrcode *)
+        ((struct picoui_backend_widget *)backend_widget)->host_widget);
+    if (ld_qrcode == NULL) {
+        return -1;
+    }
+
+    ld_qrcode->qrEcc = (uint8_t)ecc;
+    return 0;
+}
+
+int picoui_backend_qrcode_set_max_version(void *backend_widget, int max_version)
+{
+    ldQRCode_t *ld_qrcode;
+
+    if (backend_widget == NULL || max_version <= 0 || max_version > 40) {
+        return -1;
+    }
+
+    ld_qrcode = picoui_backend_qrcode_get_ld((struct picoui_qrcode *)
+        ((struct picoui_backend_widget *)backend_widget)->host_widget);
+    if (ld_qrcode == NULL) {
+        return -1;
+    }
+
+    ld_qrcode->qrMaxVersion = (uint8_t)max_version;
+    return 0;
+}
+
+int picoui_backend_qrcode_set_zoom(void *backend_widget, int zoom)
+{
+    ldQRCode_t *ld_qrcode;
+
+    if (backend_widget == NULL || zoom <= 0) {
+        return -1;
+    }
+
+    ld_qrcode = picoui_backend_qrcode_get_ld((struct picoui_qrcode *)
+        ((struct picoui_backend_widget *)backend_widget)->host_widget);
+    if (ld_qrcode == NULL) {
+        return -1;
+    }
+
+    ld_qrcode->qrZoom = (uint8_t)zoom;
+    return 0;
+}

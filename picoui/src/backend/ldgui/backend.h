@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#include "picoui/image.h"
+#include "picoui/native.h"
 #include "picoui/widget.h"
 
 struct picoui_widget;
@@ -10,7 +12,13 @@ struct picoui_message_box;
 struct picoui_app;
 struct picoui_theme;
 struct picoui_window;
-struct picoui_image_source;
+struct picoui_animation;
+struct picoui_checkbox;
+struct picoui_switch;
+struct picoui_date_time;
+struct picoui_clock;
+struct picoui_arc;
+struct picoui_gauge;
 struct picoui_list;
 struct picoui_combo_box;
 struct picoui_icon_slider;
@@ -38,6 +46,7 @@ enum picoui_backend_widget_kind {
     PICOUI_BACKEND_WIDGET_PROGRESS_BAR,
     PICOUI_BACKEND_WIDGET_QRCODE,
     PICOUI_BACKEND_WIDGET_PROGRESS_WHEEL,
+    PICOUI_BACKEND_WIDGET_ANIMATION,
     PICOUI_BACKEND_WIDGET_LIST,
     PICOUI_BACKEND_WIDGET_MESSAGE_BOX,
     PICOUI_BACKEND_WIDGET_DATE_TIME,
@@ -124,6 +133,8 @@ struct picoui_backend_widget {
     struct picoui_image_source *image_source;
     int value;
     enum picoui_backend_signal last_signal;
+    uint32_t last_native_signal;
+    uint64_t last_native_value;
     int dispatch_count;
     struct picoui_theme *theme;
     void *ld_widget;
@@ -170,7 +181,32 @@ void *picoui_backend_create_checkbox(void *parent, const char *id);
 void *picoui_backend_create_switch(void *parent, const char *id);
 void *picoui_backend_create_slider(void *parent, const char *id);
 void *picoui_backend_create_arc(void *parent, const char *id);
+int picoui_backend_arc_set_background_angle(struct picoui_arc *arc, float bg_start_angle, float bg_end_angle);
+int picoui_backend_arc_set_foreground_angle(struct picoui_arc *arc, float fg_end_angle);
+int picoui_backend_arc_set_rotation_angle(struct picoui_arc *arc, float rotation_angle);
+int picoui_backend_arc_set_color(struct picoui_arc *arc, unsigned int bg_color, unsigned int fg_color);
+int picoui_backend_arc_get_background_angle(struct picoui_arc *arc, float *bg_start_angle, float *bg_angle);
+int picoui_backend_arc_get_foreground_angle(struct picoui_arc *arc, float *fg_end_angle);
+int picoui_backend_arc_get_rotation_angle(struct picoui_arc *arc, float *rotation_angle);
+int picoui_backend_arc_get_color(struct picoui_arc *arc, unsigned int *bg_color, unsigned int *fg_color);
+int picoui_backend_arc_set_quarter_source(struct picoui_arc *arc, struct picoui_image_source *source);
+int picoui_backend_arc_set_parent_color(struct picoui_arc *arc, unsigned int parent_color);
 void *picoui_backend_create_gauge(void *parent, const char *id);
+int picoui_backend_gauge_set_angle(struct picoui_gauge *gauge, float angle);
+int picoui_backend_gauge_get_angle(struct picoui_gauge *gauge, float *angle);
+int picoui_backend_gauge_set_bg_source(struct picoui_gauge *gauge, struct picoui_image_source *source);
+int picoui_backend_gauge_set_pointer_source(struct picoui_gauge *gauge, struct picoui_image_source *source);
+int picoui_backend_gauge_set_centre_offset(struct picoui_gauge *gauge, int centre_offset_x, int centre_offset_y);
+int picoui_backend_gauge_set_trail(struct picoui_gauge *gauge,
+                                   struct picoui_image_source *bg_trail_source,
+                                   struct picoui_image_source *pointer_trail_source);
+int picoui_backend_gauge_set_progress_bar(struct picoui_gauge *gauge,
+                                          struct picoui_image_source *bg_progress_source,
+                                          struct picoui_image_source *pointer_progress_source);
+int picoui_backend_gauge_set_pointer_color(struct picoui_gauge *gauge, unsigned int pointer_color);
+int picoui_backend_gauge_get_pointer_color(struct picoui_gauge *gauge, unsigned int *pointer_color);
+int picoui_backend_gauge_set_auto_move(struct picoui_gauge *gauge, int auto_move);
+int picoui_backend_gauge_get_auto_move(struct picoui_gauge *gauge, int *auto_move);
 void *picoui_backend_create_icon_slider(void *parent,
                                         const char *id,
                                         int width,
@@ -188,12 +224,63 @@ void *picoui_backend_create_radial_menu(void *parent,
                                         int y_axis,
                                         int item_max);
 void *picoui_backend_create_progress_bar(void *parent, const char *id);
+void *picoui_backend_create_animation(void *parent,
+                                      const char *id,
+                                      int width,
+                                      int height,
+                                      struct picoui_image_source *source,
+                                      int period_ms);
+int picoui_backend_animation_set_source(struct picoui_animation *animation,
+                                        struct picoui_image_source *source);
+int picoui_backend_animation_set_period_ms(struct picoui_animation *animation, int period_ms);
+int picoui_backend_animation_show_frame(struct picoui_animation *animation, int frame_index);
 void *picoui_backend_create_qrcode(void *parent, const char *id);
+int picoui_backend_qrcode_set_qr_color(void *backend_widget, unsigned int rgb);
+int picoui_backend_qrcode_set_bg_color(void *backend_widget, unsigned int rgb);
+int picoui_backend_qrcode_set_ecc(void *backend_widget, int ecc);
+int picoui_backend_qrcode_set_max_version(void *backend_widget, int max_version);
+int picoui_backend_qrcode_set_zoom(void *backend_widget, int zoom);
 void *picoui_backend_create_progress_wheel(void *parent, const char *id);
+int picoui_backend_progress_wheel_set_wheel_color(void *backend_widget, unsigned int rgb);
+int picoui_backend_progress_wheel_set_dot_color(void *backend_widget, unsigned int rgb);
+int picoui_backend_progress_wheel_set_dot_enabled(void *backend_widget, int enabled);
+int picoui_backend_progress_wheel_get_dot_enabled(void *backend_widget);
 void *picoui_backend_create_list(void *parent, const char *id);
 void *picoui_backend_create_message_box(void *parent, const char *id);
+int picoui_backend_message_box_set_title(struct picoui_message_box *box, const char *title);
+int picoui_backend_message_box_set_message(struct picoui_message_box *box, const char *message);
+int picoui_backend_message_box_set_confirm_text(struct picoui_message_box *box, const char *text);
+int picoui_backend_message_box_set_buttons(struct picoui_message_box *box,
+                                           const char *const *buttons,
+                                           int count);
+int picoui_backend_message_box_set_string_colors(struct picoui_message_box *box,
+                                                 unsigned int title_color,
+                                                 unsigned int message_color,
+                                                 unsigned int button_color);
+int picoui_backend_message_box_set_button_colors(struct picoui_message_box *box,
+                                                 unsigned int release_color,
+                                                 unsigned int press_color);
+int picoui_backend_message_box_set_bg_color(struct picoui_message_box *box, unsigned int bg_color);
 void *picoui_backend_create_date_time(void *parent, const char *id);
+int picoui_backend_date_time_set_format(struct picoui_date_time *dt, const char *format);
+int picoui_backend_date_time_set_date(struct picoui_date_time *dt, int year, int month, int day);
+int picoui_backend_date_time_set_time(struct picoui_date_time *dt, int hour, int minute, int second);
+const char *picoui_backend_date_time_get_format(struct picoui_date_time *dt);
+int picoui_backend_date_time_set_transparent(struct picoui_date_time *dt, int transparent);
+int picoui_backend_date_time_set_text_color(struct picoui_date_time *dt, unsigned int rgb);
+int picoui_backend_date_time_set_align(struct picoui_date_time *dt, enum picoui_align align);
+int picoui_backend_date_time_set_bg_color(struct picoui_date_time *dt, unsigned int rgb);
 void *picoui_backend_create_clock(void *parent, const char *id);
+int picoui_backend_clock_set_background_source(struct picoui_clock *clock, struct picoui_image_source *source);
+int picoui_backend_clock_set_hour_pointer_source(struct picoui_clock *clock, struct picoui_image_source *source);
+int picoui_backend_clock_set_minute_pointer_source(struct picoui_clock *clock, struct picoui_image_source *source);
+int picoui_backend_clock_set_second_pointer_source(struct picoui_clock *clock, struct picoui_image_source *source);
+int picoui_backend_clock_set_mask_color(struct picoui_clock *clock, unsigned int mask_color);
+int picoui_backend_clock_set_hour_anchor(struct picoui_clock *clock, float x, float y);
+int picoui_backend_clock_set_minute_anchor(struct picoui_clock *clock, float x, float y);
+int picoui_backend_clock_set_second_anchor(struct picoui_clock *clock, float x, float y);
+int picoui_backend_clock_set_step_second(struct picoui_clock *clock, int step_second);
+int picoui_backend_clock_get_step_second(struct picoui_clock *clock, int *step_second);
 void *picoui_backend_create_text(void *parent, const char *id);
 void *picoui_backend_create_keyboard(void *parent, const char *id);
 void *picoui_backend_create_line_edit(void *parent, const char *id);
@@ -203,11 +290,31 @@ void *picoui_backend_create_table(void *parent, const char *id, int rows, int co
 void *picoui_backend_create_graph(void *parent, const char *id, int series_max);
 void *picoui_backend_create_image(void *parent, const char *id);
 void *picoui_backend_create_calendar(void *parent, const char *id);
+int picoui_backend_progress_bar_set_bg_source(void *backend_widget, struct picoui_image_source *source);
+int picoui_backend_progress_bar_set_fg_source(void *backend_widget, struct picoui_image_source *source);
+int picoui_backend_progress_bar_set_frame_source(void *backend_widget, struct picoui_image_source *source);
+int picoui_backend_progress_bar_set_color(void *backend_widget,
+                                          unsigned int bg_color,
+                                          unsigned int fg_color);
+int picoui_backend_progress_bar_set_frame_color(void *backend_widget,
+                                                unsigned int frame_color,
+                                                int frame_color_size);
+int picoui_backend_progress_bar_set_inverted(void *backend_widget, int inverted);
+int picoui_backend_progress_bar_get_inverted(void *backend_widget);
+int picoui_backend_calendar_set_day_names(void *backend_widget, const char *const day_names[7]);
+int picoui_backend_graph_set_axis(void *backend_widget, int x_axis, int y_axis);
+int picoui_backend_graph_set_axis_offset(void *backend_widget, int axis_offset);
+int picoui_backend_graph_set_frame_space(void *backend_widget, int frame_space);
+int picoui_backend_graph_set_grid_offset(void *backend_widget, int grid_offset);
+int picoui_backend_graph_set_point_mask_source(void *backend_widget, struct picoui_image_source *source);
 int picoui_backend_calendar_set_date(void *backend_widget, int year, int month, int day);
 int picoui_backend_calendar_get_date(void *backend_widget, int *year, int *month, int *day);
 int picoui_backend_calendar_set_header_visible(void *backend_widget, int visible);
 int picoui_backend_calendar_get_header_visible(void *backend_widget);
 int picoui_backend_calendar_set_header_format(void *backend_widget, const char *format);
+int picoui_backend_calendar_set_bg_color(void *backend_widget, unsigned int rgb);
+int picoui_backend_calendar_set_item_color(void *backend_widget, unsigned int rgb);
+int picoui_backend_calendar_set_text_color(void *backend_widget, unsigned int rgb);
 const char *picoui_backend_calendar_get_header_format(void *backend_widget);
 int picoui_backend_calendar_get_grid_value(void *backend_widget, int week, int weekday);
 int picoui_backend_calendar_is_current_month_cell(void *backend_widget, int week, int weekday);
@@ -231,29 +338,59 @@ int picoui_backend_combo_box_set_items(void *backend_widget,
                                        const char *const *item_ids,
                                        const unsigned char *const *items,
                                        int item_count);
+int picoui_backend_combo_box_set_text_color(void *backend_widget, unsigned int rgb);
+int picoui_backend_combo_box_set_bg_color(void *backend_widget, unsigned int rgb);
+int picoui_backend_combo_box_set_frame_color(void *backend_widget, unsigned int rgb);
+int picoui_backend_combo_box_set_select_color(void *backend_widget, unsigned int rgb);
+int picoui_backend_combo_box_set_item_max(void *backend_widget, int item_max);
+int picoui_backend_combo_box_set_dropdown_source(void *backend_widget,
+                                                 struct picoui_image_source *source);
 int picoui_backend_combo_box_set_selected_index(void *backend_widget, int index);
 int picoui_backend_combo_box_get_selected_index(void *backend_widget);
+const char *picoui_backend_combo_box_get_text(void *backend_widget, int index);
 int picoui_backend_combo_box_sync_selected_index(struct picoui_combo_box *combo_box,
                                                  int *selected_index_out);
 int picoui_backend_combo_box_bind_host(void *backend_widget);
 int picoui_backend_combo_box_get_open(void *backend_widget, int *is_open);
 int picoui_backend_icon_slider_add_item(void *backend_widget, const char *id, const char *text);
+int picoui_backend_icon_slider_add_item_with_source(void *backend_widget,
+                                                    const char *id,
+                                                    const char *text,
+                                                    struct picoui_image_source *source);
 int picoui_backend_icon_slider_set_selected_index(void *backend_widget, int index);
 int picoui_backend_icon_slider_get_selected_index(void *backend_widget);
 int picoui_backend_icon_slider_set_horizontal(void *backend_widget, int horizontal);
 int picoui_backend_icon_slider_get_horizontal(void *backend_widget, int *horizontal);
+int picoui_backend_icon_slider_set_speed(void *backend_widget, int speed);
 int picoui_backend_icon_slider_bind_host(void *backend_widget);
 int picoui_backend_radial_menu_add_item(void *backend_widget, const char *id);
+int picoui_backend_radial_menu_add_item_with_source(void *backend_widget,
+                                                    const char *id,
+                                                    struct picoui_image_source *source);
 int picoui_backend_radial_menu_set_selected_index(void *backend_widget, int index);
 int picoui_backend_radial_menu_get_selected_index(void *backend_widget);
 int picoui_backend_radial_menu_offset_selection(void *backend_widget, int offset);
+int picoui_backend_radial_menu_set_default_item(void *backend_widget, int index);
+int picoui_backend_radial_menu_click_item(void *backend_widget, int index);
+int picoui_backend_radial_menu_offset_item(void *backend_widget, int offset);
 int picoui_backend_radial_menu_bind_host(void *backend_widget);
 int picoui_backend_scroll_selecter_set_items(void *backend_widget,
                                              const char *const *item_ids,
                                              const unsigned char *const *items,
                                              int item_count);
+int picoui_backend_scroll_selecter_set_text_color(void *backend_widget, unsigned int rgb);
+int picoui_backend_scroll_selecter_set_bg_color(void *backend_widget, unsigned int rgb);
+int picoui_backend_scroll_selecter_set_indicator_color(void *backend_widget, unsigned int rgb);
+int picoui_backend_scroll_selecter_set_bg_source(void *backend_widget,
+                                                 struct picoui_image_source *source);
+int picoui_backend_scroll_selecter_set_indicator_source(void *backend_widget,
+                                                        struct picoui_image_source *source);
+int picoui_backend_scroll_selecter_set_transparent(void *backend_widget, int transparent);
+int picoui_backend_scroll_selecter_set_speed(void *backend_widget, int speed);
+int picoui_backend_scroll_selecter_set_select_text(void *backend_widget, const char *text);
 int picoui_backend_scroll_selecter_set_selected_index(void *backend_widget, int index);
 int picoui_backend_scroll_selecter_get_selected_index(void *backend_widget);
+const char *picoui_backend_scroll_selecter_get_selected_text(void *backend_widget);
 int picoui_backend_scroll_selecter_sync_selected_index(struct picoui_scroll_selecter *scroll_selecter,
                                                        int *selected_index_out);
 int picoui_backend_scroll_selecter_set_edit_mode(void *backend_widget, int is_edit);
@@ -267,6 +404,43 @@ int picoui_backend_table_set_cell_editable(void *backend_widget,
                                            int column,
                                            int editable,
                                            unsigned int text_max);
+int picoui_backend_table_set_item_image(void *backend_widget,
+                                        int row,
+                                        int column,
+                                        int x,
+                                        int y,
+                                        struct picoui_image_source *source,
+                                        unsigned int mask_color);
+int picoui_backend_table_set_item_button(void *backend_widget,
+                                         int row,
+                                         int column,
+                                         int x,
+                                         int y,
+                                         struct picoui_image_source *release_source,
+                                         unsigned int release_mask_color,
+                                         struct picoui_image_source *press_source,
+                                         unsigned int press_mask_color,
+                                         int checkable);
+int picoui_backend_table_set_excel_type(void *backend_widget);
+int picoui_backend_table_set_item_width(void *backend_widget, int column, int width);
+int picoui_backend_table_set_item_height(void *backend_widget, int row, int height);
+int picoui_backend_table_set_item_color(void *backend_widget,
+                                        int row,
+                                        int column,
+                                        unsigned int text_color,
+                                        unsigned int bg_color);
+int picoui_backend_table_set_bg_color(void *backend_widget, unsigned int bg_color);
+int picoui_backend_table_set_item_static_text(void *backend_widget, int row, int column, const char *text);
+int picoui_backend_table_set_item_font(void *backend_widget, int row, int column);
+int picoui_backend_table_set_item_align(void *backend_widget,
+                                        int row,
+                                        int column,
+                                        enum picoui_align align);
+int picoui_backend_table_get_item_align(void *backend_widget, int row, int column);
+int picoui_backend_table_get_item_editable(void *backend_widget, int row, int column);
+int picoui_backend_table_navigate(void *backend_widget, enum picoui_native_nav_dir dir);
+int picoui_backend_table_get_item_region(void *backend_widget, int row, int column, void *region_out);
+int picoui_backend_table_set_selected_cell(void *backend_widget, int row, int column);
 int picoui_backend_table_set_current_cell(void *backend_widget, int row, int column);
 int picoui_backend_table_sync_current_cell(struct picoui_table *table, int *row_out, int *column_out);
 int picoui_backend_table_bind_host(void *backend_widget);
@@ -278,10 +452,47 @@ int picoui_backend_graph_set_value(void *backend_widget, int series_index, int v
 int picoui_backend_graph_move_add(void *backend_widget, int series_index, int value);
 int picoui_backend_graph_get_series_count(void *backend_widget);
 int picoui_backend_graph_get_value(void *backend_widget, int series_index, int value_index);
+int picoui_backend_checkbox_set_check_color(struct picoui_checkbox *checkbox, unsigned int rgb);
+int picoui_backend_checkbox_set_text_color(struct picoui_checkbox *checkbox, unsigned int rgb);
+int picoui_backend_checkbox_set_unchecked_source(struct picoui_checkbox *checkbox,
+                                                 struct picoui_image_source *source);
+int picoui_backend_checkbox_set_checked_source(struct picoui_checkbox *checkbox,
+                                               struct picoui_image_source *source);
+int picoui_backend_checkbox_set_radio_group(struct picoui_checkbox *checkbox, int radio_group);
+int picoui_backend_checkbox_set_string_left_space(struct picoui_checkbox *checkbox, int space);
+int picoui_backend_switch_set_off_source(struct picoui_switch *sw, struct picoui_image_source *source);
+int picoui_backend_switch_set_on_source(struct picoui_switch *sw, struct picoui_image_source *source);
+int picoui_backend_switch_set_knob_source(struct picoui_switch *sw, struct picoui_image_source *source);
+int picoui_backend_switch_set_horizontal(struct picoui_switch *sw, int horizontal);
+int picoui_backend_switch_get_horizontal(struct picoui_switch *sw, int *horizontal);
+int picoui_backend_switch_set_direction(struct picoui_switch *sw, int direction);
+int picoui_backend_switch_get_direction(struct picoui_switch *sw, int *direction);
+int picoui_backend_switch_set_disabled(struct picoui_switch *sw, int disabled);
+int picoui_backend_switch_get_disabled(struct picoui_switch *sw, int *disabled);
+int picoui_backend_switch_can_navigate(struct picoui_switch *sw, int direction, int *can_navigate);
+int picoui_backend_switch_navigate(struct picoui_switch *sw, int direction);
 int picoui_backend_list_set_items(void *backend_widget,
                                   const char *const *item_ids,
                                   const unsigned char *const *items,
                                   int item_count);
+int picoui_backend_list_set_item_height(void *backend_widget, int item_height);
+int picoui_backend_list_set_padding_group(void *backend_widget,
+                                          int top,
+                                          int bottom,
+                                          int left,
+                                          int right);
+int picoui_backend_list_set_margin_group(void *backend_widget,
+                                         int top,
+                                         int bottom,
+                                         int left,
+                                         int right);
+int picoui_backend_list_set_text_color(void *backend_widget, unsigned int rgb);
+int picoui_backend_list_set_bg_color(void *backend_widget, unsigned int rgb);
+int picoui_backend_list_set_select_color(void *backend_widget, unsigned int rgb);
+int picoui_backend_list_set_align(void *backend_widget, enum picoui_align align);
+int picoui_backend_list_set_item_widget(void *backend_widget,
+                                        int index,
+                                        void *item_widget_backend);
 int picoui_backend_list_set_selected_index(void *backend_widget, int index);
 int picoui_backend_list_get_selected_index(void *backend_widget);
 int picoui_backend_list_sync_selected_index(struct picoui_list *list, int *selected_index_out);

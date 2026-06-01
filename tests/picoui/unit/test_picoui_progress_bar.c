@@ -127,6 +127,72 @@ static void test_progress_bar_release_contract_covers_theme_and_config_boundary(
     assert(ld_progress_bar->frameColor != ld_progress_bar->bgColor);
 }
 
+static void test_progress_bar_native_skin_color_and_inverted_round_trip(struct picoui_window *win)
+{
+    struct picoui_progress_bar *bar = picoui_progress_bar_create(win, "progress_native_skin");
+    struct picoui_backend_widget *backend;
+    ldProgressBar_t *ld_progress_bar;
+    arm_2d_tile_t bg_tile = {0};
+    arm_2d_tile_t bg_mask = {0};
+    arm_2d_tile_t fg_tile = {0};
+    arm_2d_tile_t fg_mask = {0};
+    arm_2d_tile_t frame_tile = {0};
+    arm_2d_tile_t frame_mask = {0};
+    struct picoui_image_source bg_source = {
+        .img_tile = &bg_tile,
+        .mask_tile = &bg_mask,
+    };
+    struct picoui_image_source fg_source = {
+        .img_tile = &fg_tile,
+        .mask_tile = &fg_mask,
+    };
+    struct picoui_image_source frame_source = {
+        .img_tile = &frame_tile,
+        .mask_tile = &frame_mask,
+    };
+    struct picoui_image_source invalid_source = {
+        .img_tile = 0,
+        .mask_tile = &bg_mask,
+    };
+
+    assert(bar != 0);
+    backend = (struct picoui_backend_widget *)bar->widget.backend_widget;
+    assert(backend != 0);
+    ld_progress_bar = (ldProgressBar_t *)backend->ld_widget;
+    assert(ld_progress_bar != 0);
+
+    assert(picoui_progress_bar_set_bg_source(bar, &bg_source) == 0);
+    assert(picoui_progress_bar_set_fg_source(bar, &fg_source) == 0);
+    assert(picoui_progress_bar_set_frame_source(bar, &frame_source) == 0);
+    assert(ld_progress_bar->ptBgImgTile == &bg_tile);
+    assert(ld_progress_bar->ptBgMaskTile == &bg_mask);
+    assert(ld_progress_bar->ptFgImgTile == &fg_tile);
+    assert(ld_progress_bar->ptFgMaskTile == &fg_mask);
+    assert(ld_progress_bar->ptFrameImgTile == &frame_tile);
+    assert(ld_progress_bar->ptFrameMaskTile == &frame_mask);
+
+    assert(picoui_progress_bar_set_color(bar, 0x102030u, 0xa0b0c0u) == 0);
+    assert(picoui_progress_bar_set_frame_color(bar, 0x556677u, 3) == 0);
+    assert(picoui_progress_bar_set_inverted(bar, 1) == 0);
+    assert(picoui_progress_bar_get_inverted(bar) == 1);
+
+    assert(ld_progress_bar->ptBgImgTile == 0);
+    assert(ld_progress_bar->ptFgImgTile == 0);
+    assert(ld_progress_bar->ptFrameImgTile == 0);
+    assert(ld_progress_bar->frameColorSize == 3);
+    assert(ld_progress_bar->isInverted == true);
+
+    assert(picoui_progress_bar_set_bg_source(bar, &invalid_source) == -1);
+    assert(picoui_progress_bar_set_frame_color(bar, 0x112233u, -1) == -1);
+    assert(picoui_progress_bar_set_inverted(0, 1) == -1);
+    assert(picoui_progress_bar_get_inverted(0) == -1);
+
+    assert(ld_progress_bar->ptBgImgTile == 0);
+    assert(ld_progress_bar->ptFgImgTile == 0);
+    assert(ld_progress_bar->frameColorSize == 3);
+    assert(ld_progress_bar->isInverted == true);
+}
+
 int main(void)
 {
     struct picoui_app *app = picoui_app_create();
@@ -141,6 +207,7 @@ int main(void)
     test_progress_bar_horizontal_state(win);
     test_progress_bar_rejects_invalid_inputs(win);
     test_progress_bar_release_contract_covers_theme_and_config_boundary(win);
+    test_progress_bar_native_skin_color_and_inverted_round_trip(win);
 
     picoui_app_destroy(app);
     return 0;

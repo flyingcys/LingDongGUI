@@ -7,6 +7,15 @@
 
 extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
 
+static ldColor picoui_backend_combo_box_rgb_to_ld_color(unsigned int rgb)
+{
+    unsigned int red = (rgb >> 16) & 0xFFU;
+    unsigned int green = (rgb >> 8) & 0xFFU;
+    unsigned int blue = rgb & 0xFFU;
+
+    return (ldColor)(((red >> 3) << 11) | ((green >> 2) << 5) | (blue >> 3));
+}
+
 static struct picoui_backend_app_state *picoui_backend_combo_box_get_app_state(void *parent)
 {
     struct picoui_backend_widget *parent_widget = parent;
@@ -173,6 +182,90 @@ int picoui_backend_combo_box_set_items(void *backend_widget,
     return 0;
 }
 
+int picoui_backend_combo_box_set_text_color(void *backend_widget, unsigned int rgb)
+{
+    ldComboBox_t *ld_combo_box = picoui_backend_combo_box_get_ld(backend_widget);
+
+    if (ld_combo_box == NULL) {
+        return -1;
+    }
+
+    ldComboBoxSetTextColor(ld_combo_box, picoui_backend_combo_box_rgb_to_ld_color(rgb));
+    return 0;
+}
+
+int picoui_backend_combo_box_set_bg_color(void *backend_widget, unsigned int rgb)
+{
+    ldComboBox_t *ld_combo_box = picoui_backend_combo_box_get_ld(backend_widget);
+
+    if (ld_combo_box == NULL) {
+        return -1;
+    }
+
+    ldComboBoxSetBackgroundColor(ld_combo_box, picoui_backend_combo_box_rgb_to_ld_color(rgb));
+    return 0;
+}
+
+int picoui_backend_combo_box_set_frame_color(void *backend_widget, unsigned int rgb)
+{
+    ldComboBox_t *ld_combo_box = picoui_backend_combo_box_get_ld(backend_widget);
+
+    if (ld_combo_box == NULL) {
+        return -1;
+    }
+
+    ldComboBoxSetFrameColor(ld_combo_box, picoui_backend_combo_box_rgb_to_ld_color(rgb));
+    return 0;
+}
+
+int picoui_backend_combo_box_set_select_color(void *backend_widget, unsigned int rgb)
+{
+    ldComboBox_t *ld_combo_box = picoui_backend_combo_box_get_ld(backend_widget);
+
+    if (ld_combo_box == NULL) {
+        return -1;
+    }
+
+    ldComboBoxSetSelectColor(ld_combo_box, picoui_backend_combo_box_rgb_to_ld_color(rgb));
+    return 0;
+}
+
+int picoui_backend_combo_box_set_item_max(void *backend_widget, int item_max)
+{
+    struct picoui_backend_widget *widget = backend_widget;
+    ldComboBox_t *ld_combo_box;
+
+    if (widget == NULL ||
+        widget->kind != PICOUI_BACKEND_WIDGET_COMBO_BOX ||
+        widget->ld_widget == NULL ||
+        item_max <= 0 ||
+        item_max > PICOUI_BACKEND_LIST_MAX_ITEMS ||
+        item_max < widget->list_item_count) {
+        return -1;
+    }
+
+    ld_combo_box = picoui_backend_combo_box_get_ld(backend_widget);
+    if (ld_combo_box == NULL) {
+        return -1;
+    }
+
+    ldComboBoxSetItemMax(ld_combo_box, (uint8_t)item_max);
+    return 0;
+}
+
+int picoui_backend_combo_box_set_dropdown_source(void *backend_widget,
+                                                 struct picoui_image_source *source)
+{
+    ldComboBox_t *ld_combo_box = picoui_backend_combo_box_get_ld(backend_widget);
+
+    if (ld_combo_box == NULL || source == NULL || source->img_tile == NULL) {
+        return -1;
+    }
+
+    ldComboBoxSetDropdownImage(ld_combo_box, source->img_tile, source->mask_tile);
+    return 0;
+}
+
 int picoui_backend_combo_box_set_selected_index(void *backend_widget, int index)
 {
     struct picoui_backend_widget *widget = backend_widget;
@@ -208,6 +301,17 @@ int picoui_backend_combo_box_get_selected_index(void *backend_widget)
         return -1;
     }
     return (int)ldComboBoxGetSelectItem(ld_combo_box);
+}
+
+const char *picoui_backend_combo_box_get_text(void *backend_widget, int index)
+{
+    ldComboBox_t *ld_combo_box = picoui_backend_combo_box_get_ld(backend_widget);
+
+    if (ld_combo_box == NULL || index < 0) {
+        return NULL;
+    }
+
+    return (const char *)ldComboBoxGetText(ld_combo_box, (uint8_t)index);
 }
 
 int picoui_backend_combo_box_sync_selected_index(struct picoui_combo_box *combo_box,

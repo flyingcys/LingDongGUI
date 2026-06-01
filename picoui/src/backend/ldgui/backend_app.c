@@ -80,6 +80,7 @@ static int picoui_backend_widget_is_supported_real(const struct picoui_backend_w
     case PICOUI_BACKEND_WIDGET_PROGRESS_BAR:
     case PICOUI_BACKEND_WIDGET_QRCODE:
     case PICOUI_BACKEND_WIDGET_PROGRESS_WHEEL:
+    case PICOUI_BACKEND_WIDGET_ANIMATION:
     case PICOUI_BACKEND_WIDGET_LIST:
     case PICOUI_BACKEND_WIDGET_COMBO_BOX:
     case PICOUI_BACKEND_WIDGET_SCROLL_SELECTER:
@@ -89,6 +90,7 @@ static int picoui_backend_widget_is_supported_real(const struct picoui_backend_w
     case PICOUI_BACKEND_WIDGET_DATE_TIME:
     case PICOUI_BACKEND_WIDGET_MESSAGE_BOX:
     case PICOUI_BACKEND_WIDGET_CLOCK:
+    case PICOUI_BACKEND_WIDGET_KEYBOARD:
         return 1;
     default:
         return 0;
@@ -724,6 +726,9 @@ void picoui_backend_app_shutdown(struct picoui_app *app)
         free(state);
     }
     if (app_state != NULL) {
+        if (app_state->ld_scene != NULL) {
+            ldGuiDespose(app_state->ld_scene);
+        }
         free(app_state->ld_scene);
     }
     free(app_state);

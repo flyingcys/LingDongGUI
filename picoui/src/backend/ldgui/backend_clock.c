@@ -33,6 +33,72 @@ static ldClock_t *picoui_backend_clock_get_ld(struct picoui_clock *clock)
     return (ldClock_t *)backend->ld_widget;
 }
 
+static int picoui_backend_clock_apply_background(struct picoui_clock *clock)
+{
+    ldClock_t *ld_clock = picoui_backend_clock_get_ld(clock);
+    arm_2d_tile_t *img_tile;
+    arm_2d_tile_t *mask_tile;
+
+    if (ld_clock == NULL) {
+        return -1;
+    }
+
+    img_tile = clock->background_source != NULL ? clock->background_source->img_tile : ld_clock->ptBgImgTile;
+    mask_tile = clock->background_source != NULL ? clock->background_source->mask_tile : ld_clock->ptBgMaskTile;
+    ldClockSetBackgroundImage(ld_clock, img_tile, mask_tile, (ldColor)clock->mask_color);
+    return 0;
+}
+
+static int picoui_backend_clock_apply_pointer(struct picoui_clock *clock, int index)
+{
+    ldClock_t *ld_clock = picoui_backend_clock_get_ld(clock);
+    struct picoui_image_source *source;
+    arm_2d_tile_t *img_tile;
+    arm_2d_tile_t *mask_tile;
+    float x;
+    float y;
+
+    if (ld_clock == NULL) {
+        return -1;
+    }
+
+    switch (index) {
+    case 0:
+        source = clock->hour_pointer_source;
+        x = clock->hour_anchor_x;
+        y = clock->hour_anchor_y;
+        break;
+    case 1:
+        source = clock->minute_pointer_source;
+        x = clock->minute_anchor_x;
+        y = clock->minute_anchor_y;
+        break;
+    case 2:
+        source = clock->second_pointer_source;
+        x = clock->second_anchor_x;
+        y = clock->second_anchor_y;
+        break;
+    default:
+        return -1;
+    }
+
+    img_tile = source != NULL ? source->img_tile : ld_clock->pointerInfo[index].ptImgTile;
+    mask_tile = source != NULL ? source->mask_tile : ld_clock->pointerInfo[index].ptMaskTile;
+    switch (index) {
+    case 0:
+        ldClockSetHourPointerImage(ld_clock, img_tile, mask_tile, (ldColor)clock->mask_color, x, y);
+        return 0;
+    case 1:
+        ldClockSetMinutePointerImage(ld_clock, img_tile, mask_tile, (ldColor)clock->mask_color, x, y);
+        return 0;
+    case 2:
+        ldClockSetSecondPointerImage(ld_clock, img_tile, mask_tile, (ldColor)clock->mask_color, x, y);
+        return 0;
+    default:
+        return -1;
+    }
+}
+
 void *picoui_backend_create_clock(void *parent, const char *id)
 {
     struct picoui_backend_widget *widget;
@@ -198,4 +264,94 @@ int picoui_backend_clock_get_step_second(struct picoui_clock *clock, int *step_s
 
     *step_second = ld_clock->isStepSecond ? 1 : 0;
     return 0;
+}
+
+int picoui_backend_clock_set_background_source(struct picoui_clock *clock, struct picoui_image_source *source)
+{
+    if (clock == NULL || source == NULL || source->img_tile == NULL) {
+        return -1;
+    }
+
+    clock->background_source = source;
+    return picoui_backend_clock_apply_background(clock);
+}
+
+int picoui_backend_clock_set_hour_pointer_source(struct picoui_clock *clock, struct picoui_image_source *source)
+{
+    if (clock == NULL || source == NULL || source->img_tile == NULL) {
+        return -1;
+    }
+
+    clock->hour_pointer_source = source;
+    return picoui_backend_clock_apply_pointer(clock, 0);
+}
+
+int picoui_backend_clock_set_minute_pointer_source(struct picoui_clock *clock, struct picoui_image_source *source)
+{
+    if (clock == NULL || source == NULL || source->img_tile == NULL) {
+        return -1;
+    }
+
+    clock->minute_pointer_source = source;
+    return picoui_backend_clock_apply_pointer(clock, 1);
+}
+
+int picoui_backend_clock_set_second_pointer_source(struct picoui_clock *clock, struct picoui_image_source *source)
+{
+    if (clock == NULL || source == NULL || source->img_tile == NULL) {
+        return -1;
+    }
+
+    clock->second_pointer_source = source;
+    return picoui_backend_clock_apply_pointer(clock, 2);
+}
+
+int picoui_backend_clock_set_mask_color(struct picoui_clock *clock, unsigned int mask_color)
+{
+    if (clock == NULL || mask_color > 0xFFFFFFU) {
+        return -1;
+    }
+
+    clock->mask_color = mask_color;
+    if (picoui_backend_clock_apply_background(clock) != 0
+        || picoui_backend_clock_apply_pointer(clock, 0) != 0
+        || picoui_backend_clock_apply_pointer(clock, 1) != 0
+        || picoui_backend_clock_apply_pointer(clock, 2) != 0) {
+        return -1;
+    }
+
+    return 0;
+}
+
+int picoui_backend_clock_set_hour_anchor(struct picoui_clock *clock, float x, float y)
+{
+    if (clock == NULL) {
+        return -1;
+    }
+
+    clock->hour_anchor_x = x;
+    clock->hour_anchor_y = y;
+    return picoui_backend_clock_apply_pointer(clock, 0);
+}
+
+int picoui_backend_clock_set_minute_anchor(struct picoui_clock *clock, float x, float y)
+{
+    if (clock == NULL) {
+        return -1;
+    }
+
+    clock->minute_anchor_x = x;
+    clock->minute_anchor_y = y;
+    return picoui_backend_clock_apply_pointer(clock, 1);
+}
+
+int picoui_backend_clock_set_second_anchor(struct picoui_clock *clock, float x, float y)
+{
+    if (clock == NULL) {
+        return -1;
+    }
+
+    clock->second_anchor_x = x;
+    clock->second_anchor_y = y;
+    return picoui_backend_clock_apply_pointer(clock, 2);
 }

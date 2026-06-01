@@ -1,0 +1,57 @@
+{
+  "schema_version": "a-0.7-native-100-fragment-v1",
+  "batch": "r4b-data",
+  "scope": [
+    "table",
+    "graph",
+    "calendar"
+  ],
+  "evidence": {
+    "unit_group": "test_picoui_(table|graph|calendar)",
+    "contract_checker": "tests/picoui/contract/check_picoui_release_capability_matrix.py",
+    "mapping_checker": "tests/picoui/runtime/check_picoui_backend_mapping.py",
+    "visible_checker": "tests/picoui/runtime/check_picoui_visible_ui.py --all"
+  },
+  "widgets": [
+    {
+      "name": "graph",
+      "status": "complete",
+      "capabilities": [
+        "create_props_and_series_limit",
+        "axis_frame_grid_point_mask",
+        "series_add_and_value_write",
+        "series_count_and_value_readback",
+        "move_add_and_set_value_input_guard",
+        "move_add_shift_contract",
+        "visible_runtime_mapping"
+      ]
+    },
+    {
+      "name": "calendar",
+      "status": "complete",
+      "capabilities": [
+        "create_props_and_date_write",
+        "date_readback_backend_truth",
+        "header_visible_and_format_readback",
+        "day_names_and_colors",
+        "theme_main_and_text_backend_fields",
+        "grid_value_and_current_month_flags",
+        "visible_runtime_mapping"
+      ]
+    },
+    {
+      "name": "table",
+      "status": "complete",
+      "capabilities": [
+        "create_props_and_dimensions",
+        "cell_text_and_current_cell_backend_truth",
+        "item_image_button_and_excel_type",
+        "size_color_font_align_region_and_navigation",
+        "static_text_background_select_and_getters",
+        "editable_cell_commit_boundary_reuses_shared_core",
+        "keyboard_binding_and_edit_finish_boundary",
+        "visible_runtime_mapping"
+      ]
+    }
+  ]
+}

@@ -1,10 +1,19 @@
 #ifndef PICOUI_TABLE_H
 #define PICOUI_TABLE_H
 
+#include "picoui/native.h"
 #include "picoui/widget.h"
 
 struct picoui_window;
 struct picoui_table;
+struct picoui_image_source;
+
+struct picoui_table_region {
+    int x;
+    int y;
+    int width;
+    int height;
+};
 
 struct picoui_table_props {
     const char *id;
@@ -41,6 +50,45 @@ int picoui_table_set_cell_editable(struct picoui_table *table,
                                    int column,
                                    int editable,
                                    unsigned int text_max);
+int picoui_table_set_item_image(struct picoui_table *table,
+                                int row,
+                                int column,
+                                int x,
+                                int y,
+                                struct picoui_image_source *source,
+                                unsigned int mask_color);
+int picoui_table_set_item_button(struct picoui_table *table,
+                                 int row,
+                                 int column,
+                                 int x,
+                                 int y,
+                                 struct picoui_image_source *release_source,
+                                 unsigned int release_mask_color,
+                                 struct picoui_image_source *press_source,
+                                 unsigned int press_mask_color,
+                                 int checkable);
+int picoui_table_set_excel_type(struct picoui_table *table);
+int picoui_table_set_item_width(struct picoui_table *table, int column, int width);
+int picoui_table_set_item_height(struct picoui_table *table, int row, int height);
+int picoui_table_set_item_color(struct picoui_table *table,
+                                int row,
+                                int column,
+                                unsigned int text_color,
+                                unsigned int bg_color);
+int picoui_table_set_bg_color(struct picoui_table *table, unsigned int bg_color);
+int picoui_table_set_item_static_text(struct picoui_table *table, int row, int column, const char *text);
+int picoui_table_set_item_font(struct picoui_table *table, int row, int column);
+int picoui_table_set_item_align(struct picoui_table *table,
+                                int row,
+                                int column,
+                                enum picoui_align align);
+int picoui_table_get_item_align(const struct picoui_table *table, int row, int column);
+int picoui_table_get_item_editable(const struct picoui_table *table, int row, int column);
+int picoui_table_navigate(struct picoui_table *table, enum picoui_native_nav_dir dir);
+struct picoui_table_region picoui_table_get_item_region(const struct picoui_table *table,
+                                                        int row,
+                                                        int column);
+int picoui_table_set_selected_cell(struct picoui_table *table, int row, int column);
 int picoui_table_set_current_cell(struct picoui_table *table, int row, int column);
 int picoui_table_get_current_row(const struct picoui_table *table);
 int picoui_table_get_current_column(const struct picoui_table *table);

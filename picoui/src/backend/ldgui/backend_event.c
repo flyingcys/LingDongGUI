@@ -138,6 +138,7 @@ static int picoui_backend_widget_connect_native_events(struct picoui_backend_wid
 {
     uint8_t primary_signal = SIGNAL_NO_OPERATION;
     uint8_t secondary_signal = SIGNAL_NO_OPERATION;
+    uint8_t tertiary_signal = SIGNAL_NO_OPERATION;
     ldBase_t *sender = NULL;
     ldAssn_t *assn = NULL;
 
@@ -152,6 +153,7 @@ static int picoui_backend_widget_connect_native_events(struct picoui_backend_wid
     case PICOUI_BACKEND_WIDGET_BUTTON:
         primary_signal = SIGNAL_PRESS;
         secondary_signal = SIGNAL_RELEASE;
+        tertiary_signal = SIGNAL_HOLD_DOWN;
         break;
     case PICOUI_BACKEND_WIDGET_LIST:
         primary_signal = SIGNAL_CLICKED_ITEM;
@@ -188,6 +190,20 @@ static int picoui_backend_widget_connect_native_events(struct picoui_backend_wid
         }
         if (secondary_signal != SIGNAL_NO_OPERATION &&
             !ldMsgConnect(sender, secondary_signal, picoui_backend_ld_event_bridge_slot)) {
+            return -1;
+        }
+    }
+    if (tertiary_signal != SIGNAL_NO_OPERATION) {
+        assn = sender->ptAssn;
+        while (assn != NULL) {
+            if (assn->signal == tertiary_signal && assn->pFunc == picoui_backend_ld_event_bridge_slot) {
+                tertiary_signal = SIGNAL_NO_OPERATION;
+                break;
+            }
+            assn = assn->ptNext;
+        }
+        if (tertiary_signal != SIGNAL_NO_OPERATION &&
+            !ldMsgConnect(sender, tertiary_signal, picoui_backend_ld_event_bridge_slot)) {
             return -1;
         }
     }
@@ -390,6 +406,10 @@ int picoui_backend_widget_dispatch_native_signal(void *backend_widget,
     if (host_widget == 0) {
         return -1;
     }
+
+    backend->last_native_signal = native_signal;
+    backend->last_native_value = native_value;
+
     if (!picoui_backend_widget_accepts_event(host_widget)) {
         picoui_backend_restore_rejected_list_selection(backend);
         (void)picoui_backend_widget_release_focus(backend);
@@ -406,6 +426,9 @@ int picoui_backend_widget_dispatch_native_signal(void *backend_widget,
                                                         button->on_pressed,
                                                         host_widget,
                                                         button->on_pressed_user_data);
+        }
+        if (native_signal == SIGNAL_HOLD_DOWN) {
+            return 0;
         }
         if (native_signal == SIGNAL_RELEASE) {
             int rc;

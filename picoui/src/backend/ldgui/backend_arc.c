@@ -146,6 +146,31 @@ int picoui_backend_arc_set_color(struct picoui_arc *arc, unsigned int bg_color, 
     return 0;
 }
 
+int picoui_backend_arc_set_quarter_source(struct picoui_arc *arc, struct picoui_image_source *source)
+{
+    ldArc_t *ld_arc = picoui_backend_arc_get_ld(arc);
+
+    if (ld_arc == NULL || source == NULL || source->img_tile == NULL || source->mask_tile == NULL) {
+        return -1;
+    }
+
+    ld_arc->ptImgTile = source->img_tile;
+    ld_arc->ptMaskTile = source->mask_tile;
+    return 0;
+}
+
+int picoui_backend_arc_set_parent_color(struct picoui_arc *arc, unsigned int parent_color)
+{
+    ldArc_t *ld_arc = picoui_backend_arc_get_ld(arc);
+
+    if (ld_arc == NULL || parent_color > 0xFFFFFFU) {
+        return -1;
+    }
+
+    ld_arc->parentColor = (ldColor)parent_color;
+    return 0;
+}
+
 int picoui_backend_arc_get_background_angle(struct picoui_arc *arc, float *bg_start_angle, float *bg_angle)
 {
     ldArc_t *ld_arc = picoui_backend_arc_get_ld(arc);

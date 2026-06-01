@@ -140,6 +140,8 @@ static void test_line_edit_finished_boundary_clears_editing_state_without_reason
     ldMsgProcess(app_state->ld_scene);
     assert(picoui_line_edit_get_editing(line_edit, &editing) == 0);
     assert(editing == 0);
+    assert(backend->last_native_signal == SIGNAL_FINISHED);
+    assert(backend->last_native_value == 0);
 }
 
 static void test_line_edit_commit_and_cancel_paths_are_distinct(struct picoui_window *win)
@@ -189,6 +191,8 @@ static void test_line_edit_commit_and_cancel_paths_are_distinct(struct picoui_wi
     assert(strcmp(picoui_line_edit_get_text(line_edit), "committed") == 0);
     assert(line_edit->widget.last_edit_result == PICOUI_EDIT_RESULT_COMMIT);
     assert(line_edit->widget.pending_edit_result == PICOUI_EDIT_RESULT_NONE);
+    assert(backend->last_native_signal == SIGNAL_FINISHED);
+    assert(backend->last_native_value == 0);
     assert(line_edit_finished_count == 1);
     assert(line_edit_finished_widget == line_edit);
     assert(line_edit_finished_user_data == &finish_cookie);
@@ -203,6 +207,8 @@ static void test_line_edit_commit_and_cancel_paths_are_distinct(struct picoui_wi
     assert(editing == 0);
     assert(line_edit->widget.last_edit_result == PICOUI_EDIT_RESULT_CANCEL);
     assert(line_edit->widget.pending_edit_result == PICOUI_EDIT_RESULT_NONE);
+    assert(backend->last_native_signal == SIGNAL_PRESS);
+    assert(backend->last_native_value == 0);
     assert(line_edit_finished_count == 1);
 }
 

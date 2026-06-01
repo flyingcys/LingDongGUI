@@ -3,6 +3,7 @@
 static void make_ui(struct picoui_window *win)
 {
     struct picoui_label *title = picoui_label_create(win, "title");
+    struct picoui_message_box *message_box;
     struct picoui_message_box_props props = {
         .id = "message_box",
         .title = "Update",
@@ -11,7 +12,10 @@ static void make_ui(struct picoui_window *win)
     };
 
     picoui_label_set_text(title, "Message Box");
-    (void)picoui_message_box_create_with_props((struct picoui_widget *)win, &props);
+    message_box = picoui_message_box_create_with_props((struct picoui_widget *)win, &props);
+    if (message_box != 0) {
+        (void)picoui_widget_set_pos((struct picoui_widget *)message_box, 110, 180);
+    }
 }
 
 static int run_demo(void)

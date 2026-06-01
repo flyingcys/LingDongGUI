@@ -96,6 +96,43 @@ static void test_qrcode_release_contract_covers_configuration_boundary(struct pi
     assert(ld_qrcode->qrZoom == 4);
 }
 
+static void test_qrcode_native_color_ecc_version_and_zoom_round_trip(struct picoui_window *win)
+{
+    struct picoui_qrcode *qrcode = picoui_qrcode_create((struct picoui_widget *)win, "qr_native_config");
+    struct picoui_backend_widget *backend;
+    ldQRCode_t *ld_qrcode;
+
+    assert(qrcode != 0);
+    backend = (struct picoui_backend_widget *)qrcode->widget.backend_widget;
+    assert(backend != 0);
+    ld_qrcode = (ldQRCode_t *)backend->ld_widget;
+    assert(ld_qrcode != 0);
+
+    assert(picoui_qrcode_set_qr_color(qrcode, 0x112233U) == 0);
+    assert(picoui_qrcode_set_bg_color(qrcode, 0x445566U) == 0);
+    assert(picoui_qrcode_set_ecc(qrcode, 2) == 0);
+    assert(picoui_qrcode_set_max_version(qrcode, 5) == 0);
+    assert(picoui_qrcode_set_zoom(qrcode, 7) == 0);
+
+    assert(ld_qrcode->qrColor == (ldColor)0x112233U);
+    assert(ld_qrcode->bgColor == (ldColor)0x445566U);
+    assert(ld_qrcode->qrEcc == 2);
+    assert(ld_qrcode->qrMaxVersion == 5);
+    assert(ld_qrcode->qrZoom == 7);
+
+    assert(picoui_qrcode_set_qr_color(0, 0x000000U) == -1);
+    assert(picoui_qrcode_set_bg_color(0, 0x000000U) == -1);
+    assert(picoui_qrcode_set_ecc(qrcode, -1) == -1);
+    assert(picoui_qrcode_set_max_version(qrcode, 0) == -1);
+    assert(picoui_qrcode_set_zoom(qrcode, 0) == -1);
+
+    assert(ld_qrcode->qrColor == (ldColor)0x112233U);
+    assert(ld_qrcode->bgColor == (ldColor)0x445566U);
+    assert(ld_qrcode->qrEcc == 2);
+    assert(ld_qrcode->qrMaxVersion == 5);
+    assert(ld_qrcode->qrZoom == 7);
+}
+
 int main(void)
 {
     struct picoui_app *app = picoui_app_create();
@@ -109,6 +146,7 @@ int main(void)
     test_qrcode_set_get_text(win);
     test_qrcode_rejects_invalid_inputs(win);
     test_qrcode_release_contract_covers_configuration_boundary(win);
+    test_qrcode_native_color_ecc_version_and_zoom_round_trip(win);
 
     picoui_app_destroy(app);
     return 0;

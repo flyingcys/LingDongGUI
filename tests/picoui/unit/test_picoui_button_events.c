@@ -20,6 +20,9 @@ static int last_release_cookie = 0;
 static int last_click_cookie = 0;
 static int last_value_cookie = 0;
 static int last_value = 0;
+static uint64_t last_press_native_value = 0;
+static uint64_t last_hold_native_value = 0;
+static uint64_t last_release_native_value = 0;
 
 static void on_pressed(struct picoui_widget *widget, void *user_data)
 {
@@ -114,6 +117,8 @@ int main(void)
     assert(event_order_count == 0);
     assert(backend->last_signal == PICOUI_BACKEND_SIGNAL_NONE);
     assert(backend->dispatch_count == 0);
+    assert(backend->last_native_signal == SIGNAL_NO_OPERATION);
+    assert(backend->last_native_value == 0);
 
     assert(picoui_backend_widget_dispatch_event(button->widget.backend_widget,
                                                 PICOUI_BACKEND_SIGNAL_PRESSED,
@@ -196,6 +201,19 @@ int main(void)
     assert(backend->last_signal == PICOUI_BACKEND_SIGNAL_RELEASED);
     assert(backend->dispatch_count == 2);
 
+    last_hold_native_value = CONNECT32(3, 4, 10, 11);
+    assert(ldMsgEmit(app_state->ld_scene->ptMsgQueue,
+                     backend->ld_widget,
+                     SIGNAL_HOLD_DOWN,
+                     last_hold_native_value) == true);
+    ldMsgProcess(app_state->ld_scene);
+    assert(press_count == 1);
+    assert(release_count == 1);
+    assert(click_count == 1);
+    assert(backend->dispatch_count == 2);
+    assert(backend->last_native_signal == SIGNAL_HOLD_DOWN);
+    assert(backend->last_native_value == last_hold_native_value);
+
     assert(picoui_widget_set_enabled(&button->widget, 0) == 0);
     assert(ldMsgEmit(app_state->ld_scene->ptMsgQueue,
                      backend->ld_widget,
@@ -243,6 +261,24 @@ int main(void)
     assert(backend->dispatch_count == 2);
     assert(picoui_widget_set_visible(&button->widget, 1) == 0);
 
+    last_press_native_value = CONNECT32(0, 0, 7, 9);
+    assert(ldMsgEmit(app_state->ld_scene->ptMsgQueue,
+                     backend->ld_widget,
+                     SIGNAL_PRESS,
+                     last_press_native_value) == true);
+    ldMsgProcess(app_state->ld_scene);
+    assert(backend->last_native_signal == SIGNAL_PRESS);
+    assert(backend->last_native_value == last_press_native_value);
+
+    last_release_native_value = CONNECT32(5, 6, 7, 9);
+    assert(ldMsgEmit(app_state->ld_scene->ptMsgQueue,
+                     backend->ld_widget,
+                     SIGNAL_RELEASE,
+                     last_release_native_value) == true);
+    ldMsgProcess(app_state->ld_scene);
+    assert(backend->last_native_signal == SIGNAL_RELEASE);
+    assert(backend->last_native_value == last_release_native_value);
+
     assert(picoui_checkbox_set_checked(checkbox, 1) == 0);
     assert(value_count == 0);
     assert(picoui_switch_set_checked(sw, 1) == 0);
@@ -259,6 +295,8 @@ int main(void)
     assert(last_value_widget == &checkbox->widget);
     assert(last_value == 0);
     assert(last_value_cookie == checkbox_cookie);
+    assert(checkbox_backend->last_native_signal == SIGNAL_VALUE_CHANGED);
+    assert(checkbox_backend->last_native_value == 0);
 
     assert(ldMsgEmit(app_state->ld_scene->ptMsgQueue,
                      switch_backend->ld_widget,
@@ -269,6 +307,8 @@ int main(void)
     assert(last_value_widget == &sw->widget);
     assert(last_value == 0);
     assert(last_value_cookie == switch_cookie);
+    assert(switch_backend->last_native_signal == SIGNAL_VALUE_CHANGED);
+    assert(switch_backend->last_native_value == 0);
 
     assert(ldMsgEmit(app_state->ld_scene->ptMsgQueue,
                      slider_backend->ld_widget,
@@ -279,6 +319,8 @@ int main(void)
     assert(last_value_widget == &slider->widget);
     assert(last_value == 75);
     assert(last_value_cookie == slider_cookie);
+    assert(slider_backend->last_native_signal == SIGNAL_VALUE_CHANGED);
+    assert(slider_backend->last_native_value == 750);
 
     assert(picoui_widget_set_visible(&checkbox->widget, 0) == 0);
     assert(picoui_backend_widget_dispatch_signal(checkbox->widget.backend_widget,

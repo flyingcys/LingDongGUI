@@ -5,7 +5,11 @@
 
 struct picoui_window;
 struct picoui_image;
-struct picoui_image_source;
+
+struct picoui_image_source {
+    void *img_tile;
+    void *mask_tile;
+};
 
 struct picoui_image_props {
     const char *id;

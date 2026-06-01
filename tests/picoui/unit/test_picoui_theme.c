@@ -2,11 +2,13 @@
 #include "picoui/picoui.h"
 #include "ldButton.h"
 #include "ldCheckBox.h"
+#include "ldImage.h"
 #include "ldLabel.h"
 #include "ldList.h"
 #include "ldSlider.h"
 #include "ldSwitch.h"
 #include "ldText.h"
+#include "ldCalendar.h"
 #include "ldWindow.h"
 
 #include <assert.h>
@@ -165,6 +167,22 @@ static void assert_window_backend_padding(const struct picoui_window *window, in
     assert(ld_window->gridPadding.bottom == padding);
 }
 
+static void assert_button_backend_metrics(const struct picoui_button *button,
+                                          int height,
+                                          int radius,
+                                          int padding)
+{
+    const struct picoui_backend_widget *backend = (const struct picoui_backend_widget *)button->widget.backend_widget;
+    const ldButton_t *ld_button;
+
+    assert(backend != NULL);
+    assert(backend->ld_widget != NULL);
+    ld_button = (const ldButton_t *)backend->ld_widget;
+    assert(ld_button->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iHeight == height);
+    assert(button->widget.radius == radius);
+    assert(button->widget.padding == padding);
+}
+
 static void assert_label_backend_style(const struct picoui_label *label,
                                        unsigned int bg_color,
                                        unsigned int text_color)
@@ -207,6 +225,149 @@ static void assert_list_backend_style(const struct picoui_list *list,
     assert(ld_list->bgColor == picoui_test_rgb_to_ld_color(bg_color));
     assert(ld_list->textColor == picoui_test_rgb_to_ld_color(text_color));
     assert(ld_list->selectColor == picoui_test_rgb_to_ld_color(select_color));
+}
+
+static void assert_list_backend_text_color(const struct picoui_list *list,
+                                           unsigned int text_color)
+{
+    const struct picoui_backend_widget *backend = (const struct picoui_backend_widget *)list->widget.backend_widget;
+    const ldList_t *ld_list;
+
+    assert(backend != NULL);
+    assert(backend->ld_widget != NULL);
+    ld_list = (const ldList_t *)backend->ld_widget;
+    assert(ld_list->textColor == picoui_test_rgb_to_ld_color(text_color));
+}
+
+static void assert_calendar_backend_style(const struct picoui_calendar *calendar,
+                                          unsigned int bg_color,
+                                          unsigned int item_color,
+                                          unsigned int text_color)
+{
+    const struct picoui_backend_widget *backend = (const struct picoui_backend_widget *)calendar->widget.backend_widget;
+    const ldCalendar_t *ld_calendar;
+
+    assert(backend != NULL);
+    assert(backend->ld_widget != NULL);
+    ld_calendar = (const ldCalendar_t *)backend->ld_widget;
+    assert(ld_calendar->bgColor == picoui_test_rgb_to_ld_color(bg_color));
+    assert(ld_calendar->itemColor == picoui_test_rgb_to_ld_color(item_color));
+    assert(ld_calendar->textColor == picoui_test_rgb_to_ld_color(text_color));
+}
+
+static void test_image_theme_and_enabled_are_support_not_reject(void)
+{
+    struct picoui_theme *theme = picoui_theme_create();
+    struct picoui_app *app = picoui_app_create();
+    struct picoui_window *win;
+    struct picoui_image *image;
+    struct picoui_backend_widget *backend;
+    ldImage_t *ld_image;
+
+    assert(theme != NULL);
+    assert(app != NULL);
+    assert(picoui_theme_set_color(theme, PICOUI_COLOR_TEXT_PRIMARY, 0x111111U) == 0);
+    assert(picoui_theme_set_color(theme, PICOUI_COLOR_BG, 0x222222U) == 0);
+    assert(picoui_theme_set_color(theme, PICOUI_COLOR_PANEL, 0x333333U) == 0);
+    assert(picoui_theme_set_color(theme, PICOUI_COLOR_BORDER, 0x444444U) == 0);
+    assert(picoui_theme_set_color(theme, PICOUI_COLOR_ACCENT, 0x555555U) == 0);
+    assert(picoui_theme_set_color(theme, PICOUI_COLOR_DISABLED, 0x666666U) == 0);
+    assert(picoui_theme_set_metric(theme, PICOUI_METRIC_PADDING, 7) == 0);
+    assert(picoui_theme_set_metric(theme, PICOUI_METRIC_RADIUS, 2) == 0);
+    assert(picoui_theme_set_metric(theme, PICOUI_METRIC_CONTROL_HEIGHT, 17) == 0);
+    assert(picoui_app_set_theme(app, theme) == 0);
+
+    win = picoui_window_create(app, "image_theme_root");
+    image = picoui_image_create(win, "image_theme");
+    assert(win != NULL);
+    assert(image != NULL);
+
+    backend = (struct picoui_backend_widget *)image->widget.backend_widget;
+    assert(backend != NULL);
+    ld_image = (ldImage_t *)backend->ld_widget;
+    assert(ld_image != NULL);
+
+    assert(picoui_theme_apply_to_widget(theme,
+                                        &image->widget,
+                                        PICOUI_PART_MAIN,
+                                        PICOUI_STATE_DISABLED) == 0);
+    assert_widget_style(&image->widget, 0x222222U, 0x666666U, 0x666666U, 2, 7);
+    assert(backend_height(&image->widget) == 56);
+    assert(image->widget.height == 0);
+    assert(ld_image->maskColor == picoui_test_rgb_to_ld_color(0x222222U));
+
+    assert(picoui_widget_set_enabled(&image->widget, 0) == 0);
+    assert(image->widget.enabled == 0);
+    assert(((ldBase_t *)backend->ld_widget)->isSelectable == false);
+    assert(picoui_widget_set_enabled(&image->widget, 1) == 0);
+    assert(image->widget.enabled == 1);
+    assert(((ldBase_t *)backend->ld_widget)->isSelectable == true);
+
+    picoui_app_destroy(app);
+    picoui_theme_destroy(theme);
+}
+
+static void test_theme_native_parts_apply_to_real_backend_fields(void)
+{
+    struct picoui_theme *theme = picoui_theme_create();
+    struct picoui_app *app = picoui_app_create();
+    struct picoui_window *win;
+    struct picoui_button *button;
+    struct picoui_list *list;
+    struct picoui_calendar *calendar;
+
+    assert(theme != NULL);
+    assert(app != NULL);
+    assert(picoui_theme_set_color(theme, PICOUI_COLOR_TEXT_PRIMARY, 0x101010U) == 0);
+    assert(picoui_theme_set_color(theme, PICOUI_COLOR_BG, 0x202020U) == 0);
+    assert(picoui_theme_set_color(theme, PICOUI_COLOR_PANEL, 0x303030U) == 0);
+    assert(picoui_theme_set_color(theme, PICOUI_COLOR_BORDER, 0x404040U) == 0);
+    assert(picoui_theme_set_color(theme, PICOUI_COLOR_ACCENT, 0x505050U) == 0);
+    assert(picoui_theme_set_color(theme, PICOUI_COLOR_DISABLED, 0x606060U) == 0);
+    assert(picoui_theme_set_metric(theme, PICOUI_METRIC_PADDING, 9) == 0);
+    assert(picoui_theme_set_metric(theme, PICOUI_METRIC_RADIUS, 4) == 0);
+    assert(picoui_theme_set_metric(theme, PICOUI_METRIC_CONTROL_HEIGHT, 23) == 0);
+    assert(picoui_app_set_theme(app, theme) == 0);
+
+    win = picoui_window_create(app, "root");
+    button = picoui_button_create(win, "ok");
+    list = picoui_list_create(win, "items");
+    calendar = picoui_calendar_create(win, "calendar");
+    assert(win != NULL);
+    assert(button != NULL);
+    assert(list != NULL);
+    assert(calendar != NULL);
+
+    assert(picoui_theme_apply_to_widget(theme,
+                                        &button->widget,
+                                        PICOUI_PART_MAIN,
+                                        PICOUI_STATE_DEFAULT) == 0);
+    assert_button_backend_metrics(button, 23, 4, 9);
+
+    assert(picoui_theme_apply_to_widget(theme,
+                                        &win->widget,
+                                        PICOUI_PART_MAIN,
+                                        PICOUI_STATE_DEFAULT) == 0);
+    assert_window_backend_padding(win, 9);
+
+    assert(picoui_theme_apply_to_widget(theme,
+                                        &list->widget,
+                                        PICOUI_PART_TEXT,
+                                        PICOUI_STATE_FOCUSED) == 0);
+    assert_list_backend_text_color(list, 0x505050U);
+
+    assert(picoui_theme_apply_to_widget(theme,
+                                        &calendar->widget,
+                                        PICOUI_PART_MAIN,
+                                        PICOUI_STATE_DEFAULT) == 0);
+    assert(picoui_theme_apply_to_widget(theme,
+                                        &calendar->widget,
+                                        PICOUI_PART_TEXT,
+                                        PICOUI_STATE_FOCUSED) == 0);
+    assert_calendar_backend_style(calendar, 0x303030U, 0x404040U, 0x505050U);
+
+    picoui_app_destroy(app);
+    picoui_theme_destroy(theme);
 }
 
 int main(void)
@@ -319,10 +480,14 @@ int main(void)
                                         &list->widget,
                                         PICOUI_PART_TEXT,
                                         PICOUI_STATE_DISABLED)
-           == -1);
-    assert_widget_style(&list->widget, 0x555555U, 0x111111U, 0x555555U, 3, 5);
+           == 0);
+    assert(list->widget.bg_color == 0x222222U);
+    assert(list->widget.text_color == 0x666666U);
+    assert(list->widget.border_color == 0x666666U);
+    assert(list->widget.radius == 3);
+    assert(list->widget.padding == 5);
     assert_backend_height(&list->widget, 19);
-    assert_list_backend_style(list, 0x555555U, 0x000000U, 0x555555U);
+    assert_list_backend_text_color(list, 0x666666U);
 
     assert(picoui_theme_apply_to_widget(theme,
                                         &button->widget,
@@ -395,7 +560,11 @@ int main(void)
                                         PICOUI_PART_INDICATOR,
                                         PICOUI_STATE_DEFAULT)
            == -1);
-    assert_widget_style(&list->widget, 0x555555U, 0x111111U, 0x555555U, 3, 5);
+    assert(list->widget.bg_color == 0x222222U);
+    assert(list->widget.text_color == 0x666666U);
+    assert(list->widget.border_color == 0x666666U);
+    assert(list->widget.radius == 3);
+    assert(list->widget.padding == 5);
 
     assert(picoui_theme_apply_to_widget(theme,
                                         &slider->widget,
@@ -408,9 +577,11 @@ int main(void)
                                         &image->widget,
                                         PICOUI_PART_MAIN,
                                         PICOUI_STATE_DEFAULT)
-           == -1);
-    assert_widget_style(&image->widget, 0U, 0U, 0U, 0, 0);
+           == 0);
+    assert_widget_style(&image->widget, 0x333333U, 0x111111U, 0x444444U, 3, 5);
     assert(image->widget.height == 0);
+    assert(((ldImage_t *)((struct picoui_backend_widget *)image->widget.backend_widget)->ld_widget)->maskColor
+           == picoui_test_rgb_to_ld_color(0x333333U));
 
     assert(label->widget.visible == 1);
     assert(ldBaseIsHidden((ldBase_t *)((struct picoui_backend_widget *)label->widget.backend_widget)->ld_widget) == false);
@@ -429,6 +600,9 @@ int main(void)
     assert(picoui_widget_set_enabled(&sw->widget, 1) == 0);
     assert(sw->widget.enabled == 1);
     assert(ldSwitchIsDisabled((ldSwitch_t *)((struct picoui_backend_widget *)sw->widget.backend_widget)->ld_widget) == false);
+
+    test_image_theme_and_enabled_are_support_not_reject();
+    test_theme_native_parts_apply_to_real_backend_fields();
 
     picoui_app_destroy(app);
     picoui_theme_destroy(theme);

@@ -34,6 +34,7 @@ DEMOS = {
     "table_basic": "picoui_table_basic_demo",
     "graph_basic": "picoui_graph_basic_demo",
     "calendar_basic": "picoui_calendar_basic_demo",
+    "animation_basic": "picoui_animation_basic_demo",
 }
 
 
@@ -87,9 +88,10 @@ def _print_metadata(status: str, metadata: dict[str, str]) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="生成 PicoUI a-0.6 final release demo-level 人工窗口验收 artifact。"
+        description="生成 PicoUI a-0.7 native-100 demo-level 人工窗口验收 artifact。"
     )
     parser.add_argument("--demo", choices=sorted(DEMOS), default="basic_widgets")
+    parser.add_argument("--all", action="store_true", help="为全部 native-100 demo 生成 artifact")
     parser.add_argument("--build-dir", default=str(DEFAULT_BUILD), help="包含 demo target 的 CMake build 目录")
     parser.add_argument(
         "--artifact-root",
@@ -98,89 +100,98 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    demo = args.demo
-    target = DEMOS[demo]
+    selected_demos = sorted(DEMOS) if args.all else [args.demo]
     build_dir = Path(args.build_dir).resolve()
-    artifact_path = Path(args.artifact_root).resolve() / demo / "frame.ppm"
     driver = _default_sdl_driver()
     platform_text = f"{platform.system()} {platform.release()} ({platform.machine()})"
-
-    metadata = {
-        "PLATFORM": platform_text,
-        "SDL_VIDEO_DRIVER": driver or "<unset>",
-        "DEMO_TARGET": target,
-        "BUILD_DIR": str(build_dir),
-        "ARTIFACT_PATH": str(artifact_path),
-    }
 
     if not driver:
         return _skip(
             "当前环境未设置 SDL_VIDEODRIVER，且未检测到可用桌面窗口环境；C6 可选门禁不应让无窗口 CI 失败。",
-            metadata,
+            {
+                "PLATFORM": platform_text,
+                "SDL_VIDEO_DRIVER": driver or "<unset>",
+                "BUILD_DIR": str(build_dir),
+            },
         )
 
     if driver == "dummy":
         return _skip(
             "SDL_VIDEODRIVER=dummy 只能生成 readback artifact，不能支撑人工 OS 窗口验收结论。",
-            metadata,
+            {
+                "PLATFORM": platform_text,
+                "SDL_VIDEO_DRIVER": driver or "<unset>",
+                "BUILD_DIR": str(build_dir),
+            },
         )
 
-    try:
-        executable = _find_executable(build_dir, target)
-    except FileNotFoundError as exc:
-        print("PICOUI_MANUAL_WINDOW_ARTIFACT=FAIL")
-        for key, value in metadata.items():
-            print(f"{key}={value}")
-        print(f"ERROR={exc}")
-        return 2
+    for demo in selected_demos:
+        target = DEMOS[demo]
+        artifact_path = Path(args.artifact_root).resolve() / demo / "frame.ppm"
+        metadata = {
+            "PLATFORM": platform_text,
+            "SDL_VIDEO_DRIVER": driver or "<unset>",
+            "DEMO_TARGET": target,
+            "BUILD_DIR": str(build_dir),
+            "ARTIFACT_PATH": str(artifact_path),
+        }
 
-    artifact_path.parent.mkdir(parents=True, exist_ok=True)
-    if artifact_path.exists():
-        artifact_path.unlink()
+        try:
+            executable = _find_executable(build_dir, target)
+        except FileNotFoundError as exc:
+            print("PICOUI_MANUAL_WINDOW_ARTIFACT=FAIL")
+            for key, value in metadata.items():
+                print(f"{key}={value}")
+            print(f"ERROR={exc}")
+            return 2
 
-    env = os.environ.copy()
-    env["SDL_VIDEODRIVER"] = driver
-    env["PICOUI_DEMO_AUTO_QUIT_MS"] = "1200"
-    env["PICOUI_CAPTURE_FILE"] = str(artifact_path)
-    command = [str(executable)]
-    metadata["RUN_COMMAND"] = " ".join(command)
+        artifact_path.parent.mkdir(parents=True, exist_ok=True)
+        if artifact_path.exists():
+            artifact_path.unlink()
 
-    try:
-        completed = subprocess.run(
-            command,
-            check=False,
-            timeout=DEMO_TIMEOUT_SECONDS,
-            capture_output=True,
-            text=True,
-            env=env,
-        )
-    except subprocess.TimeoutExpired:
-        _print_metadata("FAIL", metadata)
-        print(f"ERROR=demo target '{target}' 超时，未能稳定生成人工窗口 artifact。")
-        return 2
+        env = os.environ.copy()
+        env["SDL_VIDEODRIVER"] = driver
+        env["PICOUI_DEMO_AUTO_QUIT_MS"] = "1200"
+        env["PICOUI_CAPTURE_FILE"] = str(artifact_path)
+        command = [str(executable)]
+        metadata["RUN_COMMAND"] = " ".join(command)
 
-    if completed.stdout:
-        print(completed.stdout, end="")
-    if completed.stderr:
-        print(completed.stderr, end="", file=sys.stderr)
+        try:
+            completed = subprocess.run(
+                command,
+                check=False,
+                timeout=DEMO_TIMEOUT_SECONDS,
+                capture_output=True,
+                text=True,
+                env=env,
+            )
+        except subprocess.TimeoutExpired:
+            _print_metadata("FAIL", metadata)
+            print(f"ERROR=demo target '{target}' 超时，未能稳定生成人工窗口 artifact。")
+            return 2
 
-    if completed.returncode != 0:
-        _print_metadata("FAIL", metadata)
-        print(f"ERROR=demo target '{target}' 退出码为 {completed.returncode}。")
-        return 2
+        if completed.stdout:
+            print(completed.stdout, end="")
+        if completed.stderr:
+            print(completed.stderr, end="", file=sys.stderr)
 
-    if "PICOUI_RUNTIME_READY" not in completed.stdout:
-        _print_metadata("FAIL", metadata)
-        print("ERROR=demo 未输出 PICOUI_RUNTIME_READY，不能作为可追溯 artifact 记录。")
-        return 2
+        if completed.returncode != 0:
+            _print_metadata("FAIL", metadata)
+            print(f"ERROR=demo target '{target}' 退出码为 {completed.returncode}。")
+            return 2
 
-    if not artifact_path.is_file() or artifact_path.stat().st_size <= 32:
-        _print_metadata("FAIL", metadata)
-        print("ERROR=未生成有效 frame.ppm artifact。")
-        return 2
+        if "PICOUI_RUNTIME_READY" not in completed.stdout:
+            _print_metadata("FAIL", metadata)
+            print("ERROR=demo 未输出 PICOUI_RUNTIME_READY，不能作为可追溯 artifact 记录。")
+            return 2
 
-    _print_metadata("ARTIFACT_READY", metadata)
-    print("MANUAL_CONCLUSION=脚本只证明 artifact 已生成；人工窗口验收结论必须写入 C-线人工窗口验收记录。")
+        if not artifact_path.is_file() or artifact_path.stat().st_size <= 32:
+            _print_metadata("FAIL", metadata)
+            print("ERROR=未生成有效 frame.ppm artifact。")
+            return 2
+
+        _print_metadata("ARTIFACT_READY", metadata)
+        print("MANUAL_CONCLUSION=脚本只证明 artifact 已生成；人工窗口验收结论必须写入 C-线人工窗口验收记录。")
     return 0
 
 

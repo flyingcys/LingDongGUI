@@ -8,6 +8,15 @@
 
 #include <assert.h>
 
+static unsigned int encode_rgb_to_ld_color(unsigned int rgb)
+{
+    unsigned int red = (rgb >> 16) & 0xFFU;
+    unsigned int green = (rgb >> 8) & 0xFFU;
+    unsigned int blue = rgb & 0xFFU;
+
+    return ((red >> 3) << 11) | ((green >> 2) << 5) | (blue >> 3);
+}
+
 static int combo_selected_count = 0;
 static int combo_selected_index = -1;
 static void *combo_selected_user_data = 0;
@@ -187,10 +196,129 @@ static void test_combo_box_final_visual_and_selection_contract_is_release_ready(
     picoui_app_destroy(app);
 }
 
+static void test_combo_box_native_color_item_max_and_dropdown_image_round_trip(void)
+{
+    struct picoui_app *app;
+    struct picoui_window *win;
+    struct picoui_combo_box *combo_box;
+    struct picoui_backend_widget *backend;
+    ldComboBox_t *ld_combo_box;
+    arm_2d_tile_t dropdown_tile = {0};
+    arm_2d_tile_t dropdown_mask_tile = {0};
+    struct picoui_image_source dropdown_source = {
+        .img_tile = &dropdown_tile,
+        .mask_tile = &dropdown_mask_tile,
+    };
+    struct picoui_image_source invalid_source = {
+        .img_tile = 0,
+        .mask_tile = &dropdown_mask_tile,
+    };
+
+    app = picoui_app_create();
+    assert(app != 0);
+    win = picoui_window_create(app, "combo_native_root");
+    assert(win != 0);
+    combo_box = picoui_combo_box_create(win, "combo_native");
+    assert(combo_box != 0);
+    assert(picoui_combo_box_add_item(combo_box, "wifi", "Wi-Fi") == 0);
+    assert(picoui_combo_box_add_item(combo_box, "bluetooth", "Bluetooth") == 0);
+    assert(picoui_combo_box_add_item(combo_box, "display", "Display") == 0);
+
+    backend = (struct picoui_backend_widget *)combo_box->widget.backend_widget;
+    assert(backend != 0);
+    ld_combo_box = (ldComboBox_t *)backend->ld_widget;
+    assert(ld_combo_box != 0);
+
+    assert(picoui_combo_box_set_text_color(combo_box, 0x445566U) == 0);
+    assert(picoui_combo_box_set_bg_color(combo_box, 0x112233U) == 0);
+    assert(picoui_combo_box_set_frame_color(combo_box, 0x778899U) == 0);
+    assert(picoui_combo_box_set_select_color(combo_box, 0xAABBCCU) == 0);
+    assert(picoui_combo_box_set_item_max(combo_box, 5) == 0);
+    assert(picoui_combo_box_set_dropdown_source(combo_box, &dropdown_source) == 0);
+    assert(picoui_combo_box_set_dropdown_source(combo_box, &invalid_source) == -1);
+
+    assert((unsigned int)ld_combo_box->textColor == encode_rgb_to_ld_color(0x445566U));
+    assert((unsigned int)ld_combo_box->bgColor == encode_rgb_to_ld_color(0x112233U));
+    assert((unsigned int)ld_combo_box->frameColor == encode_rgb_to_ld_color(0x778899U));
+    assert((unsigned int)ld_combo_box->selectColor == encode_rgb_to_ld_color(0xAABBCCU));
+    assert(ld_combo_box->itemMax == 5);
+    assert(ld_combo_box->ptDropdownImgTile == dropdown_source.img_tile);
+    assert(ld_combo_box->ptDropdownMaskTile == dropdown_source.mask_tile);
+
+    picoui_app_destroy(app);
+}
+
+static void test_combo_box_native_item_text_readback_matches_backend_truth(void)
+{
+    struct picoui_app *app;
+    struct picoui_window *win;
+    struct picoui_combo_box *combo_box;
+    struct picoui_backend_widget *backend;
+    ldComboBox_t *ld_combo_box;
+
+    app = picoui_app_create();
+    assert(app != 0);
+    win = picoui_window_create(app, "combo_text_root");
+    assert(win != 0);
+    combo_box = picoui_combo_box_create(win, "combo_text");
+    assert(combo_box != 0);
+    assert(picoui_combo_box_add_item(combo_box, "wifi", "Wi-Fi") == 0);
+    assert(picoui_combo_box_add_item(combo_box, "bluetooth", "Bluetooth") == 0);
+    assert(picoui_combo_box_add_item(combo_box, "display", "Display") == 0);
+
+    backend = (struct picoui_backend_widget *)combo_box->widget.backend_widget;
+    assert(backend != 0);
+    ld_combo_box = (ldComboBox_t *)backend->ld_widget;
+    assert(ld_combo_box != 0);
+
+    assert(picoui_combo_box_get_text(combo_box, 0) == ldComboBoxGetText(ld_combo_box, 0));
+    assert(picoui_combo_box_get_text(combo_box, 1) == ldComboBoxGetText(ld_combo_box, 1));
+    assert(picoui_combo_box_get_text(combo_box, 2) == ldComboBoxGetText(ld_combo_box, 2));
+    assert(picoui_combo_box_get_text(combo_box, 3) == 0);
+
+    picoui_app_destroy(app);
+}
+
+static void test_combo_box_uses_native_static_items_contract(void)
+{
+    struct picoui_app *app;
+    struct picoui_window *win;
+    struct picoui_combo_box *combo_box;
+    struct picoui_backend_widget *backend;
+    ldComboBox_t *ld_combo_box;
+
+    app = picoui_app_create();
+    assert(app != 0);
+    win = picoui_window_create(app, "combo_static_root");
+    assert(win != 0);
+    combo_box = picoui_combo_box_create(win, "combo_static");
+    assert(combo_box != 0);
+    assert(picoui_combo_box_add_item(combo_box, "wifi", "Wi-Fi") == 0);
+    assert(picoui_combo_box_add_item(combo_box, "bluetooth", "Bluetooth") == 0);
+    assert(picoui_combo_box_add_item(combo_box, "display", "Display") == 0);
+
+    backend = (struct picoui_backend_widget *)combo_box->widget.backend_widget;
+    assert(backend != 0);
+    ld_combo_box = (ldComboBox_t *)backend->ld_widget;
+    assert(ld_combo_box != 0);
+
+    assert(ld_combo_box->isStatic == true);
+    assert(ld_combo_box->itemCount == 3);
+    assert(ld_combo_box->ppItemStrGroup == (uint8_t **)combo_box->backend_item_texts);
+    assert(ldComboBoxGetText(ld_combo_box, 0) == (uint8_t *)combo_box->backend_item_texts[0]);
+    assert(ldComboBoxGetText(ld_combo_box, 1) == (uint8_t *)combo_box->backend_item_texts[1]);
+    assert(ldComboBoxGetText(ld_combo_box, 2) == (uint8_t *)combo_box->backend_item_texts[2]);
+
+    picoui_app_destroy(app);
+}
+
 int main(void)
 {
     test_combo_box_open_close_and_selected_item_truth();
     test_combo_box_reuses_selection_contract();
     test_combo_box_final_visual_and_selection_contract_is_release_ready();
+    test_combo_box_native_color_item_max_and_dropdown_image_round_trip();
+    test_combo_box_native_item_text_readback_matches_backend_truth();
+    test_combo_box_uses_native_static_items_contract();
     return 0;
 }

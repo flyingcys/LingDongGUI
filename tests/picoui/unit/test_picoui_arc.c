@@ -2,6 +2,9 @@
 #include "picoui/arc.h"
 #include "picoui/widget.h"
 #include "picoui/window.h"
+#include "../../../src/gui/ldArc.h"
+#include "backend.h"
+#include "internal.h"
 
 #include <assert.h>
 
@@ -89,6 +92,43 @@ static void test_arc_rejects_invalid_inputs(struct picoui_window *win)
     assert(picoui_arc_get_rotation_angle(0) == 0.0f);
 }
 
+static void test_arc_native_quarter_image_mask_and_parent_color_round_trip(struct picoui_window *win)
+{
+    struct picoui_arc *arc = picoui_arc_create((struct picoui_widget *)win, "arc_native_resources");
+    struct picoui_backend_widget *backend;
+    ldArc_t *ld_arc;
+    arm_2d_tile_t quarter_img = {
+        .tRegion = {
+            .tSize = { .iWidth = 24, .iHeight = 24 },
+        },
+    };
+    arm_2d_tile_t quarter_mask = {
+        .tRegion = {
+            .tSize = { .iWidth = 24, .iHeight = 24 },
+        },
+    };
+    struct picoui_image_source quarter_source = {
+        .img_tile = &quarter_img,
+        .mask_tile = &quarter_mask,
+    };
+
+    assert(arc != 0);
+    backend = (struct picoui_backend_widget *)arc->widget.backend_widget;
+    assert(backend != 0);
+    ld_arc = (ldArc_t *)backend->ld_widget;
+    assert(ld_arc != 0);
+
+    assert(picoui_arc_set_quarter_source(arc, &quarter_source) == 0);
+    assert(picoui_arc_set_parent_color(arc, 0x223344U) == 0);
+
+    assert(ld_arc->ptImgTile == &quarter_img);
+    assert(ld_arc->ptMaskTile == &quarter_mask);
+    assert(ld_arc->parentColor == (ldColor)0x223344U);
+
+    assert(picoui_arc_set_quarter_source(0, &quarter_source) == -1);
+    assert(picoui_arc_set_parent_color(0, 0x111111U) == -1);
+}
+
 int main(void)
 {
     struct picoui_app *app = picoui_app_create();
@@ -101,6 +141,7 @@ int main(void)
     test_arc_create_and_props(win);
     test_arc_value_and_angle_readback_match_backend_truth(win);
     test_arc_rejects_invalid_inputs(win);
+    test_arc_native_quarter_image_mask_and_parent_color_round_trip(win);
 
     picoui_app_destroy(app);
     return 0;

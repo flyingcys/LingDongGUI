@@ -1,0 +1,46 @@
+{
+  "schema_version": "a-0.7-native-100-fragment-v1",
+  "batch": "r5a-progress-qrcode",
+  "scope": [
+    "progress_bar",
+    "progress_wheel",
+    "qrcode"
+  ],
+  "evidence": {
+    "unit_group": "test_picoui_(progress_bar|progress_wheel|qrcode)",
+    "contract_checker": "tests/picoui/contract/check_picoui_release_capability_matrix.py"
+  },
+  "widgets": [
+    {
+      "name": "progress_bar",
+      "status": "complete",
+      "capabilities": [
+        "create_and_props",
+        "percent",
+        "horizontal",
+        "percent_and_horizontal_readback",
+        "advanced_skin_and_theme"
+      ]
+    },
+    {
+      "name": "progress_wheel",
+      "status": "complete",
+      "capabilities": [
+        "create_and_props",
+        "percent",
+        "percent_readback",
+        "advanced_animation_and_theme"
+      ]
+    },
+    {
+      "name": "qrcode",
+      "status": "complete",
+      "capabilities": [
+        "create_and_props",
+        "text",
+        "text_readback",
+        "advanced_qrcode_configuration"
+      ]
+    }
+  ]
+}

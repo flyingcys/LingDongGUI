@@ -144,10 +144,58 @@ static void test_calendar_final_release_contract_covers_full_feature_boundary(vo
     picoui_app_destroy(app);
 }
 
+static void test_calendar_native_day_names_and_colors_round_trip(void)
+{
+    struct picoui_app *app;
+    struct picoui_window *win;
+    struct picoui_calendar *calendar;
+    struct picoui_backend_widget *backend;
+    ldCalendar_t *ld_calendar;
+    static const char *day_names[7] = {
+        "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat",
+    };
+
+    app = picoui_app_create();
+    assert(app != 0);
+    win = picoui_window_create(app, "calendar_native_root");
+    assert(win != 0);
+    calendar = picoui_calendar_create(win, "calendar_native_round_trip");
+    assert(calendar != 0);
+
+    assert(picoui_calendar_set_day_names(calendar, day_names) == 0);
+    assert(picoui_calendar_set_bg_color(calendar, 0x112233U) == 0);
+    assert(picoui_calendar_set_item_color(calendar, 0x445566U) == 0);
+    assert(picoui_calendar_set_text_color(calendar, 0x778899U) == 0);
+
+    backend = (struct picoui_backend_widget *)calendar->widget.backend_widget;
+    assert(backend != 0);
+    ld_calendar = (ldCalendar_t *)backend->ld_widget;
+    assert(ld_calendar != 0);
+
+    assert(strcmp((const char *)ld_calendar->dayNames[0], "Sun") == 0);
+    assert(strcmp((const char *)ld_calendar->dayNames[6], "Sat") == 0);
+    assert(ld_calendar->bgColor == (ldColor)0x112233U);
+    assert(ld_calendar->itemColor == (ldColor)0x445566U);
+    assert(ld_calendar->textColor == (ldColor)0x778899U);
+
+    assert(picoui_calendar_set_day_names(calendar, 0) == -1);
+    assert(picoui_calendar_set_bg_color(0, 0xAABBCCU) == -1);
+    assert(picoui_calendar_set_item_color(calendar, 0x1000000U) == -1);
+    assert(picoui_calendar_set_text_color(calendar, 0x1000000U) == -1);
+
+    assert(strcmp((const char *)ld_calendar->dayNames[0], "Sun") == 0);
+    assert(ld_calendar->bgColor == (ldColor)0x112233U);
+    assert(ld_calendar->itemColor == (ldColor)0x445566U);
+    assert(ld_calendar->textColor == (ldColor)0x778899U);
+
+    picoui_app_destroy(app);
+}
+
 int main(void)
 {
     test_calendar_date_readback_matches_backend_truth();
     test_calendar_header_and_grid_visible_output_match_date_contract();
     test_calendar_final_release_contract_covers_full_feature_boundary();
+    test_calendar_native_day_names_and_colors_round_trip();
     return 0;
 }

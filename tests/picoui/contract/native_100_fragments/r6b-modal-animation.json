@@ -1,0 +1,56 @@
+{
+  "schema_version": "a-0.7-native-100-fragment-v1",
+  "batch": "r6b-modal-animation",
+  "scope": [
+    "message_box",
+    "animation"
+  ],
+  "status": "complete",
+  "evidence": {
+    "unit_group": "test_picoui_(message_box|animation)",
+    "contract_checker": "tests/picoui/contract/check_picoui_release_capability_matrix.py",
+    "mapping_checker": "tests/picoui/runtime/check_picoui_backend_mapping.py",
+    "visible_checker": "tests/picoui/runtime/check_picoui_visible_ui.py --all"
+  },
+  "widgets": [
+    {
+      "name": "message_box",
+      "status": "complete",
+      "capabilities": [
+        "title_message_confirm_text",
+        "confirm_callback_bridge",
+        "multi_button_and_indexed_callback",
+        "string_button_background_colors",
+        "multi_button_and_modal_behavior",
+        "visible_runtime_mapping"
+      ],
+      "evidence_tests": [
+        "test_message_box_confirm_callback_bridge",
+        "test_message_box_native_multi_button_and_color_round_trip",
+        "test_message_box_multi_button_callback_reports_clicked_index",
+        "test_message_box_modal_hit_and_dismiss_returns_focus_to_underlay",
+        "test_picoui_message_box",
+        "check_picoui_backend_mapping.py",
+        "check_picoui_visible_ui.py --demo message_box_basic"
+      ]
+    },
+    {
+      "name": "animation",
+      "status": "complete",
+      "capabilities": [
+        "init_image_period",
+        "show_frame_tile",
+        "frame_lifecycle",
+        "visible_runtime_mapping"
+      ],
+      "evidence_tests": [
+        "test_animation_native_image_period_and_frame_round_trip",
+        "test_picoui_animation",
+        "check_picoui_backend_mapping.py",
+        "check_picoui_visible_ui.py --demo animation_basic",
+        "check_picoui_runtime.py"
+      ]
+    }
+  ],
+  "remaining_work": []
+}

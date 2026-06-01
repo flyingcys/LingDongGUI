@@ -148,6 +148,93 @@ int picoui_backend_gauge_set_angle(struct picoui_gauge *gauge, float angle)
     return 0;
 }
 
+int picoui_backend_gauge_set_bg_source(struct picoui_gauge *gauge, struct picoui_image_source *source)
+{
+    ldGauge_t *ld_gauge = picoui_backend_gauge_get_ld(gauge);
+
+    if (ld_gauge == NULL || source == NULL || source->img_tile == NULL || source->mask_tile == NULL) {
+        return -1;
+    }
+
+    ld_gauge->ptBgImgTile = source->img_tile;
+    ld_gauge->ptBgMaskTile = source->mask_tile;
+    return 0;
+}
+
+int picoui_backend_gauge_set_pointer_source(struct picoui_gauge *gauge, struct picoui_image_source *source)
+{
+    ldGauge_t *ld_gauge = picoui_backend_gauge_get_ld(gauge);
+    arm_2d_tile_t *mask_tile;
+
+    if (ld_gauge == NULL || source == NULL || source->img_tile == NULL || source->mask_tile == NULL) {
+        return -1;
+    }
+
+    mask_tile = (arm_2d_tile_t *)source->mask_tile;
+
+    ldGaugeSetPointerImage(ld_gauge,
+                           source->img_tile,
+                           source->mask_tile,
+                           (int16_t)(mask_tile->tRegion.tSize.iWidth >> 1),
+                           (int16_t)(mask_tile->tRegion.tSize.iHeight));
+    return 0;
+}
+
+int picoui_backend_gauge_set_centre_offset(struct picoui_gauge *gauge,
+                                           int centre_offset_x,
+                                           int centre_offset_y)
+{
+    ldGauge_t *ld_gauge = picoui_backend_gauge_get_ld(gauge);
+
+    if (ld_gauge == NULL) {
+        return -1;
+    }
+
+    ld_gauge->centreOffsetX = (int16_t)centre_offset_x;
+    ld_gauge->centreOffsetY = (int16_t)centre_offset_y;
+    return 0;
+}
+
+int picoui_backend_gauge_set_trail(struct picoui_gauge *gauge,
+                                   struct picoui_image_source *bg_trail_source,
+                                   struct picoui_image_source *pointer_trail_source)
+{
+    ldGauge_t *ld_gauge = picoui_backend_gauge_get_ld(gauge);
+
+    if (ld_gauge == NULL
+        || bg_trail_source == NULL
+        || pointer_trail_source == NULL
+        || bg_trail_source->mask_tile == NULL
+        || pointer_trail_source->mask_tile == NULL) {
+        return -1;
+    }
+
+    ldGaugeSetTrail(ld_gauge,
+                    bg_trail_source->mask_tile,
+                    pointer_trail_source->mask_tile);
+    return 0;
+}
+
+int picoui_backend_gauge_set_progress_bar(struct picoui_gauge *gauge,
+                                          struct picoui_image_source *bg_progress_source,
+                                          struct picoui_image_source *pointer_progress_source)
+{
+    ldGauge_t *ld_gauge = picoui_backend_gauge_get_ld(gauge);
+
+    if (ld_gauge == NULL
+        || bg_progress_source == NULL
+        || pointer_progress_source == NULL
+        || bg_progress_source->mask_tile == NULL
+        || pointer_progress_source->mask_tile == NULL) {
+        return -1;
+    }
+
+    ldGaugeSetProgressBar(ld_gauge,
+                          bg_progress_source->mask_tile,
+                          pointer_progress_source->mask_tile);
+    return 0;
+}
+
 int picoui_backend_gauge_get_angle(struct picoui_gauge *gauge, float *angle)
 {
     ldGauge_t *ld_gauge = picoui_backend_gauge_get_ld(gauge);

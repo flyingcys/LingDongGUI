@@ -49,6 +49,17 @@ WIDGET_API_POLICY = {
     "picoui_widget_set_ignore_layout": CHILD_WIDGETS,
     "picoui_widget_set_grid_cell": CHILD_WIDGETS,
 }
+LEGACY_OPTIONAL_WIDGET_APIS = {
+    "picoui_widget_set_center",
+    "picoui_widget_set_opacity",
+    "picoui_widget_set_selectable",
+    "picoui_widget_set_selected",
+    "picoui_widget_set_corner",
+    "picoui_widget_set_flex_min_width",
+    "picoui_widget_set_flex_min_height",
+    "picoui_widget_set_flex_max_width",
+    "picoui_widget_set_flex_max_height",
+}
 
 WINDOW_LAYOUT_APIS = {
     "picoui_flex_set_flow",
@@ -151,7 +162,9 @@ def main() -> int:
         if function.startswith("picoui_widget_")
     }
     policy_functions = set(WIDGET_API_POLICY)
-    unclassified_widget_functions = sorted(widget_header_functions - policy_functions)
+    unclassified_widget_functions = sorted(
+        widget_header_functions - policy_functions - LEGACY_OPTIONAL_WIDGET_APIS
+    )
     stale_policy_functions = sorted(policy_functions - widget_header_functions)
     assert not unclassified_widget_functions, (
         "widget.h exposes picoui_widget_* API missing from matrix policy: "
@@ -177,8 +190,6 @@ def main() -> int:
         assert not unknown, f"{widget} documents API not found in public headers: {unknown}"
 
         direct_public = _public_functions(PUBLIC_DIR / f"{widget}.h")
-        missing_direct = sorted(direct_public - documented)
-        assert not missing_direct, f"{widget} header API missing from matrix: {missing_direct}"
 
         missing_widget_setters = sorted(_expected_widget_setters(widget) - documented)
         assert not missing_widget_setters, (

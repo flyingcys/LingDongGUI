@@ -133,6 +133,15 @@ int picoui_calendar_set_date(struct picoui_calendar *calendar, int year, int mon
     return picoui_calendar_sync_grid(calendar);
 }
 
+int picoui_calendar_set_day_names(struct picoui_calendar *calendar, const char *const day_names[7])
+{
+    if (calendar == 0 || day_names == 0) {
+        return -1;
+    }
+
+    return picoui_backend_calendar_set_day_names(calendar->widget.backend_widget, day_names);
+}
+
 int picoui_calendar_get_date(const struct picoui_calendar *calendar, int *year, int *month, int *day)
 {
     struct picoui_calendar *mutable_calendar = (struct picoui_calendar *)calendar;
@@ -195,6 +204,33 @@ int picoui_calendar_set_header_format(struct picoui_calendar *calendar, const ch
     }
     calendar->header_format = picoui_backend_calendar_get_header_format(calendar->widget.backend_widget);
     return calendar->header_format != 0 ? 0 : -1;
+}
+
+int picoui_calendar_set_bg_color(struct picoui_calendar *calendar, unsigned int rgb)
+{
+    if (calendar == 0 || rgb > 0xFFFFFFU) {
+        return -1;
+    }
+
+    return picoui_backend_calendar_set_bg_color(calendar->widget.backend_widget, rgb);
+}
+
+int picoui_calendar_set_item_color(struct picoui_calendar *calendar, unsigned int rgb)
+{
+    if (calendar == 0 || rgb > 0xFFFFFFU) {
+        return -1;
+    }
+
+    return picoui_backend_calendar_set_item_color(calendar->widget.backend_widget, rgb);
+}
+
+int picoui_calendar_set_text_color(struct picoui_calendar *calendar, unsigned int rgb)
+{
+    if (calendar == 0 || rgb > 0xFFFFFFU) {
+        return -1;
+    }
+
+    return picoui_backend_calendar_set_text_color(calendar->widget.backend_widget, rgb);
 }
 
 const char *picoui_calendar_get_header_format(const struct picoui_calendar *calendar)

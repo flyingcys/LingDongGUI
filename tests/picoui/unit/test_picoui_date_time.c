@@ -158,6 +158,41 @@ static void test_date_time_final_release_contract_covers_public_readback_and_mod
     assert(picoui_date_time_get_time(dt, &hour, 0, &second) == -1);
 }
 
+static void test_date_time_native_transparent_color_and_align_round_trip(struct picoui_window *win)
+{
+    struct picoui_date_time *dt =
+        picoui_date_time_create((struct picoui_widget *)win, "date_time_native_style");
+    struct picoui_backend_widget *backend;
+    ldDateTime_t *ld_date_time;
+
+    assert(dt != 0);
+    backend = (struct picoui_backend_widget *)dt->widget.backend_widget;
+    assert(backend != 0);
+    ld_date_time = (ldDateTime_t *)backend->ld_widget;
+    assert(ld_date_time != 0);
+
+    assert(picoui_date_time_set_text_color(dt, 0x112233U) == 0);
+    assert(picoui_date_time_set_bg_color(dt, 0x445566U) == 0);
+    assert(picoui_date_time_set_align(dt, PICOUI_ALIGN_END) == 0);
+    assert(picoui_date_time_set_transparent(dt, 1) == 0);
+    assert(picoui_date_time_get_transparent(dt) == 1);
+
+    assert(ld_date_time->textColor == __RGB(0x11, 0x22, 0x33));
+    assert(ld_date_time->bgColor == __RGB(0x44, 0x55, 0x66));
+    assert(ld_date_time->tAlign == ARM_2D_ALIGN_RIGHT);
+    assert(ld_date_time->isTransparent == true);
+
+    assert(picoui_date_time_set_transparent(dt, 0) == 0);
+    assert(picoui_date_time_get_transparent(dt) == 0);
+    assert(ld_date_time->isTransparent == false);
+
+    assert(picoui_date_time_set_text_color(0, 0x111111U) == -1);
+    assert(picoui_date_time_set_bg_color(0, 0x222222U) == -1);
+    assert(picoui_date_time_set_align(0, PICOUI_ALIGN_CENTER) == -1);
+    assert(picoui_date_time_set_transparent(0, 1) == -1);
+    assert(picoui_date_time_get_transparent(0) == -1);
+}
+
 int main(void)
 {
     struct picoui_app *app = picoui_app_create();
@@ -172,6 +207,7 @@ int main(void)
     test_date_time_manual_values_survive_frame_start(win);
     test_date_time_rejects_invalid_inputs(win);
     test_date_time_final_release_contract_covers_public_readback_and_modes(win);
+    test_date_time_native_transparent_color_and_align_round_trip(win);
 
     picoui_app_destroy(app);
     return 0;

@@ -4,6 +4,11 @@
 
 #include <stdlib.h>
 
+static ldColor picoui_backend_rgb_to_ld_color(unsigned int rgb)
+{
+    return __RGB((rgb >> 16) & 0xFFU, (rgb >> 8) & 0xFFU, rgb & 0xFFU);
+}
+
 static struct picoui_backend_app_state *picoui_backend_progress_wheel_get_app_state(void *parent)
 {
     struct picoui_backend_widget *parent_widget = parent;
@@ -111,4 +116,79 @@ int picoui_backend_progress_wheel_get_percent(struct picoui_progress_wheel *whee
 
     *percent = ld_progress_wheel->iProgress / 10;
     return 0;
+}
+
+int picoui_backend_progress_wheel_set_wheel_color(void *backend_widget, unsigned int rgb)
+{
+    ldProgressWheel_t *ld_progress_wheel;
+
+    if (backend_widget == NULL || rgb > 0xFFFFFFU) {
+        return -1;
+    }
+
+    ld_progress_wheel = picoui_backend_progress_wheel_get_ld((struct picoui_progress_wheel *)
+        ((struct picoui_backend_widget *)backend_widget)->host_widget);
+    if (ld_progress_wheel == NULL) {
+        return -1;
+    }
+
+    ldProgressWheelSetWheelColor(ld_progress_wheel, picoui_backend_rgb_to_ld_color(rgb));
+    return 0;
+}
+
+int picoui_backend_progress_wheel_set_dot_color(void *backend_widget, unsigned int rgb)
+{
+    ldProgressWheel_t *ld_progress_wheel;
+
+    if (backend_widget == NULL || rgb > 0xFFFFFFU) {
+        return -1;
+    }
+
+    ld_progress_wheel = picoui_backend_progress_wheel_get_ld((struct picoui_progress_wheel *)
+        ((struct picoui_backend_widget *)backend_widget)->host_widget);
+    if (ld_progress_wheel == NULL) {
+        return -1;
+    }
+
+    ldProgressWheelSetDotColor(ld_progress_wheel,
+                               picoui_backend_rgb_to_ld_color(rgb),
+                               !ld_progress_wheel->tWheel.tCFG.bIgnoreDot);
+    return 0;
+}
+
+int picoui_backend_progress_wheel_set_dot_enabled(void *backend_widget, int enabled)
+{
+    ldProgressWheel_t *ld_progress_wheel;
+
+    if (backend_widget == NULL) {
+        return -1;
+    }
+
+    ld_progress_wheel = picoui_backend_progress_wheel_get_ld((struct picoui_progress_wheel *)
+        ((struct picoui_backend_widget *)backend_widget)->host_widget);
+    if (ld_progress_wheel == NULL) {
+        return -1;
+    }
+
+    ldProgressWheelSetDotColor(ld_progress_wheel,
+                               ld_progress_wheel->tWheel.tCFG.tDotColour,
+                               enabled != 0);
+    return 0;
+}
+
+int picoui_backend_progress_wheel_get_dot_enabled(void *backend_widget)
+{
+    ldProgressWheel_t *ld_progress_wheel;
+
+    if (backend_widget == NULL) {
+        return -1;
+    }
+
+    ld_progress_wheel = picoui_backend_progress_wheel_get_ld((struct picoui_progress_wheel *)
+        ((struct picoui_backend_widget *)backend_widget)->host_widget);
+    if (ld_progress_wheel == NULL) {
+        return -1;
+    }
+
+    return ld_progress_wheel->tWheel.tCFG.bIgnoreDot ? 0 : 1;
 }

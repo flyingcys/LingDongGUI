@@ -232,7 +232,7 @@ git submodule update --init --recursive
 - Modify: `tests/picoui/contract/picoui_release_capability_matrix.json`
 - Modify: `tests/picoui/contract/check_picoui_release_capability_matrix.py`
 
-- [ ] **Step 1: 跑 impact**
+- [x] **Step 1: 跑 impact**
 
 Run:
 
@@ -240,7 +240,7 @@ Run:
 gitnexus_impact(target="check_picoui_release_capability_matrix.py", direction="upstream", repo="LingDongGUI")
 ```
 
-- [ ] **Step 2: 建立 native inventory**
+- [x] **Step 2: 建立 native inventory**
 
 `picoui_native_100_inventory.json` 必须至少包含：
 
@@ -266,7 +266,7 @@ gitnexus_impact(target="check_picoui_release_capability_matrix.py", direction="u
 }
 ```
 
-- [ ] **Step 3: 写 inventory checker**
+- [x] **Step 3: 写 inventory checker**
 
 `check_picoui_native_100_inventory.py` 必须：
 
@@ -276,7 +276,7 @@ gitnexus_impact(target="check_picoui_release_capability_matrix.py", direction="u
 4. 断言每个 widget 至少有一个 native capability。
 5. 断言没有 `reject / deferred / incomplete_contract` 字段。
 
-- [ ] **Step 4: 运行 RED/GREEN**
+- [x] **Step 4: 运行 RED/GREEN**
 
 Run:
 
@@ -291,7 +291,7 @@ Expected:
 1. inventory checker 通过。
 2. release matrix 可暂时允许 `missing_implementation`，但必须识别 `a-0.7-native-100-v1`。
 
-- [ ] **Step 5: detect changes**
+- [x] **Step 5: detect changes**
 
 Run:
 
@@ -311,7 +311,7 @@ gitnexus_detect_changes(scope="all", repo="LingDongGUI")
 - Modify: `picoui/src/backend/ldgui/backend.h`
 - Modify: `tests/picoui/CMakeLists.txt`
 
-- [ ] **Step 1: 跑 impact**
+- [x] **Step 1: 跑 impact**
 
 Run:
 
@@ -320,7 +320,7 @@ gitnexus_impact(target="picoui_widget_set_bg_color", direction="upstream", repo=
 gitnexus_impact(target="picoui_backend_widget_init_data_model", direction="upstream", repo="LingDongGUI")
 ```
 
-- [ ] **Step 2: 定义 native bridge public API**
+- [x] **Step 2: 定义 native bridge public API**
 
 `picoui/include/picoui/native.h` 必须定义：
 
@@ -353,7 +353,7 @@ enum picoui_native_nav_dir {
 };
 ```
 
-- [ ] **Step 3: 写 native bridge unit**
+- [x] **Step 3: 写 native bridge unit**
 
 新增测试必须覆盖：
 
@@ -364,7 +364,7 @@ static void test_native_align_maps_all_ldgrid_align_values(void);
 static void test_native_nav_dir_maps_all_ld_nav_values(void);
 ```
 
-- [ ] **Step 4: 实现最小 bridge**
+- [x] **Step 4: 实现最小 bridge**
 
 实现要求：
 
@@ -372,7 +372,7 @@ static void test_native_nav_dir_maps_all_ld_nav_values(void);
 2. backend 收到的 tile/mask/font 指针必须与 public API 输入一致。
 3. enum 映射必须 exhaustively tested。
 
-- [ ] **Step 5: 验证**
+- [x] **Step 5: 验证**
 
 Run:
 
@@ -399,7 +399,7 @@ git diff --check
 - Modify: `tests/picoui/unit/test_picoui_theme.c`
 - Modify: `tests/picoui/unit/test_picoui_button_events.c`
 
-- [ ] **Step 1: 跑 impact**
+- [x] **Step 1: 跑 impact**
 
 Run:
 
@@ -409,7 +409,7 @@ gitnexus_impact(target="picoui_backend_window_set_grid_align", direction="upstre
 gitnexus_impact(target="picoui_backend_widget_dispatch_signal", direction="upstream", repo="LingDongGUI")
 ```
 
-- [ ] **Step 2: 补 base/layout/theme/event API**
+- [x] **Step 2: 补 base/layout/theme/event API**
 
 必须覆盖：
 
@@ -419,7 +419,7 @@ gitnexus_impact(target="picoui_backend_widget_dispatch_signal", direction="upstr
 4. `SIGNAL_PRESS / HOLD_DOWN / RELEASE / CLICKED_ITEM / FINISHED / VALUE_CHANGED`
 5. theme state/part/color/metric 对真实 backend style 字段的映射
 
-- [ ] **Step 3: 写 fail-first tests**
+- [x] **Step 3: 写 fail-first tests**
 
 至少新增：
 
@@ -431,7 +431,7 @@ static void test_native_event_bridge_preserves_press_hold_release_payload(void);
 static void test_theme_native_parts_apply_to_real_backend_fields(void);
 ```
 
-- [ ] **Step 4: 实现并验证**
+- [x] **Step 4: 实现并验证**
 
 Run:
 
@@ -449,7 +449,7 @@ git diff --check
 **Files:** matching header/widget/backend/unit/demo files for `label / text / image`.
 - Create: `tests/picoui/contract/native_100_fragments/r3a-text-image.json`
 
-- [ ] **Step 1: 跑 impact**
+- [x] **Step 1: 跑 impact**
 
 Run:
 
@@ -459,7 +459,7 @@ gitnexus_impact(target="picoui_text_set_text", direction="upstream", repo="LingD
 gitnexus_impact(target="picoui_image_set_source", direction="upstream", repo="LingDongGUI")
 ```
 
-- [ ] **Step 2: 补 native capabilities**
+- [x] **Step 2: 补 native capabilities**
 
 必须覆盖：
 
@@ -467,7 +467,7 @@ gitnexus_impact(target="picoui_image_set_source", direction="upstream", repo="Li
 2. `ldTextSetTransparent / Text / StaticText / TextColor / Font / ConsumedFont / BackgroundImage / BackgroundColor / ScrollSeek / ScrollMove`
 3. `ldImageSetImage / MaskColor`
 
-- [ ] **Step 3: 写 backend-field tests**
+- [x] **Step 3: 写 backend-field tests**
 
 至少新增：
 
@@ -478,7 +478,7 @@ static void test_image_native_mask_color_round_trip(void);
 static void test_image_theme_and_enabled_are_support_not_reject(void);
 ```
 
-- [ ] **Step 4: 验证**
+- [x] **Step 4: 验证**
 
 Run:
 
@@ -494,7 +494,7 @@ git diff --check
 **Files:** matching header/widget/backend/unit/demo files for `button / checkbox / switch / slider / list`.
 - Create: `tests/picoui/contract/native_100_fragments/r3b-selection.json`
 
-- [ ] **Step 1: 跑 impact**
+- [x] **Step 1: 跑 impact**
 
 Run impact for each changed public setter before edit:
 
@@ -506,7 +506,7 @@ gitnexus_impact(target="picoui_slider_set_value", direction="upstream", repo="Li
 gitnexus_impact(target="picoui_list_set_selected_index", direction="upstream", repo="LingDongGUI")
 ```
 
-- [ ] **Step 2: 补 native capabilities**
+- [x] **Step 2: 补 native capabilities**
 
 必须覆盖：
 
@@ -516,7 +516,7 @@ gitnexus_impact(target="picoui_list_set_selected_index", direction="upstream", r
 4. slider：percent/horizontal/image/color/indicatorWidth/slimSize。
 5. list：itemHeight/text/textColor/align/bgColor/selectColor/itemWidget/selectItem/padding/margin。
 
-- [ ] **Step 3: 写 backend-field tests**
+- [x] **Step 3: 写 backend-field tests**
 
 至少新增：
 
@@ -527,7 +527,7 @@ static void test_list_native_item_widget_padding_margin_round_trip(void);
 static void test_list_item_marker_is_support_not_reject(void);
 ```
 
-- [ ] **Step 4: 验证**
+- [x] **Step 4: 验证**
 
 Run:
 
@@ -543,7 +543,7 @@ git diff --check
 **Files:** matching header/widget/backend/unit/demo/gate files.
 - Create: `tests/picoui/contract/native_100_fragments/r4a-input-nav.json`
 
-- [ ] **Step 1: 补 native capabilities**
+- [x] **Step 1: 补 native capabilities**
 
 必须覆盖：
 
@@ -552,7 +552,7 @@ git diff --check
 3. combo_box：textColor/bgColor/frameColor/selectColor/selectItem/staticItems/itemMax/addItem/dropdownImage/readback。
 4. scroll_selecter：items/textColor/bgColor/bgImage/indicatorColor/indicatorImage/transparent/speed/selectItem/selectText/editMode/readback。
 
-- [ ] **Step 2: 清除特殊边界**
+- [x] **Step 2: 清除特殊边界**
 
 要求：
 
@@ -560,7 +560,7 @@ git diff --check
 2. `line_edit.submit_cancel_reason` 转 support。
 3. `keyboard.mapping` 和 `keyboard.visible` 从 `not_present` 转 `present`。
 
-- [ ] **Step 3: 验证**
+- [x] **Step 3: 验证**
 
 Run:
 
@@ -577,7 +577,7 @@ git diff --check
 **Files:** matching header/widget/backend/unit/demo/gate files.
 - Create: `tests/picoui/contract/native_100_fragments/r4b-data.json`
 
-- [ ] **Step 1: 补 native capabilities**
+- [x] **Step 1: 补 native capabilities**
 
 必须覆盖：
 
@@ -585,7 +585,7 @@ git diff --check
 2. graph：axis/axisOffset/frameSpace/gridOffset/pointImageMask/setValue/moveAdd。
 3. calendar：dayNames/header/headerFormat/date/getDate/color/theme/grid。
 
-- [ ] **Step 2: 写 backend-field tests**
+- [x] **Step 2: 写 backend-field tests**
 
 至少新增：
 
@@ -595,7 +595,7 @@ static void test_graph_native_axis_grid_and_point_mask_round_trip(void);
 static void test_calendar_native_day_names_and_colors_round_trip(void);
 ```
 
-- [ ] **Step 3: 验证**
+- [x] **Step 3: 验证**
 
 Run:
 
@@ -612,7 +612,7 @@ git diff --check
 **Files:** matching header/widget/backend/unit/demo/gate files.
 - Create: `tests/picoui/contract/native_100_fragments/r5a-progress-qrcode.json`
 
-- [ ] **Step 1: 补 native capabilities**
+- [x] **Step 1: 补 native capabilities**
 
 必须覆盖：
 
@@ -620,7 +620,7 @@ git diff --check
 2. progress_wheel：progress/wheelColor/dotColor/dotEnable。
 3. qrcode：text/qrColor/bgColor/ecc/maxVersion/zoom。
 
-- [ ] **Step 2: 清除 reject**
+- [x] **Step 2: 清除 reject**
 
 要求：
 
@@ -628,7 +628,7 @@ git diff --check
 2. `progress_wheel.advanced_animation_and_theme` 转 support。
 3. `qrcode.advanced_qrcode_configuration` 转 support。
 
-- [ ] **Step 3: 验证**
+- [x] **Step 3: 验证**
 
 Run:
 
@@ -644,7 +644,7 @@ git diff --check
 **Files:** matching header/widget/backend/unit/demo/gate files.
 - Create: `tests/picoui/contract/native_100_fragments/r5b-instrument-clock.json`
 
-- [ ] **Step 1: 补 native capabilities**
+- [x] **Step 1: 补 native capabilities**
 
 必须覆盖：
 
@@ -653,14 +653,14 @@ git diff --check
 3. date_time：transparent/format/textColor/align/bgColor/date/time。
 4. clock：backgroundImage/hourPointer/minutePointer/secondPointer/maskColor/anchor/stepSecond。
 
-- [ ] **Step 2: 清除 reject**
+- [x] **Step 2: 清除 reject**
 
 要求：
 
 1. `date_time.advanced_datetime_modes` 转 support。
 2. `clock.advanced_clock_configuration` 转 support。
 
-- [ ] **Step 3: 验证**
+- [x] **Step 3: 验证**
 
 Run:
 
@@ -676,14 +676,14 @@ git diff --check
 **Files:** matching header/widget/backend/unit/demo/gate files.
 - Create: `tests/picoui/contract/native_100_fragments/r6a-composite.json`
 
-- [ ] **Step 1: 补 native capabilities**
+- [x] **Step 1: 补 native capabilities**
 
 必须覆盖：
 
 1. icon_slider：icon image/mask/name、horizontalScroll、speed、iconWidth/iconSpace/columns/rows/pages。
 2. radial_menu：item image/mask、clickItem、offsetItem、defaultItem、xAxis/yAxis/itemMax。
 
-- [ ] **Step 2: 写 backend-field tests**
+- [x] **Step 2: 写 backend-field tests**
 
 至少新增：
 
@@ -692,7 +692,7 @@ static void test_icon_slider_native_icon_images_and_speed_round_trip(void);
 static void test_radial_menu_native_click_default_offset_round_trip(void);
 ```
 
-- [ ] **Step 3: 验证**
+- [x] **Step 3: 验证**
 
 Run:
 
@@ -717,7 +717,7 @@ git diff --check
 - Modify: `tests/picoui/unit/test_picoui_message_box.c`
 - Modify: `tests/picoui/runtime/check_picoui_backend_mapping.py`
 
-- [ ] **Step 1: 补 message_box native capabilities**
+- [x] **Step 1: 补 message_box native capabilities**
 
 必须覆盖：
 
@@ -729,7 +729,7 @@ git diff --check
 6. modal behavior。
 7. formal mapping marker，不能再 exclusion。
 
-- [ ] **Step 2: 新增 animation widget**
+- [x] **Step 2: 新增 animation widget**
 
 必须覆盖：
 
@@ -739,7 +739,7 @@ git diff --check
 4. frame lifecycle proof。
 5. runtime/mapping/visible/manual artifact demo。
 
-- [ ] **Step 3: 清除 reject / not wrapped**
+- [x] **Step 3: 清除 reject / not wrapped**
 
 要求：
 
@@ -747,7 +747,7 @@ git diff --check
 2. `animation` 进入 `27/27` widget rows。
 3. `picoui/include/picoui/picoui.h` include `animation.h`。
 
-- [ ] **Step 4: 验证**
+- [x] **Step 4: 验证**
 
 Run:
 
@@ -774,7 +774,7 @@ git diff --check
 - Modify: `tests/picoui/runtime/check_picoui_manual_window_artifact.py`
 - Modify: `picoui/docs/demo_guide.md`
 
-- [ ] **Step 1: matrix closeout**
+- [x] **Step 1: matrix closeout**
 
 要求：
 
@@ -788,7 +788,7 @@ git diff --check
 8. `missing_implementation = 0`
 9. 合并所有 `tests/picoui/contract/native_100_fragments/*.json`
 
-- [ ] **Step 2: gate closeout**
+- [x] **Step 2: gate closeout**
 
 要求：
 
@@ -797,7 +797,7 @@ git diff --check
 3. visible catalog 覆盖 `animation / keyboard / message_box`。
 4. manual artifact 支持 `--all` 并覆盖全部 native-100 demos。
 
-- [ ] **Step 3: 验证**
+- [x] **Step 3: 验证**
 
 Run:
 
@@ -822,7 +822,7 @@ git diff --check
 - Modify: `picoui/docs/api_overview.md`
 - Modify: `picoui/docs/demo_guide.md`
 
-- [ ] **Step 1: docs closeout**
+- [x] **Step 1: docs closeout**
 
 要求：
 
@@ -831,7 +831,7 @@ git diff --check
 3. `a-0.6-final-release-closeout.md` 保持 a-0.6 口径，不回写成 native-100。
 4. `api_overview.md` 和 `demo_guide.md` 进入 native-100 口径。
 
-- [ ] **Step 2: final verification**
+- [x] **Step 2: final verification**
 
 Run:
 
@@ -850,7 +850,14 @@ python3 tests/picoui/runtime/check_picoui_manual_window_artifact.py --all
 git diff --check
 ```
 
-- [ ] **Step 3: GitNexus detect changes**
+- [x] **Step 3: GitNexus detect changes**
+
+当前执行状态：
+
+1. `R0 -> R7` 代码、matrix、gate、fragment 已完成并合流到主仓当前工作树。
+2. `R8 Step 1` 已完成：`a-0.7` 索引、`a-0.6` 历史文档说明、`api_overview.md`、`demo_guide.md` 已切到 native-100 closeout 口径。
+3. `R8 Step 2` 已完成：全量 `build / ctest / contract / runtime / mapping / visible / manual artifact / git diff --check` fresh 通过。
+4. `R8 Step 3` 已完成：`gitnexus_detect_changes(scope="all", repo="LingDongGUI")` 已运行，变化范围与 PicoUI/backend/gate/docs 主线一致，未见无关 core renderer 改动。
 
 Run:
 

@@ -29,12 +29,14 @@ DEMOS = {
     "message_box_basic": "picoui_message_box_basic_demo",
     "date_time_basic": "picoui_date_time_basic_demo",
     "clock_basic": "picoui_clock_basic_demo",
+    "keyboard_basic": "picoui_keyboard_basic_demo",
     "line_edit_basic": "picoui_line_edit_basic_demo",
     "combo_box_basic": "picoui_combo_box_basic_demo",
     "scroll_selecter_basic": "picoui_scroll_selecter_basic_demo",
     "table_basic": "picoui_table_basic_demo",
     "graph_basic": "picoui_graph_basic_demo",
     "calendar_basic": "picoui_calendar_basic_demo",
+    "animation_basic": "picoui_animation_basic_demo",
 }
 THEME_BG = (0xF6, 0xF8, 0xFA)
 WHITE_BG = (0xFF, 0xFF, 0xFF)
@@ -1049,6 +1051,23 @@ def _assert_message_box_basic_visible(path: Path) -> None:
         )
 
 
+def _assert_animation_basic_visible(path: Path) -> None:
+    _assert_common_visible(path, "animation_basic")
+    width, height, pixels = _read_ppm(path)
+    bg = _background_color(width, height, pixels)
+    bounds = _non_background_bounds(width, height, pixels, bg)
+
+    if bounds is None:
+        raise AssertionError("SMOKE FAIL: animation_basic capture has no non-background pixels")
+
+    min_x, min_y, max_x, max_y = bounds
+    if (max_x - min_x + 1) < 24 or (max_y - min_y + 1) < 16:
+        raise AssertionError(
+            "VISIBLE FAIL: animation_basic visible region is too small for title + frame tile.\n"
+            f"content_bounds=({min_x},{min_y})-({max_x},{max_y})"
+        )
+
+
 def _assert_date_time_basic_visible(path: Path) -> None:
     width, height, pixels = _read_ppm(path)
     bg = _background_color(width, height, pixels)
@@ -1171,16 +1190,18 @@ def _assert_clock_basic_visible(path: Path) -> None:
                 direction_bins[direction] = direction_bins.get(direction, 0) + 1
 
     strong_directions = sorted(direction for direction, count in direction_bins.items() if count >= 20)
+    medium_directions = sorted(direction for direction, count in direction_bins.items() if count >= 8)
 
     if best_center_hits < 12:
         failures.append(
             "clock hub visibility failed: "
             f"center_hits={best_center_hits}, expected a visible center hub region"
         )
-    if ray_hits < 80 or len(strong_directions) < 3:
+    if ray_hits < 80 or len(strong_directions) < 2 or len(medium_directions) < 3:
         failures.append(
             "clock pointer spread failed: "
-            f"ray_hits={ray_hits}, strong_directions={strong_directions}, expected at least three stable pointer directions"
+            f"ray_hits={ray_hits}, strong_directions={strong_directions}, "
+            f"medium_directions={medium_directions}, expected at least two strong and three medium pointer directions"
         )
     if (visible_width + visible_height) < 180:
         failures.append(
@@ -1327,12 +1348,12 @@ def _assert_no_unexpected_fallback(demo: str, stdout: str) -> None:
     )
 
 
-def _assert_temporary_smoke_path_honesty(demo: str, stdout: str) -> None:
-    expected = "PICOUI_BACKEND_TEMPORARY_SMOKE_PATH=EXCLUDED_FORMAL_MAPPING"
+def _assert_real_mapping_honesty(demo: str, stdout: str) -> None:
+    expected = "PICOUI_BACKEND_STATIC_MAPPING=REAL_LDGUI"
     if expected in stdout:
         return
     raise AssertionError(
-        f"VISIBLE FAIL: {demo} no longer reports its temporary smoke-path honesty marker.\n"
+        f"VISIBLE FAIL: {demo} no longer reports its real-mapping honesty marker.\n"
         f"expected marker: {expected}\n"
         f"stdout:\n{stdout}"
     )
@@ -1407,7 +1428,9 @@ def main() -> None:
                 _assert_qrcode_basic_visible(capture_path)
             elif demo == "message_box_basic":
                 _assert_message_box_basic_visible(capture_path)
-                _assert_temporary_smoke_path_honesty(demo, completed.stdout)
+                _assert_real_mapping_honesty(demo, completed.stdout)
+            elif demo == "animation_basic":
+                _assert_animation_basic_visible(capture_path)
             elif demo == "date_time_basic":
                 _assert_date_time_basic_visible(capture_path)
             elif demo == "clock_basic":

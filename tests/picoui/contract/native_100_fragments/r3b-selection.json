@@ -1,0 +1,117 @@
+{
+  "schema_version": "a-0.7-native-100-fragment-v1",
+  "line": "a-0.7",
+  "batch": "r3b-selection",
+  "scope": [
+    "button",
+    "checkbox",
+    "switch",
+    "slider",
+    "list"
+  ],
+  "status": "complete",
+  "evidence": {
+    "unit_group": "test_picoui_(widgets|list|button_events)",
+    "contract_checker": "tests/picoui/contract/check_picoui_release_capability_matrix.py"
+  },
+  "widgets": [
+    {
+      "name": "button",
+      "backend_widget": "ldButton",
+      "status": "support",
+      "capabilities": [
+        "color",
+        "image",
+        "transparent",
+        "font",
+        "text",
+        "text_color",
+        "checkable",
+        "key_value",
+        "press",
+        "readback"
+      ],
+      "evidence_tests": [
+        "test_button_j4_contract",
+        "test_picoui_button_events"
+      ]
+    },
+    {
+      "name": "checkbox",
+      "backend_widget": "ldCheckBox",
+      "status": "support",
+      "capabilities": [
+        "color",
+        "image",
+        "text",
+        "radio_group",
+        "text_color",
+        "string_left_space",
+        "checked"
+      ],
+      "evidence_tests": [
+        "test_checkbox_native_radio_group_and_image_mode_round_trip",
+        "test_native_event_bridge_prefers_native_path"
+      ]
+    },
+    {
+      "name": "switch",
+      "backend_widget": "ldSwitch",
+      "status": "support",
+      "capabilities": [
+        "image",
+        "can_navigate",
+        "navigate",
+        "horizontal",
+        "direction",
+        "disabled",
+        "checked",
+        "readback"
+      ],
+      "evidence_tests": [
+        "test_switch_native_direction_navigation_and_image_skin_round_trip",
+        "test_native_event_bridge_prefers_native_path"
+      ]
+    },
+    {
+      "name": "slider",
+      "backend_widget": "ldSlider",
+      "status": "support",
+      "capabilities": [
+        "percent",
+        "horizontal",
+        "image",
+        "color",
+        "indicator_width",
+        "slim_size"
+      ],
+      "evidence_tests": [
+        "test_slider_j5_contract",
+        "test_native_event_bridge_prefers_native_path"
+      ]
+    },
+    {
+      "name": "list",
+      "backend_widget": "ldList",
+      "status": "support",
+      "capabilities": [
+        "item_height",
+        "text",
+        "text_color",
+        "align",
+        "bg_color",
+        "select_color",
+        "item_widget",
+        "select_item",
+        "padding",
+        "margin"
+      ],
+      "evidence_tests": [
+        "test_list_native_item_height_padding_margin_round_trip",
+        "test_list_native_color_and_align_round_trip",
+        "test_list_native_item_widget_reparents_backend_tree"
+      ]
+    }
+  ],
+  "remaining_work": []
+}

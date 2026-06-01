@@ -2,6 +2,7 @@
 #include "picoui/scroll_selecter.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 static int picoui_scroll_selecter_props_are_valid(const struct picoui_scroll_selecter_props *props)
 {
@@ -36,6 +37,8 @@ struct picoui_scroll_selecter *picoui_scroll_selecter_create(struct picoui_windo
     scroll_selecter->id = id;
     scroll_selecter->selected_index = -1;
     scroll_selecter->edit_mode = 1;
+    scroll_selecter->transparent = 1;
+    scroll_selecter->speed = 1;
     scroll_selecter->widget.visible = 1;
     scroll_selecter->widget.enabled = 1;
     if (picoui_backend_widget_bind_host(scroll_selecter->widget.backend_widget, &scroll_selecter->widget) != 0) {
@@ -145,6 +148,114 @@ int picoui_scroll_selecter_get_selected_index(const struct picoui_scroll_selecte
     return scroll_selecter->selected_index;
 }
 
+int picoui_scroll_selecter_set_text_color(struct picoui_scroll_selecter *scroll_selecter, unsigned int rgb)
+{
+    if (scroll_selecter == 0) {
+        return -1;
+    }
+
+    return picoui_backend_scroll_selecter_set_text_color(scroll_selecter->widget.backend_widget, rgb);
+}
+
+int picoui_scroll_selecter_set_bg_color(struct picoui_scroll_selecter *scroll_selecter, unsigned int rgb)
+{
+    if (scroll_selecter == 0) {
+        return -1;
+    }
+
+    return picoui_backend_scroll_selecter_set_bg_color(scroll_selecter->widget.backend_widget, rgb);
+}
+
+int picoui_scroll_selecter_set_indicator_color(struct picoui_scroll_selecter *scroll_selecter,
+                                               unsigned int rgb)
+{
+    if (scroll_selecter == 0) {
+        return -1;
+    }
+
+    return picoui_backend_scroll_selecter_set_indicator_color(scroll_selecter->widget.backend_widget, rgb);
+}
+
+int picoui_scroll_selecter_set_bg_source(struct picoui_scroll_selecter *scroll_selecter,
+                                         struct picoui_image_source *source)
+{
+    if (scroll_selecter == 0 || source == 0 || source->img_tile == 0) {
+        return -1;
+    }
+
+    if (picoui_backend_scroll_selecter_set_bg_source(scroll_selecter->widget.backend_widget, source) != 0) {
+        return -1;
+    }
+    scroll_selecter->bg_source = source;
+    scroll_selecter->transparent = 0;
+    return 0;
+}
+
+int picoui_scroll_selecter_set_indicator_source(struct picoui_scroll_selecter *scroll_selecter,
+                                                struct picoui_image_source *source)
+{
+    if (scroll_selecter == 0 || source == 0 || source->img_tile == 0) {
+        return -1;
+    }
+
+    if (picoui_backend_scroll_selecter_set_indicator_source(scroll_selecter->widget.backend_widget, source) != 0) {
+        return -1;
+    }
+    scroll_selecter->indicator_source = source;
+    scroll_selecter->transparent = 0;
+    return 0;
+}
+
+int picoui_scroll_selecter_set_transparent(struct picoui_scroll_selecter *scroll_selecter, int transparent)
+{
+    if (scroll_selecter == 0) {
+        return -1;
+    }
+
+    if (picoui_backend_scroll_selecter_set_transparent(scroll_selecter->widget.backend_widget,
+                                                       transparent != 0) != 0) {
+        return -1;
+    }
+    scroll_selecter->transparent = transparent != 0;
+    return 0;
+}
+
+int picoui_scroll_selecter_set_speed(struct picoui_scroll_selecter *scroll_selecter, int speed)
+{
+    if (scroll_selecter == 0 || speed <= 0) {
+        return -1;
+    }
+
+    if (picoui_backend_scroll_selecter_set_speed(scroll_selecter->widget.backend_widget, speed) != 0) {
+        return -1;
+    }
+    scroll_selecter->speed = speed;
+    return 0;
+}
+
+int picoui_scroll_selecter_set_select_text(struct picoui_scroll_selecter *scroll_selecter, const char *text)
+{
+    int index;
+
+    if (scroll_selecter == 0 || text == 0) {
+        return -1;
+    }
+
+    if (picoui_backend_scroll_selecter_set_select_text(scroll_selecter->widget.backend_widget, text) != 0) {
+        return -1;
+    }
+
+    for (index = 0; index < scroll_selecter->item_count; ++index) {
+        if (scroll_selecter->items[index].text != 0 &&
+            strcmp(scroll_selecter->items[index].text, text) == 0) {
+            scroll_selecter->selected_index = index;
+            return 0;
+        }
+    }
+
+    return -1;
+}
+
 int picoui_scroll_selecter_set_edit_mode(struct picoui_scroll_selecter *scroll_selecter, int is_edit)
 {
     if (scroll_selecter == 0) {
@@ -170,4 +281,13 @@ int picoui_scroll_selecter_get_edit_mode(const struct picoui_scroll_selecter *sc
 
     *is_edit = scroll_selecter->edit_mode;
     return 0;
+}
+
+const char *picoui_scroll_selecter_get_selected_text(const struct picoui_scroll_selecter *scroll_selecter)
+{
+    if (scroll_selecter == 0) {
+        return 0;
+    }
+
+    return picoui_backend_scroll_selecter_get_selected_text((void *)scroll_selecter->widget.backend_widget);
 }

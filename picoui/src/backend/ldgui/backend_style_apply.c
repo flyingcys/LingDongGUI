@@ -1,7 +1,9 @@
 #include "backend.h"
 #include "internal.h"
 #include "ldButton.h"
+#include "ldCalendar.h"
 #include "ldCheckBox.h"
+#include "ldImage.h"
 #include "ldLabel.h"
 #include "ldList.h"
 #include "ldSlider.h"
@@ -163,8 +165,37 @@ static void picoui_backend_apply_list_style(struct picoui_backend_widget *backen
         ldListSetBackgroundColor(ld_list, picoui_backend_rgb_to_ld_color(bg_color));
         ldListSetSelectColor(ld_list, picoui_backend_rgb_to_ld_color(border_color));
         break;
+    case PICOUI_PART_TEXT:
+        ldListSetTextColor(ld_list, picoui_backend_rgb_to_ld_color(text_color));
+        break;
     default:
-        (void)text_color;
+        break;
+    }
+}
+
+static void picoui_backend_apply_image_style(struct picoui_backend_widget *backend_widget,
+                                             unsigned int bg_color)
+{
+    ldImageSetMaskColor((ldImage_t *)backend_widget->ld_widget, picoui_backend_rgb_to_ld_color(bg_color));
+}
+
+static void picoui_backend_apply_calendar_style(struct picoui_backend_widget *backend_widget,
+                                                enum picoui_part part,
+                                                unsigned int bg_color,
+                                                unsigned int text_color,
+                                                unsigned int border_color)
+{
+    ldCalendar_t *ld_calendar = (ldCalendar_t *)backend_widget->ld_widget;
+
+    switch (part) {
+    case PICOUI_PART_MAIN:
+        ld_calendar->bgColor = picoui_backend_rgb_to_ld_color(bg_color);
+        ld_calendar->itemColor = picoui_backend_rgb_to_ld_color(border_color);
+        break;
+    case PICOUI_PART_TEXT:
+        ld_calendar->textColor = picoui_backend_rgb_to_ld_color(text_color);
+        break;
+    default:
         break;
     }
 }
@@ -208,7 +239,11 @@ int picoui_backend_widget_apply_style(void *backend_widget_ptr,
         picoui_backend_apply_list_style(backend_widget, part, bg_color, text_color, border_color);
         break;
     case PICOUI_BACKEND_WIDGET_IMAGE:
-        return -1;
+        picoui_backend_apply_image_style(backend_widget, bg_color);
+        break;
+    case PICOUI_BACKEND_WIDGET_CALENDAR:
+        picoui_backend_apply_calendar_style(backend_widget, part, bg_color, text_color, border_color);
+        break;
     default:
         return -1;
     }

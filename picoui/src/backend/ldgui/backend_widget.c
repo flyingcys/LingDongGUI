@@ -1,7 +1,23 @@
 #include "backend.h"
 #include "internal.h"
+#include "../../../../src/gui/ldBase.h"
 
 static unsigned int g_picoui_backend_next_data_model_identity = 1;
+
+int picoui_native_nav_dir_to_ld(enum picoui_native_nav_dir dir)
+{
+    switch (dir) {
+    case PICOUI_NATIVE_NAV_LEFT:
+        return NAV_LEFT;
+    case PICOUI_NATIVE_NAV_RIGHT:
+        return NAV_RIGHT;
+    case PICOUI_NATIVE_NAV_UP:
+        return NAV_UP;
+    case PICOUI_NATIVE_NAV_DOWN:
+    default:
+        return NAV_DOWN;
+    }
+}
 
 void picoui_backend_widget_init_data_model(struct picoui_backend_widget *backend)
 {

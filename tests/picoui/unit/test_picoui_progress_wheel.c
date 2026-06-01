@@ -104,6 +104,36 @@ static void test_progress_wheel_release_contract_covers_animation_and_style_boun
     assert(ld_progress_wheel->tWheel.tCFG.bIgnoreDot == false);
 }
 
+static void test_progress_wheel_native_color_and_dot_enable_round_trip(struct picoui_progress_wheel *wheel)
+{
+    struct picoui_backend_widget *backend;
+    ldProgressWheel_t *ld_progress_wheel;
+
+    assert(wheel != 0);
+    backend = (struct picoui_backend_widget *)wheel->widget.backend_widget;
+    assert(backend != 0);
+    ld_progress_wheel = (ldProgressWheel_t *)backend->ld_widget;
+    assert(ld_progress_wheel != 0);
+
+    assert(picoui_progress_wheel_set_wheel_color(wheel, 0x123456U) == 0);
+    assert(picoui_progress_wheel_set_dot_color(wheel, 0xABCDEFU) == 0);
+    assert(picoui_progress_wheel_set_dot_enabled(wheel, 0) == 0);
+    assert(picoui_progress_wheel_get_dot_enabled(wheel) == 0);
+
+    assert(ld_progress_wheel->tWheel.tCFG.tWheelColour != GLCD_COLOR_WHITE);
+    assert(ld_progress_wheel->tWheel.tCFG.tDotColour != GLCD_COLOR_WHITE);
+    assert(ld_progress_wheel->tWheel.tCFG.bIgnoreDot == true);
+
+    assert(picoui_progress_wheel_set_dot_enabled(wheel, 1) == 0);
+    assert(picoui_progress_wheel_get_dot_enabled(wheel) == 1);
+    assert(ld_progress_wheel->tWheel.tCFG.bIgnoreDot == false);
+
+    assert(picoui_progress_wheel_set_wheel_color(0, 0x111111U) == -1);
+    assert(picoui_progress_wheel_set_dot_color(0, 0x222222U) == -1);
+    assert(picoui_progress_wheel_set_dot_enabled(0, 1) == -1);
+    assert(picoui_progress_wheel_get_dot_enabled(0) == -1);
+}
+
 int main(void)
 {
     struct picoui_app *app = picoui_app_create();
@@ -118,6 +148,7 @@ int main(void)
     test_progress_wheel_percent_bounds(win);
     test_progress_wheel_rejects_invalid_inputs(win);
     test_progress_wheel_release_contract_covers_animation_and_style_boundary(wheel_with_props);
+    test_progress_wheel_native_color_and_dot_enable_round_trip(wheel_with_props);
 
     picoui_app_destroy(app);
     return 0;

@@ -135,10 +135,126 @@ static void test_graph_final_release_contract_covers_advanced_readback_boundary(
     picoui_app_destroy(app);
 }
 
+static void test_graph_native_axis_grid_and_point_mask_round_trip(void)
+{
+    struct picoui_app *app;
+    struct picoui_window *win;
+    struct picoui_graph *graph;
+    struct picoui_backend_widget *backend;
+    ldGraph_t *ld_graph;
+    struct picoui_image_source point_source = {
+        .img_tile = (arm_2d_tile_t *)&c_tileWhiteDotMask,
+        .mask_tile = (arm_2d_tile_t *)&c_tileWhiteDotMask,
+    };
+    int expected_extent;
+
+    app = picoui_app_create();
+    assert(app != 0);
+    win = picoui_window_create(app, "graph_native_root");
+    assert(win != 0);
+    graph = picoui_graph_create(win, "graph_native_round_trip", 2);
+    assert(graph != 0);
+
+    assert(picoui_graph_set_axis(graph, 160, 90) == 0);
+    assert(picoui_graph_set_axis_offset(graph, 7) == 0);
+    assert(picoui_graph_set_frame_space(graph, 14) == 0);
+    assert(picoui_graph_set_grid_offset(graph, 11) == 0);
+    assert(picoui_graph_set_point_mask_source(graph, &point_source) == 0);
+
+    backend = (struct picoui_backend_widget *)graph->widget.backend_widget;
+    assert(backend != 0);
+    ld_graph = (ldGraph_t *)backend->ld_widget;
+    assert(ld_graph != 0);
+
+    expected_extent =
+        ld_graph->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iWidth -
+        ld_graph->frameSpace * 2;
+    assert(ld_graph->xAxisMax == (uint16_t)expected_extent);
+    assert(ld_graph->yAxisMax == (uint16_t)expected_extent);
+    assert(ld_graph->xAxisOffset == 7);
+    assert(ld_graph->frameSpace == 14);
+    assert(ld_graph->gridOffset == 11);
+    assert(ld_graph->ptPointMaskTile == point_source.mask_tile);
+
+    assert(picoui_graph_set_axis(graph, 0, 90) == -1);
+    assert(picoui_graph_set_axis_offset(graph, -1) == -1);
+    assert(picoui_graph_set_frame_space(graph, -1) == -1);
+    assert(picoui_graph_set_grid_offset(graph, 0) == -1);
+    assert(picoui_graph_set_point_mask_source(graph, 0) == -1);
+
+    assert(ld_graph->xAxisMax == (uint16_t)expected_extent);
+    assert(ld_graph->yAxisMax == (uint16_t)expected_extent);
+    assert(ld_graph->xAxisOffset == 7);
+    assert(ld_graph->frameSpace == 14);
+    assert(ld_graph->gridOffset == 11);
+    assert(ld_graph->ptPointMaskTile == point_source.mask_tile);
+
+    picoui_app_destroy(app);
+}
+
+static void test_graph_move_add_and_set_value_reject_invalid_inputs_without_polluting_other_series(void)
+{
+    struct picoui_app *app;
+    struct picoui_window *win;
+    struct picoui_graph *graph;
+    struct picoui_backend_widget *backend;
+    ldGraph_t *ld_graph;
+    int first_series;
+    int second_series;
+
+    app = picoui_app_create();
+    assert(app != 0);
+    win = picoui_window_create(app, "graph_series_guard_root");
+    assert(win != 0);
+    graph = picoui_graph_create(win, "graph_series_guard", 2);
+    assert(graph != 0);
+
+    first_series = picoui_graph_add_series(graph, 0x2057C4U, 2, 3);
+    second_series = picoui_graph_add_series(graph, 0x41A85FU, 1, 3);
+    assert(first_series == 0);
+    assert(second_series == 1);
+
+    assert(picoui_graph_set_value(graph, first_series, 0, 11) == 0);
+    assert(picoui_graph_set_value(graph, first_series, 1, 22) == 0);
+    assert(picoui_graph_set_value(graph, first_series, 2, 33) == 0);
+    assert(picoui_graph_set_value(graph, second_series, 0, 7) == 0);
+    assert(picoui_graph_set_value(graph, second_series, 1, 14) == 0);
+    assert(picoui_graph_set_value(graph, second_series, 2, 21) == 0);
+
+    backend = (struct picoui_backend_widget *)graph->widget.backend_widget;
+    assert(backend != 0);
+    ld_graph = (ldGraph_t *)backend->ld_widget;
+    assert(ld_graph != 0);
+
+    assert(picoui_graph_move_add(graph, first_series, 44) == 0);
+    assert(ld_graph->pSeries[first_series].pValueList[0] == 22);
+    assert(ld_graph->pSeries[first_series].pValueList[1] == 33);
+    assert(ld_graph->pSeries[first_series].pValueList[2] == 44);
+    assert(ld_graph->pSeries[second_series].pValueList[0] == 7);
+    assert(ld_graph->pSeries[second_series].pValueList[1] == 14);
+    assert(ld_graph->pSeries[second_series].pValueList[2] == 21);
+
+    assert(picoui_graph_set_value(graph, second_series, 3, 99) == -1);
+    assert(picoui_graph_set_value(graph, second_series, 1, -1) == -1);
+    assert(picoui_graph_move_add(graph, second_series, -1) == -1);
+    assert(picoui_graph_move_add(graph, 2, 55) == -1);
+
+    assert(ld_graph->pSeries[first_series].pValueList[0] == 22);
+    assert(ld_graph->pSeries[first_series].pValueList[1] == 33);
+    assert(ld_graph->pSeries[first_series].pValueList[2] == 44);
+    assert(ld_graph->pSeries[second_series].pValueList[0] == 7);
+    assert(ld_graph->pSeries[second_series].pValueList[1] == 14);
+    assert(ld_graph->pSeries[second_series].pValueList[2] == 21);
+
+    picoui_app_destroy(app);
+}
+
 int main(void)
 {
     test_graph_series_value_readback_survives_frame_update();
     test_graph_visible_output_matches_series_updates();
     test_graph_final_release_contract_covers_advanced_readback_boundary();
+    test_graph_native_axis_grid_and_point_mask_round_trip();
+    test_graph_move_add_and_set_value_reject_invalid_inputs_without_polluting_other_series();
     return 0;
 }

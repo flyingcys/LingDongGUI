@@ -7,6 +7,16 @@ static int picoui_checkbox_props_are_valid(const struct picoui_checkbox_props *p
 {
     return props != 0
         && props->id != 0
+        && (props->has_unchecked_source == 0
+            || props->unchecked_source == 0
+            || props->unchecked_source->img_tile != 0)
+        && (props->has_checked_source == 0
+            || props->checked_source == 0
+            || props->checked_source->img_tile != 0)
+        && (props->has_radio_group == 0
+            || (props->radio_group >= 0 && props->radio_group <= 255))
+        && (props->has_string_left_space == 0
+            || (props->string_left_space >= 0 && props->string_left_space <= 65535))
         && props->width >= 0
         && props->height >= 0
         && props->radius >= 0
@@ -96,7 +106,17 @@ struct picoui_checkbox *picoui_checkbox_create_with_props(struct picoui_window *
         || picoui_widget_set_text_color(&checkbox->widget, props->text_color) != 0
         || picoui_widget_set_border_color(&checkbox->widget, props->border_color) != 0
         || picoui_widget_set_radius(&checkbox->widget, props->radius) != 0
-        || picoui_widget_set_padding(&checkbox->widget, props->padding) != 0) {
+        || picoui_widget_set_padding(&checkbox->widget, props->padding) != 0
+        || (props->has_check_color != 0
+            && picoui_checkbox_set_check_color(checkbox, props->check_color) != 0)
+        || (props->has_unchecked_source != 0
+            && picoui_checkbox_set_unchecked_source(checkbox, props->unchecked_source) != 0)
+        || (props->has_checked_source != 0
+            && picoui_checkbox_set_checked_source(checkbox, props->checked_source) != 0)
+        || (props->has_radio_group != 0
+            && picoui_checkbox_set_radio_group(checkbox, props->radio_group) != 0)
+        || (props->has_string_left_space != 0
+            && picoui_checkbox_set_string_left_space(checkbox, props->string_left_space) != 0)) {
         free(checkbox);
         return 0;
     }
@@ -147,6 +167,62 @@ int picoui_checkbox_set_text(struct picoui_checkbox *checkbox, const char *text)
         return -1;
     }
     return picoui_backend_set_text(checkbox->widget.backend_widget, text);
+}
+
+int picoui_checkbox_set_check_color(struct picoui_checkbox *checkbox, unsigned int rgb)
+{
+    if (checkbox == 0) {
+        return -1;
+    }
+
+    return picoui_backend_checkbox_set_check_color(checkbox, rgb);
+}
+
+int picoui_checkbox_set_text_color(struct picoui_checkbox *checkbox, unsigned int rgb)
+{
+    if (checkbox == 0 || picoui_widget_set_text_color(&checkbox->widget, rgb) != 0) {
+        return -1;
+    }
+
+    return picoui_backend_checkbox_set_text_color(checkbox, rgb);
+}
+
+int picoui_checkbox_set_unchecked_source(struct picoui_checkbox *checkbox,
+                                         struct picoui_image_source *source)
+{
+    if (checkbox == 0 || (source != 0 && source->img_tile == 0)) {
+        return -1;
+    }
+
+    return picoui_backend_checkbox_set_unchecked_source(checkbox, source);
+}
+
+int picoui_checkbox_set_checked_source(struct picoui_checkbox *checkbox,
+                                       struct picoui_image_source *source)
+{
+    if (checkbox == 0 || (source != 0 && source->img_tile == 0)) {
+        return -1;
+    }
+
+    return picoui_backend_checkbox_set_checked_source(checkbox, source);
+}
+
+int picoui_checkbox_set_radio_group(struct picoui_checkbox *checkbox, int radio_group)
+{
+    if (checkbox == 0 || radio_group < 0 || radio_group > 255) {
+        return -1;
+    }
+
+    return picoui_backend_checkbox_set_radio_group(checkbox, radio_group);
+}
+
+int picoui_checkbox_set_string_left_space(struct picoui_checkbox *checkbox, int space)
+{
+    if (checkbox == 0 || space < 0 || space > 65535) {
+        return -1;
+    }
+
+    return picoui_backend_checkbox_set_string_left_space(checkbox, space);
 }
 
 int picoui_checkbox_set_on_toggled(struct picoui_checkbox *checkbox,

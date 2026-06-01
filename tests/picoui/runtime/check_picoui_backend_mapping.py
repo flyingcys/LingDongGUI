@@ -59,6 +59,10 @@ interactive_mapping_targets = {
         "real_ids": ["title", "qrcode"],
         "reason": "qrcode demo proves the QR code widget is a real LingDongGUI widget.",
     },
+    "picoui_message_box_basic_demo": {
+        "real_ids": ["message_box"],
+        "reason": "message_box demo should prove the dialog widget is a real LingDongGUI widget and no longer depend on temporary smoke-path exclusion.",
+    },
     "picoui_date_time_basic_demo": {
         "real_ids": ["title", "date_time"],
         "reason": "date_time demo proves the date-time widget is a real LingDongGUI widget.",
@@ -66,6 +70,10 @@ interactive_mapping_targets = {
     "picoui_clock_basic_demo": {
         "real_ids": ["clock"],
         "reason": "clock demo proves the clock widget itself is a real LingDongGUI widget.",
+    },
+    "picoui_keyboard_basic_demo": {
+        "real_ids": ["keyboard_demo_input", "keyboard_demo_keyboard"],
+        "reason": "keyboard demo proves both the edit target and keyboard widget are real LingDongGUI widgets.",
     },
     "picoui_line_edit_basic_demo": {
         "real_ids": ["title", "line_edit"],
@@ -90,6 +98,10 @@ interactive_mapping_targets = {
     "picoui_calendar_basic_demo": {
         "real_ids": ["title", "calendar"],
         "reason": "calendar demo proves the calendar widget itself is a real LingDongGUI widget.",
+    },
+    "picoui_animation_basic_demo": {
+        "real_ids": ["title", "animation"],
+        "reason": "animation demo proves the animation widget itself is a real LingDongGUI widget with a frame tile source.",
     },
 }
 layout_mapping_targets = {
@@ -178,14 +190,17 @@ def _assert_target_matrix_complete(target_matrix: dict[str, dict[str, object]]) 
         "picoui_radial_menu_basic_demo",
         "picoui_progress_wheel_basic_demo",
         "picoui_qrcode_basic_demo",
+        "picoui_message_box_basic_demo",
         "picoui_date_time_basic_demo",
         "picoui_clock_basic_demo",
+        "picoui_keyboard_basic_demo",
         "picoui_line_edit_basic_demo",
         "picoui_combo_box_basic_demo",
         "picoui_scroll_selecter_basic_demo",
         "picoui_table_basic_demo",
         "picoui_graph_basic_demo",
         "picoui_calendar_basic_demo",
+        "picoui_animation_basic_demo",
     }
     missing_targets = sorted(expected_targets - set(target_matrix))
     unexpected_targets = sorted(set(target_matrix) - expected_targets)
@@ -281,12 +296,6 @@ subprocess.run(
     check=True,
 )
 
-excluded_targets = ["picoui_message_box_basic_demo"]
-subprocess.run(
-    [RTK, "cmake", "--build", str(BUILD), "--target", *excluded_targets],
-    check=True,
-)
-
 for target in TARGETS:
     env = os.environ.copy()
     env["SDL_VIDEODRIVER"] = env.get("SDL_VIDEODRIVER", "dummy")
@@ -315,23 +324,3 @@ for target in TARGETS:
 
     _assert_no_fallback(target, completed.stdout, completed.stderr)
     _assert_real_mapping(target, target_matrix[target], completed.stdout, completed.stderr)
-
-for target in excluded_targets:
-    env = os.environ.copy()
-    env["SDL_VIDEODRIVER"] = env.get("SDL_VIDEODRIVER", "dummy")
-    env["PICOUI_DEMO_AUTO_QUIT_MS"] = "1200"
-    completed = subprocess.run(
-        [str(_find_executable(target))],
-        check=False,
-        timeout=DEMO_TIMEOUT_SECONDS,
-        capture_output=True,
-        text=True,
-        env=env,
-    )
-    if completed.returncode != 0:
-        raise RuntimeError(
-            f"Demo '{target}' exited with {completed.returncode}.\n"
-            f"stdout:\n{completed.stdout}\n"
-            f"stderr:\n{completed.stderr}"
-        )
-    _assert_demo_excluded_from_formal_mapping(target, completed.stdout, completed.stderr)

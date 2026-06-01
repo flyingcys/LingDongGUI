@@ -23,6 +23,11 @@ static uint8_t *g_picoui_calendar_day_names[7] = {
     g_picoui_calendar_day_name_6,
 };
 
+static ldColor picoui_backend_calendar_rgb_to_ld(unsigned int rgb)
+{
+    return (ldColor)rgb;
+}
+
 static struct picoui_backend_app_state *picoui_backend_calendar_get_app_state(void *parent)
 {
     struct picoui_backend_widget *parent_widget = parent;
@@ -133,6 +138,26 @@ void *picoui_backend_create_calendar(void *parent, const char *id)
     return widget;
 }
 
+int picoui_backend_calendar_set_day_names(void *backend_widget, const char *const day_names[7])
+{
+    ldCalendar_t *ld_calendar = picoui_backend_calendar_get_ld(backend_widget);
+    int i;
+
+    if (ld_calendar == NULL || day_names == NULL) {
+        return -1;
+    }
+
+    for (i = 0; i < 7; ++i) {
+        if (day_names[i] == NULL) {
+            return -1;
+        }
+        g_picoui_calendar_day_names[i] = (uint8_t *)day_names[i];
+    }
+
+    ldCalendarSetDayNames(ld_calendar, g_picoui_calendar_day_names);
+    return 0;
+}
+
 int picoui_backend_calendar_set_date(void *backend_widget, int year, int month, int day)
 {
     struct picoui_backend_widget *backend = backend_widget;
@@ -205,6 +230,42 @@ int picoui_backend_calendar_set_header_format(void *backend_widget, const char *
 
     ldCalendarSetHeaderFormat(ld_calendar, (uint8_t *)format);
     return picoui_backend_calendar_sync_host_cache(backend);
+}
+
+int picoui_backend_calendar_set_bg_color(void *backend_widget, unsigned int rgb)
+{
+    ldCalendar_t *ld_calendar = picoui_backend_calendar_get_ld(backend_widget);
+
+    if (ld_calendar == NULL || rgb > 0xFFFFFFU) {
+        return -1;
+    }
+
+    ld_calendar->bgColor = picoui_backend_calendar_rgb_to_ld(rgb);
+    return 0;
+}
+
+int picoui_backend_calendar_set_item_color(void *backend_widget, unsigned int rgb)
+{
+    ldCalendar_t *ld_calendar = picoui_backend_calendar_get_ld(backend_widget);
+
+    if (ld_calendar == NULL || rgb > 0xFFFFFFU) {
+        return -1;
+    }
+
+    ld_calendar->itemColor = picoui_backend_calendar_rgb_to_ld(rgb);
+    return 0;
+}
+
+int picoui_backend_calendar_set_text_color(void *backend_widget, unsigned int rgb)
+{
+    ldCalendar_t *ld_calendar = picoui_backend_calendar_get_ld(backend_widget);
+
+    if (ld_calendar == NULL || rgb > 0xFFFFFFU) {
+        return -1;
+    }
+
+    ld_calendar->textColor = picoui_backend_calendar_rgb_to_ld(rgb);
+    return 0;
 }
 
 const char *picoui_backend_calendar_get_header_format(void *backend_widget)

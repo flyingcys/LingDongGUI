@@ -9,6 +9,7 @@
 #include "../../../src/gui/ldSlider.h"
 #include "../../../src/gui/ldSwitch.h"
 #include "../../../src/gui/ldText.h"
+#include "../../../src/gui/ldWindow.h"
 #include "../../../src/misc/ldMsg.h"
 #include "internal.h"
 
@@ -31,6 +32,11 @@ struct test_text_box_prefix_view {
 
 void picoui_backend_text_test_fail_next_set_font(void);
 extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
+
+static unsigned int test_rgb_to_ld_color(unsigned int rgb)
+{
+    return (unsigned int)__RGB((rgb >> 16) & 0xFFU, (rgb >> 8) & 0xFFU, rgb & 0xFFU);
+}
 
 static arm_2d_font_t *test_text_consumed_font(const ldText_t *ld_text)
 {
@@ -79,6 +85,37 @@ static void assert_slider_has_bound_images(const struct picoui_slider *slider,
     assert(ld_slider->ptBgMaskTile == (background_source != 0 ? background_source->mask_tile : 0));
     assert(ld_slider->ptIndicImgTile == (indicator_source != 0 ? indicator_source->img_tile : 0));
     assert(ld_slider->ptIndicMaskTile == (indicator_source != 0 ? indicator_source->mask_tile : 0));
+}
+
+static void assert_checkbox_has_bound_images(const struct picoui_checkbox *checkbox,
+                                             const struct picoui_image_source *unchecked_source,
+                                             const struct picoui_image_source *checked_source)
+{
+    const struct picoui_backend_widget *backend = checkbox->widget.backend_widget;
+    const ldCheckBox_t *ld_checkbox = (const ldCheckBox_t *)backend->ld_widget;
+
+    assert(ld_checkbox != 0);
+    assert(ld_checkbox->ptUncheckedImgTile == (unchecked_source != 0 ? unchecked_source->img_tile : 0));
+    assert(ld_checkbox->ptUncheckedMaskTile == (unchecked_source != 0 ? unchecked_source->mask_tile : 0));
+    assert(ld_checkbox->ptCheckedImgTile == (checked_source != 0 ? checked_source->img_tile : 0));
+    assert(ld_checkbox->ptCheckedMaskTile == (checked_source != 0 ? checked_source->mask_tile : 0));
+}
+
+static void assert_switch_has_bound_images(const struct picoui_switch *sw,
+                                           const struct picoui_image_source *off_source,
+                                           const struct picoui_image_source *on_source,
+                                           const struct picoui_image_source *knob_source)
+{
+    const struct picoui_backend_widget *backend = sw->widget.backend_widget;
+    const ldSwitch_t *ld_switch = (const ldSwitch_t *)backend->ld_widget;
+
+    assert(ld_switch != 0);
+    assert(ld_switch->ptOffImgTile == (off_source != 0 ? off_source->img_tile : 0));
+    assert(ld_switch->ptOffMaskTile == (off_source != 0 ? off_source->mask_tile : 0));
+    assert(ld_switch->ptOnImgTile == (on_source != 0 ? on_source->img_tile : 0));
+    assert(ld_switch->ptOnMaskTile == (on_source != 0 ? on_source->mask_tile : 0));
+    assert(ld_switch->ptKnobImgTile == (knob_source != 0 ? knob_source->img_tile : 0));
+    assert(ld_switch->ptKnobMaskTile == (knob_source != 0 ? knob_source->mask_tile : 0));
 }
 
 static void on_switch_toggle(struct picoui_widget *widget, int value, void *user_data)
@@ -514,6 +551,195 @@ static void test_slider_j5_contract(struct picoui_slider *slider,
     assert(picoui_slider_set_indicator_source(slider, &invalid_source) == -1);
 }
 
+static void test_checkbox_native_radio_group_and_image_mode_round_trip(struct picoui_checkbox *checkbox)
+{
+    struct picoui_backend_widget *backend;
+    ldCheckBox_t *ld_checkbox;
+    arm_2d_tile_t unchecked_tile = {0};
+    arm_2d_tile_t unchecked_mask_tile = {0};
+    arm_2d_tile_t checked_tile = {0};
+    arm_2d_tile_t checked_mask_tile = {0};
+    struct picoui_image_source unchecked_source = {
+        .img_tile = &unchecked_tile,
+        .mask_tile = &unchecked_mask_tile,
+    };
+    struct picoui_image_source checked_source = {
+        .img_tile = &checked_tile,
+        .mask_tile = &checked_mask_tile,
+    };
+    struct picoui_image_source invalid_source = {
+        .img_tile = 0,
+        .mask_tile = &unchecked_mask_tile,
+    };
+
+    assert(checkbox != 0);
+    backend = checkbox->widget.backend_widget;
+    ld_checkbox = (ldCheckBox_t *)backend->ld_widget;
+    assert(ld_checkbox != 0);
+
+    assert(picoui_checkbox_set_check_color(checkbox, 0xAA5500U) == 0);
+    assert(ld_checkbox->fgColor == test_rgb_to_ld_color(0xAA5500U));
+    assert(ld_checkbox->ptUncheckedImgTile == 0);
+    assert(ld_checkbox->ptCheckedImgTile == 0);
+
+    assert(picoui_checkbox_set_text_color(checkbox, 0x224466U) == 0);
+    assert(checkbox->widget.text_color == 0x224466U);
+    assert(ld_checkbox->textColor == test_rgb_to_ld_color(0x224466U));
+
+    assert(picoui_checkbox_set_unchecked_source(checkbox, &unchecked_source) == 0);
+    assert_checkbox_has_bound_images(checkbox, &unchecked_source, 0);
+    assert(picoui_checkbox_set_checked_source(checkbox, &checked_source) == 0);
+    assert_checkbox_has_bound_images(checkbox, &unchecked_source, &checked_source);
+
+    assert(picoui_checkbox_set_radio_group(checkbox, 7) == 0);
+    assert(ld_checkbox->isRadioButton == true);
+    assert(ld_checkbox->radioButtonGroup == 7);
+
+    assert(picoui_checkbox_set_string_left_space(checkbox, 22) == 0);
+    assert(ld_checkbox->boxWidth == 22);
+
+    assert(picoui_checkbox_set_check_color(checkbox, 0x003366U) == 0);
+    assert(ld_checkbox->fgColor == test_rgb_to_ld_color(0x003366U));
+    assert_checkbox_has_bound_images(checkbox, 0, 0);
+    assert(ld_checkbox->boxWidth == 14);
+
+    assert(picoui_checkbox_set_unchecked_source(0, &unchecked_source) == -1);
+    assert(picoui_checkbox_set_checked_source(0, &checked_source) == -1);
+    assert(picoui_checkbox_set_unchecked_source(checkbox, &invalid_source) == -1);
+    assert(picoui_checkbox_set_checked_source(checkbox, &invalid_source) == -1);
+    assert(picoui_checkbox_set_radio_group(0, 1) == -1);
+    assert(picoui_checkbox_set_radio_group(checkbox, -1) == -1);
+    assert(picoui_checkbox_set_radio_group(checkbox, 256) == -1);
+    assert(picoui_checkbox_set_string_left_space(0, 10) == -1);
+    assert(picoui_checkbox_set_string_left_space(checkbox, -1) == -1);
+    assert(picoui_checkbox_set_check_color(0, 0x123456U) == -1);
+    assert(picoui_checkbox_set_text_color(0, 0x123456U) == -1);
+}
+
+static void test_switch_native_direction_navigation_and_image_skin_round_trip(struct picoui_switch *sw)
+{
+    struct picoui_backend_widget *backend;
+    ldSwitch_t *ld_switch;
+    int horizontal = -1;
+    int direction = -1;
+    int disabled = -1;
+    int can_navigate = -1;
+    arm_2d_tile_t off_tile = {0};
+    arm_2d_tile_t off_mask_tile = {0};
+    arm_2d_tile_t on_tile = {0};
+    arm_2d_tile_t on_mask_tile = {0};
+    arm_2d_tile_t knob_tile = {0};
+    arm_2d_tile_t knob_mask_tile = {0};
+    struct picoui_image_source off_source = {
+        .img_tile = &off_tile,
+        .mask_tile = &off_mask_tile,
+    };
+    struct picoui_image_source on_source = {
+        .img_tile = &on_tile,
+        .mask_tile = &on_mask_tile,
+    };
+    struct picoui_image_source knob_source = {
+        .img_tile = &knob_tile,
+        .mask_tile = &knob_mask_tile,
+    };
+    struct picoui_image_source invalid_source = {
+        .img_tile = 0,
+        .mask_tile = &off_mask_tile,
+    };
+
+    assert(sw != 0);
+    backend = sw->widget.backend_widget;
+    ld_switch = (ldSwitch_t *)backend->ld_widget;
+    assert(ld_switch != 0);
+
+    assert(picoui_switch_set_off_source(sw, &off_source) == 0);
+    assert_switch_has_bound_images(sw, &off_source, 0, 0);
+    assert(picoui_switch_set_on_source(sw, &on_source) == 0);
+    assert_switch_has_bound_images(sw, &off_source, &on_source, 0);
+    assert(picoui_switch_set_knob_source(sw, &knob_source) == 0);
+    assert_switch_has_bound_images(sw, &off_source, &on_source, &knob_source);
+
+    assert(picoui_switch_set_horizontal(sw, 0) == 0);
+    assert(picoui_switch_get_horizontal(sw, &horizontal) == 0);
+    assert(horizontal == 0);
+    assert(ld_switch->isHorizontal == false);
+
+    assert(picoui_switch_set_direction(sw, 1) == 0);
+    assert(picoui_switch_get_direction(sw, &direction) == 0);
+    assert(direction == 1);
+    assert(ld_switch->direction == LD_SWITCH_DIRECTION_HORIZONTAL);
+    assert(ld_switch->isHorizontal == true);
+
+    assert(picoui_switch_set_direction(sw, 2) == 0);
+    assert(picoui_switch_get_direction(sw, &direction) == 0);
+    assert(direction == 2);
+    assert(ld_switch->direction == LD_SWITCH_DIRECTION_VERTICAL);
+    assert(ld_switch->isHorizontal == false);
+
+    assert(picoui_switch_set_disabled(sw, 1) == 0);
+    assert(picoui_switch_get_disabled(sw, &disabled) == 0);
+    assert(disabled == 1);
+    assert(ld_switch->isDisabled == true);
+    assert(picoui_switch_can_navigate(sw, 4, &can_navigate) == 0);
+    assert(can_navigate == 0);
+
+    assert(picoui_switch_set_disabled(sw, 0) == 0);
+    assert(picoui_switch_get_disabled(sw, &disabled) == 0);
+    assert(disabled == 0);
+    assert(ld_switch->isDisabled == false);
+    assert(picoui_switch_set_checked(sw, 0) == 0);
+    assert(picoui_switch_can_navigate(sw, 1, &can_navigate) == 0);
+    assert(can_navigate == 1);
+    assert(picoui_switch_can_navigate(sw, 4, &can_navigate) == 0);
+    assert(can_navigate == 1);
+    assert(picoui_switch_can_navigate(sw, 2, &can_navigate) == 0);
+    assert(can_navigate == 0);
+    assert(picoui_switch_can_navigate(sw, 3, &can_navigate) == 0);
+    assert(can_navigate == 0);
+
+    assert(picoui_switch_navigate(sw, 1) == 0);
+    assert(picoui_switch_is_checked(sw) == 1);
+    assert(ld_switch->isChecked == true);
+    assert(picoui_switch_can_navigate(sw, 1, &can_navigate) == 0);
+    assert(can_navigate == 0);
+    assert(picoui_switch_can_navigate(sw, 4, &can_navigate) == 0);
+    assert(can_navigate == 0);
+    assert(picoui_switch_can_navigate(sw, 2, &can_navigate) == 0);
+    assert(can_navigate == 1);
+    assert(picoui_switch_can_navigate(sw, 3, &can_navigate) == 0);
+    assert(can_navigate == 1);
+    assert(picoui_switch_navigate(sw, 3) == 0);
+    assert(picoui_switch_is_checked(sw) == 0);
+    assert(ld_switch->isChecked == false);
+
+    assert(picoui_switch_set_off_source(sw, 0) == 0);
+    assert_switch_has_bound_images(sw, 0, &on_source, &knob_source);
+    assert(picoui_switch_set_on_source(sw, 0) == 0);
+    assert_switch_has_bound_images(sw, 0, 0, &knob_source);
+    assert(picoui_switch_set_knob_source(sw, 0) == 0);
+    assert_switch_has_bound_images(sw, 0, 0, 0);
+
+    assert(picoui_switch_set_off_source(sw, &invalid_source) == -1);
+    assert(picoui_switch_set_on_source(sw, &invalid_source) == -1);
+    assert(picoui_switch_set_knob_source(sw, &invalid_source) == -1);
+    assert(picoui_switch_set_horizontal(0, 1) == -1);
+    assert(picoui_switch_get_horizontal(0, &horizontal) == -1);
+    assert(picoui_switch_get_horizontal(sw, 0) == -1);
+    assert(picoui_switch_set_direction(0, 0) == -1);
+    assert(picoui_switch_set_direction(sw, -1) == -1);
+    assert(picoui_switch_set_direction(sw, 3) == -1);
+    assert(picoui_switch_get_direction(0, &direction) == -1);
+    assert(picoui_switch_get_direction(sw, 0) == -1);
+    assert(picoui_switch_set_disabled(0, 1) == -1);
+    assert(picoui_switch_get_disabled(0, &disabled) == -1);
+    assert(picoui_switch_get_disabled(sw, 0) == -1);
+    assert(picoui_switch_can_navigate(0, 1, &can_navigate) == -1);
+    assert(picoui_switch_can_navigate(sw, 0, &can_navigate) == -1);
+    assert(picoui_switch_can_navigate(sw, 1, 0) == -1);
+    assert(picoui_switch_navigate(0, 1) == -1);
+    assert(picoui_switch_navigate(sw, 0) == -1);
+}
+
 static void test_backend_value_changed_bridge_keeps_setter_sync_only(struct picoui_slider *slider,
                                                                      struct picoui_backend_widget *slider_backend,
                                                                      struct ld_scene_t *scene)
@@ -940,9 +1166,9 @@ static void test_image_source_boundary(struct picoui_window *parent,
     assert(backend_child_count(parent_backend) == child_count + 2);
 }
 
-static void test_image_theme_apply_is_rejected(struct picoui_theme *theme,
-                                               struct picoui_image *image,
-                                               struct picoui_image_source *image_source)
+static void test_image_theme_apply_is_support_contract(struct picoui_theme *theme,
+                                                       struct picoui_image *image,
+                                                       struct picoui_image_source *image_source)
 {
     const struct picoui_backend_widget *backend = image->widget.backend_widget;
     const ldImage_t *ld_image = (const ldImage_t *)backend->ld_widget;
@@ -951,16 +1177,23 @@ static void test_image_theme_apply_is_rejected(struct picoui_theme *theme,
     arm_2d_tile_t *mask_tile = ld_image->ptMaskTile;
 
     assert(picoui_image_set_source(image, image_source) == 0);
+    assert(backend != 0);
+    assert(backend->kind == PICOUI_BACKEND_WIDGET_IMAGE);
+    assert(backend->ld_widget != 0);
+    assert(backend->theme == theme);
     img_tile = ld_image->ptImgTile;
     mask_tile = ld_image->ptMaskTile;
-    assert(picoui_theme_apply_to_widget(theme, &image->widget, PICOUI_PART_MAIN, PICOUI_STATE_DEFAULT) == -1);
-    assert(image->widget.bg_color == 0U);
-    assert(image->widget.text_color == 0U);
-    assert(image->widget.border_color == 0U);
+    assert(picoui_theme_apply_to_widget(theme, &image->widget, PICOUI_PART_MAIN, PICOUI_STATE_DEFAULT) == 0);
+    assert(image->widget.bg_color == theme->colors[PICOUI_COLOR_PANEL]);
+    assert(image->widget.text_color == theme->colors[PICOUI_COLOR_TEXT_PRIMARY]);
+    assert(image->widget.border_color == theme->colors[PICOUI_COLOR_BORDER]);
+    assert(image->widget.radius == theme->metrics[PICOUI_METRIC_RADIUS]);
+    assert(image->widget.padding == theme->metrics[PICOUI_METRIC_PADDING]);
     assert(image->source == source);
     assert(backend->image_source == source);
     assert(ld_image->ptImgTile == img_tile);
     assert(ld_image->ptMaskTile == mask_tile);
+    assert(ld_image->maskColor == test_rgb_to_ld_color(theme->colors[PICOUI_COLOR_PANEL]));
 }
 
 static void test_text_font_null_falls_back_to_default_contract(struct picoui_window *parent)
@@ -1089,28 +1322,41 @@ static void test_image_theme_style_parts_remain_explicitly_rejected(struct picou
     assert(image->widget.border_color == border_color_before);
 }
 
-static void test_image_enabled_remains_rejected_contract(struct picoui_window *parent)
+static void test_image_enabled_is_support_contract(struct picoui_window *parent)
 {
     struct picoui_image *image = picoui_image_create(parent, "image_enabled_reject");
+    struct picoui_backend_widget *backend;
+    ldBase_t *ld_base;
 
     assert(image != 0);
+    backend = image->widget.backend_widget;
+    assert(backend != 0);
+    ld_base = (ldBase_t *)backend->ld_widget;
+    assert(ld_base != 0);
     assert(image->widget.enabled == 1);
-    assert(picoui_widget_set_enabled(&image->widget, 0) == -1);
+    assert(picoui_widget_set_enabled(&image->widget, 0) == 0);
+    assert(image->widget.enabled == 0);
+    assert(image->widget.selectable == 0);
+    assert(ld_base->isSelectable == false);
+    assert(picoui_widget_set_enabled(&image->widget, 1) == 0);
     assert(image->widget.enabled == 1);
+    assert(ld_base->isSelectable == true);
 }
 
 static void test_image_padding_is_cached_only_and_not_native_layout_contract(struct picoui_image *image)
 {
     struct picoui_backend_widget *backend;
+    int padding_before;
 
     assert(image != 0);
     backend = image->widget.backend_widget;
     assert(backend != 0);
 
-    assert(image->widget.padding == 0);
+    padding_before = image->widget.padding;
     assert(picoui_widget_set_padding(&image->widget, 6) == 0);
     assert(image->widget.padding == 6);
     assert(backend->kind == PICOUI_BACKEND_WIDGET_IMAGE);
+    assert(padding_before >= 0);
 }
 
 static void test_button_j4_contract(struct picoui_window *parent,
@@ -1367,6 +1613,12 @@ static void test_props_initial_values(struct picoui_app *app,
         .border_color = 0x161718,
         .radius = 3,
         .padding = 4,
+        .background_source = image_source,
+        .has_padding_group = 1,
+        .padding_left = 2,
+        .padding_top = 3,
+        .padding_right = 4,
+        .padding_bottom = 5,
     };
     struct picoui_label_props label_props = {
         .id = "props_label",
@@ -1517,6 +1769,23 @@ static void test_props_initial_values(struct picoui_app *app,
                         0x161718,
                         3,
                         4);
+    {
+        struct picoui_backend_widget *props_win_backend =
+            (struct picoui_backend_widget *)props_win->widget.backend_widget;
+        ldWindow_t *ld_window = (ldWindow_t *)props_win_backend->ld_widget;
+        assert(ld_window != 0);
+        assert(ld_window->pLayoutPaddingGroup != 0);
+        assert(ld_window->pLayoutPaddingGroup->left == win_props.padding_left);
+        assert(ld_window->pLayoutPaddingGroup->top == win_props.padding_top);
+        assert(ld_window->pLayoutPaddingGroup->right == win_props.padding_right);
+        assert(ld_window->pLayoutPaddingGroup->bottom == win_props.padding_bottom);
+        assert(picoui_window_get_padding_left(props_win) == win_props.padding_left);
+        assert(picoui_window_get_padding_top(props_win) == win_props.padding_top);
+        assert(picoui_window_get_padding_right(props_win) == win_props.padding_right);
+        assert(picoui_window_get_padding_bottom(props_win) == win_props.padding_bottom);
+        assert(ld_window->ptImgTile == win_props.background_source->img_tile);
+        assert(ld_window->ptMaskTile == win_props.background_source->mask_tile);
+    }
     assert_widget_props(&props_label->widget,
                         props_label->widget.backend_widget,
                         "label-title",
@@ -1736,6 +2005,7 @@ int main(void)
 
     app = picoui_app_create();
     theme = picoui_theme_create();
+    assert(picoui_app_set_theme(app, theme) == 0);
     win = picoui_window_create(app, "root");
 
     sw = picoui_switch_create_with_props(win, &sw_props);
@@ -1791,10 +2061,10 @@ int main(void)
 
     test_props_initial_values(app, &font, &image_source, &button_cookie, &common_cookie);
     test_image_source_boundary(win, &image_source);
-    test_image_theme_apply_is_rejected(theme, image, &image_source);
+    test_image_theme_apply_is_support_contract(theme, image, &image_source);
     test_image_style_class_and_user_data_are_stable_widget_metadata_contract(win);
     test_image_theme_style_parts_remain_explicitly_rejected(theme, win);
-    test_image_enabled_remains_rejected_contract(win);
+    test_image_enabled_is_support_contract(win);
     test_image_padding_is_cached_only_and_not_native_layout_contract(image);
     test_text_font_null_falls_back_to_default_contract(win);
     test_text_font_runtime_rebind_updates_real_ldtext_and_public_cache(win);
@@ -1907,6 +2177,8 @@ int main(void)
     test_checked_and_value_widgets_use_backend_truth_readback_contract(sw, cb, slider);
     test_item_model_identity_survives_frame_update(sw, cb, slider, app_state->ld_scene);
     test_native_duplicate_value_does_not_advance_data_model(sw, cb, slider, app_state->ld_scene);
+    test_checkbox_native_radio_group_and_image_mode_round_trip(cb);
+    test_switch_native_direction_navigation_and_image_skin_round_trip(sw);
 
     ldMsgDeinit(&app_state->ld_scene->ptMsgQueue);
     picoui_theme_destroy(theme);

@@ -2,6 +2,7 @@
 #define PICOUI_PICOUI_H
 
 #include "picoui/app.h"
+#include "picoui/animation.h"
 #include "picoui/arc.h"
 #include "picoui/layout.h"
 #include "picoui/widget.h"
@@ -20,6 +21,7 @@
 #include "picoui/line_edit.h"
 #include "picoui/list.h"
 #include "picoui/message_box.h"
+#include "picoui/native.h"
 #include "picoui/progress_bar.h"
 #include "picoui/progress_wheel.h"
 #include "picoui/qrcode.h"

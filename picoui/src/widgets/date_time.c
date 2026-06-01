@@ -4,11 +4,6 @@
 
 #include <stdlib.h>
 
-int picoui_backend_date_time_set_format(struct picoui_date_time *dt, const char *format);
-int picoui_backend_date_time_set_date(struct picoui_date_time *dt, int year, int month, int day);
-int picoui_backend_date_time_set_time(struct picoui_date_time *dt, int hour, int minute, int second);
-const char *picoui_backend_date_time_get_format(struct picoui_date_time *dt);
-
 static int picoui_date_time_props_are_valid(const struct picoui_date_time_props *props)
 {
     return props != 0
@@ -53,6 +48,10 @@ struct picoui_date_time *picoui_date_time_create(struct picoui_widget *parent, c
         return 0;
     }
     if (picoui_date_time_set_format(dt, "yyyy-mm-dd hh:nn:ss") != 0
+        || picoui_date_time_set_text_color(dt, 0x000000U) != 0
+        || picoui_date_time_set_bg_color(dt, 0xFFFFFFU) != 0
+        || picoui_date_time_set_align(dt, PICOUI_ALIGN_CENTER) != 0
+        || picoui_date_time_set_transparent(dt, 0) != 0
         || picoui_date_time_set_date(dt, 2026, 1, 1) != 0
         || picoui_date_time_set_time(dt, 12, 0, 0) != 0) {
         free(dt);
@@ -86,6 +85,10 @@ struct picoui_date_time *picoui_date_time_create_with_props(
         return 0;
     }
     if (picoui_date_time_set_format(dt, props->format) != 0
+        || picoui_date_time_set_text_color(dt, props->text_color) != 0
+        || picoui_date_time_set_bg_color(dt, props->bg_color) != 0
+        || picoui_date_time_set_align(dt, props->align) != 0
+        || picoui_date_time_set_transparent(dt, props->transparent) != 0
         || picoui_date_time_set_date(dt, props->year, props->month, props->day) != 0
         || picoui_date_time_set_time(dt, props->hour, props->minute, props->second) != 0) {
         free(dt);
@@ -144,6 +147,65 @@ int picoui_date_time_set_time(struct picoui_date_time *dt, int hour, int minute,
     return 0;
 }
 
+int picoui_date_time_set_text_color(struct picoui_date_time *dt, unsigned int rgb)
+{
+    if (dt == 0 || rgb > 0xFFFFFFU) {
+        return -1;
+    }
+
+    if (picoui_backend_date_time_set_text_color(dt, rgb) != 0) {
+        return -1;
+    }
+
+    dt->text_color = rgb;
+    return 0;
+}
+
+int picoui_date_time_set_bg_color(struct picoui_date_time *dt, unsigned int rgb)
+{
+    if (dt == 0 || rgb > 0xFFFFFFU) {
+        return -1;
+    }
+
+    if (picoui_backend_date_time_set_bg_color(dt, rgb) != 0) {
+        return -1;
+    }
+
+    dt->bg_color = rgb;
+    return 0;
+}
+
+int picoui_date_time_set_align(struct picoui_date_time *dt, enum picoui_align align)
+{
+    if (dt == 0
+        || (align != PICOUI_ALIGN_START
+            && align != PICOUI_ALIGN_CENTER
+            && align != PICOUI_ALIGN_END)) {
+        return -1;
+    }
+
+    if (picoui_backend_date_time_set_align(dt, align) != 0) {
+        return -1;
+    }
+
+    dt->align = align;
+    return 0;
+}
+
+int picoui_date_time_set_transparent(struct picoui_date_time *dt, int transparent)
+{
+    if (dt == 0) {
+        return -1;
+    }
+
+    if (picoui_backend_date_time_set_transparent(dt, transparent) != 0) {
+        return -1;
+    }
+
+    dt->transparent = transparent != 0;
+    return 0;
+}
+
 const char *picoui_date_time_get_format(const struct picoui_date_time *dt)
 {
     if (dt == 0) {
@@ -175,4 +237,13 @@ int picoui_date_time_get_time(const struct picoui_date_time *dt, int *hour, int 
     *minute = dt->minute;
     *second = dt->second;
     return 0;
+}
+
+int picoui_date_time_get_transparent(const struct picoui_date_time *dt)
+{
+    if (dt == 0) {
+        return -1;
+    }
+
+    return dt->transparent;
 }

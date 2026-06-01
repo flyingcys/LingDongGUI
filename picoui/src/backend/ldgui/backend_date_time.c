@@ -6,6 +6,32 @@
 
 extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
 
+static ldColor picoui_backend_date_time_rgb_to_ld_color(unsigned int rgb)
+{
+    return __RGB((rgb >> 16) & 0xFFU, (rgb >> 8) & 0xFFU, rgb & 0xFFU);
+}
+
+static int picoui_backend_date_time_map_align(enum picoui_align align, arm_2d_align_t *out)
+{
+    if (out == NULL) {
+        return -1;
+    }
+
+    switch (align) {
+    case PICOUI_ALIGN_START:
+        *out = ARM_2D_ALIGN_LEFT;
+        return 0;
+    case PICOUI_ALIGN_CENTER:
+        *out = ARM_2D_ALIGN_CENTRE;
+        return 0;
+    case PICOUI_ALIGN_END:
+        *out = ARM_2D_ALIGN_RIGHT;
+        return 0;
+    default:
+        return -1;
+    }
+}
+
 static struct picoui_backend_app_state *picoui_backend_date_time_get_app_state(void *parent)
 {
     struct picoui_backend_widget *parent_widget = parent;
@@ -131,4 +157,53 @@ const char *picoui_backend_date_time_get_format(struct picoui_date_time *dt)
     }
 
     return (const char *)ld_date_time->formatStr;
+}
+
+int picoui_backend_date_time_set_transparent(struct picoui_date_time *dt, int transparent)
+{
+    ldDateTime_t *ld_date_time = picoui_backend_date_time_get_ld(dt);
+
+    if (ld_date_time == NULL) {
+        return -1;
+    }
+
+    ldDateTimeSetTransparent(ld_date_time, transparent != 0);
+    return 0;
+}
+
+int picoui_backend_date_time_set_text_color(struct picoui_date_time *dt, unsigned int rgb)
+{
+    ldDateTime_t *ld_date_time = picoui_backend_date_time_get_ld(dt);
+
+    if (ld_date_time == NULL || rgb > 0xFFFFFFU) {
+        return -1;
+    }
+
+    ldDateTimeSetTextColor(ld_date_time, picoui_backend_date_time_rgb_to_ld_color(rgb));
+    return 0;
+}
+
+int picoui_backend_date_time_set_align(struct picoui_date_time *dt, enum picoui_align align)
+{
+    ldDateTime_t *ld_date_time = picoui_backend_date_time_get_ld(dt);
+    arm_2d_align_t native_align;
+
+    if (ld_date_time == NULL || picoui_backend_date_time_map_align(align, &native_align) != 0) {
+        return -1;
+    }
+
+    ldDateTimeSetAlign(ld_date_time, native_align);
+    return 0;
+}
+
+int picoui_backend_date_time_set_bg_color(struct picoui_date_time *dt, unsigned int rgb)
+{
+    ldDateTime_t *ld_date_time = picoui_backend_date_time_get_ld(dt);
+
+    if (ld_date_time == NULL || rgb > 0xFFFFFFU) {
+        return -1;
+    }
+
+    ldDateTimeSetBackgroundColor(ld_date_time, picoui_backend_date_time_rgb_to_ld_color(rgb));
+    return 0;
 }

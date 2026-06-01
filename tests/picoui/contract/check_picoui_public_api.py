@@ -15,6 +15,9 @@ LD_IDENTIFIER_RE = re.compile(r"\bld[A-Za-z0-9_]*\b")
 ARM_IDENTIFIER_RE = re.compile(r"\barm_2d_[A-Za-z0-9_]*\b")
 SIGNAL_IDENTIFIER_RE = re.compile(r"\bSIGNAL_[A-Za-z0-9_]*\b")
 IDENTIFIER_AT_END_RE = re.compile(r"(?P<name>[A-Za-z_][A-Za-z0-9_]*)\s*$")
+OPAQUE_ARM_TYPEDEF_RE = re.compile(
+    r"typedef\s+struct\s+arm_2d_[A-Za-z0-9_]*\s+arm_2d_[A-Za-z0-9_]*\s*;"
+)
 
 
 def assert_allowed_prefix(name: str, *, header: Path, kind: str, prefix: str) -> None:
@@ -67,13 +70,14 @@ def check_function_prefixes(header: Path, text: str) -> None:
 
 
 def check_forbidden_identifiers(header: Path, text: str) -> None:
+    sanitized = OPAQUE_ARM_TYPEDEF_RE.sub("", text)
     forbidden_patterns = (
         ("ld*", LD_IDENTIFIER_RE),
         ("arm_2d_*", ARM_IDENTIFIER_RE),
         ("SIGNAL_*", SIGNAL_IDENTIFIER_RE),
     )
     for label, pattern in forbidden_patterns:
-        match = pattern.search(text)
+        match = pattern.search(sanitized)
         assert match is None, f"{header.name} leaks forbidden identifier '{match.group(0)}' ({label})"
 
 

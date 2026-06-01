@@ -1,5 +1,6 @@
 set(PICOUI_UNIT_TESTS
     unit/test_picoui_smoke.c
+    unit/test_picoui_native_bridge.c
     unit/test_picoui_theme.c
     unit/test_picoui_widgets.c
     unit/test_picoui_button_events.c
@@ -12,6 +13,7 @@ set(PICOUI_UNIT_TESTS
     unit/test_picoui_progress_bar.c
     unit/test_picoui_progress_wheel.c
     unit/test_picoui_qrcode.c
+    unit/test_picoui_animation.c
     unit/test_picoui_message_box.c
     unit/test_picoui_date_time.c
     unit/test_picoui_clock.c

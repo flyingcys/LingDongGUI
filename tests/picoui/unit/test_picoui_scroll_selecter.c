@@ -7,6 +7,15 @@
 
 #include <assert.h>
 
+static unsigned int encode_rgb_to_ld_color(unsigned int rgb)
+{
+    unsigned int red = (rgb >> 16) & 0xFFU;
+    unsigned int green = (rgb >> 8) & 0xFFU;
+    unsigned int blue = rgb & 0xFFU;
+
+    return ((red >> 3) << 11) | ((green >> 2) << 5) | (blue >> 3);
+}
+
 static void assert_scroll_selecter_backend_metadata(const struct picoui_backend_widget *backend,
                                                     unsigned int expected_identity)
 {
@@ -130,10 +139,105 @@ static void test_scroll_selecter_final_visual_and_edit_contract_is_release_ready
     picoui_app_destroy(app);
 }
 
+static void test_scroll_selecter_native_style_image_speed_and_select_text_round_trip(void)
+{
+    struct picoui_app *app = picoui_app_create();
+    struct picoui_window *win;
+    struct picoui_scroll_selecter *scroll_selecter;
+    struct picoui_backend_widget *backend;
+    ldScrollSelecter_t *ld_scroll_selecter;
+    arm_2d_tile_t bg_tile = {0};
+    arm_2d_tile_t bg_mask_tile = {0};
+    arm_2d_tile_t indicator_tile = {0};
+    arm_2d_tile_t indicator_mask_tile = {0};
+    struct picoui_image_source bg_source = {
+        .img_tile = &bg_tile,
+        .mask_tile = &bg_mask_tile,
+    };
+    struct picoui_image_source indicator_source = {
+        .img_tile = &indicator_tile,
+        .mask_tile = &indicator_mask_tile,
+    };
+    struct picoui_image_source invalid_source = {
+        .img_tile = 0,
+        .mask_tile = &bg_mask_tile,
+    };
+
+    assert(app != 0);
+    win = picoui_window_create(app, "scroll_native_root");
+    assert(win != 0);
+    scroll_selecter = picoui_scroll_selecter_create(win, "scroll_native");
+    assert(scroll_selecter != 0);
+    assert(picoui_scroll_selecter_add_item(scroll_selecter, "wifi", "Wi-Fi") == 0);
+    assert(picoui_scroll_selecter_add_item(scroll_selecter, "bluetooth", "Bluetooth") == 0);
+    assert(picoui_scroll_selecter_add_item(scroll_selecter, "display", "Display") == 0);
+
+    backend = (struct picoui_backend_widget *)scroll_selecter->widget.backend_widget;
+    assert(backend != 0);
+    ld_scroll_selecter = (ldScrollSelecter_t *)backend->ld_widget;
+    assert(ld_scroll_selecter != 0);
+
+    assert(picoui_scroll_selecter_set_text_color(scroll_selecter, 0x445566U) == 0);
+    assert(picoui_scroll_selecter_set_bg_color(scroll_selecter, 0x112233U) == 0);
+    assert(picoui_scroll_selecter_set_indicator_color(scroll_selecter, 0x778899U) == 0);
+    assert(picoui_scroll_selecter_set_bg_source(scroll_selecter, &bg_source) == 0);
+    assert(picoui_scroll_selecter_set_indicator_source(scroll_selecter, &indicator_source) == 0);
+    assert(picoui_scroll_selecter_set_bg_source(scroll_selecter, &invalid_source) == -1);
+    assert(picoui_scroll_selecter_set_transparent(scroll_selecter, 1) == 0);
+    assert(picoui_scroll_selecter_set_speed(scroll_selecter, 3) == 0);
+    assert(picoui_scroll_selecter_set_select_text(scroll_selecter, "Bluetooth") == 0);
+    assert(picoui_scroll_selecter_get_selected_index(scroll_selecter) == 1);
+
+    assert((unsigned int)ld_scroll_selecter->textColor == encode_rgb_to_ld_color(0x445566U));
+    assert((unsigned int)ld_scroll_selecter->bgColor == encode_rgb_to_ld_color(0x112233U));
+    assert((unsigned int)ld_scroll_selecter->indicatorColor == encode_rgb_to_ld_color(0x778899U));
+    assert(ld_scroll_selecter->ptImgTile == bg_source.img_tile);
+    assert(ld_scroll_selecter->ptMaskTile == bg_source.mask_tile);
+    assert(ld_scroll_selecter->ptIndicatorImgTile == indicator_source.img_tile);
+    assert(ld_scroll_selecter->ptIndicatorMaskTile == indicator_source.mask_tile);
+    assert(ld_scroll_selecter->isTransparent == true);
+    assert(ld_scroll_selecter->moveOffset == 3);
+    assert(ldScrollSelecterGetSelectItemNum(ld_scroll_selecter) == 1);
+    assert(ldScrollSelecterGetSelectText(ld_scroll_selecter) == (uint8_t *)"Bluetooth");
+
+    picoui_app_destroy(app);
+}
+
+static void test_scroll_selecter_selected_text_readback_matches_backend_truth(void)
+{
+    struct picoui_app *app = picoui_app_create();
+    struct picoui_window *win;
+    struct picoui_scroll_selecter *scroll_selecter;
+    struct picoui_backend_widget *backend;
+    ldScrollSelecter_t *ld_scroll_selecter;
+
+    assert(app != 0);
+    win = picoui_window_create(app, "scroll_text_root");
+    assert(win != 0);
+    scroll_selecter = picoui_scroll_selecter_create(win, "scroll_text");
+    assert(scroll_selecter != 0);
+    assert(picoui_scroll_selecter_add_item(scroll_selecter, "wifi", "Wi-Fi") == 0);
+    assert(picoui_scroll_selecter_add_item(scroll_selecter, "bluetooth", "Bluetooth") == 0);
+    assert(picoui_scroll_selecter_add_item(scroll_selecter, "display", "Display") == 0);
+    assert(picoui_scroll_selecter_set_selected_index(scroll_selecter, 2) == 0);
+
+    backend = (struct picoui_backend_widget *)scroll_selecter->widget.backend_widget;
+    assert(backend != 0);
+    ld_scroll_selecter = (ldScrollSelecter_t *)backend->ld_widget;
+    assert(ld_scroll_selecter != 0);
+
+    assert(picoui_scroll_selecter_get_selected_text(scroll_selecter) == ldScrollSelecterGetSelectText(ld_scroll_selecter));
+    assert(strcmp(picoui_scroll_selecter_get_selected_text(scroll_selecter), "Display") == 0);
+
+    picoui_app_destroy(app);
+}
+
 int main(void)
 {
     test_scroll_selecter_selected_item_matches_backend_truth();
     test_scroll_selecter_edit_mode_and_navigation_mode_are_distinct();
     test_scroll_selecter_final_visual_and_edit_contract_is_release_ready();
+    test_scroll_selecter_native_style_image_speed_and_select_text_round_trip();
+    test_scroll_selecter_selected_text_readback_matches_backend_truth();
     return 0;
 }

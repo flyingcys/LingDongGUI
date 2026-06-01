@@ -100,25 +100,30 @@ static ldFlexTrackAlign_t picoui_backend_map_flex_track_align(enum picoui_align 
     }
 }
 
-static ldGridAlign_t picoui_backend_map_grid_align(enum picoui_align align)
+int picoui_native_align_to_ld_grid(enum picoui_native_align align)
 {
     switch (align) {
-    case PICOUI_ALIGN_END:
+    case PICOUI_NATIVE_ALIGN_END:
         return ldGridAlignEnd;
-    case PICOUI_ALIGN_CENTER:
+    case PICOUI_NATIVE_ALIGN_CENTER:
         return ldGridAlignCenter;
-    case PICOUI_ALIGN_STRETCH:
+    case PICOUI_NATIVE_ALIGN_STRETCH:
         return ldGridAlignStretch;
-    case PICOUI_ALIGN_SPACE_EVENLY:
+    case PICOUI_NATIVE_ALIGN_SPACE_EVENLY:
         return ldGridAlignSpaceEvenly;
-    case PICOUI_ALIGN_SPACE_AROUND:
+    case PICOUI_NATIVE_ALIGN_SPACE_AROUND:
         return ldGridAlignSpaceAround;
-    case PICOUI_ALIGN_SPACE_BETWEEN:
+    case PICOUI_NATIVE_ALIGN_SPACE_BETWEEN:
         return ldGridAlignSpaceBetween;
-    case PICOUI_ALIGN_START:
+    case PICOUI_NATIVE_ALIGN_START:
     default:
         return ldGridAlignStart;
     }
+}
+
+static ldGridAlign_t picoui_backend_map_grid_align(enum picoui_align align)
+{
+    return (ldGridAlign_t)picoui_native_align_to_ld_grid((enum picoui_native_align)align);
 }
 
 static int16_t picoui_backend_map_grid_track(int value)

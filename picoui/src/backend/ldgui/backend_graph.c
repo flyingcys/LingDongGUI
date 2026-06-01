@@ -82,6 +82,66 @@ void *picoui_backend_create_graph(void *parent, const char *id, int series_max)
     return widget;
 }
 
+int picoui_backend_graph_set_axis(void *backend_widget, int x_axis, int y_axis)
+{
+    ldGraph_t *ld_graph = picoui_backend_graph_get_ld(backend_widget);
+
+    if (ld_graph == NULL || x_axis <= 0 || y_axis <= 0) {
+        return -1;
+    }
+
+    ldGraphSetAxis(ld_graph, (uint16_t)x_axis, (uint16_t)y_axis, ld_graph->xAxisOffset);
+    return 0;
+}
+
+int picoui_backend_graph_set_axis_offset(void *backend_widget, int axis_offset)
+{
+    ldGraph_t *ld_graph = picoui_backend_graph_get_ld(backend_widget);
+
+    if (ld_graph == NULL || axis_offset < 0) {
+        return -1;
+    }
+
+    ldGraphSetAxisOffset(ld_graph, (uint16_t)axis_offset);
+    return 0;
+}
+
+int picoui_backend_graph_set_frame_space(void *backend_widget, int frame_space)
+{
+    ldGraph_t *ld_graph = picoui_backend_graph_get_ld(backend_widget);
+
+    if (ld_graph == NULL || frame_space < 0) {
+        return -1;
+    }
+
+    ldGraphSetFrameSpace(ld_graph, (uint8_t)frame_space, false);
+    return 0;
+}
+
+int picoui_backend_graph_set_grid_offset(void *backend_widget, int grid_offset)
+{
+    ldGraph_t *ld_graph = picoui_backend_graph_get_ld(backend_widget);
+
+    if (ld_graph == NULL || grid_offset <= 0) {
+        return -1;
+    }
+
+    ldGraphSetGridOffset(ld_graph, (uint8_t)grid_offset);
+    return 0;
+}
+
+int picoui_backend_graph_set_point_mask_source(void *backend_widget, struct picoui_image_source *source)
+{
+    ldGraph_t *ld_graph = picoui_backend_graph_get_ld(backend_widget);
+
+    if (ld_graph == NULL || source == NULL || source->mask_tile == NULL) {
+        return -1;
+    }
+
+    ldGraphSetPointImageMask(ld_graph, source->mask_tile);
+    return 0;
+}
+
 int picoui_backend_graph_add_series(void *backend_widget,
                                     unsigned int series_color,
                                     int line_size,

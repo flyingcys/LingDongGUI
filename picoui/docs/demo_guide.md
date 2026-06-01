@@ -1,19 +1,19 @@
 # PicoUI Demo 运行指南
 
-本文说明 `picoui/demo` 下各个 demo 的构建方式、启动方式、适用场景，以及 `a-0.6 final release` 口径下的 gate 覆盖边界。
+本文说明 `picoui/demo` 下各个 demo 的构建方式、启动方式、适用场景，以及 `a-0.7 native-100` 口径下的 gate 覆盖边界。
 
 当前真相源分工是：
 
 - `tests/picoui/contract/picoui_release_capability_matrix.json`
-  - 机器可读 final release truth-source
+  - 机器可读 native-100 truth-source
 - `tests/picoui/runtime/check_picoui_runtime.py`
   - runtime smoke / capture gate
 - `tests/picoui/runtime/check_picoui_backend_mapping.py`
   - backend mapping gate
 - `tests/picoui/runtime/check_picoui_visible_ui.py --all`
   - automatic visible gate
-- `docs/picoui-serial/C-线人工窗口验收记录.md`
-  - final release manual artifact truth-source
+- `tests/picoui/runtime/check_picoui_manual_window_artifact.py --all`
+  - manual artifact gate / artifact truth-source 入口
 
 本页负责把这些 gate 与 demo catalog 对齐，不把 runtime、automatic visible、manual artifact 混写成同一层结论。
 
@@ -45,6 +45,7 @@
 - `picoui_graph_basic_demo`
 - `picoui_table_basic_demo`
 - `picoui_calendar_basic_demo`
+- `picoui_animation_basic_demo`
 
 ## 二、依赖环境
 
@@ -116,9 +117,9 @@ python3 tests/picoui/runtime/check_picoui_backend_mapping.py
 build\picoui-runtime\examples\sdl\picoui_hello_world_demo.exe
 ```
 
-## 五、Final Gate Catalog
+## 五、Native-100 Gate Catalog
 
-`a-0.6 final release` 当前固定四层 gate：
+`a-0.7 native-100` 当前固定四层 gate：
 
 1. `runtime`
    - `picoui_hello_world_demo`
@@ -139,6 +140,13 @@ build\picoui-runtime\examples\sdl\picoui_hello_world_demo.exe
    - `picoui_date_time_basic_demo`
    - `picoui_clock_basic_demo`
    - `picoui_keyboard_basic_demo`
+   - `picoui_line_edit_basic_demo`
+   - `picoui_combo_box_basic_demo`
+   - `picoui_scroll_selecter_basic_demo`
+   - `picoui_table_basic_demo`
+   - `picoui_graph_basic_demo`
+   - `picoui_calendar_basic_demo`
+   - `picoui_animation_basic_demo`
 2. `mapping`
    - `picoui_hello_world_demo`
    - `picoui_theme_showcase_demo`
@@ -152,14 +160,17 @@ build\picoui-runtime\examples\sdl\picoui_hello_world_demo.exe
    - `picoui_radial_menu_basic_demo`
    - `picoui_progress_wheel_basic_demo`
    - `picoui_qrcode_basic_demo`
+   - `picoui_message_box_basic_demo`
    - `picoui_date_time_basic_demo`
    - `picoui_clock_basic_demo`
+   - `picoui_keyboard_basic_demo`
    - `picoui_line_edit_basic_demo`
    - `picoui_combo_box_basic_demo`
    - `picoui_scroll_selecter_basic_demo`
    - `picoui_table_basic_demo`
    - `picoui_graph_basic_demo`
    - `picoui_calendar_basic_demo`
+   - `picoui_animation_basic_demo`
    - `picoui_layout_flex_demo`
    - `picoui_layout_grid_demo`
 3. `visible`
@@ -186,21 +197,13 @@ build\picoui-runtime\examples\sdl\picoui_hello_world_demo.exe
    - `table_basic`
    - `graph_basic`
    - `calendar_basic`
+   - `animation_basic`
 4. `manual artifact`
    - 以 `docs/picoui-serial/C-线人工窗口验收记录.md` 为 demo-level truth-source
    - 当前 final release 目标集包含：
-     `hello_world / basic_widgets / layout_flex / layout_grid / theme_showcase / settings_panel / list_basic / progress_bar_basic / arc_basic / gauge_basic / icon_slider_basic / radial_menu_basic / progress_wheel_basic / qrcode_basic / message_box_basic / date_time_basic / clock_basic / keyboard_basic / line_edit_basic / combo_box_basic / scroll_selecter_basic / table_basic / graph_basic / calendar_basic`
+     `hello_world / basic_widgets / layout_flex / layout_grid / theme_showcase / settings_panel / list_basic / progress_bar_basic / arc_basic / gauge_basic / icon_slider_basic / radial_menu_basic / progress_wheel_basic / qrcode_basic / message_box_basic / date_time_basic / clock_basic / keyboard_basic / line_edit_basic / combo_box_basic / scroll_selecter_basic / table_basic / graph_basic / calendar_basic / animation_basic`
 
-special cases：
-
-- `keyboard`
-  - final release 主要依赖 `runtime` 和 `manual artifact`
-  - 当前没有 dedicated mapping gate，也没有 dedicated visible gate
-  - 其视觉与宿主证据通过配套输入 demo 间接覆盖，不应误写成独立 mapping/visible 已闭环
-- `message_box`
-  - 当前仍保留 formal mapping exclusion
-  - final release 结论依赖 `unit + contract + visible + runtime + manual artifact`
-  - 不能把它写成与普通静态 widget 完全同构的 mapping 证明
+当前 `a-0.7` 不再保留 `keyboard` 或 `message_box` 的 formal gate special-case。两者都要求 dedicated runtime / mapping / visible / manual artifact 证据；`animation` 也已经进入同一套 catalog。
 ## 六、各 demo 说明
 
 ### `picoui/demo/hello_world`

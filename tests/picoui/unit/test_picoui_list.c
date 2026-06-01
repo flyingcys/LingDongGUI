@@ -1,7 +1,9 @@
 #include "picoui/app.h"
+#include "picoui/button.h"
 #include "picoui/list.h"
 #include "picoui/widget.h"
 #include "picoui/window.h"
+#include "../../../src/gui/ldBase.h"
 #include "../../../src/gui/ldList.h"
 #include "../../../src/misc/ldMsg.h"
 #include "backend.h"
@@ -140,7 +142,8 @@ static void test_enabled_contract_and_native_selected_bridge(struct picoui_windo
     app_state = (struct picoui_backend_app_state *)backend->owner->backend_app;
     assert(app_state != 0);
     assert(app_state->ld_scene != 0);
-    assert(ldMsgInit(&app_state->ld_scene->ptMsgQueue, 8) == true);
+    assert(app_state->ld_scene->ptMsgQueue != 0
+           || ldMsgInit(&app_state->ld_scene->ptMsgQueue, 8) == true);
     ld_list = (ldList_t *)backend->ld_widget;
     assert(ld_list != 0);
     assert(ldMsgConnect(backend->ld_widget, SIGNAL_CLICKED_ITEM, on_native_list_clicked_probe) == true);
@@ -211,6 +214,8 @@ static void test_enabled_contract_and_native_selected_bridge(struct picoui_windo
     assert(picoui_list_get_selected_index(list) == 0);
     assert(backend->value == 0);
     assert(backend->last_signal == PICOUI_BACKEND_SIGNAL_VALUE_CHANGED);
+    assert(backend->last_native_signal == SIGNAL_CLICKED_ITEM);
+    assert(backend->last_native_value == 0);
     assert(backend->dispatch_count == 1);
 
     reset_list_signal_counters(backend);
@@ -309,7 +314,8 @@ static void test_selected_index_readback_matches_native_queue_after_preselected_
     app_state = (struct picoui_backend_app_state *)backend->owner->backend_app;
     assert(app_state != 0);
     assert(app_state->ld_scene != 0);
-    assert(ldMsgInit(&app_state->ld_scene->ptMsgQueue, 8) == true);
+    assert(app_state->ld_scene->ptMsgQueue != 0
+           || ldMsgInit(&app_state->ld_scene->ptMsgQueue, 8) == true);
     ld_list = (ldList_t *)backend->ld_widget;
     assert(ld_list != 0);
     assert(ldMsgConnect(backend->ld_widget, SIGNAL_CLICKED_ITEM, on_native_list_clicked_probe) == true);
@@ -406,7 +412,8 @@ static void test_hidden_or_disabled_list_releases_focus_and_rejects_native_selec
     assert(backend != 0);
     app_state = list_app_state(list);
     assert(app_state->ld_scene != 0);
-    assert(ldMsgInit(&app_state->ld_scene->ptMsgQueue, 8) == true);
+    assert(app_state->ld_scene->ptMsgQueue != 0
+           || ldMsgInit(&app_state->ld_scene->ptMsgQueue, 8) == true);
     ld_list = (ldList_t *)backend->ld_widget;
     assert(ld_list != 0);
 
@@ -512,6 +519,173 @@ static void test_selected_index_getter_clears_to_backend_unselected_truth(struct
     picoui_app_destroy(app);
 }
 
+static void test_list_item_marker_is_support_not_reject(struct picoui_window *win)
+{
+    struct picoui_widget *parent = (struct picoui_widget *)win;
+    struct picoui_list *list = picoui_list_create(parent, "list_marker_support");
+    struct picoui_backend_widget *backend;
+    ldList_t *ld_list;
+
+    assert(list != 0);
+    assert(picoui_list_add_item(list, "item_wifi", "Wi-Fi") == 0);
+    assert(picoui_list_add_item(list, "item_bluetooth", "Bluetooth") == 0);
+    assert(picoui_list_add_item(list, "item_display", "Display") == 0);
+
+    backend = (struct picoui_backend_widget *)list->widget.backend_widget;
+    assert(backend != 0);
+    ld_list = (ldList_t *)backend->ld_widget;
+    assert(ld_list != 0);
+
+    assert(picoui_list_get_selected_index(list) == -1);
+    assert(ldListGetSelectItem(ld_list) == -1);
+
+    assert(picoui_list_set_selected_index(list, 2) == 0);
+    assert(picoui_list_get_selected_index(list) == 2);
+    assert(list->selected_index == 2);
+    assert(backend->value == 2);
+    assert(ldListGetSelectItem(ld_list) == 2);
+
+    ldListSetSelectItem(ld_list, 1);
+    list->selected_index = 2;
+    backend->value = 2;
+    assert(picoui_list_get_selected_index(list) == 1);
+    assert(list->selected_index == 1);
+    assert(backend->value == 1);
+    assert(ldListGetSelectItem(ld_list) == 1);
+}
+
+static void test_list_native_item_height_padding_margin_round_trip(struct picoui_window *win)
+{
+    struct picoui_widget *parent = (struct picoui_widget *)win;
+    struct picoui_list *list = picoui_list_create(parent, "list_native_spacing");
+    struct picoui_backend_widget *backend;
+    ldList_t *ld_list;
+
+    assert(list != 0);
+    backend = (struct picoui_backend_widget *)list->widget.backend_widget;
+    assert(backend != 0);
+    ld_list = (ldList_t *)backend->ld_widget;
+    assert(ld_list != 0);
+
+    assert(picoui_list_set_item_height(list, 24) == 0);
+    assert(picoui_list_set_padding_group(list, 1, 2, 3, 4) == 0);
+    assert(picoui_list_set_margin_group(list, 5, 6, 7, 8) == 0);
+
+    assert(ld_list->itemHeight == 24);
+    assert(ld_list->padding.top == 1);
+    assert(ld_list->padding.bottom == 2);
+    assert(ld_list->padding.left == 3);
+    assert(ld_list->padding.right == 4);
+    assert(ld_list->margin.top == 5);
+    assert(ld_list->margin.bottom == 6);
+    assert(ld_list->margin.left == 7);
+    assert(ld_list->margin.right == 8);
+
+    assert(picoui_list_set_item_height(list, 0) == -1);
+    assert(picoui_list_set_padding_group(list, -1, 2, 3, 4) == -1);
+    assert(picoui_list_set_margin_group(list, 5, 6, 7, 256) == -1);
+
+    assert(ld_list->itemHeight == 24);
+    assert(ld_list->padding.top == 1);
+    assert(ld_list->padding.bottom == 2);
+    assert(ld_list->padding.left == 3);
+    assert(ld_list->padding.right == 4);
+    assert(ld_list->margin.top == 5);
+    assert(ld_list->margin.bottom == 6);
+    assert(ld_list->margin.left == 7);
+    assert(ld_list->margin.right == 8);
+}
+
+static unsigned int test_list_rgb_to_ld_color(unsigned int rgb)
+{
+    return (unsigned int)__RGB((rgb >> 16) & 0xFFU, (rgb >> 8) & 0xFFU, rgb & 0xFFU);
+}
+
+static void test_list_native_color_and_align_round_trip(struct picoui_window *win)
+{
+    struct picoui_widget *parent = (struct picoui_widget *)win;
+    struct picoui_list *list = picoui_list_create(parent, "list_native_color_align");
+    struct picoui_backend_widget *backend;
+    ldList_t *ld_list;
+
+    assert(list != 0);
+    backend = (struct picoui_backend_widget *)list->widget.backend_widget;
+    assert(backend != 0);
+    ld_list = (ldList_t *)backend->ld_widget;
+    assert(ld_list != 0);
+
+    assert(picoui_list_set_text_color(list, 0x112233U) == 0);
+    assert(picoui_list_set_bg_color(list, 0x445566U) == 0);
+    assert(picoui_list_set_select_color(list, 0x778899U) == 0);
+    assert(picoui_list_set_align(list, PICOUI_ALIGN_END) == 0);
+
+    assert(ld_list->textColor == test_list_rgb_to_ld_color(0x112233U));
+    assert(ld_list->bgColor == test_list_rgb_to_ld_color(0x445566U));
+    assert(ld_list->selectColor == test_list_rgb_to_ld_color(0x778899U));
+    assert(ld_list->tAlign == ARM_2D_ALIGN_RIGHT);
+
+    assert(picoui_list_set_align(list, PICOUI_ALIGN_CENTER) == 0);
+    assert(ld_list->tAlign == ARM_2D_ALIGN_CENTRE);
+
+    assert(picoui_list_set_align(list, PICOUI_ALIGN_SPACE_BETWEEN) == -1);
+    assert(ld_list->tAlign == ARM_2D_ALIGN_CENTRE);
+}
+
+static void test_list_native_item_widget_reparents_backend_tree(struct picoui_window *win)
+{
+    struct picoui_app *app;
+    struct picoui_window *owned_win;
+    struct picoui_widget *parent;
+    struct picoui_list *list;
+    struct picoui_button *button;
+    struct picoui_backend_widget *list_backend;
+    struct picoui_backend_widget *button_backend;
+    struct picoui_backend_widget *window_backend;
+    ldList_t *ld_list;
+    ldBase_t *ld_button;
+
+    (void)win;
+    app = picoui_app_create();
+    owned_win = picoui_window_create(app, "list_item_widget_root");
+    assert(app != 0);
+    assert(owned_win != 0);
+    parent = (struct picoui_widget *)owned_win;
+    list = picoui_list_create(parent, "list_item_widget");
+    button = picoui_button_create(owned_win, "list_item_widget_button");
+    assert(list != 0);
+    assert(button != 0);
+    assert(picoui_list_add_item(list, "item_wifi", "Wi-Fi") == 0);
+    assert(picoui_list_add_item(list, "item_bluetooth", "Bluetooth") == 0);
+
+    list_backend = (struct picoui_backend_widget *)list->widget.backend_widget;
+    button_backend = (struct picoui_backend_widget *)button->widget.backend_widget;
+    window_backend = (struct picoui_backend_widget *)owned_win->widget.backend_widget;
+    assert(list_backend != 0);
+    assert(button_backend != 0);
+    assert(window_backend != 0);
+    ld_list = (ldList_t *)list_backend->ld_widget;
+    ld_button = (ldBase_t *)button_backend->ld_widget;
+    assert(ld_list != 0);
+    assert(ld_button != 0);
+
+    assert(button_backend->parent == window_backend);
+    assert(ldBaseGetParent(ld_button) == (ldBase_t *)window_backend->ld_widget);
+
+    assert(picoui_list_set_item_widget(list, 1, &button->widget) == 0);
+
+    assert(button_backend->parent == list_backend);
+    assert(button_backend->root == window_backend);
+    assert(ldBaseGetParent(ld_button) == (ldBase_t *)ld_list);
+    assert(button_backend->next_sibling == 0);
+    assert(list_backend->first_child == button_backend);
+
+    assert(picoui_list_set_item_widget(list, -1, &button->widget) == -1);
+    assert(picoui_list_set_item_widget(list, 2, &button->widget) == -1);
+    assert(picoui_list_set_item_widget(list, 1, 0) == -1);
+
+    picoui_app_destroy(app);
+}
+
 static void test_repeated_native_clicked_item_same_index_is_noop_contract(struct picoui_window *win)
 {
     struct picoui_app *app;
@@ -538,7 +712,8 @@ static void test_repeated_native_clicked_item_same_index_is_noop_contract(struct
     assert(backend != 0);
     app_state = list_app_state(list);
     assert(app_state->ld_scene != 0);
-    assert(ldMsgInit(&app_state->ld_scene->ptMsgQueue, 8) == true);
+    assert(app_state->ld_scene->ptMsgQueue != 0
+           || ldMsgInit(&app_state->ld_scene->ptMsgQueue, 8) == true);
 
     reset_list_signal_counters(backend);
     assert(ldMsgEmit(app_state->ld_scene->ptMsgQueue,
@@ -686,6 +861,10 @@ int main(void)
     test_selected_index_readback_matches_native_queue_after_preselected_state(win);
     test_selected_index_getter_resynchronizes_internal_and_backend_cache_from_native_truth(win);
     test_selected_index_getter_clears_to_backend_unselected_truth(win);
+    test_list_item_marker_is_support_not_reject(win);
+    test_list_native_item_height_padding_margin_round_trip(win);
+    test_list_native_color_and_align_round_trip(win);
+    test_list_native_item_widget_reparents_backend_tree(win);
     test_hidden_or_disabled_list_releases_focus_and_rejects_native_selection(win);
     test_repeated_native_clicked_item_same_index_is_noop_contract(win);
     test_rejects_invalid_inputs(win);

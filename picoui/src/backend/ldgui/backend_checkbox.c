@@ -4,6 +4,27 @@
 
 #include <stdlib.h>
 
+static ldColor picoui_backend_checkbox_rgb_to_ld_color(unsigned int rgb)
+{
+    return __RGB((rgb >> 16) & 0xFFU, (rgb >> 8) & 0xFFU, rgb & 0xFFU);
+}
+
+static ldCheckBox_t *picoui_backend_checkbox_get_ld(struct picoui_checkbox *checkbox)
+{
+    struct picoui_backend_widget *backend;
+
+    if (checkbox == NULL || checkbox->widget.backend_widget == NULL) {
+        return NULL;
+    }
+
+    backend = (struct picoui_backend_widget *)checkbox->widget.backend_widget;
+    if (backend->kind != PICOUI_BACKEND_WIDGET_CHECKBOX || backend->ld_widget == NULL) {
+        return NULL;
+    }
+
+    return (ldCheckBox_t *)backend->ld_widget;
+}
+
 static struct picoui_backend_app_state *picoui_backend_checkbox_get_app_state(void *parent)
 {
     struct picoui_backend_widget *parent_widget = parent;
@@ -64,4 +85,86 @@ void *picoui_backend_create_checkbox(void *parent, const char *id)
         return 0;
     }
     return widget;
+}
+
+int picoui_backend_checkbox_set_check_color(struct picoui_checkbox *checkbox, unsigned int rgb)
+{
+    ldCheckBox_t *ld_checkbox = picoui_backend_checkbox_get_ld(checkbox);
+
+    if (ld_checkbox == NULL) {
+        return -1;
+    }
+
+    ldCheckBoxSetColor(ld_checkbox, ld_checkbox->bgColor, picoui_backend_checkbox_rgb_to_ld_color(rgb));
+    return 0;
+}
+
+int picoui_backend_checkbox_set_text_color(struct picoui_checkbox *checkbox, unsigned int rgb)
+{
+    ldCheckBox_t *ld_checkbox = picoui_backend_checkbox_get_ld(checkbox);
+
+    if (ld_checkbox == NULL) {
+        return -1;
+    }
+
+    ldCheckBoxSetTextColor(ld_checkbox, picoui_backend_checkbox_rgb_to_ld_color(rgb));
+    return 0;
+}
+
+int picoui_backend_checkbox_set_unchecked_source(struct picoui_checkbox *checkbox,
+                                                 struct picoui_image_source *source)
+{
+    ldCheckBox_t *ld_checkbox = picoui_backend_checkbox_get_ld(checkbox);
+
+    if (ld_checkbox == NULL) {
+        return -1;
+    }
+
+    ldCheckBoxSetImage(ld_checkbox,
+                       source != NULL ? source->img_tile : NULL,
+                       source != NULL ? source->mask_tile : NULL,
+                       ld_checkbox->ptCheckedImgTile,
+                       ld_checkbox->ptCheckedMaskTile);
+    return 0;
+}
+
+int picoui_backend_checkbox_set_checked_source(struct picoui_checkbox *checkbox,
+                                               struct picoui_image_source *source)
+{
+    ldCheckBox_t *ld_checkbox = picoui_backend_checkbox_get_ld(checkbox);
+
+    if (ld_checkbox == NULL) {
+        return -1;
+    }
+
+    ldCheckBoxSetImage(ld_checkbox,
+                       ld_checkbox->ptUncheckedImgTile,
+                       ld_checkbox->ptUncheckedMaskTile,
+                       source != NULL ? source->img_tile : NULL,
+                       source != NULL ? source->mask_tile : NULL);
+    return 0;
+}
+
+int picoui_backend_checkbox_set_radio_group(struct picoui_checkbox *checkbox, int radio_group)
+{
+    ldCheckBox_t *ld_checkbox = picoui_backend_checkbox_get_ld(checkbox);
+
+    if (ld_checkbox == NULL || radio_group < 0 || radio_group > 255) {
+        return -1;
+    }
+
+    ldCheckBoxSetRadioButtonGroup(ld_checkbox, (uint8_t)radio_group);
+    return 0;
+}
+
+int picoui_backend_checkbox_set_string_left_space(struct picoui_checkbox *checkbox, int space)
+{
+    ldCheckBox_t *ld_checkbox = picoui_backend_checkbox_get_ld(checkbox);
+
+    if (ld_checkbox == NULL || space < 0 || space > 65535) {
+        return -1;
+    }
+
+    ldCheckBoxSetStringLeftSpace(ld_checkbox, (uint16_t)space);
+    return 0;
 }

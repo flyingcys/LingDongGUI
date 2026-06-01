@@ -142,6 +142,7 @@ function(ld_define_core_targets)
 
     add_library(picoui_core STATIC
         ${LD_REPO_ROOT}/picoui/src/core/app.c
+        ${LD_REPO_ROOT}/picoui/src/core/native.c
         ${LD_REPO_ROOT}/picoui/src/core/widget.c
         ${LD_REPO_ROOT}/picoui/src/core/event.c
         ${LD_REPO_ROOT}/picoui/src/core/resource.c
@@ -170,6 +171,7 @@ function(ld_define_core_targets)
         ${LD_REPO_ROOT}/picoui/src/widgets/progress_bar.c
         ${LD_REPO_ROOT}/picoui/src/widgets/progress_wheel.c
         ${LD_REPO_ROOT}/picoui/src/widgets/qrcode.c
+        ${LD_REPO_ROOT}/picoui/src/widgets/animation.c
         ${LD_REPO_ROOT}/picoui/src/widgets/date_time.c
         ${LD_REPO_ROOT}/picoui/src/widgets/clock.c
         ${LD_REPO_ROOT}/picoui/src/widgets/list.c
@@ -212,6 +214,7 @@ function(ld_define_core_targets)
         ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_progress_bar.c
         ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_progress_wheel.c
         ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_qrcode.c
+        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_animation.c
         ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_date_time.c
         ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_clock.c
         ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_list.c

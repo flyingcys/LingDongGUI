@@ -1,12 +1,9 @@
 #include "internal.h"
+#include "backend.h"
 #include "picoui/message_box.h"
 #include "picoui/widget.h"
 
 #include <stdlib.h>
-
-int picoui_backend_message_box_set_title(struct picoui_message_box *box, const char *title);
-int picoui_backend_message_box_set_message(struct picoui_message_box *box, const char *message);
-int picoui_backend_message_box_set_confirm_text(struct picoui_message_box *box, const char *text);
 
 static int picoui_message_box_props_are_valid(const struct picoui_message_box_props *props)
 {
@@ -119,6 +116,83 @@ int picoui_message_box_set_confirm_text(struct picoui_message_box *box, const ch
     return 0;
 }
 
+int picoui_message_box_set_buttons(struct picoui_message_box *box, const char *const *buttons, int count)
+{
+    int i;
+
+    if (box == 0 || buttons == 0 || count <= 0 || count > PICOUI_LIST_MAX_ITEMS) {
+        return -1;
+    }
+    for (i = 0; i < count; ++i) {
+        if (buttons[i] == 0) {
+            return -1;
+        }
+    }
+
+    if (picoui_backend_message_box_set_buttons(box, buttons, count) != 0) {
+        return -1;
+    }
+
+    for (i = 0; i < count; ++i) {
+        box->buttons[i] = buttons[i];
+    }
+    box->button_count = count;
+    if (count > 0) {
+        box->confirm_text = buttons[count - 1];
+    }
+    return 0;
+}
+
+int picoui_message_box_set_string_colors(struct picoui_message_box *box,
+                                         unsigned int title_color,
+                                         unsigned int message_color,
+                                         unsigned int button_color)
+{
+    if (box == 0) {
+        return -1;
+    }
+
+    if (picoui_backend_message_box_set_string_colors(box, title_color, message_color, button_color) != 0) {
+        return -1;
+    }
+
+    box->title_color = title_color;
+    box->message_color = message_color;
+    box->button_color = button_color;
+    return 0;
+}
+
+int picoui_message_box_set_button_colors(struct picoui_message_box *box,
+                                         unsigned int release_color,
+                                         unsigned int press_color)
+{
+    if (box == 0) {
+        return -1;
+    }
+
+    if (picoui_backend_message_box_set_button_colors(box, release_color, press_color) != 0) {
+        return -1;
+    }
+
+    box->release_color = release_color;
+    box->press_color = press_color;
+    return 0;
+}
+
+int picoui_message_box_set_bg_color(struct picoui_message_box *box, unsigned int bg_color)
+{
+    if (box == 0) {
+        return -1;
+    }
+
+    if (picoui_backend_message_box_set_bg_color(box, bg_color) != 0) {
+        return -1;
+    }
+
+    box->bg_color = bg_color;
+    return 0;
+}
+
 void picoui_message_box_set_on_confirm(
     struct picoui_message_box *box,
     picoui_message_box_callback_t callback,
@@ -130,6 +204,22 @@ void picoui_message_box_set_on_confirm(
 
     box->on_confirm = callback;
     box->on_confirm_user_data = user_data;
+    if (callback != 0) {
+        (void)picoui_backend_message_box_set_on_confirm(box);
+    }
+}
+
+void picoui_message_box_set_on_confirm_indexed(
+    struct picoui_message_box *box,
+    picoui_message_box_indexed_callback_t callback,
+    void *user_data)
+{
+    if (box == 0) {
+        return;
+    }
+
+    box->on_confirm_indexed = callback;
+    box->on_confirm_indexed_user_data = user_data;
     if (callback != 0) {
         (void)picoui_backend_message_box_set_on_confirm(box);
     }

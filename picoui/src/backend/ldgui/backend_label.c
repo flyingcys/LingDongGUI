@@ -99,6 +99,7 @@ void *picoui_backend_create_label(void *parent, const char *id)
     widget->ld_widget = ld_label;
     widget->ld_name_id = name_id;
     if (picoui_backend_widget_attach_child(parent, widget) != 0) {
+        ldLabel_depose(app_state->ld_scene, ld_label);
         free(widget);
         return 0;
     }

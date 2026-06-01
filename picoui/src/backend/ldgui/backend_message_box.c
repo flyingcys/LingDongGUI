@@ -54,6 +54,9 @@ static void picoui_backend_message_box_confirm_bridge(ld_scene_t *scene, ldMessa
         return;
     }
 
+    if (box->on_confirm_indexed != 0) {
+        box->on_confirm_indexed(box, ld_message_box->clickNum, box->on_confirm_indexed_user_data);
+    }
     if (box->on_confirm != 0) {
         box->on_confirm(box, box->on_confirm_user_data);
     }
@@ -102,8 +105,6 @@ void *picoui_backend_create_message_box(void *parent, const char *id)
     widget->theme = ((struct picoui_backend_widget *)parent)->theme;
     widget->ld_widget = ld_message_box;
     widget->ld_name_id = name_id;
-    widget->runtime_evidence_flags = PICOUI_BACKEND_EVIDENCE_EXCLUDE_FORMAL_MAPPING |
-                                     PICOUI_BACKEND_EVIDENCE_ALLOW_SMOKE_LAYOUT;
     if (picoui_backend_widget_attach_child(parent, widget) != 0) {
         free(widget);
         return 0;
@@ -151,6 +152,64 @@ int picoui_backend_message_box_set_confirm_text(struct picoui_message_box *box, 
 
     backend->text = text;
     ldMessageBoxSetBtn(ld_message_box, (const uint8_t **)&backend->text, 1);
+    return 0;
+}
+
+int picoui_backend_message_box_set_buttons(struct picoui_message_box *box,
+                                           const char *const *buttons,
+                                           int count)
+{
+    ldMessageBox_t *ld_message_box = picoui_backend_message_box_get_ld(box);
+
+    if (ld_message_box == NULL || buttons == NULL || count <= 0) {
+        return -1;
+    }
+
+    ldMessageBoxSetBtn(ld_message_box, (const uint8_t **)buttons, (uint8_t)count);
+    return 0;
+}
+
+int picoui_backend_message_box_set_string_colors(struct picoui_message_box *box,
+                                                 unsigned int title_color,
+                                                 unsigned int message_color,
+                                                 unsigned int button_color)
+{
+    ldMessageBox_t *ld_message_box = picoui_backend_message_box_get_ld(box);
+
+    if (ld_message_box == NULL) {
+        return -1;
+    }
+
+    ldMessageBoxSetStringColor(ld_message_box,
+                               (ldColor)title_color,
+                               (ldColor)message_color,
+                               (ldColor)button_color);
+    return 0;
+}
+
+int picoui_backend_message_box_set_button_colors(struct picoui_message_box *box,
+                                                 unsigned int release_color,
+                                                 unsigned int press_color)
+{
+    ldMessageBox_t *ld_message_box = picoui_backend_message_box_get_ld(box);
+
+    if (ld_message_box == NULL) {
+        return -1;
+    }
+
+    ldMessageBoxSetButtonColor(ld_message_box, (ldColor)release_color, (ldColor)press_color);
+    return 0;
+}
+
+int picoui_backend_message_box_set_bg_color(struct picoui_message_box *box, unsigned int bg_color)
+{
+    ldMessageBox_t *ld_message_box = picoui_backend_message_box_get_ld(box);
+
+    if (ld_message_box == NULL) {
+        return -1;
+    }
+
+    ldMessageBoxSetBackgroundColor(ld_message_box, (ldColor)bg_color);
     return 0;
 }
 

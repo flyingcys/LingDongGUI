@@ -537,3 +537,6 @@ add_picoui_demo(picoui_graph_basic_demo
 add_picoui_demo(picoui_calendar_basic_demo
     "${SDL_EXAMPLE_DIR}/../../picoui/demo/calendar_basic/main.c"
 )
+add_picoui_demo(picoui_animation_basic_demo
+    "${SDL_EXAMPLE_DIR}/../../picoui/demo/animation_basic/main.c"
+)

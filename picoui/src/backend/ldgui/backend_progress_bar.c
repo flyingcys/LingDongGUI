@@ -4,6 +4,11 @@
 
 #include <stdlib.h>
 
+static ldColor picoui_backend_rgb_to_ld_color(unsigned int rgb)
+{
+    return __RGB((rgb >> 16) & 0xFFU, (rgb >> 8) & 0xFFU, rgb & 0xFFU);
+}
+
 static struct picoui_backend_app_state *picoui_backend_progress_bar_get_app_state(void *parent)
 {
     struct picoui_backend_widget *parent_widget = parent;
@@ -133,4 +138,143 @@ int picoui_backend_progress_bar_get_horizontal(struct picoui_progress_bar *bar, 
 
     *horizontal = ld_progress_bar->isHorizontal ? 1 : 0;
     return 0;
+}
+
+int picoui_backend_progress_bar_set_bg_source(void *backend_widget, struct picoui_image_source *source)
+{
+    ldProgressBar_t *ld_progress_bar;
+
+    if (backend_widget == NULL || source == NULL || source->img_tile == NULL) {
+        return -1;
+    }
+
+    ld_progress_bar = picoui_backend_progress_bar_get_ld((struct picoui_progress_bar *)
+        ((struct picoui_backend_widget *)backend_widget)->host_widget);
+    if (ld_progress_bar == NULL) {
+        return -1;
+    }
+
+    ldProgressBarSetImage(ld_progress_bar,
+                          source->img_tile,
+                          source->mask_tile,
+                          ld_progress_bar->ptFgImgTile,
+                          ld_progress_bar->ptFgMaskTile);
+    return 0;
+}
+
+int picoui_backend_progress_bar_set_fg_source(void *backend_widget, struct picoui_image_source *source)
+{
+    ldProgressBar_t *ld_progress_bar;
+
+    if (backend_widget == NULL || source == NULL || source->img_tile == NULL) {
+        return -1;
+    }
+
+    ld_progress_bar = picoui_backend_progress_bar_get_ld((struct picoui_progress_bar *)
+        ((struct picoui_backend_widget *)backend_widget)->host_widget);
+    if (ld_progress_bar == NULL) {
+        return -1;
+    }
+
+    ldProgressBarSetImage(ld_progress_bar,
+                          ld_progress_bar->ptBgImgTile,
+                          ld_progress_bar->ptBgMaskTile,
+                          source->img_tile,
+                          source->mask_tile);
+    return 0;
+}
+
+int picoui_backend_progress_bar_set_frame_source(void *backend_widget, struct picoui_image_source *source)
+{
+    ldProgressBar_t *ld_progress_bar;
+
+    if (backend_widget == NULL || source == NULL || source->img_tile == NULL) {
+        return -1;
+    }
+
+    ld_progress_bar = picoui_backend_progress_bar_get_ld((struct picoui_progress_bar *)
+        ((struct picoui_backend_widget *)backend_widget)->host_widget);
+    if (ld_progress_bar == NULL) {
+        return -1;
+    }
+
+    ldProgressBarSetFrameImage(ld_progress_bar, source->img_tile, source->mask_tile);
+    return 0;
+}
+
+int picoui_backend_progress_bar_set_color(void *backend_widget, unsigned int bg_color, unsigned int fg_color)
+{
+    ldProgressBar_t *ld_progress_bar;
+
+    if (backend_widget == NULL || bg_color > 0xFFFFFFU || fg_color > 0xFFFFFFU) {
+        return -1;
+    }
+
+    ld_progress_bar = picoui_backend_progress_bar_get_ld((struct picoui_progress_bar *)
+        ((struct picoui_backend_widget *)backend_widget)->host_widget);
+    if (ld_progress_bar == NULL) {
+        return -1;
+    }
+
+    ldProgressBarSetColor(ld_progress_bar,
+                          picoui_backend_rgb_to_ld_color(bg_color),
+                          picoui_backend_rgb_to_ld_color(fg_color));
+    return 0;
+}
+
+int picoui_backend_progress_bar_set_frame_color(void *backend_widget,
+                                                unsigned int frame_color,
+                                                int frame_color_size)
+{
+    ldProgressBar_t *ld_progress_bar;
+
+    if (backend_widget == NULL || frame_color > 0xFFFFFFU || frame_color_size < 0 || frame_color_size > 255) {
+        return -1;
+    }
+
+    ld_progress_bar = picoui_backend_progress_bar_get_ld((struct picoui_progress_bar *)
+        ((struct picoui_backend_widget *)backend_widget)->host_widget);
+    if (ld_progress_bar == NULL) {
+        return -1;
+    }
+
+    ldProgressBarSetFrameColor(ld_progress_bar,
+                               picoui_backend_rgb_to_ld_color(frame_color),
+                               (uint8_t)frame_color_size);
+    return 0;
+}
+
+int picoui_backend_progress_bar_set_inverted(void *backend_widget, int inverted)
+{
+    ldProgressBar_t *ld_progress_bar;
+
+    if (backend_widget == NULL) {
+        return -1;
+    }
+
+    ld_progress_bar = picoui_backend_progress_bar_get_ld((struct picoui_progress_bar *)
+        ((struct picoui_backend_widget *)backend_widget)->host_widget);
+    if (ld_progress_bar == NULL) {
+        return -1;
+    }
+
+    ldProgressBarSetInverted(ld_progress_bar, inverted != 0);
+    return 0;
+}
+
+int picoui_backend_progress_bar_get_inverted(void *backend_widget)
+{
+    ldProgressBar_t *ld_progress_bar;
+
+    if (backend_widget == NULL) {
+        return -1;
+    }
+
+    ld_progress_bar = picoui_backend_progress_bar_get_ld((struct picoui_progress_bar *)
+        ((struct picoui_backend_widget *)backend_widget)->host_widget);
+    if (ld_progress_bar == NULL) {
+        return -1;
+    }
+
+    return ld_progress_bar->isInverted ? 1 : 0;
 }

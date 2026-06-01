@@ -208,6 +208,42 @@ int picoui_backend_icon_slider_add_item(void *backend_widget, const char *id, co
     return 0;
 }
 
+int picoui_backend_icon_slider_add_item_with_source(void *backend_widget,
+                                                    const char *id,
+                                                    const char *text,
+                                                    struct picoui_image_source *source)
+{
+    struct picoui_backend_widget *widget = backend_widget;
+    ldIconSlider_t *ld_icon_slider;
+    int index;
+
+    if (widget == NULL ||
+        widget->kind != PICOUI_BACKEND_WIDGET_ICON_SLIDER ||
+        widget->ld_widget == NULL ||
+        id == NULL ||
+        text == NULL ||
+        source == NULL ||
+        source->img_tile == NULL ||
+        source->mask_tile == NULL ||
+        widget->list_item_count >= PICOUI_BACKEND_ICON_SLIDER_NATIVE_MAX_ITEMS) {
+        return -1;
+    }
+
+    ld_icon_slider = picoui_backend_icon_slider_get_ld(backend_widget);
+    if (ld_icon_slider == NULL) {
+        return -1;
+    }
+
+    index = widget->list_item_count;
+    ldIconSliderAddIcon(ld_icon_slider,
+                        source->img_tile,
+                        source->mask_tile,
+                        (const uint8_t *)text);
+    widget->list_item_ids[index] = id;
+    widget->list_item_count++;
+    return 0;
+}
+
 int picoui_backend_icon_slider_set_selected_index(void *backend_widget, int index)
 {
     struct picoui_backend_widget *widget = backend_widget;
@@ -264,6 +300,18 @@ int picoui_backend_icon_slider_get_horizontal(void *backend_widget, int *horizon
     }
 
     *horizontal = ld_icon_slider->isHorizontalScroll ? 1 : 0;
+    return 0;
+}
+
+int picoui_backend_icon_slider_set_speed(void *backend_widget, int speed)
+{
+    ldIconSlider_t *ld_icon_slider = picoui_backend_icon_slider_get_ld(backend_widget);
+
+    if (ld_icon_slider == NULL || speed <= 0) {
+        return -1;
+    }
+
+    ldIconSliderSetSpeed(ld_icon_slider, (uint8_t)speed);
     return 0;
 }
 

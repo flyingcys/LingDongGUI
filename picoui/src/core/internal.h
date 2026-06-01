@@ -5,6 +5,7 @@
 #include "picoui/combo_box.h"
 #include "picoui/calendar.h"
 #include "picoui/keyboard.h"
+#include "picoui/native.h"
 #include "picoui/line_edit.h"
 #include "picoui/message_box.h"
 #include "picoui/graph.h"
@@ -25,6 +26,11 @@ struct picoui_font;
 struct picoui_message_box;
 
 typedef void (*picoui_message_box_callback_t)(struct picoui_message_box *box, void *user_data);
+
+int picoui_native_align_to_ld_grid(enum picoui_native_align align);
+int picoui_native_nav_dir_to_ld(enum picoui_native_nav_dir dir);
+int picoui_native_signal_to_ld(enum picoui_native_signal signal);
+int picoui_native_readback_policy_to_backend(enum picoui_native_readback_policy policy);
 
 enum picoui_focus_event {
     PICOUI_FOCUS_EVENT_NONE = 0,
@@ -52,11 +58,19 @@ struct picoui_widget {
     unsigned int border_color;
     int radius;
     int padding;
+    int opacity;
     const struct picoui_font *font;
     int visible;
     int enabled;
+    int selectable;
+    int selected;
+    int corner;
     int flex_grow;
     int flex_new_track;
+    int flex_min_width;
+    int flex_min_height;
+    int flex_max_width;
+    int flex_max_height;
     int ignore_layout;
     int grid_col;
     int grid_row;
@@ -152,6 +166,23 @@ struct picoui_progress_bar {
     const char *id;
     int percent;
     int horizontal;
+    int inverted;
+    unsigned int bg_color;
+    unsigned int fg_color;
+    unsigned int frame_color;
+    int frame_color_size;
+    struct picoui_image_source *bg_source;
+    struct picoui_image_source *fg_source;
+    struct picoui_image_source *frame_source;
+};
+
+struct picoui_animation {
+    struct picoui_widget widget;
+    const char *id;
+    int width;
+    int height;
+    int period_ms;
+    struct picoui_image_source *source;
 };
 
 struct picoui_arc {
@@ -161,6 +192,8 @@ struct picoui_arc {
     float bg_end_angle;
     float fg_end_angle;
     float rotation_angle;
+    struct picoui_image_source *quarter_source;
+    unsigned int parent_color;
     unsigned int bg_color;
     unsigned int fg_color;
 };
@@ -169,6 +202,10 @@ struct picoui_gauge {
     struct picoui_widget widget;
     const char *id;
     float angle;
+    struct picoui_image_source *bg_source;
+    struct picoui_image_source *pointer_source;
+    int centre_offset_x;
+    int centre_offset_y;
     unsigned int pointer_color;
     int auto_move;
 };
@@ -182,9 +219,11 @@ struct picoui_icon_slider {
     struct picoui_widget widget;
     const char *id;
     struct picoui_list_item items[PICOUI_LIST_MAX_ITEMS];
+    struct picoui_image_source *item_sources[PICOUI_LIST_MAX_ITEMS];
     int item_count;
     int selected_index;
     int horizontal;
+    int speed;
     int icon_width;
     int icon_space;
     int columns;
@@ -198,6 +237,7 @@ struct picoui_radial_menu {
     struct picoui_widget widget;
     const char *id;
     struct picoui_list_item items[PICOUI_LIST_MAX_ITEMS];
+    struct picoui_image_source *item_sources[PICOUI_LIST_MAX_ITEMS];
     int item_count;
     int selected_index;
     int x_axis;
@@ -211,18 +251,30 @@ struct picoui_qrcode {
     struct picoui_widget widget;
     const char *id;
     const char *text;
+    unsigned int qr_color;
+    unsigned int bg_color;
+    int ecc;
+    int max_version;
+    int zoom;
 };
 
 struct picoui_progress_wheel {
     struct picoui_widget widget;
     const char *id;
     int percent;
+    unsigned int wheel_color;
+    unsigned int dot_color;
+    int dot_enabled;
 };
 
 struct picoui_date_time {
     struct picoui_widget widget;
     const char *id;
     const char *format;
+    unsigned int text_color;
+    unsigned int bg_color;
+    enum picoui_align align;
+    int transparent;
     int year;
     int month;
     int day;
@@ -246,6 +298,17 @@ struct picoui_calendar {
 struct picoui_clock {
     struct picoui_widget widget;
     const char *id;
+    struct picoui_image_source *background_source;
+    struct picoui_image_source *hour_pointer_source;
+    struct picoui_image_source *minute_pointer_source;
+    struct picoui_image_source *second_pointer_source;
+    unsigned int mask_color;
+    float hour_anchor_x;
+    float hour_anchor_y;
+    float minute_anchor_x;
+    float minute_anchor_y;
+    float second_anchor_x;
+    float second_anchor_y;
     int step_second;
 };
 
@@ -267,8 +330,18 @@ struct picoui_message_box {
     const char *title;
     const char *message;
     const char *confirm_text;
+    const char *buttons[PICOUI_LIST_MAX_ITEMS];
+    int button_count;
+    unsigned int title_color;
+    unsigned int message_color;
+    unsigned int button_color;
+    unsigned int release_color;
+    unsigned int press_color;
+    unsigned int bg_color;
     picoui_message_box_callback_t on_confirm;
     void *on_confirm_user_data;
+    picoui_message_box_indexed_callback_t on_confirm_indexed;
+    void *on_confirm_indexed_user_data;
 };
 
 struct picoui_text {
@@ -298,7 +371,9 @@ struct picoui_combo_box {
     const char *backend_item_ids[PICOUI_LIST_MAX_ITEMS];
     const unsigned char *backend_item_texts[PICOUI_LIST_MAX_ITEMS];
     int item_count;
+    int item_max;
     int selected_index;
+    struct picoui_image_source *dropdown_source;
     void (*cb)(struct picoui_combo_box *combo_box, int index, void *user_data);
     void *user_data;
 };
@@ -312,11 +387,10 @@ struct picoui_scroll_selecter {
     int item_count;
     int selected_index;
     int edit_mode;
-};
-
-struct picoui_image_source {
-    arm_2d_tile_t *img_tile;
-    arm_2d_tile_t *mask_tile;
+    int transparent;
+    int speed;
+    struct picoui_image_source *bg_source;
+    struct picoui_image_source *indicator_source;
 };
 
 struct picoui_image {
@@ -330,6 +404,12 @@ struct picoui_graph {
     const char *id;
     int series_max;
     int series_count;
+    int x_axis;
+    int y_axis;
+    int axis_offset;
+    int frame_space;
+    int grid_offset;
+    struct picoui_image_source *point_mask_source;
     int series_point_counts[PICOUI_GRAPH_MAX_SERIES];
 };
 

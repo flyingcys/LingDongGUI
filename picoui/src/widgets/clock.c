@@ -4,9 +4,6 @@
 
 #include <stdlib.h>
 
-int picoui_backend_clock_set_step_second(struct picoui_clock *clock, int step_second);
-int picoui_backend_clock_get_step_second(struct picoui_clock *clock, int *step_second);
-
 static int picoui_clock_props_are_valid(const struct picoui_clock_props *props)
 {
     return props != 0 && props->id != 0 && (props->step_second == 0 || props->step_second == 1);
@@ -38,6 +35,13 @@ struct picoui_clock *picoui_clock_create(struct picoui_widget *parent, const cha
         free(clock);
         return 0;
     }
+    clock->mask_color = 0;
+    clock->hour_anchor_x = 0.0f;
+    clock->hour_anchor_y = 67.0f;
+    clock->minute_anchor_x = 0.0f;
+    clock->minute_anchor_y = 100.0f;
+    clock->second_anchor_x = 0.0f;
+    clock->second_anchor_y = 100.0f;
     if (picoui_clock_set_step_second(clock, 0) != 0) {
         free(clock);
         return 0;
@@ -66,7 +70,19 @@ struct picoui_clock *picoui_clock_create_with_props(
         return 0;
     }
     if (picoui_widget_set_user_data(&clock->widget, props->user_data) != 0
-        || picoui_clock_set_step_second(clock, props->step_second) != 0) {
+        || picoui_clock_set_step_second(clock, props->step_second) != 0
+        || (props->background_source != 0
+            && picoui_clock_set_background_source(clock, props->background_source) != 0)
+        || (props->hour_pointer_source != 0
+            && picoui_clock_set_hour_pointer_source(clock, props->hour_pointer_source) != 0)
+        || (props->minute_pointer_source != 0
+            && picoui_clock_set_minute_pointer_source(clock, props->minute_pointer_source) != 0)
+        || (props->second_pointer_source != 0
+            && picoui_clock_set_second_pointer_source(clock, props->second_pointer_source) != 0)
+        || picoui_clock_set_mask_color(clock, props->mask_color) != 0
+        || picoui_clock_set_hour_anchor(clock, props->hour_anchor_x, props->hour_anchor_y) != 0
+        || picoui_clock_set_minute_anchor(clock, props->minute_anchor_x, props->minute_anchor_y) != 0
+        || picoui_clock_set_second_anchor(clock, props->second_anchor_x, props->second_anchor_y) != 0) {
         free(clock);
         return 0;
     }
@@ -101,4 +117,119 @@ int picoui_clock_get_step_second(const struct picoui_clock *clock)
     }
 
     return step_second;
+}
+
+int picoui_clock_set_background_source(struct picoui_clock *clock, struct picoui_image_source *source)
+{
+    if (clock == 0 || source == 0 || source->img_tile == 0) {
+        return -1;
+    }
+
+    if (picoui_backend_clock_set_background_source(clock, source) != 0) {
+        return -1;
+    }
+
+    clock->background_source = source;
+    return 0;
+}
+
+int picoui_clock_set_hour_pointer_source(struct picoui_clock *clock, struct picoui_image_source *source)
+{
+    if (clock == 0 || source == 0 || source->img_tile == 0) {
+        return -1;
+    }
+
+    if (picoui_backend_clock_set_hour_pointer_source(clock, source) != 0) {
+        return -1;
+    }
+
+    clock->hour_pointer_source = source;
+    return 0;
+}
+
+int picoui_clock_set_minute_pointer_source(struct picoui_clock *clock, struct picoui_image_source *source)
+{
+    if (clock == 0 || source == 0 || source->img_tile == 0) {
+        return -1;
+    }
+
+    if (picoui_backend_clock_set_minute_pointer_source(clock, source) != 0) {
+        return -1;
+    }
+
+    clock->minute_pointer_source = source;
+    return 0;
+}
+
+int picoui_clock_set_second_pointer_source(struct picoui_clock *clock, struct picoui_image_source *source)
+{
+    if (clock == 0 || source == 0 || source->img_tile == 0) {
+        return -1;
+    }
+
+    if (picoui_backend_clock_set_second_pointer_source(clock, source) != 0) {
+        return -1;
+    }
+
+    clock->second_pointer_source = source;
+    return 0;
+}
+
+int picoui_clock_set_mask_color(struct picoui_clock *clock, unsigned int mask_color)
+{
+    if (clock == 0 || mask_color > 0xFFFFFFU) {
+        return -1;
+    }
+
+    if (picoui_backend_clock_set_mask_color(clock, mask_color) != 0) {
+        return -1;
+    }
+
+    clock->mask_color = mask_color;
+    return 0;
+}
+
+int picoui_clock_set_hour_anchor(struct picoui_clock *clock, float x, float y)
+{
+    if (clock == 0) {
+        return -1;
+    }
+
+    if (picoui_backend_clock_set_hour_anchor(clock, x, y) != 0) {
+        return -1;
+    }
+
+    clock->hour_anchor_x = x;
+    clock->hour_anchor_y = y;
+    return 0;
+}
+
+int picoui_clock_set_minute_anchor(struct picoui_clock *clock, float x, float y)
+{
+    if (clock == 0) {
+        return -1;
+    }
+
+    if (picoui_backend_clock_set_minute_anchor(clock, x, y) != 0) {
+        return -1;
+    }
+
+    clock->minute_anchor_x = x;
+    clock->minute_anchor_y = y;
+    return 0;
+}
+
+int picoui_clock_set_second_anchor(struct picoui_clock *clock, float x, float y)
+{
+    if (clock == 0) {
+        return -1;
+    }
+
+    if (picoui_backend_clock_set_second_anchor(clock, x, y) != 0) {
+        return -1;
+    }
+
+    clock->second_anchor_x = x;
+    clock->second_anchor_y = y;
+    return 0;
 }

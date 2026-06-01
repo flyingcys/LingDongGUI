@@ -28,6 +28,13 @@ TARGETS = [
     "picoui_date_time_basic_demo",
     "picoui_clock_basic_demo",
     "picoui_keyboard_basic_demo",
+    "picoui_line_edit_basic_demo",
+    "picoui_combo_box_basic_demo",
+    "picoui_scroll_selecter_basic_demo",
+    "picoui_table_basic_demo",
+    "picoui_graph_basic_demo",
+    "picoui_calendar_basic_demo",
+    "picoui_animation_basic_demo",
 ]
 
 

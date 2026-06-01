@@ -11,8 +11,16 @@ void ldBaseSetX(ldBase_t *ptWidget, int16_t x);
 void ldBaseSetY(ldBase_t *ptWidget, int16_t y);
 void ldBaseSetWidth(ldBase_t *ptWidget, int16_t width);
 void ldBaseSetHeight(ldBase_t *ptWidget, int16_t height);
+void ldBaseSetCenter(ldBase_t *ptWidget);
 void ldBaseSetHidden(ldBase_t *ptWidget, bool isHidden);
+void ldBaseSetOpacity(ldBase_t *ptWidget, uint8_t opacity);
 void ldBaseSetSelectable(ldBase_t *ptWidget, bool isSelectable);
+void ldBaseSetSelect(ldBase_t *ptWidget, bool isSelect);
+void ldBaseSetCorner(ldBase_t *ptWidget, bool isCorner);
+void ldBaseSetFlexMinWidth(ldBase_t *ptWidget, int16_t minWidth);
+void ldBaseSetFlexMinHeight(ldBase_t *ptWidget, int16_t minHeight);
+void ldBaseSetFlexMaxWidth(ldBase_t *ptWidget, int16_t maxWidth);
+void ldBaseSetFlexMaxHeight(ldBase_t *ptWidget, int16_t maxHeight);
 void ldSwitchSetDisabled(ldSwitch_t *ptWidget, bool isDisabled);
 
 static int picoui_widget_is_valid(struct picoui_widget *widget)
@@ -161,6 +169,21 @@ int picoui_widget_set_padding(struct picoui_widget *widget, int padding)
     return 0;
 }
 
+int picoui_widget_set_center(struct picoui_widget *widget)
+{
+    ldBase_t *ld_base;
+
+    if (!picoui_widget_is_valid(widget)) {
+        return -1;
+    }
+
+    ld_base = picoui_widget_get_ld_base(widget);
+    if (ld_base != 0) {
+        ldBaseSetCenter(ld_base);
+    }
+    return 0;
+}
+
 int picoui_widget_set_visible(struct picoui_widget *widget, int visible)
 {
     ldBase_t *ld_base;
@@ -180,19 +203,77 @@ int picoui_widget_set_visible(struct picoui_widget *widget, int visible)
     return 0;
 }
 
-int picoui_widget_set_enabled(struct picoui_widget *widget, int enabled)
+int picoui_widget_set_opacity(struct picoui_widget *widget, int opacity)
 {
-    struct picoui_backend_widget *backend_widget;
+    ldBase_t *ld_base;
+
+    if (!picoui_widget_is_valid(widget) || opacity < 0 || opacity > 255) {
+        return -1;
+    }
+
+    widget->opacity = opacity;
+    ld_base = picoui_widget_get_ld_base(widget);
+    if (ld_base != 0) {
+        ldBaseSetOpacity(ld_base, (uint8_t)opacity);
+    }
+    return 0;
+}
+
+int picoui_widget_set_selectable(struct picoui_widget *widget, int selectable)
+{
+    ldBase_t *ld_base;
 
     if (!picoui_widget_is_valid(widget)) {
         return -1;
     }
 
-    if (widget->backend_widget != 0) {
-        backend_widget = (struct picoui_backend_widget *)widget->backend_widget;
-        if (backend_widget->kind == PICOUI_BACKEND_WIDGET_IMAGE) {
-            return -1;
-        }
+    widget->selectable = selectable != 0;
+    ld_base = picoui_widget_get_ld_base(widget);
+    if (ld_base != 0) {
+        ldBaseSetSelectable(ld_base, widget->selectable != 0);
+    }
+    return 0;
+}
+
+int picoui_widget_set_selected(struct picoui_widget *widget, int selected)
+{
+    ldBase_t *ld_base;
+
+    if (!picoui_widget_is_valid(widget)) {
+        return -1;
+    }
+
+    widget->selected = selected != 0;
+    ld_base = picoui_widget_get_ld_base(widget);
+    if (ld_base != 0) {
+        ldBaseSetSelect(ld_base, widget->selected != 0);
+    }
+    return 0;
+}
+
+int picoui_widget_set_corner(struct picoui_widget *widget, int corner)
+{
+    ldBase_t *ld_base;
+
+    if (!picoui_widget_is_valid(widget)) {
+        return -1;
+    }
+
+    widget->corner = corner != 0;
+    ld_base = picoui_widget_get_ld_base(widget);
+    if (ld_base != 0) {
+        ldBaseSetCorner(ld_base, widget->corner != 0);
+    }
+    return 0;
+}
+
+int picoui_widget_set_enabled(struct picoui_widget *widget, int enabled)
+{
+    struct picoui_backend_widget *backend_widget;
+    ldBase_t *ld_base;
+
+    if (!picoui_widget_is_valid(widget)) {
+        return -1;
     }
 
     widget->enabled = enabled != 0;
@@ -201,6 +282,10 @@ int picoui_widget_set_enabled(struct picoui_widget *widget, int enabled)
     }
     if (widget->backend_widget != 0) {
         backend_widget = (struct picoui_backend_widget *)widget->backend_widget;
+        ld_base = picoui_widget_get_ld_base(widget);
+        if (ld_base != 0) {
+            ldBaseSetSelectable(ld_base, widget->enabled != 0);
+        }
         if (backend_widget->kind == PICOUI_BACKEND_WIDGET_LIST && backend_widget->ld_widget != 0) {
             ldBaseSetSelectable((ldBase_t *)backend_widget->ld_widget, widget->enabled != 0);
         }
@@ -229,6 +314,70 @@ int picoui_widget_set_flex_new_track(struct picoui_widget *widget, int new_track
 
     widget->flex_new_track = new_track != 0;
     return picoui_backend_widget_set_flex_new_track(widget, widget->flex_new_track);
+}
+
+int picoui_widget_set_flex_min_width(struct picoui_widget *widget, int min_width)
+{
+    ldBase_t *ld_base;
+
+    if (!picoui_widget_is_valid(widget) || min_width < 0) {
+        return -1;
+    }
+
+    widget->flex_min_width = min_width;
+    ld_base = picoui_widget_get_ld_base(widget);
+    if (ld_base != 0) {
+        ldBaseSetFlexMinWidth(ld_base, (int16_t)min_width);
+    }
+    return 0;
+}
+
+int picoui_widget_set_flex_min_height(struct picoui_widget *widget, int min_height)
+{
+    ldBase_t *ld_base;
+
+    if (!picoui_widget_is_valid(widget) || min_height < 0) {
+        return -1;
+    }
+
+    widget->flex_min_height = min_height;
+    ld_base = picoui_widget_get_ld_base(widget);
+    if (ld_base != 0) {
+        ldBaseSetFlexMinHeight(ld_base, (int16_t)min_height);
+    }
+    return 0;
+}
+
+int picoui_widget_set_flex_max_width(struct picoui_widget *widget, int max_width)
+{
+    ldBase_t *ld_base;
+
+    if (!picoui_widget_is_valid(widget) || max_width < 0) {
+        return -1;
+    }
+
+    widget->flex_max_width = max_width;
+    ld_base = picoui_widget_get_ld_base(widget);
+    if (ld_base != 0) {
+        ldBaseSetFlexMaxWidth(ld_base, (int16_t)max_width);
+    }
+    return 0;
+}
+
+int picoui_widget_set_flex_max_height(struct picoui_widget *widget, int max_height)
+{
+    ldBase_t *ld_base;
+
+    if (!picoui_widget_is_valid(widget) || max_height < 0) {
+        return -1;
+    }
+
+    widget->flex_max_height = max_height;
+    ld_base = picoui_widget_get_ld_base(widget);
+    if (ld_base != 0) {
+        ldBaseSetFlexMaxHeight(ld_base, (int16_t)max_height);
+    }
+    return 0;
 }
 
 int picoui_widget_set_ignore_layout(struct picoui_widget *widget, int ignore_layout)

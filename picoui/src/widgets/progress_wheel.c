@@ -6,6 +6,10 @@
 
 int picoui_backend_progress_wheel_set_percent(struct picoui_progress_wheel *wheel, int percent);
 int picoui_backend_progress_wheel_get_percent(struct picoui_progress_wheel *wheel, int *percent);
+int picoui_backend_progress_wheel_set_wheel_color(void *backend_widget, unsigned int rgb);
+int picoui_backend_progress_wheel_set_dot_color(void *backend_widget, unsigned int rgb);
+int picoui_backend_progress_wheel_set_dot_enabled(void *backend_widget, int enabled);
+int picoui_backend_progress_wheel_get_dot_enabled(void *backend_widget);
 
 static int picoui_progress_wheel_props_are_valid(const struct picoui_progress_wheel_props *props)
 {
@@ -38,7 +42,8 @@ struct picoui_progress_wheel *picoui_progress_wheel_create(struct picoui_widget 
         free(wheel);
         return 0;
     }
-    if (picoui_progress_wheel_set_percent(wheel, 0) != 0) {
+    if (picoui_progress_wheel_set_percent(wheel, 0) != 0
+        || picoui_progress_wheel_set_dot_enabled(wheel, 1) != 0) {
         free(wheel);
         return 0;
     }
@@ -101,4 +106,55 @@ int picoui_progress_wheel_get_percent(const struct picoui_progress_wheel *wheel)
     }
 
     return percent;
+}
+
+int picoui_progress_wheel_set_wheel_color(struct picoui_progress_wheel *wheel, unsigned int rgb)
+{
+    if (wheel == 0 || rgb > 0xFFFFFFU) {
+        return -1;
+    }
+
+    if (picoui_backend_progress_wheel_set_wheel_color(wheel->widget.backend_widget, rgb) != 0) {
+        return -1;
+    }
+
+    wheel->wheel_color = rgb;
+    return 0;
+}
+
+int picoui_progress_wheel_set_dot_color(struct picoui_progress_wheel *wheel, unsigned int rgb)
+{
+    if (wheel == 0 || rgb > 0xFFFFFFU) {
+        return -1;
+    }
+
+    if (picoui_backend_progress_wheel_set_dot_color(wheel->widget.backend_widget, rgb) != 0) {
+        return -1;
+    }
+
+    wheel->dot_color = rgb;
+    return 0;
+}
+
+int picoui_progress_wheel_set_dot_enabled(struct picoui_progress_wheel *wheel, int enabled)
+{
+    if (wheel == 0) {
+        return -1;
+    }
+
+    if (picoui_backend_progress_wheel_set_dot_enabled(wheel->widget.backend_widget, enabled != 0) != 0) {
+        return -1;
+    }
+
+    wheel->dot_enabled = enabled != 0 ? 1 : 0;
+    return 0;
+}
+
+int picoui_progress_wheel_get_dot_enabled(const struct picoui_progress_wheel *wheel)
+{
+    if (wheel == 0) {
+        return -1;
+    }
+
+    return picoui_backend_progress_wheel_get_dot_enabled((void *)wheel->widget.backend_widget);
 }

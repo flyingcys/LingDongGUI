@@ -1,4 +1,5 @@
 #include "internal.h"
+#include "backend.h"
 #include "picoui/icon_slider.h"
 #include "picoui/widget.h"
 
@@ -128,6 +129,34 @@ int picoui_icon_slider_add_item(struct picoui_icon_slider *icon_slider, const ch
     return 0;
 }
 
+int picoui_icon_slider_add_item_with_source(struct picoui_icon_slider *icon_slider,
+                                            const char *id,
+                                            const char *text,
+                                            struct picoui_image_source *source)
+{
+    int index;
+
+    if (icon_slider == 0
+        || id == 0
+        || text == 0
+        || source == 0
+        || source->img_tile == 0
+        || source->mask_tile == 0
+        || icon_slider->item_count >= PICOUI_LIST_MAX_ITEMS) {
+        return -1;
+    }
+
+    if (picoui_backend_icon_slider_add_item_with_source(icon_slider->widget.backend_widget, id, text, source) != 0) {
+        return -1;
+    }
+
+    index = icon_slider->item_count++;
+    icon_slider->items[index].id = id;
+    icon_slider->items[index].text = text;
+    icon_slider->item_sources[index] = source;
+    return 0;
+}
+
 int picoui_icon_slider_set_selected_index(struct picoui_icon_slider *icon_slider, int index)
 {
     if (icon_slider == 0 || index < 0 || index >= icon_slider->item_count) {
@@ -185,6 +214,20 @@ int picoui_icon_slider_get_horizontal(const struct picoui_icon_slider *icon_slid
     }
 
     *horizontal = icon_slider->horizontal;
+    return 0;
+}
+
+int picoui_icon_slider_set_speed(struct picoui_icon_slider *icon_slider, int speed)
+{
+    if (icon_slider == 0 || speed <= 0) {
+        return -1;
+    }
+
+    if (picoui_backend_icon_slider_set_speed(icon_slider->widget.backend_widget, speed) != 0) {
+        return -1;
+    }
+
+    icon_slider->speed = speed;
     return 0;
 }
 

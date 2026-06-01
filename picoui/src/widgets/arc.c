@@ -4,15 +4,6 @@
 
 #include <stdlib.h>
 
-int picoui_backend_arc_set_background_angle(struct picoui_arc *arc, float bg_start_angle, float bg_end_angle);
-int picoui_backend_arc_set_foreground_angle(struct picoui_arc *arc, float fg_end_angle);
-int picoui_backend_arc_set_rotation_angle(struct picoui_arc *arc, float rotation_angle);
-int picoui_backend_arc_set_color(struct picoui_arc *arc, unsigned int bg_color, unsigned int fg_color);
-int picoui_backend_arc_get_background_angle(struct picoui_arc *arc, float *bg_start_angle, float *bg_angle);
-int picoui_backend_arc_get_foreground_angle(struct picoui_arc *arc, float *fg_end_angle);
-int picoui_backend_arc_get_rotation_angle(struct picoui_arc *arc, float *rotation_angle);
-int picoui_backend_arc_get_color(struct picoui_arc *arc, unsigned int *bg_color, unsigned int *fg_color);
-
 static int picoui_arc_props_are_valid(const struct picoui_arc_props *props)
 {
     return props != 0
@@ -77,6 +68,9 @@ struct picoui_arc *picoui_arc_create_with_props(struct picoui_widget *parent,
         || picoui_arc_set_background_angle(arc, props->bg_start_angle, props->bg_end_angle) != 0
         || picoui_arc_set_foreground_angle(arc, props->fg_end_angle) != 0
         || picoui_arc_set_rotation_angle(arc, props->rotation_angle) != 0
+        || (props->quarter_source != 0
+            && picoui_arc_set_quarter_source(arc, props->quarter_source) != 0)
+        || picoui_arc_set_parent_color(arc, props->parent_color) != 0
         || picoui_arc_set_color(arc, props->bg_color, props->fg_color) != 0) {
         free(arc);
         return 0;
@@ -132,6 +126,34 @@ int picoui_arc_set_color(struct picoui_arc *arc, unsigned int bg_color, unsigned
     }
     arc->bg_color = bg_color;
     arc->fg_color = fg_color;
+    return 0;
+}
+
+int picoui_arc_set_quarter_source(struct picoui_arc *arc, struct picoui_image_source *source)
+{
+    if (arc == 0 || source == 0 || source->img_tile == 0 || source->mask_tile == 0) {
+        return -1;
+    }
+
+    if (picoui_backend_arc_set_quarter_source(arc, source) != 0) {
+        return -1;
+    }
+
+    arc->quarter_source = source;
+    return 0;
+}
+
+int picoui_arc_set_parent_color(struct picoui_arc *arc, unsigned int parent_color)
+{
+    if (arc == 0 || parent_color > 0xFFFFFFU) {
+        return -1;
+    }
+
+    if (picoui_backend_arc_set_parent_color(arc, parent_color) != 0) {
+        return -1;
+    }
+
+    arc->parent_color = parent_color;
     return 0;
 }
 

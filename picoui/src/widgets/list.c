@@ -86,6 +86,82 @@ int picoui_list_add_item(struct picoui_list *list, const char *id, const char *t
     return 0;
 }
 
+int picoui_list_set_item_height(struct picoui_list *list, int item_height)
+{
+    if (list == 0) {
+        return -1;
+    }
+
+    return picoui_backend_list_set_item_height(list->widget.backend_widget, item_height);
+}
+
+int picoui_list_set_padding_group(struct picoui_list *list, int top, int bottom, int left, int right)
+{
+    if (list == 0) {
+        return -1;
+    }
+
+    return picoui_backend_list_set_padding_group(list->widget.backend_widget, top, bottom, left, right);
+}
+
+int picoui_list_set_margin_group(struct picoui_list *list, int top, int bottom, int left, int right)
+{
+    if (list == 0) {
+        return -1;
+    }
+
+    return picoui_backend_list_set_margin_group(list->widget.backend_widget, top, bottom, left, right);
+}
+
+int picoui_list_set_text_color(struct picoui_list *list, unsigned int rgb)
+{
+    if (list == 0 || picoui_widget_set_text_color(&list->widget, rgb) != 0) {
+        return -1;
+    }
+
+    return picoui_backend_list_set_text_color(list->widget.backend_widget, rgb);
+}
+
+int picoui_list_set_bg_color(struct picoui_list *list, unsigned int rgb)
+{
+    if (list == 0 || picoui_widget_set_bg_color(&list->widget, rgb) != 0) {
+        return -1;
+    }
+
+    return picoui_backend_list_set_bg_color(list->widget.backend_widget, rgb);
+}
+
+int picoui_list_set_select_color(struct picoui_list *list, unsigned int rgb)
+{
+    if (list == 0 || picoui_widget_set_border_color(&list->widget, rgb) != 0) {
+        return -1;
+    }
+
+    return picoui_backend_list_set_select_color(list->widget.backend_widget, rgb);
+}
+
+int picoui_list_set_align(struct picoui_list *list, enum picoui_align align)
+{
+    if (list == 0) {
+        return -1;
+    }
+
+    return picoui_backend_list_set_align(list->widget.backend_widget, align);
+}
+
+int picoui_list_set_item_widget(struct picoui_list *list,
+                                int index,
+                                struct picoui_widget *item_widget)
+{
+    if (list == 0 || item_widget == 0 || item_widget->backend_widget == 0) {
+        return -1;
+    }
+
+    return picoui_backend_list_set_item_widget(list->widget.backend_widget,
+                                               index,
+                                               item_widget->backend_widget);
+}
+
 int picoui_list_set_selected_index(struct picoui_list *list, int index)
 {
     if (list == 0 || index < 0 || index >= list->item_count) {

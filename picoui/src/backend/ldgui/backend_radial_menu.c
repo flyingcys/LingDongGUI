@@ -198,6 +198,40 @@ int picoui_backend_radial_menu_add_item(void *backend_widget, const char *id)
     return 0;
 }
 
+int picoui_backend_radial_menu_add_item_with_source(void *backend_widget,
+                                                    const char *id,
+                                                    struct picoui_image_source *source)
+{
+    struct picoui_backend_widget *widget = backend_widget;
+    ldRadialMenu_t *ld_radial_menu;
+    int index;
+
+    if (widget == NULL ||
+        widget->kind != PICOUI_BACKEND_WIDGET_RADIAL_MENU ||
+        widget->ld_widget == NULL ||
+        id == NULL ||
+        source == NULL ||
+        source->img_tile == NULL ||
+        source->mask_tile == NULL ||
+        widget->list_item_count >= PICOUI_BACKEND_RADIAL_MENU_NATIVE_MAX_ITEMS) {
+        return -1;
+    }
+
+    ld_radial_menu = picoui_backend_radial_menu_get_ld(backend_widget);
+    if (ld_radial_menu == NULL) {
+        return -1;
+    }
+
+    index = widget->list_item_count;
+    ldRadialMenuAddItem(ld_radial_menu, source->img_tile, source->mask_tile);
+    widget->list_item_ids[index] = id;
+    widget->list_item_count++;
+    if (widget->value < 0) {
+        widget->value = 0;
+    }
+    return 0;
+}
+
 int picoui_backend_radial_menu_set_selected_index(void *backend_widget, int index)
 {
     struct picoui_backend_widget *widget = backend_widget;
@@ -256,6 +290,73 @@ int picoui_backend_radial_menu_offset_selection(void *backend_widget, int offset
     }
 
     return picoui_backend_radial_menu_set_selected_index(backend_widget, next_index);
+}
+
+int picoui_backend_radial_menu_set_default_item(void *backend_widget, int index)
+{
+    struct picoui_backend_widget *widget = backend_widget;
+    ldRadialMenu_t *ld_radial_menu;
+
+    if (widget == NULL ||
+        widget->kind != PICOUI_BACKEND_WIDGET_RADIAL_MENU ||
+        widget->ld_widget == NULL ||
+        index < 0 ||
+        index >= widget->list_item_count) {
+        return -1;
+    }
+
+    ld_radial_menu = picoui_backend_radial_menu_get_ld(backend_widget);
+    if (ld_radial_menu == NULL) {
+        return -1;
+    }
+
+    ldRadialMenuSetDefaultItem(ld_radial_menu, (uint8_t)index);
+    widget->value = index;
+    return 0;
+}
+
+int picoui_backend_radial_menu_click_item(void *backend_widget, int index)
+{
+    struct picoui_backend_widget *widget = backend_widget;
+    ldRadialMenu_t *ld_radial_menu;
+
+    if (widget == NULL ||
+        widget->kind != PICOUI_BACKEND_WIDGET_RADIAL_MENU ||
+        widget->ld_widget == NULL ||
+        index < 0 ||
+        index >= widget->list_item_count) {
+        return -1;
+    }
+
+    ld_radial_menu = picoui_backend_radial_menu_get_ld(backend_widget);
+    if (ld_radial_menu == NULL) {
+        return -1;
+    }
+
+    ldRadialMenuSetClickItem(ld_radial_menu, (uint8_t)index);
+    widget->value = index;
+    return 0;
+}
+
+int picoui_backend_radial_menu_offset_item(void *backend_widget, int offset)
+{
+    struct picoui_backend_widget *widget = backend_widget;
+    ldRadialMenu_t *ld_radial_menu;
+
+    if (widget == NULL ||
+        widget->kind != PICOUI_BACKEND_WIDGET_RADIAL_MENU ||
+        widget->ld_widget == NULL ||
+        widget->list_item_count <= 0) {
+        return -1;
+    }
+
+    ld_radial_menu = picoui_backend_radial_menu_get_ld(backend_widget);
+    if (ld_radial_menu == NULL) {
+        return -1;
+    }
+
+    ldRadialMenuSetOffsetItem(ld_radial_menu, (int8_t)offset);
+    return 0;
 }
 
 int picoui_backend_radial_menu_bind_host(void *backend_widget)

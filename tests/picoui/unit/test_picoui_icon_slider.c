@@ -3,6 +3,7 @@
 #include "picoui/widget.h"
 #include "picoui/window.h"
 #include "../../../src/gui/ldIconSlider.h"
+#include "backend.h"
 #include "internal.h"
 
 #include <assert.h>
@@ -115,10 +116,60 @@ static void test_icon_slider_create_with_props_pushes_backend_dimensions(void)
     picoui_app_destroy(app);
 }
 
+static void test_icon_slider_native_icon_images_and_speed_round_trip(void)
+{
+    struct picoui_app *app;
+    struct picoui_window *win;
+    struct picoui_icon_slider *icon_slider;
+    struct picoui_backend_widget *backend;
+    ldIconSlider_t *ld_icon_slider;
+    arm_2d_tile_t icon_img = {
+        .tRegion = {
+            .tSize = { .iWidth = 24, .iHeight = 24 },
+        },
+    };
+    arm_2d_tile_t icon_mask = {
+        .tRegion = {
+            .tSize = { .iWidth = 24, .iHeight = 24 },
+        },
+    };
+    struct picoui_image_source icon_source = {
+        .img_tile = &icon_img,
+        .mask_tile = &icon_mask,
+    };
+
+    app = picoui_app_create();
+    assert(app != 0);
+    win = picoui_window_create(app, "root");
+    assert(win != 0);
+
+    icon_slider = picoui_icon_slider_create((struct picoui_widget *)win, "icon_slider_native");
+    assert(icon_slider != 0);
+    backend = (struct picoui_backend_widget *)icon_slider->widget.backend_widget;
+    assert(backend != 0);
+    ld_icon_slider = (ldIconSlider_t *)backend->ld_widget;
+    assert(ld_icon_slider != 0);
+
+    assert(picoui_icon_slider_add_item_with_source(icon_slider, "mail", "Mail", &icon_source) == 0);
+    assert(picoui_icon_slider_set_speed(icon_slider, 7) == 0);
+
+    assert(ld_icon_slider->iconCount == 1);
+    assert(ld_icon_slider->ptIconInfoList[0].ptImgTile == &icon_img);
+    assert(ld_icon_slider->ptIconInfoList[0].ptMaskTile == &icon_mask);
+    assert(strcmp((const char *)ld_icon_slider->ptIconInfoList[0].pName, "Mail") == 0);
+    assert(ld_icon_slider->moveOffset == 7);
+
+    assert(picoui_icon_slider_add_item_with_source(0, "mail", "Mail", &icon_source) == -1);
+    assert(picoui_icon_slider_set_speed(0, 3) == -1);
+
+    picoui_app_destroy(app);
+}
+
 int main(void)
 {
     test_icon_slider_selection_and_value_follow_backend_truth();
     test_icon_slider_rejects_items_beyond_native_capacity();
     test_icon_slider_create_with_props_pushes_backend_dimensions();
+    test_icon_slider_native_icon_images_and_speed_round_trip();
     return 0;
 }

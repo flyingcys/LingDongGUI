@@ -38,11 +38,15 @@ static int picoui_theme_part_supported(enum picoui_backend_widget_kind kind, enu
     switch (kind) {
         case PICOUI_BACKEND_WIDGET_WINDOW:
             return part == PICOUI_PART_MAIN;
+        case PICOUI_BACKEND_WIDGET_IMAGE:
+            return part == PICOUI_PART_MAIN;
+        case PICOUI_BACKEND_WIDGET_CALENDAR:
+            return part == PICOUI_PART_MAIN || part == PICOUI_PART_TEXT;
         case PICOUI_BACKEND_WIDGET_LABEL:
         case PICOUI_BACKEND_WIDGET_TEXT:
             return part == PICOUI_PART_MAIN || part == PICOUI_PART_TEXT;
         case PICOUI_BACKEND_WIDGET_LIST:
-            return part == PICOUI_PART_MAIN;
+            return part == PICOUI_PART_MAIN || part == PICOUI_PART_TEXT;
         case PICOUI_BACKEND_WIDGET_BUTTON:
             return part == PICOUI_PART_MAIN || part == PICOUI_PART_TEXT;
         case PICOUI_BACKEND_WIDGET_CHECKBOX:
@@ -101,11 +105,7 @@ static int picoui_theme_apply_widget_metrics(const struct picoui_theme *theme,
 {
     struct picoui_backend_widget *backend_widget = (struct picoui_backend_widget *)widget->backend_widget;
 
-    if (kind == PICOUI_BACKEND_WIDGET_IMAGE) {
-        return -1;
-    }
-
-    if (kind != PICOUI_BACKEND_WIDGET_WINDOW) {
+    if (kind != PICOUI_BACKEND_WIDGET_WINDOW && kind != PICOUI_BACKEND_WIDGET_IMAGE) {
         widget->height = theme->metrics[PICOUI_METRIC_CONTROL_HEIGHT];
         if (backend_widget != 0 && backend_widget->ld_widget != 0) {
             ldBaseSetHeight((ldBase_t *)backend_widget->ld_widget,
@@ -125,8 +125,7 @@ static int picoui_theme_backend_can_apply_style(const struct picoui_backend_widg
 {
     return backend_widget != 0
         && backend_widget->ld_widget != 0
-        && backend_widget->theme != 0
-        && backend_widget->kind != PICOUI_BACKEND_WIDGET_IMAGE;
+        && backend_widget->theme != 0;
 }
 
 struct picoui_theme *picoui_theme_create(void)

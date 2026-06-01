@@ -1,9 +1,14 @@
 from pathlib import Path
+import re
 
 
 ROOT = Path(__file__).resolve().parents[3]
 DEMO_DIR = ROOT / "picoui" / "demo"
-FORBIDDEN = ["ld", "arm_2d_", "SIGNAL_"]
+FORBIDDEN_PATTERNS = {
+    "ld*": re.compile(r"\bld[A-Za-z0-9_]+\b"),
+    "arm_2d_*": re.compile(r"\barm_2d_[A-Za-z0-9_]+\b"),
+    "SIGNAL_*": re.compile(r"\bSIGNAL_[A-Za-z0-9_]+\b"),
+}
 REQUIRED_DEMOS = {
     "hello_world",
     "basic_widgets",
@@ -18,6 +23,13 @@ REQUIRED_DEMOS = {
     "message_box_basic",
     "date_time_basic",
     "clock_basic",
+    "line_edit_basic",
+    "combo_box_basic",
+    "scroll_selecter_basic",
+    "table_basic",
+    "graph_basic",
+    "calendar_basic",
+    "animation_basic",
 }
 
 
@@ -31,8 +43,9 @@ def main() -> int:
 
     for source in demo_sources:
         text = source.read_text(encoding="utf-8")
-        for needle in FORBIDDEN:
-            assert needle not in text, f"{source.name} leaks forbidden token: {needle}"
+        for label, pattern in FORBIDDEN_PATTERNS.items():
+            match = pattern.search(text)
+            assert match is None, f"{source.name} leaks forbidden token: {match.group(0)} ({label})"
     return 0
 
 

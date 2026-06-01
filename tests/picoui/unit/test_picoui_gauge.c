@@ -2,6 +2,9 @@
 #include "picoui/gauge.h"
 #include "picoui/widget.h"
 #include "picoui/window.h"
+#include "../../../src/gui/ldGauge.h"
+#include "backend.h"
+#include "internal.h"
 
 #include <assert.h>
 
@@ -68,6 +71,106 @@ static void test_gauge_rejects_invalid_inputs(struct picoui_window *win)
     assert(picoui_gauge_get_auto_move(gauge) == 1);
 }
 
+static void test_gauge_native_background_pointer_and_centre_offset_round_trip(struct picoui_window *win)
+{
+    struct picoui_gauge *gauge = picoui_gauge_create((struct picoui_widget *)win, "gauge_native_resources");
+    struct picoui_backend_widget *backend;
+    ldGauge_t *ld_gauge;
+    arm_2d_tile_t bg_img = {
+        .tRegion = {
+            .tSize = { .iWidth = 30, .iHeight = 30 },
+        },
+    };
+    arm_2d_tile_t bg_mask = {
+        .tRegion = {
+            .tSize = { .iWidth = 30, .iHeight = 30 },
+        },
+    };
+    arm_2d_tile_t pointer_img = {
+        .tRegion = {
+            .tSize = { .iWidth = 11, .iHeight = 26 },
+        },
+    };
+    arm_2d_tile_t pointer_mask = {
+        .tRegion = {
+            .tSize = { .iWidth = 11, .iHeight = 26 },
+        },
+    };
+    struct picoui_image_source bg_source = {
+        .img_tile = &bg_img,
+        .mask_tile = &bg_mask,
+    };
+    struct picoui_image_source pointer_source = {
+        .img_tile = &pointer_img,
+        .mask_tile = &pointer_mask,
+    };
+
+    assert(gauge != 0);
+    backend = (struct picoui_backend_widget *)gauge->widget.backend_widget;
+    assert(backend != 0);
+    ld_gauge = (ldGauge_t *)backend->ld_widget;
+    assert(ld_gauge != 0);
+
+    assert(picoui_gauge_set_bg_source(gauge, &bg_source) == 0);
+    assert(picoui_gauge_set_pointer_source(gauge, &pointer_source) == 0);
+    assert(picoui_gauge_set_centre_offset(gauge, -7, 9) == 0);
+
+    assert(ld_gauge->ptBgImgTile == &bg_img);
+    assert(ld_gauge->ptBgMaskTile == &bg_mask);
+    assert(ld_gauge->ptPointerImgTile == &pointer_img);
+    assert(ld_gauge->ptPointerMaskTile == &pointer_mask);
+    assert(ld_gauge->centreOffsetX == -7);
+    assert(ld_gauge->centreOffsetY == 9);
+
+    assert(picoui_gauge_set_bg_source(0, &bg_source) == -1);
+    assert(picoui_gauge_set_pointer_source(0, &pointer_source) == -1);
+    assert(picoui_gauge_set_centre_offset(0, 1, 2) == -1);
+}
+
+static void test_gauge_native_trail_and_progress_bar_round_trip(struct picoui_window *win)
+{
+    struct picoui_gauge *gauge = picoui_gauge_create((struct picoui_widget *)win, "gauge_native_trail");
+    struct picoui_backend_widget *backend;
+    ldGauge_t *ld_gauge;
+    arm_2d_tile_t bg_trail_mask = {
+        .tRegion = {
+            .tSize = { .iWidth = 40, .iHeight = 40 },
+        },
+    };
+    arm_2d_tile_t pointer_trail_mask = {
+        .tRegion = {
+            .tSize = { .iWidth = 13, .iHeight = 29 },
+        },
+    };
+    struct picoui_image_source bg_trail_source = {
+        .img_tile = &bg_trail_mask,
+        .mask_tile = &bg_trail_mask,
+    };
+    struct picoui_image_source pointer_trail_source = {
+        .img_tile = &pointer_trail_mask,
+        .mask_tile = &pointer_trail_mask,
+    };
+
+    assert(gauge != 0);
+    backend = (struct picoui_backend_widget *)gauge->widget.backend_widget;
+    assert(backend != 0);
+    ld_gauge = (ldGauge_t *)backend->ld_widget;
+    assert(ld_gauge != 0);
+
+    assert(picoui_gauge_set_trail(gauge, &bg_trail_source, &pointer_trail_source) == 0);
+    assert(ld_gauge->ptBgTrailMaskTile == &bg_trail_mask);
+    assert(ld_gauge->ptPointerTrailMaskTile == &pointer_trail_mask);
+    assert(ld_gauge->isProgressBar == false);
+
+    assert(picoui_gauge_set_progress_bar(gauge, &bg_trail_source, &pointer_trail_source) == 0);
+    assert(ld_gauge->ptBgTrailMaskTile == &bg_trail_mask);
+    assert(ld_gauge->ptPointerTrailMaskTile == &pointer_trail_mask);
+    assert(ld_gauge->isProgressBar == true);
+
+    assert(picoui_gauge_set_trail(0, &bg_trail_source, &pointer_trail_source) == -1);
+    assert(picoui_gauge_set_progress_bar(0, &bg_trail_source, &pointer_trail_source) == -1);
+}
+
 int main(void)
 {
     struct picoui_app *app = picoui_app_create();
@@ -80,6 +183,8 @@ int main(void)
     test_gauge_create_and_props(win);
     test_gauge_value_and_pointer_contract_match_backend_truth(win);
     test_gauge_rejects_invalid_inputs(win);
+    test_gauge_native_background_pointer_and_centre_offset_round_trip(win);
+    test_gauge_native_trail_and_progress_bar_round_trip(win);
 
     picoui_app_destroy(app);
     return 0;
