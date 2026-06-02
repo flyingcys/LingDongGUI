@@ -2,9 +2,11 @@
 #define PICOUI_WIDGET_H
 
 #include "picoui/layout.h"
+#include "picoui/native.h"
 #include "picoui/theme.h"
 
 struct picoui_widget;
+struct picoui_app;
 struct picoui_font;
 
 typedef void (*picoui_value_changed_cb)(struct picoui_widget *widget,
@@ -15,6 +17,55 @@ typedef void (*picoui_event_cb)(struct picoui_widget *widget, void *user_data);
 struct picoui_font {
     const char *family;
     int size;
+};
+
+struct picoui_point {
+    int x;
+    int y;
+};
+
+struct picoui_size {
+    int width;
+    int height;
+};
+
+struct picoui_rect {
+    int x;
+    int y;
+    int width;
+    int height;
+};
+
+enum picoui_widget_type {
+    PICOUI_WIDGET_TYPE_UNKNOWN = 0,
+    PICOUI_WIDGET_TYPE_BACKGROUND,
+    PICOUI_WIDGET_TYPE_WINDOW,
+    PICOUI_WIDGET_TYPE_BUTTON,
+    PICOUI_WIDGET_TYPE_IMAGE,
+    PICOUI_WIDGET_TYPE_TEXT,
+    PICOUI_WIDGET_TYPE_LINE_EDIT,
+    PICOUI_WIDGET_TYPE_GRAPH,
+    PICOUI_WIDGET_TYPE_CHECKBOX,
+    PICOUI_WIDGET_TYPE_SLIDER,
+    PICOUI_WIDGET_TYPE_SWITCH,
+    PICOUI_WIDGET_TYPE_PROGRESS_BAR,
+    PICOUI_WIDGET_TYPE_GAUGE,
+    PICOUI_WIDGET_TYPE_QRCODE,
+    PICOUI_WIDGET_TYPE_DATE_TIME,
+    PICOUI_WIDGET_TYPE_ICON_SLIDER,
+    PICOUI_WIDGET_TYPE_COMBO_BOX,
+    PICOUI_WIDGET_TYPE_ARC,
+    PICOUI_WIDGET_TYPE_RADIAL_MENU,
+    PICOUI_WIDGET_TYPE_SCROLL_SELECTER,
+    PICOUI_WIDGET_TYPE_LABEL,
+    PICOUI_WIDGET_TYPE_TABLE,
+    PICOUI_WIDGET_TYPE_KEYBOARD,
+    PICOUI_WIDGET_TYPE_ANIMATION,
+    PICOUI_WIDGET_TYPE_LIST,
+    PICOUI_WIDGET_TYPE_MESSAGE_BOX,
+    PICOUI_WIDGET_TYPE_CALENDAR,
+    PICOUI_WIDGET_TYPE_PROGRESS_WHEEL,
+    PICOUI_WIDGET_TYPE_CLOCK,
 };
 
 int picoui_widget_set_pos(struct picoui_widget *widget, int x, int y);
@@ -57,5 +108,30 @@ int picoui_widget_get_opacity(const struct picoui_widget *widget);
 int picoui_widget_get_selectable(const struct picoui_widget *widget);
 int picoui_widget_get_selected(const struct picoui_widget *widget);
 int picoui_widget_get_corner(const struct picoui_widget *widget);
+struct picoui_widget *picoui_widget_get_parent(const struct picoui_widget *widget);
+struct picoui_widget *picoui_widget_get_first_child(const struct picoui_widget *widget);
+struct picoui_widget *picoui_widget_get_next_sibling(const struct picoui_widget *widget);
+struct picoui_widget *picoui_widget_get_root(const struct picoui_widget *widget);
+int picoui_widget_get_child_count(const struct picoui_widget *widget);
+int picoui_widget_get_name_id(const struct picoui_widget *widget);
+struct picoui_widget *picoui_widget_find_by_name_id(const struct picoui_widget *root, int name_id);
+enum picoui_widget_type picoui_widget_get_type(const struct picoui_widget *widget);
+struct picoui_point picoui_widget_get_absolute_pos(const struct picoui_widget *widget,
+                                                   struct picoui_point point);
+struct picoui_point picoui_widget_get_relative_pos(const struct picoui_widget *widget,
+                                                   struct picoui_point point);
+struct picoui_rect picoui_rect_align(struct picoui_rect parent,
+                                     struct picoui_rect child,
+                                     enum picoui_align x_align,
+                                     enum picoui_align y_align);
+struct picoui_rect picoui_rect_center(struct picoui_rect parent,
+                                      struct picoui_rect child);
+int picoui_vertical_grid_align_offset(struct picoui_rect widget,
+                                      int current_offset,
+                                      int item_count,
+                                      int item_height,
+                                      int space);
+int picoui_focus_reset(struct picoui_app *app);
+int picoui_focus_navigate(struct picoui_app *app, enum picoui_native_nav_dir dir);
 
 #endif

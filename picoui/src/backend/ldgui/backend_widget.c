@@ -14,6 +14,11 @@ int picoui_native_nav_dir_to_ld(enum picoui_native_nav_dir dir)
     case PICOUI_NATIVE_NAV_UP:
         return NAV_UP;
     case PICOUI_NATIVE_NAV_DOWN:
+        return NAV_DOWN;
+    case PICOUI_NATIVE_NAV_ENTER:
+        return NAV_ENTER;
+    case PICOUI_NATIVE_NAV_BACK:
+        return NAV_BACK;
     default:
         return NAV_DOWN;
     }

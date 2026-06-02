@@ -80,6 +80,10 @@ struct picoui_window *picoui_window_create(struct picoui_app *app, const char *i
     window->flex_track_align = PICOUI_ALIGN_START;
     window->grid_col_align = PICOUI_ALIGN_START;
     window->grid_row_align = PICOUI_ALIGN_START;
+    if (picoui_backend_widget_bind_host(window->widget.backend_widget, &window->widget) != 0) {
+        free(window);
+        return 0;
+    }
     return window;
 }
 

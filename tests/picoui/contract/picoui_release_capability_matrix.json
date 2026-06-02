@@ -76,8 +76,8 @@
     "native_api_matrix_row_total": 611,
     "capability_entry_total": 611,
     "gap_status_counts": {
-      "allowlisted": 207,
-      "covered": 404
+      "allowlisted": 191,
+      "covered": 420
     },
     "coverage_kind_counts": {
       "direct_field_parity": 14,
@@ -86,27 +86,25 @@
       "macro_alias_parity": 11,
       "native_getter_parity": 46,
       "native_setter_parity": 153,
-      "non_widget_allowlisted": 99,
-      "shared_api_equivalence": 166
+      "non_widget_allowlisted": 83,
+      "shared_api_equivalence": 182
     },
     "missing_gap_total": 0,
-    "allowlisted_total": 207,
-    "covered_total": 404,
-    "direct_public_covered_total": 404,
-    "policy_allowlisted_total": 207,
-    "direct_public_100_complete": false,
+    "allowlisted_total": 191,
+    "covered_total": 420,
+    "direct_public_covered_total": 420,
+    "policy_allowlisted_total": 191,
+    "direct_public_100_complete": true,
     "widget_row_total": 32,
     "shared_policy_counts": {
-      "allowlisted_tree_helper": 150,
-      "backend_proof_only": 175,
-      "missing_backend_proof": 5,
-      "missing_picoui_api": 8,
-      "shared_api_equivalence": 162
+      "allowlisted_tree_helper": 165,
+      "backend_proof_only": 154,
+      "shared_api_equivalence": 192
     },
     "policy_category_counts": {
       "backend_private_hook": 3,
-      "base_tree_policy": 20,
-      "direct_covered": 404,
+      "base_tree_policy": 4,
+      "direct_covered": 420,
       "drawing_helper_policy": 5,
       "enum_only_semantics": 2,
       "layout_solver_internal": 14,
@@ -118,7 +116,6 @@
       "runtime_host_internal": 16
     },
     "direct_100_category_counts": {
-      "optional_public_extension": 16,
       "policy_never_public": 191
     },
     "group_kind_counts": {
@@ -926,64 +923,70 @@
       "widget_status": "native_api_gap_tracked",
       "current_layer": "a_0_8_ledger_truth",
       "parity_status": "policy_complete",
-      "widget_release_judgement": "policy_complete_not_direct_100",
+      "widget_release_judgement": "policy_complete",
       "native_api_total": 63,
       "native_api_gap_status_counts": {
-        "allowlisted": 30,
-        "covered": 33
+        "allowlisted": 14,
+        "covered": 49
       },
       "capabilities": [
         {
           "name": "ldBaseAlignRegionCenter",
-          "status": "allowlisted",
+          "status": "covered",
           "native_api": "ldBaseAlignRegionCenter",
-          "coverage_kind": "non_widget_allowlisted",
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
-          "capability_release_judgement": "allowlisted",
-          "required": false,
-          "rationale": "R3 policy decision: base geometry/focus/helper row is backend-private or represented by existing PicoUI layout/widget APIs; no new public tree traversal API is required.",
-          "planned_task": "R3",
-          "overwrap_risk": false,
-          "notes": "a-0.10 R2 direct-100 category: optional_public_extension; a portable PicoUI tree, geometry, focus, or nameId abstraction could be designed later, but a-0.9 keeps native tree traversal out of the current public user model and does not add API here.",
-          "allowlist_reason": "R3 policy decision: base geometry/focus/helper row is backend-private or represented by existing PicoUI layout/widget APIs; no new public tree traversal API is required.",
-          "shared_policy": "allowlisted_tree_helper",
-          "shared_policy_evidence": [
-            "PicoUI creation APIs carry parent intent and backend attach/remove maintains the real LingDongGUI tree.",
-            "test_backend_widget_tree_contract verifies backend child/sibling tree ownership without exposing native traversal wrappers."
+          "coverage_kind": "shared_api_equivalence",
+          "picoui_api": "picoui_rect_center",
+          "backend_proof": "picoui_rect_center",
+          "unit_test": "test_widget_tree_name_and_type_queries_round_trip_to_ldbase + test_widget_geometry_helpers_round_trip_to_ldbase + test_widget_focus_navigation_public_api",
+          "gate_evidence": [
+            "ctest:test_picoui_layout",
+            "python:check_picoui_release_capability_matrix"
           ],
-          "policy_category": "base_tree_policy",
-          "direct_100_category": "optional_public_extension",
-          "group_kind": "shared_base"
+          "gap_status": "covered",
+          "capability_release_judgement": "direct_parity_complete",
+          "required": true,
+          "rationale": "a-0.12 direct public API parity: portable PicoUI wrapper covers the native base helper with public header/source/unit proof.",
+          "planned_task": "a-0.12-T2/T3",
+          "overwrap_risk": false,
+          "notes": "a-0.12 direct public API parity: covered by portable PicoUI base API without exposing ldBase_t, ld_scene_t, arm_2d_* or ldWidgetType_t.",
+          "shared_policy": "shared_api_equivalence",
+          "shared_policy_evidence": [
+            "PicoUI public API is declared in picoui/include/picoui/widget.h.",
+            "test_picoui_layout verifies public API round-trip against LingDongGUI base tree/geometry/focus behavior."
+          ],
+          "policy_category": "direct_covered",
+          "group_kind": "shared_base",
+          "picoui_public_api": "picoui_rect_center",
+          "equivalence_proof": "picoui_rect_center maps PicoUI rects to ldBaseAlignRegionCenter-compatible centered region semantics; covered by test_widget_geometry_helpers_round_trip_to_ldbase."
         },
         {
           "name": "ldBaseAutoVerticalGridAlign",
-          "status": "allowlisted",
+          "status": "covered",
           "native_api": "ldBaseAutoVerticalGridAlign",
-          "coverage_kind": "non_widget_allowlisted",
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
-          "capability_release_judgement": "allowlisted",
-          "required": false,
-          "rationale": "R3 policy decision: base geometry/focus/helper row is backend-private or represented by existing PicoUI layout/widget APIs; no new public tree traversal API is required.",
-          "planned_task": "R3",
-          "overwrap_risk": false,
-          "notes": "a-0.10 R2 direct-100 category: optional_public_extension; a portable PicoUI tree, geometry, focus, or nameId abstraction could be designed later, but a-0.9 keeps native tree traversal out of the current public user model and does not add API here.",
-          "allowlist_reason": "R3 policy decision: base geometry/focus/helper row is backend-private or represented by existing PicoUI layout/widget APIs; no new public tree traversal API is required.",
-          "shared_policy": "allowlisted_tree_helper",
-          "shared_policy_evidence": [
-            "PicoUI creation APIs carry parent intent and backend attach/remove maintains the real LingDongGUI tree.",
-            "test_backend_widget_tree_contract verifies backend child/sibling tree ownership without exposing native traversal wrappers."
+          "coverage_kind": "shared_api_equivalence",
+          "picoui_api": "picoui_vertical_grid_align_offset",
+          "backend_proof": "picoui_vertical_grid_align_offset",
+          "unit_test": "test_widget_tree_name_and_type_queries_round_trip_to_ldbase + test_widget_geometry_helpers_round_trip_to_ldbase + test_widget_focus_navigation_public_api",
+          "gate_evidence": [
+            "ctest:test_picoui_layout",
+            "python:check_picoui_release_capability_matrix"
           ],
-          "policy_category": "base_tree_policy",
-          "direct_100_category": "optional_public_extension",
-          "group_kind": "shared_base"
+          "gap_status": "covered",
+          "capability_release_judgement": "direct_parity_complete",
+          "required": true,
+          "rationale": "a-0.12 direct public API parity: portable PicoUI wrapper covers the native base helper with public header/source/unit proof.",
+          "planned_task": "a-0.12-T2/T3",
+          "overwrap_risk": false,
+          "notes": "a-0.12 direct public API parity: covered by portable PicoUI base API without exposing ldBase_t, ld_scene_t, arm_2d_* or ldWidgetType_t.",
+          "shared_policy": "shared_api_equivalence",
+          "shared_policy_evidence": [
+            "PicoUI public API is declared in picoui/include/picoui/widget.h.",
+            "test_picoui_layout verifies public API round-trip against LingDongGUI base tree/geometry/focus behavior."
+          ],
+          "policy_category": "direct_covered",
+          "group_kind": "shared_base",
+          "picoui_public_api": "picoui_vertical_grid_align_offset",
+          "equivalence_proof": "picoui_vertical_grid_align_offset maps PicoUI rect and scalar arguments to ldBaseAutoVerticalGridAlign; covered by test_widget_geometry_helpers_round_trip_to_ldbase."
         },
         {
           "name": "ldBaseBgMove",
@@ -1065,159 +1068,177 @@
         },
         {
           "name": "ldBaseFocusNavigate",
-          "status": "allowlisted",
+          "status": "covered",
           "native_api": "ldBaseFocusNavigate",
-          "coverage_kind": "non_widget_allowlisted",
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
-          "capability_release_judgement": "allowlisted",
-          "required": false,
-          "rationale": "R3 policy decision: base geometry/focus/helper row is backend-private or represented by existing PicoUI layout/widget APIs; no new public tree traversal API is required.",
-          "planned_task": "R3",
-          "overwrap_risk": false,
-          "notes": "a-0.10 R2 direct-100 category: optional_public_extension; a portable PicoUI tree, geometry, focus, or nameId abstraction could be designed later, but a-0.9 keeps native tree traversal out of the current public user model and does not add API here.",
-          "shared_policy": "allowlisted_tree_helper",
-          "shared_policy_evidence": [
-            "PicoUI creation APIs carry parent intent and backend attach/remove maintains the real LingDongGUI tree.",
-            "test_backend_widget_tree_contract verifies backend child/sibling tree ownership without exposing native traversal wrappers."
+          "coverage_kind": "shared_api_equivalence",
+          "picoui_api": "picoui_focus_navigate",
+          "backend_proof": "picoui_focus_navigate",
+          "unit_test": "test_widget_tree_name_and_type_queries_round_trip_to_ldbase + test_widget_geometry_helpers_round_trip_to_ldbase + test_widget_focus_navigation_public_api",
+          "gate_evidence": [
+            "ctest:test_picoui_layout",
+            "python:check_picoui_release_capability_matrix"
           ],
-          "allowlist_reason": "R3 policy decision: base geometry/focus/helper row is backend-private or represented by existing PicoUI layout/widget APIs; no new public tree traversal API is required.",
-          "policy_category": "base_tree_policy",
-          "direct_100_category": "optional_public_extension",
-          "group_kind": "shared_base"
+          "gap_status": "covered",
+          "capability_release_judgement": "direct_parity_complete",
+          "required": true,
+          "rationale": "a-0.12 direct public API parity: portable PicoUI wrapper covers the native base helper with public header/source/unit proof.",
+          "planned_task": "a-0.12-T2/T3",
+          "overwrap_risk": false,
+          "notes": "a-0.12 direct public API parity: covered by portable PicoUI base API without exposing ldBase_t, ld_scene_t, arm_2d_* or ldWidgetType_t.",
+          "shared_policy": "shared_api_equivalence",
+          "shared_policy_evidence": [
+            "PicoUI public API is declared in picoui/include/picoui/widget.h.",
+            "test_picoui_layout verifies public API round-trip against LingDongGUI base tree/geometry/focus behavior."
+          ],
+          "policy_category": "direct_covered",
+          "group_kind": "shared_base",
+          "picoui_public_api": "picoui_focus_navigate",
+          "equivalence_proof": "picoui_focus_navigate exposes app-level focus navigation without ld_scene_t: first focus enters the root first child, ENTER enters the current widget first child, BACK returns to the parent, and LEFT/RIGHT/UP/DOWN keep sibling directional selection; covered by test_widget_focus_navigation_public_api."
         },
         {
           "name": "ldBaseFocusNavigateInit",
-          "status": "allowlisted",
+          "status": "covered",
           "native_api": "ldBaseFocusNavigateInit",
-          "coverage_kind": "non_widget_allowlisted",
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
-          "capability_release_judgement": "allowlisted",
-          "required": false,
-          "rationale": "R3 policy decision: base geometry/focus/helper row is backend-private or represented by existing PicoUI layout/widget APIs; no new public tree traversal API is required.",
-          "planned_task": "R3",
-          "overwrap_risk": false,
-          "notes": "a-0.10 R2 direct-100 category: optional_public_extension; a portable PicoUI tree, geometry, focus, or nameId abstraction could be designed later, but a-0.9 keeps native tree traversal out of the current public user model and does not add API here.",
-          "shared_policy": "allowlisted_tree_helper",
-          "shared_policy_evidence": [
-            "PicoUI creation APIs carry parent intent and backend attach/remove maintains the real LingDongGUI tree.",
-            "test_backend_widget_tree_contract verifies backend child/sibling tree ownership without exposing native traversal wrappers."
+          "coverage_kind": "shared_api_equivalence",
+          "picoui_api": "picoui_focus_reset",
+          "backend_proof": "picoui_focus_reset",
+          "unit_test": "test_widget_tree_name_and_type_queries_round_trip_to_ldbase + test_widget_geometry_helpers_round_trip_to_ldbase + test_widget_focus_navigation_public_api",
+          "gate_evidence": [
+            "ctest:test_picoui_layout",
+            "python:check_picoui_release_capability_matrix"
           ],
-          "allowlist_reason": "R3 policy decision: base geometry/focus/helper row is backend-private or represented by existing PicoUI layout/widget APIs; no new public tree traversal API is required.",
-          "policy_category": "base_tree_policy",
-          "direct_100_category": "optional_public_extension",
-          "group_kind": "shared_base"
+          "gap_status": "covered",
+          "capability_release_judgement": "direct_parity_complete",
+          "required": true,
+          "rationale": "a-0.12 direct public API parity: portable PicoUI wrapper covers the native base helper with public header/source/unit proof.",
+          "planned_task": "a-0.12-T2/T3",
+          "overwrap_risk": false,
+          "notes": "a-0.12 direct public API parity: covered by portable PicoUI base API without exposing ldBase_t, ld_scene_t, arm_2d_* or ldWidgetType_t.",
+          "shared_policy": "shared_api_equivalence",
+          "shared_policy_evidence": [
+            "PicoUI public API is declared in picoui/include/picoui/widget.h.",
+            "test_picoui_layout verifies public API round-trip against LingDongGUI base tree/geometry/focus behavior."
+          ],
+          "policy_category": "direct_covered",
+          "group_kind": "shared_base",
+          "picoui_public_api": "picoui_focus_reset",
+          "equivalence_proof": "picoui_focus_reset clears PicoUI focus owner and invokes native focus navigation reset; covered by test_widget_focus_navigation_public_api."
         },
         {
           "name": "ldBaseGetAbsoluteLocation",
-          "status": "allowlisted",
+          "status": "covered",
           "native_api": "ldBaseGetAbsoluteLocation",
-          "coverage_kind": "non_widget_allowlisted",
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
-          "capability_release_judgement": "allowlisted",
-          "required": false,
-          "rationale": "R3 policy decision: base geometry/focus/helper row is backend-private or represented by existing PicoUI layout/widget APIs; no new public tree traversal API is required.",
-          "planned_task": "R3",
-          "overwrap_risk": false,
-          "notes": "a-0.10 R2 direct-100 category: optional_public_extension; a portable PicoUI tree, geometry, focus, or nameId abstraction could be designed later, but a-0.9 keeps native tree traversal out of the current public user model and does not add API here.",
-          "shared_policy": "allowlisted_tree_helper",
-          "shared_policy_evidence": [
-            "PicoUI creation APIs carry parent intent and backend attach/remove maintains the real LingDongGUI tree.",
-            "test_backend_widget_tree_contract verifies backend child/sibling tree ownership without exposing native traversal wrappers."
+          "coverage_kind": "shared_api_equivalence",
+          "picoui_api": "picoui_widget_get_absolute_pos",
+          "backend_proof": "picoui_widget_get_absolute_pos",
+          "unit_test": "test_widget_tree_name_and_type_queries_round_trip_to_ldbase + test_widget_geometry_helpers_round_trip_to_ldbase + test_widget_focus_navigation_public_api",
+          "gate_evidence": [
+            "ctest:test_picoui_layout",
+            "python:check_picoui_release_capability_matrix"
           ],
-          "allowlist_reason": "R3 policy decision: base geometry/focus/helper row is backend-private or represented by existing PicoUI layout/widget APIs; no new public tree traversal API is required.",
-          "policy_category": "base_tree_policy",
-          "direct_100_category": "optional_public_extension",
-          "group_kind": "shared_base"
+          "gap_status": "covered",
+          "capability_release_judgement": "direct_parity_complete",
+          "required": true,
+          "rationale": "a-0.12 direct public API parity: portable PicoUI wrapper covers the native base helper with public header/source/unit proof.",
+          "planned_task": "a-0.12-T2/T3",
+          "overwrap_risk": false,
+          "notes": "a-0.12 direct public API parity: covered by portable PicoUI base API without exposing ldBase_t, ld_scene_t, arm_2d_* or ldWidgetType_t.",
+          "shared_policy": "shared_api_equivalence",
+          "shared_policy_evidence": [
+            "PicoUI public API is declared in picoui/include/picoui/widget.h.",
+            "test_picoui_layout verifies public API round-trip against LingDongGUI base tree/geometry/focus behavior."
+          ],
+          "policy_category": "direct_covered",
+          "group_kind": "shared_base",
+          "picoui_public_api": "picoui_widget_get_absolute_pos",
+          "equivalence_proof": "picoui_widget_get_absolute_pos maps PicoUI point to native absolute-location helper and returns portable point; covered by test_widget_geometry_helpers_round_trip_to_ldbase."
         },
         {
           "name": "ldBaseGetAlignRegion",
-          "status": "allowlisted",
+          "status": "covered",
           "native_api": "ldBaseGetAlignRegion",
-          "coverage_kind": "non_widget_allowlisted",
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
-          "capability_release_judgement": "allowlisted",
-          "required": false,
-          "rationale": "R3 policy decision: base geometry/focus/helper row is backend-private or represented by existing PicoUI layout/widget APIs; no new public tree traversal API is required.",
-          "planned_task": "R3",
-          "overwrap_risk": false,
-          "notes": "a-0.10 R2 direct-100 category: optional_public_extension; a portable PicoUI tree, geometry, focus, or nameId abstraction could be designed later, but a-0.9 keeps native tree traversal out of the current public user model and does not add API here.",
-          "shared_policy": "allowlisted_tree_helper",
-          "shared_policy_evidence": [
-            "PicoUI creation APIs carry parent intent and backend attach/remove maintains the real LingDongGUI tree.",
-            "test_backend_widget_tree_contract verifies backend child/sibling tree ownership without exposing native traversal wrappers."
+          "coverage_kind": "shared_api_equivalence",
+          "picoui_api": "picoui_rect_align",
+          "backend_proof": "picoui_rect_align",
+          "unit_test": "test_widget_tree_name_and_type_queries_round_trip_to_ldbase + test_widget_geometry_helpers_round_trip_to_ldbase + test_widget_focus_navigation_public_api",
+          "gate_evidence": [
+            "ctest:test_picoui_layout",
+            "python:check_picoui_release_capability_matrix"
           ],
-          "allowlist_reason": "R3 policy decision: base geometry/focus/helper row is backend-private or represented by existing PicoUI layout/widget APIs; no new public tree traversal API is required.",
-          "policy_category": "base_tree_policy",
-          "direct_100_category": "optional_public_extension",
-          "group_kind": "shared_base"
+          "gap_status": "covered",
+          "capability_release_judgement": "direct_parity_complete",
+          "required": true,
+          "rationale": "a-0.12 direct public API parity: portable PicoUI wrapper covers the native base helper with public header/source/unit proof.",
+          "planned_task": "a-0.12-T2/T3",
+          "overwrap_risk": false,
+          "notes": "a-0.12 direct public API parity: covered by portable PicoUI base API without exposing ldBase_t, ld_scene_t, arm_2d_* or ldWidgetType_t.",
+          "shared_policy": "shared_api_equivalence",
+          "shared_policy_evidence": [
+            "PicoUI public API is declared in picoui/include/picoui/widget.h.",
+            "test_picoui_layout verifies public API round-trip against LingDongGUI base tree/geometry/focus behavior."
+          ],
+          "policy_category": "direct_covered",
+          "group_kind": "shared_base",
+          "picoui_public_api": "picoui_rect_align",
+          "equivalence_proof": "picoui_rect_align maps PicoUI rects and align enums to native align-region semantics; covered by test_widget_geometry_helpers_round_trip_to_ldbase."
         },
         {
           "name": "ldBaseGetChildCount",
-          "status": "allowlisted",
+          "status": "covered",
           "native_api": "ldBaseGetChildCount",
-          "coverage_kind": "non_widget_allowlisted",
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
-          "capability_release_judgement": "allowlisted",
-          "required": false,
-          "rationale": "R3 policy decision: PicoUI tree mutation is owned by create/parent APIs and backend attach/remove; native tree traversal/nameId helpers stay backend-private and are not a user-facing public wrapper surface.",
-          "planned_task": "R3",
-          "overwrap_risk": false,
-          "notes": "a-0.10 R2 direct-100 category: optional_public_extension; a portable PicoUI tree, geometry, focus, or nameId abstraction could be designed later, but a-0.9 keeps native tree traversal out of the current public user model and does not add API here.",
-          "shared_policy": "allowlisted_tree_helper",
-          "shared_policy_evidence": [
-            "PicoUI creation APIs carry parent intent and backend attach/remove maintains the real LingDongGUI tree.",
-            "test_backend_widget_tree_contract verifies backend child/sibling tree ownership without exposing native traversal wrappers."
+          "coverage_kind": "shared_api_equivalence",
+          "picoui_api": "picoui_widget_get_child_count",
+          "backend_proof": "picoui_widget_get_child_count",
+          "unit_test": "test_widget_tree_name_and_type_queries_round_trip_to_ldbase + test_widget_geometry_helpers_round_trip_to_ldbase + test_widget_focus_navigation_public_api",
+          "gate_evidence": [
+            "ctest:test_picoui_layout",
+            "python:check_picoui_release_capability_matrix"
           ],
-          "allowlist_reason": "R3 policy decision: PicoUI tree mutation is owned by create/parent APIs and backend attach/remove; native tree traversal/nameId helpers stay backend-private and are not a user-facing public wrapper surface.",
-          "policy_category": "base_tree_policy",
-          "direct_100_category": "optional_public_extension",
-          "group_kind": "shared_base"
+          "gap_status": "covered",
+          "capability_release_judgement": "direct_parity_complete",
+          "required": true,
+          "rationale": "a-0.12 direct public API parity: portable PicoUI wrapper covers the native base helper with public header/source/unit proof.",
+          "planned_task": "a-0.12-T2/T3",
+          "overwrap_risk": false,
+          "notes": "a-0.12 direct public API parity: covered by portable PicoUI base API without exposing ldBase_t, ld_scene_t, arm_2d_* or ldWidgetType_t.",
+          "shared_policy": "shared_api_equivalence",
+          "shared_policy_evidence": [
+            "PicoUI public API is declared in picoui/include/picoui/widget.h.",
+            "test_picoui_layout verifies public API round-trip against LingDongGUI base tree/geometry/focus behavior."
+          ],
+          "policy_category": "direct_covered",
+          "group_kind": "shared_base",
+          "picoui_public_api": "picoui_widget_get_child_count",
+          "equivalence_proof": "picoui_widget_get_child_count returns the native child count when an ldBase is present; covered by test_widget_tree_name_and_type_queries_round_trip_to_ldbase."
         },
         {
           "name": "ldBaseGetChildList",
-          "status": "allowlisted",
+          "status": "covered",
           "native_api": "ldBaseGetChildList",
-          "coverage_kind": "non_widget_allowlisted",
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
-          "capability_release_judgement": "allowlisted",
-          "required": false,
-          "rationale": "R3 policy decision: PicoUI tree mutation is owned by create/parent APIs and backend attach/remove; native tree traversal/nameId helpers stay backend-private and are not a user-facing public wrapper surface.",
-          "planned_task": "R3",
-          "overwrap_risk": false,
-          "notes": "a-0.10 R2 direct-100 category: optional_public_extension; a portable PicoUI tree, geometry, focus, or nameId abstraction could be designed later, but a-0.9 keeps native tree traversal out of the current public user model and does not add API here.",
-          "shared_policy": "allowlisted_tree_helper",
-          "shared_policy_evidence": [
-            "PicoUI creation APIs carry parent intent and backend attach/remove maintains the real LingDongGUI tree.",
-            "test_backend_widget_tree_contract verifies backend child/sibling tree ownership without exposing native traversal wrappers."
+          "coverage_kind": "shared_api_equivalence",
+          "picoui_api": "picoui_widget_get_first_child",
+          "backend_proof": "picoui_widget_get_first_child",
+          "unit_test": "test_widget_tree_name_and_type_queries_round_trip_to_ldbase + test_widget_geometry_helpers_round_trip_to_ldbase + test_widget_focus_navigation_public_api",
+          "gate_evidence": [
+            "ctest:test_picoui_layout",
+            "python:check_picoui_release_capability_matrix"
           ],
-          "allowlist_reason": "R3 policy decision: PicoUI tree mutation is owned by create/parent APIs and backend attach/remove; native tree traversal/nameId helpers stay backend-private and are not a user-facing public wrapper surface.",
-          "policy_category": "base_tree_policy",
-          "direct_100_category": "optional_public_extension",
-          "group_kind": "shared_base"
+          "gap_status": "covered",
+          "capability_release_judgement": "direct_parity_complete",
+          "required": true,
+          "rationale": "a-0.12 direct public API parity: portable PicoUI wrapper covers the native base helper with public header/source/unit proof.",
+          "planned_task": "a-0.12-T2/T3",
+          "overwrap_risk": false,
+          "notes": "a-0.12 direct public API parity: covered by portable PicoUI base API without exposing ldBase_t, ld_scene_t, arm_2d_* or ldWidgetType_t.",
+          "shared_policy": "shared_api_equivalence",
+          "shared_policy_evidence": [
+            "PicoUI public API is declared in picoui/include/picoui/widget.h.",
+            "test_picoui_layout verifies public API round-trip against LingDongGUI base tree/geometry/focus behavior."
+          ],
+          "policy_category": "direct_covered",
+          "group_kind": "shared_base",
+          "picoui_public_api": "picoui_widget_get_first_child",
+          "equivalence_proof": "picoui_widget_get_first_child returns the PicoUI host wrapper for the native/backend first child; covered by test_widget_tree_name_and_type_queries_round_trip_to_ldbase."
         },
         {
           "name": "ldBaseGetDate",
@@ -1299,55 +1320,61 @@
         },
         {
           "name": "ldBaseGetNameId",
-          "status": "allowlisted",
+          "status": "covered",
           "native_api": "ldBaseGetNameId",
-          "coverage_kind": "non_widget_allowlisted",
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
-          "capability_release_judgement": "allowlisted",
-          "required": false,
-          "rationale": "R3 policy decision: base geometry/focus/helper row is backend-private or represented by existing PicoUI layout/widget APIs; no new public tree traversal API is required.",
-          "planned_task": "R3",
-          "overwrap_risk": false,
-          "notes": "a-0.10 R2 direct-100 category: optional_public_extension; a portable PicoUI tree, geometry, focus, or nameId abstraction could be designed later, but a-0.9 keeps native tree traversal out of the current public user model and does not add API here.",
-          "shared_policy": "allowlisted_tree_helper",
-          "shared_policy_evidence": [
-            "PicoUI creation APIs carry parent intent and backend attach/remove maintains the real LingDongGUI tree.",
-            "test_backend_widget_tree_contract verifies backend child/sibling tree ownership without exposing native traversal wrappers."
+          "coverage_kind": "shared_api_equivalence",
+          "picoui_api": "picoui_widget_get_name_id",
+          "backend_proof": "picoui_widget_get_name_id",
+          "unit_test": "test_widget_tree_name_and_type_queries_round_trip_to_ldbase + test_widget_geometry_helpers_round_trip_to_ldbase + test_widget_focus_navigation_public_api",
+          "gate_evidence": [
+            "ctest:test_picoui_layout",
+            "python:check_picoui_release_capability_matrix"
           ],
-          "allowlist_reason": "R3 policy decision: base geometry/focus/helper row is backend-private or represented by existing PicoUI layout/widget APIs; no new public tree traversal API is required.",
-          "policy_category": "base_tree_policy",
-          "direct_100_category": "optional_public_extension",
-          "group_kind": "shared_base"
+          "gap_status": "covered",
+          "capability_release_judgement": "direct_parity_complete",
+          "required": true,
+          "rationale": "a-0.12 direct public API parity: portable PicoUI wrapper covers the native base helper with public header/source/unit proof.",
+          "planned_task": "a-0.12-T2/T3",
+          "overwrap_risk": false,
+          "notes": "a-0.12 direct public API parity: covered by portable PicoUI base API without exposing ldBase_t, ld_scene_t, arm_2d_* or ldWidgetType_t.",
+          "shared_policy": "shared_api_equivalence",
+          "shared_policy_evidence": [
+            "PicoUI public API is declared in picoui/include/picoui/widget.h.",
+            "test_picoui_layout verifies public API round-trip against LingDongGUI base tree/geometry/focus behavior."
+          ],
+          "policy_category": "direct_covered",
+          "group_kind": "shared_base",
+          "picoui_public_api": "picoui_widget_get_name_id",
+          "equivalence_proof": "picoui_widget_get_name_id returns the native nameId through a portable integer API; covered by test_widget_tree_name_and_type_queries_round_trip_to_ldbase."
         },
         {
           "name": "ldBaseGetNextSibling",
-          "status": "allowlisted",
+          "status": "covered",
           "native_api": "ldBaseGetNextSibling",
-          "coverage_kind": "non_widget_allowlisted",
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
-          "capability_release_judgement": "allowlisted",
-          "required": false,
-          "rationale": "R3 policy decision: PicoUI tree mutation is owned by create/parent APIs and backend attach/remove; native tree traversal/nameId helpers stay backend-private and are not a user-facing public wrapper surface.",
-          "planned_task": "R3",
-          "overwrap_risk": false,
-          "notes": "a-0.10 R2 direct-100 category: optional_public_extension; a portable PicoUI tree, geometry, focus, or nameId abstraction could be designed later, but a-0.9 keeps native tree traversal out of the current public user model and does not add API here.",
-          "shared_policy": "allowlisted_tree_helper",
-          "shared_policy_evidence": [
-            "PicoUI creation APIs carry parent intent and backend attach/remove maintains the real LingDongGUI tree.",
-            "test_backend_widget_tree_contract verifies backend child/sibling tree ownership without exposing native traversal wrappers."
+          "coverage_kind": "shared_api_equivalence",
+          "picoui_api": "picoui_widget_get_next_sibling",
+          "backend_proof": "picoui_widget_get_next_sibling",
+          "unit_test": "test_widget_tree_name_and_type_queries_round_trip_to_ldbase + test_widget_geometry_helpers_round_trip_to_ldbase + test_widget_focus_navigation_public_api",
+          "gate_evidence": [
+            "ctest:test_picoui_layout",
+            "python:check_picoui_release_capability_matrix"
           ],
-          "allowlist_reason": "R3 policy decision: PicoUI tree mutation is owned by create/parent APIs and backend attach/remove; native tree traversal/nameId helpers stay backend-private and are not a user-facing public wrapper surface.",
-          "policy_category": "base_tree_policy",
-          "direct_100_category": "optional_public_extension",
-          "group_kind": "shared_base"
+          "gap_status": "covered",
+          "capability_release_judgement": "direct_parity_complete",
+          "required": true,
+          "rationale": "a-0.12 direct public API parity: portable PicoUI wrapper covers the native base helper with public header/source/unit proof.",
+          "planned_task": "a-0.12-T2/T3",
+          "overwrap_risk": false,
+          "notes": "a-0.12 direct public API parity: covered by portable PicoUI base API without exposing ldBase_t, ld_scene_t, arm_2d_* or ldWidgetType_t.",
+          "shared_policy": "shared_api_equivalence",
+          "shared_policy_evidence": [
+            "PicoUI public API is declared in picoui/include/picoui/widget.h.",
+            "test_picoui_layout verifies public API round-trip against LingDongGUI base tree/geometry/focus behavior."
+          ],
+          "policy_category": "direct_covered",
+          "group_kind": "shared_base",
+          "picoui_public_api": "picoui_widget_get_next_sibling",
+          "equivalence_proof": "picoui_widget_get_next_sibling returns the PicoUI host wrapper for the native/backend next sibling; covered by test_widget_tree_name_and_type_queries_round_trip_to_ldbase."
         },
         {
           "name": "ldBaseGetOpacity",
@@ -1377,29 +1404,32 @@
         },
         {
           "name": "ldBaseGetParent",
-          "status": "allowlisted",
+          "status": "covered",
           "native_api": "ldBaseGetParent",
-          "coverage_kind": "non_widget_allowlisted",
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
-          "capability_release_judgement": "allowlisted",
-          "required": false,
-          "rationale": "R3 policy decision: PicoUI tree mutation is owned by create/parent APIs and backend attach/remove; native tree traversal/nameId helpers stay backend-private and are not a user-facing public wrapper surface.",
-          "planned_task": "R3",
-          "overwrap_risk": false,
-          "notes": "a-0.10 R2 direct-100 category: optional_public_extension; a portable PicoUI tree, geometry, focus, or nameId abstraction could be designed later, but a-0.9 keeps native tree traversal out of the current public user model and does not add API here.",
-          "shared_policy": "allowlisted_tree_helper",
-          "shared_policy_evidence": [
-            "PicoUI creation APIs carry parent intent and backend attach/remove maintains the real LingDongGUI tree.",
-            "test_backend_widget_tree_contract verifies backend child/sibling tree ownership without exposing native traversal wrappers."
+          "coverage_kind": "shared_api_equivalence",
+          "picoui_api": "picoui_widget_get_parent",
+          "backend_proof": "picoui_widget_get_parent",
+          "unit_test": "test_widget_tree_name_and_type_queries_round_trip_to_ldbase + test_widget_geometry_helpers_round_trip_to_ldbase + test_widget_focus_navigation_public_api",
+          "gate_evidence": [
+            "ctest:test_picoui_layout",
+            "python:check_picoui_release_capability_matrix"
           ],
-          "allowlist_reason": "R3 policy decision: PicoUI tree mutation is owned by create/parent APIs and backend attach/remove; native tree traversal/nameId helpers stay backend-private and are not a user-facing public wrapper surface.",
-          "policy_category": "base_tree_policy",
-          "direct_100_category": "optional_public_extension",
-          "group_kind": "shared_base"
+          "gap_status": "covered",
+          "capability_release_judgement": "direct_parity_complete",
+          "required": true,
+          "rationale": "a-0.12 direct public API parity: portable PicoUI wrapper covers the native base helper with public header/source/unit proof.",
+          "planned_task": "a-0.12-T2/T3",
+          "overwrap_risk": false,
+          "notes": "a-0.12 direct public API parity: covered by portable PicoUI base API without exposing ldBase_t, ld_scene_t, arm_2d_* or ldWidgetType_t.",
+          "shared_policy": "shared_api_equivalence",
+          "shared_policy_evidence": [
+            "PicoUI public API is declared in picoui/include/picoui/widget.h.",
+            "test_picoui_layout verifies public API round-trip against LingDongGUI base tree/geometry/focus behavior."
+          ],
+          "policy_category": "direct_covered",
+          "group_kind": "shared_base",
+          "picoui_public_api": "picoui_widget_get_parent",
+          "equivalence_proof": "picoui_widget_get_parent returns the PicoUI host wrapper for the native/backend parent; covered by test_widget_tree_name_and_type_queries_round_trip_to_ldbase."
         },
         {
           "name": "ldBaseGetRegion",
@@ -1429,55 +1459,61 @@
         },
         {
           "name": "ldBaseGetRelativeLocation",
-          "status": "allowlisted",
+          "status": "covered",
           "native_api": "ldBaseGetRelativeLocation",
-          "coverage_kind": "non_widget_allowlisted",
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
-          "capability_release_judgement": "allowlisted",
-          "required": false,
-          "rationale": "R3 policy decision: base geometry/focus/helper row is backend-private or represented by existing PicoUI layout/widget APIs; no new public tree traversal API is required.",
-          "planned_task": "R3",
-          "overwrap_risk": false,
-          "notes": "a-0.10 R2 direct-100 category: optional_public_extension; a portable PicoUI tree, geometry, focus, or nameId abstraction could be designed later, but a-0.9 keeps native tree traversal out of the current public user model and does not add API here.",
-          "shared_policy": "allowlisted_tree_helper",
-          "shared_policy_evidence": [
-            "PicoUI creation APIs carry parent intent and backend attach/remove maintains the real LingDongGUI tree.",
-            "test_backend_widget_tree_contract verifies backend child/sibling tree ownership without exposing native traversal wrappers."
+          "coverage_kind": "shared_api_equivalence",
+          "picoui_api": "picoui_widget_get_relative_pos",
+          "backend_proof": "picoui_widget_get_relative_pos",
+          "unit_test": "test_widget_tree_name_and_type_queries_round_trip_to_ldbase + test_widget_geometry_helpers_round_trip_to_ldbase + test_widget_focus_navigation_public_api",
+          "gate_evidence": [
+            "ctest:test_picoui_layout",
+            "python:check_picoui_release_capability_matrix"
           ],
-          "allowlist_reason": "R3 policy decision: base geometry/focus/helper row is backend-private or represented by existing PicoUI layout/widget APIs; no new public tree traversal API is required.",
-          "policy_category": "base_tree_policy",
-          "direct_100_category": "optional_public_extension",
-          "group_kind": "shared_base"
+          "gap_status": "covered",
+          "capability_release_judgement": "direct_parity_complete",
+          "required": true,
+          "rationale": "a-0.12 direct public API parity: portable PicoUI wrapper covers the native base helper with public header/source/unit proof.",
+          "planned_task": "a-0.12-T2/T3",
+          "overwrap_risk": false,
+          "notes": "a-0.12 direct public API parity: covered by portable PicoUI base API without exposing ldBase_t, ld_scene_t, arm_2d_* or ldWidgetType_t.",
+          "shared_policy": "shared_api_equivalence",
+          "shared_policy_evidence": [
+            "PicoUI public API is declared in picoui/include/picoui/widget.h.",
+            "test_picoui_layout verifies public API round-trip against LingDongGUI base tree/geometry/focus behavior."
+          ],
+          "policy_category": "direct_covered",
+          "group_kind": "shared_base",
+          "picoui_public_api": "picoui_widget_get_relative_pos",
+          "equivalence_proof": "picoui_widget_get_relative_pos maps PicoUI point to native relative-location helper and returns portable point; covered by test_widget_geometry_helpers_round_trip_to_ldbase."
         },
         {
           "name": "ldBaseGetRootNode",
-          "status": "allowlisted",
+          "status": "covered",
           "native_api": "ldBaseGetRootNode",
-          "coverage_kind": "non_widget_allowlisted",
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
-          "capability_release_judgement": "allowlisted",
-          "required": false,
-          "rationale": "R3 policy decision: PicoUI tree mutation is owned by create/parent APIs and backend attach/remove; native tree traversal/nameId helpers stay backend-private and are not a user-facing public wrapper surface.",
-          "planned_task": "R3",
-          "overwrap_risk": false,
-          "notes": "a-0.10 R2 direct-100 category: optional_public_extension; a portable PicoUI tree, geometry, focus, or nameId abstraction could be designed later, but a-0.9 keeps native tree traversal out of the current public user model and does not add API here.",
-          "shared_policy": "allowlisted_tree_helper",
-          "shared_policy_evidence": [
-            "PicoUI creation APIs carry parent intent and backend attach/remove maintains the real LingDongGUI tree.",
-            "test_backend_widget_tree_contract verifies backend child/sibling tree ownership without exposing native traversal wrappers."
+          "coverage_kind": "shared_api_equivalence",
+          "picoui_api": "picoui_widget_get_root",
+          "backend_proof": "picoui_widget_get_root",
+          "unit_test": "test_widget_tree_name_and_type_queries_round_trip_to_ldbase + test_widget_geometry_helpers_round_trip_to_ldbase + test_widget_focus_navigation_public_api",
+          "gate_evidence": [
+            "ctest:test_picoui_layout",
+            "python:check_picoui_release_capability_matrix"
           ],
-          "allowlist_reason": "R3 policy decision: PicoUI tree mutation is owned by create/parent APIs and backend attach/remove; native tree traversal/nameId helpers stay backend-private and are not a user-facing public wrapper surface.",
-          "policy_category": "base_tree_policy",
-          "direct_100_category": "optional_public_extension",
-          "group_kind": "shared_base"
+          "gap_status": "covered",
+          "capability_release_judgement": "direct_parity_complete",
+          "required": true,
+          "rationale": "a-0.12 direct public API parity: portable PicoUI wrapper covers the native base helper with public header/source/unit proof.",
+          "planned_task": "a-0.12-T2/T3",
+          "overwrap_risk": false,
+          "notes": "a-0.12 direct public API parity: covered by portable PicoUI base API without exposing ldBase_t, ld_scene_t, arm_2d_* or ldWidgetType_t.",
+          "shared_policy": "shared_api_equivalence",
+          "shared_policy_evidence": [
+            "PicoUI public API is declared in picoui/include/picoui/widget.h.",
+            "test_picoui_layout verifies public API round-trip against LingDongGUI base tree/geometry/focus behavior."
+          ],
+          "policy_category": "direct_covered",
+          "group_kind": "shared_base",
+          "picoui_public_api": "picoui_widget_get_root",
+          "equivalence_proof": "picoui_widget_get_root returns the root PicoUI host wrapper for the backend/native tree; covered by test_widget_tree_name_and_type_queries_round_trip_to_ldbase."
         },
         {
           "name": "ldBaseGetSize",
@@ -1611,81 +1647,90 @@
         },
         {
           "name": "ldBaseGetWidget",
-          "status": "allowlisted",
+          "status": "covered",
           "native_api": "ldBaseGetWidget",
-          "coverage_kind": "non_widget_allowlisted",
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
-          "capability_release_judgement": "allowlisted",
-          "required": false,
-          "rationale": "R3 policy decision: PicoUI tree mutation is owned by create/parent APIs and backend attach/remove; native tree traversal/nameId helpers stay backend-private and are not a user-facing public wrapper surface.",
-          "planned_task": "R3",
-          "overwrap_risk": false,
-          "notes": "a-0.10 R2 direct-100 category: optional_public_extension; a portable PicoUI tree, geometry, focus, or nameId abstraction could be designed later, but a-0.9 keeps native tree traversal out of the current public user model and does not add API here.",
-          "shared_policy": "allowlisted_tree_helper",
-          "shared_policy_evidence": [
-            "PicoUI creation APIs carry parent intent and backend attach/remove maintains the real LingDongGUI tree.",
-            "test_backend_widget_tree_contract verifies backend child/sibling tree ownership without exposing native traversal wrappers."
+          "coverage_kind": "shared_api_equivalence",
+          "picoui_api": "picoui_widget_find_by_name_id",
+          "backend_proof": "picoui_widget_find_by_name_id",
+          "unit_test": "test_widget_tree_name_and_type_queries_round_trip_to_ldbase + test_widget_geometry_helpers_round_trip_to_ldbase + test_widget_focus_navigation_public_api",
+          "gate_evidence": [
+            "ctest:test_picoui_layout",
+            "python:check_picoui_release_capability_matrix"
           ],
-          "allowlist_reason": "R3 policy decision: PicoUI tree mutation is owned by create/parent APIs and backend attach/remove; native tree traversal/nameId helpers stay backend-private and are not a user-facing public wrapper surface.",
-          "policy_category": "base_tree_policy",
-          "direct_100_category": "optional_public_extension",
-          "group_kind": "shared_base"
+          "gap_status": "covered",
+          "capability_release_judgement": "direct_parity_complete",
+          "required": true,
+          "rationale": "a-0.12 direct public API parity: portable PicoUI wrapper covers the native base helper with public header/source/unit proof.",
+          "planned_task": "a-0.12-T2/T3",
+          "overwrap_risk": false,
+          "notes": "a-0.12 direct public API parity: covered by portable PicoUI base API without exposing ldBase_t, ld_scene_t, arm_2d_* or ldWidgetType_t.",
+          "shared_policy": "shared_api_equivalence",
+          "shared_policy_evidence": [
+            "PicoUI public API is declared in picoui/include/picoui/widget.h.",
+            "test_picoui_layout verifies public API round-trip against LingDongGUI base tree/geometry/focus behavior."
+          ],
+          "policy_category": "direct_covered",
+          "group_kind": "shared_base",
+          "picoui_public_api": "picoui_widget_find_by_name_id",
+          "equivalence_proof": "picoui_widget_find_by_name_id exposes nameId lookup through PicoUI widget wrappers, matching native tree lookup intent; covered by test_widget_tree_name_and_type_queries_round_trip_to_ldbase."
         },
         {
           "name": "ldBaseGetWidgetById",
-          "status": "allowlisted",
+          "status": "covered",
           "native_api": "ldBaseGetWidgetById",
-          "coverage_kind": "non_widget_allowlisted",
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
-          "capability_release_judgement": "allowlisted",
-          "required": false,
-          "rationale": "R3 policy decision: PicoUI tree mutation is owned by create/parent APIs and backend attach/remove; native tree traversal/nameId helpers stay backend-private and are not a user-facing public wrapper surface.",
-          "planned_task": "R3",
-          "overwrap_risk": false,
-          "notes": "a-0.10 R2 direct-100 category: optional_public_extension; a portable PicoUI tree, geometry, focus, or nameId abstraction could be designed later, but a-0.9 keeps native tree traversal out of the current public user model and does not add API here.",
-          "shared_policy": "allowlisted_tree_helper",
-          "shared_policy_evidence": [
-            "PicoUI creation APIs carry parent intent and backend attach/remove maintains the real LingDongGUI tree.",
-            "test_backend_widget_tree_contract verifies backend child/sibling tree ownership without exposing native traversal wrappers."
+          "coverage_kind": "shared_api_equivalence",
+          "picoui_api": "picoui_widget_find_by_name_id",
+          "backend_proof": "picoui_widget_find_by_name_id",
+          "unit_test": "test_widget_tree_name_and_type_queries_round_trip_to_ldbase + test_widget_geometry_helpers_round_trip_to_ldbase + test_widget_focus_navigation_public_api",
+          "gate_evidence": [
+            "ctest:test_picoui_layout",
+            "python:check_picoui_release_capability_matrix"
           ],
-          "allowlist_reason": "R3 policy decision: PicoUI tree mutation is owned by create/parent APIs and backend attach/remove; native tree traversal/nameId helpers stay backend-private and are not a user-facing public wrapper surface.",
-          "policy_category": "base_tree_policy",
-          "direct_100_category": "optional_public_extension",
-          "group_kind": "shared_base"
+          "gap_status": "covered",
+          "capability_release_judgement": "direct_parity_complete",
+          "required": true,
+          "rationale": "a-0.12 direct public API parity: portable PicoUI wrapper covers the native base helper with public header/source/unit proof.",
+          "planned_task": "a-0.12-T2/T3",
+          "overwrap_risk": false,
+          "notes": "a-0.12 direct public API parity: covered by portable PicoUI base API without exposing ldBase_t, ld_scene_t, arm_2d_* or ldWidgetType_t.",
+          "shared_policy": "shared_api_equivalence",
+          "shared_policy_evidence": [
+            "PicoUI public API is declared in picoui/include/picoui/widget.h.",
+            "test_picoui_layout verifies public API round-trip against LingDongGUI base tree/geometry/focus behavior."
+          ],
+          "policy_category": "direct_covered",
+          "group_kind": "shared_base",
+          "picoui_public_api": "picoui_widget_find_by_name_id",
+          "equivalence_proof": "picoui_widget_find_by_name_id covers the macro alias by taking an explicit root and nameId without exposing ptScene; covered by test_widget_tree_name_and_type_queries_round_trip_to_ldbase."
         },
         {
           "name": "ldBaseGetWidgetType",
-          "status": "allowlisted",
+          "status": "covered",
           "native_api": "ldBaseGetWidgetType",
-          "coverage_kind": "non_widget_allowlisted",
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
-          "capability_release_judgement": "allowlisted",
-          "required": false,
-          "rationale": "R3 policy decision: PicoUI tree mutation is owned by create/parent APIs and backend attach/remove; native tree traversal/nameId helpers stay backend-private and are not a user-facing public wrapper surface.",
-          "planned_task": "R3",
-          "overwrap_risk": false,
-          "notes": "a-0.10 R2 direct-100 category: optional_public_extension; a portable PicoUI tree, geometry, focus, or nameId abstraction could be designed later, but a-0.9 keeps native tree traversal out of the current public user model and does not add API here.",
-          "shared_policy": "allowlisted_tree_helper",
-          "shared_policy_evidence": [
-            "PicoUI creation APIs carry parent intent and backend attach/remove maintains the real LingDongGUI tree.",
-            "test_backend_widget_tree_contract verifies backend child/sibling tree ownership without exposing native traversal wrappers."
+          "coverage_kind": "shared_api_equivalence",
+          "picoui_api": "picoui_widget_get_type",
+          "backend_proof": "picoui_widget_get_type",
+          "unit_test": "test_widget_tree_name_and_type_queries_round_trip_to_ldbase + test_widget_geometry_helpers_round_trip_to_ldbase + test_widget_focus_navigation_public_api",
+          "gate_evidence": [
+            "ctest:test_picoui_layout",
+            "python:check_picoui_release_capability_matrix"
           ],
-          "allowlist_reason": "R3 policy decision: PicoUI tree mutation is owned by create/parent APIs and backend attach/remove; native tree traversal/nameId helpers stay backend-private and are not a user-facing public wrapper surface.",
-          "policy_category": "base_tree_policy",
-          "direct_100_category": "optional_public_extension",
-          "group_kind": "shared_base"
+          "gap_status": "covered",
+          "capability_release_judgement": "direct_parity_complete",
+          "required": true,
+          "rationale": "a-0.12 direct public API parity: portable PicoUI wrapper covers the native base helper with public header/source/unit proof.",
+          "planned_task": "a-0.12-T2/T3",
+          "overwrap_risk": false,
+          "notes": "a-0.12 direct public API parity: covered by portable PicoUI base API without exposing ldBase_t, ld_scene_t, arm_2d_* or ldWidgetType_t.",
+          "shared_policy": "shared_api_equivalence",
+          "shared_policy_evidence": [
+            "PicoUI public API is declared in picoui/include/picoui/widget.h.",
+            "test_picoui_layout verifies public API round-trip against LingDongGUI base tree/geometry/focus behavior."
+          ],
+          "policy_category": "direct_covered",
+          "group_kind": "shared_base",
+          "picoui_public_api": "picoui_widget_get_type",
+          "equivalence_proof": "picoui_widget_get_type maps backend/native widget kind to portable picoui_widget_type; covered by test_widget_tree_name_and_type_queries_round_trip_to_ldbase."
         },
         {
           "name": "ldBaseGetWidth",
@@ -2572,10 +2617,10 @@
           "group_kind": "shared_base"
         }
       ],
-      "audit_note": "a-0.9 R3: base tree/resource/drawing/helper rows are strict policy rows; PicoUI user tree mutation remains create/parent driven and backend-owned.",
+      "audit_note": "a-0.12: base optional public extension candidates are now covered by portable PicoUI public API; policy_never_public resource/drawing rows remain allowlisted.",
       "gap_status_counts": {
-        "allowlisted": 30,
-        "covered": 33
+        "allowlisted": 14,
+        "covered": 49
       },
       "group_kind": "shared_base"
     },

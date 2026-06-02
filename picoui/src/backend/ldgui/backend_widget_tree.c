@@ -45,6 +45,65 @@ struct picoui_backend_widget *picoui_backend_widget_get_root(void *backend_widge
     return widget->root;
 }
 
+struct picoui_backend_widget *picoui_backend_widget_get_parent(void *backend_widget)
+{
+    struct picoui_backend_widget *widget = backend_widget;
+
+    if (widget == NULL) {
+        return NULL;
+    }
+
+    return widget->parent;
+}
+
+struct picoui_backend_widget *picoui_backend_widget_get_first_child(void *backend_widget)
+{
+    struct picoui_backend_widget *widget = backend_widget;
+
+    if (widget == NULL) {
+        return NULL;
+    }
+
+    return widget->first_child;
+}
+
+struct picoui_backend_widget *picoui_backend_widget_get_next_sibling(void *backend_widget)
+{
+    struct picoui_backend_widget *widget = backend_widget;
+
+    if (widget == NULL) {
+        return NULL;
+    }
+
+    return widget->next_sibling;
+}
+
+struct picoui_backend_widget *picoui_backend_widget_find_by_name_id(void *backend_widget, uint16_t name_id)
+{
+    struct picoui_backend_widget *widget = backend_widget;
+    struct picoui_backend_widget *child;
+    struct picoui_backend_widget *found;
+
+    if (widget == NULL) {
+        return NULL;
+    }
+
+    if (widget->ld_name_id == name_id) {
+        return widget;
+    }
+
+    child = widget->first_child;
+    while (child != NULL) {
+        found = picoui_backend_widget_find_by_name_id(child, name_id);
+        if (found != NULL) {
+            return found;
+        }
+        child = child->next_sibling;
+    }
+
+    return NULL;
+}
+
 int picoui_backend_widget_attach_child(void *parent, void *child)
 {
     struct picoui_backend_widget *parent_widget = parent;

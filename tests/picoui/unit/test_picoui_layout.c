@@ -286,7 +286,6 @@ static void test_widget_native_base_getters_round_trip_to_ldbase(void)
     assert(picoui_widget_set_selectable((struct picoui_widget *)button, 1) == 0);
     assert(picoui_widget_set_selected((struct picoui_widget *)button, 1) == 0);
     assert(picoui_widget_set_corner((struct picoui_widget *)button, 1) == 0);
-    assert(picoui_widget_set_visible((struct picoui_widget *)button, 0) == 0);
 
     assert(picoui_widget_get_x((struct picoui_widget *)button) == 17);
     assert(picoui_widget_get_y((struct picoui_widget *)button) == 23);
@@ -296,7 +295,7 @@ static void test_widget_native_base_getters_round_trip_to_ldbase(void)
     assert(picoui_widget_get_selectable((struct picoui_widget *)button) == 1);
     assert(picoui_widget_get_selected((struct picoui_widget *)button) == 1);
     assert(picoui_widget_get_corner((struct picoui_widget *)button) == 1);
-    assert(picoui_widget_get_visible((struct picoui_widget *)button) == 0);
+    assert(picoui_widget_get_visible((struct picoui_widget *)button) == 1);
 
     assert(ldBaseGetX(ld_base) == 17);
     assert(ldBaseGetY(ld_base) == 23);
@@ -306,6 +305,9 @@ static void test_widget_native_base_getters_round_trip_to_ldbase(void)
     assert(ldBaseIsSelectable(ld_base) == true);
     assert(ldBaseIsSelected(ld_base) == true);
     assert(ldBaseIsCorner(ld_base) == true);
+
+    assert(picoui_widget_set_visible((struct picoui_widget *)button, 0) == 0);
+    assert(picoui_widget_get_visible((struct picoui_widget *)button) == 0);
     assert(ldBaseIsHidden(ld_base) == true);
 
     assert(picoui_widget_get_x(0) == -1);
@@ -317,6 +319,144 @@ static void test_widget_native_base_getters_round_trip_to_ldbase(void)
     assert(picoui_widget_get_selected(0) == -1);
     assert(picoui_widget_get_corner(0) == -1);
     assert(picoui_widget_get_visible(0) == -1);
+
+    picoui_app_destroy(app);
+}
+
+static void test_widget_tree_name_and_type_queries_round_trip_to_ldbase(void)
+{
+    struct picoui_app *app = picoui_app_create();
+    struct picoui_window *win = picoui_window_create(app, "root");
+    struct picoui_button *a = picoui_button_create(win, "a");
+    struct picoui_button *b = picoui_button_create(win, "b");
+    const struct picoui_backend_widget *win_backend = win->widget.backend_widget;
+    const struct picoui_backend_widget *a_backend = a->widget.backend_widget;
+    const struct picoui_backend_widget *b_backend = b->widget.backend_widget;
+    const ldBase_t *ld_win = (const ldBase_t *)win_backend->ld_widget;
+    const ldBase_t *ld_a = (const ldBase_t *)a_backend->ld_widget;
+    const ldBase_t *ld_b = (const ldBase_t *)b_backend->ld_widget;
+    int b_name_id = picoui_widget_get_name_id((const struct picoui_widget *)b);
+
+    assert(picoui_widget_get_parent((const struct picoui_widget *)a) == (struct picoui_widget *)win);
+    assert(picoui_widget_get_first_child((const struct picoui_widget *)win) == (struct picoui_widget *)a);
+    assert(picoui_widget_get_next_sibling((const struct picoui_widget *)a) == (struct picoui_widget *)b);
+    assert(picoui_widget_get_next_sibling((const struct picoui_widget *)b) == 0);
+    assert(picoui_widget_get_root((const struct picoui_widget *)b) == (struct picoui_widget *)win);
+    assert(picoui_widget_get_child_count((const struct picoui_widget *)win) == 2);
+    assert(picoui_widget_get_child_count((const struct picoui_widget *)a) == 0);
+    assert(picoui_widget_get_name_id((const struct picoui_widget *)win) == (int)ld_win->nameId);
+    assert(picoui_widget_get_name_id((const struct picoui_widget *)a) == (int)ld_a->nameId);
+    assert(b_name_id == (int)ld_b->nameId);
+    assert(picoui_widget_find_by_name_id((const struct picoui_widget *)win, b_name_id) ==
+           (struct picoui_widget *)b);
+    assert(picoui_widget_get_type((const struct picoui_widget *)win) == PICOUI_WIDGET_TYPE_WINDOW);
+    assert(picoui_widget_get_type((const struct picoui_widget *)a) == PICOUI_WIDGET_TYPE_BUTTON);
+
+    assert(picoui_widget_get_parent(0) == 0);
+    assert(picoui_widget_get_first_child(0) == 0);
+    assert(picoui_widget_get_next_sibling(0) == 0);
+    assert(picoui_widget_get_root(0) == 0);
+    assert(picoui_widget_get_child_count(0) == -1);
+    assert(picoui_widget_get_name_id(0) == -1);
+    assert(picoui_widget_find_by_name_id(0, b_name_id) == 0);
+    assert(picoui_widget_find_by_name_id((const struct picoui_widget *)win, -1) == 0);
+    assert(picoui_widget_get_type(0) == PICOUI_WIDGET_TYPE_UNKNOWN);
+
+    picoui_app_destroy(app);
+}
+
+static void test_widget_geometry_helpers_round_trip_to_ldbase(void)
+{
+    struct picoui_app *app = picoui_app_create();
+    struct picoui_window *win = picoui_window_create(app, "root");
+    struct picoui_button *button = picoui_button_create(win, "geometry");
+    struct picoui_point absolute;
+    struct picoui_point relative;
+    struct picoui_rect parent = {10, 20, 100, 80};
+    struct picoui_rect child = {3, 4, 20, 10};
+    struct picoui_rect aligned;
+
+    assert(picoui_widget_set_pos((struct picoui_widget *)win, 5, 7) == 0);
+    assert(picoui_widget_set_pos((struct picoui_widget *)button, 17, 23) == 0);
+
+    absolute = picoui_widget_get_absolute_pos((const struct picoui_widget *)button,
+                                              (struct picoui_point){2, 3});
+    assert(absolute.x == 24);
+    assert(absolute.y == 33);
+
+    relative = picoui_widget_get_relative_pos((const struct picoui_widget *)button, absolute);
+    assert(relative.x == 2);
+    assert(relative.y == 3);
+
+    aligned = picoui_rect_align(parent, child, PICOUI_ALIGN_END, PICOUI_ALIGN_END);
+    assert(aligned.x == 83);
+    assert(aligned.y == 74);
+    assert(aligned.width == 20);
+    assert(aligned.height == 10);
+
+    aligned = picoui_rect_center(parent, child);
+    assert(aligned.x == 43);
+    assert(aligned.y == 39);
+
+    assert(picoui_vertical_grid_align_offset((struct picoui_rect){0, 0, 40, 100},
+                                             -40,
+                                             5,
+                                             20,
+                                             4) == -24);
+
+    absolute = picoui_widget_get_absolute_pos(0, (struct picoui_point){0, 0});
+    assert(absolute.x == -1);
+    assert(absolute.y == -1);
+    relative = picoui_widget_get_relative_pos(0, (struct picoui_point){0, 0});
+    assert(relative.x == -1);
+    assert(relative.y == -1);
+    aligned = picoui_rect_align(parent, (struct picoui_rect){0, 0, -1, 1},
+                                PICOUI_ALIGN_CENTER, PICOUI_ALIGN_CENTER);
+    assert(aligned.width == -1);
+    assert(aligned.height == -1);
+    assert(picoui_vertical_grid_align_offset((struct picoui_rect){0, 0, -1, 1},
+                                             0,
+                                             1,
+                                             1,
+                                             0) == -1);
+
+    picoui_app_destroy(app);
+}
+
+static void test_widget_focus_navigation_public_api(void)
+{
+    struct picoui_app *app = picoui_app_create();
+    struct picoui_window *win = picoui_window_create(app, "root");
+    struct picoui_button *left = picoui_button_create(win, "left");
+    struct picoui_button *right = picoui_button_create(win, "right");
+    struct picoui_button *down = picoui_button_create(win, "down");
+
+    app->root_window = win;
+    assert(picoui_widget_set_pos((struct picoui_widget *)left, 0, 0) == 0);
+    assert(picoui_widget_set_pos((struct picoui_widget *)right, 50, 0) == 0);
+    assert(picoui_widget_set_pos((struct picoui_widget *)down, 50, 50) == 0);
+    assert(picoui_widget_set_selectable((struct picoui_widget *)left, 1) == 0);
+    assert(picoui_widget_set_selectable((struct picoui_widget *)right, 1) == 0);
+    assert(picoui_widget_set_selectable((struct picoui_widget *)down, 1) == 0);
+
+    assert(picoui_focus_navigate(app, PICOUI_NATIVE_NAV_RIGHT) == 0);
+    assert(picoui_widget_is_focus_owner((const struct picoui_widget *)left) == 1);
+    assert(picoui_focus_navigate(app, PICOUI_NATIVE_NAV_RIGHT) == 0);
+    assert(picoui_widget_is_focus_owner((const struct picoui_widget *)right) == 1);
+    assert(picoui_widget_claim_focus((struct picoui_widget *)win) == 0);
+    assert(picoui_focus_navigate(app, PICOUI_NATIVE_NAV_ENTER) == 0);
+    assert(picoui_widget_is_focus_owner((const struct picoui_widget *)left) == 1);
+    assert(picoui_focus_navigate(app, PICOUI_NATIVE_NAV_BACK) == 0);
+    assert(picoui_widget_is_focus_owner((const struct picoui_widget *)win) == 1);
+    assert(picoui_widget_claim_focus((struct picoui_widget *)right) == 0);
+    assert(picoui_focus_navigate(app, PICOUI_NATIVE_NAV_DOWN) == 0);
+    assert(picoui_widget_is_focus_owner((const struct picoui_widget *)down) == 1);
+    assert(picoui_focus_reset(app) == 0);
+    assert(picoui_widget_is_focus_owner((const struct picoui_widget *)down) == 0);
+
+    assert(picoui_focus_reset(0) == -1);
+    assert(picoui_focus_navigate(0, PICOUI_NATIVE_NAV_RIGHT) == -1);
+    assert(picoui_focus_navigate(app, (enum picoui_native_nav_dir)99) == -1);
 
     picoui_app_destroy(app);
 }
@@ -557,6 +697,9 @@ int main(void)
     test_widget_native_base_flags_round_trip_to_ldbase();
     test_widget_native_flex_min_max_round_trip_to_ldbase();
     test_widget_native_base_getters_round_trip_to_ldbase();
+    test_widget_tree_name_and_type_queries_round_trip_to_ldbase();
+    test_widget_geometry_helpers_round_trip_to_ldbase();
+    test_widget_focus_navigation_public_api();
     test_flex_layout_relayout_uses_ld_window_without_cursor_override();
     test_window_padding_survives_layout_type_switches();
     test_window_padding_group_round_trip_to_ldwindow();

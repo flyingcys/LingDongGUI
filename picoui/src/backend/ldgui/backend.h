@@ -174,6 +174,10 @@ int picoui_backend_widget_is_kind(const void *backend_widget,
                                   enum picoui_backend_widget_kind kind);
 struct picoui_app *picoui_backend_widget_get_owner(void *backend_widget);
 struct picoui_backend_widget *picoui_backend_widget_get_root(void *backend_widget);
+struct picoui_backend_widget *picoui_backend_widget_get_parent(void *backend_widget);
+struct picoui_backend_widget *picoui_backend_widget_get_first_child(void *backend_widget);
+struct picoui_backend_widget *picoui_backend_widget_get_next_sibling(void *backend_widget);
+struct picoui_backend_widget *picoui_backend_widget_find_by_name_id(void *backend_widget, uint16_t name_id);
 int picoui_backend_widget_attach_child(void *parent, void *child);
 void *picoui_backend_create_window(struct picoui_app *app, const char *id);
 void *picoui_backend_create_label(void *parent, const char *id);

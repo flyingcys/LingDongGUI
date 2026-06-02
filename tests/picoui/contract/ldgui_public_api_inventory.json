@@ -530,15 +530,17 @@
           "ldgui_symbol": "ldBaseAlignRegionCenter",
           "category": "helper",
           "signature": "arm_2d_region_t ldBaseAlignRegionCenter(arm_2d_region_t parentRegion, arm_2d_region_t childRegion);",
-          "required": false,
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
-          "allowlist_reason": "R2 shared tree/helper/lifecycle API: internal backend structure or demo host helper, not a PicoUI user-facing native capability.",
+          "required": true,
+          "picoui_api": "picoui_rect_center",
+          "backend_proof": "picoui_rect_center",
+          "unit_test": "test_widget_tree_name_and_type_queries_round_trip_to_ldbase + test_widget_geometry_helpers_round_trip_to_ldbase + test_widget_focus_navigation_public_api",
+          "gate_evidence": [
+            "ctest:test_picoui_layout",
+            "python:check_picoui_release_capability_matrix"
+          ],
+          "gap_status": "covered",
           "group_kind": "shared_base",
-          "policy_category": "base_tree_policy"
+          "policy_category": "direct_covered"
         },
         {
           "widget": "base",
@@ -546,15 +548,17 @@
           "ldgui_symbol": "ldBaseAutoVerticalGridAlign",
           "category": "helper",
           "signature": "int16_t ldBaseAutoVerticalGridAlign(arm_2d_region_t widgetRegion, int16_t currentOffset, uint8_t itemCount, uint8_t itemHeight, uint8_t space);",
-          "required": false,
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
-          "allowlist_reason": "R2 shared tree/helper/lifecycle API: internal backend structure or demo host helper, not a PicoUI user-facing native capability.",
+          "required": true,
+          "picoui_api": "picoui_vertical_grid_align_offset",
+          "backend_proof": "picoui_vertical_grid_align_offset",
+          "unit_test": "test_widget_tree_name_and_type_queries_round_trip_to_ldbase + test_widget_geometry_helpers_round_trip_to_ldbase + test_widget_focus_navigation_public_api",
+          "gate_evidence": [
+            "ctest:test_picoui_layout",
+            "python:check_picoui_release_capability_matrix"
+          ],
+          "gap_status": "covered",
           "group_kind": "shared_base",
-          "policy_category": "base_tree_policy"
+          "policy_category": "direct_covered"
         },
         {
           "widget": "base",
@@ -610,15 +614,17 @@
           "ldgui_symbol": "ldBaseFocusNavigate",
           "category": "update_action",
           "signature": "void ldBaseFocusNavigate(ld_scene_t *ptScene, ldNavDir_t tDir);",
-          "required": false,
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
+          "required": true,
+          "picoui_api": "picoui_focus_navigate",
+          "backend_proof": "picoui_focus_navigate",
+          "unit_test": "test_widget_tree_name_and_type_queries_round_trip_to_ldbase + test_widget_geometry_helpers_round_trip_to_ldbase + test_widget_focus_navigation_public_api",
+          "gate_evidence": [
+            "ctest:test_picoui_layout",
+            "python:check_picoui_release_capability_matrix"
+          ],
+          "gap_status": "covered",
           "group_kind": "shared_base",
-          "policy_category": "base_tree_policy",
-          "allowlist_reason": "R2 shared helper/utility API: internal tree/resource/geometry/time helper or backend-private scene helper, not a PicoUI user-facing stable public capability."
+          "policy_category": "direct_covered"
         },
         {
           "widget": "base",
@@ -626,15 +632,17 @@
           "ldgui_symbol": "ldBaseFocusNavigateInit",
           "category": "init",
           "signature": "void ldBaseFocusNavigateInit(void);",
-          "required": false,
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
+          "required": true,
+          "picoui_api": "picoui_focus_reset",
+          "backend_proof": "picoui_focus_reset",
+          "unit_test": "test_widget_tree_name_and_type_queries_round_trip_to_ldbase + test_widget_geometry_helpers_round_trip_to_ldbase + test_widget_focus_navigation_public_api",
+          "gate_evidence": [
+            "ctest:test_picoui_layout",
+            "python:check_picoui_release_capability_matrix"
+          ],
+          "gap_status": "covered",
           "group_kind": "shared_base",
-          "policy_category": "base_tree_policy",
-          "allowlist_reason": "R2 shared helper/utility API: internal tree/resource/geometry/time helper or backend-private scene helper, not a PicoUI user-facing stable public capability."
+          "policy_category": "direct_covered"
         },
         {
           "widget": "base",
@@ -642,15 +650,17 @@
           "ldgui_symbol": "ldBaseGetAbsoluteLocation",
           "category": "getter",
           "signature": "arm_2d_location_t ldBaseGetAbsoluteLocation(ldBase_t *ptWidget,arm_2d_location_t tLocation);",
-          "required": false,
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
+          "required": true,
+          "picoui_api": "picoui_widget_get_absolute_pos",
+          "backend_proof": "picoui_widget_get_absolute_pos",
+          "unit_test": "test_widget_tree_name_and_type_queries_round_trip_to_ldbase + test_widget_geometry_helpers_round_trip_to_ldbase + test_widget_focus_navigation_public_api",
+          "gate_evidence": [
+            "ctest:test_picoui_layout",
+            "python:check_picoui_release_capability_matrix"
+          ],
+          "gap_status": "covered",
           "group_kind": "shared_base",
-          "policy_category": "base_tree_policy",
-          "allowlist_reason": "R2 shared helper/utility API: internal tree/resource/geometry/time helper or backend-private scene helper, not a PicoUI user-facing stable public capability."
+          "policy_category": "direct_covered"
         },
         {
           "widget": "base",
@@ -658,15 +668,17 @@
           "ldgui_symbol": "ldBaseGetAlignRegion",
           "category": "getter",
           "signature": "arm_2d_region_t ldBaseGetAlignRegion(arm_2d_region_t parentRegion,arm_2d_region_t childRegion,arm_2d_align_t tAlign);",
-          "required": false,
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
+          "required": true,
+          "picoui_api": "picoui_rect_align",
+          "backend_proof": "picoui_rect_align",
+          "unit_test": "test_widget_tree_name_and_type_queries_round_trip_to_ldbase + test_widget_geometry_helpers_round_trip_to_ldbase + test_widget_focus_navigation_public_api",
+          "gate_evidence": [
+            "ctest:test_picoui_layout",
+            "python:check_picoui_release_capability_matrix"
+          ],
+          "gap_status": "covered",
           "group_kind": "shared_base",
-          "policy_category": "base_tree_policy",
-          "allowlist_reason": "R2 shared helper/utility API: internal tree/resource/geometry/time helper or backend-private scene helper, not a PicoUI user-facing stable public capability."
+          "policy_category": "direct_covered"
         },
         {
           "widget": "base",
@@ -674,15 +686,17 @@
           "ldgui_symbol": "ldBaseGetChildCount",
           "category": "getter",
           "signature": "uint16_t ldBaseGetChildCount(ldBase_t* ptWidget);",
-          "required": false,
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
+          "required": true,
+          "picoui_api": "picoui_widget_get_child_count",
+          "backend_proof": "picoui_widget_get_child_count",
+          "unit_test": "test_widget_tree_name_and_type_queries_round_trip_to_ldbase + test_widget_geometry_helpers_round_trip_to_ldbase + test_widget_focus_navigation_public_api",
+          "gate_evidence": [
+            "ctest:test_picoui_layout",
+            "python:check_picoui_release_capability_matrix"
+          ],
+          "gap_status": "covered",
           "group_kind": "shared_base",
-          "policy_category": "base_tree_policy",
-          "allowlist_reason": "R2 shared tree/helper/lifecycle API: internal backend structure or demo host helper, not a PicoUI user-facing native capability."
+          "policy_category": "direct_covered"
         },
         {
           "widget": "base",
@@ -690,15 +704,17 @@
           "ldgui_symbol": "ldBaseGetChildList",
           "category": "getter",
           "signature": "ldBase_t* ldBaseGetChildList(ldBase_t* ptWidget);",
-          "required": false,
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
+          "required": true,
+          "picoui_api": "picoui_widget_get_first_child",
+          "backend_proof": "picoui_widget_get_first_child",
+          "unit_test": "test_widget_tree_name_and_type_queries_round_trip_to_ldbase + test_widget_geometry_helpers_round_trip_to_ldbase + test_widget_focus_navigation_public_api",
+          "gate_evidence": [
+            "ctest:test_picoui_layout",
+            "python:check_picoui_release_capability_matrix"
+          ],
+          "gap_status": "covered",
           "group_kind": "shared_base",
-          "policy_category": "base_tree_policy",
-          "allowlist_reason": "R2 shared tree/helper/lifecycle API: internal backend structure or demo host helper, not a PicoUI user-facing native capability."
+          "policy_category": "direct_covered"
         },
         {
           "widget": "base",
@@ -756,15 +772,17 @@
           "ldgui_symbol": "ldBaseGetNameId",
           "category": "getter",
           "signature": "uint16_t ldBaseGetNameId(ldBase_t *ptWidget);",
-          "required": false,
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
+          "required": true,
+          "picoui_api": "picoui_widget_get_name_id",
+          "backend_proof": "picoui_widget_get_name_id",
+          "unit_test": "test_widget_tree_name_and_type_queries_round_trip_to_ldbase + test_widget_geometry_helpers_round_trip_to_ldbase + test_widget_focus_navigation_public_api",
+          "gate_evidence": [
+            "ctest:test_picoui_layout",
+            "python:check_picoui_release_capability_matrix"
+          ],
+          "gap_status": "covered",
           "group_kind": "shared_base",
-          "policy_category": "base_tree_policy",
-          "allowlist_reason": "R2 shared helper/utility API: internal tree/resource/geometry/time helper or backend-private scene helper, not a PicoUI user-facing stable public capability."
+          "policy_category": "direct_covered"
         },
         {
           "widget": "base",
@@ -772,15 +790,17 @@
           "ldgui_symbol": "ldBaseGetNextSibling",
           "category": "getter",
           "signature": "ldBase_t* ldBaseGetNextSibling(ldBase_t* ptWidget);",
-          "required": false,
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
+          "required": true,
+          "picoui_api": "picoui_widget_get_next_sibling",
+          "backend_proof": "picoui_widget_get_next_sibling",
+          "unit_test": "test_widget_tree_name_and_type_queries_round_trip_to_ldbase + test_widget_geometry_helpers_round_trip_to_ldbase + test_widget_focus_navigation_public_api",
+          "gate_evidence": [
+            "ctest:test_picoui_layout",
+            "python:check_picoui_release_capability_matrix"
+          ],
+          "gap_status": "covered",
           "group_kind": "shared_base",
-          "policy_category": "base_tree_policy",
-          "allowlist_reason": "R2 shared tree/helper/lifecycle API: internal backend structure or demo host helper, not a PicoUI user-facing native capability."
+          "policy_category": "direct_covered"
         },
         {
           "widget": "base",
@@ -805,15 +825,17 @@
           "ldgui_symbol": "ldBaseGetParent",
           "category": "getter",
           "signature": "ldBase_t* ldBaseGetParent(ldBase_t* ptWidget);",
-          "required": false,
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
+          "required": true,
+          "picoui_api": "picoui_widget_get_parent",
+          "backend_proof": "picoui_widget_get_parent",
+          "unit_test": "test_widget_tree_name_and_type_queries_round_trip_to_ldbase + test_widget_geometry_helpers_round_trip_to_ldbase + test_widget_focus_navigation_public_api",
+          "gate_evidence": [
+            "ctest:test_picoui_layout",
+            "python:check_picoui_release_capability_matrix"
+          ],
+          "gap_status": "covered",
           "group_kind": "shared_base",
-          "policy_category": "base_tree_policy",
-          "allowlist_reason": "R2 shared tree/helper/lifecycle API: internal backend structure or demo host helper, not a PicoUI user-facing native capability."
+          "policy_category": "direct_covered"
         },
         {
           "widget": "base",
@@ -838,15 +860,17 @@
           "ldgui_symbol": "ldBaseGetRelativeLocation",
           "category": "getter",
           "signature": "arm_2d_location_t ldBaseGetRelativeLocation(ldBase_t *ptWidget,arm_2d_location_t tLocation);",
-          "required": false,
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
+          "required": true,
+          "picoui_api": "picoui_widget_get_relative_pos",
+          "backend_proof": "picoui_widget_get_relative_pos",
+          "unit_test": "test_widget_tree_name_and_type_queries_round_trip_to_ldbase + test_widget_geometry_helpers_round_trip_to_ldbase + test_widget_focus_navigation_public_api",
+          "gate_evidence": [
+            "ctest:test_picoui_layout",
+            "python:check_picoui_release_capability_matrix"
+          ],
+          "gap_status": "covered",
           "group_kind": "shared_base",
-          "policy_category": "base_tree_policy",
-          "allowlist_reason": "R2 shared helper/utility API: internal tree/resource/geometry/time helper or backend-private scene helper, not a PicoUI user-facing stable public capability."
+          "policy_category": "direct_covered"
         },
         {
           "widget": "base",
@@ -854,15 +878,17 @@
           "ldgui_symbol": "ldBaseGetRootNode",
           "category": "getter",
           "signature": "arm_2d_control_node_t *ldBaseGetRootNode(arm_2d_control_node_t *ptNode);",
-          "required": false,
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
+          "required": true,
+          "picoui_api": "picoui_widget_get_root",
+          "backend_proof": "picoui_widget_get_root",
+          "unit_test": "test_widget_tree_name_and_type_queries_round_trip_to_ldbase + test_widget_geometry_helpers_round_trip_to_ldbase + test_widget_focus_navigation_public_api",
+          "gate_evidence": [
+            "ctest:test_picoui_layout",
+            "python:check_picoui_release_capability_matrix"
+          ],
+          "gap_status": "covered",
           "group_kind": "shared_base",
-          "policy_category": "base_tree_policy",
-          "allowlist_reason": "R2 shared helper/utility API: internal tree/resource/geometry/time helper or backend-private scene helper, not a PicoUI user-facing stable public capability."
+          "policy_category": "direct_covered"
         },
         {
           "widget": "base",
@@ -951,15 +977,17 @@
           "ldgui_symbol": "ldBaseGetWidget",
           "category": "getter",
           "signature": "void* ldBaseGetWidget(arm_2d_control_node_t *ptNodeRoot, uint16_t nameId);",
-          "required": false,
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
+          "required": true,
+          "picoui_api": "picoui_widget_find_by_name_id",
+          "backend_proof": "picoui_widget_find_by_name_id",
+          "unit_test": "test_widget_tree_name_and_type_queries_round_trip_to_ldbase + test_widget_geometry_helpers_round_trip_to_ldbase + test_widget_focus_navigation_public_api",
+          "gate_evidence": [
+            "ctest:test_picoui_layout",
+            "python:check_picoui_release_capability_matrix"
+          ],
+          "gap_status": "covered",
           "group_kind": "shared_base",
-          "policy_category": "base_tree_policy",
-          "allowlist_reason": "R2 shared helper/utility API: internal tree/resource/geometry/time helper or backend-private scene helper, not a PicoUI user-facing stable public capability."
+          "policy_category": "direct_covered"
         },
         {
           "widget": "base",
@@ -968,15 +996,17 @@
           "category": "macro_alias",
           "signature": "#define ldBaseGetWidgetById(nameId) ldBaseGetWidget(ptScene->ptNodeRoot, nameId)",
           "macro_target": "ldBaseGetWidget",
-          "required": false,
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
+          "required": true,
+          "picoui_api": "picoui_widget_find_by_name_id",
+          "backend_proof": "picoui_widget_find_by_name_id",
+          "unit_test": "test_widget_tree_name_and_type_queries_round_trip_to_ldbase + test_widget_geometry_helpers_round_trip_to_ldbase + test_widget_focus_navigation_public_api",
+          "gate_evidence": [
+            "ctest:test_picoui_layout",
+            "python:check_picoui_release_capability_matrix"
+          ],
+          "gap_status": "covered",
           "group_kind": "shared_base",
-          "policy_category": "base_tree_policy",
-          "allowlist_reason": "R2 shared tree/helper/lifecycle API: internal backend structure or demo host helper, not a PicoUI user-facing native capability."
+          "policy_category": "direct_covered"
         },
         {
           "widget": "base",
@@ -984,15 +1014,17 @@
           "ldgui_symbol": "ldBaseGetWidgetType",
           "category": "getter",
           "signature": "ldWidgetType_t ldBaseGetWidgetType(ldBase_t *ptWidget);",
-          "required": false,
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
+          "required": true,
+          "picoui_api": "picoui_widget_get_type",
+          "backend_proof": "picoui_widget_get_type",
+          "unit_test": "test_widget_tree_name_and_type_queries_round_trip_to_ldbase + test_widget_geometry_helpers_round_trip_to_ldbase + test_widget_focus_navigation_public_api",
+          "gate_evidence": [
+            "ctest:test_picoui_layout",
+            "python:check_picoui_release_capability_matrix"
+          ],
+          "gap_status": "covered",
           "group_kind": "shared_base",
-          "policy_category": "base_tree_policy",
-          "allowlist_reason": "R2 shared helper/utility API: internal tree/resource/geometry/time helper or backend-private scene helper, not a PicoUI user-facing stable public capability."
+          "policy_category": "direct_covered"
         },
         {
           "widget": "base",

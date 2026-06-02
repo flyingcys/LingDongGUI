@@ -327,8 +327,13 @@ def _assert_native_api_rows(
             "resource_time_helper_policy",
             "drawing_helper_policy",
         }:
-            assert parity_status == "policy_complete", (
-                f"{widget_name} shared_base policy rows must be policy_complete"
+            expected_shared_base_status = (
+                "direct_parity_complete"
+                if not non_covered_policy_categories
+                else "policy_complete"
+            )
+            assert parity_status == expected_shared_base_status, (
+                f"{widget_name} shared_base rows must be {expected_shared_base_status}"
             )
         for capability in capabilities:
             native_api = capability.get("native_api")
@@ -461,7 +466,10 @@ def _assert_summary(matrix: dict, capability_total: int, ledger_by_symbol: dict[
     assert summary.get("covered_total") == expected_gap_counts.get("covered", 0)
     assert summary["direct_public_covered_total"] == summary["covered_total"]
     assert summary["policy_allowlisted_total"] == summary["allowlisted_total"]
-    assert summary["direct_public_100_complete"] is False
+    expected_direct_public_100_complete = (
+        expected_direct_100_category_counts == {"policy_never_public": expected_gap_counts.get("allowlisted", 0)}
+    )
+    assert summary["direct_public_100_complete"] is expected_direct_public_100_complete
     assert summary.get("widget_row_total") == len(matrix.get("widgets", []))
 
 

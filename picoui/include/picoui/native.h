@@ -25,7 +25,9 @@ enum picoui_native_nav_dir {
     PICOUI_NATIVE_NAV_LEFT = 0,
     PICOUI_NATIVE_NAV_RIGHT,
     PICOUI_NATIVE_NAV_UP,
-    PICOUI_NATIVE_NAV_DOWN
+    PICOUI_NATIVE_NAV_DOWN,
+    PICOUI_NATIVE_NAV_ENTER,
+    PICOUI_NATIVE_NAV_BACK
 };
 
 enum picoui_native_signal {
