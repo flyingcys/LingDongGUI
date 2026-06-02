@@ -23,7 +23,8 @@
 - `allowlisted=207`：policy ledger 已闭环，但不是 direct public wrapper。
 - `missing_gap_total=0` 只表示没有未建账 native API，不表示 direct 100%。
 - `direct_100_category` 统计：`policy_never_public`: 191, `optional_public_extension`: 16, `direct_100_required_if_user_demands`: 0
-- 当前 a-0.10 不新增 PicoUI public API；`optional_public_extension` 只表示未来可单独开线设计的 tree/focus/nameId 等增强。
+- 严格按“100% direct public API parity”目标看，`optional_public_extension=16` 仍是未暴露为 PicoUI public API 的剩余缺口候选，不是完成项。
+- 当前 a-0.10 不新增 PicoUI public API；这些缺口候选集中在 `base` 的 tree/focus/nameId/geometry helper，后续若要真正 direct 100%，必须单独设计 public API、backend proof、unit/gate 与 matrix/docs。
 
 ## a-0.9 policy schema
 
@@ -96,7 +97,7 @@
 
 | 分组 | API 条目数 | 能力文档 | PicoUI 覆盖摘要 |
 | --- | --- | --- | --- |
-| `base` | 63 | [base](./base.md) | `allowlisted`: 30, `covered`: 33 |
+| `base` | 63 | [base](./base.md) | `allowlisted`: 30, `covered`: 33；严格 100% direct public API 缺口候选：`16` |
 
 ## 可靠性说明
 
