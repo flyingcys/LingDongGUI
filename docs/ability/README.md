@@ -43,7 +43,6 @@
 | --- | --- | --- | --- |
 | 键盘自定义布局/按钮表 | `ldKeyboardGetTargetBtnList` | `keyboard` 仅覆盖部分属性和输入态，缺少便携 layout/button list | `picoui_keyboard_set_layout()` 等可表达按键集合、行列、显示文本和值的能力 |
 | 键盘按键事件回调 | `ldKeyboardCallback` | 缺少 PicoUI 对外按键事件钩子 | `picoui_keyboard_set_on_key_event()` 或等价事件能力 |
-| 按钮全局 action/nameId 状态 | `ldButtonActionInit`、`ldButtonActionIsPressById` | 仅有单 widget 状态与事件能力，缺少按 `nameId` 查询动作状态 | 按 id 查询 pressed/action，或通用 typed lookup 后查询状态 |
 | VRES 图片/字体资源 | `ldBaseGetVresImage`、`ldBaseGetVresFont` | 当前作为 resource helper policy allowlist，缺少用户态资源源描述 | `picoui_image_source_from_vres()`、`picoui_font_from_vres()` 或等价资源 provider |
 | 系统时间/日期/星期 | `ldBaseGetTime`、`ldBaseGetDate`、`ldBaseGetWeek` | 当前作为 time helper policy allowlist，缺少 PicoUI app/time provider | `picoui_time_now()`、`picoui_date_now()`、`picoui_weekday()` 或等价 host provider |
 | 页面/场景切换 | `ldGuiJumpPage*`、`__ldGuiJumpPage` | runtime host policy allowlist，缺少用户态 page/window switch | `picoui_app_set_window()`、`picoui_app_switch_window(mode, ms)` 或等价页面切换能力 |
@@ -55,6 +54,7 @@
 | 能力 | LingDongGUI 来源 | PicoUI 补齐状态 | 边界 |
 | --- | --- | --- | --- |
 | 动态移除/销毁控件 | `ldBaseNodeRemove`、各控件 `*_depose` | a-0.13 已新增 `picoui_widget_remove_from_parent()` 与 `picoui_widget_destroy()`，同步更新 PicoUI backend tree 与真实 `ldBase` tree，并覆盖 focus 清理、nameId 查找移除、child count 更新测试 | 当前 `destroy` 定义为用户态销毁绑定和 tree 脱离，不在本线释放所有 widget 外层内存；完整 allocator/free 所有权另线处理 |
+| 按钮全局 action/nameId 状态 | `ldButtonActionInit`、`ldButtonActionIsPressById` | a-0.13 已新增 `picoui_button_get_pressed_by_name_id()`，通过 PicoUI root/nameId 查询真实 button 并读取 native pressed 状态 | 提供按 `nameId` 查询 pressed/action 的用户态等价能力；不暴露 LingDongGUI `ld_scene_t` |
 
 ## a-0.9 policy schema
 

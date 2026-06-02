@@ -27,7 +27,13 @@
 
 | 缺口 | LingDongGUI 来源 | 当前 PicoUI 状态 | 需要补齐的能力 |
 | --- | --- | --- | --- |
-| 全局 action/nameId 按下状态 | `ldButtonActionInit`、`ldButtonActionIsPressById` | 当前有单个 button 的 pressed getter/setter 与事件，但缺少按 `nameId` 的全局 action 状态查询 | 提供按 id 查询 pressed/action 的 PicoUI API，或提供通用 typed lookup 后读取状态的等价能力 |
+当前没有剩余 button 专属控件能力等价缺口；`ldButtonActionInit` / `ldButtonActionIsPressById` 的用户态等价能力已由 `picoui_button_get_pressed_by_name_id()` 覆盖。
+
+## 控件能力等价已补齐
+
+| 能力 | LingDongGUI 来源 | PicoUI 补齐状态 | 边界 |
+| --- | --- | --- | --- |
+| 全局 action/nameId 按下状态 | `ldButtonActionInit`、`ldButtonActionIsPressById` | a-0.13 已新增 `picoui_button_get_pressed_by_name_id()`，支持从 PicoUI root 按 `nameId` 查询 button pressed 状态 | 不暴露 LingDongGUI `ld_scene_t`；非 button id、未知 id、空 root/out 参数均返回失败 |
 
 ## API 能力与 PicoUI 覆盖清单
 

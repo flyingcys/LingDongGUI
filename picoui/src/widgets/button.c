@@ -380,6 +380,24 @@ int picoui_button_get_press(struct picoui_button *button, int *pressed)
     return picoui_button_get_pressed(button, pressed);
 }
 
+int picoui_button_get_pressed_by_name_id(const struct picoui_widget *root,
+                                         int name_id,
+                                         int *pressed)
+{
+    struct picoui_widget *widget;
+
+    if (root == 0 || pressed == 0) {
+        return -1;
+    }
+
+    widget = picoui_widget_find_by_name_id(root, name_id);
+    if (widget == 0 || picoui_widget_get_type(widget) != PICOUI_WIDGET_TYPE_BUTTON) {
+        return -1;
+    }
+
+    return picoui_button_get_pressed((struct picoui_button *)widget, pressed);
+}
+
 int picoui_button_set_text_color(struct picoui_button *button, unsigned int text_color)
 {
     ldButton_t *ld_button;

@@ -59,6 +59,9 @@ int picoui_button_set_press(struct picoui_button *button, int pressed);
 int picoui_button_set_pressed(struct picoui_button *button, int pressed);
 int picoui_button_get_press(struct picoui_button *button, int *pressed);
 int picoui_button_get_pressed(struct picoui_button *button, int *pressed);
+int picoui_button_get_pressed_by_name_id(const struct picoui_widget *root,
+                                         int name_id,
+                                         int *pressed);
 int picoui_button_set_text_color(struct picoui_button *button, unsigned int text_color);
 int picoui_button_get_text_color(struct picoui_button *button, unsigned int *rgb);
 int picoui_button_set_on_clicked(struct picoui_button *button,

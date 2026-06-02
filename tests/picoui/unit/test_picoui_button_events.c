@@ -69,6 +69,9 @@ int main(void)
     struct picoui_backend_widget *switch_backend;
     struct picoui_backend_widget *slider_backend;
     struct picoui_backend_app_state *app_state;
+    int pressed_by_id = -1;
+    int button_name_id = -1;
+    int checkbox_name_id = -1;
     int click_cookie = 33;
     int press_cookie = 11;
     int release_cookie = 22;
@@ -119,6 +122,31 @@ int main(void)
     assert(backend->dispatch_count == 0);
     assert(backend->last_native_signal == SIGNAL_NO_OPERATION);
     assert(backend->last_native_value == 0);
+    button_name_id = picoui_widget_get_name_id((const struct picoui_widget *)button);
+    checkbox_name_id = picoui_widget_get_name_id((const struct picoui_widget *)checkbox);
+    assert(button_name_id > 0);
+    assert(checkbox_name_id > 0);
+
+    assert(picoui_button_set_pressed(button, 1) == 0);
+    assert(picoui_button_get_pressed_by_name_id((const struct picoui_widget *)win,
+                                                button_name_id,
+                                                &pressed_by_id) == 0);
+    assert(pressed_by_id == 1);
+    assert(picoui_button_set_pressed(button, 0) == 0);
+    assert(picoui_button_get_pressed_by_name_id((const struct picoui_widget *)win,
+                                                button_name_id,
+                                                &pressed_by_id) == 0);
+    assert(pressed_by_id == 0);
+    assert(picoui_button_get_pressed_by_name_id((const struct picoui_widget *)win,
+                                                checkbox_name_id,
+                                                &pressed_by_id) == -1);
+    assert(picoui_button_get_pressed_by_name_id((const struct picoui_widget *)win,
+                                                65535,
+                                                &pressed_by_id) == -1);
+    assert(picoui_button_get_pressed_by_name_id(0, button_name_id, &pressed_by_id) == -1);
+    assert(picoui_button_get_pressed_by_name_id((const struct picoui_widget *)win,
+                                                button_name_id,
+                                                0) == -1);
 
     assert(picoui_backend_widget_dispatch_event(button->widget.backend_widget,
                                                 PICOUI_BACKEND_SIGNAL_PRESSED,
