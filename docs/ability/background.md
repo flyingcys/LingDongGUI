@@ -8,6 +8,11 @@
 - LingDongGUI 独立 header/API 分组：无。
 - PicoUI 独立 matrix group：无；a-0.9 通过 `window` group 的 `enum_only_semantics` policy 行记录 root/background 语义。
 - 覆盖结论：不能写成“PicoUI 独立 API 100% 覆盖 background”，因为 LingDongGUI 没有独立 `ldBackground.h` public API；当前正式定义为 `window/tree derived enum-only` policy。
+- direct public API 100%：不适用；`background` 没有独立 native API group，不进入 widget public parity denominator。
+- direct_public_covered：`0`
+- policy_allowlisted：`0`
+- direct_100_gap：`0`
+- direct_100_category：`enum_only_semantics` policy，见 `window.md`。
 
 ## 能力边界
 
@@ -22,4 +27,5 @@
 - `background` 算入真实 LingDongGUI 控件类型覆盖。
 - `background` 不算一个独立 API 分组；不能虚构 setter/getter 能力。
 - a-0.9 R5 决策：不新增独立 PicoUI background public abstraction；root/background semantics 由 window/tree 派生 policy 覆盖。
+- a-0.10 R4 决策：`background` 保持 enum-only/root-window-tree derived policy；不新增 PicoUI background public API。
 - `manual_artifact` 存在不等于人工验收通过；background/root 结论以 matrix policy 与 window/backend/unit gate 为准。

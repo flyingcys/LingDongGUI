@@ -3745,7 +3745,7 @@
           "signature": "#define ldGaugeMove ldBaseMove",
           "macro_target": "ldBaseMove",
           "required": true,
-          "picoui_api": "picoui_gauge_move",
+          "picoui_api": "picoui_widget_set_pos",
           "backend_proof": "picoui_backend_gauge_move",
           "unit_test": "test_gauge_move_native_parity",
           "gate_evidence": [
@@ -3797,7 +3797,7 @@
           "signature": "#define ldGaugeSetCorner ldBaseSetCorner",
           "macro_target": "ldBaseSetCorner",
           "required": true,
-          "picoui_api": "picoui_gauge_set_corner",
+          "picoui_api": "picoui_widget_set_corner",
           "backend_proof": "picoui_backend_gauge_set_corner",
           "unit_test": "test_gauge_set_corner_native_parity",
           "gate_evidence": [
@@ -3815,7 +3815,7 @@
           "signature": "#define ldGaugeSetHidden ldBaseSetHidden",
           "macro_target": "ldBaseSetHidden",
           "required": true,
-          "picoui_api": "picoui_gauge_set_hidden",
+          "picoui_api": "picoui_widget_set_visible",
           "backend_proof": "picoui_backend_gauge_set_hidden",
           "unit_test": "test_gauge_set_hidden_native_parity",
           "gate_evidence": [
@@ -3833,7 +3833,7 @@
           "signature": "#define ldGaugeSetOpacity ldBaseSetOpacity",
           "macro_target": "ldBaseSetOpacity",
           "required": true,
-          "picoui_api": "picoui_gauge_set_opacity",
+          "picoui_api": "picoui_widget_set_opacity",
           "backend_proof": "picoui_backend_gauge_set_opacity",
           "unit_test": "test_gauge_set_opacity_native_parity",
           "gate_evidence": [
@@ -3867,7 +3867,7 @@
           "category": "setter",
           "signature": "void ldGaugeSetPointerImage(ldGauge_t *ptWidget,arm_2d_tile_t *ptPointerImgTile,arm_2d_tile_t *ptPointerMaskTile,int16_t pointerOriginOffsetX,int16_t pointerOriginOffsetY);",
           "required": true,
-          "picoui_api": "picoui_gauge_set_pointer_image",
+          "picoui_api": "picoui_gauge_set_pointer_source",
           "backend_proof": "picoui_backend_gauge_set_pointer_image",
           "unit_test": "test_gauge_set_pointer_image_native_parity",
           "gate_evidence": [
@@ -3902,7 +3902,7 @@
           "signature": "#define ldGaugeSetSelect ldBaseSetSelect",
           "macro_target": "ldBaseSetSelect",
           "required": true,
-          "picoui_api": "picoui_gauge_set_select",
+          "picoui_api": "picoui_widget_set_selected",
           "backend_proof": "picoui_backend_gauge_set_select",
           "unit_test": "test_gauge_set_select_native_parity",
           "gate_evidence": [
@@ -3920,7 +3920,7 @@
           "signature": "#define ldGaugeSetSelectable ldBaseSetSelectable",
           "macro_target": "ldBaseSetSelectable",
           "required": true,
-          "picoui_api": "picoui_gauge_set_selectable",
+          "picoui_api": "picoui_widget_set_selectable",
           "backend_proof": "picoui_backend_gauge_set_selectable",
           "unit_test": "test_gauge_set_selectable_native_parity",
           "gate_evidence": [
@@ -5135,7 +5135,7 @@
           "category": "update_action",
           "signature": "void ldKeyboardBtnUpdate(ldKeyboard_t *ptWidget,uint8_t keyCode);",
           "required": true,
-          "picoui_api": "picoui_keyboard_btn_update",
+          "picoui_api": "picoui_keyboard_button_update",
           "backend_proof": "picoui_backend_keyboard_btn_update",
           "unit_test": "test_keyboard_update_and_button_update_touch_native_state",
           "gate_evidence": [
@@ -7160,7 +7160,7 @@
           "signature": "#define ldProgressBarMove ldBaseMove",
           "macro_target": "ldBaseMove",
           "required": true,
-          "picoui_api": "picoui_progress_bar_move",
+          "picoui_api": "picoui_widget_set_pos",
           "backend_proof": "picoui_backend_progress_bar_move",
           "unit_test": "test_progress_bar_move_native_parity",
           "gate_evidence": [
@@ -7195,7 +7195,7 @@
           "signature": "#define ldProgressBarSetCorner ldBaseSetCorner",
           "macro_target": "ldBaseSetCorner",
           "required": true,
-          "picoui_api": "picoui_progress_bar_set_corner",
+          "picoui_api": "picoui_widget_set_corner",
           "backend_proof": "picoui_backend_progress_bar_set_corner",
           "unit_test": "test_progress_bar_set_corner_native_parity",
           "gate_evidence": [
@@ -7229,7 +7229,7 @@
           "category": "setter",
           "signature": "void ldProgressBarSetFrameImage(ldProgressBar_t *ptWidget, arm_2d_tile_t *ptFrameImgTile, arm_2d_tile_t *ptFrameMaskTile);",
           "required": true,
-          "picoui_api": "picoui_progress_bar_set_frame_image",
+          "picoui_api": "picoui_progress_bar_set_frame_source",
           "backend_proof": "picoui_backend_progress_bar_set_frame_image",
           "unit_test": "test_progress_bar_set_frame_image_native_parity",
           "gate_evidence": [
@@ -7247,7 +7247,7 @@
           "signature": "#define ldProgressBarSetHidden ldBaseSetHidden",
           "macro_target": "ldBaseSetHidden",
           "required": true,
-          "picoui_api": "picoui_progress_bar_set_hidden",
+          "picoui_api": "picoui_widget_set_visible",
           "backend_proof": "picoui_backend_progress_bar_set_hidden",
           "unit_test": "test_progress_bar_set_hidden_native_parity",
           "gate_evidence": [
@@ -7316,7 +7316,7 @@
           "signature": "#define ldProgressBarSetOpacity ldBaseSetOpacity",
           "macro_target": "ldBaseSetOpacity",
           "required": true,
-          "picoui_api": "picoui_progress_bar_set_opacity",
+          "picoui_api": "picoui_widget_set_opacity",
           "backend_proof": "picoui_backend_progress_bar_set_opacity",
           "unit_test": "test_progress_bar_set_opacity_native_parity",
           "gate_evidence": [
@@ -7351,7 +7351,7 @@
           "signature": "#define ldProgressBarSetSelect ldBaseSetSelect",
           "macro_target": "ldBaseSetSelect",
           "required": true,
-          "picoui_api": "picoui_progress_bar_set_select",
+          "picoui_api": "picoui_widget_set_selected",
           "backend_proof": "picoui_backend_progress_bar_set_select",
           "unit_test": "test_progress_bar_set_select_native_parity",
           "gate_evidence": [
@@ -7369,7 +7369,7 @@
           "signature": "#define ldProgressBarSetSelectable ldBaseSetSelectable",
           "macro_target": "ldBaseSetSelectable",
           "required": true,
-          "picoui_api": "picoui_progress_bar_set_selectable",
+          "picoui_api": "picoui_widget_set_selectable",
           "backend_proof": "picoui_backend_progress_bar_set_selectable",
           "unit_test": "test_progress_bar_set_selectable_native_parity",
           "gate_evidence": [
@@ -7678,8 +7678,8 @@
           "signature": "#define ldQRCodeMove ldBaseMove",
           "macro_target": "ldBaseMove",
           "required": true,
-          "picoui_api": "picoui_q_r_code_move",
-          "backend_proof": "picoui_q_r_code_move",
+          "picoui_api": "picoui_widget_set_pos",
+          "backend_proof": "picoui_widget_set_pos",
           "unit_test": "test_q_r_code_move_native_parity",
           "gate_evidence": [
             "ctest:test_picoui_widgets|test_picoui_button_events|test_picoui_qrcode"
@@ -7696,8 +7696,8 @@
           "signature": "#define ldQRCodeSetCorner ldBaseSetCorner",
           "macro_target": "ldBaseSetCorner",
           "required": true,
-          "picoui_api": "picoui_q_r_code_set_corner",
-          "backend_proof": "picoui_q_r_code_set_corner",
+          "picoui_api": "picoui_widget_set_corner",
+          "backend_proof": "picoui_widget_set_corner",
           "unit_test": "test_q_r_code_set_corner_native_parity",
           "gate_evidence": [
             "ctest:test_picoui_widgets|test_picoui_button_events|test_picoui_qrcode"
@@ -7714,8 +7714,8 @@
           "signature": "#define ldQRCodeSetHidden ldBaseSetHidden",
           "macro_target": "ldBaseSetHidden",
           "required": true,
-          "picoui_api": "picoui_q_r_code_set_hidden",
-          "backend_proof": "picoui_q_r_code_set_hidden",
+          "picoui_api": "picoui_widget_set_visible",
+          "backend_proof": "picoui_widget_set_visible",
           "unit_test": "test_q_r_code_set_hidden_native_parity",
           "gate_evidence": [
             "ctest:test_picoui_widgets|test_picoui_button_events|test_picoui_qrcode"
@@ -7732,8 +7732,8 @@
           "signature": "#define ldQRCodeSetOpacity ldBaseSetOpacity",
           "macro_target": "ldBaseSetOpacity",
           "required": true,
-          "picoui_api": "picoui_q_r_code_set_opacity",
-          "backend_proof": "picoui_q_r_code_set_opacity",
+          "picoui_api": "picoui_widget_set_opacity",
+          "backend_proof": "picoui_widget_set_opacity",
           "unit_test": "test_q_r_code_set_opacity_native_parity",
           "gate_evidence": [
             "ctest:test_picoui_widgets|test_picoui_button_events|test_picoui_qrcode"
@@ -7750,8 +7750,8 @@
           "signature": "#define ldQRCodeSetSelect ldBaseSetSelect",
           "macro_target": "ldBaseSetSelect",
           "required": true,
-          "picoui_api": "picoui_q_r_code_set_select",
-          "backend_proof": "picoui_q_r_code_set_select",
+          "picoui_api": "picoui_widget_set_selected",
+          "backend_proof": "picoui_widget_set_selected",
           "unit_test": "test_q_r_code_set_select_native_parity",
           "gate_evidence": [
             "ctest:test_picoui_widgets|test_picoui_button_events|test_picoui_qrcode"
@@ -7768,8 +7768,8 @@
           "signature": "#define ldQRCodeSetSelectable ldBaseSetSelectable",
           "macro_target": "ldBaseSetSelectable",
           "required": true,
-          "picoui_api": "picoui_q_r_code_set_selectable",
-          "backend_proof": "picoui_q_r_code_set_selectable",
+          "picoui_api": "picoui_widget_set_selectable",
+          "backend_proof": "picoui_widget_set_selectable",
           "unit_test": "test_q_r_code_set_selectable_native_parity",
           "gate_evidence": [
             "ctest:test_picoui_widgets|test_picoui_button_events|test_picoui_qrcode"
@@ -7973,7 +7973,7 @@
           "category": "setter",
           "signature": "void ldRadialMenuSetOffsetItem(ldRadialMenu_t *ptWidget,int8_t offset);",
           "required": true,
-          "picoui_api": "picoui_radial_menu_set_offset_item",
+          "picoui_api": "picoui_radial_menu_offset_item",
           "backend_proof": "picoui_backend_radial_menu_set_offset_item",
           "unit_test": "test_radial_menu_set_offset_item_native_parity",
           "gate_evidence": [
@@ -8452,8 +8452,8 @@
           "signature": "#define ldSliderMove ldBaseMove",
           "macro_target": "ldBaseMove",
           "required": true,
-          "picoui_api": "picoui_slider_move",
-          "backend_proof": "picoui_slider_move",
+          "picoui_api": "picoui_widget_set_pos",
+          "backend_proof": "picoui_widget_set_pos",
           "unit_test": "test_slider_move_native_parity",
           "gate_evidence": [
             "ctest:test_picoui_widgets|test_picoui_button_events|test_picoui_qrcode"
@@ -8487,8 +8487,8 @@
           "signature": "#define ldSliderSetCorner ldBaseSetCorner",
           "macro_target": "ldBaseSetCorner",
           "required": true,
-          "picoui_api": "picoui_slider_set_corner",
-          "backend_proof": "picoui_slider_set_corner",
+          "picoui_api": "picoui_widget_set_corner",
+          "backend_proof": "picoui_widget_set_corner",
           "unit_test": "test_slider_set_corner_native_parity",
           "gate_evidence": [
             "ctest:test_picoui_widgets|test_picoui_button_events|test_picoui_qrcode"
@@ -8505,8 +8505,8 @@
           "signature": "#define ldSliderSetHidden ldBaseSetHidden",
           "macro_target": "ldBaseSetHidden",
           "required": true,
-          "picoui_api": "picoui_slider_set_hidden",
-          "backend_proof": "picoui_slider_set_hidden",
+          "picoui_api": "picoui_widget_set_visible",
+          "backend_proof": "picoui_widget_set_visible",
           "unit_test": "test_slider_set_hidden_native_parity",
           "gate_evidence": [
             "ctest:test_picoui_widgets|test_picoui_button_events|test_picoui_qrcode"
@@ -8574,8 +8574,8 @@
           "signature": "#define ldSliderSetOpacity ldBaseSetOpacity",
           "macro_target": "ldBaseSetOpacity",
           "required": true,
-          "picoui_api": "picoui_slider_set_opacity",
-          "backend_proof": "picoui_slider_set_opacity",
+          "picoui_api": "picoui_widget_set_opacity",
+          "backend_proof": "picoui_widget_set_opacity",
           "unit_test": "test_slider_set_opacity_native_parity",
           "gate_evidence": [
             "ctest:test_picoui_widgets|test_picoui_button_events|test_picoui_qrcode"
@@ -8609,8 +8609,8 @@
           "signature": "#define ldSliderSetSelect ldBaseSetSelect",
           "macro_target": "ldBaseSetSelect",
           "required": true,
-          "picoui_api": "picoui_slider_set_select",
-          "backend_proof": "picoui_slider_set_select",
+          "picoui_api": "picoui_widget_set_selected",
+          "backend_proof": "picoui_widget_set_selected",
           "unit_test": "test_slider_set_select_native_parity",
           "gate_evidence": [
             "ctest:test_picoui_widgets|test_picoui_button_events|test_picoui_qrcode"
@@ -8627,8 +8627,8 @@
           "signature": "#define ldSliderSetSelectable ldBaseSetSelectable",
           "macro_target": "ldBaseSetSelectable",
           "required": true,
-          "picoui_api": "picoui_slider_set_selectable",
-          "backend_proof": "picoui_slider_set_selectable",
+          "picoui_api": "picoui_widget_set_selectable",
+          "backend_proof": "picoui_widget_set_selectable",
           "unit_test": "test_slider_set_selectable_native_parity",
           "gate_evidence": [
             "ctest:test_picoui_widgets|test_picoui_button_events|test_picoui_qrcode"

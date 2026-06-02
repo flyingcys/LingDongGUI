@@ -92,6 +92,9 @@
     "missing_gap_total": 0,
     "allowlisted_total": 207,
     "covered_total": 404,
+    "direct_public_covered_total": 404,
+    "policy_allowlisted_total": 207,
+    "direct_public_100_complete": false,
     "widget_row_total": 32,
     "shared_policy_counts": {
       "allowlisted_tree_helper": 150,
@@ -113,6 +116,10 @@
       "render_pipeline_internal": 27,
       "resource_time_helper_policy": 5,
       "runtime_host_internal": 16
+    },
+    "direct_100_category_counts": {
+      "optional_public_extension": 16,
+      "policy_never_public": 191
     },
     "group_kind_counts": {
       "internal_helper": 19,
@@ -338,6 +345,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -388,6 +396,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -412,6 +421,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -436,6 +446,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -456,6 +467,7 @@
           "allowlist_reason": "Render/show entry point owned by backend rendering pipeline.",
           "capability_release_judgement": "allowlisted",
           "policy_category": "render_pipeline_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         }
       ],
@@ -776,6 +788,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -826,6 +839,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -850,6 +864,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -874,6 +889,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -894,6 +910,7 @@
           "allowlist_reason": "Render/show entry point owned by backend rendering pipeline.",
           "capability_release_judgement": "allowlisted",
           "policy_category": "render_pipeline_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         }
       ],
@@ -931,7 +948,7 @@
           "rationale": "R3 policy decision: base geometry/focus/helper row is backend-private or represented by existing PicoUI layout/widget APIs; no new public tree traversal API is required.",
           "planned_task": "R3",
           "overwrap_risk": false,
-          "notes": "a-0.9 R3 base policy closeout: strict allowlist, not direct covered.",
+          "notes": "a-0.10 R2 direct-100 category: optional_public_extension; a portable PicoUI tree, geometry, focus, or nameId abstraction could be designed later, but a-0.9 keeps native tree traversal out of the current public user model and does not add API here.",
           "allowlist_reason": "R3 policy decision: base geometry/focus/helper row is backend-private or represented by existing PicoUI layout/widget APIs; no new public tree traversal API is required.",
           "shared_policy": "allowlisted_tree_helper",
           "shared_policy_evidence": [
@@ -939,6 +956,7 @@
             "test_backend_widget_tree_contract verifies backend child/sibling tree ownership without exposing native traversal wrappers."
           ],
           "policy_category": "base_tree_policy",
+          "direct_100_category": "optional_public_extension",
           "group_kind": "shared_base"
         },
         {
@@ -956,7 +974,7 @@
           "rationale": "R3 policy decision: base geometry/focus/helper row is backend-private or represented by existing PicoUI layout/widget APIs; no new public tree traversal API is required.",
           "planned_task": "R3",
           "overwrap_risk": false,
-          "notes": "a-0.9 R3 base policy closeout: strict allowlist, not direct covered.",
+          "notes": "a-0.10 R2 direct-100 category: optional_public_extension; a portable PicoUI tree, geometry, focus, or nameId abstraction could be designed later, but a-0.9 keeps native tree traversal out of the current public user model and does not add API here.",
           "allowlist_reason": "R3 policy decision: base geometry/focus/helper row is backend-private or represented by existing PicoUI layout/widget APIs; no new public tree traversal API is required.",
           "shared_policy": "allowlisted_tree_helper",
           "shared_policy_evidence": [
@@ -964,6 +982,7 @@
             "test_backend_widget_tree_contract verifies backend child/sibling tree ownership without exposing native traversal wrappers."
           ],
           "policy_category": "base_tree_policy",
+          "direct_100_category": "optional_public_extension",
           "group_kind": "shared_base"
         },
         {
@@ -981,7 +1000,7 @@
           "rationale": "R3 policy decision: base geometry/focus/helper row is backend-private or represented by existing PicoUI layout/widget APIs; no new public tree traversal API is required.",
           "planned_task": "R3",
           "overwrap_risk": false,
-          "notes": "a-0.9 R3 base policy closeout: strict allowlist, not direct covered.",
+          "notes": "a-0.10 R2 direct-100 category: policy_never_public; native tree mutation, debug print, or background helper remains backend-owned because PicoUI create/parent/backend attach APIs own tree mutation and render movement semantics.",
           "shared_policy": "allowlisted_tree_helper",
           "shared_policy_evidence": [
             "PicoUI creation APIs carry parent intent and backend attach/remove maintains the real LingDongGUI tree.",
@@ -989,6 +1008,7 @@
           ],
           "allowlist_reason": "R3 policy decision: base geometry/focus/helper row is backend-private or represented by existing PicoUI layout/widget APIs; no new public tree traversal API is required.",
           "policy_category": "base_tree_policy",
+          "direct_100_category": "policy_never_public",
           "group_kind": "shared_base"
         },
         {
@@ -1006,7 +1026,7 @@
           "rationale": "R3 policy decision: raw Arm-2D drawing helpers are backend render-pipeline utilities; PicoUI exposes widget/theme/image abstractions instead of public drawing primitive wrappers.",
           "planned_task": "R3",
           "overwrap_risk": false,
-          "notes": "a-0.9 R3 base policy closeout: strict allowlist, not direct covered.",
+          "notes": "a-0.10 R2 direct-100 category: policy_never_public; raw Arm-2D drawing helpers stay render-pipeline utilities while PicoUI exposes widget, theme, and image abstractions.",
           "allowlist_reason": "R3 policy decision: raw Arm-2D drawing helpers are backend render-pipeline utilities; PicoUI exposes widget/theme/image abstractions instead of public drawing primitive wrappers.",
           "shared_policy": "allowlisted_tree_helper",
           "shared_policy_evidence": [
@@ -1014,6 +1034,7 @@
             "test_backend_widget_tree_contract verifies backend child/sibling tree ownership without exposing native traversal wrappers."
           ],
           "policy_category": "drawing_helper_policy",
+          "direct_100_category": "policy_never_public",
           "group_kind": "shared_base"
         },
         {
@@ -1031,7 +1052,7 @@
           "rationale": "R3 policy decision: raw Arm-2D drawing helpers are backend render-pipeline utilities; PicoUI exposes widget/theme/image abstractions instead of public drawing primitive wrappers.",
           "planned_task": "R3",
           "overwrap_risk": false,
-          "notes": "a-0.9 R3 base policy closeout: strict allowlist, not direct covered.",
+          "notes": "a-0.10 R2 direct-100 category: policy_never_public; raw Arm-2D drawing helpers stay render-pipeline utilities while PicoUI exposes widget, theme, and image abstractions.",
           "allowlist_reason": "R3 policy decision: raw Arm-2D drawing helpers are backend render-pipeline utilities; PicoUI exposes widget/theme/image abstractions instead of public drawing primitive wrappers.",
           "shared_policy": "allowlisted_tree_helper",
           "shared_policy_evidence": [
@@ -1039,6 +1060,7 @@
             "test_backend_widget_tree_contract verifies backend child/sibling tree ownership without exposing native traversal wrappers."
           ],
           "policy_category": "drawing_helper_policy",
+          "direct_100_category": "policy_never_public",
           "group_kind": "shared_base"
         },
         {
@@ -1056,7 +1078,7 @@
           "rationale": "R3 policy decision: base geometry/focus/helper row is backend-private or represented by existing PicoUI layout/widget APIs; no new public tree traversal API is required.",
           "planned_task": "R3",
           "overwrap_risk": false,
-          "notes": "a-0.9 R3 base policy closeout: strict allowlist, not direct covered.",
+          "notes": "a-0.10 R2 direct-100 category: optional_public_extension; a portable PicoUI tree, geometry, focus, or nameId abstraction could be designed later, but a-0.9 keeps native tree traversal out of the current public user model and does not add API here.",
           "shared_policy": "allowlisted_tree_helper",
           "shared_policy_evidence": [
             "PicoUI creation APIs carry parent intent and backend attach/remove maintains the real LingDongGUI tree.",
@@ -1064,6 +1086,7 @@
           ],
           "allowlist_reason": "R3 policy decision: base geometry/focus/helper row is backend-private or represented by existing PicoUI layout/widget APIs; no new public tree traversal API is required.",
           "policy_category": "base_tree_policy",
+          "direct_100_category": "optional_public_extension",
           "group_kind": "shared_base"
         },
         {
@@ -1081,7 +1104,7 @@
           "rationale": "R3 policy decision: base geometry/focus/helper row is backend-private or represented by existing PicoUI layout/widget APIs; no new public tree traversal API is required.",
           "planned_task": "R3",
           "overwrap_risk": false,
-          "notes": "a-0.9 R3 base policy closeout: strict allowlist, not direct covered.",
+          "notes": "a-0.10 R2 direct-100 category: optional_public_extension; a portable PicoUI tree, geometry, focus, or nameId abstraction could be designed later, but a-0.9 keeps native tree traversal out of the current public user model and does not add API here.",
           "shared_policy": "allowlisted_tree_helper",
           "shared_policy_evidence": [
             "PicoUI creation APIs carry parent intent and backend attach/remove maintains the real LingDongGUI tree.",
@@ -1089,6 +1112,7 @@
           ],
           "allowlist_reason": "R3 policy decision: base geometry/focus/helper row is backend-private or represented by existing PicoUI layout/widget APIs; no new public tree traversal API is required.",
           "policy_category": "base_tree_policy",
+          "direct_100_category": "optional_public_extension",
           "group_kind": "shared_base"
         },
         {
@@ -1106,7 +1130,7 @@
           "rationale": "R3 policy decision: base geometry/focus/helper row is backend-private or represented by existing PicoUI layout/widget APIs; no new public tree traversal API is required.",
           "planned_task": "R3",
           "overwrap_risk": false,
-          "notes": "a-0.9 R3 base policy closeout: strict allowlist, not direct covered.",
+          "notes": "a-0.10 R2 direct-100 category: optional_public_extension; a portable PicoUI tree, geometry, focus, or nameId abstraction could be designed later, but a-0.9 keeps native tree traversal out of the current public user model and does not add API here.",
           "shared_policy": "allowlisted_tree_helper",
           "shared_policy_evidence": [
             "PicoUI creation APIs carry parent intent and backend attach/remove maintains the real LingDongGUI tree.",
@@ -1114,6 +1138,7 @@
           ],
           "allowlist_reason": "R3 policy decision: base geometry/focus/helper row is backend-private or represented by existing PicoUI layout/widget APIs; no new public tree traversal API is required.",
           "policy_category": "base_tree_policy",
+          "direct_100_category": "optional_public_extension",
           "group_kind": "shared_base"
         },
         {
@@ -1131,7 +1156,7 @@
           "rationale": "R3 policy decision: base geometry/focus/helper row is backend-private or represented by existing PicoUI layout/widget APIs; no new public tree traversal API is required.",
           "planned_task": "R3",
           "overwrap_risk": false,
-          "notes": "a-0.9 R3 base policy closeout: strict allowlist, not direct covered.",
+          "notes": "a-0.10 R2 direct-100 category: optional_public_extension; a portable PicoUI tree, geometry, focus, or nameId abstraction could be designed later, but a-0.9 keeps native tree traversal out of the current public user model and does not add API here.",
           "shared_policy": "allowlisted_tree_helper",
           "shared_policy_evidence": [
             "PicoUI creation APIs carry parent intent and backend attach/remove maintains the real LingDongGUI tree.",
@@ -1139,6 +1164,7 @@
           ],
           "allowlist_reason": "R3 policy decision: base geometry/focus/helper row is backend-private or represented by existing PicoUI layout/widget APIs; no new public tree traversal API is required.",
           "policy_category": "base_tree_policy",
+          "direct_100_category": "optional_public_extension",
           "group_kind": "shared_base"
         },
         {
@@ -1156,7 +1182,7 @@
           "rationale": "R3 policy decision: PicoUI tree mutation is owned by create/parent APIs and backend attach/remove; native tree traversal/nameId helpers stay backend-private and are not a user-facing public wrapper surface.",
           "planned_task": "R3",
           "overwrap_risk": false,
-          "notes": "a-0.9 R3 base policy closeout: strict allowlist, not direct covered.",
+          "notes": "a-0.10 R2 direct-100 category: optional_public_extension; a portable PicoUI tree, geometry, focus, or nameId abstraction could be designed later, but a-0.9 keeps native tree traversal out of the current public user model and does not add API here.",
           "shared_policy": "allowlisted_tree_helper",
           "shared_policy_evidence": [
             "PicoUI creation APIs carry parent intent and backend attach/remove maintains the real LingDongGUI tree.",
@@ -1164,6 +1190,7 @@
           ],
           "allowlist_reason": "R3 policy decision: PicoUI tree mutation is owned by create/parent APIs and backend attach/remove; native tree traversal/nameId helpers stay backend-private and are not a user-facing public wrapper surface.",
           "policy_category": "base_tree_policy",
+          "direct_100_category": "optional_public_extension",
           "group_kind": "shared_base"
         },
         {
@@ -1181,7 +1208,7 @@
           "rationale": "R3 policy decision: PicoUI tree mutation is owned by create/parent APIs and backend attach/remove; native tree traversal/nameId helpers stay backend-private and are not a user-facing public wrapper surface.",
           "planned_task": "R3",
           "overwrap_risk": false,
-          "notes": "a-0.9 R3 base policy closeout: strict allowlist, not direct covered.",
+          "notes": "a-0.10 R2 direct-100 category: optional_public_extension; a portable PicoUI tree, geometry, focus, or nameId abstraction could be designed later, but a-0.9 keeps native tree traversal out of the current public user model and does not add API here.",
           "shared_policy": "allowlisted_tree_helper",
           "shared_policy_evidence": [
             "PicoUI creation APIs carry parent intent and backend attach/remove maintains the real LingDongGUI tree.",
@@ -1189,6 +1216,7 @@
           ],
           "allowlist_reason": "R3 policy decision: PicoUI tree mutation is owned by create/parent APIs and backend attach/remove; native tree traversal/nameId helpers stay backend-private and are not a user-facing public wrapper surface.",
           "policy_category": "base_tree_policy",
+          "direct_100_category": "optional_public_extension",
           "group_kind": "shared_base"
         },
         {
@@ -1206,7 +1234,7 @@
           "rationale": "R3 policy decision: native vres/date/time helpers are LingDongGUI resource or clock utilities; PicoUI exposes resources through widget-specific portable props and does not wrap host address/time helpers.",
           "planned_task": "R3",
           "overwrap_risk": false,
-          "notes": "a-0.9 R3 base policy closeout: strict allowlist, not direct covered.",
+          "notes": "a-0.10 R2 direct-100 category: policy_never_public; LingDongGUI resource/date/time helpers stay host/backend utilities while PicoUI exposes resource or time intent through widget-specific portable properties.",
           "shared_policy": "allowlisted_tree_helper",
           "shared_policy_evidence": [
             "PicoUI creation APIs carry parent intent and backend attach/remove maintains the real LingDongGUI tree.",
@@ -1214,6 +1242,7 @@
           ],
           "allowlist_reason": "R3 policy decision: native vres/date/time helpers are LingDongGUI resource or clock utilities; PicoUI exposes resources through widget-specific portable props and does not wrap host address/time helpers.",
           "policy_category": "resource_time_helper_policy",
+          "direct_100_category": "policy_never_public",
           "group_kind": "shared_base"
         },
         {
@@ -1283,7 +1312,7 @@
           "rationale": "R3 policy decision: base geometry/focus/helper row is backend-private or represented by existing PicoUI layout/widget APIs; no new public tree traversal API is required.",
           "planned_task": "R3",
           "overwrap_risk": false,
-          "notes": "a-0.9 R3 base policy closeout: strict allowlist, not direct covered.",
+          "notes": "a-0.10 R2 direct-100 category: optional_public_extension; a portable PicoUI tree, geometry, focus, or nameId abstraction could be designed later, but a-0.9 keeps native tree traversal out of the current public user model and does not add API here.",
           "shared_policy": "allowlisted_tree_helper",
           "shared_policy_evidence": [
             "PicoUI creation APIs carry parent intent and backend attach/remove maintains the real LingDongGUI tree.",
@@ -1291,6 +1320,7 @@
           ],
           "allowlist_reason": "R3 policy decision: base geometry/focus/helper row is backend-private or represented by existing PicoUI layout/widget APIs; no new public tree traversal API is required.",
           "policy_category": "base_tree_policy",
+          "direct_100_category": "optional_public_extension",
           "group_kind": "shared_base"
         },
         {
@@ -1308,7 +1338,7 @@
           "rationale": "R3 policy decision: PicoUI tree mutation is owned by create/parent APIs and backend attach/remove; native tree traversal/nameId helpers stay backend-private and are not a user-facing public wrapper surface.",
           "planned_task": "R3",
           "overwrap_risk": false,
-          "notes": "a-0.9 R3 base policy closeout: strict allowlist, not direct covered.",
+          "notes": "a-0.10 R2 direct-100 category: optional_public_extension; a portable PicoUI tree, geometry, focus, or nameId abstraction could be designed later, but a-0.9 keeps native tree traversal out of the current public user model and does not add API here.",
           "shared_policy": "allowlisted_tree_helper",
           "shared_policy_evidence": [
             "PicoUI creation APIs carry parent intent and backend attach/remove maintains the real LingDongGUI tree.",
@@ -1316,6 +1346,7 @@
           ],
           "allowlist_reason": "R3 policy decision: PicoUI tree mutation is owned by create/parent APIs and backend attach/remove; native tree traversal/nameId helpers stay backend-private and are not a user-facing public wrapper surface.",
           "policy_category": "base_tree_policy",
+          "direct_100_category": "optional_public_extension",
           "group_kind": "shared_base"
         },
         {
@@ -1359,7 +1390,7 @@
           "rationale": "R3 policy decision: PicoUI tree mutation is owned by create/parent APIs and backend attach/remove; native tree traversal/nameId helpers stay backend-private and are not a user-facing public wrapper surface.",
           "planned_task": "R3",
           "overwrap_risk": false,
-          "notes": "a-0.9 R3 base policy closeout: strict allowlist, not direct covered.",
+          "notes": "a-0.10 R2 direct-100 category: optional_public_extension; a portable PicoUI tree, geometry, focus, or nameId abstraction could be designed later, but a-0.9 keeps native tree traversal out of the current public user model and does not add API here.",
           "shared_policy": "allowlisted_tree_helper",
           "shared_policy_evidence": [
             "PicoUI creation APIs carry parent intent and backend attach/remove maintains the real LingDongGUI tree.",
@@ -1367,6 +1398,7 @@
           ],
           "allowlist_reason": "R3 policy decision: PicoUI tree mutation is owned by create/parent APIs and backend attach/remove; native tree traversal/nameId helpers stay backend-private and are not a user-facing public wrapper surface.",
           "policy_category": "base_tree_policy",
+          "direct_100_category": "optional_public_extension",
           "group_kind": "shared_base"
         },
         {
@@ -1410,7 +1442,7 @@
           "rationale": "R3 policy decision: base geometry/focus/helper row is backend-private or represented by existing PicoUI layout/widget APIs; no new public tree traversal API is required.",
           "planned_task": "R3",
           "overwrap_risk": false,
-          "notes": "a-0.9 R3 base policy closeout: strict allowlist, not direct covered.",
+          "notes": "a-0.10 R2 direct-100 category: optional_public_extension; a portable PicoUI tree, geometry, focus, or nameId abstraction could be designed later, but a-0.9 keeps native tree traversal out of the current public user model and does not add API here.",
           "shared_policy": "allowlisted_tree_helper",
           "shared_policy_evidence": [
             "PicoUI creation APIs carry parent intent and backend attach/remove maintains the real LingDongGUI tree.",
@@ -1418,6 +1450,7 @@
           ],
           "allowlist_reason": "R3 policy decision: base geometry/focus/helper row is backend-private or represented by existing PicoUI layout/widget APIs; no new public tree traversal API is required.",
           "policy_category": "base_tree_policy",
+          "direct_100_category": "optional_public_extension",
           "group_kind": "shared_base"
         },
         {
@@ -1435,7 +1468,7 @@
           "rationale": "R3 policy decision: PicoUI tree mutation is owned by create/parent APIs and backend attach/remove; native tree traversal/nameId helpers stay backend-private and are not a user-facing public wrapper surface.",
           "planned_task": "R3",
           "overwrap_risk": false,
-          "notes": "a-0.9 R3 base policy closeout: strict allowlist, not direct covered.",
+          "notes": "a-0.10 R2 direct-100 category: optional_public_extension; a portable PicoUI tree, geometry, focus, or nameId abstraction could be designed later, but a-0.9 keeps native tree traversal out of the current public user model and does not add API here.",
           "shared_policy": "allowlisted_tree_helper",
           "shared_policy_evidence": [
             "PicoUI creation APIs carry parent intent and backend attach/remove maintains the real LingDongGUI tree.",
@@ -1443,6 +1476,7 @@
           ],
           "allowlist_reason": "R3 policy decision: PicoUI tree mutation is owned by create/parent APIs and backend attach/remove; native tree traversal/nameId helpers stay backend-private and are not a user-facing public wrapper surface.",
           "policy_category": "base_tree_policy",
+          "direct_100_category": "optional_public_extension",
           "group_kind": "shared_base"
         },
         {
@@ -1486,7 +1520,7 @@
           "rationale": "R3 policy decision: native vres/date/time helpers are LingDongGUI resource or clock utilities; PicoUI exposes resources through widget-specific portable props and does not wrap host address/time helpers.",
           "planned_task": "R3",
           "overwrap_risk": false,
-          "notes": "a-0.9 R3 base policy closeout: strict allowlist, not direct covered.",
+          "notes": "a-0.10 R2 direct-100 category: policy_never_public; LingDongGUI resource/date/time helpers stay host/backend utilities while PicoUI exposes resource or time intent through widget-specific portable properties.",
           "shared_policy": "allowlisted_tree_helper",
           "shared_policy_evidence": [
             "PicoUI creation APIs carry parent intent and backend attach/remove maintains the real LingDongGUI tree.",
@@ -1494,6 +1528,7 @@
           ],
           "allowlist_reason": "R3 policy decision: native vres/date/time helpers are LingDongGUI resource or clock utilities; PicoUI exposes resources through widget-specific portable props and does not wrap host address/time helpers.",
           "policy_category": "resource_time_helper_policy",
+          "direct_100_category": "policy_never_public",
           "group_kind": "shared_base"
         },
         {
@@ -1511,7 +1546,7 @@
           "rationale": "R3 policy decision: native vres/date/time helpers are LingDongGUI resource or clock utilities; PicoUI exposes resources through widget-specific portable props and does not wrap host address/time helpers.",
           "planned_task": "R3",
           "overwrap_risk": false,
-          "notes": "a-0.9 R3 base policy closeout: strict allowlist, not direct covered.",
+          "notes": "a-0.10 R2 direct-100 category: policy_never_public; LingDongGUI resource/date/time helpers stay host/backend utilities while PicoUI exposes resource or time intent through widget-specific portable properties.",
           "shared_policy": "allowlisted_tree_helper",
           "shared_policy_evidence": [
             "PicoUI creation APIs carry parent intent and backend attach/remove maintains the real LingDongGUI tree.",
@@ -1519,6 +1554,7 @@
           ],
           "allowlist_reason": "R3 policy decision: native vres/date/time helpers are LingDongGUI resource or clock utilities; PicoUI exposes resources through widget-specific portable props and does not wrap host address/time helpers.",
           "policy_category": "resource_time_helper_policy",
+          "direct_100_category": "policy_never_public",
           "group_kind": "shared_base"
         },
         {
@@ -1536,7 +1572,7 @@
           "rationale": "R3 policy decision: native vres/date/time helpers are LingDongGUI resource or clock utilities; PicoUI exposes resources through widget-specific portable props and does not wrap host address/time helpers.",
           "planned_task": "R3",
           "overwrap_risk": false,
-          "notes": "a-0.9 R3 base policy closeout: strict allowlist, not direct covered.",
+          "notes": "a-0.10 R2 direct-100 category: policy_never_public; LingDongGUI resource/date/time helpers stay host/backend utilities while PicoUI exposes resource or time intent through widget-specific portable properties.",
           "shared_policy": "allowlisted_tree_helper",
           "shared_policy_evidence": [
             "PicoUI creation APIs carry parent intent and backend attach/remove maintains the real LingDongGUI tree.",
@@ -1544,6 +1580,7 @@
           ],
           "allowlist_reason": "R3 policy decision: native vres/date/time helpers are LingDongGUI resource or clock utilities; PicoUI exposes resources through widget-specific portable props and does not wrap host address/time helpers.",
           "policy_category": "resource_time_helper_policy",
+          "direct_100_category": "policy_never_public",
           "group_kind": "shared_base"
         },
         {
@@ -1561,7 +1598,7 @@
           "rationale": "R3 policy decision: native vres/date/time helpers are LingDongGUI resource or clock utilities; PicoUI exposes resources through widget-specific portable props and does not wrap host address/time helpers.",
           "planned_task": "R3",
           "overwrap_risk": false,
-          "notes": "a-0.9 R3 base policy closeout: strict allowlist, not direct covered.",
+          "notes": "a-0.10 R2 direct-100 category: policy_never_public; LingDongGUI resource/date/time helpers stay host/backend utilities while PicoUI exposes resource or time intent through widget-specific portable properties.",
           "shared_policy": "allowlisted_tree_helper",
           "shared_policy_evidence": [
             "PicoUI creation APIs carry parent intent and backend attach/remove maintains the real LingDongGUI tree.",
@@ -1569,6 +1606,7 @@
           ],
           "allowlist_reason": "R3 policy decision: native vres/date/time helpers are LingDongGUI resource or clock utilities; PicoUI exposes resources through widget-specific portable props and does not wrap host address/time helpers.",
           "policy_category": "resource_time_helper_policy",
+          "direct_100_category": "policy_never_public",
           "group_kind": "shared_base"
         },
         {
@@ -1586,7 +1624,7 @@
           "rationale": "R3 policy decision: PicoUI tree mutation is owned by create/parent APIs and backend attach/remove; native tree traversal/nameId helpers stay backend-private and are not a user-facing public wrapper surface.",
           "planned_task": "R3",
           "overwrap_risk": false,
-          "notes": "a-0.9 R3 base policy closeout: strict allowlist, not direct covered.",
+          "notes": "a-0.10 R2 direct-100 category: optional_public_extension; a portable PicoUI tree, geometry, focus, or nameId abstraction could be designed later, but a-0.9 keeps native tree traversal out of the current public user model and does not add API here.",
           "shared_policy": "allowlisted_tree_helper",
           "shared_policy_evidence": [
             "PicoUI creation APIs carry parent intent and backend attach/remove maintains the real LingDongGUI tree.",
@@ -1594,6 +1632,7 @@
           ],
           "allowlist_reason": "R3 policy decision: PicoUI tree mutation is owned by create/parent APIs and backend attach/remove; native tree traversal/nameId helpers stay backend-private and are not a user-facing public wrapper surface.",
           "policy_category": "base_tree_policy",
+          "direct_100_category": "optional_public_extension",
           "group_kind": "shared_base"
         },
         {
@@ -1611,7 +1650,7 @@
           "rationale": "R3 policy decision: PicoUI tree mutation is owned by create/parent APIs and backend attach/remove; native tree traversal/nameId helpers stay backend-private and are not a user-facing public wrapper surface.",
           "planned_task": "R3",
           "overwrap_risk": false,
-          "notes": "a-0.9 R3 base policy closeout: strict allowlist, not direct covered.",
+          "notes": "a-0.10 R2 direct-100 category: optional_public_extension; a portable PicoUI tree, geometry, focus, or nameId abstraction could be designed later, but a-0.9 keeps native tree traversal out of the current public user model and does not add API here.",
           "shared_policy": "allowlisted_tree_helper",
           "shared_policy_evidence": [
             "PicoUI creation APIs carry parent intent and backend attach/remove maintains the real LingDongGUI tree.",
@@ -1619,6 +1658,7 @@
           ],
           "allowlist_reason": "R3 policy decision: PicoUI tree mutation is owned by create/parent APIs and backend attach/remove; native tree traversal/nameId helpers stay backend-private and are not a user-facing public wrapper surface.",
           "policy_category": "base_tree_policy",
+          "direct_100_category": "optional_public_extension",
           "group_kind": "shared_base"
         },
         {
@@ -1636,7 +1676,7 @@
           "rationale": "R3 policy decision: PicoUI tree mutation is owned by create/parent APIs and backend attach/remove; native tree traversal/nameId helpers stay backend-private and are not a user-facing public wrapper surface.",
           "planned_task": "R3",
           "overwrap_risk": false,
-          "notes": "a-0.9 R3 base policy closeout: strict allowlist, not direct covered.",
+          "notes": "a-0.10 R2 direct-100 category: optional_public_extension; a portable PicoUI tree, geometry, focus, or nameId abstraction could be designed later, but a-0.9 keeps native tree traversal out of the current public user model and does not add API here.",
           "shared_policy": "allowlisted_tree_helper",
           "shared_policy_evidence": [
             "PicoUI creation APIs carry parent intent and backend attach/remove maintains the real LingDongGUI tree.",
@@ -1644,6 +1684,7 @@
           ],
           "allowlist_reason": "R3 policy decision: PicoUI tree mutation is owned by create/parent APIs and backend attach/remove; native tree traversal/nameId helpers stay backend-private and are not a user-facing public wrapper surface.",
           "policy_category": "base_tree_policy",
+          "direct_100_category": "optional_public_extension",
           "group_kind": "shared_base"
         },
         {
@@ -1739,7 +1780,7 @@
           "rationale": "R3 policy decision: raw Arm-2D drawing helpers are backend render-pipeline utilities; PicoUI exposes widget/theme/image abstractions instead of public drawing primitive wrappers.",
           "planned_task": "R3",
           "overwrap_risk": false,
-          "notes": "a-0.9 R3 base policy closeout: strict allowlist, not direct covered.",
+          "notes": "a-0.10 R2 direct-100 category: policy_never_public; raw Arm-2D drawing helpers stay render-pipeline utilities while PicoUI exposes widget, theme, and image abstractions.",
           "allowlist_reason": "R3 policy decision: raw Arm-2D drawing helpers are backend render-pipeline utilities; PicoUI exposes widget/theme/image abstractions instead of public drawing primitive wrappers.",
           "shared_policy": "allowlisted_tree_helper",
           "shared_policy_evidence": [
@@ -1747,6 +1788,7 @@
             "test_backend_widget_tree_contract verifies backend child/sibling tree ownership without exposing native traversal wrappers."
           ],
           "policy_category": "drawing_helper_policy",
+          "direct_100_category": "policy_never_public",
           "group_kind": "shared_base"
         },
         {
@@ -1764,7 +1806,7 @@
           "rationale": "R3 policy decision: raw Arm-2D drawing helpers are backend render-pipeline utilities; PicoUI exposes widget/theme/image abstractions instead of public drawing primitive wrappers.",
           "planned_task": "R3",
           "overwrap_risk": false,
-          "notes": "a-0.9 R3 base policy closeout: strict allowlist, not direct covered.",
+          "notes": "a-0.10 R2 direct-100 category: policy_never_public; raw Arm-2D drawing helpers stay render-pipeline utilities while PicoUI exposes widget, theme, and image abstractions.",
           "allowlist_reason": "R3 policy decision: raw Arm-2D drawing helpers are backend render-pipeline utilities; PicoUI exposes widget/theme/image abstractions instead of public drawing primitive wrappers.",
           "shared_policy": "allowlisted_tree_helper",
           "shared_policy_evidence": [
@@ -1772,6 +1814,7 @@
             "test_backend_widget_tree_contract verifies backend child/sibling tree ownership without exposing native traversal wrappers."
           ],
           "policy_category": "drawing_helper_policy",
+          "direct_100_category": "policy_never_public",
           "group_kind": "shared_base"
         },
         {
@@ -1893,7 +1936,7 @@
           "rationale": "R3 policy decision: raw Arm-2D drawing helpers are backend render-pipeline utilities; PicoUI exposes widget/theme/image abstractions instead of public drawing primitive wrappers.",
           "planned_task": "R3",
           "overwrap_risk": false,
-          "notes": "a-0.9 R3 base policy closeout: strict allowlist, not direct covered.",
+          "notes": "a-0.10 R2 direct-100 category: policy_never_public; raw Arm-2D drawing helpers stay render-pipeline utilities while PicoUI exposes widget, theme, and image abstractions.",
           "allowlist_reason": "R3 policy decision: raw Arm-2D drawing helpers are backend render-pipeline utilities; PicoUI exposes widget/theme/image abstractions instead of public drawing primitive wrappers.",
           "shared_policy": "allowlisted_tree_helper",
           "shared_policy_evidence": [
@@ -1901,6 +1944,7 @@
             "test_backend_widget_tree_contract verifies backend child/sibling tree ownership without exposing native traversal wrappers."
           ],
           "policy_category": "drawing_helper_policy",
+          "direct_100_category": "policy_never_public",
           "group_kind": "shared_base"
         },
         {
@@ -1944,7 +1988,7 @@
           "rationale": "R3 policy decision: PicoUI tree mutation is owned by create/parent APIs and backend attach/remove; native tree traversal/nameId helpers stay backend-private and are not a user-facing public wrapper surface.",
           "planned_task": "R3",
           "overwrap_risk": false,
-          "notes": "a-0.9 R3 base policy closeout: strict allowlist, not direct covered.",
+          "notes": "a-0.10 R2 direct-100 category: policy_never_public; native tree mutation, debug print, or background helper remains backend-owned because PicoUI create/parent/backend attach APIs own tree mutation and render movement semantics.",
           "shared_policy": "allowlisted_tree_helper",
           "shared_policy_evidence": [
             "PicoUI creation APIs carry parent intent and backend attach/remove maintains the real LingDongGUI tree.",
@@ -1952,6 +1996,7 @@
           ],
           "allowlist_reason": "R3 policy decision: PicoUI tree mutation is owned by create/parent APIs and backend attach/remove; native tree traversal/nameId helpers stay backend-private and are not a user-facing public wrapper surface.",
           "policy_category": "base_tree_policy",
+          "direct_100_category": "policy_never_public",
           "group_kind": "shared_base"
         },
         {
@@ -1969,7 +2014,7 @@
           "rationale": "R3 policy decision: PicoUI tree mutation is owned by create/parent APIs and backend attach/remove; native tree traversal/nameId helpers stay backend-private and are not a user-facing public wrapper surface.",
           "planned_task": "R3",
           "overwrap_risk": false,
-          "notes": "a-0.9 R3 base policy closeout: strict allowlist, not direct covered.",
+          "notes": "a-0.10 R2 direct-100 category: policy_never_public; native tree mutation, debug print, or background helper remains backend-owned because PicoUI create/parent/backend attach APIs own tree mutation and render movement semantics.",
           "shared_policy": "allowlisted_tree_helper",
           "shared_policy_evidence": [
             "PicoUI creation APIs carry parent intent and backend attach/remove maintains the real LingDongGUI tree.",
@@ -1977,6 +2022,7 @@
           ],
           "allowlist_reason": "R3 policy decision: PicoUI tree mutation is owned by create/parent APIs and backend attach/remove; native tree traversal/nameId helpers stay backend-private and are not a user-facing public wrapper surface.",
           "policy_category": "base_tree_policy",
+          "direct_100_category": "policy_never_public",
           "group_kind": "shared_base"
         },
         {
@@ -1994,7 +2040,7 @@
           "rationale": "R3 policy decision: PicoUI tree mutation is owned by create/parent APIs and backend attach/remove; native tree traversal/nameId helpers stay backend-private and are not a user-facing public wrapper surface.",
           "planned_task": "R3",
           "overwrap_risk": false,
-          "notes": "a-0.9 R3 base policy closeout: strict allowlist, not direct covered.",
+          "notes": "a-0.10 R2 direct-100 category: policy_never_public; native tree mutation, debug print, or background helper remains backend-owned because PicoUI create/parent/backend attach APIs own tree mutation and render movement semantics.",
           "allowlist_reason": "R3 policy decision: PicoUI tree mutation is owned by create/parent APIs and backend attach/remove; native tree traversal/nameId helpers stay backend-private and are not a user-facing public wrapper surface.",
           "shared_policy": "allowlisted_tree_helper",
           "shared_policy_evidence": [
@@ -2002,6 +2048,7 @@
             "test_backend_widget_tree_contract verifies backend child/sibling tree ownership without exposing native traversal wrappers."
           ],
           "policy_category": "base_tree_policy",
+          "direct_100_category": "policy_never_public",
           "group_kind": "shared_base"
         },
         {
@@ -2569,6 +2616,7 @@
             "test_picoui_button_events proves PicoUI pressed/released/clicked callbacks and event readback cover user intent."
           ],
           "policy_category": "native_action_private",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -2596,6 +2644,7 @@
             "test_picoui_button_events proves PicoUI pressed/released/clicked callbacks and event readback cover user intent."
           ],
           "policy_category": "native_action_private",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -3096,6 +3145,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -3146,6 +3196,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -3170,6 +3221,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -3194,6 +3246,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -3214,6 +3267,7 @@
           "allowlist_reason": "Render/show entry point owned by backend rendering pipeline.",
           "capability_release_judgement": "allowlisted",
           "policy_category": "render_pipeline_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         }
       ],
@@ -3410,6 +3464,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -3460,6 +3515,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -3484,6 +3540,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -3508,6 +3565,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -3528,6 +3586,7 @@
           "allowlist_reason": "Render/show entry point owned by backend rendering pipeline.",
           "capability_release_judgement": "allowlisted",
           "policy_category": "render_pipeline_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         }
       ],
@@ -3970,6 +4029,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -4015,6 +4075,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -4039,6 +4100,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -4063,6 +4125,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -4083,6 +4146,7 @@
           "allowlist_reason": "Render/show entry point owned by backend rendering pipeline.",
           "capability_release_judgement": "allowlisted",
           "policy_category": "render_pipeline_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         }
       ],
@@ -4278,6 +4342,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -4328,6 +4393,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -4352,6 +4418,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -4376,6 +4443,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -4396,6 +4464,7 @@
           "allowlist_reason": "Render/show entry point owned by backend rendering pipeline.",
           "capability_release_judgement": "allowlisted",
           "policy_category": "render_pipeline_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         }
       ],
@@ -4897,6 +4966,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -4947,6 +5017,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -4971,6 +5042,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -4995,6 +5067,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -5015,6 +5088,7 @@
           "allowlist_reason": "Render/show entry point owned by backend rendering pipeline.",
           "capability_release_judgement": "allowlisted",
           "policy_category": "render_pipeline_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         }
       ],
@@ -5416,6 +5490,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -5466,6 +5541,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -5490,6 +5566,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -5514,6 +5591,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -5534,6 +5612,7 @@
           "allowlist_reason": "Render/show entry point owned by backend rendering pipeline.",
           "capability_release_judgement": "allowlisted",
           "policy_category": "render_pipeline_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         }
       ],
@@ -5587,7 +5666,7 @@
           "status": "covered",
           "native_api": "ldGaugeMove",
           "coverage_kind": "shared_api_equivalence",
-          "picoui_api": "picoui_gauge_move",
+          "picoui_api": "picoui_widget_set_pos",
           "backend_proof": "picoui_backend_gauge_move",
           "unit_test": "test_gauge_move_native_parity",
           "gate_evidence": [
@@ -5663,7 +5742,7 @@
           "status": "covered",
           "native_api": "ldGaugeSetCorner",
           "coverage_kind": "shared_api_equivalence",
-          "picoui_api": "picoui_gauge_set_corner",
+          "picoui_api": "picoui_widget_set_corner",
           "backend_proof": "picoui_backend_gauge_set_corner",
           "unit_test": "test_gauge_set_corner_native_parity",
           "gate_evidence": [
@@ -5689,7 +5768,7 @@
           "status": "covered",
           "native_api": "ldGaugeSetHidden",
           "coverage_kind": "shared_api_equivalence",
-          "picoui_api": "picoui_gauge_set_hidden",
+          "picoui_api": "picoui_widget_set_visible",
           "backend_proof": "picoui_backend_gauge_set_hidden",
           "unit_test": "test_gauge_set_hidden_native_parity",
           "gate_evidence": [
@@ -5715,7 +5794,7 @@
           "status": "covered",
           "native_api": "ldGaugeSetOpacity",
           "coverage_kind": "shared_api_equivalence",
-          "picoui_api": "picoui_gauge_set_opacity",
+          "picoui_api": "picoui_widget_set_opacity",
           "backend_proof": "picoui_backend_gauge_set_opacity",
           "unit_test": "test_gauge_set_opacity_native_parity",
           "gate_evidence": [
@@ -5766,7 +5845,7 @@
           "status": "covered",
           "native_api": "ldGaugeSetPointerImage",
           "coverage_kind": "native_setter_parity",
-          "picoui_api": "picoui_gauge_set_pointer_image",
+          "picoui_api": "picoui_gauge_set_pointer_source",
           "backend_proof": "picoui_backend_gauge_set_pointer_image",
           "unit_test": "test_gauge_set_pointer_image_native_parity",
           "gate_evidence": [
@@ -5816,7 +5895,7 @@
           "status": "covered",
           "native_api": "ldGaugeSetSelect",
           "coverage_kind": "shared_api_equivalence",
-          "picoui_api": "picoui_gauge_set_select",
+          "picoui_api": "picoui_widget_set_selected",
           "backend_proof": "picoui_backend_gauge_set_select",
           "unit_test": "test_gauge_set_select_native_parity",
           "gate_evidence": [
@@ -5842,7 +5921,7 @@
           "status": "covered",
           "native_api": "ldGaugeSetSelectable",
           "coverage_kind": "shared_api_equivalence",
-          "picoui_api": "picoui_gauge_set_selectable",
+          "picoui_api": "picoui_widget_set_selectable",
           "backend_proof": "picoui_backend_gauge_set_selectable",
           "unit_test": "test_gauge_set_selectable_native_parity",
           "gate_evidence": [
@@ -5910,6 +5989,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -5960,6 +6040,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -5984,6 +6065,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -6008,6 +6090,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -6028,6 +6111,7 @@
           "allowlist_reason": "Render/show entry point owned by backend rendering pipeline.",
           "capability_release_judgement": "allowlisted",
           "policy_category": "render_pipeline_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         }
       ],
@@ -6454,6 +6538,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -6504,6 +6589,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -6528,6 +6614,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -6552,6 +6639,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -6572,6 +6660,7 @@
           "allowlist_reason": "Render/show entry point owned by backend rendering pipeline.",
           "capability_release_judgement": "allowlisted",
           "policy_category": "render_pipeline_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         }
       ],
@@ -6615,6 +6704,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "runtime_host_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "runtime_host"
         },
         {
@@ -6639,6 +6729,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "runtime_host_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "runtime_host"
         },
         {
@@ -6663,6 +6754,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "runtime_host_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "runtime_host"
         },
         {
@@ -6687,6 +6779,7 @@
           ],
           "allowlist_reason": "R2 shared helper/lifecycle/layout solver API: internal scene/runtime/navigation/layout decision helper, not a stable PicoUI user-facing public capability.",
           "policy_category": "runtime_host_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "runtime_host"
         },
         {
@@ -6711,6 +6804,7 @@
           ],
           "allowlist_reason": "R2 shared helper/lifecycle/layout solver API: internal scene/runtime/navigation/layout decision helper, not a stable PicoUI user-facing public capability.",
           "policy_category": "runtime_host_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "runtime_host"
         },
         {
@@ -6735,6 +6829,7 @@
           ],
           "allowlist_reason": "R2 shared helper/lifecycle/layout solver API: internal scene/runtime/navigation/layout decision helper, not a stable PicoUI user-facing public capability.",
           "policy_category": "runtime_host_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "runtime_host"
         },
         {
@@ -6759,6 +6854,7 @@
           ],
           "allowlist_reason": "R2 shared helper/lifecycle/layout solver API: internal scene/runtime/navigation/layout decision helper, not a stable PicoUI user-facing public capability.",
           "policy_category": "runtime_host_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "runtime_host"
         },
         {
@@ -6783,6 +6879,7 @@
           ],
           "allowlist_reason": "R2 shared helper/lifecycle/layout solver API: internal scene/runtime/navigation/layout decision helper, not a stable PicoUI user-facing public capability.",
           "policy_category": "runtime_host_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "runtime_host"
         },
         {
@@ -6807,6 +6904,7 @@
           ],
           "allowlist_reason": "R2 shared helper/lifecycle/layout solver API: internal scene/runtime/navigation/layout decision helper, not a stable PicoUI user-facing public capability.",
           "policy_category": "runtime_host_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "runtime_host"
         },
         {
@@ -6831,6 +6929,7 @@
           ],
           "allowlist_reason": "R2 shared helper/lifecycle/layout solver API: internal scene/runtime/navigation/layout decision helper, not a stable PicoUI user-facing public capability.",
           "policy_category": "runtime_host_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "runtime_host"
         },
         {
@@ -6855,6 +6954,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "runtime_host_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "runtime_host"
         },
         {
@@ -6879,6 +6979,7 @@
           ],
           "allowlist_reason": "R2 shared helper/lifecycle/layout solver API: internal scene/runtime/navigation/layout decision helper, not a stable PicoUI user-facing public capability.",
           "policy_category": "runtime_host_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "runtime_host"
         },
         {
@@ -6903,6 +7004,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "runtime_host_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "runtime_host"
         },
         {
@@ -6927,6 +7029,7 @@
           ],
           "allowlist_reason": "R2 shared helper/lifecycle/layout solver API: internal scene/runtime/navigation/layout decision helper, not a stable PicoUI user-facing public capability.",
           "policy_category": "runtime_host_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "runtime_host"
         },
         {
@@ -6951,6 +7054,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "runtime_host_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "runtime_host"
         },
         {
@@ -6975,6 +7079,7 @@
           ],
           "allowlist_reason": "R2 shared helper/lifecycle/layout solver API: internal scene/runtime/navigation/layout decision helper, not a stable PicoUI user-facing public capability.",
           "policy_category": "runtime_host_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "runtime_host"
         }
       ],
@@ -7197,6 +7302,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -7247,6 +7353,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -7271,6 +7378,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -7295,6 +7403,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -7315,6 +7424,7 @@
           "allowlist_reason": "Render/show entry point owned by backend rendering pipeline.",
           "capability_release_judgement": "allowlisted",
           "policy_category": "render_pipeline_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -7500,6 +7610,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -7545,6 +7656,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -7569,6 +7681,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -7593,6 +7706,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -7613,6 +7727,7 @@
           "allowlist_reason": "Render/show entry point owned by backend rendering pipeline.",
           "capability_release_judgement": "allowlisted",
           "policy_category": "render_pipeline_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         }
       ],
@@ -7640,7 +7755,7 @@
           "status": "covered",
           "native_api": "ldKeyboardBtnUpdate",
           "coverage_kind": "direct_field_parity",
-          "picoui_api": "picoui_keyboard_btn_update",
+          "picoui_api": "picoui_keyboard_button_update",
           "backend_proof": "picoui_backend_keyboard_btn_update",
           "unit_test": "test_keyboard_update_and_button_update_touch_native_state",
           "gate_evidence": [
@@ -7685,6 +7800,7 @@
             "test_keyboard_dispatches_ascii_into_focused_line_edit and navigation tests prove portable PicoUI keyboard user intent."
           ],
           "policy_category": "backend_private_hook",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -7712,6 +7828,7 @@
             "test_keyboard_dispatches_ascii_into_focused_line_edit and navigation tests prove portable PicoUI keyboard user intent."
           ],
           "policy_category": "backend_private_hook",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -7789,6 +7906,7 @@
             "test_keyboard_dispatches_ascii_into_focused_line_edit and navigation tests prove portable PicoUI keyboard user intent."
           ],
           "policy_category": "backend_private_hook",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -7967,6 +8085,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -8017,6 +8136,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -8041,6 +8161,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -8065,6 +8186,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -8085,6 +8207,7 @@
           "allowlist_reason": "Render/show entry point owned by backend rendering pipeline.",
           "capability_release_judgement": "allowlisted",
           "policy_category": "render_pipeline_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         }
       ],
@@ -8423,6 +8546,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -8468,6 +8592,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -8492,6 +8617,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -8516,6 +8642,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -8536,6 +8663,7 @@
           "allowlist_reason": "Render/show entry point owned by backend rendering pipeline.",
           "capability_release_judgement": "allowlisted",
           "policy_category": "render_pipeline_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         }
       ],
@@ -8912,6 +9040,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -8962,6 +9091,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -8986,6 +9116,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -9010,6 +9141,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -9030,6 +9162,7 @@
           "allowlist_reason": "Render/show entry point owned by backend rendering pipeline.",
           "capability_release_judgement": "allowlisted",
           "policy_category": "render_pipeline_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         }
       ],
@@ -9488,6 +9621,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -9533,6 +9667,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -9557,6 +9692,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -9581,6 +9717,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -9601,6 +9738,7 @@
           "allowlist_reason": "Render/show entry point owned by backend rendering pipeline.",
           "capability_release_judgement": "allowlisted",
           "policy_category": "render_pipeline_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         }
       ],
@@ -9644,6 +9782,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "memory_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "internal_helper"
         },
         {
@@ -9668,6 +9807,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "memory_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "internal_helper"
         },
         {
@@ -9692,6 +9832,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "memory_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "internal_helper"
         },
         {
@@ -9716,6 +9857,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "memory_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "internal_helper"
         },
         {
@@ -9740,6 +9882,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "memory_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "internal_helper"
         }
       ],
@@ -10124,6 +10267,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -10177,6 +10321,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -10201,6 +10346,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -10225,6 +10371,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -10245,6 +10392,7 @@
           "allowlist_reason": "Render/show entry point owned by backend rendering pipeline.",
           "capability_release_judgement": "allowlisted",
           "policy_category": "render_pipeline_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         }
       ],
@@ -10298,7 +10446,7 @@
           "status": "covered",
           "native_api": "ldProgressBarMove",
           "coverage_kind": "shared_api_equivalence",
-          "picoui_api": "picoui_progress_bar_move",
+          "picoui_api": "picoui_widget_set_pos",
           "backend_proof": "picoui_backend_progress_bar_move",
           "unit_test": "test_progress_bar_move_native_parity",
           "gate_evidence": [
@@ -10349,7 +10497,7 @@
           "status": "covered",
           "native_api": "ldProgressBarSetCorner",
           "coverage_kind": "shared_api_equivalence",
-          "picoui_api": "picoui_progress_bar_set_corner",
+          "picoui_api": "picoui_widget_set_corner",
           "backend_proof": "picoui_backend_progress_bar_set_corner",
           "unit_test": "test_progress_bar_set_corner_native_parity",
           "gate_evidence": [
@@ -10400,7 +10548,7 @@
           "status": "covered",
           "native_api": "ldProgressBarSetFrameImage",
           "coverage_kind": "native_setter_parity",
-          "picoui_api": "picoui_progress_bar_set_frame_image",
+          "picoui_api": "picoui_progress_bar_set_frame_source",
           "backend_proof": "picoui_backend_progress_bar_set_frame_image",
           "unit_test": "test_progress_bar_set_frame_image_native_parity",
           "gate_evidence": [
@@ -10425,7 +10573,7 @@
           "status": "covered",
           "native_api": "ldProgressBarSetHidden",
           "coverage_kind": "shared_api_equivalence",
-          "picoui_api": "picoui_progress_bar_set_hidden",
+          "picoui_api": "picoui_widget_set_visible",
           "backend_proof": "picoui_backend_progress_bar_set_hidden",
           "unit_test": "test_progress_bar_set_hidden_native_parity",
           "gate_evidence": [
@@ -10526,7 +10674,7 @@
           "status": "covered",
           "native_api": "ldProgressBarSetOpacity",
           "coverage_kind": "shared_api_equivalence",
-          "picoui_api": "picoui_progress_bar_set_opacity",
+          "picoui_api": "picoui_widget_set_opacity",
           "backend_proof": "picoui_backend_progress_bar_set_opacity",
           "unit_test": "test_progress_bar_set_opacity_native_parity",
           "gate_evidence": [
@@ -10577,7 +10725,7 @@
           "status": "covered",
           "native_api": "ldProgressBarSetSelect",
           "coverage_kind": "shared_api_equivalence",
-          "picoui_api": "picoui_progress_bar_set_select",
+          "picoui_api": "picoui_widget_set_selected",
           "backend_proof": "picoui_backend_progress_bar_set_select",
           "unit_test": "test_progress_bar_set_select_native_parity",
           "gate_evidence": [
@@ -10603,7 +10751,7 @@
           "status": "covered",
           "native_api": "ldProgressBarSetSelectable",
           "coverage_kind": "shared_api_equivalence",
-          "picoui_api": "picoui_progress_bar_set_selectable",
+          "picoui_api": "picoui_widget_set_selectable",
           "backend_proof": "picoui_backend_progress_bar_set_selectable",
           "unit_test": "test_progress_bar_set_selectable_native_parity",
           "gate_evidence": [
@@ -10646,6 +10794,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -10696,6 +10845,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -10720,6 +10870,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -10744,6 +10895,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -10764,6 +10916,7 @@
           "allowlist_reason": "Render/show entry point owned by backend rendering pipeline.",
           "capability_release_judgement": "allowlisted",
           "policy_category": "render_pipeline_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         }
       ],
@@ -10909,6 +11062,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -10959,6 +11113,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -10983,6 +11138,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -11007,6 +11163,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -11027,6 +11184,7 @@
           "allowlist_reason": "Render/show entry point owned by backend rendering pipeline.",
           "capability_release_judgement": "allowlisted",
           "policy_category": "render_pipeline_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         }
       ],
@@ -11080,8 +11238,8 @@
           "status": "covered",
           "native_api": "ldQRCodeMove",
           "coverage_kind": "shared_api_equivalence",
-          "picoui_api": "picoui_q_r_code_move",
-          "backend_proof": "picoui_q_r_code_move",
+          "picoui_api": "picoui_widget_set_pos",
+          "backend_proof": "picoui_widget_set_pos",
           "unit_test": "test_q_r_code_move_native_parity",
           "gate_evidence": [
             "ctest:test_picoui_widgets|test_picoui_button_events|test_picoui_qrcode"
@@ -11106,8 +11264,8 @@
           "status": "covered",
           "native_api": "ldQRCodeSetCorner",
           "coverage_kind": "shared_api_equivalence",
-          "picoui_api": "picoui_q_r_code_set_corner",
-          "backend_proof": "picoui_q_r_code_set_corner",
+          "picoui_api": "picoui_widget_set_corner",
+          "backend_proof": "picoui_widget_set_corner",
           "unit_test": "test_q_r_code_set_corner_native_parity",
           "gate_evidence": [
             "ctest:test_picoui_widgets|test_picoui_button_events|test_picoui_qrcode"
@@ -11132,8 +11290,8 @@
           "status": "covered",
           "native_api": "ldQRCodeSetHidden",
           "coverage_kind": "shared_api_equivalence",
-          "picoui_api": "picoui_q_r_code_set_hidden",
-          "backend_proof": "picoui_q_r_code_set_hidden",
+          "picoui_api": "picoui_widget_set_visible",
+          "backend_proof": "picoui_widget_set_visible",
           "unit_test": "test_q_r_code_set_hidden_native_parity",
           "gate_evidence": [
             "ctest:test_picoui_widgets|test_picoui_button_events|test_picoui_qrcode"
@@ -11158,8 +11316,8 @@
           "status": "covered",
           "native_api": "ldQRCodeSetOpacity",
           "coverage_kind": "shared_api_equivalence",
-          "picoui_api": "picoui_q_r_code_set_opacity",
-          "backend_proof": "picoui_q_r_code_set_opacity",
+          "picoui_api": "picoui_widget_set_opacity",
+          "backend_proof": "picoui_widget_set_opacity",
           "unit_test": "test_q_r_code_set_opacity_native_parity",
           "gate_evidence": [
             "ctest:test_picoui_widgets|test_picoui_button_events|test_picoui_qrcode"
@@ -11184,8 +11342,8 @@
           "status": "covered",
           "native_api": "ldQRCodeSetSelect",
           "coverage_kind": "shared_api_equivalence",
-          "picoui_api": "picoui_q_r_code_set_select",
-          "backend_proof": "picoui_q_r_code_set_select",
+          "picoui_api": "picoui_widget_set_selected",
+          "backend_proof": "picoui_widget_set_selected",
           "unit_test": "test_q_r_code_set_select_native_parity",
           "gate_evidence": [
             "ctest:test_picoui_widgets|test_picoui_button_events|test_picoui_qrcode"
@@ -11210,8 +11368,8 @@
           "status": "covered",
           "native_api": "ldQRCodeSetSelectable",
           "coverage_kind": "shared_api_equivalence",
-          "picoui_api": "picoui_q_r_code_set_selectable",
-          "backend_proof": "picoui_q_r_code_set_selectable",
+          "picoui_api": "picoui_widget_set_selectable",
+          "backend_proof": "picoui_widget_set_selectable",
           "unit_test": "test_q_r_code_set_selectable_native_parity",
           "gate_evidence": [
             "ctest:test_picoui_widgets|test_picoui_button_events|test_picoui_qrcode"
@@ -11278,6 +11436,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -11328,6 +11487,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -11352,6 +11512,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -11376,6 +11537,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -11396,6 +11558,7 @@
           "allowlist_reason": "Render/show entry point owned by backend rendering pipeline.",
           "capability_release_judgement": "allowlisted",
           "policy_category": "render_pipeline_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         }
       ],
@@ -11524,7 +11687,7 @@
           "status": "covered",
           "native_api": "ldRadialMenuSetOffsetItem",
           "coverage_kind": "native_setter_parity",
-          "picoui_api": "picoui_radial_menu_set_offset_item",
+          "picoui_api": "picoui_radial_menu_offset_item",
           "backend_proof": "picoui_backend_radial_menu_set_offset_item",
           "unit_test": "test_radial_menu_set_offset_item_native_parity",
           "gate_evidence": [
@@ -11566,6 +11729,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -11616,6 +11780,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -11640,6 +11805,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -11664,6 +11830,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -11684,6 +11851,7 @@
           "allowlist_reason": "Render/show entry point owned by backend rendering pipeline.",
           "capability_release_judgement": "allowlisted",
           "policy_category": "render_pipeline_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         }
       ],
@@ -12079,6 +12247,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -12129,6 +12298,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -12153,6 +12323,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -12177,6 +12348,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -12197,6 +12369,7 @@
           "allowlist_reason": "Render/show entry point owned by backend rendering pipeline.",
           "capability_release_judgement": "allowlisted",
           "policy_category": "render_pipeline_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         }
       ],
@@ -12250,8 +12423,8 @@
           "status": "covered",
           "native_api": "ldSliderMove",
           "coverage_kind": "shared_api_equivalence",
-          "picoui_api": "picoui_slider_move",
-          "backend_proof": "picoui_slider_move",
+          "picoui_api": "picoui_widget_set_pos",
+          "backend_proof": "picoui_widget_set_pos",
           "unit_test": "test_slider_move_native_parity",
           "gate_evidence": [
             "ctest:test_picoui_widgets|test_picoui_button_events|test_picoui_qrcode"
@@ -12301,8 +12474,8 @@
           "status": "covered",
           "native_api": "ldSliderSetCorner",
           "coverage_kind": "shared_api_equivalence",
-          "picoui_api": "picoui_slider_set_corner",
-          "backend_proof": "picoui_slider_set_corner",
+          "picoui_api": "picoui_widget_set_corner",
+          "backend_proof": "picoui_widget_set_corner",
           "unit_test": "test_slider_set_corner_native_parity",
           "gate_evidence": [
             "ctest:test_picoui_widgets|test_picoui_button_events|test_picoui_qrcode"
@@ -12327,8 +12500,8 @@
           "status": "covered",
           "native_api": "ldSliderSetHidden",
           "coverage_kind": "shared_api_equivalence",
-          "picoui_api": "picoui_slider_set_hidden",
-          "backend_proof": "picoui_slider_set_hidden",
+          "picoui_api": "picoui_widget_set_visible",
+          "backend_proof": "picoui_widget_set_visible",
           "unit_test": "test_slider_set_hidden_native_parity",
           "gate_evidence": [
             "ctest:test_picoui_widgets|test_picoui_button_events|test_picoui_qrcode"
@@ -12428,8 +12601,8 @@
           "status": "covered",
           "native_api": "ldSliderSetOpacity",
           "coverage_kind": "shared_api_equivalence",
-          "picoui_api": "picoui_slider_set_opacity",
-          "backend_proof": "picoui_slider_set_opacity",
+          "picoui_api": "picoui_widget_set_opacity",
+          "backend_proof": "picoui_widget_set_opacity",
           "unit_test": "test_slider_set_opacity_native_parity",
           "gate_evidence": [
             "ctest:test_picoui_widgets|test_picoui_button_events|test_picoui_qrcode"
@@ -12479,8 +12652,8 @@
           "status": "covered",
           "native_api": "ldSliderSetSelect",
           "coverage_kind": "shared_api_equivalence",
-          "picoui_api": "picoui_slider_set_select",
-          "backend_proof": "picoui_slider_set_select",
+          "picoui_api": "picoui_widget_set_selected",
+          "backend_proof": "picoui_widget_set_selected",
           "unit_test": "test_slider_set_select_native_parity",
           "gate_evidence": [
             "ctest:test_picoui_widgets|test_picoui_button_events|test_picoui_qrcode"
@@ -12505,8 +12678,8 @@
           "status": "covered",
           "native_api": "ldSliderSetSelectable",
           "coverage_kind": "shared_api_equivalence",
-          "picoui_api": "picoui_slider_set_selectable",
-          "backend_proof": "picoui_slider_set_selectable",
+          "picoui_api": "picoui_widget_set_selectable",
+          "backend_proof": "picoui_widget_set_selectable",
           "unit_test": "test_slider_set_selectable_native_parity",
           "gate_evidence": [
             "ctest:test_picoui_widgets|test_picoui_button_events|test_picoui_qrcode"
@@ -12573,6 +12746,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -12623,6 +12797,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -12647,6 +12822,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -12671,6 +12847,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -12691,6 +12868,7 @@
           "allowlist_reason": "Render/show entry point owned by backend rendering pipeline.",
           "capability_release_judgement": "allowlisted",
           "policy_category": "render_pipeline_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         }
       ],
@@ -13170,6 +13348,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -13215,6 +13394,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -13239,6 +13419,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -13263,6 +13444,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -13283,6 +13465,7 @@
           "allowlist_reason": "Render/show entry point owned by backend rendering pipeline.",
           "capability_release_judgement": "allowlisted",
           "policy_category": "render_pipeline_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         }
       ],
@@ -13326,6 +13509,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "layout_solver_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "internal_helper"
         },
         {
@@ -13350,6 +13534,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "layout_solver_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "internal_helper"
         },
         {
@@ -13374,6 +13559,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "layout_solver_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "internal_helper"
         },
         {
@@ -13398,6 +13584,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "layout_solver_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "internal_helper"
         },
         {
@@ -13422,6 +13609,7 @@
           ],
           "allowlist_reason": "R2 shared helper/lifecycle/layout solver API: internal scene/runtime/navigation/layout decision helper, not a stable PicoUI user-facing public capability.",
           "policy_category": "layout_solver_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "internal_helper"
         },
         {
@@ -13446,6 +13634,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "layout_solver_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "internal_helper"
         }
       ],
@@ -14241,6 +14430,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -14291,6 +14481,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -14315,6 +14506,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -14339,6 +14531,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -14359,6 +14552,7 @@
           "allowlist_reason": "Render/show entry point owned by backend rendering pipeline.",
           "capability_release_judgement": "allowlisted",
           "policy_category": "render_pipeline_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         }
       ],
@@ -14796,6 +14990,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -14841,6 +15036,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -14865,6 +15061,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -14889,6 +15086,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -14909,6 +15107,7 @@
           "allowlist_reason": "Render/show entry point owned by backend rendering pipeline.",
           "capability_release_judgement": "allowlisted",
           "policy_category": "render_pipeline_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         }
       ],
@@ -14980,6 +15179,7 @@
           ],
           "allowlist_reason": "R5 policy decision: window init/root background semantics are enum-only/root-window derived; PicoUI covers user intent through picoui_window_create plus window color/background/layout APIs, not a separate background public wrapper.",
           "policy_category": "enum_only_semantics",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -15376,6 +15576,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -15401,6 +15602,7 @@
           ],
           "allowlist_reason": "R5 policy decision: window init/root background semantics are enum-only/root-window derived; PicoUI covers user intent through picoui_window_create plus window color/background/layout APIs, not a separate background public wrapper.",
           "policy_category": "enum_only_semantics",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -15425,6 +15627,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -15449,6 +15652,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -15473,6 +15677,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "lifecycle_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         },
         {
@@ -15497,6 +15702,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "render_pipeline_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "widget"
         }
       ],
@@ -15540,6 +15746,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "layout_solver_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "internal_helper"
         },
         {
@@ -15564,6 +15771,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "layout_solver_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "internal_helper"
         },
         {
@@ -15588,6 +15796,7 @@
           ],
           "allowlist_reason": "R2 shared helper/lifecycle/layout solver API: internal scene/runtime/navigation/layout decision helper, not a stable PicoUI user-facing public capability.",
           "policy_category": "layout_solver_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "internal_helper"
         },
         {
@@ -15612,6 +15821,7 @@
           ],
           "allowlist_reason": "R2 shared helper/lifecycle/layout solver API: internal scene/runtime/navigation/layout decision helper, not a stable PicoUI user-facing public capability.",
           "policy_category": "layout_solver_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "internal_helper"
         },
         {
@@ -15636,6 +15846,7 @@
           ],
           "allowlist_reason": "R2 shared helper/lifecycle/layout solver API: internal scene/runtime/navigation/layout decision helper, not a stable PicoUI user-facing public capability.",
           "policy_category": "layout_solver_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "internal_helper"
         },
         {
@@ -15660,6 +15871,7 @@
           ],
           "allowlist_reason": "R2 shared helper/lifecycle/layout solver API: internal scene/runtime/navigation/layout decision helper, not a stable PicoUI user-facing public capability.",
           "policy_category": "layout_solver_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "internal_helper"
         },
         {
@@ -15684,6 +15896,7 @@
           ],
           "allowlist_reason": "R2 shared helper/lifecycle/layout solver API: internal scene/runtime/navigation/layout decision helper, not a stable PicoUI user-facing public capability.",
           "policy_category": "layout_solver_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "internal_helper"
         },
         {
@@ -15708,6 +15921,7 @@
             "LingDongGUI tree/helper/lifecycle API; not exposed as PicoUI public native wrapper in R2"
           ],
           "policy_category": "layout_solver_internal",
+          "direct_100_category": "policy_never_public",
           "group_kind": "internal_helper"
         }
       ],

@@ -52,6 +52,11 @@ VALID_POLICY_CATEGORIES = {
     "native_action_private",
     "enum_only_semantics",
 }
+VALID_DIRECT_100_CATEGORIES = {
+    "policy_never_public",
+    "optional_public_extension",
+    "direct_100_required_if_user_demands",
+}
 REQUIRED_ROW_FIELDS = {
     "native_api",
     "coverage_kind",
@@ -179,6 +184,11 @@ def _assert_row_shape(native_api: str, row: dict) -> None:
             f"{native_api} allowlisted row must use allowlisted coverage_kind"
         )
         assert row.get("allowlist_reason"), f"{native_api} allowlisted row missing allowlist_reason"
+        direct_100_category = row.get("direct_100_category")
+        assert direct_100_category in VALID_DIRECT_100_CATEGORIES, (
+            f"{native_api} allowlisted row has invalid direct_100_category: "
+            f"{direct_100_category!r}"
+        )
 
     if gap_status == "overwrapped":
         assert row.get("notes"), f"{native_api} overwrapped row missing notes"

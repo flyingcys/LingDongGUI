@@ -1,4 +1,5 @@
 import json
+import re
 from pathlib import Path
 
 
@@ -6,6 +7,7 @@ ROOT = Path(__file__).resolve().parents[3]
 MATRIX_JSON = ROOT / "tests" / "picoui" / "contract" / "picoui_release_capability_matrix.json"
 INVENTORY_JSON = ROOT / "tests" / "picoui" / "contract" / "ldgui_public_api_inventory.json"
 LEDGER_JSON = ROOT / "tests" / "picoui" / "contract" / "native_api_gap_ledger.json"
+PICOUI_INCLUDE_DIR = ROOT / "picoui" / "include"
 
 A09_SCHEMA_VERSION = "a-0.9-allowlist-policy-v1"
 VALID_COVERAGE_KINDS = {
@@ -51,6 +53,11 @@ VALID_POLICY_CATEGORIES = {
     "backend_private_hook",
     "native_action_private",
     "enum_only_semantics",
+}
+VALID_DIRECT_100_CATEGORIES = {
+    "policy_never_public",
+    "optional_public_extension",
+    "direct_100_required_if_user_demands",
 }
 VALID_PARITY_STATUSES = {
     "direct_parity_complete",
@@ -259,7 +266,31 @@ def _ledger_rows() -> dict[str, dict]:
     return rows
 
 
-def _assert_native_api_rows(by_name: dict[str, dict], ledger_by_symbol: dict[str, dict]) -> int:
+def _public_picoui_api_symbols() -> set[str]:
+    symbols: set[str] = set()
+    pattern = re.compile(r"\b(picoui_[A-Za-z0-9_]+)\s*\(")
+    for header in PICOUI_INCLUDE_DIR.rglob("*.h"):
+        text = header.read_text(encoding="utf-8")
+        for match in pattern.finditer(text):
+            symbols.add(match.group(1))
+    return symbols
+
+
+def _assert_public_picoui_api(native_api: str, picoui_api: str, public_picoui_symbols: set[str]) -> None:
+    api_symbols = [part.strip() for part in picoui_api.split("+")]
+    assert api_symbols and all(api_symbols), f"{native_api} has invalid picoui_api field"
+    missing = [symbol for symbol in api_symbols if symbol not in public_picoui_symbols]
+    assert not missing, (
+        f"{native_api} covered row references non-public PicoUI API: "
+        f"{', '.join(missing)}"
+    )
+
+
+def _assert_native_api_rows(
+    by_name: dict[str, dict],
+    ledger_by_symbol: dict[str, dict],
+    public_picoui_symbols: set[str],
+) -> int:
     seen: set[str] = set()
     for widget_name, widget in sorted(by_name.items()):
         assert widget.get("widget_status") == "native_api_gap_tracked", (
@@ -338,6 +369,7 @@ def _assert_native_api_rows(by_name: dict[str, dict], ledger_by_symbol: dict[str
                 )
                 for field in ("picoui_api", "backend_proof", "unit_test"):
                     assert capability.get(field), f"{native_api} covered row missing {field}"
+                _assert_public_picoui_api(native_api, capability.get("picoui_api"), public_picoui_symbols)
                 assert capability.get("gate_evidence"), (
                     f"{native_api} covered row missing gate_evidence"
                 )
@@ -353,6 +385,11 @@ def _assert_native_api_rows(by_name: dict[str, dict], ledger_by_symbol: dict[str
                 )
                 assert capability.get("allowlist_reason"), (
                     f"{native_api} allowlisted row missing allowlist_reason"
+                )
+                direct_100_category = capability.get("direct_100_category")
+                assert direct_100_category in VALID_DIRECT_100_CATEGORIES, (
+                    f"{native_api} allowlisted row has invalid direct_100_category: "
+                    f"{direct_100_category!r}"
                 )
                 assert capability.get("allowlist_reason") == ledger_row.get("allowlist_reason"), (
                     f"{native_api} matrix allowlist_reason drifted from ledger"
@@ -388,6 +425,7 @@ def _assert_summary(matrix: dict, capability_total: int, ledger_by_symbol: dict[
     expected_coverage_counts: dict[str, int] = {}
     expected_gap_counts: dict[str, int] = {}
     expected_policy_counts: dict[str, int] = {}
+    expected_direct_100_category_counts: dict[str, int] = {}
     expected_group_kind_counts: dict[str, int] = {}
     for row in ledger_by_symbol.values():
         coverage_kind = row["coverage_kind"]
@@ -398,6 +436,11 @@ def _assert_summary(matrix: dict, capability_total: int, ledger_by_symbol: dict[
         expected_gap_counts[gap_status] = expected_gap_counts.get(gap_status, 0) + 1
         expected_policy_counts[policy_category] = expected_policy_counts.get(policy_category, 0) + 1
         expected_group_kind_counts[group_kind] = expected_group_kind_counts.get(group_kind, 0) + 1
+        if gap_status == "allowlisted":
+            direct_100_category = row["direct_100_category"]
+            expected_direct_100_category_counts[direct_100_category] = (
+                expected_direct_100_category_counts.get(direct_100_category, 0) + 1
+            )
 
     assert summary.get("ldgui_public_api_total") == len(ledger_by_symbol)
     assert summary.get("capability_entry_total") == capability_total
@@ -407,12 +450,18 @@ def _assert_summary(matrix: dict, capability_total: int, ledger_by_symbol: dict[
     assert summary.get("gap_status_counts") == dict(sorted(expected_gap_counts.items()))
     assert summary.get("coverage_kind_counts") == dict(sorted(expected_coverage_counts.items()))
     assert summary.get("policy_category_counts") == dict(sorted(expected_policy_counts.items()))
+    assert summary.get("direct_100_category_counts") == dict(
+        sorted(expected_direct_100_category_counts.items())
+    )
     assert summary.get("group_kind_counts") == dict(sorted(expected_group_kind_counts.items()))
     assert summary.get("missing_gap_total") == sum(
         count for status, count in expected_gap_counts.items() if status not in {"covered", "allowlisted"}
     )
     assert summary.get("allowlisted_total") == expected_gap_counts.get("allowlisted", 0)
     assert summary.get("covered_total") == expected_gap_counts.get("covered", 0)
+    assert summary["direct_public_covered_total"] == summary["covered_total"]
+    assert summary["policy_allowlisted_total"] == summary["allowlisted_total"]
+    assert summary["direct_public_100_complete"] is False
     assert summary.get("widget_row_total") == len(matrix.get("widgets", []))
 
 
@@ -452,8 +501,9 @@ def main() -> int:
     by_name = _widgets_by_name(matrix)
     inventory_symbols = _inventory_symbols()
     ledger_by_symbol = _ledger_rows()
+    public_picoui_symbols = _public_picoui_api_symbols()
     assert set(ledger_by_symbol).issubset(inventory_symbols), "ledger must be backed by inventory"
-    capability_total = _assert_native_api_rows(by_name, ledger_by_symbol)
+    capability_total = _assert_native_api_rows(by_name, ledger_by_symbol, public_picoui_symbols)
     _assert_summary(matrix, capability_total, ledger_by_symbol)
     _assert_gate_catalog(matrix)
     _assert_manual_artifact_policy(matrix)
