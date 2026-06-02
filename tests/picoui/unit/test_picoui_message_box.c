@@ -258,6 +258,56 @@ static void test_message_box_multi_button_callback_reports_clicked_index(struct 
     assert(confirm_button_index == 2);
 }
 
+static void test_message_box_init_aliases_and_shared_base_round_trip(struct picoui_window *win)
+{
+    static const char *buttons[] = {
+        "Later",
+        "Apply",
+    };
+    int user_cookie = 41;
+    struct picoui_message_box *box =
+        picoui_message_box_init((struct picoui_widget *)win, "message_box_alias");
+    struct picoui_backend_widget *backend;
+    ldMessageBox_t *ld_message_box;
+
+    assert(box != 0);
+    backend = (struct picoui_backend_widget *)box->widget.backend_widget;
+    assert(backend != 0);
+    ld_message_box = (ldMessageBox_t *)backend->ld_widget;
+    assert(ld_message_box != 0);
+
+    assert(picoui_message_box_set_title(box, "Alias") == 0);
+    assert(picoui_message_box_set_msg(box, "Apply current settings?") == 0);
+    assert(picoui_message_box_set_btn(box, buttons, 2) == 0);
+    assert(picoui_message_box_set_string_color(box, 0x112233U, 0x445566U, 0x778899U) == 0);
+    assert(picoui_message_box_set_button_color(box, 0x123456U, 0x654321U) == 0);
+    assert(picoui_message_box_set_background_color(box, 0xA0B0C0U) == 0);
+    picoui_message_box_set_callback(box, on_confirm, &user_cookie);
+
+    assert(strcmp((const char *)ld_message_box->pTitleStr, "Alias") == 0);
+    assert(strcmp((const char *)ld_message_box->pMsgStr, "Apply current settings?") == 0);
+    assert(ld_message_box->btnCount == 2);
+    assert(strcmp((const char *)ld_message_box->ppBtnStrGroup[0], "Later") == 0);
+    assert(strcmp((const char *)ld_message_box->ppBtnStrGroup[1], "Apply") == 0);
+    assert(ld_message_box->titleStrColor == (ldColor)0x112233U);
+    assert(ld_message_box->msgStrColor == (ldColor)0x445566U);
+    assert(ld_message_box->btnStrColor == (ldColor)0x778899U);
+    assert(ld_message_box->releaseColor == (ldColor)0x123456U);
+    assert(ld_message_box->pressColor == (ldColor)0x654321U);
+    assert(ld_message_box->bgColor == (ldColor)0xA0B0C0U);
+    assert(ld_message_box->ptFunc != 0);
+
+    assert(picoui_widget_set_pos(&box->widget, 14, 18) == 0);
+    assert(((ldBase_t *)ld_message_box)->tRegion.tLocation.iX == 14);
+    assert(((ldBase_t *)ld_message_box)->tRegion.tLocation.iY == 18);
+    assert(picoui_widget_set_visible(&box->widget, 0) == 0);
+    assert(((ldBase_t *)ld_message_box)->bIsVisible == false);
+    assert(picoui_widget_set_opacity(&box->widget, 62) == 0);
+    assert(((ldBase_t *)ld_message_box)->chOpacity == 62);
+    assert(picoui_widget_set_corner(&box->widget, 5) == 0);
+    assert(((ldBase_t *)ld_message_box)->chCorner == 5);
+}
+
 static void test_message_box_modal_hit_and_dismiss_returns_focus_to_underlay(struct picoui_window *win)
 {
     struct picoui_button *underlay =
@@ -344,6 +394,7 @@ int main(void)
     test_message_box_final_release_contract_covers_multi_action_and_readback_boundary(win);
     test_message_box_native_multi_button_and_color_round_trip(win);
     test_message_box_multi_button_callback_reports_clicked_index(win);
+    test_message_box_init_aliases_and_shared_base_round_trip(win);
     test_message_box_modal_hit_and_dismiss_returns_focus_to_underlay(win);
 
     picoui_app_destroy(app);

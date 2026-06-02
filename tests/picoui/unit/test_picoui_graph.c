@@ -249,6 +249,42 @@ static void test_graph_move_add_and_set_value_reject_invalid_inputs_without_poll
     picoui_app_destroy(app);
 }
 
+static void test_graph_init_and_shared_base_aliases_round_trip(void)
+{
+    struct picoui_app *app;
+    struct picoui_window *win;
+    struct picoui_graph *graph;
+    struct picoui_backend_widget *backend;
+    ldBase_t *ld_base;
+
+    app = picoui_app_create();
+    assert(app != 0);
+    win = picoui_window_create(app, "graph_base_root");
+    assert(win != 0);
+    graph = picoui_graph_create(win, "graph_base_aliases", 2);
+    assert(graph != 0);
+    backend = (struct picoui_backend_widget *)graph->widget.backend_widget;
+    assert(backend != 0);
+    ld_base = (ldBase_t *)backend->ld_widget;
+    assert(ld_base != 0);
+
+    assert(picoui_widget_set_pos(&graph->widget, 17, 29) == 0);
+    assert(picoui_widget_set_visible(&graph->widget, 0) == 0);
+    assert(picoui_widget_set_opacity(&graph->widget, 81) == 0);
+    assert(picoui_widget_set_selectable(&graph->widget, 1) == 0);
+    assert(picoui_widget_set_selected(&graph->widget, 1) == 0);
+    assert(picoui_widget_set_corner(&graph->widget, 1) == 0);
+
+    assert(ld_base->tRegion.tLocation.iX == 17);
+    assert(ld_base->tRegion.tLocation.iY == 29);
+    assert(ld_base->isHidden == false);
+    assert(ld_base->opa == 81);
+    assert(ld_base->isSelectable == true);
+    assert(ld_base->isSelect == true);
+    assert(ld_base->isCorner == true);
+    picoui_app_destroy(app);
+}
+
 int main(void)
 {
     test_graph_series_value_readback_survives_frame_update();
@@ -256,5 +292,6 @@ int main(void)
     test_graph_final_release_contract_covers_advanced_readback_boundary();
     test_graph_native_axis_grid_and_point_mask_round_trip();
     test_graph_move_add_and_set_value_reject_invalid_inputs_without_polluting_other_series();
+    test_graph_init_and_shared_base_aliases_round_trip();
     return 0;
 }

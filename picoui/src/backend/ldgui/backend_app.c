@@ -43,6 +43,8 @@ struct picoui_backend_runtime_state {
     int static_mapping_logged;
     int fallback_boundary_logged;
     int temporary_smoke_logged;
+    int smoke_layout_used;
+    int smoke_layout_marker_logged;
 };
 
 static const ldPageFuncGroup_t g_picoui_backend_runtime_page = {
@@ -430,6 +432,8 @@ int picoui_backend_app_init(struct picoui_app *app)
     state->static_mapping_logged = 0;
     state->fallback_boundary_logged = 0;
     state->temporary_smoke_logged = 0;
+    state->smoke_layout_used = 0;
+    state->smoke_layout_marker_logged = 0;
     app->backend_app = app_state;
     return 0;
 }
@@ -600,6 +604,7 @@ static void picoui_backend_apply_smoke_cursor_layout(struct picoui_backend_runti
     }
 
     /* Explicit opt-in only: keep temporary smoke layout out of generic non-layout demos. */
+    state->smoke_layout_used = 1;
     picoui_backend_apply_real_widget_layout(state, root->first_child, x, cursor_y);
 }
 
@@ -620,10 +625,16 @@ static void picoui_backend_render(struct picoui_backend_runtime_state *state, st
         app_state = picoui_backend_app_state_from_window(window);
         picoui_backend_log_mapping_markers(state, root);
         if (app_state != NULL && app_state->ld_scene != NULL && state->real_pixels != NULL) {
+            state->smoke_layout_used = 0;
             memset(state->real_pixels,
                    0,
                    (size_t)PICOUI_RUNTIME_WIDTH * (size_t)PICOUI_RUNTIME_HEIGHT * sizeof(*state->real_pixels));
             picoui_backend_apply_smoke_cursor_layout(state, root_widget, x, &y);
+            if (!state->smoke_layout_marker_logged) {
+                printf("PICOUI_SMOKE_LAYOUT_USED=%d\n", state->smoke_layout_used ? 1 : 0);
+                fflush(stdout);
+                state->smoke_layout_marker_logged = 1;
+            }
             ldGuiFrameStart(app_state->ld_scene);
             ldMsgProcess(app_state->ld_scene);
             ldGuiDraw(app_state->ld_scene, &state->real_tile, true);

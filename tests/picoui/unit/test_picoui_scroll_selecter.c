@@ -232,6 +232,71 @@ static void test_scroll_selecter_selected_text_readback_matches_backend_truth(vo
     picoui_app_destroy(app);
 }
 
+static void test_scroll_selecter_native_api_aliases_match_backend_truth(void)
+{
+    struct picoui_app *app = picoui_app_create();
+    struct picoui_window *win;
+    struct picoui_scroll_selecter *scroll_selecter;
+    struct picoui_backend_widget *backend;
+    ldScrollSelecter_t *ld_scroll_selecter;
+    const char *item_ids[] = {"wifi", "bluetooth", "display"};
+    const char *texts[] = {"Wi-Fi", "Bluetooth", "Display"};
+    arm_2d_tile_t bg_tile = {0};
+    arm_2d_tile_t indicator_tile = {0};
+    struct picoui_image_source bg_source = {.img_tile = &bg_tile, .mask_tile = 0};
+    struct picoui_image_source indicator_source = {.img_tile = &indicator_tile, .mask_tile = 0};
+
+    assert(app != 0);
+    win = picoui_window_create(app, "scroll_alias_root");
+    assert(win != 0);
+    scroll_selecter = picoui_scroll_selecter_create(win, "scroll_alias");
+    assert(scroll_selecter != 0);
+    assert(picoui_scroll_selecter_set_items(scroll_selecter, item_ids, texts, 3) == 0);
+    assert(picoui_scroll_selecter_set_select_item_num(scroll_selecter, 1) == 0);
+    assert(picoui_scroll_selecter_get_select_item_num(scroll_selecter) == 1);
+    assert(picoui_scroll_selecter_set_background_color(scroll_selecter, 0x010203U) == 0);
+    assert(picoui_scroll_selecter_set_text_color(scroll_selecter, 0x111213U) == 0);
+    assert(picoui_scroll_selecter_set_background_image(scroll_selecter, &bg_source) == 0);
+    assert(picoui_scroll_selecter_set_indicator_image(scroll_selecter, &indicator_source) == 0);
+    assert(strcmp(picoui_scroll_selecter_get_select_text(scroll_selecter), "Bluetooth") == 0);
+
+    backend = (struct picoui_backend_widget *)scroll_selecter->widget.backend_widget;
+    assert(backend != 0);
+    ld_scroll_selecter = (ldScrollSelecter_t *)backend->ld_widget;
+    assert(ld_scroll_selecter != 0);
+    assert(ldScrollSelecterGetSelectItemNum(ld_scroll_selecter) == 1);
+    assert(ld_scroll_selecter->itemCount == 3);
+    assert(ld_scroll_selecter->ptImgTile == bg_source.img_tile);
+    assert(ld_scroll_selecter->ptIndicatorImgTile == indicator_source.img_tile);
+    assert(scroll_selecter->widget.bg_color == 0x010203U);
+    assert(scroll_selecter->widget.text_color == 0x111213U);
+    picoui_app_destroy(app);
+}
+
+static void test_scroll_selecter_init_and_native_base_aliases_round_trip(void)
+{
+    struct picoui_app *app = picoui_app_create();
+    struct picoui_window *win;
+    struct picoui_scroll_selecter *scroll_selecter;
+    struct picoui_backend_widget *backend;
+    ldBase_t *ld_base;
+
+    assert(app != 0);
+    win = picoui_window_create(app, "scroll_base_root");
+    assert(win != 0);
+    scroll_selecter = picoui_scroll_selecter_create(win, "scroll_base");
+    assert(scroll_selecter != 0);
+    backend = (struct picoui_backend_widget *)scroll_selecter->widget.backend_widget;
+    assert(backend != 0);
+    ld_base = (ldBase_t *)backend->ld_widget;
+    assert(ld_base != 0);
+
+    assert(picoui_widget_set_pos(&scroll_selecter->widget, 21, 43) == 0);
+    assert(ld_base->tRegion.tLocation.iX == 21);
+    assert(ld_base->tRegion.tLocation.iY == 43);
+    picoui_app_destroy(app);
+}
+
 int main(void)
 {
     test_scroll_selecter_selected_item_matches_backend_truth();
@@ -239,5 +304,7 @@ int main(void)
     test_scroll_selecter_final_visual_and_edit_contract_is_release_ready();
     test_scroll_selecter_native_style_image_speed_and_select_text_round_trip();
     test_scroll_selecter_selected_text_readback_matches_backend_truth();
+    test_scroll_selecter_native_api_aliases_match_backend_truth();
+    test_scroll_selecter_init_and_native_base_aliases_round_trip();
     return 0;
 }

@@ -182,6 +182,29 @@ static ldPadding_t picoui_backend_uniform_padding(int padding)
     };
 }
 
+static ldPadding_t picoui_backend_padding_group(int left, int top, int right, int bottom)
+{
+    return (ldPadding_t){
+        .left = (int16_t)left,
+        .top = (int16_t)top,
+        .right = (int16_t)right,
+        .bottom = (int16_t)bottom,
+    };
+}
+
+static ldLayoutType_t picoui_backend_map_window_layout_type(enum picoui_window_layout_type type)
+{
+    switch (type) {
+    case PICOUI_WINDOW_LAYOUT_FLEX:
+        return layoutFlex;
+    case PICOUI_WINDOW_LAYOUT_GRID:
+        return layoutGrid;
+    case PICOUI_WINDOW_LAYOUT_NONE:
+    default:
+        return layoutNone;
+    }
+}
+
 static void picoui_backend_apply_window_padding(struct picoui_backend_widget *widget, ldWindow_t *ld_window)
 {
     ldPadding_t ld_padding;
@@ -366,6 +389,88 @@ int picoui_backend_window_set_grid_align(struct picoui_window *window,
                              picoui_backend_map_grid_align(col_align),
                              picoui_backend_map_grid_align(row_align));
         picoui_backend_apply_window_padding(backend_widget, ld_window);
+    }
+    return 0;
+}
+
+int picoui_backend_window_set_layout_type(struct picoui_window *window,
+                                          enum picoui_window_layout_type type)
+{
+    struct picoui_backend_widget *backend_widget = picoui_backend_window_get(window);
+    ldWindow_t *ld_window;
+
+    if (backend_widget == 0
+        || (type != PICOUI_WINDOW_LAYOUT_NONE
+            && type != PICOUI_WINDOW_LAYOUT_FLEX
+            && type != PICOUI_WINDOW_LAYOUT_GRID)) {
+        return -1;
+    }
+
+    ld_window = picoui_backend_get_ld_window(backend_widget);
+    if (ld_window != NULL) {
+        ldWindowSetLayout(ld_window, picoui_backend_map_window_layout_type(type));
+    }
+    return 0;
+}
+
+int picoui_backend_window_set_padding(struct picoui_window *window,
+                                      int left,
+                                      int top,
+                                      int right,
+                                      int bottom)
+{
+    struct picoui_backend_widget *backend_widget = picoui_backend_window_get(window);
+    ldWindow_t *ld_window;
+
+    if (backend_widget == 0 || left < 0 || top < 0 || right < 0 || bottom < 0) {
+        return -1;
+    }
+
+    ld_window = picoui_backend_get_ld_window(backend_widget);
+    if (ld_window != NULL) {
+        ldLayoutType_t layout_type = ld_window->layoutTpye;
+        ldWindowSetPadding(ld_window, picoui_backend_padding_group(left, top, right, bottom));
+        ld_window->layoutTpye = layout_type;
+    }
+    return 0;
+}
+
+int picoui_backend_window_set_grid_padding(struct picoui_window *window,
+                                           int left,
+                                           int top,
+                                           int right,
+                                           int bottom)
+{
+    struct picoui_backend_widget *backend_widget = picoui_backend_window_get(window);
+    ldWindow_t *ld_window;
+
+    if (backend_widget == 0 || left < 0 || top < 0 || right < 0 || bottom < 0) {
+        return -1;
+    }
+
+    ld_window = picoui_backend_get_ld_window(backend_widget);
+    if (ld_window != NULL) {
+        ldLayoutType_t layout_type = ld_window->layoutTpye;
+        ldWindowSetGridPadding(ld_window, picoui_backend_padding_group(left, top, right, bottom));
+        ld_window->layoutTpye = layout_type;
+    }
+    return 0;
+}
+
+int picoui_backend_window_set_gap(struct picoui_window *window, int gap)
+{
+    struct picoui_backend_widget *backend_widget = picoui_backend_window_get(window);
+    ldWindow_t *ld_window;
+
+    if (backend_widget == 0 || gap < 0) {
+        return -1;
+    }
+
+    backend_widget->window_layout.flex_item_gap = gap;
+    backend_widget->window_layout.flex_track_gap = gap;
+    ld_window = picoui_backend_get_ld_window(backend_widget);
+    if (ld_window != NULL) {
+        ldWindowSetGap(ld_window, (int16_t)gap);
     }
     return 0;
 }

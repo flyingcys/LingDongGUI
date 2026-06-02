@@ -17,6 +17,18 @@ static ldColor picoui_backend_rgb_to_ld_color(unsigned int rgb)
     return __RGB((rgb >> 16) & 0xFFU, (rgb >> 8) & 0xFFU, rgb & 0xFFU);
 }
 
+static unsigned int picoui_backend_ld_color_to_rgb(ldColor color)
+{
+    uint32_t red = ((uint32_t)color >> 11) & 0x1FU;
+    uint32_t green = ((uint32_t)color >> 5) & 0x3FU;
+    uint32_t blue = (uint32_t)color & 0x1FU;
+
+    red = (red * 255U) / 31U;
+    green = (green * 255U) / 63U;
+    blue = (blue * 255U) / 31U;
+    return (red << 16) | (green << 8) | blue;
+}
+
 static struct picoui_backend_app_state *picoui_backend_window_get_app_state(struct picoui_app *app)
 {
     if (app == NULL || app->backend_app == NULL) {
@@ -153,6 +165,18 @@ int picoui_backend_window_set_bg_color(struct picoui_window *window, unsigned in
     }
 
     ldWindowSetColor(ld_window, picoui_backend_rgb_to_ld_color(rgb));
+    return 0;
+}
+
+int picoui_backend_window_get_bg_color(struct picoui_window *window, unsigned int *rgb)
+{
+    ldWindow_t *ld_window = picoui_backend_window_get_ld(window);
+
+    if (ld_window == NULL || rgb == NULL) {
+        return -1;
+    }
+
+    *rgb = picoui_backend_ld_color_to_rgb(ldWindowGetColor(ld_window));
     return 0;
 }
 

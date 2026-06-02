@@ -19,8 +19,10 @@ struct picoui_qrcode_props {
 struct picoui_qrcode *picoui_qrcode_create(struct picoui_widget *parent, const char *id);
 struct picoui_qrcode *picoui_qrcode_create_with_props(struct picoui_widget *parent,
                                                       const struct picoui_qrcode_props *props);
+struct picoui_qrcode *picoui_q_r_code_init(struct picoui_widget *parent, const char *id);
 int picoui_qrcode_set_text(struct picoui_qrcode *qrcode, const char *text);
 const char *picoui_qrcode_get_text(const struct picoui_qrcode *qrcode);
+int picoui_q_r_code_set_text(struct picoui_qrcode *qrcode, const char *text);
 int picoui_qrcode_set_qr_color(struct picoui_qrcode *qrcode, unsigned int rgb);
 int picoui_qrcode_set_bg_color(struct picoui_qrcode *qrcode, unsigned int rgb);
 int picoui_qrcode_set_ecc(struct picoui_qrcode *qrcode, int ecc);

@@ -67,6 +67,33 @@ static void test_line_edit_create_with_props_sets_text_and_type(struct picoui_wi
     assert(ld_line_edit->kbNameId == 9U);
 }
 
+static void test_line_edit_align_and_color_write_backend_state(struct picoui_window *win)
+{
+    struct picoui_line_edit *line_edit;
+    struct picoui_backend_widget *backend;
+    ldLineEdit_t *ld_line_edit;
+
+    line_edit = picoui_line_edit_create(win, "line_edit_style");
+    assert(line_edit != 0);
+    backend = (struct picoui_backend_widget *)line_edit->widget.backend_widget;
+    assert(backend != 0);
+    ld_line_edit = (ldLineEdit_t *)backend->ld_widget;
+    assert(ld_line_edit != 0);
+
+    assert(picoui_line_edit_set_align(line_edit, PICOUI_ALIGN_CENTER) == 0);
+    assert(ld_line_edit->tAlign == ARM_2D_ALIGN_CENTRE);
+    assert(line_edit->align == PICOUI_ALIGN_CENTER);
+    assert(picoui_line_edit_set_color(line_edit, 0x112233U, 0x445566U, 0x778899U) == 0);
+    assert(ld_line_edit->textColor == __RGB(0x11, 0x22, 0x33));
+    assert(ld_line_edit->backgroundColor == __RGB(0x44, 0x55, 0x66));
+    assert(ld_line_edit->frameColor == __RGB(0x77, 0x88, 0x99));
+    assert(line_edit->widget.text_color == 0x112233U);
+    assert(line_edit->widget.bg_color == 0x445566U);
+    assert(line_edit->widget.border_color == 0x778899U);
+    assert(picoui_line_edit_set_align(0, PICOUI_ALIGN_START) == -1);
+    assert(picoui_line_edit_set_color(0, 0, 0, 0) == -1);
+}
+
 static void test_line_edit_readback_matches_backend_after_finished_boundary(struct picoui_window *win)
 {
     struct picoui_app *app;
@@ -246,6 +273,46 @@ static void test_line_edit_rejects_invalid_keyboard_binding(struct picoui_window
            == 0);
 }
 
+static void test_line_edit_set_keyboard_alias_matches_binding_contract(struct picoui_window *win)
+{
+    struct picoui_line_edit *line_edit = picoui_line_edit_create(win, "line_edit_keyboard_alias");
+    unsigned int keyboard_binding = 0;
+
+    assert(line_edit != 0);
+    assert(picoui_line_edit_set_keyboard(line_edit, 15U) == 0);
+    assert(picoui_line_edit_get_keyboard_binding(line_edit, &keyboard_binding) == 0);
+    assert(keyboard_binding == 15U);
+    assert(picoui_line_edit_set_keyboard(0, 15U) == -1);
+}
+
+static void test_line_edit_init_and_shared_base_aliases_round_trip(struct picoui_window *win)
+{
+    struct picoui_line_edit *line_edit = picoui_line_edit_create(win, "line_edit_base_aliases");
+    struct picoui_backend_widget *backend;
+    ldBase_t *ld_base;
+
+    assert(line_edit != 0);
+    backend = (struct picoui_backend_widget *)line_edit->widget.backend_widget;
+    assert(backend != 0);
+    ld_base = (ldBase_t *)backend->ld_widget;
+    assert(ld_base != 0);
+
+    assert(picoui_widget_set_pos(&line_edit->widget, 14, 28) == 0);
+    assert(picoui_widget_set_visible(&line_edit->widget, 0) == 0);
+    assert(picoui_widget_set_opacity(&line_edit->widget, 66) == 0);
+    assert(picoui_widget_set_selectable(&line_edit->widget, 1) == 0);
+    assert(picoui_widget_set_selected(&line_edit->widget, 1) == 0);
+    assert(picoui_widget_set_corner(&line_edit->widget, 1) == 0);
+
+    assert(ld_base->tRegion.tLocation.iX == 14);
+    assert(ld_base->tRegion.tLocation.iY == 28);
+    assert(ld_base->isHidden == false);
+    assert(ld_base->opa == 66);
+    assert(ld_base->isSelectable == true);
+    assert(ld_base->isSelect == true);
+    assert(ld_base->isCorner == true);
+}
+
 int main(void)
 {
     struct picoui_app *app = picoui_app_create();
@@ -257,11 +324,14 @@ int main(void)
     line_edit_msg_queue_initialized = 0;
 
     test_line_edit_create_with_props_sets_text_and_type(win);
+    test_line_edit_align_and_color_write_backend_state(win);
     test_line_edit_readback_matches_backend_after_finished_boundary(win);
     test_line_edit_finished_boundary_clears_editing_state_without_reason(win);
     test_line_edit_commit_and_cancel_paths_are_distinct(win);
     test_line_edit_submit_cancel_reason_contract_is_release_ready(win);
     test_line_edit_rejects_invalid_keyboard_binding(win);
+    test_line_edit_set_keyboard_alias_matches_binding_contract(win);
+    test_line_edit_init_and_shared_base_aliases_round_trip(win);
 
     picoui_app_destroy(app);
     return 0;

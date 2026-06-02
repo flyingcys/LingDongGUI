@@ -21,6 +21,7 @@ struct picoui_gauge_props {
 struct picoui_gauge *picoui_gauge_create(struct picoui_widget *parent, const char *id);
 struct picoui_gauge *picoui_gauge_create_with_props(struct picoui_widget *parent,
                                                     const struct picoui_gauge_props *props);
+struct picoui_gauge *picoui_gauge_init(struct picoui_widget *parent, const char *id);
 int picoui_gauge_set_angle(struct picoui_gauge *gauge, float angle);
 float picoui_gauge_get_angle(const struct picoui_gauge *gauge);
 int picoui_gauge_set_bg_source(struct picoui_gauge *gauge, struct picoui_image_source *source);

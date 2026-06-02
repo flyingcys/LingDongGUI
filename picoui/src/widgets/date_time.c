@@ -60,6 +60,11 @@ struct picoui_date_time *picoui_date_time_create(struct picoui_widget *parent, c
     return dt;
 }
 
+struct picoui_date_time *picoui_date_time_init(struct picoui_widget *parent, const char *id)
+{
+    return picoui_date_time_create(parent, id);
+}
+
 struct picoui_date_time *picoui_date_time_create_with_props(
     struct picoui_widget *parent,
     const struct picoui_date_time_props *props)
@@ -173,6 +178,11 @@ int picoui_date_time_set_bg_color(struct picoui_date_time *dt, unsigned int rgb)
 
     dt->bg_color = rgb;
     return 0;
+}
+
+int picoui_date_time_set_background_color(struct picoui_date_time *dt, unsigned int rgb)
+{
+    return picoui_date_time_set_bg_color(dt, rgb);
 }
 
 int picoui_date_time_set_align(struct picoui_date_time *dt, enum picoui_align align)

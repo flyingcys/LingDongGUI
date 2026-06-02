@@ -93,3 +93,17 @@ int picoui_image_set_source(struct picoui_image *image, struct picoui_image_sour
     image->source = source;
     return 0;
 }
+
+int picoui_image_set_mask_color(struct picoui_image *image, unsigned int rgb)
+{
+    if (image == 0) {
+        return -1;
+    }
+
+    if (picoui_backend_image_set_mask_color(image->widget.backend_widget, rgb) != 0) {
+        return -1;
+    }
+
+    image->widget.bg_color = rgb;
+    return 0;
+}

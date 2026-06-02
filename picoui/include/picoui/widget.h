@@ -48,5 +48,14 @@ int picoui_widget_set_grid_cell(struct picoui_widget *widget,
                                 int row_span,
                                 enum picoui_align x_align,
                                 enum picoui_align y_align);
+int picoui_widget_get_x(const struct picoui_widget *widget);
+int picoui_widget_get_y(const struct picoui_widget *widget);
+int picoui_widget_get_width(const struct picoui_widget *widget);
+int picoui_widget_get_height(const struct picoui_widget *widget);
+int picoui_widget_get_visible(const struct picoui_widget *widget);
+int picoui_widget_get_opacity(const struct picoui_widget *widget);
+int picoui_widget_get_selectable(const struct picoui_widget *widget);
+int picoui_widget_get_selected(const struct picoui_widget *widget);
+int picoui_widget_get_corner(const struct picoui_widget *widget);
 
 #endif

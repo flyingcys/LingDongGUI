@@ -26,10 +26,12 @@ struct picoui_date_time *picoui_date_time_create(struct picoui_widget *parent, c
 struct picoui_date_time *picoui_date_time_create_with_props(
     struct picoui_widget *parent,
     const struct picoui_date_time_props *props);
+struct picoui_date_time *picoui_date_time_init(struct picoui_widget *parent, const char *id);
 int picoui_date_time_set_format(struct picoui_date_time *dt, const char *format);
 int picoui_date_time_set_date(struct picoui_date_time *dt, int year, int month, int day);
 int picoui_date_time_set_time(struct picoui_date_time *dt, int hour, int minute, int second);
 int picoui_date_time_set_text_color(struct picoui_date_time *dt, unsigned int rgb);
+int picoui_date_time_set_background_color(struct picoui_date_time *dt, unsigned int rgb);
 int picoui_date_time_set_bg_color(struct picoui_date_time *dt, unsigned int rgb);
 int picoui_date_time_set_align(struct picoui_date_time *dt, enum picoui_align align);
 int picoui_date_time_set_transparent(struct picoui_date_time *dt, int transparent);

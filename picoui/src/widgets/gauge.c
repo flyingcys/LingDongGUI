@@ -42,6 +42,11 @@ struct picoui_gauge *picoui_gauge_create(struct picoui_widget *parent, const cha
     return gauge;
 }
 
+struct picoui_gauge *picoui_gauge_init(struct picoui_widget *parent, const char *id)
+{
+    return picoui_gauge_create(parent, id);
+}
+
 struct picoui_gauge *picoui_gauge_create_with_props(struct picoui_widget *parent,
                                                     const struct picoui_gauge_props *props)
 {

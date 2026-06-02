@@ -18,6 +18,7 @@ struct picoui_animation_props {
 };
 
 struct picoui_animation *picoui_animation_create(struct picoui_widget *parent, const char *id);
+struct picoui_animation *picoui_animation_init(struct picoui_widget *parent, const char *id);
 struct picoui_animation *picoui_animation_create_with_props(
     struct picoui_widget *parent,
     const struct picoui_animation_props *props);

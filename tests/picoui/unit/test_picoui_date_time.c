@@ -193,6 +193,38 @@ static void test_date_time_native_transparent_color_and_align_round_trip(struct 
     assert(picoui_date_time_get_transparent(0) == -1);
 }
 
+static void test_date_time_init_and_shared_base_aliases_round_trip(struct picoui_window *win)
+{
+    struct picoui_date_time *dt =
+        picoui_date_time_init((struct picoui_widget *)win, "date_time_alias");
+    struct picoui_backend_widget *backend;
+    ldDateTime_t *ld_date_time;
+
+    assert(dt != 0);
+    backend = (struct picoui_backend_widget *)dt->widget.backend_widget;
+    assert(backend != 0);
+    ld_date_time = (ldDateTime_t *)backend->ld_widget;
+    assert(ld_date_time != 0);
+
+    assert(picoui_date_time_set_background_color(dt, 0x556677U) == 0);
+    assert(ld_date_time->bgColor == __RGB(0x55, 0x66, 0x77));
+
+    assert(picoui_widget_set_pos(&dt->widget, 10, 14) == 0);
+    assert(((ldBase_t *)ld_date_time)->tRegion.tLocation.iX == 10);
+    assert(((ldBase_t *)ld_date_time)->tRegion.tLocation.iY == 14);
+
+    assert(picoui_widget_set_visible(&dt->widget, 0) == 0);
+    assert(((ldBase_t *)ld_date_time)->bIsVisible == false);
+    assert(picoui_widget_set_opacity(&dt->widget, 73) == 0);
+    assert(((ldBase_t *)ld_date_time)->chOpacity == 73);
+    assert(picoui_widget_set_selectable(&dt->widget, 0) == 0);
+    assert(((ldBase_t *)ld_date_time)->isSelectable == false);
+    assert(picoui_widget_set_selected(&dt->widget, 1) == 0);
+    assert(((ldBase_t *)ld_date_time)->isSelect == true);
+    assert(picoui_widget_set_corner(&dt->widget, 5) == 0);
+    assert(((ldBase_t *)ld_date_time)->chCorner == 5);
+}
+
 int main(void)
 {
     struct picoui_app *app = picoui_app_create();
@@ -208,6 +240,7 @@ int main(void)
     test_date_time_rejects_invalid_inputs(win);
     test_date_time_final_release_contract_covers_public_readback_and_modes(win);
     test_date_time_native_transparent_color_and_align_round_trip(win);
+    test_date_time_init_and_shared_base_aliases_round_trip(win);
 
     picoui_app_destroy(app);
     return 0;

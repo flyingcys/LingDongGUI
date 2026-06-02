@@ -160,6 +160,28 @@ def _parse_marker_ids(stdout: str, marker: str, *, required: bool = True) -> set
     return set()
 
 
+def _assert_no_smoke_layout(target: str, stdout: str, stderr: str) -> None:
+    marker = "PICOUI_SMOKE_LAYOUT_USED="
+    for line in stdout.splitlines():
+        if not line.startswith(marker):
+            continue
+        value = line[len(marker) :].strip()
+        if value != "0":
+            raise AssertionError(
+                f"Formal native demo '{target}' used temporary smoke layout.\n"
+                f"expected: PICOUI_SMOKE_LAYOUT_USED=0\n"
+                f"actual: {line}\n"
+                f"stdout:\n{stdout}\n"
+                f"stderr:\n{stderr}"
+            )
+        return
+    raise AssertionError(
+        f"Formal native demo '{target}' did not report PICOUI_SMOKE_LAYOUT_USED.\n"
+        f"stdout:\n{stdout}\n"
+        f"stderr:\n{stderr}"
+    )
+
+
 def _assert_basic_widgets_capture(path: Path, stdout: str) -> None:
     width, height, pixels = _read_ppm(path)
     assert width == 480 and height == 320, f"unexpected basic widgets capture size: {width}x{height}"
@@ -285,3 +307,4 @@ for target in TARGETS:
             f"stdout:\n{completed.stdout}\n"
             f"stderr:\n{completed.stderr}"
         )
+    _assert_no_smoke_layout(target, completed.stdout, completed.stderr)

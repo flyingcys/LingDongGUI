@@ -170,6 +170,44 @@ int picoui_backend_keyboard_navigate(void *backend_widget, int direction)
     return 0;
 }
 
+int picoui_backend_keyboard_update(void *backend_widget)
+{
+    struct picoui_backend_widget *backend = backend_widget;
+    ldKeyboard_t *ld_keyboard;
+
+    if (backend == NULL) {
+        return -1;
+    }
+
+    ld_keyboard = picoui_backend_keyboard_get_ld(backend_widget);
+    if (ld_keyboard == NULL) {
+        return -1;
+    }
+
+    picoui_backend_keyboard_prepare(ld_keyboard, picoui_backend_keyboard_get_target_line_edit(backend));
+    ldKeyboardUpdate(ld_keyboard);
+    return 0;
+}
+
+int picoui_backend_keyboard_button_update(void *backend_widget, unsigned char key_code)
+{
+    struct picoui_backend_widget *backend = backend_widget;
+    ldKeyboard_t *ld_keyboard;
+
+    if (backend == NULL) {
+        return -1;
+    }
+
+    ld_keyboard = picoui_backend_keyboard_get_ld(backend_widget);
+    if (ld_keyboard == NULL) {
+        return -1;
+    }
+
+    picoui_backend_keyboard_prepare(ld_keyboard, picoui_backend_keyboard_get_target_line_edit(backend));
+    ldKeyboardBtnUpdate(ld_keyboard, key_code);
+    return 0;
+}
+
 int picoui_backend_keyboard_click(void *backend_widget)
 {
     struct picoui_backend_widget *backend = backend_widget;

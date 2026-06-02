@@ -218,6 +218,64 @@ static void test_clock_native_background_pointer_mask_and_anchor_round_trip(stru
     assert(picoui_clock_set_second_anchor(0, 0.0f, 0.0f) == -1);
 }
 
+static void test_clock_init_and_image_aliases_round_trip(struct picoui_window *win)
+{
+    struct picoui_clock *clock =
+        picoui_clock_init((struct picoui_widget *)win, "clock_alias");
+    struct picoui_backend_widget *backend;
+    ldClock_t *ld_clock;
+    arm_2d_tile_t bg_tile = {
+        .tRegion = {
+            .tSize = { .iWidth = 48, .iHeight = 48 },
+        },
+    };
+    arm_2d_tile_t hour_tile = {
+        .tRegion = {
+            .tSize = { .iWidth = 8, .iHeight = 28 },
+        },
+    };
+    arm_2d_tile_t minute_tile = {
+        .tRegion = {
+            .tSize = { .iWidth = 8, .iHeight = 36 },
+        },
+    };
+    arm_2d_tile_t second_tile = {
+        .tRegion = {
+            .tSize = { .iWidth = 6, .iHeight = 42 },
+        },
+    };
+    struct picoui_image_source bg_source = {
+        .img_tile = &bg_tile,
+    };
+    struct picoui_image_source hour_source = {
+        .img_tile = &hour_tile,
+    };
+    struct picoui_image_source minute_source = {
+        .img_tile = &minute_tile,
+    };
+    struct picoui_image_source second_source = {
+        .img_tile = &second_tile,
+    };
+
+    assert(clock != 0);
+    backend = (struct picoui_backend_widget *)clock->widget.backend_widget;
+    assert(backend != 0);
+    ld_clock = (ldClock_t *)backend->ld_widget;
+    assert(ld_clock != 0);
+
+    assert(picoui_clock_set_background_image(clock, &bg_source) == 0);
+    assert(picoui_clock_set_hour_pointer_image(clock, &hour_source) == 0);
+    assert(picoui_clock_set_minute_pointer_image(clock, &minute_source) == 0);
+    assert(picoui_clock_set_second_pointer_image(clock, &second_source) == 0);
+    assert(picoui_clock_set_step_second(clock, 1) == 0);
+
+    assert(ld_clock->ptBgImgTile == &bg_tile);
+    assert(ld_clock->pointerInfo[0].ptImgTile == &hour_tile);
+    assert(ld_clock->pointerInfo[1].ptImgTile == &minute_tile);
+    assert(ld_clock->pointerInfo[2].ptImgTile == &second_tile);
+    assert(ld_clock->isStepSecond == true);
+}
+
 int main(void)
 {
     struct picoui_app *app = picoui_app_create();
@@ -232,6 +290,7 @@ int main(void)
     test_clock_rejects_invalid_inputs(win);
     test_clock_release_contract_covers_time_source_and_configuration_boundary(win);
     test_clock_native_background_pointer_mask_and_anchor_round_trip(win);
+    test_clock_init_and_image_aliases_round_trip(win);
 
     picoui_app_destroy(app);
     return 0;

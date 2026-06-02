@@ -6,6 +6,7 @@
 #include "picoui/image.h"
 #include "picoui/native.h"
 #include "picoui/widget.h"
+#include "picoui/window.h"
 
 struct picoui_widget;
 struct picoui_message_box;
@@ -320,10 +321,24 @@ int picoui_backend_calendar_get_grid_value(void *backend_widget, int week, int w
 int picoui_backend_calendar_is_current_month_cell(void *backend_widget, int week, int weekday);
 int picoui_backend_message_box_set_on_confirm(struct picoui_message_box *box);
 int picoui_backend_set_text(void *backend_widget, const char *text);
+int picoui_backend_text_set_static_text(void *backend_widget, const char *text);
+int picoui_backend_text_set_transparent(void *backend_widget, int transparent);
+int picoui_backend_text_set_text_color(void *backend_widget, unsigned int rgb);
+int picoui_backend_text_set_bg_color(void *backend_widget, unsigned int rgb);
+int picoui_backend_text_set_background_source(void *backend_widget,
+                                              struct picoui_image_source *source);
+int picoui_backend_text_scroll_seek(void *backend_widget, int offset);
+int picoui_backend_text_scroll_move(void *backend_widget, int move_value);
 int picoui_backend_line_edit_set_text(void *backend_widget, const char *text);
+int picoui_backend_line_edit_set_align(void *backend_widget, enum picoui_align align);
+int picoui_backend_line_edit_set_color(void *backend_widget,
+                                       unsigned int text_color,
+                                       unsigned int background_color,
+                                       unsigned int frame_color);
 const char *picoui_backend_line_edit_get_text(void *backend_widget);
 int picoui_backend_line_edit_set_type(void *backend_widget, enum picoui_line_edit_type type);
 int picoui_backend_line_edit_get_type(void *backend_widget, enum picoui_line_edit_type *type);
+int picoui_backend_line_edit_set_keyboard(void *backend_widget, unsigned int keyboard_binding);
 int picoui_backend_line_edit_set_keyboard_binding(void *backend_widget,
                                                   unsigned int keyboard_binding);
 int picoui_backend_line_edit_get_keyboard_binding(void *backend_widget,
@@ -332,6 +347,8 @@ int picoui_backend_line_edit_bind_host(void *backend_widget);
 int picoui_backend_line_edit_get_editing(void *backend_widget, int *editing);
 int picoui_backend_keyboard_input_ascii(void *backend_widget, unsigned int ascii);
 int picoui_backend_keyboard_navigate(void *backend_widget, int direction);
+int picoui_backend_keyboard_update(void *backend_widget);
+int picoui_backend_keyboard_button_update(void *backend_widget, unsigned char key_code);
 int picoui_backend_keyboard_click(void *backend_widget);
 int picoui_backend_keyboard_exit(void *backend_widget);
 int picoui_backend_combo_box_set_items(void *backend_widget,
@@ -506,6 +523,7 @@ int picoui_backend_widget_bind_ld_event_bridge(void *backend_widget,
 int picoui_backend_widget_bind_host(void *backend_widget,
                                     struct picoui_widget *widget);
 int picoui_backend_set_image_source(void *backend_widget, struct picoui_image_source *source);
+int picoui_backend_image_set_mask_color(void *backend_widget, unsigned int rgb);
 int picoui_backend_window_set_flex_flow(struct picoui_window *window, enum picoui_flex_flow flow);
 int picoui_backend_window_set_flex_align(struct picoui_window *window,
                                          enum picoui_align main_align,
@@ -518,6 +536,19 @@ int picoui_backend_window_set_grid_gap(struct picoui_window *window, int row_gap
 int picoui_backend_window_set_grid_align(struct picoui_window *window,
                                          enum picoui_align col_align,
                                          enum picoui_align row_align);
+int picoui_backend_window_set_layout_type(struct picoui_window *window,
+                                          enum picoui_window_layout_type type);
+int picoui_backend_window_set_padding(struct picoui_window *window,
+                                      int left,
+                                      int top,
+                                      int right,
+                                      int bottom);
+int picoui_backend_window_set_grid_padding(struct picoui_window *window,
+                                           int left,
+                                           int top,
+                                           int right,
+                                           int bottom);
+int picoui_backend_window_set_gap(struct picoui_window *window, int gap);
 int picoui_backend_widget_set_flex_grow(struct picoui_widget *widget, int grow);
 int picoui_backend_widget_set_flex_new_track(struct picoui_widget *widget, int new_track);
 int picoui_backend_widget_set_ignore_layout(struct picoui_widget *widget, int ignore_layout);

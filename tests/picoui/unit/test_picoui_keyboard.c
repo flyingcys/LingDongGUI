@@ -164,6 +164,87 @@ static void test_keyboard_navigation_signal_respects_focus_owner(void)
     picoui_app_destroy(app);
 }
 
+static void test_keyboard_update_and_button_update_touch_native_state(void)
+{
+    struct picoui_app *app;
+    struct picoui_window *win;
+    struct picoui_keyboard *keyboard;
+    struct picoui_line_edit *line_edit;
+    struct picoui_backend_widget *backend;
+    ldKeyboard_t *ld_keyboard;
+
+    win = test_window_create(&app);
+    keyboard = picoui_keyboard_create(win, "keyboard_update");
+    line_edit = picoui_line_edit_create(win, "line_edit_update_target");
+
+    assert(keyboard != 0);
+    assert(line_edit != 0);
+    backend = (struct picoui_backend_widget *)keyboard->widget.backend_widget;
+    assert(backend != 0);
+    ld_keyboard = (ldKeyboard_t *)backend->ld_widget;
+    assert(ld_keyboard != 0);
+
+    assert(picoui_widget_claim_focus(&line_edit->widget) == 0);
+    assert(picoui_keyboard_update(keyboard) == 0);
+    assert(ld_keyboard->pBtnList != 0);
+    assert(ld_keyboard->isWaitInit == false);
+    assert(picoui_keyboard_button_update(keyboard, '9') == 0);
+    assert(ld_keyboard->keyCode == '9');
+    assert(picoui_keyboard_update(0) == -1);
+    assert(picoui_keyboard_button_update(0, '0') == -1);
+    assert(picoui_keyboard_button_update(keyboard, 0x1FFU) == -1);
+    picoui_app_destroy(app);
+}
+
+static void test_keyboard_weak_hooks_remain_backend_private_not_public_api(void)
+{
+    struct picoui_app *app;
+    struct picoui_window *win;
+    struct picoui_keyboard *keyboard;
+    struct picoui_backend_widget *backend;
+    ldKeyboard_t *ld_keyboard;
+
+    win = test_window_create(&app);
+    keyboard = picoui_keyboard_create(win, "keyboard_backend_private_hooks");
+
+    assert(keyboard != 0);
+    backend = (struct picoui_backend_widget *)keyboard->widget.backend_widget;
+    assert(backend != 0);
+    ld_keyboard = (ldKeyboard_t *)backend->ld_widget;
+    assert(ld_keyboard != 0);
+    assert(ldKeyboardGetTargetBtnList(ld_keyboard) != 0);
+    ldKeyboardCallback(ld_keyboard, SIGNAL_PRESS);
+    assert(ldKeyboardBtnUserDraw(0, ld_keyboard, (kbBtnInfo_t *)ld_keyboard->pBtnList) == false);
+    picoui_app_destroy(app);
+}
+
+static void test_keyboard_init_and_shared_base_aliases_round_trip(void)
+{
+    struct picoui_app *app;
+    struct picoui_window *win;
+    struct picoui_keyboard *keyboard;
+    struct picoui_backend_widget *backend;
+    ldBase_t *ld_base;
+
+    win = test_window_create(&app);
+    keyboard = picoui_keyboard_create(win, "keyboard_base_aliases");
+    assert(keyboard != 0);
+    backend = (struct picoui_backend_widget *)keyboard->widget.backend_widget;
+    assert(backend != 0);
+    ld_base = (ldBase_t *)backend->ld_widget;
+    assert(ld_base != 0);
+
+    assert(picoui_widget_set_pos(&keyboard->widget, 9, 19) == 0);
+    assert(picoui_widget_set_visible(&keyboard->widget, 0) == 0);
+    assert(picoui_widget_set_opacity(&keyboard->widget, 55) == 0);
+
+    assert(ld_base->tRegion.tLocation.iX == 9);
+    assert(ld_base->tRegion.tLocation.iY == 19);
+    assert(ld_base->isHidden == false);
+    assert(ld_base->opa == 55);
+    picoui_app_destroy(app);
+}
+
 static void test_keyboard_exit_clears_focus_or_edit_session(void)
 {
     struct picoui_app *app;
@@ -231,6 +312,9 @@ int main(void)
     test_keyboard_navigation_preserves_editing_owner_model_truth();
     test_keyboard_rejects_ascii_when_target_is_not_line_edit();
     test_keyboard_navigation_signal_respects_focus_owner();
+    test_keyboard_update_and_button_update_touch_native_state();
+    test_keyboard_weak_hooks_remain_backend_private_not_public_api();
+    test_keyboard_init_and_shared_base_aliases_round_trip();
     test_keyboard_exit_clears_focus_or_edit_session();
     test_keyboard_click_respects_focus_owner();
     test_keyboard_has_explicit_final_gate_coverage_contract();

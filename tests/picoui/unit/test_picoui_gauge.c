@@ -171,6 +171,36 @@ static void test_gauge_native_trail_and_progress_bar_round_trip(struct picoui_wi
     assert(picoui_gauge_set_progress_bar(0, &bg_trail_source, &pointer_trail_source) == -1);
 }
 
+static void test_gauge_init_and_shared_base_aliases_round_trip(struct picoui_window *win)
+{
+    struct picoui_gauge *gauge = picoui_gauge_init((struct picoui_widget *)win, "gauge_alias");
+    struct picoui_backend_widget *backend;
+    ldGauge_t *ld_gauge;
+
+    assert(gauge != 0);
+    backend = (struct picoui_backend_widget *)gauge->widget.backend_widget;
+    assert(backend != 0);
+    ld_gauge = (ldGauge_t *)backend->ld_widget;
+    assert(ld_gauge != 0);
+
+    assert(picoui_gauge_get_angle(gauge) == 0.0f);
+
+    assert(picoui_widget_set_pos(&gauge->widget, 14, 18) == 0);
+    assert(((ldBase_t *)ld_gauge)->tRegion.tLocation.iX == 14);
+    assert(((ldBase_t *)ld_gauge)->tRegion.tLocation.iY == 18);
+
+    assert(picoui_widget_set_visible(&gauge->widget, 0) == 0);
+    assert(((ldBase_t *)ld_gauge)->bIsVisible == false);
+    assert(picoui_widget_set_opacity(&gauge->widget, 71) == 0);
+    assert(((ldBase_t *)ld_gauge)->chOpacity == 71);
+    assert(picoui_widget_set_selectable(&gauge->widget, 0) == 0);
+    assert(((ldBase_t *)ld_gauge)->isSelectable == false);
+    assert(picoui_widget_set_selected(&gauge->widget, 1) == 0);
+    assert(((ldBase_t *)ld_gauge)->isSelect == true);
+    assert(picoui_widget_set_corner(&gauge->widget, 6) == 0);
+    assert(((ldBase_t *)ld_gauge)->chCorner == 6);
+}
+
 int main(void)
 {
     struct picoui_app *app = picoui_app_create();
@@ -185,6 +215,7 @@ int main(void)
     test_gauge_rejects_invalid_inputs(win);
     test_gauge_native_background_pointer_and_centre_offset_round_trip(win);
     test_gauge_native_trail_and_progress_bar_round_trip(win);
+    test_gauge_init_and_shared_base_aliases_round_trip(win);
 
     picoui_app_destroy(app);
     return 0;

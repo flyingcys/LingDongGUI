@@ -74,6 +74,9 @@ def _find_executable(build_dir: Path, target: str) -> Path:
 
 def _skip(message: str, metadata: dict[str, str]) -> int:
     print("PICOUI_MANUAL_WINDOW_ARTIFACT=SKIP")
+    print("ARTIFACT_ENTRY_EXISTS=0")
+    print("MANUAL_REVIEW_REQUIRED=1")
+    print("MANUAL_REVIEWED_PASSED=0")
     for key, value in metadata.items():
         print(f"{key}={value}")
     print(f"SKIP_REASON={message}")
@@ -82,6 +85,9 @@ def _skip(message: str, metadata: dict[str, str]) -> int:
 
 def _print_metadata(status: str, metadata: dict[str, str]) -> None:
     print(f"PICOUI_MANUAL_WINDOW_ARTIFACT={status}")
+    print(f"ARTIFACT_ENTRY_EXISTS={1 if status == 'ARTIFACT_READY' else 0}")
+    print("MANUAL_REVIEW_REQUIRED=1")
+    print("MANUAL_REVIEWED_PASSED=0")
     for key, value in metadata.items():
         print(f"{key}={value}")
 
@@ -191,7 +197,7 @@ def main() -> int:
             return 2
 
         _print_metadata("ARTIFACT_READY", metadata)
-        print("MANUAL_CONCLUSION=脚本只证明 artifact 已生成；人工窗口验收结论必须写入 C-线人工窗口验收记录。")
+        print("MANUAL_CONCLUSION=脚本只证明 artifact_entry_exists；manual_review_required=true 不能当作 manual pass，人工窗口验收通过必须另有 manual_reviewed_passed=true 记录。")
     return 0
 
 

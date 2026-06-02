@@ -48,6 +48,11 @@ struct picoui_arc *picoui_arc_create(struct picoui_widget *parent, const char *i
     return arc;
 }
 
+struct picoui_arc *picoui_arc_init(struct picoui_widget *parent, const char *id)
+{
+    return picoui_arc_create(parent, id);
+}
+
 struct picoui_arc *picoui_arc_create_with_props(struct picoui_widget *parent,
                                                 const struct picoui_arc_props *props)
 {

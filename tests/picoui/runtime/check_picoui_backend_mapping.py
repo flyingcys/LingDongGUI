@@ -133,6 +133,18 @@ def _parse_marker_ids(stdout: str, marker: str) -> set[str]:
     raise AssertionError(f"Missing marker line '{marker}='.\nstdout:\n{stdout}")
 
 
+def _parse_smoke_layout_marker(stdout: str) -> int:
+    prefix = "PICOUI_SMOKE_LAYOUT_USED="
+    for line in stdout.splitlines():
+        if not line.startswith(prefix):
+            continue
+        value = line[len(prefix) :].strip()
+        if value in {"0", "1"}:
+            return int(value)
+        raise AssertionError(f"Invalid smoke layout marker: {line}\nstdout:\n{stdout}")
+    raise AssertionError(f"Missing marker line '{prefix}'.\nstdout:\n{stdout}")
+
+
 def _find_executable(target: str) -> Path:
     candidates = [
         BUILD / "examples" / "sdl" / target,
@@ -234,6 +246,13 @@ def _assert_no_fallback(target: str, stdout: str, stderr: str) -> None:
 
 
 def _assert_real_mapping(target: str, expected: dict[str, object], stdout: str, stderr: str) -> None:
+    if _parse_smoke_layout_marker(stdout) != 0:
+        raise AssertionError(
+            f"Demo '{target}' used temporary smoke layout and cannot be counted as formal mapping evidence.\n"
+            f"stdout:\n{stdout}\n"
+            f"stderr:\n{stderr}"
+        )
+
     if "PICOUI_BACKEND_STATIC_MAPPING=REAL_LDGUI" not in stdout:
         raise AssertionError(
             f"Demo '{target}' missing marker PICOUI_BACKEND_STATIC_MAPPING=REAL_LDGUI.\n"

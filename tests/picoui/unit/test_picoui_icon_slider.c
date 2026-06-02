@@ -165,11 +165,71 @@ static void test_icon_slider_native_icon_images_and_speed_round_trip(void)
     picoui_app_destroy(app);
 }
 
+static void test_icon_slider_init_aliases_and_shared_base_round_trip(void)
+{
+    struct picoui_app *app;
+    struct picoui_window *win;
+    struct picoui_icon_slider *icon_slider;
+    struct picoui_backend_widget *backend;
+    ldIconSlider_t *ld_icon_slider;
+    arm_2d_tile_t icon_img = {
+        .tRegion = {
+            .tSize = { .iWidth = 22, .iHeight = 22 },
+        },
+    };
+    arm_2d_tile_t icon_mask = {
+        .tRegion = {
+            .tSize = { .iWidth = 22, .iHeight = 22 },
+        },
+    };
+    struct picoui_image_source icon_source = {
+        .img_tile = &icon_img,
+        .mask_tile = &icon_mask,
+    };
+
+    app = picoui_app_create();
+    assert(app != 0);
+    win = picoui_window_create(app, "root");
+    assert(win != 0);
+
+    icon_slider = picoui_icon_slider_init((struct picoui_widget *)win, "icon_slider_alias");
+    assert(icon_slider != 0);
+    backend = (struct picoui_backend_widget *)icon_slider->widget.backend_widget;
+    assert(backend != 0);
+    ld_icon_slider = (ldIconSlider_t *)backend->ld_widget;
+    assert(ld_icon_slider != 0);
+
+    assert(picoui_icon_slider_add_icon(icon_slider, "mail", "Mail", &icon_source) == 0);
+    assert(picoui_icon_slider_set_horizontal_scroll(icon_slider, 0) == 0);
+
+    assert(ld_icon_slider->iconCount == 1);
+    assert(ld_icon_slider->ptIconInfoList[0].ptImgTile == &icon_img);
+    assert(ld_icon_slider->ptIconInfoList[0].ptMaskTile == &icon_mask);
+    assert(ld_icon_slider->isHorizontalScroll == false);
+
+    assert(picoui_widget_set_pos(&icon_slider->widget, 8, 12) == 0);
+    assert(((ldBase_t *)ld_icon_slider)->tRegion.tLocation.iX == 8);
+    assert(((ldBase_t *)ld_icon_slider)->tRegion.tLocation.iY == 12);
+    assert(picoui_widget_set_visible(&icon_slider->widget, 0) == 0);
+    assert(((ldBase_t *)ld_icon_slider)->bIsVisible == false);
+    assert(picoui_widget_set_opacity(&icon_slider->widget, 61) == 0);
+    assert(((ldBase_t *)ld_icon_slider)->chOpacity == 61);
+    assert(picoui_widget_set_selectable(&icon_slider->widget, 0) == 0);
+    assert(((ldBase_t *)ld_icon_slider)->isSelectable == false);
+    assert(picoui_widget_set_selected(&icon_slider->widget, 1) == 0);
+    assert(((ldBase_t *)ld_icon_slider)->isSelect == true);
+    assert(picoui_widget_set_corner(&icon_slider->widget, 4) == 0);
+    assert(((ldBase_t *)ld_icon_slider)->chCorner == 4);
+
+    picoui_app_destroy(app);
+}
+
 int main(void)
 {
     test_icon_slider_selection_and_value_follow_backend_truth();
     test_icon_slider_rejects_items_beyond_native_capacity();
     test_icon_slider_create_with_props_pushes_backend_dimensions();
     test_icon_slider_native_icon_images_and_speed_round_trip();
+    test_icon_slider_init_aliases_and_shared_base_round_trip();
     return 0;
 }

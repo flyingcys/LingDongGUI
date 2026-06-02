@@ -22,10 +22,14 @@ struct picoui_progress_bar *picoui_progress_bar_create(struct picoui_window *par
 struct picoui_progress_bar *picoui_progress_bar_create_with_props(
     struct picoui_window *parent,
     const struct picoui_progress_bar_props *props);
+struct picoui_progress_bar *picoui_progress_bar_init(struct picoui_window *parent, const char *id);
 int picoui_progress_bar_set_percent(struct picoui_progress_bar *bar, int percent);
 int picoui_progress_bar_get_percent(const struct picoui_progress_bar *bar);
 int picoui_progress_bar_set_horizontal(struct picoui_progress_bar *bar, int horizontal);
 int picoui_progress_bar_get_horizontal(const struct picoui_progress_bar *bar);
+int picoui_progress_bar_set_image(struct picoui_progress_bar *bar,
+                                  struct picoui_image_source *bg_source,
+                                  struct picoui_image_source *fg_source);
 int picoui_progress_bar_set_bg_source(struct picoui_progress_bar *bar, struct picoui_image_source *source);
 int picoui_progress_bar_set_fg_source(struct picoui_progress_bar *bar, struct picoui_image_source *source);
 int picoui_progress_bar_set_frame_source(struct picoui_progress_bar *bar, struct picoui_image_source *source);

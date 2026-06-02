@@ -1,8 +1,14 @@
 #include "backend.h"
 #include "internal.h"
+#include "ldBase.h"
 #include "ldImage.h"
 
 #include <stdlib.h>
+
+static ldColor picoui_backend_image_rgb_to_ld_color(unsigned int rgb)
+{
+    return __RGB((rgb >> 16) & 0xFFU, (rgb >> 8) & 0xFFU, rgb & 0xFFU);
+}
 
 static struct picoui_backend_app_state *picoui_backend_image_get_app_state(void *parent)
 {
@@ -73,5 +79,19 @@ int picoui_backend_set_image_source(void *backend_widget, struct picoui_image_so
     ldImageSetImage(ld_image,
                     source != NULL ? source->img_tile : NULL,
                     source != NULL ? source->mask_tile : NULL);
+    return 0;
+}
+
+int picoui_backend_image_set_mask_color(void *backend_widget, unsigned int rgb)
+{
+    struct picoui_backend_widget *widget = backend_widget;
+    ldImage_t *ld_image;
+
+    if (widget == 0 || widget->kind != PICOUI_BACKEND_WIDGET_IMAGE || widget->ld_widget == NULL) {
+        return -1;
+    }
+
+    ld_image = widget->ld_widget;
+    ldImageSetMaskColor(ld_image, picoui_backend_image_rgb_to_ld_color(rgb));
     return 0;
 }

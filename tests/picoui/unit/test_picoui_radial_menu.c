@@ -192,6 +192,57 @@ static void test_radial_menu_native_click_default_offset_round_trip(void)
     picoui_app_destroy(app);
 }
 
+static void test_radial_menu_init_and_alias_round_trip(void)
+{
+    struct picoui_app *app;
+    struct picoui_window *win;
+    struct picoui_radial_menu *radial_menu;
+    struct picoui_backend_widget *backend;
+    ldRadialMenu_t *ld_radial_menu;
+    arm_2d_tile_t item_img = {
+        .tRegion = {
+            .tSize = { .iWidth = 18, .iHeight = 18 },
+        },
+    };
+    arm_2d_tile_t item_mask = {
+        .tRegion = {
+            .tSize = { .iWidth = 18, .iHeight = 18 },
+        },
+    };
+    struct picoui_image_source item_source = {
+        .img_tile = &item_img,
+        .mask_tile = &item_mask,
+    };
+
+    app = picoui_app_create();
+    assert(app != 0);
+    win = picoui_window_create(app, "root");
+    assert(win != 0);
+
+    radial_menu = picoui_radial_menu_init((struct picoui_widget *)win, "radial_menu_alias");
+    assert(radial_menu != 0);
+    backend = (struct picoui_backend_widget *)radial_menu->widget.backend_widget;
+    assert(backend != 0);
+    ld_radial_menu = (ldRadialMenu_t *)backend->ld_widget;
+    assert(ld_radial_menu != 0);
+
+    assert(picoui_radial_menu_add_item_with_image(radial_menu, "weather", &item_source) == 0);
+    assert(picoui_radial_menu_add_item_with_image(radial_menu, "mail", &item_source) == 0);
+    assert(picoui_radial_menu_add_item_with_image(radial_menu, "book", &item_source) == 0);
+    assert(picoui_radial_menu_set_default_item(radial_menu, 1) == 0);
+    assert(picoui_radial_menu_set_click_item(radial_menu, 2) == 0);
+    assert(picoui_radial_menu_offset_item(radial_menu, -1) == 0);
+
+    assert(ld_radial_menu->use_as__ldBase_t.itemCount == 3);
+    assert(ld_radial_menu->ptItemInfoList[0].ptImgTile == &item_img);
+    assert(ld_radial_menu->ptItemInfoList[0].ptMaskTile == &item_mask);
+    assert(ld_radial_menu->selectItem == 1);
+    assert(ld_radial_menu->targetItem == 2);
+    assert(ld_radial_menu->_itemOffset == -1);
+
+    picoui_app_destroy(app);
+}
+
 int main(void)
 {
     test_radial_menu_navigation_and_selection_follow_backend_truth();
@@ -199,5 +250,6 @@ int main(void)
     test_radial_menu_create_with_default_index_defers_selection_until_items_exist();
     test_radial_menu_create_with_props_pushes_backend_geometry();
     test_radial_menu_native_click_default_offset_round_trip();
+    test_radial_menu_init_and_alias_round_trip();
     return 0;
 }

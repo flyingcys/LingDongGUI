@@ -50,6 +50,11 @@ struct picoui_progress_wheel *picoui_progress_wheel_create(struct picoui_widget 
     return wheel;
 }
 
+struct picoui_progress_wheel *picoui_progress_wheel_init(struct picoui_widget *parent, const char *id)
+{
+    return picoui_progress_wheel_create(parent, id);
+}
+
 struct picoui_progress_wheel *picoui_progress_wheel_create_with_props(
     struct picoui_widget *parent,
     const struct picoui_progress_wheel_props *props)
@@ -91,6 +96,11 @@ int picoui_progress_wheel_set_percent(struct picoui_progress_wheel *wheel, int p
 
     wheel->percent = percent;
     return 0;
+}
+
+int picoui_progress_wheel_set_progress(struct picoui_progress_wheel *wheel, int percent)
+{
+    return picoui_progress_wheel_set_percent(wheel, percent);
 }
 
 int picoui_progress_wheel_get_percent(const struct picoui_progress_wheel *wheel)

@@ -95,6 +95,19 @@ int picoui_text_set_text(struct picoui_text *text, const char *value)
     return picoui_backend_set_text(text->widget.backend_widget, value);
 }
 
+int picoui_text_set_static_text(struct picoui_text *text, const char *value)
+{
+    if (text == 0 || value == 0) {
+        return -1;
+    }
+
+    if (picoui_backend_text_set_static_text(text->widget.backend_widget, value) != 0) {
+        return -1;
+    }
+    text->widget.text = value;
+    return 0;
+}
+
 int picoui_text_set_font(struct picoui_text *text, const struct picoui_font *font)
 {
     if (text == 0) {
@@ -107,4 +120,72 @@ int picoui_text_set_font(struct picoui_text *text, const struct picoui_font *fon
 
     text->widget.font = font;
     return 0;
+}
+
+int picoui_text_set_transparent(struct picoui_text *text, int transparent)
+{
+    if (text == 0) {
+        return -1;
+    }
+
+    return picoui_backend_text_set_transparent(text->widget.backend_widget, transparent);
+}
+
+int picoui_text_set_text_color(struct picoui_text *text, unsigned int rgb)
+{
+    if (text == 0) {
+        return -1;
+    }
+
+    if (picoui_backend_text_set_text_color(text->widget.backend_widget, rgb) != 0) {
+        return -1;
+    }
+    text->widget.text_color = rgb;
+    return 0;
+}
+
+int picoui_text_set_bg_color(struct picoui_text *text, unsigned int rgb)
+{
+    if (text == 0) {
+        return -1;
+    }
+
+    if (picoui_backend_text_set_bg_color(text->widget.backend_widget, rgb) != 0) {
+        return -1;
+    }
+    text->widget.bg_color = rgb;
+    return 0;
+}
+
+int picoui_text_set_background_source(struct picoui_text *text,
+                                      struct picoui_image_source *source)
+{
+    if (text == 0 || (source != 0 && source->img_tile == 0)) {
+        return -1;
+    }
+
+    return picoui_backend_text_set_background_source(text->widget.backend_widget, source);
+}
+
+int picoui_text_set_consumed_font(struct picoui_text *text, const struct picoui_font *font)
+{
+    return picoui_text_set_font(text, font);
+}
+
+int picoui_text_scroll_seek(struct picoui_text *text, int offset)
+{
+    if (text == 0) {
+        return -1;
+    }
+
+    return picoui_backend_text_scroll_seek(text->widget.backend_widget, offset);
+}
+
+int picoui_text_scroll_move(struct picoui_text *text, int move_value)
+{
+    if (text == 0) {
+        return -1;
+    }
+
+    return picoui_backend_text_scroll_move(text->widget.backend_widget, move_value);
 }

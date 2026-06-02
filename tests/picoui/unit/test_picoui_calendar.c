@@ -191,11 +191,44 @@ static void test_calendar_native_day_names_and_colors_round_trip(void)
     picoui_app_destroy(app);
 }
 
+static void test_calendar_init_and_aliases_match_backend_truth(void)
+{
+    struct picoui_app *app;
+    struct picoui_window *win;
+    struct picoui_calendar *calendar;
+    struct picoui_backend_widget *backend;
+    ldBase_t *ld_base;
+    int year = 0;
+    int month = 0;
+    int day = 0;
+
+    app = picoui_app_create();
+    assert(app != 0);
+    win = picoui_window_create(app, "calendar_alias_root");
+    assert(win != 0);
+    calendar = picoui_calendar_create(win, "calendar_alias");
+    assert(calendar != 0);
+    assert(picoui_calendar_set_date(calendar, 2027, 1, 2) == 0);
+    assert(picoui_calendar_get_date(calendar, &year, &month, &day) == 0);
+    assert(year == 2027);
+    assert(month == 1);
+    assert(day == 2);
+    assert(picoui_calendar_set_header_format(calendar, "yy/mm/dd") == 0);
+    assert(strcmp(picoui_calendar_get_header_format(calendar), "yy/mm/dd") == 0);
+
+    backend = (struct picoui_backend_widget *)calendar->widget.backend_widget;
+    assert(backend != 0);
+    ld_base = (ldBase_t *)backend->ld_widget;
+    assert(ld_base != 0);
+    picoui_app_destroy(app);
+}
+
 int main(void)
 {
     test_calendar_date_readback_matches_backend_truth();
     test_calendar_header_and_grid_visible_output_match_date_contract();
     test_calendar_final_release_contract_covers_full_feature_boundary();
     test_calendar_native_day_names_and_colors_round_trip();
+    test_calendar_init_and_aliases_match_backend_truth();
     return 0;
 }

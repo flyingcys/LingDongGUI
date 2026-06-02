@@ -181,6 +181,7 @@ function(ld_define_core_targets)
         ${LD_REPO_ROOT}/picoui/include
         ${LD_REPO_ROOT}/picoui/src/core
         ${LD_REPO_ROOT}/picoui/src/backend/ldgui
+        ${LD_COMMON_INCLUDE_DIRS}
     )
     ld_apply_common_target_config(picoui_core)
 

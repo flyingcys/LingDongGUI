@@ -22,6 +22,7 @@ struct picoui_calendar_props {
 struct picoui_calendar *picoui_calendar_create(struct picoui_window *parent, const char *id);
 struct picoui_calendar *picoui_calendar_create_with_props(struct picoui_window *parent,
                                                           const struct picoui_calendar_props *props);
+struct picoui_calendar *picoui_calendar_init(struct picoui_window *parent, const char *id);
 int picoui_calendar_set_date(struct picoui_calendar *calendar, int year, int month, int day);
 int picoui_calendar_set_day_names(struct picoui_calendar *calendar, const char *const day_names[7]);
 int picoui_calendar_get_date(const struct picoui_calendar *calendar,

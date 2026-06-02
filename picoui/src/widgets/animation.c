@@ -34,6 +34,11 @@ struct picoui_animation *picoui_animation_create(struct picoui_widget *parent, c
     return animation;
 }
 
+struct picoui_animation *picoui_animation_init(struct picoui_widget *parent, const char *id)
+{
+    return picoui_animation_create(parent, id);
+}
+
 struct picoui_animation *picoui_animation_create_with_props(
     struct picoui_widget *parent,
     const struct picoui_animation_props *props)

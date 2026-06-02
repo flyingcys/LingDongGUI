@@ -352,6 +352,7 @@ struct picoui_text {
 struct picoui_line_edit {
     struct picoui_widget widget;
     const char *id;
+    enum picoui_align align;
     enum picoui_line_edit_type type;
     unsigned int keyboard_binding;
     int editing;

@@ -57,6 +57,48 @@ static void test_animation_native_image_period_and_frame_round_trip(struct picou
     assert(ld_animation->showRegion.tLocation.iY == 0);
 }
 
+static void test_animation_init_and_shared_base_aliases_round_trip(struct picoui_window *win)
+{
+    struct picoui_image_source source = {
+        .img_tile = &s_animation_tile,
+        .mask_tile = 0,
+    };
+    struct picoui_animation_props props = {
+        .id = "animation_alias_props",
+        .width = 16,
+        .height = 16,
+        .period_ms = 100,
+        .source = &source,
+    };
+    struct picoui_animation *animation =
+        picoui_animation_create_with_props((struct picoui_widget *)win, &props);
+    struct picoui_animation *alias =
+        picoui_animation_init((struct picoui_widget *)win, "animation_alias");
+    struct picoui_backend_widget *backend;
+    ldAnimation_t *ld_animation;
+
+    assert(animation != 0);
+    backend = (struct picoui_backend_widget *)animation->widget.backend_widget;
+    assert(backend != 0);
+    ld_animation = (ldAnimation_t *)backend->ld_widget;
+    assert(ld_animation != 0);
+
+    assert(alias != 0);
+    assert(picoui_widget_set_pos(&animation->widget, 6, 10) == 0);
+    assert(((ldBase_t *)ld_animation)->tRegion.tLocation.iX == 6);
+    assert(((ldBase_t *)ld_animation)->tRegion.tLocation.iY == 10);
+    assert(picoui_widget_set_visible(&animation->widget, 0) == 0);
+    assert(((ldBase_t *)ld_animation)->bIsVisible == false);
+    assert(picoui_widget_set_opacity(&animation->widget, 58) == 0);
+    assert(((ldBase_t *)ld_animation)->chOpacity == 58);
+    assert(picoui_widget_set_selectable(&animation->widget, 0) == 0);
+    assert(((ldBase_t *)ld_animation)->isSelectable == false);
+    assert(picoui_widget_set_selected(&animation->widget, 1) == 0);
+    assert(((ldBase_t *)ld_animation)->isSelect == true);
+    assert(picoui_widget_set_corner(&animation->widget, 3) == 0);
+    assert(((ldBase_t *)ld_animation)->chCorner == 3);
+}
+
 int main(void)
 {
     struct picoui_app *app = picoui_app_create();
@@ -67,6 +109,7 @@ int main(void)
     assert(win != 0);
 
     test_animation_native_image_period_and_frame_round_trip(win);
+    test_animation_init_and_shared_base_aliases_round_trip(win);
 
     picoui_app_destroy(app);
     return 0;

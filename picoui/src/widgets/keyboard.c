@@ -97,6 +97,24 @@ int picoui_keyboard_navigate(struct picoui_keyboard *keyboard, int direction)
     return picoui_backend_keyboard_navigate(keyboard->widget.backend_widget, direction);
 }
 
+int picoui_keyboard_update(struct picoui_keyboard *keyboard)
+{
+    if (keyboard == 0) {
+        return -1;
+    }
+
+    return picoui_backend_keyboard_update(keyboard->widget.backend_widget);
+}
+
+int picoui_keyboard_button_update(struct picoui_keyboard *keyboard, unsigned int key_code)
+{
+    if (keyboard == 0 || key_code > 0xFFU) {
+        return -1;
+    }
+
+    return picoui_backend_keyboard_button_update(keyboard->widget.backend_widget, (unsigned char)key_code);
+}
+
 int picoui_keyboard_click(struct picoui_keyboard *keyboard)
 {
     if (keyboard == 0) {

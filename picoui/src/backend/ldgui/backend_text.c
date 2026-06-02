@@ -1,5 +1,6 @@
 #include "backend.h"
 #include "internal.h"
+#include "ldBase.h"
 #include "ldText.h"
 #include "picoui/widget.h"
 
@@ -14,6 +15,21 @@ struct picoui_backend_text_box_prefix_view {
 };
 
 static int picoui_backend_text_fail_next_set_font = 0;
+
+static ldColor picoui_backend_text_rgb_to_ld_color(unsigned int rgb)
+{
+    return __RGB((rgb >> 16) & 0xFFU, (rgb >> 8) & 0xFFU, rgb & 0xFFU);
+}
+
+static ldText_t *picoui_backend_text_get_ld_text(void *backend_widget)
+{
+    struct picoui_backend_widget *widget = backend_widget;
+
+    if (widget == NULL || widget->kind != PICOUI_BACKEND_WIDGET_TEXT || widget->ld_widget == NULL) {
+        return NULL;
+    }
+    return (ldText_t *)widget->ld_widget;
+}
 
 static struct picoui_backend_app_state *picoui_backend_text_get_app_state(void *parent)
 {
@@ -89,6 +105,97 @@ int picoui_backend_text_set_font(void *backend_widget, const void *font)
     }
 
     widget->font = font;
+    return 0;
+}
+
+int picoui_backend_text_set_static_text(void *backend_widget, const char *text)
+{
+    struct picoui_backend_widget *widget = backend_widget;
+    ldText_t *ld_text = picoui_backend_text_get_ld_text(backend_widget);
+
+    if (ld_text == NULL || text == NULL) {
+        return -1;
+    }
+
+    ldTextSetStaticText(ld_text, (const uint8_t *)text);
+    widget->text = text;
+    return 0;
+}
+
+int picoui_backend_text_set_transparent(void *backend_widget, int transparent)
+{
+    ldText_t *ld_text = picoui_backend_text_get_ld_text(backend_widget);
+
+    if (ld_text == NULL) {
+        return -1;
+    }
+
+    ldTextSetTransparent(ld_text, transparent != 0);
+    return 0;
+}
+
+int picoui_backend_text_set_text_color(void *backend_widget, unsigned int rgb)
+{
+    ldText_t *ld_text = picoui_backend_text_get_ld_text(backend_widget);
+
+    if (ld_text == NULL) {
+        return -1;
+    }
+
+    ldTextSetTextColor(ld_text, picoui_backend_text_rgb_to_ld_color(rgb));
+    return 0;
+}
+
+int picoui_backend_text_set_bg_color(void *backend_widget, unsigned int rgb)
+{
+    ldText_t *ld_text = picoui_backend_text_get_ld_text(backend_widget);
+
+    if (ld_text == NULL) {
+        return -1;
+    }
+
+    ldTextSetBackgroundColor(ld_text, picoui_backend_text_rgb_to_ld_color(rgb));
+    return 0;
+}
+
+int picoui_backend_text_set_background_source(void *backend_widget,
+                                              struct picoui_image_source *source)
+{
+    struct picoui_backend_widget *widget = backend_widget;
+    ldText_t *ld_text = picoui_backend_text_get_ld_text(backend_widget);
+
+    if (ld_text == NULL || (source != NULL && source->img_tile == NULL)) {
+        return -1;
+    }
+
+    ldTextSetBackgroundImage(ld_text,
+                             source != NULL ? source->img_tile : NULL,
+                             source != NULL ? source->mask_tile : NULL);
+    widget->image_source = source;
+    return 0;
+}
+
+int picoui_backend_text_scroll_seek(void *backend_widget, int offset)
+{
+    ldText_t *ld_text = picoui_backend_text_get_ld_text(backend_widget);
+
+    if (ld_text == NULL) {
+        return -1;
+    }
+
+    ldTextScrollSeek(ld_text, (int16_t)offset);
+    return 0;
+}
+
+int picoui_backend_text_scroll_move(void *backend_widget, int move_value)
+{
+    ldText_t *ld_text = picoui_backend_text_get_ld_text(backend_widget);
+
+    if (ld_text == NULL || move_value < -128 || move_value > 127) {
+        return -1;
+    }
+
+    ldTextScrollMove(ld_text, (int8_t)move_value);
     return 0;
 }
 

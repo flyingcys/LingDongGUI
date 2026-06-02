@@ -51,6 +51,11 @@ struct picoui_qrcode *picoui_qrcode_create(struct picoui_widget *parent, const c
     return qrcode;
 }
 
+struct picoui_qrcode *picoui_q_r_code_init(struct picoui_widget *parent, const char *id)
+{
+    return picoui_qrcode_create(parent, id);
+}
+
 struct picoui_qrcode *picoui_qrcode_create_with_props(struct picoui_widget *parent,
                                                       const struct picoui_qrcode_props *props)
 {
@@ -91,6 +96,11 @@ int picoui_qrcode_set_text(struct picoui_qrcode *qrcode, const char *text)
 
     qrcode->text = text;
     return 0;
+}
+
+int picoui_q_r_code_set_text(struct picoui_qrcode *qrcode, const char *text)
+{
+    return picoui_qrcode_set_text(qrcode, text);
 }
 
 const char *picoui_qrcode_get_text(const struct picoui_qrcode *qrcode)

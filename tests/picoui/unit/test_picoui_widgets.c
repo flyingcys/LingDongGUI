@@ -47,6 +47,35 @@ static arm_2d_font_t *test_text_consumed_font(const ldText_t *ld_text)
     return (arm_2d_font_t *)view->tCFG.ptFont;
 }
 
+static void assert_text_native_r3_state(const struct picoui_text *text,
+                                        const char *expected_text,
+                                        int expected_static,
+                                        int expected_transparent,
+                                        unsigned int expected_text_color,
+                                        unsigned int expected_bg_color,
+                                        const struct picoui_image_source *expected_bg_source,
+                                        int expected_scroll_offset)
+{
+    const struct picoui_backend_widget *backend;
+    const ldText_t *ld_text;
+
+    assert(text != 0);
+    backend = text->widget.backend_widget;
+    assert(backend != 0);
+    ld_text = (const ldText_t *)backend->ld_widget;
+    assert(ld_text != 0);
+    assert(text->widget.text == expected_text);
+    assert(ld_text->pStr != 0);
+    assert(strcmp((const char *)ld_text->pStr, expected_text) == 0);
+    assert(ld_text->_isStatic == (expected_static != 0));
+    assert(ld_text->isTransparent == (expected_transparent != 0));
+    assert(ld_text->textColor == (ldColor)test_rgb_to_ld_color(expected_text_color));
+    assert(ld_text->bgColor == (ldColor)test_rgb_to_ld_color(expected_bg_color));
+    assert(ld_text->ptImgTile == (expected_bg_source != 0 ? expected_bg_source->img_tile : 0));
+    assert(ld_text->ptMaskTile == (expected_bg_source != 0 ? expected_bg_source->mask_tile : 0));
+    assert(ld_text->scrollOffset == expected_scroll_offset);
+}
+
 static void assert_button_has_no_bound_images(const struct picoui_button *button)
 {
     const struct picoui_backend_widget *backend = button->widget.backend_widget;
@@ -500,6 +529,14 @@ static void test_slider_j5_contract(struct picoui_slider *slider,
     assert(picoui_slider_get_percent(slider, &percent) == 0);
     assert(percent == 50);
     assert(ld_slider->permille == 500);
+    assert(picoui_slider_set_color(slider, 0x111111U, 0x222222U, 0x333333U) == 0);
+    assert(ld_slider->bgColor == (ldColor)0x111111U);
+    assert(ld_slider->frameColor == (ldColor)0x222222U);
+    assert(ld_slider->indicColor == (ldColor)0x333333U);
+    assert(picoui_slider_set_color(slider, 0x1000000U, 0x222222U, 0x333333U) == -1);
+    assert(picoui_slider_set_image(slider, background_source, indicator_source) == 0);
+    assert_slider_has_bound_images(slider, background_source, indicator_source);
+    assert(picoui_slider_set_image(0, background_source, indicator_source) == -1);
 
     assert(picoui_slider_set_horizontal(slider, 1) == 0);
     assert(picoui_slider_get_horizontal(slider, &horizontal) == 0);
@@ -527,11 +564,15 @@ static void test_slider_j5_contract(struct picoui_slider *slider,
     assert(ld_slider->permille == 1000);
     assert(picoui_slider_get_percent(slider, &percent) == 0);
     assert(percent == 100);
+    assert(picoui_slider_set_percent(slider, 25) == 0);
+    assert(ld_slider->permille == 250);
+    assert(picoui_slider_get_percent(slider, &percent) == 0);
+    assert(percent == 25);
 
     assert(picoui_slider_set_range(slider, 20, 60) == 0);
-    assert(ld_slider->permille == 1000);
+    assert(ld_slider->permille == 250);
     assert(picoui_slider_get_percent(slider, &percent) == 0);
-    assert(percent == 100);
+    assert(percent == 25);
 
     assert(picoui_slider_set_value(slider, 40) == 0);
     assert(ld_slider->permille == 500);
@@ -547,6 +588,8 @@ static void test_slider_j5_contract(struct picoui_slider *slider,
     assert(picoui_slider_get_horizontal(slider, 0) == -1);
     assert(picoui_slider_get_percent(0, &percent) == -1);
     assert(picoui_slider_get_percent(slider, 0) == -1);
+    assert(picoui_slider_set_percent(0, 10) == -1);
+    assert(picoui_slider_set_percent(slider, 101) == -1);
     assert(picoui_slider_set_background_source(slider, &invalid_source) == -1);
     assert(picoui_slider_set_indicator_source(slider, &invalid_source) == -1);
 }
@@ -1196,6 +1239,36 @@ static void test_image_theme_apply_is_support_contract(struct picoui_theme *them
     assert(ld_image->maskColor == test_rgb_to_ld_color(theme->colors[PICOUI_COLOR_PANEL]));
 }
 
+static void test_image_native_mask_color_round_trip(struct picoui_window *parent,
+                                                   struct picoui_image_source *image_source)
+{
+    struct picoui_app *app = picoui_app_create();
+    struct picoui_window *win = picoui_window_create(app, "image_mask_root");
+    struct picoui_image *image = picoui_image_create(win, "image_mask_color");
+    const struct picoui_backend_widget *backend;
+    const ldImage_t *ld_image;
+
+    (void)parent;
+    assert(app != 0);
+    assert(win != 0);
+    assert(image != 0);
+    backend = image->widget.backend_widget;
+    assert(backend != 0);
+    ld_image = (const ldImage_t *)backend->ld_widget;
+    assert(ld_image != 0);
+
+    assert(picoui_image_set_source(image, image_source) == 0);
+    assert(picoui_image_set_mask_color(image, 0x336699U) == 0);
+    assert(image->widget.bg_color == 0x336699U);
+    assert(ld_image->maskColor == (ldColor)test_rgb_to_ld_color(0x336699U));
+    assert(ld_image->ptImgTile == image_source->img_tile);
+    assert(ld_image->ptMaskTile == image_source->mask_tile);
+    assert(picoui_image_set_mask_color(0, 0x112233U) == -1);
+    assert(ld_image->maskColor == (ldColor)test_rgb_to_ld_color(0x336699U));
+
+    picoui_app_destroy(app);
+}
+
 static void test_text_font_null_falls_back_to_default_contract(struct picoui_window *parent)
 {
     struct picoui_text *text = picoui_text_create(parent, "text_font_null_fallback");
@@ -1276,6 +1349,85 @@ static void test_text_font_backend_failure_does_not_split_state(struct picoui_wi
     assert(backend->font == &good_font);
     assert(test_text_consumed_font(ld_text) == old_real_font);
     assert(ld_text->ptFont == old_real_font);
+}
+
+static void test_text_native_r3_style_background_static_and_scroll_round_trip(
+    struct picoui_window *parent,
+    struct picoui_image_source *image_source)
+{
+    static const char static_body[] = "native static body";
+    struct picoui_app *app = picoui_app_create();
+    struct picoui_window *win = picoui_window_create(app, "text_native_r3_root");
+    struct picoui_text *text = picoui_text_create(win, "text_native_r3");
+    struct picoui_backend_widget *backend;
+    ldText_t *ld_text;
+    struct picoui_image_source invalid_source = {
+        .img_tile = 0,
+        .mask_tile = image_source->mask_tile,
+    };
+    struct picoui_image_source unmasked_source = {
+        .img_tile = image_source->img_tile,
+        .mask_tile = 0,
+    };
+
+    (void)parent;
+    assert(app != 0);
+    assert(win != 0);
+    assert(text != 0);
+    backend = text->widget.backend_widget;
+    assert(backend != 0);
+    ld_text = (ldText_t *)backend->ld_widget;
+    assert(ld_text != 0);
+
+    assert(picoui_text_set_static_text(text, static_body) == 0);
+    assert(picoui_text_set_transparent(text, 1) == 0);
+    assert(picoui_text_set_text_color(text, 0x224466U) == 0);
+    assert(picoui_text_set_bg_color(text, 0x778899U) == 0);
+    assert(picoui_text_set_background_source(text, image_source) == 0);
+    assert(picoui_text_scroll_seek(text, 12) == 0);
+    assert(picoui_text_scroll_move(text, -3) == 0);
+    assert_text_native_r3_state(text,
+                                static_body,
+                                1,
+                                0,
+                                0x224466U,
+                                0x778899U,
+                                image_source,
+                                9);
+
+    assert(picoui_text_set_transparent(text, 1) == 0);
+    assert(ld_text->isTransparent == true);
+    assert(picoui_text_set_background_source(text, 0) == 0);
+    assert(ld_text->ptImgTile == 0);
+    assert(ld_text->ptMaskTile == 0);
+    assert(ld_text->isTransparent == false);
+    assert(picoui_text_set_background_source(text, &invalid_source) == -1);
+    assert(ld_text->ptImgTile == 0);
+    assert(ld_text->ptMaskTile == 0);
+    assert(picoui_text_set_background_source(text, &unmasked_source) == 0);
+    assert(ld_text->ptImgTile == unmasked_source.img_tile);
+    assert(ld_text->ptMaskTile == 0);
+    assert(ld_text->isTransparent == false);
+    assert(picoui_text_set_text(text, "dynamic body") == 0);
+    assert_text_native_r3_state(text,
+                                "dynamic body",
+                                0,
+                                0,
+                                0x224466U,
+                                0x778899U,
+                                &unmasked_source,
+                                0);
+
+    assert(picoui_text_set_static_text(0, static_body) == -1);
+    assert(picoui_text_set_static_text(text, 0) == -1);
+    assert(picoui_text_set_transparent(0, 1) == -1);
+    assert(picoui_text_set_text_color(0, 0x112233U) == -1);
+    assert(picoui_text_set_bg_color(0, 0x112233U) == -1);
+    assert(picoui_text_set_background_source(0, image_source) == -1);
+    assert(picoui_text_scroll_seek(0, 0) == -1);
+    assert(picoui_text_scroll_move(0, 0) == -1);
+
+    picoui_app_destroy(app);
 }
 
 static void test_image_style_class_and_user_data_are_stable_widget_metadata_contract(
@@ -1388,6 +1540,9 @@ static void test_button_j4_contract(struct picoui_window *parent,
     int checkable = -1;
     int pressed = -1;
     unsigned int key_value = 0;
+    unsigned int color = 0;
+    const char *text = 0;
+    const struct picoui_font *read_font = 0;
 
     assert(button != 0);
     assert(props_button != 0);
@@ -1420,6 +1575,39 @@ static void test_button_j4_contract(struct picoui_window *parent,
 
     assert(picoui_button_set_font(button, font) == 0);
     assert(ldButtonGetFont(ld_button) == (arm_2d_font_t *)&ARM_2D_FONT_6x8);
+    assert(picoui_button_get_font(button, &read_font) == 0);
+    assert(read_font == font);
+    assert(picoui_button_get_font(0, &read_font) == -1);
+    assert(picoui_button_get_font(button, 0) == -1);
+
+    assert(picoui_button_set_text(button, "button-text") == 0);
+    assert(picoui_button_get_text(button, &text) == 0);
+    assert(text != 0);
+    assert(strcmp(text, "button-text") == 0);
+    assert(strcmp((const char *)ldButtonGetText(ld_button), "button-text") == 0);
+    assert(picoui_button_get_text(0, &text) == -1);
+    assert(picoui_button_get_text(button, 0) == -1);
+
+    assert(picoui_button_set_text_color(button, 0x224466U) == 0);
+    assert(picoui_button_get_text_color(button, &color) == 0);
+    assert(color == 0x224466U);
+    assert(ldButtonGetTextColor(ld_button) == test_rgb_to_ld_color(0x224466U));
+    assert(picoui_button_set_text_color(button, 0x1000000U) == -1);
+    assert(picoui_button_get_text_color(0, &color) == -1);
+    assert(picoui_button_get_text_color(button, 0) == -1);
+
+    assert(picoui_button_set_color(button, 0x112233U, 0x445566U) == 0);
+    assert(picoui_button_get_release_color(button, &color) == 0);
+    assert(color == 0x112233U);
+    assert(ldButtonGetReleaseColor(ld_button) == (ldColor)0x112233U);
+    assert(picoui_button_get_press_color(button, &color) == 0);
+    assert(color == 0x445566U);
+    assert(ldButtonGetPressColor(ld_button) == (ldColor)0x445566U);
+    assert(picoui_button_set_color(button, 0x1000000U, 0x445566U) == -1);
+    assert(picoui_button_get_release_color(0, &color) == -1);
+    assert(picoui_button_get_release_color(button, 0) == -1);
+    assert(picoui_button_get_press_color(0, &color) == -1);
+    assert(picoui_button_get_press_color(button, 0) == -1);
 
     assert(picoui_button_set_checkable(button, 1) == 0);
     assert(picoui_button_get_checkable(button, &checkable) == 0);
@@ -1443,12 +1631,20 @@ static void test_button_j4_contract(struct picoui_window *parent,
     assert(picoui_button_get_pressed(button, &pressed) == 0);
     assert(pressed == 1);
     assert(ldButtonGetPress(ld_button) == true);
+    assert(picoui_button_get_press(button, &pressed) == 0);
+    assert(pressed == 1);
     assert(picoui_button_set_pressed(button, 0) == 0);
     assert(picoui_button_get_pressed(button, &pressed) == 0);
     assert(pressed == 0);
     assert(ldButtonGetPress(ld_button) == false);
+    assert(picoui_button_set_press(button, 1) == 0);
+    assert(picoui_button_get_press(button, &pressed) == 0);
+    assert(pressed == 1);
+    assert(picoui_button_set_press(button, 0) == 0);
     assert(picoui_button_get_pressed(0, &pressed) == -1);
     assert(picoui_button_get_pressed(button, 0) == -1);
+    assert(picoui_button_get_press(0, &pressed) == -1);
+    assert(picoui_button_get_press(button, 0) == -1);
 
     assert(props_button->widget.text == (const char *)"Button J4");
     assert_button_has_bound_images(props_button, release_source, press_source);
@@ -1460,8 +1656,14 @@ static void test_button_j4_contract(struct picoui_window *parent,
     assert(key_value == 0x1234U);
     assert(picoui_button_get_pressed(props_button, &pressed) == 0);
     assert(pressed == 1);
+    assert(picoui_button_get_text(props_button, &text) == 0);
+    assert(strcmp(text, "Button J4") == 0);
     assert(ldButtonGetFont((ldButton_t *)((struct picoui_backend_widget *)props_button->widget.backend_widget)->ld_widget)
            == (arm_2d_font_t *)&ARM_2D_FONT_6x8);
+
+    assert(picoui_button_set_image(button, release_source, press_source) == 0);
+    assert_button_has_bound_images(button, release_source, press_source);
+    assert(picoui_button_set_image(0, release_source, press_source) == -1);
 
     assert(picoui_button_set_checkable(button, 0) == 0);
     assert(picoui_button_set_pressed(button, 0) == 0);
@@ -1492,6 +1694,8 @@ static void test_button_j4_contract(struct picoui_window *parent,
     assert(picoui_button_set_release_image(0, release_source) == -1);
     assert(picoui_button_set_press_image(0, press_source) == -1);
     assert(picoui_button_set_font(0, font) == -1);
+    assert(picoui_button_set_text_color(0, 1) == -1);
+    assert(picoui_button_set_color(0, 1, 2) == -1);
     assert(picoui_button_set_checkable(0, 1) == -1);
     assert(picoui_button_set_key_value(0, 1) == -1);
     assert(picoui_button_set_pressed(0, 1) == -1);
@@ -2062,6 +2266,7 @@ int main(void)
     test_props_initial_values(app, &font, &image_source, &button_cookie, &common_cookie);
     test_image_source_boundary(win, &image_source);
     test_image_theme_apply_is_support_contract(theme, image, &image_source);
+    test_image_native_mask_color_round_trip(win, &image_source);
     test_image_style_class_and_user_data_are_stable_widget_metadata_contract(win);
     test_image_theme_style_parts_remain_explicitly_rejected(theme, win);
     test_image_enabled_is_support_contract(win);
@@ -2069,6 +2274,7 @@ int main(void)
     test_text_font_null_falls_back_to_default_contract(win);
     test_text_font_runtime_rebind_updates_real_ldtext_and_public_cache(win);
     test_text_font_backend_failure_does_not_split_state(win);
+    test_text_native_r3_style_background_static_and_scroll_round_trip(win, &image_source);
     test_button_j4_contract(win,
                             app_state,
                             &button_release_source,

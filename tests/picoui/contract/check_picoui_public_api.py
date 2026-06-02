@@ -1,12 +1,38 @@
 from pathlib import Path
 import re
+import json
 
 
 ROOT = Path(__file__).resolve().parents[3]
 PUBLIC_DIR = ROOT / "picoui" / "include" / "picoui"
+INVENTORY_JSON = ROOT / "tests" / "picoui" / "contract" / "ldgui_public_api_inventory.json"
+LEDGER_JSON = ROOT / "tests" / "picoui" / "contract" / "native_api_gap_ledger.json"
 ALLOWED_FUNCTION_PREFIX = "picoui_"
 ALLOWED_MACRO_PREFIX = "PICOUI_"
 ALLOWED_TYPE_PREFIX = "picoui_"
+VALID_COVERAGE_KINDS = {
+    "native_setter_parity",
+    "native_getter_parity",
+    "init_parameter_parity",
+    "direct_field_parity",
+    "macro_alias_parity",
+    "lifecycle_internal_allowlisted",
+    "non_widget_allowlisted",
+    "shared_api_equivalence",
+}
+ALLOWLISTED_COVERAGE_KINDS = {
+    "lifecycle_internal_allowlisted",
+    "non_widget_allowlisted",
+}
+VALID_GAP_STATUSES = {
+    "covered",
+    "missing_picoui_api",
+    "missing_backend_proof",
+    "missing_unit",
+    "missing_gate",
+    "overwrapped",
+    "allowlisted",
+}
 
 STRUCT_RE = re.compile(r"\bstruct\s+(?P<name>[A-Za-z_][A-Za-z0-9_]*)")
 ENUM_RE = re.compile(r"\benum\s+(?P<name>[A-Za-z_][A-Za-z0-9_]*)")
@@ -81,6 +107,59 @@ def check_forbidden_identifiers(header: Path, text: str) -> None:
         assert match is None, f"{header.name} leaks forbidden identifier '{match.group(0)}' ({label})"
 
 
+def _load_json(path: Path) -> dict:
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _ledger_rows_by_symbol() -> dict[str, dict]:
+    ledger = _load_json(LEDGER_JSON)
+    rows: dict[str, dict] = {}
+    for row in ledger.get("rows", []):
+        symbol = row.get("ldgui_symbol")
+        assert isinstance(symbol, str) and symbol, f"ledger row has invalid ldgui_symbol: {row!r}"
+        assert symbol not in rows, f"duplicate ledger row: {symbol}"
+        rows[symbol] = row
+    return rows
+
+
+def _assert_inventory_contract_rows() -> None:
+    inventory = _load_json(INVENTORY_JSON)
+    ledger_by_symbol = _ledger_rows_by_symbol()
+    inventory_symbols: set[str] = set()
+    for widget in inventory.get("widgets", []):
+        rows = widget.get("required_native_apis")
+        assert isinstance(rows, list), f"inventory widget missing rows: {widget.get('name')}"
+        for row in rows:
+            symbol = row.get("ldgui_symbol")
+            assert isinstance(symbol, str) and symbol, f"inventory row missing ldgui_symbol: {row!r}"
+            inventory_symbols.add(symbol)
+            assert symbol in ledger_by_symbol, f"{symbol} missing from native_api_gap_ledger.json"
+            ledger_row = ledger_by_symbol[symbol]
+            required = ledger_row.get("required", row.get("required"))
+            coverage_kind = ledger_row.get("coverage_kind")
+            gap_status = ledger_row.get("gap_status")
+            assert isinstance(required, bool), f"{symbol} missing boolean required"
+            assert coverage_kind in VALID_COVERAGE_KINDS, f"{symbol} invalid coverage_kind"
+            assert gap_status in VALID_GAP_STATUSES, f"{symbol} invalid gap_status"
+            assert ledger_row.get("rationale"), f"{symbol} missing rationale"
+            if required:
+                assert ledger_row.get("picoui_api") or coverage_kind == "shared_api_equivalence", (
+                    f"{symbol} required row must name planned picoui_api or shared_api_equivalence"
+                )
+            else:
+                assert ledger_row.get("allowlist_reason"), (
+                    f"{symbol} required=false row must have allowlist_reason"
+                )
+                assert coverage_kind in ALLOWLISTED_COVERAGE_KINDS, (
+                    f"{symbol} required=false row must use allowlisted coverage_kind"
+                )
+    assert set(ledger_by_symbol) == inventory_symbols, (
+        "native_api_gap_ledger rows must match ldgui_public_api_inventory rows:\n"
+        f"missing_from_inventory={sorted(set(ledger_by_symbol) - inventory_symbols)[:25]}\n"
+        f"missing_from_ledger={sorted(inventory_symbols - set(ledger_by_symbol))[:25]}"
+    )
+
+
 def main() -> int:
     headers = sorted(PUBLIC_DIR.glob("*.h"))
     assert headers, "expected PicoUI public headers to exist"
@@ -90,6 +169,7 @@ def main() -> int:
         check_macro_prefixes(header, text)
         check_type_prefixes(header, text)
         check_function_prefixes(header, text)
+    _assert_inventory_contract_rows()
     return 0
 
 

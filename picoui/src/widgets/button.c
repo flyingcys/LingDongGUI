@@ -1,5 +1,7 @@
 #include "internal.h"
 #include "picoui/button.h"
+#include "../backend/ldgui/backend.h"
+#include "../../../src/gui/ldButton.h"
 
 #include <stdlib.h>
 
@@ -16,6 +18,18 @@ int picoui_backend_button_set_key_value(struct picoui_button *button, unsigned i
 int picoui_backend_button_get_key_value(struct picoui_button *button, unsigned int *key_value);
 int picoui_backend_button_set_pressed(struct picoui_button *button, int pressed);
 int picoui_backend_button_get_pressed(struct picoui_button *button, int *pressed);
+
+static ldButton_t *picoui_button_get_ld(const struct picoui_button *button)
+{
+    const struct picoui_backend_widget *backend;
+
+    if (button == 0 || button->widget.backend_widget == 0) {
+        return 0;
+    }
+
+    backend = (const struct picoui_backend_widget *)button->widget.backend_widget;
+    return (ldButton_t *)backend->ld_widget;
+}
 
 static int picoui_button_props_are_valid(const struct picoui_button_props *props)
 {
@@ -61,6 +75,11 @@ static struct picoui_button *picoui_button_alloc(struct picoui_window *parent, c
 struct picoui_button *picoui_button_create(struct picoui_window *parent, const char *id)
 {
     return picoui_button_alloc(parent, id);
+}
+
+struct picoui_button *picoui_button_init(struct picoui_window *parent, const char *id)
+{
+    return picoui_button_create(parent, id);
 }
 
 struct picoui_button *picoui_button_create_with_props(struct picoui_window *parent,
@@ -155,6 +174,23 @@ int picoui_button_set_text(struct picoui_button *button, const char *text)
     return picoui_backend_set_text(button->widget.backend_widget, text);
 }
 
+int picoui_button_get_text(struct picoui_button *button, const char **text)
+{
+    ldButton_t *ld_button;
+
+    if (button == 0 || text == 0) {
+        return -1;
+    }
+
+    ld_button = picoui_button_get_ld(button);
+    if (ld_button == 0) {
+        return -1;
+    }
+
+    *text = (const char *)ldButtonGetText(ld_button);
+    return 0;
+}
+
 int picoui_button_set_font(struct picoui_button *button, const struct picoui_font *font)
 {
     if (button == 0) {
@@ -166,6 +202,69 @@ int picoui_button_set_font(struct picoui_button *button, const struct picoui_fon
     }
 
     button->widget.font = font;
+    return 0;
+}
+
+int picoui_button_get_font(struct picoui_button *button, const struct picoui_font **font)
+{
+    if (button == 0 || font == 0) {
+        return -1;
+    }
+
+    *font = button->widget.font;
+    return 0;
+}
+
+int picoui_button_set_color(struct picoui_button *button,
+                            unsigned int release_color,
+                            unsigned int press_color)
+{
+    ldButton_t *ld_button;
+
+    if (button == 0 || release_color > 0xFFFFFFU || press_color > 0xFFFFFFU) {
+        return -1;
+    }
+
+    ld_button = picoui_button_get_ld(button);
+    if (ld_button == 0) {
+        return -1;
+    }
+
+    ldButtonSetColor(ld_button, (ldColor)release_color, (ldColor)press_color);
+    return 0;
+}
+
+int picoui_button_get_release_color(struct picoui_button *button, unsigned int *rgb)
+{
+    ldButton_t *ld_button;
+
+    if (button == 0 || rgb == 0) {
+        return -1;
+    }
+
+    ld_button = picoui_button_get_ld(button);
+    if (ld_button == 0) {
+        return -1;
+    }
+
+    *rgb = (unsigned int)ldButtonGetReleaseColor(ld_button);
+    return 0;
+}
+
+int picoui_button_get_press_color(struct picoui_button *button, unsigned int *rgb)
+{
+    ldButton_t *ld_button;
+
+    if (button == 0 || rgb == 0) {
+        return -1;
+    }
+
+    ld_button = picoui_button_get_ld(button);
+    if (ld_button == 0) {
+        return -1;
+    }
+
+    *rgb = (unsigned int)ldButtonGetPressColor(ld_button);
     return 0;
 }
 
@@ -187,6 +286,16 @@ int picoui_button_set_press_image(struct picoui_button *button,
     }
 
     return picoui_backend_button_set_press_image(button, source);
+}
+
+int picoui_button_set_image(struct picoui_button *button,
+                            struct picoui_image_source *release_source,
+                            struct picoui_image_source *press_source)
+{
+    if (picoui_button_set_release_image(button, release_source) != 0) {
+        return -1;
+    }
+    return picoui_button_set_press_image(button, press_source);
 }
 
 int picoui_button_set_transparent(struct picoui_button *button, int transparent)
@@ -252,6 +361,11 @@ int picoui_button_set_pressed(struct picoui_button *button, int pressed)
     return picoui_backend_button_set_pressed(button, pressed != 0);
 }
 
+int picoui_button_set_press(struct picoui_button *button, int pressed)
+{
+    return picoui_button_set_pressed(button, pressed);
+}
+
 int picoui_button_get_pressed(struct picoui_button *button, int *pressed)
 {
     if (button == 0 || pressed == 0) {
@@ -259,6 +373,45 @@ int picoui_button_get_pressed(struct picoui_button *button, int *pressed)
     }
 
     return picoui_backend_button_get_pressed(button, pressed);
+}
+
+int picoui_button_get_press(struct picoui_button *button, int *pressed)
+{
+    return picoui_button_get_pressed(button, pressed);
+}
+
+int picoui_button_set_text_color(struct picoui_button *button, unsigned int text_color)
+{
+    ldButton_t *ld_button;
+
+    if (button == 0 || text_color > 0xFFFFFFU) {
+        return -1;
+    }
+
+    ld_button = picoui_button_get_ld(button);
+    if (ld_button == 0) {
+        return -1;
+    }
+
+    ldButtonSetTextColor(ld_button, (ldColor)text_color);
+    return 0;
+}
+
+int picoui_button_get_text_color(struct picoui_button *button, unsigned int *rgb)
+{
+    ldButton_t *ld_button;
+
+    if (button == 0 || rgb == 0) {
+        return -1;
+    }
+
+    ld_button = picoui_button_get_ld(button);
+    if (ld_button == 0) {
+        return -1;
+    }
+
+    *rgb = (unsigned int)ldButtonGetTextColor(ld_button);
+    return 0;
 }
 
 int picoui_button_set_on_clicked(struct picoui_button *button,

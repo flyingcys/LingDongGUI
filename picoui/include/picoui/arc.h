@@ -22,6 +22,7 @@ struct picoui_arc_props {
 struct picoui_arc *picoui_arc_create(struct picoui_widget *parent, const char *id);
 struct picoui_arc *picoui_arc_create_with_props(struct picoui_widget *parent,
                                                 const struct picoui_arc_props *props);
+struct picoui_arc *picoui_arc_init(struct picoui_widget *parent, const char *id);
 int picoui_arc_set_background_angle(struct picoui_arc *arc, float bg_start_angle, float bg_end_angle);
 int picoui_arc_set_foreground_angle(struct picoui_arc *arc, float fg_end_angle);
 int picoui_arc_set_rotation_angle(struct picoui_arc *arc, float rotation_angle);

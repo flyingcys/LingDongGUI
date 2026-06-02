@@ -69,6 +69,11 @@ struct picoui_radial_menu *picoui_radial_menu_create(struct picoui_widget *paren
     return picoui_radial_menu_create_with_backend_config(parent, id, 194, 96, 68, 46, 5);
 }
 
+struct picoui_radial_menu *picoui_radial_menu_init(struct picoui_widget *parent, const char *id)
+{
+    return picoui_radial_menu_create(parent, id);
+}
+
 struct picoui_radial_menu *picoui_radial_menu_create_with_props(
     struct picoui_widget *parent,
     const struct picoui_radial_menu_props *props
@@ -168,6 +173,13 @@ int picoui_radial_menu_add_item_with_source(struct picoui_radial_menu *radial_me
     return 0;
 }
 
+int picoui_radial_menu_add_item_with_image(struct picoui_radial_menu *radial_menu,
+                                           const char *id,
+                                           struct picoui_image_source *source)
+{
+    return picoui_radial_menu_add_item_with_source(radial_menu, id, source);
+}
+
 int picoui_radial_menu_set_selected_index(struct picoui_radial_menu *radial_menu, int index)
 {
     if (radial_menu == 0 || index < 0 || index >= radial_menu->item_count) {
@@ -245,6 +257,11 @@ int picoui_radial_menu_click_item(struct picoui_radial_menu *radial_menu, int in
 
     radial_menu->selected_index = index;
     return 0;
+}
+
+int picoui_radial_menu_set_click_item(struct picoui_radial_menu *radial_menu, int index)
+{
+    return picoui_radial_menu_click_item(radial_menu, index);
 }
 
 int picoui_radial_menu_offset_item(struct picoui_radial_menu *radial_menu, int offset)

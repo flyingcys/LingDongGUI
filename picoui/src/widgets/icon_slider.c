@@ -77,6 +77,11 @@ struct picoui_icon_slider *picoui_icon_slider_create(struct picoui_widget *paren
     return picoui_icon_slider_create_with_backend_config(parent, id, 220, 86, 48, 4, 4, 1, 2);
 }
 
+struct picoui_icon_slider *picoui_icon_slider_init(struct picoui_widget *parent, const char *id)
+{
+    return picoui_icon_slider_create(parent, id);
+}
+
 struct picoui_icon_slider *picoui_icon_slider_create_with_props(
     struct picoui_widget *parent,
     const struct picoui_icon_slider_props *props
@@ -157,6 +162,14 @@ int picoui_icon_slider_add_item_with_source(struct picoui_icon_slider *icon_slid
     return 0;
 }
 
+int picoui_icon_slider_add_icon(struct picoui_icon_slider *icon_slider,
+                                const char *id,
+                                const char *text,
+                                struct picoui_image_source *source)
+{
+    return picoui_icon_slider_add_item_with_source(icon_slider, id, text, source);
+}
+
 int picoui_icon_slider_set_selected_index(struct picoui_icon_slider *icon_slider, int index)
 {
     if (icon_slider == 0 || index < 0 || index >= icon_slider->item_count) {
@@ -201,6 +214,11 @@ int picoui_icon_slider_set_horizontal(struct picoui_icon_slider *icon_slider, in
 
     icon_slider->horizontal = horizontal != 0 ? 1 : 0;
     return 0;
+}
+
+int picoui_icon_slider_set_horizontal_scroll(struct picoui_icon_slider *icon_slider, int horizontal)
+{
+    return picoui_icon_slider_set_horizontal(icon_slider, horizontal);
 }
 
 int picoui_icon_slider_get_horizontal(const struct picoui_icon_slider *icon_slider, int *horizontal)

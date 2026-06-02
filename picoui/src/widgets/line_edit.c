@@ -119,6 +119,43 @@ int picoui_line_edit_set_text(struct picoui_line_edit *line_edit, const char *te
     return picoui_backend_line_edit_set_text(line_edit->widget.backend_widget, text);
 }
 
+int picoui_line_edit_set_align(struct picoui_line_edit *line_edit, enum picoui_align align)
+{
+    if (line_edit == 0) {
+        return -1;
+    }
+
+    if (picoui_backend_line_edit_set_align(line_edit->widget.backend_widget, align) != 0) {
+        return -1;
+    }
+
+    line_edit->align = align;
+    return 0;
+}
+
+int picoui_line_edit_set_color(struct picoui_line_edit *line_edit,
+                               unsigned int text_color,
+                               unsigned int background_color,
+                               unsigned int frame_color)
+{
+    if (line_edit == 0) {
+        return -1;
+    }
+
+    if (picoui_backend_line_edit_set_color(line_edit->widget.backend_widget,
+                                           text_color,
+                                           background_color,
+                                           frame_color)
+        != 0) {
+        return -1;
+    }
+
+    line_edit->widget.text_color = text_color;
+    line_edit->widget.bg_color = background_color;
+    line_edit->widget.border_color = frame_color;
+    return 0;
+}
+
 const char *picoui_line_edit_get_text(const struct picoui_line_edit *line_edit)
 {
     const char *backend_text;
@@ -157,6 +194,11 @@ int picoui_line_edit_get_type(const struct picoui_line_edit *line_edit,
     }
 
     return picoui_backend_line_edit_get_type((void *)line_edit->widget.backend_widget, type);
+}
+
+int picoui_line_edit_set_keyboard(struct picoui_line_edit *line_edit, unsigned int keyboard_binding)
+{
+    return picoui_line_edit_set_keyboard_binding(line_edit, keyboard_binding);
 }
 
 int picoui_line_edit_set_keyboard_binding(struct picoui_line_edit *line_edit,

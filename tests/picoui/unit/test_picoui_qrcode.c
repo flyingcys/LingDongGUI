@@ -133,6 +133,46 @@ static void test_qrcode_native_color_ecc_version_and_zoom_round_trip(struct pico
     assert(ld_qrcode->qrZoom == 7);
 }
 
+static void test_q_r_code_init_and_shared_base_aliases_round_trip(struct picoui_window *win)
+{
+    struct picoui_qrcode *qrcode = picoui_q_r_code_init((struct picoui_widget *)win, "qr_alias");
+    struct picoui_backend_widget *backend;
+    ldQRCode_t *ld_qrcode;
+
+    assert(qrcode != 0);
+    backend = (struct picoui_backend_widget *)qrcode->widget.backend_widget;
+    assert(backend != 0);
+    ld_qrcode = (ldQRCode_t *)backend->ld_widget;
+    assert(ld_qrcode != 0);
+
+    assert(picoui_q_r_code_set_text(qrcode, "alias://qrcode") == 0);
+    assert(strcmp(picoui_qrcode_get_text(qrcode), "alias://qrcode") == 0);
+    assert(strcmp((const char *)ld_qrcode->pStr, "alias://qrcode") == 0);
+
+    assert(picoui_widget_set_pos(&qrcode->widget, 13, 17) == 0);
+    assert(((ldBase_t *)ld_qrcode)->tRegion.tLocation.iX == 13);
+    assert(((ldBase_t *)ld_qrcode)->tRegion.tLocation.iY == 17);
+
+    assert(picoui_widget_set_visible(&qrcode->widget, 0) == 0);
+    assert(((ldBase_t *)ld_qrcode)->bIsVisible == false);
+    assert(picoui_widget_set_visible(&qrcode->widget, 1) == 0);
+    assert(((ldBase_t *)ld_qrcode)->bIsVisible == true);
+
+    assert(picoui_widget_set_opacity(&qrcode->widget, 77) == 0);
+    assert(((ldBase_t *)ld_qrcode)->chOpacity == 77);
+
+    assert(picoui_widget_set_selectable(&qrcode->widget, 0) == 0);
+    assert(((ldBase_t *)ld_qrcode)->isSelectable == false);
+    assert(picoui_widget_set_selectable(&qrcode->widget, 1) == 0);
+    assert(((ldBase_t *)ld_qrcode)->isSelectable == true);
+
+    assert(picoui_widget_set_selected(&qrcode->widget, 1) == 0);
+    assert(((ldBase_t *)ld_qrcode)->isSelect == true);
+
+    assert(picoui_widget_set_corner(&qrcode->widget, 9) == 0);
+    assert(((ldBase_t *)ld_qrcode)->chCorner == 9);
+}
+
 int main(void)
 {
     struct picoui_app *app = picoui_app_create();
@@ -147,6 +187,7 @@ int main(void)
     test_qrcode_rejects_invalid_inputs(win);
     test_qrcode_release_contract_covers_configuration_boundary(win);
     test_qrcode_native_color_ecc_version_and_zoom_round_trip(win);
+    test_q_r_code_init_and_shared_base_aliases_round_trip(win);
 
     picoui_app_destroy(app);
     return 0;

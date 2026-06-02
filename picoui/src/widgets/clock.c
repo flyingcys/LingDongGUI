@@ -49,6 +49,11 @@ struct picoui_clock *picoui_clock_create(struct picoui_widget *parent, const cha
     return clock;
 }
 
+struct picoui_clock *picoui_clock_init(struct picoui_widget *parent, const char *id)
+{
+    return picoui_clock_create(parent, id);
+}
+
 struct picoui_clock *picoui_clock_create_with_props(
     struct picoui_widget *parent,
     const struct picoui_clock_props *props)
@@ -133,6 +138,11 @@ int picoui_clock_set_background_source(struct picoui_clock *clock, struct picoui
     return 0;
 }
 
+int picoui_clock_set_background_image(struct picoui_clock *clock, struct picoui_image_source *source)
+{
+    return picoui_clock_set_background_source(clock, source);
+}
+
 int picoui_clock_set_hour_pointer_source(struct picoui_clock *clock, struct picoui_image_source *source)
 {
     if (clock == 0 || source == 0 || source->img_tile == 0) {
@@ -145,6 +155,11 @@ int picoui_clock_set_hour_pointer_source(struct picoui_clock *clock, struct pico
 
     clock->hour_pointer_source = source;
     return 0;
+}
+
+int picoui_clock_set_hour_pointer_image(struct picoui_clock *clock, struct picoui_image_source *source)
+{
+    return picoui_clock_set_hour_pointer_source(clock, source);
 }
 
 int picoui_clock_set_minute_pointer_source(struct picoui_clock *clock, struct picoui_image_source *source)
@@ -161,6 +176,11 @@ int picoui_clock_set_minute_pointer_source(struct picoui_clock *clock, struct pi
     return 0;
 }
 
+int picoui_clock_set_minute_pointer_image(struct picoui_clock *clock, struct picoui_image_source *source)
+{
+    return picoui_clock_set_minute_pointer_source(clock, source);
+}
+
 int picoui_clock_set_second_pointer_source(struct picoui_clock *clock, struct picoui_image_source *source)
 {
     if (clock == 0 || source == 0 || source->img_tile == 0) {
@@ -173,6 +193,11 @@ int picoui_clock_set_second_pointer_source(struct picoui_clock *clock, struct pi
 
     clock->second_pointer_source = source;
     return 0;
+}
+
+int picoui_clock_set_second_pointer_image(struct picoui_clock *clock, struct picoui_image_source *source)
+{
+    return picoui_clock_set_second_pointer_source(clock, source);
 }
 
 int picoui_clock_set_mask_color(struct picoui_clock *clock, unsigned int mask_color)

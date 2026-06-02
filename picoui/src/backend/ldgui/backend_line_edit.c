@@ -30,6 +30,24 @@ static ldLineEdit_t *picoui_backend_line_edit_get_ld(void *backend_widget)
     return (ldLineEdit_t *)widget->ld_widget;
 }
 
+static arm_2d_align_t picoui_backend_line_edit_align_to_ld(enum picoui_align align)
+{
+    switch (align) {
+    case PICOUI_ALIGN_CENTER:
+        return ARM_2D_ALIGN_CENTRE;
+    case PICOUI_ALIGN_END:
+        return ARM_2D_ALIGN_RIGHT;
+    case PICOUI_ALIGN_START:
+    default:
+        return ARM_2D_ALIGN_LEFT;
+    }
+}
+
+static ldColor picoui_backend_line_edit_rgb_to_ld_color(unsigned int rgb)
+{
+    return __RGB((rgb >> 16) & 0xFFU, (rgb >> 8) & 0xFFU, rgb & 0xFFU);
+}
+
 static bool picoui_backend_line_edit_native_slot(struct ld_scene_t *scene, ldMsg_t msg)
 {
     struct picoui_backend_widget *backend;
@@ -140,6 +158,36 @@ int picoui_backend_line_edit_set_text(void *backend_widget, const char *text)
     return 0;
 }
 
+int picoui_backend_line_edit_set_align(void *backend_widget, enum picoui_align align)
+{
+    ldLineEdit_t *ld_line_edit = picoui_backend_line_edit_get_ld(backend_widget);
+
+    if (ld_line_edit == NULL) {
+        return -1;
+    }
+
+    ldLineEditSetAlign(ld_line_edit, picoui_backend_line_edit_align_to_ld(align));
+    return 0;
+}
+
+int picoui_backend_line_edit_set_color(void *backend_widget,
+                                       unsigned int text_color,
+                                       unsigned int background_color,
+                                       unsigned int frame_color)
+{
+    ldLineEdit_t *ld_line_edit = picoui_backend_line_edit_get_ld(backend_widget);
+
+    if (ld_line_edit == NULL) {
+        return -1;
+    }
+
+    ldLineEditSetColor(ld_line_edit,
+                       picoui_backend_line_edit_rgb_to_ld_color(text_color),
+                       picoui_backend_line_edit_rgb_to_ld_color(background_color),
+                       picoui_backend_line_edit_rgb_to_ld_color(frame_color));
+    return 0;
+}
+
 const char *picoui_backend_line_edit_get_text(void *backend_widget)
 {
     ldLineEdit_t *ld_line_edit = picoui_backend_line_edit_get_ld(backend_widget);
@@ -161,6 +209,11 @@ int picoui_backend_line_edit_set_type(void *backend_widget, enum picoui_line_edi
 
     ldLineEditSetType(ld_line_edit, (ldEditType_t)type);
     return 0;
+}
+
+int picoui_backend_line_edit_set_keyboard(void *backend_widget, unsigned int keyboard_binding)
+{
+    return picoui_backend_line_edit_set_keyboard_binding(backend_widget, keyboard_binding);
 }
 
 int picoui_backend_line_edit_get_type(void *backend_widget, enum picoui_line_edit_type *type)

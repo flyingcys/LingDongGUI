@@ -25,17 +25,29 @@ struct picoui_scroll_selecter *picoui_scroll_selecter_create_with_props(
     struct picoui_window *parent,
     const struct picoui_scroll_selecter_props *props
 );
+int picoui_scroll_selecter_set_items(struct picoui_scroll_selecter *scroll_selecter,
+                                     const char *const *item_ids,
+                                     const char *const *texts,
+                                     int item_count);
 int picoui_scroll_selecter_add_item(struct picoui_scroll_selecter *scroll_selecter,
                                     const char *id,
                                     const char *text);
+int picoui_scroll_selecter_set_select_item_num(struct picoui_scroll_selecter *scroll_selecter, int index);
 int picoui_scroll_selecter_set_selected_index(struct picoui_scroll_selecter *scroll_selecter, int index);
+int picoui_scroll_selecter_get_select_item_num(const struct picoui_scroll_selecter *scroll_selecter);
 int picoui_scroll_selecter_get_selected_index(const struct picoui_scroll_selecter *scroll_selecter);
+const char *picoui_scroll_selecter_get_select_text(const struct picoui_scroll_selecter *scroll_selecter);
 int picoui_scroll_selecter_set_text_color(struct picoui_scroll_selecter *scroll_selecter, unsigned int rgb);
+int picoui_scroll_selecter_set_background_color(struct picoui_scroll_selecter *scroll_selecter, unsigned int rgb);
 int picoui_scroll_selecter_set_bg_color(struct picoui_scroll_selecter *scroll_selecter, unsigned int rgb);
 int picoui_scroll_selecter_set_indicator_color(struct picoui_scroll_selecter *scroll_selecter,
                                                unsigned int rgb);
+int picoui_scroll_selecter_set_background_image(struct picoui_scroll_selecter *scroll_selecter,
+                                                struct picoui_image_source *source);
 int picoui_scroll_selecter_set_bg_source(struct picoui_scroll_selecter *scroll_selecter,
                                          struct picoui_image_source *source);
+int picoui_scroll_selecter_set_indicator_image(struct picoui_scroll_selecter *scroll_selecter,
+                                               struct picoui_image_source *source);
 int picoui_scroll_selecter_set_indicator_source(struct picoui_scroll_selecter *scroll_selecter,
                                                 struct picoui_image_source *source);
 int picoui_scroll_selecter_set_transparent(struct picoui_scroll_selecter *scroll_selecter, int transparent);

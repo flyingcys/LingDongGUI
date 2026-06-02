@@ -4,15 +4,47 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 MATRIX_JSON = ROOT / "tests" / "picoui" / "contract" / "picoui_release_capability_matrix.json"
-INVENTORY_JSON = ROOT / "tests" / "picoui" / "contract" / "picoui_native_100_inventory.json"
+INVENTORY_JSON = ROOT / "tests" / "picoui" / "contract" / "ldgui_public_api_inventory.json"
+LEDGER_JSON = ROOT / "tests" / "picoui" / "contract" / "native_api_gap_ledger.json"
 
-A07_SCHEMA_VERSION = "a-0.7-native-100-v1"
-EXPECTED_EVIDENCE_LAYERS = {
-    "unit": "present",
-    "contract": "present",
-    "mapping": "present",
-    "visible": "present",
-    "manual_artifact": "manual_review_required",
+A08_SCHEMA_VERSION = "a-0.8-native-api-exhaustiveness-v1"
+VALID_COVERAGE_KINDS = {
+    "native_setter_parity",
+    "native_getter_parity",
+    "init_parameter_parity",
+    "direct_field_parity",
+    "macro_alias_parity",
+    "lifecycle_internal_allowlisted",
+    "non_widget_allowlisted",
+    "shared_api_equivalence",
+}
+ALLOWLISTED_COVERAGE_KINDS = {
+    "lifecycle_internal_allowlisted",
+    "non_widget_allowlisted",
+}
+VALID_GAP_STATUSES = {
+    "covered",
+    "missing_picoui_api",
+    "missing_backend_proof",
+    "missing_unit",
+    "missing_gate",
+    "overwrapped",
+    "allowlisted",
+}
+LEDGER_ALIGNED_FIELDS = {
+    "coverage_kind",
+    "picoui_api",
+    "backend_proof",
+    "unit_test",
+    "required",
+    "planned_task",
+    "rationale",
+    "notes",
+    "shared_policy",
+    "shared_policy_evidence",
+    "artifact_entry_exists",
+    "manual_review_required",
+    "manual_reviewed_passed",
 }
 EXPECTED_GATE_CATALOG = {
     "runtime": {
@@ -146,74 +178,140 @@ def _widgets_by_name(matrix: dict) -> dict[str, dict]:
 
 
 def _assert_matrix_header(matrix: dict) -> None:
-    assert matrix.get("schema_version") == A07_SCHEMA_VERSION
-    assert matrix.get("line") == "a-0.7"
-    assert matrix.get("stage") == "native-100-closeout"
-    assert matrix.get("purpose") == "PicoUI native-100 truth source and gate catalog"
-
-
-def _assert_widgets_match_inventory(matrix: dict, by_name: dict[str, dict]) -> None:
-    inventory = _load_json(INVENTORY_JSON)
-    inventory_names = {widget["name"] for widget in inventory.get("widgets", [])}
-    assert set(by_name) == inventory_names, (
-        "matrix widget rows must match native inventory rows:\n"
-        f"matrix={sorted(by_name)}\ninventory={sorted(inventory_names)}"
+    assert matrix.get("schema_version") == A08_SCHEMA_VERSION
+    assert matrix.get("line") == "a-0.8"
+    assert matrix.get("stage") == "native-api-exhaustiveness-r1"
+    assert matrix.get("purpose") == (
+        "PicoUI native API exhaustiveness truth source aligned to LingDongGUI public API "
+        "inventory and gap ledger"
     )
-    assert len(by_name) == 27, f"matrix must contain 27 widget rows, got {len(by_name)}"
 
 
-def _assert_widget_rows(by_name: dict[str, dict]) -> int:
-    capability_total = 0
+def _inventory_symbols() -> set[str]:
+    inventory = _load_json(INVENTORY_JSON)
+    symbols: set[str] = set()
+    for widget in inventory.get("widgets", []):
+        for row in widget.get("required_native_apis", []):
+            symbols.add(row["ldgui_symbol"])
+    return symbols
+
+
+def _ledger_rows() -> dict[str, dict]:
+    ledger = _load_json(LEDGER_JSON)
+    rows: dict[str, dict] = {}
+    for row in ledger.get("rows", []):
+        symbol = row.get("ldgui_symbol")
+        assert isinstance(symbol, str) and symbol, f"invalid ledger row: {row!r}"
+        assert symbol not in rows, f"duplicate ledger row: {symbol}"
+        rows[symbol] = row
+    return rows
+
+
+def _assert_native_api_rows(by_name: dict[str, dict], ledger_by_symbol: dict[str, dict]) -> int:
+    seen: set[str] = set()
     for widget_name, widget in sorted(by_name.items()):
-        assert widget.get("widget_status") == "wrapped", f"{widget_name} must be wrapped"
-        assert widget.get("current_layer") == "full_parity_complete", (
-            f"{widget_name} must be full_parity_complete"
+        assert widget.get("widget_status") == "native_api_gap_tracked", (
+            f"{widget_name} must remain native_api_gap_tracked in R1"
         )
-        assert widget.get("parity_status") == "parity_complete", (
-            f"{widget_name} must be parity_complete"
+        assert widget.get("widget_release_judgement") != "final_release_ready", (
+            f"{widget_name} must not be final_release_ready during R1"
         )
-        assert widget.get("widget_release_judgement") == "final_release_ready", (
-            f"{widget_name} must be final_release_ready"
-        )
-        evidence_layers = widget.get("evidence_layers")
-        assert evidence_layers == EXPECTED_EVIDENCE_LAYERS, (
-            f"{widget_name} evidence_layers drifted: {evidence_layers!r}"
-        )
-        manual_artifact = widget.get("manual_artifact")
-        assert isinstance(manual_artifact, dict), f"{widget_name} missing manual_artifact object"
-        assert manual_artifact.get("scope") == "demo_level_final_release"
-        assert manual_artifact.get("artifact_entry_exists") is True
-        assert manual_artifact.get("manual_review_required") is True
         capabilities = widget.get("capabilities")
         assert isinstance(capabilities, list) and capabilities, f"{widget_name} missing capabilities"
         for capability in capabilities:
-            capability_total += 1
-            assert capability.get("status") == "support", (
-                f"{widget_name}.{capability.get('name')} must be support"
+            native_api = capability.get("native_api")
+            assert isinstance(native_api, str) and native_api, (
+                f"{widget_name} capability missing native_api: {capability!r}"
             )
-            assert capability.get("capability_release_judgement") == "final_release_ready", (
-                f"{widget_name}.{capability.get('name')} must be final_release_ready"
+            assert native_api not in seen, f"duplicate matrix native API row: {native_api}"
+            seen.add(native_api)
+            assert native_api in ledger_by_symbol, f"{native_api} missing from ledger"
+            ledger_row = ledger_by_symbol[native_api]
+            assert capability.get("name") == native_api, f"{native_api} matrix name must equal native_api"
+            assert capability.get("status") == ledger_row.get("gap_status"), (
+                f"{native_api} matrix status drifted from ledger gap_status"
             )
-    return capability_total
+            assert capability.get("gap_status") == ledger_row.get("gap_status"), (
+                f"{native_api} matrix gap_status drifted from ledger"
+            )
+            for field in sorted(LEDGER_ALIGNED_FIELDS):
+                assert capability.get(field) == ledger_row.get(field), (
+                    f"{native_api} matrix {field} drifted from ledger"
+                )
+            assert capability.get("coverage_kind") in VALID_COVERAGE_KINDS, (
+                f"{native_api} invalid coverage_kind"
+            )
+            assert capability.get("gap_status") in VALID_GAP_STATUSES, (
+                f"{native_api} invalid gap_status"
+            )
+            assert isinstance(capability.get("gate_evidence"), list), (
+                f"{native_api} gate_evidence must be a list"
+            )
+            if capability.get("gap_status") == "covered":
+                for field in ("picoui_api", "backend_proof", "unit_test"):
+                    assert capability.get(field), f"{native_api} covered row missing {field}"
+                assert capability.get("gate_evidence"), (
+                    f"{native_api} covered row missing gate_evidence"
+                )
+            if capability.get("gap_status") == "allowlisted":
+                assert capability.get("coverage_kind") in ALLOWLISTED_COVERAGE_KINDS, (
+                    f"{native_api} allowlisted row has invalid coverage_kind"
+                )
+                assert capability.get("allowlist_reason"), (
+                    f"{native_api} allowlisted row missing allowlist_reason"
+                )
+                assert capability.get("allowlist_reason") == ledger_row.get("allowlist_reason"), (
+                    f"{native_api} matrix allowlist_reason drifted from ledger"
+                )
+                assert capability.get("capability_release_judgement") == "allowlisted", (
+                    f"{native_api} allowlisted row must be judged allowlisted"
+                )
+            else:
+                assert "allowlist_reason" not in capability, (
+                    f"{native_api} non-allowlisted row must not carry allowlist_reason"
+                )
+                assert capability.get("capability_release_judgement") != "final_release_ready", (
+                    f"{native_api} missing/non-allowlisted R1 row must not be final_release_ready"
+                )
+            if capability.get("gap_status") == "overwrapped":
+                assert capability.get("notes"), f"{native_api} overwrapped row missing notes"
+    assert seen == set(ledger_by_symbol), (
+        "matrix native API rows must match native_api_gap_ledger rows:\n"
+        f"missing={sorted(set(ledger_by_symbol) - seen)[:25]}\n"
+        f"extra={sorted(seen - set(ledger_by_symbol))[:25]}"
+    )
+    return len(seen)
 
 
-def _assert_summary(matrix: dict, capability_total: int) -> None:
+def _assert_summary(matrix: dict, capability_total: int, ledger_by_symbol: dict[str, dict]) -> None:
     summary = matrix.get("summary")
     assert isinstance(summary, dict), "release matrix missing summary"
-    assert summary.get("ldgui_widget_like_total") == 27
-    assert summary.get("picoui_native_wrapped_total") == 27
-    assert summary.get("ldgui_wrappable_widget_total") == 27
-    assert summary.get("picoui_wrapped_widget_total") == 27
-    assert summary.get("picoui_not_wrapped_widget_total") == 0
-    assert summary.get("missing_implementation_total") == 0
-    assert summary.get("full_parity_complete_total") == 27
-    assert summary.get("stable_contract_but_not_full_parity_total") == 0
-    assert summary.get("minimal_vertical_slice_only_total") == 0
-    assert summary.get("parity_complete_total") == 27
-    assert summary.get("parity_incomplete_total") == 0
+    matrix_rows = [
+        capability
+        for widget in matrix.get("widgets", [])
+        for capability in widget.get("capabilities", [])
+    ]
+    expected_coverage_counts: dict[str, int] = {}
+    expected_gap_counts: dict[str, int] = {}
+    for row in ledger_by_symbol.values():
+        coverage_kind = row["coverage_kind"]
+        gap_status = row["gap_status"]
+        expected_coverage_counts[coverage_kind] = expected_coverage_counts.get(coverage_kind, 0) + 1
+        expected_gap_counts[gap_status] = expected_gap_counts.get(gap_status, 0) + 1
+
+    assert summary.get("ldgui_public_api_total") == len(ledger_by_symbol)
     assert summary.get("capability_entry_total") == capability_total
-    assert summary.get("capability_status_counts") == {"support": capability_total}
-    assert summary.get("current_layer_counts") == {"full_parity_complete": 27}
+    assert summary.get("native_api_matrix_row_total") == capability_total
+    assert summary.get("capability_entry_total") == len(matrix_rows)
+    assert summary.get("native_api_matrix_row_total") == len(matrix_rows)
+    assert summary.get("gap_status_counts") == dict(sorted(expected_gap_counts.items()))
+    assert summary.get("coverage_kind_counts") == dict(sorted(expected_coverage_counts.items()))
+    assert summary.get("missing_gap_total") == sum(
+        count for status, count in expected_gap_counts.items() if status not in {"covered", "allowlisted"}
+    )
+    assert summary.get("allowlisted_total") == expected_gap_counts.get("allowlisted", 0)
+    assert summary.get("covered_total") == expected_gap_counts.get("covered", 0)
+    assert summary.get("widget_row_total") == len(matrix.get("widgets", []))
 
 
 def _assert_gate_catalog(matrix: dict) -> None:
@@ -226,17 +324,37 @@ def _assert_gate_catalog(matrix: dict) -> None:
             f"gate_catalog.{gate_name} drifted:\n"
             f"expected={sorted(expected_targets)}\nactual={sorted(actual_targets)}"
         )
-    assert gate_catalog.get("special_cases") == {}, "a-0.7 must not keep formal gate special_cases"
+    assert isinstance(gate_catalog.get("special_cases"), dict), (
+        "gate_catalog.special_cases must stay machine-readable"
+    )
+
+
+def _assert_manual_artifact_policy(matrix: dict) -> None:
+    policy = matrix.get("manual_artifact_policy")
+    assert isinstance(policy, dict), "release matrix missing manual_artifact_policy"
+    for key in ("artifact_entry_exists", "manual_review_required", "manual_reviewed_passed"):
+        assert isinstance(policy.get(key), bool), f"manual_artifact_policy.{key} must be boolean"
+    assert policy["artifact_entry_exists"] is True
+    assert policy["manual_review_required"] is True
+    assert policy["manual_reviewed_passed"] is False, (
+        "manual_review_required=true must not be counted as manual pass"
+    )
+    assert policy.get("manual_pass_evidence") in ("not_reviewed", "reviewed_passed")
+    if policy["manual_review_required"] and not policy["manual_reviewed_passed"]:
+        assert policy.get("manual_pass_evidence") == "not_reviewed"
 
 
 def main() -> int:
     matrix = _load_json(MATRIX_JSON)
     _assert_matrix_header(matrix)
     by_name = _widgets_by_name(matrix)
-    _assert_widgets_match_inventory(matrix, by_name)
-    capability_total = _assert_widget_rows(by_name)
-    _assert_summary(matrix, capability_total)
+    inventory_symbols = _inventory_symbols()
+    ledger_by_symbol = _ledger_rows()
+    assert set(ledger_by_symbol).issubset(inventory_symbols), "ledger must be backed by inventory"
+    capability_total = _assert_native_api_rows(by_name, ledger_by_symbol)
+    _assert_summary(matrix, capability_total, ledger_by_symbol)
     _assert_gate_catalog(matrix)
+    _assert_manual_artifact_policy(matrix)
     return 0
 
 

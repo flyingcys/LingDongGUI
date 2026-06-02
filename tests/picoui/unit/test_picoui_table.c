@@ -398,6 +398,87 @@ static void test_table_native_static_text_background_and_getters_round_trip(void
     picoui_app_destroy(app);
 }
 
+static void test_table_r4_aliases_and_native_getters_round_trip(void)
+{
+    struct picoui_app *app;
+    struct picoui_window *win;
+    struct picoui_table *table;
+    struct picoui_keyboard *keyboard;
+    struct picoui_backend_widget *backend;
+    struct picoui_backend_widget *keyboard_backend;
+    ldTable_t *ld_table;
+    ldTableItem_t *item;
+    unsigned int keyboard_binding = 0;
+
+    app = picoui_app_create();
+    assert(app != 0);
+    win = picoui_window_create(app, "table_r4_alias_root");
+    assert(win != 0);
+    keyboard = picoui_keyboard_create(win, "table_r4_alias_keyboard");
+    assert(keyboard != 0);
+    table = picoui_table_init(win, "table_r4_alias", 3, 3);
+    assert(table != 0);
+
+    backend = (struct picoui_backend_widget *)table->widget.backend_widget;
+    assert(backend != 0);
+    ld_table = (ldTable_t *)backend->ld_widget;
+    assert(ld_table != 0);
+    keyboard_backend = (struct picoui_backend_widget *)keyboard->widget.backend_widget;
+    assert(keyboard_backend != 0);
+
+    assert(picoui_table_set_keyboard(table, keyboard_backend->ld_name_id) == 0);
+    assert(picoui_table_get_keyboard_binding(table, &keyboard_binding) == 0);
+    assert(keyboard_binding == keyboard_backend->ld_name_id);
+    assert(ld_table->kbNameId == keyboard_backend->ld_name_id);
+
+    assert(picoui_table_set_item_text(table, 1, 1, "CELL") == 0);
+    assert(strcmp(picoui_table_get_item_text(table, 1, 1), "CELL") == 0);
+    assert(strcmp((const char *)ldTableGetItemText(ld_table, 1, 1), "CELL") == 0);
+
+    assert(picoui_table_set_item_editable(table, 1, 1, 1, 9) == 0);
+    assert(picoui_table_get_item_editable(table, 1, 1) == 1);
+    assert(ldTableGetItemEditable(ld_table, 1, 1) == true);
+
+    assert(picoui_table_set_background_color(table, 0x102030U) == 0);
+    assert(picoui_table_get_background_color(table) == 0x102030U);
+    assert(ldTableGetBackgroundColor(ld_table) == (ldColor)0x102030U);
+
+    assert(picoui_table_set_align_grid(table, 1) == 0);
+    assert(picoui_table_get_align_grid(table) == 1);
+    assert(ldTableGetAlignGrid(ld_table) == true);
+
+    assert(picoui_table_set_item_width(table, 2, 66) == 0);
+    assert(picoui_table_set_item_height(table, 1, 28) == 0);
+    assert(picoui_table_set_item_color(table, 1, 1, 0xABCDEFU, 0x123456U) == 0);
+    assert(picoui_table_set_item_font(table, 1, 1) == 0);
+    assert(picoui_table_set_item_align(table, 1, 1, PICOUI_ALIGN_CENTER) == 0);
+    assert(picoui_table_set_item_select(table, 1, 1, 1) == 0);
+
+    item = (ldTableItem_t *)picoui_table_get_item(table, 1, 1);
+    assert(item != 0);
+    assert(item == ldTableGetItem(ld_table, 1, 1));
+    assert(picoui_table_get_item_font(table, 1, 1) == ldTableGetItemFont(ld_table, 1, 1));
+    assert(picoui_table_get_item_height(table, 1) == ldTableGetItemHeight(ld_table, 1));
+    assert(picoui_table_get_item_width(table, 2) == ldTableGetItemWidth(ld_table, 2));
+    assert(picoui_table_get_item_text_color(table, 1, 1) == (unsigned int)ldTableGetItemTextColor(ld_table, 1, 1));
+    assert(picoui_table_get_item_background_color(table, 1, 1) ==
+           (unsigned int)ldTableGetItemBackgroundColor(ld_table, 1, 1));
+    assert(picoui_table_get_item_align(table, 1, 1) == PICOUI_ALIGN_CENTER);
+    assert(picoui_table_get_current_row(table) == 1);
+    assert(picoui_table_get_current_column(table) == 1);
+
+    assert(picoui_tabel_show_keyboard(table) == 0);
+    assert(picoui_widget_is_hidden(&keyboard->widget) == 0);
+
+    assert(picoui_table_set_item_select(table, 1, 1, 0) == -1);
+    assert(picoui_table_get_item(table, 9, 9) == 0);
+    assert(picoui_table_get_item_font(table, 9, 9) == 0);
+    assert(picoui_table_get_item_height(table, 9) == -1);
+    assert(picoui_table_get_item_width(table, 9) == -1);
+
+    picoui_app_destroy(app);
+}
+
 int main(void)
 {
     test_table_current_cell_matches_backend_truth();
@@ -407,5 +488,6 @@ int main(void)
     test_table_native_item_image_button_and_excel_type_round_trip();
     test_table_native_size_align_color_font_region_and_navigation_round_trip();
     test_table_native_static_text_background_and_getters_round_trip();
+    test_table_r4_aliases_and_native_getters_round_trip();
     return 0;
 }

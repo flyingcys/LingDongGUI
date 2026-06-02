@@ -24,6 +24,8 @@ struct picoui_keyboard *picoui_keyboard_create_with_props(struct picoui_window *
                                                           const struct picoui_keyboard_props *props);
 int picoui_keyboard_input_ascii(struct picoui_keyboard *keyboard, unsigned int ascii);
 int picoui_keyboard_navigate(struct picoui_keyboard *keyboard, int direction);
+int picoui_keyboard_update(struct picoui_keyboard *keyboard);
+int picoui_keyboard_button_update(struct picoui_keyboard *keyboard, unsigned int key_code);
 int picoui_keyboard_click(struct picoui_keyboard *keyboard);
 int picoui_keyboard_exit(struct picoui_keyboard *keyboard);
 

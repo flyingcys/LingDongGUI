@@ -1,5 +1,7 @@
 #include "internal.h"
 #include "picoui/table.h"
+#include "../backend/ldgui/backend.h"
+#include "../../../src/gui/ldTable.h"
 
 #include <stdlib.h>
 
@@ -24,6 +26,18 @@ static int picoui_table_props_are_valid(const struct picoui_table_props *props)
            props->padding >= 0 &&
            (props->has_keyboard_binding == 0 ||
             picoui_table_keyboard_binding_is_valid(props->keyboard_binding));
+}
+
+static ldTable_t *picoui_table_get_ld_widget(const struct picoui_table *table)
+{
+    const struct picoui_backend_widget *backend;
+
+    if (table == 0 || table->widget.backend_widget == 0) {
+        return 0;
+    }
+
+    backend = (const struct picoui_backend_widget *)table->widget.backend_widget;
+    return (ldTable_t *)backend->ld_widget;
 }
 
 struct picoui_table *picoui_table_create(struct picoui_window *parent,
@@ -106,6 +120,19 @@ struct picoui_table *picoui_table_create_with_props(struct picoui_window *parent
     return table;
 }
 
+struct picoui_table *picoui_table_init(struct picoui_window *parent,
+                                       const char *id,
+                                       int rows,
+                                       int columns)
+{
+    return picoui_table_create(parent, id, rows, columns);
+}
+
+int picoui_table_set_keyboard(struct picoui_table *table, unsigned int keyboard_binding)
+{
+    return picoui_table_set_keyboard_binding(table, keyboard_binding);
+}
+
 int picoui_table_set_keyboard_binding(struct picoui_table *table, unsigned int keyboard_binding)
 {
     if (table == 0 || !picoui_table_keyboard_binding_is_valid(keyboard_binding)) {
@@ -130,6 +157,36 @@ int picoui_table_get_keyboard_binding(const struct picoui_table *table, unsigned
                                                      keyboard_binding);
 }
 
+int picoui_tabel_show_keyboard(struct picoui_table *table)
+{
+    struct picoui_backend_widget *backend;
+    struct picoui_backend_app_state *app_state;
+    ldTable_t *ld_table;
+    ldTableItem_t *item;
+
+    if (table == 0) {
+        return -1;
+    }
+
+    backend = (struct picoui_backend_widget *)table->widget.backend_widget;
+    ld_table = picoui_table_get_ld_widget(table);
+    if (backend == 0 || ld_table == 0) {
+        return -1;
+    }
+    app_state = (struct picoui_backend_app_state *)backend->owner->backend_app;
+    if (app_state == 0 || app_state->ld_scene == 0) {
+        return -1;
+    }
+
+    item = ldTableGetItem(ld_table, (uint8_t)table->current_row, (uint8_t)table->current_column);
+    if (item == 0) {
+        return -1;
+    }
+
+    _ldTabelShowKeyboard(app_state->ld_scene, ld_table, item);
+    return 0;
+}
+
 int picoui_table_set_cell_text(struct picoui_table *table,
                                int row,
                                int column,
@@ -142,6 +199,11 @@ int picoui_table_set_cell_text(struct picoui_table *table,
     return picoui_backend_table_set_cell_text(table->widget.backend_widget, row, column, text);
 }
 
+int picoui_table_set_item_text(struct picoui_table *table, int row, int column, const char *text)
+{
+    return picoui_table_set_cell_text(table, row, column, text);
+}
+
 const char *picoui_table_get_cell_text(const struct picoui_table *table, int row, int column)
 {
     if (table == 0) {
@@ -149,6 +211,11 @@ const char *picoui_table_get_cell_text(const struct picoui_table *table, int row
     }
 
     return picoui_backend_table_get_cell_text((void *)table->widget.backend_widget, row, column);
+}
+
+const char *picoui_table_get_item_text(const struct picoui_table *table, int row, int column)
+{
+    return picoui_table_get_cell_text(table, row, column);
 }
 
 int picoui_table_set_cell_editable(struct picoui_table *table,
@@ -166,6 +233,15 @@ int picoui_table_set_cell_editable(struct picoui_table *table,
                                                   column,
                                                   editable != 0,
                                                   text_max);
+}
+
+int picoui_table_set_item_editable(struct picoui_table *table,
+                                   int row,
+                                   int column,
+                                   int editable,
+                                   unsigned int text_max)
+{
+    return picoui_table_set_cell_editable(table, row, column, editable, text_max);
 }
 
 int picoui_table_set_item_image(struct picoui_table *table,
@@ -227,6 +303,28 @@ int picoui_table_set_excel_type(struct picoui_table *table)
     }
 
     return picoui_backend_table_set_excel_type(table->widget.backend_widget);
+}
+
+int picoui_table_set_background_color(struct picoui_table *table, unsigned int bg_color)
+{
+    return picoui_table_set_bg_color(table, bg_color);
+}
+
+int picoui_table_set_align_grid(struct picoui_table *table, int enabled)
+{
+    ldTable_t *ld_table;
+
+    if (table == 0) {
+        return -1;
+    }
+
+    ld_table = picoui_table_get_ld_widget(table);
+    if (ld_table == 0) {
+        return -1;
+    }
+
+    ldTableSetAlignGrid(ld_table, enabled != 0);
+    return 0;
 }
 
 int picoui_table_set_item_width(struct picoui_table *table, int column, int width)
@@ -291,6 +389,40 @@ int picoui_table_set_item_font(struct picoui_table *table, int row, int column)
     return picoui_backend_table_set_item_font(table->widget.backend_widget, row, column);
 }
 
+int picoui_table_get_align_grid(const struct picoui_table *table)
+{
+    ldTable_t *ld_table = picoui_table_get_ld_widget(table);
+
+    if (ld_table == 0) {
+        return -1;
+    }
+
+    return ldTableGetAlignGrid(ld_table) ? 1 : 0;
+}
+
+unsigned int picoui_table_get_background_color(const struct picoui_table *table)
+{
+    ldTable_t *ld_table = picoui_table_get_ld_widget(table);
+
+    if (ld_table == 0) {
+        return 0U;
+    }
+
+    return (unsigned int)ldTableGetBackgroundColor(ld_table);
+}
+
+void *picoui_table_get_item(const struct picoui_table *table, int row, int column)
+{
+    ldTable_t *ld_table = picoui_table_get_ld_widget(table);
+
+    if (ld_table == 0 || row < 0 || column < 0 ||
+        row >= ld_table->rowCount || column >= ld_table->columnCount) {
+        return 0;
+    }
+
+    return ldTableGetItem(ld_table, (uint8_t)row, (uint8_t)column);
+}
+
 int picoui_table_set_item_align(struct picoui_table *table,
                                 int row,
                                 int column,
@@ -319,6 +451,64 @@ int picoui_table_get_item_editable(const struct picoui_table *table, int row, in
     }
 
     return picoui_backend_table_get_item_editable((void *)table->widget.backend_widget, row, column);
+}
+
+void *picoui_table_get_item_font(const struct picoui_table *table, int row, int column)
+{
+    ldTable_t *ld_table = picoui_table_get_ld_widget(table);
+
+    if (ld_table == 0 || row < 0 || column < 0 ||
+        row >= ld_table->rowCount || column >= ld_table->columnCount) {
+        return 0;
+    }
+
+    return ldTableGetItemFont(ld_table, (uint8_t)row, (uint8_t)column);
+}
+
+int picoui_table_get_item_height(const struct picoui_table *table, int row)
+{
+    ldTable_t *ld_table = picoui_table_get_ld_widget(table);
+
+    if (ld_table == 0 || row < 0 || row >= ld_table->rowCount) {
+        return -1;
+    }
+
+    return (int)ldTableGetItemHeight(ld_table, (uint8_t)row);
+}
+
+unsigned int picoui_table_get_item_text_color(const struct picoui_table *table, int row, int column)
+{
+    ldTable_t *ld_table = picoui_table_get_ld_widget(table);
+
+    if (ld_table == 0 || row < 0 || column < 0 ||
+        row >= ld_table->rowCount || column >= ld_table->columnCount) {
+        return 0U;
+    }
+
+    return (unsigned int)ldTableGetItemTextColor(ld_table, (uint8_t)row, (uint8_t)column);
+}
+
+unsigned int picoui_table_get_item_background_color(const struct picoui_table *table, int row, int column)
+{
+    ldTable_t *ld_table = picoui_table_get_ld_widget(table);
+
+    if (ld_table == 0 || row < 0 || column < 0 ||
+        row >= ld_table->rowCount || column >= ld_table->columnCount) {
+        return 0U;
+    }
+
+    return (unsigned int)ldTableGetItemBackgroundColor(ld_table, (uint8_t)row, (uint8_t)column);
+}
+
+int picoui_table_get_item_width(const struct picoui_table *table, int column)
+{
+    ldTable_t *ld_table = picoui_table_get_ld_widget(table);
+
+    if (ld_table == 0 || column < 0 || column >= ld_table->columnCount) {
+        return -1;
+    }
+
+    return (int)ldTableGetItemWidth(ld_table, (uint8_t)column);
 }
 
 int picoui_table_navigate(struct picoui_table *table, enum picoui_native_nav_dir dir)
@@ -361,6 +551,15 @@ int picoui_table_set_selected_cell(struct picoui_table *table, int row, int colu
     table->current_row = row;
     table->current_column = column;
     return 0;
+}
+
+int picoui_table_set_item_select(struct picoui_table *table, int row, int column, int selected)
+{
+    if (selected == 0) {
+        return -1;
+    }
+
+    return picoui_table_set_selected_cell(table, row, column);
 }
 
 int picoui_table_set_current_cell(struct picoui_table *table, int row, int column)

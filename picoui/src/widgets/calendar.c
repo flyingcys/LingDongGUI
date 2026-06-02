@@ -79,6 +79,11 @@ struct picoui_calendar *picoui_calendar_create(struct picoui_window *parent, con
     return calendar;
 }
 
+struct picoui_calendar *picoui_calendar_init(struct picoui_window *parent, const char *id)
+{
+    return picoui_calendar_create(parent, id);
+}
+
 struct picoui_calendar *picoui_calendar_create_with_props(struct picoui_window *parent,
                                                           const struct picoui_calendar_props *props)
 {

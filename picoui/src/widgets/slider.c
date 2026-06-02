@@ -1,5 +1,7 @@
 #include "internal.h"
 #include "picoui/slider.h"
+#include "../backend/ldgui/backend.h"
+#include "../../../src/gui/ldSlider.h"
 
 #include <stdlib.h>
 
@@ -65,6 +67,11 @@ struct picoui_slider *picoui_slider_create(struct picoui_window *parent, const c
         return 0;
     }
     return slider;
+}
+
+struct picoui_slider *picoui_slider_init(struct picoui_window *parent, const char *id)
+{
+    return picoui_slider_create(parent, id);
 }
 
 struct picoui_slider *picoui_slider_create_with_props(struct picoui_window *parent,
@@ -171,6 +178,19 @@ int picoui_slider_set_range(struct picoui_slider *slider, int min_value, int max
 
     return 0;
 }
+
+int picoui_slider_set_percent(struct picoui_slider *slider, int percent)
+{
+    int value;
+
+    if (slider == 0 || percent < 0 || percent > 100) {
+        return -1;
+    }
+
+    value = slider->min_value + ((slider->max_value - slider->min_value) * percent) / 100;
+    return picoui_slider_set_value(slider, value);
+}
+
 int picoui_slider_set_horizontal(struct picoui_slider *slider, int horizontal)
 {
     if (slider == 0) {
@@ -207,6 +227,39 @@ int picoui_slider_set_indicator_source(struct picoui_slider *slider,
     }
 
     return picoui_backend_slider_set_indicator_source(slider, source);
+}
+
+int picoui_slider_set_image(struct picoui_slider *slider,
+                            struct picoui_image_source *background_source,
+                            struct picoui_image_source *indicator_source)
+{
+    if (picoui_slider_set_background_source(slider, background_source) != 0) {
+        return -1;
+    }
+    return picoui_slider_set_indicator_source(slider, indicator_source);
+}
+
+int picoui_slider_set_color(struct picoui_slider *slider,
+                            unsigned int bg_color,
+                            unsigned int frame_color,
+                            unsigned int indicator_color)
+{
+    struct picoui_backend_widget *backend;
+    ldSlider_t *ld_slider;
+
+    if (slider == 0 || bg_color > 0xFFFFFFU || frame_color > 0xFFFFFFU ||
+        indicator_color > 0xFFFFFFU || slider->widget.backend_widget == 0) {
+        return -1;
+    }
+
+    backend = (struct picoui_backend_widget *)slider->widget.backend_widget;
+    ld_slider = (ldSlider_t *)backend->ld_widget;
+    if (ld_slider == 0) {
+        return -1;
+    }
+
+    ldSliderSetColor(ld_slider, (ldColor)bg_color, (ldColor)frame_color, (ldColor)indicator_color);
+    return 0;
 }
 
 int picoui_slider_set_indicator_width(struct picoui_slider *slider, int indicator_width)

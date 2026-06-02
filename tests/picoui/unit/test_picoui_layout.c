@@ -6,6 +6,11 @@
 #include <assert.h>
 #include <stdbool.h>
 
+static unsigned int test_rgb_to_ld_color(unsigned int rgb)
+{
+    return (unsigned int)__RGB((rgb >> 16) & 0xFFU, (rgb >> 8) & 0xFFU, rgb & 0xFFU);
+}
+
 static void test_grid_layout_setters_sync_to_real_ld_window_and_children(void)
 {
     struct picoui_app *app = picoui_app_create();
@@ -267,6 +272,109 @@ static void test_widget_native_flex_min_max_round_trip_to_ldbase(void)
     picoui_app_destroy(app);
 }
 
+static void test_widget_native_base_getters_round_trip_to_ldbase(void)
+{
+    struct picoui_app *app = picoui_app_create();
+    struct picoui_window *win = picoui_window_create(app, "root");
+    struct picoui_button *button = picoui_button_create(win, "getter_stateful");
+    const struct picoui_backend_widget *backend = button->widget.backend_widget;
+    ldBase_t *ld_base = (ldBase_t *)backend->ld_widget;
+
+    assert(picoui_widget_set_pos((struct picoui_widget *)button, 17, 23) == 0);
+    assert(picoui_widget_set_size((struct picoui_widget *)button, 91, 37) == 0);
+    assert(picoui_widget_set_opacity((struct picoui_widget *)button, 123) == 0);
+    assert(picoui_widget_set_selectable((struct picoui_widget *)button, 1) == 0);
+    assert(picoui_widget_set_selected((struct picoui_widget *)button, 1) == 0);
+    assert(picoui_widget_set_corner((struct picoui_widget *)button, 1) == 0);
+    assert(picoui_widget_set_visible((struct picoui_widget *)button, 0) == 0);
+
+    assert(picoui_widget_get_x((struct picoui_widget *)button) == 17);
+    assert(picoui_widget_get_y((struct picoui_widget *)button) == 23);
+    assert(picoui_widget_get_width((struct picoui_widget *)button) == 91);
+    assert(picoui_widget_get_height((struct picoui_widget *)button) == 37);
+    assert(picoui_widget_get_opacity((struct picoui_widget *)button) == 123);
+    assert(picoui_widget_get_selectable((struct picoui_widget *)button) == 1);
+    assert(picoui_widget_get_selected((struct picoui_widget *)button) == 1);
+    assert(picoui_widget_get_corner((struct picoui_widget *)button) == 1);
+    assert(picoui_widget_get_visible((struct picoui_widget *)button) == 0);
+
+    assert(ldBaseGetX(ld_base) == 17);
+    assert(ldBaseGetY(ld_base) == 23);
+    assert(ldBaseGetWidth(ld_base) == 91);
+    assert(ldBaseGetHeight(ld_base) == 37);
+    assert(ldBaseGetOpacity(ld_base) == 123);
+    assert(ldBaseIsSelectable(ld_base) == true);
+    assert(ldBaseIsSelected(ld_base) == true);
+    assert(ldBaseIsCorner(ld_base) == true);
+    assert(ldBaseIsHidden(ld_base) == true);
+
+    assert(picoui_widget_get_x(0) == -1);
+    assert(picoui_widget_get_y(0) == -1);
+    assert(picoui_widget_get_width(0) == -1);
+    assert(picoui_widget_get_height(0) == -1);
+    assert(picoui_widget_get_opacity(0) == -1);
+    assert(picoui_widget_get_selectable(0) == -1);
+    assert(picoui_widget_get_selected(0) == -1);
+    assert(picoui_widget_get_corner(0) == -1);
+    assert(picoui_widget_get_visible(0) == -1);
+
+    picoui_app_destroy(app);
+}
+
+static void test_window_color_round_trip_to_ldwindow(void)
+{
+    struct picoui_app *app = picoui_app_create();
+    struct picoui_window *win = picoui_window_create(app, "root");
+    const struct picoui_backend_widget *win_backend = win->widget.backend_widget;
+    const ldWindow_t *ld_window = (const ldWindow_t *)win_backend->ld_widget;
+    unsigned int rgb = 0;
+
+    assert(picoui_window_set_color(win, 0x336699U) == 0);
+    assert(picoui_window_get_color(win, &rgb) == 0);
+    assert(rgb == 0x31659CU);
+    assert(win->widget.bg_color == 0x336699U);
+    assert(ldWindowGetColor((ldWindow_t *)ld_window) == (ldColor)test_rgb_to_ld_color(0x336699U));
+    assert(picoui_window_set_color(0, 0x112233U) == -1);
+    assert(picoui_window_set_color(win, 0x1000000U) == -1);
+    assert(picoui_window_get_color(0, &rgb) == -1);
+    assert(picoui_window_get_color(win, 0) == -1);
+
+    picoui_app_destroy(app);
+}
+
+static void test_window_background_source_round_trip_to_ldwindow(void)
+{
+    arm_2d_tile_t img_tile = {0};
+    arm_2d_tile_t mask_tile = {0};
+    struct picoui_image_source source = {
+        .img_tile = &img_tile,
+        .mask_tile = &mask_tile,
+    };
+    struct picoui_image_source invalid_source = {
+        .img_tile = 0,
+        .mask_tile = &mask_tile,
+    };
+    struct picoui_app *app = picoui_app_create();
+    struct picoui_window *win = picoui_window_create(app, "root");
+    const struct picoui_backend_widget *win_backend = win->widget.backend_widget;
+    const ldWindow_t *ld_window = (const ldWindow_t *)win_backend->ld_widget;
+
+    assert(picoui_window_set_background_source(win, &source) == 0);
+    assert(ld_window->ptImgTile == source.img_tile);
+    assert(ld_window->ptMaskTile == source.mask_tile);
+
+    assert(picoui_window_set_background_source(win, 0) == 0);
+    assert(ld_window->ptImgTile == 0);
+    assert(ld_window->ptMaskTile == 0);
+
+    assert(picoui_window_set_background_source(win, &invalid_source) == -1);
+    assert(ld_window->ptImgTile == 0);
+    assert(ld_window->ptMaskTile == 0);
+    assert(picoui_window_set_background_source(0, &source) == -1);
+
+    picoui_app_destroy(app);
+}
+
 static void test_flex_layout_relayout_uses_ld_window_without_cursor_override(void)
 {
     struct picoui_app *app = picoui_app_create();
@@ -358,6 +466,53 @@ static void test_window_padding_group_round_trip_to_ldwindow(void)
     picoui_app_destroy(app);
 }
 
+static void test_window_native_layout_padding_grid_padding_and_generic_gap_round_trip(void)
+{
+    struct picoui_app *app = picoui_app_create();
+    struct picoui_window *win = picoui_window_create(app, "root");
+    const struct picoui_backend_widget *win_backend = win->widget.backend_widget;
+    const ldWindow_t *ld_window = (const ldWindow_t *)win_backend->ld_widget;
+
+    assert(picoui_window_set_layout_type(win, PICOUI_WINDOW_LAYOUT_FLEX) == 0);
+    assert(ld_window->layoutTpye == layoutFlex);
+    assert(picoui_window_set_padding(win, 2, 4, 6, 8) == 0);
+    assert(ld_window->flexPadding.left == 2);
+    assert(ld_window->flexPadding.top == 4);
+    assert(ld_window->flexPadding.right == 6);
+    assert(ld_window->flexPadding.bottom == 8);
+    assert(ld_window->layoutTpye == layoutFlex);
+
+    assert(picoui_window_set_layout_type(win, PICOUI_WINDOW_LAYOUT_GRID) == 0);
+    assert(ld_window->layoutTpye == layoutGrid);
+    assert(picoui_window_set_grid_padding(win, 3, 5, 7, 9) == 0);
+    assert(ld_window->gridPadding.left == 3);
+    assert(ld_window->gridPadding.top == 5);
+    assert(ld_window->gridPadding.right == 7);
+    assert(ld_window->gridPadding.bottom == 9);
+    assert(ld_window->layoutTpye == layoutGrid);
+
+    assert(picoui_window_set_gap(win, 11) == 0);
+    assert(ld_window->layoutTpye == layoutGrid);
+    assert(ld_window->flexItemGap == 11);
+    assert(ld_window->flexTrackGap == 11);
+    assert(win_backend->window_layout.flex_item_gap == 11);
+    assert(win_backend->window_layout.flex_track_gap == 11);
+
+    assert(picoui_window_set_layout_type(win, PICOUI_WINDOW_LAYOUT_NONE) == 0);
+    assert(ld_window->layoutTpye == layoutNone);
+    assert(picoui_window_set_layout_type(0, PICOUI_WINDOW_LAYOUT_FLEX) == -1);
+    assert(picoui_window_set_layout_type(win, (enum picoui_window_layout_type)99) == -1);
+    assert(picoui_window_set_padding(0, 1, 2, 3, 4) == -1);
+    assert(picoui_window_set_padding(win, -1, 2, 3, 4) == -1);
+    assert(picoui_window_set_grid_padding(0, 1, 2, 3, 4) == -1);
+    assert(picoui_window_set_grid_padding(win, 1, 2, 3, -4) == -1);
+    assert(picoui_window_set_gap(0, 1) == -1);
+    assert(picoui_window_set_gap(win, -1) == -1);
+    assert(ld_window->layoutTpye == layoutNone);
+
+    picoui_app_destroy(app);
+}
+
 int main(void)
 {
     struct picoui_app *app = picoui_app_create();
@@ -401,8 +556,12 @@ int main(void)
     test_flex_layout_setters_sync_to_real_ld_window_and_children();
     test_widget_native_base_flags_round_trip_to_ldbase();
     test_widget_native_flex_min_max_round_trip_to_ldbase();
+    test_widget_native_base_getters_round_trip_to_ldbase();
     test_flex_layout_relayout_uses_ld_window_without_cursor_override();
     test_window_padding_survives_layout_type_switches();
     test_window_padding_group_round_trip_to_ldwindow();
+    test_window_color_round_trip_to_ldwindow();
+    test_window_background_source_round_trip_to_ldwindow();
+    test_window_native_layout_padding_grid_padding_and_generic_gap_round_trip();
     return 0;
 }

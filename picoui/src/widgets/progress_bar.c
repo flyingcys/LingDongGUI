@@ -60,6 +60,11 @@ struct picoui_progress_bar *picoui_progress_bar_create(struct picoui_window *par
     return bar;
 }
 
+struct picoui_progress_bar *picoui_progress_bar_init(struct picoui_window *parent, const char *id)
+{
+    return picoui_progress_bar_create(parent, id);
+}
+
 struct picoui_progress_bar *picoui_progress_bar_create_with_props(
     struct picoui_window *parent,
     const struct picoui_progress_bar_props *props)
@@ -150,6 +155,16 @@ int picoui_progress_bar_get_horizontal(const struct picoui_progress_bar *bar)
     }
 
     return horizontal;
+}
+
+int picoui_progress_bar_set_image(struct picoui_progress_bar *bar,
+                                  struct picoui_image_source *bg_source,
+                                  struct picoui_image_source *fg_source)
+{
+    if (picoui_progress_bar_set_bg_source(bar, bg_source) != 0) {
+        return -1;
+    }
+    return picoui_progress_bar_set_fg_source(bar, fg_source);
 }
 
 int picoui_progress_bar_set_bg_source(struct picoui_progress_bar *bar, struct picoui_image_source *source)

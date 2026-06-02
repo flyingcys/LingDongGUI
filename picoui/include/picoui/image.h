@@ -29,5 +29,6 @@ struct picoui_image *picoui_image_create(struct picoui_window *parent, const cha
 struct picoui_image *picoui_image_create_with_props(struct picoui_window *parent,
                                                     const struct picoui_image_props *props);
 int picoui_image_set_source(struct picoui_image *image, struct picoui_image_source *source);
+int picoui_image_set_mask_color(struct picoui_image *image, unsigned int rgb);
 
 #endif
