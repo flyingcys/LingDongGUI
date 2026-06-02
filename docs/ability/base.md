@@ -22,6 +22,18 @@
 - matrix judgement：`policy_complete` / `policy_complete`
 - 来源 header：`src/gui/ldBase.h`
 
+## 控件能力等价缺口
+
+本节按 native/user-facing 能力等价判断，不按 `ld*` 名称逐个翻译判断。以下行虽然已在 policy ledger 中处置，但用户态能力尚不能证明可由 PicoUI 完整完成：
+
+| 缺口 | LingDongGUI 来源 | 当前 PicoUI 状态 | 需要补齐的能力 |
+| --- | --- | --- | --- |
+| 动态移除/销毁控件 | `ldBaseNodeRemove`、各控件 `*_depose` | `base_tree_policy` / lifecycle allowlist | `picoui_widget_destroy()` 或 `picoui_widget_remove_from_parent()` 等真实 tree 移除能力，含 backend 释放与测试 |
+| VRES 图片/字体资源 | `ldBaseGetVresImage`、`ldBaseGetVresFont` | `resource_time_helper_policy` allowlist | PicoUI 资源源或 provider 能描述 VRES 图片/字体，并可被 image/text/font 相关控件消费 |
+| 系统时间/日期/星期 | `ldBaseGetTime`、`ldBaseGetDate`、`ldBaseGetWeek` | `resource_time_helper_policy` allowlist | PicoUI app/host time provider 或 portable query API，使日期时间类控件不依赖用户绕回 LingDongGUI |
+| 背景移动 | `ldBaseBgMove` | `base_tree_policy` allowlist | window/background pan/move 能力；若新增独立 `picoui_background`，该能力归入 background 控件 |
+| 自定义绘制/基础绘图 | `ldBaseColor`、`ldBaseDrawLine`、`ldBaseImage`、`ldBaseImageScale`、`ldBaseLabel` | `drawing_helper_policy` allowlist | `picoui_canvas` 或 custom widget draw callback，覆盖填色、画线、图片、缩放图片、文字绘制 |
+
 ## API 能力与 PicoUI 覆盖清单
 
 | # | LingDongGUI symbol | 分类 | group_kind | policy_category | direct_100_category | required | PicoUI 状态 | 覆盖类型 | PicoUI API | backend proof | unit/gate | 说明 | signature |

@@ -21,6 +21,14 @@
 - matrix judgement：`non_widget_policy_complete` / `non_widget_policy_complete`
 - 来源 header：`src/gui/ldGui.h`
 
+## 控件能力等价缺口
+
+本页大部分 runtime host API 可以继续保持 backend/runtime 内部能力，不需要逐个公开为 PicoUI API。但页面/场景切换是用户可感知能力：以前用户可以通过 LingDongGUI 跳转页面，现在必须能通过 PicoUI 表达等价意图。
+
+| 缺口 | LingDongGUI 来源 | 当前 PicoUI 状态 | 需要补齐的能力 |
+| --- | --- | --- | --- |
+| 页面/场景切换 | `ldGuiJumpPage`、`ldGuiJumpPageFast`、`ldGuiJumpPage_0`、`ldGuiJumpPage_1`、`ldGuiJumpPage_2`、`__ldGuiJumpPage` | 当前全量归入 `runtime_host_internal` allowlist，缺少 PicoUI user-facing page/window switch | `picoui_app_set_window()`、`picoui_app_switch_window(mode, ms)` 或等价 page API，并覆盖真实 scene/window 切换测试 |
+
 ## API 能力与 PicoUI 覆盖清单
 
 | # | LingDongGUI symbol | 分类 | group_kind | policy_category | direct_100_category | required | PicoUI 状态 | 覆盖类型 | PicoUI API | backend proof | unit/gate | 说明 | signature |

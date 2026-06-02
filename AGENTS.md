@@ -1,6 +1,9 @@
 ## PicoUI 开发规则
 
 - `PicoUI` 是上层 API，不是第二套 GUI 渲染器。
+- `PicoUI` 的 100% 目标是控件与用户可用能力 100% 覆盖，不是把 `LingDongGUI` 的 `ld*` API 逐字翻译成 `picoui_*` API；过去能用 `LingDongGUI` 实现的控件功能和对应能力，现在必须能只用 `PicoUI` public API 实现。
+- 判断缺口时以“用户能否通过 PicoUI 完成同等控件能力”为准；允许 API 形态、命名、参数模型与 `LingDongGUI` 不同，但不得因为不是一一 API wrapper 就漏掉原本可实现的功能。
+- `policy_never_public` 只能用于生命周期、渲染管线、内存、宿主内部、调试或 backend-private helper 等不应成为用户控件能力的内部项；不能把真实用户可见/可操作的控件能力放进 policy 来规避实现。
 - 禁止在 `picoui/src/backend/ldgui/backend_app.c` 里继续堆固定坐标、固定尺寸、假控件画法；SDL 只做宿主显示，不做 `PicoUI` 专属 fake renderer。
 - `PicoUI -> LingDongGUI` 必须走真实 backend 映射：`window/label/button/checkbox/switch/slider/text/image`、`flex/grid`、`theme/event` 都要落到真实 `LingDongGUI` 对象和行为。
 - `picoui/demo/*` 只允许使用 `picoui_*` API；禁止泄漏 `ld*`、`arm_2d_*`、`SIGNAL_*`。
