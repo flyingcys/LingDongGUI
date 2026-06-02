@@ -41,7 +41,6 @@
 
 | 缺口 | LingDongGUI 来源 | 当前 PicoUI 状态 | 需要补齐的能力 |
 | --- | --- | --- | --- |
-| 动态移除/销毁控件 | `ldBaseNodeRemove`、各控件 `*_depose` | 当前作为 lifecycle/tree policy allowlist，缺少用户态销毁/移除入口 | `picoui_widget_destroy()` 或 `picoui_widget_remove_from_parent()` 等可移除真实 backend tree 节点的能力，并覆盖资源释放与测试 |
 | 键盘自定义布局/按钮表 | `ldKeyboardGetTargetBtnList` | `keyboard` 仅覆盖部分属性和输入态，缺少便携 layout/button list | `picoui_keyboard_set_layout()` 等可表达按键集合、行列、显示文本和值的能力 |
 | 键盘按键事件回调 | `ldKeyboardCallback` | 缺少 PicoUI 对外按键事件钩子 | `picoui_keyboard_set_on_key_event()` 或等价事件能力 |
 | 按钮全局 action/nameId 状态 | `ldButtonActionInit`、`ldButtonActionIsPressById` | 仅有单 widget 状态与事件能力，缺少按 `nameId` 查询动作状态 | 按 id 查询 pressed/action，或通用 typed lookup 后查询状态 |
@@ -50,6 +49,12 @@
 | 页面/场景切换 | `ldGuiJumpPage*`、`__ldGuiJumpPage` | runtime host policy allowlist，缺少用户态 page/window switch | `picoui_app_set_window()`、`picoui_app_switch_window(mode, ms)` 或等价页面切换能力 |
 | background 独立控件与背景移动 | `widgetTypeBackground`、`ldBaseBgMove` | 无独立 `picoui_background_*`；背景移动只按 backend helper allowlist | 明确是否新增独立 background 控件；至少补齐 window/background pan/move 能力 |
 | 自定义绘制/基础绘图 | `ldBaseColor`、`ldBaseDrawLine`、`ldBaseImage`、`ldBaseImageScale`、`ldBaseLabel`、`ldKeyboardBtnUserDraw` | 当前 raw drawing helper/render hook allowlist，缺少用户态 custom draw/canvas | `picoui_canvas` 或 custom widget draw callback，能画线、填色、图像、文字并参与真实 backend 渲染 |
+
+## 按控件能力等价已补齐
+
+| 能力 | LingDongGUI 来源 | PicoUI 补齐状态 | 边界 |
+| --- | --- | --- | --- |
+| 动态移除/销毁控件 | `ldBaseNodeRemove`、各控件 `*_depose` | a-0.13 已新增 `picoui_widget_remove_from_parent()` 与 `picoui_widget_destroy()`，同步更新 PicoUI backend tree 与真实 `ldBase` tree，并覆盖 focus 清理、nameId 查找移除、child count 更新测试 | 当前 `destroy` 定义为用户态销毁绑定和 tree 脱离，不在本线释放所有 widget 外层内存；完整 allocator/free 所有权另线处理 |
 
 ## a-0.9 policy schema
 

@@ -28,11 +28,16 @@
 
 | 缺口 | LingDongGUI 来源 | 当前 PicoUI 状态 | 需要补齐的能力 |
 | --- | --- | --- | --- |
-| 动态移除/销毁控件 | `ldBaseNodeRemove`、各控件 `*_depose` | `base_tree_policy` / lifecycle allowlist | `picoui_widget_destroy()` 或 `picoui_widget_remove_from_parent()` 等真实 tree 移除能力，含 backend 释放与测试 |
 | VRES 图片/字体资源 | `ldBaseGetVresImage`、`ldBaseGetVresFont` | `resource_time_helper_policy` allowlist | PicoUI 资源源或 provider 能描述 VRES 图片/字体，并可被 image/text/font 相关控件消费 |
 | 系统时间/日期/星期 | `ldBaseGetTime`、`ldBaseGetDate`、`ldBaseGetWeek` | `resource_time_helper_policy` allowlist | PicoUI app/host time provider 或 portable query API，使日期时间类控件不依赖用户绕回 LingDongGUI |
 | 背景移动 | `ldBaseBgMove` | `base_tree_policy` allowlist | window/background pan/move 能力；若新增独立 `picoui_background`，该能力归入 background 控件 |
 | 自定义绘制/基础绘图 | `ldBaseColor`、`ldBaseDrawLine`、`ldBaseImage`、`ldBaseImageScale`、`ldBaseLabel` | `drawing_helper_policy` allowlist | `picoui_canvas` 或 custom widget draw callback，覆盖填色、画线、图片、缩放图片、文字绘制 |
+
+## 控件能力等价已补齐
+
+| 能力 | LingDongGUI 来源 | PicoUI 补齐状态 | 边界 |
+| --- | --- | --- | --- |
+| 动态移除/销毁控件 | `ldBaseNodeRemove`、各控件 `*_depose` | a-0.13 已新增 `picoui_widget_remove_from_parent()` 与 `picoui_widget_destroy()`，通过 `ldBaseNodeRemove()` 脱离真实 native tree，并覆盖 parent/child/sibling/nameId/focus 测试 | 当前 `destroy` 不释放所有外层 widget 分配；内存所有权和完整 free 策略另线处理 |
 
 ## API 能力与 PicoUI 覆盖清单
 

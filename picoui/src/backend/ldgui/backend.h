@@ -179,6 +179,8 @@ struct picoui_backend_widget *picoui_backend_widget_get_first_child(void *backen
 struct picoui_backend_widget *picoui_backend_widget_get_next_sibling(void *backend_widget);
 struct picoui_backend_widget *picoui_backend_widget_find_by_name_id(void *backend_widget, uint16_t name_id);
 int picoui_backend_widget_attach_child(void *parent, void *child);
+int picoui_backend_widget_detach_from_parent(void *backend_widget);
+int picoui_backend_widget_unbind_host(void *backend_widget);
 void *picoui_backend_create_window(struct picoui_app *app, const char *id);
 void *picoui_backend_create_label(void *parent, const char *id);
 void *picoui_backend_create_button(void *parent, const char *id);

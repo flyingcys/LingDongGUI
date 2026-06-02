@@ -365,6 +365,86 @@ static void test_widget_tree_name_and_type_queries_round_trip_to_ldbase(void)
     picoui_app_destroy(app);
 }
 
+static void test_widget_remove_from_parent_updates_picoui_and_ldbase_tree(void)
+{
+    struct picoui_app *app = picoui_app_create();
+    struct picoui_window *win = picoui_window_create(app, "root");
+    struct picoui_button *a = picoui_button_create(win, "a");
+    struct picoui_button *b = picoui_button_create(win, "b");
+    struct picoui_button *c = picoui_button_create(win, "c");
+    const struct picoui_backend_widget *win_backend = win->widget.backend_widget;
+    const struct picoui_backend_widget *a_backend = a->widget.backend_widget;
+    const struct picoui_backend_widget *b_backend = b->widget.backend_widget;
+    const struct picoui_backend_widget *c_backend = c->widget.backend_widget;
+    ldBase_t *ld_win = (ldBase_t *)win_backend->ld_widget;
+    ldBase_t *ld_a = (ldBase_t *)a_backend->ld_widget;
+    ldBase_t *ld_b = (ldBase_t *)b_backend->ld_widget;
+    ldBase_t *ld_c = (ldBase_t *)c_backend->ld_widget;
+    int b_name_id = picoui_widget_get_name_id((const struct picoui_widget *)b);
+
+    assert(picoui_widget_get_child_count((const struct picoui_widget *)win) == 3);
+    assert(ldBaseGetChildCount(ld_win) == 3);
+    assert(ldBaseGetNextSibling(ld_a) == ld_b);
+    assert(ldBaseGetNextSibling(ld_b) == ld_c);
+
+    assert(picoui_widget_remove_from_parent((struct picoui_widget *)b) == 0);
+    assert(picoui_widget_get_parent((const struct picoui_widget *)b) == 0);
+    assert(picoui_widget_get_root((const struct picoui_widget *)b) == 0);
+    assert(picoui_widget_get_next_sibling((const struct picoui_widget *)b) == 0);
+    assert(picoui_widget_get_first_child((const struct picoui_widget *)win) == (struct picoui_widget *)a);
+    assert(picoui_widget_get_next_sibling((const struct picoui_widget *)a) == (struct picoui_widget *)c);
+    assert(picoui_widget_get_child_count((const struct picoui_widget *)win) == 2);
+    assert(picoui_widget_find_by_name_id((const struct picoui_widget *)win, b_name_id) == 0);
+    assert(ldBaseGetParent(ld_b) == 0);
+    assert(ldBaseGetNextSibling(ld_b) == 0);
+    assert(ldBaseGetChildCount(ld_win) == 2);
+    assert(ldBaseGetNextSibling(ld_a) == ld_c);
+
+    assert(picoui_widget_remove_from_parent((struct picoui_widget *)b) == -1);
+    assert(picoui_widget_remove_from_parent((struct picoui_widget *)win) == -1);
+    assert(picoui_widget_remove_from_parent(0) == -1);
+
+    picoui_app_destroy(app);
+}
+
+static void test_widget_destroy_detaches_focus_and_invalidates_backend_binding(void)
+{
+    struct picoui_app *app = picoui_app_create();
+    struct picoui_window *win = picoui_window_create(app, "root");
+    struct picoui_button *a = picoui_button_create(win, "a");
+    struct picoui_button *b = picoui_button_create(win, "b");
+    const struct picoui_backend_widget *win_backend = win->widget.backend_widget;
+    struct picoui_backend_widget *b_backend = b->widget.backend_widget;
+    ldBase_t *ld_win = (ldBase_t *)win_backend->ld_widget;
+    ldBase_t *ld_b = (ldBase_t *)b_backend->ld_widget;
+    int b_name_id = picoui_widget_get_name_id((const struct picoui_widget *)b);
+
+    assert(picoui_widget_claim_focus((struct picoui_widget *)b) == 0);
+    assert(picoui_widget_is_focus_owner((const struct picoui_widget *)b) == 1);
+    assert(picoui_widget_get_child_count((const struct picoui_widget *)win) == 2);
+
+    assert(picoui_widget_destroy((struct picoui_widget *)b) == 0);
+    assert(picoui_widget_is_focus_owner((const struct picoui_widget *)b) == 0);
+    assert(app->focus_owner == 0);
+    assert(picoui_widget_get_parent((const struct picoui_widget *)b) == 0);
+    assert(picoui_widget_get_root((const struct picoui_widget *)b) == 0);
+    assert(picoui_widget_get_name_id((const struct picoui_widget *)b) == -1);
+    assert(picoui_widget_get_type((const struct picoui_widget *)b) == PICOUI_WIDGET_TYPE_UNKNOWN);
+    assert(picoui_widget_find_by_name_id((const struct picoui_widget *)win, b_name_id) == 0);
+    assert(picoui_widget_get_child_count((const struct picoui_widget *)win) == 1);
+    assert(picoui_widget_get_first_child((const struct picoui_widget *)win) == (struct picoui_widget *)a);
+    assert(ldBaseGetParent(ld_b) == 0);
+    assert(ldBaseGetChildCount(ld_win) == 1);
+    assert(b->widget.backend_widget == 0);
+    assert(b_backend->host_widget == 0);
+
+    assert(picoui_widget_destroy((struct picoui_widget *)b) == -1);
+    assert(picoui_widget_destroy((struct picoui_widget *)win) == -1);
+    assert(picoui_widget_destroy(0) == -1);
+
+    picoui_app_destroy(app);
+}
+
 static void test_widget_geometry_helpers_round_trip_to_ldbase(void)
 {
     struct picoui_app *app = picoui_app_create();
@@ -698,6 +778,8 @@ int main(void)
     test_widget_native_flex_min_max_round_trip_to_ldbase();
     test_widget_native_base_getters_round_trip_to_ldbase();
     test_widget_tree_name_and_type_queries_round_trip_to_ldbase();
+    test_widget_remove_from_parent_updates_picoui_and_ldbase_tree();
+    test_widget_destroy_detaches_focus_and_invalidates_backend_binding();
     test_widget_geometry_helpers_round_trip_to_ldbase();
     test_widget_focus_navigation_public_api();
     test_flex_layout_relayout_uses_ld_window_without_cursor_override();

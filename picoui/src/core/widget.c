@@ -592,6 +592,60 @@ int picoui_widget_set_grid_cell(struct picoui_widget *widget,
     return picoui_backend_widget_set_grid_cell(widget, col, row, col_span, row_span, x_align, y_align);
 }
 
+int picoui_widget_remove_from_parent(struct picoui_widget *widget)
+{
+    struct picoui_backend_widget *backend_widget;
+
+    if (!picoui_widget_is_valid(widget)) {
+        return -1;
+    }
+
+    backend_widget = picoui_widget_get_backend(widget);
+    if (backend_widget == 0 ||
+        backend_widget->kind == PICOUI_BACKEND_WIDGET_WINDOW ||
+        backend_widget->parent == 0) {
+        return -1;
+    }
+
+    return picoui_backend_widget_detach_from_parent(backend_widget);
+}
+
+int picoui_widget_destroy(struct picoui_widget *widget)
+{
+    struct picoui_backend_widget *backend_widget;
+    struct picoui_app *owner;
+
+    if (!picoui_widget_is_valid(widget)) {
+        return -1;
+    }
+
+    backend_widget = picoui_widget_get_backend(widget);
+    if (backend_widget == 0 ||
+        backend_widget->kind == PICOUI_BACKEND_WIDGET_WINDOW ||
+        backend_widget->parent == 0) {
+        return -1;
+    }
+
+    owner = backend_widget->owner;
+    if (owner != 0) {
+        if (owner->focus_owner == widget) {
+            (void)picoui_widget_release_focus(widget);
+        }
+        if (owner->editing_owner == widget) {
+            (void)picoui_widget_release_editing(widget);
+        }
+    }
+
+    if (picoui_backend_widget_detach_from_parent(backend_widget) != 0) {
+        return -1;
+    }
+    if (picoui_backend_widget_unbind_host(backend_widget) != 0) {
+        return -1;
+    }
+    widget->backend_widget = 0;
+    return 0;
+}
+
 int picoui_widget_get_x(const struct picoui_widget *widget)
 {
     ldBase_t *ld_base = picoui_widget_get_ld_base((struct picoui_widget *)widget);

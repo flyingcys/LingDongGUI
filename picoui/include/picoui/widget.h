@@ -99,6 +99,8 @@ int picoui_widget_set_grid_cell(struct picoui_widget *widget,
                                 int row_span,
                                 enum picoui_align x_align,
                                 enum picoui_align y_align);
+int picoui_widget_remove_from_parent(struct picoui_widget *widget);
+int picoui_widget_destroy(struct picoui_widget *widget);
 int picoui_widget_get_x(const struct picoui_widget *widget);
 int picoui_widget_get_y(const struct picoui_widget *widget);
 int picoui_widget_get_width(const struct picoui_widget *widget);
