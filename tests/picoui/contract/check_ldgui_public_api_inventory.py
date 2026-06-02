@@ -62,6 +62,27 @@ VALID_GAP_STATUSES = {
     "overwrapped",
     "allowlisted",
 }
+VALID_GROUP_KINDS = {
+    "widget",
+    "shared_base",
+    "runtime_host",
+    "internal_helper",
+    "enum_only",
+}
+VALID_POLICY_CATEGORIES = {
+    "direct_covered",
+    "lifecycle_internal",
+    "render_pipeline_internal",
+    "runtime_host_internal",
+    "layout_solver_internal",
+    "memory_internal",
+    "base_tree_policy",
+    "resource_time_helper_policy",
+    "drawing_helper_policy",
+    "backend_private_hook",
+    "native_action_private",
+    "enum_only_semantics",
+}
 REQUIRED_SYMBOLS = [
     "ldTextSetStaticText",
     "ldImageSetMaskColor",
@@ -107,6 +128,13 @@ TASK_BY_WIDGET = {
     "radial_menu": "R5",
     "message_box": "R6",
     "animation": "R5",
+}
+GROUP_KIND_BY_WIDGET = {
+    "base": "shared_base",
+    "gui": "runtime_host",
+    "mem": "internal_helper",
+    "switch_internal": "internal_helper",
+    "window_layout_internal": "internal_helper",
 }
 
 
@@ -170,6 +198,41 @@ def _category(symbol: str, signature: str, target: str | None = None) -> str:
 
 def _required(category: str) -> bool:
     return category in LEDGER_REQUIRED_CATEGORIES
+
+
+def _group_kind(widget: str) -> str:
+    return GROUP_KIND_BY_WIDGET.get(widget, "widget")
+
+
+def _policy_category(widget: str, symbol: str, category: str, gap_status: str) -> str:
+    if gap_status == "covered":
+        return "direct_covered"
+    if symbol in {"ldButtonActionInit", "ldButtonActionIsPressById"}:
+        return "native_action_private"
+    if symbol in {"ldKeyboardGetTargetBtnList", "ldKeyboardCallback", "ldKeyboardBtnUserDraw"}:
+        return "backend_private_hook"
+    if widget == "gui":
+        return "runtime_host_internal"
+    if widget == "mem":
+        return "memory_internal"
+    if widget in {"switch_internal", "window_layout_internal"}:
+        return "layout_solver_internal"
+    if widget == "base":
+        if symbol in {"ldBaseGetVresImage", "ldBaseGetVresFont", "ldBaseGetDate", "ldBaseGetTime", "ldBaseGetWeek"}:
+            return "resource_time_helper_policy"
+        if symbol in {"ldBaseDrawLine", "ldBaseImageScale"}:
+            return "drawing_helper_policy"
+        return "base_tree_policy"
+    if category == "lifecycle" or any(
+        symbol.endswith(suffix)
+        for suffix in ("_depose", "_on_load", "_on_frame_start", "_on_frame_complete")
+    ):
+        return "lifecycle_internal"
+    if category == "show" or symbol.endswith("_show") or symbol.endswith("Show"):
+        return "render_pipeline_internal"
+    if widget == "window":
+        return "enum_only_semantics"
+    return "backend_private_hook"
 
 
 def _default_gap_status(category: str) -> str:
@@ -299,12 +362,16 @@ def build_inventory(rows: list[dict]) -> dict:
         category = row["category"]
         api_row = {
             **row,
+            "group_kind": _group_kind(row["widget"]),
             "picoui_api": _default_picoui_api(row["ldgui_symbol"], category),
             "backend_proof": _default_backend_proof(row["ldgui_symbol"], category),
             "unit_test": _default_unit_test(row["ldgui_symbol"], category),
             "gate_evidence": [],
             "gap_status": _default_gap_status(category),
         }
+        api_row["policy_category"] = _policy_category(
+            row["widget"], row["ldgui_symbol"], category, api_row["gap_status"]
+        )
         if api_row["gap_status"] == "allowlisted":
             api_row["allowlist_reason"] = _default_allowlist_reason(category)
         widgets[row["widget"]].append(api_row)
@@ -336,10 +403,12 @@ def build_ledger(rows: list[dict]) -> dict:
         status = _default_gap_status(row["category"])
         ledger_row = {
             "widget": row["widget"],
+            "group_kind": _group_kind(row["widget"]),
             "header": row["header"],
             "ldgui_symbol": row["ldgui_symbol"],
             "category": row["category"],
             "gap_status": status,
+            "policy_category": _policy_category(row["widget"], row["ldgui_symbol"], row["category"], status),
             "planned_task": TASK_BY_WIDGET.get(row["widget"], "R5"),
             "overwrap_risk": False,
             "notes": "R0 inventory seed; later tasks must replace missing_* with concrete PicoUI/backend/unit/gate evidence.",
@@ -421,16 +490,30 @@ def validate_inventory(scanned_rows: list[dict], inventory: dict) -> None:
             "category",
             "signature",
             "required",
+            "group_kind",
             "picoui_api",
             "backend_proof",
             "unit_test",
             "gate_evidence",
             "gap_status",
+            "policy_category",
         ):
             assert field in row, f"{row.get('ldgui_symbol')} missing inventory field {field}"
         assert row["category"] in VALID_CATEGORIES, f"{row['ldgui_symbol']} invalid category"
         assert row["gap_status"] in VALID_GAP_STATUSES, f"{row['ldgui_symbol']} invalid gap_status"
+        assert row["group_kind"] in VALID_GROUP_KINDS, f"{row['ldgui_symbol']} invalid group_kind"
+        assert row["policy_category"] in VALID_POLICY_CATEGORIES, (
+            f"{row['ldgui_symbol']} invalid policy_category"
+        )
+        if row["gap_status"] == "covered":
+            assert row["policy_category"] == "direct_covered", (
+                f"{row['ldgui_symbol']} covered row must use direct_covered policy"
+            )
         if row["gap_status"] == "allowlisted":
+            assert row["required"] is False, f"{row['ldgui_symbol']} allowlisted row must be required=false"
+            assert row["policy_category"] != "direct_covered", (
+                f"{row['ldgui_symbol']} allowlisted row must not use direct_covered policy"
+            )
             assert row.get("allowlist_reason"), f"{row['ldgui_symbol']} allowlisted without reason"
             assert row["ldgui_symbol"] in allowlist_symbols, (
                 f"{row['ldgui_symbol']} allowlisted row missing top-level allowlist entry"
@@ -449,9 +532,19 @@ def validate_ledger(scanned_rows: list[dict], ledger: dict) -> None:
         symbol = row.get("ldgui_symbol")
         ledger_by_symbol[symbol].append(row)
         assert row.get("gap_status") in VALID_GAP_STATUSES, f"{symbol} invalid gap_status"
+        assert row.get("group_kind") in VALID_GROUP_KINDS, f"{symbol} invalid group_kind"
+        assert row.get("policy_category") in VALID_POLICY_CATEGORIES, f"{symbol} invalid policy_category"
         assert row.get("planned_task"), f"{symbol} missing planned_task"
         assert "overwrap_risk" in row, f"{symbol} missing overwrap_risk"
+        if row.get("gap_status") == "covered":
+            assert row.get("policy_category") == "direct_covered", (
+                f"{symbol} covered row must use direct_covered policy"
+            )
         if row.get("gap_status") == "allowlisted":
+            assert row.get("required") is False, f"{symbol} allowlisted row must be required=false"
+            assert row.get("policy_category") != "direct_covered", (
+                f"{symbol} allowlisted row must not use direct_covered policy"
+            )
             assert row.get("allowlist_reason"), f"{symbol} allowlisted without reason"
         if row.get("gap_status") == "covered" and row.get("coverage_kind") == "shared_api_equivalence":
             assert row.get("equivalence_proof"), f"{symbol} covered without equivalence_proof"

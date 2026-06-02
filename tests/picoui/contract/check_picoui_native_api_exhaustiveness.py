@@ -31,6 +31,27 @@ VALID_GAP_STATUSES = {
     "overwrapped",
     "allowlisted",
 }
+VALID_GROUP_KINDS = {
+    "widget",
+    "shared_base",
+    "runtime_host",
+    "internal_helper",
+    "enum_only",
+}
+VALID_POLICY_CATEGORIES = {
+    "direct_covered",
+    "lifecycle_internal",
+    "render_pipeline_internal",
+    "runtime_host_internal",
+    "layout_solver_internal",
+    "memory_internal",
+    "base_tree_policy",
+    "resource_time_helper_policy",
+    "drawing_helper_policy",
+    "backend_private_hook",
+    "native_action_private",
+    "enum_only_semantics",
+}
 REQUIRED_ROW_FIELDS = {
     "native_api",
     "coverage_kind",
@@ -40,8 +61,10 @@ REQUIRED_ROW_FIELDS = {
     "gate_evidence",
     "gap_status",
     "capability_release_judgement",
+    "policy_category",
 }
 LEDGER_ALIGNED_FIELDS = {
+    "group_kind",
     "coverage_kind",
     "picoui_api",
     "backend_proof",
@@ -55,6 +78,7 @@ LEDGER_ALIGNED_FIELDS = {
     "artifact_entry_exists",
     "manual_review_required",
     "manual_reviewed_passed",
+    "policy_category",
 }
 
 VALID_SHARED_POLICIES = {
@@ -89,6 +113,9 @@ def _ledger_rows(ledger: dict) -> dict[str, dict]:
             raise AssertionError(f"ledger row has invalid ldgui_symbol: {row!r}")
         if symbol in rows:
             raise AssertionError(f"duplicate ledger row for native API: {symbol}")
+        group_kind = row.get("group_kind")
+        if group_kind not in VALID_GROUP_KINDS:
+            raise AssertionError(f"{symbol} ledger row has invalid group_kind: {group_kind!r}")
         rows[symbol] = row
     return rows
 
@@ -96,6 +123,11 @@ def _ledger_rows(ledger: dict) -> dict[str, dict]:
 def _matrix_capability_rows(matrix: dict) -> dict[str, dict]:
     rows: dict[str, dict] = {}
     for widget in matrix.get("widgets", []):
+        group_kind = widget.get("group_kind")
+        if group_kind not in VALID_GROUP_KINDS:
+            raise AssertionError(
+                f"matrix widget has invalid group_kind: {widget.get('name')}.{group_kind!r}"
+            )
         capabilities = widget.get("capabilities")
         if not isinstance(capabilities, list):
             raise AssertionError(f"matrix widget missing capabilities list: {widget.get('name')}")
@@ -123,8 +155,15 @@ def _assert_row_shape(native_api: str, row: dict) -> None:
     gap_status = row.get("gap_status")
     assert gap_status in VALID_GAP_STATUSES, f"{native_api} has invalid gap_status: {gap_status!r}"
     assert isinstance(row.get("gate_evidence"), list), f"{native_api} gate_evidence must be a list"
+    policy_category = row.get("policy_category")
+    assert policy_category in VALID_POLICY_CATEGORIES, (
+        f"{native_api} has invalid policy_category: {policy_category!r}"
+    )
 
     if gap_status == "covered":
+        assert policy_category == "direct_covered", (
+            f"{native_api} covered row must use policy_category=direct_covered"
+        )
         for field in ("picoui_api", "backend_proof", "unit_test"):
             assert isinstance(row.get(field), str) and row[field], (
                 f"{native_api} covered row must have concrete {field}"
@@ -132,6 +171,10 @@ def _assert_row_shape(native_api: str, row: dict) -> None:
         assert row["gate_evidence"], f"{native_api} covered row must have gate_evidence"
 
     if gap_status == "allowlisted":
+        assert row.get("required") is False, f"{native_api} allowlisted row must be required=false"
+        assert policy_category != "direct_covered", (
+            f"{native_api} allowlisted row must not use policy_category=direct_covered"
+        )
         assert coverage_kind in ALLOWLISTED_COVERAGE_KINDS, (
             f"{native_api} allowlisted row must use allowlisted coverage_kind"
         )

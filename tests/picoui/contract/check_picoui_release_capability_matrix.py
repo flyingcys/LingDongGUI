@@ -7,7 +7,7 @@ MATRIX_JSON = ROOT / "tests" / "picoui" / "contract" / "picoui_release_capabilit
 INVENTORY_JSON = ROOT / "tests" / "picoui" / "contract" / "ldgui_public_api_inventory.json"
 LEDGER_JSON = ROOT / "tests" / "picoui" / "contract" / "native_api_gap_ledger.json"
 
-A08_SCHEMA_VERSION = "a-0.8-native-api-exhaustiveness-v1"
+A09_SCHEMA_VERSION = "a-0.9-allowlist-policy-v1"
 VALID_COVERAGE_KINDS = {
     "native_setter_parity",
     "native_getter_parity",
@@ -31,7 +31,35 @@ VALID_GAP_STATUSES = {
     "overwrapped",
     "allowlisted",
 }
+VALID_GROUP_KINDS = {
+    "widget",
+    "shared_base",
+    "runtime_host",
+    "internal_helper",
+    "enum_only",
+}
+VALID_POLICY_CATEGORIES = {
+    "direct_covered",
+    "lifecycle_internal",
+    "render_pipeline_internal",
+    "runtime_host_internal",
+    "layout_solver_internal",
+    "memory_internal",
+    "base_tree_policy",
+    "resource_time_helper_policy",
+    "drawing_helper_policy",
+    "backend_private_hook",
+    "native_action_private",
+    "enum_only_semantics",
+}
+VALID_PARITY_STATUSES = {
+    "direct_parity_complete",
+    "policy_complete",
+    "parity_incomplete",
+    "non_widget_policy_complete",
+}
 LEDGER_ALIGNED_FIELDS = {
+    "group_kind",
     "coverage_kind",
     "picoui_api",
     "backend_proof",
@@ -45,6 +73,7 @@ LEDGER_ALIGNED_FIELDS = {
     "artifact_entry_exists",
     "manual_review_required",
     "manual_reviewed_passed",
+    "policy_category",
 }
 EXPECTED_GATE_CATALOG = {
     "runtime": {
@@ -173,17 +202,38 @@ def _widgets_by_name(matrix: dict) -> dict[str, dict]:
             raise AssertionError(f"widget row has invalid name: {widget!r}")
         if name in by_name:
             raise AssertionError(f"duplicate widget row in release matrix: {name}")
+        group_kind = widget.get("group_kind")
+        if group_kind not in VALID_GROUP_KINDS:
+            raise AssertionError(f"{name} has invalid group_kind: {group_kind!r}")
+        parity_status = widget.get("parity_status")
+        if parity_status not in VALID_PARITY_STATUSES:
+            raise AssertionError(f"{name} has invalid parity_status: {parity_status!r}")
+        if group_kind in {"runtime_host", "internal_helper"}:
+            assert parity_status == "non_widget_policy_complete", (
+                f"{name} {group_kind} group must be non_widget_policy_complete"
+            )
+        if group_kind == "shared_base" and parity_status == "policy_complete":
+            non_covered_policy_categories = {
+                capability.get("policy_category")
+                for capability in widget.get("capabilities", [])
+                if capability.get("gap_status") != "covered"
+            }
+            assert non_covered_policy_categories <= {
+                "base_tree_policy",
+                "resource_time_helper_policy",
+                "drawing_helper_policy",
+            }, f"{name} shared_base policy_complete has invalid policy categories"
         by_name[name] = widget
     return by_name
 
 
 def _assert_matrix_header(matrix: dict) -> None:
-    assert matrix.get("schema_version") == A08_SCHEMA_VERSION
-    assert matrix.get("line") == "a-0.8"
-    assert matrix.get("stage") == "native-api-exhaustiveness-r1"
+    assert matrix.get("schema_version") == A09_SCHEMA_VERSION
+    assert matrix.get("line") == "a-0.9"
+    assert matrix.get("stage") == "allowlist-truth-r0-policy-schema"
     assert matrix.get("purpose") == (
-        "PicoUI native API exhaustiveness truth source aligned to LingDongGUI public API "
-        "inventory and gap ledger"
+        "PicoUI allowlist policy truth source aligned to LingDongGUI public API inventory, "
+        "gap ledger, and a-0.9 policy categories"
     )
 
 
@@ -203,6 +253,8 @@ def _ledger_rows() -> dict[str, dict]:
         symbol = row.get("ldgui_symbol")
         assert isinstance(symbol, str) and symbol, f"invalid ledger row: {row!r}"
         assert symbol not in rows, f"duplicate ledger row: {symbol}"
+        group_kind = row.get("group_kind")
+        assert group_kind in VALID_GROUP_KINDS, f"{symbol} invalid ledger group_kind: {group_kind!r}"
         rows[symbol] = row
     return rows
 
@@ -216,8 +268,37 @@ def _assert_native_api_rows(by_name: dict[str, dict], ledger_by_symbol: dict[str
         assert widget.get("widget_release_judgement") != "final_release_ready", (
             f"{widget_name} must not be final_release_ready during R1"
         )
+        group_kind = widget.get("group_kind")
+        parity_status = widget.get("parity_status")
         capabilities = widget.get("capabilities")
         assert isinstance(capabilities, list) and capabilities, f"{widget_name} missing capabilities"
+        non_covered_policy_categories = {
+            capability.get("policy_category")
+            for capability in capabilities
+            if capability.get("gap_status") != "covered"
+        }
+        if group_kind == "widget" and non_covered_policy_categories <= {
+            "lifecycle_internal",
+            "render_pipeline_internal",
+            "backend_private_hook",
+            "native_action_private",
+            "enum_only_semantics",
+        }:
+            assert parity_status == "policy_complete", (
+                f"{widget_name} policy-only widget must be policy_complete"
+            )
+        if group_kind in {"runtime_host", "internal_helper"}:
+            assert parity_status == "non_widget_policy_complete", (
+                f"{widget_name} internal/runtime group must be non_widget_policy_complete"
+            )
+        if group_kind == "shared_base" and non_covered_policy_categories <= {
+            "base_tree_policy",
+            "resource_time_helper_policy",
+            "drawing_helper_policy",
+        }:
+            assert parity_status == "policy_complete", (
+                f"{widget_name} shared_base policy rows must be policy_complete"
+            )
         for capability in capabilities:
             native_api = capability.get("native_api")
             assert isinstance(native_api, str) and native_api, (
@@ -244,16 +325,29 @@ def _assert_native_api_rows(by_name: dict[str, dict], ledger_by_symbol: dict[str
             assert capability.get("gap_status") in VALID_GAP_STATUSES, (
                 f"{native_api} invalid gap_status"
             )
+            policy_category = capability.get("policy_category")
+            assert policy_category in VALID_POLICY_CATEGORIES, (
+                f"{native_api} invalid policy_category: {policy_category!r}"
+            )
             assert isinstance(capability.get("gate_evidence"), list), (
                 f"{native_api} gate_evidence must be a list"
             )
             if capability.get("gap_status") == "covered":
+                assert policy_category == "direct_covered", (
+                    f"{native_api} covered row must use policy_category=direct_covered"
+                )
                 for field in ("picoui_api", "backend_proof", "unit_test"):
                     assert capability.get(field), f"{native_api} covered row missing {field}"
                 assert capability.get("gate_evidence"), (
                     f"{native_api} covered row missing gate_evidence"
                 )
             if capability.get("gap_status") == "allowlisted":
+                assert capability.get("required") is False, (
+                    f"{native_api} allowlisted row must be required=false"
+                )
+                assert policy_category != "direct_covered", (
+                    f"{native_api} allowlisted row must not use policy_category=direct_covered"
+                )
                 assert capability.get("coverage_kind") in ALLOWLISTED_COVERAGE_KINDS, (
                     f"{native_api} allowlisted row has invalid coverage_kind"
                 )
@@ -293,11 +387,17 @@ def _assert_summary(matrix: dict, capability_total: int, ledger_by_symbol: dict[
     ]
     expected_coverage_counts: dict[str, int] = {}
     expected_gap_counts: dict[str, int] = {}
+    expected_policy_counts: dict[str, int] = {}
+    expected_group_kind_counts: dict[str, int] = {}
     for row in ledger_by_symbol.values():
         coverage_kind = row["coverage_kind"]
         gap_status = row["gap_status"]
+        policy_category = row["policy_category"]
+        group_kind = row["group_kind"]
         expected_coverage_counts[coverage_kind] = expected_coverage_counts.get(coverage_kind, 0) + 1
         expected_gap_counts[gap_status] = expected_gap_counts.get(gap_status, 0) + 1
+        expected_policy_counts[policy_category] = expected_policy_counts.get(policy_category, 0) + 1
+        expected_group_kind_counts[group_kind] = expected_group_kind_counts.get(group_kind, 0) + 1
 
     assert summary.get("ldgui_public_api_total") == len(ledger_by_symbol)
     assert summary.get("capability_entry_total") == capability_total
@@ -306,6 +406,8 @@ def _assert_summary(matrix: dict, capability_total: int, ledger_by_symbol: dict[
     assert summary.get("native_api_matrix_row_total") == len(matrix_rows)
     assert summary.get("gap_status_counts") == dict(sorted(expected_gap_counts.items()))
     assert summary.get("coverage_kind_counts") == dict(sorted(expected_coverage_counts.items()))
+    assert summary.get("policy_category_counts") == dict(sorted(expected_policy_counts.items()))
+    assert summary.get("group_kind_counts") == dict(sorted(expected_group_kind_counts.items()))
     assert summary.get("missing_gap_total") == sum(
         count for status, count in expected_gap_counts.items() if status not in {"covered", "allowlisted"}
     )

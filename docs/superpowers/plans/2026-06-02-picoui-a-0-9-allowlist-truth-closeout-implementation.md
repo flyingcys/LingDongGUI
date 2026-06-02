@@ -115,7 +115,7 @@ git submodule update --init --recursive
 
 **Goal:** Add machine-checkable policy metadata for all matrix rows and groups.
 
-- [ ] **Step 1: Run impact before checker edits**
+- [x] **Step 1: Run impact before checker edits**
 
 Run:
 
@@ -126,7 +126,9 @@ gitnexus_impact target=check_picoui_release_capability_matrix direction=upstream
 
 Expected: report direct callers/tests and risk before edits.
 
-- [ ] **Step 2: Add schema fields**
+执行记录（2026-06-02）：GitNexus 对 `check_picoui_native_api_exhaustiveness`、`check_picoui_release_capability_matrix` 以及对应文件/函数均未命中索引，返回 `risk=UNKNOWN`、无 HIGH/CRITICAL blast radius。实际改动限定在 contract checker/JSON truth-source/docs。
+
+- [x] **Step 2: Add schema fields**
 
 Update matrix and ledger rows:
 
@@ -169,7 +171,7 @@ allowlisted row has policy_category == direct_covered
 matrix group has no group_kind
 ```
 
-- [ ] **Step 4: Run contract gates**
+- [x] **Step 4: Run contract gates**
 
 Run:
 
@@ -182,13 +184,15 @@ git diff --check
 
 Expected: all pass.
 
+执行记录（2026-06-02）：三份机器真相源已覆盖 `611/611` 行 `group_kind` 与 `policy_category`；`picoui_release_capability_matrix.json` schema 升级为 `a-0.9-allowlist-policy-v1`；`summary.policy_category_counts` 与 `summary.group_kind_counts` 已由 checker 校验。`python3 tests/picoui/contract/check_ldgui_public_api_inventory.py`、`python3 tests/picoui/contract/check_picoui_native_api_exhaustiveness.py`、`python3 tests/picoui/contract/check_picoui_release_capability_matrix.py`、`git diff --check` 均通过。
+
 ### Task R1: Lifecycle And Show Policy
 
 **Owner:** Fresh subagent `SG-a0.9-R1-lifecycle-show`
 
 **Goal:** Convert lifecycle/show allowlist from generic allowlist into explicit policy-complete internal rows.
 
-- [ ] **Step 1: Scope rows**
+- [x] **Step 1: Scope rows**
 
 Select rows whose symbol matches:
 
@@ -200,7 +204,7 @@ Select rows whose symbol matches:
 *_show
 ```
 
-- [ ] **Step 2: Assign policy**
+- [x] **Step 2: Assign policy**
 
 Use:
 
@@ -217,11 +221,11 @@ required=false
 coverage_kind=lifecycle_internal_allowlisted or non_widget_allowlisted
 ```
 
-- [ ] **Step 3: Update widget judgement**
+- [x] **Step 3: Update widget judgement**
 
 For widgets whose only non-covered rows are lifecycle/show policy rows, set widget-level status to policy-complete wording chosen by R0 schema.
 
-- [ ] **Step 4: Sync ability docs**
+- [x] **Step 4: Sync ability docs**
 
 Update affected `docs/ability/*.md` rows so users see:
 
@@ -231,7 +235,7 @@ policy_category: lifecycle_internal or render_pipeline_internal
 说明: backend lifecycle/render pipeline owned; no public wrapper required
 ```
 
-- [ ] **Step 5: Verify**
+- [x] **Step 5: Verify**
 
 Run:
 
@@ -247,7 +251,7 @@ git diff --check
 
 **Goal:** Separate non-widget native API groups from public widget parity while keeping them in inventory.
 
-- [ ] **Step 1: Classify groups**
+- [x] **Step 1: Classify groups**
 
 Set:
 
@@ -258,7 +262,7 @@ switch_internal -> group_kind=internal_helper
 window_layout_internal -> group_kind=internal_helper
 ```
 
-- [ ] **Step 2: Classify rows**
+- [x] **Step 2: Classify rows**
 
 Use:
 
@@ -269,11 +273,11 @@ switch_internal rows -> layout_solver_internal
 window_layout_internal rows -> layout_solver_internal
 ```
 
-- [ ] **Step 3: Checker rule**
+- [x] **Step 3: Checker rule**
 
 Update checker so `runtime_host/internal_helper` groups do not count as widget public parity denominator but still must remain in `611` inventory/matrix row count.
 
-- [ ] **Step 4: Sync docs**
+- [x] **Step 4: Sync docs**
 
 Update:
 
@@ -285,7 +289,7 @@ docs/ability/window_layout_internal.md
 docs/ability/README.md
 ```
 
-- [ ] **Step 5: Verify**
+- [x] **Step 5: Verify**
 
 Run:
 
@@ -296,13 +300,16 @@ python3 tests/picoui/contract/check_picoui_release_capability_matrix.py
 git diff --check
 ```
 
+
+执行记录（2026-06-02）：R1/R2 已完成。matrix/ledger 中 `lifecycle_internal=108`、`render_pipeline_internal=27`；`gui/mem/switch_internal/window_layout_internal` 已分别归入 `runtime_host/internal_helper`，并由 checker 要求 `non_widget_policy_complete`。`docs/ability/*.md` 已逐行显示 `group_kind`、`policy_category`、`required`、`gap_status`。`python3 tests/picoui/contract/check_ldgui_public_api_inventory.py`、`python3 tests/picoui/contract/check_picoui_native_api_exhaustiveness.py`、`python3 tests/picoui/contract/check_picoui_release_capability_matrix.py`、`git diff --check` 均通过。
+
 ### Task R3: Base Tree/Resource/Helper Decision
 
 **Owner:** Fresh subagent `SG-a0.9-R3-base-policy`
 
 **Goal:** Decide whether `ldBase` tree/resource/helper rows are true PicoUI public abilities or internal policy rows.
 
-- [ ] **Step 1: Review base rows**
+- [x] **Step 1: Review base rows**
 
 Inspect `docs/ability/base.md` and classify the 30 allowlisted rows into:
 
@@ -314,7 +321,7 @@ drawing helper
 layout/helper math
 ```
 
-- [ ] **Step 2: Decide tree traversal**
+- [x] **Step 2: Decide tree traversal**
 
 If exposing tree introspection, add APIs:
 
@@ -331,7 +338,7 @@ If not exposing, document:
 PicoUI tree mutation is owned by create/parent APIs and backend tree internals; native traversal helpers are not public PicoUI user surface.
 ```
 
-- [ ] **Step 3: Implement only if exposed**
+- [x] **Step 3: Implement only if exposed**
 
 If APIs are added, implement in:
 
@@ -344,7 +351,7 @@ tests/picoui/unit/test_picoui_layout.c
 
 Unit must assert real backend/native parent-child fields, not host cache only.
 
-- [ ] **Step 4: Update matrix/docs**
+- [x] **Step 4: Update matrix/docs**
 
 For exposed APIs, set rows to `covered`.
 For internal policy rows, set:
@@ -353,7 +360,7 @@ For internal policy rows, set:
 policy_category=base_tree_policy | resource_time_helper_policy | drawing_helper_policy | layout_solver_internal
 ```
 
-- [ ] **Step 5: Verify**
+- [x] **Step 5: Verify**
 
 Run:
 
@@ -364,13 +371,16 @@ python3 tests/picoui/contract/check_picoui_release_capability_matrix.py
 git diff --check
 ```
 
+
+执行记录（2026-06-02）：R3 决策为不新增 PicoUI tree traversal public API。`ldBaseGetParent/GetChildCount/GetChildList/GetNextSibling/NodeAdd/NodeRemove` 等保持 `base_tree_policy`；resource/time helper 保持 `resource_time_helper_policy`；raw Arm-2D drawing helper 保持 `drawing_helper_policy`。`base` group 已进入 `policy_complete_not_direct_100 / policy_complete`。验证：`ctest --test-dir build -R 'test_picoui_layout' --output-on-failure`、三项 contract checker、`git diff --check` 均通过。
+
 ### Task R4: Keyboard Weak Hook And Button Action Decision
 
 **Owner:** Fresh subagent `SG-a0.9-R4-keyboard-button-policy`
 
 **Goal:** Resolve the five allowlisted rows most likely to represent real user-facing native extensibility.
 
-- [ ] **Step 1: Review exact rows**
+- [x] **Step 1: Review exact rows**
 
 Rows:
 
@@ -382,7 +392,7 @@ button.ldButtonActionInit
 button.ldButtonActionIsPressById
 ```
 
-- [ ] **Step 2: Decide keyboard target button list**
+- [x] **Step 2: Decide keyboard target button list**
 
 Choose one:
 
@@ -393,7 +403,7 @@ Keep backend-private because native list contains Arm-2D tile/mask details.
 
 If exposed, add stable `picoui_keyboard_set_layout` data structure without leaking `kbBtnInfo_t`.
 
-- [ ] **Step 3: Decide keyboard callback**
+- [x] **Step 3: Decide keyboard callback**
 
 Choose one:
 
@@ -402,7 +412,7 @@ Expose PicoUI keyboard event callback using existing event abstraction.
 Keep backend-private if current PicoUI text/input events already cover user intent.
 ```
 
-- [ ] **Step 4: Decide keyboard user draw**
+- [x] **Step 4: Decide keyboard user draw**
 
 Choose one:
 
@@ -411,7 +421,7 @@ Expose style/theme-level key paint customization.
 Reject raw Arm-2D tile draw callback as non-portable backend-private hook.
 ```
 
-- [ ] **Step 5: Decide button action helper**
+- [x] **Step 5: Decide button action helper**
 
 Choose one:
 
@@ -420,11 +430,11 @@ Expose PicoUI event/action readback.
 Reject native nameId/global action helper and prove existing button events/readback cover user intent.
 ```
 
-- [ ] **Step 6: Implement only approved public APIs**
+- [x] **Step 6: Implement only approved public APIs**
 
 If public APIs are added, modify the files listed in R4 write scope and add unit tests that assert real backend/native effect.
 
-- [ ] **Step 7: Update matrix/docs**
+- [x] **Step 7: Update matrix/docs**
 
 Each of the five rows must end as either:
 
@@ -433,7 +443,7 @@ covered with public API/backend/unit/gate
 allowlisted with policy_category=backend_private_hook or native_action_private and explicit replacement/why-not
 ```
 
-- [ ] **Step 8: Verify**
+- [x] **Step 8: Verify**
 
 Run:
 
@@ -444,13 +454,16 @@ python3 tests/picoui/contract/check_picoui_release_capability_matrix.py
 git diff --check
 ```
 
+
+执行记录（2026-06-02）：R4 决策为不新增 native weak hook/nameId action public API。`ldKeyboardGetTargetBtnList/ldKeyboardCallback/ldKeyboardBtnUserDraw` 保持 `backend_private_hook`；`ldButtonActionInit/ldButtonActionIsPressById` 保持 `native_action_private`。`button`、`keyboard` 已进入 `policy_complete_not_direct_100 / policy_complete`。验证：`ctest --test-dir build -R 'test_picoui_keyboard|test_picoui_button_events' --output-on-failure`、三项 contract checker、`git diff --check` 均通过。
+
 ### Task R5: Background/Root Semantics
 
 **Owner:** Fresh subagent `SG-a0.9-R5-background-root`
 
 **Goal:** Convert `background` from markdown-only boundary into matrix-recognized policy or real PicoUI abstraction.
 
-- [ ] **Step 1: Decide background model**
+- [x] **Step 1: Decide background model**
 
 Choose one:
 
@@ -459,7 +472,7 @@ enum_only semantics: background is widgetType-only and covered through root/wind
 public abstraction: add PicoUI root/background API and proof.
 ```
 
-- [ ] **Step 2: If enum-only**
+- [x] **Step 2: If enum-only**
 
 Add matrix policy entry or separate policy registry entry:
 
@@ -470,11 +483,11 @@ policy_category=enum_only_semantics
 reason=widgetTypeBackground has no ldBackground.h public API; semantics are root/window/tree derived.
 ```
 
-- [ ] **Step 3: If public abstraction**
+- [x] **Step 3: If public abstraction**
 
 Add public API and tests in window/root write scope. Unit must prove real root/background semantics, not only demo output.
 
-- [ ] **Step 4: Sync docs**
+- [x] **Step 4: Sync docs**
 
 Update:
 
@@ -484,7 +497,7 @@ docs/ability/README.md
 docs/picoui-serial/a-0.9-未direct覆盖能力收口.md
 ```
 
-- [ ] **Step 5: Verify**
+- [x] **Step 5: Verify**
 
 Run:
 
@@ -495,13 +508,16 @@ python3 tests/picoui/contract/check_picoui_release_capability_matrix.py
 git diff --check
 ```
 
+
+执行记录（2026-06-02）：R5 决策为不新增独立 PicoUI background public abstraction；`background` 定义为 `window/tree derived enum-only` policy。`ldWindowInit/ldWindow_init` 保持 `enum_only_semantics`，`window` 已进入 `policy_complete_not_direct_100 / policy_complete`。验证：`ctest --test-dir build -R 'test_picoui_layout|test_picoui_widgets' --output-on-failure`、三项 contract checker、`git diff --check` 均通过。
+
 ### Task R6: Closeout And Documentation Sync
 
 **Owner:** Fresh subagent `SG-a0.9-R6-closeout`
 
 **Goal:** Produce final a-0.9 truth source and verify all gates.
 
-- [ ] **Step 1: Recompute summary**
+- [x] **Step 1: Recompute summary**
 
 Read matrix summary and write final counts into:
 
@@ -511,7 +527,7 @@ docs/picoui-serial/a-0.9-未direct覆盖能力收口.md
 docs/picoui-serial/a-0.9-线计划索引.md
 ```
 
-- [ ] **Step 2: Check no stale language**
+- [x] **Step 2: Check no stale language**
 
 Search and fix:
 
@@ -521,7 +537,7 @@ rg -n '100% direct|full_parity_complete|artifact.*人工|allowlisted.*covered|pa
 
 Expected: no misleading stale conclusion.
 
-- [ ] **Step 3: Run full gates**
+- [x] **Step 3: Run full gates**
 
 Run:
 
@@ -537,7 +553,7 @@ git diff --check
 
 Expected: all pass. Manual artifact may still say `MANUAL_REVIEW_REQUIRED=1 / MANUAL_REVIEWED_PASSED=0`; document it honestly.
 
-- [ ] **Step 4: GitNexus detect changes**
+- [x] **Step 4: GitNexus detect changes**
 
 Run:
 
@@ -547,3 +563,4 @@ gitnexus_detect_changes(scope="all", repo="LingDongGUI")
 
 Expected: changed symbols/processes match a-0.9 policy/code/doc scope.
 
+执行记录（2026-06-02）：R6 closeout 已完成。最终 matrix summary：`ldgui_public_api_total=611`、`covered=404`、`allowlisted=207`、`missing_gap_total=0`；`policy_complete_not_direct_100=28`、`non_widget_policy_complete=4`，无 remaining `parity_incomplete` matrix group。验证：三项 contract checker、`check_picoui_backend_mapping.py`、`check_picoui_visible_ui.py --all`、`check_picoui_manual_window_artifact.py --all`、`git diff --check` 均通过。manual artifact 仍诚实记录为 `MANUAL_REVIEW_REQUIRED=1 / MANUAL_REVIEWED_PASSED=0`。

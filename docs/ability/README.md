@@ -7,13 +7,23 @@
 
 - inventory：`tests/picoui/contract/ldgui_public_api_inventory.json`
 - matrix：`tests/picoui/contract/picoui_release_capability_matrix.json`
-- inventory schema：`a-0.8-ldgui-public-api-inventory-v1`
-- matrix schema：`a-0.8-native-api-exhaustiveness-v1`
+- inventory schema：`a-0.8-ldgui-public-api-inventory-v1`，已追加 a-0.9 `group_kind` / `policy_category` 行级字段。
+- matrix schema：`a-0.9-allowlist-policy-v1`
 - 控件类型口径：`src/gui/ldBase.h` 的 `ldWidgetType_t`，共 `28/28` 个控件类型，包含 `background`。
 - LingDongGUI 原生 API 能力口径：`src/gui/ld*.h` public API inventory，共 `611` 条 API。
 - PicoUI 覆盖统计：`allowlisted`: 207, `covered`: 404
 - `covered` 才表示有 PicoUI API/backend/unit/gate 证据；`allowlisted` 表示已纳入 ledger 但不是 PicoUI user-facing direct wrapper 覆盖。
 - 因此当前不能笼统写“PicoUI 100% direct 覆盖 LingDongGUI 全部原生 API”；应逐 group 看 covered/allowlisted。
+
+## a-0.9 policy schema
+
+`a-0.9` 已把 `611` 行 native API 全部纳入机器可校验 policy schema：
+
+- `group_kind` 统计：`widget`: 513, `shared_base`: 63, `runtime_host`: 16, `internal_helper`: 19
+- `policy_category` 统计：`direct_covered`: 404, `lifecycle_internal`: 108, `render_pipeline_internal`: 27, `runtime_host_internal`: 16, `layout_solver_internal`: 14, `memory_internal`: 5, `base_tree_policy`: 23, `resource_time_helper_policy`: 5, `drawing_helper_policy`: 2, `backend_private_hook`: 3, `native_action_private`: 2, `enum_only_semantics`: 2
+- `covered` 行必须是 `policy_category=direct_covered`。
+- `allowlisted` 行必须是 `required=false`，且必须有非空 `allowlist_reason` 与非 `direct_covered` 的 `policy_category`。
+- group judgement：`policy_complete_not_direct_100`: 28, `non_widget_policy_complete`: 4；当前没有仍处于 `parity_incomplete` 的 matrix group。
 
 ## LingDongGUI API 分类统计
 
