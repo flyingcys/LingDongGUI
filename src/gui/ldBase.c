@@ -847,7 +847,7 @@ void ldBaseBgMove(ld_scene_t *ptScene, int16_t bgWidth,int16_t bgHeight,int16_t 
     int16_t minX = MIN(0, offsetX);
     int16_t minY = MIN(0, offsetY);
     int16_t maxX = MAX(LD_CFG_SCREEN_WIDTH, offsetX + bgWidth);
-    int16_t maxY = MAX(LD_CFG_SCREEN_HEIGHT, offsetX + bgHeight);
+    int16_t maxY = MAX(LD_CFG_SCREEN_HEIGHT, offsetY + bgHeight);
 
     ptWidget->use_as__arm_2d_control_node_t.tRegion.tSize.iWidth=maxX-minX;
     ptWidget->use_as__arm_2d_control_node_t.tRegion.tSize.iHeight=maxY-minY;
@@ -946,7 +946,6 @@ int16_t ldBaseAutoVerticalGridAlign(arm_2d_region_t widgetRegion,int16_t current
     return targetOffset;
 }
 
-#if USE_VIRTUAL_RESOURCE == 1
 arm_2d_vres_t* ldBaseGetVresImage(uint32_t addr)
 {
     uint8_t header[16]={0};
@@ -1080,8 +1079,6 @@ arm_2d_vres_font_t* ldBaseGetVresFont(uint32_t addr)
     }
     return ptFont;
 }
-
-#endif
 
 static int32_t manhattanDistance(ldBase_t *ptCurrent, ldBase_t *ptNext, ldNavDir_t tDir)
 {

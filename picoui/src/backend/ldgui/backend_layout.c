@@ -230,7 +230,8 @@ int picoui_backend_widget_set_padding(void *backend_widget, int padding)
         return -1;
     }
 
-    if (widget->kind != PICOUI_BACKEND_WIDGET_WINDOW) {
+    if (widget->kind != PICOUI_BACKEND_WIDGET_WINDOW
+        && widget->kind != PICOUI_BACKEND_WIDGET_BACKGROUND) {
         return 0;
     }
 

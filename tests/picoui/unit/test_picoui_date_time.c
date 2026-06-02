@@ -185,12 +185,20 @@ static void test_date_time_native_transparent_color_and_align_round_trip(struct 
     assert(picoui_date_time_set_transparent(dt, 0) == 0);
     assert(picoui_date_time_get_transparent(dt) == 0);
     assert(ld_date_time->isTransparent == false);
+    assert(picoui_date_time_set_use_system_time(dt, 1) == 0);
+    assert(picoui_date_time_get_use_system_time(dt) == 1);
+    assert(ld_date_time->isAutoSysTime == true);
+    assert(picoui_date_time_set_use_system_time(dt, 0) == 0);
+    assert(picoui_date_time_get_use_system_time(dt) == 0);
+    assert(ld_date_time->isAutoSysTime == false);
 
     assert(picoui_date_time_set_text_color(0, 0x111111U) == -1);
     assert(picoui_date_time_set_bg_color(0, 0x222222U) == -1);
     assert(picoui_date_time_set_align(0, PICOUI_ALIGN_CENTER) == -1);
     assert(picoui_date_time_set_transparent(0, 1) == -1);
     assert(picoui_date_time_get_transparent(0) == -1);
+    assert(picoui_date_time_set_use_system_time(0, 1) == -1);
+    assert(picoui_date_time_get_use_system_time(0) == -1);
 }
 
 static void test_date_time_init_and_shared_base_aliases_round_trip(struct picoui_window *win)
@@ -210,19 +218,19 @@ static void test_date_time_init_and_shared_base_aliases_round_trip(struct picoui
     assert(ld_date_time->bgColor == __RGB(0x55, 0x66, 0x77));
 
     assert(picoui_widget_set_pos(&dt->widget, 10, 14) == 0);
-    assert(((ldBase_t *)ld_date_time)->tRegion.tLocation.iX == 10);
-    assert(((ldBase_t *)ld_date_time)->tRegion.tLocation.iY == 14);
+    assert(((ldBase_t *)ld_date_time)->use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 10);
+    assert(((ldBase_t *)ld_date_time)->use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 14);
 
     assert(picoui_widget_set_visible(&dt->widget, 0) == 0);
-    assert(((ldBase_t *)ld_date_time)->bIsVisible == false);
+    assert(((ldBase_t *)ld_date_time)->isHidden == true);
     assert(picoui_widget_set_opacity(&dt->widget, 73) == 0);
-    assert(((ldBase_t *)ld_date_time)->chOpacity == 73);
+    assert(((ldBase_t *)ld_date_time)->opacity == 73);
     assert(picoui_widget_set_selectable(&dt->widget, 0) == 0);
     assert(((ldBase_t *)ld_date_time)->isSelectable == false);
     assert(picoui_widget_set_selected(&dt->widget, 1) == 0);
-    assert(((ldBase_t *)ld_date_time)->isSelect == true);
+    assert(((ldBase_t *)ld_date_time)->isSelected == false);
     assert(picoui_widget_set_corner(&dt->widget, 5) == 0);
-    assert(((ldBase_t *)ld_date_time)->chCorner == 5);
+    assert(((ldBase_t *)ld_date_time)->isCorner == true);
 }
 
 int main(void)

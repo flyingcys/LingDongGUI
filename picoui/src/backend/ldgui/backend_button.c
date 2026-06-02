@@ -1,12 +1,19 @@
 #include "backend.h"
 #include "internal.h"
+#include "ldBase.h"
 #include "ldButton.h"
+#include "xBtnAction.h"
 
 #include <stdlib.h>
 #include <string.h>
 
 extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
 extern const arm_2d_a1_font_t ARM_2D_FONT_16x24;
+
+struct picoui_backend_button_host {
+    struct picoui_backend_widget widget;
+    xBtnInfo_t action_info;
+};
 
 static struct picoui_backend_app_state *picoui_backend_button_get_app_state(void *parent)
 {
@@ -41,6 +48,10 @@ static arm_2d_font_t *picoui_backend_button_default_font(void)
 
 static arm_2d_font_t *picoui_backend_button_resolve_font(const struct picoui_font *font)
 {
+    if (font != NULL && font->kind == PICOUI_FONT_KIND_VRES && font->vres_addr != 0) {
+        return (arm_2d_font_t *)ldBaseGetVresFont(font->vres_addr);
+    }
+
     if (font == NULL || font->family == NULL || font->size <= 0) {
         return picoui_backend_button_default_font();
     }
@@ -54,6 +65,7 @@ static arm_2d_font_t *picoui_backend_button_resolve_font(const struct picoui_fon
 
 void *picoui_backend_create_button(void *parent, const char *id)
 {
+    struct picoui_backend_button_host *host;
     struct picoui_backend_widget *widget;
     struct picoui_backend_widget *parent_widget = parent;
     struct picoui_backend_app_state *app_state;
@@ -69,15 +81,16 @@ void *picoui_backend_create_button(void *parent, const char *id)
         return 0;
     }
 
-    widget = calloc(1, sizeof(*widget));
-    if (widget == 0) {
+    host = calloc(1, sizeof(*host));
+    if (host == 0) {
         return 0;
     }
+    widget = &host->widget;
 
     name_id = ++app_state->next_ld_name_id;
     ld_button = ldButton_init(app_state->ld_scene, NULL, name_id, parent_widget->ld_name_id, 0, 0, 160, 36);
     if (ld_button == NULL) {
-        free(widget);
+        free(host);
         return 0;
     }
 
@@ -87,8 +100,9 @@ void *picoui_backend_create_button(void *parent, const char *id)
     widget->theme = ((struct picoui_backend_widget *)parent)->theme;
     widget->ld_widget = ld_button;
     widget->ld_name_id = name_id;
+    _xBtnInit(name_id, (isBtnPressFunc)ldButtonActionIsPressById, &host->action_info);
     if (picoui_backend_widget_attach_child(parent, widget) != 0) {
-        free(widget);
+        free(host);
         return 0;
     }
     return widget;

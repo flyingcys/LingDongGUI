@@ -216,6 +216,20 @@ int picoui_date_time_set_transparent(struct picoui_date_time *dt, int transparen
     return 0;
 }
 
+int picoui_date_time_set_use_system_time(struct picoui_date_time *dt, int enabled)
+{
+    if (dt == 0) {
+        return -1;
+    }
+
+    if (picoui_backend_date_time_set_use_system_time(dt, enabled) != 0) {
+        return -1;
+    }
+
+    dt->use_system_time = enabled != 0;
+    return 0;
+}
+
 const char *picoui_date_time_get_format(const struct picoui_date_time *dt)
 {
     if (dt == 0) {
@@ -256,4 +270,20 @@ int picoui_date_time_get_transparent(const struct picoui_date_time *dt)
     }
 
     return dt->transparent;
+}
+
+int picoui_date_time_get_use_system_time(const struct picoui_date_time *dt)
+{
+    int enabled = 0;
+
+    if (dt == 0) {
+        return -1;
+    }
+
+    if (picoui_backend_date_time_get_use_system_time((struct picoui_date_time *)dt, &enabled) != 0) {
+        return -1;
+    }
+
+    ((struct picoui_date_time *)dt)->use_system_time = enabled;
+    return enabled;
 }

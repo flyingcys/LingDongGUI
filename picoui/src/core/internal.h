@@ -3,6 +3,7 @@
 
 #include "backend.h"
 #include "picoui/combo_box.h"
+#include "picoui/canvas.h"
 #include "picoui/calendar.h"
 #include "picoui/keyboard.h"
 #include "picoui/native.h"
@@ -19,11 +20,13 @@
 #define PICOUI_LIST_MAX_ITEMS 16
 #define PICOUI_GRAPH_MAX_SERIES 8
 #define PICOUI_GRAPH_MAX_POINTS 32
+#define PICOUI_CANVAS_MAX_COMMANDS 64
 
 typedef struct arm_2d_tile_t arm_2d_tile_t;
 
 struct picoui_font;
 struct picoui_message_box;
+struct kbBtnInfo_t;
 
 typedef void (*picoui_message_box_callback_t)(struct picoui_message_box *box, void *user_data);
 
@@ -103,6 +106,8 @@ struct picoui_theme {
 struct picoui_window {
     struct picoui_widget widget;
     const char *id;
+    int background_offset_x;
+    int background_offset_y;
     enum picoui_flex_flow flex_flow;
     enum picoui_align flex_main_align;
     enum picoui_align flex_cross_align;
@@ -119,6 +124,55 @@ struct picoui_window {
     enum picoui_align grid_row_align;
 };
 
+struct picoui_background {
+    struct picoui_window window;
+};
+
+enum picoui_canvas_command_kind {
+    PICOUI_CANVAS_COMMAND_FILL_RECT = 0,
+    PICOUI_CANVAS_COMMAND_DRAW_LINE,
+    PICOUI_CANVAS_COMMAND_DRAW_IMAGE,
+    PICOUI_CANVAS_COMMAND_DRAW_IMAGE_SCALED,
+    PICOUI_CANVAS_COMMAND_DRAW_TEXT,
+};
+
+struct picoui_canvas_command {
+    enum picoui_canvas_command_kind kind;
+    int x;
+    int y;
+    int width;
+    int height;
+    int x1;
+    int y1;
+    int line_size;
+    unsigned int rgb0;
+    unsigned int rgb1;
+    int opacity0;
+    int opacity1;
+    float scale;
+    enum picoui_align align;
+    const char *text;
+    struct picoui_image_source *source;
+};
+
+struct picoui_canvas {
+    struct picoui_widget widget;
+    const char *id;
+    struct picoui_canvas_command commands[PICOUI_CANVAS_MAX_COMMANDS];
+    int command_count;
+};
+
+struct picoui_keyboard_layout_entry {
+    char *text;
+    unsigned int key_code;
+    unsigned int press_color;
+    unsigned int release_color;
+    int x;
+    int y;
+    int width;
+    int height;
+};
+
 struct picoui_label {
     struct picoui_widget widget;
     const char *id;
@@ -133,6 +187,21 @@ struct picoui_button {
     void *on_pressed_user_data;
     picoui_event_cb on_released;
     void *on_released_user_data;
+};
+
+struct picoui_keyboard {
+    struct picoui_widget widget;
+    const char *id;
+    const struct picoui_keyboard_button *buttons;
+    struct picoui_keyboard_layout_entry *layout_entries;
+    void *native_layout;
+    int layout_count;
+    picoui_keyboard_event_cb event_cb;
+    void *event_user_data;
+    picoui_keyboard_draw_cb draw_cb;
+    void *draw_user_data;
+    int draw_invocation_count;
+    unsigned int last_draw_key_code;
 };
 
 struct picoui_checkbox {
@@ -281,6 +350,7 @@ struct picoui_date_time {
     int hour;
     int minute;
     int second;
+    int use_system_time;
 };
 
 struct picoui_calendar {
@@ -291,6 +361,7 @@ struct picoui_calendar {
     int month;
     int day;
     int show_header;
+    int use_system_date;
     unsigned char grid_values[42];
     unsigned char grid_flags[42];
 };
@@ -309,6 +380,7 @@ struct picoui_clock {
     float minute_anchor_y;
     float second_anchor_x;
     float second_anchor_y;
+    int use_system_time;
     int step_second;
 };
 
@@ -358,11 +430,6 @@ struct picoui_line_edit {
     int editing;
     picoui_line_edit_finished_cb on_edit_finished;
     void *on_edit_finished_user_data;
-};
-
-struct picoui_keyboard {
-    struct picoui_widget widget;
-    const char *id;
 };
 
 struct picoui_combo_box {

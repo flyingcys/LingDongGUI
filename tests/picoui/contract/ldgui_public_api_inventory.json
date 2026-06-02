@@ -1,7 +1,7 @@
 {
   "schema_version": "a-0.8-ldgui-public-api-inventory-v1",
   "source": "src/gui/ld*.h",
-  "public_api_total": 611,
+  "public_api_total": 619,
   "widgets": [
     {
       "name": "animation",
@@ -566,15 +566,17 @@
           "ldgui_symbol": "ldBaseBgMove",
           "category": "update_action",
           "signature": "void ldBaseBgMove(ld_scene_t *ptScene, int16_t bgWidth,int16_t bgHeight,int16_t offsetX,int16_t offsetY);",
-          "required": false,
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
+          "required": true,
+          "picoui_api": "picoui_window_set_background_offset + picoui_window_get_background_offset",
+          "backend_proof": "picoui_backend_window_set_background_offset -> ldBaseBgMove",
+          "unit_test": "test_window_background_offset_round_trip_to_scene_root",
+          "gate_evidence": [
+            "ctest:test_picoui_layout",
+            "python:check_picoui_release_capability_matrix"
+          ],
+          "gap_status": "covered",
           "group_kind": "shared_base",
-          "policy_category": "base_tree_policy",
-          "allowlist_reason": "R2 shared helper/utility API: internal tree/resource/geometry/time helper or backend-private scene helper, not a PicoUI user-facing stable public capability."
+          "policy_category": "direct_covered"
         },
         {
           "widget": "base",
@@ -582,15 +584,17 @@
           "ldgui_symbol": "ldBaseColor",
           "category": "helper",
           "signature": "void ldBaseColor(arm_2d_tile_t* ptTile, arm_2d_region_t* ptRegion, ldColor color, uint8_t opacity);",
-          "required": false,
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
-          "allowlist_reason": "R2 shared tree/helper/lifecycle API: internal backend structure or demo host helper, not a PicoUI user-facing native capability.",
+          "required": true,
+          "picoui_api": "picoui_canvas_fill_rect",
+          "backend_proof": "picoui_backend_canvas_sync -> ldCanvas_show -> ldBaseColor",
+          "unit_test": "test_picoui_canvas_command_round_trip_to_native_canvas",
+          "gate_evidence": [
+            "ctest:test_picoui_canvas",
+            "python:check_picoui_release_capability_matrix"
+          ],
+          "gap_status": "covered",
           "group_kind": "shared_base",
-          "policy_category": "base_tree_policy"
+          "policy_category": "direct_covered"
         },
         {
           "widget": "base",
@@ -598,15 +602,17 @@
           "ldgui_symbol": "ldBaseDrawLine",
           "category": "helper",
           "signature": "void ldBaseDrawLine(arm_2d_tile_t *pTile,int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint8_t lineSize, ldColor color,uint8_t opacityMax, uint8_t opacityMin);",
-          "required": false,
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
-          "allowlist_reason": "R2 shared tree/helper/lifecycle API: internal backend structure or demo host helper, not a PicoUI user-facing native capability.",
+          "required": true,
+          "picoui_api": "picoui_canvas_draw_line",
+          "backend_proof": "picoui_backend_canvas_sync -> ldCanvas_show -> ldBaseDrawLine",
+          "unit_test": "test_picoui_canvas_command_round_trip_to_native_canvas",
+          "gate_evidence": [
+            "ctest:test_picoui_canvas",
+            "python:check_picoui_release_capability_matrix"
+          ],
+          "gap_status": "covered",
           "group_kind": "shared_base",
-          "policy_category": "drawing_helper_policy"
+          "policy_category": "direct_covered"
         },
         {
           "widget": "base",
@@ -722,15 +728,18 @@
           "ldgui_symbol": "ldBaseGetDate",
           "category": "getter",
           "signature": "void ldBaseGetDate(uint16_t *pYear,uint8_t *pMonth,uint8_t *pDay);",
-          "required": false,
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
+          "required": true,
+          "picoui_api": "picoui_date_time_set_use_system_time + picoui_calendar_set_use_system_date",
+          "backend_proof": "picoui_backend_date_time_set_use_system_time + picoui_backend_calendar_set_use_system_date -> ldBaseGetDate",
+          "unit_test": "test_date_time_use_system_time_round_trip + test_calendar_system_date_provider_round_trip",
+          "gate_evidence": [
+            "ctest:test_picoui_date_time",
+            "ctest:test_picoui_calendar",
+            "python:check_picoui_release_capability_matrix"
+          ],
+          "gap_status": "covered",
           "group_kind": "shared_base",
-          "policy_category": "resource_time_helper_policy",
-          "allowlist_reason": "R2 shared helper/utility API: internal tree/resource/geometry/time helper or backend-private scene helper, not a PicoUI user-facing stable public capability."
+          "policy_category": "direct_covered"
         },
         {
           "widget": "base",
@@ -913,15 +922,18 @@
           "ldgui_symbol": "ldBaseGetTime",
           "category": "getter",
           "signature": "void ldBaseGetTime(uint8_t *pHour,uint8_t *pMinute,uint8_t *pSecond);",
-          "required": false,
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
+          "required": true,
+          "picoui_api": "picoui_date_time_set_use_system_time + picoui_clock_set_use_system_time",
+          "backend_proof": "picoui_backend_date_time_set_use_system_time + picoui_backend_clock_set_use_system_time -> ldBaseGetTime",
+          "unit_test": "test_date_time_use_system_time_round_trip + test_clock_system_time_provider_round_trip",
+          "gate_evidence": [
+            "ctest:test_picoui_date_time",
+            "ctest:test_picoui_clock",
+            "python:check_picoui_release_capability_matrix"
+          ],
+          "gap_status": "covered",
           "group_kind": "shared_base",
-          "policy_category": "resource_time_helper_policy",
-          "allowlist_reason": "R2 shared helper/utility API: internal tree/resource/geometry/time helper or backend-private scene helper, not a PicoUI user-facing stable public capability."
+          "policy_category": "direct_covered"
         },
         {
           "widget": "base",
@@ -929,15 +941,18 @@
           "ldgui_symbol": "ldBaseGetVresFont",
           "category": "getter",
           "signature": "arm_2d_vres_font_t* ldBaseGetVresFont(uint32_t addr);",
-          "required": false,
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
+          "required": true,
+          "picoui_api": "picoui_font_from_vres",
+          "backend_proof": "picoui_backend_text_resolve_font + picoui_backend_button_resolve_font -> ldBaseGetVresFont",
+          "unit_test": "test_vres_font_factory_round_trip + test_button_vres_font_contract",
+          "gate_evidence": [
+            "ctest:test_picoui_widgets",
+            "ctest:test_picoui_button_events",
+            "python:check_picoui_release_capability_matrix"
+          ],
+          "gap_status": "covered",
           "group_kind": "shared_base",
-          "policy_category": "resource_time_helper_policy",
-          "allowlist_reason": "R2 shared helper/utility API: internal tree/resource/geometry/time helper or backend-private scene helper, not a PicoUI user-facing stable public capability."
+          "policy_category": "direct_covered"
         },
         {
           "widget": "base",
@@ -945,15 +960,17 @@
           "ldgui_symbol": "ldBaseGetVresImage",
           "category": "getter",
           "signature": "arm_2d_vres_t *ldBaseGetVresImage(uint32_t addr);",
-          "required": false,
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
+          "required": true,
+          "picoui_api": "picoui_image_source_from_vres",
+          "backend_proof": "picoui_backend_image_source_init_from_vres -> ldBaseGetVresImage",
+          "unit_test": "test_vres_image_source_factory_round_trip",
+          "gate_evidence": [
+            "ctest:test_picoui_widgets",
+            "python:check_picoui_release_capability_matrix"
+          ],
+          "gap_status": "covered",
           "group_kind": "shared_base",
-          "policy_category": "resource_time_helper_policy",
-          "allowlist_reason": "R2 shared helper/utility API: internal tree/resource/geometry/time helper or backend-private scene helper, not a PicoUI user-facing stable public capability."
+          "policy_category": "direct_covered"
         },
         {
           "widget": "base",
@@ -961,15 +978,17 @@
           "ldgui_symbol": "ldBaseGetWeek",
           "category": "getter",
           "signature": "uint8_t ldBaseGetWeek(uint16_t year, uint8_t month, uint8_t day);",
-          "required": false,
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
+          "required": true,
+          "picoui_api": "picoui_calendar_set_use_system_date",
+          "backend_proof": "picoui_backend_calendar_set_use_system_date -> ldCalendar_on_frame_start -> ldBaseGetWeek",
+          "unit_test": "test_calendar_system_date_provider_round_trip",
+          "gate_evidence": [
+            "ctest:test_picoui_calendar",
+            "python:check_picoui_release_capability_matrix"
+          ],
+          "gap_status": "covered",
           "group_kind": "shared_base",
-          "policy_category": "resource_time_helper_policy",
-          "allowlist_reason": "R2 shared helper/utility API: internal tree/resource/geometry/time helper or backend-private scene helper, not a PicoUI user-facing stable public capability."
+          "policy_category": "direct_covered"
         },
         {
           "widget": "base",
@@ -1083,15 +1102,17 @@
           "ldgui_symbol": "ldBaseImage",
           "category": "helper",
           "signature": "void ldBaseImage(arm_2d_tile_t* ptTile, arm_2d_region_t *ptRegion, arm_2d_tile_t* ptImgTile, arm_2d_tile_t* ptMaskTile, ldColor color, uint8_t opacity);",
-          "required": false,
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
-          "allowlist_reason": "R2 shared tree/helper/lifecycle API: internal backend structure or demo host helper, not a PicoUI user-facing native capability.",
+          "required": true,
+          "picoui_api": "picoui_canvas_draw_image",
+          "backend_proof": "picoui_backend_canvas_sync -> ldCanvas_show -> ldBaseImage",
+          "unit_test": "test_picoui_canvas_command_round_trip_to_native_canvas",
+          "gate_evidence": [
+            "ctest:test_picoui_canvas",
+            "python:check_picoui_release_capability_matrix"
+          ],
+          "gap_status": "covered",
           "group_kind": "shared_base",
-          "policy_category": "base_tree_policy"
+          "policy_category": "direct_covered"
         },
         {
           "widget": "base",
@@ -1099,15 +1120,17 @@
           "ldgui_symbol": "ldBaseImageScale",
           "category": "helper",
           "signature": "void ldBaseImageScale(arm_2d_tile_t *ptTile, arm_2d_region_t *ptRegion, arm_2d_tile_t *ptImgTile, arm_2d_tile_t *ptMaskTile,float scale,arm_2d_op_trans_msk_opa_t *ptOP,uint8_t opacity,bool bIsNewFrame);",
-          "required": false,
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
-          "allowlist_reason": "R2 shared tree/helper/lifecycle API: internal backend structure or demo host helper, not a PicoUI user-facing native capability.",
+          "required": true,
+          "picoui_api": "picoui_canvas_draw_image_scaled",
+          "backend_proof": "picoui_backend_canvas_sync -> ldCanvas_show -> ldBaseImageScale",
+          "unit_test": "test_picoui_canvas_command_round_trip_to_native_canvas",
+          "gate_evidence": [
+            "ctest:test_picoui_canvas",
+            "python:check_picoui_release_capability_matrix"
+          ],
+          "gap_status": "covered",
           "group_kind": "shared_base",
-          "policy_category": "drawing_helper_policy"
+          "policy_category": "direct_covered"
         },
         {
           "widget": "base",
@@ -1183,15 +1206,17 @@
           "ldgui_symbol": "ldBaseLabel",
           "category": "helper",
           "signature": "void ldBaseLabel(arm_2d_tile_t *ptTile, arm_2d_region_t *ptRegion, uint8_t *pStr, arm_2d_font_t *ptFont, arm_2d_align_t tAlign, ldColor textColor, uint8_t opacity);",
-          "required": false,
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
-          "allowlist_reason": "R2 shared tree/helper/lifecycle API: internal backend structure or demo host helper, not a PicoUI user-facing native capability.",
+          "required": true,
+          "picoui_api": "picoui_canvas_draw_text",
+          "backend_proof": "picoui_backend_canvas_sync -> ldCanvas_show -> ldBaseLabel",
+          "unit_test": "test_picoui_canvas_command_round_trip_to_native_canvas",
+          "gate_evidence": [
+            "ctest:test_picoui_canvas",
+            "python:check_picoui_release_capability_matrix"
+          ],
+          "gap_status": "covered",
           "group_kind": "shared_base",
-          "policy_category": "base_tree_policy"
+          "policy_category": "direct_covered"
         },
         {
           "widget": "base",
@@ -2265,6 +2290,145 @@
           "allowlist_reason": "Render/show entry point owned by backend rendering pipeline.",
           "group_kind": "widget",
           "policy_category": "render_pipeline_internal"
+        }
+      ]
+    },
+    {
+      "name": "canvas",
+      "required_native_apis": [
+        {
+          "widget": "canvas",
+          "header": "src/gui/ldCanvas.h",
+          "ldgui_symbol": "ldCanvas_init",
+          "category": "init",
+          "signature": "ldCanvas_t *ldCanvas_init(ld_scene_t *ptScene, ldCanvas_t *ptWidget, uint16_t nameId, uint16_t parentNameId, int16_t x, int16_t y, int16_t width, int16_t height);",
+          "required": true,
+          "picoui_api": "picoui_canvas_create",
+          "backend_proof": "picoui_backend_create_canvas",
+          "unit_test": "test_picoui_canvas_command_round_trip_to_native_canvas",
+          "gate_evidence": [
+            "ctest:test_picoui_canvas",
+            "python:check_picoui_release_capability_matrix"
+          ],
+          "gap_status": "covered",
+          "group_kind": "widget",
+          "policy_category": "direct_covered"
+        },
+        {
+          "widget": "canvas",
+          "header": "src/gui/ldCanvas.h",
+          "ldgui_symbol": "ldCanvasClear",
+          "category": "update_action",
+          "signature": "void ldCanvasClear(ldCanvas_t *ptWidget);",
+          "required": true,
+          "picoui_api": "picoui_canvas_clear",
+          "backend_proof": "picoui_backend_canvas_sync",
+          "unit_test": "test_picoui_canvas_command_round_trip_to_native_canvas",
+          "gate_evidence": [
+            "ctest:test_picoui_canvas",
+            "python:check_picoui_release_capability_matrix"
+          ],
+          "gap_status": "covered",
+          "group_kind": "widget",
+          "policy_category": "direct_covered"
+        },
+        {
+          "widget": "canvas",
+          "header": "src/gui/ldCanvas.h",
+          "ldgui_symbol": "ldCanvasPushCommand",
+          "category": "update_action",
+          "signature": "int ldCanvasPushCommand(ldCanvas_t *ptWidget, const ldCanvasCommand_t *command);",
+          "required": true,
+          "picoui_api": "picoui_canvas_fill_rect + picoui_canvas_draw_line + picoui_canvas_draw_image + picoui_canvas_draw_image_scaled + picoui_canvas_draw_text",
+          "backend_proof": "picoui_backend_canvas_sync -> ldCanvasPushCommand",
+          "unit_test": "test_picoui_canvas_command_round_trip_to_native_canvas",
+          "gate_evidence": [
+            "ctest:test_picoui_canvas",
+            "python:check_picoui_release_capability_matrix"
+          ],
+          "gap_status": "covered",
+          "group_kind": "widget",
+          "policy_category": "direct_covered"
+        },
+        {
+          "widget": "canvas",
+          "header": "src/gui/ldCanvas.h",
+          "ldgui_symbol": "ldCanvas_depose",
+          "category": "lifecycle",
+          "signature": "void ldCanvas_depose(ld_scene_t *ptScene, ldCanvas_t *ptWidget);",
+          "required": false,
+          "picoui_api": "",
+          "backend_proof": "",
+          "unit_test": "",
+          "gate_evidence": [],
+          "gap_status": "allowlisted",
+          "group_kind": "widget",
+          "policy_category": "lifecycle_internal",
+          "allowlist_reason": "Render/lifecycle helper remains backend-owned and is not a PicoUI user-facing stable public capability."
+        },
+        {
+          "widget": "canvas",
+          "header": "src/gui/ldCanvas.h",
+          "ldgui_symbol": "ldCanvas_on_load",
+          "category": "lifecycle",
+          "signature": "void ldCanvas_on_load(ld_scene_t *ptScene, ldCanvas_t *ptWidget);",
+          "required": false,
+          "picoui_api": "",
+          "backend_proof": "",
+          "unit_test": "",
+          "gate_evidence": [],
+          "gap_status": "allowlisted",
+          "group_kind": "widget",
+          "policy_category": "lifecycle_internal",
+          "allowlist_reason": "Render/lifecycle helper remains backend-owned and is not a PicoUI user-facing stable public capability."
+        },
+        {
+          "widget": "canvas",
+          "header": "src/gui/ldCanvas.h",
+          "ldgui_symbol": "ldCanvas_on_frame_start",
+          "category": "lifecycle",
+          "signature": "void ldCanvas_on_frame_start(ld_scene_t *ptScene, ldCanvas_t *ptWidget);",
+          "required": false,
+          "picoui_api": "",
+          "backend_proof": "",
+          "unit_test": "",
+          "gate_evidence": [],
+          "gap_status": "allowlisted",
+          "group_kind": "widget",
+          "policy_category": "lifecycle_internal",
+          "allowlist_reason": "Render/lifecycle helper remains backend-owned and is not a PicoUI user-facing stable public capability."
+        },
+        {
+          "widget": "canvas",
+          "header": "src/gui/ldCanvas.h",
+          "ldgui_symbol": "ldCanvas_on_frame_complete",
+          "category": "lifecycle",
+          "signature": "void ldCanvas_on_frame_complete(ld_scene_t *ptScene, ldCanvas_t *ptWidget);",
+          "required": false,
+          "picoui_api": "",
+          "backend_proof": "",
+          "unit_test": "",
+          "gate_evidence": [],
+          "gap_status": "allowlisted",
+          "group_kind": "widget",
+          "policy_category": "lifecycle_internal",
+          "allowlist_reason": "Render/lifecycle helper remains backend-owned and is not a PicoUI user-facing stable public capability."
+        },
+        {
+          "widget": "canvas",
+          "header": "src/gui/ldCanvas.h",
+          "ldgui_symbol": "ldCanvas_show",
+          "category": "show",
+          "signature": "void ldCanvas_show(ld_scene_t *ptScene, ldCanvas_t *ptWidget, const arm_2d_tile_t *ptTile, bool bIsNewFrame);",
+          "required": false,
+          "picoui_api": "",
+          "backend_proof": "",
+          "unit_test": "",
+          "gate_evidence": [],
+          "gap_status": "allowlisted",
+          "group_kind": "widget",
+          "policy_category": "render_pipeline_internal",
+          "allowlist_reason": "Render/show entry point owned by backend rendering pipeline."
         }
       ]
     },
@@ -4532,15 +4696,17 @@
           "category": "macro_alias",
           "signature": "#define ldGuiJumpPage(pageFuncGroupName,...) ARM_CONNECT2(ldGuiJumpPage_, __ARM_VA_NUM_ARGS(__VA_ARGS__))(pageFuncGroupName, ##__VA_ARGS__)",
           "macro_target": "ARM_CONNECT2",
-          "required": false,
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
+          "required": true,
+          "picoui_api": "picoui_app_set_window + picoui_app_switch_window",
+          "backend_proof": "picoui_app_set_window + picoui_app_switch_window",
+          "unit_test": "test_app_set_window_switches_active_root_and_focus_scope + test_app_switch_window_persists_switch_metadata_contract",
+          "gate_evidence": [
+            "ctest:test_picoui_app_window_switch",
+            "python:check_picoui_release_capability_matrix"
+          ],
+          "gap_status": "covered",
           "group_kind": "runtime_host",
-          "policy_category": "runtime_host_internal",
-          "allowlist_reason": "R2 shared helper/lifecycle/layout solver API: internal scene/runtime/navigation/layout decision helper, not a stable PicoUI user-facing public capability."
+          "policy_category": "direct_covered"
         },
         {
           "widget": "gui",
@@ -4549,15 +4715,17 @@
           "category": "macro_alias",
           "signature": "#define ldGuiJumpPageFast(pageFuncGroupName) ldGuiJumpPage(pageFuncGroupName)",
           "macro_target": "ldGuiJumpPage",
-          "required": false,
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
+          "required": true,
+          "picoui_api": "picoui_app_set_window + picoui_app_switch_window",
+          "backend_proof": "picoui_app_set_window + picoui_app_switch_window",
+          "unit_test": "test_app_set_window_switches_active_root_and_focus_scope + test_app_switch_window_persists_switch_metadata_contract",
+          "gate_evidence": [
+            "ctest:test_picoui_app_window_switch",
+            "python:check_picoui_release_capability_matrix"
+          ],
+          "gap_status": "covered",
           "group_kind": "runtime_host",
-          "policy_category": "runtime_host_internal",
-          "allowlist_reason": "R2 shared helper/lifecycle/layout solver API: internal scene/runtime/navigation/layout decision helper, not a stable PicoUI user-facing public capability."
+          "policy_category": "direct_covered"
         },
         {
           "widget": "gui",
@@ -4566,15 +4734,17 @@
           "category": "macro_alias",
           "signature": "#define ldGuiJumpPage_0(page) __ldGuiJumpPage((ldPageFuncGroup_t *)NULL,&ARM_2D_SCENE_SWITCH_MODE_NONE,0)",
           "macro_target": "__ldGuiJumpPage",
-          "required": false,
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
+          "required": true,
+          "picoui_api": "picoui_app_set_window + picoui_app_switch_window",
+          "backend_proof": "picoui_app_set_window + picoui_app_switch_window",
+          "unit_test": "test_app_set_window_switches_active_root_and_focus_scope + test_app_switch_window_persists_switch_metadata_contract",
+          "gate_evidence": [
+            "ctest:test_picoui_app_window_switch",
+            "python:check_picoui_release_capability_matrix"
+          ],
+          "gap_status": "covered",
           "group_kind": "runtime_host",
-          "policy_category": "runtime_host_internal",
-          "allowlist_reason": "R2 shared helper/lifecycle/layout solver API: internal scene/runtime/navigation/layout decision helper, not a stable PicoUI user-facing public capability."
+          "policy_category": "direct_covered"
         },
         {
           "widget": "gui",
@@ -4583,15 +4753,17 @@
           "category": "macro_alias",
           "signature": "#define ldGuiJumpPage_1(page,mode) __ldGuiJumpPage((ldPageFuncGroup_t *)NULL,&ARM_2D_SCENE_SWITCH_MODE_NONE,0)",
           "macro_target": "__ldGuiJumpPage",
-          "required": false,
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
+          "required": true,
+          "picoui_api": "picoui_app_set_window + picoui_app_switch_window",
+          "backend_proof": "picoui_app_set_window + picoui_app_switch_window",
+          "unit_test": "test_app_set_window_switches_active_root_and_focus_scope + test_app_switch_window_persists_switch_metadata_contract",
+          "gate_evidence": [
+            "ctest:test_picoui_app_window_switch",
+            "python:check_picoui_release_capability_matrix"
+          ],
+          "gap_status": "covered",
           "group_kind": "runtime_host",
-          "policy_category": "runtime_host_internal",
-          "allowlist_reason": "R2 shared helper/lifecycle/layout solver API: internal scene/runtime/navigation/layout decision helper, not a stable PicoUI user-facing public capability."
+          "policy_category": "direct_covered"
         },
         {
           "widget": "gui",
@@ -4600,15 +4772,17 @@
           "category": "macro_alias",
           "signature": "#define ldGuiJumpPage_2(page,mode,ms) __ldGuiJumpPage((ldPageFuncGroup_t *)NULL,&ARM_2D_SCENE_SWITCH_MODE_NONE,0)",
           "macro_target": "__ldGuiJumpPage",
-          "required": false,
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
+          "required": true,
+          "picoui_api": "picoui_app_set_window + picoui_app_switch_window",
+          "backend_proof": "picoui_app_set_window + picoui_app_switch_window",
+          "unit_test": "test_app_set_window_switches_active_root_and_focus_scope + test_app_switch_window_persists_switch_metadata_contract",
+          "gate_evidence": [
+            "ctest:test_picoui_app_window_switch",
+            "python:check_picoui_release_capability_matrix"
+          ],
+          "gap_status": "covered",
           "group_kind": "runtime_host",
-          "policy_category": "runtime_host_internal",
-          "allowlist_reason": "R2 shared helper/lifecycle/layout solver API: internal scene/runtime/navigation/layout decision helper, not a stable PicoUI user-facing public capability."
+          "policy_category": "direct_covered"
         },
         {
           "widget": "gui",
@@ -5201,17 +5375,17 @@
           "ldgui_symbol": "ldKeyboardCallback",
           "category": "callback_hook",
           "signature": "extern void ldKeyboardCallback(ldKeyboard_t *ptWidget, uint8_t signal);",
-          "required": false,
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "test_keyboard_weak_hooks_remain_backend_private_not_public_api",
+          "required": true,
+          "picoui_api": "picoui_keyboard_set_on_key_event",
+          "backend_proof": "picoui_backend_keyboard_dispatch_event_callback",
+          "unit_test": "test_keyboard_key_event_callback_receives_native_press_release",
           "gate_evidence": [
-            "ctest:test_picoui_keyboard"
+            "ctest:test_picoui_keyboard",
+            "python:check_picoui_release_capability_matrix"
           ],
-          "gap_status": "allowlisted",
+          "gap_status": "covered",
           "group_kind": "widget",
-          "policy_category": "backend_private_hook",
-          "allowlist_reason": "backend-private weak callback hook; Arm-2D keyboard callback is not exposed as a PicoUI public API."
+          "policy_category": "direct_covered"
         },
         {
           "widget": "keyboard",
@@ -5253,17 +5427,17 @@
           "ldgui_symbol": "ldKeyboardGetTargetBtnList",
           "category": "getter",
           "signature": "extern const kbBtnInfo_t *ldKeyboardGetTargetBtnList(ldKeyboard_t *ptWidget);",
-          "required": false,
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "test_keyboard_weak_hooks_remain_backend_private_not_public_api",
+          "required": true,
+          "picoui_api": "picoui_keyboard_set_layout",
+          "backend_proof": "picoui_backend_keyboard_prepare_custom_layout",
+          "unit_test": "test_keyboard_custom_layout_button_table_round_trip",
           "gate_evidence": [
-            "ctest:test_picoui_keyboard"
+            "ctest:test_picoui_keyboard",
+            "python:check_picoui_release_capability_matrix"
           ],
-          "gap_status": "allowlisted",
+          "gap_status": "covered",
           "group_kind": "widget",
-          "policy_category": "backend_private_hook",
-          "allowlist_reason": "backend-private weak hook; target button list is not a stable cross-platform PicoUI public API."
+          "policy_category": "direct_covered"
         },
         {
           "widget": "keyboard",
@@ -11226,118 +11400,6 @@
       "reason": "Render/show entry point owned by backend rendering pipeline."
     },
     {
-      "ldgui_symbol": "ldBaseAlignRegionCenter",
-      "reason": "R2 shared tree/helper/lifecycle API: internal backend structure or demo host helper, not a PicoUI user-facing native capability."
-    },
-    {
-      "ldgui_symbol": "ldBaseAutoVerticalGridAlign",
-      "reason": "R2 shared tree/helper/lifecycle API: internal backend structure or demo host helper, not a PicoUI user-facing native capability."
-    },
-    {
-      "ldgui_symbol": "ldBaseBgMove",
-      "reason": "R2 shared helper/utility API: internal tree/resource/geometry/time helper or backend-private scene helper, not a PicoUI user-facing stable public capability."
-    },
-    {
-      "ldgui_symbol": "ldBaseColor",
-      "reason": "R2 shared tree/helper/lifecycle API: internal backend structure or demo host helper, not a PicoUI user-facing native capability."
-    },
-    {
-      "ldgui_symbol": "ldBaseDrawLine",
-      "reason": "R2 shared tree/helper/lifecycle API: internal backend structure or demo host helper, not a PicoUI user-facing native capability."
-    },
-    {
-      "ldgui_symbol": "ldBaseFocusNavigate",
-      "reason": "R2 shared helper/utility API: internal tree/resource/geometry/time helper or backend-private scene helper, not a PicoUI user-facing stable public capability."
-    },
-    {
-      "ldgui_symbol": "ldBaseFocusNavigateInit",
-      "reason": "R2 shared helper/utility API: internal tree/resource/geometry/time helper or backend-private scene helper, not a PicoUI user-facing stable public capability."
-    },
-    {
-      "ldgui_symbol": "ldBaseGetAbsoluteLocation",
-      "reason": "R2 shared helper/utility API: internal tree/resource/geometry/time helper or backend-private scene helper, not a PicoUI user-facing stable public capability."
-    },
-    {
-      "ldgui_symbol": "ldBaseGetAlignRegion",
-      "reason": "R2 shared helper/utility API: internal tree/resource/geometry/time helper or backend-private scene helper, not a PicoUI user-facing stable public capability."
-    },
-    {
-      "ldgui_symbol": "ldBaseGetChildCount",
-      "reason": "R2 shared tree/helper/lifecycle API: internal backend structure or demo host helper, not a PicoUI user-facing native capability."
-    },
-    {
-      "ldgui_symbol": "ldBaseGetChildList",
-      "reason": "R2 shared tree/helper/lifecycle API: internal backend structure or demo host helper, not a PicoUI user-facing native capability."
-    },
-    {
-      "ldgui_symbol": "ldBaseGetDate",
-      "reason": "R2 shared helper/utility API: internal tree/resource/geometry/time helper or backend-private scene helper, not a PicoUI user-facing stable public capability."
-    },
-    {
-      "ldgui_symbol": "ldBaseGetNameId",
-      "reason": "R2 shared helper/utility API: internal tree/resource/geometry/time helper or backend-private scene helper, not a PicoUI user-facing stable public capability."
-    },
-    {
-      "ldgui_symbol": "ldBaseGetNextSibling",
-      "reason": "R2 shared tree/helper/lifecycle API: internal backend structure or demo host helper, not a PicoUI user-facing native capability."
-    },
-    {
-      "ldgui_symbol": "ldBaseGetParent",
-      "reason": "R2 shared tree/helper/lifecycle API: internal backend structure or demo host helper, not a PicoUI user-facing native capability."
-    },
-    {
-      "ldgui_symbol": "ldBaseGetRelativeLocation",
-      "reason": "R2 shared helper/utility API: internal tree/resource/geometry/time helper or backend-private scene helper, not a PicoUI user-facing stable public capability."
-    },
-    {
-      "ldgui_symbol": "ldBaseGetRootNode",
-      "reason": "R2 shared helper/utility API: internal tree/resource/geometry/time helper or backend-private scene helper, not a PicoUI user-facing stable public capability."
-    },
-    {
-      "ldgui_symbol": "ldBaseGetTime",
-      "reason": "R2 shared helper/utility API: internal tree/resource/geometry/time helper or backend-private scene helper, not a PicoUI user-facing stable public capability."
-    },
-    {
-      "ldgui_symbol": "ldBaseGetVresFont",
-      "reason": "R2 shared helper/utility API: internal tree/resource/geometry/time helper or backend-private scene helper, not a PicoUI user-facing stable public capability."
-    },
-    {
-      "ldgui_symbol": "ldBaseGetVresImage",
-      "reason": "R2 shared helper/utility API: internal tree/resource/geometry/time helper or backend-private scene helper, not a PicoUI user-facing stable public capability."
-    },
-    {
-      "ldgui_symbol": "ldBaseGetWeek",
-      "reason": "R2 shared helper/utility API: internal tree/resource/geometry/time helper or backend-private scene helper, not a PicoUI user-facing stable public capability."
-    },
-    {
-      "ldgui_symbol": "ldBaseGetWidget",
-      "reason": "R2 shared helper/utility API: internal tree/resource/geometry/time helper or backend-private scene helper, not a PicoUI user-facing stable public capability."
-    },
-    {
-      "ldgui_symbol": "ldBaseGetWidgetById",
-      "reason": "R2 shared tree/helper/lifecycle API: internal backend structure or demo host helper, not a PicoUI user-facing native capability."
-    },
-    {
-      "ldgui_symbol": "ldBaseGetWidgetType",
-      "reason": "R2 shared helper/utility API: internal tree/resource/geometry/time helper or backend-private scene helper, not a PicoUI user-facing stable public capability."
-    },
-    {
-      "ldgui_symbol": "ldBaseImage",
-      "reason": "R2 shared tree/helper/lifecycle API: internal backend structure or demo host helper, not a PicoUI user-facing native capability."
-    },
-    {
-      "ldgui_symbol": "ldBaseImageScale",
-      "reason": "R2 shared tree/helper/lifecycle API: internal backend structure or demo host helper, not a PicoUI user-facing native capability."
-    },
-    {
-      "ldgui_symbol": "ldBaseLabel",
-      "reason": "R2 shared tree/helper/lifecycle API: internal backend structure or demo host helper, not a PicoUI user-facing native capability."
-    },
-    {
-      "ldgui_symbol": "ldBaseMarkParentLayoutDirty",
-      "reason": "R2 shared tree/helper/lifecycle API: internal backend structure or demo host helper, not a PicoUI user-facing native capability."
-    },
-    {
       "ldgui_symbol": "ldBaseNodeAdd",
       "reason": "R2 shared tree/helper/lifecycle API: internal backend structure or demo host helper, not a PicoUI user-facing native capability."
     },
@@ -11398,8 +11460,24 @@
       "reason": "Render/show entry point owned by backend rendering pipeline."
     },
     {
-      "ldgui_symbol": "ldCalloc",
-      "reason": "R2 shared tree/helper/lifecycle API: internal backend structure or demo host helper, not a PicoUI user-facing native capability."
+      "ldgui_symbol": "ldCanvas_depose",
+      "reason": "Render/lifecycle helper remains backend-owned and is not a PicoUI user-facing stable public capability."
+    },
+    {
+      "ldgui_symbol": "ldCanvas_on_load",
+      "reason": "Render/lifecycle helper remains backend-owned and is not a PicoUI user-facing stable public capability."
+    },
+    {
+      "ldgui_symbol": "ldCanvas_on_frame_start",
+      "reason": "Render/lifecycle helper remains backend-owned and is not a PicoUI user-facing stable public capability."
+    },
+    {
+      "ldgui_symbol": "ldCanvas_on_frame_complete",
+      "reason": "Render/lifecycle helper remains backend-owned and is not a PicoUI user-facing stable public capability."
+    },
+    {
+      "ldgui_symbol": "ldCanvas_show",
+      "reason": "Render/show entry point owned by backend rendering pipeline."
     },
     {
       "ldgui_symbol": "ldCheckBox_depose",
@@ -11482,34 +11560,6 @@
       "reason": "Render/show entry point owned by backend rendering pipeline."
     },
     {
-      "ldgui_symbol": "ldFlexClampAbsoluteSize",
-      "reason": "R2 shared tree/helper/lifecycle API: internal backend structure or demo host helper, not a PicoUI user-facing native capability."
-    },
-    {
-      "ldgui_symbol": "ldFlexFlowIsColumn",
-      "reason": "R2 shared helper/lifecycle/layout solver API: internal scene/runtime/navigation/layout decision helper, not a stable PicoUI user-facing public capability."
-    },
-    {
-      "ldgui_symbol": "ldFlexFlowIsReverse",
-      "reason": "R2 shared helper/lifecycle/layout solver API: internal scene/runtime/navigation/layout decision helper, not a stable PicoUI user-facing public capability."
-    },
-    {
-      "ldgui_symbol": "ldFlexFlowIsWrap",
-      "reason": "R2 shared helper/lifecycle/layout solver API: internal scene/runtime/navigation/layout decision helper, not a stable PicoUI user-facing public capability."
-    },
-    {
-      "ldgui_symbol": "ldFlexFlowIsWrapReverse",
-      "reason": "R2 shared helper/lifecycle/layout solver API: internal scene/runtime/navigation/layout decision helper, not a stable PicoUI user-facing public capability."
-    },
-    {
-      "ldgui_symbol": "ldFlexResolveMainStart",
-      "reason": "R2 shared helper/lifecycle/layout solver API: internal scene/runtime/navigation/layout decision helper, not a stable PicoUI user-facing public capability."
-    },
-    {
-      "ldgui_symbol": "ldFree",
-      "reason": "R2 shared tree/helper/lifecycle API: internal backend structure or demo host helper, not a PicoUI user-facing native capability."
-    },
-    {
       "ldgui_symbol": "ldGauge_depose",
       "reason": "R2 shared tree/helper/lifecycle API: internal backend structure or demo host helper, not a PicoUI user-facing native capability."
     },
@@ -11528,10 +11578,6 @@
     {
       "ldgui_symbol": "ldGauge_show",
       "reason": "Render/show entry point owned by backend rendering pipeline."
-    },
-    {
-      "ldgui_symbol": "ldGetFreeMemory",
-      "reason": "R2 shared tree/helper/lifecycle API: internal backend structure or demo host helper, not a PicoUI user-facing native capability."
     },
     {
       "ldgui_symbol": "ldGraph_depose",
@@ -11571,26 +11617,6 @@
     },
     {
       "ldgui_symbol": "ldGuiInit",
-      "reason": "R2 shared helper/lifecycle/layout solver API: internal scene/runtime/navigation/layout decision helper, not a stable PicoUI user-facing public capability."
-    },
-    {
-      "ldgui_symbol": "ldGuiJumpPage",
-      "reason": "R2 shared helper/lifecycle/layout solver API: internal scene/runtime/navigation/layout decision helper, not a stable PicoUI user-facing public capability."
-    },
-    {
-      "ldgui_symbol": "ldGuiJumpPageFast",
-      "reason": "R2 shared helper/lifecycle/layout solver API: internal scene/runtime/navigation/layout decision helper, not a stable PicoUI user-facing public capability."
-    },
-    {
-      "ldgui_symbol": "ldGuiJumpPage_0",
-      "reason": "R2 shared helper/lifecycle/layout solver API: internal scene/runtime/navigation/layout decision helper, not a stable PicoUI user-facing public capability."
-    },
-    {
-      "ldgui_symbol": "ldGuiJumpPage_1",
-      "reason": "R2 shared helper/lifecycle/layout solver API: internal scene/runtime/navigation/layout decision helper, not a stable PicoUI user-facing public capability."
-    },
-    {
-      "ldgui_symbol": "ldGuiJumpPage_2",
       "reason": "R2 shared helper/lifecycle/layout solver API: internal scene/runtime/navigation/layout decision helper, not a stable PicoUI user-facing public capability."
     },
     {
@@ -11660,14 +11686,6 @@
     {
       "ldgui_symbol": "ldKeyboardBtnUserDraw",
       "reason": "backend-private weak draw hook; Arm-2D tile draw callback is not portable PicoUI surface."
-    },
-    {
-      "ldgui_symbol": "ldKeyboardCallback",
-      "reason": "backend-private weak callback hook; Arm-2D keyboard callback is not exposed as a PicoUI public API."
-    },
-    {
-      "ldgui_symbol": "ldKeyboardGetTargetBtnList",
-      "reason": "backend-private weak hook; target button list is not a stable cross-platform PicoUI public API."
     },
     {
       "ldgui_symbol": "ldKeyboard_depose",
@@ -11750,7 +11768,23 @@
       "reason": "Render/show entry point owned by backend rendering pipeline."
     },
     {
+      "ldgui_symbol": "ldCalloc",
+      "reason": "R2 shared tree/helper/lifecycle API: internal backend structure or demo host helper, not a PicoUI user-facing native capability."
+    },
+    {
+      "ldgui_symbol": "ldFree",
+      "reason": "R2 shared tree/helper/lifecycle API: internal backend structure or demo host helper, not a PicoUI user-facing native capability."
+    },
+    {
+      "ldgui_symbol": "ldGetFreeMemory",
+      "reason": "R2 shared tree/helper/lifecycle API: internal backend structure or demo host helper, not a PicoUI user-facing native capability."
+    },
+    {
       "ldgui_symbol": "ldMalloc",
+      "reason": "R2 shared tree/helper/lifecycle API: internal backend structure or demo host helper, not a PicoUI user-facing native capability."
+    },
+    {
+      "ldgui_symbol": "ldRealloc",
       "reason": "R2 shared tree/helper/lifecycle API: internal backend structure or demo host helper, not a PicoUI user-facing native capability."
     },
     {
@@ -11854,10 +11888,6 @@
       "reason": "Render/show entry point owned by backend rendering pipeline."
     },
     {
-      "ldgui_symbol": "ldRealloc",
-      "reason": "R2 shared tree/helper/lifecycle API: internal backend structure or demo host helper, not a PicoUI user-facing native capability."
-    },
-    {
       "ldgui_symbol": "ldScrollSelecter_depose",
       "reason": "R2 shared tree/helper/lifecycle API: internal backend structure or demo host helper, not a PicoUI user-facing native capability."
     },
@@ -11898,6 +11928,26 @@
       "reason": "Render/show entry point owned by backend rendering pipeline."
     },
     {
+      "ldgui_symbol": "ldSwitch_depose",
+      "reason": "R2 shared tree/helper/lifecycle API: internal backend structure or demo host helper, not a PicoUI user-facing native capability."
+    },
+    {
+      "ldgui_symbol": "ldSwitch_on_frame_complete",
+      "reason": "R2 shared tree/helper/lifecycle API: internal backend structure or demo host helper, not a PicoUI user-facing native capability."
+    },
+    {
+      "ldgui_symbol": "ldSwitch_on_frame_start",
+      "reason": "R2 shared tree/helper/lifecycle API: internal backend structure or demo host helper, not a PicoUI user-facing native capability."
+    },
+    {
+      "ldgui_symbol": "ldSwitch_on_load",
+      "reason": "R2 shared tree/helper/lifecycle API: internal backend structure or demo host helper, not a PicoUI user-facing native capability."
+    },
+    {
+      "ldgui_symbol": "ldSwitch_show",
+      "reason": "Render/show entry point owned by backend rendering pipeline."
+    },
+    {
       "ldgui_symbol": "ldSwitchAdvanceAnimation",
       "reason": "R2 shared tree/helper/lifecycle API: internal backend structure or demo host helper, not a PicoUI user-facing native capability."
     },
@@ -11920,26 +11970,6 @@
     {
       "ldgui_symbol": "ldSwitchResolveKnobOffset",
       "reason": "R2 shared tree/helper/lifecycle API: internal backend structure or demo host helper, not a PicoUI user-facing native capability."
-    },
-    {
-      "ldgui_symbol": "ldSwitch_depose",
-      "reason": "R2 shared tree/helper/lifecycle API: internal backend structure or demo host helper, not a PicoUI user-facing native capability."
-    },
-    {
-      "ldgui_symbol": "ldSwitch_on_frame_complete",
-      "reason": "R2 shared tree/helper/lifecycle API: internal backend structure or demo host helper, not a PicoUI user-facing native capability."
-    },
-    {
-      "ldgui_symbol": "ldSwitch_on_frame_start",
-      "reason": "R2 shared tree/helper/lifecycle API: internal backend structure or demo host helper, not a PicoUI user-facing native capability."
-    },
-    {
-      "ldgui_symbol": "ldSwitch_on_load",
-      "reason": "R2 shared tree/helper/lifecycle API: internal backend structure or demo host helper, not a PicoUI user-facing native capability."
-    },
-    {
-      "ldgui_symbol": "ldSwitch_show",
-      "reason": "Render/show entry point owned by backend rendering pipeline."
     },
     {
       "ldgui_symbol": "ldTable_depose",
@@ -11982,10 +12012,6 @@
       "reason": "Render/show entry point owned by backend rendering pipeline."
     },
     {
-      "ldgui_symbol": "ldWindowCollectDirectChildren",
-      "reason": "R2 shared tree/helper/lifecycle API: internal backend structure or demo host helper, not a PicoUI user-facing native capability."
-    },
-    {
       "ldgui_symbol": "ldWindowInit",
       "reason": "R2 shared tree/helper/lifecycle API: internal backend structure or demo host helper, not a PicoUI user-facing native capability."
     },
@@ -12011,6 +12037,38 @@
     },
     {
       "ldgui_symbol": "ldWindow_show",
+      "reason": "R2 shared tree/helper/lifecycle API: internal backend structure or demo host helper, not a PicoUI user-facing native capability."
+    },
+    {
+      "ldgui_symbol": "ldBaseMarkParentLayoutDirty",
+      "reason": "R2 shared tree/helper/lifecycle API: internal backend structure or demo host helper, not a PicoUI user-facing native capability."
+    },
+    {
+      "ldgui_symbol": "ldFlexClampAbsoluteSize",
+      "reason": "R2 shared tree/helper/lifecycle API: internal backend structure or demo host helper, not a PicoUI user-facing native capability."
+    },
+    {
+      "ldgui_symbol": "ldFlexFlowIsColumn",
+      "reason": "R2 shared helper/lifecycle/layout solver API: internal scene/runtime/navigation/layout decision helper, not a stable PicoUI user-facing public capability."
+    },
+    {
+      "ldgui_symbol": "ldFlexFlowIsReverse",
+      "reason": "R2 shared helper/lifecycle/layout solver API: internal scene/runtime/navigation/layout decision helper, not a stable PicoUI user-facing public capability."
+    },
+    {
+      "ldgui_symbol": "ldFlexFlowIsWrap",
+      "reason": "R2 shared helper/lifecycle/layout solver API: internal scene/runtime/navigation/layout decision helper, not a stable PicoUI user-facing public capability."
+    },
+    {
+      "ldgui_symbol": "ldFlexFlowIsWrapReverse",
+      "reason": "R2 shared helper/lifecycle/layout solver API: internal scene/runtime/navigation/layout decision helper, not a stable PicoUI user-facing public capability."
+    },
+    {
+      "ldgui_symbol": "ldFlexResolveMainStart",
+      "reason": "R2 shared helper/lifecycle/layout solver API: internal scene/runtime/navigation/layout decision helper, not a stable PicoUI user-facing public capability."
+    },
+    {
+      "ldgui_symbol": "ldWindowCollectDirectChildren",
       "reason": "R2 shared tree/helper/lifecycle API: internal backend structure or demo host helper, not a PicoUI user-facing native capability."
     }
   ]

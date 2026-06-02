@@ -451,6 +451,28 @@ int picoui_backend_widget_dispatch_native_signal(void *backend_widget,
         }
         return -1;
     }
+    case PICOUI_BACKEND_WIDGET_KEYBOARD: {
+        struct picoui_keyboard *keyboard = (struct picoui_keyboard *)host_widget;
+        unsigned int key_code = (unsigned int)picoui_keyboard_get_selected_key_code(keyboard);
+
+        if (native_signal == SIGNAL_PRESS || native_signal == SIGNAL_RELEASE) {
+            if (picoui_backend_widget_claim_focus_for_signal(backend,
+                                                             native_signal == SIGNAL_PRESS
+                                                                 ? PICOUI_BACKEND_SIGNAL_PRESSED
+                                                                 : PICOUI_BACKEND_SIGNAL_RELEASED) != 0) {
+                return -1;
+            }
+            backend->last_signal = native_signal == SIGNAL_PRESS
+                                 ? PICOUI_BACKEND_SIGNAL_PRESSED
+                                 : PICOUI_BACKEND_SIGNAL_RELEASED;
+            backend->dispatch_count++;
+            if (keyboard->event_cb != 0) {
+                keyboard->event_cb(keyboard, key_code, native_signal, keyboard->event_user_data);
+            }
+            return 0;
+        }
+        return -1;
+    }
     case PICOUI_BACKEND_WIDGET_CHECKBOX: {
         struct picoui_checkbox *checkbox = (struct picoui_checkbox *)host_widget;
         int normalized_value;

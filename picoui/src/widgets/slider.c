@@ -151,23 +151,40 @@ int picoui_slider_set_value(struct picoui_slider *slider, int value)
 
 int picoui_slider_set_range(struct picoui_slider *slider, int min_value, int max_value)
 {
-    int clamped_value;
+    int old_min_value;
+    int old_max_value;
+    int old_range;
+    int old_percent = 0;
+    int new_range;
+    int remapped_value;
 
     if (slider == 0 || min_value > max_value) {
         return -1;
     }
 
-    slider->min_value = min_value;
-    slider->max_value = max_value;
-    clamped_value = slider->value;
-    if (clamped_value < min_value) {
-        clamped_value = min_value;
-    }
-    if (clamped_value > max_value) {
-        clamped_value = max_value;
+    old_min_value = slider->min_value;
+    old_max_value = slider->max_value;
+    old_range = old_max_value - old_min_value;
+    if (old_range > 0) {
+        old_percent = ((slider->value - old_min_value) * 100) / old_range;
+        if (old_percent < 0) {
+            old_percent = 0;
+        }
+        if (old_percent > 100) {
+            old_percent = 100;
+        }
     }
 
-    slider->value = clamped_value;
+    slider->min_value = min_value;
+    slider->max_value = max_value;
+    new_range = max_value - min_value;
+    if (new_range <= 0) {
+        remapped_value = min_value;
+    } else {
+        remapped_value = min_value + (new_range * old_percent) / 100;
+    }
+
+    slider->value = remapped_value;
     if (slider->widget.backend_widget != 0) {
         return picoui_backend_widget_update_value(slider->widget.backend_widget,
                                                   slider->value,

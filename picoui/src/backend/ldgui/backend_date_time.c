@@ -207,3 +207,27 @@ int picoui_backend_date_time_set_bg_color(struct picoui_date_time *dt, unsigned 
     ldDateTimeSetBackgroundColor(ld_date_time, picoui_backend_date_time_rgb_to_ld_color(rgb));
     return 0;
 }
+
+int picoui_backend_date_time_set_use_system_time(struct picoui_date_time *dt, int enabled)
+{
+    ldDateTime_t *ld_date_time = picoui_backend_date_time_get_ld(dt);
+
+    if (ld_date_time == NULL) {
+        return -1;
+    }
+
+    ld_date_time->isAutoSysTime = enabled != 0;
+    return 0;
+}
+
+int picoui_backend_date_time_get_use_system_time(struct picoui_date_time *dt, int *enabled)
+{
+    ldDateTime_t *ld_date_time = picoui_backend_date_time_get_ld(dt);
+
+    if (ld_date_time == NULL || enabled == NULL) {
+        return -1;
+    }
+
+    *enabled = ld_date_time->isAutoSysTime ? 1 : 0;
+    return 0;
+}

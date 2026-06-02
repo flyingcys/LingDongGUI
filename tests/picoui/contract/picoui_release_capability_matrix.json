@@ -72,57 +72,55 @@
     "manual_pass_evidence": "not_reviewed"
   },
   "summary": {
-    "ldgui_public_api_total": 611,
-    "native_api_matrix_row_total": 611,
-    "capability_entry_total": 611,
+    "ldgui_public_api_total": 619,
+    "native_api_matrix_row_total": 619,
+    "capability_entry_total": 619,
     "gap_status_counts": {
-      "allowlisted": 191,
-      "covered": 420
+      "covered": 441,
+      "allowlisted": 178
     },
     "coverage_kind_counts": {
-      "direct_field_parity": 14,
-      "init_parameter_parity": 14,
-      "lifecycle_internal_allowlisted": 108,
-      "macro_alias_parity": 11,
+      "shared_api_equivalence": 203,
+      "lifecycle_internal_allowlisted": 112,
+      "non_widget_allowlisted": 66,
       "native_getter_parity": 46,
       "native_setter_parity": 153,
-      "non_widget_allowlisted": 83,
-      "shared_api_equivalence": 182
+      "init_parameter_parity": 14,
+      "macro_alias_parity": 11,
+      "direct_field_parity": 14
     },
     "missing_gap_total": 0,
-    "allowlisted_total": 191,
-    "covered_total": 420,
-    "direct_public_covered_total": 420,
-    "policy_allowlisted_total": 191,
+    "allowlisted_total": 178,
+    "covered_total": 441,
+    "direct_public_covered_total": 441,
+    "policy_allowlisted_total": 178,
     "direct_public_100_complete": true,
-    "widget_row_total": 32,
+    "widget_row_total": 33,
     "shared_policy_counts": {
-      "allowlisted_tree_helper": 165,
-      "backend_proof_only": 154,
-      "shared_api_equivalence": 192
+      "shared_api_equivalence": 213,
+      "allowlisted_tree_helper": 152,
+      "backend_proof_only": 154
     },
     "policy_category_counts": {
-      "backend_private_hook": 3,
-      "base_tree_policy": 4,
-      "direct_covered": 420,
-      "drawing_helper_policy": 5,
-      "enum_only_semantics": 2,
-      "layout_solver_internal": 14,
-      "lifecycle_internal": 108,
-      "memory_internal": 5,
+      "direct_covered": 441,
+      "lifecycle_internal": 112,
+      "render_pipeline_internal": 28,
+      "base_tree_policy": 3,
       "native_action_private": 2,
-      "render_pipeline_internal": 27,
-      "resource_time_helper_policy": 5,
-      "runtime_host_internal": 16
+      "runtime_host_internal": 11,
+      "backend_private_hook": 1,
+      "memory_internal": 5,
+      "layout_solver_internal": 14,
+      "enum_only_semantics": 2
     },
     "direct_100_category_counts": {
-      "policy_never_public": 191
+      "policy_never_public": 178
     },
     "group_kind_counts": {
-      "internal_helper": 19,
-      "runtime_host": 16,
+      "widget": 521,
       "shared_base": 63,
-      "widget": 513
+      "runtime_host": 16,
+      "internal_helper": 19
     }
   },
   "widgets": [
@@ -134,8 +132,8 @@
       "widget_release_judgement": "policy_complete_not_direct_100",
       "native_api_total": 13,
       "native_api_gap_status_counts": {
-        "allowlisted": 5,
-        "covered": 8
+        "covered": 8,
+        "allowlisted": 5
       },
       "capabilities": [
         {
@@ -465,13 +463,15 @@
           "capability_release_judgement": "allowlisted",
           "policy_category": "render_pipeline_internal",
           "direct_100_category": "policy_never_public",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         }
       ],
       "audit_note": "a-0.9 R1: non-covered rows are lifecycle/render pipeline policy rows; no PicoUI public wrapper required.",
       "gap_status_counts": {
-        "allowlisted": 5,
-        "covered": 8
+        "covered": 8,
+        "allowlisted": 5
       },
       "group_kind": "widget"
     },
@@ -483,8 +483,8 @@
       "widget_release_judgement": "policy_complete_not_direct_100",
       "native_api_total": 17,
       "native_api_gap_status_counts": {
-        "allowlisted": 5,
-        "covered": 12
+        "covered": 12,
+        "allowlisted": 5
       },
       "capabilities": [
         {
@@ -908,13 +908,15 @@
           "capability_release_judgement": "allowlisted",
           "policy_category": "render_pipeline_internal",
           "direct_100_category": "policy_never_public",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         }
       ],
       "audit_note": "a-0.9 R1: non-covered rows are lifecycle/render pipeline policy rows; no PicoUI public wrapper required.",
       "gap_status_counts": {
-        "allowlisted": 5,
-        "covered": 12
+        "covered": 12,
+        "allowlisted": 5
       },
       "group_kind": "widget"
     },
@@ -926,8 +928,8 @@
       "widget_release_judgement": "policy_complete",
       "native_api_total": 63,
       "native_api_gap_status_counts": {
-        "allowlisted": 14,
-        "covered": 49
+        "covered": 60,
+        "allowlisted": 3
       },
       "capabilities": [
         {
@@ -990,81 +992,87 @@
         },
         {
           "name": "ldBaseBgMove",
-          "status": "allowlisted",
+          "status": "covered",
           "native_api": "ldBaseBgMove",
-          "coverage_kind": "non_widget_allowlisted",
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
-          "capability_release_judgement": "allowlisted",
-          "required": false,
-          "rationale": "R3 policy decision: base geometry/focus/helper row is backend-private or represented by existing PicoUI layout/widget APIs; no new public tree traversal API is required.",
+          "coverage_kind": "shared_api_equivalence",
+          "picoui_api": "picoui_window_set_background_offset + picoui_window_get_background_offset",
+          "backend_proof": "picoui_backend_window_set_background_offset -> ldBaseBgMove",
+          "unit_test": "test_window_background_offset_round_trip_to_scene_root",
+          "gate_evidence": [
+            "ctest:test_picoui_layout",
+            "python:check_picoui_release_capability_matrix"
+          ],
+          "gap_status": "covered",
+          "capability_release_judgement": "direct_parity_complete",
+          "required": true,
+          "rationale": "a-0.13 item 7 closes background pan/move with a portable window-level API backed by the real LingDongGUI scene root background movement helper.",
           "planned_task": "R3",
           "overwrap_risk": false,
           "notes": "a-0.10 R2 direct-100 category: policy_never_public; native tree mutation, debug print, or background helper remains backend-owned because PicoUI create/parent/backend attach APIs own tree mutation and render movement semantics.",
-          "shared_policy": "allowlisted_tree_helper",
+          "shared_policy": "shared_api_equivalence",
           "shared_policy_evidence": [
-            "PicoUI creation APIs carry parent intent and backend attach/remove maintains the real LingDongGUI tree.",
-            "test_backend_widget_tree_contract verifies backend child/sibling tree ownership without exposing native traversal wrappers."
+            "picoui/include/picoui/window.h exposes public background offset setter/getter.",
+            "test_window_background_offset_round_trip_to_scene_root verifies readback and real scene-root movement semantics."
           ],
-          "allowlist_reason": "R3 policy decision: base geometry/focus/helper row is backend-private or represented by existing PicoUI layout/widget APIs; no new public tree traversal API is required.",
-          "policy_category": "base_tree_policy",
-          "direct_100_category": "policy_never_public",
-          "group_kind": "shared_base"
+          "policy_category": "direct_covered",
+          "group_kind": "shared_base",
+          "equivalence_proof": "picoui_window_set_background_offset/get_background_offset maps portable window background pan/readback to ldBaseBgMove and native scene root offsets."
         },
         {
           "name": "ldBaseColor",
-          "status": "allowlisted",
+          "status": "covered",
           "native_api": "ldBaseColor",
-          "coverage_kind": "non_widget_allowlisted",
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
-          "capability_release_judgement": "allowlisted",
-          "required": false,
-          "rationale": "R3 policy decision: raw Arm-2D drawing helpers are backend render-pipeline utilities; PicoUI exposes widget/theme/image abstractions instead of public drawing primitive wrappers.",
+          "coverage_kind": "shared_api_equivalence",
+          "picoui_api": "picoui_canvas_fill_rect",
+          "backend_proof": "picoui_backend_canvas_sync -> ldCanvas_show -> ldBaseColor",
+          "unit_test": "test_picoui_canvas_command_round_trip_to_native_canvas",
+          "gate_evidence": [
+            "ctest:test_picoui_canvas",
+            "python:check_picoui_release_capability_matrix"
+          ],
+          "gap_status": "covered",
+          "capability_release_judgement": "direct_parity_complete",
+          "required": true,
+          "rationale": "a-0.13 item 8 closes raw fill-color drawing through a portable canvas command API rendered by the real LingDongGUI backend tree.",
           "planned_task": "R3",
           "overwrap_risk": false,
           "notes": "a-0.10 R2 direct-100 category: policy_never_public; raw Arm-2D drawing helpers stay render-pipeline utilities while PicoUI exposes widget, theme, and image abstractions.",
-          "allowlist_reason": "R3 policy decision: raw Arm-2D drawing helpers are backend render-pipeline utilities; PicoUI exposes widget/theme/image abstractions instead of public drawing primitive wrappers.",
-          "shared_policy": "allowlisted_tree_helper",
+          "shared_policy": "shared_api_equivalence",
           "shared_policy_evidence": [
-            "PicoUI creation APIs carry parent intent and backend attach/remove maintains the real LingDongGUI tree.",
-            "test_backend_widget_tree_contract verifies backend child/sibling tree ownership without exposing native traversal wrappers."
+            "picoui/include/picoui/canvas.h exposes public canvas drawing commands.",
+            "test_picoui_canvas_command_round_trip_to_native_canvas verifies commands land on a real native canvas widget."
           ],
-          "policy_category": "drawing_helper_policy",
-          "direct_100_category": "policy_never_public",
-          "group_kind": "shared_base"
+          "policy_category": "direct_covered",
+          "group_kind": "shared_base",
+          "equivalence_proof": "picoui_canvas_fill_rect records a portable fill-rect command that ldCanvas_show renders via ldBaseColor."
         },
         {
           "name": "ldBaseDrawLine",
-          "status": "allowlisted",
+          "status": "covered",
           "native_api": "ldBaseDrawLine",
-          "coverage_kind": "non_widget_allowlisted",
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
-          "capability_release_judgement": "allowlisted",
-          "required": false,
-          "rationale": "R3 policy decision: raw Arm-2D drawing helpers are backend render-pipeline utilities; PicoUI exposes widget/theme/image abstractions instead of public drawing primitive wrappers.",
+          "coverage_kind": "shared_api_equivalence",
+          "picoui_api": "picoui_canvas_draw_line",
+          "backend_proof": "picoui_backend_canvas_sync -> ldCanvas_show -> ldBaseDrawLine",
+          "unit_test": "test_picoui_canvas_command_round_trip_to_native_canvas",
+          "gate_evidence": [
+            "ctest:test_picoui_canvas",
+            "python:check_picoui_release_capability_matrix"
+          ],
+          "gap_status": "covered",
+          "capability_release_judgement": "direct_parity_complete",
+          "required": true,
+          "rationale": "a-0.13 item 8 closes line drawing through a portable canvas command API rendered by the real LingDongGUI backend tree.",
           "planned_task": "R3",
           "overwrap_risk": false,
           "notes": "a-0.10 R2 direct-100 category: policy_never_public; raw Arm-2D drawing helpers stay render-pipeline utilities while PicoUI exposes widget, theme, and image abstractions.",
-          "allowlist_reason": "R3 policy decision: raw Arm-2D drawing helpers are backend render-pipeline utilities; PicoUI exposes widget/theme/image abstractions instead of public drawing primitive wrappers.",
-          "shared_policy": "allowlisted_tree_helper",
+          "shared_policy": "shared_api_equivalence",
           "shared_policy_evidence": [
-            "PicoUI creation APIs carry parent intent and backend attach/remove maintains the real LingDongGUI tree.",
-            "test_backend_widget_tree_contract verifies backend child/sibling tree ownership without exposing native traversal wrappers."
+            "picoui/include/picoui/canvas.h exposes public line drawing command.",
+            "test_picoui_canvas_command_round_trip_to_native_canvas verifies native canvas command sync."
           ],
-          "policy_category": "drawing_helper_policy",
-          "direct_100_category": "policy_never_public",
-          "group_kind": "shared_base"
+          "policy_category": "direct_covered",
+          "group_kind": "shared_base",
+          "equivalence_proof": "picoui_canvas_draw_line records a portable line command that ldCanvas_show renders via ldBaseDrawLine."
         },
         {
           "name": "ldBaseFocusNavigate",
@@ -1242,29 +1250,32 @@
         },
         {
           "name": "ldBaseGetDate",
-          "status": "allowlisted",
+          "status": "covered",
           "native_api": "ldBaseGetDate",
-          "coverage_kind": "non_widget_allowlisted",
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
-          "capability_release_judgement": "allowlisted",
-          "required": false,
-          "rationale": "R3 policy decision: native vres/date/time helpers are LingDongGUI resource or clock utilities; PicoUI exposes resources through widget-specific portable props and does not wrap host address/time helpers.",
+          "coverage_kind": "shared_api_equivalence",
+          "picoui_api": "picoui_date_time_set_use_system_time + picoui_calendar_set_use_system_date",
+          "backend_proof": "picoui_backend_date_time_set_use_system_time + picoui_backend_calendar_set_use_system_date -> ldBaseGetDate",
+          "unit_test": "test_date_time_use_system_time_round_trip + test_calendar_system_date_provider_round_trip",
+          "gate_evidence": [
+            "ctest:test_picoui_date_time",
+            "ctest:test_picoui_calendar",
+            "python:check_picoui_release_capability_matrix"
+          ],
+          "gap_status": "covered",
+          "capability_release_judgement": "direct_parity_complete",
+          "required": true,
+          "rationale": "a-0.13 item 5 closes system-date provider intent through portable widget-level provider toggles rather than exposing raw host date helpers.",
           "planned_task": "R3",
           "overwrap_risk": false,
           "notes": "a-0.10 R2 direct-100 category: policy_never_public; LingDongGUI resource/date/time helpers stay host/backend utilities while PicoUI exposes resource or time intent through widget-specific portable properties.",
-          "shared_policy": "allowlisted_tree_helper",
+          "shared_policy": "shared_api_equivalence",
           "shared_policy_evidence": [
-            "PicoUI creation APIs carry parent intent and backend attach/remove maintains the real LingDongGUI tree.",
-            "test_backend_widget_tree_contract verifies backend child/sibling tree ownership without exposing native traversal wrappers."
+            "picoui/include/picoui/date_time.h and calendar.h expose system provider toggles.",
+            "Focused tests verify native auto-system date mode and readback."
           ],
-          "allowlist_reason": "R3 policy decision: native vres/date/time helpers are LingDongGUI resource or clock utilities; PicoUI exposes resources through widget-specific portable props and does not wrap host address/time helpers.",
-          "policy_category": "resource_time_helper_policy",
-          "direct_100_category": "policy_never_public",
-          "group_kind": "shared_base"
+          "policy_category": "direct_covered",
+          "group_kind": "shared_base",
+          "equivalence_proof": "PicoUI system-date toggles drive native auto-system date paths that consume ldBaseGetDate during runtime refresh."
         },
         {
           "name": "ldBaseGetHeight",
@@ -1543,107 +1554,117 @@
         },
         {
           "name": "ldBaseGetTime",
-          "status": "allowlisted",
+          "status": "covered",
           "native_api": "ldBaseGetTime",
-          "coverage_kind": "non_widget_allowlisted",
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
-          "capability_release_judgement": "allowlisted",
-          "required": false,
-          "rationale": "R3 policy decision: native vres/date/time helpers are LingDongGUI resource or clock utilities; PicoUI exposes resources through widget-specific portable props and does not wrap host address/time helpers.",
+          "coverage_kind": "shared_api_equivalence",
+          "picoui_api": "picoui_date_time_set_use_system_time + picoui_clock_set_use_system_time",
+          "backend_proof": "picoui_backend_date_time_set_use_system_time + picoui_backend_clock_set_use_system_time -> ldBaseGetTime",
+          "unit_test": "test_date_time_use_system_time_round_trip + test_clock_system_time_provider_round_trip",
+          "gate_evidence": [
+            "ctest:test_picoui_date_time",
+            "ctest:test_picoui_clock",
+            "python:check_picoui_release_capability_matrix"
+          ],
+          "gap_status": "covered",
+          "capability_release_judgement": "direct_parity_complete",
+          "required": true,
+          "rationale": "a-0.13 item 5 closes system-time provider intent through portable widget-level provider toggles rather than exposing raw host time helpers.",
           "planned_task": "R3",
           "overwrap_risk": false,
           "notes": "a-0.10 R2 direct-100 category: policy_never_public; LingDongGUI resource/date/time helpers stay host/backend utilities while PicoUI exposes resource or time intent through widget-specific portable properties.",
-          "shared_policy": "allowlisted_tree_helper",
+          "shared_policy": "shared_api_equivalence",
           "shared_policy_evidence": [
-            "PicoUI creation APIs carry parent intent and backend attach/remove maintains the real LingDongGUI tree.",
-            "test_backend_widget_tree_contract verifies backend child/sibling tree ownership without exposing native traversal wrappers."
+            "picoui/include/picoui/date_time.h and clock.h expose system provider toggles.",
+            "Focused tests verify native auto-system time mode and readback."
           ],
-          "allowlist_reason": "R3 policy decision: native vres/date/time helpers are LingDongGUI resource or clock utilities; PicoUI exposes resources through widget-specific portable props and does not wrap host address/time helpers.",
-          "policy_category": "resource_time_helper_policy",
-          "direct_100_category": "policy_never_public",
-          "group_kind": "shared_base"
+          "policy_category": "direct_covered",
+          "group_kind": "shared_base",
+          "equivalence_proof": "PicoUI system-time toggles drive native auto-system time paths that consume ldBaseGetTime during runtime refresh."
         },
         {
           "name": "ldBaseGetVresFont",
-          "status": "allowlisted",
+          "status": "covered",
           "native_api": "ldBaseGetVresFont",
-          "coverage_kind": "non_widget_allowlisted",
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
-          "capability_release_judgement": "allowlisted",
-          "required": false,
-          "rationale": "R3 policy decision: native vres/date/time helpers are LingDongGUI resource or clock utilities; PicoUI exposes resources through widget-specific portable props and does not wrap host address/time helpers.",
+          "coverage_kind": "shared_api_equivalence",
+          "picoui_api": "picoui_font_from_vres",
+          "backend_proof": "picoui_backend_text_resolve_font + picoui_backend_button_resolve_font -> ldBaseGetVresFont",
+          "unit_test": "test_vres_font_factory_round_trip + test_button_vres_font_contract",
+          "gate_evidence": [
+            "ctest:test_picoui_widgets",
+            "ctest:test_picoui_button_events",
+            "python:check_picoui_release_capability_matrix"
+          ],
+          "gap_status": "covered",
+          "capability_release_judgement": "direct_parity_complete",
+          "required": true,
+          "rationale": "a-0.13 item 4 closes VRES font consumption with a portable PicoUI font factory consumed by text and button widgets.",
           "planned_task": "R3",
           "overwrap_risk": false,
           "notes": "a-0.10 R2 direct-100 category: policy_never_public; LingDongGUI resource/date/time helpers stay host/backend utilities while PicoUI exposes resource or time intent through widget-specific portable properties.",
-          "shared_policy": "allowlisted_tree_helper",
+          "shared_policy": "shared_api_equivalence",
           "shared_policy_evidence": [
-            "PicoUI creation APIs carry parent intent and backend attach/remove maintains the real LingDongGUI tree.",
-            "test_backend_widget_tree_contract verifies backend child/sibling tree ownership without exposing native traversal wrappers."
+            "picoui/include/picoui/image.h exposes VRES font factory API.",
+            "Focused tests verify VRES font round-trip and widget consumption."
           ],
-          "allowlist_reason": "R3 policy decision: native vres/date/time helpers are LingDongGUI resource or clock utilities; PicoUI exposes resources through widget-specific portable props and does not wrap host address/time helpers.",
-          "policy_category": "resource_time_helper_policy",
-          "direct_100_category": "policy_never_public",
-          "group_kind": "shared_base"
+          "policy_category": "direct_covered",
+          "group_kind": "shared_base",
+          "equivalence_proof": "picoui_font_from_vres provides a portable font handle that backend text/button resolution maps to ldBaseGetVresFont."
         },
         {
           "name": "ldBaseGetVresImage",
-          "status": "allowlisted",
+          "status": "covered",
           "native_api": "ldBaseGetVresImage",
-          "coverage_kind": "non_widget_allowlisted",
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
-          "capability_release_judgement": "allowlisted",
-          "required": false,
-          "rationale": "R3 policy decision: native vres/date/time helpers are LingDongGUI resource or clock utilities; PicoUI exposes resources through widget-specific portable props and does not wrap host address/time helpers.",
+          "coverage_kind": "shared_api_equivalence",
+          "picoui_api": "picoui_image_source_from_vres",
+          "backend_proof": "picoui_backend_image_source_init_from_vres -> ldBaseGetVresImage",
+          "unit_test": "test_vres_image_source_factory_round_trip",
+          "gate_evidence": [
+            "ctest:test_picoui_widgets",
+            "python:check_picoui_release_capability_matrix"
+          ],
+          "gap_status": "covered",
+          "capability_release_judgement": "direct_parity_complete",
+          "required": true,
+          "rationale": "a-0.13 item 4 closes VRES image consumption with a portable PicoUI image source factory.",
           "planned_task": "R3",
           "overwrap_risk": false,
           "notes": "a-0.10 R2 direct-100 category: policy_never_public; LingDongGUI resource/date/time helpers stay host/backend utilities while PicoUI exposes resource or time intent through widget-specific portable properties.",
-          "shared_policy": "allowlisted_tree_helper",
+          "shared_policy": "shared_api_equivalence",
           "shared_policy_evidence": [
-            "PicoUI creation APIs carry parent intent and backend attach/remove maintains the real LingDongGUI tree.",
-            "test_backend_widget_tree_contract verifies backend child/sibling tree ownership without exposing native traversal wrappers."
+            "picoui/include/picoui/image.h exposes VRES image source factory API.",
+            "Focused tests verify VRES image source round-trip."
           ],
-          "allowlist_reason": "R3 policy decision: native vres/date/time helpers are LingDongGUI resource or clock utilities; PicoUI exposes resources through widget-specific portable props and does not wrap host address/time helpers.",
-          "policy_category": "resource_time_helper_policy",
-          "direct_100_category": "policy_never_public",
-          "group_kind": "shared_base"
+          "policy_category": "direct_covered",
+          "group_kind": "shared_base",
+          "equivalence_proof": "picoui_image_source_from_vres provides a portable image source that backend image resolution maps to ldBaseGetVresImage."
         },
         {
           "name": "ldBaseGetWeek",
-          "status": "allowlisted",
+          "status": "covered",
           "native_api": "ldBaseGetWeek",
-          "coverage_kind": "non_widget_allowlisted",
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
-          "capability_release_judgement": "allowlisted",
-          "required": false,
-          "rationale": "R3 policy decision: native vres/date/time helpers are LingDongGUI resource or clock utilities; PicoUI exposes resources through widget-specific portable props and does not wrap host address/time helpers.",
+          "coverage_kind": "shared_api_equivalence",
+          "picoui_api": "picoui_calendar_set_use_system_date",
+          "backend_proof": "picoui_backend_calendar_set_use_system_date -> ldCalendar_on_frame_start -> ldBaseGetWeek",
+          "unit_test": "test_calendar_system_date_provider_round_trip",
+          "gate_evidence": [
+            "ctest:test_picoui_calendar",
+            "python:check_picoui_release_capability_matrix"
+          ],
+          "gap_status": "covered",
+          "capability_release_judgement": "direct_parity_complete",
+          "required": true,
+          "rationale": "a-0.13 item 5 closes system weekday/grid refresh intent through the calendar system-date provider toggle.",
           "planned_task": "R3",
           "overwrap_risk": false,
           "notes": "a-0.10 R2 direct-100 category: policy_never_public; LingDongGUI resource/date/time helpers stay host/backend utilities while PicoUI exposes resource or time intent through widget-specific portable properties.",
-          "shared_policy": "allowlisted_tree_helper",
+          "shared_policy": "shared_api_equivalence",
           "shared_policy_evidence": [
-            "PicoUI creation APIs carry parent intent and backend attach/remove maintains the real LingDongGUI tree.",
-            "test_backend_widget_tree_contract verifies backend child/sibling tree ownership without exposing native traversal wrappers."
+            "picoui/include/picoui/calendar.h exposes system-date provider toggle API.",
+            "Focused test verifies native calendar auto-system date mode and readback."
           ],
-          "allowlist_reason": "R3 policy decision: native vres/date/time helpers are LingDongGUI resource or clock utilities; PicoUI exposes resources through widget-specific portable props and does not wrap host address/time helpers.",
-          "policy_category": "resource_time_helper_policy",
-          "direct_100_category": "policy_never_public",
-          "group_kind": "shared_base"
+          "policy_category": "direct_covered",
+          "group_kind": "shared_base",
+          "equivalence_proof": "picoui_calendar_set_use_system_date enables native calendar refresh that recomputes weekday/grid via ldBaseGetWeek."
         },
         {
           "name": "ldBaseGetWidget",
@@ -1812,55 +1833,59 @@
         },
         {
           "name": "ldBaseImage",
-          "status": "allowlisted",
+          "status": "covered",
           "native_api": "ldBaseImage",
-          "coverage_kind": "non_widget_allowlisted",
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
-          "capability_release_judgement": "allowlisted",
-          "required": false,
-          "rationale": "R3 policy decision: raw Arm-2D drawing helpers are backend render-pipeline utilities; PicoUI exposes widget/theme/image abstractions instead of public drawing primitive wrappers.",
+          "coverage_kind": "shared_api_equivalence",
+          "picoui_api": "picoui_canvas_draw_image",
+          "backend_proof": "picoui_backend_canvas_sync -> ldCanvas_show -> ldBaseImage",
+          "unit_test": "test_picoui_canvas_command_round_trip_to_native_canvas",
+          "gate_evidence": [
+            "ctest:test_picoui_canvas",
+            "python:check_picoui_release_capability_matrix"
+          ],
+          "gap_status": "covered",
+          "capability_release_judgement": "direct_parity_complete",
+          "required": true,
+          "rationale": "a-0.13 item 8 closes image drawing through a portable canvas command API rendered by the real LingDongGUI backend tree.",
           "planned_task": "R3",
           "overwrap_risk": false,
           "notes": "a-0.10 R2 direct-100 category: policy_never_public; raw Arm-2D drawing helpers stay render-pipeline utilities while PicoUI exposes widget, theme, and image abstractions.",
-          "allowlist_reason": "R3 policy decision: raw Arm-2D drawing helpers are backend render-pipeline utilities; PicoUI exposes widget/theme/image abstractions instead of public drawing primitive wrappers.",
-          "shared_policy": "allowlisted_tree_helper",
+          "shared_policy": "shared_api_equivalence",
           "shared_policy_evidence": [
-            "PicoUI creation APIs carry parent intent and backend attach/remove maintains the real LingDongGUI tree.",
-            "test_backend_widget_tree_contract verifies backend child/sibling tree ownership without exposing native traversal wrappers."
+            "picoui/include/picoui/canvas.h exposes public image draw command.",
+            "Focused canvas test verifies command sync onto a real native canvas widget."
           ],
-          "policy_category": "drawing_helper_policy",
-          "direct_100_category": "policy_never_public",
-          "group_kind": "shared_base"
+          "policy_category": "direct_covered",
+          "group_kind": "shared_base",
+          "equivalence_proof": "picoui_canvas_draw_image records a portable image command that ldCanvas_show renders via ldBaseImage."
         },
         {
           "name": "ldBaseImageScale",
-          "status": "allowlisted",
+          "status": "covered",
           "native_api": "ldBaseImageScale",
-          "coverage_kind": "non_widget_allowlisted",
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
-          "capability_release_judgement": "allowlisted",
-          "required": false,
-          "rationale": "R3 policy decision: raw Arm-2D drawing helpers are backend render-pipeline utilities; PicoUI exposes widget/theme/image abstractions instead of public drawing primitive wrappers.",
+          "coverage_kind": "shared_api_equivalence",
+          "picoui_api": "picoui_canvas_draw_image_scaled",
+          "backend_proof": "picoui_backend_canvas_sync -> ldCanvas_show -> ldBaseImageScale",
+          "unit_test": "test_picoui_canvas_command_round_trip_to_native_canvas",
+          "gate_evidence": [
+            "ctest:test_picoui_canvas",
+            "python:check_picoui_release_capability_matrix"
+          ],
+          "gap_status": "covered",
+          "capability_release_judgement": "direct_parity_complete",
+          "required": true,
+          "rationale": "a-0.13 item 8 closes scaled-image drawing through a portable canvas command API rendered by the real LingDongGUI backend tree.",
           "planned_task": "R3",
           "overwrap_risk": false,
           "notes": "a-0.10 R2 direct-100 category: policy_never_public; raw Arm-2D drawing helpers stay render-pipeline utilities while PicoUI exposes widget, theme, and image abstractions.",
-          "allowlist_reason": "R3 policy decision: raw Arm-2D drawing helpers are backend render-pipeline utilities; PicoUI exposes widget/theme/image abstractions instead of public drawing primitive wrappers.",
-          "shared_policy": "allowlisted_tree_helper",
+          "shared_policy": "shared_api_equivalence",
           "shared_policy_evidence": [
-            "PicoUI creation APIs carry parent intent and backend attach/remove maintains the real LingDongGUI tree.",
-            "test_backend_widget_tree_contract verifies backend child/sibling tree ownership without exposing native traversal wrappers."
+            "picoui/include/picoui/canvas.h exposes public scaled-image draw command.",
+            "Focused canvas test verifies command sync onto a real native canvas widget."
           ],
-          "policy_category": "drawing_helper_policy",
-          "direct_100_category": "policy_never_public",
-          "group_kind": "shared_base"
+          "policy_category": "direct_covered",
+          "group_kind": "shared_base",
+          "equivalence_proof": "picoui_canvas_draw_image_scaled records a portable scaled-image command that ldCanvas_show renders via ldBaseImageScale."
         },
         {
           "name": "ldBaseIsCorner",
@@ -1968,29 +1993,31 @@
         },
         {
           "name": "ldBaseLabel",
-          "status": "allowlisted",
+          "status": "covered",
           "native_api": "ldBaseLabel",
-          "coverage_kind": "non_widget_allowlisted",
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
-          "capability_release_judgement": "allowlisted",
-          "required": false,
-          "rationale": "R3 policy decision: raw Arm-2D drawing helpers are backend render-pipeline utilities; PicoUI exposes widget/theme/image abstractions instead of public drawing primitive wrappers.",
+          "coverage_kind": "shared_api_equivalence",
+          "picoui_api": "picoui_canvas_draw_text",
+          "backend_proof": "picoui_backend_canvas_sync -> ldCanvas_show -> ldBaseLabel",
+          "unit_test": "test_picoui_canvas_command_round_trip_to_native_canvas",
+          "gate_evidence": [
+            "ctest:test_picoui_canvas",
+            "python:check_picoui_release_capability_matrix"
+          ],
+          "gap_status": "covered",
+          "capability_release_judgement": "direct_parity_complete",
+          "required": true,
+          "rationale": "a-0.13 item 8 closes text drawing through a portable canvas command API rendered by the real LingDongGUI backend tree.",
           "planned_task": "R3",
           "overwrap_risk": false,
           "notes": "a-0.10 R2 direct-100 category: policy_never_public; raw Arm-2D drawing helpers stay render-pipeline utilities while PicoUI exposes widget, theme, and image abstractions.",
-          "allowlist_reason": "R3 policy decision: raw Arm-2D drawing helpers are backend render-pipeline utilities; PicoUI exposes widget/theme/image abstractions instead of public drawing primitive wrappers.",
-          "shared_policy": "allowlisted_tree_helper",
+          "shared_policy": "shared_api_equivalence",
           "shared_policy_evidence": [
-            "PicoUI creation APIs carry parent intent and backend attach/remove maintains the real LingDongGUI tree.",
-            "test_backend_widget_tree_contract verifies backend child/sibling tree ownership without exposing native traversal wrappers."
+            "picoui/include/picoui/canvas.h exposes public text draw command.",
+            "Focused canvas test verifies command sync onto a real native canvas widget."
           ],
-          "policy_category": "drawing_helper_policy",
-          "direct_100_category": "policy_never_public",
-          "group_kind": "shared_base"
+          "policy_category": "direct_covered",
+          "group_kind": "shared_base",
+          "equivalence_proof": "picoui_canvas_draw_text records a portable text command that ldCanvas_show renders via ldBaseLabel."
         },
         {
           "name": "ldBaseMove",
@@ -2619,8 +2646,8 @@
       ],
       "audit_note": "a-0.12: base optional public extension candidates are now covered by portable PicoUI public API; policy_never_public resource/drawing rows remain allowlisted.",
       "gap_status_counts": {
-        "allowlisted": 14,
-        "covered": 49
+        "covered": 60,
+        "allowlisted": 3
       },
       "group_kind": "shared_base"
     },
@@ -3313,7 +3340,9 @@
           "capability_release_judgement": "allowlisted",
           "policy_category": "render_pipeline_internal",
           "direct_100_category": "policy_never_public",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         }
       ],
       "audit_note": "a-0.9 R4: native weak hook/action helper rows are strict backend-private/native-action policy rows; portable PicoUI event/input APIs cover user intent.",
@@ -3331,8 +3360,8 @@
       "widget_release_judgement": "policy_complete_not_direct_100",
       "native_api_total": 12,
       "native_api_gap_status_counts": {
-        "allowlisted": 5,
-        "covered": 7
+        "covered": 7,
+        "allowlisted": 5
       },
       "capabilities": [
         {
@@ -3632,13 +3661,244 @@
           "capability_release_judgement": "allowlisted",
           "policy_category": "render_pipeline_internal",
           "direct_100_category": "policy_never_public",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         }
       ],
       "audit_note": "a-0.9 R1: non-covered rows are lifecycle/render pipeline policy rows; no PicoUI public wrapper required.",
       "gap_status_counts": {
-        "allowlisted": 5,
-        "covered": 7
+        "covered": 7,
+        "allowlisted": 5
+      },
+      "group_kind": "widget"
+    },
+    {
+      "name": "canvas",
+      "widget_status": "native_api_gap_tracked",
+      "current_layer": "a_0_8_ledger_truth",
+      "parity_status": "policy_complete",
+      "widget_release_judgement": "policy_complete_not_direct_100",
+      "native_api_total": 8,
+      "native_api_gap_status_counts": {
+        "covered": 3,
+        "allowlisted": 5
+      },
+      "capabilities": [
+        {
+          "name": "ldCanvas_init",
+          "status": "covered",
+          "native_api": "ldCanvas_init",
+          "coverage_kind": "shared_api_equivalence",
+          "picoui_api": "picoui_canvas_create",
+          "backend_proof": "picoui_backend_create_canvas",
+          "unit_test": "test_picoui_canvas_command_round_trip_to_native_canvas",
+          "gate_evidence": [
+            "ctest:test_picoui_canvas",
+            "python:check_picoui_release_capability_matrix"
+          ],
+          "gap_status": "covered",
+          "required": true,
+          "rationale": "a-0.13 item 8 closes custom drawing/canvas capability with a portable PicoUI canvas API mapped onto a real native widget.",
+          "planned_task": "a-0.13-T8",
+          "overwrap_risk": false,
+          "notes": "a-0.13 item 8: canvas public API backed by a real native ldCanvas widget and backend command sync.",
+          "capability_release_judgement": "direct_parity_complete",
+          "shared_policy": "shared_api_equivalence",
+          "shared_policy_evidence": [
+            "picoui/include/picoui/canvas.h exposes public canvas API.",
+            "Focused canvas test verifies native widget binding and command round-trip."
+          ],
+          "policy_category": "direct_covered",
+          "group_kind": "widget",
+          "equivalence_proof": "picoui_canvas_create allocates and binds a real native ldCanvas widget under a real PicoUI window."
+        },
+        {
+          "name": "ldCanvasClear",
+          "status": "covered",
+          "native_api": "ldCanvasClear",
+          "coverage_kind": "shared_api_equivalence",
+          "picoui_api": "picoui_canvas_clear",
+          "backend_proof": "picoui_backend_canvas_sync",
+          "unit_test": "test_picoui_canvas_command_round_trip_to_native_canvas",
+          "gate_evidence": [
+            "ctest:test_picoui_canvas",
+            "python:check_picoui_release_capability_matrix"
+          ],
+          "gap_status": "covered",
+          "required": true,
+          "rationale": "a-0.13 item 8 closes custom drawing/canvas capability with a portable PicoUI canvas API mapped onto a real native widget.",
+          "planned_task": "a-0.13-T8",
+          "overwrap_risk": false,
+          "notes": "a-0.13 item 8: canvas public API backed by a real native ldCanvas widget and backend command sync.",
+          "capability_release_judgement": "direct_parity_complete",
+          "shared_policy": "shared_api_equivalence",
+          "shared_policy_evidence": [
+            "picoui/include/picoui/canvas.h exposes public canvas API.",
+            "Focused canvas test verifies native widget binding and command round-trip."
+          ],
+          "policy_category": "direct_covered",
+          "group_kind": "widget",
+          "equivalence_proof": "picoui_canvas_clear resets native canvas command list state via backend sync."
+        },
+        {
+          "name": "ldCanvasPushCommand",
+          "status": "covered",
+          "native_api": "ldCanvasPushCommand",
+          "coverage_kind": "shared_api_equivalence",
+          "picoui_api": "picoui_canvas_fill_rect + picoui_canvas_draw_line + picoui_canvas_draw_image + picoui_canvas_draw_image_scaled + picoui_canvas_draw_text",
+          "backend_proof": "picoui_backend_canvas_sync -> ldCanvasPushCommand",
+          "unit_test": "test_picoui_canvas_command_round_trip_to_native_canvas",
+          "gate_evidence": [
+            "ctest:test_picoui_canvas",
+            "python:check_picoui_release_capability_matrix"
+          ],
+          "gap_status": "covered",
+          "required": true,
+          "rationale": "a-0.13 item 8 closes custom drawing/canvas capability with a portable PicoUI canvas API mapped onto a real native widget.",
+          "planned_task": "a-0.13-T8",
+          "overwrap_risk": false,
+          "notes": "a-0.13 item 8: canvas public API backed by a real native ldCanvas widget and backend command sync.",
+          "capability_release_judgement": "direct_parity_complete",
+          "shared_policy": "shared_api_equivalence",
+          "shared_policy_evidence": [
+            "picoui/include/picoui/canvas.h exposes public canvas API.",
+            "Focused canvas test verifies native widget binding and command round-trip."
+          ],
+          "policy_category": "direct_covered",
+          "group_kind": "widget",
+          "equivalence_proof": "Portable PicoUI canvas commands sync into the native ldCanvas command list via ldCanvasPushCommand."
+        },
+        {
+          "name": "ldCanvas_depose",
+          "status": "allowlisted",
+          "native_api": "ldCanvas_depose",
+          "coverage_kind": "lifecycle_internal_allowlisted",
+          "picoui_api": "",
+          "backend_proof": "",
+          "unit_test": "",
+          "gate_evidence": [],
+          "gap_status": "allowlisted",
+          "required": false,
+          "rationale": "Render/lifecycle helpers remain backend-owned and are not exposed as PicoUI public API.",
+          "planned_task": "a-0.13-T8",
+          "overwrap_risk": false,
+          "notes": "a-0.13 item 8: native canvas lifecycle hook remains backend-owned.",
+          "capability_release_judgement": "allowlisted",
+          "shared_policy": "allowlisted_tree_helper",
+          "shared_policy_evidence": [
+            "Native widget lifecycle hooks remain backend-managed implementation detail."
+          ],
+          "policy_category": "lifecycle_internal",
+          "group_kind": "widget",
+          "allowlist_reason": "Render/lifecycle helper remains backend-owned and is not a PicoUI user-facing stable public capability.",
+          "direct_100_category": "policy_never_public"
+        },
+        {
+          "name": "ldCanvas_on_load",
+          "status": "allowlisted",
+          "native_api": "ldCanvas_on_load",
+          "coverage_kind": "lifecycle_internal_allowlisted",
+          "picoui_api": "",
+          "backend_proof": "",
+          "unit_test": "",
+          "gate_evidence": [],
+          "gap_status": "allowlisted",
+          "required": false,
+          "rationale": "Render/lifecycle helpers remain backend-owned and are not exposed as PicoUI public API.",
+          "planned_task": "a-0.13-T8",
+          "overwrap_risk": false,
+          "notes": "a-0.13 item 8: native canvas lifecycle hook remains backend-owned.",
+          "capability_release_judgement": "allowlisted",
+          "shared_policy": "allowlisted_tree_helper",
+          "shared_policy_evidence": [
+            "Native widget lifecycle hooks remain backend-managed implementation detail."
+          ],
+          "policy_category": "lifecycle_internal",
+          "group_kind": "widget",
+          "allowlist_reason": "Render/lifecycle helper remains backend-owned and is not a PicoUI user-facing stable public capability.",
+          "direct_100_category": "policy_never_public"
+        },
+        {
+          "name": "ldCanvas_on_frame_start",
+          "status": "allowlisted",
+          "native_api": "ldCanvas_on_frame_start",
+          "coverage_kind": "lifecycle_internal_allowlisted",
+          "picoui_api": "",
+          "backend_proof": "",
+          "unit_test": "",
+          "gate_evidence": [],
+          "gap_status": "allowlisted",
+          "required": false,
+          "rationale": "Render/lifecycle helpers remain backend-owned and are not exposed as PicoUI public API.",
+          "planned_task": "a-0.13-T8",
+          "overwrap_risk": false,
+          "notes": "a-0.13 item 8: native canvas lifecycle hook remains backend-owned.",
+          "capability_release_judgement": "allowlisted",
+          "shared_policy": "allowlisted_tree_helper",
+          "shared_policy_evidence": [
+            "Native widget lifecycle hooks remain backend-managed implementation detail."
+          ],
+          "policy_category": "lifecycle_internal",
+          "group_kind": "widget",
+          "allowlist_reason": "Render/lifecycle helper remains backend-owned and is not a PicoUI user-facing stable public capability.",
+          "direct_100_category": "policy_never_public"
+        },
+        {
+          "name": "ldCanvas_on_frame_complete",
+          "status": "allowlisted",
+          "native_api": "ldCanvas_on_frame_complete",
+          "coverage_kind": "lifecycle_internal_allowlisted",
+          "picoui_api": "",
+          "backend_proof": "",
+          "unit_test": "",
+          "gate_evidence": [],
+          "gap_status": "allowlisted",
+          "required": false,
+          "rationale": "Render/lifecycle helpers remain backend-owned and are not exposed as PicoUI public API.",
+          "planned_task": "a-0.13-T8",
+          "overwrap_risk": false,
+          "notes": "a-0.13 item 8: native canvas lifecycle hook remains backend-owned.",
+          "capability_release_judgement": "allowlisted",
+          "shared_policy": "allowlisted_tree_helper",
+          "shared_policy_evidence": [
+            "Native widget lifecycle hooks remain backend-managed implementation detail."
+          ],
+          "policy_category": "lifecycle_internal",
+          "group_kind": "widget",
+          "allowlist_reason": "Render/lifecycle helper remains backend-owned and is not a PicoUI user-facing stable public capability.",
+          "direct_100_category": "policy_never_public"
+        },
+        {
+          "name": "ldCanvas_show",
+          "status": "allowlisted",
+          "native_api": "ldCanvas_show",
+          "coverage_kind": "non_widget_allowlisted",
+          "picoui_api": "",
+          "backend_proof": "",
+          "unit_test": "",
+          "gate_evidence": [],
+          "gap_status": "allowlisted",
+          "required": false,
+          "rationale": "Render/show entry point remains owned by the backend rendering pipeline.",
+          "planned_task": "a-0.13-T8",
+          "overwrap_risk": false,
+          "notes": "a-0.13 item 8: native canvas show entry remains backend render-pipeline owned.",
+          "capability_release_judgement": "allowlisted",
+          "shared_policy": "allowlisted_tree_helper",
+          "shared_policy_evidence": [
+            "Native widget show entry points are backend render-pipeline internals."
+          ],
+          "policy_category": "render_pipeline_internal",
+          "group_kind": "widget",
+          "allowlist_reason": "Render/show entry point owned by backend rendering pipeline.",
+          "direct_100_category": "policy_never_public"
+        }
+      ],
+      "audit_note": "a-0.13 item 8 adds a real native canvas widget plus portable PicoUI command API; lifecycle/show hooks remain backend-owned policy rows.",
+      "gap_status_counts": {
+        "covered": 3,
+        "allowlisted": 5
       },
       "group_kind": "widget"
     },
@@ -3650,8 +3910,8 @@
       "widget_release_judgement": "policy_complete_not_direct_100",
       "native_api_total": 23,
       "native_api_gap_status_counts": {
-        "allowlisted": 5,
-        "covered": 18
+        "covered": 18,
+        "allowlisted": 5
       },
       "capabilities": [
         {
@@ -3699,7 +3959,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldCheckBoxInit",
@@ -3720,7 +3982,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldCheckBoxIsChecked",
@@ -3741,7 +4005,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldCheckBoxMove",
@@ -3789,7 +4055,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldCheckBoxSetColor",
@@ -3810,7 +4078,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldCheckBoxSetCorner",
@@ -3885,7 +4155,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldCheckBoxSetOpacity",
@@ -3933,7 +4205,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldCheckBoxSetSelect",
@@ -4008,7 +4282,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldCheckBoxSetText",
@@ -4029,7 +4305,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldCheckBoxSetTextColor",
@@ -4050,7 +4328,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldCheckBox_depose",
@@ -4096,7 +4376,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldCheckBox_on_frame_complete",
@@ -4192,13 +4474,15 @@
           "capability_release_judgement": "allowlisted",
           "policy_category": "render_pipeline_internal",
           "direct_100_category": "policy_never_public",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         }
       ],
       "audit_note": "a-0.9 R1: non-covered rows are lifecycle/render pipeline policy rows; no PicoUI public wrapper required.",
       "gap_status_counts": {
-        "allowlisted": 5,
-        "covered": 18
+        "covered": 18,
+        "allowlisted": 5
       },
       "group_kind": "widget"
     },
@@ -4210,8 +4494,8 @@
       "widget_release_judgement": "policy_complete_not_direct_100",
       "native_api_total": 12,
       "native_api_gap_status_counts": {
-        "allowlisted": 5,
-        "covered": 7
+        "covered": 7,
+        "allowlisted": 5
       },
       "capabilities": [
         {
@@ -4510,13 +4794,15 @@
           "capability_release_judgement": "allowlisted",
           "policy_category": "render_pipeline_internal",
           "direct_100_category": "policy_never_public",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         }
       ],
       "audit_note": "a-0.9 R1: non-covered rows are lifecycle/render pipeline policy rows; no PicoUI public wrapper required.",
       "gap_status_counts": {
-        "allowlisted": 5,
-        "covered": 7
+        "covered": 7,
+        "allowlisted": 5
       },
       "group_kind": "widget"
     },
@@ -4528,8 +4814,8 @@
       "widget_release_judgement": "policy_complete_not_direct_100",
       "native_api_total": 24,
       "native_api_gap_status_counts": {
-        "allowlisted": 5,
-        "covered": 19
+        "covered": 19,
+        "allowlisted": 5
       },
       "capabilities": [
         {
@@ -5134,13 +5420,15 @@
           "capability_release_judgement": "allowlisted",
           "policy_category": "render_pipeline_internal",
           "direct_100_category": "policy_never_public",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         }
       ],
       "audit_note": "a-0.9 R1: non-covered rows are lifecycle/render pipeline policy rows; no PicoUI public wrapper required.",
       "gap_status_counts": {
-        "allowlisted": 5,
-        "covered": 19
+        "covered": 19,
+        "allowlisted": 5
       },
       "group_kind": "widget"
     },
@@ -5152,8 +5440,8 @@
       "widget_release_judgement": "policy_complete_not_direct_100",
       "native_api_total": 20,
       "native_api_gap_status_counts": {
-        "allowlisted": 5,
-        "covered": 15
+        "covered": 15,
+        "allowlisted": 5
       },
       "capabilities": [
         {
@@ -5658,13 +5946,15 @@
           "capability_release_judgement": "allowlisted",
           "policy_category": "render_pipeline_internal",
           "direct_100_category": "policy_never_public",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         }
       ],
       "audit_note": "a-0.9 R1: non-covered rows are lifecycle/render pipeline policy rows; no PicoUI public wrapper required.",
       "gap_status_counts": {
-        "allowlisted": 5,
-        "covered": 15
+        "covered": 15,
+        "allowlisted": 5
       },
       "group_kind": "widget"
     },
@@ -5676,8 +5966,8 @@
       "widget_release_judgement": "policy_complete_not_direct_100",
       "native_api_total": 19,
       "native_api_gap_status_counts": {
-        "allowlisted": 5,
-        "covered": 14
+        "covered": 14,
+        "allowlisted": 5
       },
       "capabilities": [
         {
@@ -6157,13 +6447,15 @@
           "capability_release_judgement": "allowlisted",
           "policy_category": "render_pipeline_internal",
           "direct_100_category": "policy_never_public",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         }
       ],
       "audit_note": "a-0.9 R1: non-covered rows are lifecycle/render pipeline policy rows; no PicoUI public wrapper required.",
       "gap_status_counts": {
-        "allowlisted": 5,
-        "covered": 14
+        "covered": 14,
+        "allowlisted": 5
       },
       "group_kind": "widget"
     },
@@ -6175,8 +6467,8 @@
       "widget_release_judgement": "policy_complete_not_direct_100",
       "native_api_total": 21,
       "native_api_gap_status_counts": {
-        "allowlisted": 5,
-        "covered": 16
+        "covered": 16,
+        "allowlisted": 5
       },
       "capabilities": [
         {
@@ -6706,13 +6998,15 @@
           "capability_release_judgement": "allowlisted",
           "policy_category": "render_pipeline_internal",
           "direct_100_category": "policy_never_public",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         }
       ],
       "audit_note": "a-0.9 R1: non-covered rows are lifecycle/render pipeline policy rows; no PicoUI public wrapper required.",
       "gap_status_counts": {
-        "allowlisted": 5,
-        "covered": 16
+        "covered": 16,
+        "allowlisted": 5
       },
       "group_kind": "widget"
     },
@@ -6724,7 +7018,8 @@
       "widget_release_judgement": "non_widget_policy_complete",
       "native_api_total": 16,
       "native_api_gap_status_counts": {
-        "allowlisted": 16
+        "allowlisted": 11,
+        "covered": 5
       },
       "capabilities": [
         {
@@ -6854,128 +7149,143 @@
         },
         {
           "name": "ldGuiJumpPage",
-          "status": "allowlisted",
+          "status": "covered",
           "native_api": "ldGuiJumpPage",
-          "coverage_kind": "non_widget_allowlisted",
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
-          "capability_release_judgement": "allowlisted",
-          "required": false,
-          "rationale": "Internal/helper or host utility API; R2 keeps it in the ledger but does not propose a PicoUI public wrapper.",
+          "coverage_kind": "shared_api_equivalence",
+          "picoui_api": "picoui_app_set_window + picoui_app_switch_window",
+          "backend_proof": "picoui_app_set_window + picoui_app_switch_window",
+          "unit_test": "test_app_set_window_switches_active_root_and_focus_scope + test_app_switch_window_persists_switch_metadata_contract",
+          "gate_evidence": [
+            "ctest:test_picoui_app_window_switch",
+            "python:check_picoui_release_capability_matrix"
+          ],
+          "gap_status": "covered",
+          "capability_release_judgement": "covered",
+          "required": true,
+          "rationale": "a-0.13 item 6 closes page/window switch user intent with a portable app-level active-window switch contract under the current runtime configuration.",
           "planned_task": "R2",
           "overwrap_risk": false,
           "notes": "R2 shared policy classification only; not counted covered until concrete backend/unit/gate evidence exists.",
-          "shared_policy": "allowlisted_tree_helper",
+          "shared_policy": "shared_api_equivalence",
           "shared_policy_evidence": [
-            "Internal scene/runtime/navigation/layout helper or solver; policy closes by strict allowlist in R2"
+            "picoui/include/picoui/app.h exposes active-window switch APIs.",
+            "Focused app-window switch tests verify active root and switch metadata behavior."
           ],
-          "allowlist_reason": "R2 shared helper/lifecycle/layout solver API: internal scene/runtime/navigation/layout decision helper, not a stable PicoUI user-facing public capability.",
-          "policy_category": "runtime_host_internal",
-          "direct_100_category": "policy_never_public",
-          "group_kind": "runtime_host"
+          "policy_category": "direct_covered",
+          "group_kind": "runtime_host",
+          "equivalence_proof": "picoui_app_set_window/switch_window covers user-facing page-switch intent without exposing native scene macros directly."
         },
         {
           "name": "ldGuiJumpPageFast",
-          "status": "allowlisted",
+          "status": "covered",
           "native_api": "ldGuiJumpPageFast",
-          "coverage_kind": "non_widget_allowlisted",
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
-          "capability_release_judgement": "allowlisted",
-          "required": false,
-          "rationale": "Internal/helper or host utility API; R2 keeps it in the ledger but does not propose a PicoUI public wrapper.",
+          "coverage_kind": "shared_api_equivalence",
+          "picoui_api": "picoui_app_set_window + picoui_app_switch_window",
+          "backend_proof": "picoui_app_set_window + picoui_app_switch_window",
+          "unit_test": "test_app_set_window_switches_active_root_and_focus_scope + test_app_switch_window_persists_switch_metadata_contract",
+          "gate_evidence": [
+            "ctest:test_picoui_app_window_switch",
+            "python:check_picoui_release_capability_matrix"
+          ],
+          "gap_status": "covered",
+          "capability_release_judgement": "covered",
+          "required": true,
+          "rationale": "a-0.13 item 6 closes page/window switch user intent with a portable app-level active-window switch contract under the current runtime configuration.",
           "planned_task": "R2",
           "overwrap_risk": false,
           "notes": "R2 shared policy classification only; not counted covered until concrete backend/unit/gate evidence exists.",
-          "shared_policy": "allowlisted_tree_helper",
+          "shared_policy": "shared_api_equivalence",
           "shared_policy_evidence": [
-            "Internal scene/runtime/navigation/layout helper or solver; policy closes by strict allowlist in R2"
+            "picoui/include/picoui/app.h exposes active-window switch APIs.",
+            "Focused app-window switch tests verify active root and switch metadata behavior."
           ],
-          "allowlist_reason": "R2 shared helper/lifecycle/layout solver API: internal scene/runtime/navigation/layout decision helper, not a stable PicoUI user-facing public capability.",
-          "policy_category": "runtime_host_internal",
-          "direct_100_category": "policy_never_public",
-          "group_kind": "runtime_host"
+          "policy_category": "direct_covered",
+          "group_kind": "runtime_host",
+          "equivalence_proof": "picoui_app_set_window/switch_window covers user-facing page-switch intent without exposing native scene macros directly."
         },
         {
           "name": "ldGuiJumpPage_0",
-          "status": "allowlisted",
+          "status": "covered",
           "native_api": "ldGuiJumpPage_0",
-          "coverage_kind": "non_widget_allowlisted",
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
-          "capability_release_judgement": "allowlisted",
-          "required": false,
-          "rationale": "Internal/helper or host utility API; R2 keeps it in the ledger but does not propose a PicoUI public wrapper.",
+          "coverage_kind": "shared_api_equivalence",
+          "picoui_api": "picoui_app_set_window + picoui_app_switch_window",
+          "backend_proof": "picoui_app_set_window + picoui_app_switch_window",
+          "unit_test": "test_app_set_window_switches_active_root_and_focus_scope + test_app_switch_window_persists_switch_metadata_contract",
+          "gate_evidence": [
+            "ctest:test_picoui_app_window_switch",
+            "python:check_picoui_release_capability_matrix"
+          ],
+          "gap_status": "covered",
+          "capability_release_judgement": "covered",
+          "required": true,
+          "rationale": "a-0.13 item 6 closes page/window switch user intent with a portable app-level active-window switch contract under the current runtime configuration.",
           "planned_task": "R2",
           "overwrap_risk": false,
           "notes": "R2 shared policy classification only; not counted covered until concrete backend/unit/gate evidence exists.",
-          "shared_policy": "allowlisted_tree_helper",
+          "shared_policy": "shared_api_equivalence",
           "shared_policy_evidence": [
-            "Internal scene/runtime/navigation/layout helper or solver; policy closes by strict allowlist in R2"
+            "picoui/include/picoui/app.h exposes active-window switch APIs.",
+            "Focused app-window switch tests verify active root and switch metadata behavior."
           ],
-          "allowlist_reason": "R2 shared helper/lifecycle/layout solver API: internal scene/runtime/navigation/layout decision helper, not a stable PicoUI user-facing public capability.",
-          "policy_category": "runtime_host_internal",
-          "direct_100_category": "policy_never_public",
-          "group_kind": "runtime_host"
+          "policy_category": "direct_covered",
+          "group_kind": "runtime_host",
+          "equivalence_proof": "picoui_app_set_window/switch_window covers user-facing page-switch intent without exposing native scene macros directly."
         },
         {
           "name": "ldGuiJumpPage_1",
-          "status": "allowlisted",
+          "status": "covered",
           "native_api": "ldGuiJumpPage_1",
-          "coverage_kind": "non_widget_allowlisted",
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
-          "capability_release_judgement": "allowlisted",
-          "required": false,
-          "rationale": "Internal/helper or host utility API; R2 keeps it in the ledger but does not propose a PicoUI public wrapper.",
+          "coverage_kind": "shared_api_equivalence",
+          "picoui_api": "picoui_app_set_window + picoui_app_switch_window",
+          "backend_proof": "picoui_app_set_window + picoui_app_switch_window",
+          "unit_test": "test_app_set_window_switches_active_root_and_focus_scope + test_app_switch_window_persists_switch_metadata_contract",
+          "gate_evidence": [
+            "ctest:test_picoui_app_window_switch",
+            "python:check_picoui_release_capability_matrix"
+          ],
+          "gap_status": "covered",
+          "capability_release_judgement": "covered",
+          "required": true,
+          "rationale": "a-0.13 item 6 closes page/window switch user intent with a portable app-level active-window switch contract under the current runtime configuration.",
           "planned_task": "R2",
           "overwrap_risk": false,
           "notes": "R2 shared policy classification only; not counted covered until concrete backend/unit/gate evidence exists.",
-          "shared_policy": "allowlisted_tree_helper",
+          "shared_policy": "shared_api_equivalence",
           "shared_policy_evidence": [
-            "Internal scene/runtime/navigation/layout helper or solver; policy closes by strict allowlist in R2"
+            "picoui/include/picoui/app.h exposes active-window switch APIs.",
+            "Focused app-window switch tests verify active root and switch metadata behavior."
           ],
-          "allowlist_reason": "R2 shared helper/lifecycle/layout solver API: internal scene/runtime/navigation/layout decision helper, not a stable PicoUI user-facing public capability.",
-          "policy_category": "runtime_host_internal",
-          "direct_100_category": "policy_never_public",
-          "group_kind": "runtime_host"
+          "policy_category": "direct_covered",
+          "group_kind": "runtime_host",
+          "equivalence_proof": "picoui_app_set_window/switch_window covers user-facing page-switch intent without exposing native scene macros directly."
         },
         {
           "name": "ldGuiJumpPage_2",
-          "status": "allowlisted",
+          "status": "covered",
           "native_api": "ldGuiJumpPage_2",
-          "coverage_kind": "non_widget_allowlisted",
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "",
-          "gate_evidence": [],
-          "gap_status": "allowlisted",
-          "capability_release_judgement": "allowlisted",
-          "required": false,
-          "rationale": "Internal/helper or host utility API; R2 keeps it in the ledger but does not propose a PicoUI public wrapper.",
+          "coverage_kind": "shared_api_equivalence",
+          "picoui_api": "picoui_app_set_window + picoui_app_switch_window",
+          "backend_proof": "picoui_app_set_window + picoui_app_switch_window",
+          "unit_test": "test_app_set_window_switches_active_root_and_focus_scope + test_app_switch_window_persists_switch_metadata_contract",
+          "gate_evidence": [
+            "ctest:test_picoui_app_window_switch",
+            "python:check_picoui_release_capability_matrix"
+          ],
+          "gap_status": "covered",
+          "capability_release_judgement": "covered",
+          "required": true,
+          "rationale": "a-0.13 item 6 closes page/window switch user intent with a portable app-level active-window switch contract under the current runtime configuration.",
           "planned_task": "R2",
           "overwrap_risk": false,
           "notes": "R2 shared policy classification only; not counted covered until concrete backend/unit/gate evidence exists.",
-          "shared_policy": "allowlisted_tree_helper",
+          "shared_policy": "shared_api_equivalence",
           "shared_policy_evidence": [
-            "Internal scene/runtime/navigation/layout helper or solver; policy closes by strict allowlist in R2"
+            "picoui/include/picoui/app.h exposes active-window switch APIs.",
+            "Focused app-window switch tests verify active root and switch metadata behavior."
           ],
-          "allowlist_reason": "R2 shared helper/lifecycle/layout solver API: internal scene/runtime/navigation/layout decision helper, not a stable PicoUI user-facing public capability.",
-          "policy_category": "runtime_host_internal",
-          "direct_100_category": "policy_never_public",
-          "group_kind": "runtime_host"
+          "policy_category": "direct_covered",
+          "group_kind": "runtime_host",
+          "equivalence_proof": "picoui_app_set_window/switch_window covers user-facing page-switch intent without exposing native scene macros directly."
         },
         {
           "name": "ldGuiLcdTest",
@@ -7130,7 +7440,8 @@
       ],
       "audit_note": "a-0.9 R2: runtime/internal helper group kept in native inventory but excluded from widget public parity denominator.",
       "gap_status_counts": {
-        "allowlisted": 16
+        "allowlisted": 11,
+        "covered": 5
       },
       "group_kind": "runtime_host"
     },
@@ -7142,8 +7453,8 @@
       "widget_release_judgement": "policy_complete_not_direct_100",
       "native_api_total": 16,
       "native_api_gap_status_counts": {
-        "allowlisted": 5,
-        "covered": 11
+        "covered": 11,
+        "allowlisted": 5
       },
       "capabilities": [
         {
@@ -7470,7 +7781,9 @@
           "capability_release_judgement": "allowlisted",
           "policy_category": "render_pipeline_internal",
           "direct_100_category": "policy_never_public",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldIconSliderhSetCorner",
@@ -7553,8 +7866,8 @@
       ],
       "audit_note": "a-0.9 R1: non-covered rows are lifecycle/render pipeline policy rows; no PicoUI public wrapper required.",
       "gap_status_counts": {
-        "allowlisted": 5,
-        "covered": 11
+        "covered": 11,
+        "allowlisted": 5
       },
       "group_kind": "widget"
     },
@@ -7566,8 +7879,8 @@
       "widget_release_judgement": "policy_complete_not_direct_100",
       "native_api_total": 9,
       "native_api_gap_status_counts": {
-        "allowlisted": 5,
-        "covered": 4
+        "covered": 4,
+        "allowlisted": 5
       },
       "capabilities": [
         {
@@ -7589,7 +7902,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldImageSetImage",
@@ -7610,7 +7925,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldImageSetMaskColor",
@@ -7631,7 +7948,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldImage_depose",
@@ -7677,7 +7996,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldImage_on_frame_complete",
@@ -7773,13 +8094,15 @@
           "capability_release_judgement": "allowlisted",
           "policy_category": "render_pipeline_internal",
           "direct_100_category": "policy_never_public",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         }
       ],
       "audit_note": "a-0.9 R1: non-covered rows are lifecycle/render pipeline policy rows; no PicoUI public wrapper required.",
       "gap_status_counts": {
-        "allowlisted": 5,
-        "covered": 4
+        "covered": 4,
+        "allowlisted": 5
       },
       "group_kind": "widget"
     },
@@ -7791,8 +8114,8 @@
       "widget_release_judgement": "policy_complete_not_direct_100",
       "native_api_total": 18,
       "native_api_gap_status_counts": {
-        "allowlisted": 8,
-        "covered": 10
+        "covered": 12,
+        "allowlisted": 6
       },
       "capabilities": [
         {
@@ -7850,31 +8173,31 @@
         },
         {
           "name": "ldKeyboardCallback",
-          "status": "allowlisted",
+          "status": "covered",
           "native_api": "ldKeyboardCallback",
-          "coverage_kind": "non_widget_allowlisted",
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "test_keyboard_weak_hooks_remain_backend_private_not_public_api",
+          "coverage_kind": "shared_api_equivalence",
+          "picoui_api": "picoui_keyboard_set_on_key_event",
+          "backend_proof": "picoui_backend_keyboard_dispatch_event_callback",
+          "unit_test": "test_keyboard_key_event_callback_receives_native_press_release",
           "gate_evidence": [
-            "ctest:test_picoui_keyboard"
+            "ctest:test_picoui_keyboard",
+            "python:check_picoui_release_capability_matrix"
           ],
-          "gap_status": "allowlisted",
-          "required": false,
-          "rationale": "R4 policy decision: PicoUI exposes portable keyboard input/navigation/update/click/exit APIs and text editing integration; native weak hook/layout/raw Arm-2D draw callbacks remain backend-private.",
+          "gap_status": "covered",
+          "required": true,
+          "rationale": "a-0.13 item 2 closes keyboard key-event callback intent with a portable PicoUI callback instead of exposing the native weak hook signature.",
           "planned_task": "R4",
           "overwrap_risk": false,
           "notes": "a-0.9 R4 keyboard weak-hook policy closeout: strict allowlist, not direct covered.",
-          "capability_release_judgement": "allowlisted",
-          "allowlist_reason": "R4 policy decision: native weak callback is backend-private; PicoUI user intent is covered by keyboard input/navigation APIs and widget event abstraction.",
-          "shared_policy": "allowlisted_tree_helper",
+          "capability_release_judgement": "covered",
+          "shared_policy": "shared_api_equivalence",
           "shared_policy_evidence": [
-            "test_keyboard_weak_hooks_remain_backend_private_not_public_api proves native weak hooks remain backend-private.",
-            "test_keyboard_dispatches_ascii_into_focused_line_edit and navigation tests prove portable PicoUI keyboard user intent."
+            "picoui/include/picoui/keyboard.h exposes public key-event callback API.",
+            "Focused keyboard callback test verifies native PRESS/RELEASE bridge into PicoUI callback."
           ],
-          "policy_category": "backend_private_hook",
-          "direct_100_category": "policy_never_public",
-          "group_kind": "widget"
+          "policy_category": "direct_covered",
+          "group_kind": "widget",
+          "equivalence_proof": "picoui_keyboard_set_on_key_event covers user-facing key event delivery while keeping the native weak callback implementation detail backend-owned."
         },
         {
           "name": "ldKeyboardClick",
@@ -7928,31 +8251,31 @@
         },
         {
           "name": "ldKeyboardGetTargetBtnList",
-          "status": "allowlisted",
+          "status": "covered",
           "native_api": "ldKeyboardGetTargetBtnList",
-          "coverage_kind": "non_widget_allowlisted",
-          "picoui_api": "",
-          "backend_proof": "",
-          "unit_test": "test_keyboard_weak_hooks_remain_backend_private_not_public_api",
+          "coverage_kind": "shared_api_equivalence",
+          "picoui_api": "picoui_keyboard_set_layout",
+          "backend_proof": "picoui_backend_keyboard_prepare_custom_layout",
+          "unit_test": "test_keyboard_custom_layout_button_table_round_trip",
           "gate_evidence": [
-            "ctest:test_picoui_keyboard"
+            "ctest:test_picoui_keyboard",
+            "python:check_picoui_release_capability_matrix"
           ],
-          "gap_status": "allowlisted",
-          "required": false,
-          "rationale": "R4 policy decision: PicoUI exposes portable keyboard input/navigation/update/click/exit APIs and text editing integration; native weak hook/layout/raw Arm-2D draw callbacks remain backend-private.",
+          "gap_status": "covered",
+          "required": true,
+          "rationale": "a-0.13 item 1 closes keyboard custom layout/button-table intent with a portable PicoUI layout API rather than exposing native kbBtnInfo_t tables.",
           "planned_task": "R4",
           "overwrap_risk": false,
           "notes": "a-0.9 R4 keyboard weak-hook policy closeout: strict allowlist, not direct covered.",
-          "capability_release_judgement": "allowlisted",
-          "allowlist_reason": "R4 policy decision: target button list contains native kbBtnInfo_t layout/tile details; PicoUI keeps layout backend-owned and exposes portable keyboard input/navigation APIs instead.",
-          "shared_policy": "allowlisted_tree_helper",
+          "capability_release_judgement": "covered",
+          "shared_policy": "shared_api_equivalence",
           "shared_policy_evidence": [
-            "test_keyboard_weak_hooks_remain_backend_private_not_public_api proves native weak hooks remain backend-private.",
-            "test_keyboard_dispatches_ascii_into_focused_line_edit and navigation tests prove portable PicoUI keyboard user intent."
+            "picoui/include/picoui/keyboard.h exposes portable keyboard layout API.",
+            "Focused keyboard layout test verifies selected key readback and native button table preparation."
           ],
-          "policy_category": "backend_private_hook",
-          "direct_100_category": "policy_never_public",
-          "group_kind": "widget"
+          "policy_category": "direct_covered",
+          "group_kind": "widget",
+          "equivalence_proof": "picoui_keyboard_set_layout covers user-facing custom key table/layout intent without exposing native kbBtnInfo_t structs directly."
         },
         {
           "name": "ldKeyboardInit",
@@ -8253,13 +8576,15 @@
           "capability_release_judgement": "allowlisted",
           "policy_category": "render_pipeline_internal",
           "direct_100_category": "policy_never_public",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         }
       ],
       "audit_note": "a-0.9 R4: native weak hook/action helper rows are strict backend-private/native-action policy rows; portable PicoUI event/input APIs cover user intent.",
       "gap_status_counts": {
-        "allowlisted": 8,
-        "covered": 10
+        "covered": 12,
+        "allowlisted": 6
       },
       "group_kind": "widget"
     },
@@ -8271,8 +8596,8 @@
       "widget_release_judgement": "policy_complete_not_direct_100",
       "native_api_total": 20,
       "native_api_gap_status_counts": {
-        "allowlisted": 5,
-        "covered": 15
+        "covered": 15,
+        "allowlisted": 5
       },
       "capabilities": [
         {
@@ -8294,7 +8619,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldLabelGetBackgroundColor",
@@ -8315,7 +8642,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldLabelGetFont",
@@ -8336,7 +8665,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldLabelGetText",
@@ -8357,7 +8688,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldLabelGetTextColor",
@@ -8378,7 +8711,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldLabelGetTransparent",
@@ -8399,7 +8734,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldLabelInit",
@@ -8420,7 +8757,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldLabelSetAlign",
@@ -8441,7 +8780,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldLabelSetBackgroundColor",
@@ -8462,7 +8803,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldLabelSetBackgroundImage",
@@ -8483,7 +8826,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldLabelSetFont",
@@ -8504,7 +8849,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldLabelSetText",
@@ -8525,7 +8872,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldLabelSetTextColor",
@@ -8546,7 +8895,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldLabelSetTransparent",
@@ -8567,7 +8918,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldLabel_depose",
@@ -8613,7 +8966,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldLabel_on_frame_complete",
@@ -8709,13 +9064,15 @@
           "capability_release_judgement": "allowlisted",
           "policy_category": "render_pipeline_internal",
           "direct_100_category": "policy_never_public",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         }
       ],
       "audit_note": "a-0.9 R1: non-covered rows are lifecycle/render pipeline policy rows; no PicoUI public wrapper required.",
       "gap_status_counts": {
-        "allowlisted": 5,
-        "covered": 15
+        "covered": 15,
+        "allowlisted": 5
       },
       "group_kind": "widget"
     },
@@ -8727,8 +9084,8 @@
       "widget_release_judgement": "policy_complete_not_direct_100",
       "native_api_total": 19,
       "native_api_gap_status_counts": {
-        "allowlisted": 5,
-        "covered": 14
+        "covered": 14,
+        "allowlisted": 5
       },
       "capabilities": [
         {
@@ -9208,13 +9565,15 @@
           "capability_release_judgement": "allowlisted",
           "policy_category": "render_pipeline_internal",
           "direct_100_category": "policy_never_public",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         }
       ],
       "audit_note": "a-0.9 R1: non-covered rows are lifecycle/render pipeline policy rows; no PicoUI public wrapper required.",
       "gap_status_counts": {
-        "allowlisted": 5,
-        "covered": 14
+        "covered": 14,
+        "allowlisted": 5
       },
       "group_kind": "widget"
     },
@@ -9226,8 +9585,8 @@
       "widget_release_judgement": "policy_complete_not_direct_100",
       "native_api_total": 24,
       "native_api_gap_status_counts": {
-        "allowlisted": 5,
-        "covered": 19
+        "covered": 19,
+        "allowlisted": 5
       },
       "capabilities": [
         {
@@ -9249,7 +9608,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldListInit",
@@ -9270,7 +9631,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldListMove",
@@ -9318,7 +9681,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldListSetBackgroundColor",
@@ -9339,7 +9704,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldListSetCorner",
@@ -9414,7 +9781,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldListSetItemWidget",
@@ -9435,7 +9804,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldListSetMargin",
@@ -9456,7 +9827,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldListSetOpacity",
@@ -9504,7 +9877,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldListSetSelect",
@@ -9552,7 +9927,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldListSetSelectItem",
@@ -9573,7 +9950,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldListSetSelectable",
@@ -9621,7 +10000,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldListSetTextColor",
@@ -9642,7 +10023,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldList_depose",
@@ -9688,7 +10071,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldList_on_frame_complete",
@@ -9784,13 +10169,15 @@
           "capability_release_judgement": "allowlisted",
           "policy_category": "render_pipeline_internal",
           "direct_100_category": "policy_never_public",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         }
       ],
       "audit_note": "a-0.9 R1: non-covered rows are lifecycle/render pipeline policy rows; no PicoUI public wrapper required.",
       "gap_status_counts": {
-        "allowlisted": 5,
-        "covered": 19
+        "covered": 19,
+        "allowlisted": 5
       },
       "group_kind": "widget"
     },
@@ -9945,8 +10332,8 @@
       "widget_release_judgement": "policy_complete_not_direct_100",
       "native_api_total": 18,
       "native_api_gap_status_counts": {
-        "allowlisted": 5,
-        "covered": 13
+        "covered": 13,
+        "allowlisted": 5
       },
       "capabilities": [
         {
@@ -10438,13 +10825,15 @@
           "capability_release_judgement": "allowlisted",
           "policy_category": "render_pipeline_internal",
           "direct_100_category": "policy_never_public",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         }
       ],
       "audit_note": "a-0.9 R1: non-covered rows are lifecycle/render pipeline policy rows; no PicoUI public wrapper required.",
       "gap_status_counts": {
-        "allowlisted": 5,
-        "covered": 13
+        "covered": 13,
+        "allowlisted": 5
       },
       "group_kind": "widget"
     },
@@ -10456,8 +10845,8 @@
       "widget_release_judgement": "policy_complete_not_direct_100",
       "native_api_total": 20,
       "native_api_gap_status_counts": {
-        "allowlisted": 5,
-        "covered": 15
+        "covered": 15,
+        "allowlisted": 5
       },
       "capabilities": [
         {
@@ -10962,13 +11351,15 @@
           "capability_release_judgement": "allowlisted",
           "policy_category": "render_pipeline_internal",
           "direct_100_category": "policy_never_public",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         }
       ],
       "audit_note": "a-0.9 R1: non-covered rows are lifecycle/render pipeline policy rows; no PicoUI public wrapper required.",
       "gap_status_counts": {
-        "allowlisted": 5,
-        "covered": 15
+        "covered": 15,
+        "allowlisted": 5
       },
       "group_kind": "widget"
     },
@@ -10980,8 +11371,8 @@
       "widget_release_judgement": "policy_complete_not_direct_100",
       "native_api_total": 10,
       "native_api_gap_status_counts": {
-        "allowlisted": 5,
-        "covered": 5
+        "covered": 5,
+        "allowlisted": 5
       },
       "capabilities": [
         {
@@ -11230,13 +11621,15 @@
           "capability_release_judgement": "allowlisted",
           "policy_category": "render_pipeline_internal",
           "direct_100_category": "policy_never_public",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         }
       ],
       "audit_note": "a-0.9 R1: non-covered rows are lifecycle/render pipeline policy rows; no PicoUI public wrapper required.",
       "gap_status_counts": {
-        "allowlisted": 5,
-        "covered": 5
+        "covered": 5,
+        "allowlisted": 5
       },
       "group_kind": "widget"
     },
@@ -11248,8 +11641,8 @@
       "widget_release_judgement": "policy_complete_not_direct_100",
       "native_api_total": 14,
       "native_api_gap_status_counts": {
-        "allowlisted": 5,
-        "covered": 9
+        "covered": 9,
+        "allowlisted": 5
       },
       "capabilities": [
         {
@@ -11604,13 +11997,15 @@
           "capability_release_judgement": "allowlisted",
           "policy_category": "render_pipeline_internal",
           "direct_100_category": "policy_never_public",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         }
       ],
       "audit_note": "a-0.9 R1: non-covered rows are lifecycle/render pipeline policy rows; no PicoUI public wrapper required.",
       "gap_status_counts": {
-        "allowlisted": 5,
-        "covered": 9
+        "covered": 9,
+        "allowlisted": 5
       },
       "group_kind": "widget"
     },
@@ -11622,8 +12017,8 @@
       "widget_release_judgement": "policy_complete_not_direct_100",
       "native_api_total": 11,
       "native_api_gap_status_counts": {
-        "allowlisted": 5,
-        "covered": 6
+        "covered": 6,
+        "allowlisted": 5
       },
       "capabilities": [
         {
@@ -11897,13 +12292,15 @@
           "capability_release_judgement": "allowlisted",
           "policy_category": "render_pipeline_internal",
           "direct_100_category": "policy_never_public",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         }
       ],
       "audit_note": "a-0.9 R1: non-covered rows are lifecycle/render pipeline policy rows; no PicoUI public wrapper required.",
       "gap_status_counts": {
-        "allowlisted": 5,
-        "covered": 6
+        "covered": 6,
+        "allowlisted": 5
       },
       "group_kind": "widget"
     },
@@ -11915,8 +12312,8 @@
       "widget_release_judgement": "policy_complete_not_direct_100",
       "native_api_total": 20,
       "native_api_gap_status_counts": {
-        "allowlisted": 5,
-        "covered": 15
+        "covered": 15,
+        "allowlisted": 5
       },
       "capabilities": [
         {
@@ -12415,13 +12812,15 @@
           "capability_release_judgement": "allowlisted",
           "policy_category": "render_pipeline_internal",
           "direct_100_category": "policy_never_public",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         }
       ],
       "audit_note": "a-0.9 R1: non-covered rows are lifecycle/render pipeline policy rows; no PicoUI public wrapper required.",
       "gap_status_counts": {
-        "allowlisted": 5,
-        "covered": 15
+        "covered": 15,
+        "allowlisted": 5
       },
       "group_kind": "widget"
     },
@@ -12433,8 +12832,8 @@
       "widget_release_judgement": "policy_complete_not_direct_100",
       "native_api_total": 19,
       "native_api_gap_status_counts": {
-        "allowlisted": 5,
-        "covered": 14
+        "covered": 14,
+        "allowlisted": 5
       },
       "capabilities": [
         {
@@ -12914,13 +13313,15 @@
           "capability_release_judgement": "allowlisted",
           "policy_category": "render_pipeline_internal",
           "direct_100_category": "policy_never_public",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         }
       ],
       "audit_note": "a-0.9 R1: non-covered rows are lifecycle/render pipeline policy rows; no PicoUI public wrapper required.",
       "gap_status_counts": {
-        "allowlisted": 5,
-        "covered": 14
+        "covered": 14,
+        "allowlisted": 5
       },
       "group_kind": "widget"
     },
@@ -12932,8 +13333,8 @@
       "widget_release_judgement": "policy_complete_not_direct_100",
       "native_api_total": 25,
       "native_api_gap_status_counts": {
-        "allowlisted": 5,
-        "covered": 20
+        "covered": 20,
+        "allowlisted": 5
       },
       "capabilities": [
         {
@@ -12955,7 +13356,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldSwitchGetDirection",
@@ -12976,7 +13379,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldSwitchInit",
@@ -12997,7 +13402,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldSwitchIsChecked",
@@ -13018,7 +13425,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldSwitchIsDisabled",
@@ -13039,7 +13448,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldSwitchIsHorizontal",
@@ -13060,7 +13471,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldSwitchMove",
@@ -13108,7 +13521,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldSwitchSetChecked",
@@ -13129,7 +13544,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldSwitchSetColor",
@@ -13150,7 +13567,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldSwitchSetCorner",
@@ -13198,7 +13617,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldSwitchSetDisabled",
@@ -13219,7 +13640,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldSwitchSetHidden",
@@ -13267,7 +13690,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldSwitchSetImage",
@@ -13288,7 +13713,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldSwitchSetOpacity",
@@ -13415,7 +13842,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldSwitch_on_frame_complete",
@@ -13511,13 +13940,15 @@
           "capability_release_judgement": "allowlisted",
           "policy_category": "render_pipeline_internal",
           "direct_100_category": "policy_never_public",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         }
       ],
       "audit_note": "a-0.9 R1: non-covered rows are lifecycle/render pipeline policy rows; no PicoUI public wrapper required.",
       "gap_status_counts": {
-        "allowlisted": 5,
-        "covered": 20
+        "covered": 20,
+        "allowlisted": 5
       },
       "group_kind": "widget"
     },
@@ -13697,8 +14128,8 @@
       "widget_release_judgement": "policy_complete_not_direct_100",
       "native_api_total": 36,
       "native_api_gap_status_counts": {
-        "allowlisted": 5,
-        "covered": 31
+        "covered": 31,
+        "allowlisted": 5
       },
       "capabilities": [
         {
@@ -14598,13 +15029,15 @@
           "capability_release_judgement": "allowlisted",
           "policy_category": "render_pipeline_internal",
           "direct_100_category": "policy_never_public",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         }
       ],
       "audit_note": "a-0.9 R1: non-covered rows are lifecycle/render pipeline policy rows; no PicoUI public wrapper required.",
       "gap_status_counts": {
-        "allowlisted": 5,
-        "covered": 31
+        "covered": 31,
+        "allowlisted": 5
       },
       "group_kind": "widget"
     },
@@ -14616,8 +15049,8 @@
       "widget_release_judgement": "policy_complete_not_direct_100",
       "native_api_total": 23,
       "native_api_gap_status_counts": {
-        "allowlisted": 5,
-        "covered": 18
+        "covered": 18,
+        "allowlisted": 5
       },
       "capabilities": [
         {
@@ -14639,7 +15072,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldTextMove",
@@ -14687,7 +15122,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldTextScrollSeek",
@@ -14708,7 +15145,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldTextSetBackgroundColor",
@@ -14729,7 +15168,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldTextSetBackgroundImage",
@@ -14750,7 +15191,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldTextSetConsumedFont",
@@ -14771,7 +15214,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldTextSetCorner",
@@ -14819,7 +15264,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldTextSetHidden",
@@ -14948,7 +15395,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldTextSetText",
@@ -14969,7 +15418,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldTextSetTextColor",
@@ -14990,7 +15441,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldTextSetTransparent",
@@ -15011,7 +15464,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldText_depose",
@@ -15057,7 +15512,9 @@
           "notes": "R3 ledger A closed from planned_task==R3 worklist; no R4/R5/R6 rows changed.",
           "capability_release_judgement": "covered",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldText_on_frame_complete",
@@ -15153,13 +15610,15 @@
           "capability_release_judgement": "allowlisted",
           "policy_category": "render_pipeline_internal",
           "direct_100_category": "policy_never_public",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         }
       ],
       "audit_note": "a-0.9 R1: non-covered rows are lifecycle/render pipeline policy rows; no PicoUI public wrapper required.",
       "gap_status_counts": {
-        "allowlisted": 5,
-        "covered": 18
+        "covered": 18,
+        "allowlisted": 5
       },
       "group_kind": "widget"
     },
@@ -15171,8 +15630,8 @@
       "widget_release_judgement": "policy_complete_not_direct_100",
       "native_api_total": 23,
       "native_api_gap_status_counts": {
-        "allowlisted": 7,
-        "covered": 16
+        "covered": 16,
+        "allowlisted": 7
       },
       "capabilities": [
         {
@@ -15216,13 +15675,13 @@
           "rationale": "R5 policy decision: LingDongGUI background has no independent ldBackground.h public API; root/background semantics are represented by PicoUI window creation, background source/color APIs, and backend root tree ownership.",
           "planned_task": "R5",
           "overwrap_risk": false,
-          "notes": "a-0.9 R5 background/root semantics policy closeout: enum-only/root-window derived, not direct covered.",
+          "notes": "a-0.14 update: native init entry remains internal, but PicoUI now exposes separate window/background root public widgets; this row stays allowlisted only because native init itself is not a direct public wrapper target.",
           "shared_policy": "allowlisted_tree_helper",
           "shared_policy_evidence": [
             "picoui_backend_create_window creates the real ldWindow root with root/tree ownership.",
             "test_window_background_source_round_trip_to_ldwindow and layout/window tests prove root window background semantics through concrete PicoUI APIs."
           ],
-          "allowlist_reason": "R5 policy decision: window init/root background semantics are enum-only/root-window derived; PicoUI covers user intent through picoui_window_create plus window color/background/layout APIs, not a separate background public wrapper.",
+          "allowlist_reason": "Native init entry remains backend-owned; PicoUI user-facing root creation is now split across picoui_window_create and picoui_background_create, so this row stays allowlisted only because ldWindowInit itself is not exposed directly.",
           "policy_category": "enum_only_semantics",
           "direct_100_category": "policy_never_public",
           "group_kind": "widget"
@@ -15379,7 +15838,9 @@
           "overwrap_risk": false,
           "notes": "R3 review fix: window/layout native row closed; R4/R5/R6 rows unchanged.",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldWindowSetGridAlign",
@@ -15508,7 +15969,9 @@
           "overwrap_risk": false,
           "notes": "R3 review fix: window/layout native row closed; R4/R5/R6 rows unchanged.",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldWindowSetImage",
@@ -15555,7 +16018,9 @@
           "overwrap_risk": false,
           "notes": "R3 review fix: window/layout native row closed; R4/R5/R6 rows unchanged.",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldWindowSetPadding",
@@ -15576,7 +16041,9 @@
           "overwrap_risk": false,
           "notes": "R3 review fix: window/layout native row closed; R4/R5/R6 rows unchanged.",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldWindowSetPaddingGroup",
@@ -15597,7 +16064,9 @@
           "overwrap_risk": false,
           "notes": "R3 review fix: window/layout native row closed; R4/R5/R6 rows unchanged.",
           "policy_category": "direct_covered",
-          "group_kind": "widget"
+          "group_kind": "widget",
+          "shared_policy": null,
+          "shared_policy_evidence": null
         },
         {
           "name": "ldWindow_depose",
@@ -15639,13 +16108,13 @@
           "rationale": "R5 policy decision: LingDongGUI background has no independent ldBackground.h public API; root/background semantics are represented by PicoUI window creation, background source/color APIs, and backend root tree ownership.",
           "planned_task": "R5",
           "overwrap_risk": false,
-          "notes": "a-0.9 R5 background/root semantics policy closeout: enum-only/root-window derived, not direct covered.",
+          "notes": "a-0.14 update: native init entry remains internal, but PicoUI now exposes separate window/background root public widgets; this row stays allowlisted only because native init itself is not a direct public wrapper target.",
           "shared_policy": "allowlisted_tree_helper",
           "shared_policy_evidence": [
             "picoui_backend_create_window creates the real ldWindow root with root/tree ownership.",
             "test_window_background_source_round_trip_to_ldwindow and layout/window tests prove root window background semantics through concrete PicoUI APIs."
           ],
-          "allowlist_reason": "R5 policy decision: window init/root background semantics are enum-only/root-window derived; PicoUI covers user intent through picoui_window_create plus window color/background/layout APIs, not a separate background public wrapper.",
+          "allowlist_reason": "Native init entry remains backend-owned; PicoUI user-facing root creation is now split across picoui_window_create and picoui_background_create, so this row stays allowlisted only because ldWindow_init itself is not exposed directly.",
           "policy_category": "enum_only_semantics",
           "direct_100_category": "policy_never_public",
           "group_kind": "widget"
@@ -15751,10 +16220,10 @@
           "group_kind": "widget"
         }
       ],
-      "audit_note": "a-0.9 R5: background/root semantics are enum-only/root-window derived; no separate background public API is added.",
+      "audit_note": "a-0.14 update: background root semantics now have separate PicoUI public APIs; remaining allowlisted window init rows stay internal because native init itself is not a direct public wrapper target.",
       "gap_status_counts": {
-        "allowlisted": 7,
-        "covered": 16
+        "covered": 16,
+        "allowlisted": 7
       },
       "group_kind": "widget"
     },

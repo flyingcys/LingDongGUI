@@ -152,11 +152,7 @@ extern "C" {
 #define __DISP0_CFG_FPS_CACULATION_MODE__         (1)
 #define __GLCD_CFG_SCEEN_WIDTH__                  LD_CFG_SCREEN_WIDTH
 #define __GLCD_CFG_SCEEN_HEIGHT__                 LD_CFG_SCREEN_HEIGHT
-#if USE_VIRTUAL_RESOURCE == 0
-#define __DISP0_CFG_VIRTUAL_RESOURCE_HELPER__     (0)
-#else
-#define __DISP0_CFG_VIRTUAL_RESOURCE_HELPER__     (3)
-#endif
+#define __DISP0_CFG_VIRTUAL_RESOURCE_HELPER__     (2)
 #define __GLCD_CFG_COLOUR_DEPTH__                 LD_CFG_COLOR_DEPTH
 
 #define __ARM_2D_CFG_SUPPORT_COLOUR_CHANNEL_ACCESS__                  0

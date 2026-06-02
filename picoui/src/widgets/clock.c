@@ -42,6 +42,7 @@ struct picoui_clock *picoui_clock_create(struct picoui_widget *parent, const cha
     clock->minute_anchor_y = 100.0f;
     clock->second_anchor_x = 0.0f;
     clock->second_anchor_y = 100.0f;
+    clock->use_system_time = 1;
     if (picoui_clock_set_step_second(clock, 0) != 0) {
         free(clock);
         return 0;
@@ -52,6 +53,36 @@ struct picoui_clock *picoui_clock_create(struct picoui_widget *parent, const cha
 struct picoui_clock *picoui_clock_init(struct picoui_widget *parent, const char *id)
 {
     return picoui_clock_create(parent, id);
+}
+
+int picoui_clock_set_use_system_time(struct picoui_clock *clock, int enabled)
+{
+    if (clock == 0) {
+        return -1;
+    }
+
+    if (picoui_backend_clock_set_use_system_time(clock, enabled) != 0) {
+        return -1;
+    }
+
+    clock->use_system_time = enabled != 0;
+    return 0;
+}
+
+int picoui_clock_get_use_system_time(const struct picoui_clock *clock)
+{
+    int enabled = 0;
+
+    if (clock == 0) {
+        return -1;
+    }
+
+    if (picoui_backend_clock_get_use_system_time((struct picoui_clock *)clock, &enabled) != 0) {
+        return -1;
+    }
+
+    ((struct picoui_clock *)clock)->use_system_time = enabled;
+    return enabled;
 }
 
 struct picoui_clock *picoui_clock_create_with_props(

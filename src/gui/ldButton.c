@@ -418,7 +418,14 @@ void ldButtonSetKeyValue(ldButton_t *ptWidget,uint32_t value)
 
 bool ldButtonActionIsPressById(uint16_t nameId,ld_scene_t *ptScene)
 {
-    ldButton_t *ptWidget=ldBaseGetWidgetById(nameId);
+    ldButton_t *ptWidget;
+
+    if (ptScene == NULL || ptScene->ptNodeRoot == NULL)
+    {
+        return false;
+    }
+
+    ptWidget = ldBaseGetWidget(ptScene->ptNodeRoot, nameId);
     if(ptWidget == NULL)
     {
         return 0;

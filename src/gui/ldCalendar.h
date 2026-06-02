@@ -65,6 +65,7 @@ struct ldCalendar_t
     uint8_t day;
     bool isTransparent : 1;
     bool isHeader:1;
+    bool isAutoSysDate:1;
 };
 
 ldCalendar_t* ldCalendar_init(ld_scene_t *ptScene, ldCalendar_t *ptWidget, uint16_t nameId, uint16_t parentNameId, int16_t x, int16_t y, int16_t width, int16_t height, arm_2d_font_t *ptFont, uint16_t year, uint8_t month, uint8_t day);
@@ -80,6 +81,7 @@ void ldCalendarSetDayNames(ldCalendar_t *ptWidget,uint8_t* names[7]);
 void ldCalendarSetHeader(ldCalendar_t *ptWidget,bool isEnable);
 void ldCalendarSetHeaderFormat(ldCalendar_t *ptWidget,uint8_t* format);
 void ldCalendarSetDate(ldCalendar_t *ptWidget,uint16_t year,uint8_t month,uint8_t day);
+void ldCalendarSetAutoSysDate(ldCalendar_t *ptWidget,bool isAutoSysDate);
 
 void ldCalendarGetDate(ldCalendar_t *ptWidget,uint16_t* year,uint8_t* month,uint8_t* day);
 

@@ -11,7 +11,8 @@ static int picoui_backend_widget_can_parent(const struct picoui_backend_widget *
         return 0;
     }
 
-    return widget->kind == PICOUI_BACKEND_WIDGET_WINDOW;
+    return widget->kind == PICOUI_BACKEND_WIDGET_WINDOW
+        || widget->kind == PICOUI_BACKEND_WIDGET_BACKGROUND;
 }
 
 int picoui_backend_widget_is_kind(const void *backend_widget,
@@ -117,7 +118,8 @@ int picoui_backend_widget_attach_child(void *parent, void *child)
         child_widget->root != NULL ||
         child_widget->owner != NULL ||
         (child_widget->parent != NULL && child_widget->parent != parent_widget) ||
-        child_widget->kind == PICOUI_BACKEND_WIDGET_WINDOW) {
+        child_widget->kind == PICOUI_BACKEND_WIDGET_WINDOW ||
+        child_widget->kind == PICOUI_BACKEND_WIDGET_BACKGROUND) {
         return -1;
     }
 
@@ -164,7 +166,10 @@ int picoui_backend_widget_detach_from_parent(void *backend_widget)
     struct picoui_backend_widget *parent;
     struct picoui_backend_widget *sibling;
 
-    if (widget == NULL || widget->parent == NULL || widget->kind == PICOUI_BACKEND_WIDGET_WINDOW) {
+    if (widget == NULL
+        || widget->parent == NULL
+        || widget->kind == PICOUI_BACKEND_WIDGET_WINDOW
+        || widget->kind == PICOUI_BACKEND_WIDGET_BACKGROUND) {
         return -1;
     }
 

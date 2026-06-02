@@ -6,9 +6,9 @@
 
 - 控件类型来源：`src/gui/ldBase.h` 的 `ldWidgetType_t`。
 - LingDongGUI 独立 header/API 分组：无。
-- PicoUI 独立 matrix group：无；a-0.9 通过 `window` group 的 `enum_only_semantics` policy 行记录 root/background 语义。
-- 覆盖结论：不能写成“PicoUI 独立 API 100% 覆盖 background”，因为 LingDongGUI 没有独立 `ldBackground.h` public API；当前正式定义为 `window/tree derived enum-only` policy。
-- native/user-facing 100%：未闭环；当前由 window/root/background source/color 语义承载。如果目标是每个 `ldWidgetType_t` 都有独立 PicoUI public widget，`background` 仍是缺口。
+- PicoUI 独立 matrix group：仍无独立 native API group，但 a-0.14 已补独立 `picoui_background_*` public widget 面。
+- 覆盖结论：LingDongGUI 虽然没有独立 `ldBackground.h` public API，但 PicoUI 现在已经提供独立 `background` 用户态控件能力，并继续复用真实 `ldWindow` root/background backend 语义。
+- native/user-facing 100%：当前代码面已闭环；`widgetTypeBackground` 已有独立 PicoUI public widget、backend 映射与 focused unit 证据。
 - direct public API 100%：不适用；`background` 没有独立 native API group，不进入 widget public parity denominator。
 - direct_public_covered：`0`
 - policy_allowlisted：`0`
@@ -19,21 +19,24 @@
 
 | 能力项 | LingDongGUI 来源 | PicoUI 覆盖判断 | 说明 |
 | --- | --- | --- | --- |
-| 控件类型 | `widgetTypeBackground` | `enum_only_semantics` policy | enum 中的独立类型，但无独立 public API group。 |
-| 根背景语义 | scene/window tree | `picoui_window_create` + window background/color/layout API | `picoui_backend_create_window` 创建真实 `ldWindow` root，window API 覆盖用户态 root/background 意图。 |
+| 控件类型 | `widgetTypeBackground` | `picoui_background_create` | a-0.14 已补独立 background public widget，backend 真实复用 native root `ldWindow` 并保持 `widgetTypeBackground`。 |
+| 根背景语义 | scene/window tree | `picoui_background_create` + `picoui_app_run_background` / `set_background` / `switch_background` | `picoui_backend_create_background` 创建真实 root/background，并可作为 app active root 运行。 |
 | 子层级语义 | `ldBase` tree | 见 `base.md` covered/allowlisted 行 | 可作为父级承载子控件，具体树能力以 `base.md` 为准。 |
-| 背景移动/平移 | `ldBaseBgMove` | 未闭环 | 当前作为 `base_tree_policy` allowlist，缺少 PicoUI 用户态 window/background pan/move 能力。 |
+| 背景图片/颜色 | `ldWindowSetImage`、`ldWindowSetColor` | `picoui_background_set_source()` / `set_color()` / `get_color()` | 继续复用真实 native root/background 图像与颜色路径。 |
+| 背景移动/平移 | `ldBaseBgMove` | `picoui_background_set_offset()` / `get_offset()` | 真实驱动 native scene root background move。 |
 
-## 仍需补齐
+## 控件能力等价已补齐
 
-- 若 100% 目标要求每个 `ldWidgetType_t` 都能由 PicoUI 独立创建和操作，需要新增 `picoui_background_*` 控件能力、backend group、unit/gate。
-- 若继续保持 background 由 window/root 派生承载，也必须补齐背景移动/平移能力，不能只把 `ldBaseBgMove` 作为 backend helper allowlist。
+| 能力 | LingDongGUI 来源 | PicoUI 补齐状态 | 边界 |
+| --- | --- | --- | --- |
+| 独立创建 background root | `widgetTypeBackground` | a-0.14 已新增 `picoui_background_create()` | native 仍复用 `ldWindow_init(nameId=0)`，不虚构新的 native background struct |
+| 独立运行/切换 background root | scene root/window switching | a-0.14 已新增 `picoui_app_run_background()` / `set_background()` / `switch_background()` | 本质是 app root 切换的 background 专用 public contract |
+| 背景图/颜色/偏移 | `ldWindowSetImage`、`ldWindowSetColor`、`ldBaseBgMove` | a-0.14 已新增 `picoui_background_set_source()` / `set_color()` / `get_color()` / `set_offset()` / `get_offset()` | 继续走真实 LingDongGUI root/background backend 行为，不引入 fake renderer |
 
 ## 审计边界
 
 - `background` 算入真实 LingDongGUI 控件类型覆盖。
 - `background` 不算一个独立 API 分组；不能虚构 setter/getter 能力。
-- 当前没有独立 `picoui_background_*` public API、backend group、unit/gate；这不是代码遗漏，而是 policy 决策。若目标升级为每个 native widget type 都有独立对外控件，需要另开实现线。
-- a-0.9 R5 决策：不新增独立 PicoUI background public abstraction；root/background semantics 由 window/tree 派生 policy 覆盖。
-- a-0.10 R4 决策：`background` 保持 enum-only/root-window-tree derived policy；不新增 PicoUI background public API。
+- a-0.14 当前实现没有新增独立 native `ldBackground.h`，而是以 PicoUI public widget 形式复用真实 `ldWindow` root/background 语义。
+- 旧的 a-0.9 / a-0.10 “不新增 `picoui_background_*`” 决策已不再代表当前代码事实；若 contract 三件套仍保留该口径，需要继续同步更新。
 - `manual_artifact` 存在不等于人工验收通过；background/root 结论以 matrix policy 与 window/backend/unit gate 为准。

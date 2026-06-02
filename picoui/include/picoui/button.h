@@ -7,6 +7,18 @@ struct picoui_window;
 struct picoui_button;
 struct picoui_image_source;
 
+enum picoui_button_action_state {
+    PICOUI_BUTTON_ACTION_PRESS = 1,
+    PICOUI_BUTTON_ACTION_HOLD_DOWN = 2,
+    PICOUI_BUTTON_ACTION_RELEASE = 3,
+    PICOUI_BUTTON_ACTION_CLICK = 4,
+    PICOUI_BUTTON_ACTION_DOUBLE_CLICK = 5,
+    PICOUI_BUTTON_ACTION_REPEAT_COUNT = 6,
+    PICOUI_BUTTON_ACTION_HOLD_TIME = 7,
+    PICOUI_BUTTON_ACTION_LONG_START = 8,
+    PICOUI_BUTTON_ACTION_LONG_SHOOT = 9,
+};
+
 struct picoui_button_props {
     const char *id;
     const char *text;
@@ -62,6 +74,9 @@ int picoui_button_get_pressed(struct picoui_button *button, int *pressed);
 int picoui_button_get_pressed_by_name_id(const struct picoui_widget *root,
                                          int name_id,
                                          int *pressed);
+int picoui_button_get_action_state_by_name_id(const struct picoui_widget *root,
+                                              int name_id,
+                                              enum picoui_button_action_state action);
 int picoui_button_set_text_color(struct picoui_button *button, unsigned int text_color);
 int picoui_button_get_text_color(struct picoui_button *button, unsigned int *rgb);
 int picoui_button_set_on_clicked(struct picoui_button *button,

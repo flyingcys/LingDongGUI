@@ -239,6 +239,30 @@ void *picoui_backend_create_clock(void *parent, const char *id)
     return widget;
 }
 
+int picoui_backend_clock_set_use_system_time(struct picoui_clock *clock, int enabled)
+{
+    ldClock_t *ld_clock = picoui_backend_clock_get_ld(clock);
+
+    if (ld_clock == NULL) {
+        return -1;
+    }
+
+    ldClockSetAutoSysTime(ld_clock, enabled != 0);
+    return 0;
+}
+
+int picoui_backend_clock_get_use_system_time(struct picoui_clock *clock, int *enabled)
+{
+    ldClock_t *ld_clock = picoui_backend_clock_get_ld(clock);
+
+    if (ld_clock == NULL || enabled == NULL) {
+        return -1;
+    }
+
+    *enabled = ld_clock->isAutoSysTime ? 1 : 0;
+    return 0;
+}
+
 int picoui_backend_clock_set_step_second(struct picoui_clock *clock, int step_second)
 {
     ldClock_t *ld_clock = picoui_backend_clock_get_ld(clock);

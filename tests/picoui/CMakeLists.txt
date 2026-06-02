@@ -15,10 +15,12 @@ set(PICOUI_UNIT_TESTS
     unit/test_picoui_qrcode.c
     unit/test_picoui_animation.c
     unit/test_picoui_message_box.c
+    unit/test_picoui_app_window_switch.c
     unit/test_picoui_date_time.c
     unit/test_picoui_clock.c
     unit/test_picoui_line_edit.c
     unit/test_picoui_keyboard.c
+    unit/test_picoui_canvas.c
     unit/test_picoui_combo_box.c
     unit/test_picoui_scroll_selecter.c
     unit/test_picoui_table.c

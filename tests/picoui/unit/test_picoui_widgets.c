@@ -33,6 +33,48 @@ struct test_text_box_prefix_view {
 void picoui_backend_text_test_fail_next_set_font(void);
 extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
 
+static const uintptr_t k_test_vres_image_addr = 0x1000U;
+static const uintptr_t k_test_vres_font_addr = 0x2000U;
+
+void __disp_adapter0_vres_read_memory(intptr_t pObj,
+                                      void *pBuffer,
+                                      uintptr_t pAddress,
+                                      size_t nSizeInByte)
+{
+    static const uint8_t image_header[16] = {
+        0, 0, 0, 0,
+        12, 0,
+        8, 0,
+        ARM_2D_COLOUR_GRAY8,
+        0, 0, 0, 0, 0, 0, 0
+    };
+    static const uint8_t font_header[13] = {
+        16, 0,
+        16, 0,
+        ARM_2D_COLOUR_8BIT,
+        13, 0,
+        8, 0,
+        8, 0,
+        0, 0
+    };
+
+    (void)pObj;
+    assert(pBuffer != 0);
+    memset(pBuffer, 0, nSizeInByte);
+
+    if (pAddress == k_test_vres_image_addr) {
+        assert(nSizeInByte <= sizeof(image_header));
+        memcpy(pBuffer, image_header, nSizeInByte);
+        return;
+    }
+
+    if (pAddress == k_test_vres_font_addr) {
+        assert(nSizeInByte <= sizeof(font_header));
+        memcpy(pBuffer, font_header, nSizeInByte);
+        return;
+    }
+}
+
 static unsigned int test_rgb_to_ld_color(unsigned int rgb)
 {
     return (unsigned int)__RGB((rgb >> 16) & 0xFFU, (rgb >> 8) & 0xFFU, rgb & 0xFFU);
@@ -1430,6 +1472,71 @@ static void test_text_native_r3_style_background_static_and_scroll_round_trip(
     picoui_app_destroy(app);
 }
 
+static void test_vres_image_source_factory_round_trip(void)
+{
+    struct picoui_app *app = picoui_app_create();
+    struct picoui_window *win = picoui_window_create(app, "vres_image_root");
+    struct picoui_image *image = picoui_image_create(win, "vres_image");
+    struct picoui_image_source vres_source = {0};
+    const struct picoui_backend_widget *backend;
+    const ldImage_t *ld_image;
+
+    assert(app != 0);
+    assert(win != 0);
+    assert(image != 0);
+    assert(picoui_image_source_from_vres(0, &vres_source) == -1);
+    assert(picoui_image_source_from_vres(k_test_vres_image_addr, 0) == -1);
+    assert(picoui_image_source_from_vres(k_test_vres_image_addr, &vres_source) == 0);
+    assert(vres_source.img_tile != 0);
+    assert(vres_source.mask_tile == 0);
+    assert(((arm_2d_vres_t *)vres_source.img_tile)->pTarget == k_test_vres_image_addr + 16U);
+    assert(picoui_image_set_source(image, &vres_source) == 0);
+
+    backend = image->widget.backend_widget;
+    assert(backend != 0);
+    ld_image = (const ldImage_t *)backend->ld_widget;
+    assert(ld_image != 0);
+    assert(ld_image->ptImgTile == vres_source.img_tile);
+    assert(ld_image->ptMaskTile == 0);
+    assert(picoui_image_set_source(image, 0) == 0);
+    picoui_image_source_destroy(&vres_source);
+    picoui_app_destroy(app);
+}
+
+static void test_vres_font_factory_round_trip(void)
+{
+    struct picoui_app *app = picoui_app_create();
+    struct picoui_window *win = picoui_window_create(app, "vres_font_root");
+    struct picoui_text *text = picoui_text_create(win, "vres_text");
+    struct picoui_font vres_font = {0};
+    const struct picoui_backend_widget *text_backend;
+    ldText_t *ld_text;
+    arm_2d_font_t *text_font;
+
+    assert(app != 0);
+    assert(win != 0);
+    assert(text != 0);
+    assert(picoui_font_from_vres(0, &vres_font) == -1);
+    assert(picoui_font_from_vres(k_test_vres_font_addr, 0) == -1);
+    assert(picoui_font_from_vres(k_test_vres_font_addr, &vres_font) == 0);
+    assert(vres_font.family == 0);
+    assert(vres_font.size == 0);
+
+    assert(picoui_text_set_font(text, &vres_font) == 0);
+
+    text_backend = text->widget.backend_widget;
+    assert(text_backend != 0);
+    ld_text = (ldText_t *)text_backend->ld_widget;
+    assert(ld_text != 0);
+    text_font = test_text_consumed_font(ld_text);
+    assert(text_font != (arm_2d_font_t *)&ARM_2D_FONT_6x8);
+    assert(((arm_2d_vres_font_t *)text_font)->startAddr == k_test_vres_font_addr);
+    ldTextSetConsumedFont(ld_text, (arm_2d_font_t *)&ARM_2D_FONT_6x8);
+    ldFree(text_font);
+    picoui_font_destroy(&vres_font);
+    picoui_app_destroy(app);
+}
+
 static void test_image_style_class_and_user_data_are_stable_widget_metadata_contract(
     struct picoui_window *parent)
 {
@@ -2275,6 +2382,8 @@ int main(void)
     test_text_font_runtime_rebind_updates_real_ldtext_and_public_cache(win);
     test_text_font_backend_failure_does_not_split_state(win);
     test_text_native_r3_style_background_static_and_scroll_round_trip(win, &image_source);
+    test_vres_image_source_factory_round_trip();
+    test_vres_font_factory_round_trip();
     test_button_j4_contract(win,
                             app_state,
                             &button_release_source,

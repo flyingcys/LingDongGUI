@@ -9,13 +9,13 @@
 - group_kind：`shared_base`
 - LingDongGUI API 条目数：`63`
 - LingDongGUI 分类统计：`capability`: 2, `getter`: 28, `helper`: 8, `init`: 1, `macro_alias`: 1, `setter`: 19, `update_action`: 4
-- PicoUI 覆盖统计：`allowlisted`: 14, `covered`: 49
-- policy_category 统计：`base_tree_policy`: 4, `direct_covered`: 49, `drawing_helper_policy`: 5, `resource_time_helper_policy`: 5
+- PicoUI 覆盖统计：`allowlisted`: 3, `covered`: 60
+- policy_category 统计：`base_tree_policy`: 3, `direct_covered`: 60
 - direct public API 100%：是；a-0.12 已把 base 的 16 个 `optional_public_extension` 候选收敛为 PicoUI portable public API。
-- direct_public_covered：`49`
-- policy_allowlisted：`14`
+- direct_public_covered：`60`
+- policy_allowlisted：`3`
 - direct_100_gap：`0`
-- direct_100_category 统计：`policy_never_public`: 14
+- direct_100_category 统计：`policy_never_public`: 3
 - 严格 100% direct public API 缺口候选：`0`；剩余 `allowlisted` 行均为 `policy_never_public`。
 - PicoUI 覆盖结论：`covered` 行有 PicoUI API/backend/unit/gate 证据；`allowlisted` 行是 policy 处置且不应暴露为 PicoUI public wrapper。
 - matrix layer：`a_0_8_ledger_truth`
@@ -24,20 +24,21 @@
 
 ## 控件能力等价缺口
 
-本节按 native/user-facing 能力等价判断，不按 `ld*` 名称逐个翻译判断。以下行虽然已在 policy ledger 中处置，但用户态能力尚不能证明可由 PicoUI 完整完成：
-
-| 缺口 | LingDongGUI 来源 | 当前 PicoUI 状态 | 需要补齐的能力 |
-| --- | --- | --- | --- |
-| VRES 图片/字体资源 | `ldBaseGetVresImage`、`ldBaseGetVresFont` | `resource_time_helper_policy` allowlist | PicoUI 资源源或 provider 能描述 VRES 图片/字体，并可被 image/text/font 相关控件消费 |
-| 系统时间/日期/星期 | `ldBaseGetTime`、`ldBaseGetDate`、`ldBaseGetWeek` | `resource_time_helper_policy` allowlist | PicoUI app/host time provider 或 portable query API，使日期时间类控件不依赖用户绕回 LingDongGUI |
-| 背景移动 | `ldBaseBgMove` | `base_tree_policy` allowlist | window/background pan/move 能力；若新增独立 `picoui_background`，该能力归入 background 控件 |
-| 自定义绘制/基础绘图 | `ldBaseColor`、`ldBaseDrawLine`、`ldBaseImage`、`ldBaseImageScale`、`ldBaseLabel` | `drawing_helper_policy` allowlist | `picoui_canvas` 或 custom widget draw callback，覆盖填色、画线、图片、缩放图片、文字绘制 |
+本节按 native/user-facing 能力等价判断，不按 `ld*` 名称逐个翻译判断。a-0.13 收口后，`base` 组当前没有剩余 user-facing direct 能力缺口；但这不等于逐个 native symbol 都变成 PicoUI direct wrapper。`ldBaseGetDate/GetTime/GetWeek/GetVres*` 与 `ldBaseImage/Label` 这类行仍属于“能力已由别的 PicoUI public API 等价承载，而不是 1:1 symbol parity”。
 
 ## 控件能力等价已补齐
 
 | 能力 | LingDongGUI 来源 | PicoUI 补齐状态 | 边界 |
 | --- | --- | --- | --- |
 | 动态移除/销毁控件 | `ldBaseNodeRemove`、各控件 `*_depose` | a-0.13 已新增 `picoui_widget_remove_from_parent()` 与 `picoui_widget_destroy()`，通过 `ldBaseNodeRemove()` 脱离真实 native tree，并覆盖 parent/child/sibling/nameId/focus 测试 | 当前 `destroy` 不释放所有外层 widget 分配；内存所有权和完整 free 策略另线处理 |
+| VRES 图片/字体资源 | `ldBaseGetVresImage`、`ldBaseGetVresFont` | a-0.13 已新增 `picoui_image_source_from_vres()` 与 `picoui_font_from_vres()`，并在 `image/text/button` 路径消费 | 保持 portable resource source/handle 语义，不暴露 native 地址解析细节 |
+| 系统时间/日期/星期 | `ldBaseGetTime`、`ldBaseGetDate`、`ldBaseGetWeek` | a-0.13 已新增 `picoui_date_time_set_use_system_time()`、`picoui_calendar_set_use_system_date()`、`picoui_clock_set_use_system_time()` | 覆盖的是 widget-level provider toggle，不是独立全局 time query API |
+| 背景移动 | `ldBaseBgMove` | a-0.13 已新增 `picoui_window_set_background_offset()` / `get_background_offset()`，真实驱动 scene root background move | 当前语义是 root window/background 一起 pan，不是独立 `background` widget layer |
+| 自定义绘制/基础绘图 | `ldBaseColor`、`ldBaseDrawLine`、`ldBaseImage`、`ldBaseImageScale`、`ldBaseLabel` | a-0.13 已新增 `picoui_canvas_*` 命令式绘制 API，并映射到真实 native `ldCanvas` | 当前是命令式 canvas，不是用户自定义 native draw hook |
+
+补充说明：
+- 本页上面的“能力已补齐”是 user-facing capability equivalence 口径。
+- 下方逐 symbol 表仍可能把某些 native helper 记为 `allowlisted`，因为它们并没有被设计成 PicoUI direct wrapper，而是由别的 public API 承载同等用户意图。
 
 ## API 能力与 PicoUI 覆盖清单
 
@@ -45,9 +46,9 @@
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `ldBaseAlignRegionCenter` | `helper` | `shared_base` | `direct_covered` | `direct_public_covered` | `true` | `covered` | `shared_api_equivalence` | `picoui_rect_center` | `picoui_rect_center` | test_widget_tree_name_and_type_queries_round_trip_to_ldbase + test_widget_geometry_helpers_round_trip_to_ldbase + test_widget_focus_navigation_public_api, ctest:test_picoui_layout, python:check_picoui_release_capability_matrix | picoui_rect_center maps PicoUI rects to ldBaseAlignRegionCenter-compatible centered region semantics; covered by test_widget_geometry_helpers_round_trip_to_ldbase. | `arm_2d_region_t ldBaseAlignRegionCenter(arm_2d_region_t parentRegion, arm_2d_region_t childRegion);` |
 | 2 | `ldBaseAutoVerticalGridAlign` | `helper` | `shared_base` | `direct_covered` | `direct_public_covered` | `true` | `covered` | `shared_api_equivalence` | `picoui_vertical_grid_align_offset` | `picoui_vertical_grid_align_offset` | test_widget_tree_name_and_type_queries_round_trip_to_ldbase + test_widget_geometry_helpers_round_trip_to_ldbase + test_widget_focus_navigation_public_api, ctest:test_picoui_layout, python:check_picoui_release_capability_matrix | picoui_vertical_grid_align_offset maps PicoUI rect and scalar arguments to ldBaseAutoVerticalGridAlign; covered by test_widget_geometry_helpers_round_trip_to_ldbase. | `int16_t ldBaseAutoVerticalGridAlign(arm_2d_region_t widgetRegion, int16_t currentOffset, uint8_t itemCount, uint8_t itemHeight, uint8_t space);` |
-| 3 | `ldBaseBgMove` | `update_action` | `shared_base` | `base_tree_policy` | `policy_never_public` | `false` | `allowlisted` | `non_widget_allowlisted` |  |  |  | a-0.10 R2 direct-100 category: policy_never_public; native tree mutation, debug print, or background helper remains backend-owned because PicoUI create/parent/backend attach APIs own tree mutation and render movement semantics. | `void ldBaseBgMove(ld_scene_t *ptScene, int16_t bgWidth,int16_t bgHeight,int16_t offsetX,int16_t offsetY);` |
-| 4 | `ldBaseColor` | `helper` | `shared_base` | `drawing_helper_policy` | `policy_never_public` | `false` | `allowlisted` | `non_widget_allowlisted` |  |  |  | a-0.10 R2 direct-100 category: policy_never_public; raw Arm-2D drawing helpers stay render-pipeline utilities while PicoUI exposes widget, theme, and image abstractions. | `void ldBaseColor(arm_2d_tile_t* ptTile, arm_2d_region_t* ptRegion, ldColor color, uint8_t opacity);` |
-| 5 | `ldBaseDrawLine` | `helper` | `shared_base` | `drawing_helper_policy` | `policy_never_public` | `false` | `allowlisted` | `non_widget_allowlisted` |  |  |  | a-0.10 R2 direct-100 category: policy_never_public; raw Arm-2D drawing helpers stay render-pipeline utilities while PicoUI exposes widget, theme, and image abstractions. | `void ldBaseDrawLine(arm_2d_tile_t *pTile,int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint8_t lineSize, ldColor color,uint8_t opacityMax, uint8_t opacityMin);` |
+| 3 | `ldBaseBgMove` | `update_action` | `shared_base` | `direct_covered` |  | `true` | `covered` | `shared_api_equivalence` | `picoui_window_set_background_offset + picoui_window_get_background_offset` | `picoui_backend_window_set_background_offset -> ldBaseBgMove` | test_window_background_offset_round_trip_to_scene_root, ctest:test_picoui_layout + python:check_picoui_release_capability_matrix | a-0.13 item 7 已通过 portable window background offset API 覆盖背景平移用户意图。 | `void ldBaseBgMove(ld_scene_t *ptScene, int16_t bgWidth,int16_t bgHeight,int16_t offsetX,int16_t offsetY);` |
+| 4 | `ldBaseColor` | `helper` | `shared_base` | `direct_covered` |  | `true` | `covered` | `shared_api_equivalence` | `picoui_canvas_fill_rect` | `picoui_backend_canvas_sync -> ldCanvas_show -> ldBaseColor` | test_picoui_canvas_command_round_trip_to_native_canvas, ctest:test_picoui_canvas + python:check_picoui_release_capability_matrix | a-0.13 item 8 已通过 portable canvas fill-rect 命令覆盖 raw fill-color drawing 用户意图。 | `void ldBaseColor(arm_2d_tile_t* ptTile, arm_2d_region_t* ptRegion, ldColor color, uint8_t opacity);` |
+| 5 | `ldBaseDrawLine` | `helper` | `shared_base` | `direct_covered` |  | `true` | `covered` | `shared_api_equivalence` | `picoui_canvas_draw_line` | `picoui_backend_canvas_sync -> ldCanvas_show -> ldBaseDrawLine` | test_picoui_canvas_command_round_trip_to_native_canvas, ctest:test_picoui_canvas + python:check_picoui_release_capability_matrix | a-0.13 item 8 已通过 portable canvas line 命令覆盖 raw line drawing 用户意图。 | `void ldBaseDrawLine(arm_2d_tile_t *pTile,int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint8_t lineSize, ldColor color,uint8_t opacityMax, uint8_t opacityMin);` |
 | 6 | `ldBaseFocusNavigate` | `update_action` | `shared_base` | `direct_covered` | `direct_public_covered` | `true` | `covered` | `shared_api_equivalence` | `picoui_focus_navigate` | `picoui_focus_navigate` | test_widget_tree_name_and_type_queries_round_trip_to_ldbase + test_widget_geometry_helpers_round_trip_to_ldbase + test_widget_focus_navigation_public_api, ctest:test_picoui_layout, python:check_picoui_release_capability_matrix | picoui_focus_navigate exposes app-level focus navigation without ld_scene_t: first focus enters the root first child, ENTER enters the current widget first child, BACK returns to the parent, and LEFT/RIGHT/UP/DOWN keep sibling directional selection; covered by test_widget_focus_navigation_public_api. | `void ldBaseFocusNavigate(ld_scene_t *ptScene, ldNavDir_t tDir);` |
 | 7 | `ldBaseFocusNavigateInit` | `init` | `shared_base` | `direct_covered` | `direct_public_covered` | `true` | `covered` | `shared_api_equivalence` | `picoui_focus_reset` | `picoui_focus_reset` | test_widget_tree_name_and_type_queries_round_trip_to_ldbase + test_widget_geometry_helpers_round_trip_to_ldbase + test_widget_focus_navigation_public_api, ctest:test_picoui_layout, python:check_picoui_release_capability_matrix | picoui_focus_reset clears PicoUI focus owner and invokes native focus navigation reset; covered by test_widget_focus_navigation_public_api. | `void ldBaseFocusNavigateInit(void);` |
 | 8 | `ldBaseGetAbsoluteLocation` | `getter` | `shared_base` | `direct_covered` | `direct_public_covered` | `true` | `covered` | `shared_api_equivalence` | `picoui_widget_get_absolute_pos` | `picoui_widget_get_absolute_pos` | test_widget_tree_name_and_type_queries_round_trip_to_ldbase + test_widget_geometry_helpers_round_trip_to_ldbase + test_widget_focus_navigation_public_api, ctest:test_picoui_layout, python:check_picoui_release_capability_matrix | picoui_widget_get_absolute_pos maps PicoUI point to native absolute-location helper and returns portable point; covered by test_widget_geometry_helpers_round_trip_to_ldbase. | `arm_2d_location_t ldBaseGetAbsoluteLocation(ldBase_t *ptWidget,arm_2d_location_t tLocation);` |

@@ -28,6 +28,8 @@ struct picoui_clock *picoui_clock_create_with_props(
     struct picoui_widget *parent,
     const struct picoui_clock_props *props);
 struct picoui_clock *picoui_clock_init(struct picoui_widget *parent, const char *id);
+int picoui_clock_set_use_system_time(struct picoui_clock *clock, int enabled);
+int picoui_clock_get_use_system_time(const struct picoui_clock *clock);
 int picoui_clock_set_step_second(struct picoui_clock *clock, int step_second);
 int picoui_clock_get_step_second(const struct picoui_clock *clock);
 int picoui_clock_set_background_image(struct picoui_clock *clock, struct picoui_image_source *source);

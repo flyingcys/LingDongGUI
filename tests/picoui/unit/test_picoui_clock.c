@@ -106,9 +106,37 @@ static void test_clock_release_contract_covers_time_source_and_configuration_bou
     assert(ld_clock->pointerInfo[0].ptImgTile != 0);
     assert(ld_clock->pointerInfo[1].ptImgTile != 0);
     assert(ld_clock->pointerInfo[2].ptImgTile != 0);
+    assert(picoui_clock_get_use_system_time(clock) == 1);
     assert(picoui_clock_set_step_second(clock, 0) == 0);
     assert(picoui_clock_get_step_second(clock) == 0);
     assert(ld_clock->isStepSecond == false);
+}
+
+static void test_clock_system_time_provider_round_trip(struct picoui_window *win)
+{
+    struct picoui_clock *clock =
+        picoui_clock_create((struct picoui_widget *)win, "clock_system_provider");
+    struct picoui_backend_widget *backend;
+    ldClock_t *ld_clock;
+    float frozen_radian;
+
+    assert(clock != 0);
+    backend = (struct picoui_backend_widget *)clock->widget.backend_widget;
+    assert(backend != 0);
+    ld_clock = (ldClock_t *)backend->ld_widget;
+    assert(ld_clock != 0);
+
+    assert(picoui_clock_set_use_system_time(clock, 0) == 0);
+    assert(picoui_clock_get_use_system_time(clock) == 0);
+    ldClock_on_frame_start(((struct picoui_backend_app_state *)backend->owner->backend_app)->ld_scene, ld_clock);
+    frozen_radian = ld_clock->pointerInfo[2].radian;
+    ldClock_on_frame_start(((struct picoui_backend_app_state *)backend->owner->backend_app)->ld_scene, ld_clock);
+    assert(ld_clock->pointerInfo[2].radian == frozen_radian);
+
+    assert(picoui_clock_set_use_system_time(clock, 1) == 0);
+    assert(picoui_clock_get_use_system_time(clock) == 1);
+    assert(picoui_clock_set_use_system_time(0, 1) == -1);
+    assert(picoui_clock_get_use_system_time(0) == -1);
 }
 
 static void test_clock_native_background_pointer_mask_and_anchor_round_trip(struct picoui_window *win)
@@ -289,6 +317,7 @@ int main(void)
     test_clock_step_second_state(win);
     test_clock_rejects_invalid_inputs(win);
     test_clock_release_contract_covers_time_source_and_configuration_boundary(win);
+    test_clock_system_time_provider_round_trip(win);
     test_clock_native_background_pointer_mask_and_anchor_round_trip(win);
     test_clock_init_and_image_aliases_round_trip(win);
 

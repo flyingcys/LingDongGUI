@@ -96,6 +96,7 @@ ldClock_t* ldClock_init(ld_scene_t *ptScene,ldClock_t *ptWidget, uint16_t nameId
 
     ptWidget->use_as__ldBase_t.itemCount=3;
     ptWidget->use_as__ldBase_t.ptItemRegionList=ptItemRegionList;
+    ptWidget->isAutoSysTime = true;
 
     ptWidget->pointerInfo[0].ptMaskTile=(arm_2d_tile_t*)&c_tilePointerHourMask;
     ptWidget->pointerInfo[0].rotationCentre.fX=c_tilePointerHourMask.tRegion.tSize.iWidth>>1;
@@ -156,6 +157,7 @@ void ldClock_on_frame_start(ld_scene_t *ptScene, ldClock_t *ptWidget)
 {
     assert(NULL != ptWidget);
     if(ptWidget == NULL) return;
+    if(!ptWidget->isAutoSysTime) return;
 
     int64_t lTimeStampInMs = arm_2d_helper_convert_ticks_to_ms(arm_2d_helper_get_system_timestamp());
     uint32_t total_seconds = lTimeStampInMs / 1000UL;
@@ -457,6 +459,16 @@ void ldClockSetStepSecond(ldClock_t *ptWidget, bool isStepSecond)
         return;
     }
     ptWidget->isStepSecond=isStepSecond;
+}
+
+void ldClockSetAutoSysTime(ldClock_t *ptWidget, bool isAutoSysTime)
+{
+    assert(NULL != ptWidget);
+    if(ptWidget == NULL)
+    {
+        return;
+    }
+    ptWidget->isAutoSysTime = isAutoSysTime;
 }
 
 #if defined(__clang__)

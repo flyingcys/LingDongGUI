@@ -126,6 +126,7 @@ ldCalendar_t *ldCalendar_init(ld_scene_t *ptScene, ldCalendar_t *ptWidget, uint1
     ptWidget->use_as__ldBase_t.isDirtyRegionUpdate = true;
     ptWidget->use_as__ldBase_t.isDirtyRegionAutoReset = true;
     ptWidget->use_as__ldBase_t.opacity = 255;
+    ptWidget->isAutoSysDate = false;
 
     ptWidget->bgColor = GLCD_COLOR_WHITE;
     ptWidget->textColor = GLCD_COLOR_BLACK;
@@ -173,10 +174,25 @@ void ldCalendar_on_load(ld_scene_t *ptScene, ldCalendar_t *ptWidget)
 
 void ldCalendar_on_frame_start(ld_scene_t *ptScene, ldCalendar_t *ptWidget)
 {
+    uint16_t year;
+    uint8_t month;
+    uint8_t day;
+
     assert(NULL != ptWidget);
     if (ptWidget == NULL)
     {
         return;
+    }
+    if (!ptWidget->isAutoSysDate)
+    {
+        return;
+    }
+
+    ldBaseGetDate(&year, &month, &day);
+    if (ptWidget->year + 2000 != year || ptWidget->month != month || ptWidget->day != day)
+    {
+        ldCalendarSetDate(ptWidget, year, month, day);
+        ptWidget->use_as__ldBase_t.isDirtyRegionUpdate = true;
     }
 }
 
@@ -464,6 +480,16 @@ void ldCalendarSetDate(ldCalendar_t *ptWidget,uint16_t year,uint8_t month,uint8_
     ptWidget->day = day;
 
     _getCalBuf(year, month, ptWidget->calBuf);
+}
+
+void ldCalendarSetAutoSysDate(ldCalendar_t *ptWidget,bool isAutoSysDate)
+{
+    assert(NULL != ptWidget);
+    if (ptWidget == NULL)
+    {
+        return;
+    }
+    ptWidget->isAutoSysDate = isAutoSysDate;
 }
 
 void ldCalendarGetDate(ldCalendar_t *ptWidget,uint16_t* year,uint8_t* month,uint8_t* day)

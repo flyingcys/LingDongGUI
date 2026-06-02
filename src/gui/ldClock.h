@@ -64,6 +64,7 @@ struct ldClock_t
     ldColor bgMaskColor;
     uint32_t lastTotalSeconds;
     bool isStepSecond:1;
+    bool isAutoSysTime:1;
 };
 
 ldClock_t* ldClock_init(ld_scene_t *ptScene, ldClock_t *ptWidget, uint16_t nameId, uint16_t parentNameId, int16_t x, int16_t y, int16_t width, int16_t height);
@@ -81,6 +82,7 @@ void ldClockSetMinutePointerImage(ldClock_t *ptWidget, arm_2d_tile_t *ptImgTile,
 void ldClockSetSecondPointerImage(ldClock_t *ptWidget, arm_2d_tile_t *ptImgTile, arm_2d_tile_t *ptMaskTile, ldColor maskColor, float x, float y);
 
 void ldClockSetStepSecond(ldClock_t *ptWidget, bool isStepSecond);
+void ldClockSetAutoSysTime(ldClock_t *ptWidget, bool isAutoSysTime);
 
 #if defined(__clang__)
 #pragma clang diagnostic pop

@@ -37,7 +37,9 @@ static struct picoui_backend_app_state *picoui_backend_window_get_app_state(stru
     return (struct picoui_backend_app_state *)app->backend_app;
 }
 
-void *picoui_backend_create_window(struct picoui_app *app, const char *id)
+static void *picoui_backend_create_root_widget(struct picoui_app *app,
+                                               const char *id,
+                                               enum picoui_backend_widget_kind kind)
 {
     struct picoui_backend_window_host *host;
     struct picoui_backend_app_state *app_state;
@@ -72,12 +74,22 @@ void *picoui_backend_create_window(struct picoui_app *app, const char *id)
 
     host->widget.id = id;
     host->widget.owner = app;
-    host->widget.kind = PICOUI_BACKEND_WIDGET_WINDOW;
+    host->widget.kind = kind;
     host->widget.root = &host->widget;
     host->widget.theme = app->theme;
     host->widget.ld_widget = ld_root;
     host->widget.ld_name_id = 0;
     return &host->widget;
+}
+
+void *picoui_backend_create_window(struct picoui_app *app, const char *id)
+{
+    return picoui_backend_create_root_widget(app, id, PICOUI_BACKEND_WIDGET_WINDOW);
+}
+
+void *picoui_backend_create_background(struct picoui_app *app, const char *id)
+{
+    return picoui_backend_create_root_widget(app, id, PICOUI_BACKEND_WIDGET_BACKGROUND);
 }
 
 static struct picoui_backend_widget *picoui_backend_window_get(struct picoui_window *window)
@@ -153,6 +165,39 @@ int picoui_backend_window_set_background_source(struct picoui_window *window,
     ldWindowSetImage(ld_window,
                      source != NULL ? source->img_tile : NULL,
                      source != NULL ? source->mask_tile : NULL);
+    return 0;
+}
+
+int picoui_backend_window_set_background_offset(struct picoui_window *window,
+                                                int offset_x,
+                                                int offset_y)
+{
+    struct picoui_backend_widget *backend = picoui_backend_window_get(window);
+    struct picoui_backend_app_state *app_state;
+    ldWindow_t *ld_window;
+    int16_t bg_width;
+    int16_t bg_height;
+
+    if (backend == NULL || backend->owner == NULL) {
+        return -1;
+    }
+
+    app_state = picoui_backend_window_get_app_state(backend->owner);
+    ld_window = picoui_backend_window_get_ld(window);
+    if (app_state == NULL || app_state->ld_scene == NULL || ld_window == NULL) {
+        return -1;
+    }
+
+    bg_width = ld_window->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iWidth;
+    bg_height = ld_window->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iHeight;
+    if (bg_width <= 0) {
+        bg_width = PICOUI_RUNTIME_ROOT_WIDTH;
+    }
+    if (bg_height <= 0) {
+        bg_height = PICOUI_RUNTIME_ROOT_HEIGHT;
+    }
+
+    ldBaseBgMove(app_state->ld_scene, bg_width, bg_height, (int16_t)offset_x, (int16_t)offset_y);
     return 0;
 }
 

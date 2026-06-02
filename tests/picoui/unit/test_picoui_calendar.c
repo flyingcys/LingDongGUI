@@ -2,6 +2,7 @@
 #include "picoui/calendar.h"
 #include "picoui/window.h"
 #include "../../../src/gui/ldCalendar.h"
+#include "../../../src/gui/ldBase.h"
 #include "backend.h"
 #include "internal.h"
 
@@ -191,6 +192,52 @@ static void test_calendar_native_day_names_and_colors_round_trip(void)
     picoui_app_destroy(app);
 }
 
+static void test_calendar_system_date_provider_round_trip(void)
+{
+    struct picoui_app *app;
+    struct picoui_window *win;
+    struct picoui_calendar *calendar;
+    struct picoui_backend_widget *backend;
+    ldCalendar_t *ld_calendar;
+    int year = 0;
+    int month = 0;
+    int day = 0;
+
+    app = picoui_app_create();
+    assert(app != 0);
+    win = picoui_window_create(app, "calendar_system_root");
+    assert(win != 0);
+    calendar = picoui_calendar_create(win, "calendar_system_date");
+    assert(calendar != 0);
+
+    backend = (struct picoui_backend_widget *)calendar->widget.backend_widget;
+    assert(backend != 0);
+    ld_calendar = (ldCalendar_t *)backend->ld_widget;
+    assert(ld_calendar != 0);
+
+    assert(picoui_calendar_set_date(calendar, 2024, 2, 29) == 0);
+    assert(picoui_calendar_set_use_system_date(calendar, 1) == 0);
+    assert(picoui_calendar_get_use_system_date(calendar) == 1);
+    ldCalendar_on_frame_start(backend->owner->backend_app ? ((struct picoui_backend_app_state *)backend->owner->backend_app)->ld_scene : NULL,
+                              ld_calendar);
+    assert(picoui_calendar_get_date(calendar, &year, &month, &day) == 0);
+    assert(year >= 1970);
+    assert(month >= 1 && month <= 12);
+    assert(day >= 1 && day <= 31);
+    assert(picoui_calendar_get_grid_value(calendar, 0, ldBaseGetWeek((uint16_t)year, (uint8_t)month, 1)) == 1);
+
+    assert(picoui_calendar_set_use_system_date(calendar, 0) == 0);
+    assert(picoui_calendar_get_use_system_date(calendar) == 0);
+    assert(picoui_calendar_set_date(calendar, 2024, 2, 29) == 0);
+    assert(picoui_calendar_get_date(calendar, &year, &month, &day) == 0);
+    assert(year == 2024 && month == 2 && day == 29);
+
+    assert(picoui_calendar_set_use_system_date(0, 1) == -1);
+    assert(picoui_calendar_get_use_system_date(0) == -1);
+
+    picoui_app_destroy(app);
+}
+
 static void test_calendar_init_and_aliases_match_backend_truth(void)
 {
     struct picoui_app *app;
@@ -229,6 +276,7 @@ int main(void)
     test_calendar_header_and_grid_visible_output_match_date_contract();
     test_calendar_final_release_contract_covers_full_feature_boundary();
     test_calendar_native_day_names_and_colors_round_trip();
+    test_calendar_system_date_provider_round_trip();
     test_calendar_init_and_aliases_match_backend_truth();
     return 0;
 }

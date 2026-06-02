@@ -268,6 +268,34 @@ int picoui_backend_calendar_set_text_color(void *backend_widget, unsigned int rg
     return 0;
 }
 
+int picoui_backend_calendar_set_use_system_date(void *backend_widget, int enabled)
+{
+    struct picoui_backend_widget *backend = backend_widget;
+    ldCalendar_t *ld_calendar = picoui_backend_calendar_get_ld(backend_widget);
+
+    if (backend == NULL || ld_calendar == NULL) {
+        return -1;
+    }
+
+    ldCalendarSetAutoSysDate(ld_calendar, enabled != 0);
+    if (enabled != 0) {
+        ldCalendar_on_frame_start(NULL, ld_calendar);
+    }
+    return picoui_backend_calendar_sync_host_cache(backend);
+}
+
+int picoui_backend_calendar_get_use_system_date(void *backend_widget, int *enabled)
+{
+    ldCalendar_t *ld_calendar = picoui_backend_calendar_get_ld(backend_widget);
+
+    if (ld_calendar == NULL || enabled == NULL) {
+        return -1;
+    }
+
+    *enabled = ld_calendar->isAutoSysDate ? 1 : 0;
+    return 0;
+}
+
 const char *picoui_backend_calendar_get_header_format(void *backend_widget)
 {
     struct picoui_backend_widget *backend = backend_widget;

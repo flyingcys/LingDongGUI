@@ -57,6 +57,10 @@ static arm_2d_font_t *picoui_backend_text_default_font(void)
 
 static arm_2d_font_t *picoui_backend_text_resolve_font(const struct picoui_font *font)
 {
+    if (font != NULL && font->kind == PICOUI_FONT_KIND_VRES && font->vres_addr != 0) {
+        return (arm_2d_font_t *)ldBaseGetVresFont(font->vres_addr);
+    }
+
     if (font == NULL || font->family == NULL || font->size <= 0) {
         return picoui_backend_text_default_font();
     }

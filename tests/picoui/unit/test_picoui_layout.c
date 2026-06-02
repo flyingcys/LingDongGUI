@@ -1,4 +1,5 @@
 #include "internal.h"
+#include "picoui/background.h"
 #include "picoui/picoui.h"
 #include "ldBase.h"
 #include "ldWindow.h"
@@ -595,6 +596,106 @@ static void test_window_background_source_round_trip_to_ldwindow(void)
     picoui_app_destroy(app);
 }
 
+static void test_window_background_offset_round_trip_to_scene_root(void)
+{
+    struct picoui_app *app = picoui_app_create();
+    struct picoui_window *win = picoui_window_create(app, "root");
+    const struct picoui_backend_widget *win_backend = win->widget.backend_widget;
+    const struct picoui_backend_app_state *app_state =
+        (const struct picoui_backend_app_state *)app->backend_app;
+    const ldWindow_t *ld_window = (const ldWindow_t *)win_backend->ld_widget;
+    const ldBase_t *ld_root = (const ldBase_t *)app_state->ld_scene->ptNodeRoot;
+    int offset_x = 0;
+    int offset_y = 0;
+
+    assert(picoui_window_set_background_offset(win, 12, -18) == 0);
+    assert(picoui_window_get_background_offset(win, &offset_x, &offset_y) == 0);
+    assert(offset_x == 12);
+    assert(offset_y == -18);
+    assert(ld_root->use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 12);
+    assert(ld_root->use_as__arm_2d_control_node_t.tRegion.tLocation.iY == -18);
+    assert(ld_root->use_as__arm_2d_control_node_t.tRegion.tSize.iWidth == 492);
+    assert(ld_root->use_as__arm_2d_control_node_t.tRegion.tSize.iHeight == 320);
+    assert(ld_window->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 12);
+    assert(ld_window->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == -18);
+    assert(ld_window->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iWidth == 492);
+    assert(ld_window->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iHeight == 320);
+
+    assert(picoui_window_set_background_offset(win, -24, 9) == 0);
+    assert(picoui_window_get_background_offset(win, &offset_x, &offset_y) == 0);
+    assert(offset_x == -24);
+    assert(offset_y == 9);
+    assert(ld_root->use_as__arm_2d_control_node_t.tRegion.tLocation.iX == -24);
+    assert(ld_root->use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 9);
+    assert(ld_root->use_as__arm_2d_control_node_t.tRegion.tSize.iWidth == 492);
+    assert(ld_root->use_as__arm_2d_control_node_t.tRegion.tSize.iHeight == 329);
+    assert(ld_window->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == -24);
+    assert(ld_window->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 9);
+    assert(ld_window->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iWidth == 492);
+    assert(ld_window->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iHeight == 329);
+
+    assert(picoui_window_get_background_offset(win, 0, &offset_y) == -1);
+    assert(picoui_window_get_background_offset(win, &offset_x, 0) == -1);
+    assert(picoui_window_set_background_offset(0, 1, 2) == -1);
+    assert(picoui_window_get_background_offset(0, &offset_x, &offset_y) == -1);
+
+    picoui_app_destroy(app);
+}
+
+static void test_background_widget_public_contract_round_trip(void)
+{
+    arm_2d_tile_t img_tile = {0};
+    arm_2d_tile_t mask_tile = {0};
+    struct picoui_image_source source = {
+        .img_tile = &img_tile,
+        .mask_tile = &mask_tile,
+    };
+    struct picoui_app *app = picoui_app_create();
+    struct picoui_background *background = picoui_background_create(app, "bg_root");
+    const struct picoui_backend_widget *backend =
+        (const struct picoui_backend_widget *)background->window.widget.backend_widget;
+    const ldWindow_t *ld_window = (const ldWindow_t *)backend->ld_widget;
+    unsigned int rgb = 0;
+    int offset_x = 0;
+    int offset_y = 0;
+
+    assert(background != 0);
+    assert(picoui_widget_get_type((const struct picoui_widget *)background) ==
+           PICOUI_WIDGET_TYPE_BACKGROUND);
+    assert(ld_window->use_as__ldBase_t.widgetType == widgetTypeBackground);
+
+    assert(picoui_background_set_source(background, &source) == 0);
+    assert(ld_window->ptImgTile == source.img_tile);
+    assert(ld_window->ptMaskTile == source.mask_tile);
+
+    assert(picoui_background_set_color(background, 0x224466U) == 0);
+    assert(picoui_background_get_color(background, &rgb) == 0);
+    assert(rgb == 0x204462U);
+    assert(ldWindowGetColor((ldWindow_t *)ld_window) ==
+           (ldColor)test_rgb_to_ld_color(0x224466U));
+
+    assert(picoui_background_set_offset(background, 7, -11) == 0);
+    assert(picoui_background_get_offset(background, &offset_x, &offset_y) == 0);
+    assert(offset_x == 7);
+    assert(offset_y == -11);
+    assert(picoui_app_set_background(app, background) == 0);
+    assert(app->root_window == (struct picoui_window *)background);
+    assert(picoui_app_switch_background(app, background, 3, 90) == 0);
+
+    assert(picoui_background_set_source(0, &source) == -1);
+    assert(picoui_background_set_color(0, 0x112233U) == -1);
+    assert(picoui_background_get_color(0, &rgb) == -1);
+    assert(picoui_background_get_color(background, 0) == -1);
+    assert(picoui_background_set_offset(0, 1, 2) == -1);
+    assert(picoui_background_get_offset(0, &offset_x, &offset_y) == -1);
+    assert(picoui_app_set_background(0, background) == -1);
+    assert(picoui_app_set_background(app, 0) == -1);
+    assert(picoui_app_switch_background(0, background, 0, 0) == -1);
+    assert(picoui_app_switch_background(app, 0, 0, 0) == -1);
+
+    picoui_app_destroy(app);
+}
+
 static void test_flex_layout_relayout_uses_ld_window_without_cursor_override(void)
 {
     struct picoui_app *app = picoui_app_create();
@@ -787,6 +888,8 @@ int main(void)
     test_window_padding_group_round_trip_to_ldwindow();
     test_window_color_round_trip_to_ldwindow();
     test_window_background_source_round_trip_to_ldwindow();
+    test_window_background_offset_round_trip_to_scene_root();
+    test_background_widget_public_contract_round_trip();
     test_window_native_layout_padding_grid_padding_and_generic_gap_round_trip();
     return 0;
 }

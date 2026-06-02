@@ -67,6 +67,7 @@ static int picoui_backend_widget_is_supported_real(const struct picoui_backend_w
     }
 
     switch (widget->kind) {
+    case PICOUI_BACKEND_WIDGET_BACKGROUND:
     case PICOUI_BACKEND_WIDGET_WINDOW:
     case PICOUI_BACKEND_WIDGET_LABEL:
     case PICOUI_BACKEND_WIDGET_BUTTON:
@@ -103,6 +104,7 @@ static int picoui_backend_widget_is_real_mapped(const struct picoui_backend_widg
 {
     return widget != NULL &&
            widget->kind != PICOUI_BACKEND_WIDGET_WINDOW &&
+           widget->kind != PICOUI_BACKEND_WIDGET_BACKGROUND &&
            picoui_backend_widget_is_supported_real(widget) &&
            widget->ld_widget != NULL;
 }
@@ -143,6 +145,7 @@ static int picoui_backend_widget_needs_fallback(const struct picoui_backend_widg
 {
     return widget != NULL &&
            widget->kind != PICOUI_BACKEND_WIDGET_WINDOW &&
+           widget->kind != PICOUI_BACKEND_WIDGET_BACKGROUND &&
            (!picoui_backend_widget_is_supported_real(widget) || widget->ld_widget == NULL);
 }
 
@@ -150,7 +153,10 @@ static int picoui_backend_window_has_real_layout(const struct picoui_backend_wid
 {
     ldWindow_t *ld_window;
 
-    if (widget == NULL || widget->kind != PICOUI_BACKEND_WIDGET_WINDOW || widget->ld_widget == NULL) {
+    if (widget == NULL
+        || (widget->kind != PICOUI_BACKEND_WIDGET_WINDOW
+            && widget->kind != PICOUI_BACKEND_WIDGET_BACKGROUND)
+        || widget->ld_widget == NULL) {
         return 0;
     }
 
@@ -567,7 +573,8 @@ static void picoui_backend_apply_real_widget_layout(struct picoui_backend_runtim
                                                     int *cursor_y)
 {
     while (widget != NULL) {
-        if (widget->kind != PICOUI_BACKEND_WIDGET_WINDOW) {
+        if (widget->kind != PICOUI_BACKEND_WIDGET_WINDOW
+            && widget->kind != PICOUI_BACKEND_WIDGET_BACKGROUND) {
             int height = PICOUI_RUNTIME_ROW_HEIGHT;
 
             if (widget->kind == PICOUI_BACKEND_WIDGET_IMAGE) {
@@ -652,6 +659,7 @@ int picoui_backend_app_run(struct picoui_app *app, struct picoui_window *window)
 {
     struct picoui_backend_runtime_state *state;
     struct picoui_backend_app_state *app_state;
+    struct picoui_window *active_window;
     int running = 1;
 
     if (app == NULL || window == NULL) {
@@ -697,7 +705,11 @@ int picoui_backend_app_run(struct picoui_app *app, struct picoui_window *window)
             }
         }
 
-        picoui_backend_render(state, window);
+        active_window = app->root_window != NULL ? app->root_window : window;
+        if (active_window == NULL) {
+            return -1;
+        }
+        picoui_backend_render(state, active_window);
         SDL_Delay(16);
 
         if (state->auto_quit_ms > 0 &&

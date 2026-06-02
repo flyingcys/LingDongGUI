@@ -4,9 +4,99 @@
 #include "ldLineEdit.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
 void ldKeyboardInputAscii(ldKeyboard_t *ptWidget, uint8_t ascii);
+
+static ldColor picoui_backend_keyboard_rgb_to_ld_color(unsigned int rgb)
+{
+    return __RGB((rgb >> 16) & 0xFFU, (rgb >> 8) & 0xFFU, rgb & 0xFFU);
+}
+
+static void picoui_backend_keyboard_invoke_event(struct picoui_backend_widget *backend,
+                                                 unsigned int key_code,
+                                                 enum picoui_native_signal signal)
+{
+    struct picoui_keyboard *keyboard;
+
+    if (backend == NULL || backend->host_widget == NULL) {
+        return;
+    }
+
+    keyboard = (struct picoui_keyboard *)backend->host_widget;
+    if (keyboard->event_cb == NULL) {
+        return;
+    }
+
+    keyboard->event_cb(keyboard, key_code, signal, keyboard->event_user_data);
+}
+
+static void picoui_backend_keyboard_invoke_draw(struct picoui_keyboard *keyboard,
+                                                const struct picoui_keyboard_button *button)
+{
+    if (keyboard == NULL || button == NULL || keyboard->draw_cb == NULL) {
+        return;
+    }
+
+    keyboard->draw_invocation_count++;
+    keyboard->last_draw_key_code = button->key_code;
+    keyboard->draw_cb(keyboard, button, keyboard->draw_user_data);
+}
+
+static const kbBtnInfo_t *picoui_backend_keyboard_get_custom_button_list(struct picoui_backend_widget *backend)
+{
+    struct picoui_keyboard *keyboard;
+    kbBtnInfo_t *native_buttons;
+    int i;
+
+    if (backend == NULL || backend->host_widget == NULL) {
+        return NULL;
+    }
+
+    keyboard = (struct picoui_keyboard *)backend->host_widget;
+    if (keyboard->layout_entries == NULL || keyboard->layout_count <= 0) {
+        return NULL;
+    }
+
+    if (keyboard->native_layout != NULL &&
+        keyboard->native_layout != (void *)keyboard->layout_entries) {
+        return (const kbBtnInfo_t *)keyboard->native_layout;
+    }
+
+    native_buttons = calloc((size_t)keyboard->layout_count + 1U, sizeof(*native_buttons));
+    if (native_buttons == NULL) {
+        return NULL;
+    }
+
+    for (i = 0; i < keyboard->layout_count; ++i) {
+        struct picoui_keyboard_button button_info;
+
+        native_buttons[i].region.tLocation.iX = (int16_t)keyboard->layout_entries[i].x;
+        native_buttons[i].region.tLocation.iY = (int16_t)keyboard->layout_entries[i].y;
+        native_buttons[i].region.tSize.iWidth = (int16_t)keyboard->layout_entries[i].width;
+        native_buttons[i].region.tSize.iHeight = (int16_t)keyboard->layout_entries[i].height;
+        native_buttons[i].pText = (uint8_t *)keyboard->layout_entries[i].text;
+        native_buttons[i].keyCode = (uint8_t)keyboard->layout_entries[i].key_code;
+        native_buttons[i].pressColor = picoui_backend_keyboard_rgb_to_ld_color(
+            keyboard->layout_entries[i].press_color);
+        native_buttons[i].releaseColor = picoui_backend_keyboard_rgb_to_ld_color(
+            keyboard->layout_entries[i].release_color);
+
+        button_info.x = keyboard->layout_entries[i].x;
+        button_info.y = keyboard->layout_entries[i].y;
+        button_info.width = keyboard->layout_entries[i].width;
+        button_info.height = keyboard->layout_entries[i].height;
+        button_info.text = keyboard->layout_entries[i].text;
+        button_info.key_code = keyboard->layout_entries[i].key_code;
+        button_info.press_color = keyboard->layout_entries[i].press_color;
+        button_info.release_color = keyboard->layout_entries[i].release_color;
+        picoui_backend_keyboard_invoke_draw(keyboard, &button_info);
+    }
+
+    keyboard->native_layout = native_buttons;
+    return native_buttons;
+}
 
 static struct picoui_backend_app_state *picoui_backend_keyboard_get_app_state(void *parent)
 {
@@ -32,6 +122,9 @@ static ldKeyboard_t *picoui_backend_keyboard_get_ld(void *backend_widget)
 static void picoui_backend_keyboard_prepare(ldKeyboard_t *ld_keyboard,
                                             struct picoui_line_edit *line_edit)
 {
+    struct picoui_backend_widget *backend;
+    const kbBtnInfo_t *custom_buttons;
+
     if (ld_keyboard == NULL) {
         return;
     }
@@ -39,9 +132,17 @@ static void picoui_backend_keyboard_prepare(ldKeyboard_t *ld_keyboard,
     if (line_edit != NULL) {
         ld_keyboard->editType = (ldEditType_t)line_edit->type;
     }
+    backend = (struct picoui_backend_widget *)((ldBase_t *)ld_keyboard)->pInfo;
+    custom_buttons = picoui_backend_keyboard_get_custom_button_list(backend);
     if (ld_keyboard->pBtnList == NULL || ld_keyboard->isWaitInit) {
-        ld_keyboard->pBtnList = ldKeyboardGetTargetBtnList(ld_keyboard);
+        ld_keyboard->pBtnList = custom_buttons != NULL
+                              ? custom_buttons
+                              : ldKeyboardGetTargetBtnList(ld_keyboard);
         ld_keyboard->isWaitInit = false;
+    } else if (custom_buttons != NULL) {
+        ld_keyboard->pBtnList = custom_buttons;
+    } else {
+        ld_keyboard->pBtnList = ldKeyboardGetTargetBtnList(ld_keyboard);
     }
     ldBaseSetHidden((ldBase_t *)ld_keyboard, false);
 }
@@ -204,7 +305,10 @@ int picoui_backend_keyboard_button_update(void *backend_widget, unsigned char ke
     }
 
     picoui_backend_keyboard_prepare(ld_keyboard, picoui_backend_keyboard_get_target_line_edit(backend));
+    ld_keyboard->keyCode = key_code;
+    ld_keyboard->isKeySelect = true;
     ldKeyboardBtnUpdate(ld_keyboard, key_code);
+    picoui_backend_keyboard_invoke_event(backend, key_code, PICOUI_NATIVE_SIGNAL_VALUE_CHANGED);
     return 0;
 }
 
@@ -226,6 +330,7 @@ int picoui_backend_keyboard_click(void *backend_widget)
 
     picoui_backend_keyboard_prepare(ld_keyboard, picoui_backend_keyboard_get_target_line_edit(backend));
     ldKeyboardClick(app_state->ld_scene, ld_keyboard, SIGNAL_PRESS);
+    picoui_backend_keyboard_invoke_event(backend, ld_keyboard->keyCode, PICOUI_NATIVE_SIGNAL_PRESS);
     return 0;
 }
 

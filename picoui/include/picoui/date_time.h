@@ -35,9 +35,11 @@ int picoui_date_time_set_background_color(struct picoui_date_time *dt, unsigned 
 int picoui_date_time_set_bg_color(struct picoui_date_time *dt, unsigned int rgb);
 int picoui_date_time_set_align(struct picoui_date_time *dt, enum picoui_align align);
 int picoui_date_time_set_transparent(struct picoui_date_time *dt, int transparent);
+int picoui_date_time_set_use_system_time(struct picoui_date_time *dt, int enabled);
 const char *picoui_date_time_get_format(const struct picoui_date_time *dt);
 int picoui_date_time_get_date(const struct picoui_date_time *dt, int *year, int *month, int *day);
 int picoui_date_time_get_time(const struct picoui_date_time *dt, int *hour, int *minute, int *second);
 int picoui_date_time_get_transparent(const struct picoui_date_time *dt);
+int picoui_date_time_get_use_system_time(const struct picoui_date_time *dt);
 
 #endif

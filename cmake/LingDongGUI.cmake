@@ -153,6 +153,7 @@ function(ld_define_core_targets)
         ${LD_REPO_ROOT}/picoui/src/widgets/label.c
         ${LD_REPO_ROOT}/picoui/src/widgets/text.c
         ${LD_REPO_ROOT}/picoui/src/widgets/keyboard.c
+        ${LD_REPO_ROOT}/picoui/src/widgets/canvas.c
         ${LD_REPO_ROOT}/picoui/src/widgets/line_edit.c
         ${LD_REPO_ROOT}/picoui/src/widgets/combo_box.c
         ${LD_REPO_ROOT}/picoui/src/widgets/scroll_selecter.c
@@ -174,6 +175,7 @@ function(ld_define_core_targets)
         ${LD_REPO_ROOT}/picoui/src/widgets/animation.c
         ${LD_REPO_ROOT}/picoui/src/widgets/date_time.c
         ${LD_REPO_ROOT}/picoui/src/widgets/clock.c
+        ${LD_REPO_ROOT}/picoui/src/widgets/background.c
         ${LD_REPO_ROOT}/picoui/src/widgets/list.c
         ${LD_REPO_ROOT}/picoui/src/widgets/message_box.c
     )
@@ -197,6 +199,7 @@ function(ld_define_core_targets)
         ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_label.c
         ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_text.c
         ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_keyboard.c
+        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_canvas.c
         ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_line_edit.c
         ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_combo_box.c
         ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_scroll_selecter.c

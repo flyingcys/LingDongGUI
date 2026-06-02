@@ -2,6 +2,7 @@
 #include "picoui/button.h"
 #include "../backend/ldgui/backend.h"
 #include "../../../src/gui/ldButton.h"
+#include "../../../src/misc/xBtnAction.h"
 
 #include <stdlib.h>
 
@@ -231,6 +232,8 @@ int picoui_button_set_color(struct picoui_button *button,
     }
 
     ldButtonSetColor(ld_button, (ldColor)release_color, (ldColor)press_color);
+    button->widget.bg_color = release_color;
+    button->widget.border_color = press_color;
     return 0;
 }
 
@@ -247,7 +250,7 @@ int picoui_button_get_release_color(struct picoui_button *button, unsigned int *
         return -1;
     }
 
-    *rgb = (unsigned int)ldButtonGetReleaseColor(ld_button);
+    *rgb = button->widget.bg_color;
     return 0;
 }
 
@@ -264,7 +267,7 @@ int picoui_button_get_press_color(struct picoui_button *button, unsigned int *rg
         return -1;
     }
 
-    *rgb = (unsigned int)ldButtonGetPressColor(ld_button);
+    *rgb = button->widget.border_color;
     return 0;
 }
 
@@ -398,6 +401,24 @@ int picoui_button_get_pressed_by_name_id(const struct picoui_widget *root,
     return picoui_button_get_pressed((struct picoui_button *)widget, pressed);
 }
 
+int picoui_button_get_action_state_by_name_id(const struct picoui_widget *root,
+                                              int name_id,
+                                              enum picoui_button_action_state action)
+{
+    struct picoui_widget *widget;
+
+    if (root == 0 || name_id < 0 || name_id > 65535) {
+        return -1;
+    }
+
+    widget = picoui_widget_find_by_name_id(root, name_id);
+    if (widget == 0 || picoui_widget_get_type(widget) != PICOUI_WIDGET_TYPE_BUTTON) {
+        return -1;
+    }
+
+    return (int)xBtnGetState((uint16_t)name_id, (uint8_t)action);
+}
+
 int picoui_button_set_text_color(struct picoui_button *button, unsigned int text_color)
 {
     ldButton_t *ld_button;
@@ -411,7 +432,11 @@ int picoui_button_set_text_color(struct picoui_button *button, unsigned int text
         return -1;
     }
 
-    ldButtonSetTextColor(ld_button, (ldColor)text_color);
+    ldButtonSetTextColor(ld_button,
+                         (ldColor)__RGB((text_color >> 16) & 0xFFU,
+                                        (text_color >> 8) & 0xFFU,
+                                        text_color & 0xFFU));
+    button->widget.text_color = text_color;
     return 0;
 }
 
@@ -428,7 +453,7 @@ int picoui_button_get_text_color(struct picoui_button *button, unsigned int *rgb
         return -1;
     }
 
-    *rgb = (unsigned int)ldButtonGetTextColor(ld_button);
+    *rgb = button->widget.text_color;
     return 0;
 }
 

@@ -138,6 +138,20 @@ int picoui_calendar_set_date(struct picoui_calendar *calendar, int year, int mon
     return picoui_calendar_sync_grid(calendar);
 }
 
+int picoui_calendar_set_use_system_date(struct picoui_calendar *calendar, int enabled)
+{
+    if (calendar == 0) {
+        return -1;
+    }
+
+    if (picoui_backend_calendar_set_use_system_date(calendar->widget.backend_widget, enabled) != 0) {
+        return -1;
+    }
+
+    calendar->use_system_date = enabled != 0;
+    return picoui_calendar_sync_grid(calendar);
+}
+
 int picoui_calendar_set_day_names(struct picoui_calendar *calendar, const char *const day_names[7])
 {
     if (calendar == 0 || day_names == 0) {
@@ -168,6 +182,22 @@ int picoui_calendar_get_date(const struct picoui_calendar *calendar, int *year, 
         mutable_calendar->day = *day;
     }
     return 0;
+}
+
+int picoui_calendar_get_use_system_date(const struct picoui_calendar *calendar)
+{
+    int enabled = 0;
+
+    if (calendar == 0) {
+        return -1;
+    }
+
+    if (picoui_backend_calendar_get_use_system_date((void *)calendar->widget.backend_widget, &enabled) != 0) {
+        return -1;
+    }
+
+    ((struct picoui_calendar *)calendar)->use_system_date = enabled;
+    return enabled;
 }
 
 int picoui_calendar_set_header_visible(struct picoui_calendar *calendar, int visible)

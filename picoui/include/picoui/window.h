@@ -33,6 +33,10 @@ struct picoui_window *picoui_window_create_with_props(struct picoui_app *app,
                                                       const struct picoui_window_props *props);
 int picoui_window_set_background_source(struct picoui_window *window,
                                         struct picoui_image_source *source);
+int picoui_window_set_background_offset(struct picoui_window *window, int offset_x, int offset_y);
+int picoui_window_get_background_offset(struct picoui_window *window,
+                                        int *offset_x,
+                                        int *offset_y);
 int picoui_window_set_color(struct picoui_window *window, unsigned int rgb);
 int picoui_window_get_color(struct picoui_window *window, unsigned int *rgb);
 int picoui_window_set_padding_group(struct picoui_window *window,

@@ -8,6 +8,9 @@ struct picoui_image_source;
 
 int picoui_backend_window_set_background_source(struct picoui_window *window,
                                                 struct picoui_image_source *source);
+int picoui_backend_window_set_background_offset(struct picoui_window *window,
+                                                int offset_x,
+                                                int offset_y);
 int picoui_backend_window_set_bg_color(struct picoui_window *window, unsigned int rgb);
 int picoui_backend_window_get_bg_color(struct picoui_window *window, unsigned int *rgb);
 int picoui_backend_window_set_padding_group(struct picoui_window *window,
@@ -135,6 +138,34 @@ int picoui_window_set_background_source(struct picoui_window *window,
     }
 
     return picoui_backend_window_set_background_source(window, source);
+}
+
+int picoui_window_set_background_offset(struct picoui_window *window, int offset_x, int offset_y)
+{
+    if (!picoui_window_is_valid(window)) {
+        return -1;
+    }
+
+    if (picoui_backend_window_set_background_offset(window, offset_x, offset_y) != 0) {
+        return -1;
+    }
+
+    window->background_offset_x = offset_x;
+    window->background_offset_y = offset_y;
+    return 0;
+}
+
+int picoui_window_get_background_offset(struct picoui_window *window,
+                                        int *offset_x,
+                                        int *offset_y)
+{
+    if (!picoui_window_is_valid(window) || offset_x == 0 || offset_y == 0) {
+        return -1;
+    }
+
+    *offset_x = window->background_offset_x;
+    *offset_y = window->background_offset_y;
+    return 0;
 }
 
 int picoui_window_set_color(struct picoui_window *window, unsigned int rgb)

@@ -65,7 +65,6 @@ bool ldCfgTouchGetPoint(int16_t *x,int16_t *y)
     return touchState;
 }
 
-#if USE_VIRTUAL_RESOURCE == 1
 /**
  * @brief   Read external storage data
  * 
@@ -75,12 +74,15 @@ bool ldCfgTouchGetPoint(int16_t *x,int16_t *y)
  * @param   nSizeInByte     data size
  * @return  无
  */
-void __disp_adapter0_vres_read_memory( intptr_t pObj,
-                                       void *pBuffer,
-                                       uintptr_t pAddress,
-                                       size_t nSizeInByte)
+__WEAK void __disp_adapter0_vres_read_memory( intptr_t pObj,
+                                              void *pBuffer,
+                                              uintptr_t pAddress,
+                                              size_t nSizeInByte)
 {
     (void)pObj;
+    (void)pBuffer;
+    (void)pAddress;
+    (void)nSizeInByte;
 //    norRead(pBuffer,pAddress,nSizeInByte);
 }
 
@@ -91,7 +93,6 @@ uintptr_t __disp_adapter0_vres_get_asset_address(
     (void)ptVRES;
     return pObj;
 }
-#endif
 
 void Disp0_DrawBitmap (uint32_t x,uint32_t y,uint32_t width,uint32_t height,const uint8_t *bitmap)
 {

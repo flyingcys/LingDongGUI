@@ -9,9 +9,9 @@
 - matrix：`tests/picoui/contract/picoui_release_capability_matrix.json`
 - inventory schema：`a-0.8-ldgui-public-api-inventory-v1`，已追加 a-0.9 `group_kind` / `policy_category` 行级字段。
 - matrix schema：`a-0.9-allowlist-policy-v1`
-- 控件类型口径：`src/gui/ldBase.h` 的 `ldWidgetType_t`，共 `28/28` 个控件类型，包含 `background`。
-- LingDongGUI 原生 API 能力口径：`src/gui/ld*.h` public API inventory，共 `611` 条 API。
-- PicoUI 覆盖统计：`allowlisted`: 191, `covered`: 420
+- 控件类型口径：`src/gui/ldBase.h` 的 `ldWidgetType_t`，共 `29/29` 个控件类型，包含 `background` 与 `canvas`。
+- LingDongGUI 原生 API 能力口径：`src/gui/ld*.h` public API inventory，共 `619` 条 API。
+- PicoUI 覆盖统计：`allowlisted`: 178, `covered`: 441
 - `covered` 才表示有 PicoUI API/backend/unit/gate 证据；`allowlisted` 表示已纳入 ledger 但不是 PicoUI user-facing direct wrapper 覆盖。
 - 因此当前不能笼统写“PicoUI 100% direct 覆盖 LingDongGUI 全部原生 API”；应逐 group 看 covered/allowlisted。
 
@@ -19,10 +19,10 @@
 
 当前只达到 a-0.12 定义的 strict direct-wrapper 候选清零；这不是 LingDongGUI native/user-facing 100% 对外能力闭环。
 
-- `covered=420`：有真实 PicoUI public API/backend/unit/gate 证据。
-- `allowlisted=191`：policy ledger 已闭环，且均为 `policy_never_public`。
+- `covered=441`：有真实 PicoUI public API/backend/unit/gate 证据。
+- `allowlisted=178`：policy ledger 已闭环，且均为 `policy_never_public`。
 - `missing_gap_total=0` 只表示没有未建账 native API，不表示 direct 100%。
-- `direct_100_category` 统计：`policy_never_public`: 191
+- `direct_100_category` 统计：`policy_never_public`: 178
 - 严格按“100% direct public API parity”目标看，a-0.12 已把 `base` 的 `optional_public_extension=16` 候选收敛到 `0`。
 - `direct_public_100_complete=true` 只表示 strict direct public API parity 当前没有剩余 public wrapper 候选；不能外推为截图、交互、性能或人工验收完成。
 
@@ -30,9 +30,9 @@
 
 当前未达到 LingDongGUI native/user-facing 100% 对外能力闭环。
 
-- `191` 行 `allowlisted` 不是 PicoUI user-facing direct wrapper；它们只能证明 policy ledger 已处置，不能证明原生能力都对外公开。
+- `178` 行 `allowlisted` 不是 PicoUI user-facing direct wrapper；它们只能证明 policy ledger 已处置，不能证明原生能力都对外公开。
 - 每个 widget group 仍有 lifecycle/show 等 `policy_never_public` 行，因此逐控件页的结论仍是 `policy_complete_not_direct_100`。
-- `background` 没有独立 PicoUI public widget group；当前由 window/root/background source/color 语义承载。如果目标是每个 `ldWidgetType_t` 都有独立 PicoUI public widget，这仍是缺口。
+- `background` 当前已补独立 PicoUI public widget，但 contract 三件套若仍保留旧的 enum-only/policy 口径，需要继续同步更新。
 - `backend_proof` 当前是 ledger 证据标签；checker 会反查 `picoui_api` 是否在 public header 中存在，但尚未反查每个 `backend_proof` token 是否是真实 backend 符号或完整 backend 行为。
 
 ## 按控件能力等价仍需补齐
@@ -41,27 +41,23 @@
 
 | 缺口 | LingDongGUI 来源 | 当前 PicoUI 状态 | 需要补齐的能力 |
 | --- | --- | --- | --- |
-| 键盘自定义布局/按钮表 | `ldKeyboardGetTargetBtnList` | `keyboard` 仅覆盖部分属性和输入态，缺少便携 layout/button list | `picoui_keyboard_set_layout()` 等可表达按键集合、行列、显示文本和值的能力 |
-| 键盘按键事件回调 | `ldKeyboardCallback` | 缺少 PicoUI 对外按键事件钩子 | `picoui_keyboard_set_on_key_event()` 或等价事件能力 |
-| VRES 图片/字体资源 | `ldBaseGetVresImage`、`ldBaseGetVresFont` | 当前作为 resource helper policy allowlist，缺少用户态资源源描述 | `picoui_image_source_from_vres()`、`picoui_font_from_vres()` 或等价资源 provider |
-| 系统时间/日期/星期 | `ldBaseGetTime`、`ldBaseGetDate`、`ldBaseGetWeek` | 当前作为 time helper policy allowlist，缺少 PicoUI app/time provider | `picoui_time_now()`、`picoui_date_now()`、`picoui_weekday()` 或等价 host provider |
-| 页面/场景切换 | `ldGuiJumpPage*`、`__ldGuiJumpPage` | runtime host policy allowlist，缺少用户态 page/window switch | `picoui_app_set_window()`、`picoui_app_switch_window(mode, ms)` 或等价页面切换能力 |
-| background 独立控件与背景移动 | `widgetTypeBackground`、`ldBaseBgMove` | 无独立 `picoui_background_*`；背景移动只按 backend helper allowlist | 明确是否新增独立 background 控件；至少补齐 window/background pan/move 能力 |
-| 自定义绘制/基础绘图 | `ldBaseColor`、`ldBaseDrawLine`、`ldBaseImage`、`ldBaseImageScale`、`ldBaseLabel`、`ldKeyboardBtnUserDraw` | 当前 raw drawing helper/render hook allowlist，缺少用户态 custom draw/canvas | `picoui_canvas` 或 custom widget draw callback，能画线、填色、图像、文字并参与真实 backend 渲染 |
+
 
 ## 按控件能力等价已补齐
 
 | 能力 | LingDongGUI 来源 | PicoUI 补齐状态 | 边界 |
 | --- | --- | --- | --- |
 | 动态移除/销毁控件 | `ldBaseNodeRemove`、各控件 `*_depose` | a-0.13 已新增 `picoui_widget_remove_from_parent()` 与 `picoui_widget_destroy()`，同步更新 PicoUI backend tree 与真实 `ldBase` tree，并覆盖 focus 清理、nameId 查找移除、child count 更新测试 | 当前 `destroy` 定义为用户态销毁绑定和 tree 脱离，不在本线释放所有 widget 外层内存；完整 allocator/free 所有权另线处理 |
-| 按钮全局 action/nameId 状态 | `ldButtonActionInit`、`ldButtonActionIsPressById` | a-0.13 已新增 `picoui_button_get_pressed_by_name_id()`，通过 PicoUI root/nameId 查询真实 button 并读取 native pressed 状态 | 提供按 `nameId` 查询 pressed/action 的用户态等价能力；不暴露 LingDongGUI `ld_scene_t` |
+| 按钮全局 action/nameId 状态 | `ldButtonActionInit`、`ldButtonActionIsPressById` | a-0.13 已新增 `picoui_button_get_pressed_by_name_id()` 与 `picoui_button_get_action_state_by_name_id()`，通过 PicoUI root/nameId 查询真实 button pressed/action 状态 | 提供按 `nameId` 查询 pressed/action 的用户态等价能力；不暴露 LingDongGUI `ld_scene_t` |
+| keyboard 单键自定义绘制 | `ldKeyboardBtnUserDraw` | a-0.14 已新增 `picoui_keyboard_set_draw_callback()`，通过 keyboard custom button list/backend prepare 路径向用户暴露逐键 draw callback | 当前是 portable key draw callback，不直接暴露 Arm-2D tile/raw draw hook |
+| background 独立 public widget | `widgetTypeBackground` | a-0.14 已新增 `picoui_background_create()` 与 `picoui_background_set_source/set_color/get_color/set_offset/get_offset`，并提供 app root 运行/切换入口 | native 仍复用真实 `ldWindow` root/background 语义，不新增 fake renderer |
 
 ## a-0.9 policy schema
 
-`a-0.9` 已把 `611` 行 native API 全部纳入机器可校验 policy schema：
+当前 contract truth 已把 `619` 行 native API 全部纳入机器可校验 policy schema：
 
 - `group_kind` 统计：`widget`: 513, `shared_base`: 63, `runtime_host`: 16, `internal_helper`: 19
-- `policy_category` 统计：`direct_covered`: 420, `lifecycle_internal`: 108, `render_pipeline_internal`: 27, `runtime_host_internal`: 16, `layout_solver_internal`: 14, `memory_internal`: 5, `base_tree_policy`: 4, `resource_time_helper_policy`: 5, `drawing_helper_policy`: 5, `backend_private_hook`: 3, `native_action_private`: 2, `enum_only_semantics`: 2
+- `policy_category` 统计：`direct_covered`: 441, `lifecycle_internal`: 112, `render_pipeline_internal`: 28, `runtime_host_internal`: 11, `layout_solver_internal`: 14, `memory_internal`: 5, `base_tree_policy`: 3, `backend_private_hook`: 1, `native_action_private`: 2, `enum_only_semantics`: 2
 - `covered` 行必须是 `policy_category=direct_covered`。
 - `allowlisted` 行必须是 `required=false`，且必须有非空 `allowlist_reason` 与非 `direct_covered` 的 `policy_category`。
 - group judgement：`policy_complete_not_direct_100`: 28, `non_widget_policy_complete`: 4；当前没有仍处于 `parity_incomplete` 的 matrix group。
@@ -86,7 +82,7 @@
 | 控件类型 | 能力文档 | API group | PicoUI 覆盖摘要 |
 | --- | --- | --- | --- |
 | `window` | [window](./window.md) | `window` | `allowlisted`: 7, `covered`: 16 |
-| `background` | [background](./background.md) | `无` | 无独立 matrix group；由 window/root/background source/color 语义承载。若要求每个 `ldWidgetType_t` 都有独立 PicoUI public widget，则仍是缺口。 |
+| `background` | [background](./background.md) | `无` | a-0.14 已新增独立 `picoui_background_*` public widget；native 仍复用真实 root/background `ldWindow` 语义。 |
 | `button` | [button](./button.md) | `button` | `allowlisted`: 7, `covered`: 20 |
 | `image` | [image](./image.md) | `image` | `allowlisted`: 5, `covered`: 4 |
 | `text` | [text](./text.md) | `text` | `allowlisted`: 5, `covered`: 18 |
@@ -106,7 +102,8 @@
 | `scroll_selecter` | [scroll_selecter](./scroll_selecter.md) | `scroll_selecter` | `allowlisted`: 5, `covered`: 15 |
 | `label` | [label](./label.md) | `label` | `allowlisted`: 5, `covered`: 15 |
 | `table` | [table](./table.md) | `table` | `allowlisted`: 5, `covered`: 31 |
-| `keyboard` | [keyboard](./keyboard.md) | `keyboard` | `allowlisted`: 8, `covered`: 10 |
+| `keyboard` | [keyboard](./keyboard.md) | `keyboard` | `allowlisted`: 6, `covered`: 12 |
+| `canvas` | [canvas](./canvas.md) | `canvas` | `allowlisted`: 5, `covered`: 3 |
 | `animation` | [animation](./animation.md) | `animation` | `allowlisted`: 5, `covered`: 8 |
 | `list` | [list](./list.md) | `list` | `allowlisted`: 5, `covered`: 19 |
 | `message_box` | [message_box](./message_box.md) | `message_box` | `allowlisted`: 5, `covered`: 13 |
@@ -118,7 +115,7 @@
 
 | 分组 | API 条目数 | 能力文档 | PicoUI 覆盖摘要 |
 | --- | --- | --- | --- |
-| `gui` | 16 | [gui](./gui.md) | `allowlisted`: 16 |
+| `gui` | 16 | [gui](./gui.md) | `allowlisted`: 11, `covered`: 5 |
 | `mem` | 5 | [mem](./mem.md) | `allowlisted`: 5 |
 | `switch_internal` | 6 | [switch_internal](./switch_internal.md) | `allowlisted`: 6 |
 | `window_layout_internal` | 8 | [window_layout_internal](./window_layout_internal.md) | `allowlisted`: 8 |
@@ -127,7 +124,7 @@
 
 | 分组 | API 条目数 | 能力文档 | PicoUI 覆盖摘要 |
 | --- | --- | --- | --- |
-| `base` | 63 | [base](./base.md) | `allowlisted`: 14, `covered`: 49；严格 100% direct public API 缺口候选：`0` |
+| `base` | 63 | [base](./base.md) | `allowlisted`: 3, `covered`: 60；严格 100% direct public API 缺口候选：`0` |
 
 ## 可靠性说明
 

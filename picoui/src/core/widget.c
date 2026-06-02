@@ -168,6 +168,8 @@ static struct picoui_rect picoui_rect_from_ld_region(picoui_ld_region_t region)
 static enum picoui_widget_type picoui_widget_type_from_backend_kind(enum picoui_backend_widget_kind kind)
 {
     switch (kind) {
+    case PICOUI_BACKEND_WIDGET_BACKGROUND:
+        return PICOUI_WIDGET_TYPE_BACKGROUND;
     case PICOUI_BACKEND_WIDGET_WINDOW:
         return PICOUI_WIDGET_TYPE_WINDOW;
     case PICOUI_BACKEND_WIDGET_LABEL:
@@ -220,6 +222,8 @@ static enum picoui_widget_type picoui_widget_type_from_backend_kind(enum picoui_
         return PICOUI_WIDGET_TYPE_IMAGE;
     case PICOUI_BACKEND_WIDGET_CALENDAR:
         return PICOUI_WIDGET_TYPE_CALENDAR;
+    case PICOUI_BACKEND_WIDGET_CANVAS:
+        return PICOUI_WIDGET_TYPE_CANVAS;
     default:
         return PICOUI_WIDGET_TYPE_UNKNOWN;
     }

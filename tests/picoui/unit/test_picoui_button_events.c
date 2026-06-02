@@ -1,9 +1,40 @@
 #include "picoui/picoui.h"
 #include "../../../src/gui/ldBase.h"
+#include "../../../src/gui/ldButton.h"
+#include "../../../src/gui/ldGui.h"
 #include "../../../src/misc/ldMsg.h"
 #include "internal.h"
 
 #include <assert.h>
+#include <string.h>
+
+static const uintptr_t k_test_vres_font_addr = 0x2000U;
+extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
+
+void __disp_adapter0_vres_read_memory(intptr_t pObj,
+                                      void *pBuffer,
+                                      uintptr_t pAddress,
+                                      size_t nSizeInByte)
+{
+    static const uint8_t font_header[13] = {
+        16, 0,
+        16, 0,
+        ARM_2D_COLOUR_8BIT,
+        13, 0,
+        8, 0,
+        8, 0,
+        0, 0
+    };
+
+    (void)pObj;
+    assert(pBuffer != 0);
+    memset(pBuffer, 0, nSizeInByte);
+
+    if (pAddress == k_test_vres_font_addr) {
+        assert(nSizeInByte <= sizeof(font_header));
+        memcpy(pBuffer, font_header, nSizeInByte);
+    }
+}
 
 static int press_count = 0;
 static int release_count = 0;
@@ -78,6 +109,9 @@ int main(void)
     int checkbox_cookie = 44;
     int switch_cookie = 55;
     int slider_cookie = 66;
+    struct picoui_font vres_font = {0};
+    arm_2d_vres_font_t *native_font;
+    arm_2d_font_t *button_vres_font = 0;
 
     assert(app != 0);
     assert(win != 0);
@@ -126,6 +160,17 @@ int main(void)
     checkbox_name_id = picoui_widget_get_name_id((const struct picoui_widget *)checkbox);
     assert(button_name_id > 0);
     assert(checkbox_name_id > 0);
+    assert(picoui_font_from_vres(0, &vres_font) == -1);
+    assert(picoui_font_from_vres(k_test_vres_font_addr, 0) == -1);
+    assert(picoui_font_from_vres(k_test_vres_font_addr, &vres_font) == 0);
+    native_font = ldBaseGetVresFont(k_test_vres_font_addr);
+    assert(native_font != 0);
+    assert(native_font->startAddr == k_test_vres_font_addr);
+    assert(native_font->use_as__arm_2d_font_t.fnDrawChar != 0);
+    ldFree(native_font);
+    assert(picoui_button_set_font(button, &vres_font) == 0);
+    button_vres_font = ((ldButton_t *)backend->ld_widget)->ptFont;
+    assert(((arm_2d_vres_font_t *)button_vres_font)->startAddr == k_test_vres_font_addr);
 
     assert(picoui_button_set_pressed(button, 1) == 0);
     assert(picoui_button_get_pressed_by_name_id((const struct picoui_widget *)win,
@@ -147,6 +192,20 @@ int main(void)
     assert(picoui_button_get_pressed_by_name_id((const struct picoui_widget *)win,
                                                 button_name_id,
                                                 0) == -1);
+    xBtnReset();
+    xBtnTick(SYS_TICK_CYCLE_MS, app_state->ld_scene);
+    assert(picoui_button_get_action_state_by_name_id((const struct picoui_widget *)win,
+                                                     button_name_id,
+                                                     PICOUI_BUTTON_ACTION_PRESS) == 0);
+    assert(picoui_button_get_action_state_by_name_id((const struct picoui_widget *)win,
+                                                     button_name_id,
+                                                     PICOUI_BUTTON_ACTION_CLICK) == 0);
+    assert(picoui_button_get_action_state_by_name_id((const struct picoui_widget *)win,
+                                                     checkbox_name_id,
+                                                     PICOUI_BUTTON_ACTION_PRESS) == -1);
+    assert(picoui_button_get_action_state_by_name_id(0,
+                                                     button_name_id,
+                                                     PICOUI_BUTTON_ACTION_PRESS) == -1);
 
     assert(picoui_backend_widget_dispatch_event(button->widget.backend_widget,
                                                 PICOUI_BACKEND_SIGNAL_PRESSED,
@@ -210,6 +269,16 @@ int main(void)
     assert(last_press_cookie == press_cookie);
     assert(backend->last_signal == PICOUI_BACKEND_SIGNAL_PRESSED);
     assert(backend->dispatch_count == 1);
+    assert(ldButtonActionIsPressById((uint16_t)button_name_id, app_state->ld_scene) == true);
+    xBtnTick(SYS_TICK_CYCLE_MS, app_state->ld_scene);
+    assert(ldButtonActionIsPressById((uint16_t)button_name_id, app_state->ld_scene) == true);
+    xBtnTick(SYS_TICK_CYCLE_MS, app_state->ld_scene);
+    assert(picoui_button_get_action_state_by_name_id((const struct picoui_widget *)win,
+                                                     button_name_id,
+                                                     PICOUI_BUTTON_ACTION_HOLD_DOWN) == 1);
+    assert(picoui_button_get_action_state_by_name_id((const struct picoui_widget *)win,
+                                                     button_name_id,
+                                                     PICOUI_BUTTON_ACTION_PRESS) == 1);
 
     assert(ldMsgEmit(app_state->ld_scene->ptMsgQueue,
                      backend->ld_widget,
@@ -228,6 +297,17 @@ int main(void)
     assert(last_click_cookie == click_cookie);
     assert(backend->last_signal == PICOUI_BACKEND_SIGNAL_RELEASED);
     assert(backend->dispatch_count == 2);
+    xBtnTick(SYS_TICK_CYCLE_MS, app_state->ld_scene);
+    xBtnTick(SYS_TICK_CYCLE_MS, app_state->ld_scene);
+    assert(picoui_button_get_action_state_by_name_id((const struct picoui_widget *)win,
+                                                     button_name_id,
+                                                     PICOUI_BUTTON_ACTION_RELEASE) == 1);
+    assert(picoui_button_get_action_state_by_name_id((const struct picoui_widget *)win,
+                                                     button_name_id,
+                                                     PICOUI_BUTTON_ACTION_CLICK) == 1);
+    assert(picoui_button_get_action_state_by_name_id((const struct picoui_widget *)win,
+                                                     button_name_id,
+                                                     PICOUI_BUTTON_ACTION_PRESS) == 0);
 
     last_hold_native_value = CONNECT32(3, 4, 10, 11);
     assert(ldMsgEmit(app_state->ld_scene->ptMsgQueue,
@@ -399,6 +479,9 @@ int main(void)
     assert(picoui_widget_set_visible(&slider->widget, 1) == 0);
 
     ldMsgDeinit(&app_state->ld_scene->ptMsgQueue);
+    ldButtonSetFont((ldButton_t *)backend->ld_widget, (arm_2d_font_t *)&ARM_2D_FONT_6x8);
+    ldFree(button_vres_font);
+    picoui_font_destroy(&vres_font);
     picoui_app_destroy(app);
     return 0;
 }

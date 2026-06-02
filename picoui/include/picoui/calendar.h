@@ -24,11 +24,13 @@ struct picoui_calendar *picoui_calendar_create_with_props(struct picoui_window *
                                                           const struct picoui_calendar_props *props);
 struct picoui_calendar *picoui_calendar_init(struct picoui_window *parent, const char *id);
 int picoui_calendar_set_date(struct picoui_calendar *calendar, int year, int month, int day);
+int picoui_calendar_set_use_system_date(struct picoui_calendar *calendar, int enabled);
 int picoui_calendar_set_day_names(struct picoui_calendar *calendar, const char *const day_names[7]);
 int picoui_calendar_get_date(const struct picoui_calendar *calendar,
                              int *year,
                              int *month,
                              int *day);
+int picoui_calendar_get_use_system_date(const struct picoui_calendar *calendar);
 int picoui_calendar_set_header_visible(struct picoui_calendar *calendar, int visible);
 int picoui_calendar_get_header_visible(const struct picoui_calendar *calendar);
 int picoui_calendar_set_header_format(struct picoui_calendar *calendar, const char *format);

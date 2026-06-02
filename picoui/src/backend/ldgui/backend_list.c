@@ -58,7 +58,10 @@ static int picoui_backend_list_attach_child(struct picoui_backend_widget *parent
 {
     struct picoui_backend_widget *tail;
 
-    if (parent == NULL || child == NULL || child->kind == PICOUI_BACKEND_WIDGET_WINDOW) {
+    if (parent == NULL
+        || child == NULL
+        || child->kind == PICOUI_BACKEND_WIDGET_WINDOW
+        || child->kind == PICOUI_BACKEND_WIDGET_BACKGROUND) {
         return -1;
     }
 
@@ -314,6 +317,7 @@ int picoui_backend_list_set_item_widget(void *backend_widget, int index, void *i
         list_widget->ld_widget == 0 ||
         item_widget->ld_widget == 0 ||
         item_widget->kind == PICOUI_BACKEND_WIDGET_WINDOW ||
+        item_widget->kind == PICOUI_BACKEND_WIDGET_BACKGROUND ||
         item_widget->owner != list_widget->owner ||
         index < 0 ||
         index >= list_widget->list_item_count) {

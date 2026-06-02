@@ -9,6 +9,11 @@ struct picoui_widget;
 struct picoui_app;
 struct picoui_font;
 
+enum picoui_font_kind {
+    PICOUI_FONT_KIND_FAMILY = 0,
+    PICOUI_FONT_KIND_VRES = 1,
+};
+
 typedef void (*picoui_value_changed_cb)(struct picoui_widget *widget,
                                         int value,
                                         void *user_data);
@@ -17,6 +22,8 @@ typedef void (*picoui_event_cb)(struct picoui_widget *widget, void *user_data);
 struct picoui_font {
     const char *family;
     int size;
+    enum picoui_font_kind kind;
+    unsigned int vres_addr;
 };
 
 struct picoui_point {
@@ -66,6 +73,7 @@ enum picoui_widget_type {
     PICOUI_WIDGET_TYPE_CALENDAR,
     PICOUI_WIDGET_TYPE_PROGRESS_WHEEL,
     PICOUI_WIDGET_TYPE_CLOCK,
+    PICOUI_WIDGET_TYPE_CANVAS,
 };
 
 int picoui_widget_set_pos(struct picoui_widget *widget, int x, int y);
