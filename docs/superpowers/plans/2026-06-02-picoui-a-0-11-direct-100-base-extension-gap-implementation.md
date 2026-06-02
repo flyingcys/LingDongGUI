@@ -269,9 +269,9 @@ affected_processes empty or limited to docs/checker-neutral paths
 
 **Owner:** Future worker, only if user asks to implement direct 100%
 
-**Goal:** Split the 16 candidates into implementation lanes without leaking LingDongGUI internals into PicoUI public API.
+**Goal:** Split the 16 candidates into future implementation lanes without leaking LingDongGUI internals into PicoUI public API. This is a handoff record only; a-0.11 does not execute these implementation lanes.
 
-- [ ] **Step 1: Geometry helper design lane**
+- [x] **Step 1: Geometry helper design lane**
 
 Candidate APIs:
 
@@ -289,7 +289,9 @@ Decision required before code:
 Design portable PicoUI geometry/alignment helpers or explicitly keep them policy-only.
 ```
 
-- [ ] **Step 2: Focus navigation design lane**
+执行记录（2026-06-02）：已拆成 future-only lane；本线不设计或实现 public API。
+
+- [x] **Step 2: Focus navigation design lane**
 
 Candidate APIs:
 
@@ -304,7 +306,9 @@ Decision required before code:
 Design PicoUI focus/navigation public API without exposing ld_scene_t directly.
 ```
 
-- [ ] **Step 3: Tree traversal design lane**
+执行记录（2026-06-02）：已拆成 future-only lane；本线不设计或实现 public API。
+
+- [x] **Step 3: Tree traversal design lane**
 
 Candidate APIs:
 
@@ -322,7 +326,9 @@ Decision required before code:
 Design PicoUI widget tree traversal API or reject public traversal with explicit policy.
 ```
 
-- [ ] **Step 4: Name/type lookup design lane**
+执行记录（2026-06-02）：已拆成 future-only lane；本线不设计或实现 public API。
+
+- [x] **Step 4: Name/type lookup design lane**
 
 Candidate APIs:
 
@@ -338,6 +344,8 @@ Decision required before code:
 ```text
 Design portable widget id/name/type API without leaking ldWidgetType_t or scene macros.
 ```
+
+执行记录（2026-06-02）：已拆成 future-only lane；本线不设计或实现 public API。
 
 ## 3. Self-review checklist
 
