@@ -22,6 +22,8 @@
 #include "arm_2d.h"
 #include "arm_2d_helper.h"
 #include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "ldSlider.h"
@@ -50,6 +52,20 @@ const ldBaseWidgetFunc_t ldSliderFunc = {
     .frameComplete = (ldFrameCompleteFunc_t)ldSlider_on_frame_complete,
     .show = (ldShowFunc_t)ldSlider_show,
 };
+
+static bool ldSliderTouchLogEnabled(void)
+{
+    static int initialized = 0;
+    static int enabled = 0;
+
+    if (!initialized) {
+        const char *env = getenv("PICOUI_TOUCH_LOG");
+        enabled = (env != NULL && env[0] != '\0' && env[0] != '0') ? 1 : 0;
+        initialized = 1;
+    }
+
+    return enabled != 0;
+}
 
 static bool slotSliderMove(ld_scene_t *ptScene,ldMsg_t msg)
 {
@@ -94,6 +110,15 @@ static bool slotSliderMove(ld_scene_t *ptScene,ldMsg_t msg)
         ptWidget->permille = 1000 - ((uint32_t)tClickLocal.iY * 1000) / (ptWidget->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iHeight - ptWidget->indicWidth);
     }
     ldMsgEmit(ptScene->ptMsgQueue,ptWidget,SIGNAL_VALUE_CHANGED,ptWidget->permille);
+    if (ldSliderTouchLogEnabled()) {
+        printf("[PICOUI_TOUCH][SLIDER] widget=%u local=(%d,%d) permille=%u signal=%u\n",
+               (unsigned int)ptWidget->use_as__ldBase_t.nameId,
+               tClickLocal.iX,
+               tClickLocal.iY,
+               (unsigned int)ptWidget->permille,
+               (unsigned int)msg.signal);
+        fflush(stdout);
+    }
 
     ptWidget->use_as__ldBase_t.isDirtyRegionUpdate = true;
 

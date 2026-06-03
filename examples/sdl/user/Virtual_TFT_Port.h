@@ -75,6 +75,8 @@ extern void VT_sdl_mark_dirty_region(const arm_2d_region_t *ptRegion);
 *******************************************************************************/
 extern
 bool VT_mouse_get_location(arm_2d_location_t *ptLocation);
+extern
+void VT_sdl_set_pointer_state(int16_t x, int16_t y, bool pressed);
 
 void vtFillSingleColor(int32_t x1, int32_t y1, int32_t x2, int32_t y2, color_typedef color);
 void vtFillMultipleColors(int32_t x1, int32_t y1, int32_t x2, int32_t y2, color_typedef * color_p);

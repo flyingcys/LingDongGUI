@@ -147,6 +147,21 @@ bool VT_mouse_get_location(arm_2d_location_t *ptLocation)
     return bPressed;
 }
 
+void VT_sdl_set_pointer_state(int16_t x, int16_t y, bool pressed)
+{
+    if (NULL != s_ptRefreshMutex) {
+        SDL_LockMutex(s_ptRefreshMutex);
+    }
+    last_x = x;
+    last_y = y;
+    left_button_is_down = pressed;
+    s_tPendingPointer.bButtonChanged = false;
+    s_bPointerPending = false;
+    if (NULL != s_ptRefreshMutex) {
+        SDL_UnlockMutex(s_ptRefreshMutex);
+    }
+}
+
 #if 0
 int quit_filter(void * userdata, SDL_Event * event)
 {

@@ -22,6 +22,7 @@
 #include "ldSwitch.h"
 #include "ldWindow.h"
 #include "ldWindowLayoutInternal.h"
+#include "arm_2d_disp_adapter_0.h"
 #include <stdarg.h>
 #if LD_MEM_MODE == MEM_MODE_TLFS
 #include "tlsf.h"
@@ -946,6 +947,8 @@ int16_t ldBaseAutoVerticalGridAlign(arm_2d_region_t widgetRegion,int16_t current
     return targetOffset;
 }
 
+#if USE_VIRTUAL_RESOURCE
+
 arm_2d_vres_t* ldBaseGetVresImage(uint32_t addr)
 {
     uint8_t header[16]={0};
@@ -1079,6 +1082,22 @@ arm_2d_vres_font_t* ldBaseGetVresFont(uint32_t addr)
     }
     return ptFont;
 }
+
+#else
+
+arm_2d_vres_t* ldBaseGetVresImage(uint32_t addr)
+{
+    (void)addr;
+    return NULL;
+}
+
+arm_2d_vres_font_t* ldBaseGetVresFont(uint32_t addr)
+{
+    (void)addr;
+    return NULL;
+}
+
+#endif
 
 static int32_t manhattanDistance(ldBase_t *ptCurrent, ldBase_t *ptNext, ldNavDir_t tDir)
 {

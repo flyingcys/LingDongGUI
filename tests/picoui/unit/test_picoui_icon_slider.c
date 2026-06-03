@@ -208,18 +208,18 @@ static void test_icon_slider_init_aliases_and_shared_base_round_trip(void)
     assert(ld_icon_slider->isHorizontalScroll == false);
 
     assert(picoui_widget_set_pos(&icon_slider->widget, 8, 12) == 0);
-    assert(((ldBase_t *)ld_icon_slider)->tRegion.tLocation.iX == 8);
-    assert(((ldBase_t *)ld_icon_slider)->tRegion.tLocation.iY == 12);
+    assert(((ldBase_t *)ld_icon_slider)->use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 8);
+    assert(((ldBase_t *)ld_icon_slider)->use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 12);
     assert(picoui_widget_set_visible(&icon_slider->widget, 0) == 0);
-    assert(((ldBase_t *)ld_icon_slider)->bIsVisible == false);
+    assert(((ldBase_t *)ld_icon_slider)->isHidden == true);
     assert(picoui_widget_set_opacity(&icon_slider->widget, 61) == 0);
-    assert(((ldBase_t *)ld_icon_slider)->chOpacity == 61);
+    assert(((ldBase_t *)ld_icon_slider)->opacity == 61);
     assert(picoui_widget_set_selectable(&icon_slider->widget, 0) == 0);
     assert(((ldBase_t *)ld_icon_slider)->isSelectable == false);
     assert(picoui_widget_set_selected(&icon_slider->widget, 1) == 0);
-    assert(((ldBase_t *)ld_icon_slider)->isSelect == true);
+    assert(((ldBase_t *)ld_icon_slider)->isSelected == true);
     assert(picoui_widget_set_corner(&icon_slider->widget, 4) == 0);
-    assert(((ldBase_t *)ld_icon_slider)->chCorner == 4);
+    assert(((ldBase_t *)ld_icon_slider)->isCorner == true);
 
     picoui_app_destroy(app);
 }

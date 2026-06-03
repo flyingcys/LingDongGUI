@@ -186,19 +186,19 @@ static void test_gauge_init_and_shared_base_aliases_round_trip(struct picoui_win
     assert(picoui_gauge_get_angle(gauge) == 0.0f);
 
     assert(picoui_widget_set_pos(&gauge->widget, 14, 18) == 0);
-    assert(((ldBase_t *)ld_gauge)->tRegion.tLocation.iX == 14);
-    assert(((ldBase_t *)ld_gauge)->tRegion.tLocation.iY == 18);
+    assert(((ldBase_t *)ld_gauge)->use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 14);
+    assert(((ldBase_t *)ld_gauge)->use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 18);
 
     assert(picoui_widget_set_visible(&gauge->widget, 0) == 0);
-    assert(((ldBase_t *)ld_gauge)->bIsVisible == false);
+    assert(((ldBase_t *)ld_gauge)->isHidden == true);
     assert(picoui_widget_set_opacity(&gauge->widget, 71) == 0);
-    assert(((ldBase_t *)ld_gauge)->chOpacity == 71);
+    assert(((ldBase_t *)ld_gauge)->opacity == 71);
     assert(picoui_widget_set_selectable(&gauge->widget, 0) == 0);
     assert(((ldBase_t *)ld_gauge)->isSelectable == false);
     assert(picoui_widget_set_selected(&gauge->widget, 1) == 0);
-    assert(((ldBase_t *)ld_gauge)->isSelect == true);
+    assert(((ldBase_t *)ld_gauge)->isSelected == true);
     assert(picoui_widget_set_corner(&gauge->widget, 6) == 0);
-    assert(((ldBase_t *)ld_gauge)->chCorner == 6);
+    assert(((ldBase_t *)ld_gauge)->isCorner == true);
 }
 
 int main(void)

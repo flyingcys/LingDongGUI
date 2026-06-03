@@ -20,6 +20,8 @@
 #define __ARM_2D_INHERIT__
 #include "arm_2d.h"
 #include "ldGui.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 static void ldGuiDisposeNodeTree(ld_scene_t *ptScene, ldBase_t *ptWidget)
 {
@@ -60,6 +62,20 @@ bool isFullWidgetUpdate=false;
 
 ldTimer_t sysTimer10ms=0;
 
+static bool ldGuiTouchLogEnabled(void)
+{
+    static int initialized = 0;
+    static int enabled = 0;
+
+    if (!initialized) {
+        const char *env = getenv("PICOUI_TOUCH_LOG");
+        enabled = (env != NULL && env[0] != '\0' && env[0] != '0') ? 1 : 0;
+        initialized = 1;
+    }
+
+    return enabled != 0;
+}
+
 void ldGuiClickedAction(ld_scene_t *ptScene,uint8_t touchSignal,arm_2d_location_t tLocation)
 {
     ldBase_t *ptWidget;
@@ -95,6 +111,13 @@ void ldGuiClickedAction(ld_scene_t *ptScene,uint8_t touchSignal,arm_2d_location_
             u64Temp=tLocation.iX;
             u64Temp<<=16;
             u64Temp+=tLocation.iY;
+            if (ldGuiTouchLogEnabled()) {
+                printf("[PICOUI_TOUCH][HIT] signal=press widget=%u point=(%d,%d)\n",
+                       (unsigned int)ptWidget->nameId,
+                       tLocation.iX,
+                       tLocation.iY);
+                fflush(stdout);
+            }
             emit(ptWidget->nameId,touchSignal,u64Temp);
         }
         break;
@@ -106,6 +129,15 @@ void ldGuiClickedAction(ld_scene_t *ptScene,uint8_t touchSignal,arm_2d_location_
             ptWidget=prevWidget;//不可以把static变量作为函数变量调用
             if(ptWidget!=NULL)
             {
+                if (ldGuiTouchLogEnabled()) {
+                    printf("[PICOUI_TOUCH][HIT] signal=hold widget=%u point=(%d,%d) press=(%d,%d)\n",
+                           (unsigned int)ptWidget->nameId,
+                           tLocation.iX,
+                           tLocation.iY,
+                           pressLocation.iX,
+                           pressLocation.iY);
+                    fflush(stdout);
+                }
                 u64Temp=tLocation.iX-pressLocation.iX;
                 u64Temp<<=16;
                 u64Temp+=tLocation.iY-pressLocation.iY;
@@ -125,6 +157,13 @@ void ldGuiClickedAction(ld_scene_t *ptScene,uint8_t touchSignal,arm_2d_location_
         ptWidget=prevWidget;
         if(ptWidget!=NULL)
         {
+            if (ldGuiTouchLogEnabled()) {
+                printf("[PICOUI_TOUCH][HIT] signal=release widget=%u point=(%d,%d)\n",
+                       (unsigned int)ptWidget->nameId,
+                       prevLocation.iX,
+                       prevLocation.iY);
+                fflush(stdout);
+            }
             //cal speed
             deltaMoveTime=arm_2d_helper_convert_ticks_to_ms(arm_2d_helper_get_system_timestamp())-deltaMoveTime;
             pressLocation.iX=(prevLocation.iX-pressLocation.iX);

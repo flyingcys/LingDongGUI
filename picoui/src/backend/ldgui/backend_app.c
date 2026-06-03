@@ -3,6 +3,7 @@
 
 #include <SDL.h>
 #include "arm_2d.h"
+#include "ldConfig.h"
 #include "ldBase.h"
 #include "ldGui.h"
 #include "arm_2d_disp_adapter_0.h"
@@ -18,6 +19,41 @@
 
 __attribute__((weak)) void VT_enter_global_mutex(void) {}
 __attribute__((weak)) void VT_leave_global_mutex(void) {}
+__attribute__((weak)) void ldCfgTouchSetPoint(int16_t x, int16_t y, bool pressed)
+{
+    (void)x;
+    (void)y;
+    (void)pressed;
+}
+
+static int picoui_backend_touch_log_enabled(void)
+{
+    static int initialized = 0;
+    static int enabled = 0;
+
+    if (!initialized) {
+        const char *env = getenv("PICOUI_TOUCH_LOG");
+        enabled = (env != NULL && env[0] != '\0' && env[0] != '0') ? 1 : 0;
+        initialized = 1;
+    }
+
+    return enabled;
+}
+
+static int16_t picoui_backend_map_pointer_axis(int value, int window_extent, int target_extent)
+{
+    (void)window_extent;
+    (void)target_extent;
+
+    if (value < 0) {
+        return 0;
+    }
+    if (value > 32767) {
+        return 32767;
+    }
+
+    return (int16_t)value;
+}
 
 static void picoui_backend_runtime_page_init(ld_scene_t *scene)
 {
@@ -46,6 +82,37 @@ struct picoui_backend_runtime_state {
     int smoke_layout_used;
     int smoke_layout_marker_logged;
 };
+
+static void picoui_backend_commit_pointer_event(struct picoui_backend_runtime_state *state,
+                                                int x,
+                                                int y,
+                                                int pressed)
+{
+    int window_width = PICOUI_RUNTIME_WIDTH;
+    int window_height = PICOUI_RUNTIME_HEIGHT;
+    int16_t mapped_x;
+    int16_t mapped_y;
+
+    if (state == NULL || state->window == NULL) {
+        return;
+    }
+
+    SDL_GetWindowSize(state->window, &window_width, &window_height);
+    mapped_x = picoui_backend_map_pointer_axis(x, window_width, LD_CFG_SCREEN_WIDTH);
+    mapped_y = picoui_backend_map_pointer_axis(y, window_height, LD_CFG_SCREEN_HEIGHT);
+    if (picoui_backend_touch_log_enabled()) {
+        printf("[PICOUI_TOUCH][SDL->LD] raw=(%d,%d) window=(%d,%d) mapped=(%d,%d) pressed=%d\n",
+               x,
+               y,
+               window_width,
+               window_height,
+               mapped_x,
+               mapped_y,
+               pressed ? 1 : 0);
+        fflush(stdout);
+    }
+    ldCfgTouchSetPoint(mapped_x, mapped_y, pressed != 0);
+}
 
 static const ldPageFuncGroup_t g_picoui_backend_runtime_page = {
     .init = picoui_backend_runtime_page_init,
@@ -643,6 +710,7 @@ static void picoui_backend_render(struct picoui_backend_runtime_state *state, st
                 state->smoke_layout_marker_logged = 1;
             }
             ldGuiFrameStart(app_state->ld_scene);
+            ldGuiTouchProcess(app_state->ld_scene);
             ldMsgProcess(app_state->ld_scene);
             ldGuiDraw(app_state->ld_scene, &state->real_tile, true);
             ldGuiFrameComplete(app_state->ld_scene);
@@ -702,6 +770,47 @@ int picoui_backend_app_run(struct picoui_app *app, struct picoui_window *window)
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
                 running = 0;
+            } else if (event.type == SDL_MOUSEBUTTONDOWN &&
+                       event.button.button == SDL_BUTTON_LEFT) {
+                if (picoui_backend_touch_log_enabled()) {
+                    printf("[PICOUI_TOUCH][SDL] type=down button=%u pos=(%d,%d)\n",
+                           (unsigned int)event.button.button,
+                           event.button.x,
+                           event.button.y);
+                    fflush(stdout);
+                }
+                picoui_backend_commit_pointer_event(state,
+                                                    event.button.x,
+                                                    event.button.y,
+                                                    1);
+            } else if (event.type == SDL_MOUSEBUTTONUP &&
+                       event.button.button == SDL_BUTTON_LEFT) {
+                if (picoui_backend_touch_log_enabled()) {
+                    printf("[PICOUI_TOUCH][SDL] type=up button=%u pos=(%d,%d)\n",
+                           (unsigned int)event.button.button,
+                           event.button.x,
+                           event.button.y);
+                    fflush(stdout);
+                }
+                picoui_backend_commit_pointer_event(state,
+                                                    event.button.x,
+                                                    event.button.y,
+                                                    0);
+            } else if (event.type == SDL_MOUSEMOTION) {
+                if (picoui_backend_touch_log_enabled()) {
+                    printf("[PICOUI_TOUCH][SDL] type=motion buttons=0x%x pos=(%d,%d)\n",
+                           (unsigned int)event.motion.state,
+                           event.motion.x,
+                           event.motion.y);
+                    fflush(stdout);
+                }
+                picoui_backend_commit_pointer_event(state,
+                                                    event.motion.x,
+                                                    event.motion.y,
+                                                    (event.motion.state & SDL_BUTTON_LMASK) != 0U);
+            } else if (event.type == SDL_WINDOWEVENT &&
+                       event.window.event == SDL_WINDOWEVENT_EXPOSED) {
+                SDL_RenderPresent(state->renderer);
             }
         }
 

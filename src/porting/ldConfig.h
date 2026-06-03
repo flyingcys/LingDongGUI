@@ -8,6 +8,8 @@ extern "C" {
 #include "stdint.h"
 #include "stdbool.h"
 
+void ldCfgTouchSetPoint(int16_t x, int16_t y, bool pressed);
+
 //-------- <<< Use Configuration Wizard in Context Menu >>> -----------------
 
 // base config

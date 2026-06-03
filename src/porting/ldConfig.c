@@ -5,7 +5,25 @@
 #if defined(__PERF_COUNTER__)
 #include "perf_counter.h"
 #endif
+#include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
+
+static bool s_ld_cfg_touch_pressed = false;
+static int16_t s_ld_cfg_touch_x = -1;
+static int16_t s_ld_cfg_touch_y = -1;
+static int s_ld_cfg_touch_log_init = 0;
+static int s_ld_cfg_touch_log_enabled = 0;
+
+static int ldCfgTouchLogEnabled(void)
+{
+    if (!s_ld_cfg_touch_log_init) {
+        const char *env = getenv("PICOUI_TOUCH_LOG");
+        s_ld_cfg_touch_log_enabled = (env != NULL && env[0] != '\0' && env[0] != '0') ? 1 : 0;
+        s_ld_cfg_touch_log_init = 1;
+    }
+    return s_ld_cfg_touch_log_enabled;
+}
 
 __WEAK void __aeabi_assert(const char *chCond, const char *chLine, int wErrCode)
 {
@@ -27,12 +45,9 @@ __WEAK void __aeabi_assert(const char *chCond, const char *chLine, int wErrCode)
  */
 bool ldCfgTouchGetPoint(int16_t *x,int16_t *y)
 {
-    bool touchState=false;
-    int16_t rx;
-    int16_t ry;
-    
-    //添加触摸函数
-//    touchState=vtMouseGetPoint(&rx,&ry);
+    bool touchState = s_ld_cfg_touch_pressed;
+    int16_t rx = s_ld_cfg_touch_x;
+    int16_t ry = s_ld_cfg_touch_y;
 
     if((touchState!=0)&&(((rx!=-1)&&(ry!=-1))||((rx!=0)&&(ry!=0))))
     {
@@ -62,7 +77,30 @@ bool ldCfgTouchGetPoint(int16_t *x,int16_t *y)
         *x=-1;
         *y=-1;
     }
+    if (ldCfgTouchLogEnabled()) {
+        printf("[PICOUI_TOUCH][GET] pressed=%d raw=(%d,%d) out=(%d,%d)\n",
+               s_ld_cfg_touch_pressed ? 1 : 0,
+               s_ld_cfg_touch_x,
+               s_ld_cfg_touch_y,
+               *x,
+               *y);
+        fflush(stdout);
+    }
     return touchState;
+}
+
+void ldCfgTouchSetPoint(int16_t x, int16_t y, bool pressed)
+{
+    s_ld_cfg_touch_pressed = pressed;
+    s_ld_cfg_touch_x = x;
+    s_ld_cfg_touch_y = y;
+    if (ldCfgTouchLogEnabled()) {
+        printf("[PICOUI_TOUCH][SET] pressed=%d point=(%d,%d)\n",
+               pressed ? 1 : 0,
+               x,
+               y);
+        fflush(stdout);
+    }
 }
 
 /**
