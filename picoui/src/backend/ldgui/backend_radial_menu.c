@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2023-2026 flyingcys (flyingcys@gmail.com). All rights reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "backend.h"
 #include "internal.h"
 #include "ldBase.h"
@@ -97,6 +115,18 @@ static bool picoui_backend_radial_menu_native_slot(struct ld_scene_t *scene, ldM
     return false;
 }
 
+/**
+ * @brief Create backend for radial menu
+ *
+ * @param[in] parent Parent widget
+ * @param[in] id Widget identifier string
+ * @param[in] width Width in pixels
+ * @param[in] height Height in pixels
+ * @param[in] x_axis x axis
+ * @param[in] y_axis y axis
+ * @param[in] item_max item max
+ */
+
 void *picoui_backend_create_radial_menu(void *parent,
                                         const char *id,
                                         int width,
@@ -167,6 +197,14 @@ void *picoui_backend_create_radial_menu(void *parent,
     return widget;
 }
 
+/**
+ * @brief radial: menu add item
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] id Widget identifier string
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_radial_menu_add_item(void *backend_widget, const char *id)
 {
     struct picoui_backend_widget *widget = backend_widget;
@@ -197,6 +235,15 @@ int picoui_backend_radial_menu_add_item(void *backend_widget, const char *id)
     }
     return 0;
 }
+
+/**
+ * @brief radial: menu add item with source
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] id Widget identifier string
+ * @param[in] source Image source
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_radial_menu_add_item_with_source(void *backend_widget,
                                                     const char *id,
@@ -232,6 +279,14 @@ int picoui_backend_radial_menu_add_item_with_source(void *backend_widget,
     return 0;
 }
 
+/**
+ * @brief radial: menu set selected index
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] index Index
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_radial_menu_set_selected_index(void *backend_widget, int index)
 {
     struct picoui_backend_widget *widget = backend_widget;
@@ -255,6 +310,13 @@ int picoui_backend_radial_menu_set_selected_index(void *backend_widget, int inde
     return 0;
 }
 
+/**
+ * @brief radial: menu get selected index
+ *
+ * @param[in] backend_widget backend widget
+ * @return -1 on failure
+ */
+
 int picoui_backend_radial_menu_get_selected_index(void *backend_widget)
 {
     ldRadialMenu_t *ld_radial_menu = picoui_backend_radial_menu_get_ld(backend_widget);
@@ -265,6 +327,14 @@ int picoui_backend_radial_menu_get_selected_index(void *backend_widget)
 
     return (int)ld_radial_menu->selectItem;
 }
+
+/**
+ * @brief radial: menu offset selection
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] offset Offset
+ * @return -1 on failure
+ */
 
 int picoui_backend_radial_menu_offset_selection(void *backend_widget, int offset)
 {
@@ -292,6 +362,14 @@ int picoui_backend_radial_menu_offset_selection(void *backend_widget, int offset
     return picoui_backend_radial_menu_set_selected_index(backend_widget, next_index);
 }
 
+/**
+ * @brief radial: menu set default item
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] index Index
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_radial_menu_set_default_item(void *backend_widget, int index)
 {
     struct picoui_backend_widget *widget = backend_widget;
@@ -314,6 +392,14 @@ int picoui_backend_radial_menu_set_default_item(void *backend_widget, int index)
     widget->value = index;
     return 0;
 }
+
+/**
+ * @brief radial: menu click item
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] index Index
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_radial_menu_click_item(void *backend_widget, int index)
 {
@@ -338,6 +424,14 @@ int picoui_backend_radial_menu_click_item(void *backend_widget, int index)
     return 0;
 }
 
+/**
+ * @brief radial: menu offset item
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] offset Offset
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_radial_menu_offset_item(void *backend_widget, int offset)
 {
     struct picoui_backend_widget *widget = backend_widget;
@@ -358,6 +452,13 @@ int picoui_backend_radial_menu_offset_item(void *backend_widget, int offset)
     ldRadialMenuSetOffsetItem(ld_radial_menu, (int8_t)offset);
     return 0;
 }
+
+/**
+ * @brief radial: menu bind host
+ *
+ * @param[in] backend_widget backend widget
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_radial_menu_bind_host(void *backend_widget)
 {

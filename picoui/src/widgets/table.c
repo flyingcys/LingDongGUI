@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2023-2026 flyingcys (flyingcys@gmail.com). All rights reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "internal.h"
 #include "picoui/table.h"
 #include "../backend/ldgui/backend.h"
@@ -40,6 +58,16 @@ static ldTable_t *picoui_table_get_ld_widget(const struct picoui_table *table)
     return (ldTable_t *)backend->ld_widget;
 }
 
+/**
+ * @brief Create table widget
+ *
+ * @param[in] parent Parent widget
+ * @param[in] id Widget identifier string
+ * @param[in] rows Row definitions
+ * @param[in] columns Column definitions
+ * @return Pointer to the object on success, NULL on failure
+ */
+
 struct picoui_table *picoui_table_create(struct picoui_window *parent,
                                          const char *id,
                                          int rows,
@@ -81,6 +109,14 @@ struct picoui_table *picoui_table_create(struct picoui_window *parent,
     return table;
 }
 
+/**
+ * @brief Create table widget with properties
+ *
+ * @param[in] parent Parent widget
+ * @param[in] props Properties structure
+ * @return Pointer to the object on success, NULL on failure
+ */
+
 struct picoui_table *picoui_table_create_with_props(struct picoui_window *parent,
                                                     const struct picoui_table_props *props)
 {
@@ -120,6 +156,16 @@ struct picoui_table *picoui_table_create_with_props(struct picoui_window *parent
     return table;
 }
 
+/**
+ * @brief table init
+ *
+ * @param[in] parent Parent widget
+ * @param[in] id Widget identifier string
+ * @param[in] rows Row definitions
+ * @param[in] columns Column definitions
+ * @return Pointer to the object
+ */
+
 struct picoui_table *picoui_table_init(struct picoui_window *parent,
                                        const char *id,
                                        int rows,
@@ -128,10 +174,26 @@ struct picoui_table *picoui_table_init(struct picoui_window *parent,
     return picoui_table_create(parent, id, rows, columns);
 }
 
+/**
+ * @brief Set keyboard of table widget
+ *
+ * @param[in] table table
+ * @param[in] keyboard_binding keyboard binding
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_table_set_keyboard(struct picoui_table *table, unsigned int keyboard_binding)
 {
     return picoui_table_set_keyboard_binding(table, keyboard_binding);
 }
+
+/**
+ * @brief Set keyboard binding of table widget
+ *
+ * @param[in] table table
+ * @param[in] keyboard_binding keyboard binding
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_table_set_keyboard_binding(struct picoui_table *table, unsigned int keyboard_binding)
 {
@@ -147,6 +209,14 @@ int picoui_table_set_keyboard_binding(struct picoui_table *table, unsigned int k
     return 0;
 }
 
+/**
+ * @brief Get keyboard binding of table widget
+ *
+ * @param[in] table table
+ * @param[in] keyboard_binding keyboard binding
+ * @return -1 on failure
+ */
+
 int picoui_table_get_keyboard_binding(const struct picoui_table *table, unsigned int *keyboard_binding)
 {
     if (table == 0 || keyboard_binding == 0) {
@@ -156,6 +226,13 @@ int picoui_table_get_keyboard_binding(const struct picoui_table *table, unsigned
     return picoui_backend_table_get_keyboard_binding((void *)table->widget.backend_widget,
                                                      keyboard_binding);
 }
+
+/**
+ * @brief tabel show keyboard
+ *
+ * @param[in] table table
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_tabel_show_keyboard(struct picoui_table *table)
 {
@@ -187,6 +264,16 @@ int picoui_tabel_show_keyboard(struct picoui_table *table)
     return 0;
 }
 
+/**
+ * @brief Set cell text of table widget
+ *
+ * @param[in] table table
+ * @param[in] row Row index
+ * @param[in] column Column index
+ * @param[in] text Text widget instance
+ * @return -1 on failure
+ */
+
 int picoui_table_set_cell_text(struct picoui_table *table,
                                int row,
                                int column,
@@ -199,10 +286,28 @@ int picoui_table_set_cell_text(struct picoui_table *table,
     return picoui_backend_table_set_cell_text(table->widget.backend_widget, row, column, text);
 }
 
+/**
+ * @brief Set item text of table widget
+ *
+ * @param[in] table table
+ * @param[in] row Row index
+ * @param[in] column Column index
+ * @param[in] text Text widget instance
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_table_set_item_text(struct picoui_table *table, int row, int column, const char *text)
 {
     return picoui_table_set_cell_text(table, row, column, text);
 }
+
+/**
+ * @brief Get cell text of table widget
+ *
+ * @param[in] table table
+ * @param[in] row Row index
+ * @param[in] column Column index
+ */
 
 const char *picoui_table_get_cell_text(const struct picoui_table *table, int row, int column)
 {
@@ -213,10 +318,29 @@ const char *picoui_table_get_cell_text(const struct picoui_table *table, int row
     return picoui_backend_table_get_cell_text((void *)table->widget.backend_widget, row, column);
 }
 
+/**
+ * @brief Get item text of table widget
+ *
+ * @param[in] table table
+ * @param[in] row Row index
+ * @param[in] column Column index
+ */
+
 const char *picoui_table_get_item_text(const struct picoui_table *table, int row, int column)
 {
     return picoui_table_get_cell_text(table, row, column);
 }
+
+/**
+ * @brief Set cell editable of table widget
+ *
+ * @param[in] table table
+ * @param[in] row Row index
+ * @param[in] column Column index
+ * @param[in] editable editable
+ * @param[in] text_max text max
+ * @return -1 on failure
+ */
 
 int picoui_table_set_cell_editable(struct picoui_table *table,
                                    int row,
@@ -235,6 +359,17 @@ int picoui_table_set_cell_editable(struct picoui_table *table,
                                                   text_max);
 }
 
+/**
+ * @brief Set item editable of table widget
+ *
+ * @param[in] table table
+ * @param[in] row Row index
+ * @param[in] column Column index
+ * @param[in] editable editable
+ * @param[in] text_max text max
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_table_set_item_editable(struct picoui_table *table,
                                    int row,
                                    int column,
@@ -243,6 +378,19 @@ int picoui_table_set_item_editable(struct picoui_table *table,
 {
     return picoui_table_set_cell_editable(table, row, column, editable, text_max);
 }
+
+/**
+ * @brief Set item image of table widget
+ *
+ * @param[in] table table
+ * @param[in] row Row index
+ * @param[in] column Column index
+ * @param[in] x X coordinate
+ * @param[in] y Y coordinate
+ * @param[in] source Image source
+ * @param[in] mask_color mask color
+ * @return -1 on failure
+ */
 
 int picoui_table_set_item_image(struct picoui_table *table,
                                 int row,
@@ -265,6 +413,22 @@ int picoui_table_set_item_image(struct picoui_table *table,
                                                source,
                                                mask_color);
 }
+
+/**
+ * @brief Set item button of table widget
+ *
+ * @param[in] table table
+ * @param[in] row Row index
+ * @param[in] column Column index
+ * @param[in] x X coordinate
+ * @param[in] y Y coordinate
+ * @param[in] release_source release source
+ * @param[in] release_mask_color release mask color
+ * @param[in] press_source press source
+ * @param[in] press_mask_color press mask color
+ * @param[in] checkable checkable
+ * @return -1 on failure
+ */
 
 int picoui_table_set_item_button(struct picoui_table *table,
                                  int row,
@@ -296,6 +460,13 @@ int picoui_table_set_item_button(struct picoui_table *table,
                                                 checkable != 0);
 }
 
+/**
+ * @brief Set excel type of table widget
+ *
+ * @param[in] table table
+ * @return -1 on failure
+ */
+
 int picoui_table_set_excel_type(struct picoui_table *table)
 {
     if (table == 0) {
@@ -305,10 +476,26 @@ int picoui_table_set_excel_type(struct picoui_table *table)
     return picoui_backend_table_set_excel_type(table->widget.backend_widget);
 }
 
+/**
+ * @brief Set background color of table widget
+ *
+ * @param[in] table table
+ * @param[in] bg_color Background color
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_table_set_background_color(struct picoui_table *table, unsigned int bg_color)
 {
     return picoui_table_set_bg_color(table, bg_color);
 }
+
+/**
+ * @brief Set align grid of table widget
+ *
+ * @param[in] table table
+ * @param[in] enabled Enable state
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_table_set_align_grid(struct picoui_table *table, int enabled)
 {
@@ -327,6 +514,15 @@ int picoui_table_set_align_grid(struct picoui_table *table, int enabled)
     return 0;
 }
 
+/**
+ * @brief Set item width of table widget
+ *
+ * @param[in] table table
+ * @param[in] column Column index
+ * @param[in] width Width in pixels
+ * @return -1 on failure
+ */
+
 int picoui_table_set_item_width(struct picoui_table *table, int column, int width)
 {
     if (table == 0 || width <= 0) {
@@ -336,6 +532,15 @@ int picoui_table_set_item_width(struct picoui_table *table, int column, int widt
     return picoui_backend_table_set_item_width(table->widget.backend_widget, column, width);
 }
 
+/**
+ * @brief Set item height of table widget
+ *
+ * @param[in] table table
+ * @param[in] row Row index
+ * @param[in] height Height in pixels
+ * @return -1 on failure
+ */
+
 int picoui_table_set_item_height(struct picoui_table *table, int row, int height)
 {
     if (table == 0 || height <= 0) {
@@ -344,6 +549,17 @@ int picoui_table_set_item_height(struct picoui_table *table, int row, int height
 
     return picoui_backend_table_set_item_height(table->widget.backend_widget, row, height);
 }
+
+/**
+ * @brief Set item color of table widget
+ *
+ * @param[in] table table
+ * @param[in] row Row index
+ * @param[in] column Column index
+ * @param[in] text_color Text color
+ * @param[in] bg_color Background color
+ * @return -1 on failure
+ */
 
 int picoui_table_set_item_color(struct picoui_table *table,
                                 int row,
@@ -362,6 +578,14 @@ int picoui_table_set_item_color(struct picoui_table *table,
                                                bg_color);
 }
 
+/**
+ * @brief Set bg color of table widget
+ *
+ * @param[in] table table
+ * @param[in] bg_color Background color
+ * @return -1 on failure
+ */
+
 int picoui_table_set_bg_color(struct picoui_table *table, unsigned int bg_color)
 {
     if (table == 0 || bg_color > 0xFFFFFFU) {
@@ -370,6 +594,16 @@ int picoui_table_set_bg_color(struct picoui_table *table, unsigned int bg_color)
 
     return picoui_backend_table_set_bg_color(table->widget.backend_widget, bg_color);
 }
+
+/**
+ * @brief Set item static text of table widget
+ *
+ * @param[in] table table
+ * @param[in] row Row index
+ * @param[in] column Column index
+ * @param[in] text Text widget instance
+ * @return -1 on failure
+ */
 
 int picoui_table_set_item_static_text(struct picoui_table *table, int row, int column, const char *text)
 {
@@ -380,6 +614,15 @@ int picoui_table_set_item_static_text(struct picoui_table *table, int row, int c
     return picoui_backend_table_set_item_static_text(table->widget.backend_widget, row, column, text);
 }
 
+/**
+ * @brief Set item font of table widget
+ *
+ * @param[in] table table
+ * @param[in] row Row index
+ * @param[in] column Column index
+ * @return -1 on failure
+ */
+
 int picoui_table_set_item_font(struct picoui_table *table, int row, int column)
 {
     if (table == 0) {
@@ -388,6 +631,13 @@ int picoui_table_set_item_font(struct picoui_table *table, int row, int column)
 
     return picoui_backend_table_set_item_font(table->widget.backend_widget, row, column);
 }
+
+/**
+ * @brief Get align grid of table widget
+ *
+ * @param[in] table table
+ * @return -1 on failure
+ */
 
 int picoui_table_get_align_grid(const struct picoui_table *table)
 {
@@ -400,6 +650,12 @@ int picoui_table_get_align_grid(const struct picoui_table *table)
     return ldTableGetAlignGrid(ld_table) ? 1 : 0;
 }
 
+/**
+ * @brief Get background color of table widget
+ *
+ * @param[in] table table
+ */
+
 unsigned int picoui_table_get_background_color(const struct picoui_table *table)
 {
     ldTable_t *ld_table = picoui_table_get_ld_widget(table);
@@ -410,6 +666,14 @@ unsigned int picoui_table_get_background_color(const struct picoui_table *table)
 
     return (unsigned int)ldTableGetBackgroundColor(ld_table);
 }
+
+/**
+ * @brief Get item of table widget
+ *
+ * @param[in] table table
+ * @param[in] row Row index
+ * @param[in] column Column index
+ */
 
 void *picoui_table_get_item(const struct picoui_table *table, int row, int column)
 {
@@ -423,6 +687,16 @@ void *picoui_table_get_item(const struct picoui_table *table, int row, int colum
     return ldTableGetItem(ld_table, (uint8_t)row, (uint8_t)column);
 }
 
+/**
+ * @brief Set item align of table widget
+ *
+ * @param[in] table table
+ * @param[in] row Row index
+ * @param[in] column Column index
+ * @param[in] align align
+ * @return -1 on failure
+ */
+
 int picoui_table_set_item_align(struct picoui_table *table,
                                 int row,
                                 int column,
@@ -435,6 +709,15 @@ int picoui_table_set_item_align(struct picoui_table *table,
     return picoui_backend_table_set_item_align(table->widget.backend_widget, row, column, align);
 }
 
+/**
+ * @brief Get item align of table widget
+ *
+ * @param[in] table table
+ * @param[in] row Row index
+ * @param[in] column Column index
+ * @return -1 on failure
+ */
+
 int picoui_table_get_item_align(const struct picoui_table *table, int row, int column)
 {
     if (table == 0) {
@@ -444,6 +727,15 @@ int picoui_table_get_item_align(const struct picoui_table *table, int row, int c
     return picoui_backend_table_get_item_align((void *)table->widget.backend_widget, row, column);
 }
 
+/**
+ * @brief Get item editable of table widget
+ *
+ * @param[in] table table
+ * @param[in] row Row index
+ * @param[in] column Column index
+ * @return -1 on failure
+ */
+
 int picoui_table_get_item_editable(const struct picoui_table *table, int row, int column)
 {
     if (table == 0) {
@@ -452,6 +744,14 @@ int picoui_table_get_item_editable(const struct picoui_table *table, int row, in
 
     return picoui_backend_table_get_item_editable((void *)table->widget.backend_widget, row, column);
 }
+
+/**
+ * @brief Get item font of table widget
+ *
+ * @param[in] table table
+ * @param[in] row Row index
+ * @param[in] column Column index
+ */
 
 void *picoui_table_get_item_font(const struct picoui_table *table, int row, int column)
 {
@@ -465,6 +765,14 @@ void *picoui_table_get_item_font(const struct picoui_table *table, int row, int 
     return ldTableGetItemFont(ld_table, (uint8_t)row, (uint8_t)column);
 }
 
+/**
+ * @brief Get item height of table widget
+ *
+ * @param[in] table table
+ * @param[in] row Row index
+ * @return -1 on failure
+ */
+
 int picoui_table_get_item_height(const struct picoui_table *table, int row)
 {
     ldTable_t *ld_table = picoui_table_get_ld_widget(table);
@@ -475,6 +783,14 @@ int picoui_table_get_item_height(const struct picoui_table *table, int row)
 
     return (int)ldTableGetItemHeight(ld_table, (uint8_t)row);
 }
+
+/**
+ * @brief Get item text color of table widget
+ *
+ * @param[in] table table
+ * @param[in] row Row index
+ * @param[in] column Column index
+ */
 
 unsigned int picoui_table_get_item_text_color(const struct picoui_table *table, int row, int column)
 {
@@ -488,6 +804,14 @@ unsigned int picoui_table_get_item_text_color(const struct picoui_table *table, 
     return (unsigned int)ldTableGetItemTextColor(ld_table, (uint8_t)row, (uint8_t)column);
 }
 
+/**
+ * @brief Get item background color of table widget
+ *
+ * @param[in] table table
+ * @param[in] row Row index
+ * @param[in] column Column index
+ */
+
 unsigned int picoui_table_get_item_background_color(const struct picoui_table *table, int row, int column)
 {
     ldTable_t *ld_table = picoui_table_get_ld_widget(table);
@@ -500,6 +824,14 @@ unsigned int picoui_table_get_item_background_color(const struct picoui_table *t
     return (unsigned int)ldTableGetItemBackgroundColor(ld_table, (uint8_t)row, (uint8_t)column);
 }
 
+/**
+ * @brief Get item width of table widget
+ *
+ * @param[in] table table
+ * @param[in] column Column index
+ * @return -1 on failure
+ */
+
 int picoui_table_get_item_width(const struct picoui_table *table, int column)
 {
     ldTable_t *ld_table = picoui_table_get_ld_widget(table);
@@ -510,6 +842,14 @@ int picoui_table_get_item_width(const struct picoui_table *table, int column)
 
     return (int)ldTableGetItemWidth(ld_table, (uint8_t)column);
 }
+
+/**
+ * @brief table navigate
+ *
+ * @param[in] table table
+ * @param[in] dir dir
+ * @return -1 on failure
+ */
 
 int picoui_table_navigate(struct picoui_table *table, enum picoui_native_nav_dir dir)
 {
@@ -523,6 +863,15 @@ int picoui_table_navigate(struct picoui_table *table, enum picoui_native_nav_dir
 
     return picoui_backend_table_navigate(table->widget.backend_widget, dir);
 }
+
+/**
+ * @brief Get item region of table widget
+ *
+ * @param[in] table table
+ * @param[in] row Row index
+ * @param[in] column Column index
+ * @return Pointer to the object
+ */
 
 struct picoui_table_region picoui_table_get_item_region(const struct picoui_table *table, int row, int column)
 {
@@ -539,6 +888,15 @@ struct picoui_table_region picoui_table_get_item_region(const struct picoui_tabl
     return region;
 }
 
+/**
+ * @brief Set selected cell of table widget
+ *
+ * @param[in] table table
+ * @param[in] row Row index
+ * @param[in] column Column index
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_table_set_selected_cell(struct picoui_table *table, int row, int column)
 {
     if (table == 0) {
@@ -553,6 +911,16 @@ int picoui_table_set_selected_cell(struct picoui_table *table, int row, int colu
     return 0;
 }
 
+/**
+ * @brief Set item select of table widget
+ *
+ * @param[in] table table
+ * @param[in] row Row index
+ * @param[in] column Column index
+ * @param[in] selected selected
+ * @return -1 on failure
+ */
+
 int picoui_table_set_item_select(struct picoui_table *table, int row, int column, int selected)
 {
     if (selected == 0) {
@@ -561,6 +929,15 @@ int picoui_table_set_item_select(struct picoui_table *table, int row, int column
 
     return picoui_table_set_selected_cell(table, row, column);
 }
+
+/**
+ * @brief Set current cell of table widget
+ *
+ * @param[in] table table
+ * @param[in] row Row index
+ * @param[in] column Column index
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_table_set_current_cell(struct picoui_table *table, int row, int column)
 {
@@ -576,6 +953,13 @@ int picoui_table_set_current_cell(struct picoui_table *table, int row, int colum
     return 0;
 }
 
+/**
+ * @brief Get current row of table widget
+ *
+ * @param[in] table table
+ * @return -1 on failure
+ */
+
 int picoui_table_get_current_row(const struct picoui_table *table)
 {
     int row;
@@ -590,6 +974,13 @@ int picoui_table_get_current_row(const struct picoui_table *table)
     }
     return table->current_row;
 }
+
+/**
+ * @brief Get current column of table widget
+ *
+ * @param[in] table table
+ * @return -1 on failure
+ */
 
 int picoui_table_get_current_column(const struct picoui_table *table)
 {

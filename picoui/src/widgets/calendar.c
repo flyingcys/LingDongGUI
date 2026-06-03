@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2023-2026 flyingcys (flyingcys@gmail.com). All rights reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "internal.h"
 #include "picoui/calendar.h"
 
@@ -43,6 +61,14 @@ static int picoui_calendar_sync_grid(struct picoui_calendar *calendar)
     return 0;
 }
 
+/**
+ * @brief Create calendar widget
+ *
+ * @param[in] parent Parent widget
+ * @param[in] id Widget identifier string
+ * @return Pointer to the object on success, NULL on failure
+ */
+
 struct picoui_calendar *picoui_calendar_create(struct picoui_window *parent, const char *id)
 {
     struct picoui_calendar *calendar;
@@ -79,10 +105,26 @@ struct picoui_calendar *picoui_calendar_create(struct picoui_window *parent, con
     return calendar;
 }
 
+/**
+ * @brief calendar init
+ *
+ * @param[in] parent Parent widget
+ * @param[in] id Widget identifier string
+ * @return Pointer to the object
+ */
+
 struct picoui_calendar *picoui_calendar_init(struct picoui_window *parent, const char *id)
 {
     return picoui_calendar_create(parent, id);
 }
+
+/**
+ * @brief Create calendar widget with properties
+ *
+ * @param[in] parent Parent widget
+ * @param[in] props Properties structure
+ * @return Pointer to the object on success, NULL on failure
+ */
 
 struct picoui_calendar *picoui_calendar_create_with_props(struct picoui_window *parent,
                                                           const struct picoui_calendar_props *props)
@@ -122,6 +164,16 @@ struct picoui_calendar *picoui_calendar_create_with_props(struct picoui_window *
     return calendar;
 }
 
+/**
+ * @brief Set date of calendar widget
+ *
+ * @param[in] calendar Calendar widget instance
+ * @param[in] year year
+ * @param[in] month month
+ * @param[in] day day
+ * @return -1 on failure
+ */
+
 int picoui_calendar_set_date(struct picoui_calendar *calendar, int year, int month, int day)
 {
     if (calendar == 0 || month < 1 || month > 12 || day < 1 || day > 31) {
@@ -138,6 +190,14 @@ int picoui_calendar_set_date(struct picoui_calendar *calendar, int year, int mon
     return picoui_calendar_sync_grid(calendar);
 }
 
+/**
+ * @brief Set use system date of calendar widget
+ *
+ * @param[in] calendar Calendar widget instance
+ * @param[in] enabled Enable state
+ * @return -1 on failure
+ */
+
 int picoui_calendar_set_use_system_date(struct picoui_calendar *calendar, int enabled)
 {
     if (calendar == 0) {
@@ -152,6 +212,14 @@ int picoui_calendar_set_use_system_date(struct picoui_calendar *calendar, int en
     return picoui_calendar_sync_grid(calendar);
 }
 
+/**
+ * @brief Set day names of calendar widget
+ *
+ * @param[in] calendar Calendar widget instance
+ * @param[in] day_names[7 day names[7
+ * @return -1 on failure
+ */
+
 int picoui_calendar_set_day_names(struct picoui_calendar *calendar, const char *const day_names[7])
 {
     if (calendar == 0 || day_names == 0) {
@@ -160,6 +228,16 @@ int picoui_calendar_set_day_names(struct picoui_calendar *calendar, const char *
 
     return picoui_backend_calendar_set_day_names(calendar->widget.backend_widget, day_names);
 }
+
+/**
+ * @brief Get date of calendar widget
+ *
+ * @param[in] calendar Calendar widget instance
+ * @param[in] year year
+ * @param[in] month month
+ * @param[in] day day
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_calendar_get_date(const struct picoui_calendar *calendar, int *year, int *month, int *day)
 {
@@ -184,6 +262,13 @@ int picoui_calendar_get_date(const struct picoui_calendar *calendar, int *year, 
     return 0;
 }
 
+/**
+ * @brief Get use system date of calendar widget
+ *
+ * @param[in] calendar Calendar widget instance
+ * @return -1 on failure
+ */
+
 int picoui_calendar_get_use_system_date(const struct picoui_calendar *calendar)
 {
     int enabled = 0;
@@ -200,6 +285,14 @@ int picoui_calendar_get_use_system_date(const struct picoui_calendar *calendar)
     return enabled;
 }
 
+/**
+ * @brief Set header visible of calendar widget
+ *
+ * @param[in] calendar Calendar widget instance
+ * @param[in] visible Visibility state
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_calendar_set_header_visible(struct picoui_calendar *calendar, int visible)
 {
     if (calendar == 0) {
@@ -212,6 +305,13 @@ int picoui_calendar_set_header_visible(struct picoui_calendar *calendar, int vis
     calendar->show_header = visible != 0;
     return 0;
 }
+
+/**
+ * @brief Get header visible of calendar widget
+ *
+ * @param[in] calendar Calendar widget instance
+ * @return -1 on failure
+ */
 
 int picoui_calendar_get_header_visible(const struct picoui_calendar *calendar)
 {
@@ -228,6 +328,14 @@ int picoui_calendar_get_header_visible(const struct picoui_calendar *calendar)
     return visible;
 }
 
+/**
+ * @brief Set header format of calendar widget
+ *
+ * @param[in] calendar Calendar widget instance
+ * @param[in] format Format string
+ * @return -1 on failure
+ */
+
 int picoui_calendar_set_header_format(struct picoui_calendar *calendar, const char *format)
 {
     if (calendar == 0 || format == 0) {
@@ -241,6 +349,14 @@ int picoui_calendar_set_header_format(struct picoui_calendar *calendar, const ch
     return calendar->header_format != 0 ? 0 : -1;
 }
 
+/**
+ * @brief Set bg color of calendar widget
+ *
+ * @param[in] calendar Calendar widget instance
+ * @param[in] rgb RGB color value (0xRRGGBB)
+ * @return -1 on failure
+ */
+
 int picoui_calendar_set_bg_color(struct picoui_calendar *calendar, unsigned int rgb)
 {
     if (calendar == 0 || rgb > 0xFFFFFFU) {
@@ -249,6 +365,14 @@ int picoui_calendar_set_bg_color(struct picoui_calendar *calendar, unsigned int 
 
     return picoui_backend_calendar_set_bg_color(calendar->widget.backend_widget, rgb);
 }
+
+/**
+ * @brief Set item color of calendar widget
+ *
+ * @param[in] calendar Calendar widget instance
+ * @param[in] rgb RGB color value (0xRRGGBB)
+ * @return -1 on failure
+ */
 
 int picoui_calendar_set_item_color(struct picoui_calendar *calendar, unsigned int rgb)
 {
@@ -259,6 +383,14 @@ int picoui_calendar_set_item_color(struct picoui_calendar *calendar, unsigned in
     return picoui_backend_calendar_set_item_color(calendar->widget.backend_widget, rgb);
 }
 
+/**
+ * @brief Set text color of calendar widget
+ *
+ * @param[in] calendar Calendar widget instance
+ * @param[in] rgb RGB color value (0xRRGGBB)
+ * @return -1 on failure
+ */
+
 int picoui_calendar_set_text_color(struct picoui_calendar *calendar, unsigned int rgb)
 {
     if (calendar == 0 || rgb > 0xFFFFFFU) {
@@ -267,6 +399,12 @@ int picoui_calendar_set_text_color(struct picoui_calendar *calendar, unsigned in
 
     return picoui_backend_calendar_set_text_color(calendar->widget.backend_widget, rgb);
 }
+
+/**
+ * @brief Get header format of calendar widget
+ *
+ * @param[in] calendar Calendar widget instance
+ */
 
 const char *picoui_calendar_get_header_format(const struct picoui_calendar *calendar)
 {
@@ -282,6 +420,15 @@ const char *picoui_calendar_get_header_format(const struct picoui_calendar *cale
     }
     return format;
 }
+
+/**
+ * @brief Get grid value of calendar widget
+ *
+ * @param[in] calendar Calendar widget instance
+ * @param[in] week week
+ * @param[in] weekday weekday
+ * @return -1 on failure
+ */
 
 int picoui_calendar_get_grid_value(const struct picoui_calendar *calendar, int week, int weekday)
 {
@@ -299,6 +446,15 @@ int picoui_calendar_get_grid_value(const struct picoui_calendar *calendar, int w
     }
     return day;
 }
+
+/**
+ * @brief calendar is current month cell
+ *
+ * @param[in] calendar Calendar widget instance
+ * @param[in] week week
+ * @param[in] weekday weekday
+ * @return -1 on failure
+ */
 
 int picoui_calendar_is_current_month_cell(const struct picoui_calendar *calendar, int week, int weekday)
 {

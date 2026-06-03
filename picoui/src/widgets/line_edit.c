@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2023-2026 flyingcys (flyingcys@gmail.com). All rights reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "internal.h"
 #include "picoui/line_edit.h"
 
@@ -25,6 +43,14 @@ static int picoui_line_edit_props_are_valid(const struct picoui_line_edit_props 
         && (props->has_keyboard_binding == 0
             || picoui_line_edit_keyboard_binding_is_valid(props->keyboard_binding));
 }
+
+/**
+ * @brief Create line edit widget
+ *
+ * @param[in] parent Parent widget
+ * @param[in] id Widget identifier string
+ * @return Pointer to the object on success, NULL on failure
+ */
 
 struct picoui_line_edit *picoui_line_edit_create(struct picoui_window *parent, const char *id)
 {
@@ -60,6 +86,14 @@ struct picoui_line_edit *picoui_line_edit_create(struct picoui_window *parent, c
     }
     return line_edit;
 }
+
+/**
+ * @brief Create line edit widget with properties
+ *
+ * @param[in] parent Parent widget
+ * @param[in] props Properties structure
+ * @return Pointer to the object on success, NULL on failure
+ */
 
 struct picoui_line_edit *picoui_line_edit_create_with_props(struct picoui_window *parent,
                                                             const struct picoui_line_edit_props *props)
@@ -106,6 +140,14 @@ struct picoui_line_edit *picoui_line_edit_create_with_props(struct picoui_window
     return line_edit;
 }
 
+/**
+ * @brief Set text of line edit widget
+ *
+ * @param[in] line_edit Line edit widget instance
+ * @param[in] text Text widget instance
+ * @return -1 on failure
+ */
+
 int picoui_line_edit_set_text(struct picoui_line_edit *line_edit, const char *text)
 {
     if (line_edit == 0 || text == 0) {
@@ -118,6 +160,14 @@ int picoui_line_edit_set_text(struct picoui_line_edit *line_edit, const char *te
 
     return picoui_backend_line_edit_set_text(line_edit->widget.backend_widget, text);
 }
+
+/**
+ * @brief Set align of line edit widget
+ *
+ * @param[in] line_edit Line edit widget instance
+ * @param[in] align align
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_line_edit_set_align(struct picoui_line_edit *line_edit, enum picoui_align align)
 {
@@ -132,6 +182,16 @@ int picoui_line_edit_set_align(struct picoui_line_edit *line_edit, enum picoui_a
     line_edit->align = align;
     return 0;
 }
+
+/**
+ * @brief Set color of line edit widget
+ *
+ * @param[in] line_edit Line edit widget instance
+ * @param[in] text_color Text color
+ * @param[in] background_color background color
+ * @param[in] frame_color frame color
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_line_edit_set_color(struct picoui_line_edit *line_edit,
                                unsigned int text_color,
@@ -156,6 +216,12 @@ int picoui_line_edit_set_color(struct picoui_line_edit *line_edit,
     return 0;
 }
 
+/**
+ * @brief Get text of line edit widget
+ *
+ * @param[in] line_edit Line edit widget instance
+ */
+
 const char *picoui_line_edit_get_text(const struct picoui_line_edit *line_edit)
 {
     const char *backend_text;
@@ -172,6 +238,14 @@ const char *picoui_line_edit_get_text(const struct picoui_line_edit *line_edit)
     return line_edit->widget.text;
 }
 
+/**
+ * @brief Set type of line edit widget
+ *
+ * @param[in] line_edit Line edit widget instance
+ * @param[in] type Type
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_line_edit_set_type(struct picoui_line_edit *line_edit, enum picoui_line_edit_type type)
 {
     if (line_edit == 0 || !picoui_line_edit_type_is_valid(type)) {
@@ -186,6 +260,14 @@ int picoui_line_edit_set_type(struct picoui_line_edit *line_edit, enum picoui_li
     return 0;
 }
 
+/**
+ * @brief Get type of line edit widget
+ *
+ * @param[in] line_edit Line edit widget instance
+ * @param[out] type Type
+ * @return -1 on failure
+ */
+
 int picoui_line_edit_get_type(const struct picoui_line_edit *line_edit,
                               enum picoui_line_edit_type *type)
 {
@@ -196,10 +278,26 @@ int picoui_line_edit_get_type(const struct picoui_line_edit *line_edit,
     return picoui_backend_line_edit_get_type((void *)line_edit->widget.backend_widget, type);
 }
 
+/**
+ * @brief Set keyboard of line edit widget
+ *
+ * @param[in] line_edit Line edit widget instance
+ * @param[in] keyboard_binding keyboard binding
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_line_edit_set_keyboard(struct picoui_line_edit *line_edit, unsigned int keyboard_binding)
 {
     return picoui_line_edit_set_keyboard_binding(line_edit, keyboard_binding);
 }
+
+/**
+ * @brief Set keyboard binding of line edit widget
+ *
+ * @param[in] line_edit Line edit widget instance
+ * @param[in] keyboard_binding keyboard binding
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_line_edit_set_keyboard_binding(struct picoui_line_edit *line_edit,
                                           unsigned int keyboard_binding)
@@ -217,6 +315,14 @@ int picoui_line_edit_set_keyboard_binding(struct picoui_line_edit *line_edit,
     return 0;
 }
 
+/**
+ * @brief Get keyboard binding of line edit widget
+ *
+ * @param[in] line_edit Line edit widget instance
+ * @param[in] keyboard_binding keyboard binding
+ * @return -1 on failure
+ */
+
 int picoui_line_edit_get_keyboard_binding(const struct picoui_line_edit *line_edit,
                                           unsigned int *keyboard_binding)
 {
@@ -228,6 +334,14 @@ int picoui_line_edit_get_keyboard_binding(const struct picoui_line_edit *line_ed
                                                          keyboard_binding);
 }
 
+/**
+ * @brief Get editing of line edit widget
+ *
+ * @param[in] line_edit Line edit widget instance
+ * @param[in] editing editing
+ * @return -1 on failure
+ */
+
 int picoui_line_edit_get_editing(const struct picoui_line_edit *line_edit, int *editing)
 {
     if (line_edit == 0 || editing == 0) {
@@ -236,6 +350,15 @@ int picoui_line_edit_get_editing(const struct picoui_line_edit *line_edit, int *
 
     return picoui_backend_line_edit_get_editing((void *)line_edit->widget.backend_widget, editing);
 }
+
+/**
+ * @brief Set on edit finished of line edit widget
+ *
+ * @param[in] line_edit Line edit widget instance
+ * @param[in] cb cb
+ * @param[in] user_data User data pointer
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_line_edit_set_on_edit_finished(struct picoui_line_edit *line_edit,
                                           picoui_line_edit_finished_cb cb,

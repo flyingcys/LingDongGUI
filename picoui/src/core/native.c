@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2023-2026 flyingcys (flyingcys@gmail.com). All rights reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "picoui/native.h"
 #include "../backend/ldgui/backend.h"
 
@@ -18,6 +36,15 @@ enum {
     PICOUI_LD_NAV_RIGHT = 3,
 };
 
+/**
+ * @brief Native platform: image wrap
+ *
+ * @param[in] tile tile
+ * @param[in] mask mask
+ * @param[in] mask_color mask color
+ * @return Pointer to the object
+ */
+
 struct picoui_native_image picoui_native_image_wrap(void *tile, void *mask, unsigned int mask_color)
 {
     struct picoui_native_image image;
@@ -28,6 +55,13 @@ struct picoui_native_image picoui_native_image_wrap(void *tile, void *mask, unsi
     return image;
 }
 
+/**
+ * @brief Native platform: font wrap
+ *
+ * @param[in] font font
+ * @return Pointer to the object
+ */
+
 struct picoui_native_font picoui_native_font_wrap(void *font)
 {
     struct picoui_native_font native_font;
@@ -35,6 +69,13 @@ struct picoui_native_font picoui_native_font_wrap(void *font)
     native_font.font = font;
     return native_font;
 }
+
+/**
+ * @brief Native platform: signal to ld
+ *
+ * @param[in] signal signal
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_native_signal_to_ld(enum picoui_native_signal signal)
 {
@@ -56,6 +97,13 @@ int picoui_native_signal_to_ld(enum picoui_native_signal signal)
         return PICOUI_LD_SIGNAL_NO_OPERATION;
     }
 }
+
+/**
+ * @brief Native platform: readback policy to backend
+ *
+ * @param[in] policy policy
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_native_readback_policy_to_backend(enum picoui_native_readback_policy policy)
 {

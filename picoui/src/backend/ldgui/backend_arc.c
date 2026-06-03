@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2023-2026 flyingcys (flyingcys@gmail.com). All rights reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "backend.h"
 #include "internal.h"
 #include "ldArc.h"
@@ -30,6 +48,13 @@ static ldArc_t *picoui_backend_arc_get_ld(struct picoui_arc *arc)
     }
     return (ldArc_t *)backend->ld_widget;
 }
+
+/**
+ * @brief Create backend for arc
+ *
+ * @param[in] parent Parent widget
+ * @param[in] id Widget identifier string
+ */
 
 void *picoui_backend_create_arc(void *parent, const char *id)
 {
@@ -102,6 +127,15 @@ void *picoui_backend_create_arc(void *parent, const char *id)
     return widget;
 }
 
+/**
+ * @brief Set background angle of arc backend
+ *
+ * @param[in] arc Arc widget instance
+ * @param[in] bg_start_angle Background arc start angle
+ * @param[in] bg_end_angle Background arc end angle
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_arc_set_background_angle(struct picoui_arc *arc, float bg_start_angle, float bg_end_angle)
 {
     ldArc_t *ld_arc = picoui_backend_arc_get_ld(arc);
@@ -112,6 +146,14 @@ int picoui_backend_arc_set_background_angle(struct picoui_arc *arc, float bg_sta
     ldArcSetBackgroundAngle(ld_arc, bg_start_angle, bg_end_angle);
     return 0;
 }
+
+/**
+ * @brief Set foreground angle of arc backend
+ *
+ * @param[in] arc Arc widget instance
+ * @param[in] fg_end_angle Foreground arc end angle
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_arc_set_foreground_angle(struct picoui_arc *arc, float fg_end_angle)
 {
@@ -124,6 +166,14 @@ int picoui_backend_arc_set_foreground_angle(struct picoui_arc *arc, float fg_end
     return 0;
 }
 
+/**
+ * @brief Set rotation angle of arc backend
+ *
+ * @param[in] arc Arc widget instance
+ * @param[in] rotation_angle Arc rotation angle
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_arc_set_rotation_angle(struct picoui_arc *arc, float rotation_angle)
 {
     ldArc_t *ld_arc = picoui_backend_arc_get_ld(arc);
@@ -135,6 +185,15 @@ int picoui_backend_arc_set_rotation_angle(struct picoui_arc *arc, float rotation
     return 0;
 }
 
+/**
+ * @brief Set color of arc backend
+ *
+ * @param[in] arc Arc widget instance
+ * @param[in] bg_color Background color
+ * @param[in] fg_color Foreground color
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_arc_set_color(struct picoui_arc *arc, unsigned int bg_color, unsigned int fg_color)
 {
     ldArc_t *ld_arc = picoui_backend_arc_get_ld(arc);
@@ -145,6 +204,14 @@ int picoui_backend_arc_set_color(struct picoui_arc *arc, unsigned int bg_color, 
     ldArcSetColor(ld_arc, (ldColor)bg_color, (ldColor)fg_color);
     return 0;
 }
+
+/**
+ * @brief Set quarter source of arc backend
+ *
+ * @param[in] arc Arc widget instance
+ * @param[in] source Image source
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_arc_set_quarter_source(struct picoui_arc *arc, struct picoui_image_source *source)
 {
@@ -159,6 +226,14 @@ int picoui_backend_arc_set_quarter_source(struct picoui_arc *arc, struct picoui_
     return 0;
 }
 
+/**
+ * @brief Set parent color of arc backend
+ *
+ * @param[in] arc Arc widget instance
+ * @param[in] parent_color parent color
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_arc_set_parent_color(struct picoui_arc *arc, unsigned int parent_color)
 {
     ldArc_t *ld_arc = picoui_backend_arc_get_ld(arc);
@@ -170,6 +245,15 @@ int picoui_backend_arc_set_parent_color(struct picoui_arc *arc, unsigned int par
     ld_arc->parentColor = (ldColor)parent_color;
     return 0;
 }
+
+/**
+ * @brief Get background angle from arc backend
+ *
+ * @param[out] arc Arc widget instance
+ * @param[in] bg_start_angle Background arc start angle
+ * @param[in] bg_angle bg angle
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_arc_get_background_angle(struct picoui_arc *arc, float *bg_start_angle, float *bg_angle)
 {
@@ -183,6 +267,14 @@ int picoui_backend_arc_get_background_angle(struct picoui_arc *arc, float *bg_st
     return 0;
 }
 
+/**
+ * @brief Get foreground angle from arc backend
+ *
+ * @param[out] arc Arc widget instance
+ * @param[in] fg_end_angle Foreground arc end angle
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_arc_get_foreground_angle(struct picoui_arc *arc, float *fg_end_angle)
 {
     ldArc_t *ld_arc = picoui_backend_arc_get_ld(arc);
@@ -194,6 +286,14 @@ int picoui_backend_arc_get_foreground_angle(struct picoui_arc *arc, float *fg_en
     return 0;
 }
 
+/**
+ * @brief Get rotation angle from arc backend
+ *
+ * @param[out] arc Arc widget instance
+ * @param[in] rotation_angle Arc rotation angle
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_arc_get_rotation_angle(struct picoui_arc *arc, float *rotation_angle)
 {
     ldArc_t *ld_arc = picoui_backend_arc_get_ld(arc);
@@ -204,6 +304,15 @@ int picoui_backend_arc_get_rotation_angle(struct picoui_arc *arc, float *rotatio
     *rotation_angle = ldArcGetRotationAngle(ld_arc);
     return 0;
 }
+
+/**
+ * @brief Get color from arc backend
+ *
+ * @param[out] arc Arc widget instance
+ * @param[in] bg_color Background color
+ * @param[in] fg_color Foreground color
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_arc_get_color(struct picoui_arc *arc, unsigned int *bg_color, unsigned int *fg_color)
 {

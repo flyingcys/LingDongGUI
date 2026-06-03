@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2023-2026 flyingcys (flyingcys@gmail.com). All rights reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "internal.h"
 #include "picoui/theme.h"
 
@@ -128,6 +146,12 @@ static int picoui_theme_backend_can_apply_style(const struct picoui_backend_widg
         && backend_widget->theme != 0;
 }
 
+/**
+ * @brief Create theme instance
+ *
+ * @return Pointer to the object on success, NULL on failure
+ */
+
 struct picoui_theme *picoui_theme_create(void)
 {
     struct picoui_theme *theme = calloc(1, sizeof(struct picoui_theme));
@@ -148,10 +172,25 @@ struct picoui_theme *picoui_theme_create(void)
     return theme;
 }
 
+/**
+ * @brief Destroy theme instance
+ *
+ * @param[in] theme Theme instance
+ */
+
 void picoui_theme_destroy(struct picoui_theme *theme)
 {
     free(theme);
 }
+
+/**
+ * @brief Set color of theme
+ *
+ * @param[in] theme Theme instance
+ * @param[in] id Widget identifier string
+ * @param[in] rgb RGB color value (0xRRGGBB)
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_theme_set_color(struct picoui_theme *theme, enum picoui_color_id id, unsigned int rgb)
 {
@@ -163,6 +202,15 @@ int picoui_theme_set_color(struct picoui_theme *theme, enum picoui_color_id id, 
     return 0;
 }
 
+/**
+ * @brief Set metric of theme
+ *
+ * @param[in] theme Theme instance
+ * @param[in] id Widget identifier string
+ * @param[in] value Value
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_theme_set_metric(struct picoui_theme *theme, enum picoui_metric_id id, int value)
 {
     if (theme == 0 || id < 0 || id >= PICOUI_METRIC_COUNT || value < 0) {
@@ -172,6 +220,16 @@ int picoui_theme_set_metric(struct picoui_theme *theme, enum picoui_metric_id id
     theme->metrics[id] = value;
     return 0;
 }
+
+/**
+ * @brief Theme: apply to widget
+ *
+ * @param[in] theme Theme instance
+ * @param[in] widget Widget instance
+ * @param[in] part part
+ * @param[in] state State value
+ * @return -1 on failure
+ */
 
 int picoui_theme_apply_to_widget(struct picoui_theme *theme,
                                  struct picoui_widget *widget,
@@ -214,6 +272,14 @@ int picoui_theme_apply_to_widget(struct picoui_theme *theme,
                                              text_color,
                                              border_color);
 }
+
+/**
+ * @brief Set theme of app
+ *
+ * @param[in] app Application instance
+ * @param[in] theme Theme instance
+ * @return -1 on failure
+ */
 
 int picoui_app_set_theme(struct picoui_app *app, struct picoui_theme *theme)
 {

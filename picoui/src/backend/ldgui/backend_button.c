@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2023-2026 flyingcys (flyingcys@gmail.com). All rights reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "backend.h"
 #include "internal.h"
 #include "ldBase.h"
@@ -63,6 +81,13 @@ static arm_2d_font_t *picoui_backend_button_resolve_font(const struct picoui_fon
     return picoui_backend_button_default_font();
 }
 
+/**
+ * @brief Create backend for button
+ *
+ * @param[in] parent Parent widget
+ * @param[in] id Widget identifier string
+ */
+
 void *picoui_backend_create_button(void *parent, const char *id)
 {
     struct picoui_backend_button_host *host;
@@ -108,6 +133,14 @@ void *picoui_backend_create_button(void *parent, const char *id)
     return widget;
 }
 
+/**
+ * @brief Set font of button backend
+ *
+ * @param[in] button Button widget instance
+ * @param[in] font font
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_button_set_font(struct picoui_button *button, const struct picoui_font *font)
 {
     ldButton_t *ld_button = picoui_backend_button_get_ld(button);
@@ -126,6 +159,14 @@ int picoui_backend_button_set_font(struct picoui_button *button, const struct pi
     return 0;
 }
 
+/**
+ * @brief Set release image of button backend
+ *
+ * @param[in] button Button widget instance
+ * @param[in] source Image source
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_button_set_release_image(struct picoui_button *button,
                                             struct picoui_image_source *source)
 {
@@ -142,6 +183,14 @@ int picoui_backend_button_set_release_image(struct picoui_button *button,
                      ld_button->ptPressMaskTile);
     return 0;
 }
+
+/**
+ * @brief Set press image of button backend
+ *
+ * @param[in] button Button widget instance
+ * @param[in] source Image source
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_button_set_press_image(struct picoui_button *button,
                                           struct picoui_image_source *source)
@@ -160,6 +209,14 @@ int picoui_backend_button_set_press_image(struct picoui_button *button,
     return 0;
 }
 
+/**
+ * @brief Set transparent of button backend
+ *
+ * @param[in] button Button widget instance
+ * @param[in] transparent transparent
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_button_set_transparent(struct picoui_button *button, int transparent)
 {
     ldButton_t *ld_button = picoui_backend_button_get_ld(button);
@@ -171,6 +228,14 @@ int picoui_backend_button_set_transparent(struct picoui_button *button, int tran
     ldButtonSetTransparent(ld_button, transparent != 0);
     return 0;
 }
+
+/**
+ * @brief Get transparent from button backend
+ *
+ * @param[out] button Button widget instance
+ * @param[in] transparent transparent
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_button_get_transparent(struct picoui_button *button, int *transparent)
 {
@@ -184,6 +249,14 @@ int picoui_backend_button_get_transparent(struct picoui_button *button, int *tra
     return 0;
 }
 
+/**
+ * @brief Set checkable of button backend
+ *
+ * @param[in] button Button widget instance
+ * @param[in] checkable checkable
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_button_set_checkable(struct picoui_button *button, int checkable)
 {
     ldButton_t *ld_button = picoui_backend_button_get_ld(button);
@@ -195,6 +268,14 @@ int picoui_backend_button_set_checkable(struct picoui_button *button, int checka
     ldButtonSetCheckable(ld_button, checkable != 0);
     return 0;
 }
+
+/**
+ * @brief Get checkable from button backend
+ *
+ * @param[out] button Button widget instance
+ * @param[in] checkable checkable
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_button_get_checkable(struct picoui_button *button, int *checkable)
 {
@@ -208,6 +289,14 @@ int picoui_backend_button_get_checkable(struct picoui_button *button, int *check
     return 0;
 }
 
+/**
+ * @brief Set key value of button backend
+ *
+ * @param[in] button Button widget instance
+ * @param[in] key_value key value
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_button_set_key_value(struct picoui_button *button, unsigned int key_value)
 {
     ldButton_t *ld_button = picoui_backend_button_get_ld(button);
@@ -219,6 +308,14 @@ int picoui_backend_button_set_key_value(struct picoui_button *button, unsigned i
     ldButtonSetKeyValue(ld_button, (uint32_t)key_value);
     return 0;
 }
+
+/**
+ * @brief Get key value from button backend
+ *
+ * @param[out] button Button widget instance
+ * @param[in] key_value key value
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_button_get_key_value(struct picoui_button *button, unsigned int *key_value)
 {
@@ -232,6 +329,14 @@ int picoui_backend_button_get_key_value(struct picoui_button *button, unsigned i
     return 0;
 }
 
+/**
+ * @brief Set pressed of button backend
+ *
+ * @param[in] button Button widget instance
+ * @param[in] pressed Pressed state
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_button_set_pressed(struct picoui_button *button, int pressed)
 {
     ldButton_t *ld_button = picoui_backend_button_get_ld(button);
@@ -243,6 +348,14 @@ int picoui_backend_button_set_pressed(struct picoui_button *button, int pressed)
     ldButtonSetPress(ld_button, pressed != 0);
     return 0;
 }
+
+/**
+ * @brief Get pressed from button backend
+ *
+ * @param[out] button Button widget instance
+ * @param[in] pressed Pressed state
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_button_get_pressed(struct picoui_button *button, int *pressed)
 {

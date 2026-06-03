@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2023-2026 flyingcys (flyingcys@gmail.com). All rights reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "backend.h"
 #include "internal.h"
 #include "ldBase.h"
@@ -98,6 +116,13 @@ static bool picoui_backend_combo_box_native_slot(struct ld_scene_t *scene, ldMsg
     return false;
 }
 
+/**
+ * @brief Create backend for combo box
+ *
+ * @param[in] parent Parent widget
+ * @param[in] id Widget identifier string
+ */
+
 void *picoui_backend_create_combo_box(void *parent, const char *id)
 {
     struct picoui_backend_widget *widget;
@@ -150,6 +175,16 @@ void *picoui_backend_create_combo_box(void *parent, const char *id)
     return widget;
 }
 
+/**
+ * @brief combo: box set items
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] item_ids item ids
+ * @param[in] items items
+ * @param[in] item_count item count
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_combo_box_set_items(void *backend_widget,
                                        const char *const *item_ids,
                                        const unsigned char *const *items,
@@ -182,6 +217,14 @@ int picoui_backend_combo_box_set_items(void *backend_widget,
     return 0;
 }
 
+/**
+ * @brief combo: box set text color
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] rgb RGB color value (0xRRGGBB)
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_combo_box_set_text_color(void *backend_widget, unsigned int rgb)
 {
     ldComboBox_t *ld_combo_box = picoui_backend_combo_box_get_ld(backend_widget);
@@ -193,6 +236,14 @@ int picoui_backend_combo_box_set_text_color(void *backend_widget, unsigned int r
     ldComboBoxSetTextColor(ld_combo_box, picoui_backend_combo_box_rgb_to_ld_color(rgb));
     return 0;
 }
+
+/**
+ * @brief combo: box set bg color
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] rgb RGB color value (0xRRGGBB)
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_combo_box_set_bg_color(void *backend_widget, unsigned int rgb)
 {
@@ -206,6 +257,14 @@ int picoui_backend_combo_box_set_bg_color(void *backend_widget, unsigned int rgb
     return 0;
 }
 
+/**
+ * @brief combo: box set frame color
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] rgb RGB color value (0xRRGGBB)
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_combo_box_set_frame_color(void *backend_widget, unsigned int rgb)
 {
     ldComboBox_t *ld_combo_box = picoui_backend_combo_box_get_ld(backend_widget);
@@ -218,6 +277,14 @@ int picoui_backend_combo_box_set_frame_color(void *backend_widget, unsigned int 
     return 0;
 }
 
+/**
+ * @brief combo: box set select color
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] rgb RGB color value (0xRRGGBB)
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_combo_box_set_select_color(void *backend_widget, unsigned int rgb)
 {
     ldComboBox_t *ld_combo_box = picoui_backend_combo_box_get_ld(backend_widget);
@@ -229,6 +296,14 @@ int picoui_backend_combo_box_set_select_color(void *backend_widget, unsigned int
     ldComboBoxSetSelectColor(ld_combo_box, picoui_backend_combo_box_rgb_to_ld_color(rgb));
     return 0;
 }
+
+/**
+ * @brief combo: box set item max
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] item_max item max
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_combo_box_set_item_max(void *backend_widget, int item_max)
 {
@@ -253,6 +328,14 @@ int picoui_backend_combo_box_set_item_max(void *backend_widget, int item_max)
     return 0;
 }
 
+/**
+ * @brief combo: box set dropdown source
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] source Image source
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_combo_box_set_dropdown_source(void *backend_widget,
                                                  struct picoui_image_source *source)
 {
@@ -265,6 +348,14 @@ int picoui_backend_combo_box_set_dropdown_source(void *backend_widget,
     ldComboBoxSetDropdownImage(ld_combo_box, source->img_tile, source->mask_tile);
     return 0;
 }
+
+/**
+ * @brief combo: box set selected index
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] index Index
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_combo_box_set_selected_index(void *backend_widget, int index)
 {
@@ -289,6 +380,13 @@ int picoui_backend_combo_box_set_selected_index(void *backend_widget, int index)
     return 0;
 }
 
+/**
+ * @brief combo: box get selected index
+ *
+ * @param[in] backend_widget backend widget
+ * @return -1 on failure
+ */
+
 int picoui_backend_combo_box_get_selected_index(void *backend_widget)
 {
     ldComboBox_t *ld_combo_box = picoui_backend_combo_box_get_ld(backend_widget);
@@ -303,6 +401,13 @@ int picoui_backend_combo_box_get_selected_index(void *backend_widget)
     return (int)ldComboBoxGetSelectItem(ld_combo_box);
 }
 
+/**
+ * @brief combo: box get text
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] index Index
+ */
+
 const char *picoui_backend_combo_box_get_text(void *backend_widget, int index)
 {
     ldComboBox_t *ld_combo_box = picoui_backend_combo_box_get_ld(backend_widget);
@@ -313,6 +418,14 @@ const char *picoui_backend_combo_box_get_text(void *backend_widget, int index)
 
     return (const char *)ldComboBoxGetText(ld_combo_box, (uint8_t)index);
 }
+
+/**
+ * @brief combo: box sync selected index
+ *
+ * @param[in] combo_box Combo box widget instance
+ * @param[in] selected_index_out selected index out
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_combo_box_sync_selected_index(struct picoui_combo_box *combo_box,
                                                  int *selected_index_out)
@@ -338,6 +451,13 @@ int picoui_backend_combo_box_sync_selected_index(struct picoui_combo_box *combo_
     return 0;
 }
 
+/**
+ * @brief combo: box bind host
+ *
+ * @param[in] backend_widget backend widget
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_combo_box_bind_host(void *backend_widget)
 {
     struct picoui_backend_widget *backend = backend_widget;
@@ -360,6 +480,14 @@ int picoui_backend_combo_box_bind_host(void *backend_widget)
     }
     return 0;
 }
+
+/**
+ * @brief combo: box get open
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] is_open is open
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_combo_box_get_open(void *backend_widget, int *is_open)
 {

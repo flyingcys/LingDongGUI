@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2023-2026 flyingcys (flyingcys@gmail.com). All rights reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "internal.h"
 
 static struct picoui_app *picoui_widget_get_owner_app(struct picoui_widget *widget)
@@ -31,6 +49,13 @@ static void picoui_widget_note_focus_event(struct picoui_widget *widget,
     widget->focus_leave_count++;
 }
 
+/**
+ * @brief Claim input focus
+ *
+ * @param[in] widget Widget instance
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_widget_claim_focus(struct picoui_widget *widget)
 {
     struct picoui_app *owner;
@@ -62,6 +87,13 @@ int picoui_widget_claim_focus(struct picoui_widget *widget)
     return 0;
 }
 
+/**
+ * @brief Widget: release focus
+ *
+ * @param[in] widget Widget instance
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_widget_release_focus(struct picoui_widget *widget)
 {
     struct picoui_app *owner;
@@ -87,6 +119,13 @@ int picoui_widget_release_focus(struct picoui_widget *widget)
     return 0;
 }
 
+/**
+ * @brief Widget: is focus owner
+ *
+ * @param[in] widget Widget instance
+ * @return 0 on success
+ */
+
 int picoui_widget_is_focus_owner(const struct picoui_widget *widget)
 {
     struct picoui_app *owner;
@@ -103,6 +142,14 @@ int picoui_widget_is_focus_owner(const struct picoui_widget *widget)
     return owner->focus_owner == widget;
 }
 
+/**
+ * @brief Widget: mark edit result
+ *
+ * @param[in] widget Widget instance
+ * @param[in] result result
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_widget_mark_edit_result(struct picoui_widget *widget, enum picoui_edit_result result)
 {
     if (widget == 0) {
@@ -116,6 +163,13 @@ int picoui_widget_mark_edit_result(struct picoui_widget *widget, enum picoui_edi
     widget->pending_edit_result = result;
     return 0;
 }
+
+/**
+ * @brief Widget: claim editing
+ *
+ * @param[in] widget Widget instance
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_widget_claim_editing(struct picoui_widget *widget)
 {
@@ -134,6 +188,13 @@ int picoui_widget_claim_editing(struct picoui_widget *widget)
     owner->editing_owner = widget;
     return 0;
 }
+
+/**
+ * @brief Widget: release editing
+ *
+ * @param[in] widget Widget instance
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_widget_release_editing(struct picoui_widget *widget)
 {
@@ -156,6 +217,13 @@ int picoui_widget_release_editing(struct picoui_widget *widget)
     return 0;
 }
 
+/**
+ * @brief Widget: is editing owner
+ *
+ * @param[in] widget Widget instance
+ * @return 0 on success
+ */
+
 int picoui_widget_is_editing_owner(const struct picoui_widget *widget)
 {
     struct picoui_app *owner;
@@ -171,6 +239,12 @@ int picoui_widget_is_editing_owner(const struct picoui_widget *widget)
 
     return owner->editing_owner == widget;
 }
+
+/**
+ * @brief Event: stub
+ *
+ * @return 0 on success
+ */
 
 int picoui_event_stub(void)
 {

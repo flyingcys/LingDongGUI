@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2023-2026 flyingcys (flyingcys@gmail.com). All rights reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "internal.h"
 #include "ldBase.h"
 #include "ldWindow.h"
@@ -99,6 +117,13 @@ static ldFlexTrackAlign_t picoui_backend_map_flex_track_align(enum picoui_align 
         return ldFlexTrackAlignStart;
     }
 }
+
+/**
+ * @brief Native platform: align to ld grid
+ *
+ * @param[in] align align
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_native_align_to_ld_grid(enum picoui_native_align align)
 {
@@ -221,6 +246,14 @@ static void picoui_backend_apply_window_padding(struct picoui_backend_widget *wi
     ld_window->layoutTpye = layout_type;
 }
 
+/**
+ * @brief Set padding of widget backend
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] padding padding
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_widget_set_padding(void *backend_widget, int padding)
 {
     struct picoui_backend_widget *widget = backend_widget;
@@ -245,6 +278,14 @@ int picoui_backend_widget_set_padding(void *backend_widget, int padding)
     return 0;
 }
 
+/**
+ * @brief Set flex flow of window backend
+ *
+ * @param[in] window Window instance
+ * @param[in] flow flow
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_window_set_flex_flow(struct picoui_window *window, enum picoui_flex_flow flow)
 {
     struct picoui_backend_widget *backend_widget = picoui_backend_window_get(window);
@@ -262,6 +303,16 @@ int picoui_backend_window_set_flex_flow(struct picoui_window *window, enum picou
     }
     return 0;
 }
+
+/**
+ * @brief Set flex align of window backend
+ *
+ * @param[in] window Window instance
+ * @param[in] main_align main align
+ * @param[in] cross_align cross align
+ * @param[in] track_align track align
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_window_set_flex_align(struct picoui_window *window,
                                          enum picoui_align main_align,
@@ -289,6 +340,15 @@ int picoui_backend_window_set_flex_align(struct picoui_window *window,
     return 0;
 }
 
+/**
+ * @brief Set flex gap of window backend
+ *
+ * @param[in] window Window instance
+ * @param[in] item_gap item gap
+ * @param[in] track_gap track gap
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_window_set_flex_gap(struct picoui_window *window, int item_gap, int track_gap)
 {
     struct picoui_backend_widget *backend_widget = picoui_backend_window_get(window);
@@ -307,6 +367,15 @@ int picoui_backend_window_set_flex_gap(struct picoui_window *window, int item_ga
     }
     return 0;
 }
+
+/**
+ * @brief Set grid columns of window backend
+ *
+ * @param[in] window Window instance
+ * @param[in] tracks tracks
+ * @param[in] count Count
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_window_set_grid_columns(struct picoui_window *window, const int *tracks, int count)
 {
@@ -330,6 +399,15 @@ int picoui_backend_window_set_grid_columns(struct picoui_window *window, const i
     return 0;
 }
 
+/**
+ * @brief Set grid rows of window backend
+ *
+ * @param[in] window Window instance
+ * @param[in] tracks tracks
+ * @param[in] count Count
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_window_set_grid_rows(struct picoui_window *window, const int *tracks, int count)
 {
     struct picoui_backend_widget *backend_widget = picoui_backend_window_get(window);
@@ -352,6 +430,15 @@ int picoui_backend_window_set_grid_rows(struct picoui_window *window, const int 
     return 0;
 }
 
+/**
+ * @brief Set grid gap of window backend
+ *
+ * @param[in] window Window instance
+ * @param[in] row_gap row gap
+ * @param[in] col_gap col gap
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_window_set_grid_gap(struct picoui_window *window, int row_gap, int col_gap)
 {
     struct picoui_backend_widget *backend_widget = picoui_backend_window_get(window);
@@ -370,6 +457,15 @@ int picoui_backend_window_set_grid_gap(struct picoui_window *window, int row_gap
     }
     return 0;
 }
+
+/**
+ * @brief Set grid align of window backend
+ *
+ * @param[in] window Window instance
+ * @param[in] col_align col align
+ * @param[in] row_align row align
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_window_set_grid_align(struct picoui_window *window,
                                          enum picoui_align col_align,
@@ -394,6 +490,14 @@ int picoui_backend_window_set_grid_align(struct picoui_window *window,
     return 0;
 }
 
+/**
+ * @brief Set layout type of window backend
+ *
+ * @param[in] window Window instance
+ * @param[in] type Type
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_window_set_layout_type(struct picoui_window *window,
                                           enum picoui_window_layout_type type)
 {
@@ -413,6 +517,17 @@ int picoui_backend_window_set_layout_type(struct picoui_window *window,
     }
     return 0;
 }
+
+/**
+ * @brief Set padding of window backend
+ *
+ * @param[in] window Window instance
+ * @param[in] left Left padding
+ * @param[in] top Top padding
+ * @param[in] right Right padding
+ * @param[in] bottom Bottom padding
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_window_set_padding(struct picoui_window *window,
                                       int left,
@@ -436,6 +551,17 @@ int picoui_backend_window_set_padding(struct picoui_window *window,
     return 0;
 }
 
+/**
+ * @brief Set grid padding of window backend
+ *
+ * @param[in] window Window instance
+ * @param[in] left Left padding
+ * @param[in] top Top padding
+ * @param[in] right Right padding
+ * @param[in] bottom Bottom padding
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_window_set_grid_padding(struct picoui_window *window,
                                            int left,
                                            int top,
@@ -458,6 +584,14 @@ int picoui_backend_window_set_grid_padding(struct picoui_window *window,
     return 0;
 }
 
+/**
+ * @brief Set gap of window backend
+ *
+ * @param[in] window Window instance
+ * @param[in] gap Gap in pixels
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_window_set_gap(struct picoui_window *window, int gap)
 {
     struct picoui_backend_widget *backend_widget = picoui_backend_window_get(window);
@@ -476,6 +610,14 @@ int picoui_backend_window_set_gap(struct picoui_window *window, int gap)
     return 0;
 }
 
+/**
+ * @brief Set flex grow of widget backend
+ *
+ * @param[in] widget Widget instance
+ * @param[in] grow grow
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_widget_set_flex_grow(struct picoui_widget *widget, int grow)
 {
     struct picoui_backend_widget *backend_widget = picoui_backend_widget_get(widget);
@@ -492,6 +634,14 @@ int picoui_backend_widget_set_flex_grow(struct picoui_widget *widget, int grow)
     }
     return 0;
 }
+
+/**
+ * @brief Set flex new track of widget backend
+ *
+ * @param[in] widget Widget instance
+ * @param[in] new_track new track
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_widget_set_flex_new_track(struct picoui_widget *widget, int new_track)
 {
@@ -510,6 +660,14 @@ int picoui_backend_widget_set_flex_new_track(struct picoui_widget *widget, int n
     return 0;
 }
 
+/**
+ * @brief Set ignore layout of widget backend
+ *
+ * @param[in] widget Widget instance
+ * @param[in] ignore_layout ignore layout
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_widget_set_ignore_layout(struct picoui_widget *widget, int ignore_layout)
 {
     struct picoui_backend_widget *backend_widget = picoui_backend_widget_get(widget);
@@ -526,6 +684,19 @@ int picoui_backend_widget_set_ignore_layout(struct picoui_widget *widget, int ig
     }
     return 0;
 }
+
+/**
+ * @brief Set grid cell of widget backend
+ *
+ * @param[in] widget Widget instance
+ * @param[in] col col
+ * @param[in] row Row index
+ * @param[in] col_span Column span count
+ * @param[in] row_span Row span count
+ * @param[in] x_align x align
+ * @param[in] y_align y align
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_widget_set_grid_cell(struct picoui_widget *widget,
                                         int col,

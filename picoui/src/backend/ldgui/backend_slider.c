@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2023-2026 flyingcys (flyingcys@gmail.com). All rights reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "backend.h"
 #include "internal.h"
 #include "ldSlider.h"
@@ -29,6 +47,13 @@ static struct picoui_backend_app_state *picoui_backend_slider_get_app_state(void
     }
     return (struct picoui_backend_app_state *)parent_widget->owner->backend_app;
 }
+
+/**
+ * @brief Create backend for slider
+ *
+ * @param[in] parent Parent widget
+ * @param[in] id Widget identifier string
+ */
 
 void *picoui_backend_create_slider(void *parent, const char *id)
 {
@@ -80,6 +105,14 @@ void *picoui_backend_create_slider(void *parent, const char *id)
     return widget;
 }
 
+/**
+ * @brief Set horizontal of slider backend
+ *
+ * @param[in] slider Slider widget instance
+ * @param[in] horizontal horizontal
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_slider_set_horizontal(struct picoui_slider *slider, int horizontal)
 {
     ldSlider_t *ld_slider = picoui_backend_slider_get_ld(slider);
@@ -92,6 +125,14 @@ int picoui_backend_slider_set_horizontal(struct picoui_slider *slider, int horiz
     return 0;
 }
 
+/**
+ * @brief Get horizontal from slider backend
+ *
+ * @param[out] slider Slider widget instance
+ * @param[in] horizontal horizontal
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_slider_get_horizontal(struct picoui_slider *slider, int *horizontal)
 {
     ldSlider_t *ld_slider = picoui_backend_slider_get_ld(slider);
@@ -103,6 +144,14 @@ int picoui_backend_slider_get_horizontal(struct picoui_slider *slider, int *hori
     *horizontal = ld_slider->isHorizontal ? 1 : 0;
     return 0;
 }
+
+/**
+ * @brief Set background source of slider backend
+ *
+ * @param[in] slider Slider widget instance
+ * @param[in] background_source background source
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_slider_set_background_source(struct picoui_slider *slider,
                                                 struct picoui_image_source *background_source)
@@ -121,6 +170,14 @@ int picoui_backend_slider_set_background_source(struct picoui_slider *slider,
     return 0;
 }
 
+/**
+ * @brief Set indicator source of slider backend
+ *
+ * @param[in] slider Slider widget instance
+ * @param[in] indicator_source indicator source
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_slider_set_indicator_source(struct picoui_slider *slider,
                                                struct picoui_image_source *indicator_source)
 {
@@ -138,6 +195,14 @@ int picoui_backend_slider_set_indicator_source(struct picoui_slider *slider,
     return 0;
 }
 
+/**
+ * @brief Set indicator width of slider backend
+ *
+ * @param[in] slider Slider widget instance
+ * @param[in] indicator_width indicator width
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_slider_set_indicator_width(struct picoui_slider *slider, int indicator_width)
 {
     ldSlider_t *ld_slider = picoui_backend_slider_get_ld(slider);
@@ -150,6 +215,14 @@ int picoui_backend_slider_set_indicator_width(struct picoui_slider *slider, int 
     return 0;
 }
 
+/**
+ * @brief Set slim size of slider backend
+ *
+ * @param[in] slider Slider widget instance
+ * @param[in] slim_size slim size
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_slider_set_slim_size(struct picoui_slider *slider, int slim_size)
 {
     ldSlider_t *ld_slider = picoui_backend_slider_get_ld(slider);
@@ -161,6 +234,14 @@ int picoui_backend_slider_set_slim_size(struct picoui_slider *slider, int slim_s
     ldSliderSetSlimSize(ld_slider, (uint8_t)slim_size);
     return 0;
 }
+
+/**
+ * @brief Get percent from slider backend
+ *
+ * @param[out] slider Slider widget instance
+ * @param[in] percent percent
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_slider_get_percent(struct picoui_slider *slider, int *percent)
 {

@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2023-2026 flyingcys (flyingcys@gmail.com). All rights reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "backend.h"
 #include "internal.h"
 #include "ldBase.h"
@@ -137,6 +155,15 @@ static bool picoui_backend_table_native_slot(struct ld_scene_t *scene, ldMsg_t m
     return false;
 }
 
+/**
+ * @brief Create backend for table
+ *
+ * @param[in] parent Parent widget
+ * @param[in] id Widget identifier string
+ * @param[in] rows Row definitions
+ * @param[in] columns Column definitions
+ */
+
 void *picoui_backend_create_table(void *parent, const char *id, int rows, int columns)
 {
     struct picoui_backend_widget *widget;
@@ -189,6 +216,14 @@ void *picoui_backend_create_table(void *parent, const char *id, int rows, int co
     return widget;
 }
 
+/**
+ * @brief Set keyboard binding of table backend
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] keyboard_binding keyboard binding
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_table_set_keyboard_binding(void *backend_widget, unsigned int keyboard_binding)
 {
     ldTable_t *ld_table = picoui_backend_table_get_ld(backend_widget);
@@ -201,6 +236,14 @@ int picoui_backend_table_set_keyboard_binding(void *backend_widget, unsigned int
     return 0;
 }
 
+/**
+ * @brief Get keyboard binding from table backend
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] keyboard_binding keyboard binding
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_table_get_keyboard_binding(void *backend_widget, unsigned int *keyboard_binding)
 {
     ldTable_t *ld_table = picoui_backend_table_get_ld(backend_widget);
@@ -212,6 +255,16 @@ int picoui_backend_table_get_keyboard_binding(void *backend_widget, unsigned int
     *keyboard_binding = (unsigned int)ld_table->kbNameId;
     return 0;
 }
+
+/**
+ * @brief Set cell text of table backend
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] row Row index
+ * @param[in] column Column index
+ * @param[in] text Text widget instance
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_table_set_cell_text(void *backend_widget, int row, int column, const char *text)
 {
@@ -231,6 +284,14 @@ int picoui_backend_table_set_cell_text(void *backend_widget, int row, int column
     return 0;
 }
 
+/**
+ * @brief Get cell text from table backend
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] row Row index
+ * @param[in] column Column index
+ */
+
 const char *picoui_backend_table_get_cell_text(void *backend_widget, int row, int column)
 {
     ldTable_t *ld_table = picoui_backend_table_get_ld(backend_widget);
@@ -242,6 +303,17 @@ const char *picoui_backend_table_get_cell_text(void *backend_widget, int row, in
 
     return (const char *)ldTableGetItemText(ld_table, (uint8_t)row, (uint8_t)column);
 }
+
+/**
+ * @brief Set cell editable of table backend
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] row Row index
+ * @param[in] column Column index
+ * @param[in] editable editable
+ * @param[in] text_max text max
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_table_set_cell_editable(void *backend_widget,
                                            int row,
@@ -267,6 +339,19 @@ int picoui_backend_table_set_cell_editable(void *backend_widget,
     }
     return 0;
 }
+
+/**
+ * @brief Set item image of table backend
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] row Row index
+ * @param[in] column Column index
+ * @param[in] x X coordinate
+ * @param[in] y Y coordinate
+ * @param[in] source Image source
+ * @param[in] mask_color mask color
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_table_set_item_image(void *backend_widget,
                                         int row,
@@ -294,6 +379,22 @@ int picoui_backend_table_set_item_image(void *backend_widget,
                         (ldColor)mask_color);
     return 0;
 }
+
+/**
+ * @brief Set item button of table backend
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] row Row index
+ * @param[in] column Column index
+ * @param[in] x X coordinate
+ * @param[in] y Y coordinate
+ * @param[in] release_source release source
+ * @param[in] release_mask_color release mask color
+ * @param[in] press_source press source
+ * @param[in] press_mask_color press mask color
+ * @param[in] checkable checkable
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_table_set_item_button(void *backend_widget,
                                          int row,
@@ -331,6 +432,13 @@ int picoui_backend_table_set_item_button(void *backend_widget,
     return 0;
 }
 
+/**
+ * @brief Set excel type of table backend
+ *
+ * @param[in] backend_widget backend widget
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_table_set_excel_type(void *backend_widget)
 {
     ldTable_t *ld_table = picoui_backend_table_get_ld(backend_widget);
@@ -342,6 +450,15 @@ int picoui_backend_table_set_excel_type(void *backend_widget)
     ldTableSetExcelType(ld_table, (arm_2d_font_t *)&ARM_2D_FONT_6x8);
     return 0;
 }
+
+/**
+ * @brief Set item width of table backend
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] column Column index
+ * @param[in] width Width in pixels
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_table_set_item_width(void *backend_widget, int column, int width)
 {
@@ -355,6 +472,15 @@ int picoui_backend_table_set_item_width(void *backend_widget, int column, int wi
     return 0;
 }
 
+/**
+ * @brief Set item height of table backend
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] row Row index
+ * @param[in] height Height in pixels
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_table_set_item_height(void *backend_widget, int row, int height)
 {
     ldTable_t *ld_table = picoui_backend_table_get_ld(backend_widget);
@@ -366,6 +492,17 @@ int picoui_backend_table_set_item_height(void *backend_widget, int row, int heig
     ldTableSetItemHeight(ld_table, (uint8_t)row, (int16_t)height);
     return 0;
 }
+
+/**
+ * @brief Set item color of table backend
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] row Row index
+ * @param[in] column Column index
+ * @param[in] text_color Text color
+ * @param[in] bg_color Background color
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_table_set_item_color(void *backend_widget,
                                         int row,
@@ -384,6 +521,14 @@ int picoui_backend_table_set_item_color(void *backend_widget,
     return 0;
 }
 
+/**
+ * @brief Set bg color of table backend
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] bg_color Background color
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_table_set_bg_color(void *backend_widget, unsigned int bg_color)
 {
     ldTable_t *ld_table = picoui_backend_table_get_ld(backend_widget);
@@ -395,6 +540,16 @@ int picoui_backend_table_set_bg_color(void *backend_widget, unsigned int bg_colo
     ldTableSetBackgroundColor(ld_table, (ldColor)bg_color);
     return 0;
 }
+
+/**
+ * @brief Set item static text of table backend
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] row Row index
+ * @param[in] column Column index
+ * @param[in] text Text widget instance
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_table_set_item_static_text(void *backend_widget, int row, int column, const char *text)
 {
@@ -409,6 +564,15 @@ int picoui_backend_table_set_item_static_text(void *backend_widget, int row, int
     return 0;
 }
 
+/**
+ * @brief Set item font of table backend
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] row Row index
+ * @param[in] column Column index
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_table_set_item_font(void *backend_widget, int row, int column)
 {
     ldTable_t *ld_table = picoui_backend_table_get_ld(backend_widget);
@@ -420,6 +584,16 @@ int picoui_backend_table_set_item_font(void *backend_widget, int row, int column
     ldTableSetItemFont(ld_table, (uint8_t)row, (uint8_t)column, (arm_2d_font_t *)&ARM_2D_FONT_6x8);
     return 0;
 }
+
+/**
+ * @brief Set item align of table backend
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] row Row index
+ * @param[in] column Column index
+ * @param[in] align align
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_table_set_item_align(void *backend_widget,
                                         int row,
@@ -437,6 +611,15 @@ int picoui_backend_table_set_item_align(void *backend_widget,
     ldTableSetItemAlign(ld_table, (uint8_t)row, (uint8_t)column, ld_align);
     return 0;
 }
+
+/**
+ * @brief Get item align from table backend
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] row Row index
+ * @param[in] column Column index
+ * @return -1 on failure
+ */
 
 int picoui_backend_table_get_item_align(void *backend_widget, int row, int column)
 {
@@ -460,6 +643,15 @@ int picoui_backend_table_get_item_align(void *backend_widget, int row, int colum
     }
 }
 
+/**
+ * @brief Get item editable from table backend
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] row Row index
+ * @param[in] column Column index
+ * @return -1 on failure
+ */
+
 int picoui_backend_table_get_item_editable(void *backend_widget, int row, int column)
 {
     ldTable_t *ld_table = picoui_backend_table_get_ld(backend_widget);
@@ -470,6 +662,14 @@ int picoui_backend_table_get_item_editable(void *backend_widget, int row, int co
 
     return ldTableGetItemEditable(ld_table, (uint8_t)row, (uint8_t)column) ? 1 : 0;
 }
+
+/**
+ * @brief table: navigate
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] dir dir
+ * @return -1 on failure
+ */
 
 int picoui_backend_table_navigate(void *backend_widget, enum picoui_native_nav_dir dir)
 {
@@ -490,6 +690,16 @@ int picoui_backend_table_navigate(void *backend_widget, enum picoui_native_nav_d
     return picoui_backend_table_sync_host_current_cell(backend, NULL, NULL);
 }
 
+/**
+ * @brief Get item region from table backend
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] row Row index
+ * @param[in] column Column index
+ * @param[in] region_out region out
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_table_get_item_region(void *backend_widget, int row, int column, void *region_out)
 {
     ldTable_t *ld_table = picoui_backend_table_get_ld(backend_widget);
@@ -509,10 +719,28 @@ int picoui_backend_table_get_item_region(void *backend_widget, int row, int colu
     return 0;
 }
 
+/**
+ * @brief Set selected cell of table backend
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] row Row index
+ * @param[in] column Column index
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_table_set_selected_cell(void *backend_widget, int row, int column)
 {
     return picoui_backend_table_set_current_cell(backend_widget, row, column);
 }
+
+/**
+ * @brief Set current cell of table backend
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] row Row index
+ * @param[in] column Column index
+ * @return -1 on failure
+ */
 
 int picoui_backend_table_set_current_cell(void *backend_widget, int row, int column)
 {
@@ -528,6 +756,15 @@ int picoui_backend_table_set_current_cell(void *backend_widget, int row, int col
     return picoui_backend_table_sync_host_current_cell(backend, NULL, NULL);
 }
 
+/**
+ * @brief table: sync current cell
+ *
+ * @param[in] table table
+ * @param[in] row_out row out
+ * @param[in] column_out column out
+ * @return -1 on failure
+ */
+
 int picoui_backend_table_sync_current_cell(struct picoui_table *table, int *row_out, int *column_out)
 {
     struct picoui_backend_widget *backend;
@@ -539,6 +776,13 @@ int picoui_backend_table_sync_current_cell(struct picoui_table *table, int *row_
     backend = (struct picoui_backend_widget *)table->widget.backend_widget;
     return picoui_backend_table_sync_host_current_cell(backend, row_out, column_out);
 }
+
+/**
+ * @brief table: bind host
+ *
+ * @param[in] backend_widget backend widget
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_table_bind_host(void *backend_widget)
 {

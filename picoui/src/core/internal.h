@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2023-2026 flyingcys (flyingcys@gmail.com). All rights reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #ifndef PICOUI_INTERNAL_H
 #define PICOUI_INTERNAL_H
 
@@ -30,9 +48,40 @@ struct kbBtnInfo_t;
 
 typedef void (*picoui_message_box_callback_t)(struct picoui_message_box *box, void *user_data);
 
+/**
+ * @brief Native platform: align to ld grid
+ *
+ * @param[in] align align
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_native_align_to_ld_grid(enum picoui_native_align align);
+
+/**
+ * @brief Native platform: nav dir to ld
+ *
+ * @param[in] dir dir
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_native_nav_dir_to_ld(enum picoui_native_nav_dir dir);
+
+/**
+ * @brief Native platform: signal to ld
+ *
+ * @param[in] signal signal
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_native_signal_to_ld(enum picoui_native_signal signal);
+
+/**
+ * @brief Native platform: readback policy to backend
+ *
+ * @param[in] policy policy
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_native_readback_policy_to_backend(enum picoui_native_readback_policy policy);
 
 enum picoui_focus_event {
@@ -491,12 +540,68 @@ struct picoui_table {
     int current_column;
 };
 
+/**
+ * @brief Claim input focus
+ *
+ * @param[in] widget Widget instance
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_widget_claim_focus(struct picoui_widget *widget);
+
+/**
+ * @brief Widget: release focus
+ *
+ * @param[in] widget Widget instance
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_widget_release_focus(struct picoui_widget *widget);
+
+/**
+ * @brief Widget: is focus owner
+ *
+ * @param[in] widget Widget instance
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_widget_is_focus_owner(const struct picoui_widget *widget);
+
+/**
+ * @brief Widget: mark edit result
+ *
+ * @param[in] widget Widget instance
+ * @param[in] result result
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_widget_mark_edit_result(struct picoui_widget *widget, enum picoui_edit_result result);
+
+/**
+ * @brief Widget: claim editing
+ *
+ * @param[in] widget Widget instance
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_widget_claim_editing(struct picoui_widget *widget);
+
+/**
+ * @brief Widget: release editing
+ *
+ * @param[in] widget Widget instance
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_widget_release_editing(struct picoui_widget *widget);
+
+/**
+ * @brief Widget: is editing owner
+ *
+ * @param[in] widget Widget instance
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_widget_is_editing_owner(const struct picoui_widget *widget);
 
 #endif

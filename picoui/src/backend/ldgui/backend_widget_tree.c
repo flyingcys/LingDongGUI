@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2023-2026 flyingcys (flyingcys@gmail.com). All rights reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "backend.h"
 #include "ldBase.h"
 
@@ -15,6 +33,14 @@ static int picoui_backend_widget_can_parent(const struct picoui_backend_widget *
         || widget->kind == PICOUI_BACKEND_WIDGET_BACKGROUND;
 }
 
+/**
+ * @brief Check is kind of widget
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] kind kind
+ * @return 0 on success
+ */
+
 int picoui_backend_widget_is_kind(const void *backend_widget,
                                   enum picoui_backend_widget_kind kind)
 {
@@ -27,6 +53,13 @@ int picoui_backend_widget_is_kind(const void *backend_widget,
     return widget->kind == kind;
 }
 
+/**
+ * @brief Get owner from widget backend
+ *
+ * @param[in] backend_widget backend widget
+ * @return Pointer to the object on success, NULL on failure
+ */
+
 struct picoui_app *picoui_backend_widget_get_owner(void *backend_widget)
 {
     struct picoui_backend_widget *widget = backend_widget;
@@ -37,6 +70,13 @@ struct picoui_app *picoui_backend_widget_get_owner(void *backend_widget)
 
     return widget->owner;
 }
+
+/**
+ * @brief Get root from widget backend
+ *
+ * @param[in] backend_widget backend widget
+ * @return Pointer to the object on success, NULL on failure
+ */
 
 struct picoui_backend_widget *picoui_backend_widget_get_root(void *backend_widget)
 {
@@ -49,6 +89,13 @@ struct picoui_backend_widget *picoui_backend_widget_get_root(void *backend_widge
     return widget->root;
 }
 
+/**
+ * @brief Get parent from widget backend
+ *
+ * @param[in] backend_widget backend widget
+ * @return Pointer to the object on success, NULL on failure
+ */
+
 struct picoui_backend_widget *picoui_backend_widget_get_parent(void *backend_widget)
 {
     struct picoui_backend_widget *widget = backend_widget;
@@ -59,6 +106,13 @@ struct picoui_backend_widget *picoui_backend_widget_get_parent(void *backend_wid
 
     return widget->parent;
 }
+
+/**
+ * @brief Get first child from widget backend
+ *
+ * @param[in] backend_widget backend widget
+ * @return Pointer to the object on success, NULL on failure
+ */
 
 struct picoui_backend_widget *picoui_backend_widget_get_first_child(void *backend_widget)
 {
@@ -71,6 +125,13 @@ struct picoui_backend_widget *picoui_backend_widget_get_first_child(void *backen
     return widget->first_child;
 }
 
+/**
+ * @brief Get next sibling from widget backend
+ *
+ * @param[in] backend_widget backend widget
+ * @return Pointer to the object on success, NULL on failure
+ */
+
 struct picoui_backend_widget *picoui_backend_widget_get_next_sibling(void *backend_widget)
 {
     struct picoui_backend_widget *widget = backend_widget;
@@ -81,6 +142,14 @@ struct picoui_backend_widget *picoui_backend_widget_get_next_sibling(void *backe
 
     return widget->next_sibling;
 }
+
+/**
+ * @brief widget: find by name id
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] name_id Name identifier ID
+ * @return Pointer to the object on success, NULL on failure
+ */
 
 struct picoui_backend_widget *picoui_backend_widget_find_by_name_id(void *backend_widget, uint16_t name_id)
 {
@@ -107,6 +176,14 @@ struct picoui_backend_widget *picoui_backend_widget_find_by_name_id(void *backen
 
     return NULL;
 }
+
+/**
+ * @brief Attach  child to widget
+ *
+ * @param[in] parent Parent widget
+ * @param[in] child Child widget
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_widget_attach_child(void *parent, void *child)
 {
@@ -160,6 +237,13 @@ static void picoui_backend_widget_clear_owner_and_root(struct picoui_backend_wid
     }
 }
 
+/**
+ * @brief Detach  from parent to widget
+ *
+ * @param[in] backend_widget backend widget
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_widget_detach_from_parent(void *backend_widget)
 {
     struct picoui_backend_widget *widget = backend_widget;
@@ -195,6 +279,13 @@ int picoui_backend_widget_detach_from_parent(void *backend_widget)
     picoui_backend_widget_clear_owner_and_root(widget);
     return 0;
 }
+
+/**
+ * @brief widget: unbind host
+ *
+ * @param[in] backend_widget backend widget
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_widget_unbind_host(void *backend_widget)
 {

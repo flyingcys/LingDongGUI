@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2023-2026 flyingcys (flyingcys@gmail.com). All rights reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "picoui/keyboard.h"
 #include "internal.h"
 #include "ldKeyboard.h"
@@ -67,6 +85,14 @@ static int picoui_keyboard_get_selected_key_code_internal(const struct picoui_ke
     return 0;
 }
 
+/**
+ * @brief Create keyboard widget
+ *
+ * @param[in] parent Parent widget
+ * @param[in] id Widget identifier string
+ * @return Pointer to the object on success, NULL on failure
+ */
+
 struct picoui_keyboard *picoui_keyboard_create(struct picoui_window *parent, const char *id)
 {
     struct picoui_keyboard *keyboard;
@@ -95,6 +121,14 @@ struct picoui_keyboard *picoui_keyboard_create(struct picoui_window *parent, con
     }
     return keyboard;
 }
+
+/**
+ * @brief Create keyboard widget with properties
+ *
+ * @param[in] parent Parent widget
+ * @param[in] props Properties structure
+ * @return Pointer to the object on success, NULL on failure
+ */
 
 struct picoui_keyboard *picoui_keyboard_create_with_props(struct picoui_window *parent,
                                                           const struct picoui_keyboard_props *props)
@@ -133,6 +167,14 @@ struct picoui_keyboard *picoui_keyboard_create_with_props(struct picoui_window *
     return keyboard;
 }
 
+/**
+ * @brief keyboard input ascii
+ *
+ * @param[in] keyboard Keyboard widget instance
+ * @param[in] ascii ascii
+ * @return -1 on failure
+ */
+
 int picoui_keyboard_input_ascii(struct picoui_keyboard *keyboard, unsigned int ascii)
 {
     if (keyboard == 0) {
@@ -141,6 +183,14 @@ int picoui_keyboard_input_ascii(struct picoui_keyboard *keyboard, unsigned int a
 
     return picoui_backend_keyboard_input_ascii(keyboard->widget.backend_widget, ascii);
 }
+
+/**
+ * @brief keyboard navigate
+ *
+ * @param[in] keyboard Keyboard widget instance
+ * @param[in] direction direction
+ * @return -1 on failure
+ */
 
 int picoui_keyboard_navigate(struct picoui_keyboard *keyboard, int direction)
 {
@@ -151,6 +201,13 @@ int picoui_keyboard_navigate(struct picoui_keyboard *keyboard, int direction)
     return picoui_backend_keyboard_navigate(keyboard->widget.backend_widget, direction);
 }
 
+/**
+ * @brief keyboard update
+ *
+ * @param[in] keyboard Keyboard widget instance
+ * @return -1 on failure
+ */
+
 int picoui_keyboard_update(struct picoui_keyboard *keyboard)
 {
     if (keyboard == 0) {
@@ -159,6 +216,14 @@ int picoui_keyboard_update(struct picoui_keyboard *keyboard)
 
     return picoui_backend_keyboard_update(keyboard->widget.backend_widget);
 }
+
+/**
+ * @brief keyboard button update
+ *
+ * @param[in] keyboard Keyboard widget instance
+ * @param[in] key_code key code
+ * @return -1 on failure
+ */
 
 int picoui_keyboard_button_update(struct picoui_keyboard *keyboard, unsigned int key_code)
 {
@@ -169,6 +234,13 @@ int picoui_keyboard_button_update(struct picoui_keyboard *keyboard, unsigned int
     return picoui_backend_keyboard_button_update(keyboard->widget.backend_widget, (unsigned char)key_code);
 }
 
+/**
+ * @brief keyboard click
+ *
+ * @param[in] keyboard Keyboard widget instance
+ * @return -1 on failure
+ */
+
 int picoui_keyboard_click(struct picoui_keyboard *keyboard)
 {
     if (keyboard == 0) {
@@ -178,6 +250,13 @@ int picoui_keyboard_click(struct picoui_keyboard *keyboard)
     return picoui_backend_keyboard_click(keyboard->widget.backend_widget);
 }
 
+/**
+ * @brief keyboard exit
+ *
+ * @param[in] keyboard Keyboard widget instance
+ * @return -1 on failure
+ */
+
 int picoui_keyboard_exit(struct picoui_keyboard *keyboard)
 {
     if (keyboard == 0) {
@@ -186,6 +265,15 @@ int picoui_keyboard_exit(struct picoui_keyboard *keyboard)
 
     return picoui_backend_keyboard_exit(keyboard->widget.backend_widget);
 }
+
+/**
+ * @brief Set buttons of keyboard widget
+ *
+ * @param[in] keyboard Keyboard widget instance
+ * @param[in] buttons buttons
+ * @param[in] count Count
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_keyboard_set_buttons(struct picoui_keyboard *keyboard,
                                 const struct picoui_keyboard_button *buttons,
@@ -243,6 +331,15 @@ int picoui_keyboard_set_buttons(struct picoui_keyboard *keyboard,
     return 0;
 }
 
+/**
+ * @brief Get buttons of keyboard widget
+ *
+ * @param[in] keyboard Keyboard widget instance
+ * @param[in] buttons buttons
+ * @param[in] count Count
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_keyboard_get_buttons(const struct picoui_keyboard *keyboard,
                                 const struct picoui_keyboard_button **buttons,
                                 int *count)
@@ -255,6 +352,15 @@ int picoui_keyboard_get_buttons(const struct picoui_keyboard *keyboard,
     *count = keyboard->layout_count;
     return 0;
 }
+
+/**
+ * @brief Set on key event of keyboard widget
+ *
+ * @param[in] keyboard Keyboard widget instance
+ * @param[in] cb cb
+ * @param[in] user_data User data pointer
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_keyboard_set_on_key_event(struct picoui_keyboard *keyboard,
                                      picoui_keyboard_event_cb cb,
@@ -269,6 +375,13 @@ int picoui_keyboard_set_on_key_event(struct picoui_keyboard *keyboard,
     return 0;
 }
 
+/**
+ * @brief Get selected key code of keyboard widget
+ *
+ * @param[in] keyboard Keyboard widget instance
+ * @return -1 on failure
+ */
+
 int picoui_keyboard_get_selected_key_code(const struct picoui_keyboard *keyboard)
 {
     unsigned int key_code = 0;
@@ -280,6 +393,15 @@ int picoui_keyboard_get_selected_key_code(const struct picoui_keyboard *keyboard
     return (int)key_code;
 }
 
+/**
+ * @brief Set layout of keyboard widget
+ *
+ * @param[in] keyboard Keyboard widget instance
+ * @param[in] buttons buttons
+ * @param[in] count Count
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_keyboard_set_layout(struct picoui_keyboard *keyboard,
                                const struct picoui_keyboard_button *buttons,
                                int count)
@@ -287,12 +409,30 @@ int picoui_keyboard_set_layout(struct picoui_keyboard *keyboard,
     return picoui_keyboard_set_buttons(keyboard, buttons, count);
 }
 
+/**
+ * @brief Set event callback of keyboard widget
+ *
+ * @param[in] keyboard Keyboard widget instance
+ * @param[in] cb cb
+ * @param[in] user_data User data pointer
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_keyboard_set_event_callback(struct picoui_keyboard *keyboard,
                                        picoui_keyboard_event_cb cb,
                                        void *user_data)
 {
     return picoui_keyboard_set_on_key_event(keyboard, cb, user_data);
 }
+
+/**
+ * @brief Set draw callback of keyboard widget
+ *
+ * @param[in] keyboard Keyboard widget instance
+ * @param[in] cb cb
+ * @param[in] user_data User data pointer
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_keyboard_set_draw_callback(struct picoui_keyboard *keyboard,
                                       picoui_keyboard_draw_cb cb,

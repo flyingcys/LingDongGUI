@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2023-2026 flyingcys (flyingcys@gmail.com). All rights reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "backend.h"
 #include "internal.h"
 #include "ldCheckBox.h"
@@ -34,6 +52,13 @@ static struct picoui_backend_app_state *picoui_backend_checkbox_get_app_state(vo
     }
     return (struct picoui_backend_app_state *)parent_widget->owner->backend_app;
 }
+
+/**
+ * @brief Create backend for checkbox
+ *
+ * @param[in] parent Parent widget
+ * @param[in] id Widget identifier string
+ */
 
 void *picoui_backend_create_checkbox(void *parent, const char *id)
 {
@@ -87,6 +112,14 @@ void *picoui_backend_create_checkbox(void *parent, const char *id)
     return widget;
 }
 
+/**
+ * @brief Set check color of checkbox backend
+ *
+ * @param[in] checkbox Checkbox widget instance
+ * @param[in] rgb RGB color value (0xRRGGBB)
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_checkbox_set_check_color(struct picoui_checkbox *checkbox, unsigned int rgb)
 {
     ldCheckBox_t *ld_checkbox = picoui_backend_checkbox_get_ld(checkbox);
@@ -99,6 +132,14 @@ int picoui_backend_checkbox_set_check_color(struct picoui_checkbox *checkbox, un
     return 0;
 }
 
+/**
+ * @brief Set text color of checkbox backend
+ *
+ * @param[in] checkbox Checkbox widget instance
+ * @param[in] rgb RGB color value (0xRRGGBB)
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_checkbox_set_text_color(struct picoui_checkbox *checkbox, unsigned int rgb)
 {
     ldCheckBox_t *ld_checkbox = picoui_backend_checkbox_get_ld(checkbox);
@@ -110,6 +151,14 @@ int picoui_backend_checkbox_set_text_color(struct picoui_checkbox *checkbox, uns
     ldCheckBoxSetTextColor(ld_checkbox, picoui_backend_checkbox_rgb_to_ld_color(rgb));
     return 0;
 }
+
+/**
+ * @brief Set unchecked source of checkbox backend
+ *
+ * @param[in] checkbox Checkbox widget instance
+ * @param[in] source Image source
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_checkbox_set_unchecked_source(struct picoui_checkbox *checkbox,
                                                  struct picoui_image_source *source)
@@ -128,6 +177,14 @@ int picoui_backend_checkbox_set_unchecked_source(struct picoui_checkbox *checkbo
     return 0;
 }
 
+/**
+ * @brief Set checked source of checkbox backend
+ *
+ * @param[in] checkbox Checkbox widget instance
+ * @param[in] source Image source
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_checkbox_set_checked_source(struct picoui_checkbox *checkbox,
                                                struct picoui_image_source *source)
 {
@@ -145,6 +202,14 @@ int picoui_backend_checkbox_set_checked_source(struct picoui_checkbox *checkbox,
     return 0;
 }
 
+/**
+ * @brief Set radio group of checkbox backend
+ *
+ * @param[in] checkbox Checkbox widget instance
+ * @param[in] radio_group Radio button group ID
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_checkbox_set_radio_group(struct picoui_checkbox *checkbox, int radio_group)
 {
     ldCheckBox_t *ld_checkbox = picoui_backend_checkbox_get_ld(checkbox);
@@ -156,6 +221,14 @@ int picoui_backend_checkbox_set_radio_group(struct picoui_checkbox *checkbox, in
     ldCheckBoxSetRadioButtonGroup(ld_checkbox, (uint8_t)radio_group);
     return 0;
 }
+
+/**
+ * @brief Set string left space of checkbox backend
+ *
+ * @param[in] checkbox Checkbox widget instance
+ * @param[in] space Spacing
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_checkbox_set_string_left_space(struct picoui_checkbox *checkbox, int space)
 {

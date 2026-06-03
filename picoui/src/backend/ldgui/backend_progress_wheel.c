@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2023-2026 flyingcys (flyingcys@gmail.com). All rights reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "backend.h"
 #include "internal.h"
 #include "ldProgressWheel.h"
@@ -34,6 +52,13 @@ static ldProgressWheel_t *picoui_backend_progress_wheel_get_ld(struct picoui_pro
 
     return (ldProgressWheel_t *)backend->ld_widget;
 }
+
+/**
+ * @brief Create backend for progress wheel
+ *
+ * @param[in] parent Parent widget
+ * @param[in] id Widget identifier string
+ */
 
 void *picoui_backend_create_progress_wheel(void *parent, const char *id)
 {
@@ -91,6 +116,14 @@ void *picoui_backend_create_progress_wheel(void *parent, const char *id)
     return widget;
 }
 
+/**
+ * @brief progress: wheel set percent
+ *
+ * @param[in] wheel wheel
+ * @param[in] percent percent
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_progress_wheel_set_percent(struct picoui_progress_wheel *wheel, int percent)
 {
     ldProgressWheel_t *ld_progress_wheel = picoui_backend_progress_wheel_get_ld(wheel);
@@ -106,6 +139,14 @@ int picoui_backend_progress_wheel_set_percent(struct picoui_progress_wheel *whee
     return 0;
 }
 
+/**
+ * @brief progress: wheel get percent
+ *
+ * @param[out] wheel wheel
+ * @param[in] percent percent
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_progress_wheel_get_percent(struct picoui_progress_wheel *wheel, int *percent)
 {
     ldProgressWheel_t *ld_progress_wheel = picoui_backend_progress_wheel_get_ld(wheel);
@@ -117,6 +158,14 @@ int picoui_backend_progress_wheel_get_percent(struct picoui_progress_wheel *whee
     *percent = ld_progress_wheel->iProgress / 10;
     return 0;
 }
+
+/**
+ * @brief progress: wheel set wheel color
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] rgb RGB color value (0xRRGGBB)
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_progress_wheel_set_wheel_color(void *backend_widget, unsigned int rgb)
 {
@@ -135,6 +184,14 @@ int picoui_backend_progress_wheel_set_wheel_color(void *backend_widget, unsigned
     ldProgressWheelSetWheelColor(ld_progress_wheel, picoui_backend_rgb_to_ld_color(rgb));
     return 0;
 }
+
+/**
+ * @brief progress: wheel set dot color
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] rgb RGB color value (0xRRGGBB)
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_progress_wheel_set_dot_color(void *backend_widget, unsigned int rgb)
 {
@@ -156,6 +213,14 @@ int picoui_backend_progress_wheel_set_dot_color(void *backend_widget, unsigned i
     return 0;
 }
 
+/**
+ * @brief progress: wheel set dot enabled
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] enabled Enable state
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_progress_wheel_set_dot_enabled(void *backend_widget, int enabled)
 {
     ldProgressWheel_t *ld_progress_wheel;
@@ -175,6 +240,13 @@ int picoui_backend_progress_wheel_set_dot_enabled(void *backend_widget, int enab
                                enabled != 0);
     return 0;
 }
+
+/**
+ * @brief progress: wheel get dot enabled
+ *
+ * @param[in] backend_widget backend widget
+ * @return -1 on failure
+ */
 
 int picoui_backend_progress_wheel_get_dot_enabled(void *backend_widget)
 {

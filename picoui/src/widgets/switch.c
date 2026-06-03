@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2023-2026 flyingcys (flyingcys@gmail.com). All rights reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "internal.h"
 #include "picoui/switch.h"
 
@@ -36,6 +54,14 @@ static int picoui_switch_props_are_valid(const struct picoui_switch_props *props
         && props->padding >= 0;
 }
 
+/**
+ * @brief Create switch widget
+ *
+ * @param[in] parent Parent widget
+ * @param[in] id Widget identifier string
+ * @return Pointer to the object on success, NULL on failure
+ */
+
 struct picoui_switch *picoui_switch_create(struct picoui_window *parent, const char *id)
 {
     struct picoui_switch *sw;
@@ -64,6 +90,14 @@ struct picoui_switch *picoui_switch_create(struct picoui_window *parent, const c
     }
     return sw;
 }
+
+/**
+ * @brief Create switch widget with properties
+ *
+ * @param[in] parent Parent widget
+ * @param[in] props Properties structure
+ * @return Pointer to the object on success, NULL on failure
+ */
 
 struct picoui_switch *picoui_switch_create_with_props(struct picoui_window *parent,
                                                       const struct picoui_switch_props *props)
@@ -133,6 +167,14 @@ struct picoui_switch *picoui_switch_create_with_props(struct picoui_window *pare
     return sw;
 }
 
+/**
+ * @brief Set checked of switch widget
+ *
+ * @param[in] sw sw
+ * @param[in] checked Checked state
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_switch_set_checked(struct picoui_switch *sw, int checked)
 {
     int normalized_checked;
@@ -158,6 +200,13 @@ int picoui_switch_set_checked(struct picoui_switch *sw, int checked)
                                               sw->user_data);
 }
 
+/**
+ * @brief switch is checked
+ *
+ * @param[in] sw sw
+ * @return 0 on success
+ */
+
 int picoui_switch_is_checked(struct picoui_switch *sw)
 {
     if (sw == 0) {
@@ -166,6 +215,14 @@ int picoui_switch_is_checked(struct picoui_switch *sw)
 
     return sw->checked;
 }
+
+/**
+ * @brief Set off source of switch widget
+ *
+ * @param[in] sw sw
+ * @param[in] source Image source
+ * @return -1 on failure
+ */
 
 int picoui_switch_set_off_source(struct picoui_switch *sw, struct picoui_image_source *source)
 {
@@ -176,6 +233,14 @@ int picoui_switch_set_off_source(struct picoui_switch *sw, struct picoui_image_s
     return picoui_backend_switch_set_off_source(sw, source);
 }
 
+/**
+ * @brief Set on source of switch widget
+ *
+ * @param[in] sw sw
+ * @param[in] source Image source
+ * @return -1 on failure
+ */
+
 int picoui_switch_set_on_source(struct picoui_switch *sw, struct picoui_image_source *source)
 {
     if (sw == 0 || (source != 0 && source->img_tile == 0)) {
@@ -184,6 +249,14 @@ int picoui_switch_set_on_source(struct picoui_switch *sw, struct picoui_image_so
 
     return picoui_backend_switch_set_on_source(sw, source);
 }
+
+/**
+ * @brief Set knob source of switch widget
+ *
+ * @param[in] sw sw
+ * @param[in] source Image source
+ * @return -1 on failure
+ */
 
 int picoui_switch_set_knob_source(struct picoui_switch *sw, struct picoui_image_source *source)
 {
@@ -194,6 +267,14 @@ int picoui_switch_set_knob_source(struct picoui_switch *sw, struct picoui_image_
     return picoui_backend_switch_set_knob_source(sw, source);
 }
 
+/**
+ * @brief Set horizontal of switch widget
+ *
+ * @param[in] sw sw
+ * @param[in] horizontal horizontal
+ * @return -1 on failure
+ */
+
 int picoui_switch_set_horizontal(struct picoui_switch *sw, int horizontal)
 {
     if (sw == 0) {
@@ -202,6 +283,14 @@ int picoui_switch_set_horizontal(struct picoui_switch *sw, int horizontal)
 
     return picoui_backend_switch_set_horizontal(sw, horizontal != 0);
 }
+
+/**
+ * @brief Get horizontal of switch widget
+ *
+ * @param[out] sw sw
+ * @param[in] horizontal horizontal
+ * @return -1 on failure
+ */
 
 int picoui_switch_get_horizontal(struct picoui_switch *sw, int *horizontal)
 {
@@ -212,6 +301,14 @@ int picoui_switch_get_horizontal(struct picoui_switch *sw, int *horizontal)
     return picoui_backend_switch_get_horizontal(sw, horizontal);
 }
 
+/**
+ * @brief Set direction of switch widget
+ *
+ * @param[in] sw sw
+ * @param[in] direction direction
+ * @return -1 on failure
+ */
+
 int picoui_switch_set_direction(struct picoui_switch *sw, int direction)
 {
     if (sw == 0 || direction < 0 || direction > 2) {
@@ -220,6 +317,14 @@ int picoui_switch_set_direction(struct picoui_switch *sw, int direction)
 
     return picoui_backend_switch_set_direction(sw, direction);
 }
+
+/**
+ * @brief Get direction of switch widget
+ *
+ * @param[out] sw sw
+ * @param[in] direction direction
+ * @return -1 on failure
+ */
 
 int picoui_switch_get_direction(struct picoui_switch *sw, int *direction)
 {
@@ -230,6 +335,14 @@ int picoui_switch_get_direction(struct picoui_switch *sw, int *direction)
     return picoui_backend_switch_get_direction(sw, direction);
 }
 
+/**
+ * @brief Set disabled of switch widget
+ *
+ * @param[in] sw sw
+ * @param[in] disabled disabled
+ * @return -1 on failure
+ */
+
 int picoui_switch_set_disabled(struct picoui_switch *sw, int disabled)
 {
     if (sw == 0) {
@@ -238,6 +351,14 @@ int picoui_switch_set_disabled(struct picoui_switch *sw, int disabled)
 
     return picoui_backend_switch_set_disabled(sw, disabled != 0);
 }
+
+/**
+ * @brief Get disabled of switch widget
+ *
+ * @param[out] sw sw
+ * @param[in] disabled disabled
+ * @return -1 on failure
+ */
 
 int picoui_switch_get_disabled(struct picoui_switch *sw, int *disabled)
 {
@@ -248,6 +369,15 @@ int picoui_switch_get_disabled(struct picoui_switch *sw, int *disabled)
     return picoui_backend_switch_get_disabled(sw, disabled);
 }
 
+/**
+ * @brief switch can navigate
+ *
+ * @param[in] sw sw
+ * @param[in] direction direction
+ * @param[in] can_navigate can navigate
+ * @return -1 on failure
+ */
+
 int picoui_switch_can_navigate(struct picoui_switch *sw, int direction, int *can_navigate)
 {
     if (sw == 0 || can_navigate == 0 || direction < 1 || direction > 4) {
@@ -257,6 +387,14 @@ int picoui_switch_can_navigate(struct picoui_switch *sw, int direction, int *can
     return picoui_backend_switch_can_navigate(sw, direction, can_navigate);
 }
 
+/**
+ * @brief switch navigate
+ *
+ * @param[in] sw sw
+ * @param[in] direction direction
+ * @return -1 on failure
+ */
+
 int picoui_switch_navigate(struct picoui_switch *sw, int direction)
 {
     if (sw == 0 || direction < 1 || direction > 4) {
@@ -265,6 +403,15 @@ int picoui_switch_navigate(struct picoui_switch *sw, int direction)
 
     return picoui_backend_switch_navigate(sw, direction);
 }
+
+/**
+ * @brief Set on toggled of switch widget
+ *
+ * @param[in] sw sw
+ * @param[in] cb cb
+ * @param[in] user_data User data pointer
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_switch_set_on_toggled(struct picoui_switch *sw,
                                  picoui_value_changed_cb cb,

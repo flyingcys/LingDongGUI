@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2023-2026 flyingcys (flyingcys@gmail.com). All rights reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "backend.h"
 #include "internal.h"
 #include "ldCalendar.h"
@@ -82,6 +100,13 @@ static int picoui_backend_calendar_sync_host_cache(struct picoui_backend_widget 
     return 0;
 }
 
+/**
+ * @brief Create backend for calendar
+ *
+ * @param[in] parent Parent widget
+ * @param[in] id Widget identifier string
+ */
+
 void *picoui_backend_create_calendar(void *parent, const char *id)
 {
     struct picoui_backend_widget *widget;
@@ -138,6 +163,14 @@ void *picoui_backend_create_calendar(void *parent, const char *id)
     return widget;
 }
 
+/**
+ * @brief Set day names of calendar backend
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] day_names[7 day names[7
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_calendar_set_day_names(void *backend_widget, const char *const day_names[7])
 {
     ldCalendar_t *ld_calendar = picoui_backend_calendar_get_ld(backend_widget);
@@ -158,6 +191,16 @@ int picoui_backend_calendar_set_day_names(void *backend_widget, const char *cons
     return 0;
 }
 
+/**
+ * @brief Set date of calendar backend
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] year year
+ * @param[in] month month
+ * @param[in] day day
+ * @return -1 on failure
+ */
+
 int picoui_backend_calendar_set_date(void *backend_widget, int year, int month, int day)
 {
     struct picoui_backend_widget *backend = backend_widget;
@@ -170,6 +213,16 @@ int picoui_backend_calendar_set_date(void *backend_widget, int year, int month, 
     ldCalendarSetDate(ld_calendar, (uint16_t)year, (uint8_t)month, (uint8_t)day);
     return picoui_backend_calendar_sync_host_cache(backend);
 }
+
+/**
+ * @brief Get date from calendar backend
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] year year
+ * @param[in] month month
+ * @param[in] day day
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_calendar_get_date(void *backend_widget, int *year, int *month, int *day)
 {
@@ -193,6 +246,14 @@ int picoui_backend_calendar_get_date(void *backend_widget, int *year, int *month
     return 0;
 }
 
+/**
+ * @brief Set header visible of calendar backend
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] visible Visibility state
+ * @return -1 on failure
+ */
+
 int picoui_backend_calendar_set_header_visible(void *backend_widget, int visible)
 {
     struct picoui_backend_widget *backend = backend_widget;
@@ -205,6 +266,13 @@ int picoui_backend_calendar_set_header_visible(void *backend_widget, int visible
     ldCalendarSetHeader(ld_calendar, visible != 0);
     return picoui_backend_calendar_sync_host_cache(backend);
 }
+
+/**
+ * @brief Get header visible from calendar backend
+ *
+ * @param[in] backend_widget backend widget
+ * @return -1 on failure
+ */
 
 int picoui_backend_calendar_get_header_visible(void *backend_widget)
 {
@@ -219,6 +287,14 @@ int picoui_backend_calendar_get_header_visible(void *backend_widget)
     return calendar->show_header;
 }
 
+/**
+ * @brief Set header format of calendar backend
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] format Format string
+ * @return -1 on failure
+ */
+
 int picoui_backend_calendar_set_header_format(void *backend_widget, const char *format)
 {
     struct picoui_backend_widget *backend = backend_widget;
@@ -232,6 +308,14 @@ int picoui_backend_calendar_set_header_format(void *backend_widget, const char *
     return picoui_backend_calendar_sync_host_cache(backend);
 }
 
+/**
+ * @brief Set bg color of calendar backend
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] rgb RGB color value (0xRRGGBB)
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_calendar_set_bg_color(void *backend_widget, unsigned int rgb)
 {
     ldCalendar_t *ld_calendar = picoui_backend_calendar_get_ld(backend_widget);
@@ -243,6 +327,14 @@ int picoui_backend_calendar_set_bg_color(void *backend_widget, unsigned int rgb)
     ld_calendar->bgColor = picoui_backend_calendar_rgb_to_ld(rgb);
     return 0;
 }
+
+/**
+ * @brief Set item color of calendar backend
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] rgb RGB color value (0xRRGGBB)
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_calendar_set_item_color(void *backend_widget, unsigned int rgb)
 {
@@ -256,6 +348,14 @@ int picoui_backend_calendar_set_item_color(void *backend_widget, unsigned int rg
     return 0;
 }
 
+/**
+ * @brief Set text color of calendar backend
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] rgb RGB color value (0xRRGGBB)
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_calendar_set_text_color(void *backend_widget, unsigned int rgb)
 {
     ldCalendar_t *ld_calendar = picoui_backend_calendar_get_ld(backend_widget);
@@ -267,6 +367,14 @@ int picoui_backend_calendar_set_text_color(void *backend_widget, unsigned int rg
     ld_calendar->textColor = picoui_backend_calendar_rgb_to_ld(rgb);
     return 0;
 }
+
+/**
+ * @brief Set use system date of calendar backend
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] enabled Enable state
+ * @return -1 on failure
+ */
 
 int picoui_backend_calendar_set_use_system_date(void *backend_widget, int enabled)
 {
@@ -284,6 +392,14 @@ int picoui_backend_calendar_set_use_system_date(void *backend_widget, int enable
     return picoui_backend_calendar_sync_host_cache(backend);
 }
 
+/**
+ * @brief Get use system date from calendar backend
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] enabled Enable state
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_calendar_get_use_system_date(void *backend_widget, int *enabled)
 {
     ldCalendar_t *ld_calendar = picoui_backend_calendar_get_ld(backend_widget);
@@ -295,6 +411,12 @@ int picoui_backend_calendar_get_use_system_date(void *backend_widget, int *enabl
     *enabled = ld_calendar->isAutoSysDate ? 1 : 0;
     return 0;
 }
+
+/**
+ * @brief Get header format from calendar backend
+ *
+ * @param[in] backend_widget backend widget
+ */
 
 const char *picoui_backend_calendar_get_header_format(void *backend_widget)
 {
@@ -308,6 +430,15 @@ const char *picoui_backend_calendar_get_header_format(void *backend_widget)
     calendar = (struct picoui_calendar *)backend->host_widget;
     return calendar->header_format;
 }
+
+/**
+ * @brief Get grid value from calendar backend
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] week week
+ * @param[in] weekday weekday
+ * @return -1 on failure
+ */
 
 int picoui_backend_calendar_get_grid_value(void *backend_widget, int week, int weekday)
 {
@@ -324,6 +455,15 @@ int picoui_backend_calendar_get_grid_value(void *backend_widget, int week, int w
     index = week * 7 + weekday;
     return (int)calendar->grid_values[index];
 }
+
+/**
+ * @brief Check is current month cell of calendar
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] week week
+ * @param[in] weekday weekday
+ * @return -1 on failure
+ */
 
 int picoui_backend_calendar_is_current_month_cell(void *backend_widget, int week, int weekday)
 {

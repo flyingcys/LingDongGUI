@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2023-2026 flyingcys (flyingcys@gmail.com). All rights reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "backend.h"
 #include "internal.h"
 #include "ldGauge.h"
@@ -32,6 +50,13 @@ static ldGauge_t *picoui_backend_gauge_get_ld(struct picoui_gauge *gauge)
     }
     return (ldGauge_t *)backend->ld_widget;
 }
+
+/**
+ * @brief Create backend for gauge
+ *
+ * @param[in] parent Parent widget
+ * @param[in] id Widget identifier string
+ */
 
 void *picoui_backend_create_gauge(void *parent, const char *id)
 {
@@ -134,6 +159,14 @@ void *picoui_backend_create_gauge(void *parent, const char *id)
     return widget;
 }
 
+/**
+ * @brief Set angle of gauge backend
+ *
+ * @param[in] gauge Gauge widget instance
+ * @param[in] angle Angle in degrees
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_gauge_set_angle(struct picoui_gauge *gauge, float angle)
 {
     ldGauge_t *ld_gauge = picoui_backend_gauge_get_ld(gauge);
@@ -148,6 +181,14 @@ int picoui_backend_gauge_set_angle(struct picoui_gauge *gauge, float angle)
     return 0;
 }
 
+/**
+ * @brief Set bg source of gauge backend
+ *
+ * @param[in] gauge Gauge widget instance
+ * @param[in] source Image source
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_gauge_set_bg_source(struct picoui_gauge *gauge, struct picoui_image_source *source)
 {
     ldGauge_t *ld_gauge = picoui_backend_gauge_get_ld(gauge);
@@ -160,6 +201,14 @@ int picoui_backend_gauge_set_bg_source(struct picoui_gauge *gauge, struct picoui
     ld_gauge->ptBgMaskTile = source->mask_tile;
     return 0;
 }
+
+/**
+ * @brief Set pointer source of gauge backend
+ *
+ * @param[in] gauge Gauge widget instance
+ * @param[in] source Image source
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_gauge_set_pointer_source(struct picoui_gauge *gauge, struct picoui_image_source *source)
 {
@@ -180,6 +229,15 @@ int picoui_backend_gauge_set_pointer_source(struct picoui_gauge *gauge, struct p
     return 0;
 }
 
+/**
+ * @brief Set centre offset of gauge backend
+ *
+ * @param[in] gauge Gauge widget instance
+ * @param[in] centre_offset_x centre offset x
+ * @param[in] centre_offset_y centre offset y
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_gauge_set_centre_offset(struct picoui_gauge *gauge,
                                            int centre_offset_x,
                                            int centre_offset_y)
@@ -194,6 +252,15 @@ int picoui_backend_gauge_set_centre_offset(struct picoui_gauge *gauge,
     ld_gauge->centreOffsetY = (int16_t)centre_offset_y;
     return 0;
 }
+
+/**
+ * @brief Set trail of gauge backend
+ *
+ * @param[in] gauge Gauge widget instance
+ * @param[in] bg_trail_source bg trail source
+ * @param[in] pointer_trail_source pointer trail source
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_gauge_set_trail(struct picoui_gauge *gauge,
                                    struct picoui_image_source *bg_trail_source,
@@ -215,6 +282,15 @@ int picoui_backend_gauge_set_trail(struct picoui_gauge *gauge,
     return 0;
 }
 
+/**
+ * @brief Set progress bar of gauge backend
+ *
+ * @param[in] gauge Gauge widget instance
+ * @param[in] bg_progress_source bg progress source
+ * @param[in] pointer_progress_source pointer progress source
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_gauge_set_progress_bar(struct picoui_gauge *gauge,
                                           struct picoui_image_source *bg_progress_source,
                                           struct picoui_image_source *pointer_progress_source)
@@ -235,6 +311,14 @@ int picoui_backend_gauge_set_progress_bar(struct picoui_gauge *gauge,
     return 0;
 }
 
+/**
+ * @brief Get angle from gauge backend
+ *
+ * @param[out] gauge Gauge widget instance
+ * @param[in] angle Angle in degrees
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_gauge_get_angle(struct picoui_gauge *gauge, float *angle)
 {
     ldGauge_t *ld_gauge = picoui_backend_gauge_get_ld(gauge);
@@ -245,6 +329,14 @@ int picoui_backend_gauge_get_angle(struct picoui_gauge *gauge, float *angle)
     *angle = (float)ld_gauge->_nowAngle_x10 / 10.0f;
     return 0;
 }
+
+/**
+ * @brief Set pointer color of gauge backend
+ *
+ * @param[in] gauge Gauge widget instance
+ * @param[in] pointer_color pointer color
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_gauge_set_pointer_color(struct picoui_gauge *gauge, unsigned int pointer_color)
 {
@@ -257,6 +349,14 @@ int picoui_backend_gauge_set_pointer_color(struct picoui_gauge *gauge, unsigned 
     return 0;
 }
 
+/**
+ * @brief Get pointer color from gauge backend
+ *
+ * @param[out] gauge Gauge widget instance
+ * @param[in] pointer_color pointer color
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_gauge_get_pointer_color(struct picoui_gauge *gauge, unsigned int *pointer_color)
 {
     ldGauge_t *ld_gauge = picoui_backend_gauge_get_ld(gauge);
@@ -268,6 +368,14 @@ int picoui_backend_gauge_get_pointer_color(struct picoui_gauge *gauge, unsigned 
     return 0;
 }
 
+/**
+ * @brief Set auto move of gauge backend
+ *
+ * @param[in] gauge Gauge widget instance
+ * @param[in] auto_move auto move
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_gauge_set_auto_move(struct picoui_gauge *gauge, int auto_move)
 {
     ldGauge_t *ld_gauge = picoui_backend_gauge_get_ld(gauge);
@@ -278,6 +386,14 @@ int picoui_backend_gauge_set_auto_move(struct picoui_gauge *gauge, int auto_move
     ldGaugeSetAutoMove(ld_gauge, auto_move != 0);
     return 0;
 }
+
+/**
+ * @brief Get auto move from gauge backend
+ *
+ * @param[out] gauge Gauge widget instance
+ * @param[in] auto_move auto move
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_gauge_get_auto_move(struct picoui_gauge *gauge, int *auto_move)
 {

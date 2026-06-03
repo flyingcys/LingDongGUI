@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2023-2026 flyingcys (flyingcys@gmail.com). All rights reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "backend.h"
 #include "internal.h"
 #include "ldQRCode.h"
@@ -29,6 +47,13 @@ static ldQRCode_t *picoui_backend_qrcode_get_ld(struct picoui_qrcode *qrcode)
 
     return (ldQRCode_t *)backend->ld_widget;
 }
+
+/**
+ * @brief Create backend for qrcode
+ *
+ * @param[in] parent Parent widget
+ * @param[in] id Widget identifier string
+ */
 
 void *picoui_backend_create_qrcode(void *parent, const char *id)
 {
@@ -87,6 +112,14 @@ void *picoui_backend_create_qrcode(void *parent, const char *id)
     return widget;
 }
 
+/**
+ * @brief Set text of qrcode backend
+ *
+ * @param[in] qrcode QR code widget instance
+ * @param[in] text Text widget instance
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_qrcode_set_text(struct picoui_qrcode *qrcode, const char *text)
 {
     ldQRCode_t *ld_qrcode = picoui_backend_qrcode_get_ld(qrcode);
@@ -102,6 +135,12 @@ int picoui_backend_qrcode_set_text(struct picoui_qrcode *qrcode, const char *tex
     return 0;
 }
 
+/**
+ * @brief Get text from qrcode backend
+ *
+ * @param[out] qrcode QR code widget instance
+ */
+
 const char *picoui_backend_qrcode_get_text(struct picoui_qrcode *qrcode)
 {
     ldQRCode_t *ld_qrcode = picoui_backend_qrcode_get_ld(qrcode);
@@ -112,6 +151,14 @@ const char *picoui_backend_qrcode_get_text(struct picoui_qrcode *qrcode)
 
     return (const char *)ld_qrcode->pStr;
 }
+
+/**
+ * @brief Set qr color of qrcode backend
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] rgb RGB color value (0xRRGGBB)
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_qrcode_set_qr_color(void *backend_widget, unsigned int rgb)
 {
@@ -131,6 +178,14 @@ int picoui_backend_qrcode_set_qr_color(void *backend_widget, unsigned int rgb)
     return 0;
 }
 
+/**
+ * @brief Set bg color of qrcode backend
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] rgb RGB color value (0xRRGGBB)
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_qrcode_set_bg_color(void *backend_widget, unsigned int rgb)
 {
     ldQRCode_t *ld_qrcode;
@@ -148,6 +203,14 @@ int picoui_backend_qrcode_set_bg_color(void *backend_widget, unsigned int rgb)
     ld_qrcode->bgColor = (ldColor)rgb;
     return 0;
 }
+
+/**
+ * @brief Set ecc of qrcode backend
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] ecc ecc
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_qrcode_set_ecc(void *backend_widget, int ecc)
 {
@@ -167,6 +230,14 @@ int picoui_backend_qrcode_set_ecc(void *backend_widget, int ecc)
     return 0;
 }
 
+/**
+ * @brief Set max version of qrcode backend
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] max_version max version
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_qrcode_set_max_version(void *backend_widget, int max_version)
 {
     ldQRCode_t *ld_qrcode;
@@ -184,6 +255,14 @@ int picoui_backend_qrcode_set_max_version(void *backend_widget, int max_version)
     ld_qrcode->qrMaxVersion = (uint8_t)max_version;
     return 0;
 }
+
+/**
+ * @brief Set zoom of qrcode backend
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] zoom zoom
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_qrcode_set_zoom(void *backend_widget, int zoom)
 {

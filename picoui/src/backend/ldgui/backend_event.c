@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2023-2026 flyingcys (flyingcys@gmail.com). All rights reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "backend.h"
 #include "internal.h"
 #include "../../../../src/gui/ldBase.h"
@@ -211,6 +229,15 @@ static int picoui_backend_widget_connect_native_events(struct picoui_backend_wid
     return 0;
 }
 
+/**
+ * @brief emit: value changed
+ *
+ * @param[in] cb cb
+ * @param[in] widget Widget instance
+ * @param[in] value Value
+ * @param[in] user_data User data pointer
+ */
+
 void picoui_backend_emit_value_changed(picoui_value_changed_cb cb,
                                        struct picoui_widget *widget,
                                        int value,
@@ -220,6 +247,14 @@ void picoui_backend_emit_value_changed(picoui_value_changed_cb cb,
         cb(widget, value, user_data);
     }
 }
+
+/**
+ * @brief emit: event
+ *
+ * @param[in] cb cb
+ * @param[in] widget Widget instance
+ * @param[in] user_data User data pointer
+ */
 
 void picoui_backend_emit_event(picoui_event_cb cb,
                                struct picoui_widget *widget,
@@ -280,6 +315,14 @@ static struct picoui_backend_widget *picoui_backend_widget_get_editing_backend(s
     return (struct picoui_backend_widget *)app->editing_owner->backend_widget;
 }
 
+/**
+ * @brief widget: bind host
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] widget Widget instance
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_widget_bind_host(void *backend_widget, struct picoui_widget *widget)
 {
     struct picoui_backend_widget *backend = backend_widget;
@@ -305,6 +348,15 @@ int picoui_backend_widget_bind_host(void *backend_widget, struct picoui_widget *
     return 0;
 }
 
+/**
+ * @brief widget: bind ld event bridge
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] scene scene
+ * @param[in] sender sender
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_widget_bind_ld_event_bridge(void *backend_widget,
                                                struct ld_scene_t *scene,
                                                void *sender)
@@ -322,6 +374,18 @@ int picoui_backend_widget_bind_ld_event_bridge(void *backend_widget,
     }
     return 0;
 }
+
+/**
+ * @brief widget: dispatch signal
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] signal signal
+ * @param[in] value Value
+ * @param[in] cb cb
+ * @param[in] widget Widget instance
+ * @param[in] user_data User data pointer
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_widget_dispatch_signal(void *backend_widget,
                                           enum picoui_backend_signal signal,
@@ -361,6 +425,17 @@ int picoui_backend_widget_dispatch_signal(void *backend_widget,
     return -1;
 }
 
+/**
+ * @brief widget: dispatch event
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] signal signal
+ * @param[in] cb cb
+ * @param[in] widget Widget instance
+ * @param[in] user_data User data pointer
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_widget_dispatch_event(void *backend_widget,
                                          enum picoui_backend_signal signal,
                                          picoui_event_cb cb,
@@ -390,6 +465,15 @@ int picoui_backend_widget_dispatch_event(void *backend_widget,
 
     return -1;
 }
+
+/**
+ * @brief widget: dispatch native signal
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] native_signal native signal
+ * @param[in] native_value native value
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_widget_dispatch_native_signal(void *backend_widget,
                                                  uint32_t native_signal,
@@ -606,6 +690,17 @@ int picoui_backend_widget_dispatch_native_signal(void *backend_widget,
     return -1;
 }
 
+/**
+ * @brief widget: update value
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] value Value
+ * @param[in] cb cb
+ * @param[in] widget Widget instance
+ * @param[in] user_data User data pointer
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_widget_update_value(void *backend_widget,
                                        int value,
                                        picoui_value_changed_cb cb,
@@ -634,6 +729,14 @@ int picoui_backend_widget_update_value(void *backend_widget,
     (void)user_data;
     return 0;
 }
+
+/**
+ * @brief emit: clicked
+ *
+ * @param[in] cb cb
+ * @param[in] widget Widget instance
+ * @param[in] user_data User data pointer
+ */
 
 void picoui_backend_emit_clicked(picoui_event_cb cb,
                                  struct picoui_widget *widget,

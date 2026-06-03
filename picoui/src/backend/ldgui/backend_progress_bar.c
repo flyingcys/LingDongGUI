@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2023-2026 flyingcys (flyingcys@gmail.com). All rights reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "backend.h"
 #include "internal.h"
 #include "ldProgressBar.h"
@@ -34,6 +52,13 @@ static ldProgressBar_t *picoui_backend_progress_bar_get_ld(struct picoui_progres
 
     return (ldProgressBar_t *)backend->ld_widget;
 }
+
+/**
+ * @brief Create backend for progress bar
+ *
+ * @param[in] parent Parent widget
+ * @param[in] id Widget identifier string
+ */
 
 void *picoui_backend_create_progress_bar(void *parent, const char *id)
 {
@@ -89,6 +114,14 @@ void *picoui_backend_create_progress_bar(void *parent, const char *id)
     return widget;
 }
 
+/**
+ * @brief progress: bar set percent
+ *
+ * @param[in] bar bar
+ * @param[in] percent percent
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_progress_bar_set_percent(struct picoui_progress_bar *bar, int percent)
 {
     ldProgressBar_t *ld_progress_bar = picoui_backend_progress_bar_get_ld(bar);
@@ -104,6 +137,14 @@ int picoui_backend_progress_bar_set_percent(struct picoui_progress_bar *bar, int
     return 0;
 }
 
+/**
+ * @brief progress: bar get percent
+ *
+ * @param[out] bar bar
+ * @param[in] percent percent
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_progress_bar_get_percent(struct picoui_progress_bar *bar, int *percent)
 {
     ldProgressBar_t *ld_progress_bar = picoui_backend_progress_bar_get_ld(bar);
@@ -115,6 +156,14 @@ int picoui_backend_progress_bar_get_percent(struct picoui_progress_bar *bar, int
     *percent = (int)(ld_progress_bar->permille / 10U);
     return 0;
 }
+
+/**
+ * @brief progress: bar set horizontal
+ *
+ * @param[in] bar bar
+ * @param[in] horizontal horizontal
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_progress_bar_set_horizontal(struct picoui_progress_bar *bar, int horizontal)
 {
@@ -128,6 +177,14 @@ int picoui_backend_progress_bar_set_horizontal(struct picoui_progress_bar *bar, 
     return 0;
 }
 
+/**
+ * @brief progress: bar get horizontal
+ *
+ * @param[out] bar bar
+ * @param[in] horizontal horizontal
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_progress_bar_get_horizontal(struct picoui_progress_bar *bar, int *horizontal)
 {
     ldProgressBar_t *ld_progress_bar = picoui_backend_progress_bar_get_ld(bar);
@@ -139,6 +196,14 @@ int picoui_backend_progress_bar_get_horizontal(struct picoui_progress_bar *bar, 
     *horizontal = ld_progress_bar->isHorizontal ? 1 : 0;
     return 0;
 }
+
+/**
+ * @brief progress: bar set bg source
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] source Image source
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_progress_bar_set_bg_source(void *backend_widget, struct picoui_image_source *source)
 {
@@ -162,6 +227,14 @@ int picoui_backend_progress_bar_set_bg_source(void *backend_widget, struct picou
     return 0;
 }
 
+/**
+ * @brief progress: bar set fg source
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] source Image source
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_progress_bar_set_fg_source(void *backend_widget, struct picoui_image_source *source)
 {
     ldProgressBar_t *ld_progress_bar;
@@ -184,6 +257,14 @@ int picoui_backend_progress_bar_set_fg_source(void *backend_widget, struct picou
     return 0;
 }
 
+/**
+ * @brief progress: bar set frame source
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] source Image source
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_progress_bar_set_frame_source(void *backend_widget, struct picoui_image_source *source)
 {
     ldProgressBar_t *ld_progress_bar;
@@ -201,6 +282,15 @@ int picoui_backend_progress_bar_set_frame_source(void *backend_widget, struct pi
     ldProgressBarSetFrameImage(ld_progress_bar, source->img_tile, source->mask_tile);
     return 0;
 }
+
+/**
+ * @brief progress: bar set color
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] bg_color Background color
+ * @param[in] fg_color Foreground color
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_progress_bar_set_color(void *backend_widget, unsigned int bg_color, unsigned int fg_color)
 {
@@ -221,6 +311,15 @@ int picoui_backend_progress_bar_set_color(void *backend_widget, unsigned int bg_
                           picoui_backend_rgb_to_ld_color(fg_color));
     return 0;
 }
+
+/**
+ * @brief progress: bar set frame color
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] frame_color frame color
+ * @param[in] frame_color_size frame color size
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_progress_bar_set_frame_color(void *backend_widget,
                                                 unsigned int frame_color,
@@ -244,6 +343,14 @@ int picoui_backend_progress_bar_set_frame_color(void *backend_widget,
     return 0;
 }
 
+/**
+ * @brief progress: bar set inverted
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] inverted inverted
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_progress_bar_set_inverted(void *backend_widget, int inverted)
 {
     ldProgressBar_t *ld_progress_bar;
@@ -261,6 +368,13 @@ int picoui_backend_progress_bar_set_inverted(void *backend_widget, int inverted)
     ldProgressBarSetInverted(ld_progress_bar, inverted != 0);
     return 0;
 }
+
+/**
+ * @brief progress: bar get inverted
+ *
+ * @param[in] backend_widget backend widget
+ * @return -1 on failure
+ */
 
 int picoui_backend_progress_bar_get_inverted(void *backend_widget)
 {

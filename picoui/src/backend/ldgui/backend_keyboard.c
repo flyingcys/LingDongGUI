@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2023-2026 flyingcys (flyingcys@gmail.com). All rights reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "backend.h"
 #include "internal.h"
 #include "ldKeyboard.h"
@@ -176,6 +194,13 @@ static struct picoui_line_edit *picoui_backend_keyboard_get_target_line_edit(str
     return (struct picoui_line_edit *)target;
 }
 
+/**
+ * @brief Create backend for keyboard
+ *
+ * @param[in] parent Parent widget
+ * @param[in] id Widget identifier string
+ */
+
 void *picoui_backend_create_keyboard(void *parent, const char *id)
 {
     struct picoui_backend_widget *widget;
@@ -222,6 +247,14 @@ void *picoui_backend_create_keyboard(void *parent, const char *id)
     return widget;
 }
 
+/**
+ * @brief keyboard: input ascii
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] ascii ascii
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_keyboard_input_ascii(void *backend_widget, unsigned int ascii)
 {
     struct picoui_backend_widget *backend = backend_widget;
@@ -252,6 +285,14 @@ int picoui_backend_keyboard_input_ascii(void *backend_widget, unsigned int ascii
     return 0;
 }
 
+/**
+ * @brief keyboard: navigate
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] direction direction
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_keyboard_navigate(void *backend_widget, int direction)
 {
     struct picoui_backend_widget *backend = backend_widget;
@@ -271,6 +312,13 @@ int picoui_backend_keyboard_navigate(void *backend_widget, int direction)
     return 0;
 }
 
+/**
+ * @brief keyboard: update
+ *
+ * @param[in] backend_widget backend widget
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_keyboard_update(void *backend_widget)
 {
     struct picoui_backend_widget *backend = backend_widget;
@@ -289,6 +337,14 @@ int picoui_backend_keyboard_update(void *backend_widget)
     ldKeyboardUpdate(ld_keyboard);
     return 0;
 }
+
+/**
+ * @brief keyboard: button update
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] key_code key code
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_keyboard_button_update(void *backend_widget, unsigned char key_code)
 {
@@ -312,6 +368,13 @@ int picoui_backend_keyboard_button_update(void *backend_widget, unsigned char ke
     return 0;
 }
 
+/**
+ * @brief keyboard: click
+ *
+ * @param[in] backend_widget backend widget
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_keyboard_click(void *backend_widget)
 {
     struct picoui_backend_widget *backend = backend_widget;
@@ -333,6 +396,13 @@ int picoui_backend_keyboard_click(void *backend_widget)
     picoui_backend_keyboard_invoke_event(backend, ld_keyboard->keyCode, PICOUI_NATIVE_SIGNAL_PRESS);
     return 0;
 }
+
+/**
+ * @brief keyboard: exit
+ *
+ * @param[in] backend_widget backend widget
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_keyboard_exit(void *backend_widget)
 {

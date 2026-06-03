@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2023-2026 flyingcys (flyingcys@gmail.com). All rights reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "internal.h"
 #include "picoui/progress_wheel.h"
 #include "picoui/widget.h"
@@ -15,6 +33,14 @@ static int picoui_progress_wheel_props_are_valid(const struct picoui_progress_wh
 {
     return props != 0 && props->id != 0 && props->percent >= 0 && props->percent <= 100;
 }
+
+/**
+ * @brief Create progress wheel widget
+ *
+ * @param[in] parent Parent widget
+ * @param[in] id Widget identifier string
+ * @return Pointer to the object on success, NULL on failure
+ */
 
 struct picoui_progress_wheel *picoui_progress_wheel_create(struct picoui_widget *parent, const char *id)
 {
@@ -50,10 +76,26 @@ struct picoui_progress_wheel *picoui_progress_wheel_create(struct picoui_widget 
     return wheel;
 }
 
+/**
+ * @brief progress wheel init
+ *
+ * @param[in] parent Parent widget
+ * @param[in] id Widget identifier string
+ * @return Pointer to the object
+ */
+
 struct picoui_progress_wheel *picoui_progress_wheel_init(struct picoui_widget *parent, const char *id)
 {
     return picoui_progress_wheel_create(parent, id);
 }
+
+/**
+ * @brief Create progress wheel widget with properties
+ *
+ * @param[in] parent Parent widget
+ * @param[in] props Properties structure
+ * @return Pointer to the object on success, NULL on failure
+ */
 
 struct picoui_progress_wheel *picoui_progress_wheel_create_with_props(
     struct picoui_widget *parent,
@@ -84,6 +126,14 @@ struct picoui_progress_wheel *picoui_progress_wheel_create_with_props(
     return wheel;
 }
 
+/**
+ * @brief Set percent of progress wheel widget
+ *
+ * @param[in] wheel wheel
+ * @param[in] percent percent
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_progress_wheel_set_percent(struct picoui_progress_wheel *wheel, int percent)
 {
     if (wheel == 0 || percent < 0 || percent > 100) {
@@ -98,10 +148,25 @@ int picoui_progress_wheel_set_percent(struct picoui_progress_wheel *wheel, int p
     return 0;
 }
 
+/**
+ * @brief Set progress of progress wheel widget
+ *
+ * @param[in] wheel wheel
+ * @param[in] percent percent
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_progress_wheel_set_progress(struct picoui_progress_wheel *wheel, int percent)
 {
     return picoui_progress_wheel_set_percent(wheel, percent);
 }
+
+/**
+ * @brief Get percent of progress wheel widget
+ *
+ * @param[in] wheel wheel
+ * @return -1 on failure
+ */
 
 int picoui_progress_wheel_get_percent(const struct picoui_progress_wheel *wheel)
 {
@@ -118,6 +183,14 @@ int picoui_progress_wheel_get_percent(const struct picoui_progress_wheel *wheel)
     return percent;
 }
 
+/**
+ * @brief Set wheel color of progress wheel widget
+ *
+ * @param[in] wheel wheel
+ * @param[in] rgb RGB color value (0xRRGGBB)
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_progress_wheel_set_wheel_color(struct picoui_progress_wheel *wheel, unsigned int rgb)
 {
     if (wheel == 0 || rgb > 0xFFFFFFU) {
@@ -131,6 +204,14 @@ int picoui_progress_wheel_set_wheel_color(struct picoui_progress_wheel *wheel, u
     wheel->wheel_color = rgb;
     return 0;
 }
+
+/**
+ * @brief Set dot color of progress wheel widget
+ *
+ * @param[in] wheel wheel
+ * @param[in] rgb RGB color value (0xRRGGBB)
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_progress_wheel_set_dot_color(struct picoui_progress_wheel *wheel, unsigned int rgb)
 {
@@ -146,6 +227,14 @@ int picoui_progress_wheel_set_dot_color(struct picoui_progress_wheel *wheel, uns
     return 0;
 }
 
+/**
+ * @brief Set dot enabled of progress wheel widget
+ *
+ * @param[in] wheel wheel
+ * @param[in] enabled Enable state
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_progress_wheel_set_dot_enabled(struct picoui_progress_wheel *wheel, int enabled)
 {
     if (wheel == 0) {
@@ -159,6 +248,13 @@ int picoui_progress_wheel_set_dot_enabled(struct picoui_progress_wheel *wheel, i
     wheel->dot_enabled = enabled != 0 ? 1 : 0;
     return 0;
 }
+
+/**
+ * @brief Get dot enabled of progress wheel widget
+ *
+ * @param[in] wheel wheel
+ * @return -1 on failure
+ */
 
 int picoui_progress_wheel_get_dot_enabled(const struct picoui_progress_wheel *wheel)
 {

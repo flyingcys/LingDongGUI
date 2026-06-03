@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2023-2026 flyingcys (flyingcys@gmail.com). All rights reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "backend.h"
 #include "internal.h"
 #include "ldClock.h"
@@ -98,6 +116,13 @@ static int picoui_backend_clock_apply_pointer(struct picoui_clock *clock, int in
         return -1;
     }
 }
+
+/**
+ * @brief Create backend for clock
+ *
+ * @param[in] parent Parent widget
+ * @param[in] id Widget identifier string
+ */
 
 void *picoui_backend_create_clock(void *parent, const char *id)
 {
@@ -239,6 +264,14 @@ void *picoui_backend_create_clock(void *parent, const char *id)
     return widget;
 }
 
+/**
+ * @brief Set use system time of clock backend
+ *
+ * @param[in] clock Clock widget instance
+ * @param[in] enabled Enable state
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_clock_set_use_system_time(struct picoui_clock *clock, int enabled)
 {
     ldClock_t *ld_clock = picoui_backend_clock_get_ld(clock);
@@ -251,6 +284,14 @@ int picoui_backend_clock_set_use_system_time(struct picoui_clock *clock, int ena
     return 0;
 }
 
+/**
+ * @brief Get use system time from clock backend
+ *
+ * @param[out] clock Clock widget instance
+ * @param[in] enabled Enable state
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_clock_get_use_system_time(struct picoui_clock *clock, int *enabled)
 {
     ldClock_t *ld_clock = picoui_backend_clock_get_ld(clock);
@@ -262,6 +303,14 @@ int picoui_backend_clock_get_use_system_time(struct picoui_clock *clock, int *en
     *enabled = ld_clock->isAutoSysTime ? 1 : 0;
     return 0;
 }
+
+/**
+ * @brief Set step second of clock backend
+ *
+ * @param[in] clock Clock widget instance
+ * @param[in] step_second step second
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_clock_set_step_second(struct picoui_clock *clock, int step_second)
 {
@@ -278,6 +327,14 @@ int picoui_backend_clock_set_step_second(struct picoui_clock *clock, int step_se
     return 0;
 }
 
+/**
+ * @brief Get step second from clock backend
+ *
+ * @param[out] clock Clock widget instance
+ * @param[in] step_second step second
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_clock_get_step_second(struct picoui_clock *clock, int *step_second)
 {
     ldClock_t *ld_clock = picoui_backend_clock_get_ld(clock);
@@ -290,6 +347,14 @@ int picoui_backend_clock_get_step_second(struct picoui_clock *clock, int *step_s
     return 0;
 }
 
+/**
+ * @brief Set background source of clock backend
+ *
+ * @param[in] clock Clock widget instance
+ * @param[in] source Image source
+ * @return -1 on failure
+ */
+
 int picoui_backend_clock_set_background_source(struct picoui_clock *clock, struct picoui_image_source *source)
 {
     if (clock == NULL || source == NULL || source->img_tile == NULL) {
@@ -299,6 +364,14 @@ int picoui_backend_clock_set_background_source(struct picoui_clock *clock, struc
     clock->background_source = source;
     return picoui_backend_clock_apply_background(clock);
 }
+
+/**
+ * @brief Set hour pointer source of clock backend
+ *
+ * @param[in] clock Clock widget instance
+ * @param[in] source Image source
+ * @return -1 on failure
+ */
 
 int picoui_backend_clock_set_hour_pointer_source(struct picoui_clock *clock, struct picoui_image_source *source)
 {
@@ -310,6 +383,14 @@ int picoui_backend_clock_set_hour_pointer_source(struct picoui_clock *clock, str
     return picoui_backend_clock_apply_pointer(clock, 0);
 }
 
+/**
+ * @brief Set minute pointer source of clock backend
+ *
+ * @param[in] clock Clock widget instance
+ * @param[in] source Image source
+ * @return -1 on failure
+ */
+
 int picoui_backend_clock_set_minute_pointer_source(struct picoui_clock *clock, struct picoui_image_source *source)
 {
     if (clock == NULL || source == NULL || source->img_tile == NULL) {
@@ -320,6 +401,14 @@ int picoui_backend_clock_set_minute_pointer_source(struct picoui_clock *clock, s
     return picoui_backend_clock_apply_pointer(clock, 1);
 }
 
+/**
+ * @brief Set second pointer source of clock backend
+ *
+ * @param[in] clock Clock widget instance
+ * @param[in] source Image source
+ * @return -1 on failure
+ */
+
 int picoui_backend_clock_set_second_pointer_source(struct picoui_clock *clock, struct picoui_image_source *source)
 {
     if (clock == NULL || source == NULL || source->img_tile == NULL) {
@@ -329,6 +418,14 @@ int picoui_backend_clock_set_second_pointer_source(struct picoui_clock *clock, s
     clock->second_pointer_source = source;
     return picoui_backend_clock_apply_pointer(clock, 2);
 }
+
+/**
+ * @brief Set mask color of clock backend
+ *
+ * @param[in] clock Clock widget instance
+ * @param[in] mask_color mask color
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_clock_set_mask_color(struct picoui_clock *clock, unsigned int mask_color)
 {
@@ -347,6 +444,15 @@ int picoui_backend_clock_set_mask_color(struct picoui_clock *clock, unsigned int
     return 0;
 }
 
+/**
+ * @brief Set hour anchor of clock backend
+ *
+ * @param[in] clock Clock widget instance
+ * @param[in] x X coordinate
+ * @param[in] y Y coordinate
+ * @return -1 on failure
+ */
+
 int picoui_backend_clock_set_hour_anchor(struct picoui_clock *clock, float x, float y)
 {
     if (clock == NULL) {
@@ -358,6 +464,15 @@ int picoui_backend_clock_set_hour_anchor(struct picoui_clock *clock, float x, fl
     return picoui_backend_clock_apply_pointer(clock, 0);
 }
 
+/**
+ * @brief Set minute anchor of clock backend
+ *
+ * @param[in] clock Clock widget instance
+ * @param[in] x X coordinate
+ * @param[in] y Y coordinate
+ * @return -1 on failure
+ */
+
 int picoui_backend_clock_set_minute_anchor(struct picoui_clock *clock, float x, float y)
 {
     if (clock == NULL) {
@@ -368,6 +483,15 @@ int picoui_backend_clock_set_minute_anchor(struct picoui_clock *clock, float x, 
     clock->minute_anchor_y = y;
     return picoui_backend_clock_apply_pointer(clock, 1);
 }
+
+/**
+ * @brief Set second anchor of clock backend
+ *
+ * @param[in] clock Clock widget instance
+ * @param[in] x X coordinate
+ * @param[in] y Y coordinate
+ * @return -1 on failure
+ */
 
 int picoui_backend_clock_set_second_anchor(struct picoui_clock *clock, float x, float y)
 {

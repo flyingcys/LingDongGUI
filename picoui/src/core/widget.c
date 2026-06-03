@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2023-2026 flyingcys (flyingcys@gmail.com). All rights reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "internal.h"
 #include "picoui/widget.h"
 
@@ -229,6 +247,15 @@ static enum picoui_widget_type picoui_widget_type_from_backend_kind(enum picoui_
     }
 }
 
+/**
+ * @brief Set pos of widget
+ *
+ * @param[in] widget Widget instance
+ * @param[in] x X coordinate
+ * @param[in] y Y coordinate
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_widget_set_pos(struct picoui_widget *widget, int x, int y)
 {
     ldBase_t *ld_base;
@@ -246,6 +273,15 @@ int picoui_widget_set_pos(struct picoui_widget *widget, int x, int y)
     }
     return 0;
 }
+
+/**
+ * @brief Set size of widget
+ *
+ * @param[in] widget Widget instance
+ * @param[in] width Width in pixels
+ * @param[in] height Height in pixels
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_widget_set_size(struct picoui_widget *widget, int width, int height)
 {
@@ -265,6 +301,14 @@ int picoui_widget_set_size(struct picoui_widget *widget, int width, int height)
     return 0;
 }
 
+/**
+ * @brief Set text of widget
+ *
+ * @param[in] widget Widget instance
+ * @param[in] text Text widget instance
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_widget_set_text(struct picoui_widget *widget, const char *text)
 {
     if (!picoui_widget_is_valid(widget) || text == 0) {
@@ -274,6 +318,14 @@ int picoui_widget_set_text(struct picoui_widget *widget, const char *text)
     widget->text = text;
     return 0;
 }
+
+/**
+ * @brief Set style class of widget
+ *
+ * @param[in] widget Widget instance
+ * @param[in] style_class style class
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_widget_set_style_class(struct picoui_widget *widget, const char *style_class)
 {
@@ -288,6 +340,14 @@ int picoui_widget_set_style_class(struct picoui_widget *widget, const char *styl
     return 0;
 }
 
+/**
+ * @brief Set user data of widget
+ *
+ * @param[in] widget Widget instance
+ * @param[in] user_data User data pointer
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_widget_set_user_data(struct picoui_widget *widget, void *user_data)
 {
     if (!picoui_widget_is_valid(widget)) {
@@ -301,6 +361,14 @@ int picoui_widget_set_user_data(struct picoui_widget *widget, void *user_data)
     return 0;
 }
 
+/**
+ * @brief Set bg color of widget
+ *
+ * @param[in] widget Widget instance
+ * @param[in] rgb RGB color value (0xRRGGBB)
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_widget_set_bg_color(struct picoui_widget *widget, unsigned int rgb)
 {
     if (!picoui_widget_is_valid(widget)) {
@@ -310,6 +378,14 @@ int picoui_widget_set_bg_color(struct picoui_widget *widget, unsigned int rgb)
     widget->bg_color = rgb;
     return 0;
 }
+
+/**
+ * @brief Set text color of widget
+ *
+ * @param[in] widget Widget instance
+ * @param[in] rgb RGB color value (0xRRGGBB)
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_widget_set_text_color(struct picoui_widget *widget, unsigned int rgb)
 {
@@ -321,6 +397,14 @@ int picoui_widget_set_text_color(struct picoui_widget *widget, unsigned int rgb)
     return 0;
 }
 
+/**
+ * @brief Set border color of widget
+ *
+ * @param[in] widget Widget instance
+ * @param[in] rgb RGB color value (0xRRGGBB)
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_widget_set_border_color(struct picoui_widget *widget, unsigned int rgb)
 {
     if (!picoui_widget_is_valid(widget)) {
@@ -331,6 +415,14 @@ int picoui_widget_set_border_color(struct picoui_widget *widget, unsigned int rg
     return 0;
 }
 
+/**
+ * @brief Set radius of widget
+ *
+ * @param[in] widget Widget instance
+ * @param[in] radius Radius
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_widget_set_radius(struct picoui_widget *widget, int radius)
 {
     if (!picoui_widget_is_valid(widget) || radius < 0) {
@@ -340,6 +432,14 @@ int picoui_widget_set_radius(struct picoui_widget *widget, int radius)
     widget->radius = radius;
     return 0;
 }
+
+/**
+ * @brief Set padding of widget
+ *
+ * @param[in] widget Widget instance
+ * @param[in] padding padding
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_widget_set_padding(struct picoui_widget *widget, int padding)
 {
@@ -353,6 +453,13 @@ int picoui_widget_set_padding(struct picoui_widget *widget, int padding)
     }
     return 0;
 }
+
+/**
+ * @brief Set center of widget
+ *
+ * @param[in] widget Widget instance
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_widget_set_center(struct picoui_widget *widget)
 {
@@ -368,6 +475,14 @@ int picoui_widget_set_center(struct picoui_widget *widget)
     }
     return 0;
 }
+
+/**
+ * @brief Set visible of widget
+ *
+ * @param[in] widget Widget instance
+ * @param[in] visible Visibility state
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_widget_set_visible(struct picoui_widget *widget, int visible)
 {
@@ -388,6 +503,14 @@ int picoui_widget_set_visible(struct picoui_widget *widget, int visible)
     return 0;
 }
 
+/**
+ * @brief Set opacity of widget
+ *
+ * @param[in] widget Widget instance
+ * @param[in] opacity Opacity (0-255)
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_widget_set_opacity(struct picoui_widget *widget, int opacity)
 {
     ldBase_t *ld_base;
@@ -403,6 +526,14 @@ int picoui_widget_set_opacity(struct picoui_widget *widget, int opacity)
     }
     return 0;
 }
+
+/**
+ * @brief Set selectable of widget
+ *
+ * @param[in] widget Widget instance
+ * @param[in] selectable selectable
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_widget_set_selectable(struct picoui_widget *widget, int selectable)
 {
@@ -420,6 +551,14 @@ int picoui_widget_set_selectable(struct picoui_widget *widget, int selectable)
     return 0;
 }
 
+/**
+ * @brief Set selected of widget
+ *
+ * @param[in] widget Widget instance
+ * @param[in] selected selected
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_widget_set_selected(struct picoui_widget *widget, int selected)
 {
     ldBase_t *ld_base;
@@ -436,6 +575,14 @@ int picoui_widget_set_selected(struct picoui_widget *widget, int selected)
     return 0;
 }
 
+/**
+ * @brief Set corner of widget
+ *
+ * @param[in] widget Widget instance
+ * @param[in] corner corner
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_widget_set_corner(struct picoui_widget *widget, int corner)
 {
     ldBase_t *ld_base;
@@ -451,6 +598,14 @@ int picoui_widget_set_corner(struct picoui_widget *widget, int corner)
     }
     return 0;
 }
+
+/**
+ * @brief Set enabled of widget
+ *
+ * @param[in] widget Widget instance
+ * @param[in] enabled Enable state
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_widget_set_enabled(struct picoui_widget *widget, int enabled)
 {
@@ -481,6 +636,14 @@ int picoui_widget_set_enabled(struct picoui_widget *widget, int enabled)
     return 0;
 }
 
+/**
+ * @brief Set flex grow of widget
+ *
+ * @param[in] widget Widget instance
+ * @param[in] grow grow
+ * @return -1 on failure
+ */
+
 int picoui_widget_set_flex_grow(struct picoui_widget *widget, int grow)
 {
     if (!picoui_widget_is_valid(widget) || grow < 0) {
@@ -491,6 +654,14 @@ int picoui_widget_set_flex_grow(struct picoui_widget *widget, int grow)
     return picoui_backend_widget_set_flex_grow(widget, grow);
 }
 
+/**
+ * @brief Set flex new track of widget
+ *
+ * @param[in] widget Widget instance
+ * @param[in] new_track new track
+ * @return -1 on failure
+ */
+
 int picoui_widget_set_flex_new_track(struct picoui_widget *widget, int new_track)
 {
     if (!picoui_widget_is_valid(widget)) {
@@ -500,6 +671,14 @@ int picoui_widget_set_flex_new_track(struct picoui_widget *widget, int new_track
     widget->flex_new_track = new_track != 0;
     return picoui_backend_widget_set_flex_new_track(widget, widget->flex_new_track);
 }
+
+/**
+ * @brief Set flex min width of widget
+ *
+ * @param[in] widget Widget instance
+ * @param[in] min_width min width
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_widget_set_flex_min_width(struct picoui_widget *widget, int min_width)
 {
@@ -517,6 +696,14 @@ int picoui_widget_set_flex_min_width(struct picoui_widget *widget, int min_width
     return 0;
 }
 
+/**
+ * @brief Set flex min height of widget
+ *
+ * @param[in] widget Widget instance
+ * @param[in] min_height min height
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_widget_set_flex_min_height(struct picoui_widget *widget, int min_height)
 {
     ldBase_t *ld_base;
@@ -532,6 +719,14 @@ int picoui_widget_set_flex_min_height(struct picoui_widget *widget, int min_heig
     }
     return 0;
 }
+
+/**
+ * @brief Set flex max width of widget
+ *
+ * @param[in] widget Widget instance
+ * @param[in] max_width max width
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_widget_set_flex_max_width(struct picoui_widget *widget, int max_width)
 {
@@ -549,6 +744,14 @@ int picoui_widget_set_flex_max_width(struct picoui_widget *widget, int max_width
     return 0;
 }
 
+/**
+ * @brief Set flex max height of widget
+ *
+ * @param[in] widget Widget instance
+ * @param[in] max_height max height
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_widget_set_flex_max_height(struct picoui_widget *widget, int max_height)
 {
     ldBase_t *ld_base;
@@ -565,6 +768,14 @@ int picoui_widget_set_flex_max_height(struct picoui_widget *widget, int max_heig
     return 0;
 }
 
+/**
+ * @brief Set ignore layout of widget
+ *
+ * @param[in] widget Widget instance
+ * @param[in] ignore_layout ignore layout
+ * @return -1 on failure
+ */
+
 int picoui_widget_set_ignore_layout(struct picoui_widget *widget, int ignore_layout)
 {
     if (!picoui_widget_is_valid(widget)) {
@@ -574,6 +785,19 @@ int picoui_widget_set_ignore_layout(struct picoui_widget *widget, int ignore_lay
     widget->ignore_layout = ignore_layout != 0;
     return picoui_backend_widget_set_ignore_layout(widget, widget->ignore_layout);
 }
+
+/**
+ * @brief Set grid cell of widget
+ *
+ * @param[in] widget Widget instance
+ * @param[in] col col
+ * @param[in] row Row index
+ * @param[in] col_span Column span count
+ * @param[in] row_span Row span count
+ * @param[in] x_align x align
+ * @param[in] y_align y align
+ * @return -1 on failure
+ */
 
 int picoui_widget_set_grid_cell(struct picoui_widget *widget,
                                 int col,
@@ -596,6 +820,13 @@ int picoui_widget_set_grid_cell(struct picoui_widget *widget,
     return picoui_backend_widget_set_grid_cell(widget, col, row, col_span, row_span, x_align, y_align);
 }
 
+/**
+ * @brief Widget: remove from parent
+ *
+ * @param[in] widget Widget instance
+ * @return -1 on failure
+ */
+
 int picoui_widget_remove_from_parent(struct picoui_widget *widget)
 {
     struct picoui_backend_widget *backend_widget;
@@ -613,6 +844,13 @@ int picoui_widget_remove_from_parent(struct picoui_widget *widget)
 
     return picoui_backend_widget_detach_from_parent(backend_widget);
 }
+
+/**
+ * @brief Destroy widget widget
+ *
+ * @param[in] widget Widget instance
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_widget_destroy(struct picoui_widget *widget)
 {
@@ -650,6 +888,13 @@ int picoui_widget_destroy(struct picoui_widget *widget)
     return 0;
 }
 
+/**
+ * @brief Get x of widget
+ *
+ * @param[in] widget Widget instance
+ * @return -1 on failure
+ */
+
 int picoui_widget_get_x(const struct picoui_widget *widget)
 {
     ldBase_t *ld_base = picoui_widget_get_ld_base((struct picoui_widget *)widget);
@@ -659,6 +904,13 @@ int picoui_widget_get_x(const struct picoui_widget *widget)
     }
     return ld_base != 0 ? ldBaseGetX(ld_base) : widget->x;
 }
+
+/**
+ * @brief Get y of widget
+ *
+ * @param[in] widget Widget instance
+ * @return -1 on failure
+ */
 
 int picoui_widget_get_y(const struct picoui_widget *widget)
 {
@@ -670,6 +922,13 @@ int picoui_widget_get_y(const struct picoui_widget *widget)
     return ld_base != 0 ? ldBaseGetY(ld_base) : widget->y;
 }
 
+/**
+ * @brief Get width of widget
+ *
+ * @param[in] widget Widget instance
+ * @return -1 on failure
+ */
+
 int picoui_widget_get_width(const struct picoui_widget *widget)
 {
     ldBase_t *ld_base = picoui_widget_get_ld_base((struct picoui_widget *)widget);
@@ -679,6 +938,13 @@ int picoui_widget_get_width(const struct picoui_widget *widget)
     }
     return ld_base != 0 ? ldBaseGetWidth(ld_base) : widget->width;
 }
+
+/**
+ * @brief Get height of widget
+ *
+ * @param[in] widget Widget instance
+ * @return -1 on failure
+ */
 
 int picoui_widget_get_height(const struct picoui_widget *widget)
 {
@@ -690,6 +956,13 @@ int picoui_widget_get_height(const struct picoui_widget *widget)
     return ld_base != 0 ? ldBaseGetHeight(ld_base) : widget->height;
 }
 
+/**
+ * @brief Get visible of widget
+ *
+ * @param[in] widget Widget instance
+ * @return -1 on failure
+ */
+
 int picoui_widget_get_visible(const struct picoui_widget *widget)
 {
     ldBase_t *ld_base = picoui_widget_get_ld_base((struct picoui_widget *)widget);
@@ -699,6 +972,13 @@ int picoui_widget_get_visible(const struct picoui_widget *widget)
     }
     return ld_base != 0 ? (ldBaseIsHidden(ld_base) ? 0 : 1) : widget->visible;
 }
+
+/**
+ * @brief Get opacity of widget
+ *
+ * @param[in] widget Widget instance
+ * @return -1 on failure
+ */
 
 int picoui_widget_get_opacity(const struct picoui_widget *widget)
 {
@@ -710,6 +990,13 @@ int picoui_widget_get_opacity(const struct picoui_widget *widget)
     return ld_base != 0 ? (int)ldBaseGetOpacity(ld_base) : widget->opacity;
 }
 
+/**
+ * @brief Get selectable of widget
+ *
+ * @param[in] widget Widget instance
+ * @return -1 on failure
+ */
+
 int picoui_widget_get_selectable(const struct picoui_widget *widget)
 {
     ldBase_t *ld_base = picoui_widget_get_ld_base((struct picoui_widget *)widget);
@@ -719,6 +1006,13 @@ int picoui_widget_get_selectable(const struct picoui_widget *widget)
     }
     return ld_base != 0 ? (ldBaseIsSelectable(ld_base) ? 1 : 0) : widget->selectable;
 }
+
+/**
+ * @brief Get selected of widget
+ *
+ * @param[in] widget Widget instance
+ * @return -1 on failure
+ */
 
 int picoui_widget_get_selected(const struct picoui_widget *widget)
 {
@@ -730,6 +1024,13 @@ int picoui_widget_get_selected(const struct picoui_widget *widget)
     return ld_base != 0 ? (ldBaseIsSelected(ld_base) ? 1 : 0) : widget->selected;
 }
 
+/**
+ * @brief Get corner of widget
+ *
+ * @param[in] widget Widget instance
+ * @return -1 on failure
+ */
+
 int picoui_widget_get_corner(const struct picoui_widget *widget)
 {
     ldBase_t *ld_base = picoui_widget_get_ld_base((struct picoui_widget *)widget);
@@ -739,6 +1040,13 @@ int picoui_widget_get_corner(const struct picoui_widget *widget)
     }
     return ld_base != 0 ? (ldBaseIsCorner(ld_base) ? 1 : 0) : widget->corner;
 }
+
+/**
+ * @brief Get parent of widget
+ *
+ * @param[in] widget Widget instance
+ * @return Pointer to the object on success, NULL on failure
+ */
 
 struct picoui_widget *picoui_widget_get_parent(const struct picoui_widget *widget)
 {
@@ -752,6 +1060,13 @@ struct picoui_widget *picoui_widget_get_parent(const struct picoui_widget *widge
     return picoui_backend_widget_get_host(backend_widget);
 }
 
+/**
+ * @brief Get first child of widget
+ *
+ * @param[in] widget Widget instance
+ * @return Pointer to the object on success, NULL on failure
+ */
+
 struct picoui_widget *picoui_widget_get_first_child(const struct picoui_widget *widget)
 {
     struct picoui_backend_widget *backend_widget;
@@ -763,6 +1078,13 @@ struct picoui_widget *picoui_widget_get_first_child(const struct picoui_widget *
     backend_widget = picoui_backend_widget_get_first_child(picoui_widget_get_backend(widget));
     return picoui_backend_widget_get_host(backend_widget);
 }
+
+/**
+ * @brief Get next sibling of widget
+ *
+ * @param[in] widget Widget instance
+ * @return Pointer to the object on success, NULL on failure
+ */
 
 struct picoui_widget *picoui_widget_get_next_sibling(const struct picoui_widget *widget)
 {
@@ -776,6 +1098,13 @@ struct picoui_widget *picoui_widget_get_next_sibling(const struct picoui_widget 
     return picoui_backend_widget_get_host(backend_widget);
 }
 
+/**
+ * @brief Get root of widget
+ *
+ * @param[in] widget Widget instance
+ * @return Pointer to the object on success, NULL on failure
+ */
+
 struct picoui_widget *picoui_widget_get_root(const struct picoui_widget *widget)
 {
     struct picoui_backend_widget *backend_widget;
@@ -787,6 +1116,13 @@ struct picoui_widget *picoui_widget_get_root(const struct picoui_widget *widget)
     backend_widget = picoui_backend_widget_get_root(picoui_widget_get_backend(widget));
     return picoui_backend_widget_get_host(backend_widget);
 }
+
+/**
+ * @brief Get child count of widget
+ *
+ * @param[in] widget Widget instance
+ * @return -1 on failure
+ */
 
 int picoui_widget_get_child_count(const struct picoui_widget *widget)
 {
@@ -813,6 +1149,13 @@ int picoui_widget_get_child_count(const struct picoui_widget *widget)
     }
 }
 
+/**
+ * @brief Get name id of widget
+ *
+ * @param[in] widget Widget instance
+ * @return -1 on failure
+ */
+
 int picoui_widget_get_name_id(const struct picoui_widget *widget)
 {
     ldBase_t *ld_base;
@@ -831,6 +1174,14 @@ int picoui_widget_get_name_id(const struct picoui_widget *widget)
     return backend_widget != 0 ? backend_widget->ld_name_id : -1;
 }
 
+/**
+ * @brief Widget: find by name id
+ *
+ * @param[in] root root
+ * @param[in] name_id Name identifier ID
+ * @return Pointer to the object on success, NULL on failure
+ */
+
 struct picoui_widget *picoui_widget_find_by_name_id(const struct picoui_widget *root, int name_id)
 {
     struct picoui_backend_widget *backend_widget;
@@ -843,6 +1194,12 @@ struct picoui_widget *picoui_widget_find_by_name_id(const struct picoui_widget *
                                                            (uint16_t)name_id);
     return picoui_backend_widget_get_host(backend_widget);
 }
+
+/**
+ * @brief Get type of widget
+ *
+ * @param[in] widget Widget instance
+ */
 
 enum picoui_widget_type picoui_widget_get_type(const struct picoui_widget *widget)
 {
@@ -859,6 +1216,14 @@ enum picoui_widget_type picoui_widget_get_type(const struct picoui_widget *widge
 
     return PICOUI_WIDGET_TYPE_UNKNOWN;
 }
+
+/**
+ * @brief Get absolute pos of widget
+ *
+ * @param[in] widget Widget instance
+ * @param[in] point Point
+ * @return Pointer to the object
+ */
 
 struct picoui_point picoui_widget_get_absolute_pos(const struct picoui_widget *widget,
                                                    struct picoui_point point)
@@ -886,6 +1251,14 @@ struct picoui_point picoui_widget_get_absolute_pos(const struct picoui_widget *w
     return result;
 }
 
+/**
+ * @brief Get relative pos of widget
+ *
+ * @param[in] widget Widget instance
+ * @param[in] point Point
+ * @return Pointer to the object
+ */
+
 struct picoui_point picoui_widget_get_relative_pos(const struct picoui_widget *widget,
                                                    struct picoui_point point)
 {
@@ -912,6 +1285,16 @@ struct picoui_point picoui_widget_get_relative_pos(const struct picoui_widget *w
     return result;
 }
 
+/**
+ * @brief rect align
+ *
+ * @param[in] parent Parent widget
+ * @param[in] child Child widget
+ * @param[in] x_align x align
+ * @param[in] y_align y align
+ * @return Pointer to the object
+ */
+
 struct picoui_rect picoui_rect_align(struct picoui_rect parent,
                                      struct picoui_rect child,
                                      enum picoui_align x_align,
@@ -931,11 +1314,30 @@ struct picoui_rect picoui_rect_align(struct picoui_rect parent,
     return picoui_rect_from_ld_region(aligned);
 }
 
+/**
+ * @brief rect center
+ *
+ * @param[in] parent Parent widget
+ * @param[in] child Child widget
+ * @return Pointer to the object
+ */
+
 struct picoui_rect picoui_rect_center(struct picoui_rect parent,
                                       struct picoui_rect child)
 {
     return picoui_rect_align(parent, child, PICOUI_ALIGN_CENTER, PICOUI_ALIGN_CENTER);
 }
+
+/**
+ * @brief vertical grid align offset
+ *
+ * @param[in] widget Widget instance
+ * @param[in] current_offset current offset
+ * @param[in] item_count item count
+ * @param[in] item_height item height
+ * @param[in] space Spacing
+ * @return -1 on failure
+ */
 
 int picoui_vertical_grid_align_offset(struct picoui_rect widget,
                                       int current_offset,
@@ -954,6 +1356,13 @@ int picoui_vertical_grid_align_offset(struct picoui_rect widget,
                                             (uint8_t)space);
 }
 
+/**
+ * @brief focus reset
+ *
+ * @param[in] app Application instance
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_focus_reset(struct picoui_app *app)
 {
     if (app == 0) {
@@ -966,6 +1375,14 @@ int picoui_focus_reset(struct picoui_app *app)
     ldBaseFocusNavigateInit();
     return 0;
 }
+
+/**
+ * @brief focus navigate
+ *
+ * @param[in] app Application instance
+ * @param[in] dir dir
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_focus_navigate(struct picoui_app *app, enum picoui_native_nav_dir dir)
 {

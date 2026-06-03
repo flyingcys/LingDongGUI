@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2023-2026 flyingcys (flyingcys@gmail.com). All rights reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "backend.h"
 #include "internal.h"
 #include "ldGraph.h"
@@ -26,6 +44,14 @@ static ldGraph_t *picoui_backend_graph_get_ld(void *backend_widget)
 
     return (ldGraph_t *)widget->ld_widget;
 }
+
+/**
+ * @brief Create backend for graph
+ *
+ * @param[in] parent Parent widget
+ * @param[in] id Widget identifier string
+ * @param[in] series_max series max
+ */
 
 void *picoui_backend_create_graph(void *parent, const char *id, int series_max)
 {
@@ -82,6 +108,15 @@ void *picoui_backend_create_graph(void *parent, const char *id, int series_max)
     return widget;
 }
 
+/**
+ * @brief Set axis of graph backend
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] x_axis x axis
+ * @param[in] y_axis y axis
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_graph_set_axis(void *backend_widget, int x_axis, int y_axis)
 {
     ldGraph_t *ld_graph = picoui_backend_graph_get_ld(backend_widget);
@@ -93,6 +128,14 @@ int picoui_backend_graph_set_axis(void *backend_widget, int x_axis, int y_axis)
     ldGraphSetAxis(ld_graph, (uint16_t)x_axis, (uint16_t)y_axis, ld_graph->xAxisOffset);
     return 0;
 }
+
+/**
+ * @brief Set axis offset of graph backend
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] axis_offset axis offset
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_graph_set_axis_offset(void *backend_widget, int axis_offset)
 {
@@ -106,6 +149,14 @@ int picoui_backend_graph_set_axis_offset(void *backend_widget, int axis_offset)
     return 0;
 }
 
+/**
+ * @brief Set frame space of graph backend
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] frame_space frame space
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_graph_set_frame_space(void *backend_widget, int frame_space)
 {
     ldGraph_t *ld_graph = picoui_backend_graph_get_ld(backend_widget);
@@ -117,6 +168,14 @@ int picoui_backend_graph_set_frame_space(void *backend_widget, int frame_space)
     ldGraphSetFrameSpace(ld_graph, (uint8_t)frame_space, false);
     return 0;
 }
+
+/**
+ * @brief Set grid offset of graph backend
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] grid_offset grid offset
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_graph_set_grid_offset(void *backend_widget, int grid_offset)
 {
@@ -130,6 +189,14 @@ int picoui_backend_graph_set_grid_offset(void *backend_widget, int grid_offset)
     return 0;
 }
 
+/**
+ * @brief Set point mask source of graph backend
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] source Image source
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_graph_set_point_mask_source(void *backend_widget, struct picoui_image_source *source)
 {
     ldGraph_t *ld_graph = picoui_backend_graph_get_ld(backend_widget);
@@ -141,6 +208,16 @@ int picoui_backend_graph_set_point_mask_source(void *backend_widget, struct pico
     ldGraphSetPointImageMask(ld_graph, source->mask_tile);
     return 0;
 }
+
+/**
+ * @brief Add_ series from graph
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] series_color series color
+ * @param[in] line_size line size
+ * @param[in] point_max point max
+ * @return -1 on failure
+ */
 
 int picoui_backend_graph_add_series(void *backend_widget,
                                     unsigned int series_color,
@@ -156,6 +233,16 @@ int picoui_backend_graph_add_series(void *backend_widget,
     return (int)ldGraphAddSeries(ld_graph, (ldColor)series_color, (uint8_t)line_size, (uint16_t)point_max);
 }
 
+/**
+ * @brief Set value of graph backend
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] series_index series index
+ * @param[in] value_index value index
+ * @param[in] value Value
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_graph_set_value(void *backend_widget, int series_index, int value_index, int value)
 {
     ldGraph_t *ld_graph = picoui_backend_graph_get_ld(backend_widget);
@@ -170,6 +257,15 @@ int picoui_backend_graph_set_value(void *backend_widget, int series_index, int v
     return 0;
 }
 
+/**
+ * @brief graph: move add
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] series_index series index
+ * @param[in] value Value
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_graph_move_add(void *backend_widget, int series_index, int value)
 {
     ldGraph_t *ld_graph = picoui_backend_graph_get_ld(backend_widget);
@@ -182,6 +278,13 @@ int picoui_backend_graph_move_add(void *backend_widget, int series_index, int va
     return 0;
 }
 
+/**
+ * @brief Get series count from graph backend
+ *
+ * @param[in] backend_widget backend widget
+ * @return -1 on failure
+ */
+
 int picoui_backend_graph_get_series_count(void *backend_widget)
 {
     ldGraph_t *ld_graph = picoui_backend_graph_get_ld(backend_widget);
@@ -192,6 +295,15 @@ int picoui_backend_graph_get_series_count(void *backend_widget)
 
     return (int)ld_graph->seriesCount;
 }
+
+/**
+ * @brief Get value from graph backend
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] series_index series index
+ * @param[in] value_index value index
+ * @return -1 on failure
+ */
 
 int picoui_backend_graph_get_value(void *backend_widget, int series_index, int value_index)
 {

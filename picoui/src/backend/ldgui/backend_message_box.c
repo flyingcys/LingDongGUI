@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2023-2026 flyingcys (flyingcys@gmail.com). All rights reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "backend.h"
 #include "internal.h"
 #include "ldBase.h"
@@ -62,6 +80,13 @@ static void picoui_backend_message_box_confirm_bridge(ld_scene_t *scene, ldMessa
     }
 }
 
+/**
+ * @brief Create backend for message box
+ *
+ * @param[in] parent Parent widget
+ * @param[in] id Widget identifier string
+ */
+
 void *picoui_backend_create_message_box(void *parent, const char *id)
 {
     struct picoui_backend_widget *widget;
@@ -112,6 +137,14 @@ void *picoui_backend_create_message_box(void *parent, const char *id)
     return widget;
 }
 
+/**
+ * @brief message: box set title
+ *
+ * @param[in] box box
+ * @param[in] title title
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_message_box_set_title(struct picoui_message_box *box, const char *title)
 {
     ldMessageBox_t *ld_message_box = picoui_backend_message_box_get_ld(box);
@@ -124,6 +157,14 @@ int picoui_backend_message_box_set_title(struct picoui_message_box *box, const c
     return 0;
 }
 
+/**
+ * @brief message: box set message
+ *
+ * @param[in] box box
+ * @param[in] message message
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_message_box_set_message(struct picoui_message_box *box, const char *message)
 {
     ldMessageBox_t *ld_message_box = picoui_backend_message_box_get_ld(box);
@@ -135,6 +176,14 @@ int picoui_backend_message_box_set_message(struct picoui_message_box *box, const
     ldMessageBoxSetMsg(ld_message_box, (const uint8_t *)message);
     return 0;
 }
+
+/**
+ * @brief message: box set confirm text
+ *
+ * @param[in] box box
+ * @param[in] text Text widget instance
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_message_box_set_confirm_text(struct picoui_message_box *box, const char *text)
 {
@@ -155,6 +204,15 @@ int picoui_backend_message_box_set_confirm_text(struct picoui_message_box *box, 
     return 0;
 }
 
+/**
+ * @brief message: box set buttons
+ *
+ * @param[in] box box
+ * @param[in] buttons buttons
+ * @param[in] count Count
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_message_box_set_buttons(struct picoui_message_box *box,
                                            const char *const *buttons,
                                            int count)
@@ -168,6 +226,16 @@ int picoui_backend_message_box_set_buttons(struct picoui_message_box *box,
     ldMessageBoxSetBtn(ld_message_box, (const uint8_t **)buttons, (uint8_t)count);
     return 0;
 }
+
+/**
+ * @brief message: box set string colors
+ *
+ * @param[in] box box
+ * @param[in] title_color title color
+ * @param[in] message_color message color
+ * @param[in] button_color button color
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_message_box_set_string_colors(struct picoui_message_box *box,
                                                  unsigned int title_color,
@@ -187,6 +255,15 @@ int picoui_backend_message_box_set_string_colors(struct picoui_message_box *box,
     return 0;
 }
 
+/**
+ * @brief message: box set button colors
+ *
+ * @param[in] box box
+ * @param[in] release_color release color
+ * @param[in] press_color press color
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_message_box_set_button_colors(struct picoui_message_box *box,
                                                  unsigned int release_color,
                                                  unsigned int press_color)
@@ -201,6 +278,14 @@ int picoui_backend_message_box_set_button_colors(struct picoui_message_box *box,
     return 0;
 }
 
+/**
+ * @brief message: box set bg color
+ *
+ * @param[in] box box
+ * @param[in] bg_color Background color
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_message_box_set_bg_color(struct picoui_message_box *box, unsigned int bg_color)
 {
     ldMessageBox_t *ld_message_box = picoui_backend_message_box_get_ld(box);
@@ -212,6 +297,13 @@ int picoui_backend_message_box_set_bg_color(struct picoui_message_box *box, unsi
     ldMessageBoxSetBackgroundColor(ld_message_box, (ldColor)bg_color);
     return 0;
 }
+
+/**
+ * @brief message: box set on confirm
+ *
+ * @param[in] box box
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_message_box_set_on_confirm(struct picoui_message_box *box)
 {

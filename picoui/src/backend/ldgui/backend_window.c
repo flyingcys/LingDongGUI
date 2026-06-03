@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2023-2026 flyingcys (flyingcys@gmail.com). All rights reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "internal.h"
 #include "ldWindow.h"
 
@@ -82,10 +100,24 @@ static void *picoui_backend_create_root_widget(struct picoui_app *app,
     return &host->widget;
 }
 
+/**
+ * @brief Create backend for window
+ *
+ * @param[in] app Application instance
+ * @param[in] id Widget identifier string
+ */
+
 void *picoui_backend_create_window(struct picoui_app *app, const char *id)
 {
     return picoui_backend_create_root_widget(app, id, PICOUI_BACKEND_WIDGET_WINDOW);
 }
+
+/**
+ * @brief Create backend for background
+ *
+ * @param[in] app Application instance
+ * @param[in] id Widget identifier string
+ */
 
 void *picoui_backend_create_background(struct picoui_app *app, const char *id)
 {
@@ -145,6 +177,14 @@ static int picoui_backend_window_set_padding_group_ptr(struct picoui_window *win
     return 0;
 }
 
+/**
+ * @brief Set background source of window backend
+ *
+ * @param[in] window Window instance
+ * @param[in] source Image source
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_window_set_background_source(struct picoui_window *window,
                                                 struct picoui_image_source *source)
 {
@@ -167,6 +207,15 @@ int picoui_backend_window_set_background_source(struct picoui_window *window,
                      source != NULL ? source->mask_tile : NULL);
     return 0;
 }
+
+/**
+ * @brief Set background offset of window backend
+ *
+ * @param[in] window Window instance
+ * @param[in] offset_x Horizontal offset
+ * @param[in] offset_y Vertical offset
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_window_set_background_offset(struct picoui_window *window,
                                                 int offset_x,
@@ -201,6 +250,14 @@ int picoui_backend_window_set_background_offset(struct picoui_window *window,
     return 0;
 }
 
+/**
+ * @brief Set bg color of window backend
+ *
+ * @param[in] window Window instance
+ * @param[in] rgb RGB color value (0xRRGGBB)
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_window_set_bg_color(struct picoui_window *window, unsigned int rgb)
 {
     ldWindow_t *ld_window = picoui_backend_window_get_ld(window);
@@ -212,6 +269,14 @@ int picoui_backend_window_set_bg_color(struct picoui_window *window, unsigned in
     ldWindowSetColor(ld_window, picoui_backend_rgb_to_ld_color(rgb));
     return 0;
 }
+
+/**
+ * @brief Get bg color from window backend
+ *
+ * @param[out] window Window instance
+ * @param[in] rgb RGB color value (0xRRGGBB)
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_window_get_bg_color(struct picoui_window *window, unsigned int *rgb)
 {
@@ -225,6 +290,17 @@ int picoui_backend_window_get_bg_color(struct picoui_window *window, unsigned in
     return 0;
 }
 
+/**
+ * @brief Set padding group of window backend
+ *
+ * @param[in] window Window instance
+ * @param[in] left Left padding
+ * @param[in] top Top padding
+ * @param[in] right Right padding
+ * @param[in] bottom Bottom padding
+ * @return -1 on failure
+ */
+
 int picoui_backend_window_set_padding_group(struct picoui_window *window,
                                             int left,
                                             int top,
@@ -237,6 +313,13 @@ int picoui_backend_window_set_padding_group(struct picoui_window *window,
     return picoui_backend_window_set_padding_group_ptr(window, left, top, right, bottom);
 }
 
+/**
+ * @brief Get padding left from window backend
+ *
+ * @param[out] window Window instance
+ * @return -1 on failure
+ */
+
 int picoui_backend_window_get_padding_left(struct picoui_window *window)
 {
     ldWindow_t *ld_window = picoui_backend_window_get_ld(window);
@@ -246,6 +329,13 @@ int picoui_backend_window_get_padding_left(struct picoui_window *window)
     }
     return ld_window->pLayoutPaddingGroup->left;
 }
+
+/**
+ * @brief Get padding top from window backend
+ *
+ * @param[out] window Window instance
+ * @return -1 on failure
+ */
 
 int picoui_backend_window_get_padding_top(struct picoui_window *window)
 {
@@ -257,6 +347,13 @@ int picoui_backend_window_get_padding_top(struct picoui_window *window)
     return ld_window->pLayoutPaddingGroup->top;
 }
 
+/**
+ * @brief Get padding right from window backend
+ *
+ * @param[out] window Window instance
+ * @return -1 on failure
+ */
+
 int picoui_backend_window_get_padding_right(struct picoui_window *window)
 {
     ldWindow_t *ld_window = picoui_backend_window_get_ld(window);
@@ -266,6 +363,13 @@ int picoui_backend_window_get_padding_right(struct picoui_window *window)
     }
     return ld_window->pLayoutPaddingGroup->right;
 }
+
+/**
+ * @brief Get padding bottom from window backend
+ *
+ * @param[out] window Window instance
+ * @return -1 on failure
+ */
 
 int picoui_backend_window_get_padding_bottom(struct picoui_window *window)
 {

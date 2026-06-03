@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2023-2026 flyingcys (flyingcys@gmail.com). All rights reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "backend.h"
 #include "internal.h"
 #include "ldButton.h"
@@ -63,6 +81,13 @@ static struct picoui_backend_app_state *picoui_backend_label_get_app_state(void 
     return (struct picoui_backend_app_state *)parent_widget->owner->backend_app;
 }
 
+/**
+ * @brief Create backend for label
+ *
+ * @param[in] parent Parent widget
+ * @param[in] id Widget identifier string
+ */
+
 void *picoui_backend_create_label(void *parent, const char *id)
 {
     struct picoui_backend_widget *widget;
@@ -106,6 +131,14 @@ void *picoui_backend_create_label(void *parent, const char *id)
     return widget;
 }
 
+/**
+ * @brief set: text
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] text Text widget instance
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_set_text(void *backend_widget, const char *text)
 {
     struct picoui_backend_widget *widget = backend_widget;
@@ -136,6 +169,14 @@ int picoui_backend_set_text(void *backend_widget, const char *text)
     return 0;
 }
 
+/**
+ * @brief Set style class of widget backend
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] style_class style class
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_widget_set_style_class(void *backend_widget, const char *style_class)
 {
     struct picoui_backend_widget *widget = backend_widget;
@@ -147,6 +188,14 @@ int picoui_backend_widget_set_style_class(void *backend_widget, const char *styl
     widget->style_class = style_class;
     return 0;
 }
+
+/**
+ * @brief Set font of widget backend
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] font font
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_widget_set_font(void *backend_widget, const void *font)
 {
@@ -172,6 +221,14 @@ int picoui_backend_widget_set_font(void *backend_widget, const void *font)
     }
     return 0;
 }
+
+/**
+ * @brief Set user data of widget backend
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] user_data User data pointer
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_widget_set_user_data(void *backend_widget, void *user_data)
 {
@@ -201,6 +258,12 @@ static ldLabel_t *picoui_backend_label_get_ld(struct picoui_label *label)
     return (ldLabel_t *)backend->ld_widget;
 }
 
+/**
+ * @brief Get text from label backend
+ *
+ * @param[out] label Label widget instance
+ */
+
 const char *picoui_backend_label_get_text(struct picoui_label *label)
 {
     ldLabel_t *ld_label = picoui_backend_label_get_ld(label);
@@ -211,6 +274,14 @@ const char *picoui_backend_label_get_text(struct picoui_label *label)
 
     return (const char *)ldLabelGetText(ld_label);
 }
+
+/**
+ * @brief Set text color of label backend
+ *
+ * @param[in] label Label widget instance
+ * @param[in] rgb RGB color value (0xRRGGBB)
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_label_set_text_color(struct picoui_label *label, unsigned int rgb)
 {
@@ -224,6 +295,14 @@ int picoui_backend_label_set_text_color(struct picoui_label *label, unsigned int
     return 0;
 }
 
+/**
+ * @brief Get text color from label backend
+ *
+ * @param[out] label Label widget instance
+ * @param[in] rgb RGB color value (0xRRGGBB)
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_label_get_text_color(struct picoui_label *label, unsigned int *rgb)
 {
     ldLabel_t *ld_label = picoui_backend_label_get_ld(label);
@@ -235,6 +314,14 @@ int picoui_backend_label_get_text_color(struct picoui_label *label, unsigned int
     *rgb = picoui_backend_ld_color_to_rgb(ldLabelGetTextColor(ld_label));
     return 0;
 }
+
+/**
+ * @brief Set bg color of label backend
+ *
+ * @param[in] label Label widget instance
+ * @param[in] rgb RGB color value (0xRRGGBB)
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_label_set_bg_color(struct picoui_label *label, unsigned int rgb)
 {
@@ -248,6 +335,14 @@ int picoui_backend_label_set_bg_color(struct picoui_label *label, unsigned int r
     return 0;
 }
 
+/**
+ * @brief Get bg color from label backend
+ *
+ * @param[out] label Label widget instance
+ * @param[in] rgb RGB color value (0xRRGGBB)
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_label_get_bg_color(struct picoui_label *label, unsigned int *rgb)
 {
     ldLabel_t *ld_label = picoui_backend_label_get_ld(label);
@@ -259,6 +354,14 @@ int picoui_backend_label_get_bg_color(struct picoui_label *label, unsigned int *
     *rgb = picoui_backend_ld_color_to_rgb(ldLabelGetBackgroundColor(ld_label));
     return 0;
 }
+
+/**
+ * @brief Set transparent of label backend
+ *
+ * @param[in] label Label widget instance
+ * @param[in] transparent transparent
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_label_set_transparent(struct picoui_label *label, int transparent)
 {
@@ -272,6 +375,14 @@ int picoui_backend_label_set_transparent(struct picoui_label *label, int transpa
     return 0;
 }
 
+/**
+ * @brief Get transparent from label backend
+ *
+ * @param[out] label Label widget instance
+ * @param[in] transparent transparent
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_label_get_transparent(struct picoui_label *label, int *transparent)
 {
     ldLabel_t *ld_label = picoui_backend_label_get_ld(label);
@@ -283,6 +394,14 @@ int picoui_backend_label_get_transparent(struct picoui_label *label, int *transp
     *transparent = ldLabelGetTransparent(ld_label) ? 1 : 0;
     return 0;
 }
+
+/**
+ * @brief Set align of label backend
+ *
+ * @param[in] label Label widget instance
+ * @param[in] align align
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_label_set_align(struct picoui_label *label, enum picoui_align align)
 {
@@ -300,6 +419,14 @@ int picoui_backend_label_set_align(struct picoui_label *label, enum picoui_align
     return 0;
 }
 
+/**
+ * @brief Get align from label backend
+ *
+ * @param[out] label Label widget instance
+ * @param[out] align align
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_label_get_align(struct picoui_label *label, enum picoui_align *align)
 {
     ldLabel_t *ld_label = picoui_backend_label_get_ld(label);
@@ -311,6 +438,14 @@ int picoui_backend_label_get_align(struct picoui_label *label, enum picoui_align
     *align = picoui_backend_unmap_label_align(ldLabelGetAlign(ld_label));
     return 0;
 }
+
+/**
+ * @brief Set background source of label backend
+ *
+ * @param[in] label Label widget instance
+ * @param[in] source Image source
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_label_set_background_source(struct picoui_label *label,
                                                struct picoui_image_source *source)

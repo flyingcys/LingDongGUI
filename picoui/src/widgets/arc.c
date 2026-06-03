@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2023-2026 flyingcys (flyingcys@gmail.com). All rights reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "internal.h"
 #include "picoui/arc.h"
 #include "picoui/widget.h"
@@ -13,6 +31,14 @@ static int picoui_arc_props_are_valid(const struct picoui_arc_props *props)
         && props->fg_end_angle >= 0.0f
         && props->rotation_angle >= 0.0f;
 }
+
+/**
+ * @brief Create arc widget
+ *
+ * @param[in] parent Parent widget
+ * @param[in] id Widget identifier string
+ * @return Pointer to the object on success, NULL on failure
+ */
 
 struct picoui_arc *picoui_arc_create(struct picoui_widget *parent, const char *id)
 {
@@ -48,10 +74,26 @@ struct picoui_arc *picoui_arc_create(struct picoui_widget *parent, const char *i
     return arc;
 }
 
+/**
+ * @brief arc init
+ *
+ * @param[in] parent Parent widget
+ * @param[in] id Widget identifier string
+ * @return Pointer to the object
+ */
+
 struct picoui_arc *picoui_arc_init(struct picoui_widget *parent, const char *id)
 {
     return picoui_arc_create(parent, id);
 }
+
+/**
+ * @brief Create arc widget with properties
+ *
+ * @param[in] parent Parent widget
+ * @param[in] props Properties structure
+ * @return Pointer to the object on success, NULL on failure
+ */
 
 struct picoui_arc *picoui_arc_create_with_props(struct picoui_widget *parent,
                                                 const struct picoui_arc_props *props)
@@ -84,6 +126,15 @@ struct picoui_arc *picoui_arc_create_with_props(struct picoui_widget *parent,
     return arc;
 }
 
+/**
+ * @brief Set background angle of arc widget
+ *
+ * @param[in] arc Arc widget instance
+ * @param[in] bg_start_angle Background arc start angle
+ * @param[in] bg_end_angle Background arc end angle
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_arc_set_background_angle(struct picoui_arc *arc, float bg_start_angle, float bg_end_angle)
 {
     if (arc == 0 || bg_start_angle < 0.0f || bg_end_angle < bg_start_angle) {
@@ -97,6 +148,14 @@ int picoui_arc_set_background_angle(struct picoui_arc *arc, float bg_start_angle
     return 0;
 }
 
+/**
+ * @brief Set foreground angle of arc widget
+ *
+ * @param[in] arc Arc widget instance
+ * @param[in] fg_end_angle Foreground arc end angle
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_arc_set_foreground_angle(struct picoui_arc *arc, float fg_end_angle)
 {
     if (arc == 0 || fg_end_angle < 0.0f) {
@@ -108,6 +167,14 @@ int picoui_arc_set_foreground_angle(struct picoui_arc *arc, float fg_end_angle)
     arc->fg_end_angle = fg_end_angle;
     return 0;
 }
+
+/**
+ * @brief Set rotation angle of arc widget
+ *
+ * @param[in] arc Arc widget instance
+ * @param[in] rotation_angle Arc rotation angle
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_arc_set_rotation_angle(struct picoui_arc *arc, float rotation_angle)
 {
@@ -121,6 +188,15 @@ int picoui_arc_set_rotation_angle(struct picoui_arc *arc, float rotation_angle)
     return 0;
 }
 
+/**
+ * @brief Set color of arc widget
+ *
+ * @param[in] arc Arc widget instance
+ * @param[in] bg_color Background color
+ * @param[in] fg_color Foreground color
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_arc_set_color(struct picoui_arc *arc, unsigned int bg_color, unsigned int fg_color)
 {
     if (arc == 0) {
@@ -133,6 +209,14 @@ int picoui_arc_set_color(struct picoui_arc *arc, unsigned int bg_color, unsigned
     arc->fg_color = fg_color;
     return 0;
 }
+
+/**
+ * @brief Set quarter source of arc widget
+ *
+ * @param[in] arc Arc widget instance
+ * @param[in] source Image source
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_arc_set_quarter_source(struct picoui_arc *arc, struct picoui_image_source *source)
 {
@@ -148,6 +232,14 @@ int picoui_arc_set_quarter_source(struct picoui_arc *arc, struct picoui_image_so
     return 0;
 }
 
+/**
+ * @brief Set parent color of arc widget
+ *
+ * @param[in] arc Arc widget instance
+ * @param[in] parent_color parent color
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_arc_set_parent_color(struct picoui_arc *arc, unsigned int parent_color)
 {
     if (arc == 0 || parent_color > 0xFFFFFFU) {
@@ -161,6 +253,12 @@ int picoui_arc_set_parent_color(struct picoui_arc *arc, unsigned int parent_colo
     arc->parent_color = parent_color;
     return 0;
 }
+
+/**
+ * @brief Get background start angle of arc widget
+ *
+ * @param[in] arc Arc widget instance
+ */
 
 float picoui_arc_get_background_start_angle(const struct picoui_arc *arc)
 {
@@ -176,6 +274,12 @@ float picoui_arc_get_background_start_angle(const struct picoui_arc *arc)
     return bg_start_angle;
 }
 
+/**
+ * @brief Get background angle of arc widget
+ *
+ * @param[in] arc Arc widget instance
+ */
+
 float picoui_arc_get_background_angle(const struct picoui_arc *arc)
 {
     float bg_start_angle = 0.0f;
@@ -190,6 +294,12 @@ float picoui_arc_get_background_angle(const struct picoui_arc *arc)
     return bg_end_angle - bg_start_angle;
 }
 
+/**
+ * @brief Get foreground angle of arc widget
+ *
+ * @param[in] arc Arc widget instance
+ */
+
 float picoui_arc_get_foreground_angle(const struct picoui_arc *arc)
 {
     float fg_end_angle = 0.0f;
@@ -202,6 +312,12 @@ float picoui_arc_get_foreground_angle(const struct picoui_arc *arc)
     }
     return fg_end_angle;
 }
+
+/**
+ * @brief Get rotation angle of arc widget
+ *
+ * @param[in] arc Arc widget instance
+ */
 
 float picoui_arc_get_rotation_angle(const struct picoui_arc *arc)
 {
@@ -216,6 +332,12 @@ float picoui_arc_get_rotation_angle(const struct picoui_arc *arc)
     return rotation_angle;
 }
 
+/**
+ * @brief Get background color of arc widget
+ *
+ * @param[in] arc Arc widget instance
+ */
+
 unsigned int picoui_arc_get_background_color(const struct picoui_arc *arc)
 {
     unsigned int bg_color = 0;
@@ -229,6 +351,12 @@ unsigned int picoui_arc_get_background_color(const struct picoui_arc *arc)
     }
     return bg_color;
 }
+
+/**
+ * @brief Get foreground color of arc widget
+ *
+ * @param[in] arc Arc widget instance
+ */
 
 unsigned int picoui_arc_get_foreground_color(const struct picoui_arc *arc)
 {

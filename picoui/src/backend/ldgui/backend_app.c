@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2023-2026 flyingcys (flyingcys@gmail.com). All rights reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "backend.h"
 #include "internal.h"
 
@@ -17,8 +35,28 @@
 #define PICOUI_RUNTIME_ROW_HEIGHT 34
 #define PICOUI_RUNTIME_ROW_GAP 10
 
+/**
+ * @brief   attribute  
+ *
+ * @param[in] (weak) (weak)
+ */
+
 __attribute__((weak)) void VT_enter_global_mutex(void) {}
+
+/**
+ * @brief   attribute  
+ *
+ * @param[in] (weak) (weak)
+ */
+
 __attribute__((weak)) void VT_leave_global_mutex(void) {}
+
+/**
+ * @brief   attribute  
+ *
+ * @param[in] (weak) (weak)
+ */
+
 __attribute__((weak)) void ldCfgTouchSetPoint(int16_t x, int16_t y, bool pressed)
 {
     (void)x;
@@ -461,6 +499,13 @@ static struct picoui_backend_app_state *picoui_backend_app_state_from_window(str
     return (struct picoui_backend_app_state *)root_widget->owner->backend_app;
 }
 
+/**
+ * @brief Initialize app backend
+ *
+ * @param[in] app Application instance
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_app_init(struct picoui_app *app)
 {
     struct picoui_backend_runtime_state *state;
@@ -723,6 +768,14 @@ static void picoui_backend_render(struct picoui_backend_runtime_state *state, st
     (void)picoui_backend_write_capture(state);
 }
 
+/**
+ * @brief Run app backend
+ *
+ * @param[in] app Application instance
+ * @param[in] window Window instance
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_app_run(struct picoui_app *app, struct picoui_window *window)
 {
     struct picoui_backend_runtime_state *state;
@@ -829,6 +882,12 @@ int picoui_backend_app_run(struct picoui_app *app, struct picoui_window *window)
 
     return 0;
 }
+
+/**
+ * @brief Shutdown app backend
+ *
+ * @param[in] app Application instance
+ */
 
 void picoui_backend_app_shutdown(struct picoui_app *app)
 {

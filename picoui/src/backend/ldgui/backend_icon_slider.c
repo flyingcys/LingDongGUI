@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2023-2026 flyingcys (flyingcys@gmail.com). All rights reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "backend.h"
 #include "internal.h"
 #include "ldBase.h"
@@ -100,6 +118,20 @@ static bool picoui_backend_icon_slider_native_slot(struct ld_scene_t *scene, ldM
     return false;
 }
 
+/**
+ * @brief Create backend for icon slider
+ *
+ * @param[in] parent Parent widget
+ * @param[in] id Widget identifier string
+ * @param[in] width Width in pixels
+ * @param[in] height Height in pixels
+ * @param[in] icon_width icon width
+ * @param[in] icon_space icon space
+ * @param[in] columns Column definitions
+ * @param[in] rows Row definitions
+ * @param[in] pages pages
+ */
+
 void *picoui_backend_create_icon_slider(void *parent,
                                         const char *id,
                                         int width,
@@ -178,6 +210,15 @@ void *picoui_backend_create_icon_slider(void *parent,
     return widget;
 }
 
+/**
+ * @brief icon: slider add item
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] id Widget identifier string
+ * @param[in] text Text widget instance
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_icon_slider_add_item(void *backend_widget, const char *id, const char *text)
 {
     struct picoui_backend_widget *widget = backend_widget;
@@ -207,6 +248,16 @@ int picoui_backend_icon_slider_add_item(void *backend_widget, const char *id, co
     widget->list_item_count++;
     return 0;
 }
+
+/**
+ * @brief icon: slider add item with source
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] id Widget identifier string
+ * @param[in] text Text widget instance
+ * @param[in] source Image source
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_icon_slider_add_item_with_source(void *backend_widget,
                                                     const char *id,
@@ -244,6 +295,14 @@ int picoui_backend_icon_slider_add_item_with_source(void *backend_widget,
     return 0;
 }
 
+/**
+ * @brief icon: slider set selected index
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] index Index
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_icon_slider_set_selected_index(void *backend_widget, int index)
 {
     struct picoui_backend_widget *widget = backend_widget;
@@ -268,6 +327,13 @@ int picoui_backend_icon_slider_set_selected_index(void *backend_widget, int inde
     return 0;
 }
 
+/**
+ * @brief icon: slider get selected index
+ *
+ * @param[in] backend_widget backend widget
+ * @return -1 on failure
+ */
+
 int picoui_backend_icon_slider_get_selected_index(void *backend_widget)
 {
     ldIconSlider_t *ld_icon_slider = picoui_backend_icon_slider_get_ld(backend_widget);
@@ -278,6 +344,14 @@ int picoui_backend_icon_slider_get_selected_index(void *backend_widget)
 
     return (int)ld_icon_slider->selectIconOrPage;
 }
+
+/**
+ * @brief icon: slider set horizontal
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] horizontal horizontal
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_icon_slider_set_horizontal(void *backend_widget, int horizontal)
 {
@@ -291,6 +365,14 @@ int picoui_backend_icon_slider_set_horizontal(void *backend_widget, int horizont
     return 0;
 }
 
+/**
+ * @brief icon: slider get horizontal
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] horizontal horizontal
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_icon_slider_get_horizontal(void *backend_widget, int *horizontal)
 {
     ldIconSlider_t *ld_icon_slider = picoui_backend_icon_slider_get_ld(backend_widget);
@@ -303,6 +385,14 @@ int picoui_backend_icon_slider_get_horizontal(void *backend_widget, int *horizon
     return 0;
 }
 
+/**
+ * @brief icon: slider set speed
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] speed speed
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_icon_slider_set_speed(void *backend_widget, int speed)
 {
     ldIconSlider_t *ld_icon_slider = picoui_backend_icon_slider_get_ld(backend_widget);
@@ -314,6 +404,13 @@ int picoui_backend_icon_slider_set_speed(void *backend_widget, int speed)
     ldIconSliderSetSpeed(ld_icon_slider, (uint8_t)speed);
     return 0;
 }
+
+/**
+ * @brief icon: slider bind host
+ *
+ * @param[in] backend_widget backend widget
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_icon_slider_bind_host(void *backend_widget)
 {

@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2023-2026 flyingcys (flyingcys@gmail.com). All rights reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "backend.h"
 #include "internal.h"
 #include "ldList.h"
@@ -93,6 +111,13 @@ static struct picoui_backend_app_state *picoui_backend_list_get_app_state(void *
     return (struct picoui_backend_app_state *)parent_widget->owner->backend_app;
 }
 
+/**
+ * @brief Create backend for list
+ *
+ * @param[in] parent Parent widget
+ * @param[in] id Widget identifier string
+ */
+
 void *picoui_backend_create_list(void *parent, const char *id)
 {
     struct picoui_backend_widget *widget;
@@ -145,6 +170,16 @@ void *picoui_backend_create_list(void *parent, const char *id)
     return widget;
 }
 
+/**
+ * @brief Set items of list backend
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] item_ids item ids
+ * @param[in] items items
+ * @param[in] item_count item count
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_list_set_items(void *backend_widget,
                                   const char *const *item_ids,
                                   const unsigned char *const *items,
@@ -174,6 +209,14 @@ int picoui_backend_list_set_items(void *backend_widget,
     return 0;
 }
 
+/**
+ * @brief Set item height of list backend
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] item_height item height
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_list_set_item_height(void *backend_widget, int item_height)
 {
     struct picoui_backend_widget *widget = backend_widget;
@@ -189,6 +232,17 @@ int picoui_backend_list_set_item_height(void *backend_widget, int item_height)
     ldListSetItemHeight((ldList_t *)widget->ld_widget, (uint8_t)item_height);
     return 0;
 }
+
+/**
+ * @brief Set padding group of list backend
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] top Top padding
+ * @param[in] bottom Bottom padding
+ * @param[in] left Left padding
+ * @param[in] right Right padding
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_list_set_padding_group(void *backend_widget,
                                           int top,
@@ -216,6 +270,17 @@ int picoui_backend_list_set_padding_group(void *backend_widget,
     return 0;
 }
 
+/**
+ * @brief Set margin group of list backend
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] top Top padding
+ * @param[in] bottom Bottom padding
+ * @param[in] left Left padding
+ * @param[in] right Right padding
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_list_set_margin_group(void *backend_widget,
                                          int top,
                                          int bottom,
@@ -242,6 +307,14 @@ int picoui_backend_list_set_margin_group(void *backend_widget,
     return 0;
 }
 
+/**
+ * @brief Set text color of list backend
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] rgb RGB color value (0xRRGGBB)
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_list_set_text_color(void *backend_widget, unsigned int rgb)
 {
     struct picoui_backend_widget *widget = backend_widget;
@@ -255,6 +328,14 @@ int picoui_backend_list_set_text_color(void *backend_widget, unsigned int rgb)
     ldListSetTextColor((ldList_t *)widget->ld_widget, picoui_backend_list_rgb_to_ld_color(rgb));
     return 0;
 }
+
+/**
+ * @brief Set bg color of list backend
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] rgb RGB color value (0xRRGGBB)
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_list_set_bg_color(void *backend_widget, unsigned int rgb)
 {
@@ -270,6 +351,14 @@ int picoui_backend_list_set_bg_color(void *backend_widget, unsigned int rgb)
     return 0;
 }
 
+/**
+ * @brief Set select color of list backend
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] rgb RGB color value (0xRRGGBB)
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_list_set_select_color(void *backend_widget, unsigned int rgb)
 {
     struct picoui_backend_widget *widget = backend_widget;
@@ -283,6 +372,14 @@ int picoui_backend_list_set_select_color(void *backend_widget, unsigned int rgb)
     ldListSetSelectColor((ldList_t *)widget->ld_widget, picoui_backend_list_rgb_to_ld_color(rgb));
     return 0;
 }
+
+/**
+ * @brief Set align of list backend
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] align align
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_list_set_align(void *backend_widget, enum picoui_align align)
 {
@@ -303,6 +400,15 @@ int picoui_backend_list_set_align(void *backend_widget, enum picoui_align align)
     ldListSetAlign((ldList_t *)widget->ld_widget, picoui_backend_list_map_align(align));
     return 0;
 }
+
+/**
+ * @brief Set item widget of list backend
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] index Index
+ * @param[in] item_widget_backend item widget backend
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_list_set_item_widget(void *backend_widget, int index, void *item_widget_backend)
 {
@@ -348,6 +454,14 @@ int picoui_backend_list_set_item_widget(void *backend_widget, int index, void *i
     return 0;
 }
 
+/**
+ * @brief Set selected index of list backend
+ *
+ * @param[in] backend_widget backend widget
+ * @param[in] index Index
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_list_set_selected_index(void *backend_widget, int index)
 {
     struct picoui_backend_widget *widget = backend_widget;
@@ -365,6 +479,13 @@ int picoui_backend_list_set_selected_index(void *backend_widget, int index)
     return 0;
 }
 
+/**
+ * @brief Get selected index from list backend
+ *
+ * @param[in] backend_widget backend widget
+ * @return -1 on failure
+ */
+
 int picoui_backend_list_get_selected_index(void *backend_widget)
 {
     struct picoui_backend_widget *widget = backend_widget;
@@ -377,6 +498,14 @@ int picoui_backend_list_get_selected_index(void *backend_widget)
 
     return ldListGetSelectItem((ldList_t *)widget->ld_widget);
 }
+
+/**
+ * @brief list: sync selected index
+ *
+ * @param[in] list List widget instance
+ * @param[in] selected_index_out selected index out
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_list_sync_selected_index(struct picoui_list *list, int *selected_index_out)
 {

@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2023-2026 flyingcys (flyingcys@gmail.com). All rights reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "backend.h"
 #include "internal.h"
 #include "ldDateTime.h"
@@ -58,6 +76,13 @@ static ldDateTime_t *picoui_backend_date_time_get_ld(struct picoui_date_time *dt
     return (ldDateTime_t *)backend->ld_widget;
 }
 
+/**
+ * @brief Create backend for date time
+ *
+ * @param[in] parent Parent widget
+ * @param[in] id Widget identifier string
+ */
+
 void *picoui_backend_create_date_time(void *parent, const char *id)
 {
     struct picoui_backend_widget *widget;
@@ -109,6 +134,14 @@ void *picoui_backend_create_date_time(void *parent, const char *id)
     return widget;
 }
 
+/**
+ * @brief date: time set format
+ *
+ * @param[in] dt dt
+ * @param[in] format Format string
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_date_time_set_format(struct picoui_date_time *dt, const char *format)
 {
     ldDateTime_t *ld_date_time = picoui_backend_date_time_get_ld(dt);
@@ -124,6 +157,16 @@ int picoui_backend_date_time_set_format(struct picoui_date_time *dt, const char 
     return 0;
 }
 
+/**
+ * @brief date: time set date
+ *
+ * @param[in] dt dt
+ * @param[in] year year
+ * @param[in] month month
+ * @param[in] day day
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_date_time_set_date(struct picoui_date_time *dt, int year, int month, int day)
 {
     ldDateTime_t *ld_date_time = picoui_backend_date_time_get_ld(dt);
@@ -135,6 +178,16 @@ int picoui_backend_date_time_set_date(struct picoui_date_time *dt, int year, int
     ldDateTimeSetDate(ld_date_time, (uint16_t)year, (uint8_t)month, (uint8_t)day);
     return 0;
 }
+
+/**
+ * @brief date: time set time
+ *
+ * @param[in] dt dt
+ * @param[in] hour hour
+ * @param[in] minute minute
+ * @param[in] second second
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_date_time_set_time(struct picoui_date_time *dt, int hour, int minute, int second)
 {
@@ -148,6 +201,12 @@ int picoui_backend_date_time_set_time(struct picoui_date_time *dt, int hour, int
     return 0;
 }
 
+/**
+ * @brief date: time get format
+ *
+ * @param[in] dt dt
+ */
+
 const char *picoui_backend_date_time_get_format(struct picoui_date_time *dt)
 {
     ldDateTime_t *ld_date_time = picoui_backend_date_time_get_ld(dt);
@@ -158,6 +217,14 @@ const char *picoui_backend_date_time_get_format(struct picoui_date_time *dt)
 
     return (const char *)ld_date_time->formatStr;
 }
+
+/**
+ * @brief date: time set transparent
+ *
+ * @param[in] dt dt
+ * @param[in] transparent transparent
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_date_time_set_transparent(struct picoui_date_time *dt, int transparent)
 {
@@ -171,6 +238,14 @@ int picoui_backend_date_time_set_transparent(struct picoui_date_time *dt, int tr
     return 0;
 }
 
+/**
+ * @brief date: time set text color
+ *
+ * @param[in] dt dt
+ * @param[in] rgb RGB color value (0xRRGGBB)
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_date_time_set_text_color(struct picoui_date_time *dt, unsigned int rgb)
 {
     ldDateTime_t *ld_date_time = picoui_backend_date_time_get_ld(dt);
@@ -182,6 +257,14 @@ int picoui_backend_date_time_set_text_color(struct picoui_date_time *dt, unsigne
     ldDateTimeSetTextColor(ld_date_time, picoui_backend_date_time_rgb_to_ld_color(rgb));
     return 0;
 }
+
+/**
+ * @brief date: time set align
+ *
+ * @param[in] dt dt
+ * @param[in] align align
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_date_time_set_align(struct picoui_date_time *dt, enum picoui_align align)
 {
@@ -196,6 +279,14 @@ int picoui_backend_date_time_set_align(struct picoui_date_time *dt, enum picoui_
     return 0;
 }
 
+/**
+ * @brief date: time set bg color
+ *
+ * @param[in] dt dt
+ * @param[in] rgb RGB color value (0xRRGGBB)
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_date_time_set_bg_color(struct picoui_date_time *dt, unsigned int rgb)
 {
     ldDateTime_t *ld_date_time = picoui_backend_date_time_get_ld(dt);
@@ -208,6 +299,14 @@ int picoui_backend_date_time_set_bg_color(struct picoui_date_time *dt, unsigned 
     return 0;
 }
 
+/**
+ * @brief date: time set use system time
+ *
+ * @param[in] dt dt
+ * @param[in] enabled Enable state
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_backend_date_time_set_use_system_time(struct picoui_date_time *dt, int enabled)
 {
     ldDateTime_t *ld_date_time = picoui_backend_date_time_get_ld(dt);
@@ -219,6 +318,14 @@ int picoui_backend_date_time_set_use_system_time(struct picoui_date_time *dt, in
     ld_date_time->isAutoSysTime = enabled != 0;
     return 0;
 }
+
+/**
+ * @brief date: time get use system time
+ *
+ * @param[in] dt dt
+ * @param[in] enabled Enable state
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_date_time_get_use_system_time(struct picoui_date_time *dt, int *enabled)
 {

@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2023-2026 flyingcys (flyingcys@gmail.com). All rights reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "internal.h"
 #include "picoui/checkbox.h"
 
@@ -22,6 +40,14 @@ static int picoui_checkbox_props_are_valid(const struct picoui_checkbox_props *p
         && props->radius >= 0
         && props->padding >= 0;
 }
+
+/**
+ * @brief Create checkbox widget
+ *
+ * @param[in] parent Parent widget
+ * @param[in] id Widget identifier string
+ * @return Pointer to the object on success, NULL on failure
+ */
 
 struct picoui_checkbox *picoui_checkbox_create(struct picoui_window *parent, const char *id)
 {
@@ -51,6 +77,14 @@ struct picoui_checkbox *picoui_checkbox_create(struct picoui_window *parent, con
     }
     return checkbox;
 }
+
+/**
+ * @brief Create checkbox widget with properties
+ *
+ * @param[in] parent Parent widget
+ * @param[in] props Properties structure
+ * @return Pointer to the object on success, NULL on failure
+ */
 
 struct picoui_checkbox *picoui_checkbox_create_with_props(struct picoui_window *parent,
                                                           const struct picoui_checkbox_props *props)
@@ -123,6 +157,14 @@ struct picoui_checkbox *picoui_checkbox_create_with_props(struct picoui_window *
     return checkbox;
 }
 
+/**
+ * @brief Set checked of checkbox widget
+ *
+ * @param[in] checkbox Checkbox widget instance
+ * @param[in] checked Checked state
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_checkbox_set_checked(struct picoui_checkbox *checkbox, int checked)
 {
     int normalized_checked;
@@ -148,6 +190,13 @@ int picoui_checkbox_set_checked(struct picoui_checkbox *checkbox, int checked)
                                               checkbox->user_data);
 }
 
+/**
+ * @brief checkbox is checked
+ *
+ * @param[in] checkbox Checkbox widget instance
+ * @return 0 on success
+ */
+
 int picoui_checkbox_is_checked(struct picoui_checkbox *checkbox)
 {
     if (checkbox == 0) {
@@ -156,6 +205,14 @@ int picoui_checkbox_is_checked(struct picoui_checkbox *checkbox)
 
     return checkbox->checked;
 }
+
+/**
+ * @brief Set text of checkbox widget
+ *
+ * @param[in] checkbox Checkbox widget instance
+ * @param[in] text Text widget instance
+ * @return -1 on failure
+ */
 
 int picoui_checkbox_set_text(struct picoui_checkbox *checkbox, const char *text)
 {
@@ -169,6 +226,14 @@ int picoui_checkbox_set_text(struct picoui_checkbox *checkbox, const char *text)
     return picoui_backend_set_text(checkbox->widget.backend_widget, text);
 }
 
+/**
+ * @brief Set check color of checkbox widget
+ *
+ * @param[in] checkbox Checkbox widget instance
+ * @param[in] rgb RGB color value (0xRRGGBB)
+ * @return -1 on failure
+ */
+
 int picoui_checkbox_set_check_color(struct picoui_checkbox *checkbox, unsigned int rgb)
 {
     if (checkbox == 0) {
@@ -178,6 +243,14 @@ int picoui_checkbox_set_check_color(struct picoui_checkbox *checkbox, unsigned i
     return picoui_backend_checkbox_set_check_color(checkbox, rgb);
 }
 
+/**
+ * @brief Set text color of checkbox widget
+ *
+ * @param[in] checkbox Checkbox widget instance
+ * @param[in] rgb RGB color value (0xRRGGBB)
+ * @return -1 on failure
+ */
+
 int picoui_checkbox_set_text_color(struct picoui_checkbox *checkbox, unsigned int rgb)
 {
     if (checkbox == 0 || picoui_widget_set_text_color(&checkbox->widget, rgb) != 0) {
@@ -186,6 +259,14 @@ int picoui_checkbox_set_text_color(struct picoui_checkbox *checkbox, unsigned in
 
     return picoui_backend_checkbox_set_text_color(checkbox, rgb);
 }
+
+/**
+ * @brief Set unchecked source of checkbox widget
+ *
+ * @param[in] checkbox Checkbox widget instance
+ * @param[in] source Image source
+ * @return -1 on failure
+ */
 
 int picoui_checkbox_set_unchecked_source(struct picoui_checkbox *checkbox,
                                          struct picoui_image_source *source)
@@ -197,6 +278,14 @@ int picoui_checkbox_set_unchecked_source(struct picoui_checkbox *checkbox,
     return picoui_backend_checkbox_set_unchecked_source(checkbox, source);
 }
 
+/**
+ * @brief Set checked source of checkbox widget
+ *
+ * @param[in] checkbox Checkbox widget instance
+ * @param[in] source Image source
+ * @return -1 on failure
+ */
+
 int picoui_checkbox_set_checked_source(struct picoui_checkbox *checkbox,
                                        struct picoui_image_source *source)
 {
@@ -207,6 +296,14 @@ int picoui_checkbox_set_checked_source(struct picoui_checkbox *checkbox,
     return picoui_backend_checkbox_set_checked_source(checkbox, source);
 }
 
+/**
+ * @brief Set radio group of checkbox widget
+ *
+ * @param[in] checkbox Checkbox widget instance
+ * @param[in] radio_group Radio button group ID
+ * @return -1 on failure
+ */
+
 int picoui_checkbox_set_radio_group(struct picoui_checkbox *checkbox, int radio_group)
 {
     if (checkbox == 0 || radio_group < 0 || radio_group > 255) {
@@ -216,6 +313,14 @@ int picoui_checkbox_set_radio_group(struct picoui_checkbox *checkbox, int radio_
     return picoui_backend_checkbox_set_radio_group(checkbox, radio_group);
 }
 
+/**
+ * @brief Set string left space of checkbox widget
+ *
+ * @param[in] checkbox Checkbox widget instance
+ * @param[in] space Spacing
+ * @return -1 on failure
+ */
+
 int picoui_checkbox_set_string_left_space(struct picoui_checkbox *checkbox, int space)
 {
     if (checkbox == 0 || space < 0 || space > 65535) {
@@ -224,6 +329,15 @@ int picoui_checkbox_set_string_left_space(struct picoui_checkbox *checkbox, int 
 
     return picoui_backend_checkbox_set_string_left_space(checkbox, space);
 }
+
+/**
+ * @brief Set on toggled of checkbox widget
+ *
+ * @param[in] checkbox Checkbox widget instance
+ * @param[in] cb cb
+ * @param[in] user_data User data pointer
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_checkbox_set_on_toggled(struct picoui_checkbox *checkbox,
                                    picoui_value_changed_cb cb,

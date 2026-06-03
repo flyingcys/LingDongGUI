@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2023-2026 flyingcys (flyingcys@gmail.com). All rights reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "internal.h"
 #include "backend.h"
 #include "picoui/message_box.h"
@@ -9,6 +27,14 @@ static int picoui_message_box_props_are_valid(const struct picoui_message_box_pr
 {
     return props != 0 && props->id != 0;
 }
+
+/**
+ * @brief Create message box widget
+ *
+ * @param[in] parent Parent widget
+ * @param[in] id Widget identifier string
+ * @return Pointer to the object on success, NULL on failure
+ */
 
 struct picoui_message_box *picoui_message_box_create(struct picoui_widget *parent, const char *id)
 {
@@ -39,10 +65,26 @@ struct picoui_message_box *picoui_message_box_create(struct picoui_widget *paren
     return box;
 }
 
+/**
+ * @brief message box init
+ *
+ * @param[in] parent Parent widget
+ * @param[in] id Widget identifier string
+ * @return Pointer to the object
+ */
+
 struct picoui_message_box *picoui_message_box_init(struct picoui_widget *parent, const char *id)
 {
     return picoui_message_box_create(parent, id);
 }
+
+/**
+ * @brief Create message box widget with properties
+ *
+ * @param[in] parent Parent widget
+ * @param[in] props Properties structure
+ * @return Pointer to the object on success, NULL on failure
+ */
 
 struct picoui_message_box *picoui_message_box_create_with_props(
     struct picoui_widget *parent,
@@ -79,6 +121,14 @@ struct picoui_message_box *picoui_message_box_create_with_props(
     return box;
 }
 
+/**
+ * @brief Set title of message box widget
+ *
+ * @param[in] box box
+ * @param[in] title title
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_message_box_set_title(struct picoui_message_box *box, const char *title)
 {
     if (box == 0 || title == 0) {
@@ -92,6 +142,14 @@ int picoui_message_box_set_title(struct picoui_message_box *box, const char *tit
     box->title = title;
     return 0;
 }
+
+/**
+ * @brief Set message of message box widget
+ *
+ * @param[in] box box
+ * @param[in] message message
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_message_box_set_message(struct picoui_message_box *box, const char *message)
 {
@@ -107,10 +165,26 @@ int picoui_message_box_set_message(struct picoui_message_box *box, const char *m
     return 0;
 }
 
+/**
+ * @brief Set msg of message box widget
+ *
+ * @param[in] box box
+ * @param[in] message message
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_message_box_set_msg(struct picoui_message_box *box, const char *message)
 {
     return picoui_message_box_set_message(box, message);
 }
+
+/**
+ * @brief Set confirm text of message box widget
+ *
+ * @param[in] box box
+ * @param[in] text Text widget instance
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_message_box_set_confirm_text(struct picoui_message_box *box, const char *text)
 {
@@ -125,6 +199,15 @@ int picoui_message_box_set_confirm_text(struct picoui_message_box *box, const ch
     box->confirm_text = text;
     return 0;
 }
+
+/**
+ * @brief Set buttons of message box widget
+ *
+ * @param[in] box box
+ * @param[in] buttons buttons
+ * @param[in] count Count
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_message_box_set_buttons(struct picoui_message_box *box, const char *const *buttons, int count)
 {
@@ -153,10 +236,29 @@ int picoui_message_box_set_buttons(struct picoui_message_box *box, const char *c
     return 0;
 }
 
+/**
+ * @brief Set btn of message box widget
+ *
+ * @param[in] box box
+ * @param[in] buttons buttons
+ * @param[in] count Count
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_message_box_set_btn(struct picoui_message_box *box, const char *const *buttons, int count)
 {
     return picoui_message_box_set_buttons(box, buttons, count);
 }
+
+/**
+ * @brief Set string colors of message box widget
+ *
+ * @param[in] box box
+ * @param[in] title_color title color
+ * @param[in] message_color message color
+ * @param[in] button_color button color
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_message_box_set_string_colors(struct picoui_message_box *box,
                                          unsigned int title_color,
@@ -177,6 +279,16 @@ int picoui_message_box_set_string_colors(struct picoui_message_box *box,
     return 0;
 }
 
+/**
+ * @brief Set string color of message box widget
+ *
+ * @param[in] box box
+ * @param[in] title_color title color
+ * @param[in] message_color message color
+ * @param[in] button_color button color
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_message_box_set_string_color(struct picoui_message_box *box,
                                         unsigned int title_color,
                                         unsigned int message_color,
@@ -184,6 +296,15 @@ int picoui_message_box_set_string_color(struct picoui_message_box *box,
 {
     return picoui_message_box_set_string_colors(box, title_color, message_color, button_color);
 }
+
+/**
+ * @brief Set button colors of message box widget
+ *
+ * @param[in] box box
+ * @param[in] release_color release color
+ * @param[in] press_color press color
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_message_box_set_button_colors(struct picoui_message_box *box,
                                          unsigned int release_color,
@@ -202,12 +323,29 @@ int picoui_message_box_set_button_colors(struct picoui_message_box *box,
     return 0;
 }
 
+/**
+ * @brief Set button color of message box widget
+ *
+ * @param[in] box box
+ * @param[in] release_color release color
+ * @param[in] press_color press color
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_message_box_set_button_color(struct picoui_message_box *box,
                                         unsigned int release_color,
                                         unsigned int press_color)
 {
     return picoui_message_box_set_button_colors(box, release_color, press_color);
 }
+
+/**
+ * @brief Set bg color of message box widget
+ *
+ * @param[in] box box
+ * @param[in] bg_color Background color
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_message_box_set_bg_color(struct picoui_message_box *box, unsigned int bg_color)
 {
@@ -223,10 +361,26 @@ int picoui_message_box_set_bg_color(struct picoui_message_box *box, unsigned int
     return 0;
 }
 
+/**
+ * @brief Set background color of message box widget
+ *
+ * @param[in] box box
+ * @param[in] bg_color Background color
+ * @return 0 on success, -1 on failure
+ */
+
 int picoui_message_box_set_background_color(struct picoui_message_box *box, unsigned int bg_color)
 {
     return picoui_message_box_set_bg_color(box, bg_color);
 }
+
+/**
+ * @brief Set on confirm of message box widget
+ *
+ * @param[in] box box
+ * @param[in] callback callback
+ * @param[in] user_data User data pointer
+ */
 
 void picoui_message_box_set_on_confirm(
     struct picoui_message_box *box,
@@ -244,6 +398,14 @@ void picoui_message_box_set_on_confirm(
     }
 }
 
+/**
+ * @brief Set callback of message box widget
+ *
+ * @param[in] box box
+ * @param[in] callback callback
+ * @param[in] user_data User data pointer
+ */
+
 void picoui_message_box_set_callback(
     struct picoui_message_box *box,
     picoui_message_box_callback_t callback,
@@ -251,6 +413,14 @@ void picoui_message_box_set_callback(
 {
     picoui_message_box_set_on_confirm(box, callback, user_data);
 }
+
+/**
+ * @brief Set on confirm indexed of message box widget
+ *
+ * @param[in] box box
+ * @param[in] callback callback
+ * @param[in] user_data User data pointer
+ */
 
 void picoui_message_box_set_on_confirm_indexed(
     struct picoui_message_box *box,
@@ -268,6 +438,12 @@ void picoui_message_box_set_on_confirm_indexed(
     }
 }
 
+/**
+ * @brief Get title of message box widget
+ *
+ * @param[in] box box
+ */
+
 const char *picoui_message_box_get_title(const struct picoui_message_box *box)
 {
     if (box == 0) {
@@ -276,6 +452,12 @@ const char *picoui_message_box_get_title(const struct picoui_message_box *box)
     return box->title;
 }
 
+/**
+ * @brief Get message of message box widget
+ *
+ * @param[in] box box
+ */
+
 const char *picoui_message_box_get_message(const struct picoui_message_box *box)
 {
     if (box == 0) {
@@ -283,6 +465,12 @@ const char *picoui_message_box_get_message(const struct picoui_message_box *box)
     }
     return box->message;
 }
+
+/**
+ * @brief Get confirm text of message box widget
+ *
+ * @param[in] box box
+ */
 
 const char *picoui_message_box_get_confirm_text(const struct picoui_message_box *box)
 {

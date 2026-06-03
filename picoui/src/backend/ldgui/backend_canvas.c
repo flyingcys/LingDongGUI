@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2023-2026 flyingcys (flyingcys@gmail.com). All rights reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "backend.h"
 #include "internal.h"
 #include "ldCanvas.h"
@@ -33,6 +51,13 @@ static struct picoui_backend_app_state *picoui_backend_canvas_get_app_state(void
     }
     return (struct picoui_backend_app_state *)parent_widget->owner->backend_app;
 }
+
+/**
+ * @brief Create backend for canvas
+ *
+ * @param[in] parent Parent widget
+ * @param[in] id Widget identifier string
+ */
 
 void *picoui_backend_create_canvas(void *parent, const char *id)
 {
@@ -76,6 +101,13 @@ void *picoui_backend_create_canvas(void *parent, const char *id)
     }
     return widget;
 }
+
+/**
+ * @brief canvas: sync
+ *
+ * @param[in] canvas Canvas widget instance
+ * @return 0 on success, -1 on failure
+ */
 
 int picoui_backend_canvas_sync(struct picoui_canvas *canvas)
 {
