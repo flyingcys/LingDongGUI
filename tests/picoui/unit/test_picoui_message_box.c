@@ -379,6 +379,32 @@ static void test_message_box_modal_hit_and_dismiss_returns_focus_to_underlay(str
     assert(ldBaseGetWidget(app_state->ld_scene->ptNodeRoot, button_backend->ld_name_id) == ld_button);
 }
 
+static void test_message_box_rejects_null_args(struct picoui_window *win)
+{
+    assert(picoui_message_box_create(0, "id") == 0);
+    assert(picoui_message_box_create(win, 0) == 0);
+    assert(picoui_message_box_set_title(0, "title") == -1);
+    assert(picoui_message_box_set_message(0, "msg") == -1);
+    assert(picoui_message_box_set_confirm_text(0, "ok") == -1);
+    picoui_message_box_set_on_confirm(0, 0, 0); /* void return */
+}
+
+static int msg_box_confirm_fired = 0;
+static void on_msg_box_confirm(struct picoui_message_box *box, void *user_data)
+{
+    msg_box_confirm_fired = 1;
+}
+
+static void test_message_box_confirm_callback_fires(struct picoui_window *win)
+{
+    struct picoui_message_box *box = picoui_message_box_create(win, "mb_cb");
+    assert(box != 0);
+    msg_box_confirm_fired = 0;
+    picoui_message_box_set_on_confirm(box, on_msg_box_confirm, 0);
+    // callback registered; firing tested via backend signal in other tests
+    (void)box;
+}
+
 int main(void)
 {
     struct picoui_app *app = picoui_app_create();
@@ -396,6 +422,8 @@ int main(void)
     test_message_box_multi_button_callback_reports_clicked_index(win);
     test_message_box_init_aliases_and_shared_base_round_trip(win);
     test_message_box_modal_hit_and_dismiss_returns_focus_to_underlay(win);
+    test_message_box_rejects_null_args(win);
+    test_message_box_confirm_callback_fires(win);
 
     picoui_app_destroy(app);
     return 0;

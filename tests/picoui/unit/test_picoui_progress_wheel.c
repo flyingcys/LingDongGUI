@@ -150,6 +150,16 @@ static void test_progress_wheel_progress_alias_round_trip(struct picoui_progress
     assert(ld_progress_wheel->iProgress == 370);
 }
 
+static void test_progress_wheel_rejects_null_args(struct picoui_window *win)
+{
+    assert(picoui_progress_wheel_create(0, "id") == 0);
+    assert(picoui_progress_wheel_create(win, 0) == 0);
+    assert(picoui_progress_wheel_set_percent(0, 50) == -1);
+    assert(picoui_progress_wheel_set_wheel_color(0, 0xFFFFFFU) == -1);
+    assert(picoui_progress_wheel_set_dot_color(0, 0x000000U) == -1);
+    assert(picoui_progress_wheel_set_dot_enabled(0, 1) == -1);
+}
+
 int main(void)
 {
     struct picoui_app *app = picoui_app_create();
@@ -166,6 +176,7 @@ int main(void)
     test_progress_wheel_release_contract_covers_animation_and_style_boundary(wheel_with_props);
     test_progress_wheel_native_color_and_dot_enable_round_trip(wheel_with_props);
     test_progress_wheel_progress_alias_round_trip(wheel_with_props);
+    test_progress_wheel_rejects_null_args(win);
 
     picoui_app_destroy(app);
     return 0;

@@ -203,6 +203,18 @@ static void test_gauge_init_and_shared_base_aliases_round_trip(struct picoui_win
     assert(((ldBase_t *)ld_gauge)->isCorner == true);
 }
 
+static void test_gauge_rejects_null_args(struct picoui_window *win)
+{
+    assert(picoui_gauge_create(0, "id") == 0);
+    assert(picoui_gauge_create(win, 0) == 0);
+    assert(picoui_gauge_set_angle(0, 90.0f) == -1);
+    assert(picoui_gauge_get_angle(0) == 0.0f);
+    assert(picoui_gauge_set_pointer_color(0, 0xFFFFFFU) == -1);
+    assert(picoui_gauge_get_pointer_color(0) == 0x000000);
+    assert(picoui_gauge_set_auto_move(0, 1) == -1);
+    assert(picoui_gauge_get_auto_move(0) == -1);
+}
+
 int main(void)
 {
     struct picoui_app *app = picoui_app_create();
@@ -218,6 +230,7 @@ int main(void)
     test_gauge_native_background_pointer_and_centre_offset_round_trip(win);
     test_gauge_native_trail_and_progress_bar_round_trip(win);
     test_gauge_init_and_shared_base_aliases_round_trip(win);
+    test_gauge_rejects_null_args(win);
 
     picoui_app_destroy(app);
     return 0;

@@ -297,6 +297,34 @@ static void test_scroll_selecter_init_and_native_base_aliases_round_trip(void)
     picoui_app_destroy(app);
 }
 
+static void test_scroll_selecter_sync_selected_index_round_trip(struct picoui_window *win)
+{
+    struct picoui_scroll_selecter *ss = picoui_scroll_selecter_create(win, "ss_sync");
+    const char *ids[] = {"opt_1", "opt_2", "opt_3"};
+    const unsigned char *texts[] = {(const unsigned char *)"One", (const unsigned char *)"Two", (const unsigned char *)"Three"};
+    int selected;
+
+    assert(ss != 0);
+    assert(picoui_scroll_selecter_set_items(ss, ids, texts, 3) == 0);
+    assert(picoui_scroll_selecter_set_selected_index(ss, 2) == 0);
+    selected = picoui_scroll_selecter_get_selected_index(ss);
+    assert(selected == 2);
+}
+
+static void test_scroll_selecter_get_selected_text_round_trip(struct picoui_window *win)
+{
+    struct picoui_scroll_selecter *ss = picoui_scroll_selecter_create(win, "ss_get_text");
+    const char *ids[] = {"opt_x"};
+    const unsigned char *texts[] = {(const unsigned char *)"OptionX"};
+
+    assert(ss != 0);
+    assert(picoui_scroll_selecter_set_items(ss, ids, texts, 1) == 0);
+    assert(picoui_scroll_selecter_set_selected_index(ss, 0) == 0);
+
+    const char *sel_text = picoui_scroll_selecter_get_selected_text(ss);
+    assert(sel_text != 0);
+}
+
 int main(void)
 {
     test_scroll_selecter_selected_item_matches_backend_truth();
@@ -306,5 +334,11 @@ int main(void)
     test_scroll_selecter_selected_text_readback_matches_backend_truth();
     test_scroll_selecter_native_api_aliases_match_backend_truth();
     test_scroll_selecter_init_and_native_base_aliases_round_trip();
+
+    struct picoui_app *app = picoui_app_create();
+    struct picoui_window *win = picoui_window_create(app, "root");
+    test_scroll_selecter_sync_selected_index_round_trip(win);
+    test_scroll_selecter_get_selected_text_round_trip(win);
+    picoui_app_destroy(app);
     return 0;
 }

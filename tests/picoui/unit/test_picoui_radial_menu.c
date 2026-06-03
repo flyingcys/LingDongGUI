@@ -243,6 +243,26 @@ static void test_radial_menu_init_and_alias_round_trip(void)
     picoui_app_destroy(app);
 }
 
+static void test_radial_menu_rejects_null_args(void)
+{
+    struct picoui_app *app;
+    struct picoui_window *win;
+
+    app = picoui_app_create();
+    assert(app != 0);
+    win = picoui_window_create(app, "root");
+    assert(win != 0);
+
+    assert(picoui_radial_menu_create(0, "id") == 0);
+    assert(picoui_radial_menu_create((struct picoui_widget *)win, 0) == 0);
+    assert(picoui_radial_menu_add_item(0, "item") == -1);
+    assert(picoui_radial_menu_set_selected_index(0, 0) == -1);
+    assert(picoui_radial_menu_get_selected_index(0) == -1);
+    assert(picoui_radial_menu_offset_selection(0, 1) == -1);
+
+    picoui_app_destroy(app);
+}
+
 int main(void)
 {
     test_radial_menu_navigation_and_selection_follow_backend_truth();
@@ -251,5 +271,6 @@ int main(void)
     test_radial_menu_create_with_props_pushes_backend_geometry();
     test_radial_menu_native_click_default_offset_round_trip();
     test_radial_menu_init_and_alias_round_trip();
+    test_radial_menu_rejects_null_args();
     return 0;
 }

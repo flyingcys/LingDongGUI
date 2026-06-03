@@ -285,13 +285,33 @@ static void test_graph_init_and_shared_base_aliases_round_trip(void)
     picoui_app_destroy(app);
 }
 
+static void test_graph_rejects_null_args(struct picoui_window *win)
+{
+    assert(picoui_graph_create(0, "id", 1) == 0);
+    assert(picoui_graph_create(win, 0, 1) == 0);
+    assert(picoui_graph_add_series(0, 0xFFFFFFU, 1, 10) == -1);
+    assert(picoui_graph_set_value(0, 0, 0, 50) == -1);
+    assert(picoui_graph_get_value(0, 0, 0) == -1);
+    assert(picoui_graph_set_axis(0, 100, 100) == -1);
+}
+
 int main(void)
 {
+    struct picoui_app *app = picoui_app_create();
+    struct picoui_window *win;
+
+    assert(app != 0);
+    win = picoui_window_create(app, "root");
+    assert(win != 0);
+
     test_graph_series_value_readback_survives_frame_update();
     test_graph_visible_output_matches_series_updates();
     test_graph_final_release_contract_covers_advanced_readback_boundary();
     test_graph_native_axis_grid_and_point_mask_round_trip();
     test_graph_move_add_and_set_value_reject_invalid_inputs_without_polluting_other_series();
     test_graph_init_and_shared_base_aliases_round_trip();
+    test_graph_rejects_null_args(win);
+
+    picoui_app_destroy(app);
     return 0;
 }

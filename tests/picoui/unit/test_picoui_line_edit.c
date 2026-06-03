@@ -315,6 +315,50 @@ static void test_line_edit_init_and_shared_base_aliases_round_trip(struct picoui
     assert(ld_base->isCorner == true);
 }
 
+static void test_line_edit_error_paths_null_args(struct picoui_window *win)
+{
+    assert(picoui_line_edit_create(0, "id") == 0);
+    assert(picoui_line_edit_create(win, 0) == 0);
+    assert(picoui_line_edit_set_text(0, "text") == -1);
+    assert(picoui_line_edit_get_text(0) == 0);
+    assert(picoui_line_edit_set_type(0, PICOUI_LINE_EDIT_TYPE_STRING) == -1);
+    assert(picoui_line_edit_get_type(0, 0) == -1);
+    assert(picoui_line_edit_set_keyboard_binding(0, 1) == -1);
+    assert(picoui_line_edit_get_keyboard_binding(0, 0) == -1);
+    assert(picoui_line_edit_get_editing(0, 0) == -1);
+    assert(picoui_line_edit_set_align(0, PICOUI_ALIGN_START) == -1);
+    assert(picoui_line_edit_set_color(0, 0, 0, 0) == -1);
+}
+
+static void test_line_edit_error_paths_boundary_values(struct picoui_window *win)
+{
+    struct picoui_line_edit *le = picoui_line_edit_create(win, "le_boundary");
+    enum picoui_line_edit_type type_out;
+    unsigned int kb_out;
+    int editing_out;
+
+    assert(le != 0);
+
+    assert(picoui_line_edit_set_type(le, (enum picoui_line_edit_type)999) == -1);
+    assert(picoui_line_edit_set_keyboard_binding(le, 0U) == -1);
+    assert(picoui_line_edit_set_keyboard_binding(le, 0x10000U) == -1);
+
+    assert(picoui_line_edit_set_type(le, PICOUI_LINE_EDIT_TYPE_INT) == 0);
+    assert(picoui_line_edit_get_type(le, &type_out) == 0);
+    assert(type_out == PICOUI_LINE_EDIT_TYPE_INT);
+
+    assert(picoui_line_edit_set_keyboard_binding(le, 1U) == 0);
+    assert(picoui_line_edit_get_keyboard_binding(le, &kb_out) == 0);
+    assert(kb_out == 1U);
+
+    assert(picoui_line_edit_get_editing(le, &editing_out) == 0);
+    assert(editing_out == 0);
+
+    assert(picoui_line_edit_get_type(le, 0) == -1);
+    assert(picoui_line_edit_get_keyboard_binding(le, 0) == -1);
+    assert(picoui_line_edit_get_editing(le, 0) == -1);
+}
+
 int main(void)
 {
     struct picoui_app *app = picoui_app_create();
@@ -334,6 +378,9 @@ int main(void)
     test_line_edit_rejects_invalid_keyboard_binding(win);
     test_line_edit_set_keyboard_alias_matches_binding_contract(win);
     test_line_edit_init_and_shared_base_aliases_round_trip(win);
+
+    test_line_edit_error_paths_null_args(win);
+    test_line_edit_error_paths_boundary_values(win);
 
     picoui_app_destroy(app);
     return 0;

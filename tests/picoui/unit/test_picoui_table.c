@@ -479,6 +479,51 @@ static void test_table_r4_aliases_and_native_getters_round_trip(void)
     picoui_app_destroy(app);
 }
 
+static void test_table_set_excel_type_round_trip(struct picoui_window *win)
+{
+    struct picoui_table *table = picoui_table_create(win, "table_excel", 3, 4);
+    assert(table != 0);
+    assert(picoui_table_set_excel_type(table) == 0);
+}
+
+static void test_table_set_item_image_round_trip(struct picoui_window *win)
+{
+    struct picoui_table *table = picoui_table_create(win, "table_img", 2, 2);
+    arm_2d_tile_t img_tile = {0};
+    arm_2d_tile_t mask_tile = {0};
+    struct picoui_image_source src = { .img_tile = &img_tile, .mask_tile = &mask_tile };
+
+    assert(table != 0);
+    assert(picoui_table_set_cell_text(table, 0, 0, "cell") == 0);
+    assert(picoui_table_set_item_image(table, 0, 0, 4, 4, &src, 0xFFFFFFU) == 0);
+}
+
+static void test_table_set_item_button_round_trip(struct picoui_window *win)
+{
+    struct picoui_table *table = picoui_table_create(win, "table_btn", 2, 2);
+    arm_2d_tile_t rel_tile = {0};
+    arm_2d_tile_t press_tile = {0};
+    arm_2d_tile_t rel_mask_tile = {0};
+    arm_2d_tile_t press_mask_tile = {0};
+    struct picoui_image_source rel_src = { .img_tile = &rel_tile, .mask_tile = &rel_mask_tile };
+    struct picoui_image_source press_src = { .img_tile = &press_tile, .mask_tile = &press_mask_tile };
+
+    assert(table != 0);
+    assert(picoui_table_set_cell_text(table, 0, 1, "btn_cell") == 0);
+    assert(picoui_table_set_item_button(table, 0, 1, 2, 2,
+                                         &rel_src, 0xFFFFFFU,
+                                         &press_src, 0xFFFFFFU,
+                                         0) == 0);
+}
+
+static void test_table_item_image_rejects_null_source(struct picoui_window *win)
+{
+    struct picoui_table *table = picoui_table_create(win, "table_null_src", 2, 2);
+    assert(table != 0);
+    assert(picoui_table_set_cell_text(table, 0, 0, "cell") == 0);
+    assert(picoui_table_set_item_image(table, 0, 0, 4, 4, 0, 0xFFFFFFU) == -1);
+}
+
 int main(void)
 {
     test_table_current_cell_matches_backend_truth();
@@ -489,5 +534,13 @@ int main(void)
     test_table_native_size_align_color_font_region_and_navigation_round_trip();
     test_table_native_static_text_background_and_getters_round_trip();
     test_table_r4_aliases_and_native_getters_round_trip();
+
+    struct picoui_app *app = picoui_app_create();
+    struct picoui_window *win = picoui_window_create(app, "root");
+    test_table_set_excel_type_round_trip(win);
+    test_table_set_item_image_round_trip(win);
+    test_table_set_item_button_round_trip(win);
+    test_table_item_image_rejects_null_source(win);
+    picoui_app_destroy(app);
     return 0;
 }

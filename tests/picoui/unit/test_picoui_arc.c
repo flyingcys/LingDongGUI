@@ -140,6 +140,13 @@ static void test_arc_init_alias_matches_backend_truth(struct picoui_window *win)
     assert(picoui_arc_get_rotation_angle(arc) == 0.0f);
 }
 
+static void test_arc_rejects_null_args(struct picoui_window *win)
+{
+    assert(picoui_arc_create(0, "id") == 0);
+    assert(picoui_arc_create(win, 0) == 0);
+    assert(picoui_arc_set_background_angle(0, 0, 0) == -1);
+}
+
 int main(void)
 {
     struct picoui_app *app = picoui_app_create();
@@ -154,6 +161,7 @@ int main(void)
     test_arc_rejects_invalid_inputs(win);
     test_arc_native_quarter_image_mask_and_parent_color_round_trip(win);
     test_arc_init_alias_matches_backend_truth(win);
+    test_arc_rejects_null_args(win);
 
     picoui_app_destroy(app);
     return 0;

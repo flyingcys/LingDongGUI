@@ -5,6 +5,7 @@
 #include "internal.h"
 
 #include <assert.h>
+#include <string.h>
 
 extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
 
@@ -57,6 +58,61 @@ static void on_value_changed(struct picoui_widget *widget, int value, void *user
     last_value_widget = widget;
     last_value = value;
     last_value_cookie = user_data != 0 ? *(const int *)user_data : -1;
+}
+
+static void test_button_create_with_props_pushes_all_fields(struct picoui_window *win)
+{
+    struct picoui_button *btn = picoui_button_create_with_props(
+        win,
+        &(struct picoui_button_props){
+            .id = "btn_props",
+            .text = "PropsBtn",
+            .width = 120,
+            .height = 36,
+        });
+    struct picoui_backend_widget *backend;
+    ldBase_t *ld_base;
+
+    assert(btn != 0);
+    backend = (struct picoui_backend_widget *)btn->widget.backend_widget;
+    assert(backend != 0);
+    assert(backend->kind == PICOUI_BACKEND_WIDGET_BUTTON);
+    assert(backend->text != 0);
+    assert(strcmp(backend->text, "PropsBtn") == 0);
+
+    ld_base = (ldBase_t *)backend->ld_widget;
+    assert(ld_base != 0);
+    assert(ld_base->use_as__arm_2d_control_node_t.tRegion.tSize.iWidth == 120);
+    assert(ld_base->use_as__arm_2d_control_node_t.tRegion.tSize.iHeight == 36);
+}
+
+static void test_button_set_text_round_trip(struct picoui_window *win)
+{
+    struct picoui_button *btn = picoui_button_create(win, "btn_text");
+    struct picoui_backend_widget *backend;
+
+    assert(btn != 0);
+    assert(picoui_button_set_text(btn, "NewLabel") == 0);
+    backend = (struct picoui_backend_widget *)btn->widget.backend_widget;
+    assert(backend->text != 0);
+    assert(strcmp(backend->text, "NewLabel") == 0);
+}
+
+static void test_button_set_style_class(struct picoui_window *win)
+{
+    struct picoui_button *btn = picoui_button_create(win, "btn_style");
+    assert(btn != 0);
+    assert(picoui_widget_set_style_class(&btn->widget, "primary") == 0);
+    assert(btn->widget.style_class != 0);
+    assert(strcmp(btn->widget.style_class, "primary") == 0);
+}
+
+static void test_button_rejects_null_args(struct picoui_window *win)
+{
+    assert(picoui_button_create(0, "id") == 0);
+    assert(picoui_button_create(win, 0) == 0);
+    assert(picoui_button_set_text(0, "text") == -1);
+    assert(picoui_button_set_on_clicked(0, 0, 0) == -1);
 }
 
 int main(void)
@@ -438,6 +494,12 @@ int main(void)
 
     ldMsgDeinit(&app_state->ld_scene->ptMsgQueue);
     ldButtonSetFont((ldButton_t *)backend->ld_widget, (arm_2d_font_t *)&ARM_2D_FONT_6x8);
+
+    test_button_create_with_props_pushes_all_fields(win);
+    test_button_set_text_round_trip(win);
+    test_button_set_style_class(win);
+    test_button_rejects_null_args(win);
+
     picoui_app_destroy(app);
     return 0;
 }

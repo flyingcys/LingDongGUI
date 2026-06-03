@@ -251,6 +251,17 @@ static void test_progress_bar_init_image_and_shared_base_aliases_round_trip(stru
     assert(((ldBase_t *)ld_progress_bar)->isCorner == true);
 }
 
+static void test_progress_bar_rejects_null_args(struct picoui_window *win)
+{
+    assert(picoui_progress_bar_create(0, "id") == 0);
+    assert(picoui_progress_bar_create(win, 0) == 0);
+    assert(picoui_progress_bar_set_percent(0, 50) == -1);
+    assert(picoui_progress_bar_get_percent(0) == -1);
+    assert(picoui_progress_bar_set_horizontal(0, 1) == -1);
+    assert(picoui_progress_bar_set_inverted(0, 1) == -1);
+    assert(picoui_progress_bar_get_inverted(0) == -1);
+}
+
 int main(void)
 {
     struct picoui_app *app = picoui_app_create();
@@ -267,6 +278,7 @@ int main(void)
     test_progress_bar_release_contract_covers_theme_and_config_boundary(win);
     test_progress_bar_native_skin_color_and_inverted_round_trip(win);
     test_progress_bar_init_image_and_shared_base_aliases_round_trip(win);
+    test_progress_bar_rejects_null_args(win);
 
     picoui_app_destroy(app);
     return 0;

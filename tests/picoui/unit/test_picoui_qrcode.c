@@ -173,6 +173,18 @@ static void test_q_r_code_init_and_shared_base_aliases_round_trip(struct picoui_
     assert(((ldBase_t *)ld_qrcode)->isCorner == true);
 }
 
+static void test_qrcode_rejects_null_args(struct picoui_window *win)
+{
+    assert(picoui_qrcode_create(0, "id") == 0);
+    assert(picoui_qrcode_create((struct picoui_widget *)win, 0) == 0);
+    assert(picoui_qrcode_set_text(0, "text") == -1);
+    assert(picoui_qrcode_set_ecc(0, 1) == -1);
+    assert(picoui_qrcode_set_zoom(0, 2) == -1);
+    assert(picoui_qrcode_set_max_version(0, 10) == -1);
+    assert(picoui_qrcode_set_qr_color(0, 0x000000U) == -1);
+    assert(picoui_qrcode_set_bg_color(0, 0xFFFFFFU) == -1);
+}
+
 int main(void)
 {
     struct picoui_app *app = picoui_app_create();
@@ -188,6 +200,7 @@ int main(void)
     test_qrcode_release_contract_covers_configuration_boundary(win);
     test_qrcode_native_color_ecc_version_and_zoom_round_trip(win);
     test_q_r_code_init_and_shared_base_aliases_round_trip(win);
+    test_qrcode_rejects_null_args(win);
 
     picoui_app_destroy(app);
     return 0;

@@ -2237,6 +2237,35 @@ static void test_props_initial_values(struct picoui_app *app,
     assert(picoui_slider_create_with_props(props_win, 0) == 0);
 }
 
+static void test_widget_is_hidden_contract(struct picoui_button *button)
+{
+    assert(button != 0);
+    assert(picoui_widget_is_hidden(&button->widget) == 0);
+
+    assert(picoui_widget_set_visible(&button->widget, 0) == 0);
+    assert(picoui_widget_is_hidden(&button->widget) == 1);
+
+    assert(picoui_widget_set_visible(&button->widget, 1) == 0);
+    assert(picoui_widget_is_hidden(&button->widget) == 0);
+
+    assert(picoui_widget_is_hidden(0) == -1);
+}
+
+static void test_widget_destroy_clears_backend(struct picoui_window *win)
+{
+    struct picoui_label *label = picoui_label_create(win, "label_to_destroy");
+    struct picoui_widget *widget;
+
+    assert(label != 0);
+    widget = &label->widget;
+    assert(widget->backend_widget != 0);
+
+    assert(picoui_widget_destroy(widget) == 0);
+    assert(widget->backend_widget == 0);
+
+    assert(picoui_widget_destroy(0) == -1);
+}
+
 int main(void)
 {
     arm_2d_tile_t image_tile = {0};
@@ -2501,7 +2530,10 @@ int main(void)
     test_checkbox_native_radio_group_and_image_mode_round_trip(cb);
     test_switch_native_direction_navigation_and_image_skin_round_trip(sw);
 
+    test_widget_is_hidden_contract(button);
+
     ldMsgDeinit(&app_state->ld_scene->ptMsgQueue);
+    test_widget_destroy_clears_backend(win);
     picoui_theme_destroy(theme);
     picoui_app_destroy(app);
     return 0;

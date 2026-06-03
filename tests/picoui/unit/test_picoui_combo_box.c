@@ -390,6 +390,30 @@ static void test_combo_box_uses_native_static_items_contract(void)
     picoui_app_destroy(app);
 }
 
+static void test_combo_box_sync_selected_index_round_trip(struct picoui_window *win)
+{
+    struct picoui_combo_box *cb = picoui_combo_box_create(win, "cb_sync");
+    const char *ids[] = {"item_a", "item_b", "item_c"};
+    const char *texts[] = {"A", "B", "C"};
+    int selected;
+
+    assert(cb != 0);
+    assert(picoui_combo_box_set_static_items(cb, ids, texts, 3) == 0);
+    assert(picoui_combo_box_set_selected_index(cb, 1) == 0);
+    selected = picoui_combo_box_get_selected_index(cb);
+    assert(selected == 1);
+}
+
+static void test_combo_box_get_open_round_trip(struct picoui_window *win)
+{
+    struct picoui_combo_box *cb = picoui_combo_box_create(win, "cb_open");
+    int is_open = -1;
+
+    assert(cb != 0);
+    assert(picoui_combo_box_is_open(cb, &is_open) == 0);
+    assert(is_open == 0);
+}
+
 int main(void)
 {
     test_combo_box_open_close_and_selected_item_truth();
@@ -400,5 +424,11 @@ int main(void)
     test_combo_box_native_api_aliases_match_backend_truth();
     test_combo_box_shared_base_aliases_round_trip();
     test_combo_box_uses_native_static_items_contract();
+
+    struct picoui_app *app = picoui_app_create();
+    struct picoui_window *win = picoui_window_create(app, "root");
+    test_combo_box_sync_selected_index_round_trip(win);
+    test_combo_box_get_open_round_trip(win);
+    picoui_app_destroy(app);
     return 0;
 }

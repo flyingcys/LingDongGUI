@@ -226,12 +226,32 @@ static void test_icon_slider_init_aliases_and_shared_base_round_trip(void)
     picoui_app_destroy(app);
 }
 
+static void test_icon_slider_rejects_null_args(struct picoui_window *win)
+{
+    assert(picoui_icon_slider_create(0, "id") == 0);
+    assert(picoui_icon_slider_create((struct picoui_widget *)win, 0) == 0);
+    assert(picoui_icon_slider_add_icon(0, "icon", "Icon", 0) == -1);
+    assert(picoui_icon_slider_set_selected_index(0, 0) == -1);
+    assert(picoui_icon_slider_get_selected_index(0) == -1);
+    assert(picoui_icon_slider_set_horizontal_scroll(0, 1) == -1);
+}
+
 int main(void)
 {
+    struct picoui_app *app = picoui_app_create();
+    struct picoui_window *win;
+
+    assert(app != 0);
+    win = picoui_window_create(app, "root");
+    assert(win != 0);
+
     test_icon_slider_selection_and_value_follow_backend_truth();
     test_icon_slider_rejects_items_beyond_native_capacity();
     test_icon_slider_create_with_props_pushes_backend_dimensions();
     test_icon_slider_native_icon_images_and_speed_round_trip();
     test_icon_slider_init_aliases_and_shared_base_round_trip();
+    test_icon_slider_rejects_null_args(win);
+
+    picoui_app_destroy(app);
     return 0;
 }

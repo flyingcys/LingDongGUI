@@ -270,6 +270,45 @@ static void test_calendar_init_and_aliases_match_backend_truth(void)
     picoui_app_destroy(app);
 }
 
+static void test_calendar_grid_value_round_trip(struct picoui_window *win)
+{
+    struct picoui_calendar *cal = picoui_calendar_create(win, "cal_grid");
+    int grid_val;
+
+    assert(cal != 0);
+    assert(picoui_calendar_set_date(cal, 2026, 6, 3) == 0);
+    grid_val = picoui_calendar_get_grid_value(cal, 0, 0);
+    assert(grid_val >= 0);
+
+    int is_current = picoui_calendar_is_current_month_cell(cal, 0, 0);
+    assert(is_current == 0 || is_current == 1);
+}
+
+static void test_calendar_grid_value_boundary_args(struct picoui_window *win)
+{
+    struct picoui_calendar *cal = picoui_calendar_create(win, "cal_grid_boundary");
+    assert(cal != 0);
+    assert(picoui_calendar_set_date(cal, 2026, 1, 15) == 0);
+    for (int week = 0; week < 6; week++) {
+        for (int wday = 0; wday < 7; wday++) {
+            int v = picoui_calendar_get_grid_value(cal, week, wday);
+            assert(v >= 0 && v <= 31);
+            int cur = picoui_calendar_is_current_month_cell(cal, week, wday);
+            assert(cur == 0 || cur == 1);
+        }
+    }
+}
+
+static void test_calendar_grid_out_of_bounds(struct picoui_window *win)
+{
+    struct picoui_calendar *cal = picoui_calendar_create(win, "cal_oob");
+    assert(cal != 0);
+    assert(picoui_calendar_set_date(cal, 2026, 1, 1) == 0);
+    // out-of-bounds access should not crash
+    picoui_calendar_get_grid_value(cal, 10, 10);
+    picoui_calendar_is_current_month_cell(cal, 10, 10);
+}
+
 int main(void)
 {
     test_calendar_date_readback_matches_backend_truth();
@@ -278,5 +317,12 @@ int main(void)
     test_calendar_native_day_names_and_colors_round_trip();
     test_calendar_system_date_provider_round_trip();
     test_calendar_init_and_aliases_match_backend_truth();
+
+    struct picoui_app *app = picoui_app_create();
+    struct picoui_window *win = picoui_window_create(app, "root");
+    test_calendar_grid_value_round_trip(win);
+    test_calendar_grid_value_boundary_args(win);
+    test_calendar_grid_out_of_bounds(win);
+    picoui_app_destroy(app);
     return 0;
 }
