@@ -269,18 +269,18 @@ static void test_graph_init_and_shared_base_aliases_round_trip(void)
     assert(ld_base != 0);
 
     assert(picoui_widget_set_pos(&graph->widget, 17, 29) == 0);
+    assert(ld_base->use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 17);
+    assert(ld_base->use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 29);
     assert(picoui_widget_set_visible(&graph->widget, 0) == 0);
     assert(picoui_widget_set_opacity(&graph->widget, 81) == 0);
     assert(picoui_widget_set_selectable(&graph->widget, 1) == 0);
     assert(picoui_widget_set_selected(&graph->widget, 1) == 0);
     assert(picoui_widget_set_corner(&graph->widget, 1) == 0);
 
-    assert(ld_base->tRegion.tLocation.iX == 17);
-    assert(ld_base->tRegion.tLocation.iY == 29);
-    assert(ld_base->isHidden == false);
-    assert(ld_base->opa == 81);
+    assert(ld_base->isHidden == true);
+    assert(ld_base->opacity == 81);
     assert(ld_base->isSelectable == true);
-    assert(ld_base->isSelect == true);
+    assert(ld_base->isSelected == true);
     assert(ld_base->isCorner == true);
     picoui_app_destroy(app);
 }

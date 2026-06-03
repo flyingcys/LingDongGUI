@@ -298,18 +298,20 @@ static void test_line_edit_init_and_shared_base_aliases_round_trip(struct picoui
     assert(ld_base != 0);
 
     assert(picoui_widget_set_pos(&line_edit->widget, 14, 28) == 0);
+    assert(ld_base->use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 14);
+    assert(ld_base->use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 28);
+
     assert(picoui_widget_set_visible(&line_edit->widget, 0) == 0);
+    assert(ld_base->isHidden == true);
+
     assert(picoui_widget_set_opacity(&line_edit->widget, 66) == 0);
     assert(picoui_widget_set_selectable(&line_edit->widget, 1) == 0);
     assert(picoui_widget_set_selected(&line_edit->widget, 1) == 0);
     assert(picoui_widget_set_corner(&line_edit->widget, 1) == 0);
 
-    assert(ld_base->tRegion.tLocation.iX == 14);
-    assert(ld_base->tRegion.tLocation.iY == 28);
-    assert(ld_base->isHidden == false);
-    assert(ld_base->opa == 66);
+    assert(ld_base->opacity == 66);
     assert(ld_base->isSelectable == true);
-    assert(ld_base->isSelect == true);
+    assert(ld_base->isSelected == true);
     assert(ld_base->isCorner == true);
 }
 

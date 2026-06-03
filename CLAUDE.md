@@ -1,3 +1,21 @@
+## PicoUI 开发规则
+
+- `PicoUI` 是上层 API，不是第二套 GUI 渲染器。
+- `PicoUI` 的 100% 目标是控件与用户可用能力 100% 覆盖，不是把 `LingDongGUI` 的 `ld*` API 逐字翻译成 `picoui_*` API；过去能用 `LingDongGUI` 实现的控件功能和对应能力，现在必须能只用 `PicoUI` public API 实现。
+- 判断缺口时以“用户能否通过 PicoUI 完成同等控件能力”为准；允许 API 形态、命名、参数模型与 `LingDongGUI` 不同，但不得因为不是一一 API wrapper 就漏掉原本可实现的功能。
+- `policy_never_public` 只能用于生命周期、渲染管线、内存、宿主内部、调试或 backend-private helper 等不应成为用户控件能力的内部项；不能把真实用户可见/可操作的控件能力放进 policy 来规避实现。
+- 禁止在 `picoui/src/backend/ldgui/backend_app.c` 里继续堆固定坐标、固定尺寸、假控件画法；SDL 只做宿主显示，不做 `PicoUI` 专属 fake renderer。
+- `PicoUI -> LingDongGUI` 必须走真实 backend 映射：`window/label/button/checkbox/switch/slider/text/image`、`flex/grid`、`theme/event` 都要落到真实 `LingDongGUI` 对象和行为。
+- `picoui/demo/*` 只允许使用 `picoui_*` API；禁止泄漏 `ld*`、`arm_2d_*`、`SIGNAL_*`。
+- 禁止用修改 demo 页面、硬编码 `set_size()/set_pos()`、补假视觉，来掩盖 backend/layout 缺口；demo 代码只能表达用户意图，不能承担适配补丁职责。
+- 任何“UI 已完成”结论，必须基于真实 `LingDongGUI` 输出证据；“能弹窗”不等于“适配完成”。
+- `tests/picoui/runtime/*` 只能证明 smoke / 启动 / capture；不能把 fake renderer 通过当成 backend 已闭环。
+- 做 `PicoUI` 改动时，优先补真实 backend tree、真实 widget mapping、真实 layout/event/theme；不要优先修截图外观。
+- 若当前实现只能靠临时 fake 路径工作，文档必须明确标注为 `temporary smoke path`，不得写成正式方案。
+
+- 采用 cmake 编译
+- worktree 合并，可以不管主仓库文档变更，主仓库的文档可能一直在自动更新。
+
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 

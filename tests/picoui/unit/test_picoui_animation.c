@@ -85,18 +85,20 @@ static void test_animation_init_and_shared_base_aliases_round_trip(struct picoui
 
     assert(alias != 0);
     assert(picoui_widget_set_pos(&animation->widget, 6, 10) == 0);
-    assert(((ldBase_t *)ld_animation)->tRegion.tLocation.iX == 6);
-    assert(((ldBase_t *)ld_animation)->tRegion.tLocation.iY == 10);
+    assert(((ldBase_t *)ld_animation)->use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 6);
+    assert(((ldBase_t *)ld_animation)->use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 10);
     assert(picoui_widget_set_visible(&animation->widget, 0) == 0);
-    assert(((ldBase_t *)ld_animation)->bIsVisible == false);
+    assert(((ldBase_t *)ld_animation)->isHidden == true);
     assert(picoui_widget_set_opacity(&animation->widget, 58) == 0);
-    assert(((ldBase_t *)ld_animation)->chOpacity == 58);
+    assert(((ldBase_t *)ld_animation)->opacity == 58);
+    assert(picoui_widget_set_selectable(&animation->widget, 1) == 0);
+    assert(((ldBase_t *)ld_animation)->isSelectable == true);
+    assert(picoui_widget_set_selected(&animation->widget, 1) == 0);
+    assert(((ldBase_t *)ld_animation)->isSelected == true);
     assert(picoui_widget_set_selectable(&animation->widget, 0) == 0);
     assert(((ldBase_t *)ld_animation)->isSelectable == false);
-    assert(picoui_widget_set_selected(&animation->widget, 1) == 0);
-    assert(((ldBase_t *)ld_animation)->isSelect == true);
     assert(picoui_widget_set_corner(&animation->widget, 3) == 0);
-    assert(((ldBase_t *)ld_animation)->chCorner == 3);
+    assert(((ldBase_t *)ld_animation)->isCorner == true);
 }
 
 int main(void)

@@ -150,16 +150,16 @@ static void test_q_r_code_init_and_shared_base_aliases_round_trip(struct picoui_
     assert(strcmp((const char *)ld_qrcode->pStr, "alias://qrcode") == 0);
 
     assert(picoui_widget_set_pos(&qrcode->widget, 13, 17) == 0);
-    assert(((ldBase_t *)ld_qrcode)->tRegion.tLocation.iX == 13);
-    assert(((ldBase_t *)ld_qrcode)->tRegion.tLocation.iY == 17);
+    assert(((ldBase_t *)ld_qrcode)->use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 13);
+    assert(((ldBase_t *)ld_qrcode)->use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 17);
 
     assert(picoui_widget_set_visible(&qrcode->widget, 0) == 0);
-    assert(((ldBase_t *)ld_qrcode)->bIsVisible == false);
+    assert(((ldBase_t *)ld_qrcode)->isHidden == true);
     assert(picoui_widget_set_visible(&qrcode->widget, 1) == 0);
-    assert(((ldBase_t *)ld_qrcode)->bIsVisible == true);
+    assert(((ldBase_t *)ld_qrcode)->isHidden == false);
 
     assert(picoui_widget_set_opacity(&qrcode->widget, 77) == 0);
-    assert(((ldBase_t *)ld_qrcode)->chOpacity == 77);
+    assert(((ldBase_t *)ld_qrcode)->opacity == 77);
 
     assert(picoui_widget_set_selectable(&qrcode->widget, 0) == 0);
     assert(((ldBase_t *)ld_qrcode)->isSelectable == false);
@@ -167,10 +167,10 @@ static void test_q_r_code_init_and_shared_base_aliases_round_trip(struct picoui_
     assert(((ldBase_t *)ld_qrcode)->isSelectable == true);
 
     assert(picoui_widget_set_selected(&qrcode->widget, 1) == 0);
-    assert(((ldBase_t *)ld_qrcode)->isSelect == true);
+    assert(((ldBase_t *)ld_qrcode)->isSelected == true);
 
     assert(picoui_widget_set_corner(&qrcode->widget, 9) == 0);
-    assert(((ldBase_t *)ld_qrcode)->chCorner == 9);
+    assert(((ldBase_t *)ld_qrcode)->isCorner == true);
 }
 
 int main(void)

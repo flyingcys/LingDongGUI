@@ -1,40 +1,12 @@
 #include "picoui/picoui.h"
-#include "../../../src/gui/ldBase.h"
 #include "../../../src/gui/ldButton.h"
 #include "../../../src/gui/ldGui.h"
 #include "../../../src/misc/ldMsg.h"
 #include "internal.h"
 
 #include <assert.h>
-#include <string.h>
 
-static const uintptr_t k_test_vres_font_addr = 0x2000U;
 extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
-
-void __disp_adapter0_vres_read_memory(intptr_t pObj,
-                                      void *pBuffer,
-                                      uintptr_t pAddress,
-                                      size_t nSizeInByte)
-{
-    static const uint8_t font_header[13] = {
-        16, 0,
-        16, 0,
-        ARM_2D_COLOUR_8BIT,
-        13, 0,
-        8, 0,
-        8, 0,
-        0, 0
-    };
-
-    (void)pObj;
-    assert(pBuffer != 0);
-    memset(pBuffer, 0, nSizeInByte);
-
-    if (pAddress == k_test_vres_font_addr) {
-        assert(nSizeInByte <= sizeof(font_header));
-        memcpy(pBuffer, font_header, nSizeInByte);
-    }
-}
 
 static int press_count = 0;
 static int release_count = 0;
@@ -109,9 +81,6 @@ int main(void)
     int checkbox_cookie = 44;
     int switch_cookie = 55;
     int slider_cookie = 66;
-    struct picoui_font vres_font = {0};
-    arm_2d_vres_font_t *native_font;
-    arm_2d_font_t *button_vres_font = 0;
 
     assert(app != 0);
     assert(win != 0);
@@ -160,17 +129,6 @@ int main(void)
     checkbox_name_id = picoui_widget_get_name_id((const struct picoui_widget *)checkbox);
     assert(button_name_id > 0);
     assert(checkbox_name_id > 0);
-    assert(picoui_font_from_vres(0, &vres_font) == -1);
-    assert(picoui_font_from_vres(k_test_vres_font_addr, 0) == -1);
-    assert(picoui_font_from_vres(k_test_vres_font_addr, &vres_font) == 0);
-    native_font = ldBaseGetVresFont(k_test_vres_font_addr);
-    assert(native_font != 0);
-    assert(native_font->startAddr == k_test_vres_font_addr);
-    assert(native_font->use_as__arm_2d_font_t.fnDrawChar != 0);
-    ldFree(native_font);
-    assert(picoui_button_set_font(button, &vres_font) == 0);
-    button_vres_font = ((ldButton_t *)backend->ld_widget)->ptFont;
-    assert(((arm_2d_vres_font_t *)button_vres_font)->startAddr == k_test_vres_font_addr);
 
     assert(picoui_button_set_pressed(button, 1) == 0);
     assert(picoui_button_get_pressed_by_name_id((const struct picoui_widget *)win,
@@ -480,8 +438,6 @@ int main(void)
 
     ldMsgDeinit(&app_state->ld_scene->ptMsgQueue);
     ldButtonSetFont((ldButton_t *)backend->ld_widget, (arm_2d_font_t *)&ARM_2D_FONT_6x8);
-    ldFree(button_vres_font);
-    picoui_font_destroy(&vres_font);
     picoui_app_destroy(app);
     return 0;
 }

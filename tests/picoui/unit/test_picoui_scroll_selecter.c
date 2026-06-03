@@ -292,8 +292,8 @@ static void test_scroll_selecter_init_and_native_base_aliases_round_trip(void)
     assert(ld_base != 0);
 
     assert(picoui_widget_set_pos(&scroll_selecter->widget, 21, 43) == 0);
-    assert(ld_base->tRegion.tLocation.iX == 21);
-    assert(ld_base->tRegion.tLocation.iY == 43);
+    assert(ld_base->use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 21);
+    assert(ld_base->use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 43);
     picoui_app_destroy(app);
 }
 

@@ -216,6 +216,15 @@ int picoui_widget_set_center(struct picoui_widget *widget);
 int picoui_widget_set_visible(struct picoui_widget *widget, int visible);
 
 /**
+ * @brief Check if widget is hidden
+ *
+ * @param[in] widget Widget instance
+ * @return 1 if hidden, 0 if visible, -1 on failure
+ */
+
+int picoui_widget_is_hidden(struct picoui_widget *widget);
+
+/**
  * @brief Set opacity of widget
  *
  * @param[in] widget Widget instance

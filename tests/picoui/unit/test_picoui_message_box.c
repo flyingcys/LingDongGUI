@@ -298,14 +298,14 @@ static void test_message_box_init_aliases_and_shared_base_round_trip(struct pico
     assert(ld_message_box->ptFunc != 0);
 
     assert(picoui_widget_set_pos(&box->widget, 14, 18) == 0);
-    assert(((ldBase_t *)ld_message_box)->tRegion.tLocation.iX == 14);
-    assert(((ldBase_t *)ld_message_box)->tRegion.tLocation.iY == 18);
+    assert(((ldBase_t *)ld_message_box)->use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 14);
+    assert(((ldBase_t *)ld_message_box)->use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 18);
     assert(picoui_widget_set_visible(&box->widget, 0) == 0);
-    assert(((ldBase_t *)ld_message_box)->bIsVisible == false);
+    assert(((ldBase_t *)ld_message_box)->isHidden == true);
     assert(picoui_widget_set_opacity(&box->widget, 62) == 0);
-    assert(((ldBase_t *)ld_message_box)->chOpacity == 62);
+    assert(((ldBase_t *)ld_message_box)->opacity == 62);
     assert(picoui_widget_set_corner(&box->widget, 5) == 0);
-    assert(((ldBase_t *)ld_message_box)->chCorner == 5);
+    assert(((ldBase_t *)ld_message_box)->isCorner == true);
 }
 
 static void test_message_box_modal_hit_and_dismiss_returns_focus_to_underlay(struct picoui_window *win)

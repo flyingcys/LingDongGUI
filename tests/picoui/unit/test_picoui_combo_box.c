@@ -341,18 +341,18 @@ static void test_combo_box_shared_base_aliases_round_trip(void)
     assert(ld_base != 0);
 
     assert(picoui_widget_set_pos(&combo_box->widget, 12, 34) == 0);
+    assert(ld_base->use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 12);
+    assert(ld_base->use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 34);
     assert(picoui_widget_set_visible(&combo_box->widget, 0) == 0);
     assert(picoui_widget_set_opacity(&combo_box->widget, 77) == 0);
     assert(picoui_widget_set_selectable(&combo_box->widget, 1) == 0);
     assert(picoui_widget_set_selected(&combo_box->widget, 1) == 0);
     assert(picoui_widget_set_corner(&combo_box->widget, 1) == 0);
 
-    assert(ld_base->tRegion.tLocation.iX == 12);
-    assert(ld_base->tRegion.tLocation.iY == 34);
-    assert(ld_base->isHidden == false);
-    assert(ld_base->opa == 77);
+    assert(ld_base->isHidden == true);
+    assert(ld_base->opacity == 77);
     assert(ld_base->isSelectable == true);
-    assert(ld_base->isSelect == true);
+    assert(ld_base->isSelected == true);
     assert(ld_base->isCorner == true);
     picoui_app_destroy(app);
 }

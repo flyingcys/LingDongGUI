@@ -503,6 +503,14 @@ int picoui_widget_set_visible(struct picoui_widget *widget, int visible)
     return 0;
 }
 
+int picoui_widget_is_hidden(struct picoui_widget *widget)
+{
+    if (!picoui_widget_is_valid(widget)) {
+        return -1;
+    }
+    return !widget->visible;
+}
+
 /**
  * @brief Set opacity of widget
  *

@@ -193,10 +193,12 @@ static void test_gauge_init_and_shared_base_aliases_round_trip(struct picoui_win
     assert(((ldBase_t *)ld_gauge)->isHidden == true);
     assert(picoui_widget_set_opacity(&gauge->widget, 71) == 0);
     assert(((ldBase_t *)ld_gauge)->opacity == 71);
-    assert(picoui_widget_set_selectable(&gauge->widget, 0) == 0);
-    assert(((ldBase_t *)ld_gauge)->isSelectable == false);
+    assert(picoui_widget_set_selectable(&gauge->widget, 1) == 0);
+    assert(((ldBase_t *)ld_gauge)->isSelectable == true);
     assert(picoui_widget_set_selected(&gauge->widget, 1) == 0);
     assert(((ldBase_t *)ld_gauge)->isSelected == true);
+    assert(picoui_widget_set_selectable(&gauge->widget, 0) == 0);
+    assert(((ldBase_t *)ld_gauge)->isSelectable == false);
     assert(picoui_widget_set_corner(&gauge->widget, 6) == 0);
     assert(((ldBase_t *)ld_gauge)->isCorner == true);
 }

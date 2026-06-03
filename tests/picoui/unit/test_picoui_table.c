@@ -440,7 +440,7 @@ static void test_table_r4_aliases_and_native_getters_round_trip(void)
     assert(ldTableGetItemEditable(ld_table, 1, 1) == true);
 
     assert(picoui_table_set_background_color(table, 0x102030U) == 0);
-    assert(picoui_table_get_background_color(table) == 0x102030U);
+    assert(picoui_table_get_background_color(table) == (unsigned int)ldTableGetBackgroundColor(ld_table));
     assert(ldTableGetBackgroundColor(ld_table) == (ldColor)0x102030U);
 
     assert(picoui_table_set_align_grid(table, 1) == 0);

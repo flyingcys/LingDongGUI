@@ -134,10 +134,8 @@ static void test_progress_wheel_native_color_and_dot_enable_round_trip(struct pi
     assert(picoui_progress_wheel_get_dot_enabled(0) == -1);
 }
 
-static void test_progress_wheel_init_and_progress_alias_round_trip(struct picoui_window *win)
+static void test_progress_wheel_progress_alias_round_trip(struct picoui_progress_wheel *wheel)
 {
-    struct picoui_progress_wheel *wheel =
-        picoui_progress_wheel_init((struct picoui_widget *)win, "wheel_alias");
     struct picoui_backend_widget *backend;
     ldProgressWheel_t *ld_progress_wheel;
 
@@ -167,7 +165,7 @@ int main(void)
     test_progress_wheel_rejects_invalid_inputs(win);
     test_progress_wheel_release_contract_covers_animation_and_style_boundary(wheel_with_props);
     test_progress_wheel_native_color_and_dot_enable_round_trip(wheel_with_props);
-    test_progress_wheel_init_and_progress_alias_round_trip(win);
+    test_progress_wheel_progress_alias_round_trip(wheel_with_props);
 
     picoui_app_destroy(app);
     return 0;

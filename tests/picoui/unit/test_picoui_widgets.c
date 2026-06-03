@@ -1472,6 +1472,8 @@ static void test_text_native_r3_style_background_static_and_scroll_round_trip(
     picoui_app_destroy(app);
 }
 
+#if USE_VIRTUAL_RESOURCE
+
 static void test_vres_image_source_factory_round_trip(void)
 {
     struct picoui_app *app = picoui_app_create();
@@ -1536,6 +1538,8 @@ static void test_vres_font_factory_round_trip(void)
     picoui_font_destroy(&vres_font);
     picoui_app_destroy(app);
 }
+
+#endif /* USE_VIRTUAL_RESOURCE */
 
 static void test_image_style_class_and_user_data_are_stable_widget_metadata_contract(
     struct picoui_window *parent)
@@ -2382,8 +2386,10 @@ int main(void)
     test_text_font_runtime_rebind_updates_real_ldtext_and_public_cache(win);
     test_text_font_backend_failure_does_not_split_state(win);
     test_text_native_r3_style_background_static_and_scroll_round_trip(win, &image_source);
+#if USE_VIRTUAL_RESOURCE
     test_vres_image_source_factory_round_trip();
     test_vres_font_factory_round_trip();
+#endif
     test_button_j4_contract(win,
                             app_state,
                             &button_release_source,

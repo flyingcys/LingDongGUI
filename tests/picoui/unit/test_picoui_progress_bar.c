@@ -234,19 +234,21 @@ static void test_progress_bar_init_image_and_shared_base_aliases_round_trip(stru
     assert(ld_progress_bar->ptFrameMaskTile == &frame_mask);
 
     assert(picoui_widget_set_pos(&bar->widget, 9, 12) == 0);
-    assert(((ldBase_t *)ld_progress_bar)->tRegion.tLocation.iX == 9);
-    assert(((ldBase_t *)ld_progress_bar)->tRegion.tLocation.iY == 12);
+    assert(((ldBase_t *)ld_progress_bar)->use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 9);
+    assert(((ldBase_t *)ld_progress_bar)->use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 12);
 
     assert(picoui_widget_set_visible(&bar->widget, 0) == 0);
-    assert(((ldBase_t *)ld_progress_bar)->bIsVisible == false);
+    assert(((ldBase_t *)ld_progress_bar)->isHidden == true);
     assert(picoui_widget_set_opacity(&bar->widget, 66) == 0);
-    assert(((ldBase_t *)ld_progress_bar)->chOpacity == 66);
+    assert(((ldBase_t *)ld_progress_bar)->opacity == 66);
+    assert(picoui_widget_set_selectable(&bar->widget, 1) == 0);
+    assert(((ldBase_t *)ld_progress_bar)->isSelectable == true);
+    assert(picoui_widget_set_selected(&bar->widget, 1) == 0);
+    assert(((ldBase_t *)ld_progress_bar)->isSelected == true);
     assert(picoui_widget_set_selectable(&bar->widget, 0) == 0);
     assert(((ldBase_t *)ld_progress_bar)->isSelectable == false);
-    assert(picoui_widget_set_selected(&bar->widget, 1) == 0);
-    assert(((ldBase_t *)ld_progress_bar)->isSelect == true);
     assert(picoui_widget_set_corner(&bar->widget, 7) == 0);
-    assert(((ldBase_t *)ld_progress_bar)->chCorner == 7);
+    assert(((ldBase_t *)ld_progress_bar)->isCorner == true);
 }
 
 int main(void)

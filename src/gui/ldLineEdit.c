@@ -72,7 +72,7 @@ static bool slotLineEditProcess(ld_scene_t *ptScene,ldMsg_t msg)
         if(ptWidget->kbNameId)
         {
             kb=ldBaseGetWidgetById(ptWidget->kbNameId);
-            if(kb!=NULL)
+            if(kb!=NULL && kb->use_as__ldBase_t.widgetType==widgetTypeKeyboard)
             {
                 kb->editType=ptWidget->editType;
                 kb->ppStr=&ptWidget->pText;
