@@ -8,7 +8,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[3]
-BUILD = ROOT / "build" / "picoui-runtime"
+DEFAULT_BUILD = ROOT / "build" / "picoui-runtime"
 RTK = shutil.which("rtk") or "rtk"
 DEMO_TIMEOUT_SECONDS = 6
 DEMOS = {
@@ -1485,11 +1485,11 @@ def _assert_calendar_basic_visible(path: Path) -> None:
         )
 
 
-def _find_executable(target: str) -> Path:
+def _find_executable(build_dir: Path, target: str) -> Path:
     candidates = [
-        BUILD / "examples" / "sdl" / target,
-        BUILD / target,
-        BUILD / "examples" / target,
+        build_dir / "examples" / "sdl" / target,
+        build_dir / target,
+        build_dir / "examples" / target,
     ]
     executable = next((path for path in candidates if path.is_file()), None)
     if executable is None:
@@ -1500,13 +1500,13 @@ def _find_executable(target: str) -> Path:
     return executable
 
 
-def _run_demo(target: str, capture_path: Path) -> subprocess.CompletedProcess[str]:
+def _run_demo(build_dir: Path, target: str, capture_path: Path) -> subprocess.CompletedProcess[str]:
     env = os.environ.copy()
     env["SDL_VIDEODRIVER"] = env.get("SDL_VIDEODRIVER", "dummy")
     env["PICOUI_DEMO_AUTO_QUIT_MS"] = "1200"
     env["PICOUI_CAPTURE_FILE"] = str(capture_path)
     return subprocess.run(
-        [str(_find_executable(target))],
+        [str(_find_executable(build_dir, target))],
         check=False,
         timeout=DEMO_TIMEOUT_SECONDS,
         capture_output=True,
@@ -1552,82 +1552,101 @@ def main() -> None:
     )
     parser.add_argument("--demo", choices=sorted(DEMOS), default="basic_widgets")
     parser.add_argument("--all", action="store_true", help="check every PicoUI demo visible gate")
+    parser.add_argument(
+        "--build-dir",
+        type=Path,
+        help="reuse an existing build directory instead of allocating an isolated one",
+    )
     args = parser.parse_args()
     selected = sorted(DEMOS) if args.all else [args.demo]
 
-    subprocess.run([RTK, "cmake", "-S", str(ROOT), "-B", str(BUILD), "-DUSE_DEMO=0"], check=True)
-    subprocess.run([RTK, "cmake", "--build", str(BUILD), "--target", *(DEMOS[demo] for demo in selected)], check=True)
+    build_dir = args.build_dir
+    if build_dir is None:
+        build_dir = Path(tempfile.mkdtemp(prefix="picoui-visible-build-"))
+    else:
+        build_dir = build_dir.resolve()
+        build_dir.mkdir(parents=True, exist_ok=True)
 
-    for demo in selected:
-        target = DEMOS[demo]
-        with tempfile.TemporaryDirectory(prefix=f"{target}-visible-") as tmpdir:
-            capture_path = Path(tmpdir) / "frame.ppm"
-            completed = _run_demo(target, capture_path)
-            if completed.returncode != 0:
-                raise RuntimeError(
-                    f"SMOKE FAIL: demo '{target}' exited with {completed.returncode}.\n"
-                    f"stdout:\n{completed.stdout}\n"
-                    f"stderr:\n{completed.stderr}"
-                )
-            if "PICOUI_RUNTIME_READY" not in completed.stdout:
-                raise AssertionError(
-                    f"SMOKE FAIL: demo '{target}' did not report entering a runtime loop.\n"
-                    f"stdout:\n{completed.stdout}\n"
-                    f"stderr:\n{completed.stderr}"
-                )
-            if not capture_path.is_file() or capture_path.stat().st_size <= 32:
-                raise AssertionError(
-                    f"SMOKE FAIL: demo '{target}' did not produce a capture frame.\n"
-                    f"stdout:\n{completed.stdout}\n"
-                    f"stderr:\n{completed.stderr}"
-                )
-            if demo == "basic_widgets":
-                _assert_basic_widgets_visible(capture_path)
-                _assert_basic_widgets_image_source_boundary(completed.stdout)
-            elif demo == "hello_world":
-                _assert_hello_world_visible(capture_path)
-            elif demo == "list_basic":
-                _assert_list_basic_visible(capture_path)
-            elif demo == "progress_bar_basic":
-                _assert_progress_bar_basic_visible(capture_path)
-            elif demo == "arc_basic":
-                _assert_arc_basic_visible(capture_path)
-            elif demo == "gauge_basic":
-                _assert_gauge_basic_visible(capture_path)
-            elif demo == "icon_slider_basic":
-                _assert_icon_slider_basic_visible(capture_path)
-            elif demo == "radial_menu_basic":
-                _assert_radial_menu_basic_visible(capture_path)
-            elif demo == "progress_wheel_basic":
-                _assert_progress_wheel_basic_visible(capture_path)
-            elif demo == "qrcode_basic":
-                _assert_qrcode_basic_visible(capture_path)
-            elif demo == "message_box_basic":
-                _assert_message_box_basic_visible(capture_path)
-                _assert_real_mapping_honesty(demo, completed.stdout)
-            elif demo == "animation_basic":
-                _assert_animation_basic_visible(capture_path)
-            elif demo == "date_time_basic":
-                _assert_date_time_basic_visible(capture_path)
-            elif demo == "clock_basic":
-                _assert_clock_basic_visible(capture_path)
-            elif demo == "calendar_basic":
-                _assert_calendar_basic_visible(capture_path)
-            elif demo == "legacy_widget_parity":
-                _assert_legacy_widget_parity_visible(capture_path)
-            elif demo == "layout_parity":
-                _assert_layout_parity_visible(capture_path)
-            elif demo == "grid_parity":
-                _assert_grid_parity_visible(capture_path)
-            elif demo == "line_edit_basic":
-                _assert_common_visible(capture_path, demo)
-            elif demo == "layout_flex":
-                _assert_layout_flex_visible(capture_path)
-            elif demo == "layout_grid":
-                _assert_layout_grid_visible(capture_path)
-            else:
-                _assert_common_visible(capture_path, demo)
-            _assert_no_unexpected_fallback(demo, completed.stdout)
+    try:
+        subprocess.run([RTK, "cmake", "-S", str(ROOT), "-B", str(build_dir), "-DUSE_DEMO=0"], check=True)
+        subprocess.run(
+            [RTK, "cmake", "--build", str(build_dir), "--target", *(DEMOS[demo] for demo in selected)],
+            check=True,
+        )
+
+        for demo in selected:
+            target = DEMOS[demo]
+            with tempfile.TemporaryDirectory(prefix=f"{target}-visible-") as tmpdir:
+                capture_path = Path(tmpdir) / "frame.ppm"
+                completed = _run_demo(build_dir, target, capture_path)
+                if completed.returncode != 0:
+                    raise RuntimeError(
+                        f"SMOKE FAIL: demo '{target}' exited with {completed.returncode}.\n"
+                        f"stdout:\n{completed.stdout}\n"
+                        f"stderr:\n{completed.stderr}"
+                    )
+                if "PICOUI_RUNTIME_READY" not in completed.stdout:
+                    raise AssertionError(
+                        f"SMOKE FAIL: demo '{target}' did not report entering a runtime loop.\n"
+                        f"stdout:\n{completed.stdout}\n"
+                        f"stderr:\n{completed.stderr}"
+                    )
+                if not capture_path.is_file() or capture_path.stat().st_size <= 32:
+                    raise AssertionError(
+                        f"SMOKE FAIL: demo '{target}' did not produce a capture frame.\n"
+                        f"stdout:\n{completed.stdout}\n"
+                        f"stderr:\n{completed.stderr}"
+                    )
+                if demo == "basic_widgets":
+                    _assert_basic_widgets_visible(capture_path)
+                    _assert_basic_widgets_image_source_boundary(completed.stdout)
+                elif demo == "hello_world":
+                    _assert_hello_world_visible(capture_path)
+                elif demo == "list_basic":
+                    _assert_list_basic_visible(capture_path)
+                elif demo == "progress_bar_basic":
+                    _assert_progress_bar_basic_visible(capture_path)
+                elif demo == "arc_basic":
+                    _assert_arc_basic_visible(capture_path)
+                elif demo == "gauge_basic":
+                    _assert_gauge_basic_visible(capture_path)
+                elif demo == "icon_slider_basic":
+                    _assert_icon_slider_basic_visible(capture_path)
+                elif demo == "radial_menu_basic":
+                    _assert_radial_menu_basic_visible(capture_path)
+                elif demo == "progress_wheel_basic":
+                    _assert_progress_wheel_basic_visible(capture_path)
+                elif demo == "qrcode_basic":
+                    _assert_qrcode_basic_visible(capture_path)
+                elif demo == "message_box_basic":
+                    _assert_message_box_basic_visible(capture_path)
+                    _assert_real_mapping_honesty(demo, completed.stdout)
+                elif demo == "animation_basic":
+                    _assert_animation_basic_visible(capture_path)
+                elif demo == "date_time_basic":
+                    _assert_date_time_basic_visible(capture_path)
+                elif demo == "clock_basic":
+                    _assert_clock_basic_visible(capture_path)
+                elif demo == "calendar_basic":
+                    _assert_calendar_basic_visible(capture_path)
+                elif demo == "legacy_widget_parity":
+                    _assert_legacy_widget_parity_visible(capture_path)
+                elif demo == "layout_parity":
+                    _assert_layout_parity_visible(capture_path)
+                elif demo == "grid_parity":
+                    _assert_grid_parity_visible(capture_path)
+                elif demo == "line_edit_basic":
+                    _assert_common_visible(capture_path, demo)
+                elif demo == "layout_flex":
+                    _assert_layout_flex_visible(capture_path)
+                elif demo == "layout_grid":
+                    _assert_layout_grid_visible(capture_path)
+                else:
+                    _assert_common_visible(capture_path, demo)
+                _assert_no_unexpected_fallback(demo, completed.stdout)
+    finally:
+        if args.build_dir is None:
+            shutil.rmtree(build_dir, ignore_errors=True)
 
 
 if __name__ == "__main__":
