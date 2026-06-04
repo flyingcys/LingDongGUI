@@ -237,17 +237,18 @@ void ldLabelSetTransparent(ldLabel_t* ptWidget,bool isTransparent)
 void ldLabelSetText(ldLabel_t* ptWidget,uint8_t *pStr)
 {
     assert(NULL != ptWidget);
-    if(ptWidget==NULL)
+    if(ptWidget==NULL || pStr==NULL)
     {
         return;
     }
     ptWidget->use_as__ldBase_t.isDirtyRegionUpdate = true;
     ldFree(ptWidget->pStr);
     ptWidget->pStr=ldCalloc(1,strlen((char*)pStr)+1);
-    if(ptWidget->pStr!=NULL)
+    if(ptWidget->pStr==NULL)
     {
-        strcpy((char*)ptWidget->pStr,(char*)pStr);
+        return;
     }
+    strcpy((char*)ptWidget->pStr,(char*)pStr);
 }
 
 void ldLabelSetTextColor(ldLabel_t* ptWidget,ldColor textColor)

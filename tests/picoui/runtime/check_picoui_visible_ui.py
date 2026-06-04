@@ -37,6 +37,9 @@ DEMOS = {
     "graph_basic": "picoui_graph_basic_demo",
     "calendar_basic": "picoui_calendar_basic_demo",
     "animation_basic": "picoui_animation_basic_demo",
+    "legacy_widget_parity": "picoui_legacy_widget_parity_demo",
+    "layout_parity": "picoui_layout_parity_demo",
+    "grid_parity": "picoui_grid_parity_demo",
 }
 THEME_BG = (0xF6, 0xF8, 0xFA)
 WHITE_BG = (0xFF, 0xFF, 0xFF)
@@ -363,6 +366,179 @@ def _assert_layout_grid_visible(path: Path) -> None:
         joined = "\n  - ".join(failures)
         raise AssertionError(
             "VISIBLE FAIL: layout_grid capture is non-empty, but grid layout structure is not established.\n"
+            f"  - {joined}"
+        )
+
+
+def _assert_layout_parity_visible(path: Path) -> None:
+    width, height, bg, bounds, non_bg_area, non_bg_color_count, p90, p99 = _capture_visible_metrics(path)
+    _, _, pixels = _read_ppm(path)
+    active_rows: list[int] = []
+    failures: list[str] = []
+
+    if width != 480 or height != 320:
+        raise AssertionError(f"VISIBLE FAIL: unexpected layout_parity capture size: {width}x{height}")
+
+    if bounds[2] - bounds[0] + 1 < 180 or bounds[3] - bounds[1] + 1 < 160:
+        failures.append(
+            "layout parity coverage failed: "
+            f"content_bounds={bounds}, expected at least 180x160 visible area"
+        )
+
+    if non_bg_area < 18000 or non_bg_color_count < 2:
+        failures.append(
+            "layout parity readability failed: "
+            f"non_bg_area={non_bg_area}, non_bg_color_count={non_bg_color_count}, "
+            "expected >=18000 px and >=2 visible colors"
+        )
+
+    if p90 < 35.0 or p99 < 70.0:
+        failures.append(
+            "layout parity luma floor failed: "
+            f"p90_luma={p90:.1f}, p99_luma={p99:.1f}, expected p90>=35 and p99>=70"
+        )
+
+    for y in range(height):
+        count = 0
+        for x in range(width):
+            if not _is_background(_pixel(width, pixels, x, y), bg):
+                count += 1
+        if count >= 40:
+            active_rows.append(y)
+    row_runs = [run for run in _runs(active_rows) if (run[1] - run[0] + 1) >= 12]
+
+    if len(row_runs) < 2:
+        failures.append(
+            "layout section row separation failed: "
+            f"row_runs={row_runs}, expected main content band plus guide/footer band"
+        )
+
+    footer_rows: list[int] = []
+    for y in range(max(0, height - 80), height):
+        count = 0
+        for x in range(width):
+            if not _is_background(_pixel(width, pixels, x, y), bg):
+                count += 1
+        if count >= 80:
+            footer_rows.append(y)
+    if not footer_rows:
+        failures.append(
+            "layout footer/guide visibility failed: expected a dedicated lower-band text or guide region"
+        )
+
+    if failures:
+        joined = "\n  - ".join(failures)
+        raise AssertionError(
+            "VISIBLE FAIL: layout_parity capture is non-empty, but section parity structure is not established.\n"
+            f"  - {joined}"
+        )
+
+
+def _assert_grid_parity_visible(path: Path) -> None:
+    width, height, bg, bounds, non_bg_area, non_bg_color_count, p90, p99 = _capture_visible_metrics(path)
+    _, _, pixels = _read_ppm(path)
+    failures: list[str] = []
+
+    if width != 480 or height != 320:
+        raise AssertionError(f"VISIBLE FAIL: unexpected grid_parity capture size: {width}x{height}")
+
+    if non_bg_area < 16000 or non_bg_color_count < 2:
+        failures.append(
+            "grid parity readability failed: "
+            f"non_bg_area={non_bg_area}, non_bg_color_count={non_bg_color_count}, "
+            "expected >=16000 px and >=2 visible colors"
+        )
+
+    if p90 < 30.0 or p99 < 65.0:
+        failures.append(
+            "grid parity luma floor failed: "
+            f"p90_luma={p90:.1f}, p99_luma={p99:.1f}, expected p90>=30 and p99>=65"
+        )
+
+    content_rows: list[int] = []
+    for y in range(height):
+        count = 0
+        for x in range(width):
+            if not _is_background(_pixel(width, pixels, x, y), bg):
+                count += 1
+        if count >= 40:
+            content_rows.append(y)
+    content_row_runs = [run for run in _runs(content_rows) if (run[1] - run[0] + 1) >= 12]
+    if len(content_row_runs) < 2:
+        failures.append(
+            "grid parity row-band separation failed: "
+            f"row_runs={content_row_runs}, expected main canvas band plus lower guide/overlay band"
+        )
+
+    overlay_rows: list[int] = []
+    for y in range(height):
+        count = 0
+        for x in range(max(0, width - 180), width):
+            if not _is_background(_pixel(width, pixels, x, y), bg):
+                count += 1
+        if count >= 40:
+            overlay_rows.append(y)
+    overlay_runs = [run for run in _runs(overlay_rows) if (run[1] - run[0] + 1) >= 12]
+    if not overlay_runs:
+        failures.append(
+            "grid parity overlay visibility failed: "
+            "expected a dedicated visible band near the right-side overlay region"
+        )
+
+    if failures:
+        joined = "\n  - ".join(failures)
+        raise AssertionError(
+            "VISIBLE FAIL: grid_parity capture is non-empty, but grid parity structure is not established.\n"
+            f"  - {joined}"
+        )
+
+
+def _assert_legacy_widget_parity_visible(path: Path) -> None:
+    width, height, bg, bounds, non_bg_area, non_bg_color_count, p90, p99 = _capture_visible_metrics(path)
+    _, _, pixels = _read_ppm(path)
+    failures: list[str] = []
+
+    if width != 480 or height != 320:
+        raise AssertionError(f"VISIBLE FAIL: unexpected legacy_widget_parity capture size: {width}x{height}")
+
+    min_x, min_y, max_x, max_y = bounds
+    visible_width = max_x - min_x + 1
+    visible_height = max_y - min_y + 1
+    if visible_width < 430 or visible_height < 250:
+        failures.append(
+            "legacy widget coverage failed: "
+            f"content_bounds=({min_x},{min_y})-({max_x},{max_y}), expected at least 430x250"
+        )
+
+    if non_bg_area < 45000 or non_bg_color_count < 5:
+        failures.append(
+            "legacy widget readability failed: "
+            f"non_bg_area={non_bg_area}, non_bg_color_count={non_bg_color_count}, "
+            "expected >=45000 px and >=5 visible colors"
+        )
+
+    if p90 < 25.0 or p99 < 60.0:
+        failures.append(
+            "legacy widget luma floor failed: "
+            f"p90_luma={p90:.1f}, p99_luma={p99:.1f}, expected p90>=25 and p99>=60"
+        )
+
+    colors: set[tuple[int, int, int]] = set()
+    for y in range(min_y, max_y + 1, 6):
+        for x in range(min_x, max_x + 1, 6):
+            color = _pixel(width, pixels, x, y)
+            if not _is_background(color, bg):
+                colors.add(color)
+    if len(colors) < 5:
+        failures.append(
+            "legacy widget contrast breadth failed: "
+            f"colors={sorted(colors)}, expected at least 5 visible non-background shades"
+        )
+
+    if failures:
+        joined = "\n  - ".join(failures)
+        raise AssertionError(
+            "VISIBLE FAIL: legacy_widget_parity capture is non-empty, but legacy mixed-widget structure is not established.\n"
             f"  - {joined}"
         )
 
@@ -1437,6 +1613,12 @@ def main() -> None:
                 _assert_clock_basic_visible(capture_path)
             elif demo == "calendar_basic":
                 _assert_calendar_basic_visible(capture_path)
+            elif demo == "legacy_widget_parity":
+                _assert_legacy_widget_parity_visible(capture_path)
+            elif demo == "layout_parity":
+                _assert_layout_parity_visible(capture_path)
+            elif demo == "grid_parity":
+                _assert_grid_parity_visible(capture_path)
             elif demo == "line_edit_basic":
                 _assert_common_visible(capture_path, demo)
             elif demo == "layout_flex":

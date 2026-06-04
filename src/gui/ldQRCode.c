@@ -221,17 +221,18 @@ void ldQRCode_show(ld_scene_t *ptScene, ldQRCode_t *ptWidget, const arm_2d_tile_
 void ldQRCodeSetText(ldQRCode_t *ptWidget, uint8_t *pStr)
 {
     assert(NULL != ptWidget);
-    if(ptWidget == NULL)
+    if(ptWidget == NULL || pStr == NULL)
     {
         return;
     }
     ptWidget->use_as__ldBase_t.isDirtyRegionUpdate = true;
     ldFree(ptWidget->pStr);
     ptWidget->pStr=ldCalloc(1,strlen((char*)pStr)+1);
-    if(ptWidget->pStr!=NULL)
+    if(ptWidget->pStr==NULL)
     {
-        strcpy((char*)ptWidget->pStr,(char*)pStr);
+        return;
     }
+    strcpy((char*)ptWidget->pStr,(char*)pStr);
 }
 
 #if defined(__clang__)

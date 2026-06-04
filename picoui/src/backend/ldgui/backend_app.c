@@ -768,6 +768,93 @@ static void picoui_backend_render(struct picoui_backend_runtime_state *state, st
     (void)picoui_backend_write_capture(state);
 }
 
+static void picoui_backend_pump_timers(struct picoui_app *app, unsigned int now_ticks)
+{
+    struct picoui_backend_timer_snapshot_entry {
+        struct picoui_app_timer *timer;
+        struct picoui_app_timer *expected_predecessor;
+    };
+
+    struct picoui_backend_timer_snapshot_entry *snapshot;
+    struct picoui_app_timer *timer;
+    struct picoui_app_timer *previous_timer = NULL;
+    size_t timer_count = 0;
+    size_t index = 0;
+
+    if (app == NULL) {
+        return;
+    }
+
+    timer = app->timers;
+    while (timer != NULL) {
+        timer_count += 1U;
+        timer = timer->next;
+    }
+
+    if (timer_count == 0U) {
+        return;
+    }
+
+    snapshot = calloc(timer_count, sizeof(*snapshot));
+    if (snapshot == NULL) {
+        return;
+    }
+
+    timer = app->timers;
+    while (timer != NULL && index < timer_count) {
+        snapshot[index].timer = timer;
+        snapshot[index].expected_predecessor = previous_timer;
+        index += 1U;
+        previous_timer = timer;
+        timer = timer->next;
+    }
+
+    for (index = 0; index < timer_count; ++index) {
+        int timer_is_linked = 0;
+        struct picoui_app_timer *cursor;
+        struct picoui_app_timer *current_predecessor = NULL;
+
+        timer = snapshot[index].timer;
+        cursor = app->timers;
+        while (cursor != NULL) {
+            if (cursor == timer) {
+                timer_is_linked = 1;
+                break;
+            }
+            current_predecessor = cursor;
+            cursor = cursor->next;
+        }
+
+        if (!timer_is_linked) {
+            continue;
+        }
+
+        if (current_predecessor != snapshot[index].expected_predecessor) {
+            continue;
+        }
+
+        if (timer->running && timer->callback != NULL) {
+            if (timer->next_fire_ticks == 0U) {
+                timer->next_fire_ticks = now_ticks + timer->interval_ms;
+            } else if (SDL_TICKS_PASSED((Uint32)now_ticks, (Uint32)timer->next_fire_ticks)) {
+                if (timer->repeat) {
+                    timer->next_fire_ticks = now_ticks + timer->interval_ms;
+                } else {
+                    timer->running = 0;
+                }
+                timer->callback(app, timer, timer->user_data);
+            }
+        }
+    }
+
+    free(snapshot);
+}
+
+void picoui_backend_test_pump_timers(struct picoui_app *app, unsigned int now_ticks)
+{
+    picoui_backend_pump_timers(app, now_ticks);
+}
+
 /**
  * @brief Run app backend
  *
@@ -871,6 +958,7 @@ int picoui_backend_app_run(struct picoui_app *app, struct picoui_window *window)
         if (active_window == NULL) {
             return -1;
         }
+        picoui_backend_pump_timers(app, (unsigned int)SDL_GetTicks());
         picoui_backend_render(state, active_window);
         SDL_Delay(16);
 

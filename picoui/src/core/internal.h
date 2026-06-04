@@ -20,6 +20,7 @@
 #define PICOUI_INTERNAL_H
 
 #include "backend.h"
+#include "picoui/app.h"
 #include "picoui/combo_box.h"
 #include "picoui/canvas.h"
 #include "picoui/calendar.h"
@@ -47,6 +48,17 @@ struct picoui_message_box;
 struct kbBtnInfo_t;
 
 typedef void (*picoui_message_box_callback_t)(struct picoui_message_box *box, void *user_data);
+
+struct picoui_app_timer {
+    struct picoui_app *app;
+    struct picoui_app_timer *next;
+    unsigned int interval_ms;
+    unsigned int next_fire_ticks;
+    int repeat;
+    int running;
+    picoui_app_timer_cb_t callback;
+    void *user_data;
+};
 
 /**
  * @brief Native platform: align to ld grid
@@ -145,6 +157,7 @@ struct picoui_app {
     struct picoui_window *root_window;
     struct picoui_widget *focus_owner;
     struct picoui_widget *editing_owner;
+    struct picoui_app_timer *timers;
 };
 
 struct picoui_theme {

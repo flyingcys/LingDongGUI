@@ -57,6 +57,16 @@ struct picoui_window_props {
 struct picoui_window *picoui_window_create(struct picoui_app *app, const char *id);
 
 /**
+ * @brief Create child window widget under an existing window
+ *
+ * @param[in] parent Parent window instance
+ * @param[in] id Widget identifier string
+ * @return Pointer to the object on success, NULL on failure
+ */
+
+struct picoui_window *picoui_window_create_child(struct picoui_window *parent, const char *id);
+
+/**
  * @brief Create window widget with properties
  *
  * @param[in] app Application instance

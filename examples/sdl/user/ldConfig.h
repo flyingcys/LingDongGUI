@@ -59,7 +59,7 @@ extern "C" {
 #ifndef LD_MEM_SIZE
 // <o>LingDongGui memory size
 // <i> The size of memory allocated to the ldgui
-#define LD_MEM_SIZE                               (32*1024) //BYTE
+#define LD_MEM_SIZE                               (96*1024) //BYTE
 #endif
 
 #ifndef USE_VIRTUAL_RESOURCE

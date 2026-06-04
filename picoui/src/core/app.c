@@ -23,6 +23,25 @@
 
 #include <stdlib.h>
 
+static void picoui_app_timer_unlink(struct picoui_app_timer *timer)
+{
+    struct picoui_app_timer **cursor;
+
+    if (timer == NULL || timer->app == NULL) {
+        return;
+    }
+
+    cursor = &timer->app->timers;
+    while (*cursor != NULL) {
+        if (*cursor == timer) {
+            *cursor = timer->next;
+            timer->next = NULL;
+            return;
+        }
+        cursor = &(*cursor)->next;
+    }
+}
+
 static int picoui_app_window_is_owned_by(const struct picoui_app *app,
                                          const struct picoui_window *window)
 {
@@ -174,6 +193,111 @@ int picoui_app_switch_background(struct picoui_app *app,
 }
 
 /**
+ * @brief Create app timer instance
+ *
+ * @param[in] app Application instance
+ * @return Timer instance on success, NULL on failure
+ */
+
+struct picoui_app_timer *picoui_app_timer_create(struct picoui_app *app)
+{
+    struct picoui_app_timer *timer;
+
+    if (app == NULL) {
+        return NULL;
+    }
+
+    timer = calloc(1, sizeof(struct picoui_app_timer));
+    if (timer == NULL) {
+        return NULL;
+    }
+
+    timer->app = app;
+    timer->next = app->timers;
+    app->timers = timer;
+    return timer;
+}
+
+/**
+ * @brief Start or restart app timer
+ *
+ * @param[in] timer Timer instance
+ * @param[in] interval_ms Interval in milliseconds
+ * @param[in] repeat Repeat flag
+ * @param[in] callback Timer callback
+ * @param[in] user_data User data passed to callback
+ * @return 0 on success, -1 on failure
+ */
+
+int picoui_app_timer_start(struct picoui_app_timer *timer,
+                           unsigned int interval_ms,
+                           int repeat,
+                           picoui_app_timer_cb_t callback,
+                           void *user_data)
+{
+    if (timer == NULL || interval_ms == 0 || callback == NULL) {
+        return -1;
+    }
+
+    timer->interval_ms = interval_ms;
+    timer->repeat = repeat ? 1 : 0;
+    timer->callback = callback;
+    timer->user_data = user_data;
+    timer->next_fire_ticks = 0;
+    timer->running = 1;
+    return 0;
+}
+
+/**
+ * @brief Stop app timer
+ *
+ * @param[in] timer Timer instance
+ * @return 0 on success, -1 on failure
+ */
+
+int picoui_app_timer_stop(struct picoui_app_timer *timer)
+{
+    if (timer == NULL) {
+        return -1;
+    }
+
+    timer->running = 0;
+    return 0;
+}
+
+/**
+ * @brief Query app timer running state
+ *
+ * @param[in] timer Timer instance
+ * @return 1 if running, 0 otherwise
+ */
+
+int picoui_app_timer_is_running(const struct picoui_app_timer *timer)
+{
+    if (timer == NULL) {
+        return 0;
+    }
+
+    return timer->running ? 1 : 0;
+}
+
+/**
+ * @brief Destroy app timer
+ *
+ * @param[in] timer Timer instance
+ */
+
+void picoui_app_timer_destroy(struct picoui_app_timer *timer)
+{
+    if (timer == NULL) {
+        return;
+    }
+
+    picoui_app_timer_unlink(timer);
+    free(timer);
+}
+
+/**
  * @brief Destroy app instance
  *
  * @param[in] app Application instance
@@ -181,9 +305,20 @@ int picoui_app_switch_background(struct picoui_app *app,
 
 void picoui_app_destroy(struct picoui_app *app)
 {
+    struct picoui_app_timer *timer;
+    struct picoui_app_timer *next;
+
     if (app == NULL) {
         return;
     }
+
+    timer = app->timers;
+    while (timer != NULL) {
+        next = timer->next;
+        free(timer);
+        timer = next;
+    }
+    app->timers = NULL;
 
     picoui_backend_app_shutdown(app);
     xBtnDestroy();

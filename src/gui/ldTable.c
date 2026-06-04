@@ -795,7 +795,7 @@ void ldTableSetItemHeight(ldTable_t *ptWidget,uint8_t row,int16_t height)
 void ldTableSetItemText(ldTable_t *ptWidget,uint8_t row,uint8_t column,uint8_t *pText)
 {
     assert(NULL != ptWidget);
-    if(ptWidget == NULL)
+    if(ptWidget == NULL || pText == NULL)
     {
         return;
     }
@@ -812,6 +812,11 @@ void ldTableSetItemText(ldTable_t *ptWidget,uint8_t row,uint8_t column,uint8_t *
             {
                 ldFree(item->pText);
                 item->pText=ldCalloc(1,strlen((char*)pText)+1);
+                if(item->pText==NULL)
+                {
+                    item->textMax=0;
+                    return;
+                }
                 item->textMax=textLen;
             }
             strcpy((char*)item->pText,(char*)pText);

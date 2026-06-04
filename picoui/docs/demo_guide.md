@@ -46,6 +46,9 @@
 - `picoui_table_basic_demo`
 - `picoui_calendar_basic_demo`
 - `picoui_animation_basic_demo`
+- `picoui_legacy_widget_parity_demo`
+- `picoui_layout_parity_demo`
+- `picoui_grid_parity_demo`
 
 ## 二、依赖环境
 
@@ -198,6 +201,9 @@ build\picoui-runtime\examples\sdl\picoui_hello_world_demo.exe
    - `graph_basic`
    - `calendar_basic`
    - `animation_basic`
+   - `legacy_widget_parity`
+   - `layout_parity`
+   - `grid_parity`
 4. `manual artifact`
    - 以 `docs/picoui-serial/C-线人工窗口验收记录.md` 为 demo-level truth-source
    - 当前 final release 目标集包含：
@@ -238,6 +244,60 @@ build\picoui-runtime\examples\sdl\picoui_hello_world_demo.exe
 - `button/text/image` 已有真实 backend 对象映射
 - `checkbox/switch/slider` 已有真实对象映射与 native event
 - `image` 当前创建真实 `ldImage` 对象；`picoui_image_set_source()` 只绑定调用方提供的 tile 指针，不做资源加载
+
+### `picoui/demo/legacy_widget_parity`
+
+截图对照基线，不是 showcase。目标是把老 SDL `legacy-widget` 页里的多控件混排关系搬到纯 `picoui_*` public API 下，便于对照真实 backend 差异。
+
+适合用途：
+
+- 对照 `examples/common/demo/widget/uiWidgetLegacy.c`
+- 看 legacy 大页面控件集合和 child-window/list-item 结构是否已进入 PicoUI public API
+- 看 `image/button/progress/text/slider/radial_menu/icon_slider/gauge/arc` 的 source 通路是否已接入 parity 页面
+- 做老 demo / PicoUI 双开截图比对
+
+当前边界：
+
+- 当前页面已覆盖大部分 legacy 控件样本和两批图片 source 级 API
+- 当前 source 绑定证明的是 PicoUI public image pipeline 已接通，不代表已与老 demo 原始图片资源逐张一致
+- 当前剩余大头不是 public API 缺失，而是老资源 exact-match、内容细节和 dedicated visible 对照未补
+- 当前已改为通过 PicoUI public `app timer` 驱动 `arc/gauge` 的 `100ms` 动画，不再把这部分写成 capability 阻塞
+- 仍不能把该页面当作 visible/theme 100% 对齐结论
+
+### `picoui/demo/layout_parity`
+
+截图对照基线，不是 showcase。目标是把老 SDL `layout` 页里的 `flex row / flex column / legacy row / legacy column` 四组结构保留成独立 section，并验证 child-window + public layout API 是否闭环。
+
+适合用途：
+
+- 对照 `examples/common/demo/layout/uiLayout.c` 的 layout 页
+- 看 child-window section、padding、gap、flow、grow、ignore-layout 是否真实生效
+- 给后续 visible diff 提供高信号页面
+
+当前边界：
+
+- 当前已通过 PicoUI public `app timer` 补上老页 `1200ms` 宽度切换行为
+- 当前 dedicated visible gate 已接入，可用于 child-window section 结构对照
+- 这页剩余差距主要是文案与页面壳 fidelity，不再是运行时能力阻塞
+
+### `picoui/demo/grid_parity`
+
+截图对照基线，不是 showcase。目标是把老 SDL `grid` 页里的 A-G panel、grid canvas、overlay 关系保留成单独页面，直接观察 grid cell/span/align/overlay 语义。
+
+适合用途：
+
+- 对照 `examples/common/demo/layout/uiLayout.c` 的 grid 页
+- 看 `grid columns / rows / cell / span / overlay` 是否真实闭环
+- 做 grid 相关 visible diff 和 backend gap 定位
+- 当前已补到 `[92, content, 1fr] x [54, 66, 1fr]` 的真实 descriptor 语义
+- 当前 `G` 已回到 auto placement，不再是显式 cell 近似版
+
+当前边界：
+
+- 当前 descriptor 语义已明显接近老页，但还没有 PicoUI / 老 SDL 双开截图或 visible diff 证据
+- 当前 dedicated visible gate 已接入，可用于 grid canvas / overlay 结构对照
+- panel 文案、颜色、外围页面壳仍是近似，不是逐像素复刻
+- 当前剩余差距主要是内容 fidelity 和 dedicated visible 对照，不是新的 public capability 缺口
 - `image` 允许空 source/清空 source，此时 backend 保持真实 `ldImage` 对象，`img_tile/mask_tile` 均为空
 - `image` 无 source 时 `automatic visible gate` 只能证明 demo 中 image 区域或真实对象路径可见、可捕获；不证明占位资源绑定，也不证明真实图片加载完成
 - `image` 非空 source 必须提供 `img_tile`；`mask_tile` 可为空，表示无遮罩图片

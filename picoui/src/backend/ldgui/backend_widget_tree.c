@@ -195,7 +195,6 @@ int picoui_backend_widget_attach_child(void *parent, void *child)
         child_widget->root != NULL ||
         child_widget->owner != NULL ||
         (child_widget->parent != NULL && child_widget->parent != parent_widget) ||
-        child_widget->kind == PICOUI_BACKEND_WIDGET_WINDOW ||
         child_widget->kind == PICOUI_BACKEND_WIDGET_BACKGROUND) {
         return -1;
     }

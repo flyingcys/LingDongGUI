@@ -835,6 +835,59 @@ static void test_window_native_layout_padding_grid_padding_and_generic_gap_round
     picoui_app_destroy(app);
 }
 
+static void test_child_window_public_api_binds_real_parent_and_hosts_layout_children(void)
+{
+    struct picoui_app *app = picoui_app_create();
+    struct picoui_window *root = picoui_window_create(app, "root");
+    struct picoui_window *child = picoui_window_create_child(root, "section");
+    struct picoui_button *item;
+    const struct picoui_backend_widget *root_backend;
+    const struct picoui_backend_widget *child_backend;
+    const struct picoui_backend_widget *item_backend;
+    const ldWindow_t *child_ld_window;
+    const ldBase_t *item_ld_base;
+
+    assert(child != 0);
+
+    item = picoui_button_create(child, "item");
+    assert(item != 0);
+
+    root_backend = root->widget.backend_widget;
+    child_backend = child->widget.backend_widget;
+    item_backend = item->widget.backend_widget;
+    child_ld_window = (const ldWindow_t *)child_backend->ld_widget;
+    item_ld_base = (const ldBase_t *)item_backend->ld_widget;
+
+    assert(child_backend->parent == root_backend);
+    assert(root_backend->first_child == child_backend);
+    assert(child_backend->kind == PICOUI_BACKEND_WIDGET_WINDOW);
+    assert(child_backend->root == root_backend);
+    assert(child_backend->owner == root_backend->owner);
+    assert(item_backend->parent == child_backend);
+    assert(child_backend->first_child == item_backend);
+    assert(ldBaseGetParent((ldBase_t *)child_ld_window) ==
+           (ldBase_t *)root_backend->ld_widget);
+
+    assert(picoui_window_set_layout_type(child, PICOUI_WINDOW_LAYOUT_FLEX) == 0);
+    assert(picoui_window_set_padding_group(child, 8, 10, 8, 10) == 0);
+    assert(picoui_flex_set_flow(child, PICOUI_FLEX_FLOW_ROW_WRAP) == 0);
+    assert(picoui_flex_set_gap(child, 6, 4) == 0);
+    assert(picoui_widget_set_size((struct picoui_widget *)child, 220, 80) == 0);
+    assert(picoui_widget_set_size((struct picoui_widget *)item, 64, 24) == 0);
+    assert(picoui_widget_set_flex_new_track((struct picoui_widget *)item, 1) == 0);
+
+    assert(child_ld_window->layoutTpye == layoutFlex);
+    assert(child_ld_window->pLayoutPaddingGroup != 0);
+    assert(child_ld_window->pLayoutPaddingGroup->left == 8);
+    assert(child_ld_window->pLayoutPaddingGroup->top == 10);
+    assert(child_ld_window->flexItemGap == 6);
+    assert(child_ld_window->flexTrackGap == 4);
+    assert(item_backend->child_layout.flex_new_track == 1);
+    assert(item_ld_base->flexInNewTrack == true);
+
+    picoui_app_destroy(app);
+}
+
 int main(void)
 {
     struct picoui_app *app = picoui_app_create();
@@ -892,5 +945,6 @@ int main(void)
     test_window_background_offset_round_trip_to_scene_root();
     test_background_widget_public_contract_round_trip();
     test_window_native_layout_padding_grid_padding_and_generic_gap_round_trip();
+    test_child_window_public_api_binds_real_parent_and_hosts_layout_children();
     return 0;
 }

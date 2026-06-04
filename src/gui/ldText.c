@@ -534,7 +534,7 @@ void ldTextSetTransparent(ldText_t* ptWidget,bool isTransparent)
 void ldTextSetText(ldText_t* ptWidget,uint8_t *pStr)
 {
     assert(NULL != ptWidget);
-    if(ptWidget == NULL)
+    if(ptWidget == NULL || pStr == NULL)
     {
         return;
     }
@@ -545,10 +545,13 @@ void ldTextSetText(ldText_t* ptWidget,uint8_t *pStr)
     }
     ptWidget->_isStatic=false;
     ptWidget->pStr=ldCalloc(1,strlen((char*)pStr)+1);
-    if(ptWidget->pStr!=NULL)
+    if(ptWidget->pStr==NULL)
     {
-        strcpy((char*)ptWidget->pStr,(char*)pStr);
+        ptWidget->scrollOffset=0;
+        text_box_c_str_reader_init(&ptWidget->tStringReader, "", 0);
+        return;
     }
+    strcpy((char*)ptWidget->pStr,(char*)pStr);
     ptWidget->scrollOffset=0;
     text_box_c_str_reader_init( &ptWidget->tStringReader,
                                 (char*)ptWidget->pStr,

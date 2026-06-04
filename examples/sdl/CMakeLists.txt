@@ -544,3 +544,15 @@ add_picoui_demo(picoui_calendar_basic_demo
 add_picoui_demo(picoui_animation_basic_demo
     "${SDL_EXAMPLE_DIR}/../../picoui/demo/animation_basic/main.c"
 )
+add_picoui_demo(picoui_legacy_widget_parity_demo
+    "${SDL_EXAMPLE_DIR}/../../picoui/demo/legacy_widget_parity/main.c"
+)
+target_sources(picoui_legacy_widget_parity_demo PRIVATE
+    ${WIDGET_IMAGE_SOURCES}
+)
+add_picoui_demo(picoui_layout_parity_demo
+    "${SDL_EXAMPLE_DIR}/../../picoui/demo/layout_parity/main.c"
+)
+add_picoui_demo(picoui_grid_parity_demo
+    "${SDL_EXAMPLE_DIR}/../../picoui/demo/grid_parity/main.c"
+)
