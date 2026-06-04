@@ -20,15 +20,15 @@ DISABLED_ON_TRACK = (80, 136, 96)
 PRESSED_KNOB = (255, 243, 202)
 
 SAMPLES = {
-    "h_off": ((150, 100), OFF_TRACK),
-    "h_on": ((100, 170), ON_TRACK),
-    "v_off": ((270, 80), OFF_TRACK),
-    "v_on": ((270, 280), ON_TRACK),
-    "disabled_off": ((150, 310), DISABLED_OFF_TRACK),
-    "disabled_on": ((100, 380), DISABLED_ON_TRACK),
-    "pressed_knob": ((100, 450), PRESSED_KNOB),
-    "mid_left": ((254, 450), ON_TRACK),
-    "mid_right": ((335, 450), OFF_TRACK),
+    "h_off": ((114, 90), OFF_TRACK),
+    "h_on": ((90, 160), ON_TRACK),
+    "v_off": ((260, 72), OFF_TRACK),
+    "v_on": ((260, 242), ON_TRACK),
+    "disabled_off": ((110, 300), DISABLED_OFF_TRACK),
+    "disabled_on": ((90, 370), DISABLED_ON_TRACK),
+    "pressed_knob": ((90, 440), PRESSED_KNOB),
+    "mid_left": ((256, 450), ON_TRACK),
+    "mid_right": ((288, 440), OFF_TRACK),
 }
 
 
@@ -160,8 +160,8 @@ def main() -> int:
             sampled[name] = _pixel(width, height, pixels, point[0], point[1])
             _assert_close(name, sampled[name], expected, 18)
 
-        h_on_ring = _pixel(width, height, pixels, 165, 170)
-        v_on_ring = _pixel(width, height, pixels, 270, 214)
+        h_on_ring = _pixel(width, height, pixels, 114, 160)
+        v_on_ring = _pixel(width, height, pixels, 260, 222)
         if not (_brightness(h_on_ring) > _brightness(sampled["h_on"]) + 60):
             raise AssertionError(f"h_on checked ring 亮度不够明显: ring={h_on_ring}, track={sampled['h_on']}")
         if not (_brightness(v_on_ring) > _brightness(sampled["v_on"]) + 60):

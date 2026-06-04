@@ -246,6 +246,7 @@ add_executable(layout_window_test
     "${REPO_SRC_DIR}/gui/ldSwitch.c"
     "${REPO_SRC_DIR}/gui/ldSwitchInternal.c"
     "${REPO_SRC_DIR}/gui/ldWindow.c"
+    "${REPO_SRC_DIR}/porting/ldArm2dUserDrawCircle.c"
     ${MISC_SOURCES}
 )
 
@@ -259,6 +260,7 @@ target_include_directories(layout_window_test PRIVATE
     "${COMMON_DIR}/math"
     "${REPO_SRC_DIR}/gui"
     "${REPO_SRC_DIR}/misc"
+    "${REPO_SRC_DIR}/porting"
 )
 
 target_compile_definitions(layout_window_test PRIVATE
@@ -375,6 +377,7 @@ add_executable(ldgui_sdl_demo
     ${MATH_SOURCES}
     ${GUI_SOURCES}
     ${MISC_SOURCES}
+    "${REPO_SRC_DIR}/porting/ldArm2dUserDrawCircle.c"
     ${DEMO_SOURCES}
 )
 
@@ -390,6 +393,7 @@ target_include_directories(ldgui_sdl_demo PRIVATE
     "${COMMON_DIR}/math"
     "${REPO_SRC_DIR}/gui"
     "${REPO_SRC_DIR}/misc"
+    "${REPO_SRC_DIR}/porting"
     ${DEMO_INCLUDE_DIRS}
 )
 

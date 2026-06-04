@@ -32,6 +32,7 @@
 
 #include "ldSwitch.h"
 #include "ldSwitchInternal.h"
+#include "ldArm2dUserDrawCircle.h"
 
 #if defined(__clang__)
 #pragma clang diagnostic push
@@ -114,6 +115,94 @@ static arm_2d_region_t ldSwitchRectToRegion(ldSwitchRect_t rect)
             .iHeight = rect.iHeight,
         },
     };
+}
+
+static arm_2d_region_t ldSwitchResolveKnobPaintRegion(arm_2d_region_t knobRegion)
+{
+    return knobRegion;
+}
+
+static void ldSwitchDrawCircleKnob(const arm_2d_tile_t *ptTarget,
+                                   const arm_2d_region_t *ptRegion,
+                                   ldColor color,
+                                   uint8_t opacity)
+{
+    ld_arm_2d_user_draw_circle_api_params_t tParams;
+    arm_2d_location_t tPivot;
+    int16_t diameter;
+    int16_t radius;
+
+    assert(NULL != ptTarget);
+    assert(NULL != ptRegion);
+    if ((ptTarget == NULL) || (ptRegion == NULL))
+    {
+        return;
+    }
+
+    diameter = ptRegion->tSize.iWidth;
+    if (ptRegion->tSize.iHeight < diameter)
+    {
+        diameter = ptRegion->tSize.iHeight;
+    }
+    if (diameter <= 0)
+    {
+        return;
+    }
+
+    radius = (int16_t)((diameter - 1) / 2);
+    tPivot.iX = (int16_t)(ptRegion->tLocation.iX + (ptRegion->tSize.iWidth / 2));
+    tPivot.iY = (int16_t)(ptRegion->tLocation.iY + (ptRegion->tSize.iHeight / 2));
+    tParams = (ld_arm_2d_user_draw_circle_api_params_t){
+        .ptPivot = &tPivot,
+        .iRadius = radius,
+        .bAntiAlias = true,
+    };
+
+    ldArm2dDrawCircle(NULL,
+                      ptTarget,
+                      NULL,
+                      &tParams,
+                      (arm_2d_color_rgb565_t){color},
+                      opacity);
+}
+
+static arm_2d_region_t ldSwitchInsetRegion(arm_2d_region_t region, int16_t inset)
+{
+    if (inset <= 0)
+    {
+        return region;
+    }
+
+    if ((region.tSize.iWidth <= (int16_t)(inset * 2)) || (region.tSize.iHeight <= (int16_t)(inset * 2)))
+    {
+        return region;
+    }
+
+    region.tLocation.iX += inset;
+    region.tLocation.iY += inset;
+    region.tSize.iWidth -= (int16_t)(inset * 2);
+    region.tSize.iHeight -= (int16_t)(inset * 2);
+    return region;
+}
+
+static void ldSwitchDrawCircleKnobWithBorder(const arm_2d_tile_t *ptTarget,
+                                             const arm_2d_region_t *ptRegion,
+                                             ldColor fillColor,
+                                             ldColor borderColor,
+                                             uint8_t opacity)
+{
+    arm_2d_region_t innerRegion;
+
+    assert(NULL != ptTarget);
+    assert(NULL != ptRegion);
+    if ((ptTarget == NULL) || (ptRegion == NULL))
+    {
+        return;
+    }
+
+    ldSwitchDrawCircleKnob(ptTarget, ptRegion, borderColor, opacity);
+    innerRegion = ldSwitchInsetRegion(*ptRegion, 1);
+    ldSwitchDrawCircleKnob(ptTarget, &innerRegion, fillColor, opacity);
 }
 
 static bool slotSwitchProcess(ld_scene_t *ptScene, ldMsg_t msg)
@@ -289,8 +378,10 @@ void ldSwitch_show(ld_scene_t *ptScene, ldSwitch_t *ptWidget, const arm_2d_tile_
 {
     arm_2d_region_t globalRegion;
     ldSwitchGeometry_t geometry;
+    arm_2d_region_t tTrackRegion;
     arm_2d_region_t tIndicatorRegion;
     arm_2d_region_t tKnobRegion;
+    arm_2d_region_t tKnobPaintRegion;
     uint8_t opacity;
     ldColor knobColor;
     bool useOffImageStyle;
@@ -324,6 +415,7 @@ void ldSwitch_show(ld_scene_t *ptScene, ldSwitch_t *ptWidget, const arm_2d_tile_
                                                ptWidget->direction,
                                                ptWidget->animProgress);
             ptWidget->isHorizontal = geometry.isHorizontal;
+            tTrackRegion = ldSwitchRectToRegion(geometry.track);
             tIndicatorRegion = ldSwitchRectToRegion(geometry.indicator);
             tKnobRegion = ldSwitchRectToRegion(geometry.knob);
             useOffImageStyle = ptWidget->useImageStyle
@@ -332,31 +424,37 @@ void ldSwitch_show(ld_scene_t *ptScene, ldSwitch_t *ptWidget, const arm_2d_tile_
                 && ldSwitchLayerUsesImage(ptWidget->ptOnImgTile, ptWidget->ptOnMaskTile);
             useKnobImageStyle = ptWidget->useImageStyle
                 && ldSwitchLayerUsesImage(ptWidget->ptKnobImgTile, ptWidget->ptKnobMaskTile);
+            tKnobPaintRegion = useKnobImageStyle ? tKnobRegion : ldSwitchResolveKnobPaintRegion(tKnobRegion);
 
             if (useOffImageStyle)
             {
-                ldBaseImage(&tTarget, NULL, ptWidget->ptOffImgTile, ptWidget->ptOffMaskTile, ptWidget->offTrackColor, opacity);
+                ldBaseImage(&tTarget,
+                            &tTrackRegion,
+                            ptWidget->ptOffImgTile,
+                            ptWidget->ptOffMaskTile,
+                            ptWidget->offTrackColor,
+                            opacity);
             }
             else if (ptWidget->use_as__ldBase_t.isCorner)
             {
-                draw_round_corner_box(&tTarget, NULL, ptWidget->offTrackColor, opacity, bIsNewFrame);
+                draw_round_corner_box(&tTarget, &tTrackRegion, ptWidget->offTrackColor, opacity, bIsNewFrame);
             }
             else
             {
-                ldBaseColor(&tTarget, NULL, ptWidget->offTrackColor, opacity);
+                ldBaseColor(&tTarget, &tTrackRegion, ptWidget->offTrackColor, opacity);
             }
 
             if (ptWidget->use_as__ldBase_t.isCorner)
             {
                 draw_round_corner_border(&tTarget,
-                                         NULL,
+                                         &tTrackRegion,
                                          ptWidget->borderColor,
                                          (arm_2d_border_opacity_t){opacity, opacity, opacity, opacity},
                                          (arm_2d_corner_opacity_t){opacity, opacity, opacity, opacity});
             }
             else
             {
-                arm_2d_draw_box(&tTarget, NULL, 1, ptWidget->borderColor, opacity);
+                arm_2d_draw_box(&tTarget, &tTrackRegion, 1, ptWidget->borderColor, opacity);
             }
 
             if (useOnImageStyle)
@@ -375,7 +473,7 @@ void ldSwitch_show(ld_scene_t *ptScene, ldSwitch_t *ptWidget, const arm_2d_tile_
             if (useKnobImageStyle)
             {
                 ldBaseImage(&tTarget,
-                            &tKnobRegion,
+                            &tKnobPaintRegion,
                             ptWidget->ptKnobImgTile,
                             ptWidget->ptKnobMaskTile,
                             knobColor,
@@ -383,20 +481,25 @@ void ldSwitch_show(ld_scene_t *ptScene, ldSwitch_t *ptWidget, const arm_2d_tile_
             }
             else if (ptWidget->use_as__ldBase_t.isCorner)
             {
-                draw_round_corner_box(&tTarget, &tKnobRegion, knobColor, opacity, bIsNewFrame);
+                ldSwitchDrawCircleKnobWithBorder(&tTarget,
+                                                 &tKnobPaintRegion,
+                                                 knobColor,
+                                                 ptWidget->borderColor,
+                                                 opacity);
             }
             else
             {
                 ldBaseColor(&tTarget, &tKnobRegion, knobColor, opacity);
             }
 
-            if (ptWidget->use_as__ldBase_t.isCorner)
+            if (ptWidget->use_as__ldBase_t.isCorner && useKnobImageStyle)
             {
-                draw_round_corner_border(&tTarget,
-                                         &tKnobRegion,
-                                         ptWidget->borderColor,
-                                         (arm_2d_border_opacity_t){opacity, opacity, opacity, opacity},
-                                         (arm_2d_corner_opacity_t){opacity, opacity, opacity, opacity});
+                draw_round_corner_border_with_circle_mask(&tTarget,
+                                                          &tKnobPaintRegion,
+                                                          ptWidget->borderColor,
+                                                          &c_tileCircleMask,
+                                                          (arm_2d_border_opacity_t){opacity, opacity, opacity, opacity},
+                                                          (arm_2d_corner_opacity_t){opacity, opacity, opacity, opacity});
             }
             else
             {

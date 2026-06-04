@@ -18,11 +18,9 @@
 
 #include "internal.h"
 #include "ldWindow.h"
+#include "ldConfig.h"
 
 #include <stdlib.h>
-
-#define PICOUI_RUNTIME_ROOT_WIDTH 480
-#define PICOUI_RUNTIME_ROOT_HEIGHT 320
 
 struct picoui_backend_window_host {
     struct picoui_backend_widget widget;
@@ -83,8 +81,8 @@ static void *picoui_backend_create_root_widget(struct picoui_app *app,
                             0,
                             0,
                             0,
-                            PICOUI_RUNTIME_ROOT_WIDTH,
-                            PICOUI_RUNTIME_ROOT_HEIGHT);
+                            LD_CFG_SCREEN_WIDTH,
+                            LD_CFG_SCREEN_HEIGHT);
     if (ld_root == NULL) {
         free(host);
         return 0;
@@ -240,10 +238,10 @@ int picoui_backend_window_set_background_offset(struct picoui_window *window,
     bg_width = ld_window->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iWidth;
     bg_height = ld_window->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iHeight;
     if (bg_width <= 0) {
-        bg_width = PICOUI_RUNTIME_ROOT_WIDTH;
+        bg_width = LD_CFG_SCREEN_WIDTH;
     }
     if (bg_height <= 0) {
-        bg_height = PICOUI_RUNTIME_ROOT_HEIGHT;
+        bg_height = LD_CFG_SCREEN_HEIGHT;
     }
 
     ldBaseBgMove(app_state->ld_scene, bg_width, bg_height, (int16_t)offset_x, (int16_t)offset_y);

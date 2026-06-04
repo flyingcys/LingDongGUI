@@ -111,6 +111,7 @@ function(ld_define_core_targets)
         ${LD_ARM2D_CLOCK_ASSET_SOURCES}
         ${LD_ARM2D_QRCODE_SOURCES}
         ${LD_MATH_SOURCES}
+        "${LD_PORTING_DIR}/ldArm2dUserDrawCircle.c"
     )
     target_include_directories(longdonggui_arm2d PUBLIC ${LD_COMMON_INCLUDE_DIRS})
     ld_apply_common_target_config(longdonggui_arm2d)

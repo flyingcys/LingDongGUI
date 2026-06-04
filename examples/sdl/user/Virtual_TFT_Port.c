@@ -486,6 +486,8 @@ static void VT_sdl_capture_first_present(void)
     static bool s_bCaptureSaved = false;
     static const char *s_pchCapturePath = NULL;
     FILE *ptFile;
+    uint32_t nBlankPixel;
+    bool bHasContent = false;
 
     if (s_bCaptureSaved) {
         return;
@@ -507,6 +509,17 @@ static void VT_sdl_capture_first_present(void)
         s_bCaptureConfigLoaded = true;
     }
     if (!s_bCaptureEnabled || (NULL == s_pchCapturePath) || ('\0' == s_pchCapturePath[0])) {
+        return;
+    }
+
+    nBlankPixel = 0x4d4d4d4dU;
+    for (int32_t i = 0; i < (VT_WIDTH * VT_HEIGHT); i++) {
+        if (tft_fb[i] != nBlankPixel) {
+            bHasContent = true;
+            break;
+        }
+    }
+    if (!bHasContent) {
         return;
     }
 

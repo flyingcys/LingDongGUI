@@ -1,6 +1,7 @@
 #include "picoui/picoui.h"
 #include "../../../src/gui/ldBase.h"
 #include "../../../src/gui/ldWindow.h"
+#include "../../../src/porting/ldConfig.h"
 #include "internal.h"
 #include <assert.h>
 
@@ -31,9 +32,12 @@ static void test_window_widget_base_api_round_trip(struct picoui_window *win)
     backend = (struct picoui_backend_widget *)win->widget.backend_widget;
     ld_base = (ldBase_t *)backend->ld_widget;
 
-    assert(picoui_widget_set_size(&win->widget, 480, 320) == 0);
-    assert(ld_base->use_as__arm_2d_control_node_t.tRegion.tSize.iWidth == 480);
-    assert(ld_base->use_as__arm_2d_control_node_t.tRegion.tSize.iHeight == 320);
+    assert(ld_base->use_as__arm_2d_control_node_t.tRegion.tSize.iWidth == LD_CFG_SCREEN_WIDTH);
+    assert(ld_base->use_as__arm_2d_control_node_t.tRegion.tSize.iHeight == LD_CFG_SCREEN_HEIGHT);
+
+    assert(picoui_widget_set_size(&win->widget, 200, 120) == 0);
+    assert(ld_base->use_as__arm_2d_control_node_t.tRegion.tSize.iWidth == 200);
+    assert(ld_base->use_as__arm_2d_control_node_t.tRegion.tSize.iHeight == 120);
 
     assert(picoui_widget_set_selectable(&win->widget, 1) == 0);
     assert(picoui_widget_set_selected(&win->widget, 1) == 0);

@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "arm_2d_helper_shape.h"
+#include "../../../../src/porting/ldArm2dUserDrawCircle.h"
 
 #include "../../../../src/gui/ldSwitch.c"
 
@@ -13,6 +14,13 @@ static uint64_t g_last_value;
 static uint32_t g_color_call_count;
 static uint32_t g_image_call_count;
 static ldColor g_color_calls[8];
+static const arm_2d_tile_t *g_last_round_box_mask;
+static const arm_2d_tile_t *g_last_round_border_mask;
+static uint32_t g_circle_draw_call_count;
+static int16_t g_circle_radii[4];
+static arm_2d_location_t g_circle_pivots[4];
+static uint16_t g_circle_colours[4];
+static uint8_t g_circle_opacities[4];
 
 const arm_2d_tile_t c_tileWhiteDotMask = {0};
 const arm_2d_tile_t c_tileWhiteDotMask2 = {0};
@@ -148,7 +156,7 @@ void __draw_round_corner_box(const arm_2d_tile_t *ptTarget,
     (void)ptRegion;
     (void)tColour;
     (void)chOpacity;
-    (void)ptCircleMask;
+    g_last_round_box_mask = ptCircleMask;
 }
 
 void __draw_round_corner_border(const arm_2d_tile_t *ptTarget,
@@ -163,7 +171,7 @@ void __draw_round_corner_border(const arm_2d_tile_t *ptTarget,
     (void)tColour;
     (void)Opacity;
     (void)CornerOpacity;
-    (void)ptCircleMask;
+    g_last_round_border_mask = ptCircleMask;
 }
 
 arm_2d_region_t *arm_2d_get_default_region(void)
@@ -226,6 +234,36 @@ static void reset_render_probe(void)
     g_color_call_count = 0;
     g_image_call_count = 0;
     memset(g_color_calls, 0, sizeof(g_color_calls));
+    g_last_round_box_mask = NULL;
+    g_last_round_border_mask = NULL;
+    g_circle_draw_call_count = 0;
+    memset(g_circle_radii, 0, sizeof(g_circle_radii));
+    memset(g_circle_pivots, 0, sizeof(g_circle_pivots));
+    memset(g_circle_colours, 0, sizeof(g_circle_colours));
+    memset(g_circle_opacities, 0, sizeof(g_circle_opacities));
+}
+
+arm_fsm_rt_t ldArm2dDrawCircle(ld_arm_2d_user_draw_circle_descriptor_t *ptOP,
+                               const arm_2d_tile_t *ptTarget,
+                               const arm_2d_region_t *ptRegion,
+                               const ld_arm_2d_user_draw_circle_api_params_t *ptParams,
+                               arm_2d_color_rgb565_t tColour,
+                               uint8_t chOpacity)
+{
+    (void)ptOP;
+    (void)ptTarget;
+    (void)ptRegion;
+    assert(ptParams != NULL);
+    assert(ptParams->ptPivot != NULL);
+    if (g_circle_draw_call_count < 4)
+    {
+        g_circle_radii[g_circle_draw_call_count] = ptParams->iRadius;
+        g_circle_pivots[g_circle_draw_call_count] = *ptParams->ptPivot;
+        g_circle_colours[g_circle_draw_call_count] = tColour.tValue;
+        g_circle_opacities[g_circle_draw_call_count] = chOpacity;
+    }
+    g_circle_draw_call_count++;
+    return arm_fsm_rt_cpl;
 }
 
 static void test_set_checked_before_first_frame_jumps_to_target_and_emits(void)
@@ -467,6 +505,58 @@ static void test_pressed_knob_uses_visible_highlight_not_border_color(void)
     assert(g_color_calls[g_color_call_count - 1] != widget.knobColor);
 }
 
+static void test_knob_uses_circle_mask_when_corner_enabled(void)
+{
+    ldSwitch_t widget = {0};
+    arm_2d_tile_t frame = {0};
+
+    widget.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iWidth = 44;
+    widget.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iHeight = 24;
+    widget.use_as__ldBase_t.opacity = 255;
+    widget.offTrackColor = __RGB(1, 2, 3);
+    widget.onTrackColor = __RGB(4, 5, 6);
+    widget.knobColor = __RGB(7, 8, 9);
+    widget.borderColor = __RGB(10, 11, 12);
+    widget.direction = LD_SWITCH_DIRECTION_HORIZONTAL;
+    widget.use_as__ldBase_t.isCorner = true;
+    widget.animProgress = 1000;
+    reset_render_probe();
+
+    ldSwitch_show(NULL, &widget, &frame, true);
+
+    assert(g_last_round_box_mask != &c_tileCircleMask);
+    assert(g_circle_draw_call_count == 2);
+}
+
+static void test_color_knob_draws_true_circle_when_corner_enabled(void)
+{
+    ldSwitch_t widget = {0};
+    arm_2d_tile_t frame = {0};
+
+    widget.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iWidth = 60;
+    widget.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iHeight = 30;
+    widget.use_as__ldBase_t.opacity = 255;
+    widget.offTrackColor = __RGB(1, 2, 3);
+    widget.onTrackColor = __RGB(4, 5, 6);
+    widget.knobColor = GLCD_COLOR_WHITE;
+    widget.borderColor = __RGB(10, 11, 12);
+    widget.direction = LD_SWITCH_DIRECTION_HORIZONTAL;
+    widget.use_as__ldBase_t.isCorner = true;
+    widget.knobPadding = 2;
+    widget.animProgress = 1000;
+    reset_render_probe();
+
+    ldSwitch_show(NULL, &widget, &frame, true);
+
+    assert(g_circle_draw_call_count == 2);
+    assert(g_circle_radii[0] == 14);
+    assert(g_circle_radii[1] == 13);
+    assert(g_circle_opacities[0] == 255);
+    assert(g_circle_opacities[1] == 255);
+    assert(g_circle_colours[0] == widget.borderColor);
+    assert(g_circle_colours[1] == GLCD_COLOR_WHITE);
+}
+
 int main(void)
 {
     test_set_checked_before_first_frame_jumps_to_target_and_emits();
@@ -481,5 +571,7 @@ int main(void)
     test_disabled_switch_does_not_consume_navigation();
     test_show_falls_back_per_layer_when_image_or_mask_missing();
     test_pressed_knob_uses_visible_highlight_not_border_color();
+    test_knob_uses_circle_mask_when_corner_enabled();
+    test_color_knob_draws_true_circle_when_corner_enabled();
     return 0;
 }

@@ -16,10 +16,10 @@ enum {
     UI_WIDGET_LEGACY_SWITCH_ID = 30,
     UI_WIDGET_LEGACY_SWITCH_LABEL_ID = 31,
     UI_WIDGET_LEGACY_SWITCH_X = 300,
-    UI_WIDGET_LEGACY_SWITCH_Y = 220,
-    UI_WIDGET_LEGACY_SWITCH_WIDTH = 72,
-    UI_WIDGET_LEGACY_SWITCH_HEIGHT = 36,
-    UI_WIDGET_LEGACY_SWITCH_LABEL_X = 380,
+    UI_WIDGET_LEGACY_SWITCH_Y = 226,
+    UI_WIDGET_LEGACY_SWITCH_WIDTH = 48,
+    UI_WIDGET_LEGACY_SWITCH_HEIGHT = 24,
+    UI_WIDGET_LEGACY_SWITCH_LABEL_X = 356,
     UI_WIDGET_LEGACY_SWITCH_LABEL_Y = 218,
     UI_WIDGET_LEGACY_SWITCH_LABEL_WIDTH = 60,
     UI_WIDGET_LEGACY_SWITCH_LABEL_HEIGHT = 40,
@@ -125,33 +125,33 @@ static void uiWidgetLegacyInitCaptureMatrix(ld_scene_t *ptScene)
     obj = ldWindowInit(0, 0, 0, 0, LD_CFG_SCREEN_WIDTH, LD_CFG_SCREEN_HEIGHT);
     ldWindowSetColor(obj, GLCD_COLOR_BLACK);
 
-    obj = uiWidgetLegacyInitCaptureSwitch(ptScene, UI_WIDGET_LEGACY_CAPTURE_H_OFF_ID, 80, 80, 90, 40);
+    obj = uiWidgetLegacyInitCaptureSwitch(ptScene, UI_WIDGET_LEGACY_CAPTURE_H_OFF_ID, 80, 80, 48, 24);
     ldSwitchSetChecked(obj, false);
 
-    obj = uiWidgetLegacyInitCaptureSwitch(ptScene, UI_WIDGET_LEGACY_CAPTURE_H_ON_ID, 80, 150, 90, 40);
+    obj = uiWidgetLegacyInitCaptureSwitch(ptScene, UI_WIDGET_LEGACY_CAPTURE_H_ON_ID, 80, 150, 48, 24);
     ldSwitchSetChecked(obj, true);
 
-    obj = uiWidgetLegacyInitCaptureSwitch(ptScene, UI_WIDGET_LEGACY_CAPTURE_V_OFF_ID, 250, 60, 40, 90);
+    obj = uiWidgetLegacyInitCaptureSwitch(ptScene, UI_WIDGET_LEGACY_CAPTURE_V_OFF_ID, 250, 60, 24, 48);
     ldSwitchSetDirection(obj, LD_SWITCH_DIRECTION_VERTICAL);
     ldSwitchSetChecked(obj, false);
 
-    obj = uiWidgetLegacyInitCaptureSwitch(ptScene, UI_WIDGET_LEGACY_CAPTURE_V_ON_ID, 250, 210, 40, 90);
+    obj = uiWidgetLegacyInitCaptureSwitch(ptScene, UI_WIDGET_LEGACY_CAPTURE_V_ON_ID, 250, 210, 24, 48);
     ldSwitchSetDirection(obj, LD_SWITCH_DIRECTION_VERTICAL);
     ldSwitchSetChecked(obj, true);
 
-    obj = uiWidgetLegacyInitCaptureSwitch(ptScene, UI_WIDGET_LEGACY_CAPTURE_DISABLED_OFF_ID, 80, 290, 90, 40);
+    obj = uiWidgetLegacyInitCaptureSwitch(ptScene, UI_WIDGET_LEGACY_CAPTURE_DISABLED_OFF_ID, 80, 290, 48, 24);
     ldSwitchSetChecked(obj, false);
     ldSwitchSetDisabled(obj, true);
 
-    obj = uiWidgetLegacyInitCaptureSwitch(ptScene, UI_WIDGET_LEGACY_CAPTURE_DISABLED_ON_ID, 80, 360, 90, 40);
+    obj = uiWidgetLegacyInitCaptureSwitch(ptScene, UI_WIDGET_LEGACY_CAPTURE_DISABLED_ON_ID, 80, 360, 48, 24);
     ldSwitchSetChecked(obj, true);
     ldSwitchSetDisabled(obj, true);
 
-    ptSwitch = uiWidgetLegacyInitCaptureSwitch(ptScene, UI_WIDGET_LEGACY_CAPTURE_PRESSED_ID, 80, 430, 90, 40);
+    ptSwitch = uiWidgetLegacyInitCaptureSwitch(ptScene, UI_WIDGET_LEGACY_CAPTURE_PRESSED_ID, 80, 430, 48, 24);
     ldSwitchSetChecked(ptSwitch, false);
     ptSwitch->isPressed = true;
 
-    ptSwitch = uiWidgetLegacyInitCaptureSwitch(ptScene, UI_WIDGET_LEGACY_CAPTURE_MID_ID, 250, 430, 90, 40);
+    ptSwitch = uiWidgetLegacyInitCaptureSwitch(ptScene, UI_WIDGET_LEGACY_CAPTURE_MID_ID, 250, 430, 48, 24);
     ldSwitchSetChecked(ptSwitch, true);
     ptSwitch->hasRenderedFrame = true;
     ptSwitch->animStartProgress = 0;

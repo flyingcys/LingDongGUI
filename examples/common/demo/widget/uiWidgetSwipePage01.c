@@ -32,7 +32,7 @@ static void uiWidgetSwipePage01Init(ld_scene_t *ptScene)
         return;
     }
 
-    obj = ldSwitchInit(ID_PAGE01_SWITCH, ID_PAGE01_BG, 182, 112, 116, 56);
+    obj = ldSwitchInit(ID_PAGE01_SWITCH, ID_PAGE01_BG, 216, 128, 48, 24);
     if (obj == NULL) {
         uiWidgetInitFailed("uiWidgetSwipePage01", ID_PAGE01_SWITCH);
         return;

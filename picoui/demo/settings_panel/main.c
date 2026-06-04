@@ -38,6 +38,7 @@ static void make_ui(struct picoui_window *win)
     apply = picoui_button_create(win, "apply");
 
     picoui_label_set_text(title, "Settings");
+    picoui_widget_set_size((struct picoui_widget *)wifi, 48, 24);
     picoui_switch_set_checked(wifi, 1);
     picoui_slider_set_value(brightness, 75);
     picoui_button_set_text(apply, "Apply");

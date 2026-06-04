@@ -85,8 +85,8 @@ void *picoui_backend_create_switch(void *parent, const char *id)
                               parent_widget->ld_name_id,
                               0,
                               0,
-                              220,
-                              36);
+                              48,
+                              24);
     if (ld_switch == NULL) {
         free(widget);
         return 0;

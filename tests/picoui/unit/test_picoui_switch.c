@@ -1,6 +1,7 @@
 #include "picoui/picoui.h"
 #include "../../../src/gui/ldBase.h"
 #include "../../../src/gui/ldSwitch.h"
+#include "../../../src/gui/ldSwitchInternal.h"
 #include "internal.h"
 #include <assert.h>
 #include <string.h>
@@ -18,6 +19,25 @@ static void test_switch_create_and_backend_mapping(struct picoui_window *win)
     ld_base = (ldBase_t *)backend->ld_widget;
     assert(ld_base != 0);
     assert(ld_base->widgetType == widgetTypeSwitch);
+    assert(ld_base->use_as__arm_2d_control_node_t.tRegion.tSize.iWidth == 48);
+    assert(ld_base->use_as__arm_2d_control_node_t.tRegion.tSize.iHeight == 24);
+}
+
+static void test_switch_default_geometry_matches_capsule_track(void)
+{
+    ldSwitchGeometry_t geometry = ldSwitchResolveGeometry(48, 24, 2U, LD_SWITCH_DIRECTION_AUTO, 0U);
+
+    assert(geometry.isHorizontal == true);
+    assert(geometry.track.iX == 2);
+    assert(geometry.track.iY == 2);
+    assert(geometry.track.iWidth == 44);
+    assert(geometry.track.iHeight == 20);
+    assert(geometry.knob.iWidth == 24);
+    assert(geometry.knob.iHeight == 24);
+    assert(geometry.knob.iX == 0);
+    assert(geometry.knob.iY == 0);
+    assert(geometry.indicator.iWidth == 0);
+    assert(geometry.indicator.iHeight == 20);
 }
 
 static void test_switch_create_with_props_pushes_fields(struct picoui_window *win)
@@ -84,6 +104,7 @@ int main(void)
     assert(win != 0);
 
     test_switch_create_and_backend_mapping(win);
+    test_switch_default_geometry_matches_capsule_track();
     test_switch_create_with_props_pushes_fields(win);
     test_switch_set_checked_round_trip(win);
     test_switch_rejects_null_args(win);
