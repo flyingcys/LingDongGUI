@@ -25,19 +25,23 @@ static void test_switch_create_and_backend_mapping(struct picoui_window *win)
 
 static void test_switch_default_geometry_matches_capsule_track(void)
 {
-    ldSwitchGeometry_t geometry = ldSwitchResolveGeometry(48, 24, 2U, LD_SWITCH_DIRECTION_AUTO, 0U);
+    ldSwitchGeometry_t off = ldSwitchResolveGeometry(48, 24, 4U, LD_SWITCH_DIRECTION_AUTO, 0U);
+    ldSwitchGeometry_t on = ldSwitchResolveGeometry(48, 24, 4U, LD_SWITCH_DIRECTION_AUTO, 1000U);
 
-    assert(geometry.isHorizontal == true);
-    assert(geometry.track.iX == 2);
-    assert(geometry.track.iY == 2);
-    assert(geometry.track.iWidth == 44);
-    assert(geometry.track.iHeight == 20);
-    assert(geometry.knob.iWidth == 24);
-    assert(geometry.knob.iHeight == 24);
-    assert(geometry.knob.iX == 0);
-    assert(geometry.knob.iY == 0);
-    assert(geometry.indicator.iWidth == 0);
-    assert(geometry.indicator.iHeight == 20);
+    assert(off.isHorizontal == true);
+    assert(off.track.iX == 0);
+    assert(off.track.iY == 0);
+    assert(off.track.iWidth == 48);
+    assert(off.track.iHeight == 24);
+    assert(off.knob.iWidth == 16);
+    assert(off.knob.iHeight == 16);
+    assert(off.knob.iX == 4);
+    assert(off.knob.iY == 4);
+    assert(off.indicator.iWidth == 0);
+    assert(off.indicator.iHeight == 24);
+    assert(on.knob.iX == 28);
+    assert(on.knob.iY == 4);
+    assert(on.indicator.iWidth == 48);
 }
 
 static void test_switch_create_with_props_pushes_fields(struct picoui_window *win)

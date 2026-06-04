@@ -222,6 +222,13 @@ static int picoui_backend_window_set_padding_group_ptr(struct picoui_window *win
     host->padding_group.top = (int16_t)top;
     host->padding_group.right = (int16_t)right;
     host->padding_group.bottom = (int16_t)bottom;
+
+    {
+        ldLayoutType_t layout_type = ld_window->layoutTpye;
+        ldWindowSetPadding(ld_window, host->padding_group);
+        ldWindowSetGridPadding(ld_window, host->padding_group);
+        ld_window->layoutTpye = layout_type;
+    }
     return 0;
 }
 

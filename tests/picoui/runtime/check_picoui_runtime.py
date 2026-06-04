@@ -1,3 +1,4 @@
+import argparse
 import os
 import shutil
 import subprocess
@@ -6,9 +7,16 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[3]
-BUILD = ROOT / "build" / "picoui-runtime"
+DEFAULT_BUILD = ROOT / "build" / "picoui-runtime"
 RTK = shutil.which("rtk") or "rtk"
 DEMO_TIMEOUT_SECONDS = 6
+RUNTIME_SCREEN_DEFINES = {
+    "LD_CFG_SCREEN_WIDTH": "480",
+    "LD_CFG_SCREEN_HEIGHT": "320",
+    "LD_CFG_PFB_WIDTH": "480",
+}
+ON_TRACK = (33, 150, 243)
+BLACK = (0, 0, 0)
 TARGETS = [
     "picoui_hello_world_demo",
     "picoui_basic_widgets_demo",
@@ -38,6 +46,33 @@ TARGETS = [
 ]
 
 
+def _parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Build and validate PicoUI SDL runtime demos.")
+    parser.add_argument(
+        "--demo",
+        default="all",
+        help="Demo short name such as 'basic_widgets', target name, or 'all'.",
+    )
+    parser.add_argument(
+        "--build-dir",
+        type=Path,
+        default=DEFAULT_BUILD,
+        help="CMake build directory for the PicoUI runtime demos.",
+    )
+    return parser.parse_args()
+
+
+def _targets_for_demo(demo: str) -> list[str]:
+    if demo == "all":
+        return TARGETS
+    if demo in TARGETS:
+        return [demo]
+    target = f"picoui_{demo}_demo"
+    if target in TARGETS:
+        return [target]
+    raise AssertionError(f"Unknown PicoUI runtime demo '{demo}'. Known targets: {', '.join(TARGETS)}")
+
+
 def _read_ppm(path: Path) -> tuple[int, int, bytes]:
     data = path.read_bytes()
     header, pixels = data.split(b"\n255\n", 1)
@@ -49,6 +84,38 @@ def _read_ppm(path: Path) -> tuple[int, int, bytes]:
 def _pixel(width: int, pixels: bytes, x: int, y: int) -> tuple[int, int, int]:
     offset = (y * width + x) * 3
     return pixels[offset], pixels[offset + 1], pixels[offset + 2]
+
+def _assert_not_black_bar(width: int, height: int, pixels: bytes) -> None:
+    right_edge = [_pixel(width, pixels, width - 1, y) for y in range(height)]
+    bottom_edge = [_pixel(width, pixels, x, height - 1) for x in range(width)]
+    assert any(color != BLACK for color in right_edge), "basic_widgets right edge is a black bar"
+    assert any(color != BLACK for color in bottom_edge), "basic_widgets bottom edge is a black bar"
+
+
+def _is_on_track_blue(color: tuple[int, int, int]) -> bool:
+    return (
+        abs(color[0] - ON_TRACK[0]) <= 10
+        and abs(color[1] - ON_TRACK[1]) <= 10
+        and abs(color[2] - ON_TRACK[2]) <= 12
+    )
+
+
+def _color_bounds(
+    width: int,
+    height: int,
+    pixels: bytes,
+    predicate,
+) -> tuple[int, int, int, int]:
+    xs: list[int] = []
+    ys: list[int] = []
+    for y in range(height):
+        for x in range(width):
+            if predicate(_pixel(width, pixels, x, y)):
+                xs.append(x)
+                ys.append(y)
+    if not xs:
+        raise AssertionError("capture does not contain expected color")
+    return min(xs), min(ys), max(xs), max(ys)
 
 
 def _region_colors(
@@ -185,6 +252,20 @@ def _assert_no_smoke_layout(target: str, stdout: str, stderr: str) -> None:
 def _assert_basic_widgets_capture(path: Path, stdout: str) -> None:
     width, height, pixels = _read_ppm(path)
     assert width == 480 and height == 320, f"unexpected basic widgets capture size: {width}x{height}"
+    _assert_not_black_bar(width, height, pixels)
+    assert "PICOUI_SMOKE_LAYOUT_USED=0" in stdout, (
+        "basic_widgets must report formal layout usage.\n"
+        f"stdout:\n{stdout}"
+    )
+
+    switch_bbox = _color_bounds(width, height, pixels, _is_on_track_blue)
+    assert switch_bbox == (16, 24, 63, 47), f"unexpected wifi switch bbox: {switch_bbox}"
+    for point in ((16, 24), (16, 47), (63, 24), (63, 47)):
+        assert not _is_on_track_blue(_pixel(width, pixels, point[0], point[1])), (
+            f"wifi switch corner should not be blue at {point}"
+        )
+    assert _is_on_track_blue(_pixel(width, pixels, 16, 35)), "wifi switch left midpoint should be blue"
+    assert _is_on_track_blue(_pixel(width, pixels, 63, 35)), "wifi switch right midpoint should be blue"
 
     bg = _pixel(width, pixels, width - 8, height - 8)
     min_x, min_y, max_x, max_y = _non_background_bounds(width, height, pixels, bg)
@@ -253,58 +334,127 @@ def _assert_basic_widgets_capture(path: Path, stdout: str) -> None:
         f"fallback still contains: {sorted(unexpected_fallback)}, "
         f"fallback_ids={sorted(fallback_ids)}"
     )
-subprocess.run([
-    RTK, "cmake", "-S", str(ROOT), "-B", str(BUILD), "-DUSE_DEMO=0"
-], check=True)
-subprocess.run([
-    RTK, "cmake", "--build", str(BUILD), "--target", *TARGETS
-], check=True)
 
-for target in TARGETS:
-    candidates = [
-        BUILD / "examples" / "sdl" / target,
-        BUILD / target,
-        BUILD / "examples" / target,
+
+def _compile_commands_for_source(
+    compile_commands: list[dict[str, str]],
+    source_suffix: str,
+) -> list[str]:
+    matches = [
+        entry.get("command", "")
+        for entry in compile_commands
+        if entry.get("file", "").endswith(source_suffix)
     ]
-    executable = next((path for path in candidates if path.is_file()), None)
-    if executable is None:
-        candidate_paths = ", ".join(str(path) for path in candidates)
-        raise FileNotFoundError(
-            f"Could not find executable for target '{target}'. Checked: {candidate_paths}"
-        )
+    if not matches:
+        raise AssertionError(f"missing compile command for {source_suffix}")
+    return matches
 
-    env = os.environ.copy()
-    env["SDL_VIDEODRIVER"] = env.get("SDL_VIDEODRIVER", "dummy")
-    env["PICOUI_DEMO_AUTO_QUIT_MS"] = "1200"
-    with tempfile.TemporaryDirectory(prefix=f"{target}-") as tmpdir:
-        capture_path = Path(tmpdir) / "frame.ppm"
-        env["PICOUI_CAPTURE_FILE"] = str(capture_path)
-        completed = subprocess.run(
-            [str(executable)],
-            check=False,
-            timeout=DEMO_TIMEOUT_SECONDS,
-            capture_output=True,
-            text=True,
-            env=env,
-        )
-        if not capture_path.is_file() or capture_path.stat().st_size <= 32:
-            raise AssertionError(
-                f"Demo '{target}' did not produce a capture frame.\n"
+
+def _assert_compile_unit_has_screen_defines(
+    compile_commands: list[dict[str, str]],
+    source_suffix: str,
+) -> None:
+    matches = _compile_commands_for_source(compile_commands, source_suffix)
+    for name, value in RUNTIME_SCREEN_DEFINES.items():
+        define = f"-D{name}={value}"
+        if not any(define in command for command in matches):
+            raise AssertionError(f"{source_suffix} missing {define}")
+
+
+def _assert_compile_unit_lacks_screen_defines(
+    compile_commands: list[dict[str, str]],
+    source_suffix: str,
+) -> None:
+    matches = _compile_commands_for_source(compile_commands, source_suffix)
+    for command in matches:
+        for name, value in RUNTIME_SCREEN_DEFINES.items():
+            define = f"-D{name}={value}"
+            if define in command:
+                raise AssertionError(f"{source_suffix} should not inherit {define}")
+
+
+def _assert_picoui_runtime_screen_defines(build_dir: Path) -> None:
+    import json
+
+    compile_db_path = build_dir / "compile_commands.json"
+    if not compile_db_path.is_file():
+        raise AssertionError(f"missing compile_commands.json: {compile_db_path}")
+    compile_commands = json.loads(compile_db_path.read_text())
+    for source_suffix in (
+        "picoui/src/backend/ldgui/backend_app.c",
+        "picoui/demo/basic_widgets/main.c",
+    ):
+        _assert_compile_unit_has_screen_defines(compile_commands, source_suffix)
+    for source_suffix in (
+        "src/gui/ldSwitch.c",
+        "src/porting/ldConfig.c",
+        "src/porting/arm_2d_disp_adapter_0.c",
+        "picoui/src/core/app.c",
+    ):
+        _assert_compile_unit_lacks_screen_defines(compile_commands, source_suffix)
+
+def main() -> None:
+    args = _parse_args()
+    build_dir = args.build_dir
+    targets = _targets_for_demo(args.demo)
+
+    subprocess.run([
+        RTK, "cmake", "-S", str(ROOT), "-B", str(build_dir), "-DUSE_DEMO=0", "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
+    ], check=True)
+    _assert_picoui_runtime_screen_defines(build_dir)
+    subprocess.run([
+        RTK, "cmake", "--build", str(build_dir), "--target", *targets
+    ], check=True)
+
+    for target in targets:
+        candidates = [
+            build_dir / "examples" / "sdl" / target,
+            build_dir / target,
+            build_dir / "examples" / target,
+        ]
+        executable = next((path for path in candidates if path.is_file()), None)
+        if executable is None:
+            candidate_paths = ", ".join(str(path) for path in candidates)
+            raise FileNotFoundError(
+                f"Could not find executable for target '{target}'. Checked: {candidate_paths}"
+            )
+
+        env = os.environ.copy()
+        env["SDL_VIDEODRIVER"] = env.get("SDL_VIDEODRIVER", "dummy")
+        env["PICOUI_DEMO_AUTO_QUIT_MS"] = "1200"
+        with tempfile.TemporaryDirectory(prefix=f"{target}-") as tmpdir:
+            capture_path = Path(tmpdir) / "frame.ppm"
+            env["PICOUI_CAPTURE_FILE"] = str(capture_path)
+            completed = subprocess.run(
+                [str(executable)],
+                check=False,
+                timeout=DEMO_TIMEOUT_SECONDS,
+                capture_output=True,
+                text=True,
+                env=env,
+            )
+            if not capture_path.is_file() or capture_path.stat().st_size <= 32:
+                raise AssertionError(
+                    f"Demo '{target}' did not produce a capture frame.\n"
+                    f"stdout:\n{completed.stdout}\n"
+                    f"stderr:\n{completed.stderr}"
+                )
+            if target == "picoui_basic_widgets_demo":
+                _assert_basic_widgets_capture(capture_path, completed.stdout)
+        if completed.returncode != 0:
+            raise RuntimeError(
+                f"Demo '{target}' exited with {completed.returncode}.\n"
                 f"stdout:\n{completed.stdout}\n"
                 f"stderr:\n{completed.stderr}"
             )
-        if target == "picoui_basic_widgets_demo":
-            _assert_basic_widgets_capture(capture_path, completed.stdout)
-    if completed.returncode != 0:
-        raise RuntimeError(
-            f"Demo '{target}' exited with {completed.returncode}.\n"
-            f"stdout:\n{completed.stdout}\n"
-            f"stderr:\n{completed.stderr}"
-        )
-    if "PICOUI_RUNTIME_READY" not in completed.stdout:
-        raise AssertionError(
-            f"Demo '{target}' did not report entering a visible runtime loop.\n"
-            f"stdout:\n{completed.stdout}\n"
-            f"stderr:\n{completed.stderr}"
-        )
-    _assert_no_smoke_layout(target, completed.stdout, completed.stderr)
+        if "PICOUI_RUNTIME_READY" not in completed.stdout:
+            raise AssertionError(
+                f"Demo '{target}' did not report entering a visible runtime loop.\n"
+                f"stdout:\n{completed.stdout}\n"
+                f"stderr:\n{completed.stderr}"
+            )
+        _assert_no_smoke_layout(target, completed.stdout, completed.stderr)
+
+
+if __name__ == "__main__":
+    main()

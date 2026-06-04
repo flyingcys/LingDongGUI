@@ -465,7 +465,10 @@ endif()
 
 function(add_picoui_demo target source)
     add_executable(${target} ${source})
-    target_link_libraries(${target} PRIVATE picoui_backend_ldgui)
+    target_link_libraries(${target} PRIVATE picoui_backend_ldgui_runtime)
+    if(COMMAND ld_apply_picoui_runtime_screen_config)
+        ld_apply_picoui_runtime_screen_config(${target})
+    endif()
     ld_apply_common_target_config(${target})
 endfunction()
 

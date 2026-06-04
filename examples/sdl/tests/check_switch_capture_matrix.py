@@ -13,22 +13,42 @@ TEST_FILE = Path(__file__).resolve()
 SDL_ROOT = TEST_FILE.parents[1]
 EXECUTABLE_NAME = "ldgui_sdl_demo.exe" if sys.platform.startswith("win") else "ldgui_sdl_demo"
 
-OFF_TRACK = (190, 190, 190)
-ON_TRACK = (72, 184, 120)
-DISABLED_OFF_TRACK = (95, 95, 95)
-DISABLED_ON_TRACK = (80, 136, 96)
-PRESSED_KNOB = (255, 243, 202)
+OFF_TRACK = (224, 224, 224)
+ON_TRACK = (33, 150, 243)
+KNOB = (255, 255, 255)
+DISABLED_OFF_TRACK = (112, 112, 112)
+DISABLED_ON_TRACK = (64, 126, 168)
 
 SAMPLES = {
-    "h_off": ((114, 90), OFF_TRACK),
-    "h_on": ((90, 160), ON_TRACK),
-    "v_off": ((260, 72), OFF_TRACK),
-    "v_on": ((260, 242), ON_TRACK),
-    "disabled_off": ((110, 300), DISABLED_OFF_TRACK),
+    "h_off": ((114, 92), OFF_TRACK),
+    "h_off_knob": ((92, 92), KNOB),
+    "h_on": ((90, 162), ON_TRACK),
+    "h_on_knob": ((116, 162), KNOB),
+    "v_off": ((262, 64), OFF_TRACK),
+    "v_off_knob": ((262, 100), KNOB),
+    "v_on": ((262, 250), ON_TRACK),
+    "v_on_knob": ((262, 222), KNOB),
+    "disabled_off": ((126, 301), DISABLED_OFF_TRACK),
     "disabled_on": ((90, 370), DISABLED_ON_TRACK),
-    "pressed_knob": ((90, 440), PRESSED_KNOB),
+    "pressed_knob": ((92, 442), KNOB),
     "mid_left": ((256, 450), ON_TRACK),
+    "mid_knob": ((270, 442), KNOB),
     "mid_right": ((288, 440), OFF_TRACK),
+}
+
+CAPSULE_SAMPLES = {
+    "h_on_left_top_corner": ((80, 150), ON_TRACK),
+    "h_on_left_bottom_corner": ((80, 173), ON_TRACK),
+    "h_on_right_top_corner": ((127, 150), ON_TRACK),
+    "h_on_right_bottom_corner": ((127, 173), ON_TRACK),
+    "h_on_left_mid": ((80, 162), ON_TRACK),
+    "h_on_right_mid": ((127, 162), ON_TRACK),
+    "v_on_top_left_corner": ((250, 210), ON_TRACK),
+    "v_on_top_right_corner": ((273, 210), ON_TRACK),
+    "v_on_bottom_left_corner": ((250, 257), ON_TRACK),
+    "v_on_bottom_right_corner": ((273, 257), ON_TRACK),
+    "v_on_top_mid": ((262, 210), ON_TRACK),
+    "v_on_bottom_mid": ((262, 257), ON_TRACK),
 }
 
 
@@ -83,6 +103,12 @@ def _assert_close(name: str, actual: tuple[int, int, int], expected: tuple[int, 
     deltas = tuple(abs(a - e) for a, e in zip(actual, expected))
     if any(delta > tolerance for delta in deltas):
         raise AssertionError(f"{name} 采样 {actual}，预期接近 {expected}，容差 {tolerance}")
+
+
+def _assert_not_close(name: str, actual: tuple[int, int, int], unexpected: tuple[int, int, int], tolerance: int) -> None:
+    deltas = tuple(abs(a - e) for a, e in zip(actual, unexpected))
+    if all(delta <= tolerance for delta in deltas):
+        raise AssertionError(f"{name} 采样 {actual}，不应接近 {unexpected}，容差 {tolerance}")
 
 
 def _brightness(color: tuple[int, int, int]) -> float:
@@ -159,13 +185,21 @@ def main() -> int:
         for name, (point, expected) in SAMPLES.items():
             sampled[name] = _pixel(width, height, pixels, point[0], point[1])
             _assert_close(name, sampled[name], expected, 18)
+        for name, (point, expected) in CAPSULE_SAMPLES.items():
+            sampled[name] = _pixel(width, height, pixels, point[0], point[1])
+            if name.endswith("_corner"):
+                _assert_not_close(name, sampled[name], expected, 18)
+            else:
+                _assert_close(name, sampled[name], expected, 18)
 
-        h_on_ring = _pixel(width, height, pixels, 114, 160)
-        v_on_ring = _pixel(width, height, pixels, 260, 222)
-        if not (_brightness(h_on_ring) > _brightness(sampled["h_on"]) + 60):
-            raise AssertionError(f"h_on checked ring 亮度不够明显: ring={h_on_ring}, track={sampled['h_on']}")
-        if not (_brightness(v_on_ring) > _brightness(sampled["v_on"]) + 60):
-            raise AssertionError(f"v_on checked ring 亮度不够明显: ring={v_on_ring}, track={sampled['v_on']}")
+        if not (_brightness(sampled["h_off_knob"]) > _brightness(sampled["h_off"]) + 12):
+            raise AssertionError(f"h_off knob 没有在灰色 track 内形成白色圆点: {sampled}")
+        if not (_brightness(sampled["h_on_knob"]) > _brightness(sampled["h_on"]) + 60):
+            raise AssertionError(f"h_on knob 没有在蓝色 track 内形成白色圆点: {sampled}")
+        if not (_brightness(sampled["v_off_knob"]) > _brightness(sampled["v_off"]) + 12):
+            raise AssertionError(f"v_off knob 没有在灰色 track 内形成白色圆点: {sampled}")
+        if not (_brightness(sampled["v_on_knob"]) > _brightness(sampled["v_on"]) + 60):
+            raise AssertionError(f"v_on knob 没有在蓝色 track 内形成白色圆点: {sampled}")
 
         if not (_brightness(sampled["disabled_off"]) < _brightness(sampled["h_off"]) - 40):
             raise AssertionError(f"disabled_off 亮度没有明显低于 h_off: {sampled}")

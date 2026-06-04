@@ -16,18 +16,18 @@ static void test_image_layer_requires_img_and_mask(void)
 
 static void test_horizontal_metrics_reserve_knob_padding(void)
 {
-    ldSwitchAxisMetrics_t metrics = ldSwitchResolveAxisMetrics(44, 24, 2, true);
+    ldSwitchAxisMetrics_t metrics = ldSwitchResolveAxisMetrics(48, 24, 4, true);
 
-    assert(metrics.knobSize == 24);
-    assert(metrics.trackLength == 20);
+    assert(metrics.knobSize == 16);
+    assert(metrics.trackLength == 24);
 }
 
 static void test_vertical_metrics_reserve_knob_padding(void)
 {
-    ldSwitchAxisMetrics_t metrics = ldSwitchResolveAxisMetrics(24, 44, 2, false);
+    ldSwitchAxisMetrics_t metrics = ldSwitchResolveAxisMetrics(24, 48, 4, false);
 
-    assert(metrics.knobSize == 24);
-    assert(metrics.trackLength == 20);
+    assert(metrics.knobSize == 16);
+    assert(metrics.trackLength == 24);
 }
 
 static void test_auto_direction_uses_longer_axis(void)
@@ -76,22 +76,27 @@ static void test_knob_offset_matches_progress(void)
 
 static void test_horizontal_indicator_and_knob_are_continuous(void)
 {
-    ldSwitchGeometry_t start = ldSwitchResolveGeometry(44, 24, 2, LD_SWITCH_DIRECTION_HORIZONTAL, 0);
-    ldSwitchGeometry_t middle = ldSwitchResolveGeometry(44, 24, 2, LD_SWITCH_DIRECTION_HORIZONTAL, 500);
-    ldSwitchGeometry_t end = ldSwitchResolveGeometry(44, 24, 2, LD_SWITCH_DIRECTION_HORIZONTAL, 1000);
+    ldSwitchGeometry_t start = ldSwitchResolveGeometry(48, 24, 4, LD_SWITCH_DIRECTION_HORIZONTAL, 0);
+    ldSwitchGeometry_t middle = ldSwitchResolveGeometry(48, 24, 4, LD_SWITCH_DIRECTION_HORIZONTAL, 500);
+    ldSwitchGeometry_t end = ldSwitchResolveGeometry(48, 24, 4, LD_SWITCH_DIRECTION_HORIZONTAL, 1000);
 
     assert(start.isHorizontal == true);
-    assert(start.knob.iX == 0);
-    assert(start.knob.iHeight > start.track.iHeight);
-    assert(start.knob.iY == 0);
-    assert(start.indicator.iX == 2);
-    assert(start.indicator.iY == 2);
-    assert(start.indicator.iHeight == 20);
+    assert(start.track.iX == 0);
+    assert(start.track.iY == 0);
+    assert(start.track.iWidth == 48);
+    assert(start.track.iHeight == 24);
+    assert(start.knob.iX == 4);
+    assert(start.knob.iY == 4);
+    assert(start.knob.iWidth == 16);
+    assert(start.knob.iHeight == 16);
+    assert(start.indicator.iX == 0);
+    assert(start.indicator.iY == 0);
+    assert(start.indicator.iHeight == 24);
     assert(start.indicator.iWidth == 0);
-    assert(middle.knob.iX == 10);
-    assert(end.knob.iX == 20);
-    assert(middle.indicator.iWidth == 20);
-    assert(end.indicator.iWidth == 40);
+    assert(middle.knob.iX == 16);
+    assert(end.knob.iX == 28);
+    assert(middle.indicator.iWidth == 24);
+    assert(end.indicator.iWidth == 48);
     assert(start.knob.iX < middle.knob.iX);
     assert(middle.knob.iX < end.knob.iX);
     assert(start.indicator.iWidth < middle.indicator.iWidth);
@@ -100,24 +105,29 @@ static void test_horizontal_indicator_and_knob_are_continuous(void)
 
 static void test_vertical_indicator_and_knob_are_continuous(void)
 {
-    ldSwitchGeometry_t start = ldSwitchResolveGeometry(24, 44, 2, LD_SWITCH_DIRECTION_VERTICAL, 0);
-    ldSwitchGeometry_t middle = ldSwitchResolveGeometry(24, 44, 2, LD_SWITCH_DIRECTION_VERTICAL, 500);
-    ldSwitchGeometry_t end = ldSwitchResolveGeometry(24, 44, 2, LD_SWITCH_DIRECTION_VERTICAL, 1000);
+    ldSwitchGeometry_t start = ldSwitchResolveGeometry(24, 48, 4, LD_SWITCH_DIRECTION_VERTICAL, 0);
+    ldSwitchGeometry_t middle = ldSwitchResolveGeometry(24, 48, 4, LD_SWITCH_DIRECTION_VERTICAL, 500);
+    ldSwitchGeometry_t end = ldSwitchResolveGeometry(24, 48, 4, LD_SWITCH_DIRECTION_VERTICAL, 1000);
 
     assert(start.isHorizontal == false);
-    assert(start.knob.iY == 20);
-    assert(start.knob.iWidth > start.track.iWidth);
-    assert(start.knob.iX == 0);
-    assert(start.indicator.iX == 2);
-    assert(start.indicator.iWidth == 20);
-    assert(start.indicator.iY == 44);
+    assert(start.track.iX == 0);
+    assert(start.track.iY == 0);
+    assert(start.track.iWidth == 24);
+    assert(start.track.iHeight == 48);
+    assert(start.knob.iY == 28);
+    assert(start.knob.iX == 4);
+    assert(start.knob.iWidth == 16);
+    assert(start.knob.iHeight == 16);
+    assert(start.indicator.iX == 0);
+    assert(start.indicator.iWidth == 24);
+    assert(start.indicator.iY == 48);
     assert(start.indicator.iHeight == 0);
-    assert(middle.indicator.iY == 22);
-    assert(middle.knob.iY == 10);
-    assert(middle.indicator.iHeight == 20);
-    assert(end.knob.iY == 0);
-    assert(end.indicator.iY == 2);
-    assert(end.indicator.iHeight == 40);
+    assert(middle.indicator.iY == 24);
+    assert(middle.knob.iY == 16);
+    assert(middle.indicator.iHeight == 24);
+    assert(end.knob.iY == 4);
+    assert(end.indicator.iY == 0);
+    assert(end.indicator.iHeight == 48);
     assert(start.knob.iY > middle.knob.iY);
     assert(middle.knob.iY > end.knob.iY);
     assert(start.indicator.iHeight < middle.indicator.iHeight);

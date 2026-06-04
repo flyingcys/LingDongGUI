@@ -91,6 +91,11 @@ void *picoui_backend_create_switch(void *parent, const char *id)
         free(widget);
         return 0;
     }
+    ldSwitchSetColor(ld_switch,
+                     __RGB(224, 224, 224),
+                     __RGB(33, 150, 243),
+                     GLCD_COLOR_WHITE,
+                     GLCD_COLOR_WHITE);
 
     widget->parent = parent;
     widget->id = id;

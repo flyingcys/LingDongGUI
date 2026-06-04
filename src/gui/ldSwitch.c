@@ -52,10 +52,8 @@
 #endif
 
 #define LD_SWITCH_ANIM_DURATION_MS     150U
-#define LD_SWITCH_DEFAULT_KNOB_PADDING 2U
+#define LD_SWITCH_DEFAULT_KNOB_PADDING 4U
 #define LD_SWITCH_FRAME_STEP_MS        10U
-#define LD_SWITCH_PRESSED_KNOB_COLOR   __RGB(255, 243, 202)
-
 static bool slotSwitchProcess(ld_scene_t *ptScene, ldMsg_t msg);
 static void ldSwitchApplyValue(ld_scene_t *ptScene, ldSwitch_t *ptWidget, bool isChecked);
 static arm_2d_region_t ldSwitchRectToRegion(ldSwitchRect_t rect);
@@ -166,45 +164,6 @@ static void ldSwitchDrawCircleKnob(const arm_2d_tile_t *ptTarget,
                       opacity);
 }
 
-static arm_2d_region_t ldSwitchInsetRegion(arm_2d_region_t region, int16_t inset)
-{
-    if (inset <= 0)
-    {
-        return region;
-    }
-
-    if ((region.tSize.iWidth <= (int16_t)(inset * 2)) || (region.tSize.iHeight <= (int16_t)(inset * 2)))
-    {
-        return region;
-    }
-
-    region.tLocation.iX += inset;
-    region.tLocation.iY += inset;
-    region.tSize.iWidth -= (int16_t)(inset * 2);
-    region.tSize.iHeight -= (int16_t)(inset * 2);
-    return region;
-}
-
-static void ldSwitchDrawCircleKnobWithBorder(const arm_2d_tile_t *ptTarget,
-                                             const arm_2d_region_t *ptRegion,
-                                             ldColor fillColor,
-                                             ldColor borderColor,
-                                             uint8_t opacity)
-{
-    arm_2d_region_t innerRegion;
-
-    assert(NULL != ptTarget);
-    assert(NULL != ptRegion);
-    if ((ptTarget == NULL) || (ptRegion == NULL))
-    {
-        return;
-    }
-
-    ldSwitchDrawCircleKnob(ptTarget, ptRegion, borderColor, opacity);
-    innerRegion = ldSwitchInsetRegion(*ptRegion, 1);
-    ldSwitchDrawCircleKnob(ptTarget, &innerRegion, fillColor, opacity);
-}
-
 static bool slotSwitchProcess(ld_scene_t *ptScene, ldMsg_t msg)
 {
     ldSwitch_t *ptWidget = msg.ptSender;
@@ -291,10 +250,10 @@ ldSwitch_t *ldSwitch_init(ld_scene_t *ptScene,
     ptWidget->use_as__ldBase_t.isCorner = true;
     ptWidget->use_as__ldBase_t.tTempRegion = ptWidget->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion;
 
-    ptWidget->offTrackColor = __RGB(190, 190, 190);
-    ptWidget->onTrackColor = __RGB(72, 184, 120);
+    ptWidget->offTrackColor = __RGB(224, 224, 224);
+    ptWidget->onTrackColor = __RGB(33, 150, 243);
     ptWidget->knobColor = GLCD_COLOR_WHITE;
-    ptWidget->borderColor = __RGB(120, 120, 120);
+    ptWidget->borderColor = GLCD_COLOR_WHITE;
     ptWidget->knobPadding = LD_SWITCH_DEFAULT_KNOB_PADDING;
     ptWidget->direction = LD_SWITCH_DIRECTION_AUTO;
     ptWidget->isHorizontal = true;
@@ -408,7 +367,7 @@ void ldSwitch_show(ld_scene_t *ptScene, ldSwitch_t *ptWidget, const arm_2d_tile_
             }
 
             opacity = ptWidget->isDisabled ? (uint8_t)(ptWidget->use_as__ldBase_t.opacity / 2U) : ptWidget->use_as__ldBase_t.opacity;
-            knobColor = ptWidget->isPressed ? LD_SWITCH_PRESSED_KNOB_COLOR : ptWidget->knobColor;
+            knobColor = ptWidget->knobColor;
             geometry = ldSwitchResolveGeometry(tTarget_canvas.tSize.iWidth,
                                                tTarget_canvas.tSize.iHeight,
                                                ptWidget->knobPadding,
@@ -437,24 +396,12 @@ void ldSwitch_show(ld_scene_t *ptScene, ldSwitch_t *ptWidget, const arm_2d_tile_
             }
             else if (ptWidget->use_as__ldBase_t.isCorner)
             {
-                draw_round_corner_box(&tTarget, &tTrackRegion, ptWidget->offTrackColor, opacity, bIsNewFrame);
+                (void)bIsNewFrame;
+                ldBaseDrawCapsule(&tTarget, &tTrackRegion, ptWidget->offTrackColor, opacity);
             }
             else
             {
                 ldBaseColor(&tTarget, &tTrackRegion, ptWidget->offTrackColor, opacity);
-            }
-
-            if (ptWidget->use_as__ldBase_t.isCorner)
-            {
-                draw_round_corner_border(&tTarget,
-                                         &tTrackRegion,
-                                         ptWidget->borderColor,
-                                         (arm_2d_border_opacity_t){opacity, opacity, opacity, opacity},
-                                         (arm_2d_corner_opacity_t){opacity, opacity, opacity, opacity});
-            }
-            else
-            {
-                arm_2d_draw_box(&tTarget, &tTrackRegion, 1, ptWidget->borderColor, opacity);
             }
 
             if (useOnImageStyle)
@@ -463,7 +410,7 @@ void ldSwitch_show(ld_scene_t *ptScene, ldSwitch_t *ptWidget, const arm_2d_tile_
             }
             else if (ptWidget->use_as__ldBase_t.isCorner)
             {
-                draw_round_corner_box(&tTarget, &tIndicatorRegion, ptWidget->onTrackColor, opacity, bIsNewFrame);
+                ldBaseDrawCapsule(&tTarget, &tIndicatorRegion, ptWidget->onTrackColor, opacity);
             }
             else
             {
@@ -481,18 +428,14 @@ void ldSwitch_show(ld_scene_t *ptScene, ldSwitch_t *ptWidget, const arm_2d_tile_
             }
             else if (ptWidget->use_as__ldBase_t.isCorner)
             {
-                ldSwitchDrawCircleKnobWithBorder(&tTarget,
-                                                 &tKnobPaintRegion,
-                                                 knobColor,
-                                                 ptWidget->borderColor,
-                                                 opacity);
+                ldSwitchDrawCircleKnob(&tTarget, &tKnobPaintRegion, knobColor, opacity);
             }
             else
             {
                 ldBaseColor(&tTarget, &tKnobRegion, knobColor, opacity);
             }
 
-            if (ptWidget->use_as__ldBase_t.isCorner && useKnobImageStyle)
+            if (useKnobImageStyle)
             {
                 draw_round_corner_border_with_circle_mask(&tTarget,
                                                           &tKnobPaintRegion,
@@ -501,7 +444,7 @@ void ldSwitch_show(ld_scene_t *ptScene, ldSwitch_t *ptWidget, const arm_2d_tile_
                                                           (arm_2d_border_opacity_t){opacity, opacity, opacity, opacity},
                                                           (arm_2d_corner_opacity_t){opacity, opacity, opacity, opacity});
             }
-            else
+            else if (!ptWidget->use_as__ldBase_t.isCorner)
             {
                 arm_2d_draw_box(&tTarget, &tKnobRegion, 1, ptWidget->borderColor, opacity);
             }

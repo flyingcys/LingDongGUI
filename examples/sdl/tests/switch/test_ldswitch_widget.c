@@ -14,6 +14,10 @@ static uint64_t g_last_value;
 static uint32_t g_color_call_count;
 static uint32_t g_image_call_count;
 static ldColor g_color_calls[8];
+static uint32_t g_capsule_call_count;
+static arm_2d_region_t g_capsule_regions[4];
+static ldColor g_capsule_colours[4];
+static uint8_t g_capsule_opacities[4];
 static const arm_2d_tile_t *g_last_round_box_mask;
 static const arm_2d_tile_t *g_last_round_border_mask;
 static uint32_t g_circle_draw_call_count;
@@ -114,6 +118,22 @@ void ldBaseImage(arm_2d_tile_t *ptTile,
     (void)color;
     (void)opacity;
     g_image_call_count++;
+}
+
+void ldBaseDrawCapsule(arm_2d_tile_t *ptTile,
+                       const arm_2d_region_t *ptRegion,
+                       ldColor color,
+                       uint8_t opacity)
+{
+    (void)ptTile;
+    assert(ptRegion != NULL);
+    if (g_capsule_call_count < (sizeof(g_capsule_regions) / sizeof(g_capsule_regions[0])))
+    {
+        g_capsule_regions[g_capsule_call_count] = *ptRegion;
+        g_capsule_colours[g_capsule_call_count] = color;
+        g_capsule_opacities[g_capsule_call_count] = opacity;
+    }
+    g_capsule_call_count++;
 }
 
 arm_2d_region_t *arm_2d_helper_control_get_absolute_region(arm_2d_control_node_t *ptNode,
@@ -233,7 +253,11 @@ static void reset_render_probe(void)
 {
     g_color_call_count = 0;
     g_image_call_count = 0;
+    g_capsule_call_count = 0;
     memset(g_color_calls, 0, sizeof(g_color_calls));
+    memset(g_capsule_regions, 0, sizeof(g_capsule_regions));
+    memset(g_capsule_colours, 0, sizeof(g_capsule_colours));
+    memset(g_capsule_opacities, 0, sizeof(g_capsule_opacities));
     g_last_round_box_mask = NULL;
     g_last_round_border_mask = NULL;
     g_circle_draw_call_count = 0;
@@ -495,14 +519,15 @@ static void test_pressed_knob_uses_visible_highlight_not_border_color(void)
     widget.borderColor = __RGB(10, 11, 12);
     widget.direction = LD_SWITCH_DIRECTION_HORIZONTAL;
     widget.isPressed = true;
+    widget.use_as__ldBase_t.isCorner = true;
     widget.animProgress = 1000;
     reset_render_probe();
 
     ldSwitch_show(NULL, &widget, &frame, true);
 
-    assert(g_color_call_count >= 3);
-    assert(g_color_calls[g_color_call_count - 1] != widget.borderColor);
-    assert(g_color_calls[g_color_call_count - 1] != widget.knobColor);
+    assert(g_circle_draw_call_count == 1);
+    assert(g_circle_colours[0] == widget.knobColor);
+    assert(g_circle_colours[0] != widget.borderColor);
 }
 
 static void test_knob_uses_circle_mask_when_corner_enabled(void)
@@ -525,7 +550,70 @@ static void test_knob_uses_circle_mask_when_corner_enabled(void)
     ldSwitch_show(NULL, &widget, &frame, true);
 
     assert(g_last_round_box_mask != &c_tileCircleMask);
-    assert(g_circle_draw_call_count == 2);
+    assert(g_circle_draw_call_count == 1);
+}
+
+static void test_corner_switch_track_and_indicator_use_capsule_not_round_box(void)
+{
+    ldSwitch_t widget = {0};
+    arm_2d_tile_t frame = {0};
+
+    widget.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iWidth = 60;
+    widget.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iHeight = 30;
+    widget.use_as__ldBase_t.opacity = 255;
+    widget.offTrackColor = __RGB(1, 2, 3);
+    widget.onTrackColor = __RGB(4, 5, 6);
+    widget.knobColor = GLCD_COLOR_WHITE;
+    widget.borderColor = __RGB(10, 11, 12);
+    widget.direction = LD_SWITCH_DIRECTION_HORIZONTAL;
+    widget.use_as__ldBase_t.isCorner = true;
+    widget.knobPadding = 2;
+    widget.animProgress = 1000;
+    reset_render_probe();
+
+    ldSwitch_show(NULL, &widget, &frame, true);
+
+    assert(g_last_round_box_mask == NULL);
+    assert(g_capsule_call_count == 2);
+    assert(g_capsule_colours[0] == widget.offTrackColor);
+    assert(g_capsule_colours[1] == widget.onTrackColor);
+    assert(g_capsule_opacities[0] == 255);
+    assert(g_capsule_opacities[1] == 255);
+    assert(g_capsule_regions[0].tSize.iWidth == 60);
+    assert(g_capsule_regions[0].tSize.iHeight == 30);
+    assert(g_capsule_regions[1].tSize.iHeight == 30);
+    assert(g_circle_draw_call_count == 1);
+    assert(g_circle_colours[0] == widget.knobColor);
+}
+
+static void test_vertical_corner_switch_track_and_indicator_use_capsule(void)
+{
+    ldSwitch_t widget = {0};
+    arm_2d_tile_t frame = {0};
+
+    widget.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iWidth = 30;
+    widget.use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iHeight = 60;
+    widget.use_as__ldBase_t.opacity = 255;
+    widget.offTrackColor = __RGB(1, 2, 3);
+    widget.onTrackColor = __RGB(4, 5, 6);
+    widget.knobColor = GLCD_COLOR_WHITE;
+    widget.borderColor = __RGB(10, 11, 12);
+    widget.direction = LD_SWITCH_DIRECTION_VERTICAL;
+    widget.use_as__ldBase_t.isCorner = true;
+    widget.knobPadding = 2;
+    widget.animProgress = 1000;
+    reset_render_probe();
+
+    ldSwitch_show(NULL, &widget, &frame, true);
+
+    assert(g_last_round_box_mask == NULL);
+    assert(g_capsule_call_count == 2);
+    assert(g_capsule_regions[0].tSize.iWidth == 30);
+    assert(g_capsule_regions[0].tSize.iHeight == 60);
+    assert(g_capsule_regions[1].tSize.iWidth == 30);
+    assert(g_capsule_colours[0] == widget.offTrackColor);
+    assert(g_capsule_colours[1] == widget.onTrackColor);
+    assert(g_circle_draw_call_count == 1);
 }
 
 static void test_color_knob_draws_true_circle_when_corner_enabled(void)
@@ -548,13 +636,10 @@ static void test_color_knob_draws_true_circle_when_corner_enabled(void)
 
     ldSwitch_show(NULL, &widget, &frame, true);
 
-    assert(g_circle_draw_call_count == 2);
-    assert(g_circle_radii[0] == 14);
-    assert(g_circle_radii[1] == 13);
+    assert(g_circle_draw_call_count == 1);
+    assert(g_circle_radii[0] == 12);
     assert(g_circle_opacities[0] == 255);
-    assert(g_circle_opacities[1] == 255);
-    assert(g_circle_colours[0] == widget.borderColor);
-    assert(g_circle_colours[1] == GLCD_COLOR_WHITE);
+    assert(g_circle_colours[0] == GLCD_COLOR_WHITE);
 }
 
 int main(void)
@@ -572,6 +657,8 @@ int main(void)
     test_show_falls_back_per_layer_when_image_or_mask_missing();
     test_pressed_knob_uses_visible_highlight_not_border_color();
     test_knob_uses_circle_mask_when_corner_enabled();
+    test_corner_switch_track_and_indicator_use_capsule_not_round_box();
+    test_vertical_corner_switch_track_and_indicator_use_capsule();
     test_color_knob_draws_true_circle_when_corner_enabled();
     return 0;
 }

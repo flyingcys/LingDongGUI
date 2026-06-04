@@ -36,8 +36,8 @@ ldSwitchAxisMetrics_t ldSwitchResolveAxisMetrics(int16_t width,
     int16_t padding = (int16_t)knobPadding;
 
     metrics.trackStart = padding;
-    metrics.knobSize = ldSwitchClampSize(minor);
-    metrics.trackLength = major - metrics.knobSize;
+    metrics.knobSize = ldSwitchClampSize(minor - (int16_t)(padding * 2));
+    metrics.trackLength = major - (int16_t)(padding * 2) - metrics.knobSize;
     if (metrics.trackLength < 0)
     {
         metrics.trackLength = 0;
@@ -88,8 +88,6 @@ ldSwitchGeometry_t ldSwitchResolveGeometry(int16_t width,
     ldSwitchAxisMetrics_t metrics;
     uint16_t knobOffset;
     int16_t indicatorLength;
-    int16_t trackWidth;
-    int16_t trackHeight;
     int16_t padding;
     bool isHorizontal;
 
@@ -104,56 +102,54 @@ ldSwitchGeometry_t ldSwitchResolveGeometry(int16_t width,
     metrics = ldSwitchResolveAxisMetrics(width, height, knobPadding, isHorizontal);
     knobOffset = ldSwitchResolveKnobOffset(&metrics, animProgress);
     padding = (int16_t)knobPadding;
-    trackWidth = ldSwitchClampSize(width - (int16_t)(knobPadding * 2U));
-    trackHeight = ldSwitchClampSize(height - (int16_t)(knobPadding * 2U));
-    indicatorLength = (int16_t)(((uint32_t)(isHorizontal ? trackWidth : trackHeight) * animProgress) / 1000U);
+    indicatorLength = (int16_t)(((uint32_t)(isHorizontal ? width : height) * animProgress) / 1000U);
 
     geometry.isHorizontal = isHorizontal;
     geometry.track = (ldSwitchRect_t){
-        .iX = padding,
-        .iY = padding,
-        .iWidth = trackWidth,
-        .iHeight = trackHeight,
+        .iX = 0,
+        .iY = 0,
+        .iWidth = width,
+        .iHeight = height,
     };
 
     if (isHorizontal)
     {
         geometry.knob = (ldSwitchRect_t){
-            .iX = (int16_t)knobOffset,
-            .iY = 0,
+            .iX = (int16_t)(padding + (int16_t)knobOffset),
+            .iY = padding,
             .iWidth = metrics.knobSize,
             .iHeight = metrics.knobSize,
         };
         geometry.indicator = (ldSwitchRect_t){
-            .iX = padding,
-            .iY = padding,
+            .iX = 0,
+            .iY = 0,
             .iWidth = indicatorLength,
-            .iHeight = trackHeight,
+            .iHeight = height,
         };
-        if (geometry.indicator.iWidth > trackWidth)
+        if (geometry.indicator.iWidth > width)
         {
-            geometry.indicator.iWidth = trackWidth;
+            geometry.indicator.iWidth = width;
         }
     }
     else
     {
         geometry.knob = (ldSwitchRect_t){
-            .iX = 0,
-            .iY = (int16_t)(metrics.trackLength - (int16_t)knobOffset),
+            .iX = padding,
+            .iY = (int16_t)(padding + metrics.trackLength - (int16_t)knobOffset),
             .iWidth = metrics.knobSize,
             .iHeight = metrics.knobSize,
         };
         geometry.indicator = (ldSwitchRect_t){
-            .iX = padding,
+            .iX = 0,
             .iY = (indicatorLength > 0)
-                ? (int16_t)(height - padding - indicatorLength)
+                ? (int16_t)(height - indicatorLength)
                 : height,
-            .iWidth = trackWidth,
+            .iWidth = width,
             .iHeight = indicatorLength,
         };
-        if (geometry.indicator.iHeight > trackHeight)
+        if (geometry.indicator.iHeight > height)
         {
-            geometry.indicator.iHeight = trackHeight;
+            geometry.indicator.iHeight = height;
         }
     }
 

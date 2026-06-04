@@ -1,4 +1,7 @@
 #include <assert.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <string.h>
 
 #include "ldBase.h"
 #include "ldLabel.h"
@@ -187,6 +190,152 @@ static void test_alignment_and_hidden_move_helpers(void)
     assert(ldBaseGetY((ldBase_t *)&child) == -20);
 }
 
+static arm_2d_tile_t make_rgb565_tile(uint16_t *buffer, int16_t width, int16_t height)
+{
+    arm_2d_tile_t tile = {0};
+
+    tile.bIsRoot = true;
+    tile.tInfo.tColourInfo.chScheme = ARM_2D_COLOUR_RGB565;
+    tile.tRegion.tSize.iWidth = width;
+    tile.tRegion.tSize.iHeight = height;
+    tile.phwBuffer = buffer;
+    return tile;
+}
+
+static uint16_t pixel_at(const uint16_t *buffer, int16_t stride, int16_t x, int16_t y)
+{
+    return buffer[(y * stride) + x];
+}
+
+static void assert_region_border_clean(const uint16_t *buffer,
+                                       int16_t stride,
+                                       arm_2d_region_t region,
+                                       uint16_t bg)
+{
+    int16_t min_x = (int16_t)(region.tLocation.iX - 1);
+    int16_t max_x = (int16_t)(region.tLocation.iX + region.tSize.iWidth);
+    int16_t min_y = (int16_t)(region.tLocation.iY - 1);
+    int16_t max_y = (int16_t)(region.tLocation.iY + region.tSize.iHeight);
+
+    for (int16_t x = min_x; x <= max_x; ++x)
+    {
+        assert(pixel_at(buffer, stride, x, min_y) == bg);
+        assert(pixel_at(buffer, stride, x, max_y) == bg);
+    }
+    for (int16_t y = min_y; y <= max_y; ++y)
+    {
+        assert(pixel_at(buffer, stride, min_x, y) == bg);
+        assert(pixel_at(buffer, stride, max_x, y) == bg);
+    }
+}
+
+static void assert_capsule_region_has_clean_clip(const uint16_t *buffer,
+                                                 int16_t stride,
+                                                 arm_2d_region_t region,
+                                                 uint16_t bg)
+{
+    /*
+     * ldArm2dDrawCircle expands its internal draw region beyond radius * 2.
+     * The capsule contract requires passing the current cap/shape region so
+     * that antialiasing never bleeds outside the requested capsule bounds.
+     */
+    assert_region_border_clean(buffer, stride, region, bg);
+}
+
+static void draw_capsule_case(arm_2d_region_t region, uint16_t fg, uint16_t bg, uint16_t *buffer, size_t count)
+{
+    arm_2d_tile_t tile;
+
+    for (size_t i = 0; i < count; ++i)
+    {
+        buffer[i] = bg;
+    }
+
+    tile = make_rgb565_tile(buffer, 96, 96);
+    ldBaseDrawCapsule(&tile, &region, fg, 255);
+    arm_2d_op_wait_async(NULL);
+}
+
+static void test_draw_capsule_rejects_circle_primitive_bleed_without_cap_clip(void)
+{
+    enum { WIDTH = 96, HEIGHT = 96 };
+    static uint16_t buffer[WIDTH * HEIGHT];
+    const uint16_t bg = 0x4444;
+    const uint16_t fg = 0xFFE0;
+    arm_2d_region_t region = {{9, 10}, {40, 20}};
+
+    draw_capsule_case(region, fg, bg, buffer, sizeof(buffer) / sizeof(buffer[0]));
+
+    assert_capsule_region_has_clean_clip(buffer, WIDTH, region, bg);
+    assert(pixel_at(buffer, WIDTH, 9, 20) != bg);
+    assert(pixel_at(buffer, WIDTH, 48, 20) != bg);
+}
+
+static void test_draw_capsule_even_horizontal_keeps_full_endpoints_and_clipped_caps(void)
+{
+    enum { WIDTH = 96, HEIGHT = 96 };
+    static uint16_t buffer[WIDTH * HEIGHT];
+    const uint16_t bg = 0x1111;
+    const uint16_t fg = 0x07E0;
+    arm_2d_region_t region = {{17, 19}, {60, 30}};
+
+    draw_capsule_case(region, fg, bg, buffer, sizeof(buffer) / sizeof(buffer[0]));
+
+    assert_capsule_region_has_clean_clip(buffer, WIDTH, region, bg);
+    /* These midpoint samples fail if even-size caps regress to (diameter - 1) / 2. */
+    assert(pixel_at(buffer, WIDTH, 17, 34) != bg);
+    assert(pixel_at(buffer, WIDTH, 76, 34) != bg);
+    assert(pixel_at(buffer, WIDTH, 32, 19) != bg);
+    assert(pixel_at(buffer, WIDTH, 61, 48) != bg);
+    assert(pixel_at(buffer, WIDTH, 17, 19) == bg);
+    assert(pixel_at(buffer, WIDTH, 76, 19) == bg);
+    assert(pixel_at(buffer, WIDTH, 17, 48) == bg);
+    assert(pixel_at(buffer, WIDTH, 76, 48) == bg);
+}
+
+static void test_draw_capsule_even_vertical_keeps_full_endpoints_and_clipped_caps(void)
+{
+    enum { WIDTH = 96, HEIGHT = 96 };
+    static uint16_t buffer[WIDTH * HEIGHT];
+    const uint16_t bg = 0x2222;
+    const uint16_t fg = 0x001F;
+    arm_2d_region_t region = {{23, 11}, {30, 60}};
+
+    draw_capsule_case(region, fg, bg, buffer, sizeof(buffer) / sizeof(buffer[0]));
+
+    assert_capsule_region_has_clean_clip(buffer, WIDTH, region, bg);
+    /* These midpoint samples fail if even-size caps regress to (diameter - 1) / 2. */
+    assert(pixel_at(buffer, WIDTH, 38, 11) != bg);
+    assert(pixel_at(buffer, WIDTH, 38, 70) != bg);
+    assert(pixel_at(buffer, WIDTH, 23, 26) != bg);
+    assert(pixel_at(buffer, WIDTH, 52, 55) != bg);
+    assert(pixel_at(buffer, WIDTH, 23, 11) == bg);
+    assert(pixel_at(buffer, WIDTH, 52, 11) == bg);
+    assert(pixel_at(buffer, WIDTH, 23, 70) == bg);
+    assert(pixel_at(buffer, WIDTH, 52, 70) == bg);
+}
+
+static void test_draw_capsule_square_degenerates_to_clipped_circle(void)
+{
+    enum { WIDTH = 96, HEIGHT = 96 };
+    static uint16_t buffer[WIDTH * HEIGHT];
+    const uint16_t bg = 0x3333;
+    const uint16_t fg = 0xF800;
+    arm_2d_region_t region = {{31, 37}, {24, 24}};
+
+    draw_capsule_case(region, fg, bg, buffer, sizeof(buffer) / sizeof(buffer[0]));
+
+    assert_capsule_region_has_clean_clip(buffer, WIDTH, region, bg);
+    assert(pixel_at(buffer, WIDTH, 43, 37) != bg);
+    assert(pixel_at(buffer, WIDTH, 43, 60) != bg);
+    assert(pixel_at(buffer, WIDTH, 31, 49) != bg);
+    assert(pixel_at(buffer, WIDTH, 54, 49) != bg);
+    assert(pixel_at(buffer, WIDTH, 31, 37) == bg);
+    assert(pixel_at(buffer, WIDTH, 54, 37) == bg);
+    assert(pixel_at(buffer, WIDTH, 31, 60) == bg);
+    assert(pixel_at(buffer, WIDTH, 54, 60) == bg);
+}
+
 int main(void)
 {
     test_calendar_helpers();
@@ -194,5 +343,9 @@ int main(void)
     test_visibility_selection_and_basic_getters();
     test_location_and_region_helpers();
     test_alignment_and_hidden_move_helpers();
+    test_draw_capsule_rejects_circle_primitive_bleed_without_cap_clip();
+    test_draw_capsule_even_horizontal_keeps_full_endpoints_and_clipped_caps();
+    test_draw_capsule_even_vertical_keeps_full_endpoints_and_clipped_caps();
+    test_draw_capsule_square_degenerates_to_clipped_circle();
     return 0;
 }

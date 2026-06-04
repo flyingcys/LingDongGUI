@@ -22,6 +22,7 @@
 #include "ldSwitch.h"
 #include "ldWindow.h"
 #include "ldWindowLayoutInternal.h"
+#include "ldArm2dUserDrawCircle.h"
 #include "arm_2d_disp_adapter_0.h"
 #include <stdarg.h>
 #if LD_MEM_MODE == MEM_MODE_TLFS
@@ -346,6 +347,177 @@ void *ldBaseGetWidget(arm_2d_control_node_t *ptNodeRoot,uint16_t nameId)
 void ldBaseColor(arm_2d_tile_t *ptTile, arm_2d_region_t *ptRegion, ldColor color, uint8_t opacity)
 {
     arm_2d_fill_colour_with_opacity(ptTile, ptRegion, (__arm_2d_color_t){color}, opacity);
+}
+
+void ldBaseDrawCapsule(arm_2d_tile_t *ptTile, const arm_2d_region_t *ptRegion, ldColor color, uint8_t opacity)
+{
+    const arm_2d_region_t *ptDrawRegion = ptRegion;
+    arm_2d_region_t tMiddleRegion;
+    arm_2d_location_t tPivot;
+    ld_arm_2d_user_draw_circle_api_params_t tParams;
+    arm_2d_region_t tDefaultRegion;
+    int16_t width;
+    int16_t height;
+    int16_t diameter;
+    int16_t radius;
+
+    if (ptTile == NULL)
+    {
+        return;
+    }
+
+    if (ptDrawRegion == NULL)
+    {
+        tDefaultRegion = ptTile->tRegion;
+        ptDrawRegion = &tDefaultRegion;
+    }
+
+    width = ptDrawRegion->tSize.iWidth;
+    height = ptDrawRegion->tSize.iHeight;
+    if ((width <= 0) || (height <= 0))
+    {
+        return;
+    }
+
+    diameter = MIN(width, height);
+    radius = (int16_t)(diameter / 2);
+
+    if (width == height)
+    {
+        tPivot = (arm_2d_location_t){
+            .iX = (int16_t)(ptDrawRegion->tLocation.iX + (width / 2)),
+            .iY = (int16_t)(ptDrawRegion->tLocation.iY + (height / 2)),
+        };
+        tParams = (ld_arm_2d_user_draw_circle_api_params_t){
+            .ptPivot = &tPivot,
+            .iRadius = radius,
+            .bAntiAlias = true,
+        };
+        ldArm2dDrawCircle(NULL,
+                          ptTile,
+                          ptDrawRegion,
+                          &tParams,
+                          (arm_2d_color_rgb565_t){color},
+                          opacity);
+        return;
+    }
+
+    if (width > height)
+    {
+        arm_2d_region_t tLeftCapRegion = {
+            .tLocation = ptDrawRegion->tLocation,
+            .tSize = {
+                .iWidth = height,
+                .iHeight = height,
+            },
+        };
+        arm_2d_region_t tRightCapRegion = {
+            .tLocation = {
+                .iX = (int16_t)(ptDrawRegion->tLocation.iX + width - height),
+                .iY = ptDrawRegion->tLocation.iY,
+            },
+            .tSize = {
+                .iWidth = height,
+                .iHeight = height,
+            },
+        };
+        tMiddleRegion = (arm_2d_region_t){
+            .tLocation = {
+                .iX = (int16_t)(ptDrawRegion->tLocation.iX + (height / 2)),
+                .iY = ptDrawRegion->tLocation.iY,
+            },
+            .tSize = {
+                .iWidth = (int16_t)(width - height),
+                .iHeight = height,
+            },
+        };
+        if (tMiddleRegion.tSize.iWidth > 0)
+        {
+            ldBaseColor(ptTile, &tMiddleRegion, color, opacity);
+        }
+
+        tPivot = (arm_2d_location_t){
+            .iX = (int16_t)(ptDrawRegion->tLocation.iX + (height / 2)),
+            .iY = (int16_t)(ptDrawRegion->tLocation.iY + (height / 2)),
+        };
+        tParams = (ld_arm_2d_user_draw_circle_api_params_t){
+            .ptPivot = &tPivot,
+            .iRadius = radius,
+            .bAntiAlias = true,
+        };
+        ldArm2dDrawCircle(NULL,
+                          ptTile,
+                          &tLeftCapRegion,
+                          &tParams,
+                          (arm_2d_color_rgb565_t){color},
+                          opacity);
+
+        tPivot.iX = (int16_t)(ptDrawRegion->tLocation.iX + width - (height / 2) - 1);
+        ldArm2dDrawCircle(NULL,
+                          ptTile,
+                          &tRightCapRegion,
+                          &tParams,
+                          (arm_2d_color_rgb565_t){color},
+                          opacity);
+        return;
+    }
+
+    arm_2d_region_t tTopCapRegion = {
+        .tLocation = ptDrawRegion->tLocation,
+        .tSize = {
+            .iWidth = width,
+            .iHeight = width,
+        },
+    };
+    arm_2d_region_t tBottomCapRegion = {
+        .tLocation = {
+            .iX = ptDrawRegion->tLocation.iX,
+            .iY = (int16_t)(ptDrawRegion->tLocation.iY + height - width),
+        },
+        .tSize = {
+            .iWidth = width,
+            .iHeight = width,
+        },
+    };
+
+    tMiddleRegion = (arm_2d_region_t){
+        .tLocation = {
+            .iX = ptDrawRegion->tLocation.iX,
+            .iY = (int16_t)(ptDrawRegion->tLocation.iY + (width / 2)),
+        },
+        .tSize = {
+            .iWidth = width,
+            .iHeight = (int16_t)(height - width),
+        },
+    };
+    if (tMiddleRegion.tSize.iHeight > 0)
+    {
+        ldBaseColor(ptTile, &tMiddleRegion, color, opacity);
+    }
+
+    tPivot = (arm_2d_location_t){
+        .iX = (int16_t)(ptDrawRegion->tLocation.iX + (width / 2)),
+        .iY = (int16_t)(ptDrawRegion->tLocation.iY + (width / 2)),
+    };
+    tParams = (ld_arm_2d_user_draw_circle_api_params_t){
+        .ptPivot = &tPivot,
+        .iRadius = radius,
+        .bAntiAlias = true,
+    };
+    ldArm2dDrawCircle(NULL,
+                      ptTile,
+                      &tTopCapRegion,
+                      &tParams,
+                      (arm_2d_color_rgb565_t){color},
+                      opacity);
+
+    tPivot.iY = (int16_t)(ptDrawRegion->tLocation.iY + height - (width / 2) - 1);
+    ldArm2dDrawCircle(NULL,
+                      ptTile,
+                      &tBottomCapRegion,
+                      &tParams,
+                      (arm_2d_color_rgb565_t){color},
+                      opacity);
 }
 
 void ldBaseImage(arm_2d_tile_t *ptTile, arm_2d_region_t *ptRegion, arm_2d_tile_t *ptImgTile, arm_2d_tile_t *ptMaskTile, ldColor color, uint8_t opacity)
