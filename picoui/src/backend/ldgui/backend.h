@@ -341,6 +341,7 @@ int picoui_backend_widget_unbind_host(void *backend_widget);
  */
 
 void *picoui_backend_create_window(struct picoui_app *app, const char *id);
+void *picoui_backend_create_child_window(void *parent, const char *id);
 
 /**
  * @brief Create backend for background

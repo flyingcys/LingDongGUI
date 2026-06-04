@@ -110,6 +110,56 @@ void *picoui_backend_create_window(struct picoui_app *app, const char *id)
     return picoui_backend_create_root_widget(app, id, PICOUI_BACKEND_WIDGET_WINDOW);
 }
 
+void *picoui_backend_create_child_window(void *parent, const char *id)
+{
+    struct picoui_backend_window_host *host;
+    struct picoui_backend_widget *widget;
+    struct picoui_backend_widget *parent_widget = parent;
+    struct picoui_backend_app_state *app_state;
+    ldWindow_t *ld_window;
+    uint16_t name_id;
+
+    if (parent == 0 || id == 0) {
+        return 0;
+    }
+
+    app_state = picoui_backend_window_get_app_state(parent_widget->owner);
+    if (app_state == NULL || app_state->ld_scene == NULL || parent_widget->ld_widget == NULL) {
+        return 0;
+    }
+
+    host = calloc(1, sizeof(*host));
+    if (host == 0) {
+        return 0;
+    }
+    widget = &host->widget;
+
+    name_id = ++app_state->next_ld_name_id;
+    ld_window = ldWindow_init(app_state->ld_scene,
+                              NULL,
+                              name_id,
+                              parent_widget->ld_name_id,
+                              0,
+                              0,
+                              160,
+                              80);
+    if (ld_window == NULL) {
+        free(host);
+        return 0;
+    }
+
+    widget->id = id;
+    widget->kind = PICOUI_BACKEND_WIDGET_WINDOW;
+    widget->theme = parent_widget->theme;
+    widget->ld_widget = ld_window;
+    widget->ld_name_id = name_id;
+    if (picoui_backend_widget_attach_child(parent, widget) != 0) {
+        free(host);
+        return 0;
+    }
+    return widget;
+}
+
 /**
  * @brief Create backend for background
  *

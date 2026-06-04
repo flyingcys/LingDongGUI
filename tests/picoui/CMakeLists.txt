@@ -16,6 +16,7 @@ set(PICOUI_UNIT_TESTS
     unit/test_picoui_qrcode.c
     unit/test_picoui_animation.c
     unit/test_picoui_app_lifecycle.c
+    unit/test_picoui_app_timer.c
     unit/test_picoui_image.c
     unit/test_picoui_label.c
     unit/test_picoui_message_box.c

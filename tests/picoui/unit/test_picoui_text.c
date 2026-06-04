@@ -5,6 +5,17 @@
 #include <assert.h>
 #include <string.h>
 
+static void *g_test_text_alloc_fail_once_result = (void *)1;
+
+void *ldCalloc(uint32_t num, uint32_t size)
+{
+    if (g_test_text_alloc_fail_once_result == NULL) {
+        g_test_text_alloc_fail_once_result = (void *)1;
+        return NULL;
+    }
+    return calloc((size_t)num, (size_t)size);
+}
+
 static void test_text_create_and_ld_mapping(struct picoui_window *win)
 {
     struct picoui_text *text = picoui_text_create(win, "text_test");
@@ -60,6 +71,23 @@ static void test_text_rejects_null_args(struct picoui_window *win)
     assert(picoui_text_set_static_text(0, "x") == -1);
 }
 
+static void test_text_set_text_handles_alloc_failure_without_crash(struct picoui_window *win)
+{
+    struct picoui_text *text = picoui_text_create(win, "text_alloc_failure");
+    struct picoui_backend_widget *backend;
+    ldText_t *ld_text;
+
+    assert(text != 0);
+    backend = (struct picoui_backend_widget *)text->widget.backend_widget;
+    assert(backend != 0);
+    ld_text = (ldText_t *)backend->ld_widget;
+    assert(ld_text != 0);
+
+    g_test_text_alloc_fail_once_result = NULL;
+    assert(picoui_text_set_text(text, "oom") == 0);
+    assert(ld_text->pStr == NULL);
+}
+
 int main(void)
 {
     struct picoui_app *app = picoui_app_create();
@@ -73,6 +101,7 @@ int main(void)
     test_text_scroll_seek_and_move(win);
     test_text_create_with_props_sets_content(win);
     test_text_rejects_null_args(win);
+    test_text_set_text_handles_alloc_failure_without_crash(win);
 
     picoui_app_destroy(app);
     return 0;

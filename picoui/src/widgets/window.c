@@ -116,6 +116,45 @@ struct picoui_window *picoui_window_create(struct picoui_app *app, const char *i
     return window;
 }
 
+struct picoui_window *picoui_window_create_child(struct picoui_window *parent, const char *id)
+{
+    struct picoui_window *window;
+    void *backend_widget;
+    struct picoui_backend_widget *parent_backend;
+
+    if (parent == 0 || id == 0 || parent->widget.backend_widget == 0) {
+        return 0;
+    }
+
+    parent_backend = (struct picoui_backend_widget *)parent->widget.backend_widget;
+    backend_widget = picoui_backend_create_child_window(parent_backend, id);
+    if (backend_widget == 0) {
+        return 0;
+    }
+
+    window = calloc(1, sizeof(*window));
+    if (window == 0) {
+        free(backend_widget);
+        return 0;
+    }
+
+    window->id = id;
+    window->widget.backend_widget = backend_widget;
+    window->widget.visible = 1;
+    window->widget.enabled = 1;
+    window->flex_flow = PICOUI_FLEX_FLOW_ROW;
+    window->flex_main_align = PICOUI_ALIGN_START;
+    window->flex_cross_align = PICOUI_ALIGN_START;
+    window->flex_track_align = PICOUI_ALIGN_START;
+    window->grid_col_align = PICOUI_ALIGN_START;
+    window->grid_row_align = PICOUI_ALIGN_START;
+    if (picoui_backend_widget_bind_host(window->widget.backend_widget, &window->widget) != 0) {
+        free(window);
+        return 0;
+    }
+    return window;
+}
+
 /**
  * @brief Create window widget with properties
  *
