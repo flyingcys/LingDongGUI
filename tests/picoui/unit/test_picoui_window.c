@@ -41,13 +41,15 @@ static void test_window_padding_group_round_trip(struct picoui_window *win)
 static void test_window_widget_base_api_round_trip(struct picoui_window *win)
 {
     struct picoui_backend_widget *backend;
+    struct picoui_display_config display = {0};
     ldBase_t *ld_base;
 
     backend = (struct picoui_backend_widget *)win->widget.backend_widget;
     ld_base = (ldBase_t *)backend->ld_widget;
 
-    assert(ld_base->use_as__arm_2d_control_node_t.tRegion.tSize.iWidth == LD_CFG_SCREEN_WIDTH);
-    assert(ld_base->use_as__arm_2d_control_node_t.tRegion.tSize.iHeight == LD_CFG_SCREEN_HEIGHT);
+    assert(picoui_display_get_config(backend->owner, &display) == 0);
+    assert(ld_base->use_as__arm_2d_control_node_t.tRegion.tSize.iWidth == display.width);
+    assert(ld_base->use_as__arm_2d_control_node_t.tRegion.tSize.iHeight == display.height);
 
     assert(picoui_widget_set_size(&win->widget, 200, 120) == 0);
     assert(ld_base->use_as__arm_2d_control_node_t.tRegion.tSize.iWidth == 200);

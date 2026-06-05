@@ -1,10 +1,17 @@
 # PicoUI Port Layer Implementation Plan
 
+> 完成状态（2026-06-05）：P1 已按当前 spec 落地并完成验证。以当前 worktree 证据为准：
+>
+> - `ctest --test-dir build -L 'picoui' --output-on-failure` -> `100% tests passed, 0 tests failed out of 46`
+> - `ctest --test-dir build/picoui-runtime -R 'check_picoui_runtime|check_picoui_visible_ui|check_picoui_backend_mapping' --output-on-failure` -> `100% tests passed, 0 tests failed out of 3`
+>
+> 说明：下方 checkbox 保留为实现过程记录，不再代表当前完成态。当前完成态以上述命令与代码目录事实为准。
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Build the first PicoUI `port` layer so SDL adapts through `picoui/port/sdl/` instead of `examples/sdl`, while LingDongGUI/ARM-2D remain backend-private.
 
-**Architecture:** Add small PicoUI port contracts for display, input, tick, and OS under `picoui/include/picoui/port*.h` and `picoui/src/port/`. Add `picoui/port/sdl/` as the SDL host port. Refactor `picoui/src/backend/ldgui/backend_app.c` to consume PicoUI port state instead of owning SDL dimensions, input, tick, and delay directly.
+**Architecture:** Add small PicoUI port contracts for display, input, tick, and OS under `picoui/include/picoui/{display,indev,tick,osal}.h` and `picoui/src/{display,indev,tick,osal}/`. Add `picoui/port/sdl/` as the SDL host port. Refactor `picoui/src/backend/ldgui/backend_app.c` to consume PicoUI port state instead of owning SDL dimensions, input, tick, and delay directly.
 
 **Tech Stack:** C11, CMake, SDL2, PicoUI core/backend, existing `rtk cmake` and `rtk ctest` commands.
 
@@ -15,16 +22,16 @@
 新增：
 
 - `picoui/include/picoui/port.h`：聚合 display/input/tick/os port header。
-- `picoui/include/picoui/port/display.h`：display config、area、color format、flush callback。
-- `picoui/include/picoui/port/input.h`：pointer/key input push 与 readback。
-- `picoui/include/picoui/port/tick.h`：tick source 注册与读取。
-- `picoui/include/picoui/port/os.h`：lock/delay callback 注册与调用。
-- `picoui/src/port/display.c`：display state 存取。
-- `picoui/src/port/input.c`：input state 存取。
-- `picoui/src/port/tick.c`：tick source 存取。
-- `picoui/src/port/os.c`：OS callback 存取。
-- `picoui/port/sdl/picoui_port_sdl.c`：SDL port attach。
-- `picoui/port/sdl/picoui_port_sdl.h`：SDL port public attach header。
+- `picoui/include/picoui/display.h`：display config、area、color format、flush callback。
+- `picoui/include/picoui/indev.h`：pointer/key input push 与 readback。
+- `picoui/include/picoui/tick.h`：tick source 注册与读取。
+- `picoui/include/picoui/osal.h`：lock/delay callback 注册与调用。
+- `picoui/src/display/display.c`：display state 存取。
+- `picoui/src/indev/indev.c`：input state 存取。
+- `picoui/src/tick/tick.c`：tick source 存取。
+- `picoui/src/osal/osal.c`：OS callback 存取。
+- `picoui/port/sdl/sdl.c`：SDL port attach。
+- `picoui/include/picoui/port/sdl.h`：SDL port public attach header。
 - `tests/picoui/unit/test_picoui_port_display.c`：display contract test。
 - `tests/picoui/unit/test_picoui_port_input.c`：input contract test。
 - `tests/picoui/unit/test_picoui_port_tick_os.c`：tick/OS contract test。
@@ -34,7 +41,7 @@
 - `picoui/include/picoui/picoui.h`：include `picoui/port.h`。
 - `picoui/src/core/internal.h`：给 `struct picoui_app` 增加 port state。
 - `picoui/src/backend/ldgui/backend_app.c`：消费 display/input/tick/os port 状态。
-- `cmake/LingDongGUI.cmake`：把 `picoui/src/port/*.c` 加入 `picoui_core`，把 `picoui/port/sdl/*.c` 加入 runtime backend target。
+- `cmake/LingDongGUI.cmake`：把 `picoui/src/display/*.c`、`picoui/src/indev/*.c`、`picoui/src/tick/*.c`、`picoui/src/osal/*.c` 加入 `picoui_core`，把 `picoui/port/sdl/*.c` 加入 runtime backend target。
 - `tests/picoui/CMakeLists.txt`：注册 3 个 port unit test。
 - `docs/picoui-serial/a-0.14/2026-06-05-picoui-port-boundary-audit.md`：实现完成后更新 P1 状态。
 - `docs/picoui-serial/a-0.14-线计划索引.md`：实现完成后更新下一步状态。
@@ -44,9 +51,9 @@
 ### Task 1: Display Port Contract
 
 **Files:**
-- Create: `picoui/include/picoui/port/display.h`
+- Create: `picoui/include/picoui/display.h`
 - Create: `picoui/include/picoui/port.h`
-- Create: `picoui/src/port/display.c`
+- Create: `picoui/src/display/display.c`
 - Modify: `picoui/include/picoui/picoui.h`
 - Modify: `picoui/src/core/internal.h`
 - Modify: `cmake/LingDongGUI.cmake`
@@ -153,7 +160,7 @@ Expected: compile fails because `picoui_display_config` and `picoui_display_*` d
 
 - [ ] **Step 3: Add display public headers**
 
-Create `picoui/include/picoui/port/display.h`:
+Create `picoui/include/picoui/display.h`:
 
 ```c
 #ifndef PICOUI_PORT_DISPLAY_H
@@ -202,7 +209,7 @@ Create `picoui/include/picoui/port.h`:
 #ifndef PICOUI_PORT_H
 #define PICOUI_PORT_H
 
-#include "picoui/port/display.h"
+#include "picoui/display.h"
 
 #endif
 ```
@@ -234,16 +241,16 @@ Add to `struct picoui_app`:
 Also include the display header near other public headers:
 
 ```c
-#include "picoui/port/display.h"
+#include "picoui/display.h"
 ```
 
 - [ ] **Step 5: Implement display state**
 
-Create `picoui/src/port/display.c`:
+Create `picoui/src/display/display.c`:
 
 ```c
 #include "internal.h"
-#include "picoui/port/display.h"
+#include "picoui/display.h"
 
 static const struct picoui_display_config g_picoui_default_display_config = {
     .width = 480,
@@ -316,7 +323,7 @@ int picoui_display_set_flush_callback(struct picoui_app *app,
 In `cmake/LingDongGUI.cmake`, add to `picoui_core` sources:
 
 ```cmake
-        ${LD_REPO_ROOT}/picoui/src/port/display.c
+        ${LD_REPO_ROOT}/picoui/src/display/display.c
 ```
 
 - [ ] **Step 7: Verify display test passes**
@@ -335,9 +342,9 @@ Expected: build succeeds and ctest reports `100% tests passed`.
 ### Task 2: Input Port Contract
 
 **Files:**
-- Create: `picoui/include/picoui/port/input.h`
+- Create: `picoui/include/picoui/indev.h`
 - Modify: `picoui/include/picoui/port.h`
-- Create: `picoui/src/port/input.c`
+- Create: `picoui/src/indev/indev.c`
 - Modify: `picoui/src/core/internal.h`
 - Modify: `cmake/LingDongGUI.cmake`
 - Create: `tests/picoui/unit/test_picoui_port_input.c`
@@ -445,7 +452,7 @@ Expected: compile fails because `picoui_input_*` does not exist.
 
 - [ ] **Step 3: Add input header**
 
-Create `picoui/include/picoui/port/input.h`:
+Create `picoui/include/picoui/indev.h`:
 
 ```c
 #ifndef PICOUI_PORT_INPUT_H
@@ -481,7 +488,7 @@ int picoui_input_get_key(const struct picoui_app *app,
 Update `picoui/include/picoui/port.h`:
 
 ```c
-#include "picoui/port/input.h"
+#include "picoui/indev.h"
 ```
 
 - [ ] **Step 4: Add input state to app**
@@ -489,7 +496,7 @@ Update `picoui/include/picoui/port.h`:
 In `picoui/src/core/internal.h`, include:
 
 ```c
-#include "picoui/port/input.h"
+#include "picoui/indev.h"
 ```
 
 Add:
@@ -512,11 +519,11 @@ Add to `struct picoui_app`:
 
 - [ ] **Step 5: Implement input state**
 
-Create `picoui/src/port/input.c`:
+Create `picoui/src/indev/indev.c`:
 
 ```c
 #include "internal.h"
-#include "picoui/port/input.h"
+#include "picoui/indev.h"
 
 static int picoui_input_key_is_valid(enum picoui_input_key key)
 {
@@ -578,7 +585,7 @@ int picoui_input_get_key(const struct picoui_app *app,
 In `cmake/LingDongGUI.cmake`, add to `picoui_core` sources:
 
 ```cmake
-        ${LD_REPO_ROOT}/picoui/src/port/input.c
+        ${LD_REPO_ROOT}/picoui/src/indev/indev.c
 ```
 
 - [ ] **Step 7: Verify input test passes**
@@ -597,11 +604,11 @@ Expected: build succeeds and ctest reports `100% tests passed`.
 ### Task 3: Tick And OS Port Contracts
 
 **Files:**
-- Create: `picoui/include/picoui/port/tick.h`
-- Create: `picoui/include/picoui/port/os.h`
+- Create: `picoui/include/picoui/tick.h`
+- Create: `picoui/include/picoui/osal.h`
 - Modify: `picoui/include/picoui/port.h`
-- Create: `picoui/src/port/tick.c`
-- Create: `picoui/src/port/os.c`
+- Create: `picoui/src/tick/tick.c`
+- Create: `picoui/src/osal/osal.c`
 - Modify: `picoui/src/core/internal.h`
 - Modify: `cmake/LingDongGUI.cmake`
 - Create: `tests/picoui/unit/test_picoui_port_tick_os.c`
@@ -720,7 +727,7 @@ Expected: compile fails because `picoui_tick_*` and `picoui_os_*` do not exist.
 
 - [ ] **Step 3: Add tick and OS headers**
 
-Create `picoui/include/picoui/port/tick.h`:
+Create `picoui/include/picoui/tick.h`:
 
 ```c
 #ifndef PICOUI_PORT_TICK_H
@@ -738,7 +745,7 @@ unsigned int picoui_tick_get(struct picoui_app *app);
 #endif
 ```
 
-Create `picoui/include/picoui/port/os.h`:
+Create `picoui/include/picoui/osal.h`:
 
 ```c
 #ifndef PICOUI_PORT_OS_H
@@ -766,8 +773,8 @@ void picoui_os_delay(struct picoui_app *app, unsigned int ms);
 Update `picoui/include/picoui/port.h`:
 
 ```c
-#include "picoui/port/tick.h"
-#include "picoui/port/os.h"
+#include "picoui/tick.h"
+#include "picoui/osal.h"
 ```
 
 - [ ] **Step 4: Add tick/OS state to app**
@@ -775,8 +782,8 @@ Update `picoui/include/picoui/port.h`:
 In `picoui/src/core/internal.h`, include:
 
 ```c
-#include "picoui/port/tick.h"
-#include "picoui/port/os.h"
+#include "picoui/tick.h"
+#include "picoui/osal.h"
 ```
 
 Add:
@@ -805,11 +812,11 @@ Add to `struct picoui_app`:
 
 - [ ] **Step 5: Implement tick and OS state**
 
-Create `picoui/src/port/tick.c`:
+Create `picoui/src/tick/tick.c`:
 
 ```c
 #include "internal.h"
-#include "picoui/port/tick.h"
+#include "picoui/tick.h"
 
 int picoui_tick_set_source(struct picoui_app *app,
                            picoui_tick_get_cb_t callback,
@@ -832,11 +839,11 @@ unsigned int picoui_tick_get(struct picoui_app *app)
 }
 ```
 
-Create `picoui/src/port/os.c`:
+Create `picoui/src/osal/osal.c`:
 
 ```c
 #include "internal.h"
-#include "picoui/port/os.h"
+#include "picoui/osal.h"
 
 int picoui_os_set_lock_callbacks(struct picoui_app *app,
                                  picoui_os_lock_cb_t enter,
@@ -891,8 +898,8 @@ void picoui_os_delay(struct picoui_app *app, unsigned int ms)
 In `cmake/LingDongGUI.cmake`, add to `picoui_core` sources:
 
 ```cmake
-        ${LD_REPO_ROOT}/picoui/src/port/tick.c
-        ${LD_REPO_ROOT}/picoui/src/port/os.c
+        ${LD_REPO_ROOT}/picoui/src/tick/tick.c
+        ${LD_REPO_ROOT}/picoui/src/osal/osal.c
 ```
 
 - [ ] **Step 7: Verify tick/OS test passes**
@@ -911,8 +918,8 @@ Expected: build succeeds and ctest reports `100% tests passed`.
 ### Task 4: SDL Port Attach
 
 **Files:**
-- Create: `picoui/port/sdl/picoui_port_sdl.h`
-- Create: `picoui/port/sdl/picoui_port_sdl.c`
+- Create: `picoui/include/picoui/port/sdl.h`
+- Create: `picoui/port/sdl/sdl.c`
 - Modify: `cmake/LingDongGUI.cmake`
 - Create: `tests/picoui/unit/test_picoui_port_sdl.c`
 - Modify: `tests/picoui/CMakeLists.txt`
@@ -923,7 +930,7 @@ Create `tests/picoui/unit/test_picoui_port_sdl.c`:
 
 ```c
 #include "picoui/picoui.h"
-#include "picoui_port_sdl.h"
+#include "picoui/port/sdl.h"
 
 #include <assert.h>
 
@@ -971,11 +978,11 @@ Run:
 rtk cmake --build build --target test_picoui_port_sdl
 ```
 
-Expected: compile fails because `picoui_port_sdl.h` and `picoui_port_sdl_attach()` do not exist.
+Expected: compile fails because `picoui/port/sdl.h` and `picoui_port_sdl_attach()` do not exist.
 
 - [ ] **Step 3: Add SDL port header**
 
-Create `picoui/port/sdl/picoui_port_sdl.h`:
+Create `picoui/include/picoui/port/sdl.h`:
 
 ```c
 #ifndef PICOUI_PORT_SDL_H
@@ -990,12 +997,12 @@ int picoui_port_sdl_attach(struct picoui_app *app);
 
 - [ ] **Step 4: Add SDL port implementation**
 
-Create `picoui/port/sdl/picoui_port_sdl.c`:
+Create `picoui/port/sdl/sdl.c`:
 
 ```c
 #include "picoui/app.h"
 #include "picoui/port.h"
-#include "picoui_port_sdl.h"
+#include "picoui/port/sdl.h"
 
 #include <SDL.h>
 
@@ -1043,7 +1050,7 @@ In `cmake/LingDongGUI.cmake`, add the SDL port source and include directory to b
 
 ```cmake
         target_sources(${LD_PICOUI_BACKEND_TARGET} PRIVATE
-            ${LD_REPO_ROOT}/picoui/port/sdl/picoui_port_sdl.c
+            ${LD_REPO_ROOT}/picoui/port/sdl/sdl.c
         )
         target_include_directories(${LD_PICOUI_BACKEND_TARGET} PUBLIC
             ${LD_REPO_ROOT}/picoui/port/sdl
@@ -1200,7 +1207,7 @@ Expected: all selected tests pass.
 In `picoui/src/core/app.c`, do not include SDL headers. Instead, keep core backend-neutral. In `backend_app.c`, include:
 
 ```c
-#include "picoui_port_sdl.h"
+#include "picoui/port/sdl.h"
 ```
 
 In `picoui_backend_app_init()`, after `app_state->runtime_state = state;`, attach SDL only when the runtime target enables the compile definition:
@@ -1229,7 +1236,7 @@ Run:
 rtk ctest --test-dir build -R '^check_picoui_public_api$' --output-on-failure
 ```
 
-Expected: PASS. If it fails because `picoui/include/picoui/port/*.h` exposes `ld*`, `arm_2d_*`, or `SIGNAL_*`, remove those identifiers from public headers.
+Expected: PASS. If it fails because `picoui/include/picoui/{display,indev,tick,osal}.h.h` exposes `ld*`, `arm_2d_*`, or `SIGNAL_*`, remove those identifiers from public headers.
 
 - [ ] **Step 4: Run focused port tests**
 
@@ -1301,6 +1308,6 @@ rtk git diff --stat
 Expected:
 
 - All selected tests pass.
-- New files live under `picoui/include/picoui/port*`, `picoui/src/port/`, and `picoui/port/sdl/`.
+- New files live under `picoui/include/picoui/port*`, `picoui/src/display|indev|tick|osal/`, and `picoui/port/sdl/`.
 - No new PicoUI SDL port implementation lives under `examples/sdl`.
 - Public headers do not expose `ld*`, `arm_2d_*`, or `SIGNAL_*`.

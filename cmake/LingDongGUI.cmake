@@ -47,6 +47,7 @@ set(LD_ARM2D_PROGRESS_WHEEL_ASSET_SOURCES
 )
 set(LD_ARM2D_CLOCK_ASSET_SOURCES
     "${LD_ARM2D_ASSET_DIR}/arm_2d_asset_pointer_sec.c"
+    "${LD_ARM2D_ASSET_DIR}/arm_2d_asset_clockface.c"
 )
 
 set(LD_COMMON_INCLUDE_DIRS
@@ -156,6 +157,10 @@ function(ld_define_core_targets)
         ${LD_REPO_ROOT}/picoui/src/core/widget.c
         ${LD_REPO_ROOT}/picoui/src/core/event.c
         ${LD_REPO_ROOT}/picoui/src/core/resource.c
+        ${LD_REPO_ROOT}/picoui/src/display/display.c
+        ${LD_REPO_ROOT}/picoui/src/indev/indev.c
+        ${LD_REPO_ROOT}/picoui/src/tick/tick.c
+        ${LD_REPO_ROOT}/picoui/src/osal/osal.c
         ${LD_REPO_ROOT}/picoui/src/theme/theme.c
         ${LD_REPO_ROOT}/picoui/src/layout/flex.c
         ${LD_REPO_ROOT}/picoui/src/layout/grid.c
@@ -241,6 +246,7 @@ function(ld_define_core_targets)
             ${LD_REPO_ROOT}/picoui/include
             ${LD_REPO_ROOT}/picoui/src/core
             ${LD_REPO_ROOT}/picoui/src/backend/ldgui
+            ${LD_REPO_ROOT}/picoui
         )
         target_link_libraries(${LD_PICOUI_BACKEND_TARGET} PUBLIC picoui_core longdonggui longdonggui_porting_default)
         if(LD_PICOUI_BACKEND_TARGET STREQUAL "picoui_backend_ldgui_runtime")
@@ -266,6 +272,35 @@ function(ld_define_core_targets)
         endif()
         ld_apply_common_target_config(${LD_PICOUI_BACKEND_TARGET})
     endforeach()
+
+    add_library(picoui_port_sdl STATIC
+        ${LD_REPO_ROOT}/picoui/port/sdl/sdl.c
+    )
+    target_include_directories(picoui_port_sdl PUBLIC
+        ${LD_REPO_ROOT}/picoui/include
+        ${LD_REPO_ROOT}/picoui/src/core
+        ${LD_REPO_ROOT}/picoui
+    )
+    target_link_libraries(picoui_port_sdl PUBLIC picoui_core)
+    if(WIN32)
+        if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+            set(LD_SDL2_ROOT "${LD_EXAMPLES_DIR}/sdl/sdl2/64")
+        else()
+            set(LD_SDL2_ROOT "${LD_EXAMPLES_DIR}/sdl/sdl2/32")
+        endif()
+        target_include_directories(picoui_port_sdl PUBLIC "${LD_SDL2_ROOT}/include/SDL2")
+        target_link_directories(picoui_port_sdl PUBLIC "${LD_SDL2_ROOT}/lib")
+        target_link_libraries(picoui_port_sdl PUBLIC SDL2 SDL2main)
+    else()
+        find_package(PkgConfig REQUIRED)
+        pkg_check_modules(SDL2 REQUIRED sdl2)
+        target_include_directories(picoui_port_sdl PUBLIC ${SDL2_INCLUDE_DIRS})
+        target_link_directories(picoui_port_sdl PUBLIC ${SDL2_LIBRARY_DIRS})
+        target_compile_options(picoui_port_sdl PRIVATE ${SDL2_CFLAGS_OTHER})
+        target_link_options(picoui_port_sdl PRIVATE ${SDL2_LDFLAGS_OTHER})
+        target_link_libraries(picoui_port_sdl PUBLIC ${SDL2_LIBRARIES})
+    endif()
+    ld_apply_common_target_config(picoui_port_sdl)
 endfunction()
 
 function(ld_add_c_unit_test target)

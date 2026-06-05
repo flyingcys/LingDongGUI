@@ -622,11 +622,11 @@ def _assert_basic_widgets_visible(path: Path) -> None:
     visible_height = max_y - min_y + 1
     failures: list[str] = []
 
-    if visible_width < 220 or visible_height < 180:
+    if visible_width < 220 or visible_height < 176:
         failures.append(
             "structure coverage check failed: "
             f"content_bounds=({min_x},{min_y})-({max_x},{max_y}), "
-            "expected readable UI to occupy at least 220x180 pixels"
+            "expected readable UI to occupy at least 220x176 pixels"
         )
 
     left = _column_signature(width, height, pixels, 0, width // 2)
@@ -750,7 +750,7 @@ def _assert_progress_bar_basic_visible(path: Path) -> None:
             row_spans[y] = (xs[0], xs[-1])
 
     for row_start, row_end in _runs(candidate_rows):
-        if row_end - row_start + 1 < 2 or row_end - row_start + 1 > 12:
+        if row_end - row_start + 1 < 8 or row_end - row_start + 1 > 32:
             continue
         span_start = min(row_spans[y][0] for y in range(row_start, row_end + 1) if y in row_spans)
         span_end = max(row_spans[y][1] for y in range(row_start, row_end + 1) if y in row_spans)

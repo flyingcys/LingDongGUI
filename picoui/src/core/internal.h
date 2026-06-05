@@ -26,6 +26,10 @@
 #include "picoui/calendar.h"
 #include "picoui/keyboard.h"
 #include "picoui/native.h"
+#include "picoui/display.h"
+#include "picoui/indev.h"
+#include "picoui/osal.h"
+#include "picoui/tick.h"
 #include "picoui/line_edit.h"
 #include "picoui/message_box.h"
 #include "picoui/graph.h"
@@ -58,6 +62,33 @@ struct picoui_app_timer {
     int running;
     picoui_app_timer_cb_t callback;
     void *user_data;
+};
+
+struct picoui_display_port_state {
+    struct picoui_display_config config;
+    picoui_display_flush_cb_t flush_callback;
+    void *flush_user_data;
+};
+
+struct picoui_input_port_state {
+    int pointer_x;
+    int pointer_y;
+    int pointer_pressed;
+    enum picoui_input_key key;
+    int key_pressed;
+};
+
+struct picoui_tick_port_state {
+    picoui_tick_get_cb_t callback;
+    void *user_data;
+};
+
+struct picoui_os_port_state {
+    picoui_os_lock_cb_t enter;
+    picoui_os_lock_cb_t leave;
+    void *lock_user_data;
+    picoui_os_delay_cb_t delay;
+    void *delay_user_data;
 };
 
 /**
@@ -158,6 +189,10 @@ struct picoui_app {
     struct picoui_widget *focus_owner;
     struct picoui_widget *editing_owner;
     struct picoui_app_timer *timers;
+    struct picoui_display_port_state display_port;
+    struct picoui_input_port_state input_port;
+    struct picoui_tick_port_state tick_port;
+    struct picoui_os_port_state os_port;
 };
 
 struct picoui_theme {

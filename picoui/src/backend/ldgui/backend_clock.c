@@ -24,6 +24,7 @@
 
 extern const arm_2d_tile_t c_tilePointerSecGRAY8;
 extern const arm_2d_tile_t c_tilePointerSecMask;
+extern const arm_2d_tile_t c_tileClockface;
 
 static struct picoui_backend_app_state *picoui_backend_clock_get_app_state(void *parent)
 {
@@ -249,6 +250,10 @@ void *picoui_backend_create_clock(void *parent, const char *id)
                                  0,
                                  (float)(second_mask_tile->tRegion.tSize.iWidth >> 1),
                                  100.0f);
+    ldClockSetBackgroundImage(ld_clock,
+                              (arm_2d_tile_t *)&c_tileClockface,
+                              NULL,
+                              0);
 
     widget->parent = parent;
     widget->id = id;

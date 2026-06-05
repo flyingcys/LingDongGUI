@@ -17,6 +17,10 @@ set(PICOUI_UNIT_TESTS
     unit/test_picoui_animation.c
     unit/test_picoui_app_lifecycle.c
     unit/test_picoui_app_timer.c
+    unit/test_picoui_port_display.c
+    unit/test_picoui_port_input.c
+    unit/test_picoui_port_sdl.c
+    unit/test_picoui_port_tick_os.c
     unit/test_picoui_image.c
     unit/test_picoui_label.c
     unit/test_picoui_message_box.c
@@ -48,6 +52,8 @@ foreach(test_src IN LISTS PICOUI_UNIT_TESTS)
         LABELS "picoui;unit"
     )
 endforeach()
+
+target_link_libraries(test_picoui_port_sdl PRIVATE picoui_port_sdl)
 
 ld_add_python_test(check_picoui_public_api
     SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/contract/check_picoui_public_api.py"

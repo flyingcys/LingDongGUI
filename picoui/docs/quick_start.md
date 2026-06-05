@@ -19,3 +19,7 @@ picoui_label_set_text(label, "Hello PicoUI");
 4. 设置布局与 theme
 5. 绑定事件
 6. 运行 demo
+
+## 进一步阅读
+
+- [PicoUI Port 分层与适配规则](./porting_rules.md)

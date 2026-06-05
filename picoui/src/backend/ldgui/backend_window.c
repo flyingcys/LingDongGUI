@@ -53,6 +53,28 @@ static struct picoui_backend_app_state *picoui_backend_window_get_app_state(stru
     return (struct picoui_backend_app_state *)app->backend_app;
 }
 
+static void picoui_backend_window_get_root_size(struct picoui_app *app,
+                                                int16_t *width,
+                                                int16_t *height)
+{
+    struct picoui_display_config config = {0};
+
+    if (width == NULL || height == NULL) {
+        return;
+    }
+
+    *width = LD_CFG_SCREEN_WIDTH;
+    *height = LD_CFG_SCREEN_HEIGHT;
+    if (app == NULL) {
+        return;
+    }
+
+    if (picoui_display_get_config(app, &config) == 0 && config.width > 0 && config.height > 0) {
+        *width = (int16_t)config.width;
+        *height = (int16_t)config.height;
+    }
+}
+
 static void *picoui_backend_create_root_widget(struct picoui_app *app,
                                                const char *id,
                                                enum picoui_backend_widget_kind kind)
@@ -60,6 +82,8 @@ static void *picoui_backend_create_root_widget(struct picoui_app *app,
     struct picoui_backend_window_host *host;
     struct picoui_backend_app_state *app_state;
     ldWindow_t *ld_root;
+    int16_t root_width;
+    int16_t root_height;
 
     if (app == 0 || id == 0) {
         return 0;
@@ -75,14 +99,16 @@ static void *picoui_backend_create_root_widget(struct picoui_app *app,
         return 0;
     }
 
+    picoui_backend_window_get_root_size(app, &root_width, &root_height);
+
     ld_root = ldWindow_init(app_state->ld_scene,
                             NULL,
                             0,
                             0,
                             0,
                             0,
-                            LD_CFG_SCREEN_WIDTH,
-                            LD_CFG_SCREEN_HEIGHT);
+                            root_width,
+                            root_height);
     if (ld_root == NULL) {
         free(host);
         return 0;
@@ -278,6 +304,8 @@ int picoui_backend_window_set_background_offset(struct picoui_window *window,
 {
     struct picoui_backend_widget *backend = picoui_backend_window_get(window);
     struct picoui_backend_app_state *app_state;
+    int16_t root_width = 0;
+    int16_t root_height = 0;
     ldWindow_t *ld_window;
     int16_t bg_width;
     int16_t bg_height;
@@ -292,13 +320,21 @@ int picoui_backend_window_set_background_offset(struct picoui_window *window,
         return -1;
     }
 
+    picoui_backend_window_get_root_size(backend->owner, &root_width, &root_height);
     bg_width = ld_window->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iWidth;
     bg_height = ld_window->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iHeight;
     if (bg_width <= 0) {
-        bg_width = LD_CFG_SCREEN_WIDTH;
+        bg_width = root_width;
     }
     if (bg_height <= 0) {
-        bg_height = LD_CFG_SCREEN_HEIGHT;
+        bg_height = root_height;
+    }
+
+    if (bg_width < root_width) {
+        bg_width = root_width;
+    }
+    if (bg_height < root_height) {
+        bg_height = root_height;
     }
 
     ldBaseBgMove(app_state->ld_scene, bg_width, bg_height, (int16_t)offset_x, (int16_t)offset_y);

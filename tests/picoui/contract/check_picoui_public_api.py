@@ -44,6 +44,13 @@ IDENTIFIER_AT_END_RE = re.compile(r"(?P<name>[A-Za-z_][A-Za-z0-9_]*)\s*$")
 OPAQUE_ARM_TYPEDEF_RE = re.compile(
     r"typedef\s+struct\s+arm_2d_[A-Za-z0-9_]*\s+arm_2d_[A-Za-z0-9_]*\s*;"
 )
+BLOCK_COMMENT_RE = re.compile(r"/\*.*?\*/", re.DOTALL)
+LINE_COMMENT_RE = re.compile(r"//.*?$", re.MULTILINE)
+
+
+def strip_c_comments(text: str) -> str:
+    text = BLOCK_COMMENT_RE.sub("", text)
+    return LINE_COMMENT_RE.sub("", text)
 
 
 def assert_allowed_prefix(name: str, *, header: Path, kind: str, prefix: str) -> None:
@@ -79,7 +86,7 @@ def check_type_prefixes(header: Path, text: str) -> None:
 
 
 def check_function_prefixes(header: Path, text: str) -> None:
-    for statement in text.split(";"):
+    for statement in strip_c_comments(text).split(";"):
         normalized = " ".join(statement.split())
         if not normalized or normalized.startswith("#") or normalized.startswith("typedef"):
             continue
@@ -161,7 +168,7 @@ def _assert_inventory_contract_rows() -> None:
 
 
 def main() -> int:
-    headers = sorted(PUBLIC_DIR.glob("*.h"))
+    headers = sorted(PUBLIC_DIR.rglob("*.h"))
     assert headers, "expected PicoUI public headers to exist"
     for header in headers:
         text = header.read_text(encoding="utf-8")

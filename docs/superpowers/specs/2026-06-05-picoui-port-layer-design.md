@@ -34,27 +34,26 @@ PicoUI 已经把控件 public API 与大部分 widget backend 映射收进 `pico
 
 ```text
 picoui/include/picoui/port.h
-picoui/include/picoui/port/display.h
-picoui/include/picoui/port/input.h
-picoui/include/picoui/port/tick.h
-picoui/include/picoui/port/os.h
+picoui/include/picoui/display.h
+picoui/include/picoui/indev.h
+picoui/include/picoui/tick.h
+picoui/include/picoui/osal.h
+picoui/include/picoui/port/sdl.h
 
-picoui/src/port/
-  port.c
+picoui/src/display/
   display.c
-  input.c
+picoui/src/indev/
+  indev.c
+picoui/src/tick/
   tick.c
-  os.c
+picoui/src/osal/
+  osal.c
 
 picoui/port/sdl/
-  picoui_port_sdl.c
-  picoui_port_sdl_display.c
-  picoui_port_sdl_input.c
-  picoui_port_sdl_tick.c
-  picoui_port_sdl_os.c
+  sdl.c
 ```
 
-`picoui/src/port/` 是 PicoUI core contract 和默认状态实现。`picoui/port/sdl/` 是 SDL host 端口实现。`picoui/src/backend/ldgui/` 只负责把 PicoUI app/widget/port 状态映射到底层 LingDongGUI/ARM-2D。
+`picoui/src/display/`、`picoui/src/indev/`、`picoui/src/tick/`、`picoui/src/osal/` 是 PicoUI core contract 和默认状态实现。`picoui/port/sdl/` 是 SDL host 端口实现。`picoui/src/backend/ldgui/` 只负责把 PicoUI app/widget 与 `src/display`、`src/indev`、`src/tick`、`src/osal` 状态映射到底层 LingDongGUI/ARM-2D。
 
 ## Display 合同
 
@@ -211,6 +210,7 @@ int picoui_port_sdl_attach(struct picoui_app *app);
 - `tests/picoui/unit/test_picoui_port_display.c`
 - `tests/picoui/unit/test_picoui_port_input.c`
 - `tests/picoui/unit/test_picoui_port_tick_os.c`
+- `tests/picoui/unit/test_picoui_port_sdl.c`
 
 新增或扩展 contract：
 
@@ -219,8 +219,8 @@ int picoui_port_sdl_attach(struct picoui_app *app);
 首批验证命令：
 
 ```bash
-rtk cmake --build build --target test_picoui_port_display test_picoui_port_input test_picoui_port_tick_os
-rtk ctest --test-dir build -R 'test_picoui_port_display|test_picoui_port_input|test_picoui_port_tick_os|check_picoui_public_api' --output-on-failure
+rtk cmake --build build --target test_picoui_port_display test_picoui_port_input test_picoui_port_tick_os test_picoui_port_sdl
+rtk ctest --test-dir build -R 'test_picoui_port_display|test_picoui_port_input|test_picoui_port_tick_os|test_picoui_port_sdl|check_picoui_public_api' --output-on-failure
 ```
 
 若本地使用 `build/picoui-runtime`，对应命令改为同一 build dir。

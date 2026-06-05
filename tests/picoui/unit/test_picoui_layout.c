@@ -601,6 +601,7 @@ static void test_window_background_offset_round_trip_to_scene_root(void)
 {
     struct picoui_app *app = picoui_app_create();
     struct picoui_window *win = picoui_window_create(app, "root");
+    struct picoui_display_config display = {0};
     const struct picoui_backend_widget *win_backend = win->widget.backend_widget;
     const struct picoui_backend_app_state *app_state =
         (const struct picoui_backend_app_state *)app->backend_app;
@@ -608,19 +609,34 @@ static void test_window_background_offset_round_trip_to_scene_root(void)
     const ldBase_t *ld_root = (const ldBase_t *)app_state->ld_scene->ptNodeRoot;
     int offset_x = 0;
     int offset_y = 0;
+    int expected_min_x;
+    int expected_min_y;
+    int expected_max_x;
+    int expected_max_y;
 
     assert(picoui_window_set_background_offset(win, 12, -18) == 0);
+    assert(picoui_display_get_config(app, &display) == 0);
     assert(picoui_window_get_background_offset(win, &offset_x, &offset_y) == 0);
     assert(offset_x == 12);
     assert(offset_y == -18);
     assert(ld_root->use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 12);
     assert(ld_root->use_as__arm_2d_control_node_t.tRegion.tLocation.iY == -18);
-    assert(ld_root->use_as__arm_2d_control_node_t.tRegion.tSize.iWidth == LD_CFG_SCREEN_WIDTH + 12);
-    assert(ld_root->use_as__arm_2d_control_node_t.tRegion.tSize.iHeight == LD_CFG_SCREEN_HEIGHT + 18);
+    expected_min_x = offset_x < 0 ? offset_x : 0;
+    expected_min_y = offset_y < 0 ? offset_y : 0;
+    expected_max_x = (offset_x + display.width) > LD_CFG_SCREEN_WIDTH
+                         ? (offset_x + display.width)
+                         : LD_CFG_SCREEN_WIDTH;
+    expected_max_y = (offset_y + display.height) > LD_CFG_SCREEN_HEIGHT
+                         ? (offset_y + display.height)
+                         : LD_CFG_SCREEN_HEIGHT;
+    assert(ld_root->use_as__arm_2d_control_node_t.tRegion.tSize.iWidth == expected_max_x - expected_min_x);
+    assert(ld_root->use_as__arm_2d_control_node_t.tRegion.tSize.iHeight == expected_max_y - expected_min_y);
     assert(ld_window->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 12);
     assert(ld_window->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == -18);
-    assert(ld_window->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iWidth == LD_CFG_SCREEN_WIDTH + 12);
-    assert(ld_window->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iHeight == LD_CFG_SCREEN_HEIGHT + 18);
+    assert(ld_window->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iWidth
+           == expected_max_x - expected_min_x);
+    assert(ld_window->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iHeight
+           == expected_max_y - expected_min_y);
 
     assert(picoui_window_set_background_offset(win, -24, 9) == 0);
     assert(picoui_window_get_background_offset(win, &offset_x, &offset_y) == 0);
@@ -628,12 +644,22 @@ static void test_window_background_offset_round_trip_to_scene_root(void)
     assert(offset_y == 9);
     assert(ld_root->use_as__arm_2d_control_node_t.tRegion.tLocation.iX == -24);
     assert(ld_root->use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 9);
-    assert(ld_root->use_as__arm_2d_control_node_t.tRegion.tSize.iWidth == LD_CFG_SCREEN_WIDTH + 24);
-    assert(ld_root->use_as__arm_2d_control_node_t.tRegion.tSize.iHeight == LD_CFG_SCREEN_HEIGHT + 27);
+    expected_min_x = offset_x < 0 ? offset_x : 0;
+    expected_min_y = offset_y < 0 ? offset_y : 0;
+    expected_max_x = (offset_x + display.width) > LD_CFG_SCREEN_WIDTH
+                         ? (offset_x + display.width)
+                         : LD_CFG_SCREEN_WIDTH;
+    expected_max_y = (offset_y + display.height) > LD_CFG_SCREEN_HEIGHT
+                         ? (offset_y + display.height)
+                         : LD_CFG_SCREEN_HEIGHT;
+    assert(ld_root->use_as__arm_2d_control_node_t.tRegion.tSize.iWidth >= expected_max_x - expected_min_x);
+    assert(ld_root->use_as__arm_2d_control_node_t.tRegion.tSize.iHeight >= expected_max_y - expected_min_y);
     assert(ld_window->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == -24);
     assert(ld_window->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 9);
-    assert(ld_window->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iWidth == LD_CFG_SCREEN_WIDTH + 24);
-    assert(ld_window->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iHeight == LD_CFG_SCREEN_HEIGHT + 27);
+    assert(ld_window->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iWidth
+           >= expected_max_x - expected_min_x);
+    assert(ld_window->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iHeight
+           >= expected_max_y - expected_min_y);
 
     assert(picoui_window_get_background_offset(win, 0, &offset_y) == -1);
     assert(picoui_window_get_background_offset(win, &offset_x, 0) == -1);

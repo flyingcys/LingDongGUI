@@ -54,7 +54,7 @@ static void make_ui(struct picoui_window *win)
     picoui_widget_set_size((struct picoui_widget *)slider, 220, 30);
     picoui_widget_set_size((struct picoui_widget *)button, 160, 36);
     picoui_widget_set_size((struct picoui_widget *)text, 220, 28);
-    picoui_widget_set_size((struct picoui_widget *)image, 220, 56);
+    picoui_widget_set_size((struct picoui_widget *)image, 220, 60);
 
     picoui_widget_set_grid_cell((struct picoui_widget *)sw, 0, 0, 1, 1, PICOUI_ALIGN_START, PICOUI_ALIGN_START);
     picoui_widget_set_grid_cell((struct picoui_widget *)cb, 0, 1, 1, 1, PICOUI_ALIGN_START, PICOUI_ALIGN_START);

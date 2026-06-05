@@ -71,6 +71,7 @@ LEGACY_OPTIONAL_WIDGET_APIS = {
     "picoui_widget_get_width",
     "picoui_widget_get_x",
     "picoui_widget_get_y",
+    "picoui_widget_is_hidden",
     "picoui_widget_set_center",
     "picoui_widget_set_opacity",
     "picoui_widget_set_selectable",

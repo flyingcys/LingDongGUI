@@ -2,7 +2,17 @@
 
 > 日期：2026-06-05  
 > 范围：PicoUI 的芯片、屏幕、输入、tick、OS、资源 port 边界  
-> 结论类型：建议与后续设计输入，不是实现完成证明
+> 结论类型：边界审计 + P1 实现结果收口
+
+> P1 实现状态：已完成。以当前 worktree 命令证据为准：
+>
+> - `ctest --test-dir build -L 'picoui' --output-on-failure`
+> - `ctest --test-dir build/picoui-runtime -R 'check_picoui_runtime|check_picoui_visible_ui|check_picoui_backend_mapping' --output-on-failure`
+>
+> 当前结果：
+>
+> - `build`：`100% tests passed, 0 tests failed out of 46`
+> - `build/picoui-runtime`：`100% tests passed, 0 tests failed out of 3`
 
 ## 结论
 
@@ -111,31 +121,29 @@ PicoUI 不应照搬 LVGL 控件 API，因为 PicoUI 的目标是封装 LingDongG
 
 ```text
 picoui/include/picoui/port.h
-picoui/include/picoui/port/display.h
-picoui/include/picoui/port/input.h
-picoui/include/picoui/port/tick.h
-picoui/include/picoui/port/os.h
-picoui/include/picoui/port/resource.h
+picoui/include/picoui/display.h
+picoui/include/picoui/indev.h
+picoui/include/picoui/tick.h
+picoui/include/picoui/osal.h
+picoui/include/picoui/port/sdl.h
 
-picoui/src/port/
-  port.c
+picoui/src/display/
   display.c
-  input.c
+picoui/src/indev/
+  indev.c
+picoui/src/tick/
   tick.c
-  os.c
-  resource.c
+picoui/src/osal/
+  osal.c
 
 picoui/port/sdl/
-  picoui_port_sdl_display.c
-  picoui_port_sdl_input.c
-  picoui_port_sdl_tick.c
-  picoui_port_sdl_os.c
+  sdl.c
 
 picoui/port/mh2103c/
-  picoui_port_mh2103c_display.c
-  picoui_port_mh2103c_input.c
-  picoui_port_mh2103c_tick.c
-  picoui_port_mh2103c_os.c
+  mh2103c_display.c
+  mh2103c_indev.c
+  mh2103c_tick.c
+  mh2103c_osal.c
 ```
 
 不再建议新增 `platform/ldgui` 或 `port/ldgui`。LingDongGUI 映射已经有自然归属：`picoui/src/backend/ldgui/`。SDL port 直接适配到 PicoUI port 合同；backend 私有层消费 port 状态并映射到 LingDongGUI/ARM-2D。这样不会把 LingDongGUI bridge 包装成另一个正式移植目标。
@@ -242,6 +250,8 @@ struct picoui_resource {
 
 `picoui_native_image_wrap()`、`picoui_native_font_wrap()` 可以保留为兼容入口，但文档必须写清：这是 native bridge，不是推荐的新平台资源模型。
 
+说明：`resource port` 暂不并入本轮首批固定目录。本轮先冻结 `display / indev / tick / osal` 四类最小合同，`resource` 作为后续独立设计线推进。
+
 ## 分阶段落地建议
 
 ### P0：文档和边界冻结
@@ -333,12 +343,12 @@ picoui/docs/porting_guide.md
 
 ## 推荐下一步
 
-下一步应写一份实现级 spec/plan，而不是直接改代码。建议题目：
+P1 已完成。后续如果继续推进，应进入 P2/P3，而不是回退到 `examples/sdl` 或重新把 port 逻辑塞回 `backend_app.c`。相关设计入口保留如下：
 
 - spec：`docs/superpowers/specs/2026-06-05-picoui-port-layer-design.md`
 - plan：`docs/superpowers/plans/2026-06-05-picoui-port-layer-implementation.md`
 
-第一轮实现只做 P1：display/input 最小抽象。范围过大时不要一次性动 tick、OS、resource、board port；这些应按 P2/P3 串行推进。
+第一轮实现已落在 `display / indev / tick / osal + picoui/port/sdl/`。后续不要重新拆散这层边界；新增能力应继续按 P2/P3 串行推进。
 
 ## 最终口径
 
@@ -346,4 +356,10 @@ PicoUI 的平台适配目标应定义为：
 
 > 开发者只需要实现 PicoUI `port` 下的 display/input/tick/resource/OS port，就能把 PicoUI 应用跑到 SDL 或真实芯片屏幕上；开发者不需要知道当前 backend 是否借用了 LingDongGUI、ARM-2D、display adapter 或 `ldConfig`。
 
-当前仓库还没有达到这个口径。本审计建议把它作为 a-0.14 之后的独立平台适配线推进。
+当前仓库对 P1 已达到这个口径的最小闭环：
+
+- 开发者不需要改 `picoui/src/` 固定核心实现就能接 SDL port。
+- SDL 适配落在 `picoui/port/sdl/`，不是新增到 `examples/sdl`。
+- backend 继续留在 `picoui/src/backend/ldgui/`，不引入 `port/ldgui`。
+
+更宽的芯片/board/resource 移植能力仍属于 P2/P3，不应和本轮 P1 已完成结论混写。
