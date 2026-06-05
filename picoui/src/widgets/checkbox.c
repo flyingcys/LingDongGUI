@@ -21,6 +21,8 @@
 
 #include <stdlib.h>
 
+int picoui_native_checkbox_set_checked(struct picoui_checkbox *checkbox, int checked);
+
 static int picoui_checkbox_props_are_valid(const struct picoui_checkbox_props *props)
 {
     return props != 0
@@ -183,6 +185,9 @@ int picoui_checkbox_set_checked(struct picoui_checkbox *checkbox, int checked)
     }
 
     checkbox->checked = normalized_checked;
+    if (picoui_native_checkbox_set_checked(checkbox, checkbox->checked) != 0) {
+        return -1;
+    }
     return picoui_backend_widget_update_value(checkbox->widget.backend_widget,
                                               checkbox->checked,
                                               checkbox->cb,

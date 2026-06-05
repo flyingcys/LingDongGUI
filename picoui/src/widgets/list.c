@@ -22,6 +22,9 @@
 
 #include <stdlib.h>
 
+int picoui_native_list_set_selected_index(struct picoui_list *list, int index);
+int picoui_native_list_select_index(struct picoui_list *list, int index);
+
 /**
  * @brief Create list widget
  *
@@ -102,10 +105,16 @@ struct picoui_list *picoui_list_create_with_props(struct picoui_widget *parent,
 
 int picoui_list_add_item(struct picoui_list *list, const char *id, const char *text)
 {
+    struct picoui_backend_widget *backend;
     int index;
     int next_count;
 
     if (list == 0 || id == 0 || text == 0 || list->item_count >= PICOUI_LIST_MAX_ITEMS) {
+        return -1;
+    }
+
+    backend = (struct picoui_backend_widget *)list->widget.backend_widget;
+    if (backend == 0) {
         return -1;
     }
 
@@ -126,6 +135,7 @@ int picoui_list_add_item(struct picoui_list *list, const char *id, const char *t
     list->items[index].id = id;
     list->items[index].text = text;
     list->item_count = next_count;
+    backend->list_item_count = next_count;
     return 0;
 }
 
@@ -290,7 +300,11 @@ int picoui_list_set_selected_index(struct picoui_list *list, int index)
         return -1;
     }
 
-    if (picoui_backend_list_set_selected_index(list->widget.backend_widget, index) != 0) {
+    if (list->widget.backend_widget == 0) {
+        return -1;
+    }
+
+    if (picoui_native_list_select_index(list, index) != 0) {
         return -1;
     }
     list->selected_index = index;
@@ -306,14 +320,8 @@ int picoui_list_set_selected_index(struct picoui_list *list, int index)
 
 int picoui_list_get_selected_index(const struct picoui_list *list)
 {
-    int backend_selected_index;
-
     if (list == 0) {
         return -1;
-    }
-
-    if (picoui_backend_list_sync_selected_index((struct picoui_list *)list, &backend_selected_index) == 0) {
-        return backend_selected_index;
     }
 
     return list->selected_index;

@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "route": "v1.0-native",
+  "picoui_app_apis": [
+    {
+      "name": "picoui_app_create",
+      "decision": "compat_wrapper",
+      "replacement": "picoui_init",
+      "rationale": "v1.0+ 主路径不暴露 app handle；短期保留兼容入口，委托 runtime 初始化。"
+    },
+    {
+      "name": "picoui_app_run",
+      "decision": "compat_wrapper",
+      "replacement": "picoui_timer_handler",
+      "rationale": "v1.0+ 主循环由用户周期调用 timer handler；旧 run 只作为兼容包装。"
+    },
+    {
+      "name": "picoui_app_run_background",
+      "decision": "compat_wrapper",
+      "replacement": "picoui_screen_load",
+      "rationale": "background 在 v1.0+ 收敛为 screen/window 加载语义。"
+    },
+    {
+      "name": "picoui_app_set_window",
+      "decision": "replace",
+      "replacement": "picoui_screen_load",
+      "rationale": "screen load 是 LVGL-like root 切换入口。"
+    },
+    {
+      "name": "picoui_app_set_background",
+      "decision": "replace",
+      "replacement": "picoui_screen_load",
+      "rationale": "background 作为 root screen/window 能力迁移到 screen load。"
+    },
+    {
+      "name": "picoui_app_switch_window",
+      "decision": "replace",
+      "replacement": "picoui_screen_load",
+      "rationale": "v1.0.1 首版先用 screen load 表达切换；动画模式进入后续 screen transition。"
+    },
+    {
+      "name": "picoui_app_switch_background",
+      "decision": "replace",
+      "replacement": "picoui_screen_load",
+      "rationale": "background switch 合并到 screen load/transition。"
+    },
+    {
+      "name": "picoui_app_timer_create",
+      "decision": "replace",
+      "replacement": "picoui_timer_create",
+      "rationale": "timer 属于 runtime service，不绑定 public app handle。"
+    },
+    {
+      "name": "picoui_app_timer_start",
+      "decision": "replace",
+      "replacement": "picoui_timer_start",
+      "rationale": "timer start 迁移到 runtime timer API。"
+    },
+    {
+      "name": "picoui_app_timer_stop",
+      "decision": "replace",
+      "replacement": "picoui_timer_stop",
+      "rationale": "timer stop 迁移到 runtime timer API。"
+    },
+    {
+      "name": "picoui_app_timer_is_running",
+      "decision": "replace",
+      "replacement": "picoui_timer_is_running",
+      "rationale": "timer readback 迁移到 runtime timer API。"
+    },
+    {
+      "name": "picoui_app_timer_destroy",
+      "decision": "replace",
+      "replacement": "picoui_timer_delete",
+      "rationale": "timer lifecycle 迁移到 runtime timer API。"
+    },
+    {
+      "name": "picoui_app_destroy",
+      "decision": "compat_wrapper",
+      "replacement": "picoui_deinit",
+      "rationale": "v1.0+ 释放由 runtime deinit 管理；旧 destroy 保留兼容包装。"
+    }
+  ]
+}

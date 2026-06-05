@@ -21,6 +21,8 @@
 
 #include <stdlib.h>
 
+int picoui_native_image_set_source(struct picoui_image *image, struct picoui_image_source *source);
+
 static int picoui_image_props_are_valid(const struct picoui_image_props *props)
 {
     return props != 0
@@ -55,6 +57,10 @@ struct picoui_image *picoui_image_create(struct picoui_window *parent, const cha
 
     image->widget.backend_widget = picoui_backend_create_image(parent->widget.backend_widget, id);
     if (image->widget.backend_widget == 0) {
+        free(image);
+        return 0;
+    }
+    if (picoui_backend_widget_bind_host(image->widget.backend_widget, &image->widget) != 0) {
         free(image);
         return 0;
     }
@@ -124,11 +130,29 @@ struct picoui_image *picoui_image_create_with_props(struct picoui_window *parent
 
 int picoui_image_set_source(struct picoui_image *image, struct picoui_image_source *source)
 {
+    struct picoui_backend_widget *backend;
+    struct picoui_image_source *old_source;
+    struct picoui_image_source *old_backend_source;
+
     if (image == 0 || (source != 0 && source->img_tile == 0)) {
         return -1;
     }
 
+    backend = (struct picoui_backend_widget *)image->widget.backend_widget;
+    if (backend == 0) {
+        return -1;
+    }
+
+    old_source = image->source;
+    old_backend_source = backend->image_source;
     if (picoui_backend_set_image_source(image->widget.backend_widget, source) != 0) {
+        return -1;
+    }
+
+    if (picoui_native_image_set_source(image, source) != 0) {
+        (void)picoui_backend_set_image_source(image->widget.backend_widget, old_source);
+        backend->image_source = old_backend_source;
+        image->source = old_source;
         return -1;
     }
 

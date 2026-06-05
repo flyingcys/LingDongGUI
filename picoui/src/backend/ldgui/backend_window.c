@@ -269,9 +269,11 @@ static int picoui_backend_window_set_padding_group_ptr(struct picoui_window *win
 int picoui_backend_window_set_background_source(struct picoui_window *window,
                                                 struct picoui_image_source *source)
 {
+    struct picoui_backend_widget *backend;
     ldWindow_t *ld_window;
 
-    if (picoui_backend_window_get(window) == NULL) {
+    backend = picoui_backend_window_get(window);
+    if (backend == NULL) {
         return -1;
     }
     if (source != NULL && source->img_tile == NULL) {
@@ -286,6 +288,7 @@ int picoui_backend_window_set_background_source(struct picoui_window *window,
     ldWindowSetImage(ld_window,
                      source != NULL ? source->img_tile : NULL,
                      source != NULL ? source->mask_tile : NULL);
+    backend->image_source = source;
     return 0;
 }
 

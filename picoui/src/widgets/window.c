@@ -116,6 +116,23 @@ struct picoui_window *picoui_window_create(struct picoui_app *app, const char *i
     return window;
 }
 
+struct picoui_window *picoui_window_create_root(struct picoui_screen *screen, const char *id)
+{
+    struct picoui_app *compat_app;
+
+    if (screen == 0 || id == 0) {
+        return 0;
+    }
+
+    /* P1 compatibility shim; replace with native root ownership in P1-F or later, not P7. */
+    compat_app = picoui_app_create();
+    if (compat_app == 0) {
+        return 0;
+    }
+
+    return picoui_window_create(compat_app, id);
+}
+
 struct picoui_window *picoui_window_create_child(struct picoui_window *parent, const char *id)
 {
     struct picoui_window *window;

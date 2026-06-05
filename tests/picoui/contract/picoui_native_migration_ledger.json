@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "route": "v1.0-native",
+  "entries": [
+    {"id": "P1-runtime-init", "phase": "P1", "capability": "LVGL-like runtime init/deinit", "status": "covered", "evidence": ["test_picoui_native_runtime", "01-native垂直切片.md: 当前状态/runtime lifecycle", "check_picoui_runtime.py --demo basic_widgets"]},
+    {"id": "P1-display-indev-screen", "phase": "P1", "capability": "Display, input device, and active screen without public app handle", "status": "covered", "evidence": ["test_picoui_native_display_indev", "test_picoui_native_screen", "01-native垂直切片.md: 当前状态/display indev screen"]},
+    {"id": "P1-window-label-button", "phase": "P1", "capability": "Native window, label, button vertical slice", "status": "covered", "evidence": ["test_picoui_native_screen_window", "test_picoui_native_render_window_label_button", "test_picoui_native_input_button", "01-native垂直切片.md: P1-I/P1-J"]},
+    {"id": "P1-basic-widgets-main-style", "phase": "P1", "capability": "basic_widgets main follows LVGL-like structure", "status": "covered", "evidence": ["check_picoui_demo_main_style", "check_picoui_demo_main_style_inventory", "picoui_basic_widgets_demo build", "check_picoui_runtime.py --demo basic_widgets"]},
+    {"id": "P2-widget-tree-layout-theme", "phase": "P2", "capability": "Native widget tree, layout, and theme", "status": "covered", "evidence": ["test_picoui_native_widget_tree", "test_picoui_native_geometry_dirty", "test_picoui_native_flex_layout", "test_picoui_native_grid_layout", "test_picoui_native_style_theme", "ctest --test-dir build -R 'widget_tree|geometry_dirty|flex_layout|grid_layout|style_theme' --output-on-failure", "02-core-layout-theme.md: P2-F Closeout"]},
+    {"id": "P3-basic-widgets", "phase": "P3", "capability": "Native checkbox, switch, slider, text, image, list, background", "status": "not_started", "evidence": []},
+    {"id": "P4-extended-widgets", "phase": "P4", "capability": "Native extended widget set", "status": "not_started", "evidence": []},
+    {"id": "P5-resource-font-image", "phase": "P5", "capability": "Native resource, font, image, text rendering", "status": "not_started", "evidence": []},
+    {"id": "P6-demo-port-artifact", "phase": "P6", "capability": "Demo main migration, SDL port, native artifacts", "status": "not_started", "evidence": []},
+    {"id": "P7-remove-ldgui-runtime-dependency", "phase": "P7", "capability": "Default PicoUI runtime does not link ldgui backend", "status": "not_started", "evidence": []},
+    {"id": "P8-release-gate", "phase": "P8", "capability": "v1.0.1 native-only release gate", "status": "not_started", "evidence": []}
+  ]
+}

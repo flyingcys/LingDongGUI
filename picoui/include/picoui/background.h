@@ -22,6 +22,7 @@
 struct picoui_app;
 struct picoui_background;
 struct picoui_image_source;
+struct picoui_screen;
 
 /**
  * @brief Create background widget
@@ -32,6 +33,16 @@ struct picoui_image_source;
  */
 
 struct picoui_background *picoui_background_create(struct picoui_app *app, const char *id);
+
+/**
+ * @brief Create background root widget backed by a screen
+ *
+ * @param[in] screen Screen instance
+ * @param[in] id Widget identifier string
+ * @return Pointer to the object on success, NULL on failure
+ */
+
+struct picoui_background *picoui_background_create_root(struct picoui_screen *screen, const char *id);
 
 /**
  * @brief Set source of background widget

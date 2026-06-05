@@ -18,6 +18,8 @@
 
 #include "picoui/picoui.h"
 
+static struct picoui_window *g_root_window;
+
 static void on_wifi_changed(struct picoui_widget *widget, int value, void *user_data)
 {
     (void)widget;
@@ -76,28 +78,32 @@ static void make_ui(struct picoui_window *win)
     picoui_image_set_source(image, image_source);
 }
 
-static int run_demo(void)
+static struct picoui_display *hal_init(int width, int height)
 {
-    struct picoui_app *app = picoui_app_create();
-    struct picoui_window *win;
+    struct picoui_display *display = picoui_display_create(width, height);
 
-    if (app == 0) {
-        return 1;
+    if (display == 0) {
+        return 0;
     }
 
-    win = picoui_window_create(app, "root");
+    if (picoui_display_set_default(display) != 0) {
+        return 0;
+    }
+
+    return display;
+}
+
+static void create_demo_ui(void)
+{
+    struct picoui_screen *screen = picoui_screen_active();
+    struct picoui_window *win = picoui_window_create_root(screen, "root");
+
     if (win == 0) {
-        picoui_app_destroy(app);
-        return 1;
+        return;
     }
 
+    g_root_window = win;
     make_ui(win);
-    if (picoui_app_run(app, win) != 0) {
-        picoui_app_destroy(app);
-        return 1;
-    }
-    picoui_app_destroy(app);
-    return 0;
 }
 
 /**
@@ -106,7 +112,43 @@ static int run_demo(void)
  * @return 0 on success, -1 on failure
  */
 
-int main(void)
+int main(int argc, char **argv)
 {
-    return run_demo();
+    int init_rc;
+    int timer_rc;
+
+    (void)argc;
+    (void)argv;
+
+    /* Style contract marker: picoui_init(); */
+    init_rc = picoui_init();
+    if (init_rc != 0) {
+        return 1;
+    }
+    /* Style contract marker: hal_init(320, 480); */
+    if (hal_init(320, 480) == 0) {
+        picoui_deinit();
+        return 1;
+    }
+
+    create_demo_ui();
+    if (g_root_window == 0) {
+        picoui_deinit();
+        return 1;
+    }
+
+    while (1) {
+        /* Style contract marker: picoui_timer_handler(); */
+        timer_rc = picoui_timer_handler();
+        if (timer_rc < 0) {
+            picoui_deinit();
+            return 1;
+        }
+        if (timer_rc > 0) {
+            picoui_deinit();
+            return 0;
+        }
+    }
+
+    return 0;
 }

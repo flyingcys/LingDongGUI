@@ -43,6 +43,27 @@ set(PICOUI_UNIT_TESTS
     unit/test_picoui_calendar.c
 )
 
+set(PICOUI_NATIVE_TESTS
+    native/test_picoui_native_runtime.c
+    native/test_picoui_native_display_indev.c
+    native/test_picoui_native_screen.c
+    native/test_picoui_native_screen_window.c
+    native/test_picoui_native_render_window_label_button.c
+    native/test_picoui_native_background.c
+    native/test_picoui_native_input_button.c
+    native/test_picoui_native_checkbox.c
+    native/test_picoui_native_switch.c
+    native/test_picoui_native_slider.c
+    native/test_picoui_native_text.c
+    native/test_picoui_native_image.c
+    native/test_picoui_native_list.c
+    native/test_picoui_native_widget_tree.c
+    native/test_picoui_native_geometry_dirty.c
+    native/test_picoui_native_flex_layout.c
+    native/test_picoui_native_grid_layout.c
+    native/test_picoui_native_style_theme.c
+)
+
 foreach(test_src IN LISTS PICOUI_UNIT_TESTS)
     get_filename_component(test_name "${test_src}" NAME_WE)
     ld_add_c_unit_test(${test_name}
@@ -53,11 +74,46 @@ foreach(test_src IN LISTS PICOUI_UNIT_TESTS)
     )
 endforeach()
 
+foreach(test_src IN LISTS PICOUI_NATIVE_TESTS)
+    get_filename_component(test_name "${test_src}" NAME_WE)
+    ld_add_c_unit_test(${test_name}
+        SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/${test_src}"
+        SUPPORT_LIB picoui_test_support
+        MAIN_LIB picoui_backend_ldgui
+        LABELS "picoui;native"
+    )
+endforeach()
+
 target_link_libraries(test_picoui_port_sdl PRIVATE picoui_port_sdl)
 
 ld_add_python_test(check_picoui_public_api
     SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/contract/check_picoui_public_api.py"
     LABELS "picoui;contract"
+)
+
+ld_add_python_test(check_picoui_app_compatibility_decisions
+    SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/contract/check_picoui_app_compatibility_decisions.py"
+    LABELS "picoui;contract;native"
+)
+
+ld_add_python_test(check_picoui_demo_main_style
+    SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/contract/check_picoui_demo_main_style.py"
+    LABELS "picoui;contract;native"
+)
+
+ld_add_python_test(check_picoui_demo_main_style_inventory
+    SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/contract/check_picoui_demo_main_style_inventory.py"
+    LABELS "picoui;contract;native"
+)
+
+ld_add_python_test(check_picoui_ldgui_dependency_inventory
+    SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/contract/check_picoui_ldgui_dependency_inventory.py"
+    LABELS "picoui;contract;native"
+)
+
+ld_add_python_test(check_picoui_native_migration_ledger
+    SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/contract/check_picoui_native_migration_ledger.py"
+    LABELS "picoui;contract;native;release"
 )
 
 ld_add_python_test(check_picoui_demo_boundary

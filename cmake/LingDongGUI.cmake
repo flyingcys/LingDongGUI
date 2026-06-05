@@ -157,6 +157,23 @@ function(ld_define_core_targets)
         ${LD_REPO_ROOT}/picoui/src/core/widget.c
         ${LD_REPO_ROOT}/picoui/src/core/event.c
         ${LD_REPO_ROOT}/picoui/src/core/resource.c
+        ${LD_REPO_ROOT}/picoui/src/native/native_display.c
+        ${LD_REPO_ROOT}/picoui/src/native/native_checkbox.c
+        ${LD_REPO_ROOT}/picoui/src/native/native_dirty.c
+        ${LD_REPO_ROOT}/picoui/src/native/native_event.c
+        ${LD_REPO_ROOT}/picoui/src/native/native_indev.c
+        ${LD_REPO_ROOT}/picoui/src/native/native_layout.c
+        ${LD_REPO_ROOT}/picoui/src/native/native_render.c
+        ${LD_REPO_ROOT}/picoui/src/native/native_runtime.c
+        ${LD_REPO_ROOT}/picoui/src/native/native_screen.c
+        ${LD_REPO_ROOT}/picoui/src/native/native_slider.c
+        ${LD_REPO_ROOT}/picoui/src/native/native_style.c
+        ${LD_REPO_ROOT}/picoui/src/native/native_switch.c
+        ${LD_REPO_ROOT}/picoui/src/native/native_text.c
+        ${LD_REPO_ROOT}/picoui/src/native/native_image.c
+        ${LD_REPO_ROOT}/picoui/src/native/native_background.c
+        ${LD_REPO_ROOT}/picoui/src/native/native_list.c
+        ${LD_REPO_ROOT}/picoui/src/native/native_widget.c
         ${LD_REPO_ROOT}/picoui/src/display/display.c
         ${LD_REPO_ROOT}/picoui/src/indev/indev.c
         ${LD_REPO_ROOT}/picoui/src/tick/tick.c
@@ -193,6 +210,21 @@ function(ld_define_core_targets)
         ${LD_REPO_ROOT}/picoui/src/widgets/background.c
         ${LD_REPO_ROOT}/picoui/src/widgets/list.c
         ${LD_REPO_ROOT}/picoui/src/widgets/message_box.c
+    )
+    set_source_files_properties(
+        ${LD_REPO_ROOT}/picoui/src/core/widget.c
+        PROPERTIES COMPILE_DEFINITIONS
+            "picoui_widget_get_parent=picoui_core_widget_get_parent_backend;picoui_widget_get_first_child=picoui_core_widget_get_first_child_backend;picoui_widget_get_next_sibling=picoui_core_widget_get_next_sibling_backend;picoui_widget_get_root=picoui_core_widget_get_root_backend"
+    )
+    set_source_files_properties(
+        ${LD_REPO_ROOT}/picoui/src/native/native_event.c
+        PROPERTIES COMPILE_DEFINITIONS
+            "picoui_timer_handler=picoui_native_event_timer_handler;picoui_deinit=picoui_native_event_deinit"
+    )
+    set_source_files_properties(
+        ${LD_REPO_ROOT}/picoui/src/native/native_runtime.c
+        PROPERTIES COMPILE_DEFINITIONS
+            "picoui_timer_handler=picoui_native_runtime_timer_handler;picoui_deinit=picoui_native_runtime_deinit"
     )
     target_include_directories(picoui_core PUBLIC
         ${LD_REPO_ROOT}/picoui/include

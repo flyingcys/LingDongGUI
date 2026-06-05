@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "route": "v1.0-native",
+  "targets": [
+    {
+      "name": "picoui_core",
+      "currently_links_ldgui": false,
+      "v1_target": "native_only",
+      "notes": "Current core includes backend headers and calls backend API, but ldgui objects are linked through backend targets."
+    },
+    {
+      "name": "picoui_backend_ldgui",
+      "currently_links_ldgui": true,
+      "v1_target": "legacy_opt_in",
+      "notes": "Legacy wrapper backend remains only for oracle/compat until P7."
+    },
+    {
+      "name": "picoui_backend_ldgui_runtime",
+      "currently_links_ldgui": true,
+      "v1_target": "legacy_opt_in",
+      "notes": "Runtime wrapper target must not be default after P7."
+    },
+    {
+      "name": "picoui_demo_targets",
+      "currently_links_ldgui": true,
+      "v1_target": "remove_dependency",
+      "notes": "Demo targets migrate to native runtime and must not link ldgui backend by v1.0.1."
+    }
+  ]
+}

@@ -21,6 +21,7 @@
 
 struct picoui_app;
 struct picoui_image_source;
+struct picoui_screen;
 struct picoui_window;
 
 enum picoui_window_layout_type {
@@ -55,6 +56,16 @@ struct picoui_window_props {
  */
 
 struct picoui_window *picoui_window_create(struct picoui_app *app, const char *id);
+
+/**
+ * @brief Create root window widget backed by a screen
+ *
+ * @param[in] screen Screen instance
+ * @param[in] id Widget identifier string
+ * @return Pointer to the object on success, NULL on failure
+ */
+
+struct picoui_window *picoui_window_create_root(struct picoui_screen *screen, const char *id);
 
 /**
  * @brief Create child window widget under an existing window

@@ -2,6 +2,7 @@
 #define PICOUI_PORT_DISPLAY_H
 
 struct picoui_app;
+struct picoui_display;
 
 enum picoui_color_format {
     PICOUI_COLOR_FORMAT_RGB565 = 0,
@@ -26,6 +27,14 @@ struct picoui_display_config {
 typedef void (*picoui_display_flush_cb_t)(const struct picoui_area *area,
                                           const void *pixels,
                                           void *user_data);
+
+struct picoui_display *picoui_display_create(int width, int height);
+int picoui_display_set_default(struct picoui_display *display);
+struct picoui_display *picoui_display_get_default(void);
+int picoui_display_get_size(const struct picoui_display *display, int *width, int *height);
+int picoui_display_set_flush_cb(struct picoui_display *display,
+                                picoui_display_flush_cb_t callback,
+                                void *user_data);
 
 int picoui_display_set_config(struct picoui_app *app,
                               const struct picoui_display_config *config);

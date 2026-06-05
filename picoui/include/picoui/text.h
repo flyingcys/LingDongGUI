@@ -82,6 +82,15 @@ int picoui_text_set_text(struct picoui_text *text, const char *value);
 int picoui_text_set_static_text(struct picoui_text *text, const char *value);
 
 /**
+ * @brief Get text of text widget
+ *
+ * @param[in] text Text widget instance
+ * @return Current text pointer, NULL on failure or unset
+ */
+
+const char *picoui_text_get_text(const struct picoui_text *text);
+
+/**
  * @brief Set font of text widget
  *
  * @param[in] text Text widget instance

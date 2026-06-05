@@ -32,6 +32,7 @@ int picoui_backend_slider_set_indicator_source(struct picoui_slider *slider,
 int picoui_backend_slider_set_indicator_width(struct picoui_slider *slider, int indicator_width);
 int picoui_backend_slider_set_slim_size(struct picoui_slider *slider, int slim_size);
 int picoui_backend_slider_get_percent(struct picoui_slider *slider, int *percent);
+int picoui_native_slider_set_value(struct picoui_slider *slider, int value);
 
 static int picoui_slider_props_are_valid(const struct picoui_slider_props *props)
 {
@@ -192,6 +193,7 @@ int picoui_slider_set_value(struct picoui_slider *slider, int value)
     }
 
     slider->value = value;
+    (void)picoui_native_slider_set_value(slider, slider->value);
     return picoui_backend_widget_update_value(slider->widget.backend_widget,
                                               slider->value,
                                               slider->cb,
@@ -244,6 +246,9 @@ int picoui_slider_set_range(struct picoui_slider *slider, int min_value, int max
     }
 
     slider->value = remapped_value;
+    if (slider->widget.backend_widget != 0) {
+        (void)picoui_native_slider_set_value(slider, slider->value);
+    }
     if (slider->widget.backend_widget != 0) {
         return picoui_backend_widget_update_value(slider->widget.backend_widget,
                                                   slider->value,

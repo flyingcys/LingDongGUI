@@ -32,6 +32,7 @@ int picoui_backend_switch_set_disabled(struct picoui_switch *sw, int disabled);
 int picoui_backend_switch_get_disabled(struct picoui_switch *sw, int *disabled);
 int picoui_backend_switch_can_navigate(struct picoui_switch *sw, int direction, int *can_navigate);
 int picoui_backend_switch_navigate(struct picoui_switch *sw, int direction);
+int picoui_native_switch_set_checked(struct picoui_switch *sw, int checked);
 
 static int picoui_switch_props_are_valid(const struct picoui_switch_props *props)
 {
@@ -193,6 +194,9 @@ int picoui_switch_set_checked(struct picoui_switch *sw, int checked)
     }
 
     sw->checked = normalized_checked;
+    if (picoui_native_switch_set_checked(sw, sw->checked) != 0) {
+        return -1;
+    }
     return picoui_backend_widget_update_value(sw->widget.backend_widget,
                                               sw->checked,
                                               sw->cb,

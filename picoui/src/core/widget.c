@@ -127,6 +127,15 @@ static struct picoui_widget *picoui_backend_widget_get_host(struct picoui_backen
     return backend_widget->host_widget;
 }
 
+void picoui_native_widget_mark_dirty(const struct picoui_widget *widget);
+void picoui_native_style_set_scalar(const struct picoui_widget *widget, int radius, int padding);
+void picoui_native_style_set_colors(const struct picoui_widget *widget,
+                                    enum picoui_part part,
+                                    enum picoui_state state,
+                                    unsigned int bg_color,
+                                    unsigned int text_color,
+                                    unsigned int border_color);
+
 static int picoui_align_to_ld_horizontal(enum picoui_align align)
 {
     switch (align) {
@@ -271,6 +280,7 @@ int picoui_widget_set_pos(struct picoui_widget *widget, int x, int y)
         ldBaseSetX(ld_base, (int16_t)x);
         ldBaseSetY(ld_base, (int16_t)y);
     }
+    picoui_native_widget_mark_dirty(widget);
     return 0;
 }
 
@@ -298,6 +308,7 @@ int picoui_widget_set_size(struct picoui_widget *widget, int width, int height)
         ldBaseSetWidth(ld_base, (int16_t)width);
         ldBaseSetHeight(ld_base, (int16_t)height);
     }
+    picoui_native_widget_mark_dirty(widget);
     return 0;
 }
 
@@ -376,6 +387,12 @@ int picoui_widget_set_bg_color(struct picoui_widget *widget, unsigned int rgb)
     }
 
     widget->bg_color = rgb;
+    picoui_native_style_set_colors(widget,
+                                   PICOUI_PART_MAIN,
+                                   PICOUI_STATE_DEFAULT,
+                                   widget->bg_color,
+                                   widget->text_color,
+                                   widget->border_color);
     return 0;
 }
 
@@ -394,6 +411,12 @@ int picoui_widget_set_text_color(struct picoui_widget *widget, unsigned int rgb)
     }
 
     widget->text_color = rgb;
+    picoui_native_style_set_colors(widget,
+                                   PICOUI_PART_MAIN,
+                                   PICOUI_STATE_DEFAULT,
+                                   widget->bg_color,
+                                   widget->text_color,
+                                   widget->border_color);
     return 0;
 }
 
@@ -412,6 +435,12 @@ int picoui_widget_set_border_color(struct picoui_widget *widget, unsigned int rg
     }
 
     widget->border_color = rgb;
+    picoui_native_style_set_colors(widget,
+                                   PICOUI_PART_MAIN,
+                                   PICOUI_STATE_DEFAULT,
+                                   widget->bg_color,
+                                   widget->text_color,
+                                   widget->border_color);
     return 0;
 }
 
@@ -430,6 +459,7 @@ int picoui_widget_set_radius(struct picoui_widget *widget, int radius)
     }
 
     widget->radius = radius;
+    picoui_native_style_set_scalar(widget, widget->radius, -1);
     return 0;
 }
 
@@ -448,6 +478,7 @@ int picoui_widget_set_padding(struct picoui_widget *widget, int padding)
     }
 
     widget->padding = padding;
+    picoui_native_style_set_scalar(widget, -1, widget->padding);
     if (widget->backend_widget != 0) {
         return picoui_backend_widget_set_padding(widget->backend_widget, padding);
     }

@@ -146,6 +146,14 @@ static int picoui_theme_backend_can_apply_style(const struct picoui_backend_widg
         && backend_widget->theme != 0;
 }
 
+void picoui_native_style_set_scalar(const struct picoui_widget *widget, int radius, int padding);
+void picoui_native_style_set_colors(const struct picoui_widget *widget,
+                                    enum picoui_part part,
+                                    enum picoui_state state,
+                                    unsigned int bg_color,
+                                    unsigned int text_color,
+                                    unsigned int border_color);
+
 /**
  * @brief Create theme instance
  *
@@ -253,10 +261,6 @@ int picoui_theme_apply_to_widget(struct picoui_theme *theme,
     if (!picoui_theme_part_supported(backend_widget->kind, part)) {
         return -1;
     }
-    if (!picoui_theme_backend_can_apply_style(backend_widget)) {
-        return -1;
-    }
-
     picoui_theme_map_widget_colors(theme, part, state, &bg_color, &text_color, &border_color);
     if (picoui_theme_apply_widget_metrics(theme, widget, backend_widget->kind) != 0) {
         return -1;
@@ -265,6 +269,12 @@ int picoui_theme_apply_to_widget(struct picoui_theme *theme,
     widget->bg_color = bg_color;
     widget->text_color = text_color;
     widget->border_color = border_color;
+    picoui_native_style_set_colors(widget, part, state, bg_color, text_color, border_color);
+    picoui_native_style_set_scalar(widget, widget->radius, widget->padding);
+    if (!picoui_theme_backend_can_apply_style(backend_widget)) {
+        return 0;
+    }
+
     return picoui_backend_widget_apply_style(widget->backend_widget,
                                              part,
                                              state,

@@ -21,6 +21,8 @@
 
 #include <stdlib.h>
 
+int picoui_native_text_set_text(struct picoui_text *text, const char *value);
+
 static int picoui_text_props_are_valid(const struct picoui_text_props *props)
 {
     return props != 0
@@ -54,6 +56,10 @@ struct picoui_text *picoui_text_create(struct picoui_window *parent, const char 
 
     text->widget.backend_widget = picoui_backend_create_text(parent->widget.backend_widget, id);
     if (text->widget.backend_widget == 0) {
+        free(text);
+        return 0;
+    }
+    if (picoui_backend_widget_bind_host(text->widget.backend_widget, &text->widget) != 0) {
         free(text);
         return 0;
     }
@@ -127,14 +133,35 @@ struct picoui_text *picoui_text_create_with_props(struct picoui_window *parent,
 
 int picoui_text_set_text(struct picoui_text *text, const char *value)
 {
+    struct picoui_backend_widget *backend;
+    const char *old_widget_text;
+    const char *old_backend_text;
+
     if (text == 0 || value == 0) {
         return -1;
     }
 
+    backend = (struct picoui_backend_widget *)text->widget.backend_widget;
+    if (backend == 0) {
+        return -1;
+    }
+
+    old_widget_text = text->widget.text;
+    old_backend_text = backend->text;
+
     if (picoui_widget_set_text(&text->widget, value) != 0) {
         return -1;
     }
-    return picoui_backend_set_text(text->widget.backend_widget, value);
+    if (picoui_backend_set_text(text->widget.backend_widget, value) != 0) {
+        text->widget.text = old_widget_text;
+        return -1;
+    }
+    if (picoui_native_text_set_text(text, value) != 0) {
+        text->widget.text = old_widget_text;
+        backend->text = old_backend_text;
+        return -1;
+    }
+    return 0;
 }
 
 /**
@@ -147,15 +174,41 @@ int picoui_text_set_text(struct picoui_text *text, const char *value)
 
 int picoui_text_set_static_text(struct picoui_text *text, const char *value)
 {
+    struct picoui_backend_widget *backend;
+    const char *old_widget_text;
+    const char *old_backend_text;
+
     if (text == 0 || value == 0) {
         return -1;
     }
+
+    backend = (struct picoui_backend_widget *)text->widget.backend_widget;
+    if (backend == 0) {
+        return -1;
+    }
+
+    old_widget_text = text->widget.text;
+    old_backend_text = backend->text;
 
     if (picoui_backend_text_set_static_text(text->widget.backend_widget, value) != 0) {
         return -1;
     }
     text->widget.text = value;
+    if (picoui_native_text_set_text(text, value) != 0) {
+        text->widget.text = old_widget_text;
+        backend->text = old_backend_text;
+        return -1;
+    }
     return 0;
+}
+
+const char *picoui_text_get_text(const struct picoui_text *text)
+{
+    if (text == 0) {
+        return 0;
+    }
+
+    return text->widget.text;
 }
 
 /**

@@ -205,7 +205,7 @@ build\picoui-runtime\examples\sdl\picoui_hello_world_demo.exe
    - `layout_parity`
    - `grid_parity`
 4. `manual artifact`
-   - 以 `docs/picoui-serial/C-线人工窗口验收记录.md` 为 demo-level truth-source
+   - pre-v1.0 历史口径以 `docs/picoui-serial/archive/pre-v1.0-wrapper-backend/C-线人工窗口验收记录.md` 为 demo-level truth-source
    - 当前 final release 目标集包含：
      `hello_world / basic_widgets / layout_flex / layout_grid / theme_showcase / settings_panel / list_basic / progress_bar_basic / arc_basic / gauge_basic / icon_slider_basic / radial_menu_basic / progress_wheel_basic / qrcode_basic / message_box_basic / date_time_basic / clock_basic / keyboard_basic / line_edit_basic / combo_box_basic / scroll_selecter_basic / table_basic / graph_basic / calendar_basic / animation_basic`
 
@@ -757,7 +757,7 @@ artifacts/picoui/manual-window/<demo-name>/frame.ppm
 
 - 使用非 `dummy` 的 SDL video driver，并且脚本没有输出 `SKIP`。
 - 运行时确实出现 OS 窗口，人工观察结果符合 demo 预期。
-- `docs/picoui-serial/C-线人工窗口验收记录.md` 已记录日期、平台、SDL video driver、demo target、构建目录、运行命令、artifact 路径、人工结论和已知限制。
+- pre-v1.0 历史口径中，`docs/picoui-serial/archive/pre-v1.0-wrapper-backend/C-线人工窗口验收记录.md` 已记录日期、平台、SDL video driver、demo target、构建目录、运行命令、artifact 路径、人工结论和已知限制。
 
 如果脚本输出 `PICOUI_MANUAL_WINDOW_ARTIFACT=SKIP`，只能说明当前环境不适合执行人工窗口验收；如果使用 `SDL_VIDEODRIVER=dummy` 生成 PPM，也只能作为 readback artifact，不能写成人工窗口结论。该 gate 也不能替代 `ctest`、backend mapping gate 或 automatic visible gate。
 
