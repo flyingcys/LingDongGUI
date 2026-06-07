@@ -203,14 +203,14 @@ int picoui_native_render_once(void *root_backend_widget)
     return picoui_native_render_visit(root);
 }
 
-void picoui_deinit(void)
+void picoui_native_core_deinit_impl(void)
 {
     picoui_native_render_reset();
     picoui_native_event_deinit();
     picoui_native_runtime_deinit();
 }
 
-int picoui_timer_handler(void)
+int picoui_native_core_timer_handler_impl(void)
 {
     int rc;
 

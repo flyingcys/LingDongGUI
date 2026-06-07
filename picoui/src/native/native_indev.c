@@ -8,7 +8,7 @@ struct picoui_indev {
     void *read_user_data;
 };
 
-struct picoui_indev *picoui_indev_create(void)
+struct picoui_indev *picoui_native_indev_create_impl(void)
 {
     return (struct picoui_indev *)calloc(1, sizeof(struct picoui_indev));
 }

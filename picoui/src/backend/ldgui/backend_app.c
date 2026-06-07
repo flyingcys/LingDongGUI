@@ -104,7 +104,7 @@ static void picoui_backend_runtime_page_quit(ld_scene_t *scene)
 }
 
 struct picoui_backend_runtime_state {
-    struct picoui_port_sdl_host *host;
+    struct picoui_sdl_runtime *sdl_runtime;
     COLOUR_INT *real_pixels;
     uint32_t *present_pixels;
     arm_2d_tile_t real_tile;
@@ -149,7 +149,7 @@ static void picoui_backend_bridge_pointer_from_port(struct picoui_app *app,
     int16_t mapped_x;
     int16_t mapped_y;
 
-    if (app == NULL || state == NULL || state->host == NULL) {
+    if (app == NULL || state == NULL || state->sdl_runtime == NULL) {
         return;
     }
 
@@ -163,7 +163,9 @@ static void picoui_backend_bridge_pointer_from_port(struct picoui_app *app,
 
     window_width = display.width;
     window_height = display.height;
-    (void)picoui_port_sdl_host_get_window_size(state->host, &window_width, &window_height);
+    if (picoui_port_sdl_runtime_get_window_size(state->sdl_runtime, &window_width, &window_height) != 0) {
+        return;
+    }
     mapped_x = picoui_backend_map_pointer_axis(pointer_x, window_width, display.width);
     mapped_y = picoui_backend_map_pointer_axis(pointer_y, window_height, display.height);
     if (picoui_backend_touch_log_enabled()) {
@@ -186,7 +188,7 @@ static void picoui_backend_commit_pointer_event(struct picoui_backend_runtime_st
                                                 int y,
                                                 int pressed)
 {
-    if (state == NULL || state->host == NULL || app == NULL) {
+    if (state == NULL || state->sdl_runtime == NULL || app == NULL) {
         return;
     }
 
@@ -601,15 +603,8 @@ int picoui_backend_app_init(struct picoui_app *app)
     state->auto_quit_ms = picoui_backend_parse_auto_quit_ms();
     state->display_width = 480;
     state->display_height = 320;
-    state->host = picoui_port_sdl_host_create();
-    if (state->host == NULL) {
-        free(app_state);
-        free(state);
-        return -1;
-    }
     app_state->ld_scene = calloc(1, sizeof(*app_state->ld_scene));
     if (app_state->ld_scene == NULL) {
-        picoui_port_sdl_host_destroy(state->host);
         free(app_state);
         free(state);
         return -1;
@@ -630,47 +625,52 @@ int picoui_backend_app_init(struct picoui_app *app)
     state->temporary_smoke_logged = 0;
     state->smoke_layout_used = 0;
     state->smoke_layout_marker_logged = 0;
-    if (picoui_port_sdl_attach(app) != 0) {
-        free(app_state->ld_scene);
-        picoui_port_sdl_host_destroy(state->host);
-        free(app_state);
-        free(state);
-        return -1;
-    }
+    (void)picoui_port_sdl_attach(app);
     app->backend_app = app_state;
     return 0;
 }
 
-static int picoui_backend_resize_runtime_buffers(struct picoui_backend_runtime_state *state,
-                                                 int width,
-                                                 int height)
+static int picoui_backend_ensure_window(struct picoui_app *app,
+                                        struct picoui_backend_runtime_state *state)
 {
-    if (state == NULL || width <= 0 || height <= 0) {
+    struct picoui_display_config display = {0};
+
+    if (picoui_backend_get_display_config(app, &display) != 0) {
         return -1;
     }
-    if (state->real_pixels != NULL && state->present_pixels != NULL
-        && state->display_width == width && state->display_height == height) {
+
+    if (state->sdl_runtime != NULL) {
         return 0;
     }
 
-    free(state->real_pixels);
-    free(state->present_pixels);
-    state->real_pixels = NULL;
-    state->present_pixels = NULL;
+    state->display_width = display.width;
+    state->display_height = display.height;
 
-    state->real_pixels = calloc((size_t)width * (size_t)height, sizeof(*state->real_pixels));
-    if (state->real_pixels == NULL) {
+    state->sdl_runtime = picoui_port_sdl_runtime_create("PicoUI Demo",
+                                                        state->display_width,
+                                                        state->display_height);
+    if (state->sdl_runtime == NULL) {
         return -1;
     }
-    state->present_pixels = calloc((size_t)width * (size_t)height, sizeof(*state->present_pixels));
+
+    state->real_pixels = calloc((size_t)state->display_width * (size_t)state->display_height,
+                                sizeof(*state->real_pixels));
+    if (state->real_pixels == NULL) {
+        picoui_port_sdl_runtime_destroy(state->sdl_runtime);
+        state->sdl_runtime = NULL;
+        return -1;
+    }
+
+    state->present_pixels = calloc((size_t)state->display_width * (size_t)state->display_height,
+                                   sizeof(*state->present_pixels));
     if (state->present_pixels == NULL) {
         free(state->real_pixels);
+        picoui_port_sdl_runtime_destroy(state->sdl_runtime);
         state->real_pixels = NULL;
+        state->sdl_runtime = NULL;
         return -1;
     }
 
-    state->display_width = width;
-    state->display_height = height;
     state->real_tile = (arm_2d_tile_t) {
         .tRegion = {
             .tLocation = {
@@ -678,8 +678,8 @@ static int picoui_backend_resize_runtime_buffers(struct picoui_backend_runtime_s
                 .iY = 0,
             },
             .tSize = {
-                .iWidth = width,
-                .iHeight = height,
+                .iWidth = state->display_width,
+                .iHeight = state->display_height,
             },
         },
         .tInfo = {
@@ -691,29 +691,8 @@ static int picoui_backend_resize_runtime_buffers(struct picoui_backend_runtime_s
         },
         .pchBuffer = (uint8_t *)state->real_pixels,
     };
-    return 0;
-}
 
-static int picoui_backend_ensure_window(struct picoui_app *app,
-                                        struct picoui_backend_runtime_state *state)
-{
-    struct picoui_display_config display = {0};
-
-    if (app == NULL || state == NULL || state->host == NULL) {
-        return -1;
-    }
-    if (picoui_backend_get_display_config(app, &display) != 0) {
-        return -1;
-    }
-    if (picoui_port_sdl_host_ensure_window(state->host, "PicoUI Demo", display.width, display.height) != 0) {
-        return -1;
-    }
-    if (picoui_backend_resize_runtime_buffers(state, display.width, display.height) != 0) {
-        return -1;
-    }
-    if (state->start_ticks == 0U) {
-        state->start_ticks = picoui_tick_get(app);
-    }
+    state->start_ticks = picoui_tick_get(app);
     return 0;
 }
 
@@ -722,7 +701,8 @@ static void picoui_backend_present_real_frame(struct picoui_backend_runtime_stat
     int x;
     int y;
 
-    if (state == NULL || state->host == NULL || state->real_pixels == NULL || state->present_pixels == NULL) {
+    if (state == NULL || state->sdl_runtime == NULL || state->real_pixels == NULL
+        || state->present_pixels == NULL) {
         return;
     }
 
@@ -733,14 +713,10 @@ static void picoui_backend_present_real_frame(struct picoui_backend_runtime_stat
         }
     }
 
-    (void)picoui_port_sdl_host_present(state->host,
-                                       state->present_pixels,
-                                       state->display_width,
-                                       state->display_height,
-                                       0x2E,
-                                       0x34,
-                                       0x40,
-                                       0xFF);
+    (void)picoui_port_sdl_runtime_present_argb8888(state->sdl_runtime,
+                                                   state->present_pixels,
+                                                   state->display_width,
+                                                   state->display_height);
 }
 
 static void picoui_backend_apply_real_widget_layout(struct picoui_backend_runtime_state *state,
@@ -831,6 +807,7 @@ static void picoui_backend_render(struct picoui_backend_runtime_state *state,
             picoui_backend_present_real_frame(state);
         }
     }
+
     (void)picoui_backend_write_capture(state);
 }
 
@@ -972,25 +949,38 @@ int picoui_backend_app_run(struct picoui_app *app, struct picoui_window *window)
     }
 
     while (running) {
-        struct picoui_port_sdl_event event = {0};
-        int poll_rc;
-
-        while ((poll_rc = picoui_port_sdl_host_poll_event(state->host, &event)) > 0) {
-            if (event.type == PICOUI_PORT_SDL_EVENT_QUIT) {
+        struct picoui_sdl_event event = {0};
+        while (picoui_port_sdl_runtime_poll_event(state->sdl_runtime, &event) > 0) {
+            if (event.type == PICOUI_PORT_EVENT_QUIT) {
                 running = 0;
-            } else if (event.type == PICOUI_PORT_SDL_EVENT_POINTER) {
+            } else if (event.type == PICOUI_PORT_EVENT_POINTER_DOWN) {
                 if (picoui_backend_touch_log_enabled()) {
-                    printf("[PICOUI_TOUCH][SDL] type=%s pos=(%d,%d)\n",
-                           event.pressed ? "down" : "motion",
+                    printf("[PICOUI_TOUCH][SDL] type=down button=%u pos=(%d,%d)\n",
+                           1U,
                            event.x,
                            event.y);
                     fflush(stdout);
                 }
-                picoui_backend_commit_pointer_event(state, app, event.x, event.y, event.pressed);
+                picoui_backend_commit_pointer_event(state, app, event.x, event.y, 1);
+            } else if (event.type == PICOUI_PORT_EVENT_POINTER_UP) {
+                if (picoui_backend_touch_log_enabled()) {
+                    printf("[PICOUI_TOUCH][SDL] type=up button=%u pos=(%d,%d)\n",
+                           1U,
+                           event.x,
+                           event.y);
+                    fflush(stdout);
+                }
+                picoui_backend_commit_pointer_event(state, app, event.x, event.y, 0);
+            } else if (event.type == PICOUI_PORT_EVENT_POINTER_MOTION) {
+                if (picoui_backend_touch_log_enabled()) {
+                    printf("[PICOUI_TOUCH][SDL] type=motion buttons=0x%x pos=(%d,%d)\n",
+                           event.pressed ? 0x1U : 0U,
+                           event.x,
+                           event.y);
+                    fflush(stdout);
+                }
+                picoui_backend_commit_pointer_event(state, app, event.x, event.y, event.pressed != 0U);
             }
-        }
-        if (poll_rc < 0) {
-            return -1;
         }
 
         active_window = app->root_window != NULL ? app->root_window : window;
@@ -1074,7 +1064,7 @@ void picoui_backend_app_shutdown(struct picoui_app *app)
     app_state = (struct picoui_backend_app_state *)app->backend_app;
 
     if (state != NULL) {
-        picoui_port_sdl_host_destroy(state->host);
+        picoui_port_sdl_runtime_destroy(state->sdl_runtime);
         free(state->present_pixels);
         free(state->real_pixels);
         free(state);

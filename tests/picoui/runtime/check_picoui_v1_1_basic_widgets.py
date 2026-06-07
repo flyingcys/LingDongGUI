@@ -84,6 +84,10 @@ def _assert_runtime_smoke(executable: Path) -> None:
 def main() -> int:
     _assert_v1_1_minimal_source()
     subprocess.run([RTK, "cmake", "-S", str(ROOT), "-B", str(BUILD_DIR)], check=True)
+    subprocess.run(
+        [RTK, "cmake", "--build", str(BUILD_DIR), "--target", TARGET],
+        check=True,
+    )
     _assert_runtime_smoke(_find_demo_executable())
     return 0
 

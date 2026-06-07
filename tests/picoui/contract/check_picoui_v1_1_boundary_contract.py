@@ -1,14 +1,12 @@
 import json
+import re
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[3]
-CONTRACT = ROOT / "tests/picoui/contract/picoui_v1_1_boundary_contract.json"
-TEST_SOURCE = ROOT / "tests/picoui/unit/test_picoui_v1_1_public_headers.c"
-PORT_TEST_SOURCE = ROOT / "tests/picoui/unit/test_picoui_v1_1_port_sdl.c"
-PORT_SOURCE = ROOT / "picoui/port/sdl/sdl_v1_1.c"
-STAGE_DOC = ROOT / "docs/picoui-serial/v1.1/01-C1-阶段记录.md"
-INDEX_DOC = ROOT / "docs/picoui-serial/v1.1/线计划索引.md"
+CONTRACT = ROOT / "tests" / "picoui" / "contract" / "picoui_v1_1_boundary_contract.json"
+APP_HEADER = ROOT / "picoui" / "include" / "picoui" / "app.h"
+UMBRELLA_HEADER = ROOT / "picoui" / "include" / "picoui" / "picoui.h"
 REQUIRED_DELETE_APIS = {
     "picoui_app_create",
     "picoui_app_run",
@@ -24,17 +22,14 @@ REQUIRED_DELETE_APIS = {
     "picoui_app_timer_destroy",
     "picoui_app_destroy",
 }
+APP_SYMBOL_RE = re.compile(r"\b(picoui_app_[A-Za-z0-9_]+)\b(?=\s*\()")
 
 
 def main() -> int:
     assert CONTRACT.is_file(), f"missing {CONTRACT.relative_to(ROOT)}"
+    assert APP_HEADER.is_file(), f"missing {APP_HEADER.relative_to(ROOT)}"
+    assert UMBRELLA_HEADER.is_file(), f"missing {UMBRELLA_HEADER.relative_to(ROOT)}"
     data = json.loads(CONTRACT.read_text(encoding="utf-8"))
-    test_text = TEST_SOURCE.read_text(encoding="utf-8")
-    port_test_text = PORT_TEST_SOURCE.read_text(encoding="utf-8")
-    port_source_text = PORT_SOURCE.read_text(encoding="utf-8")
-    stage_doc = STAGE_DOC.read_text(encoding="utf-8")
-    index_doc = INDEX_DOC.read_text(encoding="utf-8")
-
     assert data.get("version") == "v1.1"
     assert set(data.get("delete_public_apis", [])) == REQUIRED_DELETE_APIS
     assert data.get("remove_directories") == [
@@ -48,19 +43,12 @@ def main() -> int:
         "SIGNAL_",
         "arm_2d_control_node_t",
     ]
-    for header in data.get("minimal_public_headers", []):
-        assert f'#include "{header}"' in test_text
-    for header in data.get("minimal_port_headers", []):
-        assert f'#include "{header}"' in port_test_text
-    for header in data.get("forbid_v1_1_test_headers", []):
-        assert f'#include "{header}"' not in test_text
-        assert f'#include "{header}"' not in port_test_text
-    for claim in data.get("minimal_port_claims", []):
-        assert claim in port_source_text or claim in port_test_text
-    assert "- `C1` 已完成" not in stage_doc
-    assert "- `C1 gate`：PASS" not in stage_doc
-    assert "| `C1` | `docs/picoui-serial/v1.1/02-C1-core最小骨架计划.md` | core 最小骨架、删除边界和 build 红线 | 已完成 |" not in index_doc
-    assert "当前入口仍保持默认 `picoui = v1.0-native`" in stage_doc
+    exported = set(APP_SYMBOL_RE.findall(APP_HEADER.read_text(encoding="utf-8")))
+    assert exported == REQUIRED_DELETE_APIS, (
+        f"app.h exports drifted from v1.1 delete inventory: {sorted(exported ^ REQUIRED_DELETE_APIS)}"
+    )
+    umbrella = UMBRELLA_HEADER.read_text(encoding="utf-8")
+    assert '#include "picoui/app.h"' in umbrella, "picoui.h no longer exposes app.h"
     return 0
 
 

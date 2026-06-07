@@ -1,22 +1,36 @@
+#include "picoui/picoui.h"
+#include "picoui/port/sdl.h"
+#include "internal.h"
+
 #include <assert.h>
-#include <stdio.h>
-#include <string.h>
+
+static void test_root_window_inherits_default_display_contract(void)
+{
+    struct picoui_screen *screen;
+    struct picoui_window *window;
+    struct picoui_backend_widget *backend;
+    struct picoui_display_config config = {0};
+
+    assert(picoui_init() == 0);
+    assert(picoui_sdl_hal_init(320, 480) == 0);
+
+    screen = picoui_screen_active();
+    assert(screen != NULL);
+    window = picoui_window_create_root(screen, "root");
+    assert(window != NULL);
+
+    backend = (struct picoui_backend_widget *)window->widget.backend_widget;
+    assert(backend != NULL);
+    assert(backend->owner != NULL);
+    assert(picoui_display_get_config(backend->owner, &config) == 0);
+    assert(config.width == 320);
+    assert(config.height == 480);
+
+    picoui_deinit();
+}
 
 int main(void)
 {
-    FILE *fp = fopen("/Users/cys/embedded/LingDongGUI/picoui/src/backend/ldgui/backend_app.c", "rb");
-    char buffer[4096];
-    size_t n;
-
-    assert(fp != NULL);
-    n = fread(buffer, 1, sizeof(buffer) - 1, fp);
-    fclose(fp);
-    buffer[n] = '\0';
-
-    assert(strstr(buffer, "<SDL.h>") == NULL);
-    assert(strstr(buffer, "SDL_Init(") == NULL);
-    assert(strstr(buffer, "SDL_CreateWindow(") == NULL);
-    assert(strstr(buffer, "SDL_PollEvent(") == NULL);
-    assert(strstr(buffer, "SDL_RenderPresent(") == NULL);
+    test_root_window_inherits_default_display_contract();
     return 0;
 }

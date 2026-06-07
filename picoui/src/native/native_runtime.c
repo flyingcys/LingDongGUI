@@ -88,7 +88,7 @@ static unsigned long picoui_runtime_elapsed_ms(struct timespec start_ticks, stru
     return (unsigned long)delta_sec * 1000UL + (unsigned long)(delta_nsec / 1000000L);
 }
 
-int picoui_init(void)
+int picoui_native_runtime_init_impl(void)
 {
     struct timespec now = {0, 0};
 

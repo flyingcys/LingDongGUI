@@ -35,6 +35,22 @@ int picoui_backend_label_set_background_source(struct picoui_label *label,
                                                struct picoui_image_source *source);
 const char *picoui_backend_label_get_text(struct picoui_label *label);
 
+static void picoui_label_destroy_partial(struct picoui_label *label)
+{
+    if (label == 0) {
+        return;
+    }
+
+    if (label->widget.backend_widget != 0) {
+        (void)picoui_backend_widget_unbind_host(label->widget.backend_widget);
+        (void)picoui_backend_widget_detach_from_parent(label->widget.backend_widget);
+        free(label->widget.backend_widget);
+        label->widget.backend_widget = 0;
+    }
+
+    free(label);
+}
+
 static int picoui_label_props_are_valid(const struct picoui_label_props *props)
 {
     return props != 0
@@ -76,6 +92,10 @@ struct picoui_label *picoui_label_create(struct picoui_window *parent, const cha
     label->id = id;
     label->widget.visible = 1;
     label->widget.enabled = 1;
+    if (picoui_backend_widget_bind_host(label->widget.backend_widget, &label->widget) != 0) {
+        picoui_label_destroy_partial(label);
+        return 0;
+    }
     return label;
 }
 
@@ -102,28 +122,28 @@ struct picoui_label *picoui_label_create_with_props(struct picoui_window *parent
     }
 
     if (props->text != 0 && picoui_label_set_text(label, props->text) != 0) {
-        free(label);
+        picoui_label_destroy_partial(label);
         return 0;
     }
     if (props->font != 0 && picoui_label_set_font(label, props->font) != 0) {
-        free(label);
+        picoui_label_destroy_partial(label);
         return 0;
     }
     if (props->style_class != 0
         && picoui_widget_set_style_class(&label->widget, props->style_class) != 0) {
-        free(label);
+        picoui_label_destroy_partial(label);
         return 0;
     }
     if (picoui_widget_set_user_data(&label->widget, props->user_data) != 0
         || picoui_widget_set_border_color(&label->widget, props->border_color) != 0
         || picoui_widget_set_radius(&label->widget, props->radius) != 0
         || picoui_widget_set_padding(&label->widget, props->padding) != 0) {
-        free(label);
+        picoui_label_destroy_partial(label);
         return 0;
     }
     if ((props->width > 0 || props->height > 0)
         && picoui_widget_set_size(&label->widget, props->width, props->height) != 0) {
-        free(label);
+        picoui_label_destroy_partial(label);
         return 0;
     }
     if (picoui_label_set_bg_color(label, props->bg_color) != 0
@@ -131,7 +151,7 @@ struct picoui_label *picoui_label_create_with_props(struct picoui_window *parent
         || picoui_label_set_background_source(label, props->background_source) != 0
         || picoui_label_set_transparent(label, props->transparent) != 0
         || picoui_label_set_align(label, props->align) != 0) {
-        free(label);
+        picoui_label_destroy_partial(label);
         return 0;
     }
 
@@ -166,11 +186,11 @@ int picoui_label_set_text(struct picoui_label *label, const char *text)
 
 const char *picoui_label_get_text(struct picoui_label *label)
 {
-    if (label == 0 || label->widget.backend_widget == 0) {
+    if (label == 0) {
         return 0;
     }
 
-    return picoui_backend_label_get_text(label);
+    return label->widget.text;
 }
 
 /**

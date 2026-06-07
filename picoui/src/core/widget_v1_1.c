@@ -1,4 +1,5 @@
 #include "runtime_state.h"
+#include "internal_v1_1.h"
 
 #include "picoui/widget.h"
 
@@ -74,7 +75,7 @@ void picoui_v1_1_widget_unbind_root(struct picoui_widget *root)
 {
     struct picoui_v1_1_widget_binding *binding;
 
-    binding = picoui_v1_1_widget_binding_ensure(root);
+    binding = picoui_v1_1_widget_binding_find_mutable(root);
     if (binding == 0) {
         return;
     }
@@ -166,4 +167,33 @@ struct picoui_widget *picoui_widget_get_root(const struct picoui_widget *widget)
     const struct picoui_v1_1_widget_binding *binding = picoui_v1_1_widget_binding_find(widget);
 
     return binding != 0 ? binding->root : 0;
+}
+
+int picoui_widget_set_text(struct picoui_widget *widget, const char *text)
+{
+    if (widget == 0 || text == 0) {
+        return -1;
+    }
+
+    widget->text = text;
+    widget->dirty = 1;
+    return 0;
+}
+
+int picoui_widget_get_child_count(const struct picoui_widget *widget)
+{
+    struct picoui_widget *child;
+    int count = 0;
+
+    if (widget == 0) {
+        return -1;
+    }
+
+    child = picoui_widget_get_first_child(widget);
+    while (child != 0) {
+        ++count;
+        child = picoui_widget_get_next_sibling(child);
+    }
+
+    return count;
 }

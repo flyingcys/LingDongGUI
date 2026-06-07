@@ -7,12 +7,10 @@
 
 #include <SDL.h>
 #include <stdlib.h>
-#include <string.h>
 
 static struct picoui_display *g_picoui_sdl_display;
 static struct picoui_indev *g_picoui_sdl_pointer_indev;
-
-struct picoui_port_sdl_host {
+struct picoui_sdl_runtime {
     SDL_Window *window;
     SDL_Renderer *renderer;
     SDL_Texture *texture;
@@ -20,26 +18,38 @@ struct picoui_port_sdl_host {
     int height;
 };
 
-static int picoui_port_sdl_init_runtime(void)
-{
-    if (SDL_WasInit(SDL_INIT_VIDEO | SDL_INIT_EVENTS) == 0
-        && SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0) {
-        return -1;
-    }
-
-    return 0;
-}
-
-static unsigned int picoui_port_sdl_tick_get(void *user_data)
+unsigned int picoui_port_sdl_tick_get(void *user_data)
 {
     (void)user_data;
     return (unsigned int)SDL_GetTicks();
 }
 
-static void picoui_port_sdl_delay(unsigned int ms, void *user_data)
+void picoui_port_sdl_delay(unsigned int ms, void *user_data)
 {
     (void)user_data;
     SDL_Delay((Uint32)ms);
+}
+
+int picoui_port_sdl_copy_default_display_config(struct picoui_display_config *out_config)
+{
+    int width = 480;
+    int height = 320;
+
+    if (out_config == 0) {
+        return -1;
+    }
+
+    if (g_picoui_sdl_display != 0
+        && picoui_display_get_size(g_picoui_sdl_display, &width, &height) != 0) {
+        return -1;
+    }
+
+    out_config->width = width;
+    out_config->height = height;
+    out_config->color_format = PICOUI_COLOR_FORMAT_RGB565;
+    out_config->buffer_height = 0;
+    out_config->user_data = 0;
+    return 0;
 }
 
 int picoui_sdl_hal_init(int width, int height)
@@ -51,7 +61,8 @@ int picoui_sdl_hal_init(int width, int height)
         return -1;
     }
 
-    if (picoui_port_sdl_init_runtime() != 0) {
+    if (SDL_WasInit(SDL_INIT_VIDEO | SDL_INIT_EVENTS) == 0
+        && SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0) {
         return -1;
     }
 
@@ -89,28 +100,15 @@ int picoui_port_sdl_default_pointer_indev(struct picoui_indev **out_indev)
 
 int picoui_port_sdl_attach(struct picoui_app *app)
 {
-    struct picoui_display_config display = {
-        .width = 480,
-        .height = 320,
-        .color_format = PICOUI_COLOR_FORMAT_RGB565,
-        .buffer_height = 0,
-        .user_data = NULL,
-    };
-    int width = 0;
-    int height = 0;
+    struct picoui_display_config display = {0};
 
     if (app == NULL) {
         return -1;
     }
 
-    if (g_picoui_sdl_display != NULL
-        && picoui_display_get_size(g_picoui_sdl_display, &width, &height) == 0
-        && width > 0
-        && height > 0) {
-        display.width = width;
-        display.height = height;
+    if (picoui_port_sdl_copy_default_display_config(&display) != 0) {
+        return -1;
     }
-
     if (picoui_display_set_config(app, &display) != 0) {
         return -1;
     }
@@ -124,169 +122,164 @@ int picoui_port_sdl_attach(struct picoui_app *app)
     return 0;
 }
 
-static void picoui_port_sdl_host_reset(struct picoui_port_sdl_host *host)
+struct picoui_sdl_runtime *picoui_port_sdl_runtime_create(const char *title, int width, int height)
 {
-    if (host == NULL) {
-        return;
-    }
+    struct picoui_sdl_runtime *runtime;
 
-    if (host->texture != NULL) {
-        SDL_DestroyTexture(host->texture);
+    if (title == 0 || width <= 0 || height <= 0) {
+        return 0;
     }
-    if (host->renderer != NULL) {
-        SDL_DestroyRenderer(host->renderer);
-    }
-    if (host->window != NULL) {
-        SDL_DestroyWindow(host->window);
-    }
-
-    host->texture = NULL;
-    host->renderer = NULL;
-    host->window = NULL;
-    host->width = 0;
-    host->height = 0;
-}
-
-struct picoui_port_sdl_host *picoui_port_sdl_host_create(void)
-{
-    return (struct picoui_port_sdl_host *)calloc(1, sizeof(struct picoui_port_sdl_host));
-}
-
-void picoui_port_sdl_host_destroy(struct picoui_port_sdl_host *host)
-{
-    if (host == NULL) {
-        return;
-    }
-
-    picoui_port_sdl_host_reset(host);
-    free(host);
-}
-
-int picoui_port_sdl_host_ensure_window(struct picoui_port_sdl_host *host,
-                                       const char *title,
-                                       int width,
-                                       int height)
-{
-    const char *window_title = title != NULL ? title : "PicoUI Demo";
-
-    if (host == NULL || width <= 0 || height <= 0) {
-        return -1;
-    }
-    if (picoui_port_sdl_init_runtime() != 0) {
-        return -1;
-    }
-    if (host->window != NULL && host->renderer != NULL && host->texture != NULL
-        && host->width == width && host->height == height) {
+    if (SDL_WasInit(SDL_INIT_VIDEO | SDL_INIT_EVENTS) == 0
+        && SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0) {
         return 0;
     }
 
-    picoui_port_sdl_host_reset(host);
-    host->window = SDL_CreateWindow(window_title,
-                                    SDL_WINDOWPOS_CENTERED,
-                                    SDL_WINDOWPOS_CENTERED,
-                                    width,
-                                    height,
-                                    SDL_WINDOW_SHOWN);
-    if (host->window == NULL) {
+    runtime = calloc(1, sizeof(*runtime));
+    if (runtime == 0) {
+        return 0;
+    }
+    runtime->window = SDL_CreateWindow(title,
+                                       SDL_WINDOWPOS_CENTERED,
+                                       SDL_WINDOWPOS_CENTERED,
+                                       width,
+                                       height,
+                                       SDL_WINDOW_SHOWN);
+    if (runtime->window == 0) {
+        free(runtime);
+        return 0;
+    }
+    runtime->renderer = SDL_CreateRenderer(runtime->window, -1, SDL_RENDERER_ACCELERATED);
+    if (runtime->renderer == 0) {
+        runtime->renderer = SDL_CreateRenderer(runtime->window, -1, SDL_RENDERER_SOFTWARE);
+    }
+    if (runtime->renderer == 0) {
+        SDL_DestroyWindow(runtime->window);
+        free(runtime);
+        return 0;
+    }
+    runtime->texture = SDL_CreateTexture(runtime->renderer,
+                                         SDL_PIXELFORMAT_ARGB8888,
+                                         SDL_TEXTUREACCESS_STREAMING,
+                                         width,
+                                         height);
+    if (runtime->texture == 0) {
+        SDL_DestroyRenderer(runtime->renderer);
+        SDL_DestroyWindow(runtime->window);
+        free(runtime);
+        return 0;
+    }
+    runtime->width = width;
+    runtime->height = height;
+    return runtime;
+}
+
+void picoui_port_sdl_runtime_destroy(struct picoui_sdl_runtime *runtime)
+{
+    if (runtime == 0) {
+        return;
+    }
+    if (runtime->texture != 0) {
+        SDL_DestroyTexture(runtime->texture);
+    }
+    if (runtime->renderer != 0) {
+        SDL_DestroyRenderer(runtime->renderer);
+    }
+    if (runtime->window != 0) {
+        SDL_DestroyWindow(runtime->window);
+    }
+    free(runtime);
+}
+
+int picoui_port_sdl_runtime_get_window_size(const struct picoui_sdl_runtime *runtime,
+                                            int *width,
+                                            int *height)
+{
+    if (runtime == 0 || runtime->window == 0 || width == 0 || height == 0) {
         return -1;
     }
-
-    host->renderer = SDL_CreateRenderer(host->window, -1, SDL_RENDERER_ACCELERATED);
-    if (host->renderer == NULL) {
-        host->renderer = SDL_CreateRenderer(host->window, -1, SDL_RENDERER_SOFTWARE);
-    }
-    if (host->renderer == NULL) {
-        picoui_port_sdl_host_reset(host);
-        return -1;
-    }
-
-    host->texture = SDL_CreateTexture(host->renderer,
-                                      SDL_PIXELFORMAT_ARGB8888,
-                                      SDL_TEXTUREACCESS_STREAMING,
-                                      width,
-                                      height);
-    if (host->texture == NULL) {
-        picoui_port_sdl_host_reset(host);
-        return -1;
-    }
-
-    host->width = width;
-    host->height = height;
+    SDL_GetWindowSize(runtime->window, width, height);
     return 0;
 }
 
-int picoui_port_sdl_host_get_window_size(struct picoui_port_sdl_host *host, int *width, int *height)
+int picoui_port_sdl_runtime_poll_event(struct picoui_sdl_runtime *runtime,
+                                       struct picoui_sdl_event *event)
 {
-    if (host == NULL || host->window == NULL || width == NULL || height == NULL) {
+    SDL_Event sdl_event;
+
+    if (runtime == 0 || event == 0) {
         return -1;
     }
+    if (SDL_PollEvent(&sdl_event) == 0) {
+        event->type = PICOUI_PORT_EVENT_NONE;
+        event->x = 0;
+        event->y = 0;
+        event->pressed = 0U;
+        return 0;
+    }
 
-    SDL_GetWindowSize(host->window, width, height);
-    return 0;
+    event->x = 0;
+    event->y = 0;
+    event->pressed = 0U;
+    switch (sdl_event.type) {
+    case SDL_QUIT:
+        event->type = PICOUI_PORT_EVENT_QUIT;
+        return 1;
+    case SDL_MOUSEBUTTONDOWN:
+        if (sdl_event.button.button != SDL_BUTTON_LEFT) {
+            event->type = PICOUI_PORT_EVENT_NONE;
+            return 1;
+        }
+        event->type = PICOUI_PORT_EVENT_POINTER_DOWN;
+        event->x = sdl_event.button.x;
+        event->y = sdl_event.button.y;
+        event->pressed = 1U;
+        return 1;
+    case SDL_MOUSEBUTTONUP:
+        if (sdl_event.button.button != SDL_BUTTON_LEFT) {
+            event->type = PICOUI_PORT_EVENT_NONE;
+            return 1;
+        }
+        event->type = PICOUI_PORT_EVENT_POINTER_UP;
+        event->x = sdl_event.button.x;
+        event->y = sdl_event.button.y;
+        return 1;
+    case SDL_MOUSEMOTION:
+        event->type = PICOUI_PORT_EVENT_POINTER_MOTION;
+        event->x = sdl_event.motion.x;
+        event->y = sdl_event.motion.y;
+        event->pressed = (sdl_event.motion.state & SDL_BUTTON_LMASK) != 0U ? 1U : 0U;
+        return 1;
+    case SDL_WINDOWEVENT:
+        event->type = sdl_event.window.event == SDL_WINDOWEVENT_EXPOSED
+                          ? PICOUI_PORT_EVENT_EXPOSED
+                          : PICOUI_PORT_EVENT_NONE;
+        return 1;
+    default:
+        event->type = PICOUI_PORT_EVENT_NONE;
+        return 1;
+    }
 }
 
-int picoui_port_sdl_host_poll_event(struct picoui_port_sdl_host *host,
-                                    struct picoui_port_sdl_event *event)
+int picoui_port_sdl_runtime_present_argb8888(struct picoui_sdl_runtime *runtime,
+                                             const unsigned int *pixels,
+                                             int width,
+                                             int height)
 {
-    SDL_Event native_event;
-
-    if (host == NULL || event == NULL) {
+    if (runtime == 0 || runtime->renderer == 0 || runtime->texture == 0 || pixels == 0) {
         return -1;
     }
-
-    memset(event, 0, sizeof(*event));
-    event->type = PICOUI_PORT_SDL_EVENT_NONE;
-    while (SDL_PollEvent(&native_event)) {
-        if (native_event.type == SDL_QUIT) {
-            event->type = PICOUI_PORT_SDL_EVENT_QUIT;
-            return 1;
-        }
-        if (native_event.type == SDL_MOUSEBUTTONDOWN
-            && native_event.button.button == SDL_BUTTON_LEFT) {
-            event->type = PICOUI_PORT_SDL_EVENT_POINTER;
-            event->x = native_event.button.x;
-            event->y = native_event.button.y;
-            event->pressed = 1;
-            return 1;
-        }
-        if (native_event.type == SDL_MOUSEBUTTONUP
-            && native_event.button.button == SDL_BUTTON_LEFT) {
-            event->type = PICOUI_PORT_SDL_EVENT_POINTER;
-            event->x = native_event.button.x;
-            event->y = native_event.button.y;
-            event->pressed = 0;
-            return 1;
-        }
-        if (native_event.type == SDL_MOUSEMOTION) {
-            event->type = PICOUI_PORT_SDL_EVENT_POINTER;
-            event->x = native_event.motion.x;
-            event->y = native_event.motion.y;
-            event->pressed = (native_event.motion.state & SDL_BUTTON_LMASK) != 0U;
-            return 1;
-        }
-    }
-
-    return 0;
-}
-
-int picoui_port_sdl_host_present(struct picoui_port_sdl_host *host,
-                                 const uint32_t *pixels,
-                                 int width,
-                                 int height,
-                                 uint8_t clear_red,
-                                 uint8_t clear_green,
-                                 uint8_t clear_blue,
-                                 uint8_t clear_alpha)
-{
-    if (host == NULL || host->renderer == NULL || host->texture == NULL || pixels == NULL
-        || width <= 0 || height <= 0) {
+    if (width != runtime->width || height != runtime->height) {
         return -1;
     }
-
-    SDL_SetRenderDrawColor(host->renderer, clear_red, clear_green, clear_blue, clear_alpha);
-    SDL_RenderClear(host->renderer);
-    SDL_UpdateTexture(host->texture, NULL, pixels, (int)((size_t)width * sizeof(*pixels)));
-    SDL_RenderCopy(host->renderer, host->texture, NULL, NULL);
-    SDL_RenderPresent(host->renderer);
+    if (SDL_UpdateTexture(runtime->texture, 0, pixels, (int)(width * (int)sizeof(*pixels))) != 0) {
+        return -1;
+    }
+    if (SDL_RenderClear(runtime->renderer) != 0) {
+        return -1;
+    }
+    if (SDL_RenderCopy(runtime->renderer, runtime->texture, 0, 0) != 0) {
+        return -1;
+    }
+    SDL_RenderPresent(runtime->renderer);
     return 0;
 }

@@ -137,11 +137,11 @@ struct picoui_window *picoui_window_create(struct picoui_app *app, const char *i
 struct picoui_window *picoui_window_create_root(struct picoui_screen *screen, const char *id)
 {
     struct picoui_app *compat_app;
+    struct picoui_window *window;
     struct picoui_display *display;
     struct picoui_display_config config = {0};
-    struct picoui_window *window;
-    int width;
-    int height;
+    int width = 0;
+    int height = 0;
 
     if (screen == 0 || id == 0) {
         return 0;
@@ -159,6 +159,7 @@ struct picoui_window *picoui_window_create_root(struct picoui_screen *screen, co
         config.height = height;
         config.color_format = PICOUI_COLOR_FORMAT_RGB565;
         config.buffer_height = 0;
+        config.user_data = 0;
         if (picoui_display_set_config(compat_app, &config) != 0) {
             picoui_app_destroy(compat_app);
             return 0;

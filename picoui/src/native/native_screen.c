@@ -14,17 +14,17 @@ static struct picoui_screen *g_active_screen = &g_default_screen;
 int picoui_native_widget_bind_root(struct picoui_screen *screen, struct picoui_window *root_window);
 int picoui_native_render_bind_root(struct picoui_screen *screen, struct picoui_window *root_window);
 
-struct picoui_screen *picoui_screen_active(void)
+struct picoui_screen *picoui_native_screen_active_impl(void)
 {
     return g_active_screen;
 }
 
-struct picoui_screen *picoui_screen_create(void)
+struct picoui_screen *picoui_native_screen_create_impl(void)
 {
     return (struct picoui_screen *)calloc(1, sizeof(struct picoui_screen));
 }
 
-int picoui_screen_load(struct picoui_screen *screen)
+int picoui_native_screen_load_impl(struct picoui_screen *screen)
 {
     if (screen == 0) {
         return -1;

@@ -1,34 +1,38 @@
 #include "runtime_state.h"
 #include "picoui/screen.h"
 
-#include <string.h>
+#include <stdlib.h>
+
+struct picoui_screen {
+    int loaded;
+    struct picoui_window *root_window;
+};
+
+static struct picoui_screen g_picoui_v1_1_default_screen;
 
 struct picoui_screen *picoui_screen_active(void)
 {
-    return picoui_runtime_state()->active_screen;
+    struct picoui_runtime_state *state = picoui_runtime_state();
+
+    if (state->active_screen == 0) {
+        state->active_screen = &g_picoui_v1_1_default_screen;
+    }
+    return state->active_screen;
 }
 
 struct picoui_screen *picoui_screen_create(void)
 {
-    struct picoui_runtime_state *state = picoui_runtime_state();
-
-    memset(&state->scratch_screen, 0, sizeof(state->scratch_screen));
-    return &state->scratch_screen;
+    return (struct picoui_screen *)calloc(1, sizeof(struct picoui_screen));
 }
 
 int picoui_screen_load(struct picoui_screen *screen)
 {
-    struct picoui_runtime_state *state = picoui_runtime_state();
-
-    if (!state->initialized || screen == 0) {
+    if (screen == 0) {
         return -1;
     }
 
-    if (state->active_screen != 0) {
-        state->active_screen->active = 0;
-    }
-    screen->active = 1;
-    state->active_screen = screen;
+    screen->loaded = 1;
+    picoui_runtime_state()->active_screen = screen;
     return 0;
 }
 
