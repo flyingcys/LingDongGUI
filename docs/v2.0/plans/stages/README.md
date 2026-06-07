@@ -59,9 +59,18 @@
 - 维持必要兼容层
 - 让对外 public surface 有明确终态
 
-### P5 Closeout 与 release 收口
+### P5 性能与内存守门
 
-文件：`docs/v2.0/plans/stages/p5-closeout-and-release-plan.md`
+文件：`docs/v2.0/plans/stages/p5-performance-and-memory-guard-plan.md`
+
+目标：
+
+- 对 `TinyUI` 相对 `LingDongGUI` 的额外开销量化守门
+- 用真实数据约束速度、RAM、二进制体积，不靠感觉下结论
+
+### P6 Closeout 与 release 收口
+
+文件：`docs/v2.0/plans/stages/p6-closeout-and-release-plan.md`
 
 目标：
 
@@ -72,3 +81,4 @@
 - 任何阶段未完成 focused tests + broad gates + docs update，不得进入下一阶段
 - 每阶段建议独立 fresh subagent
 - 跨阶段共享文件冲突时，由主线程先重新裁边界
+- `P6` 不得跳过 `P5`。没有性能/速度/RAM/体积证据，不允许写最终 closeout 结论。
