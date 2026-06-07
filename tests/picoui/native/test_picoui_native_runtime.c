@@ -630,7 +630,7 @@ static void run_basic_widgets_demo_and_assert_capture(void)
     assert(waitpid(pid, &status, 0) == pid);
     assert(WIFEXITED(status));
     assert(WEXITSTATUS(status) == 0);
-    assert_capture_size(capture_path, 480, 320);
+    assert_capture_size(capture_path, 320, 480);
     assert_capture_has_visible_content_and_blue_track(capture_path);
     assert_capture_has_expected_switch_bbox(capture_path);
     assert_capture_has_basic_widget_bands(capture_path);

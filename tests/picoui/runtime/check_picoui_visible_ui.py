@@ -580,7 +580,8 @@ def _capture_visible_metrics(path: Path) -> tuple[int, int, tuple[int, int, int]
 
 def _assert_common_visible(path: Path, demo: str) -> None:
     width, height, bg, bounds, non_bg_area, non_bg_color_count, p90, p99 = _capture_visible_metrics(path)
-    if width != 480 or height != 320:
+    expected_size = (320, 480) if demo == "basic_widgets" else (480, 320)
+    if width != expected_size[0] or height != expected_size[1]:
         raise AssertionError(f"VISIBLE FAIL: unexpected {demo} capture size: {width}x{height}")
 
     min_x, min_y, max_x, max_y = bounds
@@ -634,6 +635,9 @@ def _assert_basic_widgets_visible(path: Path) -> None:
     visible_width = max_x - min_x + 1
     visible_height = max_y - min_y + 1
     failures: list[str] = []
+    active_rows, active_columns = _active_rows_and_columns(width, height, pixels, bg)
+    row_runs = _runs(active_rows)
+    column_runs = _runs(active_columns)
 
     if visible_width < 220 or visible_height < 176:
         failures.append(
@@ -642,13 +646,16 @@ def _assert_basic_widgets_visible(path: Path) -> None:
             "expected readable UI to occupy at least 220x176 pixels"
         )
 
-    left = _column_signature(width, height, pixels, 0, width // 2)
-    right = _column_signature(width, height, pixels, width // 2, width)
-    identical_rows = sum(1 for lhs, rhs in zip(left, right) if abs(lhs - rhs) <= 1)
-    if identical_rows >= len(left) * 0.70:
+    if len(row_runs) < 5:
         failures.append(
-            "duplicate-column/structure check failed: "
-            f"{identical_rows}/{len(left)} sampled rows have near-identical left/right signatures"
+            "single-column band check failed: "
+            f"row_runs={row_runs}, expected at least 5 distinct visible row bands"
+        )
+
+    if len(column_runs) != 1:
+        failures.append(
+            "single-column structure check failed: "
+            f"column_runs={column_runs}, expected one main visible content column"
         )
 
     if failures:

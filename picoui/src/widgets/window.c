@@ -17,6 +17,7 @@
  */
 
 #include "internal.h"
+#include "picoui/display.h"
 #include "picoui/widget.h"
 #include "picoui/screen.h"
 #include "picoui/window.h"
@@ -136,7 +137,11 @@ struct picoui_window *picoui_window_create(struct picoui_app *app, const char *i
 struct picoui_window *picoui_window_create_root(struct picoui_screen *screen, const char *id)
 {
     struct picoui_app *compat_app;
+    struct picoui_display *display;
+    struct picoui_display_config config = {0};
     struct picoui_window *window;
+    int width;
+    int height;
 
     if (screen == 0 || id == 0) {
         return 0;
@@ -146,6 +151,18 @@ struct picoui_window *picoui_window_create_root(struct picoui_screen *screen, co
     compat_app = picoui_app_create();
     if (compat_app == 0) {
         return 0;
+    }
+
+    display = picoui_display_get_default();
+    if (display != 0 && picoui_display_get_size(display, &width, &height) == 0) {
+        config.width = width;
+        config.height = height;
+        config.color_format = PICOUI_COLOR_FORMAT_RGB565;
+        config.buffer_height = 0;
+        if (picoui_display_set_config(compat_app, &config) != 0) {
+            picoui_app_destroy(compat_app);
+            return 0;
+        }
     }
 
     window = picoui_window_create(compat_app, id);

@@ -20,6 +20,7 @@ set(PICOUI_UNIT_TESTS
     unit/test_picoui_port_display.c
     unit/test_picoui_port_input.c
     unit/test_picoui_port_sdl.c
+    unit/test_picoui_port_sdl_boundary.c
     unit/test_picoui_port_tick_os.c
     unit/test_picoui_image.c
     unit/test_picoui_label.c
@@ -107,8 +108,6 @@ foreach(test_src IN LISTS PICOUI_NATIVE_TESTS)
     )
 endforeach()
 
-target_link_libraries(test_picoui_port_sdl PRIVATE picoui_port_sdl)
-target_link_libraries(test_picoui_native_sdl_port PRIVATE picoui_port_sdl)
 add_dependencies(test_picoui_native_runtime picoui_basic_widgets_demo)
 target_compile_definitions(test_picoui_native_runtime PRIVATE
     PICOUI_BASIC_WIDGETS_DEMO_PATH="$<TARGET_FILE:picoui_basic_widgets_demo>"
@@ -131,6 +130,11 @@ ld_add_python_test(check_picoui_demo_main_style
 
 ld_add_python_test(check_picoui_demo_main_style_inventory
     SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/contract/check_picoui_demo_main_style_inventory.py"
+    LABELS "picoui;contract;native"
+)
+
+ld_add_python_test(check_picoui_sdl_boundary
+    SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/contract/check_picoui_sdl_boundary.py"
     LABELS "picoui;contract;native"
 )
 

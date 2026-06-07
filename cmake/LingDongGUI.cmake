@@ -296,83 +296,6 @@ function(ld_define_core_targets)
         ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_message_box.c
     )
 
-    add_library(ld_picoui_native_runtime_support STATIC ${LD_PICOUI_BACKEND_LDGUI_SOURCES})
-    target_include_directories(ld_picoui_native_runtime_support PUBLIC
-        ${LD_REPO_ROOT}/picoui/include
-        ${LD_REPO_ROOT}/picoui/src/core
-        ${LD_REPO_ROOT}/picoui/src/backend/ldgui
-        ${LD_REPO_ROOT}/picoui
-    )
-    target_link_libraries(ld_picoui_native_runtime_support PUBLIC
-        picoui_core
-        longdonggui
-        longdonggui_porting_default
-    )
-    ld_apply_picoui_runtime_screen_config(ld_picoui_native_runtime_support)
-    if(WIN32)
-        if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-            set(LD_SDL2_ROOT "${LD_EXAMPLES_DIR}/sdl/sdl2/64")
-        else()
-            set(LD_SDL2_ROOT "${LD_EXAMPLES_DIR}/sdl/sdl2/32")
-        endif()
-        target_include_directories(ld_picoui_native_runtime_support PUBLIC "${LD_SDL2_ROOT}/include/SDL2")
-        target_link_directories(ld_picoui_native_runtime_support PUBLIC "${LD_SDL2_ROOT}/lib")
-        target_link_libraries(ld_picoui_native_runtime_support PUBLIC SDL2 SDL2main)
-    else()
-        find_package(PkgConfig REQUIRED)
-        pkg_check_modules(SDL2 REQUIRED sdl2)
-        target_include_directories(ld_picoui_native_runtime_support PUBLIC ${SDL2_INCLUDE_DIRS})
-        target_link_directories(ld_picoui_native_runtime_support PUBLIC ${SDL2_LIBRARY_DIRS})
-        target_compile_options(ld_picoui_native_runtime_support PRIVATE ${SDL2_CFLAGS_OTHER})
-        target_link_options(ld_picoui_native_runtime_support PRIVATE ${SDL2_LDFLAGS_OTHER})
-        target_link_libraries(ld_picoui_native_runtime_support PUBLIC ${SDL2_LIBRARIES})
-    endif()
-    ld_apply_common_target_config(ld_picoui_native_runtime_support)
-
-    add_library(picoui_native_arm2d INTERFACE)
-    target_link_libraries(picoui_native_arm2d INTERFACE
-        picoui_core
-        ld_picoui_native_runtime_support
-    )
-    add_library(picoui ALIAS picoui_native_arm2d)
-
-    if(PICOUI_ENABLE_LEGACY_LDGUI)
-        foreach(LD_PICOUI_BACKEND_TARGET IN ITEMS picoui_backend_ldgui picoui_backend_ldgui_runtime)
-            add_library(${LD_PICOUI_BACKEND_TARGET} STATIC ${LD_PICOUI_BACKEND_LDGUI_SOURCES})
-            target_include_directories(${LD_PICOUI_BACKEND_TARGET} PUBLIC
-                ${LD_REPO_ROOT}/picoui/include
-                ${LD_REPO_ROOT}/picoui/src/core
-                ${LD_REPO_ROOT}/picoui/src/backend/ldgui
-                ${LD_REPO_ROOT}/picoui
-            )
-            target_link_libraries(${LD_PICOUI_BACKEND_TARGET} PUBLIC picoui_core longdonggui longdonggui_porting_default)
-            if(LD_PICOUI_BACKEND_TARGET STREQUAL "picoui_backend_ldgui_runtime")
-                ld_apply_picoui_runtime_screen_config(${LD_PICOUI_BACKEND_TARGET})
-            endif()
-            if(WIN32)
-                if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-                    set(LD_SDL2_ROOT "${LD_EXAMPLES_DIR}/sdl/sdl2/64")
-                else()
-                    set(LD_SDL2_ROOT "${LD_EXAMPLES_DIR}/sdl/sdl2/32")
-                endif()
-                target_include_directories(${LD_PICOUI_BACKEND_TARGET} PUBLIC "${LD_SDL2_ROOT}/include/SDL2")
-                target_link_directories(${LD_PICOUI_BACKEND_TARGET} PUBLIC "${LD_SDL2_ROOT}/lib")
-                target_link_libraries(${LD_PICOUI_BACKEND_TARGET} PUBLIC SDL2 SDL2main)
-            else()
-                find_package(PkgConfig REQUIRED)
-                pkg_check_modules(SDL2 REQUIRED sdl2)
-                target_include_directories(${LD_PICOUI_BACKEND_TARGET} PUBLIC ${SDL2_INCLUDE_DIRS})
-                target_link_directories(${LD_PICOUI_BACKEND_TARGET} PUBLIC ${SDL2_LIBRARY_DIRS})
-                target_compile_options(${LD_PICOUI_BACKEND_TARGET} PRIVATE ${SDL2_CFLAGS_OTHER})
-                target_link_options(${LD_PICOUI_BACKEND_TARGET} PRIVATE ${SDL2_LDFLAGS_OTHER})
-                target_link_libraries(${LD_PICOUI_BACKEND_TARGET} PUBLIC ${SDL2_LIBRARIES})
-            endif()
-            ld_apply_common_target_config(${LD_PICOUI_BACKEND_TARGET})
-        endforeach()
-        add_library(picoui_legacy_ldgui ALIAS picoui_backend_ldgui)
-        add_library(picoui_legacy_ldgui_runtime ALIAS picoui_backend_ldgui_runtime)
-    endif()
-
     add_library(picoui_port_sdl STATIC
         ${LD_REPO_ROOT}/picoui/port/sdl/sdl.c
     )
@@ -401,6 +324,54 @@ function(ld_define_core_targets)
         target_link_libraries(picoui_port_sdl PUBLIC ${SDL2_LIBRARIES})
     endif()
     ld_apply_common_target_config(picoui_port_sdl)
+
+    add_library(ld_picoui_native_runtime_support STATIC ${LD_PICOUI_BACKEND_LDGUI_SOURCES})
+    target_include_directories(ld_picoui_native_runtime_support PUBLIC
+        ${LD_REPO_ROOT}/picoui/include
+        ${LD_REPO_ROOT}/picoui/src/core
+        ${LD_REPO_ROOT}/picoui/src/backend/ldgui
+        ${LD_REPO_ROOT}/picoui
+    )
+    target_link_libraries(ld_picoui_native_runtime_support PUBLIC
+        picoui_core
+        picoui_port_sdl
+        longdonggui
+        longdonggui_porting_default
+    )
+    ld_apply_picoui_runtime_screen_config(ld_picoui_native_runtime_support)
+    ld_apply_common_target_config(ld_picoui_native_runtime_support)
+
+    add_library(picoui_native_arm2d INTERFACE)
+    target_link_libraries(picoui_native_arm2d INTERFACE
+        picoui_core
+        picoui_port_sdl
+        ld_picoui_native_runtime_support
+    )
+    add_library(picoui ALIAS picoui_native_arm2d)
+
+    if(PICOUI_ENABLE_LEGACY_LDGUI)
+        foreach(LD_PICOUI_BACKEND_TARGET IN ITEMS picoui_backend_ldgui picoui_backend_ldgui_runtime)
+            add_library(${LD_PICOUI_BACKEND_TARGET} STATIC ${LD_PICOUI_BACKEND_LDGUI_SOURCES})
+            target_include_directories(${LD_PICOUI_BACKEND_TARGET} PUBLIC
+                ${LD_REPO_ROOT}/picoui/include
+                ${LD_REPO_ROOT}/picoui/src/core
+                ${LD_REPO_ROOT}/picoui/src/backend/ldgui
+                ${LD_REPO_ROOT}/picoui
+            )
+            target_link_libraries(${LD_PICOUI_BACKEND_TARGET} PUBLIC
+                picoui_core
+                picoui_port_sdl
+                longdonggui
+                longdonggui_porting_default
+            )
+            if(LD_PICOUI_BACKEND_TARGET STREQUAL "picoui_backend_ldgui_runtime")
+                ld_apply_picoui_runtime_screen_config(${LD_PICOUI_BACKEND_TARGET})
+            endif()
+            ld_apply_common_target_config(${LD_PICOUI_BACKEND_TARGET})
+        endforeach()
+        add_library(picoui_legacy_ldgui ALIAS picoui_backend_ldgui)
+        add_library(picoui_legacy_ldgui_runtime ALIAS picoui_backend_ldgui_runtime)
+    endif()
 endfunction()
 
 function(ld_add_c_unit_test target)

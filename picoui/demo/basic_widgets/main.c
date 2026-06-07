@@ -17,6 +17,7 @@
  */
 
 #include "picoui/picoui.h"
+#include "picoui/port/sdl.h"
 
 static struct picoui_window *g_root_window;
 
@@ -78,21 +79,6 @@ static void make_ui(struct picoui_window *win)
     picoui_image_set_source(image, image_source);
 }
 
-static struct picoui_display *hal_init(int width, int height)
-{
-    struct picoui_display *display = picoui_display_create(width, height);
-
-    if (display == 0) {
-        return 0;
-    }
-
-    if (picoui_display_set_default(display) != 0) {
-        return 0;
-    }
-
-    return display;
-}
-
 static int create_demo_ui(void)
 {
     struct picoui_screen *screen = picoui_screen_active();
@@ -130,8 +116,8 @@ int main(int argc, char **argv)
     if (init_rc != 0) {
         return 1;
     }
-    /* Style contract marker: hal_init(320, 480); */
-    if (hal_init(320, 480) == 0) {
+    /* Style contract marker: picoui_sdl_hal_init(320, 480); */
+    if (picoui_sdl_hal_init(320, 480) != 0) {
         picoui_deinit();
         return 1;
     }
