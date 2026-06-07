@@ -1,0 +1,256 @@
+# TinyUI v2.0 P1 Backend Core Flatten Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** 把 `backend/ldgui` 从共享系统路径里移出去，将 runtime/widget-tree/event/layout 胶水搬进 `picoui/src/core/*`，使 `backend` 最多只剩 widget-local 残留。
+
+**Architecture:** 在 `picoui/src/core/` 中建立小型 backend-neutral bridge helpers，把 runtime app state 与 widget tree bookkeeping 从 `backend_app.c/backend_widget*.c/backend_event.c` 抽离，并让 `picoui_core` 在 CMake 上正式拥有 shared layer。
+
+**Tech Stack:** C11、现有 `picoui` core/backend split、`LingDongGUI` `ld*` 类型、CMake、CTest。
+
+---
+
+## 文件结构
+
+新增：
+
+- `picoui/src/core/runtime_bridge.c`
+- `picoui/src/core/runtime_bridge.h`
+- `tests/picoui/unit/test_picoui_native_bridge.c`（扩展）
+
+修改：
+
+- `picoui/src/core/internal.h`
+- `picoui/src/core/event.c`
+- `picoui/src/core/widget.c`
+- `picoui/src/backend/ldgui/backend_app.c`
+- `picoui/src/backend/ldgui/backend_widget.c`
+- `picoui/src/backend/ldgui/backend_widget_tree.c`
+- `picoui/src/backend/ldgui/backend_event.c`
+- `cmake/LingDongGUI.cmake`
+- `tests/picoui/CMakeLists.txt`
+
+---
+
+### Task 1: 抽出 runtime bridge
+
+**Files:**
+- Create: `picoui/src/core/runtime_bridge.h`
+- Create: `picoui/src/core/runtime_bridge.c`
+- Modify: `picoui/src/core/internal.h`
+- Modify: `picoui/src/backend/ldgui/backend_app.c`
+- Modify: `cmake/LingDongGUI.cmake`
+
+- [ ] **Step 1: 写 fail-first runtime bridge test**
+
+Append to `tests/picoui/unit/test_picoui_native_bridge.c`:
+
+```c
+extern int picoui_runtime_bridge_has_scene(const struct picoui_app *app);
+
+static void test_runtime_bridge_reports_scene_presence(void)
+{
+    struct picoui_app *app = picoui_app_create();
+
+    assert(app != NULL);
+    assert(picoui_runtime_bridge_has_scene(app) == 1);
+    picoui_app_destroy(app);
+}
+```
+
+- [ ] **Step 2: 运行定向 test，确认缺符号**
+
+Run:
+
+```bash
+rtk cmake --build build --target test_picoui_native_bridge
+```
+
+Expected: FAIL，缺少 `picoui_runtime_bridge_has_scene`。
+
+- [ ] **Step 3: 增加 runtime bridge 头和实现**
+
+Create `picoui/src/core/runtime_bridge.h`:
+
+```c
+#ifndef PICOUI_RUNTIME_BRIDGE_H
+#define PICOUI_RUNTIME_BRIDGE_H
+
+struct picoui_app;
+struct picoui_backend_app_state;
+
+int picoui_runtime_bridge_has_scene(const struct picoui_app *app);
+struct picoui_backend_app_state *picoui_runtime_bridge_backend_state(struct picoui_app *app);
+
+#endif
+```
+
+Create `picoui/src/core/runtime_bridge.c`:
+
+```c
+#include "internal.h"
+#include "runtime_bridge.h"
+
+int picoui_runtime_bridge_has_scene(const struct picoui_app *app)
+{
+    return app != 0 && app->backend_app != 0;
+}
+
+struct picoui_backend_app_state *picoui_runtime_bridge_backend_state(struct picoui_app *app)
+{
+    if (app == 0 || app->backend_app == 0) {
+        return 0;
+    }
+    return (struct picoui_backend_app_state *)app->backend_app;
+}
+```
+
+Add to `picoui/src/core/internal.h` near existing forward declarations:
+
+```c
+struct picoui_backend_app_state;
+```
+
+Add to `cmake/LingDongGUI.cmake` inside `picoui_core`:
+
+```cmake
+        ${LD_REPO_ROOT}/picoui/src/core/runtime_bridge.c
+```
+
+- [ ] **Step 4: 改 `backend_app.c` 读取 bridge helper**
+
+In `picoui/src/backend/ldgui/backend_app.c`, replace direct `app->backend_app` casts in helper functions with:
+
+```c
+#include "runtime_bridge.h"
+
+...
+struct picoui_backend_app_state *state = picoui_runtime_bridge_backend_state(app);
+if (state == NULL) {
+    return -1;
+}
+```
+
+- [ ] **Step 5: 跑 focused tests**
+
+Run:
+
+```bash
+rtk ctest --test-dir build -R '^(test_picoui_native_bridge|test_picoui_app_lifecycle|test_picoui_app_timer)$' --output-on-failure
+```
+
+Expected: PASS。
+
+### Task 2: 抽出 widget tree / event shared glue
+
+**Files:**
+- Modify: `picoui/src/core/widget.c`
+- Modify: `picoui/src/core/event.c`
+- Modify: `picoui/src/backend/ldgui/backend_widget.c`
+- Modify: `picoui/src/backend/ldgui/backend_widget_tree.c`
+- Modify: `picoui/src/backend/ldgui/backend_event.c`
+- Modify: `tests/picoui/unit/test_picoui_event.c`
+- Modify: `tests/picoui/unit/test_picoui_layout.c`
+
+- [ ] **Step 1: 给 tree/event helper 写 fail-first test**
+
+Append to `tests/picoui/unit/test_picoui_layout.c`:
+
+```c
+extern struct picoui_widget *picoui_widget_backend_parent(const struct picoui_widget *widget);
+
+static void test_widget_backend_parent_round_trip(void)
+{
+    struct picoui_app *app = picoui_app_create();
+    struct picoui_window *root = picoui_window_create(app, "root");
+    struct picoui_window *child = picoui_window_create_child(root, "child");
+
+    assert(app != NULL);
+    assert(root != NULL);
+    assert(child != NULL);
+    assert(picoui_widget_backend_parent(&child->widget) == &root->widget);
+
+    picoui_app_destroy(app);
+}
+```
+
+- [ ] **Step 2: 运行定向 tests，确认 helper 不存在**
+
+Run:
+
+```bash
+rtk cmake --build build --target test_picoui_layout test_picoui_event
+```
+
+Expected: FAIL，缺少 `picoui_widget_backend_parent` 等 helper。
+
+- [ ] **Step 3: 把 shared tree helper 移到 `widget.c`**
+
+Add declarations in `picoui/src/core/internal.h`:
+
+```c
+struct picoui_widget *picoui_widget_backend_parent(const struct picoui_widget *widget);
+int picoui_widget_bind_backend_parent(struct picoui_widget *widget, void *backend_parent);
+```
+
+Add implementation in `picoui/src/core/widget.c`:
+
+```c
+struct picoui_widget *picoui_widget_backend_parent(const struct picoui_widget *widget)
+{
+    struct picoui_backend_widget *backend;
+
+    if (widget == 0 || widget->backend_widget == 0) {
+        return 0;
+    }
+    backend = (struct picoui_backend_widget *)widget->backend_widget;
+    if (backend->parent == 0 || ((struct picoui_backend_widget *)backend->parent)->host_widget == 0) {
+        return 0;
+    }
+    return ((struct picoui_backend_widget *)backend->parent)->host_widget;
+}
+```
+
+- [ ] **Step 4: backend 文件只保留 widget-local glue**
+
+In `backend_widget_tree.c` and `backend_event.c`, replace duplicated parent/host lookup helpers with calls back into `picoui/src/core/*`.
+
+Representative change:
+
+```c
+struct picoui_widget *parent = picoui_widget_backend_parent(widget);
+if (parent == 0) {
+    return -1;
+}
+```
+
+- [ ] **Step 5: 跑 focused + broad gates**
+
+Run:
+
+```bash
+rtk ctest --test-dir build -R '^(test_picoui_layout|test_picoui_event|test_picoui_native_bridge)$' --output-on-failure
+rtk ctest --test-dir build -L 'picoui' --output-on-failure
+```
+
+Expected: PASS。
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add \
+  picoui/src/core/internal.h \
+  picoui/src/core/runtime_bridge.h \
+  picoui/src/core/runtime_bridge.c \
+  picoui/src/core/widget.c \
+  picoui/src/core/event.c \
+  picoui/src/backend/ldgui/backend_app.c \
+  picoui/src/backend/ldgui/backend_widget.c \
+  picoui/src/backend/ldgui/backend_widget_tree.c \
+  picoui/src/backend/ldgui/backend_event.c \
+  cmake/LingDongGUI.cmake \
+  tests/picoui/unit/test_picoui_native_bridge.c \
+  tests/picoui/unit/test_picoui_layout.c \
+  tests/picoui/unit/test_picoui_event.c
+git commit -m "refactor: flatten shared picoui backend core"
+```
