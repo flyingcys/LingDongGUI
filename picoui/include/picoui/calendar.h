@@ -23,6 +23,11 @@
 
 struct picoui_window;
 struct picoui_calendar;
+typedef void (*picoui_calendar_selected_callback_t)(struct picoui_calendar *calendar,
+                                                    int year,
+                                                    int month,
+                                                    int day,
+                                                    void *user_data);
 
 struct picoui_calendar_props {
     const char *id;
@@ -114,6 +119,45 @@ int picoui_calendar_get_date(const struct picoui_calendar *calendar,
                              int *year,
                              int *month,
                              int *day);
+
+/**
+ * @brief Set selected date of calendar widget
+ *
+ * @param[in] calendar Calendar widget instance
+ * @param[in] year year
+ * @param[in] month month
+ * @param[in] day day
+ * @return 0 on success, -1 on failure
+ */
+
+int picoui_calendar_set_selected_date(struct picoui_calendar *calendar, int year, int month, int day);
+
+/**
+ * @brief Get selected date of calendar widget
+ *
+ * @param[in] calendar Calendar widget instance
+ * @param[in] year year
+ * @param[in] month month
+ * @param[in] day day
+ * @return 0 on success, -1 on failure
+ */
+
+int picoui_calendar_get_selected_date(const struct picoui_calendar *calendar,
+                                      int *year,
+                                      int *month,
+                                      int *day);
+
+/**
+ * @brief Set selected callback of calendar widget
+ *
+ * @param[in] calendar Calendar widget instance
+ * @param[in] callback Callback invoked when a day is selected
+ * @param[in] user_data User data pointer
+ */
+
+void picoui_calendar_set_on_selected(struct picoui_calendar *calendar,
+                                     picoui_calendar_selected_callback_t callback,
+                                     void *user_data);
 
 /**
  * @brief Get use system date of calendar widget

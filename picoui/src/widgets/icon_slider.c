@@ -23,6 +23,8 @@
 
 #include <stdlib.h>
 
+int picoui_native_icon_slider_set_selected_index(struct picoui_icon_slider *icon_slider, int index);
+
 static int picoui_icon_slider_props_are_valid(const struct picoui_icon_slider_props *props)
 {
     return props != 0 &&
@@ -255,11 +257,10 @@ int picoui_icon_slider_set_selected_index(struct picoui_icon_slider *icon_slider
         return -1;
     }
 
-    if (picoui_backend_icon_slider_set_selected_index(icon_slider->widget.backend_widget, index) != 0) {
+    if (picoui_native_icon_slider_set_selected_index(icon_slider, index) != 0) {
         return -1;
     }
 
-    icon_slider->selected_index = index;
     return 0;
 }
 
@@ -272,17 +273,8 @@ int picoui_icon_slider_set_selected_index(struct picoui_icon_slider *icon_slider
 
 int picoui_icon_slider_get_selected_index(const struct picoui_icon_slider *icon_slider)
 {
-    int selected_index;
-
     if (icon_slider == 0) {
         return -1;
-    }
-
-    selected_index =
-        picoui_backend_icon_slider_get_selected_index((void *)icon_slider->widget.backend_widget);
-    if (selected_index >= 0 && selected_index < icon_slider->item_count) {
-        ((struct picoui_icon_slider *)icon_slider)->selected_index = selected_index;
-        return selected_index;
     }
 
     return icon_slider->selected_index;

@@ -19,30 +19,17 @@
 #ifndef PICOUI_WIDGET_H
 #define PICOUI_WIDGET_H
 
+#include "picoui/font.h"
 #include "picoui/layout.h"
 #include "picoui/native.h"
 #include "picoui/theme.h"
 
 struct picoui_widget;
 struct picoui_app;
-struct picoui_font;
-
-enum picoui_font_kind {
-    PICOUI_FONT_KIND_FAMILY = 0,
-    PICOUI_FONT_KIND_VRES = 1,
-};
-
 typedef void (*picoui_value_changed_cb)(struct picoui_widget *widget,
                                         int value,
                                         void *user_data);
 typedef void (*picoui_event_cb)(struct picoui_widget *widget, void *user_data);
-
-struct picoui_font {
-    const char *family;
-    int size;
-    enum picoui_font_kind kind;
-    unsigned int vres_addr;
-};
 
 struct picoui_point {
     int x;

@@ -17,6 +17,9 @@
  */
 
 #include "picoui/picoui.h"
+#include "picoui/port/sdl.h"
+
+static struct picoui_window *g_root_window;
 
 static void make_ui(struct picoui_window *win)
 {
@@ -86,6 +89,26 @@ static void make_ui(struct picoui_window *win)
     }
 }
 
+static int create_demo_ui(void)
+{
+    struct picoui_screen *screen = picoui_screen_active();
+    struct picoui_window *win;
+
+    win = picoui_window_create_root(screen, "root");
+    if (win == 0) {
+        return -1;
+    }
+
+    g_root_window = win;
+    make_ui(win);
+    if (picoui_screen_load(screen) != 0) {
+        g_root_window = 0;
+        return -1;
+    }
+
+    return 0;
+}
+
 /**
  * @brief Application entry point
  *
@@ -94,21 +117,33 @@ static void make_ui(struct picoui_window *win)
 
 int main(void)
 {
-    struct picoui_app *app;
-    struct picoui_window *win;
+    int init_rc;
+    int timer_rc;
 
-    app = picoui_app_create();
-    if (app == 0) {
+    init_rc = picoui_init();
+    if (init_rc != 0) {
+        return 1;
+    }
+    if (picoui_sdl_hal_init(320, 480) != 0) {
+        picoui_deinit();
+        return 1;
+    }
+    if (create_demo_ui() != 0 || g_root_window == 0) {
+        picoui_deinit();
         return 1;
     }
 
-    win = picoui_window_create(app, "root");
-    if (win == 0) {
-        picoui_app_destroy(app);
-        return 1;
+    while (1) {
+        timer_rc = picoui_timer_handler();
+        if (timer_rc < 0) {
+            picoui_deinit();
+            return 1;
+        }
+        if (timer_rc > 0) {
+            picoui_deinit();
+            return 0;
+        }
     }
 
-    make_ui(win);
-
-    return picoui_app_run(app, win);
+    return 0;
 }

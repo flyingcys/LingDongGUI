@@ -201,6 +201,7 @@ int picoui_backend_app_init(struct picoui_app *app);
  */
 
 int picoui_backend_app_run(struct picoui_app *app, struct picoui_window *window);
+int picoui_backend_native_render_capture(struct picoui_window *window);
 
 /**
  * @brief Shutdown app backend
@@ -1201,6 +1202,15 @@ int picoui_backend_clock_set_step_second(struct picoui_clock *clock, int step_se
 int picoui_backend_clock_get_step_second(struct picoui_clock *clock, int *step_second);
 
 /**
+ * @brief Apply PicoUI manual time to real clock backend
+ *
+ * @param[in] clock Clock widget instance
+ * @return 0 on success, -1 on failure
+ */
+
+int picoui_backend_clock_apply_time(struct picoui_clock *clock);
+
+/**
  * @brief Create backend for text
  *
  * @param[in] parent Parent widget
@@ -1449,6 +1459,7 @@ int picoui_backend_graph_set_point_mask_source(void *backend_widget, struct pico
  */
 
 int picoui_backend_calendar_set_date(void *backend_widget, int year, int month, int day);
+int picoui_backend_calendar_set_selected_date(void *backend_widget, int year, int month, int day);
 
 /**
  * @brief Get date from calendar backend
@@ -1461,6 +1472,7 @@ int picoui_backend_calendar_set_date(void *backend_widget, int year, int month, 
  */
 
 int picoui_backend_calendar_get_date(void *backend_widget, int *year, int *month, int *day);
+int picoui_backend_calendar_get_selected_date(void *backend_widget, int *year, int *month, int *day);
 
 /**
  * @brief Set header visible of calendar backend
@@ -1570,6 +1582,18 @@ int picoui_backend_calendar_get_grid_value(void *backend_widget, int week, int w
  */
 
 int picoui_backend_calendar_is_current_month_cell(void *backend_widget, int week, int weekday);
+int picoui_backend_calendar_point_to_date(void *backend_widget,
+                                          int x,
+                                          int y,
+                                          int *year,
+                                          int *month,
+                                          int *day);
+int picoui_backend_calendar_get_day_center(void *backend_widget,
+                                           int year,
+                                           int month,
+                                           int day,
+                                           int *x,
+                                           int *y);
 
 /**
  * @brief message: box set on confirm
@@ -1917,6 +1941,9 @@ int picoui_backend_combo_box_set_dropdown_source(void *backend_widget,
  */
 
 int picoui_backend_combo_box_set_selected_index(void *backend_widget, int index);
+int picoui_backend_combo_box_set_open(void *backend_widget, int is_open);
+int picoui_backend_combo_box_point_to_slot(void *backend_widget, int x, int y);
+int picoui_backend_combo_box_get_item_center(void *backend_widget, int item_index, int *x, int *y);
 
 /**
  * @brief combo: box get selected index

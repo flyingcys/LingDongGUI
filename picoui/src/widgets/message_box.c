@@ -58,10 +58,13 @@ struct picoui_message_box *picoui_message_box_create(struct picoui_widget *paren
     box->id = id;
     box->widget.visible = 1;
     box->widget.enabled = 1;
+    box->is_open = 1;
+    box->pressed_button_index = -1;
     if (picoui_backend_widget_bind_host(box->widget.backend_widget, &box->widget) != 0) {
         free(box);
         return 0;
     }
+    ((struct picoui_backend_widget *)box->widget.backend_widget)->open = 1;
     return box;
 }
 

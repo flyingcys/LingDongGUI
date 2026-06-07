@@ -22,6 +22,72 @@
 
 #include <stdlib.h>
 
+int picoui_native_arc_set_value(struct picoui_arc *arc, int value);
+int picoui_arc_set_value(struct picoui_arc *arc, int value);
+int picoui_backend_arc_set_background_angle(struct picoui_arc *arc, float bg_start_angle, float bg_end_angle);
+int picoui_backend_arc_set_foreground_angle(struct picoui_arc *arc, float fg_end_angle);
+int picoui_backend_arc_set_rotation_angle(struct picoui_arc *arc, float rotation_angle);
+int picoui_backend_arc_set_color(struct picoui_arc *arc, unsigned int bg_color, unsigned int fg_color);
+int picoui_backend_arc_set_quarter_source(struct picoui_arc *arc, struct picoui_image_source *source);
+int picoui_backend_arc_set_parent_color(struct picoui_arc *arc, unsigned int parent_color);
+int picoui_backend_arc_get_background_angle(struct picoui_arc *arc, float *bg_start_angle, float *bg_angle);
+int picoui_backend_arc_get_foreground_angle(struct picoui_arc *arc, float *fg_end_angle);
+int picoui_backend_arc_get_rotation_angle(struct picoui_arc *arc, float *rotation_angle);
+int picoui_backend_arc_get_color(struct picoui_arc *arc, unsigned int *bg_color, unsigned int *fg_color);
+
+#define PICOUI_ARC_STATE_MAX 32
+
+struct picoui_arc_state_entry {
+    const struct picoui_arc *arc;
+    int min_value;
+    int max_value;
+};
+
+static struct picoui_arc_state_entry g_picoui_arc_states[PICOUI_ARC_STATE_MAX];
+
+static struct picoui_arc_state_entry *picoui_arc_find_state(const struct picoui_arc *arc)
+{
+    int i;
+
+    if (arc == 0) {
+        return 0;
+    }
+
+    for (i = 0; i < PICOUI_ARC_STATE_MAX; ++i) {
+        if (g_picoui_arc_states[i].arc == arc) {
+            return &g_picoui_arc_states[i];
+        }
+    }
+
+    return 0;
+}
+
+static struct picoui_arc_state_entry *picoui_arc_alloc_state(const struct picoui_arc *arc)
+{
+    struct picoui_arc_state_entry *state;
+    int i;
+
+    state = picoui_arc_find_state(arc);
+    if (state != 0) {
+        return state;
+    }
+
+    if (arc == 0) {
+        return 0;
+    }
+
+    for (i = 0; i < PICOUI_ARC_STATE_MAX; ++i) {
+        if (g_picoui_arc_states[i].arc == 0) {
+            g_picoui_arc_states[i].arc = arc;
+            g_picoui_arc_states[i].min_value = 0;
+            g_picoui_arc_states[i].max_value = 100;
+            return &g_picoui_arc_states[i];
+        }
+    }
+
+    return 0;
+}
+
 static int picoui_arc_props_are_valid(const struct picoui_arc_props *props)
 {
     return props != 0
@@ -43,6 +109,7 @@ static int picoui_arc_props_are_valid(const struct picoui_arc_props *props)
 struct picoui_arc *picoui_arc_create(struct picoui_widget *parent, const char *id)
 {
     struct picoui_arc *arc;
+    struct picoui_arc_state_entry *state;
 
     if (parent == 0 || id == 0 || parent->backend_widget == 0) {
         return 0;
@@ -62,6 +129,11 @@ struct picoui_arc *picoui_arc_create(struct picoui_widget *parent, const char *i
     arc->id = id;
     arc->widget.visible = 1;
     arc->widget.enabled = 1;
+    state = picoui_arc_alloc_state(arc);
+    if (state == 0) {
+        free(arc);
+        return 0;
+    }
     arc->bg_end_angle = 360.0f;
     if (picoui_backend_widget_bind_host(arc->widget.backend_widget, &arc->widget) != 0
         || picoui_arc_set_background_angle(arc, 0.0f, 360.0f) != 0
@@ -168,6 +240,123 @@ int picoui_arc_set_foreground_angle(struct picoui_arc *arc, float fg_end_angle)
     return 0;
 }
 
+int picoui_arc_set_range(struct picoui_arc *arc, int min_value, int max_value)
+{
+    struct picoui_arc_state_entry *state;
+    struct picoui_backend_widget *backend;
+    int clamped_value;
+
+    if (arc == 0 || min_value > max_value) {
+        return -1;
+    }
+
+    state = picoui_arc_alloc_state(arc);
+    backend = (struct picoui_backend_widget *)arc->widget.backend_widget;
+    if (state == 0 || backend == 0) {
+        return -1;
+    }
+
+    state->min_value = min_value;
+    state->max_value = max_value;
+    clamped_value = backend->value;
+    if (clamped_value < min_value) {
+        clamped_value = min_value;
+    } else if (clamped_value > max_value) {
+        clamped_value = max_value;
+    }
+
+    return picoui_arc_set_value(arc, clamped_value);
+}
+
+int picoui_arc_set_value(struct picoui_arc *arc, int value)
+{
+    struct picoui_arc_state_entry *state;
+    struct picoui_backend_widget *backend;
+
+    if (arc == 0) {
+        return -1;
+    }
+
+    state = picoui_arc_alloc_state(arc);
+    if (state == 0 || value < state->min_value || value > state->max_value) {
+        return -1;
+    }
+
+    backend = (struct picoui_backend_widget *)arc->widget.backend_widget;
+    if (backend == 0) {
+        return -1;
+    }
+
+    if (picoui_native_arc_set_value(arc, value) != 0) {
+        return -1;
+    }
+    return picoui_backend_widget_update_value(backend,
+                                              value,
+                                              0,
+                                              &arc->widget,
+                                              0);
+}
+
+int picoui_arc_get_min_value(const struct picoui_arc *arc)
+{
+    struct picoui_arc_state_entry *state;
+
+    state = picoui_arc_find_state(arc);
+    if (state == 0) {
+        return 0;
+    }
+
+    return state->min_value;
+}
+
+int picoui_arc_get_max_value(const struct picoui_arc *arc)
+{
+    struct picoui_arc_state_entry *state;
+
+    state = picoui_arc_find_state(arc);
+    if (state == 0) {
+        return 0;
+    }
+
+    return state->max_value;
+}
+
+int picoui_arc_get_value(const struct picoui_arc *arc)
+{
+    const struct picoui_backend_widget *backend;
+
+    if (arc == 0 || arc->widget.backend_widget == 0) {
+        return 0;
+    }
+
+    backend = (const struct picoui_backend_widget *)arc->widget.backend_widget;
+    return backend->value;
+}
+
+int picoui_arc_set_start_angle(struct picoui_arc *arc, float start_angle)
+{
+    if (arc == 0) {
+        return -1;
+    }
+
+    return picoui_arc_set_background_angle(arc, start_angle, arc->bg_end_angle);
+}
+
+int picoui_arc_set_end_angle(struct picoui_arc *arc, float end_angle)
+{
+    return picoui_arc_set_foreground_angle(arc, end_angle);
+}
+
+float picoui_arc_get_start_angle(const struct picoui_arc *arc)
+{
+    return picoui_arc_get_background_start_angle(arc);
+}
+
+float picoui_arc_get_end_angle(const struct picoui_arc *arc)
+{
+    return picoui_arc_get_foreground_angle(arc);
+}
+
 /**
  * @brief Set rotation angle of arc widget
  *
@@ -227,7 +416,6 @@ int picoui_arc_set_quarter_source(struct picoui_arc *arc, struct picoui_image_so
     if (picoui_backend_arc_set_quarter_source(arc, source) != 0) {
         return -1;
     }
-
     arc->quarter_source = source;
     return 0;
 }
@@ -249,7 +437,6 @@ int picoui_arc_set_parent_color(struct picoui_arc *arc, unsigned int parent_colo
     if (picoui_backend_arc_set_parent_color(arc, parent_color) != 0) {
         return -1;
     }
-
     arc->parent_color = parent_color;
     return 0;
 }

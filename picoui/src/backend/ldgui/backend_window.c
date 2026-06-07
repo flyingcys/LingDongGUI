@@ -418,8 +418,11 @@ int picoui_backend_window_get_padding_left(struct picoui_window *window)
 {
     ldWindow_t *ld_window = picoui_backend_window_get_ld(window);
 
-    if (ld_window == NULL || ld_window->pLayoutPaddingGroup == NULL) {
+    if (ld_window == NULL) {
         return -1;
+    }
+    if (ld_window->pLayoutPaddingGroup == NULL) {
+        return 0;
     }
     return ld_window->pLayoutPaddingGroup->left;
 }
@@ -435,8 +438,11 @@ int picoui_backend_window_get_padding_top(struct picoui_window *window)
 {
     ldWindow_t *ld_window = picoui_backend_window_get_ld(window);
 
-    if (ld_window == NULL || ld_window->pLayoutPaddingGroup == NULL) {
+    if (ld_window == NULL) {
         return -1;
+    }
+    if (ld_window->pLayoutPaddingGroup == NULL) {
+        return 0;
     }
     return ld_window->pLayoutPaddingGroup->top;
 }
@@ -452,8 +458,11 @@ int picoui_backend_window_get_padding_right(struct picoui_window *window)
 {
     ldWindow_t *ld_window = picoui_backend_window_get_ld(window);
 
-    if (ld_window == NULL || ld_window->pLayoutPaddingGroup == NULL) {
+    if (ld_window == NULL) {
         return -1;
+    }
+    if (ld_window->pLayoutPaddingGroup == NULL) {
+        return 0;
     }
     return ld_window->pLayoutPaddingGroup->right;
 }
@@ -469,8 +478,11 @@ int picoui_backend_window_get_padding_bottom(struct picoui_window *window)
 {
     ldWindow_t *ld_window = picoui_backend_window_get_ld(window);
 
-    if (ld_window == NULL || ld_window->pLayoutPaddingGroup == NULL) {
+    if (ld_window == NULL) {
         return -1;
+    }
+    if (ld_window->pLayoutPaddingGroup == NULL) {
+        return 0;
     }
     return ld_window->pLayoutPaddingGroup->bottom;
 }

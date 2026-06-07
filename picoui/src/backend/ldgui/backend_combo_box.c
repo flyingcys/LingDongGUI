@@ -55,6 +55,105 @@ static ldComboBox_t *picoui_backend_combo_box_get_ld(void *backend_widget)
     return (ldComboBox_t *)widget->ld_widget;
 }
 
+static void picoui_backend_combo_box_apply_ld_open_state(ldComboBox_t *ld_combo_box, int is_open)
+{
+    if (ld_combo_box == NULL) {
+        return;
+    }
+
+    ld_combo_box->isExpand = is_open ? true : false;
+    ld_combo_box->use_as__ldBase_t.tTempRegion =
+        ld_combo_box->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion;
+    ld_combo_box->use_as__ldBase_t.tTempRegion.tSize.iHeight =
+        ld_combo_box->itemHeight * (ld_combo_box->itemCount + 1);
+    if (ld_combo_box->isExpand) {
+        ld_combo_box->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iHeight =
+            ld_combo_box->use_as__ldBase_t.tTempRegion.tSize.iHeight;
+    } else {
+        ld_combo_box->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iHeight =
+            ld_combo_box->itemHeight;
+    }
+    ld_combo_box->use_as__ldBase_t.isDirtyRegionUpdate = true;
+}
+
+int picoui_backend_combo_box_point_to_slot(void *backend_widget, int x, int y)
+{
+    struct picoui_backend_widget *widget = backend_widget;
+    ldComboBox_t *ld_combo_box;
+    arm_2d_location_t origin = {0};
+    int local_x;
+    int local_y;
+    int width;
+    int total_height;
+    int slot;
+
+    if (widget == NULL ||
+        widget->kind != PICOUI_BACKEND_WIDGET_COMBO_BOX ||
+        widget->ld_widget == NULL) {
+        return -1;
+    }
+
+    ld_combo_box = picoui_backend_combo_box_get_ld(backend_widget);
+    if (ld_combo_box == NULL || ld_combo_box->itemHeight <= 0) {
+        return -1;
+    }
+
+    origin = ldBaseGetAbsoluteLocation((ldBase_t *)ld_combo_box, origin);
+    width = ld_combo_box->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iWidth;
+    total_height = ld_combo_box->isExpand
+                 ? ld_combo_box->itemHeight * (ld_combo_box->itemCount + 1)
+                 : ld_combo_box->itemHeight;
+    local_x = x - origin.iX;
+    local_y = y - origin.iY;
+    if (local_x < 0 || local_x >= width || local_y < 0 || local_y >= total_height) {
+        return -1;
+    }
+
+    slot = local_y / ld_combo_box->itemHeight;
+    if (slot < 0) {
+        return -1;
+    }
+    if (!ld_combo_box->isExpand && slot > 0) {
+        return -1;
+    }
+    if (slot > ld_combo_box->itemCount) {
+        return -1;
+    }
+    return slot;
+}
+
+int picoui_backend_combo_box_get_item_center(void *backend_widget, int item_index, int *x, int *y)
+{
+    struct picoui_backend_widget *widget = backend_widget;
+    ldComboBox_t *ld_combo_box;
+    arm_2d_location_t origin = {0};
+    int slot;
+
+    if (widget == NULL ||
+        widget->kind != PICOUI_BACKEND_WIDGET_COMBO_BOX ||
+        widget->ld_widget == NULL ||
+        x == NULL ||
+        y == NULL) {
+        return -1;
+    }
+
+    ld_combo_box = picoui_backend_combo_box_get_ld(backend_widget);
+    if (ld_combo_box == NULL || ld_combo_box->itemHeight <= 0) {
+        return -1;
+    }
+
+    slot = item_index + 1;
+    if (item_index < -1 || item_index >= ld_combo_box->itemCount || slot < 0) {
+        return -1;
+    }
+
+    origin = ldBaseGetAbsoluteLocation((ldBase_t *)ld_combo_box, origin);
+    *x = origin.iX
+       + (ld_combo_box->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iWidth / 2);
+    *y = origin.iY + slot * ld_combo_box->itemHeight + (ld_combo_box->itemHeight / 2);
+    return 0;
+}
+
 static bool picoui_backend_combo_box_native_slot(struct ld_scene_t *scene, ldMsg_t msg)
 {
     struct picoui_backend_widget *backend;
@@ -380,6 +479,27 @@ int picoui_backend_combo_box_set_selected_index(void *backend_widget, int index)
     return 0;
 }
 
+int picoui_backend_combo_box_set_open(void *backend_widget, int is_open)
+{
+    struct picoui_backend_widget *widget = backend_widget;
+    ldComboBox_t *ld_combo_box;
+
+    if (widget == NULL ||
+        widget->kind != PICOUI_BACKEND_WIDGET_COMBO_BOX ||
+        widget->ld_widget == NULL) {
+        return -1;
+    }
+
+    ld_combo_box = picoui_backend_combo_box_get_ld(backend_widget);
+    if (ld_combo_box == NULL) {
+        return -1;
+    }
+
+    picoui_backend_combo_box_apply_ld_open_state(ld_combo_box, is_open);
+    widget->open = is_open ? 1 : 0;
+    return 0;
+}
+
 /**
  * @brief combo: box get selected index
  *
@@ -477,6 +597,10 @@ int picoui_backend_combo_box_bind_host(void *backend_widget)
     }
     if (!ldMsgConnect(ld_combo_box, SIGNAL_CLICKED_ITEM, picoui_backend_combo_box_native_slot)) {
         return -1;
+    }
+    picoui_backend_combo_box_apply_ld_open_state(ld_combo_box, backend->open);
+    if (backend->value >= 0 && backend->value < backend->list_item_count) {
+        ldComboBoxSetSelectItem(ld_combo_box, (uint8_t)backend->value);
     }
     return 0;
 }

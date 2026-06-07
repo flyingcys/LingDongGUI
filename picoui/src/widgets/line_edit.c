@@ -21,6 +21,13 @@
 
 #include <stdlib.h>
 
+int picoui_native_line_edit_init(struct picoui_line_edit *line_edit);
+int picoui_native_line_edit_set_text(struct picoui_line_edit *line_edit, const char *text);
+const char *picoui_native_line_edit_get_text(const struct picoui_line_edit *line_edit);
+int picoui_native_line_edit_set_editing(struct picoui_line_edit *line_edit, int editing);
+int picoui_native_line_edit_get_editing(const struct picoui_line_edit *line_edit, int *editing);
+const char *picoui_backend_line_edit_get_text(void *backend_widget);
+
 static int picoui_line_edit_type_is_valid(enum picoui_line_edit_type type)
 {
     return type >= PICOUI_LINE_EDIT_TYPE_STRING && type <= PICOUI_LINE_EDIT_TYPE_FLOAT;
@@ -76,11 +83,17 @@ struct picoui_line_edit *picoui_line_edit_create(struct picoui_window *parent, c
     line_edit->type = PICOUI_LINE_EDIT_TYPE_STRING;
     line_edit->widget.visible = 1;
     line_edit->widget.enabled = 1;
+    line_edit->widget.selectable = 1;
+    line_edit->widget.accepts_text_input = 1;
     if (picoui_backend_widget_bind_host(line_edit->widget.backend_widget, &line_edit->widget) != 0) {
         free(line_edit);
         return 0;
     }
     if (picoui_backend_line_edit_bind_host(line_edit->widget.backend_widget) != 0) {
+        free(line_edit);
+        return 0;
+    }
+    if (picoui_native_line_edit_init(line_edit) != 0) {
         free(line_edit);
         return 0;
     }
@@ -157,8 +170,12 @@ int picoui_line_edit_set_text(struct picoui_line_edit *line_edit, const char *te
     if (picoui_widget_set_text(&line_edit->widget, text) != 0) {
         return -1;
     }
+    if (picoui_native_line_edit_set_text(line_edit, text) != 0) {
+        return -1;
+    }
 
-    return picoui_backend_line_edit_set_text(line_edit->widget.backend_widget, text);
+    (void)picoui_backend_line_edit_set_text(line_edit->widget.backend_widget, text);
+    return 0;
 }
 
 /**
@@ -225,17 +242,23 @@ int picoui_line_edit_set_color(struct picoui_line_edit *line_edit,
 const char *picoui_line_edit_get_text(const struct picoui_line_edit *line_edit)
 {
     const char *backend_text;
+    struct picoui_line_edit *mutable_line_edit;
 
     if (line_edit == 0) {
         return 0;
     }
 
-    backend_text = picoui_backend_line_edit_get_text((void *)line_edit->widget.backend_widget);
-    if (backend_text != 0) {
-        return backend_text;
+    if (line_edit->widget.backend_widget != 0) {
+        backend_text = picoui_backend_line_edit_get_text(line_edit->widget.backend_widget);
+        if (backend_text != 0) {
+            mutable_line_edit = (struct picoui_line_edit *)line_edit;
+            if (picoui_native_line_edit_set_text(mutable_line_edit, backend_text) == 0) {
+                return backend_text;
+            }
+        }
     }
 
-    return line_edit->widget.text;
+    return picoui_native_line_edit_get_text(line_edit);
 }
 
 /**
@@ -348,7 +371,7 @@ int picoui_line_edit_get_editing(const struct picoui_line_edit *line_edit, int *
         return -1;
     }
 
-    return picoui_backend_line_edit_get_editing((void *)line_edit->widget.backend_widget, editing);
+    return picoui_native_line_edit_get_editing(line_edit, editing);
 }
 
 /**

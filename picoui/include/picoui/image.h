@@ -77,30 +77,12 @@ struct picoui_image *picoui_image_create_with_props(struct picoui_window *parent
 int picoui_image_source_from_vres(unsigned int addr, struct picoui_image_source *out);
 
 /**
- * @brief Font: from vres
- *
- * @param[in] addr Address
- * @param[in] out Output parameter
- * @return 0 on success, -1 on failure
- */
-
-int picoui_font_from_vres(unsigned int addr, struct picoui_font *out);
-
-/**
  * @brief Destroy image source widget
  *
  * @param[in] source Image source
  */
 
 void picoui_image_source_destroy(struct picoui_image_source *source);
-
-/**
- * @brief Destroy font widget
- *
- * @param[in] font font
- */
-
-void picoui_font_destroy(struct picoui_font *font);
 
 /**
  * @brief Set source of image widget

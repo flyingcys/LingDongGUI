@@ -21,6 +21,10 @@
 
 #include <stdlib.h>
 
+int picoui_native_canvas_reset_render_state(struct picoui_canvas *canvas);
+int picoui_native_canvas_clear_shadow(struct picoui_canvas *canvas);
+int picoui_native_canvas_mark_circle_command(struct picoui_canvas *canvas, int command_index);
+
 static int picoui_canvas_is_valid(const struct picoui_canvas *canvas)
 {
     return canvas != 0 && canvas->widget.backend_widget != 0;
@@ -29,14 +33,34 @@ static int picoui_canvas_is_valid(const struct picoui_canvas *canvas)
 static int picoui_canvas_push(struct picoui_canvas *canvas,
                               const struct picoui_canvas_command *command)
 {
+    int pushed_index;
+
     if (!picoui_canvas_is_valid(canvas)
         || command == 0
         || canvas->command_count >= PICOUI_CANVAS_MAX_COMMANDS) {
         return -1;
     }
 
+    pushed_index = canvas->command_count;
     canvas->commands[canvas->command_count++] = *command;
-    return picoui_backend_canvas_sync(canvas);
+    if (picoui_native_canvas_reset_render_state(canvas) != 0) {
+        canvas->command_count--;
+        return -1;
+    }
+
+    if (command->kind == PICOUI_CANVAS_COMMAND_DRAW_LINE
+        && command->x == command->x1
+        && command->y == command->y1
+        && command->line_size > 0) {
+        if (picoui_native_canvas_mark_circle_command(canvas, pushed_index) != 0) {
+            canvas->command_count--;
+            picoui_native_canvas_reset_render_state(canvas);
+            return -1;
+        }
+    }
+
+    (void)picoui_backend_canvas_sync(canvas);
+    return 0;
 }
 
 /**
@@ -69,6 +93,10 @@ struct picoui_canvas *picoui_canvas_create(struct picoui_window *parent, const c
     canvas->id = id;
     canvas->widget.visible = 1;
     canvas->widget.enabled = 1;
+    if (picoui_backend_widget_bind_host(canvas->widget.backend_widget, &canvas->widget) != 0) {
+        free(canvas);
+        return 0;
+    }
     return canvas;
 }
 
@@ -86,7 +114,11 @@ int picoui_canvas_clear(struct picoui_canvas *canvas)
     }
 
     canvas->command_count = 0;
-    return picoui_backend_canvas_sync(canvas);
+    if (picoui_native_canvas_clear_shadow(canvas) != 0) {
+        return -1;
+    }
+    (void)picoui_backend_canvas_sync(canvas);
+    return 0;
 }
 
 /**
@@ -170,6 +202,37 @@ int picoui_canvas_draw_line(struct picoui_canvas *canvas,
         .x1 = x1,
         .y1 = y1,
         .line_size = line_size,
+        .rgb0 = rgb,
+        .opacity0 = opacity_max,
+        .opacity1 = opacity_min,
+    };
+    return picoui_canvas_push(canvas, &command);
+}
+
+int picoui_canvas_draw_circle(struct picoui_canvas *canvas,
+                              int center_x,
+                              int center_y,
+                              int radius,
+                              unsigned int rgb,
+                              int opacity_max,
+                              int opacity_min)
+{
+    struct picoui_canvas_command command;
+    if (radius <= 0
+        || opacity_max < 0
+        || opacity_max > 255
+        || opacity_min < 0
+        || opacity_min > 255) {
+        return -1;
+    }
+
+    command = (struct picoui_canvas_command){
+        .kind = PICOUI_CANVAS_COMMAND_DRAW_LINE,
+        .x = center_x,
+        .y = center_y,
+        .x1 = center_x,
+        .y1 = center_y,
+        .line_size = radius,
         .rgb0 = rgb,
         .opacity0 = opacity_max,
         .opacity1 = opacity_min,

@@ -17,10 +17,19 @@
  */
 
 #include "internal.h"
+#include "picoui/native.h"
 #include "picoui/image.h"
 #include "../../../src/gui/ldBase.h"
 
 #include <string.h>
+
+extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
+extern const arm_2d_a1_font_t ARM_2D_FONT_16x24;
+
+static void *picoui_font_default_pointer(void)
+{
+    return (void *)&ARM_2D_FONT_6x8;
+}
 
 /**
  * @brief Image source: from vres
@@ -64,6 +73,19 @@ int picoui_font_from_vres(unsigned int addr, struct picoui_font *out)
     out->kind = PICOUI_FONT_KIND_VRES;
     out->vres_addr = addr;
     return 0;
+}
+
+struct picoui_native_font picoui_font_resolve_native(const struct picoui_font *font)
+{
+    if (font != 0 && font->kind == PICOUI_FONT_KIND_VRES && font->vres_addr != 0) {
+        return picoui_native_font_wrap(ldBaseGetVresFont(font->vres_addr));
+    }
+
+    if (font != 0 && font->family != 0 && font->size >= 20 && strcmp(font->family, "Sans") == 0) {
+        return picoui_native_font_wrap((void *)&ARM_2D_FONT_16x24);
+    }
+
+    return picoui_native_font_wrap(picoui_font_default_pointer());
 }
 
 /**

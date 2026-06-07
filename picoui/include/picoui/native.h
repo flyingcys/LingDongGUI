@@ -19,6 +19,12 @@
 #ifndef PICOUI_NATIVE_H
 #define PICOUI_NATIVE_H
 
+struct picoui_rect;
+struct picoui_image_source;
+struct picoui_canvas;
+struct picoui_qrcode;
+struct picoui_animation;
+
 struct picoui_native_image {
     void *tile;
     void *mask;
@@ -28,6 +34,95 @@ struct picoui_native_image {
 struct picoui_native_font {
     void *font;
 };
+
+/**
+ * @brief Get default native font.
+ *
+ * @return Wrapped default font.
+ */
+struct picoui_native_font picoui_native_font_default(void);
+
+/**
+ * @brief Render text into a software buffer using native font fallback rules.
+ *
+ * @param[in] font Native font wrapper
+ * @param[in] text UTF-8/ASCII text pointer
+ * @param[out] buffer ARGB/RGB software buffer
+ * @param[in] width Buffer width
+ * @param[in] height Buffer height
+ * @param[in] rgb Foreground color
+ * @param[out] dirty_rect Dirty area written by renderer
+ * @return 0 on success, -1 on failure
+ */
+int picoui_native_font_render_text(struct picoui_native_font font,
+                                   const char *text,
+                                   unsigned int *buffer,
+                                   int width,
+                                   int height,
+                                   unsigned int rgb,
+                                   struct picoui_rect *dirty_rect);
+
+/**
+ * @brief Render an image source into a software buffer.
+ *
+ * @param[in] source Image source
+ * @param[in] mask_color Mask recolor value for masked pixels
+ * @param[out] buffer ARGB buffer
+ * @param[in] width Buffer width
+ * @param[in] height Buffer height
+ * @param[out] dirty_rect Dirty area written by renderer
+ * @return 0 on success, -1 on failure
+ */
+int picoui_native_image_render_buffer(const struct picoui_image_source *source,
+                                      unsigned int mask_color,
+                                      unsigned int *buffer,
+                                      int width,
+                                      int height,
+                                      struct picoui_rect *dirty_rect);
+
+/**
+ * @brief Render canvas primitive commands into a software buffer.
+ *
+ * @param[in] canvas Canvas widget
+ * @param[out] buffer ARGB buffer
+ * @param[in] width Buffer width
+ * @param[in] height Buffer height
+ * @param[out] dirty_rect Dirty area written by renderer
+ * @return 0 on success, -1 on failure
+ */
+int picoui_native_canvas_render_buffer(const struct picoui_canvas *canvas,
+                                       unsigned int *buffer,
+                                       int width,
+                                       int height,
+                                       struct picoui_rect *dirty_rect);
+
+/**
+ * @brief Render qrcode modules into a software buffer.
+ *
+ * @param[in] qrcode QRCode widget
+ * @param[out] buffer ARGB buffer
+ * @param[in] width Buffer width
+ * @param[in] height Buffer height
+ * @param[out] dirty_rect Dirty area written by renderer
+ * @return 0 on success, -1 on failure
+ */
+int picoui_native_qrcode_render_buffer(const struct picoui_qrcode *qrcode,
+                                       unsigned int *buffer,
+                                       int width,
+                                       int height,
+                                       struct picoui_rect *dirty_rect);
+
+/**
+ * @brief Bind animation to an explicit list of frame sources.
+ *
+ * @param[in] animation Animation widget
+ * @param[in] sources Frame source array
+ * @param[in] frame_count Frame count
+ * @return 0 on success, -1 on failure
+ */
+int picoui_native_animation_bind_frame_sources(struct picoui_animation *animation,
+                                               struct picoui_image_source **sources,
+                                               int frame_count);
 
 enum picoui_native_align {
     PICOUI_NATIVE_ALIGN_START = 0,

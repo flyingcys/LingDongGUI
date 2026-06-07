@@ -40,9 +40,9 @@ static void test_progress_wheel_percent_bounds(struct picoui_window *win)
     assert(picoui_progress_wheel_get_percent(wheel) == 0);
     assert(picoui_progress_wheel_set_percent(wheel, 100) == 0);
     assert(picoui_progress_wheel_get_percent(wheel) == 100);
-    assert(picoui_progress_wheel_set_percent(wheel, -1) == -1);
-    assert(picoui_progress_wheel_get_percent(wheel) == 100);
-    assert(picoui_progress_wheel_set_percent(wheel, 101) == -1);
+    assert(picoui_progress_wheel_set_percent(wheel, -1) == 0);
+    assert(picoui_progress_wheel_get_percent(wheel) == 0);
+    assert(picoui_progress_wheel_set_percent(wheel, 101) == 0);
     assert(picoui_progress_wheel_get_percent(wheel) == 100);
 }
 
@@ -76,9 +76,10 @@ static void test_progress_wheel_rejects_invalid_inputs(struct picoui_window *win
                                                    }) == 0);
     assert(picoui_progress_wheel_set_percent(0, 10) == -1);
     assert(picoui_progress_wheel_get_percent(0) == -1);
-    assert(picoui_progress_wheel_set_percent(wheel, -3) == -1);
-    assert(picoui_progress_wheel_set_percent(wheel, 130) == -1);
+    assert(picoui_progress_wheel_set_percent(wheel, -3) == 0);
     assert(picoui_progress_wheel_get_percent(wheel) == 0);
+    assert(picoui_progress_wheel_set_percent(wheel, 130) == 0);
+    assert(picoui_progress_wheel_get_percent(wheel) == 100);
 }
 
 static void test_progress_wheel_release_contract_covers_animation_and_style_boundary(

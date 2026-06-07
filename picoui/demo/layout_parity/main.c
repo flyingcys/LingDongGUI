@@ -16,21 +16,30 @@
  * limitations under the License.
  */
 
+#include <time.h>
+
 #include "picoui/picoui.h"
+#include "picoui/port/sdl.h"
+
+static struct picoui_window *g_root_window;
+static unsigned long long g_layout_last_resize_ms;
 
 struct layout_parity_runtime {
     struct picoui_window *flex_row_sample;
     int compact;
 };
 
-static void layout_parity_resize_tick(struct picoui_app *app,
-                                      struct picoui_app_timer *timer,
-                                      void *user_data)
+static unsigned long long layout_parity_now_ms(void)
 {
-    struct layout_parity_runtime *runtime = (struct layout_parity_runtime *)user_data;
+    struct timespec now;
 
-    (void)app;
-    (void)timer;
+    (void)timespec_get(&now, TIME_UTC);
+    return ((unsigned long long)now.tv_sec * 1000ULL)
+           + (unsigned long long)(now.tv_nsec / 1000000L);
+}
+
+static void layout_parity_resize_tick(struct layout_parity_runtime *runtime)
+{
     if (runtime == 0 || runtime->flex_row_sample == 0) {
         return;
     }
@@ -40,6 +49,21 @@ static void layout_parity_resize_tick(struct picoui_app *app,
                            runtime->compact ? 170 : 196,
                            80);
     picoui_flex_set_gap(runtime->flex_row_sample, 6, 4);
+}
+
+static void layout_parity_resize_pump(struct layout_parity_runtime *runtime)
+{
+    unsigned long long now_ms;
+
+    if (runtime == 0 || runtime->flex_row_sample == 0) {
+        return;
+    }
+
+    now_ms = layout_parity_now_ms();
+    while (now_ms - g_layout_last_resize_ms >= 1200ULL) {
+        layout_parity_resize_tick(runtime);
+        g_layout_last_resize_ms += 1200ULL;
+    }
 }
 
 static void style_card(struct picoui_button *button,
@@ -310,40 +334,66 @@ static void make_ui(struct picoui_window *win, struct layout_parity_runtime *run
     }
 }
 
-static int run_demo(void)
+static int create_demo_ui(struct layout_parity_runtime *runtime)
 {
-    struct picoui_app *app = picoui_app_create();
+    struct picoui_screen *screen = picoui_screen_active();
     struct picoui_window *win;
-    struct picoui_app_timer *timer;
-    struct layout_parity_runtime runtime = {0};
 
-    if (app == 0) {
-        return 1;
+    if (runtime == 0 || screen == 0) {
+        return -1;
     }
 
-    win = picoui_window_create(app, "root");
+    win = picoui_window_create_root(screen, "root");
     if (win == 0) {
-        picoui_app_destroy(app);
-        return 1;
+        return -1;
     }
 
-    make_ui(win, &runtime);
-    timer = picoui_app_timer_create(app);
-    if (runtime.flex_row_sample == 0 || timer == 0 ||
-        picoui_app_timer_start(timer, 1200, 1, layout_parity_resize_tick, &runtime) != 0) {
-        picoui_app_destroy(app);
-        return 1;
+    g_root_window = win;
+    make_ui(win, runtime);
+    if (runtime->flex_row_sample == 0) {
+        g_root_window = 0;
+        return -1;
     }
-    if (picoui_app_run(app, win) != 0) {
-        picoui_app_destroy(app);
-        return 1;
+    if (picoui_screen_load(screen) != 0) {
+        g_root_window = 0;
+        return -1;
     }
 
-    picoui_app_destroy(app);
+    g_layout_last_resize_ms = layout_parity_now_ms();
     return 0;
 }
 
 int main(void)
 {
-    return run_demo();
+    int init_rc;
+    int timer_rc;
+    struct layout_parity_runtime runtime = {0};
+
+    init_rc = picoui_init();
+    if (init_rc != 0) {
+        return 1;
+    }
+    if (picoui_sdl_hal_init(320, 480) != 0) {
+        picoui_deinit();
+        return 1;
+    }
+    if (create_demo_ui(&runtime) != 0 || g_root_window == 0) {
+        picoui_deinit();
+        return 1;
+    }
+
+    while (1) {
+        layout_parity_resize_pump(&runtime);
+        timer_rc = picoui_timer_handler();
+        if (timer_rc < 0) {
+            picoui_deinit();
+            return 1;
+        }
+        if (timer_rc > 0) {
+            picoui_deinit();
+            return 0;
+        }
+    }
+
+    return 0;
 }

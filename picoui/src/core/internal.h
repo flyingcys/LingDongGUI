@@ -158,6 +158,7 @@ struct picoui_widget {
     int visible;
     int enabled;
     int selectable;
+    int accepts_text_input;
     int selected;
     int corner;
     int flex_grow;
@@ -293,6 +294,7 @@ struct picoui_keyboard {
     struct picoui_keyboard_layout_entry *layout_entries;
     void *native_layout;
     int layout_count;
+    unsigned int selected_key_code;
     picoui_keyboard_event_cb event_cb;
     void *event_user_data;
     picoui_keyboard_draw_cb draw_cb;
@@ -347,8 +349,12 @@ struct picoui_animation {
     const char *id;
     int width;
     int height;
+    int frame_count;
     int period_ms;
     struct picoui_image_source *source;
+    unsigned int start_ticks;
+    int frame_index;
+    int render_ready;
 };
 
 struct picoui_arc {
@@ -437,6 +443,7 @@ struct picoui_date_time {
     struct picoui_widget widget;
     const char *id;
     const char *format;
+    char format_storage[64];
     unsigned int text_color;
     unsigned int bg_color;
     enum picoui_align align;
@@ -459,6 +466,8 @@ struct picoui_calendar {
     int day;
     int show_header;
     int use_system_date;
+    picoui_calendar_selected_callback_t cb;
+    void *user_data;
     unsigned char grid_values[42];
     unsigned char grid_flags[42];
 };
@@ -477,6 +486,9 @@ struct picoui_clock {
     float minute_anchor_y;
     float second_anchor_x;
     float second_anchor_y;
+    int hour;
+    int minute;
+    int second;
     int use_system_time;
     int step_second;
 };
@@ -501,6 +513,8 @@ struct picoui_message_box {
     const char *confirm_text;
     const char *buttons[PICOUI_LIST_MAX_ITEMS];
     int button_count;
+    int is_open;
+    int pressed_button_index;
     unsigned int title_color;
     unsigned int message_color;
     unsigned int button_color;
@@ -524,6 +538,7 @@ struct picoui_line_edit {
     enum picoui_align align;
     enum picoui_line_edit_type type;
     unsigned int keyboard_binding;
+    char text_buffer[256];
     int editing;
     picoui_line_edit_finished_cb on_edit_finished;
     void *on_edit_finished_user_data;
@@ -586,6 +601,11 @@ struct picoui_table {
     int column_count;
     int current_row;
     int current_column;
+    int item_space;
+    int column_widths[255];
+    int row_heights[255];
+    void (*on_selected)(struct picoui_table *table, int row, int column, void *user_data);
+    void *on_selected_user_data;
 };
 
 /**

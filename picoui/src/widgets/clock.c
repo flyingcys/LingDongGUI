@@ -27,6 +27,13 @@ static int picoui_clock_props_are_valid(const struct picoui_clock_props *props)
     return props != 0 && props->id != 0 && (props->step_second == 0 || props->step_second == 1);
 }
 
+static int picoui_clock_time_is_valid(int hour, int minute, int second)
+{
+    return hour >= 0 && hour <= 23
+        && minute >= 0 && minute <= 59
+        && second >= 0 && second <= 59;
+}
+
 /**
  * @brief Create clock widget
  *
@@ -69,6 +76,9 @@ struct picoui_clock *picoui_clock_create(struct picoui_widget *parent, const cha
     clock->second_anchor_x = 0.0f;
     clock->second_anchor_y = 100.0f;
     clock->use_system_time = 1;
+    clock->hour = 12;
+    clock->minute = 0;
+    clock->second = 0;
     if (picoui_clock_set_step_second(clock, 0) != 0) {
         free(clock);
         return 0;
@@ -108,6 +118,9 @@ int picoui_clock_set_use_system_time(struct picoui_clock *clock, int enabled)
     }
 
     clock->use_system_time = enabled != 0;
+    if (!clock->use_system_time && picoui_backend_clock_apply_time(clock) != 0) {
+        return -1;
+    }
     return 0;
 }
 
@@ -214,17 +227,85 @@ int picoui_clock_set_step_second(struct picoui_clock *clock, int step_second)
 
 int picoui_clock_get_step_second(const struct picoui_clock *clock)
 {
-    int step_second = 0;
+    if (clock == 0) {
+        return -1;
+    }
+
+    return clock->step_second;
+}
+
+/**
+ * @brief Set manual time of clock widget
+ *
+ * @param[in] clock Clock widget instance
+ * @param[in] hour Hour value
+ * @param[in] minute Minute value
+ * @param[in] second Second value
+ * @return 0 on success, -1 on failure
+ */
+
+int picoui_clock_set_time(struct picoui_clock *clock, int hour, int minute, int second)
+{
+    if (clock == 0 || !picoui_clock_time_is_valid(hour, minute, second)) {
+        return -1;
+    }
+
+    clock->hour = hour;
+    clock->minute = minute;
+    clock->second = second;
+    if (!clock->use_system_time && picoui_backend_clock_apply_time(clock) != 0) {
+        return -1;
+    }
+    return 0;
+}
+
+/**
+ * @brief Get manual time of clock widget
+ *
+ * @param[in] clock Clock widget instance
+ * @param[out] hour Hour value
+ * @param[out] minute Minute value
+ * @param[out] second Second value
+ * @return 0 on success, -1 on failure
+ */
+
+int picoui_clock_get_time(const struct picoui_clock *clock, int *hour, int *minute, int *second)
+{
+    if (clock == 0 || hour == 0 || minute == 0 || second == 0) {
+        return -1;
+    }
+
+    *hour = clock->hour;
+    *minute = clock->minute;
+    *second = clock->second;
+    return 0;
+}
+
+/**
+ * @brief Advance clock widget by one second
+ *
+ * @param[in] clock Clock widget instance
+ * @return 0 on success, -1 on failure
+ */
+
+int picoui_clock_tick(struct picoui_clock *clock)
+{
+    int total_seconds;
 
     if (clock == 0) {
         return -1;
     }
 
-    if (picoui_backend_clock_get_step_second((struct picoui_clock *)clock, &step_second) != 0) {
+    total_seconds = clock->hour * 3600 + clock->minute * 60 + clock->second;
+    total_seconds = (total_seconds + 1) % (24 * 3600);
+
+    clock->hour = total_seconds / 3600;
+    clock->minute = (total_seconds / 60) % 60;
+    clock->second = total_seconds % 60;
+    if (!clock->use_system_time && picoui_backend_clock_apply_time(clock) != 0) {
         return -1;
     }
-
-    return step_second;
+    return 0;
 }
 
 /**

@@ -118,6 +118,30 @@ static int picoui_backend_clock_apply_pointer(struct picoui_clock *clock, int in
     }
 }
 
+static int picoui_backend_clock_apply_manual_time(struct picoui_clock *clock)
+{
+    ldClock_t *ld_clock;
+
+    if (clock == NULL) {
+        return -1;
+    }
+
+    ld_clock = picoui_backend_clock_get_ld(clock);
+    if (ld_clock == NULL) {
+        return -1;
+    }
+
+    if (clock->use_system_time) {
+        return 0;
+    }
+
+    ldClockSetManualTime(ld_clock,
+                         (uint8_t)clock->hour,
+                         (uint8_t)clock->minute,
+                         (uint8_t)clock->second);
+    return 0;
+}
+
 /**
  * @brief Create backend for clock
  *
@@ -286,6 +310,9 @@ int picoui_backend_clock_set_use_system_time(struct picoui_clock *clock, int ena
     }
 
     ldClockSetAutoSysTime(ld_clock, enabled != 0);
+    if (!enabled && picoui_backend_clock_apply_manual_time(clock) != 0) {
+        return -1;
+    }
     return 0;
 }
 
@@ -507,4 +534,13 @@ int picoui_backend_clock_set_second_anchor(struct picoui_clock *clock, float x, 
     clock->second_anchor_x = x;
     clock->second_anchor_y = y;
     return picoui_backend_clock_apply_pointer(clock, 2);
+}
+
+int picoui_backend_clock_apply_time(struct picoui_clock *clock)
+{
+    if (clock == NULL) {
+        return -1;
+    }
+
+    return picoui_backend_clock_apply_manual_time(clock);
 }

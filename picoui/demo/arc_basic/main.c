@@ -17,6 +17,10 @@
  */
 
 #include "picoui/picoui.h"
+#include "picoui/port/sdl.h"
+
+static struct picoui_window *g_root_window;
+static struct picoui_theme *g_theme;
 
 static void make_ui(struct picoui_window *win)
 {
@@ -46,38 +50,48 @@ static void make_ui(struct picoui_window *win)
     picoui_widget_set_size((struct picoui_widget *)arc, 160, 160);
     picoui_widget_set_grid_cell((struct picoui_widget *)title, 0, 0, 1, 1, PICOUI_ALIGN_CENTER, PICOUI_ALIGN_CENTER);
     picoui_widget_set_grid_cell((struct picoui_widget *)arc, 0, 1, 1, 1, PICOUI_ALIGN_CENTER, PICOUI_ALIGN_CENTER);
+
+    if (g_theme != 0) {
+        (void)picoui_theme_apply_to_widget(g_theme,
+                                           (struct picoui_widget *)win,
+                                           PICOUI_PART_MAIN,
+                                           PICOUI_STATE_DEFAULT);
+        (void)picoui_theme_apply_to_widget(g_theme,
+                                           (struct picoui_widget *)title,
+                                           PICOUI_PART_MAIN,
+                                           PICOUI_STATE_DEFAULT);
+        (void)picoui_theme_apply_to_widget(g_theme,
+                                           (struct picoui_widget *)title,
+                                           PICOUI_PART_TEXT,
+                                           PICOUI_STATE_DEFAULT);
+        (void)picoui_theme_apply_to_widget(g_theme,
+                                           (struct picoui_widget *)arc,
+                                           PICOUI_PART_MAIN,
+                                           PICOUI_STATE_DEFAULT);
+    }
 }
 
-static int run_demo(void)
+static int create_demo_ui(void)
 {
-    struct picoui_theme *theme = picoui_theme_create();
-    struct picoui_app *app = picoui_app_create();
+    struct picoui_screen *screen = picoui_screen_active();
     struct picoui_window *win;
 
-    if (theme == 0 || app == 0) {
-        picoui_theme_destroy(theme);
-        picoui_app_destroy(app);
-        return 1;
+    if (g_theme == 0 || screen == 0) {
+        return -1;
     }
-    if (picoui_app_set_theme(app, theme) != 0) {
-        picoui_theme_destroy(theme);
-        picoui_app_destroy(app);
-        return 1;
-    }
-    win = picoui_window_create(app, "root");
+
+    win = picoui_window_create_root(screen, "root");
     if (win == 0) {
-        picoui_theme_destroy(theme);
-        picoui_app_destroy(app);
-        return 1;
+        return -1;
     }
+
+    g_root_window = win;
     make_ui(win);
-    if (picoui_app_run(app, win) != 0) {
-        picoui_app_destroy(app);
-        picoui_theme_destroy(theme);
-        return 1;
+    if (picoui_screen_load(screen) != 0) {
+        g_root_window = 0;
+        return -1;
     }
-    picoui_app_destroy(app);
-    picoui_theme_destroy(theme);
+
     return 0;
 }
 
@@ -89,5 +103,46 @@ static int run_demo(void)
 
 int main(void)
 {
-    return run_demo();
+    int init_rc;
+    int timer_rc;
+
+    init_rc = picoui_init();
+    if (init_rc != 0) {
+        return 1;
+    }
+    if (picoui_sdl_hal_init(320, 480) != 0) {
+        picoui_deinit();
+        return 1;
+    }
+
+    g_theme = picoui_theme_create();
+    if (g_theme == 0) {
+        picoui_deinit();
+        return 1;
+    }
+
+    if (create_demo_ui() != 0 || g_root_window == 0) {
+        picoui_theme_destroy(g_theme);
+        g_theme = 0;
+        picoui_deinit();
+        return 1;
+    }
+
+    while (1) {
+        timer_rc = picoui_timer_handler();
+        if (timer_rc < 0) {
+            picoui_theme_destroy(g_theme);
+            g_theme = 0;
+            picoui_deinit();
+            return 1;
+        }
+        if (timer_rc > 0) {
+            picoui_theme_destroy(g_theme);
+            g_theme = 0;
+            picoui_deinit();
+            return 0;
+        }
+    }
+
+    return 0;
 }

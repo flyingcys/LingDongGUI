@@ -1,11 +1,15 @@
 #include "../backend/ldgui/backend.h"
 #include "../core/internal.h"
 
+#include <stdlib.h>
+
 #define PICOUI_NATIVE_IMAGE_RENDER_MAX 32
 
 struct picoui_native_image_render_state {
     const struct picoui_image *image;
     struct picoui_image_source *source;
+    struct picoui_rect dirty_rect;
+    int changed_pixels;
     int rendered;
 };
 
@@ -50,6 +54,11 @@ static struct picoui_native_image_render_state *picoui_native_image_alloc_render
         if (g_picoui_native_image_render_states[i].image == 0) {
             g_picoui_native_image_render_states[i].image = image;
             g_picoui_native_image_render_states[i].source = 0;
+            g_picoui_native_image_render_states[i].dirty_rect.x = 0;
+            g_picoui_native_image_render_states[i].dirty_rect.y = 0;
+            g_picoui_native_image_render_states[i].dirty_rect.width = 0;
+            g_picoui_native_image_render_states[i].dirty_rect.height = 0;
+            g_picoui_native_image_render_states[i].changed_pixels = 0;
             g_picoui_native_image_render_states[i].rendered = 0;
             return &g_picoui_native_image_render_states[i];
         }
@@ -92,6 +101,9 @@ int picoui_native_image_render(const struct picoui_backend_widget *backend)
 {
     const struct picoui_image *image;
     struct picoui_native_image_render_state *state;
+    unsigned int *scratch = 0;
+    size_t scratch_count;
+    int i;
 
     if (backend == 0 || backend->kind != PICOUI_BACKEND_WIDGET_IMAGE
         || backend->host_widget == 0) {
@@ -105,6 +117,39 @@ int picoui_native_image_render(const struct picoui_backend_widget *backend)
     }
 
     state->source = image->source;
+    state->dirty_rect.x = 0;
+    state->dirty_rect.y = 0;
+    state->dirty_rect.width = 0;
+    state->dirty_rect.height = 0;
+    state->changed_pixels = 0;
+
+    if (state->source != 0 && image->widget.width > 0 && image->widget.height > 0) {
+        scratch_count = (size_t)image->widget.width * (size_t)image->widget.height;
+        scratch = calloc(scratch_count, sizeof(*scratch));
+        if (scratch == 0) {
+            return -1;
+        }
+
+        if (picoui_native_image_render_buffer(state->source,
+                                              image->widget.bg_color,
+                                              scratch,
+                                              image->widget.width,
+                                              image->widget.height,
+                                              &state->dirty_rect)
+            != 0) {
+            free(scratch);
+            return -1;
+        }
+
+        for (i = 0; i < (int)scratch_count; ++i) {
+            if (scratch[i] != 0U) {
+                state->changed_pixels++;
+            }
+        }
+
+        free(scratch);
+    }
+
     state->rendered = 1;
     return 0;
 }
@@ -124,5 +169,40 @@ int picoui_native_image_get_rendered_source(const struct picoui_image *image,
     }
 
     *source = state->source;
+    return 0;
+}
+
+int picoui_native_image_get_rendered_dirty_rect(const struct picoui_image *image,
+                                                struct picoui_rect *dirty_rect)
+{
+    struct picoui_native_image_render_state *state;
+
+    if (dirty_rect == 0) {
+        return -1;
+    }
+
+    state = picoui_native_image_find_render_state(image);
+    if (state == 0 || state->rendered == 0) {
+        return -1;
+    }
+
+    *dirty_rect = state->dirty_rect;
+    return 0;
+}
+
+int picoui_native_image_get_rendered_changed_pixels(const struct picoui_image *image, int *count)
+{
+    struct picoui_native_image_render_state *state;
+
+    if (count == 0) {
+        return -1;
+    }
+
+    state = picoui_native_image_find_render_state(image);
+    if (state == 0 || state->rendered == 0) {
+        return -1;
+    }
+
+    *count = state->changed_pixels;
     return 0;
 }

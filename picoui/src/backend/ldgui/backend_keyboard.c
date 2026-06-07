@@ -428,6 +428,10 @@ int picoui_backend_keyboard_exit(void *backend_widget)
     ldKeyboardExit(ld_keyboard);
     if (line_edit != NULL) {
         ld_line_edit = (ldLineEdit_t *)((struct picoui_backend_widget *)line_edit->widget.backend_widget)->ld_widget;
+        if (line_edit->widget.text != NULL) {
+            (void)picoui_backend_line_edit_set_text(line_edit->widget.backend_widget,
+                                                    line_edit->widget.text);
+        }
         line_edit->editing = 0;
         if (ld_line_edit != NULL) {
             ld_line_edit->isEditing = false;
@@ -438,6 +442,30 @@ int picoui_backend_keyboard_exit(void *backend_widget)
         (void)picoui_widget_mark_edit_result(&line_edit->widget, PICOUI_EDIT_RESULT_CANCEL);
         (void)picoui_widget_release_editing(&line_edit->widget);
     } else if (editing_owner_widget != NULL) {
+        if (picoui_widget_get_type(editing_owner_widget) == PICOUI_WIDGET_TYPE_TABLE) {
+            struct picoui_table *table = (struct picoui_table *)editing_owner_widget;
+            int row = -1;
+            int column = -1;
+            const char *model_text = NULL;
+
+            if (picoui_backend_table_sync_current_cell(table, &row, &column) == 0) {
+                struct picoui_table_ext {
+                    struct picoui_table table;
+                    const char *cell_texts[];
+                };
+                struct picoui_table_ext *ext = (struct picoui_table_ext *)table;
+
+                if (row >= 0 && column >= 0 && row < table->row_count && column < table->column_count) {
+                    model_text = ext->cell_texts[(row * table->column_count) + column];
+                }
+                if (model_text != NULL) {
+                    (void)picoui_backend_table_set_cell_text(editing_owner_widget->backend_widget,
+                                                             row,
+                                                             column,
+                                                             model_text);
+                }
+            }
+        }
         (void)picoui_widget_mark_edit_result(editing_owner_widget, PICOUI_EDIT_RESULT_CANCEL);
         (void)picoui_widget_release_editing(editing_owner_widget);
     }

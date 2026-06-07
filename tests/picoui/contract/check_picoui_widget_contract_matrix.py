@@ -4,7 +4,15 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 PUBLIC_DIR = ROOT / "picoui" / "include" / "picoui"
-DOC = ROOT / "docs" / "superpowers" / "specs" / "2026-05-29-picoui-d-line-widget-contract-matrix.md"
+DOC = (
+    ROOT
+    / "docs"
+    / "superpowers"
+    / "specs"
+    / "archive"
+    / "pre-v1.0-picoui-wrapper-backend"
+    / "2026-05-29-picoui-d-line-widget-contract-matrix.md"
+)
 WIDGETS = ["window", "label", "button", "checkbox", "switch", "slider", "text", "image"]
 ALL_WIDGETS = set(WIDGETS)
 CHILD_WIDGETS = ALL_WIDGETS - {"window"}

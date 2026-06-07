@@ -22,6 +22,9 @@
 
 #include <stdlib.h>
 
+const char *picoui_native_date_time_set_format_state(struct picoui_date_time *dt, const char *format);
+const char *picoui_native_date_time_get_format_state(const struct picoui_date_time *dt);
+
 static int picoui_date_time_props_are_valid(const struct picoui_date_time_props *props)
 {
     return props != 0
@@ -155,6 +158,8 @@ struct picoui_date_time *picoui_date_time_create_with_props(
 
 int picoui_date_time_set_format(struct picoui_date_time *dt, const char *format)
 {
+    const char *native_format;
+
     if (dt == 0 || format == 0) {
         return -1;
     }
@@ -163,7 +168,12 @@ int picoui_date_time_set_format(struct picoui_date_time *dt, const char *format)
         return -1;
     }
 
-    dt->format = format;
+    native_format = picoui_native_date_time_set_format_state(dt, format);
+    if (native_format == 0) {
+        return -1;
+    }
+
+    dt->format = native_format;
     return 0;
 }
 
@@ -360,7 +370,7 @@ const char *picoui_date_time_get_format(const struct picoui_date_time *dt)
         return 0;
     }
 
-    return picoui_backend_date_time_get_format((struct picoui_date_time *)dt);
+    return picoui_native_date_time_get_format_state(dt);
 }
 
 /**

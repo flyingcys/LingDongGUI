@@ -19,8 +19,11 @@
 #include "backend.h"
 #include "internal.h"
 #include "ldCalendar.h"
+#include "ldBase.h"
 
 #include <stdlib.h>
+
+#define PICOUI_BACKEND_CALENDAR_SPACE_SIZE 2
 
 extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
 
@@ -98,6 +101,50 @@ static int picoui_backend_calendar_sync_host_cache(struct picoui_backend_widget 
         calendar->grid_flags[index] = (unsigned char)((day_num & 0x80U) != 0U);
     }
     return 0;
+}
+
+static int picoui_backend_calendar_resolve_cell_geometry(ldCalendar_t *ld_calendar,
+                                                         int *cell_x,
+                                                         int *cell_y,
+                                                         int *cell_width,
+                                                         int *cell_height,
+                                                         int *header_height)
+{
+    int width;
+    int height;
+    int row_height;
+    int resolved_header_height;
+
+    if (ld_calendar == NULL || cell_x == NULL || cell_y == NULL || cell_width == NULL
+        || cell_height == NULL || header_height == NULL) {
+        return -1;
+    }
+
+    width = ld_calendar->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iWidth;
+    height = ld_calendar->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iHeight;
+    if (width <= (PICOUI_BACKEND_CALENDAR_SPACE_SIZE * 8)
+        || height <= (PICOUI_BACKEND_CALENDAR_SPACE_SIZE * 8)) {
+        return -1;
+    }
+
+    if (ld_calendar->isHeader) {
+        row_height = (height - (PICOUI_BACKEND_CALENDAR_SPACE_SIZE * 9)) / 8;
+        resolved_header_height = row_height + PICOUI_BACKEND_CALENDAR_SPACE_SIZE;
+    } else {
+        row_height = (height - (PICOUI_BACKEND_CALENDAR_SPACE_SIZE * 8)) / 7;
+        resolved_header_height = 0;
+    }
+
+    if (row_height <= 0) {
+        return -1;
+    }
+
+    *cell_x = PICOUI_BACKEND_CALENDAR_SPACE_SIZE;
+    *cell_y = resolved_header_height + PICOUI_BACKEND_CALENDAR_SPACE_SIZE + row_height;
+    *cell_width = (width - (PICOUI_BACKEND_CALENDAR_SPACE_SIZE * 8)) / 7;
+    *cell_height = row_height;
+    *header_height = resolved_header_height;
+    return (*cell_width > 0 && *cell_height > 0) ? 0 : -1;
 }
 
 /**
@@ -214,6 +261,11 @@ int picoui_backend_calendar_set_date(void *backend_widget, int year, int month, 
     return picoui_backend_calendar_sync_host_cache(backend);
 }
 
+int picoui_backend_calendar_set_selected_date(void *backend_widget, int year, int month, int day)
+{
+    return picoui_backend_calendar_set_date(backend_widget, year, month, day);
+}
+
 /**
  * @brief Get date from calendar backend
  *
@@ -244,6 +296,11 @@ int picoui_backend_calendar_get_date(void *backend_widget, int *year, int *month
         *day = calendar->day;
     }
     return 0;
+}
+
+int picoui_backend_calendar_get_selected_date(void *backend_widget, int *year, int *month, int *day)
+{
+    return picoui_backend_calendar_get_date(backend_widget, year, month, day);
 }
 
 /**
@@ -479,4 +536,134 @@ int picoui_backend_calendar_is_current_month_cell(void *backend_widget, int week
     calendar = (struct picoui_calendar *)backend->host_widget;
     index = week * 7 + weekday;
     return calendar->grid_flags[index] != 0 ? 1 : 0;
+}
+
+int picoui_backend_calendar_point_to_date(void *backend_widget,
+                                          int x,
+                                          int y,
+                                          int *year,
+                                          int *month,
+                                          int *day)
+{
+    struct picoui_backend_widget *backend = backend_widget;
+    ldCalendar_t *ld_calendar;
+    arm_2d_location_t origin = {0};
+    int cell_x;
+    int cell_y;
+    int cell_width;
+    int cell_height;
+    int header_height;
+    int local_x;
+    int local_y;
+    int col;
+    int row;
+    int cell_value;
+
+    if (backend == NULL || day == NULL || picoui_backend_calendar_sync_host_cache(backend) != 0) {
+        return -1;
+    }
+
+    ld_calendar = picoui_backend_calendar_get_ld(backend_widget);
+    if (ld_calendar == NULL
+        || picoui_backend_calendar_resolve_cell_geometry(ld_calendar,
+                                                         &cell_x,
+                                                         &cell_y,
+                                                         &cell_width,
+                                                         &cell_height,
+                                                         &header_height) != 0) {
+        return -1;
+    }
+
+    origin = ldBaseGetAbsoluteLocation((ldBase_t *)ld_calendar, origin);
+    local_x = x - origin.iX;
+    local_y = y - origin.iY;
+    if (local_x < cell_x || local_y < cell_y || cell_width <= 0 || cell_height <= 0) {
+        return -1;
+    }
+
+    col = (local_x - cell_x) / (cell_width + PICOUI_BACKEND_CALENDAR_SPACE_SIZE);
+    row = (local_y - cell_y) / (cell_height + PICOUI_BACKEND_CALENDAR_SPACE_SIZE);
+    if (col < 0 || col >= 7 || row < 0 || row >= 6) {
+        return -1;
+    }
+
+    if (local_x > (cell_x + col * (cell_width + PICOUI_BACKEND_CALENDAR_SPACE_SIZE) + cell_width)
+        || local_y > (cell_y + row * (cell_height + PICOUI_BACKEND_CALENDAR_SPACE_SIZE) + cell_height)) {
+        return -1;
+    }
+
+    if (picoui_backend_calendar_is_current_month_cell(backend_widget, row, col) != 1) {
+        return -1;
+    }
+
+    cell_value = picoui_backend_calendar_get_grid_value(backend_widget, row, col);
+    if (cell_value < 1) {
+        return -1;
+    }
+
+    if (year != NULL) {
+        *year = ((struct picoui_calendar *)backend->host_widget)->year;
+    }
+    if (month != NULL) {
+        *month = ((struct picoui_calendar *)backend->host_widget)->month;
+    }
+    *day = cell_value;
+    return 0;
+}
+
+int picoui_backend_calendar_get_day_center(void *backend_widget,
+                                           int year,
+                                           int month,
+                                           int day,
+                                           int *x,
+                                           int *y)
+{
+    struct picoui_backend_widget *backend = backend_widget;
+    ldCalendar_t *ld_calendar;
+    arm_2d_location_t origin = {0};
+    int cell_x;
+    int cell_y;
+    int cell_width;
+    int cell_height;
+    int header_height;
+    int week;
+    int weekday;
+
+    if (backend == NULL || x == NULL || y == NULL || day < 1
+        || picoui_backend_calendar_sync_host_cache(backend) != 0) {
+        return -1;
+    }
+
+    if (((struct picoui_calendar *)backend->host_widget)->year != year
+        || ((struct picoui_calendar *)backend->host_widget)->month != month) {
+        return -1;
+    }
+
+    for (week = 0; week < 6; ++week) {
+        for (weekday = 0; weekday < 7; ++weekday) {
+            if (picoui_backend_calendar_is_current_month_cell(backend_widget, week, weekday) == 1
+                && picoui_backend_calendar_get_grid_value(backend_widget, week, weekday) == day) {
+                ld_calendar = picoui_backend_calendar_get_ld(backend_widget);
+                if (ld_calendar == NULL
+                    || picoui_backend_calendar_resolve_cell_geometry(ld_calendar,
+                                                                     &cell_x,
+                                                                     &cell_y,
+                                                                     &cell_width,
+                                                                     &cell_height,
+                                                                     &header_height) != 0) {
+                    return -1;
+                }
+                origin = ldBaseGetAbsoluteLocation((ldBase_t *)ld_calendar, origin);
+                *x = origin.iX + cell_x
+                    + weekday * (cell_width + PICOUI_BACKEND_CALENDAR_SPACE_SIZE)
+                    + (cell_width / 2);
+                *y = origin.iY + cell_y
+                    + week * (cell_height + PICOUI_BACKEND_CALENDAR_SPACE_SIZE)
+                    + (cell_height / 2);
+                return 0;
+            }
+        }
+    }
+
+    return -1;
 }

@@ -16,8 +16,14 @@
  * limitations under the License.
  */
 
+#include <time.h>
+
 #include "picoui/picoui.h"
+#include "picoui/port/sdl.h"
 #include "../../../examples/common/demo/widget/images/uiImages.h"
+
+static struct picoui_window *g_root_window;
+static unsigned long long g_legacy_last_animation_ms;
 
 struct legacy_widget_runtime {
     struct picoui_arc *arc;
@@ -25,14 +31,17 @@ struct legacy_widget_runtime {
     float angle;
 };
 
-static void legacy_widget_animation_tick(struct picoui_app *app,
-                                         struct picoui_app_timer *timer,
-                                         void *user_data)
+static unsigned long long legacy_widget_now_ms(void)
 {
-    struct legacy_widget_runtime *runtime = (struct legacy_widget_runtime *)user_data;
+    struct timespec now;
 
-    (void)app;
-    (void)timer;
+    (void)timespec_get(&now, TIME_UTC);
+    return ((unsigned long long)now.tv_sec * 1000ULL)
+           + (unsigned long long)(now.tv_nsec / 1000000L);
+}
+
+static void legacy_widget_animation_tick(struct legacy_widget_runtime *runtime)
+{
     if (runtime == 0 || runtime->arc == 0 || runtime->gauge == 0) {
         return;
     }
@@ -42,6 +51,21 @@ static void legacy_widget_animation_tick(struct picoui_app *app,
     runtime->angle += 1.0f;
     if (runtime->angle >= 360.0f) {
         runtime->angle = 0.0f;
+    }
+}
+
+static void legacy_widget_animation_pump(struct legacy_widget_runtime *runtime)
+{
+    unsigned long long now_ms;
+
+    if (runtime == 0 || runtime->arc == 0 || runtime->gauge == 0) {
+        return;
+    }
+
+    now_ms = legacy_widget_now_ms();
+    while (now_ms - g_legacy_last_animation_ms >= 100ULL) {
+        legacy_widget_animation_tick(runtime);
+        g_legacy_last_animation_ms += 100ULL;
     }
 }
 
@@ -536,41 +560,67 @@ static void make_ui(struct picoui_window *win, struct legacy_widget_runtime *run
     }
 }
 
-static int run_demo(void)
+static int create_demo_ui(struct legacy_widget_runtime *runtime)
 {
-    struct picoui_app *app = picoui_app_create();
+    struct picoui_screen *screen = picoui_screen_active();
     struct picoui_window *win;
-    struct picoui_app_timer *timer;
-    struct legacy_widget_runtime runtime = {0};
 
-    if (app == 0) {
-        return 1;
+    if (runtime == 0 || screen == 0) {
+        return -1;
     }
 
-    win = picoui_window_create(app, "root");
+    win = picoui_window_create_root(screen, "root");
     if (win == 0) {
-        picoui_app_destroy(app);
-        return 1;
+        return -1;
     }
 
-    make_ui(win, &runtime);
-    runtime.angle = 120.0f;
-    timer = picoui_app_timer_create(app);
-    if (runtime.arc == 0 || runtime.gauge == 0 || timer == 0 ||
-        picoui_app_timer_start(timer, 100, 1, legacy_widget_animation_tick, &runtime) != 0) {
-        picoui_app_destroy(app);
-        return 1;
+    g_root_window = win;
+    make_ui(win, runtime);
+    runtime->angle = 120.0f;
+    if (runtime->arc == 0 || runtime->gauge == 0) {
+        g_root_window = 0;
+        return -1;
     }
-    if (picoui_app_run(app, win) != 0) {
-        picoui_app_destroy(app);
-        return 1;
+    if (picoui_screen_load(screen) != 0) {
+        g_root_window = 0;
+        return -1;
     }
 
-    picoui_app_destroy(app);
+    g_legacy_last_animation_ms = legacy_widget_now_ms();
     return 0;
 }
 
 int main(void)
 {
-    return run_demo();
+    int init_rc;
+    int timer_rc;
+    struct legacy_widget_runtime runtime = {0};
+
+    init_rc = picoui_init();
+    if (init_rc != 0) {
+        return 1;
+    }
+    if (picoui_sdl_hal_init(320, 480) != 0) {
+        picoui_deinit();
+        return 1;
+    }
+    if (create_demo_ui(&runtime) != 0 || g_root_window == 0) {
+        picoui_deinit();
+        return 1;
+    }
+
+    while (1) {
+        legacy_widget_animation_pump(&runtime);
+        timer_rc = picoui_timer_handler();
+        if (timer_rc < 0) {
+            picoui_deinit();
+            return 1;
+        }
+        if (timer_rc > 0) {
+            picoui_deinit();
+            return 0;
+        }
+    }
+
+    return 0;
 }

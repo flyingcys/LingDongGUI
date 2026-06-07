@@ -21,10 +21,10 @@
 
 #include <stdlib.h>
 
+void picoui_native_progress_bar_reset_render_state(struct picoui_progress_bar *bar);
+
 int picoui_backend_progress_bar_set_percent(struct picoui_progress_bar *bar, int percent);
-int picoui_backend_progress_bar_get_percent(struct picoui_progress_bar *bar, int *percent);
 int picoui_backend_progress_bar_set_horizontal(struct picoui_progress_bar *bar, int horizontal);
-int picoui_backend_progress_bar_get_horizontal(struct picoui_progress_bar *bar, int *horizontal);
 int picoui_backend_progress_bar_set_bg_source(void *backend_widget, struct picoui_image_source *source);
 int picoui_backend_progress_bar_set_fg_source(void *backend_widget, struct picoui_image_source *source);
 int picoui_backend_progress_bar_set_frame_source(void *backend_widget, struct picoui_image_source *source);
@@ -33,7 +33,6 @@ int picoui_backend_progress_bar_set_frame_color(void *backend_widget,
                                                 unsigned int frame_color,
                                                 int frame_color_size);
 int picoui_backend_progress_bar_set_inverted(void *backend_widget, int inverted);
-int picoui_backend_progress_bar_get_inverted(void *backend_widget);
 
 static int picoui_progress_bar_props_are_valid(const struct picoui_progress_bar_props *props)
 {
@@ -151,15 +150,22 @@ struct picoui_progress_bar *picoui_progress_bar_create_with_props(
 
 int picoui_progress_bar_set_percent(struct picoui_progress_bar *bar, int percent)
 {
-    if (bar == 0 || percent < 0 || percent > 100) {
+    if (bar == 0) {
         return -1;
     }
 
-    if (picoui_backend_progress_bar_set_percent(bar, percent) != 0) {
-        return -1;
+    if (percent < 0) {
+        percent = 0;
+    } else if (percent > 100) {
+        percent = 100;
     }
 
     bar->percent = percent;
+    if (bar->widget.backend_widget != 0
+        && picoui_backend_progress_bar_set_percent(bar, percent) != 0) {
+        return -1;
+    }
+    picoui_native_progress_bar_reset_render_state(bar);
     return 0;
 }
 
@@ -172,17 +178,11 @@ int picoui_progress_bar_set_percent(struct picoui_progress_bar *bar, int percent
 
 int picoui_progress_bar_get_percent(const struct picoui_progress_bar *bar)
 {
-    int percent = 0;
-
     if (bar == 0) {
         return -1;
     }
 
-    if (picoui_backend_progress_bar_get_percent((struct picoui_progress_bar *)bar, &percent) != 0) {
-        return -1;
-    }
-
-    return percent;
+    return bar->percent;
 }
 
 /**
@@ -199,11 +199,12 @@ int picoui_progress_bar_set_horizontal(struct picoui_progress_bar *bar, int hori
         return -1;
     }
 
-    if (picoui_backend_progress_bar_set_horizontal(bar, horizontal != 0) != 0) {
+    bar->horizontal = horizontal != 0 ? 1 : 0;
+    if (bar->widget.backend_widget != 0
+        && picoui_backend_progress_bar_set_horizontal(bar, bar->horizontal) != 0) {
         return -1;
     }
-
-    bar->horizontal = horizontal != 0 ? 1 : 0;
+    picoui_native_progress_bar_reset_render_state(bar);
     return 0;
 }
 
@@ -216,17 +217,11 @@ int picoui_progress_bar_set_horizontal(struct picoui_progress_bar *bar, int hori
 
 int picoui_progress_bar_get_horizontal(const struct picoui_progress_bar *bar)
 {
-    int horizontal = 0;
-
     if (bar == 0) {
         return -1;
     }
 
-    if (picoui_backend_progress_bar_get_horizontal((struct picoui_progress_bar *)bar, &horizontal) != 0) {
-        return -1;
-    }
-
-    return horizontal;
+    return bar->horizontal;
 }
 
 /**
@@ -380,11 +375,12 @@ int picoui_progress_bar_set_inverted(struct picoui_progress_bar *bar, int invert
         return -1;
     }
 
-    if (picoui_backend_progress_bar_set_inverted(bar->widget.backend_widget, inverted != 0) != 0) {
+    bar->inverted = inverted != 0 ? 1 : 0;
+    if (bar->widget.backend_widget != 0
+        && picoui_backend_progress_bar_set_inverted(bar->widget.backend_widget, bar->inverted) != 0) {
         return -1;
     }
-
-    bar->inverted = inverted != 0 ? 1 : 0;
+    picoui_native_progress_bar_reset_render_state(bar);
     return 0;
 }
 
@@ -401,5 +397,5 @@ int picoui_progress_bar_get_inverted(const struct picoui_progress_bar *bar)
         return -1;
     }
 
-    return picoui_backend_progress_bar_get_inverted((void *)bar->widget.backend_widget);
+    return bar->inverted;
 }

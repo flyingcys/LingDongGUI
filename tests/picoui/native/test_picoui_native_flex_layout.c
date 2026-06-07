@@ -59,6 +59,26 @@ int main(void)
     assert(picoui_widget_get_y((const struct picoui_widget *)b) == 0);
     assert(picoui_widget_get_y((const struct picoui_widget *)c) == 0);
 
+    assert(picoui_window_set_layout_type(root_window, PICOUI_WINDOW_LAYOUT_FLEX) == 0);
+    assert(picoui_flex_set_flow(root_window, PICOUI_FLEX_FLOW_COLUMN) == 0);
+    assert(picoui_flex_set_align(root_window,
+                                 PICOUI_ALIGN_CENTER,
+                                 PICOUI_ALIGN_CENTER,
+                                 PICOUI_ALIGN_CENTER) == 0);
+    assert(picoui_flex_set_gap(root_window, 12, 12) == 0);
+    assert(picoui_widget_set_size((struct picoui_widget *)root_window, 320, 240) == 0);
+    assert(picoui_widget_set_size((struct picoui_widget *)a, 120, 20) == 0);
+    assert(picoui_widget_set_size((struct picoui_widget *)b, 100, 20) == 0);
+    assert(picoui_widget_set_size((struct picoui_widget *)c, 80, 20) == 0);
+
+    assert(picoui_native_layout_apply_root(root_window) == 0);
+    assert(picoui_widget_get_x((const struct picoui_widget *)a) == 100);
+    assert(picoui_widget_get_x((const struct picoui_widget *)b) == 110);
+    assert(picoui_widget_get_x((const struct picoui_widget *)c) == 120);
+    assert(picoui_widget_get_y((const struct picoui_widget *)a) == 78);
+    assert(picoui_widget_get_y((const struct picoui_widget *)b) == 110);
+    assert(picoui_widget_get_y((const struct picoui_widget *)c) == 142);
+
     picoui_deinit();
     return 0;
 }

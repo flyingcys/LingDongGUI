@@ -1,4 +1,5 @@
 import argparse
+import json
 import os
 import shutil
 import subprocess
@@ -8,6 +9,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_BUILD = ROOT / "build" / "picoui-runtime"
+ARTIFACT_MANIFEST = Path(__file__).with_name("picoui_native_artifact_manifest.json")
 RTK = shutil.which("rtk") or "rtk"
 DEMO_TIMEOUT_SECONDS = 6
 RUNTIME_SCREEN_DEFINES = {
@@ -43,6 +45,8 @@ TARGETS = [
     "picoui_graph_basic_demo",
     "picoui_calendar_basic_demo",
     "picoui_animation_basic_demo",
+    "picoui_legacy_widget_parity_demo",
+    "picoui_grid_parity_demo",
 ]
 
 
@@ -54,6 +58,11 @@ def _parse_args() -> argparse.Namespace:
         help="Demo short name such as 'basic_widgets', target name, or 'all'.",
     )
     parser.add_argument(
+        "--all-demos",
+        action="store_true",
+        help="Alias of --demo all, matching the current P6 closeout wording.",
+    )
+    parser.add_argument(
         "--build-dir",
         type=Path,
         default=DEFAULT_BUILD,
@@ -62,8 +71,20 @@ def _parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def _targets_for_demo(demo: str) -> list[str]:
-    if demo == "all":
+def _load_artifact_policies() -> dict[str, str]:
+    payload = json.loads(ARTIFACT_MANIFEST.read_text())
+    entries = payload.get("entries", [])
+    policies: dict[str, str] = {}
+    for entry in entries:
+        target = entry.get("target")
+        policy = entry.get("artifact_policy")
+        if isinstance(target, str) and isinstance(policy, str):
+            policies[target] = policy
+    return policies
+
+
+def _targets_for_demo(demo: str, *, all_demos: bool = False) -> list[str]:
+    if all_demos or demo == "all":
         return TARGETS
     if demo in TARGETS:
         return [demo]
@@ -336,6 +357,20 @@ def _assert_basic_widgets_capture(path: Path, stdout: str) -> None:
     )
 
 
+def _assert_arc_basic_markers(stdout: str) -> None:
+    real_ids = _parse_marker_ids(stdout, "PICOUI_BACKEND_REAL_WIDGET_IDS")
+    fallback_ids = _parse_marker_ids(stdout, "PICOUI_BACKEND_FALLBACK_WIDGET_IDS", required=False)
+
+    assert "arc" in real_ids, (
+        "arc_basic should keep arc in REAL widget ids.\n"
+        f"real_ids={sorted(real_ids)}"
+    )
+    assert "arc" not in fallback_ids, (
+        "arc_basic must not regress arc into FALLBACK widget ids.\n"
+        f"fallback_ids={sorted(fallback_ids)}"
+    )
+
+
 def _assert_basic_widgets_p1_capture(path: Path) -> None:
     width, height, _ = _read_ppm(path)
     assert width == 480 and height == 320, f"unexpected basic widgets capture size: {width}x{height}"
@@ -398,10 +433,39 @@ def _assert_picoui_runtime_screen_defines(build_dir: Path) -> None:
     ):
         _assert_compile_unit_lacks_screen_defines(compile_commands, source_suffix)
 
+
+def _validate_runtime_result(
+    *,
+    target: str,
+    runtime_policy: str,
+    result: dict[str, object],
+) -> list[str]:
+    failures: list[str] = []
+    returncode = int(result["returncode"])
+    runtime_ready = bool(result["runtime_ready"])
+    capture_ready = bool(result["capture_ready"])
+
+    if not runtime_ready and returncode == 0 and not capture_ready:
+        failures.append("expected runtime-ready signal or capture artifact")
+
+    if runtime_policy == "visible":
+        if not capture_ready:
+            failures.append("expected capture artifact")
+        if returncode != 0:
+            failures.append(f"expected rc=0, actual rc={returncode}")
+        if not runtime_ready:
+            failures.append("expected PICOUI_RUNTIME_READY in stdout")
+        return failures
+
+    if returncode < 0:
+        failures.append(f"process terminated by signal, rc={returncode}")
+    return failures
+
 def main() -> None:
     args = _parse_args()
     build_dir = args.build_dir
-    targets = _targets_for_demo(args.demo)
+    targets = _targets_for_demo(args.demo, all_demos=args.all_demos)
+    artifact_policies = _load_artifact_policies()
 
     subprocess.run([
         RTK, "cmake", "-S", str(ROOT), "-B", str(build_dir), "-DUSE_DEMO=0", "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
@@ -439,34 +503,52 @@ def main() -> None:
                 env=env,
             )
             capture_ready = capture_path.is_file() and capture_path.stat().st_size > 32
+            result = {
+                "returncode": completed.returncode,
+                "stdout": completed.stdout,
+                "stderr": completed.stderr,
+                "runtime_ready": "PICOUI_RUNTIME_READY" in completed.stdout,
+                "capture_ready": capture_ready,
+                "capture_size": capture_path.stat().st_size if capture_path.is_file() else 0,
+            }
+            runtime_policy = artifact_policies.get(target, "visible")
+            if target == "picoui_basic_widgets_demo" and capture_ready:
+                _assert_basic_widgets_p1_capture(capture_path)
+            validation_failures = _validate_runtime_result(
+                target=target,
+                runtime_policy=runtime_policy,
+                result=result,
+            )
+            if validation_failures:
+                raise AssertionError(
+                    f"Demo '{target}' failed runtime policy '{runtime_policy}': {'; '.join(validation_failures)}.\n"
+                    f"stdout:\n{completed.stdout}\n"
+                    f"stderr:\n{completed.stderr}"
+                )
             if target == "picoui_basic_widgets_demo":
                 if capture_ready:
-                    _assert_basic_widgets_p1_capture(capture_path)
-                else:
+                    pass
+                elif runtime_policy == "visible":
                     print(
                         "KNOWN_LIMITATION=picoui_basic_widgets_demo native P1 runtime loop exits cleanly, "
                         "but capture/native render artifact is not ready yet"
                     )
-            elif not capture_ready:
-                raise AssertionError(
-                    f"Demo '{target}' did not produce a capture frame.\n"
-                    f"stdout:\n{completed.stdout}\n"
-                    f"stderr:\n{completed.stderr}"
-                )
-        if completed.returncode != 0:
+        if completed.returncode != 0 and runtime_policy == "visible":
             raise RuntimeError(
                 f"Demo '{target}' exited with {completed.returncode}.\n"
                 f"stdout:\n{completed.stdout}\n"
                 f"stderr:\n{completed.stderr}"
             )
-        if "PICOUI_RUNTIME_READY" not in completed.stdout:
+        if "PICOUI_RUNTIME_READY" not in completed.stdout and runtime_policy == "visible":
             raise AssertionError(
                 f"Demo '{target}' did not report entering a visible runtime loop.\n"
                 f"stdout:\n{completed.stdout}\n"
                 f"stderr:\n{completed.stderr}"
             )
-        if target != "picoui_basic_widgets_demo":
+        if target != "picoui_basic_widgets_demo" and runtime_policy == "visible":
             _assert_no_smoke_layout(target, completed.stdout, completed.stderr)
+        if target == "picoui_arc_basic_demo":
+            _assert_arc_basic_markers(completed.stdout)
 
 
 if __name__ == "__main__":

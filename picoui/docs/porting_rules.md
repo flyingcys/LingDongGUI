@@ -1,175 +1,205 @@
 # PicoUI Port 分层与适配规则
 
-## 目的
+## 目标
 
-本文定义 PicoUI 后续开发时 `src`、`port`、`demo` 三类目录的职责边界，避免把固定核心代码、平台适配代码、示例代码混在一起。
+`v1.0.1` 的 PicoUI 目标是让开发者在没有 public app object 的前提下，把显示、输入、tick 和 OS 适配接到 native runtime：
 
-## 总原则
+```text
+public API -> native runtime/widgets -> ARM-2D -> port/display
+```
 
-1. `picoui/src/` 放 PicoUI 固定核心实现。
-2. `picoui/port/` 放开发者按芯片、OS、屏幕、输入设备自行适配的 port。
-3. `picoui/demo/` 放示例应用，不承担平台适配职责。
-4. `picoui/src/backend/ldgui/` 继续是 PicoUI 到 LingDongGUI/ARM-2D 的唯一私有桥接层。
+因此 port 文档的重点不是 `picoui_app_*`，而是：
+
+- display flush callback
+- input read callback
+- buffer / stripe height
+- host main loop 与 `picoui_timer_handler()`
+
+## 主路径约束
+
+当前推荐主路径：
+
+1. `picoui_init()`
+2. 建立默认 display / indev
+3. `picoui_screen_active()` + `picoui_window_create_root()`
+4. `picoui_screen_load()`
+5. 宿主周期调用 `picoui_timer_handler()`
+6. `picoui_deinit()`
+
+明确约束：
+
+- 不要求用户先拿 `struct picoui_app *`
+- 不把 `picoui_app_create()` / `picoui_app_run()` 当作新 port 的中心
+- `picoui_app_*` 若继续存在，只能视为 compatibility wrapper
+
+## display 适配
+
+### SDL host
+
+SDL host 直接用：
+
+```c
+picoui_sdl_hal_init(320, 480);
+```
+
+它会建立默认 display，并注册默认 pointer indev。
+
+### 自定义板卡/宿主
+
+最小 display 路径：
+
+```c
+struct picoui_display *display = picoui_display_create(width, height);
+picoui_display_set_default(display);
+picoui_display_set_flush_cb(display, my_flush_cb, my_user_data);
+```
+
+`my_flush_cb` 需要接收：
+
+- `const struct picoui_area *area`
+- `const void *pixels`
+- `void *user_data`
+
+回调语义：
+
+- `area` 描述当前 flush 的矩形区域
+- `pixels` 指向该区域的像素缓冲
+- port 负责把这块像素刷到真实屏幕
+
+### buffer / stripe height
+
+PicoUI runtime 采用分块 flush 的思路，不要求整屏一次性提交。
+
+当前需要明确的 buffer 概念：
+
+- `struct picoui_display_config.buffer_height`
+  - 表达一次 flush 的 stripe / PFB 高度
+  - 适合 compatibility path 或 host 集成层保存配置时使用
+- SDL host helper 会提供默认内部缓冲
+- 自定义板卡应保证：
+  - flush callback 看到的像素块大小和底层屏幕驱动一致
+  - stripe height 不要和底层 DMA / PFB 真实大小长期漂移
+
+## 输入设备适配
+
+最小 indev 路径：
+
+```c
+struct picoui_indev *indev = picoui_indev_create();
+picoui_indev_set_type(indev, PICOUI_INDEV_TYPE_POINTER);
+picoui_indev_set_read_cb(indev, my_indev_read_cb, my_user_data);
+```
+
+`my_indev_read_cb` 需要填写：
+
+```c
+struct picoui_indev_data {
+    int pointer_x;
+    int pointer_y;
+    int pressed;
+    enum picoui_input_key key;
+};
+```
+
+常见模式：
+
+- pointer/touch：
+  - 填 `pointer_x / pointer_y / pressed`
+- keypad/encoder：
+  - 填 `key`
+
+可用类型：
+
+- `PICOUI_INDEV_TYPE_POINTER`
+- `PICOUI_INDEV_TYPE_KEYPAD`
+- `PICOUI_INDEV_TYPE_ENCODER`
 
 ## 目录职责
 
 ### `picoui/src/`
 
-适合放这里的内容：
+放 PicoUI 固定实现：
 
-- PicoUI core 生命周期
-- 固定 public contract 的默认状态实现
-- widget/layout/theme/event/resource 等通用逻辑
-- backend private bridge
+- core/runtime/widget/layout/theme
+- native runtime 状态
+- `picoui/src/backend/ldgui/` 私有桥接
 
-约束：
+不放：
 
-- 这层代码默认应直接加入 PicoUI 编译目标。
-- 这层不要求开发者按板卡或芯片修改。
-- 不把板级差异、OS 差异、显示驱动差异、输入驱动差异塞进这里。
-
-当前 port 相关 core 状态建议保留在：
-
-- `picoui/src/display/`
-- `picoui/src/indev/`
-- `picoui/src/tick/`
-- `picoui/src/osal/`
-
-这些目录表达的是 PicoUI 内部 contract/state，不是开发者要改的 board port。
+- 板级驱动差异
+- SDL/RTOS/BSP 适配细节
 
 ### `picoui/port/`
 
-适合放这里的内容：
-
-- SDL host port
-- 板卡 port
-- RTOS/裸机 port
-- 屏幕 flush、触摸采样、tick source、delay/lock、文件系统/资源入口等平台适配代码
-
-约束：
-
-- 这层是“开发者可能需要改”的代码。
-- 不同项目可以只编译自己需要的 port。
-- 不应默认把所有 `picoui/port/*` 全量编进所有目标。
-- port 的职责是把外部平台能力接到 PicoUI public contract，不直接承载业务 demo。
-
-推荐形态：
-
-```text
-picoui/port/sdl/
-picoui/port/<board_name>/
-picoui/port/<rtos_name>/
-```
-
-例如：
+放开发者需要按平台维护的适配层：
 
 - `picoui/port/sdl/`
-- `picoui/port/mh2103c/`
+- `picoui/port/<board>/`
+- `picoui/port/<rtos>/`
+
+这层负责：
+
+- 创建 display
+- 注册 flush callback
+- 创建 indev
+- 注册输入回调
+- 接入 tick / delay / lock 等 OS 能力
 
 ### `picoui/demo/`
 
-适合放这里的内容：
+只表达用户意图和示例页面：
 
-- API 用法示例
-- 视觉/交互演示
-- smoke/runtime 展示页面
-
-约束：
-
-- demo 只能表达用户意图，不承担适配补丁职责。
-- demo 不应包含板级驱动、SDL 初始化细节、触摸驱动细节。
-- demo 不应替代 port。
-
-## “固定编译” 与 “按需编译”
-
-### 必须固定编译
-
-默认进入 PicoUI 主库或 backend 库：
-
-- `picoui/src/core/*`
-- `picoui/src/widgets/*`
-- `picoui/src/layout/*`
-- `picoui/src/theme/*`
-- `picoui/src/display/*`
-- `picoui/src/indev/*`
-- `picoui/src/tick/*`
-- `picoui/src/osal/*`
-- `picoui/src/backend/ldgui/*`
-
-原因：
-
-- 这些是 PicoUI 自身实现。
-- 使用 PicoUI public API 时默认就应存在。
-- 不应要求开发者为“让 PicoUI 自己能工作”去手改这些源码。
-
-### 应按需选择编译
-
-按目标平台显式选择：
-
-- `picoui/port/sdl/*`
-- `picoui/port/<board>/*`
-- 未来其他 host/board port
-
-原因：
-
-- 同一个项目不会同时需要所有平台 port。
-- 不同平台的依赖不同，例如 SDL、裸机 BSP、RTOS。
-- 这层天然是变体点。
-
-### 可以不编译
-
-- `picoui/demo/*`
-- 专门给 demo 服务的临时 port 或 demo runner
-
-原因：
-
-- demo 不是 PicoUI 核心合同的一部分。
-- 有些产品只要库，不要 demo。
+- 不承担板级驱动适配
+- 不承载 fake renderer 补丁
+- 不把平台初始化细节散回 demo
 
 ## backend 与 port 的边界
 
-### backend 负责
+`picoui/src/backend/ldgui/` 负责：
 
-- 把 PicoUI widget/app 状态映射到底层 LingDongGUI 对象
-- 从 PicoUI display/indev/tick/osal 状态读取数据
-- 维持 PicoUI 与 LingDongGUI 的私有桥接
+- 把 PicoUI widget/runtime 状态映射到 LingDongGUI/ARM-2D 私有实现
+- 维持内部 bridge truth
 
-### port 负责
+`picoui/port/*` 负责：
 
-- 把 SDL/板卡/OS 的真实能力写入 PicoUI public contract
-- 提供 display config、pointer/key 输入、tick source、delay/lock 等适配
+- 把真实宿主 display/input/tick 能力接到 PicoUI public contract
 
-### 明确禁止
+明确禁止：
 
 - 不把 LingDongGUI backend 私有实现挪进 `picoui/port/ldgui`
-- 不把 demo 页面逻辑写进 port
-- 不把平台驱动细节散落回 `picoui/src/core` 或 widget 实现
+- 不把 demo 逻辑放进 port
+- 不把平台驱动细节重新塞回 `picoui/src/core`
 
-## 推荐开发流程
+## compatibility 说明
 
-1. 先在 `picoui/src/` 定义稳定的 PicoUI contract。
-2. 再在 `picoui/port/<target>/` 实现具体平台适配。
-3. 最后用 `picoui/demo/` 或 runtime test 验证效果。
+以下 API 仍可见，但不应成为新 port 的中心：
 
-若需求来自新芯片或新宿主环境，优先问自己：
+- `picoui_app_create()`
+- `picoui_app_run()`
+- `picoui_app_destroy()`
+- `picoui_display_set_config(struct picoui_app *, ...)`
+- `picoui_display_set_flush_callback(struct picoui_app *, ...)`
+- `picoui_input_push_pointer(struct picoui_app *, ...)`
+- `picoui_input_push_key(struct picoui_app *, ...)`
 
-- 这是 PicoUI 固有能力吗？
-  - 是：进 `picoui/src/`
-- 这是平台差异吗？
-  - 是：进 `picoui/port/`
-- 这只是示例页面吗？
-  - 是：进 `picoui/demo/`
+它们保留的理由是：
 
-## 当前建议
+- 承接 pre-v1.0 wrapper 路线
+- 给兼容 demo / 旧测试留过渡入口
 
-结合当前仓库，推荐保持：
+但 `v1.0+` 新文档、新 demo、新测试，应围绕：
 
-- `picoui/src/display/` `picoui/src/indev/` `picoui/src/tick/` `picoui/src/osal/`
-  - 表达 PicoUI 内部固定 contract/state
-- `picoui/port/sdl/`
-  - 表达 SDL host port
+- `picoui_init()`
+- `picoui_display_*`
+- `picoui_indev_*`
+- `picoui_screen_*`
+- `picoui_timer_handler()`
 
-这样可以同时满足两点：
+## 推荐 bring-up 清单
 
-1. `src` 下面的代码默认固定编译，开发者通常不改。
-2. `port` 下面的代码明确是平台适配点，开发者可按目标平台维护。
+1. 先确认 `picoui_init()` / `picoui_deinit()` 生命周期。
+2. 建 display，并接通 flush callback。
+3. 建 indev，并接通 pointer/key read callback。
+4. 明确 buffer/stripe height。
+5. 创建 active screen 和 root window。
+6. 用最小 demo 验证 `picoui_timer_handler()` 真在周期运行。

@@ -18,10 +18,11 @@
 
 #include "picoui/keyboard.h"
 #include "internal.h"
-#include "ldKeyboard.h"
 
 #include <string.h>
 #include <stdlib.h>
+
+int picoui_native_keyboard_input_ascii(struct picoui_keyboard *keyboard, unsigned int ascii);
 
 static void picoui_keyboard_free_layout(struct picoui_keyboard *keyboard)
 {
@@ -68,20 +69,11 @@ static int picoui_keyboard_props_are_valid(const struct picoui_keyboard_props *p
 static int picoui_keyboard_get_selected_key_code_internal(const struct picoui_keyboard *keyboard,
                                                           unsigned int *key_code)
 {
-    struct picoui_backend_widget *backend;
-    ldKeyboard_t *ld_keyboard;
-
     if (keyboard == 0 || key_code == 0 || keyboard->widget.backend_widget == 0) {
         return -1;
     }
 
-    backend = (struct picoui_backend_widget *)keyboard->widget.backend_widget;
-    ld_keyboard = (ldKeyboard_t *)backend->ld_widget;
-    if (ld_keyboard == 0) {
-        return -1;
-    }
-
-    *key_code = ld_keyboard->keyCode;
+    *key_code = keyboard->selected_key_code;
     return 0;
 }
 
@@ -115,6 +107,7 @@ struct picoui_keyboard *picoui_keyboard_create(struct picoui_window *parent, con
     keyboard->id = id;
     keyboard->widget.visible = 1;
     keyboard->widget.enabled = 1;
+    keyboard->widget.selectable = 1;
     if (picoui_backend_widget_bind_host(keyboard->widget.backend_widget, &keyboard->widget) != 0) {
         free(keyboard);
         return 0;
@@ -181,7 +174,7 @@ int picoui_keyboard_input_ascii(struct picoui_keyboard *keyboard, unsigned int a
         return -1;
     }
 
-    return picoui_backend_keyboard_input_ascii(keyboard->widget.backend_widget, ascii);
+    return picoui_native_keyboard_input_ascii(keyboard, ascii);
 }
 
 /**
@@ -231,6 +224,7 @@ int picoui_keyboard_button_update(struct picoui_keyboard *keyboard, unsigned int
         return -1;
     }
 
+    keyboard->selected_key_code = key_code;
     return picoui_backend_keyboard_button_update(keyboard->widget.backend_widget, (unsigned char)key_code);
 }
 
@@ -247,6 +241,7 @@ int picoui_keyboard_click(struct picoui_keyboard *keyboard)
         return -1;
     }
 
+    keyboard->selected_key_code = (unsigned int)picoui_keyboard_get_selected_key_code(keyboard);
     return picoui_backend_keyboard_click(keyboard->widget.backend_widget);
 }
 
@@ -259,8 +254,23 @@ int picoui_keyboard_click(struct picoui_keyboard *keyboard)
 
 int picoui_keyboard_exit(struct picoui_keyboard *keyboard)
 {
+    struct picoui_app *app;
+    struct picoui_line_edit *line_edit;
+    struct picoui_backend_widget *backend;
+
     if (keyboard == 0) {
         return -1;
+    }
+
+    backend = (struct picoui_backend_widget *)keyboard->widget.backend_widget;
+    if (backend != 0 && backend->owner != 0) {
+        app = backend->owner;
+        if (app->editing_owner != 0 && app->editing_owner->accepts_text_input != 0) {
+            line_edit = (struct picoui_line_edit *)app->editing_owner;
+            line_edit->editing = 0;
+            (void)picoui_widget_mark_edit_result(&line_edit->widget, PICOUI_EDIT_RESULT_CANCEL);
+            (void)picoui_widget_release_editing(&line_edit->widget);
+        }
     }
 
     return picoui_backend_keyboard_exit(keyboard->widget.backend_widget);

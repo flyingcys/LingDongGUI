@@ -90,6 +90,47 @@ int picoui_arc_set_background_angle(struct picoui_arc *arc, float bg_start_angle
 int picoui_arc_set_foreground_angle(struct picoui_arc *arc, float fg_end_angle);
 
 /**
+ * @brief Set native value range of arc widget
+ *
+ * @param[in] arc Arc widget instance
+ * @param[in] min_value Minimum value
+ * @param[in] max_value Maximum value
+ * @return 0 on success, -1 on failure
+ */
+
+int picoui_arc_set_range(struct picoui_arc *arc, int min_value, int max_value);
+
+/**
+ * @brief Set current value of arc widget
+ *
+ * @param[in] arc Arc widget instance
+ * @param[in] value Current value
+ * @return 0 on success, -1 on failure
+ */
+
+int picoui_arc_set_value(struct picoui_arc *arc, int value);
+
+/**
+ * @brief Set start angle of arc widget
+ *
+ * @param[in] arc Arc widget instance
+ * @param[in] start_angle Start angle
+ * @return 0 on success, -1 on failure
+ */
+
+int picoui_arc_set_start_angle(struct picoui_arc *arc, float start_angle);
+
+/**
+ * @brief Set end angle of arc widget
+ *
+ * @param[in] arc Arc widget instance
+ * @param[in] end_angle End angle
+ * @return 0 on success, -1 on failure
+ */
+
+int picoui_arc_set_end_angle(struct picoui_arc *arc, float end_angle);
+
+/**
  * @brief Set rotation angle of arc widget
  *
  * @param[in] arc Arc widget instance
@@ -153,6 +194,51 @@ float picoui_arc_get_background_angle(const struct picoui_arc *arc);
  */
 
 float picoui_arc_get_foreground_angle(const struct picoui_arc *arc);
+
+/**
+ * @brief Get minimum value of arc widget
+ *
+ * @param[in] arc Arc widget instance
+ * @return minimum value, 0 on failure
+ */
+
+int picoui_arc_get_min_value(const struct picoui_arc *arc);
+
+/**
+ * @brief Get maximum value of arc widget
+ *
+ * @param[in] arc Arc widget instance
+ * @return maximum value, 0 on failure
+ */
+
+int picoui_arc_get_max_value(const struct picoui_arc *arc);
+
+/**
+ * @brief Get current value of arc widget
+ *
+ * @param[in] arc Arc widget instance
+ * @return current value, 0 on failure
+ */
+
+int picoui_arc_get_value(const struct picoui_arc *arc);
+
+/**
+ * @brief Get start angle of arc widget
+ *
+ * @param[in] arc Arc widget instance
+ * @return start angle
+ */
+
+float picoui_arc_get_start_angle(const struct picoui_arc *arc);
+
+/**
+ * @brief Get end angle of arc widget
+ *
+ * @param[in] arc Arc widget instance
+ * @return end angle
+ */
+
+float picoui_arc_get_end_angle(const struct picoui_arc *arc);
 
 /**
  * @brief Get rotation angle of arc widget

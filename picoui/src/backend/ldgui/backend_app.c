@@ -33,6 +33,8 @@
 #define PICOUI_RUNTIME_ROW_HEIGHT 34
 #define PICOUI_RUNTIME_ROW_GAP 10
 
+int picoui_native_render_once(void *root_backend_widget);
+
 /**
  * @brief   attribute  
  *
@@ -116,6 +118,7 @@ struct picoui_backend_runtime_state {
     int capture_written;
     int static_mapping_logged;
     int fallback_boundary_logged;
+    int image_source_logged;
     int temporary_smoke_logged;
     int smoke_layout_used;
     int smoke_layout_marker_logged;
@@ -420,24 +423,49 @@ static void picoui_backend_log_mapping_markers(struct picoui_backend_runtime_sta
     }
 }
 
-static void picoui_backend_log_image_source_marker(const struct picoui_backend_widget *widget)
+static const struct picoui_backend_widget *picoui_backend_find_first_image_widget(const struct picoui_backend_widget *widget)
 {
     while (widget != NULL) {
         if (widget->kind == PICOUI_BACKEND_WIDGET_IMAGE && widget->id != NULL && widget->ld_widget != NULL) {
-            ldImage_t *ld_image = (ldImage_t *)widget->ld_widget;
-
-            printf("PICOUI_BACKEND_IMAGE_SOURCE=%s:img=%s,mask=%s\n",
-                   widget->id,
-                   ld_image->ptImgTile != NULL ? "set" : "null",
-                   ld_image->ptMaskTile != NULL ? "set" : "null");
+            return widget;
         }
 
         if (widget->first_child != NULL) {
-            picoui_backend_log_image_source_marker(widget->first_child);
+            const struct picoui_backend_widget *found =
+                picoui_backend_find_first_image_widget(widget->first_child);
+            if (found != NULL) {
+                return found;
+            }
         }
 
         widget = widget->next_sibling;
     }
+
+    return NULL;
+}
+
+static void picoui_backend_log_image_source_marker(struct picoui_backend_runtime_state *state,
+                                                   const struct picoui_backend_widget *widget)
+{
+    const struct picoui_backend_widget *image_widget;
+    ldImage_t *ld_image;
+
+    if (state == NULL || state->image_source_logged) {
+        return;
+    }
+
+    image_widget = picoui_backend_find_first_image_widget(widget);
+    if (image_widget == NULL) {
+        return;
+    }
+
+    ld_image = (ldImage_t *)image_widget->ld_widget;
+    printf("PICOUI_BACKEND_IMAGE_SOURCE=%s:img=%s,mask=%s\n",
+           image_widget->id,
+           ld_image->ptImgTile != NULL ? "set" : "null",
+           ld_image->ptMaskTile != NULL ? "set" : "null");
+    fflush(stdout);
+    state->image_source_logged = 1;
 }
 
 static Uint32 picoui_backend_parse_auto_quit_ms(void)
@@ -605,6 +633,7 @@ int picoui_backend_app_init(struct picoui_app *app)
     state->ready_logged = 0;
     state->static_mapping_logged = 0;
     state->fallback_boundary_logged = 0;
+    state->image_source_logged = 0;
     state->temporary_smoke_logged = 0;
     state->smoke_layout_used = 0;
     state->smoke_layout_marker_logged = 0;
@@ -795,7 +824,9 @@ static void picoui_backend_apply_smoke_cursor_layout(struct picoui_backend_runti
     picoui_backend_apply_real_widget_layout(state, root->first_child, x, cursor_y);
 }
 
-static void picoui_backend_render(struct picoui_backend_runtime_state *state, struct picoui_window *window)
+static void picoui_backend_render(struct picoui_backend_runtime_state *state,
+                                  struct picoui_window *window,
+                                  int native_render_already_synced)
 {
     const struct picoui_backend_widget *root;
     const struct picoui_backend_widget *root_widget;
@@ -818,6 +849,10 @@ static void picoui_backend_render(struct picoui_backend_runtime_state *state, st
                    (size_t)state->display_width * (size_t)state->display_height *
                        sizeof(*state->real_pixels));
             picoui_backend_apply_smoke_cursor_layout(state, root_widget, x, &y);
+            if (!native_render_already_synced
+                && picoui_native_render_once(window->widget.backend_widget) != 0) {
+                return;
+            }
             if (!state->smoke_layout_marker_logged) {
                 printf("PICOUI_SMOKE_LAYOUT_USED=%d\n", state->smoke_layout_used ? 1 : 0);
                 fflush(stdout);
@@ -828,7 +863,7 @@ static void picoui_backend_render(struct picoui_backend_runtime_state *state, st
             ldMsgProcess(app_state->ld_scene);
             ldGuiDraw(app_state->ld_scene, &state->real_tile, true);
             ldGuiFrameComplete(app_state->ld_scene);
-            picoui_backend_log_image_source_marker(root->first_child);
+            picoui_backend_log_image_source_marker(state, root->first_child);
             picoui_backend_present_real_frame(state);
         }
     }
@@ -1031,7 +1066,7 @@ int picoui_backend_app_run(struct picoui_app *app, struct picoui_window *window)
             return -1;
         }
         picoui_backend_pump_timers(app, picoui_tick_get(app));
-        picoui_backend_render(state, active_window);
+        picoui_backend_render(state, active_window, 0);
         picoui_os_delay(app, 16);
 
         if (state->auto_quit_ms > 0 &&
@@ -1040,6 +1075,51 @@ int picoui_backend_app_run(struct picoui_app *app, struct picoui_window *window)
         }
     }
 
+    return 0;
+}
+
+int picoui_backend_native_render_capture(struct picoui_window *window)
+{
+    struct picoui_backend_runtime_state *state;
+    struct picoui_backend_app_state *app_state;
+    struct picoui_app *app;
+
+    if (window == NULL || window->widget.backend_widget == NULL) {
+        return -1;
+    }
+
+    app_state = picoui_backend_app_state_from_window(window);
+    if (app_state == NULL || app_state->ld_scene == NULL) {
+        return -1;
+    }
+    app = picoui_backend_widget_get_owner(window->widget.backend_widget);
+    if (app == NULL) {
+        return -1;
+    }
+
+    state = picoui_backend_runtime_state_from_app(app);
+    if (state == NULL) {
+        return -1;
+    }
+    if (picoui_backend_ensure_window(app, state) != 0) {
+        return -1;
+    }
+
+    if (app_state->ld_scene->ptMsgQueue == NULL) {
+        ldGuiSceneInit(app_state->ld_scene);
+    }
+
+    if (!state->ready_logged) {
+        if (app->focus_owner == NULL) {
+            printf("PICOUI_FOCUS_RUNTIME_READY=1\n");
+            fflush(stdout);
+        }
+        printf("PICOUI_RUNTIME_READY\n");
+        fflush(stdout);
+        state->ready_logged = 1;
+    }
+
+    picoui_backend_render(state, window, 1);
     return 0;
 }
 

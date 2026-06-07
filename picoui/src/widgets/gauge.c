@@ -23,6 +23,71 @@
 
 #include <stdlib.h>
 
+struct picoui_gauge_ext {
+    struct picoui_gauge gauge;
+    int min_value;
+    int max_value;
+    int value;
+    int tick_count;
+    int tick_step;
+    int render_ready;
+    int rendered_min_value;
+    int rendered_max_value;
+    int rendered_value;
+    int rendered_tick_count;
+    int rendered_tick_step;
+    float rendered_needle_angle;
+};
+
+int picoui_native_gauge_init_state(struct picoui_gauge *gauge);
+void picoui_native_gauge_reset_render_state(struct picoui_gauge *gauge);
+int picoui_native_gauge_set_state(struct picoui_gauge *gauge,
+                                  int min_value,
+                                  int max_value,
+                                  int value,
+                                  int tick_count);
+
+static struct picoui_gauge_ext *picoui_gauge_ext_from_gauge(struct picoui_gauge *gauge)
+{
+    if (gauge == 0) {
+        return 0;
+    }
+
+    return (struct picoui_gauge_ext *)gauge;
+}
+
+static const struct picoui_gauge_ext *picoui_gauge_ext_from_gauge_const(const struct picoui_gauge *gauge)
+{
+    if (gauge == 0) {
+        return 0;
+    }
+
+    return (const struct picoui_gauge_ext *)gauge;
+}
+
+static int picoui_gauge_clamp_value(int value, int min_value, int max_value)
+{
+    if (value < min_value) {
+        return min_value;
+    }
+    if (value > max_value) {
+        return max_value;
+    }
+    return value;
+}
+
+static float picoui_gauge_value_to_angle(int value, int min_value, int max_value)
+{
+    float ratio;
+
+    if (max_value <= min_value) {
+        return 0.0f;
+    }
+
+    ratio = (float)(value - min_value) / (float)(max_value - min_value);
+    return ratio * 180.0f;
+}
+
 static int picoui_gauge_props_are_valid(const struct picoui_gauge_props *props)
 {
     return props != 0 && props->id != 0;
@@ -39,33 +104,172 @@ static int picoui_gauge_props_are_valid(const struct picoui_gauge_props *props)
 struct picoui_gauge *picoui_gauge_create(struct picoui_widget *parent, const char *id)
 {
     struct picoui_gauge *gauge;
+    struct picoui_gauge_ext *ext;
 
     if (parent == 0 || id == 0 || parent->backend_widget == 0) {
         return 0;
     }
 
-    gauge = calloc(1, sizeof(*gauge));
-    if (gauge == 0) {
+    ext = calloc(1, sizeof(*ext));
+    if (ext == 0) {
         return 0;
     }
+    gauge = &ext->gauge;
 
     gauge->widget.backend_widget = picoui_backend_create_gauge(parent->backend_widget, id);
     if (gauge->widget.backend_widget == 0) {
-        free(gauge);
+        free(ext);
         return 0;
     }
 
     gauge->id = id;
     gauge->widget.visible = 1;
     gauge->widget.enabled = 1;
+    if (picoui_native_gauge_init_state(gauge) != 0) {
+        free(ext);
+        return 0;
+    }
     if (picoui_backend_widget_bind_host(gauge->widget.backend_widget, &gauge->widget) != 0
         || picoui_gauge_set_angle(gauge, 0.0f) != 0
         || picoui_gauge_set_pointer_color(gauge, 0x000000) != 0
         || picoui_gauge_set_auto_move(gauge, 0) != 0) {
-        free(gauge);
+        free(ext);
         return 0;
     }
     return gauge;
+}
+
+int picoui_gauge_set_range(struct picoui_gauge *gauge, int min_value, int max_value)
+{
+    struct picoui_gauge_ext *ext;
+    int old_min_value;
+    int old_max_value;
+    int old_value;
+
+    if (gauge == 0 || min_value > max_value) {
+        return -1;
+    }
+
+    ext = picoui_gauge_ext_from_gauge(gauge);
+    if (ext == 0) {
+        return -1;
+    }
+
+    old_min_value = ext->min_value;
+    old_max_value = ext->max_value;
+    old_value = ext->value;
+
+    if (picoui_native_gauge_set_state(gauge,
+                                      min_value,
+                                      max_value,
+                                      picoui_gauge_clamp_value(old_value, min_value, max_value),
+                                      ext->tick_count) != 0) {
+        return -1;
+    }
+
+    if (picoui_gauge_set_value(gauge, picoui_gauge_clamp_value(old_value, min_value, max_value)) != 0) {
+        (void)picoui_native_gauge_set_state(gauge,
+                                            old_min_value,
+                                            old_max_value,
+                                            old_value,
+                                            ext->tick_count);
+        return -1;
+    }
+
+    return 0;
+}
+
+int picoui_gauge_set_value(struct picoui_gauge *gauge, int value)
+{
+    struct picoui_gauge_ext *ext;
+    struct picoui_backend_widget *backend;
+    int clamped_value;
+    int old_value;
+    float angle;
+    float old_angle;
+
+    if (gauge == 0) {
+        return -1;
+    }
+
+    ext = picoui_gauge_ext_from_gauge(gauge);
+    if (ext == 0) {
+        return -1;
+    }
+
+    backend = (struct picoui_backend_widget *)gauge->widget.backend_widget;
+    if (backend == 0) {
+        return -1;
+    }
+
+    old_value = ext->value;
+    old_angle = gauge->angle;
+    clamped_value = picoui_gauge_clamp_value(value, ext->min_value, ext->max_value);
+    angle = picoui_gauge_value_to_angle(clamped_value, ext->min_value, ext->max_value);
+
+    if (picoui_gauge_set_angle(gauge, angle) != 0) {
+        return -1;
+    }
+
+    if (picoui_backend_widget_update_value(backend,
+                                           clamped_value,
+                                           0,
+                                           &gauge->widget,
+                                           0) != 0) {
+        (void)picoui_gauge_set_angle(gauge, old_angle);
+        return -1;
+    }
+
+    if (picoui_native_gauge_set_state(gauge,
+                                      ext->min_value,
+                                      ext->max_value,
+                                      clamped_value,
+                                      ext->tick_count) != 0) {
+        (void)picoui_backend_widget_update_value(backend,
+                                                 old_value,
+                                                 0,
+                                                 &gauge->widget,
+                                                 0);
+        (void)picoui_gauge_set_angle(gauge, old_angle);
+        return -1;
+    }
+
+    return 0;
+}
+
+int picoui_gauge_set_tick_count(struct picoui_gauge *gauge, int tick_count)
+{
+    struct picoui_gauge_ext *ext;
+    int old_tick_count;
+
+    if (gauge == 0 || tick_count <= 0) {
+        return -1;
+    }
+
+    ext = picoui_gauge_ext_from_gauge(gauge);
+    if (ext == 0) {
+        return -1;
+    }
+
+    old_tick_count = ext->tick_count;
+    if (picoui_native_gauge_set_state(gauge,
+                                      ext->min_value,
+                                      ext->max_value,
+                                      ext->value,
+                                      tick_count) != 0) {
+        return -1;
+    }
+
+    if (ext->tick_count != tick_count) {
+        (void)picoui_native_gauge_set_state(gauge,
+                                            ext->min_value,
+                                            ext->max_value,
+                                            ext->value,
+                                            old_tick_count);
+        return -1;
+    }
+
+    return 0;
 }
 
 /**
@@ -274,6 +478,54 @@ float picoui_gauge_get_angle(const struct picoui_gauge *gauge)
         return 0.0f;
     }
     return angle;
+}
+
+int picoui_gauge_get_min_value(const struct picoui_gauge *gauge)
+{
+    const struct picoui_gauge_ext *ext;
+
+    ext = picoui_gauge_ext_from_gauge_const(gauge);
+    if (ext == 0) {
+        return 0;
+    }
+
+    return ext->min_value;
+}
+
+int picoui_gauge_get_max_value(const struct picoui_gauge *gauge)
+{
+    const struct picoui_gauge_ext *ext;
+
+    ext = picoui_gauge_ext_from_gauge_const(gauge);
+    if (ext == 0) {
+        return 0;
+    }
+
+    return ext->max_value;
+}
+
+int picoui_gauge_get_value(const struct picoui_gauge *gauge)
+{
+    const struct picoui_gauge_ext *ext;
+
+    ext = picoui_gauge_ext_from_gauge_const(gauge);
+    if (ext == 0) {
+        return 0;
+    }
+
+    return ext->value;
+}
+
+int picoui_gauge_get_tick_count(const struct picoui_gauge *gauge)
+{
+    const struct picoui_gauge_ext *ext;
+
+    ext = picoui_gauge_ext_from_gauge_const(gauge);
+    if (ext == 0) {
+        return 0;
+    }
+
+    return ext->tick_count;
 }
 
 /**

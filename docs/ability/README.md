@@ -3,6 +3,16 @@
 本文是 LingDongGUI 原生控件/API 能力与 PicoUI 覆盖审计入口。
 覆盖结论以 `ldgui_public_api_inventory.json` 和 `picoui_release_capability_matrix.json` 为准，不以截图、demo 存在或人工摘要为准。
 
+当前 `v1.0-native / v1.0.1` 口径里，PicoUI 的实现方向是：
+
+```text
+PicoUI public API -> native runtime/widgets -> ARM-2D -> port/display
+```
+
+旧 `pre-v1.0 wrapper-backend` 文档只保留 archive 参考价值，不再作为当前实现或发布口径：
+
+- `docs/picoui-serial/archive/pre-v1.0-wrapper-backend/`
+
 ## 覆盖口径
 
 - inventory：`tests/picoui/contract/ldgui_public_api_inventory.json`

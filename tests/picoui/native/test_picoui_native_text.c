@@ -7,6 +7,9 @@
 int picoui_native_event_bind_root(struct picoui_screen *screen, struct picoui_window *root_window);
 int picoui_native_text_get_rendered_text(const struct picoui_text *text, const char **value);
 int picoui_native_text_get_rendered_wrap_width(const struct picoui_text *text, int *wrap_width);
+int picoui_native_text_get_rendered_dirty_rect(const struct picoui_text *text,
+                                               struct picoui_rect *dirty_rect);
+int picoui_native_text_get_rendered_changed_pixels(const struct picoui_text *text, int *count);
 void picoui_native_text_test_fail_next_set_text(void);
 
 int main(void)
@@ -17,6 +20,8 @@ int main(void)
     struct picoui_text *text;
     const char *rendered_text = 0;
     int wrap_width = -1;
+    struct picoui_rect dirty_rect = {-1, -1, -1, -1};
+    int changed_pixels = -1;
     int rc;
 
     assert(picoui_init() == 0);
@@ -51,6 +56,11 @@ int main(void)
     assert(strcmp(rendered_text, "PicoUI UTF-8: 中文") == 0);
     assert(picoui_native_text_get_rendered_wrap_width(text, &wrap_width) == 0);
     assert(wrap_width == 96);
+    assert(picoui_native_text_get_rendered_dirty_rect(text, &dirty_rect) == 0);
+    assert(dirty_rect.width > 0);
+    assert(dirty_rect.height > 0);
+    assert(picoui_native_text_get_rendered_changed_pixels(text, &changed_pixels) == 0);
+    assert(changed_pixels > 0);
 
     picoui_native_text_test_fail_next_set_text();
     assert(picoui_text_set_text(text, "should not commit") == -1);
@@ -67,6 +77,11 @@ int main(void)
     assert(strcmp(rendered_text, "static UTF-8: 文本") == 0);
     assert(picoui_native_text_get_rendered_wrap_width(text, &wrap_width) == 0);
     assert(wrap_width == 128);
+    assert(picoui_native_text_get_rendered_dirty_rect(text, &dirty_rect) == 0);
+    assert(dirty_rect.width > 0);
+    assert(dirty_rect.height > 0);
+    assert(picoui_native_text_get_rendered_changed_pixels(text, &changed_pixels) == 0);
+    assert(changed_pixels > 0);
 
     picoui_native_text_test_fail_next_set_text();
     assert(picoui_text_set_static_text(text, "static should not commit") == -1);

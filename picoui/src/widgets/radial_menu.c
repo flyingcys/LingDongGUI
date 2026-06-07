@@ -23,6 +23,11 @@
 
 #include <stdlib.h>
 
+static int picoui_radial_menu_selected_index_is_valid(const struct picoui_radial_menu *radial_menu, int index)
+{
+    return radial_menu != 0 && index >= 0 && index < radial_menu->item_count;
+}
+
 static int picoui_radial_menu_props_are_valid(const struct picoui_radial_menu_props *props)
 {
     return props != 0 &&
@@ -179,18 +184,6 @@ int picoui_radial_menu_add_item(struct picoui_radial_menu *radial_menu, const ch
     if (radial_menu->selected_index < 0) {
         radial_menu->selected_index = 0;
     }
-    if (radial_menu->selected_index >= 0 &&
-        radial_menu->selected_index < radial_menu->item_count &&
-        picoui_backend_radial_menu_set_selected_index(radial_menu->widget.backend_widget,
-                                                      radial_menu->selected_index) != 0) {
-        radial_menu->item_count--;
-        radial_menu->items[index].id = 0;
-        radial_menu->items[index].text = 0;
-        if (radial_menu->item_count == 0) {
-            radial_menu->selected_index = -1;
-        }
-        return -1;
-    }
     return 0;
 }
 
@@ -258,15 +251,18 @@ int picoui_radial_menu_add_item_with_image(struct picoui_radial_menu *radial_men
 
 int picoui_radial_menu_set_selected_index(struct picoui_radial_menu *radial_menu, int index)
 {
-    if (radial_menu == 0 || index < 0 || index >= radial_menu->item_count) {
+    int previous_selected_index;
+
+    if (!picoui_radial_menu_selected_index_is_valid(radial_menu, index)) {
         return -1;
     }
 
-    if (picoui_backend_radial_menu_set_selected_index(radial_menu->widget.backend_widget, index) != 0) {
-        return -1;
-    }
-
+    previous_selected_index = radial_menu->selected_index;
     radial_menu->selected_index = index;
+    if (picoui_backend_radial_menu_set_selected_index(radial_menu->widget.backend_widget, index) != 0) {
+        radial_menu->selected_index = previous_selected_index;
+        return -1;
+    }
     return 0;
 }
 
@@ -279,17 +275,8 @@ int picoui_radial_menu_set_selected_index(struct picoui_radial_menu *radial_menu
 
 int picoui_radial_menu_get_selected_index(const struct picoui_radial_menu *radial_menu)
 {
-    int selected_index;
-
     if (radial_menu == 0) {
         return -1;
-    }
-
-    selected_index =
-        picoui_backend_radial_menu_get_selected_index((void *)radial_menu->widget.backend_widget);
-    if (selected_index >= 0 && selected_index < radial_menu->item_count) {
-        ((struct picoui_radial_menu *)radial_menu)->selected_index = selected_index;
-        return selected_index;
     }
 
     return radial_menu->selected_index;
@@ -306,20 +293,22 @@ int picoui_radial_menu_get_selected_index(const struct picoui_radial_menu *radia
 int picoui_radial_menu_offset_selection(struct picoui_radial_menu *radial_menu, int offset)
 {
     int selected_index;
+    int next_index;
 
     if (radial_menu == 0 || radial_menu->item_count <= 0) {
         return -1;
     }
 
-    if (picoui_backend_radial_menu_offset_selection(radial_menu->widget.backend_widget, offset) != 0) {
-        return -1;
+    selected_index = radial_menu->selected_index;
+    if (selected_index < 0 || selected_index >= radial_menu->item_count) {
+        selected_index = 0;
+    }
+    next_index = (selected_index + offset) % radial_menu->item_count;
+    if (next_index < 0) {
+        next_index += radial_menu->item_count;
     }
 
-    selected_index = picoui_backend_radial_menu_get_selected_index(radial_menu->widget.backend_widget);
-    if (selected_index >= 0 && selected_index < radial_menu->item_count) {
-        radial_menu->selected_index = selected_index;
-    }
-    return 0;
+    return picoui_radial_menu_set_selected_index(radial_menu, next_index);
 }
 
 /**
@@ -332,15 +321,18 @@ int picoui_radial_menu_offset_selection(struct picoui_radial_menu *radial_menu, 
 
 int picoui_radial_menu_set_default_item(struct picoui_radial_menu *radial_menu, int index)
 {
-    if (radial_menu == 0 || index < 0 || index >= radial_menu->item_count) {
+    int previous_selected_index;
+
+    if (!picoui_radial_menu_selected_index_is_valid(radial_menu, index)) {
         return -1;
     }
 
-    if (picoui_backend_radial_menu_set_default_item(radial_menu->widget.backend_widget, index) != 0) {
-        return -1;
-    }
-
+    previous_selected_index = radial_menu->selected_index;
     radial_menu->selected_index = index;
+    if (picoui_backend_radial_menu_set_default_item(radial_menu->widget.backend_widget, index) != 0) {
+        radial_menu->selected_index = previous_selected_index;
+        return -1;
+    }
     return 0;
 }
 
@@ -354,15 +346,18 @@ int picoui_radial_menu_set_default_item(struct picoui_radial_menu *radial_menu, 
 
 int picoui_radial_menu_click_item(struct picoui_radial_menu *radial_menu, int index)
 {
-    if (radial_menu == 0 || index < 0 || index >= radial_menu->item_count) {
+    int previous_selected_index;
+
+    if (!picoui_radial_menu_selected_index_is_valid(radial_menu, index)) {
         return -1;
     }
 
-    if (picoui_backend_radial_menu_click_item(radial_menu->widget.backend_widget, index) != 0) {
-        return -1;
-    }
-
+    previous_selected_index = radial_menu->selected_index;
     radial_menu->selected_index = index;
+    if (picoui_backend_radial_menu_click_item(radial_menu->widget.backend_widget, index) != 0) {
+        radial_menu->selected_index = previous_selected_index;
+        return -1;
+    }
     return 0;
 }
 
@@ -389,19 +384,26 @@ int picoui_radial_menu_set_click_item(struct picoui_radial_menu *radial_menu, in
 
 int picoui_radial_menu_offset_item(struct picoui_radial_menu *radial_menu, int offset)
 {
-    int selected_index;
+    int next_index;
+    int previous_selected_index;
 
     if (radial_menu == 0 || radial_menu->item_count <= 0) {
         return -1;
     }
 
-    if (picoui_backend_radial_menu_offset_item(radial_menu->widget.backend_widget, offset) != 0) {
-        return -1;
+    previous_selected_index = radial_menu->selected_index;
+    next_index = previous_selected_index;
+    if (next_index < 0 || next_index >= radial_menu->item_count) {
+        next_index = 0;
     }
-
-    selected_index = picoui_backend_radial_menu_get_selected_index(radial_menu->widget.backend_widget);
-    if (selected_index >= 0 && selected_index < radial_menu->item_count) {
-        radial_menu->selected_index = selected_index;
+    next_index = (next_index + offset) % radial_menu->item_count;
+    if (next_index < 0) {
+        next_index += radial_menu->item_count;
+    }
+    radial_menu->selected_index = next_index;
+    if (picoui_backend_radial_menu_offset_item(radial_menu->widget.backend_widget, offset) != 0) {
+        radial_menu->selected_index = previous_selected_index;
+        return -1;
     }
     return 0;
 }

@@ -60,9 +60,10 @@ static void test_progress_bar_rejects_invalid_inputs(struct picoui_window *win)
     assert(picoui_progress_bar_get_percent(0) == -1);
     assert(picoui_progress_bar_set_horizontal(0, 1) == -1);
     assert(picoui_progress_bar_get_horizontal(0) == -1);
-    assert(picoui_progress_bar_set_percent(bar, -3) == -1);
-    assert(picoui_progress_bar_set_percent(bar, 130) == -1);
+    assert(picoui_progress_bar_set_percent(bar, -3) == 0);
     assert(picoui_progress_bar_get_percent(bar) == 0);
+    assert(picoui_progress_bar_set_percent(bar, 130) == 0);
+    assert(picoui_progress_bar_get_percent(bar) == 100);
 }
 
 static void test_progress_bar_percent_bounds(struct picoui_window *win)
@@ -74,9 +75,9 @@ static void test_progress_bar_percent_bounds(struct picoui_window *win)
     assert(picoui_progress_bar_get_percent(bar) == 0);
     assert(picoui_progress_bar_set_percent(bar, 100) == 0);
     assert(picoui_progress_bar_get_percent(bar) == 100);
-    assert(picoui_progress_bar_set_percent(bar, -1) == -1);
-    assert(picoui_progress_bar_get_percent(bar) == 100);
-    assert(picoui_progress_bar_set_percent(bar, 101) == -1);
+    assert(picoui_progress_bar_set_percent(bar, -1) == 0);
+    assert(picoui_progress_bar_get_percent(bar) == 0);
+    assert(picoui_progress_bar_set_percent(bar, 101) == 0);
     assert(picoui_progress_bar_get_percent(bar) == 100);
 }
 

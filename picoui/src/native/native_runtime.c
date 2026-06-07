@@ -18,6 +18,7 @@
 
 #include "picoui/runtime.h"
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -27,7 +28,7 @@ struct picoui_runtime_state {
     int ready_logged;
     int auto_quit_enabled;
     unsigned long auto_quit_ms;
-    clock_t start_ticks;
+    struct timespec start_ticks;
 };
 
 static struct picoui_runtime_state g_picoui_runtime;
@@ -54,40 +55,71 @@ static unsigned long picoui_runtime_parse_auto_quit_ms(void)
     return parsed;
 }
 
-static unsigned long picoui_runtime_elapsed_ms(clock_t start_ticks, clock_t now_ticks)
+static int picoui_runtime_now(struct timespec *value)
 {
-    clock_t delta_ticks;
+    if (value == NULL) {
+        return -1;
+    }
+#if defined(CLOCK_MONOTONIC)
+    if (clock_gettime(CLOCK_MONOTONIC, value) == 0) {
+        return 0;
+    }
+#endif
+    return clock_gettime(CLOCK_REALTIME, value);
+}
 
-    if (now_ticks <= start_ticks) {
+static unsigned long picoui_runtime_elapsed_ms(struct timespec start_ticks, struct timespec now_ticks)
+{
+    time_t delta_sec;
+    long delta_nsec;
+
+    if (now_ticks.tv_sec < start_ticks.tv_sec
+        || (now_ticks.tv_sec == start_ticks.tv_sec && now_ticks.tv_nsec <= start_ticks.tv_nsec)) {
         return 0UL;
     }
 
-    delta_ticks = now_ticks - start_ticks;
-    return (unsigned long)(((double)delta_ticks * 1000.0) / (double)CLOCKS_PER_SEC);
+    delta_sec = now_ticks.tv_sec - start_ticks.tv_sec;
+    delta_nsec = now_ticks.tv_nsec - start_ticks.tv_nsec;
+    if (delta_nsec < 0) {
+        delta_sec -= 1;
+        delta_nsec += 1000000000L;
+    }
+
+    return (unsigned long)delta_sec * 1000UL + (unsigned long)(delta_nsec / 1000000L);
 }
 
 int picoui_init(void)
 {
+    struct timespec now = {0, 0};
+
     g_picoui_runtime.initialized = 1;
     g_picoui_runtime.ready_logged = 0;
     g_picoui_runtime.auto_quit_ms = picoui_runtime_parse_auto_quit_ms();
     g_picoui_runtime.auto_quit_enabled = g_picoui_runtime.auto_quit_ms > 0UL;
-    g_picoui_runtime.start_ticks = clock();
+    if (picoui_runtime_now(&now) != 0) {
+        g_picoui_runtime.initialized = 0;
+        g_picoui_runtime.auto_quit_enabled = 0;
+        g_picoui_runtime.auto_quit_ms = 0UL;
+        return -1;
+    }
+    g_picoui_runtime.start_ticks = now;
     return 0;
 }
 
-void picoui_deinit(void)
+void picoui_native_runtime_deinit(void)
 {
     g_picoui_runtime.initialized = 0;
     g_picoui_runtime.ready_logged = 0;
     g_picoui_runtime.auto_quit_enabled = 0;
     g_picoui_runtime.auto_quit_ms = 0UL;
-    g_picoui_runtime.start_ticks = 0;
+    g_picoui_runtime.start_ticks.tv_sec = 0;
+    g_picoui_runtime.start_ticks.tv_nsec = 0;
 }
 
-int picoui_timer_handler(void)
+int picoui_native_runtime_timer_handler(void)
 {
     unsigned long elapsed_ms;
+    struct timespec now = {0, 0};
 
     if (!g_picoui_runtime.initialized) {
         return -1;
@@ -103,7 +135,11 @@ int picoui_timer_handler(void)
         return 0;
     }
 
-    elapsed_ms = picoui_runtime_elapsed_ms(g_picoui_runtime.start_ticks, clock());
+    if (picoui_runtime_now(&now) != 0) {
+        return -1;
+    }
+
+    elapsed_ms = picoui_runtime_elapsed_ms(g_picoui_runtime.start_ticks, now);
     if (elapsed_ms >= g_picoui_runtime.auto_quit_ms) {
         return 1;
     }

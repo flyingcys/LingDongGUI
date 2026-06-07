@@ -35,3 +35,13 @@ int picoui_indev_set_read_cb(struct picoui_indev *indev,
     indev->read_user_data = user_data;
     return 0;
 }
+
+int picoui_native_indev_get_type(const struct picoui_indev *indev, enum picoui_indev_type *out_type)
+{
+    if (indev == 0 || out_type == 0) {
+        return -1;
+    }
+
+    *out_type = indev->type;
+    return 0;
+}

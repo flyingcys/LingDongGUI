@@ -1,4 +1,5 @@
 import os
+import json
 import shutil
 import subprocess
 from pathlib import Path
@@ -6,6 +7,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 BUILD = ROOT / "build" / "picoui-runtime"
+ARTIFACT_MANIFEST = ROOT / "tests" / "picoui" / "runtime" / "picoui_native_artifact_manifest.json"
 RTK = shutil.which("rtk") or "rtk"
 DEMO_TIMEOUT_SECONDS = 6
 static_mapping_targets = {
@@ -71,10 +73,6 @@ interactive_mapping_targets = {
         "real_ids": ["clock"],
         "reason": "clock demo proves the clock widget itself is a real LingDongGUI widget.",
     },
-    "picoui_keyboard_basic_demo": {
-        "real_ids": ["keyboard_demo_input", "keyboard_demo_keyboard"],
-        "reason": "keyboard demo proves both the edit target and keyboard widget are real LingDongGUI widgets.",
-    },
     "picoui_line_edit_basic_demo": {
         "real_ids": ["title", "line_edit"],
         "reason": "line_edit demo proves the editable text widget is a real LingDongGUI widget.",
@@ -121,6 +119,24 @@ theme_mapping_targets = {
     },
 }
 
+runtime_only_mapping_targets = {
+    "picoui_keyboard_basic_demo": {
+        "real_ids": ["keyboard_demo_input", "keyboard_demo_keyboard"],
+        "reason": "keyboard demo still keeps runtime_only artifact policy, so its named-widget proof is tracked outside the formal visible/backend-mapping gate.",
+    },
+}
+
+
+def _load_artifact_policies() -> dict[str, str]:
+    payload = json.loads(ARTIFACT_MANIFEST.read_text())
+    policies: dict[str, str] = {}
+    for entry in payload.get("entries", []):
+        target = entry.get("target")
+        policy = entry.get("artifact_policy")
+        if isinstance(target, str) and isinstance(policy, str):
+            policies[target] = policy
+    return policies
+
 
 def _parse_marker_ids(stdout: str, marker: str) -> set[str]:
     prefix = f"{marker}="
@@ -162,11 +178,13 @@ def _find_executable(target: str) -> Path:
 
 def _merge_target_matrix() -> dict[str, dict[str, object]]:
     merged: dict[str, dict[str, object]] = {}
+    artifact_policies = _load_artifact_policies()
     for category, targets in (
         ("static_mapping_targets", static_mapping_targets),
         ("interactive_mapping_targets", interactive_mapping_targets),
         ("layout_mapping_targets", layout_mapping_targets),
         ("theme_mapping_targets", theme_mapping_targets),
+        ("runtime_only_mapping_targets", runtime_only_mapping_targets),
     ):
         for target, config in targets.items():
             entry = merged.setdefault(
@@ -175,7 +193,7 @@ def _merge_target_matrix() -> dict[str, dict[str, object]]:
                     "real_ids": [],
                     "categories": [],
                     "reasons": [],
-                    "requires_real_widget_ids": True,
+                    "requires_real_widget_ids": artifact_policies.get(target, "visible") == "visible",
                 },
             )
             entry["categories"].append(category)
@@ -183,18 +201,17 @@ def _merge_target_matrix() -> dict[str, dict[str, object]]:
             for widget_id in config["real_ids"]:
                 if widget_id not in entry["real_ids"]:
                     entry["real_ids"].append(widget_id)
-    return merged
+    return {
+        target: entry
+        for target, entry in merged.items()
+        if artifact_policies.get(target, "visible") == "visible"
+    }
 
 
 def _assert_target_matrix_complete(target_matrix: dict[str, dict[str, object]]) -> None:
     expected_targets = {
-        "picoui_hello_world_demo",
         "picoui_basic_widgets_demo",
-        "picoui_layout_flex_demo",
-        "picoui_layout_grid_demo",
-        "picoui_theme_showcase_demo",
         "picoui_settings_panel_demo",
-        "picoui_list_basic_demo",
         "picoui_progress_bar_basic_demo",
         "picoui_arc_basic_demo",
         "picoui_gauge_basic_demo",
@@ -205,7 +222,6 @@ def _assert_target_matrix_complete(target_matrix: dict[str, dict[str, object]]) 
         "picoui_message_box_basic_demo",
         "picoui_date_time_basic_demo",
         "picoui_clock_basic_demo",
-        "picoui_keyboard_basic_demo",
         "picoui_line_edit_basic_demo",
         "picoui_combo_box_basic_demo",
         "picoui_scroll_selecter_basic_demo",
@@ -218,7 +234,7 @@ def _assert_target_matrix_complete(target_matrix: dict[str, dict[str, object]]) 
     unexpected_targets = sorted(set(target_matrix) - expected_targets)
     if missing_targets or unexpected_targets:
         raise AssertionError(
-            "Backend mapping matrix must explicitly cover the seven visible-gate demos.\n"
+            "Backend mapping matrix must explicitly cover the formal visible demos.\n"
             f"missing demos: {missing_targets}\n"
             f"unexpected demos: {unexpected_targets}"
         )

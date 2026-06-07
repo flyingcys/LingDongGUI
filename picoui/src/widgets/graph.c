@@ -20,6 +20,34 @@
 #include "picoui/graph.h"
 
 #include <stdlib.h>
+#include <string.h>
+
+struct picoui_graph_ext {
+    struct picoui_graph graph;
+    int values[PICOUI_GRAPH_MAX_SERIES][PICOUI_GRAPH_MAX_POINTS];
+    int rendered_series_count;
+    int rendered_series_point_counts[PICOUI_GRAPH_MAX_SERIES];
+    int rendered_values[PICOUI_GRAPH_MAX_SERIES][PICOUI_GRAPH_MAX_POINTS];
+    int render_ready;
+};
+
+static struct picoui_graph_ext *picoui_graph_ext_from_graph(struct picoui_graph *graph)
+{
+    if (graph == 0) {
+        return 0;
+    }
+
+    return (struct picoui_graph_ext *)graph;
+}
+
+static const struct picoui_graph_ext *picoui_graph_ext_from_graph_const(const struct picoui_graph *graph)
+{
+    if (graph == 0) {
+        return 0;
+    }
+
+    return (const struct picoui_graph_ext *)graph;
+}
 
 static int picoui_graph_props_are_valid(const struct picoui_graph_props *props)
 {
@@ -71,20 +99,22 @@ struct picoui_graph *picoui_graph_create(struct picoui_window *parent,
                                          int series_max)
 {
     struct picoui_graph *graph;
+    struct picoui_graph_ext *ext;
 
     if (parent == 0 || id == 0 || series_max <= 0 || series_max > PICOUI_GRAPH_MAX_SERIES) {
         return 0;
     }
 
-    graph = calloc(1, sizeof(*graph));
-    if (graph == 0) {
+    ext = calloc(1, sizeof(*ext));
+    if (ext == 0) {
         return 0;
     }
+    graph = &ext->graph;
 
     graph->widget.backend_widget =
         picoui_backend_create_graph(parent->widget.backend_widget, id, series_max);
     if (graph->widget.backend_widget == 0) {
-        free(graph);
+        free(ext);
         return 0;
     }
 
@@ -98,7 +128,7 @@ struct picoui_graph *picoui_graph_create(struct picoui_window *parent,
     graph->widget.visible = 1;
     graph->widget.enabled = 1;
     if (picoui_backend_widget_bind_host(graph->widget.backend_widget, &graph->widget) != 0) {
-        free(graph);
+        free(ext);
         return 0;
     }
     return graph;
@@ -280,24 +310,32 @@ int picoui_graph_add_series(struct picoui_graph *graph,
                             int line_size,
                             int point_max)
 {
+    struct picoui_graph_ext *ext;
+    int expected_index;
     int series_index;
 
-    if (graph == 0 || line_size < 0 || point_max <= 0 || point_max > PICOUI_GRAPH_MAX_POINTS) {
+    if (graph == 0 || line_size < 0 || point_max <= 0 || point_max > PICOUI_GRAPH_MAX_POINTS ||
+        graph->series_count >= graph->series_max) {
         return -1;
     }
 
+    ext = picoui_graph_ext_from_graph(graph);
+    if (ext == 0) {
+        return -1;
+    }
+
+    expected_index = graph->series_count;
     series_index = picoui_backend_graph_add_series(graph->widget.backend_widget,
                                                    series_color,
                                                    line_size,
                                                    point_max);
-    if (series_index < 0 || series_index >= PICOUI_GRAPH_MAX_SERIES) {
+    if (series_index < 0 || series_index >= PICOUI_GRAPH_MAX_SERIES || series_index != expected_index) {
         return -1;
     }
 
     graph->series_point_counts[series_index] = point_max;
-    if (series_index >= graph->series_count) {
-        graph->series_count = series_index + 1;
-    }
+    memset(ext->values[series_index], 0, sizeof(ext->values[series_index]));
+    graph->series_count = series_index + 1;
     return series_index;
 }
 
@@ -316,13 +354,24 @@ int picoui_graph_set_value(struct picoui_graph *graph,
                            int value_index,
                            int value)
 {
+    struct picoui_graph_ext *ext;
+    int old_value;
+
     if (graph == 0 || series_index < 0 || series_index >= graph->series_count ||
         value_index < 0 || value_index >= graph->series_point_counts[series_index] ||
         value < 0) {
         return -1;
     }
 
+    ext = picoui_graph_ext_from_graph(graph);
+    if (ext == 0) {
+        return -1;
+    }
+
+    old_value = ext->values[series_index][value_index];
+    ext->values[series_index][value_index] = value;
     if (picoui_backend_graph_set_value(graph->widget.backend_widget, series_index, value_index, value) != 0) {
+        ext->values[series_index][value_index] = old_value;
         return -1;
     }
     return 0;
@@ -339,11 +388,38 @@ int picoui_graph_set_value(struct picoui_graph *graph,
 
 int picoui_graph_move_add(struct picoui_graph *graph, int series_index, int value)
 {
+    struct picoui_graph_ext *ext;
+    int point_count;
+    int old_values[PICOUI_GRAPH_MAX_POINTS];
+
     if (graph == 0 || series_index < 0 || series_index >= graph->series_count || value < 0) {
         return -1;
     }
 
-    return picoui_backend_graph_move_add(graph->widget.backend_widget, series_index, value);
+    ext = picoui_graph_ext_from_graph(graph);
+    if (ext == 0) {
+        return -1;
+    }
+
+    point_count = graph->series_point_counts[series_index];
+    if (point_count <= 0 || point_count > PICOUI_GRAPH_MAX_POINTS) {
+        return -1;
+    }
+
+    memcpy(old_values, ext->values[series_index], (size_t)point_count * sizeof(int));
+    if (point_count > 1) {
+        memmove(ext->values[series_index],
+                ext->values[series_index] + 1,
+                (size_t)(point_count - 1) * sizeof(int));
+    }
+    ext->values[series_index][point_count - 1] = value;
+
+    if (picoui_backend_graph_move_add(graph->widget.backend_widget, series_index, value) != 0) {
+        memcpy(ext->values[series_index], old_values, (size_t)point_count * sizeof(int));
+        return -1;
+    }
+
+    return 0;
 }
 
 /**
@@ -359,7 +435,7 @@ int picoui_graph_get_series_count(const struct picoui_graph *graph)
         return -1;
     }
 
-    return picoui_backend_graph_get_series_count((void *)graph->widget.backend_widget);
+    return graph->series_count;
 }
 
 /**
@@ -373,9 +449,17 @@ int picoui_graph_get_series_count(const struct picoui_graph *graph)
 
 int picoui_graph_get_value(const struct picoui_graph *graph, int series_index, int value_index)
 {
-    if (graph == 0) {
+    const struct picoui_graph_ext *ext;
+
+    if (graph == 0 || series_index < 0 || series_index >= graph->series_count ||
+        value_index < 0 || value_index >= graph->series_point_counts[series_index]) {
         return -1;
     }
 
-    return picoui_backend_graph_get_value((void *)graph->widget.backend_widget, series_index, value_index);
+    ext = picoui_graph_ext_from_graph_const(graph);
+    if (ext == 0) {
+        return -1;
+    }
+
+    return ext->values[series_index][value_index];
 }

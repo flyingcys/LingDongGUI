@@ -1,0 +1,526 @@
+{
+  "schema_version": 1,
+  "route": "v1.0-native",
+  "release": "v1.0.1",
+  "phases": [
+    {
+      "phase": "P0",
+      "status": "covered",
+      "source": "线计划索引.md",
+      "note": "baseline inventory and compatibility decision phase completed before native runtime migration"
+    },
+    {
+      "phase": "P1",
+      "status": "covered",
+      "source": "picoui_native_migration_ledger.json"
+    },
+    {
+      "phase": "P2",
+      "status": "covered",
+      "source": "picoui_native_migration_ledger.json"
+    },
+    {
+      "phase": "P3",
+      "status": "covered",
+      "source": "picoui_native_migration_ledger.json"
+    },
+    {
+      "phase": "P4",
+      "status": "covered",
+      "source": "picoui_native_migration_ledger.json"
+    },
+    {
+      "phase": "P5",
+      "status": "covered",
+      "source": "picoui_native_migration_ledger.json"
+    },
+    {
+      "phase": "P6",
+      "status": "covered",
+      "source": "picoui_native_migration_ledger.json"
+    },
+    {
+      "phase": "P7",
+      "status": "covered",
+      "source": "picoui_native_migration_ledger.json"
+    },
+    {
+      "phase": "P8",
+      "status": "covered",
+      "source": "08-v1.0.1发布门禁.md"
+    }
+  ],
+  "widgets": [
+    {
+      "id": "P1-runtime-init",
+      "phase": "P1",
+      "capability": "LVGL-like runtime init/deinit",
+      "status": "covered",
+      "evidence": [
+        "test_picoui_native_runtime",
+        "01-native垂直切片.md: 当前状态/runtime lifecycle",
+        "check_picoui_runtime.py --demo basic_widgets"
+      ]
+    },
+    {
+      "id": "P1-display-indev-screen",
+      "phase": "P1",
+      "capability": "Display, input device, and active screen without public app handle",
+      "status": "covered",
+      "evidence": [
+        "test_picoui_native_display_indev",
+        "test_picoui_native_screen",
+        "01-native垂直切片.md: 当前状态/display indev screen"
+      ]
+    },
+    {
+      "id": "P1-window-label-button",
+      "phase": "P1",
+      "capability": "Native window, label, button vertical slice",
+      "status": "covered",
+      "evidence": [
+        "test_picoui_native_screen_window",
+        "test_picoui_native_render_window_label_button",
+        "test_picoui_native_input_button",
+        "01-native垂直切片.md: P1-I/P1-J"
+      ]
+    },
+    {
+      "id": "P1-basic-widgets-main-style",
+      "phase": "P1",
+      "capability": "basic_widgets main follows LVGL-like structure",
+      "status": "covered",
+      "evidence": [
+        "check_picoui_demo_main_style",
+        "check_picoui_demo_main_style_inventory",
+        "picoui_basic_widgets_demo build",
+        "check_picoui_runtime.py --demo basic_widgets"
+      ]
+    },
+    {
+      "id": "P2-widget-tree-layout-theme",
+      "phase": "P2",
+      "capability": "Native widget tree, layout, and theme",
+      "status": "covered",
+      "evidence": [
+        "test_picoui_native_widget_tree",
+        "test_picoui_native_geometry_dirty",
+        "test_picoui_native_flex_layout",
+        "test_picoui_native_grid_layout",
+        "test_picoui_native_style_theme",
+        "ctest --test-dir build -R 'widget_tree|geometry_dirty|flex_layout|grid_layout|style_theme' --output-on-failure",
+        "02-core-layout-theme.md: P2-F Closeout"
+      ]
+    },
+    {
+      "id": "P3-basic-widgets",
+      "phase": "P3",
+      "capability": "Native checkbox, switch, slider, text, image, list, background",
+      "status": "covered",
+      "evidence": [
+        "test_picoui_native_runtime",
+        "test_picoui_native_checkbox",
+        "test_picoui_native_switch",
+        "test_picoui_native_slider",
+        "test_picoui_native_text",
+        "test_picoui_native_image",
+        "test_picoui_native_list",
+        "test_picoui_native_background",
+        "ctest --test-dir build -R '^test_picoui_native_runtime$' --output-on-failure",
+        "check_picoui_runtime.py --demo basic_widgets",
+        "check_picoui_visible_ui.py --demo basic_widgets",
+        "03-基础控件迁移.md: P3-H closeout"
+      ]
+    },
+    {
+      "id": "P4-extended-widgets",
+      "phase": "P4",
+      "capability": "Native extended widget set",
+      "status": "covered",
+      "evidence": [
+        "ctest --test-dir build -R '^(test_picoui_native_arc|test_picoui_native_calendar|test_picoui_native_clock|test_picoui_native_combo_box|test_picoui_native_date_time|test_picoui_native_gauge|test_picoui_native_graph|test_picoui_native_icon_slider|test_picoui_native_keyboard_line_edit|test_picoui_native_message_box|test_picoui_native_progress|test_picoui_native_qrcode|test_picoui_native_radial_menu|test_picoui_native_scroll_selecter|test_picoui_native_table|test_picoui_native_animation_canvas)$' --output-on-failure",
+        "check_picoui_runtime.py --demo arc_basic",
+        "check_picoui_runtime.py --demo calendar_basic",
+        "check_picoui_runtime.py --demo clock_basic",
+        "check_picoui_runtime.py --demo combo_box_basic",
+        "check_picoui_runtime.py --demo date_time_basic",
+        "check_picoui_runtime.py --demo gauge_basic",
+        "check_picoui_runtime.py --demo graph_basic",
+        "check_picoui_runtime.py --demo icon_slider_basic",
+        "check_picoui_runtime.py --demo keyboard_basic",
+        "check_picoui_runtime.py --demo line_edit_basic",
+        "check_picoui_runtime.py --demo message_box_basic",
+        "check_picoui_runtime.py --demo progress_bar_basic",
+        "check_picoui_runtime.py --demo progress_wheel_basic",
+        "check_picoui_runtime.py --demo qrcode_basic",
+        "check_picoui_runtime.py --demo radial_menu_basic",
+        "check_picoui_runtime.py --demo scroll_selecter_basic",
+        "check_picoui_runtime.py --demo table_basic",
+        "check_picoui_runtime.py --demo animation_basic",
+        "check_picoui_visible_ui.py --demo arc_basic",
+        "check_picoui_visible_ui.py --demo calendar_basic",
+        "check_picoui_visible_ui.py --demo clock_basic",
+        "check_picoui_visible_ui.py --demo combo_box_basic",
+        "check_picoui_visible_ui.py --demo date_time_basic",
+        "check_picoui_visible_ui.py --demo gauge_basic",
+        "check_picoui_visible_ui.py --demo graph_basic",
+        "check_picoui_visible_ui.py --demo icon_slider_basic",
+        "check_picoui_visible_ui.py --demo keyboard_basic",
+        "check_picoui_visible_ui.py --demo line_edit_basic",
+        "check_picoui_visible_ui.py --demo message_box_basic",
+        "check_picoui_visible_ui.py --demo progress_bar_basic",
+        "check_picoui_visible_ui.py --demo progress_wheel_basic",
+        "check_picoui_visible_ui.py --demo qrcode_basic",
+        "check_picoui_visible_ui.py --demo radial_menu_basic",
+        "check_picoui_visible_ui.py --demo scroll_selecter_basic",
+        "check_picoui_visible_ui.py --demo table_basic",
+        "check_picoui_visible_ui.py --demo animation_basic",
+        "04-扩展控件迁移.md: P4-Q closeout"
+      ]
+    },
+    {
+      "id": "P5-resource-font-image",
+      "phase": "P5",
+      "capability": "Native resource, font, image, text rendering",
+      "status": "covered",
+      "evidence": [
+        "ctest --test-dir build -R 'test_picoui_native_(resource|font_renderer|image_renderer|canvas_renderer|qrcode_renderer|animation_frames)$' --output-on-failure",
+        "test_picoui_native_text",
+        "test_picoui_native_image",
+        "test_picoui_native_animation_canvas",
+        "test_picoui_native_qrcode",
+        "check_picoui_runtime.py --demo basic_widgets",
+        "check_picoui_visible_ui.py --demo basic_widgets",
+        "check_picoui_runtime.py --demo qrcode_basic",
+        "check_picoui_visible_ui.py --demo qrcode_basic",
+        "check_picoui_runtime.py --demo animation_basic",
+        "check_picoui_visible_ui.py --demo animation_basic",
+        "05-resource-font-image.md: P5-G closeout"
+      ]
+    },
+    {
+      "id": "P6-demo-port-artifact",
+      "phase": "P6",
+      "capability": "Demo main migration, SDL port, native artifacts",
+      "status": "covered",
+      "evidence": [
+        "test_picoui_native_sdl_port",
+        "check_picoui_demo_main_style.py",
+        "check_picoui_runtime.py --all-demos",
+        "check_picoui_native_visible_ui.py --all-demos",
+        "picoui_native_artifact_manifest.json",
+        "06-demo-port验证.md: P6-AC closeout"
+      ]
+    },
+    {
+      "id": "P7-remove-ldgui-runtime-dependency",
+      "phase": "P7",
+      "capability": "Default PicoUI runtime does not link ldgui backend",
+      "status": "covered",
+      "evidence": [
+        "python3 -m unittest tests.picoui.contract.test_check_picoui_no_ldgui_runtime_dependency",
+        "check_picoui_no_ldgui_runtime_dependency",
+        "ctest --test-dir build-native -L picoui --output-on-failure",
+        "ctest --test-dir build-native -L release --output-on-failure",
+        "07-ldgui构建解绑.md: P7-E closeout"
+      ]
+    }
+  ],
+  "demos": [
+    {
+      "demo": "animation_basic",
+      "target": "picoui_animation_basic_demo",
+      "main_style": "v1_lvgl_like",
+      "uses_picoui_app": false,
+      "migration_phase": "P6",
+      "style_result": "covered",
+      "artifact_policy": "visible",
+      "runtime_result": "visible"
+    },
+    {
+      "demo": "arc_basic",
+      "target": "picoui_arc_basic_demo",
+      "main_style": "v1_lvgl_like",
+      "uses_picoui_app": false,
+      "migration_phase": "P6",
+      "style_result": "covered",
+      "artifact_policy": "visible",
+      "runtime_result": "visible"
+    },
+    {
+      "demo": "basic_widgets",
+      "target": "picoui_basic_widgets_demo",
+      "main_style": "v1_lvgl_like",
+      "uses_picoui_app": false,
+      "migration_phase": "P1",
+      "style_result": "covered",
+      "artifact_policy": "visible",
+      "runtime_result": "visible"
+    },
+    {
+      "demo": "calendar_basic",
+      "target": "picoui_calendar_basic_demo",
+      "main_style": "v1_lvgl_like",
+      "uses_picoui_app": false,
+      "migration_phase": "P6",
+      "style_result": "covered",
+      "artifact_policy": "visible",
+      "runtime_result": "visible"
+    },
+    {
+      "demo": "clock_basic",
+      "target": "picoui_clock_basic_demo",
+      "main_style": "v1_lvgl_like",
+      "uses_picoui_app": false,
+      "migration_phase": "P6",
+      "style_result": "covered",
+      "artifact_policy": "visible",
+      "runtime_result": "visible"
+    },
+    {
+      "demo": "combo_box_basic",
+      "target": "picoui_combo_box_basic_demo",
+      "main_style": "v1_lvgl_like",
+      "uses_picoui_app": false,
+      "migration_phase": "P6",
+      "style_result": "covered",
+      "artifact_policy": "visible",
+      "runtime_result": "visible"
+    },
+    {
+      "demo": "date_time_basic",
+      "target": "picoui_date_time_basic_demo",
+      "main_style": "v1_lvgl_like",
+      "uses_picoui_app": false,
+      "migration_phase": "P6",
+      "style_result": "covered",
+      "artifact_policy": "visible",
+      "runtime_result": "visible"
+    },
+    {
+      "demo": "gauge_basic",
+      "target": "picoui_gauge_basic_demo",
+      "main_style": "v1_lvgl_like",
+      "uses_picoui_app": false,
+      "migration_phase": "P6",
+      "style_result": "covered",
+      "artifact_policy": "visible",
+      "runtime_result": "visible"
+    },
+    {
+      "demo": "graph_basic",
+      "target": "picoui_graph_basic_demo",
+      "main_style": "v1_lvgl_like",
+      "uses_picoui_app": false,
+      "migration_phase": "P6",
+      "style_result": "covered",
+      "artifact_policy": "visible",
+      "runtime_result": "visible"
+    },
+    {
+      "demo": "grid_parity",
+      "target": "picoui_grid_parity_demo",
+      "main_style": "v1_lvgl_like",
+      "uses_picoui_app": false,
+      "migration_phase": "P6",
+      "style_result": "covered",
+      "artifact_policy": "visible",
+      "runtime_result": "visible"
+    },
+    {
+      "demo": "hello_world",
+      "target": "picoui_hello_world_demo",
+      "main_style": "v1_lvgl_like",
+      "uses_picoui_app": false,
+      "migration_phase": "P6",
+      "style_result": "covered",
+      "artifact_policy": "runtime_only",
+      "runtime_result": "runtime_only",
+      "reason": "fresh 2026-06-06 probe reports PICOUI_RUNTIME_READY but exits 1 without stable capture"
+    },
+    {
+      "demo": "icon_slider_basic",
+      "target": "picoui_icon_slider_basic_demo",
+      "main_style": "v1_lvgl_like",
+      "uses_picoui_app": false,
+      "migration_phase": "P6",
+      "style_result": "covered",
+      "artifact_policy": "visible",
+      "runtime_result": "visible"
+    },
+    {
+      "demo": "keyboard_basic",
+      "target": "picoui_keyboard_basic_demo",
+      "main_style": "v1_lvgl_like",
+      "uses_picoui_app": false,
+      "migration_phase": "P6",
+      "style_result": "covered",
+      "artifact_policy": "runtime_only",
+      "runtime_result": "runtime_only",
+      "reason": "fresh 2026-06-06 probe reports PICOUI_RUNTIME_READY but exits 1 without stable capture"
+    },
+    {
+      "demo": "layout_flex",
+      "target": "picoui_layout_flex_demo",
+      "main_style": "v1_lvgl_like",
+      "uses_picoui_app": false,
+      "migration_phase": "P6",
+      "style_result": "covered",
+      "artifact_policy": "runtime_only",
+      "runtime_result": "runtime_only",
+      "reason": "fresh 2026-06-06 probe reports PICOUI_RUNTIME_READY but exits 1 without stable capture"
+    },
+    {
+      "demo": "layout_grid",
+      "target": "picoui_layout_grid_demo",
+      "main_style": "v1_lvgl_like",
+      "uses_picoui_app": false,
+      "migration_phase": "P6",
+      "style_result": "covered",
+      "artifact_policy": "runtime_only",
+      "runtime_result": "runtime_only",
+      "reason": "fresh 2026-06-06 probe reports PICOUI_RUNTIME_READY but exits 1 without stable capture"
+    },
+    {
+      "demo": "layout_parity",
+      "target": "picoui_layout_parity_demo",
+      "main_style": "v1_lvgl_like",
+      "uses_picoui_app": false,
+      "migration_phase": "P6",
+      "style_result": "covered",
+      "artifact_policy": "runtime_only",
+      "runtime_result": "runtime_only",
+      "reason": "fresh 2026-06-06 probe exits 1 before stable runtime-ready capture is established"
+    },
+    {
+      "demo": "legacy_widget_parity",
+      "target": "picoui_legacy_widget_parity_demo",
+      "main_style": "v1_lvgl_like",
+      "uses_picoui_app": false,
+      "migration_phase": "P6",
+      "style_result": "covered",
+      "artifact_policy": "visible",
+      "runtime_result": "visible"
+    },
+    {
+      "demo": "line_edit_basic",
+      "target": "picoui_line_edit_basic_demo",
+      "main_style": "v1_lvgl_like",
+      "uses_picoui_app": false,
+      "migration_phase": "P6",
+      "style_result": "covered",
+      "artifact_policy": "visible",
+      "runtime_result": "visible"
+    },
+    {
+      "demo": "list_basic",
+      "target": "picoui_list_basic_demo",
+      "main_style": "v1_lvgl_like",
+      "uses_picoui_app": false,
+      "migration_phase": "P6",
+      "style_result": "covered",
+      "artifact_policy": "runtime_only",
+      "runtime_result": "runtime_only",
+      "reason": "fresh 2026-06-06 probe reports PICOUI_RUNTIME_READY but exits 1 without stable capture"
+    },
+    {
+      "demo": "message_box_basic",
+      "target": "picoui_message_box_basic_demo",
+      "main_style": "v1_lvgl_like",
+      "uses_picoui_app": false,
+      "migration_phase": "P6",
+      "style_result": "covered",
+      "artifact_policy": "visible",
+      "runtime_result": "visible"
+    },
+    {
+      "demo": "progress_bar_basic",
+      "target": "picoui_progress_bar_basic_demo",
+      "main_style": "v1_lvgl_like",
+      "uses_picoui_app": false,
+      "migration_phase": "P6",
+      "style_result": "covered",
+      "artifact_policy": "visible",
+      "runtime_result": "visible"
+    },
+    {
+      "demo": "progress_wheel_basic",
+      "target": "picoui_progress_wheel_basic_demo",
+      "main_style": "v1_lvgl_like",
+      "uses_picoui_app": false,
+      "migration_phase": "P6",
+      "style_result": "covered",
+      "artifact_policy": "visible",
+      "runtime_result": "visible"
+    },
+    {
+      "demo": "qrcode_basic",
+      "target": "picoui_qrcode_basic_demo",
+      "main_style": "v1_lvgl_like",
+      "uses_picoui_app": false,
+      "migration_phase": "P6",
+      "style_result": "covered",
+      "artifact_policy": "visible",
+      "runtime_result": "visible"
+    },
+    {
+      "demo": "radial_menu_basic",
+      "target": "picoui_radial_menu_basic_demo",
+      "main_style": "v1_lvgl_like",
+      "uses_picoui_app": false,
+      "migration_phase": "P6",
+      "style_result": "covered",
+      "artifact_policy": "visible",
+      "runtime_result": "visible"
+    },
+    {
+      "demo": "scroll_selecter_basic",
+      "target": "picoui_scroll_selecter_basic_demo",
+      "main_style": "v1_lvgl_like",
+      "uses_picoui_app": false,
+      "migration_phase": "P6",
+      "style_result": "covered",
+      "artifact_policy": "visible",
+      "runtime_result": "visible"
+    },
+    {
+      "demo": "settings_panel",
+      "target": "picoui_settings_panel_demo",
+      "main_style": "v1_lvgl_like",
+      "uses_picoui_app": false,
+      "migration_phase": "P6",
+      "style_result": "covered",
+      "artifact_policy": "visible",
+      "runtime_result": "visible"
+    },
+    {
+      "demo": "table_basic",
+      "target": "picoui_table_basic_demo",
+      "main_style": "v1_lvgl_like",
+      "uses_picoui_app": false,
+      "migration_phase": "P6",
+      "style_result": "covered",
+      "artifact_policy": "visible",
+      "runtime_result": "visible"
+    },
+    {
+      "demo": "theme_showcase",
+      "target": "picoui_theme_showcase_demo",
+      "main_style": "v1_lvgl_like",
+      "uses_picoui_app": false,
+      "migration_phase": "P6",
+      "style_result": "covered",
+      "artifact_policy": "runtime_only",
+      "runtime_result": "runtime_only",
+      "reason": "fresh 2026-06-06 probe reports PICOUI_RUNTIME_READY but exits 1 without stable capture"
+    }
+  ],
+  "dependencies": [
+    {
+      "id": "default_no_ldgui_runtime_dependency",
+      "status": "covered",
+      "checker": "check_picoui_no_ldgui_runtime_dependency",
+      "scope": "default picoui/demo/test targets"
+    }
+  ]
+}

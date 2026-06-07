@@ -2,7 +2,6 @@
 #include "picoui/port/sdl.h"
 
 #include <assert.h>
-#include <stddef.h>
 
 static void test_sdl_attach_rejects_null(void)
 {

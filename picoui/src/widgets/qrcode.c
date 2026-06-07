@@ -22,8 +22,9 @@
 
 #include <stdlib.h>
 
+void picoui_native_qrcode_reset_render_state(struct picoui_qrcode *qrcode);
+
 int picoui_backend_qrcode_set_text(struct picoui_qrcode *qrcode, const char *text);
-const char *picoui_backend_qrcode_get_text(struct picoui_qrcode *qrcode);
 int picoui_backend_qrcode_set_qr_color(void *backend_widget, unsigned int rgb);
 int picoui_backend_qrcode_set_bg_color(void *backend_widget, unsigned int rgb);
 int picoui_backend_qrcode_set_ecc(void *backend_widget, int ecc);
@@ -63,6 +64,7 @@ struct picoui_qrcode *picoui_qrcode_create(struct picoui_widget *parent, const c
     }
 
     qrcode->id = id;
+    qrcode->text = "";
     qrcode->qr_color = 0x000000U;
     qrcode->bg_color = 0xFFFFFFU;
     qrcode->ecc = 0;
@@ -143,8 +145,8 @@ int picoui_qrcode_set_text(struct picoui_qrcode *qrcode, const char *text)
     if (picoui_backend_qrcode_set_text(qrcode, text) != 0) {
         return -1;
     }
-
     qrcode->text = text;
+    picoui_native_qrcode_reset_render_state(qrcode);
     return 0;
 }
 
@@ -173,7 +175,7 @@ const char *picoui_qrcode_get_text(const struct picoui_qrcode *qrcode)
         return 0;
     }
 
-    return picoui_backend_qrcode_get_text((struct picoui_qrcode *)qrcode);
+    return qrcode->text;
 }
 
 /**
@@ -195,6 +197,7 @@ int picoui_qrcode_set_qr_color(struct picoui_qrcode *qrcode, unsigned int rgb)
     }
 
     qrcode->qr_color = rgb;
+    picoui_native_qrcode_reset_render_state(qrcode);
     return 0;
 }
 
@@ -217,6 +220,7 @@ int picoui_qrcode_set_bg_color(struct picoui_qrcode *qrcode, unsigned int rgb)
     }
 
     qrcode->bg_color = rgb;
+    picoui_native_qrcode_reset_render_state(qrcode);
     return 0;
 }
 
@@ -237,8 +241,8 @@ int picoui_qrcode_set_ecc(struct picoui_qrcode *qrcode, int ecc)
     if (picoui_backend_qrcode_set_ecc(qrcode->widget.backend_widget, ecc) != 0) {
         return -1;
     }
-
     qrcode->ecc = ecc;
+    picoui_native_qrcode_reset_render_state(qrcode);
     return 0;
 }
 
@@ -261,6 +265,7 @@ int picoui_qrcode_set_max_version(struct picoui_qrcode *qrcode, int max_version)
     }
 
     qrcode->max_version = max_version;
+    picoui_native_qrcode_reset_render_state(qrcode);
     return 0;
 }
 
@@ -283,5 +288,6 @@ int picoui_qrcode_set_zoom(struct picoui_qrcode *qrcode, int zoom)
     }
 
     qrcode->zoom = zoom;
+    picoui_native_qrcode_reset_render_state(qrcode);
     return 0;
 }

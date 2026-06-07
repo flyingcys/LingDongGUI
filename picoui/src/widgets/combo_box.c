@@ -21,6 +21,59 @@
 
 #include <stdlib.h>
 
+int picoui_native_combo_box_render(const struct picoui_backend_widget *backend);
+int picoui_backend_combo_box_sync_selected_index(struct picoui_combo_box *combo_box,
+                                                 int *selected_index_out);
+int picoui_backend_combo_box_get_open(void *backend_widget, int *is_open);
+
+int picoui_combo_box_apply_open_state(struct picoui_combo_box *combo_box, int is_open)
+{
+    struct picoui_backend_widget *backend;
+
+    if (combo_box == 0 || combo_box->widget.backend_widget == 0) {
+        return -1;
+    }
+
+    backend = (struct picoui_backend_widget *)combo_box->widget.backend_widget;
+    backend->open = is_open ? 1 : 0;
+    if (backend->ld_widget != 0) {
+        (void)picoui_backend_combo_box_set_open(backend, is_open);
+    }
+    return 0;
+}
+
+int picoui_combo_box_apply_selected_index_internal(struct picoui_combo_box *combo_box,
+                                                   int index,
+                                                   int emit_callback)
+{
+    struct picoui_backend_widget *backend;
+
+    if (combo_box == 0 || combo_box->widget.backend_widget == 0 || index < 0 || index >= combo_box->item_count) {
+        return -1;
+    }
+
+    backend = (struct picoui_backend_widget *)combo_box->widget.backend_widget;
+    combo_box->selected_index = index;
+    backend->value = index;
+    if (backend->ld_widget != 0) {
+        (void)picoui_backend_combo_box_set_selected_index(backend, index);
+    }
+    backend->data_model_epoch++;
+    backend->last_data_source = emit_callback ? PICOUI_BACKEND_DATA_SOURCE_NATIVE_EVENT
+                                              : PICOUI_BACKEND_DATA_SOURCE_SETTER;
+    if (emit_callback) {
+        backend->last_signal = PICOUI_BACKEND_SIGNAL_VALUE_CHANGED;
+        backend->dispatch_count++;
+        backend->last_native_signal = PICOUI_NATIVE_SIGNAL_CLICKED_ITEM;
+        backend->last_native_value = (uint64_t)index;
+        picoui_combo_box_apply_open_state(combo_box, 0);
+        if (combo_box->cb != 0) {
+            combo_box->cb(combo_box, index, combo_box->user_data);
+        }
+    }
+    return 0;
+}
+
 static int picoui_combo_box_props_are_valid(const struct picoui_combo_box_props *props)
 {
     return props != 0
@@ -72,6 +125,7 @@ struct picoui_combo_box *picoui_combo_box_create(struct picoui_window *parent, c
         free(combo_box);
         return 0;
     }
+    ((struct picoui_backend_widget *)combo_box->widget.backend_widget)->open = 0;
     return combo_box;
 }
 
@@ -133,27 +187,33 @@ int picoui_combo_box_add_item(struct picoui_combo_box *combo_box, const char *id
 {
     int index;
     int next_count;
+    struct picoui_backend_widget *backend;
 
     if (combo_box == 0 || id == 0 || text == 0 || combo_box->item_count >= combo_box->item_max) {
         return -1;
     }
 
     index = combo_box->item_count;
+    combo_box->items[index].id = id;
+    combo_box->items[index].text = text;
     combo_box->backend_item_ids[index] = id;
     combo_box->backend_item_texts[index] = (const unsigned char *)text;
     next_count = index + 1;
-    if (picoui_backend_combo_box_set_items(combo_box->widget.backend_widget,
-                                           combo_box->backend_item_ids,
-                                           combo_box->backend_item_texts,
-                                           next_count) != 0) {
-        combo_box->backend_item_ids[index] = 0;
-        combo_box->backend_item_texts[index] = 0;
-        return -1;
-    }
-
-    combo_box->items[index].id = id;
-    combo_box->items[index].text = text;
     combo_box->item_count = next_count;
+    backend = (struct picoui_backend_widget *)combo_box->widget.backend_widget;
+    if (backend != 0) {
+        backend->list_item_count = next_count;
+        if (backend->ld_widget != 0) {
+            (void)picoui_backend_combo_box_set_items(combo_box->widget.backend_widget,
+                                                     combo_box->backend_item_ids,
+                                                     combo_box->backend_item_texts,
+                                                     next_count);
+            if (combo_box->selected_index >= 0 && combo_box->selected_index < next_count) {
+                (void)picoui_backend_combo_box_set_selected_index(backend, combo_box->selected_index);
+            }
+            (void)picoui_backend_combo_box_set_open(backend, backend->open);
+        }
+    }
     return 0;
 }
 
@@ -211,15 +271,7 @@ int picoui_combo_box_set_select_item(struct picoui_combo_box *combo_box, int ind
 
 int picoui_combo_box_set_selected_index(struct picoui_combo_box *combo_box, int index)
 {
-    if (combo_box == 0 || index < 0 || index >= combo_box->item_count) {
-        return -1;
-    }
-
-    if (picoui_backend_combo_box_set_selected_index(combo_box->widget.backend_widget, index) != 0) {
-        return -1;
-    }
-    combo_box->selected_index = index;
-    return 0;
+    return picoui_combo_box_apply_selected_index_internal(combo_box, index, 0);
 }
 
 /**
@@ -243,18 +295,24 @@ int picoui_combo_box_get_select_item(const struct picoui_combo_box *combo_box)
 
 int picoui_combo_box_get_selected_index(const struct picoui_combo_box *combo_box)
 {
-    int backend_selected_index;
+    int selected_index;
 
     if (combo_box == 0) {
         return -1;
     }
 
-    if (picoui_backend_combo_box_sync_selected_index((struct picoui_combo_box *)combo_box,
-                                                     &backend_selected_index) == 0) {
-        return backend_selected_index;
+    if (combo_box->widget.backend_widget != 0) {
+        if (picoui_backend_combo_box_sync_selected_index((struct picoui_combo_box *)combo_box,
+                                                         &selected_index) == 0) {
+            return selected_index;
+        }
     }
 
-    return combo_box->selected_index;
+    if (combo_box->selected_index >= 0 && combo_box->selected_index < combo_box->item_count) {
+        return combo_box->selected_index;
+    }
+
+    return -1;
 }
 
 /**
@@ -266,11 +324,11 @@ int picoui_combo_box_get_selected_index(const struct picoui_combo_box *combo_box
 
 const char *picoui_combo_box_get_text(const struct picoui_combo_box *combo_box, int index)
 {
-    if (combo_box == 0 || index < 0) {
+    if (combo_box == 0 || index < 0 || index >= combo_box->item_count) {
         return 0;
     }
 
-    return picoui_backend_combo_box_get_text((void *)combo_box->widget.backend_widget, index);
+    return combo_box->items[index].text;
 }
 
 /**
@@ -283,11 +341,24 @@ const char *picoui_combo_box_get_text(const struct picoui_combo_box *combo_box, 
 
 int picoui_combo_box_is_open(const struct picoui_combo_box *combo_box, int *is_open)
 {
+    struct picoui_backend_widget *backend;
+    int backend_open;
+
     if (combo_box == 0 || is_open == 0) {
         return -1;
     }
 
-    return picoui_backend_combo_box_get_open((void *)combo_box->widget.backend_widget, is_open);
+    backend = (struct picoui_backend_widget *)combo_box->widget.backend_widget;
+    if (backend == 0) {
+        return -1;
+    }
+
+    if (picoui_backend_combo_box_get_open(backend, &backend_open) == 0) {
+        backend->open = backend_open != 0 ? 1 : 0;
+    }
+
+    *is_open = backend->open ? 1 : 0;
+    return 0;
 }
 
 /**

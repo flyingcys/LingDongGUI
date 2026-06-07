@@ -29,6 +29,12 @@
 - 每阶段结束后主线程运行 GitNexus detect_changes。
 - review 不通过时，同一个 subagent 修复。
 
+状态真相说明：
+
+- phase plan 内的 checkbox 用于执行时拆步，不要求在历史文档里逐项回填。
+- 当前阶段是否完成，以 `docs/picoui-serial/v1.0-native/线计划索引.md` 和对应 phase closeout 文档为准。
+- 若 phase plan 中的未勾选框与 closeout/索引状态冲突，应优先相信 closeout 和 fresh verification 证据。
+
 ## Phase Plan Index
 
 | Phase | Plan | Goal |

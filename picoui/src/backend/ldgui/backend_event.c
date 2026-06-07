@@ -21,6 +21,7 @@
 #include "../../../../src/gui/ldBase.h"
 #include "../../../../src/gui/ldButton.h"
 #include "../../../../src/gui/ldCheckBox.h"
+#include "../../../../src/gui/ldKeyboard.h"
 #include "../../../../src/gui/ldList.h"
 #include "../../../../src/gui/ldSlider.h"
 #include "../../../../src/gui/ldSwitch.h"
@@ -537,7 +538,12 @@ int picoui_backend_widget_dispatch_native_signal(void *backend_widget,
     }
     case PICOUI_BACKEND_WIDGET_KEYBOARD: {
         struct picoui_keyboard *keyboard = (struct picoui_keyboard *)host_widget;
-        unsigned int key_code = (unsigned int)picoui_keyboard_get_selected_key_code(keyboard);
+        ldKeyboard_t *ld_keyboard = (ldKeyboard_t *)backend->ld_widget;
+        unsigned int key_code;
+
+        key_code = ld_keyboard != 0 ? (unsigned int)ld_keyboard->keyCode
+                                    : (unsigned int)picoui_keyboard_get_selected_key_code(keyboard);
+        keyboard->selected_key_code = key_code;
 
         if (native_signal == SIGNAL_PRESS || native_signal == SIGNAL_RELEASE) {
             if (picoui_backend_widget_claim_focus_for_signal(backend,

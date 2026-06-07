@@ -24,6 +24,8 @@
 
 int picoui_native_list_set_selected_index(struct picoui_list *list, int index);
 int picoui_native_list_select_index(struct picoui_list *list, int index);
+int picoui_backend_list_set_selected_index(void *backend_widget, int index);
+int picoui_backend_list_sync_selected_index(struct picoui_list *list, int *selected_index_out);
 
 /**
  * @brief Create list widget
@@ -307,6 +309,9 @@ int picoui_list_set_selected_index(struct picoui_list *list, int index)
     if (picoui_native_list_select_index(list, index) != 0) {
         return -1;
     }
+    if (picoui_backend_list_set_selected_index(list->widget.backend_widget, index) != 0) {
+        return -1;
+    }
     list->selected_index = index;
     return 0;
 }
@@ -320,8 +325,20 @@ int picoui_list_set_selected_index(struct picoui_list *list, int index)
 
 int picoui_list_get_selected_index(const struct picoui_list *list)
 {
+    struct picoui_list *mutable_list;
+    int selected_index;
+
     if (list == 0) {
         return -1;
+    }
+
+    if (list->widget.backend_widget == 0) {
+        return list->selected_index;
+    }
+
+    mutable_list = (struct picoui_list *)list;
+    if (picoui_backend_list_sync_selected_index(mutable_list, &selected_index) == 0) {
+        return selected_index;
     }
 
     return list->selected_index;

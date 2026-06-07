@@ -78,12 +78,79 @@ struct picoui_gauge *picoui_gauge_init(struct picoui_widget *parent, const char 
 int picoui_gauge_set_angle(struct picoui_gauge *gauge, float angle);
 
 /**
+ * @brief Set value range of gauge widget
+ *
+ * @param[in] gauge Gauge widget instance
+ * @param[in] min_value Minimum value
+ * @param[in] max_value Maximum value
+ * @return 0 on success, -1 on failure
+ */
+
+int picoui_gauge_set_range(struct picoui_gauge *gauge, int min_value, int max_value);
+
+/**
+ * @brief Set current value of gauge widget
+ *
+ * @param[in] gauge Gauge widget instance
+ * @param[in] value Current value
+ * @return 0 on success, -1 on failure
+ */
+
+int picoui_gauge_set_value(struct picoui_gauge *gauge, int value);
+
+/**
+ * @brief Set tick count of gauge widget
+ *
+ * @param[in] gauge Gauge widget instance
+ * @param[in] tick_count Tick count
+ * @return 0 on success, -1 on failure
+ */
+
+int picoui_gauge_set_tick_count(struct picoui_gauge *gauge, int tick_count);
+
+/**
  * @brief Get angle of gauge widget
  *
  * @param[in] gauge Gauge widget instance
  */
 
 float picoui_gauge_get_angle(const struct picoui_gauge *gauge);
+
+/**
+ * @brief Get minimum value of gauge widget
+ *
+ * @param[in] gauge Gauge widget instance
+ * @return minimum value, 0 on failure
+ */
+
+int picoui_gauge_get_min_value(const struct picoui_gauge *gauge);
+
+/**
+ * @brief Get maximum value of gauge widget
+ *
+ * @param[in] gauge Gauge widget instance
+ * @return maximum value, 0 on failure
+ */
+
+int picoui_gauge_get_max_value(const struct picoui_gauge *gauge);
+
+/**
+ * @brief Get current value of gauge widget
+ *
+ * @param[in] gauge Gauge widget instance
+ * @return current value, 0 on failure
+ */
+
+int picoui_gauge_get_value(const struct picoui_gauge *gauge);
+
+/**
+ * @brief Get tick count of gauge widget
+ *
+ * @param[in] gauge Gauge widget instance
+ * @return tick count, 0 on failure
+ */
+
+int picoui_gauge_get_tick_count(const struct picoui_gauge *gauge);
 
 /**
  * @brief Set bg source of gauge widget

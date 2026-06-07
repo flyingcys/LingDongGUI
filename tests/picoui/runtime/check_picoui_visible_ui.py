@@ -1,4 +1,5 @@
 import argparse
+import json
 import math
 import os
 import shutil
@@ -9,6 +10,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_BUILD = ROOT / "build" / "picoui-runtime"
+ARTIFACT_MANIFEST = Path(__file__).with_name("picoui_native_artifact_manifest.json")
 RTK = shutil.which("rtk") or "rtk"
 DEMO_TIMEOUT_SECONDS = 6
 DEMOS = {
@@ -44,6 +46,17 @@ DEMOS = {
 THEME_BG = (0xF6, 0xF8, 0xFA)
 WHITE_BG = (0xFF, 0xFF, 0xFF)
 BACKGROUND_TOLERANCE = 20
+
+
+def _load_visible_demos() -> set[str]:
+    payload = json.loads(ARTIFACT_MANIFEST.read_text())
+    visible: set[str] = set()
+    for entry in payload.get("entries", []):
+        demo = entry.get("demo")
+        policy = entry.get("artifact_policy")
+        if isinstance(demo, str) and policy == "visible":
+            visible.add(demo)
+    return visible
 
 
 def _read_ppm(path: Path) -> tuple[int, int, bytes]:
@@ -833,6 +846,8 @@ def _assert_arc_basic_visible(path: Path) -> None:
     min_x, min_y, max_x, max_y = bounds
     visible_width = max_x - min_x + 1
     visible_height = max_y - min_y + 1
+    center_x = (min_x + max_x) // 2
+    center_y = (min_y + max_y) // 2
     if visible_width < 100 or visible_height < 100:
         failures.append(
             "arc coverage failed: "
@@ -849,6 +864,63 @@ def _assert_arc_basic_visible(path: Path) -> None:
         failures.append(
             "arc color contrast failed: "
             f"colors={sorted(colors)}, expected foreground/background arc contrast"
+        )
+
+    inner_non_bg = 0
+    inner_total = 0
+    for dy in range(-30, 31):
+        for dx in range(-30, 31):
+            if dx * dx + dy * dy > 30 * 30:
+                continue
+            x = center_x + dx
+            y = center_y + dy
+            if x < 0 or x >= width or y < 0 or y >= height:
+                continue
+            inner_total += 1
+            if not _is_background(_pixel(width, pixels, x, y), bg):
+                inner_non_bg += 1
+    if inner_total == 0 or inner_non_bg != 0:
+        failures.append(
+            "arc center hollow failed: "
+            f"inner_non_bg={inner_non_bg}, inner_total={inner_total}, expected an empty center disk"
+        )
+
+    ring_non_bg = 0
+    ring_total = 0
+    quadrant_hits = [0, 0, 0, 0]
+    for dy in range(-55, 56):
+        for dx in range(-55, 56):
+            distance2 = dx * dx + dy * dy
+            if distance2 < 35 * 35 or distance2 > 55 * 55:
+                continue
+            x = center_x + dx
+            y = center_y + dy
+            if x < 0 or x >= width or y < 0 or y >= height:
+                continue
+            ring_total += 1
+            if _is_background(_pixel(width, pixels, x, y), bg):
+                continue
+            ring_non_bg += 1
+            if dx <= 0 and dy <= 0:
+                quadrant_hits[0] += 1
+            elif dx > 0 and dy <= 0:
+                quadrant_hits[1] += 1
+            elif dx > 0 and dy > 0:
+                quadrant_hits[2] += 1
+            else:
+                quadrant_hits[3] += 1
+
+    if ring_total == 0 or ring_non_bg * 100 < ring_total * 20:
+        failures.append(
+            "arc ring occupancy failed: "
+            f"ring_non_bg={ring_non_bg}, ring_total={ring_total}, expected >=20% occupancy in the ring band"
+        )
+
+    sparse_quadrants = [idx for idx, value in enumerate(quadrant_hits) if value == 0]
+    if sparse_quadrants:
+        failures.append(
+            "arc quadrant coverage failed: "
+            f"quadrant_hits={quadrant_hits}, empty_quadrants={sparse_quadrants}"
         )
 
     if failures:
@@ -1558,7 +1630,14 @@ def main() -> None:
         help="reuse an existing build directory instead of allocating an isolated one",
     )
     args = parser.parse_args()
-    selected = sorted(DEMOS) if args.all else [args.demo]
+    visible_demos = _load_visible_demos()
+    selected = sorted(visible_demos) if args.all else [args.demo]
+
+    if not args.all and args.demo not in visible_demos:
+        raise AssertionError(
+            f"Demo '{args.demo}' is not part of the formal visible gate.\n"
+            "Use check_picoui_runtime.py or check_picoui_native_visible_ui.py for runtime_only demos instead."
+        )
 
     build_dir = args.build_dir
     if build_dir is None:

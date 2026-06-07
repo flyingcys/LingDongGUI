@@ -18,6 +18,7 @@
 
 #include "internal.h"
 #include "picoui/widget.h"
+#include "picoui/screen.h"
 #include "picoui/window.h"
 
 #include <stdlib.h>
@@ -53,6 +54,20 @@ int picoui_backend_window_set_grid_padding(struct picoui_window *window,
                                            int right,
                                            int bottom);
 int picoui_backend_window_set_gap(struct picoui_window *window, int gap);
+
+static void picoui_window_destroy_root_partial(struct picoui_app *compat_app,
+                                               struct picoui_window *window)
+{
+    if (window != 0) {
+        if (window->widget.backend_widget != 0) {
+            (void)picoui_backend_widget_unbind_host(window->widget.backend_widget);
+            free(window->widget.backend_widget);
+            window->widget.backend_widget = 0;
+        }
+        free(window);
+    }
+    picoui_app_destroy(compat_app);
+}
 
 static int picoui_window_is_valid(struct picoui_window *window)
 {
@@ -110,6 +125,8 @@ struct picoui_window *picoui_window_create(struct picoui_app *app, const char *i
     window->grid_col_align = PICOUI_ALIGN_START;
     window->grid_row_align = PICOUI_ALIGN_START;
     if (picoui_backend_widget_bind_host(window->widget.backend_widget, &window->widget) != 0) {
+        (void)picoui_backend_widget_unbind_host(window->widget.backend_widget);
+        free(window->widget.backend_widget);
         free(window);
         return 0;
     }
@@ -119,6 +136,7 @@ struct picoui_window *picoui_window_create(struct picoui_app *app, const char *i
 struct picoui_window *picoui_window_create_root(struct picoui_screen *screen, const char *id)
 {
     struct picoui_app *compat_app;
+    struct picoui_window *window;
 
     if (screen == 0 || id == 0) {
         return 0;
@@ -130,7 +148,18 @@ struct picoui_window *picoui_window_create_root(struct picoui_screen *screen, co
         return 0;
     }
 
-    return picoui_window_create(compat_app, id);
+    window = picoui_window_create(compat_app, id);
+    if (window == 0) {
+        picoui_app_destroy(compat_app);
+        return 0;
+    }
+
+    if (picoui_screen_set_root_window(screen, window) != 0) {
+        picoui_window_destroy_root_partial(compat_app, window);
+        return 0;
+    }
+
+    return window;
 }
 
 struct picoui_window *picoui_window_create_child(struct picoui_window *parent, const char *id)

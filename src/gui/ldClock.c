@@ -471,6 +471,36 @@ void ldClockSetAutoSysTime(ldClock_t *ptWidget, bool isAutoSysTime)
     ptWidget->isAutoSysTime = isAutoSysTime;
 }
 
+void ldClockSetManualTime(ldClock_t *ptWidget, uint8_t hour, uint8_t minute, uint8_t second)
+{
+    uint32_t hour_mod_12;
+    float hour_angle;
+    float minute_angle;
+    float second_angle;
+
+    assert(NULL != ptWidget);
+    if(ptWidget == NULL)
+    {
+        return;
+    }
+
+    hour_mod_12 = ((uint32_t)hour) % 12U;
+    hour_angle = hour_mod_12 * 30.0f + ((float)minute * 0.5f);
+    minute_angle = (float)minute * 6.0f;
+    second_angle = (float)second * 6.0f;
+
+    ptWidget->pointerInfo[0].radian = ANGLE_2_RADIAN(hour_angle);
+    ptWidget->pointerInfo[1].radian = ANGLE_2_RADIAN(minute_angle);
+    ptWidget->pointerInfo[2].radian = ANGLE_2_RADIAN(second_angle);
+    ptWidget->lastTotalSeconds = ((uint32_t)hour * 3600U)
+        + ((uint32_t)minute * 60U)
+        + (uint32_t)second;
+    ptWidget->use_as__ldBase_t.isDirtyRegionUpdate = true;
+    ptWidget->use_as__ldBase_t.ptItemRegionList[0].isDRUpdate = true;
+    ptWidget->use_as__ldBase_t.ptItemRegionList[1].isDRUpdate = true;
+    ptWidget->use_as__ldBase_t.ptItemRegionList[2].isDRUpdate = true;
+}
+
 #if defined(__clang__)
 #pragma clang diagnostic pop
 #endif

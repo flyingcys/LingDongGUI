@@ -465,7 +465,7 @@ endif()
 
 function(add_picoui_demo target source)
     add_executable(${target} ${source})
-    target_link_libraries(${target} PRIVATE picoui_backend_ldgui_runtime)
+    target_link_libraries(${target} PRIVATE picoui)
     if(COMMAND ld_apply_picoui_runtime_screen_config)
         ld_apply_picoui_runtime_screen_config(${target})
     endif()
@@ -475,87 +475,114 @@ endfunction()
 add_picoui_demo(picoui_hello_world_demo
     "${SDL_EXAMPLE_DIR}/../../picoui/demo/hello_world/main.c"
 )
+target_link_libraries(picoui_hello_world_demo PRIVATE picoui_port_sdl)
 add_picoui_demo(picoui_basic_widgets_demo
     "${SDL_EXAMPLE_DIR}/../../picoui/demo/basic_widgets/main.c"
 )
 add_picoui_demo(picoui_layout_flex_demo
     "${SDL_EXAMPLE_DIR}/../../picoui/demo/layout_flex/main.c"
 )
+target_link_libraries(picoui_layout_flex_demo PRIVATE picoui_port_sdl)
 add_picoui_demo(picoui_layout_grid_demo
     "${SDL_EXAMPLE_DIR}/../../picoui/demo/layout_grid/main.c"
 )
+target_link_libraries(picoui_layout_grid_demo PRIVATE picoui_port_sdl)
 add_picoui_demo(picoui_theme_showcase_demo
     "${SDL_EXAMPLE_DIR}/../../picoui/demo/theme_showcase/main.c"
 )
+target_link_libraries(picoui_theme_showcase_demo PRIVATE picoui_port_sdl)
 add_picoui_demo(picoui_settings_panel_demo
     "${SDL_EXAMPLE_DIR}/../../picoui/demo/settings_panel/main.c"
 )
+target_link_libraries(picoui_settings_panel_demo PRIVATE picoui_port_sdl)
 add_picoui_demo(picoui_list_basic_demo
     "${SDL_EXAMPLE_DIR}/../../picoui/demo/list_basic/main.c"
 )
+target_link_libraries(picoui_list_basic_demo PRIVATE picoui_port_sdl)
 add_picoui_demo(picoui_progress_bar_basic_demo
     "${SDL_EXAMPLE_DIR}/../../picoui/demo/progress_bar_basic/main.c"
 )
+target_link_libraries(picoui_progress_bar_basic_demo PRIVATE picoui_port_sdl)
 add_picoui_demo(picoui_arc_basic_demo
     "${SDL_EXAMPLE_DIR}/../../picoui/demo/arc_basic/main.c"
 )
+target_link_libraries(picoui_arc_basic_demo PRIVATE picoui_port_sdl)
 add_picoui_demo(picoui_gauge_basic_demo
     "${SDL_EXAMPLE_DIR}/../../picoui/demo/gauge_basic/main.c"
 )
+target_link_libraries(picoui_gauge_basic_demo PRIVATE picoui_port_sdl)
 add_picoui_demo(picoui_icon_slider_basic_demo
     "${SDL_EXAMPLE_DIR}/../../picoui/demo/icon_slider_basic/main.c"
 )
+target_link_libraries(picoui_icon_slider_basic_demo PRIVATE picoui_port_sdl)
 add_picoui_demo(picoui_radial_menu_basic_demo
     "${SDL_EXAMPLE_DIR}/../../picoui/demo/radial_menu_basic/main.c"
 )
+target_link_libraries(picoui_radial_menu_basic_demo PRIVATE picoui_port_sdl)
 add_picoui_demo(picoui_progress_wheel_basic_demo
     "${SDL_EXAMPLE_DIR}/../../picoui/demo/progress_wheel_basic/main.c"
 )
+target_link_libraries(picoui_progress_wheel_basic_demo PRIVATE picoui_port_sdl)
 add_picoui_demo(picoui_qrcode_basic_demo
     "${SDL_EXAMPLE_DIR}/../../picoui/demo/qrcode_basic/main.c"
 )
+target_link_libraries(picoui_qrcode_basic_demo PRIVATE picoui_port_sdl)
 add_picoui_demo(picoui_message_box_basic_demo
     "${SDL_EXAMPLE_DIR}/../../picoui/demo/message_box_basic/main.c"
 )
+target_link_libraries(picoui_message_box_basic_demo PRIVATE picoui_port_sdl)
 add_picoui_demo(picoui_date_time_basic_demo
     "${SDL_EXAMPLE_DIR}/../../picoui/demo/date_time_basic/main.c"
 )
+target_link_libraries(picoui_date_time_basic_demo PRIVATE picoui_port_sdl)
 add_picoui_demo(picoui_clock_basic_demo
     "${SDL_EXAMPLE_DIR}/../../picoui/demo/clock_basic/main.c"
 )
+target_link_libraries(picoui_clock_basic_demo PRIVATE picoui_port_sdl)
 add_picoui_demo(picoui_keyboard_basic_demo
     "${SDL_EXAMPLE_DIR}/../../picoui/demo/keyboard_basic/main.c"
 )
+target_link_libraries(picoui_keyboard_basic_demo PRIVATE picoui_port_sdl)
 add_picoui_demo(picoui_line_edit_basic_demo
     "${SDL_EXAMPLE_DIR}/../../picoui/demo/line_edit_basic/main.c"
 )
+target_link_libraries(picoui_line_edit_basic_demo PRIVATE picoui_port_sdl)
 add_picoui_demo(picoui_combo_box_basic_demo
     "${SDL_EXAMPLE_DIR}/../../picoui/demo/combo_box_basic/main.c"
 )
+target_link_libraries(picoui_combo_box_basic_demo PRIVATE picoui_port_sdl)
 add_picoui_demo(picoui_scroll_selecter_basic_demo
     "${SDL_EXAMPLE_DIR}/../../picoui/demo/scroll_selecter_basic/main.c"
 )
+target_link_libraries(picoui_scroll_selecter_basic_demo PRIVATE picoui_port_sdl)
 add_picoui_demo(picoui_table_basic_demo
     "${SDL_EXAMPLE_DIR}/../../picoui/demo/table_basic/main.c"
 )
+target_link_libraries(picoui_table_basic_demo PRIVATE picoui_port_sdl)
 add_picoui_demo(picoui_graph_basic_demo
     "${SDL_EXAMPLE_DIR}/../../picoui/demo/graph_basic/main.c"
 )
+target_link_libraries(picoui_graph_basic_demo PRIVATE picoui_port_sdl)
 add_picoui_demo(picoui_calendar_basic_demo
     "${SDL_EXAMPLE_DIR}/../../picoui/demo/calendar_basic/main.c"
 )
+target_link_libraries(picoui_calendar_basic_demo PRIVATE picoui_port_sdl)
 add_picoui_demo(picoui_animation_basic_demo
     "${SDL_EXAMPLE_DIR}/../../picoui/demo/animation_basic/main.c"
 )
+target_link_libraries(picoui_animation_basic_demo PRIVATE picoui_port_sdl)
 add_picoui_demo(picoui_legacy_widget_parity_demo
     "${SDL_EXAMPLE_DIR}/../../picoui/demo/legacy_widget_parity/main.c"
 )
+target_link_libraries(picoui_legacy_widget_parity_demo PRIVATE picoui_port_sdl)
 target_sources(picoui_legacy_widget_parity_demo PRIVATE
     ${WIDGET_IMAGE_SOURCES}
 )
 add_picoui_demo(picoui_layout_parity_demo
     "${SDL_EXAMPLE_DIR}/../../picoui/demo/layout_parity/main.c"
 )
+target_link_libraries(picoui_layout_parity_demo PRIVATE picoui_port_sdl)
 add_picoui_demo(picoui_grid_parity_demo
     "${SDL_EXAMPLE_DIR}/../../picoui/demo/grid_parity/main.c"
 )
+target_link_libraries(picoui_grid_parity_demo PRIVATE picoui_port_sdl)

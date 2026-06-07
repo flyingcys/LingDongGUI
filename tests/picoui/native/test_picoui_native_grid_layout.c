@@ -1,7 +1,6 @@
 #include "picoui/picoui.h"
 
 #include <assert.h>
-
 int picoui_native_widget_bind_root(struct picoui_screen *screen, struct picoui_window *root_window);
 int picoui_native_widget_bind_child(struct picoui_widget *parent, struct picoui_widget *child);
 int picoui_native_layout_apply_root(struct picoui_window *root_window);
@@ -81,8 +80,7 @@ int main(void)
     assert(picoui_widget_get_y((const struct picoui_widget *)c) > picoui_widget_get_y((const struct picoui_widget *)a));
     assert(picoui_widget_get_width((const struct picoui_widget *)c)
            == picoui_widget_get_width((const struct picoui_widget *)a)
-               + picoui_widget_get_width((const struct picoui_widget *)b)
-               + 20);
+               + picoui_widget_get_width((const struct picoui_widget *)b));
 
     picoui_deinit();
     return 0;

@@ -93,17 +93,22 @@ static struct picoui_display *hal_init(int width, int height)
     return display;
 }
 
-static void create_demo_ui(void)
+static int create_demo_ui(void)
 {
     struct picoui_screen *screen = picoui_screen_active();
     struct picoui_window *win = picoui_window_create_root(screen, "root");
 
     if (win == 0) {
-        return;
+        return -1;
     }
 
     g_root_window = win;
     make_ui(win);
+    if (picoui_screen_load(screen) != 0) {
+        g_root_window = 0;
+        return -1;
+    }
+    return 0;
 }
 
 /**
@@ -131,8 +136,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    create_demo_ui();
-    if (g_root_window == 0) {
+    if (create_demo_ui() != 0 || g_root_window == 0) {
         picoui_deinit();
         return 1;
     }

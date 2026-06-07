@@ -112,6 +112,39 @@ int picoui_clock_set_step_second(struct picoui_clock *clock, int step_second);
 int picoui_clock_get_step_second(const struct picoui_clock *clock);
 
 /**
+ * @brief Set manual time of clock widget
+ *
+ * @param[in] clock Clock widget instance
+ * @param[in] hour Hour value [0, 23]
+ * @param[in] minute Minute value [0, 59]
+ * @param[in] second Second value [0, 59]
+ * @return 0 on success, -1 on failure
+ */
+
+int picoui_clock_set_time(struct picoui_clock *clock, int hour, int minute, int second);
+
+/**
+ * @brief Get manual time of clock widget
+ *
+ * @param[in] clock Clock widget instance
+ * @param[out] hour Hour value
+ * @param[out] minute Minute value
+ * @param[out] second Second value
+ * @return 0 on success, -1 on failure
+ */
+
+int picoui_clock_get_time(const struct picoui_clock *clock, int *hour, int *minute, int *second);
+
+/**
+ * @brief Advance clock widget by one second
+ *
+ * @param[in] clock Clock widget instance
+ * @return 0 on success, -1 on failure
+ */
+
+int picoui_clock_tick(struct picoui_clock *clock);
+
+/**
  * @brief Set background image of clock widget
  *
  * @param[in] clock Clock widget instance

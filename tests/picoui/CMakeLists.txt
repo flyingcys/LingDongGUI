@@ -45,6 +45,7 @@ set(PICOUI_UNIT_TESTS
 
 set(PICOUI_NATIVE_TESTS
     native/test_picoui_native_runtime.c
+    native/test_picoui_native_sdl_port.c
     native/test_picoui_native_display_indev.c
     native/test_picoui_native_screen.c
     native/test_picoui_native_screen_window.c
@@ -54,9 +55,31 @@ set(PICOUI_NATIVE_TESTS
     native/test_picoui_native_checkbox.c
     native/test_picoui_native_switch.c
     native/test_picoui_native_slider.c
+    native/test_picoui_native_arc.c
+    native/test_picoui_native_gauge.c
+    native/test_picoui_native_calendar.c
+    native/test_picoui_native_clock.c
+    native/test_picoui_native_combo_box.c
+    native/test_picoui_native_date_time.c
+    native/test_picoui_native_graph.c
+    native/test_picoui_native_icon_slider.c
     native/test_picoui_native_text.c
     native/test_picoui_native_image.c
     native/test_picoui_native_list.c
+    native/test_picoui_native_message_box.c
+    native/test_picoui_native_progress.c
+    native/test_picoui_native_qrcode.c
+    native/test_picoui_native_radial_menu.c
+    native/test_picoui_native_scroll_selecter.c
+    native/test_picoui_native_table.c
+    native/test_picoui_native_animation_canvas.c
+    native/test_picoui_native_animation_frames.c
+    native/test_picoui_native_canvas_renderer.c
+    native/test_picoui_native_qrcode_renderer.c
+    native/test_picoui_native_font_renderer.c
+    native/test_picoui_native_image_renderer.c
+    native/test_picoui_native_resource.c
+    native/test_picoui_native_keyboard_line_edit.c
     native/test_picoui_native_widget_tree.c
     native/test_picoui_native_geometry_dirty.c
     native/test_picoui_native_flex_layout.c
@@ -69,7 +92,7 @@ foreach(test_src IN LISTS PICOUI_UNIT_TESTS)
     ld_add_c_unit_test(${test_name}
         SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/${test_src}"
         SUPPORT_LIB picoui_test_support
-        MAIN_LIB picoui_backend_ldgui
+        MAIN_LIB picoui
         LABELS "picoui;unit"
     )
 endforeach()
@@ -79,12 +102,17 @@ foreach(test_src IN LISTS PICOUI_NATIVE_TESTS)
     ld_add_c_unit_test(${test_name}
         SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/${test_src}"
         SUPPORT_LIB picoui_test_support
-        MAIN_LIB picoui_backend_ldgui
+        MAIN_LIB picoui
         LABELS "picoui;native"
     )
 endforeach()
 
 target_link_libraries(test_picoui_port_sdl PRIVATE picoui_port_sdl)
+target_link_libraries(test_picoui_native_sdl_port PRIVATE picoui_port_sdl)
+add_dependencies(test_picoui_native_runtime picoui_basic_widgets_demo)
+target_compile_definitions(test_picoui_native_runtime PRIVATE
+    PICOUI_BASIC_WIDGETS_DEMO_PATH="$<TARGET_FILE:picoui_basic_widgets_demo>"
+)
 
 ld_add_python_test(check_picoui_public_api
     SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/contract/check_picoui_public_api.py"
@@ -111,8 +139,18 @@ ld_add_python_test(check_picoui_ldgui_dependency_inventory
     LABELS "picoui;contract;native"
 )
 
+ld_add_python_test(check_picoui_no_ldgui_runtime_dependency
+    SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/contract/check_picoui_no_ldgui_runtime_dependency.py"
+    LABELS "picoui;contract;native"
+)
+
 ld_add_python_test(check_picoui_native_migration_ledger
     SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/contract/check_picoui_native_migration_ledger.py"
+    LABELS "picoui;contract;native;release"
+)
+
+ld_add_python_test(check_picoui_native_release_matrix
+    SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/contract/check_picoui_native_release_matrix.py"
     LABELS "picoui;contract;native;release"
 )
 
@@ -146,6 +184,6 @@ if(LD_BUILD_RUNTIME_TESTS)
 
     ld_add_python_test(check_picoui_backend_mapping
         SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/runtime/check_picoui_backend_mapping.py"
-        LABELS "picoui;runtime;backend;mapping"
+        LABELS "runtime;backend;mapping;legacy"
     )
 endif()

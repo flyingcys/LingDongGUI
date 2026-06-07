@@ -17,28 +17,31 @@
  */
 
 #include "picoui/picoui.h"
+#include "picoui/port/sdl.h"
 
-/**
- * @brief Application entry point
- *
- * @return 0 on success
- */
+static struct picoui_window *g_root_window;
 
-int main(void)
+static int create_demo_ui(void)
 {
-    struct picoui_app *app;
+    struct picoui_screen *screen = picoui_screen_active();
     struct picoui_window *window;
 
-    app = picoui_app_create();
-    if (app == 0) {
-        return 1;
+    if (screen == 0) {
+        return -1;
     }
 
-    window = picoui_window_create(app, "keyboard_root");
+    window = picoui_window_create_root(screen, "keyboard_root");
     if (window == 0) {
-        picoui_app_destroy(app);
-        return 1;
+        return -1;
     }
+
+    g_root_window = window;
+    picoui_window_set_padding_group(window, 24, 24, 24, 24);
+    picoui_window_set_layout_type(window, PICOUI_WINDOW_LAYOUT_GRID);
+    picoui_grid_set_columns(window, (const int[]){320, 0}, 2);
+    picoui_grid_set_rows(window, (const int[]){32, 160, 0}, 3);
+    picoui_grid_set_gap(window, 16, 16);
+    picoui_grid_set_align(window, PICOUI_ALIGN_CENTER, PICOUI_ALIGN_CENTER);
 
     if (picoui_line_edit_create_with_props(
             window,
@@ -50,8 +53,8 @@ int main(void)
                 .width = 220,
                 .height = 32,
             }) == 0) {
-        picoui_app_destroy(app);
-        return 1;
+        g_root_window = 0;
+        return -1;
     }
     if (picoui_keyboard_create_with_props(
             window,
@@ -60,15 +63,53 @@ int main(void)
                 .width = 320,
                 .height = 160,
             }) == 0) {
-        picoui_app_destroy(app);
+        g_root_window = 0;
+        return -1;
+    }
+
+    if (picoui_screen_load(screen) != 0) {
+        g_root_window = 0;
+        return -1;
+    }
+
+    return 0;
+}
+
+/**
+ * @brief Application entry point
+ *
+ * @return 0 on success
+ */
+
+int main(void)
+{
+    int init_rc;
+    int timer_rc;
+
+    init_rc = picoui_init();
+    if (init_rc != 0) {
+        return 1;
+    }
+    if (picoui_sdl_hal_init(320, 480) != 0) {
+        picoui_deinit();
+        return 1;
+    }
+    if (create_demo_ui() != 0 || g_root_window == 0) {
+        picoui_deinit();
         return 1;
     }
 
-    if (picoui_app_run(app, window) != 0) {
-        picoui_app_destroy(app);
-        return 1;
+    while (1) {
+        timer_rc = picoui_timer_handler();
+        if (timer_rc < 0) {
+            picoui_deinit();
+            return 1;
+        }
+        if (timer_rc > 0) {
+            picoui_deinit();
+            return 0;
+        }
     }
 
-    picoui_app_destroy(app);
     return 0;
 }

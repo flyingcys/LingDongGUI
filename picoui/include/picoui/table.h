@@ -524,6 +524,21 @@ struct picoui_table_region picoui_table_get_item_region(const struct picoui_tabl
 int picoui_table_set_selected_cell(struct picoui_table *table, int row, int column);
 
 /**
+ * @brief Set on selected of table widget
+ *
+ * @param[in] table Table widget instance
+ * @param[in] callback Callback
+ * @param[in] user_data User data pointer
+ */
+
+void picoui_table_set_on_selected(struct picoui_table *table,
+                                  void (*callback)(struct picoui_table *table,
+                                                   int row,
+                                                   int column,
+                                                   void *user_data),
+                                  void *user_data);
+
+/**
  * @brief Set current cell of table widget
  *
  * @param[in] table table

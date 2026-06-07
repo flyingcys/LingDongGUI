@@ -22,6 +22,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+void picoui_native_scroll_selecter_reset_render_state(struct picoui_scroll_selecter *scroll_selecter);
+int picoui_native_scroll_selecter_set_selected_index(struct picoui_scroll_selecter *scroll_selecter, int index);
+int picoui_backend_scroll_selecter_set_selected_index(void *backend_widget, int index);
+int picoui_backend_scroll_selecter_sync_selected_index(struct picoui_scroll_selecter *scroll_selecter,
+                                                       int *selected_index_out);
+
 static int picoui_scroll_selecter_props_are_valid(const struct picoui_scroll_selecter_props *props)
 {
     return props != 0 &&
@@ -144,6 +150,7 @@ int picoui_scroll_selecter_set_items(struct picoui_scroll_selecter *scroll_selec
 
     scroll_selecter->item_count = 0;
     scroll_selecter->selected_index = -1;
+    picoui_native_scroll_selecter_reset_render_state(scroll_selecter);
     for (i = 0; i < item_count; ++i) {
         if (item_ids[i] == 0 || texts[i] == 0 || picoui_scroll_selecter_add_item(scroll_selecter, item_ids[i], texts[i]) != 0) {
             return -1;
@@ -190,6 +197,7 @@ int picoui_scroll_selecter_add_item(struct picoui_scroll_selecter *scroll_select
     scroll_selecter->items[index].id = id;
     scroll_selecter->items[index].text = text;
     scroll_selecter->item_count = next_count;
+    picoui_native_scroll_selecter_reset_render_state(scroll_selecter);
     return 0;
 }
 
@@ -220,10 +228,15 @@ int picoui_scroll_selecter_set_selected_index(struct picoui_scroll_selecter *scr
         return -1;
     }
 
-    if (picoui_backend_scroll_selecter_set_selected_index(scroll_selecter->widget.backend_widget, index) != 0) {
+    if (picoui_native_scroll_selecter_set_selected_index(scroll_selecter, index) != 0) {
         return -1;
     }
-    scroll_selecter->selected_index = index;
+    if (scroll_selecter->widget.backend_widget != 0
+        && picoui_backend_scroll_selecter_set_selected_index(scroll_selecter->widget.backend_widget,
+                                                             index) != 0) {
+        return -1;
+    }
+
     return 0;
 }
 
@@ -248,15 +261,17 @@ int picoui_scroll_selecter_get_select_item_num(const struct picoui_scroll_select
 
 int picoui_scroll_selecter_get_selected_index(const struct picoui_scroll_selecter *scroll_selecter)
 {
-    int backend_selected_index;
+    int selected_index;
 
     if (scroll_selecter == 0) {
         return -1;
     }
 
-    if (picoui_backend_scroll_selecter_sync_selected_index((struct picoui_scroll_selecter *)scroll_selecter,
-                                                           &backend_selected_index) == 0) {
-        return backend_selected_index;
+    if (scroll_selecter->widget.backend_widget != 0) {
+        if (picoui_backend_scroll_selecter_sync_selected_index(
+                (struct picoui_scroll_selecter *)scroll_selecter, &selected_index) == 0) {
+            return selected_index;
+        }
     }
 
     return scroll_selecter->selected_index;
@@ -468,15 +483,10 @@ int picoui_scroll_selecter_set_select_text(struct picoui_scroll_selecter *scroll
         return -1;
     }
 
-    if (picoui_backend_scroll_selecter_set_select_text(scroll_selecter->widget.backend_widget, text) != 0) {
-        return -1;
-    }
-
     for (index = 0; index < scroll_selecter->item_count; ++index) {
         if (scroll_selecter->items[index].text != 0 &&
             strcmp(scroll_selecter->items[index].text, text) == 0) {
-            scroll_selecter->selected_index = index;
-            return 0;
+            return picoui_scroll_selecter_set_selected_index(scroll_selecter, index);
         }
     }
 
@@ -493,14 +503,19 @@ int picoui_scroll_selecter_set_select_text(struct picoui_scroll_selecter *scroll
 
 int picoui_scroll_selecter_set_edit_mode(struct picoui_scroll_selecter *scroll_selecter, int is_edit)
 {
+    int previous_edit_mode;
+
     if (scroll_selecter == 0) {
         return -1;
     }
 
+    previous_edit_mode = scroll_selecter->edit_mode;
+    scroll_selecter->edit_mode = is_edit != 0;
     if (picoui_backend_scroll_selecter_set_edit_mode(scroll_selecter->widget.backend_widget, is_edit != 0) != 0) {
+        scroll_selecter->edit_mode = previous_edit_mode;
         return -1;
     }
-    scroll_selecter->edit_mode = is_edit != 0;
+    picoui_native_scroll_selecter_reset_render_state(scroll_selecter);
     return 0;
 }
 
@@ -518,10 +533,6 @@ int picoui_scroll_selecter_get_edit_mode(const struct picoui_scroll_selecter *sc
         return -1;
     }
 
-    if (picoui_backend_scroll_selecter_get_edit_mode((void *)scroll_selecter->widget.backend_widget, is_edit) == 0) {
-        return 0;
-    }
-
     *is_edit = scroll_selecter->edit_mode;
     return 0;
 }
@@ -534,11 +545,18 @@ int picoui_scroll_selecter_get_edit_mode(const struct picoui_scroll_selecter *sc
 
 const char *picoui_scroll_selecter_get_selected_text(const struct picoui_scroll_selecter *scroll_selecter)
 {
+    int index;
+
     if (scroll_selecter == 0) {
         return 0;
     }
 
-    return picoui_backend_scroll_selecter_get_selected_text((void *)scroll_selecter->widget.backend_widget);
+    index = scroll_selecter->selected_index;
+    if (index < 0 || index >= scroll_selecter->item_count) {
+        return 0;
+    }
+
+    return scroll_selecter->items[index].text;
 }
 
 /**

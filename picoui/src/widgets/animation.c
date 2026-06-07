@@ -19,8 +19,12 @@
 #include "internal.h"
 #include "backend.h"
 #include "picoui/animation.h"
+#include "arm_2d.h"
 
 #include <stdlib.h>
+
+void picoui_native_animation_reset_render_state(struct picoui_animation *animation);
+int picoui_native_animation_set_frame_index(struct picoui_animation *animation, int frame_index);
 
 static int picoui_animation_props_are_valid(const struct picoui_animation_props *props)
 {
@@ -31,6 +35,24 @@ static int picoui_animation_props_are_valid(const struct picoui_animation_props 
         && props->period_ms > 0
         && props->source != 0
         && props->source->img_tile != 0;
+}
+
+static int picoui_animation_compute_frame_count(int width, struct picoui_image_source *source)
+{
+    arm_2d_tile_t *img_tile;
+    int source_width;
+
+    if (width <= 0 || source == 0 || source->img_tile == 0) {
+        return -1;
+    }
+
+    img_tile = (arm_2d_tile_t *)source->img_tile;
+    source_width = img_tile->tRegion.tSize.iWidth;
+    if (source_width <= 0 || source_width < width) {
+        return -1;
+    }
+
+    return source_width / width;
 }
 
 /**
@@ -110,8 +132,16 @@ struct picoui_animation *picoui_animation_create_with_props(
     animation->id = props->id;
     animation->width = props->width;
     animation->height = props->height;
+    animation->frame_count = picoui_animation_compute_frame_count(props->width, props->source);
+    if (animation->frame_count <= 0) {
+        free(animation);
+        return 0;
+    }
     animation->period_ms = props->period_ms;
     animation->source = props->source;
+    animation->start_ticks = 0U;
+    animation->frame_index = 0;
+    animation->render_ready = 0;
     animation->widget.width = props->width;
     animation->widget.height = props->height;
     animation->widget.visible = 1;
@@ -144,15 +174,34 @@ struct picoui_animation *picoui_animation_create_with_props(
 
 int picoui_animation_set_source(struct picoui_animation *animation, struct picoui_image_source *source)
 {
+    int previous_frame_count;
+    struct picoui_image_source *previous_source;
+
     if (animation == 0 || source == 0 || source->img_tile == 0) {
         return -1;
     }
 
-    if (picoui_backend_animation_set_source(animation, source) != 0) {
+    previous_frame_count = animation->frame_count;
+    previous_source = animation->source;
+    animation->source = source;
+    animation->frame_count = picoui_animation_compute_frame_count(animation->width, source);
+    if (animation->frame_count <= 0) {
+        animation->source = previous_source;
+        animation->frame_count = previous_frame_count;
+        return -1;
+    }
+    if (picoui_native_animation_set_frame_index(animation, 0) != 0) {
+        animation->source = previous_source;
+        animation->frame_count = previous_frame_count;
         return -1;
     }
 
-    animation->source = source;
+    if (picoui_backend_animation_set_source(animation, source) != 0) {
+        animation->source = previous_source;
+        animation->frame_count = previous_frame_count;
+        (void)picoui_native_animation_set_frame_index(animation, 0);
+        return -1;
+    }
     return 0;
 }
 
@@ -166,15 +215,18 @@ int picoui_animation_set_source(struct picoui_animation *animation, struct picou
 
 int picoui_animation_set_period_ms(struct picoui_animation *animation, int period_ms)
 {
+    int previous_period_ms;
+
     if (animation == 0 || period_ms <= 0) {
         return -1;
     }
 
+    previous_period_ms = animation->period_ms;
+    animation->period_ms = period_ms;
     if (picoui_backend_animation_set_period_ms(animation, period_ms) != 0) {
+        animation->period_ms = previous_period_ms;
         return -1;
     }
-
-    animation->period_ms = period_ms;
     return 0;
 }
 
@@ -188,9 +240,27 @@ int picoui_animation_set_period_ms(struct picoui_animation *animation, int perio
 
 int picoui_animation_show_frame(struct picoui_animation *animation, int frame_index)
 {
+    int previous_frame_index;
+    unsigned int previous_start_ticks;
+    int previous_render_ready;
+
     if (animation == 0 || frame_index < 0) {
         return -1;
     }
 
-    return picoui_backend_animation_show_frame(animation, frame_index);
+    previous_frame_index = animation->frame_index;
+    previous_start_ticks = animation->start_ticks;
+    previous_render_ready = animation->render_ready;
+    if (picoui_native_animation_set_frame_index(animation, frame_index) != 0) {
+        return -1;
+    }
+
+    if (picoui_backend_animation_show_frame(animation, frame_index) != 0) {
+        animation->frame_index = previous_frame_index;
+        animation->start_ticks = previous_start_ticks;
+        animation->render_ready = previous_render_ready;
+        return -1;
+    }
+
+    return 0;
 }

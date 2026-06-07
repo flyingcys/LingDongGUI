@@ -83,6 +83,7 @@ void ldClockSetSecondPointerImage(ldClock_t *ptWidget, arm_2d_tile_t *ptImgTile,
 
 void ldClockSetStepSecond(ldClock_t *ptWidget, bool isStepSecond);
 void ldClockSetAutoSysTime(ldClock_t *ptWidget, bool isAutoSysTime);
+void ldClockSetManualTime(ldClock_t *ptWidget, uint8_t hour, uint8_t minute, uint8_t second);
 
 #if defined(__clang__)
 #pragma clang diagnostic pop
