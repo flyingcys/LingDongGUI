@@ -7,3 +7,8 @@ add_library(picoui_test_support STATIC picoui_test_support.c)
 target_include_directories(picoui_test_support PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(picoui_test_support PUBLIC picoui)
 ld_apply_common_target_config(picoui_test_support)
+
+add_library(picoui_v1_1_test_support STATIC picoui_test_support.c)
+target_include_directories(picoui_v1_1_test_support PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(picoui_v1_1_test_support PUBLIC picoui_v1_1)
+ld_apply_common_target_config(picoui_v1_1_test_support)

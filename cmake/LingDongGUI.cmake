@@ -325,6 +325,77 @@ function(ld_define_core_targets)
     endif()
     ld_apply_common_target_config(picoui_port_sdl)
 
+    add_library(picoui_port_sdl_v1_1 STATIC
+        ${LD_REPO_ROOT}/picoui/port/sdl/sdl_v1_1.c
+    )
+    target_include_directories(picoui_port_sdl_v1_1 PUBLIC
+        ${LD_REPO_ROOT}/picoui/include
+        ${LD_REPO_ROOT}/picoui
+    )
+    target_link_libraries(picoui_port_sdl_v1_1 PUBLIC picoui_core_v1_1)
+    if(WIN32)
+        if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+            set(LD_SDL2_ROOT "${LD_EXAMPLES_DIR}/sdl/sdl2/64")
+        else()
+            set(LD_SDL2_ROOT "${LD_EXAMPLES_DIR}/sdl/sdl2/32")
+        endif()
+        target_include_directories(picoui_port_sdl_v1_1 PUBLIC "${LD_SDL2_ROOT}/include/SDL2")
+        target_link_directories(picoui_port_sdl_v1_1 PUBLIC "${LD_SDL2_ROOT}/lib")
+        target_link_libraries(picoui_port_sdl_v1_1 PUBLIC SDL2 SDL2main)
+    else()
+        target_include_directories(picoui_port_sdl_v1_1 PUBLIC ${SDL2_INCLUDE_DIRS})
+        target_link_directories(picoui_port_sdl_v1_1 PUBLIC ${SDL2_LIBRARY_DIRS})
+        target_compile_options(picoui_port_sdl_v1_1 PRIVATE ${SDL2_CFLAGS_OTHER})
+        target_link_options(picoui_port_sdl_v1_1 PRIVATE ${SDL2_LDFLAGS_OTHER})
+        target_link_libraries(picoui_port_sdl_v1_1 PUBLIC ${SDL2_LIBRARIES})
+    endif()
+    ld_apply_common_target_config(picoui_port_sdl_v1_1)
+
+    add_library(picoui_core_v1_1 STATIC
+        ${LD_REPO_ROOT}/picoui/src/core/core.c
+        ${LD_REPO_ROOT}/picoui/src/core/screen.c
+        ${LD_REPO_ROOT}/picoui/src/core/input.c
+        ${LD_REPO_ROOT}/picoui/src/core/display_v1_1.c
+        ${LD_REPO_ROOT}/picoui/src/core/render.c
+        ${LD_REPO_ROOT}/picoui/src/core/widget_v1_1.c
+    )
+    target_include_directories(picoui_core_v1_1
+        PUBLIC
+            ${LD_REPO_ROOT}/picoui/include
+        PRIVATE
+            ${LD_REPO_ROOT}/picoui/src/core
+    )
+    ld_apply_common_target_config(picoui_core_v1_1)
+
+    add_library(picoui_widgets_v1_1 STATIC
+        ${LD_REPO_ROOT}/picoui/src/widgets/v1_1_placeholder.c
+        ${LD_REPO_ROOT}/picoui/src/widgets/window_v1_1.c
+        ${LD_REPO_ROOT}/picoui/src/widgets/label_v1_1.c
+        ${LD_REPO_ROOT}/picoui/src/widgets/button_v1_1.c
+    )
+    target_include_directories(picoui_widgets_v1_1
+        PUBLIC
+            ${LD_REPO_ROOT}/picoui/include
+        PRIVATE
+            ${LD_REPO_ROOT}/picoui/src/core
+    )
+    target_link_libraries(picoui_widgets_v1_1 PUBLIC picoui_core_v1_1)
+    ld_apply_common_target_config(picoui_widgets_v1_1)
+
+    add_library(picoui_port_v1_1 INTERFACE)
+    target_include_directories(picoui_port_v1_1 INTERFACE
+        ${LD_REPO_ROOT}/picoui/include
+        ${LD_REPO_ROOT}/picoui
+    )
+    target_link_libraries(picoui_port_v1_1 INTERFACE picoui_port_sdl_v1_1)
+
+    add_library(picoui_v1_1 INTERFACE)
+    target_link_libraries(picoui_v1_1 INTERFACE
+        picoui_core_v1_1
+        picoui_widgets_v1_1
+        picoui_port_v1_1
+    )
+
     add_library(ld_picoui_native_runtime_support STATIC ${LD_PICOUI_BACKEND_LDGUI_SOURCES})
     target_include_directories(ld_picoui_native_runtime_support PUBLIC
         ${LD_REPO_ROOT}/picoui/include

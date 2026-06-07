@@ -44,6 +44,14 @@ set(PICOUI_UNIT_TESTS
     unit/test_picoui_calendar.c
 )
 
+set(PICOUI_V1_1_UNIT_TESTS
+    unit/test_picoui_v1_1_public_headers.c
+    unit/test_picoui_v1_1_port_sdl.c
+    native/test_picoui_v1_1_window_tree.c
+    native/test_picoui_v1_1_label_render.c
+    native/test_picoui_v1_1_button_state.c
+)
+
 set(PICOUI_NATIVE_TESTS
     native/test_picoui_native_runtime.c
     native/test_picoui_native_sdl_port.c
@@ -108,6 +116,16 @@ foreach(test_src IN LISTS PICOUI_NATIVE_TESTS)
     )
 endforeach()
 
+foreach(test_src IN LISTS PICOUI_V1_1_UNIT_TESTS)
+    get_filename_component(test_name "${test_src}" NAME_WE)
+    ld_add_c_unit_test(${test_name}
+        SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/${test_src}"
+        SUPPORT_LIB picoui_v1_1_test_support
+        MAIN_LIB picoui_v1_1
+        LABELS "picoui;unit;v1_1"
+    )
+endforeach()
+
 add_dependencies(test_picoui_native_runtime picoui_basic_widgets_demo)
 target_compile_definitions(test_picoui_native_runtime PRIVATE
     PICOUI_BASIC_WIDGETS_DEMO_PATH="$<TARGET_FILE:picoui_basic_widgets_demo>"
@@ -116,6 +134,16 @@ target_compile_definitions(test_picoui_native_runtime PRIVATE
 ld_add_python_test(check_picoui_public_api
     SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/contract/check_picoui_public_api.py"
     LABELS "picoui;contract"
+)
+
+ld_add_python_test(check_picoui_v1_1_boundary_contract
+    SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/contract/check_picoui_v1_1_boundary_contract.py"
+    LABELS "picoui;contract;v1_1"
+)
+
+ld_add_python_test(check_picoui_v1_1_build_graph
+    SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/contract/check_picoui_v1_1_build_graph.py"
+    LABELS "picoui;contract;v1_1"
 )
 
 ld_add_python_test(check_picoui_app_compatibility_decisions
@@ -177,6 +205,11 @@ if(LD_BUILD_RUNTIME_TESTS)
     ld_add_python_test(check_picoui_runtime
         SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/runtime/check_picoui_runtime.py"
         LABELS "picoui;runtime"
+    )
+
+    ld_add_python_test(check_picoui_v1_1_basic_widgets
+        SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/runtime/check_picoui_v1_1_basic_widgets.py"
+        LABELS "picoui;runtime;v1_1"
     )
 
     find_package(Python3 COMPONENTS Interpreter REQUIRED)

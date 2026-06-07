@@ -16,92 +16,83 @@
  * limitations under the License.
  */
 
-#include "picoui/picoui.h"
-#include "picoui/port/sdl.h"
+#include "picoui/core.h"
+#include "picoui/screen.h"
+#include "picoui/window.h"
+#include "picoui/label.h"
+#include "picoui/button.h"
+#include "picoui/port/sdl_v1_1.h"
 
 static struct picoui_window *g_root_window;
-
-static void on_wifi_changed(struct picoui_widget *widget, int value, void *user_data)
-{
-    (void)widget;
-    (void)user_data;
-    (void)value;
-}
+static struct picoui_label *g_status_label;
 
 static void on_button_clicked(struct picoui_widget *widget, void *user_data)
 {
     (void)widget;
     (void)user_data;
+
+    if (g_status_label != 0) {
+        (void)picoui_label_set_text(g_status_label, "button clicked");
+    }
 }
 
-static void make_ui(struct picoui_window *win)
+static int make_ui(struct picoui_window *win)
 {
-    struct picoui_switch *sw = picoui_switch_create(win, "wifi");
-    struct picoui_checkbox *cb = picoui_checkbox_create(win, "agree");
-    struct picoui_slider *slider = picoui_slider_create(win, "volume");
-    struct picoui_button *button = picoui_button_create(win, "submit");
-    struct picoui_text *text = picoui_text_create(win, "title");
-    struct picoui_image *image = picoui_image_create(win, "logo");
-    struct picoui_image_source *image_source = 0;
-    const int cols[] = {220, 0};
-    const int rows[] = {24, 30, 30, 36, 28, 64, 0};
+    struct picoui_label *title;
+    struct picoui_button *button;
 
-    picoui_grid_set_columns(win, cols, 2);
-    picoui_grid_set_rows(win, rows, 7);
-    picoui_grid_set_gap(win, 12, 12);
-    picoui_grid_set_align(win, PICOUI_ALIGN_START, PICOUI_ALIGN_START);
-    picoui_window_set_padding_group(win, 16, 24, 16, 16);
+    title = picoui_label_create(win, "title");
+    if (title == 0) {
+        return -1;
+    }
+    if (picoui_label_set_text(title, "v1.1 basic widgets") != 0) {
+        return -1;
+    }
 
-    picoui_widget_set_size((struct picoui_widget *)sw, 48, 24);
-    picoui_widget_set_size((struct picoui_widget *)cb, 220, 30);
-    picoui_widget_set_size((struct picoui_widget *)slider, 220, 30);
-    picoui_widget_set_size((struct picoui_widget *)button, 160, 36);
-    picoui_widget_set_size((struct picoui_widget *)text, 220, 28);
-    picoui_widget_set_size((struct picoui_widget *)image, 220, 60);
+    g_status_label = picoui_label_create(win, "status");
+    if (g_status_label == 0) {
+        return -1;
+    }
+    if (picoui_label_set_text(g_status_label, "window label button") != 0) {
+        return -1;
+    }
 
-    picoui_widget_set_grid_cell((struct picoui_widget *)sw, 0, 0, 1, 1, PICOUI_ALIGN_START, PICOUI_ALIGN_START);
-    picoui_widget_set_grid_cell((struct picoui_widget *)cb, 0, 1, 1, 1, PICOUI_ALIGN_START, PICOUI_ALIGN_START);
-    picoui_widget_set_grid_cell((struct picoui_widget *)slider, 0, 2, 1, 1, PICOUI_ALIGN_START, PICOUI_ALIGN_START);
-    picoui_widget_set_grid_cell((struct picoui_widget *)button, 0, 3, 1, 1, PICOUI_ALIGN_START, PICOUI_ALIGN_START);
-    picoui_widget_set_grid_cell((struct picoui_widget *)text, 0, 4, 1, 1, PICOUI_ALIGN_START, PICOUI_ALIGN_START);
-    picoui_widget_set_grid_cell((struct picoui_widget *)image, 0, 5, 1, 1, PICOUI_ALIGN_START, PICOUI_ALIGN_START);
+    button = picoui_button_create(win, "action");
+    if (button == 0) {
+        return -1;
+    }
+    if (picoui_button_set_on_clicked(button, on_button_clicked, 0) != 0) {
+        return -1;
+    }
 
-    picoui_switch_set_checked(sw, 1);
-    picoui_checkbox_set_checked(cb, 1);
-    picoui_slider_set_value(slider, 28);
-    picoui_switch_set_on_toggled(sw, on_wifi_changed, 0);
-    picoui_checkbox_set_on_toggled(cb, on_wifi_changed, 0);
-    picoui_slider_set_on_value_changed(slider, on_wifi_changed, 0);
-    picoui_checkbox_set_text(cb, "Wi-Fi Enabled");
-    picoui_button_set_text(button, "Submit");
-    picoui_button_set_on_clicked(button, on_button_clicked, 0);
-    picoui_text_set_text(text, "Basic Widgets");
-    picoui_image_set_source(image, image_source);
+    return 0;
 }
 
 static int create_demo_ui(void)
 {
-    struct picoui_screen *screen = picoui_screen_active();
-    struct picoui_window *win = picoui_window_create_root(screen, "root");
+    struct picoui_screen *screen;
+    struct picoui_window *win;
 
+    screen = picoui_screen_active();
+    win = picoui_window_create_root(screen, "root");
     if (win == 0) {
         return -1;
     }
 
     g_root_window = win;
-    make_ui(win);
-    if (picoui_screen_load(screen) != 0) {
+    if (make_ui(win) != 0) {
         g_root_window = 0;
+        g_status_label = 0;
         return -1;
     }
+    if (picoui_screen_load(screen) != 0) {
+        g_root_window = 0;
+        g_status_label = 0;
+        return -1;
+    }
+
     return 0;
 }
-
-/**
- * @brief Application entry point
- *
- * @return 0 on success, -1 on failure
- */
 
 int main(int argc, char **argv)
 {

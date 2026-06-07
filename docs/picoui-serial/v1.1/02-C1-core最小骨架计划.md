@@ -192,40 +192,85 @@ git commit -m "test: freeze picoui v1.1 boundaries"
 
 **Files:**
 - Create: `picoui/include/picoui/core.h`
-- Create: `picoui/include/picoui/screen.h`
+- Modify: `picoui/include/picoui/screen.h`
 - Create: `picoui/include/picoui/input.h`
-- Modify: `picoui/include/picoui/picoui.h`
-- Modify: `picoui/include/picoui/display.h`
-- Modify: `picoui/include/picoui/indev.h`
+- Create: `picoui/include/picoui/display_v1_1.h`
+- Create: `picoui/include/picoui/port/sdl_v1_1.h`
 - Create: `tests/picoui/unit/test_picoui_v1_1_public_headers.c`
+- Create: `tests/picoui/unit/test_picoui_v1_1_port_sdl.c`
 
 - [ ] **Step 1: 写 RED public header test**
 
 新增 `tests/picoui/unit/test_picoui_v1_1_public_headers.c`：
 
 ```c
-#include "picoui/picoui.h"
+#include "picoui/core.h"
+#include "picoui/screen.h"
+#include "picoui/input.h"
+
+#include <assert.h>
+#include <stdint.h>
 
 int main(void)
 {
-    (void)picoui_init;
-    (void)picoui_deinit;
-    (void)picoui_timer_handler;
-    (void)picoui_screen_create;
-    (void)picoui_screen_load;
-    (void)picoui_screen_active;
-    (void)picoui_display_create;
-    (void)picoui_indev_create;
+    struct picoui_window *root_window = (struct picoui_window *)(uintptr_t)0x1;
+    struct picoui_screen *screen;
+    struct picoui_indev *indev;
+
+    assert(picoui_init() == 0);
+    screen = picoui_screen_active();
+    assert(screen != 0);
+    assert(picoui_screen_set_root_window(screen, root_window) == 0);
+    assert(picoui_screen_get_root_window(screen) == root_window);
+    assert(picoui_screen_load(screen) == 0);
+    indev = picoui_indev_create();
+    assert(indev != 0);
+    assert(picoui_timer_handler() == 0);
+    picoui_deinit();
+    return 0;
+}
+```
+
+- [ ] **Step 1b: 写 RED v1.1 port header test**
+
+新增 `tests/picoui/unit/test_picoui_v1_1_port_sdl.c`：
+
+```c
+#include "picoui/core.h"
+#include "picoui/input.h"
+#include "picoui/display_v1_1.h"
+#include "picoui/port/sdl_v1_1.h"
+
+#include <assert.h>
+
+int main(void)
+{
+    struct picoui_indev *indev = 0;
+    struct picoui_display *display;
+    int width = 0;
+    int height = 0;
+
+    assert(picoui_init() == 0);
+    assert(picoui_sdl_hal_init(320, 240) == 0);
+    display = picoui_display_get_default();
+    assert(display != 0);
+    assert(picoui_display_get_size(display, &width, &height) == 0);
+    assert(width == 320);
+    assert(height == 240);
+    assert(picoui_port_sdl_default_pointer_indev(&indev) == 0);
+    assert(indev != 0);
+    picoui_deinit();
     return 0;
 }
 ```
 
 - [ ] **Step 2: 注册 test**
 
-在 `tests/picoui/CMakeLists.txt` 中的 unit test 列表加入：
+在 `tests/picoui/CMakeLists.txt` 中的 `PICOUI_V1_1_UNIT_TESTS` 列表加入：
 
 ```cmake
     unit/test_picoui_v1_1_public_headers.c
+    unit/test_picoui_v1_1_port_sdl.c
 ```
 
 - [ ] **Step 3: 运行 RED**
@@ -234,11 +279,12 @@ Run:
 
 ```bash
 rtk cmake --build build --target test_picoui_v1_1_public_headers
+rtk cmake --build build --target test_picoui_v1_1_port_sdl
 ```
 
 Expected:
 
-- FAIL，缺少 `picoui_screen_*` 或 `picoui_init` 声明。
+- FAIL，缺少 `picoui_*` 最小声明或对应 v1.1 skeleton / port 实现。
 
 - [ ] **Step 4: 新建最小 public header**
 
@@ -255,17 +301,20 @@ int picoui_timer_handler(void);
 #endif
 ```
 
-新增 `picoui/include/picoui/screen.h`：
+`picoui/include/picoui/screen.h` 至少要满足：
 
 ```c
 #ifndef PICOUI_SCREEN_H
 #define PICOUI_SCREEN_H
 
+struct picoui_window;
 struct picoui_screen;
 
 struct picoui_screen *picoui_screen_create(void);
 struct picoui_screen *picoui_screen_active(void);
 int picoui_screen_load(struct picoui_screen *screen);
+int picoui_screen_set_root_window(struct picoui_screen *screen, struct picoui_window *root_window);
+struct picoui_window *picoui_screen_get_root_window(const struct picoui_screen *screen);
 
 #endif
 ```
@@ -283,12 +332,86 @@ struct picoui_indev *picoui_indev_create(void);
 #endif
 ```
 
-在 `picoui/include/picoui/picoui.h` 中加入：
+新增 `picoui/include/picoui/display_v1_1.h`：
 
 ```c
-#include "picoui/core.h"
-#include "picoui/screen.h"
-#include "picoui/input.h"
+#ifndef PICOUI_DISPLAY_V1_1_H
+#define PICOUI_DISPLAY_V1_1_H
+
+struct picoui_display;
+
+enum picoui_color_format {
+    PICOUI_COLOR_FORMAT_RGB565 = 0,
+    PICOUI_COLOR_FORMAT_ARGB8888,
+};
+
+struct picoui_area {
+    int x;
+    int y;
+    int width;
+    int height;
+};
+
+typedef void (*picoui_display_flush_cb_t)(const struct picoui_area *area,
+                                          const void *pixels,
+                                          void *user_data);
+
+struct picoui_display *picoui_display_create(int width, int height);
+int picoui_display_set_default(struct picoui_display *display);
+struct picoui_display *picoui_display_get_default(void);
+int picoui_display_get_size(const struct picoui_display *display, int *width, int *height);
+int picoui_display_set_flush_cb(struct picoui_display *display,
+                                picoui_display_flush_cb_t callback,
+                                void *user_data);
+
+#endif
+```
+
+新增 `picoui/include/picoui/port/sdl_v1_1.h`：
+
+```c
+#ifndef PICOUI_PORT_SDL_V1_1_H
+#define PICOUI_PORT_SDL_V1_1_H
+
+#include <stdint.h>
+
+struct picoui_indev;
+struct picoui_port_sdl_host;
+
+enum picoui_port_sdl_event_type {
+    PICOUI_PORT_SDL_EVENT_NONE = 0,
+    PICOUI_PORT_SDL_EVENT_QUIT,
+    PICOUI_PORT_SDL_EVENT_POINTER,
+};
+
+struct picoui_port_sdl_event {
+    enum picoui_port_sdl_event_type type;
+    int x;
+    int y;
+    int pressed;
+};
+
+int picoui_sdl_hal_init(int width, int height);
+int picoui_port_sdl_default_pointer_indev(struct picoui_indev **out_indev);
+struct picoui_port_sdl_host *picoui_port_sdl_host_create(void);
+void picoui_port_sdl_host_destroy(struct picoui_port_sdl_host *host);
+int picoui_port_sdl_host_ensure_window(struct picoui_port_sdl_host *host,
+                                       const char *title,
+                                       int width,
+                                       int height);
+int picoui_port_sdl_host_get_window_size(struct picoui_port_sdl_host *host, int *width, int *height);
+int picoui_port_sdl_host_poll_event(struct picoui_port_sdl_host *host,
+                                    struct picoui_port_sdl_event *event);
+int picoui_port_sdl_host_present(struct picoui_port_sdl_host *host,
+                                 const uint32_t *pixels,
+                                 int width,
+                                 int height,
+                                 uint8_t clear_red,
+                                 uint8_t clear_green,
+                                 uint8_t clear_blue,
+                                 uint8_t clear_alpha);
+
+#endif
 ```
 
 - [ ] **Step 5: GREEN**
@@ -297,6 +420,8 @@ Run:
 
 ```bash
 rtk cmake --build build --target test_picoui_v1_1_public_headers
+rtk cmake --build build --target test_picoui_v1_1_port_sdl
+rtk ctest --test-dir build -R test_picoui_v1_1_port_sdl --output-on-failure
 rtk ctest --test-dir build -R test_picoui_v1_1_public_headers --output-on-failure
 rtk git diff --check
 ```
@@ -310,12 +435,11 @@ Expected:
 ```bash
 git add \
   picoui/include/picoui/core.h \
-  picoui/include/picoui/screen.h \
   picoui/include/picoui/input.h \
-  picoui/include/picoui/picoui.h \
-  picoui/include/picoui/display.h \
-  picoui/include/picoui/indev.h \
+  picoui/include/picoui/display_v1_1.h \
+  picoui/include/picoui/port/sdl_v1_1.h \
   tests/picoui/unit/test_picoui_v1_1_public_headers.c \
+  tests/picoui/unit/test_picoui_v1_1_port_sdl.c \
   tests/picoui/CMakeLists.txt
 git commit -m "feat: add picoui v1.1 public skeleton"
 ```
@@ -532,6 +656,7 @@ def main() -> int:
     assert "add_library(picoui_core_v1_1 STATIC" in TEXT
     assert "add_library(picoui_widgets_v1_1 STATIC" in TEXT
     assert "add_library(picoui_port_v1_1 INTERFACE" in TEXT
+    assert "add_library(picoui_port_sdl_v1_1 STATIC" in TEXT
     return 0
 
 
@@ -564,7 +689,7 @@ Expected:
 
 - [ ] **Step 4: 加入新 target 占位**
 
-在 `cmake/LingDongGUI.cmake` 中 `ld_build_picoui` 内添加：
+在 `cmake/LingDongGUI.cmake` 中 `ld_build_picoui` 内添加或调整为：
 
 ```cmake
     add_library(picoui_core_v1_1 STATIC
@@ -583,8 +708,14 @@ Expected:
     target_link_libraries(picoui_widgets_v1_1 PUBLIC picoui_core_v1_1)
     ld_apply_common_target_config(picoui_widgets_v1_1)
 
+    add_library(picoui_port_sdl_v1_1 STATIC
+        ${LD_REPO_ROOT}/picoui/port/sdl/sdl_v1_1.c
+    )
+    target_link_libraries(picoui_port_sdl_v1_1 PUBLIC picoui_core_v1_1)
+    ld_apply_common_target_config(picoui_port_sdl_v1_1)
+
     add_library(picoui_port_v1_1 INTERFACE)
-    target_link_libraries(picoui_port_v1_1 INTERFACE picoui_port_sdl)
+    target_link_libraries(picoui_port_v1_1 INTERFACE picoui_port_sdl_v1_1)
 ```
 
 - [ ] **Step 5: GREEN**
@@ -609,9 +740,10 @@ Expected:
 
 - `picoui_core_v1_1`
 - `picoui_widgets_v1_1`
+- `picoui_port_sdl_v1_1`
 - `picoui_port_v1_1`
 
-说明：这些 target 当前只是占位骨架，用于后续 C2/C3/C4 渐进迁移，不代表旧 target 已下线。
+说明：这些 target 当前只承载 `v1.1` 的最小独立骨架与 SDL host/display/indev 接线，不代表旧 target 已下线。
 ```
 
 ```bash
@@ -634,13 +766,13 @@ git commit -m "build: add picoui v1.1 target skeleton"
 Run:
 
 ```bash
-rtk ctest --test-dir build -R 'check_picoui_v1_1_boundary_contract|check_picoui_v1_1_build_graph|test_picoui_v1_1_public_headers' --output-on-failure
+rtk ctest --test-dir build -R 'check_picoui_v1_1_boundary_contract|check_picoui_v1_1_build_graph|test_picoui_v1_1_public_headers|test_picoui_v1_1_port_sdl' --output-on-failure
 rtk git diff --check
 ```
 
 Expected:
 
-- 三项 PASS
+- 四项 PASS
 - `git diff --check` exit 0
 
 - [ ] **Step 2: 主线程跑 detect_changes**
@@ -657,7 +789,13 @@ Expected:
 
 - [ ] **Step 3: 更新 closeout 状态**
 
-在 `docs/picoui-serial/v1.1/01-C1-阶段记录.md` 追加：
+在 `docs/picoui-serial/v1.1/01-C1-阶段记录.md` 追加 closeout 前，必须先确认当前真实边界：
+
+- lifecycle 最小公开头：`picoui/core.h`、`picoui/screen.h`、`picoui/input.h`
+- port/display 最小公开头：`picoui/display_v1_1.h`、`picoui/port/sdl_v1_1.h`
+- `v1.1 port` 只证明 `SDL HAL + default display + pointer indev`，不证明 `picoui_port_sdl_attach(struct picoui_app *)`
+
+closeout 文案模板：
 
 ```markdown
 ## Closeout
