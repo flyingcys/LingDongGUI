@@ -469,3 +469,15 @@
 - 第五阶段完成目录、文档、产品名收口
 
 这条路线在当前仓库实际投入与目标约束下，是复用率最高、返工最少、总体最优的方案。
+
+## 20. Closeout Note
+
+当 `backend` shared layer、`app`-free main path、`tinyui_*` pilot public surface 与 `P5` 性能守门都已经闭环后，`TinyUI v2.0` 的 completion truth 以：
+
+- `docs/v2.0/v2.0-closeout.md`
+- `docs/v2.0/v2.0-release-matrix.md`
+- `docs/v2.0/v2.0-performance-baseline.md`
+
+为准。
+
+这一定义只说明 closeout/release-facing 真相源已经收口到上述证据文件，不额外声称 full rename、full direct binding 或 full memory proof。

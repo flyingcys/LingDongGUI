@@ -5,6 +5,8 @@
 #include "internal.h"
 #include <assert.h>
 
+extern int picoui_widget_has_ld_binding(const struct picoui_widget *widget);
+
 static void test_window_create_and_backend_mapping(struct picoui_window *win)
 {
     struct picoui_backend_widget *backend;
@@ -99,10 +101,38 @@ static void test_window_grid_padding_positions_switch(struct picoui_window *win)
     assert(ld_switch->use_as__arm_2d_control_node_t.tRegion.tSize.iHeight == 24);
 }
 
+static void test_window_constructor_binds_ld_without_backend_wrapper(void)
+{
+    struct picoui_app *app = picoui_app_create();
+    struct picoui_window *win = picoui_window_create(app, "root_contract");
+
+    assert(app != 0);
+    assert(win != 0);
+    assert(picoui_widget_has_ld_binding(&win->widget) == 1);
+
+    picoui_app_destroy(app);
+}
+
+static void test_window_legacy_backend_constructors_are_disabled(void)
+{
+    struct picoui_app *app = picoui_app_create();
+    struct picoui_window *win = picoui_window_create(app, "root_legacy");
+
+    assert(app != 0);
+    assert(win != 0);
+    assert(picoui_backend_create_window(app, "legacy_root") == 0);
+    assert(picoui_backend_create_child_window(win->widget.backend_widget, "legacy_child") == 0);
+
+    picoui_app_destroy(app);
+}
+
 int main(void)
 {
     struct picoui_app *app = picoui_app_create();
     struct picoui_window *win;
+
+    test_window_constructor_binds_ld_without_backend_wrapper();
+    test_window_legacy_backend_constructors_are_disabled();
 
     assert(app != 0);
     win = picoui_window_create(app, "root");

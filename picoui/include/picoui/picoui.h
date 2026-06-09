@@ -50,6 +50,7 @@
 #include "picoui/progress_wheel.h"
 #include "picoui/qrcode.h"
 #include "picoui/radial_menu.h"
+#include "picoui/runtime.h"
 #include "picoui/scroll_selecter.h"
 #include "picoui/slider.h"
 #include "picoui/switch.h"

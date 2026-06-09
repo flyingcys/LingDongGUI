@@ -18,6 +18,7 @@
 
 #include "backend.h"
 #include "internal.h"
+#include "runtime_bridge.h"
 #include "../../../../src/gui/ldBase.h"
 #include "../../../../src/gui/ldButton.h"
 #include "../../../../src/gui/ldCheckBox.h"
@@ -332,12 +333,12 @@ int picoui_backend_widget_bind_host(void *backend_widget, struct picoui_widget *
         return -1;
     }
 
-    backend->host_widget = widget;
+    if (picoui_widget_bind_backend_host(widget, backend) != 0) {
+        return -1;
+    }
     backend->edit_result_on_finish = PICOUI_EDIT_RESULT_NONE;
     picoui_backend_widget_init_data_model(backend);
-    if (backend->owner != NULL && backend->owner->backend_app != NULL) {
-        app_state = (struct picoui_backend_app_state *)backend->owner->backend_app;
-    }
+    app_state = picoui_runtime_bridge_backend_state(backend->owner);
     if (app_state != NULL && app_state->ld_scene != NULL && backend->ld_widget != NULL) {
         if (picoui_backend_widget_bind_ld_event_bridge(backend,
                                                        app_state->ld_scene,
@@ -486,7 +487,7 @@ int picoui_backend_widget_dispatch_native_signal(void *backend_widget,
         return -1;
     }
 
-    host_widget = backend->host_widget;
+    host_widget = picoui_widget_backend_host(backend);
     if (host_widget == 0) {
         return -1;
     }

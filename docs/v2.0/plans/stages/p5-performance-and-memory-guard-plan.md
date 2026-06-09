@@ -106,9 +106,9 @@ In `picoui/demo/basic_widgets/main.c`, add a guarded benchmark log path:
 
 ```c
 /* When PICOUI_BENCHMARK_LOG is set, emit:
- * first_frame_ms=...
- * screen_create_ms=...
- * switch_wrapper_bytes=...
+ * screen_object_create_ms=...
+ * capture_ready_ms=...
+ * legacy-compatible aliases for runtime checker only
  */
 ```
 
@@ -121,7 +121,9 @@ Create `tests/picoui/perf/check_picoui_tinyui_perf.py`:
 ```python
 # 运行 basic_widgets demo
 # 读取 PICOUI_BENCHMARK_LOG
-# 校验 first_frame_ms / screen_create_ms 相对 baseline 不超过阈值
+# 校验 screen_object_create_ms / capture_ready_ms 相对 baseline 不超过阈值
+# baseline 缺项时 fail-closed
+# 只阻塞 regression，不阻塞更优结果
 ```
 
 - [ ] **Step 3: 建立对象额外开销 checker**
@@ -129,8 +131,11 @@ Create `tests/picoui/perf/check_picoui_tinyui_perf.py`:
 Create `tests/picoui/perf/check_picoui_tinyui_object_overhead.py`:
 
 ```python
-# 从 benchmark log 或辅助导出中读取 switch_wrapper_bytes / object_wrapper_bytes
-# 约束 wrapper 开销保持在文档声明阈值内
+# 构建并执行正式 probe target `test_picoui_wrapper_struct_overhead`
+# 读取 widget_wrapper_struct_bytes / switch_wrapper_struct_delta_bytes
+# 以及可选的 backend_widget_struct_bytes
+# baseline 缺项时 fail-closed
+# 只阻塞 regression，不阻塞更优结果
 ```
 
 - [ ] **Step 4: 注册 perf/runtime/memory gate**

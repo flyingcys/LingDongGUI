@@ -16,7 +16,83 @@
  * limitations under the License.
  */
 
-#include "picoui/picoui.h"
+#include "picoui/button.h"
+#include "picoui/checkbox.h"
+#include "picoui/image.h"
+#include "picoui/layout.h"
+#include "picoui/runtime.h"
+#include "picoui/slider.h"
+#include "picoui/switch.h"
+#include "picoui/text.h"
+#include "picoui/widget.h"
+#include "picoui/window.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/stat.h>
+#include <time.h>
+
+struct picoui_demo_benchmark_state {
+    int enabled;
+    int first_frame_logged;
+    double screen_object_create_start_ms;
+    double screen_object_create_end_ms;
+    double capture_ready_start_ms;
+    const char *capture_path;
+};
+
+static int picoui_demo_benchmark_enabled(void)
+{
+    const char *value = getenv("PICOUI_BENCHMARK_LOG");
+
+    return value != 0 && value[0] != '\0' && value[0] != '0';
+}
+
+static double picoui_demo_benchmark_now_ms(void)
+{
+    struct timespec timestamp;
+
+    if (clock_gettime(CLOCK_MONOTONIC, &timestamp) != 0) {
+        return 0.0;
+    }
+
+    return (double)timestamp.tv_sec * 1000.0 + (double)timestamp.tv_nsec / 1000000.0;
+}
+
+static int picoui_demo_benchmark_capture_ready(const char *path)
+{
+    struct stat st;
+
+    if (path == 0 || path[0] == '\0') {
+        return 0;
+    }
+
+    if (stat(path, &st) != 0) {
+        return 0;
+    }
+
+    return st.st_size > 32 ? 1 : 0;
+}
+
+static void picoui_demo_benchmark_log_screen_object_create(const struct picoui_demo_benchmark_state *benchmark)
+{
+    const double elapsed_ms =
+        benchmark->screen_object_create_end_ms - benchmark->screen_object_create_start_ms;
+
+    printf("PICOUI_BENCHMARK_SCREEN_OBJECT_CREATE_MS=%.3f\n", elapsed_ms);
+    printf("PICOUI_BENCHMARK_SCREEN_CREATE_MS=%.3f\n", elapsed_ms);
+    fflush(stdout);
+}
+
+static void picoui_demo_benchmark_log_capture_ready(const struct picoui_demo_benchmark_state *benchmark,
+                                                    double capture_ready_end_ms)
+{
+    const double elapsed_ms = capture_ready_end_ms - benchmark->capture_ready_start_ms;
+
+    printf("PICOUI_BENCHMARK_CAPTURE_READY_MS=%.3f\n", elapsed_ms);
+    printf("PICOUI_BENCHMARK_FIRST_FRAME_MS=%.3f\n", elapsed_ms);
+    fflush(stdout);
+}
 
 static void on_wifi_changed(struct picoui_widget *widget, int value, void *user_data)
 {
@@ -78,25 +154,47 @@ static void make_ui(struct picoui_window *win)
 
 static int run_demo(void)
 {
-    struct picoui_app *app = picoui_app_create();
-    struct picoui_window *win;
+    struct picoui_window *screen;
+    struct picoui_demo_benchmark_state benchmark = {0};
 
-    if (app == 0) {
+    if (picoui_init() != 0) {
         return 1;
     }
 
-    win = picoui_window_create(app, "root");
-    if (win == 0) {
-        picoui_app_destroy(app);
+    benchmark.enabled = picoui_demo_benchmark_enabled();
+    benchmark.capture_path = getenv("PICOUI_CAPTURE_FILE");
+    benchmark.screen_object_create_start_ms = picoui_demo_benchmark_now_ms();
+    screen = picoui_screen_create();
+    benchmark.screen_object_create_end_ms = picoui_demo_benchmark_now_ms();
+    if (screen == 0) {
+        picoui_deinit();
         return 1;
     }
 
-    make_ui(win);
-    if (picoui_app_run(app, win) != 0) {
-        picoui_app_destroy(app);
+    make_ui(screen);
+    if (picoui_screen_load(screen) != 0) {
+        picoui_deinit();
         return 1;
     }
-    picoui_app_destroy(app);
+
+    benchmark.capture_ready_start_ms = picoui_demo_benchmark_now_ms();
+    printf("PICOUI_RUNTIME_LOOP\n");
+    fflush(stdout);
+    if (benchmark.enabled) {
+        picoui_demo_benchmark_log_screen_object_create(&benchmark);
+    }
+
+    while (1) {
+        picoui_timer_handler();
+        if (benchmark.enabled &&
+            !benchmark.first_frame_logged &&
+            picoui_demo_benchmark_capture_ready(benchmark.capture_path)) {
+            picoui_demo_benchmark_log_capture_ready(&benchmark, picoui_demo_benchmark_now_ms());
+            benchmark.first_frame_logged = 1;
+        }
+    }
+
+    picoui_deinit();
     return 0;
 }
 

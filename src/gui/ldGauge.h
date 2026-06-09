@@ -67,6 +67,7 @@ struct ldGauge_t
     arm_2d_op_trans_msk_opa_t op;
     arm_2d_op_trans_msk_opa_t trailOp;
     arm_2d_region_t targetDirtyRegion;
+    uint8_t resourceOwnerFlags;
     bool isKeying:1;
     bool isAutoMove:1;
     bool isProgressBar:1;
@@ -79,7 +80,19 @@ void ldGauge_on_frame_start(ld_scene_t *pScene, ldGauge_t *ptWidget);
 void ldGauge_on_frame_complete(ld_scene_t *pScene, ldGauge_t *ptWidget);
 void ldGauge_show(ld_scene_t *pScene, ldGauge_t *ptWidget, const arm_2d_tile_t *ptTile, bool bIsNewFrame);
 
+void ldGaugeSetBackgroundImage(ldGauge_t *ptWidget,
+                               arm_2d_tile_t *ptBgImgTile,
+                               arm_2d_tile_t *ptBgMaskTile,
+                               bool ownBgImgTile,
+                               bool ownBgMaskTile);
 void ldGaugeSetPointerImage(ldGauge_t *ptWidget,arm_2d_tile_t *ptPointerImgTile,arm_2d_tile_t *ptPointerMaskTile,int16_t pointerOriginOffsetX,int16_t pointerOriginOffsetY);
+void ldGaugeBindPointerImage(ldGauge_t *ptWidget,
+                             arm_2d_tile_t *ptPointerImgTile,
+                             arm_2d_tile_t *ptPointerMaskTile,
+                             int16_t pointerOriginOffsetX,
+                             int16_t pointerOriginOffsetY,
+                             bool ownPointerImgTile,
+                             bool ownPointerMaskTile);
 void ldGaugeSetPointerColor(ldGauge_t *ptWidget,ldColor color);
 void ldGaugeSetAngle(ldGauge_t *ptWidget, float angle);
 void ldGaugeSetTrail(ldGauge_t *ptWidget,arm_2d_tile_t *ptBgTrailMaskTile,arm_2d_tile_t *ptPointerTrailMaskTile);

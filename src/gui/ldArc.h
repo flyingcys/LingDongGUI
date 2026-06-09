@@ -51,6 +51,7 @@ struct ldArc_t
     implement(ldBase_t);
     arm_2d_tile_t *ptImgTile;
     arm_2d_tile_t *ptMaskTile;
+    uint8_t resourceOwnerFlags;
     ldColor color[2];
     ldColor parentColor;
     uint16_t startAngle_x10[2];
@@ -65,6 +66,11 @@ ldArc_t* ldArc_init(ld_scene_t *ptScene, ldArc_t *ptWidget, uint16_t nameId, uin
 #define ldArcInit(nameId,parentNameId,x,y,width,height,ptQuarterImgTile,ptQuarterMaskTile,parentColor) \
         ldArc_init(ptScene,NULL,nameId,parentNameId,x,y,width,height,ptQuarterImgTile,ptQuarterMaskTile,parentColor)
 void ldArc_depose(ld_scene_t *ptScene, ldArc_t *ptWidget);
+void ldArcSetQuarterImage(ldArc_t *ptWidget,
+                          arm_2d_tile_t *ptQuarterImgTile,
+                          arm_2d_tile_t *ptQuarterMaskTile,
+                          bool ownImgTile,
+                          bool ownMaskTile);
 void ldArc_on_load(ld_scene_t *ptScene, ldArc_t *ptWidget);
 void ldArc_on_frame_start(ld_scene_t *ptScene, ldArc_t *ptWidget);
 void ldArc_on_frame_complete(ld_scene_t *ptScene, ldArc_t *ptWidget);

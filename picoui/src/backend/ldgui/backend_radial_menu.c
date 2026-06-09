@@ -18,6 +18,7 @@
 
 #include "backend.h"
 #include "internal.h"
+#include "runtime_bridge.h"
 #include "ldBase.h"
 #include "ldRadialMenu.h"
 
@@ -45,16 +46,6 @@ static arm_2d_tile_t *const g_radial_menu_masks[] = {
 };
 
 #define PICOUI_BACKEND_RADIAL_MENU_NATIVE_MAX_ITEMS 5
-
-static struct picoui_backend_app_state *picoui_backend_radial_menu_get_app_state(void *parent)
-{
-    struct picoui_backend_widget *parent_widget = parent;
-
-    if (parent_widget == NULL || parent_widget->owner == NULL || parent_widget->owner->backend_app == NULL) {
-        return NULL;
-    }
-    return (struct picoui_backend_app_state *)parent_widget->owner->backend_app;
-}
 
 static ldRadialMenu_t *picoui_backend_radial_menu_get_ld(void *backend_widget)
 {
@@ -155,7 +146,7 @@ void *picoui_backend_create_radial_menu(void *parent,
         item_max = 1;
     }
 
-    app_state = picoui_backend_radial_menu_get_app_state(parent);
+    app_state = picoui_runtime_bridge_backend_state_from_parent(parent);
     if (app_state == NULL || app_state->ld_scene == NULL || parent_widget->ld_widget == NULL) {
         return 0;
     }
@@ -165,7 +156,11 @@ void *picoui_backend_create_radial_menu(void *parent,
         return 0;
     }
 
-    name_id = ++app_state->next_ld_name_id;
+    name_id = picoui_runtime_bridge_next_name_id(parent);
+    if (name_id == 0) {
+        free(widget);
+        return 0;
+    }
     ld_radial_menu = ldRadialMenu_init(app_state->ld_scene,
                                        NULL,
                                        name_id,
@@ -182,15 +177,21 @@ void *picoui_backend_create_radial_menu(void *parent,
         return 0;
     }
 
-    widget->parent = parent;
-    widget->id = id;
-    widget->kind = PICOUI_BACKEND_WIDGET_RADIAL_MENU;
-    widget->theme = parent_widget->theme;
+    if (picoui_backend_widget_init_child(widget,
+                                         parent,
+                                         PICOUI_BACKEND_WIDGET_RADIAL_MENU,
+                                         id,
+                                         parent_widget->theme) != 0) {
+        ldRadialMenu_depose(app_state->ld_scene, ld_radial_menu);
+        free(widget);
+        return 0;
+    }
     widget->ld_widget = ld_radial_menu;
     widget->ld_name_id = name_id;
     widget->value = -1;
     widget->last_signal = PICOUI_BACKEND_SIGNAL_NONE;
     if (picoui_backend_widget_attach_child(parent, widget) != 0) {
+        ldRadialMenu_depose(app_state->ld_scene, ld_radial_menu);
         free(widget);
         return 0;
     }

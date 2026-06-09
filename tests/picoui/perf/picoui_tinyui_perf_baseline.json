@@ -1,0 +1,85 @@
+{
+  "schema_version": 2,
+  "binary_size": {
+    "artifact": "build/picoui-runtime/examples/sdl/picoui_basic_widgets_demo",
+    "measured_at": "2026-06-09",
+    "command": "xcrun llvm-size --format=sysv build/picoui-runtime/examples/sdl/picoui_basic_widgets_demo",
+    "format": "llvm-size-sysv",
+    "metric_mapping": {
+      "__text": [
+        "__text",
+        ".text"
+      ],
+      "__data": [
+        "__data",
+        ".data"
+      ],
+      "__bss": [
+        "__bss",
+        ".bss"
+      ],
+      "total": [
+        "Total",
+        "dec"
+      ]
+    },
+    "metrics": {
+      "__text": {
+        "baseline_bytes": 121844,
+        "max_increase_percent": 5.0,
+        "max_increase_bytes": 8192
+      },
+      "__data": {
+        "baseline_bytes": 272,
+        "max_increase_percent": 25.0,
+        "max_increase_bytes": 256
+      },
+      "__bss": {
+        "baseline_bytes": 98768,
+        "max_increase_percent": 10.0,
+        "max_increase_bytes": 8192
+      },
+      "total": {
+        "baseline_bytes": 231400,
+        "max_increase_percent": 5.0,
+        "max_increase_bytes": 12288
+      }
+    }
+  },
+  "benchmark": {
+    "runtime_perf": {
+      "artifact": "build/picoui-runtime/examples/sdl/picoui_basic_widgets_demo",
+      "measured_at": "2026-06-09",
+      "command": "env SDL_VIDEODRIVER=dummy PICOUI_DEMO_AUTO_QUIT_MS=1200 PICOUI_BENCHMARK_LOG=1 PICOUI_CAPTURE_FILE=<tmpdir>/frame.ppm build/picoui-runtime/examples/sdl/picoui_basic_widgets_demo",
+      "metrics": {
+        "screen_object_create_ms": {
+          "baseline_ms": 0.0,
+          "max_allowed_ms": 5.0
+        },
+        "capture_ready_ms": {
+          "baseline_ms": 20.0,
+          "max_allowed_ms": 40.0
+        }
+      }
+    },
+    "wrapper_struct_overhead": {
+      "measured_at": "2026-06-09",
+      "command": "python3 tests/picoui/perf/check_picoui_tinyui_object_overhead.py",
+      "probe": "formal C probe target tests/picoui/unit/test_picoui_wrapper_struct_overhead.c",
+      "metrics": {
+        "widget_wrapper_struct_bytes": {
+          "baseline_bytes": 184,
+          "max_allowed_bytes": 192
+        },
+        "switch_wrapper_struct_delta_bytes": {
+          "baseline_bytes": 32,
+          "max_allowed_bytes": 32
+        },
+        "backend_widget_struct_bytes": {
+          "baseline_bytes": 496,
+          "max_allowed_bytes": 512
+        }
+      }
+    }
+  }
+}

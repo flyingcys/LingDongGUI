@@ -10,6 +10,21 @@ LEDGER_JSON = ROOT / "tests" / "picoui" / "contract" / "native_api_gap_ledger.js
 ALLOWED_FUNCTION_PREFIX = "picoui_"
 ALLOWED_MACRO_PREFIX = "PICOUI_"
 ALLOWED_TYPE_PREFIX = "picoui_"
+ALLOWED_COMPAT_TINYUI_FUNCTIONS = {
+    "tinyui_screen_create",
+    "tinyui_screen_load",
+    "tinyui_label_create",
+    "tinyui_button_create",
+    "tinyui_switch_create",
+}
+ALLOWED_COMPAT_TINYUI_MACROS = {
+    "tinyui_init",
+    "tinyui_deinit",
+    "tinyui_timer_handler",
+}
+ALLOWED_COMPAT_TINYUI_TYPES = {
+    "tinyui_obj_t",
+}
 VALID_COVERAGE_KINDS = {
     "native_setter_parity",
     "native_getter_parity",
@@ -59,6 +74,19 @@ def assert_allowed_prefix(name: str, *, header: Path, kind: str, prefix: str) ->
     )
 
 
+def assert_allowed_public_symbol(name: str, *, header: Path, kind: str) -> None:
+    if kind == "function" and name in ALLOWED_COMPAT_TINYUI_FUNCTIONS:
+        return
+    if kind == "macro" and name in ALLOWED_COMPAT_TINYUI_MACROS:
+        return
+    if kind in {"struct tag", "enum tag", "typedef callback"} and name in ALLOWED_COMPAT_TINYUI_TYPES:
+        return
+    prefix = ALLOWED_MACRO_PREFIX if kind == "macro" else (
+        ALLOWED_TYPE_PREFIX if kind in {"struct tag", "enum tag", "typedef callback"} else ALLOWED_FUNCTION_PREFIX
+    )
+    assert_allowed_prefix(name, header=header, kind=kind, prefix=prefix)
+
+
 def check_macro_prefixes(header: Path, text: str) -> None:
     for line in text.splitlines():
         stripped = line.strip()
@@ -67,22 +95,16 @@ def check_macro_prefixes(header: Path, text: str) -> None:
         parts = stripped.split()
         if len(parts) < 2 or parts[0] not in {"#define", "#ifndef"}:
             continue
-        assert_allowed_prefix(parts[1], header=header, kind="macro", prefix=ALLOWED_MACRO_PREFIX)
+        assert_allowed_public_symbol(parts[1], header=header, kind="macro")
 
 
 def check_type_prefixes(header: Path, text: str) -> None:
     for match in STRUCT_RE.finditer(text):
-        assert_allowed_prefix(
-            match.group("name"), header=header, kind="struct tag", prefix=ALLOWED_TYPE_PREFIX
-        )
+        assert_allowed_public_symbol(match.group("name"), header=header, kind="struct tag")
     for match in ENUM_RE.finditer(text):
-        assert_allowed_prefix(
-            match.group("name"), header=header, kind="enum tag", prefix=ALLOWED_TYPE_PREFIX
-        )
+        assert_allowed_public_symbol(match.group("name"), header=header, kind="enum tag")
     for match in TYPEDEF_CB_RE.finditer(text):
-        assert_allowed_prefix(
-            match.group("name"), header=header, kind="typedef callback", prefix=ALLOWED_TYPE_PREFIX
-        )
+        assert_allowed_public_symbol(match.group("name"), header=header, kind="typedef callback")
 
 
 def check_function_prefixes(header: Path, text: str) -> None:
@@ -97,9 +119,7 @@ def check_function_prefixes(header: Path, text: str) -> None:
             continue
         match = IDENTIFIER_AT_END_RE.search(declaration_head)
         assert match is not None, f"{header.name} has unrecognized function declaration: {normalized}"
-        assert_allowed_prefix(
-            match.group("name"), header=header, kind="function", prefix=ALLOWED_FUNCTION_PREFIX
-        )
+        assert_allowed_public_symbol(match.group("name"), header=header, kind="function")
 
 
 def check_forbidden_identifiers(header: Path, text: str) -> None:

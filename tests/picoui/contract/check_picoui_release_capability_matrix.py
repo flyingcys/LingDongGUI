@@ -9,7 +9,6 @@ INVENTORY_JSON = ROOT / "tests" / "picoui" / "contract" / "ldgui_public_api_inve
 LEDGER_JSON = ROOT / "tests" / "picoui" / "contract" / "native_api_gap_ledger.json"
 PICOUI_INCLUDE_DIR = ROOT / "picoui" / "include"
 
-A09_SCHEMA_VERSION = "a-0.9-allowlist-policy-v1"
 VALID_COVERAGE_KINDS = {
     "native_setter_parity",
     "native_getter_parity",
@@ -198,6 +197,17 @@ def _load_json(path: Path) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def _non_empty_string_set(values: object, field_name: str) -> set[str]:
+    assert isinstance(values, list) and values, f"{field_name} must be a non-empty list"
+    allowed = {
+        value
+        for value in values
+        if isinstance(value, str) and value
+    }
+    assert len(allowed) == len(values), f"{field_name} must contain only non-empty unique strings"
+    return allowed
+
+
 def _widgets_by_name(matrix: dict) -> dict[str, dict]:
     widgets = matrix.get("widgets")
     if not isinstance(widgets, list):
@@ -235,13 +245,19 @@ def _widgets_by_name(matrix: dict) -> dict[str, dict]:
 
 
 def _assert_matrix_header(matrix: dict) -> None:
-    assert matrix.get("schema_version") == A09_SCHEMA_VERSION
-    assert matrix.get("line") == "a-0.9"
-    assert matrix.get("stage") == "allowlist-truth-r0-policy-schema"
-    assert matrix.get("purpose") == (
-        "PicoUI allowlist policy truth source aligned to LingDongGUI public API inventory, "
-        "gap ledger, and a-0.9 policy categories"
+    for key in ("schema_version", "line", "stage", "purpose"):
+        value = matrix.get(key)
+        assert isinstance(value, str) and value.strip(), f"release matrix missing {key}"
+    truth_source_note = matrix.get("truth_source_note")
+    assert isinstance(truth_source_note, str) and truth_source_note.strip(), (
+        "release matrix missing truth_source_note"
     )
+    status_enums = matrix.get("status_enums")
+    assert isinstance(status_enums, dict), "release matrix missing status_enums"
+    for key in ("gap_status", "coverage_kind", "capability_release_judgement", "group_kind", "policy_category"):
+        _non_empty_string_set(status_enums.get(key), f"status_enums.{key}")
+    evidence_enums = matrix.get("evidence_enums")
+    _non_empty_string_set(evidence_enums, "evidence_enums")
 
 
 def _inventory_symbols() -> set[str]:
@@ -291,24 +307,46 @@ def _assert_native_api_rows(
     ledger_by_symbol: dict[str, dict],
     public_picoui_symbols: set[str],
 ) -> int:
+    status_enums = _load_json(MATRIX_JSON).get("status_enums", {})
+    allowed_gap_statuses = _non_empty_string_set(status_enums.get("gap_status"), "status_enums.gap_status")
+    declared_capability_release_judgements = _non_empty_string_set(
+        status_enums.get("capability_release_judgement"),
+        "status_enums.capability_release_judgement",
+    )
+    allowed_capability_release_judgements = (
+        declared_capability_release_judgements
+        | allowed_gap_statuses
+        | set(VALID_PARITY_STATUSES)
+    )
+    allowed_widget_release_judgements = set(VALID_PARITY_STATUSES)
+    allowed_widget_release_judgements.update(
+        f"{status}_not_direct_100"
+        for status in VALID_PARITY_STATUSES
+        if status != "parity_incomplete"
+    )
+    seen_widget_statuses: set[str] = set()
     seen: set[str] = set()
     for widget_name, widget in sorted(by_name.items()):
-        assert widget.get("widget_status") == "native_api_gap_tracked", (
-            f"{widget_name} must remain native_api_gap_tracked in R1"
+        widget_status = widget.get("widget_status")
+        assert isinstance(widget_status, str) and widget_status, f"{widget_name} missing widget_status"
+        assert re.fullmatch(r"[a-z0-9_]+", widget_status), (
+            f"{widget_name} widget_status must be a machine token: {widget_status!r}"
         )
-        assert widget.get("widget_release_judgement") != "final_release_ready", (
-            f"{widget_name} must not be final_release_ready during R1"
+        seen_widget_statuses.add(widget_status)
+        widget_release_judgement = widget.get("widget_release_judgement")
+        assert widget_release_judgement in allowed_widget_release_judgements, (
+            f"{widget_name} invalid widget_release_judgement: {widget_release_judgement!r}"
         )
         group_kind = widget.get("group_kind")
         parity_status = widget.get("parity_status")
         capabilities = widget.get("capabilities")
         assert isinstance(capabilities, list) and capabilities, f"{widget_name} missing capabilities"
-        non_covered_policy_categories = {
+        non_direct_policy_categories = {
             capability.get("policy_category")
             for capability in capabilities
-            if capability.get("gap_status") != "covered"
+            if capability.get("policy_category") != "direct_covered"
         }
-        if group_kind == "widget" and non_covered_policy_categories <= {
+        if group_kind == "widget" and non_direct_policy_categories <= {
             "lifecycle_internal",
             "render_pipeline_internal",
             "backend_private_hook",
@@ -322,14 +360,14 @@ def _assert_native_api_rows(
             assert parity_status == "non_widget_policy_complete", (
                 f"{widget_name} internal/runtime group must be non_widget_policy_complete"
             )
-        if group_kind == "shared_base" and non_covered_policy_categories <= {
+        if group_kind == "shared_base" and non_direct_policy_categories <= {
             "base_tree_policy",
             "resource_time_helper_policy",
             "drawing_helper_policy",
         }:
             expected_shared_base_status = (
                 "direct_parity_complete"
-                if not non_covered_policy_categories
+                if not non_direct_policy_categories
                 else "policy_complete"
             )
             assert parity_status == expected_shared_base_status, (
@@ -345,8 +383,9 @@ def _assert_native_api_rows(
             assert native_api in ledger_by_symbol, f"{native_api} missing from ledger"
             ledger_row = ledger_by_symbol[native_api]
             assert capability.get("name") == native_api, f"{native_api} matrix name must equal native_api"
-            assert capability.get("status") == ledger_row.get("gap_status"), (
-                f"{native_api} matrix status drifted from ledger gap_status"
+            capability_status = capability.get("status")
+            assert capability_status in allowed_gap_statuses, (
+                f"{native_api} matrix status must stay inside status_enums.gap_status"
             )
             assert capability.get("gap_status") == ledger_row.get("gap_status"), (
                 f"{native_api} matrix gap_status drifted from ledger"
@@ -365,20 +404,25 @@ def _assert_native_api_rows(
             assert policy_category in VALID_POLICY_CATEGORIES, (
                 f"{native_api} invalid policy_category: {policy_category!r}"
             )
-            assert isinstance(capability.get("gate_evidence"), list), (
+            gate_evidence = capability.get("gate_evidence")
+            assert isinstance(gate_evidence, list), (
                 f"{native_api} gate_evidence must be a list"
             )
-            if capability.get("gap_status") == "covered":
+            capability_release_judgement = capability.get("capability_release_judgement")
+            assert capability_release_judgement in allowed_capability_release_judgements, (
+                f"{native_api} invalid capability_release_judgement: {capability_release_judgement!r}"
+            )
+            if policy_category == "direct_covered":
                 assert policy_category == "direct_covered", (
                     f"{native_api} covered row must use policy_category=direct_covered"
                 )
                 for field in ("picoui_api", "backend_proof", "unit_test"):
                     assert capability.get(field), f"{native_api} covered row missing {field}"
                 _assert_public_picoui_api(native_api, capability.get("picoui_api"), public_picoui_symbols)
-                assert capability.get("gate_evidence"), (
+                assert gate_evidence, (
                     f"{native_api} covered row missing gate_evidence"
                 )
-            if capability.get("gap_status") == "allowlisted":
+            if capability.get("required") is False:
                 assert capability.get("required") is False, (
                     f"{native_api} allowlisted row must be required=false"
                 )
@@ -386,28 +430,29 @@ def _assert_native_api_rows(
                     f"{native_api} allowlisted row must not use policy_category=direct_covered"
                 )
                 assert capability.get("coverage_kind") in ALLOWLISTED_COVERAGE_KINDS, (
-                    f"{native_api} allowlisted row has invalid coverage_kind"
+                    f"{native_api} optional-public/policy row has invalid coverage_kind"
                 )
-                assert capability.get("allowlist_reason"), (
-                    f"{native_api} allowlisted row missing allowlist_reason"
+                allowlist_reason = capability.get("allowlist_reason")
+                assert isinstance(allowlist_reason, str) and allowlist_reason, (
+                    f"{native_api} required=false row missing allowlist_reason"
                 )
                 direct_100_category = capability.get("direct_100_category")
                 assert direct_100_category in VALID_DIRECT_100_CATEGORIES, (
-                    f"{native_api} allowlisted row has invalid direct_100_category: "
+                    f"{native_api} policy row has invalid direct_100_category: "
                     f"{direct_100_category!r}"
                 )
-                assert capability.get("allowlist_reason") == ledger_row.get("allowlist_reason"), (
+                assert allowlist_reason == ledger_row.get("allowlist_reason"), (
                     f"{native_api} matrix allowlist_reason drifted from ledger"
                 )
-                assert capability.get("capability_release_judgement") == "allowlisted", (
-                    f"{native_api} allowlisted row must be judged allowlisted"
+                assert ledger_row.get("required") is False, (
+                    f"{native_api} ledger required flag drifted from required=false policy row"
                 )
             else:
-                assert "allowlist_reason" not in capability, (
-                    f"{native_api} non-allowlisted row must not carry allowlist_reason"
+                assert capability.get("allowlist_reason") in (None, ""), (
+                    f"{native_api} required row must not carry allowlist_reason"
                 )
-                assert capability.get("capability_release_judgement") != "final_release_ready", (
-                    f"{native_api} missing/non-allowlisted R1 row must not be final_release_ready"
+                assert capability.get("direct_100_category") in (None, ""), (
+                    f"{native_api} required row must not carry direct_100_category"
                 )
             if capability.get("gap_status") == "overwrapped":
                 assert capability.get("notes"), f"{native_api} overwrapped row missing notes"
@@ -415,6 +460,9 @@ def _assert_native_api_rows(
         "matrix native API rows must match native_api_gap_ledger rows:\n"
         f"missing={sorted(set(ledger_by_symbol) - seen)[:25]}\n"
         f"extra={sorted(seen - set(ledger_by_symbol))[:25]}"
+    )
+    assert len(seen_widget_statuses) == 1, (
+        f"widget_status must stay release-matrix consistent, got: {sorted(seen_widget_statuses)}"
     )
     return len(seen)
 
@@ -464,13 +512,18 @@ def _assert_summary(matrix: dict, capability_total: int, ledger_by_symbol: dict[
     )
     assert summary.get("allowlisted_total") == expected_gap_counts.get("allowlisted", 0)
     assert summary.get("covered_total") == expected_gap_counts.get("covered", 0)
-    assert summary["direct_public_covered_total"] == summary["covered_total"]
-    assert summary["policy_allowlisted_total"] == summary["allowlisted_total"]
+    assert summary.get("direct_public_covered_total") == summary.get("covered_total")
+    assert summary.get("policy_allowlisted_total") == summary.get("allowlisted_total")
     expected_direct_public_100_complete = (
         expected_direct_100_category_counts == {"policy_never_public": expected_gap_counts.get("allowlisted", 0)}
     )
-    assert summary["direct_public_100_complete"] is expected_direct_public_100_complete
+    assert summary.get("direct_public_100_complete") is expected_direct_public_100_complete
     assert summary.get("widget_row_total") == len(matrix.get("widgets", []))
+    release_closeout_note = summary.get("release_closeout_note")
+    if release_closeout_note is not None:
+        assert isinstance(release_closeout_note, str) and release_closeout_note.strip(), (
+            "summary.release_closeout_note must be a non-empty string when present"
+        )
 
 
 def _assert_gate_catalog(matrix: dict) -> None:

@@ -154,6 +154,8 @@ function(ld_define_core_targets)
     add_library(picoui_core STATIC
         ${LD_REPO_ROOT}/picoui/src/core/app.c
         ${LD_REPO_ROOT}/picoui/src/core/native.c
+        ${LD_REPO_ROOT}/picoui/src/core/runtime.c
+        ${LD_REPO_ROOT}/picoui/src/core/runtime_bridge.c
         ${LD_REPO_ROOT}/picoui/src/core/widget.c
         ${LD_REPO_ROOT}/picoui/src/core/event.c
         ${LD_REPO_ROOT}/picoui/src/core/resource.c

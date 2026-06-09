@@ -20,6 +20,7 @@
 #include "picoui/widget.h"
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 typedef struct ldBase_t ldBase_t;
@@ -87,6 +88,8 @@ void ldBaseSetFlexMinHeight(ldBase_t *ptWidget, int16_t minHeight);
 void ldBaseSetFlexMaxWidth(ldBase_t *ptWidget, int16_t maxWidth);
 void ldBaseSetFlexMaxHeight(ldBase_t *ptWidget, int16_t maxHeight);
 void ldSwitchSetDisabled(ldSwitch_t *ptWidget, bool isDisabled);
+int picoui_backend_widget_unbind_host(void *backend_widget);
+int picoui_backend_widget_detach_from_parent(void *backend_widget);
 
 static int picoui_widget_is_valid(struct picoui_widget *widget)
 {
@@ -118,13 +121,260 @@ static struct picoui_backend_widget *picoui_widget_get_backend(const struct pico
     return (struct picoui_backend_widget *)widget->backend_widget;
 }
 
-static struct picoui_widget *picoui_backend_widget_get_host(struct picoui_backend_widget *backend_widget)
+static int picoui_backend_widget_can_attach_child(const struct picoui_backend_widget *parent,
+                                                  const struct picoui_backend_widget *child)
 {
-    if (backend_widget == 0) {
+    if (parent == NULL || child == NULL) {
         return 0;
     }
 
-    return backend_widget->host_widget;
+    switch (parent->kind) {
+    case PICOUI_BACKEND_WIDGET_WINDOW:
+    case PICOUI_BACKEND_WIDGET_BACKGROUND:
+        return 1;
+    case PICOUI_BACKEND_WIDGET_LIST:
+        return child->kind != PICOUI_BACKEND_WIDGET_BACKGROUND
+            && child->kind != PICOUI_BACKEND_WIDGET_WINDOW;
+    default:
+        return 0;
+    }
+}
+
+static void picoui_backend_widget_clear_owner_and_root(struct picoui_backend_widget *widget)
+{
+    struct picoui_backend_widget *child;
+
+    if (widget == NULL) {
+        return;
+    }
+
+    widget->owner = NULL;
+    widget->root = NULL;
+    child = widget->first_child;
+    while (child != NULL) {
+        picoui_backend_widget_clear_owner_and_root(child);
+        child = child->next_sibling;
+    }
+}
+
+static void picoui_backend_widget_bind_subtree_owner_and_root(struct picoui_backend_widget *widget,
+                                                              struct picoui_app *owner,
+                                                              struct picoui_backend_widget *root)
+{
+    struct picoui_backend_widget *child;
+
+    if (widget == NULL) {
+        return;
+    }
+
+    widget->owner = owner;
+    widget->root = root;
+    child = widget->first_child;
+    while (child != NULL) {
+        picoui_backend_widget_bind_subtree_owner_and_root(child, owner, root);
+        child = child->next_sibling;
+    }
+}
+
+struct picoui_app *picoui_widget_owner_app(const struct picoui_widget *widget)
+{
+    const struct picoui_backend_widget *backend = picoui_widget_get_backend(widget);
+
+    if (backend == 0) {
+        return 0;
+    }
+
+    return backend->owner;
+}
+
+int picoui_widget_has_ld_binding(const struct picoui_widget *widget)
+{
+    const struct picoui_backend_widget *backend = picoui_widget_get_backend(widget);
+
+    return backend != 0 && backend->ld_widget != 0;
+}
+
+struct picoui_widget *picoui_widget_backend_host(const void *backend_widget)
+{
+    const struct picoui_backend_widget *backend = backend_widget;
+
+    if (backend == 0) {
+        return 0;
+    }
+
+    return backend->host_widget;
+}
+
+static struct picoui_widget *picoui_backend_widget_get_host(struct picoui_backend_widget *backend_widget)
+{
+    return picoui_widget_backend_host(backend_widget);
+}
+
+struct picoui_widget *picoui_widget_backend_parent(const struct picoui_widget *widget)
+{
+    const struct picoui_backend_widget *backend = picoui_widget_get_backend(widget);
+    struct picoui_backend_widget *parent = 0;
+
+    if (backend == 0) {
+        return 0;
+    }
+
+    parent = backend->parent;
+    if (parent == 0) {
+        return 0;
+    }
+
+    return parent->host_widget;
+}
+
+int picoui_backend_widget_init_root(void *backend_widget,
+                                    struct picoui_app *owner,
+                                    enum picoui_backend_widget_kind kind,
+                                    const char *id,
+                                    struct picoui_theme *theme)
+{
+    struct picoui_backend_widget *backend = backend_widget;
+
+    if (backend == 0 || owner == 0 || id == 0) {
+        return -1;
+    }
+
+    backend->id = id;
+    backend->owner = owner;
+    backend->kind = kind;
+    backend->root = backend;
+    backend->parent = 0;
+    backend->theme = theme;
+    return 0;
+}
+
+int picoui_backend_widget_init_child(void *backend_widget,
+                                     void *parent,
+                                     enum picoui_backend_widget_kind kind,
+                                     const char *id,
+                                     struct picoui_theme *theme)
+{
+    struct picoui_backend_widget *backend = backend_widget;
+
+    if (backend == 0 || parent == 0 || id == 0) {
+        return -1;
+    }
+
+    backend->id = id;
+    backend->kind = kind;
+    backend->theme = theme;
+    backend->owner = 0;
+    backend->root = 0;
+    backend->parent = 0;
+    backend->next_sibling = 0;
+    return 0;
+}
+
+struct picoui_backend_widget *picoui_backend_widget_find_by_name_id(void *backend_widget, uint16_t name_id)
+{
+    struct picoui_backend_widget *widget = backend_widget;
+    struct picoui_backend_widget *child;
+    struct picoui_backend_widget *found;
+
+    if (widget == NULL) {
+        return NULL;
+    }
+
+    if (widget->ld_name_id == name_id) {
+        return widget;
+    }
+
+    child = widget->first_child;
+    while (child != NULL) {
+        found = picoui_backend_widget_find_by_name_id(child, name_id);
+        if (found != NULL) {
+            return found;
+        }
+        child = child->next_sibling;
+    }
+
+    return NULL;
+}
+
+int picoui_backend_widget_attach_child(void *parent, void *child)
+{
+    struct picoui_backend_widget *parent_widget = parent;
+    struct picoui_backend_widget *child_widget = child;
+
+    if (child_widget == NULL ||
+        !picoui_backend_widget_can_attach_child(parent_widget, child_widget) ||
+        child_widget->root != NULL ||
+        child_widget->owner != NULL ||
+        child_widget->parent != NULL) {
+        return -1;
+    }
+
+    picoui_backend_widget_bind_subtree_owner_and_root(child_widget,
+                                                      parent_widget->owner,
+                                                      parent_widget->root);
+    child_widget->parent = parent_widget;
+    child_widget->next_sibling = NULL;
+    if (parent_widget->first_child == NULL) {
+        parent_widget->first_child = child_widget;
+        return 0;
+    }
+
+    {
+        struct picoui_backend_widget *tail = parent_widget->first_child;
+        while (tail->next_sibling != NULL) {
+            tail = tail->next_sibling;
+        }
+        tail->next_sibling = child_widget;
+    }
+
+    return 0;
+}
+
+int picoui_widget_backend_detach(void *backend_widget)
+{
+    struct picoui_backend_widget *widget = backend_widget;
+    struct picoui_backend_widget *parent;
+    struct picoui_backend_widget *sibling;
+
+    if (widget == NULL
+        || widget->parent == NULL
+        || widget->kind == PICOUI_BACKEND_WIDGET_WINDOW
+        || widget->kind == PICOUI_BACKEND_WIDGET_BACKGROUND) {
+        return -1;
+    }
+
+    parent = widget->parent;
+    if (parent->first_child == widget) {
+        parent->first_child = widget->next_sibling;
+    } else {
+        sibling = parent->first_child;
+        while (sibling != NULL && sibling->next_sibling != widget) {
+            sibling = sibling->next_sibling;
+        }
+        if (sibling == NULL) {
+            return -1;
+        }
+        sibling->next_sibling = widget->next_sibling;
+    }
+
+    widget->parent = NULL;
+    widget->next_sibling = NULL;
+    picoui_backend_widget_clear_owner_and_root(widget);
+    return 0;
+}
+
+int picoui_widget_bind_backend_host(struct picoui_widget *widget, void *backend_widget)
+{
+    struct picoui_backend_widget *backend;
+
+    if (widget == 0 || backend_widget == 0) {
+        return -1;
+    }
+
+    backend = (struct picoui_backend_widget *)backend_widget;
+    widget->backend_widget = backend;
+    backend->host_widget = widget;
+    return 0;
 }
 
 static int picoui_align_to_ld_horizontal(enum picoui_align align)
@@ -1059,12 +1309,14 @@ int picoui_widget_get_corner(const struct picoui_widget *widget)
 struct picoui_widget *picoui_widget_get_parent(const struct picoui_widget *widget)
 {
     struct picoui_backend_widget *backend_widget;
+    struct picoui_backend_widget *backend;
 
     if (widget == 0) {
         return 0;
     }
 
-    backend_widget = picoui_backend_widget_get_parent(picoui_widget_get_backend(widget));
+    backend = picoui_widget_get_backend(widget);
+    backend_widget = backend != 0 ? backend->parent : 0;
     return picoui_backend_widget_get_host(backend_widget);
 }
 
@@ -1078,12 +1330,14 @@ struct picoui_widget *picoui_widget_get_parent(const struct picoui_widget *widge
 struct picoui_widget *picoui_widget_get_first_child(const struct picoui_widget *widget)
 {
     struct picoui_backend_widget *backend_widget;
+    struct picoui_backend_widget *backend;
 
     if (widget == 0) {
         return 0;
     }
 
-    backend_widget = picoui_backend_widget_get_first_child(picoui_widget_get_backend(widget));
+    backend = picoui_widget_get_backend(widget);
+    backend_widget = backend != 0 ? backend->first_child : 0;
     return picoui_backend_widget_get_host(backend_widget);
 }
 
@@ -1097,12 +1351,14 @@ struct picoui_widget *picoui_widget_get_first_child(const struct picoui_widget *
 struct picoui_widget *picoui_widget_get_next_sibling(const struct picoui_widget *widget)
 {
     struct picoui_backend_widget *backend_widget;
+    struct picoui_backend_widget *backend;
 
     if (widget == 0) {
         return 0;
     }
 
-    backend_widget = picoui_backend_widget_get_next_sibling(picoui_widget_get_backend(widget));
+    backend = picoui_widget_get_backend(widget);
+    backend_widget = backend != 0 ? backend->next_sibling : 0;
     return picoui_backend_widget_get_host(backend_widget);
 }
 
@@ -1116,12 +1372,14 @@ struct picoui_widget *picoui_widget_get_next_sibling(const struct picoui_widget 
 struct picoui_widget *picoui_widget_get_root(const struct picoui_widget *widget)
 {
     struct picoui_backend_widget *backend_widget;
+    struct picoui_backend_widget *backend;
 
     if (widget == 0) {
         return 0;
     }
 
-    backend_widget = picoui_backend_widget_get_root(picoui_widget_get_backend(widget));
+    backend = picoui_widget_get_backend(widget);
+    backend_widget = backend != 0 ? backend->root : 0;
     return picoui_backend_widget_get_host(backend_widget);
 }
 
@@ -1147,11 +1405,11 @@ int picoui_widget_get_child_count(const struct picoui_widget *widget)
 
     {
         int count = 0;
-        struct picoui_backend_widget *child =
-            picoui_backend_widget_get_first_child(picoui_widget_get_backend(widget));
+        struct picoui_backend_widget *backend = picoui_widget_get_backend(widget);
+        struct picoui_backend_widget *child = backend != 0 ? backend->first_child : 0;
         while (child != 0) {
             count++;
-            child = picoui_backend_widget_get_next_sibling(child);
+            child = child->next_sibling;
         }
         return count;
     }

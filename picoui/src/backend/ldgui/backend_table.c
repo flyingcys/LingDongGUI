@@ -18,22 +18,13 @@
 
 #include "backend.h"
 #include "internal.h"
+#include "runtime_bridge.h"
 #include "ldBase.h"
 #include "ldTable.h"
 
 #include <stdlib.h>
 
 extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
-
-static struct picoui_backend_app_state *picoui_backend_table_get_app_state(void *parent)
-{
-    struct picoui_backend_widget *parent_widget = parent;
-
-    if (parent_widget == NULL || parent_widget->owner == NULL || parent_widget->owner->backend_app == NULL) {
-        return NULL;
-    }
-    return (struct picoui_backend_app_state *)parent_widget->owner->backend_app;
-}
 
 static ldTable_t *picoui_backend_table_get_ld(void *backend_widget)
 {
@@ -176,7 +167,7 @@ void *picoui_backend_create_table(void *parent, const char *id, int rows, int co
         return 0;
     }
 
-    app_state = picoui_backend_table_get_app_state(parent);
+    app_state = picoui_runtime_bridge_backend_state_from_parent(parent);
     if (app_state == NULL || app_state->ld_scene == NULL || parent_widget->ld_widget == NULL) {
         return 0;
     }
@@ -186,7 +177,11 @@ void *picoui_backend_create_table(void *parent, const char *id, int rows, int co
         return 0;
     }
 
-    name_id = ++app_state->next_ld_name_id;
+    name_id = picoui_runtime_bridge_next_name_id(parent);
+    if (name_id == 0) {
+        free(widget);
+        return 0;
+    }
     ld_table = ldTable_init(app_state->ld_scene,
                             NULL,
                             name_id,
@@ -203,13 +198,19 @@ void *picoui_backend_create_table(void *parent, const char *id, int rows, int co
         return 0;
     }
 
-    widget->parent = parent;
-    widget->id = id;
-    widget->kind = PICOUI_BACKEND_WIDGET_TABLE;
-    widget->theme = parent_widget->theme;
+    if (picoui_backend_widget_init_child(widget,
+                                         parent,
+                                         PICOUI_BACKEND_WIDGET_TABLE,
+                                         id,
+                                         parent_widget->theme) != 0) {
+        ldTable_depose(app_state->ld_scene, ld_table);
+        free(widget);
+        return 0;
+    }
     widget->ld_widget = ld_table;
     widget->ld_name_id = name_id;
     if (picoui_backend_widget_attach_child(parent, widget) != 0) {
+        ldTable_depose(app_state->ld_scene, ld_table);
         free(widget);
         return 0;
     }

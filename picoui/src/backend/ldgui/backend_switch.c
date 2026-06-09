@@ -18,6 +18,7 @@
 
 #include "backend.h"
 #include "internal.h"
+#include "runtime_bridge.h"
 #include "ldSwitch.h"
 #include "ldSwitchInternal.h"
 
@@ -39,16 +40,6 @@ static ldSwitch_t *picoui_backend_switch_get_ld(struct picoui_switch *sw)
     return (ldSwitch_t *)backend->ld_widget;
 }
 
-static struct picoui_backend_app_state *picoui_backend_switch_get_app_state(void *parent)
-{
-    struct picoui_backend_widget *parent_widget = parent;
-
-    if (parent_widget == NULL || parent_widget->owner == NULL || parent_widget->owner->backend_app == NULL) {
-        return NULL;
-    }
-    return (struct picoui_backend_app_state *)parent_widget->owner->backend_app;
-}
-
 /**
  * @brief Create backend for switch
  *
@@ -68,7 +59,7 @@ void *picoui_backend_create_switch(void *parent, const char *id)
         return 0;
     }
 
-    app_state = picoui_backend_switch_get_app_state(parent);
+    app_state = picoui_runtime_bridge_backend_state_from_parent(parent);
     if (app_state == NULL || app_state->ld_scene == NULL || parent_widget->ld_widget == NULL) {
         return 0;
     }
@@ -78,7 +69,11 @@ void *picoui_backend_create_switch(void *parent, const char *id)
         return 0;
     }
 
-    name_id = ++app_state->next_ld_name_id;
+    name_id = picoui_runtime_bridge_next_name_id(parent);
+    if (name_id == 0) {
+        free(widget);
+        return 0;
+    }
     ld_switch = ldSwitch_init(app_state->ld_scene,
                               NULL,
                               name_id,
@@ -97,14 +92,20 @@ void *picoui_backend_create_switch(void *parent, const char *id)
                      GLCD_COLOR_WHITE,
                      GLCD_COLOR_WHITE);
 
-    widget->parent = parent;
-    widget->id = id;
-    widget->kind = PICOUI_BACKEND_WIDGET_SWITCH;
-    widget->theme = ((struct picoui_backend_widget *)parent)->theme;
+    if (picoui_backend_widget_init_child(widget,
+                                         parent,
+                                         PICOUI_BACKEND_WIDGET_SWITCH,
+                                         id,
+                                         parent_widget->theme) != 0) {
+        ldSwitch_depose(app_state->ld_scene, ld_switch);
+        free(widget);
+        return 0;
+    }
     widget->ld_widget = ld_switch;
     widget->ld_name_id = name_id;
     widget->last_signal = PICOUI_BACKEND_SIGNAL_NONE;
     if (picoui_backend_widget_attach_child(parent, widget) != 0) {
+        ldSwitch_depose(app_state->ld_scene, ld_switch);
         free(widget);
         return 0;
     }
@@ -368,10 +369,7 @@ int picoui_backend_switch_navigate(struct picoui_switch *sw, int direction)
     }
 
     backend = (struct picoui_backend_widget *)sw->widget.backend_widget;
-    if (backend->owner == NULL || backend->owner->backend_app == NULL) {
-        return -1;
-    }
-    app_state = (struct picoui_backend_app_state *)backend->owner->backend_app;
+    app_state = picoui_runtime_bridge_backend_state_from_parent(backend);
     if (app_state == NULL || app_state->ld_scene == NULL) {
         return -1;
     }

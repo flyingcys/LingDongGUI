@@ -5,6 +5,8 @@
 #include <assert.h>
 #include <stdint.h>
 
+extern int picoui_runtime_bridge_has_scene(const struct picoui_app *app);
+
 static void test_native_image_preserves_tile_and_mask_pointers(void)
 {
     void *tile = (void *)(uintptr_t)0x1000U;
@@ -64,6 +66,15 @@ static void test_native_readback_policy_maps_backend_truth_modes(void)
            == PICOUI_BACKEND_DATA_TRUTH_BACKEND_VALUE);
 }
 
+static void test_runtime_bridge_reports_scene_presence(void)
+{
+    struct picoui_app *app = picoui_app_create();
+
+    assert(app != NULL);
+    assert(picoui_runtime_bridge_has_scene(app) == 1);
+    picoui_app_destroy(app);
+}
+
 int main(void)
 {
     test_native_image_preserves_tile_and_mask_pointers();
@@ -72,5 +83,6 @@ int main(void)
     test_native_nav_dir_maps_all_ld_nav_values();
     test_native_signal_maps_all_ld_signal_values();
     test_native_readback_policy_maps_backend_truth_modes();
+    test_runtime_bridge_reports_scene_presence();
     return 0;
 }

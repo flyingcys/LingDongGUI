@@ -52,6 +52,25 @@ const ldBaseWidgetFunc_t ldClockFunc = {
     .show = (ldShowFunc_t)ldClock_show,
 };
 
+enum {
+    LD_CLOCK_OWN_IMG_TILE = 1 << 0,
+    LD_CLOCK_OWN_MASK_TILE = 1 << 1,
+};
+
+static void ldClockReleaseOwnedTile(arm_2d_tile_t **pptTile,
+                                    uint8_t *pFlags,
+                                    uint8_t flag)
+{
+    if (pptTile == NULL || pFlags == NULL) {
+        return;
+    }
+    if (((*pFlags) & flag) != 0 && *pptTile != NULL) {
+        ldFree(*pptTile);
+    }
+    *pptTile = NULL;
+    *pFlags &= (uint8_t)~flag;
+}
+
 extern const arm_2d_tile_t c_tilePointerSecMask;
 
 static
@@ -139,6 +158,16 @@ void ldClock_depose(ld_scene_t *ptScene, ldClock_t *ptWidget)
 
     ldMsgDelConnect(ptWidget);
     ldBaseNodeRemove((arm_2d_control_node_t*)ptWidget);
+    ldClockReleaseOwnedTile(&ptWidget->ptBgImgTile, &ptWidget->backgroundResourceOwnerFlags, LD_CLOCK_OWN_IMG_TILE);
+    ldClockReleaseOwnedTile(&ptWidget->ptBgMaskTile, &ptWidget->backgroundResourceOwnerFlags, LD_CLOCK_OWN_MASK_TILE);
+    for (uint8_t i = 0; i < 3; ++i) {
+        ldClockReleaseOwnedTile(&ptWidget->pointerInfo[i].ptImgTile,
+                                &ptWidget->pointerInfo[i].resourceOwnerFlags,
+                                LD_CLOCK_OWN_IMG_TILE);
+        ldClockReleaseOwnedTile(&ptWidget->pointerInfo[i].ptMaskTile,
+                                &ptWidget->pointerInfo[i].resourceOwnerFlags,
+                                LD_CLOCK_OWN_MASK_TILE);
+    }
 
     ldFree(ptWidget->use_as__ldBase_t.ptItemRegionList);
     ldFree(ptWidget);
@@ -366,7 +395,12 @@ void ldClock_show(ld_scene_t *ptScene, ldClock_t *ptWidget, const arm_2d_tile_t 
     }
 }
 
-void ldClockSetBackgroundImage(ldClock_t *ptWidget, arm_2d_tile_t *ptImgTile, arm_2d_tile_t *ptMaskTile, ldColor maskColor)
+void ldClockBindBackgroundImage(ldClock_t *ptWidget,
+                                arm_2d_tile_t *ptImgTile,
+                                arm_2d_tile_t *ptMaskTile,
+                                ldColor maskColor,
+                                bool ownImgTile,
+                                bool ownMaskTile)
 {
     assert(NULL != ptWidget);
     if(ptWidget == NULL)
@@ -374,12 +408,32 @@ void ldClockSetBackgroundImage(ldClock_t *ptWidget, arm_2d_tile_t *ptImgTile, ar
         return;
     }
     ptWidget->use_as__ldBase_t.isDirtyRegionUpdate = true;
+    ldClockReleaseOwnedTile(&ptWidget->ptBgImgTile, &ptWidget->backgroundResourceOwnerFlags, LD_CLOCK_OWN_IMG_TILE);
+    ldClockReleaseOwnedTile(&ptWidget->ptBgMaskTile, &ptWidget->backgroundResourceOwnerFlags, LD_CLOCK_OWN_MASK_TILE);
     ptWidget->ptBgImgTile = ptImgTile;
     ptWidget->ptBgMaskTile = ptMaskTile;
+    if (ownImgTile) {
+        ptWidget->backgroundResourceOwnerFlags |= LD_CLOCK_OWN_IMG_TILE;
+    }
+    if (ownMaskTile) {
+        ptWidget->backgroundResourceOwnerFlags |= LD_CLOCK_OWN_MASK_TILE;
+    }
     ptWidget->bgMaskColor = maskColor;
 }
 
-void ldClockSetHourPointerImage(ldClock_t *ptWidget, arm_2d_tile_t *ptImgTile, arm_2d_tile_t *ptMaskTile, ldColor maskColor, float x, float y)
+void ldClockSetBackgroundImage(ldClock_t *ptWidget, arm_2d_tile_t *ptImgTile, arm_2d_tile_t *ptMaskTile, ldColor maskColor)
+{
+    ldClockBindBackgroundImage(ptWidget, ptImgTile, ptMaskTile, maskColor, false, false);
+}
+
+void ldClockBindHourPointerImage(ldClock_t *ptWidget,
+                                 arm_2d_tile_t *ptImgTile,
+                                 arm_2d_tile_t *ptMaskTile,
+                                 ldColor maskColor,
+                                 float x,
+                                 float y,
+                                 bool ownImgTile,
+                                 bool ownMaskTile)
 {
     assert(NULL != ptWidget);
     if(ptWidget == NULL)
@@ -389,8 +443,16 @@ void ldClockSetHourPointerImage(ldClock_t *ptWidget, arm_2d_tile_t *ptImgTile, a
     ptWidget->use_as__ldBase_t.isDirtyRegionUpdate = true;    
     ptWidget->use_as__ldBase_t.ptItemRegionList[0].isDRUpdate=true;
     memset(&ptWidget->pointerInfo[0].op, 0, sizeof(arm_2d_op_trans_opa_t));
+    ldClockReleaseOwnedTile(&ptWidget->pointerInfo[0].ptImgTile, &ptWidget->pointerInfo[0].resourceOwnerFlags, LD_CLOCK_OWN_IMG_TILE);
+    ldClockReleaseOwnedTile(&ptWidget->pointerInfo[0].ptMaskTile, &ptWidget->pointerInfo[0].resourceOwnerFlags, LD_CLOCK_OWN_MASK_TILE);
     ptWidget->pointerInfo[0].ptImgTile = ptImgTile;
     ptWidget->pointerInfo[0].ptMaskTile = ptMaskTile;
+    if (ownImgTile) {
+        ptWidget->pointerInfo[0].resourceOwnerFlags |= LD_CLOCK_OWN_IMG_TILE;
+    }
+    if (ownMaskTile) {
+        ptWidget->pointerInfo[0].resourceOwnerFlags |= LD_CLOCK_OWN_MASK_TILE;
+    }
     ptWidget->pointerInfo[0].maskColor = maskColor;
     ptWidget->pointerInfo[0].rotationCentre = (arm_2d_point_float_t){x,y};
     if(ptImgTile)
@@ -403,7 +465,19 @@ void ldClockSetHourPointerImage(ldClock_t *ptWidget, arm_2d_tile_t *ptImgTile, a
     }
 }
 
-void ldClockSetMinutePointerImage(ldClock_t *ptWidget, arm_2d_tile_t *ptImgTile, arm_2d_tile_t *ptMaskTile, ldColor maskColor, float x, float y)
+void ldClockSetHourPointerImage(ldClock_t *ptWidget, arm_2d_tile_t *ptImgTile, arm_2d_tile_t *ptMaskTile, ldColor maskColor, float x, float y)
+{
+    ldClockBindHourPointerImage(ptWidget, ptImgTile, ptMaskTile, maskColor, x, y, false, false);
+}
+
+void ldClockBindMinutePointerImage(ldClock_t *ptWidget,
+                                   arm_2d_tile_t *ptImgTile,
+                                   arm_2d_tile_t *ptMaskTile,
+                                   ldColor maskColor,
+                                   float x,
+                                   float y,
+                                   bool ownImgTile,
+                                   bool ownMaskTile)
 {
     assert(NULL != ptWidget);
     if(ptWidget == NULL)
@@ -413,8 +487,16 @@ void ldClockSetMinutePointerImage(ldClock_t *ptWidget, arm_2d_tile_t *ptImgTile,
     ptWidget->use_as__ldBase_t.isDirtyRegionUpdate = true;
     ptWidget->use_as__ldBase_t.ptItemRegionList[1].isDRUpdate=true;
     memset(&ptWidget->pointerInfo[1].op, 0, sizeof(arm_2d_op_trans_opa_t));
+    ldClockReleaseOwnedTile(&ptWidget->pointerInfo[1].ptImgTile, &ptWidget->pointerInfo[1].resourceOwnerFlags, LD_CLOCK_OWN_IMG_TILE);
+    ldClockReleaseOwnedTile(&ptWidget->pointerInfo[1].ptMaskTile, &ptWidget->pointerInfo[1].resourceOwnerFlags, LD_CLOCK_OWN_MASK_TILE);
     ptWidget->pointerInfo[1].ptImgTile = ptImgTile;
     ptWidget->pointerInfo[1].ptMaskTile = ptMaskTile;
+    if (ownImgTile) {
+        ptWidget->pointerInfo[1].resourceOwnerFlags |= LD_CLOCK_OWN_IMG_TILE;
+    }
+    if (ownMaskTile) {
+        ptWidget->pointerInfo[1].resourceOwnerFlags |= LD_CLOCK_OWN_MASK_TILE;
+    }
     ptWidget->pointerInfo[1].maskColor = maskColor;
     ptWidget->pointerInfo[1].rotationCentre = (arm_2d_point_float_t){x,y};
     if(ptImgTile)
@@ -427,7 +509,19 @@ void ldClockSetMinutePointerImage(ldClock_t *ptWidget, arm_2d_tile_t *ptImgTile,
     }
 }
 
-void ldClockSetSecondPointerImage(ldClock_t *ptWidget, arm_2d_tile_t *ptImgTile, arm_2d_tile_t *ptMaskTile, ldColor maskColor, float x, float y)
+void ldClockSetMinutePointerImage(ldClock_t *ptWidget, arm_2d_tile_t *ptImgTile, arm_2d_tile_t *ptMaskTile, ldColor maskColor, float x, float y)
+{
+    ldClockBindMinutePointerImage(ptWidget, ptImgTile, ptMaskTile, maskColor, x, y, false, false);
+}
+
+void ldClockBindSecondPointerImage(ldClock_t *ptWidget,
+                                   arm_2d_tile_t *ptImgTile,
+                                   arm_2d_tile_t *ptMaskTile,
+                                   ldColor maskColor,
+                                   float x,
+                                   float y,
+                                   bool ownImgTile,
+                                   bool ownMaskTile)
 {
     assert(NULL != ptWidget);
     if(ptWidget == NULL)
@@ -437,8 +531,16 @@ void ldClockSetSecondPointerImage(ldClock_t *ptWidget, arm_2d_tile_t *ptImgTile,
     ptWidget->use_as__ldBase_t.isDirtyRegionUpdate = true;
     ptWidget->use_as__ldBase_t.ptItemRegionList[2].isDRUpdate=true;
     memset(&ptWidget->pointerInfo[2].op, 0, sizeof(arm_2d_op_trans_opa_t));
+    ldClockReleaseOwnedTile(&ptWidget->pointerInfo[2].ptImgTile, &ptWidget->pointerInfo[2].resourceOwnerFlags, LD_CLOCK_OWN_IMG_TILE);
+    ldClockReleaseOwnedTile(&ptWidget->pointerInfo[2].ptMaskTile, &ptWidget->pointerInfo[2].resourceOwnerFlags, LD_CLOCK_OWN_MASK_TILE);
     ptWidget->pointerInfo[2].ptImgTile = ptImgTile;
     ptWidget->pointerInfo[2].ptMaskTile = ptMaskTile;
+    if (ownImgTile) {
+        ptWidget->pointerInfo[2].resourceOwnerFlags |= LD_CLOCK_OWN_IMG_TILE;
+    }
+    if (ownMaskTile) {
+        ptWidget->pointerInfo[2].resourceOwnerFlags |= LD_CLOCK_OWN_MASK_TILE;
+    }
     ptWidget->pointerInfo[2].maskColor = maskColor;
     ptWidget->pointerInfo[2].rotationCentre = (arm_2d_point_float_t){x,y};
     if(ptImgTile)
@@ -449,6 +551,11 @@ void ldClockSetSecondPointerImage(ldClock_t *ptWidget, arm_2d_tile_t *ptImgTile,
     {
         ptWidget->use_as__ldBase_t.ptItemRegionList[2].itemRegion=ptMaskTile->tRegion;
     }
+}
+
+void ldClockSetSecondPointerImage(ldClock_t *ptWidget, arm_2d_tile_t *ptImgTile, arm_2d_tile_t *ptMaskTile, ldColor maskColor, float x, float y)
+{
+    ldClockBindSecondPointerImage(ptWidget, ptImgTile, ptMaskTile, maskColor, x, y, false, false);
 }
 
 void ldClockSetStepSecond(ldClock_t *ptWidget, bool isStepSecond)

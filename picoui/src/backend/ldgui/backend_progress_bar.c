@@ -18,6 +18,7 @@
 
 #include "backend.h"
 #include "internal.h"
+#include "runtime_bridge.h"
 #include "ldProgressBar.h"
 
 #include <stdlib.h>
@@ -25,16 +26,6 @@
 static ldColor picoui_backend_rgb_to_ld_color(unsigned int rgb)
 {
     return __RGB((rgb >> 16) & 0xFFU, (rgb >> 8) & 0xFFU, rgb & 0xFFU);
-}
-
-static struct picoui_backend_app_state *picoui_backend_progress_bar_get_app_state(void *parent)
-{
-    struct picoui_backend_widget *parent_widget = parent;
-
-    if (parent_widget == NULL || parent_widget->owner == NULL || parent_widget->owner->backend_app == NULL) {
-        return NULL;
-    }
-    return (struct picoui_backend_app_state *)parent_widget->owner->backend_app;
 }
 
 static ldProgressBar_t *picoui_backend_progress_bar_get_ld(struct picoui_progress_bar *bar)
@@ -72,7 +63,7 @@ void *picoui_backend_create_progress_bar(void *parent, const char *id)
         return 0;
     }
 
-    app_state = picoui_backend_progress_bar_get_app_state(parent);
+    app_state = picoui_runtime_bridge_backend_state_from_parent(parent);
     if (app_state == NULL || app_state->ld_scene == NULL || parent_widget->ld_widget == NULL) {
         return 0;
     }
@@ -82,7 +73,11 @@ void *picoui_backend_create_progress_bar(void *parent, const char *id)
         return 0;
     }
 
-    name_id = ++app_state->next_ld_name_id;
+    name_id = picoui_runtime_bridge_next_name_id(parent);
+    if (name_id == 0) {
+        free(widget);
+        return 0;
+    }
     ld_progress_bar = ldProgressBar_init(app_state->ld_scene,
                                          NULL,
                                          name_id,
@@ -99,15 +94,21 @@ void *picoui_backend_create_progress_bar(void *parent, const char *id)
     ldProgressBarSetColor(ld_progress_bar, __RGB(221, 226, 234), __RGB(32, 87, 196));
     ldProgressBarSetFrameColor(ld_progress_bar, __RGB(88, 98, 119), 1);
 
-    widget->parent = parent;
-    widget->id = id;
-    widget->kind = PICOUI_BACKEND_WIDGET_PROGRESS_BAR;
-    widget->theme = ((struct picoui_backend_widget *)parent)->theme;
+    if (picoui_backend_widget_init_child(widget,
+                                         parent,
+                                         PICOUI_BACKEND_WIDGET_PROGRESS_BAR,
+                                         id,
+                                         parent_widget->theme) != 0) {
+        ldProgressBar_depose(app_state->ld_scene, ld_progress_bar);
+        free(widget);
+        return 0;
+    }
     widget->ld_widget = ld_progress_bar;
     widget->ld_name_id = name_id;
     widget->value = 0;
     widget->last_signal = PICOUI_BACKEND_SIGNAL_NONE;
     if (picoui_backend_widget_attach_child(parent, widget) != 0) {
+        ldProgressBar_depose(app_state->ld_scene, ld_progress_bar);
         free(widget);
         return 0;
     }

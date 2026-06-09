@@ -641,7 +641,7 @@ def _assert_basic_widgets_visible(path: Path) -> None:
     if failures:
         joined = "\n  - ".join(failures)
         raise AssertionError(
-            "VISIBLE FAIL: basic_widgets capture is non-empty, but visible correctness is not established.\n"
+            "VISIBLE FAIL: TinyUI v2.0 pilot startup proof 'basic_widgets' is non-empty, but visible correctness is not established.\n"
             f"  - {joined}"
         )
 
@@ -1540,7 +1540,7 @@ def _assert_basic_widgets_image_source_boundary(stdout: str) -> None:
 
     if expected not in stdout:
         raise AssertionError(
-            "VISIBLE FAIL: basic_widgets image source boundary changed during runtime render.\n"
+            "VISIBLE FAIL: TinyUI v2.0 pilot startup proof 'basic_widgets' changed its image source boundary during runtime render.\n"
             f"expected marker: {expected}\n"
             f"stdout:\n{stdout}"
         )
@@ -1548,10 +1548,14 @@ def _assert_basic_widgets_image_source_boundary(stdout: str) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Check PicoUI visible correctness evidence for selected demos."
+        description="Check TinyUI v2.0/PicoUI visible correctness evidence for selected demos."
     )
     parser.add_argument("--demo", choices=sorted(DEMOS), default="basic_widgets")
-    parser.add_argument("--all", action="store_true", help="check every PicoUI demo visible gate")
+    parser.add_argument(
+        "--all",
+        action="store_true",
+        help="check every TinyUI v2.0/PicoUI demo visible gate",
+    )
     parser.add_argument(
         "--build-dir",
         type=Path,

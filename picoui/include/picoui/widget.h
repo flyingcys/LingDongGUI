@@ -26,6 +26,7 @@
 struct picoui_widget;
 struct picoui_app;
 struct picoui_font;
+typedef struct picoui_widget tinyui_obj_t;
 
 enum picoui_font_kind {
     PICOUI_FONT_KIND_FAMILY = 0,

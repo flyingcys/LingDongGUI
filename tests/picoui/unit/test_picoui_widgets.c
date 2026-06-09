@@ -922,6 +922,8 @@ static void test_backend_widget_tree_contract(struct picoui_app *app,
     struct picoui_backend_widget *text_backend = text->widget.backend_widget;
     struct picoui_backend_widget *image_backend = image->widget.backend_widget;
     struct picoui_backend_widget *dialog_backend;
+    struct picoui_backend_widget *orphan_backend;
+    struct picoui_backend_widget *prebound_backend;
 
     assert(picoui_backend_widget_is_kind(win_backend, PICOUI_BACKEND_WIDGET_WINDOW) == 1);
     assert(picoui_backend_widget_is_kind(sw_backend, PICOUI_BACKEND_WIDGET_SWITCH) == 1);
@@ -933,23 +935,23 @@ static void test_backend_widget_tree_contract(struct picoui_app *app,
     assert(picoui_backend_widget_is_kind(image_backend, PICOUI_BACKEND_WIDGET_IMAGE) == 1);
     assert(picoui_backend_widget_is_kind(win_backend, PICOUI_BACKEND_WIDGET_LABEL) == 0);
 
-    assert(picoui_backend_widget_get_owner(win_backend) == app);
-    assert(picoui_backend_widget_get_owner(sw_backend) == app);
-    assert(picoui_backend_widget_get_owner(cb_backend) == app);
-    assert(picoui_backend_widget_get_owner(slider_backend) == app);
-    assert(picoui_backend_widget_get_owner(label_backend) == app);
-    assert(picoui_backend_widget_get_owner(button_backend) == app);
-    assert(picoui_backend_widget_get_owner(text_backend) == app);
-    assert(picoui_backend_widget_get_owner(image_backend) == app);
+    assert(win_backend->owner == app);
+    assert(sw_backend->owner == app);
+    assert(cb_backend->owner == app);
+    assert(slider_backend->owner == app);
+    assert(label_backend->owner == app);
+    assert(button_backend->owner == app);
+    assert(text_backend->owner == app);
+    assert(image_backend->owner == app);
 
-    assert(picoui_backend_widget_get_root(win_backend) == win_backend);
-    assert(picoui_backend_widget_get_root(sw_backend) == win_backend);
-    assert(picoui_backend_widget_get_root(cb_backend) == win_backend);
-    assert(picoui_backend_widget_get_root(slider_backend) == win_backend);
-    assert(picoui_backend_widget_get_root(label_backend) == win_backend);
-    assert(picoui_backend_widget_get_root(button_backend) == win_backend);
-    assert(picoui_backend_widget_get_root(text_backend) == win_backend);
-    assert(picoui_backend_widget_get_root(image_backend) == win_backend);
+    assert(win_backend->root == win_backend);
+    assert(sw_backend->root == win_backend);
+    assert(cb_backend->root == win_backend);
+    assert(slider_backend->root == win_backend);
+    assert(label_backend->root == win_backend);
+    assert(button_backend->root == win_backend);
+    assert(text_backend->root == win_backend);
+    assert(image_backend->root == win_backend);
 
     assert(win_backend->first_child == sw_backend);
     assert(sw_backend->next_sibling == cb_backend);
@@ -964,6 +966,30 @@ static void test_backend_widget_tree_contract(struct picoui_app *app,
     dialog_backend = picoui_backend_create_window(app, "dialog");
     assert(dialog_backend != 0);
     assert(picoui_backend_widget_attach_child(win_backend, dialog_backend) == -1);
+
+    orphan_backend = calloc(1, sizeof(*orphan_backend));
+    assert(orphan_backend != 0);
+    assert(picoui_backend_widget_init_child(orphan_backend,
+                                            win_backend,
+                                            PICOUI_BACKEND_WIDGET_LABEL,
+                                            "orphan-shared-attach",
+                                            win_backend->theme) == 0);
+    assert(picoui_backend_widget_attach_child(win_backend, orphan_backend) == 0);
+    assert(orphan_backend->parent == win_backend);
+    assert(orphan_backend->owner == app);
+    assert(orphan_backend->root == win_backend);
+
+    prebound_backend = calloc(1, sizeof(*prebound_backend));
+    assert(prebound_backend != 0);
+    assert(picoui_backend_widget_init_child(prebound_backend,
+                                            win_backend,
+                                            PICOUI_BACKEND_WIDGET_LABEL,
+                                            "prebound-shared-attach",
+                                            win_backend->theme) == 0);
+    prebound_backend->parent = win_backend;
+    assert(picoui_backend_widget_attach_child(win_backend, prebound_backend) == -1);
+
+    free(prebound_backend);
 }
 
 static void assert_widget_props(const struct picoui_widget *widget,

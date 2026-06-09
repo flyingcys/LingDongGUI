@@ -18,22 +18,13 @@
 
 #include "backend.h"
 #include "internal.h"
+#include "runtime_bridge.h"
 #include "ldArc.h"
 
 #include <stdlib.h>
 
 extern const arm_2d_tile_t c_tileQuaterArcGRAY8;
 extern const arm_2d_tile_t c_tileQuaterArcMask;
-
-static struct picoui_backend_app_state *picoui_backend_arc_get_app_state(void *parent)
-{
-    struct picoui_backend_widget *parent_widget = parent;
-
-    if (parent_widget == NULL || parent_widget->owner == NULL || parent_widget->owner->backend_app == NULL) {
-        return NULL;
-    }
-    return (struct picoui_backend_app_state *)parent_widget->owner->backend_app;
-}
 
 static ldArc_t *picoui_backend_arc_get_ld(struct picoui_arc *arc)
 {
@@ -70,7 +61,7 @@ void *picoui_backend_create_arc(void *parent, const char *id)
         return 0;
     }
 
-    app_state = picoui_backend_arc_get_app_state(parent);
+    app_state = picoui_runtime_bridge_backend_state_from_parent(parent);
     if (app_state == NULL || app_state->ld_scene == NULL || parent_widget->ld_widget == NULL) {
         return 0;
     }
@@ -95,7 +86,13 @@ void *picoui_backend_create_arc(void *parent, const char *id)
     }
     *arc_mask_tile = c_tileQuaterArcMask;
 
-    name_id = ++app_state->next_ld_name_id;
+    name_id = picoui_runtime_bridge_next_name_id(parent);
+    if (name_id == 0) {
+        free(arc_mask_tile);
+        free(arc_img_tile);
+        free(widget);
+        return 0;
+    }
     ld_arc = ldArc_init(app_state->ld_scene,
                         NULL,
                         name_id,
@@ -113,14 +110,21 @@ void *picoui_backend_create_arc(void *parent, const char *id)
         free(widget);
         return 0;
     }
+    ldArcSetQuarterImage(ld_arc, arc_img_tile, arc_mask_tile, true, true);
 
-    widget->parent = parent;
-    widget->id = id;
-    widget->kind = PICOUI_BACKEND_WIDGET_ARC;
-    widget->theme = ((struct picoui_backend_widget *)parent)->theme;
+    if (picoui_backend_widget_init_child(widget,
+                                         parent,
+                                         PICOUI_BACKEND_WIDGET_ARC,
+                                         id,
+                                         parent_widget->theme) != 0) {
+        ldArc_depose(app_state->ld_scene, ld_arc);
+        free(widget);
+        return 0;
+    }
     widget->ld_widget = ld_arc;
     widget->ld_name_id = name_id;
     if (picoui_backend_widget_attach_child(parent, widget) != 0) {
+        ldArc_depose(app_state->ld_scene, ld_arc);
         free(widget);
         return 0;
     }
@@ -221,8 +225,7 @@ int picoui_backend_arc_set_quarter_source(struct picoui_arc *arc, struct picoui_
         return -1;
     }
 
-    ld_arc->ptImgTile = source->img_tile;
-    ld_arc->ptMaskTile = source->mask_tile;
+    ldArcSetQuarterImage(ld_arc, source->img_tile, source->mask_tile, false, false);
     return 0;
 }
 

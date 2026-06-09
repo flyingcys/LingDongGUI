@@ -20,6 +20,7 @@
 #define PICOUI_SWITCH_H
 
 #include "picoui/widget.h"
+#include "picoui/window.h"
 
 struct picoui_window;
 struct picoui_switch;
@@ -216,5 +217,10 @@ int picoui_switch_navigate(struct picoui_switch *sw, int direction);
 int picoui_switch_set_on_toggled(struct picoui_switch *sw,
                                  picoui_value_changed_cb cb,
                                  void *user_data);
+
+static inline tinyui_obj_t *tinyui_switch_create(tinyui_obj_t *parent, const char *id)
+{
+    return (tinyui_obj_t *)picoui_switch_create((struct picoui_window *)parent, id);
+}
 
 #endif

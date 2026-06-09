@@ -51,6 +51,25 @@ const ldBaseWidgetFunc_t ldArcFunc = {
     .show = (ldShowFunc_t)ldArc_show,
 };
 
+enum {
+    LD_ARC_OWN_IMG_TILE = 1 << 0,
+    LD_ARC_OWN_MASK_TILE = 1 << 1,
+};
+
+static void ldArcReleaseOwnedTile(arm_2d_tile_t **pptTile,
+                                  uint8_t *pFlags,
+                                  uint8_t flag)
+{
+    if (pptTile == NULL || pFlags == NULL) {
+        return;
+    }
+    if (((*pFlags) & flag) != 0 && *pptTile != NULL) {
+        ldFree(*pptTile);
+    }
+    *pptTile = NULL;
+    *pFlags &= (uint8_t)~flag;
+}
+
 ldArc_t* ldArc_init(ld_scene_t *ptScene,ldArc_t *ptWidget, uint16_t nameId, uint16_t parentNameId, int16_t x, int16_t y, int16_t width, int16_t height,arm_2d_tile_t *ptQuarterImgTile,arm_2d_tile_t *ptQuarterMaskTile,ldColor parentColor)
 {
     assert(NULL != ptScene);
@@ -118,11 +137,33 @@ void ldArc_depose(ld_scene_t *ptScene, ldArc_t *ptWidget)
     ldMsgDelConnect(ptWidget);
 
     ldBaseNodeRemove((arm_2d_control_node_t*)ptWidget);
-#if USE_VIRTUAL_RESOURCE == 1
-    ldFree(ptWidget->ptImgTile);
-    ldFree(ptWidget->ptMaskTile);
-#endif
+    ldArcReleaseOwnedTile(&ptWidget->ptImgTile, &ptWidget->resourceOwnerFlags, LD_ARC_OWN_IMG_TILE);
+    ldArcReleaseOwnedTile(&ptWidget->ptMaskTile, &ptWidget->resourceOwnerFlags, LD_ARC_OWN_MASK_TILE);
     ldFree(ptWidget);
+}
+
+void ldArcSetQuarterImage(ldArc_t *ptWidget,
+                          arm_2d_tile_t *ptQuarterImgTile,
+                          arm_2d_tile_t *ptQuarterMaskTile,
+                          bool ownImgTile,
+                          bool ownMaskTile)
+{
+    assert(NULL != ptWidget);
+    if (ptWidget == NULL)
+    {
+        return;
+    }
+
+    ldArcReleaseOwnedTile(&ptWidget->ptImgTile, &ptWidget->resourceOwnerFlags, LD_ARC_OWN_IMG_TILE);
+    ldArcReleaseOwnedTile(&ptWidget->ptMaskTile, &ptWidget->resourceOwnerFlags, LD_ARC_OWN_MASK_TILE);
+    ptWidget->ptImgTile = ptQuarterImgTile;
+    ptWidget->ptMaskTile = ptQuarterMaskTile;
+    if (ownImgTile) {
+        ptWidget->resourceOwnerFlags |= LD_ARC_OWN_IMG_TILE;
+    }
+    if (ownMaskTile) {
+        ptWidget->resourceOwnerFlags |= LD_ARC_OWN_MASK_TILE;
+    }
 }
 
 void ldArc_on_load(ld_scene_t *ptScene, ldArc_t *ptWidget)

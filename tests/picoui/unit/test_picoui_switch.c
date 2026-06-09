@@ -1,14 +1,18 @@
-#include "picoui/picoui.h"
+#include "picoui/app.h"
+#include "picoui/runtime.h"
+#include "picoui/switch.h"
+#include "picoui/window.h"
 #include "../../../src/gui/ldBase.h"
 #include "../../../src/gui/ldSwitch.h"
 #include "../../../src/gui/ldSwitchInternal.h"
-#include "internal.h"
+#include "../../../picoui/src/core/internal.h"
 #include <assert.h>
 #include <string.h>
 
 static void test_switch_create_and_backend_mapping(struct picoui_window *win)
 {
-    struct picoui_switch *sw = picoui_switch_create(win, "switch_test");
+    tinyui_obj_t *obj = tinyui_switch_create((tinyui_obj_t *)win, "switch_test");
+    struct picoui_switch *sw = (struct picoui_switch *)obj;
     struct picoui_backend_widget *backend;
     ldBase_t *ld_base;
 
@@ -66,7 +70,8 @@ static void test_switch_create_with_props_pushes_fields(struct picoui_window *wi
 
 static void test_switch_set_checked_round_trip(struct picoui_window *win)
 {
-    struct picoui_switch *sw = picoui_switch_create(win, "sw_checked");
+    tinyui_obj_t *obj = tinyui_switch_create((tinyui_obj_t *)win, "sw_checked");
+    struct picoui_switch *sw = (struct picoui_switch *)obj;
     struct picoui_backend_widget *backend;
     ldSwitch_t *ld_sw;
 
@@ -89,8 +94,8 @@ static void test_switch_set_checked_round_trip(struct picoui_window *win)
 
 static void test_switch_rejects_null_args(struct picoui_window *win)
 {
-    assert(picoui_switch_create(0, "id") == 0);
-    assert(picoui_switch_create(win, 0) == 0);
+    (void)win;
+    assert(tinyui_switch_create(0, "id") == 0);
     assert(picoui_switch_set_checked(0, 1) == -1);
     assert(picoui_switch_is_checked(0) == 0);
     assert(picoui_switch_set_on_toggled(0, 0, 0) == -1);

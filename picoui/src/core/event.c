@@ -17,17 +17,9 @@
  */
 
 #include "internal.h"
-
 static struct picoui_app *picoui_widget_get_owner_app(struct picoui_widget *widget)
 {
-    struct picoui_backend_widget *backend;
-
-    if (widget == 0 || widget->backend_widget == 0) {
-        return 0;
-    }
-
-    backend = (struct picoui_backend_widget *)widget->backend_widget;
-    return backend->owner;
+    return picoui_widget_owner_app(widget);
 }
 
 static void picoui_widget_note_focus_event(struct picoui_widget *widget,

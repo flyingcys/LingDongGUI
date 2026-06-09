@@ -255,7 +255,9 @@ def _assert_real_mapping(target: str, expected: dict[str, object], stdout: str, 
 
     if "PICOUI_BACKEND_STATIC_MAPPING=REAL_LDGUI" not in stdout:
         raise AssertionError(
-            f"Demo '{target}' missing marker PICOUI_BACKEND_STATIC_MAPPING=REAL_LDGUI.\n"
+            f"Demo '{target}' missing formal real-mapping marker PICOUI_BACKEND_STATIC_MAPPING=REAL_LDGUI.\n"
+            "This checker only accepts explicit runtime evidence that the demo entered the real LingDongGUI mapping path.\n"
+            "It does not require a dedicated backend_*.c file layout, but it does require the marker contract to remain truthful.\n"
             f"categories: {expected['categories']}\n"
             f"reasons: {expected['reasons']}\n"
             f"stdout:\n{stdout}\n"
@@ -270,6 +272,7 @@ def _assert_real_mapping(target: str, expected: dict[str, object], stdout: str, 
     if missing_ids:
         raise AssertionError(
             f"Demo '{target}' missing real-mapped widget ids: {missing_ids}.\n"
+            "Formal mapping proof is the marker plus the named real backend ids for this demo, not any specific dedicated backend source-file split.\n"
             f"expected ids: {expected['real_ids']}\n"
             f"actual ids: {sorted(real_ids)}\n"
             f"categories: {expected['categories']}\n"

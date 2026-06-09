@@ -17,6 +17,7 @@ set(PICOUI_UNIT_TESTS
     unit/test_picoui_animation.c
     unit/test_picoui_app_lifecycle.c
     unit/test_picoui_app_timer.c
+    unit/test_picoui_runtime_model.c
     unit/test_picoui_port_display.c
     unit/test_picoui_port_input.c
     unit/test_picoui_port_sdl.c
@@ -53,6 +54,13 @@ foreach(test_src IN LISTS PICOUI_UNIT_TESTS)
     )
 endforeach()
 
+ld_add_c_unit_test(test_picoui_wrapper_struct_overhead
+    SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/unit/test_picoui_wrapper_struct_overhead.c"
+    SUPPORT_LIB picoui_test_support
+    MAIN_LIB picoui_backend_ldgui
+    LABELS "picoui;perf;memory"
+)
+
 target_link_libraries(test_picoui_port_sdl PRIVATE picoui_port_sdl)
 
 ld_add_python_test(check_picoui_public_api
@@ -65,6 +73,11 @@ ld_add_python_test(check_picoui_demo_boundary
     LABELS "picoui;contract"
 )
 
+ld_add_python_test(check_picoui_tinyui_transition_guards
+    SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/contract/check_picoui_tinyui_transition_guards.py"
+    LABELS "picoui;contract;transition"
+)
+
 ld_add_python_test(check_picoui_widget_contract_matrix
     SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/contract/check_picoui_widget_contract_matrix.py"
     LABELS "picoui;contract"
@@ -73,6 +86,21 @@ ld_add_python_test(check_picoui_widget_contract_matrix
 ld_add_python_test(check_picoui_release_capability_matrix
     SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/contract/check_picoui_release_capability_matrix.py"
     LABELS "picoui;contract;release"
+)
+
+ld_add_python_test(check_picoui_tinyui_binary_size
+    SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/perf/check_picoui_tinyui_binary_size.py"
+    LABELS "picoui;perf;size"
+)
+
+ld_add_python_test(check_picoui_tinyui_perf
+    SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/perf/check_picoui_tinyui_perf.py"
+    LABELS "picoui;perf;runtime"
+)
+
+ld_add_python_test(check_picoui_tinyui_object_overhead
+    SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/perf/check_picoui_tinyui_object_overhead.py"
+    LABELS "picoui;perf;memory"
 )
 
 if(LD_BUILD_RUNTIME_TESTS)

@@ -2,11 +2,18 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 把 `backend/ldgui` 从共享系统路径里移出去，将 runtime/widget-tree/event/layout 胶水搬进 `picoui/src/core/*`，使 `backend` 最多只剩 widget-local 残留。
+**Goal:** 把 `backend/ldgui` 从共享系统路径里移出去，将 runtime/widget-tree/event/layout 胶水搬进 `picoui/src/core/*`，使 `backend` 最多只剩 widget-local 残留；如 shared/core flatten 会打破既有非试点控件 destroy/ownership 合同，允许在本阶段携带极少量 widget-local lifecycle/ownership 修复，但不得借此展开 `P2` 式控件拆平。
 
-**Architecture:** 在 `picoui/src/core/` 中建立小型 backend-neutral bridge helpers，把 runtime app state 与 widget tree bookkeeping 从 `backend_app.c/backend_widget*.c/backend_event.c` 抽离，并让 `picoui_core` 在 CMake 上正式拥有 shared layer。
+**Architecture:** 在 `picoui/src/core/` 中建立小型 backend-neutral bridge helpers，把 runtime app state 与 widget tree bookkeeping 从 `backend_app.c/backend_widget*.c/backend_event.c` 抽离，并让 `picoui_core` 在 CMake 上正式拥有 shared layer。当前 `runtime_bridge` 不只承载 app-state / scene / window ownership，还承载 name-id、theme bind、window-switch 这类 shared mutable runtime state bridge。
 
 **Tech Stack:** C11、现有 `picoui` core/backend split、`LingDongGUI` `ld*` 类型、CMake、CTest。
+
+当前 closeout 证据：
+
+- focused tests：`rtk ctest --test-dir build -R '^(test_picoui_native_bridge|test_picoui_app_lifecycle|test_picoui_app_timer|test_picoui_layout|test_picoui_event)$' --output-on-failure` => `5/5 PASS`
+- broad gate：`rtk ctest --test-dir build -L 'picoui' --output-on-failure` => `50/50 PASS`
+- 文档与格式：`git diff --check` clean
+- fresh review：阶段边界与 `runtime_bridge` 职责文档已修正后 `APPROVED`
 
 ---
 
@@ -29,6 +36,12 @@
 - `picoui/src/backend/ldgui/backend_event.c`
 - `cmake/LingDongGUI.cmake`
 - `tests/picoui/CMakeLists.txt`
+
+受限例外：
+
+- 仅当 shared/core flatten 后既有非试点控件的 destroy/ownership 合同会失真时，可修改对应 widget-local lifecycle/ownership 实现与 focused tests
+- 例外范围只允许修复资源归属、销毁释放、backend-host/tree ownership 对齐
+- 不允许把例外扩展成试点控件 flatten、public API 扩面、demo 行为重写或新能力开发
 
 ---
 

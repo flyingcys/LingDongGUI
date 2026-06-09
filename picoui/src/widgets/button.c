@@ -18,6 +18,7 @@
 
 #include "internal.h"
 #include "picoui/button.h"
+#include "../core/runtime_bridge.h"
 #include "../backend/ldgui/backend.h"
 #include "../../../src/gui/ldButton.h"
 #include "../../../src/misc/xBtnAction.h"
@@ -37,6 +38,11 @@ int picoui_backend_button_set_key_value(struct picoui_button *button, unsigned i
 int picoui_backend_button_get_key_value(struct picoui_button *button, unsigned int *key_value);
 int picoui_backend_button_set_pressed(struct picoui_button *button, int pressed);
 int picoui_backend_button_get_pressed(struct picoui_button *button, int *pressed);
+
+struct picoui_button_backend_host {
+    struct picoui_backend_widget widget;
+    xBtnInfo_t action_info;
+};
 
 static ldButton_t *picoui_button_get_ld(const struct picoui_button *button)
 {
@@ -65,8 +71,19 @@ static int picoui_button_props_are_valid(const struct picoui_button_props *props
 static struct picoui_button *picoui_button_alloc(struct picoui_window *parent, const char *id)
 {
     struct picoui_button *button;
+    struct picoui_button_backend_host *host;
+    struct picoui_backend_widget *parent_backend;
+    struct picoui_backend_app_state *app_state;
+    ldButton_t *ld_button;
+    uint16_t name_id;
 
     if (parent == 0 || id == 0) {
+        return 0;
+    }
+
+    parent_backend = (struct picoui_backend_widget *)parent->widget.backend_widget;
+    app_state = picoui_runtime_bridge_backend_state_from_parent(parent_backend);
+    if (parent_backend == 0 || parent_backend->ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
         return 0;
     }
 
@@ -75,13 +92,55 @@ static struct picoui_button *picoui_button_alloc(struct picoui_window *parent, c
         return 0;
     }
 
-    button->widget.backend_widget = picoui_backend_create_button(parent->widget.backend_widget, id);
-    if (button->widget.backend_widget == 0) {
+    host = calloc(1, sizeof(*host));
+    if (host == 0) {
+        free(button);
+        return 0;
+    }
+
+    name_id = picoui_runtime_bridge_next_name_id(parent_backend);
+    if (name_id == 0) {
+        free(host);
+        free(button);
+        return 0;
+    }
+
+    ld_button = ldButton_init(app_state->ld_scene,
+                              NULL,
+                              name_id,
+                              parent_backend->ld_name_id,
+                              0,
+                              0,
+                              160,
+                              36);
+    if (ld_button == 0) {
+        free(host);
+        free(button);
+        return 0;
+    }
+
+    if (picoui_backend_widget_init_child(&host->widget,
+                                         parent_backend,
+                                         PICOUI_BACKEND_WIDGET_BUTTON,
+                                         id,
+                                         parent_backend->theme) != 0) {
+        ldButton_depose(app_state->ld_scene, ld_button);
+        free(host);
+        free(button);
+        return 0;
+    }
+    host->widget.ld_widget = ld_button;
+    host->widget.ld_name_id = name_id;
+    _xBtnInit(name_id, (isBtnPressFunc)ldButtonActionIsPressById, &host->action_info);
+    if (picoui_backend_widget_attach_child(parent_backend, &host->widget) != 0) {
+        ldButton_depose(app_state->ld_scene, ld_button);
+        free(host);
         free(button);
         return 0;
     }
 
     button->id = id;
+    button->widget.backend_widget = &host->widget;
     button->widget.visible = 1;
     button->widget.enabled = 1;
     if (picoui_backend_widget_bind_host(button->widget.backend_widget, &button->widget) != 0) {

@@ -637,11 +637,14 @@ static void test_list_native_item_widget_reparents_backend_tree(struct picoui_wi
     struct picoui_window *owned_win;
     struct picoui_widget *parent;
     struct picoui_list *list;
+    struct picoui_list *nested_list;
     struct picoui_button *button;
     struct picoui_backend_widget *list_backend;
+    struct picoui_backend_widget *nested_list_backend;
     struct picoui_backend_widget *button_backend;
     struct picoui_backend_widget *window_backend;
     ldList_t *ld_list;
+    ldList_t *ld_nested_list;
     ldBase_t *ld_button;
 
     (void)win;
@@ -651,36 +654,53 @@ static void test_list_native_item_widget_reparents_backend_tree(struct picoui_wi
     assert(owned_win != 0);
     parent = (struct picoui_widget *)owned_win;
     list = picoui_list_create(parent, "list_item_widget");
-    button = picoui_button_create(owned_win, "list_item_widget_button");
+    nested_list = picoui_list_create(parent, "list_item_widget_nested_list");
+    button = picoui_button_create((struct picoui_widget *)nested_list, "list_item_widget_button");
     assert(list != 0);
+    assert(nested_list != 0);
     assert(button != 0);
     assert(picoui_list_add_item(list, "item_wifi", "Wi-Fi") == 0);
     assert(picoui_list_add_item(list, "item_bluetooth", "Bluetooth") == 0);
 
     list_backend = (struct picoui_backend_widget *)list->widget.backend_widget;
+    nested_list_backend = (struct picoui_backend_widget *)nested_list->widget.backend_widget;
     button_backend = (struct picoui_backend_widget *)button->widget.backend_widget;
     window_backend = (struct picoui_backend_widget *)owned_win->widget.backend_widget;
     assert(list_backend != 0);
+    assert(nested_list_backend != 0);
     assert(button_backend != 0);
     assert(window_backend != 0);
     ld_list = (ldList_t *)list_backend->ld_widget;
+    ld_nested_list = (ldList_t *)nested_list_backend->ld_widget;
     ld_button = (ldBase_t *)button_backend->ld_widget;
     assert(ld_list != 0);
+    assert(ld_nested_list != 0);
     assert(ld_button != 0);
 
-    assert(button_backend->parent == window_backend);
-    assert(ldBaseGetParent(ld_button) == (ldBase_t *)window_backend->ld_widget);
-
-    assert(picoui_list_set_item_widget(list, 1, &button->widget) == 0);
-
-    assert(button_backend->parent == list_backend);
+    assert(nested_list_backend->parent == window_backend);
+    assert(nested_list_backend->owner == app);
+    assert(nested_list_backend->root == window_backend);
+    assert(button_backend->parent == nested_list_backend);
+    assert(button_backend->owner == app);
     assert(button_backend->root == window_backend);
-    assert(ldBaseGetParent(ld_button) == (ldBase_t *)ld_list);
-    assert(button_backend->next_sibling == 0);
-    assert(list_backend->first_child == button_backend);
+    assert(ldBaseGetParent((ldBase_t *)ld_nested_list) == (ldBase_t *)window_backend->ld_widget);
+    assert(ldBaseGetParent(ld_button) == (ldBase_t *)ld_nested_list);
 
-    assert(picoui_list_set_item_widget(list, -1, &button->widget) == -1);
-    assert(picoui_list_set_item_widget(list, 2, &button->widget) == -1);
+    assert(picoui_list_set_item_widget(list, 1, &nested_list->widget) == 0);
+
+    assert(nested_list_backend->parent == list_backend);
+    assert(nested_list_backend->owner == app);
+    assert(nested_list_backend->root == window_backend);
+    assert(ldBaseGetParent((ldBase_t *)ld_nested_list) == (ldBase_t *)ld_list);
+    assert(nested_list_backend->next_sibling == 0);
+    assert(list_backend->first_child == nested_list_backend);
+    assert(button_backend->parent == nested_list_backend);
+    assert(button_backend->owner == app);
+    assert(button_backend->root == window_backend);
+    assert(ldBaseGetParent(ld_button) == (ldBase_t *)ld_nested_list);
+
+    assert(picoui_list_set_item_widget(list, -1, &nested_list->widget) == -1);
+    assert(picoui_list_set_item_widget(list, 2, &nested_list->widget) == -1);
     assert(picoui_list_set_item_widget(list, 1, 0) == -1);
 
     picoui_app_destroy(app);

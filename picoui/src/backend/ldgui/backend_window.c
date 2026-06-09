@@ -17,6 +17,7 @@
  */
 
 #include "internal.h"
+#include "runtime_bridge.h"
 #include "ldWindow.h"
 #include "ldConfig.h"
 
@@ -43,14 +44,6 @@ static unsigned int picoui_backend_ld_color_to_rgb(ldColor color)
     green = (green * 255U) / 63U;
     blue = (blue * 255U) / 31U;
     return (red << 16) | (green << 8) | blue;
-}
-
-static struct picoui_backend_app_state *picoui_backend_window_get_app_state(struct picoui_app *app)
-{
-    if (app == NULL || app->backend_app == NULL) {
-        return NULL;
-    }
-    return (struct picoui_backend_app_state *)app->backend_app;
 }
 
 static void picoui_backend_window_get_root_size(struct picoui_app *app,
@@ -89,7 +82,7 @@ static void *picoui_backend_create_root_widget(struct picoui_app *app,
         return 0;
     }
 
-    app_state = picoui_backend_window_get_app_state(app);
+    app_state = picoui_runtime_bridge_backend_state(app);
     if (app_state == NULL || app_state->ld_scene == NULL) {
         return 0;
     }
@@ -114,11 +107,11 @@ static void *picoui_backend_create_root_widget(struct picoui_app *app,
         return 0;
     }
 
-    host->widget.id = id;
-    host->widget.owner = app;
-    host->widget.kind = kind;
-    host->widget.root = &host->widget;
-    host->widget.theme = app->theme;
+    if (picoui_backend_widget_init_root(&host->widget, app, kind, id, app->theme) != 0) {
+        ldWindow_depose(app_state->ld_scene, ld_root);
+        free(host);
+        return 0;
+    }
     host->widget.ld_widget = ld_root;
     host->widget.ld_name_id = 0;
     return &host->widget;
@@ -133,57 +126,16 @@ static void *picoui_backend_create_root_widget(struct picoui_app *app,
 
 void *picoui_backend_create_window(struct picoui_app *app, const char *id)
 {
-    return picoui_backend_create_root_widget(app, id, PICOUI_BACKEND_WIDGET_WINDOW);
+    (void)app;
+    (void)id;
+    return 0;
 }
 
 void *picoui_backend_create_child_window(void *parent, const char *id)
 {
-    struct picoui_backend_window_host *host;
-    struct picoui_backend_widget *widget;
-    struct picoui_backend_widget *parent_widget = parent;
-    struct picoui_backend_app_state *app_state;
-    ldWindow_t *ld_window;
-    uint16_t name_id;
-
-    if (parent == 0 || id == 0) {
-        return 0;
-    }
-
-    app_state = picoui_backend_window_get_app_state(parent_widget->owner);
-    if (app_state == NULL || app_state->ld_scene == NULL || parent_widget->ld_widget == NULL) {
-        return 0;
-    }
-
-    host = calloc(1, sizeof(*host));
-    if (host == 0) {
-        return 0;
-    }
-    widget = &host->widget;
-
-    name_id = ++app_state->next_ld_name_id;
-    ld_window = ldWindow_init(app_state->ld_scene,
-                              NULL,
-                              name_id,
-                              parent_widget->ld_name_id,
-                              0,
-                              0,
-                              160,
-                              80);
-    if (ld_window == NULL) {
-        free(host);
-        return 0;
-    }
-
-    widget->id = id;
-    widget->kind = PICOUI_BACKEND_WIDGET_WINDOW;
-    widget->theme = parent_widget->theme;
-    widget->ld_widget = ld_window;
-    widget->ld_name_id = name_id;
-    if (picoui_backend_widget_attach_child(parent, widget) != 0) {
-        free(host);
-        return 0;
-    }
-    return widget;
+    (void)parent;
+    (void)id;
+    return 0;
 }
 
 /**
@@ -314,7 +266,7 @@ int picoui_backend_window_set_background_offset(struct picoui_window *window,
         return -1;
     }
 
-    app_state = picoui_backend_window_get_app_state(backend->owner);
+    app_state = picoui_runtime_bridge_backend_state(backend->owner);
     ld_window = picoui_backend_window_get_ld(window);
     if (app_state == NULL || app_state->ld_scene == NULL || ld_window == NULL) {
         return -1;

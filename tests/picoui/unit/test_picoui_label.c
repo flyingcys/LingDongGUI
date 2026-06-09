@@ -4,6 +4,8 @@
 #include <assert.h>
 #include <string.h>
 
+extern int picoui_widget_has_ld_binding(const struct picoui_widget *widget);
+
 static void test_label_create_and_ld_mapping(struct picoui_window *win)
 {
     struct picoui_label *label = picoui_label_create(win, "label_test");
@@ -66,6 +68,19 @@ static void test_label_destroy_clears_widget(struct picoui_window *win)
     assert(label->widget.backend_widget == 0);
 }
 
+static void test_label_constructor_binds_ld_without_backend_wrapper(struct picoui_window *win)
+{
+    struct picoui_label *label = picoui_label_create(win, "label_direct_path");
+
+    assert(label != 0);
+    assert(picoui_widget_has_ld_binding(&label->widget) == 1);
+}
+
+static void test_label_legacy_backend_constructor_is_disabled(struct picoui_window *win)
+{
+    assert(picoui_backend_create_label(win->widget.backend_widget, "legacy_label") == 0);
+}
+
 int main(void)
 {
     struct picoui_app *app = picoui_app_create();
@@ -75,6 +90,8 @@ int main(void)
     assert(win != 0);
 
     test_label_create_and_ld_mapping(win);
+    test_label_constructor_binds_ld_without_backend_wrapper(win);
+    test_label_legacy_backend_constructor_is_disabled(win);
     test_label_set_text_round_trip(win);
     test_label_create_with_props_pushes_all_fields(win);
     test_label_rejects_null_args(win);

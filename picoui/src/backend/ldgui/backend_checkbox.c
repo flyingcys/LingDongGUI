@@ -18,6 +18,7 @@
 
 #include "backend.h"
 #include "internal.h"
+#include "runtime_bridge.h"
 #include "ldCheckBox.h"
 
 #include <stdlib.h>
@@ -43,16 +44,6 @@ static ldCheckBox_t *picoui_backend_checkbox_get_ld(struct picoui_checkbox *chec
     return (ldCheckBox_t *)backend->ld_widget;
 }
 
-static struct picoui_backend_app_state *picoui_backend_checkbox_get_app_state(void *parent)
-{
-    struct picoui_backend_widget *parent_widget = parent;
-
-    if (parent_widget == NULL || parent_widget->owner == NULL || parent_widget->owner->backend_app == NULL) {
-        return NULL;
-    }
-    return (struct picoui_backend_app_state *)parent_widget->owner->backend_app;
-}
-
 /**
  * @brief Create backend for checkbox
  *
@@ -72,7 +63,7 @@ void *picoui_backend_create_checkbox(void *parent, const char *id)
         return 0;
     }
 
-    app_state = picoui_backend_checkbox_get_app_state(parent);
+    app_state = picoui_runtime_bridge_backend_state_from_parent(parent);
     if (app_state == NULL || app_state->ld_scene == NULL || parent_widget->ld_widget == NULL) {
         return 0;
     }
@@ -82,7 +73,11 @@ void *picoui_backend_create_checkbox(void *parent, const char *id)
         return 0;
     }
 
-    name_id = ++app_state->next_ld_name_id;
+    name_id = picoui_runtime_bridge_next_name_id(parent);
+    if (name_id == 0) {
+        free(widget);
+        return 0;
+    }
     ld_checkbox = ldCheckBox_init(app_state->ld_scene,
                                   NULL,
                                   name_id,
@@ -98,14 +93,20 @@ void *picoui_backend_create_checkbox(void *parent, const char *id)
     ldCheckBoxSetColor(ld_checkbox, __RGB(238, 233, 224), __RGB(32, 87, 196));
     ldCheckBoxSetTextColor(ld_checkbox, __RGB(32, 87, 196));
 
-    widget->parent = parent;
-    widget->id = id;
-    widget->kind = PICOUI_BACKEND_WIDGET_CHECKBOX;
-    widget->theme = ((struct picoui_backend_widget *)parent)->theme;
+    if (picoui_backend_widget_init_child(widget,
+                                         parent,
+                                         PICOUI_BACKEND_WIDGET_CHECKBOX,
+                                         id,
+                                         parent_widget->theme) != 0) {
+        ldCheckBox_depose(app_state->ld_scene, ld_checkbox);
+        free(widget);
+        return 0;
+    }
     widget->ld_widget = ld_checkbox;
     widget->ld_name_id = name_id;
     widget->last_signal = PICOUI_BACKEND_SIGNAL_NONE;
     if (picoui_backend_widget_attach_child(parent, widget) != 0) {
+        ldCheckBox_depose(app_state->ld_scene, ld_checkbox);
         free(widget);
         return 0;
     }

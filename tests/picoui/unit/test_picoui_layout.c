@@ -8,6 +8,8 @@
 #include <assert.h>
 #include <stdbool.h>
 
+extern struct picoui_widget *picoui_widget_backend_parent(const struct picoui_widget *widget);
+
 static unsigned int test_rgb_to_ld_color(unsigned int rgb)
 {
     return (unsigned int)__RGB((rgb >> 16) & 0xFFU, (rgb >> 8) & 0xFFU, rgb & 0xFFU);
@@ -245,6 +247,20 @@ static void test_widget_native_base_flags_round_trip_to_ldbase(void)
     assert(ld_base->isHidden == true);
     assert(ld_base->use_as__arm_2d_control_node_t.tRegion.tLocation.iX != 0 ||
            ld_base->use_as__arm_2d_control_node_t.tRegion.tLocation.iY != 0);
+
+    picoui_app_destroy(app);
+}
+
+static void test_widget_backend_parent_round_trip(void)
+{
+    struct picoui_app *app = picoui_app_create();
+    struct picoui_window *root = picoui_window_create(app, "root");
+    struct picoui_window *child = picoui_window_create_child(root, "child");
+
+    assert(app != NULL);
+    assert(root != NULL);
+    assert(child != NULL);
+    assert(picoui_widget_backend_parent(&child->widget) == &root->widget);
 
     picoui_app_destroy(app);
 }
@@ -956,6 +972,7 @@ int main(void)
     test_window_native_grid_descriptors_round_trip_to_ldwindow();
     test_flex_layout_setters_sync_to_real_ld_window_and_children();
     test_widget_native_base_flags_round_trip_to_ldbase();
+    test_widget_backend_parent_round_trip();
     test_widget_native_flex_min_max_round_trip_to_ldbase();
     test_widget_native_base_getters_round_trip_to_ldbase();
     test_widget_tree_name_and_type_queries_round_trip_to_ldbase();

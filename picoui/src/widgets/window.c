@@ -19,10 +19,19 @@
 #include "internal.h"
 #include "picoui/widget.h"
 #include "picoui/window.h"
+#include "../core/runtime_bridge.h"
+#include "../../../src/gui/ldWindow.h"
+#include "../../../src/porting/ldConfig.h"
 
 #include <stdlib.h>
 
 struct picoui_image_source;
+
+struct picoui_window_backend_host {
+    struct picoui_backend_widget widget;
+    ldPadding_t padding_group;
+    int has_padding_group;
+};
 
 int picoui_backend_window_set_background_source(struct picoui_window *window,
                                                 struct picoui_image_source *source);
@@ -54,6 +63,40 @@ int picoui_backend_window_set_grid_padding(struct picoui_window *window,
                                            int bottom);
 int picoui_backend_window_set_gap(struct picoui_window *window, int gap);
 
+static void picoui_window_init_defaults(struct picoui_window *window, const char *id, void *backend_widget)
+{
+    window->id = id;
+    window->widget.backend_widget = backend_widget;
+    window->widget.visible = 1;
+    window->widget.enabled = 1;
+    window->flex_flow = PICOUI_FLEX_FLOW_ROW;
+    window->flex_main_align = PICOUI_ALIGN_START;
+    window->flex_cross_align = PICOUI_ALIGN_START;
+    window->flex_track_align = PICOUI_ALIGN_START;
+    window->grid_col_align = PICOUI_ALIGN_START;
+    window->grid_row_align = PICOUI_ALIGN_START;
+}
+
+static void picoui_window_get_root_size(struct picoui_app *app, int16_t *width, int16_t *height)
+{
+    struct picoui_display_config config = {0};
+
+    if (width == 0 || height == 0) {
+        return;
+    }
+
+    *width = LD_CFG_SCREEN_WIDTH;
+    *height = LD_CFG_SCREEN_HEIGHT;
+    if (app == 0) {
+        return;
+    }
+
+    if (picoui_display_get_config(app, &config) == 0 && config.width > 0 && config.height > 0) {
+        *width = (int16_t)config.width;
+        *height = (int16_t)config.height;
+    }
+}
+
 static int picoui_window_is_valid(struct picoui_window *window)
 {
     return window != 0 && window->widget.backend_widget != 0;
@@ -82,33 +125,53 @@ static int picoui_window_props_are_valid(const struct picoui_window_props *props
 struct picoui_window *picoui_window_create(struct picoui_app *app, const char *id)
 {
     struct picoui_window *window;
-    void *backend_widget;
+    struct picoui_window_backend_host *host;
+    struct picoui_backend_app_state *app_state;
+    ldWindow_t *ld_root;
+    int16_t root_width;
+    int16_t root_height;
 
     if (app == 0 || id == 0) {
         return 0;
     }
 
-    backend_widget = picoui_backend_create_window(app, id);
-    if (backend_widget == 0) {
+    app_state = (struct picoui_backend_app_state *)app->backend_app;
+    if (app_state == 0 || app_state->ld_scene == 0) {
         return 0;
     }
+
+    host = calloc(1, sizeof(*host));
+    if (host == 0) {
+        return 0;
+    }
+
+    picoui_window_get_root_size(app, &root_width, &root_height);
+    ld_root = ldWindow_init(app_state->ld_scene, NULL, 0, 0, 0, 0, root_width, root_height);
+    if (ld_root == 0) {
+        free(host);
+        return 0;
+    }
+
+    if (picoui_backend_widget_init_root(&host->widget,
+                                        app,
+                                        PICOUI_BACKEND_WIDGET_WINDOW,
+                                        id,
+                                        app->theme) != 0) {
+        ldWindow_depose(app_state->ld_scene, ld_root);
+        free(host);
+        return 0;
+    }
+    host->widget.ld_widget = ld_root;
+    host->widget.ld_name_id = 0;
 
     window = calloc(1, sizeof(*window));
     if (window == 0) {
-        free(backend_widget);
+        ldWindow_depose(app_state->ld_scene, ld_root);
+        free(host);
         return 0;
     }
 
-    window->id = id;
-    window->widget.backend_widget = backend_widget;
-    window->widget.visible = 1;
-    window->widget.enabled = 1;
-    window->flex_flow = PICOUI_FLEX_FLOW_ROW;
-    window->flex_main_align = PICOUI_ALIGN_START;
-    window->flex_cross_align = PICOUI_ALIGN_START;
-    window->flex_track_align = PICOUI_ALIGN_START;
-    window->grid_col_align = PICOUI_ALIGN_START;
-    window->grid_row_align = PICOUI_ALIGN_START;
+    picoui_window_init_defaults(window, id, &host->widget);
     if (picoui_backend_widget_bind_host(window->widget.backend_widget, &window->widget) != 0) {
         free(window);
         return 0;
@@ -119,35 +182,71 @@ struct picoui_window *picoui_window_create(struct picoui_app *app, const char *i
 struct picoui_window *picoui_window_create_child(struct picoui_window *parent, const char *id)
 {
     struct picoui_window *window;
-    void *backend_widget;
+    struct picoui_window_backend_host *host;
     struct picoui_backend_widget *parent_backend;
+    struct picoui_backend_app_state *app_state;
+    ldWindow_t *ld_window;
+    uint16_t name_id;
 
     if (parent == 0 || id == 0 || parent->widget.backend_widget == 0) {
         return 0;
     }
 
     parent_backend = (struct picoui_backend_widget *)parent->widget.backend_widget;
-    backend_widget = picoui_backend_create_child_window(parent_backend, id);
-    if (backend_widget == 0) {
+    app_state = picoui_runtime_bridge_backend_state_from_parent(parent_backend);
+    if (app_state == 0 || app_state->ld_scene == 0 || parent_backend->ld_widget == 0) {
+        return 0;
+    }
+
+    host = calloc(1, sizeof(*host));
+    if (host == 0) {
+        return 0;
+    }
+
+    name_id = picoui_runtime_bridge_next_name_id(parent_backend);
+    if (name_id == 0) {
+        free(host);
+        return 0;
+    }
+
+    ld_window = ldWindow_init(app_state->ld_scene,
+                              NULL,
+                              name_id,
+                              parent_backend->ld_name_id,
+                              0,
+                              0,
+                              160,
+                              80);
+    if (ld_window == 0) {
+        free(host);
+        return 0;
+    }
+
+    if (picoui_backend_widget_init_child(&host->widget,
+                                         parent_backend,
+                                         PICOUI_BACKEND_WIDGET_WINDOW,
+                                         id,
+                                         parent_backend->theme) != 0) {
+        ldWindow_depose(app_state->ld_scene, ld_window);
+        free(host);
+        return 0;
+    }
+    host->widget.ld_widget = ld_window;
+    host->widget.ld_name_id = name_id;
+    if (picoui_backend_widget_attach_child(parent_backend, &host->widget) != 0) {
+        ldWindow_depose(app_state->ld_scene, ld_window);
+        free(host);
         return 0;
     }
 
     window = calloc(1, sizeof(*window));
     if (window == 0) {
-        free(backend_widget);
+        ldWindow_depose(app_state->ld_scene, ld_window);
+        free(host);
         return 0;
     }
 
-    window->id = id;
-    window->widget.backend_widget = backend_widget;
-    window->widget.visible = 1;
-    window->widget.enabled = 1;
-    window->flex_flow = PICOUI_FLEX_FLOW_ROW;
-    window->flex_main_align = PICOUI_ALIGN_START;
-    window->flex_cross_align = PICOUI_ALIGN_START;
-    window->flex_track_align = PICOUI_ALIGN_START;
-    window->grid_col_align = PICOUI_ALIGN_START;
-    window->grid_row_align = PICOUI_ALIGN_START;
+    picoui_window_init_defaults(window, id, &host->widget);
     if (picoui_backend_widget_bind_host(window->widget.backend_widget, &window->widget) != 0) {
         free(window);
         return 0;

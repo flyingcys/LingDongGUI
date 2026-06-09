@@ -227,6 +227,31 @@ def _parse_marker_ids(stdout: str, marker: str, *, required: bool = True) -> set
     return set()
 
 
+def _assert_optional_benchmark_markers(stdout: str) -> None:
+    benchmark_markers = {
+        "PICOUI_BENCHMARK_SCREEN_CREATE_MS": float,
+        "PICOUI_BENCHMARK_FIRST_FRAME_MS": float,
+    }
+
+    for marker, parser in benchmark_markers.items():
+        prefix = f"{marker}="
+        for line in stdout.splitlines():
+            if not line.startswith(prefix):
+                continue
+            value = line[len(prefix) :].strip()
+            try:
+                parsed = parser(value)
+            except ValueError as exc:
+                raise AssertionError(
+                    f"benchmark marker '{marker}' is not parseable: {line}\nstdout:\n{stdout}"
+                ) from exc
+            if parsed < 0:
+                raise AssertionError(
+                    f"benchmark marker '{marker}' must be non-negative: {line}\nstdout:\n{stdout}"
+                )
+            break
+
+
 def _assert_no_smoke_layout(target: str, stdout: str, stderr: str) -> None:
     marker = "PICOUI_SMOKE_LAYOUT_USED="
     for line in stdout.splitlines():
@@ -450,6 +475,14 @@ def main() -> None:
         if "PICOUI_RUNTIME_READY" not in completed.stdout:
             raise AssertionError(
                 f"Demo '{target}' did not report entering a visible runtime loop.\n"
+                f"stdout:\n{completed.stdout}\n"
+                f"stderr:\n{completed.stderr}"
+            )
+        _assert_optional_benchmark_markers(completed.stdout)
+        if target == "picoui_basic_widgets_demo" and "PICOUI_RUNTIME_LOOP" not in completed.stdout:
+            raise AssertionError(
+                "basic_widgets still does not prove the app-free runtime main path.\n"
+                "expected marker: PICOUI_RUNTIME_LOOP\n"
                 f"stdout:\n{completed.stdout}\n"
                 f"stderr:\n{completed.stderr}"
             )

@@ -126,6 +126,24 @@ int picoui_native_signal_to_ld(enum picoui_native_signal signal);
  */
 
 int picoui_native_readback_policy_to_backend(enum picoui_native_readback_policy policy);
+int picoui_backend_widget_init_root(void *backend_widget,
+                                    struct picoui_app *owner,
+                                    enum picoui_backend_widget_kind kind,
+                                    const char *id,
+                                    struct picoui_theme *theme);
+int picoui_backend_widget_init_child(void *backend_widget,
+                                     void *parent,
+                                     enum picoui_backend_widget_kind kind,
+                                     const char *id,
+                                     struct picoui_theme *theme);
+int picoui_backend_widget_attach_child(void *parent, void *child);
+int picoui_backend_widget_bind_host(void *backend_widget, struct picoui_widget *widget);
+int picoui_widget_bind_backend_host(struct picoui_widget *widget, void *backend_widget);
+struct picoui_widget *picoui_widget_backend_host(const void *backend_widget);
+int picoui_widget_backend_detach(void *backend_widget);
+struct picoui_app *picoui_widget_owner_app(const struct picoui_widget *widget);
+int picoui_widget_has_ld_binding(const struct picoui_widget *widget);
+int picoui_backend_runtime_step(struct picoui_app *app);
 
 enum picoui_focus_event {
     PICOUI_FOCUS_EVENT_NONE = 0,

@@ -201,6 +201,7 @@ int picoui_backend_app_init(struct picoui_app *app);
  */
 
 int picoui_backend_app_run(struct picoui_app *app, struct picoui_window *window);
+int picoui_backend_runtime_step(struct picoui_app *app);
 
 /**
  * @brief Shutdown app backend
@@ -249,80 +250,6 @@ int picoui_backend_widget_apply_style(void *backend_widget,
 
 int picoui_backend_widget_is_kind(const void *backend_widget,
                                   enum picoui_backend_widget_kind kind);
-
-/**
- * @brief Get owner from widget backend
- *
- * @param[in] backend_widget backend widget
- * @return Pointer to the object on success, NULL on failure
- */
-
-struct picoui_app *picoui_backend_widget_get_owner(void *backend_widget);
-
-/**
- * @brief Get root from widget backend
- *
- * @param[in] backend_widget backend widget
- * @return Pointer to the object on success, NULL on failure
- */
-
-struct picoui_backend_widget *picoui_backend_widget_get_root(void *backend_widget);
-
-/**
- * @brief Get parent from widget backend
- *
- * @param[in] backend_widget backend widget
- * @return Pointer to the object on success, NULL on failure
- */
-
-struct picoui_backend_widget *picoui_backend_widget_get_parent(void *backend_widget);
-
-/**
- * @brief Get first child from widget backend
- *
- * @param[in] backend_widget backend widget
- * @return Pointer to the object on success, NULL on failure
- */
-
-struct picoui_backend_widget *picoui_backend_widget_get_first_child(void *backend_widget);
-
-/**
- * @brief Get next sibling from widget backend
- *
- * @param[in] backend_widget backend widget
- * @return Pointer to the object on success, NULL on failure
- */
-
-struct picoui_backend_widget *picoui_backend_widget_get_next_sibling(void *backend_widget);
-
-/**
- * @brief widget: find by name id
- *
- * @param[in] backend_widget backend widget
- * @param[in] name_id Name identifier ID
- * @return Pointer to the object on success, NULL on failure
- */
-
-struct picoui_backend_widget *picoui_backend_widget_find_by_name_id(void *backend_widget, uint16_t name_id);
-
-/**
- * @brief Attach  child to widget
- *
- * @param[in] parent Parent widget
- * @param[in] child Child widget
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_widget_attach_child(void *parent, void *child);
-
-/**
- * @brief Detach  from parent to widget
- *
- * @param[in] backend_widget backend widget
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_widget_detach_from_parent(void *backend_widget);
 
 /**
  * @brief widget: unbind host

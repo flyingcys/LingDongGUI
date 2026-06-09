@@ -7,6 +7,72 @@
 #include "internal.h"
 
 #include <assert.h>
+#include <stdlib.h>
+
+void *ldMalloc(uint32_t size)
+{
+    return malloc((size_t)size);
+}
+
+void *ldCalloc(uint32_t num, uint32_t size)
+{
+    return calloc((size_t)num, (size_t)size);
+}
+
+struct tracked_free_entry {
+    void *ptr;
+    int count;
+};
+
+static struct tracked_free_entry g_tracked_frees[24];
+static int g_tracked_free_count = 0;
+
+static void tracked_free_reset(void)
+{
+    int i;
+
+    for (i = 0; i < 24; ++i) {
+        g_tracked_frees[i].ptr = NULL;
+        g_tracked_frees[i].count = 0;
+    }
+    g_tracked_free_count = 0;
+}
+
+static void tracked_free_watch(void *ptr)
+{
+    assert(g_tracked_free_count < 24);
+    g_tracked_frees[g_tracked_free_count].ptr = ptr;
+    g_tracked_frees[g_tracked_free_count].count = 0;
+    g_tracked_free_count++;
+}
+
+static int tracked_free_count_for(void *ptr)
+{
+    int i;
+
+    for (i = 0; i < g_tracked_free_count; ++i) {
+        if (g_tracked_frees[i].ptr == ptr) {
+            return g_tracked_frees[i].count;
+        }
+    }
+    return 0;
+}
+
+void ldFree(void *p)
+{
+    int i;
+
+    if (p == NULL) {
+        return;
+    }
+
+    for (i = 0; i < g_tracked_free_count; ++i) {
+        if (g_tracked_frees[i].ptr == p) {
+            g_tracked_frees[i].count++;
+        }
+    }
+    free(p);
+}
 
 static void test_gauge_create_and_props(struct picoui_window *win)
 {
@@ -215,6 +281,85 @@ static void test_gauge_rejects_null_args(struct picoui_window *win)
     assert(picoui_gauge_get_auto_move(0) == -1);
 }
 
+static void test_gauge_destroy_releases_owned_tiles_without_freeing_external_sources(void)
+{
+    struct picoui_app *app = picoui_app_create();
+    struct picoui_window *win;
+    struct picoui_gauge *gauge;
+    struct picoui_backend_widget *backend;
+    ldGauge_t *ld_gauge;
+    arm_2d_tile_t *default_bg_img_tile;
+    arm_2d_tile_t *default_bg_mask_tile;
+    arm_2d_tile_t *default_pointer_img_tile;
+    arm_2d_tile_t *default_pointer_mask_tile;
+    arm_2d_tile_t external_bg_img_tile = {
+        .tRegion = {
+            .tSize = { .iWidth = 30, .iHeight = 30 },
+        },
+    };
+    arm_2d_tile_t external_bg_mask_tile = {
+        .tRegion = {
+            .tSize = { .iWidth = 30, .iHeight = 30 },
+        },
+    };
+    arm_2d_tile_t external_pointer_img_tile = {
+        .tRegion = {
+            .tSize = { .iWidth = 11, .iHeight = 26 },
+        },
+    };
+    arm_2d_tile_t external_pointer_mask_tile = {
+        .tRegion = {
+            .tSize = { .iWidth = 11, .iHeight = 26 },
+        },
+    };
+    struct picoui_image_source bg_source = {
+        .img_tile = &external_bg_img_tile,
+        .mask_tile = &external_bg_mask_tile,
+    };
+    struct picoui_image_source pointer_source = {
+        .img_tile = &external_pointer_img_tile,
+        .mask_tile = &external_pointer_mask_tile,
+    };
+
+    tracked_free_reset();
+
+    assert(app != 0);
+    win = picoui_window_create(app, "gauge_destroy_root");
+    assert(win != 0);
+    gauge = picoui_gauge_create((struct picoui_widget *)win, "gauge_destroy");
+    assert(gauge != 0);
+    backend = (struct picoui_backend_widget *)gauge->widget.backend_widget;
+    assert(backend != 0);
+    ld_gauge = (ldGauge_t *)backend->ld_widget;
+    assert(ld_gauge != 0);
+
+    default_bg_img_tile = ld_gauge->ptBgImgTile;
+    default_bg_mask_tile = ld_gauge->ptBgMaskTile;
+    default_pointer_img_tile = ld_gauge->ptPointerImgTile;
+    default_pointer_mask_tile = ld_gauge->ptPointerMaskTile;
+    tracked_free_watch(default_bg_img_tile);
+    tracked_free_watch(default_bg_mask_tile);
+    tracked_free_watch(default_pointer_img_tile);
+    tracked_free_watch(default_pointer_mask_tile);
+    tracked_free_watch(&external_bg_img_tile);
+    tracked_free_watch(&external_bg_mask_tile);
+    tracked_free_watch(&external_pointer_img_tile);
+    tracked_free_watch(&external_pointer_mask_tile);
+
+    assert(picoui_gauge_set_bg_source(gauge, &bg_source) == 0);
+    assert(picoui_gauge_set_pointer_source(gauge, &pointer_source) == 0);
+    picoui_app_destroy(app);
+
+    assert(tracked_free_count_for(default_bg_img_tile) == 1);
+    assert(tracked_free_count_for(default_bg_mask_tile) == 1);
+    assert(tracked_free_count_for(default_pointer_img_tile) == 1);
+    assert(tracked_free_count_for(default_pointer_mask_tile) == 1);
+    assert(tracked_free_count_for(&external_bg_img_tile) == 0);
+    assert(tracked_free_count_for(&external_bg_mask_tile) == 0);
+    assert(tracked_free_count_for(&external_pointer_img_tile) == 0);
+    assert(tracked_free_count_for(&external_pointer_mask_tile) == 0);
+}
+
 int main(void)
 {
     struct picoui_app *app = picoui_app_create();
@@ -233,5 +378,6 @@ int main(void)
     test_gauge_rejects_null_args(win);
 
     picoui_app_destroy(app);
+    test_gauge_destroy_releases_owned_tiles_without_freeing_external_sources();
     return 0;
 }

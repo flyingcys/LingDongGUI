@@ -49,6 +49,7 @@ typedef struct ldClock_t ldClock_t;
 typedef struct {
     arm_2d_tile_t       *ptImgTile;
     arm_2d_tile_t       *ptMaskTile;
+    uint8_t             resourceOwnerFlags;
     ldColor             maskColor;
     arm_2d_op_trans_msk_opa_t op;
     arm_2d_point_float_t rotationCentre;
@@ -61,6 +62,7 @@ struct ldClock_t
     ldClockPointer_t pointerInfo[3];
     arm_2d_tile_t *ptBgImgTile;
     arm_2d_tile_t *ptBgMaskTile;
+    uint8_t backgroundResourceOwnerFlags;
     ldColor bgMaskColor;
     uint32_t lastTotalSeconds;
     bool isStepSecond:1;
@@ -76,9 +78,39 @@ void ldClock_on_frame_start(ld_scene_t *ptScene, ldClock_t *ptWidget);
 void ldClock_on_frame_complete(ld_scene_t *ptScene, ldClock_t *ptWidget);
 void ldClock_show(ld_scene_t *pScene, ldClock_t *ptWidget, const arm_2d_tile_t *ptTile, bool bIsNewFrame);
 
+void ldClockBindBackgroundImage(ldClock_t *ptWidget,
+                                arm_2d_tile_t *ptImgTile,
+                                arm_2d_tile_t *ptMaskTile,
+                                ldColor maskColor,
+                                bool ownImgTile,
+                                bool ownMaskTile);
 void ldClockSetBackgroundImage(ldClock_t *ptWidget, arm_2d_tile_t *ptImgTile, arm_2d_tile_t *ptMaskTile, ldColor maskColor);
+void ldClockBindHourPointerImage(ldClock_t *ptWidget,
+                                 arm_2d_tile_t *ptImgTile,
+                                 arm_2d_tile_t *ptMaskTile,
+                                 ldColor maskColor,
+                                 float x,
+                                 float y,
+                                 bool ownImgTile,
+                                 bool ownMaskTile);
 void ldClockSetHourPointerImage(ldClock_t *ptWidget, arm_2d_tile_t *ptImgTile, arm_2d_tile_t *ptMaskTile, ldColor maskColor, float x, float y);
+void ldClockBindMinutePointerImage(ldClock_t *ptWidget,
+                                   arm_2d_tile_t *ptImgTile,
+                                   arm_2d_tile_t *ptMaskTile,
+                                   ldColor maskColor,
+                                   float x,
+                                   float y,
+                                   bool ownImgTile,
+                                   bool ownMaskTile);
 void ldClockSetMinutePointerImage(ldClock_t *ptWidget, arm_2d_tile_t *ptImgTile, arm_2d_tile_t *ptMaskTile, ldColor maskColor, float x, float y);
+void ldClockBindSecondPointerImage(ldClock_t *ptWidget,
+                                   arm_2d_tile_t *ptImgTile,
+                                   arm_2d_tile_t *ptMaskTile,
+                                   ldColor maskColor,
+                                   float x,
+                                   float y,
+                                   bool ownImgTile,
+                                   bool ownMaskTile);
 void ldClockSetSecondPointerImage(ldClock_t *ptWidget, arm_2d_tile_t *ptImgTile, arm_2d_tile_t *ptMaskTile, ldColor maskColor, float x, float y);
 
 void ldClockSetStepSecond(ldClock_t *ptWidget, bool isStepSecond);

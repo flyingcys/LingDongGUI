@@ -18,6 +18,7 @@
 
 #include "backend.h"
 #include "internal.h"
+#include "runtime_bridge.h"
 #include "ldClock.h"
 
 #include <stdlib.h>
@@ -25,16 +26,6 @@
 extern const arm_2d_tile_t c_tilePointerSecGRAY8;
 extern const arm_2d_tile_t c_tilePointerSecMask;
 extern const arm_2d_tile_t c_tileClockface;
-
-static struct picoui_backend_app_state *picoui_backend_clock_get_app_state(void *parent)
-{
-    struct picoui_backend_widget *parent_widget = parent;
-
-    if (parent_widget == NULL || parent_widget->owner == NULL || parent_widget->owner->backend_app == NULL) {
-        return NULL;
-    }
-    return (struct picoui_backend_app_state *)parent_widget->owner->backend_app;
-}
 
 static ldClock_t *picoui_backend_clock_get_ld(struct picoui_clock *clock)
 {
@@ -143,7 +134,7 @@ void *picoui_backend_create_clock(void *parent, const char *id)
         return 0;
     }
 
-    app_state = picoui_backend_clock_get_app_state(parent);
+    app_state = picoui_runtime_bridge_backend_state_from_parent(parent);
     if (app_state == NULL || app_state->ld_scene == NULL || parent_widget->ld_widget == NULL) {
         return 0;
     }
@@ -212,7 +203,17 @@ void *picoui_backend_create_clock(void *parent, const char *id)
     }
     *second_mask_tile = c_tilePointerSecMask;
 
-    name_id = ++app_state->next_ld_name_id;
+    name_id = picoui_runtime_bridge_next_name_id(parent);
+    if (name_id == 0) {
+        free(second_mask_tile);
+        free(second_img_tile);
+        free(minute_mask_tile);
+        free(minute_img_tile);
+        free(hour_mask_tile);
+        free(hour_img_tile);
+        free(widget);
+        return 0;
+    }
     ld_clock = ldClock_init(app_state->ld_scene,
                             NULL,
                             name_id,
@@ -232,37 +233,51 @@ void *picoui_backend_create_clock(void *parent, const char *id)
         return 0;
     }
 
-    ldClockSetHourPointerImage(ld_clock,
-                               hour_img_tile,
-                               hour_mask_tile,
+    ldClockBindHourPointerImage(ld_clock,
+                                hour_img_tile,
+                                hour_mask_tile,
+                                0,
+                                (float)(hour_mask_tile->tRegion.tSize.iWidth >> 1),
+                                (float)hour_mask_tile->tRegion.tSize.iHeight,
+                                true,
+                                true);
+    ldClockBindMinutePointerImage(ld_clock,
+                                  minute_img_tile,
+                                  minute_mask_tile,
+                                  0,
+                                  (float)(minute_mask_tile->tRegion.tSize.iWidth >> 1),
+                                  (float)minute_mask_tile->tRegion.tSize.iHeight,
+                                  true,
+                                  true);
+    ldClockBindSecondPointerImage(ld_clock,
+                                  second_img_tile,
+                                  second_mask_tile,
+                                  0,
+                                  (float)(second_mask_tile->tRegion.tSize.iWidth >> 1),
+                                  100.0f,
+                                  true,
+                                  true);
+    ldClockBindBackgroundImage(ld_clock,
+                               (arm_2d_tile_t *)&c_tileClockface,
+                               NULL,
                                0,
-                               (float)(hour_mask_tile->tRegion.tSize.iWidth >> 1),
-                               (float)hour_mask_tile->tRegion.tSize.iHeight);
-    ldClockSetMinutePointerImage(ld_clock,
-                                 minute_img_tile,
-                                 minute_mask_tile,
-                                 0,
-                                 (float)(minute_mask_tile->tRegion.tSize.iWidth >> 1),
-                                 (float)minute_mask_tile->tRegion.tSize.iHeight);
-    ldClockSetSecondPointerImage(ld_clock,
-                                 second_img_tile,
-                                 second_mask_tile,
-                                 0,
-                                 (float)(second_mask_tile->tRegion.tSize.iWidth >> 1),
-                                 100.0f);
-    ldClockSetBackgroundImage(ld_clock,
-                              (arm_2d_tile_t *)&c_tileClockface,
-                              NULL,
-                              0);
+                               false,
+                               false);
 
-    widget->parent = parent;
-    widget->id = id;
-    widget->kind = PICOUI_BACKEND_WIDGET_CLOCK;
-    widget->theme = ((struct picoui_backend_widget *)parent)->theme;
+    if (picoui_backend_widget_init_child(widget,
+                                         parent,
+                                         PICOUI_BACKEND_WIDGET_CLOCK,
+                                         id,
+                                         parent_widget->theme) != 0) {
+        ldClock_depose(app_state->ld_scene, ld_clock);
+        free(widget);
+        return 0;
+    }
     widget->ld_widget = ld_clock;
     widget->ld_name_id = name_id;
     widget->value = 0;
     if (picoui_backend_widget_attach_child(parent, widget) != 0) {
+        ldClock_depose(app_state->ld_scene, ld_clock);
         free(widget);
         return 0;
     }

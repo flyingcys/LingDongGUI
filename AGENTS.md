@@ -14,13 +14,13 @@
 - 若当前实现只能靠临时 fake 路径工作，文档必须明确标注为 `temporary smoke path`，不得写成正式方案。
 
 - 采用 cmake 编译
-- worktree 合并，可以不管主仓库文档变更，主仓库的文档可能一直在自动更新。
+- 当前项目不创建 worktree。
 
 
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **LingDongGUI** (121608 symbols, 179730 relationships, 300 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **LingDongGUI** (122052 symbols, 180454 relationships, 300 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 

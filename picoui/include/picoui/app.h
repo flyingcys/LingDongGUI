@@ -19,6 +19,11 @@
 #ifndef PICOUI_APP_H
 #define PICOUI_APP_H
 
+/*
+ * Compatibility API retained during TinyUI transition.
+ * New user-facing startup path should use runtime.h.
+ */
+
 struct picoui_app;
 struct picoui_app_timer;
 struct picoui_background;

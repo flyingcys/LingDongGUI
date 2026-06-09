@@ -18,6 +18,7 @@
 
 #include "backend.h"
 #include "internal.h"
+#include "runtime_bridge.h"
 #include "ldDateTime.h"
 
 #include <stdlib.h>
@@ -48,16 +49,6 @@ static int picoui_backend_date_time_map_align(enum picoui_align align, arm_2d_al
     default:
         return -1;
     }
-}
-
-static struct picoui_backend_app_state *picoui_backend_date_time_get_app_state(void *parent)
-{
-    struct picoui_backend_widget *parent_widget = parent;
-
-    if (parent_widget == NULL || parent_widget->owner == NULL || parent_widget->owner->backend_app == NULL) {
-        return NULL;
-    }
-    return (struct picoui_backend_app_state *)parent_widget->owner->backend_app;
 }
 
 static ldDateTime_t *picoui_backend_date_time_get_ld(struct picoui_date_time *dt)
@@ -95,7 +86,7 @@ void *picoui_backend_create_date_time(void *parent, const char *id)
         return 0;
     }
 
-    app_state = picoui_backend_date_time_get_app_state(parent);
+    app_state = picoui_runtime_bridge_backend_state_from_parent(parent);
     if (app_state == NULL || app_state->ld_scene == NULL || parent_widget->ld_widget == NULL) {
         return 0;
     }
@@ -105,7 +96,11 @@ void *picoui_backend_create_date_time(void *parent, const char *id)
         return 0;
     }
 
-    name_id = ++app_state->next_ld_name_id;
+    name_id = picoui_runtime_bridge_next_name_id(parent);
+    if (name_id == 0) {
+        free(widget);
+        return 0;
+    }
     ld_date_time = ldDateTime_init(app_state->ld_scene,
                                    NULL,
                                    name_id,
@@ -120,14 +115,20 @@ void *picoui_backend_create_date_time(void *parent, const char *id)
         return 0;
     }
 
-    widget->parent = parent;
-    widget->id = id;
-    widget->kind = PICOUI_BACKEND_WIDGET_DATE_TIME;
-    widget->theme = ((struct picoui_backend_widget *)parent)->theme;
+    if (picoui_backend_widget_init_child(widget,
+                                         parent,
+                                         PICOUI_BACKEND_WIDGET_DATE_TIME,
+                                         id,
+                                         parent_widget->theme) != 0) {
+        ldDateTime_depose(app_state->ld_scene, ld_date_time);
+        free(widget);
+        return 0;
+    }
     widget->ld_widget = ld_date_time;
     widget->ld_name_id = name_id;
     widget->text = (const char *)ld_date_time->formatStr;
     if (picoui_backend_widget_attach_child(parent, widget) != 0) {
+        ldDateTime_depose(app_state->ld_scene, ld_date_time);
         free(widget);
         return 0;
     }

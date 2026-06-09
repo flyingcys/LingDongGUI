@@ -53,6 +53,27 @@ const ldBaseWidgetFunc_t ldGaugeFunc = {
     .show = (ldShowFunc_t)ldGauge_show,
 };
 
+enum {
+    LD_GAUGE_OWN_BG_IMG_TILE = 1 << 0,
+    LD_GAUGE_OWN_BG_MASK_TILE = 1 << 1,
+    LD_GAUGE_OWN_POINTER_IMG_TILE = 1 << 2,
+    LD_GAUGE_OWN_POINTER_MASK_TILE = 1 << 3,
+};
+
+static void ldGaugeReleaseOwnedTile(arm_2d_tile_t **pptTile,
+                                    uint8_t *pFlags,
+                                    uint8_t flag)
+{
+    if (pptTile == NULL || pFlags == NULL) {
+        return;
+    }
+    if (((*pFlags) & flag) != 0 && *pptTile != NULL) {
+        ldFree(*pptTile);
+    }
+    *pptTile = NULL;
+    *pFlags &= (uint8_t)~flag;
+}
+
 ldGauge_t* ldGauge_init( ld_scene_t *ptScene,ldGauge_t *ptWidget, uint16_t nameId, uint16_t parentNameId, int16_t x, int16_t y, int16_t width, int16_t height, arm_2d_tile_t *ptBgImgTile,arm_2d_tile_t *ptBgMaskTile, int16_t centreOffsetX, int16_t centreOffsetY)
 {
     assert(NULL != ptScene);
@@ -117,12 +138,10 @@ void ldGauge_depose(ld_scene_t *pScene, ldGauge_t *ptWidget)
 
     ldMsgDelConnect(ptWidget);
     ldBaseNodeRemove((arm_2d_control_node_t*)ptWidget);
-#if USE_VIRTUAL_RESOURCE == 1
-    ldFree(ptWidget->ptBgImgTile);
-    ldFree(ptWidget->ptBgMaskTile);
-    ldFree(ptWidget->ptPointerImgTile);
-    ldFree(ptWidget->ptPointerMaskTile);
-#endif
+    ldGaugeReleaseOwnedTile(&ptWidget->ptBgImgTile, &ptWidget->resourceOwnerFlags, LD_GAUGE_OWN_BG_IMG_TILE);
+    ldGaugeReleaseOwnedTile(&ptWidget->ptBgMaskTile, &ptWidget->resourceOwnerFlags, LD_GAUGE_OWN_BG_MASK_TILE);
+    ldGaugeReleaseOwnedTile(&ptWidget->ptPointerImgTile, &ptWidget->resourceOwnerFlags, LD_GAUGE_OWN_POINTER_IMG_TILE);
+    ldGaugeReleaseOwnedTile(&ptWidget->ptPointerMaskTile, &ptWidget->resourceOwnerFlags, LD_GAUGE_OWN_POINTER_MASK_TILE);
     ldFree(ptWidget->use_as__ldBase_t.ptItemRegionList);
     ldFree(ptWidget);
 }
@@ -443,15 +462,52 @@ void ldGauge_show(ld_scene_t *ptScene, ldGauge_t *ptWidget, const arm_2d_tile_t 
     arm_2d_op_wait_async(NULL);
 }
 
-void ldGaugeSetPointerImage(ldGauge_t *ptWidget,arm_2d_tile_t *ptPointerImgTile,arm_2d_tile_t *ptPointerMaskTile,int16_t pointerOriginOffsetX,int16_t pointerOriginOffsetY)
+void ldGaugeSetBackgroundImage(ldGauge_t *ptWidget,
+                               arm_2d_tile_t *ptBgImgTile,
+                               arm_2d_tile_t *ptBgMaskTile,
+                               bool ownBgImgTile,
+                               bool ownBgMaskTile)
 {
     assert(NULL != ptWidget);
     if(ptWidget == NULL)
     {
         return;
     }
+    ldGaugeReleaseOwnedTile(&ptWidget->ptBgImgTile, &ptWidget->resourceOwnerFlags, LD_GAUGE_OWN_BG_IMG_TILE);
+    ldGaugeReleaseOwnedTile(&ptWidget->ptBgMaskTile, &ptWidget->resourceOwnerFlags, LD_GAUGE_OWN_BG_MASK_TILE);
+    ptWidget->ptBgImgTile = ptBgImgTile;
+    ptWidget->ptBgMaskTile = ptBgMaskTile;
+    if (ownBgImgTile) {
+        ptWidget->resourceOwnerFlags |= LD_GAUGE_OWN_BG_IMG_TILE;
+    }
+    if (ownBgMaskTile) {
+        ptWidget->resourceOwnerFlags |= LD_GAUGE_OWN_BG_MASK_TILE;
+    }
+}
+
+void ldGaugeBindPointerImage(ldGauge_t *ptWidget,
+                             arm_2d_tile_t *ptPointerImgTile,
+                             arm_2d_tile_t *ptPointerMaskTile,
+                             int16_t pointerOriginOffsetX,
+                             int16_t pointerOriginOffsetY,
+                             bool ownPointerImgTile,
+                             bool ownPointerMaskTile)
+{
+    assert(NULL != ptWidget);
+    if(ptWidget == NULL)
+    {
+        return;
+    }
+    ldGaugeReleaseOwnedTile(&ptWidget->ptPointerImgTile, &ptWidget->resourceOwnerFlags, LD_GAUGE_OWN_POINTER_IMG_TILE);
+    ldGaugeReleaseOwnedTile(&ptWidget->ptPointerMaskTile, &ptWidget->resourceOwnerFlags, LD_GAUGE_OWN_POINTER_MASK_TILE);
     ptWidget->ptPointerImgTile=ptPointerImgTile;
     ptWidget->ptPointerMaskTile=ptPointerMaskTile;
+    if (ownPointerImgTile) {
+        ptWidget->resourceOwnerFlags |= LD_GAUGE_OWN_POINTER_IMG_TILE;
+    }
+    if (ownPointerMaskTile) {
+        ptWidget->resourceOwnerFlags |= LD_GAUGE_OWN_POINTER_MASK_TILE;
+    }
     ptWidget->pointerOriginOffsetX=pointerOriginOffsetX;
     ptWidget->pointerOriginOffsetY=pointerOriginOffsetY;
 
@@ -465,6 +521,17 @@ void ldGaugeSetPointerImage(ldGauge_t *ptWidget,arm_2d_tile_t *ptPointerImgTile,
     {
         ptWidget->use_as__ldBase_t.ptItemRegionList[0].itemRegion=ptWidget->ptPointerMaskTile->tRegion;
     }
+}
+
+void ldGaugeSetPointerImage(ldGauge_t *ptWidget,arm_2d_tile_t *ptPointerImgTile,arm_2d_tile_t *ptPointerMaskTile,int16_t pointerOriginOffsetX,int16_t pointerOriginOffsetY)
+{
+    ldGaugeBindPointerImage(ptWidget,
+                            ptPointerImgTile,
+                            ptPointerMaskTile,
+                            pointerOriginOffsetX,
+                            pointerOriginOffsetY,
+                            false,
+                            false);
 }
 
 void ldGaugeSetPointerColor(ldGauge_t *ptWidget,ldColor color)

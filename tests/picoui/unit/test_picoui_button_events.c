@@ -8,6 +8,7 @@
 #include <string.h>
 
 extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
+extern int picoui_widget_has_ld_binding(const struct picoui_widget *widget);
 
 static int press_count = 0;
 static int release_count = 0;
@@ -115,6 +116,19 @@ static void test_button_rejects_null_args(struct picoui_window *win)
     assert(picoui_button_set_on_clicked(0, 0, 0) == -1);
 }
 
+static void test_button_constructor_binds_ld_without_backend_wrapper(struct picoui_window *win)
+{
+    struct picoui_button *btn = picoui_button_create(win, "btn_direct_path");
+
+    assert(btn != 0);
+    assert(picoui_widget_has_ld_binding(&btn->widget) == 1);
+}
+
+static void test_button_legacy_backend_constructor_is_disabled(struct picoui_window *win)
+{
+    assert(picoui_backend_create_button(win->widget.backend_widget, "legacy_button") == 0);
+}
+
 int main(void)
 {
     struct picoui_app *app = picoui_app_create();
@@ -140,6 +154,8 @@ int main(void)
 
     assert(app != 0);
     assert(win != 0);
+    test_button_constructor_binds_ld_without_backend_wrapper(win);
+    test_button_legacy_backend_constructor_is_disabled(win);
     assert(button != 0);
     assert(checkbox != 0);
     assert(sw != 0);

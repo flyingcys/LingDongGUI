@@ -18,6 +18,7 @@
 
 #include "backend.h"
 #include "internal.h"
+#include "runtime_bridge.h"
 #include "ldGauge.h"
 
 #include <stdlib.h>
@@ -26,16 +27,6 @@ extern const arm_2d_tile_t c_tileQuaterArcGRAY8;
 extern const arm_2d_tile_t c_tileQuaterArcMask;
 extern const arm_2d_tile_t c_tilePointerSecGRAY8;
 extern const arm_2d_tile_t c_tilePointerSecMask;
-
-static struct picoui_backend_app_state *picoui_backend_gauge_get_app_state(void *parent)
-{
-    struct picoui_backend_widget *parent_widget = parent;
-
-    if (parent_widget == NULL || parent_widget->owner == NULL || parent_widget->owner->backend_app == NULL) {
-        return NULL;
-    }
-    return (struct picoui_backend_app_state *)parent_widget->owner->backend_app;
-}
 
 static ldGauge_t *picoui_backend_gauge_get_ld(struct picoui_gauge *gauge)
 {
@@ -74,7 +65,7 @@ void *picoui_backend_create_gauge(void *parent, const char *id)
         return 0;
     }
 
-    app_state = picoui_backend_gauge_get_app_state(parent);
+    app_state = picoui_runtime_bridge_backend_state_from_parent(parent);
     if (app_state == NULL || app_state->ld_scene == NULL || parent_widget->ld_widget == NULL) {
         return 0;
     }
@@ -118,7 +109,15 @@ void *picoui_backend_create_gauge(void *parent, const char *id)
     }
     *pointer_mask_tile = c_tilePointerSecMask;
 
-    name_id = ++app_state->next_ld_name_id;
+    name_id = picoui_runtime_bridge_next_name_id(parent);
+    if (name_id == 0) {
+        free(pointer_mask_tile);
+        free(pointer_img_tile);
+        free(bg_mask_tile);
+        free(bg_img_tile);
+        free(widget);
+        return 0;
+    }
     ld_gauge = ldGauge_init(app_state->ld_scene,
                             NULL,
                             name_id,
@@ -139,20 +138,29 @@ void *picoui_backend_create_gauge(void *parent, const char *id)
         free(widget);
         return 0;
     }
+    ldGaugeSetBackgroundImage(ld_gauge, bg_img_tile, bg_mask_tile, true, true);
 
-    ldGaugeSetPointerImage(ld_gauge,
-                           pointer_img_tile,
-                           pointer_mask_tile,
-                           (int16_t)(pointer_mask_tile->tRegion.tSize.iWidth >> 1),
-                           (int16_t)(pointer_mask_tile->tRegion.tSize.iHeight));
+    ldGaugeBindPointerImage(ld_gauge,
+                            pointer_img_tile,
+                            pointer_mask_tile,
+                            (int16_t)(pointer_mask_tile->tRegion.tSize.iWidth >> 1),
+                            (int16_t)(pointer_mask_tile->tRegion.tSize.iHeight),
+                            true,
+                            true);
 
-    widget->parent = parent;
-    widget->id = id;
-    widget->kind = PICOUI_BACKEND_WIDGET_GAUGE;
-    widget->theme = ((struct picoui_backend_widget *)parent)->theme;
+    if (picoui_backend_widget_init_child(widget,
+                                         parent,
+                                         PICOUI_BACKEND_WIDGET_GAUGE,
+                                         id,
+                                         parent_widget->theme) != 0) {
+        ldGauge_depose(app_state->ld_scene, ld_gauge);
+        free(widget);
+        return 0;
+    }
     widget->ld_widget = ld_gauge;
     widget->ld_name_id = name_id;
     if (picoui_backend_widget_attach_child(parent, widget) != 0) {
+        ldGauge_depose(app_state->ld_scene, ld_gauge);
         free(widget);
         return 0;
     }
@@ -197,8 +205,7 @@ int picoui_backend_gauge_set_bg_source(struct picoui_gauge *gauge, struct picoui
         return -1;
     }
 
-    ld_gauge->ptBgImgTile = source->img_tile;
-    ld_gauge->ptBgMaskTile = source->mask_tile;
+    ldGaugeSetBackgroundImage(ld_gauge, source->img_tile, source->mask_tile, false, false);
     return 0;
 }
 
@@ -221,11 +228,13 @@ int picoui_backend_gauge_set_pointer_source(struct picoui_gauge *gauge, struct p
 
     mask_tile = (arm_2d_tile_t *)source->mask_tile;
 
-    ldGaugeSetPointerImage(ld_gauge,
-                           source->img_tile,
-                           source->mask_tile,
-                           (int16_t)(mask_tile->tRegion.tSize.iWidth >> 1),
-                           (int16_t)(mask_tile->tRegion.tSize.iHeight));
+    ldGaugeBindPointerImage(ld_gauge,
+                            source->img_tile,
+                            source->mask_tile,
+                            (int16_t)(mask_tile->tRegion.tSize.iWidth >> 1),
+                            (int16_t)(mask_tile->tRegion.tSize.iHeight),
+                            false,
+                            false);
     return 0;
 }
 

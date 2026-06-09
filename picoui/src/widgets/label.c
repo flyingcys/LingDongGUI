@@ -18,6 +18,8 @@
 
 #include "internal.h"
 #include "picoui/label.h"
+#include "../core/runtime_bridge.h"
+#include "../../../src/gui/ldLabel.h"
 
 #include <stdlib.h>
 
@@ -57,8 +59,19 @@ static int picoui_label_props_are_valid(const struct picoui_label_props *props)
 struct picoui_label *picoui_label_create(struct picoui_window *parent, const char *id)
 {
     struct picoui_label *label;
+    struct picoui_backend_widget *backend;
+    struct picoui_backend_widget *parent_backend;
+    struct picoui_backend_app_state *app_state;
+    ldLabel_t *ld_label;
+    uint16_t name_id;
 
     if (parent == 0 || id == 0) {
+        return 0;
+    }
+
+    parent_backend = (struct picoui_backend_widget *)parent->widget.backend_widget;
+    app_state = picoui_runtime_bridge_backend_state_from_parent(parent_backend);
+    if (parent_backend == 0 || parent_backend->ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
         return 0;
     }
 
@@ -67,15 +80,61 @@ struct picoui_label *picoui_label_create(struct picoui_window *parent, const cha
         return 0;
     }
 
-    label->widget.backend_widget = picoui_backend_create_label(parent->widget.backend_widget, id);
-    if (label->widget.backend_widget == 0) {
+    backend = calloc(1, sizeof(*backend));
+    if (backend == 0) {
+        free(label);
+        return 0;
+    }
+
+    name_id = picoui_runtime_bridge_next_name_id(parent_backend);
+    if (name_id == 0) {
+        free(backend);
+        free(label);
+        return 0;
+    }
+
+    ld_label = ldLabel_init(app_state->ld_scene,
+                            NULL,
+                            name_id,
+                            parent_backend->ld_name_id,
+                            0,
+                            0,
+                            220,
+                            28,
+                            NULL);
+    if (ld_label == 0) {
+        free(backend);
+        free(label);
+        return 0;
+    }
+
+    if (picoui_backend_widget_init_child(backend,
+                                         parent_backend,
+                                         PICOUI_BACKEND_WIDGET_LABEL,
+                                         id,
+                                         parent_backend->theme) != 0) {
+        ldLabel_depose(app_state->ld_scene, ld_label);
+        free(backend);
+        free(label);
+        return 0;
+    }
+    backend->ld_widget = ld_label;
+    backend->ld_name_id = name_id;
+    if (picoui_backend_widget_attach_child(parent_backend, backend) != 0) {
+        ldLabel_depose(app_state->ld_scene, ld_label);
+        free(backend);
         free(label);
         return 0;
     }
 
     label->id = id;
+    label->widget.backend_widget = backend;
     label->widget.visible = 1;
     label->widget.enabled = 1;
+    if (picoui_backend_widget_bind_host(label->widget.backend_widget, &label->widget) != 0) {
+        free(label);
+        return 0;
+    }
     return label;
 }
 

@@ -20,6 +20,7 @@
 #define PICOUI_LABEL_H
 
 #include "picoui/widget.h"
+#include "picoui/window.h"
 
 struct picoui_window;
 struct picoui_label;
@@ -182,5 +183,10 @@ int picoui_label_get_align(struct picoui_label *label, enum picoui_align *align)
 
 int picoui_label_set_background_source(struct picoui_label *label,
                                        struct picoui_image_source *source);
+
+static inline tinyui_obj_t *tinyui_label_create(tinyui_obj_t *parent, const char *id)
+{
+    return (tinyui_obj_t *)picoui_label_create((struct picoui_window *)parent, id);
+}
 
 #endif

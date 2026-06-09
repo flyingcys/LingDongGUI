@@ -18,6 +18,7 @@
 
 #include "backend.h"
 #include "internal.h"
+#include "runtime_bridge.h"
 #include "ldBase.h"
 #include "ldImage.h"
 
@@ -26,16 +27,6 @@
 static ldColor picoui_backend_image_rgb_to_ld_color(unsigned int rgb)
 {
     return __RGB((rgb >> 16) & 0xFFU, (rgb >> 8) & 0xFFU, rgb & 0xFFU);
-}
-
-static struct picoui_backend_app_state *picoui_backend_image_get_app_state(void *parent)
-{
-    struct picoui_backend_widget *parent_widget = parent;
-
-    if (parent_widget == NULL || parent_widget->owner == NULL || parent_widget->owner->backend_app == NULL) {
-        return NULL;
-    }
-    return (struct picoui_backend_app_state *)parent_widget->owner->backend_app;
 }
 
 /**
@@ -57,7 +48,7 @@ void *picoui_backend_create_image(void *parent, const char *id)
         return 0;
     }
 
-    app_state = picoui_backend_image_get_app_state(parent);
+    app_state = picoui_runtime_bridge_backend_state_from_parent(parent);
     if (app_state == NULL || app_state->ld_scene == NULL || parent_widget->ld_widget == NULL) {
         return 0;
     }
@@ -67,20 +58,30 @@ void *picoui_backend_create_image(void *parent, const char *id)
         return 0;
     }
 
-    name_id = ++app_state->next_ld_name_id;
+    name_id = picoui_runtime_bridge_next_name_id(parent);
+    if (name_id == 0) {
+        free(widget);
+        return 0;
+    }
     ld_image = ldImage_init(app_state->ld_scene, NULL, name_id, parent_widget->ld_name_id, 0, 0, 220, 56, NULL, NULL);
     if (ld_image == NULL) {
         free(widget);
         return 0;
     }
 
-    widget->parent = parent;
-    widget->id = id;
-    widget->kind = PICOUI_BACKEND_WIDGET_IMAGE;
-    widget->theme = ((struct picoui_backend_widget *)parent)->theme;
+    if (picoui_backend_widget_init_child(widget,
+                                         parent,
+                                         PICOUI_BACKEND_WIDGET_IMAGE,
+                                         id,
+                                         parent_widget->theme) != 0) {
+        ldImage_depose(app_state->ld_scene, ld_image);
+        free(widget);
+        return 0;
+    }
     widget->ld_widget = ld_image;
     widget->ld_name_id = name_id;
     if (picoui_backend_widget_attach_child(parent, widget) != 0) {
+        ldImage_depose(app_state->ld_scene, ld_image);
         free(widget);
         return 0;
     }

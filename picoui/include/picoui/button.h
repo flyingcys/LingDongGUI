@@ -20,6 +20,7 @@
 #define PICOUI_BUTTON_H
 
 #include "picoui/widget.h"
+#include "picoui/window.h"
 
 struct picoui_window;
 struct picoui_button;
@@ -382,5 +383,10 @@ int picoui_button_set_on_pressed(struct picoui_button *button,
 int picoui_button_set_on_released(struct picoui_button *button,
                                   picoui_event_cb cb,
                                   void *user_data);
+
+static inline tinyui_obj_t *tinyui_button_create(tinyui_obj_t *parent, const char *id)
+{
+    return (tinyui_obj_t *)picoui_button_create((struct picoui_window *)parent, id);
+}
 
 #endif
