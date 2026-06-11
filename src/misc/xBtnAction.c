@@ -65,6 +65,25 @@ void _xBtnInit(uint16_t id, isBtnPressFunc pFunc, xBtnInfo_t *pBtnBuf)
     }
 }
 
+void xBtnRemove(xBtnInfo_t *pBtnBuf)
+{
+    xBtnInfo_t **cursor;
+
+    if (pBtnBuf == NULL) {
+        return;
+    }
+
+    cursor = &xBtnLink;
+    while (*cursor != NULL) {
+        if (*cursor == pBtnBuf) {
+            *cursor = pBtnBuf->pNext;
+            pBtnBuf->pNext = NULL;
+            return;
+        }
+        cursor = &(*cursor)->pNext;
+    }
+}
+
 static void _xBtnResetInfo(void)
 {
     xBtnInfo_t *p = xBtnLink;

@@ -94,6 +94,42 @@ static void test_radial_menu_create_with_default_index_defers_selection_until_it
     picoui_app_destroy(app);
 }
 
+static void test_radial_menu_create_builds_direct_backend_mapping(void)
+{
+    struct picoui_app *app;
+    struct picoui_window *win;
+    struct picoui_radial_menu *radial_menu;
+    struct picoui_backend_widget *backend;
+    struct picoui_backend_widget *parent_backend;
+    ldRadialMenu_t *ld_radial_menu;
+
+    app = picoui_app_create();
+    assert(app != 0);
+    win = picoui_window_create(app, "radial_menu_direct_root");
+    assert(win != 0);
+
+    radial_menu = picoui_radial_menu_create((struct picoui_widget *)win, "radial_menu_direct");
+    assert(radial_menu != 0);
+
+    backend = (struct picoui_backend_widget *)radial_menu->widget.backend_widget;
+    parent_backend = (struct picoui_backend_widget *)win->widget.backend_widget;
+    assert(backend != 0);
+    assert(parent_backend != 0);
+    assert(backend->kind == PICOUI_BACKEND_WIDGET_RADIAL_MENU);
+    assert(backend->owner == parent_backend->owner);
+    assert(backend->root == parent_backend->root);
+    assert(backend->parent == parent_backend);
+    assert(backend->ld_name_id != 0);
+    assert(backend->host_widget == &radial_menu->widget);
+    assert(backend->ld_event_bridge_scene != 0);
+    assert(backend->ld_event_bridge_sender == backend->ld_widget);
+    ld_radial_menu = (ldRadialMenu_t *)backend->ld_widget;
+    assert(ld_radial_menu != 0);
+    assert(((ldBase_t *)ld_radial_menu)->pInfo == backend);
+
+    picoui_app_destroy(app);
+}
+
 static void test_radial_menu_create_with_props_pushes_backend_geometry(void)
 {
     struct picoui_app *app;
@@ -268,6 +304,7 @@ int main(void)
     test_radial_menu_navigation_and_selection_follow_backend_truth();
     test_radial_menu_rejects_items_beyond_native_capacity();
     test_radial_menu_create_with_default_index_defers_selection_until_items_exist();
+    test_radial_menu_create_builds_direct_backend_mapping();
     test_radial_menu_create_with_props_pushes_backend_geometry();
     test_radial_menu_native_click_default_offset_round_trip();
     test_radial_menu_init_and_alias_round_trip();

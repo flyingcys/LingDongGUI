@@ -359,6 +359,23 @@ static void test_line_edit_error_paths_boundary_values(struct picoui_window *win
     assert(picoui_line_edit_get_editing(le, 0) == -1);
 }
 
+static void test_line_edit_public_create_uses_widget_local_backend(struct picoui_window *win)
+{
+    struct picoui_line_edit *line_edit;
+    struct picoui_backend_widget *backend;
+
+    assert(win != 0);
+    line_edit = picoui_line_edit_create(win, "line_edit_widget_local");
+    assert(line_edit != 0);
+
+    backend = (struct picoui_backend_widget *)line_edit->widget.backend_widget;
+    assert(backend != 0);
+    assert(backend->kind == PICOUI_BACKEND_WIDGET_TEXT);
+    assert(backend->host_widget == &line_edit->widget);
+    assert(backend->parent == win->widget.backend_widget);
+    assert(backend->ld_widget != 0);
+}
+
 int main(void)
 {
     struct picoui_app *app = picoui_app_create();
@@ -381,6 +398,7 @@ int main(void)
 
     test_line_edit_error_paths_null_args(win);
     test_line_edit_error_paths_boundary_values(win);
+    test_line_edit_public_create_uses_widget_local_backend(win);
 
     picoui_app_destroy(app);
     return 0;

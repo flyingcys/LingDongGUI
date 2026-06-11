@@ -71,6 +71,37 @@ static void test_keyboard_event_capture(struct picoui_keyboard *keyboard,
     capture[2] += 1U;
 }
 
+static void test_keyboard_create_builds_direct_backend_mapping(void)
+{
+    struct picoui_app *app;
+    struct picoui_window *win;
+    struct picoui_keyboard *keyboard;
+    struct picoui_backend_widget *backend;
+    struct picoui_backend_widget *parent_backend;
+    ldKeyboard_t *ld_keyboard;
+
+    win = test_window_create(&app);
+    keyboard = picoui_keyboard_create(win, "keyboard_direct_mapping");
+    assert(keyboard != 0);
+
+    backend = (struct picoui_backend_widget *)keyboard->widget.backend_widget;
+    parent_backend = (struct picoui_backend_widget *)win->widget.backend_widget;
+    assert(backend != 0);
+    assert(parent_backend != 0);
+    assert(backend->kind == PICOUI_BACKEND_WIDGET_KEYBOARD);
+    assert(backend->owner == parent_backend->owner);
+    assert(backend->root == parent_backend->root);
+    assert(backend->parent == parent_backend);
+    assert(backend->ld_name_id != 0);
+    assert(backend->host_widget == &keyboard->widget);
+    assert(backend->ld_event_bridge_scene != 0);
+    assert(backend->ld_event_bridge_sender == backend->ld_widget);
+    ld_keyboard = (ldKeyboard_t *)backend->ld_widget;
+    assert(ld_keyboard != 0);
+    assert(((ldBase_t *)ld_keyboard)->pInfo == backend);
+    picoui_app_destroy(app);
+}
+
 static void test_keyboard_draw_callback_round_trip(void)
 {
     struct picoui_app *app;
@@ -552,6 +583,7 @@ static void test_keyboard_native_press_and_release_emit_picoui_callback(void)
 
 int main(void)
 {
+    test_keyboard_create_builds_direct_backend_mapping();
     test_keyboard_dispatches_ascii_into_focused_line_edit();
     test_keyboard_dispatches_ascii_into_editing_owner_before_focus_owner();
     test_keyboard_navigation_preserves_editing_owner_model_truth();

@@ -1,7 +1,7 @@
 #include "picoui/app.h"
 #include "picoui/button.h"
 #include "picoui/window.h"
-#include "../../../picoui/src/backend/ldgui/backend.h"
+#include "../../../tinyui/src/backend/ldgui/backend.h"
 #include "internal.h"
 
 #include <assert.h>

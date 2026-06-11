@@ -1,0 +1,470 @@
+/*
+ * Copyright (c) 2023-2026 flyingcys (flyingcys@gmail.com). All rights reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include "internal.h"
+#include "picoui/canvas.h"
+#include "../core/runtime_bridge.h"
+#include "../../../src/gui/ldCanvas.h"
+
+#include <stdlib.h>
+
+extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
+
+static ldColor picoui_canvas_rgb_to_ld(unsigned int rgb)
+{
+    return __RGB((rgb >> 16) & 0xFFU, (rgb >> 8) & 0xFFU, rgb & 0xFFU);
+}
+
+static arm_2d_align_t picoui_canvas_align_to_ld(enum picoui_align align)
+{
+    switch (align) {
+    case PICOUI_ALIGN_START:
+        return ARM_2D_ALIGN_LEFT;
+    case PICOUI_ALIGN_END:
+        return ARM_2D_ALIGN_RIGHT;
+    case PICOUI_ALIGN_CENTER:
+    default:
+        return ARM_2D_ALIGN_CENTRE;
+    }
+}
+
+static int picoui_canvas_push_native(struct picoui_canvas *canvas,
+                                     const struct picoui_canvas_command *src)
+{
+    struct picoui_backend_widget *backend;
+    ldCanvas_t *ld_canvas;
+    ldCanvasCommand_t command;
+
+    if (canvas == 0 || src == 0 || canvas->widget.backend_widget == 0) {
+        return -1;
+    }
+
+    backend = (struct picoui_backend_widget *)canvas->widget.backend_widget;
+    if (backend->kind != PICOUI_BACKEND_WIDGET_CANVAS || backend->ld_widget == 0) {
+        return -1;
+    }
+
+    ld_canvas = (ldCanvas_t *)backend->ld_widget;
+    command = (ldCanvasCommand_t){
+        .kind = (ldCanvasCommandKind_t)src->kind,
+        .region = {
+            .tLocation = {.iX = (int16_t)src->x, .iY = (int16_t)src->y},
+            .tSize = {.iWidth = (int16_t)src->width, .iHeight = (int16_t)src->height},
+        },
+        .x1 = (int16_t)src->x1,
+        .y1 = (int16_t)src->y1,
+        .lineSize = (uint8_t)src->line_size,
+        .color0 = picoui_canvas_rgb_to_ld(src->rgb0),
+        .color1 = picoui_canvas_rgb_to_ld(src->rgb1),
+        .opacity0 = (uint8_t)src->opacity0,
+        .opacity1 = (uint8_t)src->opacity1,
+        .scale = src->scale,
+        .align = picoui_canvas_align_to_ld(src->align),
+        .pStr = (uint8_t *)src->text,
+        .ptFont = (arm_2d_font_t *)(canvas->widget.font != 0 ? canvas->widget.font : (const void *)&ARM_2D_FONT_6x8),
+        .ptImgTile = src->source != 0 ? src->source->img_tile : 0,
+        .ptMaskTile = src->source != 0 ? src->source->mask_tile : 0,
+    };
+
+    return ldCanvasPushCommand(ld_canvas, &command);
+}
+
+static int picoui_canvas_clear_native(struct picoui_canvas *canvas)
+{
+    struct picoui_backend_widget *backend;
+    ldCanvas_t *ld_canvas;
+
+    if (canvas == 0 || canvas->widget.backend_widget == 0) {
+        return -1;
+    }
+
+    backend = (struct picoui_backend_widget *)canvas->widget.backend_widget;
+    if (backend->kind != PICOUI_BACKEND_WIDGET_CANVAS || backend->ld_widget == 0) {
+        return -1;
+    }
+
+    ld_canvas = (ldCanvas_t *)backend->ld_widget;
+    ldCanvasClear(ld_canvas);
+    return 0;
+}
+
+static int picoui_canvas_is_valid(const struct picoui_canvas *canvas)
+{
+    return canvas != 0 && canvas->widget.backend_widget != 0;
+}
+
+static int picoui_canvas_push(struct picoui_canvas *canvas,
+                              const struct picoui_canvas_command *command)
+{
+    if (!picoui_canvas_is_valid(canvas)
+        || command == 0
+        || canvas->command_count >= PICOUI_CANVAS_MAX_COMMANDS) {
+        return -1;
+    }
+
+    canvas->commands[canvas->command_count++] = *command;
+    if (picoui_canvas_push_native(canvas, command) != 0) {
+        canvas->command_count--;
+        return -1;
+    }
+    return 0;
+}
+
+/**
+ * @brief Create canvas widget
+ *
+ * @param[in] parent Parent widget
+ * @param[in] id Widget identifier string
+ * @return Pointer to the object on success, NULL on failure
+ */
+
+struct picoui_canvas *picoui_canvas_create(struct picoui_window *parent, const char *id)
+{
+    struct picoui_canvas *canvas;
+    struct picoui_backend_widget *backend;
+    struct picoui_backend_widget *parent_backend;
+    struct picoui_backend_app_state *app_state;
+    ldCanvas_t *ld_canvas;
+    uint16_t name_id;
+
+    if (parent == 0 || id == 0) {
+        return 0;
+    }
+
+    parent_backend = (struct picoui_backend_widget *)parent->widget.backend_widget;
+    app_state = parent_backend != 0
+        ? picoui_runtime_bridge_backend_state_from_parent(parent_backend)
+        : 0;
+    if (parent_backend == 0 || parent_backend->ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
+        return 0;
+    }
+
+    canvas = calloc(1, sizeof(*canvas));
+    if (canvas == 0) {
+        return 0;
+    }
+
+    backend = calloc(1, sizeof(*backend));
+    if (backend == 0) {
+        free(canvas);
+        return 0;
+    }
+
+    name_id = picoui_runtime_bridge_next_name_id(parent_backend);
+    if (name_id == 0) {
+        free(backend);
+        free(canvas);
+        return 0;
+    }
+
+    ld_canvas = ldCanvas_init(app_state->ld_scene, NULL, name_id, parent_backend->ld_name_id, 0, 0, 0, 0);
+    if (ld_canvas == 0) {
+        free(backend);
+        free(canvas);
+        return 0;
+    }
+
+    if (picoui_backend_widget_init_child(backend,
+                                         parent_backend,
+                                         PICOUI_BACKEND_WIDGET_CANVAS,
+                                         id,
+                                         parent_backend->theme) != 0) {
+        ldCanvas_depose(app_state->ld_scene, ld_canvas);
+        free(backend);
+        free(canvas);
+        return 0;
+    }
+    backend->ld_widget = ld_canvas;
+    backend->ld_name_id = name_id;
+    if (picoui_backend_widget_attach_child(parent_backend, backend) != 0) {
+        ldCanvas_depose(app_state->ld_scene, ld_canvas);
+        free(backend);
+        free(canvas);
+        return 0;
+    }
+
+    canvas->widget.backend_widget = backend;
+    canvas->id = id;
+    canvas->widget.visible = 1;
+    canvas->widget.enabled = 1;
+    if (picoui_backend_widget_bind_host(canvas->widget.backend_widget, &canvas->widget) != 0) {
+        (void)picoui_backend_widget_detach_from_parent(canvas->widget.backend_widget);
+        ldCanvas_depose(app_state->ld_scene, ld_canvas);
+        free(backend);
+        free(canvas);
+        return 0;
+    }
+    return canvas;
+}
+
+/**
+ * @brief canvas clear
+ *
+ * @param[in] canvas Canvas widget instance
+ * @return -1 on failure
+ */
+
+int picoui_canvas_clear(struct picoui_canvas *canvas)
+{
+    if (!picoui_canvas_is_valid(canvas)) {
+        return -1;
+    }
+
+    canvas->command_count = 0;
+    return picoui_canvas_clear_native(canvas);
+}
+
+/**
+ * @brief canvas fill rect
+ *
+ * @param[in] canvas Canvas widget instance
+ * @param[in] x X coordinate
+ * @param[in] y Y coordinate
+ * @param[in] width Width in pixels
+ * @param[in] height Height in pixels
+ * @param[in] rgb RGB color value (0xRRGGBB)
+ * @param[in] opacity Opacity (0-255)
+ * @return -1 on failure
+ */
+
+int picoui_canvas_fill_rect(struct picoui_canvas *canvas,
+                            int x,
+                            int y,
+                            int width,
+                            int height,
+                            unsigned int rgb,
+                            int opacity)
+{
+    struct picoui_canvas_command command;
+
+    if (width < 0 || height < 0 || opacity < 0 || opacity > 255) {
+        return -1;
+    }
+
+    command = (struct picoui_canvas_command){
+        .kind = PICOUI_CANVAS_COMMAND_FILL_RECT,
+        .x = x,
+        .y = y,
+        .width = width,
+        .height = height,
+        .rgb0 = rgb,
+        .opacity0 = opacity,
+    };
+    return picoui_canvas_push(canvas, &command);
+}
+
+/**
+ * @brief canvas draw line
+ *
+ * @param[in] canvas Canvas widget instance
+ * @param[in] x0 x0
+ * @param[in] y0 y0
+ * @param[in] x1 x1
+ * @param[in] y1 y1
+ * @param[in] line_size line size
+ * @param[in] rgb RGB color value (0xRRGGBB)
+ * @param[in] opacity_max opacity max
+ * @param[in] opacity_min opacity min
+ * @return -1 on failure
+ */
+
+int picoui_canvas_draw_line(struct picoui_canvas *canvas,
+                            int x0,
+                            int y0,
+                            int x1,
+                            int y1,
+                            int line_size,
+                            unsigned int rgb,
+                            int opacity_max,
+                            int opacity_min)
+{
+    struct picoui_canvas_command command;
+
+    if (line_size <= 0
+        || opacity_max < 0
+        || opacity_max > 255
+        || opacity_min < 0
+        || opacity_min > 255) {
+        return -1;
+    }
+
+    command = (struct picoui_canvas_command){
+        .kind = PICOUI_CANVAS_COMMAND_DRAW_LINE,
+        .x = x0,
+        .y = y0,
+        .x1 = x1,
+        .y1 = y1,
+        .line_size = line_size,
+        .rgb0 = rgb,
+        .opacity0 = opacity_max,
+        .opacity1 = opacity_min,
+    };
+    return picoui_canvas_push(canvas, &command);
+}
+
+/**
+ * @brief canvas draw image
+ *
+ * @param[in] canvas Canvas widget instance
+ * @param[in] x X coordinate
+ * @param[in] y Y coordinate
+ * @param[in] width Width in pixels
+ * @param[in] height Height in pixels
+ * @param[in] source Image source
+ * @param[in] mask_color mask color
+ * @param[in] opacity Opacity (0-255)
+ * @return -1 on failure
+ */
+
+int picoui_canvas_draw_image(struct picoui_canvas *canvas,
+                             int x,
+                             int y,
+                             int width,
+                             int height,
+                             struct picoui_image_source *source,
+                             unsigned int mask_color,
+                             int opacity)
+{
+    struct picoui_canvas_command command;
+
+    if (source == 0 || source->img_tile == 0 || width < 0 || height < 0 || opacity < 0 || opacity > 255) {
+        return -1;
+    }
+
+    command = (struct picoui_canvas_command){
+        .kind = PICOUI_CANVAS_COMMAND_DRAW_IMAGE,
+        .x = x,
+        .y = y,
+        .width = width,
+        .height = height,
+        .rgb0 = mask_color,
+        .opacity0 = opacity,
+        .source = source,
+    };
+    return picoui_canvas_push(canvas, &command);
+}
+
+/**
+ * @brief canvas draw image scaled
+ *
+ * @param[in] canvas Canvas widget instance
+ * @param[in] x X coordinate
+ * @param[in] y Y coordinate
+ * @param[in] width Width in pixels
+ * @param[in] height Height in pixels
+ * @param[in] source Image source
+ * @param[in] scale Scale factor
+ * @param[in] opacity Opacity (0-255)
+ * @return -1 on failure
+ */
+
+int picoui_canvas_draw_image_scaled(struct picoui_canvas *canvas,
+                                    int x,
+                                    int y,
+                                    int width,
+                                    int height,
+                                    struct picoui_image_source *source,
+                                    float scale,
+                                    int opacity)
+{
+    struct picoui_canvas_command command;
+
+    if (source == 0 || source->img_tile == 0 || width < 0 || height < 0 || scale <= 0.0f || opacity < 0 || opacity > 255) {
+        return -1;
+    }
+
+    command = (struct picoui_canvas_command){
+        .kind = PICOUI_CANVAS_COMMAND_DRAW_IMAGE_SCALED,
+        .x = x,
+        .y = y,
+        .width = width,
+        .height = height,
+        .scale = scale,
+        .opacity0 = opacity,
+        .source = source,
+    };
+    return picoui_canvas_push(canvas, &command);
+}
+
+/**
+ * @brief canvas draw text
+ *
+ * @param[in] canvas Canvas widget instance
+ * @param[in] x X coordinate
+ * @param[in] y Y coordinate
+ * @param[in] width Width in pixels
+ * @param[in] height Height in pixels
+ * @param[in] text Text widget instance
+ * @param[in] align align
+ * @param[in] text_color Text color
+ * @param[in] opacity Opacity (0-255)
+ * @return -1 on failure
+ */
+
+int picoui_canvas_draw_text(struct picoui_canvas *canvas,
+                            int x,
+                            int y,
+                            int width,
+                            int height,
+                            const char *text,
+                            enum picoui_align align,
+                            unsigned int text_color,
+                            int opacity)
+{
+    struct picoui_canvas_command command;
+
+    if (text == 0
+        || width < 0
+        || height < 0
+        || opacity < 0
+        || opacity > 255
+        || (align != PICOUI_ALIGN_START && align != PICOUI_ALIGN_CENTER && align != PICOUI_ALIGN_END)) {
+        return -1;
+    }
+
+    command = (struct picoui_canvas_command){
+        .kind = PICOUI_CANVAS_COMMAND_DRAW_TEXT,
+        .x = x,
+        .y = y,
+        .width = width,
+        .height = height,
+        .rgb0 = text_color,
+        .opacity0 = opacity,
+        .align = align,
+        .text = text,
+    };
+    return picoui_canvas_push(canvas, &command);
+}
+
+/**
+ * @brief Get command count of canvas widget
+ *
+ * @param[in] canvas Canvas widget instance
+ * @param[in] count Count
+ * @return 0 on success, -1 on failure
+ */
+
+int picoui_canvas_get_command_count(const struct picoui_canvas *canvas, int *count)
+{
+    if (!picoui_canvas_is_valid(canvas) || count == 0) {
+        return -1;
+    }
+
+    *count = canvas->command_count;
+    return 0;
+}

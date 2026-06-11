@@ -2,6 +2,7 @@
 #include "picoui/arc.h"
 #include "picoui/widget.h"
 #include "picoui/window.h"
+#include "../../../src/gui/ldBase.h"
 #include "../../../src/gui/ldArc.h"
 #include "backend.h"
 #include "internal.h"
@@ -17,6 +18,54 @@ void *ldMalloc(uint32_t size)
 void *ldCalloc(uint32_t num, uint32_t size)
 {
     return calloc((size_t)num, (size_t)size);
+}
+
+static unsigned int test_rgb_round_trip(unsigned int rgb)
+{
+    ldColor color = __RGB((rgb >> 16) & 0xFFU, (rgb >> 8) & 0xFFU, rgb & 0xFFU);
+    unsigned int red = ((unsigned int)color >> 11) & 0x1FU;
+    unsigned int green = ((unsigned int)color >> 5) & 0x3FU;
+    unsigned int blue = (unsigned int)color & 0x1FU;
+
+    red = (red << 3) | (red >> 2);
+    green = (green << 2) | (green >> 4);
+    blue = (blue << 3) | (blue >> 2);
+    return (red << 16) | (green << 8) | blue;
+}
+
+extern int picoui_widget_has_ld_binding(const struct picoui_widget *widget);
+
+struct picoui_arc_test_dispose_snapshot {
+    int kind;
+    int cleanup_complete;
+    int cleanup_incomplete;
+    int detach_result;
+    int unbind_result;
+    int detached;
+    int owner_cleared;
+    int root_cleared;
+    int parent_cleared;
+    int next_sibling_cleared;
+    int host_cleared;
+    int event_bridge_cleared;
+    int ld_pinfo_cleared;
+};
+
+__attribute__((weak)) int picoui_backend_arc_test_take_last_dispose_snapshot(
+    struct picoui_arc_test_dispose_snapshot *snapshot)
+{
+    (void)snapshot;
+    return -1;
+}
+
+__attribute__((weak)) struct picoui_arc *
+picoui_backend_arc_test_create_with_props_fail_before_parent_color(
+    struct picoui_widget *parent,
+    const struct picoui_arc_props *props)
+{
+    (void)parent;
+    (void)props;
+    return 0;
 }
 
 struct tracked_free_entry {
@@ -99,9 +148,35 @@ static void test_arc_create_and_props(struct picoui_window *win)
     assert(picoui_arc_get_background_angle(with_props) == props.bg_end_angle - props.bg_start_angle);
     assert(picoui_arc_get_foreground_angle(with_props) == props.fg_end_angle);
     assert(picoui_arc_get_rotation_angle(with_props) == props.rotation_angle);
-    assert(picoui_arc_get_background_color(with_props) != 0U);
-    assert(picoui_arc_get_foreground_color(with_props) != 0U);
+    assert(picoui_arc_get_background_color(with_props) == test_rgb_round_trip(props.bg_color));
+    assert(picoui_arc_get_foreground_color(with_props) == test_rgb_round_trip(props.fg_color));
     assert(picoui_arc_get_background_color(with_props) != picoui_arc_get_foreground_color(with_props));
+}
+
+static void test_arc_create_and_backend_mapping(struct picoui_window *win)
+{
+    struct picoui_arc *arc = picoui_arc_create((struct picoui_widget *)win, "arc_direct_mapping");
+    struct picoui_backend_widget *backend;
+    struct picoui_backend_widget *parent_backend;
+    ldArc_t *ld_arc;
+
+    assert(arc != 0);
+    backend = (struct picoui_backend_widget *)arc->widget.backend_widget;
+    assert(backend != 0);
+    parent_backend = (struct picoui_backend_widget *)win->widget.backend_widget;
+    assert(parent_backend != 0);
+    assert(backend->kind == PICOUI_BACKEND_WIDGET_ARC);
+    assert(backend->owner == parent_backend->owner);
+    assert(backend->root == parent_backend->root);
+    assert(backend->parent == parent_backend);
+    assert(backend->ld_name_id != 0);
+    assert(backend->host_widget == &arc->widget);
+    assert(backend->ld_event_bridge_scene != 0);
+    assert(backend->ld_event_bridge_sender == backend->ld_widget);
+    ld_arc = (ldArc_t *)backend->ld_widget;
+    assert(ld_arc != 0);
+    assert(((ldBase_t *)ld_arc)->pInfo == backend);
+    assert(picoui_widget_has_ld_binding(&arc->widget) == 1);
 }
 
 static void test_arc_value_and_angle_readback_match_backend_truth(struct picoui_window *win)
@@ -117,8 +192,8 @@ static void test_arc_value_and_angle_readback_match_backend_truth(struct picoui_
     assert(picoui_arc_set_rotation_angle(arc, 30.0f) == 0);
     assert(picoui_arc_get_rotation_angle(arc) == 30.0f);
     assert(picoui_arc_set_color(arc, 0xAABBCC, 0x223344) == 0);
-    assert(picoui_arc_get_background_color(arc) == picoui_arc_get_background_color(arc));
-    assert(picoui_arc_get_foreground_color(arc) == picoui_arc_get_foreground_color(arc));
+    assert(picoui_arc_get_background_color(arc) == test_rgb_round_trip(0xAABBCCU));
+    assert(picoui_arc_get_foreground_color(arc) == test_rgb_round_trip(0x223344U));
     assert(picoui_arc_get_background_color(arc) != picoui_arc_get_foreground_color(arc));
 }
 
@@ -206,6 +281,58 @@ static void test_arc_init_alias_matches_backend_truth(struct picoui_window *win)
     assert(picoui_arc_get_rotation_angle(arc) == 0.0f);
 }
 
+static void test_arc_create_with_props_failure_rolls_back_attached_child(struct picoui_window *win)
+{
+    struct picoui_backend_widget *parent_backend =
+        (struct picoui_backend_widget *)win->widget.backend_widget;
+    struct picoui_backend_widget *tail = parent_backend->first_child;
+    struct picoui_backend_widget *next_before = 0;
+    struct picoui_arc_test_dispose_snapshot snapshot = {0};
+    struct picoui_arc *arc;
+
+    while (tail != 0 && tail->next_sibling != 0) {
+        tail = tail->next_sibling;
+    }
+    if (tail != 0) {
+        next_before = tail->next_sibling;
+    }
+
+    arc = picoui_backend_arc_test_create_with_props_fail_before_parent_color(
+        (struct picoui_widget *)win,
+        &(struct picoui_arc_props){
+            .id = "arc_fail_parent_color",
+            .bg_start_angle = 15.0f,
+            .bg_end_angle = 220.0f,
+            .fg_end_angle = 80.0f,
+            .rotation_angle = 10.0f,
+            .parent_color = 0x123456U,
+            .bg_color = 0x654321U,
+            .fg_color = 0xabcdefU,
+        });
+
+    assert(arc == 0);
+    assert(picoui_backend_arc_test_take_last_dispose_snapshot(&snapshot) == 0);
+    assert(snapshot.kind == PICOUI_BACKEND_WIDGET_ARC);
+    assert(snapshot.cleanup_complete == 1);
+    assert(snapshot.cleanup_incomplete == 0);
+    assert(snapshot.detach_result == 0);
+    assert(snapshot.unbind_result == 0);
+    assert(snapshot.detached == 1);
+    assert(snapshot.owner_cleared == 1);
+    assert(snapshot.root_cleared == 1);
+    assert(snapshot.parent_cleared == 1);
+    assert(snapshot.next_sibling_cleared == 1);
+    assert(snapshot.host_cleared == 1);
+    assert(snapshot.event_bridge_cleared == 1);
+    assert(snapshot.ld_pinfo_cleared == 1);
+    assert(picoui_backend_arc_test_take_last_dispose_snapshot(&snapshot) == -1);
+    if (tail != 0) {
+        assert(tail->next_sibling == next_before);
+    } else {
+        assert(parent_backend->first_child == 0);
+    }
+}
+
 static void test_arc_rejects_null_args(struct picoui_window *win)
 {
     assert(picoui_arc_create(0, "id") == 0);
@@ -274,11 +401,13 @@ int main(void)
     win = picoui_window_create(app, "root");
     assert(win != 0);
 
+    test_arc_create_and_backend_mapping(win);
     test_arc_create_and_props(win);
     test_arc_value_and_angle_readback_match_backend_truth(win);
     test_arc_rejects_invalid_inputs(win);
     test_arc_native_quarter_image_mask_and_parent_color_round_trip(win);
     test_arc_init_alias_matches_backend_truth(win);
+    test_arc_create_with_props_failure_rolls_back_attached_child(win);
     test_arc_rejects_null_args(win);
 
     picoui_app_destroy(app);

@@ -51,6 +51,37 @@ static void test_label_create_with_props_pushes_all_fields(struct picoui_window 
     assert(strcmp(backend->text, "PropsTest") == 0);
 }
 
+static void test_label_create_with_props_failure_rolls_back_attached_child(struct picoui_window *win)
+{
+    struct picoui_backend_widget *parent_backend =
+        (struct picoui_backend_widget *)win->widget.backend_widget;
+    struct picoui_backend_widget *tail = parent_backend->first_child;
+    struct picoui_backend_widget *next_before = 0;
+    struct picoui_label *label;
+
+    while (tail != 0 && tail->next_sibling != 0) {
+        tail = tail->next_sibling;
+    }
+    if (tail != 0) {
+        next_before = tail->next_sibling;
+    }
+
+    label = picoui_label_create_with_props(
+        win,
+        &(struct picoui_label_props){
+            .id = "label_props_invalid_align",
+            .text = "bad",
+            .align = (enum picoui_align)99,
+        });
+
+    assert(label == 0);
+    if (tail != 0) {
+        assert(tail->next_sibling == next_before);
+    } else {
+        assert(parent_backend->first_child == 0);
+    }
+}
+
 static void test_label_rejects_null_args(struct picoui_window *win)
 {
     assert(picoui_label_create(0, "id") == 0);
@@ -76,11 +107,6 @@ static void test_label_constructor_binds_ld_without_backend_wrapper(struct picou
     assert(picoui_widget_has_ld_binding(&label->widget) == 1);
 }
 
-static void test_label_legacy_backend_constructor_is_disabled(struct picoui_window *win)
-{
-    assert(picoui_backend_create_label(win->widget.backend_widget, "legacy_label") == 0);
-}
-
 int main(void)
 {
     struct picoui_app *app = picoui_app_create();
@@ -91,9 +117,9 @@ int main(void)
 
     test_label_create_and_ld_mapping(win);
     test_label_constructor_binds_ld_without_backend_wrapper(win);
-    test_label_legacy_backend_constructor_is_disabled(win);
     test_label_set_text_round_trip(win);
     test_label_create_with_props_pushes_all_fields(win);
+    test_label_create_with_props_failure_rolls_back_attached_child(win);
     test_label_rejects_null_args(win);
     test_label_destroy_clears_widget(win);
 

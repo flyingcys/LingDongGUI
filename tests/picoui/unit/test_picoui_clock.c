@@ -10,6 +10,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
+extern int picoui_widget_has_ld_binding(const struct picoui_widget *widget);
 void *ldMalloc(uint32_t size)
 {
     return malloc((size_t)size);
@@ -75,6 +76,33 @@ void ldFree(void *p)
     free(p);
 }
 
+static void test_clock_create_builds_direct_backend_mapping(struct picoui_window *win)
+{
+    struct picoui_clock *clock =
+        picoui_clock_create((struct picoui_widget *)win, "clock_direct_mapping");
+    struct picoui_backend_widget *backend;
+    struct picoui_backend_widget *parent_backend;
+    ldClock_t *ld_clock;
+
+    assert(clock != 0);
+    backend = (struct picoui_backend_widget *)clock->widget.backend_widget;
+    assert(backend != 0);
+    parent_backend = (struct picoui_backend_widget *)win->widget.backend_widget;
+    assert(parent_backend != 0);
+    assert(backend->kind == PICOUI_BACKEND_WIDGET_CLOCK);
+    assert(backend->owner == parent_backend->owner);
+    assert(backend->root == parent_backend->root);
+    assert(backend->parent == parent_backend);
+    assert(backend->ld_name_id != 0);
+    assert(backend->host_widget == &clock->widget);
+    assert(backend->ld_event_bridge_scene != 0);
+    assert(backend->ld_event_bridge_sender == backend->ld_widget);
+    ld_clock = (ldClock_t *)backend->ld_widget;
+    assert(ld_clock != 0);
+    assert(((ldBase_t *)ld_clock)->pInfo == backend);
+    assert(picoui_widget_has_ld_binding(&clock->widget) == 1);
+}
+
 static void test_clock_create_and_props(struct picoui_window *win)
 {
     int user_cookie = 17;
@@ -99,16 +127,32 @@ static void test_clock_step_second_state(struct picoui_window *win)
 {
     struct picoui_clock *clock =
         picoui_clock_create((struct picoui_widget *)win, "clock_step_second");
+    struct picoui_backend_widget *backend;
+    ldClock_t *ld_clock;
 
     assert(clock != 0);
+    backend = (struct picoui_backend_widget *)clock->widget.backend_widget;
+    assert(backend != 0);
+    ld_clock = (ldClock_t *)backend->ld_widget;
+    assert(ld_clock != 0);
+    assert(clock->step_second == 0);
+    assert(ld_clock->isStepSecond == false);
     assert(picoui_clock_set_step_second(clock, 0) == 0);
+    assert(clock->step_second == 0);
     assert(picoui_clock_get_step_second(clock) == 0);
+    assert(ld_clock->isStepSecond == false);
     assert(picoui_clock_set_step_second(clock, 1) == 0);
+    assert(clock->step_second == 1);
     assert(picoui_clock_get_step_second(clock) == 1);
+    assert(ld_clock->isStepSecond == true);
     assert(picoui_clock_set_step_second(clock, -1) == -1);
+    assert(clock->step_second == 1);
     assert(picoui_clock_get_step_second(clock) == 1);
+    assert(ld_clock->isStepSecond == true);
     assert(picoui_clock_set_step_second(clock, 2) == -1);
+    assert(clock->step_second == 1);
     assert(picoui_clock_get_step_second(clock) == 1);
+    assert(ld_clock->isStepSecond == true);
 }
 
 static void test_clock_rejects_invalid_inputs(struct picoui_window *win)
@@ -191,16 +235,22 @@ static void test_clock_system_time_provider_round_trip(struct picoui_window *win
     assert(backend != 0);
     ld_clock = (ldClock_t *)backend->ld_widget;
     assert(ld_clock != 0);
+    assert(clock->use_system_time == 1);
+    assert(ld_clock->isAutoSysTime == true);
 
     assert(picoui_clock_set_use_system_time(clock, 0) == 0);
+    assert(clock->use_system_time == 0);
     assert(picoui_clock_get_use_system_time(clock) == 0);
+    assert(ld_clock->isAutoSysTime == false);
     ldClock_on_frame_start(((struct picoui_backend_app_state *)backend->owner->backend_app)->ld_scene, ld_clock);
     frozen_radian = ld_clock->pointerInfo[2].radian;
     ldClock_on_frame_start(((struct picoui_backend_app_state *)backend->owner->backend_app)->ld_scene, ld_clock);
     assert(ld_clock->pointerInfo[2].radian == frozen_radian);
 
     assert(picoui_clock_set_use_system_time(clock, 1) == 0);
+    assert(clock->use_system_time == 1);
     assert(picoui_clock_get_use_system_time(clock) == 1);
+    assert(ld_clock->isAutoSysTime == true);
     assert(picoui_clock_set_use_system_time(0, 1) == -1);
     assert(picoui_clock_get_use_system_time(0) == -1);
 }
@@ -283,6 +333,18 @@ static void test_clock_native_background_pointer_mask_and_anchor_round_trip(stru
     assert(picoui_clock_set_minute_anchor(clock, 4.5f, 31.0f) == 0);
     assert(picoui_clock_set_second_anchor(clock, 2.0f, 37.0f) == 0);
 
+    assert(clock->background_source == &bg_source);
+    assert(clock->hour_pointer_source == &hour_source);
+    assert(clock->minute_pointer_source == &minute_source);
+    assert(clock->second_pointer_source == &second_source);
+    assert(clock->mask_color == 0x123456U);
+    assert(clock->hour_anchor_x == 3.5f);
+    assert(clock->hour_anchor_y == 21.0f);
+    assert(clock->minute_anchor_x == 4.5f);
+    assert(clock->minute_anchor_y == 31.0f);
+    assert(clock->second_anchor_x == 2.0f);
+    assert(clock->second_anchor_y == 37.0f);
+
     assert(ld_clock->ptBgImgTile == &bg_tile);
     assert(ld_clock->ptBgMaskTile == &bg_mask);
     assert(ld_clock->bgMaskColor == (ldColor)0x123456U);
@@ -295,6 +357,45 @@ static void test_clock_native_background_pointer_mask_and_anchor_round_trip(stru
     assert(ld_clock->pointerInfo[0].maskColor == (ldColor)0x123456U);
     assert(ld_clock->pointerInfo[1].maskColor == (ldColor)0x123456U);
     assert(ld_clock->pointerInfo[2].maskColor == (ldColor)0x123456U);
+    assert(ld_clock->pointerInfo[0].rotationCentre.fX == 3.5f);
+    assert(ld_clock->pointerInfo[0].rotationCentre.fY == 21.0f);
+    assert(ld_clock->pointerInfo[1].rotationCentre.fX == 4.5f);
+    assert(ld_clock->pointerInfo[1].rotationCentre.fY == 31.0f);
+    assert(ld_clock->pointerInfo[2].rotationCentre.fX == 2.0f);
+    assert(ld_clock->pointerInfo[2].rotationCentre.fY == 37.0f);
+
+    assert(picoui_clock_set_background_source(clock,
+                                              &(struct picoui_image_source){
+                                                  .img_tile = NULL,
+                                                  .mask_tile = &bg_mask,
+                                              }) == -1);
+    assert(picoui_clock_set_hour_pointer_source(clock,
+                                                &(struct picoui_image_source){
+                                                    .img_tile = NULL,
+                                                    .mask_tile = &hour_mask,
+                                                }) == -1);
+    assert(picoui_clock_set_minute_pointer_source(clock,
+                                                  &(struct picoui_image_source){
+                                                      .img_tile = NULL,
+                                                      .mask_tile = &minute_mask,
+                                                  }) == -1);
+    assert(picoui_clock_set_second_pointer_source(clock,
+                                                  &(struct picoui_image_source){
+                                                      .img_tile = NULL,
+                                                      .mask_tile = &second_mask,
+                                                  }) == -1);
+    assert(picoui_clock_set_mask_color(clock, 0x1000000U) == -1);
+    assert(clock->background_source == &bg_source);
+    assert(clock->hour_pointer_source == &hour_source);
+    assert(clock->minute_pointer_source == &minute_source);
+    assert(clock->second_pointer_source == &second_source);
+    assert(clock->mask_color == 0x123456U);
+    assert(ld_clock->ptBgImgTile == &bg_tile);
+    assert(ld_clock->ptBgMaskTile == &bg_mask);
+    assert(ld_clock->bgMaskColor == (ldColor)0x123456U);
+    assert(ld_clock->pointerInfo[0].ptImgTile == &hour_tile);
+    assert(ld_clock->pointerInfo[1].ptImgTile == &minute_tile);
+    assert(ld_clock->pointerInfo[2].ptImgTile == &second_tile);
     assert(ld_clock->pointerInfo[0].rotationCentre.fX == 3.5f);
     assert(ld_clock->pointerInfo[0].rotationCentre.fY == 21.0f);
     assert(ld_clock->pointerInfo[1].rotationCentre.fX == 4.5f);
@@ -504,6 +605,7 @@ int main(void)
     win = picoui_window_create(app, "root");
     assert(win != 0);
 
+    test_clock_create_builds_direct_backend_mapping(win);
     test_clock_create_and_props(win);
     test_clock_step_second_state(win);
     test_clock_rejects_invalid_inputs(win);

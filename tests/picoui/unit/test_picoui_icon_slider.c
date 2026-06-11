@@ -73,6 +73,42 @@ static void test_icon_slider_rejects_items_beyond_native_capacity(void)
     picoui_app_destroy(app);
 }
 
+static void test_icon_slider_create_builds_direct_backend_mapping(void)
+{
+    struct picoui_app *app;
+    struct picoui_window *win;
+    struct picoui_icon_slider *icon_slider;
+    struct picoui_backend_widget *backend;
+    struct picoui_backend_widget *parent_backend;
+    ldIconSlider_t *ld_icon_slider;
+
+    app = picoui_app_create();
+    assert(app != 0);
+    win = picoui_window_create(app, "icon_slider_direct_root");
+    assert(win != 0);
+
+    icon_slider = picoui_icon_slider_create((struct picoui_widget *)win, "icon_slider_direct");
+    assert(icon_slider != 0);
+
+    backend = (struct picoui_backend_widget *)icon_slider->widget.backend_widget;
+    parent_backend = (struct picoui_backend_widget *)win->widget.backend_widget;
+    assert(backend != 0);
+    assert(parent_backend != 0);
+    assert(backend->kind == PICOUI_BACKEND_WIDGET_ICON_SLIDER);
+    assert(backend->owner == parent_backend->owner);
+    assert(backend->root == parent_backend->root);
+    assert(backend->parent == parent_backend);
+    assert(backend->ld_name_id != 0);
+    assert(backend->host_widget == &icon_slider->widget);
+    assert(backend->ld_event_bridge_scene != 0);
+    assert(backend->ld_event_bridge_sender == backend->ld_widget);
+    ld_icon_slider = (ldIconSlider_t *)backend->ld_widget;
+    assert(ld_icon_slider != 0);
+    assert(((ldBase_t *)ld_icon_slider)->pInfo == backend);
+
+    picoui_app_destroy(app);
+}
+
 static void test_icon_slider_create_with_props_pushes_backend_dimensions(void)
 {
     struct picoui_app *app;
@@ -247,6 +283,7 @@ int main(void)
 
     test_icon_slider_selection_and_value_follow_backend_truth();
     test_icon_slider_rejects_items_beyond_native_capacity();
+    test_icon_slider_create_builds_direct_backend_mapping();
     test_icon_slider_create_with_props_pushes_backend_dimensions();
     test_icon_slider_native_icon_images_and_speed_round_trip();
     test_icon_slider_init_aliases_and_shared_base_round_trip();

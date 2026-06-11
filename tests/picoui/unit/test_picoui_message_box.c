@@ -78,6 +78,69 @@ static void test_message_box_create_and_props(struct picoui_window *win)
     assert(picoui_message_box_get_confirm_text(with_props) == props.confirm_text);
 }
 
+static void test_message_box_create_builds_direct_backend_mapping(struct picoui_window *win)
+{
+    struct picoui_message_box *box =
+        picoui_message_box_create((struct picoui_widget *)win, "message_box_direct_mapping");
+    struct picoui_backend_widget *backend;
+    struct picoui_backend_widget *parent_backend;
+    ldMessageBox_t *ld_message_box;
+
+    assert(box != 0);
+    backend = (struct picoui_backend_widget *)box->widget.backend_widget;
+    parent_backend = (struct picoui_backend_widget *)win->widget.backend_widget;
+    assert(backend != 0);
+    assert(parent_backend != 0);
+    assert(backend->kind == PICOUI_BACKEND_WIDGET_MESSAGE_BOX);
+    assert(backend->owner == parent_backend->owner);
+    assert(backend->root == parent_backend->root);
+    assert(backend->parent == parent_backend);
+    assert(backend->ld_name_id != 0);
+    assert(backend->host_widget == &box->widget);
+    assert(backend->ld_event_bridge_scene != 0);
+    assert(backend->ld_event_bridge_sender == backend->ld_widget);
+    ld_message_box = (ldMessageBox_t *)backend->ld_widget;
+    assert(ld_message_box != 0);
+    assert(((ldBase_t *)ld_message_box)->pInfo == backend);
+}
+
+static void test_message_box_widget_file_owns_native_helper_truth(struct picoui_window *win)
+{
+    static const char *buttons[] = {
+        "Cancel",
+        "Apply",
+    };
+    struct picoui_message_box *box =
+        picoui_message_box_create((struct picoui_widget *)win, "message_box_widget_truth");
+    struct picoui_backend_widget *backend;
+    ldMessageBox_t *ld_message_box;
+
+    assert(box != 0);
+    assert(picoui_message_box_set_title(box, "Widget-owned") == 0);
+    assert(picoui_message_box_set_message(box, "Helpers live in widget.c") == 0);
+    assert(picoui_message_box_set_buttons(box, buttons, 2) == 0);
+    assert(picoui_message_box_set_string_colors(box, 0x010203U, 0x040506U, 0x070809U) == 0);
+    assert(picoui_message_box_set_button_colors(box, 0x0A0B0CU, 0x0D0E0FU) == 0);
+    assert(picoui_message_box_set_bg_color(box, 0x102030U) == 0);
+
+    backend = (struct picoui_backend_widget *)box->widget.backend_widget;
+    assert(backend != 0);
+    ld_message_box = (ldMessageBox_t *)backend->ld_widget;
+    assert(ld_message_box != 0);
+
+    assert(strcmp((const char *)ld_message_box->pTitleStr, "Widget-owned") == 0);
+    assert(strcmp((const char *)ld_message_box->pMsgStr, "Helpers live in widget.c") == 0);
+    assert(ld_message_box->btnCount == 2);
+    assert(strcmp((const char *)ld_message_box->ppBtnStrGroup[0], "Cancel") == 0);
+    assert(strcmp((const char *)ld_message_box->ppBtnStrGroup[1], "Apply") == 0);
+    assert(ld_message_box->titleStrColor == (ldColor)0x010203U);
+    assert(ld_message_box->msgStrColor == (ldColor)0x040506U);
+    assert(ld_message_box->btnStrColor == (ldColor)0x070809U);
+    assert(ld_message_box->releaseColor == (ldColor)0x0A0B0CU);
+    assert(ld_message_box->pressColor == (ldColor)0x0D0E0FU);
+    assert(ld_message_box->bgColor == (ldColor)0x102030U);
+}
+
 static void test_message_box_confirm_callback_bridge(struct picoui_window *win)
 {
     int user_cookie = 23;
@@ -414,6 +477,8 @@ int main(void)
     win = picoui_window_create(app, "root");
     assert(win != 0);
 
+    test_message_box_create_builds_direct_backend_mapping(win);
+    test_message_box_widget_file_owns_native_helper_truth(win);
     test_message_box_create_and_props(win);
     test_message_box_confirm_callback_bridge(win);
     test_message_box_rejects_invalid_inputs(win);

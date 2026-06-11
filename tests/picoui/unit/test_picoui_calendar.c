@@ -309,6 +309,23 @@ static void test_calendar_grid_out_of_bounds(struct picoui_window *win)
     picoui_calendar_is_current_month_cell(cal, 10, 10);
 }
 
+static void test_calendar_public_create_uses_widget_local_backend(struct picoui_window *win)
+{
+    struct picoui_calendar *calendar;
+    struct picoui_backend_widget *backend;
+
+    assert(win != 0);
+    calendar = picoui_calendar_create(win, "calendar_widget_local");
+    assert(calendar != 0);
+
+    backend = (struct picoui_backend_widget *)calendar->widget.backend_widget;
+    assert(backend != 0);
+    assert(backend->kind == PICOUI_BACKEND_WIDGET_CALENDAR);
+    assert(backend->host_widget == &calendar->widget);
+    assert(backend->parent == win->widget.backend_widget);
+    assert(backend->ld_widget != 0);
+}
+
 int main(void)
 {
     test_calendar_date_readback_matches_backend_truth();
@@ -320,6 +337,7 @@ int main(void)
 
     struct picoui_app *app = picoui_app_create();
     struct picoui_window *win = picoui_window_create(app, "root");
+    test_calendar_public_create_uses_widget_local_backend(win);
     test_calendar_grid_value_round_trip(win);
     test_calendar_grid_value_boundary_args(win);
     test_calendar_grid_out_of_bounds(win);

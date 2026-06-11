@@ -2,6 +2,7 @@
 #include "picoui/gauge.h"
 #include "picoui/widget.h"
 #include "picoui/window.h"
+#include "../../../src/gui/ldBase.h"
 #include "../../../src/gui/ldGauge.h"
 #include "backend.h"
 #include "internal.h"
@@ -17,6 +18,54 @@ void *ldMalloc(uint32_t size)
 void *ldCalloc(uint32_t num, uint32_t size)
 {
     return calloc((size_t)num, (size_t)size);
+}
+
+static unsigned int test_rgb_round_trip(unsigned int rgb)
+{
+    ldColor color = __RGB((rgb >> 16) & 0xFFU, (rgb >> 8) & 0xFFU, rgb & 0xFFU);
+    unsigned int red = ((unsigned int)color >> 11) & 0x1FU;
+    unsigned int green = ((unsigned int)color >> 5) & 0x3FU;
+    unsigned int blue = (unsigned int)color & 0x1FU;
+
+    red = (red << 3) | (red >> 2);
+    green = (green << 2) | (green >> 4);
+    blue = (blue << 3) | (blue >> 2);
+    return (red << 16) | (green << 8) | blue;
+}
+
+extern int picoui_widget_has_ld_binding(const struct picoui_widget *widget);
+
+struct picoui_gauge_test_dispose_snapshot {
+    int kind;
+    int cleanup_complete;
+    int cleanup_incomplete;
+    int detach_result;
+    int unbind_result;
+    int detached;
+    int owner_cleared;
+    int root_cleared;
+    int parent_cleared;
+    int next_sibling_cleared;
+    int host_cleared;
+    int event_bridge_cleared;
+    int ld_pinfo_cleared;
+};
+
+__attribute__((weak)) int picoui_backend_gauge_test_take_last_dispose_snapshot(
+    struct picoui_gauge_test_dispose_snapshot *snapshot)
+{
+    (void)snapshot;
+    return -1;
+}
+
+__attribute__((weak)) struct picoui_gauge *
+picoui_backend_gauge_test_create_with_props_fail_before_centre_offset(
+    struct picoui_widget *parent,
+    const struct picoui_gauge_props *props)
+{
+    (void)parent;
+    (void)props;
+    return 0;
 }
 
 struct tracked_free_entry {
@@ -92,8 +141,34 @@ static void test_gauge_create_and_props(struct picoui_window *win)
     assert(picoui_gauge_get_pointer_color(gauge) == 0x000000);
     assert(picoui_gauge_get_auto_move(gauge) == 0);
     assert(picoui_gauge_get_angle(with_props) == props.angle);
-    assert(picoui_gauge_get_pointer_color(with_props) != 0U);
+    assert(picoui_gauge_get_pointer_color(with_props) == test_rgb_round_trip(props.pointer_color));
     assert(picoui_gauge_get_auto_move(with_props) == props.auto_move);
+}
+
+static void test_gauge_create_and_backend_mapping(struct picoui_window *win)
+{
+    struct picoui_gauge *gauge = picoui_gauge_create((struct picoui_widget *)win, "gauge_direct_mapping");
+    struct picoui_backend_widget *backend;
+    struct picoui_backend_widget *parent_backend;
+    ldGauge_t *ld_gauge;
+
+    assert(gauge != 0);
+    backend = (struct picoui_backend_widget *)gauge->widget.backend_widget;
+    assert(backend != 0);
+    parent_backend = (struct picoui_backend_widget *)win->widget.backend_widget;
+    assert(parent_backend != 0);
+    assert(backend->kind == PICOUI_BACKEND_WIDGET_GAUGE);
+    assert(backend->owner == parent_backend->owner);
+    assert(backend->root == parent_backend->root);
+    assert(backend->parent == parent_backend);
+    assert(backend->ld_name_id != 0);
+    assert(backend->host_widget == &gauge->widget);
+    assert(backend->ld_event_bridge_scene != 0);
+    assert(backend->ld_event_bridge_sender == backend->ld_widget);
+    ld_gauge = (ldGauge_t *)backend->ld_widget;
+    assert(ld_gauge != 0);
+    assert(((ldBase_t *)ld_gauge)->pInfo == backend);
+    assert(picoui_widget_has_ld_binding(&gauge->widget) == 1);
 }
 
 static void test_gauge_value_and_pointer_contract_match_backend_truth(struct picoui_window *win)
@@ -104,7 +179,7 @@ static void test_gauge_value_and_pointer_contract_match_backend_truth(struct pic
     assert(picoui_gauge_set_angle(gauge, 90.0f) == 0);
     assert(picoui_gauge_get_angle(gauge) == 90.0f);
     assert(picoui_gauge_set_pointer_color(gauge, 0xAABBCC) == 0);
-    assert(picoui_gauge_get_pointer_color(gauge) != 0U);
+    assert(picoui_gauge_get_pointer_color(gauge) == test_rgb_round_trip(0xAABBCCU));
     assert(picoui_gauge_set_auto_move(gauge, 1) == 0);
     assert(picoui_gauge_get_auto_move(gauge) == 1);
     assert(picoui_gauge_set_auto_move(gauge, 0) == 0);
@@ -269,6 +344,56 @@ static void test_gauge_init_and_shared_base_aliases_round_trip(struct picoui_win
     assert(((ldBase_t *)ld_gauge)->isCorner == true);
 }
 
+static void test_gauge_create_with_props_failure_rolls_back_attached_child(struct picoui_window *win)
+{
+    struct picoui_backend_widget *parent_backend =
+        (struct picoui_backend_widget *)win->widget.backend_widget;
+    struct picoui_backend_widget *tail = parent_backend->first_child;
+    struct picoui_backend_widget *next_before = 0;
+    struct picoui_gauge_test_dispose_snapshot snapshot = {0};
+    struct picoui_gauge *gauge;
+
+    while (tail != 0 && tail->next_sibling != 0) {
+        tail = tail->next_sibling;
+    }
+    if (tail != 0) {
+        next_before = tail->next_sibling;
+    }
+
+    gauge = picoui_backend_gauge_test_create_with_props_fail_before_centre_offset(
+        (struct picoui_widget *)win,
+        &(struct picoui_gauge_props){
+            .id = "gauge_fail_centre_offset",
+            .angle = 70.0f,
+            .centre_offset_x = 4,
+            .centre_offset_y = -6,
+            .pointer_color = 0x334455U,
+            .auto_move = 1,
+        });
+
+    assert(gauge == 0);
+    assert(picoui_backend_gauge_test_take_last_dispose_snapshot(&snapshot) == 0);
+    assert(snapshot.kind == PICOUI_BACKEND_WIDGET_GAUGE);
+    assert(snapshot.cleanup_complete == 1);
+    assert(snapshot.cleanup_incomplete == 0);
+    assert(snapshot.detach_result == 0);
+    assert(snapshot.unbind_result == 0);
+    assert(snapshot.detached == 1);
+    assert(snapshot.owner_cleared == 1);
+    assert(snapshot.root_cleared == 1);
+    assert(snapshot.parent_cleared == 1);
+    assert(snapshot.next_sibling_cleared == 1);
+    assert(snapshot.host_cleared == 1);
+    assert(snapshot.event_bridge_cleared == 1);
+    assert(snapshot.ld_pinfo_cleared == 1);
+    assert(picoui_backend_gauge_test_take_last_dispose_snapshot(&snapshot) == -1);
+    if (tail != 0) {
+        assert(tail->next_sibling == next_before);
+    } else {
+        assert(parent_backend->first_child == 0);
+    }
+}
+
 static void test_gauge_rejects_null_args(struct picoui_window *win)
 {
     assert(picoui_gauge_create(0, "id") == 0);
@@ -369,12 +494,14 @@ int main(void)
     win = picoui_window_create(app, "root");
     assert(win != 0);
 
+    test_gauge_create_and_backend_mapping(win);
     test_gauge_create_and_props(win);
     test_gauge_value_and_pointer_contract_match_backend_truth(win);
     test_gauge_rejects_invalid_inputs(win);
     test_gauge_native_background_pointer_and_centre_offset_round_trip(win);
     test_gauge_native_trail_and_progress_bar_round_trip(win);
     test_gauge_init_and_shared_base_aliases_round_trip(win);
+    test_gauge_create_with_props_failure_rolls_back_attached_child(win);
     test_gauge_rejects_null_args(win);
 
     picoui_app_destroy(app);

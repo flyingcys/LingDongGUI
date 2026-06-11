@@ -922,8 +922,11 @@ static void test_backend_widget_tree_contract(struct picoui_app *app,
     struct picoui_backend_widget *text_backend = text->widget.backend_widget;
     struct picoui_backend_widget *image_backend = image->widget.backend_widget;
     struct picoui_backend_widget *dialog_backend;
+    struct picoui_window *dialog_window;
     struct picoui_backend_widget *orphan_backend;
     struct picoui_backend_widget *prebound_backend;
+    struct picoui_label *nested_label;
+    struct picoui_backend_widget *nested_label_backend;
 
     assert(picoui_backend_widget_is_kind(win_backend, PICOUI_BACKEND_WIDGET_WINDOW) == 1);
     assert(picoui_backend_widget_is_kind(sw_backend, PICOUI_BACKEND_WIDGET_SWITCH) == 1);
@@ -962,9 +965,19 @@ static void test_backend_widget_tree_contract(struct picoui_app *app,
     assert(text_backend->next_sibling == image_backend);
     assert(image_backend->next_sibling == 0);
 
-    assert(picoui_backend_create_label(label_backend, "bad-nested-label") == 0);
-    dialog_backend = picoui_backend_create_window(app, "dialog");
+    dialog_window = picoui_window_create(app, "dialog");
+    assert(dialog_window != 0);
+    dialog_backend = dialog_window->widget.backend_widget;
     assert(dialog_backend != 0);
+
+    nested_label = picoui_label_create(dialog_window, "bad-nested-label");
+    assert(nested_label != 0);
+    nested_label_backend = nested_label->widget.backend_widget;
+    assert(nested_label_backend != 0);
+    assert(nested_label_backend->kind == PICOUI_BACKEND_WIDGET_LABEL);
+    assert(nested_label_backend->parent == dialog_backend);
+    assert(nested_label_backend->owner == app);
+    assert(nested_label_backend->root == dialog_backend);
     assert(picoui_backend_widget_attach_child(win_backend, dialog_backend) == -1);
 
     orphan_backend = calloc(1, sizeof(*orphan_backend));
@@ -1578,7 +1591,6 @@ static void test_image_style_class_and_user_data_are_stable_widget_metadata_cont
     assert(image != 0);
     backend = image->widget.backend_widget;
     assert(backend != 0);
-
     assert(picoui_widget_set_style_class(&image->widget, style_class) == 0);
     assert(picoui_widget_set_user_data(&image->widget, &cookie) == 0);
     assert(image->widget.style_class != 0);
@@ -2292,6 +2304,23 @@ static void test_widget_destroy_clears_backend(struct picoui_window *win)
     assert(picoui_widget_destroy(0) == -1);
 }
 
+static void test_combo_box_public_create_uses_widget_local_backend(struct picoui_window *win)
+{
+    struct picoui_combo_box *combo_box;
+    struct picoui_backend_widget *backend;
+
+    assert(win != 0);
+    combo_box = picoui_combo_box_create(win, "combo_box_widget_local");
+    assert(combo_box != 0);
+
+    backend = (struct picoui_backend_widget *)combo_box->widget.backend_widget;
+    assert(backend != 0);
+    assert(backend->kind == PICOUI_BACKEND_WIDGET_COMBO_BOX);
+    assert(backend->host_widget == &combo_box->widget);
+    assert(backend->parent == win->widget.backend_widget);
+    assert(backend->ld_widget != 0);
+}
+
 int main(void)
 {
     arm_2d_tile_t image_tile = {0};
@@ -2557,6 +2586,7 @@ int main(void)
     test_switch_native_direction_navigation_and_image_skin_round_trip(sw);
 
     test_widget_is_hidden_contract(button);
+    test_combo_box_public_create_uses_widget_local_backend(win);
 
     ldMsgDeinit(&app_state->ld_scene->ptMsgQueue);
     test_widget_destroy_clears_backend(win);

@@ -7,6 +7,43 @@
 
 #include <assert.h>
 
+extern int picoui_widget_has_ld_binding(const struct picoui_widget *widget);
+
+static arm_2d_tile_t g_large_graph_point_mask = {
+    .tRegion = {
+        .tSize = {
+            .iWidth = 24,
+            .iHeight = 24,
+        },
+    },
+};
+
+static void test_graph_create_builds_direct_backend_mapping(struct picoui_window *win)
+{
+    struct picoui_graph *graph = picoui_graph_create(win, "graph_direct_mapping", 2);
+    struct picoui_backend_widget *backend;
+    struct picoui_backend_widget *parent_backend;
+    ldGraph_t *ld_graph;
+
+    assert(graph != 0);
+    backend = (struct picoui_backend_widget *)graph->widget.backend_widget;
+    assert(backend != 0);
+    parent_backend = (struct picoui_backend_widget *)win->widget.backend_widget;
+    assert(parent_backend != 0);
+    assert(backend->kind == PICOUI_BACKEND_WIDGET_GRAPH);
+    assert(backend->owner == parent_backend->owner);
+    assert(backend->root == parent_backend->root);
+    assert(backend->parent == parent_backend);
+    assert(backend->ld_name_id != 0);
+    assert(backend->host_widget == &graph->widget);
+    assert(backend->ld_event_bridge_scene != 0);
+    assert(backend->ld_event_bridge_sender == backend->ld_widget);
+    ld_graph = (ldGraph_t *)backend->ld_widget;
+    assert(ld_graph != 0);
+    assert(((ldBase_t *)ld_graph)->pInfo == backend);
+    assert(picoui_widget_has_ld_binding(&graph->widget) == 1);
+}
+
 static void test_graph_series_value_readback_survives_frame_update(void)
 {
     struct picoui_app *app;
@@ -285,6 +322,112 @@ static void test_graph_init_and_shared_base_aliases_round_trip(void)
     picoui_app_destroy(app);
 }
 
+static void test_graph_rejects_non_graph_backend_binding(void)
+{
+    struct picoui_app *app;
+    struct picoui_window *win;
+    struct picoui_graph *graph;
+    struct picoui_backend_widget *backend;
+    ldGraph_t *ld_graph;
+    int original_kind;
+    int original_x_axis;
+    int original_y_axis;
+    int original_axis_offset_host;
+    int original_frame_space_host;
+    int original_grid_offset_host;
+    uint16_t original_axis_offset;
+    uint8_t original_frame_space_native;
+    uint8_t original_grid_offset_native;
+
+    app = picoui_app_create();
+    assert(app != 0);
+    win = picoui_window_create(app, "graph_binding_guard_root");
+    assert(win != 0);
+    graph = picoui_graph_create(win, "graph_binding_guard", 2);
+    assert(graph != 0);
+
+    backend = (struct picoui_backend_widget *)graph->widget.backend_widget;
+    assert(backend != 0);
+    ld_graph = (ldGraph_t *)backend->ld_widget;
+    assert(ld_graph != 0);
+
+    original_kind = backend->kind;
+    original_x_axis = graph->x_axis;
+    original_y_axis = graph->y_axis;
+    original_axis_offset_host = graph->axis_offset;
+    original_frame_space_host = graph->frame_space;
+    original_grid_offset_host = graph->grid_offset;
+    original_axis_offset = ld_graph->xAxisOffset;
+    original_frame_space_native = ld_graph->frameSpace;
+    original_grid_offset_native = ld_graph->gridOffset;
+    backend->kind = PICOUI_BACKEND_WIDGET_BUTTON;
+
+    assert(picoui_graph_set_axis(graph, 180, 120) == -1);
+    assert(graph->x_axis == original_x_axis);
+    assert(graph->y_axis == original_y_axis);
+    assert(picoui_graph_set_axis_offset(graph, 17) == -1);
+    assert(graph->axis_offset == original_axis_offset_host);
+    assert(picoui_graph_set_frame_space(graph, 19) == -1);
+    assert(graph->frame_space == original_frame_space_host);
+    assert(picoui_graph_set_grid_offset(graph, 13) == -1);
+    assert(graph->grid_offset == original_grid_offset_host);
+    assert(picoui_graph_set_point_mask_source(
+               graph,
+               &(struct picoui_image_source){
+                   .img_tile = &g_large_graph_point_mask,
+                   .mask_tile = &g_large_graph_point_mask,
+               }) == -1);
+    assert(graph->point_mask_source == 0);
+    assert(picoui_graph_add_series(graph, 0x2057C4U, 2, 4) == -1);
+    assert(picoui_graph_get_series_count(graph) == -1);
+    assert(picoui_graph_get_value(graph, 0, 0) == -1);
+
+    assert(ld_graph->seriesCount == 0);
+    assert(ld_graph->xAxisOffset == original_axis_offset);
+    assert(ld_graph->frameSpace == original_frame_space_native);
+    assert(ld_graph->gridOffset == original_grid_offset_native);
+
+    backend->kind = original_kind;
+    picoui_app_destroy(app);
+}
+
+static void test_graph_point_mask_larger_than_frame_space_is_accepted_and_synced(void)
+{
+    struct picoui_app *app;
+    struct picoui_window *win;
+    struct picoui_graph *graph;
+    struct picoui_backend_widget *backend;
+    ldGraph_t *ld_graph;
+    struct picoui_image_source large_point_source = {
+        .img_tile = &g_large_graph_point_mask,
+        .mask_tile = &g_large_graph_point_mask,
+    };
+    int original_frame_space_host;
+
+    app = picoui_app_create();
+    assert(app != 0);
+    win = picoui_window_create(app, "graph_large_mask_root");
+    assert(win != 0);
+    graph = picoui_graph_create(win, "graph_large_mask", 2);
+    assert(graph != 0);
+
+    backend = (struct picoui_backend_widget *)graph->widget.backend_widget;
+    assert(backend != 0);
+    ld_graph = (ldGraph_t *)backend->ld_widget;
+    assert(ld_graph != 0);
+
+    original_frame_space_host = graph->frame_space;
+    assert(original_frame_space_host < g_large_graph_point_mask.tRegion.tSize.iWidth);
+    assert(picoui_graph_set_point_mask_source(graph, &large_point_source) == 0);
+
+    assert(graph->point_mask_source == &large_point_source);
+    assert(graph->frame_space == g_large_graph_point_mask.tRegion.tSize.iWidth);
+    assert(ld_graph->ptPointMaskTile == large_point_source.mask_tile);
+    assert(ld_graph->frameSpace == g_large_graph_point_mask.tRegion.tSize.iWidth);
+
+    picoui_app_destroy(app);
+}
+
 static void test_graph_rejects_null_args(struct picoui_window *win)
 {
     assert(picoui_graph_create(0, "id", 1) == 0);
@@ -304,12 +447,15 @@ int main(void)
     win = picoui_window_create(app, "root");
     assert(win != 0);
 
+    test_graph_create_builds_direct_backend_mapping(win);
     test_graph_series_value_readback_survives_frame_update();
     test_graph_visible_output_matches_series_updates();
     test_graph_final_release_contract_covers_advanced_readback_boundary();
     test_graph_native_axis_grid_and_point_mask_round_trip();
     test_graph_move_add_and_set_value_reject_invalid_inputs_without_polluting_other_series();
     test_graph_init_and_shared_base_aliases_round_trip();
+    test_graph_rejects_non_graph_backend_binding();
+    test_graph_point_mask_larger_than_frame_space_is_accepted_and_synced();
     test_graph_rejects_null_args(win);
 
     picoui_app_destroy(app);

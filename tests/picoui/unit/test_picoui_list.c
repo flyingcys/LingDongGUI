@@ -10,6 +10,7 @@
 #include "internal.h"
 
 #include <assert.h>
+#include <dlfcn.h>
 
 static int list_selected_count = 0;
 static int list_selected_index = -1;
@@ -91,9 +92,29 @@ static void test_create_and_props(struct picoui_window *win)
     };
     struct picoui_list *list = picoui_list_create(parent, "list");
     struct picoui_list *list_with_props = picoui_list_create_with_props(parent, &props);
+    struct picoui_backend_widget *backend;
+    struct picoui_backend_widget *parent_backend;
 
     assert(list != 0);
     assert(list_with_props != 0);
+    backend = (struct picoui_backend_widget *)list->widget.backend_widget;
+    parent_backend = (struct picoui_backend_widget *)win->widget.backend_widget;
+    assert(backend != 0);
+    assert(parent_backend != 0);
+    assert(backend->kind == PICOUI_BACKEND_WIDGET_LIST);
+    assert(backend->owner == parent_backend->owner);
+    assert(backend->root == parent_backend->root);
+    assert(backend->parent == parent_backend);
+    assert(backend->ld_name_id != 0);
+    assert(backend->host_widget == &list->widget);
+    assert(backend->ld_widget != 0);
+    assert(((ldBase_t *)backend->ld_widget)->pInfo == backend);
+}
+
+static void test_list_legacy_backend_constructor_is_disabled(struct picoui_window *win)
+{
+    (void)win;
+    assert(dlsym(RTLD_DEFAULT, "picoui_backend_create_list") == 0);
 }
 
 static void test_items_selection_and_callback_contract(struct picoui_window *win)
@@ -631,6 +652,99 @@ static void test_list_native_color_and_align_round_trip(struct picoui_window *wi
     assert(ld_list->tAlign == ARM_2D_ALIGN_CENTRE);
 }
 
+static void test_list_backend_moved_helpers_fail_closed_without_mutation(struct picoui_window *win)
+{
+    struct picoui_widget *parent = (struct picoui_widget *)win;
+    struct picoui_list *list = picoui_list_create(parent, "list_backend_helper_guard");
+    struct picoui_backend_widget *backend;
+    ldList_t *ld_list;
+
+    assert(list != 0);
+    assert(picoui_list_add_item(list, "item_wifi", "Wi-Fi") == 0);
+    assert(picoui_list_add_item(list, "item_bluetooth", "Bluetooth") == 0);
+    assert(picoui_list_set_item_height(list, 24) == 0);
+    assert(picoui_list_set_padding_group(list, 1, 2, 3, 4) == 0);
+    assert(picoui_list_set_margin_group(list, 5, 6, 7, 8) == 0);
+    assert(picoui_list_set_text_color(list, 0x112233U) == 0);
+    assert(picoui_list_set_bg_color(list, 0x445566U) == 0);
+    assert(picoui_list_set_select_color(list, 0x778899U) == 0);
+    assert(picoui_list_set_align(list, PICOUI_ALIGN_END) == 0);
+
+    backend = (struct picoui_backend_widget *)list->widget.backend_widget;
+    assert(backend != 0);
+    ld_list = (ldList_t *)backend->ld_widget;
+    assert(ld_list != 0);
+
+    assert(picoui_backend_list_set_items(backend,
+                                         (const char *const *)list->backend_item_ids,
+                                         list->backend_item_texts,
+                                         list->item_count) == -1);
+    assert(picoui_backend_list_set_item_height(backend, 18) == -1);
+    assert(picoui_backend_list_set_padding_group(backend, 9, 9, 9, 9) == -1);
+    assert(picoui_backend_list_set_margin_group(backend, 6, 6, 6, 6) == -1);
+    assert(picoui_backend_list_set_text_color(backend, 0x010203U) == -1);
+    assert(picoui_backend_list_set_bg_color(backend, 0x040506U) == -1);
+    assert(picoui_backend_list_set_select_color(backend, 0x070809U) == -1);
+    assert(picoui_backend_list_set_align(backend, PICOUI_ALIGN_START) == -1);
+    assert(picoui_backend_list_set_item_widget(backend, 0, backend) == -1);
+
+    assert(list->item_count == 2);
+    assert(backend->list_item_count == 2);
+    assert(ld_list->itemCount == 2);
+    assert(ld_list->itemHeight == 24);
+    assert(ld_list->padding.top == 1);
+    assert(ld_list->padding.bottom == 2);
+    assert(ld_list->padding.left == 3);
+    assert(ld_list->padding.right == 4);
+    assert(ld_list->margin.top == 5);
+    assert(ld_list->margin.bottom == 6);
+    assert(ld_list->margin.left == 7);
+    assert(ld_list->margin.right == 8);
+    assert(ld_list->textColor == test_list_rgb_to_ld_color(0x112233U));
+    assert(ld_list->bgColor == test_list_rgb_to_ld_color(0x445566U));
+    assert(ld_list->selectColor == test_list_rgb_to_ld_color(0x778899U));
+    assert(ld_list->tAlign == ARM_2D_ALIGN_RIGHT);
+}
+
+static void test_list_rejects_corrupted_backend_binding_without_mutating_widget_metadata(
+    struct picoui_window *win)
+{
+    struct picoui_widget *parent = (struct picoui_widget *)win;
+    struct picoui_list *list = picoui_list_create(parent, "list_binding_guard_style");
+    struct picoui_backend_widget *backend;
+    ldList_t *ld_list;
+    enum picoui_backend_widget_kind original_kind;
+
+    assert(list != 0);
+    backend = (struct picoui_backend_widget *)list->widget.backend_widget;
+    assert(backend != 0);
+    ld_list = (ldList_t *)backend->ld_widget;
+    assert(ld_list != 0);
+
+    assert(picoui_list_set_text_color(list, 0x112233U) == 0);
+    assert(picoui_list_set_bg_color(list, 0x445566U) == 0);
+    assert(picoui_list_set_select_color(list, 0x778899U) == 0);
+    assert(picoui_list_set_align(list, PICOUI_ALIGN_END) == 0);
+
+    original_kind = backend->kind;
+    backend->kind = PICOUI_BACKEND_WIDGET_GRAPH;
+
+    assert(picoui_list_set_text_color(list, 0x010203U) == -1);
+    assert(picoui_list_set_bg_color(list, 0x040506U) == -1);
+    assert(picoui_list_set_select_color(list, 0x070809U) == -1);
+    assert(picoui_list_set_align(list, PICOUI_ALIGN_START) == -1);
+
+    assert(list->widget.text_color == 0x112233U);
+    assert(list->widget.bg_color == 0x445566U);
+    assert(list->widget.border_color == 0x778899U);
+    assert(ld_list->textColor == test_list_rgb_to_ld_color(0x112233U));
+    assert(ld_list->bgColor == test_list_rgb_to_ld_color(0x445566U));
+    assert(ld_list->selectColor == test_list_rgb_to_ld_color(0x778899U));
+    assert(ld_list->tAlign == ARM_2D_ALIGN_RIGHT);
+
+    backend->kind = original_kind;
+}
+
 static void test_list_native_item_widget_reparents_backend_tree(struct picoui_window *win)
 {
     struct picoui_app *app;
@@ -706,6 +820,59 @@ static void test_list_native_item_widget_reparents_backend_tree(struct picoui_wi
     picoui_app_destroy(app);
 }
 
+static void test_list_set_item_widget_rejects_corrupted_binding_without_reparenting(
+    struct picoui_window *win)
+{
+    struct picoui_app *app;
+    struct picoui_window *owned_win;
+    struct picoui_widget *parent;
+    struct picoui_list *list;
+    struct picoui_list *nested_list;
+    struct picoui_backend_widget *list_backend;
+    struct picoui_backend_widget *nested_list_backend;
+    struct picoui_backend_widget *window_backend;
+    ldList_t *ld_list;
+    ldList_t *ld_nested_list;
+    enum picoui_backend_widget_kind original_kind;
+
+    (void)win;
+    app = picoui_app_create();
+    owned_win = picoui_window_create(app, "list_item_widget_binding_guard_root");
+    assert(app != 0);
+    assert(owned_win != 0);
+    parent = (struct picoui_widget *)owned_win;
+    list = picoui_list_create(parent, "list_item_widget_binding_guard");
+    nested_list = picoui_list_create(parent, "list_item_widget_binding_guard_nested");
+    assert(list != 0);
+    assert(nested_list != 0);
+    assert(picoui_list_add_item(list, "item_wifi", "Wi-Fi") == 0);
+
+    list_backend = (struct picoui_backend_widget *)list->widget.backend_widget;
+    nested_list_backend = (struct picoui_backend_widget *)nested_list->widget.backend_widget;
+    window_backend = (struct picoui_backend_widget *)owned_win->widget.backend_widget;
+    assert(list_backend != 0);
+    assert(nested_list_backend != 0);
+    assert(window_backend != 0);
+    ld_list = (ldList_t *)list_backend->ld_widget;
+    ld_nested_list = (ldList_t *)nested_list_backend->ld_widget;
+    assert(ld_list != 0);
+    assert(ld_nested_list != 0);
+
+    original_kind = list_backend->kind;
+    list_backend->kind = PICOUI_BACKEND_WIDGET_GRAPH;
+
+    assert(picoui_list_set_item_widget(list, 0, &nested_list->widget) == -1);
+    assert(nested_list_backend->parent == window_backend);
+    assert(nested_list_backend->owner == app);
+    assert(nested_list_backend->root == window_backend);
+    assert(list_backend->first_child == 0);
+    assert(ldBaseGetParent((ldBase_t *)ld_nested_list) == (ldBase_t *)window_backend->ld_widget);
+    assert(ld_list->itemCount == 1);
+
+    list_backend->kind = original_kind;
+    picoui_app_destroy(app);
+}
+
 static void test_repeated_native_clicked_item_same_index_is_noop_contract(struct picoui_window *win)
 {
     struct picoui_app *app;
@@ -758,6 +925,31 @@ static void test_repeated_native_clicked_item_same_index_is_noop_contract(struct
     assert(backend->value == 0);
 
     picoui_app_destroy(app);
+}
+
+static void test_list_selected_index_getter_rejects_corrupted_native_truth_without_cache_pollution(
+    struct picoui_window *win)
+{
+    struct picoui_widget *parent = (struct picoui_widget *)win;
+    struct picoui_list *list = picoui_list_create(parent, "list_selected_binding_guard");
+    struct picoui_backend_widget *backend;
+    ldList_t *ld_list;
+
+    assert(list != 0);
+    assert(picoui_list_add_item(list, "item_wifi", "Wi-Fi") == 0);
+    assert(picoui_list_add_item(list, "item_bluetooth", "Bluetooth") == 0);
+    assert(picoui_list_set_selected_index(list, 1) == 0);
+
+    backend = (struct picoui_backend_widget *)list->widget.backend_widget;
+    assert(backend != 0);
+    ld_list = (ldList_t *)backend->ld_widget;
+    assert(ld_list != 0);
+
+    ldListSetSelectItem(ld_list, 9);
+    assert(picoui_list_get_selected_index(list) == 1);
+    assert(list->selected_index == 1);
+    assert(backend->value == 1);
+    assert(ldListGetSelectItem(ld_list) == 9);
 }
 
 static void test_list_widget_user_data_is_distinct_from_on_selected_cookie(struct picoui_window *win)
@@ -873,6 +1065,7 @@ int main(void)
     assert(win != 0);
 
     test_create_and_props(win);
+    test_list_legacy_backend_constructor_is_disabled(win);
     test_items_selection_and_callback_contract(win);
     test_list_widget_user_data_is_distinct_from_on_selected_cookie(win);
     test_list_style_class_and_user_data_are_stable_widget_metadata_contract(win);
@@ -884,9 +1077,13 @@ int main(void)
     test_list_item_marker_is_support_not_reject(win);
     test_list_native_item_height_padding_margin_round_trip(win);
     test_list_native_color_and_align_round_trip(win);
+    test_list_backend_moved_helpers_fail_closed_without_mutation(win);
+    test_list_rejects_corrupted_backend_binding_without_mutating_widget_metadata(win);
     test_list_native_item_widget_reparents_backend_tree(win);
+    test_list_set_item_widget_rejects_corrupted_binding_without_reparenting(win);
     test_hidden_or_disabled_list_releases_focus_and_rejects_native_selection(win);
     test_repeated_native_clicked_item_same_index_is_noop_contract(win);
+    test_list_selected_index_getter_rejects_corrupted_native_truth_without_cache_pollution(win);
     test_rejects_invalid_inputs(win);
 
     picoui_app_destroy(app);

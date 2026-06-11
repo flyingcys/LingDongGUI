@@ -6,6 +6,7 @@
 #include "internal.h"
 
 #include <assert.h>
+#include <dlfcn.h>
 
 static unsigned int encode_rgb_to_ld_color(unsigned int rgb)
 {
@@ -34,6 +35,7 @@ static void test_scroll_selecter_selected_item_matches_backend_truth(void)
     struct picoui_window *win;
     struct picoui_scroll_selecter *scroll_selecter;
     struct picoui_backend_widget *backend;
+    struct picoui_backend_widget *parent_backend;
     ldScrollSelecter_t *ld_scroll_selecter;
     unsigned int data_model_identity;
 
@@ -48,10 +50,18 @@ static void test_scroll_selecter_selected_item_matches_backend_truth(void)
     assert(picoui_scroll_selecter_set_selected_index(scroll_selecter, 0) == 0);
 
     backend = (struct picoui_backend_widget *)scroll_selecter->widget.backend_widget;
+    parent_backend = (struct picoui_backend_widget *)win->widget.backend_widget;
     assert_scroll_selecter_backend_metadata(backend, 0);
+    assert(parent_backend != 0);
+    assert(backend->owner == parent_backend->owner);
+    assert(backend->root == parent_backend->root);
+    assert(backend->parent == parent_backend);
+    assert(backend->ld_name_id != 0);
+    assert(backend->host_widget == &scroll_selecter->widget);
     data_model_identity = backend->data_model_identity;
     ld_scroll_selecter = (ldScrollSelecter_t *)backend->ld_widget;
     assert(ld_scroll_selecter != 0);
+    assert(((ldBase_t *)ld_scroll_selecter)->pInfo == backend);
 
     assert(picoui_scroll_selecter_set_selected_index(scroll_selecter, 1) == 0);
     assert_scroll_selecter_backend_metadata(backend, data_model_identity);
@@ -59,6 +69,12 @@ static void test_scroll_selecter_selected_item_matches_backend_truth(void)
     assert(picoui_scroll_selecter_get_selected_index(scroll_selecter) == 2);
     assert_scroll_selecter_backend_metadata(backend, data_model_identity);
     picoui_app_destroy(app);
+}
+
+static void test_scroll_selecter_legacy_backend_constructor_is_disabled(struct picoui_window *win)
+{
+    (void)win;
+    assert(dlsym(RTLD_DEFAULT, "picoui_backend_create_scroll_selecter") == 0);
 }
 
 static void test_scroll_selecter_edit_mode_and_navigation_mode_are_distinct(void)
@@ -325,6 +341,120 @@ static void test_scroll_selecter_get_selected_text_round_trip(struct picoui_wind
     assert(sel_text != 0);
 }
 
+static void test_scroll_selecter_set_items_resets_native_and_public_selection_together(void)
+{
+    struct picoui_app *app = picoui_app_create();
+    struct picoui_window *win;
+    struct picoui_scroll_selecter *scroll_selecter;
+    struct picoui_backend_widget *backend;
+    ldScrollSelecter_t *ld_scroll_selecter;
+    const char *replacement_ids[] = {"opt_a", "opt_b"};
+    const char *replacement_texts[] = {"Alpha", "Beta"};
+
+    assert(app != 0);
+    win = picoui_window_create(app, "scroll_reset_root");
+    assert(win != 0);
+    scroll_selecter = picoui_scroll_selecter_create(win, "scroll_reset");
+    assert(scroll_selecter != 0);
+    assert(picoui_scroll_selecter_add_item(scroll_selecter, "wifi", "Wi-Fi") == 0);
+    assert(picoui_scroll_selecter_add_item(scroll_selecter, "bluetooth", "Bluetooth") == 0);
+    assert(picoui_scroll_selecter_add_item(scroll_selecter, "display", "Display") == 0);
+    assert(picoui_scroll_selecter_set_selected_index(scroll_selecter, 2) == 0);
+
+    backend = (struct picoui_backend_widget *)scroll_selecter->widget.backend_widget;
+    assert(backend != 0);
+    ld_scroll_selecter = (ldScrollSelecter_t *)backend->ld_widget;
+    assert(ld_scroll_selecter != 0);
+    assert(ldScrollSelecterGetSelectItemNum(ld_scroll_selecter) == 2);
+
+    assert(picoui_scroll_selecter_set_items(scroll_selecter, replacement_ids, replacement_texts, 2) == 0);
+    assert(scroll_selecter->item_count == 2);
+    assert(scroll_selecter->selected_index == 0);
+    assert(picoui_scroll_selecter_get_selected_index(scroll_selecter) == 0);
+    assert(ldScrollSelecterGetSelectItemNum(ld_scroll_selecter) == 0);
+    assert(picoui_scroll_selecter_get_selected_text(scroll_selecter) != 0);
+    assert(strcmp(picoui_scroll_selecter_get_selected_text(scroll_selecter), "Alpha") == 0);
+
+    picoui_app_destroy(app);
+}
+
+static void test_scroll_selecter_corrupted_backend_binding_preserves_public_selection_state(void)
+{
+    struct picoui_app *app = picoui_app_create();
+    struct picoui_window *win;
+    struct picoui_scroll_selecter *scroll_selecter;
+    struct picoui_backend_widget *backend;
+    ldScrollSelecter_t *ld_scroll_selecter;
+    const char *replacement_ids[] = {"opt_a", "opt_b"};
+    const char *replacement_texts[] = {"Alpha", "Beta"};
+    enum picoui_backend_widget_kind saved_kind;
+
+    assert(app != 0);
+    win = picoui_window_create(app, "scroll_corrupt_selection_root");
+    assert(win != 0);
+    scroll_selecter = picoui_scroll_selecter_create(win, "scroll_corrupt_selection");
+    assert(scroll_selecter != 0);
+    assert(picoui_scroll_selecter_add_item(scroll_selecter, "wifi", "Wi-Fi") == 0);
+    assert(picoui_scroll_selecter_add_item(scroll_selecter, "bluetooth", "Bluetooth") == 0);
+    assert(picoui_scroll_selecter_add_item(scroll_selecter, "display", "Display") == 0);
+    assert(picoui_scroll_selecter_set_selected_index(scroll_selecter, 1) == 0);
+
+    backend = (struct picoui_backend_widget *)scroll_selecter->widget.backend_widget;
+    assert(backend != 0);
+    ld_scroll_selecter = (ldScrollSelecter_t *)backend->ld_widget;
+    assert(ld_scroll_selecter != 0);
+
+    saved_kind = backend->kind;
+    backend->kind = PICOUI_BACKEND_WIDGET_LABEL;
+    ldScrollSelecterSetSelectItemNum(ld_scroll_selecter, 2);
+
+    assert(picoui_scroll_selecter_set_items(scroll_selecter, replacement_ids, replacement_texts, 2) == -1);
+    assert(scroll_selecter->item_count == 3);
+    assert(scroll_selecter->selected_index == 1);
+    assert(picoui_scroll_selecter_get_selected_index(scroll_selecter) == 1);
+    assert(picoui_scroll_selecter_get_selected_text(scroll_selecter) != 0);
+    assert(strcmp(picoui_scroll_selecter_get_selected_text(scroll_selecter), "Bluetooth") == 0);
+
+    backend->kind = saved_kind;
+    picoui_app_destroy(app);
+}
+
+static void test_scroll_selecter_corrupted_backend_binding_rejects_edit_mutation(void)
+{
+    struct picoui_app *app = picoui_app_create();
+    struct picoui_window *win;
+    struct picoui_scroll_selecter *scroll_selecter;
+    struct picoui_backend_widget *backend;
+    ldScrollSelecter_t *ld_scroll_selecter;
+    enum picoui_backend_widget_kind saved_kind;
+    int is_edit = -1;
+
+    assert(app != 0);
+    win = picoui_window_create(app, "scroll_corrupt_edit_root");
+    assert(win != 0);
+    scroll_selecter = picoui_scroll_selecter_create(win, "scroll_corrupt_edit");
+    assert(scroll_selecter != 0);
+    assert(picoui_scroll_selecter_set_edit_mode(scroll_selecter, 0) == 0);
+
+    backend = (struct picoui_backend_widget *)scroll_selecter->widget.backend_widget;
+    assert(backend != 0);
+    ld_scroll_selecter = (ldScrollSelecter_t *)backend->ld_widget;
+    assert(ld_scroll_selecter != 0);
+    assert(ld_scroll_selecter->isEdit == false);
+
+    saved_kind = backend->kind;
+    backend->kind = PICOUI_BACKEND_WIDGET_LABEL;
+
+    assert(picoui_scroll_selecter_set_edit_mode(scroll_selecter, 1) == -1);
+    assert(scroll_selecter->edit_mode == 0);
+    assert(ld_scroll_selecter->isEdit == false);
+    assert(picoui_scroll_selecter_get_edit_mode(scroll_selecter, &is_edit) == 0);
+    assert(is_edit == 0);
+
+    backend->kind = saved_kind;
+    picoui_app_destroy(app);
+}
+
 int main(void)
 {
     test_scroll_selecter_selected_item_matches_backend_truth();
@@ -337,8 +467,12 @@ int main(void)
 
     struct picoui_app *app = picoui_app_create();
     struct picoui_window *win = picoui_window_create(app, "root");
+    test_scroll_selecter_legacy_backend_constructor_is_disabled(win);
     test_scroll_selecter_sync_selected_index_round_trip(win);
     test_scroll_selecter_get_selected_text_round_trip(win);
     picoui_app_destroy(app);
+    test_scroll_selecter_set_items_resets_native_and_public_selection_together();
+    test_scroll_selecter_corrupted_backend_binding_preserves_public_selection_state();
+    test_scroll_selecter_corrupted_backend_binding_rejects_edit_mutation();
     return 0;
 }

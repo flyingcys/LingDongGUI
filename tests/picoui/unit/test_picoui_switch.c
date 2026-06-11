@@ -5,7 +5,7 @@
 #include "../../../src/gui/ldBase.h"
 #include "../../../src/gui/ldSwitch.h"
 #include "../../../src/gui/ldSwitchInternal.h"
-#include "../../../picoui/src/core/internal.h"
+#include "../../../tinyui/src/core/internal.h"
 #include <assert.h>
 #include <string.h>
 
@@ -25,6 +25,32 @@ static void test_switch_create_and_backend_mapping(struct picoui_window *win)
     assert(ld_base->widgetType == widgetTypeSwitch);
     assert(ld_base->use_as__arm_2d_control_node_t.tRegion.tSize.iWidth == 48);
     assert(ld_base->use_as__arm_2d_control_node_t.tRegion.tSize.iHeight == 24);
+}
+
+static void test_switch_create_builds_direct_backend_mapping(struct picoui_window *win)
+{
+    tinyui_obj_t *obj = tinyui_switch_create((tinyui_obj_t *)win, "switch_direct");
+    struct picoui_switch *sw = (struct picoui_switch *)obj;
+    struct picoui_backend_widget *backend;
+    struct picoui_backend_widget *parent_backend;
+    ldSwitch_t *ld_switch;
+
+    assert(sw != 0);
+    backend = (struct picoui_backend_widget *)sw->widget.backend_widget;
+    parent_backend = (struct picoui_backend_widget *)win->widget.backend_widget;
+    assert(backend != 0);
+    assert(parent_backend != 0);
+    assert(backend->kind == PICOUI_BACKEND_WIDGET_SWITCH);
+    assert(backend->owner == parent_backend->owner);
+    assert(backend->root == parent_backend->root);
+    assert(backend->parent == parent_backend);
+    assert(backend->ld_name_id != 0);
+    assert(backend->host_widget == &sw->widget);
+    assert(backend->ld_event_bridge_scene != 0);
+    assert(backend->ld_event_bridge_sender == backend->ld_widget);
+    ld_switch = (ldSwitch_t *)backend->ld_widget;
+    assert(ld_switch != 0);
+    assert(((ldBase_t *)ld_switch)->pInfo == backend);
 }
 
 static void test_switch_default_geometry_matches_capsule_track(void)
@@ -55,6 +81,8 @@ static void test_switch_create_with_props_pushes_fields(struct picoui_window *wi
         &(struct picoui_switch_props){
             .id = "sw_props",
             .checked = 1,
+            .disabled = 1,
+            .has_disabled = 1,
         });
     struct picoui_backend_widget *backend;
     ldSwitch_t *ld_sw;
@@ -66,6 +94,8 @@ static void test_switch_create_with_props_pushes_fields(struct picoui_window *wi
     assert(ld_sw != 0);
     assert(ld_sw->isChecked == true);
     assert(sw->checked == 1);
+    assert(ld_sw->isDisabled == true);
+    assert(sw->widget.enabled == 0);
 }
 
 static void test_switch_set_checked_round_trip(struct picoui_window *win)
@@ -92,6 +122,34 @@ static void test_switch_set_checked_round_trip(struct picoui_window *win)
     assert(picoui_switch_is_checked(sw) == 0);
 }
 
+static void test_switch_set_disabled_round_trip(struct picoui_window *win)
+{
+    tinyui_obj_t *obj = tinyui_switch_create((tinyui_obj_t *)win, "sw_disabled");
+    struct picoui_switch *sw = (struct picoui_switch *)obj;
+    struct picoui_backend_widget *backend;
+    ldSwitch_t *ld_sw;
+    int disabled = -1;
+
+    assert(sw != 0);
+    backend = (struct picoui_backend_widget *)sw->widget.backend_widget;
+    assert(backend != 0);
+    ld_sw = (ldSwitch_t *)backend->ld_widget;
+    assert(ld_sw != 0);
+
+    assert(sw->widget.enabled == 1);
+    assert(picoui_switch_set_disabled(sw, 1) == 0);
+    assert(picoui_switch_get_disabled(sw, &disabled) == 0);
+    assert(disabled == 1);
+    assert(sw->widget.enabled == 0);
+    assert(ld_sw->isDisabled == true);
+
+    assert(picoui_switch_set_disabled(sw, 0) == 0);
+    assert(picoui_switch_get_disabled(sw, &disabled) == 0);
+    assert(disabled == 0);
+    assert(sw->widget.enabled == 1);
+    assert(ld_sw->isDisabled == false);
+}
+
 static void test_switch_rejects_null_args(struct picoui_window *win)
 {
     (void)win;
@@ -113,9 +171,11 @@ int main(void)
     assert(win != 0);
 
     test_switch_create_and_backend_mapping(win);
+    test_switch_create_builds_direct_backend_mapping(win);
     test_switch_default_geometry_matches_capsule_track();
     test_switch_create_with_props_pushes_fields(win);
     test_switch_set_checked_round_trip(win);
+    test_switch_set_disabled_round_trip(win);
     test_switch_rejects_null_args(win);
 
     picoui_app_destroy(app);

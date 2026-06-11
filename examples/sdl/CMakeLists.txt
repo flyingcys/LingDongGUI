@@ -473,89 +473,89 @@ function(add_picoui_demo target source)
 endfunction()
 
 add_picoui_demo(picoui_hello_world_demo
-    "${SDL_EXAMPLE_DIR}/../../picoui/demo/hello_world/main.c"
+    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/hello_world/main.c"
 )
 add_picoui_demo(picoui_basic_widgets_demo
-    "${SDL_EXAMPLE_DIR}/../../picoui/demo/basic_widgets/main.c"
+    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/basic_widgets/main.c"
 )
 add_picoui_demo(picoui_layout_flex_demo
-    "${SDL_EXAMPLE_DIR}/../../picoui/demo/layout_flex/main.c"
+    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/layout_flex/main.c"
 )
 add_picoui_demo(picoui_layout_grid_demo
-    "${SDL_EXAMPLE_DIR}/../../picoui/demo/layout_grid/main.c"
+    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/layout_grid/main.c"
 )
 add_picoui_demo(picoui_theme_showcase_demo
-    "${SDL_EXAMPLE_DIR}/../../picoui/demo/theme_showcase/main.c"
+    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/theme_showcase/main.c"
 )
 add_picoui_demo(picoui_settings_panel_demo
-    "${SDL_EXAMPLE_DIR}/../../picoui/demo/settings_panel/main.c"
+    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/settings_panel/main.c"
 )
 add_picoui_demo(picoui_list_basic_demo
-    "${SDL_EXAMPLE_DIR}/../../picoui/demo/list_basic/main.c"
+    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/list_basic/main.c"
 )
 add_picoui_demo(picoui_progress_bar_basic_demo
-    "${SDL_EXAMPLE_DIR}/../../picoui/demo/progress_bar_basic/main.c"
+    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/progress_bar_basic/main.c"
 )
 add_picoui_demo(picoui_arc_basic_demo
-    "${SDL_EXAMPLE_DIR}/../../picoui/demo/arc_basic/main.c"
+    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/arc_basic/main.c"
 )
 add_picoui_demo(picoui_gauge_basic_demo
-    "${SDL_EXAMPLE_DIR}/../../picoui/demo/gauge_basic/main.c"
+    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/gauge_basic/main.c"
 )
 add_picoui_demo(picoui_icon_slider_basic_demo
-    "${SDL_EXAMPLE_DIR}/../../picoui/demo/icon_slider_basic/main.c"
+    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/icon_slider_basic/main.c"
 )
 add_picoui_demo(picoui_radial_menu_basic_demo
-    "${SDL_EXAMPLE_DIR}/../../picoui/demo/radial_menu_basic/main.c"
+    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/radial_menu_basic/main.c"
 )
 add_picoui_demo(picoui_progress_wheel_basic_demo
-    "${SDL_EXAMPLE_DIR}/../../picoui/demo/progress_wheel_basic/main.c"
+    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/progress_wheel_basic/main.c"
 )
 add_picoui_demo(picoui_qrcode_basic_demo
-    "${SDL_EXAMPLE_DIR}/../../picoui/demo/qrcode_basic/main.c"
+    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/qrcode_basic/main.c"
 )
 add_picoui_demo(picoui_message_box_basic_demo
-    "${SDL_EXAMPLE_DIR}/../../picoui/demo/message_box_basic/main.c"
+    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/message_box_basic/main.c"
 )
 add_picoui_demo(picoui_date_time_basic_demo
-    "${SDL_EXAMPLE_DIR}/../../picoui/demo/date_time_basic/main.c"
+    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/date_time_basic/main.c"
 )
 add_picoui_demo(picoui_clock_basic_demo
-    "${SDL_EXAMPLE_DIR}/../../picoui/demo/clock_basic/main.c"
+    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/clock_basic/main.c"
 )
 add_picoui_demo(picoui_keyboard_basic_demo
-    "${SDL_EXAMPLE_DIR}/../../picoui/demo/keyboard_basic/main.c"
+    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/keyboard_basic/main.c"
 )
 add_picoui_demo(picoui_line_edit_basic_demo
-    "${SDL_EXAMPLE_DIR}/../../picoui/demo/line_edit_basic/main.c"
+    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/line_edit_basic/main.c"
 )
 add_picoui_demo(picoui_combo_box_basic_demo
-    "${SDL_EXAMPLE_DIR}/../../picoui/demo/combo_box_basic/main.c"
+    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/combo_box_basic/main.c"
 )
 add_picoui_demo(picoui_scroll_selecter_basic_demo
-    "${SDL_EXAMPLE_DIR}/../../picoui/demo/scroll_selecter_basic/main.c"
+    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/scroll_selecter_basic/main.c"
 )
 add_picoui_demo(picoui_table_basic_demo
-    "${SDL_EXAMPLE_DIR}/../../picoui/demo/table_basic/main.c"
+    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/table_basic/main.c"
 )
 add_picoui_demo(picoui_graph_basic_demo
-    "${SDL_EXAMPLE_DIR}/../../picoui/demo/graph_basic/main.c"
+    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/graph_basic/main.c"
 )
 add_picoui_demo(picoui_calendar_basic_demo
-    "${SDL_EXAMPLE_DIR}/../../picoui/demo/calendar_basic/main.c"
+    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/calendar_basic/main.c"
 )
 add_picoui_demo(picoui_animation_basic_demo
-    "${SDL_EXAMPLE_DIR}/../../picoui/demo/animation_basic/main.c"
+    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/animation_basic/main.c"
 )
 add_picoui_demo(picoui_legacy_widget_parity_demo
-    "${SDL_EXAMPLE_DIR}/../../picoui/demo/legacy_widget_parity/main.c"
+    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/legacy_widget_parity/main.c"
 )
 target_sources(picoui_legacy_widget_parity_demo PRIVATE
     ${WIDGET_IMAGE_SOURCES}
 )
 add_picoui_demo(picoui_layout_parity_demo
-    "${SDL_EXAMPLE_DIR}/../../picoui/demo/layout_parity/main.c"
+    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/layout_parity/main.c"
 )
 add_picoui_demo(picoui_grid_parity_demo
-    "${SDL_EXAMPLE_DIR}/../../picoui/demo/grid_parity/main.c"
+    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/grid_parity/main.c"
 )

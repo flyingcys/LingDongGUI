@@ -152,103 +152,79 @@ function(ld_define_core_targets)
     ld_apply_common_target_config(longdonggui_host)
 
     add_library(picoui_core STATIC
-        ${LD_REPO_ROOT}/picoui/src/core/app.c
-        ${LD_REPO_ROOT}/picoui/src/core/native.c
-        ${LD_REPO_ROOT}/picoui/src/core/runtime.c
-        ${LD_REPO_ROOT}/picoui/src/core/runtime_bridge.c
-        ${LD_REPO_ROOT}/picoui/src/core/widget.c
-        ${LD_REPO_ROOT}/picoui/src/core/event.c
-        ${LD_REPO_ROOT}/picoui/src/core/resource.c
-        ${LD_REPO_ROOT}/picoui/src/display/display.c
-        ${LD_REPO_ROOT}/picoui/src/indev/indev.c
-        ${LD_REPO_ROOT}/picoui/src/tick/tick.c
-        ${LD_REPO_ROOT}/picoui/src/osal/osal.c
-        ${LD_REPO_ROOT}/picoui/src/theme/theme.c
-        ${LD_REPO_ROOT}/picoui/src/layout/flex.c
-        ${LD_REPO_ROOT}/picoui/src/layout/grid.c
-        ${LD_REPO_ROOT}/picoui/src/widgets/window.c
-        ${LD_REPO_ROOT}/picoui/src/widgets/label.c
-        ${LD_REPO_ROOT}/picoui/src/widgets/text.c
-        ${LD_REPO_ROOT}/picoui/src/widgets/keyboard.c
-        ${LD_REPO_ROOT}/picoui/src/widgets/canvas.c
-        ${LD_REPO_ROOT}/picoui/src/widgets/line_edit.c
-        ${LD_REPO_ROOT}/picoui/src/widgets/combo_box.c
-        ${LD_REPO_ROOT}/picoui/src/widgets/scroll_selecter.c
-        ${LD_REPO_ROOT}/picoui/src/widgets/table.c
-        ${LD_REPO_ROOT}/picoui/src/widgets/graph.c
-        ${LD_REPO_ROOT}/picoui/src/widgets/calendar.c
-        ${LD_REPO_ROOT}/picoui/src/widgets/image.c
-        ${LD_REPO_ROOT}/picoui/src/widgets/button.c
-        ${LD_REPO_ROOT}/picoui/src/widgets/checkbox.c
-        ${LD_REPO_ROOT}/picoui/src/widgets/switch.c
-        ${LD_REPO_ROOT}/picoui/src/widgets/slider.c
-        ${LD_REPO_ROOT}/picoui/src/widgets/arc.c
-        ${LD_REPO_ROOT}/picoui/src/widgets/gauge.c
-        ${LD_REPO_ROOT}/picoui/src/widgets/icon_slider.c
-        ${LD_REPO_ROOT}/picoui/src/widgets/radial_menu.c
-        ${LD_REPO_ROOT}/picoui/src/widgets/progress_bar.c
-        ${LD_REPO_ROOT}/picoui/src/widgets/progress_wheel.c
-        ${LD_REPO_ROOT}/picoui/src/widgets/qrcode.c
-        ${LD_REPO_ROOT}/picoui/src/widgets/animation.c
-        ${LD_REPO_ROOT}/picoui/src/widgets/date_time.c
-        ${LD_REPO_ROOT}/picoui/src/widgets/clock.c
-        ${LD_REPO_ROOT}/picoui/src/widgets/background.c
-        ${LD_REPO_ROOT}/picoui/src/widgets/list.c
-        ${LD_REPO_ROOT}/picoui/src/widgets/message_box.c
+        ${LD_REPO_ROOT}/tinyui/src/core/app.c
+        ${LD_REPO_ROOT}/tinyui/src/core/native.c
+        ${LD_REPO_ROOT}/tinyui/src/core/runtime.c
+        ${LD_REPO_ROOT}/tinyui/src/core/runtime_bridge.c
+        ${LD_REPO_ROOT}/tinyui/src/core/widget.c
+        ${LD_REPO_ROOT}/tinyui/src/core/event.c
+        ${LD_REPO_ROOT}/tinyui/src/core/resource.c
+        ${LD_REPO_ROOT}/tinyui/src/display/display.c
+        ${LD_REPO_ROOT}/tinyui/src/indev/indev.c
+        ${LD_REPO_ROOT}/tinyui/src/tick/tick.c
+        ${LD_REPO_ROOT}/tinyui/src/osal/osal.c
+        ${LD_REPO_ROOT}/tinyui/src/theme/theme.c
+        ${LD_REPO_ROOT}/tinyui/src/layout/flex.c
+        ${LD_REPO_ROOT}/tinyui/src/layout/grid.c
+        ${LD_REPO_ROOT}/tinyui/src/widgets/window.c
+        ${LD_REPO_ROOT}/tinyui/src/widgets/label.c
+        ${LD_REPO_ROOT}/tinyui/src/widgets/text.c
+        ${LD_REPO_ROOT}/tinyui/src/widgets/keyboard.c
+        ${LD_REPO_ROOT}/tinyui/src/widgets/canvas.c
+        ${LD_REPO_ROOT}/tinyui/src/widgets/line_edit.c
+        ${LD_REPO_ROOT}/tinyui/src/widgets/combo_box.c
+        ${LD_REPO_ROOT}/tinyui/src/widgets/scroll_selecter.c
+        ${LD_REPO_ROOT}/tinyui/src/widgets/table.c
+        ${LD_REPO_ROOT}/tinyui/src/widgets/graph.c
+        ${LD_REPO_ROOT}/tinyui/src/widgets/calendar.c
+        ${LD_REPO_ROOT}/tinyui/src/widgets/image.c
+        ${LD_REPO_ROOT}/tinyui/src/widgets/button.c
+        ${LD_REPO_ROOT}/tinyui/src/widgets/checkbox.c
+        ${LD_REPO_ROOT}/tinyui/src/widgets/switch.c
+        ${LD_REPO_ROOT}/tinyui/src/widgets/slider.c
+        ${LD_REPO_ROOT}/tinyui/src/widgets/arc.c
+        ${LD_REPO_ROOT}/tinyui/src/widgets/gauge.c
+        ${LD_REPO_ROOT}/tinyui/src/widgets/icon_slider.c
+        ${LD_REPO_ROOT}/tinyui/src/widgets/radial_menu.c
+        ${LD_REPO_ROOT}/tinyui/src/widgets/progress_bar.c
+        ${LD_REPO_ROOT}/tinyui/src/widgets/progress_wheel.c
+        ${LD_REPO_ROOT}/tinyui/src/widgets/qrcode.c
+        ${LD_REPO_ROOT}/tinyui/src/widgets/animation.c
+        ${LD_REPO_ROOT}/tinyui/src/widgets/date_time.c
+        ${LD_REPO_ROOT}/tinyui/src/widgets/clock.c
+        ${LD_REPO_ROOT}/tinyui/src/widgets/background.c
+        ${LD_REPO_ROOT}/tinyui/src/widgets/list.c
+        ${LD_REPO_ROOT}/tinyui/src/widgets/message_box.c
     )
     target_include_directories(picoui_core PUBLIC
-        ${LD_REPO_ROOT}/picoui/include
-        ${LD_REPO_ROOT}/picoui/src/core
-        ${LD_REPO_ROOT}/picoui/src/backend/ldgui
+        ${LD_REPO_ROOT}/tinyui/include
+        ${LD_REPO_ROOT}/tinyui/src/core
+        ${LD_REPO_ROOT}/tinyui/src/backend/ldgui
         ${LD_COMMON_INCLUDE_DIRS}
     )
     ld_apply_common_target_config(picoui_core)
 
     set(LD_PICOUI_BACKEND_LDGUI_SOURCES
-        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_app.c
-        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_widget.c
-        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_widget_tree.c
-        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_theme.c
-        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_style_apply.c
-        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_layout.c
-        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_event.c
-        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_window.c
-        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_label.c
-        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_text.c
-        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_keyboard.c
-        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_canvas.c
-        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_line_edit.c
-        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_combo_box.c
-        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_scroll_selecter.c
-        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_table.c
-        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_graph.c
-        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_calendar.c
-        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_image.c
-        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_button.c
-        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_checkbox.c
-        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_switch.c
-        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_slider.c
-        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_arc.c
-        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_gauge.c
-        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_icon_slider.c
-        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_radial_menu.c
-        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_progress_bar.c
-        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_progress_wheel.c
-        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_qrcode.c
-        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_animation.c
-        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_date_time.c
-        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_clock.c
-        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_list.c
-        ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_message_box.c
+        ${LD_REPO_ROOT}/tinyui/src/backend/ldgui/backend_app.c
+        ${LD_REPO_ROOT}/tinyui/src/backend/ldgui/backend_widget.c
+        ${LD_REPO_ROOT}/tinyui/src/backend/ldgui/backend_widget_tree.c
+        ${LD_REPO_ROOT}/tinyui/src/backend/ldgui/backend_theme.c
+        ${LD_REPO_ROOT}/tinyui/src/backend/ldgui/backend_style_apply.c
+        ${LD_REPO_ROOT}/tinyui/src/backend/ldgui/backend_layout.c
+        ${LD_REPO_ROOT}/tinyui/src/backend/ldgui/backend_event.c
+        ${LD_REPO_ROOT}/tinyui/src/backend/ldgui/backend_label.c
+        ${LD_REPO_ROOT}/tinyui/src/backend/ldgui/backend_keyboard.c
+        ${LD_REPO_ROOT}/tinyui/src/backend/ldgui/backend_table.c
+        ${LD_REPO_ROOT}/tinyui/src/backend/ldgui/backend_list.c
     )
 
     foreach(LD_PICOUI_BACKEND_TARGET IN ITEMS picoui_backend_ldgui picoui_backend_ldgui_runtime)
         add_library(${LD_PICOUI_BACKEND_TARGET} STATIC ${LD_PICOUI_BACKEND_LDGUI_SOURCES})
         target_include_directories(${LD_PICOUI_BACKEND_TARGET} PUBLIC
-            ${LD_REPO_ROOT}/picoui/include
-            ${LD_REPO_ROOT}/picoui/src/core
-            ${LD_REPO_ROOT}/picoui/src/backend/ldgui
-            ${LD_REPO_ROOT}/picoui
+            ${LD_REPO_ROOT}/tinyui/include
+            ${LD_REPO_ROOT}/tinyui/src/core
+            ${LD_REPO_ROOT}/tinyui/src/backend/ldgui
+            ${LD_REPO_ROOT}/tinyui
         )
         target_link_libraries(${LD_PICOUI_BACKEND_TARGET} PUBLIC picoui_core longdonggui longdonggui_porting_default)
         if(LD_PICOUI_BACKEND_TARGET STREQUAL "picoui_backend_ldgui_runtime")
@@ -276,12 +252,12 @@ function(ld_define_core_targets)
     endforeach()
 
     add_library(picoui_port_sdl STATIC
-        ${LD_REPO_ROOT}/picoui/port/sdl/sdl.c
+        ${LD_REPO_ROOT}/tinyui/port/sdl/sdl.c
     )
     target_include_directories(picoui_port_sdl PUBLIC
-        ${LD_REPO_ROOT}/picoui/include
-        ${LD_REPO_ROOT}/picoui/src/core
-        ${LD_REPO_ROOT}/picoui
+        ${LD_REPO_ROOT}/tinyui/include
+        ${LD_REPO_ROOT}/tinyui/src/core
+        ${LD_REPO_ROOT}/tinyui
     )
     target_link_libraries(picoui_port_sdl PUBLIC picoui_core)
     if(WIN32)

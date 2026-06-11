@@ -52,6 +52,40 @@ static void test_table_current_cell_matches_backend_truth(void)
     picoui_app_destroy(app);
 }
 
+static void test_table_create_builds_direct_backend_mapping(void)
+{
+    struct picoui_app *app;
+    struct picoui_window *win;
+    struct picoui_table *table;
+    struct picoui_backend_widget *backend;
+    struct picoui_backend_widget *parent_backend;
+    ldTable_t *ld_table;
+
+    app = picoui_app_create();
+    assert(app != 0);
+    win = picoui_window_create(app, "table_direct_root");
+    assert(win != 0);
+    table = picoui_table_create(win, "table_direct_mapping", 3, 3);
+    assert(table != 0);
+
+    backend = (struct picoui_backend_widget *)table->widget.backend_widget;
+    parent_backend = (struct picoui_backend_widget *)win->widget.backend_widget;
+    assert(backend != 0);
+    assert(parent_backend != 0);
+    assert(backend->kind == PICOUI_BACKEND_WIDGET_TABLE);
+    assert(backend->owner == parent_backend->owner);
+    assert(backend->root == parent_backend->root);
+    assert(backend->parent == parent_backend);
+    assert(backend->ld_name_id != 0);
+    assert(backend->host_widget == &table->widget);
+    assert(backend->ld_event_bridge_scene != 0);
+    assert(backend->ld_event_bridge_sender == backend->ld_widget);
+    ld_table = (ldTable_t *)backend->ld_widget;
+    assert(ld_table != 0);
+    assert(((ldBase_t *)ld_table)->pInfo == backend);
+    picoui_app_destroy(app);
+}
+
 static void test_table_edit_commit_updates_model_and_visible_text(void)
 {
     struct picoui_app *app;
@@ -526,6 +560,7 @@ static void test_table_item_image_rejects_null_source(struct picoui_window *win)
 
 int main(void)
 {
+    test_table_create_builds_direct_backend_mapping();
     test_table_current_cell_matches_backend_truth();
     test_table_edit_commit_updates_model_and_visible_text();
     test_table_reuses_editable_cell_contract();

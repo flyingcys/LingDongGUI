@@ -1,0 +1,654 @@
+/*
+ * Copyright (c) 2023-2026 flyingcys (flyingcys@gmail.com). All rights reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include "internal.h"
+#include "picoui/switch.h"
+#include "runtime_bridge.h"
+#include "ldSwitch.h"
+
+#include <stdlib.h>
+
+static struct picoui_backend_widget *picoui_switch_backend(struct picoui_switch *sw)
+{
+    struct picoui_backend_widget *backend;
+
+    if (sw == 0 || sw->widget.backend_widget == 0) {
+        return 0;
+    }
+
+    backend = (struct picoui_backend_widget *)sw->widget.backend_widget;
+    if (backend->kind != PICOUI_BACKEND_WIDGET_SWITCH || backend->ld_widget == 0) {
+        return 0;
+    }
+
+    return backend;
+}
+
+static ldSwitch_t *picoui_switch_get_ld(struct picoui_switch *sw)
+{
+    struct picoui_backend_widget *backend = picoui_switch_backend(sw);
+
+    if (backend == 0) {
+        return 0;
+    }
+
+    return (ldSwitch_t *)backend->ld_widget;
+}
+
+static int picoui_switch_nav_dir_to_ld(int direction, int *ld_dir)
+{
+    if (ld_dir == 0) {
+        return -1;
+    }
+
+    switch (direction) {
+    case 1:
+        *ld_dir = picoui_native_nav_dir_to_ld(PICOUI_NATIVE_NAV_UP);
+        return 0;
+    case 2:
+        *ld_dir = picoui_native_nav_dir_to_ld(PICOUI_NATIVE_NAV_DOWN);
+        return 0;
+    case 3:
+        *ld_dir = picoui_native_nav_dir_to_ld(PICOUI_NATIVE_NAV_LEFT);
+        return 0;
+    case 4:
+        *ld_dir = picoui_native_nav_dir_to_ld(PICOUI_NATIVE_NAV_RIGHT);
+        return 0;
+    default:
+        return -1;
+    }
+}
+
+static int picoui_switch_attach_native(struct picoui_switch *sw,
+                                       struct picoui_window *parent,
+                                       const char *id)
+{
+    struct picoui_backend_widget *widget;
+    struct picoui_backend_widget *parent_widget;
+    struct picoui_backend_app_state *app_state;
+    ldSwitch_t *ld_switch;
+    uint16_t name_id;
+
+    if (sw == 0 || parent == 0 || id == 0 || parent->widget.backend_widget == 0) {
+        return -1;
+    }
+
+    parent_widget = (struct picoui_backend_widget *)parent->widget.backend_widget;
+    app_state = picoui_runtime_bridge_backend_state_from_parent(parent_widget);
+    if (app_state == 0 || app_state->ld_scene == 0 || parent_widget->ld_widget == 0) {
+        return -1;
+    }
+
+    widget = calloc(1, sizeof(*widget));
+    if (widget == 0) {
+        return -1;
+    }
+
+    name_id = picoui_runtime_bridge_next_name_id(parent_widget);
+    if (name_id == 0) {
+        free(widget);
+        return -1;
+    }
+
+    ld_switch = ldSwitch_init(app_state->ld_scene,
+                              0,
+                              name_id,
+                              parent_widget->ld_name_id,
+                              0,
+                              0,
+                              48,
+                              24);
+    if (ld_switch == 0) {
+        free(widget);
+        return -1;
+    }
+
+    ldSwitchSetColor(ld_switch,
+                     __RGB(224, 224, 224),
+                     __RGB(33, 150, 243),
+                     GLCD_COLOR_WHITE,
+                     GLCD_COLOR_WHITE);
+
+    if (picoui_backend_widget_init_child(widget,
+                                         parent_widget,
+                                         PICOUI_BACKEND_WIDGET_SWITCH,
+                                         id,
+                                         parent_widget->theme) != 0) {
+        ldSwitch_depose(app_state->ld_scene, ld_switch);
+        free(widget);
+        return -1;
+    }
+
+    widget->ld_widget = ld_switch;
+    widget->ld_name_id = name_id;
+    widget->last_signal = PICOUI_BACKEND_SIGNAL_NONE;
+    if (picoui_backend_widget_attach_child(parent_widget, widget) != 0) {
+        ldSwitch_depose(app_state->ld_scene, ld_switch);
+        free(widget);
+        return -1;
+    }
+
+    sw->widget.backend_widget = widget;
+    if (picoui_backend_widget_bind_host(sw->widget.backend_widget, &sw->widget) != 0) {
+        (void)picoui_backend_widget_detach_from_parent(sw->widget.backend_widget);
+        ldSwitch_depose(app_state->ld_scene, ld_switch);
+        free(widget);
+        sw->widget.backend_widget = 0;
+        return -1;
+    }
+
+    return 0;
+}
+
+static int picoui_switch_props_are_valid(const struct picoui_switch_props *props)
+{
+    return props != 0
+        && props->id != 0
+        && (props->has_off_source == 0
+            || props->off_source == 0
+            || props->off_source->img_tile != 0)
+        && (props->has_on_source == 0
+            || props->on_source == 0
+            || props->on_source->img_tile != 0)
+        && (props->has_knob_source == 0
+            || props->knob_source == 0
+            || props->knob_source->img_tile != 0)
+        && (props->has_direction == 0
+            || (props->direction >= 0 && props->direction <= 2))
+        && props->width >= 0
+        && props->height >= 0
+        && props->radius >= 0
+        && props->padding >= 0;
+}
+
+/**
+ * @brief Create switch widget
+ *
+ * @param[in] parent Parent widget
+ * @param[in] id Widget identifier string
+ * @return Pointer to the object on success, NULL on failure
+ */
+
+struct picoui_switch *picoui_switch_create(struct picoui_window *parent, const char *id)
+{
+    struct picoui_switch *sw;
+
+    if (parent == 0 || id == 0) {
+        return 0;
+    }
+
+    sw = calloc(1, sizeof(*sw));
+    if (sw == 0) {
+        return 0;
+    }
+
+    if (picoui_switch_attach_native(sw, parent, id) != 0) {
+        free(sw);
+        return 0;
+    }
+
+    sw->id = id;
+    sw->widget.visible = 1;
+    sw->widget.enabled = 1;
+    return sw;
+}
+
+/**
+ * @brief Create switch widget with properties
+ *
+ * @param[in] parent Parent widget
+ * @param[in] props Properties structure
+ * @return Pointer to the object on success, NULL on failure
+ */
+
+struct picoui_switch *picoui_switch_create_with_props(struct picoui_window *parent,
+                                                      const struct picoui_switch_props *props)
+{
+    struct picoui_switch *sw;
+    struct picoui_backend_widget *backend;
+
+    if (!picoui_switch_props_are_valid(props)) {
+        return 0;
+    }
+
+    sw = picoui_switch_create(parent, props->id);
+    if (sw == 0) {
+        return 0;
+    }
+
+    backend = (struct picoui_backend_widget *)sw->widget.backend_widget;
+    sw->checked = props->checked != 0;
+    sw->cb = 0;
+    sw->user_data = 0;
+    if (picoui_backend_widget_update_value(backend,
+                                           sw->checked,
+                                           0,
+                                           &sw->widget,
+                                           0) != 0) {
+        free(sw);
+        return 0;
+    }
+    backend->last_signal = PICOUI_BACKEND_SIGNAL_NONE;
+    backend->dispatch_count = 0;
+    sw->cb = props->on_toggled;
+    sw->user_data = props->user_data;
+    if (picoui_widget_set_user_data(&sw->widget, props->user_data) != 0) {
+        free(sw);
+        return 0;
+    }
+    if (props->style_class != 0
+        && picoui_widget_set_style_class(&sw->widget, props->style_class) != 0) {
+        free(sw);
+        return 0;
+    }
+    if ((props->width > 0 || props->height > 0)
+        && picoui_widget_set_size(&sw->widget, props->width, props->height) != 0) {
+        free(sw);
+        return 0;
+    }
+    if (picoui_widget_set_bg_color(&sw->widget, props->bg_color) != 0
+        || picoui_widget_set_text_color(&sw->widget, props->text_color) != 0
+        || picoui_widget_set_border_color(&sw->widget, props->border_color) != 0
+        || picoui_widget_set_radius(&sw->widget, props->radius) != 0
+        || picoui_widget_set_padding(&sw->widget, props->padding) != 0
+        || (props->has_off_source != 0
+            && picoui_switch_set_off_source(sw, props->off_source) != 0)
+        || (props->has_on_source != 0
+            && picoui_switch_set_on_source(sw, props->on_source) != 0)
+        || (props->has_knob_source != 0
+            && picoui_switch_set_knob_source(sw, props->knob_source) != 0)
+        || (props->has_horizontal != 0
+            && picoui_switch_set_horizontal(sw, props->horizontal) != 0)
+        || (props->has_direction != 0
+            && picoui_switch_set_direction(sw, props->direction) != 0)
+        || (props->has_disabled != 0
+            && picoui_switch_set_disabled(sw, props->disabled) != 0)) {
+        free(sw);
+        return 0;
+    }
+    return sw;
+}
+
+/**
+ * @brief Set checked of switch widget
+ *
+ * @param[in] sw sw
+ * @param[in] checked Checked state
+ * @return 0 on success, -1 on failure
+ */
+
+int picoui_switch_set_checked(struct picoui_switch *sw, int checked)
+{
+    int normalized_checked;
+
+    if (sw == 0) {
+        return -1;
+    }
+
+    normalized_checked = checked != 0;
+    if (sw->checked == normalized_checked) {
+        return 0;
+    }
+
+    if (sw->widget.backend_widget == 0) {
+        return -1;
+    }
+
+    sw->checked = normalized_checked;
+    return picoui_backend_widget_update_value(sw->widget.backend_widget,
+                                              sw->checked,
+                                              sw->cb,
+                                              &sw->widget,
+                                              sw->user_data);
+}
+
+/**
+ * @brief switch is checked
+ *
+ * @param[in] sw sw
+ * @return 0 on success
+ */
+
+int picoui_switch_is_checked(struct picoui_switch *sw)
+{
+    if (sw == 0) {
+        return 0;
+    }
+
+    return sw->checked;
+}
+
+/**
+ * @brief Set off source of switch widget
+ *
+ * @param[in] sw sw
+ * @param[in] source Image source
+ * @return -1 on failure
+ */
+
+int picoui_switch_set_off_source(struct picoui_switch *sw, struct picoui_image_source *source)
+{
+    ldSwitch_t *ld_switch;
+
+    if (sw == 0 || (source != 0 && source->img_tile == 0)) {
+        return -1;
+    }
+
+    ld_switch = picoui_switch_get_ld(sw);
+    if (ld_switch == 0) {
+        return -1;
+    }
+
+    ldSwitchSetImage(ld_switch,
+                     source != 0 ? source->img_tile : 0,
+                     source != 0 ? source->mask_tile : 0,
+                     ld_switch->ptOnImgTile,
+                     ld_switch->ptOnMaskTile,
+                     ld_switch->ptKnobImgTile,
+                     ld_switch->ptKnobMaskTile);
+    return 0;
+}
+
+/**
+ * @brief Set on source of switch widget
+ *
+ * @param[in] sw sw
+ * @param[in] source Image source
+ * @return -1 on failure
+ */
+
+int picoui_switch_set_on_source(struct picoui_switch *sw, struct picoui_image_source *source)
+{
+    ldSwitch_t *ld_switch;
+
+    if (sw == 0 || (source != 0 && source->img_tile == 0)) {
+        return -1;
+    }
+
+    ld_switch = picoui_switch_get_ld(sw);
+    if (ld_switch == 0) {
+        return -1;
+    }
+
+    ldSwitchSetImage(ld_switch,
+                     ld_switch->ptOffImgTile,
+                     ld_switch->ptOffMaskTile,
+                     source != 0 ? source->img_tile : 0,
+                     source != 0 ? source->mask_tile : 0,
+                     ld_switch->ptKnobImgTile,
+                     ld_switch->ptKnobMaskTile);
+    return 0;
+}
+
+/**
+ * @brief Set knob source of switch widget
+ *
+ * @param[in] sw sw
+ * @param[in] source Image source
+ * @return -1 on failure
+ */
+
+int picoui_switch_set_knob_source(struct picoui_switch *sw, struct picoui_image_source *source)
+{
+    ldSwitch_t *ld_switch;
+
+    if (sw == 0 || (source != 0 && source->img_tile == 0)) {
+        return -1;
+    }
+
+    ld_switch = picoui_switch_get_ld(sw);
+    if (ld_switch == 0) {
+        return -1;
+    }
+
+    ldSwitchSetImage(ld_switch,
+                     ld_switch->ptOffImgTile,
+                     ld_switch->ptOffMaskTile,
+                     ld_switch->ptOnImgTile,
+                     ld_switch->ptOnMaskTile,
+                     source != 0 ? source->img_tile : 0,
+                     source != 0 ? source->mask_tile : 0);
+    return 0;
+}
+
+/**
+ * @brief Set horizontal of switch widget
+ *
+ * @param[in] sw sw
+ * @param[in] horizontal horizontal
+ * @return -1 on failure
+ */
+
+int picoui_switch_set_horizontal(struct picoui_switch *sw, int horizontal)
+{
+    ldSwitch_t *ld_switch;
+
+    if (sw == 0) {
+        return -1;
+    }
+
+    ld_switch = picoui_switch_get_ld(sw);
+    if (ld_switch == 0) {
+        return -1;
+    }
+
+    ldSwitchSetHorizontal(ld_switch, horizontal != 0);
+    return 0;
+}
+
+/**
+ * @brief Get horizontal of switch widget
+ *
+ * @param[out] sw sw
+ * @param[in] horizontal horizontal
+ * @return -1 on failure
+ */
+
+int picoui_switch_get_horizontal(struct picoui_switch *sw, int *horizontal)
+{
+    ldSwitch_t *ld_switch;
+
+    if (sw == 0 || horizontal == 0) {
+        return -1;
+    }
+
+    ld_switch = picoui_switch_get_ld(sw);
+    if (ld_switch == 0) {
+        return -1;
+    }
+
+    *horizontal = ldSwitchIsHorizontal(ld_switch) ? 1 : 0;
+    return 0;
+}
+
+/**
+ * @brief Set direction of switch widget
+ *
+ * @param[in] sw sw
+ * @param[in] direction direction
+ * @return -1 on failure
+ */
+
+int picoui_switch_set_direction(struct picoui_switch *sw, int direction)
+{
+    ldSwitch_t *ld_switch;
+
+    if (sw == 0 || direction < 0 || direction > 2) {
+        return -1;
+    }
+
+    ld_switch = picoui_switch_get_ld(sw);
+    if (ld_switch == 0) {
+        return -1;
+    }
+
+    ldSwitchSetDirection(ld_switch, (ldSwitchDirection_t)direction);
+    return 0;
+}
+
+/**
+ * @brief Get direction of switch widget
+ *
+ * @param[out] sw sw
+ * @param[in] direction direction
+ * @return -1 on failure
+ */
+
+int picoui_switch_get_direction(struct picoui_switch *sw, int *direction)
+{
+    ldSwitch_t *ld_switch;
+
+    if (sw == 0 || direction == 0) {
+        return -1;
+    }
+
+    ld_switch = picoui_switch_get_ld(sw);
+    if (ld_switch == 0) {
+        return -1;
+    }
+
+    *direction = (int)ldSwitchGetDirection(ld_switch);
+    return 0;
+}
+
+/**
+ * @brief Set disabled of switch widget
+ *
+ * @param[in] sw sw
+ * @param[in] disabled disabled
+ * @return -1 on failure
+ */
+
+int picoui_switch_set_disabled(struct picoui_switch *sw, int disabled)
+{
+    if (sw == 0) {
+        return -1;
+    }
+
+    return picoui_widget_set_enabled(&sw->widget, disabled == 0);
+}
+
+/**
+ * @brief Get disabled of switch widget
+ *
+ * @param[out] sw sw
+ * @param[in] disabled disabled
+ * @return -1 on failure
+ */
+
+int picoui_switch_get_disabled(struct picoui_switch *sw, int *disabled)
+{
+    ldSwitch_t *ld_switch;
+
+    if (sw == 0 || disabled == 0) {
+        return -1;
+    }
+
+    ld_switch = picoui_switch_get_ld(sw);
+    if (ld_switch == 0) {
+        return -1;
+    }
+
+    *disabled = ldSwitchIsDisabled(ld_switch) ? 1 : 0;
+    return 0;
+}
+
+/**
+ * @brief switch can navigate
+ *
+ * @param[in] sw sw
+ * @param[in] direction direction
+ * @param[in] can_navigate can navigate
+ * @return -1 on failure
+ */
+
+int picoui_switch_can_navigate(struct picoui_switch *sw, int direction, int *can_navigate)
+{
+    ldSwitch_t *ld_switch;
+    int ld_dir;
+
+    if (sw == 0 || can_navigate == 0 || direction < 1 || direction > 4) {
+        return -1;
+    }
+
+    ld_switch = picoui_switch_get_ld(sw);
+    if (ld_switch == 0 || picoui_switch_nav_dir_to_ld(direction, &ld_dir) != 0) {
+        return -1;
+    }
+
+    *can_navigate = ldSwitchCanNavigate(ld_switch, (ldNavDir_t)ld_dir) ? 1 : 0;
+    return 0;
+}
+
+/**
+ * @brief switch navigate
+ *
+ * @param[in] sw sw
+ * @param[in] direction direction
+ * @return -1 on failure
+ */
+
+int picoui_switch_navigate(struct picoui_switch *sw, int direction)
+{
+    struct picoui_backend_widget *backend;
+    struct picoui_backend_app_state *app_state;
+    ldSwitch_t *ld_switch;
+    int ld_dir;
+
+    if (sw == 0 || direction < 1 || direction > 4) {
+        return -1;
+    }
+
+    backend = picoui_switch_backend(sw);
+    if (backend == 0 || picoui_switch_nav_dir_to_ld(direction, &ld_dir) != 0) {
+        return -1;
+    }
+
+    app_state = picoui_runtime_bridge_backend_state_from_parent(backend);
+    ld_switch = (ldSwitch_t *)backend->ld_widget;
+    if (app_state == 0 || app_state->ld_scene == 0 || ld_switch == 0) {
+        return -1;
+    }
+
+    ldSwitchNavigate(app_state->ld_scene, ld_switch, (ldNavDir_t)ld_dir);
+    sw->checked = ldSwitchIsChecked(ld_switch) ? 1 : 0;
+    backend->value = sw->checked;
+    return 0;
+}
+
+/**
+ * @brief Set on toggled of switch widget
+ *
+ * @param[in] sw sw
+ * @param[in] cb cb
+ * @param[in] user_data User data pointer
+ * @return 0 on success, -1 on failure
+ */
+
+int picoui_switch_set_on_toggled(struct picoui_switch *sw,
+                                 picoui_value_changed_cb cb,
+                                 void *user_data)
+{
+    if (sw == 0) {
+        return -1;
+    }
+
+    sw->cb = cb;
+    sw->user_data = user_data;
+    return 0;
+}

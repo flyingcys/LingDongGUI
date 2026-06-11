@@ -4,7 +4,7 @@
 #include "picoui/date_time.h"
 #include "picoui/widget.h"
 #include "picoui/window.h"
-#include "../../../picoui/src/backend/ldgui/backend.h"
+#include "../../../tinyui/src/backend/ldgui/backend.h"
 
 #include <assert.h>
 #include <string.h>
@@ -28,9 +28,20 @@ static void test_date_time_create_and_props(struct picoui_window *win)
         picoui_date_time_create((struct picoui_widget *)win, "date_time");
     struct picoui_date_time *with_props =
         picoui_date_time_create_with_props((struct picoui_widget *)win, &props);
+    struct picoui_backend_widget *backend;
+    struct picoui_backend_widget *parent_backend;
 
     assert(dt != 0);
     assert(with_props != 0);
+    backend = (struct picoui_backend_widget *)dt->widget.backend_widget;
+    parent_backend = (struct picoui_backend_widget *)win->widget.backend_widget;
+    assert(backend != 0);
+    assert(parent_backend != 0);
+    assert(backend->kind == PICOUI_BACKEND_WIDGET_DATE_TIME);
+    assert(backend->parent == parent_backend);
+    assert(backend->root == parent_backend->root);
+    assert(backend->owner == parent_backend->owner);
+    assert(backend->host_widget == &dt->widget);
     assert(picoui_date_time_get_format(dt) != 0);
     assert(strcmp(picoui_date_time_get_format(dt), "yyyy-mm-dd hh:nn:ss") == 0);
     assert(picoui_date_time_get_format(with_props) != 0);
@@ -164,12 +175,21 @@ static void test_date_time_native_transparent_color_and_align_round_trip(struct 
         picoui_date_time_create((struct picoui_widget *)win, "date_time_native_style");
     struct picoui_backend_widget *backend;
     ldDateTime_t *ld_date_time;
+    struct picoui_backend_app_state *app_state;
+    int year = 0;
+    int month = 0;
+    int day = 0;
+    int hour = 0;
+    int minute = 0;
+    int second = 0;
 
     assert(dt != 0);
     backend = (struct picoui_backend_widget *)dt->widget.backend_widget;
     assert(backend != 0);
     ld_date_time = (ldDateTime_t *)backend->ld_widget;
     assert(ld_date_time != 0);
+    app_state = (struct picoui_backend_app_state *)backend->owner->backend_app;
+    assert(app_state != 0);
 
     assert(picoui_date_time_set_text_color(dt, 0x112233U) == 0);
     assert(picoui_date_time_set_bg_color(dt, 0x445566U) == 0);
@@ -182,12 +202,26 @@ static void test_date_time_native_transparent_color_and_align_round_trip(struct 
     assert(ld_date_time->tAlign == ARM_2D_ALIGN_RIGHT);
     assert(ld_date_time->isTransparent == true);
 
+    assert(picoui_date_time_set_bg_color(dt, 0x778899U) == 0);
+    assert(picoui_date_time_get_transparent(dt) == 0);
+    assert(ld_date_time->bgColor == __RGB(0x77, 0x88, 0x99));
+    assert(ld_date_time->isTransparent == false);
+
     assert(picoui_date_time_set_transparent(dt, 0) == 0);
     assert(picoui_date_time_get_transparent(dt) == 0);
     assert(ld_date_time->isTransparent == false);
     assert(picoui_date_time_set_use_system_time(dt, 1) == 0);
     assert(picoui_date_time_get_use_system_time(dt) == 1);
     assert(ld_date_time->isAutoSysTime == true);
+    ldDateTime_on_frame_start(app_state->ld_scene, ld_date_time);
+    assert(picoui_date_time_get_date(dt, &year, &month, &day) == 0);
+    assert(picoui_date_time_get_time(dt, &hour, &minute, &second) == 0);
+    assert(year == ld_date_time->year);
+    assert(month == ld_date_time->month);
+    assert(day == ld_date_time->day);
+    assert(hour == ld_date_time->hour);
+    assert(minute == ld_date_time->minute);
+    assert(second == ld_date_time->second);
     assert(picoui_date_time_set_use_system_time(dt, 0) == 0);
     assert(picoui_date_time_get_use_system_time(dt) == 0);
     assert(ld_date_time->isAutoSysTime == false);
@@ -199,6 +233,69 @@ static void test_date_time_native_transparent_color_and_align_round_trip(struct 
     assert(picoui_date_time_get_transparent(0) == -1);
     assert(picoui_date_time_set_use_system_time(0, 1) == -1);
     assert(picoui_date_time_get_use_system_time(0) == -1);
+}
+
+static void test_date_time_rejects_corrupted_backend_binding_without_mutating_native(
+    struct picoui_window *win)
+{
+    struct picoui_date_time *dt =
+        picoui_date_time_create((struct picoui_widget *)win, "date_time_binding_guard");
+    struct picoui_backend_widget *backend;
+    ldDateTime_t *ld_date_time;
+    int original_kind;
+    int year = 0;
+    int month = 0;
+    int day = 0;
+    int hour = 0;
+    int minute = 0;
+    int second = 0;
+
+    assert(dt != 0);
+    backend = (struct picoui_backend_widget *)dt->widget.backend_widget;
+    assert(backend != 0);
+    ld_date_time = (ldDateTime_t *)backend->ld_widget;
+    assert(ld_date_time != 0);
+
+    assert(picoui_date_time_set_format(dt, "yyyy/mm/dd hh:nn:ss") == 0);
+    assert(picoui_date_time_set_date(dt, 2026, 6, 11) == 0);
+    assert(picoui_date_time_set_time(dt, 9, 8, 7) == 0);
+    assert(picoui_date_time_set_text_color(dt, 0x123456U) == 0);
+    assert(picoui_date_time_set_bg_color(dt, 0xABCDEFU) == 0);
+    assert(picoui_date_time_set_align(dt, PICOUI_ALIGN_END) == 0);
+    assert(picoui_date_time_set_transparent(dt, 1) == 0);
+    assert(picoui_date_time_set_use_system_time(dt, 0) == 0);
+
+    original_kind = backend->kind;
+    backend->kind = PICOUI_BACKEND_WIDGET_GRAPH;
+
+    assert(picoui_date_time_set_format(dt, "hh:nn") == -1);
+    assert(picoui_date_time_set_date(dt, 2030, 1, 2) == -1);
+    assert(picoui_date_time_set_time(dt, 1, 2, 3) == -1);
+    assert(picoui_date_time_set_text_color(dt, 0x654321U) == -1);
+    assert(picoui_date_time_set_bg_color(dt, 0x010203U) == -1);
+    assert(picoui_date_time_set_align(dt, PICOUI_ALIGN_START) == -1);
+    assert(picoui_date_time_set_transparent(dt, 0) == -1);
+    assert(picoui_date_time_set_use_system_time(dt, 1) == -1);
+    assert(picoui_date_time_get_format(dt) == 0);
+    assert(picoui_date_time_get_date(dt, &year, &month, &day) == -1);
+    assert(picoui_date_time_get_time(dt, &hour, &minute, &second) == -1);
+    assert(picoui_date_time_get_transparent(dt) == -1);
+    assert(picoui_date_time_get_use_system_time(dt) == -1);
+
+    assert(strcmp((const char *)ld_date_time->formatStr, "yyyy/mm/dd hh:nn:ss") == 0);
+    assert(ld_date_time->year == 2026);
+    assert(ld_date_time->month == 6);
+    assert(ld_date_time->day == 11);
+    assert(ld_date_time->hour == 9);
+    assert(ld_date_time->minute == 8);
+    assert(ld_date_time->second == 7);
+    assert(ld_date_time->textColor == __RGB(0x12, 0x34, 0x56));
+    assert(ld_date_time->bgColor == __RGB(0xAB, 0xCD, 0xEF));
+    assert(ld_date_time->tAlign == ARM_2D_ALIGN_RIGHT);
+    assert(ld_date_time->isTransparent == true);
+    assert(ld_date_time->isAutoSysTime == false);
+
+    backend->kind = original_kind;
 }
 
 static void test_date_time_init_and_shared_base_aliases_round_trip(struct picoui_window *win)
@@ -248,6 +345,7 @@ int main(void)
     test_date_time_rejects_invalid_inputs(win);
     test_date_time_final_release_contract_covers_public_readback_and_modes(win);
     test_date_time_native_transparent_color_and_align_round_trip(win);
+    test_date_time_rejects_corrupted_backend_binding_without_mutating_native(win);
     test_date_time_init_and_shared_base_aliases_round_trip(win);
 
     picoui_app_destroy(app);

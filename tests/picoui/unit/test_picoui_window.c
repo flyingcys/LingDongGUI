@@ -6,6 +6,7 @@
 #include <assert.h>
 
 extern int picoui_widget_has_ld_binding(const struct picoui_widget *widget);
+void picoui_backend_window_test_fail_next_set_bg_color(void);
 
 static void test_window_create_and_backend_mapping(struct picoui_window *win)
 {
@@ -113,15 +114,79 @@ static void test_window_constructor_binds_ld_without_backend_wrapper(void)
     picoui_app_destroy(app);
 }
 
-static void test_window_legacy_backend_constructors_are_disabled(void)
+static void test_window_create_with_props_failure_rolls_back_root_binding(void)
 {
     struct picoui_app *app = picoui_app_create();
-    struct picoui_window *win = picoui_window_create(app, "root_legacy");
+    struct picoui_window_props props = {
+        .id = "root_props_fail",
+        .bg_color = 0x112233,
+    };
+    struct picoui_backend_app_state *app_state;
+
+    assert(app != 0);
+    app_state = (struct picoui_backend_app_state *)app->backend_app;
+    assert(app_state != 0);
+    assert(app_state->ld_scene != 0);
+    assert(app_state->ld_scene->ptNodeRoot == 0);
+
+    picoui_backend_window_test_fail_next_set_bg_color();
+    assert(picoui_window_create_with_props(app, &props) == 0);
+    assert(app_state->ld_scene->ptNodeRoot == 0);
+
+    picoui_app_destroy(app);
+}
+
+static void test_window_create_with_props_applies_bg_color_without_backend_constructor(void)
+{
+    struct picoui_app *app = picoui_app_create();
+    struct picoui_window_props props = {
+        .id = "root_props_color",
+        .bg_color = 0x112233,
+    };
+    struct picoui_window *win;
+    struct picoui_backend_widget *backend;
+    ldWindow_t *ld_win;
+
+    assert(app != 0);
+    win = picoui_window_create_with_props(app, &props);
+    assert(win != 0);
+    assert(win->widget.bg_color == 0x112233);
+
+    backend = (struct picoui_backend_widget *)win->widget.backend_widget;
+    assert(backend != 0);
+    ld_win = (ldWindow_t *)backend->ld_widget;
+    assert(ld_win != 0);
+    assert(ldWindowGetColor(ld_win) == __RGB(0x11, 0x22, 0x33));
+
+    picoui_app_destroy(app);
+}
+
+static void test_window_public_constructors_keep_v2_direct_create_truth(void)
+{
+    struct picoui_app *app = picoui_app_create();
+    struct picoui_window *win = picoui_window_create(app, "root_public_truth");
+    struct picoui_background *bg = picoui_background_create(app, "bg_public_truth");
+    struct picoui_backend_widget *win_backend;
+    unsigned int bg_color = 0;
+    int bg_offset_x = 0;
+    int bg_offset_y = 0;
 
     assert(app != 0);
     assert(win != 0);
-    assert(picoui_backend_create_window(app, "legacy_root") == 0);
-    assert(picoui_backend_create_child_window(win->widget.backend_widget, "legacy_child") == 0);
+    assert(bg != 0);
+
+    win_backend = (struct picoui_backend_widget *)win->widget.backend_widget;
+    assert(win_backend != 0);
+    assert(win_backend->kind == PICOUI_BACKEND_WIDGET_WINDOW);
+    assert(win_backend->owner == app);
+    assert(win_backend->root == win_backend);
+    assert(picoui_background_set_color(bg, 0x224466U) == 0);
+    assert(picoui_background_get_color(bg, &bg_color) == 0);
+    assert(bg_color == 0x204462U);
+    assert(picoui_background_set_offset(bg, 3, 7) == 0);
+    assert(picoui_background_get_offset(bg, &bg_offset_x, &bg_offset_y) == 0);
+    assert(bg_offset_x == 3);
+    assert(bg_offset_y == 7);
 
     picoui_app_destroy(app);
 }
@@ -132,7 +197,9 @@ int main(void)
     struct picoui_window *win;
 
     test_window_constructor_binds_ld_without_backend_wrapper();
-    test_window_legacy_backend_constructors_are_disabled();
+    test_window_public_constructors_keep_v2_direct_create_truth();
+    test_window_create_with_props_failure_rolls_back_root_binding();
+    test_window_create_with_props_applies_bg_color_without_backend_constructor();
 
     assert(app != 0);
     win = picoui_window_create(app, "root");

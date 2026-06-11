@@ -9,6 +9,7 @@
 
 extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
 extern int picoui_widget_has_ld_binding(const struct picoui_widget *widget);
+void picoui_backend_button_test_fail_next_set_font(void);
 
 static int press_count = 0;
 static int release_count = 0;
@@ -87,6 +88,42 @@ static void test_button_create_with_props_pushes_all_fields(struct picoui_window
     assert(ld_base->use_as__arm_2d_control_node_t.tRegion.tSize.iHeight == 36);
 }
 
+static void test_button_create_with_props_failure_rolls_back_attached_child(struct picoui_window *win)
+{
+    struct picoui_backend_widget *parent_backend =
+        (struct picoui_backend_widget *)win->widget.backend_widget;
+    struct picoui_backend_widget *tail = parent_backend->first_child;
+    struct picoui_backend_widget *next_before = 0;
+    struct picoui_button *button;
+    struct picoui_font failing_font = {
+        .family = "Sans",
+        .size = 12,
+    };
+
+    while (tail != 0 && tail->next_sibling != 0) {
+        tail = tail->next_sibling;
+    }
+    if (tail != 0) {
+        next_before = tail->next_sibling;
+    }
+
+    picoui_backend_button_test_fail_next_set_font();
+    button = picoui_button_create_with_props(
+        win,
+        &(struct picoui_button_props){
+            .id = "btn_props_fail_font",
+            .text = "PropsBtnFail",
+            .font = &failing_font,
+        });
+
+    assert(button == 0);
+    if (tail != 0) {
+        assert(tail->next_sibling == next_before);
+    } else {
+        assert(parent_backend->first_child == 0);
+    }
+}
+
 static void test_button_set_text_round_trip(struct picoui_window *win)
 {
     struct picoui_button *btn = picoui_button_create(win, "btn_text");
@@ -124,11 +161,6 @@ static void test_button_constructor_binds_ld_without_backend_wrapper(struct pico
     assert(picoui_widget_has_ld_binding(&btn->widget) == 1);
 }
 
-static void test_button_legacy_backend_constructor_is_disabled(struct picoui_window *win)
-{
-    assert(picoui_backend_create_button(win->widget.backend_widget, "legacy_button") == 0);
-}
-
 int main(void)
 {
     struct picoui_app *app = picoui_app_create();
@@ -155,7 +187,7 @@ int main(void)
     assert(app != 0);
     assert(win != 0);
     test_button_constructor_binds_ld_without_backend_wrapper(win);
-    test_button_legacy_backend_constructor_is_disabled(win);
+    test_button_create_with_props_failure_rolls_back_attached_child(win);
     assert(button != 0);
     assert(checkbox != 0);
     assert(sw != 0);

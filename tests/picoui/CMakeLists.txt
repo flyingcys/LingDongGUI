@@ -78,6 +78,11 @@ ld_add_python_test(check_picoui_tinyui_transition_guards
     LABELS "picoui;contract;transition"
 )
 
+ld_add_python_test(check_tinyui_v21_transition_guards
+    SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/contract/check_tinyui_v21_transition_guards.py"
+    LABELS "picoui;contract;tinyui_v21;transition"
+)
+
 ld_add_python_test(check_picoui_widget_contract_matrix
     SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/contract/check_picoui_widget_contract_matrix.py"
     LABELS "picoui;contract"
