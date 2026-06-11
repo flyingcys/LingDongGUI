@@ -492,6 +492,52 @@ static void test_keyboard_has_explicit_final_gate_coverage_contract(void)
     picoui_app_destroy(app);
 }
 
+static void test_keyboard_button_update_rejects_corrupted_backend_binding_without_native_or_public_drift(void)
+{
+    struct picoui_app *app;
+    struct picoui_window *win;
+    struct picoui_keyboard *keyboard;
+    struct picoui_backend_widget *backend;
+    enum picoui_backend_widget_kind saved_kind;
+    ldKeyboard_t *ld_keyboard;
+    uint8_t saved_key_code;
+    bool saved_is_key_select;
+    unsigned int capture[3] = {0, 0, 0};
+
+    win = test_window_create(&app);
+    keyboard = picoui_keyboard_create(win, "keyboard_corrupted_binding");
+
+    assert(keyboard != 0);
+    assert(picoui_keyboard_set_on_key_event(keyboard, test_keyboard_event_capture, capture) == 0);
+
+    backend = (struct picoui_backend_widget *)keyboard->widget.backend_widget;
+    assert(backend != 0);
+    ld_keyboard = (ldKeyboard_t *)backend->ld_widget;
+    assert(ld_keyboard != 0);
+    saved_key_code = ld_keyboard->keyCode;
+    saved_is_key_select = ld_keyboard->isKeySelect;
+
+    saved_kind = backend->kind;
+    backend->kind = PICOUI_BACKEND_WIDGET_LABEL;
+
+    assert(picoui_backend_keyboard_button_update(backend, '7') == -1);
+    assert(ld_keyboard->keyCode == saved_key_code);
+    assert(ld_keyboard->isKeySelect == saved_is_key_select);
+    assert(capture[0] == 0U);
+    assert(capture[1] == 0U);
+    assert(capture[2] == 0U);
+    assert(backend->kind == PICOUI_BACKEND_WIDGET_LABEL);
+
+    backend->kind = saved_kind;
+    assert(picoui_keyboard_button_update(keyboard, '7') == 0);
+    assert(ld_keyboard->keyCode == '7');
+    assert(ld_keyboard->isKeySelect == true);
+    assert(capture[0] == '7');
+    assert(capture[1] == PICOUI_NATIVE_SIGNAL_VALUE_CHANGED);
+    assert(capture[2] == 1U);
+    picoui_app_destroy(app);
+}
+
 static void test_keyboard_custom_layout_round_trips_into_native_button_table(void)
 {
     struct picoui_app *app;
@@ -597,6 +643,7 @@ int main(void)
     test_keyboard_exit_clears_focus_or_edit_session();
     test_keyboard_click_respects_focus_owner();
     test_keyboard_has_explicit_final_gate_coverage_contract();
+    test_keyboard_button_update_rejects_corrupted_backend_binding_without_native_or_public_drift();
     test_keyboard_custom_layout_round_trips_into_native_button_table();
     test_keyboard_native_press_and_release_emit_picoui_callback();
     test_keyboard_draw_callback_round_trip();

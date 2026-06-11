@@ -247,6 +247,10 @@ int picoui_backend_list_sync_selected_index(struct picoui_list *list, int *selec
     }
 
     backend = (struct picoui_backend_widget *)list->widget.backend_widget;
+    if (backend->kind != PICOUI_BACKEND_WIDGET_LIST || backend->ld_widget == NULL) {
+        return -1;
+    }
+
     selected_index = picoui_backend_list_get_selected_index(backend);
     if (selected_index < -1) {
         return -1;

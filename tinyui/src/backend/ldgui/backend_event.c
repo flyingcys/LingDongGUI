@@ -239,33 +239,6 @@ static int picoui_backend_widget_connect_native_events(struct picoui_backend_wid
  * @param[in] user_data User data pointer
  */
 
-void picoui_backend_emit_value_changed(picoui_value_changed_cb cb,
-                                       struct picoui_widget *widget,
-                                       int value,
-                                       void *user_data)
-{
-    if (cb != 0) {
-        cb(widget, value, user_data);
-    }
-}
-
-/**
- * @brief emit: event
- *
- * @param[in] cb cb
- * @param[in] widget Widget instance
- * @param[in] user_data User data pointer
- */
-
-void picoui_backend_emit_event(picoui_event_cb cb,
-                               struct picoui_widget *widget,
-                               void *user_data)
-{
-    if (cb != 0) {
-        cb(widget, user_data);
-    }
-}
-
 static int picoui_backend_widget_accepts_event(const struct picoui_widget *widget)
 {
     return widget != 0 && widget->enabled != 0 && widget->visible != 0;
@@ -738,12 +711,3 @@ int picoui_backend_widget_update_value(void *backend_widget,
  * @param[in] widget Widget instance
  * @param[in] user_data User data pointer
  */
-
-void picoui_backend_emit_clicked(picoui_event_cb cb,
-                                 struct picoui_widget *widget,
-                                 void *user_data)
-{
-    if (cb != 0) {
-        cb(widget, user_data);
-    }
-}

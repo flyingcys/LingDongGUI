@@ -138,11 +138,25 @@ int picoui_backend_widget_init_child(void *backend_widget,
                                      struct picoui_theme *theme);
 int picoui_backend_widget_attach_child(void *parent, void *child);
 int picoui_backend_widget_bind_host(void *backend_widget, struct picoui_widget *widget);
+int picoui_backend_widget_is_kind(const void *backend_widget,
+                                  enum picoui_backend_widget_kind kind);
+int picoui_backend_widget_unbind_host(void *backend_widget);
+int picoui_backend_widget_detach_from_parent(void *backend_widget);
 int picoui_widget_bind_backend_host(struct picoui_widget *widget, void *backend_widget);
 struct picoui_widget *picoui_widget_backend_host(const void *backend_widget);
 int picoui_widget_backend_detach(void *backend_widget);
 struct picoui_app *picoui_widget_owner_app(const struct picoui_widget *widget);
 int picoui_widget_has_ld_binding(const struct picoui_widget *widget);
+void picoui_backend_emit_value_changed(picoui_value_changed_cb cb,
+                                       struct picoui_widget *widget,
+                                       int value,
+                                       void *user_data);
+void picoui_backend_emit_event(picoui_event_cb cb,
+                               struct picoui_widget *widget,
+                               void *user_data);
+void picoui_backend_emit_clicked(picoui_event_cb cb,
+                                 struct picoui_widget *widget,
+                                 void *user_data);
 int picoui_backend_runtime_step(struct picoui_app *app);
 int picoui_window_apply_flex_flow(struct picoui_window *window, enum picoui_flex_flow flow);
 int picoui_window_apply_flex_align(struct picoui_window *window,

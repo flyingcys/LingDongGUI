@@ -23,6 +23,8 @@
 
 #include <stdlib.h>
 
+extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
+
 struct picoui_image_source;
 int picoui_backend_widget_unbind_host(void *backend_widget);
 int picoui_backend_widget_detach_from_parent(void *backend_widget);
@@ -323,12 +325,25 @@ const char *picoui_label_get_text(struct picoui_label *label)
 
 int picoui_label_set_font(struct picoui_label *label, const struct picoui_font *font)
 {
+    ldLabel_t *ld_label;
+
     if (label == 0) {
         return -1;
     }
 
+    ld_label = picoui_backend_label_get_ld(label);
+    if (ld_label == NULL) {
+        return -1;
+    }
+
     label->widget.font = font;
-    return picoui_backend_widget_set_font(label->widget.backend_widget, font);
+    ((struct picoui_backend_widget *)label->widget.backend_widget)->font = font;
+    if (font != NULL) {
+        ldLabelSetFont(ld_label, (arm_2d_font_t *)font);
+    } else {
+        ldLabelSetFont(ld_label, (arm_2d_font_t *)&ARM_2D_FONT_6x8);
+    }
+    return 0;
 }
 
 /**

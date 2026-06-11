@@ -1,7 +1,10 @@
 #ifndef PICOUI_RUNTIME_BRIDGE_H
 #define PICOUI_RUNTIME_BRIDGE_H
 
+#include <stdint.h>
+
 struct picoui_app;
+struct picoui_theme;
 struct picoui_window;
 struct picoui_backend_app_state;
 

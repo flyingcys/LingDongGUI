@@ -226,16 +226,6 @@ int picoui_backend_runtime_step(struct picoui_app *app);
 void picoui_backend_app_shutdown(struct picoui_app *app);
 
 /**
- * @brief apply: theme
- *
- * @param[in] app Application instance
- * @param[in] theme Theme instance
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_apply_theme(struct picoui_app *app, struct picoui_theme *theme);
-
-/**
  * @brief widget: apply style
  *
  * @param[in] backend_widget backend widget
@@ -253,35 +243,6 @@ int picoui_backend_widget_apply_style(void *backend_widget,
                                       unsigned int bg_color,
                                       unsigned int text_color,
                                       unsigned int border_color);
-
-/**
- * @brief Check is kind of widget
- *
- * @param[in] backend_widget backend widget
- * @param[in] kind kind
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_widget_is_kind(const void *backend_widget,
-                                  enum picoui_backend_widget_kind kind);
-
-/**
- * @brief widget: unbind host
- *
- * @param[in] backend_widget backend widget
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_widget_unbind_host(void *backend_widget);
-
-/**
- * @brief widget: detach from parent
- *
- * @param[in] backend_widget backend widget
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_widget_detach_from_parent(void *backend_widget);
 
 /**
  * @brief Set background angle of arc backend
@@ -1905,28 +1866,6 @@ int picoui_backend_list_sync_selected_index(struct picoui_list *list, int *selec
  * @param[in] style_class style class
  * @return 0 on success, -1 on failure
  */
-
-int picoui_backend_widget_set_style_class(void *backend_widget, const char *style_class);
-
-/**
- * @brief Set font of widget backend
- *
- * @param[in] backend_widget backend widget
- * @param[in] font font
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_widget_set_font(void *backend_widget, const void *font);
-
-/**
- * @brief Set user data of widget backend
- *
- * @param[in] backend_widget backend widget
- * @param[in] user_data User data pointer
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_widget_set_user_data(void *backend_widget, void *user_data);
 
 /**
  * @brief Set padding of widget backend

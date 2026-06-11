@@ -370,6 +370,54 @@ static void test_theme_native_parts_apply_to_real_backend_fields(void)
     picoui_theme_destroy(theme);
 }
 
+static void test_app_set_theme_syncs_runtime_bridge_state(void)
+{
+    struct picoui_app *app = picoui_app_create();
+    struct picoui_theme *theme = picoui_theme_create();
+    struct picoui_backend_app_state *app_state;
+
+    assert(app != NULL);
+    assert(theme != NULL);
+
+    app_state = (struct picoui_backend_app_state *)app->backend_app;
+    assert(app_state != NULL);
+    assert(app->theme == NULL);
+    assert(app_state->theme == NULL);
+
+    assert(picoui_app_set_theme(app, theme) == 0);
+    assert(app->theme == theme);
+    assert(app_state->theme == theme);
+
+    assert(picoui_app_set_theme(NULL, theme) == -1);
+    assert(picoui_app_set_theme(app, NULL) == -1);
+    assert(app->theme == theme);
+    assert(app_state->theme == theme);
+
+    picoui_app_destroy(app);
+    picoui_theme_destroy(theme);
+}
+
+static void test_app_set_theme_does_not_dirty_public_state_when_runtime_bind_fails(void)
+{
+    struct picoui_theme *theme = picoui_theme_create();
+    struct picoui_app *app = picoui_app_create();
+    void *saved_backend_app;
+
+    assert(theme != NULL);
+    assert(app != NULL);
+    assert(app->theme == NULL);
+
+    saved_backend_app = app->backend_app;
+    app->backend_app = NULL;
+
+    assert(picoui_app_set_theme(app, theme) == -1);
+    assert(app->theme == NULL);
+
+    app->backend_app = saved_backend_app;
+    picoui_app_destroy(app);
+    picoui_theme_destroy(theme);
+}
+
 int main(void)
 {
     struct picoui_theme *theme = picoui_theme_create();
@@ -402,6 +450,8 @@ int main(void)
     assert(picoui_theme_set_metric(theme, PICOUI_METRIC_BORDER_WIDTH, 2) == 0);
     assert(picoui_theme_set_metric(theme, PICOUI_METRIC_BORDER_WIDTH, -1) == -1);
     assert(picoui_theme_set_metric(theme, PICOUI_METRIC_CONTROL_HEIGHT, 19) == 0);
+
+    test_app_set_theme_syncs_runtime_bridge_state();
 
     app = picoui_app_create();
     assert(app != NULL);
@@ -603,6 +653,7 @@ int main(void)
 
     test_image_theme_and_enabled_are_support_not_reject();
     test_theme_native_parts_apply_to_real_backend_fields();
+    test_app_set_theme_does_not_dirty_public_state_when_runtime_bind_fails();
 
     picoui_app_destroy(app);
     picoui_theme_destroy(theme);

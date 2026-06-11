@@ -62,6 +62,38 @@ static void on_value_changed(struct picoui_widget *widget, int value, void *user
     last_value_cookie = user_data != 0 ? *(const int *)user_data : -1;
 }
 
+static void test_shared_emit_helpers_keep_callback_contract(struct picoui_button *button,
+                                                            int press_cookie,
+                                                            int click_cookie,
+                                                            int slider_cookie)
+{
+    assert(button != 0);
+
+    picoui_backend_emit_event(on_pressed, &button->widget, &press_cookie);
+    assert(press_count == 1);
+    assert(last_press_widget == &button->widget);
+    assert(last_press_cookie == press_cookie);
+
+    picoui_backend_emit_clicked(on_clicked, &button->widget, &click_cookie);
+    assert(click_count == 1);
+    assert(last_click_widget == &button->widget);
+    assert(last_click_cookie == click_cookie);
+
+    picoui_backend_emit_value_changed(on_value_changed, &button->widget, 73, &slider_cookie);
+    assert(value_count == 1);
+    assert(last_value_widget == &button->widget);
+    assert(last_value == 73);
+    assert(last_value_cookie == slider_cookie);
+
+    picoui_backend_emit_event(0, &button->widget, &press_cookie);
+    picoui_backend_emit_clicked(0, &button->widget, &click_cookie);
+    picoui_backend_emit_value_changed(0, &button->widget, 91, &slider_cookie);
+    assert(press_count == 1);
+    assert(click_count == 1);
+    assert(value_count == 1);
+    assert(last_value == 73);
+}
+
 static void test_button_create_with_props_pushes_all_fields(struct picoui_window *win)
 {
     struct picoui_button *btn = picoui_button_create_with_props(
@@ -229,6 +261,23 @@ int main(void)
     assert(backend->dispatch_count == 0);
     assert(backend->last_native_signal == SIGNAL_NO_OPERATION);
     assert(backend->last_native_value == 0);
+
+    test_shared_emit_helpers_keep_callback_contract(button, press_cookie, click_cookie, slider_cookie);
+    press_count = 0;
+    release_count = 0;
+    click_count = 0;
+    value_count = 0;
+    event_order_count = 0;
+    last_press_widget = 0;
+    last_release_widget = 0;
+    last_click_widget = 0;
+    last_value_widget = 0;
+    last_press_cookie = 0;
+    last_release_cookie = 0;
+    last_click_cookie = 0;
+    last_value_cookie = 0;
+    last_value = 0;
+
     button_name_id = picoui_widget_get_name_id((const struct picoui_widget *)button);
     checkbox_name_id = picoui_widget_get_name_id((const struct picoui_widget *)checkbox);
     assert(button_name_id > 0);

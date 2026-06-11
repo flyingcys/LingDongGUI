@@ -1,5 +1,8 @@
 #include "internal.h"
 #include "runtime_bridge.h"
+#include "../../../../src/gui/ldBase.h"
+
+void ldBaseNodeRemove(arm_2d_control_node_t *ptNode);
 
 struct picoui_backend_app_state *picoui_runtime_bridge_backend_state_from_parent(void *backend_widget)
 {
@@ -47,6 +50,39 @@ int picoui_runtime_bridge_bind_theme(struct picoui_app *app, struct picoui_theme
     app->theme = theme;
     app_state->theme = theme;
     return 0;
+}
+
+int picoui_backend_widget_unbind_host(void *backend_widget)
+{
+    struct picoui_backend_widget *widget = backend_widget;
+
+    if (widget == 0) {
+        return -1;
+    }
+
+    if (widget->ld_widget != 0) {
+        ((ldBase_t *)widget->ld_widget)->pInfo = 0;
+    }
+    widget->host_widget = 0;
+    widget->ld_event_bridge_scene = 0;
+    widget->ld_event_bridge_sender = 0;
+    widget->ld_event_bridge_next = 0;
+    return 0;
+}
+
+int picoui_backend_widget_detach_from_parent(void *backend_widget)
+{
+    struct picoui_backend_widget *widget = backend_widget;
+
+    if (widget == 0) {
+        return -1;
+    }
+
+    if (widget->ld_widget != 0) {
+        ldBaseNodeRemove((arm_2d_control_node_t *)widget->ld_widget);
+    }
+
+    return picoui_widget_backend_detach(widget);
 }
 
 int picoui_runtime_bridge_has_scene(const struct picoui_app *app)

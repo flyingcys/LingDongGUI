@@ -69,6 +69,7 @@ static void test_text_create_with_props_sets_content(struct picoui_window *win)
 
     assert(text != 0);
     backend = (struct picoui_backend_widget *)text->widget.backend_widget;
+    assert(text->widget.text == (const char *)"Content");
     assert(backend->text != 0);
     assert(strcmp(backend->text, "Content") == 0);
 }

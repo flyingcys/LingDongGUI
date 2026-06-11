@@ -687,6 +687,9 @@ static void test_list_backend_moved_helpers_fail_closed_without_mutation(struct 
     assert(picoui_backend_list_set_select_color(backend, 0x070809U) == -1);
     assert(picoui_backend_list_set_align(backend, PICOUI_ALIGN_START) == -1);
     assert(picoui_backend_list_set_item_widget(backend, 0, backend) == -1);
+    assert(picoui_backend_list_set_selected_index(0, 0) == -1);
+    assert(picoui_backend_list_get_selected_index(0) == -1);
+    assert(picoui_backend_list_sync_selected_index(0, 0) == -1);
 
     assert(list->item_count == 2);
     assert(backend->list_item_count == 2);
@@ -704,6 +707,56 @@ static void test_list_backend_moved_helpers_fail_closed_without_mutation(struct 
     assert(ld_list->bgColor == test_list_rgb_to_ld_color(0x445566U));
     assert(ld_list->selectColor == test_list_rgb_to_ld_color(0x778899U));
     assert(ld_list->tAlign == ARM_2D_ALIGN_RIGHT);
+    assert(picoui_backend_list_set_selected_index(backend, 1) == 0);
+    assert(picoui_backend_list_get_selected_index(backend) == 1);
+    assert(list->selected_index == -1);
+    assert(picoui_backend_list_sync_selected_index(list, 0) == 0);
+    assert(list->selected_index == 1);
+    assert(backend->value == 1);
+    assert(picoui_backend_list_set_selected_index(backend, -1) == -1);
+    assert(picoui_backend_list_set_selected_index(backend, PICOUI_BACKEND_LIST_MAX_ITEMS) == -1);
+    assert(picoui_backend_list_get_selected_index(backend) == 1);
+}
+
+static void test_list_legacy_backend_helper_symbols_are_removed(struct picoui_window *win)
+{
+    (void)win;
+    assert(dlsym(RTLD_DEFAULT, "picoui_backend_list_set_items") == 0);
+    assert(dlsym(RTLD_DEFAULT, "picoui_backend_list_set_item_height") == 0);
+    assert(dlsym(RTLD_DEFAULT, "picoui_backend_list_set_padding_group") == 0);
+    assert(dlsym(RTLD_DEFAULT, "picoui_backend_list_set_margin_group") == 0);
+    assert(dlsym(RTLD_DEFAULT, "picoui_backend_list_set_text_color") == 0);
+    assert(dlsym(RTLD_DEFAULT, "picoui_backend_list_set_bg_color") == 0);
+    assert(dlsym(RTLD_DEFAULT, "picoui_backend_list_set_select_color") == 0);
+    assert(dlsym(RTLD_DEFAULT, "picoui_backend_list_set_align") == 0);
+    assert(dlsym(RTLD_DEFAULT, "picoui_backend_list_set_item_widget") == 0);
+}
+
+static void test_list_backend_selected_index_sync_rejects_corrupted_binding_without_cache_pollution(
+    struct picoui_window *win)
+{
+    struct picoui_widget *parent = (struct picoui_widget *)win;
+    struct picoui_list *list = picoui_list_create(parent, "list_sync_binding_guard");
+    struct picoui_backend_widget *backend;
+    enum picoui_backend_widget_kind original_kind;
+
+    assert(list != 0);
+    assert(picoui_list_add_item(list, "item_wifi", "Wi-Fi") == 0);
+    assert(picoui_list_add_item(list, "item_bluetooth", "Bluetooth") == 0);
+    assert(picoui_list_set_selected_index(list, 1) == 0);
+
+    backend = (struct picoui_backend_widget *)list->widget.backend_widget;
+    assert(backend != 0);
+    assert(backend->value == 1);
+
+    original_kind = backend->kind;
+    backend->kind = PICOUI_BACKEND_WIDGET_GRAPH;
+
+    assert(picoui_backend_list_sync_selected_index(list, 0) == -1);
+    assert(list->selected_index == 1);
+    assert(backend->value == 1);
+
+    backend->kind = original_kind;
 }
 
 static void test_list_rejects_corrupted_backend_binding_without_mutating_widget_metadata(
@@ -1078,6 +1131,8 @@ int main(void)
     test_list_native_item_height_padding_margin_round_trip(win);
     test_list_native_color_and_align_round_trip(win);
     test_list_backend_moved_helpers_fail_closed_without_mutation(win);
+    test_list_legacy_backend_helper_symbols_are_removed(win);
+    test_list_backend_selected_index_sync_rejects_corrupted_binding_without_cache_pollution(win);
     test_list_rejects_corrupted_backend_binding_without_mutating_widget_metadata(win);
     test_list_native_item_widget_reparents_backend_tree(win);
     test_list_set_item_widget_rejects_corrupted_binding_without_reparenting(win);

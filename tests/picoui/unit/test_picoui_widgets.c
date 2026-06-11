@@ -391,6 +391,19 @@ static void test_hidden_or_disabled_widget_cannot_keep_focus(struct picoui_app *
     assert(button->widget.focus_enter_count == focus_enter_before + 2);
 }
 
+static void test_focus_helpers_fail_closed_without_host_binding(void)
+{
+    struct picoui_backend_widget orphan_backend;
+
+    memset(&orphan_backend, 0, sizeof(orphan_backend));
+    orphan_backend.kind = PICOUI_BACKEND_WIDGET_BUTTON;
+
+    assert(picoui_backend_widget_claim_focus(0) == -1);
+    assert(picoui_backend_widget_release_focus(0) == -1);
+    assert(picoui_backend_widget_claim_focus(&orphan_backend) == -1);
+    assert(picoui_backend_widget_release_focus(&orphan_backend) == -1);
+}
+
 static void test_checked_and_value_widgets_use_backend_truth_readback_contract(
     struct picoui_switch *sw,
     struct picoui_checkbox *cb,
@@ -937,6 +950,7 @@ static void test_backend_widget_tree_contract(struct picoui_app *app,
     assert(picoui_backend_widget_is_kind(text_backend, PICOUI_BACKEND_WIDGET_TEXT) == 1);
     assert(picoui_backend_widget_is_kind(image_backend, PICOUI_BACKEND_WIDGET_IMAGE) == 1);
     assert(picoui_backend_widget_is_kind(win_backend, PICOUI_BACKEND_WIDGET_LABEL) == 0);
+    assert(picoui_backend_widget_is_kind(0, PICOUI_BACKEND_WIDGET_WINDOW) == 0);
 
     assert(win_backend->owner == app);
     assert(sw_backend->owner == app);
@@ -2513,6 +2527,7 @@ int main(void)
     assert(picoui_checkbox_set_text(cb, "accept terms") == 0);
     assert(cb->widget.text == (const char *)"accept terms");
     assert(cb_backend->text == (const char *)"accept terms");
+    assert(strcmp((const char *)ldCheckBoxGetText((ldCheckBox_t *)cb_backend->ld_widget), "accept terms") == 0);
 
     assert(picoui_slider_set_value(slider, 42) == 0);
     assert(slider_value_count == 0);
@@ -2549,6 +2564,7 @@ int main(void)
     assert(picoui_widget_set_radius(&button->widget, 8) == 0);
     assert(picoui_widget_set_padding(&button->widget, 12) == 0);
     assert(button->widget.text == (const char *)"launch");
+    assert(strcmp((const char *)ldButtonGetText((ldButton_t *)button_backend->ld_widget), "launch") == 0);
     assert(button->widget.style_class == (const char *)"primary");
     assert(button->widget.user_data == &button_cookie);
     assert(button_backend->style_class == (const char *)"primary");
@@ -2579,6 +2595,7 @@ int main(void)
     test_slider_j5_contract(slider, &button_release_source, &button_press_source);
     test_focus_owner_switches_between_widgets(app, button, sw, cb, slider, app_state->ld_scene);
     test_hidden_or_disabled_widget_cannot_keep_focus(app, button);
+    test_focus_helpers_fail_closed_without_host_binding();
     test_checked_and_value_widgets_use_backend_truth_readback_contract(sw, cb, slider);
     test_item_model_identity_survives_frame_update(sw, cb, slider, app_state->ld_scene);
     test_native_duplicate_value_does_not_advance_data_model(sw, cb, slider, app_state->ld_scene);

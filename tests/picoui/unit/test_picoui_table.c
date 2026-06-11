@@ -432,6 +432,44 @@ static void test_table_native_static_text_background_and_getters_round_trip(void
     picoui_app_destroy(app);
 }
 
+static void test_table_sync_current_cell_rejects_corrupted_backend_binding(void)
+{
+    struct picoui_app *app;
+    struct picoui_window *win;
+    struct picoui_table *table;
+    struct picoui_backend_widget *backend;
+    enum picoui_backend_widget_kind saved_kind;
+    int row = -1;
+    int column = -1;
+
+    app = picoui_app_create();
+    assert(app != 0);
+    win = picoui_window_create(app, "table_corrupted_binding_root");
+    assert(win != 0);
+    table = picoui_table_create(win, "table_corrupted_binding", 3, 3);
+    assert(table != 0);
+
+    assert(picoui_table_set_current_cell(table, 1, 2) == 0);
+    assert(table->current_row == 1);
+    assert(table->current_column == 2);
+
+    backend = (struct picoui_backend_widget *)table->widget.backend_widget;
+    assert(backend != 0);
+    saved_kind = backend->kind;
+    backend->kind = PICOUI_BACKEND_WIDGET_LABEL;
+
+    assert(picoui_backend_table_sync_current_cell(table, &row, &column) == -1);
+    assert(row == -1);
+    assert(column == -1);
+    assert(table->current_row == 1);
+    assert(table->current_column == 2);
+
+    backend->kind = saved_kind;
+    assert(picoui_table_get_current_row(table) == 1);
+    assert(picoui_table_get_current_column(table) == 2);
+    picoui_app_destroy(app);
+}
+
 static void test_table_r4_aliases_and_native_getters_round_trip(void)
 {
     struct picoui_app *app;
@@ -568,6 +606,7 @@ int main(void)
     test_table_native_item_image_button_and_excel_type_round_trip();
     test_table_native_size_align_color_font_region_and_navigation_round_trip();
     test_table_native_static_text_background_and_getters_round_trip();
+    test_table_sync_current_cell_rejects_corrupted_backend_binding();
     test_table_r4_aliases_and_native_getters_round_trip();
 
     struct picoui_app *app = picoui_app_create();

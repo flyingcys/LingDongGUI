@@ -58,6 +58,8 @@ static void test_scroll_selecter_selected_item_matches_backend_truth(void)
     assert(backend->parent == parent_backend);
     assert(backend->ld_name_id != 0);
     assert(backend->host_widget == &scroll_selecter->widget);
+    assert(parent_backend->data_truth_policy == PICOUI_BACKEND_DATA_TRUTH_NOT_APPLICABLE);
+    assert(parent_backend->data_model_identity == 0);
     data_model_identity = backend->data_model_identity;
     ld_scroll_selecter = (ldScrollSelecter_t *)backend->ld_widget;
     assert(ld_scroll_selecter != 0);

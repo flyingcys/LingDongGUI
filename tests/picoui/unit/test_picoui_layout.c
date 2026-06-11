@@ -1200,6 +1200,32 @@ static void test_layout_setters_reject_unbound_window_without_mutating_state(voi
     }
 }
 
+static void test_layout_child_setter_rejects_corrupted_binding_without_mutating_state(void)
+{
+    struct picoui_app *app = picoui_app_create();
+    struct picoui_window *win = picoui_window_create(app, "root");
+    struct picoui_button *button = picoui_button_create(win, "corrupted_binding");
+    struct picoui_backend_widget *backend = button->widget.backend_widget;
+    ldBase_t *ld_base = (ldBase_t *)backend->ld_widget;
+    enum picoui_backend_widget_kind original_kind = backend->kind;
+    int original_widget_type = ld_base->widgetType;
+
+    assert(picoui_widget_set_ignore_layout((struct picoui_widget *)button, 1) == 0);
+    assert(button->widget.ignore_layout == 1);
+    assert(ld_base->ignoreLayout == true);
+
+    ld_base->widgetType = widgetTypeWindow;
+
+    assert(picoui_widget_set_ignore_layout((struct picoui_widget *)button, 0) == -1);
+    assert(button->widget.ignore_layout == 1);
+    assert(ld_base->ignoreLayout == true);
+
+    backend->kind = original_kind;
+    ld_base->widgetType = original_widget_type;
+
+    picoui_app_destroy(app);
+}
+
 int main(void)
 {
     struct picoui_app *app = picoui_app_create();
@@ -1257,5 +1283,6 @@ int main(void)
     test_child_window_public_api_binds_real_parent_and_hosts_layout_children();
     test_layout_setters_with_missing_native_binding_reject_without_mutating_state();
     test_layout_setters_reject_unbound_window_without_mutating_state();
+    test_layout_child_setter_rejects_corrupted_binding_without_mutating_state();
     return 0;
 }

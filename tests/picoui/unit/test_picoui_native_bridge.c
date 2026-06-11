@@ -43,6 +43,8 @@ static void test_native_nav_dir_maps_all_ld_nav_values(void)
     assert(picoui_native_nav_dir_to_ld(PICOUI_NATIVE_NAV_RIGHT) == NAV_RIGHT);
     assert(picoui_native_nav_dir_to_ld(PICOUI_NATIVE_NAV_UP) == NAV_UP);
     assert(picoui_native_nav_dir_to_ld(PICOUI_NATIVE_NAV_DOWN) == NAV_DOWN);
+    assert(picoui_native_nav_dir_to_ld(PICOUI_NATIVE_NAV_ENTER) == NAV_ENTER);
+    assert(picoui_native_nav_dir_to_ld(PICOUI_NATIVE_NAV_BACK) == NAV_BACK);
 }
 
 static void test_native_signal_maps_all_ld_signal_values(void)

@@ -165,6 +165,68 @@ static int16_t picoui_backend_map_grid_track(int value)
     return (int16_t)value;
 }
 
+static int picoui_backend_expected_ld_widget_type(enum picoui_backend_widget_kind kind)
+{
+    switch (kind) {
+    case PICOUI_BACKEND_WIDGET_BACKGROUND:
+        return widgetTypeBackground;
+    case PICOUI_BACKEND_WIDGET_WINDOW:
+        return widgetTypeWindow;
+    case PICOUI_BACKEND_WIDGET_LABEL:
+        return widgetTypeLabel;
+    case PICOUI_BACKEND_WIDGET_BUTTON:
+        return widgetTypeButton;
+    case PICOUI_BACKEND_WIDGET_CHECKBOX:
+        return widgetTypeCheckBox;
+    case PICOUI_BACKEND_WIDGET_SWITCH:
+        return widgetTypeSwitch;
+    case PICOUI_BACKEND_WIDGET_SLIDER:
+        return widgetTypeSlider;
+    case PICOUI_BACKEND_WIDGET_ARC:
+        return widgetTypeArc;
+    case PICOUI_BACKEND_WIDGET_GAUGE:
+        return widgetTypeGauge;
+    case PICOUI_BACKEND_WIDGET_ICON_SLIDER:
+        return widgetTypeIconSlider;
+    case PICOUI_BACKEND_WIDGET_RADIAL_MENU:
+        return widgetTypeRadialMenu;
+    case PICOUI_BACKEND_WIDGET_PROGRESS_BAR:
+        return widgetTypeProgressBar;
+    case PICOUI_BACKEND_WIDGET_QRCODE:
+        return widgetTypeQRCode;
+    case PICOUI_BACKEND_WIDGET_PROGRESS_WHEEL:
+        return widgetTypeProgressWheel;
+    case PICOUI_BACKEND_WIDGET_ANIMATION:
+        return widgetTypeAnimation;
+    case PICOUI_BACKEND_WIDGET_LIST:
+        return widgetTypeList;
+    case PICOUI_BACKEND_WIDGET_MESSAGE_BOX:
+        return widgetTypeMessageBox;
+    case PICOUI_BACKEND_WIDGET_DATE_TIME:
+        return widgetTypeDateTime;
+    case PICOUI_BACKEND_WIDGET_TEXT:
+        return widgetTypeText;
+    case PICOUI_BACKEND_WIDGET_KEYBOARD:
+        return widgetTypeKeyboard;
+    case PICOUI_BACKEND_WIDGET_COMBO_BOX:
+        return widgetTypeComboBox;
+    case PICOUI_BACKEND_WIDGET_SCROLL_SELECTER:
+        return widgetTypeScrollSelecter;
+    case PICOUI_BACKEND_WIDGET_TABLE:
+        return widgetTypeTable;
+    case PICOUI_BACKEND_WIDGET_GRAPH:
+        return widgetTypeGraph;
+    case PICOUI_BACKEND_WIDGET_IMAGE:
+        return widgetTypeImage;
+    case PICOUI_BACKEND_WIDGET_CALENDAR:
+        return widgetTypeCalendar;
+    case PICOUI_BACKEND_WIDGET_CANVAS:
+        return widgetTypeCanvas;
+    default:
+        return -1;
+    }
+}
+
 static int picoui_backend_copy_tracks(int16_t *dst, const int *src, int count)
 {
     int i;
@@ -184,18 +246,39 @@ static int picoui_backend_copy_tracks(int16_t *dst, const int *src, int count)
 
 static ldWindow_t *picoui_backend_get_ld_window(struct picoui_backend_widget *backend_widget)
 {
+    ldBase_t *ld_base;
+
     if (backend_widget == NULL || backend_widget->ld_widget == NULL) {
         return NULL;
     }
-    return (ldWindow_t *)backend_widget->ld_widget;
+    if (backend_widget->kind != PICOUI_BACKEND_WIDGET_WINDOW
+        && backend_widget->kind != PICOUI_BACKEND_WIDGET_BACKGROUND) {
+        return NULL;
+    }
+
+    ld_base = (ldBase_t *)backend_widget->ld_widget;
+    if (ld_base->widgetType != widgetTypeWindow
+        && ld_base->widgetType != widgetTypeBackground) {
+        return NULL;
+    }
+    return (ldWindow_t *)ld_base;
 }
 
 static ldBase_t *picoui_backend_get_ld_base(struct picoui_backend_widget *backend_widget)
 {
+    ldBase_t *ld_base;
+    int expected_widget_type;
+
     if (backend_widget == NULL || backend_widget->ld_widget == NULL) {
         return NULL;
     }
-    return (ldBase_t *)backend_widget->ld_widget;
+
+    ld_base = (ldBase_t *)backend_widget->ld_widget;
+    expected_widget_type = picoui_backend_expected_ld_widget_type(backend_widget->kind);
+    if (expected_widget_type < 0 || ld_base->widgetType != expected_widget_type) {
+        return NULL;
+    }
+    return ld_base;
 }
 
 static ldPadding_t picoui_backend_uniform_padding(int padding)

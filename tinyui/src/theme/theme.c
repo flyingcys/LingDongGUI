@@ -17,6 +17,7 @@
  */
 
 #include "internal.h"
+#include "runtime_bridge.h"
 #include "picoui/theme.h"
 
 #include <stdlib.h>
@@ -287,6 +288,5 @@ int picoui_app_set_theme(struct picoui_app *app, struct picoui_theme *theme)
         return -1;
     }
 
-    app->theme = theme;
-    return picoui_backend_apply_theme(app, theme);
+    return picoui_runtime_bridge_bind_theme(app, theme);
 }

@@ -121,7 +121,7 @@ static ldKeyboard_t *picoui_backend_keyboard_get_ld(void *backend_widget)
 {
     struct picoui_backend_widget *widget = backend_widget;
 
-    if (widget == NULL || widget->ld_widget == NULL) {
+    if (widget == NULL || widget->kind != PICOUI_BACKEND_WIDGET_KEYBOARD || widget->ld_widget == NULL) {
         return NULL;
     }
 

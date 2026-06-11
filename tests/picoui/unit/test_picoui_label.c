@@ -25,12 +25,20 @@ static void test_label_set_text_round_trip(struct picoui_window *win)
 {
     struct picoui_label *label = picoui_label_create(win, "label_text");
     struct picoui_backend_widget *backend;
+    int cookie = 7;
 
     assert(label != 0);
     assert(picoui_label_set_text(label, "Hello PicoUI") == 0);
     backend = (struct picoui_backend_widget *)label->widget.backend_widget;
     assert(backend->text != 0);
     assert(strcmp(backend->text, "Hello PicoUI") == 0);
+    assert(label->widget.text == (const char *)"Hello PicoUI");
+    assert(picoui_widget_set_style_class(&label->widget, "label-shared") == 0);
+    assert(label->widget.style_class == (const char *)"label-shared");
+    assert(backend->style_class == (const char *)"label-shared");
+    assert(picoui_widget_set_user_data(&label->widget, &cookie) == 0);
+    assert(label->widget.user_data == &cookie);
+    assert(backend->user_data == &cookie);
 }
 
 static void test_label_create_with_props_pushes_all_fields(struct picoui_window *win)

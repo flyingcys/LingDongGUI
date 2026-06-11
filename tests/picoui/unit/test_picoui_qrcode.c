@@ -3,7 +3,6 @@
 #include "picoui/widget.h"
 #include "picoui/window.h"
 #include "../../../src/gui/ldQRCode.h"
-#include "backend.h"
 #include "internal.h"
 #include "picoui_test_support.h"
 
@@ -11,8 +10,6 @@
 #include <string.h>
 
 extern int picoui_widget_has_ld_binding(const struct picoui_widget *widget);
-int picoui_backend_widget_unbind_host(void *backend_widget);
-int picoui_backend_widget_detach_from_parent(void *backend_widget);
 
 static struct picoui_qrcode_test_dispose_snapshot g_qrcode_snapshot;
 static int g_qrcode_snapshot_valid = 0;
@@ -388,6 +385,13 @@ static void test_qrcode_create_with_props_failure_rolls_back_attached_child(stru
            != 0);
 }
 
+static void test_qrcode_shared_widget_helpers_reject_null(void)
+{
+    assert(picoui_backend_widget_unbind_host(0) == -1);
+    assert(picoui_backend_widget_detach_from_parent(0) == -1);
+    assert(picoui_backend_widget_is_kind(0, PICOUI_BACKEND_WIDGET_QRCODE) == 0);
+}
+
 int main(void)
 {
     struct picoui_app *app = picoui_app_create();
@@ -405,6 +409,7 @@ int main(void)
     test_q_r_code_init_and_shared_base_aliases_round_trip(win);
     test_qrcode_rejects_null_args(win);
     test_qrcode_create_with_props_failure_rolls_back_attached_child(win);
+    test_qrcode_shared_widget_helpers_reject_null();
 
     picoui_app_destroy(app);
     return 0;
