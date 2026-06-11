@@ -226,25 +226,6 @@ int picoui_backend_runtime_step(struct picoui_app *app);
 void picoui_backend_app_shutdown(struct picoui_app *app);
 
 /**
- * @brief widget: apply style
- *
- * @param[in] backend_widget backend widget
- * @param[in] part part
- * @param[in] state State value
- * @param[in] bg_color Background color
- * @param[in] text_color Text color
- * @param[in] border_color border color
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_widget_apply_style(void *backend_widget,
-                                      enum picoui_part part,
-                                      enum picoui_state state,
-                                      unsigned int bg_color,
-                                      unsigned int text_color,
-                                      unsigned int border_color);
-
-/**
  * @brief Set background angle of arc backend
  *
  * @param[in] arc Arc widget instance
@@ -970,63 +951,6 @@ int picoui_backend_line_edit_bind_host(void *backend_widget);
 int picoui_backend_line_edit_get_editing(void *backend_widget, int *editing);
 
 /**
- * @brief keyboard: input ascii
- *
- * @param[in] backend_widget backend widget
- * @param[in] ascii ascii
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_keyboard_input_ascii(void *backend_widget, unsigned int ascii);
-
-/**
- * @brief keyboard: navigate
- *
- * @param[in] backend_widget backend widget
- * @param[in] direction direction
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_keyboard_navigate(void *backend_widget, int direction);
-
-/**
- * @brief keyboard: update
- *
- * @param[in] backend_widget backend widget
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_keyboard_update(void *backend_widget);
-
-/**
- * @brief keyboard: button update
- *
- * @param[in] backend_widget backend widget
- * @param[in] key_code key code
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_keyboard_button_update(void *backend_widget, unsigned char key_code);
-
-/**
- * @brief keyboard: click
- *
- * @param[in] backend_widget backend widget
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_keyboard_click(void *backend_widget);
-
-/**
- * @brief keyboard: exit
- *
- * @param[in] backend_widget backend widget
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_keyboard_exit(void *backend_widget);
-
-/**
  * @brief combo: box set items
  *
  * @param[in] backend_widget backend widget
@@ -1548,8 +1472,6 @@ int picoui_backend_table_get_item_editable(void *backend_widget, int row, int co
  * @return 0 on success, -1 on failure
  */
 
-int picoui_backend_table_navigate(void *backend_widget, enum picoui_native_nav_dir dir);
-
 /**
  * @brief Get item region from table backend
  *
@@ -1592,17 +1514,6 @@ int picoui_backend_table_set_current_cell(void *backend_widget, int row, int col
  * @param[in] column_out column out
  * @return 0 on success, -1 on failure
  */
-
-int picoui_backend_table_sync_current_cell(struct picoui_table *table, int *row_out, int *column_out);
-
-/**
- * @brief table: bind host
- *
- * @param[in] backend_widget backend widget
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_table_bind_host(void *backend_widget);
 
 /**
  * @brief Add_ series from graph
@@ -1831,35 +1742,6 @@ int picoui_backend_list_set_item_widget(void *backend_widget,
                                         void *item_widget_backend);
 
 /**
- * @brief Set selected index of list backend
- *
- * @param[in] backend_widget backend widget
- * @param[in] index Index
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_list_set_selected_index(void *backend_widget, int index);
-
-/**
- * @brief Get selected index from list backend
- *
- * @param[in] backend_widget backend widget
- * @return The property value, negative on error
- */
-
-int picoui_backend_list_get_selected_index(void *backend_widget);
-
-/**
- * @brief list: sync selected index
- *
- * @param[in] list List widget instance
- * @param[in] selected_index_out selected index out
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_list_sync_selected_index(struct picoui_list *list, int *selected_index_out);
-
-/**
  * @brief Set style class of widget backend
  *
  * @param[in] backend_widget backend widget
@@ -1876,30 +1758,6 @@ int picoui_backend_list_sync_selected_index(struct picoui_list *list, int *selec
  */
 
 int picoui_backend_widget_set_padding(void *backend_widget, int padding);
-
-/**
- * @brief widget: bind ld event bridge
- *
- * @param[in] backend_widget backend widget
- * @param[in] scene scene
- * @param[in] sender sender
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_widget_bind_ld_event_bridge(void *backend_widget,
-                                               struct ld_scene_t *scene,
-                                               void *sender);
-
-/**
- * @brief widget: bind host
- *
- * @param[in] backend_widget backend widget
- * @param[in] widget Widget instance
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_widget_bind_host(void *backend_widget,
-                                    struct picoui_widget *widget);
 
 /**
  * @brief set: image source
@@ -2136,42 +1994,6 @@ void picoui_backend_emit_event(picoui_event_cb cb,
                                void *user_data);
 
 /**
- * @brief widget: dispatch signal
- *
- * @param[in] backend_widget backend widget
- * @param[in] signal signal
- * @param[in] value Value
- * @param[in] cb cb
- * @param[in] widget Widget instance
- * @param[in] user_data User data pointer
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_widget_dispatch_signal(void *backend_widget,
-                                          enum picoui_backend_signal signal,
-                                          int value,
-                                          picoui_value_changed_cb cb,
-                                          struct picoui_widget *widget,
-                                          void *user_data);
-
-/**
- * @brief widget: dispatch event
- *
- * @param[in] backend_widget backend widget
- * @param[in] signal signal
- * @param[in] cb cb
- * @param[in] widget Widget instance
- * @param[in] user_data User data pointer
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_widget_dispatch_event(void *backend_widget,
-                                         enum picoui_backend_signal signal,
-                                         picoui_event_cb cb,
-                                         struct picoui_widget *widget,
-                                         void *user_data);
-
-/**
  * @brief widget: dispatch native signal
  *
  * @param[in] backend_widget backend widget
@@ -2183,23 +2005,6 @@ int picoui_backend_widget_dispatch_event(void *backend_widget,
 int picoui_backend_widget_dispatch_native_signal(void *backend_widget,
                                                  uint32_t native_signal,
                                                  uint64_t native_value);
-
-/**
- * @brief widget: update value
- *
- * @param[in] backend_widget backend widget
- * @param[in] value Value
- * @param[in] cb cb
- * @param[in] widget Widget instance
- * @param[in] user_data User data pointer
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_widget_update_value(void *backend_widget,
-                                       int value,
-                                       picoui_value_changed_cb cb,
-                                       struct picoui_widget *widget,
-                                       void *user_data);
 
 /**
  * @brief emit: clicked

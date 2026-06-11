@@ -18,6 +18,7 @@
 
 #include "internal.h"
 #include "picoui/widget.h"
+#include "arm_2d.h"
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -35,6 +36,11 @@ typedef struct arm_2d_control_node_t arm_2d_control_node_t;
 typedef arm_2d_location_t picoui_ld_location_t;
 typedef arm_2d_region_t picoui_ld_region_t;
 typedef arm_2d_align_t picoui_ld_align_t;
+#define picoui_ld_align_left ARM_2D_ALIGN_LEFT
+#define picoui_ld_align_right ARM_2D_ALIGN_RIGHT
+#define picoui_ld_align_center ARM_2D_ALIGN_CENTRE
+#define picoui_ld_align_top ARM_2D_ALIGN_TOP
+#define picoui_ld_align_bottom ARM_2D_ALIGN_BOTTOM
 typedef enum {
     picoui_ld_nav_up,
     picoui_ld_nav_down,
@@ -44,6 +50,12 @@ typedef enum {
     picoui_ld_nav_back,
 } picoui_ld_nav_dir_t;
 
+void ldSwitchSetDisabled(ldSwitch_t *ptWidget, bool isDisabled);
+void ldLabelSetText(ldLabel_t *ptWidget, uint8_t *pStr);
+void ldTextSetText(ldText_t *ptWidget, uint8_t *pStr);
+void ldQRCodeSetText(ldQRCode_t *ptWidget, uint8_t *pStr);
+void ldButtonSetText(ldButton_t *ptWidget, uint8_t *pStr);
+void ldCheckBoxSetText(ldCheckBox_t *ptWidget, arm_2d_font_t *ptFont, uint8_t *pStr);
 int16_t ldBaseGetX(ldBase_t *ptWidget);
 int16_t ldBaseGetY(ldBase_t *ptWidget);
 int16_t ldBaseGetWidth(ldBase_t *ptWidget);
@@ -58,6 +70,16 @@ ldBase_t *ldBaseGetParent(ldBase_t *ptWidget);
 ldBase_t *ldBaseGetChildList(ldBase_t *ptWidget);
 ldBase_t *ldBaseGetNextSibling(ldBase_t *ptWidget);
 uint16_t ldBaseGetChildCount(ldBase_t *ptWidget);
+arm_2d_location_t ldBaseGetRelativeLocation(ldBase_t *ptWidget, arm_2d_location_t tLocation);
+arm_2d_location_t ldBaseGetAbsoluteLocation(ldBase_t *ptWidget, arm_2d_location_t tLocation);
+arm_2d_region_t ldBaseGetAlignRegion(arm_2d_region_t parentRegion,
+                                     arm_2d_region_t childRegion,
+                                     arm_2d_align_t tAlign);
+int16_t ldBaseAutoVerticalGridAlign(arm_2d_region_t widgetRegion,
+                                    int16_t currentOffset,
+                                    uint8_t itemCount,
+                                    uint8_t itemHeight,
+                                    uint8_t space);
 arm_2d_control_node_t *ldBaseGetRootNode(arm_2d_control_node_t *ptNode);
 void ldBaseFocusNavigateInit(void);
 void ldBaseSetX(ldBase_t *ptWidget, int16_t x);
@@ -74,12 +96,6 @@ void ldBaseSetFlexMinWidth(ldBase_t *ptWidget, int16_t minWidth);
 void ldBaseSetFlexMinHeight(ldBase_t *ptWidget, int16_t minHeight);
 void ldBaseSetFlexMaxWidth(ldBase_t *ptWidget, int16_t maxWidth);
 void ldBaseSetFlexMaxHeight(ldBase_t *ptWidget, int16_t maxHeight);
-void ldSwitchSetDisabled(ldSwitch_t *ptWidget, bool isDisabled);
-void ldLabelSetText(ldLabel_t *ptWidget, uint8_t *pStr);
-void ldTextSetText(ldText_t *ptWidget, uint8_t *pStr);
-void ldQRCodeSetText(ldQRCode_t *ptWidget, uint8_t *pStr);
-void ldButtonSetText(ldButton_t *ptWidget, uint8_t *pStr);
-void ldCheckBoxSetText(ldCheckBox_t *ptWidget, arm_2d_font_t *ptFont, uint8_t *pStr);
 
 static int picoui_widget_is_valid(struct picoui_widget *widget)
 {
@@ -201,6 +217,27 @@ int picoui_backend_widget_release_focus(void *backend_widget)
     }
 
     return picoui_widget_release_focus(backend->host_widget);
+}
+
+int picoui_widget_update_value(void *backend_widget,
+                               int value,
+                               picoui_value_changed_cb cb,
+                               struct picoui_widget *widget,
+                               void *user_data)
+{
+    struct picoui_backend_widget *backend = backend_widget;
+
+    if (backend == 0) {
+        return -1;
+    }
+
+    backend->value = value;
+    backend->data_model_epoch++;
+    backend->last_data_source = PICOUI_BACKEND_DATA_SOURCE_SETTER;
+    picoui_widget_sync_ld_value(backend, widget, value);
+    (void)cb;
+    (void)user_data;
+    return 0;
 }
 
 static int picoui_backend_widget_can_attach_child(const struct picoui_backend_widget *parent,
@@ -502,6 +539,46 @@ static picoui_ld_region_t picoui_rect_to_ld_region(struct picoui_rect rect)
     region.tSize.iWidth = (int16_t)rect.width;
     region.tSize.iHeight = (int16_t)rect.height;
     return region;
+}
+
+static arm_2d_location_t picoui_ld_location_to_arm(picoui_ld_location_t location)
+{
+    arm_2d_location_t arm_location;
+
+    arm_location.iX = location.iX;
+    arm_location.iY = location.iY;
+    return arm_location;
+}
+
+static picoui_ld_location_t picoui_ld_location_from_arm(arm_2d_location_t location)
+{
+    picoui_ld_location_t picoui_location;
+
+    picoui_location.iX = location.iX;
+    picoui_location.iY = location.iY;
+    return picoui_location;
+}
+
+static arm_2d_region_t picoui_ld_region_to_arm(picoui_ld_region_t region)
+{
+    arm_2d_region_t arm_region;
+
+    arm_region.tLocation.iX = region.tLocation.iX;
+    arm_region.tLocation.iY = region.tLocation.iY;
+    arm_region.tSize.iWidth = region.tSize.iWidth;
+    arm_region.tSize.iHeight = region.tSize.iHeight;
+    return arm_region;
+}
+
+static picoui_ld_region_t picoui_ld_region_from_arm(arm_2d_region_t region)
+{
+    picoui_ld_region_t picoui_region;
+
+    picoui_region.tLocation.iX = region.tLocation.iX;
+    picoui_region.tLocation.iY = region.tLocation.iY;
+    picoui_region.tSize.iWidth = region.tSize.iWidth;
+    picoui_region.tSize.iHeight = region.tSize.iHeight;
+    return picoui_region;
 }
 
 static struct picoui_rect picoui_rect_from_ld_region(picoui_ld_region_t region)
@@ -1698,7 +1775,8 @@ struct picoui_point picoui_widget_get_absolute_pos(const struct picoui_widget *w
 
     location.iX = (int16_t)point.x;
     location.iY = (int16_t)point.y;
-    location = ldBaseGetAbsoluteLocation(ld_base, location);
+    location = picoui_ld_location_from_arm(
+        ldBaseGetAbsoluteLocation(ld_base, picoui_ld_location_to_arm(location)));
     result.x = location.iX;
     result.y = location.iY;
     return result;
@@ -1732,7 +1810,8 @@ struct picoui_point picoui_widget_get_relative_pos(const struct picoui_widget *w
 
     location.iX = (int16_t)point.x;
     location.iY = (int16_t)point.y;
-    location = ldBaseGetRelativeLocation(ld_base, location);
+    location = picoui_ld_location_from_arm(
+        ldBaseGetRelativeLocation(ld_base, picoui_ld_location_to_arm(location)));
     result.x = location.iX;
     result.y = location.iY;
     return result;
@@ -1761,9 +1840,10 @@ struct picoui_rect picoui_rect_align(struct picoui_rect parent,
         return invalid;
     }
 
-    aligned = ldBaseGetAlignRegion(picoui_rect_to_ld_region(parent),
-                                   picoui_rect_to_ld_region(child),
-                                   (picoui_ld_align_t)ld_align);
+    aligned = picoui_ld_region_from_arm(
+        ldBaseGetAlignRegion(picoui_ld_region_to_arm(picoui_rect_to_ld_region(parent)),
+                             picoui_ld_region_to_arm(picoui_rect_to_ld_region(child)),
+                             (arm_2d_align_t)ld_align));
     return picoui_rect_from_ld_region(aligned);
 }
 
@@ -1802,7 +1882,7 @@ int picoui_vertical_grid_align_offset(struct picoui_rect widget,
         return -1;
     }
 
-    return (int)ldBaseAutoVerticalGridAlign(picoui_rect_to_ld_region(widget),
+    return (int)ldBaseAutoVerticalGridAlign(picoui_ld_region_to_arm(picoui_rect_to_ld_region(widget)),
                                             (int16_t)current_offset,
                                             (uint8_t)item_count,
                                             (uint8_t)item_height,

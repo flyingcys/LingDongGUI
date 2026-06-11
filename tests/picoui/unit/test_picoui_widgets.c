@@ -14,6 +14,8 @@
 #include "internal.h"
 
 #include <assert.h>
+#include <dlfcn.h>
+#include <stdio.h>
 #include <string.h>
 
 static int switch_toggled_count = 0;
@@ -25,6 +27,33 @@ static int slider_value = -1;
 static int button_clicked = -1;
 static int button_pressed_count = 0;
 static int button_released_count = 0;
+static const char *test_self_binary_path = 0;
+
+static void assert_self_binary_lacks_symbol(const char *symbol)
+{
+    char command[1024];
+    FILE *pipe;
+    char line[512];
+
+    assert(test_self_binary_path != 0);
+    assert(symbol != 0);
+    snprintf(command, sizeof(command), "nm %s 2>/dev/null", test_self_binary_path);
+    pipe = popen(command, "r");
+    assert(pipe != 0);
+    while (fgets(line, sizeof(line), pipe) != 0) {
+        size_t line_len = strlen(line);
+        size_t symbol_len = strlen(symbol);
+
+        while (line_len > 0 && (line[line_len - 1] == '\n' || line[line_len - 1] == '\r')) {
+            line[--line_len] = '\0';
+        }
+        if (line_len >= symbol_len &&
+            strcmp(line + line_len - symbol_len, symbol) == 0) {
+            assert(!"unexpected symbol still present in test binary");
+        }
+    }
+    assert(pclose(pipe) == 0);
+}
 
 struct test_text_box_prefix_view {
     text_box_cfg_t tCFG;
@@ -844,14 +873,43 @@ static void test_backend_value_changed_bridge_keeps_setter_sync_only(struct pico
 {
     ldBase_t sender = {0};
     ldMsg_t msg = {0};
+    ldSlider_t *ld_slider;
 
     assert(scene != 0);
     assert(scene->ptMsgQueue != 0);
+    assert(slider != 0);
+    assert(slider_backend != 0);
+    ld_slider = (ldSlider_t *)slider_backend->ld_widget;
+    assert(ld_slider != 0);
     assert(picoui_backend_widget_bind_ld_event_bridge(slider_backend, scene, &sender) == 0);
     assert(picoui_slider_set_value(slider, 12) == 0);
+    assert(ld_slider->permille == 50);
+    assert(slider_backend->value == 12);
     assert(slider_value_count == 0);
     assert(slider_value == -1);
     assert(xQueueDequeue(scene->ptMsgQueue, &msg, sizeof(msg)) == false);
+}
+
+static void test_backend_bind_ld_event_bridge_fail_closed_on_missing_native_widget(
+    struct picoui_backend_widget *slider_backend,
+    struct ld_scene_t *scene)
+{
+    ldBase_t sender = {0};
+    void *saved_ld_widget;
+
+    assert(slider_backend != 0);
+    assert(scene != 0);
+
+    saved_ld_widget = slider_backend->ld_widget;
+    slider_backend->ld_event_bridge_scene = 0;
+    slider_backend->ld_event_bridge_sender = 0;
+    slider_backend->ld_widget = 0;
+
+    assert(picoui_backend_widget_bind_ld_event_bridge(slider_backend, scene, &sender) == -1);
+    assert(slider_backend->ld_event_bridge_scene == 0);
+    assert(slider_backend->ld_event_bridge_sender == 0);
+
+    slider_backend->ld_widget = saved_ld_widget;
 }
 
 static void test_native_event_bridge_prefers_native_path(struct picoui_switch *sw,
@@ -2415,8 +2473,14 @@ int main(void)
     struct picoui_backend_app_state *app_state;
     int button_cookie = 7;
     int common_cookie = 9;
+    Dl_info self_info;
 
     app = picoui_app_create();
+    assert(dladdr((void *)&main, &self_info) != 0);
+    test_self_binary_path = self_info.dli_fname;
+    assert_self_binary_lacks_symbol("picoui_backend_sync_ld_value");
+    assert_self_binary_lacks_symbol("picoui_backend_emit_ld_event_bridge");
+    assert_self_binary_lacks_symbol("picoui_backend_widget_update_value");
     theme = picoui_theme_create();
     assert(picoui_app_set_theme(app, theme) == 0);
     win = picoui_window_create(app, "root");
@@ -2544,6 +2608,8 @@ int main(void)
     assert(slider_backend->value == 11);
     assert(slider_backend->dispatch_count == 0);
     test_backend_value_changed_bridge_keeps_setter_sync_only(slider, slider_backend, app_state->ld_scene);
+    test_backend_bind_ld_event_bridge_fail_closed_on_missing_native_widget(slider_backend,
+                                                                           app_state->ld_scene);
     test_native_event_bridge_prefers_native_path(sw, cb, slider, app_state->ld_scene);
 
     assert(picoui_switch_set_on_toggled(sw, on_switch_toggle, 0) == 0);

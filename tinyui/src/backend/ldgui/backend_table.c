@@ -92,62 +92,6 @@ static int picoui_backend_table_sync_host_current_cell(struct picoui_backend_wid
     return 0;
 }
 
-static bool picoui_backend_table_native_slot(struct ld_scene_t *scene, ldMsg_t msg)
-{
-    struct picoui_backend_widget *backend;
-    struct picoui_table *table;
-    ldTable_t *ld_table;
-    ldTableItem_t *item;
-    int row = 0;
-    int column = 0;
-    int was_focus_owner = 0;
-
-    (void)scene;
-
-    if (msg.ptSender == NULL) {
-        return false;
-    }
-
-    backend = (struct picoui_backend_widget *)((ldBase_t *)msg.ptSender)->pInfo;
-    if (backend == NULL || backend->host_widget == NULL) {
-        return false;
-    }
-
-    table = (struct picoui_table *)backend->host_widget;
-    ld_table = picoui_backend_table_get_ld(backend);
-    if (ld_table == NULL) {
-        return false;
-    }
-
-    backend->last_native_signal = msg.signal;
-    backend->last_native_value = msg.value;
-
-    (void)picoui_backend_table_sync_host_current_cell(backend, &row, &column);
-    item = ldTableGetItem(ld_table, (uint8_t)row, (uint8_t)column);
-
-    if (msg.signal == SIGNAL_PRESS) {
-        was_focus_owner = picoui_widget_is_focus_owner(&table->widget);
-        (void)picoui_backend_widget_claim_focus(backend);
-        if (item != NULL && item->isEditable && (item->isEditing || was_focus_owner)) {
-            backend->edit_result_on_finish = PICOUI_EDIT_RESULT_COMMIT;
-            (void)picoui_widget_claim_editing(&table->widget);
-        }
-        return false;
-    }
-
-    if (msg.signal != SIGNAL_FINISHED) {
-        return false;
-    }
-
-    if (item != NULL) {
-        item->isEditing = false;
-    }
-    (void)picoui_widget_mark_edit_result(&table->widget, backend->edit_result_on_finish);
-    (void)picoui_widget_release_editing(&table->widget);
-    backend->edit_result_on_finish = PICOUI_EDIT_RESULT_NONE;
-    return false;
-}
-
 /**
  * @brief Set keyboard binding of table backend
  *
@@ -596,33 +540,6 @@ int picoui_backend_table_get_item_editable(void *backend_widget, int row, int co
 }
 
 /**
- * @brief table: navigate
- *
- * @param[in] backend_widget backend widget
- * @param[in] dir dir
- * @return -1 on failure
- */
-
-int picoui_backend_table_navigate(void *backend_widget, enum picoui_native_nav_dir dir)
-{
-    struct picoui_backend_widget *backend = backend_widget;
-    ldTable_t *ld_table = picoui_backend_table_get_ld(backend_widget);
-    int ld_dir;
-
-    if (backend == NULL || ld_table == NULL) {
-        return -1;
-    }
-
-    ld_dir = picoui_native_nav_dir_to_ld(dir);
-    if (ld_dir < 0) {
-        return -1;
-    }
-
-    ldTableNavigate(ld_table, (ldNavDir_t)ld_dir);
-    return picoui_backend_table_sync_host_current_cell(backend, NULL, NULL);
-}
-
-/**
  * @brief Get item region from table backend
  *
  * @param[in] backend_widget backend widget
@@ -689,52 +606,8 @@ int picoui_backend_table_set_current_cell(void *backend_widget, int row, int col
 }
 
 /**
- * @brief table: sync current cell
- *
- * @param[in] table table
- * @param[in] row_out row out
- * @param[in] column_out column out
- * @return -1 on failure
- */
-
-int picoui_backend_table_sync_current_cell(struct picoui_table *table, int *row_out, int *column_out)
-{
-    struct picoui_backend_widget *backend;
-
-    if (table == NULL || table->widget.backend_widget == NULL) {
-        return -1;
-    }
-
-    backend = (struct picoui_backend_widget *)table->widget.backend_widget;
-    return picoui_backend_table_sync_host_current_cell(backend, row_out, column_out);
-}
-
-/**
  * @brief table: bind host
  *
  * @param[in] backend_widget backend widget
  * @return 0 on success, -1 on failure
  */
-
-int picoui_backend_table_bind_host(void *backend_widget)
-{
-    struct picoui_backend_widget *backend = backend_widget;
-    ldTable_t *ld_table;
-
-    if (backend == NULL) {
-        return -1;
-    }
-
-    ld_table = picoui_backend_table_get_ld(backend_widget);
-    if (ld_table == NULL) {
-        return -1;
-    }
-
-    if (!ldMsgConnect(ld_table, SIGNAL_PRESS, picoui_backend_table_native_slot)) {
-        return -1;
-    }
-    if (!ldMsgConnect(ld_table, SIGNAL_FINISHED, picoui_backend_table_native_slot)) {
-        return -1;
-    }
-    return 0;
-}

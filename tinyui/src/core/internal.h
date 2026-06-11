@@ -138,6 +138,12 @@ int picoui_backend_widget_init_child(void *backend_widget,
                                      struct picoui_theme *theme);
 int picoui_backend_widget_attach_child(void *parent, void *child);
 int picoui_backend_widget_bind_host(void *backend_widget, struct picoui_widget *widget);
+int picoui_backend_widget_bind_ld_event_bridge(void *backend_widget,
+                                               struct ld_scene_t *scene,
+                                               void *sender);
+int picoui_list_backend_set_selected_index(void *backend_widget, int index);
+int picoui_list_backend_get_selected_index(void *backend_widget);
+int picoui_list_backend_sync_selected_index(struct picoui_list *list, int *selected_index_out);
 int picoui_backend_widget_is_kind(const void *backend_widget,
                                   enum picoui_backend_widget_kind kind);
 int picoui_backend_widget_unbind_host(void *backend_widget);
@@ -157,6 +163,28 @@ void picoui_backend_emit_event(picoui_event_cb cb,
 void picoui_backend_emit_clicked(picoui_event_cb cb,
                                  struct picoui_widget *widget,
                                  void *user_data);
+void picoui_widget_sync_ld_value(struct picoui_backend_widget *backend,
+                                 struct picoui_widget *widget,
+                                 int value);
+int picoui_widget_update_value(void *backend_widget,
+                               int value,
+                               picoui_value_changed_cb cb,
+                               struct picoui_widget *widget,
+                               void *user_data);
+void picoui_widget_emit_ld_event_bridge(struct picoui_backend_widget *backend,
+                                        enum picoui_backend_signal signal,
+                                        int value);
+int picoui_widget_dispatch_signal(void *backend_widget,
+                                  enum picoui_backend_signal signal,
+                                  int value,
+                                  picoui_value_changed_cb cb,
+                                  struct picoui_widget *widget,
+                                  void *user_data);
+int picoui_widget_dispatch_event(void *backend_widget,
+                                 enum picoui_backend_signal signal,
+                                 picoui_event_cb cb,
+                                 struct picoui_widget *widget,
+                                 void *user_data);
 int picoui_backend_runtime_step(struct picoui_app *app);
 int picoui_window_apply_flex_flow(struct picoui_window *window, enum picoui_flex_flow flow);
 int picoui_window_apply_flex_align(struct picoui_window *window,
@@ -170,6 +198,12 @@ int picoui_window_apply_grid_gap(struct picoui_window *window, int row_gap, int 
 int picoui_window_apply_grid_align(struct picoui_window *window,
                                    enum picoui_align col_align,
                                    enum picoui_align row_align);
+int picoui_theme_apply_widget_style(void *backend_widget,
+                                    enum picoui_part part,
+                                    enum picoui_state state,
+                                    unsigned int bg_color,
+                                    unsigned int text_color,
+                                    unsigned int border_color);
 
 enum picoui_focus_event {
     PICOUI_FOCUS_EVENT_NONE = 0,

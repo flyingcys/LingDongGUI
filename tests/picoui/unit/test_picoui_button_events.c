@@ -5,11 +5,41 @@
 #include "internal.h"
 
 #include <assert.h>
+#include <dlfcn.h>
+#include <stdio.h>
 #include <string.h>
 
 extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
 extern int picoui_widget_has_ld_binding(const struct picoui_widget *widget);
 void picoui_backend_button_test_fail_next_set_font(void);
+
+static const char *test_self_binary_path = 0;
+
+static void assert_self_binary_lacks_symbol(const char *symbol)
+{
+    char command[1024];
+    FILE *pipe;
+    char line[512];
+
+    assert(test_self_binary_path != 0);
+    assert(symbol != 0);
+    snprintf(command, sizeof(command), "nm %s 2>/dev/null", test_self_binary_path);
+    pipe = popen(command, "r");
+    assert(pipe != 0);
+    while (fgets(line, sizeof(line), pipe) != 0) {
+        size_t line_len = strlen(line);
+        size_t symbol_len = strlen(symbol);
+
+        while (line_len > 0 && (line[line_len - 1] == '\n' || line[line_len - 1] == '\r')) {
+            line[--line_len] = '\0';
+        }
+        if (line_len >= symbol_len &&
+            strcmp(line + line_len - symbol_len, symbol) == 0) {
+            assert(!"unexpected symbol still present in test binary");
+        }
+    }
+    assert(pclose(pipe) == 0);
+}
 
 static int press_count = 0;
 static int release_count = 0;
@@ -215,9 +245,18 @@ int main(void)
     int checkbox_cookie = 44;
     int switch_cookie = 55;
     int slider_cookie = 66;
+    Dl_info self_info;
 
     assert(app != 0);
     assert(win != 0);
+    assert(dladdr((void *)&main, &self_info) != 0);
+    test_self_binary_path = self_info.dli_fname;
+    assert_self_binary_lacks_symbol("picoui_backend_widget_dispatch_signal");
+    assert_self_binary_lacks_symbol("picoui_backend_widget_dispatch_event");
+    assert_self_binary_lacks_symbol("picoui_backend_sync_ld_value");
+    assert_self_binary_lacks_symbol("picoui_backend_emit_ld_event_bridge");
+    assert_self_binary_lacks_symbol("picoui_backend_sync_ld_value");
+    assert_self_binary_lacks_symbol("picoui_backend_emit_ld_event_bridge");
     test_button_constructor_binds_ld_without_backend_wrapper(win);
     test_button_create_with_props_failure_rolls_back_attached_child(win);
     assert(button != 0);
@@ -318,11 +357,11 @@ int main(void)
                                                      button_name_id,
                                                      PICOUI_BUTTON_ACTION_PRESS) == -1);
 
-    assert(picoui_backend_widget_dispatch_event(button->widget.backend_widget,
-                                                PICOUI_BACKEND_SIGNAL_PRESSED,
-                                                button->on_pressed,
-                                                &button->widget,
-                                                button->on_pressed_user_data) == 0);
+    assert(picoui_widget_dispatch_event(button->widget.backend_widget,
+                                        PICOUI_BACKEND_SIGNAL_PRESSED,
+                                        button->on_pressed,
+                                        &button->widget,
+                                        button->on_pressed_user_data) == 0);
     assert(press_count == 1);
     assert(release_count == 0);
     assert(click_count == 0);
@@ -333,11 +372,11 @@ int main(void)
     assert(backend->last_signal == PICOUI_BACKEND_SIGNAL_PRESSED);
     assert(backend->dispatch_count == 1);
 
-    assert(picoui_backend_widget_dispatch_event(button->widget.backend_widget,
-                                                PICOUI_BACKEND_SIGNAL_RELEASED,
-                                                button->on_released,
-                                                &button->widget,
-                                                button->on_released_user_data) == 0);
+    assert(picoui_widget_dispatch_event(button->widget.backend_widget,
+                                        PICOUI_BACKEND_SIGNAL_RELEASED,
+                                        button->on_released,
+                                        &button->widget,
+                                        button->on_released_user_data) == 0);
     assert(press_count == 1);
     assert(release_count == 1);
     assert(click_count == 0);
@@ -348,16 +387,16 @@ int main(void)
     assert(backend->last_signal == PICOUI_BACKEND_SIGNAL_RELEASED);
     assert(backend->dispatch_count == 2);
 
-    assert(picoui_backend_widget_dispatch_event(0,
-                                                PICOUI_BACKEND_SIGNAL_PRESSED,
-                                                on_pressed,
-                                                &button->widget,
-                                                &press_cookie) == -1);
-    assert(picoui_backend_widget_dispatch_event(button->widget.backend_widget,
-                                                PICOUI_BACKEND_SIGNAL_VALUE_CHANGED,
-                                                button->on_pressed,
-                                                &button->widget,
-                                                button->on_pressed_user_data) == -1);
+    assert(picoui_widget_dispatch_event(0,
+                                        PICOUI_BACKEND_SIGNAL_PRESSED,
+                                        on_pressed,
+                                        &button->widget,
+                                        &press_cookie) == -1);
+    assert(picoui_widget_dispatch_event(button->widget.backend_widget,
+                                        PICOUI_BACKEND_SIGNAL_VALUE_CHANGED,
+                                        button->on_pressed,
+                                        &button->widget,
+                                        button->on_pressed_user_data) == -1);
 
     press_count = 0;
     release_count = 0;
@@ -447,16 +486,16 @@ int main(void)
     assert(picoui_widget_set_enabled(&button->widget, 1) == 0);
 
     assert(picoui_widget_set_visible(&button->widget, 0) == 0);
-    assert(picoui_backend_widget_dispatch_event(button->widget.backend_widget,
-                                                PICOUI_BACKEND_SIGNAL_PRESSED,
-                                                button->on_pressed,
-                                                &button->widget,
-                                                button->on_pressed_user_data) == 0);
-    assert(picoui_backend_widget_dispatch_event(button->widget.backend_widget,
-                                                PICOUI_BACKEND_SIGNAL_RELEASED,
-                                                button->on_released,
-                                                &button->widget,
-                                                button->on_released_user_data) == 0);
+    assert(picoui_widget_dispatch_event(button->widget.backend_widget,
+                                        PICOUI_BACKEND_SIGNAL_PRESSED,
+                                        button->on_pressed,
+                                        &button->widget,
+                                        button->on_pressed_user_data) == 0);
+    assert(picoui_widget_dispatch_event(button->widget.backend_widget,
+                                        PICOUI_BACKEND_SIGNAL_RELEASED,
+                                        button->on_released,
+                                        &button->widget,
+                                        button->on_released_user_data) == 0);
     assert(press_count == 1);
     assert(release_count == 1);
     assert(click_count == 1);
@@ -542,12 +581,12 @@ int main(void)
     assert(slider_backend->last_native_value == 750);
 
     assert(picoui_widget_set_visible(&checkbox->widget, 0) == 0);
-    assert(picoui_backend_widget_dispatch_signal(checkbox->widget.backend_widget,
-                                                 PICOUI_BACKEND_SIGNAL_VALUE_CHANGED,
-                                                 1,
-                                                 checkbox->cb,
-                                                 &checkbox->widget,
-                                                 checkbox->user_data) == 0);
+    assert(picoui_widget_dispatch_signal(checkbox->widget.backend_widget,
+                                         PICOUI_BACKEND_SIGNAL_VALUE_CHANGED,
+                                         1,
+                                         checkbox->cb,
+                                         &checkbox->widget,
+                                         checkbox->user_data) == 0);
     assert(ldMsgEmit(app_state->ld_scene->ptMsgQueue,
                      checkbox_backend->ld_widget,
                      SIGNAL_VALUE_CHANGED,

@@ -19,12 +19,27 @@
 #include "internal.h"
 #include "runtime_bridge.h"
 #include "picoui/theme.h"
+#include "../../../src/gui/ldBase.h"
+#include "../../../src/gui/ldButton.h"
+#include "../../../src/gui/ldCalendar.h"
+#include "../../../src/gui/ldCheckBox.h"
+#include "../../../src/gui/ldImage.h"
+#include "../../../src/gui/ldLabel.h"
+#include "../../../src/gui/ldList.h"
+#include "../../../src/gui/ldSlider.h"
+#include "../../../src/gui/ldSwitch.h"
+#include "../../../src/gui/ldText.h"
+#include "../../../src/gui/ldWindow.h"
 
 #include <stdlib.h>
 #include <stdint.h>
 
-typedef struct ldBase_t ldBase_t;
 void ldBaseSetHeight(ldBase_t *ptWidget, int16_t height);
+
+static ldColor picoui_theme_rgb_to_ld_color(unsigned int rgb)
+{
+    return __RGB((rgb >> 16) & 0xFFU, (rgb >> 8) & 0xFFU, rgb & 0xFFU);
+}
 
 static const unsigned int PICOUI_THEME_V0_COLORS[PICOUI_COLOR_COUNT] = {
     [PICOUI_COLOR_TEXT_PRIMARY] = 0x1F2328U,
@@ -147,6 +162,260 @@ static int picoui_theme_backend_can_apply_style(const struct picoui_backend_widg
         && backend_widget->theme != 0;
 }
 
+static void picoui_theme_apply_window_style(struct picoui_backend_widget *backend_widget,
+                                            unsigned int bg_color)
+{
+    ldWindowSetColor((ldWindow_t *)backend_widget->ld_widget, picoui_theme_rgb_to_ld_color(bg_color));
+}
+
+static void picoui_theme_apply_label_style(struct picoui_backend_widget *backend_widget,
+                                           unsigned int bg_color,
+                                           unsigned int text_color)
+{
+    ldLabel_t *ld_label = (ldLabel_t *)backend_widget->ld_widget;
+
+    ldLabelSetBackgroundColor(ld_label, picoui_theme_rgb_to_ld_color(bg_color));
+    ldLabelSetTextColor(ld_label, picoui_theme_rgb_to_ld_color(text_color));
+}
+
+static void picoui_theme_apply_text_style(struct picoui_backend_widget *backend_widget,
+                                          unsigned int bg_color,
+                                          unsigned int text_color)
+{
+    ldText_t *ld_text = (ldText_t *)backend_widget->ld_widget;
+
+    ldTextSetBackgroundColor(ld_text, picoui_theme_rgb_to_ld_color(bg_color));
+    ldTextSetTextColor(ld_text, picoui_theme_rgb_to_ld_color(text_color));
+}
+
+static void picoui_theme_apply_button_style(struct picoui_backend_widget *backend_widget,
+                                            enum picoui_state state,
+                                            unsigned int bg_color,
+                                            unsigned int text_color)
+{
+    ldButton_t *ld_button = (ldButton_t *)backend_widget->ld_widget;
+    ldColor release_color = picoui_theme_rgb_to_ld_color(bg_color);
+    ldColor press_color = picoui_theme_rgb_to_ld_color(bg_color);
+
+    if (state != PICOUI_STATE_PRESSED) {
+        press_color = picoui_theme_rgb_to_ld_color(backend_widget->theme->colors[PICOUI_COLOR_ACCENT]);
+    }
+
+    ldButtonSetColor(ld_button, release_color, press_color);
+    ldButtonSetTextColor(ld_button, picoui_theme_rgb_to_ld_color(text_color));
+}
+
+static void picoui_theme_apply_checkbox_style(struct picoui_backend_widget *backend_widget,
+                                              enum picoui_part part,
+                                              unsigned int bg_color,
+                                              unsigned int text_color,
+                                              unsigned int border_color)
+{
+    ldCheckBox_t *ld_checkbox = (ldCheckBox_t *)backend_widget->ld_widget;
+    ldColor main_bg = picoui_theme_rgb_to_ld_color(backend_widget->theme->colors[PICOUI_COLOR_PANEL]);
+    ldColor indicator_color = picoui_theme_rgb_to_ld_color(border_color);
+
+    if (part == PICOUI_PART_INDICATOR) {
+        indicator_color = picoui_theme_rgb_to_ld_color(bg_color);
+    } else if (part == PICOUI_PART_MAIN) {
+        main_bg = picoui_theme_rgb_to_ld_color(bg_color);
+    }
+
+    ldCheckBoxSetColor(ld_checkbox, main_bg, indicator_color);
+    ldCheckBoxSetTextColor(ld_checkbox, picoui_theme_rgb_to_ld_color(text_color));
+}
+
+static void picoui_theme_apply_switch_style(struct picoui_backend_widget *backend_widget,
+                                            enum picoui_part part,
+                                            unsigned int bg_color,
+                                            unsigned int border_color)
+{
+    ldSwitch_t *ld_switch = (ldSwitch_t *)backend_widget->ld_widget;
+    unsigned int off_track = backend_widget->theme->colors[PICOUI_COLOR_BORDER];
+    unsigned int on_track = backend_widget->theme->colors[PICOUI_COLOR_ACCENT];
+    unsigned int knob_color = bg_color;
+    unsigned int edge_color = backend_widget->theme->colors[PICOUI_COLOR_BORDER];
+
+    switch (part) {
+    case PICOUI_PART_MAIN:
+        off_track = bg_color;
+        edge_color = border_color;
+        break;
+    case PICOUI_PART_INDICATOR:
+        on_track = bg_color;
+        edge_color = border_color;
+        break;
+    case PICOUI_PART_KNOB:
+        knob_color = bg_color;
+        edge_color = border_color;
+        break;
+    case PICOUI_PART_TRACK:
+        off_track = bg_color;
+        edge_color = border_color;
+        break;
+    default:
+        break;
+    }
+
+    ldSwitchSetColor(ld_switch,
+                     picoui_theme_rgb_to_ld_color(off_track),
+                     picoui_theme_rgb_to_ld_color(on_track),
+                     picoui_theme_rgb_to_ld_color(knob_color),
+                     picoui_theme_rgb_to_ld_color(edge_color));
+}
+
+static void picoui_theme_apply_slider_style(struct picoui_backend_widget *backend_widget,
+                                            enum picoui_part part,
+                                            unsigned int bg_color,
+                                            unsigned int border_color)
+{
+    ldSlider_t *ld_slider = (ldSlider_t *)backend_widget->ld_widget;
+    unsigned int slider_bg = backend_widget->theme->colors[PICOUI_COLOR_PANEL];
+    unsigned int slider_frame = backend_widget->theme->colors[PICOUI_COLOR_BORDER];
+    unsigned int slider_indic = backend_widget->theme->colors[PICOUI_COLOR_ACCENT];
+
+    switch (part) {
+    case PICOUI_PART_MAIN:
+        slider_bg = bg_color;
+        slider_frame = border_color;
+        break;
+    case PICOUI_PART_KNOB:
+        slider_indic = bg_color;
+        break;
+    case PICOUI_PART_TRACK:
+        slider_bg = bg_color;
+        slider_frame = border_color;
+        break;
+    default:
+        break;
+    }
+
+    ldSliderSetColor(ld_slider,
+                     picoui_theme_rgb_to_ld_color(slider_bg),
+                     picoui_theme_rgb_to_ld_color(slider_frame),
+                     picoui_theme_rgb_to_ld_color(slider_indic));
+}
+
+static void picoui_theme_apply_list_style(struct picoui_backend_widget *backend_widget,
+                                          enum picoui_part part,
+                                          unsigned int bg_color,
+                                          unsigned int text_color,
+                                          unsigned int border_color)
+{
+    ldList_t *ld_list = (ldList_t *)backend_widget->ld_widget;
+
+    switch (part) {
+    case PICOUI_PART_MAIN:
+        ldListSetBackgroundColor(ld_list, picoui_theme_rgb_to_ld_color(bg_color));
+        ldListSetSelectColor(ld_list, picoui_theme_rgb_to_ld_color(border_color));
+        break;
+    case PICOUI_PART_TEXT:
+        ldListSetTextColor(ld_list, picoui_theme_rgb_to_ld_color(text_color));
+        break;
+    default:
+        break;
+    }
+}
+
+static void picoui_theme_apply_image_style(struct picoui_backend_widget *backend_widget,
+                                           unsigned int bg_color)
+{
+    ldImageSetMaskColor((ldImage_t *)backend_widget->ld_widget, picoui_theme_rgb_to_ld_color(bg_color));
+}
+
+static void picoui_theme_apply_calendar_style(struct picoui_backend_widget *backend_widget,
+                                              enum picoui_part part,
+                                              unsigned int bg_color,
+                                              unsigned int text_color,
+                                              unsigned int border_color)
+{
+    ldCalendar_t *ld_calendar = (ldCalendar_t *)backend_widget->ld_widget;
+
+    switch (part) {
+    case PICOUI_PART_MAIN:
+        ld_calendar->bgColor = picoui_theme_rgb_to_ld_color(bg_color);
+        ld_calendar->itemColor = picoui_theme_rgb_to_ld_color(border_color);
+        break;
+    case PICOUI_PART_TEXT:
+        ld_calendar->textColor = picoui_theme_rgb_to_ld_color(text_color);
+        break;
+    default:
+        break;
+    }
+}
+
+static int picoui_theme_apply_native_widget_style(struct picoui_backend_widget *backend_widget,
+                                                  enum picoui_part part,
+                                                  enum picoui_state state,
+                                                  unsigned int bg_color,
+                                                  unsigned int text_color,
+                                                  unsigned int border_color)
+{
+    switch (backend_widget->kind) {
+    case PICOUI_BACKEND_WIDGET_WINDOW:
+        picoui_theme_apply_window_style(backend_widget, bg_color);
+        break;
+    case PICOUI_BACKEND_WIDGET_LABEL:
+        picoui_theme_apply_label_style(backend_widget, bg_color, text_color);
+        break;
+    case PICOUI_BACKEND_WIDGET_TEXT:
+        picoui_theme_apply_text_style(backend_widget, bg_color, text_color);
+        break;
+    case PICOUI_BACKEND_WIDGET_BUTTON:
+        picoui_theme_apply_button_style(backend_widget, state, bg_color, text_color);
+        break;
+    case PICOUI_BACKEND_WIDGET_CHECKBOX:
+        picoui_theme_apply_checkbox_style(backend_widget, part, bg_color, text_color, border_color);
+        break;
+    case PICOUI_BACKEND_WIDGET_SWITCH:
+        picoui_theme_apply_switch_style(backend_widget, part, bg_color, border_color);
+        break;
+    case PICOUI_BACKEND_WIDGET_SLIDER:
+        picoui_theme_apply_slider_style(backend_widget, part, bg_color, border_color);
+        break;
+    case PICOUI_BACKEND_WIDGET_LIST:
+        picoui_theme_apply_list_style(backend_widget, part, bg_color, text_color, border_color);
+        break;
+    case PICOUI_BACKEND_WIDGET_IMAGE:
+        picoui_theme_apply_image_style(backend_widget, bg_color);
+        break;
+    case PICOUI_BACKEND_WIDGET_CALENDAR:
+        picoui_theme_apply_calendar_style(backend_widget, part, bg_color, text_color, border_color);
+        break;
+    default:
+        return -1;
+    }
+
+    return 0;
+}
+
+int picoui_theme_apply_widget_style(void *backend_widget,
+                                    enum picoui_part part,
+                                    enum picoui_state state,
+                                    unsigned int bg_color,
+                                    unsigned int text_color,
+                                    unsigned int border_color)
+{
+    struct picoui_backend_widget *widget = (struct picoui_backend_widget *)backend_widget;
+
+    if (!picoui_theme_backend_can_apply_style(widget)) {
+        return -1;
+    }
+
+    if (!picoui_theme_part_is_valid(part)
+        || !picoui_theme_state_is_valid(state)
+        || !picoui_theme_part_supported(widget->kind, part)) {
+        return -1;
+    }
+
+    return picoui_theme_apply_native_widget_style(widget,
+                                                  part,
+                                                  state,
+                                                  bg_color,
+                                                  text_color,
+                                                  border_color);
+}
+
 /**
  * @brief Create theme instance
  *
@@ -266,12 +535,12 @@ int picoui_theme_apply_to_widget(struct picoui_theme *theme,
     widget->bg_color = bg_color;
     widget->text_color = text_color;
     widget->border_color = border_color;
-    return picoui_backend_widget_apply_style(widget->backend_widget,
-                                             part,
-                                             state,
-                                             bg_color,
-                                             text_color,
-                                             border_color);
+    return picoui_theme_apply_native_widget_style(backend_widget,
+                                                  part,
+                                                  state,
+                                                  bg_color,
+                                                  text_color,
+                                                  border_color);
 }
 
 /**

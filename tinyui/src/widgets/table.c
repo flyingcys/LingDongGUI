@@ -21,6 +21,7 @@
 #include "../backend/ldgui/backend.h"
 #include "../core/runtime_bridge.h"
 #include "../../../src/gui/ldTable.h"
+#include "../../../src/misc/ldMsg.h"
 
 #include <stdlib.h>
 
@@ -59,6 +60,124 @@ static ldTable_t *picoui_table_get_ld_widget(const struct picoui_table *table)
 
     backend = (const struct picoui_backend_widget *)table->widget.backend_widget;
     return (ldTable_t *)backend->ld_widget;
+}
+
+static int picoui_table_sync_current_cell_local(struct picoui_table *table,
+                                                int *row_out,
+                                                int *column_out);
+
+static bool picoui_table_native_slot(struct ld_scene_t *scene, ldMsg_t msg)
+{
+    struct picoui_backend_widget *backend;
+    struct picoui_table *table;
+    ldTable_t *ld_table;
+    ldTableItem_t *item;
+    int row = 0;
+    int column = 0;
+    int was_focus_owner = 0;
+
+    (void)scene;
+
+    if (msg.ptSender == NULL) {
+        return false;
+    }
+
+    backend = (struct picoui_backend_widget *)((ldBase_t *)msg.ptSender)->pInfo;
+    if (backend == NULL || backend->host_widget == NULL) {
+        return false;
+    }
+
+    table = (struct picoui_table *)backend->host_widget;
+    ld_table = picoui_table_get_ld_widget(table);
+    if (ld_table == NULL) {
+        return false;
+    }
+
+    backend->last_native_signal = msg.signal;
+    backend->last_native_value = msg.value;
+
+    (void)picoui_table_sync_current_cell_local(table, &row, &column);
+    item = ldTableGetItem(ld_table, (uint8_t)row, (uint8_t)column);
+
+    if (msg.signal == SIGNAL_PRESS) {
+        was_focus_owner = picoui_widget_is_focus_owner(&table->widget);
+        (void)picoui_backend_widget_claim_focus(backend);
+        if (item != NULL && item->isEditable && (item->isEditing || was_focus_owner)) {
+            backend->edit_result_on_finish = PICOUI_EDIT_RESULT_COMMIT;
+            (void)picoui_widget_claim_editing(&table->widget);
+        }
+        return false;
+    }
+
+    if (msg.signal != SIGNAL_FINISHED) {
+        return false;
+    }
+
+    if (item != NULL) {
+        item->isEditing = false;
+    }
+    (void)picoui_widget_mark_edit_result(&table->widget, backend->edit_result_on_finish);
+    (void)picoui_widget_release_editing(&table->widget);
+    backend->edit_result_on_finish = PICOUI_EDIT_RESULT_NONE;
+    return false;
+}
+
+static int picoui_table_bind_native_slot(struct picoui_table *table)
+{
+    ldTable_t *ld_table;
+
+    if (table == NULL || table->widget.backend_widget == NULL) {
+        return -1;
+    }
+
+    ld_table = picoui_table_get_ld_widget(table);
+    if (ld_table == NULL) {
+        return -1;
+    }
+
+    if (!ldMsgConnect(ld_table, SIGNAL_PRESS, picoui_table_native_slot)) {
+        return -1;
+    }
+    if (!ldMsgConnect(ld_table, SIGNAL_FINISHED, picoui_table_native_slot)) {
+        return -1;
+    }
+    return 0;
+}
+
+static int picoui_table_sync_current_cell_local(struct picoui_table *table,
+                                                int *row_out,
+                                                int *column_out)
+{
+    struct picoui_backend_widget *backend;
+    ldTable_t *ld_table;
+    int row;
+    int column;
+
+    if (table == NULL || table->widget.backend_widget == NULL) {
+        return -1;
+    }
+
+    backend = (struct picoui_backend_widget *)table->widget.backend_widget;
+    if (backend->host_widget == NULL) {
+        return -1;
+    }
+
+    ld_table = picoui_table_get_ld_widget(table);
+    if (ld_table == NULL) {
+        return -1;
+    }
+
+    row = (int)ld_table->currentRow;
+    column = (int)ld_table->currentColumn;
+    table->current_row = row;
+    table->current_column = column;
+    if (row_out != NULL) {
+        *row_out = row;
+    }
+    if (column_out != NULL) {
+        *column_out = column;
+    }
+    return 0;
 }
 
 /**
@@ -164,7 +283,7 @@ struct picoui_table *picoui_table_create(struct picoui_window *parent,
         free(table);
         return 0;
     }
-    if (picoui_backend_table_bind_host(table->widget.backend_widget) != 0) {
+    if (picoui_table_bind_native_slot(table) != 0) {
         (void)picoui_backend_widget_detach_from_parent(table->widget.backend_widget);
         ldTable_depose(app_state->ld_scene, ld_table);
         free(backend);
@@ -918,6 +1037,10 @@ int picoui_table_get_item_width(const struct picoui_table *table, int column)
 
 int picoui_table_navigate(struct picoui_table *table, enum picoui_native_nav_dir dir)
 {
+    struct picoui_backend_widget *backend;
+    ldTable_t *ld_table;
+    int ld_dir;
+
     if (table == 0 ||
         (dir != PICOUI_NATIVE_NAV_LEFT &&
          dir != PICOUI_NATIVE_NAV_RIGHT &&
@@ -926,7 +1049,19 @@ int picoui_table_navigate(struct picoui_table *table, enum picoui_native_nav_dir
         return -1;
     }
 
-    return picoui_backend_table_navigate(table->widget.backend_widget, dir);
+    backend = (struct picoui_backend_widget *)table->widget.backend_widget;
+    ld_table = picoui_table_get_ld_widget(table);
+    if (backend == NULL || ld_table == NULL) {
+        return -1;
+    }
+
+    ld_dir = picoui_native_nav_dir_to_ld(dir);
+    if (ld_dir < 0) {
+        return -1;
+    }
+
+    ldTableNavigate(ld_table, (ldNavDir_t)ld_dir);
+    return picoui_table_sync_current_cell_local(table, NULL, NULL);
 }
 
 /**
@@ -1034,7 +1169,7 @@ int picoui_table_get_current_row(const struct picoui_table *table)
         return -1;
     }
 
-    if (picoui_backend_table_sync_current_cell((struct picoui_table *)table, &row, &column) == 0) {
+    if (picoui_table_sync_current_cell_local((struct picoui_table *)table, &row, &column) == 0) {
         return row;
     }
     return table->current_row;
@@ -1056,7 +1191,7 @@ int picoui_table_get_current_column(const struct picoui_table *table)
         return -1;
     }
 
-    if (picoui_backend_table_sync_current_cell((struct picoui_table *)table, &row, &column) == 0) {
+    if (picoui_table_sync_current_cell_local((struct picoui_table *)table, &row, &column) == 0) {
         return column;
     }
     return table->current_column;

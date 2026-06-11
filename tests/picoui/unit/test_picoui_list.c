@@ -11,6 +11,36 @@
 
 #include <assert.h>
 #include <dlfcn.h>
+#include <stdio.h>
+#include <string.h>
+
+static const char *test_self_binary_path = 0;
+
+static void assert_self_binary_lacks_symbol(const char *symbol)
+{
+    char command[1024];
+    FILE *pipe;
+    char line[512];
+
+    assert(test_self_binary_path != 0);
+    assert(symbol != 0);
+    snprintf(command, sizeof(command), "nm %s 2>/dev/null", test_self_binary_path);
+    pipe = popen(command, "r");
+    assert(pipe != 0);
+    while (fgets(line, sizeof(line), pipe) != 0) {
+        size_t line_len = strlen(line);
+        size_t symbol_len = strlen(symbol);
+
+        while (line_len > 0 && (line[line_len - 1] == '\n' || line[line_len - 1] == '\r')) {
+            line[--line_len] = '\0';
+        }
+        if (line_len >= symbol_len &&
+            strcmp(line + line_len - symbol_len, symbol) == 0) {
+            assert(!"unexpected symbol still present in test binary");
+        }
+    }
+    assert(pclose(pipe) == 0);
+}
 
 static int list_selected_count = 0;
 static int list_selected_index = -1;
@@ -353,7 +383,7 @@ static void test_selected_index_readback_matches_native_queue_after_preselected_
                      make_signal_value_xy(10, 10)) == true);
     ldMsgProcess(app_state->ld_scene);
     {
-        int backend_selected = picoui_backend_list_get_selected_index(list->widget.backend_widget);
+        int backend_selected = picoui_list_backend_get_selected_index(list->widget.backend_widget);
         int public_selected = picoui_list_get_selected_index(list);
         assert(native_list_clicked_count == 1);
         assert(native_list_clicked_index == 0);
@@ -687,9 +717,9 @@ static void test_list_backend_moved_helpers_fail_closed_without_mutation(struct 
     assert(picoui_backend_list_set_select_color(backend, 0x070809U) == -1);
     assert(picoui_backend_list_set_align(backend, PICOUI_ALIGN_START) == -1);
     assert(picoui_backend_list_set_item_widget(backend, 0, backend) == -1);
-    assert(picoui_backend_list_set_selected_index(0, 0) == -1);
-    assert(picoui_backend_list_get_selected_index(0) == -1);
-    assert(picoui_backend_list_sync_selected_index(0, 0) == -1);
+    assert(picoui_list_backend_set_selected_index(0, 0) == -1);
+    assert(picoui_list_backend_get_selected_index(0) == -1);
+    assert(picoui_list_backend_sync_selected_index(0, 0) == -1);
 
     assert(list->item_count == 2);
     assert(backend->list_item_count == 2);
@@ -707,15 +737,15 @@ static void test_list_backend_moved_helpers_fail_closed_without_mutation(struct 
     assert(ld_list->bgColor == test_list_rgb_to_ld_color(0x445566U));
     assert(ld_list->selectColor == test_list_rgb_to_ld_color(0x778899U));
     assert(ld_list->tAlign == ARM_2D_ALIGN_RIGHT);
-    assert(picoui_backend_list_set_selected_index(backend, 1) == 0);
-    assert(picoui_backend_list_get_selected_index(backend) == 1);
+    assert(picoui_list_backend_set_selected_index(backend, 1) == 0);
+    assert(picoui_list_backend_get_selected_index(backend) == 1);
     assert(list->selected_index == -1);
-    assert(picoui_backend_list_sync_selected_index(list, 0) == 0);
+    assert(picoui_list_backend_sync_selected_index(list, 0) == 0);
     assert(list->selected_index == 1);
     assert(backend->value == 1);
-    assert(picoui_backend_list_set_selected_index(backend, -1) == -1);
-    assert(picoui_backend_list_set_selected_index(backend, PICOUI_BACKEND_LIST_MAX_ITEMS) == -1);
-    assert(picoui_backend_list_get_selected_index(backend) == 1);
+    assert(picoui_list_backend_set_selected_index(backend, -1) == -1);
+    assert(picoui_list_backend_set_selected_index(backend, PICOUI_BACKEND_LIST_MAX_ITEMS) == -1);
+    assert(picoui_list_backend_get_selected_index(backend) == 1);
 }
 
 static void test_list_legacy_backend_helper_symbols_are_removed(struct picoui_window *win)
@@ -730,6 +760,9 @@ static void test_list_legacy_backend_helper_symbols_are_removed(struct picoui_wi
     assert(dlsym(RTLD_DEFAULT, "picoui_backend_list_set_select_color") == 0);
     assert(dlsym(RTLD_DEFAULT, "picoui_backend_list_set_align") == 0);
     assert(dlsym(RTLD_DEFAULT, "picoui_backend_list_set_item_widget") == 0);
+    assert_self_binary_lacks_symbol("picoui_backend_list_set_selected_index");
+    assert_self_binary_lacks_symbol("picoui_backend_list_get_selected_index");
+    assert_self_binary_lacks_symbol("picoui_backend_list_sync_selected_index");
 }
 
 static void test_list_backend_selected_index_sync_rejects_corrupted_binding_without_cache_pollution(
@@ -752,7 +785,7 @@ static void test_list_backend_selected_index_sync_rejects_corrupted_binding_with
     original_kind = backend->kind;
     backend->kind = PICOUI_BACKEND_WIDGET_GRAPH;
 
-    assert(picoui_backend_list_sync_selected_index(list, 0) == -1);
+    assert(picoui_list_backend_sync_selected_index(list, 0) == -1);
     assert(list->selected_index == 1);
     assert(backend->value == 1);
 
@@ -1109,11 +1142,13 @@ static void test_rejects_invalid_inputs(struct picoui_window *win)
     assert(picoui_list_add_item(list, "overflow", "Overflow") == -1);
 }
 
-int main(void)
+int main(int argc, char **argv)
 {
+    (void)argc;
     struct picoui_app *app = picoui_app_create();
     struct picoui_window *win = picoui_window_create(app, "root");
 
+    test_self_binary_path = argv[0];
     assert(app != 0);
     assert(win != 0);
 

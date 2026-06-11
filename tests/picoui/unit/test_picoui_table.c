@@ -8,7 +8,36 @@
 #include "internal.h"
 
 #include <assert.h>
+#include <stdio.h>
 #include <string.h>
+
+static const char *test_self_binary_path = 0;
+
+static void assert_self_binary_lacks_symbol(const char *symbol)
+{
+    char command[1024];
+    FILE *pipe;
+    char line[512];
+
+    assert(test_self_binary_path != 0);
+    assert(symbol != 0);
+    snprintf(command, sizeof(command), "nm %s 2>/dev/null", test_self_binary_path);
+    pipe = popen(command, "r");
+    assert(pipe != 0);
+    while (fgets(line, sizeof(line), pipe) != 0) {
+        size_t line_len = strlen(line);
+        size_t symbol_len = strlen(symbol);
+
+        while (line_len > 0 && (line[line_len - 1] == '\n' || line[line_len - 1] == '\r')) {
+            line[--line_len] = '\0';
+        }
+        if (line_len >= symbol_len &&
+            strcmp(line + line_len - symbol_len, symbol) == 0) {
+            assert(!"unexpected symbol still present in test binary");
+        }
+    }
+    assert(pclose(pipe) == 0);
+}
 
 static uint64_t make_signal_value_xy(uint16_t x, uint16_t y)
 {
@@ -439,8 +468,6 @@ static void test_table_sync_current_cell_rejects_corrupted_backend_binding(void)
     struct picoui_table *table;
     struct picoui_backend_widget *backend;
     enum picoui_backend_widget_kind saved_kind;
-    int row = -1;
-    int column = -1;
 
     app = picoui_app_create();
     assert(app != 0);
@@ -458,9 +485,8 @@ static void test_table_sync_current_cell_rejects_corrupted_backend_binding(void)
     saved_kind = backend->kind;
     backend->kind = PICOUI_BACKEND_WIDGET_LABEL;
 
-    assert(picoui_backend_table_sync_current_cell(table, &row, &column) == -1);
-    assert(row == -1);
-    assert(column == -1);
+    assert(picoui_table_get_current_row(table) == 1);
+    assert(picoui_table_get_current_column(table) == 2);
     assert(table->current_row == 1);
     assert(table->current_column == 2);
 
@@ -596,8 +622,21 @@ static void test_table_item_image_rejects_null_source(struct picoui_window *win)
     assert(picoui_table_set_item_image(table, 0, 0, 4, 4, 0, 0xFFFFFFU) == -1);
 }
 
-int main(void)
+static void test_table_legacy_bind_host_symbol_is_removed(void)
 {
+    assert_self_binary_lacks_symbol("picoui_backend_table_bind_host");
+}
+
+static void test_table_navigate_and_sync_current_cell_backend_symbols_are_no_longer_public(void)
+{
+    assert_self_binary_lacks_symbol("picoui_backend_table_navigate");
+    assert_self_binary_lacks_symbol("picoui_backend_table_sync_current_cell");
+}
+
+int main(int argc, char **argv)
+{
+    (void)argc;
+    test_self_binary_path = argv[0];
     test_table_create_builds_direct_backend_mapping();
     test_table_current_cell_matches_backend_truth();
     test_table_edit_commit_updates_model_and_visible_text();
@@ -608,6 +647,8 @@ int main(void)
     test_table_native_static_text_background_and_getters_round_trip();
     test_table_sync_current_cell_rejects_corrupted_backend_binding();
     test_table_r4_aliases_and_native_getters_round_trip();
+    test_table_legacy_bind_host_symbol_is_removed();
+    test_table_navigate_and_sync_current_cell_backend_symbols_are_no_longer_public();
 
     struct picoui_app *app = picoui_app_create();
     struct picoui_window *win = picoui_window_create(app, "root");

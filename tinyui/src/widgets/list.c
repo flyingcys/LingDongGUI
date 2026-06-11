@@ -24,6 +24,8 @@
 
 #include <stdlib.h>
 
+#define PICOUI_HIDDEN __attribute__((visibility("hidden")))
+
 static ldColor picoui_list_rgb_to_ld_color(unsigned int rgb)
 {
     return __RGB((rgb >> 16) & 0xFFU, (rgb >> 8) & 0xFFU, rgb & 0xFFU);
@@ -550,4 +552,169 @@ void picoui_list_set_on_selected(struct picoui_list *list,
 
     list->cb = callback;
     list->user_data = user_data;
+}
+
+PICOUI_HIDDEN int picoui_backend_list_set_items(void *backend_widget,
+                                                const char *const *item_ids,
+                                                const unsigned char *const *items,
+                                                int item_count)
+{
+    (void)backend_widget;
+    (void)item_ids;
+    (void)items;
+    (void)item_count;
+    return -1;
+}
+
+PICOUI_HIDDEN int picoui_backend_list_set_item_height(void *backend_widget, int item_height)
+{
+    (void)backend_widget;
+    (void)item_height;
+    return -1;
+}
+
+PICOUI_HIDDEN int picoui_backend_list_set_padding_group(void *backend_widget,
+                                                        int top,
+                                                        int bottom,
+                                                        int left,
+                                                        int right)
+{
+    (void)backend_widget;
+    (void)top;
+    (void)bottom;
+    (void)left;
+    (void)right;
+    return -1;
+}
+
+PICOUI_HIDDEN int picoui_backend_list_set_margin_group(void *backend_widget,
+                                                       int top,
+                                                       int bottom,
+                                                       int left,
+                                                       int right)
+{
+    (void)backend_widget;
+    (void)top;
+    (void)bottom;
+    (void)left;
+    (void)right;
+    return -1;
+}
+
+PICOUI_HIDDEN int picoui_backend_list_set_text_color(void *backend_widget, unsigned int rgb)
+{
+    (void)backend_widget;
+    (void)rgb;
+    return -1;
+}
+
+PICOUI_HIDDEN int picoui_backend_list_set_bg_color(void *backend_widget, unsigned int rgb)
+{
+    (void)backend_widget;
+    (void)rgb;
+    return -1;
+}
+
+PICOUI_HIDDEN int picoui_backend_list_set_select_color(void *backend_widget, unsigned int rgb)
+{
+    (void)backend_widget;
+    (void)rgb;
+    return -1;
+}
+
+PICOUI_HIDDEN int picoui_backend_list_set_align(void *backend_widget, enum picoui_align align)
+{
+    (void)backend_widget;
+    (void)align;
+    return -1;
+}
+
+PICOUI_HIDDEN int picoui_backend_list_set_item_widget(void *backend_widget,
+                                                      int index,
+                                                      void *item_widget_backend)
+{
+    (void)backend_widget;
+    (void)index;
+    (void)item_widget_backend;
+    return -1;
+}
+
+PICOUI_HIDDEN int picoui_list_backend_set_selected_index(void *backend_widget, int index)
+{
+    struct picoui_backend_widget *backend = backend_widget;
+    struct picoui_list *list;
+    ldList_t *ld_list;
+
+    if (backend == 0 ||
+        backend->kind != PICOUI_BACKEND_WIDGET_LIST ||
+        backend->host_widget == 0) {
+        return -1;
+    }
+
+    list = (struct picoui_list *)backend->host_widget;
+    if (index < 0 || index >= list->item_count) {
+        return -1;
+    }
+    ld_list = picoui_list_ld_widget(list);
+    if (list->widget.backend_widget != backend || ld_list == 0) {
+        return -1;
+    }
+
+    ldListSetSelectItem(ld_list, (int8_t)index);
+    backend->value = index;
+    return 0;
+}
+
+PICOUI_HIDDEN int picoui_list_backend_get_selected_index(void *backend_widget)
+{
+    struct picoui_backend_widget *backend = backend_widget;
+    struct picoui_list *list;
+    ldList_t *ld_list;
+    int selected_index;
+
+    if (backend == 0 ||
+        backend->kind != PICOUI_BACKEND_WIDGET_LIST ||
+        backend->host_widget == 0) {
+        return -1;
+    }
+
+    list = (struct picoui_list *)backend->host_widget;
+    ld_list = picoui_list_ld_widget(list);
+    if (list->widget.backend_widget != backend || ld_list == 0) {
+        return -1;
+    }
+
+    selected_index = ldListGetSelectItem(ld_list);
+    if (selected_index < -1 || selected_index >= list->item_count) {
+        return -1;
+    }
+    return selected_index;
+}
+
+PICOUI_HIDDEN int picoui_list_backend_sync_selected_index(struct picoui_list *list,
+                                                          int *selected_index_out)
+{
+    struct picoui_backend_widget *backend;
+    int selected_index;
+
+    if (list == 0 || list->widget.backend_widget == 0) {
+        return -1;
+    }
+
+    backend = (struct picoui_backend_widget *)list->widget.backend_widget;
+    if (backend->kind != PICOUI_BACKEND_WIDGET_LIST || backend->ld_widget == 0) {
+        return -1;
+    }
+
+    selected_index = picoui_list_get_selected_index(list);
+    if (selected_index < -1 || selected_index >= list->item_count) {
+        return -1;
+    }
+
+    list->selected_index = selected_index;
+    backend->value = selected_index;
+    if (selected_index_out != 0) {
+        *selected_index_out = selected_index;
+    }
+    return 0;
 }

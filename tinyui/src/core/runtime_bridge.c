@@ -1,8 +1,115 @@
 #include "internal.h"
 #include "runtime_bridge.h"
 #include "../../../../src/gui/ldBase.h"
+#include "../../../../src/gui/ldButton.h"
+#include "../../../../src/gui/ldCheckBox.h"
+#include "../../../../src/gui/ldList.h"
+#include "../../../../src/gui/ldSlider.h"
+#include "../../../../src/gui/ldSwitch.h"
+#include "../../../../src/misc/ldMsg.h"
 
 void ldBaseNodeRemove(arm_2d_control_node_t *ptNode);
+int picoui_backend_widget_bind_ld_event_bridge(void *backend_widget,
+                                               struct ld_scene_t *scene,
+                                               void *sender);
+
+static bool picoui_runtime_bridge_ld_event_bridge_slot(struct ld_scene_t *scene, ldMsg_t msg)
+{
+    struct picoui_backend_widget *backend = NULL;
+
+    (void)scene;
+
+    if (msg.ptSender == NULL) {
+        return false;
+    }
+
+    backend = (struct picoui_backend_widget *)((ldBase_t *)msg.ptSender)->pInfo;
+    if (backend == NULL) {
+        return false;
+    }
+
+    picoui_backend_widget_dispatch_native_signal(backend, msg.signal, msg.value);
+    return false;
+}
+
+static int picoui_runtime_bridge_connect_native_events(struct picoui_backend_widget *backend)
+{
+    uint8_t primary_signal = SIGNAL_NO_OPERATION;
+    uint8_t secondary_signal = SIGNAL_NO_OPERATION;
+    uint8_t tertiary_signal = SIGNAL_NO_OPERATION;
+    ldBase_t *sender = NULL;
+    ldAssn_t *assn = NULL;
+
+    if (backend == NULL || backend->ld_widget == NULL) {
+        return -1;
+    }
+
+    sender = (ldBase_t *)backend->ld_widget;
+    sender->pInfo = backend;
+
+    switch (backend->kind) {
+    case PICOUI_BACKEND_WIDGET_BUTTON:
+        primary_signal = SIGNAL_PRESS;
+        secondary_signal = SIGNAL_RELEASE;
+        tertiary_signal = SIGNAL_HOLD_DOWN;
+        break;
+    case PICOUI_BACKEND_WIDGET_LIST:
+        primary_signal = SIGNAL_CLICKED_ITEM;
+        break;
+    case PICOUI_BACKEND_WIDGET_CHECKBOX:
+    case PICOUI_BACKEND_WIDGET_SWITCH:
+    case PICOUI_BACKEND_WIDGET_SLIDER:
+        primary_signal = SIGNAL_VALUE_CHANGED;
+        break;
+    default:
+        return 0;
+    }
+
+    assn = sender->ptAssn;
+    while (assn != NULL) {
+        if (assn->signal == primary_signal && assn->pFunc == picoui_runtime_bridge_ld_event_bridge_slot) {
+            primary_signal = SIGNAL_NO_OPERATION;
+            break;
+        }
+        assn = assn->ptNext;
+    }
+    if (primary_signal != SIGNAL_NO_OPERATION
+        && !ldMsgConnect(sender, primary_signal, picoui_runtime_bridge_ld_event_bridge_slot)) {
+        return -1;
+    }
+    if (secondary_signal != SIGNAL_NO_OPERATION) {
+        assn = sender->ptAssn;
+        while (assn != NULL) {
+            if (assn->signal == secondary_signal
+                && assn->pFunc == picoui_runtime_bridge_ld_event_bridge_slot) {
+                secondary_signal = SIGNAL_NO_OPERATION;
+                break;
+            }
+            assn = assn->ptNext;
+        }
+        if (secondary_signal != SIGNAL_NO_OPERATION
+            && !ldMsgConnect(sender, secondary_signal, picoui_runtime_bridge_ld_event_bridge_slot)) {
+            return -1;
+        }
+    }
+    if (tertiary_signal != SIGNAL_NO_OPERATION) {
+        assn = sender->ptAssn;
+        while (assn != NULL) {
+            if (assn->signal == tertiary_signal
+                && assn->pFunc == picoui_runtime_bridge_ld_event_bridge_slot) {
+                tertiary_signal = SIGNAL_NO_OPERATION;
+                break;
+            }
+            assn = assn->ptNext;
+        }
+        if (tertiary_signal != SIGNAL_NO_OPERATION
+            && !ldMsgConnect(sender, tertiary_signal, picoui_runtime_bridge_ld_event_bridge_slot)) {
+            return -1;
+        }
+    }
+
+    return 0;
+}
 
 struct picoui_backend_app_state *picoui_runtime_bridge_backend_state_from_parent(void *backend_widget)
 {
@@ -49,6 +156,50 @@ int picoui_runtime_bridge_bind_theme(struct picoui_app *app, struct picoui_theme
 
     app->theme = theme;
     app_state->theme = theme;
+    return 0;
+}
+
+int picoui_backend_widget_bind_host(void *backend_widget, struct picoui_widget *widget)
+{
+    struct picoui_backend_widget *backend = backend_widget;
+    struct picoui_backend_app_state *app_state = NULL;
+
+    if (backend == 0 || widget == 0) {
+        return -1;
+    }
+
+    if (picoui_widget_bind_backend_host(widget, backend) != 0) {
+        return -1;
+    }
+    backend->edit_result_on_finish = PICOUI_EDIT_RESULT_NONE;
+    picoui_backend_widget_init_data_model(backend);
+    app_state = picoui_runtime_bridge_backend_state(backend->owner);
+    if (app_state != NULL && app_state->ld_scene != NULL && backend->ld_widget != NULL) {
+        if (picoui_backend_widget_bind_ld_event_bridge(backend,
+                                                       app_state->ld_scene,
+                                                       backend->ld_widget) != 0) {
+            return -1;
+        }
+    }
+    return 0;
+}
+
+int picoui_backend_widget_bind_ld_event_bridge(void *backend_widget,
+                                               struct ld_scene_t *scene,
+                                               void *sender)
+{
+    struct picoui_backend_widget *backend = backend_widget;
+
+    if (backend == 0 || scene == 0 || sender == 0) {
+        return -1;
+    }
+
+    if (picoui_runtime_bridge_connect_native_events(backend) != 0) {
+        return -1;
+    }
+
+    backend->ld_event_bridge_scene = scene;
+    backend->ld_event_bridge_sender = sender;
     return 0;
 }
 

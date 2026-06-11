@@ -370,6 +370,68 @@ static void test_theme_native_parts_apply_to_real_backend_fields(void)
     picoui_theme_destroy(theme);
 }
 
+static void test_theme_apply_requires_theme_owned_native_style_dispatch(void)
+{
+    struct picoui_theme *theme = picoui_theme_create();
+    struct picoui_app *app = picoui_app_create();
+    struct picoui_window *win;
+    struct picoui_button *button;
+    struct picoui_checkbox *checkbox;
+    struct picoui_switch *sw;
+    struct picoui_slider *slider;
+
+    assert(theme != NULL);
+    assert(app != NULL);
+    assert(picoui_theme_set_color(theme, PICOUI_COLOR_TEXT_PRIMARY, 0x111213U) == 0);
+    assert(picoui_theme_set_color(theme, PICOUI_COLOR_BG, 0x212223U) == 0);
+    assert(picoui_theme_set_color(theme, PICOUI_COLOR_PANEL, 0x313233U) == 0);
+    assert(picoui_theme_set_color(theme, PICOUI_COLOR_BORDER, 0x414243U) == 0);
+    assert(picoui_theme_set_color(theme, PICOUI_COLOR_ACCENT, 0x515253U) == 0);
+    assert(picoui_theme_set_color(theme, PICOUI_COLOR_DISABLED, 0x616263U) == 0);
+    assert(picoui_theme_set_metric(theme, PICOUI_METRIC_PADDING, 6) == 0);
+    assert(picoui_theme_set_metric(theme, PICOUI_METRIC_RADIUS, 5) == 0);
+    assert(picoui_theme_set_metric(theme, PICOUI_METRIC_CONTROL_HEIGHT, 21) == 0);
+    assert(picoui_app_set_theme(app, theme) == 0);
+
+    win = picoui_window_create(app, "dispatch_root");
+    button = picoui_button_create(win, "dispatch_button");
+    checkbox = picoui_checkbox_create(win, "dispatch_checkbox");
+    sw = picoui_switch_create(win, "dispatch_switch");
+    slider = picoui_slider_create(win, "dispatch_slider");
+    assert(win != NULL);
+    assert(button != NULL);
+    assert(checkbox != NULL);
+    assert(sw != NULL);
+    assert(slider != NULL);
+
+    assert(picoui_theme_apply_to_widget(theme,
+                                        &button->widget,
+                                        PICOUI_PART_MAIN,
+                                        PICOUI_STATE_DEFAULT) == 0);
+    assert_button_backend_style(button, 0x313233U, 0x515253U, 0x111213U);
+
+    assert(picoui_theme_apply_to_widget(theme,
+                                        &checkbox->widget,
+                                        PICOUI_PART_INDICATOR,
+                                        PICOUI_STATE_DEFAULT) == 0);
+    assert_checkbox_backend_style(checkbox, 0x313233U, 0x313233U, 0x111213U);
+
+    assert(picoui_theme_apply_to_widget(theme,
+                                        &sw->widget,
+                                        PICOUI_PART_KNOB,
+                                        PICOUI_STATE_DEFAULT) == 0);
+    assert_switch_backend_style(sw, 0x414243U, 0x515253U, 0x313233U, 0x414243U);
+
+    assert(picoui_theme_apply_to_widget(theme,
+                                        &slider->widget,
+                                        PICOUI_PART_TRACK,
+                                        PICOUI_STATE_DEFAULT) == 0);
+    assert_slider_backend_style(slider, 0x414243U, 0x414243U, 0x515253U);
+
+    picoui_app_destroy(app);
+    picoui_theme_destroy(theme);
+}
+
 static void test_app_set_theme_syncs_runtime_bridge_state(void)
 {
     struct picoui_app *app = picoui_app_create();
@@ -418,6 +480,28 @@ static void test_app_set_theme_does_not_dirty_public_state_when_runtime_bind_fai
     picoui_theme_destroy(theme);
 }
 
+static void test_theme_shared_style_apply_helpers_reject_null_and_unsupported_backend(void)
+{
+    struct picoui_backend_widget backend = {0};
+
+    assert(picoui_theme_apply_widget_style(0,
+                                           PICOUI_PART_MAIN,
+                                           PICOUI_STATE_DEFAULT,
+                                           0x111111U,
+                                           0x222222U,
+                                           0x333333U)
+           == -1);
+
+    backend.kind = PICOUI_BACKEND_WIDGET_QRCODE;
+    assert(picoui_theme_apply_widget_style(&backend,
+                                           PICOUI_PART_MAIN,
+                                           PICOUI_STATE_DEFAULT,
+                                           0x111111U,
+                                           0x222222U,
+                                           0x333333U)
+           == -1);
+}
+
 int main(void)
 {
     struct picoui_theme *theme = picoui_theme_create();
@@ -452,6 +536,7 @@ int main(void)
     assert(picoui_theme_set_metric(theme, PICOUI_METRIC_CONTROL_HEIGHT, 19) == 0);
 
     test_app_set_theme_syncs_runtime_bridge_state();
+    test_theme_apply_requires_theme_owned_native_style_dispatch();
 
     app = picoui_app_create();
     assert(app != NULL);
@@ -654,6 +739,7 @@ int main(void)
     test_image_theme_and_enabled_are_support_not_reject();
     test_theme_native_parts_apply_to_real_backend_fields();
     test_app_set_theme_does_not_dirty_public_state_when_runtime_bind_fails();
+    test_theme_shared_style_apply_helpers_reject_null_and_unsupported_backend();
 
     picoui_app_destroy(app);
     picoui_theme_destroy(theme);

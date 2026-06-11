@@ -489,19 +489,24 @@ int picoui_backend_window_set_grid_columns(struct picoui_window *window, const i
 {
     struct picoui_backend_widget *backend_widget = picoui_backend_window_get(window);
     ldWindow_t *ld_window;
+    int16_t mapped_tracks[PICOUI_BACKEND_LAYOUT_MAX_TRACKS];
+    int i;
 
     if (backend_widget == 0 || tracks == 0 || count <= 0 || count > PICOUI_BACKEND_LAYOUT_MAX_TRACKS) {
         return -1;
     }
 
-    if (picoui_backend_copy_tracks(backend_widget->window_layout.grid_cols, tracks, count) != 0) {
+    if (picoui_backend_copy_tracks(mapped_tracks, tracks, count) != 0) {
         return -1;
     }
-    backend_widget->window_layout.grid_col_count = count;
     ld_window = picoui_backend_get_ld_window(backend_widget);
     if (ld_window == NULL) {
         return -1;
     }
+    for (i = 0; i < PICOUI_BACKEND_LAYOUT_MAX_TRACKS; ++i) {
+        backend_widget->window_layout.grid_cols[i] = mapped_tracks[i];
+    }
+    backend_widget->window_layout.grid_col_count = count;
     ldWindowSetGridDscArray(ld_window,
                             backend_widget->window_layout.grid_cols,
                             backend_widget->window_layout.grid_row_count > 0
@@ -524,19 +529,24 @@ int picoui_backend_window_set_grid_rows(struct picoui_window *window, const int 
 {
     struct picoui_backend_widget *backend_widget = picoui_backend_window_get(window);
     ldWindow_t *ld_window;
+    int16_t mapped_tracks[PICOUI_BACKEND_LAYOUT_MAX_TRACKS];
+    int i;
 
     if (backend_widget == 0 || tracks == 0 || count <= 0 || count > PICOUI_BACKEND_LAYOUT_MAX_TRACKS) {
         return -1;
     }
 
-    if (picoui_backend_copy_tracks(backend_widget->window_layout.grid_rows, tracks, count) != 0) {
+    if (picoui_backend_copy_tracks(mapped_tracks, tracks, count) != 0) {
         return -1;
     }
-    backend_widget->window_layout.grid_row_count = count;
     ld_window = picoui_backend_get_ld_window(backend_widget);
     if (ld_window == NULL) {
         return -1;
     }
+    for (i = 0; i < PICOUI_BACKEND_LAYOUT_MAX_TRACKS; ++i) {
+        backend_widget->window_layout.grid_rows[i] = mapped_tracks[i];
+    }
+    backend_widget->window_layout.grid_row_count = count;
     ldWindowSetGridDscArray(ld_window,
                             backend_widget->window_layout.grid_col_count > 0
                                 ? backend_widget->window_layout.grid_cols
@@ -657,15 +667,15 @@ int picoui_backend_window_set_padding(struct picoui_window *window,
         return -1;
     }
 
+    ld_window = picoui_backend_get_ld_window(backend_widget);
+    if (ld_window == NULL) {
+        return -1;
+    }
     backend_widget->window_layout.padding_left = left;
     backend_widget->window_layout.padding_top = top;
     backend_widget->window_layout.padding_right = right;
     backend_widget->window_layout.padding_bottom = bottom;
     backend_widget->window_layout.has_explicit_flex_padding = 1;
-    ld_window = picoui_backend_get_ld_window(backend_widget);
-    if (ld_window == NULL) {
-        return -1;
-    }
     {
         ldLayoutType_t layout_type = ld_window->layoutTpye;
         ldWindowSetPadding(ld_window, picoui_backend_padding_group(left, top, right, bottom));
@@ -698,15 +708,15 @@ int picoui_backend_window_set_grid_padding(struct picoui_window *window,
         return -1;
     }
 
+    ld_window = picoui_backend_get_ld_window(backend_widget);
+    if (ld_window == NULL) {
+        return -1;
+    }
     backend_widget->window_layout.grid_padding_left = left;
     backend_widget->window_layout.grid_padding_top = top;
     backend_widget->window_layout.grid_padding_right = right;
     backend_widget->window_layout.grid_padding_bottom = bottom;
     backend_widget->window_layout.has_explicit_grid_padding = 1;
-    ld_window = picoui_backend_get_ld_window(backend_widget);
-    if (ld_window == NULL) {
-        return -1;
-    }
     {
         ldLayoutType_t layout_type = ld_window->layoutTpye;
         ldWindowSetGridPadding(ld_window, picoui_backend_padding_group(left, top, right, bottom));

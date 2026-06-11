@@ -325,11 +325,11 @@ int picoui_slider_set_value(struct picoui_slider *slider, int value)
     }
 
     slider->value = value;
-    return picoui_backend_widget_update_value(slider->widget.backend_widget,
-                                              slider->value,
-                                              slider->cb,
-                                              &slider->widget,
-                                              slider->user_data);
+    return picoui_widget_update_value(slider->widget.backend_widget,
+                                      slider->value,
+                                      slider->cb,
+                                      &slider->widget,
+                                      slider->user_data);
 }
 
 /**
@@ -378,11 +378,11 @@ int picoui_slider_set_range(struct picoui_slider *slider, int min_value, int max
 
     slider->value = remapped_value;
     if (slider->widget.backend_widget != 0) {
-        return picoui_backend_widget_update_value(slider->widget.backend_widget,
-                                                  slider->value,
-                                                  0,
-                                                  &slider->widget,
-                                                  0);
+        return picoui_widget_update_value(slider->widget.backend_widget,
+                                          slider->value,
+                                          0,
+                                          &slider->widget,
+                                          0);
     }
 
     return 0;

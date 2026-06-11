@@ -1226,6 +1226,101 @@ static void test_layout_child_setter_rejects_corrupted_binding_without_mutating_
     picoui_app_destroy(app);
 }
 
+static void test_layout_window_padding_setters_reject_corrupted_binding_without_mutating_state(void)
+{
+    struct picoui_app *app = picoui_app_create();
+    struct picoui_window *win = picoui_window_create(app, "layout_corrupted_window");
+    struct picoui_backend_widget *backend = win->widget.backend_widget;
+    ldBase_t *ld_base = (ldBase_t *)backend->ld_widget;
+    ldWindow_t *ld_window = (ldWindow_t *)backend->ld_widget;
+    int original_widget_type = ld_base->widgetType;
+
+    assert(picoui_window_set_padding(win, 2, 4, 6, 8) == 0);
+    assert(picoui_window_set_grid_padding(win, 3, 5, 7, 9) == 0);
+    assert(ld_window->flexPadding.left == 2);
+    assert(ld_window->flexPadding.top == 4);
+    assert(ld_window->flexPadding.right == 6);
+    assert(ld_window->flexPadding.bottom == 8);
+    assert(ld_window->gridPadding.left == 3);
+    assert(ld_window->gridPadding.top == 5);
+    assert(ld_window->gridPadding.right == 7);
+    assert(ld_window->gridPadding.bottom == 9);
+
+    ld_base->widgetType = widgetTypeButton;
+
+    assert(picoui_window_set_padding(win, 11, 12, 13, 14) == -1);
+    assert(picoui_window_set_grid_padding(win, 15, 16, 17, 18) == -1);
+
+    assert(ld_window->flexPadding.left == 2);
+    assert(ld_window->flexPadding.top == 4);
+    assert(ld_window->flexPadding.right == 6);
+    assert(ld_window->flexPadding.bottom == 8);
+    assert(ld_window->gridPadding.left == 3);
+    assert(ld_window->gridPadding.top == 5);
+    assert(ld_window->gridPadding.right == 7);
+    assert(ld_window->gridPadding.bottom == 9);
+    assert(backend->window_layout.padding_left == 2);
+    assert(backend->window_layout.padding_top == 4);
+    assert(backend->window_layout.padding_right == 6);
+    assert(backend->window_layout.padding_bottom == 8);
+    assert(backend->window_layout.grid_padding_left == 3);
+    assert(backend->window_layout.grid_padding_top == 5);
+    assert(backend->window_layout.grid_padding_right == 7);
+    assert(backend->window_layout.grid_padding_bottom == 9);
+    assert(backend->window_layout.has_explicit_flex_padding == 1);
+    assert(backend->window_layout.has_explicit_grid_padding == 1);
+
+    ld_base->widgetType = original_widget_type;
+
+    picoui_app_destroy(app);
+}
+
+static void test_layout_grid_setters_reject_corrupted_binding_without_mutating_cached_state(void)
+{
+    struct picoui_app *app = picoui_app_create();
+    struct picoui_window *win = picoui_window_create(app, "layout_corrupted_grid");
+    struct picoui_backend_widget *backend = win->widget.backend_widget;
+    ldBase_t *ld_base = (ldBase_t *)backend->ld_widget;
+    ldWindow_t *ld_window = (ldWindow_t *)backend->ld_widget;
+    int original_widget_type = ld_base->widgetType;
+    int original_cols[3] = {80, -1, 0};
+    int original_rows[3] = {24, -2, 0};
+    int i;
+
+    assert(picoui_grid_set_columns(win, original_cols, 3) == 0);
+    assert(picoui_grid_set_rows(win, original_rows, 3) == 0);
+    assert(picoui_grid_set_gap(win, 5, 7) == 0);
+    assert(picoui_grid_set_align(win, PICOUI_ALIGN_END, PICOUI_ALIGN_SPACE_AROUND) == 0);
+
+    ld_base->widgetType = widgetTypeButton;
+
+    assert(picoui_grid_set_columns(win, (int[]){33, -2, 0}, 3) == -1);
+    assert(picoui_grid_set_rows(win, (int[]){18, -3, 0}, 3) == -1);
+    assert(picoui_grid_set_gap(win, 11, 13) == -1);
+    assert(picoui_grid_set_align(win, PICOUI_ALIGN_CENTER, PICOUI_ALIGN_SPACE_BETWEEN) == -1);
+
+    assert(backend->window_layout.grid_col_count == 3);
+    assert(backend->window_layout.grid_row_count == 3);
+    assert(backend->window_layout.grid_row_gap == 5);
+    assert(backend->window_layout.grid_col_gap == 7);
+    assert(backend->window_layout.grid_col_align == PICOUI_ALIGN_END);
+    assert(backend->window_layout.grid_row_align == PICOUI_ALIGN_SPACE_AROUND);
+    for (i = 0; i < 3; ++i) {
+        assert(backend->window_layout.grid_cols[i] == original_cols[i]);
+        assert(backend->window_layout.grid_rows[i] == original_rows[i]);
+        assert(ld_window->gridDscArray.col[i] == original_cols[i]);
+        assert(ld_window->gridDscArray.row[i] == (i == 1 ? LD_GRID_CONTENT : original_rows[i]));
+    }
+    assert(ld_window->gridRowGap == 5);
+    assert(ld_window->gridColumnGap == 7);
+    assert(ld_window->gridColAlign == ldGridAlignEnd);
+    assert(ld_window->gridRowAlign == ldGridAlignSpaceAround);
+
+    ld_base->widgetType = original_widget_type;
+
+    picoui_app_destroy(app);
+}
+
 int main(void)
 {
     struct picoui_app *app = picoui_app_create();
@@ -1284,5 +1379,7 @@ int main(void)
     test_layout_setters_with_missing_native_binding_reject_without_mutating_state();
     test_layout_setters_reject_unbound_window_without_mutating_state();
     test_layout_child_setter_rejects_corrupted_binding_without_mutating_state();
+    test_layout_window_padding_setters_reject_corrupted_binding_without_mutating_state();
+    test_layout_grid_setters_reject_corrupted_binding_without_mutating_cached_state();
     return 0;
 }

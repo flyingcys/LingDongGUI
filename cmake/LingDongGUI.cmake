@@ -206,12 +206,9 @@ function(ld_define_core_targets)
 
     set(LD_PICOUI_BACKEND_LDGUI_SOURCES
         ${LD_REPO_ROOT}/tinyui/src/backend/ldgui/backend_app.c
-        ${LD_REPO_ROOT}/tinyui/src/backend/ldgui/backend_style_apply.c
         ${LD_REPO_ROOT}/tinyui/src/backend/ldgui/backend_layout.c
         ${LD_REPO_ROOT}/tinyui/src/backend/ldgui/backend_event.c
-        ${LD_REPO_ROOT}/tinyui/src/backend/ldgui/backend_keyboard.c
         ${LD_REPO_ROOT}/tinyui/src/backend/ldgui/backend_table.c
-        ${LD_REPO_ROOT}/tinyui/src/backend/ldgui/backend_list.c
     )
 
     foreach(LD_PICOUI_BACKEND_TARGET IN ITEMS picoui_backend_ldgui picoui_backend_ldgui_runtime)

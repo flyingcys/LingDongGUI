@@ -235,11 +235,11 @@ struct picoui_switch *picoui_switch_create_with_props(struct picoui_window *pare
     sw->checked = props->checked != 0;
     sw->cb = 0;
     sw->user_data = 0;
-    if (picoui_backend_widget_update_value(backend,
-                                           sw->checked,
-                                           0,
-                                           &sw->widget,
-                                           0) != 0) {
+    if (picoui_widget_update_value(backend,
+                                   sw->checked,
+                                   0,
+                                   &sw->widget,
+                                   0) != 0) {
         free(sw);
         return 0;
     }
@@ -310,11 +310,11 @@ int picoui_switch_set_checked(struct picoui_switch *sw, int checked)
     }
 
     sw->checked = normalized_checked;
-    return picoui_backend_widget_update_value(sw->widget.backend_widget,
-                                              sw->checked,
-                                              sw->cb,
-                                              &sw->widget,
-                                              sw->user_data);
+    return picoui_widget_update_value(sw->widget.backend_widget,
+                                      sw->checked,
+                                      sw->cb,
+                                      &sw->widget,
+                                      sw->user_data);
 }
 
 /**

@@ -19,12 +19,14 @@
 #include "picoui/keyboard.h"
 #include "internal.h"
 #include "../core/runtime_bridge.h"
+#include "ldLineEdit.h"
 #include "ldKeyboard.h"
 
 #include <string.h>
 #include <stdlib.h>
 
 extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
+void ldKeyboardInputAscii(ldKeyboard_t *ptWidget, uint8_t ascii);
 
 static void picoui_keyboard_free_layout(struct picoui_keyboard *keyboard)
 {
@@ -86,6 +88,140 @@ static int picoui_keyboard_get_selected_key_code_internal(const struct picoui_ke
 
     *key_code = ld_keyboard->keyCode;
     return 0;
+}
+
+static ldKeyboard_t *picoui_keyboard_get_ld_widget(const struct picoui_keyboard *keyboard)
+{
+    struct picoui_backend_widget *backend;
+
+    if (keyboard == 0 || keyboard->widget.backend_widget == 0) {
+        return 0;
+    }
+
+    backend = (struct picoui_backend_widget *)keyboard->widget.backend_widget;
+    if (backend->kind != PICOUI_BACKEND_WIDGET_KEYBOARD || backend->ld_widget == 0) {
+        return 0;
+    }
+
+    return (ldKeyboard_t *)backend->ld_widget;
+}
+
+static struct picoui_line_edit *picoui_keyboard_get_target_line_edit_local(
+    struct picoui_backend_widget *backend)
+{
+    struct picoui_app *app;
+    struct picoui_widget *target;
+    struct picoui_backend_widget *target_backend;
+    ldBase_t *ld_base;
+
+    if (backend == 0 || backend->owner == 0) {
+        return 0;
+    }
+
+    app = backend->owner;
+    target = app->editing_owner != 0 ? app->editing_owner : app->focus_owner;
+    if (target == 0 || target->backend_widget == 0) {
+        return 0;
+    }
+
+    target_backend = (struct picoui_backend_widget *)target->backend_widget;
+    if (target_backend->kind != PICOUI_BACKEND_WIDGET_TEXT || target_backend->ld_widget == 0) {
+        return 0;
+    }
+
+    ld_base = (ldBase_t *)target_backend->ld_widget;
+    if (ld_base->widgetType != widgetTypeLineEdit) {
+        return 0;
+    }
+    return (struct picoui_line_edit *)target;
+}
+
+static const kbBtnInfo_t *picoui_keyboard_get_custom_button_list_local(struct picoui_backend_widget *backend)
+{
+    struct picoui_keyboard *keyboard;
+    kbBtnInfo_t *native_buttons;
+    int i;
+
+    if (backend == 0 || backend->host_widget == 0) {
+        return 0;
+    }
+
+    keyboard = (struct picoui_keyboard *)backend->host_widget;
+    if (keyboard->layout_entries == 0 || keyboard->layout_count <= 0) {
+        return 0;
+    }
+
+    if (keyboard->native_layout != 0 &&
+        keyboard->native_layout != (void *)keyboard->layout_entries) {
+        return (const kbBtnInfo_t *)keyboard->native_layout;
+    }
+
+    native_buttons = calloc((size_t)keyboard->layout_count + 1U, sizeof(*native_buttons));
+    if (native_buttons == 0) {
+        return 0;
+    }
+
+    for (i = 0; i < keyboard->layout_count; ++i) {
+        struct picoui_keyboard_button button_info;
+
+        native_buttons[i].region.tLocation.iX = (int16_t)keyboard->layout_entries[i].x;
+        native_buttons[i].region.tLocation.iY = (int16_t)keyboard->layout_entries[i].y;
+        native_buttons[i].region.tSize.iWidth = (int16_t)keyboard->layout_entries[i].width;
+        native_buttons[i].region.tSize.iHeight = (int16_t)keyboard->layout_entries[i].height;
+        native_buttons[i].pText = (uint8_t *)keyboard->layout_entries[i].text;
+        native_buttons[i].keyCode = (uint8_t)keyboard->layout_entries[i].key_code;
+        native_buttons[i].pressColor = __RGB((keyboard->layout_entries[i].press_color >> 16) & 0xFFU,
+                                             (keyboard->layout_entries[i].press_color >> 8) & 0xFFU,
+                                             keyboard->layout_entries[i].press_color & 0xFFU);
+        native_buttons[i].releaseColor = __RGB((keyboard->layout_entries[i].release_color >> 16) & 0xFFU,
+                                               (keyboard->layout_entries[i].release_color >> 8) & 0xFFU,
+                                               keyboard->layout_entries[i].release_color & 0xFFU);
+
+        button_info.x = keyboard->layout_entries[i].x;
+        button_info.y = keyboard->layout_entries[i].y;
+        button_info.width = keyboard->layout_entries[i].width;
+        button_info.height = keyboard->layout_entries[i].height;
+        button_info.text = keyboard->layout_entries[i].text;
+        button_info.key_code = keyboard->layout_entries[i].key_code;
+        button_info.press_color = keyboard->layout_entries[i].press_color;
+        button_info.release_color = keyboard->layout_entries[i].release_color;
+        if (keyboard->draw_cb != 0) {
+            keyboard->draw_invocation_count++;
+            keyboard->last_draw_key_code = button_info.key_code;
+            keyboard->draw_cb(keyboard, &button_info, keyboard->draw_user_data);
+        }
+    }
+
+    keyboard->native_layout = native_buttons;
+    return native_buttons;
+}
+
+static void picoui_keyboard_prepare_local(ldKeyboard_t *ld_keyboard,
+                                          struct picoui_line_edit *line_edit)
+{
+    struct picoui_backend_widget *backend;
+    const kbBtnInfo_t *custom_buttons;
+
+    if (ld_keyboard == 0) {
+        return;
+    }
+
+    if (line_edit != 0) {
+        ld_keyboard->editType = (ldEditType_t)line_edit->type;
+    }
+    backend = (struct picoui_backend_widget *)((ldBase_t *)ld_keyboard)->pInfo;
+    custom_buttons = picoui_keyboard_get_custom_button_list_local(backend);
+    if (ld_keyboard->pBtnList == 0 || ld_keyboard->isWaitInit) {
+        ld_keyboard->pBtnList = custom_buttons != 0
+                              ? custom_buttons
+                              : ldKeyboardGetTargetBtnList(ld_keyboard);
+        ld_keyboard->isWaitInit = false;
+    } else if (custom_buttons != 0) {
+        ld_keyboard->pBtnList = custom_buttons;
+    } else {
+        ld_keyboard->pBtnList = ldKeyboardGetTargetBtnList(ld_keyboard);
+    }
+    ldBaseSetHidden((ldBase_t *)ld_keyboard, false);
 }
 
 /**
@@ -234,11 +370,33 @@ struct picoui_keyboard *picoui_keyboard_create_with_props(struct picoui_window *
 
 int picoui_keyboard_input_ascii(struct picoui_keyboard *keyboard, unsigned int ascii)
 {
+    struct picoui_backend_widget *backend;
+    struct picoui_line_edit *line_edit;
+    ldKeyboard_t *ld_keyboard;
+    ldLineEdit_t *ld_line_edit;
+
     if (keyboard == 0) {
         return -1;
     }
 
-    return picoui_backend_keyboard_input_ascii(keyboard->widget.backend_widget, ascii);
+    backend = (struct picoui_backend_widget *)keyboard->widget.backend_widget;
+    line_edit = picoui_keyboard_get_target_line_edit_local(backend);
+    ld_keyboard = picoui_keyboard_get_ld_widget(keyboard);
+    if (line_edit == 0 || ld_keyboard == 0) {
+        return -1;
+    }
+    ld_line_edit = (ldLineEdit_t *)((struct picoui_backend_widget *)line_edit->widget.backend_widget)->ld_widget;
+    if (ld_line_edit == 0) {
+        return -1;
+    }
+
+    picoui_keyboard_prepare_local(ld_keyboard, line_edit);
+    ld_keyboard->ppStr = &ld_line_edit->pText;
+    ld_keyboard->strMax = ld_line_edit->textMax;
+    ld_keyboard->editorId = ((struct picoui_backend_widget *)line_edit->widget.backend_widget)->ld_name_id;
+    ldKeyboardInputAscii(ld_keyboard, (uint8_t)ascii);
+    line_edit->widget.text = picoui_backend_line_edit_get_text(line_edit->widget.backend_widget);
+    return 0;
 }
 
 /**
@@ -251,11 +409,26 @@ int picoui_keyboard_input_ascii(struct picoui_keyboard *keyboard, unsigned int a
 
 int picoui_keyboard_navigate(struct picoui_keyboard *keyboard, int direction)
 {
+    struct picoui_backend_widget *backend;
+    ldKeyboard_t *ld_keyboard;
+
     if (keyboard == 0) {
         return -1;
     }
 
-    return picoui_backend_keyboard_navigate(keyboard->widget.backend_widget, direction);
+    backend = (struct picoui_backend_widget *)keyboard->widget.backend_widget;
+    if (backend == 0 || backend->host_widget == 0 || !picoui_widget_is_focus_owner(backend->host_widget)) {
+        return -1;
+    }
+
+    ld_keyboard = picoui_keyboard_get_ld_widget(keyboard);
+    if (ld_keyboard == 0) {
+        return -1;
+    }
+
+    picoui_keyboard_prepare_local(ld_keyboard, picoui_keyboard_get_target_line_edit_local(backend));
+    ldKeyboardNavigate(ld_keyboard, (ldNavDir_t)direction);
+    return 0;
 }
 
 /**
@@ -267,11 +440,22 @@ int picoui_keyboard_navigate(struct picoui_keyboard *keyboard, int direction)
 
 int picoui_keyboard_update(struct picoui_keyboard *keyboard)
 {
+    struct picoui_backend_widget *backend;
+    ldKeyboard_t *ld_keyboard;
+
     if (keyboard == 0) {
         return -1;
     }
 
-    return picoui_backend_keyboard_update(keyboard->widget.backend_widget);
+    backend = (struct picoui_backend_widget *)keyboard->widget.backend_widget;
+    ld_keyboard = picoui_keyboard_get_ld_widget(keyboard);
+    if (backend == 0 || ld_keyboard == 0) {
+        return -1;
+    }
+
+    picoui_keyboard_prepare_local(ld_keyboard, picoui_keyboard_get_target_line_edit_local(backend));
+    ldKeyboardUpdate(ld_keyboard);
+    return 0;
 }
 
 /**
@@ -284,11 +468,30 @@ int picoui_keyboard_update(struct picoui_keyboard *keyboard)
 
 int picoui_keyboard_button_update(struct picoui_keyboard *keyboard, unsigned int key_code)
 {
+    struct picoui_backend_widget *backend;
+    ldKeyboard_t *ld_keyboard;
+
     if (keyboard == 0 || key_code > 0xFFU) {
         return -1;
     }
 
-    return picoui_backend_keyboard_button_update(keyboard->widget.backend_widget, (unsigned char)key_code);
+    backend = (struct picoui_backend_widget *)keyboard->widget.backend_widget;
+    ld_keyboard = picoui_keyboard_get_ld_widget(keyboard);
+    if (backend == 0 || ld_keyboard == 0) {
+        return -1;
+    }
+
+    picoui_keyboard_prepare_local(ld_keyboard, picoui_keyboard_get_target_line_edit_local(backend));
+    ld_keyboard->keyCode = (uint8_t)key_code;
+    ld_keyboard->isKeySelect = true;
+    ldKeyboardBtnUpdate(ld_keyboard, (uint8_t)key_code);
+    if (keyboard->event_cb != 0) {
+        keyboard->event_cb(keyboard,
+                           (unsigned int)key_code,
+                           PICOUI_NATIVE_SIGNAL_VALUE_CHANGED,
+                           keyboard->event_user_data);
+    }
+    return 0;
 }
 
 /**
@@ -300,11 +503,30 @@ int picoui_keyboard_button_update(struct picoui_keyboard *keyboard, unsigned int
 
 int picoui_keyboard_click(struct picoui_keyboard *keyboard)
 {
+    struct picoui_backend_widget *backend;
+    struct picoui_backend_app_state *app_state;
+    ldKeyboard_t *ld_keyboard;
+
     if (keyboard == 0) {
         return -1;
     }
 
-    return picoui_backend_keyboard_click(keyboard->widget.backend_widget);
+    backend = (struct picoui_backend_widget *)keyboard->widget.backend_widget;
+    if (backend == 0 || backend->host_widget == 0 || !picoui_widget_is_focus_owner(backend->host_widget)) {
+        return -1;
+    }
+
+    app_state = picoui_runtime_bridge_backend_state_from_parent(backend);
+    ld_keyboard = picoui_keyboard_get_ld_widget(keyboard);
+    if (app_state == 0 || app_state->ld_scene == 0 || ld_keyboard == 0) {
+        return -1;
+    }
+
+    ldKeyboardClick(app_state->ld_scene, ld_keyboard, SIGNAL_PRESS);
+    if (keyboard->event_cb != 0) {
+        keyboard->event_cb(keyboard, ld_keyboard->keyCode, PICOUI_NATIVE_SIGNAL_PRESS, keyboard->event_user_data);
+    }
+    return 0;
 }
 
 /**
@@ -316,11 +538,51 @@ int picoui_keyboard_click(struct picoui_keyboard *keyboard)
 
 int picoui_keyboard_exit(struct picoui_keyboard *keyboard)
 {
+    struct picoui_backend_widget *backend;
+    struct picoui_line_edit *line_edit;
+    struct picoui_widget *editing_owner_widget = 0;
+    ldKeyboard_t *ld_keyboard;
+    ldLineEdit_t *ld_line_edit = 0;
+
     if (keyboard == 0) {
         return -1;
     }
 
-    return picoui_backend_keyboard_exit(keyboard->widget.backend_widget);
+    backend = (struct picoui_backend_widget *)keyboard->widget.backend_widget;
+    if (backend == 0) {
+        return -1;
+    }
+
+    ld_keyboard = picoui_keyboard_get_ld_widget(keyboard);
+    if (ld_keyboard == 0) {
+        return -1;
+    }
+
+    if (backend->owner != 0) {
+        editing_owner_widget = backend->owner->editing_owner;
+    }
+
+    line_edit = picoui_keyboard_get_target_line_edit_local(backend);
+    ldKeyboardExit(ld_keyboard);
+    if (line_edit != 0) {
+        ld_line_edit = (ldLineEdit_t *)((struct picoui_backend_widget *)line_edit->widget.backend_widget)->ld_widget;
+        line_edit->editing = 0;
+        if (ld_line_edit != 0) {
+            ld_line_edit->isEditing = false;
+            ((ldBase_t *)ld_line_edit)->isDirtyRegionUpdate = true;
+        }
+        ((struct picoui_backend_widget *)line_edit->widget.backend_widget)->edit_result_on_finish =
+            PICOUI_EDIT_RESULT_CANCEL;
+        (void)picoui_widget_mark_edit_result(&line_edit->widget, PICOUI_EDIT_RESULT_CANCEL);
+        (void)picoui_widget_release_editing(&line_edit->widget);
+    } else if (editing_owner_widget != 0) {
+        (void)picoui_widget_mark_edit_result(editing_owner_widget, PICOUI_EDIT_RESULT_CANCEL);
+        (void)picoui_widget_release_editing(editing_owner_widget);
+    }
+    if (backend->host_widget != 0 && picoui_widget_is_focus_owner(backend->host_widget)) {
+        return picoui_widget_release_focus(backend->host_widget);
+    }
+    return 0;
 }
 
 /**

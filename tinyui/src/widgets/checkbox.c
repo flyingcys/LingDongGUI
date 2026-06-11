@@ -224,11 +224,11 @@ struct picoui_checkbox *picoui_checkbox_create_with_props(struct picoui_window *
     }
     backend = (struct picoui_backend_widget *)checkbox->widget.backend_widget;
     checkbox->checked = props->checked != 0;
-    if (picoui_backend_widget_update_value(backend,
-                                           checkbox->checked,
-                                           0,
-                                           &checkbox->widget,
-                                           0) != 0) {
+    if (picoui_widget_update_value(backend,
+                                   checkbox->checked,
+                                   0,
+                                   &checkbox->widget,
+                                   0) != 0) {
         picoui_checkbox_dispose_partial(checkbox);
         return 0;
     }
@@ -297,11 +297,11 @@ int picoui_checkbox_set_checked(struct picoui_checkbox *checkbox, int checked)
     }
 
     checkbox->checked = normalized_checked;
-    return picoui_backend_widget_update_value(checkbox->widget.backend_widget,
-                                              checkbox->checked,
-                                              checkbox->cb,
-                                              &checkbox->widget,
-                                              checkbox->user_data);
+    return picoui_widget_update_value(checkbox->widget.backend_widget,
+                                      checkbox->checked,
+                                      checkbox->cb,
+                                      &checkbox->widget,
+                                      checkbox->user_data);
 }
 
 /**

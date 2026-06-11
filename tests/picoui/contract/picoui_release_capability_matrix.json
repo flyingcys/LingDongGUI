@@ -8124,7 +8124,7 @@
           "native_api": "ldKeyboardBtnUpdate",
           "coverage_kind": "direct_field_parity",
           "picoui_api": "picoui_keyboard_button_update",
-          "backend_proof": "picoui_backend_keyboard_btn_update",
+          "backend_proof": "picoui_keyboard_button_update widget-local native path",
           "unit_test": "test_keyboard_update_and_button_update_touch_native_state",
           "gate_evidence": [
             "ctest:test_picoui_keyboard"
@@ -8205,7 +8205,7 @@
           "native_api": "ldKeyboardClick",
           "coverage_kind": "direct_field_parity",
           "picoui_api": "picoui_keyboard_click",
-          "backend_proof": "picoui_backend_keyboard_click",
+          "backend_proof": "picoui_keyboard_click widget-local native path",
           "unit_test": "test_keyboard_click_respects_focus_owner",
           "gate_evidence": [
             "ctest:test_picoui_keyboard"
@@ -8230,7 +8230,7 @@
           "native_api": "ldKeyboardExit",
           "coverage_kind": "direct_field_parity",
           "picoui_api": "picoui_keyboard_exit",
-          "backend_proof": "picoui_backend_keyboard_exit",
+          "backend_proof": "picoui_keyboard_exit widget-local native path",
           "unit_test": "test_keyboard_exit_clears_focus_or_edit_session",
           "gate_evidence": [
             "ctest:test_picoui_keyboard"
@@ -8255,7 +8255,7 @@
           "native_api": "ldKeyboardGetTargetBtnList",
           "coverage_kind": "shared_api_equivalence",
           "picoui_api": "picoui_keyboard_set_layout",
-          "backend_proof": "picoui_backend_keyboard_prepare_custom_layout",
+          "backend_proof": "picoui_keyboard_set_layout + widget-local custom layout prepare",
           "unit_test": "test_keyboard_custom_layout_button_table_round_trip",
           "gate_evidence": [
             "ctest:test_picoui_keyboard",
@@ -8335,7 +8335,7 @@
           "native_api": "ldKeyboardNavigate",
           "coverage_kind": "direct_field_parity",
           "picoui_api": "picoui_keyboard_navigate",
-          "backend_proof": "picoui_backend_keyboard_navigate",
+          "backend_proof": "picoui_keyboard_navigate widget-local native path",
           "unit_test": "test_keyboard_navigation_signal_respects_focus_owner",
           "gate_evidence": [
             "ctest:test_picoui_keyboard"
@@ -8412,7 +8412,7 @@
           "native_api": "ldKeyboardUpdate",
           "coverage_kind": "direct_field_parity",
           "picoui_api": "picoui_keyboard_update",
-          "backend_proof": "picoui_backend_keyboard_update",
+          "backend_proof": "picoui_keyboard_update widget-local native path",
           "unit_test": "test_keyboard_update_and_button_update_touch_native_state",
           "gate_evidence": [
             "ctest:test_picoui_keyboard"

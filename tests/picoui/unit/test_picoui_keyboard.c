@@ -10,8 +10,37 @@
 #include "internal.h"
 
 #include <assert.h>
+#include <dlfcn.h>
 #include <stdio.h>
 #include <string.h>
+
+static const char *test_self_binary_path = 0;
+
+static void assert_self_binary_lacks_symbol(const char *symbol)
+{
+    char command[1024];
+    FILE *pipe;
+    char line[512];
+
+    assert(test_self_binary_path != 0);
+    assert(symbol != 0);
+    snprintf(command, sizeof(command), "nm %s 2>/dev/null", test_self_binary_path);
+    pipe = popen(command, "r");
+    assert(pipe != 0);
+    while (fgets(line, sizeof(line), pipe) != 0) {
+        size_t line_len = strlen(line);
+        size_t symbol_len = strlen(symbol);
+
+        while (line_len > 0 && (line[line_len - 1] == '\n' || line[line_len - 1] == '\r')) {
+            line[--line_len] = '\0';
+        }
+        if (line_len >= symbol_len &&
+            strcmp(line + line_len - symbol_len, symbol) == 0) {
+            assert(!"unexpected symbol still present in test binary");
+        }
+    }
+    assert(pclose(pipe) != -1);
+}
 
 static int keyboard_event_count = 0;
 static int keyboard_event_last_signal = -1;
@@ -475,6 +504,30 @@ static void test_keyboard_click_respects_focus_owner(void)
     picoui_app_destroy(app);
 }
 
+static void test_keyboard_click_and_exit_backend_symbols_are_no_longer_public(void)
+{
+    assert(dlsym(RTLD_DEFAULT, "picoui_backend_keyboard_click") == 0);
+    assert(dlsym(RTLD_DEFAULT, "picoui_backend_keyboard_exit") == 0);
+    assert_self_binary_lacks_symbol("picoui_backend_keyboard_click");
+    assert_self_binary_lacks_symbol("picoui_backend_keyboard_exit");
+}
+
+static void test_keyboard_update_and_button_update_backend_symbols_are_no_longer_public(void)
+{
+    assert(dlsym(RTLD_DEFAULT, "picoui_backend_keyboard_update") == 0);
+    assert(dlsym(RTLD_DEFAULT, "picoui_backend_keyboard_button_update") == 0);
+    assert_self_binary_lacks_symbol("picoui_backend_keyboard_update");
+    assert_self_binary_lacks_symbol("picoui_backend_keyboard_button_update");
+}
+
+static void test_keyboard_ascii_and_navigate_backend_symbols_are_no_longer_public(void)
+{
+    assert(dlsym(RTLD_DEFAULT, "picoui_backend_keyboard_input_ascii") == 0);
+    assert(dlsym(RTLD_DEFAULT, "picoui_backend_keyboard_navigate") == 0);
+    assert_self_binary_lacks_symbol("picoui_backend_keyboard_input_ascii");
+    assert_self_binary_lacks_symbol("picoui_backend_keyboard_navigate");
+}
+
 static void test_keyboard_has_explicit_final_gate_coverage_contract(void)
 {
     struct picoui_app *app;
@@ -520,7 +573,7 @@ static void test_keyboard_button_update_rejects_corrupted_backend_binding_withou
     saved_kind = backend->kind;
     backend->kind = PICOUI_BACKEND_WIDGET_LABEL;
 
-    assert(picoui_backend_keyboard_button_update(backend, '7') == -1);
+    assert(picoui_keyboard_button_update(keyboard, '7') == -1);
     assert(ld_keyboard->keyCode == saved_key_code);
     assert(ld_keyboard->isKeySelect == saved_is_key_select);
     assert(capture[0] == 0U);
@@ -629,6 +682,7 @@ static void test_keyboard_native_press_and_release_emit_picoui_callback(void)
 
 int main(void)
 {
+    test_self_binary_path = "tests/picoui/test_picoui_keyboard";
     test_keyboard_create_builds_direct_backend_mapping();
     test_keyboard_dispatches_ascii_into_focused_line_edit();
     test_keyboard_dispatches_ascii_into_editing_owner_before_focus_owner();
@@ -642,6 +696,9 @@ int main(void)
     test_keyboard_init_and_shared_base_aliases_round_trip();
     test_keyboard_exit_clears_focus_or_edit_session();
     test_keyboard_click_respects_focus_owner();
+    test_keyboard_click_and_exit_backend_symbols_are_no_longer_public();
+    test_keyboard_update_and_button_update_backend_symbols_are_no_longer_public();
+    test_keyboard_ascii_and_navigate_backend_symbols_are_no_longer_public();
     test_keyboard_has_explicit_final_gate_coverage_contract();
     test_keyboard_button_update_rejects_corrupted_backend_binding_without_native_or_public_drift();
     test_keyboard_custom_layout_round_trips_into_native_button_table();
