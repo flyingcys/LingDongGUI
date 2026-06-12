@@ -11,7 +11,7 @@
   "status": "complete",
   "evidence": {
     "unit_group": "test_tinyui_(line_edit|keyboard|combo_box|scroll_selecter)",
-    "contract_checker": "tests/picoui/contract/check_tinyui_release_capability_matrix.py",
+    "contract_checker": "tests/tinyui/contract/check_tinyui_release_capability_matrix.py",
     "mapping_checker": "tests/tinyui/runtime/check_tinyui_backend_mapping.py",
     "visible_checker": "tests/tinyui/runtime/check_tinyui_visible_ui.py --all"
   },

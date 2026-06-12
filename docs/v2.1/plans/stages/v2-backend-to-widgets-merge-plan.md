@@ -25,7 +25,7 @@
 删除：
 
 - `tinyui/src/backend/ldgui/backend_*.c`
-- `tinyui/src/backend/ldgui/backend.h`
+- `tinyui/src/backend/ldgui/backend.h`（仅当后续版本线确认可替换时再评估是否退场）
 - 仅在确认无引用后删除其余 backend 目录文件
 
 ---
@@ -36,7 +36,7 @@
 - Modify: `tests/picoui/contract/check_tinyui_v21_transition_guards.py`
 - Modify: `tests/picoui/contract/tinyui_v21_transition_inventory.json`
 
-- [ ] **Step 1: 收紧 guard，要求 backend 文件数下降到 0**
+- [x] **Step 1: 收紧 guard，要求 backend 文件数下降到 0**
 
 Update the V2 closeout target in `tinyui_v21_transition_inventory.json` so:
 
@@ -46,7 +46,7 @@ Update the V2 closeout target in `tinyui_v21_transition_inventory.json` so:
 
 and make the checker fail if any `backend_*.c` remains under the product-layer source tree.
 
-- [ ] **Step 2: 运行 checker，确认 V2 前为 fail**
+- [x] **Step 2: 运行 checker，确认 V2 前为 fail**
 
 Run:
 
@@ -66,7 +66,7 @@ Expected: FAIL，因为当前 backend 文件仍存在。
 - Modify later: the rest of `tinyui/src/widgets/*.c`
 - Delete matching `backend_*.c`
 
-- [ ] **Step 1: 先迁移已试点控件**
+- [x] **Step 1: 先迁移已试点控件**
 
 Start with:
 
@@ -77,7 +77,7 @@ Start with:
 
 because these already have `v2.0` direct-binding truth and are the lowest-risk templates for the rest of the merge.
 
-- [ ] **Step 2: 每迁一个控件，就删掉对应 backend 文件**
+- [x] **Step 2: 每迁一个控件，就删掉对应 backend 文件**
 
 For each widget batch:
 
@@ -85,14 +85,14 @@ For each widget batch:
 - remove product-layer `picoui_backend_*`/`tinyui_backend_*` function boundaries for that widget
 - delete the corresponding `backend_*.c`
 
-- [ ] **Step 3: 共享 helper 迁入薄共享层，不保留 backend 边界**
+- [x] **Step 3: 共享 helper 迁入薄共享层，不保留 backend 边界**
 
 For every helper confirmed to be cross-widget shared:
 
 - move it into `tinyui/src/core/*` or the appropriate shared subsystem
 - do not leave it under a `backend/` path
 
-- [ ] **Step 4: 跑 focused proof**
+- [x] **Step 4: 跑 focused proof**
 
 Run after each batch:
 
@@ -106,15 +106,21 @@ Expected: PASS。
 ### Task 3: 清零 backend 目录并收口文档
 
 **Files:**
-- Delete: remaining `tinyui/src/backend/*`
+- Delete: remaining `tinyui/src/backend/ldgui/backend_*.c`
 - Modify: `docs/v2.1/线计划索引.md`
 - Modify: `docs/v2.1/plans/stages/README.md`
 
-- [ ] **Step 1: 删除剩余 backend 目录**
+- [x] **Step 1: 删除剩余 backend 目录**
 
-Only after all product-layer references are removed, delete the now-empty backend directory tree.
+Only after all product-layer references are removed, delete the now-empty backend implementation tree.
 
-- [ ] **Step 2: 跑 broad gate**
+当前完成态：
+
+- `backend_*.c` 已清零
+- 独立 backend 编译面已退场
+- `tinyui/src/backend/ldgui/backend.h` 当前仅保留为 thin shared bridge 头，不再代表独立 backend 目录仍在服役
+
+- [x] **Step 2: 跑 broad gate**
 
 Run:
 
@@ -126,7 +132,7 @@ git diff --check
 
 Expected: PASS；inventory reports `backend_c_files = 0`。
 
-- [ ] **Step 3: 更新 V2 closeout 真相**
+- [x] **Step 3: 更新 V2 closeout 真相**
 
 Update docs so they explicitly say:
 

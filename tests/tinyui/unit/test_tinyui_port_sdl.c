@@ -1,5 +1,5 @@
-#include "picoui/picoui.h"
-#include "picoui/port/sdl.h"
+#include "tinyui.h"
+#include "port/sdl.h"
 
 #include <assert.h>
 #include <stddef.h>

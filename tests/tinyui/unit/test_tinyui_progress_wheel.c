@@ -1,5 +1,5 @@
 #include "app.h"
-#include "picoui/progress_wheel.h"
+#include "progress_wheel.h"
 #include "widget.h"
 #include "window.h"
 #include "../../../src/gui/ldProgressWheel.h"

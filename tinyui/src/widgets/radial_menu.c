@@ -18,8 +18,8 @@
 
 #include "internal.h"
 #include "backend.h"
-#include "picoui/radial_menu.h"
-#include "picoui/widget.h"
+#include "radial_menu.h"
+#include "widget.h"
 #include "../core/runtime_bridge.h"
 #include "../../../src/gui/ldBase.h"
 #include "../../../src/gui/ldRadialMenu.h"

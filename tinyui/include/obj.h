@@ -19,7 +19,7 @@
 #ifndef TINYUI_OBJ_H
 #define TINYUI_OBJ_H
 
-#include "picoui/widget.h"
+#include "widget.h"
 
 typedef struct picoui_widget tinyui_obj_t;
 typedef enum picoui_align tinyui_align_t;

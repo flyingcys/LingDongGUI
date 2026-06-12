@@ -32,6 +32,9 @@ REQUIRED_BASELINE_KEYS = (
     "picoui_dir_exists",
     "tinyui_dir_exists",
     "backend_c_files",
+    "backend_compat_includes",
+    "top_level_wrapper_forward_count",
+    "top_level_wrapper_forward_names",
     "compat_public_header_count",
     "tinyui_public_header_count",
     "compat_public_headers_require_followup",
@@ -50,11 +53,28 @@ def count_prefix(headers: list[Path], prefix: str) -> int:
 
 
 def collect_actual() -> dict[str, object]:
+    backend_text = (BACKEND_DIR / "backend.h").read_text(encoding="utf-8")
+    backend_compat_includes = sorted(
+        set(
+            re.findall(
+                r'#include "picoui/([^"]+)"',
+                backend_text,
+            )
+        )
+    )
+    top_level_wrapper_forward_names = sorted(
+        header.name
+        for header in TINYUI_TOP_HEADERS
+        if re.search(r'#include "picoui/[^"]+"', header.read_text(encoding="utf-8"))
+    )
     compat_only = {header.name for header in PICOUI_HEADERS} - {header.name for header in TINYUI_TOP_HEADERS}
     return {
         "picoui_dir_exists": PICOUI_DIR.exists(),
         "tinyui_dir_exists": TINYUI_DIR.exists(),
         "backend_c_files": len(sorted(BACKEND_DIR.glob("*.c"))),
+        "backend_compat_includes": backend_compat_includes,
+        "top_level_wrapper_forward_count": len(top_level_wrapper_forward_names),
+        "top_level_wrapper_forward_names": top_level_wrapper_forward_names,
         "compat_public_header_count": len(PICOUI_HEADERS),
         "tinyui_public_header_count": len(TINYUI_TOP_HEADERS),
         "compat_public_headers_require_followup": sorted(compat_only),

@@ -10,9 +10,9 @@
 
 1. `picoui_wrapped_widget_total = 22`
 2. `picoui_not_wrapped_widget_total = 4`
-3. 当前 machine truth-source 仍是 `a-0.3/current-15`
+3. 对 `2026-06-01` 这轮 review 而言，当时 machine truth-source 仍是 `a-0.3/current-15`
 
-当前最新入口应以：
+对 `2026-06-01` 这轮 review 而言，当时最新入口应以：
 
 1. `tests/picoui/contract/picoui_release_capability_matrix.json`
 2. `picoui/docs/demo_guide.md`
@@ -66,7 +66,7 @@
 
 ## Findings
 
-### 1. 严重：`a-0.3` 目录仍被引用成当前 truth-source，但它实际只覆盖 `current-15`
+### 1. 严重：`a-0.3` 目录仍被引用成当时当前 truth-source，但它实际只覆盖 `current-15`
 
 相关位置：
 
@@ -87,12 +87,12 @@
 结论：
 
 1. `a-0.3/current-15-*` 现在只能算历史阶段快照。
-2. 如果继续把它引用成“当前 truth-source”，那 `a-0.4 / a-0.5 已完成` 这个文档结论没有真相源基础。
+2. 如果在当时继续把它引用成“当前 truth-source”，那 `a-0.4 / a-0.5 已完成` 这个文档结论没有真相源基础。
 
 直接要求：
 
 1. 把 `a-0.3` 目录降格成历史快照入口。
-2. 把当前 truth-source 入口改回 machine-readable matrix + 当前 deep review。
+2. 把当时当前 truth-source 入口改回 machine-readable matrix + 当前 deep review。
 
 ### 2. 已修复：`keyboard` release matrix 证据层已回调到真实 gate 入口
 

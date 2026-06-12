@@ -1,5 +1,5 @@
 #include "app.h"
-#include "picoui/qrcode.h"
+#include "qrcode.h"
 #include "widget.h"
 #include "window.h"
 #include "../../../src/gui/ldQRCode.h"

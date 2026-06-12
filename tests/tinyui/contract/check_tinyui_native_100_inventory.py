@@ -1,10 +1,11 @@
+#!/usr/bin/env python3
 import json
 import re
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[3]
-INVENTORY_JSON = ROOT / "tests" / "picoui" / "contract" / "picoui_native_100_inventory.json"
+INVENTORY_JSON = ROOT / "tests" / "tinyui" / "contract" / "tinyui_native_100_inventory.json"
 LD_BASE_HEADER = ROOT / "src" / "gui" / "ldBase.h"
 
 EXPECTED_WIDGET_NAMES = {

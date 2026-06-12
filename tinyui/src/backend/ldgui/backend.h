@@ -21,10 +21,10 @@
 
 #include <stdint.h>
 
-#include "picoui/image.h"
-#include "picoui/native.h"
-#include "picoui/widget.h"
-#include "picoui/window.h"
+#include "image.h"
+#include "native.h"
+#include "widget.h"
+#include "window.h"
 
 struct picoui_widget;
 struct picoui_message_box;

@@ -4,9 +4,10 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[3]
+CONTRACT_DIR = ROOT / "tests" / "tinyui" / "contract"
 MATRIX_JSON = ROOT / "tests" / "tinyui" / "contract" / "tinyui_release_capability_matrix.json"
-INVENTORY_JSON = ROOT / "tests" / "picoui" / "contract" / "ldgui_public_api_inventory.json"
-LEDGER_JSON = ROOT / "tests" / "picoui" / "contract" / "native_api_gap_ledger.json"
+INVENTORY_JSON = CONTRACT_DIR / "ldgui_public_api_inventory.json"
+LEDGER_JSON = CONTRACT_DIR / "native_api_gap_ledger.json"
 PICOUI_INCLUDE_DIR = ROOT / "tinyui" / "include" / "picoui"
 
 VALID_COVERAGE_KINDS = {
@@ -192,11 +193,7 @@ EXPECTED_GATE_CATALOG = {
     },
 }
 
-EVIDENCE_ALIAS_REWRITES = (
-    ("test_tinyui_", "test_picoui_"),
-    ("check_tinyui_", "check_picoui_"),
-    ("tests/tinyui/runtime/", "tests/picoui/runtime/"),
-)
+EVIDENCE_ALIAS_REWRITES = ()
 
 
 def _load_json(path: Path) -> dict:

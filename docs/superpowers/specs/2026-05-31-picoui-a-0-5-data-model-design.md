@@ -158,7 +158,7 @@
 
 完成内容：
 
-1. current truth-source 与 capability audit 更新
+1. `a-0.5` 当时 current truth-source 与 capability audit 更新
 2. 数据类 gate 收口
 3. serial 文档与 closeout 术语统一
 4. `table / graph / calendar` 在 release matrix 中不再记为 `not_wrapped`

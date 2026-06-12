@@ -17,7 +17,7 @@
  */
 
 #include "internal.h"
-#include "picoui/graph.h"
+#include "graph.h"
 #include "../core/runtime_bridge.h"
 #include "../../../src/gui/ldGraph.h"
 

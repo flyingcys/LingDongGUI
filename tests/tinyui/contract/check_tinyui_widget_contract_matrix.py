@@ -3,7 +3,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[3]
-PUBLIC_DIR = ROOT / "tinyui" / "include" / "picoui"
+PUBLIC_DIR = ROOT / "tinyui" / "include"
 DOC = ROOT / "docs" / "superpowers" / "specs" / "2026-05-29-picoui-d-line-widget-contract-matrix.md"
 WIDGETS = ["window", "label", "button", "checkbox", "switch", "slider", "text", "image"]
 ALL_WIDGETS = set(WIDGETS)
@@ -106,8 +106,20 @@ THEME_API_POLICY = {
 }
 
 
-def _public_functions(header: Path) -> set[str]:
+INCLUDE_FORWARD_RE = re.compile(r'^\s*#include\s+"(?P<target>picoui/[^"]+)"\s*$', re.M)
+
+
+def _load_header_text(header: Path) -> str:
     text = header.read_text(encoding="utf-8")
+    match = INCLUDE_FORWARD_RE.search(text)
+    if match is not None:
+        forwarded = ROOT / "tinyui" / "include" / match.group("target")
+        return forwarded.read_text(encoding="utf-8")
+    return text
+
+
+def _public_functions(header: Path) -> set[str]:
+    text = _load_header_text(header)
     text = re.sub(r"/\*.*?\*/", "", text, flags=re.S)
     text = re.sub(r"//.*", "", text)
     return set(re.findall(r"\b(picoui_[A-Za-z0-9_]+)\s*\(", text))
@@ -262,7 +274,6 @@ def main() -> int:
         assert visible_status == "support", (
             f"{widget} visible status must be support after D4: {visible_status}"
         )
-
     return 0
 
 

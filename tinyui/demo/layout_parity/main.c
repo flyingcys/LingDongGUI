@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#include "picoui/picoui.h"
+#include "tinyui.h"
 
 struct layout_parity_runtime {
     struct picoui_window *flex_row_sample;

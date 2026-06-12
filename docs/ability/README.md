@@ -1,25 +1,25 @@
-# LingDongGUI 原生控件能力与 PicoUI 覆盖索引
+# LingDongGUI 原生控件能力与 TinyUI 当前覆盖索引
 
-本文是 LingDongGUI 原生控件/API 能力与 PicoUI 覆盖审计入口。
-覆盖结论以 `ldgui_public_api_inventory.json` 和 `picoui_release_capability_matrix.json` 为准，不以截图、demo 存在或人工摘要为准。
+本文是 LingDongGUI 原生控件/API 能力与 TinyUI 当前覆盖审计入口。
+覆盖结论以 `ldgui_public_api_inventory.json` 和 `tinyui_release_capability_matrix.json` 为准，不以截图、demo 存在或人工摘要为准。
 
 ## 覆盖口径
 
-- inventory：`tests/picoui/contract/ldgui_public_api_inventory.json`
-- matrix：`tests/picoui/contract/picoui_release_capability_matrix.json`
+- inventory：`tests/tinyui/contract/ldgui_public_api_inventory.json`
+- matrix：`tests/tinyui/contract/tinyui_release_capability_matrix.json`
 - inventory schema：`a-0.8-ldgui-public-api-inventory-v1`，已追加 a-0.9 `group_kind` / `policy_category` 行级字段。
 - matrix schema：`a-0.9-allowlist-policy-v1`
 - 控件类型口径：`src/gui/ldBase.h` 的 `ldWidgetType_t`，共 `29/29` 个控件类型，包含 `background` 与 `canvas`。
 - LingDongGUI 原生 API 能力口径：`src/gui/ld*.h` public API inventory，共 `619` 条 API。
-- PicoUI 覆盖统计：`allowlisted`: 178, `covered`: 441
-- `covered` 才表示有 PicoUI API/backend/unit/gate 证据；`allowlisted` 表示已纳入 ledger 但不是 PicoUI user-facing direct wrapper 覆盖。
-- 因此当前不能笼统写“PicoUI 100% direct 覆盖 LingDongGUI 全部原生 API”；应逐 group 看 covered/allowlisted。
+- TinyUI 当前覆盖统计：`allowlisted`: 178, `covered`: 441
+- `covered` 才表示有 current public API/backend/unit/gate 证据；`allowlisted` 表示已纳入 ledger 但不是当前 user-facing direct wrapper 覆盖。
+- 因此当前不能笼统写“当前用户态 direct wrapper 100% 覆盖 LingDongGUI 全部原生 API”；应逐 group 看 covered/allowlisted。
 
 ## a-0.12 strict direct-wrapper 候选清零结论
 
 当前只达到 a-0.12 定义的 strict direct-wrapper 候选清零；这不是 LingDongGUI native/user-facing 100% 对外能力闭环。
 
-- `covered=441`：有真实 PicoUI public API/backend/unit/gate 证据。
+- `covered=441`：有真实 current public API/backend/unit/gate 证据。
 - `allowlisted=178`：policy ledger 已闭环，且均为 `policy_never_public`。
 - `missing_gap_total=0` 只表示没有未建账 native API，不表示 direct 100%。
 - `direct_100_category` 统计：`policy_never_public`: 178
@@ -30,14 +30,14 @@
 
 当前未达到 LingDongGUI native/user-facing 100% 对外能力闭环。
 
-- `178` 行 `allowlisted` 不是 PicoUI user-facing direct wrapper；它们只能证明 policy ledger 已处置，不能证明原生能力都对外公开。
+- `178` 行 `allowlisted` 不是当前 user-facing direct wrapper；它们只能证明 policy ledger 已处置，不能证明原生能力都对外公开。
 - 每个 widget group 仍有 lifecycle/show 等 `policy_never_public` 行，因此逐控件页的结论仍是 `policy_complete_not_direct_100`。
 - `background` 当前已补独立 PicoUI public widget，但 contract 三件套若仍保留旧的 enum-only/policy 口径，需要继续同步更新。
 - `backend_proof` 当前是 ledger 证据标签；checker 会反查 `picoui_api` 是否在 public header 中存在，但尚未反查每个 `backend_proof` token 是否是真实 backend 符号或完整 backend 行为。
 
 ## 按控件能力等价仍需补齐
 
-以下缺口按新规则判断：目标不是把 `ld*` API 名字逐个翻译成 `picoui_*`，而是以前用户能用 LingDongGUI 完成的控件能力，现在必须能用 PicoUI 完成。只要用户态能力不可达，就不能算 native/user-facing 100%。
+以下缺口按新规则判断：目标不是把 `ld*` API 名字逐个翻译成 `picoui_*`，而是以前用户能用 LingDongGUI 完成的控件能力，现在必须能用当前 TinyUI 用户态 API 完成。只要用户态能力不可达，就不能算 native/user-facing 100%。
 
 | 缺口 | LingDongGUI 来源 | 当前 PicoUI 状态 | 需要补齐的能力 |
 | --- | --- | --- | --- |
@@ -45,7 +45,7 @@
 
 ## 按控件能力等价已补齐
 
-| 能力 | LingDongGUI 来源 | PicoUI 补齐状态 | 边界 |
+| 能力 | LingDongGUI 来源 | 当前补齐状态 | 边界 |
 | --- | --- | --- | --- |
 | 动态移除/销毁控件 | `ldBaseNodeRemove`、各控件 `*_depose` | a-0.13 已新增 `picoui_widget_remove_from_parent()` 与 `picoui_widget_destroy()`，同步更新 PicoUI backend tree 与真实 `ldBase` tree，并覆盖 focus 清理、nameId 查找移除、child count 更新测试 | 当前 `destroy` 定义为用户态销毁绑定和 tree 脱离，不在本线释放所有 widget 外层内存；完整 allocator/free 所有权另线处理 |
 | 按钮全局 action/nameId 状态 | `ldButtonActionInit`、`ldButtonActionIsPressById` | a-0.13 已新增 `picoui_button_get_pressed_by_name_id()` 与 `picoui_button_get_action_state_by_name_id()`，通过 PicoUI root/nameId 查询真实 button pressed/action 状态 | 提供按 `nameId` 查询 pressed/action 的用户态等价能力；不暴露 LingDongGUI `ld_scene_t` |
@@ -79,7 +79,7 @@
 
 ## 控件类型覆盖
 
-| 控件类型 | 能力文档 | API group | PicoUI 覆盖摘要 |
+| 控件类型 | 能力文档 | API group | 当前覆盖摘要 |
 | --- | --- | --- | --- |
 | `window` | [window](./window.md) | `window` | `allowlisted`: 7, `covered`: 16 |
 | `background` | [background](./background.md) | `无` | a-0.14 已新增独立 `picoui_background_*` public widget；native 仍复用真实 root/background `ldWindow` 语义。 |
@@ -113,7 +113,7 @@
 
 ## 其他原生 API 分组
 
-| 分组 | API 条目数 | 能力文档 | PicoUI 覆盖摘要 |
+| 分组 | API 条目数 | 能力文档 | 当前覆盖摘要 |
 | --- | --- | --- | --- |
 | `gui` | 16 | [gui](./gui.md) | `allowlisted`: 11, `covered`: 5 |
 | `mem` | 5 | [mem](./mem.md) | `allowlisted`: 5 |
@@ -122,13 +122,13 @@
 
 ## 共享能力
 
-| 分组 | API 条目数 | 能力文档 | PicoUI 覆盖摘要 |
+| 分组 | API 条目数 | 能力文档 | 当前覆盖摘要 |
 | --- | --- | --- | --- |
 | `base` | 63 | [base](./base.md) | `allowlisted`: 3, `covered`: 60；严格 100% direct public API 缺口候选：`0` |
 
 ## 可靠性说明
 
-- 本目录不使用人工摘要判断 PicoUI 100%。
-- 每个 group 页按 LingDongGUI symbol 逐行列出 PicoUI 状态、PicoUI API、backend proof、unit/gate 和 allowlist 原因；其中 `picoui_api` 会被 checker 反查 public header，`backend_proof` 仍是 ledger 证据标签，尚未被 checker 逐项反查为真实 backend 符号或完整行为。
+- 本目录不使用人工摘要判断当前覆盖是否 100%。
+- 每个 group 页按 LingDongGUI symbol 逐行列出当前状态、`picoui_api`、backend proof、unit/gate 和 allowlist 原因；其中 `picoui_api` 当前仍记录 public C API 过渡态符号，会被 checker 反查 canonical public header，`backend_proof` 仍是 ledger 证据标签，尚未被 checker 逐项反查为真实 backend 符号或完整行为。
 - `manual_artifact` 只表示 artifact/catalog/frame 证据；未人工复核时不能当人工验收通过。
 - 若 inventory 或 matrix 更新，本目录必须同步更新，并重新跑 native API exhaustiveness checker。

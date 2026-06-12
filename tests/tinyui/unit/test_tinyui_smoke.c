@@ -1,4 +1,4 @@
-#include "picoui/picoui.h"
+#include "tinyui.h"
 
 #include <assert.h>
 #include <stddef.h>

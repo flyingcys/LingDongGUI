@@ -1,12 +1,13 @@
+#!/usr/bin/env python3
 import json
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[3]
-CONTRACT_DIR = ROOT / "tests" / "picoui" / "contract"
+CONTRACT_DIR = ROOT / "tests" / "tinyui" / "contract"
 INVENTORY_JSON = CONTRACT_DIR / "ldgui_public_api_inventory.json"
 LEDGER_JSON = CONTRACT_DIR / "native_api_gap_ledger.json"
-MATRIX_JSON = CONTRACT_DIR / "picoui_release_capability_matrix.json"
+MATRIX_JSON = CONTRACT_DIR / "tinyui_release_capability_matrix.json"
 
 VALID_COVERAGE_KINDS = {
     "native_setter_parity",

@@ -17,7 +17,7 @@
  */
 
 #include "internal.h"
-#include "picoui/progress_wheel.h"
+#include "progress_wheel.h"
 #include "../../../src/gui/ldBase.h"
 #include "../../../src/gui/ldProgressWheel.h"
 #include "../backend/ldgui/backend.h"

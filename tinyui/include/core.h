@@ -19,6 +19,6 @@
 #ifndef TINYUI_CORE_H
 #define TINYUI_CORE_H
 
-#include "picoui/runtime.h"
+#include "runtime.h"
 
 #endif

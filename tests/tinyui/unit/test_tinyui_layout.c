@@ -1,6 +1,6 @@
 #include "internal.h"
 #include "background.h"
-#include "picoui/picoui.h"
+#include "tinyui.h"
 #include "ldBase.h"
 #include "ldWindow.h"
 #include "../../../src/porting/ldConfig.h"

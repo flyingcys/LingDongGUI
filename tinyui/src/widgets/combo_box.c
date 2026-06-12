@@ -17,7 +17,7 @@
  */
 
 #include "internal.h"
-#include "picoui/combo_box.h"
+#include "combo_box.h"
 
 #include "../backend/ldgui/backend.h"
 #include "../core/runtime_bridge.h"

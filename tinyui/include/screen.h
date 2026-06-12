@@ -20,6 +20,6 @@
 #define TINYUI_SCREEN_H
 
 #include "obj.h"
-#include "picoui/runtime.h"
+#include "runtime.h"
 
 #endif

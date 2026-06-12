@@ -19,8 +19,8 @@
 #ifndef PICOUI_LABEL_H
 #define PICOUI_LABEL_H
 
-#include "picoui/widget.h"
-#include "picoui/window.h"
+#include "../widget.h"
+#include "../window.h"
 
 struct picoui_window;
 struct picoui_label;

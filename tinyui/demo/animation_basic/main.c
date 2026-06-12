@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#include "picoui/picoui.h"
+#include "tinyui.h"
 #include "image.h"
 
 extern const unsigned char c_tileQuaterArcGRAY8;

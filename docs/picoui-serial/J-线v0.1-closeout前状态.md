@@ -4,7 +4,7 @@
 
 本文记录 `J7 closeout` 之前、当前工作树下关于 `v0.1 parity = window / label / button / slider` 的最新证据状态，以及当前仍需保留的人工证据边界。
 
-注意：本文是 `J线` 历史 closeout 前状态快照，不是当前 `a-0.6 final release` 真相源。当前最终发布结论以 `docs/picoui-serial/a-0.6-final-release-closeout.md` 和对应 final release truth-source 为准。
+注意：本文是 `J线` 历史 closeout 前状态快照，不是当前 `a-0.6 final release` 真相源。对这条历史线而言，当时最终发布结论以 `docs/picoui-serial/a-0.6-final-release-closeout.md` 和对应 final release truth-source 为准。
 
 本文不是 closeout 结论文档，不写“已完成发布”或“人工验收通过”；它只回答两件事：
 

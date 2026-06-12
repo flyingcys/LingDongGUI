@@ -19,7 +19,7 @@
 #ifndef PICOUI_LIST_H
 #define PICOUI_LIST_H
 
-#include "picoui/widget.h"
+#include "../widget.h"
 
 struct picoui_widget;
 struct picoui_list;

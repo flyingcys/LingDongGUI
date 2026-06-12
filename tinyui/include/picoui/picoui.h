@@ -30,7 +30,7 @@
 #include "picoui/arc.h"
 #include "picoui/background.h"
 #include "picoui/layout.h"
-#include "picoui/widget.h"
+#include "../widget.h"
 #include "picoui/button.h"
 #include "picoui/canvas.h"
 #include "picoui/calendar.h"
@@ -56,7 +56,7 @@
 #include "picoui/progress_wheel.h"
 #include "picoui/qrcode.h"
 #include "picoui/radial_menu.h"
-#include "picoui/runtime.h"
+#include "../runtime.h"
 #include "picoui/scroll_selecter.h"
 #include "picoui/slider.h"
 #include "picoui/switch.h"
@@ -64,6 +64,6 @@
 #include "picoui/text.h"
 #include "picoui/theme.h"
 #include "picoui/tick.h"
-#include "picoui/window.h"
+#include "../window.h"
 
 #endif

@@ -3,6 +3,7 @@
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 只完成 `a-0.3` 本阶段工作：重建 current truth-source、完成 current-15 capability audit、冻结 `a-0.3` closeout 标准。当前不展开 `a-0.4+` 的详细 spec 和 plan。
+**Scope note:** 本文中的 `current truth-source` / `current-15` 只对应 `a-0.3` 当时阶段语境，不代表当前 `v2.1` 主线的 canonical truth。
 
 **Architecture:** 执行顺序固定为 `R1 -> R2 -> R3 -> R4 -> R5`。其中 `R1 / R2 / R4 / R5` 严格串行，`R3` 采用并行 subagent：按 `J线 4 / a-01 5 / a-02 6` 三组拆开做 capability audit，主线程最后统一收敛 matrix、gate 和文档。review 独立，repair 回原执行 subagent。
 

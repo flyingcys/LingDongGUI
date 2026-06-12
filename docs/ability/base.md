@@ -1,7 +1,7 @@
 # `base`
 
-本文由 `tests/picoui/contract/ldgui_public_api_inventory.json` 和 `tests/picoui/contract/picoui_release_capability_matrix.json` 对齐生成。
-本页同时记录 LingDongGUI 原生 API 能力和 PicoUI 对应覆盖状态。
+本文由 `tests/tinyui/contract/ldgui_public_api_inventory.json` 和 `tests/tinyui/contract/tinyui_release_capability_matrix.json` 对齐生成。
+本页同时记录 LingDongGUI 原生 API 能力和 TinyUI 当前覆盖状态。
 
 ## 覆盖摘要
 
@@ -9,26 +9,26 @@
 - group_kind：`shared_base`
 - LingDongGUI API 条目数：`63`
 - LingDongGUI 分类统计：`capability`: 2, `getter`: 28, `helper`: 8, `init`: 1, `macro_alias`: 1, `setter`: 19, `update_action`: 4
-- PicoUI 覆盖统计：`allowlisted`: 3, `covered`: 60
+- TinyUI 当前覆盖统计：`allowlisted`: 3, `covered`: 60
 - policy_category 统计：`base_tree_policy`: 3, `direct_covered`: 60
-- direct public API 100%：是；a-0.12 已把 base 的 16 个 `optional_public_extension` 候选收敛为 PicoUI portable public API。
+- direct public API 100%：是；a-0.12 已把 base 的 16 个 `optional_public_extension` 候选收敛为当前 portable public API。
 - direct_public_covered：`60`
 - policy_allowlisted：`3`
 - direct_100_gap：`0`
 - direct_100_category 统计：`policy_never_public`: 3
 - 严格 100% direct public API 缺口候选：`0`；剩余 `allowlisted` 行均为 `policy_never_public`。
-- PicoUI 覆盖结论：`covered` 行有 PicoUI API/backend/unit/gate 证据；`allowlisted` 行是 policy 处置且不应暴露为 PicoUI public wrapper。
+- TinyUI 当前覆盖结论：`covered` 行有 current public API/backend/unit/gate 证据；`allowlisted` 行是 policy 处置且不应暴露为当前 public wrapper。
 - matrix layer：`a_0_8_ledger_truth`
 - matrix judgement：`policy_complete` / `policy_complete`
 - 来源 header：`src/gui/ldBase.h`
 
 ## 控件能力等价缺口
 
-本节按 native/user-facing 能力等价判断，不按 `ld*` 名称逐个翻译判断。a-0.13 收口后，`base` 组当前没有剩余 user-facing direct 能力缺口；但这不等于逐个 native symbol 都变成 PicoUI direct wrapper。`ldBaseGetDate/GetTime/GetWeek/GetVres*` 与 `ldBaseImage/Label` 这类行仍属于“能力已由别的 PicoUI public API 等价承载，而不是 1:1 symbol parity”。
+本节按 native/user-facing 能力等价判断，不按 `ld*` 名称逐个翻译判断。a-0.13 收口后，`base` 组当前没有剩余 user-facing direct 能力缺口；但这不等于逐个 native symbol 都变成 direct wrapper。`ldBaseGetDate/GetTime/GetWeek/GetVres*` 与 `ldBaseImage/Label` 这类行仍属于“能力已由别的 current public API 等价承载，而不是 1:1 symbol parity”。
 
 ## 控件能力等价已补齐
 
-| 能力 | LingDongGUI 来源 | PicoUI 补齐状态 | 边界 |
+| 能力 | LingDongGUI 来源 | 当前补齐状态 | 边界 |
 | --- | --- | --- | --- |
 | 动态移除/销毁控件 | `ldBaseNodeRemove`、各控件 `*_depose` | a-0.13 已新增 `picoui_widget_remove_from_parent()` 与 `picoui_widget_destroy()`，通过 `ldBaseNodeRemove()` 脱离真实 native tree，并覆盖 parent/child/sibling/nameId/focus 测试 | 当前 `destroy` 不释放所有外层 widget 分配；内存所有权和完整 free 策略另线处理 |
 | VRES 图片/字体资源 | `ldBaseGetVresImage`、`ldBaseGetVresFont` | a-0.13 已新增 `picoui_image_source_from_vres()` 与 `picoui_font_from_vres()`，并在 `image/text/button` 路径消费 | 保持 portable resource source/handle 语义，不暴露 native 地址解析细节 |
@@ -40,7 +40,7 @@
 - 本页上面的“能力已补齐”是 user-facing capability equivalence 口径。
 - 下方逐 symbol 表仍可能把某些 native helper 记为 `allowlisted`，因为它们并没有被设计成 PicoUI direct wrapper，而是由别的 public API 承载同等用户意图。
 
-## API 能力与 PicoUI 覆盖清单
+## API 能力与 TinyUI 当前覆盖清单
 
 | # | LingDongGUI symbol | 分类 | group_kind | policy_category | direct_100_category | required | PicoUI 状态 | 覆盖类型 | PicoUI API | backend proof | unit/gate | 说明 | signature |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -110,9 +110,9 @@
 
 ## 审计边界
 
-- `covered`：必须有真实 PicoUI public API/backend/unit/gate 证据；`picoui_api` 会被 checker 反查 `picoui/include` public header。
-- `allowlisted`：记录为 LingDongGUI 原生 API，但当前判定为 policy 处置；不能当作 PicoUI direct public wrapper 覆盖。
-- `direct_100_category=policy_never_public`：不应暴露为 PicoUI public API。
+- `covered`：必须有真实 current public API/backend/unit/gate 证据；`picoui_api` 字段当前仍记录 public C API 过渡态符号，并由 checker 反查 canonical public header。
+- `allowlisted`：记录为 LingDongGUI 原生 API，但当前判定为 policy 处置；不能当作用户态 direct public wrapper 覆盖。
+- `direct_100_category=policy_never_public`：不应暴露为用户态 public API。
 - a-0.12 后 `base` 不再保留 `optional_public_extension` 缺口候选。
 - `group_kind=runtime_host/internal_helper` 的分组保留在 native API inventory 审计中，但不进入 widget public parity denominator。
 - 若后续 LingDongGUI header、inventory 或 matrix 更新，本页必须同步更新。

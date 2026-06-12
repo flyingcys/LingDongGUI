@@ -19,9 +19,9 @@
 #ifndef PICOUI_WIDGET_H
 #define PICOUI_WIDGET_H
 
-#include "picoui/layout.h"
-#include "picoui/native.h"
-#include "picoui/theme.h"
+#include "../layout.h"
+#include "../native.h"
+#include "../theme.h"
 
 struct picoui_widget;
 struct picoui_app;

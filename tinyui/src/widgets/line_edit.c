@@ -17,7 +17,7 @@
  */
 
 #include "internal.h"
-#include "picoui/line_edit.h"
+#include "line_edit.h"
 
 #include "../backend/ldgui/backend.h"
 #include "../core/runtime_bridge.h"

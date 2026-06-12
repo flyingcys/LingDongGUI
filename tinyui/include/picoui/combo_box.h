@@ -19,7 +19,7 @@
 #ifndef PICOUI_COMBO_BOX_H
 #define PICOUI_COMBO_BOX_H
 
-#include "picoui/widget.h"
+#include "../widget.h"
 
 struct picoui_window;
 struct picoui_combo_box;

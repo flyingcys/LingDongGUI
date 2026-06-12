@@ -1,5 +1,5 @@
 #include "app.h"
-#include "picoui/clock.h"
+#include "clock.h"
 #include "image.h"
 #include "widget.h"
 #include "window.h"

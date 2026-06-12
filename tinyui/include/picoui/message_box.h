@@ -19,7 +19,7 @@
 #ifndef PICOUI_MESSAGE_BOX_H
 #define PICOUI_MESSAGE_BOX_H
 
-#include "picoui/widget.h"
+#include "../widget.h"
 
 struct picoui_message_box;
 

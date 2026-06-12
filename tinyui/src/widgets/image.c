@@ -17,7 +17,7 @@
  */
 
 #include "internal.h"
-#include "picoui/image.h"
+#include "image.h"
 #include "../core/runtime_bridge.h"
 #include "../backend/ldgui/backend.h"
 #include "../../../src/gui/ldImage.h"

@@ -19,8 +19,8 @@
 #ifndef PICOUI_SWITCH_H
 #define PICOUI_SWITCH_H
 
-#include "picoui/widget.h"
-#include "picoui/window.h"
+#include "../widget.h"
+#include "../window.h"
 
 struct picoui_window;
 struct picoui_switch;

@@ -1,0 +1,343 @@
+{
+  "schema_version": "a-0.7-native-100-inventory-v1",
+  "source": "src/gui/ld*.h",
+  "widget_like_total": 28,
+  "widgets": [
+    {
+      "name": "window",
+      "ldgui_type": "ldWindow",
+      "header": "src/gui/ldWindow.h",
+      "required_native_capabilities": [
+        "init_layout_background",
+        "flex_grid_padding_gap",
+        "background_image_mask"
+      ],
+      "picoui_widget": "picoui_window",
+      "status": "existing_release_contract"
+    },
+    {
+      "name": "label",
+      "ldgui_type": "ldLabel",
+      "header": "src/gui/ldLabel.h",
+      "required_native_capabilities": [
+        "init_text_font",
+        "text_color_align",
+        "background_image_mask"
+      ],
+      "picoui_widget": "picoui_label",
+      "status": "existing_release_contract"
+    },
+    {
+      "name": "button",
+      "ldgui_type": "ldButton",
+      "header": "src/gui/ldButton.h",
+      "required_native_capabilities": [
+        "init_text_colors",
+        "callbacks_signal_bridge",
+        "press_release_image"
+      ],
+      "picoui_widget": "picoui_button",
+      "status": "existing_release_contract"
+    },
+    {
+      "name": "checkbox",
+      "ldgui_type": "ldCheckBox",
+      "header": "src/gui/ldCheckBox.h",
+      "required_native_capabilities": [
+        "init_checked_state",
+        "signal_toggle",
+        "text_color_align"
+      ],
+      "picoui_widget": "picoui_checkbox",
+      "status": "existing_release_contract"
+    },
+    {
+      "name": "switch",
+      "ldgui_type": "ldSwitch",
+      "header": "src/gui/ldSwitch.h",
+      "required_native_capabilities": [
+        "init_state",
+        "signal_toggle",
+        "style_colors"
+      ],
+      "picoui_widget": "picoui_switch",
+      "status": "existing_release_contract"
+    },
+    {
+      "name": "slider",
+      "ldgui_type": "ldSlider",
+      "header": "src/gui/ldSlider.h",
+      "required_native_capabilities": [
+        "init_range_value",
+        "indicator_image_mask",
+        "value_changed_signal"
+      ],
+      "picoui_widget": "picoui_slider",
+      "status": "existing_release_contract"
+    },
+    {
+      "name": "text",
+      "ldgui_type": "ldText",
+      "header": "src/gui/ldText.h",
+      "required_native_capabilities": [
+        "init_text_font",
+        "scroll_static_text",
+        "bg_text_align"
+      ],
+      "picoui_widget": "picoui_text",
+      "status": "existing_release_contract"
+    },
+    {
+      "name": "image",
+      "ldgui_type": "ldImage",
+      "header": "src/gui/ldImage.h",
+      "required_native_capabilities": [
+        "init_image_mask",
+        "set_image_mask",
+        "set_mask_color"
+      ],
+      "picoui_widget": "picoui_image",
+      "status": "existing_release_contract"
+    },
+    {
+      "name": "list",
+      "ldgui_type": "ldList",
+      "header": "src/gui/ldList.h",
+      "required_native_capabilities": [
+        "set_items_font",
+        "set_item_widget",
+        "padding_margin_selection"
+      ],
+      "picoui_widget": "picoui_list",
+      "status": "existing_release_contract"
+    },
+    {
+      "name": "progress_bar",
+      "ldgui_type": "ldProgressBar",
+      "header": "src/gui/ldProgressBar.h",
+      "required_native_capabilities": [
+        "set_percent",
+        "set_image_frame_image",
+        "set_color_orientation_inverted"
+      ],
+      "picoui_widget": "picoui_progress_bar",
+      "status": "existing_release_contract"
+    },
+    {
+      "name": "qrcode",
+      "ldgui_type": "ldQRCode",
+      "header": "src/gui/ldQRCode.h",
+      "required_native_capabilities": [
+        "init_text_colors_ecc",
+        "set_text",
+        "version_zoom_configuration"
+      ],
+      "picoui_widget": "picoui_qrcode",
+      "status": "existing_release_contract"
+    },
+    {
+      "name": "progress_wheel",
+      "ldgui_type": "ldProgressWheel",
+      "header": "src/gui/ldProgressWheel.h",
+      "required_native_capabilities": [
+        "set_progress",
+        "set_wheel_color",
+        "set_dot_color"
+      ],
+      "picoui_widget": "picoui_progress_wheel",
+      "status": "existing_release_contract"
+    },
+    {
+      "name": "message_box",
+      "ldgui_type": "ldMessageBox",
+      "header": "src/gui/ldMessageBox.h",
+      "required_native_capabilities": [
+        "set_title_message_buttons",
+        "set_callback",
+        "set_string_button_background_colors"
+      ],
+      "picoui_widget": "picoui_message_box",
+      "status": "existing_release_contract"
+    },
+    {
+      "name": "date_time",
+      "ldgui_type": "ldDateTime",
+      "header": "src/gui/ldDateTime.h",
+      "required_native_capabilities": [
+        "set_format",
+        "set_date_time",
+        "set_align_color_transparent"
+      ],
+      "picoui_widget": "picoui_date_time",
+      "status": "existing_release_contract"
+    },
+    {
+      "name": "clock",
+      "ldgui_type": "ldClock",
+      "header": "src/gui/ldClock.h",
+      "required_native_capabilities": [
+        "set_background_image",
+        "set_pointer_images",
+        "set_step_second"
+      ],
+      "picoui_widget": "picoui_clock",
+      "status": "existing_release_contract"
+    },
+    {
+      "name": "line_edit",
+      "ldgui_type": "ldLineEdit",
+      "header": "src/gui/ldLineEdit.h",
+      "required_native_capabilities": [
+        "set_text_keyboard_type",
+        "set_align_color",
+        "finished_signal_bridge"
+      ],
+      "picoui_widget": "picoui_line_edit",
+      "status": "existing_release_contract"
+    },
+    {
+      "name": "keyboard",
+      "ldgui_type": "ldKeyboard",
+      "header": "src/gui/ldKeyboard.h",
+      "required_native_capabilities": [
+        "init_font_map",
+        "target_navigation",
+        "finished_runtime_bridge"
+      ],
+      "picoui_widget": "picoui_keyboard",
+      "status": "existing_release_contract"
+    },
+    {
+      "name": "combo_box",
+      "ldgui_type": "ldComboBox",
+      "header": "src/gui/ldComboBox.h",
+      "required_native_capabilities": [
+        "set_items_font",
+        "dropdown_indicator_image",
+        "selection_readback"
+      ],
+      "picoui_widget": "picoui_combo_box",
+      "status": "existing_release_contract"
+    },
+    {
+      "name": "scroll_selecter",
+      "ldgui_type": "ldScrollSelecter",
+      "header": "src/gui/ldScrollSelecter.h",
+      "required_native_capabilities": [
+        "set_items_font",
+        "indicator_image_color",
+        "edit_mode_selection_readback"
+      ],
+      "picoui_widget": "picoui_scroll_selecter",
+      "status": "existing_release_contract"
+    },
+    {
+      "name": "arc",
+      "ldgui_type": "ldArc",
+      "header": "src/gui/ldArc.h",
+      "required_native_capabilities": [
+        "init_angles",
+        "progress_trail_colors",
+        "value_readback"
+      ],
+      "picoui_widget": "picoui_arc",
+      "status": "existing_release_contract"
+    },
+    {
+      "name": "gauge",
+      "ldgui_type": "ldGauge",
+      "header": "src/gui/ldGauge.h",
+      "required_native_capabilities": [
+        "set_value_range",
+        "pointer_image_color",
+        "scale_tick_configuration"
+      ],
+      "picoui_widget": "picoui_gauge",
+      "status": "existing_release_contract"
+    },
+    {
+      "name": "graph",
+      "ldgui_type": "ldGraph",
+      "header": "src/gui/ldGraph.h",
+      "required_native_capabilities": [
+        "set_series_data",
+        "axis_grid_configuration",
+        "color_style_resources"
+      ],
+      "picoui_widget": "picoui_graph",
+      "status": "existing_release_contract"
+    },
+    {
+      "name": "table",
+      "ldgui_type": "ldTable",
+      "header": "src/gui/ldTable.h",
+      "required_native_capabilities": [
+        "set_cell_data",
+        "row_col_configuration",
+        "cell_style_alignment"
+      ],
+      "picoui_widget": "picoui_table",
+      "status": "existing_release_contract"
+    },
+    {
+      "name": "calendar",
+      "ldgui_type": "ldCalendar",
+      "header": "src/gui/ldCalendar.h",
+      "required_native_capabilities": [
+        "set_date_model",
+        "day_name_grid",
+        "cell_color_font_style"
+      ],
+      "picoui_widget": "picoui_calendar",
+      "status": "existing_release_contract"
+    },
+    {
+      "name": "icon_slider",
+      "ldgui_type": "ldIconSlider",
+      "header": "src/gui/ldIconSlider.h",
+      "required_native_capabilities": [
+        "set_icons_masks",
+        "selection_speed",
+        "default_offset_click"
+      ],
+      "picoui_widget": "picoui_icon_slider",
+      "status": "existing_release_contract"
+    },
+    {
+      "name": "radial_menu",
+      "ldgui_type": "ldRadialMenu",
+      "header": "src/gui/ldRadialMenu.h",
+      "required_native_capabilities": [
+        "set_icons_masks",
+        "selection_offset_speed",
+        "click_default_item"
+      ],
+      "picoui_widget": "picoui_radial_menu",
+      "status": "existing_release_contract"
+    },
+    {
+      "name": "animation",
+      "ldgui_type": "ldAnimation",
+      "header": "src/gui/ldAnimation.h",
+      "required_native_capabilities": [
+        "init_image_period",
+        "show_frame_tile",
+        "frame_lifecycle"
+      ],
+      "picoui_widget": "picoui_animation",
+      "status": "existing_release_contract"
+    },
+    {
+      "name": "canvas",
+      "ldgui_type": "ldCanvas",
+      "header": "src/gui/ldCanvas.h",
+      "required_native_capabilities": [
+        "create_native_canvas_widget",
+        "clear_command_list",
+        "push_portable_draw_commands"
+      ],
+      "picoui_widget": "picoui_canvas",
+      "status": "existing_release_contract"
+    }
+  ]
+}

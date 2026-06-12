@@ -17,8 +17,8 @@
  */
 
 #include "internal.h"
-#include "picoui/list.h"
-#include "picoui/widget.h"
+#include "list.h"
+#include "widget.h"
 #include "../core/runtime_bridge.h"
 #include "../../../src/gui/ldList.h"
 

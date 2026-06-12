@@ -17,8 +17,8 @@
  */
 
 #include "internal.h"
-#include "picoui/clock.h"
-#include "picoui/widget.h"
+#include "clock.h"
+#include "widget.h"
 #include "../core/runtime_bridge.h"
 #include "../../../src/gui/ldClock.h"
 

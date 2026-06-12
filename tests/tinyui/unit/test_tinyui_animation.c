@@ -1,4 +1,4 @@
-#include "picoui/animation.h"
+#include "animation.h"
 #include "app.h"
 #include "image.h"
 #include "widget.h"

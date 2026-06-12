@@ -3,25 +3,16 @@
     "picoui_dir_exists": false,
     "tinyui_dir_exists": true,
     "backend_c_files": 0,
+    "backend_compat_includes": [],
+    "top_level_wrapper_forward_count": 0,
+    "top_level_wrapper_forward_names": [],
     "compat_public_header_count": 42,
-    "tinyui_public_header_count": 32,
+    "tinyui_public_header_count": 44,
     "compat_public_headers_require_followup": [
-      "animation.h",
-      "arc.h",
-      "checkbox.h",
-      "clock.h",
-      "date_time.h",
-      "gauge.h",
-      "list.h",
       "picoui.h",
-      "port.h",
-      "progress_bar.h",
-      "progress_wheel.h",
-      "qrcode.h",
-      "sdl.h",
-      "slider.h"
+      "sdl.h"
     ],
     "picoui_public_api_count": 559,
-    "tinyui_public_api_count": 26
+    "tinyui_public_api_count": 31
   }
 }

@@ -19,7 +19,7 @@
 #ifndef PICOUI_GRAPH_H
 #define PICOUI_GRAPH_H
 
-#include "picoui/widget.h"
+#include "../widget.h"
 
 struct picoui_window;
 struct picoui_graph;

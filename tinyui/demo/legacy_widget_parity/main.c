@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#include "picoui/picoui.h"
+#include "tinyui.h"
 #include "../../../examples/common/demo/widget/images/uiImages.h"
 
 struct legacy_widget_runtime {

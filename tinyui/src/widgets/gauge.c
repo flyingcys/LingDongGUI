@@ -18,8 +18,8 @@
 
 #include "internal.h"
 #include "backend.h"
-#include "picoui/gauge.h"
-#include "picoui/widget.h"
+#include "gauge.h"
+#include "widget.h"
 #include "../core/runtime_bridge.h"
 #include "../../../src/gui/ldGauge.h"
 

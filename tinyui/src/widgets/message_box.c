@@ -18,8 +18,8 @@
 
 #include "internal.h"
 #include "backend.h"
-#include "picoui/message_box.h"
-#include "picoui/widget.h"
+#include "message_box.h"
+#include "widget.h"
 #include "../core/runtime_bridge.h"
 #include "../../../src/gui/ldMessageBox.h"
 #include "../../../src/gui/ldBase.h"

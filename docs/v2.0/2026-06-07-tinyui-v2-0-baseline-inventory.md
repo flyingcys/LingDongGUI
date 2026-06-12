@@ -5,6 +5,7 @@
 - 状态：P0 已落地
 - 日期：2026-06-07
 - 对应阶段：`docs/v2.0/plans/stages/p0-baseline-and-guards-plan.md`
+- 作用域：本文只冻结 `v2.0/P0` 当时的阶段基线，不属于当前 `v2.1` canonical truth；若要判断当前仓库主线真相，应回看 `docs/v2.1/*` 与 `tests/tinyui/contract/*`
 
 ## 当前共享层
 

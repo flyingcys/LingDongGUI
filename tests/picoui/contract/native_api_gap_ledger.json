@@ -607,6 +607,30 @@
     },
     {
       "widget": "arc",
+      "group_kind": "widget",
+      "header": "src/gui/ldArc.h",
+      "ldgui_symbol": "ldArcSetQuarterImage",
+      "category": "setter",
+      "gap_status": "missing_picoui_api",
+      "policy_category": "backend_private_hook",
+      "planned_task": "R5",
+      "overwrap_risk": false,
+      "notes": "R0 inventory seed; later tasks must replace missing_* with concrete PicoUI/backend/unit/gate evidence.",
+      "required": true,
+      "coverage_kind": "native_setter_parity",
+      "picoui_api": "picoui_arc_set_quarter_image",
+      "backend_proof": "picoui_backend_arc_set_quarter_image",
+      "unit_test": "test_arc_set_quarter_image_native_parity",
+      "gate_evidence": [],
+      "rationale": "Frozen contract inventory now tracks the native quarter-image setter; PicoUI parity is still missing and must be closed with concrete API/backend/unit proof.",
+      "capability_release_judgement": "parity_incomplete",
+      "shared_policy": "backend_proof_only",
+      "shared_policy_evidence": [
+        "No shared parity path exists yet; row remains inventory-only until concrete API/backend/unit evidence is added."
+      ]
+    },
+    {
+      "widget": "arc",
       "header": "src/gui/ldArc.h",
       "ldgui_symbol": "ldArcSetRotationAngle",
       "category": "setter",
@@ -805,7 +829,7 @@
       "rationale": "a-0.12 direct public API parity: portable PicoUI wrapper covers the native base helper with public header/source/unit proof.",
       "shared_policy": "shared_api_equivalence",
       "shared_policy_evidence": [
-        "PicoUI public API is declared in picoui/include/picoui/widget.h.",
+        "PicoUI public API is declared in tinyui/include/widget.h.",
         "test_tinyui_layout verifies public API round-trip against LingDongGUI base tree/geometry/focus behavior."
       ],
       "capability_release_judgement": "direct_parity_complete",
@@ -835,7 +859,7 @@
       "rationale": "a-0.12 direct public API parity: portable PicoUI wrapper covers the native base helper with public header/source/unit proof.",
       "shared_policy": "shared_api_equivalence",
       "shared_policy_evidence": [
-        "PicoUI public API is declared in picoui/include/picoui/widget.h.",
+        "PicoUI public API is declared in tinyui/include/widget.h.",
         "test_tinyui_layout verifies public API round-trip against LingDongGUI base tree/geometry/focus behavior."
       ],
       "capability_release_judgement": "direct_parity_complete",
@@ -865,7 +889,7 @@
       "rationale": "a-0.13 item 7 closes background pan/move with a portable window-level API backed by the real LingDongGUI scene root background movement helper.",
       "shared_policy": "shared_api_equivalence",
       "shared_policy_evidence": [
-        "picoui/include/picoui/window.h exposes public background offset setter/getter.",
+        "tinyui/include/window.h exposes public background offset setter/getter.",
         "test_window_background_offset_round_trip_to_scene_root verifies readback and real scene-root movement semantics."
       ],
       "capability_release_judgement": "direct_parity_complete",
@@ -895,7 +919,7 @@
       "rationale": "a-0.13 item 8 closes raw fill-color drawing through a portable canvas command API rendered by the real LingDongGUI backend tree.",
       "shared_policy": "shared_api_equivalence",
       "shared_policy_evidence": [
-        "picoui/include/picoui/canvas.h exposes public canvas drawing commands.",
+        "tinyui/include/canvas.h exposes public canvas drawing commands.",
         "test_tinyui_canvas_command_round_trip_to_native_canvas verifies commands land on a real native canvas widget."
       ],
       "capability_release_judgement": "direct_parity_complete",
@@ -903,6 +927,32 @@
       "group_kind": "shared_base",
       "equivalence_proof": "picoui_canvas_fill_rect records a portable fill-rect command that ldCanvas_show renders via ldBaseColor.",
       "picoui_public_api": "picoui_canvas_fill_rect"
+    },
+    {
+      "widget": "base",
+      "group_kind": "shared_base",
+      "header": "src/gui/ldBase.h",
+      "ldgui_symbol": "ldBaseDrawCapsule",
+      "category": "helper",
+      "gap_status": "allowlisted",
+      "policy_category": "base_tree_policy",
+      "planned_task": "R2",
+      "overwrap_risk": false,
+      "notes": "Internal/helper or host utility API; R0 keeps it in the ledger but does not propose a public wrapper.",
+      "required": false,
+      "allowlist_reason": "Internal/helper or host utility API; R0 keeps it in the ledger but does not propose a public wrapper.",
+      "coverage_kind": "non_widget_allowlisted",
+      "picoui_api": "",
+      "backend_proof": "",
+      "unit_test": "",
+      "gate_evidence": [],
+      "rationale": "Raw drawing helper remains a shared render-pipeline utility and is not promoted as a direct PicoUI public API.",
+      "capability_release_judgement": "allowlisted",
+      "shared_policy": "allowlisted_tree_helper",
+      "shared_policy_evidence": [
+        "Shared drawing helper; no user-facing PicoUI wrapper is planned for direct exposure."
+      ],
+      "direct_100_category": "policy_never_public"
     },
     {
       "widget": "base",
@@ -925,7 +975,7 @@
       "rationale": "a-0.13 item 8 closes line drawing through a portable canvas command API rendered by the real LingDongGUI backend tree.",
       "shared_policy": "shared_api_equivalence",
       "shared_policy_evidence": [
-        "picoui/include/picoui/canvas.h exposes public line drawing command.",
+        "tinyui/include/canvas.h exposes public line drawing command.",
         "test_tinyui_canvas_command_round_trip_to_native_canvas verifies native canvas command sync."
       ],
       "capability_release_judgement": "direct_parity_complete",
@@ -955,7 +1005,7 @@
       "rationale": "a-0.12 direct public API parity: portable PicoUI wrapper covers the native base helper with public header/source/unit proof.",
       "shared_policy": "shared_api_equivalence",
       "shared_policy_evidence": [
-        "PicoUI public API is declared in picoui/include/picoui/widget.h.",
+        "PicoUI public API is declared in tinyui/include/widget.h.",
         "test_tinyui_layout verifies public API round-trip against LingDongGUI base tree/geometry/focus behavior."
       ],
       "capability_release_judgement": "direct_parity_complete",
@@ -985,7 +1035,7 @@
       "rationale": "a-0.12 direct public API parity: portable PicoUI wrapper covers the native base helper with public header/source/unit proof.",
       "shared_policy": "shared_api_equivalence",
       "shared_policy_evidence": [
-        "PicoUI public API is declared in picoui/include/picoui/widget.h.",
+        "PicoUI public API is declared in tinyui/include/widget.h.",
         "test_tinyui_layout verifies public API round-trip against LingDongGUI base tree/geometry/focus behavior."
       ],
       "capability_release_judgement": "direct_parity_complete",
@@ -1015,7 +1065,7 @@
       "rationale": "a-0.12 direct public API parity: portable PicoUI wrapper covers the native base helper with public header/source/unit proof.",
       "shared_policy": "shared_api_equivalence",
       "shared_policy_evidence": [
-        "PicoUI public API is declared in picoui/include/picoui/widget.h.",
+        "PicoUI public API is declared in tinyui/include/widget.h.",
         "test_tinyui_layout verifies public API round-trip against LingDongGUI base tree/geometry/focus behavior."
       ],
       "capability_release_judgement": "direct_parity_complete",
@@ -1045,7 +1095,7 @@
       "rationale": "a-0.12 direct public API parity: portable PicoUI wrapper covers the native base helper with public header/source/unit proof.",
       "shared_policy": "shared_api_equivalence",
       "shared_policy_evidence": [
-        "PicoUI public API is declared in picoui/include/picoui/widget.h.",
+        "PicoUI public API is declared in tinyui/include/widget.h.",
         "test_tinyui_layout verifies public API round-trip against LingDongGUI base tree/geometry/focus behavior."
       ],
       "capability_release_judgement": "direct_parity_complete",
@@ -1075,7 +1125,7 @@
       "rationale": "a-0.12 direct public API parity: portable PicoUI wrapper covers the native base helper with public header/source/unit proof.",
       "shared_policy": "shared_api_equivalence",
       "shared_policy_evidence": [
-        "PicoUI public API is declared in picoui/include/picoui/widget.h.",
+        "PicoUI public API is declared in tinyui/include/widget.h.",
         "test_tinyui_layout verifies public API round-trip against LingDongGUI base tree/geometry/focus behavior."
       ],
       "capability_release_judgement": "direct_parity_complete",
@@ -1105,7 +1155,7 @@
       "rationale": "a-0.12 direct public API parity: portable PicoUI wrapper covers the native base helper with public header/source/unit proof.",
       "shared_policy": "shared_api_equivalence",
       "shared_policy_evidence": [
-        "PicoUI public API is declared in picoui/include/picoui/widget.h.",
+        "PicoUI public API is declared in tinyui/include/widget.h.",
         "test_tinyui_layout verifies public API round-trip against LingDongGUI base tree/geometry/focus behavior."
       ],
       "capability_release_judgement": "direct_parity_complete",
@@ -1136,7 +1186,7 @@
       "rationale": "a-0.13 item 5 closes system-date provider intent through portable widget-level provider toggles rather than exposing raw host date helpers.",
       "shared_policy": "shared_api_equivalence",
       "shared_policy_evidence": [
-        "picoui/include/picoui/date_time.h and calendar.h expose system provider toggles.",
+        "tinyui/include/date_time.h and calendar.h expose system provider toggles.",
         "Focused tests verify native auto-system date mode and readback."
       ],
       "capability_release_judgement": "direct_parity_complete",
@@ -1220,7 +1270,7 @@
       "rationale": "a-0.12 direct public API parity: portable PicoUI wrapper covers the native base helper with public header/source/unit proof.",
       "shared_policy": "shared_api_equivalence",
       "shared_policy_evidence": [
-        "PicoUI public API is declared in picoui/include/picoui/widget.h.",
+        "PicoUI public API is declared in tinyui/include/widget.h.",
         "test_tinyui_layout verifies public API round-trip against LingDongGUI base tree/geometry/focus behavior."
       ],
       "capability_release_judgement": "direct_parity_complete",
@@ -1250,7 +1300,7 @@
       "rationale": "a-0.12 direct public API parity: portable PicoUI wrapper covers the native base helper with public header/source/unit proof.",
       "shared_policy": "shared_api_equivalence",
       "shared_policy_evidence": [
-        "PicoUI public API is declared in picoui/include/picoui/widget.h.",
+        "PicoUI public API is declared in tinyui/include/widget.h.",
         "test_tinyui_layout verifies public API round-trip against LingDongGUI base tree/geometry/focus behavior."
       ],
       "capability_release_judgement": "direct_parity_complete",
@@ -1307,7 +1357,7 @@
       "rationale": "a-0.12 direct public API parity: portable PicoUI wrapper covers the native base helper with public header/source/unit proof.",
       "shared_policy": "shared_api_equivalence",
       "shared_policy_evidence": [
-        "PicoUI public API is declared in picoui/include/picoui/widget.h.",
+        "PicoUI public API is declared in tinyui/include/widget.h.",
         "test_tinyui_layout verifies public API round-trip against LingDongGUI base tree/geometry/focus behavior."
       ],
       "capability_release_judgement": "direct_parity_complete",
@@ -1364,7 +1414,7 @@
       "rationale": "a-0.12 direct public API parity: portable PicoUI wrapper covers the native base helper with public header/source/unit proof.",
       "shared_policy": "shared_api_equivalence",
       "shared_policy_evidence": [
-        "PicoUI public API is declared in picoui/include/picoui/widget.h.",
+        "PicoUI public API is declared in tinyui/include/widget.h.",
         "test_tinyui_layout verifies public API round-trip against LingDongGUI base tree/geometry/focus behavior."
       ],
       "capability_release_judgement": "direct_parity_complete",
@@ -1394,7 +1444,7 @@
       "rationale": "a-0.12 direct public API parity: portable PicoUI wrapper covers the native base helper with public header/source/unit proof.",
       "shared_policy": "shared_api_equivalence",
       "shared_policy_evidence": [
-        "PicoUI public API is declared in picoui/include/picoui/widget.h.",
+        "PicoUI public API is declared in tinyui/include/widget.h.",
         "test_tinyui_layout verifies public API round-trip against LingDongGUI base tree/geometry/focus behavior."
       ],
       "capability_release_judgement": "direct_parity_complete",
@@ -1452,7 +1502,7 @@
       "rationale": "a-0.13 item 5 closes system-time provider intent through portable widget-level provider toggles rather than exposing raw host time helpers.",
       "shared_policy": "shared_api_equivalence",
       "shared_policy_evidence": [
-        "picoui/include/picoui/date_time.h and clock.h expose system provider toggles.",
+        "tinyui/include/date_time.h and clock.h expose system provider toggles.",
         "Focused tests verify native auto-system time mode and readback."
       ],
       "capability_release_judgement": "direct_parity_complete",
@@ -1483,7 +1533,7 @@
       "rationale": "a-0.13 item 4 closes VRES font consumption with a portable PicoUI font factory consumed by text and button widgets.",
       "shared_policy": "shared_api_equivalence",
       "shared_policy_evidence": [
-        "picoui/include/picoui/image.h exposes VRES font factory API.",
+        "tinyui/include/image.h exposes VRES font factory API.",
         "Focused tests verify VRES font round-trip and widget consumption."
       ],
       "capability_release_judgement": "direct_parity_complete",
@@ -1513,7 +1563,7 @@
       "rationale": "a-0.13 item 4 closes VRES image consumption with a portable PicoUI image source factory.",
       "shared_policy": "shared_api_equivalence",
       "shared_policy_evidence": [
-        "picoui/include/picoui/image.h exposes VRES image source factory API.",
+        "tinyui/include/image.h exposes VRES image source factory API.",
         "Focused tests verify VRES image source round-trip."
       ],
       "capability_release_judgement": "direct_parity_complete",
@@ -1543,7 +1593,7 @@
       "rationale": "a-0.13 item 5 closes system weekday/grid refresh intent through the calendar system-date provider toggle.",
       "shared_policy": "shared_api_equivalence",
       "shared_policy_evidence": [
-        "picoui/include/picoui/calendar.h exposes system-date provider toggle API.",
+        "tinyui/include/calendar.h exposes system-date provider toggle API.",
         "Focused test verifies native calendar auto-system date mode and readback."
       ],
       "capability_release_judgement": "direct_parity_complete",
@@ -1573,7 +1623,7 @@
       "rationale": "a-0.12 direct public API parity: portable PicoUI wrapper covers the native base helper with public header/source/unit proof.",
       "shared_policy": "shared_api_equivalence",
       "shared_policy_evidence": [
-        "PicoUI public API is declared in picoui/include/picoui/widget.h.",
+        "PicoUI public API is declared in tinyui/include/widget.h.",
         "test_tinyui_layout verifies public API round-trip against LingDongGUI base tree/geometry/focus behavior."
       ],
       "capability_release_judgement": "direct_parity_complete",
@@ -1603,7 +1653,7 @@
       "rationale": "a-0.12 direct public API parity: portable PicoUI wrapper covers the native base helper with public header/source/unit proof.",
       "shared_policy": "shared_api_equivalence",
       "shared_policy_evidence": [
-        "PicoUI public API is declared in picoui/include/picoui/widget.h.",
+        "PicoUI public API is declared in tinyui/include/widget.h.",
         "test_tinyui_layout verifies public API round-trip against LingDongGUI base tree/geometry/focus behavior."
       ],
       "capability_release_judgement": "direct_parity_complete",
@@ -1633,7 +1683,7 @@
       "rationale": "a-0.12 direct public API parity: portable PicoUI wrapper covers the native base helper with public header/source/unit proof.",
       "shared_policy": "shared_api_equivalence",
       "shared_policy_evidence": [
-        "PicoUI public API is declared in picoui/include/picoui/widget.h.",
+        "PicoUI public API is declared in tinyui/include/widget.h.",
         "test_tinyui_layout verifies public API round-trip against LingDongGUI base tree/geometry/focus behavior."
       ],
       "capability_release_judgement": "direct_parity_complete",
@@ -1744,7 +1794,7 @@
       "rationale": "a-0.13 item 8 closes image drawing through a portable canvas command API rendered by the real LingDongGUI backend tree.",
       "shared_policy": "shared_api_equivalence",
       "shared_policy_evidence": [
-        "picoui/include/picoui/canvas.h exposes public image draw command.",
+        "tinyui/include/canvas.h exposes public image draw command.",
         "Focused canvas test verifies command sync onto a real native canvas widget."
       ],
       "capability_release_judgement": "direct_parity_complete",
@@ -1774,7 +1824,7 @@
       "rationale": "a-0.13 item 8 closes scaled-image drawing through a portable canvas command API rendered by the real LingDongGUI backend tree.",
       "shared_policy": "shared_api_equivalence",
       "shared_policy_evidence": [
-        "picoui/include/picoui/canvas.h exposes public scaled-image draw command.",
+        "tinyui/include/canvas.h exposes public scaled-image draw command.",
         "Focused canvas test verifies command sync onto a real native canvas widget."
       ],
       "capability_release_judgement": "direct_parity_complete",
@@ -1912,7 +1962,7 @@
       "rationale": "a-0.13 item 8 closes text drawing through a portable canvas command API rendered by the real LingDongGUI backend tree.",
       "shared_policy": "shared_api_equivalence",
       "shared_policy_evidence": [
-        "picoui/include/picoui/canvas.h exposes public text draw command.",
+        "tinyui/include/canvas.h exposes public text draw command.",
         "Focused canvas test verifies command sync onto a real native canvas widget."
       ],
       "capability_release_judgement": "direct_parity_complete",
@@ -3332,6 +3382,30 @@
     },
     {
       "widget": "calendar",
+      "group_kind": "widget",
+      "header": "src/gui/ldCalendar.h",
+      "ldgui_symbol": "ldCalendarSetAutoSysDate",
+      "category": "setter",
+      "gap_status": "missing_picoui_api",
+      "policy_category": "backend_private_hook",
+      "planned_task": "R4",
+      "overwrap_risk": false,
+      "notes": "R0 inventory seed; later tasks must replace missing_* with concrete PicoUI/backend/unit/gate evidence.",
+      "required": true,
+      "coverage_kind": "native_setter_parity",
+      "picoui_api": "picoui_calendar_set_auto_sys_date",
+      "backend_proof": "picoui_backend_calendar_set_auto_sys_date",
+      "unit_test": "test_calendar_set_auto_sys_date_native_parity",
+      "gate_evidence": [],
+      "rationale": "Frozen contract inventory now tracks native auto-system-date control; PicoUI parity is still missing.",
+      "capability_release_judgement": "parity_incomplete",
+      "shared_policy": "backend_proof_only",
+      "shared_policy_evidence": [
+        "No shared parity path exists yet; row remains inventory-only until concrete API/backend/unit evidence is added."
+      ]
+    },
+    {
+      "widget": "calendar",
       "header": "src/gui/ldCalendar.h",
       "ldgui_symbol": "ldCalendarSetDate",
       "category": "setter",
@@ -3589,6 +3663,226 @@
       "gate_evidence": [],
       "rationale": "Render/show entry point owned by backend rendering pipeline.",
       "capability_release_judgement": "allowlisted",
+      "policy_category": "render_pipeline_internal",
+      "direct_100_category": "policy_never_public",
+      "group_kind": "widget"
+    },
+    {
+      "widget": "canvas",
+      "header": "src/gui/ldCanvas.h",
+      "ldgui_symbol": "ldCanvasClear",
+      "category": "update_action",
+      "gap_status": "covered",
+      "planned_task": "a-0.13-T8",
+      "overwrap_risk": false,
+      "notes": "a-0.13 item 8: canvas public API backed by a real native ldCanvas widget and backend command sync.",
+      "required": true,
+      "coverage_kind": "shared_api_equivalence",
+      "picoui_api": "picoui_canvas_clear",
+      "backend_proof": "picoui_backend_canvas_sync",
+      "unit_test": "test_tinyui_canvas_command_round_trip_to_native_canvas",
+      "gate_evidence": [
+        "ctest:test_tinyui_canvas",
+        "python:check_tinyui_release_capability_matrix"
+      ],
+      "rationale": "a-0.13 item 8 closes custom drawing/canvas capability with a portable PicoUI canvas API mapped onto a real native widget.",
+      "shared_policy": "shared_api_equivalence",
+      "shared_policy_evidence": [
+        "tinyui/include/canvas.h exposes public canvas API.",
+        "Focused canvas test verifies native widget binding and command round-trip."
+      ],
+      "capability_release_judgement": "direct_parity_complete",
+      "policy_category": "direct_covered",
+      "group_kind": "widget",
+      "picoui_public_api": "picoui_canvas_clear",
+      "equivalence_proof": "picoui_canvas_clear resets native canvas command list state via backend sync."
+    },
+    {
+      "widget": "canvas",
+      "header": "src/gui/ldCanvas.h",
+      "ldgui_symbol": "ldCanvasPushCommand",
+      "category": "update_action",
+      "gap_status": "covered",
+      "planned_task": "a-0.13-T8",
+      "overwrap_risk": false,
+      "notes": "a-0.13 item 8: canvas public API backed by a real native ldCanvas widget and backend command sync.",
+      "required": true,
+      "coverage_kind": "shared_api_equivalence",
+      "picoui_api": "picoui_canvas_fill_rect + picoui_canvas_draw_line + picoui_canvas_draw_image + picoui_canvas_draw_image_scaled + picoui_canvas_draw_text",
+      "backend_proof": "picoui_backend_canvas_sync -> ldCanvasPushCommand",
+      "unit_test": "test_tinyui_canvas_command_round_trip_to_native_canvas",
+      "gate_evidence": [
+        "ctest:test_tinyui_canvas",
+        "python:check_tinyui_release_capability_matrix"
+      ],
+      "rationale": "a-0.13 item 8 closes custom drawing/canvas capability with a portable PicoUI canvas API mapped onto a real native widget.",
+      "shared_policy": "shared_api_equivalence",
+      "shared_policy_evidence": [
+        "tinyui/include/canvas.h exposes public canvas API.",
+        "Focused canvas test verifies native widget binding and command round-trip."
+      ],
+      "capability_release_judgement": "direct_parity_complete",
+      "policy_category": "direct_covered",
+      "group_kind": "widget",
+      "picoui_public_api": "picoui_canvas_fill_rect + picoui_canvas_draw_line + picoui_canvas_draw_image + picoui_canvas_draw_image_scaled + picoui_canvas_draw_text",
+      "equivalence_proof": "Portable PicoUI canvas commands sync into the native ldCanvas command list via ldCanvasPushCommand."
+    },
+    {
+      "widget": "canvas",
+      "header": "src/gui/ldCanvas.h",
+      "ldgui_symbol": "ldCanvas_depose",
+      "category": "lifecycle",
+      "gap_status": "allowlisted",
+      "planned_task": "a-0.13-T8",
+      "overwrap_risk": false,
+      "notes": "a-0.13 item 8: native canvas lifecycle hook remains backend-owned.",
+      "required": false,
+      "coverage_kind": "lifecycle_internal_allowlisted",
+      "picoui_api": "",
+      "backend_proof": "",
+      "unit_test": "",
+      "gate_evidence": [],
+      "rationale": "Render/lifecycle helpers remain backend-owned and are not exposed as PicoUI public API.",
+      "shared_policy": "allowlisted_tree_helper",
+      "shared_policy_evidence": [
+        "Native widget lifecycle hooks remain backend-managed implementation detail."
+      ],
+      "capability_release_judgement": "allowlisted",
+      "allowlist_reason": "Render/lifecycle helper remains backend-owned and is not a PicoUI user-facing stable public capability.",
+      "policy_category": "lifecycle_internal",
+      "direct_100_category": "policy_never_public",
+      "group_kind": "widget"
+    },
+    {
+      "widget": "canvas",
+      "header": "src/gui/ldCanvas.h",
+      "ldgui_symbol": "ldCanvas_init",
+      "category": "init",
+      "gap_status": "covered",
+      "planned_task": "a-0.13-T8",
+      "overwrap_risk": false,
+      "notes": "a-0.13 item 8: canvas public API backed by a real native ldCanvas widget and backend command sync.",
+      "required": true,
+      "coverage_kind": "shared_api_equivalence",
+      "picoui_api": "picoui_canvas_create",
+      "backend_proof": "picoui_backend_create_canvas",
+      "unit_test": "test_tinyui_canvas_command_round_trip_to_native_canvas",
+      "gate_evidence": [
+        "ctest:test_tinyui_canvas",
+        "python:check_tinyui_release_capability_matrix"
+      ],
+      "rationale": "a-0.13 item 8 closes custom drawing/canvas capability with a portable PicoUI canvas API mapped onto a real native widget.",
+      "shared_policy": "shared_api_equivalence",
+      "shared_policy_evidence": [
+        "tinyui/include/canvas.h exposes public canvas API.",
+        "Focused canvas test verifies native widget binding and command round-trip."
+      ],
+      "capability_release_judgement": "direct_parity_complete",
+      "policy_category": "direct_covered",
+      "group_kind": "widget",
+      "picoui_public_api": "picoui_canvas_create",
+      "equivalence_proof": "picoui_canvas_create allocates and binds a real native ldCanvas widget under a real PicoUI window."
+    },
+    {
+      "widget": "canvas",
+      "header": "src/gui/ldCanvas.h",
+      "ldgui_symbol": "ldCanvas_on_frame_complete",
+      "category": "lifecycle",
+      "gap_status": "allowlisted",
+      "planned_task": "a-0.13-T8",
+      "overwrap_risk": false,
+      "notes": "a-0.13 item 8: native canvas lifecycle hook remains backend-owned.",
+      "required": false,
+      "coverage_kind": "lifecycle_internal_allowlisted",
+      "picoui_api": "",
+      "backend_proof": "",
+      "unit_test": "",
+      "gate_evidence": [],
+      "rationale": "Render/lifecycle helpers remain backend-owned and are not exposed as PicoUI public API.",
+      "shared_policy": "allowlisted_tree_helper",
+      "shared_policy_evidence": [
+        "Native widget lifecycle hooks remain backend-managed implementation detail."
+      ],
+      "capability_release_judgement": "allowlisted",
+      "allowlist_reason": "Render/lifecycle helper remains backend-owned and is not a PicoUI user-facing stable public capability.",
+      "policy_category": "lifecycle_internal",
+      "direct_100_category": "policy_never_public",
+      "group_kind": "widget"
+    },
+    {
+      "widget": "canvas",
+      "header": "src/gui/ldCanvas.h",
+      "ldgui_symbol": "ldCanvas_on_frame_start",
+      "category": "lifecycle",
+      "gap_status": "allowlisted",
+      "planned_task": "a-0.13-T8",
+      "overwrap_risk": false,
+      "notes": "a-0.13 item 8: native canvas lifecycle hook remains backend-owned.",
+      "required": false,
+      "coverage_kind": "lifecycle_internal_allowlisted",
+      "picoui_api": "",
+      "backend_proof": "",
+      "unit_test": "",
+      "gate_evidence": [],
+      "rationale": "Render/lifecycle helpers remain backend-owned and are not exposed as PicoUI public API.",
+      "shared_policy": "allowlisted_tree_helper",
+      "shared_policy_evidence": [
+        "Native widget lifecycle hooks remain backend-managed implementation detail."
+      ],
+      "capability_release_judgement": "allowlisted",
+      "allowlist_reason": "Render/lifecycle helper remains backend-owned and is not a PicoUI user-facing stable public capability.",
+      "policy_category": "lifecycle_internal",
+      "direct_100_category": "policy_never_public",
+      "group_kind": "widget"
+    },
+    {
+      "widget": "canvas",
+      "header": "src/gui/ldCanvas.h",
+      "ldgui_symbol": "ldCanvas_on_load",
+      "category": "lifecycle",
+      "gap_status": "allowlisted",
+      "planned_task": "a-0.13-T8",
+      "overwrap_risk": false,
+      "notes": "a-0.13 item 8: native canvas lifecycle hook remains backend-owned.",
+      "required": false,
+      "coverage_kind": "lifecycle_internal_allowlisted",
+      "picoui_api": "",
+      "backend_proof": "",
+      "unit_test": "",
+      "gate_evidence": [],
+      "rationale": "Render/lifecycle helpers remain backend-owned and are not exposed as PicoUI public API.",
+      "shared_policy": "allowlisted_tree_helper",
+      "shared_policy_evidence": [
+        "Native widget lifecycle hooks remain backend-managed implementation detail."
+      ],
+      "capability_release_judgement": "allowlisted",
+      "allowlist_reason": "Render/lifecycle helper remains backend-owned and is not a PicoUI user-facing stable public capability.",
+      "policy_category": "lifecycle_internal",
+      "direct_100_category": "policy_never_public",
+      "group_kind": "widget"
+    },
+    {
+      "widget": "canvas",
+      "header": "src/gui/ldCanvas.h",
+      "ldgui_symbol": "ldCanvas_show",
+      "category": "show",
+      "gap_status": "allowlisted",
+      "planned_task": "a-0.13-T8",
+      "overwrap_risk": false,
+      "notes": "a-0.13 item 8: native canvas show entry remains backend render-pipeline owned.",
+      "required": false,
+      "coverage_kind": "non_widget_allowlisted",
+      "picoui_api": "",
+      "backend_proof": "",
+      "unit_test": "",
+      "gate_evidence": [],
+      "rationale": "Render/show entry point remains owned by the backend rendering pipeline.",
+      "shared_policy": "allowlisted_tree_helper",
+      "shared_policy_evidence": [
+        "Native widget show entry points are backend render-pipeline internals."
+      ],
+      "capability_release_judgement": "allowlisted",
+      "allowlist_reason": "Render/show entry point owned by backend rendering pipeline.",
       "policy_category": "render_pipeline_internal",
       "direct_100_category": "policy_never_public",
       "group_kind": "widget"
@@ -4158,6 +4452,110 @@
     },
     {
       "widget": "clock",
+      "group_kind": "widget",
+      "header": "src/gui/ldClock.h",
+      "ldgui_symbol": "ldClockBindBackgroundImage",
+      "category": "helper",
+      "gap_status": "allowlisted",
+      "policy_category": "backend_private_hook",
+      "planned_task": "R2",
+      "overwrap_risk": false,
+      "notes": "Internal/helper or host utility API; R0 keeps it in the ledger but does not propose a public wrapper.",
+      "required": false,
+      "allowlist_reason": "Internal/helper or host utility API; R0 keeps it in the ledger but does not propose a public wrapper.",
+      "coverage_kind": "non_widget_allowlisted",
+      "picoui_api": "",
+      "backend_proof": "",
+      "unit_test": "",
+      "gate_evidence": [],
+      "rationale": "Clock image ownership binding helper remains internal/backend-facing and is not exposed as a separate PicoUI user API.",
+      "capability_release_judgement": "allowlisted",
+      "shared_policy": "allowlisted_tree_helper",
+      "shared_policy_evidence": [
+        "Ownership-binding helper is backend-facing and not a standalone user-visible PicoUI capability."
+      ],
+      "direct_100_category": "policy_never_public"
+    },
+    {
+      "widget": "clock",
+      "group_kind": "widget",
+      "header": "src/gui/ldClock.h",
+      "ldgui_symbol": "ldClockBindHourPointerImage",
+      "category": "helper",
+      "gap_status": "allowlisted",
+      "policy_category": "backend_private_hook",
+      "planned_task": "R2",
+      "overwrap_risk": false,
+      "notes": "Internal/helper or host utility API; R0 keeps it in the ledger but does not propose a public wrapper.",
+      "required": false,
+      "allowlist_reason": "Internal/helper or host utility API; R0 keeps it in the ledger but does not propose a public wrapper.",
+      "coverage_kind": "non_widget_allowlisted",
+      "picoui_api": "",
+      "backend_proof": "",
+      "unit_test": "",
+      "gate_evidence": [],
+      "rationale": "Clock pointer ownership binding helper remains internal/backend-facing and is not exposed as a separate PicoUI user API.",
+      "capability_release_judgement": "allowlisted",
+      "shared_policy": "allowlisted_tree_helper",
+      "shared_policy_evidence": [
+        "Ownership-binding helper is backend-facing and not a standalone user-visible PicoUI capability."
+      ],
+      "direct_100_category": "policy_never_public"
+    },
+    {
+      "widget": "clock",
+      "group_kind": "widget",
+      "header": "src/gui/ldClock.h",
+      "ldgui_symbol": "ldClockBindMinutePointerImage",
+      "category": "helper",
+      "gap_status": "allowlisted",
+      "policy_category": "backend_private_hook",
+      "planned_task": "R2",
+      "overwrap_risk": false,
+      "notes": "Internal/helper or host utility API; R0 keeps it in the ledger but does not propose a public wrapper.",
+      "required": false,
+      "allowlist_reason": "Internal/helper or host utility API; R0 keeps it in the ledger but does not propose a public wrapper.",
+      "coverage_kind": "non_widget_allowlisted",
+      "picoui_api": "",
+      "backend_proof": "",
+      "unit_test": "",
+      "gate_evidence": [],
+      "rationale": "Clock pointer ownership binding helper remains internal/backend-facing and is not exposed as a separate PicoUI user API.",
+      "capability_release_judgement": "allowlisted",
+      "shared_policy": "allowlisted_tree_helper",
+      "shared_policy_evidence": [
+        "Ownership-binding helper is backend-facing and not a standalone user-visible PicoUI capability."
+      ],
+      "direct_100_category": "policy_never_public"
+    },
+    {
+      "widget": "clock",
+      "group_kind": "widget",
+      "header": "src/gui/ldClock.h",
+      "ldgui_symbol": "ldClockBindSecondPointerImage",
+      "category": "helper",
+      "gap_status": "allowlisted",
+      "policy_category": "backend_private_hook",
+      "planned_task": "R2",
+      "overwrap_risk": false,
+      "notes": "Internal/helper or host utility API; R0 keeps it in the ledger but does not propose a public wrapper.",
+      "required": false,
+      "allowlist_reason": "Internal/helper or host utility API; R0 keeps it in the ledger but does not propose a public wrapper.",
+      "coverage_kind": "non_widget_allowlisted",
+      "picoui_api": "",
+      "backend_proof": "",
+      "unit_test": "",
+      "gate_evidence": [],
+      "rationale": "Clock pointer ownership binding helper remains internal/backend-facing and is not exposed as a separate PicoUI user API.",
+      "capability_release_judgement": "allowlisted",
+      "shared_policy": "allowlisted_tree_helper",
+      "shared_policy_evidence": [
+        "Ownership-binding helper is backend-facing and not a standalone user-visible PicoUI capability."
+      ],
+      "direct_100_category": "policy_never_public"
+    },
+    {
+      "widget": "clock",
       "header": "src/gui/ldClock.h",
       "ldgui_symbol": "ldClockInit",
       "category": "macro_alias",
@@ -4182,6 +4580,30 @@
       "equivalence_proof": "picoui_clock_init allocates and binds real ldClock widget, covering native init semantics.",
       "policy_category": "direct_covered",
       "group_kind": "widget"
+    },
+    {
+      "widget": "clock",
+      "group_kind": "widget",
+      "header": "src/gui/ldClock.h",
+      "ldgui_symbol": "ldClockSetAutoSysTime",
+      "category": "setter",
+      "gap_status": "missing_picoui_api",
+      "policy_category": "backend_private_hook",
+      "planned_task": "R5",
+      "overwrap_risk": false,
+      "notes": "R0 inventory seed; later tasks must replace missing_* with concrete PicoUI/backend/unit/gate evidence.",
+      "required": true,
+      "coverage_kind": "native_setter_parity",
+      "picoui_api": "picoui_clock_set_auto_sys_time",
+      "backend_proof": "picoui_backend_clock_set_auto_sys_time",
+      "unit_test": "test_clock_set_auto_sys_time_native_parity",
+      "gate_evidence": [],
+      "rationale": "Frozen contract inventory now tracks native auto-system-time control; PicoUI parity is still missing.",
+      "capability_release_judgement": "parity_incomplete",
+      "shared_policy": "backend_proof_only",
+      "shared_policy_evidence": [
+        "No shared parity path exists yet; row remains inventory-only until concrete API/backend/unit evidence is added."
+      ]
     },
     {
       "widget": "clock",
@@ -4462,226 +4884,6 @@
       "gate_evidence": [],
       "rationale": "Render/show entry point owned by backend rendering pipeline.",
       "capability_release_judgement": "allowlisted",
-      "policy_category": "render_pipeline_internal",
-      "direct_100_category": "policy_never_public",
-      "group_kind": "widget"
-    },
-    {
-      "widget": "canvas",
-      "header": "src/gui/ldCanvas.h",
-      "ldgui_symbol": "ldCanvas_init",
-      "category": "init",
-      "gap_status": "covered",
-      "planned_task": "a-0.13-T8",
-      "overwrap_risk": false,
-      "notes": "a-0.13 item 8: canvas public API backed by a real native ldCanvas widget and backend command sync.",
-      "required": true,
-      "coverage_kind": "shared_api_equivalence",
-      "picoui_api": "picoui_canvas_create",
-      "backend_proof": "picoui_backend_create_canvas",
-      "unit_test": "test_tinyui_canvas_command_round_trip_to_native_canvas",
-      "gate_evidence": [
-        "ctest:test_tinyui_canvas",
-        "python:check_tinyui_release_capability_matrix"
-      ],
-      "rationale": "a-0.13 item 8 closes custom drawing/canvas capability with a portable PicoUI canvas API mapped onto a real native widget.",
-      "shared_policy": "shared_api_equivalence",
-      "shared_policy_evidence": [
-        "picoui/include/picoui/canvas.h exposes public canvas API.",
-        "Focused canvas test verifies native widget binding and command round-trip."
-      ],
-      "capability_release_judgement": "direct_parity_complete",
-      "policy_category": "direct_covered",
-      "group_kind": "widget",
-      "picoui_public_api": "picoui_canvas_create",
-      "equivalence_proof": "picoui_canvas_create allocates and binds a real native ldCanvas widget under a real PicoUI window."
-    },
-    {
-      "widget": "canvas",
-      "header": "src/gui/ldCanvas.h",
-      "ldgui_symbol": "ldCanvasClear",
-      "category": "update_action",
-      "gap_status": "covered",
-      "planned_task": "a-0.13-T8",
-      "overwrap_risk": false,
-      "notes": "a-0.13 item 8: canvas public API backed by a real native ldCanvas widget and backend command sync.",
-      "required": true,
-      "coverage_kind": "shared_api_equivalence",
-      "picoui_api": "picoui_canvas_clear",
-      "backend_proof": "picoui_backend_canvas_sync",
-      "unit_test": "test_tinyui_canvas_command_round_trip_to_native_canvas",
-      "gate_evidence": [
-        "ctest:test_tinyui_canvas",
-        "python:check_tinyui_release_capability_matrix"
-      ],
-      "rationale": "a-0.13 item 8 closes custom drawing/canvas capability with a portable PicoUI canvas API mapped onto a real native widget.",
-      "shared_policy": "shared_api_equivalence",
-      "shared_policy_evidence": [
-        "picoui/include/picoui/canvas.h exposes public canvas API.",
-        "Focused canvas test verifies native widget binding and command round-trip."
-      ],
-      "capability_release_judgement": "direct_parity_complete",
-      "policy_category": "direct_covered",
-      "group_kind": "widget",
-      "picoui_public_api": "picoui_canvas_clear",
-      "equivalence_proof": "picoui_canvas_clear resets native canvas command list state via backend sync."
-    },
-    {
-      "widget": "canvas",
-      "header": "src/gui/ldCanvas.h",
-      "ldgui_symbol": "ldCanvasPushCommand",
-      "category": "update_action",
-      "gap_status": "covered",
-      "planned_task": "a-0.13-T8",
-      "overwrap_risk": false,
-      "notes": "a-0.13 item 8: canvas public API backed by a real native ldCanvas widget and backend command sync.",
-      "required": true,
-      "coverage_kind": "shared_api_equivalence",
-      "picoui_api": "picoui_canvas_fill_rect + picoui_canvas_draw_line + picoui_canvas_draw_image + picoui_canvas_draw_image_scaled + picoui_canvas_draw_text",
-      "backend_proof": "picoui_backend_canvas_sync -> ldCanvasPushCommand",
-      "unit_test": "test_tinyui_canvas_command_round_trip_to_native_canvas",
-      "gate_evidence": [
-        "ctest:test_tinyui_canvas",
-        "python:check_tinyui_release_capability_matrix"
-      ],
-      "rationale": "a-0.13 item 8 closes custom drawing/canvas capability with a portable PicoUI canvas API mapped onto a real native widget.",
-      "shared_policy": "shared_api_equivalence",
-      "shared_policy_evidence": [
-        "picoui/include/picoui/canvas.h exposes public canvas API.",
-        "Focused canvas test verifies native widget binding and command round-trip."
-      ],
-      "capability_release_judgement": "direct_parity_complete",
-      "policy_category": "direct_covered",
-      "group_kind": "widget",
-      "picoui_public_api": "picoui_canvas_fill_rect + picoui_canvas_draw_line + picoui_canvas_draw_image + picoui_canvas_draw_image_scaled + picoui_canvas_draw_text",
-      "equivalence_proof": "Portable PicoUI canvas commands sync into the native ldCanvas command list via ldCanvasPushCommand."
-    },
-    {
-      "widget": "canvas",
-      "header": "src/gui/ldCanvas.h",
-      "ldgui_symbol": "ldCanvas_depose",
-      "category": "lifecycle",
-      "gap_status": "allowlisted",
-      "planned_task": "a-0.13-T8",
-      "overwrap_risk": false,
-      "notes": "a-0.13 item 8: native canvas lifecycle hook remains backend-owned.",
-      "required": false,
-      "coverage_kind": "lifecycle_internal_allowlisted",
-      "picoui_api": "",
-      "backend_proof": "",
-      "unit_test": "",
-      "gate_evidence": [],
-      "rationale": "Render/lifecycle helpers remain backend-owned and are not exposed as PicoUI public API.",
-      "shared_policy": "allowlisted_tree_helper",
-      "shared_policy_evidence": [
-        "Native widget lifecycle hooks remain backend-managed implementation detail."
-      ],
-      "capability_release_judgement": "allowlisted",
-      "allowlist_reason": "Render/lifecycle helper remains backend-owned and is not a PicoUI user-facing stable public capability.",
-      "policy_category": "lifecycle_internal",
-      "direct_100_category": "policy_never_public",
-      "group_kind": "widget"
-    },
-    {
-      "widget": "canvas",
-      "header": "src/gui/ldCanvas.h",
-      "ldgui_symbol": "ldCanvas_on_load",
-      "category": "lifecycle",
-      "gap_status": "allowlisted",
-      "planned_task": "a-0.13-T8",
-      "overwrap_risk": false,
-      "notes": "a-0.13 item 8: native canvas lifecycle hook remains backend-owned.",
-      "required": false,
-      "coverage_kind": "lifecycle_internal_allowlisted",
-      "picoui_api": "",
-      "backend_proof": "",
-      "unit_test": "",
-      "gate_evidence": [],
-      "rationale": "Render/lifecycle helpers remain backend-owned and are not exposed as PicoUI public API.",
-      "shared_policy": "allowlisted_tree_helper",
-      "shared_policy_evidence": [
-        "Native widget lifecycle hooks remain backend-managed implementation detail."
-      ],
-      "capability_release_judgement": "allowlisted",
-      "allowlist_reason": "Render/lifecycle helper remains backend-owned and is not a PicoUI user-facing stable public capability.",
-      "policy_category": "lifecycle_internal",
-      "direct_100_category": "policy_never_public",
-      "group_kind": "widget"
-    },
-    {
-      "widget": "canvas",
-      "header": "src/gui/ldCanvas.h",
-      "ldgui_symbol": "ldCanvas_on_frame_start",
-      "category": "lifecycle",
-      "gap_status": "allowlisted",
-      "planned_task": "a-0.13-T8",
-      "overwrap_risk": false,
-      "notes": "a-0.13 item 8: native canvas lifecycle hook remains backend-owned.",
-      "required": false,
-      "coverage_kind": "lifecycle_internal_allowlisted",
-      "picoui_api": "",
-      "backend_proof": "",
-      "unit_test": "",
-      "gate_evidence": [],
-      "rationale": "Render/lifecycle helpers remain backend-owned and are not exposed as PicoUI public API.",
-      "shared_policy": "allowlisted_tree_helper",
-      "shared_policy_evidence": [
-        "Native widget lifecycle hooks remain backend-managed implementation detail."
-      ],
-      "capability_release_judgement": "allowlisted",
-      "allowlist_reason": "Render/lifecycle helper remains backend-owned and is not a PicoUI user-facing stable public capability.",
-      "policy_category": "lifecycle_internal",
-      "direct_100_category": "policy_never_public",
-      "group_kind": "widget"
-    },
-    {
-      "widget": "canvas",
-      "header": "src/gui/ldCanvas.h",
-      "ldgui_symbol": "ldCanvas_on_frame_complete",
-      "category": "lifecycle",
-      "gap_status": "allowlisted",
-      "planned_task": "a-0.13-T8",
-      "overwrap_risk": false,
-      "notes": "a-0.13 item 8: native canvas lifecycle hook remains backend-owned.",
-      "required": false,
-      "coverage_kind": "lifecycle_internal_allowlisted",
-      "picoui_api": "",
-      "backend_proof": "",
-      "unit_test": "",
-      "gate_evidence": [],
-      "rationale": "Render/lifecycle helpers remain backend-owned and are not exposed as PicoUI public API.",
-      "shared_policy": "allowlisted_tree_helper",
-      "shared_policy_evidence": [
-        "Native widget lifecycle hooks remain backend-managed implementation detail."
-      ],
-      "capability_release_judgement": "allowlisted",
-      "allowlist_reason": "Render/lifecycle helper remains backend-owned and is not a PicoUI user-facing stable public capability.",
-      "policy_category": "lifecycle_internal",
-      "direct_100_category": "policy_never_public",
-      "group_kind": "widget"
-    },
-    {
-      "widget": "canvas",
-      "header": "src/gui/ldCanvas.h",
-      "ldgui_symbol": "ldCanvas_show",
-      "category": "show",
-      "gap_status": "allowlisted",
-      "planned_task": "a-0.13-T8",
-      "overwrap_risk": false,
-      "notes": "a-0.13 item 8: native canvas show entry remains backend render-pipeline owned.",
-      "required": false,
-      "coverage_kind": "non_widget_allowlisted",
-      "picoui_api": "",
-      "backend_proof": "",
-      "unit_test": "",
-      "gate_evidence": [],
-      "rationale": "Render/show entry point remains owned by the backend rendering pipeline.",
-      "shared_policy": "allowlisted_tree_helper",
-      "shared_policy_evidence": [
-        "Native widget show entry points are backend render-pipeline internals."
-      ],
-      "capability_release_judgement": "allowlisted",
-      "allowlist_reason": "Render/show entry point owned by backend rendering pipeline.",
       "policy_category": "render_pipeline_internal",
       "direct_100_category": "policy_never_public",
       "group_kind": "widget"
@@ -5859,6 +6061,32 @@
     },
     {
       "widget": "gauge",
+      "group_kind": "widget",
+      "header": "src/gui/ldGauge.h",
+      "ldgui_symbol": "ldGaugeBindPointerImage",
+      "category": "helper",
+      "gap_status": "allowlisted",
+      "policy_category": "backend_private_hook",
+      "planned_task": "R2",
+      "overwrap_risk": false,
+      "notes": "Internal/helper or host utility API; R0 keeps it in the ledger but does not propose a public wrapper.",
+      "required": false,
+      "allowlist_reason": "Internal/helper or host utility API; R0 keeps it in the ledger but does not propose a public wrapper.",
+      "coverage_kind": "non_widget_allowlisted",
+      "picoui_api": "",
+      "backend_proof": "",
+      "unit_test": "",
+      "gate_evidence": [],
+      "rationale": "Gauge pointer ownership binding helper remains internal/backend-facing and is not exposed as a separate PicoUI user API.",
+      "capability_release_judgement": "allowlisted",
+      "shared_policy": "allowlisted_tree_helper",
+      "shared_policy_evidence": [
+        "Ownership-binding helper is backend-facing and not a standalone user-visible PicoUI capability."
+      ],
+      "direct_100_category": "policy_never_public"
+    },
+    {
+      "widget": "gauge",
       "header": "src/gui/ldGauge.h",
       "ldgui_symbol": "ldGaugeInit",
       "category": "macro_alias",
@@ -5962,6 +6190,30 @@
       ],
       "policy_category": "direct_covered",
       "group_kind": "widget"
+    },
+    {
+      "widget": "gauge",
+      "group_kind": "widget",
+      "header": "src/gui/ldGauge.h",
+      "ldgui_symbol": "ldGaugeSetBackgroundImage",
+      "category": "setter",
+      "gap_status": "missing_picoui_api",
+      "policy_category": "backend_private_hook",
+      "planned_task": "R5",
+      "overwrap_risk": false,
+      "notes": "R0 inventory seed; later tasks must replace missing_* with concrete PicoUI/backend/unit/gate evidence.",
+      "required": true,
+      "coverage_kind": "native_setter_parity",
+      "picoui_api": "picoui_gauge_set_background_image",
+      "backend_proof": "picoui_backend_gauge_set_background_image",
+      "unit_test": "test_gauge_set_background_image_native_parity",
+      "gate_evidence": [],
+      "rationale": "Frozen contract inventory now tracks native gauge background-image control; PicoUI parity is still missing.",
+      "capability_release_judgement": "parity_incomplete",
+      "shared_policy": "backend_proof_only",
+      "shared_policy_evidence": [
+        "No shared parity path exists yet; row remains inventory-only until concrete API/backend/unit evidence is added."
+      ]
     },
     {
       "widget": "gauge",
@@ -7072,7 +7324,7 @@
       "rationale": "a-0.13 item 6 closes page/window switch user intent with a portable app-level active-window switch contract under the current runtime configuration.",
       "shared_policy": "shared_api_equivalence",
       "shared_policy_evidence": [
-        "picoui/include/picoui/app.h exposes active-window switch APIs.",
+        "tinyui/include/app.h exposes active-window switch APIs.",
         "Focused app-window switch tests verify active root and switch metadata behavior."
       ],
       "capability_release_judgement": "covered",
@@ -7102,7 +7354,7 @@
       "rationale": "a-0.13 item 6 closes page/window switch user intent with a portable app-level active-window switch contract under the current runtime configuration.",
       "shared_policy": "shared_api_equivalence",
       "shared_policy_evidence": [
-        "picoui/include/picoui/app.h exposes active-window switch APIs.",
+        "tinyui/include/app.h exposes active-window switch APIs.",
         "Focused app-window switch tests verify active root and switch metadata behavior."
       ],
       "capability_release_judgement": "covered",
@@ -7132,7 +7384,7 @@
       "rationale": "a-0.13 item 6 closes page/window switch user intent with a portable app-level active-window switch contract under the current runtime configuration.",
       "shared_policy": "shared_api_equivalence",
       "shared_policy_evidence": [
-        "picoui/include/picoui/app.h exposes active-window switch APIs.",
+        "tinyui/include/app.h exposes active-window switch APIs.",
         "Focused app-window switch tests verify active root and switch metadata behavior."
       ],
       "capability_release_judgement": "covered",
@@ -7162,7 +7414,7 @@
       "rationale": "a-0.13 item 6 closes page/window switch user intent with a portable app-level active-window switch contract under the current runtime configuration.",
       "shared_policy": "shared_api_equivalence",
       "shared_policy_evidence": [
-        "picoui/include/picoui/app.h exposes active-window switch APIs.",
+        "tinyui/include/app.h exposes active-window switch APIs.",
         "Focused app-window switch tests verify active root and switch metadata behavior."
       ],
       "capability_release_judgement": "covered",
@@ -7192,7 +7444,7 @@
       "rationale": "a-0.13 item 6 closes page/window switch user intent with a portable app-level active-window switch contract under the current runtime configuration.",
       "shared_policy": "shared_api_equivalence",
       "shared_policy_evidence": [
-        "picoui/include/picoui/app.h exposes active-window switch APIs.",
+        "tinyui/include/app.h exposes active-window switch APIs.",
         "Focused app-window switch tests verify active root and switch metadata behavior."
       ],
       "capability_release_judgement": "covered",
@@ -8071,7 +8323,7 @@
       "status": null,
       "shared_policy": "shared_api_equivalence",
       "shared_policy_evidence": [
-        "picoui/include/picoui/keyboard.h exposes public key-event callback API.",
+        "tinyui/include/keyboard.h exposes public key-event callback API.",
         "Focused keyboard callback test verifies native PRESS/RELEASE bridge into PicoUI callback."
       ],
       "policy_category": "direct_covered",
@@ -8156,7 +8408,7 @@
       "status": null,
       "shared_policy": "shared_api_equivalence",
       "shared_policy_evidence": [
-        "picoui/include/picoui/keyboard.h exposes portable keyboard layout API.",
+        "tinyui/include/keyboard.h exposes portable keyboard layout API.",
         "Focused keyboard layout test verifies selected key readback and native button table preparation."
       ],
       "policy_category": "direct_covered",

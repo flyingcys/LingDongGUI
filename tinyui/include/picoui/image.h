@@ -19,7 +19,7 @@
 #ifndef PICOUI_IMAGE_H
 #define PICOUI_IMAGE_H
 
-#include "picoui/widget.h"
+#include "../widget.h"
 
 struct picoui_window;
 struct picoui_image;

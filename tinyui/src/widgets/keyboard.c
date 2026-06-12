@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#include "picoui/keyboard.h"
+#include "keyboard.h"
 #include "internal.h"
 #include "../core/runtime_bridge.h"
 #include "ldLineEdit.h"

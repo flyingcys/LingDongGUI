@@ -19,7 +19,7 @@
 #ifndef PICOUI_SCROLL_SELECTER_H
 #define PICOUI_SCROLL_SELECTER_H
 
-#include "picoui/widget.h"
+#include "../widget.h"
 
 struct picoui_window;
 struct picoui_scroll_selecter;

@@ -1,6 +1,12 @@
-# PicoUI API 总览
+# TinyUI API 总览
 
-当前 `a-0.7` 口径下，PicoUI 已覆盖 LingDongGUI `27` 个 widget-like 控件：
+当前 `v2.1` 口径下，TinyUI 的 current truth 以 canonical `tests/tinyui/contract/*` 为准，尤其是：
+
+- `tests/tinyui/contract/tinyui_native_100_inventory.json`
+- `tests/tinyui/contract/tinyui_release_capability_matrix.json`
+- `tests/tinyui/contract/ldgui_public_api_inventory.json`
+
+当前 widget-like 控件覆盖为 `27` 个：
 
 - `window`
 - `label`
@@ -37,16 +43,16 @@
 - 主题与样式桥：真实 backend theme/style apply
 - demo/gate 入口：`runtime / mapping / visible / manual artifact`
 
-## 设计约束
+## 当前约束
 
-- 对外只暴露 `picoui_*`
+- current-facing canonical 目录、header、contract、test、CMake truth 已统一到 `tinyui`
 - 用户不需要直接使用 `ld*`
 - 用户不需要直接使用 `ARM-2D`
-- backend 适配只放在 `picoui/src/backend/ldgui/`
-- `a-0.7` 的 truth-source 以 `tests/picoui/contract/picoui_native_100_inventory.json` 和 `tests/picoui/contract/picoui_release_capability_matrix.json` 为准
+- backend 私有适配仍放在 `tinyui/src/backend/ldgui/`
+- public C API 目前仍允许保留 `picoui_*` 作为过渡态；这不是 `v2.1` 当前 blocker
 
-当前状态：
+## 当前状态
 
-- `27/27` widget-like 控件已进入 PicoUI public API，包含 `animation`
-- `a-0.7` 当前处于 `R8 closeout / release readiness audit`
-- 是否可以正式写成完成，以最终 fresh verification 和 `gitnexus_detect_changes` 结果为准
+- `27/27` widget-like 控件已进入 current public API 覆盖面，包含 `animation`
+- `v2.1` 当前重点不是继续清空 `picoui_*` public symbol，而是保持 canonical truth、contract gate、runtime gate、release-facing 文档一致
+- 是否可以写成 release-ready，仍以 fresh verification 和最终 closeout 证据为准

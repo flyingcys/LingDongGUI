@@ -5,9 +5,11 @@ import json
 
 
 ROOT = Path(__file__).resolve().parents[3]
-PUBLIC_DIR = ROOT / "tinyui" / "include" / "picoui"
-INVENTORY_JSON = ROOT / "tests" / "picoui" / "contract" / "ldgui_public_api_inventory.json"
-LEDGER_JSON = ROOT / "tests" / "picoui" / "contract" / "native_api_gap_ledger.json"
+PUBLIC_DIR = ROOT / "tinyui" / "include"
+LEGACY_PUBLIC_DIR = ROOT / "tinyui" / "include" / "picoui"
+CONTRACT_DIR = ROOT / "tests" / "tinyui" / "contract"
+INVENTORY_JSON = CONTRACT_DIR / "ldgui_public_api_inventory.json"
+LEDGER_JSON = CONTRACT_DIR / "native_api_gap_ledger.json"
 ALLOWED_FUNCTION_PREFIX = "picoui_"
 ALLOWED_MACRO_PREFIX = "PICOUI_"
 ALLOWED_TYPE_PREFIX = "picoui_"
@@ -15,8 +17,18 @@ ALLOWED_COMPAT_TINYUI_FUNCTIONS = {
     "tinyui_screen_create",
     "tinyui_screen_load",
     "tinyui_label_create",
+    "tinyui_label_set_text",
+    "tinyui_label_get_text",
+    "tinyui_label_set_align",
     "tinyui_button_create",
+    "tinyui_button_set_text",
+    "tinyui_button_set_on_clicked",
+    "tinyui_button_set_on_pressed",
+    "tinyui_button_set_on_released",
     "tinyui_switch_create",
+    "tinyui_switch_set_checked",
+    "tinyui_switch_is_checked",
+    "tinyui_switch_set_on_toggled",
 }
 ALLOWED_COMPAT_TINYUI_MACROS = {
     "tinyui_init",
@@ -62,11 +74,26 @@ OPAQUE_ARM_TYPEDEF_RE = re.compile(
 )
 BLOCK_COMMENT_RE = re.compile(r"/\*.*?\*/", re.DOTALL)
 LINE_COMMENT_RE = re.compile(r"//.*?$", re.MULTILINE)
+INCLUDE_FORWARD_RE = re.compile(r'^\s*#include\s+"(?P<target>picoui/[^"]+)"\s*$', re.M)
+
+
+def _allowed_include_guard(header: Path) -> str:
+    stem = header.stem.upper().replace(".", "_")
+    return f"TINYUI_{stem}_H"
 
 
 def strip_c_comments(text: str) -> str:
     text = BLOCK_COMMENT_RE.sub("", text)
     return LINE_COMMENT_RE.sub("", text)
+
+
+def resolve_public_header_text(header: Path) -> str:
+    text = header.read_text(encoding="utf-8")
+    match = INCLUDE_FORWARD_RE.search(text)
+    if match is not None:
+        forwarded = ROOT / "tinyui" / "include" / match.group("target")
+        return forwarded.read_text(encoding="utf-8")
+    return text
 
 
 def assert_allowed_prefix(name: str, *, header: Path, kind: str, prefix: str) -> None:
@@ -79,6 +106,8 @@ def assert_allowed_public_symbol(name: str, *, header: Path, kind: str) -> None:
     if kind == "function" and name in ALLOWED_COMPAT_TINYUI_FUNCTIONS:
         return
     if kind == "macro" and name in ALLOWED_COMPAT_TINYUI_MACROS:
+        return
+    if kind == "macro" and name == _allowed_include_guard(header):
         return
     if kind in {"struct tag", "enum tag", "typedef callback"} and name in ALLOWED_COMPAT_TINYUI_TYPES:
         return
@@ -189,10 +218,13 @@ def _assert_inventory_contract_rows() -> None:
 
 
 def main() -> int:
-    headers = sorted(PUBLIC_DIR.rglob("*.h"))
+    compat_names = {header.name for header in LEGACY_PUBLIC_DIR.glob("*.h")}
+    headers = sorted(
+        header for header in PUBLIC_DIR.glob("*.h") if header.name in compat_names
+    )
     assert headers, "expected PicoUI public headers to exist"
     for header in headers:
-        text = header.read_text(encoding="utf-8")
+        text = resolve_public_header_text(header)
         check_forbidden_identifiers(header, text)
         check_macro_prefixes(header, text)
         check_type_prefixes(header, text)

@@ -19,8 +19,8 @@
 #ifndef PICOUI_CANVAS_H
 #define PICOUI_CANVAS_H
 
-#include "picoui/image.h"
-#include "picoui/theme.h"
+#include "../image.h"
+#include "../theme.h"
 
 struct picoui_window;
 struct picoui_canvas;

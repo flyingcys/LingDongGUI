@@ -19,7 +19,7 @@
 #ifndef PICOUI_SLIDER_H
 #define PICOUI_SLIDER_H
 
-#include "picoui/widget.h"
+#include "../widget.h"
 
 struct picoui_window;
 struct picoui_slider;

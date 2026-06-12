@@ -17,7 +17,7 @@
  */
 
 #include "internal.h"
-#include "picoui/background.h"
+#include "background.h"
 #include "../core/runtime_bridge.h"
 #include "../../../src/gui/ldWindow.h"
 #include "../../../src/porting/ldConfig.h"

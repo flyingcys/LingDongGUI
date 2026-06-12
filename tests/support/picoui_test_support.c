@@ -4,6 +4,7 @@
 #include "../../../src/gui/ldBase.h"
 
 #include <assert.h>
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -18,6 +19,7 @@ static int g_qrcode_snapshot_valid = 0;
 
 static const char *const k_repo_markers[] = {
     "/tests/support/picoui_test_support.c",
+    "/tests/tinyui/unit/",
     "/tests/picoui/unit/",
 };
 
@@ -57,12 +59,17 @@ const char *picoui_test_repo_path_from_file(const char *file, const char *relati
 
 static char *picoui_test_read_file_text(const char *path)
 {
+    const char *resolved_path = path;
     FILE *fp;
     long size;
     char *buf;
 
     assert(path != 0);
-    fp = fopen(path, "rb");
+    fp = fopen(resolved_path, "rb");
+    if (fp == 0 && path[0] != '/') {
+        resolved_path = picoui_test_repo_path_from_file(__FILE__, path);
+        fp = fopen(resolved_path, "rb");
+    }
     assert(fp != 0);
     assert(fseek(fp, 0, SEEK_END) == 0);
     size = ftell(fp);
@@ -90,6 +97,37 @@ int picoui_test_source_contains(const char *path, const char *needle)
     return found;
 }
 
+static int picoui_test_source_match_function_definition(const char *cursor,
+                                                        const char *prefix,
+                                                        const char *symbol)
+{
+    while (*prefix != '\0') {
+        if (isspace((unsigned char)*prefix)) {
+            if (!isspace((unsigned char)*cursor)) {
+                return 0;
+            }
+            while (isspace((unsigned char)*prefix)) {
+                prefix++;
+            }
+            while (isspace((unsigned char)*cursor)) {
+                cursor++;
+            }
+        } else {
+            if (*cursor != *prefix) {
+                return 0;
+            }
+            prefix++;
+            cursor++;
+        }
+    }
+
+    while (isspace((unsigned char)*cursor)) {
+        cursor++;
+    }
+    return strncmp(cursor, symbol, strlen(symbol)) == 0
+        && cursor[strlen(symbol)] == '(';
+}
+
 int picoui_test_source_has_function_definition(const char *path, const char *symbol)
 {
     static const char *const prefixes[] = {
@@ -101,6 +139,9 @@ int picoui_test_source_has_function_definition(const char *path, const char *sym
         "static const ldArc_t *",
         "static struct picoui_backend_widget *",
         "static struct picoui_arc *",
+        "static struct picoui_gauge *",
+        "static struct picoui_image *",
+        "static struct picoui_qrcode *",
         "int ",
         "void ",
         "unsigned int ",
@@ -109,20 +150,34 @@ int picoui_test_source_has_function_definition(const char *path, const char *sym
         "const ldArc_t *",
         "struct picoui_backend_widget *",
         "struct picoui_arc *",
+        "struct picoui_gauge *",
+        "struct picoui_image *",
+        "struct picoui_qrcode *",
     };
     char needle[256];
+    char *text;
     size_t i;
 
     assert(path != 0);
     assert(symbol != 0);
 
+    text = picoui_test_read_file_text(path);
     for (i = 0; i < sizeof(prefixes) / sizeof(prefixes[0]); ++i) {
+        const char *cursor;
         int written = snprintf(needle, sizeof(needle), "%s%s(", prefixes[i], symbol);
         assert(written > 0 && (size_t)written < sizeof(needle));
-        if (picoui_test_source_contains(path, needle) == 1) {
+        if (strstr(text, needle) != 0) {
+            free(text);
             return 1;
         }
+        for (cursor = text; *cursor != '\0'; ++cursor) {
+            if (picoui_test_source_match_function_definition(cursor, prefixes[i], symbol) == 1) {
+                free(text);
+                return 1;
+            }
+        }
     }
+    free(text);
     return 0;
 }
 

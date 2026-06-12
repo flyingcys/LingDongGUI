@@ -10,7 +10,7 @@
   "status": "complete",
   "evidence": {
     "unit_group": "test_tinyui_(arc|gauge|date_time|clock)",
-    "contract_checker": "tests/picoui/contract/check_tinyui_release_capability_matrix.py"
+    "contract_checker": "tests/tinyui/contract/check_tinyui_release_capability_matrix.py"
   },
   "widgets": [
     {

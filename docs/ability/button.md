@@ -1,7 +1,7 @@
 # `button`
 
-本文由 `tests/picoui/contract/ldgui_public_api_inventory.json` 和 `tests/picoui/contract/picoui_release_capability_matrix.json` 对齐生成。
-本页同时记录 LingDongGUI 原生 API 能力和 PicoUI 对应覆盖状态。
+本文由 `tests/tinyui/contract/ldgui_public_api_inventory.json` 和 `tests/tinyui/contract/tinyui_release_capability_matrix.json` 对齐生成。
+本页同时记录 LingDongGUI 原生 API 能力和 TinyUI 当前覆盖状态。
 
 ## 覆盖摘要
 
@@ -9,14 +9,14 @@
 - group_kind：`widget`
 - LingDongGUI API 条目数：`27`
 - LingDongGUI 分类统计：`getter`: 10, `init`: 1, `lifecycle`: 4, `macro_alias`: 2, `setter`: 9, `show`: 1
-- PicoUI 覆盖统计：`allowlisted`: 7, `covered`: 20
+- TinyUI 当前覆盖统计：`allowlisted`: 7, `covered`: 20
 - policy_category 统计：`direct_covered`: 20, `lifecycle_internal`: 4, `native_action_private`: 2, `render_pipeline_internal`: 1
 - direct public API 100%：否；当前为 policy complete, not direct public 100%。
 - direct_public_covered：`20`
 - policy_allowlisted：`7`
 - direct_100_gap：`0`
 - direct_100_category 统计：`direct_public_covered`: 20, `policy_never_public`: 7
-- PicoUI 覆盖结论：不是 PicoUI 直接 100% wrapper 覆盖；`covered` 行有 PicoUI API/backend/unit/gate 证据，`allowlisted` 行是 policy 处置且不是 direct public wrapper 覆盖。
+- TinyUI 当前覆盖结论：不是当前用户态 direct wrapper 100% 覆盖；`covered` 行有 current public API/backend/unit/gate 证据，`allowlisted` 行是 policy 处置且不是 direct public wrapper 覆盖。
 - matrix layer：`a_0_8_ledger_truth`
 - matrix judgement：`policy_complete_not_direct_100` / `policy_complete`
 - 来源 header：`src/gui/ldButton.h`
@@ -31,11 +31,11 @@
 
 ## 控件能力等价已补齐
 
-| 能力 | LingDongGUI 来源 | PicoUI 补齐状态 | 边界 |
+| 能力 | LingDongGUI 来源 | 当前补齐状态 | 边界 |
 | --- | --- | --- | --- |
 | 全局 action/nameId 按下状态 | `ldButtonActionInit`、`ldButtonActionIsPressById` | a-0.13 已新增 `picoui_button_get_pressed_by_name_id()` 与 `picoui_button_get_action_state_by_name_id()`，支持从 PicoUI root 按 `nameId` 查询 button pressed/action 状态 | 不暴露 LingDongGUI `ld_scene_t`；非 button id、未知 id、空 root/out 参数均返回失败 |
 
-## API 能力与 PicoUI 覆盖清单
+## API 能力与 TinyUI 当前覆盖清单
 
 | # | LingDongGUI symbol | 分类 | group_kind | policy_category | direct_100_category | required | PicoUI 状态 | 覆盖类型 | PicoUI API | backend proof | unit/gate | 说明 | signature |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -69,9 +69,9 @@
 
 ## 审计边界
 
-- `covered`：必须有真实 PicoUI public API/backend/unit/gate 证据；`picoui_api` 会被 checker 反查 `picoui/include` public header。
-- `allowlisted`：记录为 LingDongGUI 原生 API，但当前判定为 policy 处置；不能当作 PicoUI direct public wrapper 覆盖。
-- `direct_100_category=policy_never_public`：不应暴露为 PicoUI public API。
+- `covered`：必须有真实 current public API/backend/unit/gate 证据；`picoui_api` 字段当前仍记录 public C API 过渡态符号，并由 checker 反查 canonical public header。
+- `allowlisted`：记录为 LingDongGUI 原生 API，但当前判定为 policy 处置；不能当作用户态 direct public wrapper 覆盖。
+- `direct_100_category=policy_never_public`：不应暴露为用户态 public API。
 - `direct_100_category=optional_public_extension`：未来可单独开线设计，但不是 a-0.10 必做 public API。
 - `direct_100_category=direct_100_required_if_user_demands`：若出现，必须拆 public API 实现任务；当前 a-0.10 为 `0`。
 - `group_kind=runtime_host/internal_helper` 的分组保留在 native API inventory 审计中，但不进入 widget public parity denominator。

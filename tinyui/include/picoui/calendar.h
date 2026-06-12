@@ -19,7 +19,7 @@
 #ifndef PICOUI_CALENDAR_H
 #define PICOUI_CALENDAR_H
 
-#include "picoui/widget.h"
+#include "../widget.h"
 
 struct picoui_window;
 struct picoui_calendar;

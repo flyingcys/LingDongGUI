@@ -17,7 +17,7 @@
  */
 
 #include "internal.h"
-#include "picoui/slider.h"
+#include "slider.h"
 #include "../core/runtime_bridge.h"
 #include "../backend/ldgui/backend.h"
 #include "../../../src/gui/ldSlider.h"

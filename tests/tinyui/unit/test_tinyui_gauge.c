@@ -1,11 +1,12 @@
 #include "app.h"
-#include "picoui/gauge.h"
+#include "gauge.h"
 #include "widget.h"
 #include "window.h"
 #include "../../../src/gui/ldBase.h"
 #include "../../../src/gui/ldGauge.h"
 #include "backend.h"
 #include "internal.h"
+#include "picoui_test_support.h"
 
 #include <assert.h>
 #include <stdio.h>
@@ -149,33 +150,34 @@ static void test_gauge_create_and_props(struct picoui_window *win)
 
 static void test_gauge_internal_seam_names_are_gone(void)
 {
-    FILE *source = fopen("tinyui/src/widgets/gauge.c", "rb");
-    FILE *test_source = fopen("tests/tinyui/unit/test_tinyui_gauge.c", "rb");
-    char source_buf[32768];
-    char test_buf[8192];
-    size_t source_len;
-    size_t test_len;
+    const char *source_path = "tinyui/src/widgets/gauge.c";
+    const char *test_source_path = "tests/tinyui/unit/test_tinyui_gauge.c";
 
-    assert(source != NULL);
-    assert(test_source != NULL);
-    source_len = fread(source_buf, 1, sizeof(source_buf) - 1, source);
-    test_len = fread(test_buf, 1, sizeof(test_buf) - 1, test_source);
-    fclose(source);
-    fclose(test_source);
-    source_buf[source_len] = '\0';
-    test_buf[test_len] = '\0';
-
-    assert(strstr(source_buf, "static int picoui_gauge_props_are_valid(") == NULL);
-    assert(strstr(source_buf, "static ldColor picoui_gauge_rgb_to_ld_color(") == NULL);
-    assert(strstr(source_buf, "static unsigned int picoui_gauge_ld_color_to_rgb(") == NULL);
-    assert(strstr(source_buf, "static struct picoui_backend_widget *picoui_gauge_backend(") == NULL);
-    assert(strstr(source_buf, "static ldGauge_t *picoui_gauge_get_ld(") == NULL);
-    assert(strstr(source_buf, "static int picoui_gauge_finish_detach_after_backend_failure(") == NULL);
-    assert(strstr(source_buf, "static void picoui_gauge_dispose_partial_impl(") == NULL);
-    assert(strstr(source_buf, "int picoui_backend_gauge_test_take_last_dispose_snapshot(") == NULL);
-    assert(strstr(source_buf, "struct picoui_gauge *picoui_backend_gauge_test_create_with_props_fail_before_centre_offset(") == NULL);
-    assert(strstr(test_buf, "picoui_backend_gauge_test_take_last_dispose_snapshot(") == NULL);
-    assert(strstr(test_buf, "picoui_backend_gauge_test_create_with_props_fail_before_centre_offset(") == NULL);
+    assert(picoui_test_source_lacks_function_definition(source_path,
+                                                        "picoui_gauge_props_are_valid") == 1);
+    assert(picoui_test_source_lacks_function_definition(source_path,
+                                                        "picoui_gauge_rgb_to_ld_color") == 1);
+    assert(picoui_test_source_lacks_function_definition(source_path,
+                                                        "picoui_gauge_ld_color_to_rgb") == 1);
+    assert(picoui_test_source_lacks_function_definition(source_path,
+                                                        "picoui_gauge_backend") == 1);
+    assert(picoui_test_source_lacks_function_definition(source_path,
+                                                        "picoui_gauge_get_ld") == 1);
+    assert(picoui_test_source_lacks_function_definition(source_path,
+                                                        "picoui_gauge_finish_detach_after_backend_failure") == 1);
+    assert(picoui_test_source_lacks_function_definition(source_path,
+                                                        "picoui_gauge_dispose_partial_impl") == 1);
+    assert(picoui_test_source_lacks_function_definition(source_path,
+                                                        "picoui_backend_gauge_test_take_last_dispose_snapshot") == 1);
+    assert(picoui_test_source_lacks_function_definition(
+               source_path,
+               "picoui_backend_gauge_test_create_with_props_fail_before_centre_offset") == 1);
+    assert(picoui_test_source_lacks_function_definition(
+               test_source_path,
+               "picoui_backend_gauge_test_take_last_dispose_snapshot") == 1);
+    assert(picoui_test_source_lacks_function_definition(
+               test_source_path,
+               "picoui_backend_gauge_test_create_with_props_fail_before_centre_offset") == 1);
 }
 
 static void test_gauge_create_and_backend_mapping(struct picoui_window *win)

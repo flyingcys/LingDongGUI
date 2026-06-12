@@ -19,7 +19,7 @@
 #ifndef PICOUI_DATE_TIME_H
 #define PICOUI_DATE_TIME_H
 
-#include "picoui/widget.h"
+#include "../widget.h"
 
 struct picoui_date_time;
 

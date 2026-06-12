@@ -19,7 +19,7 @@
 #ifndef PICOUI_CHECKBOX_H
 #define PICOUI_CHECKBOX_H
 
-#include "picoui/widget.h"
+#include "../widget.h"
 
 struct picoui_window;
 struct picoui_checkbox;

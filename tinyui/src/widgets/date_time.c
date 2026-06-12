@@ -17,8 +17,8 @@
  */
 
 #include "internal.h"
-#include "picoui/date_time.h"
-#include "picoui/widget.h"
+#include "date_time.h"
+#include "widget.h"
 #include "../core/runtime_bridge.h"
 #include "../../../src/gui/ldDateTime.h"
 

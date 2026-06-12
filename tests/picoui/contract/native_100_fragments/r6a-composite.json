@@ -8,7 +8,7 @@
   "status": "complete",
   "evidence": {
     "unit_group": "test_tinyui_(icon_slider|radial_menu)",
-    "contract_checker": "tests/picoui/contract/check_tinyui_release_capability_matrix.py"
+    "contract_checker": "tests/tinyui/contract/check_tinyui_release_capability_matrix.py"
   },
   "widgets": [
     {

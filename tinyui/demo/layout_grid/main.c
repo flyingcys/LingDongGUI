@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#include "picoui/picoui.h"
+#include "tinyui.h"
 
 static const int cols[] = {80, -2, 0};
 static const int rows[] = {32, -2, 0};

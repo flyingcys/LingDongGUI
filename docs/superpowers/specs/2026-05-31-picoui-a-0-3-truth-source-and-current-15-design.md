@@ -4,6 +4,7 @@
 > 适用仓库：`/Users/cys/embedded/LingDongGUI`
 > 入口索引：`docs/picoui-serial/a-0.3/README.md`
 > 目标：把 PicoUI 从“代码已继续前进，但 release truth 仍停在旧 `9` 控件世界”的状态，收敛到一个诚实、可验证、可继续推进的 `a-0.3` 基线：重建 truth-source、审计 current-15、冻结 `a-0.3` closeout 标准。
+> 作用域补充：本文中的 `current truth-source` / `current-15` 都只对应 `2026-05-31` 的 `a-0.3` 阶段语境，不代表当前 `v2.1` 主线的 canonical truth。
 
 ---
 

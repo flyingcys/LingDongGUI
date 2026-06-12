@@ -18,8 +18,8 @@
 
 #include "internal.h"
 #include "backend.h"
-#include "picoui/icon_slider.h"
-#include "picoui/widget.h"
+#include "icon_slider.h"
+#include "widget.h"
 #include "../core/runtime_bridge.h"
 #include "../../../src/gui/ldBase.h"
 #include "../../../src/gui/ldIconSlider.h"

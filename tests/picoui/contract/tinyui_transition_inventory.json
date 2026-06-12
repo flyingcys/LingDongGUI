@@ -1,9 +1,0 @@
-{
-  "baseline": {
-    "backend_c_files": 0,
-    "app_header_exists": true,
-    "app_source_exists": true,
-    "picoui_public_api_count": 558,
-    "tinyui_public_api_count": 21
-  }
-}

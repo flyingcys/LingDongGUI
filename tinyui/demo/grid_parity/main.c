@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#include "picoui/picoui.h"
+#include "tinyui.h"
 
 static void style_panel(struct picoui_button *button,
                         const char *text,

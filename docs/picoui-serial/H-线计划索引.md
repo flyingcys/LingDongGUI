@@ -1,5 +1,7 @@
 # PicoUI H线计划索引
 
+- 作用域：本文只对应 PicoUI `H` 线历史发布准备阶段，不定义当前 `v2.1` 主线的 canonical truth；文中的 `tests/picoui/*`、`check_picoui_*`、`picoui_release_capability_matrix.json` 仅属于该历史线的证据入口。
+
 ## H线定位
 
 `H线` 是 PicoUI 基于当前 `9` 个已覆盖控件的第一版本发布准备线。它不是继续补 `G线` 剩余项，也不是新控件扩张线，更不是直接宣布可发布的 closeout 文档。

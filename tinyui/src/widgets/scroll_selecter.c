@@ -17,7 +17,7 @@
  */
 
 #include "internal.h"
-#include "picoui/scroll_selecter.h"
+#include "scroll_selecter.h"
 #include "../core/runtime_bridge.h"
 #include "../../../src/gui/ldScrollSelecter.h"
 

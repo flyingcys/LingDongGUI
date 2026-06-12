@@ -1,15 +1,42 @@
-#include "picoui/picoui.h"
+#include "tinyui.h"
 #include "../../../src/gui/ldBase.h"
 #include "../../../src/gui/ldImage.h"
 #include "internal.h"
 #include "picoui_test_support.h"
 #include <assert.h>
+#include <stdio.h>
 #include <string.h>
 
 extern int tinyui_widget_has_ld_binding(const struct picoui_widget *widget);
 
+static const char *test_source_file_path = __FILE__;
 static struct picoui_image_test_dispose_snapshot g_tinyui_image_snapshot;
 static int g_tinyui_image_snapshot_valid = 0;
+
+static const char *resolve_repo_path(const char *repo_relative_path)
+{
+    static char resolved_path[1024];
+    char base_path[1024];
+    char *tests_dir;
+    size_t base_len;
+
+    assert(test_source_file_path != 0);
+    assert(repo_relative_path != 0);
+    assert(strlen(test_source_file_path) < sizeof(base_path));
+    snprintf(base_path, sizeof(base_path), "%s", test_source_file_path);
+    tests_dir = strstr(base_path, "tests/tinyui/unit/");
+    assert(tests_dir != 0);
+    *tests_dir = '\0';
+    base_len = strlen(base_path);
+    assert(base_len + strlen(repo_relative_path) + 1 < sizeof(resolved_path));
+    snprintf(resolved_path, sizeof(resolved_path), "%s%s", base_path, repo_relative_path);
+    return resolved_path;
+}
+
+static int file_contains_pattern(const char *path, const char *pattern)
+{
+    return picoui_test_source_contains(path, pattern);
+}
 
 static int tinyui_image_finish_detach_after_backend_failure(struct picoui_backend_widget *backend)
 {
@@ -265,30 +292,42 @@ static void test_image_shared_widget_helpers_reject_null(void)
     assert(tinyui_runtime_bridge_unbind_host(0) == -1);
     assert(tinyui_runtime_bridge_detach_from_parent(0) == -1);
     assert(tinyui_widget_is_kind(0, PICOUI_BACKEND_WIDGET_IMAGE) == 0);
-    assert(file_contains_pattern("tinyui/src/widgets/image.c",
-                                 "static ldColor picoui_image_rgb_to_ld_color(") == 0);
-    assert(file_contains_pattern("tinyui/src/widgets/image.c",
-                                 "static int picoui_image_props_are_valid(") == 0);
-    assert(file_contains_pattern("tinyui/src/widgets/image.c",
-                                 "static int picoui_image_finish_detach_after_backend_failure(") == 0);
-    assert(file_contains_pattern("tinyui/src/widgets/image.c",
-                                 "static void picoui_image_dispose_partial_impl(") == 0);
-    assert(file_contains_pattern("tinyui/src/widgets/image.c",
-                                 "static struct picoui_image *picoui_image_create_with_props_impl(") == 0);
-    assert(file_contains_pattern("tests/tinyui/unit/test_tinyui_image.c",
-                                 "static struct picoui_image_test_dispose_snapshot g_image_snapshot;") == 0);
-    assert(file_contains_pattern("tests/tinyui/unit/test_tinyui_image.c",
-                                 "static int g_image_snapshot_valid = 0;") == 0);
-    assert(file_contains_pattern("tests/tinyui/unit/test_tinyui_image.c",
-                                 "static int test_image_finish_detach_after_backend_failure(") == 0);
-    assert(file_contains_pattern("tests/tinyui/unit/test_tinyui_image.c",
-                                 "static void test_image_fill_snapshot(") == 0);
-    assert(file_contains_pattern("tests/tinyui/unit/test_tinyui_image.c",
-                                 "void picoui_backend_image_test_reset_state(void)") == 0);
-    assert(file_contains_pattern("tests/tinyui/unit/test_tinyui_image.c",
-                                 "struct picoui_image *picoui_backend_image_test_create_with_props_fail_before_size(") == 0);
-    assert(file_contains_pattern("tests/tinyui/unit/test_tinyui_image.c",
-                                 "int picoui_backend_image_test_take_last_dispose_snapshot(") == 0);
+    assert(picoui_test_source_lacks_function_definition(
+               resolve_repo_path("tinyui/src/widgets/image.c"),
+               "picoui_image_rgb_to_ld_color") == 1);
+    assert(picoui_test_source_lacks_function_definition(
+               resolve_repo_path("tinyui/src/widgets/image.c"),
+               "picoui_image_props_are_valid") == 1);
+    assert(picoui_test_source_lacks_function_definition(
+               resolve_repo_path("tinyui/src/widgets/image.c"),
+               "picoui_image_finish_detach_after_backend_failure") == 1);
+    assert(picoui_test_source_lacks_function_definition(
+               resolve_repo_path("tinyui/src/widgets/image.c"),
+               "picoui_image_dispose_partial_impl") == 1);
+    assert(picoui_test_source_lacks_function_definition(
+               resolve_repo_path("tinyui/src/widgets/image.c"),
+               "picoui_image_create_with_props_impl") == 1);
+    assert(file_contains_pattern(resolve_repo_path("tests/tinyui/unit/test_tinyui_image.c"),
+                                 "static struct picoui_image_test_dispose_snapshot "
+                                 "g_image_snapshot;") == 0);
+    assert(file_contains_pattern(resolve_repo_path("tests/tinyui/unit/test_tinyui_image.c"),
+                                 "static int "
+                                 "g_image_snapshot_valid = 0;") == 0);
+    assert(picoui_test_source_lacks_function_definition(
+               resolve_repo_path("tests/tinyui/unit/test_tinyui_image.c"),
+               "test_image_finish_detach_after_backend_failure") == 1);
+    assert(picoui_test_source_lacks_function_definition(
+               resolve_repo_path("tests/tinyui/unit/test_tinyui_image.c"),
+               "test_image_fill_snapshot") == 1);
+    assert(picoui_test_source_lacks_function_definition(
+               resolve_repo_path("tests/tinyui/unit/test_tinyui_image.c"),
+               "picoui_backend_image_test_reset_state") == 1);
+    assert(picoui_test_source_lacks_function_definition(
+               resolve_repo_path("tests/tinyui/unit/test_tinyui_image.c"),
+               "picoui_backend_image_test_create_with_props_fail_before_size") == 1);
+    assert(picoui_test_source_lacks_function_definition(
+               resolve_repo_path("tests/tinyui/unit/test_tinyui_image.c"),
+               "picoui_backend_image_test_take_last_dispose_snapshot") == 1);
 }
 
 int main(void)

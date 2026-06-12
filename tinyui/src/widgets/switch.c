@@ -17,7 +17,7 @@
  */
 
 #include "internal.h"
-#include "picoui/switch.h"
+#include "switch.h"
 #include "runtime_bridge.h"
 #include "ldSwitch.h"
 

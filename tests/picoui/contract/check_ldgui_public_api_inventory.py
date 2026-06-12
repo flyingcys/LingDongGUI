@@ -5,12 +5,15 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[3]
-CONTRACT_DIR = ROOT / "tests" / "picoui" / "contract"
-EXPECTED_JSON = CONTRACT_DIR / "ldgui_public_api_expected_symbols.json"
-INVENTORY_JSON = CONTRACT_DIR / "ldgui_public_api_inventory.json"
-LEDGER_JSON = CONTRACT_DIR / "native_api_gap_ledger.json"
+TINYUI_CONTRACT_DIR = ROOT / "tests" / "tinyui" / "contract"
+EXPECTED_JSON = TINYUI_CONTRACT_DIR / "ldgui_public_api_expected_symbols.json"
+INVENTORY_JSON = TINYUI_CONTRACT_DIR / "ldgui_public_api_inventory.json"
+LEDGER_JSON = TINYUI_CONTRACT_DIR / "native_api_gap_ledger.json"
 HEADER_GLOB = "src/gui/ld*.h"
 SCHEMA_VERSION = "a-0.8-ldgui-public-api-inventory-v1"
+LEDGER_SOURCE_PATHS = {
+    "tests/tinyui/contract/ldgui_public_api_inventory.json",
+}
 
 VALID_CATEGORIES = {
     "init",
@@ -422,7 +425,7 @@ def build_ledger(rows: list[dict]) -> dict:
         ledger_rows.append(ledger_row)
     return {
         "schema_version": "a-0.8-native-api-gap-ledger-v1",
-        "source": "tests/picoui/contract/ldgui_public_api_inventory.json",
+        "source": "tests/tinyui/contract/ldgui_public_api_inventory.json",
         "rows": ledger_rows,
     }
 
@@ -524,7 +527,7 @@ def validate_inventory(scanned_rows: list[dict], inventory: dict) -> None:
 
 def validate_ledger(scanned_rows: list[dict], ledger: dict) -> None:
     assert ledger.get("schema_version") == "a-0.8-native-api-gap-ledger-v1"
-    assert ledger.get("source") == "tests/picoui/contract/ldgui_public_api_inventory.json"
+    assert ledger.get("source") in LEDGER_SOURCE_PATHS
     ledger_rows = ledger.get("rows")
     assert isinstance(ledger_rows, list) and ledger_rows, "ledger rows must be non-empty"
     ledger_by_symbol = defaultdict(list)

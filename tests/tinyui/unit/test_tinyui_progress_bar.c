@@ -1,5 +1,5 @@
 #include "app.h"
-#include "picoui/progress_bar.h"
+#include "progress_bar.h"
 #include "widget.h"
 #include "window.h"
 #include "../../../src/gui/ldBase.h"

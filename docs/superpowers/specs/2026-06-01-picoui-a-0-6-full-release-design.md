@@ -89,7 +89,7 @@
 4. 最终发布中文文档集
 5. 每个控件的 capability gap 关闭标准
 
-### 4.3 当前 truth-source 的边界
+### 4.3 `a-0.6` 当时 truth-source 的边界
 
 当前 `tests/picoui/contract/picoui_release_capability_matrix.json` 仍是：
 
@@ -400,7 +400,7 @@
 2. `26/26` 全控件 capability gap 收口完毕。
 3. 不再有 `stable_contract_but_not_full_parity`、`minimal_vertical_slice_only`、`not_wrapped` 作为最终态。
 4. final release matrix、final gate catalog、manual artifact、中文发布文档全部收口。
-5. 用户能够从单一 truth-source 入口回答：
+5. 用户能够从 `a-0.6` 当时单一 truth-source 入口回答：
    - 哪 `26` 个控件全部完成
    - 每个控件靠什么证据证明完成
    - 最终发布版本还剩什么工作

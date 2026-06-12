@@ -17,7 +17,7 @@
  */
 
 #include "internal.h"
-#include "picoui/calendar.h"
+#include "calendar.h"
 
 #include "../backend/ldgui/backend.h"
 #include "../core/runtime_bridge.h"

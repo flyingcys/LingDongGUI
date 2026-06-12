@@ -19,7 +19,7 @@
 #ifndef PICOUI_ANIMATION_H
 #define PICOUI_ANIMATION_H
 
-#include "picoui/widget.h"
+#include "../widget.h"
 
 struct picoui_window;
 struct picoui_animation;

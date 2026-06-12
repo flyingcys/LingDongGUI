@@ -4,7 +4,7 @@
 
 本文记录 `H13 closeout` 之前、当前工作树下最新一轮 fresh 验证证据，以及仍需诚实保留的证据边界。
 
-注意：本文是 `H线` 历史 closeout 前状态快照，不是当前 `a-0.6 final release` 真相源。当前最终发布结论以 `docs/picoui-serial/a-0.6-final-release-closeout.md` 和对应 final release truth-source 为准。
+注意：本文是 `H线` 历史 closeout 前状态快照，不是当前 `a-0.6 final release` 真相源。对这条历史线而言，当时最终发布结论以 `docs/picoui-serial/a-0.6-final-release-closeout.md` 和对应 final release truth-source 为准。
 
 本文不是 `closeout` 结论文档，不写“可发布”；它只回答两件事：
 

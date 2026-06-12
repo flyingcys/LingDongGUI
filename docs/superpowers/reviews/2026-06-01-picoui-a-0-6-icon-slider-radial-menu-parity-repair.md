@@ -26,7 +26,7 @@
 1. 让 `icon_slider` 的 `icon_width / icon_space / columns / rows / pages` 真实下传到 `ldIconSlider`。
 2. 让 `radial_menu` 的 `x_axis / y_axis / item_max` 真实下传到 `ldRadialMenu`。
 3. 用 unit test 直接断言 backend 实际字段，防止后续再次把 host cache 误写成 parity 完成。
-4. 把 release truth-source 与 closeout 文档同步回和代码一致的口径。
+4. 把 `a-0.6` 当时的 release truth-source 与 closeout 文档同步回和代码一致的口径。
 
 ## 非目标
 

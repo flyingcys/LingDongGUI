@@ -17,7 +17,7 @@
  */
 
 #include "internal.h"
-#include "picoui/label.h"
+#include "label.h"
 #include "../core/runtime_bridge.h"
 #include "../../../src/gui/ldLabel.h"
 

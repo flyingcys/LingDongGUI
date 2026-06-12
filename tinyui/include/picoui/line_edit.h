@@ -19,8 +19,8 @@
 #ifndef PICOUI_LINE_EDIT_H
 #define PICOUI_LINE_EDIT_H
 
-#include "picoui/layout.h"
-#include "picoui/widget.h"
+#include "../layout.h"
+#include "../widget.h"
 
 struct picoui_window;
 struct picoui_line_edit;

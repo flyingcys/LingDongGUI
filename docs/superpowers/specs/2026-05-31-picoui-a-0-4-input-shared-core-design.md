@@ -191,7 +191,7 @@
 
 完成内容：
 
-1. `current truth-source` 扩面
+1. `a-0.4` 当时 `current truth-source` 扩面
 2. contract / runtime / visible / mapping gate 同步
 3. 中文 serial 文档收口
 

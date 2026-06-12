@@ -19,8 +19,8 @@
 #ifndef PICOUI_TABLE_H
 #define PICOUI_TABLE_H
 
-#include "picoui/native.h"
-#include "picoui/widget.h"
+#include "../native.h"
+#include "../widget.h"
 
 struct picoui_window;
 struct picoui_table;

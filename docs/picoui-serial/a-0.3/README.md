@@ -5,14 +5,14 @@
 - 当前旧 parity 真相源：`docs/picoui-serial/J-线计划索引.md`
 - 当前 backlog 收口线：`docs/picoui-serial/a-01-线计划索引.md`
 - 当前低耦合扩面线：`docs/picoui-serial/a-02-线计划索引.md`
-- 当前机器可读 truth-source：`tests/picoui/contract/picoui_release_capability_matrix.json`
-- 当前 deep review：`docs/superpowers/reviews/2026-06-01-picoui-a-0-3-a-0-4-a-0-5-deep-review.md`
+- 当时主仓机器可读 truth-source：`tests/picoui/contract/picoui_release_capability_matrix.json`
+- 当时 deep review：`docs/superpowers/reviews/2026-06-01-picoui-a-0-3-a-0-4-a-0-5-deep-review.md`
 - 当前 `a-0.3` 历史快照：`docs/picoui-serial/a-0.3/current-15-覆盖与分层真相源.md`
 - 当前 `a-0.3` 历史 capability audit：`docs/picoui-serial/a-0.3/current-15-capability-audit.md`
 - 当前 closeout 标准：`docs/picoui-serial/a-0.3/a-0.3-closeout-标准.md`
 - 本目录设计 spec：`docs/superpowers/specs/2026-05-31-picoui-a-0-3-truth-source-and-current-15-design.md`
 - 本目录执行 plan：`docs/superpowers/plans/2026-05-31-picoui-a-0-3-truth-source-and-current-15-implementation.md`
-- 当前 closeout review：`docs/superpowers/reviews/2026-05-31-picoui-a-0-3-closeout-review.md`
+- 当时 closeout review：`docs/superpowers/reviews/2026-05-31-picoui-a-0-3-closeout-review.md`
 - 后续 `0.4-0.6` 记录：`docs/picoui-serial/a-0.4-a-0.6-后续版本记录.md`
 - `a-0.4` 串行索引：`docs/picoui-serial/a-0.4-线计划索引.md`
 - `a-0.5` 串行索引：`docs/picoui-serial/a-0.5-线计划索引.md`
@@ -24,7 +24,7 @@
 它解决的是当前最急的收敛问题：
 
 1. 旧 truth-source 仍停在 `9` 控件世界。
-2. `a-01 / a-02 / J线` 已继续推进，但缺少统一的 current truth。
+2. `a-01 / a-02 / J线` 已继续推进，但当时缺少统一的 current truth。
 3. 不先把 current truth、current gap、`0.3` 完成标准写实，后面再快都会继续失真。
 
 ## 当前真实基线
@@ -40,7 +40,7 @@
 因此当前最保守、最诚实的工程判断是：
 
 - PicoUI current public widget 总数当前是 `22`。
-- `tests/picoui/contract/picoui_release_capability_matrix.json` 才是当前主仓 truth-source 入口。
+- `tests/picoui/contract/picoui_release_capability_matrix.json` 是 `a-0.3` 当时主仓 truth-source 入口。
 - `a-0.3/current-15-*` 文档现在只能视为 2026-05-31 的阶段审计快照，不能再被引用为“当前 truth-source”。
 
 ## 最终大目标

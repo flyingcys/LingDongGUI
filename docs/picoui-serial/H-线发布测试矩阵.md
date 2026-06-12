@@ -2,6 +2,8 @@
 
 ## 范围与非范围
 
+- 作用域：本文只冻结 PicoUI `H10/J7` 历史发布线的测试矩阵与证据分层，不定义当前 `v2.1` 主线的 canonical truth；当前主线应以 `docs/v2.1/*`、`tests/tinyui/contract/*`、`tests/tinyui/runtime/*` 为准。
+
 本文档冻结两件事：
 
 1. `H10` 阶段“发布前必须跑什么测试、从哪里跑、哪些不能并行”的真相源。
@@ -26,6 +28,8 @@
 | visible | `visible`、`runtime`、`picoui` | `tests/picoui/runtime/check_picoui_visible_ui.py --all` | `ctest --test-dir build --output-on-failure -L visible` | 是 | 当前 `visible` label 只有 `check_picoui_visible_ui`；若在真实桌面环境下额外生成自动窗口截图，也仍属于 `visible` 层自动证据。 |
 | runtime | `runtime`、`picoui` | `tests/picoui/runtime/check_picoui_runtime.py` | `python3 tests/picoui/runtime/check_picoui_runtime.py` | 是 | 当前 `runtime` label 会同时带上 `check_picoui_runtime`、`check_picoui_visible_ui`、`check_picoui_backend_mapping`，因此不适合作为并行拆分入口。 |
 | manual artifact | 无 | `tests/picoui/runtime/check_picoui_manual_window_artifact.py --demo basic_widgets|settings_panel` | `python3 tests/picoui/runtime/check_picoui_manual_window_artifact.py --demo basic_widgets`<br>`python3 tests/picoui/runtime/check_picoui_manual_window_artifact.py --demo settings_panel` | 否 | 只覆盖 `basic_widgets` / `settings_panel`，只证明 artifact 生成入口存在，不接入强制 CTest。 |
+
+补充说明：表中的 `tests/picoui/*` 与 `check_picoui_*` 入口在本文里仍是历史发布线真相源；它们当前不再代表 `v2.1` current live checker 或 canonical contract/runtime truth。
 
 ## manual artifact 边界
 

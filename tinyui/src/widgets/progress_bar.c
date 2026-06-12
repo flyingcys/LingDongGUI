@@ -17,7 +17,7 @@
  */
 
 #include "internal.h"
-#include "picoui/progress_bar.h"
+#include "progress_bar.h"
 #include "../core/runtime_bridge.h"
 #include "../backend/ldgui/backend.h"
 #include "../../../src/gui/ldProgressBar.h"

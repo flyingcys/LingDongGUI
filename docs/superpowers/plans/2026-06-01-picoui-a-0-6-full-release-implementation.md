@@ -882,7 +882,7 @@ gitnexus_detect_changes(scope="all", repo="LingDongGUI")
 
 必须同步：
 
-1. final release truth-source 入口
+1. `a-0.6` 当时 final release truth-source 入口
 2. `26` 控件完成态总表
 3. manual artifact 入口
 4. 发布说明 / closeout / review 术语

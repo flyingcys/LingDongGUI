@@ -16,16 +16,16 @@
  * limitations under the License.
  */
 
-#include "picoui/button.h"
-#include "picoui/checkbox.h"
-#include "picoui/image.h"
-#include "picoui/layout.h"
-#include "picoui/runtime.h"
-#include "picoui/slider.h"
-#include "picoui/switch.h"
-#include "picoui/text.h"
-#include "picoui/widget.h"
-#include "picoui/window.h"
+#include "button.h"
+#include "checkbox.h"
+#include "image.h"
+#include "layout.h"
+#include "runtime.h"
+#include "slider.h"
+#include "switch.h"
+#include "text.h"
+#include "widget.h"
+#include "window.h"
 
 #include <stdio.h>
 #include <stdlib.h>

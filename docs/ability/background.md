@@ -27,7 +27,7 @@
 
 ## 控件能力等价已补齐
 
-| 能力 | LingDongGUI 来源 | PicoUI 补齐状态 | 边界 |
+| 能力 | LingDongGUI 来源 | 当前补齐状态 | 边界 |
 | --- | --- | --- | --- |
 | 独立创建 background root | `widgetTypeBackground` | a-0.14 已新增 `picoui_background_create()` | native 仍复用 `ldWindow_init(nameId=0)`，不虚构新的 native background struct |
 | 独立运行/切换 background root | scene root/window switching | a-0.14 已新增 `picoui_app_run_background()` / `set_background()` / `switch_background()` | 本质是 app root 切换的 background 专用 public contract |

@@ -19,7 +19,7 @@
 #ifndef PICOUI_PROGRESS_BAR_H
 #define PICOUI_PROGRESS_BAR_H
 
-#include "picoui/widget.h"
+#include "../widget.h"
 
 struct picoui_widget;
 struct picoui_progress_bar;

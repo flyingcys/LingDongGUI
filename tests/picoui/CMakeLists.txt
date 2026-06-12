@@ -74,7 +74,7 @@ ld_add_python_test(check_tinyui_public_api
 )
 
 ld_add_python_test(check_tinyui_demo_boundary
-    SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/contract/check_tinyui_demo_boundary.py"
+    SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/../tinyui/contract/check_tinyui_demo_boundary.py"
     LABELS "tinyui;contract"
 )
 
@@ -89,7 +89,7 @@ ld_add_python_test(check_tinyui_v21_transition_guards
 )
 
 ld_add_python_test(check_tinyui_widget_contract_matrix
-    SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/contract/check_tinyui_widget_contract_matrix.py"
+    SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/../tinyui/contract/check_tinyui_widget_contract_matrix.py"
     LABELS "tinyui;contract"
 )
 

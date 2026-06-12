@@ -1,5 +1,5 @@
 #include "internal.h"
-#include "picoui/picoui.h"
+#include "tinyui.h"
 #include "ldButton.h"
 #include "ldCheckBox.h"
 #include "ldImage.h"

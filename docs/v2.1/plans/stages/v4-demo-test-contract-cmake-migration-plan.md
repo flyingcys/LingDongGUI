@@ -39,7 +39,7 @@ rg -n "picoui" tinyui tests cmake docs/v2.1
 
 Expected: still many hits at the start of V4.
 
-- [ ] **Step 2: demo/test 文件名收口**
+- [x] **Step 2: demo/test 文件名收口**
 
 Rename:
 
@@ -48,6 +48,11 @@ Rename:
 - product demo target names -> `tinyui_*`
 
 Keep `LingDongGUI` engine references untouched.
+
+当前完成态：
+
+- canonical `tests/tinyui/*`、`check_tinyui_*` 与 `test_tinyui_*` 已建立
+- `tests/picoui/*` 当前只保留历史兼容入口、compat shell 与历史资产说明，不再代表 current live checker / broad gate 主线
 
 - [x] **Step 3: 迁移 CTest 注册**
 
@@ -67,16 +72,18 @@ Update test registration so CTest names, labels, and Python checker registration
 - `tests/picoui/contract/*` 旧真相源里的证据串当前也已进一步统一到 TinyUI 口径；同时 `check_picoui_native_100_inventory.py` 与 `picoui_native_100_inventory.json` 已补齐 `canvas`，native-100 inventory gate 已重新通过
 - include 消费面当前已完成第一小批 safe move：`tinyui/port/sdl/sdl.c` 已切到顶层 `display.h`/`osal.h`/`tick.h`，`tinyui/demo/animation_basic/main.c` 已切到顶层 `image.h`；fresh proof `rtk cmake -S . -B build` 与 `rtk cmake --build build --target tinyui_animation_basic_demo test_tinyui_port_sdl test_tinyui_port_display test_tinyui_port_input test_tinyui_port_tick_os` 已通过
 - canonical 头可组合性当前已完成最小修复：`tinyui/include/{core,screen,label,button,switch}.h` 不再重复定义兼容头已经提供的 `tinyui_*` inline/宏；`tests/tinyui/contract/check_tinyui_v21_transition_guards.py` 已新增多头组合 `cc -fsyntax-only` probe；去重后 `tinyui_v21_transition_inventory.json` 的 `tinyui_public_api_count` 已更新为 `26`，`tinyui_transition_inventory.json` 已更新为 `21`
+- broad gate 修复当前已完成：完整执行 `rtk cmake --build build` 后，`rtk ctest --test-dir build -L 'tinyui' --output-on-failure` 已 fresh 通过 `56/56`；`test_tinyui_{gauge,image,graph,qrcode}` 与 `check_tinyui_release_capability_matrix` 的 V4 迁移后路径/旧证据串红项已修复
 
 当前剩余：
 
 - `test_picoui_*` / `check_picoui_*` 的仓库级文件名与证据串仍未全量清零，主要收敛到 `tests/picoui/contract/*` 的旧真相源与 docs 历史记录
-- `tests/picoui/contract/*` 旧入口文件名本身与少量 legacy loader 仍在，当前验证命令仍依赖它们，留待 `V5`
-- broad gate `rtk ctest --test-dir build -L 'tinyui' --output-on-failure` 尚未作为全量 V4 closeout fresh 通过
+- `check_tinyui_demo_boundary` 与 `check_tinyui_widget_contract_matrix` 已切到 `tests/tinyui/contract/*` canonical 入口；`tests/picoui/contract/check_tinyui_{demo_boundary,widget_contract_matrix}.py` 当前只保留兼容转发壳
+- baseline inventory、线计划索引与 orchestration 文档当前已明确：`tests/tinyui/contract/*` 是 canonical 入口，`tests/picoui/contract/*` 是历史兼容/旧真相源入口
+- `check_picoui_public_api.py`、`check_picoui_tinyui_transition_guards.py`、`check_picoui_release_capability_matrix.py` 当前已收口为 canonical `tests/tinyui/contract/*` 转发壳；与 canonical 完全一致的 `tinyui_{transition_inventory,v21_transition_inventory,release_capability_matrix}.json` 兼容副本已退场；`tests/picoui/contract/*` 下剩余待退场重点已收敛到旧真相源文件名与仍有独立用途的旧 JSON/ledger 资产
 - `tinyui/include/picoui/*` 兼容 public include 子树当前不能直接删：`tinyui/include/*.h`、`tinyui/src/*`、`tinyui/demo/*`、`tests/tinyui/unit/*` 与 canonical contract checker 仍直接依赖它；最小安全顺序是先迁 consumer/header/checker 面，再在 `V5` 退场
 - include consumer 面此前的多头组合 `tinyui_*` inline redefinition blocker 已修；下一批可以继续小批迁 `tinyui/demo/*`、`tests/tinyui/unit/*` 与 canonical checker 的 include consumer 面，但仍不得直接删除 `tinyui/include/picoui/*`
 
-- [ ] **Step 4: 跑 broad test gate**
+- [x] **Step 4: 跑 broad test gate**
 
 Run the renamed product-layer broad gate command after migration:
 
@@ -85,6 +92,15 @@ rtk ctest --test-dir build -L 'tinyui' --output-on-failure
 ```
 
 V4 closeout requires this broad gate to pass with `tinyui` labels only. Do not close V4 while any active product-layer CTest registration still uses `picoui` labels or names.
+
+当前 fresh proof：
+
+```bash
+rtk cmake --build build
+rtk ctest --test-dir build -L 'tinyui' --output-on-failure
+```
+
+结果：`100% tests passed, 0 tests failed out of 56`。
 
 ### Task 2: 迁移 contract/perf artifact 命名
 
@@ -105,7 +121,7 @@ Rename product-layer artifact names so they no longer contain `picoui`, includin
 
 Update every Python checker to point at the new `tinyui` artifact names and paths.
 
-- [ ] **Step 3: 跑 contract/perf gate**
+- [x] **Step 3: 跑 contract/perf gate**
 
 Run:
 
@@ -117,6 +133,15 @@ rtk ctest --test-dir build -L 'perf' --output-on-failure
 ```
 
 Expected: PASS。
+
+当前 fresh proof：
+
+- `python3 tests/tinyui/contract/check_tinyui_release_capability_matrix.py`
+- `python3 tests/tinyui/contract/check_tinyui_public_api.py`
+- `python3 tests/tinyui/contract/check_tinyui_v21_transition_guards.py`
+- `rtk ctest --test-dir build -L 'perf' --output-on-failure`
+
+结果：PASS。
 
 ### Task 3: 更新 V4 文档真相
 

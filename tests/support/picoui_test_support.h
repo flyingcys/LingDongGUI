@@ -1,7 +1,7 @@
 #ifndef PICOUI_TEST_SUPPORT_H
 #define PICOUI_TEST_SUPPORT_H
 
-#include "picoui/picoui.h"
+#include "tinyui.h"
 
 int picoui_test_support_stub(void);
 const char *picoui_test_repo_path_from_file(const char *file, const char *relative_path);

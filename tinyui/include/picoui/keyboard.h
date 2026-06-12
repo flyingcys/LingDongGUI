@@ -19,7 +19,7 @@
 #ifndef PICOUI_KEYBOARD_H
 #define PICOUI_KEYBOARD_H
 
-#include "picoui/widget.h"
+#include "../widget.h"
 
 struct picoui_window;
 struct picoui_keyboard;

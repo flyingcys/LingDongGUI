@@ -7,7 +7,7 @@
 1. `docs/picoui-serial/a-0.3/*`
 2. `tests/picoui/contract/check_picoui_release_capability_matrix.py`
 3. `tests/picoui/contract/picoui_release_capability_matrix.json`
-4. 与当前 truth-source 直接相关的 runtime / backend / widget 证据链
+4. 与 `a-0.3` 当时 truth-source 直接相关的 runtime / backend / widget 证据链
 
 不重新评估整个 PicoUI 仓库历史，只回答：
 
@@ -153,7 +153,7 @@
 
 因此最终判断是：
 
-- `a-0.3` 可以作为 `0.4` 的正式输入。
+- `a-0.3` 在当时可以作为后续 `a-0.4` 历史串行线的正式输入，但不再构成当前 `v2.1` 主线入口。
 - 但 `0.4` 的第一阶段必须先处理 smoke path、readback policy、gate 分层，而不是直接平推四个新控件。
 
 ## 0.4-0.5 串行建议
@@ -197,14 +197,14 @@
 2. `table` 还没验证 edit model 就先铺 `graph`
 3. 把 host cache 当成 shared/core 习惯扩散
 
-## 推荐的文档与执行入口
+## 当时推荐的文档与执行入口
 
 1. `docs/picoui-serial/a-0.4-线计划索引.md`
 2. `docs/picoui-serial/a-0.5-线计划索引.md`
 3. `docs/superpowers/specs/2026-05-31-picoui-a-0-4-input-shared-core-design.md`
 4. `docs/superpowers/specs/2026-05-31-picoui-a-0-5-data-model-design.md`
 
-这些文档共同承担：
+这些文档在当时共同承担：
 
 1. 版本边界
 2. 串行顺序
