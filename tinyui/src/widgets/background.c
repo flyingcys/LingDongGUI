@@ -24,11 +24,11 @@
 
 #include <stdlib.h>
 
-struct picoui_background_backend_host {
+struct tinyui_background_backend_host {
     struct picoui_backend_widget widget;
 };
 
-static void picoui_background_get_root_size(struct picoui_app *app, int16_t *width, int16_t *height)
+static void tinyui_background_get_root_size(struct picoui_app *app, int16_t *width, int16_t *height)
 {
     struct picoui_display_config config = {0};
 
@@ -59,7 +59,7 @@ static void picoui_background_get_root_size(struct picoui_app *app, int16_t *wid
 struct picoui_background *picoui_background_create(struct picoui_app *app, const char *id)
 {
     struct picoui_background *background;
-    struct picoui_background_backend_host *host;
+    struct tinyui_background_backend_host *host;
     struct picoui_backend_app_state *app_state;
     ldWindow_t *ld_root;
     int16_t root_width;
@@ -79,7 +79,7 @@ struct picoui_background *picoui_background_create(struct picoui_app *app, const
         return 0;
     }
 
-    picoui_background_get_root_size(app, &root_width, &root_height);
+    tinyui_background_get_root_size(app, &root_width, &root_height);
     ld_root = ldWindow_init(app_state->ld_scene, NULL, 0, 0, 0, 0, root_width, root_height);
     if (ld_root == 0) {
         free(host);

@@ -35,6 +35,7 @@ EXPECTED_WIDGET_NAMES = {
     "calendar",
     "progress_wheel",
     "clock",
+    "canvas",
 }
 
 DISALLOWED_STATUS_FIELDS = {"reject", "deferred", "incomplete_contract"}
@@ -77,8 +78,8 @@ def main() -> int:
     )
 
     header_widgets = _parse_widget_types()
-    assert len(header_widgets) == 27, (
-        f"ldWidgetType_t widget-like total must be 27, got {len(header_widgets)}"
+    assert len(header_widgets) == len(EXPECTED_WIDGET_NAMES), (
+        f"ldWidgetType_t widget-like total must be {len(EXPECTED_WIDGET_NAMES)}, got {len(header_widgets)}"
     )
     assert header_widgets == EXPECTED_WIDGET_NAMES, (
         "ldWidgetType_t widget-like names drifted from native-100 inventory expectation:\n"
@@ -87,8 +88,12 @@ def main() -> int:
 
     widgets = inventory.get("widgets")
     assert isinstance(widgets, list), "inventory widgets must be a list"
-    assert inventory.get("widget_like_total") == 27, "inventory widget_like_total must be 27"
-    assert len(widgets) == 27, f"inventory widgets must contain 27 rows, got {len(widgets)}"
+    assert inventory.get("widget_like_total") == len(EXPECTED_WIDGET_NAMES), (
+        f"inventory widget_like_total must be {len(EXPECTED_WIDGET_NAMES)}"
+    )
+    assert len(widgets) == len(EXPECTED_WIDGET_NAMES), (
+        f"inventory widgets must contain {len(EXPECTED_WIDGET_NAMES)} rows, got {len(widgets)}"
+    )
 
     seen = set()
     for widget in widgets:

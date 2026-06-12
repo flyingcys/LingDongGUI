@@ -29,12 +29,12 @@ struct picoui_image_source;
 int tinyui_runtime_bridge_unbind_host(void *backend_widget);
 int tinyui_runtime_bridge_detach_from_parent(void *backend_widget);
 
-static ldColor picoui_backend_rgb_to_ld_color(unsigned int rgb)
+static ldColor tinyui_label_rgb_to_ld_color(unsigned int rgb)
 {
     return __RGB((rgb >> 16) & 0xFFU, (rgb >> 8) & 0xFFU, rgb & 0xFFU);
 }
 
-static unsigned int picoui_backend_ld_color_to_rgb(ldColor color)
+static unsigned int tinyui_label_ld_color_to_rgb(ldColor color)
 {
     uint32_t red = ((uint32_t)color >> 11) & 0x1FU;
     uint32_t green = ((uint32_t)color >> 5) & 0x3FU;
@@ -46,7 +46,7 @@ static unsigned int picoui_backend_ld_color_to_rgb(ldColor color)
     return (unsigned int)((red << 16) | (green << 8) | blue);
 }
 
-static arm_2d_align_t picoui_backend_map_label_align(enum picoui_align align)
+static arm_2d_align_t tinyui_label_map_align(enum picoui_align align)
 {
     switch (align) {
     case PICOUI_ALIGN_START:
@@ -60,7 +60,7 @@ static arm_2d_align_t picoui_backend_map_label_align(enum picoui_align align)
     }
 }
 
-static enum picoui_align picoui_backend_unmap_label_align(arm_2d_align_t align)
+static enum picoui_align tinyui_label_unmap_align(arm_2d_align_t align)
 {
     switch (align & (ARM_2D_ALIGN_LEFT | ARM_2D_ALIGN_RIGHT)) {
     case ARM_2D_ALIGN_LEFT:
@@ -72,7 +72,7 @@ static enum picoui_align picoui_backend_unmap_label_align(arm_2d_align_t align)
     }
 }
 
-static ldLabel_t *picoui_backend_label_get_ld(struct picoui_label *label)
+static ldLabel_t *tinyui_label_get_ld(struct picoui_label *label)
 {
     struct picoui_backend_widget *backend;
 
@@ -88,7 +88,7 @@ static ldLabel_t *picoui_backend_label_get_ld(struct picoui_label *label)
     return (ldLabel_t *)backend->ld_widget;
 }
 
-static int picoui_label_props_are_valid(const struct picoui_label_props *props)
+static int tinyui_label_props_are_valid(const struct picoui_label_props *props)
 {
     return props != 0
         && props->id != 0
@@ -99,7 +99,7 @@ static int picoui_label_props_are_valid(const struct picoui_label_props *props)
         && (props->background_source == 0 || props->background_source->img_tile != 0);
 }
 
-static void picoui_label_dispose_partial(struct picoui_label *label)
+static void tinyui_label_dispose_partial(struct picoui_label *label)
 {
     struct picoui_backend_widget *backend;
     struct picoui_backend_app_state *app_state;
@@ -227,7 +227,7 @@ struct picoui_label *picoui_label_create_with_props(struct picoui_window *parent
 {
     struct picoui_label *label;
 
-    if (!picoui_label_props_are_valid(props)) {
+    if (!tinyui_label_props_are_valid(props)) {
         return 0;
     }
 
@@ -237,28 +237,28 @@ struct picoui_label *picoui_label_create_with_props(struct picoui_window *parent
     }
 
     if (props->text != 0 && picoui_label_set_text(label, props->text) != 0) {
-        picoui_label_dispose_partial(label);
+        tinyui_label_dispose_partial(label);
         return 0;
     }
     if (props->font != 0 && picoui_label_set_font(label, props->font) != 0) {
-        picoui_label_dispose_partial(label);
+        tinyui_label_dispose_partial(label);
         return 0;
     }
     if (props->style_class != 0
         && picoui_widget_set_style_class(&label->widget, props->style_class) != 0) {
-        picoui_label_dispose_partial(label);
+        tinyui_label_dispose_partial(label);
         return 0;
     }
     if (picoui_widget_set_user_data(&label->widget, props->user_data) != 0
         || picoui_widget_set_border_color(&label->widget, props->border_color) != 0
         || picoui_widget_set_radius(&label->widget, props->radius) != 0
         || picoui_widget_set_padding(&label->widget, props->padding) != 0) {
-        picoui_label_dispose_partial(label);
+        tinyui_label_dispose_partial(label);
         return 0;
     }
     if ((props->width > 0 || props->height > 0)
         && picoui_widget_set_size(&label->widget, props->width, props->height) != 0) {
-        picoui_label_dispose_partial(label);
+        tinyui_label_dispose_partial(label);
         return 0;
     }
     if (picoui_label_set_bg_color(label, props->bg_color) != 0
@@ -266,7 +266,7 @@ struct picoui_label *picoui_label_create_with_props(struct picoui_window *parent
         || picoui_label_set_background_source(label, props->background_source) != 0
         || picoui_label_set_transparent(label, props->transparent) != 0
         || picoui_label_set_align(label, props->align) != 0) {
-        picoui_label_dispose_partial(label);
+        tinyui_label_dispose_partial(label);
         return 0;
     }
 
@@ -290,7 +290,7 @@ int picoui_label_set_text(struct picoui_label *label, const char *text)
     if (picoui_widget_set_text(&label->widget, text) != 0) {
         return -1;
     }
-    return picoui_backend_set_text(label->widget.backend_widget, text);
+    return tinyui_widget_set_backend_text(label->widget.backend_widget, text);
 }
 
 /**
@@ -307,7 +307,7 @@ const char *picoui_label_get_text(struct picoui_label *label)
         return 0;
     }
 
-    ld_label = picoui_backend_label_get_ld(label);
+    ld_label = tinyui_label_get_ld(label);
     if (ld_label == NULL) {
         return 0;
     }
@@ -331,7 +331,7 @@ int picoui_label_set_font(struct picoui_label *label, const struct picoui_font *
         return -1;
     }
 
-    ld_label = picoui_backend_label_get_ld(label);
+    ld_label = tinyui_label_get_ld(label);
     if (ld_label == NULL) {
         return -1;
     }
@@ -362,12 +362,12 @@ int picoui_label_set_text_color(struct picoui_label *label, unsigned int rgb)
         return -1;
     }
 
-    ld_label = picoui_backend_label_get_ld(label);
+    ld_label = tinyui_label_get_ld(label);
     if (ld_label == NULL) {
         return -1;
     }
 
-    ldLabelSetTextColor(ld_label, picoui_backend_rgb_to_ld_color(rgb));
+    ldLabelSetTextColor(ld_label, tinyui_label_rgb_to_ld_color(rgb));
     return 0;
 }
 
@@ -387,12 +387,12 @@ int picoui_label_get_text_color(struct picoui_label *label, unsigned int *rgb)
         return -1;
     }
 
-    ld_label = picoui_backend_label_get_ld(label);
+    ld_label = tinyui_label_get_ld(label);
     if (ld_label == NULL) {
         return -1;
     }
 
-    *rgb = picoui_backend_ld_color_to_rgb(ldLabelGetTextColor(ld_label));
+    *rgb = tinyui_label_ld_color_to_rgb(ldLabelGetTextColor(ld_label));
     return 0;
 }
 
@@ -412,12 +412,12 @@ int picoui_label_set_bg_color(struct picoui_label *label, unsigned int rgb)
         return -1;
     }
 
-    ld_label = picoui_backend_label_get_ld(label);
+    ld_label = tinyui_label_get_ld(label);
     if (ld_label == NULL) {
         return -1;
     }
 
-    ldLabelSetBackgroundColor(ld_label, picoui_backend_rgb_to_ld_color(rgb));
+    ldLabelSetBackgroundColor(ld_label, tinyui_label_rgb_to_ld_color(rgb));
     return 0;
 }
 
@@ -437,12 +437,12 @@ int picoui_label_get_bg_color(struct picoui_label *label, unsigned int *rgb)
         return -1;
     }
 
-    ld_label = picoui_backend_label_get_ld(label);
+    ld_label = tinyui_label_get_ld(label);
     if (ld_label == NULL) {
         return -1;
     }
 
-    *rgb = picoui_backend_ld_color_to_rgb(ldLabelGetBackgroundColor(ld_label));
+    *rgb = tinyui_label_ld_color_to_rgb(ldLabelGetBackgroundColor(ld_label));
     return 0;
 }
 
@@ -462,7 +462,7 @@ int picoui_label_set_transparent(struct picoui_label *label, int transparent)
         return -1;
     }
 
-    ld_label = picoui_backend_label_get_ld(label);
+    ld_label = tinyui_label_get_ld(label);
     if (ld_label == NULL) {
         return -1;
     }
@@ -487,7 +487,7 @@ int picoui_label_get_transparent(struct picoui_label *label, int *transparent)
         return -1;
     }
 
-    ld_label = picoui_backend_label_get_ld(label);
+    ld_label = tinyui_label_get_ld(label);
     if (ld_label == NULL) {
         return -1;
     }
@@ -512,7 +512,7 @@ int picoui_label_set_align(struct picoui_label *label, enum picoui_align align)
         return -1;
     }
 
-    ld_label = picoui_backend_label_get_ld(label);
+    ld_label = tinyui_label_get_ld(label);
     if (ld_label == NULL) {
         return -1;
     }
@@ -520,7 +520,7 @@ int picoui_label_set_align(struct picoui_label *label, enum picoui_align align)
         return -1;
     }
 
-    ldLabelSetAlign(ld_label, picoui_backend_map_label_align(align));
+    ldLabelSetAlign(ld_label, tinyui_label_map_align(align));
     return 0;
 }
 
@@ -540,12 +540,12 @@ int picoui_label_get_align(struct picoui_label *label, enum picoui_align *align)
         return -1;
     }
 
-    ld_label = picoui_backend_label_get_ld(label);
+    ld_label = tinyui_label_get_ld(label);
     if (ld_label == NULL) {
         return -1;
     }
 
-    *align = picoui_backend_unmap_label_align(ldLabelGetAlign(ld_label));
+    *align = tinyui_label_unmap_align(ldLabelGetAlign(ld_label));
     return 0;
 }
 
@@ -566,7 +566,7 @@ int picoui_label_set_background_source(struct picoui_label *label,
         return -1;
     }
 
-    ld_label = picoui_backend_label_get_ld(label);
+    ld_label = tinyui_label_get_ld(label);
     if (ld_label == NULL) {
         return -1;
     }

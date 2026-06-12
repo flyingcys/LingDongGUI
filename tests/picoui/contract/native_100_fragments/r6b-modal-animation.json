@@ -7,10 +7,10 @@
   ],
   "status": "complete",
   "evidence": {
-    "unit_group": "test_picoui_(message_box|animation)",
-    "contract_checker": "tests/picoui/contract/check_picoui_release_capability_matrix.py",
-    "mapping_checker": "tests/picoui/runtime/check_picoui_backend_mapping.py",
-    "visible_checker": "tests/picoui/runtime/check_picoui_visible_ui.py --all"
+    "unit_group": "test_tinyui_(message_box|animation)",
+    "contract_checker": "tests/picoui/contract/check_tinyui_release_capability_matrix.py",
+    "mapping_checker": "tests/tinyui/runtime/check_tinyui_backend_mapping.py",
+    "visible_checker": "tests/tinyui/runtime/check_tinyui_visible_ui.py --all"
   },
   "widgets": [
     {
@@ -29,9 +29,9 @@
         "test_message_box_native_multi_button_and_color_round_trip",
         "test_message_box_multi_button_callback_reports_clicked_index",
         "test_message_box_modal_hit_and_dismiss_returns_focus_to_underlay",
-        "test_picoui_message_box",
-        "check_picoui_backend_mapping.py",
-        "check_picoui_visible_ui.py --demo message_box_basic"
+        "test_tinyui_message_box",
+        "check_tinyui_backend_mapping.py",
+        "check_tinyui_visible_ui.py --demo message_box_basic"
       ]
     },
     {
@@ -45,10 +45,10 @@
       ],
       "evidence_tests": [
         "test_animation_native_image_period_and_frame_round_trip",
-        "test_picoui_animation",
-        "check_picoui_backend_mapping.py",
-        "check_picoui_visible_ui.py --demo animation_basic",
-        "check_picoui_runtime.py"
+        "test_tinyui_animation",
+        "check_tinyui_backend_mapping.py",
+        "check_tinyui_visible_ui.py --demo animation_basic",
+        "check_tinyui_runtime.py"
       ]
     }
   ],

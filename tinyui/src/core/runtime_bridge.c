@@ -234,7 +234,7 @@ static bool tinyui_runtime_bridge_ld_event_bridge_slot(struct ld_scene_t *scene,
         return false;
     }
 
-    picoui_widget_dispatch_native_signal(backend, msg.signal, msg.value);
+    tinyui_widget_dispatch_native_signal(backend, msg.signal, msg.value);
     return false;
 }
 
@@ -588,11 +588,11 @@ int tinyui_runtime_bridge_bind_host(void *backend_widget, struct picoui_widget *
         return -1;
     }
 
-    if (picoui_widget_bind_backend_host(widget, backend) != 0) {
+    if (tinyui_widget_bind_backend_host(widget, backend) != 0) {
         return -1;
     }
     backend->edit_result_on_finish = PICOUI_EDIT_RESULT_NONE;
-    picoui_backend_widget_init_data_model(backend);
+    tinyui_widget_init_data_model(backend);
     app_state = tinyui_runtime_bridge_backend_state(backend->owner);
     if (app_state != NULL && app_state->ld_scene != NULL && backend->ld_widget != NULL) {
         if (tinyui_runtime_bridge_bind_ld_event_bridge(backend,
@@ -653,7 +653,7 @@ int tinyui_runtime_bridge_detach_from_parent(void *backend_widget)
         ldBaseNodeRemove((arm_2d_control_node_t *)widget->ld_widget);
     }
 
-    return picoui_widget_backend_detach(widget);
+    return tinyui_widget_backend_detach(widget);
 }
 
 int tinyui_runtime_bridge_has_scene(const struct picoui_app *app)

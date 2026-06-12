@@ -1,7 +1,7 @@
 {
   "schema_version": "a-0.7-native-100-inventory-v1",
   "source": "src/gui/ld*.h",
-  "widget_like_total": 27,
+  "widget_like_total": 28,
   "widgets": [
     {
       "name": "window",
@@ -325,6 +325,18 @@
         "frame_lifecycle"
       ],
       "picoui_widget": "picoui_animation",
+      "status": "existing_release_contract"
+    },
+    {
+      "name": "canvas",
+      "ldgui_type": "ldCanvas",
+      "header": "src/gui/ldCanvas.h",
+      "required_native_capabilities": [
+        "create_native_canvas_widget",
+        "clear_command_list",
+        "push_portable_draw_commands"
+      ],
+      "picoui_widget": "picoui_canvas",
       "status": "existing_release_contract"
     }
   ]

@@ -19,6 +19,12 @@
 #ifndef PICOUI_PICOUI_H
 #define PICOUI_PICOUI_H
 
+/*
+ * Transitional compatibility umbrella only.
+ * V4 keeps this subtree for existing includes while the canonical product-layer
+ * headers continue moving to tinyui/include/*.h.
+ */
+
 #include "picoui/app.h"
 #include "picoui/animation.h"
 #include "picoui/arc.h"

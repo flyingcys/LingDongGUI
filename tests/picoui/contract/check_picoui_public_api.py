@@ -4,7 +4,7 @@ import json
 
 
 ROOT = Path(__file__).resolve().parents[3]
-PUBLIC_DIR = ROOT / "picoui" / "include" / "picoui"
+PUBLIC_DIR = ROOT / "tinyui" / "include" / "picoui"
 INVENTORY_JSON = ROOT / "tests" / "picoui" / "contract" / "ldgui_public_api_inventory.json"
 LEDGER_JSON = ROOT / "tests" / "picoui" / "contract" / "native_api_gap_ledger.json"
 ALLOWED_FUNCTION_PREFIX = "picoui_"

@@ -21,19 +21,4 @@
 
 #include "picoui/runtime.h"
 
-static inline int tinyui_init(void)
-{
-    return picoui_init();
-}
-
-static inline void tinyui_deinit(void)
-{
-    picoui_deinit();
-}
-
-static inline void tinyui_timer_handler(void)
-{
-    picoui_timer_handler();
-}
-
 #endif

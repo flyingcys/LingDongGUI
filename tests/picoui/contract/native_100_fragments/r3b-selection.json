@@ -11,8 +11,8 @@
   ],
   "status": "complete",
   "evidence": {
-    "unit_group": "test_picoui_(widgets|list|button_events)",
-    "contract_checker": "tests/picoui/contract/check_picoui_release_capability_matrix.py"
+    "unit_group": "test_tinyui_(widgets|list|button_events)",
+    "contract_checker": "tests/picoui/contract/check_tinyui_release_capability_matrix.py"
   },
   "widgets": [
     {
@@ -33,7 +33,7 @@
       ],
       "evidence_tests": [
         "test_button_j4_contract",
-        "test_picoui_button_events"
+        "test_tinyui_button_events"
       ]
     },
     {

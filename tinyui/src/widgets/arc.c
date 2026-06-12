@@ -30,7 +30,7 @@ int tinyui_runtime_bridge_detach_from_parent(void *backend_widget);
 extern const arm_2d_tile_t c_tileQuaterArcGRAY8;
 extern const arm_2d_tile_t c_tileQuaterArcMask;
 
-struct picoui_arc_test_dispose_snapshot {
+struct tinyui_arc_test_dispose_snapshot {
     int kind;
     int cleanup_complete;
     int cleanup_incomplete;
@@ -46,17 +46,17 @@ struct picoui_arc_test_dispose_snapshot {
     int ld_pinfo_cleared;
 };
 
-static struct picoui_arc_test_dispose_snapshot picoui_arc_last_dispose_snapshot;
-static int picoui_arc_last_dispose_snapshot_valid = 0;
+static struct tinyui_arc_test_dispose_snapshot tinyui_arc_last_dispose_snapshot;
+static int tinyui_arc_last_dispose_snapshot_valid = 0;
 
-static int picoui_arc_props_are_valid(const struct picoui_arc_props *props);
+static int tinyui_arc_props_are_valid(const struct picoui_arc_props *props);
 
-static ldColor picoui_arc_rgb_to_ld_color(unsigned int rgb)
+static ldColor tinyui_arc_rgb_to_ld_color(unsigned int rgb)
 {
     return __RGB((rgb >> 16) & 0xFFU, (rgb >> 8) & 0xFFU, rgb & 0xFFU);
 }
 
-static unsigned int picoui_arc_ld_color_to_rgb(ldColor color)
+static unsigned int tinyui_arc_ld_color_to_rgb(ldColor color)
 {
     uint32_t red = ((uint32_t)color >> 11) & 0x1FU;
     uint32_t green = ((uint32_t)color >> 5) & 0x3FU;
@@ -68,7 +68,7 @@ static unsigned int picoui_arc_ld_color_to_rgb(ldColor color)
     return (red << 16) | (green << 8) | blue;
 }
 
-static struct picoui_backend_widget *picoui_arc_backend(struct picoui_arc *arc)
+static struct picoui_backend_widget *tinyui_arc_backend(struct picoui_arc *arc)
 {
     struct picoui_backend_widget *backend;
 
@@ -84,9 +84,9 @@ static struct picoui_backend_widget *picoui_arc_backend(struct picoui_arc *arc)
     return backend;
 }
 
-static ldArc_t *picoui_arc_get_ld(struct picoui_arc *arc)
+static ldArc_t *tinyui_arc_get_ld(struct picoui_arc *arc)
 {
-    struct picoui_backend_widget *backend = picoui_arc_backend(arc);
+    struct picoui_backend_widget *backend = tinyui_arc_backend(arc);
 
     if (backend == 0) {
         return 0;
@@ -95,7 +95,7 @@ static ldArc_t *picoui_arc_get_ld(struct picoui_arc *arc)
     return (ldArc_t *)backend->ld_widget;
 }
 
-static int picoui_arc_finish_detach_after_backend_failure(
+static int tinyui_arc_finish_detach_after_backend_failure(
     struct picoui_backend_widget *backend)
 {
     struct picoui_backend_widget *parent;
@@ -126,7 +126,7 @@ static int picoui_arc_finish_detach_after_backend_failure(
     return 0;
 }
 
-static void picoui_arc_dispose_partial_impl(struct picoui_arc *arc)
+static void tinyui_arc_dispose_partial_impl(struct picoui_arc *arc)
 {
     struct picoui_backend_widget *backend;
     struct picoui_backend_app_state *app_state;
@@ -142,36 +142,36 @@ static void picoui_arc_dispose_partial_impl(struct picoui_arc *arc)
     if (backend != 0) {
         app_state = tinyui_runtime_bridge_backend_state(backend->owner);
         ld_base = (ldBase_t *)backend->ld_widget;
-        memset(&picoui_arc_last_dispose_snapshot, 0, sizeof(picoui_arc_last_dispose_snapshot));
-        picoui_arc_last_dispose_snapshot.kind = backend->kind;
+        memset(&tinyui_arc_last_dispose_snapshot, 0, sizeof(tinyui_arc_last_dispose_snapshot));
+        tinyui_arc_last_dispose_snapshot.kind = backend->kind;
         if (backend->parent != 0) {
             detach_result = tinyui_runtime_bridge_detach_from_parent(backend);
             if (detach_result != 0) {
-                detach_result = picoui_arc_finish_detach_after_backend_failure(backend);
+                detach_result = tinyui_arc_finish_detach_after_backend_failure(backend);
             }
         } else {
-            picoui_arc_last_dispose_snapshot.detached = 1;
+            tinyui_arc_last_dispose_snapshot.detached = 1;
         }
         unbind_result = tinyui_runtime_bridge_unbind_host(backend);
-        picoui_arc_last_dispose_snapshot.detach_result = detach_result;
-        picoui_arc_last_dispose_snapshot.unbind_result = unbind_result;
-        picoui_arc_last_dispose_snapshot.cleanup_complete =
+        tinyui_arc_last_dispose_snapshot.detach_result = detach_result;
+        tinyui_arc_last_dispose_snapshot.unbind_result = unbind_result;
+        tinyui_arc_last_dispose_snapshot.cleanup_complete =
             (detach_result == 0 && unbind_result == 0);
-        picoui_arc_last_dispose_snapshot.cleanup_incomplete =
+        tinyui_arc_last_dispose_snapshot.cleanup_incomplete =
             (detach_result != 0 || unbind_result != 0);
-        picoui_arc_last_dispose_snapshot.detached = (detach_result == 0 && backend->parent == 0);
-        picoui_arc_last_dispose_snapshot.owner_cleared = (backend->owner == 0);
-        picoui_arc_last_dispose_snapshot.root_cleared = (backend->root == 0);
-        picoui_arc_last_dispose_snapshot.parent_cleared = (backend->parent == 0);
-        picoui_arc_last_dispose_snapshot.next_sibling_cleared = (backend->next_sibling == 0);
-        picoui_arc_last_dispose_snapshot.host_cleared = (backend->host_widget == 0);
-        picoui_arc_last_dispose_snapshot.event_bridge_cleared =
+        tinyui_arc_last_dispose_snapshot.detached = (detach_result == 0 && backend->parent == 0);
+        tinyui_arc_last_dispose_snapshot.owner_cleared = (backend->owner == 0);
+        tinyui_arc_last_dispose_snapshot.root_cleared = (backend->root == 0);
+        tinyui_arc_last_dispose_snapshot.parent_cleared = (backend->parent == 0);
+        tinyui_arc_last_dispose_snapshot.next_sibling_cleared = (backend->next_sibling == 0);
+        tinyui_arc_last_dispose_snapshot.host_cleared = (backend->host_widget == 0);
+        tinyui_arc_last_dispose_snapshot.event_bridge_cleared =
             (backend->ld_event_bridge_scene == 0
              && backend->ld_event_bridge_sender == 0
              && backend->ld_event_bridge_next == 0);
-        picoui_arc_last_dispose_snapshot.ld_pinfo_cleared =
+        tinyui_arc_last_dispose_snapshot.ld_pinfo_cleared =
             (ld_base == 0 || ld_base->pInfo == 0);
-        picoui_arc_last_dispose_snapshot_valid = 1;
+        tinyui_arc_last_dispose_snapshot_valid = 1;
         if (app_state != 0 && app_state->ld_scene != 0 && backend->ld_widget != 0) {
             ldArc_depose(app_state->ld_scene, (ldArc_t *)backend->ld_widget);
         }
@@ -181,26 +181,26 @@ static void picoui_arc_dispose_partial_impl(struct picoui_arc *arc)
     free(arc);
 }
 
-int picoui_backend_arc_test_take_last_dispose_snapshot(
-    struct picoui_arc_test_dispose_snapshot *snapshot)
+int tinyui_arc_test_take_last_dispose_snapshot(
+    struct tinyui_arc_test_dispose_snapshot *snapshot)
 {
-    if (snapshot == 0 || picoui_arc_last_dispose_snapshot_valid == 0) {
+    if (snapshot == 0 || tinyui_arc_last_dispose_snapshot_valid == 0) {
         return -1;
     }
 
-    *snapshot = picoui_arc_last_dispose_snapshot;
-    memset(&picoui_arc_last_dispose_snapshot, 0, sizeof(picoui_arc_last_dispose_snapshot));
-    picoui_arc_last_dispose_snapshot_valid = 0;
+    *snapshot = tinyui_arc_last_dispose_snapshot;
+    memset(&tinyui_arc_last_dispose_snapshot, 0, sizeof(tinyui_arc_last_dispose_snapshot));
+    tinyui_arc_last_dispose_snapshot_valid = 0;
     return 0;
 }
 
-struct picoui_arc *picoui_backend_arc_test_create_with_props_fail_before_parent_color(
+struct picoui_arc *tinyui_arc_test_create_with_props_fail_before_parent_color(
     struct picoui_widget *parent,
     const struct picoui_arc_props *props)
 {
     struct picoui_arc *arc;
 
-    if (!picoui_arc_props_are_valid(props)) {
+    if (!tinyui_arc_props_are_valid(props)) {
         return 0;
     }
 
@@ -217,15 +217,15 @@ struct picoui_arc *picoui_backend_arc_test_create_with_props_fail_before_parent_
         || picoui_arc_set_rotation_angle(arc, props->rotation_angle) != 0
         || (props->quarter_source != 0
             && picoui_arc_set_quarter_source(arc, props->quarter_source) != 0)) {
-        picoui_arc_dispose_partial_impl(arc);
+        tinyui_arc_dispose_partial_impl(arc);
         return 0;
     }
 
-    picoui_arc_dispose_partial_impl(arc);
+    tinyui_arc_dispose_partial_impl(arc);
     return 0;
 }
 
-static int picoui_arc_props_are_valid(const struct picoui_arc_props *props)
+static int tinyui_arc_props_are_valid(const struct picoui_arc_props *props)
 {
     return props != 0
         && props->id != 0
@@ -343,7 +343,7 @@ struct picoui_arc *picoui_arc_create(struct picoui_widget *parent, const char *i
         || picoui_arc_set_foreground_angle(arc, 0.0f) != 0
         || picoui_arc_set_rotation_angle(arc, 0.0f) != 0
         || picoui_arc_set_color(arc, 0xFFFFFFU, 0xADD8E6U) != 0) {
-        picoui_arc_dispose_partial_impl(arc);
+        tinyui_arc_dispose_partial_impl(arc);
         return 0;
     }
 
@@ -360,7 +360,7 @@ struct picoui_arc *picoui_arc_create_with_props(struct picoui_widget *parent,
 {
     struct picoui_arc *arc;
 
-    if (!picoui_arc_props_are_valid(props)) {
+    if (!tinyui_arc_props_are_valid(props)) {
         return 0;
     }
 
@@ -379,7 +379,7 @@ struct picoui_arc *picoui_arc_create_with_props(struct picoui_widget *parent,
             && picoui_arc_set_quarter_source(arc, props->quarter_source) != 0)
         || picoui_arc_set_parent_color(arc, props->parent_color) != 0
         || picoui_arc_set_color(arc, props->bg_color, props->fg_color) != 0) {
-        picoui_arc_dispose_partial_impl(arc);
+        tinyui_arc_dispose_partial_impl(arc);
         return 0;
     }
 
@@ -388,7 +388,7 @@ struct picoui_arc *picoui_arc_create_with_props(struct picoui_widget *parent,
 
 int picoui_backend_arc_set_background_angle(struct picoui_arc *arc, float bg_start_angle, float bg_end_angle)
 {
-    ldArc_t *ld_arc = picoui_arc_get_ld(arc);
+    ldArc_t *ld_arc = tinyui_arc_get_ld(arc);
 
     if (ld_arc == 0 || bg_end_angle < bg_start_angle) {
         return -1;
@@ -413,7 +413,7 @@ int picoui_arc_set_background_angle(struct picoui_arc *arc, float bg_start_angle
 
 int picoui_backend_arc_set_foreground_angle(struct picoui_arc *arc, float fg_end_angle)
 {
-    ldArc_t *ld_arc = picoui_arc_get_ld(arc);
+    ldArc_t *ld_arc = tinyui_arc_get_ld(arc);
 
     if (ld_arc == 0) {
         return -1;
@@ -437,7 +437,7 @@ int picoui_arc_set_foreground_angle(struct picoui_arc *arc, float fg_end_angle)
 
 int picoui_backend_arc_set_rotation_angle(struct picoui_arc *arc, float rotation_angle)
 {
-    ldArc_t *ld_arc = picoui_arc_get_ld(arc);
+    ldArc_t *ld_arc = tinyui_arc_get_ld(arc);
 
     if (ld_arc == 0) {
         return -1;
@@ -461,15 +461,15 @@ int picoui_arc_set_rotation_angle(struct picoui_arc *arc, float rotation_angle)
 
 int picoui_backend_arc_set_color(struct picoui_arc *arc, unsigned int bg_color, unsigned int fg_color)
 {
-    ldArc_t *ld_arc = picoui_arc_get_ld(arc);
+    ldArc_t *ld_arc = tinyui_arc_get_ld(arc);
 
     if (ld_arc == 0) {
         return -1;
     }
 
     ldArcSetColor(ld_arc,
-                  picoui_arc_rgb_to_ld_color(bg_color),
-                  picoui_arc_rgb_to_ld_color(fg_color));
+                  tinyui_arc_rgb_to_ld_color(bg_color),
+                  tinyui_arc_rgb_to_ld_color(fg_color));
     return 0;
 }
 
@@ -488,7 +488,7 @@ int picoui_arc_set_color(struct picoui_arc *arc, unsigned int bg_color, unsigned
 
 int picoui_backend_arc_set_quarter_source(struct picoui_arc *arc, struct picoui_image_source *source)
 {
-    ldArc_t *ld_arc = picoui_arc_get_ld(arc);
+    ldArc_t *ld_arc = tinyui_arc_get_ld(arc);
 
     if (ld_arc == 0 || source == 0 || source->img_tile == 0 || source->mask_tile == 0) {
         return -1;
@@ -514,7 +514,7 @@ int picoui_arc_set_quarter_source(struct picoui_arc *arc, struct picoui_image_so
 
 int picoui_backend_arc_set_parent_color(struct picoui_arc *arc, unsigned int parent_color)
 {
-    ldArc_t *ld_arc = picoui_arc_get_ld(arc);
+    ldArc_t *ld_arc = tinyui_arc_get_ld(arc);
 
     if (ld_arc == 0 || parent_color > 0xFFFFFFU) {
         return -1;
@@ -540,7 +540,7 @@ int picoui_arc_set_parent_color(struct picoui_arc *arc, unsigned int parent_colo
 
 int picoui_backend_arc_get_background_angle(struct picoui_arc *arc, float *bg_start_angle, float *bg_angle)
 {
-    ldArc_t *ld_arc = picoui_arc_get_ld(arc);
+    ldArc_t *ld_arc = tinyui_arc_get_ld(arc);
 
     if (ld_arc == 0 || bg_start_angle == 0 || bg_angle == 0) {
         return -1;
@@ -581,7 +581,7 @@ float picoui_arc_get_background_angle(const struct picoui_arc *arc)
 
 int picoui_backend_arc_get_foreground_angle(struct picoui_arc *arc, float *fg_end_angle)
 {
-    ldArc_t *ld_arc = picoui_arc_get_ld(arc);
+    ldArc_t *ld_arc = tinyui_arc_get_ld(arc);
 
     if (ld_arc == 0 || fg_end_angle == 0) {
         return -1;
@@ -606,7 +606,7 @@ float picoui_arc_get_foreground_angle(const struct picoui_arc *arc)
 
 int picoui_backend_arc_get_rotation_angle(struct picoui_arc *arc, float *rotation_angle)
 {
-    ldArc_t *ld_arc = picoui_arc_get_ld(arc);
+    ldArc_t *ld_arc = tinyui_arc_get_ld(arc);
 
     if (ld_arc == 0 || rotation_angle == 0) {
         return -1;
@@ -631,14 +631,14 @@ float picoui_arc_get_rotation_angle(const struct picoui_arc *arc)
 
 int picoui_backend_arc_get_color(struct picoui_arc *arc, unsigned int *bg_color, unsigned int *fg_color)
 {
-    ldArc_t *ld_arc = picoui_arc_get_ld(arc);
+    ldArc_t *ld_arc = tinyui_arc_get_ld(arc);
 
     if (ld_arc == 0 || bg_color == 0 || fg_color == 0) {
         return -1;
     }
 
-    *bg_color = picoui_arc_ld_color_to_rgb(ldArcGetBackgroundColor(ld_arc));
-    *fg_color = picoui_arc_ld_color_to_rgb(ldArcGetForegroundColor(ld_arc));
+    *bg_color = tinyui_arc_ld_color_to_rgb(ldArcGetBackgroundColor(ld_arc));
+    *fg_color = tinyui_arc_ld_color_to_rgb(ldArcGetForegroundColor(ld_arc));
     return 0;
 }
 

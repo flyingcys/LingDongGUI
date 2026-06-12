@@ -7,8 +7,8 @@
     "qrcode"
   ],
   "evidence": {
-    "unit_group": "test_picoui_(progress_bar|progress_wheel|qrcode)",
-    "contract_checker": "tests/picoui/contract/check_picoui_release_capability_matrix.py"
+    "unit_group": "test_tinyui_(progress_bar|progress_wheel|qrcode)",
+    "contract_checker": "tests/picoui/contract/check_tinyui_release_capability_matrix.py"
   },
   "widgets": [
     {

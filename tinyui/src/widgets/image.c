@@ -28,12 +28,12 @@
 int tinyui_runtime_bridge_unbind_host(void *backend_widget);
 int tinyui_runtime_bridge_detach_from_parent(void *backend_widget);
 
-static ldColor picoui_image_rgb_to_ld_color(unsigned int rgb)
+static ldColor tinyui_image_rgb_to_ld_color(unsigned int rgb)
 {
     return __RGB((rgb >> 16) & 0xFFU, (rgb >> 8) & 0xFFU, rgb & 0xFFU);
 }
 
-static int picoui_image_props_are_valid(const struct picoui_image_props *props)
+static int tinyui_image_props_are_valid(const struct picoui_image_props *props)
 {
     return props != 0
         && props->id != 0
@@ -44,7 +44,7 @@ static int picoui_image_props_are_valid(const struct picoui_image_props *props)
         && props->padding >= 0;
 }
 
-static int picoui_image_finish_detach_after_backend_failure(
+static int tinyui_image_finish_detach_after_backend_failure(
     struct picoui_backend_widget *backend)
 {
     struct picoui_backend_widget *parent;
@@ -75,7 +75,7 @@ static int picoui_image_finish_detach_after_backend_failure(
     return 0;
 }
 
-static void picoui_image_dispose_partial_impl(struct picoui_image *image)
+static void tinyui_image_dispose_partial_impl(struct picoui_image *image)
 {
     struct picoui_backend_widget *backend;
     struct picoui_backend_app_state *app_state;
@@ -91,7 +91,7 @@ static void picoui_image_dispose_partial_impl(struct picoui_image *image)
         if (backend->parent != 0) {
             detach_result = tinyui_runtime_bridge_detach_from_parent(backend);
             if (detach_result != 0) {
-                detach_result = picoui_image_finish_detach_after_backend_failure(backend);
+                detach_result = tinyui_image_finish_detach_after_backend_failure(backend);
             }
         }
         (void)tinyui_runtime_bridge_unbind_host(backend);
@@ -104,13 +104,13 @@ static void picoui_image_dispose_partial_impl(struct picoui_image *image)
     free(image);
 }
 
-static struct picoui_image *picoui_image_create_with_props_impl(
+static struct picoui_image *tinyui_image_create_with_props_impl(
     struct picoui_window *parent,
     const struct picoui_image_props *props)
 {
     struct picoui_image *image;
 
-    if (!picoui_image_props_are_valid(props)) {
+    if (!tinyui_image_props_are_valid(props)) {
         return 0;
     }
 
@@ -120,12 +120,12 @@ static struct picoui_image *picoui_image_create_with_props_impl(
     }
 
     if (props->source != 0 && picoui_image_set_source(image, props->source) != 0) {
-        picoui_image_dispose_partial_impl(image);
+        tinyui_image_dispose_partial_impl(image);
         return 0;
     }
     if (props->style_class != 0
         && picoui_widget_set_style_class(&image->widget, props->style_class) != 0) {
-        picoui_image_dispose_partial_impl(image);
+        tinyui_image_dispose_partial_impl(image);
         return 0;
     }
     if (picoui_widget_set_user_data(&image->widget, props->user_data) != 0
@@ -136,7 +136,7 @@ static struct picoui_image *picoui_image_create_with_props_impl(
         || picoui_widget_set_padding(&image->widget, props->padding) != 0
         || ((props->width > 0 || props->height > 0)
             && picoui_widget_set_size(&image->widget, props->width, props->height) != 0)) {
-        picoui_image_dispose_partial_impl(image);
+        tinyui_image_dispose_partial_impl(image);
         return 0;
     }
 
@@ -230,7 +230,7 @@ struct picoui_image *picoui_image_create(struct picoui_window *parent, const cha
     image->widget.visible = 1;
     image->widget.enabled = 1;
     if (tinyui_runtime_bridge_bind_host(image->widget.backend_widget, &image->widget) != 0) {
-        picoui_image_dispose_partial_impl(image);
+        tinyui_image_dispose_partial_impl(image);
         return 0;
     }
     return image;
@@ -247,7 +247,7 @@ struct picoui_image *picoui_image_create(struct picoui_window *parent, const cha
 struct picoui_image *picoui_image_create_with_props(struct picoui_window *parent,
                                                     const struct picoui_image_props *props)
 {
-    return picoui_image_create_with_props_impl(parent, props);
+    return tinyui_image_create_with_props_impl(parent, props);
 }
 
 /**
@@ -304,7 +304,7 @@ int picoui_image_set_mask_color(struct picoui_image *image, unsigned int rgb)
     }
     ld_image = (ldImage_t *)backend->ld_widget;
 
-    ldImageSetMaskColor(ld_image, picoui_image_rgb_to_ld_color(rgb));
+    ldImageSetMaskColor(ld_image, tinyui_image_rgb_to_ld_color(rgb));
     image->widget.bg_color = rgb;
     return 0;
 }

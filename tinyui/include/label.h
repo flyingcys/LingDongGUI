@@ -22,11 +22,6 @@
 #include "obj.h"
 #include "picoui/label.h"
 
-static inline tinyui_obj_t *tinyui_label_create(tinyui_obj_t *parent, const char *id)
-{
-    return (tinyui_obj_t *)picoui_label_create((struct picoui_window *)parent, id);
-}
-
 static inline int tinyui_label_set_text(tinyui_obj_t *label, const char *text)
 {
     return picoui_label_set_text((struct picoui_label *)label, text);

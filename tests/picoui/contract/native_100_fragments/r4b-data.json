@@ -7,10 +7,10 @@
     "calendar"
   ],
   "evidence": {
-    "unit_group": "test_picoui_(table|graph|calendar)",
-    "contract_checker": "tests/picoui/contract/check_picoui_release_capability_matrix.py",
-    "mapping_checker": "tests/picoui/runtime/check_picoui_backend_mapping.py",
-    "visible_checker": "tests/picoui/runtime/check_picoui_visible_ui.py --all"
+    "unit_group": "test_tinyui_(table|graph|calendar)",
+    "contract_checker": "tests/picoui/contract/check_tinyui_release_capability_matrix.py",
+    "mapping_checker": "tests/tinyui/runtime/check_tinyui_backend_mapping.py",
+    "visible_checker": "tests/tinyui/runtime/check_tinyui_visible_ui.py --all"
   },
   "widgets": [
     {

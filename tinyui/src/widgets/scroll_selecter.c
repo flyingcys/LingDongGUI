@@ -26,7 +26,7 @@
 
 extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
 
-static int picoui_scroll_selecter_props_are_valid(const struct picoui_scroll_selecter_props *props)
+static int tinyui_scroll_selecter_props_are_valid(const struct picoui_scroll_selecter_props *props)
 {
     return props != 0 &&
            props->id != 0 &&
@@ -36,7 +36,7 @@ static int picoui_scroll_selecter_props_are_valid(const struct picoui_scroll_sel
            props->padding >= 0;
 }
 
-static ldColor picoui_scroll_selecter_rgb_to_ld_color(unsigned int rgb)
+static ldColor tinyui_scroll_selecter_rgb_to_ld_color(unsigned int rgb)
 {
     unsigned int red = (rgb >> 16) & 0xFFU;
     unsigned int green = (rgb >> 8) & 0xFFU;
@@ -45,7 +45,7 @@ static ldColor picoui_scroll_selecter_rgb_to_ld_color(unsigned int rgb)
     return (ldColor)(((red >> 3) << 11) | ((green >> 2) << 5) | (blue >> 3));
 }
 
-static struct picoui_backend_widget *picoui_scroll_selecter_backend_from_widget(
+static struct picoui_backend_widget *tinyui_scroll_selecter_backend_from_widget(
     const struct picoui_scroll_selecter *scroll_selecter
 )
 {
@@ -63,7 +63,7 @@ static struct picoui_backend_widget *picoui_scroll_selecter_backend_from_widget(
     return backend;
 }
 
-static ldScrollSelecter_t *picoui_scroll_selecter_ld_from_backend(void *backend_widget)
+static ldScrollSelecter_t *tinyui_scroll_selecter_get_ld(void *backend_widget)
 {
     struct picoui_backend_widget *widget = backend_widget;
 
@@ -76,7 +76,7 @@ static ldScrollSelecter_t *picoui_scroll_selecter_ld_from_backend(void *backend_
     return (ldScrollSelecter_t *)widget->ld_widget;
 }
 
-static const char *picoui_scroll_selecter_selected_text_from_public_state(
+static const char *tinyui_scroll_selecter_selected_text_from_public_state(
     const struct picoui_scroll_selecter *scroll_selecter
 )
 {
@@ -113,7 +113,7 @@ int picoui_backend_scroll_selecter_set_items(void *backend_widget,
         return -1;
     }
 
-    ld_scroll_selecter = picoui_scroll_selecter_ld_from_backend(backend_widget);
+    ld_scroll_selecter = tinyui_scroll_selecter_get_ld(backend_widget);
     if (ld_scroll_selecter == 0) {
         return -1;
     }
@@ -132,44 +132,44 @@ int picoui_backend_scroll_selecter_set_items(void *backend_widget,
 
 int picoui_backend_scroll_selecter_set_text_color(void *backend_widget, unsigned int rgb)
 {
-    ldScrollSelecter_t *ld_scroll_selecter = picoui_scroll_selecter_ld_from_backend(backend_widget);
+    ldScrollSelecter_t *ld_scroll_selecter = tinyui_scroll_selecter_get_ld(backend_widget);
 
     if (ld_scroll_selecter == 0) {
         return -1;
     }
 
-    ldScrollSelecterSetTextColor(ld_scroll_selecter, picoui_scroll_selecter_rgb_to_ld_color(rgb));
+    ldScrollSelecterSetTextColor(ld_scroll_selecter, tinyui_scroll_selecter_rgb_to_ld_color(rgb));
     return 0;
 }
 
 int picoui_backend_scroll_selecter_set_bg_color(void *backend_widget, unsigned int rgb)
 {
-    ldScrollSelecter_t *ld_scroll_selecter = picoui_scroll_selecter_ld_from_backend(backend_widget);
+    ldScrollSelecter_t *ld_scroll_selecter = tinyui_scroll_selecter_get_ld(backend_widget);
 
     if (ld_scroll_selecter == 0) {
         return -1;
     }
 
-    ldScrollSelecterSetBackgroundColor(ld_scroll_selecter, picoui_scroll_selecter_rgb_to_ld_color(rgb));
+    ldScrollSelecterSetBackgroundColor(ld_scroll_selecter, tinyui_scroll_selecter_rgb_to_ld_color(rgb));
     return 0;
 }
 
 int picoui_backend_scroll_selecter_set_indicator_color(void *backend_widget, unsigned int rgb)
 {
-    ldScrollSelecter_t *ld_scroll_selecter = picoui_scroll_selecter_ld_from_backend(backend_widget);
+    ldScrollSelecter_t *ld_scroll_selecter = tinyui_scroll_selecter_get_ld(backend_widget);
 
     if (ld_scroll_selecter == 0) {
         return -1;
     }
 
-    ldScrollSelecterSetIndicatorColor(ld_scroll_selecter, picoui_scroll_selecter_rgb_to_ld_color(rgb));
+    ldScrollSelecterSetIndicatorColor(ld_scroll_selecter, tinyui_scroll_selecter_rgb_to_ld_color(rgb));
     return 0;
 }
 
 int picoui_backend_scroll_selecter_set_bg_source(void *backend_widget,
                                                  struct picoui_image_source *source)
 {
-    ldScrollSelecter_t *ld_scroll_selecter = picoui_scroll_selecter_ld_from_backend(backend_widget);
+    ldScrollSelecter_t *ld_scroll_selecter = tinyui_scroll_selecter_get_ld(backend_widget);
 
     if (ld_scroll_selecter == 0 || source == 0 || source->img_tile == 0) {
         return -1;
@@ -182,7 +182,7 @@ int picoui_backend_scroll_selecter_set_bg_source(void *backend_widget,
 int picoui_backend_scroll_selecter_set_indicator_source(void *backend_widget,
                                                         struct picoui_image_source *source)
 {
-    ldScrollSelecter_t *ld_scroll_selecter = picoui_scroll_selecter_ld_from_backend(backend_widget);
+    ldScrollSelecter_t *ld_scroll_selecter = tinyui_scroll_selecter_get_ld(backend_widget);
 
     if (ld_scroll_selecter == 0 || source == 0 || source->img_tile == 0) {
         return -1;
@@ -194,7 +194,7 @@ int picoui_backend_scroll_selecter_set_indicator_source(void *backend_widget,
 
 int picoui_backend_scroll_selecter_set_transparent(void *backend_widget, int transparent)
 {
-    ldScrollSelecter_t *ld_scroll_selecter = picoui_scroll_selecter_ld_from_backend(backend_widget);
+    ldScrollSelecter_t *ld_scroll_selecter = tinyui_scroll_selecter_get_ld(backend_widget);
 
     if (ld_scroll_selecter == 0) {
         return -1;
@@ -206,7 +206,7 @@ int picoui_backend_scroll_selecter_set_transparent(void *backend_widget, int tra
 
 int picoui_backend_scroll_selecter_set_speed(void *backend_widget, int speed)
 {
-    ldScrollSelecter_t *ld_scroll_selecter = picoui_scroll_selecter_ld_from_backend(backend_widget);
+    ldScrollSelecter_t *ld_scroll_selecter = tinyui_scroll_selecter_get_ld(backend_widget);
 
     if (ld_scroll_selecter == 0 || speed <= 0) {
         return -1;
@@ -218,7 +218,7 @@ int picoui_backend_scroll_selecter_set_speed(void *backend_widget, int speed)
 
 int picoui_backend_scroll_selecter_set_select_text(void *backend_widget, const char *text)
 {
-    ldScrollSelecter_t *ld_scroll_selecter = picoui_scroll_selecter_ld_from_backend(backend_widget);
+    ldScrollSelecter_t *ld_scroll_selecter = tinyui_scroll_selecter_get_ld(backend_widget);
 
     if (ld_scroll_selecter == 0 || text == 0) {
         return -1;
@@ -241,7 +241,7 @@ int picoui_backend_scroll_selecter_set_selected_index(void *backend_widget, int 
         return -1;
     }
 
-    ld_scroll_selecter = picoui_scroll_selecter_ld_from_backend(backend_widget);
+    ld_scroll_selecter = tinyui_scroll_selecter_get_ld(backend_widget);
     if (ld_scroll_selecter == 0) {
         return -1;
     }
@@ -253,7 +253,7 @@ int picoui_backend_scroll_selecter_set_selected_index(void *backend_widget, int 
 
 int picoui_backend_scroll_selecter_get_selected_index(void *backend_widget)
 {
-    ldScrollSelecter_t *ld_scroll_selecter = picoui_scroll_selecter_ld_from_backend(backend_widget);
+    ldScrollSelecter_t *ld_scroll_selecter = tinyui_scroll_selecter_get_ld(backend_widget);
 
     if (ld_scroll_selecter == 0 || ld_scroll_selecter->itemCount == 0) {
         return -1;
@@ -264,7 +264,7 @@ int picoui_backend_scroll_selecter_get_selected_index(void *backend_widget)
 
 const char *picoui_backend_scroll_selecter_get_selected_text(void *backend_widget)
 {
-    ldScrollSelecter_t *ld_scroll_selecter = picoui_scroll_selecter_ld_from_backend(backend_widget);
+    ldScrollSelecter_t *ld_scroll_selecter = tinyui_scroll_selecter_get_ld(backend_widget);
 
     if (ld_scroll_selecter == 0 || ld_scroll_selecter->itemCount == 0) {
         return 0;
@@ -279,7 +279,7 @@ int picoui_backend_scroll_selecter_sync_selected_index(struct picoui_scroll_sele
     struct picoui_backend_widget *backend;
     int selected_index;
 
-    backend = picoui_scroll_selecter_backend_from_widget(scroll_selecter);
+    backend = tinyui_scroll_selecter_backend_from_widget(scroll_selecter);
     if (backend == 0) {
         return -1;
     }
@@ -299,7 +299,7 @@ int picoui_backend_scroll_selecter_sync_selected_index(struct picoui_scroll_sele
 
 int picoui_backend_scroll_selecter_set_edit_mode(void *backend_widget, int is_edit)
 {
-    ldScrollSelecter_t *ld_scroll_selecter = picoui_scroll_selecter_ld_from_backend(backend_widget);
+    ldScrollSelecter_t *ld_scroll_selecter = tinyui_scroll_selecter_get_ld(backend_widget);
 
     if (ld_scroll_selecter == 0) {
         return -1;
@@ -311,7 +311,7 @@ int picoui_backend_scroll_selecter_set_edit_mode(void *backend_widget, int is_ed
 
 int picoui_backend_scroll_selecter_get_edit_mode(void *backend_widget, int *is_edit)
 {
-    ldScrollSelecter_t *ld_scroll_selecter = picoui_scroll_selecter_ld_from_backend(backend_widget);
+    ldScrollSelecter_t *ld_scroll_selecter = tinyui_scroll_selecter_get_ld(backend_widget);
 
     if (ld_scroll_selecter == 0 || is_edit == 0) {
         return -1;
@@ -437,7 +437,7 @@ struct picoui_scroll_selecter *picoui_scroll_selecter_create_with_props(
 {
     struct picoui_scroll_selecter *scroll_selecter;
 
-    if (!picoui_scroll_selecter_props_are_valid(props)) {
+    if (!tinyui_scroll_selecter_props_are_valid(props)) {
         return 0;
     }
 
@@ -920,7 +920,7 @@ const char *picoui_scroll_selecter_get_selected_text(const struct picoui_scroll_
         return selected_text;
     }
 
-    return picoui_scroll_selecter_selected_text_from_public_state(scroll_selecter);
+    return tinyui_scroll_selecter_selected_text_from_public_state(scroll_selecter);
 }
 
 /**

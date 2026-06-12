@@ -28,12 +28,12 @@
 
 extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
 
-static int picoui_message_box_props_are_valid(const struct picoui_message_box_props *props)
+static int tinyui_message_box_props_are_valid(const struct picoui_message_box_props *props)
 {
     return props != 0 && props->id != 0;
 }
 
-static ldMessageBox_t *picoui_message_box_get_ld(struct picoui_message_box *box)
+static ldMessageBox_t *tinyui_message_box_get_ld(struct picoui_message_box *box)
 {
     struct picoui_backend_widget *backend;
 
@@ -49,7 +49,7 @@ static ldMessageBox_t *picoui_message_box_get_ld(struct picoui_message_box *box)
     return (ldMessageBox_t *)backend->ld_widget;
 }
 
-static void picoui_message_box_confirm_bridge(ld_scene_t *scene, ldMessageBox_t *ld_message_box)
+static void tinyui_message_box_confirm_bridge(ld_scene_t *scene, ldMessageBox_t *ld_message_box)
 {
     struct picoui_backend_widget *backend;
     struct picoui_message_box *box;
@@ -198,7 +198,7 @@ struct picoui_message_box *picoui_message_box_create_with_props(
 {
     struct picoui_message_box *box;
 
-    if (!picoui_message_box_props_are_valid(props)) {
+    if (!tinyui_message_box_props_are_valid(props)) {
         return 0;
     }
 
@@ -243,7 +243,7 @@ int picoui_message_box_set_title(struct picoui_message_box *box, const char *tit
         return -1;
     }
 
-    ld_message_box = picoui_message_box_get_ld(box);
+    ld_message_box = tinyui_message_box_get_ld(box);
     if (ld_message_box == 0) {
         return -1;
     }
@@ -269,7 +269,7 @@ int picoui_message_box_set_message(struct picoui_message_box *box, const char *m
         return -1;
     }
 
-    ld_message_box = picoui_message_box_get_ld(box);
+    ld_message_box = tinyui_message_box_get_ld(box);
     if (ld_message_box == 0) {
         return -1;
     }
@@ -309,7 +309,7 @@ int picoui_message_box_set_confirm_text(struct picoui_message_box *box, const ch
         return -1;
     }
 
-    ld_message_box = picoui_message_box_get_ld(box);
+    ld_message_box = tinyui_message_box_get_ld(box);
     backend = (struct picoui_backend_widget *)box->widget.backend_widget;
     if (ld_message_box == 0 || backend == 0) {
         return -1;
@@ -344,7 +344,7 @@ int picoui_message_box_set_buttons(struct picoui_message_box *box, const char *c
         }
     }
 
-    ld_message_box = picoui_message_box_get_ld(box);
+    ld_message_box = tinyui_message_box_get_ld(box);
     if (ld_message_box == 0) {
         return -1;
     }
@@ -395,7 +395,7 @@ int picoui_message_box_set_string_colors(struct picoui_message_box *box,
         return -1;
     }
 
-    ld_message_box = picoui_message_box_get_ld(box);
+    ld_message_box = tinyui_message_box_get_ld(box);
     if (ld_message_box == 0) {
         return -1;
     }
@@ -447,7 +447,7 @@ int picoui_message_box_set_button_colors(struct picoui_message_box *box,
         return -1;
     }
 
-    ld_message_box = picoui_message_box_get_ld(box);
+    ld_message_box = tinyui_message_box_get_ld(box);
     if (ld_message_box == 0) {
         return -1;
     }
@@ -490,7 +490,7 @@ int picoui_message_box_set_bg_color(struct picoui_message_box *box, unsigned int
         return -1;
     }
 
-    ld_message_box = picoui_message_box_get_ld(box);
+    ld_message_box = tinyui_message_box_get_ld(box);
     if (ld_message_box == 0) {
         return -1;
     }
@@ -535,9 +535,9 @@ void picoui_message_box_set_on_confirm(
     box->on_confirm = callback;
     box->on_confirm_user_data = user_data;
     if (callback != 0) {
-        ld_message_box = picoui_message_box_get_ld(box);
+        ld_message_box = tinyui_message_box_get_ld(box);
         if (ld_message_box != 0) {
-            ldMessageBoxSetCallback(ld_message_box, picoui_message_box_confirm_bridge);
+            ldMessageBoxSetCallback(ld_message_box, tinyui_message_box_confirm_bridge);
         }
     }
 }
@@ -580,9 +580,9 @@ void picoui_message_box_set_on_confirm_indexed(
     box->on_confirm_indexed = callback;
     box->on_confirm_indexed_user_data = user_data;
     if (callback != 0) {
-        ld_message_box = picoui_message_box_get_ld(box);
+        ld_message_box = tinyui_message_box_get_ld(box);
         if (ld_message_box != 0) {
-            ldMessageBoxSetCallback(ld_message_box, picoui_message_box_confirm_bridge);
+            ldMessageBoxSetCallback(ld_message_box, tinyui_message_box_confirm_bridge);
         }
     }
 }

@@ -10,10 +10,10 @@
   ],
   "status": "complete",
   "evidence": {
-    "unit_group": "test_picoui_(line_edit|keyboard|combo_box|scroll_selecter)",
-    "contract_checker": "tests/picoui/contract/check_picoui_release_capability_matrix.py",
-    "mapping_checker": "tests/picoui/runtime/check_picoui_backend_mapping.py",
-    "visible_checker": "tests/picoui/runtime/check_picoui_visible_ui.py --all"
+    "unit_group": "test_tinyui_(line_edit|keyboard|combo_box|scroll_selecter)",
+    "contract_checker": "tests/picoui/contract/check_tinyui_release_capability_matrix.py",
+    "mapping_checker": "tests/tinyui/runtime/check_tinyui_backend_mapping.py",
+    "visible_checker": "tests/tinyui/runtime/check_tinyui_visible_ui.py --all"
   },
   "widgets": [
     {
@@ -31,7 +31,7 @@
       "evidence_tests": [
         "test_line_edit_commit_and_cancel_paths_are_distinct",
         "test_line_edit_submit_cancel_reason_contract_is_release_ready",
-        "test_picoui_line_edit"
+        "test_tinyui_line_edit"
       ]
     },
     {
@@ -52,7 +52,7 @@
         "test_keyboard_dispatches_ascii_into_editing_owner_before_focus_owner",
         "test_keyboard_navigation_signal_respects_focus_owner",
         "test_keyboard_exit_clears_focus_or_edit_session",
-        "test_picoui_keyboard"
+        "test_tinyui_keyboard"
       ]
     },
     {
@@ -76,7 +76,7 @@
         "test_combo_box_native_color_item_max_and_dropdown_image_round_trip",
         "test_combo_box_native_item_text_readback_matches_backend_truth",
         "test_combo_box_uses_native_static_items_contract",
-        "test_picoui_combo_box"
+        "test_tinyui_combo_box"
       ]
     },
     {
@@ -101,7 +101,7 @@
         "test_scroll_selecter_selected_item_matches_backend_truth",
         "test_scroll_selecter_native_style_image_speed_and_select_text_round_trip",
         "test_scroll_selecter_selected_text_readback_matches_backend_truth",
-        "test_picoui_scroll_selecter"
+        "test_tinyui_scroll_selecter"
       ]
     }
   ],

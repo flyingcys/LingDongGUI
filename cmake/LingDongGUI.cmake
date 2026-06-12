@@ -99,13 +99,17 @@ function(ld_apply_common_target_config target)
     endif()
 endfunction()
 
-function(ld_apply_picoui_runtime_screen_config target)
+function(ld_apply_tinyui_runtime_screen_config target)
     target_compile_definitions(${target}
         PRIVATE
             LD_CFG_SCREEN_WIDTH=480
             LD_CFG_SCREEN_HEIGHT=320
             LD_CFG_PFB_WIDTH=480
     )
+endfunction()
+
+function(ld_apply_picoui_runtime_screen_config target)
+    ld_apply_tinyui_runtime_screen_config(${target})
 endfunction()
 
 function(ld_define_core_targets)
@@ -205,12 +209,12 @@ function(ld_define_core_targets)
     ld_apply_common_target_config(tinyui_core)
     add_library(picoui_core ALIAS tinyui_core)
 
-    set(LD_PICOUI_BACKEND_LDGUI_SOURCES
+    set(LD_TINYUI_BACKEND_LDGUI_SOURCES
         ${LD_REPO_ROOT}/tinyui/src/core/runtime_host.c
     )
 
     foreach(LD_TINYUI_BACKEND_TARGET IN ITEMS tinyui_backend_ldgui tinyui_backend_ldgui_runtime)
-        add_library(${LD_TINYUI_BACKEND_TARGET} STATIC ${LD_PICOUI_BACKEND_LDGUI_SOURCES})
+        add_library(${LD_TINYUI_BACKEND_TARGET} STATIC ${LD_TINYUI_BACKEND_LDGUI_SOURCES})
         target_include_directories(${LD_TINYUI_BACKEND_TARGET} PUBLIC
             ${LD_REPO_ROOT}/tinyui/include
             ${LD_REPO_ROOT}/tinyui/src/core
@@ -219,7 +223,7 @@ function(ld_define_core_targets)
         )
         target_link_libraries(${LD_TINYUI_BACKEND_TARGET} PUBLIC tinyui_core longdonggui longdonggui_porting_default)
         if(LD_TINYUI_BACKEND_TARGET STREQUAL "tinyui_backend_ldgui_runtime")
-            ld_apply_picoui_runtime_screen_config(${LD_TINYUI_BACKEND_TARGET})
+            ld_apply_tinyui_runtime_screen_config(${LD_TINYUI_BACKEND_TARGET})
         endif()
         if(WIN32)
             if(CMAKE_SIZEOF_VOID_P EQUAL 8)
@@ -276,13 +280,17 @@ function(ld_define_core_targets)
 endfunction()
 
 function(ld_add_c_unit_test target)
-    cmake_parse_arguments(LDTEST "" "SUPPORT_LIB;MAIN_LIB" "SOURCES;LABELS" ${ARGN})
+    cmake_parse_arguments(LDTEST "" "SUPPORT_LIB;MAIN_LIB;TEST_NAME" "SOURCES;LABELS" ${ARGN})
     add_executable(${target} ${LDTEST_SOURCES})
     target_link_libraries(${target} PRIVATE ${LDTEST_SUPPORT_LIB} ${LDTEST_MAIN_LIB})
     ld_apply_common_target_config(${target})
-    add_test(NAME ${target} COMMAND ${target})
+    set(LDTEST_CTEST_NAME "${target}")
+    if(LDTEST_TEST_NAME)
+        set(LDTEST_CTEST_NAME "${LDTEST_TEST_NAME}")
+    endif()
+    add_test(NAME ${LDTEST_CTEST_NAME} COMMAND ${target})
     if(LDTEST_LABELS)
-        set_tests_properties(${target} PROPERTIES LABELS "${LDTEST_LABELS}")
+        set_tests_properties(${LDTEST_CTEST_NAME} PROPERTIES LABELS "${LDTEST_LABELS}")
     endif()
 endfunction()
 

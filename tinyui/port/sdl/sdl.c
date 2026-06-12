@@ -1,8 +1,8 @@
 #include "picoui/port/sdl.h"
 
-#include "picoui/display.h"
-#include "picoui/osal.h"
-#include "picoui/tick.h"
+#include "display.h"
+#include "osal.h"
+#include "tick.h"
 
 #include <SDL.h>
 

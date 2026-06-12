@@ -23,7 +23,7 @@
 
 #include <stdlib.h>
 
-static struct picoui_backend_widget *picoui_graph_backend(struct picoui_graph *graph)
+static struct picoui_backend_widget *tinyui_graph_backend(struct picoui_graph *graph)
 {
     struct picoui_backend_widget *backend;
 
@@ -39,7 +39,7 @@ static struct picoui_backend_widget *picoui_graph_backend(struct picoui_graph *g
     return backend;
 }
 
-static struct picoui_backend_widget *picoui_graph_backend_const(const struct picoui_graph *graph)
+static struct picoui_backend_widget *tinyui_graph_backend_const(const struct picoui_graph *graph)
 {
     struct picoui_backend_widget *backend;
 
@@ -55,9 +55,9 @@ static struct picoui_backend_widget *picoui_graph_backend_const(const struct pic
     return backend;
 }
 
-static ldGraph_t *picoui_graph_get_ld(struct picoui_graph *graph)
+static ldGraph_t *tinyui_graph_get_ld(struct picoui_graph *graph)
 {
-    struct picoui_backend_widget *backend = picoui_graph_backend(graph);
+    struct picoui_backend_widget *backend = tinyui_graph_backend(graph);
 
     if (backend == 0) {
         return 0;
@@ -66,9 +66,9 @@ static ldGraph_t *picoui_graph_get_ld(struct picoui_graph *graph)
     return (ldGraph_t *)backend->ld_widget;
 }
 
-static const ldGraph_t *picoui_graph_get_ld_const(const struct picoui_graph *graph)
+static const ldGraph_t *tinyui_graph_get_ld_const(const struct picoui_graph *graph)
 {
-    struct picoui_backend_widget *backend = picoui_graph_backend_const(graph);
+    struct picoui_backend_widget *backend = tinyui_graph_backend_const(graph);
 
     if (backend == 0) {
         return 0;
@@ -77,7 +77,7 @@ static const ldGraph_t *picoui_graph_get_ld_const(const struct picoui_graph *gra
     return (const ldGraph_t *)backend->ld_widget;
 }
 
-static int picoui_graph_props_are_valid(const struct picoui_graph_props *props)
+static int tinyui_graph_props_are_valid(const struct picoui_graph_props *props)
 {
     return props != 0 &&
            props->id != 0 &&
@@ -87,7 +87,7 @@ static int picoui_graph_props_are_valid(const struct picoui_graph_props *props)
            props->height >= 0;
 }
 
-static int picoui_graph_apply_native_geometry_candidate(struct picoui_graph *graph,
+static int tinyui_graph_apply_native_geometry_candidate(struct picoui_graph *graph,
                                                         int x_axis,
                                                         int y_axis,
                                                         int axis_offset,
@@ -115,7 +115,7 @@ static int picoui_graph_apply_native_geometry_candidate(struct picoui_graph *gra
     if (graph == 0) {
         return -1;
     }
-    ld_graph = picoui_graph_get_ld(graph);
+    ld_graph = tinyui_graph_get_ld(graph);
     if (ld_graph == 0) {
         return -1;
     }
@@ -329,7 +329,7 @@ struct picoui_graph *picoui_graph_create_with_props(struct picoui_window *parent
 {
     struct picoui_graph *graph;
 
-    if (!picoui_graph_props_are_valid(props)) {
+    if (!tinyui_graph_props_are_valid(props)) {
         return 0;
     }
 
@@ -371,7 +371,7 @@ int picoui_graph_set_axis(struct picoui_graph *graph, int x_axis, int y_axis)
         return -1;
     }
 
-    return picoui_graph_apply_native_geometry_candidate(graph,
+    return tinyui_graph_apply_native_geometry_candidate(graph,
                                                         x_axis,
                                                         y_axis,
                                                         graph->axis_offset,
@@ -394,7 +394,7 @@ int picoui_graph_set_axis_offset(struct picoui_graph *graph, int axis_offset)
         return -1;
     }
 
-    return picoui_graph_apply_native_geometry_candidate(graph,
+    return tinyui_graph_apply_native_geometry_candidate(graph,
                                                         graph->x_axis,
                                                         graph->y_axis,
                                                         axis_offset,
@@ -417,7 +417,7 @@ int picoui_graph_set_frame_space(struct picoui_graph *graph, int frame_space)
         return -1;
     }
 
-    return picoui_graph_apply_native_geometry_candidate(graph,
+    return tinyui_graph_apply_native_geometry_candidate(graph,
                                                         graph->x_axis,
                                                         graph->y_axis,
                                                         graph->axis_offset,
@@ -440,7 +440,7 @@ int picoui_graph_set_grid_offset(struct picoui_graph *graph, int grid_offset)
         return -1;
     }
 
-    return picoui_graph_apply_native_geometry_candidate(graph,
+    return tinyui_graph_apply_native_geometry_candidate(graph,
                                                         graph->x_axis,
                                                         graph->y_axis,
                                                         graph->axis_offset,
@@ -463,7 +463,7 @@ int picoui_graph_set_point_mask_source(struct picoui_graph *graph, struct picoui
         return -1;
     }
 
-    return picoui_graph_apply_native_geometry_candidate(graph,
+    return tinyui_graph_apply_native_geometry_candidate(graph,
                                                         graph->x_axis,
                                                         graph->y_axis,
                                                         graph->axis_offset,
@@ -506,7 +506,7 @@ int picoui_graph_add_series(struct picoui_graph *graph,
     if (graph == 0 || line_size < 0 || point_max <= 0 || point_max > PICOUI_GRAPH_MAX_POINTS) {
         return -1;
     }
-    ld_graph = picoui_graph_get_ld(graph);
+    ld_graph = tinyui_graph_get_ld(graph);
     if (ld_graph == 0) {
         return -1;
     }
@@ -548,7 +548,7 @@ int picoui_graph_set_value(struct picoui_graph *graph,
         value < 0) {
         return -1;
     }
-    ld_graph = picoui_graph_get_ld(graph);
+    ld_graph = tinyui_graph_get_ld(graph);
     if (ld_graph == 0 || series_index >= ld_graph->seriesCount ||
         value_index >= ld_graph->pSeries[series_index].valueCountMax) {
         return -1;
@@ -574,7 +574,7 @@ int picoui_graph_move_add(struct picoui_graph *graph, int series_index, int valu
     if (graph == 0 || series_index < 0 || series_index >= graph->series_count || value < 0) {
         return -1;
     }
-    ld_graph = picoui_graph_get_ld(graph);
+    ld_graph = tinyui_graph_get_ld(graph);
     if (ld_graph == 0 || series_index >= ld_graph->seriesCount) {
         return -1;
     }
@@ -597,7 +597,7 @@ int picoui_graph_get_series_count(const struct picoui_graph *graph)
     if (graph == 0) {
         return -1;
     }
-    ld_graph = picoui_graph_get_ld_const(graph);
+    ld_graph = tinyui_graph_get_ld_const(graph);
     if (ld_graph == 0) {
         return -1;
     }
@@ -621,7 +621,7 @@ int picoui_graph_get_value(const struct picoui_graph *graph, int series_index, i
     if (graph == 0) {
         return -1;
     }
-    ld_graph = picoui_graph_get_ld_const(graph);
+    ld_graph = tinyui_graph_get_ld_const(graph);
     if (ld_graph == 0 || series_index < 0 || series_index >= ld_graph->seriesCount ||
         value_index < 0 || value_index >= ld_graph->pSeries[series_index].valueCountMax) {
         return -1;

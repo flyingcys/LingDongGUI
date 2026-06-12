@@ -64,7 +64,7 @@ struct picoui_app_timer {
     void *user_data;
 };
 
-void picoui_app_pump_timers(struct picoui_app *app, unsigned int now_ticks);
+void tinyui_app_pump_timers(struct picoui_app *app, unsigned int now_ticks);
 
 struct picoui_display_port_state {
     struct picoui_display_config config;
@@ -143,18 +143,18 @@ int tinyui_runtime_bridge_bind_host(void *backend_widget, struct picoui_widget *
 int tinyui_runtime_bridge_bind_ld_event_bridge(void *backend_widget,
                                                struct ld_scene_t *scene,
                                                void *sender);
-int picoui_list_backend_set_selected_index(void *backend_widget, int index);
-int picoui_list_backend_get_selected_index(void *backend_widget);
-int picoui_list_backend_sync_selected_index(struct picoui_list *list, int *selected_index_out);
+int tinyui_list_set_selected_index(void *backend_widget, int index);
+int tinyui_list_get_selected_index(void *backend_widget);
+int tinyui_list_sync_selected_index(struct picoui_list *list, int *selected_index_out);
 int tinyui_widget_is_kind(const void *backend_widget,
                           enum picoui_backend_widget_kind kind);
 int tinyui_runtime_bridge_unbind_host(void *backend_widget);
 int tinyui_runtime_bridge_detach_from_parent(void *backend_widget);
-int picoui_widget_bind_backend_host(struct picoui_widget *widget, void *backend_widget);
-struct picoui_widget *picoui_widget_backend_host(const void *backend_widget);
-int picoui_widget_backend_detach(void *backend_widget);
-struct picoui_app *picoui_widget_owner_app(const struct picoui_widget *widget);
-int picoui_widget_has_ld_binding(const struct picoui_widget *widget);
+int tinyui_widget_bind_backend_host(struct picoui_widget *widget, void *backend_widget);
+struct picoui_widget *tinyui_widget_backend_host(const void *backend_widget);
+int tinyui_widget_backend_detach(void *backend_widget);
+struct picoui_app *tinyui_widget_owner_app(const struct picoui_widget *widget);
+int tinyui_widget_has_ld_binding(const struct picoui_widget *widget);
 void tinyui_widget_emit_value_changed(picoui_value_changed_cb cb,
                                       struct picoui_widget *widget,
                                       int value,
@@ -165,29 +165,30 @@ void tinyui_widget_emit_event(picoui_event_cb cb,
 void tinyui_widget_emit_clicked(picoui_event_cb cb,
                                 struct picoui_widget *widget,
                                 void *user_data);
-void picoui_widget_sync_ld_value(struct picoui_backend_widget *backend,
+void tinyui_widget_sync_ld_value(struct picoui_backend_widget *backend,
                                  struct picoui_widget *widget,
                                  int value);
-int picoui_widget_update_value(void *backend_widget,
+int tinyui_widget_update_value(void *backend_widget,
                                int value,
                                picoui_value_changed_cb cb,
                                struct picoui_widget *widget,
                                void *user_data);
-void picoui_widget_emit_ld_event_bridge(struct picoui_backend_widget *backend,
+int tinyui_widget_set_backend_text(void *backend_widget, const char *text);
+void tinyui_widget_emit_ld_event_bridge(struct picoui_backend_widget *backend,
                                         enum picoui_backend_signal signal,
                                         int value);
-int picoui_widget_dispatch_signal(void *backend_widget,
+int tinyui_widget_dispatch_signal(void *backend_widget,
                                   enum picoui_backend_signal signal,
                                   int value,
                                   picoui_value_changed_cb cb,
                                   struct picoui_widget *widget,
                                   void *user_data);
-int picoui_widget_dispatch_event(void *backend_widget,
+int tinyui_widget_dispatch_event(void *backend_widget,
                                  enum picoui_backend_signal signal,
                                  picoui_event_cb cb,
                                  struct picoui_widget *widget,
                                  void *user_data);
-int picoui_widget_dispatch_native_signal(void *backend_widget,
+int tinyui_widget_dispatch_native_signal(void *backend_widget,
                                          uint32_t native_signal,
                                          uint64_t native_value);
 int tinyui_runtime_host_step_app(struct picoui_app *app);

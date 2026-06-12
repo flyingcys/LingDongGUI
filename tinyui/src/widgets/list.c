@@ -26,12 +26,12 @@
 
 #define PICOUI_HIDDEN __attribute__((visibility("hidden")))
 
-static ldColor picoui_list_rgb_to_ld_color(unsigned int rgb)
+static ldColor tinyui_list_rgb_to_ld_color(unsigned int rgb)
 {
     return __RGB((rgb >> 16) & 0xFFU, (rgb >> 8) & 0xFFU, rgb & 0xFFU);
 }
 
-static arm_2d_align_t picoui_list_map_align(enum picoui_align align)
+static arm_2d_align_t tinyui_list_map_align(enum picoui_align align)
 {
     switch (align) {
     case PICOUI_ALIGN_START:
@@ -45,7 +45,7 @@ static arm_2d_align_t picoui_list_map_align(enum picoui_align align)
     }
 }
 
-static struct picoui_backend_widget *picoui_list_backend(const struct picoui_list *list)
+static struct picoui_backend_widget *tinyui_list_backend(const struct picoui_list *list)
 {
     if (list == 0 || list->widget.backend_widget == 0) {
         return 0;
@@ -54,9 +54,9 @@ static struct picoui_backend_widget *picoui_list_backend(const struct picoui_lis
     return (struct picoui_backend_widget *)list->widget.backend_widget;
 }
 
-static ldList_t *picoui_list_ld_widget(const struct picoui_list *list)
+static ldList_t *tinyui_list_get_ld(const struct picoui_list *list)
 {
-    struct picoui_backend_widget *backend = picoui_list_backend(list);
+    struct picoui_backend_widget *backend = tinyui_list_backend(list);
 
     if (backend == 0 ||
         backend->kind != PICOUI_BACKEND_WIDGET_LIST ||
@@ -214,8 +214,8 @@ int picoui_list_add_item(struct picoui_list *list, const char *id, const char *t
         return -1;
     }
 
-    backend = picoui_list_backend(list);
-    ld_list = picoui_list_ld_widget(list);
+    backend = tinyui_list_backend(list);
+    ld_list = tinyui_list_get_ld(list);
     if (backend == 0 || ld_list == 0) {
         return -1;
     }
@@ -250,7 +250,7 @@ int picoui_list_set_item_height(struct picoui_list *list, int item_height)
         return -1;
     }
 
-    ld_list = picoui_list_ld_widget(list);
+    ld_list = tinyui_list_get_ld(list);
     if (ld_list == 0) {
         return -1;
     }
@@ -282,7 +282,7 @@ int picoui_list_set_padding_group(struct picoui_list *list, int top, int bottom,
         return -1;
     }
 
-    ld_list = picoui_list_ld_widget(list);
+    ld_list = tinyui_list_get_ld(list);
     if (ld_list == 0) {
         return -1;
     }
@@ -314,7 +314,7 @@ int picoui_list_set_margin_group(struct picoui_list *list, int top, int bottom, 
         return -1;
     }
 
-    ld_list = picoui_list_ld_widget(list);
+    ld_list = tinyui_list_get_ld(list);
     if (ld_list == 0) {
         return -1;
     }
@@ -333,13 +333,13 @@ int picoui_list_set_margin_group(struct picoui_list *list, int top, int bottom, 
 
 int picoui_list_set_text_color(struct picoui_list *list, unsigned int rgb)
 {
-    ldList_t *ld_list = picoui_list_ld_widget(list);
+    ldList_t *ld_list = tinyui_list_get_ld(list);
 
     if (list == 0 || ld_list == 0) {
         return -1;
     }
 
-    ldListSetTextColor(ld_list, picoui_list_rgb_to_ld_color(rgb));
+    ldListSetTextColor(ld_list, tinyui_list_rgb_to_ld_color(rgb));
     return picoui_widget_set_text_color(&list->widget, rgb);
 }
 
@@ -353,13 +353,13 @@ int picoui_list_set_text_color(struct picoui_list *list, unsigned int rgb)
 
 int picoui_list_set_bg_color(struct picoui_list *list, unsigned int rgb)
 {
-    ldList_t *ld_list = picoui_list_ld_widget(list);
+    ldList_t *ld_list = tinyui_list_get_ld(list);
 
     if (list == 0 || ld_list == 0) {
         return -1;
     }
 
-    ldListSetBackgroundColor(ld_list, picoui_list_rgb_to_ld_color(rgb));
+    ldListSetBackgroundColor(ld_list, tinyui_list_rgb_to_ld_color(rgb));
     return picoui_widget_set_bg_color(&list->widget, rgb);
 }
 
@@ -373,13 +373,13 @@ int picoui_list_set_bg_color(struct picoui_list *list, unsigned int rgb)
 
 int picoui_list_set_select_color(struct picoui_list *list, unsigned int rgb)
 {
-    ldList_t *ld_list = picoui_list_ld_widget(list);
+    ldList_t *ld_list = tinyui_list_get_ld(list);
 
     if (list == 0 || ld_list == 0) {
         return -1;
     }
 
-    ldListSetSelectColor(ld_list, picoui_list_rgb_to_ld_color(rgb));
+    ldListSetSelectColor(ld_list, tinyui_list_rgb_to_ld_color(rgb));
     return picoui_widget_set_border_color(&list->widget, rgb);
 }
 
@@ -402,12 +402,12 @@ int picoui_list_set_align(struct picoui_list *list, enum picoui_align align)
         return -1;
     }
 
-    ld_list = picoui_list_ld_widget(list);
+    ld_list = tinyui_list_get_ld(list);
     if (ld_list == 0) {
         return -1;
     }
 
-    ldListSetAlign(ld_list, picoui_list_map_align(align));
+    ldListSetAlign(ld_list, tinyui_list_map_align(align));
     return 0;
 }
 
@@ -433,9 +433,9 @@ int picoui_list_set_item_widget(struct picoui_list *list,
         return -1;
     }
 
-    list_backend = picoui_list_backend(list);
+    list_backend = tinyui_list_backend(list);
     item_backend = (struct picoui_backend_widget *)item_widget->backend_widget;
-    ld_list = picoui_list_ld_widget(list);
+    ld_list = tinyui_list_get_ld(list);
     if (list_backend == 0 ||
         item_backend == 0 ||
         ld_list == 0 ||
@@ -450,13 +450,13 @@ int picoui_list_set_item_widget(struct picoui_list *list,
 
     ld_child = (ldBase_t *)item_backend->ld_widget;
     if (item_backend->parent != NULL && item_backend->parent != list_backend) {
-        if (picoui_widget_backend_detach(item_backend) != 0) {
+        if (tinyui_widget_backend_detach(item_backend) != 0) {
             return -1;
         }
         ldBaseNodeRemove((arm_2d_control_node_t *)ld_child);
     } else if (item_backend->parent == list_backend) {
         ldBaseNodeRemove((arm_2d_control_node_t *)ld_child);
-        if (picoui_widget_backend_detach(item_backend) != 0) {
+        if (tinyui_widget_backend_detach(item_backend) != 0) {
             return -1;
         }
     }
@@ -487,8 +487,8 @@ int picoui_list_set_selected_index(struct picoui_list *list, int index)
         return -1;
     }
 
-    backend = picoui_list_backend(list);
-    ld_list = picoui_list_ld_widget(list);
+    backend = tinyui_list_backend(list);
+    ld_list = tinyui_list_get_ld(list);
     if (backend == 0 || ld_list == 0) {
         return -1;
     }
@@ -516,8 +516,8 @@ int picoui_list_get_selected_index(const struct picoui_list *list)
         return -1;
     }
 
-    backend = picoui_list_backend(list);
-    ld_list = picoui_list_ld_widget(list);
+    backend = tinyui_list_backend(list);
+    ld_list = tinyui_list_get_ld(list);
     if (backend == 0 || ld_list == 0) {
         return list->selected_index;
     }
@@ -554,10 +554,10 @@ void picoui_list_set_on_selected(struct picoui_list *list,
     list->user_data = user_data;
 }
 
-PICOUI_HIDDEN int picoui_backend_list_set_items(void *backend_widget,
-                                                const char *const *item_ids,
-                                                const unsigned char *const *items,
-                                                int item_count)
+PICOUI_HIDDEN int tinyui_list_set_items(void *backend_widget,
+                                        const char *const *item_ids,
+                                        const unsigned char *const *items,
+                                        int item_count)
 {
     (void)backend_widget;
     (void)item_ids;
@@ -566,18 +566,18 @@ PICOUI_HIDDEN int picoui_backend_list_set_items(void *backend_widget,
     return -1;
 }
 
-PICOUI_HIDDEN int picoui_backend_list_set_item_height(void *backend_widget, int item_height)
+PICOUI_HIDDEN int tinyui_list_set_item_height(void *backend_widget, int item_height)
 {
     (void)backend_widget;
     (void)item_height;
     return -1;
 }
 
-PICOUI_HIDDEN int picoui_backend_list_set_padding_group(void *backend_widget,
-                                                        int top,
-                                                        int bottom,
-                                                        int left,
-                                                        int right)
+PICOUI_HIDDEN int tinyui_list_set_padding_group(void *backend_widget,
+                                                int top,
+                                                int bottom,
+                                                int left,
+                                                int right)
 {
     (void)backend_widget;
     (void)top;
@@ -587,11 +587,11 @@ PICOUI_HIDDEN int picoui_backend_list_set_padding_group(void *backend_widget,
     return -1;
 }
 
-PICOUI_HIDDEN int picoui_backend_list_set_margin_group(void *backend_widget,
-                                                       int top,
-                                                       int bottom,
-                                                       int left,
-                                                       int right)
+PICOUI_HIDDEN int tinyui_list_set_margin_group(void *backend_widget,
+                                               int top,
+                                               int bottom,
+                                               int left,
+                                               int right)
 {
     (void)backend_widget;
     (void)top;
@@ -601,37 +601,37 @@ PICOUI_HIDDEN int picoui_backend_list_set_margin_group(void *backend_widget,
     return -1;
 }
 
-PICOUI_HIDDEN int picoui_backend_list_set_text_color(void *backend_widget, unsigned int rgb)
+PICOUI_HIDDEN int tinyui_list_set_text_color(void *backend_widget, unsigned int rgb)
 {
     (void)backend_widget;
     (void)rgb;
     return -1;
 }
 
-PICOUI_HIDDEN int picoui_backend_list_set_bg_color(void *backend_widget, unsigned int rgb)
+PICOUI_HIDDEN int tinyui_list_set_bg_color(void *backend_widget, unsigned int rgb)
 {
     (void)backend_widget;
     (void)rgb;
     return -1;
 }
 
-PICOUI_HIDDEN int picoui_backend_list_set_select_color(void *backend_widget, unsigned int rgb)
+PICOUI_HIDDEN int tinyui_list_set_select_color(void *backend_widget, unsigned int rgb)
 {
     (void)backend_widget;
     (void)rgb;
     return -1;
 }
 
-PICOUI_HIDDEN int picoui_backend_list_set_align(void *backend_widget, enum picoui_align align)
+PICOUI_HIDDEN int tinyui_list_set_align(void *backend_widget, enum picoui_align align)
 {
     (void)backend_widget;
     (void)align;
     return -1;
 }
 
-PICOUI_HIDDEN int picoui_backend_list_set_item_widget(void *backend_widget,
-                                                      int index,
-                                                      void *item_widget_backend)
+PICOUI_HIDDEN int tinyui_list_set_item_widget(void *backend_widget,
+                                              int index,
+                                              void *item_widget_backend)
 {
     (void)backend_widget;
     (void)index;
@@ -639,7 +639,7 @@ PICOUI_HIDDEN int picoui_backend_list_set_item_widget(void *backend_widget,
     return -1;
 }
 
-PICOUI_HIDDEN int picoui_list_backend_set_selected_index(void *backend_widget, int index)
+PICOUI_HIDDEN int tinyui_list_set_selected_index(void *backend_widget, int index)
 {
     struct picoui_backend_widget *backend = backend_widget;
     struct picoui_list *list;
@@ -655,7 +655,7 @@ PICOUI_HIDDEN int picoui_list_backend_set_selected_index(void *backend_widget, i
     if (index < 0 || index >= list->item_count) {
         return -1;
     }
-    ld_list = picoui_list_ld_widget(list);
+    ld_list = tinyui_list_get_ld(list);
     if (list->widget.backend_widget != backend || ld_list == 0) {
         return -1;
     }
@@ -665,7 +665,7 @@ PICOUI_HIDDEN int picoui_list_backend_set_selected_index(void *backend_widget, i
     return 0;
 }
 
-PICOUI_HIDDEN int picoui_list_backend_get_selected_index(void *backend_widget)
+PICOUI_HIDDEN int tinyui_list_get_selected_index(void *backend_widget)
 {
     struct picoui_backend_widget *backend = backend_widget;
     struct picoui_list *list;
@@ -679,7 +679,7 @@ PICOUI_HIDDEN int picoui_list_backend_get_selected_index(void *backend_widget)
     }
 
     list = (struct picoui_list *)backend->host_widget;
-    ld_list = picoui_list_ld_widget(list);
+    ld_list = tinyui_list_get_ld(list);
     if (list->widget.backend_widget != backend || ld_list == 0) {
         return -1;
     }
@@ -691,7 +691,7 @@ PICOUI_HIDDEN int picoui_list_backend_get_selected_index(void *backend_widget)
     return selected_index;
 }
 
-PICOUI_HIDDEN int picoui_list_backend_sync_selected_index(struct picoui_list *list,
+PICOUI_HIDDEN int tinyui_list_sync_selected_index(struct picoui_list *list,
                                                           int *selected_index_out)
 {
     struct picoui_backend_widget *backend;

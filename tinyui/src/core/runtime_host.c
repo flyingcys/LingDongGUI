@@ -758,7 +758,7 @@ int tinyui_runtime_host_step_app(struct picoui_app *app)
         return -1;
     }
 
-    picoui_app_pump_timers(app, picoui_tick_get(app));
+    tinyui_app_pump_timers(app, picoui_tick_get(app));
     tinyui_runtime_host_render(state, active_window);
     picoui_os_delay(app, 16);
 

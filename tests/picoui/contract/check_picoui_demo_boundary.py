@@ -3,7 +3,7 @@ import re
 
 
 ROOT = Path(__file__).resolve().parents[3]
-DEMO_DIR = ROOT / "picoui" / "demo"
+DEMO_DIR = ROOT / "tinyui" / "demo"
 SDL_CMAKE = ROOT / "examples" / "sdl" / "CMakeLists.txt"
 FORBIDDEN_PATTERNS = {
     "ld*": re.compile(r"\bld[A-Za-z0-9_]+\b"),
@@ -36,9 +36,9 @@ REQUIRED_DEMOS = {
     "grid_parity",
 }
 REQUIRED_TARGETS = (
-    "picoui_legacy_widget_parity_demo",
-    "picoui_layout_parity_demo",
-    "picoui_grid_parity_demo",
+    "tinyui_legacy_widget_parity_demo",
+    "tinyui_layout_parity_demo",
+    "tinyui_grid_parity_demo",
 )
 DEMO_MARKERS = {
     "legacy_widget_parity": (
@@ -106,11 +106,11 @@ def main() -> int:
         assert target in cmake_text, f"missing parity demo target: {target}"
 
     demo_sources = sorted(DEMO_DIR.glob("**/*.c"))
-    assert demo_sources, "expected PicoUI demo sources"
+    assert demo_sources, "expected TinyUI demo sources"
 
     found_demos = {source.parent.name for source in demo_sources}
     missing = sorted(REQUIRED_DEMOS - found_demos)
-    assert not missing, f"missing PicoUI demos: {', '.join(missing)}"
+    assert not missing, f"missing TinyUI demos: {', '.join(missing)}"
 
     for source in demo_sources:
         text = source.read_text(encoding="utf-8")

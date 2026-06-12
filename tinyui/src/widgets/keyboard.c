@@ -28,7 +28,7 @@
 extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
 void ldKeyboardInputAscii(ldKeyboard_t *ptWidget, uint8_t ascii);
 
-static void picoui_keyboard_free_layout(struct picoui_keyboard *keyboard)
+static void tinyui_keyboard_free_layout(struct picoui_keyboard *keyboard)
 {
     int i;
     void *native_layout;
@@ -60,7 +60,7 @@ static void picoui_keyboard_free_layout(struct picoui_keyboard *keyboard)
     keyboard->layout_count = 0;
 }
 
-static int picoui_keyboard_props_are_valid(const struct picoui_keyboard_props *props)
+static int tinyui_keyboard_props_are_valid(const struct picoui_keyboard_props *props)
 {
     return props != 0
         && props->id != 0
@@ -70,7 +70,7 @@ static int picoui_keyboard_props_are_valid(const struct picoui_keyboard_props *p
         && props->padding >= 0;
 }
 
-static int picoui_keyboard_get_selected_key_code_internal(const struct picoui_keyboard *keyboard,
+static int tinyui_keyboard_get_selected_key_code_internal(const struct picoui_keyboard *keyboard,
                                                           unsigned int *key_code)
 {
     struct picoui_backend_widget *backend;
@@ -90,7 +90,7 @@ static int picoui_keyboard_get_selected_key_code_internal(const struct picoui_ke
     return 0;
 }
 
-static ldKeyboard_t *picoui_keyboard_get_ld_widget(const struct picoui_keyboard *keyboard)
+static ldKeyboard_t *tinyui_keyboard_get_ld_widget(const struct picoui_keyboard *keyboard)
 {
     struct picoui_backend_widget *backend;
 
@@ -106,7 +106,7 @@ static ldKeyboard_t *picoui_keyboard_get_ld_widget(const struct picoui_keyboard 
     return (ldKeyboard_t *)backend->ld_widget;
 }
 
-static struct picoui_line_edit *picoui_keyboard_get_target_line_edit_local(
+static struct picoui_line_edit *tinyui_keyboard_get_target_line_edit_local(
     struct picoui_backend_widget *backend)
 {
     struct picoui_app *app;
@@ -136,7 +136,7 @@ static struct picoui_line_edit *picoui_keyboard_get_target_line_edit_local(
     return (struct picoui_line_edit *)target;
 }
 
-static const kbBtnInfo_t *picoui_keyboard_get_custom_button_list_local(struct picoui_backend_widget *backend)
+static const kbBtnInfo_t *tinyui_keyboard_get_custom_button_list_local(struct picoui_backend_widget *backend)
 {
     struct picoui_keyboard *keyboard;
     kbBtnInfo_t *native_buttons;
@@ -196,7 +196,7 @@ static const kbBtnInfo_t *picoui_keyboard_get_custom_button_list_local(struct pi
     return native_buttons;
 }
 
-static void picoui_keyboard_prepare_local(ldKeyboard_t *ld_keyboard,
+static void tinyui_keyboard_prepare_local(ldKeyboard_t *ld_keyboard,
                                           struct picoui_line_edit *line_edit)
 {
     struct picoui_backend_widget *backend;
@@ -210,7 +210,7 @@ static void picoui_keyboard_prepare_local(ldKeyboard_t *ld_keyboard,
         ld_keyboard->editType = (ldEditType_t)line_edit->type;
     }
     backend = (struct picoui_backend_widget *)((ldBase_t *)ld_keyboard)->pInfo;
-    custom_buttons = picoui_keyboard_get_custom_button_list_local(backend);
+    custom_buttons = tinyui_keyboard_get_custom_button_list_local(backend);
     if (ld_keyboard->pBtnList == 0 || ld_keyboard->isWaitInit) {
         ld_keyboard->pBtnList = custom_buttons != 0
                               ? custom_buttons
@@ -328,7 +328,7 @@ struct picoui_keyboard *picoui_keyboard_create_with_props(struct picoui_window *
 {
     struct picoui_keyboard *keyboard;
 
-    if (!picoui_keyboard_props_are_valid(props)) {
+    if (!tinyui_keyboard_props_are_valid(props)) {
         return 0;
     }
 
@@ -380,8 +380,8 @@ int picoui_keyboard_input_ascii(struct picoui_keyboard *keyboard, unsigned int a
     }
 
     backend = (struct picoui_backend_widget *)keyboard->widget.backend_widget;
-    line_edit = picoui_keyboard_get_target_line_edit_local(backend);
-    ld_keyboard = picoui_keyboard_get_ld_widget(keyboard);
+    line_edit = tinyui_keyboard_get_target_line_edit_local(backend);
+    ld_keyboard = tinyui_keyboard_get_ld_widget(keyboard);
     if (line_edit == 0 || ld_keyboard == 0) {
         return -1;
     }
@@ -390,12 +390,12 @@ int picoui_keyboard_input_ascii(struct picoui_keyboard *keyboard, unsigned int a
         return -1;
     }
 
-    picoui_keyboard_prepare_local(ld_keyboard, line_edit);
+    tinyui_keyboard_prepare_local(ld_keyboard, line_edit);
     ld_keyboard->ppStr = &ld_line_edit->pText;
     ld_keyboard->strMax = ld_line_edit->textMax;
     ld_keyboard->editorId = ((struct picoui_backend_widget *)line_edit->widget.backend_widget)->ld_name_id;
     ldKeyboardInputAscii(ld_keyboard, (uint8_t)ascii);
-    line_edit->widget.text = picoui_backend_line_edit_get_text(line_edit->widget.backend_widget);
+    line_edit->widget.text = picoui_line_edit_get_text(line_edit);
     return 0;
 }
 
@@ -421,12 +421,12 @@ int picoui_keyboard_navigate(struct picoui_keyboard *keyboard, int direction)
         return -1;
     }
 
-    ld_keyboard = picoui_keyboard_get_ld_widget(keyboard);
+    ld_keyboard = tinyui_keyboard_get_ld_widget(keyboard);
     if (ld_keyboard == 0) {
         return -1;
     }
 
-    picoui_keyboard_prepare_local(ld_keyboard, picoui_keyboard_get_target_line_edit_local(backend));
+    tinyui_keyboard_prepare_local(ld_keyboard, tinyui_keyboard_get_target_line_edit_local(backend));
     ldKeyboardNavigate(ld_keyboard, (ldNavDir_t)direction);
     return 0;
 }
@@ -448,12 +448,12 @@ int picoui_keyboard_update(struct picoui_keyboard *keyboard)
     }
 
     backend = (struct picoui_backend_widget *)keyboard->widget.backend_widget;
-    ld_keyboard = picoui_keyboard_get_ld_widget(keyboard);
+    ld_keyboard = tinyui_keyboard_get_ld_widget(keyboard);
     if (backend == 0 || ld_keyboard == 0) {
         return -1;
     }
 
-    picoui_keyboard_prepare_local(ld_keyboard, picoui_keyboard_get_target_line_edit_local(backend));
+    tinyui_keyboard_prepare_local(ld_keyboard, tinyui_keyboard_get_target_line_edit_local(backend));
     ldKeyboardUpdate(ld_keyboard);
     return 0;
 }
@@ -476,12 +476,12 @@ int picoui_keyboard_button_update(struct picoui_keyboard *keyboard, unsigned int
     }
 
     backend = (struct picoui_backend_widget *)keyboard->widget.backend_widget;
-    ld_keyboard = picoui_keyboard_get_ld_widget(keyboard);
+    ld_keyboard = tinyui_keyboard_get_ld_widget(keyboard);
     if (backend == 0 || ld_keyboard == 0) {
         return -1;
     }
 
-    picoui_keyboard_prepare_local(ld_keyboard, picoui_keyboard_get_target_line_edit_local(backend));
+    tinyui_keyboard_prepare_local(ld_keyboard, tinyui_keyboard_get_target_line_edit_local(backend));
     ld_keyboard->keyCode = (uint8_t)key_code;
     ld_keyboard->isKeySelect = true;
     ldKeyboardBtnUpdate(ld_keyboard, (uint8_t)key_code);
@@ -517,7 +517,7 @@ int picoui_keyboard_click(struct picoui_keyboard *keyboard)
     }
 
     app_state = tinyui_runtime_bridge_backend_state_from_parent(backend);
-    ld_keyboard = picoui_keyboard_get_ld_widget(keyboard);
+    ld_keyboard = tinyui_keyboard_get_ld_widget(keyboard);
     if (app_state == 0 || app_state->ld_scene == 0 || ld_keyboard == 0) {
         return -1;
     }
@@ -553,7 +553,7 @@ int picoui_keyboard_exit(struct picoui_keyboard *keyboard)
         return -1;
     }
 
-    ld_keyboard = picoui_keyboard_get_ld_widget(keyboard);
+    ld_keyboard = tinyui_keyboard_get_ld_widget(keyboard);
     if (ld_keyboard == 0) {
         return -1;
     }
@@ -562,7 +562,7 @@ int picoui_keyboard_exit(struct picoui_keyboard *keyboard)
         editing_owner_widget = backend->owner->editing_owner;
     }
 
-    line_edit = picoui_keyboard_get_target_line_edit_local(backend);
+    line_edit = tinyui_keyboard_get_target_line_edit_local(backend);
     ldKeyboardExit(ld_keyboard);
     if (line_edit != 0) {
         ld_line_edit = (ldLineEdit_t *)((struct picoui_backend_widget *)line_edit->widget.backend_widget)->ld_widget;
@@ -606,7 +606,7 @@ int picoui_keyboard_set_buttons(struct picoui_keyboard *keyboard,
     }
 
     if (buttons == 0 || count <= 0) {
-        picoui_keyboard_free_layout(keyboard);
+        tinyui_keyboard_free_layout(keyboard);
         keyboard->buttons = 0;
         return 0;
     }
@@ -642,7 +642,7 @@ int picoui_keyboard_set_buttons(struct picoui_keyboard *keyboard,
         entries[i].height = buttons[i].height;
     }
 
-    picoui_keyboard_free_layout(keyboard);
+    tinyui_keyboard_free_layout(keyboard);
     keyboard->buttons = buttons;
     keyboard->layout_entries = entries;
     keyboard->layout_count = count;
@@ -705,7 +705,7 @@ int picoui_keyboard_get_selected_key_code(const struct picoui_keyboard *keyboard
 {
     unsigned int key_code = 0;
 
-    if (picoui_keyboard_get_selected_key_code_internal(keyboard, &key_code) != 0) {
+    if (tinyui_keyboard_get_selected_key_code_internal(keyboard, &key_code) != 0) {
         return -1;
     }
 

@@ -22,11 +22,6 @@
 #include "obj.h"
 #include "picoui/button.h"
 
-static inline tinyui_obj_t *tinyui_button_create(tinyui_obj_t *parent, const char *id)
-{
-    return (tinyui_obj_t *)picoui_button_create((struct picoui_window *)parent, id);
-}
-
 static inline int tinyui_button_set_text(tinyui_obj_t *button, const char *text)
 {
     return picoui_button_set_text((struct picoui_button *)button, text);

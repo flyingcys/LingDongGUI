@@ -27,11 +27,11 @@
 int tinyui_runtime_bridge_unbind_host(void *backend_widget);
 int tinyui_runtime_bridge_detach_from_parent(void *backend_widget);
 
-static const char *picoui_slider_fail_indicator_width_id = 0;
-static struct picoui_backend_widget picoui_slider_last_disposed_backend_snapshot;
-static int picoui_slider_last_disposed_backend_valid = 0;
+static const char *tinyui_slider_fail_indicator_width_id = 0;
+static struct picoui_backend_widget tinyui_slider_last_disposed_backend_snapshot;
+static int tinyui_slider_last_disposed_backend_valid = 0;
 
-static struct picoui_backend_widget *picoui_slider_backend(struct picoui_slider *slider)
+static struct picoui_backend_widget *tinyui_slider_backend(struct picoui_slider *slider)
 {
     struct picoui_backend_widget *backend;
 
@@ -47,9 +47,9 @@ static struct picoui_backend_widget *picoui_slider_backend(struct picoui_slider 
     return backend;
 }
 
-static ldSlider_t *picoui_slider_get_ld(struct picoui_slider *slider)
+static ldSlider_t *tinyui_slider_get_ld(struct picoui_slider *slider)
 {
-    struct picoui_backend_widget *backend = picoui_slider_backend(slider);
+    struct picoui_backend_widget *backend = tinyui_slider_backend(slider);
 
     if (backend == 0) {
         return 0;
@@ -58,21 +58,21 @@ static ldSlider_t *picoui_slider_get_ld(struct picoui_slider *slider)
     return (ldSlider_t *)backend->ld_widget;
 }
 
-static int picoui_slider_should_fail_indicator_width(const struct picoui_slider *slider)
+static int tinyui_slider_should_fail_indicator_width(const struct picoui_slider *slider)
 {
-    if (picoui_slider_fail_indicator_width_id == 0 || slider == 0 || slider->id == 0) {
+    if (tinyui_slider_fail_indicator_width_id == 0 || slider == 0 || slider->id == 0) {
         return 0;
     }
 
-    if (strcmp(slider->id, picoui_slider_fail_indicator_width_id) != 0) {
+    if (strcmp(slider->id, tinyui_slider_fail_indicator_width_id) != 0) {
         return 0;
     }
 
-    picoui_slider_fail_indicator_width_id = 0;
+    tinyui_slider_fail_indicator_width_id = 0;
     return 1;
 }
 
-static void picoui_slider_dispose_partial(struct picoui_slider *slider)
+static void tinyui_slider_dispose_partial(struct picoui_slider *slider)
 {
     struct picoui_backend_widget *backend;
     struct picoui_backend_app_state *app_state;
@@ -88,8 +88,8 @@ static void picoui_slider_dispose_partial(struct picoui_slider *slider)
             (void)tinyui_runtime_bridge_detach_from_parent(backend);
         }
         (void)tinyui_runtime_bridge_unbind_host(backend);
-        picoui_slider_last_disposed_backend_snapshot = *backend;
-        picoui_slider_last_disposed_backend_valid = 1;
+        tinyui_slider_last_disposed_backend_snapshot = *backend;
+        tinyui_slider_last_disposed_backend_valid = 1;
         if (app_state != 0 && app_state->ld_scene != 0 && backend->ld_widget != 0) {
             ldSlider_depose(app_state->ld_scene, (ldSlider_t *)backend->ld_widget);
         }
@@ -99,21 +99,21 @@ static void picoui_slider_dispose_partial(struct picoui_slider *slider)
     free(slider);
 }
 
-void picoui_backend_slider_test_fail_indicator_width_for_id(const char *id)
+void tinyui_slider_test_fail_indicator_width_for_id(const char *id)
 {
-    picoui_slider_fail_indicator_width_id = id;
+    tinyui_slider_fail_indicator_width_id = id;
 }
 
-const struct picoui_backend_widget *picoui_backend_slider_test_last_disposed_backend(void)
+const struct picoui_backend_widget *tinyui_slider_test_last_disposed_backend(void)
 {
-    if (picoui_slider_last_disposed_backend_valid == 0) {
+    if (tinyui_slider_last_disposed_backend_valid == 0) {
         return 0;
     }
 
-    return &picoui_slider_last_disposed_backend_snapshot;
+    return &tinyui_slider_last_disposed_backend_snapshot;
 }
 
-static int picoui_slider_props_are_valid(const struct picoui_slider_props *props)
+static int tinyui_slider_props_are_valid(const struct picoui_slider_props *props)
 {
     return props != 0
         && props->id != 0
@@ -222,7 +222,7 @@ struct picoui_slider *picoui_slider_create(struct picoui_window *parent, const c
     slider->widget.visible = 1;
     slider->widget.enabled = 1;
     if (tinyui_runtime_bridge_bind_host(slider->widget.backend_widget, &slider->widget) != 0) {
-        picoui_slider_dispose_partial(slider);
+        tinyui_slider_dispose_partial(slider);
         return 0;
     }
     return slider;
@@ -254,7 +254,7 @@ struct picoui_slider *picoui_slider_create_with_props(struct picoui_window *pare
 {
     struct picoui_slider *slider;
 
-    if (!picoui_slider_props_are_valid(props)) {
+    if (!tinyui_slider_props_are_valid(props)) {
         return 0;
     }
 
@@ -279,7 +279,7 @@ struct picoui_slider *picoui_slider_create_with_props(struct picoui_window *pare
             && picoui_slider_set_indicator_width(slider, props->indicator_width) != 0)
         || (props->has_slim_size != 0
             && picoui_slider_set_slim_size(slider, props->slim_size) != 0)) {
-        picoui_slider_dispose_partial(slider);
+        tinyui_slider_dispose_partial(slider);
         return 0;
     }
 
@@ -325,7 +325,7 @@ int picoui_slider_set_value(struct picoui_slider *slider, int value)
     }
 
     slider->value = value;
-    return picoui_widget_update_value(slider->widget.backend_widget,
+    return tinyui_widget_update_value(slider->widget.backend_widget,
                                       slider->value,
                                       slider->cb,
                                       &slider->widget,
@@ -378,7 +378,7 @@ int picoui_slider_set_range(struct picoui_slider *slider, int min_value, int max
 
     slider->value = remapped_value;
     if (slider->widget.backend_widget != 0) {
-        return picoui_widget_update_value(slider->widget.backend_widget,
+        return tinyui_widget_update_value(slider->widget.backend_widget,
                                           slider->value,
                                           0,
                                           &slider->widget,
@@ -424,7 +424,7 @@ int picoui_slider_set_horizontal(struct picoui_slider *slider, int horizontal)
         return -1;
     }
 
-    ld_slider = picoui_slider_get_ld(slider);
+    ld_slider = tinyui_slider_get_ld(slider);
     if (ld_slider == 0) {
         return -1;
     }
@@ -449,7 +449,7 @@ int picoui_slider_get_horizontal(struct picoui_slider *slider, int *horizontal)
         return -1;
     }
 
-    ld_slider = picoui_slider_get_ld(slider);
+    ld_slider = tinyui_slider_get_ld(slider);
     if (ld_slider == 0) {
         return -1;
     }
@@ -475,7 +475,7 @@ int picoui_slider_set_background_source(struct picoui_slider *slider,
         return -1;
     }
 
-    ld_slider = picoui_slider_get_ld(slider);
+    ld_slider = tinyui_slider_get_ld(slider);
     if (ld_slider == 0) {
         return -1;
     }
@@ -505,7 +505,7 @@ int picoui_slider_set_indicator_source(struct picoui_slider *slider,
         return -1;
     }
 
-    ld_slider = picoui_slider_get_ld(slider);
+    ld_slider = tinyui_slider_get_ld(slider);
     if (ld_slider == 0) {
         return -1;
     }
@@ -586,11 +586,11 @@ int picoui_slider_set_indicator_width(struct picoui_slider *slider, int indicato
         return -1;
     }
 
-    ld_slider = picoui_slider_get_ld(slider);
+    ld_slider = tinyui_slider_get_ld(slider);
     if (ld_slider == 0 || indicator_width > 255) {
         return -1;
     }
-    if (picoui_slider_should_fail_indicator_width(slider)) {
+    if (tinyui_slider_should_fail_indicator_width(slider)) {
         return -1;
     }
 
@@ -614,7 +614,7 @@ int picoui_slider_set_slim_size(struct picoui_slider *slider, int slim_size)
         return -1;
     }
 
-    ld_slider = picoui_slider_get_ld(slider);
+    ld_slider = tinyui_slider_get_ld(slider);
     if (ld_slider == 0 || slim_size > 255) {
         return -1;
     }
@@ -639,7 +639,7 @@ int picoui_slider_get_percent(struct picoui_slider *slider, int *percent)
         return -1;
     }
 
-    ld_slider = picoui_slider_get_ld(slider);
+    ld_slider = tinyui_slider_get_ld(slider);
     if (ld_slider == 0) {
         return -1;
     }

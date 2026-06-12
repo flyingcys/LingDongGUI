@@ -33,7 +33,7 @@ extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
 int tinyui_runtime_bridge_unbind_host(void *backend_widget);
 int tinyui_runtime_bridge_detach_from_parent(void *backend_widget);
 
-static ldLineEdit_t *picoui_backend_line_edit_get_ld(void *backend_widget)
+static ldLineEdit_t *tinyui_line_edit_get_ld(void *backend_widget)
 {
     struct picoui_backend_widget *widget = backend_widget;
 
@@ -44,7 +44,7 @@ static ldLineEdit_t *picoui_backend_line_edit_get_ld(void *backend_widget)
     return (ldLineEdit_t *)widget->ld_widget;
 }
 
-static arm_2d_align_t picoui_backend_line_edit_align_to_ld(enum picoui_align align)
+static arm_2d_align_t tinyui_line_edit_align_to_ld(enum picoui_align align)
 {
     switch (align) {
     case PICOUI_ALIGN_CENTER:
@@ -57,12 +57,14 @@ static arm_2d_align_t picoui_backend_line_edit_align_to_ld(enum picoui_align ali
     }
 }
 
-static ldColor picoui_backend_line_edit_rgb_to_ld_color(unsigned int rgb)
+static ldColor tinyui_line_edit_rgb_to_ld_color(unsigned int rgb)
 {
     return __RGB((rgb >> 16) & 0xFFU, (rgb >> 8) & 0xFFU, rgb & 0xFFU);
 }
 
-static bool picoui_backend_line_edit_native_slot(struct ld_scene_t *scene, ldMsg_t msg)
+static const char *tinyui_line_edit_get_text(void *backend_widget);
+
+static bool tinyui_line_edit_native_slot(struct ld_scene_t *scene, ldMsg_t msg)
 {
     struct picoui_backend_widget *backend;
     struct picoui_line_edit *line_edit;
@@ -84,14 +86,14 @@ static bool picoui_backend_line_edit_native_slot(struct ld_scene_t *scene, ldMsg
     if (msg.signal == SIGNAL_PRESS) {
         line_edit->editing = 1;
         backend->edit_result_on_finish = PICOUI_EDIT_RESULT_COMMIT;
-        (void)picoui_backend_widget_claim_focus(backend);
+        (void)tinyui_widget_claim_backend_focus(backend);
         (void)picoui_widget_claim_editing(&line_edit->widget);
         return false;
     }
 
     if (msg.signal == SIGNAL_FINISHED) {
         line_edit->editing = 0;
-        line_edit->widget.text = picoui_backend_line_edit_get_text(backend);
+        line_edit->widget.text = tinyui_line_edit_get_text(backend);
         (void)picoui_widget_mark_edit_result(&line_edit->widget, backend->edit_result_on_finish);
         (void)picoui_widget_release_editing(&line_edit->widget);
         backend->edit_result_on_finish = PICOUI_EDIT_RESULT_NONE;
@@ -103,7 +105,7 @@ static bool picoui_backend_line_edit_native_slot(struct ld_scene_t *scene, ldMsg
     return false;
 }
 
-static void *picoui_line_edit_create_backend_local(void *parent, const char *id)
+static void *tinyui_line_edit_create_backend_local(void *parent, const char *id)
 {
     struct picoui_backend_widget *widget;
     struct picoui_backend_widget *parent_widget = parent;
@@ -164,17 +166,17 @@ static void *picoui_line_edit_create_backend_local(void *parent, const char *id)
     return widget;
 }
 
-static int picoui_line_edit_type_is_valid(enum picoui_line_edit_type type)
+static int tinyui_line_edit_type_is_valid(enum picoui_line_edit_type type)
 {
     return type >= PICOUI_LINE_EDIT_TYPE_STRING && type <= PICOUI_LINE_EDIT_TYPE_FLOAT;
 }
 
-static int picoui_line_edit_keyboard_binding_is_valid(unsigned int keyboard_binding)
+static int tinyui_line_edit_keyboard_binding_is_valid(unsigned int keyboard_binding)
 {
     return keyboard_binding > 0U && keyboard_binding <= 0xFFFFU;
 }
 
-static int picoui_line_edit_props_are_valid(const struct picoui_line_edit_props *props)
+static int tinyui_line_edit_props_are_valid(const struct picoui_line_edit_props *props)
 {
     return props != 0 &&
            props->id != 0 &&
@@ -182,12 +184,12 @@ static int picoui_line_edit_props_are_valid(const struct picoui_line_edit_props 
            props->height >= 0 &&
            props->radius >= 0 &&
            props->padding >= 0 &&
-           (props->has_type == 0 || picoui_line_edit_type_is_valid(props->type)) &&
+           (props->has_type == 0 || tinyui_line_edit_type_is_valid(props->type)) &&
            (props->has_keyboard_binding == 0 ||
-            picoui_line_edit_keyboard_binding_is_valid(props->keyboard_binding));
+            tinyui_line_edit_keyboard_binding_is_valid(props->keyboard_binding));
 }
 
-int picoui_backend_line_edit_set_text(void *backend_widget, const char *text)
+int tinyui_line_edit_set_text(void *backend_widget, const char *text)
 {
     ldLineEdit_t *ld_line_edit;
 
@@ -195,7 +197,7 @@ int picoui_backend_line_edit_set_text(void *backend_widget, const char *text)
         return -1;
     }
 
-    ld_line_edit = picoui_backend_line_edit_get_ld(backend_widget);
+    ld_line_edit = tinyui_line_edit_get_ld(backend_widget);
     if (ld_line_edit == NULL) {
         return -1;
     }
@@ -205,39 +207,39 @@ int picoui_backend_line_edit_set_text(void *backend_widget, const char *text)
     return 0;
 }
 
-int picoui_backend_line_edit_set_align(void *backend_widget, enum picoui_align align)
+int tinyui_line_edit_set_align(void *backend_widget, enum picoui_align align)
 {
-    ldLineEdit_t *ld_line_edit = picoui_backend_line_edit_get_ld(backend_widget);
+    ldLineEdit_t *ld_line_edit = tinyui_line_edit_get_ld(backend_widget);
 
     if (ld_line_edit == NULL) {
         return -1;
     }
 
-    ldLineEditSetAlign(ld_line_edit, picoui_backend_line_edit_align_to_ld(align));
+    ldLineEditSetAlign(ld_line_edit, tinyui_line_edit_align_to_ld(align));
     return 0;
 }
 
-int picoui_backend_line_edit_set_color(void *backend_widget,
+int tinyui_line_edit_set_color(void *backend_widget,
                                        unsigned int text_color,
                                        unsigned int background_color,
                                        unsigned int frame_color)
 {
-    ldLineEdit_t *ld_line_edit = picoui_backend_line_edit_get_ld(backend_widget);
+    ldLineEdit_t *ld_line_edit = tinyui_line_edit_get_ld(backend_widget);
 
     if (ld_line_edit == NULL) {
         return -1;
     }
 
     ldLineEditSetColor(ld_line_edit,
-                       picoui_backend_line_edit_rgb_to_ld_color(text_color),
-                       picoui_backend_line_edit_rgb_to_ld_color(background_color),
-                       picoui_backend_line_edit_rgb_to_ld_color(frame_color));
+                       tinyui_line_edit_rgb_to_ld_color(text_color),
+                       tinyui_line_edit_rgb_to_ld_color(background_color),
+                       tinyui_line_edit_rgb_to_ld_color(frame_color));
     return 0;
 }
 
-const char *picoui_backend_line_edit_get_text(void *backend_widget)
+const char *tinyui_line_edit_get_text(void *backend_widget)
 {
-    ldLineEdit_t *ld_line_edit = picoui_backend_line_edit_get_ld(backend_widget);
+    ldLineEdit_t *ld_line_edit = tinyui_line_edit_get_ld(backend_widget);
 
     if (ld_line_edit == NULL) {
         return NULL;
@@ -246,9 +248,9 @@ const char *picoui_backend_line_edit_get_text(void *backend_widget)
     return (const char *)ldLineEditGetText(ld_line_edit);
 }
 
-int picoui_backend_line_edit_set_type(void *backend_widget, enum picoui_line_edit_type type)
+int tinyui_line_edit_set_type(void *backend_widget, enum picoui_line_edit_type type)
 {
-    ldLineEdit_t *ld_line_edit = picoui_backend_line_edit_get_ld(backend_widget);
+    ldLineEdit_t *ld_line_edit = tinyui_line_edit_get_ld(backend_widget);
 
     if (ld_line_edit == NULL) {
         return -1;
@@ -258,9 +260,9 @@ int picoui_backend_line_edit_set_type(void *backend_widget, enum picoui_line_edi
     return 0;
 }
 
-int picoui_backend_line_edit_get_type(void *backend_widget, enum picoui_line_edit_type *type)
+int tinyui_line_edit_get_type(void *backend_widget, enum picoui_line_edit_type *type)
 {
-    ldLineEdit_t *ld_line_edit = picoui_backend_line_edit_get_ld(backend_widget);
+    ldLineEdit_t *ld_line_edit = tinyui_line_edit_get_ld(backend_widget);
 
     if (ld_line_edit == NULL || type == NULL) {
         return -1;
@@ -270,10 +272,10 @@ int picoui_backend_line_edit_get_type(void *backend_widget, enum picoui_line_edi
     return 0;
 }
 
-int picoui_backend_line_edit_set_keyboard_binding(void *backend_widget,
+int tinyui_line_edit_set_keyboard_binding(void *backend_widget,
                                                   unsigned int keyboard_binding)
 {
-    ldLineEdit_t *ld_line_edit = picoui_backend_line_edit_get_ld(backend_widget);
+    ldLineEdit_t *ld_line_edit = tinyui_line_edit_get_ld(backend_widget);
 
     if (ld_line_edit == NULL || keyboard_binding == 0U || keyboard_binding > 0xFFFFU) {
         return -1;
@@ -283,10 +285,10 @@ int picoui_backend_line_edit_set_keyboard_binding(void *backend_widget,
     return 0;
 }
 
-int picoui_backend_line_edit_get_keyboard_binding(void *backend_widget,
+int tinyui_line_edit_get_keyboard_binding(void *backend_widget,
                                                   unsigned int *keyboard_binding)
 {
-    ldLineEdit_t *ld_line_edit = picoui_backend_line_edit_get_ld(backend_widget);
+    ldLineEdit_t *ld_line_edit = tinyui_line_edit_get_ld(backend_widget);
 
     if (ld_line_edit == NULL || keyboard_binding == NULL) {
         return -1;
@@ -296,7 +298,7 @@ int picoui_backend_line_edit_get_keyboard_binding(void *backend_widget,
     return 0;
 }
 
-int picoui_backend_line_edit_bind_host(void *backend_widget)
+int tinyui_line_edit_bind_host(void *backend_widget)
 {
     struct picoui_backend_widget *backend = backend_widget;
     ldLineEdit_t *ld_line_edit;
@@ -305,23 +307,23 @@ int picoui_backend_line_edit_bind_host(void *backend_widget)
         return -1;
     }
 
-    ld_line_edit = picoui_backend_line_edit_get_ld(backend_widget);
+    ld_line_edit = tinyui_line_edit_get_ld(backend_widget);
     if (ld_line_edit == NULL) {
         return -1;
     }
 
-    if (!ldMsgConnect(ld_line_edit, SIGNAL_PRESS, picoui_backend_line_edit_native_slot)) {
+    if (!ldMsgConnect(ld_line_edit, SIGNAL_PRESS, tinyui_line_edit_native_slot)) {
         return -1;
     }
-    if (!ldMsgConnect(ld_line_edit, SIGNAL_FINISHED, picoui_backend_line_edit_native_slot)) {
+    if (!ldMsgConnect(ld_line_edit, SIGNAL_FINISHED, tinyui_line_edit_native_slot)) {
         return -1;
     }
     return 0;
 }
 
-int picoui_backend_line_edit_get_editing(void *backend_widget, int *editing)
+int tinyui_line_edit_get_editing(void *backend_widget, int *editing)
 {
-    ldLineEdit_t *ld_line_edit = picoui_backend_line_edit_get_ld(backend_widget);
+    ldLineEdit_t *ld_line_edit = tinyui_line_edit_get_ld(backend_widget);
 
     if (ld_line_edit == NULL || editing == NULL) {
         return -1;
@@ -331,7 +333,7 @@ int picoui_backend_line_edit_get_editing(void *backend_widget, int *editing)
     return 0;
 }
 
-static void picoui_line_edit_dispose_partial(struct picoui_line_edit *line_edit)
+static void tinyui_line_edit_dispose_partial(struct picoui_line_edit *line_edit)
 {
     struct picoui_backend_widget *backend;
     struct picoui_backend_app_state *app_state;
@@ -369,7 +371,7 @@ struct picoui_line_edit *picoui_line_edit_create(struct picoui_window *parent, c
         return 0;
     }
 
-    line_edit->widget.backend_widget = picoui_line_edit_create_backend_local(parent->widget.backend_widget, id);
+    line_edit->widget.backend_widget = tinyui_line_edit_create_backend_local(parent->widget.backend_widget, id);
     if (line_edit->widget.backend_widget == 0) {
         free(line_edit);
         return 0;
@@ -380,11 +382,11 @@ struct picoui_line_edit *picoui_line_edit_create(struct picoui_window *parent, c
     line_edit->widget.visible = 1;
     line_edit->widget.enabled = 1;
     if (tinyui_runtime_bridge_bind_host(line_edit->widget.backend_widget, &line_edit->widget) != 0) {
-        picoui_line_edit_dispose_partial(line_edit);
+        tinyui_line_edit_dispose_partial(line_edit);
         return 0;
     }
-    if (picoui_backend_line_edit_bind_host(line_edit->widget.backend_widget) != 0) {
-        picoui_line_edit_dispose_partial(line_edit);
+    if (tinyui_line_edit_bind_host(line_edit->widget.backend_widget) != 0) {
+        tinyui_line_edit_dispose_partial(line_edit);
         return 0;
     }
     return line_edit;
@@ -395,7 +397,7 @@ struct picoui_line_edit *picoui_line_edit_create_with_props(struct picoui_window
 {
     struct picoui_line_edit *line_edit;
 
-    if (!picoui_line_edit_props_are_valid(props)) {
+    if (!tinyui_line_edit_props_are_valid(props)) {
         return 0;
     }
 
@@ -408,7 +410,7 @@ struct picoui_line_edit *picoui_line_edit_create_with_props(struct picoui_window
         (props->has_type != 0 && picoui_line_edit_set_type(line_edit, props->type) != 0) ||
         (props->has_keyboard_binding != 0 &&
          picoui_line_edit_set_keyboard_binding(line_edit, props->keyboard_binding) != 0)) {
-        picoui_line_edit_dispose_partial(line_edit);
+        tinyui_line_edit_dispose_partial(line_edit);
         return 0;
     }
 
@@ -418,17 +420,17 @@ struct picoui_line_edit *picoui_line_edit_create_with_props(struct picoui_window
         picoui_widget_set_border_color(&line_edit->widget, props->border_color) != 0 ||
         picoui_widget_set_radius(&line_edit->widget, props->radius) != 0 ||
         picoui_widget_set_padding(&line_edit->widget, props->padding) != 0) {
-        picoui_line_edit_dispose_partial(line_edit);
+        tinyui_line_edit_dispose_partial(line_edit);
         return 0;
     }
     if (props->style_class != 0 &&
         picoui_widget_set_style_class(&line_edit->widget, props->style_class) != 0) {
-        picoui_line_edit_dispose_partial(line_edit);
+        tinyui_line_edit_dispose_partial(line_edit);
         return 0;
     }
     if ((props->width > 0 || props->height > 0) &&
         picoui_widget_set_size(&line_edit->widget, props->width, props->height) != 0) {
-        picoui_line_edit_dispose_partial(line_edit);
+        tinyui_line_edit_dispose_partial(line_edit);
         return 0;
     }
 
@@ -445,7 +447,7 @@ int picoui_line_edit_set_text(struct picoui_line_edit *line_edit, const char *te
         return -1;
     }
 
-    return picoui_backend_line_edit_set_text(line_edit->widget.backend_widget, text);
+    return tinyui_line_edit_set_text(line_edit->widget.backend_widget, text);
 }
 
 int picoui_line_edit_set_align(struct picoui_line_edit *line_edit, enum picoui_align align)
@@ -454,7 +456,7 @@ int picoui_line_edit_set_align(struct picoui_line_edit *line_edit, enum picoui_a
         return -1;
     }
 
-    if (picoui_backend_line_edit_set_align(line_edit->widget.backend_widget, align) != 0) {
+    if (tinyui_line_edit_set_align(line_edit->widget.backend_widget, align) != 0) {
         return -1;
     }
 
@@ -471,7 +473,7 @@ int picoui_line_edit_set_color(struct picoui_line_edit *line_edit,
         return -1;
     }
 
-    if (picoui_backend_line_edit_set_color(line_edit->widget.backend_widget,
+    if (tinyui_line_edit_set_color(line_edit->widget.backend_widget,
                                            text_color,
                                            background_color,
                                            frame_color) != 0) {
@@ -492,7 +494,7 @@ const char *picoui_line_edit_get_text(const struct picoui_line_edit *line_edit)
         return 0;
     }
 
-    backend_text = picoui_backend_line_edit_get_text((void *)line_edit->widget.backend_widget);
+    backend_text = tinyui_line_edit_get_text((void *)line_edit->widget.backend_widget);
     if (backend_text != 0) {
         return backend_text;
     }
@@ -502,11 +504,11 @@ const char *picoui_line_edit_get_text(const struct picoui_line_edit *line_edit)
 
 int picoui_line_edit_set_type(struct picoui_line_edit *line_edit, enum picoui_line_edit_type type)
 {
-    if (line_edit == 0 || !picoui_line_edit_type_is_valid(type)) {
+    if (line_edit == 0 || !tinyui_line_edit_type_is_valid(type)) {
         return -1;
     }
 
-    if (picoui_backend_line_edit_set_type(line_edit->widget.backend_widget, type) != 0) {
+    if (tinyui_line_edit_set_type(line_edit->widget.backend_widget, type) != 0) {
         return -1;
     }
 
@@ -521,7 +523,7 @@ int picoui_line_edit_get_type(const struct picoui_line_edit *line_edit,
         return -1;
     }
 
-    return picoui_backend_line_edit_get_type((void *)line_edit->widget.backend_widget, type);
+    return tinyui_line_edit_get_type((void *)line_edit->widget.backend_widget, type);
 }
 
 int picoui_line_edit_set_keyboard(struct picoui_line_edit *line_edit, unsigned int keyboard_binding)
@@ -532,11 +534,11 @@ int picoui_line_edit_set_keyboard(struct picoui_line_edit *line_edit, unsigned i
 int picoui_line_edit_set_keyboard_binding(struct picoui_line_edit *line_edit,
                                           unsigned int keyboard_binding)
 {
-    if (line_edit == 0 || !picoui_line_edit_keyboard_binding_is_valid(keyboard_binding)) {
+    if (line_edit == 0 || !tinyui_line_edit_keyboard_binding_is_valid(keyboard_binding)) {
         return -1;
     }
 
-    if (picoui_backend_line_edit_set_keyboard_binding(line_edit->widget.backend_widget,
+    if (tinyui_line_edit_set_keyboard_binding(line_edit->widget.backend_widget,
                                                       keyboard_binding) != 0) {
         return -1;
     }
@@ -552,7 +554,7 @@ int picoui_line_edit_get_keyboard_binding(const struct picoui_line_edit *line_ed
         return -1;
     }
 
-    return picoui_backend_line_edit_get_keyboard_binding((void *)line_edit->widget.backend_widget,
+    return tinyui_line_edit_get_keyboard_binding((void *)line_edit->widget.backend_widget,
                                                          keyboard_binding);
 }
 
@@ -562,7 +564,7 @@ int picoui_line_edit_get_editing(const struct picoui_line_edit *line_edit, int *
         return -1;
     }
 
-    return picoui_backend_line_edit_get_editing((void *)line_edit->widget.backend_widget, editing);
+    return tinyui_line_edit_get_editing((void *)line_edit->widget.backend_widget, editing);
 }
 
 int picoui_line_edit_set_on_edit_finished(struct picoui_line_edit *line_edit,

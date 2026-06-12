@@ -24,7 +24,7 @@
 
 #include <stdlib.h>
 
-static void picoui_app_timer_unlink(struct picoui_app_timer *timer)
+static void tinyui_app_timer_unlink(struct picoui_app_timer *timer)
 {
     struct picoui_app_timer **cursor;
 
@@ -43,7 +43,7 @@ static void picoui_app_timer_unlink(struct picoui_app_timer *timer)
     }
 }
 
-void picoui_app_pump_timers(struct picoui_app *app, unsigned int now_ticks)
+void tinyui_app_pump_timers(struct picoui_app *app, unsigned int now_ticks)
 {
     struct picoui_app_timer_snapshot_entry {
         struct picoui_app_timer *timer;
@@ -352,7 +352,7 @@ void picoui_app_timer_destroy(struct picoui_app_timer *timer)
         return;
     }
 
-    picoui_app_timer_unlink(timer);
+    tinyui_app_timer_unlink(timer);
     free(timer);
 }
 

@@ -213,7 +213,7 @@ int tinyui_native_nav_dir_to_ld(enum picoui_native_nav_dir dir)
     }
 }
 
-void picoui_backend_widget_init_data_model(struct picoui_backend_widget *backend)
+void tinyui_widget_init_data_model(struct picoui_backend_widget *backend)
 {
     if (backend == 0) {
         return;
@@ -239,7 +239,7 @@ void picoui_backend_widget_init_data_model(struct picoui_backend_widget *backend
     }
 }
 
-int picoui_backend_widget_claim_focus(void *backend_widget)
+int tinyui_widget_claim_backend_focus(void *backend_widget)
 {
     struct picoui_backend_widget *backend;
 
@@ -255,7 +255,7 @@ int picoui_backend_widget_claim_focus(void *backend_widget)
     return picoui_widget_claim_focus(backend->host_widget);
 }
 
-int picoui_backend_widget_release_focus(void *backend_widget)
+int tinyui_widget_release_backend_focus(void *backend_widget)
 {
     struct picoui_backend_widget *backend;
 
@@ -271,7 +271,7 @@ int picoui_backend_widget_release_focus(void *backend_widget)
     return picoui_widget_release_focus(backend->host_widget);
 }
 
-int picoui_widget_update_value(void *backend_widget,
+int tinyui_widget_update_value(void *backend_widget,
                                int value,
                                picoui_value_changed_cb cb,
                                struct picoui_widget *widget,
@@ -286,7 +286,7 @@ int picoui_widget_update_value(void *backend_widget,
     backend->value = value;
     backend->data_model_epoch++;
     backend->last_data_source = PICOUI_BACKEND_DATA_SOURCE_SETTER;
-    picoui_widget_sync_ld_value(backend, widget, value);
+    tinyui_widget_sync_ld_value(backend, widget, value);
     (void)cb;
     (void)user_data;
     return 0;
@@ -347,7 +347,7 @@ static void tinyui_widget_bind_subtree_owner_and_root(struct picoui_backend_widg
     }
 }
 
-struct picoui_app *picoui_widget_owner_app(const struct picoui_widget *widget)
+struct picoui_app *tinyui_widget_owner_app(const struct picoui_widget *widget)
 {
     const struct picoui_backend_widget *backend = tinyui_widget_get_backend(widget);
 
@@ -358,14 +358,14 @@ struct picoui_app *picoui_widget_owner_app(const struct picoui_widget *widget)
     return backend->owner;
 }
 
-int picoui_widget_has_ld_binding(const struct picoui_widget *widget)
+int tinyui_widget_has_ld_binding(const struct picoui_widget *widget)
 {
     const struct picoui_backend_widget *backend = tinyui_widget_get_backend(widget);
 
     return backend != 0 && backend->ld_widget != 0;
 }
 
-struct picoui_widget *picoui_widget_backend_host(const void *backend_widget)
+struct picoui_widget *tinyui_widget_backend_host(const void *backend_widget)
 {
     const struct picoui_backend_widget *backend = backend_widget;
 
@@ -378,7 +378,7 @@ struct picoui_widget *picoui_widget_backend_host(const void *backend_widget)
 
 static struct picoui_widget *tinyui_widget_get_host(struct picoui_backend_widget *backend_widget)
 {
-    return picoui_widget_backend_host(backend_widget);
+    return tinyui_widget_backend_host(backend_widget);
 }
 
 struct picoui_widget *picoui_widget_backend_parent(const struct picoui_widget *widget)
@@ -501,7 +501,7 @@ int tinyui_widget_attach_child(void *parent, void *child)
     return 0;
 }
 
-int picoui_widget_backend_detach(void *backend_widget)
+int tinyui_widget_backend_detach(void *backend_widget)
 {
     struct picoui_backend_widget *widget = backend_widget;
     struct picoui_backend_widget *parent;
@@ -534,7 +534,7 @@ int picoui_widget_backend_detach(void *backend_widget)
     return 0;
 }
 
-int picoui_widget_bind_backend_host(struct picoui_widget *widget, void *backend_widget)
+int tinyui_widget_bind_backend_host(struct picoui_widget *widget, void *backend_widget)
 {
     struct picoui_backend_widget *backend;
 
@@ -548,7 +548,7 @@ int picoui_widget_bind_backend_host(struct picoui_widget *widget, void *backend_
     return 0;
 }
 
-static int picoui_align_to_ld_horizontal(enum picoui_align align)
+static int tinyui_align_to_ld_horizontal(enum picoui_align align)
 {
     switch (align) {
     case PICOUI_ALIGN_START:
@@ -565,7 +565,7 @@ static int picoui_align_to_ld_horizontal(enum picoui_align align)
     }
 }
 
-static int picoui_align_to_ld_vertical(enum picoui_align align)
+static int tinyui_align_to_ld_vertical(enum picoui_align align)
 {
     switch (align) {
     case PICOUI_ALIGN_START:
@@ -582,7 +582,7 @@ static int picoui_align_to_ld_vertical(enum picoui_align align)
     }
 }
 
-static picoui_ld_region_t picoui_rect_to_ld_region(struct picoui_rect rect)
+static picoui_ld_region_t tinyui_rect_to_ld_region(struct picoui_rect rect)
 {
     picoui_ld_region_t region;
 
@@ -593,7 +593,7 @@ static picoui_ld_region_t picoui_rect_to_ld_region(struct picoui_rect rect)
     return region;
 }
 
-static arm_2d_location_t picoui_ld_location_to_arm(picoui_ld_location_t location)
+static arm_2d_location_t tinyui_ld_location_to_arm(picoui_ld_location_t location)
 {
     arm_2d_location_t arm_location;
 
@@ -602,7 +602,7 @@ static arm_2d_location_t picoui_ld_location_to_arm(picoui_ld_location_t location
     return arm_location;
 }
 
-static picoui_ld_location_t picoui_ld_location_from_arm(arm_2d_location_t location)
+static picoui_ld_location_t tinyui_ld_location_from_arm(arm_2d_location_t location)
 {
     picoui_ld_location_t picoui_location;
 
@@ -611,7 +611,7 @@ static picoui_ld_location_t picoui_ld_location_from_arm(arm_2d_location_t locati
     return picoui_location;
 }
 
-static arm_2d_region_t picoui_ld_region_to_arm(picoui_ld_region_t region)
+static arm_2d_region_t tinyui_ld_region_to_arm(picoui_ld_region_t region)
 {
     arm_2d_region_t arm_region;
 
@@ -622,7 +622,7 @@ static arm_2d_region_t picoui_ld_region_to_arm(picoui_ld_region_t region)
     return arm_region;
 }
 
-static picoui_ld_region_t picoui_ld_region_from_arm(arm_2d_region_t region)
+static picoui_ld_region_t tinyui_ld_region_from_arm(arm_2d_region_t region)
 {
     picoui_ld_region_t picoui_region;
 
@@ -633,7 +633,7 @@ static picoui_ld_region_t picoui_ld_region_from_arm(arm_2d_region_t region)
     return picoui_region;
 }
 
-static struct picoui_rect picoui_rect_from_ld_region(picoui_ld_region_t region)
+static struct picoui_rect tinyui_rect_from_ld_region(picoui_ld_region_t region)
 {
     struct picoui_rect rect;
 
@@ -644,7 +644,7 @@ static struct picoui_rect picoui_rect_from_ld_region(picoui_ld_region_t region)
     return rect;
 }
 
-static enum picoui_widget_type picoui_widget_type_from_backend_kind(enum picoui_backend_widget_kind kind)
+static enum picoui_widget_type tinyui_widget_type_from_backend_kind(enum picoui_backend_widget_kind kind)
 {
     switch (kind) {
     case PICOUI_BACKEND_WIDGET_BACKGROUND:
@@ -780,7 +780,7 @@ int picoui_widget_set_text(struct picoui_widget *widget, const char *text)
     return 0;
 }
 
-int picoui_backend_set_text(void *backend_widget, const char *text)
+int tinyui_widget_set_backend_text(void *backend_widget, const char *text)
 {
     struct picoui_backend_widget *widget = backend_widget;
 
@@ -1830,7 +1830,7 @@ enum picoui_widget_type picoui_widget_get_type(const struct picoui_widget *widge
 
     backend_widget = tinyui_widget_get_backend(widget);
     if (backend_widget != 0) {
-        return picoui_widget_type_from_backend_kind(backend_widget->kind);
+        return tinyui_widget_type_from_backend_kind(backend_widget->kind);
     }
 
     return PICOUI_WIDGET_TYPE_UNKNOWN;
@@ -1864,8 +1864,8 @@ struct picoui_point picoui_widget_get_absolute_pos(const struct picoui_widget *w
 
     location.iX = (int16_t)point.x;
     location.iY = (int16_t)point.y;
-    location = picoui_ld_location_from_arm(
-        ldBaseGetAbsoluteLocation(ld_base, picoui_ld_location_to_arm(location)));
+    location = tinyui_ld_location_from_arm(
+        ldBaseGetAbsoluteLocation(ld_base, tinyui_ld_location_to_arm(location)));
     result.x = location.iX;
     result.y = location.iY;
     return result;
@@ -1899,8 +1899,8 @@ struct picoui_point picoui_widget_get_relative_pos(const struct picoui_widget *w
 
     location.iX = (int16_t)point.x;
     location.iY = (int16_t)point.y;
-    location = picoui_ld_location_from_arm(
-        ldBaseGetRelativeLocation(ld_base, picoui_ld_location_to_arm(location)));
+    location = tinyui_ld_location_from_arm(
+        ldBaseGetRelativeLocation(ld_base, tinyui_ld_location_to_arm(location)));
     result.x = location.iX;
     result.y = location.iY;
     return result;
@@ -1922,18 +1922,18 @@ struct picoui_rect picoui_rect_align(struct picoui_rect parent,
                                      enum picoui_align y_align)
 {
     picoui_ld_region_t aligned;
-    int ld_align = picoui_align_to_ld_horizontal(x_align) | picoui_align_to_ld_vertical(y_align);
+    int ld_align = tinyui_align_to_ld_horizontal(x_align) | tinyui_align_to_ld_vertical(y_align);
 
     if (child.width < 0 || child.height < 0 || parent.width < 0 || parent.height < 0) {
         struct picoui_rect invalid = {0, 0, -1, -1};
         return invalid;
     }
 
-    aligned = picoui_ld_region_from_arm(
-        ldBaseGetAlignRegion(picoui_ld_region_to_arm(picoui_rect_to_ld_region(parent)),
-                             picoui_ld_region_to_arm(picoui_rect_to_ld_region(child)),
+    aligned = tinyui_ld_region_from_arm(
+        ldBaseGetAlignRegion(tinyui_ld_region_to_arm(tinyui_rect_to_ld_region(parent)),
+                             tinyui_ld_region_to_arm(tinyui_rect_to_ld_region(child)),
                              (arm_2d_align_t)ld_align));
-    return picoui_rect_from_ld_region(aligned);
+    return tinyui_rect_from_ld_region(aligned);
 }
 
 /**
@@ -1971,7 +1971,7 @@ int picoui_vertical_grid_align_offset(struct picoui_rect widget,
         return -1;
     }
 
-    return (int)ldBaseAutoVerticalGridAlign(picoui_ld_region_to_arm(picoui_rect_to_ld_region(widget)),
+    return (int)ldBaseAutoVerticalGridAlign(tinyui_ld_region_to_arm(tinyui_rect_to_ld_region(widget)),
                                             (int16_t)current_offset,
                                             (uint8_t)item_count,
                                             (uint8_t)item_height,

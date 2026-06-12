@@ -7,34 +7,34 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[3]
-DEFAULT_BUILD = ROOT / "build" / "picoui-runtime"
+DEFAULT_BUILD = ROOT / "build" / "tinyui-runtime"
 DEMO_TIMEOUT_SECONDS = 8
 DEMOS = {
-    "hello_world": "picoui_hello_world_demo",
-    "basic_widgets": "picoui_basic_widgets_demo",
-    "layout_flex": "picoui_layout_flex_demo",
-    "layout_grid": "picoui_layout_grid_demo",
-    "theme_showcase": "picoui_theme_showcase_demo",
-    "settings_panel": "picoui_settings_panel_demo",
-    "list_basic": "picoui_list_basic_demo",
-    "progress_bar_basic": "picoui_progress_bar_basic_demo",
-    "arc_basic": "picoui_arc_basic_demo",
-    "gauge_basic": "picoui_gauge_basic_demo",
-    "icon_slider_basic": "picoui_icon_slider_basic_demo",
-    "radial_menu_basic": "picoui_radial_menu_basic_demo",
-    "progress_wheel_basic": "picoui_progress_wheel_basic_demo",
-    "qrcode_basic": "picoui_qrcode_basic_demo",
-    "message_box_basic": "picoui_message_box_basic_demo",
-    "date_time_basic": "picoui_date_time_basic_demo",
-    "clock_basic": "picoui_clock_basic_demo",
-    "keyboard_basic": "picoui_keyboard_basic_demo",
-    "line_edit_basic": "picoui_line_edit_basic_demo",
-    "combo_box_basic": "picoui_combo_box_basic_demo",
-    "scroll_selecter_basic": "picoui_scroll_selecter_basic_demo",
-    "table_basic": "picoui_table_basic_demo",
-    "graph_basic": "picoui_graph_basic_demo",
-    "calendar_basic": "picoui_calendar_basic_demo",
-    "animation_basic": "picoui_animation_basic_demo",
+    "hello_world": "tinyui_hello_world_demo",
+    "basic_widgets": "tinyui_basic_widgets_demo",
+    "layout_flex": "tinyui_layout_flex_demo",
+    "layout_grid": "tinyui_layout_grid_demo",
+    "theme_showcase": "tinyui_theme_showcase_demo",
+    "settings_panel": "tinyui_settings_panel_demo",
+    "list_basic": "tinyui_list_basic_demo",
+    "progress_bar_basic": "tinyui_progress_bar_basic_demo",
+    "arc_basic": "tinyui_arc_basic_demo",
+    "gauge_basic": "tinyui_gauge_basic_demo",
+    "icon_slider_basic": "tinyui_icon_slider_basic_demo",
+    "radial_menu_basic": "tinyui_radial_menu_basic_demo",
+    "progress_wheel_basic": "tinyui_progress_wheel_basic_demo",
+    "qrcode_basic": "tinyui_qrcode_basic_demo",
+    "message_box_basic": "tinyui_message_box_basic_demo",
+    "date_time_basic": "tinyui_date_time_basic_demo",
+    "clock_basic": "tinyui_clock_basic_demo",
+    "keyboard_basic": "tinyui_keyboard_basic_demo",
+    "line_edit_basic": "tinyui_line_edit_basic_demo",
+    "combo_box_basic": "tinyui_combo_box_basic_demo",
+    "scroll_selecter_basic": "tinyui_scroll_selecter_basic_demo",
+    "table_basic": "tinyui_table_basic_demo",
+    "graph_basic": "tinyui_graph_basic_demo",
+    "calendar_basic": "tinyui_calendar_basic_demo",
+    "animation_basic": "tinyui_animation_basic_demo",
 }
 
 
@@ -94,14 +94,14 @@ def _print_metadata(status: str, metadata: dict[str, str]) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="生成 PicoUI a-0.7 native-100 demo-level 人工窗口验收 artifact。"
+        description="生成 TinyUI v2.1 demo-level 人工窗口验收 artifact。"
     )
     parser.add_argument("--demo", choices=sorted(DEMOS), default="basic_widgets")
     parser.add_argument("--all", action="store_true", help="为全部 native-100 demo 生成 artifact")
     parser.add_argument("--build-dir", default=str(DEFAULT_BUILD), help="包含 demo target 的 CMake build 目录")
     parser.add_argument(
         "--artifact-root",
-        default=str(ROOT / "artifacts" / "picoui" / "manual-window"),
+        default=str(ROOT / "artifacts" / "tinyui" / "manual-window"),
         help="artifact 输出根目录",
     )
     args = parser.parse_args()

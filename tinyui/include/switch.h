@@ -22,11 +22,6 @@
 #include "obj.h"
 #include "picoui/switch.h"
 
-static inline tinyui_obj_t *tinyui_switch_create(tinyui_obj_t *parent, const char *id)
-{
-    return (tinyui_obj_t *)picoui_switch_create((struct picoui_window *)parent, id);
-}
-
 static inline int tinyui_switch_set_checked(tinyui_obj_t *sw, int checked)
 {
     return picoui_switch_set_checked((struct picoui_switch *)sw, checked);

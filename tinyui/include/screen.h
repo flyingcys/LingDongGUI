@@ -22,14 +22,4 @@
 #include "obj.h"
 #include "picoui/runtime.h"
 
-static inline tinyui_obj_t *tinyui_screen_create(void)
-{
-    return (tinyui_obj_t *)picoui_screen_create();
-}
-
-static inline int tinyui_screen_load(tinyui_obj_t *screen)
-{
-    return picoui_screen_load((struct picoui_window *)screen);
-}
-
 #endif

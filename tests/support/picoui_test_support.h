@@ -4,6 +4,10 @@
 #include "picoui/picoui.h"
 
 int picoui_test_support_stub(void);
+const char *picoui_test_repo_path_from_file(const char *file, const char *relative_path);
+int picoui_test_source_contains(const char *path, const char *needle);
+int picoui_test_source_has_function_definition(const char *path, const char *symbol);
+int picoui_test_source_lacks_function_definition(const char *path, const char *symbol);
 
 struct picoui_image_test_dispose_snapshot {
     int kind;

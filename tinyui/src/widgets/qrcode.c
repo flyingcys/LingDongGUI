@@ -29,12 +29,12 @@
 int tinyui_runtime_bridge_unbind_host(void *backend_widget);
 int tinyui_runtime_bridge_detach_from_parent(void *backend_widget);
 
-static int picoui_qrcode_props_are_valid(const struct picoui_qrcode_props *props)
+static int tinyui_qrcode_props_are_valid(const struct picoui_qrcode_props *props)
 {
     return props != 0 && props->id != 0 && props->text != 0;
 }
 
-static ldQRCode_t *picoui_qrcode_get_ld(const struct picoui_qrcode *qrcode)
+static ldQRCode_t *tinyui_qrcode_get_ld(const struct picoui_qrcode *qrcode)
 {
     struct picoui_backend_widget *backend;
 
@@ -50,7 +50,7 @@ static ldQRCode_t *picoui_qrcode_get_ld(const struct picoui_qrcode *qrcode)
     return (ldQRCode_t *)backend->ld_widget;
 }
 
-static int picoui_qrcode_finish_detach_after_backend_failure(
+static int tinyui_qrcode_finish_detach_after_backend_failure(
     struct picoui_backend_widget *backend)
 {
     struct picoui_backend_widget *parent;
@@ -81,7 +81,7 @@ static int picoui_qrcode_finish_detach_after_backend_failure(
     return 0;
 }
 
-static void picoui_qrcode_dispose_partial_impl(struct picoui_qrcode *qrcode)
+static void tinyui_qrcode_dispose_partial_impl(struct picoui_qrcode *qrcode)
 {
     struct picoui_backend_widget *backend;
     struct picoui_backend_app_state *app_state;
@@ -97,7 +97,7 @@ static void picoui_qrcode_dispose_partial_impl(struct picoui_qrcode *qrcode)
         if (backend->parent != 0) {
             detach_result = tinyui_runtime_bridge_detach_from_parent(backend);
             if (detach_result != 0) {
-                detach_result = picoui_qrcode_finish_detach_after_backend_failure(backend);
+                detach_result = tinyui_qrcode_finish_detach_after_backend_failure(backend);
             }
         }
         (void)tinyui_runtime_bridge_unbind_host(backend);
@@ -110,13 +110,13 @@ static void picoui_qrcode_dispose_partial_impl(struct picoui_qrcode *qrcode)
     free(qrcode);
 }
 
-static struct picoui_qrcode *picoui_qrcode_create_with_props_impl(
+static struct picoui_qrcode *tinyui_qrcode_create_with_props_impl(
     struct picoui_widget *parent,
     const struct picoui_qrcode_props *props)
 {
     struct picoui_qrcode *qrcode;
 
-    if (!picoui_qrcode_props_are_valid(props)) {
+    if (!tinyui_qrcode_props_are_valid(props)) {
         return 0;
     }
 
@@ -129,7 +129,7 @@ static struct picoui_qrcode *picoui_qrcode_create_with_props_impl(
          && picoui_widget_set_style_class(&qrcode->widget, props->style_class) != 0)
         || picoui_widget_set_user_data(&qrcode->widget, props->user_data) != 0
         || picoui_qrcode_set_text(qrcode, props->text) != 0) {
-        picoui_qrcode_dispose_partial_impl(qrcode);
+        tinyui_qrcode_dispose_partial_impl(qrcode);
         return 0;
     }
 
@@ -231,7 +231,7 @@ struct picoui_qrcode *picoui_qrcode_create(struct picoui_widget *parent, const c
     qrcode->widget.visible = 1;
     qrcode->widget.enabled = 1;
     if (tinyui_runtime_bridge_bind_host(qrcode->widget.backend_widget, &qrcode->widget) != 0) {
-        picoui_qrcode_dispose_partial_impl(qrcode);
+        tinyui_qrcode_dispose_partial_impl(qrcode);
         return 0;
     }
     return qrcode;
@@ -261,7 +261,7 @@ struct picoui_qrcode *picoui_q_r_code_init(struct picoui_widget *parent, const c
 struct picoui_qrcode *picoui_qrcode_create_with_props(struct picoui_widget *parent,
                                                       const struct picoui_qrcode_props *props)
 {
-    return picoui_qrcode_create_with_props_impl(parent, props);
+    return tinyui_qrcode_create_with_props_impl(parent, props);
 }
 
 /**
@@ -281,7 +281,7 @@ int picoui_qrcode_set_text(struct picoui_qrcode *qrcode, const char *text)
         return -1;
     }
 
-    ld_qrcode = picoui_qrcode_get_ld(qrcode);
+    ld_qrcode = tinyui_qrcode_get_ld(qrcode);
     if (ld_qrcode == 0) {
         return -1;
     }
@@ -320,7 +320,7 @@ const char *picoui_qrcode_get_text(const struct picoui_qrcode *qrcode)
         return 0;
     }
 
-    ld_qrcode = picoui_qrcode_get_ld(qrcode);
+    ld_qrcode = tinyui_qrcode_get_ld(qrcode);
     if (ld_qrcode == 0) {
         return 0;
     }
@@ -344,7 +344,7 @@ int picoui_qrcode_set_qr_color(struct picoui_qrcode *qrcode, unsigned int rgb)
         return -1;
     }
 
-    ld_qrcode = picoui_qrcode_get_ld(qrcode);
+    ld_qrcode = tinyui_qrcode_get_ld(qrcode);
     if (ld_qrcode == 0) {
         return -1;
     }
@@ -370,7 +370,7 @@ int picoui_qrcode_set_bg_color(struct picoui_qrcode *qrcode, unsigned int rgb)
         return -1;
     }
 
-    ld_qrcode = picoui_qrcode_get_ld(qrcode);
+    ld_qrcode = tinyui_qrcode_get_ld(qrcode);
     if (ld_qrcode == 0) {
         return -1;
     }
@@ -396,7 +396,7 @@ int picoui_qrcode_set_ecc(struct picoui_qrcode *qrcode, int ecc)
         return -1;
     }
 
-    ld_qrcode = picoui_qrcode_get_ld(qrcode);
+    ld_qrcode = tinyui_qrcode_get_ld(qrcode);
     if (ld_qrcode == 0) {
         return -1;
     }
@@ -422,7 +422,7 @@ int picoui_qrcode_set_max_version(struct picoui_qrcode *qrcode, int max_version)
         return -1;
     }
 
-    ld_qrcode = picoui_qrcode_get_ld(qrcode);
+    ld_qrcode = tinyui_qrcode_get_ld(qrcode);
     if (ld_qrcode == 0) {
         return -1;
     }
@@ -448,7 +448,7 @@ int picoui_qrcode_set_zoom(struct picoui_qrcode *qrcode, int zoom)
         return -1;
     }
 
-    ld_qrcode = picoui_qrcode_get_ld(qrcode);
+    ld_qrcode = tinyui_qrcode_get_ld(qrcode);
     if (ld_qrcode == 0) {
         return -1;
     }

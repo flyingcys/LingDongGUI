@@ -684,149 +684,6 @@ int picoui_backend_progress_bar_set_inverted(void *backend_widget, int inverted)
 int picoui_backend_progress_bar_get_inverted(void *backend_widget);
 
 /**
- * @brief Set day names of calendar backend
- *
- * @param[in] backend_widget backend widget
- * @param[in] day_names[7 day names[7
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_calendar_set_day_names(void *backend_widget, const char *const day_names[7]);
-
-/**
- * @brief Set date of calendar backend
- *
- * @param[in] backend_widget backend widget
- * @param[in] year year
- * @param[in] month month
- * @param[in] day day
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_calendar_set_date(void *backend_widget, int year, int month, int day);
-
-/**
- * @brief Get date from calendar backend
- *
- * @param[in] backend_widget backend widget
- * @param[in] year year
- * @param[in] month month
- * @param[in] day day
- * @return The property value, negative on error
- */
-
-int picoui_backend_calendar_get_date(void *backend_widget, int *year, int *month, int *day);
-
-/**
- * @brief Set header visible of calendar backend
- *
- * @param[in] backend_widget backend widget
- * @param[in] visible Visibility state
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_calendar_set_header_visible(void *backend_widget, int visible);
-
-/**
- * @brief Get header visible from calendar backend
- *
- * @param[in] backend_widget backend widget
- * @return The property value, negative on error
- */
-
-int picoui_backend_calendar_get_header_visible(void *backend_widget);
-
-/**
- * @brief Set header format of calendar backend
- *
- * @param[in] backend_widget backend widget
- * @param[in] format Format string
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_calendar_set_header_format(void *backend_widget, const char *format);
-
-/**
- * @brief Set bg color of calendar backend
- *
- * @param[in] backend_widget backend widget
- * @param[in] rgb RGB color value (0xRRGGBB)
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_calendar_set_bg_color(void *backend_widget, unsigned int rgb);
-
-/**
- * @brief Set item color of calendar backend
- *
- * @param[in] backend_widget backend widget
- * @param[in] rgb RGB color value (0xRRGGBB)
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_calendar_set_item_color(void *backend_widget, unsigned int rgb);
-
-/**
- * @brief Set text color of calendar backend
- *
- * @param[in] backend_widget backend widget
- * @param[in] rgb RGB color value (0xRRGGBB)
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_calendar_set_text_color(void *backend_widget, unsigned int rgb);
-
-/**
- * @brief Set use system date of calendar backend
- *
- * @param[in] backend_widget backend widget
- * @param[in] enabled Enable state
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_calendar_set_use_system_date(void *backend_widget, int enabled);
-
-/**
- * @brief Get use system date from calendar backend
- *
- * @param[in] backend_widget backend widget
- * @param[in] enabled Enable state
- * @return The property value, negative on error
- */
-
-int picoui_backend_calendar_get_use_system_date(void *backend_widget, int *enabled);
-
-/**
- * @brief Get header format from calendar backend
- *
- * @param[in] backend_widget backend widget
- */
-
-const char *picoui_backend_calendar_get_header_format(void *backend_widget);
-
-/**
- * @brief Get grid value from calendar backend
- *
- * @param[in] backend_widget backend widget
- * @param[in] week week
- * @param[in] weekday weekday
- * @return The property value, negative on error
- */
-
-int picoui_backend_calendar_get_grid_value(void *backend_widget, int week, int weekday);
-
-/**
- * @brief Check is current month cell of calendar
- *
- * @param[in] backend_widget backend widget
- * @param[in] week week
- * @param[in] weekday weekday
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_calendar_is_current_month_cell(void *backend_widget, int week, int weekday);
-
-/**
  * @brief message: box set on confirm
  *
  * @param[in] box box
@@ -841,7 +698,7 @@ int picoui_backend_calendar_is_current_month_cell(void *backend_widget, int week
  * @return 0 on success, -1 on failure
  */
 
-int picoui_backend_set_text(void *backend_widget, const char *text);
+int tinyui_widget_set_backend_text(void *backend_widget, const char *text);
 
 /**
  * @brief line: edit set text
@@ -1430,10 +1287,10 @@ int picoui_backend_switch_navigate(struct picoui_switch *sw, int direction);
  * @return 0 on success, -1 on failure
  */
 
-int picoui_backend_list_set_items(void *backend_widget,
-                                  const char *const *item_ids,
-                                  const unsigned char *const *items,
-                                  int item_count);
+int tinyui_list_set_items(void *backend_widget,
+                          const char *const *item_ids,
+                          const unsigned char *const *items,
+                          int item_count);
 
 /**
  * @brief Set item height of list backend
@@ -1443,7 +1300,7 @@ int picoui_backend_list_set_items(void *backend_widget,
  * @return 0 on success, -1 on failure
  */
 
-int picoui_backend_list_set_item_height(void *backend_widget, int item_height);
+int tinyui_list_set_item_height(void *backend_widget, int item_height);
 
 /**
  * @brief Set padding group of list backend
@@ -1456,11 +1313,11 @@ int picoui_backend_list_set_item_height(void *backend_widget, int item_height);
  * @return 0 on success, -1 on failure
  */
 
-int picoui_backend_list_set_padding_group(void *backend_widget,
-                                          int top,
-                                          int bottom,
-                                          int left,
-                                          int right);
+int tinyui_list_set_padding_group(void *backend_widget,
+                                  int top,
+                                  int bottom,
+                                  int left,
+                                  int right);
 
 /**
  * @brief Set margin group of list backend
@@ -1473,11 +1330,11 @@ int picoui_backend_list_set_padding_group(void *backend_widget,
  * @return 0 on success, -1 on failure
  */
 
-int picoui_backend_list_set_margin_group(void *backend_widget,
-                                         int top,
-                                         int bottom,
-                                         int left,
-                                         int right);
+int tinyui_list_set_margin_group(void *backend_widget,
+                                 int top,
+                                 int bottom,
+                                 int left,
+                                 int right);
 
 /**
  * @brief Set text color of list backend
@@ -1487,7 +1344,7 @@ int picoui_backend_list_set_margin_group(void *backend_widget,
  * @return 0 on success, -1 on failure
  */
 
-int picoui_backend_list_set_text_color(void *backend_widget, unsigned int rgb);
+int tinyui_list_set_text_color(void *backend_widget, unsigned int rgb);
 
 /**
  * @brief Set bg color of list backend
@@ -1497,7 +1354,7 @@ int picoui_backend_list_set_text_color(void *backend_widget, unsigned int rgb);
  * @return 0 on success, -1 on failure
  */
 
-int picoui_backend_list_set_bg_color(void *backend_widget, unsigned int rgb);
+int tinyui_list_set_bg_color(void *backend_widget, unsigned int rgb);
 
 /**
  * @brief Set select color of list backend
@@ -1507,7 +1364,7 @@ int picoui_backend_list_set_bg_color(void *backend_widget, unsigned int rgb);
  * @return 0 on success, -1 on failure
  */
 
-int picoui_backend_list_set_select_color(void *backend_widget, unsigned int rgb);
+int tinyui_list_set_select_color(void *backend_widget, unsigned int rgb);
 
 /**
  * @brief Set align of list backend
@@ -1517,7 +1374,7 @@ int picoui_backend_list_set_select_color(void *backend_widget, unsigned int rgb)
  * @return 0 on success, -1 on failure
  */
 
-int picoui_backend_list_set_align(void *backend_widget, enum picoui_align align);
+int tinyui_list_set_align(void *backend_widget, enum picoui_align align);
 
 /**
  * @brief Set item widget of list backend
@@ -1528,9 +1385,9 @@ int picoui_backend_list_set_align(void *backend_widget, enum picoui_align align)
  * @return 0 on success, -1 on failure
  */
 
-int picoui_backend_list_set_item_widget(void *backend_widget,
-                                        int index,
-                                        void *item_widget_backend);
+int tinyui_list_set_item_widget(void *backend_widget,
+                                int index,
+                                void *item_widget_backend);
 
 /**
  * @brief Set style class of widget backend
@@ -1623,7 +1480,7 @@ void tinyui_widget_emit_clicked(picoui_event_cb cb,
  * @return 0 on success, -1 on failure
  */
 
-int picoui_backend_widget_claim_focus(void *backend_widget);
+int tinyui_widget_claim_backend_focus(void *backend_widget);
 
 /**
  * @brief widget: release focus
@@ -1632,7 +1489,7 @@ int picoui_backend_widget_claim_focus(void *backend_widget);
  * @return 0 on success, -1 on failure
  */
 
-int picoui_backend_widget_release_focus(void *backend_widget);
+int tinyui_widget_release_backend_focus(void *backend_widget);
 
 /**
  * @brief widget: init data model
@@ -1640,6 +1497,6 @@ int picoui_backend_widget_release_focus(void *backend_widget);
  * @param[in] backend backend
  */
 
-void picoui_backend_widget_init_data_model(struct picoui_backend_widget *backend);
+void tinyui_widget_init_data_model(struct picoui_backend_widget *backend);
 
 #endif

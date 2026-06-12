@@ -29,9 +29,9 @@
 int tinyui_runtime_bridge_unbind_host(void *backend_widget);
 int tinyui_runtime_bridge_detach_from_parent(void *backend_widget);
 
-static int picoui_backend_progress_wheel_fail_next_set_percent = 0;
+static int tinyui_progress_wheel_fail_next_set_percent = 0;
 
-struct picoui_progress_wheel_cfg_bridge {
+struct tinyui_progress_wheel_cfg_bridge {
     struct {
         const arm_2d_tile_t *ptileArcMask;
         const arm_2d_tile_t *ptileDotMask;
@@ -45,12 +45,12 @@ struct picoui_progress_wheel_cfg_bridge {
     } tCFG;
 };
 
-static ldColor picoui_progress_wheel_rgb_to_ld_color(unsigned int rgb)
+static ldColor tinyui_progress_wheel_rgb_to_ld_color(unsigned int rgb)
 {
     return __RGB((rgb >> 16) & 0xFFU, (rgb >> 8) & 0xFFU, rgb & 0xFFU);
 }
 
-struct picoui_progress_wheel_test_dispose_snapshot {
+struct tinyui_progress_wheel_test_dispose_snapshot {
     int kind;
     int cleanup_complete;
     int cleanup_incomplete;
@@ -66,11 +66,11 @@ struct picoui_progress_wheel_test_dispose_snapshot {
     int ld_pinfo_cleared;
 };
 
-static struct picoui_progress_wheel_test_dispose_snapshot
-    picoui_progress_wheel_last_dispose_snapshot;
-static int picoui_progress_wheel_last_dispose_snapshot_valid = 0;
+static struct tinyui_progress_wheel_test_dispose_snapshot
+    tinyui_progress_wheel_last_dispose_snapshot;
+static int tinyui_progress_wheel_last_dispose_snapshot_valid = 0;
 
-static struct picoui_backend_widget *picoui_progress_wheel_backend(struct picoui_progress_wheel *wheel)
+static struct picoui_backend_widget *tinyui_progress_wheel_backend(struct picoui_progress_wheel *wheel)
 {
     struct picoui_backend_widget *backend;
 
@@ -86,9 +86,9 @@ static struct picoui_backend_widget *picoui_progress_wheel_backend(struct picoui
     return backend;
 }
 
-static ldProgressWheel_t *picoui_progress_wheel_get_ld(struct picoui_progress_wheel *wheel)
+static ldProgressWheel_t *tinyui_progress_wheel_get_ld(struct picoui_progress_wheel *wheel)
 {
-    struct picoui_backend_widget *backend = picoui_progress_wheel_backend(wheel);
+    struct picoui_backend_widget *backend = tinyui_progress_wheel_backend(wheel);
 
     if (backend == 0) {
         return 0;
@@ -97,7 +97,7 @@ static ldProgressWheel_t *picoui_progress_wheel_get_ld(struct picoui_progress_wh
     return (ldProgressWheel_t *)backend->ld_widget;
 }
 
-static int picoui_progress_wheel_finish_detach_after_backend_failure(
+static int tinyui_progress_wheel_finish_detach_after_backend_failure(
     struct picoui_backend_widget *backend)
 {
     struct picoui_backend_widget *parent;
@@ -128,94 +128,94 @@ static int picoui_progress_wheel_finish_detach_after_backend_failure(
     return 0;
 }
 
-static void picoui_progress_wheel_test_reset_internal_state(void)
+static void tinyui_progress_wheel_test_reset_internal_state(void)
 {
-    memset(&picoui_progress_wheel_last_dispose_snapshot,
+    memset(&tinyui_progress_wheel_last_dispose_snapshot,
            0,
-           sizeof(picoui_progress_wheel_last_dispose_snapshot));
-    picoui_progress_wheel_last_dispose_snapshot_valid = 0;
+           sizeof(tinyui_progress_wheel_last_dispose_snapshot));
+    tinyui_progress_wheel_last_dispose_snapshot_valid = 0;
 }
 
-void picoui_backend_progress_wheel_test_reset_state(void)
+void tinyui_progress_wheel_test_reset_state(void)
 {
-    picoui_progress_wheel_test_reset_internal_state();
+    tinyui_progress_wheel_test_reset_internal_state();
 }
 
-int picoui_backend_progress_wheel_test_take_last_dispose_snapshot(
-    struct picoui_progress_wheel_test_dispose_snapshot *snapshot)
+int tinyui_progress_wheel_test_take_last_dispose_snapshot(
+    struct tinyui_progress_wheel_test_dispose_snapshot *snapshot)
 {
-    if (snapshot == 0 || picoui_progress_wheel_last_dispose_snapshot_valid == 0) {
+    if (snapshot == 0 || tinyui_progress_wheel_last_dispose_snapshot_valid == 0) {
         return -1;
     }
 
-    *snapshot = picoui_progress_wheel_last_dispose_snapshot;
-    memset(&picoui_progress_wheel_last_dispose_snapshot,
+    *snapshot = tinyui_progress_wheel_last_dispose_snapshot;
+    memset(&tinyui_progress_wheel_last_dispose_snapshot,
            0,
-           sizeof(picoui_progress_wheel_last_dispose_snapshot));
-    picoui_progress_wheel_last_dispose_snapshot_valid = 0;
+           sizeof(tinyui_progress_wheel_last_dispose_snapshot));
+    tinyui_progress_wheel_last_dispose_snapshot_valid = 0;
     return 0;
 }
 
-void picoui_backend_progress_wheel_test_capture_dispose_snapshot(
+void tinyui_progress_wheel_test_capture_dispose_snapshot(
     struct picoui_backend_widget *backend,
     int detach_result,
     int unbind_result)
 {
     ldBase_t *ld_base = (ldBase_t *)backend->ld_widget;
 
-    memset(&picoui_progress_wheel_last_dispose_snapshot,
+    memset(&tinyui_progress_wheel_last_dispose_snapshot,
            0,
-           sizeof(picoui_progress_wheel_last_dispose_snapshot));
-    picoui_progress_wheel_last_dispose_snapshot.kind = backend->kind;
-    picoui_progress_wheel_last_dispose_snapshot.detach_result = detach_result;
-    picoui_progress_wheel_last_dispose_snapshot.unbind_result = unbind_result;
-    picoui_progress_wheel_last_dispose_snapshot.cleanup_complete =
+           sizeof(tinyui_progress_wheel_last_dispose_snapshot));
+    tinyui_progress_wheel_last_dispose_snapshot.kind = backend->kind;
+    tinyui_progress_wheel_last_dispose_snapshot.detach_result = detach_result;
+    tinyui_progress_wheel_last_dispose_snapshot.unbind_result = unbind_result;
+    tinyui_progress_wheel_last_dispose_snapshot.cleanup_complete =
         (detach_result == 0 && unbind_result == 0);
-    picoui_progress_wheel_last_dispose_snapshot.cleanup_incomplete =
+    tinyui_progress_wheel_last_dispose_snapshot.cleanup_incomplete =
         (detach_result != 0 || unbind_result != 0);
-    picoui_progress_wheel_last_dispose_snapshot.detached =
+    tinyui_progress_wheel_last_dispose_snapshot.detached =
         (detach_result == 0 && backend->parent == 0);
-    picoui_progress_wheel_last_dispose_snapshot.owner_cleared = (backend->owner == 0);
-    picoui_progress_wheel_last_dispose_snapshot.root_cleared = (backend->root == 0);
-    picoui_progress_wheel_last_dispose_snapshot.parent_cleared = (backend->parent == 0);
-    picoui_progress_wheel_last_dispose_snapshot.next_sibling_cleared = (backend->next_sibling == 0);
-    picoui_progress_wheel_last_dispose_snapshot.host_cleared = (backend->host_widget == 0);
-    picoui_progress_wheel_last_dispose_snapshot.event_bridge_cleared =
+    tinyui_progress_wheel_last_dispose_snapshot.owner_cleared = (backend->owner == 0);
+    tinyui_progress_wheel_last_dispose_snapshot.root_cleared = (backend->root == 0);
+    tinyui_progress_wheel_last_dispose_snapshot.parent_cleared = (backend->parent == 0);
+    tinyui_progress_wheel_last_dispose_snapshot.next_sibling_cleared = (backend->next_sibling == 0);
+    tinyui_progress_wheel_last_dispose_snapshot.host_cleared = (backend->host_widget == 0);
+    tinyui_progress_wheel_last_dispose_snapshot.event_bridge_cleared =
         (backend->ld_event_bridge_scene == 0
          && backend->ld_event_bridge_sender == 0
          && backend->ld_event_bridge_next == 0);
-    picoui_progress_wheel_last_dispose_snapshot.ld_pinfo_cleared =
+    tinyui_progress_wheel_last_dispose_snapshot.ld_pinfo_cleared =
         (ld_base == 0 || ld_base->pInfo == 0);
-    picoui_progress_wheel_last_dispose_snapshot_valid = 1;
+    tinyui_progress_wheel_last_dispose_snapshot_valid = 1;
 }
 
-static int picoui_progress_wheel_test_finish_detach_after_backend_failure(
+static int tinyui_progress_wheel_test_finish_detach_after_backend_failure(
     struct picoui_backend_widget *backend)
 {
-    return picoui_progress_wheel_finish_detach_after_backend_failure(backend);
+    return tinyui_progress_wheel_finish_detach_after_backend_failure(backend);
 }
 
-void picoui_backend_progress_wheel_test_fail_next_set_percent(void)
+void tinyui_progress_wheel_test_fail_next_set_percent(void)
 {
-    picoui_backend_progress_wheel_fail_next_set_percent = 1;
+    tinyui_progress_wheel_fail_next_set_percent = 1;
 }
 
-static void picoui_progress_wheel_disable_dirty_regions(void *backend_widget)
+static void tinyui_progress_wheel_disable_dirty_regions(void *backend_widget)
 {
     struct picoui_backend_widget *backend = backend_widget;
     ldProgressWheel_t *ld_progress_wheel;
-    struct picoui_progress_wheel_cfg_bridge *bridge;
+    struct tinyui_progress_wheel_cfg_bridge *bridge;
 
     if (backend == 0 || backend->kind != PICOUI_BACKEND_WIDGET_PROGRESS_WHEEL || backend->ld_widget == 0) {
         return;
     }
 
     ld_progress_wheel = (ldProgressWheel_t *)backend->ld_widget;
-    bridge = (struct picoui_progress_wheel_cfg_bridge *)&ld_progress_wheel->tWheel;
+    bridge = (struct tinyui_progress_wheel_cfg_bridge *)&ld_progress_wheel->tWheel;
     bridge->tCFG.bUseDirtyRegions = false;
 }
 
-static void picoui_progress_wheel_dispose_partial_impl(struct picoui_progress_wheel *wheel)
+static void tinyui_progress_wheel_dispose_partial_impl(struct picoui_progress_wheel *wheel)
 {
     struct picoui_backend_widget *backend;
     struct picoui_backend_app_state *app_state;
@@ -235,14 +235,14 @@ static void picoui_progress_wheel_dispose_partial_impl(struct picoui_progress_wh
             detach_result = tinyui_runtime_bridge_detach_from_parent(backend);
             if (detach_result != 0) {
                 detach_result =
-                    picoui_progress_wheel_test_finish_detach_after_backend_failure(backend);
+                    tinyui_progress_wheel_test_finish_detach_after_backend_failure(backend);
             }
         }
         unbind_result = tinyui_runtime_bridge_unbind_host(backend);
         (void)ld_base;
-        picoui_backend_progress_wheel_test_capture_dispose_snapshot(backend,
-                                                                    detach_result,
-                                                                    unbind_result);
+        tinyui_progress_wheel_test_capture_dispose_snapshot(backend,
+                                                            detach_result,
+                                                            unbind_result);
         if (app_state != 0 && app_state->ld_scene != 0 && backend->ld_widget != 0) {
             ldProgressWheel_depose(app_state->ld_scene, (ldProgressWheel_t *)backend->ld_widget);
         }
@@ -252,7 +252,7 @@ static void picoui_progress_wheel_dispose_partial_impl(struct picoui_progress_wh
     free(wheel);
 }
 
-static int picoui_progress_wheel_props_are_valid(const struct picoui_progress_wheel_props *props)
+static int tinyui_progress_wheel_props_are_valid(const struct picoui_progress_wheel_props *props)
 {
     return props != 0 && props->id != 0 && props->percent >= 0 && props->percent <= 100;
 }
@@ -351,14 +351,14 @@ struct picoui_progress_wheel *picoui_progress_wheel_create(struct picoui_widget 
     wheel->widget.backend_widget = backend;
     wheel->widget.visible = 1;
     wheel->widget.enabled = 1;
-    picoui_progress_wheel_disable_dirty_regions(backend);
+    tinyui_progress_wheel_disable_dirty_regions(backend);
     if (tinyui_runtime_bridge_bind_host(wheel->widget.backend_widget, &wheel->widget) != 0) {
-        picoui_progress_wheel_dispose_partial_impl(wheel);
+        tinyui_progress_wheel_dispose_partial_impl(wheel);
         return 0;
     }
     if (picoui_progress_wheel_set_percent(wheel, 0) != 0
         || picoui_progress_wheel_set_dot_enabled(wheel, 1) != 0) {
-        picoui_progress_wheel_dispose_partial_impl(wheel);
+        tinyui_progress_wheel_dispose_partial_impl(wheel);
         return 0;
     }
     return wheel;
@@ -391,7 +391,7 @@ struct picoui_progress_wheel *picoui_progress_wheel_create_with_props(
 {
     struct picoui_progress_wheel *wheel;
 
-    if (!picoui_progress_wheel_props_are_valid(props)) {
+    if (!tinyui_progress_wheel_props_are_valid(props)) {
         return 0;
     }
 
@@ -402,12 +402,12 @@ struct picoui_progress_wheel *picoui_progress_wheel_create_with_props(
 
     if (props->style_class != 0
         && picoui_widget_set_style_class(&wheel->widget, props->style_class) != 0) {
-        picoui_progress_wheel_dispose_partial_impl(wheel);
+        tinyui_progress_wheel_dispose_partial_impl(wheel);
         return 0;
     }
     if (picoui_widget_set_user_data(&wheel->widget, props->user_data) != 0
         || picoui_progress_wheel_set_percent(wheel, props->percent) != 0) {
-        picoui_progress_wheel_dispose_partial_impl(wheel);
+        tinyui_progress_wheel_dispose_partial_impl(wheel);
         return 0;
     }
     return wheel;
@@ -430,13 +430,13 @@ int picoui_progress_wheel_set_percent(struct picoui_progress_wheel *wheel, int p
         return -1;
     }
 
-    ld_progress_wheel = picoui_progress_wheel_get_ld(wheel);
+    ld_progress_wheel = tinyui_progress_wheel_get_ld(wheel);
     if (ld_progress_wheel == 0) {
         return -1;
     }
 
-    if (picoui_backend_progress_wheel_fail_next_set_percent != 0) {
-        picoui_backend_progress_wheel_fail_next_set_percent = 0;
+    if (tinyui_progress_wheel_fail_next_set_percent != 0) {
+        tinyui_progress_wheel_fail_next_set_percent = 0;
         return -1;
     }
 
@@ -492,12 +492,12 @@ int picoui_progress_wheel_set_wheel_color(struct picoui_progress_wheel *wheel, u
         return -1;
     }
 
-    ld_progress_wheel = picoui_progress_wheel_get_ld(wheel);
+    ld_progress_wheel = tinyui_progress_wheel_get_ld(wheel);
     if (ld_progress_wheel == 0) {
         return -1;
     }
 
-    ldProgressWheelSetWheelColor(ld_progress_wheel, picoui_progress_wheel_rgb_to_ld_color(rgb));
+    ldProgressWheelSetWheelColor(ld_progress_wheel, tinyui_progress_wheel_rgb_to_ld_color(rgb));
     wheel->wheel_color = rgb;
     return 0;
 }
@@ -518,13 +518,13 @@ int picoui_progress_wheel_set_dot_color(struct picoui_progress_wheel *wheel, uns
         return -1;
     }
 
-    ld_progress_wheel = picoui_progress_wheel_get_ld(wheel);
+    ld_progress_wheel = tinyui_progress_wheel_get_ld(wheel);
     if (ld_progress_wheel == 0) {
         return -1;
     }
 
     ldProgressWheelSetDotColor(ld_progress_wheel,
-                               picoui_progress_wheel_rgb_to_ld_color(rgb),
+                               tinyui_progress_wheel_rgb_to_ld_color(rgb),
                                wheel->dot_enabled != 0);
     wheel->dot_color = rgb;
     return 0;
@@ -546,13 +546,13 @@ int picoui_progress_wheel_set_dot_enabled(struct picoui_progress_wheel *wheel, i
         return -1;
     }
 
-    ld_progress_wheel = picoui_progress_wheel_get_ld(wheel);
+    ld_progress_wheel = tinyui_progress_wheel_get_ld(wheel);
     if (ld_progress_wheel == 0) {
         return -1;
     }
 
     ldProgressWheelSetDotColor(ld_progress_wheel,
-                               picoui_progress_wheel_rgb_to_ld_color(wheel->dot_color),
+                               tinyui_progress_wheel_rgb_to_ld_color(wheel->dot_color),
                                enabled != 0);
     wheel->dot_enabled = enabled != 0 ? 1 : 0;
     return 0;

@@ -28,12 +28,12 @@ extern const arm_2d_tile_t c_tilePointerSecGRAY8;
 extern const arm_2d_tile_t c_tilePointerSecMask;
 extern const arm_2d_tile_t c_tileClockface;
 
-static int picoui_clock_props_are_valid(const struct picoui_clock_props *props)
+static int tinyui_clock_props_are_valid(const struct picoui_clock_props *props)
 {
     return props != 0 && props->id != 0 && (props->step_second == 0 || props->step_second == 1);
 }
 
-static ldClock_t *picoui_clock_get_ld(struct picoui_clock *clock)
+static ldClock_t *tinyui_clock_get_ld(struct picoui_clock *clock)
 {
     struct picoui_backend_widget *backend;
 
@@ -49,9 +49,9 @@ static ldClock_t *picoui_clock_get_ld(struct picoui_clock *clock)
     return (ldClock_t *)backend->ld_widget;
 }
 
-static int picoui_clock_apply_background(struct picoui_clock *clock)
+static int tinyui_clock_apply_background(struct picoui_clock *clock)
 {
-    ldClock_t *ld_clock = picoui_clock_get_ld(clock);
+    ldClock_t *ld_clock = tinyui_clock_get_ld(clock);
     arm_2d_tile_t *img_tile;
     arm_2d_tile_t *mask_tile;
 
@@ -65,9 +65,9 @@ static int picoui_clock_apply_background(struct picoui_clock *clock)
     return 0;
 }
 
-static int picoui_clock_apply_pointer(struct picoui_clock *clock, int index)
+static int tinyui_clock_apply_pointer(struct picoui_clock *clock, int index)
 {
-    ldClock_t *ld_clock = picoui_clock_get_ld(clock);
+    ldClock_t *ld_clock = tinyui_clock_get_ld(clock);
     struct picoui_image_source *source;
     arm_2d_tile_t *img_tile;
     arm_2d_tile_t *mask_tile;
@@ -363,7 +363,7 @@ int picoui_clock_set_use_system_time(struct picoui_clock *clock, int enabled)
         return -1;
     }
 
-    ld_clock = picoui_clock_get_ld(clock);
+    ld_clock = tinyui_clock_get_ld(clock);
     if (ld_clock == NULL) {
         return -1;
     }
@@ -388,7 +388,7 @@ int picoui_clock_get_use_system_time(const struct picoui_clock *clock)
         return -1;
     }
 
-    ld_clock = picoui_clock_get_ld((struct picoui_clock *)clock);
+    ld_clock = tinyui_clock_get_ld((struct picoui_clock *)clock);
     if (ld_clock == NULL) {
         return -1;
     }
@@ -411,7 +411,7 @@ struct picoui_clock *picoui_clock_create_with_props(
 {
     struct picoui_clock *clock;
 
-    if (!picoui_clock_props_are_valid(props)) {
+    if (!tinyui_clock_props_are_valid(props)) {
         return 0;
     }
 
@@ -463,7 +463,7 @@ int picoui_clock_set_step_second(struct picoui_clock *clock, int step_second)
         return -1;
     }
 
-    ld_clock = picoui_clock_get_ld(clock);
+    ld_clock = tinyui_clock_get_ld(clock);
     if (ld_clock == NULL) {
         return -1;
     }
@@ -490,7 +490,7 @@ int picoui_clock_get_step_second(const struct picoui_clock *clock)
         return -1;
     }
 
-    ld_clock = picoui_clock_get_ld((struct picoui_clock *)clock);
+    ld_clock = tinyui_clock_get_ld((struct picoui_clock *)clock);
     if (ld_clock == NULL) {
         return -1;
     }
@@ -514,7 +514,7 @@ int picoui_clock_set_background_source(struct picoui_clock *clock, struct picoui
     }
 
     clock->background_source = source;
-    return picoui_clock_apply_background(clock);
+    return tinyui_clock_apply_background(clock);
 }
 
 /**
@@ -545,7 +545,7 @@ int picoui_clock_set_hour_pointer_source(struct picoui_clock *clock, struct pico
     }
 
     clock->hour_pointer_source = source;
-    return picoui_clock_apply_pointer(clock, 0);
+    return tinyui_clock_apply_pointer(clock, 0);
 }
 
 /**
@@ -576,7 +576,7 @@ int picoui_clock_set_minute_pointer_source(struct picoui_clock *clock, struct pi
     }
 
     clock->minute_pointer_source = source;
-    return picoui_clock_apply_pointer(clock, 1);
+    return tinyui_clock_apply_pointer(clock, 1);
 }
 
 /**
@@ -607,7 +607,7 @@ int picoui_clock_set_second_pointer_source(struct picoui_clock *clock, struct pi
     }
 
     clock->second_pointer_source = source;
-    return picoui_clock_apply_pointer(clock, 2);
+    return tinyui_clock_apply_pointer(clock, 2);
 }
 
 /**
@@ -638,8 +638,9 @@ int picoui_clock_set_mask_color(struct picoui_clock *clock, unsigned int mask_co
     }
 
     clock->mask_color = mask_color;
-    if (picoui_clock_apply_background(clock) != 0 || picoui_clock_apply_pointer(clock, 0) != 0
-        || picoui_clock_apply_pointer(clock, 1) != 0 || picoui_clock_apply_pointer(clock, 2) != 0) {
+    if (tinyui_clock_apply_background(clock) != 0 || tinyui_clock_apply_pointer(clock, 0) != 0
+        || tinyui_clock_apply_pointer(clock, 1) != 0
+        || tinyui_clock_apply_pointer(clock, 2) != 0) {
         return -1;
     }
 
@@ -663,7 +664,7 @@ int picoui_clock_set_hour_anchor(struct picoui_clock *clock, float x, float y)
 
     clock->hour_anchor_x = x;
     clock->hour_anchor_y = y;
-    return picoui_clock_apply_pointer(clock, 0);
+    return tinyui_clock_apply_pointer(clock, 0);
 }
 
 /**
@@ -683,7 +684,7 @@ int picoui_clock_set_minute_anchor(struct picoui_clock *clock, float x, float y)
 
     clock->minute_anchor_x = x;
     clock->minute_anchor_y = y;
-    return picoui_clock_apply_pointer(clock, 1);
+    return tinyui_clock_apply_pointer(clock, 1);
 }
 
 /**
@@ -703,5 +704,5 @@ int picoui_clock_set_second_anchor(struct picoui_clock *clock, float x, float y)
 
     clock->second_anchor_x = x;
     clock->second_anchor_y = y;
-    return picoui_clock_apply_pointer(clock, 2);
+    return tinyui_clock_apply_pointer(clock, 2);
 }

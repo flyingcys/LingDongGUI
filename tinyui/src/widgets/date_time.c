@@ -26,12 +26,12 @@
 
 extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
 
-static ldColor picoui_date_time_rgb_to_ld_color(unsigned int rgb)
+static ldColor tinyui_date_time_rgb_to_ld_color(unsigned int rgb)
 {
     return __RGB((rgb >> 16) & 0xFFU, (rgb >> 8) & 0xFFU, rgb & 0xFFU);
 }
 
-static int picoui_date_time_map_align(enum picoui_align align, arm_2d_align_t *out)
+static int tinyui_date_time_map_align(enum picoui_align align, arm_2d_align_t *out)
 {
     if (out == NULL) {
         return -1;
@@ -52,7 +52,7 @@ static int picoui_date_time_map_align(enum picoui_align align, arm_2d_align_t *o
     }
 }
 
-static ldDateTime_t *picoui_date_time_get_ld(struct picoui_date_time *dt)
+static ldDateTime_t *tinyui_date_time_get_ld(struct picoui_date_time *dt)
 {
     struct picoui_backend_widget *backend;
 
@@ -68,7 +68,7 @@ static ldDateTime_t *picoui_date_time_get_ld(struct picoui_date_time *dt)
     return (ldDateTime_t *)backend->ld_widget;
 }
 
-static int picoui_date_time_props_are_valid(const struct picoui_date_time_props *props)
+static int tinyui_date_time_props_are_valid(const struct picoui_date_time_props *props)
 {
     return props != 0
         && props->id != 0
@@ -216,7 +216,7 @@ struct picoui_date_time *picoui_date_time_create_with_props(
 {
     struct picoui_date_time *dt;
 
-    if (!picoui_date_time_props_are_valid(props)) {
+    if (!tinyui_date_time_props_are_valid(props)) {
         return 0;
     }
 
@@ -265,7 +265,7 @@ int picoui_date_time_set_format(struct picoui_date_time *dt, const char *format)
         return -1;
     }
 
-    ld_date_time = picoui_date_time_get_ld(dt);
+    ld_date_time = tinyui_date_time_get_ld(dt);
     if (ld_date_time == NULL) {
         return -1;
     }
@@ -296,7 +296,7 @@ int picoui_date_time_set_date(struct picoui_date_time *dt, int year, int month, 
         return -1;
     }
 
-    ld_date_time = picoui_date_time_get_ld(dt);
+    ld_date_time = tinyui_date_time_get_ld(dt);
     if (ld_date_time == NULL) {
         return -1;
     }
@@ -330,7 +330,7 @@ int picoui_date_time_set_time(struct picoui_date_time *dt, int hour, int minute,
         return -1;
     }
 
-    ld_date_time = picoui_date_time_get_ld(dt);
+    ld_date_time = tinyui_date_time_get_ld(dt);
     if (ld_date_time == NULL) {
         return -1;
     }
@@ -359,12 +359,12 @@ int picoui_date_time_set_text_color(struct picoui_date_time *dt, unsigned int rg
         return -1;
     }
 
-    ld_date_time = picoui_date_time_get_ld(dt);
+    ld_date_time = tinyui_date_time_get_ld(dt);
     if (ld_date_time == NULL) {
         return -1;
     }
 
-    ldDateTimeSetTextColor(ld_date_time, picoui_date_time_rgb_to_ld_color(rgb));
+    ldDateTimeSetTextColor(ld_date_time, tinyui_date_time_rgb_to_ld_color(rgb));
     dt->text_color = rgb;
     return 0;
 }
@@ -385,12 +385,12 @@ int picoui_date_time_set_bg_color(struct picoui_date_time *dt, unsigned int rgb)
         return -1;
     }
 
-    ld_date_time = picoui_date_time_get_ld(dt);
+    ld_date_time = tinyui_date_time_get_ld(dt);
     if (ld_date_time == NULL) {
         return -1;
     }
 
-    ldDateTimeSetBackgroundColor(ld_date_time, picoui_date_time_rgb_to_ld_color(rgb));
+    ldDateTimeSetBackgroundColor(ld_date_time, tinyui_date_time_rgb_to_ld_color(rgb));
     dt->bg_color = rgb;
     dt->transparent = 0;
     return 0;
@@ -429,8 +429,8 @@ int picoui_date_time_set_align(struct picoui_date_time *dt, enum picoui_align al
         return -1;
     }
 
-    ld_date_time = picoui_date_time_get_ld(dt);
-    if (ld_date_time == NULL || picoui_date_time_map_align(align, &native_align) != 0) {
+    ld_date_time = tinyui_date_time_get_ld(dt);
+    if (ld_date_time == NULL || tinyui_date_time_map_align(align, &native_align) != 0) {
         return -1;
     }
 
@@ -455,7 +455,7 @@ int picoui_date_time_set_transparent(struct picoui_date_time *dt, int transparen
         return -1;
     }
 
-    ld_date_time = picoui_date_time_get_ld(dt);
+    ld_date_time = tinyui_date_time_get_ld(dt);
     if (ld_date_time == NULL) {
         return -1;
     }
@@ -481,7 +481,7 @@ int picoui_date_time_set_use_system_time(struct picoui_date_time *dt, int enable
         return -1;
     }
 
-    ld_date_time = picoui_date_time_get_ld(dt);
+    ld_date_time = tinyui_date_time_get_ld(dt);
     if (ld_date_time == NULL) {
         return -1;
     }
@@ -505,7 +505,7 @@ const char *picoui_date_time_get_format(const struct picoui_date_time *dt)
         return 0;
     }
 
-    ld_date_time = picoui_date_time_get_ld((struct picoui_date_time *)dt);
+    ld_date_time = tinyui_date_time_get_ld((struct picoui_date_time *)dt);
     if (ld_date_time == NULL) {
         return 0;
     }
@@ -532,7 +532,7 @@ int picoui_date_time_get_date(const struct picoui_date_time *dt, int *year, int 
         return -1;
     }
 
-    ld_date_time = picoui_date_time_get_ld((struct picoui_date_time *)dt);
+    ld_date_time = tinyui_date_time_get_ld((struct picoui_date_time *)dt);
     if (ld_date_time == NULL) {
         return -1;
     }
@@ -564,7 +564,7 @@ int picoui_date_time_get_time(const struct picoui_date_time *dt, int *hour, int 
         return -1;
     }
 
-    ld_date_time = picoui_date_time_get_ld((struct picoui_date_time *)dt);
+    ld_date_time = tinyui_date_time_get_ld((struct picoui_date_time *)dt);
     if (ld_date_time == NULL) {
         return -1;
     }
@@ -593,7 +593,7 @@ int picoui_date_time_get_transparent(const struct picoui_date_time *dt)
         return -1;
     }
 
-    ld_date_time = picoui_date_time_get_ld((struct picoui_date_time *)dt);
+    ld_date_time = tinyui_date_time_get_ld((struct picoui_date_time *)dt);
     if (ld_date_time == NULL) {
         return -1;
     }
@@ -617,7 +617,7 @@ int picoui_date_time_get_use_system_time(const struct picoui_date_time *dt)
         return -1;
     }
 
-    ld_date_time = picoui_date_time_get_ld((struct picoui_date_time *)dt);
+    ld_date_time = tinyui_date_time_get_ld((struct picoui_date_time *)dt);
     if (ld_date_time == NULL) {
         return -1;
     }

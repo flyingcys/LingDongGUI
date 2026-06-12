@@ -48,17 +48,17 @@ struct picoui_gauge_test_dispose_snapshot {
     int ld_pinfo_cleared;
 };
 
-static struct picoui_gauge_test_dispose_snapshot picoui_gauge_last_dispose_snapshot;
-static int picoui_gauge_last_dispose_snapshot_valid = 0;
+static struct picoui_gauge_test_dispose_snapshot tinyui_gauge_last_dispose_snapshot;
+static int tinyui_gauge_last_dispose_snapshot_valid = 0;
 
-static int picoui_gauge_props_are_valid(const struct picoui_gauge_props *props);
+static int tinyui_gauge_props_are_valid(const struct picoui_gauge_props *props);
 
-static ldColor picoui_gauge_rgb_to_ld_color(unsigned int rgb)
+static ldColor tinyui_gauge_rgb_to_ld_color(unsigned int rgb)
 {
     return __RGB((rgb >> 16) & 0xFFU, (rgb >> 8) & 0xFFU, rgb & 0xFFU);
 }
 
-static unsigned int picoui_gauge_ld_color_to_rgb(ldColor color)
+static unsigned int tinyui_gauge_ld_color_to_rgb(ldColor color)
 {
     uint32_t red = ((uint32_t)color >> 11) & 0x1FU;
     uint32_t green = ((uint32_t)color >> 5) & 0x3FU;
@@ -70,7 +70,7 @@ static unsigned int picoui_gauge_ld_color_to_rgb(ldColor color)
     return (red << 16) | (green << 8) | blue;
 }
 
-static struct picoui_backend_widget *picoui_gauge_backend(struct picoui_gauge *gauge)
+static struct picoui_backend_widget *tinyui_gauge_backend(struct picoui_gauge *gauge)
 {
     struct picoui_backend_widget *backend;
 
@@ -86,9 +86,9 @@ static struct picoui_backend_widget *picoui_gauge_backend(struct picoui_gauge *g
     return backend;
 }
 
-static ldGauge_t *picoui_gauge_get_ld(struct picoui_gauge *gauge)
+static ldGauge_t *tinyui_gauge_get_ld(struct picoui_gauge *gauge)
 {
-    struct picoui_backend_widget *backend = picoui_gauge_backend(gauge);
+    struct picoui_backend_widget *backend = tinyui_gauge_backend(gauge);
 
     if (backend == 0) {
         return 0;
@@ -97,7 +97,7 @@ static ldGauge_t *picoui_gauge_get_ld(struct picoui_gauge *gauge)
     return (ldGauge_t *)backend->ld_widget;
 }
 
-static int picoui_gauge_finish_detach_after_backend_failure(
+static int tinyui_gauge_finish_detach_after_backend_failure(
     struct picoui_backend_widget *backend)
 {
     struct picoui_backend_widget *parent;
@@ -128,7 +128,7 @@ static int picoui_gauge_finish_detach_after_backend_failure(
     return 0;
 }
 
-static void picoui_gauge_dispose_partial_impl(struct picoui_gauge *gauge)
+static void tinyui_gauge_dispose_partial_impl(struct picoui_gauge *gauge)
 {
     struct picoui_backend_widget *backend;
     struct picoui_backend_app_state *app_state;
@@ -144,36 +144,36 @@ static void picoui_gauge_dispose_partial_impl(struct picoui_gauge *gauge)
     if (backend != 0) {
         app_state = tinyui_runtime_bridge_backend_state(backend->owner);
         ld_base = (ldBase_t *)backend->ld_widget;
-        memset(&picoui_gauge_last_dispose_snapshot, 0, sizeof(picoui_gauge_last_dispose_snapshot));
-        picoui_gauge_last_dispose_snapshot.kind = backend->kind;
+        memset(&tinyui_gauge_last_dispose_snapshot, 0, sizeof(tinyui_gauge_last_dispose_snapshot));
+        tinyui_gauge_last_dispose_snapshot.kind = backend->kind;
         if (backend->parent != 0) {
             detach_result = tinyui_runtime_bridge_detach_from_parent(backend);
             if (detach_result != 0) {
-                detach_result = picoui_gauge_finish_detach_after_backend_failure(backend);
+                detach_result = tinyui_gauge_finish_detach_after_backend_failure(backend);
             }
         } else {
-            picoui_gauge_last_dispose_snapshot.detached = 1;
+            tinyui_gauge_last_dispose_snapshot.detached = 1;
         }
         unbind_result = tinyui_runtime_bridge_unbind_host(backend);
-        picoui_gauge_last_dispose_snapshot.detach_result = detach_result;
-        picoui_gauge_last_dispose_snapshot.unbind_result = unbind_result;
-        picoui_gauge_last_dispose_snapshot.cleanup_complete =
+        tinyui_gauge_last_dispose_snapshot.detach_result = detach_result;
+        tinyui_gauge_last_dispose_snapshot.unbind_result = unbind_result;
+        tinyui_gauge_last_dispose_snapshot.cleanup_complete =
             (detach_result == 0 && unbind_result == 0);
-        picoui_gauge_last_dispose_snapshot.cleanup_incomplete =
+        tinyui_gauge_last_dispose_snapshot.cleanup_incomplete =
             (detach_result != 0 || unbind_result != 0);
-        picoui_gauge_last_dispose_snapshot.detached = (detach_result == 0 && backend->parent == 0);
-        picoui_gauge_last_dispose_snapshot.owner_cleared = (backend->owner == 0);
-        picoui_gauge_last_dispose_snapshot.root_cleared = (backend->root == 0);
-        picoui_gauge_last_dispose_snapshot.parent_cleared = (backend->parent == 0);
-        picoui_gauge_last_dispose_snapshot.next_sibling_cleared = (backend->next_sibling == 0);
-        picoui_gauge_last_dispose_snapshot.host_cleared = (backend->host_widget == 0);
-        picoui_gauge_last_dispose_snapshot.event_bridge_cleared =
+        tinyui_gauge_last_dispose_snapshot.detached = (detach_result == 0 && backend->parent == 0);
+        tinyui_gauge_last_dispose_snapshot.owner_cleared = (backend->owner == 0);
+        tinyui_gauge_last_dispose_snapshot.root_cleared = (backend->root == 0);
+        tinyui_gauge_last_dispose_snapshot.parent_cleared = (backend->parent == 0);
+        tinyui_gauge_last_dispose_snapshot.next_sibling_cleared = (backend->next_sibling == 0);
+        tinyui_gauge_last_dispose_snapshot.host_cleared = (backend->host_widget == 0);
+        tinyui_gauge_last_dispose_snapshot.event_bridge_cleared =
             (backend->ld_event_bridge_scene == 0
              && backend->ld_event_bridge_sender == 0
              && backend->ld_event_bridge_next == 0);
-        picoui_gauge_last_dispose_snapshot.ld_pinfo_cleared =
+        tinyui_gauge_last_dispose_snapshot.ld_pinfo_cleared =
             (ld_base == 0 || ld_base->pInfo == 0);
-        picoui_gauge_last_dispose_snapshot_valid = 1;
+        tinyui_gauge_last_dispose_snapshot_valid = 1;
         if (app_state != 0 && app_state->ld_scene != 0 && backend->ld_widget != 0) {
             ldGauge_depose(app_state->ld_scene, (ldGauge_t *)backend->ld_widget);
         }
@@ -183,26 +183,26 @@ static void picoui_gauge_dispose_partial_impl(struct picoui_gauge *gauge)
     free(gauge);
 }
 
-int picoui_backend_gauge_test_take_last_dispose_snapshot(
+int tinyui_gauge_test_take_last_dispose_snapshot(
     struct picoui_gauge_test_dispose_snapshot *snapshot)
 {
-    if (snapshot == 0 || picoui_gauge_last_dispose_snapshot_valid == 0) {
+    if (snapshot == 0 || tinyui_gauge_last_dispose_snapshot_valid == 0) {
         return -1;
     }
 
-    *snapshot = picoui_gauge_last_dispose_snapshot;
-    memset(&picoui_gauge_last_dispose_snapshot, 0, sizeof(picoui_gauge_last_dispose_snapshot));
-    picoui_gauge_last_dispose_snapshot_valid = 0;
+    *snapshot = tinyui_gauge_last_dispose_snapshot;
+    memset(&tinyui_gauge_last_dispose_snapshot, 0, sizeof(tinyui_gauge_last_dispose_snapshot));
+    tinyui_gauge_last_dispose_snapshot_valid = 0;
     return 0;
 }
 
-struct picoui_gauge *picoui_backend_gauge_test_create_with_props_fail_before_centre_offset(
+struct picoui_gauge *tinyui_gauge_test_create_with_props_fail_before_centre_offset(
     struct picoui_widget *parent,
     const struct picoui_gauge_props *props)
 {
     struct picoui_gauge *gauge;
 
-    if (!picoui_gauge_props_are_valid(props)) {
+    if (!tinyui_gauge_props_are_valid(props)) {
         return 0;
     }
 
@@ -217,15 +217,15 @@ struct picoui_gauge *picoui_backend_gauge_test_create_with_props_fail_before_cen
         || picoui_gauge_set_angle(gauge, props->angle) != 0
         || (props->bg_source != 0 && picoui_gauge_set_bg_source(gauge, props->bg_source) != 0)
         || (props->pointer_source != 0 && picoui_gauge_set_pointer_source(gauge, props->pointer_source) != 0)) {
-        picoui_gauge_dispose_partial_impl(gauge);
+        tinyui_gauge_dispose_partial_impl(gauge);
         return 0;
     }
 
-    picoui_gauge_dispose_partial_impl(gauge);
+    tinyui_gauge_dispose_partial_impl(gauge);
     return 0;
 }
 
-static int picoui_gauge_props_are_valid(const struct picoui_gauge_props *props)
+static int tinyui_gauge_props_are_valid(const struct picoui_gauge_props *props)
 {
     return props != 0 && props->id != 0;
 }
@@ -373,7 +373,7 @@ struct picoui_gauge *picoui_gauge_create(struct picoui_widget *parent, const cha
         || picoui_gauge_set_angle(gauge, 0.0f) != 0
         || picoui_gauge_set_pointer_color(gauge, 0x000000U) != 0
         || picoui_gauge_set_auto_move(gauge, 0) != 0) {
-        picoui_gauge_dispose_partial_impl(gauge);
+        tinyui_gauge_dispose_partial_impl(gauge);
         return 0;
     }
 
@@ -390,7 +390,7 @@ struct picoui_gauge *picoui_gauge_create_with_props(struct picoui_widget *parent
 {
     struct picoui_gauge *gauge;
 
-    if (!picoui_gauge_props_are_valid(props)) {
+    if (!tinyui_gauge_props_are_valid(props)) {
         return 0;
     }
 
@@ -408,7 +408,7 @@ struct picoui_gauge *picoui_gauge_create_with_props(struct picoui_widget *parent
         || picoui_gauge_set_centre_offset(gauge, props->centre_offset_x, props->centre_offset_y) != 0
         || picoui_gauge_set_pointer_color(gauge, props->pointer_color) != 0
         || picoui_gauge_set_auto_move(gauge, props->auto_move) != 0) {
-        picoui_gauge_dispose_partial_impl(gauge);
+        tinyui_gauge_dispose_partial_impl(gauge);
         return 0;
     }
 
@@ -417,7 +417,7 @@ struct picoui_gauge *picoui_gauge_create_with_props(struct picoui_widget *parent
 
 int picoui_backend_gauge_set_angle(struct picoui_gauge *gauge, float angle)
 {
-    ldGauge_t *ld_gauge = picoui_gauge_get_ld(gauge);
+    ldGauge_t *ld_gauge = tinyui_gauge_get_ld(gauge);
     struct picoui_backend_widget *backend;
 
     if (ld_gauge == 0) {
@@ -444,7 +444,7 @@ int picoui_gauge_set_angle(struct picoui_gauge *gauge, float angle)
 
 int picoui_backend_gauge_set_bg_source(struct picoui_gauge *gauge, struct picoui_image_source *source)
 {
-    ldGauge_t *ld_gauge = picoui_gauge_get_ld(gauge);
+    ldGauge_t *ld_gauge = tinyui_gauge_get_ld(gauge);
 
     if (ld_gauge == 0 || source == 0 || source->img_tile == 0 || source->mask_tile == 0) {
         return -1;
@@ -468,7 +468,7 @@ int picoui_gauge_set_bg_source(struct picoui_gauge *gauge, struct picoui_image_s
 
 int picoui_backend_gauge_set_pointer_source(struct picoui_gauge *gauge, struct picoui_image_source *source)
 {
-    ldGauge_t *ld_gauge = picoui_gauge_get_ld(gauge);
+    ldGauge_t *ld_gauge = tinyui_gauge_get_ld(gauge);
     arm_2d_tile_t *mask_tile;
 
     if (ld_gauge == 0 || source == 0 || source->img_tile == 0 || source->mask_tile == 0) {
@@ -502,7 +502,7 @@ int picoui_backend_gauge_set_centre_offset(struct picoui_gauge *gauge,
                                            int centre_offset_x,
                                            int centre_offset_y)
 {
-    ldGauge_t *ld_gauge = picoui_gauge_get_ld(gauge);
+    ldGauge_t *ld_gauge = tinyui_gauge_get_ld(gauge);
 
     if (ld_gauge == 0) {
         return -1;
@@ -530,7 +530,7 @@ int picoui_backend_gauge_set_trail(struct picoui_gauge *gauge,
                                    struct picoui_image_source *bg_trail_source,
                                    struct picoui_image_source *pointer_trail_source)
 {
-    ldGauge_t *ld_gauge = picoui_gauge_get_ld(gauge);
+    ldGauge_t *ld_gauge = tinyui_gauge_get_ld(gauge);
 
     if (ld_gauge == 0
         || bg_trail_source == 0
@@ -569,7 +569,7 @@ int picoui_backend_gauge_set_progress_bar(struct picoui_gauge *gauge,
                                           struct picoui_image_source *bg_progress_source,
                                           struct picoui_image_source *pointer_progress_source)
 {
-    ldGauge_t *ld_gauge = picoui_gauge_get_ld(gauge);
+    ldGauge_t *ld_gauge = tinyui_gauge_get_ld(gauge);
 
     if (ld_gauge == 0
         || bg_progress_source == 0
@@ -606,7 +606,7 @@ int picoui_gauge_set_progress_bar(struct picoui_gauge *gauge,
 
 int picoui_backend_gauge_get_angle(struct picoui_gauge *gauge, float *angle)
 {
-    ldGauge_t *ld_gauge = picoui_gauge_get_ld(gauge);
+    ldGauge_t *ld_gauge = tinyui_gauge_get_ld(gauge);
 
     if (ld_gauge == 0 || angle == 0) {
         return -1;
@@ -631,13 +631,13 @@ float picoui_gauge_get_angle(const struct picoui_gauge *gauge)
 
 int picoui_backend_gauge_set_pointer_color(struct picoui_gauge *gauge, unsigned int pointer_color)
 {
-    ldGauge_t *ld_gauge = picoui_gauge_get_ld(gauge);
+    ldGauge_t *ld_gauge = tinyui_gauge_get_ld(gauge);
 
     if (ld_gauge == 0) {
         return -1;
     }
 
-    ldGaugeSetPointerColor(ld_gauge, picoui_gauge_rgb_to_ld_color(pointer_color));
+    ldGaugeSetPointerColor(ld_gauge, tinyui_gauge_rgb_to_ld_color(pointer_color));
     return 0;
 }
 
@@ -655,13 +655,13 @@ int picoui_gauge_set_pointer_color(struct picoui_gauge *gauge, unsigned int poin
 
 int picoui_backend_gauge_get_pointer_color(struct picoui_gauge *gauge, unsigned int *pointer_color)
 {
-    ldGauge_t *ld_gauge = picoui_gauge_get_ld(gauge);
+    ldGauge_t *ld_gauge = tinyui_gauge_get_ld(gauge);
 
     if (ld_gauge == 0 || pointer_color == 0) {
         return -1;
     }
 
-    *pointer_color = picoui_gauge_ld_color_to_rgb(ld_gauge->maskColor);
+    *pointer_color = tinyui_gauge_ld_color_to_rgb(ld_gauge->maskColor);
     return 0;
 }
 
@@ -680,7 +680,7 @@ unsigned int picoui_gauge_get_pointer_color(const struct picoui_gauge *gauge)
 
 int picoui_backend_gauge_set_auto_move(struct picoui_gauge *gauge, int auto_move)
 {
-    ldGauge_t *ld_gauge = picoui_gauge_get_ld(gauge);
+    ldGauge_t *ld_gauge = tinyui_gauge_get_ld(gauge);
 
     if (ld_gauge == 0) {
         return -1;
@@ -704,7 +704,7 @@ int picoui_gauge_set_auto_move(struct picoui_gauge *gauge, int auto_move)
 
 int picoui_backend_gauge_get_auto_move(struct picoui_gauge *gauge, int *auto_move)
 {
-    ldGauge_t *ld_gauge = picoui_gauge_get_ld(gauge);
+    ldGauge_t *ld_gauge = tinyui_gauge_get_ld(gauge);
 
     if (ld_gauge == 0 || auto_move == 0) {
         return -1;

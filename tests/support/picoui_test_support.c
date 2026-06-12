@@ -3,6 +3,9 @@
 #include "internal.h"
 #include "../../../src/gui/ldBase.h"
 
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 int picoui_backend_widget_unbind_host(void *backend_widget);
@@ -13,9 +16,119 @@ static int g_image_snapshot_valid = 0;
 static struct picoui_qrcode_test_dispose_snapshot g_qrcode_snapshot;
 static int g_qrcode_snapshot_valid = 0;
 
+static const char *const k_repo_markers[] = {
+    "/tests/support/picoui_test_support.c",
+    "/tests/picoui/unit/",
+};
+
 int picoui_test_support_stub(void)
 {
     return 0;
+}
+
+const char *picoui_test_repo_path_from_file(const char *file, const char *relative_path)
+{
+    static char path[2048];
+    size_t i;
+
+    assert(file != 0);
+    assert(relative_path != 0);
+
+    for (i = 0; i < sizeof(k_repo_markers) / sizeof(k_repo_markers[0]); ++i) {
+        const char *hit = strstr(file, k_repo_markers[i]);
+        if (hit != 0) {
+            size_t root_len = (size_t)(hit - file);
+            int written;
+
+            written = snprintf(path,
+                               sizeof(path),
+                               "%.*s/%s",
+                               (int)root_len,
+                               file,
+                               relative_path);
+            assert(written > 0 && (size_t)written < sizeof(path));
+            return path;
+        }
+    }
+
+    assert(!"could not infer repository root from file path");
+    return 0;
+}
+
+static char *picoui_test_read_file_text(const char *path)
+{
+    FILE *fp;
+    long size;
+    char *buf;
+
+    assert(path != 0);
+    fp = fopen(path, "rb");
+    assert(fp != 0);
+    assert(fseek(fp, 0, SEEK_END) == 0);
+    size = ftell(fp);
+    assert(size >= 0);
+    assert(fseek(fp, 0, SEEK_SET) == 0);
+
+    buf = (char *)malloc((size_t)size + 1U);
+    assert(buf != 0);
+    assert(fread(buf, 1U, (size_t)size, fp) == (size_t)size);
+    buf[size] = '\0';
+    assert(fclose(fp) == 0);
+    return buf;
+}
+
+int picoui_test_source_contains(const char *path, const char *needle)
+{
+    char *text;
+    int found;
+
+    assert(path != 0);
+    assert(needle != 0);
+    text = picoui_test_read_file_text(path);
+    found = strstr(text, needle) != 0 ? 1 : 0;
+    free(text);
+    return found;
+}
+
+int picoui_test_source_has_function_definition(const char *path, const char *symbol)
+{
+    static const char *const prefixes[] = {
+        "static int ",
+        "static void ",
+        "static unsigned int ",
+        "static ldColor ",
+        "static ldArc_t *",
+        "static const ldArc_t *",
+        "static struct picoui_backend_widget *",
+        "static struct picoui_arc *",
+        "int ",
+        "void ",
+        "unsigned int ",
+        "ldColor ",
+        "ldArc_t *",
+        "const ldArc_t *",
+        "struct picoui_backend_widget *",
+        "struct picoui_arc *",
+    };
+    char needle[256];
+    size_t i;
+
+    assert(path != 0);
+    assert(symbol != 0);
+
+    for (i = 0; i < sizeof(prefixes) / sizeof(prefixes[0]); ++i) {
+        int written = snprintf(needle, sizeof(needle), "%s%s(", prefixes[i], symbol);
+        assert(written > 0 && (size_t)written < sizeof(needle));
+        if (picoui_test_source_contains(path, needle) == 1) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int picoui_test_source_lacks_function_definition(const char *path, const char *symbol)
+{
+    return picoui_test_source_has_function_definition(path, symbol) == 1 ? 0 : 1;
 }
 
 static int picoui_test_support_finish_detach_after_backend_failure(

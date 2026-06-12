@@ -7,8 +7,8 @@
   ],
   "status": "complete",
   "evidence": {
-    "unit_group": "test_picoui_(icon_slider|radial_menu)",
-    "contract_checker": "tests/picoui/contract/check_picoui_release_capability_matrix.py"
+    "unit_group": "test_tinyui_(icon_slider|radial_menu)",
+    "contract_checker": "tests/picoui/contract/check_tinyui_release_capability_matrix.py"
   },
   "widgets": [
     {
@@ -23,7 +23,7 @@
         "test_icon_slider_selection_and_value_follow_backend_truth",
         "test_icon_slider_create_with_props_pushes_backend_dimensions",
         "test_icon_slider_native_icon_images_and_speed_round_trip",
-        "test_picoui_icon_slider"
+        "test_tinyui_icon_slider"
       ]
     },
     {
@@ -38,7 +38,7 @@
         "test_radial_menu_navigation_and_selection_follow_backend_truth",
         "test_radial_menu_create_with_props_pushes_backend_geometry",
         "test_radial_menu_native_click_default_offset_round_trip",
-        "test_picoui_radial_menu"
+        "test_tinyui_radial_menu"
       ]
     }
   ],

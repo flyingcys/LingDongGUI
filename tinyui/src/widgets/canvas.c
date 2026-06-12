@@ -25,12 +25,12 @@
 
 extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
 
-static ldColor picoui_canvas_rgb_to_ld(unsigned int rgb)
+static ldColor tinyui_canvas_rgb_to_ld(unsigned int rgb)
 {
     return __RGB((rgb >> 16) & 0xFFU, (rgb >> 8) & 0xFFU, rgb & 0xFFU);
 }
 
-static arm_2d_align_t picoui_canvas_align_to_ld(enum picoui_align align)
+static arm_2d_align_t tinyui_canvas_align_to_ld(enum picoui_align align)
 {
     switch (align) {
     case PICOUI_ALIGN_START:
@@ -43,7 +43,7 @@ static arm_2d_align_t picoui_canvas_align_to_ld(enum picoui_align align)
     }
 }
 
-static int picoui_canvas_push_native(struct picoui_canvas *canvas,
+static int tinyui_canvas_push_native(struct picoui_canvas *canvas,
                                      const struct picoui_canvas_command *src)
 {
     struct picoui_backend_widget *backend;
@@ -69,12 +69,12 @@ static int picoui_canvas_push_native(struct picoui_canvas *canvas,
         .x1 = (int16_t)src->x1,
         .y1 = (int16_t)src->y1,
         .lineSize = (uint8_t)src->line_size,
-        .color0 = picoui_canvas_rgb_to_ld(src->rgb0),
-        .color1 = picoui_canvas_rgb_to_ld(src->rgb1),
+        .color0 = tinyui_canvas_rgb_to_ld(src->rgb0),
+        .color1 = tinyui_canvas_rgb_to_ld(src->rgb1),
         .opacity0 = (uint8_t)src->opacity0,
         .opacity1 = (uint8_t)src->opacity1,
         .scale = src->scale,
-        .align = picoui_canvas_align_to_ld(src->align),
+        .align = tinyui_canvas_align_to_ld(src->align),
         .pStr = (uint8_t *)src->text,
         .ptFont = (arm_2d_font_t *)(canvas->widget.font != 0 ? canvas->widget.font : (const void *)&ARM_2D_FONT_6x8),
         .ptImgTile = src->source != 0 ? src->source->img_tile : 0,
@@ -84,7 +84,7 @@ static int picoui_canvas_push_native(struct picoui_canvas *canvas,
     return ldCanvasPushCommand(ld_canvas, &command);
 }
 
-static int picoui_canvas_clear_native(struct picoui_canvas *canvas)
+static int tinyui_canvas_clear_native(struct picoui_canvas *canvas)
 {
     struct picoui_backend_widget *backend;
     ldCanvas_t *ld_canvas;
@@ -103,22 +103,22 @@ static int picoui_canvas_clear_native(struct picoui_canvas *canvas)
     return 0;
 }
 
-static int picoui_canvas_is_valid(const struct picoui_canvas *canvas)
+static int tinyui_canvas_is_valid(const struct picoui_canvas *canvas)
 {
     return canvas != 0 && canvas->widget.backend_widget != 0;
 }
 
-static int picoui_canvas_push(struct picoui_canvas *canvas,
+static int tinyui_canvas_push(struct picoui_canvas *canvas,
                               const struct picoui_canvas_command *command)
 {
-    if (!picoui_canvas_is_valid(canvas)
+    if (!tinyui_canvas_is_valid(canvas)
         || command == 0
         || canvas->command_count >= PICOUI_CANVAS_MAX_COMMANDS) {
         return -1;
     }
 
     canvas->commands[canvas->command_count++] = *command;
-    if (picoui_canvas_push_native(canvas, command) != 0) {
+    if (tinyui_canvas_push_native(canvas, command) != 0) {
         canvas->command_count--;
         return -1;
     }
@@ -221,12 +221,12 @@ struct picoui_canvas *picoui_canvas_create(struct picoui_window *parent, const c
 
 int picoui_canvas_clear(struct picoui_canvas *canvas)
 {
-    if (!picoui_canvas_is_valid(canvas)) {
+    if (!tinyui_canvas_is_valid(canvas)) {
         return -1;
     }
 
     canvas->command_count = 0;
-    return picoui_canvas_clear_native(canvas);
+    return tinyui_canvas_clear_native(canvas);
 }
 
 /**
@@ -265,7 +265,7 @@ int picoui_canvas_fill_rect(struct picoui_canvas *canvas,
         .rgb0 = rgb,
         .opacity0 = opacity,
     };
-    return picoui_canvas_push(canvas, &command);
+    return tinyui_canvas_push(canvas, &command);
 }
 
 /**
@@ -314,7 +314,7 @@ int picoui_canvas_draw_line(struct picoui_canvas *canvas,
         .opacity0 = opacity_max,
         .opacity1 = opacity_min,
     };
-    return picoui_canvas_push(canvas, &command);
+    return tinyui_canvas_push(canvas, &command);
 }
 
 /**
@@ -356,7 +356,7 @@ int picoui_canvas_draw_image(struct picoui_canvas *canvas,
         .opacity0 = opacity,
         .source = source,
     };
-    return picoui_canvas_push(canvas, &command);
+    return tinyui_canvas_push(canvas, &command);
 }
 
 /**
@@ -398,7 +398,7 @@ int picoui_canvas_draw_image_scaled(struct picoui_canvas *canvas,
         .opacity0 = opacity,
         .source = source,
     };
-    return picoui_canvas_push(canvas, &command);
+    return tinyui_canvas_push(canvas, &command);
 }
 
 /**
@@ -448,7 +448,7 @@ int picoui_canvas_draw_text(struct picoui_canvas *canvas,
         .align = align,
         .text = text,
     };
-    return picoui_canvas_push(canvas, &command);
+    return tinyui_canvas_push(canvas, &command);
 }
 
 /**
@@ -461,7 +461,7 @@ int picoui_canvas_draw_text(struct picoui_canvas *canvas,
 
 int picoui_canvas_get_command_count(const struct picoui_canvas *canvas, int *count)
 {
-    if (!picoui_canvas_is_valid(canvas) || count == 0) {
+    if (!tinyui_canvas_is_valid(canvas) || count == 0) {
         return -1;
     }
 

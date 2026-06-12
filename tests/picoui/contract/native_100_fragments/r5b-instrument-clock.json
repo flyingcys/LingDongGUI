@@ -9,8 +9,8 @@
   ],
   "status": "complete",
   "evidence": {
-    "unit_group": "test_picoui_(arc|gauge|date_time|clock)",
-    "contract_checker": "tests/picoui/contract/check_picoui_release_capability_matrix.py"
+    "unit_group": "test_tinyui_(arc|gauge|date_time|clock)",
+    "contract_checker": "tests/picoui/contract/check_tinyui_release_capability_matrix.py"
   },
   "widgets": [
     {
@@ -24,7 +24,7 @@
       "evidence_tests": [
         "test_arc_value_and_angle_readback_match_backend_truth",
         "test_arc_native_quarter_image_mask_and_parent_color_round_trip",
-        "test_picoui_arc"
+        "test_tinyui_arc"
       ]
     },
     {
@@ -40,7 +40,7 @@
         "test_gauge_value_and_pointer_contract_match_backend_truth",
         "test_gauge_native_background_pointer_and_centre_offset_round_trip",
         "test_gauge_native_trail_and_progress_bar_round_trip",
-        "test_picoui_gauge"
+        "test_tinyui_gauge"
       ]
     },
     {
@@ -55,7 +55,7 @@
       "evidence_tests": [
         "test_date_time_final_release_contract_covers_public_readback_and_modes",
         "test_date_time_native_transparent_color_and_align_round_trip",
-        "test_picoui_date_time"
+        "test_tinyui_date_time"
       ]
     },
     {
@@ -69,7 +69,7 @@
       "evidence_tests": [
         "test_clock_release_contract_covers_time_source_and_configuration_boundary",
         "test_clock_native_background_pointer_mask_and_anchor_round_trip",
-        "test_picoui_clock"
+        "test_tinyui_clock"
       ]
     }
   ],

@@ -27,14 +27,14 @@
 int tinyui_runtime_bridge_unbind_host(void *backend_widget);
 int tinyui_runtime_bridge_detach_from_parent(void *backend_widget);
 
-static int picoui_checkbox_fail_next_set_check_color = 0;
+static int tinyui_checkbox_fail_next_set_check_color = 0;
 
-static ldColor picoui_checkbox_rgb_to_ld_color(unsigned int rgb)
+static ldColor tinyui_checkbox_rgb_to_ld_color(unsigned int rgb)
 {
     return __RGB((rgb >> 16) & 0xFFU, (rgb >> 8) & 0xFFU, rgb & 0xFFU);
 }
 
-static ldCheckBox_t *picoui_checkbox_get_ld(struct picoui_checkbox *checkbox)
+static ldCheckBox_t *tinyui_checkbox_get_ld(struct picoui_checkbox *checkbox)
 {
     struct picoui_backend_widget *backend;
 
@@ -50,7 +50,7 @@ static ldCheckBox_t *picoui_checkbox_get_ld(struct picoui_checkbox *checkbox)
     return (ldCheckBox_t *)backend->ld_widget;
 }
 
-static int picoui_checkbox_props_are_valid(const struct picoui_checkbox_props *props)
+static int tinyui_checkbox_props_are_valid(const struct picoui_checkbox_props *props)
 {
     return props != 0
         && props->id != 0
@@ -70,7 +70,7 @@ static int picoui_checkbox_props_are_valid(const struct picoui_checkbox_props *p
         && props->padding >= 0;
 }
 
-static void picoui_checkbox_dispose_partial(struct picoui_checkbox *checkbox)
+static void tinyui_checkbox_dispose_partial(struct picoui_checkbox *checkbox)
 {
     struct picoui_backend_widget *backend;
     struct picoui_backend_app_state *app_state;
@@ -95,9 +95,9 @@ static void picoui_checkbox_dispose_partial(struct picoui_checkbox *checkbox)
     free(checkbox);
 }
 
-void picoui_backend_checkbox_test_fail_next_set_check_color(void)
+void tinyui_checkbox_test_fail_next_set_check_color(void)
 {
-    picoui_checkbox_fail_next_set_check_color = 1;
+    tinyui_checkbox_fail_next_set_check_color = 1;
 }
 
 /**
@@ -186,7 +186,7 @@ struct picoui_checkbox *picoui_checkbox_create(struct picoui_window *parent, con
     checkbox->widget.visible = 1;
     checkbox->widget.enabled = 1;
     if (tinyui_runtime_bridge_bind_host(checkbox->widget.backend_widget, &checkbox->widget) != 0) {
-        picoui_checkbox_dispose_partial(checkbox);
+        tinyui_checkbox_dispose_partial(checkbox);
         return 0;
     }
     return checkbox;
@@ -206,7 +206,7 @@ struct picoui_checkbox *picoui_checkbox_create_with_props(struct picoui_window *
     struct picoui_checkbox *checkbox;
     struct picoui_backend_widget *backend;
 
-    if (!picoui_checkbox_props_are_valid(props)) {
+    if (!tinyui_checkbox_props_are_valid(props)) {
         return 0;
     }
 
@@ -219,17 +219,17 @@ struct picoui_checkbox *picoui_checkbox_create_with_props(struct picoui_window *
     checkbox->cb = 0;
     checkbox->user_data = 0;
     if (props->text != 0 && picoui_checkbox_set_text(checkbox, props->text) != 0) {
-        picoui_checkbox_dispose_partial(checkbox);
+        tinyui_checkbox_dispose_partial(checkbox);
         return 0;
     }
     backend = (struct picoui_backend_widget *)checkbox->widget.backend_widget;
     checkbox->checked = props->checked != 0;
-    if (picoui_widget_update_value(backend,
+    if (tinyui_widget_update_value(backend,
                                    checkbox->checked,
                                    0,
                                    &checkbox->widget,
                                    0) != 0) {
-        picoui_checkbox_dispose_partial(checkbox);
+        tinyui_checkbox_dispose_partial(checkbox);
         return 0;
     }
     backend->last_signal = PICOUI_BACKEND_SIGNAL_NONE;
@@ -237,17 +237,17 @@ struct picoui_checkbox *picoui_checkbox_create_with_props(struct picoui_window *
     checkbox->cb = props->on_toggled;
     checkbox->user_data = props->user_data;
     if (picoui_widget_set_user_data(&checkbox->widget, props->user_data) != 0) {
-        picoui_checkbox_dispose_partial(checkbox);
+        tinyui_checkbox_dispose_partial(checkbox);
         return 0;
     }
     if (props->style_class != 0
         && picoui_widget_set_style_class(&checkbox->widget, props->style_class) != 0) {
-        picoui_checkbox_dispose_partial(checkbox);
+        tinyui_checkbox_dispose_partial(checkbox);
         return 0;
     }
     if ((props->width > 0 || props->height > 0)
         && picoui_widget_set_size(&checkbox->widget, props->width, props->height) != 0) {
-        picoui_checkbox_dispose_partial(checkbox);
+        tinyui_checkbox_dispose_partial(checkbox);
         return 0;
     }
     if (picoui_widget_set_bg_color(&checkbox->widget, props->bg_color) != 0
@@ -265,7 +265,7 @@ struct picoui_checkbox *picoui_checkbox_create_with_props(struct picoui_window *
             && picoui_checkbox_set_radio_group(checkbox, props->radio_group) != 0)
         || (props->has_string_left_space != 0
             && picoui_checkbox_set_string_left_space(checkbox, props->string_left_space) != 0)) {
-        picoui_checkbox_dispose_partial(checkbox);
+        tinyui_checkbox_dispose_partial(checkbox);
         return 0;
     }
     return checkbox;
@@ -297,7 +297,7 @@ int picoui_checkbox_set_checked(struct picoui_checkbox *checkbox, int checked)
     }
 
     checkbox->checked = normalized_checked;
-    return picoui_widget_update_value(checkbox->widget.backend_widget,
+    return tinyui_widget_update_value(checkbox->widget.backend_widget,
                                       checkbox->checked,
                                       checkbox->cb,
                                       &checkbox->widget,
@@ -337,7 +337,7 @@ int picoui_checkbox_set_text(struct picoui_checkbox *checkbox, const char *text)
     if (picoui_widget_set_text(&checkbox->widget, text) != 0) {
         return -1;
     }
-    return picoui_backend_set_text(checkbox->widget.backend_widget, text);
+    return tinyui_widget_set_backend_text(checkbox->widget.backend_widget, text);
 }
 
 /**
@@ -352,19 +352,19 @@ int picoui_checkbox_set_check_color(struct picoui_checkbox *checkbox, unsigned i
 {
     ldCheckBox_t *ld_checkbox;
 
-    if (picoui_checkbox_fail_next_set_check_color != 0) {
-        picoui_checkbox_fail_next_set_check_color = 0;
+    if (tinyui_checkbox_fail_next_set_check_color != 0) {
+        tinyui_checkbox_fail_next_set_check_color = 0;
         return -1;
     }
 
-    ld_checkbox = picoui_checkbox_get_ld(checkbox);
+    ld_checkbox = tinyui_checkbox_get_ld(checkbox);
     if (ld_checkbox == 0) {
         return -1;
     }
 
     ldCheckBoxSetColor(ld_checkbox,
                        ld_checkbox->bgColor,
-                       picoui_checkbox_rgb_to_ld_color(rgb));
+                       tinyui_checkbox_rgb_to_ld_color(rgb));
     return 0;
 }
 
@@ -384,12 +384,12 @@ int picoui_checkbox_set_text_color(struct picoui_checkbox *checkbox, unsigned in
         return -1;
     }
 
-    ld_checkbox = picoui_checkbox_get_ld(checkbox);
+    ld_checkbox = tinyui_checkbox_get_ld(checkbox);
     if (ld_checkbox == 0) {
         return -1;
     }
 
-    ldCheckBoxSetTextColor(ld_checkbox, picoui_checkbox_rgb_to_ld_color(rgb));
+    ldCheckBoxSetTextColor(ld_checkbox, tinyui_checkbox_rgb_to_ld_color(rgb));
     return 0;
 }
 
@@ -410,7 +410,7 @@ int picoui_checkbox_set_unchecked_source(struct picoui_checkbox *checkbox,
         return -1;
     }
 
-    ld_checkbox = picoui_checkbox_get_ld(checkbox);
+    ld_checkbox = tinyui_checkbox_get_ld(checkbox);
     if (ld_checkbox == 0) {
         return -1;
     }
@@ -440,7 +440,7 @@ int picoui_checkbox_set_checked_source(struct picoui_checkbox *checkbox,
         return -1;
     }
 
-    ld_checkbox = picoui_checkbox_get_ld(checkbox);
+    ld_checkbox = tinyui_checkbox_get_ld(checkbox);
     if (ld_checkbox == 0) {
         return -1;
     }
@@ -469,7 +469,7 @@ int picoui_checkbox_set_radio_group(struct picoui_checkbox *checkbox, int radio_
         return -1;
     }
 
-    ld_checkbox = picoui_checkbox_get_ld(checkbox);
+    ld_checkbox = tinyui_checkbox_get_ld(checkbox);
     if (ld_checkbox == 0) {
         return -1;
     }
@@ -494,7 +494,7 @@ int picoui_checkbox_set_string_left_space(struct picoui_checkbox *checkbox, int 
         return -1;
     }
 
-    ld_checkbox = picoui_checkbox_get_ld(checkbox);
+    ld_checkbox = tinyui_checkbox_get_ld(checkbox);
     if (ld_checkbox == 0) {
         return -1;
     }

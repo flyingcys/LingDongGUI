@@ -7,11 +7,11 @@ import re
 import sys
 
 ROOT = Path(__file__).resolve().parents[3]
-INVENTORY = ROOT / "tests" / "picoui" / "contract" / "picoui_tinyui_transition_inventory.json"
-BACKEND_DIR = ROOT / "picoui" / "src" / "backend" / "ldgui"
-APP_HEADER = ROOT / "picoui" / "include" / "picoui" / "app.h"
-APP_SOURCE = ROOT / "picoui" / "src" / "core" / "app.c"
-PICOUI_PUBLIC_HEADERS = sorted((ROOT / "picoui" / "include" / "picoui").glob("*.h"))
+INVENTORY = ROOT / "tests" / "picoui" / "contract" / "tinyui_transition_inventory.json"
+BACKEND_DIR = ROOT / "tinyui" / "src" / "backend" / "ldgui"
+APP_HEADER = ROOT / "tinyui" / "include" / "picoui" / "app.h"
+APP_SOURCE = ROOT / "tinyui" / "src" / "core" / "app.c"
+PICOUI_PUBLIC_HEADERS = sorted((ROOT / "tinyui" / "include" / "picoui").glob("*.h"))
 TINYUI_INCLUDE_DIR = ROOT / "tinyui" / "include"
 TINYUI_HEADERS = [
     TINYUI_INCLUDE_DIR / "tinyui.h",
@@ -57,7 +57,7 @@ def load_expected() -> dict[str, object]:
 
 def collect_actual() -> dict[str, object]:
     return {
-        "backend_c_files": len(sorted(BACKEND_DIR.glob("backend_*.c"))),
+        "backend_c_files": len(sorted(BACKEND_DIR.glob("*.c"))),
         "app_header_exists": APP_HEADER.exists(),
         "app_source_exists": APP_SOURCE.exists(),
         "picoui_public_api_count": count_api(PICOUI_PUBLIC_HEADERS, "picoui_"),

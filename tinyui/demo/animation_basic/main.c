@@ -17,7 +17,7 @@
  */
 
 #include "picoui/picoui.h"
-#include "picoui/image.h"
+#include "image.h"
 
 extern const unsigned char c_tileQuaterArcGRAY8;
 
