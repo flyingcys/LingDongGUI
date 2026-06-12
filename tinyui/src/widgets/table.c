@@ -24,8 +24,31 @@
 #include "../../../src/misc/ldMsg.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
+int tinyui_runtime_bridge_unbind_host(void *backend_widget);
+int tinyui_runtime_bridge_detach_from_parent(void *backend_widget);
+
+struct picoui_table_test_dispose_snapshot {
+    int kind;
+    int cleanup_complete;
+    int cleanup_incomplete;
+    int detach_result;
+    int unbind_result;
+    int detached;
+    int owner_cleared;
+    int root_cleared;
+    int parent_cleared;
+    int next_sibling_cleared;
+    int host_cleared;
+    int event_bridge_cleared;
+    int ld_pinfo_cleared;
+};
+
+static struct picoui_table_test_dispose_snapshot picoui_table_last_dispose_snapshot;
+static int picoui_table_last_dispose_snapshot_valid = 0;
+static int picoui_backend_table_fail_next_set_keyboard_binding = 0;
 
 static int picoui_table_dims_are_valid(int rows, int columns)
 {
@@ -35,6 +58,94 @@ static int picoui_table_dims_are_valid(int rows, int columns)
 static int picoui_table_keyboard_binding_is_valid(unsigned int keyboard_binding)
 {
     return keyboard_binding > 0U && keyboard_binding <= 0xFFFFU;
+}
+
+void picoui_table_test_reset_dispose_snapshot(void)
+{
+    memset(&picoui_table_last_dispose_snapshot, 0, sizeof(picoui_table_last_dispose_snapshot));
+    picoui_table_last_dispose_snapshot_valid = 0;
+}
+
+static int picoui_table_finish_detach_after_backend_failure(struct picoui_backend_widget *backend)
+{
+    struct picoui_backend_widget *parent;
+    struct picoui_backend_widget *cursor;
+
+    if (backend == 0 || backend->parent == 0) {
+        return 0;
+    }
+
+    parent = backend->parent;
+    if (parent->first_child == backend) {
+        parent->first_child = backend->next_sibling;
+    } else {
+        cursor = parent->first_child;
+        while (cursor != 0 && cursor->next_sibling != backend) {
+            cursor = cursor->next_sibling;
+        }
+        if (cursor == 0) {
+            return -1;
+        }
+        cursor->next_sibling = backend->next_sibling;
+    }
+
+    backend->parent = 0;
+    backend->next_sibling = 0;
+    backend->owner = 0;
+    backend->root = 0;
+    return 0;
+}
+
+static void picoui_table_dispose_partial(struct picoui_table *table)
+{
+    struct picoui_backend_widget *backend;
+    struct picoui_backend_app_state *app_state;
+    ldBase_t *ld_base;
+    int detach_result = 0;
+    int unbind_result = 0;
+
+    if (table == 0) {
+        return;
+    }
+
+    backend = (struct picoui_backend_widget *)table->widget.backend_widget;
+    if (backend != 0) {
+        app_state = tinyui_runtime_bridge_backend_state(backend->owner);
+        ld_base = (ldBase_t *)backend->ld_widget;
+        memset(&picoui_table_last_dispose_snapshot, 0, sizeof(picoui_table_last_dispose_snapshot));
+        picoui_table_last_dispose_snapshot.kind = backend->kind;
+        if (backend->parent != 0) {
+            detach_result = tinyui_runtime_bridge_detach_from_parent(backend);
+            if (detach_result != 0) {
+                detach_result = picoui_table_finish_detach_after_backend_failure(backend);
+            }
+        } else {
+            picoui_table_last_dispose_snapshot.detached = 1;
+        }
+        unbind_result = tinyui_runtime_bridge_unbind_host(backend);
+        picoui_table_last_dispose_snapshot.detach_result = detach_result;
+        picoui_table_last_dispose_snapshot.unbind_result = unbind_result;
+        picoui_table_last_dispose_snapshot.cleanup_complete = (detach_result == 0 && unbind_result == 0);
+        picoui_table_last_dispose_snapshot.cleanup_incomplete = (detach_result != 0 || unbind_result != 0);
+        picoui_table_last_dispose_snapshot.detached = (detach_result == 0 && backend->parent == 0);
+        picoui_table_last_dispose_snapshot.owner_cleared = (backend->owner == 0);
+        picoui_table_last_dispose_snapshot.root_cleared = (backend->root == 0);
+        picoui_table_last_dispose_snapshot.parent_cleared = (backend->parent == 0);
+        picoui_table_last_dispose_snapshot.next_sibling_cleared = (backend->next_sibling == 0);
+        picoui_table_last_dispose_snapshot.host_cleared = (backend->host_widget == 0);
+        picoui_table_last_dispose_snapshot.event_bridge_cleared =
+            (backend->ld_event_bridge_scene == 0 &&
+             backend->ld_event_bridge_sender == 0 &&
+             backend->ld_event_bridge_next == 0);
+        picoui_table_last_dispose_snapshot.ld_pinfo_cleared = (ld_base == 0 || ld_base->pInfo == 0);
+        picoui_table_last_dispose_snapshot_valid = 1;
+        if (app_state != 0 && app_state->ld_scene != 0 && backend->ld_widget != 0) {
+            ldTable_depose(app_state->ld_scene, (ldTable_t *)backend->ld_widget);
+        }
+        free(backend);
+    }
+
+    free(table);
 }
 
 static int picoui_table_props_are_valid(const struct picoui_table_props *props)
@@ -60,6 +171,43 @@ static ldTable_t *picoui_table_get_ld_widget(const struct picoui_table *table)
 
     backend = (const struct picoui_backend_widget *)table->widget.backend_widget;
     return (ldTable_t *)backend->ld_widget;
+}
+
+static ldTable_t *picoui_table_get_strict_ld_widget(const struct picoui_table *table)
+{
+    const struct picoui_backend_widget *backend;
+
+    if (table == 0 || table->widget.backend_widget == 0) {
+        return 0;
+    }
+
+    backend = (const struct picoui_backend_widget *)table->widget.backend_widget;
+    if (backend->kind != PICOUI_BACKEND_WIDGET_TABLE || backend->ld_widget == 0) {
+        return 0;
+    }
+
+    return (ldTable_t *)backend->ld_widget;
+}
+
+static int picoui_table_align_to_ld(enum picoui_align align, arm_2d_align_t *out)
+{
+    if (out == 0) {
+        return -1;
+    }
+
+    switch (align) {
+    case PICOUI_ALIGN_START:
+        *out = ARM_2D_ALIGN_LEFT;
+        return 0;
+    case PICOUI_ALIGN_CENTER:
+        *out = ARM_2D_ALIGN_CENTRE;
+        return 0;
+    case PICOUI_ALIGN_END:
+        *out = ARM_2D_ALIGN_RIGHT;
+        return 0;
+    default:
+        return -1;
+    }
 }
 
 static int picoui_table_sync_current_cell_local(struct picoui_table *table,
@@ -88,7 +236,7 @@ static bool picoui_table_native_slot(struct ld_scene_t *scene, ldMsg_t msg)
     }
 
     table = (struct picoui_table *)backend->host_widget;
-    ld_table = picoui_table_get_ld_widget(table);
+    ld_table = picoui_table_get_strict_ld_widget(table);
     if (ld_table == NULL) {
         return false;
     }
@@ -130,7 +278,7 @@ static int picoui_table_bind_native_slot(struct picoui_table *table)
         return -1;
     }
 
-    ld_table = picoui_table_get_ld_widget(table);
+    ld_table = picoui_table_get_strict_ld_widget(table);
     if (ld_table == NULL) {
         return -1;
     }
@@ -162,7 +310,7 @@ static int picoui_table_sync_current_cell_local(struct picoui_table *table,
         return -1;
     }
 
-    ld_table = picoui_table_get_ld_widget(table);
+    ld_table = picoui_table_get_strict_ld_widget(table);
     if (ld_table == NULL) {
         return -1;
     }
@@ -208,7 +356,7 @@ struct picoui_table *picoui_table_create(struct picoui_window *parent,
 
     parent_backend = (struct picoui_backend_widget *)parent->widget.backend_widget;
     app_state = parent_backend != 0
-        ? picoui_runtime_bridge_backend_state_from_parent(parent_backend)
+        ? tinyui_runtime_bridge_backend_state_from_parent(parent_backend)
         : 0;
     if (parent_backend == 0 || parent_backend->ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
         return 0;
@@ -225,7 +373,7 @@ struct picoui_table *picoui_table_create(struct picoui_window *parent,
         return 0;
     }
 
-    name_id = picoui_runtime_bridge_next_name_id(parent_backend);
+    name_id = tinyui_runtime_bridge_next_name_id(parent_backend);
     if (name_id == 0) {
         free(backend);
         free(table);
@@ -249,7 +397,7 @@ struct picoui_table *picoui_table_create(struct picoui_window *parent,
         return 0;
     }
 
-    if (picoui_backend_widget_init_child(backend,
+    if (tinyui_widget_init_child(backend,
                                          parent_backend,
                                          PICOUI_BACKEND_WIDGET_TABLE,
                                          id,
@@ -261,7 +409,7 @@ struct picoui_table *picoui_table_create(struct picoui_window *parent,
     }
     backend->ld_widget = ld_table;
     backend->ld_name_id = name_id;
-    if (picoui_backend_widget_attach_child(parent_backend, backend) != 0) {
+    if (tinyui_widget_attach_child(parent_backend, backend) != 0) {
         ldTable_depose(app_state->ld_scene, ld_table);
         free(backend);
         free(table);
@@ -276,15 +424,15 @@ struct picoui_table *picoui_table_create(struct picoui_window *parent,
     table->current_column = 0;
     table->widget.visible = 1;
     table->widget.enabled = 1;
-    if (picoui_backend_widget_bind_host(table->widget.backend_widget, &table->widget) != 0) {
-        (void)picoui_backend_widget_detach_from_parent(table->widget.backend_widget);
+    if (tinyui_runtime_bridge_bind_host(table->widget.backend_widget, &table->widget) != 0) {
+        (void)tinyui_runtime_bridge_detach_from_parent(table->widget.backend_widget);
         ldTable_depose(app_state->ld_scene, ld_table);
         free(backend);
         free(table);
         return 0;
     }
     if (picoui_table_bind_native_slot(table) != 0) {
-        (void)picoui_backend_widget_detach_from_parent(table->widget.backend_widget);
+        (void)tinyui_runtime_bridge_detach_from_parent(table->widget.backend_widget);
         ldTable_depose(app_state->ld_scene, ld_table);
         free(backend);
         free(table);
@@ -323,17 +471,17 @@ struct picoui_table *picoui_table_create_with_props(struct picoui_window *parent
         picoui_widget_set_border_color(&table->widget, props->border_color) != 0 ||
         picoui_widget_set_radius(&table->widget, props->radius) != 0 ||
         picoui_widget_set_padding(&table->widget, props->padding) != 0) {
-        free(table);
+        picoui_table_dispose_partial(table);
         return 0;
     }
     if (props->style_class != 0 &&
         picoui_widget_set_style_class(&table->widget, props->style_class) != 0) {
-        free(table);
+        picoui_table_dispose_partial(table);
         return 0;
     }
     if ((props->width > 0 || props->height > 0) &&
         picoui_widget_set_size(&table->widget, props->width, props->height) != 0) {
-        free(table);
+        picoui_table_dispose_partial(table);
         return 0;
     }
 
@@ -381,12 +529,27 @@ int picoui_table_set_keyboard(struct picoui_table *table, unsigned int keyboard_
 
 int picoui_table_set_keyboard_binding(struct picoui_table *table, unsigned int keyboard_binding)
 {
+    ldTable_t *ld_table;
+
     if (table == 0 || !picoui_table_keyboard_binding_is_valid(keyboard_binding)) {
         return -1;
     }
 
-    if (picoui_backend_table_set_keyboard_binding(table->widget.backend_widget,
-                                                  keyboard_binding) != 0) {
+    ld_table = picoui_table_get_strict_ld_widget(table);
+    if (ld_table == 0) {
+        return -1;
+    }
+
+    if (picoui_backend_table_fail_next_set_keyboard_binding != 0) {
+        picoui_backend_table_fail_next_set_keyboard_binding = 0;
+        return -1;
+    }
+
+    ldTableSetKeyboard(ld_table, (uint16_t)keyboard_binding);
+    if ((struct picoui_backend_widget *)table->widget.backend_widget != 0) {
+        ((struct picoui_backend_widget *)table->widget.backend_widget)->value = (int)keyboard_binding;
+    }
+    if (ld_table->kbNameId != (uint16_t)keyboard_binding) {
         return -1;
     }
     table->keyboard_binding = keyboard_binding;
@@ -403,12 +566,48 @@ int picoui_table_set_keyboard_binding(struct picoui_table *table, unsigned int k
 
 int picoui_table_get_keyboard_binding(const struct picoui_table *table, unsigned int *keyboard_binding)
 {
+    ldTable_t *ld_table;
+
     if (table == 0 || keyboard_binding == 0) {
         return -1;
     }
 
-    return picoui_backend_table_get_keyboard_binding((void *)table->widget.backend_widget,
-                                                     keyboard_binding);
+    ld_table = picoui_table_get_strict_ld_widget(table);
+    if (ld_table != 0) {
+        *keyboard_binding = (unsigned int)ld_table->kbNameId;
+        return 0;
+    }
+
+    if (((const struct picoui_table *)table)->keyboard_binding == 0U) {
+        return -1;
+    }
+
+    *keyboard_binding = table->keyboard_binding;
+    return 0;
+}
+
+int picoui_backend_table_test_take_last_dispose_snapshot(
+    struct picoui_table_test_dispose_snapshot *snapshot)
+{
+    if (snapshot == 0 || picoui_table_last_dispose_snapshot_valid == 0) {
+        return -1;
+    }
+
+    *snapshot = picoui_table_last_dispose_snapshot;
+    memset(&picoui_table_last_dispose_snapshot, 0, sizeof(picoui_table_last_dispose_snapshot));
+    picoui_table_last_dispose_snapshot_valid = 0;
+    return 0;
+}
+
+void picoui_backend_table_test_fail_next_set_keyboard_binding(void)
+{
+    picoui_backend_table_fail_next_set_keyboard_binding = 1;
+}
+
+void picoui_backend_table_test_reset_state(void)
+{
+    picoui_backend_table_fail_next_set_keyboard_binding = 0;
+    picoui_table_test_reset_dispose_snapshot();
 }
 
 /**
@@ -430,7 +629,7 @@ int picoui_tabel_show_keyboard(struct picoui_table *table)
     }
 
     backend = (struct picoui_backend_widget *)table->widget.backend_widget;
-    ld_table = picoui_table_get_ld_widget(table);
+    ld_table = picoui_table_get_strict_ld_widget(table);
     if (backend == 0 || ld_table == 0) {
         return -1;
     }
@@ -463,11 +662,25 @@ int picoui_table_set_cell_text(struct picoui_table *table,
                                int column,
                                const char *text)
 {
+    ldTable_t *ld_table;
+    ldTableItem_t *item;
+
     if (table == 0 || text == 0) {
         return -1;
     }
 
-    return picoui_backend_table_set_cell_text(table->widget.backend_widget, row, column, text);
+    ld_table = picoui_table_get_strict_ld_widget(table);
+    if (ld_table == 0 || row < 0 || column < 0 ||
+        row >= ld_table->rowCount || column >= ld_table->columnCount) {
+        return -1;
+    }
+
+    item = ldTableGetItem(ld_table, (uint8_t)row, (uint8_t)column);
+    if (item != 0 && item->ptFont == 0) {
+        ldTableSetItemFont(ld_table, (uint8_t)row, (uint8_t)column, (arm_2d_font_t *)&ARM_2D_FONT_6x8);
+    }
+    ldTableSetItemText(ld_table, (uint8_t)row, (uint8_t)column, (uint8_t *)text);
+    return 0;
 }
 
 /**
@@ -495,11 +708,19 @@ int picoui_table_set_item_text(struct picoui_table *table, int row, int column, 
 
 const char *picoui_table_get_cell_text(const struct picoui_table *table, int row, int column)
 {
+    ldTable_t *ld_table;
+
     if (table == 0) {
         return 0;
     }
 
-    return picoui_backend_table_get_cell_text((void *)table->widget.backend_widget, row, column);
+    ld_table = picoui_table_get_strict_ld_widget(table);
+    if (ld_table == 0 || row < 0 || column < 0 ||
+        row >= ld_table->rowCount || column >= ld_table->columnCount) {
+        return 0;
+    }
+
+    return (const char *)ldTableGetItemText(ld_table, (uint8_t)row, (uint8_t)column);
 }
 
 /**
@@ -532,15 +753,28 @@ int picoui_table_set_cell_editable(struct picoui_table *table,
                                    int editable,
                                    unsigned int text_max)
 {
+    ldTable_t *ld_table;
+
     if (table == 0) {
         return -1;
     }
 
-    return picoui_backend_table_set_cell_editable(table->widget.backend_widget,
-                                                  row,
-                                                  column,
-                                                  editable != 0,
-                                                  text_max);
+    ld_table = picoui_table_get_strict_ld_widget(table);
+    if (ld_table == 0 || row < 0 || column < 0 ||
+        row >= ld_table->rowCount || column >= ld_table->columnCount ||
+        text_max > 255U) {
+        return -1;
+    }
+
+    ldTableSetItemEditable(ld_table,
+                           (uint8_t)row,
+                           (uint8_t)column,
+                           editable != 0,
+                           (uint8_t)text_max);
+    if (editable != 0) {
+        ldTableSetItemFont(ld_table, (uint8_t)row, (uint8_t)column, (arm_2d_font_t *)&ARM_2D_FONT_6x8);
+    }
+    return 0;
 }
 
 /**
@@ -584,18 +818,28 @@ int picoui_table_set_item_image(struct picoui_table *table,
                                 struct picoui_image_source *source,
                                 unsigned int mask_color)
 {
+    ldTable_t *ld_table;
+
     if (table == 0 || source == 0 || source->img_tile == 0 || source->mask_tile == 0 ||
         mask_color > 0xFFFFFFU) {
         return -1;
     }
 
-    return picoui_backend_table_set_item_image(table->widget.backend_widget,
-                                               row,
-                                               column,
-                                               x,
-                                               y,
-                                               source,
-                                               mask_color);
+    ld_table = picoui_table_get_strict_ld_widget(table);
+    if (ld_table == 0 || row < 0 || column < 0 ||
+        row >= ld_table->rowCount || column >= ld_table->columnCount) {
+        return -1;
+    }
+
+    ldTableSetItemImage(ld_table,
+                        (uint8_t)row,
+                        (uint8_t)column,
+                        (int16_t)x,
+                        (int16_t)y,
+                        source->img_tile,
+                        source->mask_tile,
+                        (ldColor)mask_color);
+    return 0;
 }
 
 /**
@@ -625,6 +869,8 @@ int picoui_table_set_item_button(struct picoui_table *table,
                                  unsigned int press_mask_color,
                                  int checkable)
 {
+    ldTable_t *ld_table;
+
     if (table == 0 || release_source == 0 || press_source == 0 ||
         release_source->img_tile == 0 || release_source->mask_tile == 0 ||
         press_source->img_tile == 0 || press_source->mask_tile == 0 ||
@@ -632,16 +878,25 @@ int picoui_table_set_item_button(struct picoui_table *table,
         return -1;
     }
 
-    return picoui_backend_table_set_item_button(table->widget.backend_widget,
-                                                row,
-                                                column,
-                                                x,
-                                                y,
-                                                release_source,
-                                                release_mask_color,
-                                                press_source,
-                                                press_mask_color,
-                                                checkable != 0);
+    ld_table = picoui_table_get_strict_ld_widget(table);
+    if (ld_table == 0 || row < 0 || column < 0 ||
+        row >= ld_table->rowCount || column >= ld_table->columnCount) {
+        return -1;
+    }
+
+    ldTableSetItemButton(ld_table,
+                         (uint8_t)row,
+                         (uint8_t)column,
+                         (int16_t)x,
+                         (int16_t)y,
+                         release_source->img_tile,
+                         release_source->mask_tile,
+                         (ldColor)release_mask_color,
+                         press_source->img_tile,
+                         press_source->mask_tile,
+                         (ldColor)press_mask_color,
+                         checkable != 0);
+    return 0;
 }
 
 /**
@@ -653,11 +908,19 @@ int picoui_table_set_item_button(struct picoui_table *table,
 
 int picoui_table_set_excel_type(struct picoui_table *table)
 {
+    ldTable_t *ld_table;
+
     if (table == 0) {
         return -1;
     }
 
-    return picoui_backend_table_set_excel_type(table->widget.backend_widget);
+    ld_table = picoui_table_get_strict_ld_widget(table);
+    if (ld_table == 0) {
+        return -1;
+    }
+
+    ldTableSetExcelType(ld_table, (arm_2d_font_t *)&ARM_2D_FONT_6x8);
+    return 0;
 }
 
 /**
@@ -709,11 +972,19 @@ int picoui_table_set_align_grid(struct picoui_table *table, int enabled)
 
 int picoui_table_set_item_width(struct picoui_table *table, int column, int width)
 {
+    ldTable_t *ld_table;
+
     if (table == 0 || width <= 0) {
         return -1;
     }
 
-    return picoui_backend_table_set_item_width(table->widget.backend_widget, column, width);
+    ld_table = picoui_table_get_strict_ld_widget(table);
+    if (ld_table == 0 || column < 0 || column >= ld_table->columnCount) {
+        return -1;
+    }
+
+    ldTableSetItemWidth(ld_table, (uint8_t)column, (int16_t)width);
+    return 0;
 }
 
 /**
@@ -727,11 +998,19 @@ int picoui_table_set_item_width(struct picoui_table *table, int column, int widt
 
 int picoui_table_set_item_height(struct picoui_table *table, int row, int height)
 {
+    ldTable_t *ld_table;
+
     if (table == 0 || height <= 0) {
         return -1;
     }
 
-    return picoui_backend_table_set_item_height(table->widget.backend_widget, row, height);
+    ld_table = picoui_table_get_strict_ld_widget(table);
+    if (ld_table == 0 || row < 0 || row >= ld_table->rowCount) {
+        return -1;
+    }
+
+    ldTableSetItemHeight(ld_table, (uint8_t)row, (int16_t)height);
+    return 0;
 }
 
 /**
@@ -751,15 +1030,20 @@ int picoui_table_set_item_color(struct picoui_table *table,
                                 unsigned int text_color,
                                 unsigned int bg_color)
 {
+    ldTable_t *ld_table;
+
     if (table == 0 || text_color > 0xFFFFFFU || bg_color > 0xFFFFFFU) {
         return -1;
     }
 
-    return picoui_backend_table_set_item_color(table->widget.backend_widget,
-                                               row,
-                                               column,
-                                               text_color,
-                                               bg_color);
+    ld_table = picoui_table_get_strict_ld_widget(table);
+    if (ld_table == 0 || row < 0 || column < 0 || row >= ld_table->rowCount ||
+        column >= ld_table->columnCount) {
+        return -1;
+    }
+
+    ldTableSetItemColor(ld_table, (uint8_t)row, (uint8_t)column, (ldColor)text_color, (ldColor)bg_color);
+    return 0;
 }
 
 /**
@@ -772,11 +1056,19 @@ int picoui_table_set_item_color(struct picoui_table *table,
 
 int picoui_table_set_bg_color(struct picoui_table *table, unsigned int bg_color)
 {
+    ldTable_t *ld_table;
+
     if (table == 0 || bg_color > 0xFFFFFFU) {
         return -1;
     }
 
-    return picoui_backend_table_set_bg_color(table->widget.backend_widget, bg_color);
+    ld_table = picoui_table_get_strict_ld_widget(table);
+    if (ld_table == 0) {
+        return -1;
+    }
+
+    ldTableSetBackgroundColor(ld_table, (ldColor)bg_color);
+    return 0;
 }
 
 /**
@@ -791,11 +1083,20 @@ int picoui_table_set_bg_color(struct picoui_table *table, unsigned int bg_color)
 
 int picoui_table_set_item_static_text(struct picoui_table *table, int row, int column, const char *text)
 {
+    ldTable_t *ld_table;
+
     if (table == 0 || text == 0) {
         return -1;
     }
 
-    return picoui_backend_table_set_item_static_text(table->widget.backend_widget, row, column, text);
+    ld_table = picoui_table_get_strict_ld_widget(table);
+    if (ld_table == 0 || row < 0 || column < 0 ||
+        row >= ld_table->rowCount || column >= ld_table->columnCount) {
+        return -1;
+    }
+
+    ldTableSetItemStaticText(ld_table, (uint8_t)row, (uint8_t)column, (uint8_t *)text);
+    return 0;
 }
 
 /**
@@ -809,11 +1110,20 @@ int picoui_table_set_item_static_text(struct picoui_table *table, int row, int c
 
 int picoui_table_set_item_font(struct picoui_table *table, int row, int column)
 {
+    ldTable_t *ld_table;
+
     if (table == 0) {
         return -1;
     }
 
-    return picoui_backend_table_set_item_font(table->widget.backend_widget, row, column);
+    ld_table = picoui_table_get_strict_ld_widget(table);
+    if (ld_table == 0 || row < 0 || column < 0 ||
+        row >= ld_table->rowCount || column >= ld_table->columnCount) {
+        return -1;
+    }
+
+    ldTableSetItemFont(ld_table, (uint8_t)row, (uint8_t)column, (arm_2d_font_t *)&ARM_2D_FONT_6x8);
+    return 0;
 }
 
 /**
@@ -886,11 +1196,22 @@ int picoui_table_set_item_align(struct picoui_table *table,
                                 int column,
                                 enum picoui_align align)
 {
+    ldTable_t *ld_table;
+    arm_2d_align_t ld_align;
+
     if (table == 0) {
         return -1;
     }
 
-    return picoui_backend_table_set_item_align(table->widget.backend_widget, row, column, align);
+    ld_table = picoui_table_get_strict_ld_widget(table);
+    if (ld_table == 0 || row < 0 || column < 0 ||
+        row >= ld_table->rowCount || column >= ld_table->columnCount ||
+        picoui_table_align_to_ld(align, &ld_align) != 0) {
+        return -1;
+    }
+
+    ldTableSetItemAlign(ld_table, (uint8_t)row, (uint8_t)column, ld_align);
+    return 0;
 }
 
 /**
@@ -904,11 +1225,30 @@ int picoui_table_set_item_align(struct picoui_table *table,
 
 int picoui_table_get_item_align(const struct picoui_table *table, int row, int column)
 {
+    ldTable_t *ld_table;
+    arm_2d_align_t ld_align;
+
     if (table == 0) {
         return -1;
     }
 
-    return picoui_backend_table_get_item_align((void *)table->widget.backend_widget, row, column);
+    ld_table = picoui_table_get_strict_ld_widget(table);
+    if (ld_table == 0 || row < 0 || column < 0 ||
+        row >= ld_table->rowCount || column >= ld_table->columnCount) {
+        return -1;
+    }
+
+    ld_align = ldTableGetItemAlign(ld_table, (uint8_t)row, (uint8_t)column);
+    switch (ld_align) {
+    case ARM_2D_ALIGN_LEFT:
+        return PICOUI_ALIGN_START;
+    case ARM_2D_ALIGN_CENTRE:
+        return PICOUI_ALIGN_CENTER;
+    case ARM_2D_ALIGN_RIGHT:
+        return PICOUI_ALIGN_END;
+    default:
+        return -1;
+    }
 }
 
 /**
@@ -922,11 +1262,19 @@ int picoui_table_get_item_align(const struct picoui_table *table, int row, int c
 
 int picoui_table_get_item_editable(const struct picoui_table *table, int row, int column)
 {
+    ldTable_t *ld_table;
+
     if (table == 0) {
         return -1;
     }
 
-    return picoui_backend_table_get_item_editable((void *)table->widget.backend_widget, row, column);
+    ld_table = picoui_table_get_strict_ld_widget(table);
+    if (ld_table == 0 || row < 0 || column < 0 ||
+        row >= ld_table->rowCount || column >= ld_table->columnCount) {
+        return -1;
+    }
+
+    return ldTableGetItemEditable(ld_table, (uint8_t)row, (uint8_t)column) ? 1 : 0;
 }
 
 /**
@@ -1055,7 +1403,7 @@ int picoui_table_navigate(struct picoui_table *table, enum picoui_native_nav_dir
         return -1;
     }
 
-    ld_dir = picoui_native_nav_dir_to_ld(dir);
+    ld_dir = tinyui_native_nav_dir_to_ld(dir);
     if (ld_dir < 0) {
         return -1;
     }
@@ -1075,16 +1423,25 @@ int picoui_table_navigate(struct picoui_table *table, enum picoui_native_nav_dir
 
 struct picoui_table_region picoui_table_get_item_region(const struct picoui_table *table, int row, int column)
 {
+    ldTable_t *ld_table;
     struct picoui_table_region region = {0};
+    arm_2d_region_t native_region;
 
     if (table == 0) {
         return region;
     }
 
-    if (picoui_backend_table_get_item_region((void *)table->widget.backend_widget, row, column, &region) != 0) {
-        struct picoui_table_region empty = {0};
-        return empty;
+    ld_table = picoui_table_get_strict_ld_widget(table);
+    if (ld_table == 0 || row < 0 || column < 0 ||
+        row >= ld_table->rowCount || column >= ld_table->columnCount) {
+        return region;
     }
+
+    native_region = ldTableGetItemRegion(ld_table, (uint8_t)row, (uint8_t)column);
+    region.x = native_region.tLocation.iX;
+    region.y = native_region.tLocation.iY;
+    region.width = native_region.tSize.iWidth;
+    region.height = native_region.tSize.iHeight;
     return region;
 }
 
@@ -1099,13 +1456,19 @@ struct picoui_table_region picoui_table_get_item_region(const struct picoui_tabl
 
 int picoui_table_set_selected_cell(struct picoui_table *table, int row, int column)
 {
+    ldTable_t *ld_table;
+
     if (table == 0) {
         return -1;
     }
 
-    if (picoui_backend_table_set_selected_cell(table->widget.backend_widget, row, column) != 0) {
+    ld_table = picoui_table_get_ld_widget(table);
+    if (ld_table == 0 || row < 0 || column < 0 ||
+        row >= ld_table->rowCount || column >= ld_table->columnCount) {
         return -1;
     }
+
+    ldTableSetItemSelect(ld_table, (uint8_t)row, (uint8_t)column, true);
     table->current_row = row;
     table->current_column = column;
     return 0;
@@ -1141,13 +1504,19 @@ int picoui_table_set_item_select(struct picoui_table *table, int row, int column
 
 int picoui_table_set_current_cell(struct picoui_table *table, int row, int column)
 {
+    ldTable_t *ld_table;
+
     if (table == 0) {
         return -1;
     }
 
-    if (picoui_backend_table_set_current_cell(table->widget.backend_widget, row, column) != 0) {
+    ld_table = picoui_table_get_ld_widget(table);
+    if (ld_table == 0 || row < 0 || column < 0 ||
+        row >= ld_table->rowCount || column >= ld_table->columnCount) {
         return -1;
     }
+
+    ldTableSetItemSelect(ld_table, (uint8_t)row, (uint8_t)column, true);
     table->current_row = row;
     table->current_column = column;
     return 0;

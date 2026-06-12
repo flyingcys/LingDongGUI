@@ -24,8 +24,8 @@
 
 #include <stdlib.h>
 
-int picoui_backend_widget_unbind_host(void *backend_widget);
-int picoui_backend_widget_detach_from_parent(void *backend_widget);
+int tinyui_runtime_bridge_unbind_host(void *backend_widget);
+int tinyui_runtime_bridge_detach_from_parent(void *backend_widget);
 
 static const char *picoui_slider_fail_indicator_width_id = 0;
 static struct picoui_backend_widget picoui_slider_last_disposed_backend_snapshot;
@@ -83,11 +83,11 @@ static void picoui_slider_dispose_partial(struct picoui_slider *slider)
 
     backend = (struct picoui_backend_widget *)slider->widget.backend_widget;
     if (backend != 0) {
-        app_state = picoui_runtime_bridge_backend_state(backend->owner);
+        app_state = tinyui_runtime_bridge_backend_state(backend->owner);
         if (backend->parent != 0) {
-            (void)picoui_backend_widget_detach_from_parent(backend);
+            (void)tinyui_runtime_bridge_detach_from_parent(backend);
         }
-        (void)picoui_backend_widget_unbind_host(backend);
+        (void)tinyui_runtime_bridge_unbind_host(backend);
         picoui_slider_last_disposed_backend_snapshot = *backend;
         picoui_slider_last_disposed_backend_valid = 1;
         if (app_state != 0 && app_state->ld_scene != 0 && backend->ld_widget != 0) {
@@ -158,7 +158,7 @@ struct picoui_slider *picoui_slider_create(struct picoui_window *parent, const c
     }
 
     parent_backend = (struct picoui_backend_widget *)parent->widget.backend_widget;
-    app_state = picoui_runtime_bridge_backend_state_from_parent(parent_backend);
+    app_state = tinyui_runtime_bridge_backend_state_from_parent(parent_backend);
     if (parent_backend == 0 || parent_backend->ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
         return 0;
     }
@@ -174,7 +174,7 @@ struct picoui_slider *picoui_slider_create(struct picoui_window *parent, const c
         return 0;
     }
 
-    name_id = picoui_runtime_bridge_next_name_id(parent_backend);
+    name_id = tinyui_runtime_bridge_next_name_id(parent_backend);
     if (name_id == 0) {
         free(backend);
         free(slider);
@@ -195,7 +195,7 @@ struct picoui_slider *picoui_slider_create(struct picoui_window *parent, const c
         return 0;
     }
 
-    if (picoui_backend_widget_init_child(backend,
+    if (tinyui_widget_init_child(backend,
                                          parent_backend,
                                          PICOUI_BACKEND_WIDGET_SLIDER,
                                          id,
@@ -208,7 +208,7 @@ struct picoui_slider *picoui_slider_create(struct picoui_window *parent, const c
     backend->ld_widget = ld_slider;
     backend->ld_name_id = name_id;
     backend->last_signal = PICOUI_BACKEND_SIGNAL_NONE;
-    if (picoui_backend_widget_attach_child(parent_backend, backend) != 0) {
+    if (tinyui_widget_attach_child(parent_backend, backend) != 0) {
         ldSlider_depose(app_state->ld_scene, ld_slider);
         free(backend);
         free(slider);
@@ -221,7 +221,7 @@ struct picoui_slider *picoui_slider_create(struct picoui_window *parent, const c
     slider->max_value = 100;
     slider->widget.visible = 1;
     slider->widget.enabled = 1;
-    if (picoui_backend_widget_bind_host(slider->widget.backend_widget, &slider->widget) != 0) {
+    if (tinyui_runtime_bridge_bind_host(slider->widget.backend_widget, &slider->widget) != 0) {
         picoui_slider_dispose_partial(slider);
         return 0;
     }

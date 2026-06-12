@@ -24,8 +24,8 @@
 
 #include <stdlib.h>
 
-int picoui_backend_widget_unbind_host(void *backend_widget);
-int picoui_backend_widget_detach_from_parent(void *backend_widget);
+int tinyui_runtime_bridge_unbind_host(void *backend_widget);
+int tinyui_runtime_bridge_detach_from_parent(void *backend_widget);
 
 static int picoui_checkbox_fail_next_set_check_color = 0;
 
@@ -81,11 +81,11 @@ static void picoui_checkbox_dispose_partial(struct picoui_checkbox *checkbox)
 
     backend = (struct picoui_backend_widget *)checkbox->widget.backend_widget;
     if (backend != 0) {
-        app_state = picoui_runtime_bridge_backend_state(backend->owner);
+        app_state = tinyui_runtime_bridge_backend_state(backend->owner);
         if (backend->parent != 0) {
-            (void)picoui_backend_widget_detach_from_parent(backend);
+            (void)tinyui_runtime_bridge_detach_from_parent(backend);
         }
-        (void)picoui_backend_widget_unbind_host(backend);
+        (void)tinyui_runtime_bridge_unbind_host(backend);
         if (app_state != 0 && app_state->ld_scene != 0 && backend->ld_widget != 0) {
             ldCheckBox_depose(app_state->ld_scene, (ldCheckBox_t *)backend->ld_widget);
         }
@@ -122,7 +122,7 @@ struct picoui_checkbox *picoui_checkbox_create(struct picoui_window *parent, con
     }
 
     parent_backend = (struct picoui_backend_widget *)parent->widget.backend_widget;
-    app_state = picoui_runtime_bridge_backend_state_from_parent(parent_backend);
+    app_state = tinyui_runtime_bridge_backend_state_from_parent(parent_backend);
     if (parent_backend == 0 || parent_backend->ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
         return 0;
     }
@@ -138,7 +138,7 @@ struct picoui_checkbox *picoui_checkbox_create(struct picoui_window *parent, con
         return 0;
     }
 
-    name_id = picoui_runtime_bridge_next_name_id(parent_backend);
+    name_id = tinyui_runtime_bridge_next_name_id(parent_backend);
     if (name_id == 0) {
         free(backend);
         free(checkbox);
@@ -161,7 +161,7 @@ struct picoui_checkbox *picoui_checkbox_create(struct picoui_window *parent, con
     ldCheckBoxSetColor(ld_checkbox, __RGB(238, 233, 224), __RGB(32, 87, 196));
     ldCheckBoxSetTextColor(ld_checkbox, __RGB(32, 87, 196));
 
-    if (picoui_backend_widget_init_child(backend,
+    if (tinyui_widget_init_child(backend,
                                          parent_backend,
                                          PICOUI_BACKEND_WIDGET_CHECKBOX,
                                          id,
@@ -174,7 +174,7 @@ struct picoui_checkbox *picoui_checkbox_create(struct picoui_window *parent, con
     backend->ld_widget = ld_checkbox;
     backend->ld_name_id = name_id;
     backend->last_signal = PICOUI_BACKEND_SIGNAL_NONE;
-    if (picoui_backend_widget_attach_child(parent_backend, backend) != 0) {
+    if (tinyui_widget_attach_child(parent_backend, backend) != 0) {
         ldCheckBox_depose(app_state->ld_scene, ld_checkbox);
         free(backend);
         free(checkbox);
@@ -185,7 +185,7 @@ struct picoui_checkbox *picoui_checkbox_create(struct picoui_window *parent, con
     checkbox->widget.backend_widget = backend;
     checkbox->widget.visible = 1;
     checkbox->widget.enabled = 1;
-    if (picoui_backend_widget_bind_host(checkbox->widget.backend_widget, &checkbox->widget) != 0) {
+    if (tinyui_runtime_bridge_bind_host(checkbox->widget.backend_widget, &checkbox->widget) != 0) {
         picoui_checkbox_dispose_partial(checkbox);
         return 0;
     }

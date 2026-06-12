@@ -17,8 +17,8 @@
  */
 
 #include "internal.h"
-#include "picoui/layout.h"
-static struct picoui_backend_widget *picoui_window_get_backend(struct picoui_window *window)
+#include "layout.h"
+static struct picoui_backend_widget *tinyui_window_get_backend(struct picoui_window *window)
 {
     if (window == 0 || window->widget.backend_widget == 0) {
         return 0;
@@ -27,9 +27,9 @@ static struct picoui_backend_widget *picoui_window_get_backend(struct picoui_win
     return (struct picoui_backend_widget *)window->widget.backend_widget;
 }
 
-static int picoui_window_is_valid(struct picoui_window *window)
+static int tinyui_window_is_valid(struct picoui_window *window)
 {
-    return picoui_window_get_backend(window) != 0;
+    return tinyui_window_get_backend(window) != 0;
 }
 
 /**
@@ -43,11 +43,11 @@ static int picoui_window_is_valid(struct picoui_window *window)
 
 int picoui_grid_set_columns(struct picoui_window *window, const int *tracks, int count)
 {
-    if (!picoui_window_is_valid(window)) {
+    if (!tinyui_window_is_valid(window)) {
         return -1;
     }
 
-    return picoui_window_apply_grid_columns(window, tracks, count);
+    return tinyui_window_apply_grid_columns(window, tracks, count);
 }
 
 /**
@@ -61,11 +61,11 @@ int picoui_grid_set_columns(struct picoui_window *window, const int *tracks, int
 
 int picoui_grid_set_rows(struct picoui_window *window, const int *tracks, int count)
 {
-    if (!picoui_window_is_valid(window)) {
+    if (!tinyui_window_is_valid(window)) {
         return -1;
     }
 
-    return picoui_window_apply_grid_rows(window, tracks, count);
+    return tinyui_window_apply_grid_rows(window, tracks, count);
 }
 
 /**
@@ -79,11 +79,11 @@ int picoui_grid_set_rows(struct picoui_window *window, const int *tracks, int co
 
 int picoui_grid_set_gap(struct picoui_window *window, int row_gap, int col_gap)
 {
-    if (!picoui_window_is_valid(window) || row_gap < 0 || col_gap < 0) {
+    if (!tinyui_window_is_valid(window) || row_gap < 0 || col_gap < 0) {
         return -1;
     }
 
-    return picoui_window_apply_grid_gap(window, row_gap, col_gap);
+    return tinyui_window_apply_grid_gap(window, row_gap, col_gap);
 }
 
 /**
@@ -99,9 +99,9 @@ int picoui_grid_set_align(struct picoui_window *window,
                           enum picoui_align col_align,
                           enum picoui_align row_align)
 {
-    if (!picoui_window_is_valid(window)) {
+    if (!tinyui_window_is_valid(window)) {
         return -1;
     }
 
-    return picoui_window_apply_grid_align(window, col_align, row_align);
+    return tinyui_window_apply_grid_align(window, col_align, row_align);
 }

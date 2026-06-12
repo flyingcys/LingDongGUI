@@ -104,43 +104,43 @@ enum picoui_backend_data_value_source {
 };
 
 struct picoui_backend_layout_window_state {
-    enum picoui_flex_flow flex_flow;
-    enum picoui_align flex_main_align;
-    enum picoui_align flex_cross_align;
-    enum picoui_align flex_track_align;
-    int padding;
-    int padding_left;
-    int padding_top;
-    int padding_right;
-    int padding_bottom;
-    int has_explicit_flex_padding;
-    int grid_padding_left;
-    int grid_padding_top;
-    int grid_padding_right;
-    int grid_padding_bottom;
-    int has_explicit_grid_padding;
-    int flex_item_gap;
-    int flex_track_gap;
+    int16_t flex_flow;
+    int16_t flex_main_align;
+    int16_t flex_cross_align;
+    int16_t flex_track_align;
+    int16_t padding;
+    int16_t padding_left;
+    int16_t padding_top;
+    int16_t padding_right;
+    int16_t padding_bottom;
+    uint8_t has_explicit_flex_padding;
+    int16_t grid_padding_left;
+    int16_t grid_padding_top;
+    int16_t grid_padding_right;
+    int16_t grid_padding_bottom;
+    uint8_t has_explicit_grid_padding;
+    int16_t flex_item_gap;
+    int16_t flex_track_gap;
     int16_t grid_cols[PICOUI_BACKEND_LAYOUT_MAX_TRACKS];
     int16_t grid_rows[PICOUI_BACKEND_LAYOUT_MAX_TRACKS];
-    int grid_col_count;
-    int grid_row_count;
-    int grid_row_gap;
-    int grid_col_gap;
-    enum picoui_align grid_col_align;
-    enum picoui_align grid_row_align;
+    int16_t grid_col_count;
+    int16_t grid_row_count;
+    int16_t grid_row_gap;
+    int16_t grid_col_gap;
+    int16_t grid_col_align;
+    int16_t grid_row_align;
 };
 
 struct picoui_backend_layout_child_state {
-    int flex_grow;
-    int flex_new_track;
-    int ignore_layout;
-    int grid_col;
-    int grid_row;
-    int grid_col_span;
-    int grid_row_span;
-    enum picoui_align grid_x_align;
-    enum picoui_align grid_y_align;
+    int16_t flex_grow;
+    uint8_t flex_new_track;
+    uint8_t ignore_layout;
+    int16_t grid_col;
+    int16_t grid_row;
+    int16_t grid_col_span;
+    int16_t grid_row_span;
+    int16_t grid_x_align;
+    int16_t grid_y_align;
 };
 
 enum picoui_backend_runtime_evidence_flags {
@@ -166,7 +166,8 @@ struct picoui_backend_widget {
     struct picoui_backend_widget *ld_event_bridge_next;
     struct picoui_image_source *image_source;
     int value;
-    enum picoui_backend_signal last_signal;
+    int16_t last_signal;
+    uint16_t reserved_signal_padding;
     uint32_t last_native_signal;
     uint64_t last_native_value;
     int dispatch_count;
@@ -174,16 +175,18 @@ struct picoui_backend_widget {
     void *ld_widget;
     uint16_t ld_name_id;
     const char *list_item_ids[PICOUI_BACKEND_LIST_MAX_ITEMS];
-    int list_item_count;
+    uint16_t list_item_count;
+    uint16_t reserved_list_padding;
     unsigned int data_model_identity;
     unsigned int data_model_epoch;
-    enum picoui_backend_data_truth_policy data_truth_policy;
-    enum picoui_backend_data_value_source last_data_source;
-    int edit_result_on_finish;
+    int16_t data_truth_policy;
+    int16_t last_data_source;
+    int16_t edit_result_on_finish;
+    uint16_t reserved_edit_padding;
     struct picoui_backend_layout_window_state window_layout;
     struct picoui_backend_layout_child_state child_layout;
-    unsigned int runtime_evidence_flags;
-    int open;
+    uint16_t runtime_evidence_flags;
+    uint16_t open;
 };
 
 struct picoui_backend_app_state {
@@ -196,6 +199,7 @@ struct picoui_backend_app_state {
 };
 
 struct picoui_progress_wheel_test_dispose_snapshot;
+struct picoui_table_test_dispose_snapshot;
 
 /**
  * @brief Initialize app backend
@@ -215,7 +219,6 @@ int picoui_backend_app_init(struct picoui_app *app);
  */
 
 int picoui_backend_app_run(struct picoui_app *app, struct picoui_window *window);
-int picoui_backend_runtime_step(struct picoui_app *app);
 
 /**
  * @brief Shutdown app backend
@@ -536,6 +539,10 @@ void picoui_backend_progress_wheel_test_capture_dispose_snapshot(
     struct picoui_backend_widget *backend,
     int detach_result,
     int unbind_result);
+void picoui_backend_table_test_fail_next_set_keyboard_binding(void);
+void picoui_backend_table_test_reset_state(void);
+int picoui_backend_table_test_take_last_dispose_snapshot(
+    struct picoui_table_test_dispose_snapshot *snapshot);
 
 /**
  * @brief Set background offset of window backend
@@ -1240,26 +1247,6 @@ int picoui_backend_scroll_selecter_set_edit_mode(void *backend_widget, int is_ed
 int picoui_backend_scroll_selecter_get_edit_mode(void *backend_widget, int *is_edit);
 
 /**
- * @brief Set keyboard binding of table backend
- *
- * @param[in] backend_widget backend widget
- * @param[in] keyboard_binding keyboard binding
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_table_set_keyboard_binding(void *backend_widget, unsigned int keyboard_binding);
-
-/**
- * @brief Get keyboard binding from table backend
- *
- * @param[in] backend_widget backend widget
- * @param[in] keyboard_binding keyboard binding
- * @return The property value, negative on error
- */
-
-int picoui_backend_table_get_keyboard_binding(void *backend_widget, unsigned int *keyboard_binding);
-
-/**
  * @brief Set cell text of table backend
  *
  * @param[in] backend_widget backend widget
@@ -1268,35 +1255,6 @@ int picoui_backend_table_get_keyboard_binding(void *backend_widget, unsigned int
  * @param[in] text Text widget instance
  * @return 0 on success, -1 on failure
  */
-
-int picoui_backend_table_set_cell_text(void *backend_widget, int row, int column, const char *text);
-
-/**
- * @brief Get cell text from table backend
- *
- * @param[in] backend_widget backend widget
- * @param[in] row Row index
- * @param[in] column Column index
- */
-
-const char *picoui_backend_table_get_cell_text(void *backend_widget, int row, int column);
-
-/**
- * @brief Set cell editable of table backend
- *
- * @param[in] backend_widget backend widget
- * @param[in] row Row index
- * @param[in] column Column index
- * @param[in] editable editable
- * @param[in] text_max text max
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_table_set_cell_editable(void *backend_widget,
-                                           int row,
-                                           int column,
-                                           int editable,
-                                           unsigned int text_max);
 
 /**
  * @brief Set item image of table backend
@@ -1311,122 +1269,6 @@ int picoui_backend_table_set_cell_editable(void *backend_widget,
  * @return 0 on success, -1 on failure
  */
 
-int picoui_backend_table_set_item_image(void *backend_widget,
-                                        int row,
-                                        int column,
-                                        int x,
-                                        int y,
-                                        struct picoui_image_source *source,
-                                        unsigned int mask_color);
-
-/**
- * @brief Set item button of table backend
- *
- * @param[in] backend_widget backend widget
- * @param[in] row Row index
- * @param[in] column Column index
- * @param[in] x X coordinate
- * @param[in] y Y coordinate
- * @param[in] release_source release source
- * @param[in] release_mask_color release mask color
- * @param[in] press_source press source
- * @param[in] press_mask_color press mask color
- * @param[in] checkable checkable
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_table_set_item_button(void *backend_widget,
-                                         int row,
-                                         int column,
-                                         int x,
-                                         int y,
-                                         struct picoui_image_source *release_source,
-                                         unsigned int release_mask_color,
-                                         struct picoui_image_source *press_source,
-                                         unsigned int press_mask_color,
-                                         int checkable);
-
-/**
- * @brief Set excel type of table backend
- *
- * @param[in] backend_widget backend widget
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_table_set_excel_type(void *backend_widget);
-
-/**
- * @brief Set item width of table backend
- *
- * @param[in] backend_widget backend widget
- * @param[in] column Column index
- * @param[in] width Width in pixels
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_table_set_item_width(void *backend_widget, int column, int width);
-
-/**
- * @brief Set item height of table backend
- *
- * @param[in] backend_widget backend widget
- * @param[in] row Row index
- * @param[in] height Height in pixels
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_table_set_item_height(void *backend_widget, int row, int height);
-
-/**
- * @brief Set item color of table backend
- *
- * @param[in] backend_widget backend widget
- * @param[in] row Row index
- * @param[in] column Column index
- * @param[in] text_color Text color
- * @param[in] bg_color Background color
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_table_set_item_color(void *backend_widget,
-                                        int row,
-                                        int column,
-                                        unsigned int text_color,
-                                        unsigned int bg_color);
-
-/**
- * @brief Set bg color of table backend
- *
- * @param[in] backend_widget backend widget
- * @param[in] bg_color Background color
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_table_set_bg_color(void *backend_widget, unsigned int bg_color);
-
-/**
- * @brief Set item static text of table backend
- *
- * @param[in] backend_widget backend widget
- * @param[in] row Row index
- * @param[in] column Column index
- * @param[in] text Text widget instance
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_table_set_item_static_text(void *backend_widget, int row, int column, const char *text);
-
-/**
- * @brief Set item font of table backend
- *
- * @param[in] backend_widget backend widget
- * @param[in] row Row index
- * @param[in] column Column index
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_table_set_item_font(void *backend_widget, int row, int column);
-
 /**
  * @brief Set item align of table backend
  *
@@ -1436,33 +1278,6 @@ int picoui_backend_table_set_item_font(void *backend_widget, int row, int column
  * @param[in] align align
  * @return 0 on success, -1 on failure
  */
-
-int picoui_backend_table_set_item_align(void *backend_widget,
-                                        int row,
-                                        int column,
-                                        enum picoui_align align);
-
-/**
- * @brief Get item align from table backend
- *
- * @param[in] backend_widget backend widget
- * @param[in] row Row index
- * @param[in] column Column index
- * @return The property value, negative on error
- */
-
-int picoui_backend_table_get_item_align(void *backend_widget, int row, int column);
-
-/**
- * @brief Get item editable from table backend
- *
- * @param[in] backend_widget backend widget
- * @param[in] row Row index
- * @param[in] column Column index
- * @return The property value, negative on error
- */
-
-int picoui_backend_table_get_item_editable(void *backend_widget, int row, int column);
 
 /**
  * @brief table: navigate
@@ -1481,30 +1296,6 @@ int picoui_backend_table_get_item_editable(void *backend_widget, int row, int co
  * @param[in] region_out region out
  * @return The property value, negative on error
  */
-
-int picoui_backend_table_get_item_region(void *backend_widget, int row, int column, void *region_out);
-
-/**
- * @brief Set selected cell of table backend
- *
- * @param[in] backend_widget backend widget
- * @param[in] row Row index
- * @param[in] column Column index
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_table_set_selected_cell(void *backend_widget, int row, int column);
-
-/**
- * @brief Set current cell of table backend
- *
- * @param[in] backend_widget backend widget
- * @param[in] row Row index
- * @param[in] column Column index
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_table_set_current_cell(void *backend_widget, int row, int column);
 
 /**
  * @brief table: sync current cell
@@ -1750,16 +1541,6 @@ int picoui_backend_list_set_item_widget(void *backend_widget,
  */
 
 /**
- * @brief Set padding of widget backend
- *
- * @param[in] backend_widget backend widget
- * @param[in] padding padding
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_widget_set_padding(void *backend_widget, int padding);
-
-/**
  * @brief set: image source
  *
  * @param[in] backend_widget backend widget
@@ -1780,192 +1561,12 @@ int picoui_backend_set_image_source(void *backend_widget, struct picoui_image_so
 int picoui_backend_image_set_mask_color(void *backend_widget, unsigned int rgb);
 
 /**
- * @brief Set flex flow of window backend
- *
- * @param[in] window Window instance
- * @param[in] flow flow
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_window_set_flex_flow(struct picoui_window *window, enum picoui_flex_flow flow);
-
-/**
- * @brief Set flex align of window backend
- *
- * @param[in] window Window instance
- * @param[in] main_align main align
- * @param[in] cross_align cross align
- * @param[in] track_align track align
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_window_set_flex_align(struct picoui_window *window,
-                                         enum picoui_align main_align,
-                                         enum picoui_align cross_align,
-                                         enum picoui_align track_align);
-
-/**
- * @brief Set flex gap of window backend
- *
- * @param[in] window Window instance
- * @param[in] item_gap item gap
- * @param[in] track_gap track gap
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_window_set_flex_gap(struct picoui_window *window, int item_gap, int track_gap);
-
-/**
- * @brief Set grid columns of window backend
- *
- * @param[in] window Window instance
- * @param[in] tracks tracks
- * @param[in] count Count
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_window_set_grid_columns(struct picoui_window *window, const int *tracks, int count);
-
-/**
- * @brief Set grid rows of window backend
- *
- * @param[in] window Window instance
- * @param[in] tracks tracks
- * @param[in] count Count
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_window_set_grid_rows(struct picoui_window *window, const int *tracks, int count);
-
-/**
- * @brief Set grid gap of window backend
- *
- * @param[in] window Window instance
- * @param[in] row_gap row gap
- * @param[in] col_gap col gap
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_window_set_grid_gap(struct picoui_window *window, int row_gap, int col_gap);
-
-/**
- * @brief Set grid align of window backend
- *
- * @param[in] window Window instance
- * @param[in] col_align col align
- * @param[in] row_align row align
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_window_set_grid_align(struct picoui_window *window,
-                                         enum picoui_align col_align,
-                                         enum picoui_align row_align);
-
-/**
- * @brief Set layout type of window backend
- *
- * @param[in] window Window instance
- * @param[in] type Type
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_window_set_layout_type(struct picoui_window *window,
-                                          enum picoui_window_layout_type type);
-
-/**
- * @brief Set padding of window backend
- *
- * @param[in] window Window instance
- * @param[in] left Left padding
- * @param[in] top Top padding
- * @param[in] right Right padding
- * @param[in] bottom Bottom padding
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_window_set_padding(struct picoui_window *window,
-                                      int left,
-                                      int top,
-                                      int right,
-                                      int bottom);
-
-/**
- * @brief Set grid padding of window backend
- *
- * @param[in] window Window instance
- * @param[in] left Left padding
- * @param[in] top Top padding
- * @param[in] right Right padding
- * @param[in] bottom Bottom padding
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_window_set_grid_padding(struct picoui_window *window,
-                                           int left,
-                                           int top,
-                                           int right,
-                                           int bottom);
-
-/**
- * @brief Set gap of window backend
- *
- * @param[in] window Window instance
- * @param[in] gap Gap in pixels
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_window_set_gap(struct picoui_window *window, int gap);
-
-/**
  * @brief Set flex grow of widget backend
  *
  * @param[in] widget Widget instance
  * @param[in] grow grow
  * @return 0 on success, -1 on failure
  */
-
-int picoui_backend_widget_set_flex_grow(struct picoui_widget *widget, int grow);
-
-/**
- * @brief Set flex new track of widget backend
- *
- * @param[in] widget Widget instance
- * @param[in] new_track new track
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_widget_set_flex_new_track(struct picoui_widget *widget, int new_track);
-
-/**
- * @brief Set ignore layout of widget backend
- *
- * @param[in] widget Widget instance
- * @param[in] ignore_layout ignore layout
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_widget_set_ignore_layout(struct picoui_widget *widget, int ignore_layout);
-
-/**
- * @brief Set grid cell of widget backend
- *
- * @param[in] widget Widget instance
- * @param[in] col col
- * @param[in] row Row index
- * @param[in] col_span Column span count
- * @param[in] row_span Row span count
- * @param[in] x_align x align
- * @param[in] y_align y align
- * @return 0 on success, -1 on failure
- */
-
-int picoui_backend_widget_set_grid_cell(struct picoui_widget *widget,
-                                        int col,
-                                        int row,
-                                        int col_span,
-                                        int row_span,
-                                        enum picoui_align x_align,
-                                        enum picoui_align y_align);
 
 /**
  * @brief emit: value changed
@@ -1976,10 +1577,10 @@ int picoui_backend_widget_set_grid_cell(struct picoui_widget *widget,
  * @param[in] user_data User data pointer
  */
 
-void picoui_backend_emit_value_changed(picoui_value_changed_cb cb,
-                                       struct picoui_widget *widget,
-                                       int value,
-                                       void *user_data);
+void tinyui_widget_emit_value_changed(picoui_value_changed_cb cb,
+                                      struct picoui_widget *widget,
+                                      int value,
+                                      void *user_data);
 
 /**
  * @brief emit: event
@@ -1989,9 +1590,9 @@ void picoui_backend_emit_value_changed(picoui_value_changed_cb cb,
  * @param[in] user_data User data pointer
  */
 
-void picoui_backend_emit_event(picoui_event_cb cb,
-                               struct picoui_widget *widget,
-                               void *user_data);
+void tinyui_widget_emit_event(picoui_event_cb cb,
+                              struct picoui_widget *widget,
+                              void *user_data);
 
 /**
  * @brief widget: dispatch native signal
@@ -2002,9 +1603,6 @@ void picoui_backend_emit_event(picoui_event_cb cb,
  * @return 0 on success, -1 on failure
  */
 
-int picoui_backend_widget_dispatch_native_signal(void *backend_widget,
-                                                 uint32_t native_signal,
-                                                 uint64_t native_value);
 
 /**
  * @brief emit: clicked
@@ -2014,9 +1612,9 @@ int picoui_backend_widget_dispatch_native_signal(void *backend_widget,
  * @param[in] user_data User data pointer
  */
 
-void picoui_backend_emit_clicked(picoui_event_cb cb,
-                                 struct picoui_widget *widget,
-                                 void *user_data);
+void tinyui_widget_emit_clicked(picoui_event_cb cb,
+                                struct picoui_widget *widget,
+                                void *user_data);
 
 /**
  * @brief widget: claim focus

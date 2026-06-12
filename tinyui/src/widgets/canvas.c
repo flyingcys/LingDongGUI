@@ -148,7 +148,7 @@ struct picoui_canvas *picoui_canvas_create(struct picoui_window *parent, const c
 
     parent_backend = (struct picoui_backend_widget *)parent->widget.backend_widget;
     app_state = parent_backend != 0
-        ? picoui_runtime_bridge_backend_state_from_parent(parent_backend)
+        ? tinyui_runtime_bridge_backend_state_from_parent(parent_backend)
         : 0;
     if (parent_backend == 0 || parent_backend->ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
         return 0;
@@ -165,7 +165,7 @@ struct picoui_canvas *picoui_canvas_create(struct picoui_window *parent, const c
         return 0;
     }
 
-    name_id = picoui_runtime_bridge_next_name_id(parent_backend);
+    name_id = tinyui_runtime_bridge_next_name_id(parent_backend);
     if (name_id == 0) {
         free(backend);
         free(canvas);
@@ -179,7 +179,7 @@ struct picoui_canvas *picoui_canvas_create(struct picoui_window *parent, const c
         return 0;
     }
 
-    if (picoui_backend_widget_init_child(backend,
+    if (tinyui_widget_init_child(backend,
                                          parent_backend,
                                          PICOUI_BACKEND_WIDGET_CANVAS,
                                          id,
@@ -191,7 +191,7 @@ struct picoui_canvas *picoui_canvas_create(struct picoui_window *parent, const c
     }
     backend->ld_widget = ld_canvas;
     backend->ld_name_id = name_id;
-    if (picoui_backend_widget_attach_child(parent_backend, backend) != 0) {
+    if (tinyui_widget_attach_child(parent_backend, backend) != 0) {
         ldCanvas_depose(app_state->ld_scene, ld_canvas);
         free(backend);
         free(canvas);
@@ -202,8 +202,8 @@ struct picoui_canvas *picoui_canvas_create(struct picoui_window *parent, const c
     canvas->id = id;
     canvas->widget.visible = 1;
     canvas->widget.enabled = 1;
-    if (picoui_backend_widget_bind_host(canvas->widget.backend_widget, &canvas->widget) != 0) {
-        (void)picoui_backend_widget_detach_from_parent(canvas->widget.backend_widget);
+    if (tinyui_runtime_bridge_bind_host(canvas->widget.backend_widget, &canvas->widget) != 0) {
+        (void)tinyui_runtime_bridge_detach_from_parent(canvas->widget.backend_widget);
         ldCanvas_depose(app_state->ld_scene, ld_canvas);
         free(backend);
         free(canvas);

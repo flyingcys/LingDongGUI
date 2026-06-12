@@ -68,7 +68,7 @@ static int picoui_animation_attach_native(struct picoui_animation *animation,
     }
 
     parent_backend = (struct picoui_backend_widget *)parent->backend_widget;
-    app_state = picoui_runtime_bridge_backend_state_from_parent(parent_backend);
+    app_state = tinyui_runtime_bridge_backend_state_from_parent(parent_backend);
     if (parent_backend->ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
         return -1;
     }
@@ -78,7 +78,7 @@ static int picoui_animation_attach_native(struct picoui_animation *animation,
         return -1;
     }
 
-    name_id = picoui_runtime_bridge_next_name_id(parent_backend);
+    name_id = tinyui_runtime_bridge_next_name_id(parent_backend);
     if (name_id == 0) {
         free(backend);
         return -1;
@@ -99,7 +99,7 @@ static int picoui_animation_attach_native(struct picoui_animation *animation,
         return -1;
     }
 
-    if (picoui_backend_widget_init_child(backend,
+    if (tinyui_widget_init_child(backend,
                                          parent_backend,
                                          PICOUI_BACKEND_WIDGET_ANIMATION,
                                          animation->id,
@@ -110,15 +110,15 @@ static int picoui_animation_attach_native(struct picoui_animation *animation,
     }
     backend->ld_widget = ld_animation;
     backend->ld_name_id = name_id;
-    if (picoui_backend_widget_attach_child(parent_backend, backend) != 0) {
+    if (tinyui_widget_attach_child(parent_backend, backend) != 0) {
         ldAnimation_depose(app_state->ld_scene, ld_animation);
         free(backend);
         return -1;
     }
 
     animation->widget.backend_widget = backend;
-    if (picoui_backend_widget_bind_host(animation->widget.backend_widget, &animation->widget) != 0) {
-        (void)picoui_backend_widget_detach_from_parent(animation->widget.backend_widget);
+    if (tinyui_runtime_bridge_bind_host(animation->widget.backend_widget, &animation->widget) != 0) {
+        (void)tinyui_runtime_bridge_detach_from_parent(animation->widget.backend_widget);
         ldAnimation_depose(app_state->ld_scene, ld_animation);
         free(backend);
         animation->widget.backend_widget = 0;

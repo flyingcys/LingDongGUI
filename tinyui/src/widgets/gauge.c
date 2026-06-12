@@ -24,8 +24,8 @@
 #include "../../../src/gui/ldGauge.h"
 
 #include <stdlib.h>
-int picoui_backend_widget_unbind_host(void *backend_widget);
-int picoui_backend_widget_detach_from_parent(void *backend_widget);
+int tinyui_runtime_bridge_unbind_host(void *backend_widget);
+int tinyui_runtime_bridge_detach_from_parent(void *backend_widget);
 
 extern const arm_2d_tile_t c_tileQuaterArcGRAY8;
 extern const arm_2d_tile_t c_tileQuaterArcMask;
@@ -142,19 +142,19 @@ static void picoui_gauge_dispose_partial_impl(struct picoui_gauge *gauge)
 
     backend = (struct picoui_backend_widget *)gauge->widget.backend_widget;
     if (backend != 0) {
-        app_state = picoui_runtime_bridge_backend_state(backend->owner);
+        app_state = tinyui_runtime_bridge_backend_state(backend->owner);
         ld_base = (ldBase_t *)backend->ld_widget;
         memset(&picoui_gauge_last_dispose_snapshot, 0, sizeof(picoui_gauge_last_dispose_snapshot));
         picoui_gauge_last_dispose_snapshot.kind = backend->kind;
         if (backend->parent != 0) {
-            detach_result = picoui_backend_widget_detach_from_parent(backend);
+            detach_result = tinyui_runtime_bridge_detach_from_parent(backend);
             if (detach_result != 0) {
                 detach_result = picoui_gauge_finish_detach_after_backend_failure(backend);
             }
         } else {
             picoui_gauge_last_dispose_snapshot.detached = 1;
         }
-        unbind_result = picoui_backend_widget_unbind_host(backend);
+        unbind_result = tinyui_runtime_bridge_unbind_host(backend);
         picoui_gauge_last_dispose_snapshot.detach_result = detach_result;
         picoui_gauge_last_dispose_snapshot.unbind_result = unbind_result;
         picoui_gauge_last_dispose_snapshot.cleanup_complete =
@@ -248,7 +248,7 @@ struct picoui_gauge *picoui_gauge_create(struct picoui_widget *parent, const cha
     }
 
     parent_backend = (struct picoui_backend_widget *)parent->backend_widget;
-    app_state = picoui_runtime_bridge_backend_state_from_parent(parent_backend);
+    app_state = tinyui_runtime_bridge_backend_state_from_parent(parent_backend);
     if (parent_backend->ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
         return 0;
     }
@@ -302,7 +302,7 @@ struct picoui_gauge *picoui_gauge_create(struct picoui_widget *parent, const cha
     }
     *pointer_mask_tile = c_tilePointerSecMask;
 
-    name_id = picoui_runtime_bridge_next_name_id(parent_backend);
+    name_id = tinyui_runtime_bridge_next_name_id(parent_backend);
     if (name_id == 0) {
         free(pointer_mask_tile);
         free(pointer_img_tile);
@@ -344,7 +344,7 @@ struct picoui_gauge *picoui_gauge_create(struct picoui_widget *parent, const cha
                             true,
                             true);
 
-    if (picoui_backend_widget_init_child(backend,
+    if (tinyui_widget_init_child(backend,
                                          parent_backend,
                                          PICOUI_BACKEND_WIDGET_GAUGE,
                                          id,
@@ -358,7 +358,7 @@ struct picoui_gauge *picoui_gauge_create(struct picoui_widget *parent, const cha
     backend->ld_name_id = name_id;
     backend->value = 0;
     backend->last_signal = PICOUI_BACKEND_SIGNAL_NONE;
-    if (picoui_backend_widget_attach_child(parent_backend, backend) != 0) {
+    if (tinyui_widget_attach_child(parent_backend, backend) != 0) {
         ldGauge_depose(app_state->ld_scene, ld_gauge);
         free(backend);
         free(gauge);
@@ -369,7 +369,7 @@ struct picoui_gauge *picoui_gauge_create(struct picoui_widget *parent, const cha
     gauge->widget.backend_widget = backend;
     gauge->widget.visible = 1;
     gauge->widget.enabled = 1;
-    if (picoui_backend_widget_bind_host(gauge->widget.backend_widget, &gauge->widget) != 0
+    if (tinyui_runtime_bridge_bind_host(gauge->widget.backend_widget, &gauge->widget) != 0
         || picoui_gauge_set_angle(gauge, 0.0f) != 0
         || picoui_gauge_set_pointer_color(gauge, 0x000000U) != 0
         || picoui_gauge_set_auto_move(gauge, 0) != 0) {

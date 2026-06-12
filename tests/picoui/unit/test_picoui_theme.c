@@ -13,6 +13,47 @@
 
 #include <assert.h>
 #include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+static void assert_source_lacks_static_definition(const char *path, const char *symbol_name)
+{
+    char command[1024];
+
+    snprintf(command,
+             sizeof(command),
+             "rg -n \"^[[:space:]]*static[[:space:]].*%s[[:space:]]*(\\(|=)\" %s >/dev/null",
+             symbol_name,
+             path);
+    if (system(command) == 0) {
+        fprintf(stderr, "unexpected old static helper still present: %s in %s\n", symbol_name, path);
+        abort();
+    }
+}
+
+static void test_theme_internal_static_helpers_no_longer_use_picoui_prefix(void)
+{
+    const char *source = "/Users/cys/embedded/LingDongGUI/tinyui/src/theme/theme.c";
+
+    assert_source_lacks_static_definition(source, "picoui_theme_rgb_to_ld_color");
+    assert_source_lacks_static_definition(source, "picoui_theme_state_is_valid");
+    assert_source_lacks_static_definition(source, "picoui_theme_part_is_valid");
+    assert_source_lacks_static_definition(source, "picoui_theme_part_supported");
+    assert_source_lacks_static_definition(source, "picoui_theme_map_widget_colors");
+    assert_source_lacks_static_definition(source, "picoui_theme_apply_widget_metrics");
+    assert_source_lacks_static_definition(source, "picoui_theme_backend_can_apply_style");
+    assert_source_lacks_static_definition(source, "picoui_theme_apply_window_style");
+    assert_source_lacks_static_definition(source, "picoui_theme_apply_label_style");
+    assert_source_lacks_static_definition(source, "picoui_theme_apply_text_style");
+    assert_source_lacks_static_definition(source, "picoui_theme_apply_button_style");
+    assert_source_lacks_static_definition(source, "picoui_theme_apply_checkbox_style");
+    assert_source_lacks_static_definition(source, "picoui_theme_apply_switch_style");
+    assert_source_lacks_static_definition(source, "picoui_theme_apply_slider_style");
+    assert_source_lacks_static_definition(source, "picoui_theme_apply_list_style");
+    assert_source_lacks_static_definition(source, "picoui_theme_apply_image_style");
+    assert_source_lacks_static_definition(source, "picoui_theme_apply_calendar_style");
+    assert_source_lacks_static_definition(source, "picoui_theme_apply_native_widget_style");
+}
 
 static void assert_widget_style(const struct picoui_widget *widget,
                                 unsigned int bg,
@@ -484,7 +525,7 @@ static void test_theme_shared_style_apply_helpers_reject_null_and_unsupported_ba
 {
     struct picoui_backend_widget backend = {0};
 
-    assert(picoui_theme_apply_widget_style(0,
+    assert(tinyui_theme_apply_widget_style(0,
                                            PICOUI_PART_MAIN,
                                            PICOUI_STATE_DEFAULT,
                                            0x111111U,
@@ -493,13 +534,20 @@ static void test_theme_shared_style_apply_helpers_reject_null_and_unsupported_ba
            == -1);
 
     backend.kind = PICOUI_BACKEND_WIDGET_QRCODE;
-    assert(picoui_theme_apply_widget_style(&backend,
+    assert(tinyui_theme_apply_widget_style(&backend,
                                            PICOUI_PART_MAIN,
                                            PICOUI_STATE_DEFAULT,
                                            0x111111U,
                                            0x222222U,
                                            0x333333U)
            == -1);
+}
+
+static void test_theme_internal_style_apply_helper_no_longer_uses_picoui_prefix(void)
+{
+    const char *source = "/Users/cys/embedded/LingDongGUI/tinyui/src/theme/theme.c";
+
+    assert_source_lacks_static_definition(source, "picoui_theme_apply_widget_style");
 }
 
 int main(void)
@@ -521,6 +569,8 @@ int main(void)
     int failed_height;
     unsigned int failed_backend_bg;
     unsigned int failed_backend_text;
+
+    test_theme_internal_static_helpers_no_longer_use_picoui_prefix();
 
     assert(theme != NULL);
     assert(picoui_theme_set_color(theme, PICOUI_COLOR_TEXT_PRIMARY, 0x111111U) == 0);
@@ -740,6 +790,7 @@ int main(void)
     test_theme_native_parts_apply_to_real_backend_fields();
     test_app_set_theme_does_not_dirty_public_state_when_runtime_bind_fails();
     test_theme_shared_style_apply_helpers_reject_null_and_unsupported_backend();
+    test_theme_internal_style_apply_helper_no_longer_uses_picoui_prefix();
 
     picoui_app_destroy(app);
     picoui_theme_destroy(theme);

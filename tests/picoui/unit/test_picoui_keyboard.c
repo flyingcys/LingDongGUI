@@ -667,13 +667,13 @@ static void test_keyboard_native_press_and_release_emit_picoui_callback(void)
     assert(ld_keyboard != 0);
     ld_keyboard->keyCode = 'Z';
 
-    assert(picoui_backend_widget_dispatch_native_signal(backend, SIGNAL_PRESS, 0) == 0);
+    assert(picoui_widget_dispatch_native_signal(backend, SIGNAL_PRESS, 0) == 0);
     assert(keyboard_event_count == 1);
     assert(keyboard_event_last_signal == PICOUI_NATIVE_SIGNAL_PRESS);
     assert(keyboard_event_last_key_code == 'Z');
     assert(picoui_keyboard_get_selected_key_code(keyboard) == 'Z');
 
-    assert(picoui_backend_widget_dispatch_native_signal(backend, SIGNAL_RELEASE, 0) == 0);
+    assert(picoui_widget_dispatch_native_signal(backend, SIGNAL_RELEASE, 0) == 0);
     assert(keyboard_event_count == 2);
     assert(keyboard_event_last_signal == PICOUI_NATIVE_SIGNAL_RELEASE);
     assert(keyboard_event_last_key_code == 'Z');

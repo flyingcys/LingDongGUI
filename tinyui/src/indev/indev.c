@@ -1,9 +1,9 @@
 #include "internal.h"
-#include "picoui/indev.h"
+#include "indev.h"
 
 #include <stddef.h>
 
-static int picoui_input_key_is_valid(enum picoui_input_key key)
+static int tinyui_input_key_is_valid(enum picoui_input_key key)
 {
     return key >= PICOUI_INPUT_KEY_NONE && key <= PICOUI_INPUT_KEY_BACK;
 }
@@ -34,7 +34,7 @@ int picoui_input_get_pointer(const struct picoui_app *app, int *x, int *y, int *
 
 int picoui_input_push_key(struct picoui_app *app, enum picoui_input_key key, int pressed)
 {
-    if (app == NULL || !picoui_input_key_is_valid(key)) {
+    if (app == NULL || !tinyui_input_key_is_valid(key)) {
         return -1;
     }
 

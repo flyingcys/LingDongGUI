@@ -3,6 +3,32 @@
 #include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+static void assert_source_lacks_static_definition(const char *path, const char *symbol_name)
+{
+    char command[1024];
+
+    snprintf(command,
+             sizeof(command),
+             "rg -n \"^[[:space:]]*static[[:space:]].*%s[[:space:]]*(=|\\()\" %s >/dev/null",
+             symbol_name,
+             path);
+    if (system(command) == 0) {
+        fprintf(stderr, "unexpected old static helper still present: %s in %s\n", symbol_name, path);
+        abort();
+    }
+}
+
+static void test_display_internal_helpers_no_longer_use_picoui_prefix(void)
+{
+    const char *source = "/Users/cys/embedded/LingDongGUI/tinyui/src/display/display.c";
+
+    assert_source_lacks_static_definition(source, "g_picoui_default_display_config");
+    assert_source_lacks_static_definition(source, "picoui_display_config_is_valid");
+    assert_source_lacks_static_definition(source, "picoui_display_resolve_config");
+}
 
 static void test_default_display_config(void)
 {
@@ -70,6 +96,7 @@ static void test_display_rejects_invalid_config(void)
 
 int main(void)
 {
+    test_display_internal_helpers_no_longer_use_picoui_prefix();
     test_default_display_config();
     test_display_config_round_trip();
     test_display_rejects_invalid_config();

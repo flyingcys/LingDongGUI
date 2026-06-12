@@ -26,8 +26,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-int picoui_backend_widget_unbind_host(void *backend_widget);
-int picoui_backend_widget_detach_from_parent(void *backend_widget);
+int tinyui_runtime_bridge_unbind_host(void *backend_widget);
+int tinyui_runtime_bridge_detach_from_parent(void *backend_widget);
 
 static int picoui_backend_progress_wheel_fail_next_set_percent = 0;
 
@@ -229,16 +229,16 @@ static void picoui_progress_wheel_dispose_partial_impl(struct picoui_progress_wh
 
     backend = (struct picoui_backend_widget *)wheel->widget.backend_widget;
     if (backend != 0) {
-        app_state = picoui_runtime_bridge_backend_state(backend->owner);
+        app_state = tinyui_runtime_bridge_backend_state(backend->owner);
         ld_base = (ldBase_t *)backend->ld_widget;
         if (backend->parent != 0) {
-            detach_result = picoui_backend_widget_detach_from_parent(backend);
+            detach_result = tinyui_runtime_bridge_detach_from_parent(backend);
             if (detach_result != 0) {
                 detach_result =
                     picoui_progress_wheel_test_finish_detach_after_backend_failure(backend);
             }
         }
-        unbind_result = picoui_backend_widget_unbind_host(backend);
+        unbind_result = tinyui_runtime_bridge_unbind_host(backend);
         (void)ld_base;
         picoui_backend_progress_wheel_test_capture_dispose_snapshot(backend,
                                                                     detach_result,
@@ -279,7 +279,7 @@ struct picoui_progress_wheel *picoui_progress_wheel_create(struct picoui_widget 
     }
 
     parent_backend = (struct picoui_backend_widget *)parent->backend_widget;
-    app_state = picoui_runtime_bridge_backend_state_from_parent(parent_backend);
+    app_state = tinyui_runtime_bridge_backend_state_from_parent(parent_backend);
     if (parent_backend == 0
         || parent_backend->ld_widget == 0
         || app_state == 0
@@ -298,7 +298,7 @@ struct picoui_progress_wheel *picoui_progress_wheel_create(struct picoui_widget 
         return 0;
     }
 
-    name_id = picoui_runtime_bridge_next_name_id(parent_backend);
+    name_id = tinyui_runtime_bridge_next_name_id(parent_backend);
     if (name_id == 0) {
         free(backend);
         free(wheel);
@@ -322,7 +322,7 @@ struct picoui_progress_wheel *picoui_progress_wheel_create(struct picoui_widget 
     ldProgressWheelSetWheelColor(ld_progress_wheel, __RGB(32, 87, 196));
     ldProgressWheelSetDotColor(ld_progress_wheel, GLCD_COLOR_WHITE, true);
 
-    if (picoui_backend_widget_init_child(backend,
+    if (tinyui_widget_init_child(backend,
                                          parent_backend,
                                          PICOUI_BACKEND_WIDGET_PROGRESS_WHEEL,
                                          id,
@@ -336,7 +336,7 @@ struct picoui_progress_wheel *picoui_progress_wheel_create(struct picoui_widget 
     backend->ld_name_id = name_id;
     backend->value = 0;
     backend->last_signal = PICOUI_BACKEND_SIGNAL_NONE;
-    if (picoui_backend_widget_attach_child(parent_backend, backend) != 0) {
+    if (tinyui_widget_attach_child(parent_backend, backend) != 0) {
         ldProgressWheel_depose(app_state->ld_scene, ld_progress_wheel);
         free(backend);
         free(wheel);
@@ -352,7 +352,7 @@ struct picoui_progress_wheel *picoui_progress_wheel_create(struct picoui_widget 
     wheel->widget.visible = 1;
     wheel->widget.enabled = 1;
     picoui_progress_wheel_disable_dirty_regions(backend);
-    if (picoui_backend_widget_bind_host(wheel->widget.backend_widget, &wheel->widget) != 0) {
+    if (tinyui_runtime_bridge_bind_host(wheel->widget.backend_widget, &wheel->widget) != 0) {
         picoui_progress_wheel_dispose_partial_impl(wheel);
         return 0;
     }

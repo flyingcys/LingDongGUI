@@ -322,7 +322,7 @@ static struct picoui_icon_slider *picoui_icon_slider_create_with_backend_config(
     }
 
     parent_backend = (struct picoui_backend_widget *)parent->backend_widget;
-    app_state = picoui_runtime_bridge_backend_state_from_parent(parent_backend);
+    app_state = tinyui_runtime_bridge_backend_state_from_parent(parent_backend);
     if (parent_backend->ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
         return 0;
     }
@@ -338,7 +338,7 @@ static struct picoui_icon_slider *picoui_icon_slider_create_with_backend_config(
         return 0;
     }
 
-    name_id = picoui_runtime_bridge_next_name_id(parent_backend);
+    name_id = tinyui_runtime_bridge_next_name_id(parent_backend);
     if (name_id == 0) {
         free(backend);
         free(icon_slider);
@@ -365,7 +365,7 @@ static struct picoui_icon_slider *picoui_icon_slider_create_with_backend_config(
         return 0;
     }
 
-    if (picoui_backend_widget_init_child(backend,
+    if (tinyui_widget_init_child(backend,
                                          parent_backend,
                                          PICOUI_BACKEND_WIDGET_ICON_SLIDER,
                                          id,
@@ -379,7 +379,7 @@ static struct picoui_icon_slider *picoui_icon_slider_create_with_backend_config(
     backend->ld_name_id = name_id;
     backend->value = -1;
     backend->last_signal = PICOUI_BACKEND_SIGNAL_NONE;
-    if (picoui_backend_widget_attach_child(parent_backend, backend) != 0) {
+    if (tinyui_widget_attach_child(parent_backend, backend) != 0) {
         ldIconSlider_depose(app_state->ld_scene, ld_icon_slider);
         free(backend);
         free(icon_slider);
@@ -397,9 +397,9 @@ static struct picoui_icon_slider *picoui_icon_slider_create_with_backend_config(
     icon_slider->pages = pages;
     icon_slider->widget.visible = 1;
     icon_slider->widget.enabled = 1;
-    if (picoui_backend_widget_bind_host(icon_slider->widget.backend_widget, &icon_slider->widget) != 0 ||
+    if (tinyui_runtime_bridge_bind_host(icon_slider->widget.backend_widget, &icon_slider->widget) != 0 ||
         picoui_icon_slider_bind_host(icon_slider->widget.backend_widget) != 0) {
-        (void)picoui_backend_widget_detach_from_parent(icon_slider->widget.backend_widget);
+        (void)tinyui_runtime_bridge_detach_from_parent(icon_slider->widget.backend_widget);
         ldIconSlider_depose(app_state->ld_scene, ld_icon_slider);
         free(backend);
         free(icon_slider);

@@ -17,9 +17,9 @@
  */
 
 #include "internal.h"
-#include "picoui/layout.h"
+#include "layout.h"
 
-static struct picoui_backend_widget *picoui_window_get_backend(struct picoui_window *window)
+static struct picoui_backend_widget *tinyui_window_get_backend(struct picoui_window *window)
 {
     if (window == 0 || window->widget.backend_widget == 0) {
         return 0;
@@ -28,9 +28,9 @@ static struct picoui_backend_widget *picoui_window_get_backend(struct picoui_win
     return (struct picoui_backend_widget *)window->widget.backend_widget;
 }
 
-static int picoui_window_is_valid(struct picoui_window *window)
+static int tinyui_window_is_valid(struct picoui_window *window)
 {
-    return picoui_window_get_backend(window) != 0;
+    return tinyui_window_get_backend(window) != 0;
 }
 
 /**
@@ -43,11 +43,11 @@ static int picoui_window_is_valid(struct picoui_window *window)
 
 int picoui_flex_set_flow(struct picoui_window *window, enum picoui_flex_flow flow)
 {
-    if (!picoui_window_is_valid(window)) {
+    if (!tinyui_window_is_valid(window)) {
         return -1;
     }
 
-    return picoui_window_apply_flex_flow(window, flow);
+    return tinyui_window_apply_flex_flow(window, flow);
 }
 
 /**
@@ -65,11 +65,11 @@ int picoui_flex_set_align(struct picoui_window *window,
                           enum picoui_align cross_align,
                           enum picoui_align track_align)
 {
-    if (!picoui_window_is_valid(window)) {
+    if (!tinyui_window_is_valid(window)) {
         return -1;
     }
 
-    return picoui_window_apply_flex_align(window, main_align, cross_align, track_align);
+    return tinyui_window_apply_flex_align(window, main_align, cross_align, track_align);
 }
 
 /**
@@ -83,9 +83,9 @@ int picoui_flex_set_align(struct picoui_window *window,
 
 int picoui_flex_set_gap(struct picoui_window *window, int item_gap, int track_gap)
 {
-    if (!picoui_window_is_valid(window) || item_gap < 0 || track_gap < 0) {
+    if (!tinyui_window_is_valid(window) || item_gap < 0 || track_gap < 0) {
         return -1;
     }
 
-    return picoui_window_apply_flex_gap(window, item_gap, track_gap);
+    return tinyui_window_apply_flex_gap(window, item_gap, track_gap);
 }

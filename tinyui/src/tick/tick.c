@@ -1,5 +1,5 @@
 #include "internal.h"
-#include "picoui/tick.h"
+#include "tick.h"
 
 #include <stddef.h>
 

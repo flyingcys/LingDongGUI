@@ -27,8 +27,8 @@
 
 extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
 
-int picoui_backend_widget_unbind_host(void *backend_widget);
-int picoui_backend_widget_detach_from_parent(void *backend_widget);
+int tinyui_runtime_bridge_unbind_host(void *backend_widget);
+int tinyui_runtime_bridge_detach_from_parent(void *backend_widget);
 
 static uint8_t g_picoui_calendar_day_name_0[] = "Su";
 static uint8_t g_picoui_calendar_day_name_1[] = "Mo";
@@ -108,7 +108,7 @@ static void *picoui_calendar_create_backend_local(void *parent, const char *id)
         return 0;
     }
 
-    app_state = picoui_runtime_bridge_backend_state_from_parent(parent);
+    app_state = tinyui_runtime_bridge_backend_state_from_parent(parent);
     if (app_state == NULL || app_state->ld_scene == NULL || parent_widget->ld_widget == NULL) {
         return 0;
     }
@@ -118,7 +118,7 @@ static void *picoui_calendar_create_backend_local(void *parent, const char *id)
         return 0;
     }
 
-    name_id = picoui_runtime_bridge_next_name_id(parent);
+    name_id = tinyui_runtime_bridge_next_name_id(parent);
     if (name_id == 0) {
         free(widget);
         return 0;
@@ -143,7 +143,7 @@ static void *picoui_calendar_create_backend_local(void *parent, const char *id)
     ldCalendarSetDayNames(ld_calendar, g_picoui_calendar_day_names);
     ldCalendarSetHeader(ld_calendar, true);
     ldCalendarSetHeaderFormat(ld_calendar, (uint8_t *)"yyyy-mm-dd");
-    if (picoui_backend_widget_init_child(widget,
+    if (tinyui_widget_init_child(widget,
                                          parent,
                                          PICOUI_BACKEND_WIDGET_CALENDAR,
                                          id,
@@ -154,7 +154,7 @@ static void *picoui_calendar_create_backend_local(void *parent, const char *id)
     }
     widget->ld_widget = ld_calendar;
     widget->ld_name_id = name_id;
-    if (picoui_backend_widget_attach_child(parent, widget) != 0) {
+    if (tinyui_widget_attach_child(parent, widget) != 0) {
         ldCalendar_depose(app_state->ld_scene, ld_calendar);
         free(widget);
         return 0;
@@ -416,11 +416,11 @@ static void picoui_calendar_dispose_partial(struct picoui_calendar *calendar)
 
     backend = (struct picoui_backend_widget *)calendar->widget.backend_widget;
     if (backend != 0) {
-        app_state = picoui_runtime_bridge_backend_state(backend->owner);
+        app_state = tinyui_runtime_bridge_backend_state(backend->owner);
         if (backend->parent != 0) {
-            (void)picoui_backend_widget_detach_from_parent(backend);
+            (void)tinyui_runtime_bridge_detach_from_parent(backend);
         }
-        (void)picoui_backend_widget_unbind_host(backend);
+        (void)tinyui_runtime_bridge_unbind_host(backend);
         if (app_state != 0 && app_state->ld_scene != 0 && backend->ld_widget != 0) {
             ldCalendar_depose(app_state->ld_scene, (ldCalendar_t *)backend->ld_widget);
         }
@@ -452,7 +452,7 @@ struct picoui_calendar *picoui_calendar_create(struct picoui_window *parent, con
     calendar->id = id;
     calendar->widget.visible = 1;
     calendar->widget.enabled = 1;
-    if (picoui_backend_widget_bind_host(calendar->widget.backend_widget, &calendar->widget) != 0) {
+    if (tinyui_runtime_bridge_bind_host(calendar->widget.backend_widget, &calendar->widget) != 0) {
         picoui_calendar_dispose_partial(calendar);
         return 0;
     }

@@ -406,7 +406,7 @@ def _assert_picoui_runtime_screen_defines(build_dir: Path) -> None:
         raise AssertionError(f"missing compile_commands.json: {compile_db_path}")
     compile_commands = json.loads(compile_db_path.read_text())
     for source_suffix in (
-        "tinyui/src/backend/ldgui/backend_app.c",
+        "tinyui/src/core/runtime_host.c",
         "tinyui/demo/basic_widgets/main.c",
     ):
         _assert_compile_unit_has_screen_defines(compile_commands, source_suffix)
@@ -415,6 +415,7 @@ def _assert_picoui_runtime_screen_defines(build_dir: Path) -> None:
         "src/porting/ldConfig.c",
         "src/porting/arm_2d_disp_adapter_0.c",
         "tinyui/src/core/app.c",
+        "tinyui/src/core/runtime_bridge.c",
     ):
         _assert_compile_unit_lacks_screen_defines(compile_commands, source_suffix)
 

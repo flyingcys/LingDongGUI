@@ -48,20 +48,20 @@ foreach(test_src IN LISTS PICOUI_UNIT_TESTS)
     get_filename_component(test_name "${test_src}" NAME_WE)
     ld_add_c_unit_test(${test_name}
         SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/${test_src}"
-        SUPPORT_LIB picoui_test_support
-        MAIN_LIB picoui_backend_ldgui
+        SUPPORT_LIB tinyui_test_support
+        MAIN_LIB tinyui_backend_ldgui
         LABELS "picoui;unit"
     )
 endforeach()
 
 ld_add_c_unit_test(test_picoui_wrapper_struct_overhead
     SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/unit/test_picoui_wrapper_struct_overhead.c"
-    SUPPORT_LIB picoui_test_support
-    MAIN_LIB picoui_backend_ldgui
-    LABELS "picoui;perf;memory"
+    SUPPORT_LIB tinyui_test_support
+    MAIN_LIB tinyui_backend_ldgui
+    LABELS "picoui;probe;memory"
 )
 
-target_link_libraries(test_picoui_port_sdl PRIVATE picoui_port_sdl)
+target_link_libraries(test_picoui_port_sdl PRIVATE tinyui_port_sdl)
 
 ld_add_python_test(check_picoui_public_api
     SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/contract/check_picoui_public_api.py"

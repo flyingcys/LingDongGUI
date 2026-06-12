@@ -69,7 +69,7 @@ struct picoui_background *picoui_background_create(struct picoui_app *app, const
         return 0;
     }
 
-    app_state = picoui_runtime_bridge_backend_state(app);
+    app_state = tinyui_runtime_bridge_backend_state(app);
     if (app_state == 0 || app_state->ld_scene == 0) {
         return 0;
     }
@@ -86,7 +86,7 @@ struct picoui_background *picoui_background_create(struct picoui_app *app, const
         return 0;
     }
 
-    if (picoui_backend_widget_init_root(&host->widget,
+    if (tinyui_widget_init_root(&host->widget,
                                         app,
                                         PICOUI_BACKEND_WIDGET_BACKGROUND,
                                         id,
@@ -115,7 +115,7 @@ struct picoui_background *picoui_background_create(struct picoui_app *app, const
     background->window.flex_track_align = PICOUI_ALIGN_START;
     background->window.grid_col_align = PICOUI_ALIGN_START;
     background->window.grid_row_align = PICOUI_ALIGN_START;
-    if (picoui_backend_widget_bind_host(background->window.widget.backend_widget,
+    if (tinyui_runtime_bridge_bind_host(background->window.widget.backend_widget,
                                         &background->window.widget) != 0) {
         free(background);
         return 0;

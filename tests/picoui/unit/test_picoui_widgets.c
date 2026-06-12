@@ -6,6 +6,7 @@
 #include "../../../src/gui/ldKeyboard.h"
 #include "../../../src/gui/ldLabel.h"
 #include "../../../src/gui/ldLineEdit.h"
+#include "../../../src/gui/ldList.h"
 #include "../../../src/gui/ldSlider.h"
 #include "../../../src/gui/ldSwitch.h"
 #include "../../../src/gui/ldText.h"
@@ -28,6 +29,8 @@ static int button_clicked = -1;
 static int button_pressed_count = 0;
 static int button_released_count = 0;
 static const char *test_self_binary_path = 0;
+static const char *test_widget_source_path =
+    "/Users/cys/embedded/LingDongGUI/tinyui/src/core/widget.c";
 
 static void assert_self_binary_lacks_symbol(const char *symbol)
 {
@@ -53,6 +56,109 @@ static void assert_self_binary_lacks_symbol(const char *symbol)
         }
     }
     assert(pclose(pipe) == 0);
+}
+
+static void assert_archive_lacks_symbol(const char *archive_relpath, const char *symbol)
+{
+    char command[1024];
+    FILE *pipe;
+    char line[512];
+
+    assert(test_self_binary_path != 0);
+    assert(archive_relpath != 0);
+    assert(symbol != 0);
+    snprintf(command, sizeof(command),
+             "cd \"$(dirname '%s')\" && nm \"%s\" 2>/dev/null",
+             test_self_binary_path,
+             archive_relpath);
+    pipe = popen(command, "r");
+    assert(pipe != 0);
+    while (fgets(line, sizeof(line), pipe) != 0) {
+        size_t line_len = strlen(line);
+        size_t symbol_len = strlen(symbol);
+
+        while (line_len > 0 && (line[line_len - 1] == '\n' || line[line_len - 1] == '\r')) {
+            line[--line_len] = '\0';
+        }
+        if (line_len >= symbol_len &&
+            strcmp(line + line_len - symbol_len, symbol) == 0) {
+            assert(!"unexpected symbol still present in archive");
+        }
+    }
+    assert(pclose(pipe) == 0);
+}
+
+static void assert_archive_lacks_member(const char *archive_relpath, const char *member)
+{
+    char command[1024];
+    FILE *pipe;
+    char line[512];
+    size_t member_len;
+
+    assert(test_self_binary_path != 0);
+    assert(archive_relpath != 0);
+    assert(member != 0);
+    snprintf(command, sizeof(command),
+             "cd \"$(dirname '%s')\" && nm \"%s\" 2>/dev/null",
+             test_self_binary_path,
+             archive_relpath);
+    pipe = popen(command, "r");
+    assert(pipe != 0);
+    member_len = strlen(member);
+    while (fgets(line, sizeof(line), pipe) != 0) {
+        size_t line_len = strlen(line);
+
+        while (line_len > 0 && (line[line_len - 1] == '\n' || line[line_len - 1] == '\r')) {
+            line[--line_len] = '\0';
+        }
+        if (line_len == member_len + 1 &&
+            strncmp(line, member, member_len) == 0 &&
+            line[member_len] == ':') {
+            assert(!"unexpected archive member still present");
+        }
+    }
+    assert(pclose(pipe) == 0);
+}
+
+static void assert_source_lacks_function_definition(const char *source_path, const char *symbol)
+{
+    char command[1024];
+
+    assert(source_path != 0);
+    assert(symbol != 0);
+    snprintf(command,
+             sizeof(command),
+             "python3 - '%s' '%s' <<'PY'\n"
+             "from pathlib import Path\n"
+             "import re\n"
+             "import sys\n"
+             "text = Path(sys.argv[1]).read_text()\n"
+             "symbol = sys.argv[2]\n"
+             "pattern = re.compile(r'(^|\\n)\\s*(?:static\\s+)?[A-Za-z_][A-Za-z0-9_\\s\\*]*\\b' + re.escape(symbol) + r'\\s*\\(', re.MULTILINE)\n"
+             "raise SystemExit(1 if pattern.search(text) else 0)\n"
+             "PY",
+             source_path,
+             symbol);
+    assert(system(command) == 0);
+}
+
+static void assert_source_lacks_text(const char *source_path, const char *needle)
+{
+    char command[1024];
+
+    assert(source_path != 0);
+    assert(needle != 0);
+    snprintf(command,
+             sizeof(command),
+             "python3 - '%s' '%s' <<'PY'\n"
+             "from pathlib import Path\n"
+             "import sys\n"
+             "text = Path(sys.argv[1]).read_text()\n"
+             "raise SystemExit(1 if sys.argv[2] in text else 0)\n"
+             "PY",
+             source_path,
+             needle);
+    assert(system(command) == 0);
 }
 
 struct test_text_box_prefix_view {
@@ -321,7 +427,7 @@ static void test_focus_owner_switches_between_widgets(struct picoui_app *app,
     assert(picoui_button_set_on_pressed(button, on_button_pressed, 0) == 0);
 
     assert(app->focus_owner == 0);
-    assert(picoui_backend_widget_dispatch_native_signal(button->widget.backend_widget, SIGNAL_PRESS, 0) == 0);
+    assert(picoui_widget_dispatch_native_signal(button->widget.backend_widget, SIGNAL_PRESS, 0) == 0);
     assert(app->focus_owner == &button->widget);
     assert(button->widget.has_focus == 1);
     assert(button->widget.focus_enter_count == button_enter_before + 1);
@@ -390,7 +496,7 @@ static void test_hidden_or_disabled_widget_cannot_keep_focus(struct picoui_app *
     focus_enter_before = button->widget.focus_enter_count;
     focus_leave_before = button->widget.focus_leave_count;
 
-    assert(picoui_backend_widget_dispatch_native_signal(backend, SIGNAL_PRESS, 0) == 0);
+    assert(picoui_widget_dispatch_native_signal(backend, SIGNAL_PRESS, 0) == 0);
     assert(app->focus_owner == &button->widget);
     assert(button->widget.has_focus == 1);
     assert(button->widget.focus_enter_count == focus_enter_before + 1);
@@ -403,7 +509,7 @@ static void test_hidden_or_disabled_widget_cannot_keep_focus(struct picoui_app *
     assert(button->widget.last_focus_event == PICOUI_FOCUS_EVENT_LEAVE);
 
     assert(picoui_widget_set_visible(&button->widget, 1) == 0);
-    assert(picoui_backend_widget_dispatch_native_signal(backend, SIGNAL_PRESS, 0) == 0);
+    assert(picoui_widget_dispatch_native_signal(backend, SIGNAL_PRESS, 0) == 0);
     assert(app->focus_owner == &button->widget);
     assert(button->widget.has_focus == 1);
     assert(button->widget.focus_enter_count == focus_enter_before + 2);
@@ -414,7 +520,7 @@ static void test_hidden_or_disabled_widget_cannot_keep_focus(struct picoui_app *
     assert(button->widget.has_focus == 0);
     assert(button->widget.focus_leave_count == focus_leave_before + 2);
     assert(button->widget.last_focus_event == PICOUI_FOCUS_EVENT_LEAVE);
-    assert(picoui_backend_widget_dispatch_native_signal(backend, SIGNAL_PRESS, 0) == 0);
+    assert(picoui_widget_dispatch_native_signal(backend, SIGNAL_PRESS, 0) == 0);
     assert(app->focus_owner == 0);
     assert(button->widget.has_focus == 0);
     assert(button->widget.focus_enter_count == focus_enter_before + 2);
@@ -881,7 +987,7 @@ static void test_backend_value_changed_bridge_keeps_setter_sync_only(struct pico
     assert(slider_backend != 0);
     ld_slider = (ldSlider_t *)slider_backend->ld_widget;
     assert(ld_slider != 0);
-    assert(picoui_backend_widget_bind_ld_event_bridge(slider_backend, scene, &sender) == 0);
+    assert(tinyui_runtime_bridge_bind_ld_event_bridge(slider_backend, scene, &sender) == 0);
     assert(picoui_slider_set_value(slider, 12) == 0);
     assert(ld_slider->permille == 50);
     assert(slider_backend->value == 12);
@@ -905,7 +1011,7 @@ static void test_backend_bind_ld_event_bridge_fail_closed_on_missing_native_widg
     slider_backend->ld_event_bridge_sender = 0;
     slider_backend->ld_widget = 0;
 
-    assert(picoui_backend_widget_bind_ld_event_bridge(slider_backend, scene, &sender) == -1);
+    assert(tinyui_runtime_bridge_bind_ld_event_bridge(slider_backend, scene, &sender) == -1);
     assert(slider_backend->ld_event_bridge_scene == 0);
     assert(slider_backend->ld_event_bridge_sender == 0);
 
@@ -974,6 +1080,61 @@ static void test_native_event_bridge_prefers_native_path(struct picoui_switch *s
     assert(slider_backend->dispatch_count == 1);
 }
 
+static void test_list_native_signal_restore_rejected_selection_when_hidden_or_disabled(
+    struct picoui_window *win,
+    struct ld_scene_t *scene)
+{
+    struct picoui_list *list;
+    struct picoui_backend_widget *backend;
+    ldList_t *ld_list;
+
+    assert(win != 0);
+    assert(scene != 0);
+
+    list = picoui_list_create(win, "dispatch-list");
+    assert(list != 0);
+    assert(picoui_list_add_item(list, "a", "A") == 0);
+    assert(picoui_list_add_item(list, "b", "B") == 0);
+    assert(picoui_list_add_item(list, "c", "C") == 0);
+    assert(picoui_list_set_selected_index(list, 1) == 0);
+
+    backend = list->widget.backend_widget;
+    assert(backend != 0);
+    ld_list = (ldList_t *)backend->ld_widget;
+    assert(ld_list != 0);
+
+    assert(tinyui_runtime_bridge_bind_ld_event_bridge(backend, scene, backend->ld_widget) == 0);
+
+    assert(picoui_widget_set_visible(&list->widget, 0) == 0);
+    assert(ldMsgEmit(scene->ptMsgQueue, backend->ld_widget, SIGNAL_CLICKED_ITEM, 2) == true);
+    ldMsgProcess(scene);
+    assert(list->selected_index == 1);
+    assert(backend->value == 1);
+    assert(ldListGetSelectItem(ld_list) == 1);
+    assert(backend->dispatch_count == 0);
+
+    assert(picoui_widget_set_visible(&list->widget, 1) == 0);
+    assert(picoui_widget_set_enabled(&list->widget, 0) == 0);
+    assert(ldMsgEmit(scene->ptMsgQueue, backend->ld_widget, SIGNAL_CLICKED_ITEM, 0) == true);
+    ldMsgProcess(scene);
+    assert(list->selected_index == 1);
+    assert(backend->value == 1);
+    assert(ldListGetSelectItem(ld_list) == 1);
+    assert(backend->dispatch_count == 0);
+}
+
+static void test_backend_event_dispatch_native_signal_symbol_is_no_longer_public(void)
+{
+    assert_archive_lacks_member("../../libpicoui_backend_ldgui.a", "backend_event.c.o");
+    assert_archive_lacks_symbol("../../libpicoui_backend_ldgui.a",
+                                "picoui_backend_widget_dispatch_native_signal");
+    assert_self_binary_lacks_symbol("picoui_backend_widget_dispatch_native_signal");
+    assert_self_binary_lacks_symbol("picoui_backend_widget_bind_host");
+    assert_self_binary_lacks_symbol("picoui_backend_widget_bind_ld_event_bridge");
+    assert_self_binary_lacks_symbol("picoui_backend_widget_unbind_host");
+    assert_self_binary_lacks_symbol("picoui_backend_widget_detach_from_parent");
+}
+
 static void test_backend_widget_tree_contract(struct picoui_app *app,
                                               struct picoui_window *win,
                                               struct picoui_switch *sw,
@@ -999,16 +1160,16 @@ static void test_backend_widget_tree_contract(struct picoui_app *app,
     struct picoui_label *nested_label;
     struct picoui_backend_widget *nested_label_backend;
 
-    assert(picoui_backend_widget_is_kind(win_backend, PICOUI_BACKEND_WIDGET_WINDOW) == 1);
-    assert(picoui_backend_widget_is_kind(sw_backend, PICOUI_BACKEND_WIDGET_SWITCH) == 1);
-    assert(picoui_backend_widget_is_kind(cb_backend, PICOUI_BACKEND_WIDGET_CHECKBOX) == 1);
-    assert(picoui_backend_widget_is_kind(slider_backend, PICOUI_BACKEND_WIDGET_SLIDER) == 1);
-    assert(picoui_backend_widget_is_kind(label_backend, PICOUI_BACKEND_WIDGET_LABEL) == 1);
-    assert(picoui_backend_widget_is_kind(button_backend, PICOUI_BACKEND_WIDGET_BUTTON) == 1);
-    assert(picoui_backend_widget_is_kind(text_backend, PICOUI_BACKEND_WIDGET_TEXT) == 1);
-    assert(picoui_backend_widget_is_kind(image_backend, PICOUI_BACKEND_WIDGET_IMAGE) == 1);
-    assert(picoui_backend_widget_is_kind(win_backend, PICOUI_BACKEND_WIDGET_LABEL) == 0);
-    assert(picoui_backend_widget_is_kind(0, PICOUI_BACKEND_WIDGET_WINDOW) == 0);
+    assert(tinyui_widget_is_kind(win_backend, PICOUI_BACKEND_WIDGET_WINDOW) == 1);
+    assert(tinyui_widget_is_kind(sw_backend, PICOUI_BACKEND_WIDGET_SWITCH) == 1);
+    assert(tinyui_widget_is_kind(cb_backend, PICOUI_BACKEND_WIDGET_CHECKBOX) == 1);
+    assert(tinyui_widget_is_kind(slider_backend, PICOUI_BACKEND_WIDGET_SLIDER) == 1);
+    assert(tinyui_widget_is_kind(label_backend, PICOUI_BACKEND_WIDGET_LABEL) == 1);
+    assert(tinyui_widget_is_kind(button_backend, PICOUI_BACKEND_WIDGET_BUTTON) == 1);
+    assert(tinyui_widget_is_kind(text_backend, PICOUI_BACKEND_WIDGET_TEXT) == 1);
+    assert(tinyui_widget_is_kind(image_backend, PICOUI_BACKEND_WIDGET_IMAGE) == 1);
+    assert(tinyui_widget_is_kind(win_backend, PICOUI_BACKEND_WIDGET_LABEL) == 0);
+    assert(tinyui_widget_is_kind(0, PICOUI_BACKEND_WIDGET_WINDOW) == 0);
 
     assert(win_backend->owner == app);
     assert(sw_backend->owner == app);
@@ -1050,31 +1211,61 @@ static void test_backend_widget_tree_contract(struct picoui_app *app,
     assert(nested_label_backend->parent == dialog_backend);
     assert(nested_label_backend->owner == app);
     assert(nested_label_backend->root == dialog_backend);
-    assert(picoui_backend_widget_attach_child(win_backend, dialog_backend) == -1);
+    assert(tinyui_widget_attach_child(win_backend, dialog_backend) == -1);
 
     orphan_backend = calloc(1, sizeof(*orphan_backend));
     assert(orphan_backend != 0);
-    assert(picoui_backend_widget_init_child(orphan_backend,
-                                            win_backend,
-                                            PICOUI_BACKEND_WIDGET_LABEL,
-                                            "orphan-shared-attach",
-                                            win_backend->theme) == 0);
-    assert(picoui_backend_widget_attach_child(win_backend, orphan_backend) == 0);
+    assert(tinyui_widget_init_child(orphan_backend,
+                                    win_backend,
+                                    PICOUI_BACKEND_WIDGET_LABEL,
+                                    "orphan-shared-attach",
+                                    win_backend->theme) == 0);
+    assert(tinyui_widget_attach_child(win_backend, orphan_backend) == 0);
     assert(orphan_backend->parent == win_backend);
     assert(orphan_backend->owner == app);
     assert(orphan_backend->root == win_backend);
 
     prebound_backend = calloc(1, sizeof(*prebound_backend));
     assert(prebound_backend != 0);
-    assert(picoui_backend_widget_init_child(prebound_backend,
-                                            win_backend,
-                                            PICOUI_BACKEND_WIDGET_LABEL,
-                                            "prebound-shared-attach",
-                                            win_backend->theme) == 0);
+    assert(tinyui_widget_init_child(prebound_backend,
+                                    win_backend,
+                                    PICOUI_BACKEND_WIDGET_LABEL,
+                                    "prebound-shared-attach",
+                                    win_backend->theme) == 0);
     prebound_backend->parent = win_backend;
-    assert(picoui_backend_widget_attach_child(win_backend, prebound_backend) == -1);
+    assert(tinyui_widget_attach_child(win_backend, prebound_backend) == -1);
 
     free(prebound_backend);
+}
+
+static void test_widget_internal_static_helpers_no_longer_use_picoui_prefix(void)
+{
+    assert_source_lacks_function_definition(test_widget_source_path, "picoui_widget_is_valid");
+    assert_source_lacks_function_definition(test_widget_source_path, "picoui_widget_get_ld_base");
+    assert_source_lacks_function_definition(test_widget_source_path, "picoui_widget_get_backend");
+    assert_source_lacks_function_definition(test_widget_source_path, "picoui_widget_expected_native_type");
+    assert_source_lacks_function_definition(test_widget_source_path, "picoui_widget_validate_native_binding");
+    assert_source_lacks_function_definition(test_widget_source_path, "picoui_backend_widget_can_attach_child");
+    assert_source_lacks_function_definition(test_widget_source_path, "picoui_backend_widget_clear_owner_and_root");
+    assert_source_lacks_function_definition(test_widget_source_path, "picoui_backend_widget_bind_subtree_owner_and_root");
+    assert_source_lacks_function_definition(test_widget_source_path, "picoui_backend_widget_get_host");
+    assert_source_lacks_text(test_widget_source_path, "g_picoui_backend_next_data_model_identity");
+}
+
+static void test_widget_kind_helper_no_longer_uses_picoui_backend_prefix(void)
+{
+    assert_source_lacks_function_definition(test_widget_source_path, "picoui_backend_widget_is_kind");
+    assert_self_binary_lacks_symbol("picoui_backend_widget_is_kind");
+}
+
+static void test_widget_tree_lifecycle_helpers_no_longer_use_picoui_backend_prefix(void)
+{
+    assert_source_lacks_function_definition(test_widget_source_path, "picoui_backend_widget_init_root");
+    assert_source_lacks_function_definition(test_widget_source_path, "picoui_backend_widget_init_child");
+    assert_source_lacks_function_definition(test_widget_source_path, "picoui_backend_widget_attach_child");
+    assert_self_binary_lacks_symbol("picoui_backend_widget_init_root");
+    assert_self_binary_lacks_symbol("picoui_backend_widget_init_child");
+    assert_self_binary_lacks_symbol("picoui_backend_widget_attach_child");
 }
 
 static void assert_widget_props(const struct picoui_widget *widget,
@@ -2481,6 +2672,7 @@ int main(void)
     assert_self_binary_lacks_symbol("picoui_backend_sync_ld_value");
     assert_self_binary_lacks_symbol("picoui_backend_emit_ld_event_bridge");
     assert_self_binary_lacks_symbol("picoui_backend_widget_update_value");
+    assert_self_binary_lacks_symbol("picoui_backend_widget_dispatch_native_signal");
     theme = picoui_theme_create();
     assert(picoui_app_set_theme(app, theme) == 0);
     win = picoui_window_create(app, "root");
@@ -2611,6 +2803,9 @@ int main(void)
     test_backend_bind_ld_event_bridge_fail_closed_on_missing_native_widget(slider_backend,
                                                                            app_state->ld_scene);
     test_native_event_bridge_prefers_native_path(sw, cb, slider, app_state->ld_scene);
+    test_list_native_signal_restore_rejected_selection_when_hidden_or_disabled(win,
+                                                                               app_state->ld_scene);
+    test_backend_event_dispatch_native_signal_symbol_is_no_longer_public();
 
     assert(picoui_switch_set_on_toggled(sw, on_switch_toggle, 0) == 0);
     assert(picoui_checkbox_set_on_toggled(cb, on_checkbox_toggle, 0) == 0);
@@ -2667,6 +2862,9 @@ int main(void)
     test_native_duplicate_value_does_not_advance_data_model(sw, cb, slider, app_state->ld_scene);
     test_checkbox_native_radio_group_and_image_mode_round_trip(cb);
     test_switch_native_direction_navigation_and_image_skin_round_trip(sw);
+    test_widget_internal_static_helpers_no_longer_use_picoui_prefix();
+    test_widget_kind_helper_no_longer_uses_picoui_backend_prefix();
+    test_widget_tree_lifecycle_helpers_no_longer_use_picoui_backend_prefix();
 
     test_widget_is_hidden_contract(button);
     test_combo_box_public_create_uses_widget_local_backend(win);

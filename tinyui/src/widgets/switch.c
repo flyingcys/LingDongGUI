@@ -58,16 +58,16 @@ static int picoui_switch_nav_dir_to_ld(int direction, int *ld_dir)
 
     switch (direction) {
     case 1:
-        *ld_dir = picoui_native_nav_dir_to_ld(PICOUI_NATIVE_NAV_UP);
+        *ld_dir = tinyui_native_nav_dir_to_ld(PICOUI_NATIVE_NAV_UP);
         return 0;
     case 2:
-        *ld_dir = picoui_native_nav_dir_to_ld(PICOUI_NATIVE_NAV_DOWN);
+        *ld_dir = tinyui_native_nav_dir_to_ld(PICOUI_NATIVE_NAV_DOWN);
         return 0;
     case 3:
-        *ld_dir = picoui_native_nav_dir_to_ld(PICOUI_NATIVE_NAV_LEFT);
+        *ld_dir = tinyui_native_nav_dir_to_ld(PICOUI_NATIVE_NAV_LEFT);
         return 0;
     case 4:
-        *ld_dir = picoui_native_nav_dir_to_ld(PICOUI_NATIVE_NAV_RIGHT);
+        *ld_dir = tinyui_native_nav_dir_to_ld(PICOUI_NATIVE_NAV_RIGHT);
         return 0;
     default:
         return -1;
@@ -89,7 +89,7 @@ static int picoui_switch_attach_native(struct picoui_switch *sw,
     }
 
     parent_widget = (struct picoui_backend_widget *)parent->widget.backend_widget;
-    app_state = picoui_runtime_bridge_backend_state_from_parent(parent_widget);
+    app_state = tinyui_runtime_bridge_backend_state_from_parent(parent_widget);
     if (app_state == 0 || app_state->ld_scene == 0 || parent_widget->ld_widget == 0) {
         return -1;
     }
@@ -99,7 +99,7 @@ static int picoui_switch_attach_native(struct picoui_switch *sw,
         return -1;
     }
 
-    name_id = picoui_runtime_bridge_next_name_id(parent_widget);
+    name_id = tinyui_runtime_bridge_next_name_id(parent_widget);
     if (name_id == 0) {
         free(widget);
         return -1;
@@ -124,7 +124,7 @@ static int picoui_switch_attach_native(struct picoui_switch *sw,
                      GLCD_COLOR_WHITE,
                      GLCD_COLOR_WHITE);
 
-    if (picoui_backend_widget_init_child(widget,
+    if (tinyui_widget_init_child(widget,
                                          parent_widget,
                                          PICOUI_BACKEND_WIDGET_SWITCH,
                                          id,
@@ -137,15 +137,15 @@ static int picoui_switch_attach_native(struct picoui_switch *sw,
     widget->ld_widget = ld_switch;
     widget->ld_name_id = name_id;
     widget->last_signal = PICOUI_BACKEND_SIGNAL_NONE;
-    if (picoui_backend_widget_attach_child(parent_widget, widget) != 0) {
+    if (tinyui_widget_attach_child(parent_widget, widget) != 0) {
         ldSwitch_depose(app_state->ld_scene, ld_switch);
         free(widget);
         return -1;
     }
 
     sw->widget.backend_widget = widget;
-    if (picoui_backend_widget_bind_host(sw->widget.backend_widget, &sw->widget) != 0) {
-        (void)picoui_backend_widget_detach_from_parent(sw->widget.backend_widget);
+    if (tinyui_runtime_bridge_bind_host(sw->widget.backend_widget, &sw->widget) != 0) {
+        (void)tinyui_runtime_bridge_detach_from_parent(sw->widget.backend_widget);
         ldSwitch_depose(app_state->ld_scene, ld_switch);
         free(widget);
         sw->widget.backend_widget = 0;
@@ -619,7 +619,7 @@ int picoui_switch_navigate(struct picoui_switch *sw, int direction)
         return -1;
     }
 
-    app_state = picoui_runtime_bridge_backend_state_from_parent(backend);
+    app_state = tinyui_runtime_bridge_backend_state_from_parent(backend);
     ld_switch = (ldSwitch_t *)backend->ld_widget;
     if (app_state == 0 || app_state->ld_scene == 0 || ld_switch == 0) {
         return -1;

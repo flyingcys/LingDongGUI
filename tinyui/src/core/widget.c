@@ -17,7 +17,7 @@
  */
 
 #include "internal.h"
-#include "picoui/widget.h"
+#include "widget.h"
 #include "arm_2d.h"
 
 #include <stdbool.h>
@@ -61,6 +61,7 @@ int16_t ldBaseGetY(ldBase_t *ptWidget);
 int16_t ldBaseGetWidth(ldBase_t *ptWidget);
 int16_t ldBaseGetHeight(ldBase_t *ptWidget);
 uint16_t ldBaseGetOpacity(ldBase_t *ptWidget);
+int ldBaseGetWidgetType(ldBase_t *ptWidget);
 bool ldBaseIsHidden(ldBase_t *ptWidget);
 bool ldBaseIsSelectable(ldBase_t *ptWidget);
 bool ldBaseIsSelected(ldBase_t *ptWidget);
@@ -96,19 +97,29 @@ void ldBaseSetFlexMinWidth(ldBase_t *ptWidget, int16_t minWidth);
 void ldBaseSetFlexMinHeight(ldBase_t *ptWidget, int16_t minHeight);
 void ldBaseSetFlexMaxWidth(ldBase_t *ptWidget, int16_t maxWidth);
 void ldBaseSetFlexMaxHeight(ldBase_t *ptWidget, int16_t maxHeight);
+void ldBaseSetFlexGrow(ldBase_t *ptWidget, uint16_t flexGrow);
+void ldBaseSetFlexNewTrack(ldBase_t *ptWidget, bool flexInNewTrack);
+void ldBaseSetIgnoreLayout(ldBase_t *ptWidget, bool ignoreLayout);
+void ldBaseSetGridCell(ldBase_t *ptWidget,
+                       int xAlign,
+                       int16_t colPos,
+                       int16_t colSpan,
+                       int yAlign,
+                       int16_t rowPos,
+                       int16_t rowSpan);
 
-static int picoui_widget_is_valid(struct picoui_widget *widget)
+static int tinyui_widget_is_valid(struct picoui_widget *widget)
 {
     return widget != 0;
 }
 
-static unsigned int g_picoui_backend_next_data_model_identity = 1;
+static unsigned int g_tinyui_backend_next_data_model_identity = 1;
 
-static ldBase_t *picoui_widget_get_ld_base(struct picoui_widget *widget)
+static ldBase_t *tinyui_widget_get_ld_base(struct picoui_widget *widget)
 {
     struct picoui_backend_widget *backend_widget;
 
-    if (!picoui_widget_is_valid(widget) || widget->backend_widget == 0) {
+    if (!tinyui_widget_is_valid(widget) || widget->backend_widget == 0) {
         return 0;
     }
 
@@ -120,7 +131,7 @@ static ldBase_t *picoui_widget_get_ld_base(struct picoui_widget *widget)
     return (ldBase_t *)backend_widget->ld_widget;
 }
 
-static struct picoui_backend_widget *picoui_widget_get_backend(const struct picoui_widget *widget)
+static struct picoui_backend_widget *tinyui_widget_get_backend(const struct picoui_widget *widget)
 {
     if (widget == 0 || widget->backend_widget == 0) {
         return 0;
@@ -129,8 +140,49 @@ static struct picoui_backend_widget *picoui_widget_get_backend(const struct pico
     return (struct picoui_backend_widget *)widget->backend_widget;
 }
 
-int picoui_backend_widget_is_kind(const void *backend_widget,
-                                  enum picoui_backend_widget_kind kind)
+static int tinyui_widget_expected_native_type(enum picoui_backend_widget_kind kind)
+{
+    switch (kind) {
+    case PICOUI_BACKEND_WIDGET_BACKGROUND:
+        return 0;
+    case PICOUI_BACKEND_WIDGET_WINDOW:
+        return 1;
+    case PICOUI_BACKEND_WIDGET_LABEL:
+        return 19;
+    case PICOUI_BACKEND_WIDGET_BUTTON:
+        return 2;
+    case PICOUI_BACKEND_WIDGET_CHECKBOX:
+        return 7;
+    case PICOUI_BACKEND_WIDGET_SWITCH:
+        return 9;
+    case PICOUI_BACKEND_WIDGET_SLIDER:
+        return 8;
+    case PICOUI_BACKEND_WIDGET_TEXT:
+        return 4;
+    default:
+        return -1;
+    }
+}
+
+static int tinyui_widget_validate_native_binding(const struct picoui_backend_widget *backend_widget,
+                                                 const ldBase_t *ld_base)
+{
+    int expected_type;
+
+    if (backend_widget == 0 || ld_base == 0) {
+        return 0;
+    }
+
+    expected_type = tinyui_widget_expected_native_type(backend_widget->kind);
+    if (expected_type < 0) {
+        return 1;
+    }
+
+    return ldBaseGetWidgetType((ldBase_t *)ld_base) == expected_type;
+}
+
+int tinyui_widget_is_kind(const void *backend_widget,
+                          enum picoui_backend_widget_kind kind)
 {
     const struct picoui_backend_widget *widget = backend_widget;
 
@@ -141,7 +193,7 @@ int picoui_backend_widget_is_kind(const void *backend_widget,
     return widget->kind == kind;
 }
 
-int picoui_native_nav_dir_to_ld(enum picoui_native_nav_dir dir)
+int tinyui_native_nav_dir_to_ld(enum picoui_native_nav_dir dir)
 {
     switch (dir) {
     case PICOUI_NATIVE_NAV_LEFT:
@@ -175,9 +227,9 @@ void picoui_backend_widget_init_data_model(struct picoui_backend_widget *backend
     case PICOUI_BACKEND_WIDGET_COMBO_BOX:
     case PICOUI_BACKEND_WIDGET_SCROLL_SELECTER:
         backend->data_truth_policy = PICOUI_BACKEND_DATA_TRUTH_BACKEND_VALUE;
-        backend->data_model_identity = g_picoui_backend_next_data_model_identity++;
+        backend->data_model_identity = g_tinyui_backend_next_data_model_identity++;
         if (backend->data_model_identity == 0) {
-            backend->data_model_identity = g_picoui_backend_next_data_model_identity++;
+            backend->data_model_identity = g_tinyui_backend_next_data_model_identity++;
         }
         break;
     default:
@@ -240,8 +292,8 @@ int picoui_widget_update_value(void *backend_widget,
     return 0;
 }
 
-static int picoui_backend_widget_can_attach_child(const struct picoui_backend_widget *parent,
-                                                  const struct picoui_backend_widget *child)
+static int tinyui_widget_can_attach_child(const struct picoui_backend_widget *parent,
+                                          const struct picoui_backend_widget *child)
 {
     if (parent == NULL || child == NULL) {
         return 0;
@@ -259,7 +311,7 @@ static int picoui_backend_widget_can_attach_child(const struct picoui_backend_wi
     }
 }
 
-static void picoui_backend_widget_clear_owner_and_root(struct picoui_backend_widget *widget)
+static void tinyui_widget_clear_owner_and_root(struct picoui_backend_widget *widget)
 {
     struct picoui_backend_widget *child;
 
@@ -271,14 +323,14 @@ static void picoui_backend_widget_clear_owner_and_root(struct picoui_backend_wid
     widget->root = NULL;
     child = widget->first_child;
     while (child != NULL) {
-        picoui_backend_widget_clear_owner_and_root(child);
+        tinyui_widget_clear_owner_and_root(child);
         child = child->next_sibling;
     }
 }
 
-static void picoui_backend_widget_bind_subtree_owner_and_root(struct picoui_backend_widget *widget,
-                                                              struct picoui_app *owner,
-                                                              struct picoui_backend_widget *root)
+static void tinyui_widget_bind_subtree_owner_and_root(struct picoui_backend_widget *widget,
+                                                      struct picoui_app *owner,
+                                                      struct picoui_backend_widget *root)
 {
     struct picoui_backend_widget *child;
 
@@ -290,14 +342,14 @@ static void picoui_backend_widget_bind_subtree_owner_and_root(struct picoui_back
     widget->root = root;
     child = widget->first_child;
     while (child != NULL) {
-        picoui_backend_widget_bind_subtree_owner_and_root(child, owner, root);
+        tinyui_widget_bind_subtree_owner_and_root(child, owner, root);
         child = child->next_sibling;
     }
 }
 
 struct picoui_app *picoui_widget_owner_app(const struct picoui_widget *widget)
 {
-    const struct picoui_backend_widget *backend = picoui_widget_get_backend(widget);
+    const struct picoui_backend_widget *backend = tinyui_widget_get_backend(widget);
 
     if (backend == 0) {
         return 0;
@@ -308,7 +360,7 @@ struct picoui_app *picoui_widget_owner_app(const struct picoui_widget *widget)
 
 int picoui_widget_has_ld_binding(const struct picoui_widget *widget)
 {
-    const struct picoui_backend_widget *backend = picoui_widget_get_backend(widget);
+    const struct picoui_backend_widget *backend = tinyui_widget_get_backend(widget);
 
     return backend != 0 && backend->ld_widget != 0;
 }
@@ -324,14 +376,14 @@ struct picoui_widget *picoui_widget_backend_host(const void *backend_widget)
     return backend->host_widget;
 }
 
-static struct picoui_widget *picoui_backend_widget_get_host(struct picoui_backend_widget *backend_widget)
+static struct picoui_widget *tinyui_widget_get_host(struct picoui_backend_widget *backend_widget)
 {
     return picoui_widget_backend_host(backend_widget);
 }
 
 struct picoui_widget *picoui_widget_backend_parent(const struct picoui_widget *widget)
 {
-    const struct picoui_backend_widget *backend = picoui_widget_get_backend(widget);
+    const struct picoui_backend_widget *backend = tinyui_widget_get_backend(widget);
     struct picoui_backend_widget *parent = 0;
 
     if (backend == 0) {
@@ -346,7 +398,7 @@ struct picoui_widget *picoui_widget_backend_parent(const struct picoui_widget *w
     return parent->host_widget;
 }
 
-int picoui_backend_widget_init_root(void *backend_widget,
+int tinyui_widget_init_root(void *backend_widget,
                                     struct picoui_app *owner,
                                     enum picoui_backend_widget_kind kind,
                                     const char *id,
@@ -367,7 +419,7 @@ int picoui_backend_widget_init_root(void *backend_widget,
     return 0;
 }
 
-int picoui_backend_widget_init_child(void *backend_widget,
+int tinyui_widget_init_child(void *backend_widget,
                                      void *parent,
                                      enum picoui_backend_widget_kind kind,
                                      const char *id,
@@ -415,22 +467,22 @@ struct picoui_backend_widget *picoui_backend_widget_find_by_name_id(void *backen
     return NULL;
 }
 
-int picoui_backend_widget_attach_child(void *parent, void *child)
+int tinyui_widget_attach_child(void *parent, void *child)
 {
     struct picoui_backend_widget *parent_widget = parent;
     struct picoui_backend_widget *child_widget = child;
 
     if (child_widget == NULL ||
-        !picoui_backend_widget_can_attach_child(parent_widget, child_widget) ||
+        !tinyui_widget_can_attach_child(parent_widget, child_widget) ||
         child_widget->root != NULL ||
         child_widget->owner != NULL ||
         child_widget->parent != NULL) {
         return -1;
     }
 
-    picoui_backend_widget_bind_subtree_owner_and_root(child_widget,
-                                                      parent_widget->owner,
-                                                      parent_widget->root);
+    tinyui_widget_bind_subtree_owner_and_root(child_widget,
+                                              parent_widget->owner,
+                                              parent_widget->root);
     child_widget->parent = parent_widget;
     child_widget->next_sibling = NULL;
     if (parent_widget->first_child == NULL) {
@@ -478,7 +530,7 @@ int picoui_widget_backend_detach(void *backend_widget)
 
     widget->parent = NULL;
     widget->next_sibling = NULL;
-    picoui_backend_widget_clear_owner_and_root(widget);
+    tinyui_widget_clear_owner_and_root(widget);
     return 0;
 }
 
@@ -669,13 +721,13 @@ int picoui_widget_set_pos(struct picoui_widget *widget, int x, int y)
 {
     ldBase_t *ld_base;
 
-    if (!picoui_widget_is_valid(widget)) {
+    if (!tinyui_widget_is_valid(widget)) {
         return -1;
     }
 
     widget->x = x;
     widget->y = y;
-    ld_base = picoui_widget_get_ld_base(widget);
+    ld_base = tinyui_widget_get_ld_base(widget);
     if (ld_base != 0) {
         ldBaseSetX(ld_base, (int16_t)x);
         ldBaseSetY(ld_base, (int16_t)y);
@@ -696,13 +748,13 @@ int picoui_widget_set_size(struct picoui_widget *widget, int width, int height)
 {
     ldBase_t *ld_base;
 
-    if (!picoui_widget_is_valid(widget) || width < 0 || height < 0) {
+    if (!tinyui_widget_is_valid(widget) || width < 0 || height < 0) {
         return -1;
     }
 
     widget->width = width;
     widget->height = height;
-    ld_base = picoui_widget_get_ld_base(widget);
+    ld_base = tinyui_widget_get_ld_base(widget);
     if (ld_base != 0) {
         ldBaseSetWidth(ld_base, (int16_t)width);
         ldBaseSetHeight(ld_base, (int16_t)height);
@@ -720,7 +772,7 @@ int picoui_widget_set_size(struct picoui_widget *widget, int width, int height)
 
 int picoui_widget_set_text(struct picoui_widget *widget, const char *text)
 {
-    if (!picoui_widget_is_valid(widget) || text == 0) {
+    if (!tinyui_widget_is_valid(widget) || text == 0) {
         return -1;
     }
 
@@ -764,28 +816,28 @@ int picoui_backend_set_text(void *backend_widget, const char *text)
     return 0;
 }
 
-void picoui_backend_emit_value_changed(picoui_value_changed_cb cb,
-                                       struct picoui_widget *widget,
-                                       int value,
-                                       void *user_data)
+void tinyui_widget_emit_value_changed(picoui_value_changed_cb cb,
+                                      struct picoui_widget *widget,
+                                      int value,
+                                      void *user_data)
 {
     if (cb != 0) {
         cb(widget, value, user_data);
     }
 }
 
-void picoui_backend_emit_event(picoui_event_cb cb,
-                               struct picoui_widget *widget,
-                               void *user_data)
+void tinyui_widget_emit_event(picoui_event_cb cb,
+                              struct picoui_widget *widget,
+                              void *user_data)
 {
     if (cb != 0) {
         cb(widget, user_data);
     }
 }
 
-void picoui_backend_emit_clicked(picoui_event_cb cb,
-                                 struct picoui_widget *widget,
-                                 void *user_data)
+void tinyui_widget_emit_clicked(picoui_event_cb cb,
+                                struct picoui_widget *widget,
+                                void *user_data)
 {
     if (cb != 0) {
         cb(widget, user_data);
@@ -802,7 +854,7 @@ void picoui_backend_emit_clicked(picoui_event_cb cb,
 
 int picoui_widget_set_style_class(struct picoui_widget *widget, const char *style_class)
 {
-    if (!picoui_widget_is_valid(widget)) {
+    if (!tinyui_widget_is_valid(widget)) {
         return -1;
     }
 
@@ -823,7 +875,7 @@ int picoui_widget_set_style_class(struct picoui_widget *widget, const char *styl
 
 int picoui_widget_set_user_data(struct picoui_widget *widget, void *user_data)
 {
-    if (!picoui_widget_is_valid(widget)) {
+    if (!tinyui_widget_is_valid(widget)) {
         return -1;
     }
 
@@ -844,7 +896,7 @@ int picoui_widget_set_user_data(struct picoui_widget *widget, void *user_data)
 
 int picoui_widget_set_bg_color(struct picoui_widget *widget, unsigned int rgb)
 {
-    if (!picoui_widget_is_valid(widget)) {
+    if (!tinyui_widget_is_valid(widget)) {
         return -1;
     }
 
@@ -862,7 +914,7 @@ int picoui_widget_set_bg_color(struct picoui_widget *widget, unsigned int rgb)
 
 int picoui_widget_set_text_color(struct picoui_widget *widget, unsigned int rgb)
 {
-    if (!picoui_widget_is_valid(widget)) {
+    if (!tinyui_widget_is_valid(widget)) {
         return -1;
     }
 
@@ -880,7 +932,7 @@ int picoui_widget_set_text_color(struct picoui_widget *widget, unsigned int rgb)
 
 int picoui_widget_set_border_color(struct picoui_widget *widget, unsigned int rgb)
 {
-    if (!picoui_widget_is_valid(widget)) {
+    if (!tinyui_widget_is_valid(widget)) {
         return -1;
     }
 
@@ -898,7 +950,7 @@ int picoui_widget_set_border_color(struct picoui_widget *widget, unsigned int rg
 
 int picoui_widget_set_radius(struct picoui_widget *widget, int radius)
 {
-    if (!picoui_widget_is_valid(widget) || radius < 0) {
+    if (!tinyui_widget_is_valid(widget) || radius < 0) {
         return -1;
     }
 
@@ -916,9 +968,7 @@ int picoui_widget_set_radius(struct picoui_widget *widget, int radius)
 
 int picoui_widget_set_padding(struct picoui_widget *widget, int padding)
 {
-    int rc;
-
-    if (!picoui_widget_is_valid(widget) || padding < 0) {
+    if (!tinyui_widget_is_valid(widget) || padding < 0) {
         return -1;
     }
 
@@ -927,9 +977,13 @@ int picoui_widget_set_padding(struct picoui_widget *widget, int padding)
         return 0;
     }
 
-    rc = picoui_backend_widget_set_padding(widget->backend_widget, padding);
-    if (rc != 0) {
-        return -1;
+    if (((struct picoui_backend_widget *)widget->backend_widget)->kind == PICOUI_BACKEND_WIDGET_WINDOW
+        || ((struct picoui_backend_widget *)widget->backend_widget)->kind == PICOUI_BACKEND_WIDGET_BACKGROUND) {
+        struct picoui_window *window = (struct picoui_window *)widget;
+
+        if (tinyui_window_apply_uniform_padding(window, padding) != 0) {
+            return -1;
+        }
     }
 
     widget->padding = padding;
@@ -947,11 +1001,11 @@ int picoui_widget_set_center(struct picoui_widget *widget)
 {
     ldBase_t *ld_base;
 
-    if (!picoui_widget_is_valid(widget)) {
+    if (!tinyui_widget_is_valid(widget)) {
         return -1;
     }
 
-    ld_base = picoui_widget_get_ld_base(widget);
+    ld_base = tinyui_widget_get_ld_base(widget);
     if (ld_base != 0) {
         ldBaseSetCenter(ld_base);
     }
@@ -970,7 +1024,7 @@ int picoui_widget_set_visible(struct picoui_widget *widget, int visible)
 {
     ldBase_t *ld_base;
 
-    if (!picoui_widget_is_valid(widget)) {
+    if (!tinyui_widget_is_valid(widget)) {
         return -1;
     }
 
@@ -978,7 +1032,7 @@ int picoui_widget_set_visible(struct picoui_widget *widget, int visible)
     if (widget->visible == 0) {
         (void)picoui_widget_release_focus(widget);
     }
-    ld_base = picoui_widget_get_ld_base(widget);
+    ld_base = tinyui_widget_get_ld_base(widget);
     if (ld_base != 0) {
         ldBaseSetHidden(ld_base, widget->visible == 0);
     }
@@ -987,7 +1041,7 @@ int picoui_widget_set_visible(struct picoui_widget *widget, int visible)
 
 int picoui_widget_is_hidden(struct picoui_widget *widget)
 {
-    if (!picoui_widget_is_valid(widget)) {
+    if (!tinyui_widget_is_valid(widget)) {
         return -1;
     }
     return !widget->visible;
@@ -1005,12 +1059,12 @@ int picoui_widget_set_opacity(struct picoui_widget *widget, int opacity)
 {
     ldBase_t *ld_base;
 
-    if (!picoui_widget_is_valid(widget) || opacity < 0 || opacity > 255) {
+    if (!tinyui_widget_is_valid(widget) || opacity < 0 || opacity > 255) {
         return -1;
     }
 
     widget->opacity = opacity;
-    ld_base = picoui_widget_get_ld_base(widget);
+    ld_base = tinyui_widget_get_ld_base(widget);
     if (ld_base != 0) {
         ldBaseSetOpacity(ld_base, (uint8_t)opacity);
     }
@@ -1029,12 +1083,12 @@ int picoui_widget_set_selectable(struct picoui_widget *widget, int selectable)
 {
     ldBase_t *ld_base;
 
-    if (!picoui_widget_is_valid(widget)) {
+    if (!tinyui_widget_is_valid(widget)) {
         return -1;
     }
 
     widget->selectable = selectable != 0;
-    ld_base = picoui_widget_get_ld_base(widget);
+    ld_base = tinyui_widget_get_ld_base(widget);
     if (ld_base != 0) {
         ldBaseSetSelectable(ld_base, widget->selectable != 0);
     }
@@ -1053,12 +1107,12 @@ int picoui_widget_set_selected(struct picoui_widget *widget, int selected)
 {
     ldBase_t *ld_base;
 
-    if (!picoui_widget_is_valid(widget)) {
+    if (!tinyui_widget_is_valid(widget)) {
         return -1;
     }
 
     widget->selected = selected != 0;
-    ld_base = picoui_widget_get_ld_base(widget);
+    ld_base = tinyui_widget_get_ld_base(widget);
     if (ld_base != 0) {
         ldBaseSetSelect(ld_base, widget->selected != 0);
     }
@@ -1077,12 +1131,12 @@ int picoui_widget_set_corner(struct picoui_widget *widget, int corner)
 {
     ldBase_t *ld_base;
 
-    if (!picoui_widget_is_valid(widget)) {
+    if (!tinyui_widget_is_valid(widget)) {
         return -1;
     }
 
     widget->corner = corner != 0;
-    ld_base = picoui_widget_get_ld_base(widget);
+    ld_base = tinyui_widget_get_ld_base(widget);
     if (ld_base != 0) {
         ldBaseSetCorner(ld_base, widget->corner != 0);
     }
@@ -1102,7 +1156,7 @@ int picoui_widget_set_enabled(struct picoui_widget *widget, int enabled)
     struct picoui_backend_widget *backend_widget;
     ldBase_t *ld_base;
 
-    if (!picoui_widget_is_valid(widget)) {
+    if (!tinyui_widget_is_valid(widget)) {
         return -1;
     }
 
@@ -1112,7 +1166,7 @@ int picoui_widget_set_enabled(struct picoui_widget *widget, int enabled)
     }
     if (widget->backend_widget != 0) {
         backend_widget = (struct picoui_backend_widget *)widget->backend_widget;
-        ld_base = picoui_widget_get_ld_base(widget);
+        ld_base = tinyui_widget_get_ld_base(widget);
         if (ld_base != 0) {
             ldBaseSetSelectable(ld_base, widget->enabled != 0);
         }
@@ -1136,17 +1190,22 @@ int picoui_widget_set_enabled(struct picoui_widget *widget, int enabled)
 
 int picoui_widget_set_flex_grow(struct picoui_widget *widget, int grow)
 {
-    int rc;
+    struct picoui_backend_widget *backend_widget;
+    ldBase_t *ld_base;
 
-    if (!picoui_widget_is_valid(widget) || grow < 0) {
+    if (!tinyui_widget_is_valid(widget) || grow < 0) {
         return -1;
     }
 
-    rc = picoui_backend_widget_set_flex_grow(widget, grow);
-    if (rc != 0) {
+    backend_widget = tinyui_widget_get_backend(widget);
+    ld_base = tinyui_widget_get_ld_base(widget);
+    if (backend_widget == 0 || ld_base == 0 ||
+        !tinyui_widget_validate_native_binding(backend_widget, ld_base)) {
         return -1;
     }
 
+    ldBaseSetFlexGrow(ld_base, (uint16_t)grow);
+    backend_widget->child_layout.flex_grow = grow;
     widget->flex_grow = grow;
     return 0;
 }
@@ -1162,18 +1221,23 @@ int picoui_widget_set_flex_grow(struct picoui_widget *widget, int grow)
 int picoui_widget_set_flex_new_track(struct picoui_widget *widget, int new_track)
 {
     int value;
-    int rc;
+    struct picoui_backend_widget *backend_widget;
+    ldBase_t *ld_base;
 
-    if (!picoui_widget_is_valid(widget)) {
+    if (!tinyui_widget_is_valid(widget)) {
         return -1;
     }
 
     value = new_track != 0;
-    rc = picoui_backend_widget_set_flex_new_track(widget, value);
-    if (rc != 0) {
+    backend_widget = tinyui_widget_get_backend(widget);
+    ld_base = tinyui_widget_get_ld_base(widget);
+    if (backend_widget == 0 || ld_base == 0 ||
+        !tinyui_widget_validate_native_binding(backend_widget, ld_base)) {
         return -1;
     }
 
+    ldBaseSetFlexNewTrack(ld_base, value);
+    backend_widget->child_layout.flex_new_track = value;
     widget->flex_new_track = value;
     return 0;
 }
@@ -1190,12 +1254,12 @@ int picoui_widget_set_flex_min_width(struct picoui_widget *widget, int min_width
 {
     ldBase_t *ld_base;
 
-    if (!picoui_widget_is_valid(widget) || min_width < 0) {
+    if (!tinyui_widget_is_valid(widget) || min_width < 0) {
         return -1;
     }
 
     widget->flex_min_width = min_width;
-    ld_base = picoui_widget_get_ld_base(widget);
+    ld_base = tinyui_widget_get_ld_base(widget);
     if (ld_base != 0) {
         ldBaseSetFlexMinWidth(ld_base, (int16_t)min_width);
     }
@@ -1214,12 +1278,12 @@ int picoui_widget_set_flex_min_height(struct picoui_widget *widget, int min_heig
 {
     ldBase_t *ld_base;
 
-    if (!picoui_widget_is_valid(widget) || min_height < 0) {
+    if (!tinyui_widget_is_valid(widget) || min_height < 0) {
         return -1;
     }
 
     widget->flex_min_height = min_height;
-    ld_base = picoui_widget_get_ld_base(widget);
+    ld_base = tinyui_widget_get_ld_base(widget);
     if (ld_base != 0) {
         ldBaseSetFlexMinHeight(ld_base, (int16_t)min_height);
     }
@@ -1238,12 +1302,12 @@ int picoui_widget_set_flex_max_width(struct picoui_widget *widget, int max_width
 {
     ldBase_t *ld_base;
 
-    if (!picoui_widget_is_valid(widget) || max_width < 0) {
+    if (!tinyui_widget_is_valid(widget) || max_width < 0) {
         return -1;
     }
 
     widget->flex_max_width = max_width;
-    ld_base = picoui_widget_get_ld_base(widget);
+    ld_base = tinyui_widget_get_ld_base(widget);
     if (ld_base != 0) {
         ldBaseSetFlexMaxWidth(ld_base, (int16_t)max_width);
     }
@@ -1262,12 +1326,12 @@ int picoui_widget_set_flex_max_height(struct picoui_widget *widget, int max_heig
 {
     ldBase_t *ld_base;
 
-    if (!picoui_widget_is_valid(widget) || max_height < 0) {
+    if (!tinyui_widget_is_valid(widget) || max_height < 0) {
         return -1;
     }
 
     widget->flex_max_height = max_height;
-    ld_base = picoui_widget_get_ld_base(widget);
+    ld_base = tinyui_widget_get_ld_base(widget);
     if (ld_base != 0) {
         ldBaseSetFlexMaxHeight(ld_base, (int16_t)max_height);
     }
@@ -1285,18 +1349,23 @@ int picoui_widget_set_flex_max_height(struct picoui_widget *widget, int max_heig
 int picoui_widget_set_ignore_layout(struct picoui_widget *widget, int ignore_layout)
 {
     int value;
-    int rc;
+    struct picoui_backend_widget *backend_widget;
+    ldBase_t *ld_base;
 
-    if (!picoui_widget_is_valid(widget)) {
+    if (!tinyui_widget_is_valid(widget)) {
         return -1;
     }
 
     value = ignore_layout != 0;
-    rc = picoui_backend_widget_set_ignore_layout(widget, value);
-    if (rc != 0) {
+    backend_widget = tinyui_widget_get_backend(widget);
+    ld_base = tinyui_widget_get_ld_base(widget);
+    if (backend_widget == 0 || ld_base == 0 ||
+        !tinyui_widget_validate_native_binding(backend_widget, ld_base)) {
         return -1;
     }
 
+    ldBaseSetIgnoreLayout(ld_base, value);
+    backend_widget->child_layout.ignore_layout = value;
     widget->ignore_layout = value;
     return 0;
 }
@@ -1322,17 +1391,37 @@ int picoui_widget_set_grid_cell(struct picoui_widget *widget,
                                 enum picoui_align x_align,
                                 enum picoui_align y_align)
 {
-    int rc;
+    struct picoui_backend_widget *backend_widget;
+    ldBase_t *ld_base;
+    int grid_x_align;
+    int grid_y_align;
 
-    if (!picoui_widget_is_valid(widget) || col_span <= 0 || row_span <= 0) {
+    if (!tinyui_widget_is_valid(widget) || col_span <= 0 || row_span <= 0) {
         return -1;
     }
 
-    rc = picoui_backend_widget_set_grid_cell(widget, col, row, col_span, row_span, x_align, y_align);
-    if (rc != 0) {
+    backend_widget = tinyui_widget_get_backend(widget);
+    ld_base = tinyui_widget_get_ld_base(widget);
+    if (backend_widget == 0 || ld_base == 0 ||
+        !tinyui_widget_validate_native_binding(backend_widget, ld_base)) {
         return -1;
     }
 
+    grid_x_align = tinyui_native_align_to_ld_grid((enum picoui_native_align)x_align);
+    grid_y_align = tinyui_native_align_to_ld_grid((enum picoui_native_align)y_align);
+    ldBaseSetGridCell(ld_base,
+                      grid_x_align,
+                      (int16_t)col,
+                      (int16_t)col_span,
+                      grid_y_align,
+                      (int16_t)row,
+                      (int16_t)row_span);
+    backend_widget->child_layout.grid_col = col;
+    backend_widget->child_layout.grid_row = row;
+    backend_widget->child_layout.grid_col_span = col_span;
+    backend_widget->child_layout.grid_row_span = row_span;
+    backend_widget->child_layout.grid_x_align = x_align;
+    backend_widget->child_layout.grid_y_align = y_align;
     widget->grid_col = col;
     widget->grid_row = row;
     widget->grid_col_span = col_span;
@@ -1353,18 +1442,18 @@ int picoui_widget_remove_from_parent(struct picoui_widget *widget)
 {
     struct picoui_backend_widget *backend_widget;
 
-    if (!picoui_widget_is_valid(widget)) {
+    if (!tinyui_widget_is_valid(widget)) {
         return -1;
     }
 
-    backend_widget = picoui_widget_get_backend(widget);
+    backend_widget = tinyui_widget_get_backend(widget);
     if (backend_widget == 0 ||
         backend_widget->kind == PICOUI_BACKEND_WIDGET_WINDOW ||
         backend_widget->parent == 0) {
         return -1;
     }
 
-    return picoui_backend_widget_detach_from_parent(backend_widget);
+    return tinyui_runtime_bridge_detach_from_parent(backend_widget);
 }
 
 /**
@@ -1379,11 +1468,11 @@ int picoui_widget_destroy(struct picoui_widget *widget)
     struct picoui_backend_widget *backend_widget;
     struct picoui_app *owner;
 
-    if (!picoui_widget_is_valid(widget)) {
+    if (!tinyui_widget_is_valid(widget)) {
         return -1;
     }
 
-    backend_widget = picoui_widget_get_backend(widget);
+    backend_widget = tinyui_widget_get_backend(widget);
     if (backend_widget == 0 ||
         backend_widget->kind == PICOUI_BACKEND_WIDGET_WINDOW ||
         backend_widget->parent == 0) {
@@ -1400,10 +1489,10 @@ int picoui_widget_destroy(struct picoui_widget *widget)
         }
     }
 
-    if (picoui_backend_widget_detach_from_parent(backend_widget) != 0) {
+    if (tinyui_runtime_bridge_detach_from_parent(backend_widget) != 0) {
         return -1;
     }
-    if (picoui_backend_widget_unbind_host(backend_widget) != 0) {
+    if (tinyui_runtime_bridge_unbind_host(backend_widget) != 0) {
         return -1;
     }
     widget->backend_widget = 0;
@@ -1419,9 +1508,9 @@ int picoui_widget_destroy(struct picoui_widget *widget)
 
 int picoui_widget_get_x(const struct picoui_widget *widget)
 {
-    ldBase_t *ld_base = picoui_widget_get_ld_base((struct picoui_widget *)widget);
+    ldBase_t *ld_base = tinyui_widget_get_ld_base((struct picoui_widget *)widget);
 
-    if (!picoui_widget_is_valid((struct picoui_widget *)widget)) {
+    if (!tinyui_widget_is_valid((struct picoui_widget *)widget)) {
         return -1;
     }
     return ld_base != 0 ? ldBaseGetX(ld_base) : widget->x;
@@ -1436,9 +1525,9 @@ int picoui_widget_get_x(const struct picoui_widget *widget)
 
 int picoui_widget_get_y(const struct picoui_widget *widget)
 {
-    ldBase_t *ld_base = picoui_widget_get_ld_base((struct picoui_widget *)widget);
+    ldBase_t *ld_base = tinyui_widget_get_ld_base((struct picoui_widget *)widget);
 
-    if (!picoui_widget_is_valid((struct picoui_widget *)widget)) {
+    if (!tinyui_widget_is_valid((struct picoui_widget *)widget)) {
         return -1;
     }
     return ld_base != 0 ? ldBaseGetY(ld_base) : widget->y;
@@ -1453,9 +1542,9 @@ int picoui_widget_get_y(const struct picoui_widget *widget)
 
 int picoui_widget_get_width(const struct picoui_widget *widget)
 {
-    ldBase_t *ld_base = picoui_widget_get_ld_base((struct picoui_widget *)widget);
+    ldBase_t *ld_base = tinyui_widget_get_ld_base((struct picoui_widget *)widget);
 
-    if (!picoui_widget_is_valid((struct picoui_widget *)widget)) {
+    if (!tinyui_widget_is_valid((struct picoui_widget *)widget)) {
         return -1;
     }
     return ld_base != 0 ? ldBaseGetWidth(ld_base) : widget->width;
@@ -1470,9 +1559,9 @@ int picoui_widget_get_width(const struct picoui_widget *widget)
 
 int picoui_widget_get_height(const struct picoui_widget *widget)
 {
-    ldBase_t *ld_base = picoui_widget_get_ld_base((struct picoui_widget *)widget);
+    ldBase_t *ld_base = tinyui_widget_get_ld_base((struct picoui_widget *)widget);
 
-    if (!picoui_widget_is_valid((struct picoui_widget *)widget)) {
+    if (!tinyui_widget_is_valid((struct picoui_widget *)widget)) {
         return -1;
     }
     return ld_base != 0 ? ldBaseGetHeight(ld_base) : widget->height;
@@ -1487,9 +1576,9 @@ int picoui_widget_get_height(const struct picoui_widget *widget)
 
 int picoui_widget_get_visible(const struct picoui_widget *widget)
 {
-    ldBase_t *ld_base = picoui_widget_get_ld_base((struct picoui_widget *)widget);
+    ldBase_t *ld_base = tinyui_widget_get_ld_base((struct picoui_widget *)widget);
 
-    if (!picoui_widget_is_valid((struct picoui_widget *)widget)) {
+    if (!tinyui_widget_is_valid((struct picoui_widget *)widget)) {
         return -1;
     }
     return ld_base != 0 ? (ldBaseIsHidden(ld_base) ? 0 : 1) : widget->visible;
@@ -1504,9 +1593,9 @@ int picoui_widget_get_visible(const struct picoui_widget *widget)
 
 int picoui_widget_get_opacity(const struct picoui_widget *widget)
 {
-    ldBase_t *ld_base = picoui_widget_get_ld_base((struct picoui_widget *)widget);
+    ldBase_t *ld_base = tinyui_widget_get_ld_base((struct picoui_widget *)widget);
 
-    if (!picoui_widget_is_valid((struct picoui_widget *)widget)) {
+    if (!tinyui_widget_is_valid((struct picoui_widget *)widget)) {
         return -1;
     }
     return ld_base != 0 ? (int)ldBaseGetOpacity(ld_base) : widget->opacity;
@@ -1521,9 +1610,9 @@ int picoui_widget_get_opacity(const struct picoui_widget *widget)
 
 int picoui_widget_get_selectable(const struct picoui_widget *widget)
 {
-    ldBase_t *ld_base = picoui_widget_get_ld_base((struct picoui_widget *)widget);
+    ldBase_t *ld_base = tinyui_widget_get_ld_base((struct picoui_widget *)widget);
 
-    if (!picoui_widget_is_valid((struct picoui_widget *)widget)) {
+    if (!tinyui_widget_is_valid((struct picoui_widget *)widget)) {
         return -1;
     }
     return ld_base != 0 ? (ldBaseIsSelectable(ld_base) ? 1 : 0) : widget->selectable;
@@ -1538,9 +1627,9 @@ int picoui_widget_get_selectable(const struct picoui_widget *widget)
 
 int picoui_widget_get_selected(const struct picoui_widget *widget)
 {
-    ldBase_t *ld_base = picoui_widget_get_ld_base((struct picoui_widget *)widget);
+    ldBase_t *ld_base = tinyui_widget_get_ld_base((struct picoui_widget *)widget);
 
-    if (!picoui_widget_is_valid((struct picoui_widget *)widget)) {
+    if (!tinyui_widget_is_valid((struct picoui_widget *)widget)) {
         return -1;
     }
     return ld_base != 0 ? (ldBaseIsSelected(ld_base) ? 1 : 0) : widget->selected;
@@ -1555,9 +1644,9 @@ int picoui_widget_get_selected(const struct picoui_widget *widget)
 
 int picoui_widget_get_corner(const struct picoui_widget *widget)
 {
-    ldBase_t *ld_base = picoui_widget_get_ld_base((struct picoui_widget *)widget);
+    ldBase_t *ld_base = tinyui_widget_get_ld_base((struct picoui_widget *)widget);
 
-    if (!picoui_widget_is_valid((struct picoui_widget *)widget)) {
+    if (!tinyui_widget_is_valid((struct picoui_widget *)widget)) {
         return -1;
     }
     return ld_base != 0 ? (ldBaseIsCorner(ld_base) ? 1 : 0) : widget->corner;
@@ -1579,9 +1668,9 @@ struct picoui_widget *picoui_widget_get_parent(const struct picoui_widget *widge
         return 0;
     }
 
-    backend = picoui_widget_get_backend(widget);
+    backend = tinyui_widget_get_backend(widget);
     backend_widget = backend != 0 ? backend->parent : 0;
-    return picoui_backend_widget_get_host(backend_widget);
+    return tinyui_widget_get_host(backend_widget);
 }
 
 /**
@@ -1600,9 +1689,9 @@ struct picoui_widget *picoui_widget_get_first_child(const struct picoui_widget *
         return 0;
     }
 
-    backend = picoui_widget_get_backend(widget);
+    backend = tinyui_widget_get_backend(widget);
     backend_widget = backend != 0 ? backend->first_child : 0;
-    return picoui_backend_widget_get_host(backend_widget);
+    return tinyui_widget_get_host(backend_widget);
 }
 
 /**
@@ -1621,9 +1710,9 @@ struct picoui_widget *picoui_widget_get_next_sibling(const struct picoui_widget 
         return 0;
     }
 
-    backend = picoui_widget_get_backend(widget);
+    backend = tinyui_widget_get_backend(widget);
     backend_widget = backend != 0 ? backend->next_sibling : 0;
-    return picoui_backend_widget_get_host(backend_widget);
+    return tinyui_widget_get_host(backend_widget);
 }
 
 /**
@@ -1642,9 +1731,9 @@ struct picoui_widget *picoui_widget_get_root(const struct picoui_widget *widget)
         return 0;
     }
 
-    backend = picoui_widget_get_backend(widget);
+    backend = tinyui_widget_get_backend(widget);
     backend_widget = backend != 0 ? backend->root : 0;
-    return picoui_backend_widget_get_host(backend_widget);
+    return tinyui_widget_get_host(backend_widget);
 }
 
 /**
@@ -1662,14 +1751,14 @@ int picoui_widget_get_child_count(const struct picoui_widget *widget)
         return -1;
     }
 
-    ld_base = picoui_widget_get_ld_base((struct picoui_widget *)widget);
+    ld_base = tinyui_widget_get_ld_base((struct picoui_widget *)widget);
     if (ld_base != 0) {
         return (int)ldBaseGetChildCount(ld_base);
     }
 
     {
         int count = 0;
-        struct picoui_backend_widget *backend = picoui_widget_get_backend(widget);
+        struct picoui_backend_widget *backend = tinyui_widget_get_backend(widget);
         struct picoui_backend_widget *child = backend != 0 ? backend->first_child : 0;
         while (child != 0) {
             count++;
@@ -1695,12 +1784,12 @@ int picoui_widget_get_name_id(const struct picoui_widget *widget)
         return -1;
     }
 
-    ld_base = picoui_widget_get_ld_base((struct picoui_widget *)widget);
+    ld_base = tinyui_widget_get_ld_base((struct picoui_widget *)widget);
     if (ld_base != 0) {
         return (int)ldBaseGetNameId(ld_base);
     }
 
-    backend_widget = picoui_widget_get_backend(widget);
+    backend_widget = tinyui_widget_get_backend(widget);
     return backend_widget != 0 ? backend_widget->ld_name_id : -1;
 }
 
@@ -1720,9 +1809,9 @@ struct picoui_widget *picoui_widget_find_by_name_id(const struct picoui_widget *
         return 0;
     }
 
-    backend_widget = picoui_backend_widget_find_by_name_id(picoui_widget_get_backend(root),
+    backend_widget = picoui_backend_widget_find_by_name_id(tinyui_widget_get_backend(root),
                                                            (uint16_t)name_id);
-    return picoui_backend_widget_get_host(backend_widget);
+    return tinyui_widget_get_host(backend_widget);
 }
 
 /**
@@ -1739,7 +1828,7 @@ enum picoui_widget_type picoui_widget_get_type(const struct picoui_widget *widge
         return PICOUI_WIDGET_TYPE_UNKNOWN;
     }
 
-    backend_widget = picoui_widget_get_backend(widget);
+    backend_widget = tinyui_widget_get_backend(widget);
     if (backend_widget != 0) {
         return picoui_widget_type_from_backend_kind(backend_widget->kind);
     }
@@ -1766,7 +1855,7 @@ struct picoui_point picoui_widget_get_absolute_pos(const struct picoui_widget *w
         return result;
     }
 
-    ld_base = picoui_widget_get_ld_base((struct picoui_widget *)widget);
+    ld_base = tinyui_widget_get_ld_base((struct picoui_widget *)widget);
     if (ld_base == 0) {
         result.x = point.x + widget->x;
         result.y = point.y + widget->y;
@@ -1801,7 +1890,7 @@ struct picoui_point picoui_widget_get_relative_pos(const struct picoui_widget *w
         return result;
     }
 
-    ld_base = picoui_widget_get_ld_base((struct picoui_widget *)widget);
+    ld_base = tinyui_widget_get_ld_base((struct picoui_widget *)widget);
     if (ld_base == 0) {
         result.x = point.x - widget->x;
         result.y = point.y - widget->y;

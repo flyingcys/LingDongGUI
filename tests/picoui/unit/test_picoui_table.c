@@ -11,7 +11,90 @@
 #include <stdio.h>
 #include <string.h>
 
+struct picoui_table_test_dispose_snapshot {
+    int kind;
+    int cleanup_complete;
+    int cleanup_incomplete;
+    int detach_result;
+    int unbind_result;
+    int detached;
+    int owner_cleared;
+    int root_cleared;
+    int parent_cleared;
+    int next_sibling_cleared;
+    int host_cleared;
+    int event_bridge_cleared;
+    int ld_pinfo_cleared;
+};
+
+void picoui_backend_table_test_fail_next_set_keyboard_binding(void);
+void picoui_backend_table_test_reset_state(void);
+int picoui_backend_table_test_take_last_dispose_snapshot(
+    struct picoui_table_test_dispose_snapshot *snapshot);
+
 static const char *test_self_binary_path = 0;
+
+static void assert_archive_lacks_symbol(const char *archive_relpath, const char *symbol)
+{
+    char command[1024];
+    FILE *pipe;
+    char line[512];
+
+    assert(test_self_binary_path != 0);
+    assert(archive_relpath != 0);
+    assert(symbol != 0);
+    snprintf(command, sizeof(command),
+             "cd \"$(dirname '%s')\" && nm \"%s\" 2>/dev/null",
+             test_self_binary_path,
+             archive_relpath);
+    pipe = popen(command, "r");
+    assert(pipe != 0);
+    while (fgets(line, sizeof(line), pipe) != 0) {
+        size_t line_len = strlen(line);
+        size_t symbol_len = strlen(symbol);
+
+        while (line_len > 0 && (line[line_len - 1] == '\n' || line[line_len - 1] == '\r')) {
+            line[--line_len] = '\0';
+        }
+        if (line_len >= symbol_len &&
+            strcmp(line + line_len - symbol_len, symbol) == 0) {
+            assert(!"unexpected symbol still present in archive");
+        }
+    }
+    assert(pclose(pipe) == 0);
+}
+
+static void assert_archive_lacks_member(const char *archive_relpath, const char *member)
+{
+    char command[1024];
+    FILE *pipe;
+    char line[512];
+    size_t member_len;
+
+    assert(test_self_binary_path != 0);
+    assert(archive_relpath != 0);
+    assert(member != 0);
+    snprintf(command, sizeof(command),
+             "cd \"$(dirname '%s')\" && nm \"%s\" 2>/dev/null",
+             test_self_binary_path,
+             archive_relpath);
+    pipe = popen(command, "r");
+    assert(pipe != 0);
+    member_len = strlen(member);
+    while (fgets(line, sizeof(line), pipe) != 0) {
+        size_t line_len = strlen(line);
+
+        while (line_len > 0 && (line[line_len - 1] == '\n' || line[line_len - 1] == '\r')) {
+            line[--line_len] = '\0';
+        }
+        if (line_len == member_len + 1 &&
+            strncmp(line, member, member_len) == 0 &&
+            line[member_len] == ':') {
+            assert(!"unexpected archive member still present");
+        }
+    }
+    assert(pclose(pipe) == 0);
+}
 
 static void assert_self_binary_lacks_symbol(const char *symbol)
 {
@@ -496,6 +579,278 @@ static void test_table_sync_current_cell_rejects_corrupted_backend_binding(void)
     picoui_app_destroy(app);
 }
 
+static void test_table_set_current_and_selected_cell_tolerate_corrupted_backend_binding(void)
+{
+    struct picoui_app *app;
+    struct picoui_window *win;
+    struct picoui_table *table;
+    struct picoui_backend_widget *backend;
+    ldTable_t *ld_table;
+    enum picoui_backend_widget_kind saved_kind;
+
+    app = picoui_app_create();
+    assert(app != 0);
+    win = picoui_window_create(app, "table_corrupted_setter_root");
+    assert(win != 0);
+    table = picoui_table_create(win, "table_corrupted_setter", 3, 3);
+    assert(table != 0);
+
+    backend = (struct picoui_backend_widget *)table->widget.backend_widget;
+    assert(backend != 0);
+    ld_table = (ldTable_t *)backend->ld_widget;
+    assert(ld_table != 0);
+    saved_kind = backend->kind;
+    backend->kind = PICOUI_BACKEND_WIDGET_LABEL;
+
+    assert(picoui_table_set_current_cell(table, 1, 2) == 0);
+    assert(table->current_row == 1);
+    assert(table->current_column == 2);
+    assert(ld_table->currentRow == 1);
+    assert(ld_table->currentColumn == 2);
+
+    assert(picoui_table_set_selected_cell(table, 2, 1) == 0);
+    assert(table->current_row == 2);
+    assert(table->current_column == 1);
+    assert(ld_table->currentRow == 2);
+    assert(ld_table->currentColumn == 1);
+
+    backend->kind = saved_kind;
+    picoui_app_destroy(app);
+}
+
+static void test_table_cell_text_and_editable_reject_corrupted_backend_binding(void)
+{
+    struct picoui_app *app;
+    struct picoui_window *win;
+    struct picoui_table *table;
+    struct picoui_backend_widget *backend;
+    ldTable_t *ld_table;
+
+    app = picoui_app_create();
+    assert(app != 0);
+    win = picoui_window_create(app, "table_cell_corrupt_root");
+    assert(win != 0);
+    table = picoui_table_create(win, "table_cell_corrupt", 2, 2);
+    assert(table != 0);
+
+    backend = (struct picoui_backend_widget *)table->widget.backend_widget;
+    assert(backend != 0);
+    ld_table = (ldTable_t *)backend->ld_widget;
+    assert(ld_table != 0);
+
+    assert(picoui_table_set_cell_editable(table, 0, 0, 1, 8) == 0);
+    assert(picoui_table_set_cell_text(table, 0, 0, "before") == 0);
+    backend->kind = PICOUI_BACKEND_WIDGET_LABEL;
+
+    assert(picoui_table_set_cell_text(table, 0, 0, "after") == -1);
+    assert(picoui_table_get_cell_text(table, 0, 0) == 0);
+    assert(picoui_table_set_cell_editable(table, 0, 0, 1, 8) == -1);
+    assert(strcmp((const char *)ldTableGetItemText(ld_table, 0, 0), "before") == 0);
+    assert(ldTableGetItemEditable(ld_table, 0, 0) == true);
+
+    picoui_app_destroy(app);
+}
+
+static void test_table_item_align_and_region_reject_corrupted_backend_binding(void)
+{
+    struct picoui_app *app;
+    struct picoui_window *win;
+    struct picoui_table *table;
+    struct picoui_backend_widget *backend;
+    ldTable_t *ld_table;
+    struct picoui_table_region region;
+
+    app = picoui_app_create();
+    assert(app != 0);
+    win = picoui_window_create(app, "table_item_meta_corrupt_root");
+    assert(win != 0);
+    table = picoui_table_create(win, "table_item_meta_corrupt", 3, 3);
+    assert(table != 0);
+
+    backend = (struct picoui_backend_widget *)table->widget.backend_widget;
+    assert(backend != 0);
+    ld_table = (ldTable_t *)backend->ld_widget;
+    assert(ld_table != 0);
+
+    assert(picoui_table_set_item_align(table, 1, 1, PICOUI_ALIGN_END) == 0);
+    assert(picoui_table_set_cell_editable(table, 1, 1, 1, 12) == 0);
+    region = picoui_table_get_item_region(table, 1, 1);
+    assert(region.width > 0);
+    assert(region.height > 0);
+
+    backend->kind = PICOUI_BACKEND_WIDGET_LABEL;
+    assert(picoui_table_set_item_align(table, 1, 1, PICOUI_ALIGN_CENTER) == -1);
+    assert(picoui_table_get_item_align(table, 1, 1) == -1);
+    assert(picoui_table_get_item_editable(table, 1, 1) == -1);
+    region = picoui_table_get_item_region(table, 1, 1);
+    assert(region.x == 0);
+    assert(region.y == 0);
+    assert(region.width == 0);
+    assert(region.height == 0);
+    assert(ldTableGetItemAlign(ld_table, 1, 1) == ARM_2D_ALIGN_RIGHT);
+    assert(ldTableGetItemEditable(ld_table, 1, 1) == true);
+
+    picoui_app_destroy(app);
+}
+
+static void test_table_style_setters_reject_corrupted_backend_binding(void)
+{
+    struct picoui_app *app;
+    struct picoui_window *win;
+    struct picoui_table *table;
+    struct picoui_backend_widget *backend;
+    ldTable_t *ld_table;
+    ldTableItem_t *item;
+
+    app = picoui_app_create();
+    assert(app != 0);
+    win = picoui_window_create(app, "table_style_corrupt_root");
+    assert(win != 0);
+    table = picoui_table_create(win, "table_style_corrupt", 3, 3);
+    assert(table != 0);
+
+    backend = (struct picoui_backend_widget *)table->widget.backend_widget;
+    assert(backend != 0);
+    ld_table = (ldTable_t *)backend->ld_widget;
+    assert(ld_table != 0);
+
+    assert(picoui_table_set_background_color(table, 0x102030U) == 0);
+    assert(picoui_table_set_item_width(table, 2, 66) == 0);
+    assert(picoui_table_set_item_height(table, 1, 28) == 0);
+    assert(picoui_table_set_item_color(table, 1, 1, 0xABCDEFU, 0x123456U) == 0);
+    assert(picoui_table_set_item_font(table, 1, 1) == 0);
+    assert(picoui_table_set_item_static_text(table, 0, 2, "HEAD") == 0);
+    assert(picoui_table_set_excel_type(table) == 0);
+
+    item = ldTableGetItem(ld_table, 1, 1);
+    assert(item != 0);
+    backend->kind = PICOUI_BACKEND_WIDGET_LABEL;
+
+    assert(picoui_table_set_background_color(table, 0x556677U) == -1);
+    assert(picoui_table_set_item_width(table, 2, 77) == -1);
+    assert(picoui_table_set_item_height(table, 1, 30) == -1);
+    assert(picoui_table_set_item_color(table, 1, 1, 0x010203U, 0x040506U) == -1);
+    assert(picoui_table_set_item_font(table, 1, 1) == -1);
+    assert(picoui_table_set_item_static_text(table, 0, 2, "TAIL") == -1);
+    assert(picoui_table_set_excel_type(table) == -1);
+
+    assert(ldTableGetBackgroundColor(ld_table) == __RGB(219,219,219));
+    assert(ldTableGetItemWidth(ld_table, 2) == 71);
+    assert(ldTableGetItemHeight(ld_table, 1) == 18);
+    assert(ldTableGetItemTextColor(ld_table, 1, 1) == (ldColor)0xABCDEFU);
+    assert(ldTableGetItemBackgroundColor(ld_table, 1, 1) == (ldColor)0x123456U);
+    assert(ldTableGetItemFont(ld_table, 1, 1) == (arm_2d_font_t *)&ARM_2D_FONT_6x8);
+    assert(item->ptFont == (arm_2d_font_t *)&ARM_2D_FONT_6x8);
+
+    picoui_app_destroy(app);
+}
+
+static void test_table_image_and_button_reject_corrupted_backend_binding(void)
+{
+    struct picoui_app *app;
+    struct picoui_window *win;
+    struct picoui_table *table;
+    struct picoui_backend_widget *backend;
+    ldTable_t *ld_table;
+    ldTableItem_t *image_item;
+    ldTableItem_t *button_item;
+    arm_2d_tile_t release_tile = {0};
+    arm_2d_tile_t press_tile = {0};
+    arm_2d_tile_t release_mask_tile = {0};
+    arm_2d_tile_t press_mask_tile = {0};
+    struct picoui_image_source image_src = { .img_tile = &release_tile, .mask_tile = &release_mask_tile };
+    struct picoui_image_source release_src = { .img_tile = &release_tile, .mask_tile = &release_mask_tile };
+    struct picoui_image_source press_src = { .img_tile = &press_tile, .mask_tile = &press_mask_tile };
+
+    app = picoui_app_create();
+    assert(app != 0);
+    win = picoui_window_create(app, "table_image_button_corrupt_root");
+    assert(win != 0);
+    table = picoui_table_create(win, "table_image_button_corrupt", 2, 2);
+    assert(table != 0);
+
+    backend = (struct picoui_backend_widget *)table->widget.backend_widget;
+    assert(backend != 0);
+    ld_table = (ldTable_t *)backend->ld_widget;
+    assert(ld_table != 0);
+
+    assert(picoui_table_set_item_image(table, 0, 0, 4, 4, &image_src, 0xFFFFFFU) == 0);
+    assert(picoui_table_set_item_button(table, 0, 1, 2, 2,
+                                        &release_src, 0xAAAAAAU,
+                                        &press_src, 0xBBBBBBU,
+                                        1) == 0);
+
+    image_item = ldTableGetItem(ld_table, 0, 0);
+    button_item = ldTableGetItem(ld_table, 0, 1);
+    assert(image_item != 0);
+    assert(button_item != 0);
+    backend->kind = PICOUI_BACKEND_WIDGET_LABEL;
+
+    assert(picoui_table_set_item_image(table, 0, 0, 6, 6, &image_src, 0x123456U) == -1);
+    assert(picoui_table_set_item_button(table, 0, 1, 3, 3,
+                                        &release_src, 0x111111U,
+                                        &press_src, 0x222222U,
+                                        0) == -1);
+
+    assert(image_item->tLocation.iX == 4);
+    assert(image_item->tLocation.iY == 4);
+    assert(image_item->ptPressImgTile == image_src.img_tile);
+    assert(image_item->ptPressMaskTile == image_src.mask_tile);
+    assert(image_item->releaseImgMaskColor == (ldColor)0xFFFFFFU);
+
+    assert(button_item->tLocation.iX == 2);
+    assert(button_item->tLocation.iY == 2);
+    assert(button_item->ptReleaseImgTile == release_src.img_tile);
+    assert(button_item->ptReleaseMaskTile == release_src.mask_tile);
+    assert(button_item->ptPressImgTile == press_src.img_tile);
+    assert(button_item->ptPressMaskTile == press_src.mask_tile);
+    assert(button_item->releaseImgMaskColor == (ldColor)0xAAAAAAU);
+    assert(button_item->pressImgMaskColor == (ldColor)0xBBBBBBU);
+    assert(button_item->isButton == true);
+    assert(button_item->isCheckable == true);
+
+    picoui_app_destroy(app);
+}
+
+static void test_table_get_keyboard_binding_rejects_corrupted_backend_binding(void)
+{
+    struct picoui_app *app;
+    struct picoui_window *win;
+    struct picoui_keyboard *keyboard;
+    struct picoui_table *table;
+    struct picoui_backend_widget *backend;
+    struct picoui_backend_widget *keyboard_backend;
+    enum picoui_backend_widget_kind saved_kind;
+    unsigned int keyboard_binding = 0;
+
+    app = picoui_app_create();
+    assert(app != 0);
+    win = picoui_window_create(app, "table_keyboard_corrupted_root");
+    assert(win != 0);
+    keyboard = picoui_keyboard_create(win, "table_keyboard_corrupted_keyboard");
+    assert(keyboard != 0);
+    table = picoui_table_create(win, "table_keyboard_corrupted", 3, 3);
+    assert(table != 0);
+
+    keyboard_backend = (struct picoui_backend_widget *)keyboard->widget.backend_widget;
+    assert(keyboard_backend != 0);
+    assert(picoui_table_set_keyboard_binding(table, keyboard_backend->ld_name_id) == 0);
+
+    backend = (struct picoui_backend_widget *)table->widget.backend_widget;
+    assert(backend != 0);
+    saved_kind = backend->kind;
+    backend->kind = PICOUI_BACKEND_WIDGET_LABEL;
+
+    assert(picoui_table_get_keyboard_binding(table, &keyboard_binding) == 0);
+    assert(keyboard_binding == keyboard_backend->ld_name_id);
+    assert(table->keyboard_binding == keyboard_backend->ld_name_id);
+
+    backend->kind = saved_kind;
+    assert(picoui_table_get_keyboard_binding(table, &keyboard_binding) == 0);
+    assert(keyboard_binding == keyboard_backend->ld_name_id);
+    picoui_app_destroy(app);
+}
+
 static void test_table_r4_aliases_and_native_getters_round_trip(void)
 {
     struct picoui_app *app;
@@ -577,6 +932,75 @@ static void test_table_r4_aliases_and_native_getters_round_trip(void)
     picoui_app_destroy(app);
 }
 
+static void test_table_create_with_props_applies_keyboard_and_size_contract(void)
+{
+    struct picoui_app *app;
+    struct picoui_window *win;
+    struct picoui_keyboard *keyboard;
+    struct picoui_table *table;
+    struct picoui_backend_widget *backend;
+    struct picoui_backend_widget *keyboard_backend;
+    ldTable_t *ld_table;
+    unsigned int keyboard_binding = 0;
+    const struct picoui_table_props props = {
+        .id = "table_props_contract",
+        .keyboard_binding = 0,
+        .rows = 3,
+        .columns = 3,
+        .style_class = "table-props",
+        .user_data = (void *)0x1234,
+        .width = 144,
+        .height = 72,
+        .bg_color = 0x102030U,
+        .text_color = 0x405060U,
+        .border_color = 0x708090U,
+        .radius = 6,
+        .padding = 4,
+        .has_keyboard_binding = 1,
+    };
+
+    app = picoui_app_create();
+    assert(app != 0);
+    win = picoui_window_create(app, "table_props_root");
+    assert(win != 0);
+    keyboard = picoui_keyboard_create(win, "table_props_keyboard");
+    assert(keyboard != 0);
+
+    keyboard_backend = (struct picoui_backend_widget *)keyboard->widget.backend_widget;
+    assert(keyboard_backend != 0);
+
+    {
+        struct picoui_table_props bound_props = props;
+        bound_props.keyboard_binding = keyboard_backend->ld_name_id;
+        table = picoui_table_create_with_props(win, &bound_props);
+    }
+
+    assert(table != 0);
+    backend = (struct picoui_backend_widget *)table->widget.backend_widget;
+    assert(backend != 0);
+    ld_table = (ldTable_t *)backend->ld_widget;
+    assert(ld_table != 0);
+
+    assert(picoui_table_get_keyboard_binding(table, &keyboard_binding) == 0);
+    assert(keyboard_binding == keyboard_backend->ld_name_id);
+    assert(table->keyboard_binding == keyboard_backend->ld_name_id);
+    assert(ld_table->kbNameId == keyboard_backend->ld_name_id);
+    assert(table->widget.width == 144);
+    assert(table->widget.height == 72);
+    assert(table->widget.user_data == (void *)0x1234);
+    assert(table->widget.bg_color == 0x102030U);
+    assert(table->widget.text_color == 0x405060U);
+    assert(table->widget.border_color == 0x708090U);
+    assert(table->widget.radius == 6);
+    assert(table->widget.padding == 4);
+    assert(table->widget.style_class == props.style_class);
+    assert(picoui_table_set_current_cell(table, 2, 1) == 0);
+    assert(picoui_table_get_current_row(table) == 2);
+    assert(picoui_table_get_current_column(table) == 1);
+
+    picoui_app_destroy(app);
+}
+
 static void test_table_set_excel_type_round_trip(struct picoui_window *win)
 {
     struct picoui_table *table = picoui_table_create(win, "table_excel", 3, 4);
@@ -622,6 +1046,73 @@ static void test_table_item_image_rejects_null_source(struct picoui_window *win)
     assert(picoui_table_set_item_image(table, 0, 0, 4, 4, 0, 0xFFFFFFU) == -1);
 }
 
+static void test_table_create_with_props_keyboard_failure_rolls_back_attached_child(void)
+{
+    struct picoui_app *app;
+    struct picoui_window *win;
+    struct picoui_backend_widget *parent_backend;
+    struct picoui_backend_widget *tail;
+    struct picoui_backend_widget *next_before = 0;
+    struct picoui_table *probe;
+    struct picoui_table *table;
+    struct picoui_table_test_dispose_snapshot snapshot = {0};
+
+    app = picoui_app_create();
+    assert(app != 0);
+    win = picoui_window_create(app, "table_props_fail_root");
+    assert(win != 0);
+
+    parent_backend = (struct picoui_backend_widget *)win->widget.backend_widget;
+    assert(parent_backend != 0);
+    tail = parent_backend->first_child;
+    while (tail != 0 && tail->next_sibling != 0) {
+        tail = tail->next_sibling;
+    }
+    if (tail != 0) {
+        next_before = tail->next_sibling;
+    }
+
+    picoui_backend_table_test_reset_state();
+    probe = picoui_table_create(win, "table_props_fail_probe", 2, 2);
+    assert(probe != 0);
+    assert(picoui_widget_destroy(&probe->widget) == 0);
+
+    picoui_backend_table_test_fail_next_set_keyboard_binding();
+    table = picoui_table_create_with_props(
+        win,
+        &(struct picoui_table_props){
+            .id = "table_props_fail_keyboard",
+            .rows = 2,
+            .columns = 2,
+            .has_keyboard_binding = 1,
+            .keyboard_binding = 7U,
+        });
+
+    assert(table == 0);
+    assert(picoui_backend_table_test_take_last_dispose_snapshot(&snapshot) == 0);
+    assert(snapshot.kind == PICOUI_BACKEND_WIDGET_TABLE);
+    assert(snapshot.cleanup_complete == 1);
+    assert(snapshot.cleanup_incomplete == 0);
+    assert(snapshot.detach_result == 0);
+    assert(snapshot.unbind_result == 0);
+    assert(snapshot.detached == 1);
+    assert(snapshot.owner_cleared == 1);
+    assert(snapshot.root_cleared == 1);
+    assert(snapshot.parent_cleared == 1);
+    assert(snapshot.next_sibling_cleared == 1);
+    assert(snapshot.host_cleared == 1);
+    assert(snapshot.event_bridge_cleared == 1);
+    assert(snapshot.ld_pinfo_cleared == 1);
+    assert(picoui_backend_table_test_take_last_dispose_snapshot(&snapshot) == -1);
+    if (tail != 0) {
+        assert(tail->next_sibling == next_before);
+    } else {
+        assert(parent_backend->first_child == 0);
+    }
+
+    picoui_app_destroy(app);
+}
+
 static void test_table_legacy_bind_host_symbol_is_removed(void)
 {
     assert_self_binary_lacks_symbol("picoui_backend_table_bind_host");
@@ -629,8 +1120,67 @@ static void test_table_legacy_bind_host_symbol_is_removed(void)
 
 static void test_table_navigate_and_sync_current_cell_backend_symbols_are_no_longer_public(void)
 {
+    assert_archive_lacks_member("../../libpicoui_backend_ldgui.a", "backend_table.c.o");
+    assert_archive_lacks_symbol("../../libpicoui_backend_ldgui.a",
+                                "picoui_backend_table_set_keyboard_binding");
+    assert_archive_lacks_symbol("../../libpicoui_backend_ldgui.a",
+                                "picoui_backend_table_get_keyboard_binding");
+    assert_archive_lacks_symbol("../../libpicoui_backend_ldgui.a",
+                                "picoui_backend_table_set_cell_text");
+    assert_archive_lacks_symbol("../../libpicoui_backend_ldgui.a",
+                                "picoui_backend_table_get_cell_text");
+    assert_archive_lacks_symbol("../../libpicoui_backend_ldgui.a",
+                                "picoui_backend_table_set_cell_editable");
+    assert_archive_lacks_symbol("../../libpicoui_backend_ldgui.a",
+                                "picoui_backend_table_set_item_align");
+    assert_archive_lacks_symbol("../../libpicoui_backend_ldgui.a",
+                                "picoui_backend_table_get_item_align");
+    assert_archive_lacks_symbol("../../libpicoui_backend_ldgui.a",
+                                "picoui_backend_table_get_item_editable");
+    assert_archive_lacks_symbol("../../libpicoui_backend_ldgui.a",
+                                "picoui_backend_table_get_item_region");
+    assert_archive_lacks_symbol("../../libpicoui_backend_ldgui.a",
+                                "picoui_backend_table_set_excel_type");
+    assert_archive_lacks_symbol("../../libpicoui_backend_ldgui.a",
+                                "picoui_backend_table_set_item_width");
+    assert_archive_lacks_symbol("../../libpicoui_backend_ldgui.a",
+                                "picoui_backend_table_set_item_height");
+    assert_archive_lacks_symbol("../../libpicoui_backend_ldgui.a",
+                                "picoui_backend_table_set_item_color");
+    assert_archive_lacks_symbol("../../libpicoui_backend_ldgui.a",
+                                "picoui_backend_table_set_bg_color");
+    assert_archive_lacks_symbol("../../libpicoui_backend_ldgui.a",
+                                "picoui_backend_table_set_item_static_text");
+    assert_archive_lacks_symbol("../../libpicoui_backend_ldgui.a",
+                                "picoui_backend_table_set_item_font");
+    assert_archive_lacks_symbol("../../libpicoui_backend_ldgui.a",
+                                "picoui_backend_table_set_item_image");
+    assert_archive_lacks_symbol("../../libpicoui_backend_ldgui.a",
+                                "picoui_backend_table_set_item_button");
+    assert_archive_lacks_symbol("../../libpicoui_backend_ldgui.a",
+                                "picoui_backend_table_set_selected_cell");
+    assert_archive_lacks_symbol("../../libpicoui_backend_ldgui.a",
+                                "picoui_backend_table_set_current_cell");
     assert_self_binary_lacks_symbol("picoui_backend_table_navigate");
     assert_self_binary_lacks_symbol("picoui_backend_table_sync_current_cell");
+    assert_self_binary_lacks_symbol("picoui_backend_table_set_cell_text");
+    assert_self_binary_lacks_symbol("picoui_backend_table_get_cell_text");
+    assert_self_binary_lacks_symbol("picoui_backend_table_set_cell_editable");
+    assert_self_binary_lacks_symbol("picoui_backend_table_set_item_align");
+    assert_self_binary_lacks_symbol("picoui_backend_table_get_item_align");
+    assert_self_binary_lacks_symbol("picoui_backend_table_get_item_editable");
+    assert_self_binary_lacks_symbol("picoui_backend_table_get_item_region");
+    assert_self_binary_lacks_symbol("picoui_backend_table_set_excel_type");
+    assert_self_binary_lacks_symbol("picoui_backend_table_set_item_width");
+    assert_self_binary_lacks_symbol("picoui_backend_table_set_item_height");
+    assert_self_binary_lacks_symbol("picoui_backend_table_set_item_color");
+    assert_self_binary_lacks_symbol("picoui_backend_table_set_bg_color");
+    assert_self_binary_lacks_symbol("picoui_backend_table_set_item_static_text");
+    assert_self_binary_lacks_symbol("picoui_backend_table_set_item_font");
+    assert_self_binary_lacks_symbol("picoui_backend_table_set_item_image");
+    assert_self_binary_lacks_symbol("picoui_backend_table_set_item_button");
+    assert_self_binary_lacks_symbol("picoui_backend_table_set_selected_cell");
+    assert_self_binary_lacks_symbol("picoui_backend_table_set_current_cell");
 }
 
 int main(int argc, char **argv)
@@ -646,7 +1196,15 @@ int main(int argc, char **argv)
     test_table_native_size_align_color_font_region_and_navigation_round_trip();
     test_table_native_static_text_background_and_getters_round_trip();
     test_table_sync_current_cell_rejects_corrupted_backend_binding();
+    test_table_set_current_and_selected_cell_tolerate_corrupted_backend_binding();
+    test_table_cell_text_and_editable_reject_corrupted_backend_binding();
+    test_table_item_align_and_region_reject_corrupted_backend_binding();
+    test_table_style_setters_reject_corrupted_backend_binding();
+    test_table_image_and_button_reject_corrupted_backend_binding();
+    test_table_get_keyboard_binding_rejects_corrupted_backend_binding();
     test_table_r4_aliases_and_native_getters_round_trip();
+    test_table_create_with_props_applies_keyboard_and_size_contract();
+    test_table_create_with_props_keyboard_failure_rolls_back_attached_child();
     test_table_legacy_bind_host_symbol_is_removed();
     test_table_navigate_and_sync_current_cell_backend_symbols_are_no_longer_public();
 

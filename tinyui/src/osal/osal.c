@@ -1,5 +1,5 @@
 #include "internal.h"
-#include "picoui/osal.h"
+#include "osal.h"
 
 #include <stddef.h>
 

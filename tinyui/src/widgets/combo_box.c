@@ -28,8 +28,8 @@
 
 extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
 
-int picoui_backend_widget_unbind_host(void *backend_widget);
-int picoui_backend_widget_detach_from_parent(void *backend_widget);
+int tinyui_runtime_bridge_unbind_host(void *backend_widget);
+int tinyui_runtime_bridge_detach_from_parent(void *backend_widget);
 
 static ldColor picoui_backend_combo_box_rgb_to_ld_color(unsigned int rgb)
 {
@@ -124,7 +124,7 @@ static void *picoui_combo_box_create_backend_local(void *parent, const char *id)
         return 0;
     }
 
-    app_state = picoui_runtime_bridge_backend_state_from_parent(parent);
+    app_state = tinyui_runtime_bridge_backend_state_from_parent(parent);
     if (app_state == NULL || app_state->ld_scene == NULL || parent_widget->ld_widget == NULL) {
         return 0;
     }
@@ -134,7 +134,7 @@ static void *picoui_combo_box_create_backend_local(void *parent, const char *id)
         return 0;
     }
 
-    name_id = picoui_runtime_bridge_next_name_id(parent);
+    name_id = tinyui_runtime_bridge_next_name_id(parent);
     if (name_id == 0) {
         free(widget);
         return 0;
@@ -153,7 +153,7 @@ static void *picoui_combo_box_create_backend_local(void *parent, const char *id)
         return 0;
     }
 
-    if (picoui_backend_widget_init_child(widget,
+    if (tinyui_widget_init_child(widget,
                                          parent,
                                          PICOUI_BACKEND_WIDGET_COMBO_BOX,
                                          id,
@@ -166,7 +166,7 @@ static void *picoui_combo_box_create_backend_local(void *parent, const char *id)
     widget->ld_name_id = name_id;
     widget->value = -1;
     widget->last_signal = PICOUI_BACKEND_SIGNAL_NONE;
-    if (picoui_backend_widget_attach_child(parent, widget) != 0) {
+    if (tinyui_widget_attach_child(parent, widget) != 0) {
         ldComboBox_depose(app_state->ld_scene, ld_combo_box);
         free(widget);
         return 0;
@@ -418,11 +418,11 @@ static void picoui_combo_box_dispose_partial(struct picoui_combo_box *combo_box)
 
     backend = (struct picoui_backend_widget *)combo_box->widget.backend_widget;
     if (backend != 0) {
-        app_state = picoui_runtime_bridge_backend_state(backend->owner);
+        app_state = tinyui_runtime_bridge_backend_state(backend->owner);
         if (backend->parent != 0) {
-            (void)picoui_backend_widget_detach_from_parent(backend);
+            (void)tinyui_runtime_bridge_detach_from_parent(backend);
         }
-        (void)picoui_backend_widget_unbind_host(backend);
+        (void)tinyui_runtime_bridge_unbind_host(backend);
         if (app_state != 0 && app_state->ld_scene != 0 && backend->ld_widget != 0) {
             ldComboBox_depose(app_state->ld_scene, (ldComboBox_t *)backend->ld_widget);
         }
@@ -456,7 +456,7 @@ struct picoui_combo_box *picoui_combo_box_create(struct picoui_window *parent, c
     combo_box->selected_index = -1;
     combo_box->widget.visible = 1;
     combo_box->widget.enabled = 1;
-    if (picoui_backend_widget_bind_host(combo_box->widget.backend_widget, &combo_box->widget) != 0) {
+    if (tinyui_runtime_bridge_bind_host(combo_box->widget.backend_widget, &combo_box->widget) != 0) {
         picoui_combo_box_dispose_partial(combo_box);
         return 0;
     }

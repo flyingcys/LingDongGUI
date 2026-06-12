@@ -105,12 +105,12 @@ struct picoui_qrcode *picoui_backend_qrcode_test_create_with_props_fail_before_t
         return 0;
     }
     if (backend->parent != 0) {
-        detach_result = picoui_backend_widget_detach_from_parent(backend);
+        detach_result = tinyui_runtime_bridge_detach_from_parent(backend);
         if (detach_result != 0) {
             detach_result = test_qrcode_finish_detach_after_backend_failure(backend);
         }
     }
-    unbind_result = picoui_backend_widget_unbind_host(backend);
+    unbind_result = tinyui_runtime_bridge_unbind_host(backend);
     test_qrcode_fill_snapshot(backend, detach_result, unbind_result);
     picoui_widget_destroy(&qrcode->widget);
     return 0;
@@ -387,9 +387,9 @@ static void test_qrcode_create_with_props_failure_rolls_back_attached_child(stru
 
 static void test_qrcode_shared_widget_helpers_reject_null(void)
 {
-    assert(picoui_backend_widget_unbind_host(0) == -1);
-    assert(picoui_backend_widget_detach_from_parent(0) == -1);
-    assert(picoui_backend_widget_is_kind(0, PICOUI_BACKEND_WIDGET_QRCODE) == 0);
+    assert(tinyui_runtime_bridge_unbind_host(0) == -1);
+    assert(tinyui_runtime_bridge_detach_from_parent(0) == -1);
+    assert(tinyui_widget_is_kind(0, PICOUI_BACKEND_WIDGET_QRCODE) == 0);
 }
 
 int main(void)

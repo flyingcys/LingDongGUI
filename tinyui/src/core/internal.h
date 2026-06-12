@@ -20,24 +20,24 @@
 #define PICOUI_INTERNAL_H
 
 #include "backend.h"
-#include "picoui/app.h"
-#include "picoui/combo_box.h"
-#include "picoui/canvas.h"
-#include "picoui/calendar.h"
-#include "picoui/keyboard.h"
-#include "picoui/native.h"
-#include "picoui/display.h"
-#include "picoui/indev.h"
-#include "picoui/osal.h"
-#include "picoui/tick.h"
-#include "picoui/line_edit.h"
-#include "picoui/message_box.h"
-#include "picoui/graph.h"
-#include "picoui/icon_slider.h"
-#include "picoui/scroll_selecter.h"
-#include "picoui/radial_menu.h"
-#include "picoui/table.h"
-#include "picoui/theme.h"
+#include "app.h"
+#include "combo_box.h"
+#include "canvas.h"
+#include "calendar.h"
+#include "keyboard.h"
+#include "native.h"
+#include "display.h"
+#include "indev.h"
+#include "osal.h"
+#include "tick.h"
+#include "line_edit.h"
+#include "message_box.h"
+#include "graph.h"
+#include "icon_slider.h"
+#include "scroll_selecter.h"
+#include "radial_menu.h"
+#include "table.h"
+#include "theme.h"
 
 #define PICOUI_LAYOUT_MAX_TRACKS 16
 #define PICOUI_LIST_MAX_ITEMS 16
@@ -63,6 +63,8 @@ struct picoui_app_timer {
     picoui_app_timer_cb_t callback;
     void *user_data;
 };
+
+void picoui_app_pump_timers(struct picoui_app *app, unsigned int now_ticks);
 
 struct picoui_display_port_state {
     struct picoui_display_config config;
@@ -98,7 +100,7 @@ struct picoui_os_port_state {
  * @return 0 on success, -1 on failure
  */
 
-int picoui_native_align_to_ld_grid(enum picoui_native_align align);
+int tinyui_native_align_to_ld_grid(enum picoui_native_align align);
 
 /**
  * @brief Native platform: nav dir to ld
@@ -107,7 +109,7 @@ int picoui_native_align_to_ld_grid(enum picoui_native_align align);
  * @return 0 on success, -1 on failure
  */
 
-int picoui_native_nav_dir_to_ld(enum picoui_native_nav_dir dir);
+int tinyui_native_nav_dir_to_ld(enum picoui_native_nav_dir dir);
 
 /**
  * @brief Native platform: signal to ld
@@ -116,7 +118,7 @@ int picoui_native_nav_dir_to_ld(enum picoui_native_nav_dir dir);
  * @return 0 on success, -1 on failure
  */
 
-int picoui_native_signal_to_ld(enum picoui_native_signal signal);
+int tinyui_native_signal_to_ld(enum picoui_native_signal signal);
 
 /**
  * @brief Native platform: readback policy to backend
@@ -125,44 +127,44 @@ int picoui_native_signal_to_ld(enum picoui_native_signal signal);
  * @return 0 on success, -1 on failure
  */
 
-int picoui_native_readback_policy_to_backend(enum picoui_native_readback_policy policy);
-int picoui_backend_widget_init_root(void *backend_widget,
+int tinyui_native_readback_policy_to_backend(enum picoui_native_readback_policy policy);
+int tinyui_widget_init_root(void *backend_widget,
                                     struct picoui_app *owner,
                                     enum picoui_backend_widget_kind kind,
                                     const char *id,
                                     struct picoui_theme *theme);
-int picoui_backend_widget_init_child(void *backend_widget,
+int tinyui_widget_init_child(void *backend_widget,
                                      void *parent,
                                      enum picoui_backend_widget_kind kind,
                                      const char *id,
                                      struct picoui_theme *theme);
-int picoui_backend_widget_attach_child(void *parent, void *child);
-int picoui_backend_widget_bind_host(void *backend_widget, struct picoui_widget *widget);
-int picoui_backend_widget_bind_ld_event_bridge(void *backend_widget,
+int tinyui_widget_attach_child(void *parent, void *child);
+int tinyui_runtime_bridge_bind_host(void *backend_widget, struct picoui_widget *widget);
+int tinyui_runtime_bridge_bind_ld_event_bridge(void *backend_widget,
                                                struct ld_scene_t *scene,
                                                void *sender);
 int picoui_list_backend_set_selected_index(void *backend_widget, int index);
 int picoui_list_backend_get_selected_index(void *backend_widget);
 int picoui_list_backend_sync_selected_index(struct picoui_list *list, int *selected_index_out);
-int picoui_backend_widget_is_kind(const void *backend_widget,
-                                  enum picoui_backend_widget_kind kind);
-int picoui_backend_widget_unbind_host(void *backend_widget);
-int picoui_backend_widget_detach_from_parent(void *backend_widget);
+int tinyui_widget_is_kind(const void *backend_widget,
+                          enum picoui_backend_widget_kind kind);
+int tinyui_runtime_bridge_unbind_host(void *backend_widget);
+int tinyui_runtime_bridge_detach_from_parent(void *backend_widget);
 int picoui_widget_bind_backend_host(struct picoui_widget *widget, void *backend_widget);
 struct picoui_widget *picoui_widget_backend_host(const void *backend_widget);
 int picoui_widget_backend_detach(void *backend_widget);
 struct picoui_app *picoui_widget_owner_app(const struct picoui_widget *widget);
 int picoui_widget_has_ld_binding(const struct picoui_widget *widget);
-void picoui_backend_emit_value_changed(picoui_value_changed_cb cb,
-                                       struct picoui_widget *widget,
-                                       int value,
-                                       void *user_data);
-void picoui_backend_emit_event(picoui_event_cb cb,
-                               struct picoui_widget *widget,
-                               void *user_data);
-void picoui_backend_emit_clicked(picoui_event_cb cb,
-                                 struct picoui_widget *widget,
-                                 void *user_data);
+void tinyui_widget_emit_value_changed(picoui_value_changed_cb cb,
+                                      struct picoui_widget *widget,
+                                      int value,
+                                      void *user_data);
+void tinyui_widget_emit_event(picoui_event_cb cb,
+                              struct picoui_widget *widget,
+                              void *user_data);
+void tinyui_widget_emit_clicked(picoui_event_cb cb,
+                                struct picoui_widget *widget,
+                                void *user_data);
 void picoui_widget_sync_ld_value(struct picoui_backend_widget *backend,
                                  struct picoui_widget *widget,
                                  int value);
@@ -185,20 +187,34 @@ int picoui_widget_dispatch_event(void *backend_widget,
                                  picoui_event_cb cb,
                                  struct picoui_widget *widget,
                                  void *user_data);
-int picoui_backend_runtime_step(struct picoui_app *app);
-int picoui_window_apply_flex_flow(struct picoui_window *window, enum picoui_flex_flow flow);
-int picoui_window_apply_flex_align(struct picoui_window *window,
+int picoui_widget_dispatch_native_signal(void *backend_widget,
+                                         uint32_t native_signal,
+                                         uint64_t native_value);
+int tinyui_runtime_host_step_app(struct picoui_app *app);
+int tinyui_window_apply_flex_flow(struct picoui_window *window, enum picoui_flex_flow flow);
+int tinyui_window_apply_flex_align(struct picoui_window *window,
                                    enum picoui_align main_align,
                                    enum picoui_align cross_align,
                                    enum picoui_align track_align);
-int picoui_window_apply_flex_gap(struct picoui_window *window, int item_gap, int track_gap);
-int picoui_window_apply_grid_columns(struct picoui_window *window, const int *tracks, int count);
-int picoui_window_apply_grid_rows(struct picoui_window *window, const int *tracks, int count);
-int picoui_window_apply_grid_gap(struct picoui_window *window, int row_gap, int col_gap);
-int picoui_window_apply_grid_align(struct picoui_window *window,
+int tinyui_window_apply_flex_gap(struct picoui_window *window, int item_gap, int track_gap);
+int tinyui_window_apply_uniform_padding(struct picoui_window *window, int padding);
+int tinyui_window_apply_explicit_padding(struct picoui_window *window,
+                                         int left,
+                                         int top,
+                                         int right,
+                                         int bottom);
+int tinyui_window_apply_explicit_grid_padding(struct picoui_window *window,
+                                              int left,
+                                              int top,
+                                              int right,
+                                              int bottom);
+int tinyui_window_apply_grid_columns(struct picoui_window *window, const int *tracks, int count);
+int tinyui_window_apply_grid_rows(struct picoui_window *window, const int *tracks, int count);
+int tinyui_window_apply_grid_gap(struct picoui_window *window, int row_gap, int col_gap);
+int tinyui_window_apply_grid_align(struct picoui_window *window,
                                    enum picoui_align col_align,
                                    enum picoui_align row_align);
-int picoui_theme_apply_widget_style(void *backend_widget,
+int tinyui_theme_apply_widget_style(void *backend_widget,
                                     enum picoui_part part,
                                     enum picoui_state state,
                                     unsigned int bg_color,

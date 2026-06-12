@@ -350,7 +350,7 @@ static struct picoui_radial_menu *picoui_radial_menu_create_with_backend_config(
     }
 
     parent_backend = (struct picoui_backend_widget *)parent->backend_widget;
-    app_state = picoui_runtime_bridge_backend_state_from_parent(parent_backend);
+    app_state = tinyui_runtime_bridge_backend_state_from_parent(parent_backend);
     if (parent_backend->ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
         return 0;
     }
@@ -366,7 +366,7 @@ static struct picoui_radial_menu *picoui_radial_menu_create_with_backend_config(
         return 0;
     }
 
-    name_id = picoui_runtime_bridge_next_name_id(parent_backend);
+    name_id = tinyui_runtime_bridge_next_name_id(parent_backend);
     if (name_id == 0) {
         free(backend);
         free(radial_menu);
@@ -390,7 +390,7 @@ static struct picoui_radial_menu *picoui_radial_menu_create_with_backend_config(
         return 0;
     }
 
-    if (picoui_backend_widget_init_child(backend,
+    if (tinyui_widget_init_child(backend,
                                          parent_backend,
                                          PICOUI_BACKEND_WIDGET_RADIAL_MENU,
                                          id,
@@ -404,7 +404,7 @@ static struct picoui_radial_menu *picoui_radial_menu_create_with_backend_config(
     backend->ld_name_id = name_id;
     backend->value = -1;
     backend->last_signal = PICOUI_BACKEND_SIGNAL_NONE;
-    if (picoui_backend_widget_attach_child(parent_backend, backend) != 0) {
+    if (tinyui_widget_attach_child(parent_backend, backend) != 0) {
         ldRadialMenu_depose(app_state->ld_scene, ld_radial_menu);
         free(backend);
         free(radial_menu);
@@ -419,9 +419,9 @@ static struct picoui_radial_menu *picoui_radial_menu_create_with_backend_config(
     radial_menu->item_max = item_max;
     radial_menu->widget.visible = 1;
     radial_menu->widget.enabled = 1;
-    if (picoui_backend_widget_bind_host(radial_menu->widget.backend_widget, &radial_menu->widget) != 0 ||
+    if (tinyui_runtime_bridge_bind_host(radial_menu->widget.backend_widget, &radial_menu->widget) != 0 ||
         picoui_radial_menu_bind_host(radial_menu->widget.backend_widget) != 0) {
-        (void)picoui_backend_widget_detach_from_parent(radial_menu->widget.backend_widget);
+        (void)tinyui_runtime_bridge_detach_from_parent(radial_menu->widget.backend_widget);
         ldRadialMenu_depose(app_state->ld_scene, ld_radial_menu);
         free(backend);
         free(radial_menu);

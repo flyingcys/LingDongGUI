@@ -100,7 +100,7 @@ struct picoui_message_box *picoui_message_box_create(struct picoui_widget *paren
     }
 
     parent_backend = (struct picoui_backend_widget *)parent->backend_widget;
-    app_state = picoui_runtime_bridge_backend_state_from_parent(parent_backend);
+    app_state = tinyui_runtime_bridge_backend_state_from_parent(parent_backend);
     if (parent_backend->ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
         return 0;
     }
@@ -116,7 +116,7 @@ struct picoui_message_box *picoui_message_box_create(struct picoui_widget *paren
         return 0;
     }
 
-    name_id = picoui_runtime_bridge_next_name_id(parent_backend);
+    name_id = tinyui_runtime_bridge_next_name_id(parent_backend);
     if (name_id == 0) {
         free(backend);
         free(box);
@@ -138,7 +138,7 @@ struct picoui_message_box *picoui_message_box_create(struct picoui_widget *paren
         return 0;
     }
 
-    if (picoui_backend_widget_init_child(backend,
+    if (tinyui_widget_init_child(backend,
                                          parent_backend,
                                          PICOUI_BACKEND_WIDGET_MESSAGE_BOX,
                                          id,
@@ -150,7 +150,7 @@ struct picoui_message_box *picoui_message_box_create(struct picoui_widget *paren
     }
     backend->ld_widget = ld_message_box;
     backend->ld_name_id = name_id;
-    if (picoui_backend_widget_attach_child(parent_backend, backend) != 0) {
+    if (tinyui_widget_attach_child(parent_backend, backend) != 0) {
         ldMessageBox_depose(app_state->ld_scene, ld_message_box);
         free(backend);
         free(box);
@@ -161,8 +161,8 @@ struct picoui_message_box *picoui_message_box_create(struct picoui_widget *paren
     box->id = id;
     box->widget.visible = 1;
     box->widget.enabled = 1;
-    if (picoui_backend_widget_bind_host(box->widget.backend_widget, &box->widget) != 0) {
-        (void)picoui_backend_widget_detach_from_parent(box->widget.backend_widget);
+    if (tinyui_runtime_bridge_bind_host(box->widget.backend_widget, &box->widget) != 0) {
+        (void)tinyui_runtime_bridge_detach_from_parent(box->widget.backend_widget);
         ldMessageBox_depose(app_state->ld_scene, ld_message_box);
         free(backend);
         free(box);

@@ -18,8 +18,8 @@
 
 #include "internal.h"
 #include "runtime_bridge.h"
-#include "picoui/app.h"
-#include "picoui/background.h"
+#include "app.h"
+#include "background.h"
 #include "../../../src/misc/xBtnAction.h"
 
 #include <stdlib.h>
@@ -43,6 +43,88 @@ static void picoui_app_timer_unlink(struct picoui_app_timer *timer)
     }
 }
 
+void picoui_app_pump_timers(struct picoui_app *app, unsigned int now_ticks)
+{
+    struct picoui_app_timer_snapshot_entry {
+        struct picoui_app_timer *timer;
+        struct picoui_app_timer *expected_predecessor;
+    };
+
+    struct picoui_app_timer_snapshot_entry *snapshot;
+    struct picoui_app_timer *timer;
+    struct picoui_app_timer *previous_timer = NULL;
+    size_t timer_count = 0;
+    size_t index = 0;
+
+    if (app == NULL) {
+        return;
+    }
+
+    timer = app->timers;
+    while (timer != NULL) {
+        timer_count += 1U;
+        timer = timer->next;
+    }
+
+    if (timer_count == 0U) {
+        return;
+    }
+
+    snapshot = calloc(timer_count, sizeof(*snapshot));
+    if (snapshot == NULL) {
+        return;
+    }
+
+    timer = app->timers;
+    while (timer != NULL && index < timer_count) {
+        snapshot[index].timer = timer;
+        snapshot[index].expected_predecessor = previous_timer;
+        index += 1U;
+        previous_timer = timer;
+        timer = timer->next;
+    }
+
+    for (index = 0; index < timer_count; ++index) {
+        int timer_is_linked = 0;
+        struct picoui_app_timer *cursor;
+        struct picoui_app_timer *current_predecessor = NULL;
+
+        timer = snapshot[index].timer;
+        cursor = app->timers;
+        while (cursor != NULL) {
+            if (cursor == timer) {
+                timer_is_linked = 1;
+                break;
+            }
+            current_predecessor = cursor;
+            cursor = cursor->next;
+        }
+
+        if (!timer_is_linked) {
+            continue;
+        }
+
+        if (current_predecessor != snapshot[index].expected_predecessor) {
+            continue;
+        }
+
+        if (timer->running && timer->callback != NULL) {
+            if (timer->next_fire_ticks == 0U) {
+                timer->next_fire_ticks = now_ticks + timer->interval_ms;
+            } else if (now_ticks >= timer->next_fire_ticks) {
+                if (timer->repeat) {
+                    timer->next_fire_ticks = now_ticks + timer->interval_ms;
+                } else {
+                    timer->running = 0;
+                }
+                timer->callback(app, timer, timer->user_data);
+            }
+        }
+    }
+
+    free(snapshot);
+}
+
 /**
  * @brief Create app instance
  *
@@ -56,7 +138,7 @@ struct picoui_app *picoui_app_create(void)
         return NULL;
     }
 
-    if (picoui_backend_app_init(app) != 0) {
+    if (tinyui_runtime_bridge_init_app(app) != 0) {
         free(app);
         return NULL;
     }
@@ -74,12 +156,11 @@ struct picoui_app *picoui_app_create(void)
 
 int picoui_app_run(struct picoui_app *app, struct picoui_window *window)
 {
-    if (app == NULL || !picoui_runtime_bridge_window_is_owned_by(app, window)) {
+    if (app == NULL || !tinyui_runtime_bridge_window_is_owned_by(app, window)) {
         return -1;
     }
 
-    app->root_window = window;
-    return picoui_backend_app_run(app, window);
+    return tinyui_runtime_bridge_run_app(app, window);
 }
 
 /**
@@ -105,14 +186,14 @@ int picoui_app_run_background(struct picoui_app *app, struct picoui_background *
 
 int picoui_app_set_window(struct picoui_app *app, struct picoui_window *window)
 {
-    if (app == NULL || !picoui_runtime_bridge_window_is_owned_by(app, window)) {
+    if (app == NULL || !tinyui_runtime_bridge_window_is_owned_by(app, window)) {
         return -1;
     }
 
     app->root_window = window;
     app->focus_owner = 0;
     app->editing_owner = 0;
-    picoui_runtime_bridge_reset_window_switch(app);
+    tinyui_runtime_bridge_reset_window_switch(app);
     return 0;
 }
 
@@ -148,7 +229,7 @@ int picoui_app_switch_window(struct picoui_app *app,
         return -1;
     }
 
-    picoui_runtime_bridge_set_window_switch(app, mode, duration_ms);
+    tinyui_runtime_bridge_set_window_switch(app, mode, duration_ms);
     return 0;
 }
 
@@ -298,7 +379,7 @@ void picoui_app_destroy(struct picoui_app *app)
     }
     app->timers = NULL;
 
-    picoui_backend_app_shutdown(app);
+    tinyui_runtime_bridge_shutdown_app(app);
     xBtnDestroy();
     free(app);
 }

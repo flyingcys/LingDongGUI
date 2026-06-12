@@ -30,8 +30,8 @@ extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
 
 #define PICOUI_BACKEND_LINE_EDIT_TEXT_MAX 255
 
-int picoui_backend_widget_unbind_host(void *backend_widget);
-int picoui_backend_widget_detach_from_parent(void *backend_widget);
+int tinyui_runtime_bridge_unbind_host(void *backend_widget);
+int tinyui_runtime_bridge_detach_from_parent(void *backend_widget);
 
 static ldLineEdit_t *picoui_backend_line_edit_get_ld(void *backend_widget)
 {
@@ -115,7 +115,7 @@ static void *picoui_line_edit_create_backend_local(void *parent, const char *id)
         return 0;
     }
 
-    app_state = picoui_runtime_bridge_backend_state_from_parent(parent);
+    app_state = tinyui_runtime_bridge_backend_state_from_parent(parent);
     if (app_state == NULL || app_state->ld_scene == NULL || parent_widget->ld_widget == NULL) {
         return 0;
     }
@@ -125,7 +125,7 @@ static void *picoui_line_edit_create_backend_local(void *parent, const char *id)
         return 0;
     }
 
-    name_id = picoui_runtime_bridge_next_name_id(parent);
+    name_id = tinyui_runtime_bridge_next_name_id(parent);
     if (name_id == 0) {
         free(widget);
         return 0;
@@ -145,7 +145,7 @@ static void *picoui_line_edit_create_backend_local(void *parent, const char *id)
         return 0;
     }
 
-    if (picoui_backend_widget_init_child(widget,
+    if (tinyui_widget_init_child(widget,
                                          parent,
                                          PICOUI_BACKEND_WIDGET_TEXT,
                                          id,
@@ -156,7 +156,7 @@ static void *picoui_line_edit_create_backend_local(void *parent, const char *id)
     }
     widget->ld_widget = ld_line_edit;
     widget->ld_name_id = name_id;
-    if (picoui_backend_widget_attach_child(parent, widget) != 0) {
+    if (tinyui_widget_attach_child(parent, widget) != 0) {
         ldLineEdit_depose(app_state->ld_scene, ld_line_edit);
         free(widget);
         return 0;
@@ -342,11 +342,11 @@ static void picoui_line_edit_dispose_partial(struct picoui_line_edit *line_edit)
 
     backend = (struct picoui_backend_widget *)line_edit->widget.backend_widget;
     if (backend != 0) {
-        app_state = picoui_runtime_bridge_backend_state(backend->owner);
+        app_state = tinyui_runtime_bridge_backend_state(backend->owner);
         if (backend->parent != 0) {
-            (void)picoui_backend_widget_detach_from_parent(backend);
+            (void)tinyui_runtime_bridge_detach_from_parent(backend);
         }
-        (void)picoui_backend_widget_unbind_host(backend);
+        (void)tinyui_runtime_bridge_unbind_host(backend);
         if (app_state != 0 && app_state->ld_scene != 0 && backend->ld_widget != 0) {
             ldLineEdit_depose(app_state->ld_scene, (ldLineEdit_t *)backend->ld_widget);
         }
@@ -379,7 +379,7 @@ struct picoui_line_edit *picoui_line_edit_create(struct picoui_window *parent, c
     line_edit->type = PICOUI_LINE_EDIT_TYPE_STRING;
     line_edit->widget.visible = 1;
     line_edit->widget.enabled = 1;
-    if (picoui_backend_widget_bind_host(line_edit->widget.backend_widget, &line_edit->widget) != 0) {
+    if (tinyui_runtime_bridge_bind_host(line_edit->widget.backend_widget, &line_edit->widget) != 0) {
         picoui_line_edit_dispose_partial(line_edit);
         return 0;
     }

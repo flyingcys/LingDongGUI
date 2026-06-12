@@ -2,10 +2,55 @@
 #include "internal.h"
 
 #include <assert.h>
+#include <stdio.h>
 #include <stddef.h>
 #include <stdlib.h>
 
-extern void picoui_backend_test_pump_timers(struct picoui_app *app, unsigned int now_ticks);
+static const char *test_self_binary_path =
+    "/Users/cys/embedded/LingDongGUI/build/tests/picoui/test_picoui_app_timer";
+
+static void assert_command_success(const char *command)
+{
+    int rc = system(command);
+    if (rc == 0) {
+        return;
+    }
+
+    fprintf(stderr, "command failed (%d): %s\n", rc, command);
+    abort();
+}
+
+static void assert_archive_lacks_symbol(const char *archive_path, const char *symbol)
+{
+    char command[1024];
+
+    snprintf(command,
+             sizeof(command),
+             "nm %s | awk '{print $NF}' | grep -E '^(%s|_%s)$' >/dev/null",
+             archive_path,
+             symbol,
+             symbol);
+    if (system(command) == 0) {
+        fprintf(stderr, "unexpected archive symbol present: %s in %s\n", symbol, archive_path);
+        abort();
+    }
+}
+
+static void assert_self_binary_lacks_symbol(const char *symbol)
+{
+    char command[1024];
+
+    snprintf(command,
+             sizeof(command),
+             "nm %s | awk '{print $NF}' | grep -E '^(%s|_%s)$' >/dev/null",
+             test_self_binary_path,
+             symbol,
+             symbol);
+    if (system(command) == 0) {
+        fprintf(stderr, "unexpected self symbol present: %s in %s\n", symbol, test_self_binary_path);
+        abort();
+    }
+}
 
 static void require_condition(int condition)
 {
@@ -174,12 +219,12 @@ static void test_repeating_timer_pump_keeps_running(void)
     require_condition(picoui_app_timer_start(timer, 50, 1, timer_probe_callback, &probe) == 0);
 
     assert(probe.call_count == 0);
-    picoui_backend_test_pump_timers(app, 1000);
-    picoui_backend_test_pump_timers(app, 1050);
+    picoui_app_pump_timers(app, 1000);
+    picoui_app_pump_timers(app, 1050);
     assert(probe.call_count == 1);
     assert(picoui_app_timer_is_running(timer) == 1);
 
-    picoui_backend_test_pump_timers(app, 1100);
+    picoui_app_pump_timers(app, 1100);
     assert(probe.call_count == 2);
     assert(picoui_app_timer_is_running(timer) == 1);
 
@@ -200,12 +245,12 @@ static void test_one_shot_timer_pump_stops_after_fire(void)
     require_condition(picoui_app_timer_start(timer, 50, 0, timer_probe_callback, &probe) == 0);
 
     assert(probe.call_count == 0);
-    picoui_backend_test_pump_timers(app, 2000);
-    picoui_backend_test_pump_timers(app, 2050);
+    picoui_app_pump_timers(app, 2000);
+    picoui_app_pump_timers(app, 2050);
     assert(probe.call_count == 1);
     assert(picoui_app_timer_is_running(timer) == 0);
 
-    picoui_backend_test_pump_timers(app, 2100);
+    picoui_app_pump_timers(app, 2100);
     assert(probe.call_count == 1);
     assert(picoui_app_timer_is_running(timer) == 0);
 
@@ -236,13 +281,13 @@ static void test_timer_pump_skips_detached_successor_after_callback_relink(void)
     require_condition(picoui_app_timer_start(middle_timer, 50, 0, timer_must_not_fire_callback, NULL) == 0);
     require_condition(picoui_app_timer_start(head_timer, 50, 0, timer_relink_chain_callback, &head_probe) == 0);
 
-    picoui_backend_test_pump_timers(app, 3000);
-    picoui_backend_test_pump_timers(app, 3050);
+    picoui_app_pump_timers(app, 3000);
+    picoui_app_pump_timers(app, 3050);
 
     assert(head_probe.call_count == 1);
     assert(tail_probe.call_count == 0);
 
-    picoui_backend_test_pump_timers(app, 3100);
+    picoui_app_pump_timers(app, 3100);
     assert(tail_probe.call_count == 1);
 
     picoui_app_timer_destroy(middle_timer);
@@ -250,8 +295,17 @@ static void test_timer_pump_skips_detached_successor_after_callback_relink(void)
     picoui_app_destroy(app);
 }
 
+static void test_timer_pump_backend_symbol_is_no_longer_public(void)
+{
+    assert_command_success("test -f ../../libpicoui_backend_ldgui.a");
+    assert_command_success("test -f /Users/cys/embedded/LingDongGUI/build/tests/picoui/test_picoui_app_timer");
+    assert_archive_lacks_symbol("../../libpicoui_backend_ldgui.a", "picoui_backend_test_pump_timers");
+    assert_self_binary_lacks_symbol("picoui_backend_test_pump_timers");
+}
+
 int main(void)
 {
+    assert_self_binary_lacks_symbol("picoui_backend_test_pump_timers");
     test_timer_rejects_null_app();
     test_timer_callback_contract_shape();
     test_timer_running_state_contract();
@@ -261,5 +315,6 @@ int main(void)
     test_repeating_timer_pump_keeps_running();
     test_one_shot_timer_pump_stops_after_fire();
     test_timer_pump_skips_detached_successor_after_callback_relink();
+    test_timer_pump_backend_symbol_is_no_longer_public();
     return 0;
 }

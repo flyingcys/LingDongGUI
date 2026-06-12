@@ -16,8 +16,9 @@
  * limitations under the License.
  */
 
-#include "picoui/native.h"
+#include "native.h"
 #include "../backend/ldgui/backend.h"
+#include "ldBase.h"
 
 enum {
     PICOUI_LD_SIGNAL_NO_OPERATION = 0,
@@ -71,13 +72,41 @@ struct picoui_native_font picoui_native_font_wrap(void *font)
 }
 
 /**
+ * @brief Native platform: align to ld grid
+ *
+ * @param[in] align align
+ * @return 0 on success, -1 on failure
+ */
+
+int tinyui_native_align_to_ld_grid(enum picoui_native_align align)
+{
+    switch (align) {
+    case PICOUI_NATIVE_ALIGN_END:
+        return ldGridAlignEnd;
+    case PICOUI_NATIVE_ALIGN_CENTER:
+        return ldGridAlignCenter;
+    case PICOUI_NATIVE_ALIGN_STRETCH:
+        return ldGridAlignStretch;
+    case PICOUI_NATIVE_ALIGN_SPACE_EVENLY:
+        return ldGridAlignSpaceEvenly;
+    case PICOUI_NATIVE_ALIGN_SPACE_AROUND:
+        return ldGridAlignSpaceAround;
+    case PICOUI_NATIVE_ALIGN_SPACE_BETWEEN:
+        return ldGridAlignSpaceBetween;
+    case PICOUI_NATIVE_ALIGN_START:
+    default:
+        return ldGridAlignStart;
+    }
+}
+
+/**
  * @brief Native platform: signal to ld
  *
  * @param[in] signal signal
  * @return 0 on success, -1 on failure
  */
 
-int picoui_native_signal_to_ld(enum picoui_native_signal signal)
+int tinyui_native_signal_to_ld(enum picoui_native_signal signal)
 {
     switch (signal) {
     case PICOUI_NATIVE_SIGNAL_PRESS:
@@ -105,7 +134,7 @@ int picoui_native_signal_to_ld(enum picoui_native_signal signal)
  * @return 0 on success, -1 on failure
  */
 
-int picoui_native_readback_policy_to_backend(enum picoui_native_readback_policy policy)
+int tinyui_native_readback_policy_to_backend(enum picoui_native_readback_policy policy)
 {
     switch (policy) {
     case PICOUI_NATIVE_READBACK_BACKEND_FIELD:

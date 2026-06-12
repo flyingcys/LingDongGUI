@@ -344,7 +344,7 @@ struct picoui_scroll_selecter *picoui_scroll_selecter_create(struct picoui_windo
 
     parent_backend = (struct picoui_backend_widget *)parent->widget.backend_widget;
     app_state = parent_backend != 0
-        ? picoui_runtime_bridge_backend_state_from_parent(parent_backend)
+        ? tinyui_runtime_bridge_backend_state_from_parent(parent_backend)
         : 0;
     if (parent_backend == 0 || parent_backend->ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
         return 0;
@@ -361,7 +361,7 @@ struct picoui_scroll_selecter *picoui_scroll_selecter_create(struct picoui_windo
         return 0;
     }
 
-    name_id = picoui_runtime_bridge_next_name_id(parent_backend);
+    name_id = tinyui_runtime_bridge_next_name_id(parent_backend);
     if (name_id == 0) {
         free(backend);
         free(scroll_selecter);
@@ -383,7 +383,7 @@ struct picoui_scroll_selecter *picoui_scroll_selecter_create(struct picoui_windo
         return 0;
     }
 
-    if (picoui_backend_widget_init_child(backend,
+    if (tinyui_widget_init_child(backend,
                                          parent_backend,
                                          PICOUI_BACKEND_WIDGET_SCROLL_SELECTER,
                                          id,
@@ -397,7 +397,7 @@ struct picoui_scroll_selecter *picoui_scroll_selecter_create(struct picoui_windo
     backend->ld_name_id = name_id;
     backend->value = -1;
     backend->last_signal = PICOUI_BACKEND_SIGNAL_NONE;
-    if (picoui_backend_widget_attach_child(parent_backend, backend) != 0) {
+    if (tinyui_widget_attach_child(parent_backend, backend) != 0) {
         ldScrollSelecter_depose(app_state->ld_scene, ld_scroll_selecter);
         free(backend);
         free(scroll_selecter);
@@ -412,8 +412,8 @@ struct picoui_scroll_selecter *picoui_scroll_selecter_create(struct picoui_windo
     scroll_selecter->speed = 1;
     scroll_selecter->widget.visible = 1;
     scroll_selecter->widget.enabled = 1;
-    if (picoui_backend_widget_bind_host(scroll_selecter->widget.backend_widget, &scroll_selecter->widget) != 0) {
-        (void)picoui_backend_widget_detach_from_parent(scroll_selecter->widget.backend_widget);
+    if (tinyui_runtime_bridge_bind_host(scroll_selecter->widget.backend_widget, &scroll_selecter->widget) != 0) {
+        (void)tinyui_runtime_bridge_detach_from_parent(scroll_selecter->widget.backend_widget);
         ldScrollSelecter_depose(app_state->ld_scene, ld_scroll_selecter);
         free(backend);
         free(scroll_selecter);

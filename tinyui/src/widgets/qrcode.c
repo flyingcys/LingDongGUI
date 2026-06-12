@@ -26,8 +26,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-int picoui_backend_widget_unbind_host(void *backend_widget);
-int picoui_backend_widget_detach_from_parent(void *backend_widget);
+int tinyui_runtime_bridge_unbind_host(void *backend_widget);
+int tinyui_runtime_bridge_detach_from_parent(void *backend_widget);
 
 static int picoui_qrcode_props_are_valid(const struct picoui_qrcode_props *props)
 {
@@ -93,14 +93,14 @@ static void picoui_qrcode_dispose_partial_impl(struct picoui_qrcode *qrcode)
 
     backend = (struct picoui_backend_widget *)qrcode->widget.backend_widget;
     if (backend != 0) {
-        app_state = picoui_runtime_bridge_backend_state(backend->owner);
+        app_state = tinyui_runtime_bridge_backend_state(backend->owner);
         if (backend->parent != 0) {
-            detach_result = picoui_backend_widget_detach_from_parent(backend);
+            detach_result = tinyui_runtime_bridge_detach_from_parent(backend);
             if (detach_result != 0) {
                 detach_result = picoui_qrcode_finish_detach_after_backend_failure(backend);
             }
         }
-        (void)picoui_backend_widget_unbind_host(backend);
+        (void)tinyui_runtime_bridge_unbind_host(backend);
         if (app_state != 0 && app_state->ld_scene != 0 && backend->ld_widget != 0) {
             ldQRCode_depose(app_state->ld_scene, (ldQRCode_t *)backend->ld_widget);
         }
@@ -159,7 +159,7 @@ struct picoui_qrcode *picoui_qrcode_create(struct picoui_widget *parent, const c
     }
 
     parent_backend = (struct picoui_backend_widget *)parent->backend_widget;
-    app_state = picoui_runtime_bridge_backend_state_from_parent(parent_backend);
+    app_state = tinyui_runtime_bridge_backend_state_from_parent(parent_backend);
     if (parent_backend->ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
         return 0;
     }
@@ -175,7 +175,7 @@ struct picoui_qrcode *picoui_qrcode_create(struct picoui_widget *parent, const c
         return 0;
     }
 
-    name_id = picoui_runtime_bridge_next_name_id(parent_backend);
+    name_id = tinyui_runtime_bridge_next_name_id(parent_backend);
     if (name_id == 0) {
         free(backend);
         free(qrcode);
@@ -201,7 +201,7 @@ struct picoui_qrcode *picoui_qrcode_create(struct picoui_widget *parent, const c
         return 0;
     }
 
-    if (picoui_backend_widget_init_child(backend,
+    if (tinyui_widget_init_child(backend,
                                          parent_backend,
                                          PICOUI_BACKEND_WIDGET_QRCODE,
                                          id,
@@ -214,7 +214,7 @@ struct picoui_qrcode *picoui_qrcode_create(struct picoui_widget *parent, const c
     backend->ld_widget = ld_qrcode;
     backend->ld_name_id = name_id;
     backend->text = (const char *)empty_text;
-    if (picoui_backend_widget_attach_child(parent_backend, backend) != 0) {
+    if (tinyui_widget_attach_child(parent_backend, backend) != 0) {
         ldQRCode_depose(app_state->ld_scene, ld_qrcode);
         free(backend);
         free(qrcode);
@@ -230,7 +230,7 @@ struct picoui_qrcode *picoui_qrcode_create(struct picoui_widget *parent, const c
     qrcode->zoom = 4;
     qrcode->widget.visible = 1;
     qrcode->widget.enabled = 1;
-    if (picoui_backend_widget_bind_host(qrcode->widget.backend_widget, &qrcode->widget) != 0) {
+    if (tinyui_runtime_bridge_bind_host(qrcode->widget.backend_widget, &qrcode->widget) != 0) {
         picoui_qrcode_dispose_partial_impl(qrcode);
         return 0;
     }

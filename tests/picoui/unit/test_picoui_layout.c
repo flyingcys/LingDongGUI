@@ -7,8 +7,131 @@
 
 #include <assert.h>
 #include <stdbool.h>
+#include <stdio.h>
+#include <string.h>
 
 extern struct picoui_widget *picoui_widget_backend_parent(const struct picoui_widget *widget);
+
+static const char *test_self_binary_path = 0;
+
+static void assert_source_lacks_static_definition(const char *path, const char *symbol_name)
+{
+    char command[1024];
+
+    snprintf(command,
+             sizeof(command),
+             "rg -n \"^[[:space:]]*static[[:space:]].*%s[[:space:]]*\\(\" %s >/dev/null",
+             symbol_name,
+             path);
+    if (system(command) == 0) {
+        fprintf(stderr, "unexpected old static helper still present: %s in %s\n", symbol_name, path);
+        abort();
+    }
+}
+
+static void assert_archive_lacks_symbol(const char *archive_relpath, const char *symbol)
+{
+    char command[1024];
+    FILE *pipe;
+    char line[512];
+    char prefixed_symbol[256];
+    const char *line_symbol;
+
+    assert(test_self_binary_path != 0);
+    assert(archive_relpath != 0);
+    assert(symbol != 0);
+    snprintf(prefixed_symbol, sizeof(prefixed_symbol), "_%s", symbol);
+    snprintf(command, sizeof(command),
+             "cd \"$(dirname '%s')\" && nm \"%s\" 2>/dev/null",
+             test_self_binary_path,
+             archive_relpath);
+    pipe = popen(command, "r");
+    assert(pipe != 0);
+    while (fgets(line, sizeof(line), pipe) != 0) {
+        size_t line_len = strlen(line);
+        size_t symbol_len = strlen(symbol);
+
+        while (line_len > 0 && (line[line_len - 1] == '\n' || line[line_len - 1] == '\r')) {
+            line[--line_len] = '\0';
+        }
+        line_symbol = strrchr(line, ' ');
+        if (line_symbol != 0) {
+            line_symbol += 1;
+        } else {
+            line_symbol = line;
+        }
+        if (strcmp(line_symbol, symbol) == 0 || strcmp(line_symbol, prefixed_symbol) == 0) {
+            assert(!"unexpected symbol still present in archive");
+        }
+    }
+    assert(pclose(pipe) == 0);
+}
+
+static void assert_archive_lacks_member(const char *archive_relpath, const char *member)
+{
+    char command[1024];
+    FILE *pipe;
+    char line[512];
+    size_t member_len;
+
+    assert(test_self_binary_path != 0);
+    assert(archive_relpath != 0);
+    assert(member != 0);
+    snprintf(command, sizeof(command),
+             "cd \"$(dirname '%s')\" && nm \"%s\" 2>/dev/null",
+             test_self_binary_path,
+             archive_relpath);
+    pipe = popen(command, "r");
+    assert(pipe != 0);
+    member_len = strlen(member);
+    while (fgets(line, sizeof(line), pipe) != 0) {
+        size_t line_len = strlen(line);
+
+        while (line_len > 0 && (line[line_len - 1] == '\n' || line[line_len - 1] == '\r')) {
+            line[--line_len] = '\0';
+        }
+        if (line_len == member_len + 1 &&
+            strncmp(line, member, member_len) == 0 &&
+            line[member_len] == ':') {
+            assert(!"unexpected archive member still present");
+        }
+    }
+    assert(pclose(pipe) == 0);
+}
+
+static void assert_self_binary_lacks_symbol(const char *symbol)
+{
+    char command[1024];
+    FILE *pipe;
+    char line[512];
+    char prefixed_symbol[256];
+    const char *line_symbol;
+
+    assert(test_self_binary_path != 0);
+    assert(symbol != 0);
+    snprintf(prefixed_symbol, sizeof(prefixed_symbol), "_%s", symbol);
+    snprintf(command, sizeof(command), "nm %s 2>/dev/null", test_self_binary_path);
+    pipe = popen(command, "r");
+    assert(pipe != 0);
+    while (fgets(line, sizeof(line), pipe) != 0) {
+        size_t line_len = strlen(line);
+        size_t symbol_len = strlen(symbol);
+
+        while (line_len > 0 && (line[line_len - 1] == '\n' || line[line_len - 1] == '\r')) {
+            line[--line_len] = '\0';
+        }
+        line_symbol = strrchr(line, ' ');
+        if (line_symbol != 0) {
+            line_symbol += 1;
+        } else {
+            line_symbol = line;
+        }
+        if (strcmp(line_symbol, symbol) == 0 || strcmp(line_symbol, prefixed_symbol) == 0) {
+            assert(!"unexpected symbol still present in test binary");
+        }
+    }
+    assert(pclose(pipe) == 0);
+}
 
 static unsigned int test_rgb_to_ld_color(unsigned int rgb)
 {
@@ -1248,9 +1371,11 @@ static void test_layout_window_padding_setters_reject_corrupted_binding_without_
 
     ld_base->widgetType = widgetTypeButton;
 
+    assert(picoui_widget_set_padding((struct picoui_widget *)win, 10) == -1);
     assert(picoui_window_set_padding(win, 11, 12, 13, 14) == -1);
     assert(picoui_window_set_grid_padding(win, 15, 16, 17, 18) == -1);
 
+    assert(win->widget.padding == 0);
     assert(ld_window->flexPadding.left == 2);
     assert(ld_window->flexPadding.top == 4);
     assert(ld_window->flexPadding.right == 6);
@@ -1294,22 +1419,48 @@ static void test_layout_grid_setters_reject_corrupted_binding_without_mutating_c
 
     ld_base->widgetType = widgetTypeButton;
 
+    assert(picoui_flex_set_flow(win, PICOUI_FLEX_FLOW_COLUMN_WRAP) == -1);
+    assert(picoui_flex_set_align(win,
+                                 PICOUI_ALIGN_END,
+                                 PICOUI_ALIGN_CENTER,
+                                 PICOUI_ALIGN_SPACE_AROUND) == -1);
+    assert(picoui_flex_set_gap(win, 11, 13) == -1);
     assert(picoui_grid_set_columns(win, (int[]){33, -2, 0}, 3) == -1);
     assert(picoui_grid_set_rows(win, (int[]){18, -3, 0}, 3) == -1);
     assert(picoui_grid_set_gap(win, 11, 13) == -1);
     assert(picoui_grid_set_align(win, PICOUI_ALIGN_CENTER, PICOUI_ALIGN_SPACE_BETWEEN) == -1);
 
+    assert(win->flex_flow == PICOUI_FLEX_FLOW_ROW);
+    assert(win->flex_main_align == PICOUI_ALIGN_START);
+    assert(win->flex_cross_align == PICOUI_ALIGN_START);
+    assert(win->flex_track_align == PICOUI_ALIGN_START);
     assert(backend->window_layout.grid_col_count == 3);
     assert(backend->window_layout.grid_row_count == 3);
     assert(backend->window_layout.grid_row_gap == 5);
     assert(backend->window_layout.grid_col_gap == 7);
     assert(backend->window_layout.grid_col_align == PICOUI_ALIGN_END);
     assert(backend->window_layout.grid_row_align == PICOUI_ALIGN_SPACE_AROUND);
+    assert(ld_window->flexFlow == ldFlexFlowRow);
+    assert(ld_window->flexMainAlign == ldFlexMainAlignStart);
+    assert(ld_window->flexCrossAlign == ldFlexCrossAlignStart);
+    assert(ld_window->flexTrackAlign == ldFlexTrackAlignStart);
+    assert(win->grid_cols[0] == original_cols[0]);
+    assert(win->grid_cols[1] == original_cols[1]);
+    assert(win->grid_cols[2] == original_cols[2]);
+    assert(win->grid_rows[0] == original_rows[0]);
+    assert(win->grid_rows[1] == original_rows[1]);
+    assert(win->grid_rows[2] == original_rows[2]);
+    assert(ld_window->gridColDsc[0] == 80);
+    assert(ld_window->gridColDsc[1] < 0);
+    assert(ld_window->gridColDsc[1] != LD_GRID_CONTENT);
+    assert(ld_window->gridColDsc[1] != LD_GRID_TEMPLATE_LAST);
+    assert(ld_window->gridColDsc[2] == LD_GRID_TEMPLATE_LAST);
+    assert(ld_window->gridRowDsc[0] == 24);
+    assert(ld_window->gridRowDsc[1] == LD_GRID_CONTENT);
+    assert(ld_window->gridRowDsc[2] == LD_GRID_TEMPLATE_LAST);
     for (i = 0; i < 3; ++i) {
-        assert(backend->window_layout.grid_cols[i] == original_cols[i]);
-        assert(backend->window_layout.grid_rows[i] == original_rows[i]);
-        assert(ld_window->gridDscArray.col[i] == original_cols[i]);
-        assert(ld_window->gridDscArray.row[i] == (i == 1 ? LD_GRID_CONTENT : original_rows[i]));
+        assert(backend->window_layout.grid_cols[i] == ld_window->gridColDsc[i]);
+        assert(backend->window_layout.grid_rows[i] == ld_window->gridRowDsc[i]);
     }
     assert(ld_window->gridRowGap == 5);
     assert(ld_window->gridColumnGap == 7);
@@ -1321,8 +1472,125 @@ static void test_layout_grid_setters_reject_corrupted_binding_without_mutating_c
     picoui_app_destroy(app);
 }
 
+static void test_layout_window_gap_setter_rejects_corrupted_binding_without_mutating_state(void)
+{
+    struct picoui_app *app = picoui_app_create();
+    struct picoui_window *win = picoui_window_create(app, "layout_corrupted_gap");
+    struct picoui_backend_widget *backend = win->widget.backend_widget;
+    ldBase_t *ld_base = (ldBase_t *)backend->ld_widget;
+    ldWindow_t *ld_window = (ldWindow_t *)backend->ld_widget;
+    int original_widget_type = ld_base->widgetType;
+
+    assert(picoui_window_set_gap(win, 11) == 0);
+    assert(win->flex_item_gap == 11);
+    assert(win->flex_track_gap == 11);
+    assert(backend->window_layout.flex_item_gap == 11);
+    assert(backend->window_layout.flex_track_gap == 11);
+    assert(ld_window->flexItemGap == 11);
+    assert(ld_window->flexTrackGap == 11);
+
+    ld_base->widgetType = widgetTypeButton;
+
+    assert(picoui_window_set_gap(win, 17) == -1);
+    assert(win->flex_item_gap == 11);
+    assert(win->flex_track_gap == 11);
+    assert(backend->window_layout.flex_item_gap == 11);
+    assert(backend->window_layout.flex_track_gap == 11);
+    assert(ld_window->flexItemGap == 11);
+    assert(ld_window->flexTrackGap == 11);
+
+    ld_base->widgetType = original_widget_type;
+
+    picoui_app_destroy(app);
+}
+
+static void test_layout_child_helper_backend_symbols_are_no_longer_public(void)
+{
+    assert_archive_lacks_symbol("../../libpicoui_backend_ldgui.a",
+                                "picoui_backend_widget_set_flex_grow");
+    assert_archive_lacks_symbol("../../libpicoui_backend_ldgui.a",
+                                "picoui_backend_widget_set_flex_new_track");
+    assert_archive_lacks_symbol("../../libpicoui_backend_ldgui.a",
+                                "picoui_backend_widget_set_ignore_layout");
+    assert_archive_lacks_symbol("../../libpicoui_backend_ldgui.a",
+                                "picoui_backend_widget_set_grid_cell");
+    assert_self_binary_lacks_symbol("picoui_backend_widget_set_flex_grow");
+    assert_self_binary_lacks_symbol("picoui_backend_widget_set_flex_new_track");
+    assert_self_binary_lacks_symbol("picoui_backend_widget_set_ignore_layout");
+    assert_self_binary_lacks_symbol("picoui_backend_widget_set_grid_cell");
+}
+
+static void test_layout_padding_helper_backend_symbols_are_no_longer_public(void)
+{
+    assert_archive_lacks_symbol("../../libpicoui_backend_ldgui.a",
+                                "picoui_backend_widget_set_padding");
+    assert_archive_lacks_symbol("../../libpicoui_backend_ldgui.a",
+                                "picoui_backend_window_set_padding");
+    assert_archive_lacks_symbol("../../libpicoui_backend_ldgui.a",
+                                "picoui_backend_window_set_grid_padding");
+    assert_self_binary_lacks_symbol("picoui_backend_widget_set_padding");
+    assert_self_binary_lacks_symbol("picoui_backend_window_set_padding");
+    assert_self_binary_lacks_symbol("picoui_backend_window_set_grid_padding");
+}
+
+static void test_layout_flex_helper_backend_symbols_are_no_longer_public(void)
+{
+    assert_archive_lacks_symbol("../../libpicoui_backend_ldgui.a",
+                                "picoui_backend_window_set_layout_type");
+    assert_archive_lacks_symbol("../../libpicoui_backend_ldgui.a",
+                                "picoui_backend_window_set_flex_flow");
+    assert_archive_lacks_symbol("../../libpicoui_backend_ldgui.a",
+                                "picoui_backend_window_set_flex_align");
+    assert_archive_lacks_symbol("../../libpicoui_backend_ldgui.a",
+                                "picoui_backend_window_set_flex_gap");
+    assert_self_binary_lacks_symbol("picoui_backend_window_set_layout_type");
+    assert_self_binary_lacks_symbol("picoui_backend_window_set_flex_flow");
+    assert_self_binary_lacks_symbol("picoui_backend_window_set_flex_align");
+    assert_self_binary_lacks_symbol("picoui_backend_window_set_flex_gap");
+}
+
+static void test_layout_grid_helper_backend_symbols_are_no_longer_public(void)
+{
+    assert_archive_lacks_symbol("../../libpicoui_backend_ldgui.a",
+                                "picoui_backend_window_set_grid_columns");
+    assert_archive_lacks_symbol("../../libpicoui_backend_ldgui.a",
+                                "picoui_backend_window_set_grid_rows");
+    assert_archive_lacks_symbol("../../libpicoui_backend_ldgui.a",
+                                "picoui_backend_window_set_grid_gap");
+    assert_archive_lacks_symbol("../../libpicoui_backend_ldgui.a",
+                                "picoui_backend_window_set_grid_align");
+    assert_self_binary_lacks_symbol("picoui_backend_window_set_grid_columns");
+    assert_self_binary_lacks_symbol("picoui_backend_window_set_grid_rows");
+    assert_self_binary_lacks_symbol("picoui_backend_window_set_grid_gap");
+    assert_self_binary_lacks_symbol("picoui_backend_window_set_grid_align");
+}
+
+static void test_layout_gap_helper_backend_symbol_is_no_longer_public(void)
+{
+    assert_archive_lacks_symbol("../../libpicoui_backend_ldgui.a",
+                                "picoui_backend_window_set_gap");
+    assert_self_binary_lacks_symbol("picoui_backend_window_set_gap");
+}
+
+static void test_layout_backend_layout_archive_member_is_no_longer_present(void)
+{
+    assert_archive_lacks_member("../../libpicoui_backend_ldgui.a", "backend_layout.c.o");
+}
+
+static void test_layout_internal_static_helpers_no_longer_use_picoui_prefix(void)
+{
+    const char *flex_source = "/Users/cys/embedded/LingDongGUI/tinyui/src/layout/flex.c";
+    const char *grid_source = "/Users/cys/embedded/LingDongGUI/tinyui/src/layout/grid.c";
+
+    assert_source_lacks_static_definition(flex_source, "picoui_window_get_backend");
+    assert_source_lacks_static_definition(flex_source, "picoui_window_is_valid");
+    assert_source_lacks_static_definition(grid_source, "picoui_window_get_backend");
+    assert_source_lacks_static_definition(grid_source, "picoui_window_is_valid");
+}
+
 int main(void)
 {
+    test_self_binary_path = "/Users/cys/embedded/LingDongGUI/build/tests/picoui/test_picoui_layout";
     struct picoui_app *app = picoui_app_create();
     struct picoui_window *win = picoui_window_create(app, "root");
     struct picoui_button *a = picoui_button_create(win, "a");
@@ -1381,5 +1649,13 @@ int main(void)
     test_layout_child_setter_rejects_corrupted_binding_without_mutating_state();
     test_layout_window_padding_setters_reject_corrupted_binding_without_mutating_state();
     test_layout_grid_setters_reject_corrupted_binding_without_mutating_cached_state();
+    test_layout_window_gap_setter_rejects_corrupted_binding_without_mutating_state();
+    test_layout_child_helper_backend_symbols_are_no_longer_public();
+    test_layout_padding_helper_backend_symbols_are_no_longer_public();
+    test_layout_flex_helper_backend_symbols_are_no_longer_public();
+    test_layout_grid_helper_backend_symbols_are_no_longer_public();
+    test_layout_gap_helper_backend_symbol_is_no_longer_public();
+    test_layout_backend_layout_archive_member_is_no_longer_present();
+    test_layout_internal_static_helpers_no_longer_use_picoui_prefix();
     return 0;
 }

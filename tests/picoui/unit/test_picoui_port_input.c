@@ -2,6 +2,30 @@
 
 #include <assert.h>
 #include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+static void assert_source_lacks_static_definition(const char *path, const char *symbol_name)
+{
+    char command[1024];
+
+    snprintf(command,
+             sizeof(command),
+             "rg -n \"^[[:space:]]*static[[:space:]].*%s[[:space:]]*(=|\\()\" %s >/dev/null",
+             symbol_name,
+             path);
+    if (system(command) == 0) {
+        fprintf(stderr, "unexpected old static helper still present: %s in %s\n", symbol_name, path);
+        abort();
+    }
+}
+
+static void test_input_internal_helper_no_longer_uses_picoui_prefix(void)
+{
+    assert_source_lacks_static_definition(
+        "/Users/cys/embedded/LingDongGUI/tinyui/src/indev/indev.c",
+        "picoui_input_key_is_valid");
+}
 
 static void test_pointer_defaults_and_round_trip(void)
 {
@@ -71,6 +95,7 @@ static void test_input_rejects_invalid_arguments(void)
 
 int main(void)
 {
+    test_input_internal_helper_no_longer_uses_picoui_prefix();
     test_pointer_defaults_and_round_trip();
     test_key_defaults_and_round_trip();
     test_input_rejects_invalid_arguments();

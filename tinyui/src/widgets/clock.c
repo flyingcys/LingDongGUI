@@ -143,7 +143,7 @@ struct picoui_clock *picoui_clock_create(struct picoui_widget *parent, const cha
     }
 
     parent_backend = (struct picoui_backend_widget *)parent->backend_widget;
-    app_state = picoui_runtime_bridge_backend_state_from_parent(parent_backend);
+    app_state = tinyui_runtime_bridge_backend_state_from_parent(parent_backend);
     if (parent_backend->ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
         return 0;
     }
@@ -224,7 +224,7 @@ struct picoui_clock *picoui_clock_create(struct picoui_widget *parent, const cha
     }
     *second_mask_tile = c_tilePointerSecMask;
 
-    name_id = picoui_runtime_bridge_next_name_id(parent_backend);
+    name_id = tinyui_runtime_bridge_next_name_id(parent_backend);
     if (name_id == 0) {
         free(second_mask_tile);
         free(second_img_tile);
@@ -288,7 +288,7 @@ struct picoui_clock *picoui_clock_create(struct picoui_widget *parent, const cha
                                false,
                                false);
 
-    if (picoui_backend_widget_init_child(backend,
+    if (tinyui_widget_init_child(backend,
                                          parent_backend,
                                          PICOUI_BACKEND_WIDGET_CLOCK,
                                          id,
@@ -301,7 +301,7 @@ struct picoui_clock *picoui_clock_create(struct picoui_widget *parent, const cha
     backend->ld_widget = ld_clock;
     backend->ld_name_id = name_id;
     backend->value = 0;
-    if (picoui_backend_widget_attach_child(parent_backend, backend) != 0) {
+    if (tinyui_widget_attach_child(parent_backend, backend) != 0) {
         ldClock_depose(app_state->ld_scene, ld_clock);
         free(backend);
         free(clock);
@@ -312,8 +312,8 @@ struct picoui_clock *picoui_clock_create(struct picoui_widget *parent, const cha
     clock->widget.backend_widget = backend;
     clock->widget.visible = 1;
     clock->widget.enabled = 1;
-    if (picoui_backend_widget_bind_host(clock->widget.backend_widget, &clock->widget) != 0) {
-        (void)picoui_backend_widget_detach_from_parent(clock->widget.backend_widget);
+    if (tinyui_runtime_bridge_bind_host(clock->widget.backend_widget, &clock->widget) != 0) {
+        (void)tinyui_runtime_bridge_detach_from_parent(clock->widget.backend_widget);
         ldClock_depose(app_state->ld_scene, ld_clock);
         free(backend);
         free(clock);

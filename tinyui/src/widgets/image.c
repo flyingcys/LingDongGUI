@@ -25,8 +25,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-int picoui_backend_widget_unbind_host(void *backend_widget);
-int picoui_backend_widget_detach_from_parent(void *backend_widget);
+int tinyui_runtime_bridge_unbind_host(void *backend_widget);
+int tinyui_runtime_bridge_detach_from_parent(void *backend_widget);
 
 static ldColor picoui_image_rgb_to_ld_color(unsigned int rgb)
 {
@@ -87,14 +87,14 @@ static void picoui_image_dispose_partial_impl(struct picoui_image *image)
 
     backend = (struct picoui_backend_widget *)image->widget.backend_widget;
     if (backend != 0) {
-        app_state = picoui_runtime_bridge_backend_state(backend->owner);
+        app_state = tinyui_runtime_bridge_backend_state(backend->owner);
         if (backend->parent != 0) {
-            detach_result = picoui_backend_widget_detach_from_parent(backend);
+            detach_result = tinyui_runtime_bridge_detach_from_parent(backend);
             if (detach_result != 0) {
                 detach_result = picoui_image_finish_detach_after_backend_failure(backend);
             }
         }
-        (void)picoui_backend_widget_unbind_host(backend);
+        (void)tinyui_runtime_bridge_unbind_host(backend);
         if (app_state != 0 && app_state->ld_scene != 0 && backend->ld_widget != 0) {
             ldImage_depose(app_state->ld_scene, (ldImage_t *)backend->ld_widget);
         }
@@ -166,7 +166,7 @@ struct picoui_image *picoui_image_create(struct picoui_window *parent, const cha
 
     parent_backend = (struct picoui_backend_widget *)parent->widget.backend_widget;
     app_state = parent_backend != 0
-        ? picoui_runtime_bridge_backend_state_from_parent(parent_backend)
+        ? tinyui_runtime_bridge_backend_state_from_parent(parent_backend)
         : 0;
     if (parent_backend == 0 || parent_backend->ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
         return 0;
@@ -183,7 +183,7 @@ struct picoui_image *picoui_image_create(struct picoui_window *parent, const cha
         return 0;
     }
 
-    name_id = picoui_runtime_bridge_next_name_id(parent_backend);
+    name_id = tinyui_runtime_bridge_next_name_id(parent_backend);
     if (name_id == 0) {
         free(backend);
         free(image);
@@ -206,7 +206,7 @@ struct picoui_image *picoui_image_create(struct picoui_window *parent, const cha
         return 0;
     }
 
-    if (picoui_backend_widget_init_child(backend,
+    if (tinyui_widget_init_child(backend,
                                          parent_backend,
                                          PICOUI_BACKEND_WIDGET_IMAGE,
                                          id,
@@ -218,7 +218,7 @@ struct picoui_image *picoui_image_create(struct picoui_window *parent, const cha
     }
     backend->ld_widget = ld_image;
     backend->ld_name_id = name_id;
-    if (picoui_backend_widget_attach_child(parent_backend, backend) != 0) {
+    if (tinyui_widget_attach_child(parent_backend, backend) != 0) {
         ldImage_depose(app_state->ld_scene, ld_image);
         free(backend);
         free(image);
@@ -229,7 +229,7 @@ struct picoui_image *picoui_image_create(struct picoui_window *parent, const cha
     image->id = id;
     image->widget.visible = 1;
     image->widget.enabled = 1;
-    if (picoui_backend_widget_bind_host(image->widget.backend_widget, &image->widget) != 0) {
+    if (tinyui_runtime_bridge_bind_host(image->widget.backend_widget, &image->widget) != 0) {
         picoui_image_dispose_partial_impl(image);
         return 0;
     }

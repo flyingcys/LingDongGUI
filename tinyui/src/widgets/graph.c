@@ -217,7 +217,7 @@ struct picoui_graph *picoui_graph_create(struct picoui_window *parent,
 
     parent_backend = (struct picoui_backend_widget *)parent->widget.backend_widget;
     app_state = parent_backend != 0
-        ? picoui_runtime_bridge_backend_state_from_parent(parent_backend)
+        ? tinyui_runtime_bridge_backend_state_from_parent(parent_backend)
         : 0;
     if (parent_backend == 0 || parent_backend->ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
         return 0;
@@ -234,7 +234,7 @@ struct picoui_graph *picoui_graph_create(struct picoui_window *parent,
         return 0;
     }
 
-    name_id = picoui_runtime_bridge_next_name_id(parent_backend);
+    name_id = tinyui_runtime_bridge_next_name_id(parent_backend);
     if (name_id == 0) {
         free(backend);
         free(graph);
@@ -261,7 +261,7 @@ struct picoui_graph *picoui_graph_create(struct picoui_window *parent,
     ldGraphSetAxis(ld_graph, 100, 100, 5);
     ldGraphSetPointImageMask(ld_graph, (arm_2d_tile_t *)&c_tileWhiteDotMask);
 
-    if (picoui_backend_widget_init_child(backend,
+    if (tinyui_widget_init_child(backend,
                                          parent_backend,
                                          PICOUI_BACKEND_WIDGET_GRAPH,
                                          id,
@@ -273,7 +273,7 @@ struct picoui_graph *picoui_graph_create(struct picoui_window *parent,
     }
     backend->ld_widget = ld_graph;
     backend->ld_name_id = name_id;
-    if (picoui_backend_widget_attach_child(parent_backend, backend) != 0) {
+    if (tinyui_widget_attach_child(parent_backend, backend) != 0) {
         ldGraph_depose(app_state->ld_scene, ld_graph);
         free(backend);
         free(graph);
@@ -290,8 +290,8 @@ struct picoui_graph *picoui_graph_create(struct picoui_window *parent,
     graph->grid_offset = 20;
     graph->widget.visible = 1;
     graph->widget.enabled = 1;
-    if (picoui_backend_widget_bind_host(graph->widget.backend_widget, &graph->widget) != 0) {
-        (void)picoui_backend_widget_detach_from_parent(graph->widget.backend_widget);
+    if (tinyui_runtime_bridge_bind_host(graph->widget.backend_widget, &graph->widget) != 0) {
+        (void)tinyui_runtime_bridge_detach_from_parent(graph->widget.backend_widget);
         ldGraph_depose(app_state->ld_scene, ld_graph);
         free(backend);
         free(graph);

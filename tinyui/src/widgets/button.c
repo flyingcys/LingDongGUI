@@ -33,8 +33,8 @@ struct picoui_button_backend_host {
 
 extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
 extern const arm_2d_a1_font_t ARM_2D_FONT_16x24;
-int picoui_backend_widget_unbind_host(void *backend_widget);
-int picoui_backend_widget_detach_from_parent(void *backend_widget);
+int tinyui_runtime_bridge_unbind_host(void *backend_widget);
+int tinyui_runtime_bridge_detach_from_parent(void *backend_widget);
 
 static int picoui_button_fail_next_set_font = 0;
 
@@ -83,12 +83,12 @@ static void picoui_button_dispose_partial(struct picoui_button *button)
 
     host = (struct picoui_button_backend_host *)button->widget.backend_widget;
     if (host != 0) {
-        app_state = picoui_runtime_bridge_backend_state(host->widget.owner);
+        app_state = tinyui_runtime_bridge_backend_state(host->widget.owner);
         xBtnRemove(&host->action_info);
         if (host->widget.parent != 0) {
-            (void)picoui_backend_widget_detach_from_parent(&host->widget);
+            (void)tinyui_runtime_bridge_detach_from_parent(&host->widget);
         }
-        (void)picoui_backend_widget_unbind_host(&host->widget);
+        (void)tinyui_runtime_bridge_unbind_host(&host->widget);
         if (app_state != 0 && app_state->ld_scene != 0 && host->widget.ld_widget != 0) {
             ldButton_depose(app_state->ld_scene, (ldButton_t *)host->widget.ld_widget);
         }
@@ -129,7 +129,7 @@ static struct picoui_button *picoui_button_alloc(struct picoui_window *parent, c
     }
 
     parent_backend = (struct picoui_backend_widget *)parent->widget.backend_widget;
-    app_state = picoui_runtime_bridge_backend_state_from_parent(parent_backend);
+    app_state = tinyui_runtime_bridge_backend_state_from_parent(parent_backend);
     if (parent_backend == 0 || parent_backend->ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
         return 0;
     }
@@ -145,7 +145,7 @@ static struct picoui_button *picoui_button_alloc(struct picoui_window *parent, c
         return 0;
     }
 
-    name_id = picoui_runtime_bridge_next_name_id(parent_backend);
+    name_id = tinyui_runtime_bridge_next_name_id(parent_backend);
     if (name_id == 0) {
         free(host);
         free(button);
@@ -166,7 +166,7 @@ static struct picoui_button *picoui_button_alloc(struct picoui_window *parent, c
         return 0;
     }
 
-    if (picoui_backend_widget_init_child(&host->widget,
+    if (tinyui_widget_init_child(&host->widget,
                                          parent_backend,
                                          PICOUI_BACKEND_WIDGET_BUTTON,
                                          id,
@@ -179,7 +179,7 @@ static struct picoui_button *picoui_button_alloc(struct picoui_window *parent, c
     host->widget.ld_widget = ld_button;
     host->widget.ld_name_id = name_id;
     _xBtnInit(name_id, (isBtnPressFunc)ldButtonActionIsPressById, &host->action_info);
-    if (picoui_backend_widget_attach_child(parent_backend, &host->widget) != 0) {
+    if (tinyui_widget_attach_child(parent_backend, &host->widget) != 0) {
         ldButton_depose(app_state->ld_scene, ld_button);
         free(host);
         free(button);
@@ -190,7 +190,7 @@ static struct picoui_button *picoui_button_alloc(struct picoui_window *parent, c
     button->widget.backend_widget = &host->widget;
     button->widget.visible = 1;
     button->widget.enabled = 1;
-    if (picoui_backend_widget_bind_host(button->widget.backend_widget, &button->widget) != 0) {
+    if (tinyui_runtime_bridge_bind_host(button->widget.backend_widget, &button->widget) != 0) {
         free(button);
         return 0;
     }

@@ -247,7 +247,7 @@ struct picoui_keyboard *picoui_keyboard_create(struct picoui_window *parent, con
 
     parent_backend = (struct picoui_backend_widget *)parent->widget.backend_widget;
     app_state = parent_backend != 0
-        ? picoui_runtime_bridge_backend_state_from_parent(parent_backend)
+        ? tinyui_runtime_bridge_backend_state_from_parent(parent_backend)
         : 0;
     if (parent_backend == 0 || parent_backend->ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
         return 0;
@@ -264,7 +264,7 @@ struct picoui_keyboard *picoui_keyboard_create(struct picoui_window *parent, con
         return 0;
     }
 
-    name_id = picoui_runtime_bridge_next_name_id(parent_backend);
+    name_id = tinyui_runtime_bridge_next_name_id(parent_backend);
     if (name_id == 0) {
         free(backend);
         free(keyboard);
@@ -282,7 +282,7 @@ struct picoui_keyboard *picoui_keyboard_create(struct picoui_window *parent, con
         return 0;
     }
 
-    if (picoui_backend_widget_init_child(backend,
+    if (tinyui_widget_init_child(backend,
                                          parent_backend,
                                          PICOUI_BACKEND_WIDGET_KEYBOARD,
                                          id,
@@ -294,7 +294,7 @@ struct picoui_keyboard *picoui_keyboard_create(struct picoui_window *parent, con
     }
     backend->ld_widget = ld_keyboard;
     backend->ld_name_id = name_id;
-    if (picoui_backend_widget_attach_child(parent_backend, backend) != 0) {
+    if (tinyui_widget_attach_child(parent_backend, backend) != 0) {
         ldKeyboard_depose(app_state->ld_scene, ld_keyboard);
         free(backend);
         free(keyboard);
@@ -305,8 +305,8 @@ struct picoui_keyboard *picoui_keyboard_create(struct picoui_window *parent, con
     keyboard->id = id;
     keyboard->widget.visible = 1;
     keyboard->widget.enabled = 1;
-    if (picoui_backend_widget_bind_host(keyboard->widget.backend_widget, &keyboard->widget) != 0) {
-        (void)picoui_backend_widget_detach_from_parent(keyboard->widget.backend_widget);
+    if (tinyui_runtime_bridge_bind_host(keyboard->widget.backend_widget, &keyboard->widget) != 0) {
+        (void)tinyui_runtime_bridge_detach_from_parent(keyboard->widget.backend_widget);
         ldKeyboard_depose(app_state->ld_scene, ld_keyboard);
         free(backend);
         free(keyboard);
@@ -516,7 +516,7 @@ int picoui_keyboard_click(struct picoui_keyboard *keyboard)
         return -1;
     }
 
-    app_state = picoui_runtime_bridge_backend_state_from_parent(backend);
+    app_state = tinyui_runtime_bridge_backend_state_from_parent(backend);
     ld_keyboard = picoui_keyboard_get_ld_widget(keyboard);
     if (app_state == 0 || app_state->ld_scene == 0 || ld_keyboard == 0) {
         return -1;

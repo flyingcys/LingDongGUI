@@ -24,8 +24,8 @@
 #include "../../../src/gui/ldArc.h"
 
 #include <stdlib.h>
-int picoui_backend_widget_unbind_host(void *backend_widget);
-int picoui_backend_widget_detach_from_parent(void *backend_widget);
+int tinyui_runtime_bridge_unbind_host(void *backend_widget);
+int tinyui_runtime_bridge_detach_from_parent(void *backend_widget);
 
 extern const arm_2d_tile_t c_tileQuaterArcGRAY8;
 extern const arm_2d_tile_t c_tileQuaterArcMask;
@@ -140,19 +140,19 @@ static void picoui_arc_dispose_partial_impl(struct picoui_arc *arc)
 
     backend = (struct picoui_backend_widget *)arc->widget.backend_widget;
     if (backend != 0) {
-        app_state = picoui_runtime_bridge_backend_state(backend->owner);
+        app_state = tinyui_runtime_bridge_backend_state(backend->owner);
         ld_base = (ldBase_t *)backend->ld_widget;
         memset(&picoui_arc_last_dispose_snapshot, 0, sizeof(picoui_arc_last_dispose_snapshot));
         picoui_arc_last_dispose_snapshot.kind = backend->kind;
         if (backend->parent != 0) {
-            detach_result = picoui_backend_widget_detach_from_parent(backend);
+            detach_result = tinyui_runtime_bridge_detach_from_parent(backend);
             if (detach_result != 0) {
                 detach_result = picoui_arc_finish_detach_after_backend_failure(backend);
             }
         } else {
             picoui_arc_last_dispose_snapshot.detached = 1;
         }
-        unbind_result = picoui_backend_widget_unbind_host(backend);
+        unbind_result = tinyui_runtime_bridge_unbind_host(backend);
         picoui_arc_last_dispose_snapshot.detach_result = detach_result;
         picoui_arc_last_dispose_snapshot.unbind_result = unbind_result;
         picoui_arc_last_dispose_snapshot.cleanup_complete =
@@ -251,7 +251,7 @@ struct picoui_arc *picoui_arc_create(struct picoui_widget *parent, const char *i
     }
 
     parent_backend = (struct picoui_backend_widget *)parent->backend_widget;
-    app_state = picoui_runtime_bridge_backend_state_from_parent(parent_backend);
+    app_state = tinyui_runtime_bridge_backend_state_from_parent(parent_backend);
     if (parent_backend->ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
         return 0;
     }
@@ -284,7 +284,7 @@ struct picoui_arc *picoui_arc_create(struct picoui_widget *parent, const char *i
     }
     *arc_mask_tile = c_tileQuaterArcMask;
 
-    name_id = picoui_runtime_bridge_next_name_id(parent_backend);
+    name_id = tinyui_runtime_bridge_next_name_id(parent_backend);
     if (name_id == 0) {
         free(arc_mask_tile);
         free(arc_img_tile);
@@ -313,7 +313,7 @@ struct picoui_arc *picoui_arc_create(struct picoui_widget *parent, const char *i
     }
     ldArcSetQuarterImage(ld_arc, arc_img_tile, arc_mask_tile, true, true);
 
-    if (picoui_backend_widget_init_child(backend,
+    if (tinyui_widget_init_child(backend,
                                          parent_backend,
                                          PICOUI_BACKEND_WIDGET_ARC,
                                          id,
@@ -326,7 +326,7 @@ struct picoui_arc *picoui_arc_create(struct picoui_widget *parent, const char *i
     backend->ld_widget = ld_arc;
     backend->ld_name_id = name_id;
     backend->last_signal = PICOUI_BACKEND_SIGNAL_NONE;
-    if (picoui_backend_widget_attach_child(parent_backend, backend) != 0) {
+    if (tinyui_widget_attach_child(parent_backend, backend) != 0) {
         ldArc_depose(app_state->ld_scene, ld_arc);
         free(backend);
         free(arc);
@@ -338,7 +338,7 @@ struct picoui_arc *picoui_arc_create(struct picoui_widget *parent, const char *i
     arc->widget.visible = 1;
     arc->widget.enabled = 1;
     arc->parent_color = (unsigned int)GLCD_COLOR_WHITE;
-    if (picoui_backend_widget_bind_host(arc->widget.backend_widget, &arc->widget) != 0
+    if (tinyui_runtime_bridge_bind_host(arc->widget.backend_widget, &arc->widget) != 0
         || picoui_arc_set_background_angle(arc, 0.0f, 360.0f) != 0
         || picoui_arc_set_foreground_angle(arc, 0.0f) != 0
         || picoui_arc_set_rotation_angle(arc, 0.0f) != 0

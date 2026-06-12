@@ -99,29 +99,36 @@ static void test_shared_emit_helpers_keep_callback_contract(struct picoui_button
 {
     assert(button != 0);
 
-    picoui_backend_emit_event(on_pressed, &button->widget, &press_cookie);
+    tinyui_widget_emit_event(on_pressed, &button->widget, &press_cookie);
     assert(press_count == 1);
     assert(last_press_widget == &button->widget);
     assert(last_press_cookie == press_cookie);
 
-    picoui_backend_emit_clicked(on_clicked, &button->widget, &click_cookie);
+    tinyui_widget_emit_clicked(on_clicked, &button->widget, &click_cookie);
     assert(click_count == 1);
     assert(last_click_widget == &button->widget);
     assert(last_click_cookie == click_cookie);
 
-    picoui_backend_emit_value_changed(on_value_changed, &button->widget, 73, &slider_cookie);
+    tinyui_widget_emit_value_changed(on_value_changed, &button->widget, 73, &slider_cookie);
     assert(value_count == 1);
     assert(last_value_widget == &button->widget);
     assert(last_value == 73);
     assert(last_value_cookie == slider_cookie);
 
-    picoui_backend_emit_event(0, &button->widget, &press_cookie);
-    picoui_backend_emit_clicked(0, &button->widget, &click_cookie);
-    picoui_backend_emit_value_changed(0, &button->widget, 91, &slider_cookie);
+    tinyui_widget_emit_event(0, &button->widget, &press_cookie);
+    tinyui_widget_emit_clicked(0, &button->widget, &click_cookie);
+    tinyui_widget_emit_value_changed(0, &button->widget, 91, &slider_cookie);
     assert(press_count == 1);
     assert(click_count == 1);
     assert(value_count == 1);
     assert(last_value == 73);
+}
+
+static void test_shared_emit_helpers_no_longer_use_picoui_backend_prefix(void)
+{
+    assert_self_binary_lacks_symbol("picoui_backend_emit_event");
+    assert_self_binary_lacks_symbol("picoui_backend_emit_clicked");
+    assert_self_binary_lacks_symbol("picoui_backend_emit_value_changed");
 }
 
 static void test_button_create_with_props_pushes_all_fields(struct picoui_window *win)
@@ -631,6 +638,7 @@ int main(void)
     ldMsgDeinit(&app_state->ld_scene->ptMsgQueue);
     ldButtonSetFont((ldButton_t *)backend->ld_widget, (arm_2d_font_t *)&ARM_2D_FONT_6x8);
 
+    test_shared_emit_helpers_no_longer_use_picoui_backend_prefix();
     test_button_create_with_props_pushes_all_fields(win);
     test_button_set_text_round_trip(win);
     test_button_set_style_class(win);

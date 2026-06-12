@@ -1,6 +1,7 @@
 #include "internal.h"
-#include "picoui/runtime.h"
-#include "picoui/window.h"
+#include "runtime_bridge.h"
+#include "runtime.h"
+#include "window.h"
 
 #include <stdlib.h>
 
@@ -52,7 +53,7 @@ void picoui_timer_handler(void)
         return;
     }
 
-    step = picoui_backend_runtime_step(g_picoui_runtime_app);
+    step = tinyui_runtime_bridge_step_app(g_picoui_runtime_app);
     if (step < 0) {
         picoui_deinit();
         exit(1);

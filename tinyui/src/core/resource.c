@@ -17,7 +17,7 @@
  */
 
 #include "internal.h"
-#include "picoui/image.h"
+#include "image.h"
 #include "../../../src/gui/ldBase.h"
 
 #include <string.h>
