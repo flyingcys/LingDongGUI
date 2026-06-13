@@ -19,8 +19,32 @@
 #ifndef PICOUI_INTERNAL_H
 #define PICOUI_INTERNAL_H
 
-#include "backend.h"
+#include "runtime_internal.h"
 #include "app.h"
+
+/* Forward declarations for widget types used in internal function declarations.
+ * These must appear before any function declaration that uses them as parameter
+ * types, otherwise C creates file-scope-local struct tags that conflict with
+ * the real definitions later in this header. */
+struct picoui_animation;
+struct picoui_message_box;
+struct picoui_list;
+struct picoui_combo_box;
+struct picoui_scroll_selecter;
+struct picoui_table;
+struct picoui_icon_slider;
+struct picoui_radial_menu;
+struct picoui_checkbox;
+struct picoui_switch;
+struct picoui_slider;
+struct picoui_progress_wheel;
+struct picoui_date_time;
+struct picoui_clock;
+struct picoui_arc;
+struct picoui_gauge;
+struct picoui_progress_wheel_props;
+struct picoui_calendar;
+struct picoui_canvas;
 #include "combo_box.h"
 #include "canvas.h"
 #include "calendar.h"
@@ -191,6 +215,30 @@ int tinyui_widget_dispatch_event(void *backend_widget,
 int tinyui_widget_dispatch_native_signal(void *backend_widget,
                                          uint32_t native_signal,
                                          uint64_t native_value);
+
+/**
+ * @brief Claim backend focus for a widget
+ *
+ * @param[in] backend_widget backend widget
+ * @return 0 on success, -1 on failure
+ */
+int tinyui_widget_claim_backend_focus(void *backend_widget);
+
+/**
+ * @brief Release backend focus from a widget
+ *
+ * @param[in] backend_widget backend widget
+ * @return 0 on success, -1 on failure
+ */
+int tinyui_widget_release_backend_focus(void *backend_widget);
+
+/**
+ * @brief Initialize data model for backend widget
+ *
+ * @param[in] backend backend
+ */
+void tinyui_widget_init_data_model(struct picoui_backend_widget *backend);
+
 int tinyui_runtime_host_step_app(struct picoui_app *app);
 int tinyui_window_apply_flex_flow(struct picoui_window *window, enum picoui_flex_flow flow);
 int tinyui_window_apply_flex_align(struct picoui_window *window,

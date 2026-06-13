@@ -3,7 +3,7 @@
     "backend_c_files": 0,
     "app_header_exists": true,
     "app_source_exists": true,
-    "picoui_public_api_count": 558,
+    "picoui_public_api_count": 551,
     "tinyui_public_api_count": 24
   }
 }

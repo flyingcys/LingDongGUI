@@ -19,7 +19,6 @@
 #include "internal.h"
 #include "progress_bar.h"
 #include "../core/runtime_bridge.h"
-#include "../backend/ldgui/backend.h"
 #include "../../../src/gui/ldProgressBar.h"
 
 #include <stdlib.h>

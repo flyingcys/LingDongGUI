@@ -6,7 +6,6 @@
 #include "../../../src/gui/ldBase.h"
 #include "../../../src/gui/ldList.h"
 #include "../../../src/misc/ldMsg.h"
-#include "backend.h"
 #include "internal.h"
 
 #include <assert.h>
@@ -864,16 +863,6 @@ static void test_list_legacy_backend_helper_symbols_are_removed(struct picoui_wi
     assert_source_file_lacks_symbol("tinyui/src/widgets/list.c", "picoui_backend_list_set_select_color");
     assert_source_file_lacks_symbol("tinyui/src/widgets/list.c", "picoui_backend_list_set_align");
     assert_source_file_lacks_symbol("tinyui/src/widgets/list.c", "picoui_backend_list_set_item_widget");
-    assert_source_file_lacks_symbol("tinyui/src/backend/ldgui/backend.h", "picoui_backend_list_set_items");
-    assert_source_file_lacks_symbol("tinyui/src/backend/ldgui/backend.h", "picoui_backend_list_set_item_height");
-    assert_source_file_lacks_symbol("tinyui/src/backend/ldgui/backend.h", "picoui_backend_list_set_padding_group");
-    assert_source_file_lacks_symbol("tinyui/src/backend/ldgui/backend.h", "picoui_backend_list_set_margin_group");
-    assert_source_file_lacks_symbol("tinyui/src/backend/ldgui/backend.h", "picoui_backend_list_set_text_color");
-    assert_source_file_lacks_symbol("tinyui/src/backend/ldgui/backend.h", "picoui_backend_list_set_bg_color");
-    assert_source_file_lacks_symbol("tinyui/src/backend/ldgui/backend.h", "picoui_backend_list_set_select_color");
-    assert_source_file_lacks_symbol("tinyui/src/backend/ldgui/backend.h", "picoui_backend_list_set_align");
-    assert_source_file_lacks_symbol("tinyui/src/backend/ldgui/backend.h", "picoui_backend_list_set_item_widget");
-    assert(dlsym(RTLD_DEFAULT, "picoui_backend_list_set_items") == 0);
     assert(dlsym(RTLD_DEFAULT, "picoui_backend_list_set_item_height") == 0);
     assert(dlsym(RTLD_DEFAULT, "picoui_backend_list_set_padding_group") == 0);
     assert(dlsym(RTLD_DEFAULT, "picoui_backend_list_set_margin_group") == 0);

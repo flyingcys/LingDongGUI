@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-#include "backend.h"
 #include "internal.h"
 #include "runtime_bridge.h"
 
@@ -78,6 +77,20 @@ static int tinyui_runtime_host_touch_log_enabled(void)
     return enabled;
 }
 
+static int tinyui_runtime_host_benchmark_log_enabled(void)
+{
+    static int initialized = 0;
+    static int enabled = 0;
+
+    if (!initialized) {
+        const char *env = getenv("PICOUI_BENCHMARK_LOG");
+        enabled = (env != NULL && env[0] != '\0' && env[0] != '0') ? 1 : 0;
+        initialized = 1;
+    }
+
+    return enabled;
+}
+
 static void tinyui_runtime_host_runtime_bootstrap(void)
 {
     static int initialized = 0;
@@ -108,6 +121,8 @@ struct tinyui_runtime_host_state {
     uint32_t *present_pixels;
     arm_2d_tile_t real_tile;
     Uint32 start_ticks;
+    Uint32 screen_create_start_ticks;
+    Uint32 screen_create_end_ticks;
     Uint32 auto_quit_ms;
     int display_width;
     int display_height;
@@ -118,7 +133,49 @@ struct tinyui_runtime_host_state {
     int temporary_smoke_logged;
     int smoke_layout_used;
     int smoke_layout_marker_logged;
+    int benchmark_screen_create_logged;
+    int benchmark_first_frame_logged;
 };
+
+static void tinyui_runtime_host_log_screen_create_benchmark(struct tinyui_runtime_host_state *state)
+{
+    double elapsed_ms;
+
+    if (state == NULL || state->benchmark_screen_create_logged ||
+        !tinyui_runtime_host_benchmark_log_enabled()) {
+        return;
+    }
+
+    if (state->screen_create_end_ticks < state->screen_create_start_ticks) {
+        return;
+    }
+
+    elapsed_ms = (double)(state->screen_create_end_ticks - state->screen_create_start_ticks);
+    printf("PICOUI_BENCHMARK_SCREEN_OBJECT_CREATE_MS=%.3f\n", elapsed_ms);
+    printf("PICOUI_BENCHMARK_SCREEN_CREATE_MS=%.3f\n", elapsed_ms);
+    fflush(stdout);
+    state->benchmark_screen_create_logged = 1;
+}
+
+static void tinyui_runtime_host_log_first_frame_benchmark(struct tinyui_runtime_host_state *state)
+{
+    double elapsed_ms;
+
+    if (state == NULL || state->benchmark_first_frame_logged ||
+        !tinyui_runtime_host_benchmark_log_enabled()) {
+        return;
+    }
+
+    if (state->capture_written == 0) {
+        return;
+    }
+
+    elapsed_ms = (double)(SDL_GetTicks() - state->start_ticks);
+    printf("PICOUI_BENCHMARK_CAPTURE_READY_MS=%.3f\n", elapsed_ms);
+    printf("PICOUI_BENCHMARK_FIRST_FRAME_MS=%.3f\n", elapsed_ms);
+    fflush(stdout);
+    state->benchmark_first_frame_logged = 1;
+}
 
 static const ldPageFuncGroup_t g_tinyui_runtime_host_page = {
     .init = tinyui_runtime_host_runtime_page_init,
@@ -438,6 +495,7 @@ static int tinyui_runtime_host_write_capture(struct tinyui_runtime_host_state *s
 
     fclose(fp);
     state->capture_written = 1;
+    tinyui_runtime_host_log_first_frame_benchmark(state);
     return 0;
 }
 
@@ -635,6 +693,8 @@ static void tinyui_runtime_host_log_runtime_ready(struct picoui_app *app,
     printf("PICOUI_RUNTIME_READY\n");
     fflush(stdout);
     state->ready_logged = 1;
+    state->screen_create_end_ticks = SDL_GetTicks();
+    tinyui_runtime_host_log_screen_create_benchmark(state);
 }
 
 static int tinyui_runtime_host_prepare_runtime(struct picoui_app *app, struct picoui_window *window)

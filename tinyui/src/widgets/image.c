@@ -19,7 +19,6 @@
 #include "internal.h"
 #include "image.h"
 #include "../core/runtime_bridge.h"
-#include "../backend/ldgui/backend.h"
 #include "../../../src/gui/ldImage.h"
 
 #include <stdlib.h>

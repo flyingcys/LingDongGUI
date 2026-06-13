@@ -20,7 +20,6 @@
 #include "progress_wheel.h"
 #include "../../../src/gui/ldBase.h"
 #include "../../../src/gui/ldProgressWheel.h"
-#include "../backend/ldgui/backend.h"
 #include "../core/runtime_bridge.h"
 
 #include <stdlib.h>

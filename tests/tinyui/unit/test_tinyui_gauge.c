@@ -4,7 +4,6 @@
 #include "window.h"
 #include "../../../src/gui/ldBase.h"
 #include "../../../src/gui/ldGauge.h"
-#include "backend.h"
 #include "internal.h"
 #include "picoui_test_support.h"
 

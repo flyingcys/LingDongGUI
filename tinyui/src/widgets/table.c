@@ -18,7 +18,6 @@
 
 #include "internal.h"
 #include "table.h"
-#include "../backend/ldgui/backend.h"
 #include "../core/runtime_bridge.h"
 #include "../../../src/gui/ldTable.h"
 #include "../../../src/misc/ldMsg.h"

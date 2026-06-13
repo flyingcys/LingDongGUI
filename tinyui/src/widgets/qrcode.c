@@ -20,7 +20,6 @@
 #include "qrcode.h"
 #include "widget.h"
 #include "../core/runtime_bridge.h"
-#include "../backend/ldgui/backend.h"
 #include "../../../src/gui/ldQRCode.h"
 
 #include <stdlib.h>

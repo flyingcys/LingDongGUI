@@ -7,7 +7,7 @@
 
 static struct picoui_app *g_tinyui_runtime_app;
 
-int picoui_init(void)
+int tinyui_init(void)
 {
     if (g_tinyui_runtime_app != 0) {
         return 0;
@@ -17,7 +17,7 @@ int picoui_init(void)
     return g_tinyui_runtime_app != 0 ? 0 : -1;
 }
 
-void picoui_deinit(void)
+void tinyui_deinit(void)
 {
     if (g_tinyui_runtime_app == 0) {
         return;
@@ -27,39 +27,39 @@ void picoui_deinit(void)
     g_tinyui_runtime_app = 0;
 }
 
-struct picoui_window *picoui_screen_create(void)
+tinyui_obj_t *tinyui_screen_create(void)
 {
-    if (g_tinyui_runtime_app == 0 && picoui_init() != 0) {
+    if (g_tinyui_runtime_app == 0 && tinyui_init() != 0) {
         return 0;
     }
 
-    return picoui_window_create(g_tinyui_runtime_app, "root");
+    tinyui_runtime_bridge_begin_screen_create(g_tinyui_runtime_app);
+    return (tinyui_obj_t *)picoui_window_create(g_tinyui_runtime_app, "root");
 }
 
-int picoui_screen_load(struct picoui_window *screen)
+int tinyui_screen_load(tinyui_obj_t *screen)
 {
     if (g_tinyui_runtime_app == 0 || screen == 0) {
         return -1;
     }
 
-    return picoui_app_set_window(g_tinyui_runtime_app, screen);
+    return picoui_app_set_window(g_tinyui_runtime_app, (struct picoui_window *)screen);
 }
 
-void picoui_timer_handler(void)
+int tinyui_timer_handler(void)
 {
     int step;
 
     if (g_tinyui_runtime_app == 0) {
-        return;
+        return -1;
     }
 
     step = tinyui_runtime_bridge_step_app(g_tinyui_runtime_app);
     if (step < 0) {
-        picoui_deinit();
-        exit(1);
+        return -1;
     }
     if (step > 0) {
-        picoui_deinit();
-        exit(0);
+        return 1;
     }
+    return 0;
 }

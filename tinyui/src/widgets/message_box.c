@@ -17,7 +17,6 @@
  */
 
 #include "internal.h"
-#include "backend.h"
 #include "message_box.h"
 #include "widget.h"
 #include "../core/runtime_bridge.h"

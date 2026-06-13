@@ -16,17 +16,11 @@
  * limitations under the License.
  */
 
-#ifndef PICOUI_RUNTIME_H
-#define PICOUI_RUNTIME_H
+#ifndef TINYUI_DEMO_BASIC_WIDGETS_H
+#define TINYUI_DEMO_BASIC_WIDGETS_H
 
-/*
- * Legacy compatibility header.
- *
- * Include this header for backward compatibility with code that uses
- * `#include "picoui/runtime.h"`. All picoui_* functions are now static
- * inline wrappers defined in runtime.h that call the canonical tinyui_* API.
- */
+#include "widget.h"
 
-#include "../runtime.h"
+int tinyui_demo_basic_widgets_build(tinyui_obj_t *screen);
 
 #endif

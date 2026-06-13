@@ -2,8 +2,19 @@
 #define TINYUI_APP_H
 
 /*
- * Compatibility API retained during TinyUI transition.
- * New user-facing startup path should use runtime.h.
+ * INTERNAL / NON-CANONICAL -- DO NOT USE FOR NEW CODE.
+ *
+ * This header exposes the old picoui_app_* startup path, which has been
+ * superseded by the canonical tinyui_init / tinyui_screen_create /
+ * tinyui_screen_load / tinyui_timer_handler chain declared in runtime.h.
+ *
+ * New user code must #include "runtime.h" and use the tinyui_* API.
+ * This file is retained only for internal lifecycle helpers (timer pump,
+ * app/set_window) and for existing demo source files that have not yet
+ * been migrated to the canonical path.  All such legacy consumers will
+ * be migrated in a future stage.
+ *
+ * Removal target: after all demo/* and internal callers are migrated.
  */
 
 struct picoui_app;

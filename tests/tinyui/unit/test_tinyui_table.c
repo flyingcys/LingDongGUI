@@ -4,7 +4,6 @@
 #include "window.h"
 #include "../../../src/gui/ldTable.h"
 #include "../../../src/misc/ldMsg.h"
-#include "backend.h"
 #include "internal.h"
 
 #include <assert.h>

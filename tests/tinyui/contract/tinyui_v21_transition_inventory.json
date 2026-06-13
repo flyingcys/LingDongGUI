@@ -12,7 +12,7 @@
       "picoui.h",
       "sdl.h"
     ],
-    "picoui_public_api_count": 559,
-    "tinyui_public_api_count": 31
+    "picoui_public_api_count": 552,
+    "tinyui_public_api_count": 37
   }
 }

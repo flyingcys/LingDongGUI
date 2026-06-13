@@ -39,6 +39,8 @@ struct tinyui_runtime_bridge_backend_runtime_state {
     uint32_t *present_pixels;
     arm_2d_tile_t real_tile;
     uint32_t start_ticks;
+    uint32_t screen_create_start_ticks;
+    uint32_t screen_create_end_ticks;
     uint32_t auto_quit_ms;
     int display_width;
     int display_height;
@@ -49,6 +51,8 @@ struct tinyui_runtime_bridge_backend_runtime_state {
     int temporary_smoke_logged;
     int smoke_layout_used;
     int smoke_layout_marker_logged;
+    int benchmark_screen_create_logged;
+    int benchmark_first_frame_logged;
 };
 
 #ifndef SDL_INIT_VIDEO
@@ -490,6 +494,22 @@ int tinyui_runtime_bridge_ensure_window(struct picoui_app *app)
     return tinyui_runtime_bridge_ensure_window_from_state(
         app,
         (struct tinyui_runtime_bridge_backend_runtime_state *)app_state->runtime_state);
+}
+
+void tinyui_runtime_bridge_begin_screen_create(struct picoui_app *app)
+{
+    struct picoui_backend_app_state *app_state;
+    struct tinyui_runtime_bridge_backend_runtime_state *state;
+
+    app_state = tinyui_runtime_bridge_backend_state(app);
+    if (app_state == NULL || app_state->runtime_state == NULL) {
+        return;
+    }
+
+    state = (struct tinyui_runtime_bridge_backend_runtime_state *)app_state->runtime_state;
+    state->screen_create_start_ticks = picoui_tick_get(app);
+    state->screen_create_end_ticks = state->screen_create_start_ticks;
+    state->benchmark_screen_create_logged = 0;
 }
 
 int16_t tinyui_runtime_bridge_map_pointer_axis(int value, int window_extent, int target_extent)

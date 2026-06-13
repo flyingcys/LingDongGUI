@@ -17,7 +17,6 @@
  */
 
 #include "internal.h"
-#include "backend.h"
 #include "icon_slider.h"
 #include "widget.h"
 #include "../core/runtime_bridge.h"

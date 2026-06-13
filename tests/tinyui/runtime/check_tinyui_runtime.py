@@ -407,7 +407,7 @@ def _assert_picoui_runtime_screen_defines(build_dir: Path) -> None:
     compile_commands = json.loads(compile_db_path.read_text())
     for source_suffix in (
         "tinyui/src/core/runtime_host.c",
-        "tinyui/demo/basic_widgets/main.c",
+        "tinyui/demo/main.c",
     ):
         _assert_compile_unit_has_screen_defines(compile_commands, source_suffix)
     for source_suffix in (

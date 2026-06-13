@@ -45,10 +45,40 @@ static void test_runtime_init_create_load_teardown(void)
     tinyui_deinit();
 }
 
+static void test_timer_handler_before_init_returns_error(void)
+{
+    /* The handler must not crash or exit the process when called
+     * before tinyui_init(). It must return a stable error code. */
+    int result = tinyui_timer_handler();
+    assert(result < 0);
+}
+
+static void test_timer_handler_after_init_returns_status(void)
+{
+    /* After a full init→create→load cycle, the handler must not exit()
+     * the process. It must return <0, 0, or >0 as a library status. */
+    tinyui_obj_t *screen;
+
+    assert(tinyui_init() == 0);
+    screen = tinyui_screen_create();
+    assert(screen != NULL);
+    assert(tinyui_screen_load(screen) == 0);
+
+    /* Call once — must not exit, must return a valid status code.
+     * In unit test context the backend may return -1 (no display),
+     * 0 (running), or 1 (finished). All are valid non-exit paths. */
+    int result = tinyui_timer_handler();
+    assert(result >= -1 && result <= 1);
+
+    tinyui_deinit();
+}
+
 int main(void)
 {
     test_shared_sources_no_longer_include_picoui_paths();
     test_runtime_internal_state_uses_tinyui_prefix();
     test_runtime_init_create_load_teardown();
+    test_timer_handler_before_init_returns_error();
+    test_timer_handler_after_init_returns_status();
     return 0;
 }

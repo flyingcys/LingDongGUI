@@ -464,7 +464,8 @@ else()
 endif()
 
 function(add_tinyui_demo target source)
-    add_executable(${target} ${source})
+    add_executable(${target} ${source} ${ARGN})
+    target_include_directories(${target} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../../tinyui/demo")
     target_link_libraries(${target} PRIVATE tinyui_backend_ldgui_runtime)
     if(COMMAND ld_apply_tinyui_runtime_screen_config)
         ld_apply_tinyui_runtime_screen_config(${target})
@@ -482,7 +483,8 @@ add_tinyui_demo(tinyui_hello_world_demo
     "${SDL_EXAMPLE_DIR}/../../tinyui/demo/hello_world/main.c"
 )
 add_tinyui_demo(tinyui_basic_widgets_demo
-    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/basic_widgets/main.c"
+    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/main.c"
+    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/basic_widgets/basic_widgets.c"
 )
 add_tinyui_demo(tinyui_layout_flex_demo
     "${SDL_EXAMPLE_DIR}/../../tinyui/demo/layout_flex/main.c"
@@ -494,8 +496,10 @@ add_tinyui_demo(tinyui_theme_showcase_demo
     "${SDL_EXAMPLE_DIR}/../../tinyui/demo/theme_showcase/main.c"
 )
 add_tinyui_demo(tinyui_settings_panel_demo
-    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/settings_panel/main.c"
+    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/main.c"
+    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/settings_panel/settings_panel.c"
 )
+target_compile_definitions(tinyui_settings_panel_demo PRIVATE TINYUI_DEMO_SETTINGS_PANEL)
 add_tinyui_demo(tinyui_list_basic_demo
     "${SDL_EXAMPLE_DIR}/../../tinyui/demo/list_basic/main.c"
 )

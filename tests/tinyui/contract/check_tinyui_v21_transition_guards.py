@@ -53,15 +53,19 @@ def count_prefix(headers: list[Path], prefix: str) -> int:
 
 
 def collect_actual() -> dict[str, object]:
-    backend_text = (BACKEND_DIR / "backend.h").read_text(encoding="utf-8")
-    backend_compat_includes = sorted(
-        set(
-            re.findall(
-                r'#include "picoui/([^"]+)"',
-                backend_text,
+    backend_h_path = BACKEND_DIR / "backend.h"
+    if backend_h_path.exists():
+        backend_text = backend_h_path.read_text(encoding="utf-8")
+        backend_compat_includes = sorted(
+            set(
+                re.findall(
+                    r'#include "picoui/([^"]+)"',
+                    backend_text,
+                )
             )
         )
-    )
+    else:
+        backend_compat_includes = []
     top_level_wrapper_forward_names = sorted(
         header.name
         for header in TINYUI_TOP_HEADERS

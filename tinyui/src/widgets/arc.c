@@ -20,7 +20,6 @@
 #include "arc.h"
 #include "widget.h"
 #include "../core/runtime_bridge.h"
-#include "../backend/ldgui/backend.h"
 #include "../../../src/gui/ldArc.h"
 
 #include <stdlib.h>

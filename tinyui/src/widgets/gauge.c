@@ -17,7 +17,6 @@
  */
 
 #include "internal.h"
-#include "backend.h"
 #include "gauge.h"
 #include "widget.h"
 #include "../core/runtime_bridge.h"

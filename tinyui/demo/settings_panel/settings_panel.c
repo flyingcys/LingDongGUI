@@ -16,9 +16,16 @@
  * limitations under the License.
  */
 
-#include "tinyui.h"
+#include "settings_panel/settings_panel.h"
+#include "button.h"
+#include "label.h"
+#include "layout.h"
+#include "slider.h"
+#include "switch.h"
+#include "widget.h"
+#include "window.h"
 
-static void make_ui(struct picoui_window *win)
+static int make_ui(struct picoui_window *win)
 {
     struct picoui_label *title;
     struct picoui_switch *wifi;
@@ -36,6 +43,10 @@ static void make_ui(struct picoui_window *win)
     wifi = picoui_switch_create(win, "wifi");
     brightness = picoui_slider_create(win, "brightness");
     apply = picoui_button_create(win, "apply");
+
+    if (title == 0 || wifi == 0 || brightness == 0 || apply == 0) {
+        return -1;
+    }
 
     picoui_label_set_text(title, "Settings");
     picoui_widget_set_size((struct picoui_widget *)wifi, 48, 24);
@@ -58,51 +69,17 @@ static void make_ui(struct picoui_window *win)
                                 1, 3, 1, 1,
                                 PICOUI_ALIGN_END,
                                 PICOUI_ALIGN_CENTER);
-}
 
-static int run_demo(void)
-{
-    struct picoui_theme *theme = picoui_theme_create();
-    struct picoui_app *app = picoui_app_create();
-    struct picoui_window *win;
-
-    if (theme == 0 || app == 0) {
-        picoui_theme_destroy(theme);
-        picoui_app_destroy(app);
-        return 1;
-    }
-
-    if (picoui_app_set_theme(app, theme) != 0) {
-        picoui_theme_destroy(theme);
-        picoui_app_destroy(app);
-        return 1;
-    }
-
-    win = picoui_window_create(app, "root");
-    if (win == 0) {
-        picoui_theme_destroy(theme);
-        picoui_app_destroy(app);
-        return 1;
-    }
-
-    make_ui(win);
-    if (picoui_app_run(app, win) != 0) {
-        picoui_app_destroy(app);
-        picoui_theme_destroy(theme);
-        return 1;
-    }
-    picoui_app_destroy(app);
-    picoui_theme_destroy(theme);
     return 0;
 }
 
-/**
- * @brief Application entry point
- *
- * @return 0 on success, -1 on failure
- */
-
-int main(void)
+int tinyui_demo_settings_panel_build(tinyui_obj_t *screen)
 {
-    return run_demo();
+    struct picoui_window *win = (struct picoui_window *)screen;
+
+    if (screen == 0) {
+        return -1;
+    }
+
+    return make_ui(win);
 }

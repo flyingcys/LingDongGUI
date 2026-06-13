@@ -17,7 +17,7 @@
  */
 
 #include "native.h"
-#include "../backend/ldgui/backend.h"
+#include "internal.h"
 #include "ldBase.h"
 
 enum {

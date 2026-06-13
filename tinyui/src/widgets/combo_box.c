@@ -19,7 +19,6 @@
 #include "internal.h"
 #include "combo_box.h"
 
-#include "../backend/ldgui/backend.h"
 #include "../core/runtime_bridge.h"
 #include "../../../src/gui/ldBase.h"
 #include "../../../src/gui/ldComboBox.h"

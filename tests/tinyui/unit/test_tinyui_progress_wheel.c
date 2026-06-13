@@ -3,7 +3,6 @@
 #include "widget.h"
 #include "window.h"
 #include "../../../src/gui/ldProgressWheel.h"
-#include "backend.h"
 #include "internal.h"
 
 #include <assert.h>

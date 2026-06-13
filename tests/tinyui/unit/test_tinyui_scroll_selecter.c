@@ -2,7 +2,6 @@
 #include "scroll_selecter.h"
 #include "window.h"
 #include "../../../src/gui/ldScrollSelecter.h"
-#include "backend.h"
 #include "internal.h"
 
 #include <assert.h>

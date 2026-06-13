@@ -19,7 +19,6 @@
 #include "internal.h"
 #include "calendar.h"
 
-#include "../backend/ldgui/backend.h"
 #include "../core/runtime_bridge.h"
 #include "../../../src/gui/ldCalendar.h"
 

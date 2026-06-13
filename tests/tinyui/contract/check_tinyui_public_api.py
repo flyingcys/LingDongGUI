@@ -2,6 +2,8 @@
 from pathlib import Path
 import re
 import json
+import subprocess
+import tempfile
 
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -10,10 +12,18 @@ LEGACY_PUBLIC_DIR = ROOT / "tinyui" / "include" / "picoui"
 CONTRACT_DIR = ROOT / "tests" / "tinyui" / "contract"
 INVENTORY_JSON = CONTRACT_DIR / "ldgui_public_api_inventory.json"
 LEDGER_JSON = CONTRACT_DIR / "native_api_gap_ledger.json"
+
+LEGACY_RUNTIME_PROBE = """\
+#include "picoui/runtime.h"
+int main(void) { return picoui_init() != 0 ? tinyui_init() : 0; }
+"""
 ALLOWED_FUNCTION_PREFIX = "picoui_"
 ALLOWED_MACRO_PREFIX = "PICOUI_"
 ALLOWED_TYPE_PREFIX = "picoui_"
 ALLOWED_COMPAT_TINYUI_FUNCTIONS = {
+    "tinyui_init",
+    "tinyui_deinit",
+    "tinyui_timer_handler",
     "tinyui_screen_create",
     "tinyui_screen_load",
     "tinyui_label_create",
@@ -31,9 +41,6 @@ ALLOWED_COMPAT_TINYUI_FUNCTIONS = {
     "tinyui_switch_set_on_toggled",
 }
 ALLOWED_COMPAT_TINYUI_MACROS = {
-    "tinyui_init",
-    "tinyui_deinit",
-    "tinyui_timer_handler",
 }
 ALLOWED_COMPAT_TINYUI_TYPES = {
     "tinyui_obj_t",
@@ -217,6 +224,35 @@ def _assert_inventory_contract_rows() -> None:
     )
 
 
+def check_legacy_runtime_header_compiles() -> None:
+    """Verify `#include "picoui/runtime.h"` compiles and both picoui_* and
+    tinyui_* entry points are accessible."""
+    with tempfile.NamedTemporaryFile("w", suffix=".c", encoding="utf-8", delete=False) as probe:
+        probe.write(LEGACY_RUNTIME_PROBE)
+        probe_path = Path(probe.name)
+    try:
+        result = subprocess.run(
+            [
+                "cc",
+                "-fsyntax-only",
+                "-I", str(PUBLIC_DIR),
+                "-I", str(LEGACY_PUBLIC_DIR),
+                str(probe_path),
+            ],
+            cwd=ROOT,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+        )
+    finally:
+        probe_path.unlink(missing_ok=True)
+    assert result.returncode == 0, (
+        f"legacy header `#include \"picoui/runtime.h\"` failed to compile:\n"
+        + result.stdout + result.stderr
+    )
+
+
 def main() -> int:
     compat_names = {header.name for header in LEGACY_PUBLIC_DIR.glob("*.h")}
     headers = sorted(
@@ -230,6 +266,7 @@ def main() -> int:
         check_type_prefixes(header, text)
         check_function_prefixes(header, text)
     _assert_inventory_contract_rows()
+    check_legacy_runtime_header_compiles()
     return 0
 
 
