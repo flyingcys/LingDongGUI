@@ -66,6 +66,9 @@ int tinyui_backend_init(struct tinyui_app *app)
 {
     if (app == NULL) return -1;
 
+    /* 重入保护：已初始化则直接返回 */
+    if (s_pfb_inited || s_pfb_mem != NULL) return 0;
+
     ldgui_port_set_current_app(app);
 
     if (tinyui_runtime_bridge_init_app(app) != 0) return -1;
@@ -108,6 +111,7 @@ int tinyui_backend_init(struct tinyui_app *app)
     if (arm_2d_helper_pfb_init(&s_tPFBHelper, &pfb_cfg) != ARM_2D_ERR_NONE) {
         ldFree(s_pfb_mem);
         s_pfb_mem = NULL;
+        memset(&s_tPFBHelper, 0, sizeof(s_tPFBHelper));
         return -1;
     }
 
