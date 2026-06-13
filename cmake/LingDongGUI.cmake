@@ -305,7 +305,6 @@ function(ld_add_c_unit_test target)
             ${LDTEST_MAIN_LIB}
             tinyui_core
             longdonggui
-            longdonggui_porting_default
             longdonggui_arm2d
             -Wl,--end-group
         )

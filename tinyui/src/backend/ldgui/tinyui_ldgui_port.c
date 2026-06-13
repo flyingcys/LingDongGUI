@@ -88,8 +88,8 @@ bool ldCfgTouchGetPoint(int16_t *x, int16_t *y)
 {
     struct tinyui_app *app = s_ldgui_current_app;
     if (app == NULL) {
-        *x = -1;
-        *y = -1;
+        if (x) *x = -1;
+        if (y) *y = -1;
         return false;
     }
 
@@ -100,18 +100,18 @@ bool ldCfgTouchGetPoint(int16_t *x, int16_t *y)
         struct tinyui_display_config cfg;
         tinyui_display_get_config(app, &cfg);
 
-        if (px < 0)          px = 0;
-        if (py < 0)          py = 0;
-        if (px > cfg.width)  px = cfg.width;
-        if (py > cfg.height) py = cfg.height;
+        if (px < 0)           px = 0;
+        if (py < 0)           py = 0;
+        if (px >= cfg.width)  px = cfg.width - 1;
+        if (py >= cfg.height) py = cfg.height - 1;
 
         *x = (int16_t)px;
         *y = (int16_t)py;
         return true;
     }
 
-    *x = -1;
-    *y = -1;
+    if (x) *x = -1;
+    if (y) *y = -1;
     return false;
 }
 

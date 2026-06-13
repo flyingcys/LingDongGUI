@@ -66,8 +66,8 @@ int tinyui_backend_init(struct tinyui_app *app)
 {
     if (app == NULL) return -1;
 
-    /* 重入保护：已初始化则直接返回 */
-    if (s_pfb_inited || s_pfb_mem != NULL) return 0;
+    /* 重入保护：已初始化则直接返回（SDL 路径为 -1，MCU 路径为 1）*/
+    if (s_pfb_inited != 0 || s_pfb_mem != NULL) return 0;
 
     ldgui_port_set_current_app(app);
 
@@ -77,7 +77,10 @@ int tinyui_backend_init(struct tinyui_app *app)
     arm_2d_helper_init();
 
     /* SDL/host 路径（无 flush callback）：不初始化 PFB */
-    if (app->display_port.flush_callback == NULL) return 0;
+    if (app->display_port.flush_callback == NULL) {
+        s_pfb_inited = -1;  /* SDL path sentinel */
+        return 0;
+    }
 
     /* MCU 路径：动态分配 PFB */
     struct tinyui_display_config cfg;
