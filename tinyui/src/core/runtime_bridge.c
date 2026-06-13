@@ -100,16 +100,16 @@ static void tinyui_runtime_bridge_default_delay(unsigned int ms, void *user_data
 }
 
 static int tinyui_runtime_bridge_ensure_window_from_state(
-    struct picoui_app *app,
+    struct tinyui_app *app,
     struct tinyui_runtime_bridge_backend_runtime_state *state)
 {
-    struct picoui_display_config display = {0};
+    struct tinyui_display_config display = {0};
 
     if (state == NULL) {
         return -1;
     }
 
-    if (picoui_display_get_config(app, &display) != 0) {
+    if (tinyui_display_get_config(app, &display) != 0) {
         return -1;
     }
 
@@ -122,18 +122,18 @@ static int tinyui_runtime_bridge_ensure_window_from_state(
     }
 
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0) {
-        fprintf(stderr, "PicoUI runtime SDL_Init failed: %s\n", SDL_GetError());
+        fprintf(stderr, "TINYUI runtime SDL_Init failed: %s\n", SDL_GetError());
         return -1;
     }
 
-    state->window = SDL_CreateWindow("PicoUI Demo",
+    state->window = SDL_CreateWindow("TINYUI Demo",
                                      SDL_WINDOWPOS_CENTERED,
                                      SDL_WINDOWPOS_CENTERED,
                                      state->display_width,
                                      state->display_height,
                                      SDL_WINDOW_SHOWN);
     if (state->window == NULL) {
-        fprintf(stderr, "PicoUI runtime SDL_CreateWindow failed: %s\n", SDL_GetError());
+        fprintf(stderr, "TINYUI runtime SDL_CreateWindow failed: %s\n", SDL_GetError());
         SDL_Quit();
         return -1;
     }
@@ -143,7 +143,7 @@ static int tinyui_runtime_bridge_ensure_window_from_state(
         state->renderer = SDL_CreateRenderer(state->window, -1, SDL_RENDERER_SOFTWARE);
     }
     if (state->renderer == NULL) {
-        fprintf(stderr, "PicoUI runtime SDL_CreateRenderer failed: %s\n", SDL_GetError());
+        fprintf(stderr, "TINYUI runtime SDL_CreateRenderer failed: %s\n", SDL_GetError());
         SDL_DestroyWindow(state->window);
         state->window = NULL;
         SDL_Quit();
@@ -156,7 +156,7 @@ static int tinyui_runtime_bridge_ensure_window_from_state(
                                        state->display_width,
                                        state->display_height);
     if (state->texture == NULL) {
-        fprintf(stderr, "PicoUI runtime SDL_CreateTexture failed: %s\n", SDL_GetError());
+        fprintf(stderr, "TINYUI runtime SDL_CreateTexture failed: %s\n", SDL_GetError());
         SDL_DestroyRenderer(state->renderer);
         SDL_DestroyWindow(state->window);
         state->renderer = NULL;
@@ -214,7 +214,7 @@ static int tinyui_runtime_bridge_ensure_window_from_state(
         .pchBuffer = (uint8_t *)state->real_pixels,
     };
 
-    state->start_ticks = picoui_tick_get(app);
+    state->start_ticks = tinyui_tick_get(app);
     return 0;
 }
 
@@ -225,7 +225,7 @@ int tinyui_runtime_bridge_bind_ld_event_bridge(void *backend_widget,
 
 static bool tinyui_runtime_bridge_ld_event_bridge_slot(struct ld_scene_t *scene, ldMsg_t msg)
 {
-    struct picoui_backend_widget *backend = NULL;
+    struct tinyui_backend_widget *backend = NULL;
 
     (void)scene;
 
@@ -233,7 +233,7 @@ static bool tinyui_runtime_bridge_ld_event_bridge_slot(struct ld_scene_t *scene,
         return false;
     }
 
-    backend = (struct picoui_backend_widget *)((ldBase_t *)msg.ptSender)->pInfo;
+    backend = (struct tinyui_backend_widget *)((ldBase_t *)msg.ptSender)->pInfo;
     if (backend == NULL) {
         return false;
     }
@@ -242,7 +242,7 @@ static bool tinyui_runtime_bridge_ld_event_bridge_slot(struct ld_scene_t *scene,
     return false;
 }
 
-static int tinyui_runtime_bridge_connect_native_events(struct picoui_backend_widget *backend)
+static int tinyui_runtime_bridge_connect_native_events(struct tinyui_backend_widget *backend)
 {
     uint8_t primary_signal = SIGNAL_NO_OPERATION;
     uint8_t secondary_signal = SIGNAL_NO_OPERATION;
@@ -258,17 +258,17 @@ static int tinyui_runtime_bridge_connect_native_events(struct picoui_backend_wid
     sender->pInfo = backend;
 
     switch (backend->kind) {
-    case PICOUI_BACKEND_WIDGET_BUTTON:
+    case TINYUI_BACKEND_WIDGET_BUTTON:
         primary_signal = SIGNAL_PRESS;
         secondary_signal = SIGNAL_RELEASE;
         tertiary_signal = SIGNAL_HOLD_DOWN;
         break;
-    case PICOUI_BACKEND_WIDGET_LIST:
+    case TINYUI_BACKEND_WIDGET_LIST:
         primary_signal = SIGNAL_CLICKED_ITEM;
         break;
-    case PICOUI_BACKEND_WIDGET_CHECKBOX:
-    case PICOUI_BACKEND_WIDGET_SWITCH:
-    case PICOUI_BACKEND_WIDGET_SLIDER:
+    case TINYUI_BACKEND_WIDGET_CHECKBOX:
+    case TINYUI_BACKEND_WIDGET_SWITCH:
+    case TINYUI_BACKEND_WIDGET_SLIDER:
         primary_signal = SIGNAL_VALUE_CHANGED;
         break;
     default:
@@ -321,9 +321,9 @@ static int tinyui_runtime_bridge_connect_native_events(struct picoui_backend_wid
     return 0;
 }
 
-struct picoui_backend_app_state *tinyui_runtime_bridge_backend_state_from_parent(void *backend_widget)
+struct tinyui_backend_app_state *tinyui_runtime_bridge_backend_state_from_parent(void *backend_widget)
 {
-    struct picoui_backend_widget *parent_widget = backend_widget;
+    struct tinyui_backend_widget *parent_widget = backend_widget;
 
     if (parent_widget == 0 || parent_widget->owner == 0) {
         return 0;
@@ -334,7 +334,7 @@ struct picoui_backend_app_state *tinyui_runtime_bridge_backend_state_from_parent
 
 struct ld_scene_t *tinyui_runtime_bridge_scene_from_parent(void *backend_widget)
 {
-    struct picoui_backend_app_state *app_state =
+    struct tinyui_backend_app_state *app_state =
         tinyui_runtime_bridge_backend_state_from_parent(backend_widget);
 
     if (app_state == 0) {
@@ -346,7 +346,7 @@ struct ld_scene_t *tinyui_runtime_bridge_scene_from_parent(void *backend_widget)
 
 uint16_t tinyui_runtime_bridge_next_name_id(void *backend_widget)
 {
-    struct picoui_backend_app_state *app_state =
+    struct tinyui_backend_app_state *app_state =
         tinyui_runtime_bridge_backend_state_from_parent(backend_widget);
 
     if (app_state == 0) {
@@ -356,9 +356,9 @@ uint16_t tinyui_runtime_bridge_next_name_id(void *backend_widget)
     return ++app_state->next_ld_name_id;
 }
 
-int tinyui_runtime_bridge_bind_theme(struct picoui_app *app, struct picoui_theme *theme)
+int tinyui_runtime_bridge_bind_theme(struct tinyui_app *app, struct tinyui_theme *theme)
 {
-    struct picoui_backend_app_state *app_state = tinyui_runtime_bridge_backend_state(app);
+    struct tinyui_backend_app_state *app_state = tinyui_runtime_bridge_backend_state(app);
 
     if (app == 0 || theme == 0 || app_state == 0) {
         return -1;
@@ -369,10 +369,10 @@ int tinyui_runtime_bridge_bind_theme(struct picoui_app *app, struct picoui_theme
     return 0;
 }
 
-int tinyui_runtime_bridge_init_app(struct picoui_app *app)
+int tinyui_runtime_bridge_init_app(struct tinyui_app *app)
 {
     struct tinyui_runtime_bridge_backend_runtime_state *state;
-    struct picoui_backend_app_state *app_state;
+    struct tinyui_backend_app_state *app_state;
 
     if (app == NULL) {
         return -1;
@@ -406,13 +406,17 @@ int tinyui_runtime_bridge_init_app(struct picoui_app *app)
     app_state->next_ld_name_id = 0;
     app_state->ld_scene->bUserAllocated = true;
     app_state->runtime_state = state;
-    (void)picoui_tick_set_source(app, tinyui_runtime_bridge_default_tick_source, NULL);
-    (void)picoui_os_set_delay_callback(app, tinyui_runtime_bridge_default_delay, NULL);
+    if (app->tick_port.callback == NULL) {
+        (void)tinyui_tick_set_source(app, tinyui_runtime_bridge_default_tick_source, NULL);
+    }
+    if (app->os_port.delay == NULL) {
+        (void)tinyui_os_set_delay_callback(app, tinyui_runtime_bridge_default_delay, NULL);
+    }
     app->backend_app = app_state;
     return 0;
 }
 
-int tinyui_runtime_bridge_run_app(struct picoui_app *app, struct picoui_window *window)
+int tinyui_runtime_bridge_run_app(struct tinyui_app *app, struct tinyui_window *window)
 {
     int running = 1;
 
@@ -435,14 +439,14 @@ int tinyui_runtime_bridge_run_app(struct picoui_app *app, struct picoui_window *
     return 0;
 }
 
-int tinyui_runtime_bridge_step_app(struct picoui_app *app)
+int tinyui_runtime_bridge_step_app(struct tinyui_app *app)
 {
     return tinyui_runtime_host_step_app(app);
 }
 
-void tinyui_runtime_bridge_shutdown_app(struct picoui_app *app)
+void tinyui_runtime_bridge_shutdown_app(struct tinyui_app *app)
 {
-    struct picoui_backend_app_state *app_state;
+    struct tinyui_backend_app_state *app_state;
     struct tinyui_runtime_bridge_backend_runtime_state *state;
 
     if (app == NULL) {
@@ -478,9 +482,9 @@ void tinyui_runtime_bridge_shutdown_app(struct picoui_app *app)
     app->backend_app = NULL;
 }
 
-int tinyui_runtime_bridge_ensure_window(struct picoui_app *app)
+int tinyui_runtime_bridge_ensure_window(struct tinyui_app *app)
 {
-    struct picoui_backend_app_state *app_state;
+    struct tinyui_backend_app_state *app_state;
 
     if (app == NULL) {
         return -1;
@@ -496,9 +500,9 @@ int tinyui_runtime_bridge_ensure_window(struct picoui_app *app)
         (struct tinyui_runtime_bridge_backend_runtime_state *)app_state->runtime_state);
 }
 
-void tinyui_runtime_bridge_begin_screen_create(struct picoui_app *app)
+void tinyui_runtime_bridge_begin_screen_create(struct tinyui_app *app)
 {
-    struct picoui_backend_app_state *app_state;
+    struct tinyui_backend_app_state *app_state;
     struct tinyui_runtime_bridge_backend_runtime_state *state;
 
     app_state = tinyui_runtime_bridge_backend_state(app);
@@ -507,7 +511,7 @@ void tinyui_runtime_bridge_begin_screen_create(struct picoui_app *app)
     }
 
     state = (struct tinyui_runtime_bridge_backend_runtime_state *)app_state->runtime_state;
-    state->screen_create_start_ticks = picoui_tick_get(app);
+    state->screen_create_start_ticks = tinyui_tick_get(app);
     state->screen_create_end_ticks = state->screen_create_start_ticks;
     state->benchmark_screen_create_logged = 0;
 }
@@ -533,7 +537,7 @@ static int tinyui_runtime_bridge_touch_log_enabled(void)
     static int enabled = 0;
 
     if (!initialized) {
-        const char *env = getenv("PICOUI_TOUCH_LOG");
+        const char *env = getenv("TINYUI_TOUCH_LOG");
         enabled = (env != NULL && env[0] != '\0' && env[0] != '0') ? 1 : 0;
         initialized = 1;
     }
@@ -541,11 +545,11 @@ static int tinyui_runtime_bridge_touch_log_enabled(void)
     return enabled;
 }
 
-int tinyui_runtime_bridge_bridge_pointer_from_port(struct picoui_app *app,
+int tinyui_runtime_bridge_bridge_pointer_from_port(struct tinyui_app *app,
                                                    int window_width,
                                                    int window_height)
 {
-    struct picoui_display_config display = {0};
+    struct tinyui_display_config display = {0};
     int pointer_x = 0;
     int pointer_y = 0;
     int pointer_pressed = 0;
@@ -556,18 +560,18 @@ int tinyui_runtime_bridge_bridge_pointer_from_port(struct picoui_app *app,
         return -1;
     }
 
-    if (picoui_input_get_pointer(app, &pointer_x, &pointer_y, &pointer_pressed) != 0) {
+    if (tinyui_input_get_pointer(app, &pointer_x, &pointer_y, &pointer_pressed) != 0) {
         return -1;
     }
 
-    if (picoui_display_get_config(app, &display) != 0) {
+    if (tinyui_display_get_config(app, &display) != 0) {
         return -1;
     }
 
     mapped_x = tinyui_runtime_bridge_map_pointer_axis(pointer_x, window_width, display.width);
     mapped_y = tinyui_runtime_bridge_map_pointer_axis(pointer_y, window_height, display.height);
     if (tinyui_runtime_bridge_touch_log_enabled()) {
-        printf("[PICOUI_TOUCH][PORT->LD] raw=(%d,%d) window=(%d,%d) mapped=(%d,%d) pressed=%d\n",
+        printf("[TINYUI_TOUCH][PORT->LD] raw=(%d,%d) window=(%d,%d) mapped=(%d,%d) pressed=%d\n",
                pointer_x,
                pointer_y,
                window_width,
@@ -581,7 +585,7 @@ int tinyui_runtime_bridge_bridge_pointer_from_port(struct picoui_app *app,
     return 0;
 }
 
-int tinyui_runtime_bridge_commit_pointer_event(struct picoui_app *app,
+int tinyui_runtime_bridge_commit_pointer_event(struct tinyui_app *app,
                                                int window_width,
                                                int window_height,
                                                int x,
@@ -592,17 +596,17 @@ int tinyui_runtime_bridge_commit_pointer_event(struct picoui_app *app,
         return -1;
     }
 
-    if (picoui_input_push_pointer(app, x, y, pressed) != 0) {
+    if (tinyui_input_push_pointer(app, x, y, pressed) != 0) {
         return -1;
     }
 
     return tinyui_runtime_bridge_bridge_pointer_from_port(app, window_width, window_height);
 }
 
-int tinyui_runtime_bridge_bind_host(void *backend_widget, struct picoui_widget *widget)
+int tinyui_runtime_bridge_bind_host(void *backend_widget, struct tinyui_widget *widget)
 {
-    struct picoui_backend_widget *backend = backend_widget;
-    struct picoui_backend_app_state *app_state = NULL;
+    struct tinyui_backend_widget *backend = backend_widget;
+    struct tinyui_backend_app_state *app_state = NULL;
 
     if (backend == 0 || widget == 0) {
         return -1;
@@ -611,7 +615,7 @@ int tinyui_runtime_bridge_bind_host(void *backend_widget, struct picoui_widget *
     if (tinyui_widget_bind_backend_host(widget, backend) != 0) {
         return -1;
     }
-    backend->edit_result_on_finish = PICOUI_EDIT_RESULT_NONE;
+    backend->edit_result_on_finish = TINYUI_EDIT_RESULT_NONE;
     tinyui_widget_init_data_model(backend);
     app_state = tinyui_runtime_bridge_backend_state(backend->owner);
     if (app_state != NULL && app_state->ld_scene != NULL && backend->ld_widget != NULL) {
@@ -628,7 +632,7 @@ int tinyui_runtime_bridge_bind_ld_event_bridge(void *backend_widget,
                                                struct ld_scene_t *scene,
                                                void *sender)
 {
-    struct picoui_backend_widget *backend = backend_widget;
+    struct tinyui_backend_widget *backend = backend_widget;
 
     if (backend == 0 || scene == 0 || sender == 0) {
         return -1;
@@ -645,7 +649,7 @@ int tinyui_runtime_bridge_bind_ld_event_bridge(void *backend_widget,
 
 int tinyui_runtime_bridge_unbind_host(void *backend_widget)
 {
-    struct picoui_backend_widget *widget = backend_widget;
+    struct tinyui_backend_widget *widget = backend_widget;
 
     if (widget == 0) {
         return -1;
@@ -663,7 +667,7 @@ int tinyui_runtime_bridge_unbind_host(void *backend_widget)
 
 int tinyui_runtime_bridge_detach_from_parent(void *backend_widget)
 {
-    struct picoui_backend_widget *widget = backend_widget;
+    struct tinyui_backend_widget *widget = backend_widget;
 
     if (widget == 0) {
         return -1;
@@ -676,48 +680,48 @@ int tinyui_runtime_bridge_detach_from_parent(void *backend_widget)
     return tinyui_widget_backend_detach(widget);
 }
 
-int tinyui_runtime_bridge_has_scene(const struct picoui_app *app)
+int tinyui_runtime_bridge_has_scene(const struct tinyui_app *app)
 {
     return app != 0 && app->backend_app != 0;
 }
 
-struct picoui_backend_app_state *tinyui_runtime_bridge_backend_state(struct picoui_app *app)
+struct tinyui_backend_app_state *tinyui_runtime_bridge_backend_state(struct tinyui_app *app)
 {
     if (app == 0 || app->backend_app == 0) {
         return 0;
     }
 
-    return (struct picoui_backend_app_state *)app->backend_app;
+    return (struct tinyui_backend_app_state *)app->backend_app;
 }
 
-struct picoui_backend_app_state *tinyui_runtime_bridge_backend_state_from_window(struct picoui_window *window)
+struct tinyui_backend_app_state *tinyui_runtime_bridge_backend_state_from_window(struct tinyui_window *window)
 {
-    const struct picoui_backend_widget *backend = 0;
+    const struct tinyui_backend_widget *backend = 0;
 
     if (window == 0 || window->widget.backend_widget == 0) {
         return 0;
     }
 
-    backend = (const struct picoui_backend_widget *)window->widget.backend_widget;
+    backend = (const struct tinyui_backend_widget *)window->widget.backend_widget;
     return tinyui_runtime_bridge_backend_state(backend->owner);
 }
 
-int tinyui_runtime_bridge_window_is_owned_by(const struct picoui_app *app,
-                                             const struct picoui_window *window)
+int tinyui_runtime_bridge_window_is_owned_by(const struct tinyui_app *app,
+                                             const struct tinyui_window *window)
 {
-    const struct picoui_backend_widget *backend = 0;
+    const struct tinyui_backend_widget *backend = 0;
 
     if (app == 0 || window == 0 || window->widget.backend_widget == 0) {
         return 0;
     }
 
-    backend = (const struct picoui_backend_widget *)window->widget.backend_widget;
+    backend = (const struct tinyui_backend_widget *)window->widget.backend_widget;
     return backend->owner == app;
 }
 
-void tinyui_runtime_bridge_reset_window_switch(struct picoui_app *app)
+void tinyui_runtime_bridge_reset_window_switch(struct tinyui_app *app)
 {
-    struct picoui_backend_app_state *app_state = tinyui_runtime_bridge_backend_state(app);
+    struct tinyui_backend_app_state *app_state = tinyui_runtime_bridge_backend_state(app);
 
     if (app_state == 0) {
         return;
@@ -727,11 +731,11 @@ void tinyui_runtime_bridge_reset_window_switch(struct picoui_app *app)
     app_state->last_window_switch_duration_ms = 0;
 }
 
-void tinyui_runtime_bridge_set_window_switch(struct picoui_app *app,
+void tinyui_runtime_bridge_set_window_switch(struct tinyui_app *app,
                                              int mode,
                                              unsigned int duration_ms)
 {
-    struct picoui_backend_app_state *app_state = tinyui_runtime_bridge_backend_state(app);
+    struct tinyui_backend_app_state *app_state = tinyui_runtime_bridge_backend_state(app);
 
     if (app_state == 0) {
         return;
