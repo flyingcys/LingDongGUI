@@ -1,14 +1,14 @@
 #include "internal.h"
 #include "runtime_bridge.h"
-#include "../../../../src/porting/ldConfig.h"
-#include "../../../../src/gui/ldBase.h"
-#include "../../../../src/gui/ldButton.h"
-#include "../../../../src/gui/ldCheckBox.h"
-#include "../../../../src/gui/ldList.h"
-#include "../../../../src/gui/ldSlider.h"
-#include "../../../../src/gui/ldSwitch.h"
-#include "../../../../src/gui/ldGui.h"
-#include "../../../../src/misc/ldMsg.h"
+#include "../../../src/porting/ldConfig.h"
+#include "../../../src/gui/ldBase.h"
+#include "../../../src/gui/ldButton.h"
+#include "../../../src/gui/ldCheckBox.h"
+#include "../../../src/gui/ldList.h"
+#include "../../../src/gui/ldSlider.h"
+#include "../../../src/gui/ldSwitch.h"
+#include "../../../src/gui/ldGui.h"
+#include "../../../src/misc/ldMsg.h"
 #include <stdio.h>
 #include <stdlib.h>
 

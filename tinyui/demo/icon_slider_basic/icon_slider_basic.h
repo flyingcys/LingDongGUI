@@ -16,9 +16,9 @@
  * limitations under the License.
  */
 
-#ifndef TINYUI_DEMO_SETTINGS_PANEL_H
-#define TINYUI_DEMO_SETTINGS_PANEL_H
+#ifndef TINYUI_DEMO_ICON_SLIDER_BASIC_H
+#define TINYUI_DEMO_ICON_SLIDER_BASIC_H
 
-void tinyui_demo_settings_panel(void);
+void tinyui_demo_icon_slider_basic(void);
 
-#endif
+#endif /* TINYUI_DEMO_ICON_SLIDER_BASIC_H */

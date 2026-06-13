@@ -18,11 +18,11 @@
 
 #include "internal.h"
 
-#include "../../../../src/gui/ldCheckBox.h"
-#include "../../../../src/gui/ldList.h"
-#include "../../../../src/gui/ldSlider.h"
-#include "../../../../src/gui/ldSwitch.h"
-#include "../../../../src/misc/ldMsg.h"
+#include "../../../src/gui/ldCheckBox.h"
+#include "../../../src/gui/ldList.h"
+#include "../../../src/gui/ldSlider.h"
+#include "../../../src/gui/ldSwitch.h"
+#include "../../../src/misc/ldMsg.h"
 
 static int tinyui_widget_accepts_event(const struct picoui_widget *widget)
 {

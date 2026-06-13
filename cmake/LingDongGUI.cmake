@@ -282,7 +282,20 @@ endfunction()
 function(ld_add_c_unit_test target)
     cmake_parse_arguments(LDTEST "" "SUPPORT_LIB;MAIN_LIB;TEST_NAME" "SOURCES;LABELS" ${ARGN})
     add_executable(${target} ${LDTEST_SOURCES})
-    target_link_libraries(${target} PRIVATE ${LDTEST_SUPPORT_LIB} ${LDTEST_MAIN_LIB})
+    if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+        target_link_libraries(${target} PRIVATE
+            ${LDTEST_SUPPORT_LIB}
+            -Wl,--start-group
+            ${LDTEST_MAIN_LIB}
+            tinyui_core
+            longdonggui
+            longdonggui_porting_default
+            longdonggui_arm2d
+            -Wl,--end-group
+        )
+    else()
+        target_link_libraries(${target} PRIVATE ${LDTEST_SUPPORT_LIB} ${LDTEST_MAIN_LIB})
+    endif()
     ld_apply_common_target_config(${target})
     set(LDTEST_CTEST_NAME "${target}")
     if(LDTEST_TEST_NAME)

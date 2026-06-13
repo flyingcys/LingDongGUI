@@ -91,13 +91,15 @@ static int make_ui(struct picoui_window *win)
     return 0;
 }
 
-int tinyui_demo_basic_widgets_build(tinyui_obj_t *screen)
+void tinyui_demo_basic_widgets(void)
 {
+    tinyui_obj_t *screen = tinyui_screen_create();
     struct picoui_window *win = (struct picoui_window *)screen;
 
-    if (screen == 0) {
-        return -1;
+    if (win == 0) {
+        return;
     }
 
-    return make_ui(win);
+    make_ui(win);
+    tinyui_screen_load(screen);
 }

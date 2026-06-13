@@ -466,7 +466,24 @@ endif()
 function(add_tinyui_demo target source)
     add_executable(${target} ${source} ${ARGN})
     target_include_directories(${target} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../../tinyui/demo")
-    target_link_libraries(${target} PRIVATE tinyui_backend_ldgui_runtime)
+    # Multiple circular static-library dependencies exist in the core:
+    #   tinyui_core <-> tinyui_backend_ldgui_runtime
+    #   longdonggui <-> longdonggui_porting_default
+    # A single --start-group / --end-group covering all four archives lets
+    # GNU ld rescan until all cross-archive references are resolved.
+    if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+        target_link_libraries(${target} PRIVATE
+            -Wl,--start-group
+            tinyui_backend_ldgui_runtime
+            tinyui_core
+            longdonggui
+            longdonggui_porting_default
+            longdonggui_arm2d
+            -Wl,--end-group
+        )
+    else()
+        target_link_libraries(${target} PRIVATE tinyui_backend_ldgui_runtime)
+    endif()
     if(COMMAND ld_apply_tinyui_runtime_screen_config)
         ld_apply_tinyui_runtime_screen_config(${target})
     elseif(COMMAND ld_apply_picoui_runtime_screen_config)
@@ -479,93 +496,42 @@ function(add_picoui_demo target source)
     add_tinyui_demo(${target} ${source})
 endfunction()
 
-add_tinyui_demo(tinyui_hello_world_demo
-    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/hello_world/main.c"
-)
-add_tinyui_demo(tinyui_basic_widgets_demo
-    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/main.c"
-    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/basic_widgets/basic_widgets.c"
-)
-add_tinyui_demo(tinyui_layout_flex_demo
-    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/layout_flex/main.c"
-)
-add_tinyui_demo(tinyui_layout_grid_demo
-    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/layout_grid/main.c"
-)
-add_tinyui_demo(tinyui_theme_showcase_demo
-    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/theme_showcase/main.c"
-)
-add_tinyui_demo(tinyui_settings_panel_demo
-    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/main.c"
-    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/settings_panel/settings_panel.c"
-)
-target_compile_definitions(tinyui_settings_panel_demo PRIVATE TINYUI_DEMO_SETTINGS_PANEL)
-add_tinyui_demo(tinyui_list_basic_demo
-    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/list_basic/main.c"
-)
-add_tinyui_demo(tinyui_progress_bar_basic_demo
-    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/progress_bar_basic/main.c"
-)
-add_tinyui_demo(tinyui_arc_basic_demo
-    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/arc_basic/main.c"
-)
-add_tinyui_demo(tinyui_gauge_basic_demo
-    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/gauge_basic/main.c"
-)
-add_tinyui_demo(tinyui_icon_slider_basic_demo
-    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/icon_slider_basic/main.c"
-)
-add_tinyui_demo(tinyui_radial_menu_basic_demo
-    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/radial_menu_basic/main.c"
-)
-add_tinyui_demo(tinyui_progress_wheel_basic_demo
-    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/progress_wheel_basic/main.c"
-)
-add_tinyui_demo(tinyui_qrcode_basic_demo
-    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/qrcode_basic/main.c"
-)
-add_tinyui_demo(tinyui_message_box_basic_demo
-    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/message_box_basic/main.c"
-)
-add_tinyui_demo(tinyui_date_time_basic_demo
-    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/date_time_basic/main.c"
-)
-add_tinyui_demo(tinyui_clock_basic_demo
-    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/clock_basic/main.c"
-)
-add_tinyui_demo(tinyui_keyboard_basic_demo
-    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/keyboard_basic/main.c"
-)
-add_tinyui_demo(tinyui_line_edit_basic_demo
-    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/line_edit_basic/main.c"
-)
-add_tinyui_demo(tinyui_combo_box_basic_demo
-    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/combo_box_basic/main.c"
-)
-add_tinyui_demo(tinyui_scroll_selecter_basic_demo
-    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/scroll_selecter_basic/main.c"
-)
-add_tinyui_demo(tinyui_table_basic_demo
-    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/table_basic/main.c"
-)
-add_tinyui_demo(tinyui_graph_basic_demo
-    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/graph_basic/main.c"
-)
-add_tinyui_demo(tinyui_calendar_basic_demo
-    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/calendar_basic/main.c"
-)
-add_tinyui_demo(tinyui_animation_basic_demo
-    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/animation_basic/main.c"
-)
-add_tinyui_demo(tinyui_legacy_widget_parity_demo
-    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/legacy_widget_parity/main.c"
-)
-target_sources(tinyui_legacy_widget_parity_demo PRIVATE
+
+# Single tinyui_demo binary — all demos compiled in, select at runtime.
+# Usage: ./tinyui_demo <demo_name>   (e.g. ./tinyui_demo arc_basic)
+#        ./tinyui_demo               (no args: runs first demo, animation_basic)
+set(TINYUI_DEMO_DIR "${SDL_EXAMPLE_DIR}/../../tinyui/demo")
+add_tinyui_demo(tinyui_demo
+    "${SDL_EXAMPLE_DIR}/../../tinyui_demo/main.c"
+    "${SDL_EXAMPLE_DIR}/../../tinyui_demo/vt_mutex_stubs.c"
+    "${TINYUI_DEMO_DIR}/tinyui_demos.c"
+    "${TINYUI_DEMO_DIR}/animation_basic/animation_basic.c"
+    "${TINYUI_DEMO_DIR}/arc_basic/arc_basic.c"
+    "${TINYUI_DEMO_DIR}/basic_widgets/basic_widgets.c"
+    "${TINYUI_DEMO_DIR}/calendar_basic/calendar_basic.c"
+    "${TINYUI_DEMO_DIR}/clock_basic/clock_basic.c"
+    "${TINYUI_DEMO_DIR}/combo_box_basic/combo_box_basic.c"
+    "${TINYUI_DEMO_DIR}/date_time_basic/date_time_basic.c"
+    "${TINYUI_DEMO_DIR}/gauge_basic/gauge_basic.c"
+    "${TINYUI_DEMO_DIR}/graph_basic/graph_basic.c"
+    "${TINYUI_DEMO_DIR}/grid_parity/grid_parity.c"
+    "${TINYUI_DEMO_DIR}/hello_world/hello_world.c"
+    "${TINYUI_DEMO_DIR}/icon_slider_basic/icon_slider_basic.c"
+    "${TINYUI_DEMO_DIR}/keyboard_basic/keyboard_basic.c"
+    "${TINYUI_DEMO_DIR}/layout_flex/layout_flex.c"
+    "${TINYUI_DEMO_DIR}/layout_grid/layout_grid.c"
+    "${TINYUI_DEMO_DIR}/layout_parity/layout_parity.c"
+    "${TINYUI_DEMO_DIR}/legacy_widget_parity/legacy_widget_parity.c"
+    "${TINYUI_DEMO_DIR}/line_edit_basic/line_edit_basic.c"
+    "${TINYUI_DEMO_DIR}/list_basic/list_basic.c"
+    "${TINYUI_DEMO_DIR}/message_box_basic/message_box_basic.c"
+    "${TINYUI_DEMO_DIR}/progress_bar_basic/progress_bar_basic.c"
+    "${TINYUI_DEMO_DIR}/progress_wheel_basic/progress_wheel_basic.c"
+    "${TINYUI_DEMO_DIR}/qrcode_basic/qrcode_basic.c"
+    "${TINYUI_DEMO_DIR}/radial_menu_basic/radial_menu_basic.c"
+    "${TINYUI_DEMO_DIR}/scroll_selecter_basic/scroll_selecter_basic.c"
+    "${TINYUI_DEMO_DIR}/settings_panel/settings_panel.c"
+    "${TINYUI_DEMO_DIR}/table_basic/table_basic.c"
+    "${TINYUI_DEMO_DIR}/theme_showcase/theme_showcase.c"
     ${WIDGET_IMAGE_SOURCES}
-)
-add_tinyui_demo(tinyui_layout_parity_demo
-    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/layout_parity/main.c"
-)
-add_tinyui_demo(tinyui_grid_parity_demo
-    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/grid_parity/main.c"
 )
