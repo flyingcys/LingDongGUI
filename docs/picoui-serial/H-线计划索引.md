@@ -1,36 +1,36 @@
-# PicoUI H线计划索引
+# TINYUI H线计划索引
 
-- 作用域：本文只对应 PicoUI `H` 线历史发布准备阶段，不定义当前 `v2.1` 主线的 canonical truth；文中的 `tests/picoui/*`、`check_picoui_*`、`picoui_release_capability_matrix.json` 仅属于该历史线的证据入口。
+- 作用域：本文只对应 TINYUI `H` 线历史发布准备阶段，不定义当前 `v2.1` 主线的 canonical truth；文中的 `tests/tinyui/*`、`check_tinyui_*`、`tinyui_release_capability_matrix.json` 仅属于该历史线的证据入口。
 
 ## H线定位
 
-`H线` 是 PicoUI 基于当前 `9` 个已覆盖控件的第一版本发布准备线。它不是继续补 `G线` 剩余项，也不是新控件扩张线，更不是直接宣布可发布的 closeout 文档。
+`H线` 是 TINYUI 基于当前 `9` 个已覆盖控件的第一版本发布准备线。它不是继续补 `G线` 剩余项，也不是新控件扩张线，更不是直接宣布可发布的 closeout 文档。
 
 本线只回答三件事：
 
 1. 离第一版本发布还有多少距离。
-2. PicoUI 在控件数量上与 LingDongGUI 的差距。
-3. PicoUI 在每个已覆盖控件的能力合同上与 LingDongGUI 的差距。
+2. TINYUI 在控件数量上与 LingDongGUI 的差距。
+3. TINYUI 在每个已覆盖控件的能力合同上与 LingDongGUI 的差距。
 
 详细对比真相源：
 
-- `docs/picoui-serial/H-线发布差距与LingDongGUI控件对比.md`
-- `docs/picoui-serial/J-线计划索引.md`
-- `docs/picoui-serial/H-线第一版发布说明.md`
-- `docs/picoui-serial/H-线已支持控件清单.md`
-- `docs/picoui-serial/H-线demo-catalog.md`
-- `docs/picoui-serial/H-线发布测试矩阵.md`
-- `docs/picoui-serial/C-线人工窗口验收记录.md`
-- `tests/picoui/contract/picoui_release_capability_matrix.json`
-- `docs/superpowers/specs/2026-05-30-picoui-h-line-first-release-preparation-design.md`
-- `docs/superpowers/plans/2026-05-30-picoui-h-line-first-release-preparation-implementation.md`
+- `docs/tinyui-serial/H-线发布差距与LingDongGUI控件对比.md`
+- `docs/tinyui-serial/J-线计划索引.md`
+- `docs/tinyui-serial/H-线第一版发布说明.md`
+- `docs/tinyui-serial/H-线已支持控件清单.md`
+- `docs/tinyui-serial/H-线demo-catalog.md`
+- `docs/tinyui-serial/H-线发布测试矩阵.md`
+- `docs/tinyui-serial/C-线人工窗口验收记录.md`
+- `tests/tinyui/contract/tinyui_release_capability_matrix.json`
+- `docs/superpowers/specs/2026-05-30-tinyui-h-line-first-release-preparation-design.md`
+- `docs/superpowers/plans/2026-05-30-tinyui-h-line-first-release-preparation-implementation.md`
 
 相关历史真相源：
 
-- `docs/picoui-serial/D-线计划索引.md`
-- `docs/picoui-serial/F-线计划索引.md`
-- `docs/picoui-serial/G-线计划索引.md`
-- `docs/superpowers/specs/2026-05-29-picoui-g-line-current-widget-capability-gap-matrix.md`
+- `docs/tinyui-serial/D-线计划索引.md`
+- `docs/tinyui-serial/F-线计划索引.md`
+- `docs/tinyui-serial/G-线计划索引.md`
+- `docs/superpowers/specs/2026-05-29-tinyui-g-line-current-widget-capability-gap-matrix.md`
 
 ## 当前结论摘要
 
@@ -38,39 +38,39 @@
 
 当前结论：**还没有到发布第一版本的时候**。
 
-原因不是某一个 gate 红了，而是第一版发布所需的产品边界、发布矩阵、当前 9 控件 release contract、人工验收、文档和示例目录还没有形成完整闭环。当前 9 个 PicoUI 控件已经具备真实 LingDongGUI backend mapping 和自动 gate 证据，但这只是发布前基础条件，不是发布完成条件。
+原因不是某一个 gate 红了，而是第一版发布所需的产品边界、发布矩阵、当前 9 控件 release contract、人工验收、文档和示例目录还没有形成完整闭环。当前 9 个 TINYUI 控件已经具备真实 LingDongGUI backend mapping 和自动 gate 证据，但这只是发布前基础条件，不是发布完成条件。
 
 H 线后续必须按串行任务推进：`H0` 未完成前不进入 `H1`，`H1` 未完成前不进入 `H2`，依此类推。每个阶段都要有文档、测试或证据产物，不能只做口头判断。
 
 ### 2026-05-30 当前真实状态
 
 - `H0-H11` 所需的发布口径文档、release matrix JSON/gate、当前 9 控件 release contract、demo catalog、发布说明与测试矩阵文档已经入库。
-- `tests/picoui/contract/check_picoui_release_capability_matrix.py` 已接入 CTest，当前可被 `ctest --test-dir build -R check_picoui_release_capability_matrix` 正式执行。
+- `tests/tinyui/contract/check_tinyui_release_capability_matrix.py` 已接入 CTest，当前可被 `ctest --test-dir build -R check_tinyui_release_capability_matrix` 正式执行。
 - 当前实测通过：
-  - `ctest --test-dir build --output-on-failure -L picoui`：`13/13` 通过
+  - `ctest --test-dir build --output-on-failure -L tinyui`：`13/13` 通过
   - `ctest --test-dir build --output-on-failure -L visible`：通过
   - `ctest --test-dir build --output-on-failure -L mapping`：通过
-  - `python3 tests/picoui/contract/check_picoui_public_api.py`：通过
-  - `python3 tests/picoui/contract/check_picoui_demo_boundary.py`：通过
+  - `python3 tests/tinyui/contract/check_tinyui_public_api.py`：通过
+  - `python3 tests/tinyui/contract/check_tinyui_demo_boundary.py`：通过
   - `git diff --check`：通过
-- `python3 tests/picoui/runtime/check_picoui_manual_window_artifact.py --demo basic_widgets`
+- `python3 tests/tinyui/runtime/check_tinyui_manual_window_artifact.py --demo basic_widgets`
   与
-  `python3 tests/picoui/runtime/check_picoui_manual_window_artifact.py --demo settings_panel`
+  `python3 tests/tinyui/runtime/check_tinyui_manual_window_artifact.py --demo settings_panel`
   当前都能在 `Darwin 25.3.0 (arm64) + cocoa` 下输出 `PICOUI_MANUAL_WINDOW_ARTIFACT=ARTIFACT_READY` 并生成 artifact。
-- 上述 `ARTIFACT_READY` 只代表 artifact existence；`docs/picoui-serial/C-线人工窗口验收记录.md` 里的人工结论当前已补到 `artifact-based visual observation`，但仍不能写成“人工窗口验收通过”。
+- 上述 `ARTIFACT_READY` 只代表 artifact existence；`docs/tinyui-serial/C-线人工窗口验收记录.md` 里的人工结论当前已补到 `artifact-based visual observation`，但仍不能写成“人工窗口验收通过”。
 - 本轮 review blockers 已完成修复并通过当前验证：
-  - `check_picoui_release_capability_matrix.py` 现在会断言 `9` 个已覆盖控件保持 `wrapped`，并校验 `summary.capability_entry_total` 与 `capability_status_counts` 和实际 capability 条目一致。
+  - `check_tinyui_release_capability_matrix.py` 现在会断言 `9` 个已覆盖控件保持 `wrapped`，并校验 `summary.capability_entry_total` 与 `capability_status_counts` 和实际 capability 条目一致。
   - `label` 的 `create_with_props` 已补齐当前 `v0.1 parity` 合同需要的 `transparent / align / background_source`。
   - `slider` 的 release matrix 已回调到真实 public API 边界，不再把不存在的 `get_value` 记成 `support`。
-  - `test_picoui_list.c` 已删除跨层指针同一性假合同，只保留 “item id 不是 list/backend/widget identity” 这一层发布口径。
+  - `test_tinyui_list.c` 已删除跨层指针同一性假合同，只保留 “item id 不是 list/backend/widget identity” 这一层发布口径。
   - 发布说明与测试矩阵已收紧为“桌面截图仅是未来可选补强路径”，不再写成仓库内已固定现状证据。
 - 因此当前可认定：H12 blocking 已修复；但当前人工层仍只有 artifact-based visual observation，H13 closeout 仍未完成，不能写成已发布。
-- `H13` 自动 closeout 前状态已单独收口到 `docs/picoui-serial/H-线发布closeout前状态.md`；当前剩余边界不是“没有人工记录”，而是“只有 artifact-based visual observation，没有 live OS window acceptance”。
+- `H13` 自动 closeout 前状态已单独收口到 `docs/tinyui-serial/H-线发布closeout前状态.md`；当前剩余边界不是“没有人工记录”，而是“只有 artifact-based visual observation，没有 live OS window acceptance”。
 
 ### 控件数量距离
 
 - LingDongGUI 当前可封装原生控件按 H 线口径统计为 `26` 个。
-- PicoUI 当前 public 控件为 `9` 个：
+- TINYUI 当前 public 控件为 `9` 个：
   - `window`
   - `label`
   - `button`
@@ -83,11 +83,11 @@ H 线后续必须按串行任务推进：`H0` 未完成前不进入 `H1`，`H1` 
 - 数量覆盖率约为 `9 / 26 = 34.6%`。
 - 未覆盖原生控件为 `17` 个。
 
-这个数字不能直接解释成“第一版只完成三分之一”。PicoUI 是上层 API，不要求逐项镜像 LingDongGUI 全部控件；第一版可以选择更小的发布面。但如果第一版目标是“覆盖 LingDongGUI 主流控件面”，当前距离仍然明显不足。
+这个数字不能直接解释成“第一版只完成三分之一”。TINYUI 是上层 API，不要求逐项镜像 LingDongGUI 全部控件；第一版可以选择更小的发布面。但如果第一版目标是“覆盖 LingDongGUI 主流控件面”，当前距离仍然明显不足。
 
 ### 已覆盖控件能力距离
 
-PicoUI 当前 9 个控件都已有真实 LingDongGUI backend mapping，并且至少有一层 automatic visible gate 证据。但这只说明“每个控件至少有一个真实映射和可见样本”，不说明每个控件的全部能力都闭环。
+TINYUI 当前 9 个控件都已有真实 LingDongGUI backend mapping，并且至少有一层 automatic visible gate 证据。但这只说明“每个控件至少有一个真实映射和可见样本”，不说明每个控件的全部能力都闭环。
 
 按当前能力矩阵统计：
 
@@ -114,7 +114,7 @@ PicoUI 当前 9 个控件都已有真实 LingDongGUI backend mapping，并且至
 - demo catalog 与 known limitations 成文。
 - 发布前验证命令固定。
 
-如果第一版本定义为“对外声明 PicoUI 已覆盖 LingDongGUI 主流控件”的 `v1.0`，当前距离更远，但这已经不属于当前 `H线` closeout 范围，而应在 `H线` 基于现有 9 控件收口后，另开新的 line-level spec / plan：
+如果第一版本定义为“对外声明 TINYUI 已覆盖 LingDongGUI 主流控件”的 `v1.0`，当前距离更远，但这已经不属于当前 `H线` closeout 范围，而应在 `H线` 基于现有 9 控件收口后，另开新的 line-level spec / plan：
 
 - 补 3 个高价值新控件 vertical slice。
 - 建立输入类控件的焦点、键盘、编辑事件合同。
@@ -124,7 +124,7 @@ PicoUI 当前 9 个控件都已有真实 LingDongGUI backend mapping，并且至
 
 如果第一版本定义改成“`H线` 之后先把一部分已做控件真正做实对齐再发 `v0.1`”，后续执行入口不再留在 `H线`，而是转到：
 
-- `docs/picoui-serial/J-线计划索引.md`
+- `docs/tinyui-serial/J-线计划索引.md`
 
 `J线` 当前固定口径是：
 
@@ -141,13 +141,13 @@ PicoUI 当前 9 个控件都已有真实 LingDongGUI backend mapping，并且至
 
 本阶段必须固定：
 
-- 第一版本名称：建议暂称 `PicoUI first release`，不提前承诺 `v1.0`。
+- 第一版本名称：建议暂称 `TINYUI first release`，不提前承诺 `v1.0`。
 - 第一版本最低发布门槛：release matrix gate、demo catalog、known limitations、manual artifact 记录、closeout review 全部完成。
 - 四层证据边界保持不变；新增自动桌面窗口截图时，只能算 `visible` 层补强，不能写成 `manual artifact` 完成或人工验收补齐。
 - 禁止发布口径：
-  - “PicoUI 已完整支持 LingDongGUI。”
-  - “PicoUI 已覆盖 LingDongGUI 全控件。”
-  - “9 个 PicoUI 控件已 100% 镜像对应 ld* 控件能力。”
+  - “TINYUI 已完整支持 LingDongGUI。”
+  - “TINYUI 已覆盖 LingDongGUI 全控件。”
+  - “9 个 TINYUI 控件已 100% 镜像对应 ld* 控件能力。”
   - “visible gate 通过等于人工验收通过。”
 
 完成条件：
@@ -161,12 +161,12 @@ PicoUI 当前 9 个控件都已有真实 LingDongGUI backend mapping，并且至
 
 产物：
 
-- `docs/picoui-serial/H-线发布差距与LingDongGUI控件对比.md`
+- `docs/tinyui-serial/H-线发布差距与LingDongGUI控件对比.md`
 
 该文档必须包含：
 
 - 原生 LingDongGUI 控件全集。
-- PicoUI 当前覆盖控件。
+- TINYUI 当前覆盖控件。
 - 数量覆盖率。
 - 已覆盖控件逐项能力差距。
 - 未覆盖控件分组和优先级。
@@ -174,9 +174,9 @@ PicoUI 当前 9 个控件都已有真实 LingDongGUI backend mapping，并且至
 
 完成条件：
 
-- `docs/picoui-serial/H-线发布差距与LingDongGUI控件对比.md` 成为对比真相源。
+- `docs/tinyui-serial/H-线发布差距与LingDongGUI控件对比.md` 成为对比真相源。
 - 对比文档不使用 G 线文件名。
-- 对比文档明确：26 个 LingDongGUI 可封装控件、9 个 PicoUI 已覆盖控件、17 个未覆盖控件、44 条当前能力项。
+- 对比文档明确：26 个 LingDongGUI 可封装控件、9 个 TINYUI 已覆盖控件、17 个未覆盖控件、44 条当前能力项。
 
 ### H2：第一版 release matrix 设计
 
@@ -185,7 +185,7 @@ PicoUI 当前 9 个控件都已有真实 LingDongGUI backend mapping，并且至
 设计内容：
 
 - 机器可读真相源：
-  - `tests/picoui/contract/picoui_release_capability_matrix.json`
+  - `tests/tinyui/contract/tinyui_release_capability_matrix.json`
 - schema 顶层要求：
   - `status_enums.widget_status`
   - `status_enums.capability_status`
@@ -227,7 +227,7 @@ schema 约束：
   - `scope`
   - `artifact_entry_exists`
   - `manual_review_required`
-- demo-level artifact entry 真相源继续放在 `docs/picoui-serial/C-线人工窗口验收记录.md`；不能把 `widget.manual_artifact.artifact_entry_exists = false` 读成“当前根本没有任何 artifact 条目”。
+- demo-level artifact entry 真相源继续放在 `docs/tinyui-serial/C-线人工窗口验收记录.md`；不能把 `widget.manual_artifact.artifact_entry_exists = false` 读成“当前根本没有任何 artifact 条目”。
 - `widget_release_judgement` 是控件级粗粒度发布归类：当前 `internal v0.1` 讨论范围内的 wrapped 控件，若不是 blocker，默认归到 `internal_v0_1_known_limitation`，避免误表达成 `post_h_candidate`。
 - release matrix 只负责表达条目存在与是否仍需人工复核，不负责编码“人工验收已通过/未通过”。
 - 当前 H2 初稿至少要覆盖：
@@ -237,7 +237,7 @@ schema 约束：
 
 完成条件：
 
-- `tests/picoui/contract/picoui_release_capability_matrix.json` 成为 H 线 release matrix 的机器可读真相源。
+- `tests/tinyui/contract/tinyui_release_capability_matrix.json` 成为 H 线 release matrix 的机器可读真相源。
 - 文档与 JSON 对齐使用同一套状态枚举，不再靠 Markdown 自由表述推断。
 - evidence 维度在 H2 先以控件级最小表达入库，不再让 `unit / contract / mapping / visible / manual_artifact` 在机器语义里完全缺位。
 - 明确 `image` / `list` 的非 `support` 项在第一版中属于 `internal_v0_1_known_limitation`。
@@ -245,12 +245,12 @@ schema 约束：
 
 ### H3：release matrix gate 落地
 
-目标：当前旧 `check_picoui_widget_contract_matrix.py` 仍是 D 线旧矩阵 gate，只覆盖 8 控件 / 3 态。发布前必须让 H 线对比结论进入正式可执行检查。
+目标：当前旧 `check_tinyui_widget_contract_matrix.py` 仍是 D 线旧矩阵 gate，只覆盖 8 控件 / 3 态。发布前必须让 H 线对比结论进入正式可执行检查。
 
 建议 gate 不直接解析 Markdown 全表，而是抽出稳定机器可读源：
 
-- `tests/picoui/contract/picoui_release_capability_matrix.json`
-- `tests/picoui/contract/check_picoui_release_capability_matrix.py`
+- `tests/tinyui/contract/tinyui_release_capability_matrix.json`
+- `tests/tinyui/contract/check_tinyui_release_capability_matrix.py`
 
 第一阶段只检查：
 
@@ -355,20 +355,20 @@ schema 约束：
 
 最小范围：
 
-- `picoui_basic_widgets_demo`
-- `picoui_settings_panel_demo`
+- `tinyui_basic_widgets_demo`
+- `tinyui_settings_panel_demo`
 
 边界约束：
 
-- 当前 `H8` 最小 manual artifact 范围只锁定这两个 demo，因为现有 `tests/picoui/runtime/check_picoui_manual_window_artifact.py` 只支持 `basic_widgets / settings_panel`。
-- `docs/picoui-serial/C-线人工窗口验收记录.md` 继续作为人工记录真相源，不新建平行记录文件。
+- 当前 `H8` 最小 manual artifact 范围只锁定这两个 demo，因为现有 `tests/tinyui/runtime/check_tinyui_manual_window_artifact.py` 只支持 `basic_widgets / settings_panel`。
+- `docs/tinyui-serial/C-线人工窗口验收记录.md` 继续作为人工记录真相源，不新建平行记录文件。
 - `artifact existence` 只代表已有 artifact 条目和路径，不代表人工已观察 OS 窗口，更不代表人工验收通过。
 - 若后续讨论扩张到 `hello_world / layout_flex / layout_grid / theme_showcase / list_basic` 等更多 demo，只能记为 `post-H candidate`，不并入当前 `H8` 完成条件。
 
 完成条件：
 
-- `picoui_basic_widgets_demo` 与 `picoui_settings_panel_demo` 各有 artifact 条目。
-- 这两个 demo 在 `docs/picoui-serial/C-线人工窗口验收记录.md` 中各有人工观察记录槽位。
+- `tinyui_basic_widgets_demo` 与 `tinyui_settings_panel_demo` 各有 artifact 条目。
+- 这两个 demo 在 `docs/tinyui-serial/C-线人工窗口验收记录.md` 中各有人工观察记录槽位。
 - 若人工尚未观察 OS 窗口，记录必须明确写成“待人工观察并填写最终结论”，不得伪造通过。
 - 文档明确 artifact existence 不等于人工验收通过。
 
@@ -378,7 +378,7 @@ schema 约束：
 
 必须检查：
 
-- `picoui/include/picoui/*.h` 不泄漏 `ld*`。
+- `tinyui/include/tinyui/*.h` 不泄漏 `ld*`。
 - 不泄漏 `arm_2d_*`。
 - 不泄漏 `SIGNAL_*`.
 - public API 命名稳定。
@@ -407,7 +407,7 @@ schema 约束：
 完成条件：
 
 - CTest label 和脚本入口清楚。
-- 明确 runtime / visible / mapping 不能并行抢 `build/picoui-runtime`。
+- 明确 runtime / visible / mapping 不能并行抢 `build/tinyui-runtime`。
 
 ### H11：发布文档包
 
@@ -449,10 +449,10 @@ review 必须检查：
 
 本轮独立 review 暴露的 blocking 已完成修复，当前结论如下：
 
-1. `tests/picoui/contract/check_picoui_release_capability_matrix.py`
+1. `tests/tinyui/contract/check_tinyui_release_capability_matrix.py`
    - 已新增 `wrapped` 控件状态断言。
    - 已新增 `summary.capability_entry_total` 与 `capability_status_counts` 的实际条目一致性校验。
-2. `tests/picoui/unit/test_picoui_list.c`
+2. `tests/tinyui/unit/test_tinyui_list.c`
    - 已删除 backend 内部指针别名假合同。
    - 当前只保留 item id 不是 `list/backend/widget identity` 的最小合同。
 3. 发布文档口径
@@ -464,15 +464,15 @@ review 必须检查：
 建议 closeout 命令：
 
 ```bash
-ctest --test-dir build --output-on-failure -L picoui
+ctest --test-dir build --output-on-failure -L tinyui
 ctest --test-dir build --output-on-failure -L visible
 ctest --test-dir build --output-on-failure -L mapping
-python3 tests/picoui/contract/check_picoui_public_api.py
-python3 tests/picoui/contract/check_picoui_demo_boundary.py
+python3 tests/tinyui/contract/check_tinyui_public_api.py
+python3 tests/tinyui/contract/check_tinyui_demo_boundary.py
 git diff --check
 ```
 
-注意：runtime / visible / mapping 脚本共用 `build/picoui-runtime`，不要并行跑这些标签，否则可能互相抢同一 build 目录。
+注意：runtime / visible / mapping 脚本共用 `build/tinyui-runtime`，不要并行跑这些标签，否则可能互相抢同一 build 目录。
 
 完成条件：
 
@@ -506,14 +506,14 @@ git diff --check
 
 当前不建议直接对外宣称：
 
-- “PicoUI 已完整支持 LingDongGUI。”
-- “PicoUI 已覆盖 LingDongGUI 全控件。”
-- “9 个 PicoUI 控件已 100% 镜像对应 ld* 控件能力。”
+- “TINYUI 已完整支持 LingDongGUI。”
+- “TINYUI 已覆盖 LingDongGUI 全控件。”
+- “9 个 TINYUI 控件已 100% 镜像对应 ld* 控件能力。”
 - “visible gate 通过等于人工验收通过。”
 
 可以诚实宣称：
 
-- “PicoUI 已有 9 个上层控件，它们都走真实 LingDongGUI backend mapping。”
+- “TINYUI 已有 9 个上层控件，它们都走真实 LingDongGUI backend mapping。”
 - “当前支持能力是明确的合同子集，并有 unit / contract / mapping / visible 证据。”
 - “未支持能力和未封装控件已在 H 线对比文档中列出。”
 

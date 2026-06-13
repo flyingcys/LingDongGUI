@@ -9,11 +9,11 @@
 #include <unistd.h>
 
 static const char *test_self_binary_path =
-    "/Users/cys/embedded/LingDongGUI/build/tests/picoui/test_tinyui_app_lifecycle";
+    "/Users/cys/embedded/LingDongGUI/build/tests/tinyui/test_tinyui_app_lifecycle";
 static const char *test_runtime_host_source =
     "/Users/cys/embedded/LingDongGUI/tinyui/src/core/runtime_host.c";
 static const char *test_animation_demo_path =
-    "/Users/cys/embedded/LingDongGUI/build/examples/sdl/picoui_animation_basic_demo";
+    "/Users/cys/embedded/LingDongGUI/build/examples/sdl/tinyui_animation_basic_demo";
 
 static void assert_self_binary_lacks_symbol(const char *symbol)
 {
@@ -128,7 +128,7 @@ static void test_runtime_markers_are_logged_once_per_run(void)
     snprintf(capture_path, sizeof(capture_path), "%s/frame.ppm", tmp_dir);
     snprintf(command,
              sizeof(command),
-             "PICOUI_DEMO_AUTO_QUIT_MS=200 PICOUI_CAPTURE_FILE='%s' SDL_VIDEODRIVER=dummy '%s' >'%s' 2>'%s'",
+             "TINYUI_DEMO_AUTO_QUIT_MS=200 TINYUI_CAPTURE_FILE='%s' SDL_VIDEODRIVER=dummy '%s' >'%s' 2>'%s'",
              capture_path,
              test_animation_demo_path,
              stdout_path,
@@ -140,54 +140,54 @@ static void test_runtime_markers_are_logged_once_per_run(void)
     assert(WEXITSTATUS(status) == 0);
 
     stdout_text = read_entire_file(stdout_path);
-    assert(count_exact_line(stdout_text, "PICOUI_RUNTIME_READY") == 1);
-    assert(count_exact_line(stdout_text, "PICOUI_FOCUS_RUNTIME_READY=1") == 1);
-    assert(count_exact_line(stdout_text, "PICOUI_BACKEND_STATIC_MAPPING=REAL_LDGUI") == 1);
-    assert(count_exact_line(stdout_text, "PICOUI_SMOKE_LAYOUT_USED=0") == 1);
+    assert(count_exact_line(stdout_text, "TINYUI_RUNTIME_READY") == 1);
+    assert(count_exact_line(stdout_text, "TINYUI_FOCUS_RUNTIME_READY=1") == 1);
+    assert(count_exact_line(stdout_text, "TINYUI_BACKEND_STATIC_MAPPING=REAL_LDGUI") == 1);
+    assert(count_exact_line(stdout_text, "TINYUI_SMOKE_LAYOUT_USED=0") == 1);
     free(stdout_text);
 }
 
 // Test 1: create + destroy bare app
 static void test_app_create_and_destroy(void)
 {
-    struct picoui_app *app = picoui_app_create();
+    struct tinyui_app *app = tinyui_app_create();
     assert(app != 0);
-    picoui_app_destroy(app);
+    tinyui_app_destroy(app);
     // no crash = pass
 }
 
 // Test 2: app with multiple windows
 static void test_app_multiple_windows(void)
 {
-    struct picoui_app *app = picoui_app_create();
+    struct tinyui_app *app = tinyui_app_create();
     assert(app != 0);
-    struct picoui_window *w1 = picoui_window_create(app, "win1");
-    struct picoui_window *w2 = picoui_window_create(app, "win2");
+    struct tinyui_window *w1 = tinyui_window_create(app, "win1");
+    struct tinyui_window *w2 = tinyui_window_create(app, "win2");
     assert(w1 != 0);
     assert(w2 != 0);
     // verify windows have different backend widgets
     assert(w1->widget.backend_widget != w2->widget.backend_widget);
-    picoui_app_destroy(app);
+    tinyui_app_destroy(app);
 }
 
 // Test 3: create window with null app
 static void test_app_rejects_null(void)
 {
-    assert(picoui_window_create(0, "x") == 0);
-    assert(picoui_app_set_theme(0, 0) == -1);
+    assert(tinyui_window_create(0, "x") == 0);
+    assert(tinyui_app_set_theme(0, 0) == -1);
 }
 
 static void test_app_backend_wrappers_are_no_longer_public(void)
 {
-    assert_source_lacks_function_definition(test_runtime_host_source, "picoui_backend_app_init");
-    assert_self_binary_lacks_symbol("picoui_backend_app_init");
-    assert_source_lacks_function_definition(test_runtime_host_source, "picoui_backend_app_run");
-    assert_self_binary_lacks_symbol("picoui_backend_app_run");
-    assert_source_lacks_function_definition(test_runtime_host_source, "picoui_backend_app_shutdown");
-    assert_self_binary_lacks_symbol("picoui_backend_app_shutdown");
-    assert_source_lacks_function_definition(test_runtime_host_source, "picoui_backend_ensure_window");
-    assert_source_lacks_function_definition(test_runtime_host_source, "picoui_backend_runtime_step");
-    assert_self_binary_lacks_symbol("picoui_backend_runtime_step");
+    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_app_init");
+    assert_self_binary_lacks_symbol("tinyui_backend_app_init");
+    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_app_run");
+    assert_self_binary_lacks_symbol("tinyui_backend_app_run");
+    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_app_shutdown");
+    assert_self_binary_lacks_symbol("tinyui_backend_app_shutdown");
+    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_ensure_window");
+    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_runtime_step");
+    assert_self_binary_lacks_symbol("tinyui_backend_runtime_step");
 }
 
 static void test_runtime_prepare_helpers_exist(void)
@@ -223,69 +223,69 @@ static void test_runtime_step_uses_event_pump_helper(void)
     assert(system(command) == 0);
 }
 
-static void test_runtime_host_internal_bootstrap_helpers_no_longer_use_picoui_prefix(void)
+static void test_runtime_host_internal_bootstrap_helpers_no_longer_use_tinyui_prefix(void)
 {
-    assert_source_lacks_function_definition(test_runtime_host_source, "picoui_backend_touch_log_enabled");
-    assert_source_lacks_function_definition(test_runtime_host_source, "picoui_backend_runtime_bootstrap");
-    assert_source_lacks_function_definition(test_runtime_host_source, "picoui_backend_runtime_page_init");
-    assert_source_lacks_function_definition(test_runtime_host_source, "picoui_backend_runtime_page_quit");
-    assert(system("rg -n \"struct[[:space:]]+picoui_backend_runtime_state|g_picoui_backend_runtime_page\" "
+    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_touch_log_enabled");
+    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_runtime_bootstrap");
+    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_runtime_page_init");
+    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_runtime_page_quit");
+    assert(system("rg -n \"struct[[:space:]]+tinyui_backend_runtime_state|g_tinyui_backend_runtime_page\" "
                   "/Users/cys/embedded/LingDongGUI/tinyui/src/core/runtime_host.c >/dev/null") != 0);
 }
 
-static void test_runtime_host_internal_mapping_helpers_no_longer_use_picoui_prefix(void)
+static void test_runtime_host_internal_mapping_helpers_no_longer_use_tinyui_prefix(void)
 {
-    assert_source_lacks_function_definition(test_runtime_host_source, "picoui_backend_widget_is_supported_real");
-    assert_source_lacks_function_definition(test_runtime_host_source, "picoui_backend_widget_is_real_mapped");
-    assert_source_lacks_function_definition(test_runtime_host_source, "picoui_backend_append_id");
-    assert_source_lacks_function_definition(test_runtime_host_source, "picoui_backend_widget_needs_fallback");
-    assert_source_lacks_function_definition(test_runtime_host_source, "picoui_backend_window_has_real_layout");
-    assert_source_lacks_function_definition(test_runtime_host_source, "picoui_backend_widget_excludes_formal_mapping");
-    assert_source_lacks_function_definition(test_runtime_host_source, "picoui_backend_widget_allows_smoke_layout");
-    assert_source_lacks_function_definition(test_runtime_host_source, "picoui_backend_append_widget_ids");
+    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_widget_is_supported_real");
+    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_widget_is_real_mapped");
+    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_append_id");
+    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_widget_needs_fallback");
+    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_window_has_real_layout");
+    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_widget_excludes_formal_mapping");
+    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_widget_allows_smoke_layout");
+    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_append_widget_ids");
 }
 
-static void test_runtime_host_internal_render_helpers_no_longer_use_picoui_prefix(void)
+static void test_runtime_host_internal_render_helpers_no_longer_use_tinyui_prefix(void)
 {
-    assert_source_lacks_function_definition(test_runtime_host_source, "picoui_backend_log_image_source_marker");
-    assert_source_lacks_function_definition(test_runtime_host_source, "picoui_backend_parse_auto_quit_ms");
-    assert_source_lacks_function_definition(test_runtime_host_source, "picoui_backend_pixel_to_rgb888");
-    assert_source_lacks_function_definition(test_runtime_host_source, "picoui_backend_pixel_to_argb8888");
-    assert_source_lacks_function_definition(test_runtime_host_source, "picoui_backend_runtime_state_from_app");
-    assert_source_lacks_function_definition(test_runtime_host_source, "picoui_backend_app_state_from_window");
-    assert_source_lacks_function_definition(test_runtime_host_source, "picoui_backend_present_real_frame");
-    assert_source_lacks_function_definition(test_runtime_host_source, "picoui_backend_apply_real_widget_layout");
-    assert_source_lacks_function_definition(test_runtime_host_source, "picoui_backend_log_mapping_markers");
-    assert_source_lacks_function_definition(test_runtime_host_source, "picoui_backend_write_capture");
-    assert_source_lacks_function_definition(test_runtime_host_source, "picoui_backend_apply_smoke_cursor_layout");
-    assert_source_lacks_function_definition(test_runtime_host_source, "picoui_backend_render");
+    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_log_image_source_marker");
+    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_parse_auto_quit_ms");
+    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_pixel_to_rgb888");
+    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_pixel_to_argb8888");
+    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_runtime_state_from_app");
+    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_app_state_from_window");
+    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_present_real_frame");
+    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_apply_real_widget_layout");
+    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_log_mapping_markers");
+    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_write_capture");
+    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_apply_smoke_cursor_layout");
+    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_render");
 }
 
-static void test_runtime_host_internal_step_helpers_no_longer_use_picoui_prefix(void)
+static void test_runtime_host_internal_step_helpers_no_longer_use_tinyui_prefix(void)
 {
-    assert_source_lacks_function_definition(test_runtime_host_source, "picoui_backend_prepare_runtime_state");
-    assert_source_lacks_function_definition(test_runtime_host_source, "picoui_backend_prepare_runtime_scene");
-    assert_source_lacks_function_definition(test_runtime_host_source, "picoui_backend_log_runtime_ready");
-    assert_source_lacks_function_definition(test_runtime_host_source, "picoui_backend_prepare_runtime");
-    assert_source_lacks_function_definition(test_runtime_host_source, "picoui_backend_pump_sdl_events");
-    assert_source_lacks_function_definition(test_runtime_host_source, "picoui_backend_step_app");
+    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_prepare_runtime_state");
+    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_prepare_runtime_scene");
+    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_log_runtime_ready");
+    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_prepare_runtime");
+    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_pump_sdl_events");
+    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_step_app");
 }
 
 int main(void)
 {
-    assert_self_binary_lacks_symbol("picoui_backend_app_init");
-    assert_self_binary_lacks_symbol("picoui_backend_app_run");
-    assert_self_binary_lacks_symbol("picoui_backend_app_shutdown");
+    assert_self_binary_lacks_symbol("tinyui_backend_app_init");
+    assert_self_binary_lacks_symbol("tinyui_backend_app_run");
+    assert_self_binary_lacks_symbol("tinyui_backend_app_shutdown");
     test_app_create_and_destroy();
     test_app_multiple_windows();
     test_app_rejects_null();
     test_app_backend_wrappers_are_no_longer_public();
     test_runtime_prepare_helpers_exist();
     test_runtime_step_uses_event_pump_helper();
-    test_runtime_host_internal_bootstrap_helpers_no_longer_use_picoui_prefix();
-    test_runtime_host_internal_mapping_helpers_no_longer_use_picoui_prefix();
-    test_runtime_host_internal_render_helpers_no_longer_use_picoui_prefix();
-    test_runtime_host_internal_step_helpers_no_longer_use_picoui_prefix();
+    test_runtime_host_internal_bootstrap_helpers_no_longer_use_tinyui_prefix();
+    test_runtime_host_internal_mapping_helpers_no_longer_use_tinyui_prefix();
+    test_runtime_host_internal_render_helpers_no_longer_use_tinyui_prefix();
+    test_runtime_host_internal_step_helpers_no_longer_use_tinyui_prefix();
     test_runtime_markers_are_logged_once_per_run();
     return 0;
 }

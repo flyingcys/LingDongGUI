@@ -19,10 +19,10 @@
 #ifndef TINYUI_QRCODE_H
 #define TINYUI_QRCODE_H
 
-struct picoui_widget;
-struct picoui_qrcode;
+struct tinyui_widget;
+struct tinyui_qrcode;
 
-struct picoui_qrcode_props {
+struct tinyui_qrcode_props {
     const char *id;
     const char *style_class;
     void *user_data;
@@ -34,17 +34,17 @@ struct picoui_qrcode_props {
     int zoom;
 };
 
-struct picoui_qrcode *picoui_qrcode_create(struct picoui_widget *parent, const char *id);
-struct picoui_qrcode *picoui_qrcode_create_with_props(struct picoui_widget *parent,
-                                                      const struct picoui_qrcode_props *props);
-struct picoui_qrcode *picoui_q_r_code_init(struct picoui_widget *parent, const char *id);
-int picoui_qrcode_set_text(struct picoui_qrcode *qrcode, const char *text);
-const char *picoui_qrcode_get_text(const struct picoui_qrcode *qrcode);
-int picoui_q_r_code_set_text(struct picoui_qrcode *qrcode, const char *text);
-int picoui_qrcode_set_qr_color(struct picoui_qrcode *qrcode, unsigned int rgb);
-int picoui_qrcode_set_bg_color(struct picoui_qrcode *qrcode, unsigned int rgb);
-int picoui_qrcode_set_ecc(struct picoui_qrcode *qrcode, int ecc);
-int picoui_qrcode_set_max_version(struct picoui_qrcode *qrcode, int max_version);
-int picoui_qrcode_set_zoom(struct picoui_qrcode *qrcode, int zoom);
+struct tinyui_qrcode *tinyui_qrcode_create(struct tinyui_widget *parent, const char *id);
+struct tinyui_qrcode *tinyui_qrcode_create_with_props(struct tinyui_widget *parent,
+                                                      const struct tinyui_qrcode_props *props);
+struct tinyui_qrcode *tinyui_q_r_code_init(struct tinyui_widget *parent, const char *id);
+int tinyui_qrcode_set_text(struct tinyui_qrcode *qrcode, const char *text);
+const char *tinyui_qrcode_get_text(const struct tinyui_qrcode *qrcode);
+int tinyui_q_r_code_set_text(struct tinyui_qrcode *qrcode, const char *text);
+int tinyui_qrcode_set_qr_color(struct tinyui_qrcode *qrcode, unsigned int rgb);
+int tinyui_qrcode_set_bg_color(struct tinyui_qrcode *qrcode, unsigned int rgb);
+int tinyui_qrcode_set_ecc(struct tinyui_qrcode *qrcode, int ecc);
+int tinyui_qrcode_set_max_version(struct tinyui_qrcode *qrcode, int max_version);
+int tinyui_qrcode_set_zoom(struct tinyui_qrcode *qrcode, int zoom);
 
 #endif

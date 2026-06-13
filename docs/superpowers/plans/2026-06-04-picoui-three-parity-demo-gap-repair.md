@@ -1,4 +1,4 @@
-# PicoUI 三个 Parity Demo 差距修复计划
+# TINYUI 三个 Parity Demo 差距修复计划
 
 **Goal:** 把 `legacy_widget_parity / layout_parity / grid_parity` 从“可对照 baseline”继续推进到更接近老 SDL truth-source 的真实行为、资源和验证闭环。
 
@@ -8,8 +8,8 @@
 
 **Capability Line Docs:**
 
-- `timer capability design`: `docs/superpowers/specs/2026-06-04-picoui-app-timer-tick-capability-design.md`
-- `timer capability implementation`: `docs/superpowers/plans/2026-06-04-picoui-app-timer-tick-capability-implementation.md`
+- `timer capability design`: `docs/superpowers/specs/2026-06-04-tinyui-app-timer-tick-capability-design.md`
+- `timer capability implementation`: `docs/superpowers/plans/2026-06-04-tinyui-app-timer-tick-capability-implementation.md`
 
 1. 先补最小 public `app` timer/tick/frame callback 能力。
 2. 再用它补 `layout_parity` 的 `1200ms` 宽度切换，并回收 `legacy_widget_parity` 的 `100ms` arc/gauge 动画。
@@ -23,16 +23,16 @@
 **Goal:** 给 demo 层一个合法表达周期行为的 public hook，不把页面行为偷偷写进 backend。
 
 **Files:**
-- Modify: `picoui/include/picoui/app.h`
-- Modify: `picoui/src/core/app.c`
-- Modify: `picoui/src/backend/ldgui/backend_app.c`
+- Modify: `tinyui/include/tinyui/app.h`
+- Modify: `tinyui/src/core/app.c`
+- Modify: `tinyui/src/backend/ldgui/backend_app.c`
 - Reference: `examples/common/demo/layout/uiLayout.c`
 - Reference: `examples/common/demo/widget/uiWidgetLegacy.c`
 
 - [ ] 设计最小 public 接口
   - 可选方向：frame callback、tick callback、timer register
 - [ ] 保证该接口是通用 capability，不是只为某个 parity demo 定制
-- [ ] 保证 demo 只通过 `picoui_*` public API 使用该能力
+- [ ] 保证 demo 只通过 `tinyui_*` public API 使用该能力
 - [ ] 为新能力补最小 contract / unit / demo 级验证
 
 约束：
@@ -44,7 +44,7 @@
 ## Task 2: 用新 capability 补 `layout_parity` 的运行时行为
 
 **Files:**
-- Modify: `picoui/demo/layout_parity/main.c`
+- Modify: `tinyui/demo/layout_parity/main.c`
 - Reference: `examples/common/demo/layout/uiLayout.c`
 
 - [ ] 复刻老页 `1200ms` 周期切换 `flex row` 区域宽度的行为
@@ -55,7 +55,7 @@
 ## Task 3: 回收 `legacy_widget_parity` 的剩余真实差距
 
 **Files:**
-- Modify: `picoui/demo/legacy_widget_parity/main.c`
+- Modify: `tinyui/demo/legacy_widget_parity/main.c`
 - Reference: `examples/common/demo/widget/uiWidgetLegacy.c`
 - Reference: `examples/common/demo/resource/uiImages.h`
 
@@ -80,10 +80,10 @@
 ## Task 4: 给三页接 dedicated visible 对照
 
 **Files:**
-- Modify: `tests/picoui/runtime/check_picoui_visible_ui.py`
-- Reference: `picoui/demo/legacy_widget_parity/main.c`
-- Reference: `picoui/demo/layout_parity/main.c`
-- Reference: `picoui/demo/grid_parity/main.c`
+- Modify: `tests/tinyui/runtime/check_tinyui_visible_ui.py`
+- Reference: `tinyui/demo/legacy_widget_parity/main.c`
+- Reference: `tinyui/demo/layout_parity/main.c`
+- Reference: `tinyui/demo/grid_parity/main.c`
 
 - [ ] 把 `legacy_widget_parity`
 - [ ] 把 `layout_parity`
@@ -95,7 +95,7 @@
 ## Task 5: 细化 `grid_parity` 内容 fidelity
 
 **Files:**
-- Modify: `picoui/demo/grid_parity/main.c`
+- Modify: `tinyui/demo/grid_parity/main.c`
 - Reference: `examples/common/demo/layout/uiLayout.c`
 
 - [ ] 保留当前 `[92, content, 1fr] x [54, 66, 1fr]` descriptor 语义
@@ -105,9 +105,9 @@
 ## Task 6: 同步文档
 
 **Files:**
-- Modify: `picoui/docs/demo_guide.md`
-- Modify: `docs/superpowers/reviews/2026-06-04-picoui-three-parity-demo-gap-audit.md`
-- Modify: `docs/superpowers/plans/2026-06-04-picoui-three-parity-demo-gap-repair.md`
+- Modify: `tinyui/docs/demo_guide.md`
+- Modify: `docs/superpowers/reviews/2026-06-04-tinyui-three-parity-demo-gap-audit.md`
+- Modify: `docs/superpowers/plans/2026-06-04-tinyui-three-parity-demo-gap-repair.md`
 
 - [x] 写清唯一硬 capability gap 是 `app` 级 timer/tick/frame callback
 - [x] 写清 `legacy_widget_parity` 和 `grid_parity` 当前不是 API 缺口
@@ -121,6 +121,6 @@
 
 ## 本轮最小验证
 
-- [x] `python3 tests/picoui/contract/check_picoui_demo_boundary.py`
-- [x] `cmake --build build --target picoui_grid_parity_demo picoui_layout_parity_demo`
+- [x] `python3 tests/tinyui/contract/check_tinyui_demo_boundary.py`
+- [x] `cmake --build build --target tinyui_grid_parity_demo tinyui_layout_parity_demo`
 - [x] `git diff --check`

@@ -1,12 +1,12 @@
-# PicoUI B线可见 UI 收口实施计划
+# TINYUI B线可见 UI 收口实施计划
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 把 `PicoUI` 的 demo 验收从“smoke 可出图”推进到“自动 visible gate 已证明 dummy SDL + PPM readback 下可显示、可读、可判定”，先完成 `picoui_basic_widgets_demo` 的 visible baseline，再推广到其他 demos。
+**Goal:** 把 `TINYUI` 的 demo 验收从“smoke 可出图”推进到“自动 visible gate 已证明 dummy SDL + PPM readback 下可显示、可读、可判定”，先完成 `tinyui_basic_widgets_demo` 的 visible baseline，再推广到其他 demos。
 
 **Architecture:** `B线` 不再继续优先扩新的 backend 能力面，而是围绕 automatic visible correctness 建立一条新主线：先建立 dummy SDL + PPM readback 证据链，再纠正 host present/readback 显示链与颜色链，再收口 `basic_widgets`，最后铺开到其他 demos，并把 automatic visible gate 固化进文档和测试。人工 OS 窗口验收不属于 `B线` 完成结论，必须等 `C6 / manual window artifact gate`。
 
-**Tech Stack:** C11、CMake、LingDongGUI、SDL2 host runtime、Python3 验证脚本、CTest、GitNexus、PicoUI demo targets
+**Tech Stack:** C11、CMake、LingDongGUI、SDL2 host runtime、Python3 验证脚本、CTest、GitNexus、TINYUI demo targets
 
 ---
 
@@ -15,11 +15,11 @@
 ### G1 文档与验收口径锚点
 
 **Files:**
-- Modify: `docs/picoui-serial/B-线计划索引.md`
-- Modify: `docs/superpowers/specs/2026-05-27-picoui-b-line-visible-ui-design.md`
-- Modify: `docs/superpowers/plans/2026-05-27-picoui-b-line-visible-ui-implementation.md`
-- Modify: `docs/superpowers/specs/2026-05-26-picoui-lingdonggui-test-architecture-design.md`
-- Modify: `picoui/docs/demo_guide.md`
+- Modify: `docs/tinyui-serial/B-线计划索引.md`
+- Modify: `docs/superpowers/specs/2026-05-27-tinyui-b-line-visible-ui-design.md`
+- Modify: `docs/superpowers/plans/2026-05-27-tinyui-b-line-visible-ui-implementation.md`
+- Modify: `docs/superpowers/specs/2026-05-26-tinyui-lingdonggui-test-architecture-design.md`
+- Modify: `tinyui/docs/demo_guide.md`
 
 职责：
 
@@ -30,9 +30,9 @@
 ### G2 visible evidence 组
 
 **Files:**
-- Modify: `tests/picoui/runtime/check_picoui_runtime.py`
-- Create or Modify: `tests/picoui/runtime/check_picoui_visible_ui.py`
-- Modify: `docs/superpowers/specs/2026-05-26-picoui-lingdonggui-test-architecture-design.md`
+- Modify: `tests/tinyui/runtime/check_tinyui_runtime.py`
+- Create or Modify: `tests/tinyui/runtime/check_tinyui_visible_ui.py`
+- Modify: `docs/superpowers/specs/2026-05-26-tinyui-lingdonggui-test-architecture-design.md`
 
 职责：
 
@@ -42,7 +42,7 @@
 ### G3 host present/readback 显示链组
 
 **Files:**
-- Modify: `picoui/src/backend/ldgui/backend_app.c`
+- Modify: `tinyui/src/backend/ldgui/backend_app.c`
 
 职责：
 
@@ -52,10 +52,10 @@
 ### G4 theme/颜色/可读性链组
 
 **Files:**
-- Modify: `picoui/src/backend/ldgui/backend_style_apply.c`
-- Modify: `picoui/src/backend/ldgui/backend_theme.c`
-- Modify: `picoui/src/theme/theme.c`
-- Modify: `tests/picoui/unit/test_picoui_theme.c`
+- Modify: `tinyui/src/backend/ldgui/backend_style_apply.c`
+- Modify: `tinyui/src/backend/ldgui/backend_theme.c`
+- Modify: `tinyui/src/theme/theme.c`
+- Modify: `tests/tinyui/unit/test_tinyui_theme.c`
 
 职责：
 
@@ -64,12 +64,12 @@
 ### G5 `basic_widgets` 首个可见样板组
 
 **Files:**
-- Modify: `picoui/demo/basic_widgets/main.c`
-- Modify: `picoui/src/backend/ldgui/backend_layout.c`
-- Modify: `picoui/src/backend/ldgui/backend_widget.c`
-- Modify: `picoui/src/backend/ldgui/backend_image.c`
-- Modify: `tests/picoui/unit/test_picoui_widgets.c`
-- Modify: `tests/picoui/unit/test_picoui_layout.c`
+- Modify: `tinyui/demo/basic_widgets/main.c`
+- Modify: `tinyui/src/backend/ldgui/backend_layout.c`
+- Modify: `tinyui/src/backend/ldgui/backend_widget.c`
+- Modify: `tinyui/src/backend/ldgui/backend_image.c`
+- Modify: `tests/tinyui/unit/test_tinyui_widgets.c`
+- Modify: `tests/tinyui/unit/test_tinyui_layout.c`
 
 职责：
 
@@ -78,12 +78,12 @@
 ### G6 multi-demo 推广组
 
 **Files:**
-- Modify: `picoui/demo/hello_world/main.c`
-- Modify: `picoui/demo/layout_flex/main.c`
-- Modify: `picoui/demo/layout_grid/main.c`
-- Modify: `picoui/demo/theme_showcase/main.c`
-- Modify: `picoui/demo/settings_panel/main.c`
-- Modify: `tests/picoui/runtime/*`
+- Modify: `tinyui/demo/hello_world/main.c`
+- Modify: `tinyui/demo/layout_flex/main.c`
+- Modify: `tinyui/demo/layout_grid/main.c`
+- Modify: `tinyui/demo/theme_showcase/main.c`
+- Modify: `tinyui/demo/settings_panel/main.c`
+- Modify: `tests/tinyui/runtime/*`
 
 职责：
 
@@ -118,7 +118,7 @@
 - `G6` 只能在 `G5` 形成稳定样板后再展开
 - 同一时刻：
   - `backend_app.c` 只能有一个 subagent 改
-  - `tests/picoui/runtime/*` 只能有一个 subagent 改
+  - `tests/tinyui/runtime/*` 只能有一个 subagent 改
   - `theme.c/backend_style_apply.c/backend_theme.c` 归 `G4` 独占
   - demo 文件可按文件并行，但一旦触及共享 backend，立即收回主线程重拆
 
@@ -129,15 +129,15 @@
 ### Task 1: 建立 automatic visible evidence 基线（对应 `G2`，`G1` 可并行回写文档边界）
 
 **Files:**
-- Modify: `tests/picoui/runtime/check_picoui_runtime.py`
-- Create: `tests/picoui/runtime/check_picoui_visible_ui.py`
-- Modify: `docs/superpowers/specs/2026-05-26-picoui-lingdonggui-test-architecture-design.md`
+- Modify: `tests/tinyui/runtime/check_tinyui_runtime.py`
+- Create: `tests/tinyui/runtime/check_tinyui_visible_ui.py`
+- Modify: `docs/superpowers/specs/2026-05-26-tinyui-lingdonggui-test-architecture-design.md`
 
 - [ ] **Step 1: 写失败检查，明确 `capture 非空` 不等于 `visible correctness`**
 
 要求：
 
-- 为 `picoui_basic_widgets_demo` 增加一条独立 visible 检查入口
+- 为 `tinyui_basic_widgets_demo` 增加一条独立 visible 检查入口
 - 先让它失败在“重复列/可读性异常/窗口显示与 smoke 不一致”这类现象上
 
 - [ ] **Step 2: 运行失败检查，确认当前现状被正确捕获**
@@ -145,7 +145,7 @@
 Run:
 
 ```bash
-python3 tests/picoui/runtime/check_picoui_visible_ui.py --demo basic_widgets
+python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --demo basic_widgets
 ```
 
 Expected:
@@ -168,7 +168,7 @@ Expected:
 Run:
 
 ```bash
-python3 tests/picoui/runtime/check_picoui_visible_ui.py --demo basic_widgets
+python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --demo basic_widgets
 ```
 
 Expected:
@@ -178,21 +178,21 @@ Expected:
 - [ ] **Step 5: Commit**
 
 ```bash
-git add tests/picoui/runtime/check_picoui_runtime.py \
-        tests/picoui/runtime/check_picoui_visible_ui.py \
-        docs/superpowers/specs/2026-05-26-picoui-lingdonggui-test-architecture-design.md
-git commit -m "test(picoui): add visible ui gate baseline"
+git add tests/tinyui/runtime/check_tinyui_runtime.py \
+        tests/tinyui/runtime/check_tinyui_visible_ui.py \
+        docs/superpowers/specs/2026-05-26-tinyui-lingdonggui-test-architecture-design.md
+git commit -m "test(tinyui): add visible ui gate baseline"
 ```
 
 ### Task 2: 修正窗口显示链与颜色链（拆成 `G3 + G4` 两个独立写面）
 
 **Files:**
-- Modify: `picoui/src/backend/ldgui/backend_app.c`
-- Modify: `picoui/src/backend/ldgui/backend_style_apply.c`
-- Modify: `picoui/src/backend/ldgui/backend_theme.c`
-- Modify: `picoui/src/theme/theme.c`
-- Test: `tests/picoui/runtime/check_picoui_visible_ui.py`
-- Test: `tests/picoui/unit/test_picoui_theme.c`
+- Modify: `tinyui/src/backend/ldgui/backend_app.c`
+- Modify: `tinyui/src/backend/ldgui/backend_style_apply.c`
+- Modify: `tinyui/src/backend/ldgui/backend_theme.c`
+- Modify: `tinyui/src/theme/theme.c`
+- Test: `tests/tinyui/runtime/check_tinyui_visible_ui.py`
+- Test: `tests/tinyui/unit/test_tinyui_theme.c`
 
 - [ ] **Step 1: 先定位显示链与 capture/readback 链的差异点**
 
@@ -207,7 +207,7 @@ git commit -m "test(picoui): add visible ui gate baseline"
 要求：
 
 - `G3` 只允许改 `backend_app.c`
-- `G4` 只允许改 `theme.c / backend_style_apply.c / backend_theme.c / test_picoui_theme.c`
+- `G4` 只允许改 `theme.c / backend_style_apply.c / backend_theme.c / test_tinyui_theme.c`
 - 两组并行，但不能互相越界
 
 - [ ] **Step 2: 写最小失败检查锁住颜色链/显示链偏差**
@@ -215,8 +215,8 @@ git commit -m "test(picoui): add visible ui gate baseline"
 Run:
 
 ```bash
-ctest --test-dir build -R test_picoui_theme --output-on-failure
-python3 tests/picoui/runtime/check_picoui_visible_ui.py --demo basic_widgets
+ctest --test-dir build -R test_tinyui_theme --output-on-failure
+python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --demo basic_widgets
 ```
 
 Expected:
@@ -235,8 +235,8 @@ Expected:
 Run:
 
 ```bash
-ctest --test-dir build -R test_picoui_theme --output-on-failure
-python3 tests/picoui/runtime/check_picoui_visible_ui.py --demo basic_widgets
+ctest --test-dir build -R test_tinyui_theme --output-on-failure
+python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --demo basic_widgets
 ```
 
 Expected:
@@ -247,23 +247,23 @@ Expected:
 - [ ] **Step 5: Commit**
 
 ```bash
-git add picoui/src/backend/ldgui/backend_app.c \
-        picoui/src/backend/ldgui/backend_style_apply.c \
-        picoui/src/theme/theme.c \
-        tests/picoui/runtime/check_picoui_visible_ui.py \
-        tests/picoui/unit/test_picoui_theme.c
-git commit -m "fix(picoui): correct visible display path"
+git add tinyui/src/backend/ldgui/backend_app.c \
+        tinyui/src/backend/ldgui/backend_style_apply.c \
+        tinyui/src/theme/theme.c \
+        tests/tinyui/runtime/check_tinyui_visible_ui.py \
+        tests/tinyui/unit/test_tinyui_theme.c
+git commit -m "fix(tinyui): correct visible display path"
 ```
 
 ### Task 3: 收口 `basic_widgets` visible baseline（对应 `G5`）
 
 **Files:**
-- Modify: `picoui/demo/basic_widgets/main.c`
-- Modify: `picoui/src/backend/ldgui/backend_layout.c`
-- Modify: `picoui/src/backend/ldgui/backend_widget.c`
-- Modify: `picoui/src/backend/ldgui/backend_image.c`
-- Modify: `tests/picoui/unit/test_picoui_widgets.c`
-- Modify: `tests/picoui/unit/test_picoui_layout.c`
+- Modify: `tinyui/demo/basic_widgets/main.c`
+- Modify: `tinyui/src/backend/ldgui/backend_layout.c`
+- Modify: `tinyui/src/backend/ldgui/backend_widget.c`
+- Modify: `tinyui/src/backend/ldgui/backend_image.c`
+- Modify: `tests/tinyui/unit/test_tinyui_widgets.c`
+- Modify: `tests/tinyui/unit/test_tinyui_layout.c`
 
 - [ ] **Step 1: 锁定 `basic_widgets` 当前不正确的 visible 结构**
 
@@ -276,7 +276,7 @@ git commit -m "fix(picoui): correct visible display path"
 Run:
 
 ```bash
-python3 tests/picoui/runtime/check_picoui_visible_ui.py --demo basic_widgets
+python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --demo basic_widgets
 ```
 
 Expected:
@@ -302,47 +302,47 @@ Expected:
 Run:
 
 ```bash
-ctest --test-dir build -R test_picoui_widgets --output-on-failure
-python3 tests/picoui/runtime/check_picoui_runtime.py
-python3 tests/picoui/runtime/check_picoui_visible_ui.py --demo basic_widgets
+ctest --test-dir build -R test_tinyui_widgets --output-on-failure
+python3 tests/tinyui/runtime/check_tinyui_runtime.py
+python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --demo basic_widgets
 ```
 
 Expected:
 
-- `test_picoui_widgets` PASS
+- `test_tinyui_widgets` PASS
 - runtime smoke PASS
 - `basic_widgets` visible gate PASS
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add picoui/demo/basic_widgets/main.c \
-        tests/picoui/runtime/check_picoui_runtime.py \
-        tests/picoui/runtime/check_picoui_visible_ui.py \
-        tests/picoui/unit/test_picoui_widgets.c
-git commit -m "fix(picoui): close basic widgets visible ui"
+git add tinyui/demo/basic_widgets/main.c \
+        tests/tinyui/runtime/check_tinyui_runtime.py \
+        tests/tinyui/runtime/check_tinyui_visible_ui.py \
+        tests/tinyui/unit/test_tinyui_widgets.c
+git commit -m "fix(tinyui): close basic widgets visible ui"
 ```
 
-### Task 4: 铺开到其他 `picoui` demos（对应 `G6`）
+### Task 4: 铺开到其他 `tinyui` demos（对应 `G6`）
 
 **Files:**
-- Modify: `picoui/demo/hello_world/main.c`
-- Modify: `picoui/demo/layout_flex/main.c`
-- Modify: `picoui/demo/layout_grid/main.c`
-- Modify: `picoui/demo/theme_showcase/main.c`
-- Modify: `picoui/demo/settings_panel/main.c`
-- Modify: `tests/picoui/runtime/check_picoui_visible_ui.py`
+- Modify: `tinyui/demo/hello_world/main.c`
+- Modify: `tinyui/demo/layout_flex/main.c`
+- Modify: `tinyui/demo/layout_grid/main.c`
+- Modify: `tinyui/demo/theme_showcase/main.c`
+- Modify: `tinyui/demo/settings_panel/main.c`
+- Modify: `tests/tinyui/runtime/check_tinyui_visible_ui.py`
 
 - [ ] **Step 1: 为 5 个其余 demos 建立逐个 visible 检查**
 
 Run:
 
 ```bash
-python3 tests/picoui/runtime/check_picoui_visible_ui.py --demo hello_world
-python3 tests/picoui/runtime/check_picoui_visible_ui.py --demo layout_flex
-python3 tests/picoui/runtime/check_picoui_visible_ui.py --demo layout_grid
-python3 tests/picoui/runtime/check_picoui_visible_ui.py --demo theme_showcase
-python3 tests/picoui/runtime/check_picoui_visible_ui.py --demo settings_panel
+python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --demo hello_world
+python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --demo layout_flex
+python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --demo layout_grid
+python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --demo theme_showcase
+python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --demo settings_panel
 ```
 
 Expected:
@@ -367,42 +367,42 @@ Expected:
 - demo subagent 只改本 demo 文件
 - 若发现需要改共享 backend，暂停并收回主线程重拆
 
-- [ ] **Step 3: 复跑所有 PicoUI visible 检查**
+- [ ] **Step 3: 复跑所有 TINYUI visible 检查**
 
 Run:
 
 ```bash
-python3 tests/picoui/runtime/check_picoui_visible_ui.py --all
-python3 tests/picoui/runtime/check_picoui_runtime.py
-ctest --test-dir build -L picoui --output-on-failure
+python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --all
+python3 tests/tinyui/runtime/check_tinyui_runtime.py
+ctest --test-dir build -L tinyui --output-on-failure
 ```
 
 Expected:
 
 - visible gate PASS
 - runtime smoke PASS
-- `ctest -L picoui` PASS
+- `ctest -L tinyui` PASS
 
 - [ ] **Step 4: Commit**
 
 ```bash
-git add picoui/demo/hello_world/main.c \
-        picoui/demo/layout_flex/main.c \
-        picoui/demo/layout_grid/main.c \
-        picoui/demo/theme_showcase/main.c \
-        picoui/demo/settings_panel/main.c \
-        tests/picoui/runtime/check_picoui_visible_ui.py
-git commit -m "fix(picoui): extend visible ui baseline"
+git add tinyui/demo/hello_world/main.c \
+        tinyui/demo/layout_flex/main.c \
+        tinyui/demo/layout_grid/main.c \
+        tinyui/demo/theme_showcase/main.c \
+        tinyui/demo/settings_panel/main.c \
+        tests/tinyui/runtime/check_tinyui_visible_ui.py
+git commit -m "fix(tinyui): extend visible ui baseline"
 ```
 
 ### Task 5: 文档回写与 B线 closeout（由 `G1` 收口）
 
 **Files:**
-- Modify: `docs/picoui-serial/B-线计划索引.md`
-- Modify: `docs/superpowers/specs/2026-05-27-picoui-b-line-visible-ui-design.md`
-- Modify: `docs/superpowers/plans/2026-05-27-picoui-b-line-visible-ui-implementation.md`
-- Modify: `docs/superpowers/specs/2026-05-26-picoui-lingdonggui-test-architecture-design.md`
-- Modify: `picoui/docs/demo_guide.md`
+- Modify: `docs/tinyui-serial/B-线计划索引.md`
+- Modify: `docs/superpowers/specs/2026-05-27-tinyui-b-line-visible-ui-design.md`
+- Modify: `docs/superpowers/plans/2026-05-27-tinyui-b-line-visible-ui-implementation.md`
+- Modify: `docs/superpowers/specs/2026-05-26-tinyui-lingdonggui-test-architecture-design.md`
+- Modify: `tinyui/docs/demo_guide.md`
 
 - [x] **Step 1: 回写 visible gate 结果与最终边界**
 
@@ -420,10 +420,10 @@ git commit -m "fix(picoui): extend visible ui baseline"
 Run:
 
 ```bash
-python3 tests/picoui/runtime/check_picoui_visible_ui.py --all
-python3 tests/picoui/runtime/check_picoui_backend_mapping.py
-python3 tests/picoui/runtime/check_picoui_runtime.py
-ctest --test-dir build -L picoui --output-on-failure
+python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --all
+python3 tests/tinyui/runtime/check_tinyui_backend_mapping.py
+python3 tests/tinyui/runtime/check_tinyui_runtime.py
+ctest --test-dir build -L tinyui --output-on-failure
 ```
 
 Expected:
@@ -432,20 +432,20 @@ Expected:
 
 实际收口 gate：
 
-- `python3 tests/picoui/runtime/check_picoui_visible_ui.py --all`：PASS
-- `python3 tests/picoui/runtime/check_picoui_backend_mapping.py`：PASS
-- `python3 tests/picoui/runtime/check_picoui_runtime.py`：PASS
-- `ctest --test-dir build -L picoui --output-on-failure`：PASS
+- `python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --all`：PASS
+- `python3 tests/tinyui/runtime/check_tinyui_backend_mapping.py`：PASS
+- `python3 tests/tinyui/runtime/check_tinyui_runtime.py`：PASS
+- `ctest --test-dir build -L tinyui --output-on-failure`：PASS
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add docs/picoui-serial/B-线计划索引.md \
-        docs/superpowers/specs/2026-05-27-picoui-b-line-visible-ui-design.md \
-        docs/superpowers/plans/2026-05-27-picoui-b-line-visible-ui-implementation.md \
-        docs/superpowers/specs/2026-05-26-picoui-lingdonggui-test-architecture-design.md \
-        picoui/docs/demo_guide.md
-git commit -m "docs(picoui): close b-line visible ui plan"
+git add docs/tinyui-serial/B-线计划索引.md \
+        docs/superpowers/specs/2026-05-27-tinyui-b-line-visible-ui-design.md \
+        docs/superpowers/plans/2026-05-27-tinyui-b-line-visible-ui-implementation.md \
+        docs/superpowers/specs/2026-05-26-tinyui-lingdonggui-test-architecture-design.md \
+        tinyui/docs/demo_guide.md
+git commit -m "docs(tinyui): close b-line visible ui plan"
 ```
 
 ---

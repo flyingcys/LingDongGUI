@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Analyze all non-static functions in picoui/*.c, auto-fill doxygen headers:
+Analyze all non-static functions in tinyui/*.c, auto-fill doxygen headers:
 - @brief: from function name and implementation pattern
 - @param[in]/@param[out]: from const qualifier and pointer usage
 - @return: from actual return statements in function body
@@ -336,13 +336,13 @@ def describe_function(func_name, body):
     if func_name.startswith('xBtn'):
         return 'Backlight button handler'
 
-    # Remove picoui_ or picoui_backend_ prefix
+    # Remove tinyui_ or tinyui_backend_ prefix
     base = func_name
     is_backend = False
-    if base.startswith('picoui_backend_'):
+    if base.startswith('tinyui_backend_'):
         base = base[15:]
         is_backend = True
-    elif base.startswith('picoui_'):
+    elif base.startswith('tinyui_'):
         base = base[7:]
 
     # Backend functions use backend description
@@ -981,7 +981,7 @@ def main():
     os.chdir(project_root)
 
     all_files = []
-    for root_dir, dirs, files in os.walk('picoui'):
+    for root_dir, dirs, files in os.walk('tinyui'):
         dirs[:] = [d for d in dirs if not d.startswith('.')]
         for f in files:
             if f.endswith('.c') or f.endswith('.h'):

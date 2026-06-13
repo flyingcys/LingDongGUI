@@ -1,15 +1,15 @@
-# PicoUI C线门禁工程化设计文档
+# TINYUI C线门禁工程化设计文档
 
 > 日期：2026-05-29
 > 适用仓库：`/Users/cys/embedded/LingDongGUI`
-> 入口索引：`docs/picoui-serial/C-线计划索引.md`
-> 目标：把 `B线` 已有的自动 visible correctness 结果，收口成口径准确、CTest 可执行、长期可维护的 PicoUI 门禁体系。
+> 入口索引：`docs/tinyui-serial/C-线计划索引.md`
+> 目标：把 `B线` 已有的自动 visible correctness 结果，收口成口径准确、CTest 可执行、长期可维护的 TINYUI 门禁体系。
 
 ---
 
 ## 1. 背景
 
-`A线` 已完成 `PicoUI -> LingDongGUI` 真实 backend 主线收口。`B线` 已完成自动 visible gate，当前 `tests/picoui/runtime/check_picoui_visible_ui.py --all` 覆盖 6 个 `picoui` demos，并且比早期 `capture 非空` 更严格：
+`A线` 已完成 `TINYUI -> LingDongGUI` 真实 backend 主线收口。`B线` 已完成自动 visible gate，当前 `tests/tinyui/runtime/check_tinyui_visible_ui.py --all` 覆盖 6 个 `tinyui` demos，并且比早期 `capture 非空` 更严格：
 
 1. 校验 PPM 尺寸。
 2. 校验背景色与 theme 背景接近。
@@ -21,10 +21,10 @@
 但 `B线` 收口后还存在三类工程化风险：
 
 1. 文档里的“真实窗口”表述容易被误读成已经完成人工 OS 窗口验收。
-2. `ctest --test-dir build -L picoui --output-on-failure` 当前没有直接覆盖完整 visible gate 和 backend mapping gate。
-3. `tests/picoui/runtime/check_picoui_backend_mapping.py` 的覆盖面窄于 visible gate，容易被误读成所有 demo 的全量 id mapping 都已覆盖。
+2. `ctest --test-dir build -L tinyui --output-on-failure` 当前没有直接覆盖完整 visible gate 和 backend mapping gate。
+3. `tests/tinyui/runtime/check_tinyui_backend_mapping.py` 的覆盖面窄于 visible gate，容易被误读成所有 demo 的全量 id mapping 都已覆盖。
 
-`C线` 用来处理这些风险。它不扩大 PicoUI 功能面，只把已有验证体系变成长期可执行、可解释、可复用的门禁。
+`C线` 用来处理这些风险。它不扩大 TINYUI 功能面，只把已有验证体系变成长期可执行、可解释、可复用的门禁。
 
 ---
 
@@ -45,12 +45,12 @@
 
 `C线` 不处理以下事情：
 
-1. 不新增 PicoUI public API。
+1. 不新增 TINYUI public API。
 2. 不新增控件。
 3. 不扩复杂 theme/style 能力。
 4. 不美化 demo 外观。
 5. 不修改 demo 用户意图来让 marker 更容易通过。
-6. 不把 `backend_app.c` 改回 PicoUI 专属 fake renderer。
+6. 不把 `backend_app.c` 改回 TINYUI 专属 fake renderer。
 7. 不把 `dummy SDL + PPM readback` 说成人工 OS 窗口验收。
 
 如果执行过程中发现真实 backend/layout/theme 缺口，必须先记录为后续能力线问题；只有当该缺口直接阻断 C 线门禁工程化时，才允许在本线内做最小修复。
@@ -64,8 +64,8 @@
 代表命令：
 
 ```bash
-python3 tests/picoui/runtime/check_picoui_runtime.py
-ctest --test-dir build -R check_picoui_runtime --output-on-failure
+python3 tests/tinyui/runtime/check_tinyui_runtime.py
+ctest --test-dir build -R check_tinyui_runtime --output-on-failure
 ```
 
 能证明：
@@ -86,8 +86,8 @@ ctest --test-dir build -R check_picoui_runtime --output-on-failure
 代表命令：
 
 ```bash
-python3 tests/picoui/runtime/check_picoui_backend_mapping.py
-ctest --test-dir build -R check_picoui_backend_mapping --output-on-failure
+python3 tests/tinyui/runtime/check_tinyui_backend_mapping.py
+ctest --test-dir build -R check_tinyui_backend_mapping --output-on-failure
 ```
 
 能证明：
@@ -108,8 +108,8 @@ ctest --test-dir build -R check_picoui_backend_mapping --output-on-failure
 代表命令：
 
 ```bash
-python3 tests/picoui/runtime/check_picoui_visible_ui.py --all
-ctest --test-dir build -R check_picoui_visible_ui --output-on-failure
+python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --all
+ctest --test-dir build -R check_tinyui_visible_ui --output-on-failure
 ```
 
 能证明：
@@ -143,41 +143,41 @@ ctest --test-dir build -R check_picoui_visible_ui --output-on-failure
 
 ## 5. CTest 标签设计
 
-`C线` 后，PicoUI 相关 CTest 标签必须满足：
+`C线` 后，TINYUI 相关 CTest 标签必须满足：
 
 | 标签 | 含义 | 典型测试 |
 | --- | --- | --- |
-| `picoui` | PicoUI 总入口标签 | unit/contract/runtime/visible/mapping |
-| `unit` | C 层单元测试 | `test_picoui_*` |
-| `contract` | public API/demo boundary 检查 | `check_picoui_public_api` |
-| `runtime` | 可构建、可启动、可运行脚本 | `check_picoui_runtime` |
-| `visible` | 自动 visible correctness | `check_picoui_visible_ui` |
-| `backend` | backend marker 或 backend 行为证据 | `check_picoui_backend_mapping` |
-| `mapping` | backend mapping matrix | `check_picoui_backend_mapping` |
+| `tinyui` | TINYUI 总入口标签 | unit/contract/runtime/visible/mapping |
+| `unit` | C 层单元测试 | `test_tinyui_*` |
+| `contract` | public API/demo boundary 检查 | `check_tinyui_public_api` |
+| `runtime` | 可构建、可启动、可运行脚本 | `check_tinyui_runtime` |
+| `visible` | 自动 visible correctness | `check_tinyui_visible_ui` |
+| `backend` | backend marker 或 backend 行为证据 | `check_tinyui_backend_mapping` |
+| `mapping` | backend mapping matrix | `check_tinyui_backend_mapping` |
 
-`ctest -L picoui` 是总入口，但执行汇报必须说明它当前包含了哪些标签。`C2/C3` 完成后，`ctest -L picoui` 应包含 visible 和 mapping gate；在此之前，文档必须明确 standalone 脚本仍需单独运行。
+`ctest -L tinyui` 是总入口，但执行汇报必须说明它当前包含了哪些标签。`C2/C3` 完成后，`ctest -L tinyui` 应包含 visible 和 mapping gate；在此之前，文档必须明确 standalone 脚本仍需单独运行。
 
 ---
 
 ## 6. backend mapping matrix 设计
 
-`check_picoui_backend_mapping.py` 当前覆盖：
+`check_tinyui_backend_mapping.py` 当前覆盖：
 
-- `picoui_hello_world_demo`
-- `picoui_theme_showcase_demo`
-- `picoui_settings_panel_demo`
+- `tinyui_hello_world_demo`
+- `tinyui_theme_showcase_demo`
+- `tinyui_settings_panel_demo`
 
 `C5` 后，脚本必须把覆盖面显式结构化。推荐结构：
 
 ```python
 MAPPING_TARGETS = {
-    "picoui_hello_world_demo": {
+    "tinyui_hello_world_demo": {
         "category": "static",
         "required_markers": ["PICOUI_BACKEND_STATIC_MAPPING=REAL_LDGUI"],
         "required_real_ids": [],
         "forbidden_markers": ["PICOUI_BACKEND_INTERACTIVE_BOUNDARY=FAKE_FALLBACK"],
     },
-    "picoui_settings_panel_demo": {
+    "tinyui_settings_panel_demo": {
         "category": "interactive",
         "required_markers": ["PICOUI_BACKEND_STATIC_MAPPING=REAL_LDGUI"],
         "required_real_ids": ["title", "wifi", "brightness", "apply"],
@@ -222,10 +222,10 @@ artifact 记录至少包含：
 
 新增 demo 时必须同步：
 
-1. `tests/picoui/runtime/check_picoui_runtime.py`
-2. `tests/picoui/runtime/check_picoui_visible_ui.py`
-3. `tests/picoui/runtime/check_picoui_backend_mapping.py` 的 matrix 或豁免说明
-4. `picoui/docs/demo_guide.md`
+1. `tests/tinyui/runtime/check_tinyui_runtime.py`
+2. `tests/tinyui/runtime/check_tinyui_visible_ui.py`
+3. `tests/tinyui/runtime/check_tinyui_backend_mapping.py` 的 matrix 或豁免说明
+4. `tinyui/docs/demo_guide.md`
 5. 对应 serial 文档的阶段状态
 
 新增 widget 时必须同步：
@@ -266,9 +266,9 @@ artifact 记录至少包含：
 `C线` 收口时必须同时满足：
 
 - 文档不再混用 automatic visible gate 和 manual window artifact。
-- `check_picoui_visible_ui.py --all` 已接入 CTest。
-- `check_picoui_backend_mapping.py` 已接入 CTest。
-- `ctest -L picoui`、`ctest -L visible`、`ctest -L mapping` 的关系已写清。
+- `check_tinyui_visible_ui.py --all` 已接入 CTest。
+- `check_tinyui_backend_mapping.py` 已接入 CTest。
+- `ctest -L tinyui`、`ctest -L visible`、`ctest -L mapping` 的关系已写清。
 - backend mapping matrix 覆盖面显式，不再被误读成所有 demo 全量 id 覆盖。
 - 新增 demo/widget/layout/theme 的 gate 同步规则已写清。
 - 若使用人工窗口验收表述，必须存在 artifact 记录。

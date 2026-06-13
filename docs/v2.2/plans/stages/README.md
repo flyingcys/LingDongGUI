@@ -31,7 +31,7 @@ S0 已完成（2026-06-13）：
 
 - startup baseline inventory 已建立：`docs/v2.2/2026-06-13-tinyui-v2-2-startup-baseline-inventory.md`
 - `backend.h` include 残留面已冻结：19 处直接 include，内容已按 shared/widget-local/layout 分层
-- demo `main/run_demo/app_run` 残留面已冻结：28 个 demo 目录均有 `main.c` + `picoui_app_*` 依赖
+- demo `main/run_demo/app_run` 残留面已冻结：28 个 demo 目录均有 `main.c` + `tinyui_app_*` 依赖
 
 当前摘要：
 
@@ -55,7 +55,7 @@ S0 已完成（2026-06-13）：
   - `app.h` 已标记为 INTERNAL / NON-CANONICAL，禁止新代码使用
   - `runtime.c` 实现已改为 `tinyui_*` 函数名，通过 `internal.h` 获取 app 内部声明
   - `tinyui/demo/main.c` unified runner 骨架已建立，待 S3 接入 demo build API
-  - 向后兼容：`picoui_*` static inline wrappers 保留，现有 demo 继续编译通过
+  - 向后兼容：`tinyui_*` static inline wrappers 保留，现有 demo 继续编译通过
   - contract tests 已更新：`check_tinyui_public_api.py` 和 `tinyui_v21_transition_inventory.json`
 
 ### S2 `backend.h` 退场
@@ -98,6 +98,6 @@ S2 已完成（2026-06-13）：
   - `tinyui/demo/settings_panel/main.c` 已拆为 `settings_panel.h` + `settings_panel.c`，只暴露 `tinyui_demo_settings_panel_build()` build API
   - `tinyui/demo/main.c` unified runner 已接入 demo build API（默认 basic_widgets，支持编译宏切换 settings_panel）
   - CMake wiring 已更新：`add_tinyui_demo` 支持多源文件，各 demo target 使用 unified runner + demo build 文件
-  - `basic_widgets/` 和 `settings_panel/` 子目录不再有 `main()` / `run_demo()` / `picoui_app_*`
+  - `basic_widgets/` 和 `settings_panel/` 子目录不再有 `main()` / `run_demo()` / `tinyui_app_*`
   - focused gate 已通过：`rtk ctest --test-dir build --output-on-failure -R 'test_tinyui|check_tinyui'`
-  - 其余 26 个 demo 保持旧自定义 main/run_demo/picoui_app_* 结构，待后续阶段迁移
+  - 其余 26 个 demo 保持旧自定义 main/run_demo/tinyui_app_* 结构，待后续阶段迁移

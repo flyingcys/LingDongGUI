@@ -1,31 +1,31 @@
-# PicoUI a-01 已 Wrapped Backlog 收口设计
+# TINYUI a-01 已 Wrapped Backlog 收口设计
 
 > 日期：2026-05-31
 > 适用仓库：`/Users/cys/embedded/LingDongGUI`
-> 入口索引：`docs/picoui-serial/a-01-线计划索引.md`
-> 目标：把当前已经 `wrapped` 但仍未真正收口的 `image / text / checkbox / switch / list` 五个 PicoUI backlog 控件，放进一个长期串行 worktree 中做实合同、真实 backend 语义和证据层，同时把 shared 写面集中到同一条线上，减少多 worktree 互撞。
+> 入口索引：`docs/tinyui-serial/a-01-线计划索引.md`
+> 目标：把当前已经 `wrapped` 但仍未真正收口的 `image / text / checkbox / switch / list` 五个 TINYUI backlog 控件，放进一个长期串行 worktree 中做实合同、真实 backend 语义和证据层，同时把 shared 写面集中到同一条线上，减少多 worktree 互撞。
 
 ---
 
 ## 1. 背景
 
-当前 PicoUI 并行开发要解决的不是“有没有任务可做”，而是“怎么拆才能真加速而不是互相冲突”。
+当前 TINYUI 并行开发要解决的不是“有没有任务可做”，而是“怎么拆才能真加速而不是互相冲突”。
 
 仓库现状已经明确：
 
-1. `J线` 已把当前 `9` 个 PicoUI 控件分成两层：
+1. `J线` 已把当前 `9` 个 TINYUI 控件分成两层：
    - `v0.1 parity`：`window / label / button / slider`
    - `v0.2 backlog`：`checkbox / switch / text / image / list`
 2. `image / text / checkbox / switch / list` 这 `5` 个控件都不是“完全没做”，而是：
-   - 已有 PicoUI public widget
+   - 已有 TINYUI public widget
    - 已有真实 LingDongGUI backend mapping
    - 但仍有能力缺口、合同边界不稳或 shared 语义未完全钉死
 3. 这些 backlog 控件很容易碰 shared 热点文件：
-   - `picoui/src/core/widget.c`
-   - `picoui/src/backend/ldgui/backend_style_apply.c`
-   - `picoui/src/backend/ldgui/backend_event.c`
-   - `picoui/src/backend/ldgui/backend_app.c`
-   - `tests/picoui/contract/picoui_release_capability_matrix.json`
+   - `tinyui/src/core/widget.c`
+   - `tinyui/src/backend/ldgui/backend_style_apply.c`
+   - `tinyui/src/backend/ldgui/backend_event.c`
+   - `tinyui/src/backend/ldgui/backend_app.c`
+   - `tests/tinyui/contract/tinyui_release_capability_matrix.json`
 
 因此不能把这 `5` 个 backlog 控件拆成多个长期并行 worktree 分头改。那样表面上人多线多，实际会在 shared 合同、release matrix、event/style 语义上频繁撞车。
 
@@ -37,7 +37,7 @@
 
 `a-01` 的唯一目标是：
 
-在 `.worktree/a-01` 内，按固定顺序串行收口 `image / text / checkbox / switch / list` 五个 backlog 控件，使其当前公开承诺的 PicoUI 合同更真实、更稳定、证据更完整，同时把 shared 层改动集中在同一条线内。
+在 `.worktree/a-01` 内，按固定顺序串行收口 `image / text / checkbox / switch / list` 五个 backlog 控件，使其当前公开承诺的 TINYUI 合同更真实、更稳定、证据更完整，同时把 shared 层改动集中在同一条线内。
 
 这条线只回答四件事：
 
@@ -143,42 +143,42 @@
 
 以下文件默认只允许 `a-01` 持续修改：
 
-- `picoui/src/core/widget.c`
-- `picoui/src/backend/ldgui/backend_style_apply.c`
-- `picoui/src/backend/ldgui/backend_event.c`
-- `picoui/src/backend/ldgui/backend_app.c`
-- `tests/picoui/contract/picoui_release_capability_matrix.json`
-- `tests/picoui/contract/check_picoui_release_capability_matrix.py`
+- `tinyui/src/core/widget.c`
+- `tinyui/src/backend/ldgui/backend_style_apply.c`
+- `tinyui/src/backend/ldgui/backend_event.c`
+- `tinyui/src/backend/ldgui/backend_app.c`
+- `tests/tinyui/contract/tinyui_release_capability_matrix.json`
+- `tests/tinyui/contract/check_tinyui_release_capability_matrix.py`
 
 ### 6.2 `a-01` 控件内文件
 
 以下文件允许按阶段修改，但每个阶段只碰本控件相关逻辑：
 
-- `picoui/src/widgets/image.c`
-- `picoui/src/widgets/text.c`
-- `picoui/src/widgets/checkbox.c`
-- `picoui/src/widgets/switch.c`
-- `picoui/src/widgets/list.c`
-- `picoui/src/backend/ldgui/backend_image.c`
-- `picoui/src/backend/ldgui/backend_text.c`
-- `picoui/src/backend/ldgui/backend_checkbox.c`
-- `picoui/src/backend/ldgui/backend_switch.c`
-- `picoui/src/backend/ldgui/backend_list.c`
-- `tests/picoui/unit/test_picoui_widgets.c`
-- `tests/picoui/unit/test_picoui_theme.c`
-- `tests/picoui/unit/test_picoui_list.c`
+- `tinyui/src/widgets/image.c`
+- `tinyui/src/widgets/text.c`
+- `tinyui/src/widgets/checkbox.c`
+- `tinyui/src/widgets/switch.c`
+- `tinyui/src/widgets/list.c`
+- `tinyui/src/backend/ldgui/backend_image.c`
+- `tinyui/src/backend/ldgui/backend_text.c`
+- `tinyui/src/backend/ldgui/backend_checkbox.c`
+- `tinyui/src/backend/ldgui/backend_switch.c`
+- `tinyui/src/backend/ldgui/backend_list.c`
+- `tests/tinyui/unit/test_tinyui_widgets.c`
+- `tests/tinyui/unit/test_tinyui_theme.c`
+- `tests/tinyui/unit/test_tinyui_list.c`
 
 ### 6.3 聚合文件策略
 
 以下聚合文件不应在日常开发中高频来回改，统一留到阶段末尾一次性接入：
 
-- `picoui/include/picoui/picoui.h`
-- `tests/picoui/CMakeLists.txt`
-- `tests/picoui/runtime/check_picoui_runtime.py`
-- `tests/picoui/runtime/check_picoui_backend_mapping.py`
-- `tests/picoui/runtime/check_picoui_visible_ui.py`
-- `tests/picoui/contract/check_picoui_public_api.py`
-- `tests/picoui/contract/check_picoui_demo_boundary.py`
+- `tinyui/include/tinyui/tinyui.h`
+- `tests/tinyui/CMakeLists.txt`
+- `tests/tinyui/runtime/check_tinyui_runtime.py`
+- `tests/tinyui/runtime/check_tinyui_backend_mapping.py`
+- `tests/tinyui/runtime/check_tinyui_visible_ui.py`
+- `tests/tinyui/contract/check_tinyui_public_api.py`
+- `tests/tinyui/contract/check_tinyui_demo_boundary.py`
 
 ---
 
@@ -270,7 +270,7 @@
 
 ## 9. 证据层与验收要求
 
-`a-01` 每个阶段都必须继续使用 PicoUI 当前五层证据口径：
+`a-01` 每个阶段都必须继续使用 TINYUI 当前五层证据口径：
 
 1. `unit`
 2. `contract`
@@ -289,8 +289,8 @@
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
 rtk cmake --build build
-ctest --test-dir build -L picoui --output-on-failure
-python3 tests/picoui/contract/check_picoui_public_api.py
+ctest --test-dir build -L tinyui --output-on-failure
+python3 tests/tinyui/contract/check_tinyui_public_api.py
 git diff --check
 ```
 
@@ -299,7 +299,7 @@ git diff --check
 ```bash
 ctest --test-dir build -L mapping --output-on-failure
 ctest --test-dir build -L visible --output-on-failure
-python3 tests/picoui/contract/check_picoui_release_capability_matrix.py
+python3 tests/tinyui/contract/check_tinyui_release_capability_matrix.py
 ```
 
 ---
@@ -381,11 +381,11 @@ git diff --check
 
 ### 13.5 runtime gate 约束
 
-- `check_picoui_backend_mapping`
-- `check_picoui_visible_ui`
-- `check_picoui_runtime`
+- `check_tinyui_backend_mapping`
+- `check_tinyui_visible_ui`
+- `check_tinyui_runtime`
 
-三个 gate 共用 `build/picoui-runtime`，必须串行运行。
+三个 gate 共用 `build/tinyui-runtime`，必须串行运行。
 
 ### 13.6 仍然不是的结论
 

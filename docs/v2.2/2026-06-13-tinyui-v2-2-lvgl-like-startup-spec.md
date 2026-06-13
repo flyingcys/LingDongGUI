@@ -9,11 +9,11 @@
 - 顶层产品目录已统一到 `tinyui/`
 - 独立 `backend` 目录已不再是 `v2.1` 的未完成项
 - canonical contract / runtime / test / CMake 入口已统一到 `tinyui` 口径
-- `v2.1` 完成态已经允许有限过渡残留，不再把“继续清零所有 `picoui_*` 公共 API”当作完成前提
+- `v2.1` 完成态已经允许有限过渡残留，不再把“继续清零所有 `tinyui_*` 公共 API”当作完成前提
 
 但当前代码面仍保留一条不够理想的开发者主路径：
 
-- `tinyui/src/core/app.c` 仍保留旧 `picoui_app_*` 主入口叙事
+- `tinyui/src/core/app.c` 仍保留旧 `tinyui_app_*` 主入口叙事
 - `tinyui/include/runtime.h` 虽然已经提供 `screen + timer` 风格入口，但还不是唯一、绝对清晰的 canonical 启动真相
 - `tinyui/src/backend/ldgui/backend.h` 仍像一个跨层总汇聚头，和“backend 已退场”这条架构结论不一致
 - `tinyui/demo/*/main.c` 仍多为各 demo 自带启动/循环/切屏逻辑，不够接近 `LVGL` 常见 demo 组织方式
@@ -44,7 +44,7 @@
 - 不重命名 `LingDongGUI` 的目录和 `ld*` public API
 - 不做 demo 聚合轮播器
 - 不做“自动发现 demo 并动态切换”的框架
-- 不保留旧 `picoui_app_*` 主路径兼容作为本次设计约束
+- 不保留旧 `tinyui_app_*` 主路径兼容作为本次设计约束
 - 不把所有 shared 逻辑粗暴塞进 widgets
 - 不借这条线顺手扩成 `TinyUI` 全量 public C API rename 工程
 
@@ -69,7 +69,7 @@
 
 - `main()`
 - `run_demo()`
-- `picoui_app_create()/picoui_app_run()` 式自持启动路径
+- `tinyui_app_create()/tinyui_app_run()` 式自持启动路径
 - 自己的 runtime loop
 
 推荐终态形态：
@@ -108,7 +108,7 @@
 1. 文件保留，但只承担 timer/lifecycle/shared state 的 internal 薄职责
 2. 文件进一步被拆平，用户入口能力被完全并入 `runtime.*` 与其他 shared 层
 
-无论采用哪种落地形式，都不再允许 `picoui_app_create()`、`picoui_app_run()`、`picoui_app_switch_window()` 这类旧模型继续作为 TinyUI 的当前主叙事。
+无论采用哪种落地形式，都不再允许 `tinyui_app_create()`、`tinyui_app_run()`、`tinyui_app_switch_window()` 这类旧模型继续作为 TinyUI 的当前主叙事。
 
 ## 5. 模块边界与文件落点
 
@@ -132,7 +132,7 @@
 
 `v2.2` 的清理方向固定为：
 
-- 旧 `picoui_app_*` 主路径退出 canonical surface
+- 旧 `tinyui_app_*` 主路径退出 canonical surface
 - 剩余必要能力要么并入 `runtime`，要么降级为 internal helper
 - demo 与后续示例不得再依赖 `app_create -> window_create -> app_run` 这条链
 
@@ -220,7 +220,7 @@ int tinyui_demo_basic_widgets_build(tinyui_obj_t *screen);
 必须完成：
 
 - 明确唯一 `tinyui_init/screen_create/screen_load/timer_handler/deinit` 主链
-- demo 不再依赖 `picoui_app_*` 主路径
+- demo 不再依赖 `tinyui_app_*` 主路径
 
 完成标准：
 
@@ -271,7 +271,7 @@ int tinyui_demo_basic_widgets_build(tinyui_obj_t *screen);
 2. 统一 runner 可启动目标 demo
 3. focused unit/runtime proof 通过
 4. `backend.h` 已删除且无残留 include
-5. 主线 demo 已无各自 `main/run_demo/picoui_app_run` 主路径
+5. 主线 demo 已无各自 `main/run_demo/tinyui_app_run` 主路径
 6. `git diff --check` 通过
 
 建议固定验证集合：
@@ -280,7 +280,7 @@ int tinyui_demo_basic_widgets_build(tinyui_obj_t *screen);
 rtk cmake -S . -B build
 rtk cmake --build build
 rtk ctest --test-dir build --output-on-failure -R 'test_tinyui|check_tinyui'
-rg -n 'backend\\.h|picoui_app_create|picoui_app_run|run_demo\\(|int main\\(' tinyui/demo tinyui/src tinyui/include
+rg -n 'backend\\.h|tinyui_app_create|tinyui_app_run|run_demo\\(|int main\\(' tinyui/demo tinyui/src tinyui/include
 git diff --check
 ```
 
@@ -318,6 +318,6 @@ git diff --check
 
 - `backend.h` 仍存在
 - 主线 demo 仍各自持有 `main()/run_demo()`
-- 仍把 `picoui_app_*` 作为当前 TinyUI canonical 用法
+- 仍把 `tinyui_app_*` 作为当前 TinyUI canonical 用法
 - 统一 runner 还未建立
 - demo 切换方式仍需依赖各 demo 自己的启动骨架

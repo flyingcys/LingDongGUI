@@ -40,36 +40,4 @@ int tinyui_screen_load(tinyui_obj_t *screen);
  */
 int tinyui_timer_handler(void);
 
-/*
- * Deprecated backward-compatibility aliases.
- * These will be removed in a future version.
- * New code should use the tinyui_* API directly.
- */
-struct picoui_window;
-
-static inline int picoui_init(void)
-{
-    return tinyui_init();
-}
-
-static inline void picoui_deinit(void)
-{
-    tinyui_deinit();
-}
-
-static inline struct picoui_window *picoui_screen_create(void)
-{
-    return (struct picoui_window *)tinyui_screen_create();
-}
-
-static inline int picoui_screen_load(struct picoui_window *screen)
-{
-    return tinyui_screen_load((tinyui_obj_t *)screen);
-}
-
-static inline int picoui_timer_handler(void)
-{
-    return tinyui_timer_handler();
-}
-
 #endif

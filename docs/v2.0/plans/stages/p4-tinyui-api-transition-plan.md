@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 让 public surface 开始收口到 `tinyui_*`，同时为现有 `picoui_*` 使用者保留受控兼容层。
+**Goal:** 让 public surface 开始收口到 `tinyui_*`，同时为现有 `tinyui_*` 使用者保留受控兼容层。
 
 **Architecture:** 先新增 `tinyui_*` headers 与 aliases，并接到已经拆平的 `widgets/core` 实现上；再更新 guard checker 强制 `tinyui_*` API count 非零；最后把试点 demo 与最小 tests 改到新命名。
 
@@ -24,16 +24,16 @@
 
 修改：
 
-- `picoui/include/picoui/picoui.h`
-- `picoui/include/picoui/runtime.h`
-- `picoui/include/picoui/widget.h`
-- `picoui/include/picoui/window.h`
-- `picoui/include/picoui/label.h`
-- `picoui/include/picoui/button.h`
-- `picoui/include/picoui/switch.h`
-- `tests/picoui/contract/check_picoui_tinyui_transition_guards.py`
-- `tests/picoui/contract/picoui_tinyui_transition_inventory.json`
-- `picoui/demo/basic_widgets/main.c`
+- `tinyui/include/tinyui/tinyui.h`
+- `tinyui/include/tinyui/runtime.h`
+- `tinyui/include/tinyui/widget.h`
+- `tinyui/include/tinyui/window.h`
+- `tinyui/include/tinyui/label.h`
+- `tinyui/include/tinyui/button.h`
+- `tinyui/include/tinyui/switch.h`
+- `tests/tinyui/contract/check_tinyui_tinyui_transition_guards.py`
+- `tests/tinyui/contract/tinyui_tinyui_transition_inventory.json`
+- `tinyui/demo/basic_widgets/main.c`
 
 ---
 
@@ -47,12 +47,12 @@
 - Create: `tinyui/include/label.h`
 - Create: `tinyui/include/button.h`
 - Create: `tinyui/include/switch.h`
-- Modify: `tests/picoui/contract/check_picoui_tinyui_transition_guards.py`
-- Modify: `tests/picoui/contract/picoui_tinyui_transition_inventory.json`
+- Modify: `tests/tinyui/contract/check_tinyui_tinyui_transition_guards.py`
+- Modify: `tests/tinyui/contract/tinyui_tinyui_transition_inventory.json`
 
 - [ ] **Step 1: 写 fail-first tinyui header contract**
 
-Append to `tests/picoui/contract/check_picoui_tinyui_transition_guards.py`:
+Append to `tests/tinyui/contract/check_tinyui_tinyui_transition_guards.py`:
 
 ```python
 TINYUI_HEADERS = [
@@ -73,7 +73,7 @@ for header in TINYUI_HEADERS:
 Run:
 
 ```bash
-python3 tests/picoui/contract/check_picoui_tinyui_transition_guards.py
+python3 tests/tinyui/contract/check_tinyui_tinyui_transition_guards.py
 ```
 
 Expected: FAIL，缺少 `tinyui/include/*`。
@@ -102,9 +102,9 @@ Create `tinyui/include/obj.h`:
 #ifndef TINYUI_OBJ_H
 #define TINYUI_OBJ_H
 
-#include "picoui/widget.h"
+#include "tinyui/widget.h"
 
-typedef struct picoui_widget tinyui_obj_t;
+typedef struct tinyui_widget tinyui_obj_t;
 
 #endif
 ```
@@ -116,7 +116,7 @@ Create `tinyui/include/screen.h`:
 #define TINYUI_SCREEN_H
 
 #include "obj.h"
-#include "picoui/window.h"
+#include "tinyui/window.h"
 
 int tinyui_init(void);
 void tinyui_deinit(void);
@@ -131,7 +131,7 @@ void tinyui_timer_handler(void);
 
 - [ ] **Step 4: 更新 baseline inventory**
 
-Update `tests/picoui/contract/picoui_tinyui_transition_inventory.json`:
+Update `tests/tinyui/contract/tinyui_tinyui_transition_inventory.json`:
 
 ```json
 {
@@ -139,7 +139,7 @@ Update `tests/picoui/contract/picoui_tinyui_transition_inventory.json`:
     "backend_c_files": 35,
     "app_header_exists": true,
     "app_source_exists": true,
-    "picoui_public_api_count": 548,
+    "tinyui_public_api_count": 548,
     "tinyui_public_api_count": 18
   }
 }
@@ -152,8 +152,8 @@ Update `tests/picoui/contract/picoui_tinyui_transition_inventory.json`:
 Run:
 
 ```bash
-python3 tests/picoui/contract/check_picoui_tinyui_transition_guards.py
-rtk ctest --test-dir build -R '^check_picoui_tinyui_transition_guards$' --output-on-failure
+python3 tests/tinyui/contract/check_tinyui_tinyui_transition_guards.py
+rtk ctest --test-dir build -R '^check_tinyui_tinyui_transition_guards$' --output-on-failure
 ```
 
 Expected: PASS。
@@ -161,45 +161,45 @@ Expected: PASS。
 ### Task 2: 迁移试点 demo 和最小 tests 到 `tinyui_*`
 
 **Files:**
-- Modify: `picoui/demo/basic_widgets/main.c`
-- Modify: `picoui/include/picoui/picoui.h`
-- Modify: `picoui/include/picoui/runtime.h`
-- Modify: `picoui/include/picoui/widget.h`
-- Modify: `picoui/include/picoui/window.h`
-- Modify: `picoui/include/picoui/label.h`
-- Modify: `picoui/include/picoui/button.h`
-- Modify: `picoui/include/picoui/switch.h`
-- Modify: `tests/picoui/unit/test_picoui_runtime_model.c`
-- Modify: `tests/picoui/unit/test_picoui_switch.c`
+- Modify: `tinyui/demo/basic_widgets/main.c`
+- Modify: `tinyui/include/tinyui/tinyui.h`
+- Modify: `tinyui/include/tinyui/runtime.h`
+- Modify: `tinyui/include/tinyui/widget.h`
+- Modify: `tinyui/include/tinyui/window.h`
+- Modify: `tinyui/include/tinyui/label.h`
+- Modify: `tinyui/include/tinyui/button.h`
+- Modify: `tinyui/include/tinyui/switch.h`
+- Modify: `tests/tinyui/unit/test_tinyui_runtime_model.c`
+- Modify: `tests/tinyui/unit/test_tinyui_switch.c`
 
 - [ ] **Step 1: 新旧 API 建立一对一 compatibility bridge**
 
-In `picoui/include/picoui/runtime.h`, add:
+In `tinyui/include/tinyui/runtime.h`, add:
 
 ```c
-#define tinyui_init picoui_init
-#define tinyui_deinit picoui_deinit
-#define tinyui_timer_handler picoui_timer_handler
+#define tinyui_init tinyui_init
+#define tinyui_deinit tinyui_deinit
+#define tinyui_timer_handler tinyui_timer_handler
 ```
 
-In `picoui/include/picoui/window.h`, add:
+In `tinyui/include/tinyui/window.h`, add:
 
 ```c
-#define tinyui_screen_create picoui_screen_create
-#define tinyui_screen_load picoui_screen_load
+#define tinyui_screen_create tinyui_screen_create
+#define tinyui_screen_load tinyui_screen_load
 ```
 
-In `picoui/include/picoui/switch.h`, add:
+In `tinyui/include/tinyui/switch.h`, add:
 
 ```c
-#define tinyui_switch_create(parent) ((tinyui_obj_t *)picoui_switch_create((struct picoui_window *)(parent), "switch"))
+#define tinyui_switch_create(parent) ((tinyui_obj_t *)tinyui_switch_create((struct tinyui_window *)(parent), "switch"))
 ```
 
 If macros become too messy, prefer `static inline` wrappers in the new `tinyui/include/*.h`.
 
 - [ ] **Step 2: 把 `basic_widgets` demo 改到 `tinyui_*`**
 
-In `picoui/demo/basic_widgets/main.c`, change includes and calls:
+In `tinyui/demo/basic_widgets/main.c`, change includes and calls:
 
 ```c
 #include "tinyui.h"
@@ -218,7 +218,7 @@ Within the widget section, use `tinyui_*` aliases for the pilot set wherever ava
 
 - [ ] **Step 3: 把 focused test 改成认 `tinyui_*`**
 
-Representative update in `tests/picoui/unit/test_picoui_runtime_model.c`:
+Representative update in `tests/tinyui/unit/test_tinyui_runtime_model.c`:
 
 ```c
 assert(tinyui_init() == 0);
@@ -233,8 +233,8 @@ tinyui_deinit();
 Run:
 
 ```bash
-rtk ctest --test-dir build -R '^(test_picoui_runtime_model|test_picoui_switch)$' --output-on-failure
-rtk ctest --test-dir build/picoui-runtime -R 'check_picoui_runtime|check_picoui_visible_ui' --output-on-failure
+rtk ctest --test-dir build -R '^(test_tinyui_runtime_model|test_tinyui_switch)$' --output-on-failure
+rtk ctest --test-dir build/tinyui-runtime -R 'check_tinyui_runtime|check_tinyui_visible_ui' --output-on-failure
 ```
 
 Expected: PASS。
@@ -250,17 +250,17 @@ git add \
   tinyui/include/label.h \
   tinyui/include/button.h \
   tinyui/include/switch.h \
-  picoui/include/picoui/picoui.h \
-  picoui/include/picoui/runtime.h \
-  picoui/include/picoui/widget.h \
-  picoui/include/picoui/window.h \
-  picoui/include/picoui/label.h \
-  picoui/include/picoui/button.h \
-  picoui/include/picoui/switch.h \
-  picoui/demo/basic_widgets/main.c \
-  tests/picoui/unit/test_picoui_runtime_model.c \
-  tests/picoui/unit/test_picoui_switch.c \
-  tests/picoui/contract/check_picoui_tinyui_transition_guards.py \
-  tests/picoui/contract/picoui_tinyui_transition_inventory.json
+  tinyui/include/tinyui/tinyui.h \
+  tinyui/include/tinyui/runtime.h \
+  tinyui/include/tinyui/widget.h \
+  tinyui/include/tinyui/window.h \
+  tinyui/include/tinyui/label.h \
+  tinyui/include/tinyui/button.h \
+  tinyui/include/tinyui/switch.h \
+  tinyui/demo/basic_widgets/main.c \
+  tests/tinyui/unit/test_tinyui_runtime_model.c \
+  tests/tinyui/unit/test_tinyui_switch.c \
+  tests/tinyui/contract/check_tinyui_tinyui_transition_guards.py \
+  tests/tinyui/contract/tinyui_tinyui_transition_inventory.json
 git commit -m "feat: introduce tinyui pilot public api"
 ```

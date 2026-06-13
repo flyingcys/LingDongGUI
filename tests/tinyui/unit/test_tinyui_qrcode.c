@@ -4,16 +4,16 @@
 #include "window.h"
 #include "../../../src/gui/ldQRCode.h"
 #include "internal.h"
-#include "picoui_test_support.h"
+#include "tinyui_test_support.h"
 
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-extern int tinyui_widget_has_ld_binding(const struct picoui_widget *widget);
+extern int tinyui_widget_has_ld_binding(const struct tinyui_widget *widget);
 
-static struct picoui_qrcode_test_dispose_snapshot g_tinyui_qrcode_snapshot;
+static struct tinyui_qrcode_test_dispose_snapshot g_tinyui_qrcode_snapshot;
 static int g_tinyui_qrcode_snapshot_valid = 0;
 static const char *test_source_file_path = __FILE__;
 
@@ -59,10 +59,10 @@ static void assert_source_lacks_function_definition(const char *source_path, con
     assert(system(command) == 0);
 }
 
-static int tinyui_qrcode_finish_detach_after_backend_failure(struct picoui_backend_widget *backend)
+static int tinyui_qrcode_finish_detach_after_backend_failure(struct tinyui_backend_widget *backend)
 {
-    struct picoui_backend_widget *parent;
-    struct picoui_backend_widget *cursor;
+    struct tinyui_backend_widget *parent;
+    struct tinyui_backend_widget *cursor;
 
     if (backend == 0 || backend->parent == 0) {
         return 0;
@@ -89,7 +89,7 @@ static int tinyui_qrcode_finish_detach_after_backend_failure(struct picoui_backe
     return 0;
 }
 
-static void tinyui_qrcode_fill_snapshot(struct picoui_backend_widget *backend,
+static void tinyui_qrcode_fill_snapshot(struct tinyui_backend_widget *backend,
                                         int detach_result,
                                         int unbind_result)
 {
@@ -120,12 +120,12 @@ void tinyui_qrcode_test_reset_state(void)
     g_tinyui_qrcode_snapshot_valid = 0;
 }
 
-struct picoui_qrcode *tinyui_qrcode_test_create_with_props_fail_before_text(
-    struct picoui_widget *parent,
-    const struct picoui_qrcode_props *props)
+struct tinyui_qrcode *tinyui_qrcode_test_create_with_props_fail_before_text(
+    struct tinyui_widget *parent,
+    const struct tinyui_qrcode_props *props)
 {
-    struct picoui_qrcode *qrcode;
-    struct picoui_backend_widget *backend;
+    struct tinyui_qrcode *qrcode;
+    struct tinyui_backend_widget *backend;
     int detach_result = 0;
     int unbind_result;
 
@@ -133,20 +133,20 @@ struct picoui_qrcode *tinyui_qrcode_test_create_with_props_fail_before_text(
         return 0;
     }
 
-    qrcode = picoui_qrcode_create(parent, props->id);
+    qrcode = tinyui_qrcode_create(parent, props->id);
     if (qrcode == 0) {
         return 0;
     }
     if ((props->style_class != 0
-         && picoui_widget_set_style_class(&qrcode->widget, props->style_class) != 0)
-        || picoui_widget_set_user_data(&qrcode->widget, props->user_data) != 0) {
-        picoui_widget_destroy(&qrcode->widget);
+         && tinyui_widget_set_style_class(&qrcode->widget, props->style_class) != 0)
+        || tinyui_widget_set_user_data(&qrcode->widget, props->user_data) != 0) {
+        tinyui_widget_destroy(&qrcode->widget);
         return 0;
     }
 
-    backend = (struct picoui_backend_widget *)qrcode->widget.backend_widget;
+    backend = (struct tinyui_backend_widget *)qrcode->widget.backend_widget;
     if (backend == 0) {
-        picoui_widget_destroy(&qrcode->widget);
+        tinyui_widget_destroy(&qrcode->widget);
         return 0;
     }
     if (backend->parent != 0) {
@@ -157,12 +157,12 @@ struct picoui_qrcode *tinyui_qrcode_test_create_with_props_fail_before_text(
     }
     unbind_result = tinyui_runtime_bridge_unbind_host(backend);
     tinyui_qrcode_fill_snapshot(backend, detach_result, unbind_result);
-    picoui_widget_destroy(&qrcode->widget);
+    tinyui_widget_destroy(&qrcode->widget);
     return 0;
 }
 
 int tinyui_qrcode_test_take_last_dispose_snapshot(
-    struct picoui_qrcode_test_dispose_snapshot *snapshot)
+    struct tinyui_qrcode_test_dispose_snapshot *snapshot)
 {
     if (snapshot == 0 || g_tinyui_qrcode_snapshot_valid == 0) {
         return -1;
@@ -174,28 +174,28 @@ int tinyui_qrcode_test_take_last_dispose_snapshot(
     return 0;
 }
 
-static void test_qrcode_create_and_props(struct picoui_window *win)
+static void test_qrcode_create_and_props(struct tinyui_window *win)
 {
     int user_cookie = 7;
-    struct picoui_qrcode_props props = {
+    struct tinyui_qrcode_props props = {
         .id = "qr_props",
         .style_class = "qr-code",
         .user_data = &user_cookie,
         .text = "https://example.local/props",
     };
-    struct picoui_qrcode *qrcode = picoui_qrcode_create((struct picoui_widget *)win, "qr");
-    struct picoui_qrcode *with_props = picoui_qrcode_create_with_props((struct picoui_widget *)win, &props);
-    struct picoui_backend_widget *backend;
-    struct picoui_backend_widget *parent_backend;
+    struct tinyui_qrcode *qrcode = tinyui_qrcode_create((struct tinyui_widget *)win, "qr");
+    struct tinyui_qrcode *with_props = tinyui_qrcode_create_with_props((struct tinyui_widget *)win, &props);
+    struct tinyui_backend_widget *backend;
+    struct tinyui_backend_widget *parent_backend;
     ldQRCode_t *ld_qrcode;
 
     assert(qrcode != 0);
     assert(with_props != 0);
-    backend = (struct picoui_backend_widget *)qrcode->widget.backend_widget;
+    backend = (struct tinyui_backend_widget *)qrcode->widget.backend_widget;
     assert(backend != 0);
-    parent_backend = (struct picoui_backend_widget *)win->widget.backend_widget;
+    parent_backend = (struct tinyui_backend_widget *)win->widget.backend_widget;
     assert(parent_backend != 0);
-    assert(backend->kind == PICOUI_BACKEND_WIDGET_QRCODE);
+    assert(backend->kind == TINYUI_BACKEND_WIDGET_QRCODE);
     assert(backend->owner == parent_backend->owner);
     assert(backend->root == parent_backend->root);
     assert(backend->parent == parent_backend);
@@ -207,71 +207,71 @@ static void test_qrcode_create_and_props(struct picoui_window *win)
     assert(ld_qrcode != 0);
     assert(((ldBase_t *)ld_qrcode)->pInfo == backend);
     assert(tinyui_widget_has_ld_binding(&qrcode->widget) == 1);
-    assert(picoui_qrcode_get_text(qrcode) != 0);
-    assert(strcmp(picoui_qrcode_get_text(qrcode), "") == 0);
-    assert(picoui_qrcode_get_text(with_props) != 0);
-    assert(strcmp(picoui_qrcode_get_text(with_props), props.text) == 0);
+    assert(tinyui_qrcode_get_text(qrcode) != 0);
+    assert(strcmp(tinyui_qrcode_get_text(qrcode), "") == 0);
+    assert(tinyui_qrcode_get_text(with_props) != 0);
+    assert(strcmp(tinyui_qrcode_get_text(with_props), props.text) == 0);
 }
 
-static void test_qrcode_set_get_text(struct picoui_window *win)
+static void test_qrcode_set_get_text(struct tinyui_window *win)
 {
-    struct picoui_qrcode *qrcode = picoui_qrcode_create((struct picoui_widget *)win, "qr_text");
+    struct tinyui_qrcode *qrcode = tinyui_qrcode_create((struct tinyui_widget *)win, "qr_text");
     const char *value = "https://example.local/qrcode";
 
     assert(qrcode != 0);
-    assert(picoui_qrcode_set_text(qrcode, value) == 0);
-    assert(picoui_qrcode_get_text(qrcode) != 0);
-    assert(strcmp(picoui_qrcode_get_text(qrcode), value) == 0);
+    assert(tinyui_qrcode_set_text(qrcode, value) == 0);
+    assert(tinyui_qrcode_get_text(qrcode) != 0);
+    assert(strcmp(tinyui_qrcode_get_text(qrcode), value) == 0);
 }
 
-static void test_qrcode_rejects_invalid_inputs(struct picoui_window *win)
+static void test_qrcode_rejects_invalid_inputs(struct tinyui_window *win)
 {
-    struct picoui_qrcode *qrcode = picoui_qrcode_create((struct picoui_widget *)win, "qr_invalid");
+    struct tinyui_qrcode *qrcode = tinyui_qrcode_create((struct tinyui_widget *)win, "qr_invalid");
 
     assert(qrcode != 0);
-    assert(picoui_qrcode_create(0, "qr") == 0);
-    assert(picoui_qrcode_create((struct picoui_widget *)win, 0) == 0);
-    assert(picoui_qrcode_create_with_props(0,
-                                           &(struct picoui_qrcode_props){
+    assert(tinyui_qrcode_create(0, "qr") == 0);
+    assert(tinyui_qrcode_create((struct tinyui_widget *)win, 0) == 0);
+    assert(tinyui_qrcode_create_with_props(0,
+                                           &(struct tinyui_qrcode_props){
                                                .id = "bad_parent",
                                                .text = "abc",
                                            }) == 0);
-    assert(picoui_qrcode_create_with_props((struct picoui_widget *)win, 0) == 0);
-    assert(picoui_qrcode_create_with_props((struct picoui_widget *)win,
-                                           &(struct picoui_qrcode_props){
+    assert(tinyui_qrcode_create_with_props((struct tinyui_widget *)win, 0) == 0);
+    assert(tinyui_qrcode_create_with_props((struct tinyui_widget *)win,
+                                           &(struct tinyui_qrcode_props){
                                                .text = "abc",
                                            }) == 0);
-    assert(picoui_qrcode_create_with_props((struct picoui_widget *)win,
-                                           &(struct picoui_qrcode_props){
+    assert(tinyui_qrcode_create_with_props((struct tinyui_widget *)win,
+                                           &(struct tinyui_qrcode_props){
                                                .id = "bad_text",
                                            }) == 0);
-    assert(picoui_qrcode_set_text(0, "abc") == -1);
-    assert(picoui_qrcode_set_text(qrcode, 0) == -1);
-    assert(picoui_qrcode_get_text(0) == 0);
+    assert(tinyui_qrcode_set_text(0, "abc") == -1);
+    assert(tinyui_qrcode_set_text(qrcode, 0) == -1);
+    assert(tinyui_qrcode_get_text(0) == 0);
 }
 
-static void test_qrcode_release_contract_covers_configuration_boundary(struct picoui_window *win)
+static void test_qrcode_release_contract_covers_configuration_boundary(struct tinyui_window *win)
 {
     const char *value = "https://example.local/final-release";
-    struct picoui_qrcode *qrcode = picoui_qrcode_create_with_props(
-        (struct picoui_widget *)win,
-        &(struct picoui_qrcode_props){
+    struct tinyui_qrcode *qrcode = tinyui_qrcode_create_with_props(
+        (struct tinyui_widget *)win,
+        &(struct tinyui_qrcode_props){
             .id = "qr_release_ready",
             .style_class = "qr-card",
             .text = value,
         });
-    struct picoui_backend_widget *backend;
+    struct tinyui_backend_widget *backend;
     ldQRCode_t *ld_qrcode;
 
     assert(qrcode != 0);
-    backend = (struct picoui_backend_widget *)qrcode->widget.backend_widget;
+    backend = (struct tinyui_backend_widget *)qrcode->widget.backend_widget;
     assert(backend != 0);
-    assert(backend->kind == PICOUI_BACKEND_WIDGET_QRCODE);
+    assert(backend->kind == TINYUI_BACKEND_WIDGET_QRCODE);
     assert(backend->style_class == (const char *)"qr-card");
     ld_qrcode = (ldQRCode_t *)backend->ld_widget;
     assert(ld_qrcode != 0);
 
-    assert(strcmp(picoui_qrcode_get_text(qrcode), value) == 0);
+    assert(strcmp(tinyui_qrcode_get_text(qrcode), value) == 0);
     assert(strcmp((const char *)ld_qrcode->pStr, value) == 0);
     assert(ld_qrcode->qrColor == GLCD_COLOR_BLACK);
     assert(ld_qrcode->bgColor == GLCD_COLOR_WHITE);
@@ -280,23 +280,23 @@ static void test_qrcode_release_contract_covers_configuration_boundary(struct pi
     assert(ld_qrcode->qrZoom == 4);
 }
 
-static void test_qrcode_native_color_ecc_version_and_zoom_round_trip(struct picoui_window *win)
+static void test_qrcode_native_color_ecc_version_and_zoom_round_trip(struct tinyui_window *win)
 {
-    struct picoui_qrcode *qrcode = picoui_qrcode_create((struct picoui_widget *)win, "qr_native_config");
-    struct picoui_backend_widget *backend;
+    struct tinyui_qrcode *qrcode = tinyui_qrcode_create((struct tinyui_widget *)win, "qr_native_config");
+    struct tinyui_backend_widget *backend;
     ldQRCode_t *ld_qrcode;
 
     assert(qrcode != 0);
-    backend = (struct picoui_backend_widget *)qrcode->widget.backend_widget;
+    backend = (struct tinyui_backend_widget *)qrcode->widget.backend_widget;
     assert(backend != 0);
     ld_qrcode = (ldQRCode_t *)backend->ld_widget;
     assert(ld_qrcode != 0);
 
-    assert(picoui_qrcode_set_qr_color(qrcode, 0x112233U) == 0);
-    assert(picoui_qrcode_set_bg_color(qrcode, 0x445566U) == 0);
-    assert(picoui_qrcode_set_ecc(qrcode, 2) == 0);
-    assert(picoui_qrcode_set_max_version(qrcode, 5) == 0);
-    assert(picoui_qrcode_set_zoom(qrcode, 7) == 0);
+    assert(tinyui_qrcode_set_qr_color(qrcode, 0x112233U) == 0);
+    assert(tinyui_qrcode_set_bg_color(qrcode, 0x445566U) == 0);
+    assert(tinyui_qrcode_set_ecc(qrcode, 2) == 0);
+    assert(tinyui_qrcode_set_max_version(qrcode, 5) == 0);
+    assert(tinyui_qrcode_set_zoom(qrcode, 7) == 0);
 
     assert(ld_qrcode->qrColor == (ldColor)0x112233U);
     assert(ld_qrcode->bgColor == (ldColor)0x445566U);
@@ -304,11 +304,11 @@ static void test_qrcode_native_color_ecc_version_and_zoom_round_trip(struct pico
     assert(ld_qrcode->qrMaxVersion == 5);
     assert(ld_qrcode->qrZoom == 7);
 
-    assert(picoui_qrcode_set_qr_color(0, 0x000000U) == -1);
-    assert(picoui_qrcode_set_bg_color(0, 0x000000U) == -1);
-    assert(picoui_qrcode_set_ecc(qrcode, -1) == -1);
-    assert(picoui_qrcode_set_max_version(qrcode, 0) == -1);
-    assert(picoui_qrcode_set_zoom(qrcode, 0) == -1);
+    assert(tinyui_qrcode_set_qr_color(0, 0x000000U) == -1);
+    assert(tinyui_qrcode_set_bg_color(0, 0x000000U) == -1);
+    assert(tinyui_qrcode_set_ecc(qrcode, -1) == -1);
+    assert(tinyui_qrcode_set_max_version(qrcode, 0) == -1);
+    assert(tinyui_qrcode_set_zoom(qrcode, 0) == -1);
 
     assert(ld_qrcode->qrColor == (ldColor)0x112233U);
     assert(ld_qrcode->bgColor == (ldColor)0x445566U);
@@ -317,66 +317,66 @@ static void test_qrcode_native_color_ecc_version_and_zoom_round_trip(struct pico
     assert(ld_qrcode->qrZoom == 7);
 }
 
-static void test_q_r_code_init_and_shared_base_aliases_round_trip(struct picoui_window *win)
+static void test_q_r_code_init_and_shared_base_aliases_round_trip(struct tinyui_window *win)
 {
-    struct picoui_qrcode *qrcode = picoui_q_r_code_init((struct picoui_widget *)win, "qr_alias");
-    struct picoui_backend_widget *backend;
+    struct tinyui_qrcode *qrcode = tinyui_q_r_code_init((struct tinyui_widget *)win, "qr_alias");
+    struct tinyui_backend_widget *backend;
     ldQRCode_t *ld_qrcode;
 
     assert(qrcode != 0);
-    backend = (struct picoui_backend_widget *)qrcode->widget.backend_widget;
+    backend = (struct tinyui_backend_widget *)qrcode->widget.backend_widget;
     assert(backend != 0);
     ld_qrcode = (ldQRCode_t *)backend->ld_widget;
     assert(ld_qrcode != 0);
 
-    assert(picoui_q_r_code_set_text(qrcode, "alias://qrcode") == 0);
-    assert(strcmp(picoui_qrcode_get_text(qrcode), "alias://qrcode") == 0);
+    assert(tinyui_q_r_code_set_text(qrcode, "alias://qrcode") == 0);
+    assert(strcmp(tinyui_qrcode_get_text(qrcode), "alias://qrcode") == 0);
     assert(strcmp((const char *)ld_qrcode->pStr, "alias://qrcode") == 0);
 
-    assert(picoui_widget_set_pos(&qrcode->widget, 13, 17) == 0);
+    assert(tinyui_widget_set_pos(&qrcode->widget, 13, 17) == 0);
     assert(((ldBase_t *)ld_qrcode)->use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 13);
     assert(((ldBase_t *)ld_qrcode)->use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 17);
 
-    assert(picoui_widget_set_visible(&qrcode->widget, 0) == 0);
+    assert(tinyui_widget_set_visible(&qrcode->widget, 0) == 0);
     assert(((ldBase_t *)ld_qrcode)->isHidden == true);
-    assert(picoui_widget_set_visible(&qrcode->widget, 1) == 0);
+    assert(tinyui_widget_set_visible(&qrcode->widget, 1) == 0);
     assert(((ldBase_t *)ld_qrcode)->isHidden == false);
 
-    assert(picoui_widget_set_opacity(&qrcode->widget, 77) == 0);
+    assert(tinyui_widget_set_opacity(&qrcode->widget, 77) == 0);
     assert(((ldBase_t *)ld_qrcode)->opacity == 77);
 
-    assert(picoui_widget_set_selectable(&qrcode->widget, 0) == 0);
+    assert(tinyui_widget_set_selectable(&qrcode->widget, 0) == 0);
     assert(((ldBase_t *)ld_qrcode)->isSelectable == false);
-    assert(picoui_widget_set_selectable(&qrcode->widget, 1) == 0);
+    assert(tinyui_widget_set_selectable(&qrcode->widget, 1) == 0);
     assert(((ldBase_t *)ld_qrcode)->isSelectable == true);
 
-    assert(picoui_widget_set_selected(&qrcode->widget, 1) == 0);
+    assert(tinyui_widget_set_selected(&qrcode->widget, 1) == 0);
     assert(((ldBase_t *)ld_qrcode)->isSelected == true);
 
-    assert(picoui_widget_set_corner(&qrcode->widget, 9) == 0);
+    assert(tinyui_widget_set_corner(&qrcode->widget, 9) == 0);
     assert(((ldBase_t *)ld_qrcode)->isCorner == true);
 }
 
-static void test_qrcode_rejects_null_args(struct picoui_window *win)
+static void test_qrcode_rejects_null_args(struct tinyui_window *win)
 {
-    assert(picoui_qrcode_create(0, "id") == 0);
-    assert(picoui_qrcode_create((struct picoui_widget *)win, 0) == 0);
-    assert(picoui_qrcode_set_text(0, "text") == -1);
-    assert(picoui_qrcode_set_ecc(0, 1) == -1);
-    assert(picoui_qrcode_set_zoom(0, 2) == -1);
-    assert(picoui_qrcode_set_max_version(0, 10) == -1);
-    assert(picoui_qrcode_set_qr_color(0, 0x000000U) == -1);
-    assert(picoui_qrcode_set_bg_color(0, 0xFFFFFFU) == -1);
+    assert(tinyui_qrcode_create(0, "id") == 0);
+    assert(tinyui_qrcode_create((struct tinyui_widget *)win, 0) == 0);
+    assert(tinyui_qrcode_set_text(0, "text") == -1);
+    assert(tinyui_qrcode_set_ecc(0, 1) == -1);
+    assert(tinyui_qrcode_set_zoom(0, 2) == -1);
+    assert(tinyui_qrcode_set_max_version(0, 10) == -1);
+    assert(tinyui_qrcode_set_qr_color(0, 0x000000U) == -1);
+    assert(tinyui_qrcode_set_bg_color(0, 0xFFFFFFU) == -1);
 }
 
-static void test_qrcode_create_with_props_failure_rolls_back_attached_child(struct picoui_window *win)
+static void test_qrcode_create_with_props_failure_rolls_back_attached_child(struct tinyui_window *win)
 {
-    struct picoui_backend_widget *parent_backend =
-        (struct picoui_backend_widget *)win->widget.backend_widget;
-    struct picoui_backend_widget *tail = parent_backend->first_child;
-    struct picoui_backend_widget *next_before = 0;
-    struct picoui_qrcode *probe;
-    struct picoui_qrcode_test_dispose_snapshot snapshot = {0};
+    struct tinyui_backend_widget *parent_backend =
+        (struct tinyui_backend_widget *)win->widget.backend_widget;
+    struct tinyui_backend_widget *tail = parent_backend->first_child;
+    struct tinyui_backend_widget *next_before = 0;
+    struct tinyui_qrcode *probe;
+    struct tinyui_qrcode_test_dispose_snapshot snapshot = {0};
 
     while (tail != 0 && tail->next_sibling != 0) {
         tail = tail->next_sibling;
@@ -386,20 +386,20 @@ static void test_qrcode_create_with_props_failure_rolls_back_attached_child(stru
     }
 
     tinyui_qrcode_test_reset_state();
-    probe = picoui_qrcode_create((struct picoui_widget *)win, "qr_fail_text");
+    probe = tinyui_qrcode_create((struct tinyui_widget *)win, "qr_fail_text");
     assert(probe != 0);
-    assert(picoui_widget_destroy(&probe->widget) == 0);
+    assert(tinyui_widget_destroy(&probe->widget) == 0);
 
     assert(tinyui_qrcode_test_create_with_props_fail_before_text(
-               (struct picoui_widget *)win,
-               &(struct picoui_qrcode_props){
+               (struct tinyui_widget *)win,
+               &(struct tinyui_qrcode_props){
                    .id = "qr_fail_text",
                    .style_class = "qr-fail",
                    .text = "https://example.local/fail",
                })
            == 0);
     assert(tinyui_qrcode_test_take_last_dispose_snapshot(&snapshot) == 0);
-    assert(snapshot.kind == PICOUI_BACKEND_WIDGET_QRCODE);
+    assert(snapshot.kind == TINYUI_BACKEND_WIDGET_QRCODE);
     assert(snapshot.cleanup_complete == 1);
     assert(snapshot.cleanup_incomplete == 0);
     assert(snapshot.detach_result == 0);
@@ -420,9 +420,9 @@ static void test_qrcode_create_with_props_failure_rolls_back_attached_child(stru
     }
 
     tinyui_qrcode_test_reset_state();
-    assert(picoui_qrcode_create_with_props(
-               (struct picoui_widget *)win,
-               &(struct picoui_qrcode_props){
+    assert(tinyui_qrcode_create_with_props(
+               (struct tinyui_widget *)win,
+               &(struct tinyui_qrcode_props){
                    .id = "qr_fail_text",
                    .style_class = "qr-fail",
                    .text = "https://example.local/fail",
@@ -437,32 +437,32 @@ static void test_qrcode_shared_widget_helpers_reject_null(void)
 
     assert(tinyui_runtime_bridge_unbind_host(0) == -1);
     assert(tinyui_runtime_bridge_detach_from_parent(0) == -1);
-    assert(tinyui_widget_is_kind(0, PICOUI_BACKEND_WIDGET_QRCODE) == 0);
+    assert(tinyui_widget_is_kind(0, TINYUI_BACKEND_WIDGET_QRCODE) == 0);
     assert_source_lacks_function_definition(qrcode_source_path,
-                                            "picoui_qrcode_props_are_valid");
+                                            "tinyui_qrcode_props_are_valid");
     assert_source_lacks_function_definition(qrcode_source_path,
-                                            "picoui_qrcode_get_ld");
+                                            "tinyui_qrcode_get_ld");
     assert_source_lacks_function_definition(qrcode_source_path,
-                                            "picoui_qrcode_finish_detach_after_backend_failure");
+                                            "tinyui_qrcode_finish_detach_after_backend_failure");
     assert_source_lacks_function_definition(qrcode_source_path,
-                                            "picoui_qrcode_dispose_partial_impl");
+                                            "tinyui_qrcode_dispose_partial_impl");
     assert_source_lacks_function_definition(qrcode_source_path,
-                                            "picoui_qrcode_create_with_props_impl");
+                                            "tinyui_qrcode_create_with_props_impl");
     assert_source_lacks_function_definition(test_source_path,
-                                            "picoui_backend_qrcode_test_reset_state");
+                                            "tinyui_backend_qrcode_test_reset_state");
     assert_source_lacks_function_definition(test_source_path,
-                                            "picoui_backend_qrcode_test_create_with_props_fail_before_text");
+                                            "tinyui_backend_qrcode_test_create_with_props_fail_before_text");
     assert_source_lacks_function_definition(test_source_path,
-                                            "picoui_backend_qrcode_test_take_last_dispose_snapshot");
+                                            "tinyui_backend_qrcode_test_take_last_dispose_snapshot");
 }
 
 int main(void)
 {
-    struct picoui_app *app = picoui_app_create();
-    struct picoui_window *win;
+    struct tinyui_app *app = tinyui_app_create();
+    struct tinyui_window *win;
 
     assert(app != 0);
-    win = picoui_window_create(app, "root");
+    win = tinyui_window_create(app, "root");
     assert(win != 0);
 
     test_qrcode_create_and_props(win);
@@ -475,6 +475,6 @@ int main(void)
     test_qrcode_create_with_props_failure_rolls_back_attached_child(win);
     test_qrcode_shared_widget_helpers_reject_null();
 
-    picoui_app_destroy(app);
+    tinyui_app_destroy(app);
     return 0;
 }

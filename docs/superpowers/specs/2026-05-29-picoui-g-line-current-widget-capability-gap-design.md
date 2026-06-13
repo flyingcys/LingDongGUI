@@ -1,22 +1,22 @@
-# PicoUI G线当前控件能力缺口收口设计文档
+# TINYUI G线当前控件能力缺口收口设计文档
 
 > 日期：2026-05-29
 > 适用仓库：`/Users/cys/embedded/LingDongGUI`
-> 建议 worktree：`.worktree/picoui-g-current-capability-gap`
-> 入口索引：`docs/picoui-serial/G-线计划索引.md`
+> 建议 worktree：`.worktree/tinyui-g-current-capability-gap`
+> 入口索引：`docs/tinyui-serial/G-线计划索引.md`
 
 ## 1. 背景
 
-`A/B/C/D/F` 之后，`PicoUI` 已有一条稳定主线：
+`A/B/C/D/F` 之后，`TINYUI` 已有一条稳定主线：
 
 - 当前已完成控件都已接到真实 `LingDongGUI` backend。
 - `smoke`、`backend mapping`、`automatic visible`、`manual artifact` 四层证据边界已经固定。
 - `window/label/button/checkbox/switch/slider/text/image/list` 已存在 public API、真实 backend 对象或 vertical slice 证据。
 
-但最新 review 也说明，当前状态不能写成“PicoUI 已 100% 支持对应 `ld*` 控件的全部能力”。原因不是 backend 没接通，而是：
+但最新 review 也说明，当前状态不能写成“TINYUI 已 100% 支持对应 `ld*` 控件的全部能力”。原因不是 backend 没接通，而是：
 
-- PicoUI public API 明显比对应 `ld*` header 窄。
-- 若干能力仍停在 PicoUI 字段合同、theme 子集、event bridge 子集。
+- TINYUI public API 明显比对应 `ld*` header 窄。
+- 若干能力仍停在 TINYUI 字段合同、theme 子集、event bridge 子集。
 - `list` 已暴露一个典型问题：public API 已经暴露，但 native selection event contract 还没闭环。
 
 因此需要一条新的主线，把“真实 backend 已接通”与“能力是否已完整封装”这两个问题拆开，统一收口到可执行的真相源里。
@@ -25,15 +25,15 @@
 
 `G线` 的目标不是继续扩新控件数量，而是把当前已完成控件的能力缺口、证据边界和下一阶段补齐顺序明确下来。完成后应满足：
 
-- 有一份逐控件 capability gap matrix，直接对照 PicoUI public API 与对应 `ld*` 公开能力。
+- 有一份逐控件 capability gap matrix，直接对照 TINYUI public API 与对应 `ld*` 公开能力。
 - 每个能力都明确标记为 `support`、`reject`、`deferred` 或 `incomplete_contract`。
 - 当前已知过强表述被收口，不再把 vertical slice、mapping marker 或 visible gate 误写成全能力完成。
 - 后续实现任务能按 shared write surface 串行推进，并适合 fresh subagent 独立接手。
 
 ## 3. 非目标
 
-- 不新增 `PicoUI` 新控件；新控件扩张不属于 `G线`。
-- 不把 `PicoUI` 改造成 `ld*` 底层 API 的逐项镜像层。
+- 不新增 `TINYUI` 新控件；新控件扩张不属于 `G线`。
+- 不把 `TINYUI` 改造成 `ld*` 底层 API 的逐项镜像层。
 - 不用 demo 外观、readback 或 marker 通过来替代真实能力合同。
 - 不重新定义既有四层证据边界。
 
@@ -44,13 +44,13 @@
 `G线` 的第一真相源按优先级排序如下：
 
 1. 当前源码：
-   - `picoui/include/picoui/*.h`
-   - `picoui/src/*`
+   - `tinyui/include/tinyui/*.h`
+   - `tinyui/src/*`
    - `src/gui/ld*.h`
 2. 合同与 gate：
-   - `tests/picoui/unit/*`
-   - `tests/picoui/contract/*`
-   - `tests/picoui/runtime/*`
+   - `tests/tinyui/unit/*`
+   - `tests/tinyui/contract/*`
+   - `tests/tinyui/runtime/*`
 3. `G线` 索引、spec、implementation plan
 
 后续若 `D/F` 文档与当前源码冲突，以源码和 `G线` 文档为准。
@@ -71,7 +71,7 @@
 
 每个能力项必须包含：
 
-- PicoUI 当前 public API 或缺失状态
+- TINYUI 当前 public API 或缺失状态
 - 对应 `ld*` 能力入口
 - 状态：
   - `support`
@@ -91,13 +91,13 @@
 - 调用方会自然认为能力已存在
 - 但真实 backend 行为或 native contract 仍未闭环
 
-当前已知例子：`picoui_list_set_on_selected()`。
+当前已知例子：`tinyui_list_set_on_selected()`。
 
 ### 4.3 当前优先缺口
 
 #### a. list selection contract
 
-- `picoui_list_set_on_selected()` 目前只保存 callback/user_data。
+- `tinyui_list_set_on_selected()` 目前只保存 callback/user_data。
 - 当前还没有 `ldList` native selection event bridge。
 - 因此该 API 不能继续写成 `support`，应先按 `incomplete_contract` 收口，再决定补实现还是明确降级。
 
@@ -109,13 +109,13 @@
 
 #### c. slider range contract
 
-- `picoui_slider_set_range()` 当前只更新 PicoUI shadow state。
+- `tinyui_slider_set_range()` 当前只更新 TINYUI shadow state。
 - 当 range clamp 影响当前值时，不能自动推导为底层 `ldSlider` percent 已同步。
 - 这项要么补真实同步和测试，要么在矩阵里明确降级为 `deferred`。
 
 #### d. direct style setter 基座语义
 
-- `bg_color/text_color/border_color/radius` 当前主要是 PicoUI 字段合同。
+- `bg_color/text_color/border_color/radius` 当前主要是 TINYUI 字段合同。
 - 若要把它们提升成“实时 backend style setter”，必须补真实 `ld*` 同步与可验证证据。
 - 若不提升，文档必须继续保持“字段合同”口径。
 
@@ -141,17 +141,17 @@
 
 - 矩阵/文档类任务可单独一条线。
 - `list` contract / marker 任务串行，因为会共享：
-  - `picoui/include/picoui/list.h`
-  - `picoui/src/widgets/list.c`
-  - `picoui/src/backend/ldgui/backend_event.c`
-  - `picoui/src/backend/ldgui/backend_app.c`
-  - `tests/picoui/unit/test_picoui_list.c`
-  - `tests/picoui/runtime/check_picoui_backend_mapping.py`
+  - `tinyui/include/tinyui/list.h`
+  - `tinyui/src/widgets/list.c`
+  - `tinyui/src/backend/ldgui/backend_event.c`
+  - `tinyui/src/backend/ldgui/backend_app.c`
+  - `tests/tinyui/unit/test_tinyui_list.c`
+  - `tests/tinyui/runtime/check_tinyui_backend_mapping.py`
 - shared widget base 任务串行，因为会共享：
-  - `picoui/src/core/widget.c`
-  - `picoui/src/backend/ldgui/backend_style_apply.c`
-  - `picoui/src/backend/ldgui/backend_theme.c`
-  - `picoui/include/picoui/widget.h`
+  - `tinyui/src/core/widget.c`
+  - `tinyui/src/backend/ldgui/backend_style_apply.c`
+  - `tinyui/src/backend/ldgui/backend_theme.c`
+  - `tinyui/include/tinyui/widget.h`
 - widget-specific 扩面可按“交互控件组 / 展示控件组”拆分，但每组内部仍串行。
 
 review 后修复必须回原 subagent，不新开 subagent 修复，也不由主线程顺手修。
@@ -175,16 +175,16 @@ review 后修复必须回原 subagent，不新开 subagent 修复，也不由主
 - 哪些是 `unit/contract/mapping/visible/manual artifact` 证据
 - 哪些能力仍是 `reject/deferred/incomplete_contract`
 
-最小门禁仍沿用既有 PicoUI 集合：
+最小门禁仍沿用既有 TINYUI 集合：
 
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
-ctest --test-dir build -L picoui --output-on-failure
+ctest --test-dir build -L tinyui --output-on-failure
 ctest --test-dir build -L visible --output-on-failure
 ctest --test-dir build -L mapping --output-on-failure
-python3 tests/picoui/runtime/check_picoui_runtime.py
-python3 tests/picoui/runtime/check_picoui_visible_ui.py --all
-python3 tests/picoui/runtime/check_picoui_backend_mapping.py
+python3 tests/tinyui/runtime/check_tinyui_runtime.py
+python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --all
+python3 tests/tinyui/runtime/check_tinyui_backend_mapping.py
 git diff --check
 ```
 

@@ -19,32 +19,32 @@
 #include "calendar_basic/calendar_basic.h"
 #include "tinyui.h"
 
-static void make_ui(struct picoui_window *win)
+static void make_ui(struct tinyui_window *win)
 {
-    struct picoui_label *title;
-    struct picoui_calendar *calendar;
+    struct tinyui_label *title;
+    struct tinyui_calendar *calendar;
     static const int cols[] = {320, 0};
     static const int rows[] = {28, 196, 0};
 
-    picoui_grid_set_columns(win, cols, 2);
-    picoui_grid_set_rows(win, rows, 3);
-    picoui_grid_set_gap(win, 12, 12);
-    picoui_grid_set_align(win, PICOUI_ALIGN_START, PICOUI_ALIGN_START);
-    picoui_window_set_padding_group(win, 24, 24, 24, 24);
+    tinyui_grid_set_columns(win, cols, 2);
+    tinyui_grid_set_rows(win, rows, 3);
+    tinyui_grid_set_gap(win, 12, 12);
+    tinyui_grid_set_align(win, TINYUI_ALIGN_START, TINYUI_ALIGN_START);
+    tinyui_window_set_padding_group(win, 24, 24, 24, 24);
 
-    title = picoui_label_create(win, "title");
+    title = tinyui_label_create(win, "title");
     if (title != 0) {
-        picoui_label_set_text(title, "Calendar");
-        picoui_widget_set_size((struct picoui_widget *)title, 220, 28);
-        picoui_widget_set_grid_cell((struct picoui_widget *)title,
+        tinyui_label_set_text(title, "Calendar");
+        tinyui_widget_set_size((struct tinyui_widget *)title, 220, 28);
+        tinyui_widget_set_grid_cell((struct tinyui_widget *)title,
                                     0, 0, 1, 1,
-                                    PICOUI_ALIGN_START,
-                                    PICOUI_ALIGN_CENTER);
+                                    TINYUI_ALIGN_START,
+                                    TINYUI_ALIGN_CENTER);
     }
 
-    calendar = picoui_calendar_create_with_props(
+    calendar = tinyui_calendar_create_with_props(
         win,
-        &(struct picoui_calendar_props){
+        &(struct tinyui_calendar_props){
             .id = "calendar",
             .year = 2026,
             .month = 6,
@@ -55,17 +55,17 @@ static void make_ui(struct picoui_window *win)
             .header_format = "yyyy/mm/dd",
         });
     if (calendar != 0) {
-        picoui_widget_set_grid_cell((struct picoui_widget *)calendar,
+        tinyui_widget_set_grid_cell((struct tinyui_widget *)calendar,
                                     0, 1, 1, 1,
-                                    PICOUI_ALIGN_START,
-                                    PICOUI_ALIGN_CENTER);
+                                    TINYUI_ALIGN_START,
+                                    TINYUI_ALIGN_CENTER);
     }
 }
 
 void tinyui_demo_calendar_basic(void)
 {
     tinyui_obj_t *screen = tinyui_screen_create();
-    struct picoui_window *win = (struct picoui_window *)screen;
+    struct tinyui_window *win = (struct tinyui_window *)screen;
 
     if (win == 0) {
         return;

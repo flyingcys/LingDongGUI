@@ -229,8 +229,8 @@ def _parse_marker_ids(stdout: str, marker: str, *, required: bool = True) -> set
 
 def _assert_optional_benchmark_markers(stdout: str) -> None:
     benchmark_markers = {
-        "PICOUI_BENCHMARK_SCREEN_CREATE_MS": float,
-        "PICOUI_BENCHMARK_FIRST_FRAME_MS": float,
+        "TINYUI_BENCHMARK_SCREEN_CREATE_MS": float,
+        "TINYUI_BENCHMARK_FIRST_FRAME_MS": float,
     }
 
     for marker, parser in benchmark_markers.items():
@@ -253,7 +253,7 @@ def _assert_optional_benchmark_markers(stdout: str) -> None:
 
 
 def _assert_no_smoke_layout(target: str, stdout: str, stderr: str) -> None:
-    marker = "PICOUI_SMOKE_LAYOUT_USED="
+    marker = "TINYUI_SMOKE_LAYOUT_USED="
     for line in stdout.splitlines():
         if not line.startswith(marker):
             continue
@@ -261,14 +261,14 @@ def _assert_no_smoke_layout(target: str, stdout: str, stderr: str) -> None:
         if value != "0":
             raise AssertionError(
                 f"Formal native demo '{target}' used temporary smoke layout.\n"
-                f"expected: PICOUI_SMOKE_LAYOUT_USED=0\n"
+                f"expected: TINYUI_SMOKE_LAYOUT_USED=0\n"
                 f"actual: {line}\n"
                 f"stdout:\n{stdout}\n"
                 f"stderr:\n{stderr}"
             )
         return
     raise AssertionError(
-        f"Formal native demo '{target}' did not report PICOUI_SMOKE_LAYOUT_USED.\n"
+        f"Formal native demo '{target}' did not report TINYUI_SMOKE_LAYOUT_USED.\n"
         f"stdout:\n{stdout}\n"
         f"stderr:\n{stderr}"
     )
@@ -278,7 +278,7 @@ def _assert_basic_widgets_capture(path: Path, stdout: str) -> None:
     width, height, pixels = _read_ppm(path)
     assert width == 480 and height == 320, f"unexpected basic widgets capture size: {width}x{height}"
     _assert_not_black_bar(width, height, pixels)
-    assert "PICOUI_SMOKE_LAYOUT_USED=0" in stdout, (
+    assert "TINYUI_SMOKE_LAYOUT_USED=0" in stdout, (
         "basic_widgets must report formal layout usage.\n"
         f"stdout:\n{stdout}"
     )
@@ -344,8 +344,8 @@ def _assert_basic_widgets_capture(path: Path, stdout: str) -> None:
         "text/image bands should not collapse into the same visual treatment, "
         f"text_colors={sorted(text_colors)}, image_colors={sorted(image_colors)}"
     )
-    real_ids = _parse_marker_ids(stdout, "PICOUI_BACKEND_REAL_WIDGET_IDS")
-    fallback_ids = _parse_marker_ids(stdout, "PICOUI_BACKEND_FALLBACK_WIDGET_IDS", required=False)
+    real_ids = _parse_marker_ids(stdout, "TINYUI_BACKEND_REAL_WIDGET_IDS")
+    fallback_ids = _parse_marker_ids(stdout, "TINYUI_BACKEND_FALLBACK_WIDGET_IDS", required=False)
     assert "logo" in real_ids, f"basic_widgets should keep logo in REAL widget ids: {sorted(real_ids)}"
     expected_interactive = {"wifi", "agree", "volume"}
     missing_interactive = expected_interactive - real_ids
@@ -398,7 +398,7 @@ def _assert_compile_unit_lacks_screen_defines(
                 raise AssertionError(f"{source_suffix} should not inherit {define}")
 
 
-def _assert_picoui_runtime_screen_defines(build_dir: Path) -> None:
+def _assert_tinyui_runtime_screen_defines(build_dir: Path) -> None:
     import json
 
     compile_db_path = build_dir / "compile_commands.json"
@@ -427,7 +427,7 @@ def main() -> None:
     subprocess.run([
         RTK, "cmake", "-S", str(ROOT), "-B", str(build_dir), "-DUSE_DEMO=0", "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
     ], check=True)
-    _assert_picoui_runtime_screen_defines(build_dir)
+    _assert_tinyui_runtime_screen_defines(build_dir)
     subprocess.run([
         RTK, "cmake", "--build", str(build_dir), "--target", *targets
     ], check=True)
@@ -447,10 +447,10 @@ def main() -> None:
 
         env = os.environ.copy()
         env["SDL_VIDEODRIVER"] = env.get("SDL_VIDEODRIVER", "dummy")
-        env["PICOUI_DEMO_AUTO_QUIT_MS"] = "1200"
+        env["TINYUI_DEMO_AUTO_QUIT_MS"] = "1200"
         with tempfile.TemporaryDirectory(prefix=f"{target}-") as tmpdir:
             capture_path = Path(tmpdir) / "frame.ppm"
-            env["PICOUI_CAPTURE_FILE"] = str(capture_path)
+            env["TINYUI_CAPTURE_FILE"] = str(capture_path)
             completed = subprocess.run(
                 [str(executable)],
                 check=False,
@@ -473,17 +473,17 @@ def main() -> None:
                 f"stdout:\n{completed.stdout}\n"
                 f"stderr:\n{completed.stderr}"
             )
-        if "PICOUI_RUNTIME_READY" not in completed.stdout:
+        if "TINYUI_RUNTIME_READY" not in completed.stdout:
             raise AssertionError(
                 f"Demo '{target}' did not report entering a visible runtime loop.\n"
                 f"stdout:\n{completed.stdout}\n"
                 f"stderr:\n{completed.stderr}"
             )
         _assert_optional_benchmark_markers(completed.stdout)
-        if target == "tinyui_basic_widgets_demo" and "PICOUI_RUNTIME_LOOP" not in completed.stdout:
+        if target == "tinyui_basic_widgets_demo" and "TINYUI_RUNTIME_LOOP" not in completed.stdout:
             raise AssertionError(
                 "basic_widgets still does not prove the app-free runtime main path.\n"
-                "expected marker: PICOUI_RUNTIME_LOOP\n"
+                "expected marker: TINYUI_RUNTIME_LOOP\n"
                 f"stdout:\n{completed.stdout}\n"
                 f"stderr:\n{completed.stderr}"
             )

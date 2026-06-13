@@ -1,14 +1,14 @@
-# PicoUI B线可见 UI 收口设计文档
+# TINYUI B线可见 UI 收口设计文档
 
 > 日期：2026-05-27  
 > 适用仓库：`/Users/cys/embedded/LingDongGUI`  
-> 目标：把 `PicoUI` 从“backend 主线已通、smoke 可出图”的状态，推进到“自动 visible gate 已证明 dummy SDL + PPM readback 下可显示、可读、可判定”的状态。
+> 目标：把 `TINYUI` 从“backend 主线已通、smoke 可出图”的状态，推进到“自动 visible gate 已证明 dummy SDL + PPM readback 下可显示、可读、可判定”的状态。
 
 ---
 
 ## 1. 背景
 
-`A线` 已完成 `PicoUI -> LingDongGUI` 的 backend 主线收口：
+`A线` 已完成 `TINYUI -> LingDongGUI` 的 backend 主线收口：
 
 - 基础控件、布局、事件、theme 已有真实 backend 映射
 - `runtime/capture` 已能证明 demo 可启动、可出首帧、可回归
@@ -16,7 +16,7 @@
 
 但 `A线` 的成功边界从一开始就不是“自动 visible gate 或人工窗口验收已经成立”。`A线` 证明的是：
 
-1. `PicoUI` 不再主要依赖 fake renderer 主输出
+1. `TINYUI` 不再主要依赖 fake renderer 主输出
 2. demo 能启动
 3. capture 能出图
 4. backend 主线、layout/event/theme 的基本映射已闭环
@@ -32,7 +32,7 @@
 
 ## 2. 当前新事实
 
-`2026-05-27` 对 `picoui_basic_widgets_demo` 的复核，给出了 `A线` 之后必须切到 `B线` 的直接证据：
+`2026-05-27` 对 `tinyui_basic_widgets_demo` 的复核，给出了 `A线` 之后必须切到 `B线` 的直接证据：
 
 1. 用户在真实运行时反馈“UI 一片黑”，这是 `B线` 启动背景，不是已有人工窗口验收 artifact。
 2. dummy runtime capture 证明该 demo 并非完全无像素。
@@ -47,7 +47,7 @@
 
 ## 3. B线唯一目标
 
-**B线唯一目标**：建立并收口 `PicoUI` 的 visible correctness，使 demo 在 `SDL_VIDEODRIVER=dummy + PPM readback` 的自动 visible gate 下达到“可显示、可读、可判定”的状态。
+**B线唯一目标**：建立并收口 `TINYUI` 的 visible correctness，使 demo 在 `SDL_VIDEODRIVER=dummy + PPM readback` 的自动 visible gate 下达到“可显示、可读、可判定”的状态。
 
 若要声称人工 OS 窗口验收通过，必须执行 `C线` 的 `C6 / manual window artifact gate` 并留下 artifact 记录；`B线` 自动 gate 本身不支撑这个结论。
 
@@ -67,10 +67,10 @@
 
 ## 4. 为什么 B线 必须先于其他工作
 
-当前最容易误判的方向，是把 `A线` 的 smoke 绿灯继续外推成“可以开始做更多 PicoUI 功能”。这在 `B线` 启动时是错误顺序，原因有四个：
+当前最容易误判的方向，是把 `A线` 的 smoke 绿灯继续外推成“可以开始做更多 TINYUI 功能”。这在 `B线` 启动时是错误顺序，原因有四个：
 
 1. **用户感知已经给出反证**
-   - 用户直接运行 `picoui_basic_widgets_demo` 时看到的是“黑屏感”，这是启动 `B线` 的真实窗口反馈。
+   - 用户直接运行 `tinyui_basic_widgets_demo` 时看到的是“黑屏感”，这是启动 `B线` 的真实窗口反馈。
 2. **当前 visible 证据与 smoke 证据错位**
    - capture 非空、runtime 通过，并不能解释“为什么可见结果仍可能近黑或不可读”。
 3. **如果先扩能力面，会把 visible correctness 问题扩散到更多 demos**
@@ -84,7 +84,7 @@
 
 ## 5. B线 的核心诊断对象
 
-### 5.1 一号样本：`picoui_basic_widgets_demo`
+### 5.1 一号样本：`tinyui_basic_widgets_demo`
 
 这是 `B线` 的最小可信样本，原因：
 
@@ -126,7 +126,7 @@
 
 ### 6.2 B线 不解决的事情
 
-- 新增 PicoUI 控件种类
+- 新增 TINYUI 控件种类
 - 大幅扩展 public API
 - 继续扩 `theme v0` 以外的复杂样式系统
 - 回到 fake renderer 主导 UI 产出
@@ -217,7 +217,7 @@
 
 目的：
 
-- 把 `basic_widgets` 经验推广到所有 `picoui` demos
+- 把 `basic_widgets` 经验推广到所有 `tinyui` demos
 
 设计要求：
 
@@ -226,7 +226,7 @@
 
 完成标志：
 
-- 6 个 `picoui` demos 都达到同级 visible correctness
+- 6 个 `tinyui` demos 都达到同级 visible correctness
 
 ### 7.6 `B5` visible gate 与 closeout
 
@@ -266,16 +266,16 @@
 ### 8.2 适合 subagent 推进的事情
 
 1. **visible evidence 组**
-   - `tests/picoui/runtime/*`
+   - `tests/tinyui/runtime/*`
    - 文档中的 evidence 定义
 2. **display/color path 组**
-   - `picoui/src/backend/ldgui/backend_app.c`
+   - `tinyui/src/backend/ldgui/backend_app.c`
    - 颜色/显示相关辅助逻辑
 3. **basic_widgets demo 组**
-   - `picoui/demo/basic_widgets/main.c`
+   - `tinyui/demo/basic_widgets/main.c`
    - 与其直接相关的最小验证
 4. **doc gate 组**
-   - `docs/picoui-serial/*`
+   - `docs/tinyui-serial/*`
    - `docs/superpowers/specs/*`
    - `docs/superpowers/plans/*`
 
@@ -312,9 +312,9 @@
 
 最终 gate 分层如下：
 
-- `backend correctness gate`：证明 `PicoUI -> LingDongGUI` 对象、布局、事件、theme 映射成立，主要证据是 `tests/picoui/unit/*` 与 `tests/picoui/runtime/check_picoui_backend_mapping.py`。
-- `smoke gate`：证明 demo 可构建、可启动、可 capture、可回归，主要证据是 `tests/picoui/runtime/check_picoui_runtime.py`。
-- `automatic visible gate`：证明 dummy SDL + PPM readback 下可显示、可读、可判定，主要证据是 `tests/picoui/runtime/check_picoui_visible_ui.py --all`。
+- `backend correctness gate`：证明 `TINYUI -> LingDongGUI` 对象、布局、事件、theme 映射成立，主要证据是 `tests/tinyui/unit/*` 与 `tests/tinyui/runtime/check_tinyui_backend_mapping.py`。
+- `smoke gate`：证明 demo 可构建、可启动、可 capture、可回归，主要证据是 `tests/tinyui/runtime/check_tinyui_runtime.py`。
+- `automatic visible gate`：证明 dummy SDL + PPM readback 下可显示、可读、可判定，主要证据是 `tests/tinyui/runtime/check_tinyui_visible_ui.py --all`。
 - `manual window artifact gate`：证明人工 OS 窗口验收通过；这属于 `C6`，需要独立 artifact 记录，不能由 `B线` automatic visible gate 代替。
 
 `B线` 收口后的 visible matrix：
@@ -328,4 +328,4 @@
 | `theme_showcase` | PASS | `title/body/accent` 为真实 backend |
 | `settings_panel` | PASS | `title/wifi/brightness/apply` 为真实 backend，不再输出 `FAKE_FALLBACK` marker |
 
-后续新能力线可以继续推进，但必须把 `check_picoui_visible_ui.py --all` 作为 automatic visible baseline；不能再用 capture 非空或 smoke 绿灯替代 automatic visible correctness。若要写“人工窗口验收通过”，必须等 `C6 / manual window artifact gate`。
+后续新能力线可以继续推进，但必须把 `check_tinyui_visible_ui.py --all` 作为 automatic visible baseline；不能再用 capture 非空或 smoke 绿灯替代 automatic visible correctness。若要写“人工窗口验收通过”，必须等 `C6 / manual window artifact gate`。

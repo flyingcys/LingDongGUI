@@ -5,145 +5,145 @@
 #include "native.h"
 #include "theme.h"
 
-struct picoui_widget;
-struct picoui_app;
-struct picoui_font;
-typedef struct picoui_widget tinyui_obj_t;
+struct tinyui_widget;
+struct tinyui_app;
+struct tinyui_font;
+typedef struct tinyui_widget tinyui_obj_t;
 
-enum picoui_font_kind {
-    PICOUI_FONT_KIND_FAMILY = 0,
-    PICOUI_FONT_KIND_VRES = 1,
+enum tinyui_font_kind {
+    TINYUI_FONT_KIND_FAMILY = 0,
+    TINYUI_FONT_KIND_VRES = 1,
 };
 
-typedef void (*picoui_value_changed_cb)(struct picoui_widget *widget,
+typedef void (*tinyui_value_changed_cb)(struct tinyui_widget *widget,
                                         int value,
                                         void *user_data);
-typedef void (*picoui_event_cb)(struct picoui_widget *widget, void *user_data);
+typedef void (*tinyui_event_cb)(struct tinyui_widget *widget, void *user_data);
 
-struct picoui_font {
+struct tinyui_font {
     const char *family;
     int size;
-    enum picoui_font_kind kind;
+    enum tinyui_font_kind kind;
     unsigned int vres_addr;
 };
 
-struct picoui_point {
+struct tinyui_point {
     int x;
     int y;
 };
 
-struct picoui_size {
+struct tinyui_size {
     int width;
     int height;
 };
 
-struct picoui_rect {
+struct tinyui_rect {
     int x;
     int y;
     int width;
     int height;
 };
 
-enum picoui_widget_type {
-    PICOUI_WIDGET_TYPE_UNKNOWN = 0,
-    PICOUI_WIDGET_TYPE_BACKGROUND,
-    PICOUI_WIDGET_TYPE_WINDOW,
-    PICOUI_WIDGET_TYPE_BUTTON,
-    PICOUI_WIDGET_TYPE_IMAGE,
-    PICOUI_WIDGET_TYPE_TEXT,
-    PICOUI_WIDGET_TYPE_LINE_EDIT,
-    PICOUI_WIDGET_TYPE_GRAPH,
-    PICOUI_WIDGET_TYPE_CHECKBOX,
-    PICOUI_WIDGET_TYPE_SLIDER,
-    PICOUI_WIDGET_TYPE_SWITCH,
-    PICOUI_WIDGET_TYPE_PROGRESS_BAR,
-    PICOUI_WIDGET_TYPE_GAUGE,
-    PICOUI_WIDGET_TYPE_QRCODE,
-    PICOUI_WIDGET_TYPE_DATE_TIME,
-    PICOUI_WIDGET_TYPE_ICON_SLIDER,
-    PICOUI_WIDGET_TYPE_COMBO_BOX,
-    PICOUI_WIDGET_TYPE_ARC,
-    PICOUI_WIDGET_TYPE_RADIAL_MENU,
-    PICOUI_WIDGET_TYPE_SCROLL_SELECTER,
-    PICOUI_WIDGET_TYPE_LABEL,
-    PICOUI_WIDGET_TYPE_TABLE,
-    PICOUI_WIDGET_TYPE_KEYBOARD,
-    PICOUI_WIDGET_TYPE_ANIMATION,
-    PICOUI_WIDGET_TYPE_LIST,
-    PICOUI_WIDGET_TYPE_MESSAGE_BOX,
-    PICOUI_WIDGET_TYPE_CALENDAR,
-    PICOUI_WIDGET_TYPE_PROGRESS_WHEEL,
-    PICOUI_WIDGET_TYPE_CLOCK,
-    PICOUI_WIDGET_TYPE_CANVAS,
+enum tinyui_widget_type {
+    TINYUI_WIDGET_TYPE_UNKNOWN = 0,
+    TINYUI_WIDGET_TYPE_BACKGROUND,
+    TINYUI_WIDGET_TYPE_WINDOW,
+    TINYUI_WIDGET_TYPE_BUTTON,
+    TINYUI_WIDGET_TYPE_IMAGE,
+    TINYUI_WIDGET_TYPE_TEXT,
+    TINYUI_WIDGET_TYPE_LINE_EDIT,
+    TINYUI_WIDGET_TYPE_GRAPH,
+    TINYUI_WIDGET_TYPE_CHECKBOX,
+    TINYUI_WIDGET_TYPE_SLIDER,
+    TINYUI_WIDGET_TYPE_SWITCH,
+    TINYUI_WIDGET_TYPE_PROGRESS_BAR,
+    TINYUI_WIDGET_TYPE_GAUGE,
+    TINYUI_WIDGET_TYPE_QRCODE,
+    TINYUI_WIDGET_TYPE_DATE_TIME,
+    TINYUI_WIDGET_TYPE_ICON_SLIDER,
+    TINYUI_WIDGET_TYPE_COMBO_BOX,
+    TINYUI_WIDGET_TYPE_ARC,
+    TINYUI_WIDGET_TYPE_RADIAL_MENU,
+    TINYUI_WIDGET_TYPE_SCROLL_SELECTER,
+    TINYUI_WIDGET_TYPE_LABEL,
+    TINYUI_WIDGET_TYPE_TABLE,
+    TINYUI_WIDGET_TYPE_KEYBOARD,
+    TINYUI_WIDGET_TYPE_ANIMATION,
+    TINYUI_WIDGET_TYPE_LIST,
+    TINYUI_WIDGET_TYPE_MESSAGE_BOX,
+    TINYUI_WIDGET_TYPE_CALENDAR,
+    TINYUI_WIDGET_TYPE_PROGRESS_WHEEL,
+    TINYUI_WIDGET_TYPE_CLOCK,
+    TINYUI_WIDGET_TYPE_CANVAS,
 };
 
-int picoui_widget_set_pos(struct picoui_widget *widget, int x, int y);
-int picoui_widget_set_size(struct picoui_widget *widget, int width, int height);
-int picoui_widget_set_text(struct picoui_widget *widget, const char *text);
-int picoui_widget_set_style_class(struct picoui_widget *widget, const char *style_class);
-int picoui_widget_set_user_data(struct picoui_widget *widget, void *user_data);
-int picoui_widget_set_bg_color(struct picoui_widget *widget, unsigned int rgb);
-int picoui_widget_set_text_color(struct picoui_widget *widget, unsigned int rgb);
-int picoui_widget_set_border_color(struct picoui_widget *widget, unsigned int rgb);
-int picoui_widget_set_radius(struct picoui_widget *widget, int radius);
-int picoui_widget_set_padding(struct picoui_widget *widget, int padding);
-int picoui_widget_set_center(struct picoui_widget *widget);
-int picoui_widget_set_visible(struct picoui_widget *widget, int visible);
-int picoui_widget_is_hidden(struct picoui_widget *widget);
-int picoui_widget_set_opacity(struct picoui_widget *widget, int opacity);
-int picoui_widget_set_selectable(struct picoui_widget *widget, int selectable);
-int picoui_widget_set_selected(struct picoui_widget *widget, int selected);
-int picoui_widget_set_corner(struct picoui_widget *widget, int corner);
-int picoui_widget_set_enabled(struct picoui_widget *widget, int enabled);
-int picoui_widget_set_flex_grow(struct picoui_widget *widget, int grow);
-int picoui_widget_set_flex_new_track(struct picoui_widget *widget, int new_track);
-int picoui_widget_set_flex_min_width(struct picoui_widget *widget, int min_width);
-int picoui_widget_set_flex_min_height(struct picoui_widget *widget, int min_height);
-int picoui_widget_set_flex_max_width(struct picoui_widget *widget, int max_width);
-int picoui_widget_set_flex_max_height(struct picoui_widget *widget, int max_height);
-int picoui_widget_set_ignore_layout(struct picoui_widget *widget, int ignore_layout);
-int picoui_widget_set_grid_cell(struct picoui_widget *widget,
+int tinyui_widget_set_pos(struct tinyui_widget *widget, int x, int y);
+int tinyui_widget_set_size(struct tinyui_widget *widget, int width, int height);
+int tinyui_widget_set_text(struct tinyui_widget *widget, const char *text);
+int tinyui_widget_set_style_class(struct tinyui_widget *widget, const char *style_class);
+int tinyui_widget_set_user_data(struct tinyui_widget *widget, void *user_data);
+int tinyui_widget_set_bg_color(struct tinyui_widget *widget, unsigned int rgb);
+int tinyui_widget_set_text_color(struct tinyui_widget *widget, unsigned int rgb);
+int tinyui_widget_set_border_color(struct tinyui_widget *widget, unsigned int rgb);
+int tinyui_widget_set_radius(struct tinyui_widget *widget, int radius);
+int tinyui_widget_set_padding(struct tinyui_widget *widget, int padding);
+int tinyui_widget_set_center(struct tinyui_widget *widget);
+int tinyui_widget_set_visible(struct tinyui_widget *widget, int visible);
+int tinyui_widget_is_hidden(struct tinyui_widget *widget);
+int tinyui_widget_set_opacity(struct tinyui_widget *widget, int opacity);
+int tinyui_widget_set_selectable(struct tinyui_widget *widget, int selectable);
+int tinyui_widget_set_selected(struct tinyui_widget *widget, int selected);
+int tinyui_widget_set_corner(struct tinyui_widget *widget, int corner);
+int tinyui_widget_set_enabled(struct tinyui_widget *widget, int enabled);
+int tinyui_widget_set_flex_grow(struct tinyui_widget *widget, int grow);
+int tinyui_widget_set_flex_new_track(struct tinyui_widget *widget, int new_track);
+int tinyui_widget_set_flex_min_width(struct tinyui_widget *widget, int min_width);
+int tinyui_widget_set_flex_min_height(struct tinyui_widget *widget, int min_height);
+int tinyui_widget_set_flex_max_width(struct tinyui_widget *widget, int max_width);
+int tinyui_widget_set_flex_max_height(struct tinyui_widget *widget, int max_height);
+int tinyui_widget_set_ignore_layout(struct tinyui_widget *widget, int ignore_layout);
+int tinyui_widget_set_grid_cell(struct tinyui_widget *widget,
                                 int col,
                                 int row,
                                 int col_span,
                                 int row_span,
-                                enum picoui_align x_align,
-                                enum picoui_align y_align);
-int picoui_widget_remove_from_parent(struct picoui_widget *widget);
-int picoui_widget_destroy(struct picoui_widget *widget);
-int picoui_widget_get_x(const struct picoui_widget *widget);
-int picoui_widget_get_y(const struct picoui_widget *widget);
-int picoui_widget_get_width(const struct picoui_widget *widget);
-int picoui_widget_get_height(const struct picoui_widget *widget);
-int picoui_widget_get_visible(const struct picoui_widget *widget);
-int picoui_widget_get_opacity(const struct picoui_widget *widget);
-int picoui_widget_get_selectable(const struct picoui_widget *widget);
-int picoui_widget_get_selected(const struct picoui_widget *widget);
-int picoui_widget_get_corner(const struct picoui_widget *widget);
-struct picoui_widget *picoui_widget_get_parent(const struct picoui_widget *widget);
-struct picoui_widget *picoui_widget_get_first_child(const struct picoui_widget *widget);
-struct picoui_widget *picoui_widget_get_next_sibling(const struct picoui_widget *widget);
-struct picoui_widget *picoui_widget_get_root(const struct picoui_widget *widget);
-int picoui_widget_get_child_count(const struct picoui_widget *widget);
-int picoui_widget_get_name_id(const struct picoui_widget *widget);
-struct picoui_widget *picoui_widget_find_by_name_id(const struct picoui_widget *root, int name_id);
-enum picoui_widget_type picoui_widget_get_type(const struct picoui_widget *widget);
-struct picoui_point picoui_widget_get_absolute_pos(const struct picoui_widget *widget,
-                                                   struct picoui_point point);
-struct picoui_point picoui_widget_get_relative_pos(const struct picoui_widget *widget,
-                                                   struct picoui_point point);
-struct picoui_rect picoui_rect_align(struct picoui_rect parent,
-                                     struct picoui_rect child,
-                                     enum picoui_align x_align,
-                                     enum picoui_align y_align);
-struct picoui_rect picoui_rect_center(struct picoui_rect parent,
-                                      struct picoui_rect child);
-int picoui_vertical_grid_align_offset(struct picoui_rect widget,
+                                enum tinyui_align x_align,
+                                enum tinyui_align y_align);
+int tinyui_widget_remove_from_parent(struct tinyui_widget *widget);
+int tinyui_widget_destroy(struct tinyui_widget *widget);
+int tinyui_widget_get_x(const struct tinyui_widget *widget);
+int tinyui_widget_get_y(const struct tinyui_widget *widget);
+int tinyui_widget_get_width(const struct tinyui_widget *widget);
+int tinyui_widget_get_height(const struct tinyui_widget *widget);
+int tinyui_widget_get_visible(const struct tinyui_widget *widget);
+int tinyui_widget_get_opacity(const struct tinyui_widget *widget);
+int tinyui_widget_get_selectable(const struct tinyui_widget *widget);
+int tinyui_widget_get_selected(const struct tinyui_widget *widget);
+int tinyui_widget_get_corner(const struct tinyui_widget *widget);
+struct tinyui_widget *tinyui_widget_get_parent(const struct tinyui_widget *widget);
+struct tinyui_widget *tinyui_widget_get_first_child(const struct tinyui_widget *widget);
+struct tinyui_widget *tinyui_widget_get_next_sibling(const struct tinyui_widget *widget);
+struct tinyui_widget *tinyui_widget_get_root(const struct tinyui_widget *widget);
+int tinyui_widget_get_child_count(const struct tinyui_widget *widget);
+int tinyui_widget_get_name_id(const struct tinyui_widget *widget);
+struct tinyui_widget *tinyui_widget_find_by_name_id(const struct tinyui_widget *root, int name_id);
+enum tinyui_widget_type tinyui_widget_get_type(const struct tinyui_widget *widget);
+struct tinyui_point tinyui_widget_get_absolute_pos(const struct tinyui_widget *widget,
+                                                   struct tinyui_point point);
+struct tinyui_point tinyui_widget_get_relative_pos(const struct tinyui_widget *widget,
+                                                   struct tinyui_point point);
+struct tinyui_rect tinyui_rect_align(struct tinyui_rect parent,
+                                     struct tinyui_rect child,
+                                     enum tinyui_align x_align,
+                                     enum tinyui_align y_align);
+struct tinyui_rect tinyui_rect_center(struct tinyui_rect parent,
+                                      struct tinyui_rect child);
+int tinyui_vertical_grid_align_offset(struct tinyui_rect widget,
                                       int current_offset,
                                       int item_count,
                                       int item_height,
                                       int space);
-int picoui_focus_reset(struct picoui_app *app);
-int picoui_focus_navigate(struct picoui_app *app, enum picoui_native_nav_dir dir);
+int tinyui_focus_reset(struct tinyui_app *app);
+int tinyui_focus_navigate(struct tinyui_app *app, enum tinyui_native_nav_dir dir);
 
 #endif

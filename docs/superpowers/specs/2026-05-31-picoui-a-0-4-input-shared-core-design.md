@@ -1,8 +1,8 @@
-# PicoUI a-0.4 输入 shared-core 串行设计
+# TINYUI a-0.4 输入 shared-core 串行设计
 
 ## 1. 背景
 
-`a-0.3` 已把 PicoUI 当前 `15` 个 public widget 的真实分层写实，但 review 结论也很明确：
+`a-0.3` 已把 TINYUI 当前 `15` 个 public widget 的真实分层写实，但 review 结论也很明确：
 
 1. runtime 仍存在会替 demo 补 layout 的 `temporary smoke path`
 2. `list` 已暴露 host cache 与 backend truth 不统一的问题
@@ -14,7 +14,7 @@
 
 `a-0.4` 的唯一目标：
 
-1. 建立 PicoUI 输入/焦点/选择 shared-core
+1. 建立 TINYUI 输入/焦点/选择 shared-core
 2. 在这套 shared-core 上串行接入 `line_edit / keyboard / combo_box / scroll_selecter`
 3. 让这些控件从第一天起就走真实 backend mapping、真实 focus/navigation 语义、真实 readback 边界
 
@@ -112,16 +112,16 @@
 
 建议主要写面：
 
-1. `picoui/src/core/internal.h`
-2. `picoui/src/core/widget.c`
-3. `picoui/src/core/event.c`
-4. `picoui/src/backend/ldgui/backend.h`
-5. `picoui/src/backend/ldgui/backend_widget.c`
-6. `picoui/src/backend/ldgui/backend_event.c`
-7. `picoui/src/backend/ldgui/backend_app.c`
-8. `picoui/src/backend/ldgui/backend_layout.c`
-9. `tests/picoui/runtime/check_picoui_backend_mapping.py`
-10. `tests/picoui/runtime/check_picoui_visible_ui.py`
+1. `tinyui/src/core/internal.h`
+2. `tinyui/src/core/widget.c`
+3. `tinyui/src/core/event.c`
+4. `tinyui/src/backend/ldgui/backend.h`
+5. `tinyui/src/backend/ldgui/backend_widget.c`
+6. `tinyui/src/backend/ldgui/backend_event.c`
+7. `tinyui/src/backend/ldgui/backend_app.c`
+8. `tinyui/src/backend/ldgui/backend_layout.c`
+9. `tests/tinyui/runtime/check_tinyui_backend_mapping.py`
+10. `tests/tinyui/runtime/check_tinyui_visible_ui.py`
 
 ## 6. 严格串行阶段
 
@@ -246,7 +246,7 @@
 
 `a-0.4` 完成时至少满足：
 
-1. `line_edit / keyboard / combo_box / scroll_selecter` 进入 PicoUI public widget
+1. `line_edit / keyboard / combo_box / scroll_selecter` 进入 TINYUI public widget
 2. 不再依赖 runtime 通用补 layout 逻辑制造 visible PASS
 3. getter truth policy 明确，文档与 matrix 一致
 4. 输入 shared-core 可被 `table` 直接复用

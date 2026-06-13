@@ -21,74 +21,74 @@
 
 #include "widget.h"
 
-typedef struct picoui_widget tinyui_obj_t;
-typedef enum picoui_align tinyui_align_t;
-typedef picoui_event_cb tinyui_event_cb;
-typedef picoui_value_changed_cb tinyui_value_changed_cb;
+typedef struct tinyui_widget tinyui_obj_t;
+typedef enum tinyui_align tinyui_align_t;
+typedef tinyui_event_cb tinyui_event_cb;
+typedef tinyui_value_changed_cb tinyui_value_changed_cb;
 
 static inline int tinyui_obj_set_pos(tinyui_obj_t *obj, int x, int y)
 {
-    return picoui_widget_set_pos(obj, x, y);
+    return tinyui_widget_set_pos(obj, x, y);
 }
 
 static inline int tinyui_obj_set_size(tinyui_obj_t *obj, int width, int height)
 {
-    return picoui_widget_set_size(obj, width, height);
+    return tinyui_widget_set_size(obj, width, height);
 }
 
 static inline int tinyui_obj_set_text(tinyui_obj_t *obj, const char *text)
 {
-    return picoui_widget_set_text(obj, text);
+    return tinyui_widget_set_text(obj, text);
 }
 
 static inline int tinyui_obj_set_style_class(tinyui_obj_t *obj, const char *style_class)
 {
-    return picoui_widget_set_style_class(obj, style_class);
+    return tinyui_widget_set_style_class(obj, style_class);
 }
 
 static inline int tinyui_obj_set_user_data(tinyui_obj_t *obj, void *user_data)
 {
-    return picoui_widget_set_user_data(obj, user_data);
+    return tinyui_widget_set_user_data(obj, user_data);
 }
 
 static inline int tinyui_obj_set_bg_color(tinyui_obj_t *obj, unsigned int rgb)
 {
-    return picoui_widget_set_bg_color(obj, rgb);
+    return tinyui_widget_set_bg_color(obj, rgb);
 }
 
 static inline int tinyui_obj_set_text_color(tinyui_obj_t *obj, unsigned int rgb)
 {
-    return picoui_widget_set_text_color(obj, rgb);
+    return tinyui_widget_set_text_color(obj, rgb);
 }
 
 static inline int tinyui_obj_set_border_color(tinyui_obj_t *obj, unsigned int rgb)
 {
-    return picoui_widget_set_border_color(obj, rgb);
+    return tinyui_widget_set_border_color(obj, rgb);
 }
 
 static inline int tinyui_obj_set_radius(tinyui_obj_t *obj, int radius)
 {
-    return picoui_widget_set_radius(obj, radius);
+    return tinyui_widget_set_radius(obj, radius);
 }
 
 static inline int tinyui_obj_set_padding(tinyui_obj_t *obj, int padding)
 {
-    return picoui_widget_set_padding(obj, padding);
+    return tinyui_widget_set_padding(obj, padding);
 }
 
 static inline int tinyui_obj_set_center(tinyui_obj_t *obj)
 {
-    return picoui_widget_set_center(obj);
+    return tinyui_widget_set_center(obj);
 }
 
 static inline int tinyui_obj_set_visible(tinyui_obj_t *obj, int visible)
 {
-    return picoui_widget_set_visible(obj, visible);
+    return tinyui_widget_set_visible(obj, visible);
 }
 
 static inline int tinyui_obj_destroy(tinyui_obj_t *obj)
 {
-    return picoui_widget_destroy(obj);
+    return tinyui_widget_destroy(obj);
 }
 
 #endif

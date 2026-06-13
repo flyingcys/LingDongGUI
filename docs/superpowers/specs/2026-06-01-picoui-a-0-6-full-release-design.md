@@ -1,13 +1,13 @@
-# PicoUI a-0.6 全量发布缺口总账设计
+# TINYUI a-0.6 全量发布缺口总账设计
 
 ## 1. 背景
 
-当前 PicoUI 已经不再处于“只有少数 public widget”的早期阶段。
+当前 TINYUI 已经不再处于“只有少数 public widget”的早期阶段。
 
 真实基线已经是：
 
 1. LingDongGUI 可封装控件总数：`26`
-2. PicoUI 已进入 public widget 集的控件：`22`
+2. TINYUI 已进入 public widget 集的控件：`22`
 3. 仍未进入 public widget 集的控件：`4`
 4. 真正还能维持 `full_parity_complete` 的控件：`4`
 5. 其余 `18` 个已包裹控件仍分别停在
@@ -27,8 +27,8 @@
 
 `a-0.6` 的唯一目标：
 
-1. 把 PicoUI 收口到真正可发布的 LingDongGUI 全量控件版本。
-2. 让 `26` 个控件全部进入 PicoUI public widget 集。
+1. 把 TINYUI 收口到真正可发布的 LingDongGUI 全量控件版本。
+2. 让 `26` 个控件全部进入 TINYUI public widget 集。
 3. 让 `26` 个控件全部从当前中间态收口到 `full_parity_complete`。
 4. 把 release matrix、gate、中文文档升级为最终发布真相源，而不是继续停留在 `a-0.3 current-15` 盘点口径。
 
@@ -91,7 +91,7 @@
 
 ### 4.3 `a-0.6` 当时 truth-source 的边界
 
-当前 `tests/picoui/contract/picoui_release_capability_matrix.json` 仍是：
+当前 `tests/tinyui/contract/tinyui_release_capability_matrix.json` 仍是：
 
 1. `schema_version = a-0.3-current-15-layered-v1`
 2. purpose = `current-15 truth source and layered capability matrix`
@@ -312,30 +312,30 @@
 
 以下文件默认由 `a-0.6` 主线程控制写面，不允许多个写 subagent 重叠修改：
 
-- `picoui/src/core/internal.h`
-- `picoui/src/core/widget.c`
-- `picoui/src/core/event.c`
-- `picoui/src/backend/ldgui/backend.h`
-- `picoui/src/backend/ldgui/backend_widget.c`
-- `picoui/src/backend/ldgui/backend_event.c`
-- `tests/picoui/runtime/check_picoui_runtime.py`
-- `tests/picoui/runtime/check_picoui_backend_mapping.py`
-- `tests/picoui/runtime/check_picoui_visible_ui.py`
-- `tests/picoui/contract/picoui_release_capability_matrix.json`
-- `tests/picoui/contract/check_picoui_release_capability_matrix.py`
+- `tinyui/src/core/internal.h`
+- `tinyui/src/core/widget.c`
+- `tinyui/src/core/event.c`
+- `tinyui/src/backend/ldgui/backend.h`
+- `tinyui/src/backend/ldgui/backend_widget.c`
+- `tinyui/src/backend/ldgui/backend_event.c`
+- `tests/tinyui/runtime/check_tinyui_runtime.py`
+- `tests/tinyui/runtime/check_tinyui_backend_mapping.py`
+- `tests/tinyui/runtime/check_tinyui_visible_ui.py`
+- `tests/tinyui/contract/tinyui_release_capability_matrix.json`
+- `tests/tinyui/contract/check_tinyui_release_capability_matrix.py`
 
 ### 8.2 聚合入口文件
 
 以下文件只允许在每个子阶段末尾最小接入一次：
 
-- `picoui/include/picoui/picoui.h`
-- `tests/picoui/CMakeLists.txt`
-- `tests/picoui/contract/check_picoui_public_api.py`
-- `tests/picoui/contract/check_picoui_demo_boundary.py`
-- `picoui/docs/demo_guide.md`
-- `docs/picoui-serial/a-0.4-a-0.6-后续版本记录.md`
-- `docs/picoui-serial/a-0.4-线计划索引.md`
-- `docs/picoui-serial/a-0.5-线计划索引.md`
+- `tinyui/include/tinyui/tinyui.h`
+- `tests/tinyui/CMakeLists.txt`
+- `tests/tinyui/contract/check_tinyui_public_api.py`
+- `tests/tinyui/contract/check_tinyui_demo_boundary.py`
+- `tinyui/docs/demo_guide.md`
+- `docs/tinyui-serial/a-0.4-a-0.6-后续版本记录.md`
+- `docs/tinyui-serial/a-0.4-线计划索引.md`
+- `docs/tinyui-serial/a-0.5-线计划索引.md`
 
 ## 9. Subagent 策略
 
@@ -396,7 +396,7 @@
 
 只有当以下条件全部满足，`a-0.6` 才算完成：
 
-1. `26/26` 全控件进入 PicoUI public widget 集。
+1. `26/26` 全控件进入 TINYUI public widget 集。
 2. `26/26` 全控件 capability gap 收口完毕。
 3. 不再有 `stable_contract_but_not_full_parity`、`minimal_vertical_slice_only`、`not_wrapped` 作为最终态。
 4. final release matrix、final gate catalog、manual artifact、中文发布文档全部收口。

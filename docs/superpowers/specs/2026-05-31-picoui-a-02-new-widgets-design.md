@@ -1,15 +1,15 @@
-# PicoUI a-02 低耦合新控件扩面设计
+# TINYUI a-02 低耦合新控件扩面设计
 
 > 日期：2026-05-31
 > 适用仓库：`/Users/cys/embedded/LingDongGUI`
-> 入口索引：`docs/picoui-serial/a-02-线计划索引.md`
+> 入口索引：`docs/tinyui-serial/a-02-线计划索引.md`
 > 目标：在不争抢 shared-owner 写面的前提下，把 `progress_bar / qrcode / progress_wheel / message_box / date_time / clock` 拆成一条长期串行新控件 vertical-slice worktree，用最少 shared 改动换取最快覆盖率提升，并为 fresh subagent 提供单线可执行边界。
 
 ---
 
 ## 1. 背景
 
-当前 PicoUI 想加速，不能只看“还有多少控件没做”，还要看“哪些控件能不打架地做”。
+当前 TINYUI 想加速，不能只看“还有多少控件没做”，还要看“哪些控件能不打架地做”。
 
 仓库现状已经明确：
 
@@ -22,7 +22,7 @@
 - `a-01` 负责 current backlog 与 shared-owner
 - `a-02` 负责低耦合新控件 vertical slice
 
-`a-02` 的关键不是“挑最炫的控件”，而是挑那些能在尽量少修改 shared 层前提下，快速拉高 PicoUI 覆盖率的控件。
+`a-02` 的关键不是“挑最炫的控件”，而是挑那些能在尽量少修改 shared 层前提下，快速拉高 TINYUI 覆盖率的控件。
 
 ---
 
@@ -53,9 +53,9 @@
 
 1. 不修 `image / text / checkbox / switch / list` backlog。
 2. 不修改 release matrix 总口径。
-3. 不争抢 `picoui/src/core/widget.c`、`backend_style_apply.c`、`backend_event.c`、`backend_app.c` 的持续写权。
+3. 不争抢 `tinyui/src/core/widget.c`、`backend_style_apply.c`、`backend_event.c`、`backend_app.c` 的持续写权。
 4. 不做 `line_edit`、`combo_box`、`keyboard`、`table`、`graph`、`calendar`、`scroll selecter` 等高耦合输入/focus/dropdown/data-model 合同。
-5. 不把单个 demo 通过写成“PicoUI 发布能力完成”。
+5. 不把单个 demo 通过写成“TINYUI 发布能力完成”。
 6. 不把“先把控件创建出来”冒充成 vertical slice 完成。
 
 ---
@@ -219,7 +219,7 @@
 
 1. `a-02` 整线完成
 2. 所有后续控件能力已验证
-3. PicoUI 发布能力已经整体 closeout
+3. TINYUI 发布能力已经整体 closeout
 
 `B2 qrcode` 的当前收口口径仅限：
 
@@ -231,7 +231,7 @@
 
 1. `a-02` 整线完成
 2. `progress_wheel / message_box / date_time / clock` 已验证
-3. PicoUI 发布能力已经整体 closeout
+3. TINYUI 发布能力已经整体 closeout
 
 `B3 progress_wheel` 的当前收口口径仅限：
 
@@ -244,7 +244,7 @@
 
 1. `a-02` 整线完成
 2. `message_box / date_time / clock` 已验证
-3. PicoUI 发布能力已经整体 closeout
+3. TINYUI 发布能力已经整体 closeout
    - 最后处理更重的显示型图片/指针控件
 
 `B4 message_box` 的当前收口口径仅限：
@@ -258,7 +258,7 @@
 
 1. `a-02` 整线完成
 2. `date_time / clock` 已验证
-3. PicoUI 发布能力已经整体 closeout
+3. TINYUI 发布能力已经整体 closeout
    - 最后处理更重的显示型图片/指针控件
 
 `B5 date_time` 的当前收口口径仅限：
@@ -272,20 +272,20 @@
 
 1. `a-02` 整线完成
 2. `clock` 已验证
-3. PicoUI 发布能力已经整体 closeout
+3. TINYUI 发布能力已经整体 closeout
 
 `B6 clock` 的当前收口口径仅限：
 
 1. public API、widget、backend、demo、unit 已落地
 2. runtime / mapping / visible / contract 入口已接通并通过当前 targeted 验证
-3. 当前 PicoUI 只承诺最小 `step_second` 指针显示合同，不承诺背景资源或高级动画系统
+3. 当前 TINYUI 只承诺最小 `step_second` 指针显示合同，不承诺背景资源或高级动画系统
 4. 当前回合受工具策略约束未再新开独立 reviewer；已补做主线程本地 review，未见新的阻断项
 
 它同样不等于：
 
-1. PicoUI 整体发布能力已经 closeout
+1. TINYUI 整体发布能力已经 closeout
 2. 更高耦合输入类 backlog 已完成
-3. 所有 LingDongGUI 原生时钟资源语义都已对 PicoUI 暴露
+3. 所有 LingDongGUI 原生时钟资源语义都已对 TINYUI 暴露
 
 ---
 
@@ -297,12 +297,12 @@
    - 对外头文件存在
    - 不泄漏 `ld*` / `arm_2d_*` / `SIGNAL_*`
 2. **widget implementation**
-   - PicoUI 层对象、属性、生命周期、最小状态语义完整
+   - TINYUI 层对象、属性、生命周期、最小状态语义完整
 3. **backend mapping**
    - 真实落到对应 `ld*` 控件
    - 不是 fake path
 4. **demo**
-   - demo 只使用 `picoui_*` API
+   - demo 只使用 `tinyui_*` API
    - 不靠 demo 代码承担适配补丁
 5. **证据**
    - 至少有 unit / contract 入口
@@ -318,75 +318,75 @@
 
 `progress_bar` 阶段：
 
-- `picoui/include/picoui/progress_bar.h`
-- `picoui/src/widgets/progress_bar.c`
-- `picoui/src/backend/ldgui/backend_progress_bar.c`
-- `picoui/demo/progress_bar_basic/main.c`
-- `tests/picoui/unit/test_picoui_progress_bar.c`
+- `tinyui/include/tinyui/progress_bar.h`
+- `tinyui/src/widgets/progress_bar.c`
+- `tinyui/src/backend/ldgui/backend_progress_bar.c`
+- `tinyui/demo/progress_bar_basic/main.c`
+- `tests/tinyui/unit/test_tinyui_progress_bar.c`
 
 `qrcode` 阶段：
 
-- `picoui/include/picoui/qrcode.h`
-- `picoui/src/widgets/qrcode.c`
-- `picoui/src/backend/ldgui/backend_qrcode.c`
-- `picoui/demo/qrcode_basic/main.c`
-- `tests/picoui/unit/test_picoui_qrcode.c`
+- `tinyui/include/tinyui/qrcode.h`
+- `tinyui/src/widgets/qrcode.c`
+- `tinyui/src/backend/ldgui/backend_qrcode.c`
+- `tinyui/demo/qrcode_basic/main.c`
+- `tests/tinyui/unit/test_tinyui_qrcode.c`
 
 `progress_wheel` 阶段：
 
-- `picoui/include/picoui/progress_wheel.h`
-- `picoui/src/widgets/progress_wheel.c`
-- `picoui/src/backend/ldgui/backend_progress_wheel.c`
-- `picoui/demo/progress_wheel_basic/main.c`
-- `tests/picoui/unit/test_picoui_progress_wheel.c`
+- `tinyui/include/tinyui/progress_wheel.h`
+- `tinyui/src/widgets/progress_wheel.c`
+- `tinyui/src/backend/ldgui/backend_progress_wheel.c`
+- `tinyui/demo/progress_wheel_basic/main.c`
+- `tests/tinyui/unit/test_tinyui_progress_wheel.c`
 
 `message_box` 阶段：
 
-- `picoui/include/picoui/message_box.h`
-- `picoui/src/widgets/message_box.c`
-- `picoui/src/backend/ldgui/backend_message_box.c`
-- `picoui/demo/message_box_basic/main.c`
-- `tests/picoui/unit/test_picoui_message_box.c`
+- `tinyui/include/tinyui/message_box.h`
+- `tinyui/src/widgets/message_box.c`
+- `tinyui/src/backend/ldgui/backend_message_box.c`
+- `tinyui/demo/message_box_basic/main.c`
+- `tests/tinyui/unit/test_tinyui_message_box.c`
 
 `date_time` 阶段：
 
-- `picoui/include/picoui/date_time.h`
-- `picoui/src/widgets/date_time.c`
-- `picoui/src/backend/ldgui/backend_date_time.c`
-- `picoui/demo/date_time_basic/main.c`
-- `tests/picoui/unit/test_picoui_date_time.c`
+- `tinyui/include/tinyui/date_time.h`
+- `tinyui/src/widgets/date_time.c`
+- `tinyui/src/backend/ldgui/backend_date_time.c`
+- `tinyui/demo/date_time_basic/main.c`
+- `tests/tinyui/unit/test_tinyui_date_time.c`
 
 `clock` 阶段：
 
-- `picoui/include/picoui/clock.h`
-- `picoui/src/widgets/clock.c`
-- `picoui/src/backend/ldgui/backend_clock.c`
-- `picoui/demo/clock_basic/main.c`
-- `tests/picoui/unit/test_picoui_clock.c`
+- `tinyui/include/tinyui/clock.h`
+- `tinyui/src/widgets/clock.c`
+- `tinyui/src/backend/ldgui/backend_clock.c`
+- `tinyui/demo/clock_basic/main.c`
+- `tests/tinyui/unit/test_tinyui_clock.c`
 
 ### 8.2 默认禁改 shared-owner 文件
 
 以下文件默认禁止 `a-02` 持续修改：
 
-- `picoui/src/core/widget.c`
-- `picoui/src/backend/ldgui/backend_style_apply.c`
-- `picoui/src/backend/ldgui/backend_event.c`
-- `picoui/src/backend/ldgui/backend_app.c`
-- `tests/picoui/contract/picoui_release_capability_matrix.json`
-- `tests/picoui/contract/check_picoui_release_capability_matrix.py`
+- `tinyui/src/core/widget.c`
+- `tinyui/src/backend/ldgui/backend_style_apply.c`
+- `tinyui/src/backend/ldgui/backend_event.c`
+- `tinyui/src/backend/ldgui/backend_app.c`
+- `tests/tinyui/contract/tinyui_release_capability_matrix.json`
+- `tests/tinyui/contract/check_tinyui_release_capability_matrix.py`
 
 ### 8.3 聚合文件策略
 
 以下文件允许在每个控件阶段末尾做一次最小接入，但不要高频反复改：
 
-- `picoui/include/picoui/picoui.h`
-- `tests/picoui/CMakeLists.txt`
-- `tests/picoui/runtime/check_picoui_runtime.py`
-- `tests/picoui/runtime/check_picoui_backend_mapping.py`
-- `tests/picoui/runtime/check_picoui_visible_ui.py`
-- `tests/picoui/contract/check_picoui_public_api.py`
-- `tests/picoui/contract/check_picoui_demo_boundary.py`
-- `picoui/docs/demo_guide.md`
+- `tinyui/include/tinyui/tinyui.h`
+- `tests/tinyui/CMakeLists.txt`
+- `tests/tinyui/runtime/check_tinyui_runtime.py`
+- `tests/tinyui/runtime/check_tinyui_backend_mapping.py`
+- `tests/tinyui/runtime/check_tinyui_visible_ui.py`
+- `tests/tinyui/contract/check_tinyui_public_api.py`
+- `tests/tinyui/contract/check_tinyui_demo_boundary.py`
+- `tinyui/docs/demo_guide.md`
 
 ---
 
@@ -485,7 +485,7 @@
 至少要保证：
 
 - 真实落到 `ldClock`
-- 只承诺当前 PicoUI 明确暴露的显示合同
+- 只承诺当前 TINYUI 明确暴露的显示合同
 
 ---
 
@@ -509,17 +509,17 @@
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
 rtk cmake --build build
-python3 tests/picoui/contract/check_picoui_public_api.py
-python3 tests/picoui/contract/check_picoui_demo_boundary.py
+python3 tests/tinyui/contract/check_tinyui_public_api.py
+python3 tests/tinyui/contract/check_tinyui_demo_boundary.py
 git diff --check
 ```
 
 若已接入 demo/runtime，再补：
 
 ```bash
-python3 tests/picoui/runtime/check_picoui_runtime.py
-python3 tests/picoui/runtime/check_picoui_backend_mapping.py
-python3 tests/picoui/runtime/check_picoui_visible_ui.py --demo <demo_name>
+python3 tests/tinyui/runtime/check_tinyui_runtime.py
+python3 tests/tinyui/runtime/check_tinyui_backend_mapping.py
+python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --demo <demo_name>
 ```
 
 若已新增 unit target，再补：
@@ -566,7 +566,7 @@ git diff --check
 3. `a-02` 每阶段都可单独 merge-back。
 4. `a-01` 与 `a-02` 之间的边界仍清晰，没有演化成双 shared 主线。
 5. 覆盖率提升来自真实新控件闭环，不是来自名义文件新增。
-6. 这一轮结束后，PicoUI 数量覆盖从 `9 / 26` 提升到 `15 / 26`，约 `57.7%`，但仍不是 LingDongGUI 全控件覆盖。
+6. 这一轮结束后，TINYUI 数量覆盖从 `9 / 26` 提升到 `15 / 26`，约 `57.7%`，但仍不是 LingDongGUI 全控件覆盖。
 
 ---
 

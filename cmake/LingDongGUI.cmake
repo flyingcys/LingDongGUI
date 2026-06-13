@@ -143,7 +143,7 @@ function(ld_define_core_targets)
     target_link_libraries(longdonggui_porting_default PUBLIC longdonggui)
     ld_apply_common_target_config(longdonggui_porting_default)
 
-    set(LD_TINYUI_BACKEND_LDGUI_DIR "${LD_REPO_ROOT}/tinyui/src/backend/ldgui")
+    set(LD_TINYUI_BACKEND_LDGUI_DIR "${LD_REPO_ROOT}/tinyui/src/drivers")
 
     add_library(tinyui_backend_ldgui_porting STATIC
         "${LD_TINYUI_BACKEND_LDGUI_DIR}/tinyui_ldgui_port.c"
@@ -154,7 +154,7 @@ function(ld_define_core_targets)
         "${LD_TINYUI_BACKEND_LDGUI_DIR}"
         "${LD_REPO_ROOT}/tinyui/include"
         "${LD_REPO_ROOT}/tinyui/src/core"
-        "${LD_REPO_ROOT}/tinyui/src/backend/ldgui"
+        "${LD_REPO_ROOT}/tinyui/src/drivers"
         ${LD_COMMON_INCLUDE_DIRS}
     )
     target_compile_definitions(tinyui_backend_ldgui_porting PRIVATE
@@ -219,7 +219,7 @@ function(ld_define_core_targets)
     target_include_directories(tinyui_core PUBLIC
         ${LD_REPO_ROOT}/tinyui/include
         ${LD_REPO_ROOT}/tinyui/src/core
-        ${LD_REPO_ROOT}/tinyui/src/backend/ldgui
+        ${LD_REPO_ROOT}/tinyui/src/drivers
         ${LD_COMMON_INCLUDE_DIRS}
     )
     ld_apply_common_target_config(tinyui_core)
@@ -234,7 +234,7 @@ function(ld_define_core_targets)
         target_include_directories(${LD_TINYUI_BACKEND_TARGET} PUBLIC
             ${LD_REPO_ROOT}/tinyui/include
             ${LD_REPO_ROOT}/tinyui/src/core
-            ${LD_REPO_ROOT}/tinyui/src/backend/ldgui
+            ${LD_REPO_ROOT}/tinyui/src/drivers
             ${LD_REPO_ROOT}/tinyui
         )
         target_link_libraries(${LD_TINYUI_BACKEND_TARGET} PUBLIC tinyui_core longdonggui tinyui_backend_ldgui_porting)

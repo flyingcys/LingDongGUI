@@ -33,23 +33,23 @@ static ldColor tinyui_checkbox_rgb_to_ld_color(unsigned int rgb)
     return __RGB((rgb >> 16) & 0xFFU, (rgb >> 8) & 0xFFU, rgb & 0xFFU);
 }
 
-static ldCheckBox_t *tinyui_checkbox_get_ld(struct picoui_checkbox *checkbox)
+static ldCheckBox_t *tinyui_checkbox_get_ld(struct tinyui_checkbox *checkbox)
 {
-    struct picoui_backend_widget *backend;
+    struct tinyui_backend_widget *backend;
 
     if (checkbox == 0 || checkbox->widget.backend_widget == 0) {
         return 0;
     }
 
-    backend = (struct picoui_backend_widget *)checkbox->widget.backend_widget;
-    if (backend->kind != PICOUI_BACKEND_WIDGET_CHECKBOX || backend->ld_widget == 0) {
+    backend = (struct tinyui_backend_widget *)checkbox->widget.backend_widget;
+    if (backend->kind != TINYUI_BACKEND_WIDGET_CHECKBOX || backend->ld_widget == 0) {
         return 0;
     }
 
     return (ldCheckBox_t *)backend->ld_widget;
 }
 
-static int tinyui_checkbox_props_are_valid(const struct picoui_checkbox_props *props)
+static int tinyui_checkbox_props_are_valid(const struct tinyui_checkbox_props *props)
 {
     return props != 0
         && props->id != 0
@@ -69,16 +69,16 @@ static int tinyui_checkbox_props_are_valid(const struct picoui_checkbox_props *p
         && props->padding >= 0;
 }
 
-static void tinyui_checkbox_dispose_partial(struct picoui_checkbox *checkbox)
+static void tinyui_checkbox_dispose_partial(struct tinyui_checkbox *checkbox)
 {
-    struct picoui_backend_widget *backend;
-    struct picoui_backend_app_state *app_state;
+    struct tinyui_backend_widget *backend;
+    struct tinyui_backend_app_state *app_state;
 
     if (checkbox == 0) {
         return;
     }
 
-    backend = (struct picoui_backend_widget *)checkbox->widget.backend_widget;
+    backend = (struct tinyui_backend_widget *)checkbox->widget.backend_widget;
     if (backend != 0) {
         app_state = tinyui_runtime_bridge_backend_state(backend->owner);
         if (backend->parent != 0) {
@@ -107,12 +107,12 @@ void tinyui_checkbox_test_fail_next_set_check_color(void)
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct picoui_checkbox *picoui_checkbox_create(struct picoui_window *parent, const char *id)
+struct tinyui_checkbox *tinyui_checkbox_create(struct tinyui_window *parent, const char *id)
 {
-    struct picoui_checkbox *checkbox;
-    struct picoui_backend_widget *backend;
-    struct picoui_backend_widget *parent_backend;
-    struct picoui_backend_app_state *app_state;
+    struct tinyui_checkbox *checkbox;
+    struct tinyui_backend_widget *backend;
+    struct tinyui_backend_widget *parent_backend;
+    struct tinyui_backend_app_state *app_state;
     ldCheckBox_t *ld_checkbox;
     uint16_t name_id;
 
@@ -120,7 +120,7 @@ struct picoui_checkbox *picoui_checkbox_create(struct picoui_window *parent, con
         return 0;
     }
 
-    parent_backend = (struct picoui_backend_widget *)parent->widget.backend_widget;
+    parent_backend = (struct tinyui_backend_widget *)parent->widget.backend_widget;
     app_state = tinyui_runtime_bridge_backend_state_from_parent(parent_backend);
     if (parent_backend == 0 || parent_backend->ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
         return 0;
@@ -162,7 +162,7 @@ struct picoui_checkbox *picoui_checkbox_create(struct picoui_window *parent, con
 
     if (tinyui_widget_init_child(backend,
                                          parent_backend,
-                                         PICOUI_BACKEND_WIDGET_CHECKBOX,
+                                         TINYUI_BACKEND_WIDGET_CHECKBOX,
                                          id,
                                          parent_backend->theme) != 0) {
         ldCheckBox_depose(app_state->ld_scene, ld_checkbox);
@@ -172,7 +172,7 @@ struct picoui_checkbox *picoui_checkbox_create(struct picoui_window *parent, con
     }
     backend->ld_widget = ld_checkbox;
     backend->ld_name_id = name_id;
-    backend->last_signal = PICOUI_BACKEND_SIGNAL_NONE;
+    backend->last_signal = TINYUI_BACKEND_SIGNAL_NONE;
     if (tinyui_widget_attach_child(parent_backend, backend) != 0) {
         ldCheckBox_depose(app_state->ld_scene, ld_checkbox);
         free(backend);
@@ -199,17 +199,17 @@ struct picoui_checkbox *picoui_checkbox_create(struct picoui_window *parent, con
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct picoui_checkbox *picoui_checkbox_create_with_props(struct picoui_window *parent,
-                                                          const struct picoui_checkbox_props *props)
+struct tinyui_checkbox *tinyui_checkbox_create_with_props(struct tinyui_window *parent,
+                                                          const struct tinyui_checkbox_props *props)
 {
-    struct picoui_checkbox *checkbox;
-    struct picoui_backend_widget *backend;
+    struct tinyui_checkbox *checkbox;
+    struct tinyui_backend_widget *backend;
 
     if (!tinyui_checkbox_props_are_valid(props)) {
         return 0;
     }
 
-    checkbox = picoui_checkbox_create(parent, props->id);
+    checkbox = tinyui_checkbox_create(parent, props->id);
     if (checkbox == 0) {
         return 0;
     }
@@ -217,11 +217,11 @@ struct picoui_checkbox *picoui_checkbox_create_with_props(struct picoui_window *
     checkbox->checked = 0;
     checkbox->cb = 0;
     checkbox->user_data = 0;
-    if (props->text != 0 && picoui_checkbox_set_text(checkbox, props->text) != 0) {
+    if (props->text != 0 && tinyui_checkbox_set_text(checkbox, props->text) != 0) {
         tinyui_checkbox_dispose_partial(checkbox);
         return 0;
     }
-    backend = (struct picoui_backend_widget *)checkbox->widget.backend_widget;
+    backend = (struct tinyui_backend_widget *)checkbox->widget.backend_widget;
     checkbox->checked = props->checked != 0;
     if (tinyui_widget_update_value(backend,
                                    checkbox->checked,
@@ -231,39 +231,39 @@ struct picoui_checkbox *picoui_checkbox_create_with_props(struct picoui_window *
         tinyui_checkbox_dispose_partial(checkbox);
         return 0;
     }
-    backend->last_signal = PICOUI_BACKEND_SIGNAL_NONE;
+    backend->last_signal = TINYUI_BACKEND_SIGNAL_NONE;
     backend->dispatch_count = 0;
     checkbox->cb = props->on_toggled;
     checkbox->user_data = props->user_data;
-    if (picoui_widget_set_user_data(&checkbox->widget, props->user_data) != 0) {
+    if (tinyui_widget_set_user_data(&checkbox->widget, props->user_data) != 0) {
         tinyui_checkbox_dispose_partial(checkbox);
         return 0;
     }
     if (props->style_class != 0
-        && picoui_widget_set_style_class(&checkbox->widget, props->style_class) != 0) {
+        && tinyui_widget_set_style_class(&checkbox->widget, props->style_class) != 0) {
         tinyui_checkbox_dispose_partial(checkbox);
         return 0;
     }
     if ((props->width > 0 || props->height > 0)
-        && picoui_widget_set_size(&checkbox->widget, props->width, props->height) != 0) {
+        && tinyui_widget_set_size(&checkbox->widget, props->width, props->height) != 0) {
         tinyui_checkbox_dispose_partial(checkbox);
         return 0;
     }
-    if (picoui_widget_set_bg_color(&checkbox->widget, props->bg_color) != 0
-        || picoui_checkbox_set_text_color(checkbox, props->text_color) != 0
-        || picoui_widget_set_border_color(&checkbox->widget, props->border_color) != 0
-        || picoui_widget_set_radius(&checkbox->widget, props->radius) != 0
-        || picoui_widget_set_padding(&checkbox->widget, props->padding) != 0
+    if (tinyui_widget_set_bg_color(&checkbox->widget, props->bg_color) != 0
+        || tinyui_checkbox_set_text_color(checkbox, props->text_color) != 0
+        || tinyui_widget_set_border_color(&checkbox->widget, props->border_color) != 0
+        || tinyui_widget_set_radius(&checkbox->widget, props->radius) != 0
+        || tinyui_widget_set_padding(&checkbox->widget, props->padding) != 0
         || (props->has_check_color != 0
-            && picoui_checkbox_set_check_color(checkbox, props->check_color) != 0)
+            && tinyui_checkbox_set_check_color(checkbox, props->check_color) != 0)
         || (props->has_unchecked_source != 0
-            && picoui_checkbox_set_unchecked_source(checkbox, props->unchecked_source) != 0)
+            && tinyui_checkbox_set_unchecked_source(checkbox, props->unchecked_source) != 0)
         || (props->has_checked_source != 0
-            && picoui_checkbox_set_checked_source(checkbox, props->checked_source) != 0)
+            && tinyui_checkbox_set_checked_source(checkbox, props->checked_source) != 0)
         || (props->has_radio_group != 0
-            && picoui_checkbox_set_radio_group(checkbox, props->radio_group) != 0)
+            && tinyui_checkbox_set_radio_group(checkbox, props->radio_group) != 0)
         || (props->has_string_left_space != 0
-            && picoui_checkbox_set_string_left_space(checkbox, props->string_left_space) != 0)) {
+            && tinyui_checkbox_set_string_left_space(checkbox, props->string_left_space) != 0)) {
         tinyui_checkbox_dispose_partial(checkbox);
         return 0;
     }
@@ -278,7 +278,7 @@ struct picoui_checkbox *picoui_checkbox_create_with_props(struct picoui_window *
  * @return 0 on success, -1 on failure
  */
 
-int picoui_checkbox_set_checked(struct picoui_checkbox *checkbox, int checked)
+int tinyui_checkbox_set_checked(struct tinyui_checkbox *checkbox, int checked)
 {
     int normalized_checked;
 
@@ -310,7 +310,7 @@ int picoui_checkbox_set_checked(struct picoui_checkbox *checkbox, int checked)
  * @return 0 on success
  */
 
-int picoui_checkbox_is_checked(struct picoui_checkbox *checkbox)
+int tinyui_checkbox_is_checked(struct tinyui_checkbox *checkbox)
 {
     if (checkbox == 0) {
         return 0;
@@ -327,13 +327,13 @@ int picoui_checkbox_is_checked(struct picoui_checkbox *checkbox)
  * @return -1 on failure
  */
 
-int picoui_checkbox_set_text(struct picoui_checkbox *checkbox, const char *text)
+int tinyui_checkbox_set_text(struct tinyui_checkbox *checkbox, const char *text)
 {
     if (checkbox == 0 || text == 0) {
         return -1;
     }
 
-    if (picoui_widget_set_text(&checkbox->widget, text) != 0) {
+    if (tinyui_widget_set_text(&checkbox->widget, text) != 0) {
         return -1;
     }
     return tinyui_widget_set_backend_text(checkbox->widget.backend_widget, text);
@@ -347,7 +347,7 @@ int picoui_checkbox_set_text(struct picoui_checkbox *checkbox, const char *text)
  * @return -1 on failure
  */
 
-int picoui_checkbox_set_check_color(struct picoui_checkbox *checkbox, unsigned int rgb)
+int tinyui_checkbox_set_check_color(struct tinyui_checkbox *checkbox, unsigned int rgb)
 {
     ldCheckBox_t *ld_checkbox;
 
@@ -375,11 +375,11 @@ int picoui_checkbox_set_check_color(struct picoui_checkbox *checkbox, unsigned i
  * @return -1 on failure
  */
 
-int picoui_checkbox_set_text_color(struct picoui_checkbox *checkbox, unsigned int rgb)
+int tinyui_checkbox_set_text_color(struct tinyui_checkbox *checkbox, unsigned int rgb)
 {
     ldCheckBox_t *ld_checkbox;
 
-    if (checkbox == 0 || picoui_widget_set_text_color(&checkbox->widget, rgb) != 0) {
+    if (checkbox == 0 || tinyui_widget_set_text_color(&checkbox->widget, rgb) != 0) {
         return -1;
     }
 
@@ -400,8 +400,8 @@ int picoui_checkbox_set_text_color(struct picoui_checkbox *checkbox, unsigned in
  * @return -1 on failure
  */
 
-int picoui_checkbox_set_unchecked_source(struct picoui_checkbox *checkbox,
-                                         struct picoui_image_source *source)
+int tinyui_checkbox_set_unchecked_source(struct tinyui_checkbox *checkbox,
+                                         struct tinyui_image_source *source)
 {
     ldCheckBox_t *ld_checkbox;
 
@@ -430,8 +430,8 @@ int picoui_checkbox_set_unchecked_source(struct picoui_checkbox *checkbox,
  * @return -1 on failure
  */
 
-int picoui_checkbox_set_checked_source(struct picoui_checkbox *checkbox,
-                                       struct picoui_image_source *source)
+int tinyui_checkbox_set_checked_source(struct tinyui_checkbox *checkbox,
+                                       struct tinyui_image_source *source)
 {
     ldCheckBox_t *ld_checkbox;
 
@@ -460,7 +460,7 @@ int picoui_checkbox_set_checked_source(struct picoui_checkbox *checkbox,
  * @return -1 on failure
  */
 
-int picoui_checkbox_set_radio_group(struct picoui_checkbox *checkbox, int radio_group)
+int tinyui_checkbox_set_radio_group(struct tinyui_checkbox *checkbox, int radio_group)
 {
     ldCheckBox_t *ld_checkbox;
 
@@ -485,7 +485,7 @@ int picoui_checkbox_set_radio_group(struct picoui_checkbox *checkbox, int radio_
  * @return -1 on failure
  */
 
-int picoui_checkbox_set_string_left_space(struct picoui_checkbox *checkbox, int space)
+int tinyui_checkbox_set_string_left_space(struct tinyui_checkbox *checkbox, int space)
 {
     ldCheckBox_t *ld_checkbox;
 
@@ -511,8 +511,8 @@ int picoui_checkbox_set_string_left_space(struct picoui_checkbox *checkbox, int 
  * @return 0 on success, -1 on failure
  */
 
-int picoui_checkbox_set_on_toggled(struct picoui_checkbox *checkbox,
-                                   picoui_value_changed_cb cb,
+int tinyui_checkbox_set_on_toggled(struct tinyui_checkbox *checkbox,
+                                   tinyui_value_changed_cb cb,
                                    void *user_data)
 {
     if (checkbox == 0) {

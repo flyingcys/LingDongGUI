@@ -1,35 +1,35 @@
-# PicoUI B线计划索引
+# TINYUI B线计划索引
 
-- `A线` 收口索引：`docs/picoui-serial/A-线计划索引.md`
-- `PicoUI` 总设计真相源：`docs/superpowers/specs/2026-05-26-picoui-abstraction-layer-design.md`
-- `PicoUI` 测试架构真相源：`docs/superpowers/specs/2026-05-26-picoui-lingdonggui-test-architecture-design.md`
-- `B线` 总设计真相源：`docs/superpowers/specs/2026-05-27-picoui-b-line-visible-ui-design.md`
-- `B线` 总实施口径：`docs/superpowers/plans/2026-05-27-picoui-b-line-visible-ui-implementation.md`
+- `A线` 收口索引：`docs/tinyui-serial/A-线计划索引.md`
+- `TINYUI` 总设计真相源：`docs/superpowers/specs/2026-05-26-tinyui-abstraction-layer-design.md`
+- `TINYUI` 测试架构真相源：`docs/superpowers/specs/2026-05-26-tinyui-lingdonggui-test-architecture-design.md`
+- `B线` 总设计真相源：`docs/superpowers/specs/2026-05-27-tinyui-b-line-visible-ui-design.md`
+- `B线` 总实施口径：`docs/superpowers/plans/2026-05-27-tinyui-b-line-visible-ui-implementation.md`
 - 当前仓库硬规则：`AGENTS.md`
 
 ## 当前状态
 
 - `B线` 已按 `B0 -> B1 -> B2 -> B3 -> B4 -> B5` 顺序完成：
-  - `B1` 建立了独立 visible gate：`tests/picoui/runtime/check_picoui_visible_ui.py`
+  - `B1` 建立了独立 visible gate：`tests/tinyui/runtime/check_tinyui_visible_ui.py`
   - `B2` 修正了 `LingDongGUI RGB565 framebuffer -> SDL ARGB8888 / PPM RGB888` 的显示与 capture 颜色链
-  - `B3` 收口了 `picoui_basic_widgets_demo` 的可见基线
-  - `B4` 把 visible gate 推广到 6 个 `picoui` demos，并让 `settings_panel` 的 `wifi/brightness` 不再走 fallback marker
+  - `B3` 收口了 `tinyui_basic_widgets_demo` 的可见基线
+  - `B4` 把 visible gate 推广到 6 个 `tinyui` demos，并让 `settings_panel` 的 `wifi/brightness` 不再走 fallback marker
   - `B5` 将 smoke gate / visible gate / closeout 口径写回文档
 - `A线` 已完成的事情：
-  - `PicoUI -> LingDongGUI` backend 主线已经打通
+  - `TINYUI -> LingDongGUI` backend 主线已经打通
   - `window/label/button/checkbox/switch/slider/text/image`、`flex/grid`、`event`、`theme` 已有真实 backend 映射与 smoke 级验证
   - `runtime/capture` 已能证明 demo 可启动、可出首帧、可回归
 - `B线` 启动前正视的新事实已被关闭：
   - `A线` 证明的是“backend 主线和 smoke 闭环成立”，**不是**“自动 visible gate 或人工窗口验收已经成立”
-  - `2026-05-27` 对 `picoui_basic_widgets_demo` 的复核已经证明：当前首帧虽然不是空白，也不是完全无像素，但画面仍明显不合格
+  - `2026-05-27` 对 `tinyui_basic_widgets_demo` 的复核已经证明：当前首帧虽然不是空白，也不是完全无像素，但画面仍明显不合格
   - 当前至少已确认两类可见问题：
     - 首帧存在重复列/重复控件现象，说明最终呈现和预期控件树不一致
     - 画面配色与可读性异常，不能把“有像素”当成“用户看起来正常”
-  - 用户在真实运行 `picoui_basic_widgets_demo` 时反馈“UI 一片黑”，这是 `B线` 启动背景；该反馈已通过 B2 的颜色链修正和 B3/B4 自动 visible gate 收口处理，但不等同于已有完整人工窗口验收 artifact
+  - 用户在真实运行 `tinyui_basic_widgets_demo` 时反馈“UI 一片黑”，这是 `B线` 启动背景；该反馈已通过 B2 的颜色链修正和 B3/B4 自动 visible gate 收口处理，但不等同于已有完整人工窗口验收 artifact
 
 ## B线目标
 
-- **B线唯一目标已完成**：`PicoUI` 已从“backend 主线已通 + smoke 可出图”推进到“自动 visible gate 已证明 dummy SDL + PPM readback 下可显示、可读、可判定”的状态。
+- **B线唯一目标已完成**：`TINYUI` 已从“backend 主线已通 + smoke 可出图”推进到“自动 visible gate 已证明 dummy SDL + PPM readback 下可显示、可读、可判定”的状态。
 - 若后续需要声称“人工窗口验收通过”，必须执行 `C线` 的 `C6 / manual window artifact gate` 并留下 artifact 记录。
 
 ## 当前游标
@@ -46,7 +46,7 @@
 - `B1`：自动 visible 证据链建立
 - `B2`：窗口显示链与颜色链纠偏
 - `B3`：`basic_widgets` 可见正确性收口
-- `B4`：其他 `picoui` demos 可见正确性铺开
+- `B4`：其他 `tinyui` demos 可见正确性铺开
 - `B5`：可见 UI gate、文档与 closeout
 
 ## 逐阶段入口
@@ -61,10 +61,10 @@
   - `B线` 的首要问题不是“再加控件/再补 API”，而是“当前可见结果证据层级仍不可信”
   - `basic_widgets` 是 `B线` 的最小、最重要样本，后续可见性复核必须先从它开始
 - 当前证据：
-  - `python3 tests/picoui/runtime/check_picoui_runtime.py` 通过
-  - `python3 tests/picoui/runtime/check_picoui_visible_ui.py --all` 通过
-  - `python3 tests/picoui/runtime/check_picoui_backend_mapping.py` 通过
-  - `ctest --test-dir build -L picoui --output-on-failure` 通过
+  - `python3 tests/tinyui/runtime/check_tinyui_runtime.py` 通过
+  - `python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --all` 通过
+  - `python3 tests/tinyui/runtime/check_tinyui_backend_mapping.py` 通过
+  - `ctest --test-dir build -L tinyui --output-on-failure` 通过
 
 ### B1 自动 visible 证据链建立
 
@@ -76,27 +76,27 @@
     - 需要 `C6 / manual window artifact gate` 支撑的人工 OS 窗口结论
     - `显示内容与预期控件树一致`
 - 必须完成的事情：
-  - 为 `picoui_basic_widgets_demo` 建立可见验收基线
+  - 为 `tinyui_basic_widgets_demo` 建立可见验收基线
   - 固定 dummy SDL + PPM readback 下的截图/必要 marker 输出方式
   - 明确哪些检查只能证明 smoke，哪些检查才可证明 visible correctness
 - 阶段完成判定：
-  - 后续每个 `picoui` demo 都有统一的 visible evidence 入口
+  - 后续每个 `tinyui` demo 都有统一的 visible evidence 入口
   - 不再出现“smoke 绿灯，但自动 visible gate 仍可判定黑屏/近黑屏/不可读”的证据错位
 - 收口证据：
-  - `check_picoui_visible_ui.py --demo basic_widgets` 从 B1 RED 变成 B3 PASS
-  - `check_picoui_visible_ui.py --all` 覆盖 6 个 demo
+  - `check_tinyui_visible_ui.py --demo basic_widgets` 从 B1 RED 变成 B3 PASS
+  - `check_tinyui_visible_ui.py --all` 覆盖 6 个 demo
 
 ### B2 窗口显示链与颜色链纠偏
 
 - 当前目标：
-  - 查清 `PicoUI` host present 显示链为什么会和 dummy capture / smoke 证据出现偏差
+  - 查清 `TINYUI` host present 显示链为什么会和 dummy capture / smoke 证据出现偏差
   - 查清当前异常配色、近黑/误黑、颜色通道、渲染呈现路径的问题是否存在系统性偏差
 - 优先排查方向：
   - `backend_app.c` 的 host present 路径是否与 capture/readback 路径存在颜色/像素解释差异
   - `LingDongGUI -> SDL` 的 host present 链与 `PICOUI_CAPTURE_FILE` 的读回路径是否使用了不同的颜色语义
   - 当前默认 theme token、底层颜色映射与最终视觉呈现是否存在“技术上有像素，但用户视觉上不可读”的问题
 - 阶段完成判定：
-  - `PicoUI` host present 与 capture 之间不再出现“一个看起来正常、一个看起来近黑/错色”的系统性偏差
+  - `TINYUI` host present 与 capture 之间不再出现“一个看起来正常、一个看起来近黑/错色”的系统性偏差
   - `B线` 后续 visible gate 可以基于稳定的显示链继续推进
 - 收口证据：
   - `backend_app.c` 将 `COLOUR_INT` framebuffer 按 `LD_CFG_COLOR_DEPTH=16` 转成 SDL `ARGB8888` 与 PPM `RGB888`
@@ -105,7 +105,7 @@
 ### B3 `basic_widgets` 可见正确性收口
 
 - 当前目标：
-  - 把 `picoui_basic_widgets_demo` 变成 `B线` 的第一块真正可见样板
+  - 把 `tinyui_basic_widgets_demo` 变成 `B线` 的第一块真正可见样板
 - 必须完成的事情：
   - 消灭重复列/重复控件/错误布局这类“画出来了但不对”的问题
   - 让 `switch/checkbox/slider/button/text/image` 在 dummy SDL + PPM readback 下达到最小可读状态
@@ -114,13 +114,13 @@
   - `basic_widgets` 在自动 visible gate 下不再被判定为黑屏、近黑屏或不可读
   - `basic_widgets` 的视觉结果与预期控件树一致，不再靠“首帧非空”过关
 - 收口证据：
-  - `python3 tests/picoui/runtime/check_picoui_visible_ui.py --demo basic_widgets` 通过
+  - `python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --demo basic_widgets` 通过
   - `image` 当前以真实 `ldImage` 对象和显式占位 mask 进入 visible evidence，不再造成“未说明状态”的误判
 
-### B4 其他 `picoui` demos 可见正确性铺开
+### B4 其他 `tinyui` demos 可见正确性铺开
 
 - 当前目标：
-  - 把 `basic_widgets` 的 visible correctness 经验推广到其他 `picoui` demos
+  - 把 `basic_widgets` 的 visible correctness 经验推广到其他 `tinyui` demos
 - 覆盖范围：
   - `hello_world`
   - `layout_flex`
@@ -131,10 +131,10 @@
   - 顺序仍然从最小样本开始，不并行扩散到新的大功能面
   - `settings_panel` 若继续暴露 mixed-tree / bridge / placeholder 问题，应作为 `B线` 后段样本处理，不反向污染 `basic_widgets`
 - 阶段完成判定：
-  - 6 个 `picoui` demos 都有“dummy SDL + PPM readback 下可读、可判定”的 automatic visible evidence
+  - 6 个 `tinyui` demos 都有“dummy SDL + PPM readback 下可读、可判定”的 automatic visible evidence
   - 不再只有 `runtime/capture` 级绿灯
 - 收口证据：
-  - `python3 tests/picoui/runtime/check_picoui_visible_ui.py --all` 通过
+  - `python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --all` 通过
   - `settings_panel` 的 `title/wifi/brightness/apply` 均进入 `PICOUI_BACKEND_REAL_WIDGET_IDS`
   - `settings_panel` 不再输出 `PICOUI_BACKEND_INTERACTIVE_BOUNDARY=FAKE_FALLBACK`
 
@@ -145,15 +145,15 @@
   - 明确 `A线` 与 `B线` 的最终边界
 - 必须完成的事情：
   - 文档回写：哪些门禁只能证明 smoke，哪些门禁可证明 automatic visible correctness，哪些结论必须等 C6 manual window artifact gate
-  - 为 `picoui` demos 建立 visible matrix 或等价的可见验收清单
+  - 为 `tinyui` demos 建立 visible matrix 或等价的可见验收清单
   - 关闭“黑屏 / 近黑屏 / 错色 / 重复列 / 不可读但测试为绿”这类证据错位
 - 退出口径：
-  - `B线` 完成时，`PicoUI` 不只是“backend 映射已闭环”，还必须达到“自动 visible gate 已证明 dummy SDL + PPM readback 下可正常显示”
+  - `B线` 完成时，`TINYUI` 不只是“backend 映射已闭环”，还必须达到“自动 visible gate 已证明 dummy SDL + PPM readback 下可正常显示”
 - 收口证据：
-  - smoke gate：`python3 tests/picoui/runtime/check_picoui_runtime.py`
-  - visible gate：`python3 tests/picoui/runtime/check_picoui_visible_ui.py --all`
-  - backend mapping gate：`python3 tests/picoui/runtime/check_picoui_backend_mapping.py`
-  - repo gate：`ctest --test-dir build -L picoui --output-on-failure`
+  - smoke gate：`python3 tests/tinyui/runtime/check_tinyui_runtime.py`
+  - visible gate：`python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --all`
+  - backend mapping gate：`python3 tests/tinyui/runtime/check_tinyui_backend_mapping.py`
+  - repo gate：`ctest --test-dir build -L tinyui --output-on-failure`
 
 ## 当前规则
 
@@ -168,32 +168,32 @@
 
 ## 当前明确做什么
 
-1. 后续新能力线继续保留 `check_picoui_visible_ui.py --all` 作为 automatic visible gate
+1. 后续新能力线继续保留 `check_tinyui_visible_ui.py --all` 作为 automatic visible gate
 2. 后续汇报继续区分 smoke gate、backend correctness gate、automatic visible gate、manual window artifact gate
 3. 若新增 demo，必须同步加入 visible matrix 或等价检查
 
 ## 当前明确不做什么
 
-1. 不先扩新的 `PicoUI` 控件或 public API
+1. 不先扩新的 `TINYUI` 控件或 public API
 2. 不先继续追加 theme/style 花样能力
 3. 不把“测试绿了”当成“用户眼里已经显示正常”
 4. 不把 `A线` 的 closeout 直接包装成“UI 已经完成”
 
 ## 推荐阅读顺序
 
-1. 先读 `docs/picoui-serial/A-线计划索引.md`
-2. 再读 `docs/superpowers/specs/2026-05-26-picoui-abstraction-layer-design.md` 第 `24` 节
-3. 再读 `docs/superpowers/specs/2026-05-27-picoui-b-line-visible-ui-design.md`
-4. 再读 `docs/superpowers/plans/2026-05-27-picoui-b-line-visible-ui-implementation.md`
+1. 先读 `docs/tinyui-serial/A-线计划索引.md`
+2. 再读 `docs/superpowers/specs/2026-05-26-tinyui-abstraction-layer-design.md` 第 `24` 节
+3. 再读 `docs/superpowers/specs/2026-05-27-tinyui-b-line-visible-ui-design.md`
+4. 再读 `docs/superpowers/plans/2026-05-27-tinyui-b-line-visible-ui-implementation.md`
 5. 最后读本文，确认当前游标和阶段顺序
 
 ## 退出口径
 
 下面条件已同时成立，`B线` 已收口：
 
-- `picoui_basic_widgets_demo` 在 dummy SDL + PPM readback 下可正常显示、可读、可判定
+- `tinyui_basic_widgets_demo` 在 dummy SDL + PPM readback 下可正常显示、可读、可判定
 - `capture` 证据与 automatic visible gate 结果不再互相打架
 - `hello_world/layout_flex/layout_grid/theme_showcase/settings_panel` 也达到同级 visible correctness
 - 文档明确区分了 smoke gate、backend mapping gate、automatic visible gate 与 manual window artifact gate
-- 后续若继续扩展 `PicoUI`，不再需要先回头解决“窗口看起来像黑屏/近黑屏”的基础问题
+- 后续若继续扩展 `TINYUI`，不再需要先回头解决“窗口看起来像黑屏/近黑屏”的基础问题
 - 但截至 `B线` 收口，本文不声称已有人工 OS 窗口验收 artifact；该结论必须由 `C6 / manual window artifact gate` 另行支撑

@@ -1,4 +1,4 @@
-# PicoUI a-0.3 / a-0.4 / a-0.5 深度 review
+# TINYUI a-0.3 / a-0.4 / a-0.5 深度 review
 
 ## 范围
 
@@ -8,15 +8,15 @@
 
 后续 `a-0.6` 主线推进后，以下结论已经不再代表当前最新状态：
 
-1. `picoui_wrapped_widget_total = 22`
-2. `picoui_not_wrapped_widget_total = 4`
+1. `tinyui_wrapped_widget_total = 22`
+2. `tinyui_not_wrapped_widget_total = 4`
 3. 对 `2026-06-01` 这轮 review 而言，当时 machine truth-source 仍是 `a-0.3/current-15`
 
 对 `2026-06-01` 这轮 review 而言，当时最新入口应以：
 
-1. `tests/picoui/contract/picoui_release_capability_matrix.json`
-2. `picoui/docs/demo_guide.md`
-3. `docs/picoui-serial/C-线人工窗口验收记录.md`
+1. `tests/tinyui/contract/tinyui_release_capability_matrix.json`
+2. `tinyui/docs/demo_guide.md`
+3. `docs/tinyui-serial/C-线人工窗口验收记录.md`
 
 为准。本文保留的价值是：
 
@@ -25,20 +25,20 @@
 
 本轮 review 只评估当前主仓 `dev` 上与 `a-0.3 / a-0.4 / a-0.5` 直接相关的真实交付：
 
-1. `docs/picoui-serial/a-0.3/*`
-2. `docs/picoui-serial/a-0.4-线计划索引.md`
-3. `docs/picoui-serial/a-0.5-线计划索引.md`
-4. `docs/picoui-serial/a-0.4-a-0.6-后续版本记录.md`
-5. `docs/superpowers/specs/2026-05-31-picoui-a-0-4-input-shared-core-design.md`
-6. `docs/superpowers/specs/2026-05-31-picoui-a-0-5-data-model-design.md`
-7. `docs/superpowers/plans/2026-05-31-picoui-a-0-4-input-shared-core-implementation.md`
-8. `docs/superpowers/plans/2026-05-31-picoui-a-0-5-data-model-implementation.md`
-9. `picoui/src/widgets/*`
-10. `picoui/src/backend/ldgui/*`
-11. `picoui/demo/*`
-12. `tests/picoui/contract/*`
-13. `tests/picoui/runtime/*`
-14. `tests/picoui/unit/*`
+1. `docs/tinyui-serial/a-0.3/*`
+2. `docs/tinyui-serial/a-0.4-线计划索引.md`
+3. `docs/tinyui-serial/a-0.5-线计划索引.md`
+4. `docs/tinyui-serial/a-0.4-a-0.6-后续版本记录.md`
+5. `docs/superpowers/specs/2026-05-31-tinyui-a-0-4-input-shared-core-design.md`
+6. `docs/superpowers/specs/2026-05-31-tinyui-a-0-5-data-model-design.md`
+7. `docs/superpowers/plans/2026-05-31-tinyui-a-0-4-input-shared-core-implementation.md`
+8. `docs/superpowers/plans/2026-05-31-tinyui-a-0-5-data-model-implementation.md`
+9. `tinyui/src/widgets/*`
+10. `tinyui/src/backend/ldgui/*`
+11. `tinyui/demo/*`
+12. `tests/tinyui/contract/*`
+13. `tests/tinyui/runtime/*`
+14. `tests/tinyui/unit/*`
 
 本轮不重跑整仓历史 line，只回答：
 
@@ -50,7 +50,7 @@
 
 ### git / GitNexus 结论
 
-1. 当前主仓 `HEAD` 为 `ec2f8c7 feat(picoui): add input and data widgets`。
+1. 当前主仓 `HEAD` 为 `ec2f8c7 feat(tinyui): add input and data widgets`。
 2. `0ebd8ac start a-0.4/0.5` 是 `a-0.4 / a-0.5` 这批改动的直接起点。
 3. `gitnexus_detect_changes(repo=\"LingDongGUI\", scope=\"compare\", base_ref=\"0ebd8ac\")` 返回：
    - `changed_count = 194`
@@ -70,19 +70,19 @@
 
 相关位置：
 
-1. `docs/picoui-serial/a-0.3/README.md:9`
-2. `docs/picoui-serial/a-0.3/README.md:33`
-3. `docs/picoui-serial/a-0.3/current-15-覆盖与分层真相源.md:14`
-4. `docs/picoui-serial/a-0.3/current-15-覆盖与分层真相源.md:58`
-5. `tests/picoui/contract/picoui_release_capability_matrix.json:53`
-6. `picoui/include/picoui/picoui.h:8`
+1. `docs/tinyui-serial/a-0.3/README.md:9`
+2. `docs/tinyui-serial/a-0.3/README.md:33`
+3. `docs/tinyui-serial/a-0.3/current-15-覆盖与分层真相源.md:14`
+4. `docs/tinyui-serial/a-0.3/current-15-覆盖与分层真相源.md:58`
+5. `tests/tinyui/contract/tinyui_release_capability_matrix.json:53`
+6. `tinyui/include/tinyui/tinyui.h:8`
 
 现状：
 
 1. `a-0.3/README.md` 仍把 `current-15-覆盖与分层真相源.md` 标成“当前 truth-source”。
 2. 同 README 仍写当前 public widget 总数是 `15`、未覆盖是 `11`。
-3. 但主仓 `picoui.h` 已经公开导出 `calendar / combo_box / graph / keyboard / line_edit / scroll_selecter / table`。
-4. release matrix summary 也已经是 `picoui_wrapped_widget_total = 22`、`picoui_not_wrapped_widget_total = 4`。
+3. 但主仓 `tinyui.h` 已经公开导出 `calendar / combo_box / graph / keyboard / line_edit / scroll_selecter / table`。
+4. release matrix summary 也已经是 `tinyui_wrapped_widget_total = 22`、`tinyui_not_wrapped_widget_total = 4`。
 
 结论：
 
@@ -98,18 +98,18 @@
 
 相关位置：
 
-1. `tests/picoui/contract/picoui_release_capability_matrix.json:954`
-2. `tests/picoui/runtime/check_picoui_visible_ui.py:14`
-3. `tests/picoui/runtime/check_picoui_backend_mapping.py:21`
-4. `tests/picoui/runtime/check_picoui_runtime.py:12`
-5. `picoui/docs/demo_guide.md:251`
+1. `tests/tinyui/contract/tinyui_release_capability_matrix.json:954`
+2. `tests/tinyui/runtime/check_tinyui_visible_ui.py:14`
+3. `tests/tinyui/runtime/check_tinyui_backend_mapping.py:21`
+4. `tests/tinyui/runtime/check_tinyui_runtime.py:12`
+5. `tinyui/docs/demo_guide.md:251`
 
 修复前现状：
 
 1. release matrix 把 `keyboard.evidence_layers.mapping = present`、`visible = present`。
-2. 但 `keyboard_basic` 只出现在 `check_picoui_runtime.py` 的 target 集。
-3. `check_picoui_visible_ui.py` 的 `DEMOS` 不包含 `keyboard_basic`。
-4. `check_picoui_backend_mapping.py` 的 target matrix 也不包含 `picoui_keyboard_basic_demo`。
+2. 但 `keyboard_basic` 只出现在 `check_tinyui_runtime.py` 的 target 集。
+3. `check_tinyui_visible_ui.py` 的 `DEMOS` 不包含 `keyboard_basic`。
+4. `check_tinyui_backend_mapping.py` 的 target matrix 也不包含 `tinyui_keyboard_basic_demo`。
 5. `demo_guide` 反而明确写了 `keyboard_basic` 不承担 visible correctness gate。
 
 这不是措辞小问题，而是机器真相源与真实 gate 入口直接矛盾。当前最多只能证明：
@@ -132,16 +132,16 @@
 
 相关位置：
 
-1. `picoui/src/backend/ldgui/backend_scroll_selecter.c:69`
-2. `picoui/src/backend/ldgui/backend.h:42`
-3. `picoui/src/backend/ldgui/backend_widget.c:18`
-4. `picoui/src/backend/ldgui/backend_event.c:278`
+1. `tinyui/src/backend/ldgui/backend_scroll_selecter.c:69`
+2. `tinyui/src/backend/ldgui/backend.h:42`
+3. `tinyui/src/backend/ldgui/backend_widget.c:18`
+4. `tinyui/src/backend/ldgui/backend_event.c:278`
 
 修复前现状：
 
 1. 枚举已经有独立 `PICOUI_BACKEND_WIDGET_SCROLL_SELECTER`。
-2. 但 `picoui_backend_create_scroll_selecter()` 仍把 `widget->kind` 设成 `PICOUI_BACKEND_WIDGET_TEXT`。
-3. `picoui_backend_widget_bind_host()` 会调用 `picoui_backend_widget_init_data_model()`。
+2. 但 `tinyui_backend_create_scroll_selecter()` 仍把 `widget->kind` 设成 `PICOUI_BACKEND_WIDGET_TEXT`。
+3. `tinyui_backend_widget_bind_host()` 会调用 `tinyui_backend_widget_init_data_model()`。
 4. 该初始化只会对 `PICOUI_BACKEND_WIDGET_SCROLL_SELECTER` 设置 `data_truth_policy = BACKEND_VALUE` 和非零 `data_model_identity`。
 
 结果：
@@ -160,17 +160,17 @@
 
 相关位置：
 
-1. `docs/picoui-serial/a-0.4-线计划索引.md:169`
-2. `docs/picoui-serial/a-0.5-线计划索引.md:161`
-3. `docs/picoui-serial/a-0.4-a-0.6-后续版本记录.md:69`
-4. `docs/picoui-serial/a-0.4-a-0.6-后续版本记录.md:129`
-5. `tests/picoui/contract/picoui_release_capability_matrix.json:883`
-6. `tests/picoui/contract/picoui_release_capability_matrix.json:948`
-7. `tests/picoui/contract/picoui_release_capability_matrix.json:998`
-8. `tests/picoui/contract/picoui_release_capability_matrix.json:1048`
-9. `tests/picoui/contract/picoui_release_capability_matrix.json:1121`
-10. `tests/picoui/contract/picoui_release_capability_matrix.json:1169`
-11. `tests/picoui/contract/picoui_release_capability_matrix.json:1219`
+1. `docs/tinyui-serial/a-0.4-线计划索引.md:169`
+2. `docs/tinyui-serial/a-0.5-线计划索引.md:161`
+3. `docs/tinyui-serial/a-0.4-a-0.6-后续版本记录.md:69`
+4. `docs/tinyui-serial/a-0.4-a-0.6-后续版本记录.md:129`
+5. `tests/tinyui/contract/tinyui_release_capability_matrix.json:883`
+6. `tests/tinyui/contract/tinyui_release_capability_matrix.json:948`
+7. `tests/tinyui/contract/tinyui_release_capability_matrix.json:998`
+8. `tests/tinyui/contract/tinyui_release_capability_matrix.json:1048`
+9. `tests/tinyui/contract/tinyui_release_capability_matrix.json:1121`
+10. `tests/tinyui/contract/tinyui_release_capability_matrix.json:1169`
+11. `tests/tinyui/contract/tinyui_release_capability_matrix.json:1219`
 
 现状：
 
@@ -197,10 +197,10 @@
 
 相关位置：
 
-1. `tests/picoui/unit/test_picoui_table.c:55`
-2. `picoui/src/backend/ldgui/backend_table.c:93`
-3. `docs/picoui-serial/a-0.4-a-0.6-后续版本记录.md:124`
-4. `tests/picoui/contract/picoui_release_capability_matrix.json:1201`
+1. `tests/tinyui/unit/test_tinyui_table.c:55`
+2. `tinyui/src/backend/ldgui/backend_table.c:93`
+3. `docs/tinyui-serial/a-0.4-a-0.6-后续版本记录.md:124`
+4. `tests/tinyui/contract/tinyui_release_capability_matrix.json:1201`
 
 收口前现状：
 
@@ -215,10 +215,10 @@
 
 相关位置：
 
-1. `docs/picoui-serial/a-0.4-线计划索引.md:166`
-2. `docs/picoui-serial/a-0.4-线计划索引.md:171`
-3. `picoui/docs/demo_guide.md:246`
-4. `tests/picoui/runtime/check_picoui_runtime.py:12`
+1. `docs/tinyui-serial/a-0.4-线计划索引.md:166`
+2. `docs/tinyui-serial/a-0.4-线计划索引.md:171`
+3. `tinyui/docs/demo_guide.md:246`
+4. `tests/tinyui/runtime/check_tinyui_runtime.py:12`
 
 `a-0.4` 索引当前写法容易让人读成四个控件都已经具备同层证据。实际不是：
 
@@ -253,12 +253,12 @@
 
 ## 文档修正建议
 
-1. `docs/picoui-serial/a-0.4-线计划索引.md`
+1. `docs/tinyui-serial/a-0.4-线计划索引.md`
    - 改成“shared-core 阶段已落地，但仍属 stable contract / parity incomplete”
    - 单列 `keyboard evidence mismatch`
    - 单列 `scroll_selecter kind / shared model metadata gap`
-2. `docs/picoui-serial/a-0.5-线计划索引.md`
+2. `docs/tinyui-serial/a-0.5-线计划索引.md`
    - 改成“data-model 阶段主路径已落地，不等于 full parity”
    - 显式引用 release matrix 当前层级
-3. `docs/picoui-serial/a-0.4-a-0.6-后续版本记录.md`
+3. `docs/tinyui-serial/a-0.4-a-0.6-后续版本记录.md`
    - 同步上述口径，避免“已完成并收口”被读成最终完成

@@ -30,9 +30,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define PICOUI_RUNTIME_PADDING 16
-#define PICOUI_RUNTIME_ROW_HEIGHT 34
-#define PICOUI_RUNTIME_ROW_GAP 10
+#define TINYUI_RUNTIME_PADDING 16
+#define TINYUI_RUNTIME_ROW_HEIGHT 34
+#define TINYUI_RUNTIME_ROW_GAP 10
 
 /**
  * @brief   attribute  
@@ -69,7 +69,7 @@ static int tinyui_runtime_host_touch_log_enabled(void)
     static int enabled = 0;
 
     if (!initialized) {
-        const char *env = getenv("PICOUI_TOUCH_LOG");
+        const char *env = getenv("TINYUI_TOUCH_LOG");
         enabled = (env != NULL && env[0] != '\0' && env[0] != '0') ? 1 : 0;
         initialized = 1;
     }
@@ -83,7 +83,7 @@ static int tinyui_runtime_host_benchmark_log_enabled(void)
     static int enabled = 0;
 
     if (!initialized) {
-        const char *env = getenv("PICOUI_BENCHMARK_LOG");
+        const char *env = getenv("TINYUI_BENCHMARK_LOG");
         enabled = (env != NULL && env[0] != '\0' && env[0] != '0') ? 1 : 0;
         initialized = 1;
     }
@@ -151,8 +151,8 @@ static void tinyui_runtime_host_log_screen_create_benchmark(struct tinyui_runtim
     }
 
     elapsed_ms = (double)(state->screen_create_end_ticks - state->screen_create_start_ticks);
-    printf("PICOUI_BENCHMARK_SCREEN_OBJECT_CREATE_MS=%.3f\n", elapsed_ms);
-    printf("PICOUI_BENCHMARK_SCREEN_CREATE_MS=%.3f\n", elapsed_ms);
+    printf("TINYUI_BENCHMARK_SCREEN_OBJECT_CREATE_MS=%.3f\n", elapsed_ms);
+    printf("TINYUI_BENCHMARK_SCREEN_CREATE_MS=%.3f\n", elapsed_ms);
     fflush(stdout);
     state->benchmark_screen_create_logged = 1;
 }
@@ -171,8 +171,8 @@ static void tinyui_runtime_host_log_first_frame_benchmark(struct tinyui_runtime_
     }
 
     elapsed_ms = (double)(SDL_GetTicks() - state->start_ticks);
-    printf("PICOUI_BENCHMARK_CAPTURE_READY_MS=%.3f\n", elapsed_ms);
-    printf("PICOUI_BENCHMARK_FIRST_FRAME_MS=%.3f\n", elapsed_ms);
+    printf("TINYUI_BENCHMARK_CAPTURE_READY_MS=%.3f\n", elapsed_ms);
+    printf("TINYUI_BENCHMARK_FIRST_FRAME_MS=%.3f\n", elapsed_ms);
     fflush(stdout);
     state->benchmark_first_frame_logged = 1;
 }
@@ -185,56 +185,56 @@ static const ldPageFuncGroup_t g_tinyui_runtime_host_page = {
     .frameStart = NULL,
     .frameComplete = NULL,
 #if (USE_LOG_LEVEL>=LOG_LEVEL_INFO)
-    .pageName = "picoui_runtime",
+    .pageName = "tinyui_runtime",
 #endif
     .pointer = NULL,
 };
 
-static int tinyui_runtime_host_widget_is_supported_real(const struct picoui_backend_widget *widget)
+static int tinyui_runtime_host_widget_is_supported_real(const struct tinyui_backend_widget *widget)
 {
     if (widget == NULL) {
         return 1;
     }
 
     switch (widget->kind) {
-    case PICOUI_BACKEND_WIDGET_BACKGROUND:
-    case PICOUI_BACKEND_WIDGET_WINDOW:
-    case PICOUI_BACKEND_WIDGET_LABEL:
-    case PICOUI_BACKEND_WIDGET_BUTTON:
-    case PICOUI_BACKEND_WIDGET_CHECKBOX:
-    case PICOUI_BACKEND_WIDGET_TEXT:
-    case PICOUI_BACKEND_WIDGET_IMAGE:
-    case PICOUI_BACKEND_WIDGET_SWITCH:
-    case PICOUI_BACKEND_WIDGET_SLIDER:
-    case PICOUI_BACKEND_WIDGET_ARC:
-    case PICOUI_BACKEND_WIDGET_GAUGE:
-    case PICOUI_BACKEND_WIDGET_ICON_SLIDER:
-    case PICOUI_BACKEND_WIDGET_RADIAL_MENU:
-    case PICOUI_BACKEND_WIDGET_PROGRESS_BAR:
-    case PICOUI_BACKEND_WIDGET_QRCODE:
-    case PICOUI_BACKEND_WIDGET_PROGRESS_WHEEL:
-    case PICOUI_BACKEND_WIDGET_ANIMATION:
-    case PICOUI_BACKEND_WIDGET_LIST:
-    case PICOUI_BACKEND_WIDGET_COMBO_BOX:
-    case PICOUI_BACKEND_WIDGET_SCROLL_SELECTER:
-    case PICOUI_BACKEND_WIDGET_TABLE:
-    case PICOUI_BACKEND_WIDGET_GRAPH:
-    case PICOUI_BACKEND_WIDGET_CALENDAR:
-    case PICOUI_BACKEND_WIDGET_DATE_TIME:
-    case PICOUI_BACKEND_WIDGET_MESSAGE_BOX:
-    case PICOUI_BACKEND_WIDGET_CLOCK:
-    case PICOUI_BACKEND_WIDGET_KEYBOARD:
+    case TINYUI_BACKEND_WIDGET_BACKGROUND:
+    case TINYUI_BACKEND_WIDGET_WINDOW:
+    case TINYUI_BACKEND_WIDGET_LABEL:
+    case TINYUI_BACKEND_WIDGET_BUTTON:
+    case TINYUI_BACKEND_WIDGET_CHECKBOX:
+    case TINYUI_BACKEND_WIDGET_TEXT:
+    case TINYUI_BACKEND_WIDGET_IMAGE:
+    case TINYUI_BACKEND_WIDGET_SWITCH:
+    case TINYUI_BACKEND_WIDGET_SLIDER:
+    case TINYUI_BACKEND_WIDGET_ARC:
+    case TINYUI_BACKEND_WIDGET_GAUGE:
+    case TINYUI_BACKEND_WIDGET_ICON_SLIDER:
+    case TINYUI_BACKEND_WIDGET_RADIAL_MENU:
+    case TINYUI_BACKEND_WIDGET_PROGRESS_BAR:
+    case TINYUI_BACKEND_WIDGET_QRCODE:
+    case TINYUI_BACKEND_WIDGET_PROGRESS_WHEEL:
+    case TINYUI_BACKEND_WIDGET_ANIMATION:
+    case TINYUI_BACKEND_WIDGET_LIST:
+    case TINYUI_BACKEND_WIDGET_COMBO_BOX:
+    case TINYUI_BACKEND_WIDGET_SCROLL_SELECTER:
+    case TINYUI_BACKEND_WIDGET_TABLE:
+    case TINYUI_BACKEND_WIDGET_GRAPH:
+    case TINYUI_BACKEND_WIDGET_CALENDAR:
+    case TINYUI_BACKEND_WIDGET_DATE_TIME:
+    case TINYUI_BACKEND_WIDGET_MESSAGE_BOX:
+    case TINYUI_BACKEND_WIDGET_CLOCK:
+    case TINYUI_BACKEND_WIDGET_KEYBOARD:
         return 1;
     default:
         return 0;
     }
 }
 
-static int tinyui_runtime_host_widget_is_real_mapped(const struct picoui_backend_widget *widget)
+static int tinyui_runtime_host_widget_is_real_mapped(const struct tinyui_backend_widget *widget)
 {
     return widget != NULL &&
-           widget->kind != PICOUI_BACKEND_WIDGET_WINDOW &&
-           widget->kind != PICOUI_BACKEND_WIDGET_BACKGROUND &&
+           widget->kind != TINYUI_BACKEND_WIDGET_WINDOW &&
+           widget->kind != TINYUI_BACKEND_WIDGET_BACKGROUND &&
            tinyui_runtime_host_widget_is_supported_real(widget) &&
            widget->ld_widget != NULL;
 }
@@ -271,21 +271,21 @@ static void tinyui_runtime_host_append_id(const char *id,
     }
 }
 
-static int tinyui_runtime_host_widget_needs_fallback(const struct picoui_backend_widget *widget)
+static int tinyui_runtime_host_widget_needs_fallback(const struct tinyui_backend_widget *widget)
 {
     return widget != NULL &&
-           widget->kind != PICOUI_BACKEND_WIDGET_WINDOW &&
-           widget->kind != PICOUI_BACKEND_WIDGET_BACKGROUND &&
+           widget->kind != TINYUI_BACKEND_WIDGET_WINDOW &&
+           widget->kind != TINYUI_BACKEND_WIDGET_BACKGROUND &&
            (!tinyui_runtime_host_widget_is_supported_real(widget) || widget->ld_widget == NULL);
 }
 
-static int tinyui_runtime_host_window_has_real_layout(const struct picoui_backend_widget *widget)
+static int tinyui_runtime_host_window_has_real_layout(const struct tinyui_backend_widget *widget)
 {
     ldWindow_t *ld_window;
 
     if (widget == NULL
-        || (widget->kind != PICOUI_BACKEND_WIDGET_WINDOW
-            && widget->kind != PICOUI_BACKEND_WIDGET_BACKGROUND)
+        || (widget->kind != TINYUI_BACKEND_WIDGET_WINDOW
+            && widget->kind != TINYUI_BACKEND_WIDGET_BACKGROUND)
         || widget->ld_widget == NULL) {
         return 0;
     }
@@ -294,10 +294,10 @@ static int tinyui_runtime_host_window_has_real_layout(const struct picoui_backen
     return ld_window->layoutTpye == layoutFlex || ld_window->layoutTpye == layoutGrid;
 }
 
-static int tinyui_runtime_host_widget_excludes_formal_mapping(const struct picoui_backend_widget *widget)
+static int tinyui_runtime_host_widget_excludes_formal_mapping(const struct tinyui_backend_widget *widget)
 {
     while (widget != NULL) {
-        if ((widget->runtime_evidence_flags & PICOUI_BACKEND_EVIDENCE_EXCLUDE_FORMAL_MAPPING) != 0U) {
+        if ((widget->runtime_evidence_flags & TINYUI_BACKEND_EVIDENCE_EXCLUDE_FORMAL_MAPPING) != 0U) {
             return 1;
         }
         if (widget->first_child != NULL && tinyui_runtime_host_widget_excludes_formal_mapping(widget->first_child)) {
@@ -308,10 +308,10 @@ static int tinyui_runtime_host_widget_excludes_formal_mapping(const struct picou
     return 0;
 }
 
-static int tinyui_runtime_host_widget_allows_smoke_layout(const struct picoui_backend_widget *widget)
+static int tinyui_runtime_host_widget_allows_smoke_layout(const struct tinyui_backend_widget *widget)
 {
     while (widget != NULL) {
-        if ((widget->runtime_evidence_flags & PICOUI_BACKEND_EVIDENCE_ALLOW_SMOKE_LAYOUT) != 0U) {
+        if ((widget->runtime_evidence_flags & TINYUI_BACKEND_EVIDENCE_ALLOW_SMOKE_LAYOUT) != 0U) {
             return 1;
         }
         if (widget->first_child != NULL && tinyui_runtime_host_widget_allows_smoke_layout(widget->first_child)) {
@@ -322,8 +322,8 @@ static int tinyui_runtime_host_widget_allows_smoke_layout(const struct picoui_ba
     return 0;
 }
 
-static void tinyui_runtime_host_append_widget_ids(const struct picoui_backend_widget *widget,
-                                             int (*predicate)(const struct picoui_backend_widget *widget),
+static void tinyui_runtime_host_append_widget_ids(const struct tinyui_backend_widget *widget,
+                                             int (*predicate)(const struct tinyui_backend_widget *widget),
                                              char *buffer,
                                              size_t buffer_size,
                                              size_t *used)
@@ -346,7 +346,7 @@ static void tinyui_runtime_host_append_widget_ids(const struct picoui_backend_wi
 }
 
 static void tinyui_runtime_host_log_mapping_markers(struct tinyui_runtime_host_state *state,
-                                               const struct picoui_backend_widget *root)
+                                               const struct tinyui_backend_widget *root)
 {
     char real_ids[256] = {0};
     char fallback_ids[256] = {0};
@@ -371,34 +371,34 @@ static void tinyui_runtime_host_log_mapping_markers(struct tinyui_runtime_host_s
     if (real_used > 0 &&
         !tinyui_runtime_host_widget_excludes_formal_mapping(root->first_child) &&
         !state->static_mapping_logged) {
-        printf("PICOUI_BACKEND_STATIC_MAPPING=REAL_LDGUI\n");
-        printf("PICOUI_BACKEND_REAL_WIDGET_IDS=%s\n", real_ids);
+        printf("TINYUI_BACKEND_STATIC_MAPPING=REAL_LDGUI\n");
+        printf("TINYUI_BACKEND_REAL_WIDGET_IDS=%s\n", real_ids);
         fflush(stdout);
         state->static_mapping_logged = 1;
     }
 
     if (tinyui_runtime_host_widget_excludes_formal_mapping(root->first_child) &&
         !state->temporary_smoke_logged) {
-        printf("PICOUI_BACKEND_TEMPORARY_SMOKE_PATH=EXCLUDED_FORMAL_MAPPING\n");
+        printf("TINYUI_BACKEND_TEMPORARY_SMOKE_PATH=EXCLUDED_FORMAL_MAPPING\n");
         fflush(stdout);
         state->temporary_smoke_logged = 1;
     }
 
     if (fallback_used > 0 && !state->fallback_boundary_logged) {
-        printf("PICOUI_BACKEND_INTERACTIVE_BOUNDARY=FAKE_FALLBACK\n");
-        printf("PICOUI_BACKEND_FALLBACK_WIDGET_IDS=%s\n", fallback_ids);
+        printf("TINYUI_BACKEND_INTERACTIVE_BOUNDARY=FAKE_FALLBACK\n");
+        printf("TINYUI_BACKEND_FALLBACK_WIDGET_IDS=%s\n", fallback_ids);
         fflush(stdout);
         state->fallback_boundary_logged = 1;
     }
 }
 
-static void tinyui_runtime_host_log_image_source_marker(const struct picoui_backend_widget *widget)
+static void tinyui_runtime_host_log_image_source_marker(const struct tinyui_backend_widget *widget)
 {
     while (widget != NULL) {
-        if (widget->kind == PICOUI_BACKEND_WIDGET_IMAGE && widget->id != NULL && widget->ld_widget != NULL) {
+        if (widget->kind == TINYUI_BACKEND_WIDGET_IMAGE && widget->id != NULL && widget->ld_widget != NULL) {
             ldImage_t *ld_image = (ldImage_t *)widget->ld_widget;
 
-            printf("PICOUI_BACKEND_IMAGE_SOURCE=%s:img=%s,mask=%s\n",
+            printf("TINYUI_BACKEND_IMAGE_SOURCE=%s:img=%s,mask=%s\n",
                    widget->id,
                    ld_image->ptImgTile != NULL ? "set" : "null",
                    ld_image->ptMaskTile != NULL ? "set" : "null");
@@ -414,7 +414,7 @@ static void tinyui_runtime_host_log_image_source_marker(const struct picoui_back
 
 static Uint32 tinyui_runtime_host_parse_auto_quit_ms(void)
 {
-    const char *value = getenv("PICOUI_DEMO_AUTO_QUIT_MS");
+    const char *value = getenv("TINYUI_DEMO_AUTO_QUIT_MS");
     char *end = NULL;
     unsigned long parsed;
 
@@ -460,7 +460,7 @@ static uint32_t tinyui_runtime_host_pixel_to_argb8888(COLOUR_INT pixel)
 
 static int tinyui_runtime_host_write_capture(struct tinyui_runtime_host_state *state)
 {
-    const char *path = getenv("PICOUI_CAPTURE_FILE");
+    const char *path = getenv("TINYUI_CAPTURE_FILE");
     FILE *fp;
     int x;
     int y;
@@ -499,9 +499,9 @@ static int tinyui_runtime_host_write_capture(struct tinyui_runtime_host_state *s
     return 0;
 }
 
-static struct tinyui_runtime_host_state *tinyui_runtime_host_state_from_app(struct picoui_app *app)
+static struct tinyui_runtime_host_state *tinyui_runtime_host_state_from_app(struct tinyui_app *app)
 {
-    struct picoui_backend_app_state *app_state;
+    struct tinyui_backend_app_state *app_state;
 
     app_state = tinyui_runtime_bridge_backend_state(app);
     if (app_state == NULL) {
@@ -510,7 +510,7 @@ static struct tinyui_runtime_host_state *tinyui_runtime_host_state_from_app(stru
     return (struct tinyui_runtime_host_state *)app_state->runtime_state;
 }
 
-static struct picoui_backend_app_state *tinyui_runtime_host_app_state_from_window(struct picoui_window *window)
+static struct tinyui_backend_app_state *tinyui_runtime_host_app_state_from_window(struct tinyui_window *window)
 {
     return tinyui_runtime_bridge_backend_state_from_window(window);
 }
@@ -547,16 +547,16 @@ static void tinyui_runtime_host_present_real_frame(struct tinyui_runtime_host_st
 }
 
 static void tinyui_runtime_host_apply_real_widget_layout(struct tinyui_runtime_host_state *state,
-                                                    const struct picoui_backend_widget *widget,
+                                                    const struct tinyui_backend_widget *widget,
                                                     int x,
                                                     int *cursor_y)
 {
     while (widget != NULL) {
-        if (widget->kind != PICOUI_BACKEND_WIDGET_WINDOW
-            && widget->kind != PICOUI_BACKEND_WIDGET_BACKGROUND) {
-            int height = PICOUI_RUNTIME_ROW_HEIGHT;
+        if (widget->kind != TINYUI_BACKEND_WIDGET_WINDOW
+            && widget->kind != TINYUI_BACKEND_WIDGET_BACKGROUND) {
+            int height = TINYUI_RUNTIME_ROW_HEIGHT;
 
-            if (widget->kind == PICOUI_BACKEND_WIDGET_IMAGE) {
+            if (widget->kind == TINYUI_BACKEND_WIDGET_IMAGE) {
                 height = 56;
             }
 
@@ -568,7 +568,7 @@ static void tinyui_runtime_host_apply_real_widget_layout(struct tinyui_runtime_h
                 height = region.tSize.iHeight > 0 ? region.tSize.iHeight : height;
             }
 
-            *cursor_y += height + PICOUI_RUNTIME_ROW_GAP;
+            *cursor_y += height + TINYUI_RUNTIME_ROW_GAP;
         }
 
         if (widget->first_child != NULL) {
@@ -580,7 +580,7 @@ static void tinyui_runtime_host_apply_real_widget_layout(struct tinyui_runtime_h
 }
 
 static void tinyui_runtime_host_apply_smoke_cursor_layout(struct tinyui_runtime_host_state *state,
-                                                     const struct picoui_backend_widget *root,
+                                                     const struct tinyui_backend_widget *root,
                                                      int x,
                                                      int *cursor_y)
 {
@@ -594,20 +594,20 @@ static void tinyui_runtime_host_apply_smoke_cursor_layout(struct tinyui_runtime_
     tinyui_runtime_host_apply_real_widget_layout(state, root->first_child, x, cursor_y);
 }
 
-static void tinyui_runtime_host_render(struct tinyui_runtime_host_state *state, struct picoui_window *window)
+static void tinyui_runtime_host_render(struct tinyui_runtime_host_state *state, struct tinyui_window *window)
 {
-    const struct picoui_backend_widget *root;
-    const struct picoui_backend_widget *root_widget;
-    struct picoui_backend_app_state *app_state;
-    int x = PICOUI_RUNTIME_PADDING;
-    int y = PICOUI_RUNTIME_PADDING + 20;
+    const struct tinyui_backend_widget *root;
+    const struct tinyui_backend_widget *root_widget;
+    struct tinyui_backend_app_state *app_state;
+    int x = TINYUI_RUNTIME_PADDING;
+    int y = TINYUI_RUNTIME_PADDING + 20;
 
     SDL_SetRenderDrawColor(state->renderer, 0x2E, 0x34, 0x40, 0xFF);
     SDL_RenderClear(state->renderer);
 
-    root = (const struct picoui_backend_widget *)window->widget.backend_widget;
+    root = (const struct tinyui_backend_widget *)window->widget.backend_widget;
     if (root != NULL && root->first_child != NULL) {
-        root_widget = (const struct picoui_backend_widget *)window->widget.backend_widget;
+        root_widget = (const struct tinyui_backend_widget *)window->widget.backend_widget;
         app_state = tinyui_runtime_host_app_state_from_window(window);
         tinyui_runtime_host_log_mapping_markers(state, root);
         if (app_state != NULL && app_state->ld_scene != NULL && state->real_pixels != NULL) {
@@ -618,7 +618,7 @@ static void tinyui_runtime_host_render(struct tinyui_runtime_host_state *state, 
                        sizeof(*state->real_pixels));
             tinyui_runtime_host_apply_smoke_cursor_layout(state, root_widget, x, &y);
             if (!state->smoke_layout_marker_logged) {
-                printf("PICOUI_SMOKE_LAYOUT_USED=%d\n", state->smoke_layout_used ? 1 : 0);
+                printf("TINYUI_SMOKE_LAYOUT_USED=%d\n", state->smoke_layout_used ? 1 : 0);
                 fflush(stdout);
                 state->smoke_layout_marker_logged = 1;
             }
@@ -636,7 +636,7 @@ static void tinyui_runtime_host_render(struct tinyui_runtime_host_state *state, 
     (void)tinyui_runtime_host_write_capture(state);
 }
 
-static int tinyui_runtime_host_prepare_runtime_state(struct picoui_app *app,
+static int tinyui_runtime_host_prepare_runtime_state(struct tinyui_app *app,
                                                      struct tinyui_runtime_host_state **state_out)
 {
     struct tinyui_runtime_host_state *state;
@@ -658,11 +658,11 @@ static int tinyui_runtime_host_prepare_runtime_state(struct picoui_app *app,
     return 0;
 }
 
-static int tinyui_runtime_host_prepare_runtime_scene(struct picoui_app *app,
-                                                     struct picoui_window *window,
-                                                     struct picoui_backend_app_state **app_state_out)
+static int tinyui_runtime_host_prepare_runtime_scene(struct tinyui_app *app,
+                                                     struct tinyui_window *window,
+                                                     struct tinyui_backend_app_state **app_state_out)
 {
-    struct picoui_backend_app_state *app_state;
+    struct tinyui_backend_app_state *app_state;
 
     if (app == NULL || window == NULL || app_state_out == NULL) {
         return -1;
@@ -679,7 +679,7 @@ static int tinyui_runtime_host_prepare_runtime_scene(struct picoui_app *app,
     return 0;
 }
 
-static void tinyui_runtime_host_log_runtime_ready(struct picoui_app *app,
+static void tinyui_runtime_host_log_runtime_ready(struct tinyui_app *app,
                                                   struct tinyui_runtime_host_state *state)
 {
     if (app == NULL || state == NULL || state->ready_logged) {
@@ -687,20 +687,20 @@ static void tinyui_runtime_host_log_runtime_ready(struct picoui_app *app,
     }
 
     if (app->focus_owner == NULL) {
-        printf("PICOUI_FOCUS_RUNTIME_READY=1\n");
+        printf("TINYUI_FOCUS_RUNTIME_READY=1\n");
         fflush(stdout);
     }
-    printf("PICOUI_RUNTIME_READY\n");
+    printf("TINYUI_RUNTIME_READY\n");
     fflush(stdout);
     state->ready_logged = 1;
     state->screen_create_end_ticks = SDL_GetTicks();
     tinyui_runtime_host_log_screen_create_benchmark(state);
 }
 
-static int tinyui_runtime_host_prepare_runtime(struct picoui_app *app, struct picoui_window *window)
+static int tinyui_runtime_host_prepare_runtime(struct tinyui_app *app, struct tinyui_window *window)
 {
     struct tinyui_runtime_host_state *state;
-    struct picoui_backend_app_state *app_state;
+    struct tinyui_backend_app_state *app_state;
 
     if (tinyui_runtime_host_prepare_runtime_state(app, &state) != 0) {
         return -1;
@@ -724,7 +724,7 @@ static int tinyui_runtime_host_prepare_runtime(struct picoui_app *app, struct pi
     return 0;
 }
 
-static int tinyui_runtime_host_pump_sdl_events(struct picoui_app *app,
+static int tinyui_runtime_host_pump_sdl_events(struct tinyui_app *app,
                                                struct tinyui_runtime_host_state *state)
 {
     SDL_Event event;
@@ -739,7 +739,7 @@ static int tinyui_runtime_host_pump_sdl_events(struct picoui_app *app,
         } else if (event.type == SDL_MOUSEBUTTONDOWN &&
                    event.button.button == SDL_BUTTON_LEFT) {
             if (tinyui_runtime_host_touch_log_enabled()) {
-                printf("[PICOUI_TOUCH][SDL] type=down button=%u pos=(%d,%d)\n",
+                printf("[TINYUI_TOUCH][SDL] type=down button=%u pos=(%d,%d)\n",
                        (unsigned int)event.button.button,
                        event.button.x,
                        event.button.y);
@@ -754,7 +754,7 @@ static int tinyui_runtime_host_pump_sdl_events(struct picoui_app *app,
         } else if (event.type == SDL_MOUSEBUTTONUP &&
                    event.button.button == SDL_BUTTON_LEFT) {
             if (tinyui_runtime_host_touch_log_enabled()) {
-                printf("[PICOUI_TOUCH][SDL] type=up button=%u pos=(%d,%d)\n",
+                printf("[TINYUI_TOUCH][SDL] type=up button=%u pos=(%d,%d)\n",
                        (unsigned int)event.button.button,
                        event.button.x,
                        event.button.y);
@@ -768,7 +768,7 @@ static int tinyui_runtime_host_pump_sdl_events(struct picoui_app *app,
                                                              0);
         } else if (event.type == SDL_MOUSEMOTION) {
             if (tinyui_runtime_host_touch_log_enabled()) {
-                printf("[PICOUI_TOUCH][SDL] type=motion buttons=0x%x pos=(%d,%d)\n",
+                printf("[TINYUI_TOUCH][SDL] type=motion buttons=0x%x pos=(%d,%d)\n",
                        (unsigned int)event.motion.state,
                        event.motion.x,
                        event.motion.y);
@@ -789,10 +789,10 @@ static int tinyui_runtime_host_pump_sdl_events(struct picoui_app *app,
     return 0;
 }
 
-int tinyui_runtime_host_step_app(struct picoui_app *app)
+int tinyui_runtime_host_step_app(struct tinyui_app *app)
 {
     struct tinyui_runtime_host_state *state;
-    struct picoui_window *active_window;
+    struct tinyui_window *active_window;
     int event_result;
 
     if (app == NULL || app->root_window == NULL) {
@@ -818,12 +818,12 @@ int tinyui_runtime_host_step_app(struct picoui_app *app)
         return -1;
     }
 
-    tinyui_app_pump_timers(app, picoui_tick_get(app));
+    tinyui_app_pump_timers(app, tinyui_tick_get(app));
     tinyui_runtime_host_render(state, active_window);
-    picoui_os_delay(app, 16);
+    tinyui_os_delay(app, 16);
 
     if (state->auto_quit_ms > 0 &&
-        picoui_tick_get(app) - state->start_ticks >= state->auto_quit_ms) {
+        tinyui_tick_get(app) - state->start_ticks >= state->auto_quit_ms) {
         return 1;
     }
 

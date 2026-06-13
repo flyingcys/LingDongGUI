@@ -37,7 +37,7 @@
 Run:
 
 ```bash
-rg -n 'picoui_app_create|picoui_app_run|run_demo\(|int main\(' tinyui/include tinyui/src tinyui/demo
+rg -n 'tinyui_app_create|tinyui_app_run|run_demo\(|int main\(' tinyui/include tinyui/src tinyui/demo
 ```
 
 Expected: 输出当前旧 app 主路径、demo 自带 `main()/run_demo()` 的真实命中。
@@ -65,7 +65,7 @@ Create `docs/v2.2/2026-06-13-tinyui-v2-2-startup-baseline-inventory.md`，至少
 - 当前 demo 启动真相：
   - 哪些 demo 目录仍有 `main.c`
   - 哪些 demo 仍保留 `run_demo()`
-  - 哪些 demo 已直接依赖 `picoui_app_*`
+  - 哪些 demo 已直接依赖 `tinyui_app_*`
 - 当前目标终态：
   - demo `.c` 只导出 build API
   - `tinyui/demo/main.c` 作为统一 runner
@@ -159,7 +159,7 @@ Append under `S0` in `docs/v2.2/plans/stages/README.md`:
 Run:
 
 ```bash
-rg -n 'backend\.h|picoui_app_create|picoui_app_run|run_demo\(|int main\(' tinyui
+rg -n 'backend\.h|tinyui_app_create|tinyui_app_run|run_demo\(|int main\(' tinyui
 git diff --check
 ```
 

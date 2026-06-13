@@ -1,18 +1,18 @@
-# PicoUI G线当前控件能力缺口收口实施计划
+# TINYUI G线当前控件能力缺口收口实施计划
 
 > **给 agentic workers:** REQUIRED SUB-SKILL: 使用 `superpowers:subagent-driven-development`（推荐）或 `superpowers:executing-plans` 按任务执行本计划。步骤使用 checkbox（`- [ ]`）格式跟踪。
 
-**目标:** 把 PicoUI 当前已完成控件的能力缺口、过强口径和高优先级补齐顺序收口成可执行主线，避免把真实 backend 子集误写成 100% 能力封装。
+**目标:** 把 TINYUI 当前已完成控件的能力缺口、过强口径和高优先级补齐顺序收口成可执行主线，避免把真实 backend 子集误写成 100% 能力封装。
 
-**架构:** G 线在 `.worktree/picoui-g-current-capability-gap` 串行推进。先冻结 capability gap 真相源，再按 `list contract -> marker 语义 -> slider range -> shared base -> widget-specific` 顺序收口。每个 Task 由 fresh subagent 执行，Task 后由独立 review subagent 只读 review。
+**架构:** G 线在 `.worktree/tinyui-g-current-capability-gap` 串行推进。先冻结 capability gap 真相源，再按 `list contract -> marker 语义 -> slider range -> shared base -> widget-specific` 顺序收口。每个 Task 由 fresh subagent 执行，Task 后由独立 review subagent 只读 review。
 
-**技术栈:** C、CMake、CTest、Python3、SDL2 host runtime、PicoUI、LingDongGUI、GitNexus、Markdown serial docs
+**技术栈:** C、CMake、CTest、Python3、SDL2 host runtime、TINYUI、LingDongGUI、GitNexus、Markdown serial docs
 
 ---
 
 ## 0. 执行规则
 
-- 创建 worktree：`.worktree/picoui-g-current-capability-gap`。
+- 创建 worktree：`.worktree/tinyui-g-current-capability-gap`。
 - 创建或切换后必须同步并更新 submodule。
 - G 线内部严格串行：`G0 -> G1 -> G2 -> G3 -> G4 -> G5 -> G6 -> G7 -> G8`。
 - 修改函数、方法或类前必须运行 GitNexus impact，并在 subagent 最终回复中报告 blast radius。
@@ -25,81 +25,81 @@
 
 ### G1 真相源 / 矩阵组
 
-- 修改: `docs/picoui-serial/G-线计划索引.md`
-- 新增: `docs/superpowers/specs/2026-05-29-picoui-g-line-current-widget-capability-gap-matrix.md`
-- 可选修改: `tests/picoui/contract/check_picoui_widget_contract_matrix.py`
+- 修改: `docs/tinyui-serial/G-线计划索引.md`
+- 新增: `docs/superpowers/specs/2026-05-29-tinyui-g-line-current-widget-capability-gap-matrix.md`
+- 可选修改: `tests/tinyui/contract/check_tinyui_widget_contract_matrix.py`
 
 ### G2 list contract 组
 
-- 修改: `picoui/include/picoui/list.h`
-- 修改: `picoui/src/widgets/list.c`
-- 修改: `picoui/src/backend/ldgui/backend_event.c`
-- 修改: `tests/picoui/unit/test_picoui_list.c`
-- 修改: `docs/picoui-serial/G-线计划索引.md`
-- 修改: `docs/superpowers/specs/2026-05-29-picoui-g-line-current-widget-capability-gap-matrix.md`
+- 修改: `tinyui/include/tinyui/list.h`
+- 修改: `tinyui/src/widgets/list.c`
+- 修改: `tinyui/src/backend/ldgui/backend_event.c`
+- 修改: `tests/tinyui/unit/test_tinyui_list.c`
+- 修改: `docs/tinyui-serial/G-线计划索引.md`
+- 修改: `docs/superpowers/specs/2026-05-29-tinyui-g-line-current-widget-capability-gap-matrix.md`
 
 ### G3 list marker 组
 
-- 修改: `picoui/src/backend/ldgui/backend_app.c`
-- 修改: `tests/picoui/runtime/check_picoui_backend_mapping.py`
-- 修改: `picoui/docs/demo_guide.md`
-- 修改: `docs/picoui-serial/G-线计划索引.md`
-- 修改: `docs/superpowers/specs/2026-05-29-picoui-g-line-current-widget-capability-gap-matrix.md`
+- 修改: `tinyui/src/backend/ldgui/backend_app.c`
+- 修改: `tests/tinyui/runtime/check_tinyui_backend_mapping.py`
+- 修改: `tinyui/docs/demo_guide.md`
+- 修改: `docs/tinyui-serial/G-线计划索引.md`
+- 修改: `docs/superpowers/specs/2026-05-29-tinyui-g-line-current-widget-capability-gap-matrix.md`
 
 ### G4 slider range 组
 
-- 修改: `picoui/include/picoui/slider.h`
-- 修改: `picoui/src/widgets/slider.c`
-- 必要时修改: `picoui/src/backend/ldgui/backend_event.c`
-- 修改: `tests/picoui/unit/test_picoui_widgets.c`
-- 修改: `docs/picoui-serial/G-线计划索引.md`
-- 修改: `docs/superpowers/specs/2026-05-29-picoui-g-line-current-widget-capability-gap-matrix.md`
+- 修改: `tinyui/include/tinyui/slider.h`
+- 修改: `tinyui/src/widgets/slider.c`
+- 必要时修改: `tinyui/src/backend/ldgui/backend_event.c`
+- 修改: `tests/tinyui/unit/test_tinyui_widgets.c`
+- 修改: `docs/tinyui-serial/G-线计划索引.md`
+- 修改: `docs/superpowers/specs/2026-05-29-tinyui-g-line-current-widget-capability-gap-matrix.md`
 
 ### G5 shared base 组
 
-- 修改: `picoui/include/picoui/widget.h`
-- 修改: `picoui/src/core/widget.c`
-- 修改: `picoui/src/backend/ldgui/backend_style_apply.c`
-- 修改: `picoui/src/backend/ldgui/backend_theme.c`
-- 修改: `tests/picoui/unit/test_picoui_widgets.c`
-- 修改: `tests/picoui/unit/test_picoui_theme.c`
+- 修改: `tinyui/include/tinyui/widget.h`
+- 修改: `tinyui/src/core/widget.c`
+- 修改: `tinyui/src/backend/ldgui/backend_style_apply.c`
+- 修改: `tinyui/src/backend/ldgui/backend_theme.c`
+- 修改: `tests/tinyui/unit/test_tinyui_widgets.c`
+- 修改: `tests/tinyui/unit/test_tinyui_theme.c`
 
 ### G6 交互控件组
 
-- 修改: `picoui/include/picoui/{button,checkbox,switch,slider}.h`
-- 修改: `picoui/src/widgets/{button,checkbox,switch,slider}.c`
-- 必要时修改: `picoui/src/backend/ldgui/backend_{button,checkbox,switch,slider}.c`
-- 修改: `tests/picoui/unit/test_picoui_button_events.c`
-- 修改: `tests/picoui/unit/test_picoui_widgets.c`
+- 修改: `tinyui/include/tinyui/{button,checkbox,switch,slider}.h`
+- 修改: `tinyui/src/widgets/{button,checkbox,switch,slider}.c`
+- 必要时修改: `tinyui/src/backend/ldgui/backend_{button,checkbox,switch,slider}.c`
+- 修改: `tests/tinyui/unit/test_tinyui_button_events.c`
+- 修改: `tests/tinyui/unit/test_tinyui_widgets.c`
 
 ### G7 展示控件组
 
-- 修改: `picoui/include/picoui/{window,label,text,image}.h`
-- 修改: `picoui/src/widgets/{window,label,text,image}.c`
-- 必要时修改: `picoui/src/backend/ldgui/backend_{window,label,text,image}.c`
-- 修改: `tests/picoui/unit/test_picoui_widgets.c`
-- 修改: `tests/picoui/unit/test_picoui_theme.c`
-- 修改: `picoui/docs/demo_guide.md`
+- 修改: `tinyui/include/tinyui/{window,label,text,image}.h`
+- 修改: `tinyui/src/widgets/{window,label,text,image}.c`
+- 必要时修改: `tinyui/src/backend/ldgui/backend_{window,label,text,image}.c`
+- 修改: `tests/tinyui/unit/test_tinyui_widgets.c`
+- 修改: `tests/tinyui/unit/test_tinyui_theme.c`
+- 修改: `tinyui/docs/demo_guide.md`
 
 ### G8 closeout 组
 
-- 修改: `docs/picoui-serial/G-线计划索引.md`
-- 修改: `docs/superpowers/specs/2026-05-29-picoui-g-line-current-widget-capability-gap-matrix.md`
-- 必要时修改: `docs/superpowers/specs/2026-05-29-picoui-g-line-current-widget-capability-gap-design.md`
+- 修改: `docs/tinyui-serial/G-线计划索引.md`
+- 修改: `docs/superpowers/specs/2026-05-29-tinyui-g-line-current-widget-capability-gap-matrix.md`
+- 必要时修改: `docs/superpowers/specs/2026-05-29-tinyui-g-line-current-widget-capability-gap-design.md`
 
 ## 2. Tasks
 
 ### Task G0: worktree 准备和 baseline
 
 **文件:**
-- Read: `docs/picoui-serial/G-线计划索引.md`
-- Read: `docs/superpowers/specs/2026-05-29-picoui-g-line-current-widget-capability-gap-design.md`
+- Read: `docs/tinyui-serial/G-线计划索引.md`
+- Read: `docs/superpowers/specs/2026-05-29-tinyui-g-line-current-widget-capability-gap-design.md`
 
 - [ ] **Step 1: 创建 worktree**
 
 ```bash
-git worktree add .worktree/picoui-g-current-capability-gap HEAD
-cd .worktree/picoui-g-current-capability-gap
+git worktree add .worktree/tinyui-g-current-capability-gap HEAD
+cd .worktree/tinyui-g-current-capability-gap
 git submodule sync --recursive
 git submodule update --init --recursive
 ```
@@ -115,7 +115,7 @@ rtk cmake -S . -B build -DUSE_DEMO=0
 - [ ] **Step 3: 运行 baseline gate**
 
 ```bash
-ctest --test-dir build -L picoui --output-on-failure
+ctest --test-dir build -L tinyui --output-on-failure
 ctest --test-dir build -L visible --output-on-failure
 ctest --test-dir build -L mapping --output-on-failure
 ```
@@ -125,9 +125,9 @@ ctest --test-dir build -L mapping --output-on-failure
 ### Task G1: 冻结 capability gap 真相源
 
 **文件:**
-- 修改: `docs/picoui-serial/G-线计划索引.md`
-- 新增: `docs/superpowers/specs/2026-05-29-picoui-g-line-current-widget-capability-gap-matrix.md`
-- 可选修改: `tests/picoui/contract/check_picoui_widget_contract_matrix.py`
+- 修改: `docs/tinyui-serial/G-线计划索引.md`
+- 新增: `docs/superpowers/specs/2026-05-29-tinyui-g-line-current-widget-capability-gap-matrix.md`
+- 可选修改: `tests/tinyui/contract/check_tinyui_widget_contract_matrix.py`
 
 - [ ] **Step 1: 生成矩阵文档骨架**
 
@@ -145,7 +145,7 @@ ctest --test-dir build -L mapping --output-on-failure
 
 每行至少包含：
 
-- PicoUI public API
+- TINYUI public API
 - 对应 `ld*` 能力入口
 - `support/reject/deferred/incomplete_contract`
 - `unit/contract/mapping/visible/manual artifact`
@@ -156,16 +156,16 @@ ctest --test-dir build -L mapping --output-on-failure
 
 - [ ] **Step 3: 可选扩展 contract script**
 
-如果 `tests/picoui/contract/check_picoui_widget_contract_matrix.py` 能低风险扩展，则把 `list` 和 `incomplete_contract` 状态纳入检查；若现有脚本不适合直接扩展，则只在文档中明确并记录豁免原因。
+如果 `tests/tinyui/contract/check_tinyui_widget_contract_matrix.py` 能低风险扩展，则把 `list` 和 `incomplete_contract` 状态纳入检查；若现有脚本不适合直接扩展，则只在文档中明确并记录豁免原因。
 
 - [ ] **Step 4: 验证 G1**
 
 ```bash
 git diff --check
 rg -n "incomplete_contract|ldList|ldSlider|ldWindow|ldLabel|ldButton|ldCheckBox|ldSwitch|ldText|ldImage" \
-  docs/superpowers/specs/2026-05-29-picoui-g-line-current-widget-capability-gap-matrix.md \
-  docs/picoui-serial/G-线计划索引.md
-python3 tests/picoui/contract/check_picoui_widget_contract_matrix.py
+  docs/superpowers/specs/2026-05-29-tinyui-g-line-current-widget-capability-gap-matrix.md \
+  docs/tinyui-serial/G-线计划索引.md
+python3 tests/tinyui/contract/check_tinyui_widget_contract_matrix.py
 ```
 
 期望：文档无占位，contract 检查通过；若脚本未扩展，则必须在 subagent 总结中明确“本阶段只冻结真相源，未改变 contract script 行为”。
@@ -181,20 +181,20 @@ gitnexus_detect_changes(scope="all", repo="LingDongGUI")
 ### Task G2: list selection contract 收口
 
 **文件:**
-- 修改: `picoui/include/picoui/list.h`
-- 修改: `picoui/src/widgets/list.c`
-- 修改: `picoui/src/backend/ldgui/backend_event.c`
-- 修改: `tests/picoui/unit/test_picoui_list.c`
-- 修改: `docs/picoui-serial/G-线计划索引.md`
-- 修改: `docs/superpowers/specs/2026-05-29-picoui-g-line-current-widget-capability-gap-matrix.md`
+- 修改: `tinyui/include/tinyui/list.h`
+- 修改: `tinyui/src/widgets/list.c`
+- 修改: `tinyui/src/backend/ldgui/backend_event.c`
+- 修改: `tests/tinyui/unit/test_tinyui_list.c`
+- 修改: `docs/tinyui-serial/G-线计划索引.md`
+- 修改: `docs/superpowers/specs/2026-05-29-tinyui-g-line-current-widget-capability-gap-matrix.md`
 
 - [ ] **Step 1: GitNexus impact**
 
 运行：
 
 ```text
-gitnexus_impact(target="picoui_list_set_on_selected", direction="upstream", repo="LingDongGUI")
-gitnexus_impact(target="picoui_backend_widget_dispatch_signal", direction="upstream", repo="LingDongGUI")
+gitnexus_impact(target="tinyui_list_set_on_selected", direction="upstream", repo="LingDongGUI")
+gitnexus_impact(target="tinyui_backend_widget_dispatch_signal", direction="upstream", repo="LingDongGUI")
 ```
 
 期望：记录 direct callers、affected processes 和风险等级。若 HIGH/CRITICAL，先汇报主线程再继续。
@@ -210,7 +210,7 @@ subagent 必须在本阶段回复里先说明选了哪条路，以及为什么�
 
 - [ ] **Step 3: 先写 RED 测试**
 
-在 `tests/picoui/unit/test_picoui_list.c` 新增至少一种 fail-first 断言：
+在 `tests/tinyui/unit/test_tinyui_list.c` 新增至少一种 fail-first 断言：
 
 - 若选择补 bridge：native selection 改变必须触发 callback
 - 若选择降级：public API 调用后必须有明确返回值 / 文档边界 / 断言行为，不允许继续“默默保存 callback 但永远不触发”
@@ -222,8 +222,8 @@ subagent 必须在本阶段回复里先说明选了哪条路，以及为什么�
 - [ ] **Step 5: 验证 G2**
 
 ```bash
-ctest --test-dir build -R test_picoui_list --output-on-failure
-python3 tests/picoui/contract/check_picoui_public_api.py
+ctest --test-dir build -R test_tinyui_list --output-on-failure
+python3 tests/tinyui/contract/check_tinyui_public_api.py
 git diff --check
 ```
 
@@ -240,26 +240,26 @@ gitnexus_detect_changes(scope="all", repo="LingDongGUI")
 ### Task G3: list marker 语义拆分
 
 **文件:**
-- 修改: `picoui/src/backend/ldgui/backend_app.c`
-- 修改: `tests/picoui/runtime/check_picoui_backend_mapping.py`
-- 修改: `picoui/docs/demo_guide.md`
-- 修改: `docs/picoui-serial/G-线计划索引.md`
-- 修改: `docs/superpowers/specs/2026-05-29-picoui-g-line-current-widget-capability-gap-matrix.md`
+- 修改: `tinyui/src/backend/ldgui/backend_app.c`
+- 修改: `tests/tinyui/runtime/check_tinyui_backend_mapping.py`
+- 修改: `tinyui/docs/demo_guide.md`
+- 修改: `docs/tinyui-serial/G-线计划索引.md`
+- 修改: `docs/superpowers/specs/2026-05-29-tinyui-g-line-current-widget-capability-gap-matrix.md`
 
 - [ ] **Step 1: GitNexus impact**
 
 运行：
 
 ```text
-gitnexus_impact(target="picoui_backend_log_mapping_markers", direction="upstream", repo="LingDongGUI")
-gitnexus_impact(target="picoui_backend_append_widget_ids", direction="upstream", repo="LingDongGUI")
+gitnexus_impact(target="tinyui_backend_log_mapping_markers", direction="upstream", repo="LingDongGUI")
+gitnexus_impact(target="tinyui_backend_append_widget_ids", direction="upstream", repo="LingDongGUI")
 ```
 
 期望：记录风险。若 GitNexus 对 static backend 函数缺失，明确记为弱证据，再继续。
 
 - [ ] **Step 2: 先写 mapping RED**
 
-在 `tests/picoui/runtime/check_picoui_backend_mapping.py` 先写清新的期望语义：
+在 `tests/tinyui/runtime/check_tinyui_backend_mapping.py` 先写清新的期望语义：
 
 - `list` 属于真实 backend widget id
 - `item_*` 若继续输出，必须走单独 marker 名称或单独解释路径
@@ -284,8 +284,8 @@ gitnexus_impact(target="picoui_backend_append_widget_ids", direction="upstream",
 - [ ] **Step 5: 验证 G3**
 
 ```bash
-python3 tests/picoui/runtime/check_picoui_backend_mapping.py
-python3 tests/picoui/runtime/check_picoui_visible_ui.py --demo list_basic
+python3 tests/tinyui/runtime/check_tinyui_backend_mapping.py
+python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --demo list_basic
 git diff --check
 ```
 
@@ -302,27 +302,27 @@ gitnexus_detect_changes(scope="all", repo="LingDongGUI")
 ### Task G4: slider range contract 收口
 
 **文件:**
-- 修改: `picoui/include/picoui/slider.h`
-- 修改: `picoui/src/widgets/slider.c`
-- 必要时修改: `picoui/src/backend/ldgui/backend_event.c`
-- 修改: `tests/picoui/unit/test_picoui_widgets.c`
-- 修改: `docs/picoui-serial/G-线计划索引.md`
-- 修改: `docs/superpowers/specs/2026-05-29-picoui-g-line-current-widget-capability-gap-matrix.md`
+- 修改: `tinyui/include/tinyui/slider.h`
+- 修改: `tinyui/src/widgets/slider.c`
+- 必要时修改: `tinyui/src/backend/ldgui/backend_event.c`
+- 修改: `tests/tinyui/unit/test_tinyui_widgets.c`
+- 修改: `docs/tinyui-serial/G-线计划索引.md`
+- 修改: `docs/superpowers/specs/2026-05-29-tinyui-g-line-current-widget-capability-gap-matrix.md`
 
 - [ ] **Step 1: GitNexus impact**
 
 运行：
 
 ```text
-gitnexus_impact(target="picoui_slider_set_range", direction="upstream", repo="LingDongGUI")
-gitnexus_impact(target="picoui_slider_set_value", direction="upstream", repo="LingDongGUI")
+gitnexus_impact(target="tinyui_slider_set_range", direction="upstream", repo="LingDongGUI")
+gitnexus_impact(target="tinyui_slider_set_value", direction="upstream", repo="LingDongGUI")
 ```
 
 - [ ] **Step 2: 写 RED 测试**
 
-在 `tests/picoui/unit/test_picoui_widgets.c` 增加至少两类断言：
+在 `tests/tinyui/unit/test_tinyui_widgets.c` 增加至少两类断言：
 
-- range clamp 改值时，PicoUI `value` 行为
+- range clamp 改值时，TINYUI `value` 行为
 - 若合同要求同步到底层，则 `ldSlider.permille` 也必须同步
 
 - [ ] **Step 3: 二选一收口**
@@ -337,7 +337,7 @@ subagent 必须在回复里说明选项及理由。
 - [ ] **Step 4: 验证 G4**
 
 ```bash
-ctest --test-dir build -R test_picoui_widgets --output-on-failure
+ctest --test-dir build -R test_tinyui_widgets --output-on-failure
 git diff --check
 ```
 
@@ -354,12 +354,12 @@ gitnexus_detect_changes(scope="all", repo="LingDongGUI")
 ### Task G5: shared base 语义决议
 
 **文件:**
-- 修改: `picoui/include/picoui/widget.h`
-- 修改: `picoui/src/core/widget.c`
-- 修改: `picoui/src/backend/ldgui/backend_style_apply.c`
-- 修改: `picoui/src/backend/ldgui/backend_theme.c`
-- 修改: `tests/picoui/unit/test_picoui_widgets.c`
-- 修改: `tests/picoui/unit/test_picoui_theme.c`
+- 修改: `tinyui/include/tinyui/widget.h`
+- 修改: `tinyui/src/core/widget.c`
+- 修改: `tinyui/src/backend/ldgui/backend_style_apply.c`
+- 修改: `tinyui/src/backend/ldgui/backend_theme.c`
+- 修改: `tests/tinyui/unit/test_tinyui_widgets.c`
+- 修改: `tests/tinyui/unit/test_tinyui_theme.c`
 
 - [ ] **Step 1: 冻结决策表**
 
@@ -376,7 +376,7 @@ gitnexus_detect_changes(scope="all", repo="LingDongGUI")
 
 - [ ] **Step 2: 按决策写 RED 测试**
 
-根据 Step 1 的决策，在 `test_picoui_widgets.c` / `test_picoui_theme.c` 写 fail-first 断言。
+根据 Step 1 的决策，在 `test_tinyui_widgets.c` / `test_tinyui_theme.c` 写 fail-first 断言。
 
 - [ ] **Step 3: 实现最小 shared base 变更**
 
@@ -385,8 +385,8 @@ gitnexus_detect_changes(scope="all", repo="LingDongGUI")
 - [ ] **Step 4: 验证 G5**
 
 ```bash
-ctest --test-dir build -R test_picoui_widgets --output-on-failure
-ctest --test-dir build -R test_picoui_theme --output-on-failure
+ctest --test-dir build -R test_tinyui_widgets --output-on-failure
+ctest --test-dir build -R test_tinyui_theme --output-on-failure
 git diff --check
 ```
 
@@ -395,11 +395,11 @@ git diff --check
 ### Task G6: 交互控件高价值缺口
 
 **文件:**
-- 修改: `picoui/include/picoui/{button,checkbox,switch,slider}.h`
-- 修改: `picoui/src/widgets/{button,checkbox,switch,slider}.c`
+- 修改: `tinyui/include/tinyui/{button,checkbox,switch,slider}.h`
+- 修改: `tinyui/src/widgets/{button,checkbox,switch,slider}.c`
 - 必要时修改: backend 对应文件
-- 修改: `tests/picoui/unit/test_picoui_button_events.c`
-- 修改: `tests/picoui/unit/test_picoui_widgets.c`
+- 修改: `tests/tinyui/unit/test_tinyui_button_events.c`
+- 修改: `tests/tinyui/unit/test_tinyui_widgets.c`
 
 - [ ] **Step 1: 只选一批最小能力**
 
@@ -423,8 +423,8 @@ git diff --check
 - [ ] **Step 4: 验证 G6**
 
 ```bash
-ctest --test-dir build -R test_picoui_button_events --output-on-failure
-ctest --test-dir build -R test_picoui_widgets --output-on-failure
+ctest --test-dir build -R test_tinyui_button_events --output-on-failure
+ctest --test-dir build -R test_tinyui_widgets --output-on-failure
 git diff --check
 ```
 
@@ -433,12 +433,12 @@ git diff --check
 ### Task G7: 展示控件高价值缺口
 
 **文件:**
-- 修改: `picoui/include/picoui/{window,label,text,image}.h`
-- 修改: `picoui/src/widgets/{window,label,text,image}.c`
+- 修改: `tinyui/include/tinyui/{window,label,text,image}.h`
+- 修改: `tinyui/src/widgets/{window,label,text,image}.c`
 - 必要时修改: backend 对应文件
-- 修改: `tests/picoui/unit/test_picoui_widgets.c`
-- 修改: `tests/picoui/unit/test_picoui_theme.c`
-- 修改: `picoui/docs/demo_guide.md`
+- 修改: `tests/tinyui/unit/test_tinyui_widgets.c`
+- 修改: `tests/tinyui/unit/test_tinyui_theme.c`
+- 修改: `tinyui/docs/demo_guide.md`
 
 - [ ] **Step 1: 只选一批最小能力**
 
@@ -460,8 +460,8 @@ git diff --check
 - [ ] **Step 4: 验证 G7**
 
 ```bash
-ctest --test-dir build -R test_picoui_widgets --output-on-failure
-ctest --test-dir build -R test_picoui_theme --output-on-failure
+ctest --test-dir build -R test_tinyui_widgets --output-on-failure
+ctest --test-dir build -R test_tinyui_theme --output-on-failure
 git diff --check
 ```
 
@@ -470,9 +470,9 @@ git diff --check
 ### Task G8: G线 closeout
 
 **文件:**
-- 修改: `docs/picoui-serial/G-线计划索引.md`
-- 修改: `docs/superpowers/specs/2026-05-29-picoui-g-line-current-widget-capability-gap-matrix.md`
-- 必要时修改: `docs/superpowers/specs/2026-05-29-picoui-g-line-current-widget-capability-gap-design.md`
+- 修改: `docs/tinyui-serial/G-线计划索引.md`
+- 修改: `docs/superpowers/specs/2026-05-29-tinyui-g-line-current-widget-capability-gap-matrix.md`
+- 必要时修改: `docs/superpowers/specs/2026-05-29-tinyui-g-line-current-widget-capability-gap-design.md`
 
 - [ ] **Step 1: 更新索引与矩阵**
 
@@ -492,12 +492,12 @@ git diff --check
 ```bash
 git status --short
 rtk cmake -S . -B build -DUSE_DEMO=0
-ctest --test-dir build -L picoui --output-on-failure
+ctest --test-dir build -L tinyui --output-on-failure
 ctest --test-dir build -L visible --output-on-failure
 ctest --test-dir build -L mapping --output-on-failure
-python3 tests/picoui/runtime/check_picoui_runtime.py
-python3 tests/picoui/runtime/check_picoui_visible_ui.py --all
-python3 tests/picoui/runtime/check_picoui_backend_mapping.py
+python3 tests/tinyui/runtime/check_tinyui_runtime.py
+python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --all
+python3 tests/tinyui/runtime/check_tinyui_backend_mapping.py
 git diff --check
 ```
 

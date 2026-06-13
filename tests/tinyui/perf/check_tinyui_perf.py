@@ -97,11 +97,11 @@ def _run_benchmark(build_dir: Path) -> subprocess.CompletedProcess[str]:
 
     env = os.environ.copy()
     env["SDL_VIDEODRIVER"] = env.get("SDL_VIDEODRIVER", "dummy")
-    env["PICOUI_DEMO_AUTO_QUIT_MS"] = "1200"
-    env["PICOUI_BENCHMARK_LOG"] = "1"
+    env["TINYUI_DEMO_AUTO_QUIT_MS"] = "1200"
+    env["TINYUI_BENCHMARK_LOG"] = "1"
     with tempfile.TemporaryDirectory(prefix="tinyui-benchmark-") as tmpdir:
         capture_path = Path(tmpdir) / "frame.ppm"
-        env["PICOUI_CAPTURE_FILE"] = str(capture_path)
+        env["TINYUI_CAPTURE_FILE"] = str(capture_path)
         completed = subprocess.run(
             [str(_find_executable(build_dir))],
             check=False,
@@ -152,8 +152,8 @@ def main() -> None:
     capture_ready_baseline = float(limits["capture_ready_ms"]["baseline_ms"])
     capture_ready_limit = float(limits["capture_ready_ms"]["max_allowed_ms"])
     completed = _run_benchmark(DEFAULT_BUILD)
-    screen_object_create_ms = _parse_marker(completed.stdout, "PICOUI_BENCHMARK_SCREEN_OBJECT_CREATE_MS")
-    capture_ready_ms = _parse_marker(completed.stdout, "PICOUI_BENCHMARK_CAPTURE_READY_MS")
+    screen_object_create_ms = _parse_marker(completed.stdout, "TINYUI_BENCHMARK_SCREEN_OBJECT_CREATE_MS")
+    capture_ready_ms = _parse_marker(completed.stdout, "TINYUI_BENCHMARK_CAPTURE_READY_MS")
 
     try:
         _assert_runtime_metric_within_gate(

@@ -1,10 +1,10 @@
 # TinyUI v2.0 设计文档
 
-> 面向后续 agent 执行：本设计文档锁定 `TinyUI` 的命名、路线切换、架构边界与阶段推进方式。后续实现必须先基于本文拆详细 plan，不得回退到旧 `PicoUI backend` 路线，也不得把 `LingDongGUI` 改造成另一套重命名 public API。
+> 面向后续 agent 执行：本设计文档锁定 `TinyUI` 的命名、路线切换、架构边界与阶段推进方式。后续实现必须先基于本文拆详细 plan，不得回退到旧 `TINYUI backend` 路线，也不得把 `LingDongGUI` 改造成另一套重命名 public API。
 
 ## 1. 背景与设计结论
 
-当前仓库已经在 `PicoUI` 上投入了大量真实工作，包括：
+当前仓库已经在 `TINYUI` 上投入了大量真实工作，包括：
 
 - 真实控件封装
 - demo 页面
@@ -13,18 +13,18 @@
 
 因此，`TinyUI v2.0` 的最佳路线不是“从零新建一套最小子集目录重新开始”，也不是“整体 fork 一份 `LingDongGUI` 再重命名”，而是：
 
-**以 `picoui/` 为施工现场，在最大化复用既有代码、demo、测试和构建成果的前提下，分阶段重整结构，最终演化为 `TinyUI`。**
+**以 `tinyui/` 为施工现场，在最大化复用既有代码、demo、测试和构建成果的前提下，分阶段重整结构，最终演化为 `TinyUI`。**
 
 这条路线的核心价值是：
 
 - 不重复造轮子
-- 不放弃已经完成的大量 `PicoUI` 资产
+- 不放弃已经完成的大量 `TINYUI` 资产
 - 可以逐步消灭最不想要的两层：`backend` 与 `app`
 - 最终仍能收口到更轻、更直接、使用方式更接近 `LVGL` 的新产品形态
 
 ## 2. 目标
 
-`TinyUI v2.0` 的目标不是做第二个 `LVGL`，也不是复制一整份轻量 GUI 内核，而是在保持 `LingDongGUI` 轻量内核优势的前提下，把当前 `PicoUI` 路线重整为：
+`TinyUI v2.0` 的目标不是做第二个 `LVGL`，也不是复制一整份轻量 GUI 内核，而是在保持 `LingDongGUI` 轻量内核优势的前提下，把当前 `TINYUI` 路线重整为：
 
 - 更直接的实现路径
 - 更薄的 runtime 模型
@@ -34,7 +34,7 @@
 
 本路线最终要实现以下结果：
 
-- `PicoUI -> backend/ldgui -> LingDongGUI` 三层桥接被拆平
+- `TINYUI -> backend/ldgui -> LingDongGUI` 三层桥接被拆平
 - `app` 模型退出主路径
 - public API 最终演化为 `tinyui_*`
 - `LingDongGUI` 继续作为轻量内核真相源
@@ -68,11 +68,11 @@
 
 当前阶段的关键变化是：
 
-**`TinyUI` 不再被定义为一开始就独立目录起步的新实现，而是定义为“以 `picoui/` 为施工现场、最终演化出的终态产品名”。**
+**`TinyUI` 不再被定义为一开始就独立目录起步的新实现，而是定义为“以 `tinyui/` 为施工现场、最终演化出的终态产品名”。**
 
 也就是说：
 
-- 短期施工目录可以仍在 `picoui/`
+- 短期施工目录可以仍在 `tinyui/`
 - 长期对外结果必须收口到 `TinyUI`
 
 ## 5. 总体架构判断
@@ -126,13 +126,13 @@
 
 一句话：
 
-`TinyUI` 和重整后的 `PicoUI` 使用 `LingDongGUI`，但不把 `LingDongGUI` 重新包装成另一套名字的 public 库。
+`TinyUI` 和重整后的 `TINYUI` 使用 `LingDongGUI`，但不把 `LingDongGUI` 重新包装成另一套名字的 public 库。
 
 ## 7. 路线选择与最佳方案
 
 当前实际可选路线有两条：
 
-### 方案 A：新建 `tinyui/`，从 `PicoUI` 与 `LingDongGUI` 定向复制最小子集
+### 方案 A：新建 `tinyui/`，从 `TINYUI` 与 `LingDongGUI` 定向复制最小子集
 
 优点：
 
@@ -143,9 +143,9 @@
 
 - 需要重复搬 demo、测试、构建、合同
 - 前期重复工作明显
-- 已有 `PicoUI` 资产利用率低
+- 已有 `TINYUI` 资产利用率低
 
-### 方案 B：以 `picoui/` 为施工现场，逐步重整并最终演化为 `TinyUI`
+### 方案 B：以 `tinyui/` 为施工现场，逐步重整并最终演化为 `TinyUI`
 
 优点：
 
@@ -231,7 +231,7 @@
 - widget-specific API 通过 create/set/get/callback 访问
 - 不对外暴露 `ldBase_t *`、`ldSwitch_t *` 之类的 `LingDongGUI` 类型
 
-这条设计结论不会因为施工现场在 `picoui/` 而改变。
+这条设计结论不会因为施工现场在 `tinyui/` 而改变。
 
 ## 11. 样式与布局边界
 
@@ -263,7 +263,7 @@
 
 第一阶段不追求立刻完成全部 `TinyUI` 命名与目录切换，而是先完成最重要的结构重整：
 
-**消灭 `picoui/src/backend/ldgui` 作为独立架构层。**
+**消灭 `tinyui/src/backend/ldgui` 作为独立架构层。**
 
 第一阶段完成后，路径应变为：
 
@@ -316,8 +316,8 @@
 观察结果：
 
 - `src/gui/ldSwitch.c` 已有真实控件行为：按压、释放、动画、状态切换、绘制、`SIGNAL_VALUE_CHANGED`
-- `picoui/src/backend/ldgui/backend_switch.c` 主要承担创建、挂父节点、分配 `name_id`、setter 转发等胶水职责
-- `picoui/src/widgets/switch.c` 主要是 public wrapper
+- `tinyui/src/backend/ldgui/backend_switch.c` 主要承担创建、挂父节点、分配 `name_id`、setter 转发等胶水职责
+- `tinyui/src/widgets/switch.c` 主要是 public wrapper
 
 因此第一阶段 `switch` 的正确改法是：
 
@@ -341,18 +341,18 @@
 
 可以继续直接复用：
 
-- 现有 `PicoUI` widget wrapper 基础代码
-- 现有 `PicoUI` demo 页面
-- 现有 `PicoUI` test/gate/contract 体系
-- 现有 `PicoUI` runtime/nativity 路线经验
+- 现有 `TINYUI` widget wrapper 基础代码
+- 现有 `TINYUI` demo 页面
+- 现有 `TINYUI` test/gate/contract 体系
+- 现有 `TINYUI` runtime/nativity 路线经验
 - `LingDongGUI` 真实控件能力
 
 ### 14.2 不应复用为长期架构的部分
 
 不应继续保留为长期正式架构：
 
-- `picoui/src/backend/ldgui/*`
-- `picoui_app_*` 主模型
+- `tinyui/src/backend/ldgui/*`
+- `tinyui_app_*` 主模型
 - `public api -> app -> backend -> ld*` 这条链
 
 ### 14.3 复用原则
@@ -399,7 +399,7 @@
 
 目标：
 
-- 从 `picoui_*` 演化到 `tinyui_*`
+- 从 `tinyui_*` 演化到 `tinyui_*`
 - 统一头文件与 public surface
 
 ### 阶段 4：性能与内存守门
@@ -422,7 +422,7 @@
 
 - 如果只挪文件、不改运行时职责，`backend` 会变相存活
 - 如果只改名字、不改主模型，`app` 会继续成为主路径
-- 如果不设阶段边界，`picoui_*`、`tinyui_*`、`ld*` 会在过渡期混乱
+- 如果不设阶段边界，`tinyui_*`、`tinyui_*`、`ld*` 会在过渡期混乱
 
 ### 17.2 控制策略
 
@@ -460,7 +460,7 @@
 
 - 不从零新建一套最小实现重新开始
 - 不整体 fork 一份 `LingDongGUI`
-- 以 `picoui/` 为施工现场
+- 以 `tinyui/` 为施工现场
 - 优先复用既有代码、demo、测试、合同、构建成果
 - 第一阶段先拆平 `backend`
 - 第二阶段再消灭 `app`

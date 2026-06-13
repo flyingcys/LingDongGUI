@@ -3,12 +3,12 @@
 
 #include <stddef.h>
 
-static int tinyui_input_key_is_valid(enum picoui_input_key key)
+static int tinyui_input_key_is_valid(enum tinyui_input_key key)
 {
-    return key >= PICOUI_INPUT_KEY_NONE && key <= PICOUI_INPUT_KEY_BACK;
+    return key >= TINYUI_INPUT_KEY_NONE && key <= TINYUI_INPUT_KEY_BACK;
 }
 
-int picoui_input_push_pointer(struct picoui_app *app, int x, int y, int pressed)
+int tinyui_input_push_pointer(struct tinyui_app *app, int x, int y, int pressed)
 {
     if (app == NULL) {
         return -1;
@@ -20,7 +20,7 @@ int picoui_input_push_pointer(struct picoui_app *app, int x, int y, int pressed)
     return 0;
 }
 
-int picoui_input_get_pointer(const struct picoui_app *app, int *x, int *y, int *pressed)
+int tinyui_input_get_pointer(const struct tinyui_app *app, int *x, int *y, int *pressed)
 {
     if (app == NULL || x == NULL || y == NULL || pressed == NULL) {
         return -1;
@@ -32,7 +32,7 @@ int picoui_input_get_pointer(const struct picoui_app *app, int *x, int *y, int *
     return 0;
 }
 
-int picoui_input_push_key(struct picoui_app *app, enum picoui_input_key key, int pressed)
+int tinyui_input_push_key(struct tinyui_app *app, enum tinyui_input_key key, int pressed)
 {
     if (app == NULL || !tinyui_input_key_is_valid(key)) {
         return -1;
@@ -43,8 +43,8 @@ int picoui_input_push_key(struct picoui_app *app, enum picoui_input_key key, int
     return 0;
 }
 
-int picoui_input_get_key(const struct picoui_app *app,
-                         enum picoui_input_key *key,
+int tinyui_input_get_key(const struct tinyui_app *app,
+                         enum tinyui_input_key *key,
                          int *pressed)
 {
     if (app == NULL || key == NULL || pressed == NULL) {

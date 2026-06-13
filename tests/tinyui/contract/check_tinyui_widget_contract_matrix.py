@@ -4,7 +4,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 PUBLIC_DIR = ROOT / "tinyui" / "include"
-DOC = ROOT / "docs" / "superpowers" / "specs" / "2026-05-29-picoui-d-line-widget-contract-matrix.md"
+DOC = ROOT / "docs" / "superpowers" / "specs" / "2026-05-29-tinyui-d-line-widget-contract-matrix.md"
 WIDGETS = ["window", "label", "button", "checkbox", "switch", "slider", "text", "image"]
 ALL_WIDGETS = set(WIDGETS)
 CHILD_WIDGETS = ALL_WIDGETS - {"window"}
@@ -32,81 +32,81 @@ CAPABILITY_COLUMNS = [
 STATUS_INDEX = {name: index for index, name in enumerate(CAPABILITY_COLUMNS)}
 
 WIDGET_API_POLICY = {
-    "picoui_widget_set_pos": CHILD_WIDGETS,
-    "picoui_widget_set_size": CHILD_WIDGETS,
-    "picoui_widget_set_text": TEXT_WIDGETS,
-    "picoui_widget_set_style_class": ALL_WIDGETS,
-    "picoui_widget_set_user_data": ALL_WIDGETS,
-    "picoui_widget_set_bg_color": ALL_WIDGETS,
-    "picoui_widget_set_text_color": ALL_WIDGETS,
-    "picoui_widget_set_border_color": ALL_WIDGETS,
-    "picoui_widget_set_radius": ALL_WIDGETS,
-    "picoui_widget_set_padding": ALL_WIDGETS,
-    "picoui_widget_set_visible": ALL_WIDGETS,
-    "picoui_widget_set_enabled": ALL_WIDGETS,
-    "picoui_widget_set_flex_grow": CHILD_WIDGETS,
-    "picoui_widget_set_flex_new_track": CHILD_WIDGETS,
-    "picoui_widget_set_ignore_layout": CHILD_WIDGETS,
-    "picoui_widget_set_grid_cell": CHILD_WIDGETS,
-    "picoui_widget_remove_from_parent": CHILD_WIDGETS,
-    "picoui_widget_destroy": CHILD_WIDGETS,
+    "tinyui_widget_set_pos": CHILD_WIDGETS,
+    "tinyui_widget_set_size": CHILD_WIDGETS,
+    "tinyui_widget_set_text": TEXT_WIDGETS,
+    "tinyui_widget_set_style_class": ALL_WIDGETS,
+    "tinyui_widget_set_user_data": ALL_WIDGETS,
+    "tinyui_widget_set_bg_color": ALL_WIDGETS,
+    "tinyui_widget_set_text_color": ALL_WIDGETS,
+    "tinyui_widget_set_border_color": ALL_WIDGETS,
+    "tinyui_widget_set_radius": ALL_WIDGETS,
+    "tinyui_widget_set_padding": ALL_WIDGETS,
+    "tinyui_widget_set_visible": ALL_WIDGETS,
+    "tinyui_widget_set_enabled": ALL_WIDGETS,
+    "tinyui_widget_set_flex_grow": CHILD_WIDGETS,
+    "tinyui_widget_set_flex_new_track": CHILD_WIDGETS,
+    "tinyui_widget_set_ignore_layout": CHILD_WIDGETS,
+    "tinyui_widget_set_grid_cell": CHILD_WIDGETS,
+    "tinyui_widget_remove_from_parent": CHILD_WIDGETS,
+    "tinyui_widget_destroy": CHILD_WIDGETS,
 }
 LEGACY_OPTIONAL_WIDGET_APIS = {
-    "picoui_widget_find_by_name_id",
-    "picoui_widget_get_absolute_pos",
-    "picoui_widget_get_child_count",
-    "picoui_widget_get_corner",
-    "picoui_widget_get_first_child",
-    "picoui_widget_get_height",
-    "picoui_widget_get_name_id",
-    "picoui_widget_get_next_sibling",
-    "picoui_widget_get_opacity",
-    "picoui_widget_get_parent",
-    "picoui_widget_get_relative_pos",
-    "picoui_widget_get_root",
-    "picoui_widget_get_selectable",
-    "picoui_widget_get_selected",
-    "picoui_widget_get_type",
-    "picoui_widget_get_visible",
-    "picoui_widget_get_width",
-    "picoui_widget_get_x",
-    "picoui_widget_get_y",
-    "picoui_widget_is_hidden",
-    "picoui_widget_set_center",
-    "picoui_widget_set_opacity",
-    "picoui_widget_set_selectable",
-    "picoui_widget_set_selected",
-    "picoui_widget_set_corner",
-    "picoui_widget_set_flex_min_width",
-    "picoui_widget_set_flex_min_height",
-    "picoui_widget_set_flex_max_width",
-    "picoui_widget_set_flex_max_height",
+    "tinyui_widget_find_by_name_id",
+    "tinyui_widget_get_absolute_pos",
+    "tinyui_widget_get_child_count",
+    "tinyui_widget_get_corner",
+    "tinyui_widget_get_first_child",
+    "tinyui_widget_get_height",
+    "tinyui_widget_get_name_id",
+    "tinyui_widget_get_next_sibling",
+    "tinyui_widget_get_opacity",
+    "tinyui_widget_get_parent",
+    "tinyui_widget_get_relative_pos",
+    "tinyui_widget_get_root",
+    "tinyui_widget_get_selectable",
+    "tinyui_widget_get_selected",
+    "tinyui_widget_get_type",
+    "tinyui_widget_get_visible",
+    "tinyui_widget_get_width",
+    "tinyui_widget_get_x",
+    "tinyui_widget_get_y",
+    "tinyui_widget_is_hidden",
+    "tinyui_widget_set_center",
+    "tinyui_widget_set_opacity",
+    "tinyui_widget_set_selectable",
+    "tinyui_widget_set_selected",
+    "tinyui_widget_set_corner",
+    "tinyui_widget_set_flex_min_width",
+    "tinyui_widget_set_flex_min_height",
+    "tinyui_widget_set_flex_max_width",
+    "tinyui_widget_set_flex_max_height",
 }
 
 WINDOW_LAYOUT_APIS = {
-    "picoui_flex_set_flow",
-    "picoui_flex_set_align",
-    "picoui_flex_set_gap",
-    "picoui_grid_set_columns",
-    "picoui_grid_set_rows",
-    "picoui_grid_set_gap",
-    "picoui_grid_set_align",
+    "tinyui_flex_set_flow",
+    "tinyui_flex_set_align",
+    "tinyui_flex_set_gap",
+    "tinyui_grid_set_columns",
+    "tinyui_grid_set_rows",
+    "tinyui_grid_set_gap",
+    "tinyui_grid_set_align",
 }
 CHILD_LAYOUT_APIS = {
-    "picoui_widget_set_pos",
-    "picoui_widget_set_size",
-    "picoui_widget_set_flex_grow",
-    "picoui_widget_set_flex_new_track",
-    "picoui_widget_set_ignore_layout",
-    "picoui_widget_set_grid_cell",
-    "picoui_widget_set_padding",
+    "tinyui_widget_set_pos",
+    "tinyui_widget_set_size",
+    "tinyui_widget_set_flex_grow",
+    "tinyui_widget_set_flex_new_track",
+    "tinyui_widget_set_ignore_layout",
+    "tinyui_widget_set_grid_cell",
+    "tinyui_widget_set_padding",
 }
 THEME_API_POLICY = {
-    "picoui_theme_apply_to_widget": ALL_WIDGETS - {"image"},
+    "tinyui_theme_apply_to_widget": ALL_WIDGETS - {"image"},
 }
 
 
-INCLUDE_FORWARD_RE = re.compile(r'^\s*#include\s+"(?P<target>picoui/[^"]+)"\s*$', re.M)
+INCLUDE_FORWARD_RE = re.compile(r'^\s*#include\s+"(?P<target>tinyui/[^"]+)"\s*$', re.M)
 
 
 def _load_header_text(header: Path) -> str:
@@ -122,7 +122,7 @@ def _public_functions(header: Path) -> set[str]:
     text = _load_header_text(header)
     text = re.sub(r"/\*.*?\*/", "", text, flags=re.S)
     text = re.sub(r"//.*", "", text)
-    return set(re.findall(r"\b(picoui_[A-Za-z0-9_]+)\s*\(", text))
+    return set(re.findall(r"\b(tinyui_[A-Za-z0-9_]+)\s*\(", text))
 
 
 def _extract_table_rows(text: str, marker: str) -> dict[str, list[str]]:
@@ -150,7 +150,7 @@ def _extract_table_rows(text: str, marker: str) -> dict[str, list[str]]:
 def _extract_api_matrix(text: str) -> dict[str, set[str]]:
     rows = _extract_table_rows(text, "## Public API 名称矩阵")
     return {
-        widget: set(re.findall(r"`(picoui_[A-Za-z0-9_]+)`", "|".join(columns)))
+        widget: set(re.findall(r"`(tinyui_[A-Za-z0-9_]+)`", "|".join(columns)))
         for widget, columns in rows.items()
     }
 
@@ -176,7 +176,7 @@ def _expected_widget_setters(widget: str) -> set[str]:
 
 def _expected_layout_apis(widget: str) -> set[str]:
     if widget == "window":
-        return WINDOW_LAYOUT_APIS | {"picoui_widget_set_padding"}
+        return WINDOW_LAYOUT_APIS | {"tinyui_widget_set_padding"}
     return CHILD_LAYOUT_APIS
 
 
@@ -193,7 +193,7 @@ def main() -> int:
     widget_header_functions = {
         function
         for function in _public_functions(PUBLIC_DIR / "widget.h")
-        if function.startswith("picoui_widget_")
+        if function.startswith("tinyui_widget_")
     }
     policy_functions = set(WIDGET_API_POLICY)
     unclassified_widget_functions = sorted(
@@ -201,11 +201,11 @@ def main() -> int:
     )
     stale_policy_functions = sorted(policy_functions - widget_header_functions)
     assert not unclassified_widget_functions, (
-        "widget.h exposes picoui_widget_* API missing from matrix policy: "
+        "widget.h exposes tinyui_widget_* API missing from matrix policy: "
         f"{unclassified_widget_functions}"
     )
     assert not stale_policy_functions, (
-        "matrix policy references picoui_widget_* API not found in widget.h: "
+        "matrix policy references tinyui_widget_* API not found in widget.h: "
         f"{stale_policy_functions}"
     )
 
@@ -254,7 +254,7 @@ def main() -> int:
             f"{widget} documents non-applicable theme API: {unexpected_theme_apis}"
         )
 
-        create_with_props = f"picoui_{widget}_create_with_props"
+        create_with_props = f"tinyui_{widget}_create_with_props"
         assert create_with_props in direct_public, (
             f"{widget} header missing D3 create_with_props API: {create_with_props}"
         )

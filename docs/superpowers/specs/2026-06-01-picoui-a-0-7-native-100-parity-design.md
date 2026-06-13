@@ -1,4 +1,4 @@
-# PicoUI a-0.7 LingDongGUI 原生 100% 能力对齐设计
+# TINYUI a-0.7 LingDongGUI 原生 100% 能力对齐设计
 
 ## 1. 背景
 
@@ -6,9 +6,9 @@
 
 当前 1 对 1 审计已经确认：
 
-1. LingDongGUI `ldBase` 枚举里存在 `27` 个 widget-like 类型，`ldAnimation` 未进入 PicoUI。
+1. LingDongGUI `ldBase` 枚举里存在 `27` 个 widget-like 类型，`ldAnimation` 未进入 TINYUI。
 2. `a-0.6` matrix 仍有 `13` 条 `reject-with-rationale`。
-3. 多个 `ld*` public setter/getter/event/resource 能力未进入 PicoUI public contract。
+3. 多个 `ld*` public setter/getter/event/resource 能力未进入 TINYUI public contract。
 4. gate 主要证明 release contract，不证明每个原生能力逐项 parity。
 
 `a-0.7` 因此必须重定义为 native-100 线，而不是 `a-0.6` 的小修补。
@@ -18,9 +18,9 @@
 `a-0.7` 的唯一目标：
 
 1. 以 `src/gui/ld*.h` 为原生事实源，覆盖全部 widget-like 控件。
-2. PicoUI public API 能表达每个 LingDongGUI 原生控件的全部 public 能力。
-3. 每个 PicoUI API 都落到真实 LingDongGUI backend 对象和字段，不依赖 fake renderer、demo 私有状态或 host-cache 假读回。
-4. `tests/picoui/contract/picoui_release_capability_matrix.json` 升级为 `a-0.7-native-100-v1`。
+2. TINYUI public API 能表达每个 LingDongGUI 原生控件的全部 public 能力。
+3. 每个 TINYUI API 都落到真实 LingDongGUI backend 对象和字段，不依赖 fake renderer、demo 私有状态或 host-cache 假读回。
+4. `tests/tinyui/contract/tinyui_release_capability_matrix.json` 升级为 `a-0.7-native-100-v1`。
 5. matrix 中 `not_wrapped / reject / deferred / incomplete_contract` 全部清零。
 6. runtime / mapping / visible / manual artifact gate 都以 native-100 口径重建。
 
@@ -144,7 +144,7 @@
 26. `radial_menu`
 27. `animation`
 
-`widgetTypeBackground / ldBase / ldGui / internal solver / switch internal` 不作为独立控件，但其通用能力必须通过 `picoui_widget_*`、layout、event、theme、resource API 覆盖。
+`widgetTypeBackground / ldBase / ldGui / internal solver / switch internal` 不作为独立控件，但其通用能力必须通过 `tinyui_widget_*`、layout、event、theme、resource API 覆盖。
 
 ### 5.2 能力范围
 
@@ -170,7 +170,7 @@
 ```text
 schema_version = a-0.7-native-100-v1
 ldgui_widget_like_total = 27
-picoui_native_wrapped_total = 27
+tinyui_native_wrapped_total = 27
 native_capability_total = derived from src/gui/ld*.h inventory
 native_capability_status_counts.support = native_capability_total
 native_capability_status_counts.reject = 0
@@ -181,7 +181,7 @@ matrix 每行必须记录：
 
 1. `widget`
 2. `ldgui_symbol`
-3. `picoui_api`
+3. `tinyui_api`
 4. `backend_proof`
 5. `unit_test`
 6. `runtime_gate`
@@ -194,16 +194,16 @@ matrix 每行必须记录：
 
 `a-0.7` 必须先统一以下类型和桥：
 
-1. `picoui_native_color`
-2. `picoui_native_align`
-3. `picoui_native_font`
-4. `picoui_native_image_source`
-5. `picoui_native_mask_source`
-6. `picoui_native_resource_pair`
-7. `picoui_native_nav_dir`
-8. `picoui_native_signal`
-9. `picoui_native_callback`
-10. `picoui_native_readback_policy`
+1. `tinyui_native_color`
+2. `tinyui_native_align`
+3. `tinyui_native_font`
+4. `tinyui_native_image_source`
+5. `tinyui_native_mask_source`
+6. `tinyui_native_resource_pair`
+7. `tinyui_native_nav_dir`
+8. `tinyui_native_signal`
+9. `tinyui_native_callback`
+10. `tinyui_native_readback_policy`
 
 这些桥必须在 shared-core 中统一实现，控件 subagent 不得各自发明重复类型。
 
@@ -212,8 +212,8 @@ matrix 每行必须记录：
 每个能力只能属于以下一种：
 
 1. backend field truth：直接读真实 `ld*` 对象字段或 getter。
-2. backend committed truth：PicoUI cache 是提交到 backend 的同一份真值，并有 unit proof 证明提交。
-3. resource pointer truth：PicoUI resource wrapper 与 backend tile/mask/font 指针一致。
+2. backend committed truth：TINYUI cache 是提交到 backend 的同一份真值，并有 unit proof 证明提交。
+3. resource pointer truth：TINYUI resource wrapper 与 backend tile/mask/font 指针一致。
 
 不允许：
 
@@ -262,7 +262,7 @@ gate 分四层：
 
 目标：
 
-1. `ldBase` 通用能力通过 `picoui_widget_*` 覆盖。
+1. `ldBase` 通用能力通过 `tinyui_widget_*` 覆盖。
 2. `ldWindow` flex/grid/padding/gap/grid descriptor 全量覆盖。
 3. theme 不再是 image/list 等控件 reject 边界。
 4. press/hold/release/clicked_item/finished/value_changed 都有统一 event bridge。
@@ -284,7 +284,7 @@ gate 分四层：
 
 1. 每个批次一个独立 worktree。
 2. 每个批次只能最终提交自己的控件文件和 unit/demo 文件。
-3. 每个批次必须产出 `tests/picoui/contract/native_100_fragments/<batch>.json`。
+3. 每个批次必须产出 `tests/tinyui/contract/native_100_fragments/<batch>.json`。
 4. 每个批次可临时改聚合文件做本地验证，但最终合流由 `R7` 统一处理。
 5. 任一批次发现 shared bridge 缺口，必须停下并回到主线程调整 `R1/R2`，不能在批次内私改 shared bridge。
 
@@ -315,7 +315,7 @@ gate 分四层：
 
 1. `icon_slider / radial_menu` 完整 icon image/mask、speed、selection/click/default/offset。
 2. `message_box` 完整多按钮、callback、string/button/background color、modal behavior，且不再 formal mapping exclusion。
-3. `animation` 新增 PicoUI public widget，覆盖 frame image、period、show/update 证据。
+3. `animation` 新增 TINYUI public widget，覆盖 frame image、period、show/update 证据。
 
 ### R7：native-100 matrix / gate / manual artifact
 
@@ -344,17 +344,17 @@ gate 分四层：
 3. matrix 无 `reject / deferred / incomplete_contract / not_wrapped / missing_implementation`。
 4. 每个 capability row 至少有 unit proof。
 5. 每个 widget 至少有 runtime/mapping/visible/manual artifact proof。
-6. `check_picoui_release_capability_matrix.py` 能从 native inventory 校验 matrix 完整性。
-7. `check_picoui_public_api.py` 校验所有 native-100 public API。
-8. `check_picoui_backend_mapping.py` 不允许 fake fallback 和 formal mapping exclusion。
-9. `check_picoui_visible_ui.py --all` 覆盖全部 native-100 demos。
-10. `check_picoui_manual_window_artifact.py --all` 覆盖全部 native-100 demos。
+6. `check_tinyui_release_capability_matrix.py` 能从 native inventory 校验 matrix 完整性。
+7. `check_tinyui_public_api.py` 校验所有 native-100 public API。
+8. `check_tinyui_backend_mapping.py` 不允许 fake fallback 和 formal mapping exclusion。
+9. `check_tinyui_visible_ui.py --all` 覆盖全部 native-100 demos。
+10. `check_tinyui_manual_window_artifact.py --all` 覆盖全部 native-100 demos。
 11. `git diff --check` 通过。
 12. `gitnexus_detect_changes(scope="all", repo="LingDongGUI")` 风险符合预期。
 
 ## 9. 风险
 
-1. `a-0.7` 实际上会把 PicoUI 从上层 API 推近 native mirror。风险是 public API 暴涨。
+1. `a-0.7` 实际上会把 TINYUI 从上层 API 推近 native mirror。风险是 public API 暴涨。
 2. image/mask/font 资源桥如果设计不稳，所有视觉控件都会返工。
 3. native inventory gate 如果只靠人工维护，很容易漏 API。
 4. `message_box / keyboard / animation` 是最容易破坏当前 gate 假设的三类控件。

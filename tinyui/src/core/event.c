@@ -24,12 +24,12 @@
 #include "../../../src/gui/ldSwitch.h"
 #include "../../../src/misc/ldMsg.h"
 
-static int tinyui_widget_accepts_event(const struct picoui_widget *widget)
+static int tinyui_widget_accepts_event(const struct tinyui_widget *widget)
 {
     return widget != 0 && widget->enabled != 0 && widget->visible != 0;
 }
 
-static int tinyui_widget_slider_value_to_percent(struct picoui_slider *slider, int value)
+static int tinyui_widget_slider_value_to_percent(struct tinyui_slider *slider, int value)
 {
     int range;
 
@@ -45,7 +45,7 @@ static int tinyui_widget_slider_value_to_percent(struct picoui_slider *slider, i
     return ((value - slider->min_value) * 100) / range;
 }
 
-static int tinyui_widget_slider_percent_to_value(struct picoui_slider *slider, int permille)
+static int tinyui_widget_slider_percent_to_value(struct tinyui_slider *slider, int permille)
 {
     int range;
     int scaled;
@@ -76,8 +76,8 @@ static int tinyui_widget_slider_percent_to_value(struct picoui_slider *slider, i
     return scaled;
 }
 
-void tinyui_widget_sync_ld_value(struct picoui_backend_widget *backend,
-                                 struct picoui_widget *widget,
+void tinyui_widget_sync_ld_value(struct tinyui_backend_widget *backend,
+                                 struct tinyui_widget *widget,
                                  int value)
 {
     if (backend == NULL || backend->ld_widget == NULL) {
@@ -85,13 +85,13 @@ void tinyui_widget_sync_ld_value(struct picoui_backend_widget *backend,
     }
 
     switch (backend->kind) {
-    case PICOUI_BACKEND_WIDGET_CHECKBOX: {
+    case TINYUI_BACKEND_WIDGET_CHECKBOX: {
         ldCheckBox_t *ld_checkbox = (ldCheckBox_t *)backend->ld_widget;
         ld_checkbox->isChecked = value != 0;
         ld_checkbox->use_as__ldBase_t.isDirtyRegionUpdate = true;
         break;
     }
-    case PICOUI_BACKEND_WIDGET_SWITCH: {
+    case TINYUI_BACKEND_WIDGET_SWITCH: {
         ldSwitch_t *ld_switch = (ldSwitch_t *)backend->ld_widget;
         uint16_t progress = value != 0 ? 1000U : 0U;
         ld_switch->isChecked = value != 0;
@@ -103,9 +103,9 @@ void tinyui_widget_sync_ld_value(struct picoui_backend_widget *backend,
         ld_switch->use_as__ldBase_t.isDirtyRegionUpdate = true;
         break;
     }
-    case PICOUI_BACKEND_WIDGET_SLIDER: {
+    case TINYUI_BACKEND_WIDGET_SLIDER: {
         ldSlider_t *ld_slider = (ldSlider_t *)backend->ld_widget;
-        int percent = tinyui_widget_slider_value_to_percent((struct picoui_slider *)widget, value);
+        int percent = tinyui_widget_slider_value_to_percent((struct tinyui_slider *)widget, value);
         ldSliderSetPercent(ld_slider, (float)percent);
         break;
     }
@@ -114,15 +114,15 @@ void tinyui_widget_sync_ld_value(struct picoui_backend_widget *backend,
     }
 }
 
-void tinyui_widget_emit_ld_event_bridge(struct picoui_backend_widget *backend,
-                                        enum picoui_backend_signal signal,
+void tinyui_widget_emit_ld_event_bridge(struct tinyui_backend_widget *backend,
+                                        enum tinyui_backend_signal signal,
                                         int value)
 {
     if (backend == 0 || backend->ld_event_bridge_scene == 0 || backend->ld_event_bridge_sender == 0) {
         return;
     }
 
-    if (signal != PICOUI_BACKEND_SIGNAL_VALUE_CHANGED) {
+    if (signal != TINYUI_BACKEND_SIGNAL_VALUE_CHANGED) {
         return;
     }
 
@@ -136,33 +136,33 @@ void tinyui_widget_emit_ld_event_bridge(struct picoui_backend_widget *backend,
               (uint64_t)value);
 }
 
-static int tinyui_widget_claim_focus_for_signal(struct picoui_backend_widget *backend,
-                                                enum picoui_backend_signal signal)
+static int tinyui_widget_claim_focus_for_signal(struct tinyui_backend_widget *backend,
+                                                enum tinyui_backend_signal signal)
 {
     if (backend == 0) {
         return -1;
     }
 
-    if (signal != PICOUI_BACKEND_SIGNAL_PRESSED &&
-        signal != PICOUI_BACKEND_SIGNAL_RELEASED &&
-        signal != PICOUI_BACKEND_SIGNAL_VALUE_CHANGED) {
+    if (signal != TINYUI_BACKEND_SIGNAL_PRESSED &&
+        signal != TINYUI_BACKEND_SIGNAL_RELEASED &&
+        signal != TINYUI_BACKEND_SIGNAL_VALUE_CHANGED) {
         return 0;
     }
 
     return tinyui_widget_claim_backend_focus(backend);
 }
 
-static void tinyui_widget_restore_rejected_list_selection(struct picoui_backend_widget *backend)
+static void tinyui_widget_restore_rejected_list_selection(struct tinyui_backend_widget *backend)
 {
-    struct picoui_list *list;
+    struct tinyui_list *list;
 
-    if (backend == NULL || backend->kind != PICOUI_BACKEND_WIDGET_LIST || backend->host_widget == NULL) {
+    if (backend == NULL || backend->kind != TINYUI_BACKEND_WIDGET_LIST || backend->host_widget == NULL) {
         return;
     }
 
-    list = (struct picoui_list *)backend->host_widget;
+    list = (struct tinyui_list *)backend->host_widget;
     if (list->selected_index >= 0 && list->selected_index < list->item_count) {
-        (void)tinyui_list_set_selected_index(backend, list->selected_index);
+        (void)tinyui_list_set_selected_index_ld(backend, list->selected_index);
         return;
     }
 
@@ -172,21 +172,21 @@ static void tinyui_widget_restore_rejected_list_selection(struct picoui_backend_
     backend->value = -1;
 }
 
-static struct picoui_app *tinyui_widget_get_owner_app(struct picoui_widget *widget)
+static struct tinyui_app *tinyui_widget_get_owner_app(struct tinyui_widget *widget)
 {
     return tinyui_widget_owner_app(widget);
 }
 
-static void tinyui_widget_note_focus_event(struct picoui_widget *widget,
-                                           enum picoui_focus_event event)
+static void tinyui_widget_note_focus_event(struct tinyui_widget *widget,
+                                           enum tinyui_focus_event event)
 {
-    if (widget == 0 || event == PICOUI_FOCUS_EVENT_NONE) {
+    if (widget == 0 || event == TINYUI_FOCUS_EVENT_NONE) {
         return;
     }
 
     widget->last_focus_event = event;
     widget->focus_change_count++;
-    if (event == PICOUI_FOCUS_EVENT_ENTER) {
+    if (event == TINYUI_FOCUS_EVENT_ENTER) {
         widget->has_focus = 1;
         widget->focus_enter_count++;
         return;
@@ -203,10 +203,10 @@ static void tinyui_widget_note_focus_event(struct picoui_widget *widget,
  * @return 0 on success, -1 on failure
  */
 
-int picoui_widget_claim_focus(struct picoui_widget *widget)
+int tinyui_widget_claim_focus(struct tinyui_widget *widget)
 {
-    struct picoui_app *owner;
-    struct picoui_widget *previous;
+    struct tinyui_app *owner;
+    struct tinyui_widget *previous;
 
     if (widget == 0 || widget->visible == 0 || widget->enabled == 0) {
         return -1;
@@ -220,17 +220,17 @@ int picoui_widget_claim_focus(struct picoui_widget *widget)
     previous = owner->focus_owner;
     if (previous == widget) {
         if (widget->has_focus == 0) {
-            tinyui_widget_note_focus_event(widget, PICOUI_FOCUS_EVENT_ENTER);
+            tinyui_widget_note_focus_event(widget, TINYUI_FOCUS_EVENT_ENTER);
         }
         return 0;
     }
 
     if (previous != 0) {
-        tinyui_widget_note_focus_event(previous, PICOUI_FOCUS_EVENT_LEAVE);
+        tinyui_widget_note_focus_event(previous, TINYUI_FOCUS_EVENT_LEAVE);
     }
 
     owner->focus_owner = widget;
-    tinyui_widget_note_focus_event(widget, PICOUI_FOCUS_EVENT_ENTER);
+    tinyui_widget_note_focus_event(widget, TINYUI_FOCUS_EVENT_ENTER);
     return 0;
 }
 
@@ -241,9 +241,9 @@ int picoui_widget_claim_focus(struct picoui_widget *widget)
  * @return 0 on success, -1 on failure
  */
 
-int picoui_widget_release_focus(struct picoui_widget *widget)
+int tinyui_widget_release_focus(struct tinyui_widget *widget)
 {
-    struct picoui_app *owner;
+    struct tinyui_app *owner;
 
     if (widget == 0) {
         return -1;
@@ -256,13 +256,13 @@ int picoui_widget_release_focus(struct picoui_widget *widget)
 
     if (owner->focus_owner != widget) {
         if (widget->has_focus != 0) {
-            tinyui_widget_note_focus_event(widget, PICOUI_FOCUS_EVENT_LEAVE);
+            tinyui_widget_note_focus_event(widget, TINYUI_FOCUS_EVENT_LEAVE);
         }
         return 0;
     }
 
     owner->focus_owner = 0;
-    tinyui_widget_note_focus_event(widget, PICOUI_FOCUS_EVENT_LEAVE);
+    tinyui_widget_note_focus_event(widget, TINYUI_FOCUS_EVENT_LEAVE);
     return 0;
 }
 
@@ -273,15 +273,15 @@ int picoui_widget_release_focus(struct picoui_widget *widget)
  * @return 0 on success
  */
 
-int picoui_widget_is_focus_owner(const struct picoui_widget *widget)
+int tinyui_widget_is_focus_owner(const struct tinyui_widget *widget)
 {
-    struct picoui_app *owner;
+    struct tinyui_app *owner;
 
     if (widget == 0) {
         return 0;
     }
 
-    owner = tinyui_widget_get_owner_app((struct picoui_widget *)widget);
+    owner = tinyui_widget_get_owner_app((struct tinyui_widget *)widget);
     if (owner == 0) {
         return 0;
     }
@@ -297,13 +297,13 @@ int picoui_widget_is_focus_owner(const struct picoui_widget *widget)
  * @return 0 on success, -1 on failure
  */
 
-int picoui_widget_mark_edit_result(struct picoui_widget *widget, enum picoui_edit_result result)
+int tinyui_widget_mark_edit_result(struct tinyui_widget *widget, enum tinyui_edit_result result)
 {
     if (widget == 0) {
         return -1;
     }
 
-    if (result != PICOUI_EDIT_RESULT_COMMIT && result != PICOUI_EDIT_RESULT_CANCEL) {
+    if (result != TINYUI_EDIT_RESULT_COMMIT && result != TINYUI_EDIT_RESULT_CANCEL) {
         return -1;
     }
 
@@ -318,9 +318,9 @@ int picoui_widget_mark_edit_result(struct picoui_widget *widget, enum picoui_edi
  * @return 0 on success, -1 on failure
  */
 
-int picoui_widget_claim_editing(struct picoui_widget *widget)
+int tinyui_widget_claim_editing(struct tinyui_widget *widget)
 {
-    struct picoui_app *owner;
+    struct tinyui_app *owner;
 
     if (widget == 0 || widget->visible == 0 || widget->enabled == 0) {
         return -1;
@@ -331,7 +331,7 @@ int picoui_widget_claim_editing(struct picoui_widget *widget)
         return -1;
     }
 
-    widget->pending_edit_result = PICOUI_EDIT_RESULT_NONE;
+    widget->pending_edit_result = TINYUI_EDIT_RESULT_NONE;
     owner->editing_owner = widget;
     return 0;
 }
@@ -343,9 +343,9 @@ int picoui_widget_claim_editing(struct picoui_widget *widget)
  * @return 0 on success, -1 on failure
  */
 
-int picoui_widget_release_editing(struct picoui_widget *widget)
+int tinyui_widget_release_editing(struct tinyui_widget *widget)
 {
-    struct picoui_app *owner;
+    struct tinyui_app *owner;
 
     if (widget == 0) {
         return -1;
@@ -360,7 +360,7 @@ int picoui_widget_release_editing(struct picoui_widget *widget)
         owner->editing_owner = 0;
     }
     widget->last_edit_result = widget->pending_edit_result;
-    widget->pending_edit_result = PICOUI_EDIT_RESULT_NONE;
+    widget->pending_edit_result = TINYUI_EDIT_RESULT_NONE;
     return 0;
 }
 
@@ -371,15 +371,15 @@ int picoui_widget_release_editing(struct picoui_widget *widget)
  * @return 0 on success
  */
 
-int picoui_widget_is_editing_owner(const struct picoui_widget *widget)
+int tinyui_widget_is_editing_owner(const struct tinyui_widget *widget)
 {
-    struct picoui_app *owner;
+    struct tinyui_app *owner;
 
     if (widget == 0) {
         return 0;
     }
 
-    owner = tinyui_widget_get_owner_app((struct picoui_widget *)widget);
+    owner = tinyui_widget_get_owner_app((struct tinyui_widget *)widget);
     if (owner == 0) {
         return 0;
     }
@@ -388,13 +388,13 @@ int picoui_widget_is_editing_owner(const struct picoui_widget *widget)
 }
 
 int tinyui_widget_dispatch_signal(void *backend_widget,
-                                  enum picoui_backend_signal signal,
+                                  enum tinyui_backend_signal signal,
                                   int value,
-                                  picoui_value_changed_cb cb,
-                                  struct picoui_widget *widget,
+                                  tinyui_value_changed_cb cb,
+                                  struct tinyui_widget *widget,
                                   void *user_data)
 {
-    struct picoui_backend_widget *backend = backend_widget;
+    struct tinyui_backend_widget *backend = backend_widget;
 
     if (backend == 0) {
         return -1;
@@ -404,14 +404,14 @@ int tinyui_widget_dispatch_signal(void *backend_widget,
         return 0;
     }
 
-    if (signal == PICOUI_BACKEND_SIGNAL_VALUE_CHANGED) {
+    if (signal == TINYUI_BACKEND_SIGNAL_VALUE_CHANGED) {
         if (backend->value == value) {
             return 0;
         }
 
         backend->value = value;
         backend->data_model_epoch++;
-        backend->last_data_source = PICOUI_BACKEND_DATA_SOURCE_SETTER;
+        backend->last_data_source = TINYUI_BACKEND_DATA_SOURCE_SETTER;
         tinyui_widget_sync_ld_value(backend, widget, value);
         backend->last_signal = signal;
         backend->dispatch_count++;
@@ -426,12 +426,12 @@ int tinyui_widget_dispatch_signal(void *backend_widget,
 }
 
 int tinyui_widget_dispatch_event(void *backend_widget,
-                                 enum picoui_backend_signal signal,
-                                 picoui_event_cb cb,
-                                 struct picoui_widget *widget,
+                                 enum tinyui_backend_signal signal,
+                                 tinyui_event_cb cb,
+                                 struct tinyui_widget *widget,
                                  void *user_data)
 {
-    struct picoui_backend_widget *backend = backend_widget;
+    struct tinyui_backend_widget *backend = backend_widget;
 
     if (backend == 0) {
         return -1;
@@ -442,7 +442,7 @@ int tinyui_widget_dispatch_event(void *backend_widget,
         return 0;
     }
 
-    if (signal == PICOUI_BACKEND_SIGNAL_PRESSED || signal == PICOUI_BACKEND_SIGNAL_RELEASED) {
+    if (signal == TINYUI_BACKEND_SIGNAL_PRESSED || signal == TINYUI_BACKEND_SIGNAL_RELEASED) {
         if (tinyui_widget_claim_focus_for_signal(backend, signal) != 0) {
             return -1;
         }
@@ -459,8 +459,8 @@ int tinyui_widget_dispatch_native_signal(void *backend_widget,
                                          uint32_t native_signal,
                                          uint64_t native_value)
 {
-    struct picoui_backend_widget *backend = backend_widget;
-    struct picoui_widget *host_widget;
+    struct tinyui_backend_widget *backend = backend_widget;
+    struct tinyui_widget *host_widget;
 
     if (backend == 0) {
         return -1;
@@ -481,12 +481,12 @@ int tinyui_widget_dispatch_native_signal(void *backend_widget,
     }
 
     switch (backend->kind) {
-    case PICOUI_BACKEND_WIDGET_BUTTON: {
-        struct picoui_button *button = (struct picoui_button *)host_widget;
+    case TINYUI_BACKEND_WIDGET_BUTTON: {
+        struct tinyui_button *button = (struct tinyui_button *)host_widget;
 
         if (native_signal == SIGNAL_PRESS) {
             return tinyui_widget_dispatch_event(backend,
-                                                PICOUI_BACKEND_SIGNAL_PRESSED,
+                                                TINYUI_BACKEND_SIGNAL_PRESSED,
                                                 button->on_pressed,
                                                 host_widget,
                                                 button->on_pressed_user_data);
@@ -498,7 +498,7 @@ int tinyui_widget_dispatch_native_signal(void *backend_widget,
             int rc;
 
             rc = tinyui_widget_dispatch_event(backend,
-                                              PICOUI_BACKEND_SIGNAL_RELEASED,
+                                              TINYUI_BACKEND_SIGNAL_RELEASED,
                                               button->on_released,
                                               host_widget,
                                               button->on_released_user_data);
@@ -515,20 +515,20 @@ int tinyui_widget_dispatch_native_signal(void *backend_widget,
         }
         return -1;
     }
-    case PICOUI_BACKEND_WIDGET_KEYBOARD: {
-        struct picoui_keyboard *keyboard = (struct picoui_keyboard *)host_widget;
-        unsigned int key_code = (unsigned int)picoui_keyboard_get_selected_key_code(keyboard);
+    case TINYUI_BACKEND_WIDGET_KEYBOARD: {
+        struct tinyui_keyboard *keyboard = (struct tinyui_keyboard *)host_widget;
+        unsigned int key_code = (unsigned int)tinyui_keyboard_get_selected_key_code(keyboard);
 
         if (native_signal == SIGNAL_PRESS || native_signal == SIGNAL_RELEASE) {
             if (tinyui_widget_claim_focus_for_signal(backend,
                                                      native_signal == SIGNAL_PRESS
-                                                         ? PICOUI_BACKEND_SIGNAL_PRESSED
-                                                         : PICOUI_BACKEND_SIGNAL_RELEASED) != 0) {
+                                                         ? TINYUI_BACKEND_SIGNAL_PRESSED
+                                                         : TINYUI_BACKEND_SIGNAL_RELEASED) != 0) {
                 return -1;
             }
             backend->last_signal = native_signal == SIGNAL_PRESS
-                                 ? PICOUI_BACKEND_SIGNAL_PRESSED
-                                 : PICOUI_BACKEND_SIGNAL_RELEASED;
+                                 ? TINYUI_BACKEND_SIGNAL_PRESSED
+                                 : TINYUI_BACKEND_SIGNAL_RELEASED;
             backend->dispatch_count++;
             if (keyboard->event_cb != 0) {
                 keyboard->event_cb(keyboard, key_code, native_signal, keyboard->event_user_data);
@@ -537,8 +537,8 @@ int tinyui_widget_dispatch_native_signal(void *backend_widget,
         }
         return -1;
     }
-    case PICOUI_BACKEND_WIDGET_CHECKBOX: {
-        struct picoui_checkbox *checkbox = (struct picoui_checkbox *)host_widget;
+    case TINYUI_BACKEND_WIDGET_CHECKBOX: {
+        struct tinyui_checkbox *checkbox = (struct tinyui_checkbox *)host_widget;
         int normalized_value;
 
         if (native_signal != SIGNAL_VALUE_CHANGED) {
@@ -547,7 +547,7 @@ int tinyui_widget_dispatch_native_signal(void *backend_widget,
 
         normalized_value = native_value != 0;
         if (tinyui_widget_claim_focus_for_signal(backend,
-                                                 PICOUI_BACKEND_SIGNAL_VALUE_CHANGED) != 0) {
+                                                 TINYUI_BACKEND_SIGNAL_VALUE_CHANGED) != 0) {
             return -1;
         }
         if (checkbox->checked == normalized_value && backend->value == normalized_value) {
@@ -556,9 +556,9 @@ int tinyui_widget_dispatch_native_signal(void *backend_widget,
         checkbox->checked = normalized_value;
         backend->value = normalized_value;
         backend->data_model_epoch++;
-        backend->last_data_source = PICOUI_BACKEND_DATA_SOURCE_NATIVE_EVENT;
+        backend->last_data_source = TINYUI_BACKEND_DATA_SOURCE_NATIVE_EVENT;
         tinyui_widget_sync_ld_value(backend, host_widget, normalized_value);
-        backend->last_signal = PICOUI_BACKEND_SIGNAL_VALUE_CHANGED;
+        backend->last_signal = TINYUI_BACKEND_SIGNAL_VALUE_CHANGED;
         backend->dispatch_count++;
         tinyui_widget_emit_value_changed(checkbox->cb,
                                          host_widget,
@@ -566,8 +566,8 @@ int tinyui_widget_dispatch_native_signal(void *backend_widget,
                                          checkbox->user_data);
         return 0;
     }
-    case PICOUI_BACKEND_WIDGET_SWITCH: {
-        struct picoui_switch *sw = (struct picoui_switch *)host_widget;
+    case TINYUI_BACKEND_WIDGET_SWITCH: {
+        struct tinyui_switch *sw = (struct tinyui_switch *)host_widget;
         int normalized_value;
 
         if (native_signal != SIGNAL_VALUE_CHANGED) {
@@ -576,7 +576,7 @@ int tinyui_widget_dispatch_native_signal(void *backend_widget,
 
         normalized_value = native_value != 0;
         if (tinyui_widget_claim_focus_for_signal(backend,
-                                                 PICOUI_BACKEND_SIGNAL_VALUE_CHANGED) != 0) {
+                                                 TINYUI_BACKEND_SIGNAL_VALUE_CHANGED) != 0) {
             return -1;
         }
         if (sw->checked == normalized_value && backend->value == normalized_value) {
@@ -585,9 +585,9 @@ int tinyui_widget_dispatch_native_signal(void *backend_widget,
         sw->checked = normalized_value;
         backend->value = normalized_value;
         backend->data_model_epoch++;
-        backend->last_data_source = PICOUI_BACKEND_DATA_SOURCE_NATIVE_EVENT;
+        backend->last_data_source = TINYUI_BACKEND_DATA_SOURCE_NATIVE_EVENT;
         tinyui_widget_sync_ld_value(backend, host_widget, normalized_value);
-        backend->last_signal = PICOUI_BACKEND_SIGNAL_VALUE_CHANGED;
+        backend->last_signal = TINYUI_BACKEND_SIGNAL_VALUE_CHANGED;
         backend->dispatch_count++;
         tinyui_widget_emit_value_changed(sw->cb,
                                          host_widget,
@@ -595,8 +595,8 @@ int tinyui_widget_dispatch_native_signal(void *backend_widget,
                                          sw->user_data);
         return 0;
     }
-    case PICOUI_BACKEND_WIDGET_SLIDER: {
-        struct picoui_slider *slider = (struct picoui_slider *)host_widget;
+    case TINYUI_BACKEND_WIDGET_SLIDER: {
+        struct tinyui_slider *slider = (struct tinyui_slider *)host_widget;
         int widget_value;
 
         if (native_signal != SIGNAL_VALUE_CHANGED) {
@@ -605,7 +605,7 @@ int tinyui_widget_dispatch_native_signal(void *backend_widget,
 
         widget_value = tinyui_widget_slider_percent_to_value(slider, (int)native_value);
         if (tinyui_widget_claim_focus_for_signal(backend,
-                                                 PICOUI_BACKEND_SIGNAL_VALUE_CHANGED) != 0) {
+                                                 TINYUI_BACKEND_SIGNAL_VALUE_CHANGED) != 0) {
             return -1;
         }
         if (slider->value == widget_value && backend->value == widget_value) {
@@ -614,9 +614,9 @@ int tinyui_widget_dispatch_native_signal(void *backend_widget,
         slider->value = widget_value;
         backend->value = widget_value;
         backend->data_model_epoch++;
-        backend->last_data_source = PICOUI_BACKEND_DATA_SOURCE_NATIVE_EVENT;
+        backend->last_data_source = TINYUI_BACKEND_DATA_SOURCE_NATIVE_EVENT;
         tinyui_widget_sync_ld_value(backend, host_widget, widget_value);
-        backend->last_signal = PICOUI_BACKEND_SIGNAL_VALUE_CHANGED;
+        backend->last_signal = TINYUI_BACKEND_SIGNAL_VALUE_CHANGED;
         backend->dispatch_count++;
         tinyui_widget_emit_value_changed(slider->cb,
                                          host_widget,
@@ -624,8 +624,8 @@ int tinyui_widget_dispatch_native_signal(void *backend_widget,
                                          slider->user_data);
         return 0;
     }
-    case PICOUI_BACKEND_WIDGET_LIST: {
-        struct picoui_list *list = (struct picoui_list *)host_widget;
+    case TINYUI_BACKEND_WIDGET_LIST: {
+        struct tinyui_list *list = (struct tinyui_list *)host_widget;
         int selected_index;
         int was_selected_index;
         int was_backend_value;
@@ -641,11 +641,11 @@ int tinyui_widget_dispatch_native_signal(void *backend_widget,
         was_selected_index = list->selected_index;
         was_backend_value = backend->value;
         if (tinyui_widget_claim_focus_for_signal(backend,
-                                                 PICOUI_BACKEND_SIGNAL_VALUE_CHANGED) != 0) {
+                                                 TINYUI_BACKEND_SIGNAL_VALUE_CHANGED) != 0) {
             return -1;
         }
 
-        if (tinyui_list_set_selected_index(backend, selected_index) != 0) {
+        if (tinyui_list_set_selected_index_ld(backend, selected_index) != 0) {
             return -1;
         }
         if (tinyui_list_sync_selected_index(list, &selected_index) != 0) {
@@ -655,8 +655,8 @@ int tinyui_widget_dispatch_native_signal(void *backend_widget,
             return 0;
         }
         backend->data_model_epoch++;
-        backend->last_data_source = PICOUI_BACKEND_DATA_SOURCE_NATIVE_EVENT;
-        backend->last_signal = PICOUI_BACKEND_SIGNAL_VALUE_CHANGED;
+        backend->last_data_source = TINYUI_BACKEND_DATA_SOURCE_NATIVE_EVENT;
+        backend->last_signal = TINYUI_BACKEND_SIGNAL_VALUE_CHANGED;
         backend->dispatch_count++;
         if (list->cb != 0) {
             list->cb(list, selected_index, list->user_data);
@@ -676,7 +676,7 @@ int tinyui_widget_dispatch_native_signal(void *backend_widget,
  * @return 0 on success
  */
 
-int picoui_event_stub(void)
+int tinyui_event_stub(void)
 {
     return 0;
 }

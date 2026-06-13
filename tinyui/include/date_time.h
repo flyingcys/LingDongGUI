@@ -3,16 +3,16 @@
 
 #include "widget.h"
 
-struct picoui_date_time;
+struct tinyui_date_time;
 
-struct picoui_date_time_props {
+struct tinyui_date_time_props {
     const char *id;
     const char *style_class;
     void *user_data;
     const char *format;
     unsigned int text_color;
     unsigned int bg_color;
-    enum picoui_align align;
+    enum tinyui_align align;
     int transparent;
     int year;
     int month;
@@ -22,40 +22,40 @@ struct picoui_date_time_props {
     int second;
 };
 
-struct picoui_date_time *picoui_date_time_create(struct picoui_widget *parent, const char *id);
+struct tinyui_date_time *tinyui_date_time_create(struct tinyui_widget *parent, const char *id);
 
-struct picoui_date_time *picoui_date_time_create_with_props(
-    struct picoui_widget *parent,
-    const struct picoui_date_time_props *props);
+struct tinyui_date_time *tinyui_date_time_create_with_props(
+    struct tinyui_widget *parent,
+    const struct tinyui_date_time_props *props);
 
-struct picoui_date_time *picoui_date_time_init(struct picoui_widget *parent, const char *id);
+struct tinyui_date_time *tinyui_date_time_init(struct tinyui_widget *parent, const char *id);
 
-int picoui_date_time_set_format(struct picoui_date_time *dt, const char *format);
+int tinyui_date_time_set_format(struct tinyui_date_time *dt, const char *format);
 
-int picoui_date_time_set_date(struct picoui_date_time *dt, int year, int month, int day);
+int tinyui_date_time_set_date(struct tinyui_date_time *dt, int year, int month, int day);
 
-int picoui_date_time_set_time(struct picoui_date_time *dt, int hour, int minute, int second);
+int tinyui_date_time_set_time(struct tinyui_date_time *dt, int hour, int minute, int second);
 
-int picoui_date_time_set_text_color(struct picoui_date_time *dt, unsigned int rgb);
+int tinyui_date_time_set_text_color(struct tinyui_date_time *dt, unsigned int rgb);
 
-int picoui_date_time_set_background_color(struct picoui_date_time *dt, unsigned int rgb);
+int tinyui_date_time_set_background_color(struct tinyui_date_time *dt, unsigned int rgb);
 
-int picoui_date_time_set_bg_color(struct picoui_date_time *dt, unsigned int rgb);
+int tinyui_date_time_set_bg_color(struct tinyui_date_time *dt, unsigned int rgb);
 
-int picoui_date_time_set_align(struct picoui_date_time *dt, enum picoui_align align);
+int tinyui_date_time_set_align(struct tinyui_date_time *dt, enum tinyui_align align);
 
-int picoui_date_time_set_transparent(struct picoui_date_time *dt, int transparent);
+int tinyui_date_time_set_transparent(struct tinyui_date_time *dt, int transparent);
 
-int picoui_date_time_set_use_system_time(struct picoui_date_time *dt, int enabled);
+int tinyui_date_time_set_use_system_time(struct tinyui_date_time *dt, int enabled);
 
-const char *picoui_date_time_get_format(const struct picoui_date_time *dt);
+const char *tinyui_date_time_get_format(const struct tinyui_date_time *dt);
 
-int picoui_date_time_get_date(const struct picoui_date_time *dt, int *year, int *month, int *day);
+int tinyui_date_time_get_date(const struct tinyui_date_time *dt, int *year, int *month, int *day);
 
-int picoui_date_time_get_time(const struct picoui_date_time *dt, int *hour, int *minute, int *second);
+int tinyui_date_time_get_time(const struct tinyui_date_time *dt, int *hour, int *minute, int *second);
 
-int picoui_date_time_get_transparent(const struct picoui_date_time *dt);
+int tinyui_date_time_get_transparent(const struct tinyui_date_time *dt);
 
-int picoui_date_time_get_use_system_time(const struct picoui_date_time *dt);
+int tinyui_date_time_get_use_system_time(const struct tinyui_date_time *dt);
 
 #endif

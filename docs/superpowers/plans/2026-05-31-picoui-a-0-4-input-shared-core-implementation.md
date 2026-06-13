@@ -1,23 +1,23 @@
-# PicoUI a-0.4 输入 shared-core Implementation Plan
+# TINYUI a-0.4 输入 shared-core Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 在 `.worktree/a-0.4` 中严格串行完成 PicoUI 输入 shared-core 收口，先解决 runtime/layout honesty、getter truth policy、focus/edit/navigation/dropdown 合同，再接入 `line_edit / keyboard / combo_box / scroll_selecter` 四个高耦合输入控件。
+**Goal:** 在 `.worktree/a-0.4` 中严格串行完成 TINYUI 输入 shared-core 收口，先解决 runtime/layout honesty、getter truth policy、focus/edit/navigation/dropdown 合同，再接入 `line_edit / keyboard / combo_box / scroll_selecter` 四个高耦合输入控件。
 
 **Architecture:** `a-0.4` 不是四控件平推线，而是 shared-core 先行线。阶段固定为 `R0 -> R1 -> R2 -> R3 -> R4 -> R5 -> R6 -> R7`。`R0 / R1 / R4 / R7` 是 shared-owner 阶段，必须主线程先做 GitNexus impact 再派单一写 subagent；`R2 / R3 / R5 / R6` 在前置 shared-core 冻结后按控件串行接入。每阶段结束都做独立 review；review 不通过时，由同一执行 subagent 修复。
 
-**Tech Stack:** C、CMake、CTest、Python3、SDL2 host runtime、PicoUI、LingDongGUI、GitNexus、Markdown serial docs
+**Tech Stack:** C、CMake、CTest、Python3、SDL2 host runtime、TINYUI、LingDongGUI、GitNexus、Markdown serial docs
 
 ---
 
 ## 0. 执行规则
 
 - worktree 固定：`.worktree/a-0.4`
-- 建议分支：`feat/picoui-a-0-4-input-shared-core`
+- 建议分支：`feat/tinyui-a-0-4-input-shared-core`
 - 创建或切换后必须执行：
 
 ```bash
-git worktree add .worktree/a-0.4 -b feat/picoui-a-0-4-input-shared-core HEAD
+git worktree add .worktree/a-0.4 -b feat/tinyui-a-0-4-input-shared-core HEAD
 cd .worktree/a-0.4
 git submodule sync --recursive
 git submodule update --init --recursive
@@ -34,172 +34,172 @@ git submodule update --init --recursive
 
 以下文件默认只允许 `a-0.4` shared-core 阶段持续修改：
 
-- `picoui/src/core/internal.h`
-- `picoui/src/core/widget.c`
-- `picoui/src/core/event.c`
-- `picoui/src/backend/ldgui/backend.h`
-- `picoui/src/backend/ldgui/backend_widget.c`
-- `picoui/src/backend/ldgui/backend_event.c`
-- `picoui/src/backend/ldgui/backend_app.c`
-- `picoui/src/backend/ldgui/backend_layout.c`
-- `tests/picoui/runtime/check_picoui_backend_mapping.py`
-- `tests/picoui/runtime/check_picoui_visible_ui.py`
-- `tests/picoui/runtime/check_picoui_runtime.py`
-- `tests/picoui/contract/picoui_release_capability_matrix.json`
-- `tests/picoui/contract/check_picoui_release_capability_matrix.py`
+- `tinyui/src/core/internal.h`
+- `tinyui/src/core/widget.c`
+- `tinyui/src/core/event.c`
+- `tinyui/src/backend/ldgui/backend.h`
+- `tinyui/src/backend/ldgui/backend_widget.c`
+- `tinyui/src/backend/ldgui/backend_event.c`
+- `tinyui/src/backend/ldgui/backend_app.c`
+- `tinyui/src/backend/ldgui/backend_layout.c`
+- `tests/tinyui/runtime/check_tinyui_backend_mapping.py`
+- `tests/tinyui/runtime/check_tinyui_visible_ui.py`
+- `tests/tinyui/runtime/check_tinyui_runtime.py`
+- `tests/tinyui/contract/tinyui_release_capability_matrix.json`
+- `tests/tinyui/contract/check_tinyui_release_capability_matrix.py`
 
 ### a-0.4 聚合文件
 
 以下文件只允许在每个阶段末尾做一次最小接入：
 
-- `picoui/include/picoui/picoui.h`
-- `tests/picoui/CMakeLists.txt`
-- `tests/picoui/contract/check_picoui_public_api.py`
-- `tests/picoui/contract/check_picoui_demo_boundary.py`
-- `picoui/docs/demo_guide.md`
-- `docs/picoui-serial/a-0.4-线计划索引.md`
-- `docs/superpowers/specs/2026-05-31-picoui-a-0-4-input-shared-core-design.md`
+- `tinyui/include/tinyui/tinyui.h`
+- `tests/tinyui/CMakeLists.txt`
+- `tests/tinyui/contract/check_tinyui_public_api.py`
+- `tests/tinyui/contract/check_tinyui_demo_boundary.py`
+- `tinyui/docs/demo_guide.md`
+- `docs/tinyui-serial/a-0.4-线计划索引.md`
+- `docs/superpowers/specs/2026-05-31-tinyui-a-0-4-input-shared-core-design.md`
 
 ## 1. 文件结构与阶段边界
 
 ### R0 honesty + readback policy
 
 **Modify:**
-- `picoui/src/backend/ldgui/backend_app.c`
-- `picoui/src/core/internal.h`
-- `picoui/src/backend/ldgui/backend.h`
-- `picoui/src/backend/ldgui/backend_widget.c`
-- `tests/picoui/runtime/check_picoui_backend_mapping.py`
-- `tests/picoui/runtime/check_picoui_visible_ui.py`
-- `tests/picoui/contract/picoui_release_capability_matrix.json`
-- `docs/superpowers/reviews/2026-05-31-picoui-a-0-3-closeout-review.md`
+- `tinyui/src/backend/ldgui/backend_app.c`
+- `tinyui/src/core/internal.h`
+- `tinyui/src/backend/ldgui/backend.h`
+- `tinyui/src/backend/ldgui/backend_widget.c`
+- `tests/tinyui/runtime/check_tinyui_backend_mapping.py`
+- `tests/tinyui/runtime/check_tinyui_visible_ui.py`
+- `tests/tinyui/contract/tinyui_release_capability_matrix.json`
+- `docs/superpowers/reviews/2026-05-31-tinyui-a-0-3-closeout-review.md`
 
 ### R1 focus ownership
 
 **Modify:**
-- `picoui/src/core/internal.h`
-- `picoui/src/core/widget.c`
-- `picoui/src/core/event.c`
-- `picoui/src/backend/ldgui/backend.h`
-- `picoui/src/backend/ldgui/backend_widget.c`
-- `picoui/src/backend/ldgui/backend_event.c`
-- `tests/picoui/unit/test_picoui_widgets.c`
-- `tests/picoui/runtime/check_picoui_runtime.py`
+- `tinyui/src/core/internal.h`
+- `tinyui/src/core/widget.c`
+- `tinyui/src/core/event.c`
+- `tinyui/src/backend/ldgui/backend.h`
+- `tinyui/src/backend/ldgui/backend_widget.c`
+- `tinyui/src/backend/ldgui/backend_event.c`
+- `tests/tinyui/unit/test_tinyui_widgets.c`
+- `tests/tinyui/runtime/check_tinyui_runtime.py`
 
 ### R2 editable text contract + `line_edit`
 
 **Create:**
-- `picoui/include/picoui/line_edit.h`
-- `picoui/src/widgets/line_edit.c`
-- `picoui/src/backend/ldgui/backend_line_edit.c`
-- `picoui/demo/line_edit_basic/main.c`
-- `tests/picoui/unit/test_picoui_line_edit.c`
+- `tinyui/include/tinyui/line_edit.h`
+- `tinyui/src/widgets/line_edit.c`
+- `tinyui/src/backend/ldgui/backend_line_edit.c`
+- `tinyui/demo/line_edit_basic/main.c`
+- `tests/tinyui/unit/test_tinyui_line_edit.c`
 
 **Modify:**
-- `picoui/include/picoui/picoui.h`
-- `picoui/src/core/internal.h`
-- `picoui/src/backend/ldgui/backend.h`
-- `tests/picoui/CMakeLists.txt`
-- `tests/picoui/contract/check_picoui_public_api.py`
-- `tests/picoui/runtime/check_picoui_backend_mapping.py`
-- `tests/picoui/runtime/check_picoui_visible_ui.py`
+- `tinyui/include/tinyui/tinyui.h`
+- `tinyui/src/core/internal.h`
+- `tinyui/src/backend/ldgui/backend.h`
+- `tests/tinyui/CMakeLists.txt`
+- `tests/tinyui/contract/check_tinyui_public_api.py`
+- `tests/tinyui/runtime/check_tinyui_backend_mapping.py`
+- `tests/tinyui/runtime/check_tinyui_visible_ui.py`
 
 ### R3 keyboard bridge + `keyboard`
 
 **Create:**
-- `picoui/include/picoui/keyboard.h`
-- `picoui/src/widgets/keyboard.c`
-- `picoui/src/backend/ldgui/backend_keyboard.c`
-- `picoui/demo/keyboard_basic/main.c`
-- `tests/picoui/unit/test_picoui_keyboard.c`
+- `tinyui/include/tinyui/keyboard.h`
+- `tinyui/src/widgets/keyboard.c`
+- `tinyui/src/backend/ldgui/backend_keyboard.c`
+- `tinyui/demo/keyboard_basic/main.c`
+- `tests/tinyui/unit/test_tinyui_keyboard.c`
 
 **Modify:**
-- `picoui/include/picoui/picoui.h`
-- `picoui/src/core/internal.h`
-- `picoui/src/core/event.c`
-- `picoui/src/backend/ldgui/backend.h`
-- `picoui/src/backend/ldgui/backend_event.c`
-- `tests/picoui/CMakeLists.txt`
-- `tests/picoui/runtime/check_picoui_runtime.py`
+- `tinyui/include/tinyui/tinyui.h`
+- `tinyui/src/core/internal.h`
+- `tinyui/src/core/event.c`
+- `tinyui/src/backend/ldgui/backend.h`
+- `tinyui/src/backend/ldgui/backend_event.c`
+- `tests/tinyui/CMakeLists.txt`
+- `tests/tinyui/runtime/check_tinyui_runtime.py`
 
 ### R4 selection / navigation contract
 
 **Modify:**
-- `picoui/src/core/internal.h`
-- `picoui/src/core/widget.c`
-- `picoui/src/core/event.c`
-- `picoui/src/widgets/list.c`
-- `picoui/src/backend/ldgui/backend.h`
-- `picoui/src/backend/ldgui/backend_list.c`
-- `picoui/src/backend/ldgui/backend_event.c`
-- `tests/picoui/unit/test_picoui_list.c`
-- `tests/picoui/runtime/check_picoui_runtime.py`
-- `tests/picoui/contract/picoui_release_capability_matrix.json`
+- `tinyui/src/core/internal.h`
+- `tinyui/src/core/widget.c`
+- `tinyui/src/core/event.c`
+- `tinyui/src/widgets/list.c`
+- `tinyui/src/backend/ldgui/backend.h`
+- `tinyui/src/backend/ldgui/backend_list.c`
+- `tinyui/src/backend/ldgui/backend_event.c`
+- `tests/tinyui/unit/test_tinyui_list.c`
+- `tests/tinyui/runtime/check_tinyui_runtime.py`
+- `tests/tinyui/contract/tinyui_release_capability_matrix.json`
 
 ### R5 dropdown contract + `combo_box`
 
 **Create:**
-- `picoui/include/picoui/combo_box.h`
-- `picoui/src/widgets/combo_box.c`
-- `picoui/src/backend/ldgui/backend_combo_box.c`
-- `picoui/demo/combo_box_basic/main.c`
-- `tests/picoui/unit/test_picoui_combo_box.c`
+- `tinyui/include/tinyui/combo_box.h`
+- `tinyui/src/widgets/combo_box.c`
+- `tinyui/src/backend/ldgui/backend_combo_box.c`
+- `tinyui/demo/combo_box_basic/main.c`
+- `tests/tinyui/unit/test_tinyui_combo_box.c`
 
 **Modify:**
-- `picoui/include/picoui/picoui.h`
-- `picoui/src/core/internal.h`
-- `picoui/src/backend/ldgui/backend.h`
-- `tests/picoui/CMakeLists.txt`
-- `tests/picoui/runtime/check_picoui_backend_mapping.py`
-- `tests/picoui/runtime/check_picoui_visible_ui.py`
+- `tinyui/include/tinyui/tinyui.h`
+- `tinyui/src/core/internal.h`
+- `tinyui/src/backend/ldgui/backend.h`
+- `tests/tinyui/CMakeLists.txt`
+- `tests/tinyui/runtime/check_tinyui_backend_mapping.py`
+- `tests/tinyui/runtime/check_tinyui_visible_ui.py`
 
 ### R6 `scroll_selecter`
 
 **Create:**
-- `picoui/include/picoui/scroll_selecter.h`
-- `picoui/src/widgets/scroll_selecter.c`
-- `picoui/src/backend/ldgui/backend_scroll_selecter.c`
-- `picoui/demo/scroll_selecter_basic/main.c`
-- `tests/picoui/unit/test_picoui_scroll_selecter.c`
+- `tinyui/include/tinyui/scroll_selecter.h`
+- `tinyui/src/widgets/scroll_selecter.c`
+- `tinyui/src/backend/ldgui/backend_scroll_selecter.c`
+- `tinyui/demo/scroll_selecter_basic/main.c`
+- `tests/tinyui/unit/test_tinyui_scroll_selecter.c`
 
 **Modify:**
-- `picoui/include/picoui/picoui.h`
-- `picoui/src/core/internal.h`
-- `picoui/src/backend/ldgui/backend.h`
-- `tests/picoui/CMakeLists.txt`
-- `tests/picoui/runtime/check_picoui_backend_mapping.py`
-- `tests/picoui/runtime/check_picoui_visible_ui.py`
+- `tinyui/include/tinyui/tinyui.h`
+- `tinyui/src/core/internal.h`
+- `tinyui/src/backend/ldgui/backend.h`
+- `tests/tinyui/CMakeLists.txt`
+- `tests/tinyui/runtime/check_tinyui_backend_mapping.py`
+- `tests/tinyui/runtime/check_tinyui_visible_ui.py`
 
 ### R7 文档与 closeout
 
 **Modify:**
-- `docs/picoui-serial/a-0.4-线计划索引.md`
-- `docs/picoui-serial/a-0.4-a-0.6-后续版本记录.md`
-- `docs/superpowers/specs/2026-05-31-picoui-a-0-4-input-shared-core-design.md`
-- `picoui/docs/demo_guide.md`
-- `tests/picoui/contract/picoui_release_capability_matrix.json`
+- `docs/tinyui-serial/a-0.4-线计划索引.md`
+- `docs/tinyui-serial/a-0.4-a-0.6-后续版本记录.md`
+- `docs/superpowers/specs/2026-05-31-tinyui-a-0-4-input-shared-core-design.md`
+- `tinyui/docs/demo_guide.md`
+- `tests/tinyui/contract/tinyui_release_capability_matrix.json`
 
 ## 2. Tasks
 
 ### Task R0: honesty + readback policy baseline
 
 **Files:**
-- Modify: `picoui/src/backend/ldgui/backend_app.c`
-- Modify: `picoui/src/core/internal.h`
-- Modify: `picoui/src/backend/ldgui/backend.h`
-- Modify: `picoui/src/backend/ldgui/backend_widget.c`
-- Modify: `tests/picoui/runtime/check_picoui_backend_mapping.py`
-- Modify: `tests/picoui/runtime/check_picoui_visible_ui.py`
-- Modify: `tests/picoui/contract/picoui_release_capability_matrix.json`
+- Modify: `tinyui/src/backend/ldgui/backend_app.c`
+- Modify: `tinyui/src/core/internal.h`
+- Modify: `tinyui/src/backend/ldgui/backend.h`
+- Modify: `tinyui/src/backend/ldgui/backend_widget.c`
+- Modify: `tests/tinyui/runtime/check_tinyui_backend_mapping.py`
+- Modify: `tests/tinyui/runtime/check_tinyui_visible_ui.py`
+- Modify: `tests/tinyui/contract/tinyui_release_capability_matrix.json`
 
 - [ ] **Step 1: 跑 impact**
 
 Run:
 
 ```text
-gitnexus_impact(target="picoui_backend_app_run", direction="upstream", repo="LingDongGUI")
-gitnexus_impact(target="picoui_backend_widget_dispatch_native_signal", direction="upstream", repo="LingDongGUI")
-gitnexus_impact(target="picoui_list_get_selected_index", direction="upstream", repo="LingDongGUI")
+gitnexus_impact(target="tinyui_backend_app_run", direction="upstream", repo="LingDongGUI")
+gitnexus_impact(target="tinyui_backend_widget_dispatch_native_signal", direction="upstream", repo="LingDongGUI")
+gitnexus_impact(target="tinyui_list_get_selected_index", direction="upstream", repo="LingDongGUI")
 ```
 
 - [ ] **Step 2: 写 fail-first honesty / readback 测试**
@@ -222,7 +222,7 @@ Run:
 
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
-ctest --test-dir build -R 'test_picoui_(list|widgets)' --output-on-failure
+ctest --test-dir build -R 'test_tinyui_(list|widgets)' --output-on-failure
 ```
 
 Expected:
@@ -251,10 +251,10 @@ Run:
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
 rtk cmake --build build
-ctest --test-dir build -L picoui --output-on-failure
-python3 tests/picoui/runtime/check_picoui_backend_mapping.py
-python3 tests/picoui/runtime/check_picoui_visible_ui.py --all
-python3 tests/picoui/contract/check_picoui_release_capability_matrix.py
+ctest --test-dir build -L tinyui --output-on-failure
+python3 tests/tinyui/runtime/check_tinyui_backend_mapping.py
+python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --all
+python3 tests/tinyui/contract/check_tinyui_release_capability_matrix.py
 git diff --check
 ```
 
@@ -269,22 +269,22 @@ gitnexus_detect_changes(scope="all", repo="LingDongGUI")
 ### Task R1: focus ownership
 
 **Files:**
-- Modify: `picoui/src/core/internal.h`
-- Modify: `picoui/src/core/widget.c`
-- Modify: `picoui/src/core/event.c`
-- Modify: `picoui/src/backend/ldgui/backend.h`
-- Modify: `picoui/src/backend/ldgui/backend_widget.c`
-- Modify: `picoui/src/backend/ldgui/backend_event.c`
-- Modify: `tests/picoui/unit/test_picoui_widgets.c`
-- Modify: `tests/picoui/runtime/check_picoui_runtime.py`
+- Modify: `tinyui/src/core/internal.h`
+- Modify: `tinyui/src/core/widget.c`
+- Modify: `tinyui/src/core/event.c`
+- Modify: `tinyui/src/backend/ldgui/backend.h`
+- Modify: `tinyui/src/backend/ldgui/backend_widget.c`
+- Modify: `tinyui/src/backend/ldgui/backend_event.c`
+- Modify: `tests/tinyui/unit/test_tinyui_widgets.c`
+- Modify: `tests/tinyui/runtime/check_tinyui_runtime.py`
 
 - [ ] **Step 1: 跑 impact**
 
 Run:
 
 ```text
-gitnexus_impact(target="picoui_backend_widget_dispatch_event", direction="upstream", repo="LingDongGUI")
-gitnexus_impact(target="picoui_backend_widget_dispatch_signal", direction="upstream", repo="LingDongGUI")
+gitnexus_impact(target="tinyui_backend_widget_dispatch_event", direction="upstream", repo="LingDongGUI")
+gitnexus_impact(target="tinyui_backend_widget_dispatch_signal", direction="upstream", repo="LingDongGUI")
 ```
 
 - [ ] **Step 2: 写 fail-first focus 测试**
@@ -302,7 +302,7 @@ Run:
 
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
-ctest --test-dir build -R '^test_picoui_widgets$' --output-on-failure
+ctest --test-dir build -R '^test_tinyui_widgets$' --output-on-failure
 ```
 
 - [ ] **Step 4: 实现最小 focus ownership**
@@ -320,8 +320,8 @@ Run:
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
 rtk cmake --build build
-ctest --test-dir build -R '^test_picoui_widgets$' --output-on-failure
-python3 tests/picoui/runtime/check_picoui_runtime.py
+ctest --test-dir build -R '^test_tinyui_widgets$' --output-on-failure
+python3 tests/tinyui/runtime/check_tinyui_runtime.py
 git diff --check
 ```
 
@@ -336,18 +336,18 @@ gitnexus_detect_changes(scope="all", repo="LingDongGUI")
 ### Task R2: editable text contract + `line_edit`
 
 **Files:**
-- Create: `picoui/include/picoui/line_edit.h`
-- Create: `picoui/src/widgets/line_edit.c`
-- Create: `picoui/src/backend/ldgui/backend_line_edit.c`
-- Create: `picoui/demo/line_edit_basic/main.c`
-- Create: `tests/picoui/unit/test_picoui_line_edit.c`
-- Modify: `picoui/include/picoui/picoui.h`
-- Modify: `picoui/src/core/internal.h`
-- Modify: `picoui/src/backend/ldgui/backend.h`
-- Modify: `tests/picoui/CMakeLists.txt`
-- Modify: `tests/picoui/contract/check_picoui_public_api.py`
-- Modify: `tests/picoui/runtime/check_picoui_backend_mapping.py`
-- Modify: `tests/picoui/runtime/check_picoui_visible_ui.py`
+- Create: `tinyui/include/tinyui/line_edit.h`
+- Create: `tinyui/src/widgets/line_edit.c`
+- Create: `tinyui/src/backend/ldgui/backend_line_edit.c`
+- Create: `tinyui/demo/line_edit_basic/main.c`
+- Create: `tests/tinyui/unit/test_tinyui_line_edit.c`
+- Modify: `tinyui/include/tinyui/tinyui.h`
+- Modify: `tinyui/src/core/internal.h`
+- Modify: `tinyui/src/backend/ldgui/backend.h`
+- Modify: `tests/tinyui/CMakeLists.txt`
+- Modify: `tests/tinyui/contract/check_tinyui_public_api.py`
+- Modify: `tests/tinyui/runtime/check_tinyui_backend_mapping.py`
+- Modify: `tests/tinyui/runtime/check_tinyui_visible_ui.py`
 
 - [ ] **Step 1: 跑 impact**
 
@@ -375,7 +375,7 @@ Run:
 
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
-ctest --test-dir build -R '^test_picoui_line_edit$' --output-on-failure
+ctest --test-dir build -R '^test_tinyui_line_edit$' --output-on-failure
 ```
 
 - [ ] **Step 4: 实现最小 `line_edit`**
@@ -391,9 +391,9 @@ Requirements:
 Run:
 
 ```bash
-python3 tests/picoui/contract/check_picoui_public_api.py
-python3 tests/picoui/runtime/check_picoui_backend_mapping.py
-python3 tests/picoui/runtime/check_picoui_visible_ui.py --demo line_edit_basic
+python3 tests/tinyui/contract/check_tinyui_public_api.py
+python3 tests/tinyui/runtime/check_tinyui_backend_mapping.py
+python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --demo line_edit_basic
 ```
 
 - [ ] **Step 6: 验证 GREEN**
@@ -403,10 +403,10 @@ Run:
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
 rtk cmake --build build
-ctest --test-dir build -R '^test_picoui_line_edit$' --output-on-failure
-python3 tests/picoui/contract/check_picoui_public_api.py
-python3 tests/picoui/runtime/check_picoui_backend_mapping.py
-python3 tests/picoui/runtime/check_picoui_visible_ui.py --demo line_edit_basic
+ctest --test-dir build -R '^test_tinyui_line_edit$' --output-on-failure
+python3 tests/tinyui/contract/check_tinyui_public_api.py
+python3 tests/tinyui/runtime/check_tinyui_backend_mapping.py
+python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --demo line_edit_basic
 git diff --check
 ```
 
@@ -421,18 +421,18 @@ gitnexus_detect_changes(scope="all", repo="LingDongGUI")
 ### Task R3: keyboard bridge + `keyboard`
 
 **Files:**
-- Create: `picoui/include/picoui/keyboard.h`
-- Create: `picoui/src/widgets/keyboard.c`
-- Create: `picoui/src/backend/ldgui/backend_keyboard.c`
-- Create: `picoui/demo/keyboard_basic/main.c`
-- Create: `tests/picoui/unit/test_picoui_keyboard.c`
-- Modify: `picoui/include/picoui/picoui.h`
-- Modify: `picoui/src/core/internal.h`
-- Modify: `picoui/src/core/event.c`
-- Modify: `picoui/src/backend/ldgui/backend.h`
-- Modify: `picoui/src/backend/ldgui/backend_event.c`
-- Modify: `tests/picoui/CMakeLists.txt`
-- Modify: `tests/picoui/runtime/check_picoui_runtime.py`
+- Create: `tinyui/include/tinyui/keyboard.h`
+- Create: `tinyui/src/widgets/keyboard.c`
+- Create: `tinyui/src/backend/ldgui/backend_keyboard.c`
+- Create: `tinyui/demo/keyboard_basic/main.c`
+- Create: `tests/tinyui/unit/test_tinyui_keyboard.c`
+- Modify: `tinyui/include/tinyui/tinyui.h`
+- Modify: `tinyui/src/core/internal.h`
+- Modify: `tinyui/src/core/event.c`
+- Modify: `tinyui/src/backend/ldgui/backend.h`
+- Modify: `tinyui/src/backend/ldgui/backend_event.c`
+- Modify: `tests/tinyui/CMakeLists.txt`
+- Modify: `tests/tinyui/runtime/check_tinyui_runtime.py`
 
 - [ ] **Step 1: 跑 impact**
 
@@ -460,7 +460,7 @@ Run:
 
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
-ctest --test-dir build -R '^test_picoui_keyboard$' --output-on-failure
+ctest --test-dir build -R '^test_tinyui_keyboard$' --output-on-failure
 ```
 
 - [ ] **Step 4: 实现最小 `keyboard` bridge**
@@ -478,8 +478,8 @@ Run:
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
 rtk cmake --build build
-ctest --test-dir build -R '^test_picoui_keyboard$' --output-on-failure
-python3 tests/picoui/runtime/check_picoui_runtime.py
+ctest --test-dir build -R '^test_tinyui_keyboard$' --output-on-failure
+python3 tests/tinyui/runtime/check_tinyui_runtime.py
 git diff --check
 ```
 
@@ -494,25 +494,25 @@ gitnexus_detect_changes(scope="all", repo="LingDongGUI")
 ### Task R4: selection / navigation contract
 
 **Files:**
-- Modify: `picoui/src/core/internal.h`
-- Modify: `picoui/src/core/widget.c`
-- Modify: `picoui/src/core/event.c`
-- Modify: `picoui/src/widgets/list.c`
-- Modify: `picoui/src/backend/ldgui/backend.h`
-- Modify: `picoui/src/backend/ldgui/backend_list.c`
-- Modify: `picoui/src/backend/ldgui/backend_event.c`
-- Modify: `tests/picoui/unit/test_picoui_list.c`
-- Modify: `tests/picoui/runtime/check_picoui_runtime.py`
-- Modify: `tests/picoui/contract/picoui_release_capability_matrix.json`
+- Modify: `tinyui/src/core/internal.h`
+- Modify: `tinyui/src/core/widget.c`
+- Modify: `tinyui/src/core/event.c`
+- Modify: `tinyui/src/widgets/list.c`
+- Modify: `tinyui/src/backend/ldgui/backend.h`
+- Modify: `tinyui/src/backend/ldgui/backend_list.c`
+- Modify: `tinyui/src/backend/ldgui/backend_event.c`
+- Modify: `tests/tinyui/unit/test_tinyui_list.c`
+- Modify: `tests/tinyui/runtime/check_tinyui_runtime.py`
+- Modify: `tests/tinyui/contract/tinyui_release_capability_matrix.json`
 
 - [ ] **Step 1: 跑 impact**
 
 Run:
 
 ```text
-gitnexus_impact(target="picoui_list_get_selected_index", direction="upstream", repo="LingDongGUI")
-gitnexus_impact(target="picoui_backend_list_set_selected_index", direction="upstream", repo="LingDongGUI")
-gitnexus_impact(target="picoui_backend_widget_dispatch_native_signal", direction="upstream", repo="LingDongGUI")
+gitnexus_impact(target="tinyui_list_get_selected_index", direction="upstream", repo="LingDongGUI")
+gitnexus_impact(target="tinyui_backend_list_set_selected_index", direction="upstream", repo="LingDongGUI")
+gitnexus_impact(target="tinyui_backend_widget_dispatch_native_signal", direction="upstream", repo="LingDongGUI")
 ```
 
 - [ ] **Step 2: 写 fail-first selection 测试**
@@ -530,7 +530,7 @@ Run:
 
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
-ctest --test-dir build -R '^test_picoui_list$' --output-on-failure
+ctest --test-dir build -R '^test_tinyui_list$' --output-on-failure
 ```
 
 - [ ] **Step 4: 实现 shared selection / navigation**
@@ -548,9 +548,9 @@ Run:
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
 rtk cmake --build build
-ctest --test-dir build -R '^test_picoui_list$' --output-on-failure
-python3 tests/picoui/runtime/check_picoui_runtime.py
-python3 tests/picoui/contract/check_picoui_release_capability_matrix.py
+ctest --test-dir build -R '^test_tinyui_list$' --output-on-failure
+python3 tests/tinyui/runtime/check_tinyui_runtime.py
+python3 tests/tinyui/contract/check_tinyui_release_capability_matrix.py
 git diff --check
 ```
 
@@ -565,17 +565,17 @@ gitnexus_detect_changes(scope="all", repo="LingDongGUI")
 ### Task R5: dropdown contract + `combo_box`
 
 **Files:**
-- Create: `picoui/include/picoui/combo_box.h`
-- Create: `picoui/src/widgets/combo_box.c`
-- Create: `picoui/src/backend/ldgui/backend_combo_box.c`
-- Create: `picoui/demo/combo_box_basic/main.c`
-- Create: `tests/picoui/unit/test_picoui_combo_box.c`
-- Modify: `picoui/include/picoui/picoui.h`
-- Modify: `picoui/src/core/internal.h`
-- Modify: `picoui/src/backend/ldgui/backend.h`
-- Modify: `tests/picoui/CMakeLists.txt`
-- Modify: `tests/picoui/runtime/check_picoui_backend_mapping.py`
-- Modify: `tests/picoui/runtime/check_picoui_visible_ui.py`
+- Create: `tinyui/include/tinyui/combo_box.h`
+- Create: `tinyui/src/widgets/combo_box.c`
+- Create: `tinyui/src/backend/ldgui/backend_combo_box.c`
+- Create: `tinyui/demo/combo_box_basic/main.c`
+- Create: `tests/tinyui/unit/test_tinyui_combo_box.c`
+- Modify: `tinyui/include/tinyui/tinyui.h`
+- Modify: `tinyui/src/core/internal.h`
+- Modify: `tinyui/src/backend/ldgui/backend.h`
+- Modify: `tests/tinyui/CMakeLists.txt`
+- Modify: `tests/tinyui/runtime/check_tinyui_backend_mapping.py`
+- Modify: `tests/tinyui/runtime/check_tinyui_visible_ui.py`
 
 - [ ] **Step 1: 跑 impact**
 
@@ -602,7 +602,7 @@ Run:
 
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
-ctest --test-dir build -R '^test_picoui_combo_box$' --output-on-failure
+ctest --test-dir build -R '^test_tinyui_combo_box$' --output-on-failure
 ```
 
 - [ ] **Step 4: 实现最小 `combo_box`**
@@ -620,9 +620,9 @@ Run:
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
 rtk cmake --build build
-ctest --test-dir build -R '^test_picoui_combo_box$' --output-on-failure
-python3 tests/picoui/runtime/check_picoui_backend_mapping.py
-python3 tests/picoui/runtime/check_picoui_visible_ui.py --demo combo_box_basic
+ctest --test-dir build -R '^test_tinyui_combo_box$' --output-on-failure
+python3 tests/tinyui/runtime/check_tinyui_backend_mapping.py
+python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --demo combo_box_basic
 git diff --check
 ```
 
@@ -637,17 +637,17 @@ gitnexus_detect_changes(scope="all", repo="LingDongGUI")
 ### Task R6: `scroll_selecter`
 
 **Files:**
-- Create: `picoui/include/picoui/scroll_selecter.h`
-- Create: `picoui/src/widgets/scroll_selecter.c`
-- Create: `picoui/src/backend/ldgui/backend_scroll_selecter.c`
-- Create: `picoui/demo/scroll_selecter_basic/main.c`
-- Create: `tests/picoui/unit/test_picoui_scroll_selecter.c`
-- Modify: `picoui/include/picoui/picoui.h`
-- Modify: `picoui/src/core/internal.h`
-- Modify: `picoui/src/backend/ldgui/backend.h`
-- Modify: `tests/picoui/CMakeLists.txt`
-- Modify: `tests/picoui/runtime/check_picoui_backend_mapping.py`
-- Modify: `tests/picoui/runtime/check_picoui_visible_ui.py`
+- Create: `tinyui/include/tinyui/scroll_selecter.h`
+- Create: `tinyui/src/widgets/scroll_selecter.c`
+- Create: `tinyui/src/backend/ldgui/backend_scroll_selecter.c`
+- Create: `tinyui/demo/scroll_selecter_basic/main.c`
+- Create: `tests/tinyui/unit/test_tinyui_scroll_selecter.c`
+- Modify: `tinyui/include/tinyui/tinyui.h`
+- Modify: `tinyui/src/core/internal.h`
+- Modify: `tinyui/src/backend/ldgui/backend.h`
+- Modify: `tests/tinyui/CMakeLists.txt`
+- Modify: `tests/tinyui/runtime/check_tinyui_backend_mapping.py`
+- Modify: `tests/tinyui/runtime/check_tinyui_visible_ui.py`
 
 - [ ] **Step 1: 跑 impact**
 
@@ -674,7 +674,7 @@ Run:
 
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
-ctest --test-dir build -R '^test_picoui_scroll_selecter$' --output-on-failure
+ctest --test-dir build -R '^test_tinyui_scroll_selecter$' --output-on-failure
 ```
 
 - [ ] **Step 4: 实现最小 `scroll_selecter`**
@@ -692,9 +692,9 @@ Run:
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
 rtk cmake --build build
-ctest --test-dir build -R '^test_picoui_scroll_selecter$' --output-on-failure
-python3 tests/picoui/runtime/check_picoui_backend_mapping.py
-python3 tests/picoui/runtime/check_picoui_visible_ui.py --demo scroll_selecter_basic
+ctest --test-dir build -R '^test_tinyui_scroll_selecter$' --output-on-failure
+python3 tests/tinyui/runtime/check_tinyui_backend_mapping.py
+python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --demo scroll_selecter_basic
 git diff --check
 ```
 
@@ -709,11 +709,11 @@ gitnexus_detect_changes(scope="all", repo="LingDongGUI")
 ### Task R7: 文档与 closeout
 
 **Files:**
-- Modify: `docs/picoui-serial/a-0.4-线计划索引.md`
-- Modify: `docs/picoui-serial/a-0.4-a-0.6-后续版本记录.md`
-- Modify: `docs/superpowers/specs/2026-05-31-picoui-a-0-4-input-shared-core-design.md`
-- Modify: `picoui/docs/demo_guide.md`
-- Modify: `tests/picoui/contract/picoui_release_capability_matrix.json`
+- Modify: `docs/tinyui-serial/a-0.4-线计划索引.md`
+- Modify: `docs/tinyui-serial/a-0.4-a-0.6-后续版本记录.md`
+- Modify: `docs/superpowers/specs/2026-05-31-tinyui-a-0-4-input-shared-core-design.md`
+- Modify: `tinyui/docs/demo_guide.md`
+- Modify: `tests/tinyui/contract/tinyui_release_capability_matrix.json`
 
 - [ ] **Step 1: 回写 serial 文档**
 
@@ -730,12 +730,12 @@ Run:
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
 rtk cmake --build build
-ctest --test-dir build -L picoui --output-on-failure
-python3 tests/picoui/contract/check_picoui_public_api.py
-python3 tests/picoui/contract/check_picoui_release_capability_matrix.py
-python3 tests/picoui/runtime/check_picoui_backend_mapping.py
-python3 tests/picoui/runtime/check_picoui_visible_ui.py --all
-python3 tests/picoui/runtime/check_picoui_runtime.py
+ctest --test-dir build -L tinyui --output-on-failure
+python3 tests/tinyui/contract/check_tinyui_public_api.py
+python3 tests/tinyui/contract/check_tinyui_release_capability_matrix.py
+python3 tests/tinyui/runtime/check_tinyui_backend_mapping.py
+python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --all
+python3 tests/tinyui/runtime/check_tinyui_runtime.py
 git diff --check
 ```
 
@@ -749,7 +749,7 @@ gitnexus_detect_changes(scope="all", repo="LingDongGUI")
 
 ## 3. 执行交接
 
-Plan complete and saved to `docs/superpowers/plans/2026-05-31-picoui-a-0-4-input-shared-core-implementation.md`. Two execution options:
+Plan complete and saved to `docs/superpowers/plans/2026-05-31-tinyui-a-0-4-input-shared-core-implementation.md`. Two execution options:
 
 1. Subagent-Driven (recommended) - I dispatch a fresh subagent per task, review between tasks, fast iteration
 2. Inline Execution - Execute tasks in this session using executing-plans, batch execution with checkpoints

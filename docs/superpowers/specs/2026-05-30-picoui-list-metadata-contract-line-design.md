@@ -1,4 +1,4 @@
-# PicoUI List Metadata 合同线设计
+# TINYUI List Metadata 合同线设计
 
 ## 目标
 
@@ -9,14 +9,14 @@
 ## 背景
 
 - 当前 `list` 的主能力已经有独立真实合同：
-  - `picoui_list_create()` / `picoui_list_create_with_props()` -> `ldList_init`
-  - `picoui_list_add_item()` -> full text snapshot -> `ldListSetText`
-  - `picoui_list_set_selected_index()` / `get_selected_index()` -> `ldListSetSelectItem` / `ldListGetSelectItem`
-  - `picoui_list_set_on_selected()` -> native `SIGNAL_CLICKED_ITEM` bridge
-  - `picoui_theme_apply_to_widget(..., PICOUI_PART_MAIN, ...)` -> `ldListSetBackgroundColor()` / `ldListSetSelectColor()`
-  - `picoui_widget_set_visible()`、`picoui_widget_set_enabled()` 也已分别收口到真实 hidden / selectable 语义
+  - `tinyui_list_create()` / `tinyui_list_create_with_props()` -> `ldList_init`
+  - `tinyui_list_add_item()` -> full text snapshot -> `ldListSetText`
+  - `tinyui_list_set_selected_index()` / `get_selected_index()` -> `ldListSetSelectItem` / `ldListGetSelectItem`
+  - `tinyui_list_set_on_selected()` -> native `SIGNAL_CLICKED_ITEM` bridge
+  - `tinyui_theme_apply_to_widget(..., PICOUI_PART_MAIN, ...)` -> `ldListSetBackgroundColor()` / `ldListSetSelectColor()`
+  - `tinyui_widget_set_visible()`、`tinyui_widget_set_enabled()` 也已分别收口到真实 hidden / selectable 语义
 - 当前剩余的 `list style_class` 与 widget-level `list user_data` 不属于上述真实交互链。
-- 它们目前更接近 PicoUI / backend wrapper 侧附加 metadata，而不是 `ldList` 已消费的真实 style/state 语义。
+- 它们目前更接近 TINYUI / backend wrapper 侧附加 metadata，而不是 `ldList` 已消费的真实 style/state 语义。
 
 ## 非目标
 
@@ -29,41 +29,41 @@
 
 ### 已真实闭环的 list 能力
 
-- `picoui_list_create()`、`picoui_list_create_with_props()`：真实落到 `ldList_init`
-- `picoui_list_add_item()`：真实落到 full text snapshot + `ldListSetText`
-- `picoui_list_set_selected_index()`、`picoui_list_get_selected_index()`：真实落到 `ldListSetSelectItem`、`ldListGetSelectItem`
-- `picoui_list_set_on_selected()`：真实走 native selected bridge
-- `picoui_theme_apply_to_widget(..., PICOUI_PART_MAIN, ...)`：真实落到 `ldList` 颜色入口
-- `picoui_widget_set_visible()`、`picoui_widget_set_enabled()`：真实落到 hidden / selectable 子合同
+- `tinyui_list_create()`、`tinyui_list_create_with_props()`：真实落到 `ldList_init`
+- `tinyui_list_add_item()`：真实落到 full text snapshot + `ldListSetText`
+- `tinyui_list_set_selected_index()`、`tinyui_list_get_selected_index()`：真实落到 `ldListSetSelectItem`、`ldListGetSelectItem`
+- `tinyui_list_set_on_selected()`：真实走 native selected bridge
+- `tinyui_theme_apply_to_widget(..., PICOUI_PART_MAIN, ...)`：真实落到 `ldList` 颜色入口
+- `tinyui_widget_set_visible()`、`tinyui_widget_set_enabled()`：真实落到 hidden / selectable 子合同
 
 ### 当前未闭环项的真实现状
 
-- `picoui_widget_set_style_class()` on list
-  - 当前会更新 PicoUI `widget.style_class`
+- `tinyui_widget_set_style_class()` on list
+  - 当前会更新 TINYUI `widget.style_class`
   - 当前也会更新 backend wrapper `style_class`
   - 没有真实 `ldList` 消费链
-- `picoui_widget_set_user_data()` on list
-  - 当前会更新 PicoUI `widget.user_data`
+- `tinyui_widget_set_user_data()` on list
+  - 当前会更新 TINYUI `widget.user_data`
   - 当前也会更新 backend wrapper `user_data`
   - 没有真实 `ldList` 消费链
-- `picoui_list_set_on_selected(..., user_data)`
+- `tinyui_list_set_on_selected(..., user_data)`
   - 使用的是 `list` callback 私有 `user_data`
   - 它是已收口的 callback cookie 语义
-  - 它不等同于 widget-level `picoui_widget_set_user_data()`
+  - 它不等同于 widget-level `tinyui_widget_set_user_data()`
 
 ## 合同结论
 
 ### list style_class
 
 - 当前只承认 metadata-only 存储语义。
-- 它可以继续作为 PicoUI / backend wrapper 侧的附加信息存在，但在没有真实 `ldList` 消费链之前，不承诺任何视觉、主题、样式或交互行为。
+- 它可以继续作为 TINYUI / backend wrapper 侧的附加信息存在，但在没有真实 `ldList` 消费链之前，不承诺任何视觉、主题、样式或交互行为。
 - 因此这项在当前矩阵中继续保持 `incomplete_contract`，而不是 `support`。
 
 ### list user_data
 
 - 当前只承认 widget-level metadata-only 存储语义。
-- 它可以继续作为 PicoUI / backend wrapper 侧的通用附加指针存在，但不承诺任何真实 `ldList` 行为。
-- 这项必须与 `picoui_list_set_on_selected(..., user_data)` 的 callback cookie 语义明确分离。
+- 它可以继续作为 TINYUI / backend wrapper 侧的通用附加指针存在，但不承诺任何真实 `ldList` 行为。
+- 这项必须与 `tinyui_list_set_on_selected(..., user_data)` 的 callback cookie 语义明确分离。
 - 因此这项在当前矩阵中继续保持 `incomplete_contract`，而不是 `support`。
 
 ### on_selected(..., user_data) 的边界
@@ -88,7 +88,7 @@
 
 ### 方案 B：把 style_class / user_data 都升级成 support
 
-- 只因为 PicoUI 与 backend wrapper 两侧都能存到值，就把这两项直接写成 `support`
+- 只因为 TINYUI 与 backend wrapper 两侧都能存到值，就把这两项直接写成 `support`
 - 缺点：
   - 会把 metadata 存储错误外推成真实 `ldList` 行为支持
   - 会模糊 widget-level `user_data` 与 callback cookie 的边界
@@ -108,9 +108,9 @@
 
 ## 架构边界
 
-### PicoUI 层
+### TINYUI 层
 
-- 继续保留现有 `picoui_widget_set_style_class()` 与 `picoui_widget_set_user_data()` API 形状。
+- 继续保留现有 `tinyui_widget_set_style_class()` 与 `tinyui_widget_set_user_data()` API 形状。
 - 但文档与测试口径必须清楚区分：
   - 哪些只是 widget / backend wrapper metadata
   - 哪些已是独立真实行为合同
@@ -122,16 +122,16 @@
 
 ### LingDongGUI 层
 
-- 当前 `ldList` 没有由这两条 PicoUI metadata 自动消费的稳定 public 合同。
+- 当前 `ldList` 没有由这两条 TINYUI metadata 自动消费的稳定 public 合同。
 - 因此在没有新 backend 合同前，不应把它外推成“天然能吃 style_class / widget-level user_data”的控件。
 
 ## 测试与证据要求
 
 - `list style_class` 的测试只能证明：
-  - PicoUI widget 存到值
+  - TINYUI widget 存到值
   - backend wrapper 也存到值
 - `list user_data` 的测试只能证明：
-  - PicoUI widget 存到值
+  - TINYUI widget 存到值
   - backend wrapper 也存到值
 - 这些测试都不能外推成：
   - `ldList` 已消费

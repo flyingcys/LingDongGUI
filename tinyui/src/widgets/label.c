@@ -25,7 +25,7 @@
 
 extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
 
-struct picoui_image_source;
+struct tinyui_image_source;
 int tinyui_runtime_bridge_unbind_host(void *backend_widget);
 int tinyui_runtime_bridge_detach_from_parent(void *backend_widget);
 
@@ -46,49 +46,49 @@ static unsigned int tinyui_label_ld_color_to_rgb(ldColor color)
     return (unsigned int)((red << 16) | (green << 8) | blue);
 }
 
-static arm_2d_align_t tinyui_label_map_align(enum picoui_align align)
+static arm_2d_align_t tinyui_label_map_align(enum tinyui_align align)
 {
     switch (align) {
-    case PICOUI_ALIGN_START:
+    case TINYUI_ALIGN_START:
         return ARM_2D_ALIGN_LEFT;
-    case PICOUI_ALIGN_END:
+    case TINYUI_ALIGN_END:
         return ARM_2D_ALIGN_RIGHT;
-    case PICOUI_ALIGN_CENTER:
+    case TINYUI_ALIGN_CENTER:
         return ARM_2D_ALIGN_CENTRE;
     default:
         return ARM_2D_ALIGN_CENTRE;
     }
 }
 
-static enum picoui_align tinyui_label_unmap_align(arm_2d_align_t align)
+static enum tinyui_align tinyui_label_unmap_align(arm_2d_align_t align)
 {
     switch (align & (ARM_2D_ALIGN_LEFT | ARM_2D_ALIGN_RIGHT)) {
     case ARM_2D_ALIGN_LEFT:
-        return PICOUI_ALIGN_START;
+        return TINYUI_ALIGN_START;
     case ARM_2D_ALIGN_RIGHT:
-        return PICOUI_ALIGN_END;
+        return TINYUI_ALIGN_END;
     default:
-        return PICOUI_ALIGN_CENTER;
+        return TINYUI_ALIGN_CENTER;
     }
 }
 
-static ldLabel_t *tinyui_label_get_ld(struct picoui_label *label)
+static ldLabel_t *tinyui_label_get_ld(struct tinyui_label *label)
 {
-    struct picoui_backend_widget *backend;
+    struct tinyui_backend_widget *backend;
 
     if (label == NULL || label->widget.backend_widget == NULL) {
         return NULL;
     }
 
-    backend = (struct picoui_backend_widget *)label->widget.backend_widget;
-    if (backend->kind != PICOUI_BACKEND_WIDGET_LABEL || backend->ld_widget == NULL) {
+    backend = (struct tinyui_backend_widget *)label->widget.backend_widget;
+    if (backend->kind != TINYUI_BACKEND_WIDGET_LABEL || backend->ld_widget == NULL) {
         return NULL;
     }
 
     return (ldLabel_t *)backend->ld_widget;
 }
 
-static int tinyui_label_props_are_valid(const struct picoui_label_props *props)
+static int tinyui_label_props_are_valid(const struct tinyui_label_props *props)
 {
     return props != 0
         && props->id != 0
@@ -99,16 +99,16 @@ static int tinyui_label_props_are_valid(const struct picoui_label_props *props)
         && (props->background_source == 0 || props->background_source->img_tile != 0);
 }
 
-static void tinyui_label_dispose_partial(struct picoui_label *label)
+static void tinyui_label_dispose_partial(struct tinyui_label *label)
 {
-    struct picoui_backend_widget *backend;
-    struct picoui_backend_app_state *app_state;
+    struct tinyui_backend_widget *backend;
+    struct tinyui_backend_app_state *app_state;
 
     if (label == 0) {
         return;
     }
 
-    backend = (struct picoui_backend_widget *)label->widget.backend_widget;
+    backend = (struct tinyui_backend_widget *)label->widget.backend_widget;
     if (backend != 0) {
         app_state = tinyui_runtime_bridge_backend_state(backend->owner);
         if (backend->parent != 0) {
@@ -132,12 +132,12 @@ static void tinyui_label_dispose_partial(struct picoui_label *label)
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct picoui_label *picoui_label_create(struct picoui_window *parent, const char *id)
+struct tinyui_label *tinyui_label_create(struct tinyui_window *parent, const char *id)
 {
-    struct picoui_label *label;
-    struct picoui_backend_widget *backend;
-    struct picoui_backend_widget *parent_backend;
-    struct picoui_backend_app_state *app_state;
+    struct tinyui_label *label;
+    struct tinyui_backend_widget *backend;
+    struct tinyui_backend_widget *parent_backend;
+    struct tinyui_backend_app_state *app_state;
     ldLabel_t *ld_label;
     uint16_t name_id;
 
@@ -145,7 +145,7 @@ struct picoui_label *picoui_label_create(struct picoui_window *parent, const cha
         return 0;
     }
 
-    parent_backend = (struct picoui_backend_widget *)parent->widget.backend_widget;
+    parent_backend = (struct tinyui_backend_widget *)parent->widget.backend_widget;
     app_state = tinyui_runtime_bridge_backend_state_from_parent(parent_backend);
     if (parent_backend == 0 || parent_backend->ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
         return 0;
@@ -186,7 +186,7 @@ struct picoui_label *picoui_label_create(struct picoui_window *parent, const cha
 
     if (tinyui_widget_init_child(backend,
                                          parent_backend,
-                                         PICOUI_BACKEND_WIDGET_LABEL,
+                                         TINYUI_BACKEND_WIDGET_LABEL,
                                          id,
                                          parent_backend->theme) != 0) {
         ldLabel_depose(app_state->ld_scene, ld_label);
@@ -222,50 +222,50 @@ struct picoui_label *picoui_label_create(struct picoui_window *parent, const cha
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct picoui_label *picoui_label_create_with_props(struct picoui_window *parent,
-                                                    const struct picoui_label_props *props)
+struct tinyui_label *tinyui_label_create_with_props(struct tinyui_window *parent,
+                                                    const struct tinyui_label_props *props)
 {
-    struct picoui_label *label;
+    struct tinyui_label *label;
 
     if (!tinyui_label_props_are_valid(props)) {
         return 0;
     }
 
-    label = picoui_label_create(parent, props->id);
+    label = tinyui_label_create(parent, props->id);
     if (label == 0) {
         return 0;
     }
 
-    if (props->text != 0 && picoui_label_set_text(label, props->text) != 0) {
+    if (props->text != 0 && tinyui_label_set_text(label, props->text) != 0) {
         tinyui_label_dispose_partial(label);
         return 0;
     }
-    if (props->font != 0 && picoui_label_set_font(label, props->font) != 0) {
+    if (props->font != 0 && tinyui_label_set_font(label, props->font) != 0) {
         tinyui_label_dispose_partial(label);
         return 0;
     }
     if (props->style_class != 0
-        && picoui_widget_set_style_class(&label->widget, props->style_class) != 0) {
+        && tinyui_widget_set_style_class(&label->widget, props->style_class) != 0) {
         tinyui_label_dispose_partial(label);
         return 0;
     }
-    if (picoui_widget_set_user_data(&label->widget, props->user_data) != 0
-        || picoui_widget_set_border_color(&label->widget, props->border_color) != 0
-        || picoui_widget_set_radius(&label->widget, props->radius) != 0
-        || picoui_widget_set_padding(&label->widget, props->padding) != 0) {
+    if (tinyui_widget_set_user_data(&label->widget, props->user_data) != 0
+        || tinyui_widget_set_border_color(&label->widget, props->border_color) != 0
+        || tinyui_widget_set_radius(&label->widget, props->radius) != 0
+        || tinyui_widget_set_padding(&label->widget, props->padding) != 0) {
         tinyui_label_dispose_partial(label);
         return 0;
     }
     if ((props->width > 0 || props->height > 0)
-        && picoui_widget_set_size(&label->widget, props->width, props->height) != 0) {
+        && tinyui_widget_set_size(&label->widget, props->width, props->height) != 0) {
         tinyui_label_dispose_partial(label);
         return 0;
     }
-    if (picoui_label_set_bg_color(label, props->bg_color) != 0
-        || picoui_label_set_text_color(label, props->text_color) != 0
-        || picoui_label_set_background_source(label, props->background_source) != 0
-        || picoui_label_set_transparent(label, props->transparent) != 0
-        || picoui_label_set_align(label, props->align) != 0) {
+    if (tinyui_label_set_bg_color(label, props->bg_color) != 0
+        || tinyui_label_set_text_color(label, props->text_color) != 0
+        || tinyui_label_set_background_source(label, props->background_source) != 0
+        || tinyui_label_set_transparent(label, props->transparent) != 0
+        || tinyui_label_set_align(label, props->align) != 0) {
         tinyui_label_dispose_partial(label);
         return 0;
     }
@@ -281,13 +281,13 @@ struct picoui_label *picoui_label_create_with_props(struct picoui_window *parent
  * @return -1 on failure
  */
 
-int picoui_label_set_text(struct picoui_label *label, const char *text)
+int tinyui_label_set_text(struct tinyui_label *label, const char *text)
 {
     if (label == 0 || text == 0) {
         return -1;
     }
 
-    if (picoui_widget_set_text(&label->widget, text) != 0) {
+    if (tinyui_widget_set_text(&label->widget, text) != 0) {
         return -1;
     }
     return tinyui_widget_set_backend_text(label->widget.backend_widget, text);
@@ -299,7 +299,7 @@ int picoui_label_set_text(struct picoui_label *label, const char *text)
  * @param[out] label Label widget instance
  */
 
-const char *picoui_label_get_text(struct picoui_label *label)
+const char *tinyui_label_get_text(struct tinyui_label *label)
 {
     ldLabel_t *ld_label;
 
@@ -323,7 +323,7 @@ const char *picoui_label_get_text(struct picoui_label *label)
  * @return -1 on failure
  */
 
-int picoui_label_set_font(struct picoui_label *label, const struct picoui_font *font)
+int tinyui_label_set_font(struct tinyui_label *label, const struct tinyui_font *font)
 {
     ldLabel_t *ld_label;
 
@@ -337,7 +337,7 @@ int picoui_label_set_font(struct picoui_label *label, const struct picoui_font *
     }
 
     label->widget.font = font;
-    ((struct picoui_backend_widget *)label->widget.backend_widget)->font = font;
+    ((struct tinyui_backend_widget *)label->widget.backend_widget)->font = font;
     if (font != NULL) {
         ldLabelSetFont(ld_label, (arm_2d_font_t *)font);
     } else {
@@ -354,11 +354,11 @@ int picoui_label_set_font(struct picoui_label *label, const struct picoui_font *
  * @return -1 on failure
  */
 
-int picoui_label_set_text_color(struct picoui_label *label, unsigned int rgb)
+int tinyui_label_set_text_color(struct tinyui_label *label, unsigned int rgb)
 {
     ldLabel_t *ld_label;
 
-    if (label == 0 || picoui_widget_set_text_color(&label->widget, rgb) != 0) {
+    if (label == 0 || tinyui_widget_set_text_color(&label->widget, rgb) != 0) {
         return -1;
     }
 
@@ -379,7 +379,7 @@ int picoui_label_set_text_color(struct picoui_label *label, unsigned int rgb)
  * @return -1 on failure
  */
 
-int picoui_label_get_text_color(struct picoui_label *label, unsigned int *rgb)
+int tinyui_label_get_text_color(struct tinyui_label *label, unsigned int *rgb)
 {
     ldLabel_t *ld_label;
 
@@ -404,11 +404,11 @@ int picoui_label_get_text_color(struct picoui_label *label, unsigned int *rgb)
  * @return -1 on failure
  */
 
-int picoui_label_set_bg_color(struct picoui_label *label, unsigned int rgb)
+int tinyui_label_set_bg_color(struct tinyui_label *label, unsigned int rgb)
 {
     ldLabel_t *ld_label;
 
-    if (label == 0 || picoui_widget_set_bg_color(&label->widget, rgb) != 0) {
+    if (label == 0 || tinyui_widget_set_bg_color(&label->widget, rgb) != 0) {
         return -1;
     }
 
@@ -429,7 +429,7 @@ int picoui_label_set_bg_color(struct picoui_label *label, unsigned int rgb)
  * @return -1 on failure
  */
 
-int picoui_label_get_bg_color(struct picoui_label *label, unsigned int *rgb)
+int tinyui_label_get_bg_color(struct tinyui_label *label, unsigned int *rgb)
 {
     ldLabel_t *ld_label;
 
@@ -454,7 +454,7 @@ int picoui_label_get_bg_color(struct picoui_label *label, unsigned int *rgb)
  * @return -1 on failure
  */
 
-int picoui_label_set_transparent(struct picoui_label *label, int transparent)
+int tinyui_label_set_transparent(struct tinyui_label *label, int transparent)
 {
     ldLabel_t *ld_label;
 
@@ -479,7 +479,7 @@ int picoui_label_set_transparent(struct picoui_label *label, int transparent)
  * @return -1 on failure
  */
 
-int picoui_label_get_transparent(struct picoui_label *label, int *transparent)
+int tinyui_label_get_transparent(struct tinyui_label *label, int *transparent)
 {
     ldLabel_t *ld_label;
 
@@ -504,7 +504,7 @@ int picoui_label_get_transparent(struct picoui_label *label, int *transparent)
  * @return -1 on failure
  */
 
-int picoui_label_set_align(struct picoui_label *label, enum picoui_align align)
+int tinyui_label_set_align(struct tinyui_label *label, enum tinyui_align align)
 {
     ldLabel_t *ld_label;
 
@@ -516,7 +516,7 @@ int picoui_label_set_align(struct picoui_label *label, enum picoui_align align)
     if (ld_label == NULL) {
         return -1;
     }
-    if (align != PICOUI_ALIGN_START && align != PICOUI_ALIGN_CENTER && align != PICOUI_ALIGN_END) {
+    if (align != TINYUI_ALIGN_START && align != TINYUI_ALIGN_CENTER && align != TINYUI_ALIGN_END) {
         return -1;
     }
 
@@ -532,7 +532,7 @@ int picoui_label_set_align(struct picoui_label *label, enum picoui_align align)
  * @return -1 on failure
  */
 
-int picoui_label_get_align(struct picoui_label *label, enum picoui_align *align)
+int tinyui_label_get_align(struct tinyui_label *label, enum tinyui_align *align)
 {
     ldLabel_t *ld_label;
 
@@ -557,8 +557,8 @@ int picoui_label_get_align(struct picoui_label *label, enum picoui_align *align)
  * @return -1 on failure
  */
 
-int picoui_label_set_background_source(struct picoui_label *label,
-                                       struct picoui_image_source *source)
+int tinyui_label_set_background_source(struct tinyui_label *label,
+                                       struct tinyui_image_source *source)
 {
     ldLabel_t *ld_label;
 

@@ -1,15 +1,15 @@
-# PicoUI a-0.3 closeout review 与 0.4-0.5 串行建议
+# TINYUI a-0.3 closeout review 与 0.4-0.5 串行建议
 
 ## 评审范围
 
 本轮 review 只评估 `a-0.3` closeout 对应的真实交付：
 
-1. `docs/picoui-serial/a-0.3/*`
-2. `tests/picoui/contract/check_picoui_release_capability_matrix.py`
-3. `tests/picoui/contract/picoui_release_capability_matrix.json`
+1. `docs/tinyui-serial/a-0.3/*`
+2. `tests/tinyui/contract/check_tinyui_release_capability_matrix.py`
+3. `tests/tinyui/contract/tinyui_release_capability_matrix.json`
 4. 与 `a-0.3` 当时 truth-source 直接相关的 runtime / backend / widget 证据链
 
-不重新评估整个 PicoUI 仓库历史，只回答：
+不重新评估整个 TINYUI 仓库历史，只回答：
 
 1. `a-0.3` 是否足够 closeout。
 2. 进入 `a-0.4` / `a-0.5` 前，哪些问题必须先收敛。
@@ -25,7 +25,7 @@
    - `changed_files = 8`
    - `risk_level = low`
    - `affected_processes = 0`
-3. `gitnexus_impact()` 对本轮唯一真实代码检查点 `_assert_current_layers`、`_assert_summary_counts` 都是 `LOW`，影响面仅在 `tests/picoui/contract/check_picoui_release_capability_matrix.py` 自身。
+3. `gitnexus_impact()` 对本轮唯一真实代码检查点 `_assert_current_layers`、`_assert_summary_counts` 都是 `LOW`，影响面仅在 `tests/tinyui/contract/check_tinyui_release_capability_matrix.py` 自身。
 
 结论：
 
@@ -36,13 +36,13 @@
 
 ### 1. 严重：runtime 仍保留会主动补 layout 的 temporary smoke path
 
-`picoui/src/backend/ldgui/backend_app.c` 里的 `picoui_backend_apply_smoke_cursor_layout()` 仍会在 root 没有真实 `flex/grid` 布局时，给子控件线性排位并直接改写 `ldBaseSetRegion(...)`。
+`tinyui/src/backend/ldgui/backend_app.c` 里的 `tinyui_backend_apply_smoke_cursor_layout()` 仍会在 root 没有真实 `flex/grid` 布局时，给子控件线性排位并直接改写 `ldBaseSetRegion(...)`。
 
 相关位置：
 
-1. `picoui/src/backend/ldgui/backend_app.c:510`
-2. `picoui/src/backend/ldgui/backend_app.c:542`
-3. `picoui/demo/message_box_basic/main.c:3`
+1. `tinyui/src/backend/ldgui/backend_app.c:510`
+2. `tinyui/src/backend/ldgui/backend_app.c:542`
+3. `tinyui/demo/message_box_basic/main.c:3`
 
 这不只是“host smoke capture 能看到东西”，而是在真实 runtime 里替 demo 补布局。它违反仓库规则里“demo 不能掩盖 backend/layout 缺口”的边界，也会让 visible gate 把“被补位后的可见”误判成“真实布局完成”。
 
@@ -53,14 +53,14 @@
 
 ### 2. 中高：`list` 的 public getter 仍是 host cache，不是 backend truth
 
-`picoui_list_get_selected_index()` 直接返回 `list->selected_index`，而不是回读 backend。backend 已有 `picoui_backend_list_get_selected_index()`，但 public getter 没走这条路径。
+`tinyui_list_get_selected_index()` 直接返回 `list->selected_index`，而不是回读 backend。backend 已有 `tinyui_backend_list_get_selected_index()`，但 public getter 没走这条路径。
 
 相关位置：
 
-1. `picoui/src/widgets/list.c:89`
-2. `picoui/src/backend/ldgui/backend_list.c:115`
-3. `picoui/src/backend/ldgui/backend_event.c:436`
-4. `docs/picoui-serial/a-0.3/current-15-capability-audit.md:112`
+1. `tinyui/src/widgets/list.c:89`
+2. `tinyui/src/backend/ldgui/backend_list.c:115`
+3. `tinyui/src/backend/ldgui/backend_event.c:436`
+4. `docs/tinyui-serial/a-0.3/current-15-capability-audit.md:112`
 
 当前它之所以还没暴露，是因为 `list` 的 selection 入口仍很单一，主要靠 clicked-item bridge 同步 host cache。一旦 `a-0.4` 接入 `keyboard / focus / navigation`，这个 getter 很容易失真。
 
@@ -75,9 +75,9 @@
 
 相关位置：
 
-1. `picoui/src/widgets/message_box.c:138`
-2. `tests/picoui/unit/test_picoui_message_box.c:47`
-3. `picoui/demo/message_box_basic/main.c:3`
+1. `tinyui/src/widgets/message_box.c:138`
+2. `tests/tinyui/unit/test_tinyui_message_box.c:47`
+3. `tinyui/demo/message_box_basic/main.c:3`
 
 所以它当前最多只能证明：
 
@@ -99,7 +99,7 @@
 
 相关位置：
 
-1. `tests/picoui/runtime/check_picoui_visible_ui.py:886`
+1. `tests/tinyui/runtime/check_tinyui_visible_ui.py:886`
 
 `clock / progress_wheel / qrcode` 也类似：能防空白图，但不防“值错了、文本错了、默认值顶掉了”。
 
@@ -132,7 +132,7 @@
 6. plan
 7. release matrix
 
-但 `README` 原先把后续版本记录写错到 `docs/picoui-serial/a-0.3/a-0.4-a-0.6-后续版本记录.md`，实际文件在 `docs/picoui-serial/a-0.4-a-0.6-后续版本记录.md`。
+但 `README` 原先把后续版本记录写错到 `docs/tinyui-serial/a-0.3/a-0.4-a-0.6-后续版本记录.md`，实际文件在 `docs/tinyui-serial/a-0.4-a-0.6-后续版本记录.md`。
 
 本轮已顺手修正索引。
 
@@ -199,10 +199,10 @@
 
 ## 当时推荐的文档与执行入口
 
-1. `docs/picoui-serial/a-0.4-线计划索引.md`
-2. `docs/picoui-serial/a-0.5-线计划索引.md`
-3. `docs/superpowers/specs/2026-05-31-picoui-a-0-4-input-shared-core-design.md`
-4. `docs/superpowers/specs/2026-05-31-picoui-a-0-5-data-model-design.md`
+1. `docs/tinyui-serial/a-0.4-线计划索引.md`
+2. `docs/tinyui-serial/a-0.5-线计划索引.md`
+3. `docs/superpowers/specs/2026-05-31-tinyui-a-0-4-input-shared-core-design.md`
+4. `docs/superpowers/specs/2026-05-31-tinyui-a-0-5-data-model-design.md`
 
 这些文档在当时共同承担：
 

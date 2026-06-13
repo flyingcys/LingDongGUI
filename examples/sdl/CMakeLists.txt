@@ -486,14 +486,8 @@ function(add_tinyui_demo target source)
     endif()
     if(COMMAND ld_apply_tinyui_runtime_screen_config)
         ld_apply_tinyui_runtime_screen_config(${target})
-    elseif(COMMAND ld_apply_picoui_runtime_screen_config)
-        ld_apply_picoui_runtime_screen_config(${target})
     endif()
     ld_apply_common_target_config(${target})
-endfunction()
-
-function(add_picoui_demo target source)
-    add_tinyui_demo(${target} ${source})
 endfunction()
 
 

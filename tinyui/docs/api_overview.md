@@ -49,10 +49,10 @@
 - 用户不需要直接使用 `ld*`
 - 用户不需要直接使用 `ARM-2D`
 - backend 私有适配仍放在 `tinyui/src/backend/ldgui/`
-- public C API 目前仍允许保留 `picoui_*` 作为过渡态；这不是 `v2.1` 当前 blocker
+- public C API 目前仍允许保留 `tinyui_*` 作为过渡态；这不是 `v2.1` 当前 blocker
 
 ## 当前状态
 
 - `27/27` widget-like 控件已进入 current public API 覆盖面，包含 `animation`
-- `v2.1` 当前重点不是继续清空 `picoui_*` public symbol，而是保持 canonical truth、contract gate、runtime gate、release-facing 文档一致
+- `v2.1` 当前重点不是继续清空 `tinyui_*` public symbol，而是保持 canonical truth、contract gate、runtime gate、release-facing 文档一致
 - 是否可以写成 release-ready，仍以 fresh verification 和最终 closeout 证据为准

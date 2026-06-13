@@ -65,10 +65,10 @@ void tinyui_table_test_reset_dispose_snapshot(void)
     tinyui_table_last_dispose_snapshot_valid = 0;
 }
 
-static int tinyui_table_finish_detach_after_backend_failure(struct picoui_backend_widget *backend)
+static int tinyui_table_finish_detach_after_backend_failure(struct tinyui_backend_widget *backend)
 {
-    struct picoui_backend_widget *parent;
-    struct picoui_backend_widget *cursor;
+    struct tinyui_backend_widget *parent;
+    struct tinyui_backend_widget *cursor;
 
     if (backend == 0 || backend->parent == 0) {
         return 0;
@@ -95,10 +95,10 @@ static int tinyui_table_finish_detach_after_backend_failure(struct picoui_backen
     return 0;
 }
 
-static void tinyui_table_dispose_partial(struct picoui_table *table)
+static void tinyui_table_dispose_partial(struct tinyui_table *table)
 {
-    struct picoui_backend_widget *backend;
-    struct picoui_backend_app_state *app_state;
+    struct tinyui_backend_widget *backend;
+    struct tinyui_backend_app_state *app_state;
     ldBase_t *ld_base;
     int detach_result = 0;
     int unbind_result = 0;
@@ -107,7 +107,7 @@ static void tinyui_table_dispose_partial(struct picoui_table *table)
         return;
     }
 
-    backend = (struct picoui_backend_widget *)table->widget.backend_widget;
+    backend = (struct tinyui_backend_widget *)table->widget.backend_widget;
     if (backend != 0) {
         app_state = tinyui_runtime_bridge_backend_state(backend->owner);
         ld_base = (ldBase_t *)backend->ld_widget;
@@ -147,7 +147,7 @@ static void tinyui_table_dispose_partial(struct picoui_table *table)
     free(table);
 }
 
-static int tinyui_table_props_are_valid(const struct picoui_table_props *props)
+static int tinyui_table_props_are_valid(const struct tinyui_table_props *props)
 {
     return props != 0 &&
            props->id != 0 &&
@@ -160,48 +160,48 @@ static int tinyui_table_props_are_valid(const struct picoui_table_props *props)
             tinyui_table_keyboard_binding_is_valid(props->keyboard_binding));
 }
 
-static ldTable_t *tinyui_table_get_ld_widget(const struct picoui_table *table)
+static ldTable_t *tinyui_table_get_ld_widget(const struct tinyui_table *table)
 {
-    const struct picoui_backend_widget *backend;
+    const struct tinyui_backend_widget *backend;
 
     if (table == 0 || table->widget.backend_widget == 0) {
         return 0;
     }
 
-    backend = (const struct picoui_backend_widget *)table->widget.backend_widget;
+    backend = (const struct tinyui_backend_widget *)table->widget.backend_widget;
     return (ldTable_t *)backend->ld_widget;
 }
 
-static ldTable_t *tinyui_table_get_strict_ld_widget(const struct picoui_table *table)
+static ldTable_t *tinyui_table_get_strict_ld_widget(const struct tinyui_table *table)
 {
-    const struct picoui_backend_widget *backend;
+    const struct tinyui_backend_widget *backend;
 
     if (table == 0 || table->widget.backend_widget == 0) {
         return 0;
     }
 
-    backend = (const struct picoui_backend_widget *)table->widget.backend_widget;
-    if (backend->kind != PICOUI_BACKEND_WIDGET_TABLE || backend->ld_widget == 0) {
+    backend = (const struct tinyui_backend_widget *)table->widget.backend_widget;
+    if (backend->kind != TINYUI_BACKEND_WIDGET_TABLE || backend->ld_widget == 0) {
         return 0;
     }
 
     return (ldTable_t *)backend->ld_widget;
 }
 
-static int tinyui_table_align_to_ld(enum picoui_align align, arm_2d_align_t *out)
+static int tinyui_table_align_to_ld(enum tinyui_align align, arm_2d_align_t *out)
 {
     if (out == 0) {
         return -1;
     }
 
     switch (align) {
-    case PICOUI_ALIGN_START:
+    case TINYUI_ALIGN_START:
         *out = ARM_2D_ALIGN_LEFT;
         return 0;
-    case PICOUI_ALIGN_CENTER:
+    case TINYUI_ALIGN_CENTER:
         *out = ARM_2D_ALIGN_CENTRE;
         return 0;
-    case PICOUI_ALIGN_END:
+    case TINYUI_ALIGN_END:
         *out = ARM_2D_ALIGN_RIGHT;
         return 0;
     default:
@@ -209,14 +209,14 @@ static int tinyui_table_align_to_ld(enum picoui_align align, arm_2d_align_t *out
     }
 }
 
-static int tinyui_table_sync_current_cell_local(struct picoui_table *table,
+static int tinyui_table_sync_current_cell_local(struct tinyui_table *table,
                                                 int *row_out,
                                                 int *column_out);
 
 static bool tinyui_table_native_slot(struct ld_scene_t *scene, ldMsg_t msg)
 {
-    struct picoui_backend_widget *backend;
-    struct picoui_table *table;
+    struct tinyui_backend_widget *backend;
+    struct tinyui_table *table;
     ldTable_t *ld_table;
     ldTableItem_t *item;
     int row = 0;
@@ -229,12 +229,12 @@ static bool tinyui_table_native_slot(struct ld_scene_t *scene, ldMsg_t msg)
         return false;
     }
 
-    backend = (struct picoui_backend_widget *)((ldBase_t *)msg.ptSender)->pInfo;
+    backend = (struct tinyui_backend_widget *)((ldBase_t *)msg.ptSender)->pInfo;
     if (backend == NULL || backend->host_widget == NULL) {
         return false;
     }
 
-    table = (struct picoui_table *)backend->host_widget;
+    table = (struct tinyui_table *)backend->host_widget;
     ld_table = tinyui_table_get_strict_ld_widget(table);
     if (ld_table == NULL) {
         return false;
@@ -247,11 +247,11 @@ static bool tinyui_table_native_slot(struct ld_scene_t *scene, ldMsg_t msg)
     item = ldTableGetItem(ld_table, (uint8_t)row, (uint8_t)column);
 
     if (msg.signal == SIGNAL_PRESS) {
-        was_focus_owner = picoui_widget_is_focus_owner(&table->widget);
+        was_focus_owner = tinyui_widget_is_focus_owner(&table->widget);
         (void)tinyui_widget_claim_backend_focus(backend);
         if (item != NULL && item->isEditable && (item->isEditing || was_focus_owner)) {
-            backend->edit_result_on_finish = PICOUI_EDIT_RESULT_COMMIT;
-            (void)picoui_widget_claim_editing(&table->widget);
+            backend->edit_result_on_finish = TINYUI_EDIT_RESULT_COMMIT;
+            (void)tinyui_widget_claim_editing(&table->widget);
         }
         return false;
     }
@@ -263,13 +263,13 @@ static bool tinyui_table_native_slot(struct ld_scene_t *scene, ldMsg_t msg)
     if (item != NULL) {
         item->isEditing = false;
     }
-    (void)picoui_widget_mark_edit_result(&table->widget, backend->edit_result_on_finish);
-    (void)picoui_widget_release_editing(&table->widget);
-    backend->edit_result_on_finish = PICOUI_EDIT_RESULT_NONE;
+    (void)tinyui_widget_mark_edit_result(&table->widget, backend->edit_result_on_finish);
+    (void)tinyui_widget_release_editing(&table->widget);
+    backend->edit_result_on_finish = TINYUI_EDIT_RESULT_NONE;
     return false;
 }
 
-static int tinyui_table_bind_native_slot(struct picoui_table *table)
+static int tinyui_table_bind_native_slot(struct tinyui_table *table)
 {
     ldTable_t *ld_table;
 
@@ -291,11 +291,11 @@ static int tinyui_table_bind_native_slot(struct picoui_table *table)
     return 0;
 }
 
-static int tinyui_table_sync_current_cell_local(struct picoui_table *table,
+static int tinyui_table_sync_current_cell_local(struct tinyui_table *table,
                                                 int *row_out,
                                                 int *column_out)
 {
-    struct picoui_backend_widget *backend;
+    struct tinyui_backend_widget *backend;
     ldTable_t *ld_table;
     int row;
     int column;
@@ -304,7 +304,7 @@ static int tinyui_table_sync_current_cell_local(struct picoui_table *table,
         return -1;
     }
 
-    backend = (struct picoui_backend_widget *)table->widget.backend_widget;
+    backend = (struct tinyui_backend_widget *)table->widget.backend_widget;
     if (backend->host_widget == NULL) {
         return -1;
     }
@@ -337,15 +337,15 @@ static int tinyui_table_sync_current_cell_local(struct picoui_table *table,
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct picoui_table *picoui_table_create(struct picoui_window *parent,
+struct tinyui_table *tinyui_table_create(struct tinyui_window *parent,
                                          const char *id,
                                          int rows,
                                          int columns)
 {
-    struct picoui_table *table;
-    struct picoui_backend_widget *backend;
-    struct picoui_backend_widget *parent_backend;
-    struct picoui_backend_app_state *app_state;
+    struct tinyui_table *table;
+    struct tinyui_backend_widget *backend;
+    struct tinyui_backend_widget *parent_backend;
+    struct tinyui_backend_app_state *app_state;
     ldTable_t *ld_table;
     uint16_t name_id;
 
@@ -353,7 +353,7 @@ struct picoui_table *picoui_table_create(struct picoui_window *parent,
         return 0;
     }
 
-    parent_backend = (struct picoui_backend_widget *)parent->widget.backend_widget;
+    parent_backend = (struct tinyui_backend_widget *)parent->widget.backend_widget;
     app_state = parent_backend != 0
         ? tinyui_runtime_bridge_backend_state_from_parent(parent_backend)
         : 0;
@@ -398,7 +398,7 @@ struct picoui_table *picoui_table_create(struct picoui_window *parent,
 
     if (tinyui_widget_init_child(backend,
                                          parent_backend,
-                                         PICOUI_BACKEND_WIDGET_TABLE,
+                                         TINYUI_BACKEND_WIDGET_TABLE,
                                          id,
                                          parent_backend->theme) != 0) {
         ldTable_depose(app_state->ld_scene, ld_table);
@@ -448,38 +448,38 @@ struct picoui_table *picoui_table_create(struct picoui_window *parent,
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct picoui_table *picoui_table_create_with_props(struct picoui_window *parent,
-                                                    const struct picoui_table_props *props)
+struct tinyui_table *tinyui_table_create_with_props(struct tinyui_window *parent,
+                                                    const struct tinyui_table_props *props)
 {
-    struct picoui_table *table;
+    struct tinyui_table *table;
 
     if (!tinyui_table_props_are_valid(props)) {
         return 0;
     }
 
-    table = picoui_table_create(parent, props->id, props->rows, props->columns);
+    table = tinyui_table_create(parent, props->id, props->rows, props->columns);
     if (table == 0) {
         return 0;
     }
 
     if ((props->has_keyboard_binding != 0 &&
-         picoui_table_set_keyboard_binding(table, props->keyboard_binding) != 0) ||
-        picoui_widget_set_user_data(&table->widget, props->user_data) != 0 ||
-        picoui_widget_set_bg_color(&table->widget, props->bg_color) != 0 ||
-        picoui_widget_set_text_color(&table->widget, props->text_color) != 0 ||
-        picoui_widget_set_border_color(&table->widget, props->border_color) != 0 ||
-        picoui_widget_set_radius(&table->widget, props->radius) != 0 ||
-        picoui_widget_set_padding(&table->widget, props->padding) != 0) {
+         tinyui_table_set_keyboard_binding(table, props->keyboard_binding) != 0) ||
+        tinyui_widget_set_user_data(&table->widget, props->user_data) != 0 ||
+        tinyui_widget_set_bg_color(&table->widget, props->bg_color) != 0 ||
+        tinyui_widget_set_text_color(&table->widget, props->text_color) != 0 ||
+        tinyui_widget_set_border_color(&table->widget, props->border_color) != 0 ||
+        tinyui_widget_set_radius(&table->widget, props->radius) != 0 ||
+        tinyui_widget_set_padding(&table->widget, props->padding) != 0) {
         tinyui_table_dispose_partial(table);
         return 0;
     }
     if (props->style_class != 0 &&
-        picoui_widget_set_style_class(&table->widget, props->style_class) != 0) {
+        tinyui_widget_set_style_class(&table->widget, props->style_class) != 0) {
         tinyui_table_dispose_partial(table);
         return 0;
     }
     if ((props->width > 0 || props->height > 0) &&
-        picoui_widget_set_size(&table->widget, props->width, props->height) != 0) {
+        tinyui_widget_set_size(&table->widget, props->width, props->height) != 0) {
         tinyui_table_dispose_partial(table);
         return 0;
     }
@@ -497,12 +497,12 @@ struct picoui_table *picoui_table_create_with_props(struct picoui_window *parent
  * @return Pointer to the object
  */
 
-struct picoui_table *picoui_table_init(struct picoui_window *parent,
+struct tinyui_table *tinyui_table_init(struct tinyui_window *parent,
                                        const char *id,
                                        int rows,
                                        int columns)
 {
-    return picoui_table_create(parent, id, rows, columns);
+    return tinyui_table_create(parent, id, rows, columns);
 }
 
 /**
@@ -513,9 +513,9 @@ struct picoui_table *picoui_table_init(struct picoui_window *parent,
  * @return 0 on success, -1 on failure
  */
 
-int picoui_table_set_keyboard(struct picoui_table *table, unsigned int keyboard_binding)
+int tinyui_table_set_keyboard(struct tinyui_table *table, unsigned int keyboard_binding)
 {
-    return picoui_table_set_keyboard_binding(table, keyboard_binding);
+    return tinyui_table_set_keyboard_binding(table, keyboard_binding);
 }
 
 /**
@@ -526,7 +526,7 @@ int picoui_table_set_keyboard(struct picoui_table *table, unsigned int keyboard_
  * @return 0 on success, -1 on failure
  */
 
-int picoui_table_set_keyboard_binding(struct picoui_table *table, unsigned int keyboard_binding)
+int tinyui_table_set_keyboard_binding(struct tinyui_table *table, unsigned int keyboard_binding)
 {
     ldTable_t *ld_table;
 
@@ -545,8 +545,8 @@ int picoui_table_set_keyboard_binding(struct picoui_table *table, unsigned int k
     }
 
     ldTableSetKeyboard(ld_table, (uint16_t)keyboard_binding);
-    if ((struct picoui_backend_widget *)table->widget.backend_widget != 0) {
-        ((struct picoui_backend_widget *)table->widget.backend_widget)->value = (int)keyboard_binding;
+    if ((struct tinyui_backend_widget *)table->widget.backend_widget != 0) {
+        ((struct tinyui_backend_widget *)table->widget.backend_widget)->value = (int)keyboard_binding;
     }
     if (ld_table->kbNameId != (uint16_t)keyboard_binding) {
         return -1;
@@ -563,7 +563,7 @@ int picoui_table_set_keyboard_binding(struct picoui_table *table, unsigned int k
  * @return -1 on failure
  */
 
-int picoui_table_get_keyboard_binding(const struct picoui_table *table, unsigned int *keyboard_binding)
+int tinyui_table_get_keyboard_binding(const struct tinyui_table *table, unsigned int *keyboard_binding)
 {
     ldTable_t *ld_table;
 
@@ -577,7 +577,7 @@ int picoui_table_get_keyboard_binding(const struct picoui_table *table, unsigned
         return 0;
     }
 
-    if (((const struct picoui_table *)table)->keyboard_binding == 0U) {
+    if (((const struct tinyui_table *)table)->keyboard_binding == 0U) {
         return -1;
     }
 
@@ -616,10 +616,10 @@ void tinyui_table_test_reset_state(void)
  * @return 0 on success, -1 on failure
  */
 
-int picoui_tabel_show_keyboard(struct picoui_table *table)
+int tinyui_tabel_show_keyboard(struct tinyui_table *table)
 {
-    struct picoui_backend_widget *backend;
-    struct picoui_backend_app_state *app_state;
+    struct tinyui_backend_widget *backend;
+    struct tinyui_backend_app_state *app_state;
     ldTable_t *ld_table;
     ldTableItem_t *item;
 
@@ -627,12 +627,12 @@ int picoui_tabel_show_keyboard(struct picoui_table *table)
         return -1;
     }
 
-    backend = (struct picoui_backend_widget *)table->widget.backend_widget;
+    backend = (struct tinyui_backend_widget *)table->widget.backend_widget;
     ld_table = tinyui_table_get_strict_ld_widget(table);
     if (backend == 0 || ld_table == 0) {
         return -1;
     }
-    app_state = (struct picoui_backend_app_state *)backend->owner->backend_app;
+    app_state = (struct tinyui_backend_app_state *)backend->owner->backend_app;
     if (app_state == 0 || app_state->ld_scene == 0) {
         return -1;
     }
@@ -656,7 +656,7 @@ int picoui_tabel_show_keyboard(struct picoui_table *table)
  * @return -1 on failure
  */
 
-int picoui_table_set_cell_text(struct picoui_table *table,
+int tinyui_table_set_cell_text(struct tinyui_table *table,
                                int row,
                                int column,
                                const char *text)
@@ -692,9 +692,9 @@ int picoui_table_set_cell_text(struct picoui_table *table,
  * @return 0 on success, -1 on failure
  */
 
-int picoui_table_set_item_text(struct picoui_table *table, int row, int column, const char *text)
+int tinyui_table_set_item_text(struct tinyui_table *table, int row, int column, const char *text)
 {
-    return picoui_table_set_cell_text(table, row, column, text);
+    return tinyui_table_set_cell_text(table, row, column, text);
 }
 
 /**
@@ -705,7 +705,7 @@ int picoui_table_set_item_text(struct picoui_table *table, int row, int column, 
  * @param[in] column Column index
  */
 
-const char *picoui_table_get_cell_text(const struct picoui_table *table, int row, int column)
+const char *tinyui_table_get_cell_text(const struct tinyui_table *table, int row, int column)
 {
     ldTable_t *ld_table;
 
@@ -730,9 +730,9 @@ const char *picoui_table_get_cell_text(const struct picoui_table *table, int row
  * @param[in] column Column index
  */
 
-const char *picoui_table_get_item_text(const struct picoui_table *table, int row, int column)
+const char *tinyui_table_get_item_text(const struct tinyui_table *table, int row, int column)
 {
-    return picoui_table_get_cell_text(table, row, column);
+    return tinyui_table_get_cell_text(table, row, column);
 }
 
 /**
@@ -746,7 +746,7 @@ const char *picoui_table_get_item_text(const struct picoui_table *table, int row
  * @return -1 on failure
  */
 
-int picoui_table_set_cell_editable(struct picoui_table *table,
+int tinyui_table_set_cell_editable(struct tinyui_table *table,
                                    int row,
                                    int column,
                                    int editable,
@@ -787,13 +787,13 @@ int picoui_table_set_cell_editable(struct picoui_table *table,
  * @return 0 on success, -1 on failure
  */
 
-int picoui_table_set_item_editable(struct picoui_table *table,
+int tinyui_table_set_item_editable(struct tinyui_table *table,
                                    int row,
                                    int column,
                                    int editable,
                                    unsigned int text_max)
 {
-    return picoui_table_set_cell_editable(table, row, column, editable, text_max);
+    return tinyui_table_set_cell_editable(table, row, column, editable, text_max);
 }
 
 /**
@@ -809,12 +809,12 @@ int picoui_table_set_item_editable(struct picoui_table *table,
  * @return -1 on failure
  */
 
-int picoui_table_set_item_image(struct picoui_table *table,
+int tinyui_table_set_item_image(struct tinyui_table *table,
                                 int row,
                                 int column,
                                 int x,
                                 int y,
-                                struct picoui_image_source *source,
+                                struct tinyui_image_source *source,
                                 unsigned int mask_color)
 {
     ldTable_t *ld_table;
@@ -857,14 +857,14 @@ int picoui_table_set_item_image(struct picoui_table *table,
  * @return -1 on failure
  */
 
-int picoui_table_set_item_button(struct picoui_table *table,
+int tinyui_table_set_item_button(struct tinyui_table *table,
                                  int row,
                                  int column,
                                  int x,
                                  int y,
-                                 struct picoui_image_source *release_source,
+                                 struct tinyui_image_source *release_source,
                                  unsigned int release_mask_color,
-                                 struct picoui_image_source *press_source,
+                                 struct tinyui_image_source *press_source,
                                  unsigned int press_mask_color,
                                  int checkable)
 {
@@ -905,7 +905,7 @@ int picoui_table_set_item_button(struct picoui_table *table,
  * @return -1 on failure
  */
 
-int picoui_table_set_excel_type(struct picoui_table *table)
+int tinyui_table_set_excel_type(struct tinyui_table *table)
 {
     ldTable_t *ld_table;
 
@@ -930,9 +930,9 @@ int picoui_table_set_excel_type(struct picoui_table *table)
  * @return 0 on success, -1 on failure
  */
 
-int picoui_table_set_background_color(struct picoui_table *table, unsigned int bg_color)
+int tinyui_table_set_background_color(struct tinyui_table *table, unsigned int bg_color)
 {
-    return picoui_table_set_bg_color(table, bg_color);
+    return tinyui_table_set_bg_color(table, bg_color);
 }
 
 /**
@@ -943,7 +943,7 @@ int picoui_table_set_background_color(struct picoui_table *table, unsigned int b
  * @return 0 on success, -1 on failure
  */
 
-int picoui_table_set_align_grid(struct picoui_table *table, int enabled)
+int tinyui_table_set_align_grid(struct tinyui_table *table, int enabled)
 {
     ldTable_t *ld_table;
 
@@ -969,7 +969,7 @@ int picoui_table_set_align_grid(struct picoui_table *table, int enabled)
  * @return -1 on failure
  */
 
-int picoui_table_set_item_width(struct picoui_table *table, int column, int width)
+int tinyui_table_set_item_width(struct tinyui_table *table, int column, int width)
 {
     ldTable_t *ld_table;
 
@@ -995,7 +995,7 @@ int picoui_table_set_item_width(struct picoui_table *table, int column, int widt
  * @return -1 on failure
  */
 
-int picoui_table_set_item_height(struct picoui_table *table, int row, int height)
+int tinyui_table_set_item_height(struct tinyui_table *table, int row, int height)
 {
     ldTable_t *ld_table;
 
@@ -1023,7 +1023,7 @@ int picoui_table_set_item_height(struct picoui_table *table, int row, int height
  * @return -1 on failure
  */
 
-int picoui_table_set_item_color(struct picoui_table *table,
+int tinyui_table_set_item_color(struct tinyui_table *table,
                                 int row,
                                 int column,
                                 unsigned int text_color,
@@ -1053,7 +1053,7 @@ int picoui_table_set_item_color(struct picoui_table *table,
  * @return -1 on failure
  */
 
-int picoui_table_set_bg_color(struct picoui_table *table, unsigned int bg_color)
+int tinyui_table_set_bg_color(struct tinyui_table *table, unsigned int bg_color)
 {
     ldTable_t *ld_table;
 
@@ -1080,7 +1080,7 @@ int picoui_table_set_bg_color(struct picoui_table *table, unsigned int bg_color)
  * @return -1 on failure
  */
 
-int picoui_table_set_item_static_text(struct picoui_table *table, int row, int column, const char *text)
+int tinyui_table_set_item_static_text(struct tinyui_table *table, int row, int column, const char *text)
 {
     ldTable_t *ld_table;
 
@@ -1107,7 +1107,7 @@ int picoui_table_set_item_static_text(struct picoui_table *table, int row, int c
  * @return -1 on failure
  */
 
-int picoui_table_set_item_font(struct picoui_table *table, int row, int column)
+int tinyui_table_set_item_font(struct tinyui_table *table, int row, int column)
 {
     ldTable_t *ld_table;
 
@@ -1132,7 +1132,7 @@ int picoui_table_set_item_font(struct picoui_table *table, int row, int column)
  * @return -1 on failure
  */
 
-int picoui_table_get_align_grid(const struct picoui_table *table)
+int tinyui_table_get_align_grid(const struct tinyui_table *table)
 {
     ldTable_t *ld_table = tinyui_table_get_ld_widget(table);
 
@@ -1149,7 +1149,7 @@ int picoui_table_get_align_grid(const struct picoui_table *table)
  * @param[in] table table
  */
 
-unsigned int picoui_table_get_background_color(const struct picoui_table *table)
+unsigned int tinyui_table_get_background_color(const struct tinyui_table *table)
 {
     ldTable_t *ld_table = tinyui_table_get_ld_widget(table);
 
@@ -1168,7 +1168,7 @@ unsigned int picoui_table_get_background_color(const struct picoui_table *table)
  * @param[in] column Column index
  */
 
-void *picoui_table_get_item(const struct picoui_table *table, int row, int column)
+void *tinyui_table_get_item(const struct tinyui_table *table, int row, int column)
 {
     ldTable_t *ld_table = tinyui_table_get_ld_widget(table);
 
@@ -1190,10 +1190,10 @@ void *picoui_table_get_item(const struct picoui_table *table, int row, int colum
  * @return -1 on failure
  */
 
-int picoui_table_set_item_align(struct picoui_table *table,
+int tinyui_table_set_item_align(struct tinyui_table *table,
                                 int row,
                                 int column,
-                                enum picoui_align align)
+                                enum tinyui_align align)
 {
     ldTable_t *ld_table;
     arm_2d_align_t ld_align;
@@ -1222,7 +1222,7 @@ int picoui_table_set_item_align(struct picoui_table *table,
  * @return -1 on failure
  */
 
-int picoui_table_get_item_align(const struct picoui_table *table, int row, int column)
+int tinyui_table_get_item_align(const struct tinyui_table *table, int row, int column)
 {
     ldTable_t *ld_table;
     arm_2d_align_t ld_align;
@@ -1240,11 +1240,11 @@ int picoui_table_get_item_align(const struct picoui_table *table, int row, int c
     ld_align = ldTableGetItemAlign(ld_table, (uint8_t)row, (uint8_t)column);
     switch (ld_align) {
     case ARM_2D_ALIGN_LEFT:
-        return PICOUI_ALIGN_START;
+        return TINYUI_ALIGN_START;
     case ARM_2D_ALIGN_CENTRE:
-        return PICOUI_ALIGN_CENTER;
+        return TINYUI_ALIGN_CENTER;
     case ARM_2D_ALIGN_RIGHT:
-        return PICOUI_ALIGN_END;
+        return TINYUI_ALIGN_END;
     default:
         return -1;
     }
@@ -1259,7 +1259,7 @@ int picoui_table_get_item_align(const struct picoui_table *table, int row, int c
  * @return -1 on failure
  */
 
-int picoui_table_get_item_editable(const struct picoui_table *table, int row, int column)
+int tinyui_table_get_item_editable(const struct tinyui_table *table, int row, int column)
 {
     ldTable_t *ld_table;
 
@@ -1284,7 +1284,7 @@ int picoui_table_get_item_editable(const struct picoui_table *table, int row, in
  * @param[in] column Column index
  */
 
-void *picoui_table_get_item_font(const struct picoui_table *table, int row, int column)
+void *tinyui_table_get_item_font(const struct tinyui_table *table, int row, int column)
 {
     ldTable_t *ld_table = tinyui_table_get_ld_widget(table);
 
@@ -1304,7 +1304,7 @@ void *picoui_table_get_item_font(const struct picoui_table *table, int row, int 
  * @return -1 on failure
  */
 
-int picoui_table_get_item_height(const struct picoui_table *table, int row)
+int tinyui_table_get_item_height(const struct tinyui_table *table, int row)
 {
     ldTable_t *ld_table = tinyui_table_get_ld_widget(table);
 
@@ -1323,7 +1323,7 @@ int picoui_table_get_item_height(const struct picoui_table *table, int row)
  * @param[in] column Column index
  */
 
-unsigned int picoui_table_get_item_text_color(const struct picoui_table *table, int row, int column)
+unsigned int tinyui_table_get_item_text_color(const struct tinyui_table *table, int row, int column)
 {
     ldTable_t *ld_table = tinyui_table_get_ld_widget(table);
 
@@ -1343,7 +1343,7 @@ unsigned int picoui_table_get_item_text_color(const struct picoui_table *table, 
  * @param[in] column Column index
  */
 
-unsigned int picoui_table_get_item_background_color(const struct picoui_table *table, int row, int column)
+unsigned int tinyui_table_get_item_background_color(const struct tinyui_table *table, int row, int column)
 {
     ldTable_t *ld_table = tinyui_table_get_ld_widget(table);
 
@@ -1363,7 +1363,7 @@ unsigned int picoui_table_get_item_background_color(const struct picoui_table *t
  * @return -1 on failure
  */
 
-int picoui_table_get_item_width(const struct picoui_table *table, int column)
+int tinyui_table_get_item_width(const struct tinyui_table *table, int column)
 {
     ldTable_t *ld_table = tinyui_table_get_ld_widget(table);
 
@@ -1382,21 +1382,21 @@ int picoui_table_get_item_width(const struct picoui_table *table, int column)
  * @return -1 on failure
  */
 
-int picoui_table_navigate(struct picoui_table *table, enum picoui_native_nav_dir dir)
+int tinyui_table_navigate(struct tinyui_table *table, enum tinyui_native_nav_dir dir)
 {
-    struct picoui_backend_widget *backend;
+    struct tinyui_backend_widget *backend;
     ldTable_t *ld_table;
     int ld_dir;
 
     if (table == 0 ||
-        (dir != PICOUI_NATIVE_NAV_LEFT &&
-         dir != PICOUI_NATIVE_NAV_RIGHT &&
-         dir != PICOUI_NATIVE_NAV_UP &&
-         dir != PICOUI_NATIVE_NAV_DOWN)) {
+        (dir != TINYUI_NATIVE_NAV_LEFT &&
+         dir != TINYUI_NATIVE_NAV_RIGHT &&
+         dir != TINYUI_NATIVE_NAV_UP &&
+         dir != TINYUI_NATIVE_NAV_DOWN)) {
         return -1;
     }
 
-    backend = (struct picoui_backend_widget *)table->widget.backend_widget;
+    backend = (struct tinyui_backend_widget *)table->widget.backend_widget;
     ld_table = tinyui_table_get_ld_widget(table);
     if (backend == NULL || ld_table == NULL) {
         return -1;
@@ -1420,10 +1420,10 @@ int picoui_table_navigate(struct picoui_table *table, enum picoui_native_nav_dir
  * @return Pointer to the object
  */
 
-struct picoui_table_region picoui_table_get_item_region(const struct picoui_table *table, int row, int column)
+struct tinyui_table_region tinyui_table_get_item_region(const struct tinyui_table *table, int row, int column)
 {
     ldTable_t *ld_table;
-    struct picoui_table_region region = {0};
+    struct tinyui_table_region region = {0};
     arm_2d_region_t native_region;
 
     if (table == 0) {
@@ -1453,7 +1453,7 @@ struct picoui_table_region picoui_table_get_item_region(const struct picoui_tabl
  * @return 0 on success, -1 on failure
  */
 
-int picoui_table_set_selected_cell(struct picoui_table *table, int row, int column)
+int tinyui_table_set_selected_cell(struct tinyui_table *table, int row, int column)
 {
     ldTable_t *ld_table;
 
@@ -1483,13 +1483,13 @@ int picoui_table_set_selected_cell(struct picoui_table *table, int row, int colu
  * @return -1 on failure
  */
 
-int picoui_table_set_item_select(struct picoui_table *table, int row, int column, int selected)
+int tinyui_table_set_item_select(struct tinyui_table *table, int row, int column, int selected)
 {
     if (selected == 0) {
         return -1;
     }
 
-    return picoui_table_set_selected_cell(table, row, column);
+    return tinyui_table_set_selected_cell(table, row, column);
 }
 
 /**
@@ -1501,7 +1501,7 @@ int picoui_table_set_item_select(struct picoui_table *table, int row, int column
  * @return 0 on success, -1 on failure
  */
 
-int picoui_table_set_current_cell(struct picoui_table *table, int row, int column)
+int tinyui_table_set_current_cell(struct tinyui_table *table, int row, int column)
 {
     ldTable_t *ld_table;
 
@@ -1528,7 +1528,7 @@ int picoui_table_set_current_cell(struct picoui_table *table, int row, int colum
  * @return -1 on failure
  */
 
-int picoui_table_get_current_row(const struct picoui_table *table)
+int tinyui_table_get_current_row(const struct tinyui_table *table)
 {
     int row;
     int column;
@@ -1537,7 +1537,7 @@ int picoui_table_get_current_row(const struct picoui_table *table)
         return -1;
     }
 
-    if (tinyui_table_sync_current_cell_local((struct picoui_table *)table, &row, &column) == 0) {
+    if (tinyui_table_sync_current_cell_local((struct tinyui_table *)table, &row, &column) == 0) {
         return row;
     }
     return table->current_row;
@@ -1550,7 +1550,7 @@ int picoui_table_get_current_row(const struct picoui_table *table)
  * @return -1 on failure
  */
 
-int picoui_table_get_current_column(const struct picoui_table *table)
+int tinyui_table_get_current_column(const struct tinyui_table *table)
 {
     int row;
     int column;
@@ -1559,7 +1559,7 @@ int picoui_table_get_current_column(const struct picoui_table *table)
         return -1;
     }
 
-    if (tinyui_table_sync_current_cell_local((struct picoui_table *)table, &row, &column) == 0) {
+    if (tinyui_table_sync_current_cell_local((struct tinyui_table *)table, &row, &column) == 0) {
         return column;
     }
     return table->current_column;

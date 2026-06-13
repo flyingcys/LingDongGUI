@@ -1,19 +1,19 @@
-# PicoUI F线新控件 垂直切片 设计文档
+# TINYUI F线新控件 垂直切片 设计文档
 
 > 日期：2026-05-29
 > 适用仓库：`/Users/cys/embedded/LingDongGUI`
-> 建议 worktree：`.worktree/picoui-f-new-widgets`
-> 入口索引：`docs/picoui-serial/F-线计划索引.md`
+> 建议 worktree：`.worktree/tinyui-f-new-widgets`
+> 入口索引：`docs/tinyui-serial/F-线计划索引.md`
 
 ## 1. 背景
 
-`D线` 负责当前控件完整性和 shared quality。为了快速推进 PicoUI 能力面，可以并行开 `F线`，但 `F线` 不能抢占 `D线` 的 shared backend/layout/event/theme 写面。
+`D线` 负责当前控件完整性和 shared quality。为了快速推进 TINYUI 能力面，可以并行开 `F线`，但 `F线` 不能抢占 `D线` 的 shared backend/layout/event/theme 写面。
 
 `LingDongGUI` 已有多个底层控件：`ldList`、`ldLineEdit`、`ldComboBox`、`ldTable`、`ldKeyboard`、`ldArc`。直接同时推进多个新控件会拉大 public API、输入、focus、layout、theme 和 visible gate 的耦合，因此 `F线` 先做一个低耦合新控件 vertical slice。
 
 ## 2. 控件选择
 
-第一批只实现 `picoui_list`。
+第一批只实现 `tinyui_list`。
 
 理由：
 
@@ -28,13 +28,13 @@
 
 ## 3. 目标
 
-`F线` 的目标是新增 `picoui_list` 的最小完整 vertical slice：
+`F线` 的目标是新增 `tinyui_list` 的最小完整 vertical slice：
 
-- public header：`picoui/include/picoui/list.h`
-- widget implementation：`picoui/src/widgets/list.c`
-- backend mapping：`picoui/src/backend/ldgui/backend_list.c`
-- demo：`picoui/demo/list_basic/main.c`
-- unit test：`tests/picoui/unit/test_picoui_list.c`
+- public header：`tinyui/include/tinyui/list.h`
+- widget implementation：`tinyui/src/widgets/list.c`
+- backend mapping：`tinyui/src/backend/ldgui/backend_list.c`
+- demo：`tinyui/demo/list_basic/main.c`
+- unit test：`tests/tinyui/unit/test_tinyui_list.c`
 - runtime gates：smoke、mapping、visible matrix 增加 list demo
 - docs：demo guide、F 线索引和测试矩阵说明
 
@@ -45,27 +45,27 @@
 - 不实现复杂 list virtualization、multi-select、drag reorder、filtering。
 - 不通过修改现有 demo 绕过 D 线缺口。
 
-## 5. `picoui_list` API 边界
+## 5. `tinyui_list` API 边界
 
 最小 public API：
 
 ```c
-struct picoui_list;
+struct tinyui_list;
 
-struct picoui_list_props {
+struct tinyui_list_props {
     const char *id;
     const char *style_class;
     void *user_data;
 };
 
-struct picoui_list *picoui_list_create(struct picoui_widget *parent, const char *id);
-struct picoui_list *picoui_list_create_with_props(struct picoui_widget *parent,
-                                                  const struct picoui_list_props *props);
-int picoui_list_add_item(struct picoui_list *list, const char *id, const char *text);
-int picoui_list_set_selected_index(struct picoui_list *list, int index);
-int picoui_list_get_selected_index(const struct picoui_list *list);
-void picoui_list_set_on_selected(struct picoui_list *list,
-                                 void (*callback)(struct picoui_list *list, int index, void *user_data),
+struct tinyui_list *tinyui_list_create(struct tinyui_widget *parent, const char *id);
+struct tinyui_list *tinyui_list_create_with_props(struct tinyui_widget *parent,
+                                                  const struct tinyui_list_props *props);
+int tinyui_list_add_item(struct tinyui_list *list, const char *id, const char *text);
+int tinyui_list_set_selected_index(struct tinyui_list *list, int index);
+int tinyui_list_get_selected_index(const struct tinyui_list *list);
+void tinyui_list_set_on_selected(struct tinyui_list *list,
+                                 void (*callback)(struct tinyui_list *list, int index, void *user_data),
                                  void *user_data);
 ```
 
@@ -83,13 +83,13 @@ void picoui_list_set_on_selected(struct picoui_list *list,
 
 新增 demo 必须同步：
 
-- `tests/picoui/runtime/check_picoui_runtime.py`
-- `tests/picoui/runtime/check_picoui_visible_ui.py`
-- `tests/picoui/runtime/check_picoui_backend_mapping.py`
-- `picoui/docs/demo_guide.md`
-- `docs/picoui-serial/F-线计划索引.md`
+- `tests/tinyui/runtime/check_tinyui_runtime.py`
+- `tests/tinyui/runtime/check_tinyui_visible_ui.py`
+- `tests/tinyui/runtime/check_tinyui_backend_mapping.py`
+- `tinyui/docs/demo_guide.md`
+- `docs/tinyui-serial/F-线计划索引.md`
 
-`picoui_list_basic_demo` 必须输出：
+`tinyui_list_basic_demo` 必须输出：
 
 - `PICOUI_RUNTIME_READY`
 - `PICOUI_BACKEND_STATIC_MAPPING=REAL_LDGUI`
@@ -99,12 +99,12 @@ void picoui_list_set_on_selected(struct picoui_list *list,
 当前主线补充口径：
 
 - `PICOUI_BACKEND_WIDGET_LIST` 已进入真实 mapping marker 分类。
-- `item_wifi/item_bluetooth/item_display` 是 list item marker，不是独立 PicoUI child widget，也不是独立 `LingDongGUI` backend widget。
-- `picoui_list_set_on_selected()` 当前只保存 callback/user_data；尚未接入 `ldList` native selection event bridge，因此该公开 API 当前仍是 incomplete contract。
+- `item_wifi/item_bluetooth/item_display` 是 list item marker，不是独立 TINYUI child widget，也不是独立 `LingDongGUI` backend widget。
+- `tinyui_list_set_on_selected()` 当前只保存 callback/user_data；尚未接入 `ldList` native selection event bridge，因此该公开 API 当前仍是 incomplete contract。
 
 ## 7. D/F 并行边界
 
-`F线` 可以与 `D线` 并行，但只允许新增 list 独立文件和对应 demo/gate matrix 项。若需要修改共享聚合文件，例如 `picoui/include/picoui/picoui.h`、`tests/picoui/CMakeLists.txt`、`examples/sdl/CMakeLists.txt`，必须在 F 线计划中标注，并由主线程在合并阶段处理冲突。
+`F线` 可以与 `D线` 并行，但只允许新增 list 独立文件和对应 demo/gate matrix 项。若需要修改共享聚合文件，例如 `tinyui/include/tinyui/tinyui.h`、`tests/tinyui/CMakeLists.txt`、`examples/sdl/CMakeLists.txt`，必须在 F 线计划中标注，并由主线程在合并阶段处理冲突。
 
 ## 8. 验收
 
@@ -112,14 +112,14 @@ void picoui_list_set_on_selected(struct picoui_list *list,
 
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
-ctest --test-dir build -R test_picoui_list --output-on-failure
-python3 tests/picoui/contract/check_picoui_public_api.py
-python3 tests/picoui/contract/check_picoui_demo_boundary.py
-python3 tests/picoui/runtime/check_picoui_runtime.py
-python3 tests/picoui/runtime/check_picoui_backend_mapping.py
-python3 tests/picoui/runtime/check_picoui_visible_ui.py --all
-ctest --test-dir build -L picoui --output-on-failure
+ctest --test-dir build -R test_tinyui_list --output-on-failure
+python3 tests/tinyui/contract/check_tinyui_public_api.py
+python3 tests/tinyui/contract/check_tinyui_demo_boundary.py
+python3 tests/tinyui/runtime/check_tinyui_runtime.py
+python3 tests/tinyui/runtime/check_tinyui_backend_mapping.py
+python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --all
+ctest --test-dir build -L tinyui --output-on-failure
 git diff --check
 ```
 
-验收通过仍只代表 `picoui_list` 最小 vertical slice 完成，不代表 `ldList` 全部能力已 100% 暴露到 PicoUI，也不代表 `picoui_list_set_on_selected()` 已有真实 native selection 事件闭环。
+验收通过仍只代表 `tinyui_list` 最小 vertical slice 完成，不代表 `ldList` 全部能力已 100% 暴露到 TINYUI，也不代表 `tinyui_list_set_on_selected()` 已有真实 native selection 事件闭环。

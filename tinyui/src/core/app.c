@@ -24,9 +24,9 @@
 
 #include <stdlib.h>
 
-static void tinyui_app_timer_unlink(struct picoui_app_timer *timer)
+static void tinyui_app_timer_unlink(struct tinyui_app_timer *timer)
 {
-    struct picoui_app_timer **cursor;
+    struct tinyui_app_timer **cursor;
 
     if (timer == NULL || timer->app == NULL) {
         return;
@@ -43,16 +43,16 @@ static void tinyui_app_timer_unlink(struct picoui_app_timer *timer)
     }
 }
 
-void tinyui_app_pump_timers(struct picoui_app *app, unsigned int now_ticks)
+void tinyui_app_pump_timers(struct tinyui_app *app, unsigned int now_ticks)
 {
-    struct picoui_app_timer_snapshot_entry {
-        struct picoui_app_timer *timer;
-        struct picoui_app_timer *expected_predecessor;
+    struct tinyui_app_timer_snapshot_entry {
+        struct tinyui_app_timer *timer;
+        struct tinyui_app_timer *expected_predecessor;
     };
 
-    struct picoui_app_timer_snapshot_entry *snapshot;
-    struct picoui_app_timer *timer;
-    struct picoui_app_timer *previous_timer = NULL;
+    struct tinyui_app_timer_snapshot_entry *snapshot;
+    struct tinyui_app_timer *timer;
+    struct tinyui_app_timer *previous_timer = NULL;
     size_t timer_count = 0;
     size_t index = 0;
 
@@ -86,8 +86,8 @@ void tinyui_app_pump_timers(struct picoui_app *app, unsigned int now_ticks)
 
     for (index = 0; index < timer_count; ++index) {
         int timer_is_linked = 0;
-        struct picoui_app_timer *cursor;
-        struct picoui_app_timer *current_predecessor = NULL;
+        struct tinyui_app_timer *cursor;
+        struct tinyui_app_timer *current_predecessor = NULL;
 
         timer = snapshot[index].timer;
         cursor = app->timers;
@@ -131,9 +131,9 @@ void tinyui_app_pump_timers(struct picoui_app *app, unsigned int now_ticks)
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct picoui_app *picoui_app_create(void)
+struct tinyui_app *tinyui_app_create(void)
 {
-    struct picoui_app *app = calloc(1, sizeof(struct picoui_app));
+    struct tinyui_app *app = calloc(1, sizeof(struct tinyui_app));
     if (app == NULL) {
         return NULL;
     }
@@ -154,7 +154,7 @@ struct picoui_app *picoui_app_create(void)
  * @return -1 on failure
  */
 
-int picoui_app_run(struct picoui_app *app, struct picoui_window *window)
+int tinyui_app_run(struct tinyui_app *app, struct tinyui_window *window)
 {
     if (app == NULL || !tinyui_runtime_bridge_window_is_owned_by(app, window)) {
         return -1;
@@ -171,9 +171,9 @@ int picoui_app_run(struct picoui_app *app, struct picoui_window *window)
  * @return 0 on success, -1 on failure
  */
 
-int picoui_app_run_background(struct picoui_app *app, struct picoui_background *background)
+int tinyui_app_run_background(struct tinyui_app *app, struct tinyui_background *background)
 {
-    return picoui_app_run(app, (struct picoui_window *)background);
+    return tinyui_app_run(app, (struct tinyui_window *)background);
 }
 
 /**
@@ -184,7 +184,7 @@ int picoui_app_run_background(struct picoui_app *app, struct picoui_background *
  * @return 0 on success, -1 on failure
  */
 
-int picoui_app_set_window(struct picoui_app *app, struct picoui_window *window)
+int tinyui_app_set_window(struct tinyui_app *app, struct tinyui_window *window)
 {
     if (app == NULL || !tinyui_runtime_bridge_window_is_owned_by(app, window)) {
         return -1;
@@ -205,9 +205,9 @@ int picoui_app_set_window(struct picoui_app *app, struct picoui_window *window)
  * @return 0 on success, -1 on failure
  */
 
-int picoui_app_set_background(struct picoui_app *app, struct picoui_background *background)
+int tinyui_app_set_background(struct tinyui_app *app, struct tinyui_background *background)
 {
-    return picoui_app_set_window(app, (struct picoui_window *)background);
+    return tinyui_app_set_window(app, (struct tinyui_window *)background);
 }
 
 /**
@@ -220,12 +220,12 @@ int picoui_app_set_background(struct picoui_app *app, struct picoui_background *
  * @return 0 on success, -1 on failure
  */
 
-int picoui_app_switch_window(struct picoui_app *app,
-                             struct picoui_window *window,
+int tinyui_app_switch_window(struct tinyui_app *app,
+                             struct tinyui_window *window,
                              int mode,
                              unsigned int duration_ms)
 {
-    if (picoui_app_set_window(app, window) != 0) {
+    if (tinyui_app_set_window(app, window) != 0) {
         return -1;
     }
 
@@ -243,12 +243,12 @@ int picoui_app_switch_window(struct picoui_app *app,
  * @return 0 on success, -1 on failure
  */
 
-int picoui_app_switch_background(struct picoui_app *app,
-                                 struct picoui_background *background,
+int tinyui_app_switch_background(struct tinyui_app *app,
+                                 struct tinyui_background *background,
                                  int mode,
                                  unsigned int duration_ms)
 {
-    return picoui_app_switch_window(app, (struct picoui_window *)background, mode, duration_ms);
+    return tinyui_app_switch_window(app, (struct tinyui_window *)background, mode, duration_ms);
 }
 
 /**
@@ -258,15 +258,15 @@ int picoui_app_switch_background(struct picoui_app *app,
  * @return Timer instance on success, NULL on failure
  */
 
-struct picoui_app_timer *picoui_app_timer_create(struct picoui_app *app)
+struct tinyui_app_timer *tinyui_app_timer_create(struct tinyui_app *app)
 {
-    struct picoui_app_timer *timer;
+    struct tinyui_app_timer *timer;
 
     if (app == NULL) {
         return NULL;
     }
 
-    timer = calloc(1, sizeof(struct picoui_app_timer));
+    timer = calloc(1, sizeof(struct tinyui_app_timer));
     if (timer == NULL) {
         return NULL;
     }
@@ -288,10 +288,10 @@ struct picoui_app_timer *picoui_app_timer_create(struct picoui_app *app)
  * @return 0 on success, -1 on failure
  */
 
-int picoui_app_timer_start(struct picoui_app_timer *timer,
+int tinyui_app_timer_start(struct tinyui_app_timer *timer,
                            unsigned int interval_ms,
                            int repeat,
-                           picoui_app_timer_cb_t callback,
+                           tinyui_app_timer_cb_t callback,
                            void *user_data)
 {
     if (timer == NULL || interval_ms == 0 || callback == NULL) {
@@ -314,7 +314,7 @@ int picoui_app_timer_start(struct picoui_app_timer *timer,
  * @return 0 on success, -1 on failure
  */
 
-int picoui_app_timer_stop(struct picoui_app_timer *timer)
+int tinyui_app_timer_stop(struct tinyui_app_timer *timer)
 {
     if (timer == NULL) {
         return -1;
@@ -331,7 +331,7 @@ int picoui_app_timer_stop(struct picoui_app_timer *timer)
  * @return 1 if running, 0 otherwise
  */
 
-int picoui_app_timer_is_running(const struct picoui_app_timer *timer)
+int tinyui_app_timer_is_running(const struct tinyui_app_timer *timer)
 {
     if (timer == NULL) {
         return 0;
@@ -346,7 +346,7 @@ int picoui_app_timer_is_running(const struct picoui_app_timer *timer)
  * @param[in] timer Timer instance
  */
 
-void picoui_app_timer_destroy(struct picoui_app_timer *timer)
+void tinyui_app_timer_destroy(struct tinyui_app_timer *timer)
 {
     if (timer == NULL) {
         return;
@@ -362,10 +362,10 @@ void picoui_app_timer_destroy(struct picoui_app_timer *timer)
  * @param[in] app Application instance
  */
 
-void picoui_app_destroy(struct picoui_app *app)
+void tinyui_app_destroy(struct tinyui_app *app)
 {
-    struct picoui_app_timer *timer;
-    struct picoui_app_timer *next;
+    struct tinyui_app_timer *timer;
+    struct tinyui_app_timer *next;
 
     if (app == NULL) {
         return;

@@ -58,7 +58,7 @@ LEDGER_REQUIRED_CATEGORIES = {
 }
 VALID_GAP_STATUSES = {
     "covered",
-    "missing_picoui_api",
+    "missing_tinyui_api",
     "missing_backend_proof",
     "missing_unit",
     "missing_gate",
@@ -245,29 +245,29 @@ def _default_gap_status(category: str) -> str:
         return "missing_backend_proof"
     if category == "helper":
         return "allowlisted"
-    return "missing_picoui_api"
+    return "missing_tinyui_api"
 
 
 def _default_allowlist_reason(category: str) -> str:
     if category == "lifecycle":
-        return "LingDongGUI lifecycle hook; PicoUI must not expose a duplicate public wrapper."
+        return "LingDongGUI lifecycle hook; TINYUI must not expose a duplicate public wrapper."
     if category == "show":
         return "Render/show entry point owned by backend rendering pipeline."
     return "Internal/helper or host utility API; R0 keeps it in the ledger but does not propose a public wrapper."
 
 
-def _default_picoui_api(symbol: str, category: str) -> str:
+def _default_tinyui_api(symbol: str, category: str) -> str:
     if category in {"lifecycle", "show"}:
         return ""
     name = re.sub(r"(?<!^)(?=[A-Z])", "_", symbol.removeprefix("ld")).lower()
-    return f"picoui_{name}"
+    return f"tinyui_{name}"
 
 
 def _default_backend_proof(symbol: str, category: str) -> str:
     if category in {"lifecycle", "show"}:
         return ""
     name = re.sub(r"(?<!^)(?=[A-Z])", "_", symbol.removeprefix("ld")).lower()
-    return f"picoui_backend_{name}"
+    return f"tinyui_backend_{name}"
 
 
 def _default_unit_test(symbol: str, category: str) -> str:
@@ -366,7 +366,7 @@ def build_inventory(rows: list[dict]) -> dict:
         api_row = {
             **row,
             "group_kind": _group_kind(row["widget"]),
-            "picoui_api": _default_picoui_api(row["ldgui_symbol"], category),
+            "tinyui_api": _default_tinyui_api(row["ldgui_symbol"], category),
             "backend_proof": _default_backend_proof(row["ldgui_symbol"], category),
             "unit_test": _default_unit_test(row["ldgui_symbol"], category),
             "gate_evidence": [],
@@ -414,7 +414,7 @@ def build_ledger(rows: list[dict]) -> dict:
             "policy_category": _policy_category(row["widget"], row["ldgui_symbol"], row["category"], status),
             "planned_task": TASK_BY_WIDGET.get(row["widget"], "R5"),
             "overwrap_risk": False,
-            "notes": "R0 inventory seed; later tasks must replace missing_* with concrete PicoUI/backend/unit/gate evidence.",
+            "notes": "R0 inventory seed; later tasks must replace missing_* with concrete TINYUI/backend/unit/gate evidence.",
         }
         if status == "allowlisted":
             ledger_row["planned_task"] = "R2"
@@ -494,7 +494,7 @@ def validate_inventory(scanned_rows: list[dict], inventory: dict) -> None:
             "signature",
             "required",
             "group_kind",
-            "picoui_api",
+            "tinyui_api",
             "backend_proof",
             "unit_test",
             "gate_evidence",

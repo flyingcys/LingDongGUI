@@ -30,23 +30,23 @@ static ldColor tinyui_canvas_rgb_to_ld(unsigned int rgb)
     return __RGB((rgb >> 16) & 0xFFU, (rgb >> 8) & 0xFFU, rgb & 0xFFU);
 }
 
-static arm_2d_align_t tinyui_canvas_align_to_ld(enum picoui_align align)
+static arm_2d_align_t tinyui_canvas_align_to_ld(enum tinyui_align align)
 {
     switch (align) {
-    case PICOUI_ALIGN_START:
+    case TINYUI_ALIGN_START:
         return ARM_2D_ALIGN_LEFT;
-    case PICOUI_ALIGN_END:
+    case TINYUI_ALIGN_END:
         return ARM_2D_ALIGN_RIGHT;
-    case PICOUI_ALIGN_CENTER:
+    case TINYUI_ALIGN_CENTER:
     default:
         return ARM_2D_ALIGN_CENTRE;
     }
 }
 
-static int tinyui_canvas_push_native(struct picoui_canvas *canvas,
-                                     const struct picoui_canvas_command *src)
+static int tinyui_canvas_push_native(struct tinyui_canvas *canvas,
+                                     const struct tinyui_canvas_command *src)
 {
-    struct picoui_backend_widget *backend;
+    struct tinyui_backend_widget *backend;
     ldCanvas_t *ld_canvas;
     ldCanvasCommand_t command;
 
@@ -54,8 +54,8 @@ static int tinyui_canvas_push_native(struct picoui_canvas *canvas,
         return -1;
     }
 
-    backend = (struct picoui_backend_widget *)canvas->widget.backend_widget;
-    if (backend->kind != PICOUI_BACKEND_WIDGET_CANVAS || backend->ld_widget == 0) {
+    backend = (struct tinyui_backend_widget *)canvas->widget.backend_widget;
+    if (backend->kind != TINYUI_BACKEND_WIDGET_CANVAS || backend->ld_widget == 0) {
         return -1;
     }
 
@@ -84,17 +84,17 @@ static int tinyui_canvas_push_native(struct picoui_canvas *canvas,
     return ldCanvasPushCommand(ld_canvas, &command);
 }
 
-static int tinyui_canvas_clear_native(struct picoui_canvas *canvas)
+static int tinyui_canvas_clear_native(struct tinyui_canvas *canvas)
 {
-    struct picoui_backend_widget *backend;
+    struct tinyui_backend_widget *backend;
     ldCanvas_t *ld_canvas;
 
     if (canvas == 0 || canvas->widget.backend_widget == 0) {
         return -1;
     }
 
-    backend = (struct picoui_backend_widget *)canvas->widget.backend_widget;
-    if (backend->kind != PICOUI_BACKEND_WIDGET_CANVAS || backend->ld_widget == 0) {
+    backend = (struct tinyui_backend_widget *)canvas->widget.backend_widget;
+    if (backend->kind != TINYUI_BACKEND_WIDGET_CANVAS || backend->ld_widget == 0) {
         return -1;
     }
 
@@ -103,17 +103,17 @@ static int tinyui_canvas_clear_native(struct picoui_canvas *canvas)
     return 0;
 }
 
-static int tinyui_canvas_is_valid(const struct picoui_canvas *canvas)
+static int tinyui_canvas_is_valid(const struct tinyui_canvas *canvas)
 {
     return canvas != 0 && canvas->widget.backend_widget != 0;
 }
 
-static int tinyui_canvas_push(struct picoui_canvas *canvas,
-                              const struct picoui_canvas_command *command)
+static int tinyui_canvas_push(struct tinyui_canvas *canvas,
+                              const struct tinyui_canvas_command *command)
 {
     if (!tinyui_canvas_is_valid(canvas)
         || command == 0
-        || canvas->command_count >= PICOUI_CANVAS_MAX_COMMANDS) {
+        || canvas->command_count >= TINYUI_CANVAS_MAX_COMMANDS) {
         return -1;
     }
 
@@ -133,12 +133,12 @@ static int tinyui_canvas_push(struct picoui_canvas *canvas,
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct picoui_canvas *picoui_canvas_create(struct picoui_window *parent, const char *id)
+struct tinyui_canvas *tinyui_canvas_create(struct tinyui_window *parent, const char *id)
 {
-    struct picoui_canvas *canvas;
-    struct picoui_backend_widget *backend;
-    struct picoui_backend_widget *parent_backend;
-    struct picoui_backend_app_state *app_state;
+    struct tinyui_canvas *canvas;
+    struct tinyui_backend_widget *backend;
+    struct tinyui_backend_widget *parent_backend;
+    struct tinyui_backend_app_state *app_state;
     ldCanvas_t *ld_canvas;
     uint16_t name_id;
 
@@ -146,7 +146,7 @@ struct picoui_canvas *picoui_canvas_create(struct picoui_window *parent, const c
         return 0;
     }
 
-    parent_backend = (struct picoui_backend_widget *)parent->widget.backend_widget;
+    parent_backend = (struct tinyui_backend_widget *)parent->widget.backend_widget;
     app_state = parent_backend != 0
         ? tinyui_runtime_bridge_backend_state_from_parent(parent_backend)
         : 0;
@@ -181,7 +181,7 @@ struct picoui_canvas *picoui_canvas_create(struct picoui_window *parent, const c
 
     if (tinyui_widget_init_child(backend,
                                          parent_backend,
-                                         PICOUI_BACKEND_WIDGET_CANVAS,
+                                         TINYUI_BACKEND_WIDGET_CANVAS,
                                          id,
                                          parent_backend->theme) != 0) {
         ldCanvas_depose(app_state->ld_scene, ld_canvas);
@@ -219,7 +219,7 @@ struct picoui_canvas *picoui_canvas_create(struct picoui_window *parent, const c
  * @return -1 on failure
  */
 
-int picoui_canvas_clear(struct picoui_canvas *canvas)
+int tinyui_canvas_clear(struct tinyui_canvas *canvas)
 {
     if (!tinyui_canvas_is_valid(canvas)) {
         return -1;
@@ -242,7 +242,7 @@ int picoui_canvas_clear(struct picoui_canvas *canvas)
  * @return -1 on failure
  */
 
-int picoui_canvas_fill_rect(struct picoui_canvas *canvas,
+int tinyui_canvas_fill_rect(struct tinyui_canvas *canvas,
                             int x,
                             int y,
                             int width,
@@ -250,14 +250,14 @@ int picoui_canvas_fill_rect(struct picoui_canvas *canvas,
                             unsigned int rgb,
                             int opacity)
 {
-    struct picoui_canvas_command command;
+    struct tinyui_canvas_command command;
 
     if (width < 0 || height < 0 || opacity < 0 || opacity > 255) {
         return -1;
     }
 
-    command = (struct picoui_canvas_command){
-        .kind = PICOUI_CANVAS_COMMAND_FILL_RECT,
+    command = (struct tinyui_canvas_command){
+        .kind = TINYUI_CANVAS_COMMAND_FILL_RECT,
         .x = x,
         .y = y,
         .width = width,
@@ -283,7 +283,7 @@ int picoui_canvas_fill_rect(struct picoui_canvas *canvas,
  * @return -1 on failure
  */
 
-int picoui_canvas_draw_line(struct picoui_canvas *canvas,
+int tinyui_canvas_draw_line(struct tinyui_canvas *canvas,
                             int x0,
                             int y0,
                             int x1,
@@ -293,7 +293,7 @@ int picoui_canvas_draw_line(struct picoui_canvas *canvas,
                             int opacity_max,
                             int opacity_min)
 {
-    struct picoui_canvas_command command;
+    struct tinyui_canvas_command command;
 
     if (line_size <= 0
         || opacity_max < 0
@@ -303,8 +303,8 @@ int picoui_canvas_draw_line(struct picoui_canvas *canvas,
         return -1;
     }
 
-    command = (struct picoui_canvas_command){
-        .kind = PICOUI_CANVAS_COMMAND_DRAW_LINE,
+    command = (struct tinyui_canvas_command){
+        .kind = TINYUI_CANVAS_COMMAND_DRAW_LINE,
         .x = x0,
         .y = y0,
         .x1 = x1,
@@ -331,23 +331,23 @@ int picoui_canvas_draw_line(struct picoui_canvas *canvas,
  * @return -1 on failure
  */
 
-int picoui_canvas_draw_image(struct picoui_canvas *canvas,
+int tinyui_canvas_draw_image(struct tinyui_canvas *canvas,
                              int x,
                              int y,
                              int width,
                              int height,
-                             struct picoui_image_source *source,
+                             struct tinyui_image_source *source,
                              unsigned int mask_color,
                              int opacity)
 {
-    struct picoui_canvas_command command;
+    struct tinyui_canvas_command command;
 
     if (source == 0 || source->img_tile == 0 || width < 0 || height < 0 || opacity < 0 || opacity > 255) {
         return -1;
     }
 
-    command = (struct picoui_canvas_command){
-        .kind = PICOUI_CANVAS_COMMAND_DRAW_IMAGE,
+    command = (struct tinyui_canvas_command){
+        .kind = TINYUI_CANVAS_COMMAND_DRAW_IMAGE,
         .x = x,
         .y = y,
         .width = width,
@@ -373,23 +373,23 @@ int picoui_canvas_draw_image(struct picoui_canvas *canvas,
  * @return -1 on failure
  */
 
-int picoui_canvas_draw_image_scaled(struct picoui_canvas *canvas,
+int tinyui_canvas_draw_image_scaled(struct tinyui_canvas *canvas,
                                     int x,
                                     int y,
                                     int width,
                                     int height,
-                                    struct picoui_image_source *source,
+                                    struct tinyui_image_source *source,
                                     float scale,
                                     int opacity)
 {
-    struct picoui_canvas_command command;
+    struct tinyui_canvas_command command;
 
     if (source == 0 || source->img_tile == 0 || width < 0 || height < 0 || scale <= 0.0f || opacity < 0 || opacity > 255) {
         return -1;
     }
 
-    command = (struct picoui_canvas_command){
-        .kind = PICOUI_CANVAS_COMMAND_DRAW_IMAGE_SCALED,
+    command = (struct tinyui_canvas_command){
+        .kind = TINYUI_CANVAS_COMMAND_DRAW_IMAGE_SCALED,
         .x = x,
         .y = y,
         .width = width,
@@ -416,29 +416,29 @@ int picoui_canvas_draw_image_scaled(struct picoui_canvas *canvas,
  * @return -1 on failure
  */
 
-int picoui_canvas_draw_text(struct picoui_canvas *canvas,
+int tinyui_canvas_draw_text(struct tinyui_canvas *canvas,
                             int x,
                             int y,
                             int width,
                             int height,
                             const char *text,
-                            enum picoui_align align,
+                            enum tinyui_align align,
                             unsigned int text_color,
                             int opacity)
 {
-    struct picoui_canvas_command command;
+    struct tinyui_canvas_command command;
 
     if (text == 0
         || width < 0
         || height < 0
         || opacity < 0
         || opacity > 255
-        || (align != PICOUI_ALIGN_START && align != PICOUI_ALIGN_CENTER && align != PICOUI_ALIGN_END)) {
+        || (align != TINYUI_ALIGN_START && align != TINYUI_ALIGN_CENTER && align != TINYUI_ALIGN_END)) {
         return -1;
     }
 
-    command = (struct picoui_canvas_command){
-        .kind = PICOUI_CANVAS_COMMAND_DRAW_TEXT,
+    command = (struct tinyui_canvas_command){
+        .kind = TINYUI_CANVAS_COMMAND_DRAW_TEXT,
         .x = x,
         .y = y,
         .width = width,
@@ -459,7 +459,7 @@ int picoui_canvas_draw_text(struct picoui_canvas *canvas,
  * @return 0 on success, -1 on failure
  */
 
-int picoui_canvas_get_command_count(const struct picoui_canvas *canvas, int *count)
+int tinyui_canvas_get_command_count(const struct tinyui_canvas *canvas, int *count)
 {
     if (!tinyui_canvas_is_valid(canvas) || count == 0) {
         return -1;

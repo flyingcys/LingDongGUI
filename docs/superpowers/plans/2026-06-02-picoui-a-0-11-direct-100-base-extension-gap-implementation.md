@@ -1,4 +1,4 @@
-# PicoUI a-0.11 Direct 100% Base Extension Gap Implementation Plan
+# TINYUI a-0.11 Direct 100% Base Extension Gap Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -6,7 +6,7 @@
 
 **Architecture:** `S0` 复核审计输入；`S1` 收口 ability 文档；`S2` 写入 a-0.11 serial/spec/plan；`S3` 做 gate 和 GitNexus closeout。本线只做文档和计划拆分，不实现新 public API。
 
-**Tech Stack:** Markdown、Python3 contract checker、PicoUI public headers、LingDongGUI native API inventory、GitNexus
+**Tech Stack:** Markdown、Python3 contract checker、TINYUI public headers、LingDongGUI native API inventory、GitNexus
 
 ---
 
@@ -20,7 +20,7 @@ git submodule update --init --recursive
 ```
 
 - 跨模块摸底与 review 必须使用独立 subagent。
-- 本线不修改 C 源码、不新增 PicoUI public API、不改 matrix truth-source 统计。
+- 本线不修改 C 源码、不新增 TINYUI public API、不改 matrix truth-source 统计。
 - 若后续要实现 `optional_public_extension`，必须另开实现阶段，并在编辑函数/方法前跑 GitNexus impact。
 
 ## 1. 文件写面
@@ -34,9 +34,9 @@ git submodule update --init --recursive
 ### S2 a-0.11 docs
 
 **Create:**
-- `docs/picoui-serial/a-0.11-线计划索引.md`
-- `docs/superpowers/specs/2026-06-02-picoui-a-0-11-direct-100-base-extension-gap-design.md`
-- `docs/superpowers/plans/2026-06-02-picoui-a-0-11-direct-100-base-extension-gap-implementation.md`
+- `docs/tinyui-serial/a-0.11-线计划索引.md`
+- `docs/superpowers/specs/2026-06-02-tinyui-a-0-11-direct-100-base-extension-gap-design.md`
+- `docs/superpowers/plans/2026-06-02-tinyui-a-0-11-direct-100-base-extension-gap-implementation.md`
 
 ## 2. Tasks
 
@@ -44,18 +44,18 @@ git submodule update --init --recursive
 
 **Owner:** Fresh subagent `SG-a0.11-S0-direct-100-audit`
 
-**Goal:** 重新确认 PicoUI public API 和 `docs/ability` 当前是否达到 strict 100% direct public API parity。
+**Goal:** 重新确认 TINYUI public API 和 `docs/ability` 当前是否达到 strict 100% direct public API parity。
 
 - [x] **Step 1: Run read-only audit**
 
 Audit scope:
 
 ```text
-picoui/include
-picoui/src
-tests/picoui/contract/ldgui_public_api_inventory.json
-tests/picoui/contract/native_api_gap_ledger.json
-tests/picoui/contract/picoui_release_capability_matrix.json
+tinyui/include
+tinyui/src
+tests/tinyui/contract/ldgui_public_api_inventory.json
+tests/tinyui/contract/native_api_gap_ledger.json
+tests/tinyui/contract/tinyui_release_capability_matrix.json
 docs/ability/*.md
 ```
 
@@ -105,8 +105,8 @@ ldBaseGetWidgetType
 Add the strict 100% wording under Direct Public API conclusion:
 
 ```markdown
-- 严格按“100% direct public API parity”目标看，`optional_public_extension=16` 仍是未暴露为 PicoUI public API 的剩余缺口候选，不是完成项。
-- 当前 a-0.10 不新增 PicoUI public API；这些缺口候选集中在 `base` 的 tree/focus/nameId/geometry helper，后续若要真正 direct 100%，必须单独设计 public API、backend proof、unit/gate 与 matrix/docs。
+- 严格按“100% direct public API parity”目标看，`optional_public_extension=16` 仍是未暴露为 TINYUI public API 的剩余缺口候选，不是完成项。
+- 当前 a-0.10 不新增 TINYUI public API；这些缺口候选集中在 `base` 的 tree/focus/nameId/geometry helper，后续若要真正 direct 100%，必须单独设计 public API、backend proof、unit/gate 与 matrix/docs。
 ```
 
 Also update the shared `base` row:
@@ -122,7 +122,7 @@ Also update the shared `base` row:
 Add:
 
 ```markdown
-- 严格 100% direct public API 缺口候选：`16`；这些 `optional_public_extension` 行当前没有 PicoUI public API/backend/unit/gate，若目标是对外 direct 100%，必须单独补 public API 设计与实现。
+- 严格 100% direct public API 缺口候选：`16`；这些 `optional_public_extension` 行当前没有 TINYUI public API/backend/unit/gate，若目标是对外 direct 100%，必须单独补 public API 设计与实现。
 ```
 
 执行记录（2026-06-02）：已完成。
@@ -132,7 +132,7 @@ Add:
 Replace weak optional wording with:
 
 ```markdown
-- `direct_100_category=optional_public_extension`：a-0.10 没有把它列为必做 public API；但严格按“100% direct public API parity”目标，它仍是未暴露为 PicoUI public API 的剩余缺口候选。
+- `direct_100_category=optional_public_extension`：a-0.10 没有把它列为必做 public API；但严格按“100% direct public API parity”目标，它仍是未暴露为 TINYUI public API 的剩余缺口候选。
 ```
 
 执行记录（2026-06-02）：已完成。
@@ -148,7 +148,7 @@ Replace weak optional wording with:
 Create:
 
 ```text
-docs/picoui-serial/a-0.11-线计划索引.md
+docs/tinyui-serial/a-0.11-线计划索引.md
 ```
 
 Required sections:
@@ -169,7 +169,7 @@ a-0.11 不做什么
 Create:
 
 ```text
-docs/superpowers/specs/2026-06-02-picoui-a-0-11-direct-100-base-extension-gap-design.md
+docs/superpowers/specs/2026-06-02-tinyui-a-0-11-direct-100-base-extension-gap-design.md
 ```
 
 Required sections:
@@ -191,7 +191,7 @@ Required sections:
 Create:
 
 ```text
-docs/superpowers/plans/2026-06-02-picoui-a-0-11-direct-100-base-extension-gap-implementation.md
+docs/superpowers/plans/2026-06-02-tinyui-a-0-11-direct-100-base-extension-gap-implementation.md
 ```
 
 Required tasks:
@@ -217,9 +217,9 @@ S4 Future Implementation Handoff
 Run:
 
 ```bash
-python3 tests/picoui/contract/check_ldgui_public_api_inventory.py
-python3 tests/picoui/contract/check_picoui_native_api_exhaustiveness.py
-python3 tests/picoui/contract/check_picoui_release_capability_matrix.py
+python3 tests/tinyui/contract/check_ldgui_public_api_inventory.py
+python3 tests/tinyui/contract/check_tinyui_native_api_exhaustiveness.py
+python3 tests/tinyui/contract/check_tinyui_release_capability_matrix.py
 ```
 
 Expected:
@@ -235,7 +235,7 @@ all exit 0
 Run:
 
 ```bash
-rg -n "严格.*100% direct public API|剩余缺口候选|optional_public_extension=16" docs/ability/README.md docs/ability/base.md docs/picoui-serial/a-0.11-线计划索引.md docs/superpowers/specs/2026-06-02-picoui-a-0-11-direct-100-base-extension-gap-design.md
+rg -n "严格.*100% direct public API|剩余缺口候选|optional_public_extension=16" docs/ability/README.md docs/ability/base.md docs/tinyui-serial/a-0.11-线计划索引.md docs/superpowers/specs/2026-06-02-tinyui-a-0-11-direct-100-base-extension-gap-design.md
 git diff --check
 ```
 
@@ -269,7 +269,7 @@ affected_processes empty or limited to docs/checker-neutral paths
 
 **Owner:** Future worker, only if user asks to implement direct 100%
 
-**Goal:** Split the 16 candidates into future implementation lanes without leaking LingDongGUI internals into PicoUI public API. This is a handoff record only; a-0.11 does not execute these implementation lanes.
+**Goal:** Split the 16 candidates into future implementation lanes without leaking LingDongGUI internals into TINYUI public API. This is a handoff record only; a-0.11 does not execute these implementation lanes.
 
 - [x] **Step 1: Geometry helper design lane**
 
@@ -286,7 +286,7 @@ ldBaseGetRelativeLocation
 Decision required before code:
 
 ```text
-Design portable PicoUI geometry/alignment helpers or explicitly keep them policy-only.
+Design portable TINYUI geometry/alignment helpers or explicitly keep them policy-only.
 ```
 
 执行记录（2026-06-02）：已拆成 future-only lane；本线不设计或实现 public API。
@@ -303,7 +303,7 @@ ldBaseFocusNavigateInit
 Decision required before code:
 
 ```text
-Design PicoUI focus/navigation public API without exposing ld_scene_t directly.
+Design TINYUI focus/navigation public API without exposing ld_scene_t directly.
 ```
 
 执行记录（2026-06-02）：已拆成 future-only lane；本线不设计或实现 public API。
@@ -323,7 +323,7 @@ ldBaseGetRootNode
 Decision required before code:
 
 ```text
-Design PicoUI widget tree traversal API or reject public traversal with explicit policy.
+Design TINYUI widget tree traversal API or reject public traversal with explicit policy.
 ```
 
 执行记录（2026-06-02）：已拆成 future-only lane；本线不设计或实现 public API。

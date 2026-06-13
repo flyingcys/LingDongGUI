@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 扫描 picoui 下所有 .c 文件，为缺失 Apache 2.0 文件头的文件自动加入
+# 扫描 tinyui 下所有 .c 文件，为缺失 Apache 2.0 文件头的文件自动加入
 set -euo pipefail
 
 cd "$(git rev-parse --show-toplevel)"
@@ -38,7 +38,7 @@ while IFS= read -r -d '' f; do
     # 头插入到文件最前面
     printf '%s' "$HEADER" | cat - "$f" > "${f}.tmp" && mv "${f}.tmp" "$f"
     added=$((added + 1))
-done < <(find picoui \( -name '*.c' -o -name '*.h' \) -print0)
+done < <(find tinyui \( -name '*.c' -o -name '*.h' \) -print0)
 
 echo ""
 echo "Done. $added file(s) updated, $skipped file(s) already had header."

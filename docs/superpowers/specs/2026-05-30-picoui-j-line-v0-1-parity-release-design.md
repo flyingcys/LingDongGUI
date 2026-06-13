@@ -1,8 +1,8 @@
-# PicoUI J线 `v0.1` 对齐发布设计
+# TINYUI J线 `v0.1` 对齐发布设计
 
 > 日期：2026-05-30
 > 适用仓库：`/Users/cys/embedded/LingDongGUI`
-> 入口索引：`docs/picoui-serial/J-线计划索引.md`
+> 入口索引：`docs/tinyui-serial/J-线计划索引.md`
 > 目标：把 `H线` 之后的首版对齐发布路线冻结成独立 `J线`，避免继续把“发布准备”“9 控件完全对齐”“`v0.2` backlog”混写。
 
 ---
@@ -11,7 +11,7 @@
 
 `H线` 已经把以下事实冻结下来：
 
-1. PicoUI 当前已做控件固定为 `window/label/button/checkbox/switch/slider/text/image/list` 这 `9` 个。
+1. TINYUI 当前已做控件固定为 `window/label/button/checkbox/switch/slider/text/image/list` 这 `9` 个。
 2. `H线` 的主责任是发布准备：release matrix、当前 9 控件合同、known limitations、demo catalog、manual artifact、closeout review。
 3. `H线` 文档里已经出现另一条更强口径：如果首版不是保守 internal candidate，而是要求“当前已做控件先做实功能对齐”，则应把任务从发布准备线中分离出来。
 
@@ -93,8 +93,8 @@
 对 `J线` 而言，“对齐完成”不是“API 能调用”或“demo 能跑”，而是以下五项同时成立：
 
 1. **public API 对齐**
-   - PicoUI public API 已覆盖本次首版承诺的 `ld*` 能力面。
-   - 不再靠“底层有能力但 PicoUI 暂不承诺”回避缺口。
+   - TINYUI public API 已覆盖本次首版承诺的 `ld*` 能力面。
+   - 不再靠“底层有能力但 TINYUI 暂不承诺”回避缺口。
 2. **真实 backend 对齐**
    - 对应能力真实落到 `ld*` 或真实 `ldBase` 语义。
    - 不是 wrapper-only 状态，也不是 metadata-only 占位。
@@ -120,8 +120,8 @@
 
 `J线` 要求：
 
-1. 明确 `window background image` 的 PicoUI public contract。
-2. 明确 `PaddingGroup` 是否暴露为 PicoUI public API，或定义等价高层语义。
+1. 明确 `window background image` 的 TINYUI public contract。
+2. 明确 `PaddingGroup` 是否暴露为 TINYUI public API，或定义等价高层语义。
 3. 至少补足 `window` 对应已承诺样式/布局状态的最小 readback。
 4. 文档不再把 `window` 写成“只支持基础容器子集”。
 
@@ -191,7 +191,7 @@
 
 ### 7.2 对现有 H 线 release matrix 采用非破坏扩展
 
-`H线` 已有 `tests/picoui/contract/picoui_release_capability_matrix.json` 与对应 gate。`J线` 不应推翻 H 线 schema，而应在不破坏 H 线 gate 的前提下增加 `J线` 所需的对齐分流信息。
+`H线` 已有 `tests/tinyui/contract/tinyui_release_capability_matrix.json` 与对应 gate。`J线` 不应推翻 H 线 schema，而应在不破坏 H 线 gate 的前提下增加 `J线` 所需的对齐分流信息。
 
 推荐做法：
 
@@ -206,10 +206,10 @@
 
 以下文档后续必须同步改写：
 
-- `docs/picoui-serial/H-线当前9控件发布合同.md`
-- `docs/picoui-serial/H-线已支持控件清单.md`
-- `docs/picoui-serial/H-线第一版发布说明.md`
-- `docs/picoui-serial/H-线发布差距与LingDongGUI控件对比.md`
+- `docs/tinyui-serial/H-线当前9控件发布合同.md`
+- `docs/tinyui-serial/H-线已支持控件清单.md`
+- `docs/tinyui-serial/H-线第一版发布说明.md`
+- `docs/tinyui-serial/H-线发布差距与LingDongGUI控件对比.md`
 
 其中：
 

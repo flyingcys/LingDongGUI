@@ -1,15 +1,15 @@
 #ifndef TINYUI_CHECKBOX_H
 #define TINYUI_CHECKBOX_H
 
-struct picoui_window;
-struct picoui_checkbox;
-struct picoui_image_source;
+struct tinyui_window;
+struct tinyui_checkbox;
+struct tinyui_image_source;
 
-struct picoui_checkbox_props {
+struct tinyui_checkbox_props {
     const char *id;
     const char *text;
     int checked;
-    picoui_value_changed_cb on_toggled;
+    tinyui_value_changed_cb on_toggled;
     void *user_data;
     const char *style_class;
     int width;
@@ -20,8 +20,8 @@ struct picoui_checkbox_props {
     int radius;
     int padding;
     unsigned int check_color;
-    struct picoui_image_source *unchecked_source;
-    struct picoui_image_source *checked_source;
+    struct tinyui_image_source *unchecked_source;
+    struct tinyui_image_source *checked_source;
     int radio_group;
     int string_left_space;
     int has_check_color;
@@ -31,33 +31,33 @@ struct picoui_checkbox_props {
     int has_string_left_space;
 };
 
-struct picoui_checkbox *picoui_checkbox_create(struct picoui_window *parent, const char *id);
+struct tinyui_checkbox *tinyui_checkbox_create(struct tinyui_window *parent, const char *id);
 
-struct picoui_checkbox *picoui_checkbox_create_with_props(struct picoui_window *parent,
-                                                          const struct picoui_checkbox_props *props);
+struct tinyui_checkbox *tinyui_checkbox_create_with_props(struct tinyui_window *parent,
+                                                          const struct tinyui_checkbox_props *props);
 
-int picoui_checkbox_set_checked(struct picoui_checkbox *checkbox, int checked);
+int tinyui_checkbox_set_checked(struct tinyui_checkbox *checkbox, int checked);
 
-int picoui_checkbox_is_checked(struct picoui_checkbox *checkbox);
+int tinyui_checkbox_is_checked(struct tinyui_checkbox *checkbox);
 
-int picoui_checkbox_set_text(struct picoui_checkbox *checkbox, const char *text);
+int tinyui_checkbox_set_text(struct tinyui_checkbox *checkbox, const char *text);
 
-int picoui_checkbox_set_check_color(struct picoui_checkbox *checkbox, unsigned int rgb);
+int tinyui_checkbox_set_check_color(struct tinyui_checkbox *checkbox, unsigned int rgb);
 
-int picoui_checkbox_set_text_color(struct picoui_checkbox *checkbox, unsigned int rgb);
+int tinyui_checkbox_set_text_color(struct tinyui_checkbox *checkbox, unsigned int rgb);
 
-int picoui_checkbox_set_unchecked_source(struct picoui_checkbox *checkbox,
-                                         struct picoui_image_source *source);
+int tinyui_checkbox_set_unchecked_source(struct tinyui_checkbox *checkbox,
+                                         struct tinyui_image_source *source);
 
-int picoui_checkbox_set_checked_source(struct picoui_checkbox *checkbox,
-                                       struct picoui_image_source *source);
+int tinyui_checkbox_set_checked_source(struct tinyui_checkbox *checkbox,
+                                       struct tinyui_image_source *source);
 
-int picoui_checkbox_set_radio_group(struct picoui_checkbox *checkbox, int radio_group);
+int tinyui_checkbox_set_radio_group(struct tinyui_checkbox *checkbox, int radio_group);
 
-int picoui_checkbox_set_string_left_space(struct picoui_checkbox *checkbox, int space);
+int tinyui_checkbox_set_string_left_space(struct tinyui_checkbox *checkbox, int space);
 
-int picoui_checkbox_set_on_toggled(struct picoui_checkbox *checkbox,
-                                   picoui_value_changed_cb cb,
+int tinyui_checkbox_set_on_toggled(struct tinyui_checkbox *checkbox,
+                                   tinyui_value_changed_cb cb,
                                    void *user_data);
 
 #endif

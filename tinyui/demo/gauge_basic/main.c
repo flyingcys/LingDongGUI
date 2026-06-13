@@ -18,63 +18,63 @@
 
 #include "tinyui.h"
 
-static void make_ui(struct picoui_window *win)
+static void make_ui(struct tinyui_window *win)
 {
-    struct picoui_label *title;
-    struct picoui_gauge_props props = {
+    struct tinyui_label *title;
+    struct tinyui_gauge_props props = {
         .id = "gauge",
         .angle = 72.0f,
         .pointer_color = 0xD97706,
         .auto_move = 0,
     };
-    struct picoui_gauge *gauge;
+    struct tinyui_gauge *gauge;
 
-    picoui_grid_set_columns(win, (const int[]){240, 0}, 2);
-    picoui_grid_set_rows(win, (const int[]){28, 180, 0}, 3);
-    picoui_grid_set_gap(win, 16, 16);
-    picoui_grid_set_align(win, PICOUI_ALIGN_CENTER, PICOUI_ALIGN_CENTER);
-    picoui_window_set_padding_group(win, 24, 24, 24, 24);
+    tinyui_grid_set_columns(win, (const int[]){240, 0}, 2);
+    tinyui_grid_set_rows(win, (const int[]){28, 180, 0}, 3);
+    tinyui_grid_set_gap(win, 16, 16);
+    tinyui_grid_set_align(win, TINYUI_ALIGN_CENTER, TINYUI_ALIGN_CENTER);
+    tinyui_window_set_padding_group(win, 24, 24, 24, 24);
 
-    title = picoui_label_create(win, "title");
-    gauge = picoui_gauge_create_with_props((struct picoui_widget *)win, &props);
+    title = tinyui_label_create(win, "title");
+    gauge = tinyui_gauge_create_with_props((struct tinyui_widget *)win, &props);
 
-    picoui_label_set_text(title, "Gauge");
-    picoui_widget_set_size((struct picoui_widget *)title, 220, 28);
-    picoui_widget_set_size((struct picoui_widget *)gauge, 160, 160);
-    picoui_widget_set_grid_cell((struct picoui_widget *)title, 0, 0, 1, 1, PICOUI_ALIGN_CENTER, PICOUI_ALIGN_CENTER);
-    picoui_widget_set_grid_cell((struct picoui_widget *)gauge, 0, 1, 1, 1, PICOUI_ALIGN_CENTER, PICOUI_ALIGN_CENTER);
+    tinyui_label_set_text(title, "Gauge");
+    tinyui_widget_set_size((struct tinyui_widget *)title, 220, 28);
+    tinyui_widget_set_size((struct tinyui_widget *)gauge, 160, 160);
+    tinyui_widget_set_grid_cell((struct tinyui_widget *)title, 0, 0, 1, 1, TINYUI_ALIGN_CENTER, TINYUI_ALIGN_CENTER);
+    tinyui_widget_set_grid_cell((struct tinyui_widget *)gauge, 0, 1, 1, 1, TINYUI_ALIGN_CENTER, TINYUI_ALIGN_CENTER);
 }
 
 static int run_demo(void)
 {
-    struct picoui_theme *theme = picoui_theme_create();
-    struct picoui_app *app = picoui_app_create();
-    struct picoui_window *win;
+    struct tinyui_theme *theme = tinyui_theme_create();
+    struct tinyui_app *app = tinyui_app_create();
+    struct tinyui_window *win;
 
     if (theme == 0 || app == 0) {
-        picoui_theme_destroy(theme);
-        picoui_app_destroy(app);
+        tinyui_theme_destroy(theme);
+        tinyui_app_destroy(app);
         return 1;
     }
-    if (picoui_app_set_theme(app, theme) != 0) {
-        picoui_theme_destroy(theme);
-        picoui_app_destroy(app);
+    if (tinyui_app_set_theme(app, theme) != 0) {
+        tinyui_theme_destroy(theme);
+        tinyui_app_destroy(app);
         return 1;
     }
-    win = picoui_window_create(app, "root");
+    win = tinyui_window_create(app, "root");
     if (win == 0) {
-        picoui_theme_destroy(theme);
-        picoui_app_destroy(app);
+        tinyui_theme_destroy(theme);
+        tinyui_app_destroy(app);
         return 1;
     }
     make_ui(win);
-    if (picoui_app_run(app, win) != 0) {
-        picoui_app_destroy(app);
-        picoui_theme_destroy(theme);
+    if (tinyui_app_run(app, win) != 0) {
+        tinyui_app_destroy(app);
+        tinyui_theme_destroy(theme);
         return 1;
     }
-    picoui_app_destroy(app);
-    picoui_theme_destroy(theme);
+    tinyui_app_destroy(app);
+    tinyui_theme_destroy(theme);
     return 0;
 }
 

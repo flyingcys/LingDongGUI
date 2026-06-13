@@ -71,9 +71,9 @@
 </table>
 <br>
 
-# PicoUI API
+# TINYUI API
 
-第一阶段 PicoUI 提供：
+第一阶段 TINYUI 提供：
 
 - `window`
 - `label`
@@ -86,7 +86,7 @@
 - `flex`
 - `grid`
 
-PicoUI 对外统一暴露 `picoui_*`，用户不需要直接使用 `ld*` 或 `ARM-2D`。
+TINYUI 对外统一暴露 `tinyui_*`，用户不需要直接使用 `ld*` 或 `ARM-2D`。
 
 #### ldArcSetBgAngle
 <table>

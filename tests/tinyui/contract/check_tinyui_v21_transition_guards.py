@@ -11,10 +11,10 @@ import tempfile
 ROOT = Path(__file__).resolve().parents[3]
 INVENTORY = ROOT / "tests" / "tinyui" / "contract" / "tinyui_v21_transition_inventory.json"
 
-PICOUI_DIR = ROOT / "picoui"
+TINYUI_DIR = ROOT / "tinyui"
 TINYUI_DIR = ROOT / "tinyui"
 BACKEND_DIR = ROOT / "tinyui" / "src" / "backend" / "ldgui"
-PICOUI_HEADERS = sorted((ROOT / "tinyui" / "include" / "picoui").rglob("*.h"))
+TINYUI_HEADERS = sorted((ROOT / "tinyui" / "include" / "tinyui").rglob("*.h"))
 TINYUI_HEADERS = sorted((ROOT / "tinyui" / "include").rglob("*.h"))
 TINYUI_TOP_HEADERS = sorted((ROOT / "tinyui" / "include").glob("*.h"))
 TINYUI_INCLUDE_PROBE = """\
@@ -29,7 +29,7 @@ int main(void) { return 0; }
 """
 
 REQUIRED_BASELINE_KEYS = (
-    "picoui_dir_exists",
+    "tinyui_dir_exists",
     "tinyui_dir_exists",
     "backend_c_files",
     "backend_compat_includes",
@@ -38,7 +38,7 @@ REQUIRED_BASELINE_KEYS = (
     "compat_public_header_count",
     "tinyui_public_header_count",
     "compat_public_headers_require_followup",
-    "picoui_public_api_count",
+    "tinyui_public_api_count",
     "tinyui_public_api_count",
 )
 
@@ -59,7 +59,7 @@ def collect_actual() -> dict[str, object]:
         backend_compat_includes = sorted(
             set(
                 re.findall(
-                    r'#include "picoui/([^"]+)"',
+                    r'#include "tinyui/([^"]+)"',
                     backend_text,
                 )
             )
@@ -69,20 +69,20 @@ def collect_actual() -> dict[str, object]:
     top_level_wrapper_forward_names = sorted(
         header.name
         for header in TINYUI_TOP_HEADERS
-        if re.search(r'#include "picoui/[^"]+"', header.read_text(encoding="utf-8"))
+        if re.search(r'#include "tinyui/[^"]+"', header.read_text(encoding="utf-8"))
     )
-    compat_only = {header.name for header in PICOUI_HEADERS} - {header.name for header in TINYUI_TOP_HEADERS}
+    compat_only = {header.name for header in TINYUI_HEADERS} - {header.name for header in TINYUI_TOP_HEADERS}
     return {
-        "picoui_dir_exists": PICOUI_DIR.exists(),
+        "tinyui_dir_exists": TINYUI_DIR.exists(),
         "tinyui_dir_exists": TINYUI_DIR.exists(),
         "backend_c_files": len(sorted(BACKEND_DIR.glob("*.c"))),
         "backend_compat_includes": backend_compat_includes,
         "top_level_wrapper_forward_count": len(top_level_wrapper_forward_names),
         "top_level_wrapper_forward_names": top_level_wrapper_forward_names,
-        "compat_public_header_count": len(PICOUI_HEADERS),
+        "compat_public_header_count": len(TINYUI_HEADERS),
         "tinyui_public_header_count": len(TINYUI_TOP_HEADERS),
         "compat_public_headers_require_followup": sorted(compat_only),
-        "picoui_public_api_count": count_prefix(PICOUI_HEADERS, "picoui_"),
+        "tinyui_public_api_count": count_prefix(TINYUI_HEADERS, "tinyui_"),
         "tinyui_public_api_count": count_prefix(TINYUI_HEADERS, "tinyui_"),
     }
 
@@ -119,7 +119,7 @@ def check_tinyui_headers_are_composable() -> None:
                 "-I",
                 str(ROOT / "tinyui" / "include"),
                 "-I",
-                str(ROOT / "tinyui" / "include" / "picoui"),
+                str(ROOT / "tinyui" / "include" / "tinyui"),
                 str(probe_path),
             ],
             cwd=ROOT,

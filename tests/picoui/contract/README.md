@@ -1,4 +1,4 @@
-# tests/picoui/contract 历史资产说明
+# tests/tinyui/contract 历史资产说明
 
 本目录已不再承载当前 TinyUI `v2.1` 的 canonical contract truth。
 
@@ -8,8 +8,8 @@
 
 本目录当前保留的文件只承担以下历史职责：
 
-- 为 `docs/picoui-serial/*`、`docs/superpowers/*`、`docs/v2.0/*` 等历史文档保留可追溯证据路径
-- 保留 PicoUI 阶段性审计、review、spec、plan 中引用过的冻结 JSON/ledger 快照
+- 为 `docs/tinyui-serial/*`、`docs/superpowers/*`、`docs/v2.0/*` 等历史文档保留可追溯证据路径
+- 保留 TINYUI 阶段性审计、review、spec、plan 中引用过的冻结 JSON/ledger 快照
 - 保留仍带独立逻辑、但当前已改读 canonical `tests/tinyui/contract/*` 输入的 `check_ldgui_public_api_inventory.py`
 
 约束：
@@ -23,7 +23,7 @@
 - `ldgui_public_api_inventory.json`
 - `ldgui_public_api_expected_symbols.json`
 - `native_api_gap_ledger.json`
-- `picoui_release_capability_matrix.json`
-- `picoui_native_100_inventory.json`
+- `tinyui_release_capability_matrix.json`
+- `tinyui_native_100_inventory.json`
 - `native_100_fragments/*.json`
-- `picoui_tinyui_transition_inventory.json`
+- `tinyui_tinyui_transition_inventory.json`

@@ -1,12 +1,12 @@
-# PicoUI 与 LingDongGUI 测试架构 Implementation Plan
+# TINYUI 与 LingDongGUI 测试架构 Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 把 `gui-test-coverage` 分支和 `picoui-abstraction-layer` worktree 里已有测试资产收拢为仓库级统一测试架构，让 `LingDongGUI` 与 `PicoUI` 都拥有分层清晰、默认启用、可按 label 运行的测试体系。
+**Goal:** 把 `gui-test-coverage` 分支和 `tinyui-abstraction-layer` worktree 里已有测试资产收拢为仓库级统一测试架构，让 `LingDongGUI` 与 `TINYUI` 都拥有分层清晰、默认启用、可按 label 运行的测试体系。
 
-**Architecture:** 根 `CMakeLists.txt` 成为仓库 canonical 入口，`cmake/LingDongGUI.cmake` 承担公共 target / source list / helper function；仓库根新增 `tests/` 作为统一测试树，将 `LingDongGUI` host 单测放入 `tests/lingdonggui/unit/`，将 `PicoUI` 单测/contract/runtime 放入 `tests/picoui/`，SDL demo 专属测试继续留在 `examples/sdl/tests/`。整个迁移按“先骨架、后 host 单测、再 PicoUI target、再 PicoUI tests、最后瘦 SDL CMake”的顺序串行推进。
+**Architecture:** 根 `CMakeLists.txt` 成为仓库 canonical 入口，`cmake/LingDongGUI.cmake` 承担公共 target / source list / helper function；仓库根新增 `tests/` 作为统一测试树，将 `LingDongGUI` host 单测放入 `tests/lingdonggui/unit/`，将 `TINYUI` 单测/contract/runtime 放入 `tests/tinyui/`，SDL demo 专属测试继续留在 `examples/sdl/tests/`。整个迁移按“先骨架、后 host 单测、再 TINYUI target、再 TINYUI tests、最后瘦 SDL CMake”的顺序串行推进。
 
-**Tech Stack:** C11、CMake、CTest、Python3、LingDongGUI、PicoUI、Arm-2D host stubs、SDL demo 构建链
+**Tech Stack:** C11、CMake、CTest、Python3、LingDongGUI、TINYUI、Arm-2D host stubs、SDL demo 构建链
 
 ---
 
@@ -20,8 +20,8 @@
 - Create: `tests/support/CMakeLists.txt`
 - Create: `tests/support/ldgui_test_support.c`
 - Create: `tests/support/ldgui_test_support.h`
-- Create: `tests/support/picoui_test_support.c`
-- Create: `tests/support/picoui_test_support.h`
+- Create: `tests/support/tinyui_test_support.c`
+- Create: `tests/support/tinyui_test_support.h`
 - Create: `tests/lingdonggui/CMakeLists.txt`
 - Create: `tests/lingdonggui/unit/test_ldbase.c`
 - Create: `tests/lingdonggui/unit/test_ldlabel.c`
@@ -29,22 +29,22 @@
 - Create: `tests/lingdonggui/unit/test_layout_window.c`
 - Create: `tests/lingdonggui/unit/test_ldswitch_internal.c`
 - Create: `tests/lingdonggui/unit/test_ldswitch_widget.c`
-- Create: `tests/picoui/CMakeLists.txt`
-- Create: `tests/picoui/unit/test_picoui_smoke.c`
-- Create: `tests/picoui/unit/test_picoui_theme.c`
-- Create: `tests/picoui/unit/test_picoui_widgets.c`
-- Create: `tests/picoui/unit/test_picoui_layout.c`
-- Create: `tests/picoui/contract/check_picoui_public_api.py`
-- Create: `tests/picoui/contract/check_picoui_demo_boundary.py`
-- Create: `tests/picoui/runtime/check_picoui_runtime.py`
+- Create: `tests/tinyui/CMakeLists.txt`
+- Create: `tests/tinyui/unit/test_tinyui_smoke.c`
+- Create: `tests/tinyui/unit/test_tinyui_theme.c`
+- Create: `tests/tinyui/unit/test_tinyui_widgets.c`
+- Create: `tests/tinyui/unit/test_tinyui_layout.c`
+- Create: `tests/tinyui/contract/check_tinyui_public_api.py`
+- Create: `tests/tinyui/contract/check_tinyui_demo_boundary.py`
+- Create: `tests/tinyui/runtime/check_tinyui_runtime.py`
 
 ### 需要修改的现有文件
 
 - Modify: `examples/sdl/CMakeLists.txt`
-- Modify: `picoui/include/picoui/*.h` 相关 include 结构（仅在迁 PicoUI tests 时按需要微调）
-- Modify: `picoui/src/...` 的 target 归属（通过 CMake 接线，不优先改逻辑）
-- Delete or stop referencing: `examples/sdl/tests/picoui/*`
-- Delete or stop referencing: `examples/sdl/tests/check_picoui_*.py`
+- Modify: `tinyui/include/tinyui/*.h` 相关 include 结构（仅在迁 TINYUI tests 时按需要微调）
+- Modify: `tinyui/src/...` 的 target 归属（通过 CMake 接线，不优先改逻辑）
+- Delete or stop referencing: `examples/sdl/tests/tinyui/*`
+- Delete or stop referencing: `examples/sdl/tests/check_tinyui_*.py`
 
 ### 责任约束
 
@@ -52,7 +52,7 @@
 - `cmake/LingDongGUI.cmake`：公共 sources、公共 targets、公共 test helper。
 - `tests/support/`：唯一放公共 host stub / fixture helper 的位置。
 - `tests/lingdonggui/`：只放 `LingDongGUI` 库级单测。
-- `tests/picoui/`：只放 `PicoUI` 单测 / contract / runtime。
+- `tests/tinyui/`：只放 `TINYUI` 单测 / contract / runtime。
 - `examples/sdl/tests/`：只放 SDL demo 行为测试。
 
 ---
@@ -116,13 +116,13 @@ endif()
 # tests/CMakeLists.txt
 add_subdirectory(support)
 add_subdirectory(lingdonggui)
-add_subdirectory(picoui)
+add_subdirectory(tinyui)
 ```
 
 ```cmake
 # tests/support/CMakeLists.txt
 add_library(ldgui_test_support STATIC ldgui_test_support.c)
-add_library(picoui_test_support STATIC picoui_test_support.c)
+add_library(tinyui_test_support STATIC tinyui_test_support.c)
 ```
 
 - [ ] **Step 4: 在 `cmake/LingDongGUI.cmake` 建公共 helper 雏形**
@@ -150,7 +150,7 @@ rtk cmake -S . -B build/test-arch-s1
 Expected:
 
 - configure 成功
-- 如果 `tests/lingdonggui`、`tests/picoui` 尚未创建，报的是“缺子目录”这类结构性错误，而不是根入口本身损坏
+- 如果 `tests/lingdonggui`、`tests/tinyui` 尚未创建，报的是“缺子目录”这类结构性错误，而不是根入口本身损坏
 
 - [ ] **Step 6: 补齐缺失子目录最小入口并重新 configure**
 
@@ -160,8 +160,8 @@ Expected:
 ```
 
 ```cmake
-# tests/picoui/CMakeLists.txt
-# placeholder subdir for upcoming PicoUI tests
+# tests/tinyui/CMakeLists.txt
+# placeholder subdir for upcoming TINYUI tests
 ```
 
 Run:
@@ -296,260 +296,260 @@ git commit -m "test: restore LingDongGUI host unit tests"
 
 ---
 
-### Task 3: 抽取 PicoUI 公共 target，消除 SDL CMake 中的重复源列表
+### Task 3: 抽取 TINYUI 公共 target，消除 SDL CMake 中的重复源列表
 
 **Files:**
 - Modify: `cmake/LingDongGUI.cmake`
 - Modify: `examples/sdl/CMakeLists.txt`
 
-- [ ] **Step 1: 在 `cmake/LingDongGUI.cmake` 定义 `picoui_core`**
+- [ ] **Step 1: 在 `cmake/LingDongGUI.cmake` 定义 `tinyui_core`**
 
 ```cmake
-add_library(picoui_core STATIC
-    ${LD_REPO_ROOT}/picoui/src/core/app.c
-    ${LD_REPO_ROOT}/picoui/src/core/widget.c
-    ${LD_REPO_ROOT}/picoui/src/core/event.c
-    ${LD_REPO_ROOT}/picoui/src/core/resource.c
-    ${LD_REPO_ROOT}/picoui/src/theme/theme.c
-    ${LD_REPO_ROOT}/picoui/src/layout/flex.c
-    ${LD_REPO_ROOT}/picoui/src/layout/grid.c
-    ${LD_REPO_ROOT}/picoui/src/widgets/window.c
-    ${LD_REPO_ROOT}/picoui/src/widgets/label.c
-    ${LD_REPO_ROOT}/picoui/src/widgets/text.c
-    ${LD_REPO_ROOT}/picoui/src/widgets/image.c
-    ${LD_REPO_ROOT}/picoui/src/widgets/button.c
-    ${LD_REPO_ROOT}/picoui/src/widgets/checkbox.c
-    ${LD_REPO_ROOT}/picoui/src/widgets/switch.c
-    ${LD_REPO_ROOT}/picoui/src/widgets/slider.c
+add_library(tinyui_core STATIC
+    ${LD_REPO_ROOT}/tinyui/src/core/app.c
+    ${LD_REPO_ROOT}/tinyui/src/core/widget.c
+    ${LD_REPO_ROOT}/tinyui/src/core/event.c
+    ${LD_REPO_ROOT}/tinyui/src/core/resource.c
+    ${LD_REPO_ROOT}/tinyui/src/theme/theme.c
+    ${LD_REPO_ROOT}/tinyui/src/layout/flex.c
+    ${LD_REPO_ROOT}/tinyui/src/layout/grid.c
+    ${LD_REPO_ROOT}/tinyui/src/widgets/window.c
+    ${LD_REPO_ROOT}/tinyui/src/widgets/label.c
+    ${LD_REPO_ROOT}/tinyui/src/widgets/text.c
+    ${LD_REPO_ROOT}/tinyui/src/widgets/image.c
+    ${LD_REPO_ROOT}/tinyui/src/widgets/button.c
+    ${LD_REPO_ROOT}/tinyui/src/widgets/checkbox.c
+    ${LD_REPO_ROOT}/tinyui/src/widgets/switch.c
+    ${LD_REPO_ROOT}/tinyui/src/widgets/slider.c
 )
 ```
 
-- [ ] **Step 2: 定义 `picoui_backend_ldgui`**
+- [ ] **Step 2: 定义 `tinyui_backend_ldgui`**
 
 ```cmake
-add_library(picoui_backend_ldgui STATIC
-    ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_widget.c
-    ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_theme.c
-    ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_layout.c
-    ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_event.c
-    ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_window.c
-    ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_label.c
-    ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_text.c
-    ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_image.c
-    ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_button.c
-    ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_checkbox.c
-    ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_switch.c
-    ${LD_REPO_ROOT}/picoui/src/backend/ldgui/backend_slider.c
+add_library(tinyui_backend_ldgui STATIC
+    ${LD_REPO_ROOT}/tinyui/src/backend/ldgui/backend_widget.c
+    ${LD_REPO_ROOT}/tinyui/src/backend/ldgui/backend_theme.c
+    ${LD_REPO_ROOT}/tinyui/src/backend/ldgui/backend_layout.c
+    ${LD_REPO_ROOT}/tinyui/src/backend/ldgui/backend_event.c
+    ${LD_REPO_ROOT}/tinyui/src/backend/ldgui/backend_window.c
+    ${LD_REPO_ROOT}/tinyui/src/backend/ldgui/backend_label.c
+    ${LD_REPO_ROOT}/tinyui/src/backend/ldgui/backend_text.c
+    ${LD_REPO_ROOT}/tinyui/src/backend/ldgui/backend_image.c
+    ${LD_REPO_ROOT}/tinyui/src/backend/ldgui/backend_button.c
+    ${LD_REPO_ROOT}/tinyui/src/backend/ldgui/backend_checkbox.c
+    ${LD_REPO_ROOT}/tinyui/src/backend/ldgui/backend_switch.c
+    ${LD_REPO_ROOT}/tinyui/src/backend/ldgui/backend_slider.c
 )
 ```
 
 并链接：
 
 ```cmake
-target_link_libraries(picoui_backend_ldgui PUBLIC picoui_core longdonggui)
+target_link_libraries(tinyui_backend_ldgui PUBLIC tinyui_core longdonggui)
 ```
 
-- [ ] **Step 3: 给 PicoUI targets 加统一 include dirs / compile config**
+- [ ] **Step 3: 给 TINYUI targets 加统一 include dirs / compile config**
 
 ```cmake
-target_include_directories(picoui_core PUBLIC
-    ${LD_REPO_ROOT}/picoui/include
-    ${LD_REPO_ROOT}/picoui/src/core
+target_include_directories(tinyui_core PUBLIC
+    ${LD_REPO_ROOT}/tinyui/include
+    ${LD_REPO_ROOT}/tinyui/src/core
 )
 
-target_include_directories(picoui_backend_ldgui PUBLIC
-    ${LD_REPO_ROOT}/picoui/include
-    ${LD_REPO_ROOT}/picoui/src/core
-    ${LD_REPO_ROOT}/picoui/src/backend/ldgui
+target_include_directories(tinyui_backend_ldgui PUBLIC
+    ${LD_REPO_ROOT}/tinyui/include
+    ${LD_REPO_ROOT}/tinyui/src/core
+    ${LD_REPO_ROOT}/tinyui/src/backend/ldgui
 )
 ```
 
-- [ ] **Step 4: 在 `examples/sdl/CMakeLists.txt` 把 PicoUI demo target 改为链接库而不是手抄 sources**
+- [ ] **Step 4: 在 `examples/sdl/CMakeLists.txt` 把 TINYUI demo target 改为链接库而不是手抄 sources**
 
 把类似下面这类重复段删掉：
 
 ```cmake
-add_executable(picoui_settings_panel_demo
-    ... lots of picoui/src/*.c ...
+add_executable(tinyui_settings_panel_demo
+    ... lots of tinyui/src/*.c ...
 )
 ```
 
 改为：
 
 ```cmake
-add_executable(picoui_settings_panel_demo
-    "${SDL_EXAMPLE_DIR}/../../picoui/demo/settings_panel/main.c"
+add_executable(tinyui_settings_panel_demo
+    "${SDL_EXAMPLE_DIR}/../../tinyui/demo/settings_panel/main.c"
 )
-target_link_libraries(picoui_settings_panel_demo PRIVATE picoui_backend_ldgui)
+target_link_libraries(tinyui_settings_panel_demo PRIVATE tinyui_backend_ldgui)
 ```
 
-- [ ] **Step 5: 只编 PicoUI demo target，确认接线成功**
+- [ ] **Step 5: 只编 TINYUI demo target，确认接线成功**
 
 Run:
 
 ```bash
 rtk cmake -S . -B build/test-arch-s3
-rtk cmake --build build/test-arch-s3 --target picoui_settings_panel_demo
+rtk cmake --build build/test-arch-s3 --target tinyui_settings_panel_demo
 ```
 
 Expected:
 
-- `picoui_settings_panel_demo` 编译成功
-- `examples/sdl/CMakeLists.txt` 中不再存在多份重复 PicoUI 源列表
+- `tinyui_settings_panel_demo` 编译成功
+- `examples/sdl/CMakeLists.txt` 中不再存在多份重复 TINYUI 源列表
 
-- [ ] **Step 6: 提交 PicoUI target 收敛**
+- [ ] **Step 6: 提交 TINYUI target 收敛**
 
 ```bash
 git add cmake/LingDongGUI.cmake examples/sdl/CMakeLists.txt
-git commit -m "build: factor PicoUI into reusable targets"
+git commit -m "build: factor TINYUI into reusable targets"
 ```
 
 ---
 
-### Task 4: 迁移 PicoUI unit / contract / runtime tests 到统一测试树
+### Task 4: 迁移 TINYUI unit / contract / runtime tests 到统一测试树
 
 **Files:**
-- Create: `tests/support/picoui_test_support.c`
-- Create: `tests/support/picoui_test_support.h`
-- Create: `tests/picoui/CMakeLists.txt`
-- Create: `tests/picoui/unit/test_picoui_smoke.c`
-- Create: `tests/picoui/unit/test_picoui_theme.c`
-- Create: `tests/picoui/unit/test_picoui_widgets.c`
-- Create: `tests/picoui/unit/test_picoui_layout.c`
-- Create: `tests/picoui/contract/check_picoui_public_api.py`
-- Create: `tests/picoui/contract/check_picoui_demo_boundary.py`
-- Create: `tests/picoui/runtime/check_picoui_runtime.py`
+- Create: `tests/support/tinyui_test_support.c`
+- Create: `tests/support/tinyui_test_support.h`
+- Create: `tests/tinyui/CMakeLists.txt`
+- Create: `tests/tinyui/unit/test_tinyui_smoke.c`
+- Create: `tests/tinyui/unit/test_tinyui_theme.c`
+- Create: `tests/tinyui/unit/test_tinyui_widgets.c`
+- Create: `tests/tinyui/unit/test_tinyui_layout.c`
+- Create: `tests/tinyui/contract/check_tinyui_public_api.py`
+- Create: `tests/tinyui/contract/check_tinyui_demo_boundary.py`
+- Create: `tests/tinyui/runtime/check_tinyui_runtime.py`
 - Modify: `examples/sdl/CMakeLists.txt`
 
-- [ ] **Step 1: 迁移 PicoUI C 单测到 `tests/picoui/unit/`**
+- [ ] **Step 1: 迁移 TINYUI C 单测到 `tests/tinyui/unit/`**
 
 来源：
 
 ```text
-.worktree/picoui-abstraction-layer/examples/sdl/tests/picoui/test_picoui_smoke.c
-.worktree/picoui-abstraction-layer/examples/sdl/tests/picoui/test_picoui_theme.c
-.worktree/picoui-abstraction-layer/examples/sdl/tests/picoui/test_picoui_widgets.c
-.worktree/picoui-abstraction-layer/examples/sdl/tests/picoui/test_picoui_layout.c
+.worktree/tinyui-abstraction-layer/examples/sdl/tests/tinyui/test_tinyui_smoke.c
+.worktree/tinyui-abstraction-layer/examples/sdl/tests/tinyui/test_tinyui_theme.c
+.worktree/tinyui-abstraction-layer/examples/sdl/tests/tinyui/test_tinyui_widgets.c
+.worktree/tinyui-abstraction-layer/examples/sdl/tests/tinyui/test_tinyui_layout.c
 ```
 
 要求：
 
-- include 仍使用 `#include "picoui/picoui.h"`
+- include 仍使用 `#include "tinyui/tinyui.h"`
 - 逻辑保持原样
 - 不再从 `examples/sdl/CMakeLists.txt` 注册这些 unit tests
 
-- [ ] **Step 2: 迁移 PicoUI Python tests 到 `tests/picoui/contract/` 和 `tests/picoui/runtime/`**
+- [ ] **Step 2: 迁移 TINYUI Python tests 到 `tests/tinyui/contract/` 和 `tests/tinyui/runtime/`**
 
 来源：
 
 ```text
-.worktree/picoui-abstraction-layer/examples/sdl/tests/check_picoui_public_api.py
-.worktree/picoui-abstraction-layer/examples/sdl/tests/check_picoui_demo_boundary.py
-.worktree/picoui-abstraction-layer/examples/sdl/tests/check_picoui_runtime.py
+.worktree/tinyui-abstraction-layer/examples/sdl/tests/check_tinyui_public_api.py
+.worktree/tinyui-abstraction-layer/examples/sdl/tests/check_tinyui_demo_boundary.py
+.worktree/tinyui-abstraction-layer/examples/sdl/tests/check_tinyui_runtime.py
 ```
 
 调整：
 
-- 路径改到 `tests/picoui/...`
+- 路径改到 `tests/tinyui/...`
 - `ROOT` 解析改为以仓库根为准
-- `BUILD` 路径使用 `build/picoui-runtime` 或 `${CMAKE_BINARY_DIR}` 注入方式
+- `BUILD` 路径使用 `build/tinyui-runtime` 或 `${CMAKE_BINARY_DIR}` 注入方式
 
-- [ ] **Step 3: 写 `picoui_test_support` 最小骨架**
+- [ ] **Step 3: 写 `tinyui_test_support` 最小骨架**
 
 ```c
-#include "picoui_test_support.h"
+#include "tinyui_test_support.h"
 
-int picoui_test_support_stub(void)
+int tinyui_test_support_stub(void)
 {
     return 0;
 }
 ```
 
 ```cmake
-add_library(picoui_test_support STATIC picoui_test_support.c)
-target_include_directories(picoui_test_support PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(picoui_test_support PUBLIC picoui_core picoui_backend_ldgui)
-ld_apply_common_target_config(picoui_test_support)
+add_library(tinyui_test_support STATIC tinyui_test_support.c)
+target_include_directories(tinyui_test_support PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(tinyui_test_support PUBLIC tinyui_core tinyui_backend_ldgui)
+ld_apply_common_target_config(tinyui_test_support)
 ```
 
-- [ ] **Step 4: 写 `tests/picoui/CMakeLists.txt`**
+- [ ] **Step 4: 写 `tests/tinyui/CMakeLists.txt`**
 
 ```cmake
 set(PICOUI_UNIT_TESTS
-    unit/test_picoui_smoke.c
-    unit/test_picoui_theme.c
-    unit/test_picoui_widgets.c
-    unit/test_picoui_layout.c
+    unit/test_tinyui_smoke.c
+    unit/test_tinyui_theme.c
+    unit/test_tinyui_widgets.c
+    unit/test_tinyui_layout.c
 )
 
 foreach(test_src IN LISTS PICOUI_UNIT_TESTS)
     get_filename_component(test_name "${test_src}" NAME_WE)
     ld_add_c_unit_test(${test_name}
         SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/${test_src}"
-        SUPPORT_LIB picoui_test_support
-        MAIN_LIB picoui_backend_ldgui
-        LABELS "picoui;unit"
+        SUPPORT_LIB tinyui_test_support
+        MAIN_LIB tinyui_backend_ldgui
+        LABELS "tinyui;unit"
     )
 endforeach()
 
-ld_add_python_test(check_picoui_public_api
-    SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/contract/check_picoui_public_api.py"
-    LABELS "picoui;contract"
+ld_add_python_test(check_tinyui_public_api
+    SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/contract/check_tinyui_public_api.py"
+    LABELS "tinyui;contract"
 )
 
-ld_add_python_test(check_picoui_demo_boundary
-    SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/contract/check_picoui_demo_boundary.py"
-    LABELS "picoui;contract"
+ld_add_python_test(check_tinyui_demo_boundary
+    SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/contract/check_tinyui_demo_boundary.py"
+    LABELS "tinyui;contract"
 )
 
 if(LD_BUILD_RUNTIME_TESTS)
-    ld_add_python_test(check_picoui_runtime
-        SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/runtime/check_picoui_runtime.py"
-        LABELS "picoui;runtime"
+    ld_add_python_test(check_tinyui_runtime
+        SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/runtime/check_tinyui_runtime.py"
+        LABELS "tinyui;runtime"
     )
 endif()
 ```
 
-- [ ] **Step 5: 从 `examples/sdl/CMakeLists.txt` 删除 PicoUI test 注册**
+- [ ] **Step 5: 从 `examples/sdl/CMakeLists.txt` 删除 TINYUI test 注册**
 
 删除：
 
 ```text
-picoui_smoke_test
-picoui_theme_test
-picoui_widgets_test
-picoui_layout_test
-check_picoui_public_api
-check_picoui_demo_boundary
-check_picoui_runtime
+tinyui_smoke_test
+tinyui_theme_test
+tinyui_widgets_test
+tinyui_layout_test
+check_tinyui_public_api
+check_tinyui_demo_boundary
+check_tinyui_runtime
 ```
 
 保留：
 
-- `picoui_settings_panel_demo` 这类 demo target
+- `tinyui_settings_panel_demo` 这类 demo target
 - SDL demo 专属 check
 
-- [ ] **Step 6: configure + build + 运行 PicoUI tests**
+- [ ] **Step 6: configure + build + 运行 TINYUI tests**
 
 Run:
 
 ```bash
 rtk cmake -S . -B build/test-arch-s4
-rtk cmake --build build/test-arch-s4 --target test_picoui_smoke test_picoui_theme test_picoui_widgets test_picoui_layout picoui_settings_panel_demo
-rtk ctest --test-dir build/test-arch-s4 -L picoui --output-on-failure
+rtk cmake --build build/test-arch-s4 --target test_tinyui_smoke test_tinyui_theme test_tinyui_widgets test_tinyui_layout tinyui_settings_panel_demo
+rtk ctest --test-dir build/test-arch-s4 -L tinyui --output-on-failure
 ```
 
 Expected:
 
-- PicoUI unit / contract / runtime tests 全部注册
-- PicoUI demo 仍可编
-- `examples/sdl/CMakeLists.txt` 不再承担 PicoUI unit test 注册
+- TINYUI unit / contract / runtime tests 全部注册
+- TINYUI demo 仍可编
+- `examples/sdl/CMakeLists.txt` 不再承担 TINYUI unit test 注册
 
-- [ ] **Step 7: 提交 PicoUI 测试迁移**
+- [ ] **Step 7: 提交 TINYUI 测试迁移**
 
 ```bash
-git add tests/picoui tests/support examples/sdl/CMakeLists.txt cmake/LingDongGUI.cmake
-git commit -m "test: move PicoUI tests into repository test tree"
+git add tests/tinyui tests/support examples/sdl/CMakeLists.txt cmake/LingDongGUI.cmake
+git commit -m "test: move TINYUI tests into repository test tree"
 ```
 
 ---
@@ -592,7 +592,7 @@ rtk ctest --test-dir build/test-arch-s4 -N
 
 Expected:
 
-- 能看到 `lingdonggui`、`picoui`、`unit`、`contract`、`runtime` 至少五类标签对应的测试
+- 能看到 `lingdonggui`、`tinyui`、`unit`、`contract`、`runtime` 至少五类标签对应的测试
 
 - [ ] **Step 4: 分层验证运行体验**
 
@@ -626,7 +626,7 @@ Expected:
 
 ```bash
 git add CMakeLists.txt cmake/LingDongGUI.cmake tests examples/sdl/CMakeLists.txt
-git commit -m "build: reorganize PicoUI and LingDongGUI tests"
+git commit -m "build: reorganize TINYUI and LingDongGUI tests"
 ```
 
 ---
@@ -637,8 +637,8 @@ git commit -m "build: reorganize PicoUI and LingDongGUI tests"
 
 - 统一 `tests/` 测试树：Task 1
 - LingDongGUI host 单测迁回：Task 2
-- PicoUI target 收敛：Task 3
-- PicoUI unit/contract/runtime 迁移：Task 4
+- TINYUI target 收敛：Task 3
+- TINYUI unit/contract/runtime 迁移：Task 4
 - SDL 测试职责收口与 label 分层：Task 5
 
 ### Placeholder scan
@@ -650,5 +650,5 @@ git commit -m "build: reorganize PicoUI and LingDongGUI tests"
 ### Type consistency
 
 - 公共 helper 名统一为 `ld_add_c_unit_test` / `ld_add_python_test`
-- PicoUI target 名统一为 `picoui_core` / `picoui_backend_ldgui`
-- label 统一为 `lingdonggui` / `picoui` / `unit` / `contract` / `runtime`
+- TINYUI target 名统一为 `tinyui_core` / `tinyui_backend_ldgui`
+- label 统一为 `lingdonggui` / `tinyui` / `unit` / `contract` / `runtime`

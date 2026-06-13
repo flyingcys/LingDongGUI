@@ -1,7 +1,7 @@
 # `canvas`
 
 本文由 `tests/tinyui/contract/ldgui_public_api_inventory.json` 和 `tests/tinyui/contract/tinyui_release_capability_matrix.json` 对齐生成。
-本页同时记录 LingDongGUI 原生 `canvas` API 能力和 PicoUI 对应覆盖状态。
+本页同时记录 LingDongGUI 原生 `canvas` API 能力和 TinyUI 对应覆盖状态。
 
 ## 覆盖摘要
 
@@ -9,15 +9,15 @@
 - group_kind：`widget`
 - LingDongGUI API 条目数：`8`
 - TinyUI 当前覆盖统计：`allowlisted`: 5, `covered`: 3
-- 覆盖结论：a-0.13 item 8 已补齐 PicoUI 用户态 `canvas` 命令式绘制面，真实落到 native `ldCanvas` widget；生命周期和 `show` 仍是 backend-private。
+- 覆盖结论：a-0.13 item 8 已补齐 TinyUI 用户态 `canvas` 命令式绘制面，真实落到 native `ldCanvas` widget；生命周期和 `show` 仍是 backend-private。
 
 ## 用户态能力
 
-| 能力 | LingDongGUI 来源 | PicoUI 覆盖 |
+| 能力 | LingDongGUI 来源 | TinyUI 覆盖 |
 | --- | --- | --- |
-| 创建真实 canvas widget | `ldCanvas_init` | `picoui_canvas_create()` |
-| 清空命令列表 | `ldCanvasClear` | `picoui_canvas_clear()` |
-| 推入绘制命令 | `ldCanvasPushCommand` | `picoui_canvas_fill_rect()`、`picoui_canvas_draw_line()`、`picoui_canvas_draw_image()`、`picoui_canvas_draw_image_scaled()`、`picoui_canvas_draw_text()` |
+| 创建真实 canvas widget | `ldCanvas_init` | `tinyui_canvas_create()` |
+| 清空命令列表 | `ldCanvasClear` | `tinyui_canvas_clear()` |
+| 推入绘制命令 | `ldCanvasPushCommand` | `tinyui_canvas_fill_rect()`、`tinyui_canvas_draw_line()`、`tinyui_canvas_draw_image()`、`tinyui_canvas_draw_image_scaled()`、`tinyui_canvas_draw_text()` |
 
 ## 审计边界
 

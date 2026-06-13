@@ -19,11 +19,11 @@
 #include "keyboard_basic/keyboard_basic.h"
 #include "tinyui.h"
 
-static int make_ui(struct picoui_window *win)
+static int make_ui(struct tinyui_window *win)
 {
-    if (picoui_line_edit_create_with_props(
+    if (tinyui_line_edit_create_with_props(
             win,
-            &(struct picoui_line_edit_props){
+            &(struct tinyui_line_edit_props){
                 .id = "keyboard_demo_input",
                 .text = "abc",
                 .keyboard_binding = 1U,
@@ -33,9 +33,9 @@ static int make_ui(struct picoui_window *win)
             }) == 0) {
         return -1;
     }
-    if (picoui_keyboard_create_with_props(
+    if (tinyui_keyboard_create_with_props(
             win,
-            &(struct picoui_keyboard_props){
+            &(struct tinyui_keyboard_props){
                 .id = "keyboard_demo_keyboard",
                 .width = 320,
                 .height = 160,
@@ -48,7 +48,7 @@ static int make_ui(struct picoui_window *win)
 void tinyui_demo_keyboard_basic(void)
 {
     tinyui_obj_t *screen = tinyui_screen_create();
-    struct picoui_window *win = (struct picoui_window *)screen;
+    struct tinyui_window *win = (struct tinyui_window *)screen;
     if (win == 0) return;
     make_ui(win);
     tinyui_screen_load(screen);

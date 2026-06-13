@@ -11,7 +11,7 @@ CANONICAL_SCRIPT = ROOT / "tests" / "tinyui" / "runtime" / "check_tinyui_visible
 
 
 def _load_canonical_module() -> types.ModuleType:
-    spec = importlib.util.spec_from_file_location("check_picoui_visible_ui_compat", CANONICAL_SCRIPT)
+    spec = importlib.util.spec_from_file_location("check_tinyui_visible_ui_compat", CANONICAL_SCRIPT)
     if spec is None or spec.loader is None:
         raise RuntimeError(f"unable to load canonical visible-ui checker: {CANONICAL_SCRIPT}")
     module = importlib.util.module_from_spec(spec)

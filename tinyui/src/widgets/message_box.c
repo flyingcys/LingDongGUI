@@ -27,21 +27,21 @@
 
 extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
 
-static int tinyui_message_box_props_are_valid(const struct picoui_message_box_props *props)
+static int tinyui_message_box_props_are_valid(const struct tinyui_message_box_props *props)
 {
     return props != 0 && props->id != 0;
 }
 
-static ldMessageBox_t *tinyui_message_box_get_ld(struct picoui_message_box *box)
+static ldMessageBox_t *tinyui_message_box_get_ld(struct tinyui_message_box *box)
 {
-    struct picoui_backend_widget *backend;
+    struct tinyui_backend_widget *backend;
 
     if (box == 0 || box->widget.backend_widget == 0) {
         return 0;
     }
 
-    backend = (struct picoui_backend_widget *)box->widget.backend_widget;
-    if (backend->kind != PICOUI_BACKEND_WIDGET_MESSAGE_BOX || backend->ld_widget == 0) {
+    backend = (struct tinyui_backend_widget *)box->widget.backend_widget;
+    if (backend->kind != TINYUI_BACKEND_WIDGET_MESSAGE_BOX || backend->ld_widget == 0) {
         return 0;
     }
 
@@ -50,8 +50,8 @@ static ldMessageBox_t *tinyui_message_box_get_ld(struct picoui_message_box *box)
 
 static void tinyui_message_box_confirm_bridge(ld_scene_t *scene, ldMessageBox_t *ld_message_box)
 {
-    struct picoui_backend_widget *backend;
-    struct picoui_message_box *box;
+    struct tinyui_backend_widget *backend;
+    struct tinyui_message_box *box;
 
     (void)scene;
 
@@ -59,12 +59,12 @@ static void tinyui_message_box_confirm_bridge(ld_scene_t *scene, ldMessageBox_t 
         return;
     }
 
-    backend = (struct picoui_backend_widget *)((ldBase_t *)ld_message_box)->pInfo;
+    backend = (struct tinyui_backend_widget *)((ldBase_t *)ld_message_box)->pInfo;
     if (backend == 0 || backend->host_widget == 0) {
         return;
     }
 
-    box = (struct picoui_message_box *)backend->host_widget;
+    box = (struct tinyui_message_box *)backend->host_widget;
     if (box->widget.enabled == 0 || box->widget.visible == 0) {
         return;
     }
@@ -85,12 +85,12 @@ static void tinyui_message_box_confirm_bridge(ld_scene_t *scene, ldMessageBox_t 
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct picoui_message_box *picoui_message_box_create(struct picoui_widget *parent, const char *id)
+struct tinyui_message_box *tinyui_message_box_create(struct tinyui_widget *parent, const char *id)
 {
-    struct picoui_message_box *box;
-    struct picoui_backend_widget *backend;
-    struct picoui_backend_widget *parent_backend;
-    struct picoui_backend_app_state *app_state;
+    struct tinyui_message_box *box;
+    struct tinyui_backend_widget *backend;
+    struct tinyui_backend_widget *parent_backend;
+    struct tinyui_backend_app_state *app_state;
     ldMessageBox_t *ld_message_box;
     uint16_t name_id;
 
@@ -98,7 +98,7 @@ struct picoui_message_box *picoui_message_box_create(struct picoui_widget *paren
         return 0;
     }
 
-    parent_backend = (struct picoui_backend_widget *)parent->backend_widget;
+    parent_backend = (struct tinyui_backend_widget *)parent->backend_widget;
     app_state = tinyui_runtime_bridge_backend_state_from_parent(parent_backend);
     if (parent_backend->ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
         return 0;
@@ -139,7 +139,7 @@ struct picoui_message_box *picoui_message_box_create(struct picoui_widget *paren
 
     if (tinyui_widget_init_child(backend,
                                          parent_backend,
-                                         PICOUI_BACKEND_WIDGET_MESSAGE_BOX,
+                                         TINYUI_BACKEND_WIDGET_MESSAGE_BOX,
                                          id,
                                          parent_backend->theme) != 0) {
         ldMessageBox_depose(app_state->ld_scene, ld_message_box);
@@ -178,9 +178,9 @@ struct picoui_message_box *picoui_message_box_create(struct picoui_widget *paren
  * @return Pointer to the object
  */
 
-struct picoui_message_box *picoui_message_box_init(struct picoui_widget *parent, const char *id)
+struct tinyui_message_box *tinyui_message_box_init(struct tinyui_widget *parent, const char *id)
 {
-    return picoui_message_box_create(parent, id);
+    return tinyui_message_box_create(parent, id);
 }
 
 /**
@@ -191,34 +191,34 @@ struct picoui_message_box *picoui_message_box_init(struct picoui_widget *parent,
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct picoui_message_box *picoui_message_box_create_with_props(
-    struct picoui_widget *parent,
-    const struct picoui_message_box_props *props)
+struct tinyui_message_box *tinyui_message_box_create_with_props(
+    struct tinyui_widget *parent,
+    const struct tinyui_message_box_props *props)
 {
-    struct picoui_message_box *box;
+    struct tinyui_message_box *box;
 
     if (!tinyui_message_box_props_are_valid(props)) {
         return 0;
     }
 
-    box = picoui_message_box_create(parent, props->id);
+    box = tinyui_message_box_create(parent, props->id);
     if (box == 0) {
         return 0;
     }
 
     if (props->style_class != 0
-        && picoui_widget_set_style_class(&box->widget, props->style_class) != 0) {
+        && tinyui_widget_set_style_class(&box->widget, props->style_class) != 0) {
         free(box);
         return 0;
     }
-    if (picoui_widget_set_user_data(&box->widget, props->user_data) != 0) {
+    if (tinyui_widget_set_user_data(&box->widget, props->user_data) != 0) {
         free(box);
         return 0;
     }
-    if ((props->title != 0 && picoui_message_box_set_title(box, props->title) != 0)
-        || (props->message != 0 && picoui_message_box_set_message(box, props->message) != 0)
+    if ((props->title != 0 && tinyui_message_box_set_title(box, props->title) != 0)
+        || (props->message != 0 && tinyui_message_box_set_message(box, props->message) != 0)
         || (props->confirm_text != 0
-            && picoui_message_box_set_confirm_text(box, props->confirm_text) != 0)) {
+            && tinyui_message_box_set_confirm_text(box, props->confirm_text) != 0)) {
         free(box);
         return 0;
     }
@@ -234,7 +234,7 @@ struct picoui_message_box *picoui_message_box_create_with_props(
  * @return 0 on success, -1 on failure
  */
 
-int picoui_message_box_set_title(struct picoui_message_box *box, const char *title)
+int tinyui_message_box_set_title(struct tinyui_message_box *box, const char *title)
 {
     ldMessageBox_t *ld_message_box;
 
@@ -260,7 +260,7 @@ int picoui_message_box_set_title(struct picoui_message_box *box, const char *tit
  * @return 0 on success, -1 on failure
  */
 
-int picoui_message_box_set_message(struct picoui_message_box *box, const char *message)
+int tinyui_message_box_set_message(struct tinyui_message_box *box, const char *message)
 {
     ldMessageBox_t *ld_message_box;
 
@@ -286,9 +286,9 @@ int picoui_message_box_set_message(struct picoui_message_box *box, const char *m
  * @return 0 on success, -1 on failure
  */
 
-int picoui_message_box_set_msg(struct picoui_message_box *box, const char *message)
+int tinyui_message_box_set_msg(struct tinyui_message_box *box, const char *message)
 {
-    return picoui_message_box_set_message(box, message);
+    return tinyui_message_box_set_message(box, message);
 }
 
 /**
@@ -299,17 +299,17 @@ int picoui_message_box_set_msg(struct picoui_message_box *box, const char *messa
  * @return 0 on success, -1 on failure
  */
 
-int picoui_message_box_set_confirm_text(struct picoui_message_box *box, const char *text)
+int tinyui_message_box_set_confirm_text(struct tinyui_message_box *box, const char *text)
 {
     ldMessageBox_t *ld_message_box;
-    struct picoui_backend_widget *backend;
+    struct tinyui_backend_widget *backend;
 
     if (box == 0 || text == 0) {
         return -1;
     }
 
     ld_message_box = tinyui_message_box_get_ld(box);
-    backend = (struct picoui_backend_widget *)box->widget.backend_widget;
+    backend = (struct tinyui_backend_widget *)box->widget.backend_widget;
     if (ld_message_box == 0 || backend == 0) {
         return -1;
     }
@@ -329,12 +329,12 @@ int picoui_message_box_set_confirm_text(struct picoui_message_box *box, const ch
  * @return 0 on success, -1 on failure
  */
 
-int picoui_message_box_set_buttons(struct picoui_message_box *box, const char *const *buttons, int count)
+int tinyui_message_box_set_buttons(struct tinyui_message_box *box, const char *const *buttons, int count)
 {
     int i;
     ldMessageBox_t *ld_message_box;
 
-    if (box == 0 || buttons == 0 || count <= 0 || count > PICOUI_LIST_MAX_ITEMS) {
+    if (box == 0 || buttons == 0 || count <= 0 || count > TINYUI_LIST_MAX_ITEMS) {
         return -1;
     }
     for (i = 0; i < count; ++i) {
@@ -368,9 +368,9 @@ int picoui_message_box_set_buttons(struct picoui_message_box *box, const char *c
  * @return 0 on success, -1 on failure
  */
 
-int picoui_message_box_set_btn(struct picoui_message_box *box, const char *const *buttons, int count)
+int tinyui_message_box_set_btn(struct tinyui_message_box *box, const char *const *buttons, int count)
 {
-    return picoui_message_box_set_buttons(box, buttons, count);
+    return tinyui_message_box_set_buttons(box, buttons, count);
 }
 
 /**
@@ -383,7 +383,7 @@ int picoui_message_box_set_btn(struct picoui_message_box *box, const char *const
  * @return 0 on success, -1 on failure
  */
 
-int picoui_message_box_set_string_colors(struct picoui_message_box *box,
+int tinyui_message_box_set_string_colors(struct tinyui_message_box *box,
                                          unsigned int title_color,
                                          unsigned int message_color,
                                          unsigned int button_color)
@@ -419,12 +419,12 @@ int picoui_message_box_set_string_colors(struct picoui_message_box *box,
  * @return 0 on success, -1 on failure
  */
 
-int picoui_message_box_set_string_color(struct picoui_message_box *box,
+int tinyui_message_box_set_string_color(struct tinyui_message_box *box,
                                         unsigned int title_color,
                                         unsigned int message_color,
                                         unsigned int button_color)
 {
-    return picoui_message_box_set_string_colors(box, title_color, message_color, button_color);
+    return tinyui_message_box_set_string_colors(box, title_color, message_color, button_color);
 }
 
 /**
@@ -436,7 +436,7 @@ int picoui_message_box_set_string_color(struct picoui_message_box *box,
  * @return 0 on success, -1 on failure
  */
 
-int picoui_message_box_set_button_colors(struct picoui_message_box *box,
+int tinyui_message_box_set_button_colors(struct tinyui_message_box *box,
                                          unsigned int release_color,
                                          unsigned int press_color)
 {
@@ -466,11 +466,11 @@ int picoui_message_box_set_button_colors(struct picoui_message_box *box,
  * @return 0 on success, -1 on failure
  */
 
-int picoui_message_box_set_button_color(struct picoui_message_box *box,
+int tinyui_message_box_set_button_color(struct tinyui_message_box *box,
                                         unsigned int release_color,
                                         unsigned int press_color)
 {
-    return picoui_message_box_set_button_colors(box, release_color, press_color);
+    return tinyui_message_box_set_button_colors(box, release_color, press_color);
 }
 
 /**
@@ -481,7 +481,7 @@ int picoui_message_box_set_button_color(struct picoui_message_box *box,
  * @return 0 on success, -1 on failure
  */
 
-int picoui_message_box_set_bg_color(struct picoui_message_box *box, unsigned int bg_color)
+int tinyui_message_box_set_bg_color(struct tinyui_message_box *box, unsigned int bg_color)
 {
     ldMessageBox_t *ld_message_box;
 
@@ -507,9 +507,9 @@ int picoui_message_box_set_bg_color(struct picoui_message_box *box, unsigned int
  * @return 0 on success, -1 on failure
  */
 
-int picoui_message_box_set_background_color(struct picoui_message_box *box, unsigned int bg_color)
+int tinyui_message_box_set_background_color(struct tinyui_message_box *box, unsigned int bg_color)
 {
-    return picoui_message_box_set_bg_color(box, bg_color);
+    return tinyui_message_box_set_bg_color(box, bg_color);
 }
 
 /**
@@ -520,9 +520,9 @@ int picoui_message_box_set_background_color(struct picoui_message_box *box, unsi
  * @param[in] user_data User data pointer
  */
 
-void picoui_message_box_set_on_confirm(
-    struct picoui_message_box *box,
-    picoui_message_box_callback_t callback,
+void tinyui_message_box_set_on_confirm(
+    struct tinyui_message_box *box,
+    tinyui_message_box_callback_t callback,
     void *user_data)
 {
     ldMessageBox_t *ld_message_box;
@@ -549,12 +549,12 @@ void picoui_message_box_set_on_confirm(
  * @param[in] user_data User data pointer
  */
 
-void picoui_message_box_set_callback(
-    struct picoui_message_box *box,
-    picoui_message_box_callback_t callback,
+void tinyui_message_box_set_callback(
+    struct tinyui_message_box *box,
+    tinyui_message_box_callback_t callback,
     void *user_data)
 {
-    picoui_message_box_set_on_confirm(box, callback, user_data);
+    tinyui_message_box_set_on_confirm(box, callback, user_data);
 }
 
 /**
@@ -565,9 +565,9 @@ void picoui_message_box_set_callback(
  * @param[in] user_data User data pointer
  */
 
-void picoui_message_box_set_on_confirm_indexed(
-    struct picoui_message_box *box,
-    picoui_message_box_indexed_callback_t callback,
+void tinyui_message_box_set_on_confirm_indexed(
+    struct tinyui_message_box *box,
+    tinyui_message_box_indexed_callback_t callback,
     void *user_data)
 {
     ldMessageBox_t *ld_message_box;
@@ -592,7 +592,7 @@ void picoui_message_box_set_on_confirm_indexed(
  * @param[in] box box
  */
 
-const char *picoui_message_box_get_title(const struct picoui_message_box *box)
+const char *tinyui_message_box_get_title(const struct tinyui_message_box *box)
 {
     if (box == 0) {
         return 0;
@@ -606,7 +606,7 @@ const char *picoui_message_box_get_title(const struct picoui_message_box *box)
  * @param[in] box box
  */
 
-const char *picoui_message_box_get_message(const struct picoui_message_box *box)
+const char *tinyui_message_box_get_message(const struct tinyui_message_box *box)
 {
     if (box == 0) {
         return 0;
@@ -620,7 +620,7 @@ const char *picoui_message_box_get_message(const struct picoui_message_box *box)
  * @param[in] box box
  */
 
-const char *picoui_message_box_get_confirm_text(const struct picoui_message_box *box)
+const char *tinyui_message_box_get_confirm_text(const struct tinyui_message_box *box)
 {
     if (box == 0) {
         return 0;

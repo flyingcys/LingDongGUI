@@ -1,10 +1,10 @@
-# PicoUI J线 `v0.1` closeout 前状态
+# TINYUI J线 `v0.1` closeout 前状态
 
 ## 文档定位
 
 本文记录 `J7 closeout` 之前、当前工作树下关于 `v0.1 parity = window / label / button / slider` 的最新证据状态，以及当前仍需保留的人工证据边界。
 
-注意：本文是 `J线` 历史 closeout 前状态快照，不是当前 `a-0.6 final release` 真相源。对这条历史线而言，当时最终发布结论以 `docs/picoui-serial/a-0.6-final-release-closeout.md` 和对应 final release truth-source 为准。
+注意：本文是 `J线` 历史 closeout 前状态快照，不是当前 `a-0.6 final release` 真相源。对这条历史线而言，当时最终发布结论以 `docs/tinyui-serial/a-0.6-final-release-closeout.md` 和对应 final release truth-source 为准。
 
 本文不是 closeout 结论文档，不写“已完成发布”或“人工验收通过”；它只回答两件事：
 
@@ -16,19 +16,19 @@
 围绕 `v0.1` 四控件，当前已经可用的自动证据是：
 
 - `unit`
-  - `tests/picoui/unit/test_picoui_widgets.c`
-  - `tests/picoui/unit/test_picoui_button_events.c`
+  - `tests/tinyui/unit/test_tinyui_widgets.c`
+  - `tests/tinyui/unit/test_tinyui_button_events.c`
 - `contract`
-  - `python3 tests/picoui/contract/check_picoui_public_api.py`
-  - `python3 tests/picoui/contract/check_picoui_demo_boundary.py`
-  - `python3 tests/picoui/contract/check_picoui_release_capability_matrix.py`
+  - `python3 tests/tinyui/contract/check_tinyui_public_api.py`
+  - `python3 tests/tinyui/contract/check_tinyui_demo_boundary.py`
+  - `python3 tests/tinyui/contract/check_tinyui_release_capability_matrix.py`
 - `mapping`
   - `ctest --test-dir build --output-on-failure -L mapping`
 - `visible`
   - `ctest --test-dir build --output-on-failure -L visible`
 - `manual artifact entry`
-  - `python3 tests/picoui/runtime/check_picoui_manual_window_artifact.py --demo basic_widgets`
-  - `python3 tests/picoui/runtime/check_picoui_manual_window_artifact.py --demo settings_panel`
+  - `python3 tests/tinyui/runtime/check_tinyui_manual_window_artifact.py --demo basic_widgets`
+  - `python3 tests/tinyui/runtime/check_tinyui_manual_window_artifact.py --demo settings_panel`
 
 ## 当前已闭环项
 

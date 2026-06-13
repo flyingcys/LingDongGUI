@@ -1,23 +1,23 @@
-# PicoUI a-0.8 Native API Exhaustiveness Implementation Plan
+# TINYUI a-0.8 Native API Exhaustiveness Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 把 PicoUI `v0.7` 的手写 native-100 口径升级为可机器证明的 LingDongGUI native public API exhaustiveness，并关闭当前代码里所有真实控件能力和证据缺口。
+**Goal:** 把 TINYUI `v0.7` 的手写 native-100 口径升级为可机器证明的 LingDongGUI native public API exhaustiveness，并关闭当前代码里所有真实控件能力和证据缺口。
 
 **Architecture:** `a-0.8` 固定依赖为 `R0 -> R1 -> R2 -> R3/R4/R5 -> R6 -> R7 -> R8`。先建立 `ld*.h` public API extractor、`native_api_gap_ledger.json` 和 exhaustiveness gate，再按 ledger 分批补 shared policy 与全部控件缺口，最后串行收敛 matrix、runtime/mapping/visible/manual evidence 和 closeout 文档。任何 full parity 结论必须来自真实 backend 字段、unit、contract、runtime/mapping/visible/manual gate，不接受 hand-written matrix 自证，也不允许为 lifecycle/internal 能力过度新增 public wrapper。
 
-**Tech Stack:** C、CMake、CTest、Python3、SDL2 host runtime、PicoUI、LingDongGUI、GitNexus、Markdown serial docs
+**Tech Stack:** C、CMake、CTest、Python3、SDL2 host runtime、TINYUI、LingDongGUI、GitNexus、Markdown serial docs
 
 ---
 
 ## 0. 执行规则
 
 - 主线 worktree 固定：`.worktree/a-0.8`
-- 建议分支：`feat/picoui-a-0-8-native-api-exhaustiveness`
+- 建议分支：`feat/tinyui-a-0-8-native-api-exhaustiveness`
 - 创建 worktree 后必须执行：
 
 ```bash
-git worktree add .worktree/a-0.8 -b feat/picoui-a-0-8-native-api-exhaustiveness HEAD
+git worktree add .worktree/a-0.8 -b feat/tinyui-a-0-8-native-api-exhaustiveness HEAD
 cd .worktree/a-0.8
 git submodule sync --recursive
 git submodule update --init --recursive
@@ -36,201 +36,201 @@ git submodule update --init --recursive
 ### R0 native API inventory
 
 **Create:**
-- `tests/picoui/contract/ldgui_public_api_inventory.json`
-- `tests/picoui/contract/native_api_gap_ledger.json`
-- `tests/picoui/contract/check_ldgui_public_api_inventory.py`
-- `tests/picoui/contract/ldgui_public_api_expected_symbols.json`
+- `tests/tinyui/contract/ldgui_public_api_inventory.json`
+- `tests/tinyui/contract/native_api_gap_ledger.json`
+- `tests/tinyui/contract/check_ldgui_public_api_inventory.py`
+- `tests/tinyui/contract/ldgui_public_api_expected_symbols.json`
 
 **Modify:**
-- `docs/picoui-serial/a-0.8-线计划索引.md`
+- `docs/tinyui-serial/a-0.8-线计划索引.md`
 
 ### R1 exhaustiveness gate / matrix schema
 
 **Create:**
-- `tests/picoui/contract/check_picoui_native_api_exhaustiveness.py`
+- `tests/tinyui/contract/check_tinyui_native_api_exhaustiveness.py`
 
 **Modify:**
-- `tests/picoui/contract/picoui_release_capability_matrix.json`
-- `tests/picoui/contract/check_picoui_release_capability_matrix.py`
-- `tests/picoui/contract/check_picoui_public_api.py`
+- `tests/tinyui/contract/tinyui_release_capability_matrix.json`
+- `tests/tinyui/contract/check_tinyui_release_capability_matrix.py`
+- `tests/tinyui/contract/check_tinyui_public_api.py`
 
 ### R2 shared policy / smoke path gate
 
 **Modify:**
-- `picoui/include/picoui/widget.h`
-- `picoui/include/picoui/layout.h`
-- `picoui/include/picoui/theme.h`
-- `picoui/include/picoui/native.h`
-- `picoui/src/core/widget.c`
-- `picoui/src/core/native.c`
-- `picoui/src/layout/flex.c`
-- `picoui/src/layout/grid.c`
-- `picoui/src/theme/theme.c`
-- `picoui/src/backend/ldgui/backend_widget.c`
-- `picoui/src/backend/ldgui/backend_layout.c`
-- `picoui/src/backend/ldgui/backend_theme.c`
-- `picoui/src/backend/ldgui/backend_event.c`
-- `picoui/src/backend/ldgui/backend_app.c`
-- `tests/picoui/runtime/check_picoui_runtime.py`
-- `tests/picoui/runtime/check_picoui_backend_mapping.py`
-- `tests/picoui/runtime/check_picoui_visible_ui.py`
-- `tests/picoui/runtime/check_picoui_manual_window_artifact.py`
-- `tests/picoui/unit/test_picoui_native_bridge.c`
-- `tests/picoui/unit/test_picoui_widgets.c`
-- `tests/picoui/unit/test_picoui_layout.c`
-- `tests/picoui/unit/test_picoui_theme.c`
+- `tinyui/include/tinyui/widget.h`
+- `tinyui/include/tinyui/layout.h`
+- `tinyui/include/tinyui/theme.h`
+- `tinyui/include/tinyui/native.h`
+- `tinyui/src/core/widget.c`
+- `tinyui/src/core/native.c`
+- `tinyui/src/layout/flex.c`
+- `tinyui/src/layout/grid.c`
+- `tinyui/src/theme/theme.c`
+- `tinyui/src/backend/ldgui/backend_widget.c`
+- `tinyui/src/backend/ldgui/backend_layout.c`
+- `tinyui/src/backend/ldgui/backend_theme.c`
+- `tinyui/src/backend/ldgui/backend_event.c`
+- `tinyui/src/backend/ldgui/backend_app.c`
+- `tests/tinyui/runtime/check_tinyui_runtime.py`
+- `tests/tinyui/runtime/check_tinyui_backend_mapping.py`
+- `tests/tinyui/runtime/check_tinyui_visible_ui.py`
+- `tests/tinyui/runtime/check_tinyui_manual_window_artifact.py`
+- `tests/tinyui/unit/test_tinyui_native_bridge.c`
+- `tests/tinyui/unit/test_tinyui_widgets.c`
+- `tests/tinyui/unit/test_tinyui_layout.c`
+- `tests/tinyui/unit/test_tinyui_theme.c`
 
 ### R3 ledger A：base / layout / text / image / stable old widgets
 
 **Modify:**
-- `picoui/include/picoui/text.h`
-- `picoui/include/picoui/image.h`
-- `picoui/include/picoui/window.h`
-- `picoui/include/picoui/layout.h`
-- `picoui/include/picoui/label.h`
-- `picoui/include/picoui/checkbox.h`
-- `picoui/include/picoui/switch.h`
-- `picoui/include/picoui/list.h`
-- `picoui/src/widgets/text.c`
-- `picoui/src/widgets/image.c`
-- `picoui/src/widgets/window.c`
-- `picoui/src/backend/ldgui/backend_text.c`
-- `picoui/src/backend/ldgui/backend_image.c`
-- `picoui/src/backend/ldgui/backend_window.c`
-- `picoui/src/backend/ldgui/backend_layout.c`
-- `tests/picoui/unit/test_picoui_text.c`
-- `tests/picoui/unit/test_picoui_widgets.c`
-- `tests/picoui/unit/test_picoui_layout.c`
+- `tinyui/include/tinyui/text.h`
+- `tinyui/include/tinyui/image.h`
+- `tinyui/include/tinyui/window.h`
+- `tinyui/include/tinyui/layout.h`
+- `tinyui/include/tinyui/label.h`
+- `tinyui/include/tinyui/checkbox.h`
+- `tinyui/include/tinyui/switch.h`
+- `tinyui/include/tinyui/list.h`
+- `tinyui/src/widgets/text.c`
+- `tinyui/src/widgets/image.c`
+- `tinyui/src/widgets/window.c`
+- `tinyui/src/backend/ldgui/backend_text.c`
+- `tinyui/src/backend/ldgui/backend_image.c`
+- `tinyui/src/backend/ldgui/backend_window.c`
+- `tinyui/src/backend/ldgui/backend_layout.c`
+- `tests/tinyui/unit/test_tinyui_text.c`
+- `tests/tinyui/unit/test_tinyui_widgets.c`
+- `tests/tinyui/unit/test_tinyui_layout.c`
 
 ### R4 ledger B：input / navigation / data widgets
 
 **Modify:**
-- `picoui/include/picoui/line_edit.h`
-- `picoui/include/picoui/keyboard.h`
-- `picoui/include/picoui/combo_box.h`
-- `picoui/include/picoui/scroll_selecter.h`
-- `picoui/include/picoui/table.h`
-- `picoui/include/picoui/graph.h`
-- `picoui/include/picoui/calendar.h`
-- `picoui/src/widgets/line_edit.c`
-- `picoui/src/widgets/keyboard.c`
-- `picoui/src/widgets/combo_box.c`
-- `picoui/src/widgets/scroll_selecter.c`
-- `picoui/src/widgets/table.c`
-- `picoui/src/widgets/graph.c`
-- `picoui/src/widgets/calendar.c`
-- `picoui/src/backend/ldgui/backend_line_edit.c`
-- `picoui/src/backend/ldgui/backend_keyboard.c`
-- `picoui/src/backend/ldgui/backend_combo_box.c`
-- `picoui/src/backend/ldgui/backend_scroll_selecter.c`
-- `picoui/src/backend/ldgui/backend_table.c`
-- `picoui/src/backend/ldgui/backend_graph.c`
-- `picoui/src/backend/ldgui/backend_calendar.c`
-- `tests/picoui/unit/test_picoui_line_edit.c`
-- `tests/picoui/unit/test_picoui_keyboard.c`
-- `tests/picoui/contract/native_100_fragments/r4a-input-nav.json`
-- `tests/picoui/contract/native_100_fragments/r4b-data.json`
+- `tinyui/include/tinyui/line_edit.h`
+- `tinyui/include/tinyui/keyboard.h`
+- `tinyui/include/tinyui/combo_box.h`
+- `tinyui/include/tinyui/scroll_selecter.h`
+- `tinyui/include/tinyui/table.h`
+- `tinyui/include/tinyui/graph.h`
+- `tinyui/include/tinyui/calendar.h`
+- `tinyui/src/widgets/line_edit.c`
+- `tinyui/src/widgets/keyboard.c`
+- `tinyui/src/widgets/combo_box.c`
+- `tinyui/src/widgets/scroll_selecter.c`
+- `tinyui/src/widgets/table.c`
+- `tinyui/src/widgets/graph.c`
+- `tinyui/src/widgets/calendar.c`
+- `tinyui/src/backend/ldgui/backend_line_edit.c`
+- `tinyui/src/backend/ldgui/backend_keyboard.c`
+- `tinyui/src/backend/ldgui/backend_combo_box.c`
+- `tinyui/src/backend/ldgui/backend_scroll_selecter.c`
+- `tinyui/src/backend/ldgui/backend_table.c`
+- `tinyui/src/backend/ldgui/backend_graph.c`
+- `tinyui/src/backend/ldgui/backend_calendar.c`
+- `tests/tinyui/unit/test_tinyui_line_edit.c`
+- `tests/tinyui/unit/test_tinyui_keyboard.c`
+- `tests/tinyui/contract/native_100_fragments/r4a-input-nav.json`
+- `tests/tinyui/contract/native_100_fragments/r4b-data.json`
 
 ### R5 ledger C：visual / instrument / composite / remaining widgets
 
 **Modify:**
-- `picoui/include/picoui/button.h`
-- `picoui/include/picoui/slider.h`
-- `picoui/include/picoui/qrcode.h`
-- `picoui/include/picoui/arc.h`
-- `picoui/include/picoui/gauge.h`
-- `picoui/include/picoui/date_time.h`
-- `picoui/include/picoui/clock.h`
-- `picoui/include/picoui/progress_bar.h`
-- `picoui/include/picoui/progress_wheel.h`
-- `picoui/include/picoui/icon_slider.h`
-- `picoui/include/picoui/radial_menu.h`
-- `picoui/include/picoui/message_box.h`
-- `picoui/include/picoui/animation.h`
-- `picoui/src/widgets/button.c`
-- `picoui/src/widgets/slider.c`
-- `picoui/src/widgets/qrcode.c`
-- `picoui/src/widgets/arc.c`
-- `picoui/src/widgets/gauge.c`
-- `picoui/src/widgets/date_time.c`
-- `picoui/src/widgets/clock.c`
-- `picoui/src/widgets/progress_bar.c`
-- `picoui/src/widgets/progress_wheel.c`
-- `picoui/src/widgets/icon_slider.c`
-- `picoui/src/widgets/radial_menu.c`
-- `picoui/src/widgets/message_box.c`
-- `picoui/src/widgets/animation.c`
-- `picoui/src/backend/ldgui/backend_button.c`
-- `picoui/src/backend/ldgui/backend_slider.c`
-- `picoui/src/backend/ldgui/backend_qrcode.c`
-- `picoui/src/backend/ldgui/backend_arc.c`
-- `picoui/src/backend/ldgui/backend_gauge.c`
-- `picoui/src/backend/ldgui/backend_date_time.c`
-- `picoui/src/backend/ldgui/backend_clock.c`
-- `picoui/src/backend/ldgui/backend_progress_bar.c`
-- `picoui/src/backend/ldgui/backend_progress_wheel.c`
-- `picoui/src/backend/ldgui/backend_icon_slider.c`
-- `picoui/src/backend/ldgui/backend_radial_menu.c`
-- `picoui/src/backend/ldgui/backend_message_box.c`
-- `picoui/src/backend/ldgui/backend_animation.c`
-- `tests/picoui/unit/test_picoui_widgets.c`
-- `tests/picoui/unit/test_picoui_button_events.c`
-- `tests/picoui/unit/test_picoui_qrcode.c`
+- `tinyui/include/tinyui/button.h`
+- `tinyui/include/tinyui/slider.h`
+- `tinyui/include/tinyui/qrcode.h`
+- `tinyui/include/tinyui/arc.h`
+- `tinyui/include/tinyui/gauge.h`
+- `tinyui/include/tinyui/date_time.h`
+- `tinyui/include/tinyui/clock.h`
+- `tinyui/include/tinyui/progress_bar.h`
+- `tinyui/include/tinyui/progress_wheel.h`
+- `tinyui/include/tinyui/icon_slider.h`
+- `tinyui/include/tinyui/radial_menu.h`
+- `tinyui/include/tinyui/message_box.h`
+- `tinyui/include/tinyui/animation.h`
+- `tinyui/src/widgets/button.c`
+- `tinyui/src/widgets/slider.c`
+- `tinyui/src/widgets/qrcode.c`
+- `tinyui/src/widgets/arc.c`
+- `tinyui/src/widgets/gauge.c`
+- `tinyui/src/widgets/date_time.c`
+- `tinyui/src/widgets/clock.c`
+- `tinyui/src/widgets/progress_bar.c`
+- `tinyui/src/widgets/progress_wheel.c`
+- `tinyui/src/widgets/icon_slider.c`
+- `tinyui/src/widgets/radial_menu.c`
+- `tinyui/src/widgets/message_box.c`
+- `tinyui/src/widgets/animation.c`
+- `tinyui/src/backend/ldgui/backend_button.c`
+- `tinyui/src/backend/ldgui/backend_slider.c`
+- `tinyui/src/backend/ldgui/backend_qrcode.c`
+- `tinyui/src/backend/ldgui/backend_arc.c`
+- `tinyui/src/backend/ldgui/backend_gauge.c`
+- `tinyui/src/backend/ldgui/backend_date_time.c`
+- `tinyui/src/backend/ldgui/backend_clock.c`
+- `tinyui/src/backend/ldgui/backend_progress_bar.c`
+- `tinyui/src/backend/ldgui/backend_progress_wheel.c`
+- `tinyui/src/backend/ldgui/backend_icon_slider.c`
+- `tinyui/src/backend/ldgui/backend_radial_menu.c`
+- `tinyui/src/backend/ldgui/backend_message_box.c`
+- `tinyui/src/backend/ldgui/backend_animation.c`
+- `tests/tinyui/unit/test_tinyui_widgets.c`
+- `tests/tinyui/unit/test_tinyui_button_events.c`
+- `tests/tinyui/unit/test_tinyui_qrcode.c`
 
 ### R6 message_box / keyboard evidence
 
 **Modify:**
-- `docs/picoui-serial/C-线人工窗口验收记录.md`
-- `tests/picoui/runtime/check_picoui_backend_mapping.py`
-- `tests/picoui/runtime/check_picoui_visible_ui.py`
-- `tests/picoui/runtime/check_picoui_manual_window_artifact.py`
-- `tests/picoui/contract/picoui_release_capability_matrix.json`
-- `picoui/docs/demo_guide.md`
+- `docs/tinyui-serial/C-线人工窗口验收记录.md`
+- `tests/tinyui/runtime/check_tinyui_backend_mapping.py`
+- `tests/tinyui/runtime/check_tinyui_visible_ui.py`
+- `tests/tinyui/runtime/check_tinyui_manual_window_artifact.py`
+- `tests/tinyui/contract/tinyui_release_capability_matrix.json`
+- `tinyui/docs/demo_guide.md`
 
 ### R7 final matrix / gate closeout
 
 **Modify:**
-- `tests/picoui/contract/ldgui_public_api_inventory.json`
-- `tests/picoui/contract/picoui_release_capability_matrix.json`
-- `tests/picoui/contract/check_picoui_release_capability_matrix.py`
-- `tests/picoui/contract/check_picoui_public_api.py`
-- `picoui/docs/api_overview.md`
-- `picoui/docs/demo_guide.md`
+- `tests/tinyui/contract/ldgui_public_api_inventory.json`
+- `tests/tinyui/contract/tinyui_release_capability_matrix.json`
+- `tests/tinyui/contract/check_tinyui_release_capability_matrix.py`
+- `tests/tinyui/contract/check_tinyui_public_api.py`
+- `tinyui/docs/api_overview.md`
+- `tinyui/docs/demo_guide.md`
 
 ### R8 docs / release readiness
 
 **Modify:**
-- `docs/picoui-serial/a-0.8-线计划索引.md`
-- `docs/picoui-serial/a-0.8-v0.7-native-100-review-gap-list.md`
-- `docs/superpowers/specs/2026-06-02-picoui-a-0-8-native-api-exhaustiveness-design.md`
-- `docs/superpowers/plans/2026-06-02-picoui-a-0-8-native-api-exhaustiveness-implementation.md`
+- `docs/tinyui-serial/a-0.8-线计划索引.md`
+- `docs/tinyui-serial/a-0.8-v0.7-native-100-review-gap-list.md`
+- `docs/superpowers/specs/2026-06-02-tinyui-a-0-8-native-api-exhaustiveness-design.md`
+- `docs/superpowers/plans/2026-06-02-tinyui-a-0-8-native-api-exhaustiveness-implementation.md`
 
 ## 2. Tasks
 
 ### Task R0: native API inventory
 
 **Files:**
-- Create: `tests/picoui/contract/ldgui_public_api_inventory.json`
-- Create: `tests/picoui/contract/native_api_gap_ledger.json`
-- Create: `tests/picoui/contract/check_ldgui_public_api_inventory.py`
-- Create: `tests/picoui/contract/ldgui_public_api_expected_symbols.json`
+- Create: `tests/tinyui/contract/ldgui_public_api_inventory.json`
+- Create: `tests/tinyui/contract/native_api_gap_ledger.json`
+- Create: `tests/tinyui/contract/check_ldgui_public_api_inventory.py`
+- Create: `tests/tinyui/contract/ldgui_public_api_expected_symbols.json`
 
 - [ ] **Step 1: 跑 impact**
 
 Run:
 
 ```text
-gitnexus_impact(target="check_picoui_native_100_inventory.py", direction="upstream", repo="LingDongGUI")
-gitnexus_impact(target="picoui_release_capability_matrix.json", direction="upstream", repo="LingDongGUI")
+gitnexus_impact(target="check_tinyui_native_100_inventory.py", direction="upstream", repo="LingDongGUI")
+gitnexus_impact(target="tinyui_release_capability_matrix.json", direction="upstream", repo="LingDongGUI")
 ```
 
 Expected: 记录 direct callers / affected processes / risk。若 HIGH 或 CRITICAL，先回主线程确认。
 
 - [ ] **Step 2: 写 extractor RED**
 
-新增 `tests/picoui/contract/check_ldgui_public_api_inventory.py`，先让它读取不存在或不完整的 inventory 并 fail。
+新增 `tests/tinyui/contract/check_ldgui_public_api_inventory.py`，先让它读取不存在或不完整的 inventory 并 fail。
 
-Required behavior 必须基于全量 expected fixture，不允许只断言 3 个样本。先新增 `tests/picoui/contract/ldgui_public_api_expected_symbols.json`，内容由当前 `src/gui/ld*.h` 扫描结果冻结，至少包含：
+Required behavior 必须基于全量 expected fixture，不允许只断言 3 个样本。先新增 `tests/tinyui/contract/ldgui_public_api_expected_symbols.json`，内容由当前 `src/gui/ld*.h` 扫描结果冻结，至少包含：
 
 ```python
 assert len(extracted_symbols) >= expected["minimum_symbol_count"]
@@ -245,7 +245,7 @@ assert "ldBaseFocusNavigate" in extracted_symbols
 Run:
 
 ```bash
-python3 tests/picoui/contract/check_ldgui_public_api_inventory.py
+python3 tests/tinyui/contract/check_ldgui_public_api_inventory.py
 ```
 
 Expected: FAIL，原因是 `ldgui_public_api_inventory.json` 不存在、symbol count 不足、或缺任一 expected required symbol。
@@ -273,7 +273,7 @@ init / lifecycle / show / setter / getter / callback_hook / update_action / macr
 
 - [ ] **Step 4: 写 inventory JSON**
 
-新增 `tests/picoui/contract/ldgui_public_api_inventory.json`。
+新增 `tests/tinyui/contract/ldgui_public_api_inventory.json`。
 
 必须由 extractor 输出全量 `src/gui/ld*.h` public API rows，不允许只包含 review 已知缺口。下面只是 row 结构示例：
 
@@ -289,10 +289,10 @@ init / lifecycle / show / setter / getter / callback_hook / update_action / macr
           "ldgui_symbol": "ldTextSetStaticText",
           "category": "setter",
           "required": true,
-          "picoui_api": "picoui_text_set_static_text",
-          "backend_proof": "picoui_backend_text_set_static_text",
+          "tinyui_api": "tinyui_text_set_static_text",
+          "backend_proof": "tinyui_backend_text_set_static_text",
           "unit_test": "test_text_static_text_uses_backend_static_storage",
-          "gap_status": "missing_picoui_api"
+          "gap_status": "missing_tinyui_api"
         }
       ]
     }
@@ -303,7 +303,7 @@ init / lifecycle / show / setter / getter / callback_hook / update_action / macr
 
 - [ ] **Step 5: 生成 gap ledger**
 
-新增 `tests/picoui/contract/native_api_gap_ledger.json`。
+新增 `tests/tinyui/contract/native_api_gap_ledger.json`。
 
 ledger 每条 row 必须包含：
 
@@ -311,10 +311,10 @@ ledger 每条 row 必须包含：
 {
   "widget": "text",
   "ldgui_symbol": "ldTextSetStaticText",
-  "gap_status": "missing_picoui_api",
+  "gap_status": "missing_tinyui_api",
   "planned_task": "R3",
   "overwrap_risk": false,
-  "notes": "No current PicoUI API exposes static text lifetime semantics."
+  "notes": "No current TINYUI API exposes static text lifetime semantics."
 }
 ```
 
@@ -322,7 +322,7 @@ ledger 每条 row 必须包含：
 
 ```text
 covered
-missing_picoui_api
+missing_tinyui_api
 missing_backend_proof
 missing_unit
 missing_gate
@@ -343,11 +343,11 @@ allowlisted
 Run:
 
 ```bash
-python3 tests/picoui/contract/check_ldgui_public_api_inventory.py
+python3 tests/tinyui/contract/check_ldgui_public_api_inventory.py
 python3 - <<'PY'
 import json
-ledger = json.load(open('tests/picoui/contract/native_api_gap_ledger.json'))
-assert any(row['gap_status'] == 'missing_picoui_api' for row in ledger['rows'])
+ledger = json.load(open('tests/tinyui/contract/native_api_gap_ledger.json'))
+assert any(row['gap_status'] == 'missing_tinyui_api' for row in ledger['rows'])
 assert not any(row['gap_status'] == 'overwrapped' and not row.get('notes') for row in ledger['rows'])
 PY
 git diff --check
@@ -366,19 +366,19 @@ gitnexus_detect_changes(scope="all", repo="LingDongGUI")
 ### Task R1: exhaustiveness gate / matrix schema
 
 **Files:**
-- Create: `tests/picoui/contract/check_picoui_native_api_exhaustiveness.py`
-- Modify: `tests/picoui/contract/native_api_gap_ledger.json`
-- Modify: `tests/picoui/contract/picoui_release_capability_matrix.json`
-- Modify: `tests/picoui/contract/check_picoui_release_capability_matrix.py`
-- Modify: `tests/picoui/contract/check_picoui_public_api.py`
+- Create: `tests/tinyui/contract/check_tinyui_native_api_exhaustiveness.py`
+- Modify: `tests/tinyui/contract/native_api_gap_ledger.json`
+- Modify: `tests/tinyui/contract/tinyui_release_capability_matrix.json`
+- Modify: `tests/tinyui/contract/check_tinyui_release_capability_matrix.py`
+- Modify: `tests/tinyui/contract/check_tinyui_public_api.py`
 
 - [ ] **Step 1: 跑 impact**
 
 Run:
 
 ```text
-gitnexus_impact(target="check_picoui_release_capability_matrix.py", direction="upstream", repo="LingDongGUI")
-gitnexus_impact(target="check_picoui_public_api.py", direction="upstream", repo="LingDongGUI")
+gitnexus_impact(target="check_tinyui_release_capability_matrix.py", direction="upstream", repo="LingDongGUI")
+gitnexus_impact(target="check_tinyui_public_api.py", direction="upstream", repo="LingDongGUI")
 ```
 
 - [ ] **Step 2: 写 exhaustiveness RED**
@@ -388,7 +388,7 @@ gitnexus_impact(target="check_picoui_public_api.py", direction="upstream", repo=
 ```text
 native_api
 coverage_kind
-picoui_api
+tinyui_api
 backend_proof
 unit_test
 gate_evidence
@@ -398,7 +398,7 @@ gap_status
 Run:
 
 ```bash
-python3 tests/picoui/contract/check_picoui_native_api_exhaustiveness.py
+python3 tests/tinyui/contract/check_tinyui_native_api_exhaustiveness.py
 ```
 
 Expected: FAIL，指出当前 matrix 缺 native API aligned rows。
@@ -413,8 +413,8 @@ Expected: FAIL，指出当前 matrix 缺 native API aligned rows。
   "status": "support",
   "native_api": "ldImageSetMaskColor",
   "coverage_kind": "native_setter_parity",
-  "picoui_api": "picoui_image_set_mask_color",
-  "backend_proof": "picoui_backend_image_set_mask_color",
+  "tinyui_api": "tinyui_image_set_mask_color",
+  "backend_proof": "tinyui_backend_image_set_mask_color",
   "unit_test": "test_image_mask_color_writes_ld_image_field",
   "gate_evidence": ["contract", "unit"],
   "gap_status": "covered",
@@ -440,9 +440,9 @@ shared_api_equivalence
 Checker 必须验证：
 
 ```text
-required=true and non-allowlisted rows: picoui_api exists in picoui/include/picoui/*.h
-required=true and non-allowlisted rows: backend_proof exists in picoui/src/backend/ldgui/*.c or backend.h
-required=true and non-allowlisted rows: unit_test exists in tests/picoui/unit/*.c
+required=true and non-allowlisted rows: tinyui_api exists in tinyui/include/tinyui/*.h
+required=true and non-allowlisted rows: backend_proof exists in tinyui/src/backend/ldgui/*.c or backend.h
+required=true and non-allowlisted rows: unit_test exists in tests/tinyui/unit/*.c
 allowlisted rows: allowlist_reason exists and coverage_kind is allowlisted
 gap_status is covered or allowlisted at closeout
 ```
@@ -452,25 +452,25 @@ gap_status is covered or allowlisted at closeout
 Checker 必须 fail 这些情况：
 
 ```text
-lifecycle-only API has proposed picoui public wrapper
-render-only show API has proposed picoui public wrapper
-native API already covered by picoui_widget/layout/theme/native shared API but plan proposes duplicate widget-specific wrapper
+lifecycle-only API has proposed tinyui public wrapper
+render-only show API has proposed tinyui public wrapper
+native API already covered by tinyui_widget/layout/theme/native shared API but plan proposes duplicate widget-specific wrapper
 ```
 
 Expected: `overwrapped` row 必须在 R3/R4/R5 被移除或改为 `shared_api_equivalence`。
 
 - [ ] **Step 6: public API checker 双向化**
 
-保留禁泄漏检查，同时读取 `ldgui_public_api_inventory.json`，校验每个 row 都有 `required / coverage_kind / gap_status / rationale`。`required=true` 的 row 必须有存在的 `picoui_api` 或 `coverage_kind=shared_api_equivalence`；`required=false` 的 row 必须有 allowlist reason。
+保留禁泄漏检查，同时读取 `ldgui_public_api_inventory.json`，校验每个 row 都有 `required / coverage_kind / gap_status / rationale`。`required=true` 的 row 必须有存在的 `tinyui_api` 或 `coverage_kind=shared_api_equivalence`；`required=false` 的 row 必须有 allowlist reason。
 
 - [ ] **Step 7: GREEN**
 
 Run:
 
 ```bash
-python3 tests/picoui/contract/check_picoui_public_api.py
-python3 tests/picoui/contract/check_picoui_release_capability_matrix.py
-python3 tests/picoui/contract/check_picoui_native_api_exhaustiveness.py
+python3 tests/tinyui/contract/check_tinyui_public_api.py
+python3 tests/tinyui/contract/check_tinyui_release_capability_matrix.py
+python3 tests/tinyui/contract/check_tinyui_native_api_exhaustiveness.py
 git diff --check
 ```
 
@@ -487,35 +487,35 @@ gitnexus_detect_changes(scope="all", repo="LingDongGUI")
 ### Task R2: shared policy / smoke path gate
 
 **Files:**
-- Modify: `picoui/include/picoui/widget.h`
-- Modify: `picoui/include/picoui/layout.h`
-- Modify: `picoui/include/picoui/theme.h`
-- Modify: `picoui/include/picoui/native.h`
-- Modify: `picoui/src/core/widget.c`
-- Modify: `picoui/src/core/native.c`
-- Modify: `picoui/src/layout/flex.c`
-- Modify: `picoui/src/layout/grid.c`
-- Modify: `picoui/src/theme/theme.c`
-- Modify: `picoui/src/backend/ldgui/backend_widget.c`
-- Modify: `picoui/src/backend/ldgui/backend_layout.c`
-- Modify: `picoui/src/backend/ldgui/backend_theme.c`
-- Modify: `picoui/src/backend/ldgui/backend_event.c`
-- Modify: `picoui/src/backend/ldgui/backend_app.c`
-- Modify: `tests/picoui/runtime/check_picoui_runtime.py`
-- Modify: `tests/picoui/runtime/check_picoui_backend_mapping.py`
-- Modify: `tests/picoui/runtime/check_picoui_visible_ui.py`
-- Modify: `tests/picoui/runtime/check_picoui_manual_window_artifact.py`
-- Modify: `tests/picoui/unit/test_picoui_widgets.c`
-- Modify: `tests/picoui/unit/test_picoui_layout.c`
-- Modify: `tests/picoui/unit/test_picoui_theme.c`
+- Modify: `tinyui/include/tinyui/widget.h`
+- Modify: `tinyui/include/tinyui/layout.h`
+- Modify: `tinyui/include/tinyui/theme.h`
+- Modify: `tinyui/include/tinyui/native.h`
+- Modify: `tinyui/src/core/widget.c`
+- Modify: `tinyui/src/core/native.c`
+- Modify: `tinyui/src/layout/flex.c`
+- Modify: `tinyui/src/layout/grid.c`
+- Modify: `tinyui/src/theme/theme.c`
+- Modify: `tinyui/src/backend/ldgui/backend_widget.c`
+- Modify: `tinyui/src/backend/ldgui/backend_layout.c`
+- Modify: `tinyui/src/backend/ldgui/backend_theme.c`
+- Modify: `tinyui/src/backend/ldgui/backend_event.c`
+- Modify: `tinyui/src/backend/ldgui/backend_app.c`
+- Modify: `tests/tinyui/runtime/check_tinyui_runtime.py`
+- Modify: `tests/tinyui/runtime/check_tinyui_backend_mapping.py`
+- Modify: `tests/tinyui/runtime/check_tinyui_visible_ui.py`
+- Modify: `tests/tinyui/runtime/check_tinyui_manual_window_artifact.py`
+- Modify: `tests/tinyui/unit/test_tinyui_widgets.c`
+- Modify: `tests/tinyui/unit/test_tinyui_layout.c`
+- Modify: `tests/tinyui/unit/test_tinyui_theme.c`
 
 - [ ] **Step 1: 跑 impact**
 
 Run:
 
 ```text
-gitnexus_impact(target="picoui_backend_apply_smoke_cursor_layout", direction="upstream", repo="LingDongGUI")
-gitnexus_impact(target="picoui_native_image_wrap", direction="upstream", repo="LingDongGUI")
+gitnexus_impact(target="tinyui_backend_apply_smoke_cursor_layout", direction="upstream", repo="LingDongGUI")
+gitnexus_impact(target="tinyui_native_image_wrap", direction="upstream", repo="LingDongGUI")
 ```
 
 - [ ] **Step 2: shared base/layout ledger RED**
@@ -527,7 +527,7 @@ Run:
 ```bash
 python3 - <<'PY'
 import json
-ledger = json.load(open('tests/picoui/contract/native_api_gap_ledger.json'))
+ledger = json.load(open('tests/tinyui/contract/native_api_gap_ledger.json'))
 rows = [r for r in ledger['rows'] if r.get('widget') in ('base', 'window') or r.get('category') == 'macro_alias']
 assert rows, 'missing shared base/window ledger rows'
 for symbol in ['ldBaseGetOpacity', 'ldBaseSetHidden', 'ldBaseGetRegion', 'ldBaseFocusNavigate', 'ldWindowSetLayout', 'ldWindowSetPadding']:
@@ -550,7 +550,7 @@ PICOUI_SMOKE_LAYOUT_USED=0
 Run:
 
 ```bash
-python3 tests/picoui/runtime/check_picoui_runtime.py
+python3 tests/tinyui/runtime/check_tinyui_runtime.py
 ```
 
 Expected: 若当前 demo 触发 smoke layout，FAIL。
@@ -560,8 +560,8 @@ Expected: 若当前 demo 触发 smoke layout，FAIL。
 R2 必须把 shared rows 分成：
 
 ```text
-shared_api_equivalence via picoui_widget_*
-shared_api_equivalence via picoui_flex_* / picoui_grid_*
+shared_api_equivalence via tinyui_widget_*
+shared_api_equivalence via tinyui_flex_* / tinyui_grid_*
 backend proof only
 allowlisted tree/helper
 missing_* to be fixed before R3
@@ -600,10 +600,10 @@ manual_reviewed_passed
 Run:
 
 ```bash
-python3 tests/picoui/runtime/check_picoui_runtime.py
-python3 tests/picoui/runtime/check_picoui_backend_mapping.py
-python3 tests/picoui/runtime/check_picoui_visible_ui.py --all
-python3 tests/picoui/runtime/check_picoui_manual_window_artifact.py --all
+python3 tests/tinyui/runtime/check_tinyui_runtime.py
+python3 tests/tinyui/runtime/check_tinyui_backend_mapping.py
+python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --all
+python3 tests/tinyui/runtime/check_tinyui_manual_window_artifact.py --all
 git diff --check
 ```
 
@@ -620,43 +620,43 @@ gitnexus_detect_changes(scope="all", repo="LingDongGUI")
 ### Task R3: ledger A fixes
 
 **Files:**
-- Modify: `picoui/include/picoui/text.h`
-- Modify: `picoui/include/picoui/image.h`
-- Modify: `picoui/include/picoui/window.h`
-- Modify: `picoui/include/picoui/layout.h`
-- Modify: `picoui/include/picoui/label.h`
-- Modify: `picoui/include/picoui/checkbox.h`
-- Modify: `picoui/include/picoui/switch.h`
-- Modify: `picoui/include/picoui/list.h`
-- Modify: `picoui/src/widgets/text.c`
-- Modify: `picoui/src/widgets/image.c`
-- Modify: `picoui/src/widgets/window.c`
-- Modify: `picoui/src/widgets/label.c`
-- Modify: `picoui/src/widgets/checkbox.c`
-- Modify: `picoui/src/widgets/switch.c`
-- Modify: `picoui/src/widgets/list.c`
-- Modify: `picoui/src/backend/ldgui/backend_text.c`
-- Modify: `picoui/src/backend/ldgui/backend_image.c`
-- Modify: `picoui/src/backend/ldgui/backend_window.c`
-- Modify: `picoui/src/backend/ldgui/backend_layout.c`
-- Modify: `picoui/src/backend/ldgui/backend_label.c`
-- Modify: `picoui/src/backend/ldgui/backend_checkbox.c`
-- Modify: `picoui/src/backend/ldgui/backend_switch.c`
-- Modify: `picoui/src/backend/ldgui/backend_list.c`
-- Modify: `tests/picoui/unit/test_picoui_text.c`
-- Modify: `tests/picoui/unit/test_picoui_widgets.c`
-- Modify: `tests/picoui/unit/test_picoui_layout.c`
-- Modify: `tests/picoui/unit/test_picoui_list.c`
-- Modify: `tests/picoui/contract/native_100_fragments/r3b-selection.json`
+- Modify: `tinyui/include/tinyui/text.h`
+- Modify: `tinyui/include/tinyui/image.h`
+- Modify: `tinyui/include/tinyui/window.h`
+- Modify: `tinyui/include/tinyui/layout.h`
+- Modify: `tinyui/include/tinyui/label.h`
+- Modify: `tinyui/include/tinyui/checkbox.h`
+- Modify: `tinyui/include/tinyui/switch.h`
+- Modify: `tinyui/include/tinyui/list.h`
+- Modify: `tinyui/src/widgets/text.c`
+- Modify: `tinyui/src/widgets/image.c`
+- Modify: `tinyui/src/widgets/window.c`
+- Modify: `tinyui/src/widgets/label.c`
+- Modify: `tinyui/src/widgets/checkbox.c`
+- Modify: `tinyui/src/widgets/switch.c`
+- Modify: `tinyui/src/widgets/list.c`
+- Modify: `tinyui/src/backend/ldgui/backend_text.c`
+- Modify: `tinyui/src/backend/ldgui/backend_image.c`
+- Modify: `tinyui/src/backend/ldgui/backend_window.c`
+- Modify: `tinyui/src/backend/ldgui/backend_layout.c`
+- Modify: `tinyui/src/backend/ldgui/backend_label.c`
+- Modify: `tinyui/src/backend/ldgui/backend_checkbox.c`
+- Modify: `tinyui/src/backend/ldgui/backend_switch.c`
+- Modify: `tinyui/src/backend/ldgui/backend_list.c`
+- Modify: `tests/tinyui/unit/test_tinyui_text.c`
+- Modify: `tests/tinyui/unit/test_tinyui_widgets.c`
+- Modify: `tests/tinyui/unit/test_tinyui_layout.c`
+- Modify: `tests/tinyui/unit/test_tinyui_list.c`
+- Modify: `tests/tinyui/contract/native_100_fragments/r3b-selection.json`
 
 - [ ] **Step 1: 跑 impact**
 
 Run:
 
 ```text
-gitnexus_impact(target="picoui_text_set_text", direction="upstream", repo="LingDongGUI")
-gitnexus_impact(target="picoui_image_set_source", direction="upstream", repo="LingDongGUI")
-gitnexus_impact(target="picoui_flex_set_gap", direction="upstream", repo="LingDongGUI")
+gitnexus_impact(target="tinyui_text_set_text", direction="upstream", repo="LingDongGUI")
+gitnexus_impact(target="tinyui_image_set_source", direction="upstream", repo="LingDongGUI")
+gitnexus_impact(target="tinyui_flex_set_gap", direction="upstream", repo="LingDongGUI")
 ```
 
 - [ ] **Step 2: derive R3 worklist from ledger**
@@ -666,7 +666,7 @@ Run:
 ```bash
 python3 - <<'PY'
 import json
-ledger = json.load(open('tests/picoui/contract/native_api_gap_ledger.json'))
+ledger = json.load(open('tests/tinyui/contract/native_api_gap_ledger.json'))
 rows = [r for r in ledger['rows'] if r.get('planned_task') == 'R3' and r['gap_status'] != 'covered']
 assert rows, 'R3 has no ledger rows'
 for row in rows:
@@ -690,7 +690,7 @@ test_text_scroll_seek_and_move_write_scroll_offsets
 Run:
 
 ```bash
-ctest --test-dir build -R 'test_picoui_text|test_picoui_widgets' --output-on-failure
+ctest --test-dir build -R 'test_tinyui_text|test_tinyui_widgets' --output-on-failure
 ```
 
 Expected: FAIL。
@@ -709,7 +709,7 @@ test_window_generic_gap_writes_ld_window_gap
 Run:
 
 ```bash
-ctest --test-dir build -R 'test_picoui_layout|test_picoui_widgets' --output-on-failure
+ctest --test-dir build -R 'test_tinyui_layout|test_tinyui_widgets' --output-on-failure
 ```
 
 Expected: FAIL。
@@ -719,14 +719,14 @@ Expected: FAIL。
 只有在 ledger 证明现有 shared API 不足时，才新增 public API：
 
 ```c
-int picoui_text_set_transparent(struct picoui_text *text, int transparent);
-int picoui_text_set_static_text(struct picoui_text *text, const char *value);
-int picoui_text_set_text_color(struct picoui_text *text, unsigned int rgb);
-int picoui_text_set_bg_color(struct picoui_text *text, unsigned int rgb);
-int picoui_text_set_background_source(struct picoui_text *text, struct picoui_image_source *source);
-int picoui_text_set_consumed_font(struct picoui_text *text, const struct picoui_font *font);
-int picoui_text_scroll_seek(struct picoui_text *text, int offset);
-int picoui_text_scroll_move(struct picoui_text *text, int delta);
+int tinyui_text_set_transparent(struct tinyui_text *text, int transparent);
+int tinyui_text_set_static_text(struct tinyui_text *text, const char *value);
+int tinyui_text_set_text_color(struct tinyui_text *text, unsigned int rgb);
+int tinyui_text_set_bg_color(struct tinyui_text *text, unsigned int rgb);
+int tinyui_text_set_background_source(struct tinyui_text *text, struct tinyui_image_source *source);
+int tinyui_text_set_consumed_font(struct tinyui_text *text, const struct tinyui_font *font);
+int tinyui_text_scroll_seek(struct tinyui_text *text, int offset);
+int tinyui_text_scroll_move(struct tinyui_text *text, int delta);
 ```
 
 Backend 或 equivalence proof 必须调用或证明：
@@ -747,14 +747,14 @@ ldTextScrollMove
 只有在 ledger 证明现有 shared API 不足时，才新增 public API：
 
 ```c
-int picoui_image_set_mask_color(struct picoui_image *image, unsigned int rgb);
-int picoui_window_set_layout(struct picoui_window *window, int layout);
-int picoui_window_set_padding(struct picoui_window *window, int padding);
-int picoui_window_set_grid_padding(struct picoui_window *window, int padding);
-int picoui_window_set_gap(struct picoui_window *window, int gap);
+int tinyui_image_set_mask_color(struct tinyui_image *image, unsigned int rgb);
+int tinyui_window_set_layout(struct tinyui_window *window, int layout);
+int tinyui_window_set_padding(struct tinyui_window *window, int padding);
+int tinyui_window_set_grid_padding(struct tinyui_window *window, int padding);
+int tinyui_window_set_gap(struct tinyui_window *window, int gap);
 ```
 
-如果 `picoui_widget_set_padding`、`picoui_flex_set_gap`、`picoui_grid_set_gap`、`picoui_grid_set_columns` 已等价覆盖，对应 matrix row 必须使用 `shared_api_equivalence`，不得重复包装。
+如果 `tinyui_widget_set_padding`、`tinyui_flex_set_gap`、`tinyui_grid_set_gap`、`tinyui_grid_set_columns` 已等价覆盖，对应 matrix row 必须使用 `shared_api_equivalence`，不得重复包装。
 
 Backend 必须证明：
 
@@ -772,9 +772,9 @@ ldWindow_t.gridRowGap / gridColumnGap
 把新增 APIs 写入：
 
 ```text
-tests/picoui/contract/ldgui_public_api_inventory.json
-tests/picoui/contract/native_api_gap_ledger.json
-tests/picoui/contract/picoui_release_capability_matrix.json
+tests/tinyui/contract/ldgui_public_api_inventory.json
+tests/tinyui/contract/native_api_gap_ledger.json
+tests/tinyui/contract/tinyui_release_capability_matrix.json
 ```
 
 - [ ] **Step 8: GREEN**
@@ -784,12 +784,12 @@ Run:
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
 rtk cmake --build build
-ctest --test-dir build -R 'test_picoui_text|test_picoui_widgets|test_picoui_layout' --output-on-failure
-python3 tests/picoui/contract/check_picoui_public_api.py
-python3 tests/picoui/contract/check_picoui_native_api_exhaustiveness.py
+ctest --test-dir build -R 'test_tinyui_text|test_tinyui_widgets|test_tinyui_layout' --output-on-failure
+python3 tests/tinyui/contract/check_tinyui_public_api.py
+python3 tests/tinyui/contract/check_tinyui_native_api_exhaustiveness.py
 python3 - <<'PY'
 import json
-ledger = json.load(open('tests/picoui/contract/native_api_gap_ledger.json'))
+ledger = json.load(open('tests/tinyui/contract/native_api_gap_ledger.json'))
 bad = [r for r in ledger['rows'] if r.get('planned_task') == 'R3' and r['gap_status'] not in ('covered', 'allowlisted')]
 assert not bad, bad[:5]
 PY
@@ -809,44 +809,44 @@ gitnexus_detect_changes(scope="all", repo="LingDongGUI")
 ### Task R4: ledger B fixes
 
 **Files:**
-- Modify: `picoui/include/picoui/line_edit.h`
-- Modify: `picoui/include/picoui/keyboard.h`
-- Modify: `picoui/include/picoui/combo_box.h`
-- Modify: `picoui/include/picoui/scroll_selecter.h`
-- Modify: `picoui/include/picoui/table.h`
-- Modify: `picoui/include/picoui/graph.h`
-- Modify: `picoui/include/picoui/calendar.h`
-- Modify: `picoui/src/widgets/line_edit.c`
-- Modify: `picoui/src/widgets/keyboard.c`
-- Modify: `picoui/src/widgets/combo_box.c`
-- Modify: `picoui/src/widgets/scroll_selecter.c`
-- Modify: `picoui/src/widgets/table.c`
-- Modify: `picoui/src/widgets/graph.c`
-- Modify: `picoui/src/widgets/calendar.c`
-- Modify: `picoui/src/backend/ldgui/backend_line_edit.c`
-- Modify: `picoui/src/backend/ldgui/backend_keyboard.c`
-- Modify: `picoui/src/backend/ldgui/backend_combo_box.c`
-- Modify: `picoui/src/backend/ldgui/backend_scroll_selecter.c`
-- Modify: `picoui/src/backend/ldgui/backend_table.c`
-- Modify: `picoui/src/backend/ldgui/backend_graph.c`
-- Modify: `picoui/src/backend/ldgui/backend_calendar.c`
-- Modify: `tests/picoui/unit/test_picoui_line_edit.c`
-- Modify: `tests/picoui/unit/test_picoui_keyboard.c`
-- Modify: `tests/picoui/unit/test_picoui_combo_box.c`
-- Modify: `tests/picoui/unit/test_picoui_scroll_selecter.c`
-- Modify: `tests/picoui/unit/test_picoui_table.c`
-- Modify: `tests/picoui/unit/test_picoui_graph.c`
-- Modify: `tests/picoui/unit/test_picoui_calendar.c`
-- Modify: `tests/picoui/contract/native_100_fragments/r4a-input-nav.json`
-- Modify: `tests/picoui/contract/native_100_fragments/r4b-data.json`
+- Modify: `tinyui/include/tinyui/line_edit.h`
+- Modify: `tinyui/include/tinyui/keyboard.h`
+- Modify: `tinyui/include/tinyui/combo_box.h`
+- Modify: `tinyui/include/tinyui/scroll_selecter.h`
+- Modify: `tinyui/include/tinyui/table.h`
+- Modify: `tinyui/include/tinyui/graph.h`
+- Modify: `tinyui/include/tinyui/calendar.h`
+- Modify: `tinyui/src/widgets/line_edit.c`
+- Modify: `tinyui/src/widgets/keyboard.c`
+- Modify: `tinyui/src/widgets/combo_box.c`
+- Modify: `tinyui/src/widgets/scroll_selecter.c`
+- Modify: `tinyui/src/widgets/table.c`
+- Modify: `tinyui/src/widgets/graph.c`
+- Modify: `tinyui/src/widgets/calendar.c`
+- Modify: `tinyui/src/backend/ldgui/backend_line_edit.c`
+- Modify: `tinyui/src/backend/ldgui/backend_keyboard.c`
+- Modify: `tinyui/src/backend/ldgui/backend_combo_box.c`
+- Modify: `tinyui/src/backend/ldgui/backend_scroll_selecter.c`
+- Modify: `tinyui/src/backend/ldgui/backend_table.c`
+- Modify: `tinyui/src/backend/ldgui/backend_graph.c`
+- Modify: `tinyui/src/backend/ldgui/backend_calendar.c`
+- Modify: `tests/tinyui/unit/test_tinyui_line_edit.c`
+- Modify: `tests/tinyui/unit/test_tinyui_keyboard.c`
+- Modify: `tests/tinyui/unit/test_tinyui_combo_box.c`
+- Modify: `tests/tinyui/unit/test_tinyui_scroll_selecter.c`
+- Modify: `tests/tinyui/unit/test_tinyui_table.c`
+- Modify: `tests/tinyui/unit/test_tinyui_graph.c`
+- Modify: `tests/tinyui/unit/test_tinyui_calendar.c`
+- Modify: `tests/tinyui/contract/native_100_fragments/r4a-input-nav.json`
+- Modify: `tests/tinyui/contract/native_100_fragments/r4b-data.json`
 
 - [ ] **Step 1: 跑 impact**
 
 Run:
 
 ```text
-gitnexus_impact(target="picoui_line_edit_set_text", direction="upstream", repo="LingDongGUI")
-gitnexus_impact(target="picoui_keyboard_navigate", direction="upstream", repo="LingDongGUI")
+gitnexus_impact(target="tinyui_line_edit_set_text", direction="upstream", repo="LingDongGUI")
+gitnexus_impact(target="tinyui_keyboard_navigate", direction="upstream", repo="LingDongGUI")
 ```
 
 - [ ] **Step 2: derive R4 worklist from ledger**
@@ -856,7 +856,7 @@ Run:
 ```bash
 python3 - <<'PY'
 import json
-ledger = json.load(open('tests/picoui/contract/native_api_gap_ledger.json'))
+ledger = json.load(open('tests/tinyui/contract/native_api_gap_ledger.json'))
 rows = [r for r in ledger['rows'] if r.get('planned_task') == 'R4' and r['gap_status'] != 'covered']
 assert rows, 'R4 has no ledger rows'
 for row in rows:
@@ -874,13 +874,13 @@ Expected: 输出 R4 必须关闭的全部 rows。不得只修 line_edit / keyboa
 test_line_edit_align_writes_backend_align
 test_line_edit_color_writes_text_background_frame
 test_line_edit_finished_signal_parity
-test_line_edit_commit_cancel_result_is_picoui_internal_not_native_reason
+test_line_edit_commit_cancel_result_is_tinyui_internal_not_native_reason
 ```
 
 Run:
 
 ```bash
-ctest --test-dir build -R '^test_picoui_line_edit$' --output-on-failure
+ctest --test-dir build -R '^test_tinyui_line_edit$' --output-on-failure
 ```
 
 Expected: FAIL。
@@ -899,18 +899,18 @@ test_keyboard_update_and_button_update_contract_or_allowlist
 Run:
 
 ```bash
-ctest --test-dir build -R 'test_picoui_keyboard|test_picoui_line_edit' --output-on-failure
+ctest --test-dir build -R 'test_tinyui_keyboard|test_tinyui_line_edit' --output-on-failure
 ```
 
 Expected: FAIL。
 
 - [ ] **Step 5: implement line_edit API or equivalence**
 
-只允许新增 align/color 这类 native public setter 对应 API。不要新增 finished reason public API；native 只有 `SIGNAL_FINISHED`，PicoUI commit/cancel 只能作为内部 edit_result 证据，不计入 native parity public surface。
+只允许新增 align/color 这类 native public setter 对应 API。不要新增 finished reason public API；native 只有 `SIGNAL_FINISHED`，TINYUI commit/cancel 只能作为内部 edit_result 证据，不计入 native parity public surface。
 
 ```c
-int picoui_line_edit_set_align(struct picoui_line_edit *line_edit, int align);
-int picoui_line_edit_set_color(struct picoui_line_edit *line_edit,
+int tinyui_line_edit_set_align(struct tinyui_line_edit *line_edit, int align);
+int tinyui_line_edit_set_color(struct tinyui_line_edit *line_edit,
                                unsigned int text_rgb,
                                unsigned int bg_rgb,
                                unsigned int frame_rgb);
@@ -922,18 +922,18 @@ Matrix 要求：
 ldLineEditSetAlign -> native_setter_parity
 ldLineEditSetColor -> native_setter_parity
 SIGNAL_FINISHED -> event parity via existing finished callback
-commit/cancel edit_result -> PicoUI internal evidence, not native API row
+commit/cancel edit_result -> TINYUI internal evidence, not native API row
 ```
 
 - [ ] **Step 6: implement keyboard policy**
 
-先决策，不默认新增 public API。`ldKeyboardGetTargetBtnList / ldKeyboardCallback / ldKeyboardBtnUserDraw` 是 weak extension hook；其中 user draw 牵涉 Arm-2D draw context，默认应是 backend-private extension 或 allowlist，不得直接暴露为跨平台 PicoUI API。
+先决策，不默认新增 public API。`ldKeyboardGetTargetBtnList / ldKeyboardCallback / ldKeyboardBtnUserDraw` 是 weak extension hook；其中 user draw 牵涉 Arm-2D draw context，默认应是 backend-private extension 或 allowlist，不得直接暴露为跨平台 TINYUI API。
 
 允许的处理方式：
 
 ```c
-int picoui_keyboard_update(struct picoui_keyboard *keyboard);
-int picoui_keyboard_button_update(struct picoui_keyboard *keyboard, unsigned int key_code);
+int tinyui_keyboard_update(struct tinyui_keyboard *keyboard);
+int tinyui_keyboard_button_update(struct tinyui_keyboard *keyboard, unsigned int key_code);
 ```
 
 如果决定公开 target list 或 callback，必须先定义稳定 key list schema，不得用 `void *` 糊掉 `kbBtnInfo_t` 合同。若某项必须 allowlist，必须在 inventory 中写 explicit reason，并让 checker enforce。
@@ -943,10 +943,10 @@ int picoui_keyboard_button_update(struct picoui_keyboard *keyboard, unsigned int
 更新：
 
 ```text
-tests/picoui/contract/ldgui_public_api_inventory.json
-tests/picoui/contract/native_api_gap_ledger.json
-tests/picoui/contract/picoui_release_capability_matrix.json
-tests/picoui/contract/native_100_fragments/r4a-input-nav.json
+tests/tinyui/contract/ldgui_public_api_inventory.json
+tests/tinyui/contract/native_api_gap_ledger.json
+tests/tinyui/contract/tinyui_release_capability_matrix.json
+tests/tinyui/contract/native_100_fragments/r4a-input-nav.json
 ```
 
 - [ ] **Step 8: GREEN**
@@ -956,11 +956,11 @@ Run:
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
 rtk cmake --build build
-ctest --test-dir build -R 'test_picoui_line_edit|test_picoui_keyboard' --output-on-failure
-python3 tests/picoui/contract/check_picoui_native_api_exhaustiveness.py
+ctest --test-dir build -R 'test_tinyui_line_edit|test_tinyui_keyboard' --output-on-failure
+python3 tests/tinyui/contract/check_tinyui_native_api_exhaustiveness.py
 python3 - <<'PY'
 import json
-ledger = json.load(open('tests/picoui/contract/native_api_gap_ledger.json'))
+ledger = json.load(open('tests/tinyui/contract/native_api_gap_ledger.json'))
 bad = [r for r in ledger['rows'] if r.get('planned_task') == 'R4' and r['gap_status'] not in ('covered', 'allowlisted')]
 assert not bad, bad[:5]
 PY
@@ -980,71 +980,71 @@ gitnexus_detect_changes(scope="all", repo="LingDongGUI")
 ### Task R5: ledger C fixes
 
 **Files:**
-- Modify: `picoui/include/picoui/button.h`
-- Modify: `picoui/include/picoui/slider.h`
-- Modify: `picoui/include/picoui/qrcode.h`
-- Modify: `picoui/include/picoui/progress_bar.h`
-- Modify: `picoui/include/picoui/progress_wheel.h`
-- Modify: `picoui/include/picoui/arc.h`
-- Modify: `picoui/include/picoui/gauge.h`
-- Modify: `picoui/include/picoui/date_time.h`
-- Modify: `picoui/include/picoui/clock.h`
-- Modify: `picoui/include/picoui/icon_slider.h`
-- Modify: `picoui/include/picoui/radial_menu.h`
-- Modify: `picoui/include/picoui/message_box.h`
-- Modify: `picoui/include/picoui/animation.h`
-- Modify: `picoui/src/widgets/button.c`
-- Modify: `picoui/src/widgets/slider.c`
-- Modify: `picoui/src/widgets/qrcode.c`
-- Modify: `picoui/src/widgets/progress_bar.c`
-- Modify: `picoui/src/widgets/progress_wheel.c`
-- Modify: `picoui/src/widgets/arc.c`
-- Modify: `picoui/src/widgets/gauge.c`
-- Modify: `picoui/src/widgets/date_time.c`
-- Modify: `picoui/src/widgets/clock.c`
-- Modify: `picoui/src/widgets/icon_slider.c`
-- Modify: `picoui/src/widgets/radial_menu.c`
-- Modify: `picoui/src/widgets/message_box.c`
-- Modify: `picoui/src/widgets/animation.c`
-- Modify: `picoui/src/backend/ldgui/backend_slider.c`
-- Modify: `picoui/src/backend/ldgui/backend_button.c`
-- Modify: `picoui/src/backend/ldgui/backend_qrcode.c`
-- Modify: `picoui/src/backend/ldgui/backend_progress_bar.c`
-- Modify: `picoui/src/backend/ldgui/backend_progress_wheel.c`
-- Modify: `picoui/src/backend/ldgui/backend_arc.c`
-- Modify: `picoui/src/backend/ldgui/backend_gauge.c`
-- Modify: `picoui/src/backend/ldgui/backend_date_time.c`
-- Modify: `picoui/src/backend/ldgui/backend_clock.c`
-- Modify: `picoui/src/backend/ldgui/backend_icon_slider.c`
-- Modify: `picoui/src/backend/ldgui/backend_radial_menu.c`
-- Modify: `picoui/src/backend/ldgui/backend_message_box.c`
-- Modify: `picoui/src/backend/ldgui/backend_animation.c`
-- Modify: `tests/picoui/unit/test_picoui_widgets.c`
-- Modify: `tests/picoui/unit/test_picoui_button_events.c`
-- Modify: `tests/picoui/unit/test_picoui_qrcode.c`
-- Modify: `tests/picoui/unit/test_picoui_progress_bar.c`
-- Modify: `tests/picoui/unit/test_picoui_progress_wheel.c`
-- Modify: `tests/picoui/unit/test_picoui_arc.c`
-- Modify: `tests/picoui/unit/test_picoui_gauge.c`
-- Modify: `tests/picoui/unit/test_picoui_date_time.c`
-- Modify: `tests/picoui/unit/test_picoui_clock.c`
-- Modify: `tests/picoui/unit/test_picoui_icon_slider.c`
-- Modify: `tests/picoui/unit/test_picoui_radial_menu.c`
-- Modify: `tests/picoui/unit/test_picoui_message_box.c`
-- Modify: `tests/picoui/unit/test_picoui_animation.c`
-- Modify: `tests/picoui/contract/native_100_fragments/r5a-progress-qrcode.json`
-- Modify: `tests/picoui/contract/native_100_fragments/r5b-instrument-clock.json`
-- Modify: `tests/picoui/contract/native_100_fragments/r6a-composite.json`
-- Modify: `tests/picoui/contract/native_100_fragments/r6b-modal-animation.json`
+- Modify: `tinyui/include/tinyui/button.h`
+- Modify: `tinyui/include/tinyui/slider.h`
+- Modify: `tinyui/include/tinyui/qrcode.h`
+- Modify: `tinyui/include/tinyui/progress_bar.h`
+- Modify: `tinyui/include/tinyui/progress_wheel.h`
+- Modify: `tinyui/include/tinyui/arc.h`
+- Modify: `tinyui/include/tinyui/gauge.h`
+- Modify: `tinyui/include/tinyui/date_time.h`
+- Modify: `tinyui/include/tinyui/clock.h`
+- Modify: `tinyui/include/tinyui/icon_slider.h`
+- Modify: `tinyui/include/tinyui/radial_menu.h`
+- Modify: `tinyui/include/tinyui/message_box.h`
+- Modify: `tinyui/include/tinyui/animation.h`
+- Modify: `tinyui/src/widgets/button.c`
+- Modify: `tinyui/src/widgets/slider.c`
+- Modify: `tinyui/src/widgets/qrcode.c`
+- Modify: `tinyui/src/widgets/progress_bar.c`
+- Modify: `tinyui/src/widgets/progress_wheel.c`
+- Modify: `tinyui/src/widgets/arc.c`
+- Modify: `tinyui/src/widgets/gauge.c`
+- Modify: `tinyui/src/widgets/date_time.c`
+- Modify: `tinyui/src/widgets/clock.c`
+- Modify: `tinyui/src/widgets/icon_slider.c`
+- Modify: `tinyui/src/widgets/radial_menu.c`
+- Modify: `tinyui/src/widgets/message_box.c`
+- Modify: `tinyui/src/widgets/animation.c`
+- Modify: `tinyui/src/backend/ldgui/backend_slider.c`
+- Modify: `tinyui/src/backend/ldgui/backend_button.c`
+- Modify: `tinyui/src/backend/ldgui/backend_qrcode.c`
+- Modify: `tinyui/src/backend/ldgui/backend_progress_bar.c`
+- Modify: `tinyui/src/backend/ldgui/backend_progress_wheel.c`
+- Modify: `tinyui/src/backend/ldgui/backend_arc.c`
+- Modify: `tinyui/src/backend/ldgui/backend_gauge.c`
+- Modify: `tinyui/src/backend/ldgui/backend_date_time.c`
+- Modify: `tinyui/src/backend/ldgui/backend_clock.c`
+- Modify: `tinyui/src/backend/ldgui/backend_icon_slider.c`
+- Modify: `tinyui/src/backend/ldgui/backend_radial_menu.c`
+- Modify: `tinyui/src/backend/ldgui/backend_message_box.c`
+- Modify: `tinyui/src/backend/ldgui/backend_animation.c`
+- Modify: `tests/tinyui/unit/test_tinyui_widgets.c`
+- Modify: `tests/tinyui/unit/test_tinyui_button_events.c`
+- Modify: `tests/tinyui/unit/test_tinyui_qrcode.c`
+- Modify: `tests/tinyui/unit/test_tinyui_progress_bar.c`
+- Modify: `tests/tinyui/unit/test_tinyui_progress_wheel.c`
+- Modify: `tests/tinyui/unit/test_tinyui_arc.c`
+- Modify: `tests/tinyui/unit/test_tinyui_gauge.c`
+- Modify: `tests/tinyui/unit/test_tinyui_date_time.c`
+- Modify: `tests/tinyui/unit/test_tinyui_clock.c`
+- Modify: `tests/tinyui/unit/test_tinyui_icon_slider.c`
+- Modify: `tests/tinyui/unit/test_tinyui_radial_menu.c`
+- Modify: `tests/tinyui/unit/test_tinyui_message_box.c`
+- Modify: `tests/tinyui/unit/test_tinyui_animation.c`
+- Modify: `tests/tinyui/contract/native_100_fragments/r5a-progress-qrcode.json`
+- Modify: `tests/tinyui/contract/native_100_fragments/r5b-instrument-clock.json`
+- Modify: `tests/tinyui/contract/native_100_fragments/r6a-composite.json`
+- Modify: `tests/tinyui/contract/native_100_fragments/r6b-modal-animation.json`
 
 - [ ] **Step 1: 跑 impact**
 
 Run:
 
 ```text
-gitnexus_impact(target="picoui_slider_set_value", direction="upstream", repo="LingDongGUI")
-gitnexus_impact(target="picoui_button_set_text", direction="upstream", repo="LingDongGUI")
-gitnexus_impact(target="picoui_qrcode_set_text", direction="upstream", repo="LingDongGUI")
+gitnexus_impact(target="tinyui_slider_set_value", direction="upstream", repo="LingDongGUI")
+gitnexus_impact(target="tinyui_button_set_text", direction="upstream", repo="LingDongGUI")
+gitnexus_impact(target="tinyui_qrcode_set_text", direction="upstream", repo="LingDongGUI")
 ```
 
 - [ ] **Step 2: derive R5 worklist from ledger**
@@ -1054,7 +1054,7 @@ Run:
 ```bash
 python3 - <<'PY'
 import json
-ledger = json.load(open('tests/picoui/contract/native_api_gap_ledger.json'))
+ledger = json.load(open('tests/tinyui/contract/native_api_gap_ledger.json'))
 rows = [r for r in ledger['rows'] if r.get('planned_task') == 'R5' and r['gap_status'] != 'covered']
 assert rows, 'R5 has no ledger rows'
 for row in rows:
@@ -1077,7 +1077,7 @@ test_qrcode_init_only_fields_are_marked_direct_field_parity
 Run:
 
 ```bash
-ctest --test-dir build -R 'test_picoui_widgets|test_picoui_button_events|test_picoui_qrcode' --output-on-failure
+ctest --test-dir build -R 'test_tinyui_widgets|test_tinyui_button_events|test_tinyui_qrcode' --output-on-failure
 ```
 
 Expected: FAIL。
@@ -1087,14 +1087,14 @@ Expected: FAIL。
 只有在 ledger 证明现有 shared API 不足时，才新增 public API。已知样本：
 
 ```c
-int picoui_slider_set_color(struct picoui_slider *slider,
+int tinyui_slider_set_color(struct tinyui_slider *slider,
                             unsigned int bg_rgb,
                             unsigned int frame_rgb,
                             unsigned int indicator_rgb);
-int picoui_button_get_text(struct picoui_button *button, const char **text);
-int picoui_button_get_text_color(struct picoui_button *button, unsigned int *rgb);
-int picoui_button_get_release_color(struct picoui_button *button, unsigned int *rgb);
-int picoui_button_get_press_color(struct picoui_button *button, unsigned int *rgb);
+int tinyui_button_get_text(struct tinyui_button *button, const char **text);
+int tinyui_button_get_text_color(struct tinyui_button *button, unsigned int *rgb);
+int tinyui_button_get_release_color(struct tinyui_button *button, unsigned int *rgb);
+int tinyui_button_get_press_color(struct tinyui_button *button, unsigned int *rgb);
 ```
 
 `qrcode` 若继续 direct field write，matrix row 必须使用：
@@ -1110,9 +1110,9 @@ coverage_kind = direct_field_parity
 更新：
 
 ```text
-tests/picoui/contract/ldgui_public_api_inventory.json
-tests/picoui/contract/native_api_gap_ledger.json
-tests/picoui/contract/picoui_release_capability_matrix.json
+tests/tinyui/contract/ldgui_public_api_inventory.json
+tests/tinyui/contract/native_api_gap_ledger.json
+tests/tinyui/contract/tinyui_release_capability_matrix.json
 ```
 
 - [ ] **Step 6: GREEN**
@@ -1122,11 +1122,11 @@ Run:
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
 rtk cmake --build build
-ctest --test-dir build -R 'test_picoui_widgets|test_picoui_button_events|test_picoui_qrcode' --output-on-failure
-python3 tests/picoui/contract/check_picoui_native_api_exhaustiveness.py
+ctest --test-dir build -R 'test_tinyui_widgets|test_tinyui_button_events|test_tinyui_qrcode' --output-on-failure
+python3 tests/tinyui/contract/check_tinyui_native_api_exhaustiveness.py
 python3 - <<'PY'
 import json
-ledger = json.load(open('tests/picoui/contract/native_api_gap_ledger.json'))
+ledger = json.load(open('tests/tinyui/contract/native_api_gap_ledger.json'))
 bad = [r for r in ledger['rows'] if r.get('planned_task') == 'R5' and r['gap_status'] not in ('covered', 'allowlisted')]
 assert not bad, bad[:5]
 PY
@@ -1146,20 +1146,20 @@ gitnexus_detect_changes(scope="all", repo="LingDongGUI")
 ### Task R6: message_box / keyboard evidence repair
 
 **Files:**
-- Modify: `docs/picoui-serial/C-线人工窗口验收记录.md`
-- Modify: `tests/picoui/runtime/check_picoui_backend_mapping.py`
-- Modify: `tests/picoui/runtime/check_picoui_visible_ui.py`
-- Modify: `tests/picoui/runtime/check_picoui_manual_window_artifact.py`
-- Modify: `tests/picoui/contract/picoui_release_capability_matrix.json`
-- Modify: `picoui/docs/demo_guide.md`
+- Modify: `docs/tinyui-serial/C-线人工窗口验收记录.md`
+- Modify: `tests/tinyui/runtime/check_tinyui_backend_mapping.py`
+- Modify: `tests/tinyui/runtime/check_tinyui_visible_ui.py`
+- Modify: `tests/tinyui/runtime/check_tinyui_manual_window_artifact.py`
+- Modify: `tests/tinyui/contract/tinyui_release_capability_matrix.json`
+- Modify: `tinyui/docs/demo_guide.md`
 
 - [ ] **Step 1: 跑 impact**
 
 Run:
 
 ```text
-gitnexus_impact(target="check_picoui_backend_mapping.py", direction="upstream", repo="LingDongGUI")
-gitnexus_impact(target="check_picoui_manual_window_artifact.py", direction="upstream", repo="LingDongGUI")
+gitnexus_impact(target="check_tinyui_backend_mapping.py", direction="upstream", repo="LingDongGUI")
+gitnexus_impact(target="check_tinyui_manual_window_artifact.py", direction="upstream", repo="LingDongGUI")
 ```
 
 - [ ] **Step 2: RED**
@@ -1175,8 +1175,8 @@ manual_review_required must not imply final manual pass
 Run:
 
 ```bash
-python3 tests/picoui/runtime/check_picoui_backend_mapping.py
-python3 tests/picoui/runtime/check_picoui_manual_window_artifact.py --all
+python3 tests/tinyui/runtime/check_tinyui_backend_mapping.py
+python3 tests/tinyui/runtime/check_tinyui_manual_window_artifact.py --all
 ```
 
 Expected: FAIL if old special-case remains.
@@ -1224,10 +1224,10 @@ matrix manual object 必须区分：
 Run:
 
 ```bash
-python3 tests/picoui/runtime/check_picoui_backend_mapping.py
-python3 tests/picoui/runtime/check_picoui_visible_ui.py --all
-python3 tests/picoui/runtime/check_picoui_manual_window_artifact.py --all
-python3 tests/picoui/contract/check_picoui_release_capability_matrix.py
+python3 tests/tinyui/runtime/check_tinyui_backend_mapping.py
+python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --all
+python3 tests/tinyui/runtime/check_tinyui_manual_window_artifact.py --all
+python3 tests/tinyui/contract/check_tinyui_release_capability_matrix.py
 git diff --check
 ```
 
@@ -1244,24 +1244,24 @@ gitnexus_detect_changes(scope="all", repo="LingDongGUI")
 ### Task R7: final matrix / gate closeout
 
 **Files:**
-- Modify: `tests/picoui/contract/ldgui_public_api_inventory.json`
-- Modify: `tests/picoui/contract/native_api_gap_ledger.json`
-- Modify: `tests/picoui/contract/picoui_release_capability_matrix.json`
-- Modify: `tests/picoui/contract/check_picoui_release_capability_matrix.py`
-- Modify: `tests/picoui/contract/check_picoui_public_api.py`
-- Modify: `picoui/docs/api_overview.md`
-- Modify: `picoui/docs/demo_guide.md`
+- Modify: `tests/tinyui/contract/ldgui_public_api_inventory.json`
+- Modify: `tests/tinyui/contract/native_api_gap_ledger.json`
+- Modify: `tests/tinyui/contract/tinyui_release_capability_matrix.json`
+- Modify: `tests/tinyui/contract/check_tinyui_release_capability_matrix.py`
+- Modify: `tests/tinyui/contract/check_tinyui_public_api.py`
+- Modify: `tinyui/docs/api_overview.md`
+- Modify: `tinyui/docs/demo_guide.md`
 
 - [ ] **Step 1: run full contract suite**
 
 Run:
 
 ```bash
-python3 tests/picoui/contract/check_picoui_public_api.py
-python3 tests/picoui/contract/check_picoui_native_100_inventory.py
-python3 tests/picoui/contract/check_ldgui_public_api_inventory.py
-python3 tests/picoui/contract/check_picoui_native_api_exhaustiveness.py
-python3 tests/picoui/contract/check_picoui_release_capability_matrix.py
+python3 tests/tinyui/contract/check_tinyui_public_api.py
+python3 tests/tinyui/contract/check_tinyui_native_100_inventory.py
+python3 tests/tinyui/contract/check_ldgui_public_api_inventory.py
+python3 tests/tinyui/contract/check_tinyui_native_api_exhaustiveness.py
+python3 tests/tinyui/contract/check_tinyui_release_capability_matrix.py
 ```
 
 Expected: PASS。
@@ -1273,7 +1273,7 @@ Run:
 ```bash
 python3 - <<'PY'
 import json
-ledger = json.load(open('tests/picoui/contract/native_api_gap_ledger.json'))
+ledger = json.load(open('tests/tinyui/contract/native_api_gap_ledger.json'))
 bad = [r for r in ledger['rows'] if r['gap_status'] not in ('covered', 'allowlisted')]
 assert not bad, bad[:20]
 assert all(r.get('allowlist_reason') for r in ledger['rows'] if r['gap_status'] == 'allowlisted')
@@ -1289,7 +1289,7 @@ Run:
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
 rtk cmake --build build
-ctest --test-dir build -L picoui --output-on-failure
+ctest --test-dir build -L tinyui --output-on-failure
 ```
 
 Expected: PASS。
@@ -1299,10 +1299,10 @@ Expected: PASS。
 Run:
 
 ```bash
-python3 tests/picoui/runtime/check_picoui_runtime.py
-python3 tests/picoui/runtime/check_picoui_backend_mapping.py
-python3 tests/picoui/runtime/check_picoui_visible_ui.py --all
-python3 tests/picoui/runtime/check_picoui_manual_window_artifact.py --all
+python3 tests/tinyui/runtime/check_tinyui_runtime.py
+python3 tests/tinyui/runtime/check_tinyui_backend_mapping.py
+python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --all
+python3 tests/tinyui/runtime/check_tinyui_manual_window_artifact.py --all
 ```
 
 Expected: PASS。
@@ -1312,8 +1312,8 @@ Expected: PASS。
 Update:
 
 ```text
-picoui/docs/api_overview.md
-picoui/docs/demo_guide.md
+tinyui/docs/api_overview.md
+tinyui/docs/demo_guide.md
 ```
 
 Required wording:
@@ -1346,17 +1346,17 @@ gitnexus_detect_changes(scope="all", repo="LingDongGUI")
 ### Task R8: docs / release readiness
 
 **Files:**
-- Modify: `docs/picoui-serial/a-0.8-线计划索引.md`
-- Modify: `docs/picoui-serial/a-0.8-v0.7-native-100-review-gap-list.md`
-- Modify: `docs/superpowers/specs/2026-06-02-picoui-a-0-8-native-api-exhaustiveness-design.md`
-- Modify: `docs/superpowers/plans/2026-06-02-picoui-a-0-8-native-api-exhaustiveness-implementation.md`
+- Modify: `docs/tinyui-serial/a-0.8-线计划索引.md`
+- Modify: `docs/tinyui-serial/a-0.8-v0.7-native-100-review-gap-list.md`
+- Modify: `docs/superpowers/specs/2026-06-02-tinyui-a-0-8-native-api-exhaustiveness-design.md`
+- Modify: `docs/superpowers/plans/2026-06-02-tinyui-a-0-8-native-api-exhaustiveness-implementation.md`
 
 - [ ] **Step 1: closeout wording audit**
 
 Search:
 
 ```bash
-rg -n "100%|full_parity_complete|final_release_ready|manual_review_required|temporary smoke|fake fallback|formal mapping exclusion" docs/picoui-serial docs/superpowers picoui/docs tests/picoui/contract
+rg -n "100%|full_parity_complete|final_release_ready|manual_review_required|temporary smoke|fake fallback|formal mapping exclusion" docs/tinyui-serial docs/superpowers tinyui/docs tests/tinyui/contract
 ```
 
 Expected: no stale claim says v0.7 achieved native 100% without a-0.8 gates.
@@ -1376,19 +1376,19 @@ temporary smoke path 不参与 full parity 结论。
 Run:
 
 ```bash
-ctest --test-dir build -L picoui --output-on-failure
-python3 tests/picoui/contract/check_picoui_public_api.py
-python3 tests/picoui/contract/check_picoui_native_100_inventory.py
-python3 tests/picoui/contract/check_ldgui_public_api_inventory.py
-python3 tests/picoui/contract/check_picoui_native_api_exhaustiveness.py
-python3 tests/picoui/contract/check_picoui_release_capability_matrix.py
-python3 tests/picoui/runtime/check_picoui_runtime.py
-python3 tests/picoui/runtime/check_picoui_backend_mapping.py
-python3 tests/picoui/runtime/check_picoui_visible_ui.py --all
-python3 tests/picoui/runtime/check_picoui_manual_window_artifact.py --all
+ctest --test-dir build -L tinyui --output-on-failure
+python3 tests/tinyui/contract/check_tinyui_public_api.py
+python3 tests/tinyui/contract/check_tinyui_native_100_inventory.py
+python3 tests/tinyui/contract/check_ldgui_public_api_inventory.py
+python3 tests/tinyui/contract/check_tinyui_native_api_exhaustiveness.py
+python3 tests/tinyui/contract/check_tinyui_release_capability_matrix.py
+python3 tests/tinyui/runtime/check_tinyui_runtime.py
+python3 tests/tinyui/runtime/check_tinyui_backend_mapping.py
+python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --all
+python3 tests/tinyui/runtime/check_tinyui_manual_window_artifact.py --all
 python3 - <<'PY'
 import json
-ledger = json.load(open('tests/picoui/contract/native_api_gap_ledger.json'))
+ledger = json.load(open('tests/tinyui/contract/native_api_gap_ledger.json'))
 bad = [r for r in ledger['rows'] if r['gap_status'] not in ('covered', 'allowlisted')]
 assert not bad, bad[:20]
 PY
@@ -1405,4 +1405,4 @@ Run:
 gitnexus_detect_changes(scope="all", repo="LingDongGUI")
 ```
 
-Expected: affected scope matches `a-0.8` native API exhaustiveness and PicoUI gate/docs updates.
+Expected: affected scope matches `a-0.8` native API exhaustiveness and TINYUI gate/docs updates.

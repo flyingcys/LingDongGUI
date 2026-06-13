@@ -1,4 +1,4 @@
-# PicoUI a-0.3 truth-source 重建与 current-15 审计 Implementation Plan
+# TINYUI a-0.3 truth-source 重建与 current-15 审计 Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -7,7 +7,7 @@
 
 **Architecture:** 执行顺序固定为 `R1 -> R2 -> R3 -> R4 -> R5`。其中 `R1 / R2 / R4 / R5` 严格串行，`R3` 采用并行 subagent：按 `J线 4 / a-01 5 / a-02 6` 三组拆开做 capability audit，主线程最后统一收敛 matrix、gate 和文档。review 独立，repair 回原执行 subagent。
 
-**Tech Stack:** C、CMake、CTest、Python3、SDL2 host runtime、PicoUI、LingDongGUI、GitNexus、Markdown serial docs
+**Tech Stack:** C、CMake、CTest、Python3、SDL2 host runtime、TINYUI、LingDongGUI、GitNexus、Markdown serial docs
 
 ---
 
@@ -15,7 +15,7 @@
 
 - 本阶段只做 `a-0.3`
 - 不创建 `a-0.4 / a-0.5 / a-0.6` 的详细 spec 或 detailed implementation plan
-- 涉及 `tests/picoui/contract/*.py` 或 `*.json` 的符号修改前，先做 GitNexus impact
+- 涉及 `tests/tinyui/contract/*.py` 或 `*.json` 的符号修改前，先做 GitNexus impact
 - `review / repair / audit` 必须独立子任务
 - 每个阶段结束都要同步索引、spec、plan、真相源文档
 - 所有 markdown 统一中文
@@ -48,57 +48,57 @@
 ### Task R1: current truth-source rebuild
 
 **Files:**
-- Modify: `docs/picoui-serial/a-0.3/README.md`
-- Create: `docs/picoui-serial/a-0.3/current-15-覆盖与分层真相源.md`
-- Modify: `tests/picoui/contract/picoui_release_capability_matrix.json`
-- Modify: `tests/picoui/contract/check_picoui_release_capability_matrix.py`
+- Modify: `docs/tinyui-serial/a-0.3/README.md`
+- Create: `docs/tinyui-serial/a-0.3/current-15-覆盖与分层真相源.md`
+- Modify: `tests/tinyui/contract/tinyui_release_capability_matrix.json`
+- Modify: `tests/tinyui/contract/check_tinyui_release_capability_matrix.py`
 
 ### Task R2: current-15 parity stratification
 
 **Files:**
-- Modify: `docs/picoui-serial/a-0.3/current-15-覆盖与分层真相源.md`
-- Create: `docs/picoui-serial/a-0.3/current-15-capability-audit.md`
-- Modify: `tests/picoui/contract/picoui_release_capability_matrix.json`
+- Modify: `docs/tinyui-serial/a-0.3/current-15-覆盖与分层真相源.md`
+- Create: `docs/tinyui-serial/a-0.3/current-15-capability-audit.md`
+- Modify: `tests/tinyui/contract/tinyui_release_capability_matrix.json`
 
 ### Task R3: current-15 capability audit
 
 **Files:**
-- Modify: `docs/picoui-serial/a-0.3/current-15-capability-audit.md`
-- Modify: `tests/picoui/contract/picoui_release_capability_matrix.json`
+- Modify: `docs/tinyui-serial/a-0.3/current-15-capability-audit.md`
+- Modify: `tests/tinyui/contract/tinyui_release_capability_matrix.json`
 
 ### Task R4: truth-source / docs / gate consistency repair
 
 **Files:**
-- Modify: `docs/picoui-serial/a-0.3/README.md`
-- Modify: `docs/picoui-serial/a-0.3/current-15-覆盖与分层真相源.md`
-- Modify: `docs/picoui-serial/a-0.3/current-15-capability-audit.md`
-- Modify: `tests/picoui/contract/picoui_release_capability_matrix.json`
-- Modify: `tests/picoui/contract/check_picoui_release_capability_matrix.py`
-- Modify: `docs/superpowers/specs/2026-05-31-picoui-a-0-3-truth-source-and-current-15-design.md`
+- Modify: `docs/tinyui-serial/a-0.3/README.md`
+- Modify: `docs/tinyui-serial/a-0.3/current-15-覆盖与分层真相源.md`
+- Modify: `docs/tinyui-serial/a-0.3/current-15-capability-audit.md`
+- Modify: `tests/tinyui/contract/tinyui_release_capability_matrix.json`
+- Modify: `tests/tinyui/contract/check_tinyui_release_capability_matrix.py`
+- Modify: `docs/superpowers/specs/2026-05-31-tinyui-a-0-3-truth-source-and-current-15-design.md`
 
 ### Task R5: a-0.3 closeout 标准冻结
 
 **Files:**
-- Create: `docs/picoui-serial/a-0.3/a-0.3-closeout-标准.md`
-- Modify: `docs/picoui-serial/a-0.3/README.md`
-- Modify: `docs/superpowers/specs/2026-05-31-picoui-a-0-3-truth-source-and-current-15-design.md`
-- Modify: `docs/superpowers/plans/2026-05-31-picoui-a-0-3-truth-source-and-current-15-implementation.md`
+- Create: `docs/tinyui-serial/a-0.3/a-0.3-closeout-标准.md`
+- Modify: `docs/tinyui-serial/a-0.3/README.md`
+- Modify: `docs/superpowers/specs/2026-05-31-tinyui-a-0-3-truth-source-and-current-15-design.md`
+- Modify: `docs/superpowers/plans/2026-05-31-tinyui-a-0-3-truth-source-and-current-15-implementation.md`
 
 ## 2. Tasks
 
 ### Task R1: 重建 current truth-source
 
 **Files:**
-- Modify: `tests/picoui/contract/picoui_release_capability_matrix.json`
-- Modify: `tests/picoui/contract/check_picoui_release_capability_matrix.py`
-- Create: `docs/picoui-serial/a-0.3/current-15-覆盖与分层真相源.md`
+- Modify: `tests/tinyui/contract/tinyui_release_capability_matrix.json`
+- Modify: `tests/tinyui/contract/check_tinyui_release_capability_matrix.py`
+- Create: `docs/tinyui-serial/a-0.3/current-15-覆盖与分层真相源.md`
 
 - [ ] **Step 1: 跑 impact**
 
 Run:
 
 ```text
-gitnexus_impact(target="check_picoui_release_capability_matrix", direction="upstream", repo="LingDongGUI")
+gitnexus_impact(target="check_tinyui_release_capability_matrix", direction="upstream", repo="LingDongGUI")
 ```
 
 Expected:
@@ -110,10 +110,10 @@ Expected:
 Run:
 
 ```bash
-for f in picoui/include/picoui/*.h; do
+for f in tinyui/include/tinyui/*.h; do
   bn=$(basename "$f")
   case "$bn" in
-    app.h|layout.h|theme.h|widget.h|picoui.h) continue ;;
+    app.h|layout.h|theme.h|widget.h|tinyui.h) continue ;;
   esac
   echo "$bn"
 done
@@ -121,12 +121,12 @@ done
 
 Expected:
 
-- 得到 current PicoUI public widget 清单
+- 得到 current TINYUI public widget 清单
 - 当前应至少识别到 `15` 个 widget
 
 - [ ] **Step 3: 写真相源文档**
 
-在 `docs/picoui-serial/a-0.3/current-15-覆盖与分层真相源.md` 写清：
+在 `docs/tinyui-serial/a-0.3/current-15-覆盖与分层真相源.md` 写清：
 
 ```md
 # Current-15 覆盖与分层真相源
@@ -141,7 +141,7 @@ Expected:
 
 Requirements:
 
-- `picoui_wrapped_widget_total` 从旧 `9` 改到 current truth
+- `tinyui_wrapped_widget_total` 从旧 `9` 改到 current truth
 - 纳入 `progress_bar / qrcode / progress_wheel / message_box / date_time / clock`
 - 先诚实写当前层级，禁止直接把六个 `a-02` 控件全写成 `parity_complete`
 
@@ -149,7 +149,7 @@ Requirements:
 
 Requirements:
 
-- `check_picoui_release_capability_matrix.py` 必须校验：
+- `check_tinyui_release_capability_matrix.py` 必须校验：
   - current widget 总数
   - current uncovered widget 总数
   - current-15 新增控件存在
@@ -160,7 +160,7 @@ Requirements:
 Run:
 
 ```bash
-python3 tests/picoui/contract/check_picoui_release_capability_matrix.py
+python3 tests/tinyui/contract/check_tinyui_release_capability_matrix.py
 git diff --check
 ```
 
@@ -172,9 +172,9 @@ Expected:
 ### Task R2: current-15 分层
 
 **Files:**
-- Modify: `docs/picoui-serial/a-0.3/current-15-覆盖与分层真相源.md`
-- Create: `docs/picoui-serial/a-0.3/current-15-capability-audit.md`
-- Modify: `tests/picoui/contract/picoui_release_capability_matrix.json`
+- Modify: `docs/tinyui-serial/a-0.3/current-15-覆盖与分层真相源.md`
+- Create: `docs/tinyui-serial/a-0.3/current-15-capability-audit.md`
+- Modify: `tests/tinyui/contract/tinyui_release_capability_matrix.json`
 
 - [ ] **Step 1: 固定三层中间态**
 
@@ -208,8 +208,8 @@ Requirements:
 Run:
 
 ```bash
-python3 tests/picoui/contract/check_picoui_release_capability_matrix.py
-rg -n "full parity complete|stable contract|minimal vertical slice" docs/picoui-serial/a-0.3
+python3 tests/tinyui/contract/check_tinyui_release_capability_matrix.py
+rg -n "full parity complete|stable contract|minimal vertical slice" docs/tinyui-serial/a-0.3
 git diff --check
 ```
 
@@ -225,8 +225,8 @@ git diff --check
 **Serial merge owner:** 主线程
 
 **Files:**
-- Modify: `docs/picoui-serial/a-0.3/current-15-capability-audit.md`
-- Modify: `tests/picoui/contract/picoui_release_capability_matrix.json`
+- Modify: `docs/tinyui-serial/a-0.3/current-15-capability-audit.md`
+- Modify: `tests/tinyui/contract/tinyui_release_capability_matrix.json`
 
 - [ ] **Step 1: 逐控件写 capability checklist**
 
@@ -273,7 +273,7 @@ Requirements:
 
 - 主线程统一把三组 audit 合并进
   - `current-15-capability-audit.md`
-  - `picoui_release_capability_matrix.json`
+  - `tinyui_release_capability_matrix.json`
 - 若三组对同一层级定义冲突，主线程裁决，不交给 subagent 各自决定
 
 - [ ] **Step 3: 审核**
@@ -281,8 +281,8 @@ Requirements:
 Run:
 
 ```bash
-rg -n "未完成|限制|缺口" docs/picoui-serial/a-0.3/current-15-capability-audit.md
-python3 tests/picoui/contract/check_picoui_release_capability_matrix.py
+rg -n "未完成|限制|缺口" docs/tinyui-serial/a-0.3/current-15-capability-audit.md
+python3 tests/tinyui/contract/check_tinyui_release_capability_matrix.py
 git diff --check
 ```
 
@@ -295,12 +295,12 @@ Expected:
 **Execution mode:** 严格串行
 
 **Files:**
-- Modify: `docs/picoui-serial/a-0.3/README.md`
-- Modify: `docs/picoui-serial/a-0.3/current-15-覆盖与分层真相源.md`
-- Modify: `docs/picoui-serial/a-0.3/current-15-capability-audit.md`
-- Modify: `tests/picoui/contract/picoui_release_capability_matrix.json`
-- Modify: `tests/picoui/contract/check_picoui_release_capability_matrix.py`
-- Modify: `docs/superpowers/specs/2026-05-31-picoui-a-0-3-truth-source-and-current-15-design.md`
+- Modify: `docs/tinyui-serial/a-0.3/README.md`
+- Modify: `docs/tinyui-serial/a-0.3/current-15-覆盖与分层真相源.md`
+- Modify: `docs/tinyui-serial/a-0.3/current-15-capability-audit.md`
+- Modify: `tests/tinyui/contract/tinyui_release_capability_matrix.json`
+- Modify: `tests/tinyui/contract/check_tinyui_release_capability_matrix.py`
+- Modify: `docs/superpowers/specs/2026-05-31-tinyui-a-0-3-truth-source-and-current-15-design.md`
 
 - [ ] **Step 1: 对齐术语**
 
@@ -331,8 +331,8 @@ Expected:
 Run:
 
 ```bash
-rg -n "current-15|full parity complete|stable contract but not full parity|minimal vertical slice only" docs/picoui-serial/a-0.3 docs/superpowers/specs tests/picoui/contract
-python3 tests/picoui/contract/check_picoui_release_capability_matrix.py
+rg -n "current-15|full parity complete|stable contract but not full parity|minimal vertical slice only" docs/tinyui-serial/a-0.3 docs/superpowers/specs tests/tinyui/contract
+python3 tests/tinyui/contract/check_tinyui_release_capability_matrix.py
 git diff --check
 ```
 
@@ -341,10 +341,10 @@ git diff --check
 **Execution mode:** 严格串行
 
 **Files:**
-- Create: `docs/picoui-serial/a-0.3/a-0.3-closeout-标准.md`
-- Modify: `docs/picoui-serial/a-0.3/README.md`
-- Modify: `docs/superpowers/specs/2026-05-31-picoui-a-0-3-truth-source-and-current-15-design.md`
-- Modify: `docs/superpowers/plans/2026-05-31-picoui-a-0-3-truth-source-and-current-15-implementation.md`
+- Create: `docs/tinyui-serial/a-0.3/a-0.3-closeout-标准.md`
+- Modify: `docs/tinyui-serial/a-0.3/README.md`
+- Modify: `docs/superpowers/specs/2026-05-31-tinyui-a-0-3-truth-source-and-current-15-design.md`
+- Modify: `docs/superpowers/plans/2026-05-31-tinyui-a-0-3-truth-source-and-current-15-implementation.md`
 
 - [ ] **Step 1: 写 closeout 标准**
 
@@ -369,8 +369,8 @@ Requirements:
 Run:
 
 ```bash
-rg -n "closeout|完成标准|不等于" docs/picoui-serial/a-0.3 docs/superpowers/specs docs/superpowers/plans
-python3 tests/picoui/contract/check_picoui_release_capability_matrix.py
+rg -n "closeout|完成标准|不等于" docs/tinyui-serial/a-0.3 docs/superpowers/specs docs/superpowers/plans
+python3 tests/tinyui/contract/check_tinyui_release_capability_matrix.py
 git diff --check
 ```
 
@@ -391,4 +391,4 @@ git diff --check
 
 1. `R1 / R2 / R4 / R5` 由主线程严格串行执行。
 2. `R3` 只允许按 `J / a01 / a02` 三组并行 subagent 拆分。
-3. 最终 closeout 以 `docs/picoui-serial/a-0.3/a-0.3-closeout-标准.md` 与 fresh verification 为准。
+3. 最终 closeout 以 `docs/tinyui-serial/a-0.3/a-0.3-closeout-标准.md` 与 fresh verification 为准。

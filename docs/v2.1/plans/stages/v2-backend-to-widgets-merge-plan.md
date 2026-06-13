@@ -19,8 +19,8 @@
 - `tinyui/src/display/*`
 - `tinyui/src/theme/*`
 - `tinyui/src/indev/*`
-- `tests/picoui/runtime/check_picoui_backend_mapping.py`
-- `tests/picoui/contract/tinyui_v21_transition_inventory.json`
+- `tests/tinyui/runtime/check_tinyui_backend_mapping.py`
+- `tests/tinyui/contract/tinyui_v21_transition_inventory.json`
 
 删除：
 
@@ -33,8 +33,8 @@
 ### Task 1: 建立 backend 退场 contract
 
 **Files:**
-- Modify: `tests/picoui/contract/check_tinyui_v21_transition_guards.py`
-- Modify: `tests/picoui/contract/tinyui_v21_transition_inventory.json`
+- Modify: `tests/tinyui/contract/check_tinyui_v21_transition_guards.py`
+- Modify: `tests/tinyui/contract/tinyui_v21_transition_inventory.json`
 
 - [x] **Step 1: 收紧 guard，要求 backend 文件数下降到 0**
 
@@ -51,7 +51,7 @@ and make the checker fail if any `backend_*.c` remains under the product-layer s
 Run:
 
 ```bash
-python3 tests/picoui/contract/check_tinyui_v21_transition_guards.py
+python3 tests/tinyui/contract/check_tinyui_v21_transition_guards.py
 ```
 
 Expected: FAIL，因为当前 backend 文件仍存在。
@@ -82,7 +82,7 @@ because these already have `v2.0` direct-binding truth and are the lowest-risk t
 For each widget batch:
 
 - merge create/set/get/bind/update behavior into the widget file
-- remove product-layer `picoui_backend_*`/`tinyui_backend_*` function boundaries for that widget
+- remove product-layer `tinyui_backend_*`/`tinyui_backend_*` function boundaries for that widget
 - delete the corresponding `backend_*.c`
 
 - [x] **Step 3: 共享 helper 迁入薄共享层，不保留 backend 边界**
@@ -97,8 +97,8 @@ For every helper confirmed to be cross-widget shared:
 Run after each batch:
 
 ```bash
-rtk ctest --test-dir build -R '^(test_picoui_window|test_picoui_label|test_picoui_button_events|test_picoui_switch)$' --output-on-failure
-rtk ctest --test-dir build/picoui-runtime -R 'check_picoui_backend_mapping|check_picoui_visible_ui' --output-on-failure
+rtk ctest --test-dir build -R '^(test_tinyui_window|test_tinyui_label|test_tinyui_button_events|test_tinyui_switch)$' --output-on-failure
+rtk ctest --test-dir build/tinyui-runtime -R 'check_tinyui_backend_mapping|check_tinyui_visible_ui' --output-on-failure
 ```
 
 Expected: PASS。
@@ -125,8 +125,8 @@ Only after all product-layer references are removed, delete the now-empty backen
 Run:
 
 ```bash
-rtk ctest --test-dir build -L 'picoui' --output-on-failure
-python3 tests/picoui/contract/check_tinyui_v21_transition_guards.py
+rtk ctest --test-dir build -L 'tinyui' --output-on-failure
+python3 tests/tinyui/contract/check_tinyui_v21_transition_guards.py
 git diff --check
 ```
 

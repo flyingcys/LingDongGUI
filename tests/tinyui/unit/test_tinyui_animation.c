@@ -5,13 +5,13 @@
 #include "window.h"
 #include "../../../src/gui/ldAnimation.h"
 #include "internal.h"
-#include "picoui_test_support.h"
+#include "tinyui_test_support.h"
 
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
 
-extern int tinyui_widget_has_ld_binding(const struct picoui_widget *widget);
+extern int tinyui_widget_has_ld_binding(const struct tinyui_widget *widget);
 
 static void assert_source_lacks_function_definition(const char *path, const char *symbol)
 {
@@ -21,7 +21,7 @@ static void assert_source_lacks_function_definition(const char *path, const char
     if (strstr(symbol, "get_ld") != 0) {
         snprintf(needle, sizeof(needle), "static ldAnimation_t *%s(", symbol);
     }
-    assert(picoui_test_source_contains(path, needle) == 0);
+    assert(tinyui_test_source_contains(path, needle) == 0);
 }
 
 static void assert_source_has_function_definition(const char *path,
@@ -31,7 +31,7 @@ static void assert_source_has_function_definition(const char *path,
     char needle[256];
 
     snprintf(needle, sizeof(needle), "%s%s(", prefix, symbol);
-    assert(picoui_test_source_contains(path, needle) == 1);
+    assert(tinyui_test_source_contains(path, needle) == 1);
 }
 static arm_2d_tile_t s_animation_tile = {
     .tRegion = {
@@ -51,31 +51,31 @@ static arm_2d_tile_t s_animation_grid_tile = {
     },
 };
 
-static void test_animation_create_with_props_builds_direct_backend_mapping(struct picoui_window *win)
+static void test_animation_create_with_props_builds_direct_backend_mapping(struct tinyui_window *win)
 {
-    struct picoui_image_source source = {
+    struct tinyui_image_source source = {
         .img_tile = &s_animation_tile,
         .mask_tile = 0,
     };
-    struct picoui_animation_props props = {
+    struct tinyui_animation_props props = {
         .id = "animation_direct_mapping",
         .width = 16,
         .height = 16,
         .period_ms = 120,
         .source = &source,
     };
-    struct picoui_animation *animation =
-        picoui_animation_create_with_props((struct picoui_widget *)win, &props);
-    struct picoui_backend_widget *backend;
-    struct picoui_backend_widget *parent_backend;
+    struct tinyui_animation *animation =
+        tinyui_animation_create_with_props((struct tinyui_widget *)win, &props);
+    struct tinyui_backend_widget *backend;
+    struct tinyui_backend_widget *parent_backend;
     ldAnimation_t *ld_animation;
 
     assert(animation != 0);
-    backend = (struct picoui_backend_widget *)animation->widget.backend_widget;
+    backend = (struct tinyui_backend_widget *)animation->widget.backend_widget;
     assert(backend != 0);
-    parent_backend = (struct picoui_backend_widget *)win->widget.backend_widget;
+    parent_backend = (struct tinyui_backend_widget *)win->widget.backend_widget;
     assert(parent_backend != 0);
-    assert(backend->kind == PICOUI_BACKEND_WIDGET_ANIMATION);
+    assert(backend->kind == TINYUI_BACKEND_WIDGET_ANIMATION);
     assert(backend->owner == parent_backend->owner);
     assert(backend->root == parent_backend->root);
     assert(backend->parent == parent_backend);
@@ -99,26 +99,26 @@ static void test_animation_create_with_props_builds_direct_backend_mapping(struc
     assert(ld_animation->showRegion.tSize.iHeight == 16);
 }
 
-static void test_animation_native_image_period_and_frame_round_trip(struct picoui_window *win)
+static void test_animation_native_image_period_and_frame_round_trip(struct tinyui_window *win)
 {
-    struct picoui_image_source source = {
+    struct tinyui_image_source source = {
         .img_tile = &s_animation_tile,
         .mask_tile = 0,
     };
-    struct picoui_animation_props props = {
+    struct tinyui_animation_props props = {
         .id = "animation",
         .width = 16,
         .height = 16,
         .period_ms = 120,
         .source = &source,
     };
-    struct picoui_animation *animation =
-        picoui_animation_create_with_props((struct picoui_widget *)win, &props);
-    struct picoui_backend_widget *backend;
+    struct tinyui_animation *animation =
+        tinyui_animation_create_with_props((struct tinyui_widget *)win, &props);
+    struct tinyui_backend_widget *backend;
     ldAnimation_t *ld_animation;
 
     assert(animation != 0);
-    backend = (struct picoui_backend_widget *)animation->widget.backend_widget;
+    backend = (struct tinyui_backend_widget *)animation->widget.backend_widget;
     assert(backend != 0);
     ld_animation = (ldAnimation_t *)backend->ld_widget;
     assert(ld_animation != 0);
@@ -130,91 +130,91 @@ static void test_animation_native_image_period_and_frame_round_trip(struct picou
     assert(ld_animation->showRegion.tSize.iWidth == 16);
     assert(ld_animation->showRegion.tSize.iHeight == 16);
 
-    assert(picoui_animation_show_frame(animation, 2) == 0);
+    assert(tinyui_animation_show_frame(animation, 2) == 0);
     assert(ld_animation->showRegion.tLocation.iX == 32);
     assert(ld_animation->showRegion.tLocation.iY == 0);
 
-    assert(picoui_animation_show_frame(animation, 4) == -1);
+    assert(tinyui_animation_show_frame(animation, 4) == -1);
     assert(ld_animation->showRegion.tLocation.iX == 32);
     assert(ld_animation->showRegion.tLocation.iY == 0);
 }
 
-static void test_animation_show_frame_advances_across_rows(struct picoui_window *win)
+static void test_animation_show_frame_advances_across_rows(struct tinyui_window *win)
 {
-    struct picoui_image_source source = {
+    struct tinyui_image_source source = {
         .img_tile = &s_animation_grid_tile,
         .mask_tile = 0,
     };
-    struct picoui_animation_props props = {
+    struct tinyui_animation_props props = {
         .id = "animation_grid",
         .width = 16,
         .height = 16,
         .period_ms = 90,
         .source = &source,
     };
-    struct picoui_animation *animation =
-        picoui_animation_create_with_props((struct picoui_widget *)win, &props);
-    struct picoui_backend_widget *backend;
+    struct tinyui_animation *animation =
+        tinyui_animation_create_with_props((struct tinyui_widget *)win, &props);
+    struct tinyui_backend_widget *backend;
     ldAnimation_t *ld_animation;
 
     assert(animation != 0);
-    backend = (struct picoui_backend_widget *)animation->widget.backend_widget;
+    backend = (struct tinyui_backend_widget *)animation->widget.backend_widget;
     assert(backend != 0);
     ld_animation = (ldAnimation_t *)backend->ld_widget;
     assert(ld_animation != 0);
 
-    assert(picoui_animation_show_frame(animation, 3) == 0);
+    assert(tinyui_animation_show_frame(animation, 3) == 0);
     assert(ld_animation->showRegion.tLocation.iX == 16);
     assert(ld_animation->showRegion.tLocation.iY == 16);
     assert(ld_animation->showRegion.tSize.iWidth == 16);
     assert(ld_animation->showRegion.tSize.iHeight == 16);
 
-    assert(picoui_animation_show_frame(animation, 4) == -1);
+    assert(tinyui_animation_show_frame(animation, 4) == -1);
     assert(ld_animation->showRegion.tLocation.iX == 16);
     assert(ld_animation->showRegion.tLocation.iY == 16);
 }
 
-static void test_animation_init_and_shared_base_aliases_round_trip(struct picoui_window *win)
+static void test_animation_init_and_shared_base_aliases_round_trip(struct tinyui_window *win)
 {
-    struct picoui_image_source source = {
+    struct tinyui_image_source source = {
         .img_tile = &s_animation_tile,
         .mask_tile = 0,
     };
-    struct picoui_animation_props props = {
+    struct tinyui_animation_props props = {
         .id = "animation_alias_props",
         .width = 16,
         .height = 16,
         .period_ms = 100,
         .source = &source,
     };
-    struct picoui_animation *animation =
-        picoui_animation_create_with_props((struct picoui_widget *)win, &props);
-    struct picoui_animation *alias =
-        picoui_animation_init((struct picoui_widget *)win, "animation_alias");
-    struct picoui_backend_widget *backend;
+    struct tinyui_animation *animation =
+        tinyui_animation_create_with_props((struct tinyui_widget *)win, &props);
+    struct tinyui_animation *alias =
+        tinyui_animation_init((struct tinyui_widget *)win, "animation_alias");
+    struct tinyui_backend_widget *backend;
     ldAnimation_t *ld_animation;
 
     assert(animation != 0);
-    backend = (struct picoui_backend_widget *)animation->widget.backend_widget;
+    backend = (struct tinyui_backend_widget *)animation->widget.backend_widget;
     assert(backend != 0);
     ld_animation = (ldAnimation_t *)backend->ld_widget;
     assert(ld_animation != 0);
 
     assert(alias != 0);
-    assert(picoui_widget_set_pos(&animation->widget, 6, 10) == 0);
+    assert(tinyui_widget_set_pos(&animation->widget, 6, 10) == 0);
     assert(((ldBase_t *)ld_animation)->use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 6);
     assert(((ldBase_t *)ld_animation)->use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 10);
-    assert(picoui_widget_set_visible(&animation->widget, 0) == 0);
+    assert(tinyui_widget_set_visible(&animation->widget, 0) == 0);
     assert(((ldBase_t *)ld_animation)->isHidden == true);
-    assert(picoui_widget_set_opacity(&animation->widget, 58) == 0);
+    assert(tinyui_widget_set_opacity(&animation->widget, 58) == 0);
     assert(((ldBase_t *)ld_animation)->opacity == 58);
-    assert(picoui_widget_set_selectable(&animation->widget, 1) == 0);
+    assert(tinyui_widget_set_selectable(&animation->widget, 1) == 0);
     assert(((ldBase_t *)ld_animation)->isSelectable == true);
-    assert(picoui_widget_set_selected(&animation->widget, 1) == 0);
+    assert(tinyui_widget_set_selected(&animation->widget, 1) == 0);
     assert(((ldBase_t *)ld_animation)->isSelected == true);
-    assert(picoui_widget_set_selectable(&animation->widget, 0) == 0);
+    assert(tinyui_widget_set_selectable(&animation->widget, 0) == 0);
     assert(((ldBase_t *)ld_animation)->isSelectable == false);
-    assert(picoui_widget_set_corner(&animation->widget, 3) == 0);
+    assert(tinyui_widget_set_corner(&animation->widget, 3) == 0);
     assert(((ldBase_t *)ld_animation)->isCorner == true);
 }
 
@@ -222,9 +222,9 @@ static void test_animation_internal_seams_renamed_in_source(void)
 {
     const char *animation_source = "/Users/cys/embedded/LingDongGUI/tinyui/src/widgets/animation.c";
 
-    assert_source_lacks_function_definition(animation_source, "picoui_animation_get_ld");
-    assert_source_lacks_function_definition(animation_source, "picoui_animation_props_are_valid");
-    assert_source_lacks_function_definition(animation_source, "picoui_animation_attach_native");
+    assert_source_lacks_function_definition(animation_source, "tinyui_animation_get_ld");
+    assert_source_lacks_function_definition(animation_source, "tinyui_animation_props_are_valid");
+    assert_source_lacks_function_definition(animation_source, "tinyui_animation_attach_native");
     assert_source_has_function_definition(animation_source,
                                           "static ldAnimation_t *",
                                           "tinyui_animation_get_ld");
@@ -238,11 +238,11 @@ static void test_animation_internal_seams_renamed_in_source(void)
 
 int main(void)
 {
-    struct picoui_app *app = picoui_app_create();
-    struct picoui_window *win;
+    struct tinyui_app *app = tinyui_app_create();
+    struct tinyui_window *win;
 
     assert(app != 0);
-    win = picoui_window_create(app, "root");
+    win = tinyui_window_create(app, "root");
     assert(win != 0);
 
     test_animation_create_with_props_builds_direct_backend_mapping(win);
@@ -251,6 +251,6 @@ int main(void)
     test_animation_init_and_shared_base_aliases_round_trip(win);
     test_animation_internal_seams_renamed_in_source();
 
-    picoui_app_destroy(app);
+    tinyui_app_destroy(app);
     return 0;
 }

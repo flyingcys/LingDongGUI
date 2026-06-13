@@ -1,4 +1,4 @@
-# PicoUI a-0.5 数据 / edit model 串行设计
+# TINYUI a-0.5 数据 / edit model 串行设计
 
 ## 1. 背景
 
@@ -16,7 +16,7 @@
 
 `a-0.5` 的唯一目标：
 
-1. 建立 PicoUI 数据模型 / 可编辑单元格 shared model
+1. 建立 TINYUI 数据模型 / 可编辑单元格 shared model
 2. 在这套 shared model 上串行接入 `table / graph / calendar`
 3. 让数据类控件从第一天起就走真实 model、真实 readback、真实 frame/event 一致性
 
@@ -211,7 +211,7 @@
 
 `a-0.5` 完成时至少满足：
 
-1. `table / graph / calendar` 进入 PicoUI public widget
+1. `table / graph / calendar` 进入 TINYUI public widget
 2. `table` 证明 edit model 可复用，不是 demo 假逻辑
 3. `graph` 证明 series / value 合同真实落到底层
 4. `calendar` 证明 date / header / grid 合同真实落到底层

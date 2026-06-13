@@ -1,21 +1,21 @@
-# PicoUI a-0.3 计划索引
+# TINYUI a-0.3 计划索引
 
 - 当前仓库硬规则：`AGENTS.md`
-- 当前旧发布真相源：`docs/picoui-serial/H-线计划索引.md`
-- 当前旧 parity 真相源：`docs/picoui-serial/J-线计划索引.md`
-- 当前 backlog 收口线：`docs/picoui-serial/a-01-线计划索引.md`
-- 当前低耦合扩面线：`docs/picoui-serial/a-02-线计划索引.md`
-- 当时主仓机器可读 truth-source：`tests/picoui/contract/picoui_release_capability_matrix.json`
-- 当时 deep review：`docs/superpowers/reviews/2026-06-01-picoui-a-0-3-a-0-4-a-0-5-deep-review.md`
-- 当前 `a-0.3` 历史快照：`docs/picoui-serial/a-0.3/current-15-覆盖与分层真相源.md`
-- 当前 `a-0.3` 历史 capability audit：`docs/picoui-serial/a-0.3/current-15-capability-audit.md`
-- 当前 closeout 标准：`docs/picoui-serial/a-0.3/a-0.3-closeout-标准.md`
-- 本目录设计 spec：`docs/superpowers/specs/2026-05-31-picoui-a-0-3-truth-source-and-current-15-design.md`
-- 本目录执行 plan：`docs/superpowers/plans/2026-05-31-picoui-a-0-3-truth-source-and-current-15-implementation.md`
-- 当时 closeout review：`docs/superpowers/reviews/2026-05-31-picoui-a-0-3-closeout-review.md`
-- 后续 `0.4-0.6` 记录：`docs/picoui-serial/a-0.4-a-0.6-后续版本记录.md`
-- `a-0.4` 串行索引：`docs/picoui-serial/a-0.4-线计划索引.md`
-- `a-0.5` 串行索引：`docs/picoui-serial/a-0.5-线计划索引.md`
+- 当前旧发布真相源：`docs/tinyui-serial/H-线计划索引.md`
+- 当前旧 parity 真相源：`docs/tinyui-serial/J-线计划索引.md`
+- 当前 backlog 收口线：`docs/tinyui-serial/a-01-线计划索引.md`
+- 当前低耦合扩面线：`docs/tinyui-serial/a-02-线计划索引.md`
+- 当时主仓机器可读 truth-source：`tests/tinyui/contract/tinyui_release_capability_matrix.json`
+- 当时 deep review：`docs/superpowers/reviews/2026-06-01-tinyui-a-0-3-a-0-4-a-0-5-deep-review.md`
+- 当前 `a-0.3` 历史快照：`docs/tinyui-serial/a-0.3/current-15-覆盖与分层真相源.md`
+- 当前 `a-0.3` 历史 capability audit：`docs/tinyui-serial/a-0.3/current-15-capability-audit.md`
+- 当前 closeout 标准：`docs/tinyui-serial/a-0.3/a-0.3-closeout-标准.md`
+- 本目录设计 spec：`docs/superpowers/specs/2026-05-31-tinyui-a-0-3-truth-source-and-current-15-design.md`
+- 本目录执行 plan：`docs/superpowers/plans/2026-05-31-tinyui-a-0-3-truth-source-and-current-15-implementation.md`
+- 当时 closeout review：`docs/superpowers/reviews/2026-05-31-tinyui-a-0-3-closeout-review.md`
+- 后续 `0.4-0.6` 记录：`docs/tinyui-serial/a-0.4-a-0.6-后续版本记录.md`
+- `a-0.4` 串行索引：`docs/tinyui-serial/a-0.4-线计划索引.md`
+- `a-0.5` 串行索引：`docs/tinyui-serial/a-0.5-线计划索引.md`
 
 ## 为什么开 a-0.3 目录
 
@@ -31,24 +31,24 @@
 
 截至 2026-06-01，代码与机器真相源共同表明：
 
-1. current PicoUI public widget 已达 `22` 个，不再是旧 `9` 控件世界，也不再停在 `15` 控件世界。
+1. current TINYUI public widget 已达 `22` 个，不再是旧 `9` 控件世界，也不再停在 `15` 控件世界。
 2. `J线 4` 仍是当前唯一可维持 `full parity complete` 口径的控件组。
 3. `a-01 5 + a-0.4 4 + a-0.5 3` 当前都应诚实归为 `stable contract but not full parity`。
 4. `a-02` 六控件当前仍应诚实归为 `minimal vertical slice only`。
-5. 当前仍有 `4` 个 LingDongGUI 控件尚未进入 PicoUI public widget。
+5. 当前仍有 `4` 个 LingDongGUI 控件尚未进入 TINYUI public widget。
 
 因此当前最保守、最诚实的工程判断是：
 
-- PicoUI current public widget 总数当前是 `22`。
-- `tests/picoui/contract/picoui_release_capability_matrix.json` 是 `a-0.3` 当时主仓 truth-source 入口。
+- TINYUI current public widget 总数当前是 `22`。
+- `tests/tinyui/contract/tinyui_release_capability_matrix.json` 是 `a-0.3` 当时主仓 truth-source 入口。
 - `a-0.3/current-15-*` 文档现在只能视为 2026-05-31 的阶段审计快照，不能再被引用为“当前 truth-source”。
 
 ## 最终大目标
 
 最终大目标不变：
 
-1. PicoUI 覆盖 LingDongGUI 当前 `26` 个可封装原生控件。
-2. 每个 PicoUI public 控件都与对应 LingDongGUI 控件**完整对齐**。
+1. TINYUI 覆盖 LingDongGUI 当前 `26` 个可封装原生控件。
+2. 每个 TINYUI public 控件都与对应 LingDongGUI 控件**完整对齐**。
 3. `wrapped`、`stable contract`、`minimal vertical slice` 都只能是中间态，不能是最终口径。
 
 但这不是 `a-0.3` 本阶段全部要做完的内容。
@@ -133,7 +133,7 @@
 
 `a-0.3` 完成时必须满足：
 
-1. 当时覆盖面不再含糊，能够准确回答 2026-05-31 时点的 PicoUI public widget 总数。
+1. 当时覆盖面不再含糊，能够准确回答 2026-05-31 时点的 TINYUI public widget 总数。
 2. 当时 `15` 个已接入控件全部进入新的 truth-source。
 3. 每个 current-15 控件都有明确 capability audit：
    - 已完成什么
@@ -144,8 +144,8 @@
 
 当前 `R1 / R2` 真相源入口：
 
-1. `docs/picoui-serial/a-0.3/current-15-覆盖与分层真相源.md`
-2. `docs/picoui-serial/a-0.3/current-15-capability-audit.md`
+1. `docs/tinyui-serial/a-0.3/current-15-覆盖与分层真相源.md`
+2. `docs/tinyui-serial/a-0.3/current-15-capability-audit.md`
 
 ## a-0.3 不做什么
 

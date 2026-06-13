@@ -12,7 +12,7 @@ CANONICAL_SCRIPT = ROOT / "tests" / "tinyui" / "runtime" / "check_tinyui_backend
 
 def _load_canonical_module() -> types.ModuleType:
     spec = importlib.util.spec_from_file_location(
-        "check_picoui_backend_mapping_compat",
+        "check_tinyui_backend_mapping_compat",
         CANONICAL_SCRIPT,
     )
     if spec is None or spec.loader is None:

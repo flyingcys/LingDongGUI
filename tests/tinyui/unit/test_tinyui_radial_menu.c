@@ -61,19 +61,19 @@ static void test_radial_menu_internal_seam_names_are_tinyui_local(void)
 {
     const char *widget_source = "tinyui/src/widgets/radial_menu.c";
 
-    assert_source_lacks_definition(widget_source, "static ldRadialMenu_t *picoui_radial_menu_get_ld(");
-    assert_source_lacks_definition(widget_source, "static int picoui_radial_menu_backend_set_selected_index(");
-    assert_source_lacks_definition(widget_source, "static bool picoui_radial_menu_native_slot(");
-    assert_source_lacks_definition(widget_source, "static int picoui_radial_menu_backend_add_item(");
-    assert_source_lacks_definition(widget_source, "static int picoui_radial_menu_backend_add_item_with_source(");
-    assert_source_lacks_definition(widget_source, "static int picoui_radial_menu_backend_get_selected_index(");
-    assert_source_lacks_definition(widget_source, "static int picoui_radial_menu_backend_offset_selection(");
-    assert_source_lacks_definition(widget_source, "static int picoui_radial_menu_backend_set_default_item(");
-    assert_source_lacks_definition(widget_source, "static int picoui_radial_menu_backend_click_item(");
-    assert_source_lacks_definition(widget_source, "static int picoui_radial_menu_backend_offset_item(");
-    assert_source_lacks_definition(widget_source, "static int picoui_radial_menu_bind_host(");
-    assert_source_lacks_definition(widget_source, "static int picoui_radial_menu_props_are_valid(");
-    assert_source_lacks_definition(widget_source, "static struct picoui_radial_menu *picoui_radial_menu_create_with_backend_config(");
+    assert_source_lacks_definition(widget_source, "static ldRadialMenu_t *tinyui_radial_menu_get_ld(");
+    assert_source_lacks_definition(widget_source, "static int tinyui_radial_menu_backend_set_selected_index(");
+    assert_source_lacks_definition(widget_source, "static bool tinyui_radial_menu_native_slot(");
+    assert_source_lacks_definition(widget_source, "static int tinyui_radial_menu_backend_add_item(");
+    assert_source_lacks_definition(widget_source, "static int tinyui_radial_menu_backend_add_item_with_source(");
+    assert_source_lacks_definition(widget_source, "static int tinyui_radial_menu_backend_get_selected_index(");
+    assert_source_lacks_definition(widget_source, "static int tinyui_radial_menu_backend_offset_selection(");
+    assert_source_lacks_definition(widget_source, "static int tinyui_radial_menu_backend_set_default_item(");
+    assert_source_lacks_definition(widget_source, "static int tinyui_radial_menu_backend_click_item(");
+    assert_source_lacks_definition(widget_source, "static int tinyui_radial_menu_backend_offset_item(");
+    assert_source_lacks_definition(widget_source, "static int tinyui_radial_menu_bind_host(");
+    assert_source_lacks_definition(widget_source, "static int tinyui_radial_menu_props_are_valid(");
+    assert_source_lacks_definition(widget_source, "static struct tinyui_radial_menu *tinyui_radial_menu_create_with_backend_config(");
 
     assert_source_contains_definition(widget_source, "static ldRadialMenu_t *tinyui_radial_menu_get_ld(");
     assert_source_contains_definition(widget_source, "static int tinyui_radial_menu_backend_set_selected_index(");
@@ -87,10 +87,10 @@ static void test_radial_menu_internal_seam_names_are_tinyui_local(void)
     assert_source_contains_definition(widget_source, "static int tinyui_radial_menu_backend_offset_item(");
     assert_source_contains_definition(widget_source, "static int tinyui_radial_menu_bind_host(");
     assert_source_contains_definition(widget_source, "static int tinyui_radial_menu_props_are_valid(");
-    assert_source_contains_definition(widget_source, "static struct picoui_radial_menu *tinyui_radial_menu_create_with_backend_config(");
+    assert_source_contains_definition(widget_source, "static struct tinyui_radial_menu *tinyui_radial_menu_create_with_backend_config(");
 }
 
-static void radial_menu_on_selected(struct picoui_radial_menu *radial_menu, int index, void *user_data)
+static void radial_menu_on_selected(struct tinyui_radial_menu *radial_menu, int index, void *user_data)
 {
     (void)radial_menu;
     (void)index;
@@ -99,104 +99,104 @@ static void radial_menu_on_selected(struct picoui_radial_menu *radial_menu, int 
 
 static void test_radial_menu_navigation_and_selection_follow_backend_truth(void)
 {
-    struct picoui_app *app;
-    struct picoui_window *win;
-    struct picoui_radial_menu *radial_menu;
+    struct tinyui_app *app;
+    struct tinyui_window *win;
+    struct tinyui_radial_menu *radial_menu;
 
-    app = picoui_app_create();
+    app = tinyui_app_create();
     assert(app != 0);
-    win = picoui_window_create(app, "root");
+    win = tinyui_window_create(app, "root");
     assert(win != 0);
 
-    radial_menu = picoui_radial_menu_create((struct picoui_widget *)win, "radial_menu");
+    radial_menu = tinyui_radial_menu_create((struct tinyui_widget *)win, "radial_menu");
     assert(radial_menu != 0);
-    assert(picoui_radial_menu_add_item(radial_menu, "weather") == 0);
-    assert(picoui_radial_menu_add_item(radial_menu, "note") == 0);
-    assert(picoui_radial_menu_add_item(radial_menu, "book") == 0);
-    assert(picoui_radial_menu_add_item(radial_menu, "chart") == 0);
-    assert(picoui_radial_menu_set_selected_index(radial_menu, 1) == 0);
-    assert(picoui_radial_menu_get_selected_index(radial_menu) == 1);
-    assert(picoui_radial_menu_offset_selection(radial_menu, 1) == 0);
-    assert(picoui_radial_menu_get_selected_index(radial_menu) == 2);
+    assert(tinyui_radial_menu_add_item(radial_menu, "weather") == 0);
+    assert(tinyui_radial_menu_add_item(radial_menu, "note") == 0);
+    assert(tinyui_radial_menu_add_item(radial_menu, "book") == 0);
+    assert(tinyui_radial_menu_add_item(radial_menu, "chart") == 0);
+    assert(tinyui_radial_menu_set_selected_index(radial_menu, 1) == 0);
+    assert(tinyui_radial_menu_get_selected_index(radial_menu) == 1);
+    assert(tinyui_radial_menu_offset_selection(radial_menu, 1) == 0);
+    assert(tinyui_radial_menu_get_selected_index(radial_menu) == 2);
 
-    picoui_radial_menu_set_on_selected(radial_menu, radial_menu_on_selected, radial_menu);
-    picoui_app_destroy(app);
+    tinyui_radial_menu_set_on_selected(radial_menu, radial_menu_on_selected, radial_menu);
+    tinyui_app_destroy(app);
 }
 
 static void test_radial_menu_rejects_items_beyond_native_capacity(void)
 {
-    struct picoui_app *app;
-    struct picoui_window *win;
-    struct picoui_radial_menu *radial_menu;
+    struct tinyui_app *app;
+    struct tinyui_window *win;
+    struct tinyui_radial_menu *radial_menu;
     int index;
 
-    app = picoui_app_create();
+    app = tinyui_app_create();
     assert(app != 0);
-    win = picoui_window_create(app, "root");
+    win = tinyui_window_create(app, "root");
     assert(win != 0);
 
-    radial_menu = picoui_radial_menu_create((struct picoui_widget *)win, "radial_menu");
+    radial_menu = tinyui_radial_menu_create((struct tinyui_widget *)win, "radial_menu");
     assert(radial_menu != 0);
     for (index = 0; index < 5; ++index) {
         char id[16];
 
         snprintf(id, sizeof(id), "item_%d", index);
-        assert(picoui_radial_menu_add_item(radial_menu, id) == 0);
+        assert(tinyui_radial_menu_add_item(radial_menu, id) == 0);
     }
 
-    assert(picoui_radial_menu_add_item(radial_menu, "overflow") == -1);
-    assert(picoui_radial_menu_set_selected_index(radial_menu, 4) == 0);
-    assert(picoui_radial_menu_set_selected_index(radial_menu, 5) == -1);
+    assert(tinyui_radial_menu_add_item(radial_menu, "overflow") == -1);
+    assert(tinyui_radial_menu_set_selected_index(radial_menu, 4) == 0);
+    assert(tinyui_radial_menu_set_selected_index(radial_menu, 5) == -1);
 
-    picoui_app_destroy(app);
+    tinyui_app_destroy(app);
 }
 
 static void test_radial_menu_create_with_default_index_defers_selection_until_items_exist(void)
 {
-    struct picoui_app *app;
-    struct picoui_window *win;
-    struct picoui_radial_menu *radial_menu;
-    const struct picoui_radial_menu_props props = {
+    struct tinyui_app *app;
+    struct tinyui_window *win;
+    struct tinyui_radial_menu *radial_menu;
+    const struct tinyui_radial_menu_props props = {
         .id = "radial_menu",
         .default_index = 0,
     };
 
-    app = picoui_app_create();
+    app = tinyui_app_create();
     assert(app != 0);
-    win = picoui_window_create(app, "root");
+    win = tinyui_window_create(app, "root");
     assert(win != 0);
 
-    radial_menu = picoui_radial_menu_create_with_props((struct picoui_widget *)win, &props);
+    radial_menu = tinyui_radial_menu_create_with_props((struct tinyui_widget *)win, &props);
     assert(radial_menu != 0);
-    assert(picoui_radial_menu_get_selected_index(radial_menu) == 0);
-    assert(picoui_radial_menu_add_item(radial_menu, "weather") == 0);
-    assert(picoui_radial_menu_get_selected_index(radial_menu) == 0);
+    assert(tinyui_radial_menu_get_selected_index(radial_menu) == 0);
+    assert(tinyui_radial_menu_add_item(radial_menu, "weather") == 0);
+    assert(tinyui_radial_menu_get_selected_index(radial_menu) == 0);
 
-    picoui_app_destroy(app);
+    tinyui_app_destroy(app);
 }
 
 static void test_radial_menu_create_builds_direct_backend_mapping(void)
 {
-    struct picoui_app *app;
-    struct picoui_window *win;
-    struct picoui_radial_menu *radial_menu;
-    struct picoui_backend_widget *backend;
-    struct picoui_backend_widget *parent_backend;
+    struct tinyui_app *app;
+    struct tinyui_window *win;
+    struct tinyui_radial_menu *radial_menu;
+    struct tinyui_backend_widget *backend;
+    struct tinyui_backend_widget *parent_backend;
     ldRadialMenu_t *ld_radial_menu;
 
-    app = picoui_app_create();
+    app = tinyui_app_create();
     assert(app != 0);
-    win = picoui_window_create(app, "radial_menu_direct_root");
+    win = tinyui_window_create(app, "radial_menu_direct_root");
     assert(win != 0);
 
-    radial_menu = picoui_radial_menu_create((struct picoui_widget *)win, "radial_menu_direct");
+    radial_menu = tinyui_radial_menu_create((struct tinyui_widget *)win, "radial_menu_direct");
     assert(radial_menu != 0);
 
-    backend = (struct picoui_backend_widget *)radial_menu->widget.backend_widget;
-    parent_backend = (struct picoui_backend_widget *)win->widget.backend_widget;
+    backend = (struct tinyui_backend_widget *)radial_menu->widget.backend_widget;
+    parent_backend = (struct tinyui_backend_widget *)win->widget.backend_widget;
     assert(backend != 0);
     assert(parent_backend != 0);
-    assert(backend->kind == PICOUI_BACKEND_WIDGET_RADIAL_MENU);
+    assert(backend->kind == TINYUI_BACKEND_WIDGET_RADIAL_MENU);
     assert(backend->owner == parent_backend->owner);
     assert(backend->root == parent_backend->root);
     assert(backend->parent == parent_backend);
@@ -208,17 +208,17 @@ static void test_radial_menu_create_builds_direct_backend_mapping(void)
     assert(ld_radial_menu != 0);
     assert(((ldBase_t *)ld_radial_menu)->pInfo == backend);
 
-    picoui_app_destroy(app);
+    tinyui_app_destroy(app);
 }
 
 static void test_radial_menu_create_with_props_pushes_backend_geometry(void)
 {
-    struct picoui_app *app;
-    struct picoui_window *win;
-    struct picoui_radial_menu *radial_menu;
-    struct picoui_backend_widget *backend;
+    struct tinyui_app *app;
+    struct tinyui_window *win;
+    struct tinyui_radial_menu *radial_menu;
+    struct tinyui_backend_widget *backend;
     ldRadialMenu_t *ld_radial_menu;
-    const struct picoui_radial_menu_props props = {
+    const struct tinyui_radial_menu_props props = {
         .id = "radial_menu",
         .width = 210,
         .height = 132,
@@ -228,16 +228,16 @@ static void test_radial_menu_create_with_props_pushes_backend_geometry(void)
         .default_index = 0,
     };
 
-    app = picoui_app_create();
+    app = tinyui_app_create();
     assert(app != 0);
-    win = picoui_window_create(app, "root");
+    win = tinyui_window_create(app, "root");
     assert(win != 0);
 
-    radial_menu = picoui_radial_menu_create_with_props((struct picoui_widget *)win, &props);
+    radial_menu = tinyui_radial_menu_create_with_props((struct tinyui_widget *)win, &props);
     assert(radial_menu != 0);
-    assert(picoui_radial_menu_add_item(radial_menu, "weather") == 0);
+    assert(tinyui_radial_menu_add_item(radial_menu, "weather") == 0);
 
-    backend = (struct picoui_backend_widget *)radial_menu->widget.backend_widget;
+    backend = (struct tinyui_backend_widget *)radial_menu->widget.backend_widget;
     assert(backend != 0);
     ld_radial_menu = (ldRadialMenu_t *)backend->ld_widget;
     assert(ld_radial_menu != 0);
@@ -249,15 +249,15 @@ static void test_radial_menu_create_with_props_pushes_backend_geometry(void)
     assert(ld_radial_menu->itemMax == props.item_max);
     assert(ld_radial_menu->selectItem == props.default_index);
 
-    picoui_app_destroy(app);
+    tinyui_app_destroy(app);
 }
 
 static void test_radial_menu_native_click_default_offset_round_trip(void)
 {
-    struct picoui_app *app;
-    struct picoui_window *win;
-    struct picoui_radial_menu *radial_menu;
-    struct picoui_backend_widget *backend;
+    struct tinyui_app *app;
+    struct tinyui_window *win;
+    struct tinyui_radial_menu *radial_menu;
+    struct tinyui_backend_widget *backend;
     ldRadialMenu_t *ld_radial_menu;
     arm_2d_tile_t item_img = {
         .tRegion = {
@@ -269,30 +269,30 @@ static void test_radial_menu_native_click_default_offset_round_trip(void)
             .tSize = { .iWidth = 20, .iHeight = 20 },
         },
     };
-    struct picoui_image_source item_source = {
+    struct tinyui_image_source item_source = {
         .img_tile = &item_img,
         .mask_tile = &item_mask,
     };
 
-    app = picoui_app_create();
+    app = tinyui_app_create();
     assert(app != 0);
-    win = picoui_window_create(app, "root");
+    win = tinyui_window_create(app, "root");
     assert(win != 0);
 
-    radial_menu = picoui_radial_menu_create((struct picoui_widget *)win, "radial_menu_native");
+    radial_menu = tinyui_radial_menu_create((struct tinyui_widget *)win, "radial_menu_native");
     assert(radial_menu != 0);
-    backend = (struct picoui_backend_widget *)radial_menu->widget.backend_widget;
+    backend = (struct tinyui_backend_widget *)radial_menu->widget.backend_widget;
     assert(backend != 0);
     ld_radial_menu = (ldRadialMenu_t *)backend->ld_widget;
     assert(ld_radial_menu != 0);
 
-    assert(picoui_radial_menu_add_item_with_source(radial_menu, "weather", &item_source) == 0);
-    assert(picoui_radial_menu_add_item_with_source(radial_menu, "mail", &item_source) == 0);
-    assert(picoui_radial_menu_add_item_with_source(radial_menu, "book", &item_source) == 0);
+    assert(tinyui_radial_menu_add_item_with_source(radial_menu, "weather", &item_source) == 0);
+    assert(tinyui_radial_menu_add_item_with_source(radial_menu, "mail", &item_source) == 0);
+    assert(tinyui_radial_menu_add_item_with_source(radial_menu, "book", &item_source) == 0);
 
-    assert(picoui_radial_menu_set_default_item(radial_menu, 1) == 0);
-    assert(picoui_radial_menu_click_item(radial_menu, 2) == 0);
-    assert(picoui_radial_menu_offset_item(radial_menu, -1) == 0);
+    assert(tinyui_radial_menu_set_default_item(radial_menu, 1) == 0);
+    assert(tinyui_radial_menu_click_item(radial_menu, 2) == 0);
+    assert(tinyui_radial_menu_offset_item(radial_menu, -1) == 0);
 
     assert(ld_radial_menu->use_as__ldBase_t.itemCount == 3);
     assert(ld_radial_menu->ptItemInfoList[0].ptImgTile == &item_img);
@@ -301,20 +301,20 @@ static void test_radial_menu_native_click_default_offset_round_trip(void)
     assert(ld_radial_menu->targetItem == 2);
     assert(ld_radial_menu->_itemOffset == -1);
 
-    assert(picoui_radial_menu_add_item_with_source(0, "x", &item_source) == -1);
-    assert(picoui_radial_menu_set_default_item(0, 0) == -1);
-    assert(picoui_radial_menu_click_item(0, 0) == -1);
-    assert(picoui_radial_menu_offset_item(0, 1) == -1);
+    assert(tinyui_radial_menu_add_item_with_source(0, "x", &item_source) == -1);
+    assert(tinyui_radial_menu_set_default_item(0, 0) == -1);
+    assert(tinyui_radial_menu_click_item(0, 0) == -1);
+    assert(tinyui_radial_menu_offset_item(0, 1) == -1);
 
-    picoui_app_destroy(app);
+    tinyui_app_destroy(app);
 }
 
 static void test_radial_menu_init_and_alias_round_trip(void)
 {
-    struct picoui_app *app;
-    struct picoui_window *win;
-    struct picoui_radial_menu *radial_menu;
-    struct picoui_backend_widget *backend;
+    struct tinyui_app *app;
+    struct tinyui_window *win;
+    struct tinyui_radial_menu *radial_menu;
+    struct tinyui_backend_widget *backend;
     ldRadialMenu_t *ld_radial_menu;
     arm_2d_tile_t item_img = {
         .tRegion = {
@@ -326,29 +326,29 @@ static void test_radial_menu_init_and_alias_round_trip(void)
             .tSize = { .iWidth = 18, .iHeight = 18 },
         },
     };
-    struct picoui_image_source item_source = {
+    struct tinyui_image_source item_source = {
         .img_tile = &item_img,
         .mask_tile = &item_mask,
     };
 
-    app = picoui_app_create();
+    app = tinyui_app_create();
     assert(app != 0);
-    win = picoui_window_create(app, "root");
+    win = tinyui_window_create(app, "root");
     assert(win != 0);
 
-    radial_menu = picoui_radial_menu_init((struct picoui_widget *)win, "radial_menu_alias");
+    radial_menu = tinyui_radial_menu_init((struct tinyui_widget *)win, "radial_menu_alias");
     assert(radial_menu != 0);
-    backend = (struct picoui_backend_widget *)radial_menu->widget.backend_widget;
+    backend = (struct tinyui_backend_widget *)radial_menu->widget.backend_widget;
     assert(backend != 0);
     ld_radial_menu = (ldRadialMenu_t *)backend->ld_widget;
     assert(ld_radial_menu != 0);
 
-    assert(picoui_radial_menu_add_item_with_image(radial_menu, "weather", &item_source) == 0);
-    assert(picoui_radial_menu_add_item_with_image(radial_menu, "mail", &item_source) == 0);
-    assert(picoui_radial_menu_add_item_with_image(radial_menu, "book", &item_source) == 0);
-    assert(picoui_radial_menu_set_default_item(radial_menu, 1) == 0);
-    assert(picoui_radial_menu_set_click_item(radial_menu, 2) == 0);
-    assert(picoui_radial_menu_offset_item(radial_menu, -1) == 0);
+    assert(tinyui_radial_menu_add_item_with_image(radial_menu, "weather", &item_source) == 0);
+    assert(tinyui_radial_menu_add_item_with_image(radial_menu, "mail", &item_source) == 0);
+    assert(tinyui_radial_menu_add_item_with_image(radial_menu, "book", &item_source) == 0);
+    assert(tinyui_radial_menu_set_default_item(radial_menu, 1) == 0);
+    assert(tinyui_radial_menu_set_click_item(radial_menu, 2) == 0);
+    assert(tinyui_radial_menu_offset_item(radial_menu, -1) == 0);
 
     assert(ld_radial_menu->use_as__ldBase_t.itemCount == 3);
     assert(ld_radial_menu->ptItemInfoList[0].ptImgTile == &item_img);
@@ -357,27 +357,27 @@ static void test_radial_menu_init_and_alias_round_trip(void)
     assert(ld_radial_menu->targetItem == 2);
     assert(ld_radial_menu->_itemOffset == -1);
 
-    picoui_app_destroy(app);
+    tinyui_app_destroy(app);
 }
 
 static void test_radial_menu_rejects_null_args(void)
 {
-    struct picoui_app *app;
-    struct picoui_window *win;
+    struct tinyui_app *app;
+    struct tinyui_window *win;
 
-    app = picoui_app_create();
+    app = tinyui_app_create();
     assert(app != 0);
-    win = picoui_window_create(app, "root");
+    win = tinyui_window_create(app, "root");
     assert(win != 0);
 
-    assert(picoui_radial_menu_create(0, "id") == 0);
-    assert(picoui_radial_menu_create((struct picoui_widget *)win, 0) == 0);
-    assert(picoui_radial_menu_add_item(0, "item") == -1);
-    assert(picoui_radial_menu_set_selected_index(0, 0) == -1);
-    assert(picoui_radial_menu_get_selected_index(0) == -1);
-    assert(picoui_radial_menu_offset_selection(0, 1) == -1);
+    assert(tinyui_radial_menu_create(0, "id") == 0);
+    assert(tinyui_radial_menu_create((struct tinyui_widget *)win, 0) == 0);
+    assert(tinyui_radial_menu_add_item(0, "item") == -1);
+    assert(tinyui_radial_menu_set_selected_index(0, 0) == -1);
+    assert(tinyui_radial_menu_get_selected_index(0) == -1);
+    assert(tinyui_radial_menu_offset_selection(0, 1) == -1);
 
-    picoui_app_destroy(app);
+    tinyui_app_destroy(app);
 }
 
 int main(void)

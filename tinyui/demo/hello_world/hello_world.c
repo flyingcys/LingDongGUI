@@ -19,26 +19,26 @@
 #include "hello_world/hello_world.h"
 #include "tinyui.h"
 
-static void make_ui(struct picoui_window *win)
+static void make_ui(struct tinyui_window *win)
 {
-    struct picoui_label *label = picoui_label_create(win, "title");
-    struct picoui_button *button = picoui_button_create(win, "ok");
+    struct tinyui_label *label = tinyui_label_create(win, "title");
+    struct tinyui_button *button = tinyui_button_create(win, "ok");
 
-    picoui_flex_set_flow(win, PICOUI_FLEX_FLOW_COLUMN);
-    picoui_flex_set_align(win,
-                          PICOUI_ALIGN_CENTER,
-                          PICOUI_ALIGN_CENTER,
-                          PICOUI_ALIGN_CENTER);
-    picoui_flex_set_gap(win, 12, 12);
+    tinyui_flex_set_flow(win, TINYUI_FLEX_FLOW_COLUMN);
+    tinyui_flex_set_align(win,
+                          TINYUI_ALIGN_CENTER,
+                          TINYUI_ALIGN_CENTER,
+                          TINYUI_ALIGN_CENTER);
+    tinyui_flex_set_gap(win, 12, 12);
 
-    picoui_label_set_text(label, "Hello PicoUI");
-    picoui_button_set_text(button, "OK");
+    tinyui_label_set_text(label, "Hello TINYUI");
+    tinyui_button_set_text(button, "OK");
 }
 
 void tinyui_demo_hello_world(void)
 {
     tinyui_obj_t *screen = tinyui_screen_create();
-    struct picoui_window *win = (struct picoui_window *)screen;
+    struct tinyui_window *win = (struct tinyui_window *)screen;
 
     if (win == 0) {
         return;

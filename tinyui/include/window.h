@@ -1,17 +1,17 @@
 #ifndef TINYUI_WINDOW_H
 #define TINYUI_WINDOW_H
 
-struct picoui_app;
-struct picoui_image_source;
-struct picoui_window;
+struct tinyui_app;
+struct tinyui_image_source;
+struct tinyui_window;
 
-enum picoui_window_layout_type {
-    PICOUI_WINDOW_LAYOUT_NONE,
-    PICOUI_WINDOW_LAYOUT_FLEX,
-    PICOUI_WINDOW_LAYOUT_GRID,
+enum tinyui_window_layout_type {
+    TINYUI_WINDOW_LAYOUT_NONE,
+    TINYUI_WINDOW_LAYOUT_FLEX,
+    TINYUI_WINDOW_LAYOUT_GRID,
 };
 
-struct picoui_window_props {
+struct tinyui_window_props {
     const char *id;
     const char *style_class;
     void *user_data;
@@ -20,7 +20,7 @@ struct picoui_window_props {
     unsigned int border_color;
     int radius;
     int padding;
-    struct picoui_image_source *background_source;
+    struct tinyui_image_source *background_source;
     int has_padding_group;
     int padding_left;
     int padding_top;
@@ -28,66 +28,66 @@ struct picoui_window_props {
     int padding_bottom;
 };
 
-struct picoui_window *picoui_window_create(struct picoui_app *app, const char *id);
+struct tinyui_window *tinyui_window_create(struct tinyui_app *app, const char *id);
 
-struct picoui_window *picoui_window_create_child(struct picoui_window *parent, const char *id);
+struct tinyui_window *tinyui_window_create_child(struct tinyui_window *parent, const char *id);
 
-struct picoui_window *picoui_window_create_with_props(struct picoui_app *app,
-                                                      const struct picoui_window_props *props);
+struct tinyui_window *tinyui_window_create_with_props(struct tinyui_app *app,
+                                                      const struct tinyui_window_props *props);
 
-int picoui_window_set_background_source(struct picoui_window *window,
-                                        struct picoui_image_source *source);
+int tinyui_window_set_background_source(struct tinyui_window *window,
+                                        struct tinyui_image_source *source);
 
-int picoui_window_set_background_offset(struct picoui_window *window, int offset_x, int offset_y);
+int tinyui_window_set_background_offset(struct tinyui_window *window, int offset_x, int offset_y);
 
-int picoui_window_get_background_offset(struct picoui_window *window,
+int tinyui_window_get_background_offset(struct tinyui_window *window,
                                         int *offset_x,
                                         int *offset_y);
 
-int picoui_window_set_color(struct picoui_window *window, unsigned int rgb);
+int tinyui_window_set_color(struct tinyui_window *window, unsigned int rgb);
 
-int picoui_window_get_color(struct picoui_window *window, unsigned int *rgb);
+int tinyui_window_get_color(struct tinyui_window *window, unsigned int *rgb);
 
-int picoui_window_set_padding_group(struct picoui_window *window,
+int tinyui_window_set_padding_group(struct tinyui_window *window,
                                     int left,
                                     int top,
                                     int right,
                                     int bottom);
 
-int picoui_window_set_layout_type(struct picoui_window *window,
-                                  enum picoui_window_layout_type type);
+int tinyui_window_set_layout_type(struct tinyui_window *window,
+                                  enum tinyui_window_layout_type type);
 
-int picoui_window_set_padding(struct picoui_window *window,
+int tinyui_window_set_padding(struct tinyui_window *window,
                               int left,
                               int top,
                               int right,
                               int bottom);
 
-int picoui_window_set_grid_padding(struct picoui_window *window,
+int tinyui_window_set_grid_padding(struct tinyui_window *window,
                                    int left,
                                    int top,
                                    int right,
                                    int bottom);
 
-int picoui_window_set_gap(struct picoui_window *window, int gap);
+int tinyui_window_set_gap(struct tinyui_window *window, int gap);
 
-int picoui_window_get_padding_left(struct picoui_window *window);
+int tinyui_window_get_padding_left(struct tinyui_window *window);
 
-int picoui_window_get_padding_top(struct picoui_window *window);
+int tinyui_window_get_padding_top(struct tinyui_window *window);
 
-int picoui_window_get_padding_right(struct picoui_window *window);
+int tinyui_window_get_padding_right(struct tinyui_window *window);
 
-int picoui_window_get_padding_bottom(struct picoui_window *window);
+int tinyui_window_get_padding_bottom(struct tinyui_window *window);
 
-int picoui_window_get_padding_group(struct picoui_window *window,
+int tinyui_window_get_padding_group(struct tinyui_window *window,
                                     int *left,
                                     int *top,
                                     int *right,
                                     int *bottom);
 
-int picoui_window_get_layout_type(struct picoui_window *window,
-                                  enum picoui_window_layout_type *type);
+int tinyui_window_get_layout_type(struct tinyui_window *window,
+                                  enum tinyui_window_layout_type *type);
 
-int picoui_window_get_gap(struct picoui_window *window);
+int tinyui_window_get_gap(struct tinyui_window *window);
 
 #endif

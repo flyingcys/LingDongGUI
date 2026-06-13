@@ -23,41 +23,41 @@
 
 #include <stdlib.h>
 
-static struct picoui_backend_widget *tinyui_graph_backend(struct picoui_graph *graph)
+static struct tinyui_backend_widget *tinyui_graph_backend(struct tinyui_graph *graph)
 {
-    struct picoui_backend_widget *backend;
+    struct tinyui_backend_widget *backend;
 
     if (graph == 0 || graph->widget.backend_widget == 0) {
         return 0;
     }
 
-    backend = (struct picoui_backend_widget *)graph->widget.backend_widget;
-    if (backend->kind != PICOUI_BACKEND_WIDGET_GRAPH || backend->ld_widget == 0) {
+    backend = (struct tinyui_backend_widget *)graph->widget.backend_widget;
+    if (backend->kind != TINYUI_BACKEND_WIDGET_GRAPH || backend->ld_widget == 0) {
         return 0;
     }
 
     return backend;
 }
 
-static struct picoui_backend_widget *tinyui_graph_backend_const(const struct picoui_graph *graph)
+static struct tinyui_backend_widget *tinyui_graph_backend_const(const struct tinyui_graph *graph)
 {
-    struct picoui_backend_widget *backend;
+    struct tinyui_backend_widget *backend;
 
     if (graph == 0 || graph->widget.backend_widget == 0) {
         return 0;
     }
 
-    backend = (struct picoui_backend_widget *)graph->widget.backend_widget;
-    if (backend->kind != PICOUI_BACKEND_WIDGET_GRAPH || backend->ld_widget == 0) {
+    backend = (struct tinyui_backend_widget *)graph->widget.backend_widget;
+    if (backend->kind != TINYUI_BACKEND_WIDGET_GRAPH || backend->ld_widget == 0) {
         return 0;
     }
 
     return backend;
 }
 
-static ldGraph_t *tinyui_graph_get_ld(struct picoui_graph *graph)
+static ldGraph_t *tinyui_graph_get_ld(struct tinyui_graph *graph)
 {
-    struct picoui_backend_widget *backend = tinyui_graph_backend(graph);
+    struct tinyui_backend_widget *backend = tinyui_graph_backend(graph);
 
     if (backend == 0) {
         return 0;
@@ -66,9 +66,9 @@ static ldGraph_t *tinyui_graph_get_ld(struct picoui_graph *graph)
     return (ldGraph_t *)backend->ld_widget;
 }
 
-static const ldGraph_t *tinyui_graph_get_ld_const(const struct picoui_graph *graph)
+static const ldGraph_t *tinyui_graph_get_ld_const(const struct tinyui_graph *graph)
 {
-    struct picoui_backend_widget *backend = tinyui_graph_backend_const(graph);
+    struct tinyui_backend_widget *backend = tinyui_graph_backend_const(graph);
 
     if (backend == 0) {
         return 0;
@@ -77,25 +77,25 @@ static const ldGraph_t *tinyui_graph_get_ld_const(const struct picoui_graph *gra
     return (const ldGraph_t *)backend->ld_widget;
 }
 
-static int tinyui_graph_props_are_valid(const struct picoui_graph_props *props)
+static int tinyui_graph_props_are_valid(const struct tinyui_graph_props *props)
 {
     return props != 0 &&
            props->id != 0 &&
            props->series_max > 0 &&
-           props->series_max <= PICOUI_GRAPH_MAX_SERIES &&
+           props->series_max <= TINYUI_GRAPH_MAX_SERIES &&
            props->width >= 0 &&
            props->height >= 0;
 }
 
-static int tinyui_graph_apply_native_geometry_candidate(struct picoui_graph *graph,
+static int tinyui_graph_apply_native_geometry_candidate(struct tinyui_graph *graph,
                                                         int x_axis,
                                                         int y_axis,
                                                         int axis_offset,
                                                         int frame_space,
                                                         int grid_offset,
-                                                        struct picoui_image_source *point_mask_source)
+                                                        struct tinyui_image_source *point_mask_source)
 {
-    struct picoui_graph_native_snapshot {
+    struct tinyui_graph_native_snapshot {
         uint16_t x_axis_max;
         uint16_t y_axis_max;
         uint16_t x_axis_offset;
@@ -200,22 +200,22 @@ fail:
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct picoui_graph *picoui_graph_create(struct picoui_window *parent,
+struct tinyui_graph *tinyui_graph_create(struct tinyui_window *parent,
                                          const char *id,
                                          int series_max)
 {
-    struct picoui_graph *graph;
-    struct picoui_backend_widget *backend;
-    struct picoui_backend_widget *parent_backend;
-    struct picoui_backend_app_state *app_state;
+    struct tinyui_graph *graph;
+    struct tinyui_backend_widget *backend;
+    struct tinyui_backend_widget *parent_backend;
+    struct tinyui_backend_app_state *app_state;
     ldGraph_t *ld_graph;
     uint16_t name_id;
 
-    if (parent == 0 || id == 0 || series_max <= 0 || series_max > PICOUI_GRAPH_MAX_SERIES) {
+    if (parent == 0 || id == 0 || series_max <= 0 || series_max > TINYUI_GRAPH_MAX_SERIES) {
         return 0;
     }
 
-    parent_backend = (struct picoui_backend_widget *)parent->widget.backend_widget;
+    parent_backend = (struct tinyui_backend_widget *)parent->widget.backend_widget;
     app_state = parent_backend != 0
         ? tinyui_runtime_bridge_backend_state_from_parent(parent_backend)
         : 0;
@@ -263,7 +263,7 @@ struct picoui_graph *picoui_graph_create(struct picoui_window *parent,
 
     if (tinyui_widget_init_child(backend,
                                          parent_backend,
-                                         PICOUI_BACKEND_WIDGET_GRAPH,
+                                         TINYUI_BACKEND_WIDGET_GRAPH,
                                          id,
                                          parent_backend->theme) != 0) {
         ldGraph_depose(app_state->ld_scene, ld_graph);
@@ -309,11 +309,11 @@ struct picoui_graph *picoui_graph_create(struct picoui_window *parent,
  * @return Pointer to the object
  */
 
-struct picoui_graph *picoui_graph_init(struct picoui_window *parent,
+struct tinyui_graph *tinyui_graph_init(struct tinyui_window *parent,
                                        const char *id,
                                        int series_max)
 {
-    return picoui_graph_create(parent, id, series_max);
+    return tinyui_graph_create(parent, id, series_max);
 }
 
 /**
@@ -324,31 +324,31 @@ struct picoui_graph *picoui_graph_init(struct picoui_window *parent,
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct picoui_graph *picoui_graph_create_with_props(struct picoui_window *parent,
-                                                    const struct picoui_graph_props *props)
+struct tinyui_graph *tinyui_graph_create_with_props(struct tinyui_window *parent,
+                                                    const struct tinyui_graph_props *props)
 {
-    struct picoui_graph *graph;
+    struct tinyui_graph *graph;
 
     if (!tinyui_graph_props_are_valid(props)) {
         return 0;
     }
 
-    graph = picoui_graph_create(parent, props->id, props->series_max);
+    graph = tinyui_graph_create(parent, props->id, props->series_max);
     if (graph == 0) {
         return 0;
     }
 
-    if (picoui_widget_set_user_data(&graph->widget, props->user_data) != 0) {
+    if (tinyui_widget_set_user_data(&graph->widget, props->user_data) != 0) {
         free(graph);
         return 0;
     }
     if (props->style_class != 0 &&
-        picoui_widget_set_style_class(&graph->widget, props->style_class) != 0) {
+        tinyui_widget_set_style_class(&graph->widget, props->style_class) != 0) {
         free(graph);
         return 0;
     }
     if ((props->width > 0 || props->height > 0) &&
-        picoui_widget_set_size(&graph->widget, props->width, props->height) != 0) {
+        tinyui_widget_set_size(&graph->widget, props->width, props->height) != 0) {
         free(graph);
         return 0;
     }
@@ -365,7 +365,7 @@ struct picoui_graph *picoui_graph_create_with_props(struct picoui_window *parent
  * @return -1 on failure
  */
 
-int picoui_graph_set_axis(struct picoui_graph *graph, int x_axis, int y_axis)
+int tinyui_graph_set_axis(struct tinyui_graph *graph, int x_axis, int y_axis)
 {
     if (graph == 0 || x_axis <= 0 || y_axis <= 0) {
         return -1;
@@ -388,7 +388,7 @@ int picoui_graph_set_axis(struct picoui_graph *graph, int x_axis, int y_axis)
  * @return -1 on failure
  */
 
-int picoui_graph_set_axis_offset(struct picoui_graph *graph, int axis_offset)
+int tinyui_graph_set_axis_offset(struct tinyui_graph *graph, int axis_offset)
 {
     if (graph == 0 || axis_offset < 0) {
         return -1;
@@ -411,7 +411,7 @@ int picoui_graph_set_axis_offset(struct picoui_graph *graph, int axis_offset)
  * @return -1 on failure
  */
 
-int picoui_graph_set_frame_space(struct picoui_graph *graph, int frame_space)
+int tinyui_graph_set_frame_space(struct tinyui_graph *graph, int frame_space)
 {
     if (graph == 0 || frame_space < 0) {
         return -1;
@@ -434,7 +434,7 @@ int picoui_graph_set_frame_space(struct picoui_graph *graph, int frame_space)
  * @return -1 on failure
  */
 
-int picoui_graph_set_grid_offset(struct picoui_graph *graph, int grid_offset)
+int tinyui_graph_set_grid_offset(struct tinyui_graph *graph, int grid_offset)
 {
     if (graph == 0 || grid_offset <= 0) {
         return -1;
@@ -457,7 +457,7 @@ int picoui_graph_set_grid_offset(struct picoui_graph *graph, int grid_offset)
  * @return -1 on failure
  */
 
-int picoui_graph_set_point_mask_source(struct picoui_graph *graph, struct picoui_image_source *source)
+int tinyui_graph_set_point_mask_source(struct tinyui_graph *graph, struct tinyui_image_source *source)
 {
     if (graph == 0 || source == 0 || source->mask_tile == 0) {
         return -1;
@@ -480,9 +480,9 @@ int picoui_graph_set_point_mask_source(struct picoui_graph *graph, struct picoui
  * @return 0 on success, -1 on failure
  */
 
-int picoui_graph_set_point_image_mask(struct picoui_graph *graph, struct picoui_image_source *source)
+int tinyui_graph_set_point_image_mask(struct tinyui_graph *graph, struct tinyui_image_source *source)
 {
-    return picoui_graph_set_point_mask_source(graph, source);
+    return tinyui_graph_set_point_mask_source(graph, source);
 }
 
 /**
@@ -495,7 +495,7 @@ int picoui_graph_set_point_image_mask(struct picoui_graph *graph, struct picoui_
  * @return -1 on failure
  */
 
-int picoui_graph_add_series(struct picoui_graph *graph,
+int tinyui_graph_add_series(struct tinyui_graph *graph,
                             unsigned int series_color,
                             int line_size,
                             int point_max)
@@ -503,7 +503,7 @@ int picoui_graph_add_series(struct picoui_graph *graph,
     ldGraph_t *ld_graph;
     int series_index;
 
-    if (graph == 0 || line_size < 0 || point_max <= 0 || point_max > PICOUI_GRAPH_MAX_POINTS) {
+    if (graph == 0 || line_size < 0 || point_max <= 0 || point_max > TINYUI_GRAPH_MAX_POINTS) {
         return -1;
     }
     ld_graph = tinyui_graph_get_ld(graph);
@@ -515,7 +515,7 @@ int picoui_graph_add_series(struct picoui_graph *graph,
                                          (ldColor)series_color,
                                          (uint8_t)line_size,
                                          (uint16_t)point_max);
-    if (series_index < 0 || series_index >= PICOUI_GRAPH_MAX_SERIES) {
+    if (series_index < 0 || series_index >= TINYUI_GRAPH_MAX_SERIES) {
         return -1;
     }
 
@@ -536,7 +536,7 @@ int picoui_graph_add_series(struct picoui_graph *graph,
  * @return 0 on success, -1 on failure
  */
 
-int picoui_graph_set_value(struct picoui_graph *graph,
+int tinyui_graph_set_value(struct tinyui_graph *graph,
                            int series_index,
                            int value_index,
                            int value)
@@ -567,7 +567,7 @@ int picoui_graph_set_value(struct picoui_graph *graph,
  * @return -1 on failure
  */
 
-int picoui_graph_move_add(struct picoui_graph *graph, int series_index, int value)
+int tinyui_graph_move_add(struct tinyui_graph *graph, int series_index, int value)
 {
     ldGraph_t *ld_graph;
 
@@ -590,7 +590,7 @@ int picoui_graph_move_add(struct picoui_graph *graph, int series_index, int valu
  * @return -1 on failure
  */
 
-int picoui_graph_get_series_count(const struct picoui_graph *graph)
+int tinyui_graph_get_series_count(const struct tinyui_graph *graph)
 {
     const ldGraph_t *ld_graph;
 
@@ -614,7 +614,7 @@ int picoui_graph_get_series_count(const struct picoui_graph *graph)
  * @return -1 on failure
  */
 
-int picoui_graph_get_value(const struct picoui_graph *graph, int series_index, int value_index)
+int tinyui_graph_get_value(const struct tinyui_graph *graph, int series_index, int value_index)
 {
     const ldGraph_t *ld_graph;
 

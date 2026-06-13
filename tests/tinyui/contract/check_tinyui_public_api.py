@@ -8,18 +8,18 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[3]
 PUBLIC_DIR = ROOT / "tinyui" / "include"
-LEGACY_PUBLIC_DIR = ROOT / "tinyui" / "include" / "picoui"
+LEGACY_PUBLIC_DIR = ROOT / "tinyui" / "include" / "tinyui"
 CONTRACT_DIR = ROOT / "tests" / "tinyui" / "contract"
 INVENTORY_JSON = CONTRACT_DIR / "ldgui_public_api_inventory.json"
 LEDGER_JSON = CONTRACT_DIR / "native_api_gap_ledger.json"
 
 LEGACY_RUNTIME_PROBE = """\
-#include "picoui/runtime.h"
-int main(void) { return picoui_init() != 0 ? tinyui_init() : 0; }
+#include "tinyui/runtime.h"
+int main(void) { return tinyui_init() != 0 ? tinyui_init() : 0; }
 """
-ALLOWED_FUNCTION_PREFIX = "picoui_"
-ALLOWED_MACRO_PREFIX = "PICOUI_"
-ALLOWED_TYPE_PREFIX = "picoui_"
+ALLOWED_FUNCTION_PREFIX = "tinyui_"
+ALLOWED_MACRO_PREFIX = "TINYUI_"
+ALLOWED_TYPE_PREFIX = "tinyui_"
 ALLOWED_COMPAT_TINYUI_FUNCTIONS = {
     "tinyui_init",
     "tinyui_deinit",
@@ -61,7 +61,7 @@ ALLOWLISTED_COVERAGE_KINDS = {
 }
 VALID_GAP_STATUSES = {
     "covered",
-    "missing_picoui_api",
+    "missing_tinyui_api",
     "missing_backend_proof",
     "missing_unit",
     "missing_gate",
@@ -81,7 +81,7 @@ OPAQUE_ARM_TYPEDEF_RE = re.compile(
 )
 BLOCK_COMMENT_RE = re.compile(r"/\*.*?\*/", re.DOTALL)
 LINE_COMMENT_RE = re.compile(r"//.*?$", re.MULTILINE)
-INCLUDE_FORWARD_RE = re.compile(r'^\s*#include\s+"(?P<target>picoui/[^"]+)"\s*$', re.M)
+INCLUDE_FORWARD_RE = re.compile(r'^\s*#include\s+"(?P<target>tinyui/[^"]+)"\s*$', re.M)
 
 
 def _allowed_include_guard(header: Path) -> str:
@@ -207,8 +207,8 @@ def _assert_inventory_contract_rows() -> None:
             assert gap_status in VALID_GAP_STATUSES, f"{symbol} invalid gap_status"
             assert ledger_row.get("rationale"), f"{symbol} missing rationale"
             if required:
-                assert ledger_row.get("picoui_api") or coverage_kind == "shared_api_equivalence", (
-                    f"{symbol} required row must name planned picoui_api or shared_api_equivalence"
+                assert ledger_row.get("tinyui_api") or coverage_kind == "shared_api_equivalence", (
+                    f"{symbol} required row must name planned tinyui_api or shared_api_equivalence"
                 )
             else:
                 assert ledger_row.get("allowlist_reason"), (
@@ -225,7 +225,7 @@ def _assert_inventory_contract_rows() -> None:
 
 
 def check_legacy_runtime_header_compiles() -> None:
-    """Verify `#include "picoui/runtime.h"` compiles and both picoui_* and
+    """Verify `#include "tinyui/runtime.h"` compiles and both tinyui_* and
     tinyui_* entry points are accessible."""
     with tempfile.NamedTemporaryFile("w", suffix=".c", encoding="utf-8", delete=False) as probe:
         probe.write(LEGACY_RUNTIME_PROBE)
@@ -248,7 +248,7 @@ def check_legacy_runtime_header_compiles() -> None:
     finally:
         probe_path.unlink(missing_ok=True)
     assert result.returncode == 0, (
-        f"legacy header `#include \"picoui/runtime.h\"` failed to compile:\n"
+        f"legacy header `#include \"tinyui/runtime.h\"` failed to compile:\n"
         + result.stdout + result.stderr
     )
 
@@ -258,7 +258,7 @@ def main() -> int:
     headers = sorted(
         header for header in PUBLIC_DIR.glob("*.h") if header.name in compat_names
     )
-    assert headers, "expected PicoUI public headers to exist"
+    assert headers, "expected TINYUI public headers to exist"
     for header in headers:
         text = resolve_public_header_text(header)
         check_forbidden_identifiers(header, text)

@@ -1,14 +1,14 @@
-# PicoUI J线计划索引
+# TINYUI J线计划索引
 
-- `H线` 发布准备真相源：`docs/picoui-serial/H-线计划索引.md`
-- `H线` 差距对比真相源：`docs/picoui-serial/H-线发布差距与LingDongGUI控件对比.md`
-- `J线` design truth：`docs/superpowers/specs/2026-05-30-picoui-j-line-v0-1-parity-release-design.md`
-- `J线` implementation plan：`docs/superpowers/plans/2026-05-30-picoui-j-line-v0-1-parity-release-implementation.md`
-- `H线` 当前 9 控件合同：`docs/picoui-serial/H-线当前9控件发布合同.md`
-- `H线` 已支持控件清单：`docs/picoui-serial/H-线已支持控件清单.md`
-- `H线` 发布测试矩阵：`docs/picoui-serial/H-线发布测试矩阵.md`
-- `H线` 发布说明：`docs/picoui-serial/H-线第一版发布说明.md`
-- `H线` manual artifact 真相源：`docs/picoui-serial/C-线人工窗口验收记录.md`
+- `H线` 发布准备真相源：`docs/tinyui-serial/H-线计划索引.md`
+- `H线` 差距对比真相源：`docs/tinyui-serial/H-线发布差距与LingDongGUI控件对比.md`
+- `J线` design truth：`docs/superpowers/specs/2026-05-30-tinyui-j-line-v0-1-parity-release-design.md`
+- `J线` implementation plan：`docs/superpowers/plans/2026-05-30-tinyui-j-line-v0-1-parity-release-implementation.md`
+- `H线` 当前 9 控件合同：`docs/tinyui-serial/H-线当前9控件发布合同.md`
+- `H线` 已支持控件清单：`docs/tinyui-serial/H-线已支持控件清单.md`
+- `H线` 发布测试矩阵：`docs/tinyui-serial/H-线发布测试矩阵.md`
+- `H线` 发布说明：`docs/tinyui-serial/H-线第一版发布说明.md`
+- `H线` manual artifact 真相源：`docs/tinyui-serial/C-线人工窗口验收记录.md`
 - 当前仓库硬规则：`AGENTS.md`
 
 ## J线定位
@@ -69,7 +69,7 @@
 
 这些控件当前仍属于 `wrapped but not parity-complete`，即：
 
-- 已经接入 PicoUI；
+- 已经接入 TINYUI；
 - 已有真实 LingDongGUI backend mapping；
 - 但还没有完成与对应 `ld*` 控件的功能对齐；
 - 不得在 `v0.1` 文档中顺带写成“已对齐”。
@@ -129,7 +129,7 @@
 禁止表述：
 
 - “当前 9 个控件都已完成对齐”
-- “PicoUI 首版已经完整覆盖 LingDongGUI 当前已做控件”
+- “TINYUI 首版已经完整覆盖 LingDongGUI 当前已做控件”
 - “其余 5 个控件只是视觉小问题”
 
 ## J线任务拆分
@@ -242,10 +242,10 @@
 
 至少需要同步的文档：
 
-- `docs/picoui-serial/H-线当前9控件发布合同.md`
-- `docs/picoui-serial/H-线已支持控件清单.md`
-- `docs/picoui-serial/H-线第一版发布说明.md`
-- `docs/picoui-serial/H-线发布差距与LingDongGUI控件对比.md`
+- `docs/tinyui-serial/H-线当前9控件发布合同.md`
+- `docs/tinyui-serial/H-线已支持控件清单.md`
+- `docs/tinyui-serial/H-线第一版发布说明.md`
+- `docs/tinyui-serial/H-线发布差距与LingDongGUI控件对比.md`
 
 完成条件：
 

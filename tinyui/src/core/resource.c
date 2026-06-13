@@ -30,7 +30,7 @@
  * @return 0 on success, -1 on failure
  */
 
-int picoui_image_source_from_vres(unsigned int addr, struct picoui_image_source *out)
+int tinyui_image_source_from_vres(unsigned int addr, struct tinyui_image_source *out)
 {
     if (addr == 0 || out == 0) {
         return -1;
@@ -54,14 +54,14 @@ int picoui_image_source_from_vres(unsigned int addr, struct picoui_image_source 
  * @return 0 on success, -1 on failure
  */
 
-int picoui_font_from_vres(unsigned int addr, struct picoui_font *out)
+int tinyui_font_from_vres(unsigned int addr, struct tinyui_font *out)
 {
     if (addr == 0 || out == 0) {
         return -1;
     }
 
     memset(out, 0, sizeof(*out));
-    out->kind = PICOUI_FONT_KIND_VRES;
+    out->kind = TINYUI_FONT_KIND_VRES;
     out->vres_addr = addr;
     return 0;
 }
@@ -72,7 +72,7 @@ int picoui_font_from_vres(unsigned int addr, struct picoui_font *out)
  * @param[out] source Image source
  */
 
-void picoui_image_source_destroy(struct picoui_image_source *source)
+void tinyui_image_source_destroy(struct tinyui_image_source *source)
 {
     if (source == 0) {
         return;
@@ -90,7 +90,7 @@ void picoui_image_source_destroy(struct picoui_image_source *source)
  * @param[out] font font
  */
 
-void picoui_font_destroy(struct picoui_font *font)
+void tinyui_font_destroy(struct tinyui_font *font)
 {
     if (font == 0) {
         return;

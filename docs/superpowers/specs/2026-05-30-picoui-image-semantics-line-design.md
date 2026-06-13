@@ -1,4 +1,4 @@
-# PicoUI Image 语义线设计
+# TINYUI Image 语义线设计
 
 ## 目标
 
@@ -9,11 +9,11 @@
 ## 背景
 
 - 当前 `image` 的真实 backend 映射已经存在于 `ldImage`：
-  - `picoui_image_create()` / `picoui_image_create_with_props()` -> `ldImage_init`
-  - `picoui_image_set_source()` -> `ldImageSetImage`
+  - `tinyui_image_create()` / `tinyui_image_create_with_props()` -> `ldImage_init`
+  - `tinyui_image_set_source()` -> `ldImageSetImage`
 - 当前 `image` 的位置、尺寸、可见性和布局相关能力已通过 `ldBase` 通用入口闭环。
 - 但 `image` 的 style/state 剩余项并不处于同一语义层：
-  - `style_class / user_data` 当前只是 PicoUI / backend wrapper metadata 存储
+  - `style_class / user_data` 当前只是 TINYUI / backend wrapper metadata 存储
   - `bg_color / text_color / border_color / radius` 当前没有真实 image-style backend 承接点
   - `padding` 的 public 含义并未被定义清楚
   - `enabled` 没有 image-specific disabled 语义
@@ -29,32 +29,32 @@
 
 ### 已真实闭环的 image 能力
 
-- `picoui_image_create()`、`picoui_image_create_with_props()`：真实落到 `ldImage_init`
-- `picoui_image_set_source()`：真实落到 `ldImageSetImage`
-- `picoui_widget_set_pos()` / `set_size()` / `set_visible()`：真实落到 `ldBase` 通用入口
-- `picoui_widget_set_flex_grow()` / `set_flex_new_track()` / `set_ignore_layout()` / `set_grid_cell()`：真实落到当前 layout backend
+- `tinyui_image_create()`、`tinyui_image_create_with_props()`：真实落到 `ldImage_init`
+- `tinyui_image_set_source()`：真实落到 `ldImageSetImage`
+- `tinyui_widget_set_pos()` / `set_size()` / `set_visible()`：真实落到 `ldBase` 通用入口
+- `tinyui_widget_set_flex_grow()` / `set_flex_new_track()` / `set_ignore_layout()` / `set_grid_cell()`：真实落到当前 layout backend
 
 ### 当前未闭环项的真实现状
 
-- `picoui_widget_set_style_class()` / `picoui_widget_set_user_data()`
-  - 当前只更新 PicoUI `widget` 与 backend wrapper 字段
+- `tinyui_widget_set_style_class()` / `tinyui_widget_set_user_data()`
+  - 当前只更新 TINYUI `widget` 与 backend wrapper 字段
   - 没有真实 `ldImage` 消费链
-- `picoui_widget_set_bg_color()` / `set_text_color()` / `set_border_color()` / `set_radius()`
+- `tinyui_widget_set_bg_color()` / `set_text_color()` / `set_border_color()` / `set_radius()`
   - 当前 `image` style backend 不存在
   - `backend_style_apply.c` 对 `PICOUI_BACKEND_WIDGET_IMAGE` 直接拒绝
-- `picoui_widget_set_padding()`
+- `tinyui_widget_set_padding()`
   - 当前 API 形状存在
   - 但 `image padding` 还没有被定义为 content inset、layout gap 或其他稳定语义
-- `picoui_widget_set_enabled()`
+- `tinyui_widget_set_enabled()`
   - 当前没有 image-specific backend bridge
-  - `picoui_widget_set_enabled()` 只对 `list` 和 `switch` 有真实特化语义
+  - `tinyui_widget_set_enabled()` 只对 `list` 和 `switch` 有真实特化语义
 
 ## 合同结论
 
 ### image style_class / user_data
 
 - 当前只承认 metadata 存储语义。
-- 它们可以继续作为 PicoUI / backend wrapper 侧的附加信息存在，但在没有真实 `ldImage` 消费链之前，不承诺任何视觉或交互行为。
+- 它们可以继续作为 TINYUI / backend wrapper 侧的附加信息存在，但在没有真实 `ldImage` 消费链之前，不承诺任何视觉或交互行为。
 - 因此这两项在当前矩阵中继续保持 `incomplete_contract`，而不是 `support`。
 
 ### image bg_color / text_color / border_color / radius
@@ -117,7 +117,7 @@
 
 ## 架构边界
 
-### PicoUI 层
+### TINYUI 层
 
 - 继续保留现有 `image` public API 形状。
 - 但文档与测试口径必须清楚区分：

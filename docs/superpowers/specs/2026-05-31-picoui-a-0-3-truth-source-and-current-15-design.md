@@ -1,9 +1,9 @@
-# PicoUI a-0.3 truth-source 重建与 current-15 审计设计
+# TINYUI a-0.3 truth-source 重建与 current-15 审计设计
 
 > 日期：2026-05-31
 > 适用仓库：`/Users/cys/embedded/LingDongGUI`
-> 入口索引：`docs/picoui-serial/a-0.3/README.md`
-> 目标：把 PicoUI 从“代码已继续前进，但 release truth 仍停在旧 `9` 控件世界”的状态，收敛到一个诚实、可验证、可继续推进的 `a-0.3` 基线：重建 truth-source、审计 current-15、冻结 `a-0.3` closeout 标准。
+> 入口索引：`docs/tinyui-serial/a-0.3/README.md`
+> 目标：把 TINYUI 从“代码已继续前进，但 release truth 仍停在旧 `9` 控件世界”的状态，收敛到一个诚实、可验证、可继续推进的 `a-0.3` 基线：重建 truth-source、审计 current-15、冻结 `a-0.3` closeout 标准。
 > 作用域补充：本文中的 `current truth-source` / `current-15` 都只对应 `2026-05-31` 的 `a-0.3` 阶段语境，不代表当前 `v2.1` 主线的 canonical truth。
 
 ---
@@ -12,8 +12,8 @@
 
 最终大目标不变：
 
-1. PicoUI 覆盖 LingDongGUI 当前 `26` 个可封装原生控件。
-2. 每个 PicoUI public 控件最终都与对应 `ld*` 控件完整功能对齐。
+1. TINYUI 覆盖 LingDongGUI 当前 `26` 个可封装原生控件。
+2. 每个 TINYUI public 控件最终都与对应 `ld*` 控件完整功能对齐。
 
 但 `a-0.3` 本阶段**不负责直接做完全部对齐**。
 
@@ -83,7 +83,7 @@
 
 至少要输出：
 
-1. current PicoUI public widget 清单
+1. current TINYUI public widget 清单
 2. 与 LingDongGUI `26` 控件的对应关系
 3. 当前未覆盖控件清单
 4. 旧 J1 matrix 为何过时
@@ -139,14 +139,14 @@
 
 本阶段必须交付：
 
-1. `docs/picoui-serial/a-0.3/README.md`
-2. `docs/picoui-serial/a-0.3/current-15-覆盖与分层真相源.md`
-3. `docs/picoui-serial/a-0.3/current-15-capability-audit.md`
-4. `docs/picoui-serial/a-0.3/a-0.3-closeout-标准.md`
-5. `tests/picoui/contract/picoui_release_capability_matrix.json`
-6. `tests/picoui/contract/check_picoui_release_capability_matrix.py`
-7. `docs/superpowers/specs/2026-05-31-picoui-a-0-3-truth-source-and-current-15-design.md`
-8. `docs/superpowers/plans/2026-05-31-picoui-a-0-3-truth-source-and-current-15-implementation.md`
+1. `docs/tinyui-serial/a-0.3/README.md`
+2. `docs/tinyui-serial/a-0.3/current-15-覆盖与分层真相源.md`
+3. `docs/tinyui-serial/a-0.3/current-15-capability-audit.md`
+4. `docs/tinyui-serial/a-0.3/a-0.3-closeout-标准.md`
+5. `tests/tinyui/contract/tinyui_release_capability_matrix.json`
+6. `tests/tinyui/contract/check_tinyui_release_capability_matrix.py`
+7. `docs/superpowers/specs/2026-05-31-tinyui-a-0-3-truth-source-and-current-15-design.md`
+8. `docs/superpowers/plans/2026-05-31-tinyui-a-0-3-truth-source-and-current-15-implementation.md`
 
 ## 7. a-0.3 严格串行阶段
 
@@ -154,7 +154,7 @@
 
 输出：
 
-1. current PicoUI public widget 清单
+1. current TINYUI public widget 清单
 2. current widget total
 3. current uncovered widget total
 4. 更新后的 machine-readable matrix
@@ -250,11 +250,11 @@
 
 `a-0.3` 成功时必须满足：
 
-1. 当前 PicoUI public widget 总数不再含糊。
+1. 当前 TINYUI public widget 总数不再含糊。
 2. current-15 全部进入 truth-source。
 3. current-15 每个控件都有诚实 capability audit。
 4. machine-readable matrix、gate、中文文档三者一致。
-5. `a-0.3` closeout 标准冻结完成，并以 `docs/picoui-serial/a-0.3/a-0.3-closeout-标准.md` 为最终判定入口。
+5. `a-0.3` closeout 标准冻结完成，并以 `docs/tinyui-serial/a-0.3/a-0.3-closeout-标准.md` 为最终判定入口。
 
 ## 10. 失败判定
 

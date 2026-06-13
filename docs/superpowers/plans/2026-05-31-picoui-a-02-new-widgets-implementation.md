@@ -1,4 +1,4 @@
-# PicoUI a-02 低耦合新控件扩面 Implementation Plan
+# TINYUI a-02 低耦合新控件扩面 Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -6,14 +6,14 @@
 
 **Architecture:** `a-02` 按控件逐个推进，每个控件必须独立完成 public API、widget、backend、demo、unit/contract/runtime/mapping/visible 接入，然后再进入下一个控件。共享层文件不是长期写面，只允许在每个控件阶段末尾做一次最小聚合接入；任何 shared 语义缺口优先回流 `a-01`，而不是在 `a-02` 扩散成第二条 shared 主线。
 
-**Tech Stack:** C、CMake、CTest、Python3、SDL2 host runtime、PicoUI、LingDongGUI、GitNexus、Markdown serial docs
+**Tech Stack:** C、CMake、CTest、Python3、SDL2 host runtime、TINYUI、LingDongGUI、GitNexus、Markdown serial docs
 
 ---
 
 ## 0. 执行规则
 
 - worktree 固定：`.worktree/a-02`
-- 建议分支：`feat/picoui-a-02-new-widgets`
+- 建议分支：`feat/tinyui-a-02-new-widgets`
 - 创建或切换后必须执行：
 
 ```bash
@@ -32,12 +32,12 @@ git submodule update --init --recursive
 
 以下文件默认禁止 `a-02` 持续修改：
 
-- `picoui/src/core/widget.c`
-- `picoui/src/backend/ldgui/backend_style_apply.c`
-- `picoui/src/backend/ldgui/backend_event.c`
-- `picoui/src/backend/ldgui/backend_app.c`
-- `tests/picoui/contract/picoui_release_capability_matrix.json`
-- `tests/picoui/contract/check_picoui_release_capability_matrix.py`
+- `tinyui/src/core/widget.c`
+- `tinyui/src/backend/ldgui/backend_style_apply.c`
+- `tinyui/src/backend/ldgui/backend_event.c`
+- `tinyui/src/backend/ldgui/backend_app.c`
+- `tests/tinyui/contract/tinyui_release_capability_matrix.json`
+- `tests/tinyui/contract/check_tinyui_release_capability_matrix.py`
 
 若某个控件在阶段末尾必须接入 shared 层：
 
@@ -50,107 +50,107 @@ git submodule update --init --recursive
 
 以下文件允许在阶段末尾做一次最小接入：
 
-- `picoui/include/picoui/picoui.h`
-- `tests/picoui/CMakeLists.txt`
-- `tests/picoui/runtime/check_picoui_runtime.py`
-- `tests/picoui/runtime/check_picoui_backend_mapping.py`
-- `tests/picoui/runtime/check_picoui_visible_ui.py`
-- `tests/picoui/contract/check_picoui_public_api.py`
-- `tests/picoui/contract/check_picoui_demo_boundary.py`
-- `picoui/docs/demo_guide.md`
-- `docs/picoui-serial/a-02-线计划索引.md`
+- `tinyui/include/tinyui/tinyui.h`
+- `tests/tinyui/CMakeLists.txt`
+- `tests/tinyui/runtime/check_tinyui_runtime.py`
+- `tests/tinyui/runtime/check_tinyui_backend_mapping.py`
+- `tests/tinyui/runtime/check_tinyui_visible_ui.py`
+- `tests/tinyui/contract/check_tinyui_public_api.py`
+- `tests/tinyui/contract/check_tinyui_demo_boundary.py`
+- `tinyui/docs/demo_guide.md`
+- `docs/tinyui-serial/a-02-线计划索引.md`
 
 ## 1. 文件结构与阶段边界
 
 ### B1 `progress_bar`
 
 **Create:**
-- `picoui/include/picoui/progress_bar.h`
-- `picoui/src/widgets/progress_bar.c`
-- `picoui/src/backend/ldgui/backend_progress_bar.c`
-- `picoui/demo/progress_bar_basic/main.c`
-- `tests/picoui/unit/test_picoui_progress_bar.c`
+- `tinyui/include/tinyui/progress_bar.h`
+- `tinyui/src/widgets/progress_bar.c`
+- `tinyui/src/backend/ldgui/backend_progress_bar.c`
+- `tinyui/demo/progress_bar_basic/main.c`
+- `tests/tinyui/unit/test_tinyui_progress_bar.c`
 
 **Modify:**
-- `picoui/include/picoui/picoui.h`
-- `picoui/src/backend/ldgui/backend.h`
-- `tests/picoui/CMakeLists.txt`
-- `tests/picoui/runtime/check_picoui_runtime.py`
-- `tests/picoui/runtime/check_picoui_backend_mapping.py`
-- `tests/picoui/runtime/check_picoui_visible_ui.py`
-- `tests/picoui/contract/check_picoui_demo_boundary.py`
+- `tinyui/include/tinyui/tinyui.h`
+- `tinyui/src/backend/ldgui/backend.h`
+- `tests/tinyui/CMakeLists.txt`
+- `tests/tinyui/runtime/check_tinyui_runtime.py`
+- `tests/tinyui/runtime/check_tinyui_backend_mapping.py`
+- `tests/tinyui/runtime/check_tinyui_visible_ui.py`
+- `tests/tinyui/contract/check_tinyui_demo_boundary.py`
 
 ### B2 `qrcode`
 
 **Create:**
-- `picoui/include/picoui/qrcode.h`
-- `picoui/src/widgets/qrcode.c`
-- `picoui/src/backend/ldgui/backend_qrcode.c`
-- `picoui/demo/qrcode_basic/main.c`
-- `tests/picoui/unit/test_picoui_qrcode.c`
+- `tinyui/include/tinyui/qrcode.h`
+- `tinyui/src/widgets/qrcode.c`
+- `tinyui/src/backend/ldgui/backend_qrcode.c`
+- `tinyui/demo/qrcode_basic/main.c`
+- `tests/tinyui/unit/test_tinyui_qrcode.c`
 
 **Modify:**
-- `picoui/include/picoui/picoui.h`
-- `picoui/src/backend/ldgui/backend.h`
-- `tests/picoui/CMakeLists.txt`
-- `tests/picoui/runtime/check_picoui_runtime.py`
-- `tests/picoui/runtime/check_picoui_backend_mapping.py`
-- `tests/picoui/runtime/check_picoui_visible_ui.py`
-- `tests/picoui/contract/check_picoui_demo_boundary.py`
+- `tinyui/include/tinyui/tinyui.h`
+- `tinyui/src/backend/ldgui/backend.h`
+- `tests/tinyui/CMakeLists.txt`
+- `tests/tinyui/runtime/check_tinyui_runtime.py`
+- `tests/tinyui/runtime/check_tinyui_backend_mapping.py`
+- `tests/tinyui/runtime/check_tinyui_visible_ui.py`
+- `tests/tinyui/contract/check_tinyui_demo_boundary.py`
 
 ### B3 `progress_wheel`
 
 **Create:**
-- `picoui/include/picoui/progress_wheel.h`
-- `picoui/src/widgets/progress_wheel.c`
-- `picoui/src/backend/ldgui/backend_progress_wheel.c`
-- `picoui/demo/progress_wheel_basic/main.c`
-- `tests/picoui/unit/test_picoui_progress_wheel.c`
+- `tinyui/include/tinyui/progress_wheel.h`
+- `tinyui/src/widgets/progress_wheel.c`
+- `tinyui/src/backend/ldgui/backend_progress_wheel.c`
+- `tinyui/demo/progress_wheel_basic/main.c`
+- `tests/tinyui/unit/test_tinyui_progress_wheel.c`
 
 **Modify:**
-- `picoui/include/picoui/picoui.h`
-- `picoui/src/backend/ldgui/backend.h`
-- `tests/picoui/CMakeLists.txt`
-- `tests/picoui/runtime/check_picoui_runtime.py`
-- `tests/picoui/runtime/check_picoui_backend_mapping.py`
-- `tests/picoui/runtime/check_picoui_visible_ui.py`
-- `tests/picoui/contract/check_picoui_demo_boundary.py`
+- `tinyui/include/tinyui/tinyui.h`
+- `tinyui/src/backend/ldgui/backend.h`
+- `tests/tinyui/CMakeLists.txt`
+- `tests/tinyui/runtime/check_tinyui_runtime.py`
+- `tests/tinyui/runtime/check_tinyui_backend_mapping.py`
+- `tests/tinyui/runtime/check_tinyui_visible_ui.py`
+- `tests/tinyui/contract/check_tinyui_demo_boundary.py`
 
 ### B4 `message_box`
 
 **Create:**
-- `picoui/include/picoui/message_box.h`
-- `picoui/src/widgets/message_box.c`
-- `picoui/src/backend/ldgui/backend_message_box.c`
-- `picoui/demo/message_box_basic/main.c`
-- `tests/picoui/unit/test_picoui_message_box.c`
+- `tinyui/include/tinyui/message_box.h`
+- `tinyui/src/widgets/message_box.c`
+- `tinyui/src/backend/ldgui/backend_message_box.c`
+- `tinyui/demo/message_box_basic/main.c`
+- `tests/tinyui/unit/test_tinyui_message_box.c`
 
 **Modify:**
-- `picoui/include/picoui/picoui.h`
-- `picoui/src/backend/ldgui/backend.h`
-- `tests/picoui/CMakeLists.txt`
-- `tests/picoui/runtime/check_picoui_runtime.py`
-- `tests/picoui/runtime/check_picoui_backend_mapping.py`
-- `tests/picoui/runtime/check_picoui_visible_ui.py`
-- `tests/picoui/contract/check_picoui_demo_boundary.py`
+- `tinyui/include/tinyui/tinyui.h`
+- `tinyui/src/backend/ldgui/backend.h`
+- `tests/tinyui/CMakeLists.txt`
+- `tests/tinyui/runtime/check_tinyui_runtime.py`
+- `tests/tinyui/runtime/check_tinyui_backend_mapping.py`
+- `tests/tinyui/runtime/check_tinyui_visible_ui.py`
+- `tests/tinyui/contract/check_tinyui_demo_boundary.py`
 
 ### B5 `date_time`
 
 **Create:**
-- `picoui/include/picoui/date_time.h`
-- `picoui/src/widgets/date_time.c`
-- `picoui/src/backend/ldgui/backend_date_time.c`
-- `picoui/demo/date_time_basic/main.c`
-- `tests/picoui/unit/test_picoui_date_time.c`
+- `tinyui/include/tinyui/date_time.h`
+- `tinyui/src/widgets/date_time.c`
+- `tinyui/src/backend/ldgui/backend_date_time.c`
+- `tinyui/demo/date_time_basic/main.c`
+- `tests/tinyui/unit/test_tinyui_date_time.c`
 
 **Modify:**
-- `picoui/include/picoui/picoui.h`
-- `picoui/src/backend/ldgui/backend.h`
-- `tests/picoui/CMakeLists.txt`
-- `tests/picoui/runtime/check_picoui_runtime.py`
-- `tests/picoui/runtime/check_picoui_backend_mapping.py`
-- `tests/picoui/runtime/check_picoui_visible_ui.py`
-- `tests/picoui/contract/check_picoui_demo_boundary.py`
+- `tinyui/include/tinyui/tinyui.h`
+- `tinyui/src/backend/ldgui/backend.h`
+- `tests/tinyui/CMakeLists.txt`
+- `tests/tinyui/runtime/check_tinyui_runtime.py`
+- `tests/tinyui/runtime/check_tinyui_backend_mapping.py`
+- `tests/tinyui/runtime/check_tinyui_visible_ui.py`
+- `tests/tinyui/contract/check_tinyui_demo_boundary.py`
 
 **当前状态：已完成并收口**
 
@@ -159,12 +159,12 @@ git submodule update --init --recursive
 - `gitnexus_impact(target="Function:src/gui/ldDateTime.c:ldDateTimeSetFormat", direction="upstream", repo="LingDongGUI")`：`LOW`
 - `gitnexus_impact(target="Function:src/gui/ldDateTime.c:ldDateTimeSetDate", direction="upstream", repo="LingDongGUI")`：`LOW`
 - `gitnexus_impact(target="Function:src/gui/ldDateTime.c:ldDateTimeSetTime", direction="upstream", repo="LingDongGUI")`：`LOW`
-- `ctest --test-dir build -R test_picoui_date_time --output-on-failure` 通过
-- `python3 tests/picoui/contract/check_picoui_public_api.py` 通过
-- `python3 tests/picoui/contract/check_picoui_demo_boundary.py` 通过
-- `python3 tests/picoui/runtime/check_picoui_runtime.py` 通过
-- `python3 tests/picoui/runtime/check_picoui_backend_mapping.py` 通过
-- `python3 tests/picoui/runtime/check_picoui_visible_ui.py --demo date_time_basic` 通过
+- `ctest --test-dir build -R test_tinyui_date_time --output-on-failure` 通过
+- `python3 tests/tinyui/contract/check_tinyui_public_api.py` 通过
+- `python3 tests/tinyui/contract/check_tinyui_demo_boundary.py` 通过
+- `python3 tests/tinyui/runtime/check_tinyui_runtime.py` 通过
+- `python3 tests/tinyui/runtime/check_tinyui_backend_mapping.py` 通过
+- `python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --demo date_time_basic` 通过
 - `git diff --check` 通过
 
 本轮额外确认点：
@@ -176,20 +176,20 @@ git submodule update --init --recursive
 ### B6 `clock`
 
 **Create:**
-- `picoui/include/picoui/clock.h`
-- `picoui/src/widgets/clock.c`
-- `picoui/src/backend/ldgui/backend_clock.c`
-- `picoui/demo/clock_basic/main.c`
-- `tests/picoui/unit/test_picoui_clock.c`
+- `tinyui/include/tinyui/clock.h`
+- `tinyui/src/widgets/clock.c`
+- `tinyui/src/backend/ldgui/backend_clock.c`
+- `tinyui/demo/clock_basic/main.c`
+- `tests/tinyui/unit/test_tinyui_clock.c`
 
 **Modify:**
-- `picoui/include/picoui/picoui.h`
-- `picoui/src/backend/ldgui/backend.h`
-- `tests/picoui/CMakeLists.txt`
-- `tests/picoui/runtime/check_picoui_runtime.py`
-- `tests/picoui/runtime/check_picoui_backend_mapping.py`
-- `tests/picoui/runtime/check_picoui_visible_ui.py`
-- `tests/picoui/contract/check_picoui_demo_boundary.py`
+- `tinyui/include/tinyui/tinyui.h`
+- `tinyui/src/backend/ldgui/backend.h`
+- `tests/tinyui/CMakeLists.txt`
+- `tests/tinyui/runtime/check_tinyui_runtime.py`
+- `tests/tinyui/runtime/check_tinyui_backend_mapping.py`
+- `tests/tinyui/runtime/check_tinyui_visible_ui.py`
+- `tests/tinyui/contract/check_tinyui_demo_boundary.py`
 
 **当前状态：已完成并收口**
 
@@ -197,38 +197,38 @@ git submodule update --init --recursive
 
 - `gitnexus_impact(target="Function:src/gui/ldClock.c:ldClockSetBackgroundImage", direction="upstream", repo="LingDongGUI")`：`LOW`
 - `gitnexus_impact(target="Function:src/gui/ldClock.c:ldClockSetStepSecond", direction="upstream", repo="LingDongGUI")`：`LOW`
-- `ctest --test-dir build -R test_picoui_clock --output-on-failure` 通过
-- `python3 tests/picoui/contract/check_picoui_public_api.py` 通过
-- `python3 tests/picoui/contract/check_picoui_demo_boundary.py` 通过
-- `python3 tests/picoui/runtime/check_picoui_runtime.py` 通过
-- `python3 tests/picoui/runtime/check_picoui_backend_mapping.py` 通过
-- `python3 tests/picoui/runtime/check_picoui_visible_ui.py --demo clock_basic` 通过
+- `ctest --test-dir build -R test_tinyui_clock --output-on-failure` 通过
+- `python3 tests/tinyui/contract/check_tinyui_public_api.py` 通过
+- `python3 tests/tinyui/contract/check_tinyui_demo_boundary.py` 通过
+- `python3 tests/tinyui/runtime/check_tinyui_runtime.py` 通过
+- `python3 tests/tinyui/runtime/check_tinyui_backend_mapping.py` 通过
+- `python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --demo clock_basic` 通过
 - `git diff --check` 通过
 
 本轮额外确认点：
 
 - `clock_basic` 当前真实输出契约是不带背景表盘的三针时钟；`visible_ui` 已按中心枢纽和三向指针重写，不再错误强求圆盘背景。
-- 当前 PicoUI `clock` 只承诺最小 `step_second` 显示合同，不暴露背景资源或更复杂时钟配置。
+- 当前 TINYUI `clock` 只承诺最小 `step_second` 显示合同，不暴露背景资源或更复杂时钟配置。
 
 ### B7 文档与 closeout
 
 **Modify:**
-- `picoui/docs/demo_guide.md`
-- `docs/picoui-serial/a-02-线计划索引.md`
-- `docs/superpowers/specs/2026-05-31-picoui-a-02-new-widgets-design.md`
+- `tinyui/docs/demo_guide.md`
+- `docs/tinyui-serial/a-02-线计划索引.md`
+- `docs/superpowers/specs/2026-05-31-tinyui-a-02-new-widgets-design.md`
 
 ## 2. Tasks
 
 ### Task B0: worktree 准备和 baseline
 
 **Files:**
-- Read: `docs/picoui-serial/a-02-线计划索引.md`
-- Read: `docs/superpowers/specs/2026-05-31-picoui-a-02-new-widgets-design.md`
+- Read: `docs/tinyui-serial/a-02-线计划索引.md`
+- Read: `docs/superpowers/specs/2026-05-31-tinyui-a-02-new-widgets-design.md`
 
 - [ ] **Step 1: 创建 worktree**
 
 ```bash
-git worktree add .worktree/a-02 -b feat/picoui-a-02-new-widgets HEAD
+git worktree add .worktree/a-02 -b feat/tinyui-a-02-new-widgets HEAD
 cd .worktree/a-02
 git submodule sync --recursive
 git submodule update --init --recursive
@@ -244,11 +244,11 @@ Expected:
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
 rtk cmake --build build
-ctest --test-dir build -L picoui --output-on-failure
+ctest --test-dir build -L tinyui --output-on-failure
 ctest --test-dir build -L visible --output-on-failure
 ctest --test-dir build -L mapping --output-on-failure
-python3 tests/picoui/contract/check_picoui_public_api.py
-python3 tests/picoui/contract/check_picoui_demo_boundary.py
+python3 tests/tinyui/contract/check_tinyui_public_api.py
+python3 tests/tinyui/contract/check_tinyui_demo_boundary.py
 git diff --check
 ```
 
@@ -260,29 +260,29 @@ Expected:
 ### Task B1: `progress_bar` vertical slice
 
 **Files:**
-- Create: `picoui/include/picoui/progress_bar.h`
-- Create: `picoui/src/widgets/progress_bar.c`
-- Create: `picoui/src/backend/ldgui/backend_progress_bar.c`
-- Create: `picoui/demo/progress_bar_basic/main.c`
-- Create: `tests/picoui/unit/test_picoui_progress_bar.c`
-- Modify: `picoui/include/picoui/picoui.h`
-- Modify: `picoui/src/backend/ldgui/backend.h`
-- Modify: `tests/picoui/CMakeLists.txt`
-- Modify: `tests/picoui/runtime/check_picoui_runtime.py`
-- Modify: `tests/picoui/runtime/check_picoui_backend_mapping.py`
-- Modify: `tests/picoui/runtime/check_picoui_visible_ui.py`
-- Modify: `tests/picoui/contract/check_picoui_demo_boundary.py`
+- Create: `tinyui/include/tinyui/progress_bar.h`
+- Create: `tinyui/src/widgets/progress_bar.c`
+- Create: `tinyui/src/backend/ldgui/backend_progress_bar.c`
+- Create: `tinyui/demo/progress_bar_basic/main.c`
+- Create: `tests/tinyui/unit/test_tinyui_progress_bar.c`
+- Modify: `tinyui/include/tinyui/tinyui.h`
+- Modify: `tinyui/src/backend/ldgui/backend.h`
+- Modify: `tests/tinyui/CMakeLists.txt`
+- Modify: `tests/tinyui/runtime/check_tinyui_runtime.py`
+- Modify: `tests/tinyui/runtime/check_tinyui_backend_mapping.py`
+- Modify: `tests/tinyui/runtime/check_tinyui_visible_ui.py`
+- Modify: `tests/tinyui/contract/check_tinyui_demo_boundary.py`
 
 **当前状态：已完成并收口**
 
 当前已确认的收口证据：
 
 - `gitnexus_impact(target="ldProgressBarSetPercent", direction="upstream", repo="LingDongGUI")`：`LOW`
-- `ctest --test-dir build -R test_picoui_progress_bar --output-on-failure` 通过
-- `python3 tests/picoui/contract/check_picoui_public_api.py` 通过
-- `python3 tests/picoui/contract/check_picoui_demo_boundary.py` 通过
-- `python3 tests/picoui/runtime/check_picoui_backend_mapping.py` 通过
-- `python3 tests/picoui/runtime/check_picoui_visible_ui.py --demo progress_bar_basic` 通过
+- `ctest --test-dir build -R test_tinyui_progress_bar --output-on-failure` 通过
+- `python3 tests/tinyui/contract/check_tinyui_public_api.py` 通过
+- `python3 tests/tinyui/contract/check_tinyui_demo_boundary.py` 通过
+- `python3 tests/tinyui/runtime/check_tinyui_backend_mapping.py` 通过
+- `python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --demo progress_bar_basic` 通过
 - `git diff --check` 通过
 - fresh 独立 review：无 findings，`B1` 可收口
 
@@ -292,7 +292,7 @@ Run:
 
 ```text
 gitnexus_impact(target="ldProgressBarSetPercent", direction="upstream", repo="LingDongGUI")
-gitnexus_impact(target="test_picoui_widgets", direction="upstream", repo="LingDongGUI")
+gitnexus_impact(target="test_tinyui_widgets", direction="upstream", repo="LingDongGUI")
 ```
 
 Expected:
@@ -306,14 +306,14 @@ Expected:
 
 - [ ] **Step 2: 写 public header 和 failing unit**
 
-Create `picoui/include/picoui/progress_bar.h` and `tests/picoui/unit/test_picoui_progress_bar.c`.
+Create `tinyui/include/tinyui/progress_bar.h` and `tests/tinyui/unit/test_tinyui_progress_bar.c`.
 
 Header 至少定义：
 
 ```c
-struct picoui_progress_bar;
+struct tinyui_progress_bar;
 
-struct picoui_progress_bar_props {
+struct tinyui_progress_bar_props {
     const char *id;
     const char *style_class;
     void *user_data;
@@ -321,14 +321,14 @@ struct picoui_progress_bar_props {
     int horizontal;
 };
 
-struct picoui_progress_bar *picoui_progress_bar_create(struct picoui_widget *parent, const char *id);
-struct picoui_progress_bar *picoui_progress_bar_create_with_props(
-    struct picoui_widget *parent,
-    const struct picoui_progress_bar_props *props);
-int picoui_progress_bar_set_percent(struct picoui_progress_bar *bar, int percent);
-int picoui_progress_bar_get_percent(const struct picoui_progress_bar *bar);
-int picoui_progress_bar_set_horizontal(struct picoui_progress_bar *bar, int horizontal);
-int picoui_progress_bar_get_horizontal(const struct picoui_progress_bar *bar);
+struct tinyui_progress_bar *tinyui_progress_bar_create(struct tinyui_widget *parent, const char *id);
+struct tinyui_progress_bar *tinyui_progress_bar_create_with_props(
+    struct tinyui_widget *parent,
+    const struct tinyui_progress_bar_props *props);
+int tinyui_progress_bar_set_percent(struct tinyui_progress_bar *bar, int percent);
+int tinyui_progress_bar_get_percent(const struct tinyui_progress_bar *bar);
+int tinyui_progress_bar_set_horizontal(struct tinyui_progress_bar *bar, int horizontal);
+int tinyui_progress_bar_get_horizontal(const struct tinyui_progress_bar *bar);
 ```
 
 Test 至少覆盖：
@@ -349,12 +349,12 @@ Run:
 
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
-ctest --test-dir build -R test_picoui_progress_bar --output-on-failure
+ctest --test-dir build -R test_tinyui_progress_bar --output-on-failure
 ```
 
 Expected:
 
-- `test_picoui_progress_bar` 当前因实现缺失失败
+- `test_tinyui_progress_bar` 当前因实现缺失失败
 
 结果：
 
@@ -372,8 +372,8 @@ Requirements:
 Private files:
 
 ```c
-picoui/src/widgets/progress_bar.c
-picoui/src/backend/ldgui/backend_progress_bar.c
+tinyui/src/widgets/progress_bar.c
+tinyui/src/backend/ldgui/backend_progress_bar.c
 ```
 
 结果：
@@ -382,9 +382,9 @@ picoui/src/backend/ldgui/backend_progress_bar.c
 
 - [ ] **Step 5: 写 demo 并接入 runtime**
 
-Create `picoui/demo/progress_bar_basic/main.c`.
+Create `tinyui/demo/progress_bar_basic/main.c`.
 
-Demo 只允许 `picoui_*` API，至少创建：
+Demo 只允许 `tinyui_*` API，至少创建：
 
 ```c
 progress_bar id = "progress_bar"
@@ -394,14 +394,14 @@ horizontal = 1
 
 Update:
 
-- `tests/picoui/runtime/check_picoui_runtime.py`
-- `tests/picoui/runtime/check_picoui_backend_mapping.py`
-- `tests/picoui/runtime/check_picoui_visible_ui.py`
-- `tests/picoui/contract/check_picoui_demo_boundary.py`
+- `tests/tinyui/runtime/check_tinyui_runtime.py`
+- `tests/tinyui/runtime/check_tinyui_backend_mapping.py`
+- `tests/tinyui/runtime/check_tinyui_visible_ui.py`
+- `tests/tinyui/contract/check_tinyui_demo_boundary.py`
 
 结果：
 
-- [x] 已完成，demo 使用纯 `picoui_*` API，runtime/mapping/visible/contract 已接入
+- [x] 已完成，demo 使用纯 `tinyui_*` API，runtime/mapping/visible/contract 已接入
 
 - [ ] **Step 6: 验证 GREEN**
 
@@ -410,12 +410,12 @@ Run:
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
 rtk cmake --build build
-ctest --test-dir build -R test_picoui_progress_bar --output-on-failure
-python3 tests/picoui/contract/check_picoui_public_api.py
-python3 tests/picoui/contract/check_picoui_demo_boundary.py
-python3 tests/picoui/runtime/check_picoui_runtime.py
-python3 tests/picoui/runtime/check_picoui_backend_mapping.py
-python3 tests/picoui/runtime/check_picoui_visible_ui.py --demo progress_bar_basic
+ctest --test-dir build -R test_tinyui_progress_bar --output-on-failure
+python3 tests/tinyui/contract/check_tinyui_public_api.py
+python3 tests/tinyui/contract/check_tinyui_demo_boundary.py
+python3 tests/tinyui/runtime/check_tinyui_runtime.py
+python3 tests/tinyui/runtime/check_tinyui_backend_mapping.py
+python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --demo progress_bar_basic
 git diff --check
 ```
 
@@ -446,30 +446,30 @@ Expected:
 ### Task B2: `qrcode` vertical slice
 
 **Files:**
-- Create: `picoui/include/picoui/qrcode.h`
-- Create: `picoui/src/widgets/qrcode.c`
-- Create: `picoui/src/backend/ldgui/backend_qrcode.c`
-- Create: `picoui/demo/qrcode_basic/main.c`
-- Create: `tests/picoui/unit/test_picoui_qrcode.c`
-- Modify: `picoui/include/picoui/picoui.h`
-- Modify: `picoui/src/backend/ldgui/backend.h`
-- Modify: `tests/picoui/CMakeLists.txt`
-- Modify: `tests/picoui/runtime/check_picoui_runtime.py`
-- Modify: `tests/picoui/runtime/check_picoui_backend_mapping.py`
-- Modify: `tests/picoui/runtime/check_picoui_visible_ui.py`
-- Modify: `tests/picoui/contract/check_picoui_demo_boundary.py`
+- Create: `tinyui/include/tinyui/qrcode.h`
+- Create: `tinyui/src/widgets/qrcode.c`
+- Create: `tinyui/src/backend/ldgui/backend_qrcode.c`
+- Create: `tinyui/demo/qrcode_basic/main.c`
+- Create: `tests/tinyui/unit/test_tinyui_qrcode.c`
+- Modify: `tinyui/include/tinyui/tinyui.h`
+- Modify: `tinyui/src/backend/ldgui/backend.h`
+- Modify: `tests/tinyui/CMakeLists.txt`
+- Modify: `tests/tinyui/runtime/check_tinyui_runtime.py`
+- Modify: `tests/tinyui/runtime/check_tinyui_backend_mapping.py`
+- Modify: `tests/tinyui/runtime/check_tinyui_visible_ui.py`
+- Modify: `tests/tinyui/contract/check_tinyui_demo_boundary.py`
 
 **当前状态：已完成并收口**
 
 当前已确认的收口证据：
 
 - `gitnexus_impact(target_uid="Function:src/gui/ldQRCode.c:ldQRCodeSetText", direction="upstream", repo="LingDongGUI")`：`LOW`
-- `ctest --test-dir build -R test_picoui_qrcode --output-on-failure` 通过
-- `python3 tests/picoui/contract/check_picoui_public_api.py` 通过
-- `python3 tests/picoui/contract/check_picoui_demo_boundary.py` 通过
-- `python3 tests/picoui/runtime/check_picoui_runtime.py` 通过
-- `python3 tests/picoui/runtime/check_picoui_backend_mapping.py` 通过
-- `python3 tests/picoui/runtime/check_picoui_visible_ui.py --demo qrcode_basic` 通过
+- `ctest --test-dir build -R test_tinyui_qrcode --output-on-failure` 通过
+- `python3 tests/tinyui/contract/check_tinyui_public_api.py` 通过
+- `python3 tests/tinyui/contract/check_tinyui_demo_boundary.py` 通过
+- `python3 tests/tinyui/runtime/check_tinyui_runtime.py` 通过
+- `python3 tests/tinyui/runtime/check_tinyui_backend_mapping.py` 通过
+- `python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --demo qrcode_basic` 通过
 - `git diff --check` 通过
 - fresh 独立 review：无 findings，`B2` 可收口
 
@@ -479,34 +479,34 @@ Run:
 
 ```text
 gitnexus_impact(target="ldQRCodeSetText", direction="upstream", repo="LingDongGUI")
-gitnexus_impact(target="check_picoui_public_api", direction="upstream", repo="LingDongGUI")
+gitnexus_impact(target="check_tinyui_public_api", direction="upstream", repo="LingDongGUI")
 ```
 
 结果：
 
 - [x] 已完成，`ldQRCodeSetText` 上游影响 `LOW`
-- [x] 计划里的 `check_picoui_public_api` 不是 GitNexus 可解析符号，未作为有效 impact 证据使用
+- [x] 计划里的 `check_tinyui_public_api` 不是 GitNexus 可解析符号，未作为有效 impact 证据使用
 
 - [ ] **Step 2: 写 public header 和 failing unit**
 
 Header 至少定义：
 
 ```c
-struct picoui_qrcode;
+struct tinyui_qrcode;
 
-struct picoui_qrcode_props {
+struct tinyui_qrcode_props {
     const char *id;
     const char *style_class;
     void *user_data;
     const char *text;
 };
 
-struct picoui_qrcode *picoui_qrcode_create(struct picoui_widget *parent, const char *id);
-struct picoui_qrcode *picoui_qrcode_create_with_props(
-    struct picoui_widget *parent,
-    const struct picoui_qrcode_props *props);
-int picoui_qrcode_set_text(struct picoui_qrcode *qrcode, const char *text);
-const char *picoui_qrcode_get_text(const struct picoui_qrcode *qrcode);
+struct tinyui_qrcode *tinyui_qrcode_create(struct tinyui_widget *parent, const char *id);
+struct tinyui_qrcode *tinyui_qrcode_create_with_props(
+    struct tinyui_widget *parent,
+    const struct tinyui_qrcode_props *props);
+int tinyui_qrcode_set_text(struct tinyui_qrcode *qrcode, const char *text);
+const char *tinyui_qrcode_get_text(const struct tinyui_qrcode *qrcode);
 ```
 
 Test 至少覆盖 create / text set-get / NULL text reject。
@@ -521,7 +521,7 @@ Run:
 
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
-ctest --test-dir build -R test_picoui_qrcode --output-on-failure
+ctest --test-dir build -R test_tinyui_qrcode --output-on-failure
 ```
 
 结果：
@@ -546,12 +546,12 @@ Demo 最少创建：
 
 ```c
 qrcode id = "qrcode"
-text = "https://example.local/picoui"
+text = "https://example.local/tinyui"
 ```
 
 结果：
 
-- [x] 已完成，demo 使用纯 `picoui_*` API，runtime/mapping/visible/contract 已接入
+- [x] 已完成，demo 使用纯 `tinyui_*` API，runtime/mapping/visible/contract 已接入
 
 - [ ] **Step 6: 验证 GREEN**
 
@@ -560,12 +560,12 @@ Run:
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
 rtk cmake --build build
-ctest --test-dir build -R test_picoui_qrcode --output-on-failure
-python3 tests/picoui/contract/check_picoui_public_api.py
-python3 tests/picoui/contract/check_picoui_demo_boundary.py
-python3 tests/picoui/runtime/check_picoui_runtime.py
-python3 tests/picoui/runtime/check_picoui_backend_mapping.py
-python3 tests/picoui/runtime/check_picoui_visible_ui.py --demo qrcode_basic
+ctest --test-dir build -R test_tinyui_qrcode --output-on-failure
+python3 tests/tinyui/contract/check_tinyui_public_api.py
+python3 tests/tinyui/contract/check_tinyui_demo_boundary.py
+python3 tests/tinyui/runtime/check_tinyui_runtime.py
+python3 tests/tinyui/runtime/check_tinyui_backend_mapping.py
+python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --demo qrcode_basic
 git diff --check
 ```
 
@@ -588,37 +588,37 @@ gitnexus_detect_changes(scope="all", repo="LingDongGUI")
 ### Task B3: `progress_wheel` vertical slice
 
 **Files:**
-- Create: `picoui/include/picoui/progress_wheel.h`
-- Create: `picoui/src/widgets/progress_wheel.c`
-- Create: `picoui/src/backend/ldgui/backend_progress_wheel.c`
-- Create: `picoui/demo/progress_wheel_basic/main.c`
-- Create: `tests/picoui/unit/test_picoui_progress_wheel.c`
-- Modify: `picoui/include/picoui/picoui.h`
-- Modify: `picoui/src/backend/ldgui/backend.h`
-- Modify: `tests/picoui/CMakeLists.txt`
-- Modify: `tests/picoui/runtime/check_picoui_runtime.py`
-- Modify: `tests/picoui/runtime/check_picoui_backend_mapping.py`
-- Modify: `tests/picoui/runtime/check_picoui_visible_ui.py`
-- Modify: `tests/picoui/contract/check_picoui_demo_boundary.py`
+- Create: `tinyui/include/tinyui/progress_wheel.h`
+- Create: `tinyui/src/widgets/progress_wheel.c`
+- Create: `tinyui/src/backend/ldgui/backend_progress_wheel.c`
+- Create: `tinyui/demo/progress_wheel_basic/main.c`
+- Create: `tests/tinyui/unit/test_tinyui_progress_wheel.c`
+- Modify: `tinyui/include/tinyui/tinyui.h`
+- Modify: `tinyui/src/backend/ldgui/backend.h`
+- Modify: `tests/tinyui/CMakeLists.txt`
+- Modify: `tests/tinyui/runtime/check_tinyui_runtime.py`
+- Modify: `tests/tinyui/runtime/check_tinyui_backend_mapping.py`
+- Modify: `tests/tinyui/runtime/check_tinyui_visible_ui.py`
+- Modify: `tests/tinyui/contract/check_tinyui_demo_boundary.py`
 
 **当前状态：已完成并收口**
 
 当前已确认的收口证据：
 
 - `gitnexus_impact(target="ldProgressWheelSetProgress", direction="upstream", repo="LingDongGUI")`：`LOW`
-- `ctest --test-dir build -R test_picoui_progress_wheel --output-on-failure` 通过
-- `python3 tests/picoui/contract/check_picoui_public_api.py` 通过
-- `python3 tests/picoui/contract/check_picoui_demo_boundary.py` 通过
-- `python3 tests/picoui/runtime/check_picoui_runtime.py` 通过
-- `python3 tests/picoui/runtime/check_picoui_backend_mapping.py` 通过
-- `python3 tests/picoui/runtime/check_picoui_visible_ui.py --demo progress_wheel_basic` 通过
+- `ctest --test-dir build -R test_tinyui_progress_wheel --output-on-failure` 通过
+- `python3 tests/tinyui/contract/check_tinyui_public_api.py` 通过
+- `python3 tests/tinyui/contract/check_tinyui_demo_boundary.py` 通过
+- `python3 tests/tinyui/runtime/check_tinyui_runtime.py` 通过
+- `python3 tests/tinyui/runtime/check_tinyui_backend_mapping.py` 通过
+- `python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --demo progress_wheel_basic` 通过
 - `git diff --check` 通过
 - fresh 独立 review：无 findings，`B3` 可收口
 
 本阶段额外记录：
 
 - release 崩溃根因来自 `src/gui/ldProgressWheel.c` 中 `progress_wheel_init()` 误传 scene 指针；已改为 `&ptScene->use_as__arm_2d_scene_t`
-- `tests/picoui/runtime/check_picoui_visible_ui.py` 已从单纯 ring 像素检测补强为 `colored ring + adjacent white dot` 联合判定
+- `tests/tinyui/runtime/check_tinyui_visible_ui.py` 已从单纯 ring 像素检测补强为 `colored ring + adjacent white dot` 联合判定
 
 - [ ] **Step 1: 跑 impact**
 
@@ -637,21 +637,21 @@ gitnexus_impact(target="ldProgressWheelSetProgress", direction="upstream", repo=
 Header 至少定义：
 
 ```c
-struct picoui_progress_wheel;
+struct tinyui_progress_wheel;
 
-struct picoui_progress_wheel_props {
+struct tinyui_progress_wheel_props {
     const char *id;
     const char *style_class;
     void *user_data;
     int percent;
 };
 
-struct picoui_progress_wheel *picoui_progress_wheel_create(struct picoui_widget *parent, const char *id);
-struct picoui_progress_wheel *picoui_progress_wheel_create_with_props(
-    struct picoui_widget *parent,
-    const struct picoui_progress_wheel_props *props);
-int picoui_progress_wheel_set_percent(struct picoui_progress_wheel *wheel, int percent);
-int picoui_progress_wheel_get_percent(const struct picoui_progress_wheel *wheel);
+struct tinyui_progress_wheel *tinyui_progress_wheel_create(struct tinyui_widget *parent, const char *id);
+struct tinyui_progress_wheel *tinyui_progress_wheel_create_with_props(
+    struct tinyui_widget *parent,
+    const struct tinyui_progress_wheel_props *props);
+int tinyui_progress_wheel_set_percent(struct tinyui_progress_wheel *wheel, int percent);
+int tinyui_progress_wheel_get_percent(const struct tinyui_progress_wheel *wheel);
 ```
 
 Test 至少覆盖 create / percent bounds / getter。
@@ -666,12 +666,12 @@ Run:
 
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
-ctest --test-dir build -R test_picoui_progress_wheel --output-on-failure
+ctest --test-dir build -R test_tinyui_progress_wheel --output-on-failure
 ```
 
 Expected:
 
-- `test_picoui_progress_wheel` 当前因实现缺失失败
+- `test_tinyui_progress_wheel` 当前因实现缺失失败
 
 结果：
 
@@ -710,12 +710,12 @@ Run:
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
 rtk cmake --build build
-ctest --test-dir build -R test_picoui_progress_wheel --output-on-failure
-python3 tests/picoui/contract/check_picoui_public_api.py
-python3 tests/picoui/contract/check_picoui_demo_boundary.py
-python3 tests/picoui/runtime/check_picoui_runtime.py
-python3 tests/picoui/runtime/check_picoui_backend_mapping.py
-python3 tests/picoui/runtime/check_picoui_visible_ui.py --demo progress_wheel_basic
+ctest --test-dir build -R test_tinyui_progress_wheel --output-on-failure
+python3 tests/tinyui/contract/check_tinyui_public_api.py
+python3 tests/tinyui/contract/check_tinyui_demo_boundary.py
+python3 tests/tinyui/runtime/check_tinyui_runtime.py
+python3 tests/tinyui/runtime/check_tinyui_backend_mapping.py
+python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --demo progress_wheel_basic
 git diff --check
 ```
 
@@ -744,18 +744,18 @@ gitnexus_detect_changes(scope="all", repo="LingDongGUI")
 ### Task B4: `message_box` vertical slice
 
 **Files:**
-- Create: `picoui/include/picoui/message_box.h`
-- Create: `picoui/src/widgets/message_box.c`
-- Create: `picoui/src/backend/ldgui/backend_message_box.c`
-- Create: `picoui/demo/message_box_basic/main.c`
-- Create: `tests/picoui/unit/test_picoui_message_box.c`
-- Modify: `picoui/include/picoui/picoui.h`
-- Modify: `picoui/src/backend/ldgui/backend.h`
-- Modify: `tests/picoui/CMakeLists.txt`
-- Modify: `tests/picoui/runtime/check_picoui_runtime.py`
-- Modify: `tests/picoui/runtime/check_picoui_backend_mapping.py`
-- Modify: `tests/picoui/runtime/check_picoui_visible_ui.py`
-- Modify: `tests/picoui/contract/check_picoui_demo_boundary.py`
+- Create: `tinyui/include/tinyui/message_box.h`
+- Create: `tinyui/src/widgets/message_box.c`
+- Create: `tinyui/src/backend/ldgui/backend_message_box.c`
+- Create: `tinyui/demo/message_box_basic/main.c`
+- Create: `tests/tinyui/unit/test_tinyui_message_box.c`
+- Modify: `tinyui/include/tinyui/tinyui.h`
+- Modify: `tinyui/src/backend/ldgui/backend.h`
+- Modify: `tests/tinyui/CMakeLists.txt`
+- Modify: `tests/tinyui/runtime/check_tinyui_runtime.py`
+- Modify: `tests/tinyui/runtime/check_tinyui_backend_mapping.py`
+- Modify: `tests/tinyui/runtime/check_tinyui_visible_ui.py`
+- Modify: `tests/tinyui/contract/check_tinyui_demo_boundary.py`
 
 **当前状态：已完成并收口**
 
@@ -763,18 +763,18 @@ gitnexus_detect_changes(scope="all", repo="LingDongGUI")
 
 - `gitnexus_impact(target="Function:src/gui/ldMessageBox.c:ldMessageBoxSetTitle", direction="upstream", repo="LingDongGUI")`：`LOW`
 - `gitnexus_impact(target="Function:src/gui/ldMessageBox.c:ldMessageBoxSetCallback", direction="upstream", repo="LingDongGUI")`：`LOW`
-- `ctest --test-dir build -R test_picoui_message_box --output-on-failure` 通过
-- `python3 tests/picoui/contract/check_picoui_public_api.py` 通过
-- `python3 tests/picoui/contract/check_picoui_demo_boundary.py` 通过
-- `python3 tests/picoui/runtime/check_picoui_runtime.py` 通过
-- `python3 tests/picoui/runtime/check_picoui_backend_mapping.py` 通过
-- `python3 tests/picoui/runtime/check_picoui_visible_ui.py --demo message_box_basic` 通过
+- `ctest --test-dir build -R test_tinyui_message_box --output-on-failure` 通过
+- `python3 tests/tinyui/contract/check_tinyui_public_api.py` 通过
+- `python3 tests/tinyui/contract/check_tinyui_demo_boundary.py` 通过
+- `python3 tests/tinyui/runtime/check_tinyui_runtime.py` 通过
+- `python3 tests/tinyui/runtime/check_tinyui_backend_mapping.py` 通过
+- `python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --demo message_box_basic` 通过
 - `git diff --check` 通过
 - fresh 独立 review：无 findings，`B4` 可收口
 
 本阶段额外记录：
 
-- `picoui_message_box_set_on_confirm()` 当前已通过 backend 真正桥接到底层 `ldMessageBoxSetCallback()`
+- `tinyui_message_box_set_on_confirm()` 当前已通过 backend 真正桥接到底层 `ldMessageBoxSetCallback()`
 - unit 已补成真实 callback 触发验证，不再只是字段存储验证
 - `visible_ui` 对 `message_box_basic` 当前只承诺结构可见，不夸写成完整 modal/focus 交互证明
 
@@ -796,11 +796,11 @@ gitnexus_impact(target="ldMessageBoxSetCallback", direction="upstream", repo="Li
 Header 至少定义：
 
 ```c
-struct picoui_message_box;
+struct tinyui_message_box;
 
-typedef void (*picoui_message_box_callback_t)(struct picoui_message_box *box, void *user_data);
+typedef void (*tinyui_message_box_callback_t)(struct tinyui_message_box *box, void *user_data);
 
-struct picoui_message_box_props {
+struct tinyui_message_box_props {
     const char *id;
     const char *style_class;
     void *user_data;
@@ -809,16 +809,16 @@ struct picoui_message_box_props {
     const char *confirm_text;
 };
 
-struct picoui_message_box *picoui_message_box_create(struct picoui_widget *parent, const char *id);
-struct picoui_message_box *picoui_message_box_create_with_props(
-    struct picoui_widget *parent,
-    const struct picoui_message_box_props *props);
-int picoui_message_box_set_title(struct picoui_message_box *box, const char *title);
-int picoui_message_box_set_message(struct picoui_message_box *box, const char *message);
-int picoui_message_box_set_confirm_text(struct picoui_message_box *box, const char *text);
-void picoui_message_box_set_on_confirm(
-    struct picoui_message_box *box,
-    picoui_message_box_callback_t callback,
+struct tinyui_message_box *tinyui_message_box_create(struct tinyui_widget *parent, const char *id);
+struct tinyui_message_box *tinyui_message_box_create_with_props(
+    struct tinyui_widget *parent,
+    const struct tinyui_message_box_props *props);
+int tinyui_message_box_set_title(struct tinyui_message_box *box, const char *title);
+int tinyui_message_box_set_message(struct tinyui_message_box *box, const char *message);
+int tinyui_message_box_set_confirm_text(struct tinyui_message_box *box, const char *text);
+void tinyui_message_box_set_on_confirm(
+    struct tinyui_message_box *box,
+    tinyui_message_box_callback_t callback,
     void *user_data);
 ```
 
@@ -834,12 +834,12 @@ Run:
 
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
-ctest --test-dir build -R test_picoui_message_box --output-on-failure
+ctest --test-dir build -R test_tinyui_message_box --output-on-failure
 ```
 
 Expected:
 
-- `test_picoui_message_box` 当前因实现缺失失败
+- `test_tinyui_message_box` 当前因实现缺失失败
 
 结果：
 
@@ -880,12 +880,12 @@ Run:
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
 rtk cmake --build build
-ctest --test-dir build -R test_picoui_message_box --output-on-failure
-python3 tests/picoui/contract/check_picoui_public_api.py
-python3 tests/picoui/contract/check_picoui_demo_boundary.py
-python3 tests/picoui/runtime/check_picoui_runtime.py
-python3 tests/picoui/runtime/check_picoui_backend_mapping.py
-python3 tests/picoui/runtime/check_picoui_visible_ui.py --demo message_box_basic
+ctest --test-dir build -R test_tinyui_message_box --output-on-failure
+python3 tests/tinyui/contract/check_tinyui_public_api.py
+python3 tests/tinyui/contract/check_tinyui_demo_boundary.py
+python3 tests/tinyui/runtime/check_tinyui_runtime.py
+python3 tests/tinyui/runtime/check_tinyui_backend_mapping.py
+python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --demo message_box_basic
 git diff --check
 ```
 
@@ -908,18 +908,18 @@ gitnexus_detect_changes(scope="all", repo="LingDongGUI")
 ### Task B5: `date_time` vertical slice
 
 **Files:**
-- Create: `picoui/include/picoui/date_time.h`
-- Create: `picoui/src/widgets/date_time.c`
-- Create: `picoui/src/backend/ldgui/backend_date_time.c`
-- Create: `picoui/demo/date_time_basic/main.c`
-- Create: `tests/picoui/unit/test_picoui_date_time.c`
-- Modify: `picoui/include/picoui/picoui.h`
-- Modify: `picoui/src/backend/ldgui/backend.h`
-- Modify: `tests/picoui/CMakeLists.txt`
-- Modify: `tests/picoui/runtime/check_picoui_runtime.py`
-- Modify: `tests/picoui/runtime/check_picoui_backend_mapping.py`
-- Modify: `tests/picoui/runtime/check_picoui_visible_ui.py`
-- Modify: `tests/picoui/contract/check_picoui_demo_boundary.py`
+- Create: `tinyui/include/tinyui/date_time.h`
+- Create: `tinyui/src/widgets/date_time.c`
+- Create: `tinyui/src/backend/ldgui/backend_date_time.c`
+- Create: `tinyui/demo/date_time_basic/main.c`
+- Create: `tests/tinyui/unit/test_tinyui_date_time.c`
+- Modify: `tinyui/include/tinyui/tinyui.h`
+- Modify: `tinyui/src/backend/ldgui/backend.h`
+- Modify: `tests/tinyui/CMakeLists.txt`
+- Modify: `tests/tinyui/runtime/check_tinyui_runtime.py`
+- Modify: `tests/tinyui/runtime/check_tinyui_backend_mapping.py`
+- Modify: `tests/tinyui/runtime/check_tinyui_visible_ui.py`
+- Modify: `tests/tinyui/contract/check_tinyui_demo_boundary.py`
 
 - [ ] **Step 1: 跑 impact**
 
@@ -935,9 +935,9 @@ gitnexus_impact(target="ldDateTimeSetDate", direction="upstream", repo="LingDong
 Header 至少定义：
 
 ```c
-struct picoui_date_time;
+struct tinyui_date_time;
 
-struct picoui_date_time_props {
+struct tinyui_date_time_props {
     const char *id;
     const char *style_class;
     void *user_data;
@@ -950,13 +950,13 @@ struct picoui_date_time_props {
     int second;
 };
 
-struct picoui_date_time *picoui_date_time_create(struct picoui_widget *parent, const char *id);
-struct picoui_date_time *picoui_date_time_create_with_props(
-    struct picoui_widget *parent,
-    const struct picoui_date_time_props *props);
-int picoui_date_time_set_format(struct picoui_date_time *dt, const char *format);
-int picoui_date_time_set_date(struct picoui_date_time *dt, int year, int month, int day);
-int picoui_date_time_set_time(struct picoui_date_time *dt, int hour, int minute, int second);
+struct tinyui_date_time *tinyui_date_time_create(struct tinyui_widget *parent, const char *id);
+struct tinyui_date_time *tinyui_date_time_create_with_props(
+    struct tinyui_widget *parent,
+    const struct tinyui_date_time_props *props);
+int tinyui_date_time_set_format(struct tinyui_date_time *dt, const char *format);
+int tinyui_date_time_set_date(struct tinyui_date_time *dt, int year, int month, int day);
+int tinyui_date_time_set_time(struct tinyui_date_time *dt, int hour, int minute, int second);
 ```
 
 Test 至少覆盖 create / format state / date-time setter state / invalid range reject。
@@ -967,7 +967,7 @@ Run:
 
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
-ctest --test-dir build -R test_picoui_date_time --output-on-failure
+ctest --test-dir build -R test_tinyui_date_time --output-on-failure
 ```
 
 - [ ] **Step 4: 实现 widget 和 backend**
@@ -996,12 +996,12 @@ Run:
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
 rtk cmake --build build
-ctest --test-dir build -R test_picoui_date_time --output-on-failure
-python3 tests/picoui/contract/check_picoui_public_api.py
-python3 tests/picoui/contract/check_picoui_demo_boundary.py
-python3 tests/picoui/runtime/check_picoui_runtime.py
-python3 tests/picoui/runtime/check_picoui_backend_mapping.py
-python3 tests/picoui/runtime/check_picoui_visible_ui.py --demo date_time_basic
+ctest --test-dir build -R test_tinyui_date_time --output-on-failure
+python3 tests/tinyui/contract/check_tinyui_public_api.py
+python3 tests/tinyui/contract/check_tinyui_demo_boundary.py
+python3 tests/tinyui/runtime/check_tinyui_runtime.py
+python3 tests/tinyui/runtime/check_tinyui_backend_mapping.py
+python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --demo date_time_basic
 git diff --check
 ```
 
@@ -1016,18 +1016,18 @@ gitnexus_detect_changes(scope="all", repo="LingDongGUI")
 ### Task B6: `clock` vertical slice
 
 **Files:**
-- Create: `picoui/include/picoui/clock.h`
-- Create: `picoui/src/widgets/clock.c`
-- Create: `picoui/src/backend/ldgui/backend_clock.c`
-- Create: `picoui/demo/clock_basic/main.c`
-- Create: `tests/picoui/unit/test_picoui_clock.c`
-- Modify: `picoui/include/picoui/picoui.h`
-- Modify: `picoui/src/backend/ldgui/backend.h`
-- Modify: `tests/picoui/CMakeLists.txt`
-- Modify: `tests/picoui/runtime/check_picoui_runtime.py`
-- Modify: `tests/picoui/runtime/check_picoui_backend_mapping.py`
-- Modify: `tests/picoui/runtime/check_picoui_visible_ui.py`
-- Modify: `tests/picoui/contract/check_picoui_demo_boundary.py`
+- Create: `tinyui/include/tinyui/clock.h`
+- Create: `tinyui/src/widgets/clock.c`
+- Create: `tinyui/src/backend/ldgui/backend_clock.c`
+- Create: `tinyui/demo/clock_basic/main.c`
+- Create: `tests/tinyui/unit/test_tinyui_clock.c`
+- Modify: `tinyui/include/tinyui/tinyui.h`
+- Modify: `tinyui/src/backend/ldgui/backend.h`
+- Modify: `tests/tinyui/CMakeLists.txt`
+- Modify: `tests/tinyui/runtime/check_tinyui_runtime.py`
+- Modify: `tests/tinyui/runtime/check_tinyui_backend_mapping.py`
+- Modify: `tests/tinyui/runtime/check_tinyui_visible_ui.py`
+- Modify: `tests/tinyui/contract/check_tinyui_demo_boundary.py`
 
 - [ ] **Step 1: 跑 impact**
 
@@ -1043,21 +1043,21 @@ gitnexus_impact(target="ldClockSetStepSecond", direction="upstream", repo="LingD
 Header 至少定义：
 
 ```c
-struct picoui_clock;
+struct tinyui_clock;
 
-struct picoui_clock_props {
+struct tinyui_clock_props {
     const char *id;
     const char *style_class;
     void *user_data;
     int step_second;
 };
 
-struct picoui_clock *picoui_clock_create(struct picoui_widget *parent, const char *id);
-struct picoui_clock *picoui_clock_create_with_props(
-    struct picoui_widget *parent,
-    const struct picoui_clock_props *props);
-int picoui_clock_set_step_second(struct picoui_clock *clock, int step_second);
-int picoui_clock_get_step_second(const struct picoui_clock *clock);
+struct tinyui_clock *tinyui_clock_create(struct tinyui_widget *parent, const char *id);
+struct tinyui_clock *tinyui_clock_create_with_props(
+    struct tinyui_widget *parent,
+    const struct tinyui_clock_props *props);
+int tinyui_clock_set_step_second(struct tinyui_clock *clock, int step_second);
+int tinyui_clock_get_step_second(const struct tinyui_clock *clock);
 ```
 
 Test 至少覆盖 create / step_second state / props create。
@@ -1068,7 +1068,7 @@ Run:
 
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
-ctest --test-dir build -R test_picoui_clock --output-on-failure
+ctest --test-dir build -R test_tinyui_clock --output-on-failure
 ```
 
 - [ ] **Step 4: 实现 widget 和 backend**
@@ -1095,12 +1095,12 @@ Run:
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
 rtk cmake --build build
-ctest --test-dir build -R test_picoui_clock --output-on-failure
-python3 tests/picoui/contract/check_picoui_public_api.py
-python3 tests/picoui/contract/check_picoui_demo_boundary.py
-python3 tests/picoui/runtime/check_picoui_runtime.py
-python3 tests/picoui/runtime/check_picoui_backend_mapping.py
-python3 tests/picoui/runtime/check_picoui_visible_ui.py --demo clock_basic
+ctest --test-dir build -R test_tinyui_clock --output-on-failure
+python3 tests/tinyui/contract/check_tinyui_public_api.py
+python3 tests/tinyui/contract/check_tinyui_demo_boundary.py
+python3 tests/tinyui/runtime/check_tinyui_runtime.py
+python3 tests/tinyui/runtime/check_tinyui_backend_mapping.py
+python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --demo clock_basic
 git diff --check
 ```
 
@@ -1118,19 +1118,19 @@ gitnexus_detect_changes(scope="all", repo="LingDongGUI")
 
 当前已确认的收口证据：
 
-- `ctest --test-dir build -L picoui --output-on-failure` 通过
-- `python3 tests/picoui/contract/check_picoui_public_api.py` 通过
-- `python3 tests/picoui/contract/check_picoui_demo_boundary.py` 通过
-- `python3 tests/picoui/runtime/check_picoui_runtime.py` 通过
-- `python3 tests/picoui/runtime/check_picoui_backend_mapping.py` 通过
-- `python3 tests/picoui/runtime/check_picoui_visible_ui.py --all` 通过
+- `ctest --test-dir build -L tinyui --output-on-failure` 通过
+- `python3 tests/tinyui/contract/check_tinyui_public_api.py` 通过
+- `python3 tests/tinyui/contract/check_tinyui_demo_boundary.py` 通过
+- `python3 tests/tinyui/runtime/check_tinyui_runtime.py` 通过
+- `python3 tests/tinyui/runtime/check_tinyui_backend_mapping.py` 通过
+- `python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --all` 通过
 - `git diff --check` 通过
-- `picoui/docs/demo_guide.md` 已同步六个新控件 demo 的证明边界
+- `tinyui/docs/demo_guide.md` 已同步六个新控件 demo 的证明边界
 
 **Files:**
-- Modify: `picoui/docs/demo_guide.md`
-- Modify: `docs/picoui-serial/a-02-线计划索引.md`
-- Modify: `docs/superpowers/specs/2026-05-31-picoui-a-02-new-widgets-design.md`
+- Modify: `tinyui/docs/demo_guide.md`
+- Modify: `docs/tinyui-serial/a-02-线计划索引.md`
+- Modify: `docs/superpowers/specs/2026-05-31-tinyui-a-02-new-widgets-design.md`
 
 - [ ] **Step 1: 更新 demo guide**
 
@@ -1164,7 +1164,7 @@ Write:
 Review subagent 只读检查：
 
 - public header 是否泄漏底层标识
-- demo 是否只用 `picoui_*`
+- demo 是否只用 `tinyui_*`
 - 是否误改 shared-owner 文件
 - 是否把显示型 demo 夸写成“完整交互能力”
 - 当前 6 控件范围是否仍受控
@@ -1177,14 +1177,14 @@ Run:
 git status --short --branch --ignore-submodules=all
 rtk cmake -S . -B build -DUSE_DEMO=0
 rtk cmake --build build
-ctest --test-dir build -L picoui --output-on-failure
+ctest --test-dir build -L tinyui --output-on-failure
 ctest --test-dir build -L visible --output-on-failure
 ctest --test-dir build -L mapping --output-on-failure
-python3 tests/picoui/contract/check_picoui_public_api.py
-python3 tests/picoui/contract/check_picoui_demo_boundary.py
-python3 tests/picoui/runtime/check_picoui_runtime.py
-python3 tests/picoui/runtime/check_picoui_backend_mapping.py
-python3 tests/picoui/runtime/check_picoui_visible_ui.py --all
+python3 tests/tinyui/contract/check_tinyui_public_api.py
+python3 tests/tinyui/contract/check_tinyui_demo_boundary.py
+python3 tests/tinyui/runtime/check_tinyui_runtime.py
+python3 tests/tinyui/runtime/check_tinyui_backend_mapping.py
+python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --all
 git diff --check
 ```
 

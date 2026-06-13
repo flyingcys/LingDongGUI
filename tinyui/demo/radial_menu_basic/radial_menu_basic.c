@@ -19,36 +19,36 @@
 #include "radial_menu_basic/radial_menu_basic.h"
 #include "tinyui.h"
 
-static void make_ui(struct picoui_window *win)
+static void make_ui(struct tinyui_window *win)
 {
-    struct picoui_label *title;
-    struct picoui_radial_menu *radial_menu;
+    struct tinyui_label *title;
+    struct tinyui_radial_menu *radial_menu;
 
-    picoui_grid_set_columns(win, (const int[]){240, 0}, 2);
-    picoui_grid_set_rows(win, (const int[]){28, 140, 0}, 3);
-    picoui_grid_set_gap(win, 16, 16);
-    picoui_grid_set_align(win, PICOUI_ALIGN_CENTER, PICOUI_ALIGN_CENTER);
-    picoui_window_set_padding_group(win, 24, 24, 24, 24);
+    tinyui_grid_set_columns(win, (const int[]){240, 0}, 2);
+    tinyui_grid_set_rows(win, (const int[]){28, 140, 0}, 3);
+    tinyui_grid_set_gap(win, 16, 16);
+    tinyui_grid_set_align(win, TINYUI_ALIGN_CENTER, TINYUI_ALIGN_CENTER);
+    tinyui_window_set_padding_group(win, 24, 24, 24, 24);
 
-    title = picoui_label_create(win, "title");
-    radial_menu = picoui_radial_menu_create((struct picoui_widget *)win, "radial_menu");
+    title = tinyui_label_create(win, "title");
+    radial_menu = tinyui_radial_menu_create((struct tinyui_widget *)win, "radial_menu");
 
-    picoui_label_set_text(title, "Radial Menu");
-    picoui_widget_set_size((struct picoui_widget *)title, 220, 28);
-    picoui_widget_set_size((struct picoui_widget *)radial_menu, 194, 96);
-    picoui_radial_menu_add_item(radial_menu, "weather");
-    picoui_radial_menu_add_item(radial_menu, "note");
-    picoui_radial_menu_add_item(radial_menu, "book");
-    picoui_radial_menu_add_item(radial_menu, "chart");
-    picoui_radial_menu_set_selected_index(radial_menu, 1);
-    picoui_widget_set_grid_cell((struct picoui_widget *)title, 0, 0, 1, 1, PICOUI_ALIGN_CENTER, PICOUI_ALIGN_CENTER);
-    picoui_widget_set_grid_cell((struct picoui_widget *)radial_menu, 0, 1, 1, 1, PICOUI_ALIGN_CENTER, PICOUI_ALIGN_CENTER);
+    tinyui_label_set_text(title, "Radial Menu");
+    tinyui_widget_set_size((struct tinyui_widget *)title, 220, 28);
+    tinyui_widget_set_size((struct tinyui_widget *)radial_menu, 194, 96);
+    tinyui_radial_menu_add_item(radial_menu, "weather");
+    tinyui_radial_menu_add_item(radial_menu, "note");
+    tinyui_radial_menu_add_item(radial_menu, "book");
+    tinyui_radial_menu_add_item(radial_menu, "chart");
+    tinyui_radial_menu_set_selected_index(radial_menu, 1);
+    tinyui_widget_set_grid_cell((struct tinyui_widget *)title, 0, 0, 1, 1, TINYUI_ALIGN_CENTER, TINYUI_ALIGN_CENTER);
+    tinyui_widget_set_grid_cell((struct tinyui_widget *)radial_menu, 0, 1, 1, 1, TINYUI_ALIGN_CENTER, TINYUI_ALIGN_CENTER);
 }
 
 void tinyui_demo_radial_menu_basic(void)
 {
     tinyui_obj_t *screen = tinyui_screen_create();
-    struct picoui_window *win = (struct picoui_window *)screen;
+    struct tinyui_window *win = (struct tinyui_window *)screen;
     if (win == 0) return;
     make_ui(win);
     tinyui_screen_load(screen);

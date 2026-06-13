@@ -5,7 +5,7 @@
 
 #include <stdlib.h>
 
-static struct picoui_app *g_tinyui_runtime_app;
+static struct tinyui_app *g_tinyui_runtime_app;
 
 int tinyui_init(void)
 {
@@ -13,7 +13,7 @@ int tinyui_init(void)
         return 0;
     }
 
-    g_tinyui_runtime_app = picoui_app_create();
+    g_tinyui_runtime_app = tinyui_app_create();
     return g_tinyui_runtime_app != 0 ? 0 : -1;
 }
 
@@ -23,7 +23,7 @@ void tinyui_deinit(void)
         return;
     }
 
-    picoui_app_destroy(g_tinyui_runtime_app);
+    tinyui_app_destroy(g_tinyui_runtime_app);
     g_tinyui_runtime_app = 0;
 }
 
@@ -34,7 +34,7 @@ tinyui_obj_t *tinyui_screen_create(void)
     }
 
     tinyui_runtime_bridge_begin_screen_create(g_tinyui_runtime_app);
-    return (tinyui_obj_t *)picoui_window_create(g_tinyui_runtime_app, "root");
+    return (tinyui_obj_t *)tinyui_window_create(g_tinyui_runtime_app, "root");
 }
 
 int tinyui_screen_load(tinyui_obj_t *screen)
@@ -43,7 +43,7 @@ int tinyui_screen_load(tinyui_obj_t *screen)
         return -1;
     }
 
-    return picoui_app_set_window(g_tinyui_runtime_app, (struct picoui_window *)screen);
+    return tinyui_app_set_window(g_tinyui_runtime_app, (struct tinyui_window *)screen);
 }
 
 int tinyui_timer_handler(void)

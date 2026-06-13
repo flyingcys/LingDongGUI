@@ -11,7 +11,7 @@ CANONICAL_SCRIPT = ROOT / "tests" / "tinyui" / "perf" / "check_tinyui_perf.py"
 
 
 def _load_canonical_module() -> types.ModuleType:
-    spec = importlib.util.spec_from_file_location("check_picoui_tinyui_perf_compat", CANONICAL_SCRIPT)
+    spec = importlib.util.spec_from_file_location("check_tinyui_tinyui_perf_compat", CANONICAL_SCRIPT)
     if spec is None or spec.loader is None:
         raise RuntimeError(f"unable to load canonical perf checker: {CANONICAL_SCRIPT}")
     module = importlib.util.module_from_spec(spec)

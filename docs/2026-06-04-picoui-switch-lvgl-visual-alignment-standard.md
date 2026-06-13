@@ -1,14 +1,14 @@
-# PicoUI switch 对齐 LVGL 视觉验收标准
+# TINYUI switch 对齐 LVGL 视觉验收标准
 
 ## 目标
 
-PicoUI `switch` 必须通过真实 LingDongGUI backend 输出，达到 LVGL default switch 的可见效果。验收不以“能显示蓝色开关”作为完成标准，而以真实截图中的画布、几何、颜色、状态和交互视觉共同判断。
+TINYUI `switch` 必须通过真实 LingDongGUI backend 输出，达到 LVGL default switch 的可见效果。验收不以“能显示蓝色开关”作为完成标准，而以真实截图中的画布、几何、颜色、状态和交互视觉共同判断。
 
 ## 分层验收
 
 ### 1. 宿主画布
 
-- PicoUI SDL runtime 的窗口、capture、root window、background 必须使用同一画布尺寸。
+- TINYUI SDL runtime 的窗口、capture、root window、background 必须使用同一画布尺寸。
 - 当前目标尺寸为 `480x320`。
 - 截图中不得出现右侧或底部黑块；黑块说明 root/background 仍按较小画布绘制，不能进入 switch 本体对齐结论。
 - 背景必须连续覆盖完整 capture 区域；不能只靠控件局部 crop 证明 UI 已完成。
@@ -33,12 +33,12 @@ PicoUI `switch` 必须通过真实 LingDongGUI backend 输出，达到 LVGL defa
 - pressed 状态默认不改变 knob 颜色；不能变成黄色高亮。
 - disabled 状态可由整体 opacity 变暗，但仍必须保留 off/on track 与 knob 的关系。
 
-### 4. PicoUI backend 边界
+### 4. TINYUI backend 边界
 
-- `picoui/demo/*` 只能表达用户意图，不能硬编码 switch 坐标、尺寸或假视觉来掩盖 backend 问题。
-- PicoUI switch 必须落到真实 `ldSwitch_t`，不得通过 `backend_app.c` 或 SDL 专用路径画 fake switch。
-- PicoUI backend 默认 switch 色值必须与 LingDongGUI 默认 switch 色值保持一致，避免同一控件在直接 LingDongGUI 与 PicoUI 路径下视觉分裂。
-- `basic_widgets` 的 `wifi` switch 必须由真实 grid layout 和 `picoui_window_set_padding_group()` 定位；当前 demo 标准位置为 `(x=16, y=24, w=48, h=24)`。
+- `tinyui/demo/*` 只能表达用户意图，不能硬编码 switch 坐标、尺寸或假视觉来掩盖 backend 问题。
+- TINYUI switch 必须落到真实 `ldSwitch_t`，不得通过 `backend_app.c` 或 SDL 专用路径画 fake switch。
+- TINYUI backend 默认 switch 色值必须与 LingDongGUI 默认 switch 色值保持一致，避免同一控件在直接 LingDongGUI 与 TINYUI 路径下视觉分裂。
+- `basic_widgets` 的 `wifi` switch 必须由真实 grid layout 和 `tinyui_window_set_padding_group()` 定位；当前 demo 标准位置为 `(x=16, y=24, w=48, h=24)`。
 - 若截图中 `wifi` switch 出现在 `(0,0)`，判定为 window padding 未进入真实 grid layout，不能通过修改 demo 固定坐标规避。
 
 ## 截图验收方法
@@ -46,7 +46,7 @@ PicoUI `switch` 必须通过真实 LingDongGUI backend 输出，达到 LVGL defa
 ### 必须通过的证据
 
 - SDL switch matrix 截图采样：覆盖 horizontal off/on、vertical off/on、disabled off/on、pressed、mid animation。
-- PicoUI basic widgets 截图采样：确认 `wifi` switch bbox 是 `(16,24)-(63,47)`，尺寸为 `48x24`，track/knob 颜色和位置符合上述标准。
+- TINYUI basic widgets 截图采样：确认 `wifi` switch bbox 是 `(16,24)-(63,47)`，尺寸为 `48x24`，track/knob 颜色和位置符合上述标准。
 - root/background 完整性采样：确认 `480x320` 全画布无右侧/底部黑块。
 - runtime marker 必须显示 `PICOUI_SMOKE_LAYOUT_USED=0`，说明没有走临时 smoke cursor layout。
 
@@ -68,4 +68,4 @@ PicoUI `switch` 必须通过真实 LingDongGUI backend 输出，达到 LVGL defa
 2. knob 是否内嵌。
 3. off/on/pressed/disabled 颜色。
 4. 动画中间态。
-5. PicoUI 与直接 LingDongGUI 路径是否一致。
+5. TINYUI 与直接 LingDongGUI 路径是否一致。

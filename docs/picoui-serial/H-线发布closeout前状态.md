@@ -1,10 +1,10 @@
-# PicoUI H线发布 closeout 前状态
+# TINYUI H线发布 closeout 前状态
 
 ## 文档定位
 
 本文记录 `H13 closeout` 之前、当前工作树下最新一轮 fresh 验证证据，以及仍需诚实保留的证据边界。
 
-注意：本文是 `H线` 历史 closeout 前状态快照，不是当前 `a-0.6 final release` 真相源。对这条历史线而言，当时最终发布结论以 `docs/picoui-serial/a-0.6-final-release-closeout.md` 和对应 final release truth-source 为准。
+注意：本文是 `H线` 历史 closeout 前状态快照，不是当前 `a-0.6 final release` 真相源。对这条历史线而言，当时最终发布结论以 `docs/tinyui-serial/a-0.6-final-release-closeout.md` 和对应 final release truth-source 为准。
 
 本文不是 `closeout` 结论文档，不写“可发布”；它只回答两件事：
 
@@ -15,21 +15,21 @@
 
 本轮按 `H-线发布测试矩阵.md` 的 closeout 命令顺序重跑，结果如下：
 
-- `ctest --test-dir build --output-on-failure -L picoui`
+- `ctest --test-dir build --output-on-failure -L tinyui`
   - 结果：通过，`13/13` 通过
 - `ctest --test-dir build --output-on-failure -L visible`
   - 结果：通过，`1/1` 通过
 - `ctest --test-dir build --output-on-failure -L mapping`
   - 结果：通过，`1/1` 通过
-- `python3 tests/picoui/contract/check_picoui_release_capability_matrix.py`
+- `python3 tests/tinyui/contract/check_tinyui_release_capability_matrix.py`
   - 结果：通过
-- `python3 tests/picoui/contract/check_picoui_public_api.py`
+- `python3 tests/tinyui/contract/check_tinyui_public_api.py`
   - 结果：通过
-- `python3 tests/picoui/contract/check_picoui_demo_boundary.py`
+- `python3 tests/tinyui/contract/check_tinyui_demo_boundary.py`
   - 结果：通过
-- `python3 tests/picoui/runtime/check_picoui_manual_window_artifact.py --demo basic_widgets`
+- `python3 tests/tinyui/runtime/check_tinyui_manual_window_artifact.py --demo basic_widgets`
   - 结果：输出 `PICOUI_MANUAL_WINDOW_ARTIFACT=ARTIFACT_READY`
-- `python3 tests/picoui/runtime/check_picoui_manual_window_artifact.py --demo settings_panel`
+- `python3 tests/tinyui/runtime/check_tinyui_manual_window_artifact.py --demo settings_panel`
   - 结果：输出 `PICOUI_MANUAL_WINDOW_ARTIFACT=ARTIFACT_READY`
 - `git diff --check`
   - 结果：通过，无输出
@@ -55,8 +55,8 @@
 以下事项仍阻止 `H13` 写成完成：
 
 1. 当前人工层只到 `artifact-based visual observation`。
-   - `docs/picoui-serial/C-线人工窗口验收记录.md` 中 `2026-05-30 basic_widgets`
-   - `docs/picoui-serial/C-线人工窗口验收记录.md` 中 `2026-05-30 settings_panel`
+   - `docs/tinyui-serial/C-线人工窗口验收记录.md` 中 `2026-05-30 basic_widgets`
+   - `docs/tinyui-serial/C-线人工窗口验收记录.md` 中 `2026-05-30 settings_panel`
    - 两条记录都来自 `frame.ppm` artifact 的人眼观察，不是 live OS 窗口现场验收。
 2. 因为证据边界仍在这里，当前只能认定：
    - artifact existence 成立

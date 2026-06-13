@@ -1,13 +1,13 @@
-# PicoUI D线当前控件完整性设计文档
+# TINYUI D线当前控件完整性设计文档
 
 > 日期：2026-05-29
 > 适用仓库：`/Users/cys/embedded/LingDongGUI`
-> 建议 worktree：`.worktree/picoui-d-current-widgets`
-> 入口索引：`docs/picoui-serial/D-线计划索引.md`
+> 建议 worktree：`.worktree/tinyui-d-current-widgets`
+> 入口索引：`docs/tinyui-serial/D-线计划索引.md`
 
 ## 1. 背景
 
-`A线` 已完成真实 `PicoUI -> LingDongGUI` backend 主线，`B线` 已完成 automatic visible gate，`C线` 已把 smoke、mapping、visible、manual artifact 的门禁口径工程化。当前可以进入新能力推进，但 review 明确指出一个关键缺口：runtime present 路径仍在 `picoui/src/backend/ldgui/backend_app.c` 中通过 `picoui_backend_apply_real_widget_layout()` 用固定 padding、row height、row gap 和 cursor 线性排布所有 widget。
+`A线` 已完成真实 `TINYUI -> LingDongGUI` backend 主线，`B线` 已完成 automatic visible gate，`C线` 已把 smoke、mapping、visible、manual artifact 的门禁口径工程化。当前可以进入新能力推进，但 review 明确指出一个关键缺口：runtime present 路径仍在 `tinyui/src/backend/ldgui/backend_app.c` 中通过 `tinyui_backend_apply_real_widget_layout()` 用固定 padding、row height、row gap 和 cursor 线性排布所有 widget。
 
 这意味着当前 mapping marker 可以证明对象进入真实 backend tree，visible gate 可以证明画面不是黑屏/近黑/空白，但还不能声明 flex/grid 可见语义已经完整由真实 `LingDongGUI` layout 结果驱动。
 
@@ -22,10 +22,10 @@
 
 ## 3. 非目标
 
-- 不新增 `PicoUI` 新控件；新控件由 `F线` 负责。
+- 不新增 `TINYUI` 新控件；新控件由 `F线` 负责。
 - 不把 `backend_app.c` 改成新的 fake renderer。
 - 不用 demo 侧固定坐标或硬编码视觉补丁掩盖 backend/layout/theme 缺口。
-- 不把 manual artifact、capture 非空或 `ctest -L picoui` 单独写成完整 UI 完成。
+- 不把 manual artifact、capture 非空或 `ctest -L tinyui` 单独写成完整 UI 完成。
 
 ## 4. 设计
 
@@ -53,7 +53,7 @@
 
 ### 4.3 props 和 state
 
-props 补齐只处理当前控件，按 `label/text/image/window -> checkbox/switch/slider -> button` 顺序推进。`enabled/visible/state` 必须明确是否同步到底层 `LingDongGUI` 行为；不能只更新 PicoUI shadow 字段。
+props 补齐只处理当前控件，按 `label/text/image/window -> checkbox/switch/slider -> button` 顺序推进。`enabled/visible/state` 必须明确是否同步到底层 `LingDongGUI` 行为；不能只更新 TINYUI shadow 字段。
 
 ### 4.4 event
 
@@ -93,12 +93,12 @@ theme token v1 只做当前控件稳定语义，不做完整 CSS-like 样式系�
 
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
-ctest --test-dir build -L picoui --output-on-failure
+ctest --test-dir build -L tinyui --output-on-failure
 ctest --test-dir build -L visible --output-on-failure
 ctest --test-dir build -L mapping --output-on-failure
-python3 tests/picoui/runtime/check_picoui_runtime.py
-python3 tests/picoui/runtime/check_picoui_visible_ui.py --all
-python3 tests/picoui/runtime/check_picoui_backend_mapping.py
+python3 tests/tinyui/runtime/check_tinyui_runtime.py
+python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --all
+python3 tests/tinyui/runtime/check_tinyui_backend_mapping.py
 git diff --check
 ```
 

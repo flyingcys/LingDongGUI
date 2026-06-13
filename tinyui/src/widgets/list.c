@@ -24,42 +24,42 @@
 
 #include <stdlib.h>
 
-#define PICOUI_HIDDEN __attribute__((visibility("hidden")))
+#define TINYUI_HIDDEN __attribute__((visibility("hidden")))
 
 static ldColor tinyui_list_rgb_to_ld_color(unsigned int rgb)
 {
     return __RGB((rgb >> 16) & 0xFFU, (rgb >> 8) & 0xFFU, rgb & 0xFFU);
 }
 
-static arm_2d_align_t tinyui_list_map_align(enum picoui_align align)
+static arm_2d_align_t tinyui_list_map_align(enum tinyui_align align)
 {
     switch (align) {
-    case PICOUI_ALIGN_START:
+    case TINYUI_ALIGN_START:
         return ARM_2D_ALIGN_LEFT;
-    case PICOUI_ALIGN_END:
+    case TINYUI_ALIGN_END:
         return ARM_2D_ALIGN_RIGHT;
-    case PICOUI_ALIGN_CENTER:
+    case TINYUI_ALIGN_CENTER:
         return ARM_2D_ALIGN_CENTRE;
     default:
         return ARM_2D_ALIGN_CENTRE;
     }
 }
 
-static struct picoui_backend_widget *tinyui_list_backend(const struct picoui_list *list)
+static struct tinyui_backend_widget *tinyui_list_backend(const struct tinyui_list *list)
 {
     if (list == 0 || list->widget.backend_widget == 0) {
         return 0;
     }
 
-    return (struct picoui_backend_widget *)list->widget.backend_widget;
+    return (struct tinyui_backend_widget *)list->widget.backend_widget;
 }
 
-static ldList_t *tinyui_list_get_ld(const struct picoui_list *list)
+static ldList_t *tinyui_list_get_ld(const struct tinyui_list *list)
 {
-    struct picoui_backend_widget *backend = tinyui_list_backend(list);
+    struct tinyui_backend_widget *backend = tinyui_list_backend(list);
 
     if (backend == 0 ||
-        backend->kind != PICOUI_BACKEND_WIDGET_LIST ||
+        backend->kind != TINYUI_BACKEND_WIDGET_LIST ||
         backend->ld_widget == 0) {
         return 0;
     }
@@ -75,12 +75,12 @@ static ldList_t *tinyui_list_get_ld(const struct picoui_list *list)
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct picoui_list *picoui_list_create(struct picoui_widget *parent, const char *id)
+struct tinyui_list *tinyui_list_create(struct tinyui_widget *parent, const char *id)
 {
-    struct picoui_list *list;
-    struct picoui_backend_widget *backend;
-    struct picoui_backend_widget *parent_backend;
-    struct picoui_backend_app_state *app_state;
+    struct tinyui_list *list;
+    struct tinyui_backend_widget *backend;
+    struct tinyui_backend_widget *parent_backend;
+    struct tinyui_backend_app_state *app_state;
     ldList_t *ld_list;
     uint16_t name_id;
 
@@ -88,7 +88,7 @@ struct picoui_list *picoui_list_create(struct picoui_widget *parent, const char 
         return 0;
     }
 
-    parent_backend = (struct picoui_backend_widget *)parent->backend_widget;
+    parent_backend = (struct tinyui_backend_widget *)parent->backend_widget;
     app_state = tinyui_runtime_bridge_backend_state_from_parent(parent_backend);
     if (parent_backend->ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
         return 0;
@@ -129,7 +129,7 @@ struct picoui_list *picoui_list_create(struct picoui_widget *parent, const char 
     ldListSetSelectItem(ld_list, -1);
     if (tinyui_widget_init_child(backend,
                                          parent_backend,
-                                         PICOUI_BACKEND_WIDGET_LIST,
+                                         TINYUI_BACKEND_WIDGET_LIST,
                                          id,
                                          parent_backend->theme) != 0) {
         ldList_depose(app_state->ld_scene, ld_list);
@@ -140,7 +140,7 @@ struct picoui_list *picoui_list_create(struct picoui_widget *parent, const char 
     backend->ld_widget = ld_list;
     backend->ld_name_id = name_id;
     backend->value = -1;
-    backend->last_signal = PICOUI_BACKEND_SIGNAL_NONE;
+    backend->last_signal = TINYUI_BACKEND_SIGNAL_NONE;
     if (tinyui_widget_attach_child(parent_backend, backend) != 0) {
         ldList_depose(app_state->ld_scene, ld_list);
         free(backend);
@@ -171,23 +171,23 @@ struct picoui_list *picoui_list_create(struct picoui_widget *parent, const char 
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct picoui_list *picoui_list_create_with_props(struct picoui_widget *parent,
-                                                  const struct picoui_list_props *props)
+struct tinyui_list *tinyui_list_create_with_props(struct tinyui_widget *parent,
+                                                  const struct tinyui_list_props *props)
 {
-    struct picoui_list *list;
+    struct tinyui_list *list;
 
     if (props == 0) {
         return 0;
     }
 
-    list = picoui_list_create(parent, props->id);
+    list = tinyui_list_create(parent, props->id);
     if (list == 0) {
         return 0;
     }
 
     list->user_data = props->user_data;
-    if (picoui_widget_set_style_class(&list->widget, props->style_class) != 0 ||
-        picoui_widget_set_user_data(&list->widget, props->user_data) != 0) {
+    if (tinyui_widget_set_style_class(&list->widget, props->style_class) != 0 ||
+        tinyui_widget_set_user_data(&list->widget, props->user_data) != 0) {
         free(list);
         return 0;
     }
@@ -203,14 +203,14 @@ struct picoui_list *picoui_list_create_with_props(struct picoui_widget *parent,
  * @return 0 on success, -1 on failure
  */
 
-int picoui_list_add_item(struct picoui_list *list, const char *id, const char *text)
+int tinyui_list_add_item(struct tinyui_list *list, const char *id, const char *text)
 {
-    struct picoui_backend_widget *backend;
+    struct tinyui_backend_widget *backend;
     ldList_t *ld_list;
     int index;
     int next_count;
 
-    if (list == 0 || id == 0 || text == 0 || list->item_count >= PICOUI_LIST_MAX_ITEMS) {
+    if (list == 0 || id == 0 || text == 0 || list->item_count >= TINYUI_LIST_MAX_ITEMS) {
         return -1;
     }
 
@@ -242,7 +242,7 @@ int picoui_list_add_item(struct picoui_list *list, const char *id, const char *t
  * @return -1 on failure
  */
 
-int picoui_list_set_item_height(struct picoui_list *list, int item_height)
+int tinyui_list_set_item_height(struct tinyui_list *list, int item_height)
 {
     ldList_t *ld_list;
 
@@ -270,7 +270,7 @@ int picoui_list_set_item_height(struct picoui_list *list, int item_height)
  * @return -1 on failure
  */
 
-int picoui_list_set_padding_group(struct picoui_list *list, int top, int bottom, int left, int right)
+int tinyui_list_set_padding_group(struct tinyui_list *list, int top, int bottom, int left, int right)
 {
     ldList_t *ld_list;
 
@@ -302,7 +302,7 @@ int picoui_list_set_padding_group(struct picoui_list *list, int top, int bottom,
  * @return -1 on failure
  */
 
-int picoui_list_set_margin_group(struct picoui_list *list, int top, int bottom, int left, int right)
+int tinyui_list_set_margin_group(struct tinyui_list *list, int top, int bottom, int left, int right)
 {
     ldList_t *ld_list;
 
@@ -331,7 +331,7 @@ int picoui_list_set_margin_group(struct picoui_list *list, int top, int bottom, 
  * @return -1 on failure
  */
 
-int picoui_list_set_text_color(struct picoui_list *list, unsigned int rgb)
+int tinyui_list_set_text_color(struct tinyui_list *list, unsigned int rgb)
 {
     ldList_t *ld_list = tinyui_list_get_ld(list);
 
@@ -340,7 +340,7 @@ int picoui_list_set_text_color(struct picoui_list *list, unsigned int rgb)
     }
 
     ldListSetTextColor(ld_list, tinyui_list_rgb_to_ld_color(rgb));
-    return picoui_widget_set_text_color(&list->widget, rgb);
+    return tinyui_widget_set_text_color(&list->widget, rgb);
 }
 
 /**
@@ -351,7 +351,7 @@ int picoui_list_set_text_color(struct picoui_list *list, unsigned int rgb)
  * @return -1 on failure
  */
 
-int picoui_list_set_bg_color(struct picoui_list *list, unsigned int rgb)
+int tinyui_list_set_bg_color(struct tinyui_list *list, unsigned int rgb)
 {
     ldList_t *ld_list = tinyui_list_get_ld(list);
 
@@ -360,7 +360,7 @@ int picoui_list_set_bg_color(struct picoui_list *list, unsigned int rgb)
     }
 
     ldListSetBackgroundColor(ld_list, tinyui_list_rgb_to_ld_color(rgb));
-    return picoui_widget_set_bg_color(&list->widget, rgb);
+    return tinyui_widget_set_bg_color(&list->widget, rgb);
 }
 
 /**
@@ -371,7 +371,7 @@ int picoui_list_set_bg_color(struct picoui_list *list, unsigned int rgb)
  * @return -1 on failure
  */
 
-int picoui_list_set_select_color(struct picoui_list *list, unsigned int rgb)
+int tinyui_list_set_select_color(struct tinyui_list *list, unsigned int rgb)
 {
     ldList_t *ld_list = tinyui_list_get_ld(list);
 
@@ -380,7 +380,7 @@ int picoui_list_set_select_color(struct picoui_list *list, unsigned int rgb)
     }
 
     ldListSetSelectColor(ld_list, tinyui_list_rgb_to_ld_color(rgb));
-    return picoui_widget_set_border_color(&list->widget, rgb);
+    return tinyui_widget_set_border_color(&list->widget, rgb);
 }
 
 /**
@@ -391,14 +391,14 @@ int picoui_list_set_select_color(struct picoui_list *list, unsigned int rgb)
  * @return -1 on failure
  */
 
-int picoui_list_set_align(struct picoui_list *list, enum picoui_align align)
+int tinyui_list_set_align(struct tinyui_list *list, enum tinyui_align align)
 {
     ldList_t *ld_list;
 
     if (list == 0 ||
-        (align != PICOUI_ALIGN_START &&
-         align != PICOUI_ALIGN_CENTER &&
-         align != PICOUI_ALIGN_END)) {
+        (align != TINYUI_ALIGN_START &&
+         align != TINYUI_ALIGN_CENTER &&
+         align != TINYUI_ALIGN_END)) {
         return -1;
     }
 
@@ -420,12 +420,12 @@ int picoui_list_set_align(struct picoui_list *list, enum picoui_align align)
  * @return -1 on failure
  */
 
-int picoui_list_set_item_widget(struct picoui_list *list,
+int tinyui_list_set_item_widget(struct tinyui_list *list,
                                 int index,
-                                struct picoui_widget *item_widget)
+                                struct tinyui_widget *item_widget)
 {
-    struct picoui_backend_widget *list_backend;
-    struct picoui_backend_widget *item_backend;
+    struct tinyui_backend_widget *list_backend;
+    struct tinyui_backend_widget *item_backend;
     ldList_t *ld_list;
     ldBase_t *ld_child;
 
@@ -434,14 +434,14 @@ int picoui_list_set_item_widget(struct picoui_list *list,
     }
 
     list_backend = tinyui_list_backend(list);
-    item_backend = (struct picoui_backend_widget *)item_widget->backend_widget;
+    item_backend = (struct tinyui_backend_widget *)item_widget->backend_widget;
     ld_list = tinyui_list_get_ld(list);
     if (list_backend == 0 ||
         item_backend == 0 ||
         ld_list == 0 ||
         item_backend->ld_widget == 0 ||
-        item_backend->kind == PICOUI_BACKEND_WIDGET_WINDOW ||
-        item_backend->kind == PICOUI_BACKEND_WIDGET_BACKGROUND ||
+        item_backend->kind == TINYUI_BACKEND_WIDGET_WINDOW ||
+        item_backend->kind == TINYUI_BACKEND_WIDGET_BACKGROUND ||
         item_backend->owner != list_backend->owner ||
         index < 0 ||
         index >= list->item_count) {
@@ -478,9 +478,9 @@ int picoui_list_set_item_widget(struct picoui_list *list,
  * @return 0 on success, -1 on failure
  */
 
-int picoui_list_set_selected_index(struct picoui_list *list, int index)
+int tinyui_list_set_selected_index(struct tinyui_list *list, int index)
 {
-    struct picoui_backend_widget *backend;
+    struct tinyui_backend_widget *backend;
     ldList_t *ld_list;
 
     if (list == 0 || index < 0 || index >= list->item_count) {
@@ -506,9 +506,9 @@ int picoui_list_set_selected_index(struct picoui_list *list, int index)
  * @return -1 on failure
  */
 
-int picoui_list_get_selected_index(const struct picoui_list *list)
+int tinyui_list_get_selected_index(const struct tinyui_list *list)
 {
-    struct picoui_backend_widget *backend;
+    struct tinyui_backend_widget *backend;
     ldList_t *ld_list;
     int selected_index;
 
@@ -527,7 +527,7 @@ int picoui_list_get_selected_index(const struct picoui_list *list)
         return list->selected_index;
     }
 
-    ((struct picoui_list *)list)->selected_index = selected_index;
+    ((struct tinyui_list *)list)->selected_index = selected_index;
     backend->value = selected_index;
     return selected_index;
 }
@@ -540,8 +540,8 @@ int picoui_list_get_selected_index(const struct picoui_list *list)
  * @param[in] user_data User data pointer
  */
 
-void picoui_list_set_on_selected(struct picoui_list *list,
-                                 void (*callback)(struct picoui_list *list,
+void tinyui_list_set_on_selected(struct tinyui_list *list,
+                                 void (*callback)(struct tinyui_list *list,
                                                   int index,
                                                   void *user_data),
                                  void *user_data)
@@ -554,7 +554,7 @@ void picoui_list_set_on_selected(struct picoui_list *list,
     list->user_data = user_data;
 }
 
-PICOUI_HIDDEN int tinyui_list_set_items(void *backend_widget,
+TINYUI_HIDDEN int tinyui_list_set_items_ld(void *backend_widget,
                                         const char *const *item_ids,
                                         const unsigned char *const *items,
                                         int item_count)
@@ -566,14 +566,14 @@ PICOUI_HIDDEN int tinyui_list_set_items(void *backend_widget,
     return -1;
 }
 
-PICOUI_HIDDEN int tinyui_list_set_item_height(void *backend_widget, int item_height)
+TINYUI_HIDDEN int tinyui_list_set_item_height_ld(void *backend_widget, int item_height)
 {
     (void)backend_widget;
     (void)item_height;
     return -1;
 }
 
-PICOUI_HIDDEN int tinyui_list_set_padding_group(void *backend_widget,
+TINYUI_HIDDEN int tinyui_list_set_padding_group_ld(void *backend_widget,
                                                 int top,
                                                 int bottom,
                                                 int left,
@@ -587,7 +587,7 @@ PICOUI_HIDDEN int tinyui_list_set_padding_group(void *backend_widget,
     return -1;
 }
 
-PICOUI_HIDDEN int tinyui_list_set_margin_group(void *backend_widget,
+TINYUI_HIDDEN int tinyui_list_set_margin_group_ld(void *backend_widget,
                                                int top,
                                                int bottom,
                                                int left,
@@ -601,35 +601,35 @@ PICOUI_HIDDEN int tinyui_list_set_margin_group(void *backend_widget,
     return -1;
 }
 
-PICOUI_HIDDEN int tinyui_list_set_text_color(void *backend_widget, unsigned int rgb)
+TINYUI_HIDDEN int tinyui_list_set_text_color_ld(void *backend_widget, unsigned int rgb)
 {
     (void)backend_widget;
     (void)rgb;
     return -1;
 }
 
-PICOUI_HIDDEN int tinyui_list_set_bg_color(void *backend_widget, unsigned int rgb)
+TINYUI_HIDDEN int tinyui_list_set_bg_color_ld(void *backend_widget, unsigned int rgb)
 {
     (void)backend_widget;
     (void)rgb;
     return -1;
 }
 
-PICOUI_HIDDEN int tinyui_list_set_select_color(void *backend_widget, unsigned int rgb)
+TINYUI_HIDDEN int tinyui_list_set_select_color_ld(void *backend_widget, unsigned int rgb)
 {
     (void)backend_widget;
     (void)rgb;
     return -1;
 }
 
-PICOUI_HIDDEN int tinyui_list_set_align(void *backend_widget, enum picoui_align align)
+TINYUI_HIDDEN int tinyui_list_set_align_ld(void *backend_widget, enum tinyui_align align)
 {
     (void)backend_widget;
     (void)align;
     return -1;
 }
 
-PICOUI_HIDDEN int tinyui_list_set_item_widget(void *backend_widget,
+TINYUI_HIDDEN int tinyui_list_set_item_widget_ld(void *backend_widget,
                                               int index,
                                               void *item_widget_backend)
 {
@@ -639,19 +639,19 @@ PICOUI_HIDDEN int tinyui_list_set_item_widget(void *backend_widget,
     return -1;
 }
 
-PICOUI_HIDDEN int tinyui_list_set_selected_index(void *backend_widget, int index)
+TINYUI_HIDDEN int tinyui_list_set_selected_index_ld(void *backend_widget, int index)
 {
-    struct picoui_backend_widget *backend = backend_widget;
-    struct picoui_list *list;
+    struct tinyui_backend_widget *backend = backend_widget;
+    struct tinyui_list *list;
     ldList_t *ld_list;
 
     if (backend == 0 ||
-        backend->kind != PICOUI_BACKEND_WIDGET_LIST ||
+        backend->kind != TINYUI_BACKEND_WIDGET_LIST ||
         backend->host_widget == 0) {
         return -1;
     }
 
-    list = (struct picoui_list *)backend->host_widget;
+    list = (struct tinyui_list *)backend->host_widget;
     if (index < 0 || index >= list->item_count) {
         return -1;
     }
@@ -665,20 +665,20 @@ PICOUI_HIDDEN int tinyui_list_set_selected_index(void *backend_widget, int index
     return 0;
 }
 
-PICOUI_HIDDEN int tinyui_list_get_selected_index(void *backend_widget)
+TINYUI_HIDDEN int tinyui_list_get_selected_index_ld(void *backend_widget)
 {
-    struct picoui_backend_widget *backend = backend_widget;
-    struct picoui_list *list;
+    struct tinyui_backend_widget *backend = backend_widget;
+    struct tinyui_list *list;
     ldList_t *ld_list;
     int selected_index;
 
     if (backend == 0 ||
-        backend->kind != PICOUI_BACKEND_WIDGET_LIST ||
+        backend->kind != TINYUI_BACKEND_WIDGET_LIST ||
         backend->host_widget == 0) {
         return -1;
     }
 
-    list = (struct picoui_list *)backend->host_widget;
+    list = (struct tinyui_list *)backend->host_widget;
     ld_list = tinyui_list_get_ld(list);
     if (list->widget.backend_widget != backend || ld_list == 0) {
         return -1;
@@ -691,22 +691,22 @@ PICOUI_HIDDEN int tinyui_list_get_selected_index(void *backend_widget)
     return selected_index;
 }
 
-PICOUI_HIDDEN int tinyui_list_sync_selected_index(struct picoui_list *list,
+TINYUI_HIDDEN int tinyui_list_sync_selected_index(struct tinyui_list *list,
                                                           int *selected_index_out)
 {
-    struct picoui_backend_widget *backend;
+    struct tinyui_backend_widget *backend;
     int selected_index;
 
     if (list == 0 || list->widget.backend_widget == 0) {
         return -1;
     }
 
-    backend = (struct picoui_backend_widget *)list->widget.backend_widget;
-    if (backend->kind != PICOUI_BACKEND_WIDGET_LIST || backend->ld_widget == 0) {
+    backend = (struct tinyui_backend_widget *)list->widget.backend_widget;
+    if (backend->kind != TINYUI_BACKEND_WIDGET_LIST || backend->ld_widget == 0) {
         return -1;
     }
 
-    selected_index = picoui_list_get_selected_index(list);
+    selected_index = tinyui_list_get_selected_index(list);
     if (selected_index < -1 || selected_index >= list->item_count) {
         return -1;
     }

@@ -50,7 +50,7 @@
     "runtime_perf": {
       "artifact": "build/tinyui-runtime/examples/sdl/tinyui_basic_widgets_demo",
       "measured_at": "2026-06-09",
-      "command": "env SDL_VIDEODRIVER=dummy PICOUI_DEMO_AUTO_QUIT_MS=1200 PICOUI_BENCHMARK_LOG=1 PICOUI_CAPTURE_FILE=<tmpdir>/frame.ppm build/tinyui-runtime/examples/sdl/tinyui_basic_widgets_demo",
+      "command": "env SDL_VIDEODRIVER=dummy TINYUI_DEMO_AUTO_QUIT_MS=1200 TINYUI_BENCHMARK_LOG=1 TINYUI_CAPTURE_FILE=<tmpdir>/frame.ppm build/tinyui-runtime/examples/sdl/tinyui_basic_widgets_demo",
       "metrics": {
         "screen_object_create_ms": {
           "baseline_ms": 0.0,

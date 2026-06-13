@@ -70,7 +70,7 @@ def _configure_build(build_dir: Path) -> None:
 
 def _find_probe_executable(build_dir: Path) -> Path:
     candidates = [
-        build_dir / "tests" / "picoui" / PROBE_TARGET,
+        build_dir / "tests" / "tinyui" / PROBE_TARGET,
         build_dir / PROBE_TARGET,
     ]
     executable = next((path for path in candidates if path.is_file()), None)
@@ -96,11 +96,11 @@ def _run_probe(build_dir: Path) -> tuple[int, int, int]:
 
     values: dict[str, int] = {}
     for line in completed.stdout.splitlines():
-        if line.startswith("PICOUI_BENCHMARK_WIDGET_WRAPPER_STRUCT_BYTES="):
+        if line.startswith("TINYUI_BENCHMARK_WIDGET_WRAPPER_STRUCT_BYTES="):
             values["widget_wrapper_struct_bytes"] = int(line.split("=", 1)[1].strip())
-        if line.startswith("PICOUI_BENCHMARK_SWITCH_WRAPPER_STRUCT_DELTA_BYTES="):
+        if line.startswith("TINYUI_BENCHMARK_SWITCH_WRAPPER_STRUCT_DELTA_BYTES="):
             values["switch_wrapper_struct_delta_bytes"] = int(line.split("=", 1)[1].strip())
-        if line.startswith("PICOUI_BENCHMARK_BACKEND_WIDGET_STRUCT_BYTES="):
+        if line.startswith("TINYUI_BENCHMARK_BACKEND_WIDGET_STRUCT_BYTES="):
             values["backend_widget_struct_bytes"] = int(line.split("=", 1)[1].strip())
 
     required = (

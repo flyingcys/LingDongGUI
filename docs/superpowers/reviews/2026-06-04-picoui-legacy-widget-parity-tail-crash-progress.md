@@ -1,4 +1,4 @@
-# PicoUI `legacy_widget_parity` 尾部崩溃收敛进展
+# TINYUI `legacy_widget_parity` 尾部崩溃收敛进展
 
 ## 目的
 
@@ -8,8 +8,8 @@
 
 当前可以确认：
 
-1. `check_picoui_demo_boundary.py` 已恢复为 PASS。
-2. `picoui_legacy_widget_parity_demo` 已能完成编译和资源链接。
+1. `check_tinyui_demo_boundary.py` 已恢复为 PASS。
+2. `tinyui_legacy_widget_parity_demo` 已能完成编译和资源链接。
 3. 启动崩溃不是单一“页面整体坏掉”，而是多个 native 文本/表格写入路径在低内存或分配失败时缺少判空。
 4. 本轮已确认并修掉两处真实 root cause：
    - `ldTextSetText()`
@@ -24,19 +24,19 @@
 
 本轮已改成：
 
-1. demo 继续只使用 `picoui_*` API；
+1. demo 继续只使用 `tinyui_*` API；
 2. 不再在 demo 文件中显式声明 `arm_2d_*` 类型；
-3. `check_picoui_demo_boundary.py` 已重新通过。
+3. `check_tinyui_demo_boundary.py` 已重新通过。
 
 ### 2. 老图片资源已进入 demo 链接图
 
-此前直接接老 `IMAGE_*` 宏时，`picoui_legacy_widget_parity_demo` 会在链接阶段报大量 `c_tile_*` undefined symbols。
+此前直接接老 `IMAGE_*` 宏时，`tinyui_legacy_widget_parity_demo` 会在链接阶段报大量 `c_tile_*` undefined symbols。
 
 本轮已在：
 
 1. `examples/sdl/CMakeLists.txt`
 
-为 `picoui_legacy_widget_parity_demo` 补入：
+为 `tinyui_legacy_widget_parity_demo` 补入：
 
 1. `WIDGET_IMAGE_SOURCES`
 
@@ -47,7 +47,7 @@
 通过 ASan 和运行日志已确认：
 
 1. 崩溃发生在 `legacy_ui:text_begin`
-2. 调用链落到 `picoui_backend_set_text -> ldTextSetText`
+2. 调用链落到 `tinyui_backend_set_text -> ldTextSetText`
 3. 真实原因不是 `text` 入参为空
 4. 真实原因是 `ldCalloc(...)` 失败后，`ldTextSetText()` 继续对 `ptWidget->pStr` 做 `strlen(NULL)`
 
@@ -83,7 +83,7 @@
 
 随后确认：
 
-1. `picoui_table_set_cell_text -> picoui_backend_table_set_cell_text -> ldTableSetItemText`
+1. `tinyui_table_set_cell_text -> tinyui_backend_table_set_cell_text -> ldTableSetItemText`
 2. `ldTableSetItemText()` 与 `ldTextSetText()` 存在同类问题
 3. 当 `ldCalloc` 失败时，代码仍继续走 `strcpy`
 
@@ -134,14 +134,14 @@
 
 已确认通过：
 
-1. `python3 tests/picoui/contract/check_picoui_demo_boundary.py`
-2. `ctest --test-dir build/picoui-runtime -R '^test_picoui_text$' --output-on-failure`
+1. `python3 tests/tinyui/contract/check_tinyui_demo_boundary.py`
+2. `ctest --test-dir build/tinyui-runtime -R '^test_tinyui_text$' --output-on-failure`
 3. `git diff --check`
 
 已确认仍未通过：
 
-1. `python3 tests/picoui/runtime/check_picoui_visible_ui.py --demo legacy_widget_parity`
-2. `SDL_VIDEODRIVER=dummy PICOUI_DEMO_AUTO_QUIT_MS=1200 ./build/picoui-runtime/examples/sdl/picoui_legacy_widget_parity_demo`
+1. `python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --demo legacy_widget_parity`
+2. `SDL_VIDEODRIVER=dummy PICOUI_DEMO_AUTO_QUIT_MS=1200 ./build/tinyui-runtime/examples/sdl/tinyui_legacy_widget_parity_demo`
 
 失败方式：
 

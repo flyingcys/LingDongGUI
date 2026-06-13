@@ -1,4 +1,4 @@
-# PicoUI J线 `v0.1` 对齐发布 Implementation Plan
+# TINYUI J线 `v0.1` 对齐发布 Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -6,7 +6,7 @@
 
 **Architecture:** 本计划不新增控件，不追求一次吃掉全部 `9` 个控件。执行顺序固定为：先冻结 `v0.1/v0.2` 边界和矩阵状态，再逐控件收口 `window / label / button / slider`，最后统一改合同、清单、发布说明和证据层。每个 Task 使用 fresh subagent，写面不得重叠；涉及 C/Python 符号改动前必须跑 GitNexus impact。
 
-**Tech Stack:** Markdown serial docs、PicoUI C API、LingDongGUI backend、Python3 contract gate、CTest、runtime visible/manual artifact scripts、GitNexus
+**Tech Stack:** Markdown serial docs、TINYUI C API、LingDongGUI backend、Python3 contract gate、CTest、runtime visible/manual artifact scripts、GitNexus
 
 ---
 
@@ -33,11 +33,11 @@ git submodule update --init --recursive
 ### J线文档基线组
 
 **文件：**
-- Modify: `docs/picoui-serial/J-线计划索引.md`
-- Create: `docs/superpowers/specs/2026-05-30-picoui-j-line-v0-1-parity-release-design.md`
-- Create: `docs/superpowers/plans/2026-05-30-picoui-j-line-v0-1-parity-release-implementation.md`
-- Modify: `docs/picoui-serial/H-线计划索引.md`
-- Modify: `docs/picoui-serial/H-线发布差距与LingDongGUI控件对比.md`
+- Modify: `docs/tinyui-serial/J-线计划索引.md`
+- Create: `docs/superpowers/specs/2026-05-30-tinyui-j-line-v0-1-parity-release-design.md`
+- Create: `docs/superpowers/plans/2026-05-30-tinyui-j-line-v0-1-parity-release-implementation.md`
+- Modify: `docs/tinyui-serial/H-线计划索引.md`
+- Modify: `docs/tinyui-serial/H-线发布差距与LingDongGUI控件对比.md`
 
 职责：
 
@@ -47,10 +47,10 @@ git submodule update --init --recursive
 ### parity matrix / gate 组
 
 **文件：**
-- Modify: `tests/picoui/contract/picoui_release_capability_matrix.json`
-- Modify: `tests/picoui/contract/check_picoui_release_capability_matrix.py`
-- Optional Create: `tests/picoui/contract/check_picoui_j_line_parity.py`
-- Modify: `tests/picoui/CMakeLists.txt`
+- Modify: `tests/tinyui/contract/tinyui_release_capability_matrix.json`
+- Modify: `tests/tinyui/contract/check_tinyui_release_capability_matrix.py`
+- Optional Create: `tests/tinyui/contract/check_tinyui_j_line_parity.py`
+- Modify: `tests/tinyui/CMakeLists.txt`
 
 职责：
 
@@ -60,13 +60,13 @@ git submodule update --init --recursive
 ### `window` 对齐组
 
 **文件：**
-- Modify: `picoui/include/picoui/window.h`
-- Modify: `picoui/src/widgets/window.c`
-- Modify: `picoui/src/backend/ldgui/backend_window.c`
-- Optional Modify: `picoui/src/backend/ldgui/backend_style_apply.c`
-- Optional Modify: `picoui/src/backend/ldgui/backend_theme.c`
-- Modify: `tests/picoui/unit/test_picoui_widgets.c`
-- Optional Modify: `tests/picoui/unit/test_picoui_theme.c`
+- Modify: `tinyui/include/tinyui/window.h`
+- Modify: `tinyui/src/widgets/window.c`
+- Modify: `tinyui/src/backend/ldgui/backend_window.c`
+- Optional Modify: `tinyui/src/backend/ldgui/backend_style_apply.c`
+- Optional Modify: `tinyui/src/backend/ldgui/backend_theme.c`
+- Modify: `tests/tinyui/unit/test_tinyui_widgets.c`
+- Optional Modify: `tests/tinyui/unit/test_tinyui_theme.c`
 
 职责：
 
@@ -75,12 +75,12 @@ git submodule update --init --recursive
 ### `label` 对齐组
 
 **文件：**
-- Modify: `picoui/include/picoui/label.h`
-- Modify: `picoui/src/widgets/label.c`
-- Modify: `picoui/src/backend/ldgui/backend_label.c`
-- Optional Modify: `picoui/src/backend/ldgui/backend_style_apply.c`
-- Modify: `tests/picoui/unit/test_picoui_widgets.c`
-- Optional Modify: `tests/picoui/unit/test_picoui_theme.c`
+- Modify: `tinyui/include/tinyui/label.h`
+- Modify: `tinyui/src/widgets/label.c`
+- Modify: `tinyui/src/backend/ldgui/backend_label.c`
+- Optional Modify: `tinyui/src/backend/ldgui/backend_style_apply.c`
+- Modify: `tests/tinyui/unit/test_tinyui_widgets.c`
+- Optional Modify: `tests/tinyui/unit/test_tinyui_theme.c`
 
 职责：
 
@@ -89,13 +89,13 @@ git submodule update --init --recursive
 ### `button` 对齐组
 
 **文件：**
-- Modify: `picoui/include/picoui/button.h`
-- Modify: `picoui/src/widgets/button.c`
-- Modify: `picoui/src/backend/ldgui/backend_button.c`
-- Optional Modify: `picoui/src/backend/ldgui/backend_event.c`
-- Optional Modify: `picoui/src/backend/ldgui/backend_style_apply.c`
-- Modify: `tests/picoui/unit/test_picoui_widgets.c`
-- Optional Modify: `tests/picoui/unit/test_picoui_theme.c`
+- Modify: `tinyui/include/tinyui/button.h`
+- Modify: `tinyui/src/widgets/button.c`
+- Modify: `tinyui/src/backend/ldgui/backend_button.c`
+- Optional Modify: `tinyui/src/backend/ldgui/backend_event.c`
+- Optional Modify: `tinyui/src/backend/ldgui/backend_style_apply.c`
+- Modify: `tests/tinyui/unit/test_tinyui_widgets.c`
+- Optional Modify: `tests/tinyui/unit/test_tinyui_theme.c`
 
 职责：
 
@@ -104,13 +104,13 @@ git submodule update --init --recursive
 ### `slider` 对齐组
 
 **文件：**
-- Modify: `picoui/include/picoui/slider.h`
-- Modify: `picoui/src/widgets/slider.c`
-- Modify: `picoui/src/backend/ldgui/backend_slider.c`
-- Optional Modify: `picoui/src/backend/ldgui/backend_event.c`
-- Optional Modify: `picoui/src/backend/ldgui/backend_style_apply.c`
-- Modify: `tests/picoui/unit/test_picoui_widgets.c`
-- Optional Modify: `tests/picoui/unit/test_picoui_theme.c`
+- Modify: `tinyui/include/tinyui/slider.h`
+- Modify: `tinyui/src/widgets/slider.c`
+- Modify: `tinyui/src/backend/ldgui/backend_slider.c`
+- Optional Modify: `tinyui/src/backend/ldgui/backend_event.c`
+- Optional Modify: `tinyui/src/backend/ldgui/backend_style_apply.c`
+- Modify: `tests/tinyui/unit/test_tinyui_widgets.c`
+- Optional Modify: `tests/tinyui/unit/test_tinyui_theme.c`
 
 职责：
 
@@ -119,13 +119,13 @@ git submodule update --init --recursive
 ### 发布文案与证据收尾组
 
 **文件：**
-- Modify: `docs/picoui-serial/H-线当前9控件发布合同.md`
-- Modify: `docs/picoui-serial/H-线已支持控件清单.md`
-- Modify: `docs/picoui-serial/H-线第一版发布说明.md`
-- Modify: `docs/picoui-serial/H-线发布差距与LingDongGUI控件对比.md`
-- Modify: `docs/picoui-serial/H-线发布测试矩阵.md`
-- Modify: `docs/picoui-serial/C-线人工窗口验收记录.md`
-- Optional Create: `docs/picoui-serial/J-线v0.1-closeout前状态.md`
+- Modify: `docs/tinyui-serial/H-线当前9控件发布合同.md`
+- Modify: `docs/tinyui-serial/H-线已支持控件清单.md`
+- Modify: `docs/tinyui-serial/H-线第一版发布说明.md`
+- Modify: `docs/tinyui-serial/H-线发布差距与LingDongGUI控件对比.md`
+- Modify: `docs/tinyui-serial/H-线发布测试矩阵.md`
+- Modify: `docs/tinyui-serial/C-线人工窗口验收记录.md`
+- Optional Create: `docs/tinyui-serial/J-线v0.1-closeout前状态.md`
 
 职责：
 
@@ -137,24 +137,24 @@ git submodule update --init --recursive
 ### Task 1: J0-J1 边界冻结与 parity 状态分层
 
 **Files:**
-- Modify: `docs/picoui-serial/J-线计划索引.md`
-- Modify: `docs/picoui-serial/H-线计划索引.md`
-- Modify: `docs/picoui-serial/H-线发布差距与LingDongGUI控件对比.md`
-- Modify: `tests/picoui/contract/picoui_release_capability_matrix.json`
-- Modify: `tests/picoui/contract/check_picoui_release_capability_matrix.py`
-- Optional Create: `tests/picoui/contract/check_picoui_j_line_parity.py`
-- Modify: `tests/picoui/CMakeLists.txt`
-- Reference: `docs/superpowers/specs/2026-05-30-picoui-j-line-v0-1-parity-release-design.md`
+- Modify: `docs/tinyui-serial/J-线计划索引.md`
+- Modify: `docs/tinyui-serial/H-线计划索引.md`
+- Modify: `docs/tinyui-serial/H-线发布差距与LingDongGUI控件对比.md`
+- Modify: `tests/tinyui/contract/tinyui_release_capability_matrix.json`
+- Modify: `tests/tinyui/contract/check_tinyui_release_capability_matrix.py`
+- Optional Create: `tests/tinyui/contract/check_tinyui_j_line_parity.py`
+- Modify: `tests/tinyui/CMakeLists.txt`
+- Reference: `docs/superpowers/specs/2026-05-30-tinyui-j-line-v0-1-parity-release-design.md`
 
 - [ ] **Step 1: 复核 H/J 现状文档与当前 release matrix**
 
 Run:
 
 ```bash
-sed -n '1,260p' docs/picoui-serial/J-线计划索引.md
-sed -n '1,220p' docs/picoui-serial/H-线计划索引.md
-sed -n '220,420p' docs/picoui-serial/H-线发布差距与LingDongGUI控件对比.md
-python3 -m json.tool tests/picoui/contract/picoui_release_capability_matrix.json >/dev/null
+sed -n '1,260p' docs/tinyui-serial/J-线计划索引.md
+sed -n '1,220p' docs/tinyui-serial/H-线计划索引.md
+sed -n '220,420p' docs/tinyui-serial/H-线发布差距与LingDongGUI控件对比.md
+python3 -m json.tool tests/tinyui/contract/tinyui_release_capability_matrix.json >/dev/null
 ```
 
 Expected:
@@ -168,8 +168,8 @@ Expected:
 Run:
 
 ```text
-impact target: check_picoui_release_capability_matrix
-impact target: tests/picoui/CMakeLists.txt
+impact target: check_tinyui_release_capability_matrix
+impact target: tests/tinyui/CMakeLists.txt
 ```
 
 Expected:
@@ -195,8 +195,8 @@ Expected:
 Run:
 
 ```bash
-ctest --test-dir build -N -R "picoui.*parity|release"
-python3 tests/picoui/contract/check_picoui_release_capability_matrix.py
+ctest --test-dir build -N -R "tinyui.*parity|release"
+python3 tests/tinyui/contract/check_tinyui_release_capability_matrix.py
 ```
 
 Expected:
@@ -209,12 +209,12 @@ Expected:
 Run:
 
 ```bash
-git diff --check -- docs/picoui-serial/J-线计划索引.md \
-                  docs/picoui-serial/H-线计划索引.md \
-                  docs/picoui-serial/H-线发布差距与LingDongGUI控件对比.md \
-                  tests/picoui/contract/picoui_release_capability_matrix.json \
-                  tests/picoui/contract/check_picoui_release_capability_matrix.py \
-                  tests/picoui/CMakeLists.txt
+git diff --check -- docs/tinyui-serial/J-线计划索引.md \
+                  docs/tinyui-serial/H-线计划索引.md \
+                  docs/tinyui-serial/H-线发布差距与LingDongGUI控件对比.md \
+                  tests/tinyui/contract/tinyui_release_capability_matrix.json \
+                  tests/tinyui/contract/check_tinyui_release_capability_matrix.py \
+                  tests/tinyui/CMakeLists.txt
 ```
 
 Expected:
@@ -234,12 +234,12 @@ Expected:
 ### Task 2: J2 `window` 对齐收口
 
 **Files:**
-- Modify: `picoui/include/picoui/window.h`
-- Modify: `picoui/src/widgets/window.c`
-- Modify: `picoui/src/backend/ldgui/backend_window.c`
-- Optional Modify: `picoui/src/backend/ldgui/backend_style_apply.c`
-- Optional Modify: `tests/picoui/unit/test_picoui_widgets.c`
-- Optional Modify: `tests/picoui/unit/test_picoui_theme.c`
+- Modify: `tinyui/include/tinyui/window.h`
+- Modify: `tinyui/src/widgets/window.c`
+- Modify: `tinyui/src/backend/ldgui/backend_window.c`
+- Optional Modify: `tinyui/src/backend/ldgui/backend_style_apply.c`
+- Optional Modify: `tests/tinyui/unit/test_tinyui_widgets.c`
+- Optional Modify: `tests/tinyui/unit/test_tinyui_theme.c`
 
 - [ ] **Step 1: 复核 `window` 现状与 `ldWindow` 缺口**
 
@@ -247,10 +247,10 @@ Run:
 
 ```bash
 sed -n '1,220p' src/gui/ldWindow.h
-sed -n '1,220p' picoui/include/picoui/window.h
-sed -n '1,220p' picoui/src/widgets/window.c
-sed -n '1,220p' picoui/src/backend/ldgui/backend_window.c
-rg -n "window" tests/picoui/unit/test_picoui_widgets.c tests/picoui/unit/test_picoui_theme.c
+sed -n '1,220p' tinyui/include/tinyui/window.h
+sed -n '1,220p' tinyui/src/widgets/window.c
+sed -n '1,220p' tinyui/src/backend/ldgui/backend_window.c
+rg -n "window" tests/tinyui/unit/test_tinyui_widgets.c tests/tinyui/unit/test_tinyui_theme.c
 ```
 
 Expected:
@@ -262,8 +262,8 @@ Expected:
 Run:
 
 ```text
-impact target: picoui_window_create
-impact target: picoui_backend_create_window
+impact target: tinyui_window_create
+impact target: tinyui_backend_create_window
 impact target: ldWindowSetImage
 ```
 
@@ -294,9 +294,9 @@ Run:
 
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
-rtk cmake --build build --target test_picoui_widgets test_picoui_theme
-ctest --test-dir build -R "test_picoui_widgets|test_picoui_theme" --output-on-failure
-python3 tests/picoui/contract/check_picoui_public_api.py
+rtk cmake --build build --target test_tinyui_widgets test_tinyui_theme
+ctest --test-dir build -R "test_tinyui_widgets|test_tinyui_theme" --output-on-failure
+python3 tests/tinyui/contract/check_tinyui_public_api.py
 git diff --check
 ```
 
@@ -316,12 +316,12 @@ Expected:
 ### Task 3: J3 `label` 对齐收口
 
 **Files:**
-- Modify: `picoui/include/picoui/label.h`
-- Modify: `picoui/src/widgets/label.c`
-- Modify: `picoui/src/backend/ldgui/backend_label.c`
-- Optional Modify: `picoui/src/backend/ldgui/backend_style_apply.c`
-- Optional Modify: `tests/picoui/unit/test_picoui_widgets.c`
-- Optional Modify: `tests/picoui/unit/test_picoui_theme.c`
+- Modify: `tinyui/include/tinyui/label.h`
+- Modify: `tinyui/src/widgets/label.c`
+- Modify: `tinyui/src/backend/ldgui/backend_label.c`
+- Optional Modify: `tinyui/src/backend/ldgui/backend_style_apply.c`
+- Optional Modify: `tests/tinyui/unit/test_tinyui_widgets.c`
+- Optional Modify: `tests/tinyui/unit/test_tinyui_theme.c`
 
 - [ ] **Step 1: 复核 `label` 现状与 `ldLabel` 缺口**
 
@@ -329,10 +329,10 @@ Run:
 
 ```bash
 sed -n '1,220p' src/gui/ldLabel.h
-sed -n '1,220p' picoui/include/picoui/label.h
-sed -n '1,220p' picoui/src/widgets/label.c
-sed -n '1,220p' picoui/src/backend/ldgui/backend_label.c
-rg -n "label" tests/picoui/unit/test_picoui_widgets.c tests/picoui/unit/test_picoui_theme.c
+sed -n '1,220p' tinyui/include/tinyui/label.h
+sed -n '1,220p' tinyui/src/widgets/label.c
+sed -n '1,220p' tinyui/src/backend/ldgui/backend_label.c
+rg -n "label" tests/tinyui/unit/test_tinyui_widgets.c tests/tinyui/unit/test_tinyui_theme.c
 ```
 
 Expected:
@@ -344,9 +344,9 @@ Expected:
 Run:
 
 ```text
-impact target: picoui_label_set_text
-impact target: picoui_label_set_font
-impact target: picoui_backend_create_label
+impact target: tinyui_label_set_text
+impact target: tinyui_label_set_font
+impact target: tinyui_backend_create_label
 ```
 
 Expected:
@@ -368,7 +368,7 @@ Expected:
 要求：
 
 - 真正走 `ldLabelSetTransparent / SetAlign / SetBackgroundImage`
-- readback 不能只读 PicoUI shadow state，需和 backend 语义一致
+- readback 不能只读 TINYUI shadow state，需和 backend 语义一致
 
 - [ ] **Step 5: 跑 targeted 验证**
 
@@ -376,9 +376,9 @@ Run:
 
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
-rtk cmake --build build --target test_picoui_widgets test_picoui_theme
-ctest --test-dir build -R "test_picoui_widgets|test_picoui_theme" --output-on-failure
-python3 tests/picoui/contract/check_picoui_public_api.py
+rtk cmake --build build --target test_tinyui_widgets test_tinyui_theme
+ctest --test-dir build -R "test_tinyui_widgets|test_tinyui_theme" --output-on-failure
+python3 tests/tinyui/contract/check_tinyui_public_api.py
 git diff --check
 ```
 
@@ -397,13 +397,13 @@ Expected:
 ### Task 4: J4 `button` 对齐收口
 
 **Files:**
-- Modify: `picoui/include/picoui/button.h`
-- Modify: `picoui/src/widgets/button.c`
-- Modify: `picoui/src/backend/ldgui/backend_button.c`
-- Optional Modify: `picoui/src/backend/ldgui/backend_event.c`
-- Optional Modify: `picoui/src/backend/ldgui/backend_style_apply.c`
-- Optional Modify: `tests/picoui/unit/test_picoui_widgets.c`
-- Optional Modify: `tests/picoui/unit/test_picoui_theme.c`
+- Modify: `tinyui/include/tinyui/button.h`
+- Modify: `tinyui/src/widgets/button.c`
+- Modify: `tinyui/src/backend/ldgui/backend_button.c`
+- Optional Modify: `tinyui/src/backend/ldgui/backend_event.c`
+- Optional Modify: `tinyui/src/backend/ldgui/backend_style_apply.c`
+- Optional Modify: `tests/tinyui/unit/test_tinyui_widgets.c`
+- Optional Modify: `tests/tinyui/unit/test_tinyui_theme.c`
 
 - [ ] **Step 1: 复核 `button` 现状与 `ldButton` 缺口**
 
@@ -411,10 +411,10 @@ Run:
 
 ```bash
 sed -n '1,220p' src/gui/ldButton.h
-sed -n '1,220p' picoui/include/picoui/button.h
-sed -n '1,240p' picoui/src/widgets/button.c
-sed -n '1,240p' picoui/src/backend/ldgui/backend_button.c
-rg -n "button" tests/picoui/unit/test_picoui_widgets.c tests/picoui/unit/test_picoui_theme.c
+sed -n '1,220p' tinyui/include/tinyui/button.h
+sed -n '1,240p' tinyui/src/widgets/button.c
+sed -n '1,240p' tinyui/src/backend/ldgui/backend_button.c
+rg -n "button" tests/tinyui/unit/test_tinyui_widgets.c tests/tinyui/unit/test_tinyui_theme.c
 ```
 
 Expected:
@@ -426,9 +426,9 @@ Expected:
 Run:
 
 ```text
-impact target: picoui_button_set_on_clicked
-impact target: picoui_button_set_text
-impact target: picoui_backend_create_button
+impact target: tinyui_button_set_on_clicked
+impact target: tinyui_button_set_text
+impact target: tinyui_backend_create_button
 ```
 
 Expected:
@@ -461,9 +461,9 @@ Run:
 
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
-rtk cmake --build build --target test_picoui_widgets test_picoui_theme
-ctest --test-dir build -R "test_picoui_widgets|test_picoui_theme" --output-on-failure
-python3 tests/picoui/contract/check_picoui_public_api.py
+rtk cmake --build build --target test_tinyui_widgets test_tinyui_theme
+ctest --test-dir build -R "test_tinyui_widgets|test_tinyui_theme" --output-on-failure
+python3 tests/tinyui/contract/check_tinyui_public_api.py
 git diff --check
 ```
 
@@ -483,13 +483,13 @@ Expected:
 ### Task 5: J5 `slider` 对齐收口
 
 **Files:**
-- Modify: `picoui/include/picoui/slider.h`
-- Modify: `picoui/src/widgets/slider.c`
-- Modify: `picoui/src/backend/ldgui/backend_slider.c`
-- Optional Modify: `picoui/src/backend/ldgui/backend_event.c`
-- Optional Modify: `picoui/src/backend/ldgui/backend_style_apply.c`
-- Optional Modify: `tests/picoui/unit/test_picoui_widgets.c`
-- Optional Modify: `tests/picoui/unit/test_picoui_theme.c`
+- Modify: `tinyui/include/tinyui/slider.h`
+- Modify: `tinyui/src/widgets/slider.c`
+- Modify: `tinyui/src/backend/ldgui/backend_slider.c`
+- Optional Modify: `tinyui/src/backend/ldgui/backend_event.c`
+- Optional Modify: `tinyui/src/backend/ldgui/backend_style_apply.c`
+- Optional Modify: `tests/tinyui/unit/test_tinyui_widgets.c`
+- Optional Modify: `tests/tinyui/unit/test_tinyui_theme.c`
 
 - [ ] **Step 1: 复核 `slider` 现状与 `ldSlider` 缺口**
 
@@ -497,10 +497,10 @@ Run:
 
 ```bash
 sed -n '1,220p' src/gui/ldSlider.h
-sed -n '1,220p' picoui/include/picoui/slider.h
-sed -n '1,240p' picoui/src/widgets/slider.c
-sed -n '1,220p' picoui/src/backend/ldgui/backend_slider.c
-rg -n "slider" tests/picoui/unit/test_picoui_widgets.c tests/picoui/unit/test_picoui_theme.c
+sed -n '1,220p' tinyui/include/tinyui/slider.h
+sed -n '1,240p' tinyui/src/widgets/slider.c
+sed -n '1,220p' tinyui/src/backend/ldgui/backend_slider.c
+rg -n "slider" tests/tinyui/unit/test_tinyui_widgets.c tests/tinyui/unit/test_tinyui_theme.c
 ```
 
 Expected:
@@ -512,9 +512,9 @@ Expected:
 Run:
 
 ```text
-impact target: picoui_slider_set_value
-impact target: picoui_slider_set_range
-impact target: picoui_backend_create_slider
+impact target: tinyui_slider_set_value
+impact target: tinyui_slider_set_range
+impact target: tinyui_backend_create_slider
 ```
 
 Expected:
@@ -545,9 +545,9 @@ Run:
 
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
-rtk cmake --build build --target test_picoui_widgets test_picoui_theme
-ctest --test-dir build -R "test_picoui_widgets|test_picoui_theme" --output-on-failure
-python3 tests/picoui/contract/check_picoui_public_api.py
+rtk cmake --build build --target test_tinyui_widgets test_tinyui_theme
+ctest --test-dir build -R "test_tinyui_widgets|test_tinyui_theme" --output-on-failure
+python3 tests/tinyui/contract/check_tinyui_public_api.py
 git diff --check
 ```
 
@@ -566,21 +566,21 @@ Expected:
 ### Task 6: J6 发布合同、清单、release wording 重写
 
 **Files:**
-- Modify: `docs/picoui-serial/H-线当前9控件发布合同.md`
-- Modify: `docs/picoui-serial/H-线已支持控件清单.md`
-- Modify: `docs/picoui-serial/H-线第一版发布说明.md`
-- Modify: `docs/picoui-serial/H-线发布差距与LingDongGUI控件对比.md`
-- Optional Modify: `tests/picoui/contract/picoui_release_capability_matrix.json`
+- Modify: `docs/tinyui-serial/H-线当前9控件发布合同.md`
+- Modify: `docs/tinyui-serial/H-线已支持控件清单.md`
+- Modify: `docs/tinyui-serial/H-线第一版发布说明.md`
+- Modify: `docs/tinyui-serial/H-线发布差距与LingDongGUI控件对比.md`
+- Optional Modify: `tests/tinyui/contract/tinyui_release_capability_matrix.json`
 
 - [ ] **Step 1: 复核 4 个已对齐控件与 5 个 backlog 控件口径**
 
 Run:
 
 ```bash
-sed -n '1,420p' docs/picoui-serial/H-线当前9控件发布合同.md
-sed -n '1,220p' docs/picoui-serial/H-线已支持控件清单.md
-sed -n '1,220p' docs/picoui-serial/H-线第一版发布说明.md
-rg -n "v0.1|v0.2|已对齐|wrapped" docs/picoui-serial/H-线发布差距与LingDongGUI控件对比.md
+sed -n '1,420p' docs/tinyui-serial/H-线当前9控件发布合同.md
+sed -n '1,220p' docs/tinyui-serial/H-线已支持控件清单.md
+sed -n '1,220p' docs/tinyui-serial/H-线第一版发布说明.md
+rg -n "v0.1|v0.2|已对齐|wrapped" docs/tinyui-serial/H-线发布差距与LingDongGUI控件对比.md
 ```
 
 Expected:
@@ -600,11 +600,11 @@ Expected:
 Run:
 
 ```bash
-git diff --check -- docs/picoui-serial/H-线当前9控件发布合同.md \
-                  docs/picoui-serial/H-线已支持控件清单.md \
-                  docs/picoui-serial/H-线第一版发布说明.md \
-                  docs/picoui-serial/H-线发布差距与LingDongGUI控件对比.md
-rg -n "当前 9 个控件都已完成对齐|全部完全对齐" docs/picoui-serial/H-线当前9控件发布合同.md docs/picoui-serial/H-线第一版发布说明.md
+git diff --check -- docs/tinyui-serial/H-线当前9控件发布合同.md \
+                  docs/tinyui-serial/H-线已支持控件清单.md \
+                  docs/tinyui-serial/H-线第一版发布说明.md \
+                  docs/tinyui-serial/H-线发布差距与LingDongGUI控件对比.md
+rg -n "当前 9 个控件都已完成对齐|全部完全对齐" docs/tinyui-serial/H-线当前9控件发布合同.md docs/tinyui-serial/H-线第一版发布说明.md
 ```
 
 Expected:
@@ -623,20 +623,20 @@ Expected:
 ### Task 7: J7 `v0.1` 证据层补齐与 closeout
 
 **Files:**
-- Modify: `docs/picoui-serial/H-线发布测试矩阵.md`
-- Modify: `docs/picoui-serial/C-线人工窗口验收记录.md`
-- Optional Create: `docs/picoui-serial/J-线v0.1-closeout前状态.md`
-- Optional Modify: `tests/picoui/runtime/check_picoui_visible_ui.py`
-- Optional Modify: `tests/picoui/runtime/check_picoui_manual_window_artifact.py`
+- Modify: `docs/tinyui-serial/H-线发布测试矩阵.md`
+- Modify: `docs/tinyui-serial/C-线人工窗口验收记录.md`
+- Optional Create: `docs/tinyui-serial/J-线v0.1-closeout前状态.md`
+- Optional Modify: `tests/tinyui/runtime/check_tinyui_visible_ui.py`
+- Optional Modify: `tests/tinyui/runtime/check_tinyui_manual_window_artifact.py`
 
 - [ ] **Step 1: 复核当前 `visible/manual artifact` 覆盖范围**
 
 Run:
 
 ```bash
-sed -n '1,240p' docs/picoui-serial/H-线发布测试矩阵.md
-sed -n '1,260p' docs/picoui-serial/C-线人工窗口验收记录.md
-sed -n '1,240p' docs/picoui-serial/H-线发布closeout前状态.md
+sed -n '1,240p' docs/tinyui-serial/H-线发布测试矩阵.md
+sed -n '1,260p' docs/tinyui-serial/C-线人工窗口验收记录.md
+sed -n '1,240p' docs/tinyui-serial/H-线发布closeout前状态.md
 ```
 
 Expected:
@@ -658,11 +658,11 @@ Expected:
 Run:
 
 ```bash
-ctest --test-dir build --output-on-failure -L picoui
+ctest --test-dir build --output-on-failure -L tinyui
 ctest --test-dir build --output-on-failure -L visible
 ctest --test-dir build --output-on-failure -L mapping
-python3 tests/picoui/contract/check_picoui_public_api.py
-python3 tests/picoui/contract/check_picoui_demo_boundary.py
+python3 tests/tinyui/contract/check_tinyui_public_api.py
+python3 tests/tinyui/contract/check_tinyui_demo_boundary.py
 git diff --check
 ```
 

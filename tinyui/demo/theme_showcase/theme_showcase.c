@@ -19,28 +19,28 @@
 #include "theme_showcase/theme_showcase.h"
 #include "tinyui.h"
 
-static void make_ui(struct picoui_window *win)
+static void make_ui(struct tinyui_window *win)
 {
-    struct picoui_label *title = picoui_label_create(win, "title");
-    struct picoui_text *body = picoui_text_create(win, "body");
-    struct picoui_button *accent = picoui_button_create(win, "accent");
+    struct tinyui_label *title = tinyui_label_create(win, "title");
+    struct tinyui_text *body = tinyui_text_create(win, "body");
+    struct tinyui_button *accent = tinyui_button_create(win, "accent");
 
-    picoui_flex_set_flow(win, PICOUI_FLEX_FLOW_COLUMN);
-    picoui_flex_set_align(win,
-                          PICOUI_ALIGN_CENTER,
-                          PICOUI_ALIGN_CENTER,
-                          PICOUI_ALIGN_CENTER);
-    picoui_flex_set_gap(win, 12, 12);
+    tinyui_flex_set_flow(win, TINYUI_FLEX_FLOW_COLUMN);
+    tinyui_flex_set_align(win,
+                          TINYUI_ALIGN_CENTER,
+                          TINYUI_ALIGN_CENTER,
+                          TINYUI_ALIGN_CENTER);
+    tinyui_flex_set_gap(win, 12, 12);
 
-    picoui_label_set_text(title, "Theme");
-    picoui_text_set_text(body, "Accent preview");
-    picoui_button_set_text(accent, "Primary");
+    tinyui_label_set_text(title, "Theme");
+    tinyui_text_set_text(body, "Accent preview");
+    tinyui_button_set_text(accent, "Primary");
 }
 
 void tinyui_demo_theme_showcase(void)
 {
     tinyui_obj_t *screen = tinyui_screen_create();
-    struct picoui_window *win = (struct picoui_window *)screen;
+    struct tinyui_window *win = (struct tinyui_window *)screen;
     if (win == 0) return;
     make_ui(win);
     tinyui_screen_load(screen);

@@ -91,18 +91,18 @@ static unsigned int encode_ld_color(unsigned int rgb)
 
 int main(void)
 {
-    struct picoui_app *app = picoui_app_create();
-    struct picoui_window *win = picoui_window_create(app, "root");
-    struct picoui_canvas *canvas = picoui_canvas_create(win, "canvas");
+    struct tinyui_app *app = tinyui_app_create();
+    struct tinyui_window *win = tinyui_window_create(app, "root");
+    struct tinyui_canvas *canvas = tinyui_canvas_create(win, "canvas");
     char mutable_text[] = "canvas";
     arm_2d_tile_t image_tile = {0};
     arm_2d_tile_t mask_tile = {0};
-    struct picoui_image_source image_source = {
+    struct tinyui_image_source image_source = {
         .img_tile = &image_tile,
         .mask_tile = &mask_tile,
     };
-    const struct picoui_backend_widget *backend;
-    const struct picoui_backend_widget *parent_backend;
+    const struct tinyui_backend_widget *backend;
+    const struct tinyui_backend_widget *parent_backend;
     const ldCanvas_t *ld_canvas;
     const char *repo_root = repo_root_from_file(__FILE__);
     char canvas_source_path[1200];
@@ -117,35 +117,35 @@ int main(void)
                             "%s/tinyui/src/widgets/canvas.c",
                             repo_root) < sizeof(canvas_source_path));
     canvas_source = read_file_text(canvas_source_path);
-    assert_source_lacks_function_definition(canvas_source, "picoui_canvas_rgb_to_ld");
-    assert_source_lacks_function_definition(canvas_source, "picoui_canvas_align_to_ld");
-    assert_source_lacks_function_definition(canvas_source, "picoui_canvas_push_native");
-    assert_source_lacks_function_definition(canvas_source, "picoui_canvas_clear_native");
-    assert_source_lacks_function_definition(canvas_source, "picoui_canvas_is_valid");
-    assert_source_lacks_function_definition(canvas_source, "picoui_canvas_push");
+    assert_source_lacks_function_definition(canvas_source, "tinyui_canvas_rgb_to_ld");
+    assert_source_lacks_function_definition(canvas_source, "tinyui_canvas_align_to_ld");
+    assert_source_lacks_function_definition(canvas_source, "tinyui_canvas_push_native");
+    assert_source_lacks_function_definition(canvas_source, "tinyui_canvas_clear_native");
+    assert_source_lacks_function_definition(canvas_source, "tinyui_canvas_is_valid");
+    assert_source_lacks_function_definition(canvas_source, "tinyui_canvas_push");
     assert_source_has_function_definition(canvas_source, "tinyui_canvas_rgb_to_ld");
     assert_source_has_function_definition(canvas_source, "tinyui_canvas_align_to_ld");
     assert_source_has_function_definition(canvas_source, "tinyui_canvas_push_native");
     assert_source_has_function_definition(canvas_source, "tinyui_canvas_clear_native");
     assert_source_has_function_definition(canvas_source, "tinyui_canvas_is_valid");
     assert_source_has_function_definition(canvas_source, "tinyui_canvas_push");
-    assert(picoui_widget_set_size((struct picoui_widget *)canvas, 120, 80) == 0);
+    assert(tinyui_widget_set_size((struct tinyui_widget *)canvas, 120, 80) == 0);
 
-    assert(picoui_canvas_fill_rect(canvas, 1, 2, 30, 40, 0x112233U, 200) == 0);
-    assert(picoui_canvas_draw_line(canvas, 0, 0, 20, 10, 3, 0x445566U, 255, 32) == 0);
-    assert(picoui_canvas_draw_image(canvas, 5, 6, 24, 18, &image_source, 0x778899U, 180) == 0);
-    assert(picoui_canvas_draw_image_scaled(canvas, 7, 8, 32, 20, &image_source, 0.5f, 210) == 0);
-    assert(picoui_canvas_draw_text(canvas,
+    assert(tinyui_canvas_fill_rect(canvas, 1, 2, 30, 40, 0x112233U, 200) == 0);
+    assert(tinyui_canvas_draw_line(canvas, 0, 0, 20, 10, 3, 0x445566U, 255, 32) == 0);
+    assert(tinyui_canvas_draw_image(canvas, 5, 6, 24, 18, &image_source, 0x778899U, 180) == 0);
+    assert(tinyui_canvas_draw_image_scaled(canvas, 7, 8, 32, 20, &image_source, 0.5f, 210) == 0);
+    assert(tinyui_canvas_draw_text(canvas,
                                    9,
                                    10,
                                    50,
                                    16,
                                    mutable_text,
-                                   PICOUI_ALIGN_CENTER,
+                                   TINYUI_ALIGN_CENTER,
                                    0xAABBCCU,
                                    255) == 0);
 
-    assert(picoui_canvas_get_command_count(canvas, &command_count) == 0);
+    assert(tinyui_canvas_get_command_count(canvas, &command_count) == 0);
     assert(command_count == 5);
 
     backend = canvas->widget.backend_widget;
@@ -193,7 +193,7 @@ int main(void)
     assert(strcmp((const char *)ld_canvas->commands[4].pStr, "canvas") == 0);
 
     mutable_text[0] = 'X';
-    assert(picoui_canvas_fill_rect(canvas, 11, 12, 13, 14, 0x010203U, 99) == 0);
+    assert(tinyui_canvas_fill_rect(canvas, 11, 12, 13, 14, 0x010203U, 99) == 0);
     assert(ld_canvas->commandCount == 6);
     assert(strcmp((const char *)ld_canvas->commands[4].pStr, "canvas") == 0);
     assert(ld_canvas->commands[5].kind == ldCanvasCommandFillRect);
@@ -204,20 +204,20 @@ int main(void)
     assert(ld_canvas->commands[5].color0 == encode_ld_color(0x010203U));
     assert(ld_canvas->commands[5].opacity0 == 99);
 
-    assert(picoui_canvas_clear(canvas) == 0);
-    assert(picoui_canvas_get_command_count(canvas, &command_count) == 0);
+    assert(tinyui_canvas_clear(canvas) == 0);
+    assert(tinyui_canvas_get_command_count(canvas, &command_count) == 0);
     assert(command_count == 0);
     assert(ld_canvas->commandCount == 0);
     assert(ld_canvas->commands[4].pStr == 0);
 
-    assert(picoui_canvas_fill_rect(0, 0, 0, 1, 1, 0, 255) == -1);
-    assert(picoui_canvas_draw_line(0, 0, 0, 1, 1, 1, 0, 255, 255) == -1);
-    assert(picoui_canvas_draw_image(canvas, 0, 0, 10, 10, 0, 0, 255) == -1);
-    assert(picoui_canvas_draw_image_scaled(canvas, 0, 0, 10, 10, 0, 1.0f, 255) == -1);
-    assert(picoui_canvas_draw_text(canvas, 0, 0, 10, 10, 0, PICOUI_ALIGN_START, 0, 255) == -1);
-    assert(picoui_canvas_get_command_count(canvas, 0) == -1);
+    assert(tinyui_canvas_fill_rect(0, 0, 0, 1, 1, 0, 255) == -1);
+    assert(tinyui_canvas_draw_line(0, 0, 0, 1, 1, 1, 0, 255, 255) == -1);
+    assert(tinyui_canvas_draw_image(canvas, 0, 0, 10, 10, 0, 0, 255) == -1);
+    assert(tinyui_canvas_draw_image_scaled(canvas, 0, 0, 10, 10, 0, 1.0f, 255) == -1);
+    assert(tinyui_canvas_draw_text(canvas, 0, 0, 10, 10, 0, TINYUI_ALIGN_START, 0, 255) == -1);
+    assert(tinyui_canvas_get_command_count(canvas, 0) == -1);
 
-    picoui_app_destroy(app);
+    tinyui_app_destroy(app);
     free(canvas_source);
     return 0;
 }

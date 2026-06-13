@@ -13,13 +13,13 @@
 首轮主要 blocker 有三类：
 
 1. `check_tinyui_v21_transition_guards` 仍注册在 focused gate 内，但 checker 会读取已删除的 `backend.h`，导致 `ctest -R 'test_tinyui|check_tinyui'` 失败。
-2. `tinyui/include/picoui/runtime.h` 仍把旧 `picoui_*` 声明当外部 ABI，但 `runtime.c` 已只定义 `tinyui_*`，直接 include legacy runtime header 的旧用户会链接失败。
-3. `S3 demo LVGL-like 化` 的代码事实和文档完成结论不一致。统一 runner 只接入了 `basic_widgets` 与 `settings_panel`，但 `tinyui/demo` 下大量 demo 仍保留各自 `main()`、`run_demo()`、`picoui_app_create()`、`picoui_app_run()` 主路径。
+2. `tinyui/include/tinyui/runtime.h` 仍把旧 `tinyui_*` 声明当外部 ABI，但 `runtime.c` 已只定义 `tinyui_*`，直接 include legacy runtime header 的旧用户会链接失败。
+3. `S3 demo LVGL-like 化` 的代码事实和文档完成结论不一致。统一 runner 只接入了 `basic_widgets` 与 `settings_panel`，但 `tinyui/demo` 下大量 demo 仍保留各自 `main()`、`run_demo()`、`tinyui_app_create()`、`tinyui_app_run()` 主路径。
 
 当前状态摘要：
 
 - `check_tinyui_v21_transition_guards` 已修复
-- `picoui/runtime.h` legacy ABI/link 问题已修复
+- `tinyui/runtime.h` legacy ABI/link 问题已修复
 - `check_tinyui_runtime` / `check_tinyui_perf` 已适配 unified runner 并通过
 - `rtk ctest --test-dir build --output-on-failure -R 'test_tinyui|check_tinyui'` 已通过
 - `S3` 文档口径已下调为“部分完成（未关闭）”
@@ -33,10 +33,10 @@
   - affected processes：0
   - risk：LOW
 - 重点 runtime 符号 impact：
-  - `picoui_init`：LOW，direct callers 0
-  - `picoui_deinit`：LOW，direct callers 0
-  - `picoui_screen_create`：LOW，direct callers 0
-  - `picoui_timer_handler`：LOW，direct callers 0
+  - `tinyui_init`：LOW，direct callers 0
+  - `tinyui_deinit`：LOW，direct callers 0
+  - `tinyui_screen_create`：LOW，direct callers 0
+  - `tinyui_timer_handler`：LOW，direct callers 0
 
 说明：GitNexus 当前没有把这条新的 runtime surface 映射出调用链，因此本 review 以源码 diff、stage gate 和 fresh build/test 证据共同判断。
 
@@ -66,19 +66,19 @@ rtk python3 tests/tinyui/contract/check_tinyui_v21_transition_guards.py --print-
 结果：`FileNotFoundError: tinyui/src/backend/ldgui/backend.h`。
 
 ```bash
-cc -I tinyui/include -x c -c -o /tmp/picoui_runtime_probe.o - <<'EOF'
-#include "picoui/runtime.h"
-int main(void) { return picoui_init(); }
+cc -I tinyui/include -x c -c -o /tmp/tinyui_runtime_probe.o - <<'EOF'
+#include "tinyui/runtime.h"
+int main(void) { return tinyui_init(); }
 EOF
-nm -u /tmp/picoui_runtime_probe.o | rg 'picoui_init|tinyui_init'
+nm -u /tmp/tinyui_runtime_probe.o | rg 'tinyui_init|tinyui_init'
 ```
 
-结果：probe object 仍引用 `_picoui_init`；当前库只导出 `_tinyui_init`，没有 `_picoui_init`。
+结果：probe object 仍引用 `_tinyui_init`；当前库只导出 `_tinyui_init`，没有 `_tinyui_init`。
 
 未通过完成口径：
 
 ```bash
-rtk rg -n 'backend\.h|picoui_app_create|picoui_app_run|run_demo\(|int main\(' tinyui/demo tinyui/src tinyui/include
+rtk rg -n 'backend\.h|tinyui_app_create|tinyui_app_run|run_demo\(|int main\(' tinyui/demo tinyui/src tinyui/include
 ```
 
 该扫描仍在 `tinyui/demo` 下命中大量旧启动骨架。
@@ -122,12 +122,12 @@ rtk ctest --test-dir build --output-on-failure -R 'check_tinyui_v21_transition_g
 
 把该 checker 更新为 v2.2 语义：`backend.h` 不存在时视为期望状态，并继续检查 `backend_c_files=0`、active include 为零、top-level wrapper 和 public API count 与 inventory 一致。或者新增 v2.2 checker 并从当前 focused gate 中移除旧 v2.1 checker。不能只更新 inventory 数字。
 
-### 2. Blocker：`picoui/runtime.h` 兼容头链接到已不存在的 `picoui_*` ABI
+### 2. Blocker：`tinyui/runtime.h` 兼容头链接到已不存在的 `tinyui_*` ABI
 
 位置：
 
-- `tinyui/include/picoui/runtime.h:26`
-- `tinyui/include/picoui/runtime.h:32`
+- `tinyui/include/tinyui/runtime.h:26`
+- `tinyui/include/tinyui/runtime.h:32`
 - `tinyui/src/core/runtime.c:10`
 - `tinyui/src/core/runtime.c:20`
 - `tinyui/src/core/runtime.c:30`
@@ -136,45 +136,45 @@ rtk ctest --test-dir build --output-on-failure -R 'check_tinyui_v21_transition_g
 
 问题：
 
-top-level `tinyui/include/runtime.h` 已改成声明 `tinyui_*` 并用 `static inline` 提供 `picoui_*` alias。但 legacy 兼容头 `tinyui/include/picoui/runtime.h` 仍声明外部函数：
+top-level `tinyui/include/runtime.h` 已改成声明 `tinyui_*` 并用 `static inline` 提供 `tinyui_*` alias。但 legacy 兼容头 `tinyui/include/tinyui/runtime.h` 仍声明外部函数：
 
 ```c
-int picoui_init(void);
-void picoui_deinit(void);
-struct picoui_window *picoui_screen_create(void);
-int picoui_screen_load(struct picoui_window *screen);
-void picoui_timer_handler(void);
+int tinyui_init(void);
+void tinyui_deinit(void);
+struct tinyui_window *tinyui_screen_create(void);
+int tinyui_screen_load(struct tinyui_window *screen);
+void tinyui_timer_handler(void);
 ```
 
-并且把 `tinyui_init` 宏映射回 `picoui_init`。当前 `runtime.c` 只定义 `tinyui_*`，库里没有 `_picoui_init` 等符号。
+并且把 `tinyui_init` 宏映射回 `tinyui_init`。当前 `runtime.c` 只定义 `tinyui_*`，库里没有 `_tinyui_init` 等符号。
 
 影响：
 
-旧用户如果直接 `#include "picoui/runtime.h"`，代码能编译，但会链接到不存在的 `picoui_init`。这是 public compatibility break，不是单纯内部 rename。
+旧用户如果直接 `#include "tinyui/runtime.h"`，代码能编译，但会链接到不存在的 `tinyui_init`。这是 public compatibility break，不是单纯内部 rename。
 
 复验证据：
 
 ```bash
-nm -g build/libtinyui_core.a build/libtinyui_backend_ldgui_runtime.a | rg '(_)?(picoui_init|tinyui_init)$'
+nm -g build/libtinyui_core.a build/libtinyui_backend_ldgui_runtime.a | rg '(_)?(tinyui_init|tinyui_init)$'
 ```
 
 只看到 `_tinyui_init`。
 
 ```bash
-cc -I tinyui/include -x c -c -o /tmp/picoui_runtime_probe.o - <<'EOF'
-#include "picoui/runtime.h"
-int main(void) { return picoui_init(); }
+cc -I tinyui/include -x c -c -o /tmp/tinyui_runtime_probe.o - <<'EOF'
+#include "tinyui/runtime.h"
+int main(void) { return tinyui_init(); }
 EOF
-nm -u /tmp/picoui_runtime_probe.o | rg 'picoui_init|tinyui_init'
+nm -u /tmp/tinyui_runtime_probe.o | rg 'tinyui_init|tinyui_init'
 ```
 
-probe object 仍引用 `_picoui_init`。
+probe object 仍引用 `_tinyui_init`。
 
 建议修复：
 
-同步 `tinyui/include/picoui/runtime.h`：让它声明 canonical `tinyui_*`，再提供 `picoui_*` static inline wrapper；或者在 `runtime.c` 保留真实 `picoui_*` ABI wrapper。补一个 direct legacy header compile+link 测试，覆盖 `#include "picoui/runtime.h"` 后调用 `picoui_init()` 和 `tinyui_init()`。
+同步 `tinyui/include/tinyui/runtime.h`：让它声明 canonical `tinyui_*`，再提供 `tinyui_*` static inline wrapper；或者在 `runtime.c` 保留真实 `tinyui_*` ABI wrapper。补一个 direct legacy header compile+link 测试，覆盖 `#include "tinyui/runtime.h"` 后调用 `tinyui_init()` 和 `tinyui_init()`。
 
-### 3. Medium：public API checker 未直接覆盖 legacy `picoui/*.h` 子树
+### 3. Medium：public API checker 未直接覆盖 legacy `tinyui/*.h` 子树
 
 位置：
 
@@ -183,22 +183,22 @@ probe object 仍引用 `_picoui_init`。
 
 问题：
 
-`check_tinyui_public_api.py` 先取 `tinyui/include/picoui/*.h` 的文件名，再只遍历 top-level `tinyui/include/*.h` 中同名 header。`resolve_public_header_text()` 读到的是 top-level forwarding 或 top-level header 内容，没有直接检查 `tinyui/include/picoui/runtime.h` 自身。
+`check_tinyui_public_api.py` 先取 `tinyui/include/tinyui/*.h` 的文件名，再只遍历 top-level `tinyui/include/*.h` 中同名 header。`resolve_public_header_text()` 读到的是 top-level forwarding 或 top-level header 内容，没有直接检查 `tinyui/include/tinyui/runtime.h` 自身。
 
 影响：
 
-`check_tinyui_public_api.py` 当前能 PASS，但无法捕获 `picoui/runtime.h` 直连 include 的 ABI 断裂。
+`check_tinyui_public_api.py` 当前能 PASS，但无法捕获 `tinyui/runtime.h` 直连 include 的 ABI 断裂。
 
 建议修复：
 
 新增 legacy subtree direct include matrix。至少加一个 probe：
 
 ```c
-#include "picoui/runtime.h"
-int main(void) { return picoui_init(); }
+#include "tinyui/runtime.h"
+int main(void) { return tinyui_init(); }
 ```
 
-并链接当前 TinyUI runtime 库。更稳妥的做法是对 `tinyui/include/picoui/*.h` 做 direct include / compile / link 覆盖。
+并链接当前 TinyUI runtime 库。更稳妥的做法是对 `tinyui/include/tinyui/*.h` 做 direct include / compile / link 覆盖。
 
 ### 4. Blocker：S3 已完成结论与 demo 代码事实冲突
 
@@ -226,7 +226,7 @@ int main(void) { return picoui_init(); }
 
 - demo `.c` 已转为 build API 文件
 - 统一 `main` 已成为主线 demo 唯一启动入口
-- 主线 demo 已无各自 `main/run_demo/picoui_app_run` 主路径
+- 主线 demo 已无各自 `main/run_demo/tinyui_app_run` 主路径
 
 当前状态最多只能说“`basic_widgets` 和 `settings_panel` 两个 demo 已迁移”，不能说 `S3` 或 `v2.2` 完成。
 
@@ -251,15 +251,15 @@ int main(void) { return picoui_init(); }
 S3 plan 要求执行：
 
 ```bash
-rg -n 'picoui_app_create|picoui_app_run|run_demo\(|int main\(' tinyui/demo
+rg -n 'tinyui_app_create|tinyui_app_run|run_demo\(|int main\(' tinyui/demo
 ```
 
 并期望 active demo tree 不再显示 per-demo startup skeletons。但当前实际扫描仍命中大量旧入口：
 
 - `run_demo()`
 - `int main()`
-- `picoui_app_create()`
-- `picoui_app_run()`
+- `tinyui_app_create()`
+- `tinyui_app_run()`
 
 影响：
 
@@ -267,7 +267,7 @@ rg -n 'picoui_app_create|picoui_app_run|run_demo\(|int main\(' tinyui/demo
 
 建议修复：
 
-把该扫描纳入 CTest 或新增 contract checker，避免只在文档中列命令但不执行。修复后要求扫描只允许 `tinyui/demo/main.c` 作为唯一 `main()`，并禁止其他 demo 目录出现 `run_demo()` / `picoui_app_*` 主路径。
+把该扫描纳入 CTest 或新增 contract checker，避免只在文档中列命令但不执行。修复后要求扫描只允许 `tinyui/demo/main.c` 作为唯一 `main()`，并禁止其他 demo 目录出现 `run_demo()` / `tinyui_app_*` 主路径。
 
 ### 6. High：`tinyui_timer_handler()` 作为 canonical public API 仍直接终止进程
 
@@ -368,6 +368,6 @@ if (step > 0) {
 ## 建议下一步
 
 1. 先修 S3 口径：选择“全量迁移 demo”或“文档降级为部分完成”，不要保持当前矛盾状态。
-2. 修 `check_tinyui_v21_transition_guards` 与 `picoui/runtime.h` 兼容头，这两个会直接破坏 focused gate / legacy include。
+2. 修 `check_tinyui_v21_transition_guards` 与 `tinyui/runtime.h` 兼容头，这两个会直接破坏 focused gate / legacy include。
 3. 修 `tinyui_timer_handler()` 的 public API 控制权问题，或把 `exit()` 行为变成显式 contract 并补子进程测试。
 4. 把 S3 残留扫描变成自动 gate，避免后续再次把局部迁移写成整阶段完成。

@@ -28,28 +28,28 @@ extern const arm_2d_tile_t c_tilePointerSecGRAY8;
 extern const arm_2d_tile_t c_tilePointerSecMask;
 extern const arm_2d_tile_t c_tileClockface;
 
-static int tinyui_clock_props_are_valid(const struct picoui_clock_props *props)
+static int tinyui_clock_props_are_valid(const struct tinyui_clock_props *props)
 {
     return props != 0 && props->id != 0 && (props->step_second == 0 || props->step_second == 1);
 }
 
-static ldClock_t *tinyui_clock_get_ld(struct picoui_clock *clock)
+static ldClock_t *tinyui_clock_get_ld(struct tinyui_clock *clock)
 {
-    struct picoui_backend_widget *backend;
+    struct tinyui_backend_widget *backend;
 
     if (clock == NULL || clock->widget.backend_widget == NULL) {
         return NULL;
     }
 
-    backend = (struct picoui_backend_widget *)clock->widget.backend_widget;
-    if (backend->kind != PICOUI_BACKEND_WIDGET_CLOCK || backend->ld_widget == NULL) {
+    backend = (struct tinyui_backend_widget *)clock->widget.backend_widget;
+    if (backend->kind != TINYUI_BACKEND_WIDGET_CLOCK || backend->ld_widget == NULL) {
         return NULL;
     }
 
     return (ldClock_t *)backend->ld_widget;
 }
 
-static int tinyui_clock_apply_background(struct picoui_clock *clock)
+static int tinyui_clock_apply_background(struct tinyui_clock *clock)
 {
     ldClock_t *ld_clock = tinyui_clock_get_ld(clock);
     arm_2d_tile_t *img_tile;
@@ -65,10 +65,10 @@ static int tinyui_clock_apply_background(struct picoui_clock *clock)
     return 0;
 }
 
-static int tinyui_clock_apply_pointer(struct picoui_clock *clock, int index)
+static int tinyui_clock_apply_pointer(struct tinyui_clock *clock, int index)
 {
     ldClock_t *ld_clock = tinyui_clock_get_ld(clock);
-    struct picoui_image_source *source;
+    struct tinyui_image_source *source;
     arm_2d_tile_t *img_tile;
     arm_2d_tile_t *mask_tile;
     float x;
@@ -123,12 +123,12 @@ static int tinyui_clock_apply_pointer(struct picoui_clock *clock, int index)
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct picoui_clock *picoui_clock_create(struct picoui_widget *parent, const char *id)
+struct tinyui_clock *tinyui_clock_create(struct tinyui_widget *parent, const char *id)
 {
-    struct picoui_clock *clock;
-    struct picoui_backend_widget *backend;
-    struct picoui_backend_widget *parent_backend;
-    struct picoui_backend_app_state *app_state;
+    struct tinyui_clock *clock;
+    struct tinyui_backend_widget *backend;
+    struct tinyui_backend_widget *parent_backend;
+    struct tinyui_backend_app_state *app_state;
     ldClock_t *ld_clock;
     arm_2d_tile_t *hour_img_tile;
     arm_2d_tile_t *hour_mask_tile;
@@ -142,7 +142,7 @@ struct picoui_clock *picoui_clock_create(struct picoui_widget *parent, const cha
         return 0;
     }
 
-    parent_backend = (struct picoui_backend_widget *)parent->backend_widget;
+    parent_backend = (struct tinyui_backend_widget *)parent->backend_widget;
     app_state = tinyui_runtime_bridge_backend_state_from_parent(parent_backend);
     if (parent_backend->ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
         return 0;
@@ -290,7 +290,7 @@ struct picoui_clock *picoui_clock_create(struct picoui_widget *parent, const cha
 
     if (tinyui_widget_init_child(backend,
                                          parent_backend,
-                                         PICOUI_BACKEND_WIDGET_CLOCK,
+                                         TINYUI_BACKEND_WIDGET_CLOCK,
                                          id,
                                          parent_backend->theme) != 0) {
         ldClock_depose(app_state->ld_scene, ld_clock);
@@ -327,7 +327,7 @@ struct picoui_clock *picoui_clock_create(struct picoui_widget *parent, const cha
     clock->second_anchor_x = 0.0f;
     clock->second_anchor_y = 100.0f;
     clock->use_system_time = 1;
-    if (picoui_clock_set_step_second(clock, 0) != 0) {
+    if (tinyui_clock_set_step_second(clock, 0) != 0) {
         free(clock);
         return 0;
     }
@@ -342,9 +342,9 @@ struct picoui_clock *picoui_clock_create(struct picoui_widget *parent, const cha
  * @return Pointer to the object
  */
 
-struct picoui_clock *picoui_clock_init(struct picoui_widget *parent, const char *id)
+struct tinyui_clock *tinyui_clock_init(struct tinyui_widget *parent, const char *id)
 {
-    return picoui_clock_create(parent, id);
+    return tinyui_clock_create(parent, id);
 }
 
 /**
@@ -355,7 +355,7 @@ struct picoui_clock *picoui_clock_init(struct picoui_widget *parent, const char 
  * @return 0 on success, -1 on failure
  */
 
-int picoui_clock_set_use_system_time(struct picoui_clock *clock, int enabled)
+int tinyui_clock_set_use_system_time(struct tinyui_clock *clock, int enabled)
 {
     ldClock_t *ld_clock;
 
@@ -373,6 +373,11 @@ int picoui_clock_set_use_system_time(struct picoui_clock *clock, int enabled)
     return 0;
 }
 
+int tinyui_clock_set_auto_sys_time(struct tinyui_clock *clock, int enabled)
+{
+    return tinyui_clock_set_use_system_time(clock, enabled);
+}
+
 /**
  * @brief Get use system time of clock widget
  *
@@ -380,7 +385,7 @@ int picoui_clock_set_use_system_time(struct picoui_clock *clock, int enabled)
  * @return -1 on failure
  */
 
-int picoui_clock_get_use_system_time(const struct picoui_clock *clock)
+int tinyui_clock_get_use_system_time(const struct tinyui_clock *clock)
 {
     ldClock_t *ld_clock;
 
@@ -388,13 +393,13 @@ int picoui_clock_get_use_system_time(const struct picoui_clock *clock)
         return -1;
     }
 
-    ld_clock = tinyui_clock_get_ld((struct picoui_clock *)clock);
+    ld_clock = tinyui_clock_get_ld((struct tinyui_clock *)clock);
     if (ld_clock == NULL) {
         return -1;
     }
 
-    ((struct picoui_clock *)clock)->use_system_time = ld_clock->isAutoSysTime ? 1 : 0;
-    return ((struct picoui_clock *)clock)->use_system_time;
+    ((struct tinyui_clock *)clock)->use_system_time = ld_clock->isAutoSysTime ? 1 : 0;
+    return ((struct tinyui_clock *)clock)->use_system_time;
 }
 
 /**
@@ -405,40 +410,40 @@ int picoui_clock_get_use_system_time(const struct picoui_clock *clock)
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct picoui_clock *picoui_clock_create_with_props(
-    struct picoui_widget *parent,
-    const struct picoui_clock_props *props)
+struct tinyui_clock *tinyui_clock_create_with_props(
+    struct tinyui_widget *parent,
+    const struct tinyui_clock_props *props)
 {
-    struct picoui_clock *clock;
+    struct tinyui_clock *clock;
 
     if (!tinyui_clock_props_are_valid(props)) {
         return 0;
     }
 
-    clock = picoui_clock_create(parent, props->id);
+    clock = tinyui_clock_create(parent, props->id);
     if (clock == 0) {
         return 0;
     }
 
     if (props->style_class != 0
-        && picoui_widget_set_style_class(&clock->widget, props->style_class) != 0) {
+        && tinyui_widget_set_style_class(&clock->widget, props->style_class) != 0) {
         free(clock);
         return 0;
     }
-    if (picoui_widget_set_user_data(&clock->widget, props->user_data) != 0
-        || picoui_clock_set_step_second(clock, props->step_second) != 0
+    if (tinyui_widget_set_user_data(&clock->widget, props->user_data) != 0
+        || tinyui_clock_set_step_second(clock, props->step_second) != 0
         || (props->background_source != 0
-            && picoui_clock_set_background_source(clock, props->background_source) != 0)
+            && tinyui_clock_set_background_source(clock, props->background_source) != 0)
         || (props->hour_pointer_source != 0
-            && picoui_clock_set_hour_pointer_source(clock, props->hour_pointer_source) != 0)
+            && tinyui_clock_set_hour_pointer_source(clock, props->hour_pointer_source) != 0)
         || (props->minute_pointer_source != 0
-            && picoui_clock_set_minute_pointer_source(clock, props->minute_pointer_source) != 0)
+            && tinyui_clock_set_minute_pointer_source(clock, props->minute_pointer_source) != 0)
         || (props->second_pointer_source != 0
-            && picoui_clock_set_second_pointer_source(clock, props->second_pointer_source) != 0)
-        || picoui_clock_set_mask_color(clock, props->mask_color) != 0
-        || picoui_clock_set_hour_anchor(clock, props->hour_anchor_x, props->hour_anchor_y) != 0
-        || picoui_clock_set_minute_anchor(clock, props->minute_anchor_x, props->minute_anchor_y) != 0
-        || picoui_clock_set_second_anchor(clock, props->second_anchor_x, props->second_anchor_y) != 0) {
+            && tinyui_clock_set_second_pointer_source(clock, props->second_pointer_source) != 0)
+        || tinyui_clock_set_mask_color(clock, props->mask_color) != 0
+        || tinyui_clock_set_hour_anchor(clock, props->hour_anchor_x, props->hour_anchor_y) != 0
+        || tinyui_clock_set_minute_anchor(clock, props->minute_anchor_x, props->minute_anchor_y) != 0
+        || tinyui_clock_set_second_anchor(clock, props->second_anchor_x, props->second_anchor_y) != 0) {
         free(clock);
         return 0;
     }
@@ -454,10 +459,10 @@ struct picoui_clock *picoui_clock_create_with_props(
  * @return 0 on success, -1 on failure
  */
 
-int picoui_clock_set_step_second(struct picoui_clock *clock, int step_second)
+int tinyui_clock_set_step_second(struct tinyui_clock *clock, int step_second)
 {
     ldClock_t *ld_clock;
-    struct picoui_backend_widget *backend;
+    struct tinyui_backend_widget *backend;
 
     if (clock == 0 || (step_second != 0 && step_second != 1)) {
         return -1;
@@ -469,7 +474,7 @@ int picoui_clock_set_step_second(struct picoui_clock *clock, int step_second)
     }
 
     ldClockSetStepSecond(ld_clock, step_second != 0);
-    backend = (struct picoui_backend_widget *)clock->widget.backend_widget;
+    backend = (struct tinyui_backend_widget *)clock->widget.backend_widget;
     backend->value = step_second;
     clock->step_second = step_second;
     return 0;
@@ -482,7 +487,7 @@ int picoui_clock_set_step_second(struct picoui_clock *clock, int step_second)
  * @return -1 on failure
  */
 
-int picoui_clock_get_step_second(const struct picoui_clock *clock)
+int tinyui_clock_get_step_second(const struct tinyui_clock *clock)
 {
     ldClock_t *ld_clock;
 
@@ -490,13 +495,13 @@ int picoui_clock_get_step_second(const struct picoui_clock *clock)
         return -1;
     }
 
-    ld_clock = tinyui_clock_get_ld((struct picoui_clock *)clock);
+    ld_clock = tinyui_clock_get_ld((struct tinyui_clock *)clock);
     if (ld_clock == NULL) {
         return -1;
     }
 
-    ((struct picoui_clock *)clock)->step_second = ld_clock->isStepSecond ? 1 : 0;
-    return ((struct picoui_clock *)clock)->step_second;
+    ((struct tinyui_clock *)clock)->step_second = ld_clock->isStepSecond ? 1 : 0;
+    return ((struct tinyui_clock *)clock)->step_second;
 }
 
 /**
@@ -507,7 +512,7 @@ int picoui_clock_get_step_second(const struct picoui_clock *clock)
  * @return 0 on success, -1 on failure
  */
 
-int picoui_clock_set_background_source(struct picoui_clock *clock, struct picoui_image_source *source)
+int tinyui_clock_set_background_source(struct tinyui_clock *clock, struct tinyui_image_source *source)
 {
     if (clock == 0 || source == 0 || source->img_tile == 0) {
         return -1;
@@ -525,9 +530,9 @@ int picoui_clock_set_background_source(struct picoui_clock *clock, struct picoui
  * @return 0 on success, -1 on failure
  */
 
-int picoui_clock_set_background_image(struct picoui_clock *clock, struct picoui_image_source *source)
+int tinyui_clock_set_background_image(struct tinyui_clock *clock, struct tinyui_image_source *source)
 {
-    return picoui_clock_set_background_source(clock, source);
+    return tinyui_clock_set_background_source(clock, source);
 }
 
 /**
@@ -538,7 +543,7 @@ int picoui_clock_set_background_image(struct picoui_clock *clock, struct picoui_
  * @return 0 on success, -1 on failure
  */
 
-int picoui_clock_set_hour_pointer_source(struct picoui_clock *clock, struct picoui_image_source *source)
+int tinyui_clock_set_hour_pointer_source(struct tinyui_clock *clock, struct tinyui_image_source *source)
 {
     if (clock == 0 || source == 0 || source->img_tile == 0) {
         return -1;
@@ -556,9 +561,9 @@ int picoui_clock_set_hour_pointer_source(struct picoui_clock *clock, struct pico
  * @return 0 on success, -1 on failure
  */
 
-int picoui_clock_set_hour_pointer_image(struct picoui_clock *clock, struct picoui_image_source *source)
+int tinyui_clock_set_hour_pointer_image(struct tinyui_clock *clock, struct tinyui_image_source *source)
 {
-    return picoui_clock_set_hour_pointer_source(clock, source);
+    return tinyui_clock_set_hour_pointer_source(clock, source);
 }
 
 /**
@@ -569,7 +574,7 @@ int picoui_clock_set_hour_pointer_image(struct picoui_clock *clock, struct picou
  * @return 0 on success, -1 on failure
  */
 
-int picoui_clock_set_minute_pointer_source(struct picoui_clock *clock, struct picoui_image_source *source)
+int tinyui_clock_set_minute_pointer_source(struct tinyui_clock *clock, struct tinyui_image_source *source)
 {
     if (clock == 0 || source == 0 || source->img_tile == 0) {
         return -1;
@@ -587,9 +592,9 @@ int picoui_clock_set_minute_pointer_source(struct picoui_clock *clock, struct pi
  * @return 0 on success, -1 on failure
  */
 
-int picoui_clock_set_minute_pointer_image(struct picoui_clock *clock, struct picoui_image_source *source)
+int tinyui_clock_set_minute_pointer_image(struct tinyui_clock *clock, struct tinyui_image_source *source)
 {
-    return picoui_clock_set_minute_pointer_source(clock, source);
+    return tinyui_clock_set_minute_pointer_source(clock, source);
 }
 
 /**
@@ -600,7 +605,7 @@ int picoui_clock_set_minute_pointer_image(struct picoui_clock *clock, struct pic
  * @return 0 on success, -1 on failure
  */
 
-int picoui_clock_set_second_pointer_source(struct picoui_clock *clock, struct picoui_image_source *source)
+int tinyui_clock_set_second_pointer_source(struct tinyui_clock *clock, struct tinyui_image_source *source)
 {
     if (clock == 0 || source == 0 || source->img_tile == 0) {
         return -1;
@@ -618,9 +623,9 @@ int picoui_clock_set_second_pointer_source(struct picoui_clock *clock, struct pi
  * @return 0 on success, -1 on failure
  */
 
-int picoui_clock_set_second_pointer_image(struct picoui_clock *clock, struct picoui_image_source *source)
+int tinyui_clock_set_second_pointer_image(struct tinyui_clock *clock, struct tinyui_image_source *source)
 {
-    return picoui_clock_set_second_pointer_source(clock, source);
+    return tinyui_clock_set_second_pointer_source(clock, source);
 }
 
 /**
@@ -631,7 +636,7 @@ int picoui_clock_set_second_pointer_image(struct picoui_clock *clock, struct pic
  * @return 0 on success, -1 on failure
  */
 
-int picoui_clock_set_mask_color(struct picoui_clock *clock, unsigned int mask_color)
+int tinyui_clock_set_mask_color(struct tinyui_clock *clock, unsigned int mask_color)
 {
     if (clock == 0 || mask_color > 0xFFFFFFU) {
         return -1;
@@ -656,7 +661,7 @@ int picoui_clock_set_mask_color(struct picoui_clock *clock, unsigned int mask_co
  * @return 0 on success, -1 on failure
  */
 
-int picoui_clock_set_hour_anchor(struct picoui_clock *clock, float x, float y)
+int tinyui_clock_set_hour_anchor(struct tinyui_clock *clock, float x, float y)
 {
     if (clock == 0) {
         return -1;
@@ -676,7 +681,7 @@ int picoui_clock_set_hour_anchor(struct picoui_clock *clock, float x, float y)
  * @return 0 on success, -1 on failure
  */
 
-int picoui_clock_set_minute_anchor(struct picoui_clock *clock, float x, float y)
+int tinyui_clock_set_minute_anchor(struct tinyui_clock *clock, float x, float y)
 {
     if (clock == 0) {
         return -1;
@@ -696,7 +701,7 @@ int picoui_clock_set_minute_anchor(struct picoui_clock *clock, float x, float y)
  * @return 0 on success, -1 on failure
  */
 
-int picoui_clock_set_second_anchor(struct picoui_clock *clock, float x, float y)
+int tinyui_clock_set_second_anchor(struct tinyui_clock *clock, float x, float y)
 {
     if (clock == 0) {
         return -1;

@@ -25,12 +25,12 @@
 #include <stdlib.h>
 
 struct tinyui_background_backend_host {
-    struct picoui_backend_widget widget;
+    struct tinyui_backend_widget widget;
 };
 
-static void tinyui_background_get_root_size(struct picoui_app *app, int16_t *width, int16_t *height)
+static void tinyui_background_get_root_size(struct tinyui_app *app, int16_t *width, int16_t *height)
 {
-    struct picoui_display_config config = {0};
+    struct tinyui_display_config config = {0};
 
     if (width == 0 || height == 0) {
         return;
@@ -42,7 +42,7 @@ static void tinyui_background_get_root_size(struct picoui_app *app, int16_t *wid
         return;
     }
 
-    if (picoui_display_get_config(app, &config) == 0 && config.width > 0 && config.height > 0) {
+    if (tinyui_display_get_config(app, &config) == 0 && config.width > 0 && config.height > 0) {
         *width = (int16_t)config.width;
         *height = (int16_t)config.height;
     }
@@ -56,11 +56,11 @@ static void tinyui_background_get_root_size(struct picoui_app *app, int16_t *wid
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct picoui_background *picoui_background_create(struct picoui_app *app, const char *id)
+struct tinyui_background *tinyui_background_create(struct tinyui_app *app, const char *id)
 {
-    struct picoui_background *background;
+    struct tinyui_background *background;
     struct tinyui_background_backend_host *host;
-    struct picoui_backend_app_state *app_state;
+    struct tinyui_backend_app_state *app_state;
     ldWindow_t *ld_root;
     int16_t root_width;
     int16_t root_height;
@@ -88,7 +88,7 @@ struct picoui_background *picoui_background_create(struct picoui_app *app, const
 
     if (tinyui_widget_init_root(&host->widget,
                                         app,
-                                        PICOUI_BACKEND_WIDGET_BACKGROUND,
+                                        TINYUI_BACKEND_WIDGET_BACKGROUND,
                                         id,
                                         app->theme) != 0) {
         ldWindow_depose(app_state->ld_scene, ld_root);
@@ -109,12 +109,12 @@ struct picoui_background *picoui_background_create(struct picoui_app *app, const
     background->window.widget.backend_widget = &host->widget;
     background->window.widget.visible = 1;
     background->window.widget.enabled = 1;
-    background->window.flex_flow = PICOUI_FLEX_FLOW_ROW;
-    background->window.flex_main_align = PICOUI_ALIGN_START;
-    background->window.flex_cross_align = PICOUI_ALIGN_START;
-    background->window.flex_track_align = PICOUI_ALIGN_START;
-    background->window.grid_col_align = PICOUI_ALIGN_START;
-    background->window.grid_row_align = PICOUI_ALIGN_START;
+    background->window.flex_flow = TINYUI_FLEX_FLOW_ROW;
+    background->window.flex_main_align = TINYUI_ALIGN_START;
+    background->window.flex_cross_align = TINYUI_ALIGN_START;
+    background->window.flex_track_align = TINYUI_ALIGN_START;
+    background->window.grid_col_align = TINYUI_ALIGN_START;
+    background->window.grid_row_align = TINYUI_ALIGN_START;
     if (tinyui_runtime_bridge_bind_host(background->window.widget.backend_widget,
                                         &background->window.widget) != 0) {
         free(background);
@@ -132,10 +132,10 @@ struct picoui_background *picoui_background_create(struct picoui_app *app, const
  * @return 0 on success, -1 on failure
  */
 
-int picoui_background_set_source(struct picoui_background *background,
-                                 struct picoui_image_source *source)
+int tinyui_background_set_source(struct tinyui_background *background,
+                                 struct tinyui_image_source *source)
 {
-    return picoui_window_set_background_source((struct picoui_window *)background, source);
+    return tinyui_window_set_background_source((struct tinyui_window *)background, source);
 }
 
 /**
@@ -146,9 +146,9 @@ int picoui_background_set_source(struct picoui_background *background,
  * @return 0 on success, -1 on failure
  */
 
-int picoui_background_set_color(struct picoui_background *background, unsigned int rgb)
+int tinyui_background_set_color(struct tinyui_background *background, unsigned int rgb)
 {
-    return picoui_window_set_color((struct picoui_window *)background, rgb);
+    return tinyui_window_set_color((struct tinyui_window *)background, rgb);
 }
 
 /**
@@ -159,9 +159,9 @@ int picoui_background_set_color(struct picoui_background *background, unsigned i
  * @return The property value, negative on error
  */
 
-int picoui_background_get_color(struct picoui_background *background, unsigned int *rgb)
+int tinyui_background_get_color(struct tinyui_background *background, unsigned int *rgb)
 {
-    return picoui_window_get_color((struct picoui_window *)background, rgb);
+    return tinyui_window_get_color((struct tinyui_window *)background, rgb);
 }
 
 /**
@@ -173,9 +173,9 @@ int picoui_background_get_color(struct picoui_background *background, unsigned i
  * @return 0 on success, -1 on failure
  */
 
-int picoui_background_set_offset(struct picoui_background *background, int offset_x, int offset_y)
+int tinyui_background_set_offset(struct tinyui_background *background, int offset_x, int offset_y)
 {
-    return picoui_window_set_background_offset((struct picoui_window *)background, offset_x, offset_y);
+    return tinyui_window_set_background_offset((struct tinyui_window *)background, offset_x, offset_y);
 }
 
 /**
@@ -187,11 +187,11 @@ int picoui_background_set_offset(struct picoui_background *background, int offse
  * @return The property value, negative on error
  */
 
-int picoui_background_get_offset(struct picoui_background *background,
+int tinyui_background_get_offset(struct tinyui_background *background,
                                  int *offset_x,
                                  int *offset_y)
 {
-    return picoui_window_get_background_offset((struct picoui_window *)background,
+    return tinyui_window_get_background_offset((struct tinyui_window *)background,
                                                offset_x,
                                                offset_y);
 }

@@ -19,18 +19,19 @@
 #include "animation_basic/animation_basic.h"
 #include "tinyui.h"
 
-extern const unsigned char c_tileQuaterArcGRAY8;
+typedef struct arm_2d_tile_t arm_2d_tile_t;
+extern const arm_2d_tile_t c_tileQuaterArcGRAY8;
 
-static struct picoui_image_source s_animation_source = {
+static struct tinyui_image_source s_animation_source = {
     .img_tile = (void *)&c_tileQuaterArcGRAY8,
     .mask_tile = 0,
 };
 
-static void make_ui(struct picoui_window *win)
+static void make_ui(struct tinyui_window *win)
 {
-    struct picoui_label *title;
-    struct picoui_animation *animation;
-    struct picoui_animation_props props = {
+    struct tinyui_label *title;
+    struct tinyui_animation *animation;
+    struct tinyui_animation_props props = {
         .id = "animation",
         .width = 62,
         .height = 31,
@@ -38,19 +39,19 @@ static void make_ui(struct picoui_window *win)
         .source = &s_animation_source,
     };
 
-    title = picoui_label_create(win, "title");
-    animation = picoui_animation_create_with_props((struct picoui_widget *)win, &props);
+    title = tinyui_label_create(win, "title");
+    animation = tinyui_animation_create_with_props((struct tinyui_widget *)win, &props);
 
-    picoui_label_set_text(title, "Animation");
-    picoui_widget_set_pos((struct picoui_widget *)title, 32, 32);
-    picoui_widget_set_pos((struct picoui_widget *)animation, 160, 120);
-    (void)picoui_animation_show_frame(animation, 0);
+    tinyui_label_set_text(title, "Animation");
+    tinyui_widget_set_pos((struct tinyui_widget *)title, 32, 32);
+    tinyui_widget_set_pos((struct tinyui_widget *)animation, 160, 120);
+    (void)tinyui_animation_show_frame(animation, 0);
 }
 
 void tinyui_demo_animation_basic(void)
 {
     tinyui_obj_t *screen = tinyui_screen_create();
-    struct picoui_window *win = (struct picoui_window *)screen;
+    struct tinyui_window *win = (struct tinyui_window *)screen;
 
     if (win == 0) {
         return;

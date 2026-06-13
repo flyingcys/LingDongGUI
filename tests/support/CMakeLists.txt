@@ -3,8 +3,8 @@ target_include_directories(ldgui_test_support PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}
 target_link_libraries(ldgui_test_support PUBLIC longdonggui_host)
 ld_apply_common_target_config(ldgui_test_support)
 
-add_library(tinyui_test_support STATIC picoui_test_support.c)
+add_library(tinyui_test_support STATIC tinyui_test_support.c)
 target_include_directories(tinyui_test_support PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(tinyui_test_support PUBLIC tinyui_core tinyui_backend_ldgui)
 ld_apply_common_target_config(tinyui_test_support)
-add_library(picoui_test_support ALIAS tinyui_test_support)
+add_library(tinyui_test_support ALIAS tinyui_test_support)

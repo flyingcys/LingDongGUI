@@ -60,7 +60,7 @@ def _find_executable(build_dir: Path, target: str) -> Path:
         build_dir / target / f"{target}{suffix}",
         build_dir / f"{target}{suffix}",
         build_dir / "examples" / f"{target}{suffix}",
-        ROOT / "build" / "picoui-runtime" / "examples" / "sdl" / f"{target}{suffix}",
+        ROOT / "build" / "tinyui-runtime" / "examples" / "sdl" / f"{target}{suffix}",
         ROOT / "build" / "examples" / "sdl" / f"{target}{suffix}",
     ]
     executable = next((path for path in candidates if path.is_file()), None)
@@ -73,7 +73,7 @@ def _find_executable(build_dir: Path, target: str) -> Path:
 
 
 def _skip(message: str, metadata: dict[str, str]) -> int:
-    print("PICOUI_MANUAL_WINDOW_ARTIFACT=SKIP")
+    print("TINYUI_MANUAL_WINDOW_ARTIFACT=SKIP")
     print("ARTIFACT_ENTRY_EXISTS=0")
     print("MANUAL_REVIEW_REQUIRED=1")
     print("MANUAL_REVIEWED_PASSED=0")
@@ -84,7 +84,7 @@ def _skip(message: str, metadata: dict[str, str]) -> int:
 
 
 def _print_metadata(status: str, metadata: dict[str, str]) -> None:
-    print(f"PICOUI_MANUAL_WINDOW_ARTIFACT={status}")
+    print(f"TINYUI_MANUAL_WINDOW_ARTIFACT={status}")
     print(f"ARTIFACT_ENTRY_EXISTS={1 if status == 'ARTIFACT_READY' else 0}")
     print("MANUAL_REVIEW_REQUIRED=1")
     print("MANUAL_REVIEWED_PASSED=0")
@@ -145,7 +145,7 @@ def main() -> int:
         try:
             executable = _find_executable(build_dir, target)
         except FileNotFoundError as exc:
-            print("PICOUI_MANUAL_WINDOW_ARTIFACT=FAIL")
+            print("TINYUI_MANUAL_WINDOW_ARTIFACT=FAIL")
             for key, value in metadata.items():
                 print(f"{key}={value}")
             print(f"ERROR={exc}")
@@ -157,8 +157,8 @@ def main() -> int:
 
         env = os.environ.copy()
         env["SDL_VIDEODRIVER"] = driver
-        env["PICOUI_DEMO_AUTO_QUIT_MS"] = "1200"
-        env["PICOUI_CAPTURE_FILE"] = str(artifact_path)
+        env["TINYUI_DEMO_AUTO_QUIT_MS"] = "1200"
+        env["TINYUI_CAPTURE_FILE"] = str(artifact_path)
         command = [str(executable)]
         metadata["RUN_COMMAND"] = " ".join(command)
 
@@ -186,9 +186,9 @@ def main() -> int:
             print(f"ERROR=demo target '{target}' 退出码为 {completed.returncode}。")
             return 2
 
-        if "PICOUI_RUNTIME_READY" not in completed.stdout:
+        if "TINYUI_RUNTIME_READY" not in completed.stdout:
             _print_metadata("FAIL", metadata)
-            print("ERROR=demo 未输出 PICOUI_RUNTIME_READY，不能作为可追溯 artifact 记录。")
+            print("ERROR=demo 未输出 TINYUI_RUNTIME_READY，不能作为可追溯 artifact 记录。")
             return 2
 
         if not artifact_path.is_file() or artifact_path.stat().st_size <= 32:

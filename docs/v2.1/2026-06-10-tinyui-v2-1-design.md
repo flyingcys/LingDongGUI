@@ -1,6 +1,6 @@
 # TinyUI v2.1 设计文档
 
-> 面向后续 agent 执行：本设计文档锁定 `TinyUI v2.1` 的目标、命名、目录、架构边界与阶段推进方式。后续实现必须先基于本文拆详细 plan，不得回退到 `PicoUI` 兼容过渡态，也不得把 `LingDongGUI` 改造成另一套重命名 engine。
+> 面向后续 agent 执行：本设计文档锁定 `TinyUI v2.1` 的目标、命名、目录、架构边界与阶段推进方式。后续实现必须先基于本文拆详细 plan，不得回退到 `TINYUI` 兼容过渡态，也不得把 `LingDongGUI` 改造成另一套重命名 engine。
 
 ## 1. 背景与设计结论
 
@@ -13,24 +13,24 @@
 
 但 `v2.0` 的完成态刻意停在过渡边界：
 
-- 仓库里仍然存在大量 `picoui/*`
-- `picoui_*` 仍然是主要 public 名称
-- 顶层产品目录仍然是 `picoui/`
+- 仓库里仍然存在大量 `tinyui/*`
+- `tinyui_*` 仍然是主要 public 名称
+- 顶层产品目录仍然是 `tinyui/`
 - `backend_*.c` 历史文件仍在
-- `demo/tests/contracts/CMake` 中仍存在大量 `picoui` 痕迹
+- `demo/tests/contracts/CMake` 中仍存在大量 `tinyui` 痕迹
 
 因此，`TinyUI v2.1` 的目标不是继续做另一轮局部 alias，而是：
 
-**在不修改 `LingDongGUI` 目录与 public API 的前提下，完成产品层 canonical truth 的 `TinyUI` 收口：把当前 `picoui/` 原地演化为真正唯一的 `tinyui/` 产品目录，并完成目录、命名、文件、demo、tests、contracts、CMake 的主线收口。**
+**在不修改 `LingDongGUI` 目录与 public API 的前提下，完成产品层 canonical truth 的 `TinyUI` 收口：把当前 `tinyui/` 原地演化为真正唯一的 `tinyui/` 产品目录，并完成目录、命名、文件、demo、tests、contracts、CMake 的主线收口。**
 
 ## 2. 目标
 
 `TinyUI v2.1` 的目标固定为：
 
 - 顶层产品目录只保留 `tinyui/`
-- `picoui/` 目录整体退场
+- `tinyui/` 目录整体退场
 - canonical public header / contract / test / CMake 入口统一到 `tinyui` 口径
-- public C API 符号是否从 `picoui_*` 全量迁到 `tinyui_*`，不作为 `v2.1` 当前完成前提
+- public C API 符号是否从 `tinyui_*` 全量迁到 `tinyui_*`，不作为 `v2.1` 当前完成前提
 - `backend` 独立目录彻底消失
 - widget-specific backend 文件与 API 并回 `widgets/*`
 - `demo/tests/contracts/CMake/文档标题` 的产品层公开痕迹统一收口到 `TinyUI`
@@ -47,8 +47,8 @@
 - 不修改 `LingDongGUI` 既有目录结构
 - 不重命名 `LingDongGUI` 的 `ld*` public API
 - 不把 `LingDongGUI` 品牌化成 `TinyUI`
-- 不把 `picoui_* -> tinyui_*` 的全量 public C API rename 当作当前已完成前提
-- 不继续维持 `tinyui/` 与 `picoui/` 双目录并行
+- 不把 `tinyui_* -> tinyui_*` 的全量 public C API rename 当作当前已完成前提
+- 不继续维持 `tinyui/` 与 `tinyui/` 双目录并行
 - 不通过 alias/bridge 长期容忍产品层双命名
 - 不把共享 runtime/theme/layout/display/indev 盲目塞进 `widgets/*`
 
@@ -64,10 +64,10 @@
 
 以下命名在当前 canonical truth surface 中不再允许继续作为主线公开痕迹存在：
 
-- `PicoUI`
-- `picoui/`
-- `check_picoui_*`
-- `test_picoui_*`
+- `TINYUI`
+- `tinyui/`
+- `check_tinyui_*`
+- `test_tinyui_*`
 
 这里的“公开痕迹”当前主要指：
 
@@ -79,7 +79,7 @@
 - CMake target / CTest name
 - `docs/v2.1` 的正式对外文档标题
 
-当前明确不纳入这条清零要求的，是仍处过渡态的 public C API `picoui_*` 符号本体；这部分以 `docs/v2.1/v2.1-release-matrix.md` 的 current truth 为准。
+当前明确不纳入这条清零要求的，是仍处过渡态的 public C API `tinyui_*` 符号本体；这部分以 `docs/v2.1/v2.1-release-matrix.md` 的 current truth 为准。
 
 ## 5. `LingDongGUI` 边界
 
@@ -104,7 +104,7 @@
 
 当前产品层还残留三类问题：
 
-- 目录名仍然停在 `picoui/`
+- 目录名仍然停在 `tinyui/`
 - widget 能力仍有大量 `backend_*` 风格边界
 - 公开命名、测试命名、合同命名没有真正收口
 
@@ -156,7 +156,7 @@
 
 - `tinyui/`
 
-当前 `picoui/` 的 `include/src/demo` 等内容原地迁移到这个目录中。
+当前 `tinyui/` 的 `include/src/demo` 等内容原地迁移到这个目录中。
 
 现有试点 `tinyui/include/*` 不继续作为“并行试点树”存在，而是吸收到统一产品目录里。
 
@@ -192,10 +192,10 @@
 
 以下目录在 `v2.1` 完成时必须消失：
 
-- `picoui/`
+- `tinyui/`
 - `tinyui/` 试点并行树（被统一吸收后不再双轨）
 - `tinyui/src/backend`
-- `picoui/src/backend`
+- `tinyui/src/backend`
 
 如果底层对接仍需要少量共享 helper，这些 helper 必须迁入 `core` 或对应 subsystem，而不是继续保留 `backend/` 目录。
 
@@ -209,15 +209,15 @@
 
 终态不允许：
 
-- `picoui_*`
-- `tinyui_*` -> `picoui_*` 长期 alias
-- `picoui/include/*` 继续作为公开入口
+- `tinyui_*`
+- `tinyui_*` -> `tinyui_*` 长期 alias
+- `tinyui/include/*` 继续作为公开入口
 
 ### 8.2 文件名
 
 终态产品层文件名不应再出现：
 
-- `picoui`
+- `tinyui`
 - `backend_`
 
 允许保留的底层 `LingDongGUI` 文件名仍然是：
@@ -230,10 +230,10 @@
 
 以下内容都要同步收口：
 
-- `tests/picoui/*` -> 对应 `tests/tinyui/*` 或统一新路径
-- `check_picoui_*` -> `check_tinyui_*`
-- `test_picoui_*` -> `test_tinyui_*`
-- `picoui_*` baseline/contract/json artifact 名称 -> `tinyui_*`
+- `tests/tinyui/*` -> 对应 `tests/tinyui/*` 或统一新路径
+- `check_tinyui_*` -> `check_tinyui_*`
+- `test_tinyui_*` -> `test_tinyui_*`
+- `tinyui_*` baseline/contract/json artifact 名称 -> `tinyui_*`
 
 终态不允许靠“名字旧但内容新”来蒙混收口。
 
@@ -263,14 +263,14 @@
 ### 10.1 目录完成标准
 
 - 顶层产品目录只剩 `tinyui/`
-- 不再存在 `picoui/`
+- 不再存在 `tinyui/`
 - 不再存在独立 `backend/` 产品层目录
 
 ### 10.2 命名完成标准
 
 - canonical public header 路径只剩 `tinyui/include/*`
-- demo/test/contract/CMake/文档标题的 current-truth 产品层公开痕迹不再出现 `picoui`
-- release matrix 已明确允许的 `picoui_*` 过渡态 public C API、compatibility subtree 与历史资产入口，不计入未完成 residue
+- demo/test/contract/CMake/文档标题的 current-truth 产品层公开痕迹不再出现 `tinyui`
+- release matrix 已明确允许的 `tinyui_*` 过渡态 public C API、compatibility subtree 与历史资产入口，不计入未完成 residue
 
 ### 10.3 架构完成标准
 
@@ -299,7 +299,7 @@
 
 ### `V1` 顶层目录与 public header 收口
 
-- `picoui/` 原地演化成唯一 `tinyui/`
+- `tinyui/` 原地演化成唯一 `tinyui/`
 - public include 树统一
 - 去掉并行 `tinyui` 试点树
 
@@ -316,7 +316,7 @@
 ### `V4` demo/test/contract/CMake 全量迁移
 
 - demo/test/contract/json/python checker/CMake/CTest 全面改到 `tinyui`
-- 清零 current-truth 产品层命名残留；不要求机械删除 release matrix 已允许的 `picoui_*` 过渡态 public C API 与历史资产入口
+- 清零 current-truth 产品层命名残留；不要求机械删除 release matrix 已允许的 `tinyui_*` 过渡态 public C API 与历史资产入口
 
 ### `V5` closeout 与 release 收口
 
@@ -347,11 +347,11 @@
 `TinyUI v2.1` 的最佳路线已经确定：
 
 - 不动 `LingDongGUI` 目录
-- 不保留 `PicoUI` 兼容窗口
+- 不保留 `TINYUI` 兼容窗口
 - 不继续维持双目录并行
-- 以当前 `picoui/` 为唯一迁移母体
+- 以当前 `tinyui/` 为唯一迁移母体
 - 最终演化为唯一的 `tinyui/` 顶层产品目录
 - 删除独立 `backend/`，但保留薄共享层
-- 把产品层的公开痕迹彻底从 `PicoUI` 收口到 `TinyUI`
+- 把产品层的公开痕迹彻底从 `TINYUI` 收口到 `TinyUI`
 
 这条路线是当前用户目标下最直接、最一致、也最不含糊的方案。

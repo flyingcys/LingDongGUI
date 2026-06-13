@@ -1,13 +1,13 @@
 #ifndef TINYUI_TICK_H
 #define TINYUI_TICK_H
 
-struct picoui_app;
+struct tinyui_app;
 
-typedef unsigned int (*picoui_tick_get_cb_t)(void *user_data);
+typedef unsigned int (*tinyui_tick_get_cb_t)(void *user_data);
 
-int picoui_tick_set_source(struct picoui_app *app,
-                           picoui_tick_get_cb_t callback,
+int tinyui_tick_set_source(struct tinyui_app *app,
+                           tinyui_tick_get_cb_t callback,
                            void *user_data);
-unsigned int picoui_tick_get(struct picoui_app *app);
+unsigned int tinyui_tick_get(struct tinyui_app *app);
 
 #endif

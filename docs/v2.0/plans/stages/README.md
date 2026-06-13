@@ -69,7 +69,7 @@
 当前摘要：
 
 - `runtime.h/runtime.c` 与 app-free runtime 主路径事实已落地
-- `basic_widgets` 作为当前 runtime proof 载体仍保留在 `picoui_*` 用户路径
+- `basic_widgets` 作为当前 runtime proof 载体仍保留在 `tinyui_*` 用户路径
 - 具体 runtime / visible gate 输出，不在本文件重复维护
 
 ### P4 TinyUI public API 过渡
@@ -85,7 +85,7 @@
 当前摘要：
 
 - `tinyui/include/*` 已开始提供试点 `tinyui_*` public surface
-- `picoui/include/picoui/*` 中的兼容桥仍存在；本阶段仍是过渡态，不写成全量切换完成
+- `tinyui/include/tinyui/*` 中的兼容桥仍存在；本阶段仍是过渡态，不写成全量切换完成
 - 具体 API inventory 与 gate 输出，不在本文件重复维护
 
 ### P5 性能与内存守门

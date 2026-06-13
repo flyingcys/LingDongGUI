@@ -1,22 +1,22 @@
-# PicoUI Demo Parity Baseline Design
+# TINYUI Demo Parity Baseline Design
 
 **日期**：2026-06-04  
-**范围**：`picoui/demo` 第一批 parity baseline：`legacy-widget`、`layout`、`grid`
+**范围**：`tinyui/demo` 第一批 parity baseline：`legacy-widget`、`layout`、`grid`
 
 ## 1. 背景
 
-当前 `picoui/demo` 以控件级 basic demo 为主，页面结构、控件组合、文案和布局关系与 `LingDongGUI` 现有 SDL demo 差异很大。  
+当前 `tinyui/demo` 以控件级 basic demo 为主，页面结构、控件组合、文案和布局关系与 `LingDongGUI` 现有 SDL demo 差异很大。  
 这会混淆两类问题：
 
 - 是 `demo` 自己长得不一样；
-- 还是 `PicoUI -> LingDongGUI` 的真实能力、布局、映射没有对齐。
+- 还是 `TINYUI -> LingDongGUI` 的真实能力、布局、映射没有对齐。
 
-本轮目标不是“再设计一套更好看的 PicoUI demo”，而是建立一套 `parity baseline`：  
-让 `PicoUI` demo 在页面结构、控件集合、主要文案、主要位置关系上尽量贴近老 demo。这样后续做双开截图对比时，差异更容易直接指向 `PicoUI` 实现缺口。
+本轮目标不是“再设计一套更好看的 TINYUI demo”，而是建立一套 `parity baseline`：  
+让 `TINYUI` demo 在页面结构、控件集合、主要文案、主要位置关系上尽量贴近老 demo。这样后续做双开截图对比时，差异更容易直接指向 `TINYUI` 实现缺口。
 
 ## 2. 真相源
 
-第一批 demo 的真相源固定为老 SDL demo 源码，不以当前 `picoui/demo/*` 为准：
+第一批 demo 的真相源固定为老 SDL demo 源码，不以当前 `tinyui/demo/*` 为准：
 
 - `legacy-widget`：`examples/common/demo/widget/uiWidgetLegacy.c`
 - `layout`：`examples/common/demo/layout/uiLayout.c`
@@ -28,11 +28,11 @@
 
 ## 3. 目标
 
-新增 3 个独立 PicoUI demo：
+新增 3 个独立 TINYUI demo：
 
-- `picoui/demo/legacy_widget_parity`
-- `picoui/demo/layout_parity`
-- `picoui/demo/grid_parity`
+- `tinyui/demo/legacy_widget_parity`
+- `tinyui/demo/layout_parity`
+- `tinyui/demo/grid_parity`
 
 每个 demo 都作为独立 SDL target 构建，便于与老 demo 一一对开对比。
 
@@ -54,8 +54,8 @@
 
 ## 4. 非目标
 
-- 不做“更现代/更美观”的 PicoUI demo 改版
-- 不把老 demo 内部 `ld*` API 直接暴露进 `picoui/demo`
+- 不做“更现代/更美观”的 TINYUI demo 改版
+- 不把老 demo 内部 `ld*` API 直接暴露进 `tinyui/demo`
 - 不通过 demo 侧硬编码补丁掩盖 backend/layout/public API 缺口
 - 不把 `startup`、`printer`、`widget`、`widget-swipe` 一起塞进第一批
 
@@ -63,24 +63,24 @@
 
 ### 5.1 Parity baseline 优先
 
-demo 的首要职责不是展示“PicoUI 自己想怎么用”，而是给 `LingDongGUI` 老 demo 提供可比对的等价页面。
+demo 的首要职责不是展示“TINYUI 自己想怎么用”，而是给 `LingDongGUI` 老 demo 提供可比对的等价页面。
 
 ### 5.2 老 demo 是黄金样本
 
-若老 demo 中存在某个控件、某段文案、某个主区域布局关系，PicoUI parity demo 默认也要表达出来。  
+若老 demo 中存在某个控件、某段文案、某个主区域布局关系，TINYUI parity demo 默认也要表达出来。  
 禁止为了方便实现擅自删控件、换控件、改文案、改页面结构。
 
 ### 5.3 缺能力就暴露真缺口
 
-若 `PicoUI` public API、layout、backend mapping 不能表达老 demo 所需能力，应：
+若 `TINYUI` public API、layout、backend mapping 不能表达老 demo 所需能力，应：
 
 - 先记录为真实 gap；
-- 必要时补 `PicoUI` public API / backend / runtime；
+- 必要时补 `TINYUI` public API / backend / runtime；
 - 不允许在 demo 侧通过 fake 画法、固定坐标补丁、伪控件规避。
 
 ### 5.4 demo boundary 维持纯净
 
-`picoui/demo/*` 只能使用 `picoui_*` public API。  
+`tinyui/demo/*` 只能使用 `tinyui_*` public API。  
 禁止引入：
 
 - `ld*`
@@ -116,7 +116,7 @@ demo 的首要职责不是展示“PicoUI 自己想怎么用”，而是给 `Lin
 
 ### 6.2 `layout_parity`
 
-用途：验证 legacy/flex/column 这些布局关系是否能用 PicoUI 真布局表达。  
+用途：验证 legacy/flex/column 这些布局关系是否能用 TINYUI 真布局表达。  
 真相源：`uiLayout.c` 中 layout 页。
 
 首轮至少覆盖：
@@ -154,13 +154,13 @@ demo 的首要职责不是展示“PicoUI 自己想怎么用”，而是给 `Lin
 
 新增目录：
 
-- `picoui/demo/legacy_widget_parity/main.c`
-- `picoui/demo/layout_parity/main.c`
-- `picoui/demo/grid_parity/main.c`
+- `tinyui/demo/legacy_widget_parity/main.c`
+- `tinyui/demo/layout_parity/main.c`
+- `tinyui/demo/grid_parity/main.c`
 
 允许新增少量共享 helper，例如：
 
-- `picoui/demo/common/*`
+- `tinyui/demo/common/*`
 
 但 helper 只负责：
 
@@ -172,9 +172,9 @@ demo 的首要职责不是展示“PicoUI 自己想怎么用”，而是给 `Lin
 
 SDL 构建入口需新增 3 个 target，命名遵循现有规则：
 
-- `picoui_legacy_widget_parity_demo`
-- `picoui_layout_parity_demo`
-- `picoui_grid_parity_demo`
+- `tinyui_legacy_widget_parity_demo`
+- `tinyui_layout_parity_demo`
+- `tinyui_grid_parity_demo`
 
 ## 8. 验证口径
 
@@ -189,7 +189,7 @@ SDL 构建入口需新增 3 个 target，命名遵循现有规则：
 ### 8.2 本轮必须通过
 
 - 目标 target 能构建成功
-- `check_picoui_demo_boundary.py` 对新 demo 仍通过
+- `check_tinyui_demo_boundary.py` 对新 demo 仍通过
 - 至少有一条针对新 target 注册面的源码级或 contract 断言
 
 ### 8.3 本轮不强行宣称
@@ -203,7 +203,7 @@ SDL 构建入口需新增 3 个 target，命名遵循现有规则：
 本轮更适合输出的结论是：
 
 - 已建立可截图对照的 parity baseline demo；
-- 后续差异截图更能定位到 PicoUI 实现问题，而不是 demo 设计差异。
+- 后续差异截图更能定位到 TINYUI 实现问题，而不是 demo 设计差异。
 
 ## 9. 第二批留待后续
 

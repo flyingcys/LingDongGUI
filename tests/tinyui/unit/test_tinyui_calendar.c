@@ -77,40 +77,40 @@ static void assert_self_binary_lacks_symbol(const char *symbol)
 static void test_calendar_internal_widget_local_seam_uses_tinyui_names(void)
 {
     static const char *old_source_symbols[] = {
-        "g_" "picoui_calendar_day_name_0",
-        "g_" "picoui_calendar_day_name_1",
-        "g_" "picoui_calendar_day_name_2",
-        "g_" "picoui_calendar_day_name_3",
-        "g_" "picoui_calendar_day_name_4",
-        "g_" "picoui_calendar_day_name_5",
-        "g_" "picoui_calendar_day_name_6",
-        "g_" "picoui_calendar_day_names",
-        "picoui_" "backend_calendar_rgb_to_ld",
-        "picoui_" "backend_calendar_get_ld",
-        "picoui_" "backend_calendar_sync_host_cache",
-        "picoui_" "calendar_create_backend_local",
-        "picoui_" "backend_calendar_set_day_names",
-        "picoui_" "backend_calendar_set_date",
-        "picoui_" "backend_calendar_get_date",
-        "picoui_" "backend_calendar_set_header_visible",
-        "picoui_" "backend_calendar_get_header_visible",
-        "picoui_" "backend_calendar_set_header_format",
-        "picoui_" "backend_calendar_set_bg_color",
-        "picoui_" "backend_calendar_set_item_color",
-        "picoui_" "backend_calendar_set_text_color",
-        "picoui_" "backend_calendar_set_use_system_date",
-        "picoui_" "backend_calendar_get_use_system_date",
-        "picoui_" "backend_calendar_get_header_format",
-        "picoui_" "backend_calendar_get_grid_value",
-        "picoui_" "backend_calendar_is_current_month_cell",
-        "picoui_" "calendar_props_are_valid",
-        "picoui_" "calendar_sync_grid",
-        "picoui_" "calendar_dispose_partial",
+        "g_" "tinyui_calendar_day_name_0",
+        "g_" "tinyui_calendar_day_name_1",
+        "g_" "tinyui_calendar_day_name_2",
+        "g_" "tinyui_calendar_day_name_3",
+        "g_" "tinyui_calendar_day_name_4",
+        "g_" "tinyui_calendar_day_name_5",
+        "g_" "tinyui_calendar_day_name_6",
+        "g_" "tinyui_calendar_day_names",
+        "tinyui_" "backend_calendar_rgb_to_ld",
+        "tinyui_" "backend_calendar_get_ld",
+        "tinyui_" "backend_calendar_sync_host_cache",
+        "tinyui_" "calendar_create_backend_local",
+        "tinyui_" "backend_calendar_set_day_names",
+        "tinyui_" "backend_calendar_set_date",
+        "tinyui_" "backend_calendar_get_date",
+        "tinyui_" "backend_calendar_set_header_visible",
+        "tinyui_" "backend_calendar_get_header_visible",
+        "tinyui_" "backend_calendar_set_header_format",
+        "tinyui_" "backend_calendar_set_bg_color",
+        "tinyui_" "backend_calendar_set_item_color",
+        "tinyui_" "backend_calendar_set_text_color",
+        "tinyui_" "backend_calendar_set_use_system_date",
+        "tinyui_" "backend_calendar_get_use_system_date",
+        "tinyui_" "backend_calendar_get_header_format",
+        "tinyui_" "backend_calendar_get_grid_value",
+        "tinyui_" "backend_calendar_is_current_month_cell",
+        "tinyui_" "calendar_props_are_valid",
+        "tinyui_" "calendar_sync_grid",
+        "tinyui_" "calendar_dispose_partial",
     };
     size_t i;
 
-    assert_repo_file_lacks("tinyui/src/widgets/calendar.c", "g_" "picoui_calendar_day_names");
-    assert_repo_file_lacks("tinyui/src/widgets/calendar.c", "picoui_" "calendar_create_backend_local");
+    assert_repo_file_lacks("tinyui/src/widgets/calendar.c", "g_" "tinyui_calendar_day_names");
+    assert_repo_file_lacks("tinyui/src/widgets/calendar.c", "tinyui_" "calendar_create_backend_local");
     for (i = 0; i < sizeof(old_source_symbols) / sizeof(old_source_symbols[0]); ++i) {
         assert_repo_file_lacks("tinyui/src/widgets/calendar.c", old_source_symbols[i]);
         assert_self_binary_lacks_symbol(old_source_symbols[i]);
@@ -119,10 +119,10 @@ static void test_calendar_internal_widget_local_seam_uses_tinyui_names(void)
 
 static void test_calendar_date_readback_matches_backend_truth(void)
 {
-    struct picoui_app *app;
-    struct picoui_window *win;
-    struct picoui_calendar *calendar;
-    struct picoui_backend_widget *backend;
+    struct tinyui_app *app;
+    struct tinyui_window *win;
+    struct tinyui_calendar *calendar;
+    struct tinyui_backend_widget *backend;
     ldCalendar_t *ld_calendar;
     int year = 0;
     int month = 0;
@@ -131,20 +131,20 @@ static void test_calendar_date_readback_matches_backend_truth(void)
     uint8_t backend_month = 0;
     uint8_t backend_day = 0;
 
-    app = picoui_app_create();
+    app = tinyui_app_create();
     assert(app != 0);
-    win = picoui_window_create(app, "root");
+    win = tinyui_window_create(app, "root");
     assert(win != 0);
 
-    calendar = picoui_calendar_create(win, "calendar_readback");
+    calendar = tinyui_calendar_create(win, "calendar_readback");
     assert(calendar != 0);
-    assert(picoui_calendar_set_date(calendar, 2026, 6, 15) == 0);
-    assert(picoui_calendar_get_date(calendar, &year, &month, &day) == 0);
+    assert(tinyui_calendar_set_date(calendar, 2026, 6, 15) == 0);
+    assert(tinyui_calendar_get_date(calendar, &year, &month, &day) == 0);
     assert(year == 2026);
     assert(month == 6);
     assert(day == 15);
 
-    backend = (struct picoui_backend_widget *)calendar->widget.backend_widget;
+    backend = (struct tinyui_backend_widget *)calendar->widget.backend_widget;
     assert(backend != 0);
     ld_calendar = (ldCalendar_t *)backend->ld_widget;
     assert(ld_calendar != 0);
@@ -153,25 +153,25 @@ static void test_calendar_date_readback_matches_backend_truth(void)
     assert(backend_month == 6);
     assert(backend_day == 15);
 
-    picoui_app_destroy(app);
+    tinyui_app_destroy(app);
 }
 
 static void test_calendar_header_and_grid_visible_output_match_date_contract(void)
 {
-    struct picoui_app *app;
-    struct picoui_window *win;
-    struct picoui_calendar *calendar;
-    struct picoui_backend_widget *backend;
+    struct tinyui_app *app;
+    struct tinyui_window *win;
+    struct tinyui_calendar *calendar;
+    struct tinyui_backend_widget *backend;
     ldCalendar_t *ld_calendar;
 
-    app = picoui_app_create();
+    app = tinyui_app_create();
     assert(app != 0);
-    win = picoui_window_create(app, "root");
+    win = tinyui_window_create(app, "root");
     assert(win != 0);
 
-    calendar = picoui_calendar_create_with_props(
+    calendar = tinyui_calendar_create_with_props(
         win,
-        &(struct picoui_calendar_props){
+        &(struct tinyui_calendar_props){
             .id = "calendar_contract",
             .year = 2026,
             .month = 6,
@@ -183,15 +183,15 @@ static void test_calendar_header_and_grid_visible_output_match_date_contract(voi
         });
     assert(calendar != 0);
 
-    assert(picoui_calendar_get_header_visible(calendar) == 1);
-    assert(picoui_calendar_get_header_format(calendar) != 0);
-    assert(strcmp(picoui_calendar_get_header_format(calendar), "yyyy/mm/dd") == 0);
-    assert(picoui_calendar_get_grid_value(calendar, 2, 1) == 15);
-    assert(picoui_calendar_is_current_month_cell(calendar, 2, 1) == 1);
-    assert(picoui_calendar_get_grid_value(calendar, 0, 0) == 31);
-    assert(picoui_calendar_is_current_month_cell(calendar, 0, 0) == 0);
+    assert(tinyui_calendar_get_header_visible(calendar) == 1);
+    assert(tinyui_calendar_get_header_format(calendar) != 0);
+    assert(strcmp(tinyui_calendar_get_header_format(calendar), "yyyy/mm/dd") == 0);
+    assert(tinyui_calendar_get_grid_value(calendar, 2, 1) == 15);
+    assert(tinyui_calendar_is_current_month_cell(calendar, 2, 1) == 1);
+    assert(tinyui_calendar_get_grid_value(calendar, 0, 0) == 31);
+    assert(tinyui_calendar_is_current_month_cell(calendar, 0, 0) == 0);
 
-    backend = (struct picoui_backend_widget *)calendar->widget.backend_widget;
+    backend = (struct tinyui_backend_widget *)calendar->widget.backend_widget;
     assert(backend != 0);
     ld_calendar = (ldCalendar_t *)backend->ld_widget;
     assert(ld_calendar != 0);
@@ -200,24 +200,24 @@ static void test_calendar_header_and_grid_visible_output_match_date_contract(voi
     assert(ld_calendar->calBuf[2 * 7 + 1] == (uint8_t)(15 | 0x80));
     assert(ld_calendar->calBuf[0] == 31);
 
-    picoui_app_destroy(app);
+    tinyui_app_destroy(app);
 }
 
 static void test_calendar_final_release_contract_covers_full_feature_boundary(void)
 {
-    struct picoui_app *app;
-    struct picoui_window *win;
-    struct picoui_calendar *calendar;
-    struct picoui_backend_widget *backend;
+    struct tinyui_app *app;
+    struct tinyui_window *win;
+    struct tinyui_calendar *calendar;
+    struct tinyui_backend_widget *backend;
     ldCalendar_t *ld_calendar;
 
-    app = picoui_app_create();
+    app = tinyui_app_create();
     assert(app != 0);
-    win = picoui_window_create(app, "calendar_release_root");
+    win = tinyui_window_create(app, "calendar_release_root");
     assert(win != 0);
-    calendar = picoui_calendar_create_with_props(
+    calendar = tinyui_calendar_create_with_props(
         win,
-        &(struct picoui_calendar_props){
+        &(struct tinyui_calendar_props){
             .id = "calendar_release_ready",
             .year = 2024,
             .month = 2,
@@ -230,53 +230,53 @@ static void test_calendar_final_release_contract_covers_full_feature_boundary(vo
         });
     assert(calendar != 0);
 
-    backend = (struct picoui_backend_widget *)calendar->widget.backend_widget;
+    backend = (struct tinyui_backend_widget *)calendar->widget.backend_widget;
     assert(backend != 0);
-    assert(backend->kind == PICOUI_BACKEND_WIDGET_CALENDAR);
+    assert(backend->kind == TINYUI_BACKEND_WIDGET_CALENDAR);
     assert(backend->style_class == (const char *)"calendar-card");
     ld_calendar = (ldCalendar_t *)backend->ld_widget;
     assert(ld_calendar != 0);
 
-    assert(picoui_calendar_get_header_visible(calendar) == 0);
-    assert(strcmp(picoui_calendar_get_header_format(calendar), "yyyy.mm.dd") == 0);
-    assert(picoui_calendar_get_grid_value(calendar, 4, 4) == 29);
-    assert(picoui_calendar_is_current_month_cell(calendar, 4, 4) == 1);
-    assert(picoui_calendar_get_grid_value(calendar, 0, 0) >= 0);
-    assert(picoui_calendar_is_current_month_cell(calendar, 0, 0) == 0);
-    assert(picoui_calendar_set_header_visible(calendar, 1) == 0);
-    assert(picoui_calendar_get_header_visible(calendar) == 1);
+    assert(tinyui_calendar_get_header_visible(calendar) == 0);
+    assert(strcmp(tinyui_calendar_get_header_format(calendar), "yyyy.mm.dd") == 0);
+    assert(tinyui_calendar_get_grid_value(calendar, 4, 4) == 29);
+    assert(tinyui_calendar_is_current_month_cell(calendar, 4, 4) == 1);
+    assert(tinyui_calendar_get_grid_value(calendar, 0, 0) >= 0);
+    assert(tinyui_calendar_is_current_month_cell(calendar, 0, 0) == 0);
+    assert(tinyui_calendar_set_header_visible(calendar, 1) == 0);
+    assert(tinyui_calendar_get_header_visible(calendar) == 1);
     assert(ld_calendar->isHeader == true);
-    assert(picoui_calendar_set_date(calendar, 2024, 3, 1) == 0);
-    assert(picoui_calendar_get_grid_value(calendar, 0, 5) == 1);
-    assert(picoui_calendar_is_current_month_cell(calendar, 0, 5) == 1);
+    assert(tinyui_calendar_set_date(calendar, 2024, 3, 1) == 0);
+    assert(tinyui_calendar_get_grid_value(calendar, 0, 5) == 1);
+    assert(tinyui_calendar_is_current_month_cell(calendar, 0, 5) == 1);
 
-    picoui_app_destroy(app);
+    tinyui_app_destroy(app);
 }
 
 static void test_calendar_native_day_names_and_colors_round_trip(void)
 {
-    struct picoui_app *app;
-    struct picoui_window *win;
-    struct picoui_calendar *calendar;
-    struct picoui_backend_widget *backend;
+    struct tinyui_app *app;
+    struct tinyui_window *win;
+    struct tinyui_calendar *calendar;
+    struct tinyui_backend_widget *backend;
     ldCalendar_t *ld_calendar;
     static const char *day_names[7] = {
         "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat",
     };
 
-    app = picoui_app_create();
+    app = tinyui_app_create();
     assert(app != 0);
-    win = picoui_window_create(app, "calendar_native_root");
+    win = tinyui_window_create(app, "calendar_native_root");
     assert(win != 0);
-    calendar = picoui_calendar_create(win, "calendar_native_round_trip");
+    calendar = tinyui_calendar_create(win, "calendar_native_round_trip");
     assert(calendar != 0);
 
-    assert(picoui_calendar_set_day_names(calendar, day_names) == 0);
-    assert(picoui_calendar_set_bg_color(calendar, 0x112233U) == 0);
-    assert(picoui_calendar_set_item_color(calendar, 0x445566U) == 0);
-    assert(picoui_calendar_set_text_color(calendar, 0x778899U) == 0);
+    assert(tinyui_calendar_set_day_names(calendar, day_names) == 0);
+    assert(tinyui_calendar_set_bg_color(calendar, 0x112233U) == 0);
+    assert(tinyui_calendar_set_item_color(calendar, 0x445566U) == 0);
+    assert(tinyui_calendar_set_text_color(calendar, 0x778899U) == 0);
 
-    backend = (struct picoui_backend_widget *)calendar->widget.backend_widget;
+    backend = (struct tinyui_backend_widget *)calendar->widget.backend_widget;
     assert(backend != 0);
     ld_calendar = (ldCalendar_t *)backend->ld_widget;
     assert(ld_calendar != 0);
@@ -287,148 +287,148 @@ static void test_calendar_native_day_names_and_colors_round_trip(void)
     assert(ld_calendar->itemColor == (ldColor)0x445566U);
     assert(ld_calendar->textColor == (ldColor)0x778899U);
 
-    assert(picoui_calendar_set_day_names(calendar, 0) == -1);
-    assert(picoui_calendar_set_bg_color(0, 0xAABBCCU) == -1);
-    assert(picoui_calendar_set_item_color(calendar, 0x1000000U) == -1);
-    assert(picoui_calendar_set_text_color(calendar, 0x1000000U) == -1);
+    assert(tinyui_calendar_set_day_names(calendar, 0) == -1);
+    assert(tinyui_calendar_set_bg_color(0, 0xAABBCCU) == -1);
+    assert(tinyui_calendar_set_item_color(calendar, 0x1000000U) == -1);
+    assert(tinyui_calendar_set_text_color(calendar, 0x1000000U) == -1);
 
     assert(strcmp((const char *)ld_calendar->dayNames[0], "Sun") == 0);
     assert(ld_calendar->bgColor == (ldColor)0x112233U);
     assert(ld_calendar->itemColor == (ldColor)0x445566U);
     assert(ld_calendar->textColor == (ldColor)0x778899U);
 
-    picoui_app_destroy(app);
+    tinyui_app_destroy(app);
 }
 
 static void test_calendar_system_date_provider_round_trip(void)
 {
-    struct picoui_app *app;
-    struct picoui_window *win;
-    struct picoui_calendar *calendar;
-    struct picoui_backend_widget *backend;
+    struct tinyui_app *app;
+    struct tinyui_window *win;
+    struct tinyui_calendar *calendar;
+    struct tinyui_backend_widget *backend;
     ldCalendar_t *ld_calendar;
     int year = 0;
     int month = 0;
     int day = 0;
 
-    app = picoui_app_create();
+    app = tinyui_app_create();
     assert(app != 0);
-    win = picoui_window_create(app, "calendar_system_root");
+    win = tinyui_window_create(app, "calendar_system_root");
     assert(win != 0);
-    calendar = picoui_calendar_create(win, "calendar_system_date");
+    calendar = tinyui_calendar_create(win, "calendar_system_date");
     assert(calendar != 0);
 
-    backend = (struct picoui_backend_widget *)calendar->widget.backend_widget;
+    backend = (struct tinyui_backend_widget *)calendar->widget.backend_widget;
     assert(backend != 0);
     ld_calendar = (ldCalendar_t *)backend->ld_widget;
     assert(ld_calendar != 0);
 
-    assert(picoui_calendar_set_date(calendar, 2024, 2, 29) == 0);
-    assert(picoui_calendar_set_use_system_date(calendar, 1) == 0);
-    assert(picoui_calendar_get_use_system_date(calendar) == 1);
-    ldCalendar_on_frame_start(backend->owner->backend_app ? ((struct picoui_backend_app_state *)backend->owner->backend_app)->ld_scene : NULL,
+    assert(tinyui_calendar_set_date(calendar, 2024, 2, 29) == 0);
+    assert(tinyui_calendar_set_use_system_date(calendar, 1) == 0);
+    assert(tinyui_calendar_get_use_system_date(calendar) == 1);
+    ldCalendar_on_frame_start(backend->owner->backend_app ? ((struct tinyui_backend_app_state *)backend->owner->backend_app)->ld_scene : NULL,
                               ld_calendar);
-    assert(picoui_calendar_get_date(calendar, &year, &month, &day) == 0);
+    assert(tinyui_calendar_get_date(calendar, &year, &month, &day) == 0);
     assert(year >= 1970);
     assert(month >= 1 && month <= 12);
     assert(day >= 1 && day <= 31);
-    assert(picoui_calendar_get_grid_value(calendar, 0, ldBaseGetWeek((uint16_t)year, (uint8_t)month, 1)) == 1);
+    assert(tinyui_calendar_get_grid_value(calendar, 0, ldBaseGetWeek((uint16_t)year, (uint8_t)month, 1)) == 1);
 
-    assert(picoui_calendar_set_use_system_date(calendar, 0) == 0);
-    assert(picoui_calendar_get_use_system_date(calendar) == 0);
-    assert(picoui_calendar_set_date(calendar, 2024, 2, 29) == 0);
-    assert(picoui_calendar_get_date(calendar, &year, &month, &day) == 0);
+    assert(tinyui_calendar_set_use_system_date(calendar, 0) == 0);
+    assert(tinyui_calendar_get_use_system_date(calendar) == 0);
+    assert(tinyui_calendar_set_date(calendar, 2024, 2, 29) == 0);
+    assert(tinyui_calendar_get_date(calendar, &year, &month, &day) == 0);
     assert(year == 2024 && month == 2 && day == 29);
 
-    assert(picoui_calendar_set_use_system_date(0, 1) == -1);
-    assert(picoui_calendar_get_use_system_date(0) == -1);
+    assert(tinyui_calendar_set_use_system_date(0, 1) == -1);
+    assert(tinyui_calendar_get_use_system_date(0) == -1);
 
-    picoui_app_destroy(app);
+    tinyui_app_destroy(app);
 }
 
 static void test_calendar_init_and_aliases_match_backend_truth(void)
 {
-    struct picoui_app *app;
-    struct picoui_window *win;
-    struct picoui_calendar *calendar;
-    struct picoui_backend_widget *backend;
+    struct tinyui_app *app;
+    struct tinyui_window *win;
+    struct tinyui_calendar *calendar;
+    struct tinyui_backend_widget *backend;
     ldBase_t *ld_base;
     int year = 0;
     int month = 0;
     int day = 0;
 
-    app = picoui_app_create();
+    app = tinyui_app_create();
     assert(app != 0);
-    win = picoui_window_create(app, "calendar_alias_root");
+    win = tinyui_window_create(app, "calendar_alias_root");
     assert(win != 0);
-    calendar = picoui_calendar_create(win, "calendar_alias");
+    calendar = tinyui_calendar_create(win, "calendar_alias");
     assert(calendar != 0);
-    assert(picoui_calendar_set_date(calendar, 2027, 1, 2) == 0);
-    assert(picoui_calendar_get_date(calendar, &year, &month, &day) == 0);
+    assert(tinyui_calendar_set_date(calendar, 2027, 1, 2) == 0);
+    assert(tinyui_calendar_get_date(calendar, &year, &month, &day) == 0);
     assert(year == 2027);
     assert(month == 1);
     assert(day == 2);
-    assert(picoui_calendar_set_header_format(calendar, "yy/mm/dd") == 0);
-    assert(strcmp(picoui_calendar_get_header_format(calendar), "yy/mm/dd") == 0);
+    assert(tinyui_calendar_set_header_format(calendar, "yy/mm/dd") == 0);
+    assert(strcmp(tinyui_calendar_get_header_format(calendar), "yy/mm/dd") == 0);
 
-    backend = (struct picoui_backend_widget *)calendar->widget.backend_widget;
+    backend = (struct tinyui_backend_widget *)calendar->widget.backend_widget;
     assert(backend != 0);
     ld_base = (ldBase_t *)backend->ld_widget;
     assert(ld_base != 0);
-    picoui_app_destroy(app);
+    tinyui_app_destroy(app);
 }
 
-static void test_calendar_grid_value_round_trip(struct picoui_window *win)
+static void test_calendar_grid_value_round_trip(struct tinyui_window *win)
 {
-    struct picoui_calendar *cal = picoui_calendar_create(win, "cal_grid");
+    struct tinyui_calendar *cal = tinyui_calendar_create(win, "cal_grid");
     int grid_val;
 
     assert(cal != 0);
-    assert(picoui_calendar_set_date(cal, 2026, 6, 3) == 0);
-    grid_val = picoui_calendar_get_grid_value(cal, 0, 0);
+    assert(tinyui_calendar_set_date(cal, 2026, 6, 3) == 0);
+    grid_val = tinyui_calendar_get_grid_value(cal, 0, 0);
     assert(grid_val >= 0);
 
-    int is_current = picoui_calendar_is_current_month_cell(cal, 0, 0);
+    int is_current = tinyui_calendar_is_current_month_cell(cal, 0, 0);
     assert(is_current == 0 || is_current == 1);
 }
 
-static void test_calendar_grid_value_boundary_args(struct picoui_window *win)
+static void test_calendar_grid_value_boundary_args(struct tinyui_window *win)
 {
-    struct picoui_calendar *cal = picoui_calendar_create(win, "cal_grid_boundary");
+    struct tinyui_calendar *cal = tinyui_calendar_create(win, "cal_grid_boundary");
     assert(cal != 0);
-    assert(picoui_calendar_set_date(cal, 2026, 1, 15) == 0);
+    assert(tinyui_calendar_set_date(cal, 2026, 1, 15) == 0);
     for (int week = 0; week < 6; week++) {
         for (int wday = 0; wday < 7; wday++) {
-            int v = picoui_calendar_get_grid_value(cal, week, wday);
+            int v = tinyui_calendar_get_grid_value(cal, week, wday);
             assert(v >= 0 && v <= 31);
-            int cur = picoui_calendar_is_current_month_cell(cal, week, wday);
+            int cur = tinyui_calendar_is_current_month_cell(cal, week, wday);
             assert(cur == 0 || cur == 1);
         }
     }
 }
 
-static void test_calendar_grid_out_of_bounds(struct picoui_window *win)
+static void test_calendar_grid_out_of_bounds(struct tinyui_window *win)
 {
-    struct picoui_calendar *cal = picoui_calendar_create(win, "cal_oob");
+    struct tinyui_calendar *cal = tinyui_calendar_create(win, "cal_oob");
     assert(cal != 0);
-    assert(picoui_calendar_set_date(cal, 2026, 1, 1) == 0);
+    assert(tinyui_calendar_set_date(cal, 2026, 1, 1) == 0);
     // out-of-bounds access should not crash
-    picoui_calendar_get_grid_value(cal, 10, 10);
-    picoui_calendar_is_current_month_cell(cal, 10, 10);
+    tinyui_calendar_get_grid_value(cal, 10, 10);
+    tinyui_calendar_is_current_month_cell(cal, 10, 10);
 }
 
-static void test_calendar_public_create_uses_widget_local_backend(struct picoui_window *win)
+static void test_calendar_public_create_uses_widget_local_backend(struct tinyui_window *win)
 {
-    struct picoui_calendar *calendar;
-    struct picoui_backend_widget *backend;
+    struct tinyui_calendar *calendar;
+    struct tinyui_backend_widget *backend;
 
     assert(win != 0);
-    calendar = picoui_calendar_create(win, "calendar_widget_local");
+    calendar = tinyui_calendar_create(win, "calendar_widget_local");
     assert(calendar != 0);
 
-    backend = (struct picoui_backend_widget *)calendar->widget.backend_widget;
+    backend = (struct tinyui_backend_widget *)calendar->widget.backend_widget;
     assert(backend != 0);
-    assert(backend->kind == PICOUI_BACKEND_WIDGET_CALENDAR);
+    assert(backend->kind == TINYUI_BACKEND_WIDGET_CALENDAR);
     assert(backend->host_widget == &calendar->widget);
     assert(backend->parent == win->widget.backend_widget);
     assert(backend->ld_widget != 0);
@@ -448,12 +448,12 @@ int main(void)
     test_calendar_system_date_provider_round_trip();
     test_calendar_init_and_aliases_match_backend_truth();
 
-    struct picoui_app *app = picoui_app_create();
-    struct picoui_window *win = picoui_window_create(app, "root");
+    struct tinyui_app *app = tinyui_app_create();
+    struct tinyui_window *win = tinyui_window_create(app, "root");
     test_calendar_public_create_uses_widget_local_backend(win);
     test_calendar_grid_value_round_trip(win);
     test_calendar_grid_value_boundary_args(win);
     test_calendar_grid_out_of_bounds(win);
-    picoui_app_destroy(app);
+    tinyui_app_destroy(app);
     return 0;
 }

@@ -2,11 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 冻结当前 `picoui` 基线，为 `backend`/`app`/`tinyui_*` 迁移建立机器守门，并在结构改造前固定真相源。
+**Goal:** 冻结当前 `tinyui` 基线，为 `backend`/`app`/`tinyui_*` 迁移建立机器守门，并在结构改造前固定真相源。
 
-**Architecture:** 新增一个迁移守门 checker 和一个机器可读 inventory，挂入 `tests/picoui/CMakeLists.txt` 与 `docs/v2.0` 索引，使后续各阶段都能量化 `backend`/`app` 是否真正下降，而不是靠主观判断。
+**Architecture:** 新增一个迁移守门 checker 和一个机器可读 inventory，挂入 `tests/tinyui/CMakeLists.txt` 与 `docs/v2.0` 索引，使后续各阶段都能量化 `backend`/`app` 是否真正下降，而不是靠主观判断。
 
-**Tech Stack:** Python 3、CMake/CTest、JSON、现有 `tests/picoui/contract/*`、现有 `docs/v2.0/*`。
+**Tech Stack:** Python 3、CMake/CTest、JSON、现有 `tests/tinyui/contract/*`、现有 `docs/v2.0/*`。
 
 ---
 
@@ -14,13 +14,13 @@
 
 新增：
 
-- `tests/picoui/contract/check_picoui_tinyui_transition_guards.py`
-- `tests/picoui/contract/picoui_tinyui_transition_inventory.json`
+- `tests/tinyui/contract/check_tinyui_tinyui_transition_guards.py`
+- `tests/tinyui/contract/tinyui_tinyui_transition_inventory.json`
 - `docs/v2.0/2026-06-07-tinyui-v2-0-baseline-inventory.md`
 
 修改：
 
-- `tests/picoui/CMakeLists.txt`
+- `tests/tinyui/CMakeLists.txt`
 - `docs/v2.0/线计划索引.md`
 - `docs/v2.0/plans/stages/README.md`
 
@@ -29,13 +29,13 @@
 ### Task 1: 建立 backend/app/tinyui guard checker
 
 **Files:**
-- Create: `tests/picoui/contract/check_picoui_tinyui_transition_guards.py`
-- Modify: `tests/picoui/CMakeLists.txt`
-- Create: `tests/picoui/contract/picoui_tinyui_transition_inventory.json`
+- Create: `tests/tinyui/contract/check_tinyui_tinyui_transition_guards.py`
+- Modify: `tests/tinyui/CMakeLists.txt`
+- Create: `tests/tinyui/contract/tinyui_tinyui_transition_inventory.json`
 
 - [ ] **Step 1: 写 fail-first guard checker**
 
-Create `tests/picoui/contract/check_picoui_tinyui_transition_guards.py`:
+Create `tests/tinyui/contract/check_tinyui_tinyui_transition_guards.py`:
 
 ```python
 #!/usr/bin/env python3
@@ -47,12 +47,12 @@ import re
 import sys
 
 ROOT = Path(__file__).resolve().parents[3]
-INVENTORY = ROOT / "tests" / "picoui" / "contract" / "picoui_tinyui_transition_inventory.json"
+INVENTORY = ROOT / "tests" / "tinyui" / "contract" / "tinyui_tinyui_transition_inventory.json"
 
-BACKEND_GLOB = sorted((ROOT / "picoui" / "src" / "backend" / "ldgui").glob("backend_*.c"))
-APP_HEADER = ROOT / "picoui" / "include" / "picoui" / "app.h"
-APP_SOURCE = ROOT / "picoui" / "src" / "core" / "app.c"
-PUBLIC_HEADERS = sorted((ROOT / "picoui" / "include" / "picoui").glob("*.h"))
+BACKEND_GLOB = sorted((ROOT / "tinyui" / "src" / "backend" / "ldgui").glob("backend_*.c"))
+APP_HEADER = ROOT / "tinyui" / "include" / "tinyui" / "app.h"
+APP_SOURCE = ROOT / "tinyui" / "src" / "core" / "app.c"
+PUBLIC_HEADERS = sorted((ROOT / "tinyui" / "include" / "tinyui").glob("*.h"))
 
 def count_api(prefix: str) -> int:
     pattern = re.compile(rf"\\b{re.escape(prefix)}[a-zA-Z0-9_]*\\s*\\(")
@@ -71,7 +71,7 @@ def main() -> int:
         "backend_c_files": len(BACKEND_GLOB),
         "app_header_exists": APP_HEADER.exists(),
         "app_source_exists": APP_SOURCE.exists(),
-        "picoui_public_api_count": count_api("picoui_"),
+        "tinyui_public_api_count": count_api("tinyui_"),
         "tinyui_public_api_count": count_api("tinyui_"),
     }
     for key, expected in inv["baseline"].items():
@@ -85,7 +85,7 @@ if __name__ == "__main__":
     raise SystemExit(main())
 ```
 
-Create `tests/picoui/contract/picoui_tinyui_transition_inventory.json`:
+Create `tests/tinyui/contract/tinyui_tinyui_transition_inventory.json`:
 
 ```json
 {
@@ -93,27 +93,27 @@ Create `tests/picoui/contract/picoui_tinyui_transition_inventory.json`:
     "backend_c_files": 35,
     "app_header_exists": true,
     "app_source_exists": true,
-    "picoui_public_api_count": 0,
+    "tinyui_public_api_count": 0,
     "tinyui_public_api_count": 0
   }
 }
 ```
 
-Note: in the first implementation pass, replace `picoui_public_api_count: 0` with the real count reported by the temporary failing run below.
+Note: in the first implementation pass, replace `tinyui_public_api_count: 0` with the real count reported by the temporary failing run below.
 
 - [ ] **Step 2: 运行 checker，拿真实 baseline 数**
 
 Run:
 
 ```bash
-python3 tests/picoui/contract/check_picoui_tinyui_transition_guards.py
+python3 tests/tinyui/contract/check_tinyui_tinyui_transition_guards.py
 ```
 
-Expected: FAIL 一次，因为 `picoui_public_api_count` 初始占位仍是 `0`。
+Expected: FAIL 一次，因为 `tinyui_public_api_count` 初始占位仍是 `0`。
 
 - [ ] **Step 3: 用真实 baseline 数更新 inventory**
 
-Update `tests/picoui/contract/picoui_tinyui_transition_inventory.json`:
+Update `tests/tinyui/contract/tinyui_tinyui_transition_inventory.json`:
 
 ```json
 {
@@ -121,7 +121,7 @@ Update `tests/picoui/contract/picoui_tinyui_transition_inventory.json`:
     "backend_c_files": 35,
     "app_header_exists": true,
     "app_source_exists": true,
-    "picoui_public_api_count": 548,
+    "tinyui_public_api_count": 548,
     "tinyui_public_api_count": 0
   }
 }
@@ -131,12 +131,12 @@ Update `tests/picoui/contract/picoui_tinyui_transition_inventory.json`:
 
 - [ ] **Step 4: 在 CTest 注册 checker**
 
-Add to `tests/picoui/CMakeLists.txt` near other contract tests:
+Add to `tests/tinyui/CMakeLists.txt` near other contract tests:
 
 ```cmake
-ld_add_python_test(check_picoui_tinyui_transition_guards
-    SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/contract/check_picoui_tinyui_transition_guards.py"
-    LABELS "picoui;contract;transition"
+ld_add_python_test(check_tinyui_tinyui_transition_guards
+    SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/contract/check_tinyui_tinyui_transition_guards.py"
+    LABELS "tinyui;contract;transition"
 )
 ```
 
@@ -145,8 +145,8 @@ ld_add_python_test(check_picoui_tinyui_transition_guards
 Run:
 
 ```bash
-python3 tests/picoui/contract/check_picoui_tinyui_transition_guards.py
-rtk ctest --test-dir build -R '^check_picoui_tinyui_transition_guards$' --output-on-failure
+python3 tests/tinyui/contract/check_tinyui_tinyui_transition_guards.py
+rtk ctest --test-dir build -R '^check_tinyui_tinyui_transition_guards$' --output-on-failure
 ```
 
 Expected: PASS。
@@ -167,31 +167,31 @@ Create `docs/v2.0/2026-06-07-tinyui-v2-0-baseline-inventory.md`:
 
 ## 当前共享层
 
-- `picoui/src/backend/ldgui/backend_app.c`
-- `picoui/src/backend/ldgui/backend_widget.c`
-- `picoui/src/backend/ldgui/backend_widget_tree.c`
-- `picoui/src/backend/ldgui/backend_event.c`
-- `picoui/src/backend/ldgui/backend_layout.c`
-- `picoui/src/backend/ldgui/backend_theme.c`
-- `picoui/src/backend/ldgui/backend_style_apply.c`
+- `tinyui/src/backend/ldgui/backend_app.c`
+- `tinyui/src/backend/ldgui/backend_widget.c`
+- `tinyui/src/backend/ldgui/backend_widget_tree.c`
+- `tinyui/src/backend/ldgui/backend_event.c`
+- `tinyui/src/backend/ldgui/backend_layout.c`
+- `tinyui/src/backend/ldgui/backend_theme.c`
+- `tinyui/src/backend/ldgui/backend_style_apply.c`
 
 ## 当前试点控件
 
-- `picoui/src/widgets/window.c`
-- `picoui/src/widgets/label.c`
-- `picoui/src/widgets/button.c`
-- `picoui/src/widgets/switch.c`
+- `tinyui/src/widgets/window.c`
+- `tinyui/src/widgets/label.c`
+- `tinyui/src/widgets/button.c`
+- `tinyui/src/widgets/switch.c`
 
 ## 当前 public app 入口
 
-- `picoui/include/picoui/app.h`
-- `picoui/src/core/app.c`
-- `picoui/demo/basic_widgets/main.c`
+- `tinyui/include/tinyui/app.h`
+- `tinyui/src/core/app.c`
+- `tinyui/demo/basic_widgets/main.c`
 
 ## 当前 broad gates
 
-- `rtk ctest --test-dir build -L 'picoui' --output-on-failure`
-- `rtk ctest --test-dir build/picoui-runtime -R 'check_picoui_runtime|check_picoui_visible_ui|check_picoui_backend_mapping' --output-on-failure`
+- `rtk ctest --test-dir build -L 'tinyui' --output-on-failure`
+- `rtk ctest --test-dir build/tinyui-runtime -R 'check_tinyui_runtime|check_tinyui_visible_ui|check_tinyui_backend_mapping' --output-on-failure`
 - `git diff --check`
 ```
 
@@ -220,7 +220,7 @@ Add under `P0` in `docs/v2.0/plans/stages/README.md`:
 Run:
 
 ```bash
-rtk ctest --test-dir build -R 'check_picoui_tinyui_transition_guards|check_picoui_public_api|check_picoui_demo_boundary' --output-on-failure
+rtk ctest --test-dir build -R 'check_tinyui_tinyui_transition_guards|check_tinyui_public_api|check_tinyui_demo_boundary' --output-on-failure
 git diff --check
 ```
 
@@ -230,9 +230,9 @@ Expected: PASS。
 
 ```bash
 git add \
-  tests/picoui/CMakeLists.txt \
-  tests/picoui/contract/check_picoui_tinyui_transition_guards.py \
-  tests/picoui/contract/picoui_tinyui_transition_inventory.json \
+  tests/tinyui/CMakeLists.txt \
+  tests/tinyui/contract/check_tinyui_tinyui_transition_guards.py \
+  tests/tinyui/contract/tinyui_tinyui_transition_inventory.json \
   docs/v2.0/2026-06-07-tinyui-v2-0-baseline-inventory.md \
   docs/v2.0/线计划索引.md \
   docs/v2.0/plans/stages/README.md

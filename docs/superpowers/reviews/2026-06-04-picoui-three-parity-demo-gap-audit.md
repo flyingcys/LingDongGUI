@@ -1,8 +1,8 @@
-# PicoUI 三个 Parity Demo 对老 SDL 页面差距审计
+# TINYUI 三个 Parity Demo 对老 SDL 页面差距审计
 
 ## 结论
 
-当前 `picoui/demo/legacy_widget_parity`、`picoui/demo/layout_parity`、`picoui/demo/grid_parity` 都已经具备“可对照 baseline”，但都还不能写成与老 SDL 页面完成 parity。
+当前 `tinyui/demo/legacy_widget_parity`、`tinyui/demo/layout_parity`、`tinyui/demo/grid_parity` 都已经具备“可对照 baseline”，但都还不能写成与老 SDL 页面完成 parity。
 
 这轮重新按当前源码和独立 subagent 摸底结论收口后，可以把差距分成两类：
 
@@ -19,27 +19,27 @@
 1. 老 SDL truth-source
    - `examples/common/demo/widget/uiWidgetLegacy.c`
    - `examples/common/demo/layout/uiLayout.c`
-2. 当前 PicoUI parity 页面
-   - `picoui/demo/legacy_widget_parity/main.c`
-   - `picoui/demo/layout_parity/main.c`
-   - `picoui/demo/grid_parity/main.c`
-3. 当前 PicoUI public API / backend 证据
-   - `picoui/include/picoui/app.h`
-   - `picoui/src/core/app.c`
-   - `picoui/src/backend/ldgui/backend_app.c`
-   - `picoui/include/picoui/layout.h`
-   - `picoui/include/picoui/widget.h`
-   - `picoui/include/picoui/image.h`
-   - `picoui/include/picoui/button.h`
-   - `picoui/include/picoui/progress_bar.h`
-   - `picoui/include/picoui/text.h`
-   - `picoui/include/picoui/slider.h`
-   - `picoui/include/picoui/radial_menu.h`
-   - `picoui/include/picoui/icon_slider.h`
-   - `picoui/include/picoui/gauge.h`
+2. 当前 TINYUI parity 页面
+   - `tinyui/demo/legacy_widget_parity/main.c`
+   - `tinyui/demo/layout_parity/main.c`
+   - `tinyui/demo/grid_parity/main.c`
+3. 当前 TINYUI public API / backend 证据
+   - `tinyui/include/tinyui/app.h`
+   - `tinyui/src/core/app.c`
+   - `tinyui/src/backend/ldgui/backend_app.c`
+   - `tinyui/include/tinyui/layout.h`
+   - `tinyui/include/tinyui/widget.h`
+   - `tinyui/include/tinyui/image.h`
+   - `tinyui/include/tinyui/button.h`
+   - `tinyui/include/tinyui/progress_bar.h`
+   - `tinyui/include/tinyui/text.h`
+   - `tinyui/include/tinyui/slider.h`
+   - `tinyui/include/tinyui/radial_menu.h`
+   - `tinyui/include/tinyui/icon_slider.h`
+   - `tinyui/include/tinyui/gauge.h`
 4. 当前验证入口
-   - `tests/picoui/runtime/check_picoui_visible_ui.py`
-   - `picoui/docs/demo_guide.md`
+   - `tests/tinyui/runtime/check_tinyui_visible_ui.py`
+   - `tinyui/docs/demo_guide.md`
 
 ## 硬缺 capability
 
@@ -51,8 +51,8 @@
 
 1. 老 `layout` 页在 `uiLayoutLoop()` 里用 `ldTimeOut(1200, true, &s_layout_resize_timer)` 周期性切换 `flex row` 宽度，并直接改 `ldBaseSetWidth(...)`。
 2. 老 `legacy widget` 页也用 `ldTimeOut(100, true)` 驱动 `arc/gauge` 动画。
-3. PicoUI public app 面目前只有 `create/run/set_window/switch_window/destroy` 这一层，没有 callback/tick/timer 注册接口。
-4. `picoui_app_run()` 只是进入 backend loop。
+3. TINYUI public app 面目前只有 `create/run/set_window/switch_window/destroy` 这一层，没有 callback/tick/timer 注册接口。
+4. `tinyui_app_run()` 只是进入 backend loop。
 5. backend runtime page 的 `.loop/.frameStart/.frameComplete` 也没有 public hook 暴露给 demo 使用。
 
 判断：
@@ -70,7 +70,7 @@
 
 1. 页面已包含老 `legacy-widget` 页的大部分核心控件样本。
 2. `radial_menu / icon_slider / qrcode / gauge / line_edit / keyboard / arc / list item widget / child-window` 都已进入页面。
-3. `image / button / progress bar / text / slider / radial menu / icon slider / gauge / arc` 都已走通 PicoUI public source 级 API。
+3. `image / button / progress bar / text / slider / radial menu / icon slider / gauge / arc` 都已走通 TINYUI public source 级 API。
 
 #### 当前差距
 
@@ -111,10 +111,10 @@
 #### 当前差距
 
 1. 老页 `uiLayoutLoop()` 每 `1200ms` 会在 `170` 和 `220` 之间切换 `flex row` 区域宽度。
-2. PicoUI parity 页面目前没有对应 loop / timer 行为，只是静态页面。
-3. 当前阻塞不是 demo 忘了写，而是 PicoUI public app/demo 层还没有 timer / tick / frame callback。
-4. 老页页面标题和 hint 文案更贴近行为描述；PicoUI 版文案更偏 section 结构解释。
-5. PicoUI 版为了增强结构可读性，引入了 section shell，这使结构更清楚，但不再是对老页外壳的逐像素复刻。
+2. TINYUI parity 页面目前没有对应 loop / timer 行为，只是静态页面。
+3. 当前阻塞不是 demo 忘了写，而是 TINYUI public app/demo 层还没有 timer / tick / frame callback。
+4. 老页页面标题和 hint 文案更贴近行为描述；TINYUI 版文案更偏 section 结构解释。
+5. TINYUI 版为了增强结构可读性，引入了 section shell，这使结构更清楚，但不再是对老页外壳的逐像素复刻。
 
 #### 能力判断
 
@@ -140,10 +140,10 @@
 
 #### 当前差距
 
-1. 当前还没有 PicoUI / 老 SDL 双开截图或 visible diff 证据。
+1. 当前还没有 TINYUI / 老 SDL 双开截图或 visible diff 证据。
 2. panel 内容目前仍是 `A-G` 简化文案，不是老页那种 `window + title + hint` 内容层。
 3. panel 尺寸、文案、颜色仍是近似，不是逐像素复刻。
-4. root 外层仍是 PicoUI 页面壳，不是老页原始外围排布的逐像素拷贝。
+4. root 外层仍是 TINYUI 页面壳，不是老页原始外围排布的逐像素拷贝。
 
 #### 能力判断
 
@@ -159,7 +159,7 @@
 
 ### 1. dedicated visible 对照未接入
 
-当前 `tests/picoui/runtime/check_picoui_visible_ui.py` 的 `DEMOS` 只覆盖 `layout_flex/layout_grid/basic_widgets/...`，还没有把：
+当前 `tests/tinyui/runtime/check_tinyui_visible_ui.py` 的 `DEMOS` 只覆盖 `layout_flex/layout_grid/basic_widgets/...`，还没有把：
 
 1. `legacy_widget_parity`
 2. `layout_parity`
@@ -174,8 +174,8 @@
 1. 先补最小 public `app` timer / tick / frame callback 能力
    - 这是唯一硬 capability gap
    - 独立设计与计划已拆到：
-     - `docs/superpowers/specs/2026-06-04-picoui-app-timer-tick-capability-design.md`
-     - `docs/superpowers/plans/2026-06-04-picoui-app-timer-tick-capability-implementation.md`
+     - `docs/superpowers/specs/2026-06-04-tinyui-app-timer-tick-capability-design.md`
+     - `docs/superpowers/plans/2026-06-04-tinyui-app-timer-tick-capability-implementation.md`
 2. 再给 `legacy_widget_parity` 接老 demo 真实资源
    - 这是资源 fidelity 收敛
 3. 再做三页 dedicated visible 对照和内容细化

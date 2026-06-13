@@ -3,8 +3,8 @@
 
 #include <stddef.h>
 
-int picoui_tick_set_source(struct picoui_app *app,
-                           picoui_tick_get_cb_t callback,
+int tinyui_tick_set_source(struct tinyui_app *app,
+                           tinyui_tick_get_cb_t callback,
                            void *user_data)
 {
     if (app == NULL) {
@@ -16,7 +16,7 @@ int picoui_tick_set_source(struct picoui_app *app,
     return 0;
 }
 
-unsigned int picoui_tick_get(struct picoui_app *app)
+unsigned int tinyui_tick_get(struct tinyui_app *app)
 {
     if (app == NULL || app->tick_port.callback == NULL) {
         return 0;

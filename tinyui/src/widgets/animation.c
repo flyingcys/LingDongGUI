@@ -23,23 +23,23 @@
 
 #include <stdlib.h>
 
-static ldAnimation_t *tinyui_animation_get_ld(struct picoui_animation *animation)
+static ldAnimation_t *tinyui_animation_get_ld(struct tinyui_animation *animation)
 {
-    struct picoui_backend_widget *backend;
+    struct tinyui_backend_widget *backend;
 
     if (animation == 0 || animation->widget.backend_widget == 0) {
         return 0;
     }
 
-    backend = (struct picoui_backend_widget *)animation->widget.backend_widget;
-    if (backend->kind != PICOUI_BACKEND_WIDGET_ANIMATION || backend->ld_widget == 0) {
+    backend = (struct tinyui_backend_widget *)animation->widget.backend_widget;
+    if (backend->kind != TINYUI_BACKEND_WIDGET_ANIMATION || backend->ld_widget == 0) {
         return 0;
     }
 
     return (ldAnimation_t *)backend->ld_widget;
 }
 
-static int tinyui_animation_props_are_valid(const struct picoui_animation_props *props)
+static int tinyui_animation_props_are_valid(const struct tinyui_animation_props *props)
 {
     return props != 0
         && props->id != 0
@@ -50,16 +50,16 @@ static int tinyui_animation_props_are_valid(const struct picoui_animation_props 
         && props->source->img_tile != 0;
 }
 
-static int tinyui_animation_attach_native(struct picoui_animation *animation,
-                                          struct picoui_widget *parent,
+static int tinyui_animation_attach_native(struct tinyui_animation *animation,
+                                          struct tinyui_widget *parent,
                                           int width,
                                           int height,
-                                          struct picoui_image_source *source,
+                                          struct tinyui_image_source *source,
                                           int period_ms)
 {
-    struct picoui_backend_widget *backend;
-    struct picoui_backend_widget *parent_backend;
-    struct picoui_backend_app_state *app_state;
+    struct tinyui_backend_widget *backend;
+    struct tinyui_backend_widget *parent_backend;
+    struct tinyui_backend_app_state *app_state;
     ldAnimation_t *ld_animation;
     uint16_t name_id;
 
@@ -67,7 +67,7 @@ static int tinyui_animation_attach_native(struct picoui_animation *animation,
         return -1;
     }
 
-    parent_backend = (struct picoui_backend_widget *)parent->backend_widget;
+    parent_backend = (struct tinyui_backend_widget *)parent->backend_widget;
     app_state = tinyui_runtime_bridge_backend_state_from_parent(parent_backend);
     if (parent_backend->ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
         return -1;
@@ -101,7 +101,7 @@ static int tinyui_animation_attach_native(struct picoui_animation *animation,
 
     if (tinyui_widget_init_child(backend,
                                          parent_backend,
-                                         PICOUI_BACKEND_WIDGET_ANIMATION,
+                                         TINYUI_BACKEND_WIDGET_ANIMATION,
                                          animation->id,
                                          parent_backend->theme) != 0) {
         ldAnimation_depose(app_state->ld_scene, ld_animation);
@@ -136,9 +136,9 @@ static int tinyui_animation_attach_native(struct picoui_animation *animation,
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct picoui_animation *picoui_animation_create(struct picoui_widget *parent, const char *id)
+struct tinyui_animation *tinyui_animation_create(struct tinyui_widget *parent, const char *id)
 {
-    struct picoui_animation *animation;
+    struct tinyui_animation *animation;
 
     if (parent == 0 || id == 0 || parent->backend_widget == 0) {
         return 0;
@@ -163,9 +163,9 @@ struct picoui_animation *picoui_animation_create(struct picoui_widget *parent, c
  * @return Pointer to the object
  */
 
-struct picoui_animation *picoui_animation_init(struct picoui_widget *parent, const char *id)
+struct tinyui_animation *tinyui_animation_init(struct tinyui_widget *parent, const char *id)
 {
-    return picoui_animation_create(parent, id);
+    return tinyui_animation_create(parent, id);
 }
 
 /**
@@ -176,17 +176,17 @@ struct picoui_animation *picoui_animation_init(struct picoui_widget *parent, con
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct picoui_animation *picoui_animation_create_with_props(
-    struct picoui_widget *parent,
-    const struct picoui_animation_props *props)
+struct tinyui_animation *tinyui_animation_create_with_props(
+    struct tinyui_widget *parent,
+    const struct tinyui_animation_props *props)
 {
-    struct picoui_animation *animation;
+    struct tinyui_animation *animation;
 
     if (!tinyui_animation_props_are_valid(props) || parent == 0 || parent->backend_widget == 0) {
         return 0;
     }
 
-    animation = picoui_animation_create(parent, props->id);
+    animation = tinyui_animation_create(parent, props->id);
     if (animation == 0) {
         return 0;
     }
@@ -197,8 +197,8 @@ struct picoui_animation *picoui_animation_create_with_props(
                                        props->height,
                                        props->source,
                                        props->period_ms) != 0
-        || picoui_animation_set_source(animation, props->source) != 0
-        || picoui_animation_set_period_ms(animation, props->period_ms) != 0) {
+        || tinyui_animation_set_source(animation, props->source) != 0
+        || tinyui_animation_set_period_ms(animation, props->period_ms) != 0) {
         free(animation);
         return 0;
     }
@@ -209,16 +209,16 @@ struct picoui_animation *picoui_animation_create_with_props(
     animation->source = props->source;
     animation->widget.width = props->width;
     animation->widget.height = props->height;
-    if (picoui_animation_show_frame(animation, 0) != 0) {
+    if (tinyui_animation_show_frame(animation, 0) != 0) {
         free(animation);
         return 0;
     }
-    if (picoui_widget_set_user_data(&animation->widget, props->user_data) != 0) {
+    if (tinyui_widget_set_user_data(&animation->widget, props->user_data) != 0) {
         free(animation);
         return 0;
     }
     if (props->style_class != 0 &&
-        picoui_widget_set_style_class(&animation->widget, props->style_class) != 0) {
+        tinyui_widget_set_style_class(&animation->widget, props->style_class) != 0) {
         free(animation);
         return 0;
     }
@@ -234,7 +234,7 @@ struct picoui_animation *picoui_animation_create_with_props(
  * @return 0 on success, -1 on failure
  */
 
-int picoui_animation_set_source(struct picoui_animation *animation, struct picoui_image_source *source)
+int tinyui_animation_set_source(struct tinyui_animation *animation, struct tinyui_image_source *source)
 {
     ldAnimation_t *ld_animation;
 
@@ -260,7 +260,7 @@ int picoui_animation_set_source(struct picoui_animation *animation, struct picou
  * @return 0 on success, -1 on failure
  */
 
-int picoui_animation_set_period_ms(struct picoui_animation *animation, int period_ms)
+int tinyui_animation_set_period_ms(struct tinyui_animation *animation, int period_ms)
 {
     ldAnimation_t *ld_animation;
 
@@ -286,7 +286,7 @@ int picoui_animation_set_period_ms(struct picoui_animation *animation, int perio
  * @return -1 on failure
  */
 
-int picoui_animation_show_frame(struct picoui_animation *animation, int frame_index)
+int tinyui_animation_show_frame(struct tinyui_animation *animation, int frame_index)
 {
     ldAnimation_t *ld_animation;
     arm_2d_tile_t *img_tile;

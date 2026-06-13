@@ -26,23 +26,23 @@
 
 int main(void)
 {
-    struct picoui_app *app;
-    struct picoui_window *window;
+    struct tinyui_app *app;
+    struct tinyui_window *window;
 
-    app = picoui_app_create();
+    app = tinyui_app_create();
     if (app == 0) {
         return 1;
     }
 
-    window = picoui_window_create(app, "keyboard_root");
+    window = tinyui_window_create(app, "keyboard_root");
     if (window == 0) {
-        picoui_app_destroy(app);
+        tinyui_app_destroy(app);
         return 1;
     }
 
-    if (picoui_line_edit_create_with_props(
+    if (tinyui_line_edit_create_with_props(
             window,
-            &(struct picoui_line_edit_props){
+            &(struct tinyui_line_edit_props){
                 .id = "keyboard_demo_input",
                 .text = "abc",
                 .keyboard_binding = 1U,
@@ -50,25 +50,25 @@ int main(void)
                 .width = 220,
                 .height = 32,
             }) == 0) {
-        picoui_app_destroy(app);
+        tinyui_app_destroy(app);
         return 1;
     }
-    if (picoui_keyboard_create_with_props(
+    if (tinyui_keyboard_create_with_props(
             window,
-            &(struct picoui_keyboard_props){
+            &(struct tinyui_keyboard_props){
                 .id = "keyboard_demo_keyboard",
                 .width = 320,
                 .height = 160,
             }) == 0) {
-        picoui_app_destroy(app);
+        tinyui_app_destroy(app);
         return 1;
     }
 
-    if (picoui_app_run(app, window) != 0) {
-        picoui_app_destroy(app);
+    if (tinyui_app_run(app, window) != 0) {
+        tinyui_app_destroy(app);
         return 1;
     }
 
-    picoui_app_destroy(app);
+    tinyui_app_destroy(app);
     return 0;
 }

@@ -2,7 +2,7 @@
 
 ## 文档定位
 
-本文是 `H11` 的 supported controls 真相源，只回答当前 first release discussion 范围内，哪些 PicoUI public 控件可以被列入支持清单，以及每个控件当前承认的支持子集。
+本文是 `H11` 的 supported controls 真相源，只回答当前 first release discussion 范围内，哪些 TINYUI public 控件可以被列入支持清单，以及每个控件当前承认的支持子集。
 
 当前口径已经按 `J线` 分流为：
 
@@ -11,28 +11,28 @@
 
 完整合同与限制仍以以下文档为准：
 
-- [H-线当前9控件发布合同](/Users/cys/embedded/LingDongGUI/docs/picoui-serial/H-线当前9控件发布合同.md)
-- [H-线发布差距与LingDongGUI控件对比](/Users/cys/embedded/LingDongGUI/docs/picoui-serial/H-线发布差距与LingDongGUI控件对比.md)
-- [H-线第一版发布说明](/Users/cys/embedded/LingDongGUI/docs/picoui-serial/H-线第一版发布说明.md)
+- [H-线当前9控件发布合同](/Users/cys/embedded/LingDongGUI/docs/tinyui-serial/H-线当前9控件发布合同.md)
+- [H-线发布差距与LingDongGUI控件对比](/Users/cys/embedded/LingDongGUI/docs/tinyui-serial/H-线发布差距与LingDongGUI控件对比.md)
+- [H-线第一版发布说明](/Users/cys/embedded/LingDongGUI/docs/tinyui-serial/H-线第一版发布说明.md)
 
 ## `v0.1` 已对齐控件
 
 | 控件 | 当前支持子集摘要 | 详细合同 |
 | --- | --- | --- |
-| `window` | 容器、flex/grid、padding/gap/align、背景色、background image/mask、`padding_group` | [window 合同](/Users/cys/embedded/LingDongGUI/docs/picoui-serial/H-线当前9控件发布合同.md) |
-| `label` | 文本、font 映射、背景色、文字色、transparent、align、background image/mask、诚实 readback，且 `create_with_props` 已覆盖 `transparent/align/background_source` | [label 合同](/Users/cys/embedded/LingDongGUI/docs/picoui-serial/H-线当前9控件发布合同.md) |
-| `button` | 文本、clicked/pressed/released、release/press image、transparent、font、checkable、key_value、pressed state | [button 合同](/Users/cys/embedded/LingDongGUI/docs/picoui-serial/H-线当前9控件发布合同.md) |
-| `slider` | `set_value/range` 归一化合同、value changed callback、horizontal、background/indicator image+mask、indicator/slim size、percent/orientation readback；不承认 `get_value` public API | [slider 合同](/Users/cys/embedded/LingDongGUI/docs/picoui-serial/H-线当前9控件发布合同.md) |
+| `window` | 容器、flex/grid、padding/gap/align、背景色、background image/mask、`padding_group` | [window 合同](/Users/cys/embedded/LingDongGUI/docs/tinyui-serial/H-线当前9控件发布合同.md) |
+| `label` | 文本、font 映射、背景色、文字色、transparent、align、background image/mask、诚实 readback，且 `create_with_props` 已覆盖 `transparent/align/background_source` | [label 合同](/Users/cys/embedded/LingDongGUI/docs/tinyui-serial/H-线当前9控件发布合同.md) |
+| `button` | 文本、clicked/pressed/released、release/press image、transparent、font、checkable、key_value、pressed state | [button 合同](/Users/cys/embedded/LingDongGUI/docs/tinyui-serial/H-线当前9控件发布合同.md) |
+| `slider` | `set_value/range` 归一化合同、value changed callback、horizontal、background/indicator image+mask、indicator/slim size、percent/orientation readback；不承认 `get_value` public API | [slider 合同](/Users/cys/embedded/LingDongGUI/docs/tinyui-serial/H-线当前9控件发布合同.md) |
 
 ## 已 wrapped、转入 `v0.2` backlog 的控件
 
 | 控件 | 当前支持子集摘要 | 详细合同 |
 | --- | --- | --- |
-| `checkbox` | 文本、checked state、toggle callback、基础样式子集 | [checkbox 合同](/Users/cys/embedded/LingDongGUI/docs/picoui-serial/H-线当前9控件发布合同.md) |
-| `switch` | checked state、toggle callback、enabled、基础样式子集 | [switch 合同](/Users/cys/embedded/LingDongGUI/docs/picoui-serial/H-线当前9控件发布合同.md) |
-| `text` | 文本、最小 font fallback、背景色、文字色 | [text 合同](/Users/cys/embedded/LingDongGUI/docs/picoui-serial/H-线当前9控件发布合同.md) |
-| `image` | 基础 source 绑定、布局显示、真实 `ldImage` backend 路径；仅基础子集，`style_class/user_data` 仅 metadata-only，详见限制 | [image 合同](/Users/cys/embedded/LingDongGUI/docs/picoui-serial/H-线当前9控件发布合同.md) |
-| `list` | add item、selected index、真实 `ldList` 文本/选择映射、`on_selected` callback cookie；高风险控件，非 support 项与 metadata-only 限制见合同 | [list 合同](/Users/cys/embedded/LingDongGUI/docs/picoui-serial/H-线当前9控件发布合同.md) |
+| `checkbox` | 文本、checked state、toggle callback、基础样式子集 | [checkbox 合同](/Users/cys/embedded/LingDongGUI/docs/tinyui-serial/H-线当前9控件发布合同.md) |
+| `switch` | checked state、toggle callback、enabled、基础样式子集 | [switch 合同](/Users/cys/embedded/LingDongGUI/docs/tinyui-serial/H-线当前9控件发布合同.md) |
+| `text` | 文本、最小 font fallback、背景色、文字色 | [text 合同](/Users/cys/embedded/LingDongGUI/docs/tinyui-serial/H-线当前9控件发布合同.md) |
+| `image` | 基础 source 绑定、布局显示、真实 `ldImage` backend 路径；仅基础子集，`style_class/user_data` 仅 metadata-only，详见限制 | [image 合同](/Users/cys/embedded/LingDongGUI/docs/tinyui-serial/H-线当前9控件发布合同.md) |
+| `list` | add item、selected index、真实 `ldList` 文本/选择映射、`on_selected` callback cookie；高风险控件，非 support 项与 metadata-only 限制见合同 | [list 合同](/Users/cys/embedded/LingDongGUI/docs/tinyui-serial/H-线当前9控件发布合同.md) |
 
 ## 当前不在 `v0.1` 对齐支持清单里的内容
 
@@ -45,7 +45,7 @@
 
 ## 跳转
 
-- [H-线第一版发布说明](/Users/cys/embedded/LingDongGUI/docs/picoui-serial/H-线第一版发布说明.md)
-- [H-线demo-catalog](/Users/cys/embedded/LingDongGUI/docs/picoui-serial/H-线demo-catalog.md)
-- [H-线发布测试矩阵](/Users/cys/embedded/LingDongGUI/docs/picoui-serial/H-线发布测试矩阵.md)
-- [picoui_release_capability_matrix.json](/Users/cys/embedded/LingDongGUI/tests/picoui/contract/picoui_release_capability_matrix.json)
+- [H-线第一版发布说明](/Users/cys/embedded/LingDongGUI/docs/tinyui-serial/H-线第一版发布说明.md)
+- [H-线demo-catalog](/Users/cys/embedded/LingDongGUI/docs/tinyui-serial/H-线demo-catalog.md)
+- [H-线发布测试矩阵](/Users/cys/embedded/LingDongGUI/docs/tinyui-serial/H-线发布测试矩阵.md)
+- [tinyui_release_capability_matrix.json](/Users/cys/embedded/LingDongGUI/tests/tinyui/contract/tinyui_release_capability_matrix.json)

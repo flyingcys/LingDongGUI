@@ -59,7 +59,7 @@ static bool ldSliderTouchLogEnabled(void)
     static int enabled = 0;
 
     if (!initialized) {
-        const char *env = getenv("PICOUI_TOUCH_LOG");
+        const char *env = getenv("TINYUI_TOUCH_LOG");
         enabled = (env != NULL && env[0] != '\0' && env[0] != '0') ? 1 : 0;
         initialized = 1;
     }
@@ -111,7 +111,7 @@ static bool slotSliderMove(ld_scene_t *ptScene,ldMsg_t msg)
     }
     ldMsgEmit(ptScene->ptMsgQueue,ptWidget,SIGNAL_VALUE_CHANGED,ptWidget->permille);
     if (ldSliderTouchLogEnabled()) {
-        printf("[PICOUI_TOUCH][SLIDER] widget=%u local=(%d,%d) permille=%u signal=%u\n",
+        printf("[TINYUI_TOUCH][SLIDER] widget=%u local=(%d,%d) permille=%u signal=%u\n",
                (unsigned int)ptWidget->use_as__ldBase_t.nameId,
                tClickLocal.iX,
                tClickLocal.iY,

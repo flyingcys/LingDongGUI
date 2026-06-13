@@ -25,8 +25,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-struct picoui_button_backend_host {
-    struct picoui_backend_widget widget;
+struct tinyui_button_backend_host {
+    struct tinyui_backend_widget widget;
     xBtnInfo_t action_info;
 };
 
@@ -37,15 +37,15 @@ int tinyui_runtime_bridge_detach_from_parent(void *backend_widget);
 
 static int tinyui_button_fail_next_set_font = 0;
 
-static ldButton_t *tinyui_button_get_ld(const struct picoui_button *button)
+static ldButton_t *tinyui_button_get_ld(const struct tinyui_button *button)
 {
-    const struct picoui_backend_widget *backend;
+    const struct tinyui_backend_widget *backend;
 
     if (button == 0 || button->widget.backend_widget == 0) {
         return 0;
     }
 
-    backend = (const struct picoui_backend_widget *)button->widget.backend_widget;
+    backend = (const struct tinyui_backend_widget *)button->widget.backend_widget;
     return (ldButton_t *)backend->ld_widget;
 }
 
@@ -54,9 +54,9 @@ static arm_2d_font_t *tinyui_button_default_font(void)
     return (arm_2d_font_t *)&ARM_2D_FONT_6x8;
 }
 
-static arm_2d_font_t *tinyui_button_resolve_font(const struct picoui_font *font)
+static arm_2d_font_t *tinyui_button_resolve_font(const struct tinyui_font *font)
 {
-    if (font != NULL && font->kind == PICOUI_FONT_KIND_VRES && font->vres_addr != 0) {
+    if (font != NULL && font->kind == TINYUI_FONT_KIND_VRES && font->vres_addr != 0) {
         return (arm_2d_font_t *)ldBaseGetVresFont(font->vres_addr);
     }
 
@@ -71,16 +71,16 @@ static arm_2d_font_t *tinyui_button_resolve_font(const struct picoui_font *font)
     return tinyui_button_default_font();
 }
 
-static void tinyui_button_dispose_partial(struct picoui_button *button)
+static void tinyui_button_dispose_partial(struct tinyui_button *button)
 {
-    struct picoui_button_backend_host *host;
-    struct picoui_backend_app_state *app_state;
+    struct tinyui_button_backend_host *host;
+    struct tinyui_backend_app_state *app_state;
 
     if (button == 0) {
         return;
     }
 
-    host = (struct picoui_button_backend_host *)button->widget.backend_widget;
+    host = (struct tinyui_button_backend_host *)button->widget.backend_widget;
     if (host != 0) {
         app_state = tinyui_runtime_bridge_backend_state(host->widget.owner);
         xBtnRemove(&host->action_info);
@@ -102,7 +102,7 @@ void tinyui_button_test_fail_next_set_font(void)
     tinyui_button_fail_next_set_font = 1;
 }
 
-static int tinyui_button_props_are_valid(const struct picoui_button_props *props)
+static int tinyui_button_props_are_valid(const struct tinyui_button_props *props)
 {
     return props != 0
         && props->id != 0
@@ -114,12 +114,12 @@ static int tinyui_button_props_are_valid(const struct picoui_button_props *props
         && props->padding >= 0;
 }
 
-static struct picoui_button *tinyui_button_alloc(struct picoui_window *parent, const char *id)
+static struct tinyui_button *tinyui_button_alloc(struct tinyui_window *parent, const char *id)
 {
-    struct picoui_button *button;
-    struct picoui_button_backend_host *host;
-    struct picoui_backend_widget *parent_backend;
-    struct picoui_backend_app_state *app_state;
+    struct tinyui_button *button;
+    struct tinyui_button_backend_host *host;
+    struct tinyui_backend_widget *parent_backend;
+    struct tinyui_backend_app_state *app_state;
     ldButton_t *ld_button;
     uint16_t name_id;
 
@@ -127,7 +127,7 @@ static struct picoui_button *tinyui_button_alloc(struct picoui_window *parent, c
         return 0;
     }
 
-    parent_backend = (struct picoui_backend_widget *)parent->widget.backend_widget;
+    parent_backend = (struct tinyui_backend_widget *)parent->widget.backend_widget;
     app_state = tinyui_runtime_bridge_backend_state_from_parent(parent_backend);
     if (parent_backend == 0 || parent_backend->ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
         return 0;
@@ -167,7 +167,7 @@ static struct picoui_button *tinyui_button_alloc(struct picoui_window *parent, c
 
     if (tinyui_widget_init_child(&host->widget,
                                          parent_backend,
-                                         PICOUI_BACKEND_WIDGET_BUTTON,
+                                         TINYUI_BACKEND_WIDGET_BUTTON,
                                          id,
                                          parent_backend->theme) != 0) {
         ldButton_depose(app_state->ld_scene, ld_button);
@@ -204,7 +204,7 @@ static struct picoui_button *tinyui_button_alloc(struct picoui_window *parent, c
  * @return Pointer to the object
  */
 
-struct picoui_button *picoui_button_create(struct picoui_window *parent, const char *id)
+struct tinyui_button *tinyui_button_create(struct tinyui_window *parent, const char *id)
 {
     return tinyui_button_alloc(parent, id);
 }
@@ -217,9 +217,9 @@ struct picoui_button *picoui_button_create(struct picoui_window *parent, const c
  * @return Pointer to the object
  */
 
-struct picoui_button *picoui_button_init(struct picoui_window *parent, const char *id)
+struct tinyui_button *tinyui_button_init(struct tinyui_window *parent, const char *id)
 {
-    return picoui_button_create(parent, id);
+    return tinyui_button_create(parent, id);
 }
 
 /**
@@ -230,10 +230,10 @@ struct picoui_button *picoui_button_init(struct picoui_window *parent, const cha
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct picoui_button *picoui_button_create_with_props(struct picoui_window *parent,
-                                                      const struct picoui_button_props *props)
+struct tinyui_button *tinyui_button_create_with_props(struct tinyui_window *parent,
+                                                      const struct tinyui_button_props *props)
 {
-    struct picoui_button *button;
+    struct tinyui_button *button;
 
     if (!tinyui_button_props_are_valid(props)) {
         return 0;
@@ -246,42 +246,42 @@ struct picoui_button *picoui_button_create_with_props(struct picoui_window *pare
 
     button->on_clicked = props->on_clicked;
     button->user_data = props->user_data;
-    if (picoui_widget_set_user_data(&button->widget, props->user_data) != 0) {
+    if (tinyui_widget_set_user_data(&button->widget, props->user_data) != 0) {
         tinyui_button_dispose_partial(button);
         return 0;
     }
-    if (props->text != 0 && picoui_button_set_text(button, props->text) != 0) {
+    if (props->text != 0 && tinyui_button_set_text(button, props->text) != 0) {
         tinyui_button_dispose_partial(button);
         return 0;
     }
-    if (props->font != 0 && picoui_button_set_font(button, props->font) != 0) {
+    if (props->font != 0 && tinyui_button_set_font(button, props->font) != 0) {
         tinyui_button_dispose_partial(button);
         return 0;
     }
     if ((props->width > 0 || props->height > 0)
-        && picoui_widget_set_size(&button->widget, props->width, props->height) != 0) {
+        && tinyui_widget_set_size(&button->widget, props->width, props->height) != 0) {
         tinyui_button_dispose_partial(button);
         return 0;
     }
     if (props->style_class != 0
-        && picoui_widget_set_style_class(&button->widget, props->style_class) != 0) {
+        && tinyui_widget_set_style_class(&button->widget, props->style_class) != 0) {
         tinyui_button_dispose_partial(button);
         return 0;
     }
-    if (picoui_widget_set_bg_color(&button->widget, props->bg_color) != 0
-        || picoui_widget_set_text_color(&button->widget, props->text_color) != 0
-        || picoui_widget_set_border_color(&button->widget, props->border_color) != 0
-        || picoui_widget_set_radius(&button->widget, props->radius) != 0
-        || picoui_widget_set_padding(&button->widget, props->padding) != 0) {
+    if (tinyui_widget_set_bg_color(&button->widget, props->bg_color) != 0
+        || tinyui_widget_set_text_color(&button->widget, props->text_color) != 0
+        || tinyui_widget_set_border_color(&button->widget, props->border_color) != 0
+        || tinyui_widget_set_radius(&button->widget, props->radius) != 0
+        || tinyui_widget_set_padding(&button->widget, props->padding) != 0) {
         tinyui_button_dispose_partial(button);
         return 0;
     }
-    if (picoui_button_set_release_image(button, props->release_image) != 0
-        || picoui_button_set_press_image(button, props->press_image) != 0
-        || picoui_button_set_transparent(button, props->transparent) != 0
-        || picoui_button_set_checkable(button, props->checkable) != 0
-        || picoui_button_set_key_value(button, props->key_value) != 0
-        || picoui_button_set_pressed(button, props->pressed) != 0) {
+    if (tinyui_button_set_release_image(button, props->release_image) != 0
+        || tinyui_button_set_press_image(button, props->press_image) != 0
+        || tinyui_button_set_transparent(button, props->transparent) != 0
+        || tinyui_button_set_checkable(button, props->checkable) != 0
+        || tinyui_button_set_key_value(button, props->key_value) != 0
+        || tinyui_button_set_pressed(button, props->pressed) != 0) {
         tinyui_button_dispose_partial(button);
         return 0;
     }
@@ -289,8 +289,8 @@ struct picoui_button *picoui_button_create_with_props(struct picoui_window *pare
     return button;
 }
 
-static int tinyui_button_set_event(struct picoui_button *button,
-                                   picoui_event_cb cb,
+static int tinyui_button_set_event(struct tinyui_button *button,
+                                   tinyui_event_cb cb,
                                    void *user_data,
                                    int kind)
 {
@@ -318,13 +318,13 @@ static int tinyui_button_set_event(struct picoui_button *button,
  * @return -1 on failure
  */
 
-int picoui_button_set_text(struct picoui_button *button, const char *text)
+int tinyui_button_set_text(struct tinyui_button *button, const char *text)
 {
     if (button == 0 || text == 0) {
         return -1;
     }
 
-    if (picoui_widget_set_text(&button->widget, text) != 0) {
+    if (tinyui_widget_set_text(&button->widget, text) != 0) {
         return -1;
     }
     return tinyui_widget_set_backend_text(button->widget.backend_widget, text);
@@ -338,7 +338,7 @@ int picoui_button_set_text(struct picoui_button *button, const char *text)
  * @return 0 on success, -1 on failure
  */
 
-int picoui_button_get_text(struct picoui_button *button, const char **text)
+int tinyui_button_get_text(struct tinyui_button *button, const char **text)
 {
     ldButton_t *ld_button;
 
@@ -363,7 +363,7 @@ int picoui_button_get_text(struct picoui_button *button, const char **text)
  * @return 0 on success, -1 on failure
  */
 
-int picoui_button_set_font(struct picoui_button *button, const struct picoui_font *font)
+int tinyui_button_set_font(struct tinyui_button *button, const struct tinyui_font *font)
 {
     ldButton_t *ld_button;
     arm_2d_font_t *resolved_font;
@@ -400,7 +400,7 @@ int picoui_button_set_font(struct picoui_button *button, const struct picoui_fon
  * @return 0 on success, -1 on failure
  */
 
-int picoui_button_get_font(struct picoui_button *button, const struct picoui_font **font)
+int tinyui_button_get_font(struct tinyui_button *button, const struct tinyui_font **font)
 {
     if (button == 0 || font == 0) {
         return -1;
@@ -419,7 +419,7 @@ int picoui_button_get_font(struct picoui_button *button, const struct picoui_fon
  * @return 0 on success, -1 on failure
  */
 
-int picoui_button_set_color(struct picoui_button *button,
+int tinyui_button_set_color(struct tinyui_button *button,
                             unsigned int release_color,
                             unsigned int press_color)
 {
@@ -448,7 +448,7 @@ int picoui_button_set_color(struct picoui_button *button,
  * @return 0 on success, -1 on failure
  */
 
-int picoui_button_get_release_color(struct picoui_button *button, unsigned int *rgb)
+int tinyui_button_get_release_color(struct tinyui_button *button, unsigned int *rgb)
 {
     ldButton_t *ld_button;
 
@@ -473,7 +473,7 @@ int picoui_button_get_release_color(struct picoui_button *button, unsigned int *
  * @return 0 on success, -1 on failure
  */
 
-int picoui_button_get_press_color(struct picoui_button *button, unsigned int *rgb)
+int tinyui_button_get_press_color(struct tinyui_button *button, unsigned int *rgb)
 {
     ldButton_t *ld_button;
 
@@ -498,8 +498,8 @@ int picoui_button_get_press_color(struct picoui_button *button, unsigned int *rg
  * @return -1 on failure
  */
 
-int picoui_button_set_release_image(struct picoui_button *button,
-                                    struct picoui_image_source *source)
+int tinyui_button_set_release_image(struct tinyui_button *button,
+                                    struct tinyui_image_source *source)
 {
     ldButton_t *ld_button;
 
@@ -528,8 +528,8 @@ int picoui_button_set_release_image(struct picoui_button *button,
  * @return -1 on failure
  */
 
-int picoui_button_set_press_image(struct picoui_button *button,
-                                  struct picoui_image_source *source)
+int tinyui_button_set_press_image(struct tinyui_button *button,
+                                  struct tinyui_image_source *source)
 {
     ldButton_t *ld_button;
 
@@ -559,14 +559,14 @@ int picoui_button_set_press_image(struct picoui_button *button,
  * @return -1 on failure
  */
 
-int picoui_button_set_image(struct picoui_button *button,
-                            struct picoui_image_source *release_source,
-                            struct picoui_image_source *press_source)
+int tinyui_button_set_image(struct tinyui_button *button,
+                            struct tinyui_image_source *release_source,
+                            struct tinyui_image_source *press_source)
 {
-    if (picoui_button_set_release_image(button, release_source) != 0) {
+    if (tinyui_button_set_release_image(button, release_source) != 0) {
         return -1;
     }
-    return picoui_button_set_press_image(button, press_source);
+    return tinyui_button_set_press_image(button, press_source);
 }
 
 /**
@@ -577,7 +577,7 @@ int picoui_button_set_image(struct picoui_button *button,
  * @return -1 on failure
  */
 
-int picoui_button_set_transparent(struct picoui_button *button, int transparent)
+int tinyui_button_set_transparent(struct tinyui_button *button, int transparent)
 {
     ldButton_t *ld_button;
 
@@ -602,7 +602,7 @@ int picoui_button_set_transparent(struct picoui_button *button, int transparent)
  * @return -1 on failure
  */
 
-int picoui_button_get_transparent(struct picoui_button *button, int *transparent)
+int tinyui_button_get_transparent(struct tinyui_button *button, int *transparent)
 {
     ldButton_t *ld_button;
 
@@ -627,7 +627,7 @@ int picoui_button_get_transparent(struct picoui_button *button, int *transparent
  * @return -1 on failure
  */
 
-int picoui_button_set_checkable(struct picoui_button *button, int checkable)
+int tinyui_button_set_checkable(struct tinyui_button *button, int checkable)
 {
     ldButton_t *ld_button;
 
@@ -652,7 +652,7 @@ int picoui_button_set_checkable(struct picoui_button *button, int checkable)
  * @return -1 on failure
  */
 
-int picoui_button_get_checkable(struct picoui_button *button, int *checkable)
+int tinyui_button_get_checkable(struct tinyui_button *button, int *checkable)
 {
     ldButton_t *ld_button;
 
@@ -677,7 +677,7 @@ int picoui_button_get_checkable(struct picoui_button *button, int *checkable)
  * @return -1 on failure
  */
 
-int picoui_button_set_key_value(struct picoui_button *button, unsigned int key_value)
+int tinyui_button_set_key_value(struct tinyui_button *button, unsigned int key_value)
 {
     ldButton_t *ld_button;
 
@@ -702,7 +702,7 @@ int picoui_button_set_key_value(struct picoui_button *button, unsigned int key_v
  * @return -1 on failure
  */
 
-int picoui_button_get_key_value(struct picoui_button *button, unsigned int *key_value)
+int tinyui_button_get_key_value(struct tinyui_button *button, unsigned int *key_value)
 {
     ldButton_t *ld_button;
 
@@ -727,7 +727,7 @@ int picoui_button_get_key_value(struct picoui_button *button, unsigned int *key_
  * @return -1 on failure
  */
 
-int picoui_button_set_pressed(struct picoui_button *button, int pressed)
+int tinyui_button_set_pressed(struct tinyui_button *button, int pressed)
 {
     ldButton_t *ld_button;
 
@@ -752,9 +752,9 @@ int picoui_button_set_pressed(struct picoui_button *button, int pressed)
  * @return 0 on success, -1 on failure
  */
 
-int picoui_button_set_press(struct picoui_button *button, int pressed)
+int tinyui_button_set_press(struct tinyui_button *button, int pressed)
 {
-    return picoui_button_set_pressed(button, pressed);
+    return tinyui_button_set_pressed(button, pressed);
 }
 
 /**
@@ -765,7 +765,7 @@ int picoui_button_set_press(struct picoui_button *button, int pressed)
  * @return -1 on failure
  */
 
-int picoui_button_get_pressed(struct picoui_button *button, int *pressed)
+int tinyui_button_get_pressed(struct tinyui_button *button, int *pressed)
 {
     ldButton_t *ld_button;
 
@@ -790,9 +790,9 @@ int picoui_button_get_pressed(struct picoui_button *button, int *pressed)
  * @return The property value, negative on error
  */
 
-int picoui_button_get_press(struct picoui_button *button, int *pressed)
+int tinyui_button_get_press(struct tinyui_button *button, int *pressed)
 {
-    return picoui_button_get_pressed(button, pressed);
+    return tinyui_button_get_pressed(button, pressed);
 }
 
 /**
@@ -804,22 +804,22 @@ int picoui_button_get_press(struct picoui_button *button, int *pressed)
  * @return -1 on failure
  */
 
-int picoui_button_get_pressed_by_name_id(const struct picoui_widget *root,
+int tinyui_button_get_pressed_by_name_id(const struct tinyui_widget *root,
                                          int name_id,
                                          int *pressed)
 {
-    struct picoui_widget *widget;
+    struct tinyui_widget *widget;
 
     if (root == 0 || pressed == 0) {
         return -1;
     }
 
-    widget = picoui_widget_find_by_name_id(root, name_id);
-    if (widget == 0 || picoui_widget_get_type(widget) != PICOUI_WIDGET_TYPE_BUTTON) {
+    widget = tinyui_widget_find_by_name_id(root, name_id);
+    if (widget == 0 || tinyui_widget_get_type(widget) != TINYUI_WIDGET_TYPE_BUTTON) {
         return -1;
     }
 
-    return picoui_button_get_pressed((struct picoui_button *)widget, pressed);
+    return tinyui_button_get_pressed((struct tinyui_button *)widget, pressed);
 }
 
 /**
@@ -831,18 +831,18 @@ int picoui_button_get_pressed_by_name_id(const struct picoui_widget *root,
  * @return -1 on failure
  */
 
-int picoui_button_get_action_state_by_name_id(const struct picoui_widget *root,
+int tinyui_button_get_action_state_by_name_id(const struct tinyui_widget *root,
                                               int name_id,
-                                              enum picoui_button_action_state action)
+                                              enum tinyui_button_action_state action)
 {
-    struct picoui_widget *widget;
+    struct tinyui_widget *widget;
 
     if (root == 0 || name_id < 0 || name_id > 65535) {
         return -1;
     }
 
-    widget = picoui_widget_find_by_name_id(root, name_id);
-    if (widget == 0 || picoui_widget_get_type(widget) != PICOUI_WIDGET_TYPE_BUTTON) {
+    widget = tinyui_widget_find_by_name_id(root, name_id);
+    if (widget == 0 || tinyui_widget_get_type(widget) != TINYUI_WIDGET_TYPE_BUTTON) {
         return -1;
     }
 
@@ -857,7 +857,7 @@ int picoui_button_get_action_state_by_name_id(const struct picoui_widget *root,
  * @return 0 on success, -1 on failure
  */
 
-int picoui_button_set_text_color(struct picoui_button *button, unsigned int text_color)
+int tinyui_button_set_text_color(struct tinyui_button *button, unsigned int text_color)
 {
     ldButton_t *ld_button;
 
@@ -886,7 +886,7 @@ int picoui_button_set_text_color(struct picoui_button *button, unsigned int text
  * @return 0 on success, -1 on failure
  */
 
-int picoui_button_get_text_color(struct picoui_button *button, unsigned int *rgb)
+int tinyui_button_get_text_color(struct tinyui_button *button, unsigned int *rgb)
 {
     ldButton_t *ld_button;
 
@@ -912,8 +912,8 @@ int picoui_button_get_text_color(struct picoui_button *button, unsigned int *rgb
  * @return 0 on success, -1 on failure
  */
 
-int picoui_button_set_on_clicked(struct picoui_button *button,
-                                 picoui_event_cb cb,
+int tinyui_button_set_on_clicked(struct tinyui_button *button,
+                                 tinyui_event_cb cb,
                                  void *user_data)
 {
     if (button == 0) {
@@ -934,8 +934,8 @@ int picoui_button_set_on_clicked(struct picoui_button *button,
  * @return 0 on success, -1 on failure
  */
 
-int picoui_button_set_on_pressed(struct picoui_button *button,
-                                 picoui_event_cb cb,
+int tinyui_button_set_on_pressed(struct tinyui_button *button,
+                                 tinyui_event_cb cb,
                                  void *user_data)
 {
     return tinyui_button_set_event(button, cb, user_data, 0);
@@ -950,8 +950,8 @@ int picoui_button_set_on_pressed(struct picoui_button *button,
  * @return 0 on success, -1 on failure
  */
 
-int picoui_button_set_on_released(struct picoui_button *button,
-                                  picoui_event_cb cb,
+int tinyui_button_set_on_released(struct tinyui_button *button,
+                                  tinyui_event_cb cb,
                                   void *user_data)
 {
     return tinyui_button_set_event(button, cb, user_data, 1);

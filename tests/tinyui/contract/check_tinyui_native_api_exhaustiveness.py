@@ -25,7 +25,7 @@ ALLOWLISTED_COVERAGE_KINDS = {
 }
 VALID_GAP_STATUSES = {
     "covered",
-    "missing_picoui_api",
+    "missing_tinyui_api",
     "missing_backend_proof",
     "missing_unit",
     "missing_gate",
@@ -61,7 +61,7 @@ VALID_DIRECT_100_CATEGORIES = {
 REQUIRED_ROW_FIELDS = {
     "native_api",
     "coverage_kind",
-    "picoui_api",
+    "tinyui_api",
     "backend_proof",
     "unit_test",
     "gate_evidence",
@@ -72,7 +72,7 @@ REQUIRED_ROW_FIELDS = {
 LEDGER_ALIGNED_FIELDS = {
     "group_kind",
     "coverage_kind",
-    "picoui_api",
+    "tinyui_api",
     "backend_proof",
     "unit_test",
     "required",
@@ -91,7 +91,7 @@ VALID_SHARED_POLICIES = {
     "shared_api_equivalence",
     "backend_proof_only",
     "allowlisted_tree_helper",
-    "missing_picoui_api",
+    "missing_tinyui_api",
     "missing_backend_proof",
 }
 
@@ -170,7 +170,7 @@ def _assert_row_shape(native_api: str, row: dict) -> None:
         assert policy_category == "direct_covered", (
             f"{native_api} covered row must use policy_category=direct_covered"
         )
-        for field in ("picoui_api", "backend_proof", "unit_test"):
+        for field in ("tinyui_api", "backend_proof", "unit_test"):
             assert isinstance(row.get(field), str) and row[field], (
                 f"{native_api} covered row must have concrete {field}"
             )

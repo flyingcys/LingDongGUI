@@ -1,19 +1,19 @@
-# PicoUI a-0.9 Allowlist Truth Closeout Implementation Plan
+# TINYUI a-0.9 Allowlist Truth Closeout Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 将 `a-0.8` 产生的 `207` 个 allowlisted native API 行收敛为可机器校验的 PicoUI policy truth，并对 keyboard/button/background 等真实边界做明确开发或拒绝决策。
+**Goal:** 将 `a-0.8` 产生的 `207` 个 allowlisted native API 行收敛为可机器校验的 TINYUI policy truth，并对 keyboard/button/background 等真实边界做明确开发或拒绝决策。
 
 **Architecture:** `a-0.9` 固定串行入口为 `R0 policy schema`，随后 `R1 lifecycle/show` 与 `R2 runtime/internal` 可并行，`R3 base`、`R4 keyboard/button`、`R5 background` 可并行探索但必须串行合流 matrix，最后 `R6` 做 matrix/docs/gate closeout。每个 subagent 只拥有自己的写面，shared matrix 合流由 integration subagent 或主线程串行执行。
 
-**Tech Stack:** C、Python3、CMake、CTest、PicoUI、LingDongGUI、Markdown serial docs、GitNexus
+**Tech Stack:** C、Python3、CMake、CTest、TINYUI、LingDongGUI、Markdown serial docs、GitNexus
 
 ---
 
 ## 0. 执行规则
 
 - worktree 建议：`.worktree/a-0.9`
-- 分支建议：`feat/picoui-a-0-9-allowlist-truth-closeout`
+- 分支建议：`feat/tinyui-a-0-9-allowlist-truth-closeout`
 - 创建或切换 worktree 后必须执行：
 
 ```bash
@@ -32,25 +32,25 @@ git submodule update --init --recursive
 ### R0 policy schema
 
 **Modify:**
-- `tests/picoui/contract/picoui_release_capability_matrix.json`
-- `tests/picoui/contract/native_api_gap_ledger.json`
-- `tests/picoui/contract/ldgui_public_api_inventory.json`
-- `tests/picoui/contract/check_picoui_native_api_exhaustiveness.py`
-- `tests/picoui/contract/check_picoui_release_capability_matrix.py`
+- `tests/tinyui/contract/tinyui_release_capability_matrix.json`
+- `tests/tinyui/contract/native_api_gap_ledger.json`
+- `tests/tinyui/contract/ldgui_public_api_inventory.json`
+- `tests/tinyui/contract/check_tinyui_native_api_exhaustiveness.py`
+- `tests/tinyui/contract/check_tinyui_release_capability_matrix.py`
 - `docs/ability/README.md`
 
 ### R1 lifecycle / show policy
 
 **Modify:**
-- `tests/picoui/contract/native_api_gap_ledger.json`
-- `tests/picoui/contract/picoui_release_capability_matrix.json`
+- `tests/tinyui/contract/native_api_gap_ledger.json`
+- `tests/tinyui/contract/tinyui_release_capability_matrix.json`
 - `docs/ability/*.md`
 
 ### R2 runtime/internal group policy
 
 **Modify:**
-- `tests/picoui/contract/native_api_gap_ledger.json`
-- `tests/picoui/contract/picoui_release_capability_matrix.json`
+- `tests/tinyui/contract/native_api_gap_ledger.json`
+- `tests/tinyui/contract/tinyui_release_capability_matrix.json`
 - `docs/ability/gui.md`
 - `docs/ability/mem.md`
 - `docs/ability/switch_internal.md`
@@ -59,53 +59,53 @@ git submodule update --init --recursive
 ### R3 base tree/resource/helper decision
 
 **Modify if exposing new API:**
-- `picoui/include/picoui/widget.h`
-- `picoui/src/core/widget.c`
-- `picoui/src/backend/ldgui/backend_widget.c`
-- `tests/picoui/unit/test_picoui_layout.c`
+- `tinyui/include/tinyui/widget.h`
+- `tinyui/src/core/widget.c`
+- `tinyui/src/backend/ldgui/backend_widget.c`
+- `tests/tinyui/unit/test_tinyui_layout.c`
 
 **Always modify:**
-- `tests/picoui/contract/native_api_gap_ledger.json`
-- `tests/picoui/contract/picoui_release_capability_matrix.json`
+- `tests/tinyui/contract/native_api_gap_ledger.json`
+- `tests/tinyui/contract/tinyui_release_capability_matrix.json`
 - `docs/ability/base.md`
 
 ### R4 keyboard weak hook / button action decision
 
 **Modify if exposing new API:**
-- `picoui/include/picoui/keyboard.h`
-- `picoui/src/widgets/keyboard.c`
-- `picoui/src/backend/ldgui/backend_keyboard.c`
-- `tests/picoui/unit/test_picoui_keyboard.c`
-- `picoui/include/picoui/button.h`
-- `picoui/src/widgets/button.c`
-- `picoui/src/backend/ldgui/backend_button.c`
-- `tests/picoui/unit/test_picoui_button_events.c`
+- `tinyui/include/tinyui/keyboard.h`
+- `tinyui/src/widgets/keyboard.c`
+- `tinyui/src/backend/ldgui/backend_keyboard.c`
+- `tests/tinyui/unit/test_tinyui_keyboard.c`
+- `tinyui/include/tinyui/button.h`
+- `tinyui/src/widgets/button.c`
+- `tinyui/src/backend/ldgui/backend_button.c`
+- `tests/tinyui/unit/test_tinyui_button_events.c`
 
 **Always modify:**
-- `tests/picoui/contract/native_api_gap_ledger.json`
-- `tests/picoui/contract/picoui_release_capability_matrix.json`
+- `tests/tinyui/contract/native_api_gap_ledger.json`
+- `tests/tinyui/contract/tinyui_release_capability_matrix.json`
 - `docs/ability/keyboard.md`
 - `docs/ability/button.md`
 
 ### R5 background/root semantics
 
 **Modify if adding matrix policy only:**
-- `tests/picoui/contract/picoui_release_capability_matrix.json`
+- `tests/tinyui/contract/tinyui_release_capability_matrix.json`
 - `docs/ability/background.md`
 
 **Modify if exposing new API:**
-- `picoui/include/picoui/window.h`
-- `picoui/src/widgets/window.c`
-- `picoui/src/backend/ldgui/backend_window.c`
-- `tests/picoui/unit/test_picoui_layout.c`
+- `tinyui/include/tinyui/window.h`
+- `tinyui/src/widgets/window.c`
+- `tinyui/src/backend/ldgui/backend_window.c`
+- `tests/tinyui/unit/test_tinyui_layout.c`
 
 ### R6 closeout
 
 **Modify:**
 - `docs/ability/README.md`
-- `docs/picoui-serial/a-0.9-未direct覆盖能力收口.md`
-- `docs/picoui-serial/a-0.9-线计划索引.md`
-- `docs/picoui-serial/a-0.10-线计划索引.md` only if a real follow-up remains
+- `docs/tinyui-serial/a-0.9-未direct覆盖能力收口.md`
+- `docs/tinyui-serial/a-0.9-线计划索引.md`
+- `docs/tinyui-serial/a-0.10-线计划索引.md` only if a real follow-up remains
 
 ## 2. Tasks
 
@@ -120,13 +120,13 @@ git submodule update --init --recursive
 Run:
 
 ```bash
-gitnexus_impact target=check_picoui_native_api_exhaustiveness direction=upstream repo=LingDongGUI
-gitnexus_impact target=check_picoui_release_capability_matrix direction=upstream repo=LingDongGUI
+gitnexus_impact target=check_tinyui_native_api_exhaustiveness direction=upstream repo=LingDongGUI
+gitnexus_impact target=check_tinyui_release_capability_matrix direction=upstream repo=LingDongGUI
 ```
 
 Expected: report direct callers/tests and risk before edits.
 
-执行记录（2026-06-02）：GitNexus 对 `check_picoui_native_api_exhaustiveness`、`check_picoui_release_capability_matrix` 以及对应文件/函数均未命中索引，返回 `risk=UNKNOWN`、无 HIGH/CRITICAL blast radius。实际改动限定在 contract checker/JSON truth-source/docs。
+执行记录（2026-06-02）：GitNexus 对 `check_tinyui_native_api_exhaustiveness`、`check_tinyui_release_capability_matrix` 以及对应文件/函数均未命中索引，返回 `risk=UNKNOWN`、无 HIGH/CRITICAL blast radius。实际改动限定在 contract checker/JSON truth-source/docs。
 
 - [x] **Step 2: Add schema fields**
 
@@ -160,7 +160,7 @@ gap_status=allowlisted -> allowlist_reason non-empty
 
 - [ ] **Step 3: Update checker**
 
-Modify `check_picoui_native_api_exhaustiveness.py` to fail when:
+Modify `check_tinyui_native_api_exhaustiveness.py` to fail when:
 
 ```text
 row has no policy_category
@@ -176,15 +176,15 @@ matrix group has no group_kind
 Run:
 
 ```bash
-python3 tests/picoui/contract/check_ldgui_public_api_inventory.py
-python3 tests/picoui/contract/check_picoui_native_api_exhaustiveness.py
-python3 tests/picoui/contract/check_picoui_release_capability_matrix.py
+python3 tests/tinyui/contract/check_ldgui_public_api_inventory.py
+python3 tests/tinyui/contract/check_tinyui_native_api_exhaustiveness.py
+python3 tests/tinyui/contract/check_tinyui_release_capability_matrix.py
 git diff --check
 ```
 
 Expected: all pass.
 
-执行记录（2026-06-02）：三份机器真相源已覆盖 `611/611` 行 `group_kind` 与 `policy_category`；`picoui_release_capability_matrix.json` schema 升级为 `a-0.9-allowlist-policy-v1`；`summary.policy_category_counts` 与 `summary.group_kind_counts` 已由 checker 校验。`python3 tests/picoui/contract/check_ldgui_public_api_inventory.py`、`python3 tests/picoui/contract/check_picoui_native_api_exhaustiveness.py`、`python3 tests/picoui/contract/check_picoui_release_capability_matrix.py`、`git diff --check` 均通过。
+执行记录（2026-06-02）：三份机器真相源已覆盖 `611/611` 行 `group_kind` 与 `policy_category`；`tinyui_release_capability_matrix.json` schema 升级为 `a-0.9-allowlist-policy-v1`；`summary.policy_category_counts` 与 `summary.group_kind_counts` 已由 checker 校验。`python3 tests/tinyui/contract/check_ldgui_public_api_inventory.py`、`python3 tests/tinyui/contract/check_tinyui_native_api_exhaustiveness.py`、`python3 tests/tinyui/contract/check_tinyui_release_capability_matrix.py`、`git diff --check` 均通过。
 
 ### Task R1: Lifecycle And Show Policy
 
@@ -230,7 +230,7 @@ For widgets whose only non-covered rows are lifecycle/show policy rows, set widg
 Update affected `docs/ability/*.md` rows so users see:
 
 ```text
-PicoUI 状态: allowlisted
+TINYUI 状态: allowlisted
 policy_category: lifecycle_internal or render_pipeline_internal
 说明: backend lifecycle/render pipeline owned; no public wrapper required
 ```
@@ -240,8 +240,8 @@ policy_category: lifecycle_internal or render_pipeline_internal
 Run:
 
 ```bash
-python3 tests/picoui/contract/check_picoui_native_api_exhaustiveness.py
-python3 tests/picoui/contract/check_picoui_release_capability_matrix.py
+python3 tests/tinyui/contract/check_tinyui_native_api_exhaustiveness.py
+python3 tests/tinyui/contract/check_tinyui_release_capability_matrix.py
 git diff --check
 ```
 
@@ -294,20 +294,20 @@ docs/ability/README.md
 Run:
 
 ```bash
-python3 tests/picoui/contract/check_ldgui_public_api_inventory.py
-python3 tests/picoui/contract/check_picoui_native_api_exhaustiveness.py
-python3 tests/picoui/contract/check_picoui_release_capability_matrix.py
+python3 tests/tinyui/contract/check_ldgui_public_api_inventory.py
+python3 tests/tinyui/contract/check_tinyui_native_api_exhaustiveness.py
+python3 tests/tinyui/contract/check_tinyui_release_capability_matrix.py
 git diff --check
 ```
 
 
-执行记录（2026-06-02）：R1/R2 已完成。matrix/ledger 中 `lifecycle_internal=108`、`render_pipeline_internal=27`；`gui/mem/switch_internal/window_layout_internal` 已分别归入 `runtime_host/internal_helper`，并由 checker 要求 `non_widget_policy_complete`。`docs/ability/*.md` 已逐行显示 `group_kind`、`policy_category`、`required`、`gap_status`。`python3 tests/picoui/contract/check_ldgui_public_api_inventory.py`、`python3 tests/picoui/contract/check_picoui_native_api_exhaustiveness.py`、`python3 tests/picoui/contract/check_picoui_release_capability_matrix.py`、`git diff --check` 均通过。
+执行记录（2026-06-02）：R1/R2 已完成。matrix/ledger 中 `lifecycle_internal=108`、`render_pipeline_internal=27`；`gui/mem/switch_internal/window_layout_internal` 已分别归入 `runtime_host/internal_helper`，并由 checker 要求 `non_widget_policy_complete`。`docs/ability/*.md` 已逐行显示 `group_kind`、`policy_category`、`required`、`gap_status`。`python3 tests/tinyui/contract/check_ldgui_public_api_inventory.py`、`python3 tests/tinyui/contract/check_tinyui_native_api_exhaustiveness.py`、`python3 tests/tinyui/contract/check_tinyui_release_capability_matrix.py`、`git diff --check` 均通过。
 
 ### Task R3: Base Tree/Resource/Helper Decision
 
 **Owner:** Fresh subagent `SG-a0.9-R3-base-policy`
 
-**Goal:** Decide whether `ldBase` tree/resource/helper rows are true PicoUI public abilities or internal policy rows.
+**Goal:** Decide whether `ldBase` tree/resource/helper rows are true TINYUI public abilities or internal policy rows.
 
 - [x] **Step 1: Review base rows**
 
@@ -326,16 +326,16 @@ layout/helper math
 If exposing tree introspection, add APIs:
 
 ```c
-struct picoui_widget *picoui_widget_get_parent(const struct picoui_widget *widget);
-int picoui_widget_get_child_count(const struct picoui_widget *widget);
-struct picoui_widget *picoui_widget_get_child(const struct picoui_widget *widget, int index);
-struct picoui_widget *picoui_widget_get_next_sibling(const struct picoui_widget *widget);
+struct tinyui_widget *tinyui_widget_get_parent(const struct tinyui_widget *widget);
+int tinyui_widget_get_child_count(const struct tinyui_widget *widget);
+struct tinyui_widget *tinyui_widget_get_child(const struct tinyui_widget *widget, int index);
+struct tinyui_widget *tinyui_widget_get_next_sibling(const struct tinyui_widget *widget);
 ```
 
 If not exposing, document:
 
 ```text
-PicoUI tree mutation is owned by create/parent APIs and backend tree internals; native traversal helpers are not public PicoUI user surface.
+TINYUI tree mutation is owned by create/parent APIs and backend tree internals; native traversal helpers are not public TINYUI user surface.
 ```
 
 - [x] **Step 3: Implement only if exposed**
@@ -343,10 +343,10 @@ PicoUI tree mutation is owned by create/parent APIs and backend tree internals; 
 If APIs are added, implement in:
 
 ```text
-picoui/include/picoui/widget.h
-picoui/src/core/widget.c
-picoui/src/backend/ldgui/backend_widget.c
-tests/picoui/unit/test_picoui_layout.c
+tinyui/include/tinyui/widget.h
+tinyui/src/core/widget.c
+tinyui/src/backend/ldgui/backend_widget.c
+tests/tinyui/unit/test_tinyui_layout.c
 ```
 
 Unit must assert real backend/native parent-child fields, not host cache only.
@@ -365,14 +365,14 @@ policy_category=base_tree_policy | resource_time_helper_policy | drawing_helper_
 Run:
 
 ```bash
-ctest --test-dir build -R 'test_picoui_layout' --output-on-failure
-python3 tests/picoui/contract/check_picoui_native_api_exhaustiveness.py
-python3 tests/picoui/contract/check_picoui_release_capability_matrix.py
+ctest --test-dir build -R 'test_tinyui_layout' --output-on-failure
+python3 tests/tinyui/contract/check_tinyui_native_api_exhaustiveness.py
+python3 tests/tinyui/contract/check_tinyui_release_capability_matrix.py
 git diff --check
 ```
 
 
-执行记录（2026-06-02）：R3 决策为不新增 PicoUI tree traversal public API。`ldBaseGetParent/GetChildCount/GetChildList/GetNextSibling/NodeAdd/NodeRemove` 等保持 `base_tree_policy`；resource/time helper 保持 `resource_time_helper_policy`；raw Arm-2D drawing helper 保持 `drawing_helper_policy`。`base` group 已进入 `policy_complete_not_direct_100 / policy_complete`。验证：`ctest --test-dir build -R 'test_picoui_layout' --output-on-failure`、三项 contract checker、`git diff --check` 均通过。
+执行记录（2026-06-02）：R3 决策为不新增 TINYUI tree traversal public API。`ldBaseGetParent/GetChildCount/GetChildList/GetNextSibling/NodeAdd/NodeRemove` 等保持 `base_tree_policy`；resource/time helper 保持 `resource_time_helper_policy`；raw Arm-2D drawing helper 保持 `drawing_helper_policy`。`base` group 已进入 `policy_complete_not_direct_100 / policy_complete`。验证：`ctest --test-dir build -R 'test_tinyui_layout' --output-on-failure`、三项 contract checker、`git diff --check` 均通过。
 
 ### Task R4: Keyboard Weak Hook And Button Action Decision
 
@@ -401,15 +401,15 @@ Expose portable key layout API.
 Keep backend-private because native list contains Arm-2D tile/mask details.
 ```
 
-If exposed, add stable `picoui_keyboard_set_layout` data structure without leaking `kbBtnInfo_t`.
+If exposed, add stable `tinyui_keyboard_set_layout` data structure without leaking `kbBtnInfo_t`.
 
 - [x] **Step 3: Decide keyboard callback**
 
 Choose one:
 
 ```text
-Expose PicoUI keyboard event callback using existing event abstraction.
-Keep backend-private if current PicoUI text/input events already cover user intent.
+Expose TINYUI keyboard event callback using existing event abstraction.
+Keep backend-private if current TINYUI text/input events already cover user intent.
 ```
 
 - [x] **Step 4: Decide keyboard user draw**
@@ -426,7 +426,7 @@ Reject raw Arm-2D tile draw callback as non-portable backend-private hook.
 Choose one:
 
 ```text
-Expose PicoUI event/action readback.
+Expose TINYUI event/action readback.
 Reject native nameId/global action helper and prove existing button events/readback cover user intent.
 ```
 
@@ -448,20 +448,20 @@ allowlisted with policy_category=backend_private_hook or native_action_private a
 Run:
 
 ```bash
-ctest --test-dir build -R 'test_picoui_keyboard|test_picoui_button_events' --output-on-failure
-python3 tests/picoui/contract/check_picoui_native_api_exhaustiveness.py
-python3 tests/picoui/contract/check_picoui_release_capability_matrix.py
+ctest --test-dir build -R 'test_tinyui_keyboard|test_tinyui_button_events' --output-on-failure
+python3 tests/tinyui/contract/check_tinyui_native_api_exhaustiveness.py
+python3 tests/tinyui/contract/check_tinyui_release_capability_matrix.py
 git diff --check
 ```
 
 
-执行记录（2026-06-02）：R4 决策为不新增 native weak hook/nameId action public API。`ldKeyboardGetTargetBtnList/ldKeyboardCallback/ldKeyboardBtnUserDraw` 保持 `backend_private_hook`；`ldButtonActionInit/ldButtonActionIsPressById` 保持 `native_action_private`。`button`、`keyboard` 已进入 `policy_complete_not_direct_100 / policy_complete`。验证：`ctest --test-dir build -R 'test_picoui_keyboard|test_picoui_button_events' --output-on-failure`、三项 contract checker、`git diff --check` 均通过。
+执行记录（2026-06-02）：R4 决策为不新增 native weak hook/nameId action public API。`ldKeyboardGetTargetBtnList/ldKeyboardCallback/ldKeyboardBtnUserDraw` 保持 `backend_private_hook`；`ldButtonActionInit/ldButtonActionIsPressById` 保持 `native_action_private`。`button`、`keyboard` 已进入 `policy_complete_not_direct_100 / policy_complete`。验证：`ctest --test-dir build -R 'test_tinyui_keyboard|test_tinyui_button_events' --output-on-failure`、三项 contract checker、`git diff --check` 均通过。
 
 ### Task R5: Background/Root Semantics
 
 **Owner:** Fresh subagent `SG-a0.9-R5-background-root`
 
-**Goal:** Convert `background` from markdown-only boundary into matrix-recognized policy or real PicoUI abstraction.
+**Goal:** Convert `background` from markdown-only boundary into matrix-recognized policy or real TINYUI abstraction.
 
 - [x] **Step 1: Decide background model**
 
@@ -469,7 +469,7 @@ Choose one:
 
 ```text
 enum_only semantics: background is widgetType-only and covered through root/window/tree policies.
-public abstraction: add PicoUI root/background API and proof.
+public abstraction: add TINYUI root/background API and proof.
 ```
 
 - [x] **Step 2: If enum-only**
@@ -494,7 +494,7 @@ Update:
 ```text
 docs/ability/background.md
 docs/ability/README.md
-docs/picoui-serial/a-0.9-未direct覆盖能力收口.md
+docs/tinyui-serial/a-0.9-未direct覆盖能力收口.md
 ```
 
 - [x] **Step 5: Verify**
@@ -502,14 +502,14 @@ docs/picoui-serial/a-0.9-未direct覆盖能力收口.md
 Run:
 
 ```bash
-ctest --test-dir build -R 'test_picoui_layout|test_picoui_widgets' --output-on-failure
-python3 tests/picoui/contract/check_picoui_native_api_exhaustiveness.py
-python3 tests/picoui/contract/check_picoui_release_capability_matrix.py
+ctest --test-dir build -R 'test_tinyui_layout|test_tinyui_widgets' --output-on-failure
+python3 tests/tinyui/contract/check_tinyui_native_api_exhaustiveness.py
+python3 tests/tinyui/contract/check_tinyui_release_capability_matrix.py
 git diff --check
 ```
 
 
-执行记录（2026-06-02）：R5 决策为不新增独立 PicoUI background public abstraction；`background` 定义为 `window/tree derived enum-only` policy。`ldWindowInit/ldWindow_init` 保持 `enum_only_semantics`，`window` 已进入 `policy_complete_not_direct_100 / policy_complete`。验证：`ctest --test-dir build -R 'test_picoui_layout|test_picoui_widgets' --output-on-failure`、三项 contract checker、`git diff --check` 均通过。
+执行记录（2026-06-02）：R5 决策为不新增独立 TINYUI background public abstraction；`background` 定义为 `window/tree derived enum-only` policy。`ldWindowInit/ldWindow_init` 保持 `enum_only_semantics`，`window` 已进入 `policy_complete_not_direct_100 / policy_complete`。验证：`ctest --test-dir build -R 'test_tinyui_layout|test_tinyui_widgets' --output-on-failure`、三项 contract checker、`git diff --check` 均通过。
 
 ### Task R6: Closeout And Documentation Sync
 
@@ -523,8 +523,8 @@ Read matrix summary and write final counts into:
 
 ```text
 docs/ability/README.md
-docs/picoui-serial/a-0.9-未direct覆盖能力收口.md
-docs/picoui-serial/a-0.9-线计划索引.md
+docs/tinyui-serial/a-0.9-未direct覆盖能力收口.md
+docs/tinyui-serial/a-0.9-线计划索引.md
 ```
 
 - [x] **Step 2: Check no stale language**
@@ -532,7 +532,7 @@ docs/picoui-serial/a-0.9-线计划索引.md
 Search and fix:
 
 ```bash
-rg -n '100% direct|full_parity_complete|artifact.*人工|allowlisted.*covered|parity_incomplete' docs/ability docs/picoui-serial/a-0.9-* tests/picoui/contract
+rg -n '100% direct|full_parity_complete|artifact.*人工|allowlisted.*covered|parity_incomplete' docs/ability docs/tinyui-serial/a-0.9-* tests/tinyui/contract
 ```
 
 Expected: no misleading stale conclusion.
@@ -542,12 +542,12 @@ Expected: no misleading stale conclusion.
 Run:
 
 ```bash
-python3 tests/picoui/contract/check_ldgui_public_api_inventory.py
-python3 tests/picoui/contract/check_picoui_native_api_exhaustiveness.py
-python3 tests/picoui/contract/check_picoui_release_capability_matrix.py
-python3 tests/picoui/runtime/check_picoui_backend_mapping.py
-python3 tests/picoui/runtime/check_picoui_visible_ui.py --all
-python3 tests/picoui/runtime/check_picoui_manual_window_artifact.py --all
+python3 tests/tinyui/contract/check_ldgui_public_api_inventory.py
+python3 tests/tinyui/contract/check_tinyui_native_api_exhaustiveness.py
+python3 tests/tinyui/contract/check_tinyui_release_capability_matrix.py
+python3 tests/tinyui/runtime/check_tinyui_backend_mapping.py
+python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --all
+python3 tests/tinyui/runtime/check_tinyui_manual_window_artifact.py --all
 git diff --check
 ```
 
@@ -563,4 +563,4 @@ gitnexus_detect_changes(scope="all", repo="LingDongGUI")
 
 Expected: changed symbols/processes match a-0.9 policy/code/doc scope.
 
-执行记录（2026-06-02）：R6 closeout 已完成。最终 matrix summary：`ldgui_public_api_total=611`、`covered=404`、`allowlisted=207`、`missing_gap_total=0`；`policy_complete_not_direct_100=28`、`non_widget_policy_complete=4`，无 remaining `parity_incomplete` matrix group。验证：三项 contract checker、`check_picoui_backend_mapping.py`、`check_picoui_visible_ui.py --all`、`check_picoui_manual_window_artifact.py --all`、`git diff --check` 均通过。manual artifact 仍诚实记录为 `MANUAL_REVIEW_REQUIRED=1 / MANUAL_REVIEWED_PASSED=0`。
+执行记录（2026-06-02）：R6 closeout 已完成。最终 matrix summary：`ldgui_public_api_total=611`、`covered=404`、`allowlisted=207`、`missing_gap_total=0`；`policy_complete_not_direct_100=28`、`non_widget_policy_complete=4`，无 remaining `parity_incomplete` matrix group。验证：三项 contract checker、`check_tinyui_backend_mapping.py`、`check_tinyui_visible_ui.py --all`、`check_tinyui_manual_window_artifact.py --all`、`git diff --check` 均通过。manual artifact 仍诚实记录为 `MANUAL_REVIEW_REQUIRED=1 / MANUAL_REVIEWED_PASSED=0`。

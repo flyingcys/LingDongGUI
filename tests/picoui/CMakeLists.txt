@@ -1,4 +1,4 @@
-set(PICOUI_UNIT_TESTS
+set(TINYUI_UNIT_TESTS
     ../tinyui/unit/test_tinyui_smoke.c
     ../tinyui/unit/test_tinyui_native_bridge.c
     ../tinyui/unit/test_tinyui_theme.c
@@ -46,7 +46,7 @@ set(PICOUI_UNIT_TESTS
 
 function(ld_register_tinyui_unit_test test_src)
     get_filename_component(legacy_target "${test_src}" NAME_WE)
-    string(REGEX REPLACE "^test_picoui_" "test_tinyui_" tinyui_target "${legacy_target}")
+    string(REGEX REPLACE "^test_tinyui_" "test_tinyui_" tinyui_target "${legacy_target}")
     ld_add_c_unit_test(${tinyui_target}
         SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/${test_src}"
         SUPPORT_LIB tinyui_test_support
@@ -55,7 +55,7 @@ function(ld_register_tinyui_unit_test test_src)
     )
 endfunction()
 
-foreach(test_src IN LISTS PICOUI_UNIT_TESTS)
+foreach(test_src IN LISTS TINYUI_UNIT_TESTS)
     ld_register_tinyui_unit_test("${test_src}")
 endforeach()
 

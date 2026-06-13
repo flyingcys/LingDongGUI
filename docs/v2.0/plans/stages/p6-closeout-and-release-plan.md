@@ -6,7 +6,7 @@
 
 **Architecture:** 把 closeout 当作 evidence-driven 工作：更新 contract/runtime gate 文案，明确哪些部分已收口到 `TinyUI`、哪些仍是过渡态，并让 `docs/v2.0/线计划索引.md` 成为本线唯一入口。`P6` 必须建立在 `P5` 的性能/速度/RAM/体积证据已经闭环的前提上。
 
-**Tech Stack:** Markdown 文档、Python gate scripts、CTest、当前 `v2.0` spec/plan 文档、现有 `picoui` runtime/demos/tests。
+**Tech Stack:** Markdown 文档、Python gate scripts、CTest、当前 `v2.0` spec/plan 文档、现有 `tinyui` runtime/demos/tests。
 
 ---
 
@@ -22,9 +22,9 @@
 - `docs/v2.0/线计划索引.md`
 - `docs/v2.0/plans/stages/README.md`
 - `docs/v2.0/2026-06-07-tinyui-v2-0-design.md`
-- `tests/picoui/contract/check_picoui_release_capability_matrix.py`
-- `tests/picoui/runtime/check_picoui_backend_mapping.py`
-- `tests/picoui/runtime/check_picoui_visible_ui.py`
+- `tests/tinyui/contract/check_tinyui_release_capability_matrix.py`
+- `tests/tinyui/runtime/check_tinyui_backend_mapping.py`
+- `tests/tinyui/runtime/check_tinyui_visible_ui.py`
 
 ---
 
@@ -53,14 +53,14 @@ Create `docs/v2.0/v2.0-closeout.md`:
 
 ## 仍处过渡态
 
-- 非试点控件仍可能保留 `picoui_*` 命名
+- 非试点控件仍可能保留 `tinyui_*` 命名
 - 部分目录仍保留施工现场历史命名
 
 ## 真实 gate
 
-- `rtk ctest --test-dir build -L 'picoui' --output-on-failure`
+- `rtk ctest --test-dir build -L 'tinyui' --output-on-failure`
 - `rtk ctest --test-dir build -L 'perf' --output-on-failure`
-- `rtk ctest --test-dir build/picoui-runtime -R 'check_picoui_runtime|check_picoui_visible_ui|check_picoui_backend_mapping' --output-on-failure`
+- `rtk ctest --test-dir build/tinyui-runtime -R 'check_tinyui_runtime|check_tinyui_visible_ui|check_tinyui_backend_mapping' --output-on-failure`
 - `git diff --check`
 ```
 
@@ -75,7 +75,7 @@ Create `docs/v2.0/v2.0-release-matrix.md`:
 |------|----------------|----------|
 | Backend layer | No longer a shared architecture layer | focused code diff + runtime mapping gate |
 | Runtime model | app-free public main path | `basic_widgets` startup path + runtime test |
-| Pilot widgets | direct `ld*` path | `test_picoui_window/label/button/switch` |
+| Pilot widgets | direct `ld*` path | `test_tinyui_window/label/button/switch` |
 | Public API | `tinyui_*` pilot surface exists | headers + demo compile |
 | Perf/RAM/Binary | no obvious regression vs baseline | `P5` perf docs + perf gates |
 | Docs truth | `docs/v2.0/线计划索引.md` points to spec/plan/closeout | doc review |
@@ -120,14 +120,14 @@ Expected: PASS。
 ### Task 2: broad gates 与 release-facing wording 收口
 
 **Files:**
-- Modify: `tests/picoui/contract/check_picoui_release_capability_matrix.py`
-- Modify: `tests/picoui/runtime/check_picoui_backend_mapping.py`
-- Modify: `tests/picoui/runtime/check_picoui_visible_ui.py`
+- Modify: `tests/tinyui/contract/check_tinyui_release_capability_matrix.py`
+- Modify: `tests/tinyui/runtime/check_tinyui_backend_mapping.py`
+- Modify: `tests/tinyui/runtime/check_tinyui_visible_ui.py`
 - Modify: `docs/v2.0/2026-06-07-tinyui-v2-0-design.md`
 
 - [ ] **Step 1: release matrix checker 接受过渡完成态**
 
-In `tests/picoui/contract/check_picoui_release_capability_matrix.py`, extend summary wording handling so it accepts:
+In `tests/tinyui/contract/check_tinyui_release_capability_matrix.py`, extend summary wording handling so it accepts:
 
 ```python
 "tinyui_pilot_ready"
@@ -140,7 +140,7 @@ when those states are what `v2.0` closeout explicitly claims.
 
 - [ ] **Step 2: runtime mapping checker 文案去 backend-central assumption**
 
-Update `tests/picoui/runtime/check_picoui_backend_mapping.py` to stop requiring every widget to map through a dedicated `backend_*.c` file and instead require:
+Update `tests/tinyui/runtime/check_tinyui_backend_mapping.py` to stop requiring every widget to map through a dedicated `backend_*.c` file and instead require:
 
 ```python
 "direct_ld_binding" or "legacy_backend_bridge"
@@ -150,7 +150,7 @@ with pilot widgets expected to use `direct_ld_binding`.
 
 - [ ] **Step 3: visible gate 文案同步 TinyUI closeout**
 
-In `tests/picoui/runtime/check_picoui_visible_ui.py`, update failure/help text so `basic_widgets` is described as the `TinyUI v2.0` pilot startup proof, not purely `PicoUI basic_widgets`.
+In `tests/tinyui/runtime/check_tinyui_visible_ui.py`, update failure/help text so `basic_widgets` is described as the `TinyUI v2.0` pilot startup proof, not purely `TINYUI basic_widgets`.
 
 - [ ] **Step 4: spec 增加 closeout note**
 
@@ -167,9 +167,9 @@ Append to `docs/v2.0/2026-06-07-tinyui-v2-0-design.md`:
 Run:
 
 ```bash
-rtk ctest --test-dir build -L 'picoui' --output-on-failure
+rtk ctest --test-dir build -L 'tinyui' --output-on-failure
 rtk ctest --test-dir build -L 'perf' --output-on-failure
-rtk ctest --test-dir build/picoui-runtime -R 'check_picoui_runtime|check_picoui_visible_ui|check_picoui_backend_mapping' --output-on-failure
+rtk ctest --test-dir build/tinyui-runtime -R 'check_tinyui_runtime|check_tinyui_visible_ui|check_tinyui_backend_mapping' --output-on-failure
 git diff --check
 ```
 
@@ -185,8 +185,8 @@ git add \
   docs/v2.0/v2.0-closeout.md \
   docs/v2.0/v2.0-release-matrix.md \
   docs/v2.0/v2.0-performance-baseline.md \
-  tests/picoui/contract/check_picoui_release_capability_matrix.py \
-  tests/picoui/runtime/check_picoui_backend_mapping.py \
-  tests/picoui/runtime/check_picoui_visible_ui.py
+  tests/tinyui/contract/check_tinyui_release_capability_matrix.py \
+  tests/tinyui/runtime/check_tinyui_backend_mapping.py \
+  tests/tinyui/runtime/check_tinyui_visible_ui.py
 git commit -m "docs: close out tinyui v2.0 line"
 ```

@@ -104,23 +104,23 @@ widget demo sdl
 
 📖 [中文教程](https://ldgui-doc-cn.readthedocs.io)
 
-## PicoUI
+## TINYUI
 
-PicoUI is the application-level abstraction built on top of LingDongGUI and exposes a unified Linux-style `picoui_*` API.
+TINYUI is the application-level abstraction built on top of LingDongGUI and exposes a unified Linux-style `tinyui_*` API.
 
 - Start from the repository root CMake entrypoint: `rtk cmake -S . -B build`
 - The default test entrypoint also lives at the repository root via `CTest`
 - The current default build still enables `LD_BUILD_SDL_DEMO=ON`, so SDL dependencies remain part of the default build path
-- `tests/picoui/runtime/check_picoui_runtime.py` uses a separate build tree at `build/picoui-runtime`
+- `tests/tinyui/runtime/check_tinyui_runtime.py` uses a separate build tree at `build/tinyui-runtime`
 - Direct `examples/sdl` configure is still useful for focused SDL demo debugging, but it is no longer the primary recommended path
 
-### PicoUI 当前能力矩阵
+### TINYUI 当前能力矩阵
 
 | 能力 | 当前状态 | 说明 |
 | --- | --- | --- |
 | `window/label/button/text` 真实 backend 映射 | 已完成 | 已映射到真实 `LingDongGUI` 控件对象 |
 | `checkbox/switch/slider` 真实 backend 映射 | 已完成 | 已接入真实值同步与 native event |
-| `image` 对象映射与 source 绑定 | 已完成 | 已可把 `picoui_image_source` 绑定到底层 `ldImage` |
+| `image` 对象映射与 source 绑定 | 已完成 | 已可把 `tinyui_image_source` 绑定到底层 `ldImage` |
 | `image` 的 theme/style apply | 当前拒绝 | 当前明确拒绝 `PICOUI_PART_MAIN`，不能写成默认支持 |
 | `flex/grid` 布局映射 | 已完成 | 已映射到底层 layout 语义 |
 | `theme/state/part/style` | 部分完成 | `window/button/checkbox/switch/slider/label/text` 已有真实 apply，`image` 仍拒绝 |
@@ -129,7 +129,7 @@ PicoUI is the application-level abstraction built on top of LingDongGUI and expo
 
 ### 当前口径提醒
 
-- `PicoUI` 当前主线已收口为“真实 backend 映射”，不是继续扩写 SDL 假渲染器
+- `TINYUI` 当前主线已收口为“真实 backend 映射”，不是继续扩写 SDL 假渲染器
 - runtime/capture 测试只提供 smoke / 回归证据
 - `backend_app.c` 当前仍是 `temporary smoke path` / host harness，但已不再承担正式 fake renderer 主输出职责
 

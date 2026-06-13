@@ -36,9 +36,9 @@ static ldColor tinyui_text_rgb_to_ld_color(unsigned int rgb)
 
 static ldText_t *tinyui_text_get_ld_text(void *backend_widget)
 {
-    struct picoui_backend_widget *widget = backend_widget;
+    struct tinyui_backend_widget *widget = backend_widget;
 
-    if (widget == NULL || widget->kind != PICOUI_BACKEND_WIDGET_TEXT || widget->ld_widget == NULL) {
+    if (widget == NULL || widget->kind != TINYUI_BACKEND_WIDGET_TEXT || widget->ld_widget == NULL) {
         return NULL;
     }
     return (ldText_t *)widget->ld_widget;
@@ -58,9 +58,9 @@ static arm_2d_font_t *tinyui_text_default_font(void)
     return (arm_2d_font_t *)&ARM_2D_FONT_6x8;
 }
 
-static arm_2d_font_t *tinyui_text_resolve_font(const struct picoui_font *font)
+static arm_2d_font_t *tinyui_text_resolve_font(const struct tinyui_font *font)
 {
-    if (font != NULL && font->kind == PICOUI_FONT_KIND_VRES && font->vres_addr != 0) {
+    if (font != NULL && font->kind == TINYUI_FONT_KIND_VRES && font->vres_addr != 0) {
         return (arm_2d_font_t *)ldBaseGetVresFont(font->vres_addr);
     }
 
@@ -75,16 +75,16 @@ static arm_2d_font_t *tinyui_text_resolve_font(const struct picoui_font *font)
     return tinyui_text_default_font();
 }
 
-static void tinyui_text_dispose_partial(struct picoui_text *text)
+static void tinyui_text_dispose_partial(struct tinyui_text *text)
 {
-    struct picoui_backend_widget *backend;
-    struct picoui_backend_app_state *app_state;
+    struct tinyui_backend_widget *backend;
+    struct tinyui_backend_app_state *app_state;
 
     if (text == 0) {
         return;
     }
 
-    backend = (struct picoui_backend_widget *)text->widget.backend_widget;
+    backend = (struct tinyui_backend_widget *)text->widget.backend_widget;
     if (backend != 0) {
         app_state = tinyui_runtime_bridge_backend_state(backend->owner);
         if (backend->parent != 0) {
@@ -105,14 +105,14 @@ void tinyui_text_test_fail_next_set_font(void)
     tinyui_text_fail_next_set_font = 1;
 }
 
-int tinyui_text_set_font(void *backend_widget, const void *font)
+int tinyui_text_set_font_ld(void *backend_widget, const void *font)
 {
-    struct picoui_backend_widget *widget = backend_widget;
-    const struct picoui_font *picoui_font = (const struct picoui_font *)font;
+    struct tinyui_backend_widget *widget = backend_widget;
+    const struct tinyui_font *tinyui_font = (const struct tinyui_font *)font;
     ldText_t *ld_text;
     arm_2d_font_t *resolved_font;
 
-    if (widget == NULL || widget->kind != PICOUI_BACKEND_WIDGET_TEXT || widget->ld_widget == NULL) {
+    if (widget == NULL || widget->kind != TINYUI_BACKEND_WIDGET_TEXT || widget->ld_widget == NULL) {
         return -1;
     }
 
@@ -123,7 +123,7 @@ int tinyui_text_set_font(void *backend_widget, const void *font)
         return -1;
     }
 
-    resolved_font = tinyui_text_resolve_font(picoui_font);
+    resolved_font = tinyui_text_resolve_font(tinyui_font);
     if (resolved_font == NULL) {
         return -1;
     }
@@ -140,9 +140,9 @@ int tinyui_text_set_font(void *backend_widget, const void *font)
     return 0;
 }
 
-int tinyui_text_set_static_text(void *backend_widget, const char *text)
+int tinyui_text_set_static_text_ld(void *backend_widget, const char *text)
 {
-    struct picoui_backend_widget *widget = backend_widget;
+    struct tinyui_backend_widget *widget = backend_widget;
     ldText_t *ld_text = tinyui_text_get_ld_text(backend_widget);
 
     if (ld_text == NULL || text == NULL) {
@@ -154,7 +154,7 @@ int tinyui_text_set_static_text(void *backend_widget, const char *text)
     return 0;
 }
 
-int tinyui_text_set_transparent(void *backend_widget, int transparent)
+int tinyui_text_set_transparent_ld(void *backend_widget, int transparent)
 {
     ldText_t *ld_text = tinyui_text_get_ld_text(backend_widget);
 
@@ -166,7 +166,7 @@ int tinyui_text_set_transparent(void *backend_widget, int transparent)
     return 0;
 }
 
-int tinyui_text_set_text_color(void *backend_widget, unsigned int rgb)
+int tinyui_text_set_text_color_ld(void *backend_widget, unsigned int rgb)
 {
     ldText_t *ld_text = tinyui_text_get_ld_text(backend_widget);
 
@@ -178,7 +178,7 @@ int tinyui_text_set_text_color(void *backend_widget, unsigned int rgb)
     return 0;
 }
 
-int tinyui_text_set_bg_color(void *backend_widget, unsigned int rgb)
+int tinyui_text_set_bg_color_ld(void *backend_widget, unsigned int rgb)
 {
     ldText_t *ld_text = tinyui_text_get_ld_text(backend_widget);
 
@@ -190,10 +190,10 @@ int tinyui_text_set_bg_color(void *backend_widget, unsigned int rgb)
     return 0;
 }
 
-int tinyui_text_set_background_source(void *backend_widget,
-                                      struct picoui_image_source *source)
+int tinyui_text_set_background_source_ld(void *backend_widget,
+                                         struct tinyui_image_source *source)
 {
-    struct picoui_backend_widget *widget = backend_widget;
+    struct tinyui_backend_widget *widget = backend_widget;
     ldText_t *ld_text = tinyui_text_get_ld_text(backend_widget);
 
     if (ld_text == NULL || (source != NULL && source->img_tile == NULL)) {
@@ -207,7 +207,7 @@ int tinyui_text_set_background_source(void *backend_widget,
     return 0;
 }
 
-int tinyui_text_scroll_seek(void *backend_widget, int offset)
+int tinyui_text_scroll_seek_ld(void *backend_widget, int offset)
 {
     ldText_t *ld_text = tinyui_text_get_ld_text(backend_widget);
 
@@ -219,7 +219,7 @@ int tinyui_text_scroll_seek(void *backend_widget, int offset)
     return 0;
 }
 
-int tinyui_text_scroll_move(void *backend_widget, int move_value)
+int tinyui_text_scroll_move_ld(void *backend_widget, int move_value)
 {
     ldText_t *ld_text = tinyui_text_get_ld_text(backend_widget);
 
@@ -231,7 +231,7 @@ int tinyui_text_scroll_move(void *backend_widget, int move_value)
     return 0;
 }
 
-static int tinyui_text_props_are_valid(const struct picoui_text_props *props)
+static int tinyui_text_props_are_valid(const struct tinyui_text_props *props)
 {
     return props != 0
         && props->id != 0
@@ -249,12 +249,12 @@ static int tinyui_text_props_are_valid(const struct picoui_text_props *props)
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct picoui_text *picoui_text_create(struct picoui_window *parent, const char *id)
+struct tinyui_text *tinyui_text_create(struct tinyui_window *parent, const char *id)
 {
-    struct picoui_text *text;
-    struct picoui_backend_widget *backend;
-    struct picoui_backend_widget *parent_backend;
-    struct picoui_backend_app_state *app_state;
+    struct tinyui_text *text;
+    struct tinyui_backend_widget *backend;
+    struct tinyui_backend_widget *parent_backend;
+    struct tinyui_backend_app_state *app_state;
     ldText_t *ld_text;
     uint16_t name_id;
 
@@ -262,7 +262,7 @@ struct picoui_text *picoui_text_create(struct picoui_window *parent, const char 
         return 0;
     }
 
-    parent_backend = (struct picoui_backend_widget *)parent->widget.backend_widget;
+    parent_backend = (struct tinyui_backend_widget *)parent->widget.backend_widget;
     app_state = parent_backend != 0
         ? tinyui_runtime_bridge_backend_state_from_parent(parent_backend)
         : 0;
@@ -307,7 +307,7 @@ struct picoui_text *picoui_text_create(struct picoui_window *parent, const char 
 
     if (tinyui_widget_init_child(backend,
                                          parent_backend,
-                                         PICOUI_BACKEND_WIDGET_TEXT,
+                                         TINYUI_BACKEND_WIDGET_TEXT,
                                          id,
                                          parent_backend->theme) != 0) {
         ldText_depose(app_state->ld_scene, ld_text);
@@ -346,44 +346,44 @@ struct picoui_text *picoui_text_create(struct picoui_window *parent, const char 
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct picoui_text *picoui_text_create_with_props(struct picoui_window *parent,
-                                                  const struct picoui_text_props *props)
+struct tinyui_text *tinyui_text_create_with_props(struct tinyui_window *parent,
+                                                  const struct tinyui_text_props *props)
 {
-    struct picoui_text *text;
+    struct tinyui_text *text;
 
     if (!tinyui_text_props_are_valid(props)) {
         return 0;
     }
 
-    text = picoui_text_create(parent, props->id);
+    text = tinyui_text_create(parent, props->id);
     if (text == 0) {
         return 0;
     }
 
-    if (props->text != 0 && picoui_text_set_text(text, props->text) != 0) {
+    if (props->text != 0 && tinyui_text_set_text(text, props->text) != 0) {
         tinyui_text_dispose_partial(text);
         return 0;
     }
-    if (props->font != 0 && picoui_text_set_font(text, props->font) != 0) {
+    if (props->font != 0 && tinyui_text_set_font(text, props->font) != 0) {
         tinyui_text_dispose_partial(text);
         return 0;
     }
     if (props->style_class != 0
-        && picoui_widget_set_style_class(&text->widget, props->style_class) != 0) {
+        && tinyui_widget_set_style_class(&text->widget, props->style_class) != 0) {
         tinyui_text_dispose_partial(text);
         return 0;
     }
-    if (picoui_widget_set_user_data(&text->widget, props->user_data) != 0
-        || picoui_widget_set_bg_color(&text->widget, props->bg_color) != 0
-        || picoui_widget_set_text_color(&text->widget, props->text_color) != 0
-        || picoui_widget_set_border_color(&text->widget, props->border_color) != 0
-        || picoui_widget_set_radius(&text->widget, props->radius) != 0
-        || picoui_widget_set_padding(&text->widget, props->padding) != 0) {
+    if (tinyui_widget_set_user_data(&text->widget, props->user_data) != 0
+        || tinyui_widget_set_bg_color(&text->widget, props->bg_color) != 0
+        || tinyui_widget_set_text_color(&text->widget, props->text_color) != 0
+        || tinyui_widget_set_border_color(&text->widget, props->border_color) != 0
+        || tinyui_widget_set_radius(&text->widget, props->radius) != 0
+        || tinyui_widget_set_padding(&text->widget, props->padding) != 0) {
         tinyui_text_dispose_partial(text);
         return 0;
     }
     if ((props->width > 0 || props->height > 0)
-        && picoui_widget_set_size(&text->widget, props->width, props->height) != 0) {
+        && tinyui_widget_set_size(&text->widget, props->width, props->height) != 0) {
         tinyui_text_dispose_partial(text);
         return 0;
     }
@@ -399,13 +399,13 @@ struct picoui_text *picoui_text_create_with_props(struct picoui_window *parent,
  * @return -1 on failure
  */
 
-int picoui_text_set_text(struct picoui_text *text, const char *value)
+int tinyui_text_set_text(struct tinyui_text *text, const char *value)
 {
     if (text == 0 || value == 0) {
         return -1;
     }
 
-    if (picoui_widget_set_text(&text->widget, value) != 0) {
+    if (tinyui_widget_set_text(&text->widget, value) != 0) {
         return -1;
     }
     return tinyui_widget_set_backend_text(text->widget.backend_widget, value);
@@ -419,13 +419,13 @@ int picoui_text_set_text(struct picoui_text *text, const char *value)
  * @return 0 on success, -1 on failure
  */
 
-int picoui_text_set_static_text(struct picoui_text *text, const char *value)
+int tinyui_text_set_static_text(struct tinyui_text *text, const char *value)
 {
     if (text == 0 || value == 0) {
         return -1;
     }
 
-    if (tinyui_text_set_static_text(text->widget.backend_widget, value) != 0) {
+    if (tinyui_text_set_static_text_ld(text->widget.backend_widget, value) != 0) {
         return -1;
     }
     text->widget.text = value;
@@ -440,13 +440,13 @@ int picoui_text_set_static_text(struct picoui_text *text, const char *value)
  * @return 0 on success, -1 on failure
  */
 
-int picoui_text_set_font(struct picoui_text *text, const struct picoui_font *font)
+int tinyui_text_set_font(struct tinyui_text *text, const struct tinyui_font *font)
 {
     if (text == 0) {
         return -1;
     }
 
-    if (tinyui_text_set_font(text->widget.backend_widget, font) != 0) {
+    if (tinyui_text_set_font_ld(text->widget.backend_widget, font) != 0) {
         return -1;
     }
 
@@ -462,13 +462,13 @@ int picoui_text_set_font(struct picoui_text *text, const struct picoui_font *fon
  * @return -1 on failure
  */
 
-int picoui_text_set_transparent(struct picoui_text *text, int transparent)
+int tinyui_text_set_transparent(struct tinyui_text *text, int transparent)
 {
     if (text == 0) {
         return -1;
     }
 
-    return tinyui_text_set_transparent(text->widget.backend_widget, transparent);
+    return tinyui_text_set_transparent_ld(text->widget.backend_widget, transparent);
 }
 
 /**
@@ -479,13 +479,13 @@ int picoui_text_set_transparent(struct picoui_text *text, int transparent)
  * @return 0 on success, -1 on failure
  */
 
-int picoui_text_set_text_color(struct picoui_text *text, unsigned int rgb)
+int tinyui_text_set_text_color(struct tinyui_text *text, unsigned int rgb)
 {
     if (text == 0) {
         return -1;
     }
 
-    if (tinyui_text_set_text_color(text->widget.backend_widget, rgb) != 0) {
+    if (tinyui_text_set_text_color_ld(text->widget.backend_widget, rgb) != 0) {
         return -1;
     }
     text->widget.text_color = rgb;
@@ -500,13 +500,13 @@ int picoui_text_set_text_color(struct picoui_text *text, unsigned int rgb)
  * @return 0 on success, -1 on failure
  */
 
-int picoui_text_set_bg_color(struct picoui_text *text, unsigned int rgb)
+int tinyui_text_set_bg_color(struct tinyui_text *text, unsigned int rgb)
 {
     if (text == 0) {
         return -1;
     }
 
-    if (tinyui_text_set_bg_color(text->widget.backend_widget, rgb) != 0) {
+    if (tinyui_text_set_bg_color_ld(text->widget.backend_widget, rgb) != 0) {
         return -1;
     }
     text->widget.bg_color = rgb;
@@ -521,14 +521,14 @@ int picoui_text_set_bg_color(struct picoui_text *text, unsigned int rgb)
  * @return -1 on failure
  */
 
-int picoui_text_set_background_source(struct picoui_text *text,
-                                      struct picoui_image_source *source)
+int tinyui_text_set_background_source(struct tinyui_text *text,
+                                      struct tinyui_image_source *source)
 {
     if (text == 0 || (source != 0 && source->img_tile == 0)) {
         return -1;
     }
 
-    return tinyui_text_set_background_source(text->widget.backend_widget, source);
+    return tinyui_text_set_background_source_ld(text->widget.backend_widget, source);
 }
 
 /**
@@ -539,9 +539,9 @@ int picoui_text_set_background_source(struct picoui_text *text,
  * @return 0 on success, -1 on failure
  */
 
-int picoui_text_set_consumed_font(struct picoui_text *text, const struct picoui_font *font)
+int tinyui_text_set_consumed_font(struct tinyui_text *text, const struct tinyui_font *font)
 {
-    return picoui_text_set_font(text, font);
+    return tinyui_text_set_font(text, font);
 }
 
 /**
@@ -552,13 +552,13 @@ int picoui_text_set_consumed_font(struct picoui_text *text, const struct picoui_
  * @return -1 on failure
  */
 
-int picoui_text_scroll_seek(struct picoui_text *text, int offset)
+int tinyui_text_scroll_seek(struct tinyui_text *text, int offset)
 {
     if (text == 0) {
         return -1;
     }
 
-    return tinyui_text_scroll_seek(text->widget.backend_widget, offset);
+    return tinyui_text_scroll_seek_ld(text->widget.backend_widget, offset);
 }
 
 /**
@@ -569,11 +569,11 @@ int picoui_text_scroll_seek(struct picoui_text *text, int offset)
  * @return -1 on failure
  */
 
-int picoui_text_scroll_move(struct picoui_text *text, int move_value)
+int tinyui_text_scroll_move(struct tinyui_text *text, int move_value)
 {
     if (text == 0) {
         return -1;
     }
 
-    return tinyui_text_scroll_move(text->widget.backend_widget, move_value);
+    return tinyui_text_scroll_move_ld(text->widget.backend_widget, move_value);
 }

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 为 picoui 下所有 .c 文件中非 static 函数加入标准 doxygen 注释模板
+# 为 tinyui 下所有 .c 文件中非 static 函数加入标准 doxygen 注释模板
 # @param[in]/@param[out]/@return 留空，供手工填写
 set -euo pipefail
 
@@ -641,7 +641,7 @@ def main():
     os.chdir(root)
 
     c_files = []
-    for root_dir, dirs, files in os.walk('picoui'):
+    for root_dir, dirs, files in os.walk('tinyui'):
         for f in files:
             if f.endswith('.c'):
                 c_files.append(os.path.join(root_dir, f))

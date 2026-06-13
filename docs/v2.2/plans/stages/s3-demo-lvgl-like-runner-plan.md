@@ -119,7 +119,7 @@ Delete or rewrite demo-local:
 
 - `main()`
 - `run_demo()`
-- `picoui_app_create()/picoui_app_run()` flow
+- `tinyui_app_create()/tinyui_app_run()` flow
 
 End state: the demo file can only be used through the unified runner.
 
@@ -128,7 +128,7 @@ End state: the demo file can only be used through the unified runner.
 Run:
 
 ```bash
-rg -n 'picoui_app_create|picoui_app_run|run_demo\(|int main\(' tinyui/demo
+rg -n 'tinyui_app_create|tinyui_app_run|run_demo\(|int main\(' tinyui/demo
 rtk cmake --build build
 ```
 
@@ -163,7 +163,7 @@ Run:
 
 ```bash
 rtk ctest --test-dir build --output-on-failure -R 'test_tinyui|check_tinyui'
-rg -n 'picoui_app_create|picoui_app_run|run_demo\(|int main\(' tinyui/demo
+rg -n 'tinyui_app_create|tinyui_app_run|run_demo\(|int main\(' tinyui/demo
 git diff --check
 ```
 

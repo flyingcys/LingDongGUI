@@ -21,25 +21,25 @@
 
 仍存在问题：该 checker 仍因 inventory count drift 在 CTest 中失败，见下方 blocker 1。
 
-### 2. `picoui/runtime.h` 旧 ABI 链接断裂
+### 2. `tinyui/runtime.h` 旧 ABI 链接断裂
 
 状态：已修复。
 
 证据：
 
-- `tinyui/include/picoui/runtime.h` 现在 include `../runtime.h`
-- `tinyui/include/runtime.h` 提供 `picoui_*` static inline wrapper，转到 canonical `tinyui_*`
+- `tinyui/include/tinyui/runtime.h` 现在 include `../runtime.h`
+- `tinyui/include/runtime.h` 提供 `tinyui_*` static inline wrapper，转到 canonical `tinyui_*`
 - 手工 legacy probe 编译、链接并运行成功：
 
 ```bash
-cc -I tinyui/include /tmp/picoui_runtime_probe.c \
+cc -I tinyui/include /tmp/tinyui_runtime_probe.c \
   build/libtinyui_backend_ldgui_runtime.a \
   build/libtinyui_core.a \
   build/liblongdonggui_porting_default.a \
   build/liblongdonggui.a \
   build/liblongdonggui_arm2d.a \
   -L/opt/homebrew/lib -lSDL2 \
-  -o /tmp/picoui_runtime_probe
+  -o /tmp/tinyui_runtime_probe
 ```
 
 结果：`exit=0`。
@@ -72,8 +72,8 @@ rtk ctest --test-dir build --output-on-failure -R 'test_tinyui|check_tinyui'
 
 原始结果：56 个测试中 4 个失败，其中两个是 transition guard：
 
-- `check_tinyui_transition_guards`：`picoui_public_api_count expected 558 actual 551`
-- `check_tinyui_v21_transition_guards`：`picoui_public_api_count expected 559 actual 552`
+- `check_tinyui_transition_guards`：`tinyui_public_api_count expected 558 actual 551`
+- `check_tinyui_v21_transition_guards`：`tinyui_public_api_count expected 559 actual 552`
 - `check_tinyui_v21_transition_guards`：`tinyui_public_api_count expected 39 actual 37`
 
 当前状态：
@@ -132,7 +132,7 @@ rtk ctest --test-dir build --output-on-failure -R 'test_tinyui|check_tinyui'
 复现命令：
 
 ```bash
-rtk rg -n 'backend\.h|picoui_app_create|picoui_app_run|run_demo\(|int main\(' tinyui/demo tinyui/src tinyui/include
+rtk rg -n 'backend\.h|tinyui_app_create|tinyui_app_run|run_demo\(|int main\(' tinyui/demo tinyui/src tinyui/include
 ```
 
 结果：
@@ -145,7 +145,7 @@ rtk rg -n 'backend\.h|picoui_app_create|picoui_app_run|run_demo\(|int main\(' ti
 
 - “demo `.c` 已转为 build API 文件”
 - “统一 `main` 已成为主线 demo 唯一启动入口”
-- “主线 demo 已无各自 `main/run_demo/picoui_app_run` 主路径”
+- “主线 demo 已无各自 `main/run_demo/tinyui_app_run` 主路径”
 
 当前处理：
 
@@ -168,13 +168,13 @@ rtk rg -n 'backend\.h|picoui_app_create|picoui_app_run|run_demo\(|int main\(' ti
 
 问题：
 
-`check_tinyui_public_api.py` 新增了 `picoui/runtime.h` direct include probe，但命令是：
+`check_tinyui_public_api.py` 新增了 `tinyui/runtime.h` direct include probe，但命令是：
 
 ```bash
 cc -fsyntax-only ...
 ```
 
-这只能证明 header 可编译，不能证明 ABI / link 可用。上一轮 `picoui/runtime.h` 问题正是“能编译但链接失败”类型。
+这只能证明 header 可编译，不能证明 ABI / link 可用。上一轮 `tinyui/runtime.h` 问题正是“能编译但链接失败”类型。
 
 状态：
 
@@ -186,8 +186,8 @@ cc -fsyntax-only ...
 把手工 link probe 固化进 CTest 或 checker，至少链接当前 TinyUI runtime 库和 SDL2，覆盖：
 
 ```c
-#include "picoui/runtime.h"
-int main(void) { return picoui_init() != 0 ? tinyui_init() : 0; }
+#include "tinyui/runtime.h"
+int main(void) { return tinyui_init() != 0 ? tinyui_init() : 0; }
 ```
 
 ## 当前验证记录
@@ -197,7 +197,7 @@ int main(void) { return picoui_init() != 0 ? tinyui_init() : 0; }
 ```bash
 rtk git diff --check
 rtk ctest --test-dir build --output-on-failure -R 'test_tinyui|check_tinyui'
-rtk rg -n 'backend\.h|picoui_app_create|picoui_app_run|run_demo\(|int main\(' tinyui/demo tinyui/src tinyui/include
+rtk rg -n 'backend\.h|tinyui_app_create|tinyui_app_run|run_demo\(|int main\(' tinyui/demo tinyui/src tinyui/include
 rtk python3 tests/tinyui/contract/check_tinyui_transition_guards.py --print-current
 rtk python3 tests/tinyui/contract/check_tinyui_v21_transition_guards.py --print-current
 ```

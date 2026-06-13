@@ -41,7 +41,7 @@
 Run:
 
 ```bash
-rg -n 'picoui_app_create|picoui_app_run|picoui_app_switch_window' tinyui/demo tinyui/include tinyui/src
+rg -n 'tinyui_app_create|tinyui_app_run|tinyui_app_switch_window' tinyui/demo tinyui/include tinyui/src
 ```
 
 Expected: 当前仍有旧 app 主路径命中。
@@ -58,7 +58,7 @@ int tinyui_screen_load(tinyui_obj_t *screen);
 void tinyui_timer_handler(void);
 ```
 
-If current implementation still expresses these through `picoui_*` aliases or mixed naming, rewrite the public face so the header itself reads as TinyUI canonical truth.
+If current implementation still expresses these through `tinyui_*` aliases or mixed naming, rewrite the public face so the header itself reads as TinyUI canonical truth.
 
 - [ ] **Step 3: 编译最小 runtime public surface**
 
@@ -83,7 +83,7 @@ Expected: PASS。
 Run:
 
 ```bash
-rg -n 'picoui_app_create|picoui_app_run|picoui_app_set_window|picoui_app_switch_window' tinyui/include tinyui/src tinyui/demo
+rg -n 'tinyui_app_create|tinyui_app_run|tinyui_app_set_window|tinyui_app_switch_window' tinyui/include tinyui/src tinyui/demo
 ```
 
 Expected: 输出旧主路径残留。

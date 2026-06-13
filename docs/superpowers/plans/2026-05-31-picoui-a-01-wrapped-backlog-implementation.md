@@ -1,4 +1,4 @@
-# PicoUI a-01 已 Wrapped Backlog 收口 Implementation Plan
+# TINYUI a-01 已 Wrapped Backlog 收口 Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -6,14 +6,14 @@
 
 **Architecture:** `a-01` 是 shared-owner 线。开发顺序固定为 `image -> text -> checkbox -> switch -> list`，先冻结最容易误扩张的 `image` 语义，再补 `text` 显示合同，然后连续处理 `checkbox/switch` 的 shared style/event 语义，最后收口最易扩散的 `list` marker/callback/runtime 口径。shared-owner 文件只允许由 `a-01` 持续修改，聚合文件在每阶段末尾一次性最小接入。
 
-**Tech Stack:** C、CMake、CTest、Python3、SDL2 host runtime、PicoUI、LingDongGUI、GitNexus、Markdown serial docs
+**Tech Stack:** C、CMake、CTest、Python3、SDL2 host runtime、TINYUI、LingDongGUI、GitNexus、Markdown serial docs
 
 ---
 
 ## 0. 执行规则
 
 - worktree 固定：`.worktree/a-01`
-- 建议分支：`feat/picoui-a-01-wrapped-backlog`
+- 建议分支：`feat/tinyui-a-01-wrapped-backlog`
 - 创建或切换后必须执行：
 
 ```bash
@@ -32,103 +32,103 @@ git submodule update --init --recursive
 
 以下文件默认只允许 `a-01` 持续修改：
 
-- `picoui/src/core/widget.c`
-- `picoui/src/backend/ldgui/backend_style_apply.c`
-- `picoui/src/backend/ldgui/backend_event.c`
-- `picoui/src/backend/ldgui/backend_app.c`
-- `tests/picoui/contract/picoui_release_capability_matrix.json`
-- `tests/picoui/contract/check_picoui_release_capability_matrix.py`
+- `tinyui/src/core/widget.c`
+- `tinyui/src/backend/ldgui/backend_style_apply.c`
+- `tinyui/src/backend/ldgui/backend_event.c`
+- `tinyui/src/backend/ldgui/backend_app.c`
+- `tests/tinyui/contract/tinyui_release_capability_matrix.json`
+- `tests/tinyui/contract/check_tinyui_release_capability_matrix.py`
 
 ### a-01 聚合文件
 
 以下文件只允许在每个控件阶段末尾做一次最小接入：
 
-- `picoui/include/picoui/picoui.h`
-- `tests/picoui/CMakeLists.txt`
-- `tests/picoui/runtime/check_picoui_runtime.py`
-- `tests/picoui/runtime/check_picoui_backend_mapping.py`
-- `tests/picoui/runtime/check_picoui_visible_ui.py`
-- `tests/picoui/contract/check_picoui_public_api.py`
-- `tests/picoui/contract/check_picoui_demo_boundary.py`
-- `docs/picoui-serial/a-01-线计划索引.md`
-- `docs/superpowers/specs/2026-05-31-picoui-a-01-wrapped-backlog-design.md`
+- `tinyui/include/tinyui/tinyui.h`
+- `tests/tinyui/CMakeLists.txt`
+- `tests/tinyui/runtime/check_tinyui_runtime.py`
+- `tests/tinyui/runtime/check_tinyui_backend_mapping.py`
+- `tests/tinyui/runtime/check_tinyui_visible_ui.py`
+- `tests/tinyui/contract/check_tinyui_public_api.py`
+- `tests/tinyui/contract/check_tinyui_demo_boundary.py`
+- `docs/tinyui-serial/a-01-线计划索引.md`
+- `docs/superpowers/specs/2026-05-31-tinyui-a-01-wrapped-backlog-design.md`
 
 ## 1. 文件结构与阶段边界
 
 ### A1 `image`
 
 **Modify:**
-- `picoui/src/core/widget.c`
-- `picoui/src/backend/ldgui/backend_style_apply.c`
-- `picoui/src/backend/ldgui/backend_image.c`
-- `tests/picoui/unit/test_picoui_widgets.c`
-- `tests/picoui/contract/picoui_release_capability_matrix.json`
-- `tests/picoui/contract/check_picoui_release_capability_matrix.py`
+- `tinyui/src/core/widget.c`
+- `tinyui/src/backend/ldgui/backend_style_apply.c`
+- `tinyui/src/backend/ldgui/backend_image.c`
+- `tests/tinyui/unit/test_tinyui_widgets.c`
+- `tests/tinyui/contract/tinyui_release_capability_matrix.json`
+- `tests/tinyui/contract/check_tinyui_release_capability_matrix.py`
 
 ### A2 `text`
 
 **Modify:**
-- `picoui/include/picoui/text.h`
-- `picoui/src/widgets/text.c`
-- `picoui/src/backend/ldgui/backend_text.c`
-- `picoui/src/backend/ldgui/backend_style_apply.c`
-- `tests/picoui/unit/test_picoui_widgets.c`
-- `tests/picoui/unit/test_picoui_theme.c`
-- `tests/picoui/contract/picoui_release_capability_matrix.json`
+- `tinyui/include/tinyui/text.h`
+- `tinyui/src/widgets/text.c`
+- `tinyui/src/backend/ldgui/backend_text.c`
+- `tinyui/src/backend/ldgui/backend_style_apply.c`
+- `tests/tinyui/unit/test_tinyui_widgets.c`
+- `tests/tinyui/unit/test_tinyui_theme.c`
+- `tests/tinyui/contract/tinyui_release_capability_matrix.json`
 
 ### A3 `checkbox`
 
 **Modify:**
-- `picoui/include/picoui/checkbox.h`
-- `picoui/src/widgets/checkbox.c`
-- `picoui/src/backend/ldgui/backend_checkbox.c`
-- `picoui/src/backend/ldgui/backend_event.c`
-- `picoui/src/backend/ldgui/backend_style_apply.c`
-- `tests/picoui/unit/test_picoui_widgets.c`
-- `tests/picoui/contract/picoui_release_capability_matrix.json`
+- `tinyui/include/tinyui/checkbox.h`
+- `tinyui/src/widgets/checkbox.c`
+- `tinyui/src/backend/ldgui/backend_checkbox.c`
+- `tinyui/src/backend/ldgui/backend_event.c`
+- `tinyui/src/backend/ldgui/backend_style_apply.c`
+- `tests/tinyui/unit/test_tinyui_widgets.c`
+- `tests/tinyui/contract/tinyui_release_capability_matrix.json`
 
 ### A4 `switch`
 
 **Modify:**
-- `picoui/include/picoui/switch.h`
-- `picoui/src/widgets/switch.c`
-- `picoui/src/backend/ldgui/backend_switch.c`
-- `picoui/src/backend/ldgui/backend_event.c`
-- `picoui/src/backend/ldgui/backend_style_apply.c`
-- `tests/picoui/unit/test_picoui_widgets.c`
-- `tests/picoui/contract/picoui_release_capability_matrix.json`
+- `tinyui/include/tinyui/switch.h`
+- `tinyui/src/widgets/switch.c`
+- `tinyui/src/backend/ldgui/backend_switch.c`
+- `tinyui/src/backend/ldgui/backend_event.c`
+- `tinyui/src/backend/ldgui/backend_style_apply.c`
+- `tests/tinyui/unit/test_tinyui_widgets.c`
+- `tests/tinyui/contract/tinyui_release_capability_matrix.json`
 
 ### A5 `list`
 
 **Modify:**
-- `picoui/include/picoui/list.h`
-- `picoui/src/widgets/list.c`
-- `picoui/src/backend/ldgui/backend_list.c`
-- `picoui/src/backend/ldgui/backend_event.c`
-- `picoui/src/backend/ldgui/backend_app.c`
-- `tests/picoui/unit/test_picoui_list.c`
-- `tests/picoui/runtime/check_picoui_backend_mapping.py`
-- `tests/picoui/contract/picoui_release_capability_matrix.json`
+- `tinyui/include/tinyui/list.h`
+- `tinyui/src/widgets/list.c`
+- `tinyui/src/backend/ldgui/backend_list.c`
+- `tinyui/src/backend/ldgui/backend_event.c`
+- `tinyui/src/backend/ldgui/backend_app.c`
+- `tests/tinyui/unit/test_tinyui_list.c`
+- `tests/tinyui/runtime/check_tinyui_backend_mapping.py`
+- `tests/tinyui/contract/tinyui_release_capability_matrix.json`
 
 ### A6 文档与 closeout
 
 **Modify:**
-- `docs/picoui-serial/a-01-线计划索引.md`
-- `docs/superpowers/specs/2026-05-31-picoui-a-01-wrapped-backlog-design.md`
-- `picoui/docs/demo_guide.md`
+- `docs/tinyui-serial/a-01-线计划索引.md`
+- `docs/superpowers/specs/2026-05-31-tinyui-a-01-wrapped-backlog-design.md`
+- `tinyui/docs/demo_guide.md`
 
 ## 2. Tasks
 
 ### Task A0: worktree 准备和 baseline
 
 **Files:**
-- Read: `docs/picoui-serial/a-01-线计划索引.md`
-- Read: `docs/superpowers/specs/2026-05-31-picoui-a-01-wrapped-backlog-design.md`
+- Read: `docs/tinyui-serial/a-01-线计划索引.md`
+- Read: `docs/superpowers/specs/2026-05-31-tinyui-a-01-wrapped-backlog-design.md`
 
 - [ ] **Step 1: 创建 worktree**
 
 ```bash
-git worktree add .worktree/a-01 -b feat/picoui-a-01-wrapped-backlog HEAD
+git worktree add .worktree/a-01 -b feat/tinyui-a-01-wrapped-backlog HEAD
 cd .worktree/a-01
 git submodule sync --recursive
 git submodule update --init --recursive
@@ -139,11 +139,11 @@ git submodule update --init --recursive
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
 rtk cmake --build build
-ctest --test-dir build -L picoui --output-on-failure
+ctest --test-dir build -L tinyui --output-on-failure
 ctest --test-dir build -L visible --output-on-failure
 ctest --test-dir build -L mapping --output-on-failure
-python3 tests/picoui/contract/check_picoui_public_api.py
-python3 tests/picoui/contract/check_picoui_release_capability_matrix.py
+python3 tests/tinyui/contract/check_tinyui_public_api.py
+python3 tests/tinyui/contract/check_tinyui_release_capability_matrix.py
 git diff --check
 ```
 
@@ -155,25 +155,25 @@ Expected:
 ### Task A1: `image` 语义冻结
 
 **Files:**
-- Modify: `picoui/src/core/widget.c`
-- Modify: `picoui/src/backend/ldgui/backend_style_apply.c`
-- Modify: `picoui/src/backend/ldgui/backend_image.c`
-- Modify: `tests/picoui/unit/test_picoui_widgets.c`
-- Modify: `tests/picoui/contract/picoui_release_capability_matrix.json`
-- Modify: `tests/picoui/contract/check_picoui_release_capability_matrix.py`
+- Modify: `tinyui/src/core/widget.c`
+- Modify: `tinyui/src/backend/ldgui/backend_style_apply.c`
+- Modify: `tinyui/src/backend/ldgui/backend_image.c`
+- Modify: `tests/tinyui/unit/test_tinyui_widgets.c`
+- Modify: `tests/tinyui/contract/tinyui_release_capability_matrix.json`
+- Modify: `tests/tinyui/contract/check_tinyui_release_capability_matrix.py`
 
 - [ ] **Step 1: 跑 impact**
 
 Run:
 
 ```text
-gitnexus_impact(target="picoui_widget_set_enabled", direction="upstream", repo="LingDongGUI")
-gitnexus_impact(target="picoui_backend_widget_apply_style", direction="upstream", repo="LingDongGUI")
+gitnexus_impact(target="tinyui_widget_set_enabled", direction="upstream", repo="LingDongGUI")
+gitnexus_impact(target="tinyui_backend_widget_apply_style", direction="upstream", repo="LingDongGUI")
 ```
 
 - [ ] **Step 2: 写 fail-first image 语义测试**
 
-在 `tests/picoui/unit/test_picoui_widgets.c` 增加最小 RED 用例，覆盖：
+在 `tests/tinyui/unit/test_tinyui_widgets.c` 增加最小 RED 用例，覆盖：
 
 ```c
 static void test_image_style_class_and_user_data_are_metadata_only_contract(void);
@@ -193,7 +193,7 @@ Run:
 
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
-ctest --test-dir build -R '^test_picoui_widgets$' --output-on-failure
+ctest --test-dir build -R '^test_tinyui_widgets$' --output-on-failure
 ```
 
 Expected:
@@ -204,14 +204,14 @@ Expected:
 
 Requirements:
 
-- 仅在测试证明现状不稳定时修改 `picoui/src/core/widget.c`
+- 仅在测试证明现状不稳定时修改 `tinyui/src/core/widget.c`
 - 仅在测试证明现状不稳定时修改 `backend_style_apply.c`
 - `backend_image.c` 只允许补最小稳定 reject / metadata-only 路径
 - 不新增任何 image disabled backend 或 fake style backend
 
 - [ ] **Step 5: 同步 release matrix**
 
-Update `tests/picoui/contract/picoui_release_capability_matrix.json`，至少固定：
+Update `tests/tinyui/contract/tinyui_release_capability_matrix.json`，至少固定：
 
 - `theme`: `reject`
 - `style_class / user_data`: `incomplete_contract`
@@ -226,9 +226,9 @@ Run:
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
 rtk cmake --build build
-ctest --test-dir build -R '^test_picoui_widgets$' --output-on-failure
-python3 tests/picoui/contract/check_picoui_release_capability_matrix.py
-python3 tests/picoui/contract/check_picoui_public_api.py
+ctest --test-dir build -R '^test_tinyui_widgets$' --output-on-failure
+python3 tests/tinyui/contract/check_tinyui_release_capability_matrix.py
+python3 tests/tinyui/contract/check_tinyui_public_api.py
 git diff --check
 ```
 
@@ -243,26 +243,26 @@ gitnexus_detect_changes(scope="all", repo="LingDongGUI")
 ### Task A2: `text` 显示合同与 readback 收口
 
 **Files:**
-- Modify: `picoui/include/picoui/text.h`
-- Modify: `picoui/src/widgets/text.c`
-- Modify: `picoui/src/backend/ldgui/backend_text.c`
-- Modify: `picoui/src/backend/ldgui/backend_style_apply.c`
-- Modify: `tests/picoui/unit/test_picoui_widgets.c`
-- Modify: `tests/picoui/unit/test_picoui_theme.c`
-- Modify: `tests/picoui/contract/picoui_release_capability_matrix.json`
+- Modify: `tinyui/include/tinyui/text.h`
+- Modify: `tinyui/src/widgets/text.c`
+- Modify: `tinyui/src/backend/ldgui/backend_text.c`
+- Modify: `tinyui/src/backend/ldgui/backend_style_apply.c`
+- Modify: `tests/tinyui/unit/test_tinyui_widgets.c`
+- Modify: `tests/tinyui/unit/test_tinyui_theme.c`
+- Modify: `tests/tinyui/contract/tinyui_release_capability_matrix.json`
 
 - [ ] **Step 1: 跑 impact**
 
 Run:
 
 ```text
-gitnexus_impact(target="picoui_text_set_font", direction="upstream", repo="LingDongGUI")
-gitnexus_impact(target="picoui_text_set_text", direction="upstream", repo="LingDongGUI")
+gitnexus_impact(target="tinyui_text_set_font", direction="upstream", repo="LingDongGUI")
+gitnexus_impact(target="tinyui_text_set_text", direction="upstream", repo="LingDongGUI")
 ```
 
 - [ ] **Step 2: 写 fail-first text 测试**
 
-在 `tests/picoui/unit/test_picoui_widgets.c` / `tests/picoui/unit/test_picoui_theme.c` 增加 RED 用例，至少覆盖：
+在 `tests/tinyui/unit/test_tinyui_widgets.c` / `tests/tinyui/unit/test_tinyui_theme.c` 增加 RED 用例，至少覆盖：
 
 ```c
 static void test_text_font_contract_round_trip(void);
@@ -282,7 +282,7 @@ Run:
 
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
-ctest --test-dir build -R '^(test_picoui_widgets|test_picoui_theme)$' --output-on-failure
+ctest --test-dir build -R '^(test_tinyui_widgets|test_tinyui_theme)$' --output-on-failure
 ```
 
 - [ ] **Step 4: 实现最小收口**
@@ -307,9 +307,9 @@ Run:
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
 rtk cmake --build build
-ctest --test-dir build -R '^(test_picoui_widgets|test_picoui_theme)$' --output-on-failure
-python3 tests/picoui/contract/check_picoui_release_capability_matrix.py
-python3 tests/picoui/contract/check_picoui_public_api.py
+ctest --test-dir build -R '^(test_tinyui_widgets|test_tinyui_theme)$' --output-on-failure
+python3 tests/tinyui/contract/check_tinyui_release_capability_matrix.py
+python3 tests/tinyui/contract/check_tinyui_public_api.py
 git diff --check
 ```
 
@@ -324,21 +324,21 @@ gitnexus_detect_changes(scope="all", repo="LingDongGUI")
 ### Task A3: `checkbox` checked/toggled 合同收口
 
 **Files:**
-- Modify: `picoui/include/picoui/checkbox.h`
-- Modify: `picoui/src/widgets/checkbox.c`
-- Modify: `picoui/src/backend/ldgui/backend_checkbox.c`
-- Modify: `picoui/src/backend/ldgui/backend_event.c`
-- Modify: `picoui/src/backend/ldgui/backend_style_apply.c`
-- Modify: `tests/picoui/unit/test_picoui_widgets.c`
-- Modify: `tests/picoui/contract/picoui_release_capability_matrix.json`
+- Modify: `tinyui/include/tinyui/checkbox.h`
+- Modify: `tinyui/src/widgets/checkbox.c`
+- Modify: `tinyui/src/backend/ldgui/backend_checkbox.c`
+- Modify: `tinyui/src/backend/ldgui/backend_event.c`
+- Modify: `tinyui/src/backend/ldgui/backend_style_apply.c`
+- Modify: `tests/tinyui/unit/test_tinyui_widgets.c`
+- Modify: `tests/tinyui/contract/tinyui_release_capability_matrix.json`
 
 - [ ] **Step 1: 跑 impact**
 
 Run:
 
 ```text
-gitnexus_impact(target="picoui_checkbox_set_checked", direction="upstream", repo="LingDongGUI")
-gitnexus_impact(target="picoui_backend_widget_dispatch_event", direction="upstream", repo="LingDongGUI")
+gitnexus_impact(target="tinyui_checkbox_set_checked", direction="upstream", repo="LingDongGUI")
+gitnexus_impact(target="tinyui_backend_widget_dispatch_event", direction="upstream", repo="LingDongGUI")
 ```
 
 - [ ] **Step 2: 写 fail-first checkbox 测试**
@@ -363,7 +363,7 @@ Run:
 
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
-ctest --test-dir build -R '^test_picoui_widgets$' --output-on-failure
+ctest --test-dir build -R '^test_tinyui_widgets$' --output-on-failure
 ```
 
 - [ ] **Step 4: 实现最小收口**
@@ -385,9 +385,9 @@ Run:
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
 rtk cmake --build build
-ctest --test-dir build -R '^test_picoui_widgets$' --output-on-failure
-python3 tests/picoui/contract/check_picoui_release_capability_matrix.py
-python3 tests/picoui/contract/check_picoui_public_api.py
+ctest --test-dir build -R '^test_tinyui_widgets$' --output-on-failure
+python3 tests/tinyui/contract/check_tinyui_release_capability_matrix.py
+python3 tests/tinyui/contract/check_tinyui_public_api.py
 git diff --check
 ```
 
@@ -402,21 +402,21 @@ gitnexus_detect_changes(scope="all", repo="LingDongGUI")
 ### Task A4: `switch` checked/disabled/event 合同收口
 
 **Files:**
-- Modify: `picoui/include/picoui/switch.h`
-- Modify: `picoui/src/widgets/switch.c`
-- Modify: `picoui/src/backend/ldgui/backend_switch.c`
-- Modify: `picoui/src/backend/ldgui/backend_event.c`
-- Modify: `picoui/src/backend/ldgui/backend_style_apply.c`
-- Modify: `tests/picoui/unit/test_picoui_widgets.c`
-- Modify: `tests/picoui/contract/picoui_release_capability_matrix.json`
+- Modify: `tinyui/include/tinyui/switch.h`
+- Modify: `tinyui/src/widgets/switch.c`
+- Modify: `tinyui/src/backend/ldgui/backend_switch.c`
+- Modify: `tinyui/src/backend/ldgui/backend_event.c`
+- Modify: `tinyui/src/backend/ldgui/backend_style_apply.c`
+- Modify: `tests/tinyui/unit/test_tinyui_widgets.c`
+- Modify: `tests/tinyui/contract/tinyui_release_capability_matrix.json`
 
 - [ ] **Step 1: 跑 impact**
 
 Run:
 
 ```text
-gitnexus_impact(target="picoui_switch_set_checked", direction="upstream", repo="LingDongGUI")
-gitnexus_impact(target="picoui_widget_set_enabled", direction="upstream", repo="LingDongGUI")
+gitnexus_impact(target="tinyui_switch_set_checked", direction="upstream", repo="LingDongGUI")
+gitnexus_impact(target="tinyui_widget_set_enabled", direction="upstream", repo="LingDongGUI")
 ```
 
 - [ ] **Step 2: 写 fail-first switch 测试**
@@ -441,7 +441,7 @@ Run:
 
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
-ctest --test-dir build -R '^test_picoui_widgets$' --output-on-failure
+ctest --test-dir build -R '^test_tinyui_widgets$' --output-on-failure
 ```
 
 - [ ] **Step 4: 实现最小收口**
@@ -463,9 +463,9 @@ Run:
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
 rtk cmake --build build
-ctest --test-dir build -R '^test_picoui_widgets$' --output-on-failure
-python3 tests/picoui/contract/check_picoui_release_capability_matrix.py
-python3 tests/picoui/contract/check_picoui_public_api.py
+ctest --test-dir build -R '^test_tinyui_widgets$' --output-on-failure
+python3 tests/tinyui/contract/check_tinyui_release_capability_matrix.py
+python3 tests/tinyui/contract/check_tinyui_public_api.py
 git diff --check
 ```
 
@@ -480,27 +480,27 @@ gitnexus_detect_changes(scope="all", repo="LingDongGUI")
 ### Task A5: `list` marker/callback/runtime 口径收口
 
 **Files:**
-- Modify: `picoui/include/picoui/list.h`
-- Modify: `picoui/src/widgets/list.c`
-- Modify: `picoui/src/backend/ldgui/backend_list.c`
-- Modify: `picoui/src/backend/ldgui/backend_event.c`
-- Modify: `picoui/src/backend/ldgui/backend_app.c`
-- Modify: `tests/picoui/unit/test_picoui_list.c`
-- Modify: `tests/picoui/runtime/check_picoui_backend_mapping.py`
-- Modify: `tests/picoui/contract/picoui_release_capability_matrix.json`
+- Modify: `tinyui/include/tinyui/list.h`
+- Modify: `tinyui/src/widgets/list.c`
+- Modify: `tinyui/src/backend/ldgui/backend_list.c`
+- Modify: `tinyui/src/backend/ldgui/backend_event.c`
+- Modify: `tinyui/src/backend/ldgui/backend_app.c`
+- Modify: `tests/tinyui/unit/test_tinyui_list.c`
+- Modify: `tests/tinyui/runtime/check_tinyui_backend_mapping.py`
+- Modify: `tests/tinyui/contract/tinyui_release_capability_matrix.json`
 
 - [ ] **Step 1: 跑 impact**
 
 Run:
 
 ```text
-gitnexus_impact(target="picoui_list_set_on_selected", direction="upstream", repo="LingDongGUI")
-gitnexus_impact(target="picoui_backend_append_widget_ids", direction="upstream", repo="LingDongGUI")
+gitnexus_impact(target="tinyui_list_set_on_selected", direction="upstream", repo="LingDongGUI")
+gitnexus_impact(target="tinyui_backend_append_widget_ids", direction="upstream", repo="LingDongGUI")
 ```
 
 - [ ] **Step 2: 写 fail-first list 测试**
 
-在 `tests/picoui/unit/test_picoui_list.c` 和 `tests/picoui/runtime/check_picoui_backend_mapping.py` 增加 RED 断言，至少覆盖：
+在 `tests/tinyui/unit/test_tinyui_list.c` 和 `tests/tinyui/runtime/check_tinyui_backend_mapping.py` 增加 RED 断言，至少覆盖：
 
 ```c
 static void test_list_widget_user_data_is_distinct_from_callback_cookie(void);
@@ -517,8 +517,8 @@ Run:
 
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
-ctest --test-dir build -R '^test_picoui_list$' --output-on-failure
-python3 tests/picoui/runtime/check_picoui_backend_mapping.py
+ctest --test-dir build -R '^test_tinyui_list$' --output-on-failure
+python3 tests/tinyui/runtime/check_tinyui_backend_mapping.py
 ```
 
 - [ ] **Step 4: 实现最小收口**
@@ -546,10 +546,10 @@ Run:
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
 rtk cmake --build build
-ctest --test-dir build -R '^test_picoui_list$' --output-on-failure
-python3 tests/picoui/runtime/check_picoui_backend_mapping.py
-python3 tests/picoui/contract/check_picoui_release_capability_matrix.py
-python3 tests/picoui/contract/check_picoui_public_api.py
+ctest --test-dir build -R '^test_tinyui_list$' --output-on-failure
+python3 tests/tinyui/runtime/check_tinyui_backend_mapping.py
+python3 tests/tinyui/contract/check_tinyui_release_capability_matrix.py
+python3 tests/tinyui/contract/check_tinyui_public_api.py
 git diff --check
 ```
 
@@ -564,9 +564,9 @@ gitnexus_detect_changes(scope="all", repo="LingDongGUI")
 ### Task A6: 文档收口与 closeout review
 
 **Files:**
-- Modify: `docs/picoui-serial/a-01-线计划索引.md`
-- Modify: `docs/superpowers/specs/2026-05-31-picoui-a-01-wrapped-backlog-design.md`
-- Modify: `picoui/docs/demo_guide.md`
+- Modify: `docs/tinyui-serial/a-01-线计划索引.md`
+- Modify: `docs/superpowers/specs/2026-05-31-tinyui-a-01-wrapped-backlog-design.md`
+- Modify: `tinyui/docs/demo_guide.md`
 
 - [ ] **Step 1: 更新 a-01 索引**
 
@@ -612,12 +612,12 @@ Run:
 git status --short --branch --ignore-submodules=all
 rtk cmake -S . -B build -DUSE_DEMO=0
 rtk cmake --build build
-ctest --test-dir build -L picoui --output-on-failure
+ctest --test-dir build -L tinyui --output-on-failure
 ctest --test-dir build -L visible --output-on-failure
 ctest --test-dir build -L mapping --output-on-failure
-python3 tests/picoui/contract/check_picoui_public_api.py
-python3 tests/picoui/contract/check_picoui_release_capability_matrix.py
-python3 tests/picoui/runtime/check_picoui_backend_mapping.py
+python3 tests/tinyui/contract/check_tinyui_public_api.py
+python3 tests/tinyui/contract/check_tinyui_release_capability_matrix.py
+python3 tests/tinyui/runtime/check_tinyui_backend_mapping.py
 git diff --check
 ```
 

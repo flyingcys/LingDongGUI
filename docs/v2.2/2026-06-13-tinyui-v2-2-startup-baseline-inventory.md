@@ -11,8 +11,8 @@
 文件：`tinyui/include/runtime.h`
 
 当前状态：
-- 已提供 `picoui_init/deinit/screen_create/screen_load/timer_handler` 函数声明
-- 但声明仍使用 `picoui_*` 前缀命名，不是 `tinyui_*`
+- 已提供 `tinyui_init/deinit/screen_create/screen_load/timer_handler` 函数声明
+- 但声明仍使用 `tinyui_*` 前缀命名，不是 `tinyui_*`
 - 通过 `#define` alias 和 `static inline` wrapper 提供 `tinyui_*` 入口
 - 不是唯一、绝对清晰的 canonical 启动真相
 
@@ -21,28 +21,28 @@
 文件：`tinyui/include/app.h`
 
 当前状态：
-- 包含完整的 `picoui_app_*` 旧主路径声明
+- 包含完整的 `tinyui_app_*` 旧主路径声明
 - 头部注释已标记为 "Compatibility API retained during TinyUI transition"
 - 但所有 demo 仍依赖此路径
-- 声明：`picoui_app_create/run/run_background/set_window/set_background/switch_window/switch_background/timer_*`
+- 声明：`tinyui_app_create/run/run_background/set_window/set_background/switch_window/switch_background/timer_*`
 
 ### 1.3 app.c — 旧主路径实现
 
 文件：`tinyui/src/core/app.c`
 
 当前状态：
-- 实现完整的 `picoui_app_*` 函数：`create/run/run_background/set_window/set_background/switch_window/switch_background/timer_create/start/stop/is_running/destroy/destroy`
+- 实现完整的 `tinyui_app_*` 函数：`create/run/run_background/set_window/set_background/switch_window/switch_background/timer_create/start/stop/is_running/destroy/destroy`
 - 包含 `tinyui_app_pump_timers` 内部 helper
-- 被 `runtime.c` 通过 `picoui_app_create()` 间接依赖
+- 被 `runtime.c` 通过 `tinyui_app_create()` 间接依赖
 
 ### 1.4 runtime.c — 当前 runtime 实现
 
 文件：`tinyui/src/core/runtime.c`
 
 当前状态：
-- 实现 `picoui_init/deinit/screen_create/screen_load/timer_handler`
-- `picoui_init` 内部调用 `picoui_app_create()` — 仍依赖旧 app 路径
-- `picoui_screen_load` 内部调用 `picoui_app_set_window()` — 仍依赖旧 app 路径
+- 实现 `tinyui_init/deinit/screen_create/screen_load/timer_handler`
+- `tinyui_init` 内部调用 `tinyui_app_create()` — 仍依赖旧 app 路径
+- `tinyui_screen_load` 内部调用 `tinyui_app_set_window()` — 仍依赖旧 app 路径
 
 ### 1.5 runtime_host.c — SDL host 渲染
 
@@ -100,30 +100,30 @@ tinyui/demo/theme_showcase/main.c
 
 ### 2.2 demo 启动模式分类
 
-**模式 A：`main() -> run_demo() -> picoui_app_create() + picoui_app_run()`**
+**模式 A：`main() -> run_demo() -> tinyui_app_create() + tinyui_app_run()`**
 （25 个 demo 采用此模式）
 
-- `run_demo()` 内创建 `picoui_app_create()`，构建 UI，调用 `picoui_app_run()`
+- `run_demo()` 内创建 `tinyui_app_create()`，构建 UI，调用 `tinyui_app_run()`
 - `main()` 仅调用 `return run_demo();`
 
 具体：arc_basic, progress_bar_basic, list_basic, settings_panel, clock_basic, layout_grid, line_edit_basic, theme_showcase, layout_flex, layout_parity, message_box_basic, hello_world, qrcode_basic, gauge_basic, icon_slider_basic, animation_basic, progress_wheel_basic, radial_menu_basic, date_time_basic, grid_parity, legacy_widget_parity
 
-**模式 B：`main() -> picoui_app_create() + picoui_app_run()`（直接）**
+**模式 B：`main() -> tinyui_app_create() + tinyui_app_run()`（直接）**
 （6 个 demo 采用此模式）
 
-- `main()` 内直接调用 `picoui_app_create()` 和 `picoui_app_run()`
+- `main()` 内直接调用 `tinyui_app_create()` 和 `tinyui_app_run()`
 - 无 `run_demo()` 函数
 
 具体：table_basic, graph_basic, scroll_selecter_basic, combo_box_basic, calendar_basic, keyboard_basic
 
-**模式 C：`main() -> run_demo()`（但 `run_demo` 不调用 `picoui_app_create`）**
+**模式 C：`main() -> run_demo()`（但 `run_demo` 不调用 `tinyui_app_create`）**
 （1 个 demo）
 
-- `basic_widgets/main.c`：`run_demo()` 不直接调用 `picoui_app_create()`，但 `main()` 调用 `run_demo()`
+- `basic_widgets/main.c`：`run_demo()` 不直接调用 `tinyui_app_create()`，但 `main()` 调用 `run_demo()`
 
-### 2.3 所有 demo 均依赖 `picoui_app_*` 主路径
+### 2.3 所有 demo 均依赖 `tinyui_app_*` 主路径
 
-无一例外，所有 28 个 demo 均通过 `picoui_app_create()/picoui_app_run()` 或其包装函数启动。
+无一例外，所有 28 个 demo 均通过 `tinyui_app_create()/tinyui_app_run()` 或其包装函数启动。
 
 ### 2.4 当前无统一 `tinyui/demo/main.c`
 
@@ -163,41 +163,41 @@ tinyui/demo/theme_showcase/main.c
 
 #### 类别 A：Shared enum / truth policy / signal（应迁入 `core/internal.h`）
 
-- `enum picoui_backend_widget_kind` (26 个 widget kind)
-- `enum picoui_backend_signal` (4 个信号类型)
-- `enum picoui_backend_data_truth_policy` (3 个策略)
-- `enum picoui_backend_data_value_source` (3 个数据源)
-- `enum picoui_backend_runtime_evidence_flags` (2 个 flags)
+- `enum tinyui_backend_widget_kind` (26 个 widget kind)
+- `enum tinyui_backend_signal` (4 个信号类型)
+- `enum tinyui_backend_data_truth_policy` (3 个策略)
+- `enum tinyui_backend_data_value_source` (3 个数据源)
+- `enum tinyui_backend_runtime_evidence_flags` (2 个 flags)
 
 #### 类别 B：Backend widget tree / runtime state（应迁入 `core/runtime_internal.h`）
 
-- `struct picoui_backend_widget` (核心 backend widget 结构体，含 tree、layout、data model 等)
-- `struct picoui_backend_app_state` (app backend state，含 theme、scene、runtime_state 等)
+- `struct tinyui_backend_widget` (核心 backend widget 结构体，含 tree、layout、data model 等)
+- `struct tinyui_backend_app_state` (app backend state，含 theme、scene、runtime_state 等)
 
 #### 类别 C：Layout cache（应迁入 `window` / `layout` private）
 
-- `struct picoui_backend_layout_window_state` (flex/grid layout 参数)
-- `struct picoui_backend_layout_child_state` (child layout 参数)
+- `struct tinyui_backend_layout_window_state` (flex/grid layout 参数)
+- `struct tinyui_backend_layout_child_state` (child layout 参数)
 
 #### 类别 D：Widget-specific LDGUI bridge/helper（应保留在各 widget `.c` 或 widget-private 头）
 
-- `picoui_backend_arc_*` (arc 相关 backend 函数)
-- `picoui_backend_gauge_*` (gauge 相关 backend 函数)
-- `picoui_backend_progress_bar_*` (progress bar 相关 backend 函数)
-- `picoui_backend_qrcode_*` (qrcode 相关 backend 函数)
-- `picoui_backend_line_edit_*` (line edit 相关 backend 函数)
-- `picoui_backend_combo_box_*` (combo box 相关 backend 函数)
-- `picoui_backend_scroll_selecter_*` (scroll selecter 相关 backend 函数)
-- `picoui_backend_switch_*` (switch 相关 backend 函数)
-- `picoui_backend_image_*` (image 相关 backend 函数)
-- `picoui_backend_window_*` (window 相关 backend 函数)
+- `tinyui_backend_arc_*` (arc 相关 backend 函数)
+- `tinyui_backend_gauge_*` (gauge 相关 backend 函数)
+- `tinyui_backend_progress_bar_*` (progress bar 相关 backend 函数)
+- `tinyui_backend_qrcode_*` (qrcode 相关 backend 函数)
+- `tinyui_backend_line_edit_*` (line edit 相关 backend 函数)
+- `tinyui_backend_combo_box_*` (combo box 相关 backend 函数)
+- `tinyui_backend_scroll_selecter_*` (scroll selecter 相关 backend 函数)
+- `tinyui_backend_switch_*` (switch 相关 backend 函数)
+- `tinyui_backend_image_*` (image 相关 backend 函数)
+- `tinyui_backend_window_*` (window 相关 backend 函数)
 - `tinyui_list_*` (list 相关 backend 函数)
 - `tinyui_widget_emit_*` (emit helper 函数)
 - `tinyui_widget_*_backend_focus` (focus 函数)
 - `tinyui_widget_init_data_model` (data model 函数)
-- `picoui_backend_set_image_source` (image source setter)
-- `picoui_backend_progress_wheel_test_*` (progress wheel 测试 hook)
-- `picoui_backend_table_test_*` (table 测试 hook)
+- `tinyui_backend_set_image_source` (image source setter)
+- `tinyui_backend_progress_wheel_test_*` (progress wheel 测试 hook)
+- `tinyui_backend_table_test_*` (table 测试 hook)
 
 #### 类别 E：仅单文件使用的 helper
 
@@ -234,4 +234,4 @@ tinyui_init() -> tinyui_screen_create() -> demo_build(screen) -> tinyui_screen_l
 - 不允许新建另一份 mega-header 取代 `backend.h`
 - 不允许把 widget-local helper 再提升成 shared 总入口
 - 不允许 demo 迁移时顺手把业务逻辑上推到 runtime 层
-- 不允许保留 `picoui_app_*` 作为 canonical 主路径
+- 不允许保留 `tinyui_app_*` 作为 canonical 主路径

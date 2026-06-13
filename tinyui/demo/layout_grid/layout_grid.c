@@ -22,40 +22,40 @@
 static const int cols[] = {80, -2, 0};
 static const int rows[] = {32, -2, 0};
 
-static void make_ui(struct picoui_window *win)
+static void make_ui(struct tinyui_window *win)
 {
-    struct picoui_label *title;
-    struct picoui_button *left;
-    struct picoui_button *right;
+    struct tinyui_label *title;
+    struct tinyui_button *left;
+    struct tinyui_button *right;
 
-    picoui_grid_set_columns(win, cols, 3);
-    picoui_grid_set_rows(win, rows, 3);
-    picoui_grid_set_gap(win, 8, 8);
+    tinyui_grid_set_columns(win, cols, 3);
+    tinyui_grid_set_rows(win, rows, 3);
+    tinyui_grid_set_gap(win, 8, 8);
 
-    title = picoui_label_create(win, "title");
-    left = picoui_button_create(win, "left");
-    right = picoui_button_create(win, "right");
-    picoui_label_set_text(title, "Grid");
-    picoui_button_set_text(left, "A");
-    picoui_button_set_text(right, "B");
-    picoui_widget_set_grid_cell((struct picoui_widget *)title,
+    title = tinyui_label_create(win, "title");
+    left = tinyui_button_create(win, "left");
+    right = tinyui_button_create(win, "right");
+    tinyui_label_set_text(title, "Grid");
+    tinyui_button_set_text(left, "A");
+    tinyui_button_set_text(right, "B");
+    tinyui_widget_set_grid_cell((struct tinyui_widget *)title,
                                 0, 0, 2, 1,
-                                PICOUI_ALIGN_START,
-                                PICOUI_ALIGN_CENTER);
-    picoui_widget_set_grid_cell((struct picoui_widget *)left,
+                                TINYUI_ALIGN_START,
+                                TINYUI_ALIGN_CENTER);
+    tinyui_widget_set_grid_cell((struct tinyui_widget *)left,
                                 0, 1, 1, 1,
-                                PICOUI_ALIGN_STRETCH,
-                                PICOUI_ALIGN_STRETCH);
-    picoui_widget_set_grid_cell((struct picoui_widget *)right,
+                                TINYUI_ALIGN_STRETCH,
+                                TINYUI_ALIGN_STRETCH);
+    tinyui_widget_set_grid_cell((struct tinyui_widget *)right,
                                 1, 1, 1, 1,
-                                PICOUI_ALIGN_STRETCH,
-                                PICOUI_ALIGN_STRETCH);
+                                TINYUI_ALIGN_STRETCH,
+                                TINYUI_ALIGN_STRETCH);
 }
 
 void tinyui_demo_layout_grid(void)
 {
     tinyui_obj_t *screen = tinyui_screen_create();
-    struct picoui_window *win = (struct picoui_window *)screen;
+    struct tinyui_window *win = (struct tinyui_window *)screen;
     if (win == 0) return;
     make_ui(win);
     tinyui_screen_load(screen);

@@ -18,16 +18,16 @@
 
 #include "internal.h"
 #include "layout.h"
-static struct picoui_backend_widget *tinyui_window_get_backend(struct picoui_window *window)
+static struct tinyui_backend_widget *tinyui_window_get_backend(struct tinyui_window *window)
 {
     if (window == 0 || window->widget.backend_widget == 0) {
         return 0;
     }
 
-    return (struct picoui_backend_widget *)window->widget.backend_widget;
+    return (struct tinyui_backend_widget *)window->widget.backend_widget;
 }
 
-static int tinyui_window_is_valid(struct picoui_window *window)
+static int tinyui_window_is_valid(struct tinyui_window *window)
 {
     return tinyui_window_get_backend(window) != 0;
 }
@@ -41,7 +41,7 @@ static int tinyui_window_is_valid(struct picoui_window *window)
  * @return -1 on failure
  */
 
-int picoui_grid_set_columns(struct picoui_window *window, const int *tracks, int count)
+int tinyui_grid_set_columns(struct tinyui_window *window, const int *tracks, int count)
 {
     if (!tinyui_window_is_valid(window)) {
         return -1;
@@ -59,7 +59,7 @@ int picoui_grid_set_columns(struct picoui_window *window, const int *tracks, int
  * @return -1 on failure
  */
 
-int picoui_grid_set_rows(struct picoui_window *window, const int *tracks, int count)
+int tinyui_grid_set_rows(struct tinyui_window *window, const int *tracks, int count)
 {
     if (!tinyui_window_is_valid(window)) {
         return -1;
@@ -77,7 +77,7 @@ int picoui_grid_set_rows(struct picoui_window *window, const int *tracks, int co
  * @return -1 on failure
  */
 
-int picoui_grid_set_gap(struct picoui_window *window, int row_gap, int col_gap)
+int tinyui_grid_set_gap(struct tinyui_window *window, int row_gap, int col_gap)
 {
     if (!tinyui_window_is_valid(window) || row_gap < 0 || col_gap < 0) {
         return -1;
@@ -95,9 +95,9 @@ int picoui_grid_set_gap(struct picoui_window *window, int row_gap, int col_gap)
  * @return -1 on failure
  */
 
-int picoui_grid_set_align(struct picoui_window *window,
-                          enum picoui_align col_align,
-                          enum picoui_align row_align)
+int tinyui_grid_set_align(struct tinyui_window *window,
+                          enum tinyui_align col_align,
+                          enum tinyui_align row_align)
 {
     if (!tinyui_window_is_valid(window)) {
         return -1;

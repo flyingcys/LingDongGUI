@@ -23,25 +23,25 @@
 
 #include <stdlib.h>
 
-static struct picoui_backend_widget *tinyui_switch_backend(struct picoui_switch *sw)
+static struct tinyui_backend_widget *tinyui_switch_backend(struct tinyui_switch *sw)
 {
-    struct picoui_backend_widget *backend;
+    struct tinyui_backend_widget *backend;
 
     if (sw == 0 || sw->widget.backend_widget == 0) {
         return 0;
     }
 
-    backend = (struct picoui_backend_widget *)sw->widget.backend_widget;
-    if (backend->kind != PICOUI_BACKEND_WIDGET_SWITCH || backend->ld_widget == 0) {
+    backend = (struct tinyui_backend_widget *)sw->widget.backend_widget;
+    if (backend->kind != TINYUI_BACKEND_WIDGET_SWITCH || backend->ld_widget == 0) {
         return 0;
     }
 
     return backend;
 }
 
-static ldSwitch_t *tinyui_switch_get_ld(struct picoui_switch *sw)
+static ldSwitch_t *tinyui_switch_get_ld(struct tinyui_switch *sw)
 {
-    struct picoui_backend_widget *backend = tinyui_switch_backend(sw);
+    struct tinyui_backend_widget *backend = tinyui_switch_backend(sw);
 
     if (backend == 0) {
         return 0;
@@ -58,29 +58,29 @@ static int tinyui_switch_nav_dir_to_ld(int direction, int *ld_dir)
 
     switch (direction) {
     case 1:
-        *ld_dir = tinyui_native_nav_dir_to_ld(PICOUI_NATIVE_NAV_UP);
+        *ld_dir = tinyui_native_nav_dir_to_ld(TINYUI_NATIVE_NAV_UP);
         return 0;
     case 2:
-        *ld_dir = tinyui_native_nav_dir_to_ld(PICOUI_NATIVE_NAV_DOWN);
+        *ld_dir = tinyui_native_nav_dir_to_ld(TINYUI_NATIVE_NAV_DOWN);
         return 0;
     case 3:
-        *ld_dir = tinyui_native_nav_dir_to_ld(PICOUI_NATIVE_NAV_LEFT);
+        *ld_dir = tinyui_native_nav_dir_to_ld(TINYUI_NATIVE_NAV_LEFT);
         return 0;
     case 4:
-        *ld_dir = tinyui_native_nav_dir_to_ld(PICOUI_NATIVE_NAV_RIGHT);
+        *ld_dir = tinyui_native_nav_dir_to_ld(TINYUI_NATIVE_NAV_RIGHT);
         return 0;
     default:
         return -1;
     }
 }
 
-static int tinyui_switch_attach_native(struct picoui_switch *sw,
-                                       struct picoui_window *parent,
+static int tinyui_switch_attach_native(struct tinyui_switch *sw,
+                                       struct tinyui_window *parent,
                                        const char *id)
 {
-    struct picoui_backend_widget *widget;
-    struct picoui_backend_widget *parent_widget;
-    struct picoui_backend_app_state *app_state;
+    struct tinyui_backend_widget *widget;
+    struct tinyui_backend_widget *parent_widget;
+    struct tinyui_backend_app_state *app_state;
     ldSwitch_t *ld_switch;
     uint16_t name_id;
 
@@ -88,7 +88,7 @@ static int tinyui_switch_attach_native(struct picoui_switch *sw,
         return -1;
     }
 
-    parent_widget = (struct picoui_backend_widget *)parent->widget.backend_widget;
+    parent_widget = (struct tinyui_backend_widget *)parent->widget.backend_widget;
     app_state = tinyui_runtime_bridge_backend_state_from_parent(parent_widget);
     if (app_state == 0 || app_state->ld_scene == 0 || parent_widget->ld_widget == 0) {
         return -1;
@@ -126,7 +126,7 @@ static int tinyui_switch_attach_native(struct picoui_switch *sw,
 
     if (tinyui_widget_init_child(widget,
                                          parent_widget,
-                                         PICOUI_BACKEND_WIDGET_SWITCH,
+                                         TINYUI_BACKEND_WIDGET_SWITCH,
                                          id,
                                          parent_widget->theme) != 0) {
         ldSwitch_depose(app_state->ld_scene, ld_switch);
@@ -136,7 +136,7 @@ static int tinyui_switch_attach_native(struct picoui_switch *sw,
 
     widget->ld_widget = ld_switch;
     widget->ld_name_id = name_id;
-    widget->last_signal = PICOUI_BACKEND_SIGNAL_NONE;
+    widget->last_signal = TINYUI_BACKEND_SIGNAL_NONE;
     if (tinyui_widget_attach_child(parent_widget, widget) != 0) {
         ldSwitch_depose(app_state->ld_scene, ld_switch);
         free(widget);
@@ -155,7 +155,7 @@ static int tinyui_switch_attach_native(struct picoui_switch *sw,
     return 0;
 }
 
-static int tinyui_switch_props_are_valid(const struct picoui_switch_props *props)
+static int tinyui_switch_props_are_valid(const struct tinyui_switch_props *props)
 {
     return props != 0
         && props->id != 0
@@ -184,9 +184,9 @@ static int tinyui_switch_props_are_valid(const struct picoui_switch_props *props
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct picoui_switch *picoui_switch_create(struct picoui_window *parent, const char *id)
+struct tinyui_switch *tinyui_switch_create(struct tinyui_window *parent, const char *id)
 {
-    struct picoui_switch *sw;
+    struct tinyui_switch *sw;
 
     if (parent == 0 || id == 0) {
         return 0;
@@ -216,22 +216,22 @@ struct picoui_switch *picoui_switch_create(struct picoui_window *parent, const c
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct picoui_switch *picoui_switch_create_with_props(struct picoui_window *parent,
-                                                      const struct picoui_switch_props *props)
+struct tinyui_switch *tinyui_switch_create_with_props(struct tinyui_window *parent,
+                                                      const struct tinyui_switch_props *props)
 {
-    struct picoui_switch *sw;
-    struct picoui_backend_widget *backend;
+    struct tinyui_switch *sw;
+    struct tinyui_backend_widget *backend;
 
     if (!tinyui_switch_props_are_valid(props)) {
         return 0;
     }
 
-    sw = picoui_switch_create(parent, props->id);
+    sw = tinyui_switch_create(parent, props->id);
     if (sw == 0) {
         return 0;
     }
 
-    backend = (struct picoui_backend_widget *)sw->widget.backend_widget;
+    backend = (struct tinyui_backend_widget *)sw->widget.backend_widget;
     sw->checked = props->checked != 0;
     sw->cb = 0;
     sw->user_data = 0;
@@ -243,41 +243,41 @@ struct picoui_switch *picoui_switch_create_with_props(struct picoui_window *pare
         free(sw);
         return 0;
     }
-    backend->last_signal = PICOUI_BACKEND_SIGNAL_NONE;
+    backend->last_signal = TINYUI_BACKEND_SIGNAL_NONE;
     backend->dispatch_count = 0;
     sw->cb = props->on_toggled;
     sw->user_data = props->user_data;
-    if (picoui_widget_set_user_data(&sw->widget, props->user_data) != 0) {
+    if (tinyui_widget_set_user_data(&sw->widget, props->user_data) != 0) {
         free(sw);
         return 0;
     }
     if (props->style_class != 0
-        && picoui_widget_set_style_class(&sw->widget, props->style_class) != 0) {
+        && tinyui_widget_set_style_class(&sw->widget, props->style_class) != 0) {
         free(sw);
         return 0;
     }
     if ((props->width > 0 || props->height > 0)
-        && picoui_widget_set_size(&sw->widget, props->width, props->height) != 0) {
+        && tinyui_widget_set_size(&sw->widget, props->width, props->height) != 0) {
         free(sw);
         return 0;
     }
-    if (picoui_widget_set_bg_color(&sw->widget, props->bg_color) != 0
-        || picoui_widget_set_text_color(&sw->widget, props->text_color) != 0
-        || picoui_widget_set_border_color(&sw->widget, props->border_color) != 0
-        || picoui_widget_set_radius(&sw->widget, props->radius) != 0
-        || picoui_widget_set_padding(&sw->widget, props->padding) != 0
+    if (tinyui_widget_set_bg_color(&sw->widget, props->bg_color) != 0
+        || tinyui_widget_set_text_color(&sw->widget, props->text_color) != 0
+        || tinyui_widget_set_border_color(&sw->widget, props->border_color) != 0
+        || tinyui_widget_set_radius(&sw->widget, props->radius) != 0
+        || tinyui_widget_set_padding(&sw->widget, props->padding) != 0
         || (props->has_off_source != 0
-            && picoui_switch_set_off_source(sw, props->off_source) != 0)
+            && tinyui_switch_set_off_source(sw, props->off_source) != 0)
         || (props->has_on_source != 0
-            && picoui_switch_set_on_source(sw, props->on_source) != 0)
+            && tinyui_switch_set_on_source(sw, props->on_source) != 0)
         || (props->has_knob_source != 0
-            && picoui_switch_set_knob_source(sw, props->knob_source) != 0)
+            && tinyui_switch_set_knob_source(sw, props->knob_source) != 0)
         || (props->has_horizontal != 0
-            && picoui_switch_set_horizontal(sw, props->horizontal) != 0)
+            && tinyui_switch_set_horizontal(sw, props->horizontal) != 0)
         || (props->has_direction != 0
-            && picoui_switch_set_direction(sw, props->direction) != 0)
+            && tinyui_switch_set_direction(sw, props->direction) != 0)
         || (props->has_disabled != 0
-            && picoui_switch_set_disabled(sw, props->disabled) != 0)) {
+            && tinyui_switch_set_disabled(sw, props->disabled) != 0)) {
         free(sw);
         return 0;
     }
@@ -292,7 +292,7 @@ struct picoui_switch *picoui_switch_create_with_props(struct picoui_window *pare
  * @return 0 on success, -1 on failure
  */
 
-int picoui_switch_set_checked(struct picoui_switch *sw, int checked)
+int tinyui_switch_set_checked(struct tinyui_switch *sw, int checked)
 {
     int normalized_checked;
 
@@ -324,7 +324,7 @@ int picoui_switch_set_checked(struct picoui_switch *sw, int checked)
  * @return 0 on success
  */
 
-int picoui_switch_is_checked(struct picoui_switch *sw)
+int tinyui_switch_is_checked(struct tinyui_switch *sw)
 {
     if (sw == 0) {
         return 0;
@@ -341,7 +341,7 @@ int picoui_switch_is_checked(struct picoui_switch *sw)
  * @return -1 on failure
  */
 
-int picoui_switch_set_off_source(struct picoui_switch *sw, struct picoui_image_source *source)
+int tinyui_switch_set_off_source(struct tinyui_switch *sw, struct tinyui_image_source *source)
 {
     ldSwitch_t *ld_switch;
 
@@ -372,7 +372,7 @@ int picoui_switch_set_off_source(struct picoui_switch *sw, struct picoui_image_s
  * @return -1 on failure
  */
 
-int picoui_switch_set_on_source(struct picoui_switch *sw, struct picoui_image_source *source)
+int tinyui_switch_set_on_source(struct tinyui_switch *sw, struct tinyui_image_source *source)
 {
     ldSwitch_t *ld_switch;
 
@@ -403,7 +403,7 @@ int picoui_switch_set_on_source(struct picoui_switch *sw, struct picoui_image_so
  * @return -1 on failure
  */
 
-int picoui_switch_set_knob_source(struct picoui_switch *sw, struct picoui_image_source *source)
+int tinyui_switch_set_knob_source(struct tinyui_switch *sw, struct tinyui_image_source *source)
 {
     ldSwitch_t *ld_switch;
 
@@ -434,7 +434,7 @@ int picoui_switch_set_knob_source(struct picoui_switch *sw, struct picoui_image_
  * @return -1 on failure
  */
 
-int picoui_switch_set_horizontal(struct picoui_switch *sw, int horizontal)
+int tinyui_switch_set_horizontal(struct tinyui_switch *sw, int horizontal)
 {
     ldSwitch_t *ld_switch;
 
@@ -459,7 +459,7 @@ int picoui_switch_set_horizontal(struct picoui_switch *sw, int horizontal)
  * @return -1 on failure
  */
 
-int picoui_switch_get_horizontal(struct picoui_switch *sw, int *horizontal)
+int tinyui_switch_get_horizontal(struct tinyui_switch *sw, int *horizontal)
 {
     ldSwitch_t *ld_switch;
 
@@ -484,7 +484,7 @@ int picoui_switch_get_horizontal(struct picoui_switch *sw, int *horizontal)
  * @return -1 on failure
  */
 
-int picoui_switch_set_direction(struct picoui_switch *sw, int direction)
+int tinyui_switch_set_direction(struct tinyui_switch *sw, int direction)
 {
     ldSwitch_t *ld_switch;
 
@@ -509,7 +509,7 @@ int picoui_switch_set_direction(struct picoui_switch *sw, int direction)
  * @return -1 on failure
  */
 
-int picoui_switch_get_direction(struct picoui_switch *sw, int *direction)
+int tinyui_switch_get_direction(struct tinyui_switch *sw, int *direction)
 {
     ldSwitch_t *ld_switch;
 
@@ -534,13 +534,13 @@ int picoui_switch_get_direction(struct picoui_switch *sw, int *direction)
  * @return -1 on failure
  */
 
-int picoui_switch_set_disabled(struct picoui_switch *sw, int disabled)
+int tinyui_switch_set_disabled(struct tinyui_switch *sw, int disabled)
 {
     if (sw == 0) {
         return -1;
     }
 
-    return picoui_widget_set_enabled(&sw->widget, disabled == 0);
+    return tinyui_widget_set_enabled(&sw->widget, disabled == 0);
 }
 
 /**
@@ -551,7 +551,7 @@ int picoui_switch_set_disabled(struct picoui_switch *sw, int disabled)
  * @return -1 on failure
  */
 
-int picoui_switch_get_disabled(struct picoui_switch *sw, int *disabled)
+int tinyui_switch_get_disabled(struct tinyui_switch *sw, int *disabled)
 {
     ldSwitch_t *ld_switch;
 
@@ -577,7 +577,7 @@ int picoui_switch_get_disabled(struct picoui_switch *sw, int *disabled)
  * @return -1 on failure
  */
 
-int picoui_switch_can_navigate(struct picoui_switch *sw, int direction, int *can_navigate)
+int tinyui_switch_can_navigate(struct tinyui_switch *sw, int direction, int *can_navigate)
 {
     ldSwitch_t *ld_switch;
     int ld_dir;
@@ -603,10 +603,10 @@ int picoui_switch_can_navigate(struct picoui_switch *sw, int direction, int *can
  * @return -1 on failure
  */
 
-int picoui_switch_navigate(struct picoui_switch *sw, int direction)
+int tinyui_switch_navigate(struct tinyui_switch *sw, int direction)
 {
-    struct picoui_backend_widget *backend;
-    struct picoui_backend_app_state *app_state;
+    struct tinyui_backend_widget *backend;
+    struct tinyui_backend_app_state *app_state;
     ldSwitch_t *ld_switch;
     int ld_dir;
 
@@ -640,8 +640,8 @@ int picoui_switch_navigate(struct picoui_switch *sw, int direction)
  * @return 0 on success, -1 on failure
  */
 
-int picoui_switch_set_on_toggled(struct picoui_switch *sw,
-                                 picoui_value_changed_cb cb,
+int tinyui_switch_set_on_toggled(struct tinyui_switch *sw,
+                                 tinyui_value_changed_cb cb,
                                  void *user_data)
 {
     if (sw == 0) {

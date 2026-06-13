@@ -5,12 +5,12 @@
 
 int main(void)
 {
-    struct picoui_app *app = picoui_app_create();
+    struct tinyui_app *app = tinyui_app_create();
     assert(app != NULL);
 
-    struct picoui_window *win = picoui_window_create(app, "root_window");
+    struct tinyui_window *win = tinyui_window_create(app, "root_window");
     assert(win != NULL);
 
-    picoui_app_destroy(app);
+    tinyui_app_destroy(app);
     return 0;
 }

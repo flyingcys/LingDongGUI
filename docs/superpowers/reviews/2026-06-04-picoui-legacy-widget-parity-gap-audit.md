@@ -1,4 +1,4 @@
-# PicoUI `legacy_widget_parity` 对老 SDL `uiWidgetLegacy` 的缺口审计
+# TINYUI `legacy_widget_parity` 对老 SDL `uiWidgetLegacy` 的缺口审计
 
 ## 结论
 
@@ -11,9 +11,9 @@
 
 1. `layout_parity` 与 `grid_parity` 已建立可对照的结构基线。
 2. `legacy_widget_parity` 已完成第一版多控件大页面骨架，并覆盖了大部分 legacy 控件样本。
-3. `legacy_widget_parity` 的主要缺口不是 PicoUI 没有这些控件，而是：
+3. `legacy_widget_parity` 的主要缺口不是 TINYUI 没有这些控件，而是：
    - 当前接入的是通用 source，占位证明 public image pipeline 已闭环，但不是老 demo 原图资源逐张一致；
-   - 还没有 PicoUI / 老 SDL 双开截图和 visible diff 证据；
+   - 还没有 TINYUI / 老 SDL 双开截图和 visible diff 证据；
    - contract 已抬高到页面级 marker，但还不是 visible parity。
 
 ## 真相源
@@ -22,12 +22,12 @@
 
 1. 老 SDL truth-source：
    - `examples/common/demo/widget/uiWidgetLegacy.c`
-2. 当前 PicoUI parity 页面：
-   - `picoui/demo/legacy_widget_parity/main.c`
+2. 当前 TINYUI parity 页面：
+   - `tinyui/demo/legacy_widget_parity/main.c`
 3. 当前 demo boundary contract：
-   - `tests/picoui/contract/check_picoui_demo_boundary.py`
+   - `tests/tinyui/contract/check_tinyui_demo_boundary.py`
 4. 当前图片通路口径：
-   - `picoui/docs/demo_guide.md`
+   - `tinyui/docs/demo_guide.md`
 
 ## 逐项对照
 
@@ -54,8 +54,8 @@
 
 对应证据见：
 
-1. `picoui/demo/legacy_widget_parity/main.c:101-121`
-2. `picoui/demo/legacy_widget_parity/main.c:123-285`
+1. `tinyui/demo/legacy_widget_parity/main.c:101-121`
+2. `tinyui/demo/legacy_widget_parity/main.c:123-285`
 
 ### 2. 已进入 `legacy_widget_parity` 的补齐项
 
@@ -73,7 +73,7 @@
 
 当前 parity 页面接入证据见：
 
-1. `picoui/demo/legacy_widget_parity/main.c`
+1. `tinyui/demo/legacy_widget_parity/main.c`
 
 ### 3. 图片资源还没对齐的项目
 
@@ -97,14 +97,14 @@
 
 而当前 `legacy_widget_parity` 的图片相关真实状态是：
 
-1. `image / button / progress_bar / text / slider` 已接通用 `picoui_image_source` 绑定。
+1. `image / button / progress_bar / text / slider` 已接通用 `tinyui_image_source` 绑定。
 2. `radial_menu / icon_slider` 已切到带 source 的 item API。
 3. `gauge / arc` 已绑定 source 级 public API。
-4. 这些绑定目前证明的是 PicoUI public image 通路已进入 parity 页面，不证明已经与老 demo 的原始图片资源逐张一致。
+4. 这些绑定目前证明的是 TINYUI public image 通路已进入 parity 页面，不证明已经与老 demo 的原始图片资源逐张一致。
 
 证据见：
 
-1. `picoui/demo/legacy_widget_parity/main.c`
+1. `tinyui/demo/legacy_widget_parity/main.c`
 
 ## 缺口分类
 
@@ -112,55 +112,55 @@
 
 当前这批不再是“demo 未接”，而是已经进入 parity 页面：
 
-1. `picoui_image_set_source()`
-2. `picoui_button_set_image()`
-3. `picoui_progress_bar_set_image()`
-4. `picoui_slider_set_image()`
-5. `picoui_text_set_background_source()`
-6. `picoui_radial_menu_create()` / `picoui_radial_menu_add_item_with_source()`
-7. `picoui_icon_slider_create()` / `picoui_icon_slider_add_item_with_source()`
-8. `picoui_qrcode_create()`
-9. `picoui_gauge_create()` / `picoui_gauge_set_bg_source()` / `picoui_gauge_set_pointer_source()`
-10. `picoui_line_edit_create()`
-11. `picoui_keyboard_create()`
-12. `picoui_arc_create()` / `picoui_arc_set_quarter_source()`
-13. `picoui_list_set_item_widget()`
-14. `picoui_calendar_set_day_names()`
-15. `picoui_window_create_child()`
+1. `tinyui_image_set_source()`
+2. `tinyui_button_set_image()`
+3. `tinyui_progress_bar_set_image()`
+4. `tinyui_slider_set_image()`
+5. `tinyui_text_set_background_source()`
+6. `tinyui_radial_menu_create()` / `tinyui_radial_menu_add_item_with_source()`
+7. `tinyui_icon_slider_create()` / `tinyui_icon_slider_add_item_with_source()`
+8. `tinyui_qrcode_create()`
+9. `tinyui_gauge_create()` / `tinyui_gauge_set_bg_source()` / `tinyui_gauge_set_pointer_source()`
+10. `tinyui_line_edit_create()`
+11. `tinyui_keyboard_create()`
+12. `tinyui_arc_create()` / `tinyui_arc_set_quarter_source()`
+13. `tinyui_list_set_item_widget()`
+14. `tinyui_calendar_set_day_names()`
+15. `tinyui_window_create_child()`
 
 对应 public 证据见：
 
-1. `picoui/include/picoui/image.h`
-2. `picoui/include/picoui/button.h`
-3. `picoui/include/picoui/progress_bar.h`
-4. `picoui/include/picoui/slider.h`
-5. `picoui/include/picoui/text.h`
-6. `picoui/include/picoui/radial_menu.h`
-7. `picoui/include/picoui/icon_slider.h`
-8. `picoui/include/picoui/qrcode.h`
-9. `picoui/include/picoui/gauge.h`
-10. `picoui/include/picoui/line_edit.h`
-11. `picoui/include/picoui/keyboard.h`
-12. `picoui/include/picoui/arc.h`
-13. `picoui/include/picoui/list.h`
-14. `picoui/include/picoui/calendar.h`
-15. `picoui/include/picoui/window.h`
+1. `tinyui/include/tinyui/image.h`
+2. `tinyui/include/tinyui/button.h`
+3. `tinyui/include/tinyui/progress_bar.h`
+4. `tinyui/include/tinyui/slider.h`
+5. `tinyui/include/tinyui/text.h`
+6. `tinyui/include/tinyui/radial_menu.h`
+7. `tinyui/include/tinyui/icon_slider.h`
+8. `tinyui/include/tinyui/qrcode.h`
+9. `tinyui/include/tinyui/gauge.h`
+10. `tinyui/include/tinyui/line_edit.h`
+11. `tinyui/include/tinyui/keyboard.h`
+12. `tinyui/include/tinyui/arc.h`
+13. `tinyui/include/tinyui/list.h`
+14. `tinyui/include/tinyui/calendar.h`
+15. `tinyui/include/tinyui/window.h`
 
 ### B. `图片资源通路` 还没形成 demo 级真闭环
 
 这类已经不是“source API 没接进 demo”，而是：
 
-1. parity demo 当前绑定的是通用 source，占位证明 PicoUI public image pipeline 已闭环；
-2. demo guide 仍明确 `picoui_image_set_source()` 只绑定调用方提供的 tile，不负责资源加载；
+1. parity demo 当前绑定的是通用 source，占位证明 TINYUI public image pipeline 已闭环；
+2. demo guide 仍明确 `tinyui_image_set_source()` 只绑定调用方提供的 tile，不负责资源加载；
 3. 因而“视觉上是否真是老 demo 的同一张图”目前还没有页面级证据。
 
 证据见：
 
-1. `picoui/docs/demo_guide.md:241-243`
+1. `tinyui/docs/demo_guide.md:241-243`
 
 ### C. `contract 已抬高，但还不是 visible parity`
 
-当前 `check_picoui_demo_boundary.py` 对 `legacy_widget_parity` 已锁到：
+当前 `check_tinyui_demo_boundary.py` 对 `legacy_widget_parity` 已锁到：
 
 1. 多数 legacy 控件 create marker
 2. `list item widget`
@@ -177,7 +177,7 @@
 
 证据见：
 
-1. `tests/picoui/contract/check_picoui_demo_boundary.py`
+1. `tests/tinyui/contract/check_tinyui_demo_boundary.py`
 
 ## 结论分层
 
@@ -199,7 +199,7 @@
 建议按以下顺序收口，不要并行乱补：
 
 1. 把当前通用 source 进一步替换成老 demo 对应图片资源，而不是共享占位 tile。
-2. 做 PicoUI / 老 SDL 双开截图与 visible diff，确认 spacing、theme、控件内容差异。
+2. 做 TINYUI / 老 SDL 双开截图与 visible diff，确认 spacing、theme、控件内容差异。
 3. 若 visible 差异仍大，再区分是 demo 页面没复刻全，还是 backend/layout 真缺口。
 
 这三步完成前，不要再宣称 `legacy_widget_parity` 已完成老页面 parity。

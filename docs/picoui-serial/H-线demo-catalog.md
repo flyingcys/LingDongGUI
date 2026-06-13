@@ -1,4 +1,4 @@
-# PicoUI H 线 Demo Catalog
+# TINYUI H 线 Demo Catalog
 
 本文整理当前 7 个 visible demo 的发布口径，用于回答三个问题：
 
@@ -10,7 +10,7 @@
 
 ## 一、证据层边界
 
-本 catalog 沿用 [picoui/docs/demo_guide.md](../../picoui/docs/demo_guide.md) 的证据层定义，保持同一口径：
+本 catalog 沿用 [tinyui/docs/demo_guide.md](../../tinyui/docs/demo_guide.md) 的证据层定义，保持同一口径：
 
 1. `runtime smoke`：证明 demo 可 build、可启动、可 capture、可回归。
 2. `backend mapping gate`：证明 demo 中声明的真实 backend 映射或布局/事件/theme 映射已进入正式 gate。
@@ -37,7 +37,7 @@
 
 - 最小 `app -> window -> widget` 生命周期可 build、可启动、可 capture。
 - `label` / `button` 的基础文本与最小真实 backend 映射路径存在。
-- 作为最小发布样本，可用于确认 PicoUI demo 宿主和基础窗口链路可运行。
+- 作为最小发布样本，可用于确认 TINYUI demo 宿主和基础窗口链路可运行。
 
 不证明的能力：
 
@@ -94,7 +94,7 @@
 
 证明的能力：
 
-- `flex` 的 `flow / align / gap` 等基础布局语义能从 PicoUI 传到真实 backend。
+- `flex` 的 `flow / align / gap` 等基础布局语义能从 TINYUI 传到真实 backend。
 - 布局结果来自真实 layout 映射，而不是 demo 里手工坐标补丁。
 - 可作为第一版发布时 `flex` 布局能力的最小可见样本。
 
@@ -227,4 +227,4 @@
 - 要说明某个 demo 在 dummy SDL 下可显示、可读、可判定，只能引用 `automatic visible gate`。
 - 要说明人工窗口验收通过，必须引用单独的 `manual artifact gate` 记录，而不是引用本 catalog。
 
-如果后续新增 demo、扩展控件能力或调整 gate 范围，必须同时更新本文和 `picoui/docs/demo_guide.md`，继续保持证据层边界一致。
+如果后续新增 demo、扩展控件能力或调整 gate 范围，必须同时更新本文和 `tinyui/docs/demo_guide.md`，继续保持证据层边界一致。

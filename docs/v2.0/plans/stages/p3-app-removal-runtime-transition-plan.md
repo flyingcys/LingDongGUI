@@ -4,9 +4,9 @@
 
 **Goal:** 让用户主路径摆脱 `app`，改为 LVGL-like runtime 入口，同时在迁移期保住现有内部实现的兼容性。
 
-**Architecture:** 先在当前 `picoui` public headers 上新增 app-free runtime surface，再把 demo 与 runtime loop 改成 `init/display/indev/screen/timer_handler`，并将 `picoui_app_*` 降级为兼容内部实现而不是主用户模型。
+**Architecture:** 先在当前 `tinyui` public headers 上新增 app-free runtime surface，再把 demo 与 runtime loop 改成 `init/display/indev/screen/timer_handler`，并将 `tinyui_app_*` 降级为兼容内部实现而不是主用户模型。
 
-**Tech Stack:** C11、SDL2、当前 `picoui/src/core/app.c`、`picoui/src/tick/tick.c`、demos、unit/runtime tests。
+**Tech Stack:** C11、SDL2、当前 `tinyui/src/core/app.c`、`tinyui/src/tick/tick.c`、demos、unit/runtime tests。
 
 ---
 
@@ -14,52 +14,52 @@
 
 新增：
 
-- `picoui/include/picoui/runtime.h`
-- `picoui/src/core/runtime.c`
-- `tests/picoui/unit/test_picoui_runtime_model.c`
+- `tinyui/include/tinyui/runtime.h`
+- `tinyui/src/core/runtime.c`
+- `tests/tinyui/unit/test_tinyui_runtime_model.c`
 
 修改：
 
-- `picoui/include/picoui/picoui.h`
-- `picoui/include/picoui/app.h`
-- `picoui/src/core/app.c`
-- `picoui/src/core/internal.h`
-- `picoui/demo/basic_widgets/main.c`
+- `tinyui/include/tinyui/tinyui.h`
+- `tinyui/include/tinyui/app.h`
+- `tinyui/src/core/app.c`
+- `tinyui/src/core/internal.h`
+- `tinyui/demo/basic_widgets/main.c`
 - `cmake/LingDongGUI.cmake`
-- `tests/picoui/CMakeLists.txt`
-- `tests/picoui/runtime/check_picoui_runtime.py`
+- `tests/tinyui/CMakeLists.txt`
+- `tests/tinyui/runtime/check_tinyui_runtime.py`
 
 ---
 
 ### Task 1: 增加 app-free runtime API
 
 **Files:**
-- Create: `picoui/include/picoui/runtime.h`
-- Create: `picoui/src/core/runtime.c`
-- Modify: `picoui/include/picoui/picoui.h`
-- Modify: `picoui/src/core/internal.h`
+- Create: `tinyui/include/tinyui/runtime.h`
+- Create: `tinyui/src/core/runtime.c`
+- Modify: `tinyui/include/tinyui/tinyui.h`
+- Modify: `tinyui/src/core/internal.h`
 - Modify: `cmake/LingDongGUI.cmake`
-- Create: `tests/picoui/unit/test_picoui_runtime_model.c`
-- Modify: `tests/picoui/CMakeLists.txt`
+- Create: `tests/tinyui/unit/test_tinyui_runtime_model.c`
+- Modify: `tests/tinyui/CMakeLists.txt`
 
 - [ ] **Step 1: 写 fail-first runtime model test**
 
-Create `tests/picoui/unit/test_picoui_runtime_model.c`:
+Create `tests/tinyui/unit/test_tinyui_runtime_model.c`:
 
 ```c
-#include "picoui/picoui.h"
+#include "tinyui/tinyui.h"
 
 #include <assert.h>
 
 static void test_runtime_init_create_load_teardown(void)
 {
-    struct picoui_window *screen;
+    struct tinyui_window *screen;
 
-    assert(picoui_init() == 0);
-    screen = picoui_screen_create();
+    assert(tinyui_init() == 0);
+    screen = tinyui_screen_create();
     assert(screen != NULL);
-    assert(picoui_screen_load(screen) == 0);
-    picoui_deinit();
+    assert(tinyui_screen_load(screen) == 0);
+    tinyui_deinit();
 }
 
 int main(void)
@@ -69,10 +69,10 @@ int main(void)
 }
 ```
 
-Register in `tests/picoui/CMakeLists.txt`:
+Register in `tests/tinyui/CMakeLists.txt`:
 
 ```cmake
-    unit/test_picoui_runtime_model.c
+    unit/test_tinyui_runtime_model.c
 ```
 
 - [ ] **Step 2: 运行 build，确认接口不存在**
@@ -80,98 +80,98 @@ Register in `tests/picoui/CMakeLists.txt`:
 Run:
 
 ```bash
-rtk cmake --build build --target test_picoui_runtime_model
+rtk cmake --build build --target test_tinyui_runtime_model
 ```
 
-Expected: FAIL，`picoui_init`/`picoui_screen_create`/`picoui_screen_load` 不存在。
+Expected: FAIL，`tinyui_init`/`tinyui_screen_create`/`tinyui_screen_load` 不存在。
 
 - [ ] **Step 3: 新增 `runtime.h` 与核心实现**
 
-Create `picoui/include/picoui/runtime.h`:
+Create `tinyui/include/tinyui/runtime.h`:
 
 ```c
 #ifndef PICOUI_RUNTIME_H
 #define PICOUI_RUNTIME_H
 
-struct picoui_window;
+struct tinyui_window;
 
-int picoui_init(void);
-void picoui_deinit(void);
-struct picoui_window *picoui_screen_create(void);
-int picoui_screen_load(struct picoui_window *screen);
-void picoui_timer_handler(void);
+int tinyui_init(void);
+void tinyui_deinit(void);
+struct tinyui_window *tinyui_screen_create(void);
+int tinyui_screen_load(struct tinyui_window *screen);
+void tinyui_timer_handler(void);
 
 #endif
 ```
 
-Add to `picoui/include/picoui/picoui.h`:
+Add to `tinyui/include/tinyui/tinyui.h`:
 
 ```c
-#include "picoui/runtime.h"
+#include "tinyui/runtime.h"
 ```
 
-Create `picoui/src/core/runtime.c`:
+Create `tinyui/src/core/runtime.c`:
 
 ```c
 #include "internal.h"
-#include "picoui/runtime.h"
-#include "picoui/window.h"
+#include "tinyui/runtime.h"
+#include "tinyui/window.h"
 
-static struct picoui_app *g_picoui_runtime_app;
+static struct tinyui_app *g_tinyui_runtime_app;
 
-int picoui_init(void)
+int tinyui_init(void)
 {
-    if (g_picoui_runtime_app != 0) {
+    if (g_tinyui_runtime_app != 0) {
         return 0;
     }
-    g_picoui_runtime_app = picoui_app_create();
-    return g_picoui_runtime_app != 0 ? 0 : -1;
+    g_tinyui_runtime_app = tinyui_app_create();
+    return g_tinyui_runtime_app != 0 ? 0 : -1;
 }
 
-void picoui_deinit(void)
+void tinyui_deinit(void)
 {
-    if (g_picoui_runtime_app != 0) {
-        picoui_app_destroy(g_picoui_runtime_app);
-        g_picoui_runtime_app = 0;
+    if (g_tinyui_runtime_app != 0) {
+        tinyui_app_destroy(g_tinyui_runtime_app);
+        g_tinyui_runtime_app = 0;
     }
 }
 ```
 
-Add `runtime.c` to `picoui_core` in `cmake/LingDongGUI.cmake`.
+Add `runtime.c` to `tinyui_core` in `cmake/LingDongGUI.cmake`.
 
 - [ ] **Step 4: 补齐 `screen_create/load` 与 `timer_handler`**
 
-Extend `picoui/src/core/runtime.c`:
+Extend `tinyui/src/core/runtime.c`:
 
 ```c
-struct picoui_window *picoui_screen_create(void)
+struct tinyui_window *tinyui_screen_create(void)
 {
-    if (g_picoui_runtime_app == 0 && picoui_init() != 0) {
+    if (g_tinyui_runtime_app == 0 && tinyui_init() != 0) {
         return 0;
     }
-    return picoui_window_create(g_picoui_runtime_app, "root");
+    return tinyui_window_create(g_tinyui_runtime_app, "root");
 }
 
-int picoui_screen_load(struct picoui_window *screen)
+int tinyui_screen_load(struct tinyui_window *screen)
 {
-    if (g_picoui_runtime_app == 0 || screen == 0) {
+    if (g_tinyui_runtime_app == 0 || screen == 0) {
         return -1;
     }
-    return picoui_app_set_window(g_picoui_runtime_app, screen);
+    return tinyui_app_set_window(g_tinyui_runtime_app, screen);
 }
 
-void picoui_timer_handler(void)
+void tinyui_timer_handler(void)
 {
-    if (g_picoui_runtime_app != 0) {
-        picoui_backend_runtime_step(g_picoui_runtime_app);
+    if (g_tinyui_runtime_app != 0) {
+        tinyui_backend_runtime_step(g_tinyui_runtime_app);
     }
 }
 ```
 
-Also add the private forward declaration in `picoui/src/core/internal.h`:
+Also add the private forward declaration in `tinyui/src/core/internal.h`:
 
 ```c
-void picoui_backend_runtime_step(struct picoui_app *app);
+void tinyui_backend_runtime_step(struct tinyui_app *app);
 ```
 
 - [ ] **Step 5: 跑 focused tests**
@@ -179,7 +179,7 @@ void picoui_backend_runtime_step(struct picoui_app *app);
 Run:
 
 ```bash
-rtk ctest --test-dir build -R '^(test_picoui_runtime_model|test_picoui_app_lifecycle|test_picoui_app_timer)$' --output-on-failure
+rtk ctest --test-dir build -R '^(test_tinyui_runtime_model|test_tinyui_app_lifecycle|test_tinyui_app_timer)$' --output-on-failure
 ```
 
 Expected: PASS。
@@ -187,38 +187,38 @@ Expected: PASS。
 ### Task 2: 把 `basic_widgets` 启动模型改成 app-free path
 
 **Files:**
-- Modify: `picoui/demo/basic_widgets/main.c`
-- Modify: `picoui/include/picoui/app.h`
-- Modify: `picoui/src/core/app.c`
-- Modify: `tests/picoui/runtime/check_picoui_runtime.py`
+- Modify: `tinyui/demo/basic_widgets/main.c`
+- Modify: `tinyui/include/tinyui/app.h`
+- Modify: `tinyui/src/core/app.c`
+- Modify: `tests/tinyui/runtime/check_tinyui_runtime.py`
 
 - [ ] **Step 1: 把 demo 改成新启动模型**
 
-In `picoui/demo/basic_widgets/main.c`, replace `run_demo()` body with:
+In `tinyui/demo/basic_widgets/main.c`, replace `run_demo()` body with:
 
 ```c
 static int run_demo(void)
 {
-    struct picoui_window *screen;
+    struct tinyui_window *screen;
 
-    if (picoui_init() != 0) {
+    if (tinyui_init() != 0) {
         return 1;
     }
 
-    screen = picoui_screen_create();
+    screen = tinyui_screen_create();
     if (screen == 0) {
-        picoui_deinit();
+        tinyui_deinit();
         return 1;
     }
 
     make_ui(screen);
-    if (picoui_screen_load(screen) != 0) {
-        picoui_deinit();
+    if (tinyui_screen_load(screen) != 0) {
+        tinyui_deinit();
         return 1;
     }
 
     while (1) {
-        picoui_timer_handler();
+        tinyui_timer_handler();
     }
 }
 ```
@@ -227,7 +227,7 @@ If an existing runtime helper already provides the loop, call that helper instea
 
 - [ ] **Step 2: 让 `app.h` 退为兼容层文案**
 
-In `picoui/include/picoui/app.h`, rewrite top comment to:
+In `tinyui/include/tinyui/app.h`, rewrite top comment to:
 
 ```c
 /*
@@ -238,21 +238,21 @@ In `picoui/include/picoui/app.h`, rewrite top comment to:
 
 - [ ] **Step 3: 在 runtime checker 中要求新启动标记**
 
-Update `tests/picoui/runtime/check_picoui_runtime.py` to accept log markers such as:
+Update `tests/tinyui/runtime/check_tinyui_runtime.py` to accept log markers such as:
 
 ```python
 "PICOUI_RUNTIME_READY"
 "PICOUI_RUNTIME_LOOP"
 ```
 
-and make the checker fail if `basic_widgets` still only proves `picoui_app_run()` path.
+and make the checker fail if `basic_widgets` still only proves `tinyui_app_run()` path.
 
 - [ ] **Step 4: 跑 runtime/visible gates**
 
 Run:
 
 ```bash
-rtk ctest --test-dir build/picoui-runtime -R 'check_picoui_runtime|check_picoui_visible_ui' --output-on-failure
+rtk ctest --test-dir build/tinyui-runtime -R 'check_tinyui_runtime|check_tinyui_visible_ui' --output-on-failure
 ```
 
 Expected: PASS。
@@ -261,16 +261,16 @@ Expected: PASS。
 
 ```bash
 git add \
-  picoui/include/picoui/runtime.h \
-  picoui/include/picoui/picoui.h \
-  picoui/include/picoui/app.h \
-  picoui/src/core/internal.h \
-  picoui/src/core/runtime.c \
-  picoui/src/core/app.c \
-  picoui/demo/basic_widgets/main.c \
+  tinyui/include/tinyui/runtime.h \
+  tinyui/include/tinyui/tinyui.h \
+  tinyui/include/tinyui/app.h \
+  tinyui/src/core/internal.h \
+  tinyui/src/core/runtime.c \
+  tinyui/src/core/app.c \
+  tinyui/demo/basic_widgets/main.c \
   cmake/LingDongGUI.cmake \
-  tests/picoui/CMakeLists.txt \
-  tests/picoui/unit/test_picoui_runtime_model.c \
-  tests/picoui/runtime/check_picoui_runtime.py
-git commit -m "refactor: remove picoui app from main runtime path"
+  tests/tinyui/CMakeLists.txt \
+  tests/tinyui/unit/test_tinyui_runtime_model.c \
+  tests/tinyui/runtime/check_tinyui_runtime.py
+git commit -m "refactor: remove tinyui app from main runtime path"
 ```

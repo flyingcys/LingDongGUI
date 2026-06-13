@@ -3,15 +3,15 @@
 
 #include <stddef.h>
 
-static const struct picoui_display_config g_tinyui_default_display_config = {
+static const struct tinyui_display_config g_tinyui_default_display_config = {
     .width = 480,
     .height = 320,
-    .color_format = PICOUI_COLOR_FORMAT_RGB565,
+    .color_format = TINYUI_COLOR_FORMAT_RGB565,
     .buffer_height = 0,
     .user_data = NULL,
 };
 
-static int tinyui_display_config_is_valid(const struct picoui_display_config *config)
+static int tinyui_display_config_is_valid(const struct tinyui_display_config *config)
 {
     if (config == NULL) {
         return 0;
@@ -21,8 +21,8 @@ static int tinyui_display_config_is_valid(const struct picoui_display_config *co
         return 0;
     }
 
-    if (config->color_format != PICOUI_COLOR_FORMAT_RGB565 &&
-        config->color_format != PICOUI_COLOR_FORMAT_ARGB8888) {
+    if (config->color_format != TINYUI_COLOR_FORMAT_RGB565 &&
+        config->color_format != TINYUI_COLOR_FORMAT_ARGB8888) {
         return 0;
     }
 
@@ -33,8 +33,8 @@ static int tinyui_display_config_is_valid(const struct picoui_display_config *co
     return 1;
 }
 
-static const struct picoui_display_config *tinyui_display_resolve_config(
-    const struct picoui_display_port_state *state)
+static const struct tinyui_display_config *tinyui_display_resolve_config(
+    const struct tinyui_display_port_state *state)
 {
     if (state == NULL || !tinyui_display_config_is_valid(&state->config)) {
         return &g_tinyui_default_display_config;
@@ -43,7 +43,7 @@ static const struct picoui_display_config *tinyui_display_resolve_config(
     return &state->config;
 }
 
-int picoui_display_set_config(struct picoui_app *app, const struct picoui_display_config *config)
+int tinyui_display_set_config(struct tinyui_app *app, const struct tinyui_display_config *config)
 {
     if (app == NULL || !tinyui_display_config_is_valid(config)) {
         return -1;
@@ -53,7 +53,7 @@ int picoui_display_set_config(struct picoui_app *app, const struct picoui_displa
     return 0;
 }
 
-int picoui_display_get_config(const struct picoui_app *app, struct picoui_display_config *out_config)
+int tinyui_display_get_config(const struct tinyui_app *app, struct tinyui_display_config *out_config)
 {
     if (app == NULL || out_config == NULL) {
         return -1;
@@ -63,8 +63,8 @@ int picoui_display_get_config(const struct picoui_app *app, struct picoui_displa
     return 0;
 }
 
-int picoui_display_set_flush_callback(struct picoui_app *app,
-                                      picoui_display_flush_cb_t callback,
+int tinyui_display_set_flush_callback(struct tinyui_app *app,
+                                      tinyui_display_flush_cb_t callback,
                                       void *user_data)
 {
     if (app == NULL) {

@@ -68,7 +68,7 @@ static bool ldGuiTouchLogEnabled(void)
     static int enabled = 0;
 
     if (!initialized) {
-        const char *env = getenv("PICOUI_TOUCH_LOG");
+        const char *env = getenv("TINYUI_TOUCH_LOG");
         enabled = (env != NULL && env[0] != '\0' && env[0] != '0') ? 1 : 0;
         initialized = 1;
     }
@@ -112,7 +112,7 @@ void ldGuiClickedAction(ld_scene_t *ptScene,uint8_t touchSignal,arm_2d_location_
             u64Temp<<=16;
             u64Temp+=tLocation.iY;
             if (ldGuiTouchLogEnabled()) {
-                printf("[PICOUI_TOUCH][HIT] signal=press widget=%u point=(%d,%d)\n",
+                printf("[TINYUI_TOUCH][HIT] signal=press widget=%u point=(%d,%d)\n",
                        (unsigned int)ptWidget->nameId,
                        tLocation.iX,
                        tLocation.iY);
@@ -130,7 +130,7 @@ void ldGuiClickedAction(ld_scene_t *ptScene,uint8_t touchSignal,arm_2d_location_
             if(ptWidget!=NULL)
             {
                 if (ldGuiTouchLogEnabled()) {
-                    printf("[PICOUI_TOUCH][HIT] signal=hold widget=%u point=(%d,%d) press=(%d,%d)\n",
+                    printf("[TINYUI_TOUCH][HIT] signal=hold widget=%u point=(%d,%d) press=(%d,%d)\n",
                            (unsigned int)ptWidget->nameId,
                            tLocation.iX,
                            tLocation.iY,
@@ -158,7 +158,7 @@ void ldGuiClickedAction(ld_scene_t *ptScene,uint8_t touchSignal,arm_2d_location_
         if(ptWidget!=NULL)
         {
             if (ldGuiTouchLogEnabled()) {
-                printf("[PICOUI_TOUCH][HIT] signal=release widget=%u point=(%d,%d)\n",
+                printf("[TINYUI_TOUCH][HIT] signal=release widget=%u point=(%d,%d)\n",
                        (unsigned int)ptWidget->nameId,
                        prevLocation.iX,
                        prevLocation.iY);

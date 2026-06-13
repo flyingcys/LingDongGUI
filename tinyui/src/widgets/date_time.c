@@ -31,20 +31,20 @@ static ldColor tinyui_date_time_rgb_to_ld_color(unsigned int rgb)
     return __RGB((rgb >> 16) & 0xFFU, (rgb >> 8) & 0xFFU, rgb & 0xFFU);
 }
 
-static int tinyui_date_time_map_align(enum picoui_align align, arm_2d_align_t *out)
+static int tinyui_date_time_map_align(enum tinyui_align align, arm_2d_align_t *out)
 {
     if (out == NULL) {
         return -1;
     }
 
     switch (align) {
-    case PICOUI_ALIGN_START:
+    case TINYUI_ALIGN_START:
         *out = ARM_2D_ALIGN_LEFT;
         return 0;
-    case PICOUI_ALIGN_CENTER:
+    case TINYUI_ALIGN_CENTER:
         *out = ARM_2D_ALIGN_CENTRE;
         return 0;
-    case PICOUI_ALIGN_END:
+    case TINYUI_ALIGN_END:
         *out = ARM_2D_ALIGN_RIGHT;
         return 0;
     default:
@@ -52,23 +52,23 @@ static int tinyui_date_time_map_align(enum picoui_align align, arm_2d_align_t *o
     }
 }
 
-static ldDateTime_t *tinyui_date_time_get_ld(struct picoui_date_time *dt)
+static ldDateTime_t *tinyui_date_time_get_ld(struct tinyui_date_time *dt)
 {
-    struct picoui_backend_widget *backend;
+    struct tinyui_backend_widget *backend;
 
     if (dt == NULL || dt->widget.backend_widget == NULL) {
         return NULL;
     }
 
-    backend = (struct picoui_backend_widget *)dt->widget.backend_widget;
-    if (backend->kind != PICOUI_BACKEND_WIDGET_DATE_TIME || backend->ld_widget == NULL) {
+    backend = (struct tinyui_backend_widget *)dt->widget.backend_widget;
+    if (backend->kind != TINYUI_BACKEND_WIDGET_DATE_TIME || backend->ld_widget == NULL) {
         return NULL;
     }
 
     return (ldDateTime_t *)backend->ld_widget;
 }
 
-static int tinyui_date_time_props_are_valid(const struct picoui_date_time_props *props)
+static int tinyui_date_time_props_are_valid(const struct tinyui_date_time_props *props)
 {
     return props != 0
         && props->id != 0
@@ -93,12 +93,12 @@ static int tinyui_date_time_props_are_valid(const struct picoui_date_time_props 
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct picoui_date_time *picoui_date_time_create(struct picoui_widget *parent, const char *id)
+struct tinyui_date_time *tinyui_date_time_create(struct tinyui_widget *parent, const char *id)
 {
-    struct picoui_date_time *dt;
-    struct picoui_backend_widget *backend;
-    struct picoui_backend_widget *parent_backend;
-    struct picoui_backend_app_state *app_state;
+    struct tinyui_date_time *dt;
+    struct tinyui_backend_widget *backend;
+    struct tinyui_backend_widget *parent_backend;
+    struct tinyui_backend_app_state *app_state;
     ldDateTime_t *ld_date_time;
     uint16_t name_id;
 
@@ -106,7 +106,7 @@ struct picoui_date_time *picoui_date_time_create(struct picoui_widget *parent, c
         return 0;
     }
 
-    parent_backend = (struct picoui_backend_widget *)parent->backend_widget;
+    parent_backend = (struct tinyui_backend_widget *)parent->backend_widget;
     app_state = tinyui_runtime_bridge_backend_state_from_parent(parent_backend);
     if (parent_backend->ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
         return 0;
@@ -147,7 +147,7 @@ struct picoui_date_time *picoui_date_time_create(struct picoui_widget *parent, c
 
     if (tinyui_widget_init_child(backend,
                                          parent_backend,
-                                         PICOUI_BACKEND_WIDGET_DATE_TIME,
+                                         TINYUI_BACKEND_WIDGET_DATE_TIME,
                                          id,
                                          parent_backend->theme) != 0) {
         ldDateTime_depose(app_state->ld_scene, ld_date_time);
@@ -176,13 +176,13 @@ struct picoui_date_time *picoui_date_time_create(struct picoui_widget *parent, c
         free(dt);
         return 0;
     }
-    if (picoui_date_time_set_format(dt, "yyyy-mm-dd hh:nn:ss") != 0
-        || picoui_date_time_set_text_color(dt, 0x000000U) != 0
-        || picoui_date_time_set_bg_color(dt, 0xFFFFFFU) != 0
-        || picoui_date_time_set_align(dt, PICOUI_ALIGN_CENTER) != 0
-        || picoui_date_time_set_transparent(dt, 0) != 0
-        || picoui_date_time_set_date(dt, 2026, 1, 1) != 0
-        || picoui_date_time_set_time(dt, 12, 0, 0) != 0) {
+    if (tinyui_date_time_set_format(dt, "yyyy-mm-dd hh:nn:ss") != 0
+        || tinyui_date_time_set_text_color(dt, 0x000000U) != 0
+        || tinyui_date_time_set_bg_color(dt, 0xFFFFFFU) != 0
+        || tinyui_date_time_set_align(dt, TINYUI_ALIGN_CENTER) != 0
+        || tinyui_date_time_set_transparent(dt, 0) != 0
+        || tinyui_date_time_set_date(dt, 2026, 1, 1) != 0
+        || tinyui_date_time_set_time(dt, 12, 0, 0) != 0) {
         free(dt);
         return 0;
     }
@@ -197,9 +197,9 @@ struct picoui_date_time *picoui_date_time_create(struct picoui_widget *parent, c
  * @return Pointer to the object
  */
 
-struct picoui_date_time *picoui_date_time_init(struct picoui_widget *parent, const char *id)
+struct tinyui_date_time *tinyui_date_time_init(struct tinyui_widget *parent, const char *id)
 {
-    return picoui_date_time_create(parent, id);
+    return tinyui_date_time_create(parent, id);
 }
 
 /**
@@ -210,37 +210,37 @@ struct picoui_date_time *picoui_date_time_init(struct picoui_widget *parent, con
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct picoui_date_time *picoui_date_time_create_with_props(
-    struct picoui_widget *parent,
-    const struct picoui_date_time_props *props)
+struct tinyui_date_time *tinyui_date_time_create_with_props(
+    struct tinyui_widget *parent,
+    const struct tinyui_date_time_props *props)
 {
-    struct picoui_date_time *dt;
+    struct tinyui_date_time *dt;
 
     if (!tinyui_date_time_props_are_valid(props)) {
         return 0;
     }
 
-    dt = picoui_date_time_create(parent, props->id);
+    dt = tinyui_date_time_create(parent, props->id);
     if (dt == 0) {
         return 0;
     }
 
     if (props->style_class != 0
-        && picoui_widget_set_style_class(&dt->widget, props->style_class) != 0) {
+        && tinyui_widget_set_style_class(&dt->widget, props->style_class) != 0) {
         free(dt);
         return 0;
     }
-    if (picoui_widget_set_user_data(&dt->widget, props->user_data) != 0) {
+    if (tinyui_widget_set_user_data(&dt->widget, props->user_data) != 0) {
         free(dt);
         return 0;
     }
-    if (picoui_date_time_set_format(dt, props->format) != 0
-        || picoui_date_time_set_text_color(dt, props->text_color) != 0
-        || picoui_date_time_set_bg_color(dt, props->bg_color) != 0
-        || picoui_date_time_set_align(dt, props->align) != 0
-        || picoui_date_time_set_transparent(dt, props->transparent) != 0
-        || picoui_date_time_set_date(dt, props->year, props->month, props->day) != 0
-        || picoui_date_time_set_time(dt, props->hour, props->minute, props->second) != 0) {
+    if (tinyui_date_time_set_format(dt, props->format) != 0
+        || tinyui_date_time_set_text_color(dt, props->text_color) != 0
+        || tinyui_date_time_set_bg_color(dt, props->bg_color) != 0
+        || tinyui_date_time_set_align(dt, props->align) != 0
+        || tinyui_date_time_set_transparent(dt, props->transparent) != 0
+        || tinyui_date_time_set_date(dt, props->year, props->month, props->day) != 0
+        || tinyui_date_time_set_time(dt, props->hour, props->minute, props->second) != 0) {
         free(dt);
         return 0;
     }
@@ -256,10 +256,10 @@ struct picoui_date_time *picoui_date_time_create_with_props(
  * @return 0 on success, -1 on failure
  */
 
-int picoui_date_time_set_format(struct picoui_date_time *dt, const char *format)
+int tinyui_date_time_set_format(struct tinyui_date_time *dt, const char *format)
 {
     ldDateTime_t *ld_date_time;
-    struct picoui_backend_widget *backend;
+    struct tinyui_backend_widget *backend;
 
     if (dt == 0 || format == 0) {
         return -1;
@@ -271,7 +271,7 @@ int picoui_date_time_set_format(struct picoui_date_time *dt, const char *format)
     }
 
     ldDateTimeSetFormat(ld_date_time, (const uint8_t *)format);
-    backend = (struct picoui_backend_widget *)dt->widget.backend_widget;
+    backend = (struct tinyui_backend_widget *)dt->widget.backend_widget;
     backend->text = format;
     dt->format = format;
     dt->use_system_time = 0;
@@ -288,7 +288,7 @@ int picoui_date_time_set_format(struct picoui_date_time *dt, const char *format)
  * @return 0 on success, -1 on failure
  */
 
-int picoui_date_time_set_date(struct picoui_date_time *dt, int year, int month, int day)
+int tinyui_date_time_set_date(struct tinyui_date_time *dt, int year, int month, int day)
 {
     ldDateTime_t *ld_date_time;
 
@@ -319,7 +319,7 @@ int picoui_date_time_set_date(struct picoui_date_time *dt, int year, int month, 
  * @return 0 on success, -1 on failure
  */
 
-int picoui_date_time_set_time(struct picoui_date_time *dt, int hour, int minute, int second)
+int tinyui_date_time_set_time(struct tinyui_date_time *dt, int hour, int minute, int second)
 {
     ldDateTime_t *ld_date_time;
 
@@ -351,7 +351,7 @@ int picoui_date_time_set_time(struct picoui_date_time *dt, int hour, int minute,
  * @return 0 on success, -1 on failure
  */
 
-int picoui_date_time_set_text_color(struct picoui_date_time *dt, unsigned int rgb)
+int tinyui_date_time_set_text_color(struct tinyui_date_time *dt, unsigned int rgb)
 {
     ldDateTime_t *ld_date_time;
 
@@ -377,7 +377,7 @@ int picoui_date_time_set_text_color(struct picoui_date_time *dt, unsigned int rg
  * @return 0 on success, -1 on failure
  */
 
-int picoui_date_time_set_bg_color(struct picoui_date_time *dt, unsigned int rgb)
+int tinyui_date_time_set_bg_color(struct tinyui_date_time *dt, unsigned int rgb)
 {
     ldDateTime_t *ld_date_time;
 
@@ -404,9 +404,9 @@ int picoui_date_time_set_bg_color(struct picoui_date_time *dt, unsigned int rgb)
  * @return 0 on success, -1 on failure
  */
 
-int picoui_date_time_set_background_color(struct picoui_date_time *dt, unsigned int rgb)
+int tinyui_date_time_set_background_color(struct tinyui_date_time *dt, unsigned int rgb)
 {
-    return picoui_date_time_set_bg_color(dt, rgb);
+    return tinyui_date_time_set_bg_color(dt, rgb);
 }
 
 /**
@@ -417,15 +417,15 @@ int picoui_date_time_set_background_color(struct picoui_date_time *dt, unsigned 
  * @return 0 on success, -1 on failure
  */
 
-int picoui_date_time_set_align(struct picoui_date_time *dt, enum picoui_align align)
+int tinyui_date_time_set_align(struct tinyui_date_time *dt, enum tinyui_align align)
 {
     ldDateTime_t *ld_date_time;
     arm_2d_align_t native_align;
 
     if (dt == 0
-        || (align != PICOUI_ALIGN_START
-            && align != PICOUI_ALIGN_CENTER
-            && align != PICOUI_ALIGN_END)) {
+        || (align != TINYUI_ALIGN_START
+            && align != TINYUI_ALIGN_CENTER
+            && align != TINYUI_ALIGN_END)) {
         return -1;
     }
 
@@ -447,7 +447,7 @@ int picoui_date_time_set_align(struct picoui_date_time *dt, enum picoui_align al
  * @return 0 on success, -1 on failure
  */
 
-int picoui_date_time_set_transparent(struct picoui_date_time *dt, int transparent)
+int tinyui_date_time_set_transparent(struct tinyui_date_time *dt, int transparent)
 {
     ldDateTime_t *ld_date_time;
 
@@ -473,7 +473,7 @@ int picoui_date_time_set_transparent(struct picoui_date_time *dt, int transparen
  * @return 0 on success, -1 on failure
  */
 
-int picoui_date_time_set_use_system_time(struct picoui_date_time *dt, int enabled)
+int tinyui_date_time_set_use_system_time(struct tinyui_date_time *dt, int enabled)
 {
     ldDateTime_t *ld_date_time;
 
@@ -497,7 +497,7 @@ int picoui_date_time_set_use_system_time(struct picoui_date_time *dt, int enable
  * @param[in] dt dt
  */
 
-const char *picoui_date_time_get_format(const struct picoui_date_time *dt)
+const char *tinyui_date_time_get_format(const struct tinyui_date_time *dt)
 {
     ldDateTime_t *ld_date_time;
 
@@ -505,13 +505,13 @@ const char *picoui_date_time_get_format(const struct picoui_date_time *dt)
         return 0;
     }
 
-    ld_date_time = tinyui_date_time_get_ld((struct picoui_date_time *)dt);
+    ld_date_time = tinyui_date_time_get_ld((struct tinyui_date_time *)dt);
     if (ld_date_time == NULL) {
         return 0;
     }
 
-    ((struct picoui_date_time *)dt)->format = (const char *)ld_date_time->formatStr;
-    return ((struct picoui_date_time *)dt)->format;
+    ((struct tinyui_date_time *)dt)->format = (const char *)ld_date_time->formatStr;
+    return ((struct tinyui_date_time *)dt)->format;
 }
 
 /**
@@ -524,7 +524,7 @@ const char *picoui_date_time_get_format(const struct picoui_date_time *dt)
  * @return 0 on success, -1 on failure
  */
 
-int picoui_date_time_get_date(const struct picoui_date_time *dt, int *year, int *month, int *day)
+int tinyui_date_time_get_date(const struct tinyui_date_time *dt, int *year, int *month, int *day)
 {
     ldDateTime_t *ld_date_time;
 
@@ -532,17 +532,17 @@ int picoui_date_time_get_date(const struct picoui_date_time *dt, int *year, int 
         return -1;
     }
 
-    ld_date_time = tinyui_date_time_get_ld((struct picoui_date_time *)dt);
+    ld_date_time = tinyui_date_time_get_ld((struct tinyui_date_time *)dt);
     if (ld_date_time == NULL) {
         return -1;
     }
 
-    ((struct picoui_date_time *)dt)->year = ld_date_time->year;
-    ((struct picoui_date_time *)dt)->month = ld_date_time->month;
-    ((struct picoui_date_time *)dt)->day = ld_date_time->day;
-    *year = ((struct picoui_date_time *)dt)->year;
-    *month = ((struct picoui_date_time *)dt)->month;
-    *day = ((struct picoui_date_time *)dt)->day;
+    ((struct tinyui_date_time *)dt)->year = ld_date_time->year;
+    ((struct tinyui_date_time *)dt)->month = ld_date_time->month;
+    ((struct tinyui_date_time *)dt)->day = ld_date_time->day;
+    *year = ((struct tinyui_date_time *)dt)->year;
+    *month = ((struct tinyui_date_time *)dt)->month;
+    *day = ((struct tinyui_date_time *)dt)->day;
     return 0;
 }
 
@@ -556,7 +556,7 @@ int picoui_date_time_get_date(const struct picoui_date_time *dt, int *year, int 
  * @return 0 on success, -1 on failure
  */
 
-int picoui_date_time_get_time(const struct picoui_date_time *dt, int *hour, int *minute, int *second)
+int tinyui_date_time_get_time(const struct tinyui_date_time *dt, int *hour, int *minute, int *second)
 {
     ldDateTime_t *ld_date_time;
 
@@ -564,17 +564,17 @@ int picoui_date_time_get_time(const struct picoui_date_time *dt, int *hour, int 
         return -1;
     }
 
-    ld_date_time = tinyui_date_time_get_ld((struct picoui_date_time *)dt);
+    ld_date_time = tinyui_date_time_get_ld((struct tinyui_date_time *)dt);
     if (ld_date_time == NULL) {
         return -1;
     }
 
-    ((struct picoui_date_time *)dt)->hour = ld_date_time->hour;
-    ((struct picoui_date_time *)dt)->minute = ld_date_time->minute;
-    ((struct picoui_date_time *)dt)->second = ld_date_time->second;
-    *hour = ((struct picoui_date_time *)dt)->hour;
-    *minute = ((struct picoui_date_time *)dt)->minute;
-    *second = ((struct picoui_date_time *)dt)->second;
+    ((struct tinyui_date_time *)dt)->hour = ld_date_time->hour;
+    ((struct tinyui_date_time *)dt)->minute = ld_date_time->minute;
+    ((struct tinyui_date_time *)dt)->second = ld_date_time->second;
+    *hour = ((struct tinyui_date_time *)dt)->hour;
+    *minute = ((struct tinyui_date_time *)dt)->minute;
+    *second = ((struct tinyui_date_time *)dt)->second;
     return 0;
 }
 
@@ -585,7 +585,7 @@ int picoui_date_time_get_time(const struct picoui_date_time *dt, int *hour, int 
  * @return -1 on failure
  */
 
-int picoui_date_time_get_transparent(const struct picoui_date_time *dt)
+int tinyui_date_time_get_transparent(const struct tinyui_date_time *dt)
 {
     ldDateTime_t *ld_date_time;
 
@@ -593,13 +593,13 @@ int picoui_date_time_get_transparent(const struct picoui_date_time *dt)
         return -1;
     }
 
-    ld_date_time = tinyui_date_time_get_ld((struct picoui_date_time *)dt);
+    ld_date_time = tinyui_date_time_get_ld((struct tinyui_date_time *)dt);
     if (ld_date_time == NULL) {
         return -1;
     }
 
-    ((struct picoui_date_time *)dt)->transparent = ld_date_time->isTransparent ? 1 : 0;
-    return ((struct picoui_date_time *)dt)->transparent;
+    ((struct tinyui_date_time *)dt)->transparent = ld_date_time->isTransparent ? 1 : 0;
+    return ((struct tinyui_date_time *)dt)->transparent;
 }
 
 /**
@@ -609,7 +609,7 @@ int picoui_date_time_get_transparent(const struct picoui_date_time *dt)
  * @return -1 on failure
  */
 
-int picoui_date_time_get_use_system_time(const struct picoui_date_time *dt)
+int tinyui_date_time_get_use_system_time(const struct tinyui_date_time *dt)
 {
     ldDateTime_t *ld_date_time;
 
@@ -617,11 +617,11 @@ int picoui_date_time_get_use_system_time(const struct picoui_date_time *dt)
         return -1;
     }
 
-    ld_date_time = tinyui_date_time_get_ld((struct picoui_date_time *)dt);
+    ld_date_time = tinyui_date_time_get_ld((struct tinyui_date_time *)dt);
     if (ld_date_time == NULL) {
         return -1;
     }
 
-    ((struct picoui_date_time *)dt)->use_system_time = ld_date_time->isAutoSysTime ? 1 : 0;
-    return ((struct picoui_date_time *)dt)->use_system_time;
+    ((struct tinyui_date_time *)dt)->use_system_time = ld_date_time->isAutoSysTime ? 1 : 0;
+    return ((struct tinyui_date_time *)dt)->use_system_time;
 }

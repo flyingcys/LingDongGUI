@@ -19,16 +19,16 @@
 #include "internal.h"
 #include "layout.h"
 
-static struct picoui_backend_widget *tinyui_window_get_backend(struct picoui_window *window)
+static struct tinyui_backend_widget *tinyui_window_get_backend(struct tinyui_window *window)
 {
     if (window == 0 || window->widget.backend_widget == 0) {
         return 0;
     }
 
-    return (struct picoui_backend_widget *)window->widget.backend_widget;
+    return (struct tinyui_backend_widget *)window->widget.backend_widget;
 }
 
-static int tinyui_window_is_valid(struct picoui_window *window)
+static int tinyui_window_is_valid(struct tinyui_window *window)
 {
     return tinyui_window_get_backend(window) != 0;
 }
@@ -41,7 +41,7 @@ static int tinyui_window_is_valid(struct picoui_window *window)
  * @return -1 on failure
  */
 
-int picoui_flex_set_flow(struct picoui_window *window, enum picoui_flex_flow flow)
+int tinyui_flex_set_flow(struct tinyui_window *window, enum tinyui_flex_flow flow)
 {
     if (!tinyui_window_is_valid(window)) {
         return -1;
@@ -60,10 +60,10 @@ int picoui_flex_set_flow(struct picoui_window *window, enum picoui_flex_flow flo
  * @return -1 on failure
  */
 
-int picoui_flex_set_align(struct picoui_window *window,
-                          enum picoui_align main_align,
-                          enum picoui_align cross_align,
-                          enum picoui_align track_align)
+int tinyui_flex_set_align(struct tinyui_window *window,
+                          enum tinyui_align main_align,
+                          enum tinyui_align cross_align,
+                          enum tinyui_align track_align)
 {
     if (!tinyui_window_is_valid(window)) {
         return -1;
@@ -81,7 +81,7 @@ int picoui_flex_set_align(struct picoui_window *window,
  * @return -1 on failure
  */
 
-int picoui_flex_set_gap(struct picoui_window *window, int item_gap, int track_gap)
+int tinyui_flex_set_gap(struct tinyui_window *window, int item_gap, int track_gap)
 {
     if (!tinyui_window_is_valid(window) || item_gap < 0 || track_gap < 0) {
         return -1;

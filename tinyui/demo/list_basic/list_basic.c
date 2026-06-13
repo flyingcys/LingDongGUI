@@ -19,45 +19,45 @@
 #include "list_basic/list_basic.h"
 #include "tinyui.h"
 
-static void make_ui(struct picoui_window *win)
+static void make_ui(struct tinyui_window *win)
 {
-    struct picoui_label *title;
-    struct picoui_list *list;
+    struct tinyui_label *title;
+    struct tinyui_list *list;
     static const int cols[] = {220, 0};
     static const int rows[] = {32, 104, 0};
 
-    picoui_grid_set_columns(win, cols, 2);
-    picoui_grid_set_rows(win, rows, 3);
-    picoui_grid_set_gap(win, 8, 8);
-    picoui_grid_set_align(win, PICOUI_ALIGN_START, PICOUI_ALIGN_START);
+    tinyui_grid_set_columns(win, cols, 2);
+    tinyui_grid_set_rows(win, rows, 3);
+    tinyui_grid_set_gap(win, 8, 8);
+    tinyui_grid_set_align(win, TINYUI_ALIGN_START, TINYUI_ALIGN_START);
 
-    title = picoui_label_create(win, "title");
-    list = picoui_list_create(win, "list");
+    title = tinyui_label_create(win, "title");
+    list = tinyui_list_create(win, "list");
 
     if (title != 0) {
-        picoui_label_set_text(title, "List");
-        picoui_widget_set_grid_cell((struct picoui_widget *)title,
+        tinyui_label_set_text(title, "List");
+        tinyui_widget_set_grid_cell((struct tinyui_widget *)title,
                                     0, 0, 1, 1,
-                                    PICOUI_ALIGN_START,
-                                    PICOUI_ALIGN_CENTER);
+                                    TINYUI_ALIGN_START,
+                                    TINYUI_ALIGN_CENTER);
     }
 
     if (list != 0) {
-        picoui_list_add_item(list, "item_wifi", "Wi-Fi");
-        picoui_list_add_item(list, "item_bluetooth", "Bluetooth");
-        picoui_list_add_item(list, "item_display", "Display");
-        picoui_list_set_selected_index(list, 0);
-        picoui_widget_set_grid_cell((struct picoui_widget *)list,
+        tinyui_list_add_item(list, "item_wifi", "Wi-Fi");
+        tinyui_list_add_item(list, "item_bluetooth", "Bluetooth");
+        tinyui_list_add_item(list, "item_display", "Display");
+        tinyui_list_set_selected_index(list, 0);
+        tinyui_widget_set_grid_cell((struct tinyui_widget *)list,
                                     0, 1, 1, 1,
-                                    PICOUI_ALIGN_STRETCH,
-                                    PICOUI_ALIGN_START);
+                                    TINYUI_ALIGN_STRETCH,
+                                    TINYUI_ALIGN_START);
     }
 }
 
 void tinyui_demo_list_basic(void)
 {
     tinyui_obj_t *screen = tinyui_screen_create();
-    struct picoui_window *win = (struct picoui_window *)screen;
+    struct tinyui_window *win = (struct tinyui_window *)screen;
     if (win == 0) return;
     make_ui(win);
     tinyui_screen_load(screen);

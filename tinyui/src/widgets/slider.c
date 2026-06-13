@@ -27,28 +27,28 @@ int tinyui_runtime_bridge_unbind_host(void *backend_widget);
 int tinyui_runtime_bridge_detach_from_parent(void *backend_widget);
 
 static const char *tinyui_slider_fail_indicator_width_id = 0;
-static struct picoui_backend_widget tinyui_slider_last_disposed_backend_snapshot;
+static struct tinyui_backend_widget tinyui_slider_last_disposed_backend_snapshot;
 static int tinyui_slider_last_disposed_backend_valid = 0;
 
-static struct picoui_backend_widget *tinyui_slider_backend(struct picoui_slider *slider)
+static struct tinyui_backend_widget *tinyui_slider_backend(struct tinyui_slider *slider)
 {
-    struct picoui_backend_widget *backend;
+    struct tinyui_backend_widget *backend;
 
     if (slider == 0 || slider->widget.backend_widget == 0) {
         return 0;
     }
 
-    backend = (struct picoui_backend_widget *)slider->widget.backend_widget;
-    if (backend->kind != PICOUI_BACKEND_WIDGET_SLIDER || backend->ld_widget == 0) {
+    backend = (struct tinyui_backend_widget *)slider->widget.backend_widget;
+    if (backend->kind != TINYUI_BACKEND_WIDGET_SLIDER || backend->ld_widget == 0) {
         return 0;
     }
 
     return backend;
 }
 
-static ldSlider_t *tinyui_slider_get_ld(struct picoui_slider *slider)
+static ldSlider_t *tinyui_slider_get_ld(struct tinyui_slider *slider)
 {
-    struct picoui_backend_widget *backend = tinyui_slider_backend(slider);
+    struct tinyui_backend_widget *backend = tinyui_slider_backend(slider);
 
     if (backend == 0) {
         return 0;
@@ -57,7 +57,7 @@ static ldSlider_t *tinyui_slider_get_ld(struct picoui_slider *slider)
     return (ldSlider_t *)backend->ld_widget;
 }
 
-static int tinyui_slider_should_fail_indicator_width(const struct picoui_slider *slider)
+static int tinyui_slider_should_fail_indicator_width(const struct tinyui_slider *slider)
 {
     if (tinyui_slider_fail_indicator_width_id == 0 || slider == 0 || slider->id == 0) {
         return 0;
@@ -71,16 +71,16 @@ static int tinyui_slider_should_fail_indicator_width(const struct picoui_slider 
     return 1;
 }
 
-static void tinyui_slider_dispose_partial(struct picoui_slider *slider)
+static void tinyui_slider_dispose_partial(struct tinyui_slider *slider)
 {
-    struct picoui_backend_widget *backend;
-    struct picoui_backend_app_state *app_state;
+    struct tinyui_backend_widget *backend;
+    struct tinyui_backend_app_state *app_state;
 
     if (slider == 0) {
         return;
     }
 
-    backend = (struct picoui_backend_widget *)slider->widget.backend_widget;
+    backend = (struct tinyui_backend_widget *)slider->widget.backend_widget;
     if (backend != 0) {
         app_state = tinyui_runtime_bridge_backend_state(backend->owner);
         if (backend->parent != 0) {
@@ -103,7 +103,7 @@ void tinyui_slider_test_fail_indicator_width_for_id(const char *id)
     tinyui_slider_fail_indicator_width_id = id;
 }
 
-const struct picoui_backend_widget *tinyui_slider_test_last_disposed_backend(void)
+const struct tinyui_backend_widget *tinyui_slider_test_last_disposed_backend(void)
 {
     if (tinyui_slider_last_disposed_backend_valid == 0) {
         return 0;
@@ -112,7 +112,7 @@ const struct picoui_backend_widget *tinyui_slider_test_last_disposed_backend(voi
     return &tinyui_slider_last_disposed_backend_snapshot;
 }
 
-static int tinyui_slider_props_are_valid(const struct picoui_slider_props *props)
+static int tinyui_slider_props_are_valid(const struct tinyui_slider_props *props)
 {
     return props != 0
         && props->id != 0
@@ -143,12 +143,12 @@ static int tinyui_slider_props_are_valid(const struct picoui_slider_props *props
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct picoui_slider *picoui_slider_create(struct picoui_window *parent, const char *id)
+struct tinyui_slider *tinyui_slider_create(struct tinyui_window *parent, const char *id)
 {
-    struct picoui_slider *slider;
-    struct picoui_backend_widget *backend;
-    struct picoui_backend_widget *parent_backend;
-    struct picoui_backend_app_state *app_state;
+    struct tinyui_slider *slider;
+    struct tinyui_backend_widget *backend;
+    struct tinyui_backend_widget *parent_backend;
+    struct tinyui_backend_app_state *app_state;
     ldSlider_t *ld_slider;
     uint16_t name_id;
 
@@ -156,7 +156,7 @@ struct picoui_slider *picoui_slider_create(struct picoui_window *parent, const c
         return 0;
     }
 
-    parent_backend = (struct picoui_backend_widget *)parent->widget.backend_widget;
+    parent_backend = (struct tinyui_backend_widget *)parent->widget.backend_widget;
     app_state = tinyui_runtime_bridge_backend_state_from_parent(parent_backend);
     if (parent_backend == 0 || parent_backend->ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
         return 0;
@@ -196,7 +196,7 @@ struct picoui_slider *picoui_slider_create(struct picoui_window *parent, const c
 
     if (tinyui_widget_init_child(backend,
                                          parent_backend,
-                                         PICOUI_BACKEND_WIDGET_SLIDER,
+                                         TINYUI_BACKEND_WIDGET_SLIDER,
                                          id,
                                          parent_backend->theme) != 0) {
         ldSlider_depose(app_state->ld_scene, ld_slider);
@@ -206,7 +206,7 @@ struct picoui_slider *picoui_slider_create(struct picoui_window *parent, const c
     }
     backend->ld_widget = ld_slider;
     backend->ld_name_id = name_id;
-    backend->last_signal = PICOUI_BACKEND_SIGNAL_NONE;
+    backend->last_signal = TINYUI_BACKEND_SIGNAL_NONE;
     if (tinyui_widget_attach_child(parent_backend, backend) != 0) {
         ldSlider_depose(app_state->ld_scene, ld_slider);
         free(backend);
@@ -235,9 +235,9 @@ struct picoui_slider *picoui_slider_create(struct picoui_window *parent, const c
  * @return Pointer to the object
  */
 
-struct picoui_slider *picoui_slider_init(struct picoui_window *parent, const char *id)
+struct tinyui_slider *tinyui_slider_init(struct tinyui_window *parent, const char *id)
 {
-    return picoui_slider_create(parent, id);
+    return tinyui_slider_create(parent, id);
 }
 
 /**
@@ -248,16 +248,16 @@ struct picoui_slider *picoui_slider_init(struct picoui_window *parent, const cha
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct picoui_slider *picoui_slider_create_with_props(struct picoui_window *parent,
-                                                      const struct picoui_slider_props *props)
+struct tinyui_slider *tinyui_slider_create_with_props(struct tinyui_window *parent,
+                                                      const struct tinyui_slider_props *props)
 {
-    struct picoui_slider *slider;
+    struct tinyui_slider *slider;
 
     if (!tinyui_slider_props_are_valid(props)) {
         return 0;
     }
 
-    slider = picoui_slider_create(parent, props->id);
+    slider = tinyui_slider_create(parent, props->id);
     if (slider == 0) {
         return 0;
     }
@@ -266,18 +266,18 @@ struct picoui_slider *picoui_slider_create_with_props(struct picoui_window *pare
     slider->max_value = props->max_value;
     slider->cb = 0;
     slider->user_data = 0;
-    if (picoui_slider_set_range(slider, props->min_value, props->max_value) != 0
-        || picoui_slider_set_value(slider, props->value) != 0
+    if (tinyui_slider_set_range(slider, props->min_value, props->max_value) != 0
+        || tinyui_slider_set_value(slider, props->value) != 0
         || (props->has_horizontal != 0
-            && picoui_slider_set_horizontal(slider, props->horizontal) != 0)
+            && tinyui_slider_set_horizontal(slider, props->horizontal) != 0)
         || (props->has_background_source != 0
-            && picoui_slider_set_background_source(slider, props->background_source) != 0)
+            && tinyui_slider_set_background_source(slider, props->background_source) != 0)
         || (props->has_indicator_source != 0
-            && picoui_slider_set_indicator_source(slider, props->indicator_source) != 0)
+            && tinyui_slider_set_indicator_source(slider, props->indicator_source) != 0)
         || (props->has_indicator_width != 0
-            && picoui_slider_set_indicator_width(slider, props->indicator_width) != 0)
+            && tinyui_slider_set_indicator_width(slider, props->indicator_width) != 0)
         || (props->has_slim_size != 0
-            && picoui_slider_set_slim_size(slider, props->slim_size) != 0)) {
+            && tinyui_slider_set_slim_size(slider, props->slim_size) != 0)) {
         tinyui_slider_dispose_partial(slider);
         return 0;
     }
@@ -286,18 +286,18 @@ struct picoui_slider *picoui_slider_create_with_props(struct picoui_window *pare
      * do not expose a real failure path for a valid non-window slider backend. */
     slider->cb = props->on_value_changed;
     slider->user_data = props->user_data;
-    (void)picoui_widget_set_user_data(&slider->widget, props->user_data);
+    (void)tinyui_widget_set_user_data(&slider->widget, props->user_data);
     if (props->style_class != 0) {
-        (void)picoui_widget_set_style_class(&slider->widget, props->style_class);
+        (void)tinyui_widget_set_style_class(&slider->widget, props->style_class);
     }
     if (props->width > 0 || props->height > 0) {
-        (void)picoui_widget_set_size(&slider->widget, props->width, props->height);
+        (void)tinyui_widget_set_size(&slider->widget, props->width, props->height);
     }
-    (void)picoui_widget_set_bg_color(&slider->widget, props->bg_color);
-    (void)picoui_widget_set_text_color(&slider->widget, props->text_color);
-    (void)picoui_widget_set_border_color(&slider->widget, props->border_color);
-    (void)picoui_widget_set_radius(&slider->widget, props->radius);
-    (void)picoui_widget_set_padding(&slider->widget, props->padding);
+    (void)tinyui_widget_set_bg_color(&slider->widget, props->bg_color);
+    (void)tinyui_widget_set_text_color(&slider->widget, props->text_color);
+    (void)tinyui_widget_set_border_color(&slider->widget, props->border_color);
+    (void)tinyui_widget_set_radius(&slider->widget, props->radius);
+    (void)tinyui_widget_set_padding(&slider->widget, props->padding);
     return slider;
 }
 
@@ -309,7 +309,7 @@ struct picoui_slider *picoui_slider_create_with_props(struct picoui_window *pare
  * @return 0 on success, -1 on failure
  */
 
-int picoui_slider_set_value(struct picoui_slider *slider, int value)
+int tinyui_slider_set_value(struct tinyui_slider *slider, int value)
 {
     if (slider == 0 || value < slider->min_value || value > slider->max_value) {
         return -1;
@@ -340,7 +340,7 @@ int picoui_slider_set_value(struct picoui_slider *slider, int value)
  * @return 0 on success, -1 on failure
  */
 
-int picoui_slider_set_range(struct picoui_slider *slider, int min_value, int max_value)
+int tinyui_slider_set_range(struct tinyui_slider *slider, int min_value, int max_value)
 {
     int old_min_value;
     int old_max_value;
@@ -395,7 +395,7 @@ int picoui_slider_set_range(struct picoui_slider *slider, int min_value, int max
  * @return -1 on failure
  */
 
-int picoui_slider_set_percent(struct picoui_slider *slider, int percent)
+int tinyui_slider_set_percent(struct tinyui_slider *slider, int percent)
 {
     int value;
 
@@ -404,7 +404,7 @@ int picoui_slider_set_percent(struct picoui_slider *slider, int percent)
     }
 
     value = slider->min_value + ((slider->max_value - slider->min_value) * percent) / 100;
-    return picoui_slider_set_value(slider, value);
+    return tinyui_slider_set_value(slider, value);
 }
 
 /**
@@ -415,7 +415,7 @@ int picoui_slider_set_percent(struct picoui_slider *slider, int percent)
  * @return -1 on failure
  */
 
-int picoui_slider_set_horizontal(struct picoui_slider *slider, int horizontal)
+int tinyui_slider_set_horizontal(struct tinyui_slider *slider, int horizontal)
 {
     ldSlider_t *ld_slider;
 
@@ -440,7 +440,7 @@ int picoui_slider_set_horizontal(struct picoui_slider *slider, int horizontal)
  * @return -1 on failure
  */
 
-int picoui_slider_get_horizontal(struct picoui_slider *slider, int *horizontal)
+int tinyui_slider_get_horizontal(struct tinyui_slider *slider, int *horizontal)
 {
     ldSlider_t *ld_slider;
 
@@ -465,8 +465,8 @@ int picoui_slider_get_horizontal(struct picoui_slider *slider, int *horizontal)
  * @return -1 on failure
  */
 
-int picoui_slider_set_background_source(struct picoui_slider *slider,
-                                        struct picoui_image_source *source)
+int tinyui_slider_set_background_source(struct tinyui_slider *slider,
+                                        struct tinyui_image_source *source)
 {
     ldSlider_t *ld_slider;
 
@@ -495,8 +495,8 @@ int picoui_slider_set_background_source(struct picoui_slider *slider,
  * @return -1 on failure
  */
 
-int picoui_slider_set_indicator_source(struct picoui_slider *slider,
-                                       struct picoui_image_source *source)
+int tinyui_slider_set_indicator_source(struct tinyui_slider *slider,
+                                       struct tinyui_image_source *source)
 {
     ldSlider_t *ld_slider;
 
@@ -526,14 +526,14 @@ int picoui_slider_set_indicator_source(struct picoui_slider *slider,
  * @return -1 on failure
  */
 
-int picoui_slider_set_image(struct picoui_slider *slider,
-                            struct picoui_image_source *background_source,
-                            struct picoui_image_source *indicator_source)
+int tinyui_slider_set_image(struct tinyui_slider *slider,
+                            struct tinyui_image_source *background_source,
+                            struct tinyui_image_source *indicator_source)
 {
-    if (picoui_slider_set_background_source(slider, background_source) != 0) {
+    if (tinyui_slider_set_background_source(slider, background_source) != 0) {
         return -1;
     }
-    return picoui_slider_set_indicator_source(slider, indicator_source);
+    return tinyui_slider_set_indicator_source(slider, indicator_source);
 }
 
 /**
@@ -546,12 +546,12 @@ int picoui_slider_set_image(struct picoui_slider *slider,
  * @return 0 on success, -1 on failure
  */
 
-int picoui_slider_set_color(struct picoui_slider *slider,
+int tinyui_slider_set_color(struct tinyui_slider *slider,
                             unsigned int bg_color,
                             unsigned int frame_color,
                             unsigned int indicator_color)
 {
-    struct picoui_backend_widget *backend;
+    struct tinyui_backend_widget *backend;
     ldSlider_t *ld_slider;
 
     if (slider == 0 || bg_color > 0xFFFFFFU || frame_color > 0xFFFFFFU ||
@@ -559,7 +559,7 @@ int picoui_slider_set_color(struct picoui_slider *slider,
         return -1;
     }
 
-    backend = (struct picoui_backend_widget *)slider->widget.backend_widget;
+    backend = (struct tinyui_backend_widget *)slider->widget.backend_widget;
     ld_slider = (ldSlider_t *)backend->ld_widget;
     if (ld_slider == 0) {
         return -1;
@@ -577,7 +577,7 @@ int picoui_slider_set_color(struct picoui_slider *slider,
  * @return -1 on failure
  */
 
-int picoui_slider_set_indicator_width(struct picoui_slider *slider, int indicator_width)
+int tinyui_slider_set_indicator_width(struct tinyui_slider *slider, int indicator_width)
 {
     ldSlider_t *ld_slider;
 
@@ -605,7 +605,7 @@ int picoui_slider_set_indicator_width(struct picoui_slider *slider, int indicato
  * @return -1 on failure
  */
 
-int picoui_slider_set_slim_size(struct picoui_slider *slider, int slim_size)
+int tinyui_slider_set_slim_size(struct tinyui_slider *slider, int slim_size)
 {
     ldSlider_t *ld_slider;
 
@@ -630,7 +630,7 @@ int picoui_slider_set_slim_size(struct picoui_slider *slider, int slim_size)
  * @return -1 on failure
  */
 
-int picoui_slider_get_percent(struct picoui_slider *slider, int *percent)
+int tinyui_slider_get_percent(struct tinyui_slider *slider, int *percent)
 {
     ldSlider_t *ld_slider;
 
@@ -656,8 +656,8 @@ int picoui_slider_get_percent(struct picoui_slider *slider, int *percent)
  * @return 0 on success, -1 on failure
  */
 
-int picoui_slider_set_on_value_changed(struct picoui_slider *slider,
-                                       picoui_value_changed_cb cb,
+int tinyui_slider_set_on_value_changed(struct tinyui_slider *slider,
+                                       tinyui_value_changed_cb cb,
                                        void *user_data)
 {
     if (slider == 0) {

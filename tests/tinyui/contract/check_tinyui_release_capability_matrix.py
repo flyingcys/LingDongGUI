@@ -8,7 +8,7 @@ CONTRACT_DIR = ROOT / "tests" / "tinyui" / "contract"
 MATRIX_JSON = ROOT / "tests" / "tinyui" / "contract" / "tinyui_release_capability_matrix.json"
 INVENTORY_JSON = CONTRACT_DIR / "ldgui_public_api_inventory.json"
 LEDGER_JSON = CONTRACT_DIR / "native_api_gap_ledger.json"
-PICOUI_INCLUDE_DIR = ROOT / "tinyui" / "include" / "picoui"
+TINYUI_INCLUDE_DIR = ROOT / "tinyui" / "include" / "tinyui"
 
 VALID_COVERAGE_KINDS = {
     "native_setter_parity",
@@ -26,7 +26,7 @@ ALLOWLISTED_COVERAGE_KINDS = {
 }
 VALID_GAP_STATUSES = {
     "covered",
-    "missing_picoui_api",
+    "missing_tinyui_api",
     "missing_backend_proof",
     "missing_unit",
     "missing_gate",
@@ -68,7 +68,7 @@ VALID_PARITY_STATUSES = {
 LEDGER_ALIGNED_FIELDS = {
     "group_kind",
     "coverage_kind",
-    "picoui_api",
+    "tinyui_api",
     "backend_proof",
     "unit_test",
     "required",
@@ -301,22 +301,22 @@ def _ledger_rows() -> dict[str, dict]:
     return rows
 
 
-def _public_picoui_api_symbols() -> set[str]:
+def _public_tinyui_api_symbols() -> set[str]:
     symbols: set[str] = set()
-    pattern = re.compile(r"\b(picoui_[A-Za-z0-9_]+)\s*\(")
-    for header in PICOUI_INCLUDE_DIR.rglob("*.h"):
+    pattern = re.compile(r"\b(tinyui_[A-Za-z0-9_]+)\s*\(")
+    for header in TINYUI_INCLUDE_DIR.rglob("*.h"):
         text = header.read_text(encoding="utf-8")
         for match in pattern.finditer(text):
             symbols.add(match.group(1))
     return symbols
 
 
-def _assert_public_picoui_api(native_api: str, picoui_api: str, public_picoui_symbols: set[str]) -> None:
-    api_symbols = [part.strip() for part in picoui_api.split("+")]
-    assert api_symbols and all(api_symbols), f"{native_api} has invalid picoui_api field"
-    missing = [symbol for symbol in api_symbols if symbol not in public_picoui_symbols]
+def _assert_public_tinyui_api(native_api: str, tinyui_api: str, public_tinyui_symbols: set[str]) -> None:
+    api_symbols = [part.strip() for part in tinyui_api.split("+")]
+    assert api_symbols and all(api_symbols), f"{native_api} has invalid tinyui_api field"
+    missing = [symbol for symbol in api_symbols if symbol not in public_tinyui_symbols]
     assert not missing, (
-        f"{native_api} covered row references non-public PicoUI API: "
+        f"{native_api} covered row references non-public TINYUI API: "
         f"{', '.join(missing)}"
     )
 
@@ -324,7 +324,7 @@ def _assert_public_picoui_api(native_api: str, picoui_api: str, public_picoui_sy
 def _assert_native_api_rows(
     by_name: dict[str, dict],
     ledger_by_symbol: dict[str, dict],
-    public_picoui_symbols: set[str],
+    public_tinyui_symbols: set[str],
 ) -> int:
     status_enums = _load_json(MATRIX_JSON).get("status_enums", {})
     allowed_gap_statuses = _non_empty_string_set(status_enums.get("gap_status"), "status_enums.gap_status")
@@ -435,9 +435,9 @@ def _assert_native_api_rows(
                 assert policy_category == "direct_covered", (
                     f"{native_api} covered row must use policy_category=direct_covered"
                 )
-                for field in ("picoui_api", "backend_proof", "unit_test"):
+                for field in ("tinyui_api", "backend_proof", "unit_test"):
                     assert capability.get(field), f"{native_api} covered row missing {field}"
-                _assert_public_picoui_api(native_api, capability.get("picoui_api"), public_picoui_symbols)
+                _assert_public_tinyui_api(native_api, capability.get("tinyui_api"), public_tinyui_symbols)
                 assert gate_evidence, (
                     f"{native_api} covered row missing gate_evidence"
                 )
@@ -581,9 +581,9 @@ def main() -> int:
     by_name = _widgets_by_name(matrix)
     inventory_symbols = _inventory_symbols()
     ledger_by_symbol = _ledger_rows()
-    public_picoui_symbols = _public_picoui_api_symbols()
+    public_tinyui_symbols = _public_tinyui_api_symbols()
     assert set(ledger_by_symbol).issubset(inventory_symbols), "ledger must be backed by inventory"
-    capability_total = _assert_native_api_rows(by_name, ledger_by_symbol, public_picoui_symbols)
+    capability_total = _assert_native_api_rows(by_name, ledger_by_symbol, public_tinyui_symbols)
     _assert_summary(matrix, capability_total, ledger_by_symbol)
     _assert_gate_catalog(matrix)
     _assert_manual_artifact_policy(matrix)

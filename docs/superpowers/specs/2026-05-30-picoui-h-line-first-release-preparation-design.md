@@ -1,9 +1,9 @@
-# PicoUI H线第一版本发布准备设计
+# TINYUI H线第一版本发布准备设计
 
 > 日期：2026-05-30
 > 适用仓库：`/Users/cys/embedded/LingDongGUI`
-> 入口索引：`docs/picoui-serial/H-线计划索引.md`
-> 目标：把 `PicoUI` 的 `H线` 冻结成“基于当前 9 个已覆盖控件的第一版本发布准备线”，避免和新控件扩张线、输入系统线、后续 `public v1.0` 候选线混写。
+> 入口索引：`docs/tinyui-serial/H-线计划索引.md`
+> 目标：把 `TINYUI` 的 `H线` 冻结成“基于当前 9 个已覆盖控件的第一版本发布准备线”，避免和新控件扩张线、输入系统线、后续 `public v1.0` 候选线混写。
 
 ---
 
@@ -27,7 +27,7 @@
 
 1. 当前 `9` 个控件距离第一版本发布还有多少差距。
 2. 当前 `9` 个控件哪些能力可以作为 `support` 发布，哪些只能作为 `known limitation` 或 `reject/incomplete/deferred` 对外说明。
-3. 发布前必须补哪些文档、gate、artifact 和 review，才能避免把当前研发状态夸写成“PicoUI 已完整覆盖 LingDongGUI”。
+3. 发布前必须补哪些文档、gate、artifact 和 review，才能避免把当前研发状态夸写成“TINYUI 已完整覆盖 LingDongGUI”。
 
 ---
 
@@ -55,7 +55,7 @@
 1. 只基于当前 `9` 个控件。
 2. 只承诺当前已被 `unit / contract / mapping / visible / manual artifact` 证据共同约束的合同子集。
 3. 明确写出 `image/list/font/theme/manual artifact` 等 known limitations。
-4. 不对外宣称“PicoUI 已覆盖 LingDongGUI 主流控件面”。
+4. 不对外宣称“TINYUI 已覆盖 LingDongGUI 主流控件面”。
 
 ### 4.2 `public v1.0`
 
@@ -111,8 +111,8 @@
 
 当前可执行、已有口径支撑的最小 manual artifact 范围，只能先固定为：
 
-1. `picoui_basic_widgets_demo`
-2. `picoui_settings_panel_demo`
+1. `tinyui_basic_widgets_demo`
+2. `tinyui_settings_panel_demo`
 
 若未来要扩到 `7` 个 visible demos，必须先开独立子任务扩脚本入口、artifact 模板和文档矩阵；不能直接把 `7` 个 demo 写成当前阶段的默认完成条件。
 
@@ -124,11 +124,11 @@
 
 必须冻结以下口径：
 
-1. 第一版本名称暂称 `PicoUI first release` 或 `internal v0.1 candidate`。
+1. 第一版本名称暂称 `TINYUI first release` 或 `internal v0.1 candidate`。
 2. 禁止表述：
-   - `PicoUI 已完整支持 LingDongGUI`
-   - `PicoUI 已覆盖 LingDongGUI 全控件`
-   - `9 个 PicoUI 控件已 100% 镜像对应 ld* 控件能力`
+   - `TINYUI 已完整支持 LingDongGUI`
+   - `TINYUI 已覆盖 LingDongGUI 全控件`
+   - `9 个 TINYUI 控件已 100% 镜像对应 ld* 控件能力`
    - `visible gate 通过等于人工验收通过`
 3. 允许表述：
    - `当前 9 个控件已走真实 LingDongGUI backend mapping`
@@ -139,7 +139,7 @@
 
 必须维护 `H线` 自己的对比真相源，回答：
 
-1. LingDongGUI 可封装控件总数与 PicoUI 已覆盖数量。
+1. LingDongGUI 可封装控件总数与 TINYUI 已覆盖数量。
 2. 当前 `9` 控件逐项能力差距。
 3. `internal v0.1` 与 `public v1.0` 的边界差异。
 4. 哪些问题是当前 H 线 blocker，哪些是 H 线后的候选主题。
@@ -204,8 +204,8 @@ release matrix 必须成为机器可读真相源，并至少表达：
 
 `H线` 的最小 manual artifact 交付只要求覆盖：
 
-1. `picoui_basic_widgets_demo`
-2. `picoui_settings_panel_demo`
+1. `tinyui_basic_widgets_demo`
+2. `tinyui_settings_panel_demo`
 
 每条记录至少包含：
 
@@ -221,12 +221,12 @@ release matrix 必须成为机器可读真相源，并至少表达：
 
 第一版本前必须再次冻结：
 
-1. `picoui/include/picoui/*.h` 不泄漏 `ld*`
+1. `tinyui/include/tinyui/*.h` 不泄漏 `ld*`
 2. 不泄漏 `arm_2d_*`
 3. 不泄漏 `SIGNAL_*`
 4. 发布测试矩阵的命令顺序和互斥关系
 
-尤其要明确：`runtime / visible / mapping` 共用 `build/picoui-runtime`，不能并行抢目录。
+尤其要明确：`runtime / visible / mapping` 共用 `build/tinyui-runtime`，不能并行抢目录。
 
 ### 6.9 发布文档包、独立 review 与 closeout
 

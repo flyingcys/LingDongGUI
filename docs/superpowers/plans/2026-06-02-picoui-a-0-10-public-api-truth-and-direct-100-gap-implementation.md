@@ -1,12 +1,12 @@
-# PicoUI a-0.10 Public API Truth And Direct-100 Gap Implementation Plan
+# TINYUI a-0.10 Public API Truth And Direct-100 Gap Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 固化 PicoUI public API truth gate，修正 ability/matrix 中虚构 public API 名，并把 direct public 100% 缺口拆成可执行后续任务。
+**Goal:** 固化 TINYUI public API truth gate，修正 ability/matrix 中虚构 public API 名，并把 direct public 100% 缺口拆成可执行后续任务。
 
 **Architecture:** `R0` 先修 truth gate 与已知漂移；`R1` 冻结 direct-100 denominator；`R2` 对 allowlisted 行再分类；`R3` 决定是否新增 public API；`R4` 同步 ability 文档；`R5` 做 fresh subagent review 与 gate closeout。所有 JSON truth-source 合流必须串行，review 与摸底必须用独立 subagent。
 
-**Tech Stack:** Python3、C、PicoUI public headers、LingDongGUI native API inventory、Markdown serial docs、GitNexus
+**Tech Stack:** Python3、C、TINYUI public headers、LingDongGUI native API inventory、Markdown serial docs、GitNexus
 
 ---
 
@@ -29,10 +29,10 @@ git submodule update --init --recursive
 ### R0 public API truth gate
 
 **Modify:**
-- `tests/picoui/contract/check_picoui_release_capability_matrix.py`
-- `tests/picoui/contract/ldgui_public_api_inventory.json`
-- `tests/picoui/contract/native_api_gap_ledger.json`
-- `tests/picoui/contract/picoui_release_capability_matrix.json`
+- `tests/tinyui/contract/check_tinyui_release_capability_matrix.py`
+- `tests/tinyui/contract/ldgui_public_api_inventory.json`
+- `tests/tinyui/contract/native_api_gap_ledger.json`
+- `tests/tinyui/contract/tinyui_release_capability_matrix.json`
 - `docs/ability/README.md`
 - `docs/ability/gauge.md`
 - `docs/ability/progress_bar.md`
@@ -44,37 +44,37 @@ git submodule update --init --recursive
 ### R1 direct-100 denominator
 
 **Modify:**
-- `tests/picoui/contract/picoui_release_capability_matrix.json`
-- `tests/picoui/contract/native_api_gap_ledger.json`
-- `tests/picoui/contract/check_picoui_native_api_exhaustiveness.py`
-- `tests/picoui/contract/check_picoui_release_capability_matrix.py`
+- `tests/tinyui/contract/tinyui_release_capability_matrix.json`
+- `tests/tinyui/contract/native_api_gap_ledger.json`
+- `tests/tinyui/contract/check_tinyui_native_api_exhaustiveness.py`
+- `tests/tinyui/contract/check_tinyui_release_capability_matrix.py`
 - `docs/ability/README.md`
 
 ### R2 allowlisted row classification
 
 **Modify:**
-- `tests/picoui/contract/native_api_gap_ledger.json`
-- `tests/picoui/contract/picoui_release_capability_matrix.json`
+- `tests/tinyui/contract/native_api_gap_ledger.json`
+- `tests/tinyui/contract/tinyui_release_capability_matrix.json`
 - `docs/ability/*.md`
 
 ### R3 optional direct public API implementation
 
 **Modify only if direct-100 implementation is chosen:**
-- `picoui/include/picoui/*.h`
-- `picoui/src/widgets/*.c`
-- `picoui/src/core/*.c`
-- `picoui/src/backend/ldgui/*.c`
-- `tests/picoui/unit/*.c`
-- `tests/picoui/contract/*.json`
+- `tinyui/include/tinyui/*.h`
+- `tinyui/src/widgets/*.c`
+- `tinyui/src/core/*.c`
+- `tinyui/src/backend/ldgui/*.c`
+- `tests/tinyui/unit/*.c`
+- `tests/tinyui/contract/*.json`
 - `docs/ability/*.md`
 
 ### R4/R5 docs and review closeout
 
 **Modify:**
 - `docs/ability/README.md`
-- `docs/picoui-serial/a-0.10-线计划索引.md`
-- `docs/superpowers/specs/2026-06-02-picoui-a-0-10-public-api-truth-and-direct-100-gap-design.md`
-- `docs/superpowers/plans/2026-06-02-picoui-a-0-10-public-api-truth-and-direct-100-gap-implementation.md`
+- `docs/tinyui-serial/a-0.10-线计划索引.md`
+- `docs/superpowers/specs/2026-06-02-tinyui-a-0-10-public-api-truth-and-direct-100-gap-design.md`
+- `docs/superpowers/plans/2026-06-02-tinyui-a-0-10-public-api-truth-and-direct-100-gap-implementation.md`
 
 ## 2. Tasks
 
@@ -82,63 +82,63 @@ git submodule update --init --recursive
 
 **Owner:** Fresh subagent `SG-a0.10-R0-public-api-truth`
 
-**Goal:** 修正已知不存在的 `picoui_api` 字段，并让 checker 防止复发。
+**Goal:** 修正已知不存在的 `tinyui_api` 字段，并让 checker 防止复发。
 
 - [x] **Step 1: Run impact before checker edit**
 
 Run:
 
 ```bash
-gitnexus_impact target=check_picoui_release_capability_matrix.py direction=upstream repo=LingDongGUI
+gitnexus_impact target=check_tinyui_release_capability_matrix.py direction=upstream repo=LingDongGUI
 ```
 
 Expected: LOW 或明确报告影响面；若 HIGH/CRITICAL，先停下汇报。
 
-执行记录（2026-06-02）：GitNexus impact 对文件 `tests/picoui/contract/check_picoui_release_capability_matrix.py` 返回 `risk=LOW`、`impactedCount=0`、`processes_affected=0`。
+执行记录（2026-06-02）：GitNexus impact 对文件 `tests/tinyui/contract/check_tinyui_release_capability_matrix.py` 返回 `risk=LOW`、`impactedCount=0`、`processes_affected=0`。
 
-- [x] **Step 2: Fix known non-public PicoUI API names**
+- [x] **Step 2: Fix known non-public TINYUI API names**
 
 Update all three JSON truth-sources and affected ability docs:
 
 | Wrong | Correct |
 | --- | --- |
-| `picoui_gauge_move` | `picoui_widget_set_pos` |
-| `picoui_gauge_set_corner` | `picoui_widget_set_corner` |
-| `picoui_gauge_set_hidden` | `picoui_widget_set_visible` |
-| `picoui_gauge_set_opacity` | `picoui_widget_set_opacity` |
-| `picoui_gauge_set_pointer_image` | `picoui_gauge_set_pointer_source` |
-| `picoui_gauge_set_select` | `picoui_widget_set_selected` |
-| `picoui_gauge_set_selectable` | `picoui_widget_set_selectable` |
-| `picoui_progress_bar_move` | `picoui_widget_set_pos` |
-| `picoui_progress_bar_set_corner` | `picoui_widget_set_corner` |
-| `picoui_progress_bar_set_frame_image` | `picoui_progress_bar_set_frame_source` |
-| `picoui_progress_bar_set_hidden` | `picoui_widget_set_visible` |
-| `picoui_progress_bar_set_opacity` | `picoui_widget_set_opacity` |
-| `picoui_progress_bar_set_select` | `picoui_widget_set_selected` |
-| `picoui_progress_bar_set_selectable` | `picoui_widget_set_selectable` |
-| `picoui_q_r_code_move` | `picoui_widget_set_pos` |
-| `picoui_q_r_code_set_corner` | `picoui_widget_set_corner` |
-| `picoui_q_r_code_set_hidden` | `picoui_widget_set_visible` |
-| `picoui_q_r_code_set_opacity` | `picoui_widget_set_opacity` |
-| `picoui_q_r_code_set_select` | `picoui_widget_set_selected` |
-| `picoui_q_r_code_set_selectable` | `picoui_widget_set_selectable` |
-| `picoui_slider_move` | `picoui_widget_set_pos` |
-| `picoui_slider_set_corner` | `picoui_widget_set_corner` |
-| `picoui_slider_set_hidden` | `picoui_widget_set_visible` |
-| `picoui_slider_set_opacity` | `picoui_widget_set_opacity` |
-| `picoui_slider_set_select` | `picoui_widget_set_selected` |
-| `picoui_slider_set_selectable` | `picoui_widget_set_selectable` |
-| `picoui_keyboard_btn_update` | `picoui_keyboard_button_update` |
-| `picoui_radial_menu_set_offset_item` | `picoui_radial_menu_offset_item` |
+| `tinyui_gauge_move` | `tinyui_widget_set_pos` |
+| `tinyui_gauge_set_corner` | `tinyui_widget_set_corner` |
+| `tinyui_gauge_set_hidden` | `tinyui_widget_set_visible` |
+| `tinyui_gauge_set_opacity` | `tinyui_widget_set_opacity` |
+| `tinyui_gauge_set_pointer_image` | `tinyui_gauge_set_pointer_source` |
+| `tinyui_gauge_set_select` | `tinyui_widget_set_selected` |
+| `tinyui_gauge_set_selectable` | `tinyui_widget_set_selectable` |
+| `tinyui_progress_bar_move` | `tinyui_widget_set_pos` |
+| `tinyui_progress_bar_set_corner` | `tinyui_widget_set_corner` |
+| `tinyui_progress_bar_set_frame_image` | `tinyui_progress_bar_set_frame_source` |
+| `tinyui_progress_bar_set_hidden` | `tinyui_widget_set_visible` |
+| `tinyui_progress_bar_set_opacity` | `tinyui_widget_set_opacity` |
+| `tinyui_progress_bar_set_select` | `tinyui_widget_set_selected` |
+| `tinyui_progress_bar_set_selectable` | `tinyui_widget_set_selectable` |
+| `tinyui_q_r_code_move` | `tinyui_widget_set_pos` |
+| `tinyui_q_r_code_set_corner` | `tinyui_widget_set_corner` |
+| `tinyui_q_r_code_set_hidden` | `tinyui_widget_set_visible` |
+| `tinyui_q_r_code_set_opacity` | `tinyui_widget_set_opacity` |
+| `tinyui_q_r_code_set_select` | `tinyui_widget_set_selected` |
+| `tinyui_q_r_code_set_selectable` | `tinyui_widget_set_selectable` |
+| `tinyui_slider_move` | `tinyui_widget_set_pos` |
+| `tinyui_slider_set_corner` | `tinyui_widget_set_corner` |
+| `tinyui_slider_set_hidden` | `tinyui_widget_set_visible` |
+| `tinyui_slider_set_opacity` | `tinyui_widget_set_opacity` |
+| `tinyui_slider_set_select` | `tinyui_widget_set_selected` |
+| `tinyui_slider_set_selectable` | `tinyui_widget_set_selectable` |
+| `tinyui_keyboard_btn_update` | `tinyui_keyboard_button_update` |
+| `tinyui_radial_menu_set_offset_item` | `tinyui_radial_menu_offset_item` |
 
 - [x] **Step 3: Add public header check**
 
-Modify `check_picoui_release_capability_matrix.py`:
+Modify `check_tinyui_release_capability_matrix.py`:
 
 ```python
-def _public_picoui_api_symbols() -> set[str]:
+def _public_tinyui_api_symbols() -> set[str]:
     symbols: set[str] = set()
-    pattern = re.compile(r"\b(picoui_[A-Za-z0-9_]+)\s*\(")
+    pattern = re.compile(r"\b(tinyui_[A-Za-z0-9_]+)\s*\(")
     for header in PICOUI_INCLUDE_DIR.rglob("*.h"):
         text = header.read_text(encoding="utf-8")
         for match in pattern.finditer(text):
@@ -149,8 +149,8 @@ def _public_picoui_api_symbols() -> set[str]:
 Then assert every `covered` row has public API symbols. Support `+` composition:
 
 ```python
-api_symbols = [part.strip() for part in picoui_api.split("+")]
-missing = [symbol for symbol in api_symbols if symbol not in public_picoui_symbols]
+api_symbols = [part.strip() for part in tinyui_api.split("+")]
+missing = [symbol for symbol in api_symbols if symbol not in public_tinyui_symbols]
 assert not missing
 ```
 
@@ -159,10 +159,10 @@ assert not missing
 Run:
 
 ```bash
-python3 tests/picoui/contract/check_picoui_release_capability_matrix.py
-python3 tests/picoui/contract/check_ldgui_public_api_inventory.py
-python3 tests/picoui/contract/check_picoui_native_api_exhaustiveness.py
-rg -n 'picoui_gauge_move|picoui_gauge_set_corner|picoui_gauge_set_hidden|picoui_gauge_set_opacity|picoui_gauge_set_pointer_image|picoui_gauge_set_select|picoui_gauge_set_selectable|picoui_progress_bar_move|picoui_progress_bar_set_corner|picoui_progress_bar_set_frame_image|picoui_progress_bar_set_hidden|picoui_progress_bar_set_opacity|picoui_progress_bar_set_select|picoui_progress_bar_set_selectable|picoui_q_r_code_move|picoui_q_r_code_set_corner|picoui_q_r_code_set_hidden|picoui_q_r_code_set_opacity|picoui_q_r_code_set_select|picoui_q_r_code_set_selectable|picoui_slider_move|picoui_slider_set_corner|picoui_slider_set_hidden|picoui_slider_set_opacity|picoui_slider_set_select|picoui_slider_set_selectable|picoui_keyboard_btn_update|picoui_radial_menu_set_offset_item' docs/ability tests/picoui/contract
+python3 tests/tinyui/contract/check_tinyui_release_capability_matrix.py
+python3 tests/tinyui/contract/check_ldgui_public_api_inventory.py
+python3 tests/tinyui/contract/check_tinyui_native_api_exhaustiveness.py
+rg -n 'tinyui_gauge_move|tinyui_gauge_set_corner|tinyui_gauge_set_hidden|tinyui_gauge_set_opacity|tinyui_gauge_set_pointer_image|tinyui_gauge_set_select|tinyui_gauge_set_selectable|tinyui_progress_bar_move|tinyui_progress_bar_set_corner|tinyui_progress_bar_set_frame_image|tinyui_progress_bar_set_hidden|tinyui_progress_bar_set_opacity|tinyui_progress_bar_set_select|tinyui_progress_bar_set_selectable|tinyui_q_r_code_move|tinyui_q_r_code_set_corner|tinyui_q_r_code_set_hidden|tinyui_q_r_code_set_opacity|tinyui_q_r_code_set_select|tinyui_q_r_code_set_selectable|tinyui_slider_move|tinyui_slider_set_corner|tinyui_slider_set_hidden|tinyui_slider_set_opacity|tinyui_slider_set_select|tinyui_slider_set_selectable|tinyui_keyboard_btn_update|tinyui_radial_menu_set_offset_item' docs/ability tests/tinyui/contract
 git diff --check
 ```
 
@@ -184,7 +184,7 @@ git diff --check exits 0
 
 - [x] **Step 1: Add derived summary fields**
 
-In `picoui_release_capability_matrix.json.summary`, add:
+In `tinyui_release_capability_matrix.json.summary`, add:
 
 ```json
 "direct_public_covered_total": 404,
@@ -194,7 +194,7 @@ In `picoui_release_capability_matrix.json.summary`, add:
 
 - [x] **Step 2: Add checker assertions**
 
-In `check_picoui_release_capability_matrix.py`, assert:
+In `check_tinyui_release_capability_matrix.py`, assert:
 
 ```python
 assert summary["direct_public_covered_total"] == summary["covered_total"]
@@ -211,9 +211,9 @@ In `docs/ability/README.md`, add a direct-100 section:
 ```markdown
 ## Direct Public API 100% 结论
 
-当前未达到 PicoUI 对外 public API direct 100%。
+当前未达到 TINYUI 对外 public API direct 100%。
 
-- `covered=404`：有真实 PicoUI public API/backend/unit/gate。
+- `covered=404`：有真实 TINYUI public API/backend/unit/gate。
 - `allowlisted=207`：policy ledger 已闭环，但不是 direct public wrapper。
 - `missing_gap_total=0` 只表示没有未建账 native API，不表示 direct 100%。
 ```
@@ -223,13 +223,13 @@ In `docs/ability/README.md`, add a direct-100 section:
 Run:
 
 ```bash
-python3 tests/picoui/contract/check_picoui_release_capability_matrix.py
+python3 tests/tinyui/contract/check_tinyui_release_capability_matrix.py
 git diff --check
 ```
 
 Expected: both pass.
 
-执行记录（2026-06-02）：已在 `picoui_release_capability_matrix.json.summary` 冻结 `direct_public_covered_total=404`、`policy_allowlisted_total=207`、`direct_public_100_complete=false`；已在 checker 中断言 direct/public 派生字段只能等于 covered/allowlisted 事实，且不能从 `missing_gap_total=0` 推断 direct 100%；已在 `docs/ability/README.md` 增加 Direct Public API 100% 结论小节。验证命令 `python3 tests/picoui/contract/check_picoui_release_capability_matrix.py` 与 `git diff --check` 均通过。
+执行记录（2026-06-02）：已在 `tinyui_release_capability_matrix.json.summary` 冻结 `direct_public_covered_total=404`、`policy_allowlisted_total=207`、`direct_public_100_complete=false`；已在 checker 中断言 direct/public 派生字段只能等于 covered/allowlisted 事实，且不能从 `missing_gap_total=0` 推断 direct 100%；已在 `docs/ability/README.md` 增加 Direct Public API 100% 结论小节。验证命令 `python3 tests/tinyui/contract/check_tinyui_release_capability_matrix.py` 与 `git diff --check` 均通过。
 
 ### Task R2: Classify 207 Allowlisted Rows
 
@@ -297,8 +297,8 @@ Fail if any `gap_status=allowlisted` row lacks `direct_100_category`.
 Run:
 
 ```bash
-python3 tests/picoui/contract/check_picoui_native_api_exhaustiveness.py
-python3 tests/picoui/contract/check_picoui_release_capability_matrix.py
+python3 tests/tinyui/contract/check_tinyui_native_api_exhaustiveness.py
+python3 tests/tinyui/contract/check_tinyui_release_capability_matrix.py
 git diff --check
 ```
 
@@ -310,14 +310,14 @@ summary 中固化 `direct_100_category_counts={"optional_public_extension":16,
 "policy_never_public":191}`。明显 internal/private/enum policy 全部归为
 `policy_never_public`。`base_tree_policy` 逐行按 a-0.9 决策保守分类：
 native tree traversal、geometry/focus/nameId lookup 相关 `16` 行标为
-`optional_public_extension`，只表示未来可另行设计 portable PicoUI abstraction；
+`optional_public_extension`，只表示未来可另行设计 portable TINYUI abstraction；
 tree mutation/debug/background helper `4` 行仍为 `policy_never_public`。
 `resource_time_helper_policy` 与 `drawing_helper_policy` 均保持
 `policy_never_public`，不新增 public API。当前没有
 `direct_100_required_if_user_demands` 行。checker 已要求 allowlisted row
 必须有合法 `direct_100_category`，并要求 matrix 与 ledger 字段一致。
-验证：`python3 tests/picoui/contract/check_picoui_native_api_exhaustiveness.py`、
-`python3 tests/picoui/contract/check_picoui_release_capability_matrix.py`、
+验证：`python3 tests/tinyui/contract/check_tinyui_native_api_exhaustiveness.py`、
+`python3 tests/tinyui/contract/check_tinyui_release_capability_matrix.py`、
 `git diff --check` 均通过。
 
 ### Task R3: Decide Optional Direct Public API Work
@@ -333,7 +333,7 @@ Run:
 ```bash
 python3 - <<'PY'
 import json
-d=json.load(open('tests/picoui/contract/picoui_release_capability_matrix.json'))
+d=json.load(open('tests/tinyui/contract/tinyui_release_capability_matrix.json'))
 for w in d['widgets']:
     for c in w['capabilities']:
         if c.get('direct_100_category') == 'direct_100_required_if_user_demands':
@@ -348,7 +348,7 @@ PY
 Outcome A:
 
 ```text
-Implement PicoUI public API.
+Implement TINYUI public API.
 ```
 
 Outcome B:
@@ -357,7 +357,7 @@ Outcome B:
 Reclassify as optional_public_extension or policy_never_public with stricter rationale.
 ```
 
-执行记录（2026-06-02）：没有 candidate row，因此本线选择“不新增 PicoUI public API”。`optional_public_extension=16` 仅作为未来可选增强，不进入 a-0.10 必做实现。
+执行记录（2026-06-02）：没有 candidate row，因此本线选择“不新增 TINYUI public API”。`optional_public_extension=16` 仅作为未来可选增强，不进入 a-0.10 必做实现。
 
 - [x] **Step 3: If implementing API, follow TDD**
 
@@ -376,11 +376,11 @@ For each API:
 Run focused unit tests plus:
 
 ```bash
-python3 tests/picoui/contract/check_picoui_release_capability_matrix.py
+python3 tests/tinyui/contract/check_tinyui_release_capability_matrix.py
 git diff --check
 ```
 
-执行记录（2026-06-02）：`python3 tests/picoui/contract/check_picoui_release_capability_matrix.py`、`git diff --check` 已在 R2/R3 复核中通过。
+执行记录（2026-06-02）：`python3 tests/tinyui/contract/check_tinyui_release_capability_matrix.py`、`git diff --check` 已在 R2/R3 复核中通过。
 
 ### Task R4: Ability Docs Direct-100 Closeout
 
@@ -405,7 +405,7 @@ If a page is non-widget/internal, write:
 - direct public API 100%：不适用；该 group 不进入 widget public parity denominator。
 ```
 
-执行记录（2026-06-02）：已从 `picoui_release_capability_matrix.json` 机械同步 matrix-backed `docs/ability/*.md`，并单独补 `background.md` enum-only 口径。每个 matrix-backed 页面已写入 direct public API 100% 结论、`direct_public_covered`、`policy_allowlisted`、`direct_100_gap`、`direct_100_category` 统计。
+执行记录（2026-06-02）：已从 `tinyui_release_capability_matrix.json` 机械同步 matrix-backed `docs/ability/*.md`，并单独补 `background.md` enum-only 口径。每个 matrix-backed 页面已写入 direct public API 100% 结论、`direct_public_covered`、`policy_allowlisted`、`direct_100_gap`、`direct_100_category` 统计。
 
 - [x] **Step 2: Add per-row direct-100 category**
 
@@ -429,7 +429,7 @@ Run:
 
 ```bash
 rg -n 'direct public API 100%：|direct_100_category' docs/ability
-rg -n 'PicoUI 对外 public API direct 100%|policy complete, not direct public 100%' docs/ability
+rg -n 'TINYUI 对外 public API direct 100%|policy complete, not direct public 100%' docs/ability
 git diff --check
 ```
 
@@ -448,10 +448,10 @@ Expected: every ability page has the new summary or an explicit non-widget exemp
 Ask a fresh subagent:
 
 ```text
-Review PicoUI a-0.10 direct public API truth. Check picoui/include, matrix JSON, native ledger, docs/ability. Find any covered row whose picoui_api is not public, and any docs that imply direct 100% incorrectly.
+Review TINYUI a-0.10 direct public API truth. Check tinyui/include, matrix JSON, native ledger, docs/ability. Find any covered row whose tinyui_api is not public, and any docs that imply direct 100% incorrectly.
 ```
 
-执行记录（2026-06-02）：fresh reviewer `Nietzsche` 已复核 `picoui/include`、三份 JSON truth-source、`docs/ability/*`、a-0.10 spec/plan/index。结论为未发现问题。复核覆盖：`covered=404` public header 反查无缺失、旧 `28` 个虚构 API 名无残留、组合 API 拆分后均存在、ability 文档 direct-100 数量与 matrix 一致、README/ledger/matrix/spec/plan 统计一致。
+执行记录（2026-06-02）：fresh reviewer `Nietzsche` 已复核 `tinyui/include`、三份 JSON truth-source、`docs/ability/*`、a-0.10 spec/plan/index。结论为未发现问题。复核覆盖：`covered=404` public header 反查无缺失、旧 `28` 个虚构 API 名无残留、组合 API 拆分后均存在、ability 文档 direct-100 数量与 matrix 一致、README/ledger/matrix/spec/plan 统计一致。
 
 - [x] **Step 2: Fix findings in same reviewer/worker loop**
 
@@ -464,12 +464,12 @@ If review fails, the same responsible subagent fixes it. Do not fix review findi
 Run:
 
 ```bash
-python3 tests/picoui/contract/check_ldgui_public_api_inventory.py
-python3 tests/picoui/contract/check_picoui_native_api_exhaustiveness.py
-python3 tests/picoui/contract/check_picoui_release_capability_matrix.py
-python3 tests/picoui/runtime/check_picoui_backend_mapping.py
-python3 tests/picoui/runtime/check_picoui_visible_ui.py --all
-python3 tests/picoui/runtime/check_picoui_manual_window_artifact.py --all
+python3 tests/tinyui/contract/check_ldgui_public_api_inventory.py
+python3 tests/tinyui/contract/check_tinyui_native_api_exhaustiveness.py
+python3 tests/tinyui/contract/check_tinyui_release_capability_matrix.py
+python3 tests/tinyui/runtime/check_tinyui_backend_mapping.py
+python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --all
+python3 tests/tinyui/runtime/check_tinyui_manual_window_artifact.py --all
 git diff --check
 ```
 
@@ -483,16 +483,16 @@ manual artifact remains artifact evidence only unless manual reviewed passed is 
 执行记录（2026-06-02）：最终 gate 已通过：
 
 ```text
-python3 tests/picoui/contract/check_ldgui_public_api_inventory.py
-python3 tests/picoui/contract/check_picoui_native_api_exhaustiveness.py
-python3 tests/picoui/contract/check_picoui_release_capability_matrix.py
-python3 tests/picoui/runtime/check_picoui_backend_mapping.py
-python3 tests/picoui/runtime/check_picoui_visible_ui.py --all
-python3 tests/picoui/runtime/check_picoui_manual_window_artifact.py --all
+python3 tests/tinyui/contract/check_ldgui_public_api_inventory.py
+python3 tests/tinyui/contract/check_tinyui_native_api_exhaustiveness.py
+python3 tests/tinyui/contract/check_tinyui_release_capability_matrix.py
+python3 tests/tinyui/runtime/check_tinyui_backend_mapping.py
+python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --all
+python3 tests/tinyui/runtime/check_tinyui_manual_window_artifact.py --all
 git diff --check
 ```
 
-`check_picoui_manual_window_artifact.py --all` 只证明 `artifact_entry_exists` / `PICOUI_MANUAL_WINDOW_ARTIFACT=ARTIFACT_READY`；输出仍为 `MANUAL_REVIEW_REQUIRED=1`、`MANUAL_REVIEWED_PASSED=0`，不能写成人工验收通过。
+`check_tinyui_manual_window_artifact.py --all` 只证明 `artifact_entry_exists` / `PICOUI_MANUAL_WINDOW_ARTIFACT=ARTIFACT_READY`；输出仍为 `MANUAL_REVIEW_REQUIRED=1`、`MANUAL_REVIEWED_PASSED=0`，不能写成人工验收通过。
 
 ## 3. Self-review checklist
 

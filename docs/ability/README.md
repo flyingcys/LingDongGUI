@@ -10,8 +10,8 @@
 - inventory schema：`a-0.8-ldgui-public-api-inventory-v1`，已追加 a-0.9 `group_kind` / `policy_category` 行级字段。
 - matrix schema：`a-0.9-allowlist-policy-v1`
 - 控件类型口径：`src/gui/ldBase.h` 的 `ldWidgetType_t`，共 `29/29` 个控件类型，包含 `background` 与 `canvas`。
-- LingDongGUI 原生 API 能力口径：`src/gui/ld*.h` public API inventory，共 `619` 条 API。
-- TinyUI 当前覆盖统计：`allowlisted`: 178, `covered`: 441
+- LingDongGUI 原生 API 能力口径：`src/gui/ld*.h` public API inventory，共 `629` 条 API。
+- TinyUI 当前覆盖统计：`allowlisted`: 184, `covered`: 445
 - `covered` 才表示有 current public API/backend/unit/gate 证据；`allowlisted` 表示已纳入 ledger 但不是当前 user-facing direct wrapper 覆盖。
 - 因此当前不能笼统写“当前用户态 direct wrapper 100% 覆盖 LingDongGUI 全部原生 API”；应逐 group 看 covered/allowlisted。
 
@@ -19,10 +19,10 @@
 
 当前只达到 a-0.12 定义的 strict direct-wrapper 候选清零；这不是 LingDongGUI native/user-facing 100% 对外能力闭环。
 
-- `covered=441`：有真实 current public API/backend/unit/gate 证据。
-- `allowlisted=178`：policy ledger 已闭环，且均为 `policy_never_public`。
-- `missing_gap_total=0` 只表示没有未建账 native API，不表示 direct 100%。
-- `direct_100_category` 统计：`policy_never_public`: 178
+- `covered=445`：有真实 current public API/backend/unit/gate 证据。
+- `allowlisted=184`：policy ledger 已闭环，且均为 `policy_never_public`。
+- `missing_gap_total=0`：当前无 `missing_tinyui_api` 状态条目，所有 matrix 追踪项均已有对应 `tinyui_*` API 实现。
+- `direct_100_category` 统计：`policy_never_public`: 184
 - 严格按“100% direct public API parity”目标看，a-0.12 已把 `base` 的 `optional_public_extension=16` 候选收敛到 `0`。
 - `direct_public_100_complete=true` 只表示 strict direct public API parity 当前没有剩余 public wrapper 候选；不能外推为截图、交互、性能或人工验收完成。
 
@@ -30,34 +30,31 @@
 
 当前未达到 LingDongGUI native/user-facing 100% 对外能力闭环。
 
-- `178` 行 `allowlisted` 不是当前 user-facing direct wrapper；它们只能证明 policy ledger 已处置，不能证明原生能力都对外公开。
+- `184` 行 `allowlisted` 不是当前 user-facing direct wrapper；它们只能证明 policy ledger 已处置，不能证明原生能力都对外公开。
 - 每个 widget group 仍有 lifecycle/show 等 `policy_never_public` 行，因此逐控件页的结论仍是 `policy_complete_not_direct_100`。
-- `background` 当前已补独立 PicoUI public widget，但 contract 三件套若仍保留旧的 enum-only/policy 口径，需要继续同步更新。
-- `backend_proof` 当前是 ledger 证据标签；checker 会反查 `picoui_api` 是否在 public header 中存在，但尚未反查每个 `backend_proof` token 是否是真实 backend 符号或完整 backend 行为。
+- `background` 当前已补独立 TinyUI public widget，但 contract 三件套若仍保留旧的 enum-only/policy 口径，需要继续同步更新。
+- `backend_proof` 当前是 ledger 证据标签；checker 会反查 `tinyui_api` 是否在 public header 中存在，但尚未反查每个 `backend_proof` token 是否是真实 backend 符号或完整 backend 行为。
 
 ## 按控件能力等价仍需补齐
 
-以下缺口按新规则判断：目标不是把 `ld*` API 名字逐个翻译成 `picoui_*`，而是以前用户能用 LingDongGUI 完成的控件能力，现在必须能用当前 TinyUI 用户态 API 完成。只要用户态能力不可达，就不能算 native/user-facing 100%。
-
-| 缺口 | LingDongGUI 来源 | 当前 PicoUI 状态 | 需要补齐的能力 |
-| --- | --- | --- | --- |
+当前所有已追踪的控件能力缺口均已闭合（R6 已补全 4 个 alias API）。
 
 
 ## 按控件能力等价已补齐
 
 | 能力 | LingDongGUI 来源 | 当前补齐状态 | 边界 |
 | --- | --- | --- | --- |
-| 动态移除/销毁控件 | `ldBaseNodeRemove`、各控件 `*_depose` | a-0.13 已新增 `picoui_widget_remove_from_parent()` 与 `picoui_widget_destroy()`，同步更新 PicoUI backend tree 与真实 `ldBase` tree，并覆盖 focus 清理、nameId 查找移除、child count 更新测试 | 当前 `destroy` 定义为用户态销毁绑定和 tree 脱离，不在本线释放所有 widget 外层内存；完整 allocator/free 所有权另线处理 |
-| 按钮全局 action/nameId 状态 | `ldButtonActionInit`、`ldButtonActionIsPressById` | a-0.13 已新增 `picoui_button_get_pressed_by_name_id()` 与 `picoui_button_get_action_state_by_name_id()`，通过 PicoUI root/nameId 查询真实 button pressed/action 状态 | 提供按 `nameId` 查询 pressed/action 的用户态等价能力；不暴露 LingDongGUI `ld_scene_t` |
-| keyboard 单键自定义绘制 | `ldKeyboardBtnUserDraw` | a-0.14 已新增 `picoui_keyboard_set_draw_callback()`，通过 keyboard custom button list/backend prepare 路径向用户暴露逐键 draw callback | 当前是 portable key draw callback，不直接暴露 Arm-2D tile/raw draw hook |
-| background 独立 public widget | `widgetTypeBackground` | a-0.14 已新增 `picoui_background_create()` 与 `picoui_background_set_source/set_color/get_color/set_offset/get_offset`，并提供 app root 运行/切换入口 | native 仍复用真实 `ldWindow` root/background 语义，不新增 fake renderer |
+| 动态移除/销毁控件 | `ldBaseNodeRemove`、各控件 `*_depose` | a-0.13 已新增 `tinyui_widget_remove_from_parent()` 与 `tinyui_widget_destroy()`，同步更新 TinyUI backend tree 与真实 `ldBase` tree，并覆盖 focus 清理、nameId 查找移除、child count 更新测试 | 当前 `destroy` 定义为用户态销毁绑定和 tree 脱离，不在本线释放所有 widget 外层内存；完整 allocator/free 所有权另线处理 |
+| 按钮全局 action/nameId 状态 | `ldButtonActionInit`、`ldButtonActionIsPressById` | a-0.13 已新增 `tinyui_button_get_pressed_by_name_id()` 与 `tinyui_button_get_action_state_by_name_id()`，通过 TinyUI root/nameId 查询真实 button pressed/action 状态 | 提供按 `nameId` 查询 pressed/action 的用户态等价能力；不暴露 LingDongGUI `ld_scene_t` |
+| keyboard 单键自定义绘制 | `ldKeyboardBtnUserDraw` | a-0.14 已新增 `tinyui_keyboard_set_draw_callback()`，通过 keyboard custom button list/backend prepare 路径向用户暴露逐键 draw callback | 当前是 portable key draw callback，不直接暴露 Arm-2D tile/raw draw hook |
+| background 独立 public widget | `widgetTypeBackground` | a-0.14 已新增 `tinyui_background_create()` 与 `tinyui_background_set_source/set_color/get_color/set_offset/get_offset`，并提供 app root 运行/切换入口 | native 仍复用真实 `ldWindow` root/background 语义，不新增 fake renderer |
 
 ## a-0.9 policy schema
 
-当前 contract truth 已把 `619` 行 native API 全部纳入机器可校验 policy schema：
+当前 contract truth 已把 `629` 行 native API 全部纳入机器可校验 policy schema：
 
-- `group_kind` 统计：`widget`: 513, `shared_base`: 63, `runtime_host`: 16, `internal_helper`: 19
-- `policy_category` 统计：`direct_covered`: 441, `lifecycle_internal`: 112, `render_pipeline_internal`: 28, `runtime_host_internal`: 11, `layout_solver_internal`: 14, `memory_internal`: 5, `base_tree_policy`: 3, `backend_private_hook`: 1, `native_action_private`: 2, `enum_only_semantics`: 2
+- `group_kind` 统计：`widget`: 530, `shared_base`: 64, `runtime_host`: 16, `internal_helper`: 19
+- `policy_category` 统计：`direct_covered`: 445, `lifecycle_internal`: 112, `render_pipeline_internal`: 28, `runtime_host_internal`: 11, `layout_solver_internal`: 14, `memory_internal`: 5, `base_tree_policy`: 4, `backend_private_hook`: 6, `native_action_private`: 2, `enum_only_semantics`: 2
 - `covered` 行必须是 `policy_category=direct_covered`。
 - `allowlisted` 行必须是 `required=false`，且必须有非空 `allowlist_reason` 与非 `direct_covered` 的 `policy_category`。
 - group judgement：`policy_complete_not_direct_100`: 28, `non_widget_policy_complete`: 4；当前没有仍处于 `parity_incomplete` 的 matrix group。
@@ -82,7 +79,7 @@
 | 控件类型 | 能力文档 | API group | 当前覆盖摘要 |
 | --- | --- | --- | --- |
 | `window` | [window](./window.md) | `window` | `allowlisted`: 7, `covered`: 16 |
-| `background` | [background](./background.md) | `无` | a-0.14 已新增独立 `picoui_background_*` public widget；native 仍复用真实 root/background `ldWindow` 语义。 |
+| `background` | [background](./background.md) | `无` | a-0.14 已新增独立 `tinyui_background_*` public widget；native 仍复用真实 root/background `ldWindow` 语义。 |
 | `button` | [button](./button.md) | `button` | `allowlisted`: 7, `covered`: 20 |
 | `image` | [image](./image.md) | `image` | `allowlisted`: 5, `covered`: 4 |
 | `text` | [text](./text.md) | `text` | `allowlisted`: 5, `covered`: 18 |
@@ -92,12 +89,12 @@
 | `slider` | [slider](./slider.md) | `slider` | `allowlisted`: 5, `covered`: 14 |
 | `switch` | [switch](./switch.md) | `switch` | `allowlisted`: 5, `covered`: 20 |
 | `progress_bar` | [progress_bar](./progress_bar.md) | `progress_bar` | `allowlisted`: 5, `covered`: 15 |
-| `gauge` | [gauge](./gauge.md) | `gauge` | `allowlisted`: 5, `covered`: 14 |
+| `gauge` | [gauge](./gauge.md) | `gauge` | `allowlisted`: 6, `covered`: 15 |
 | `qrcode` | [qrcode](./qrcode.md) | `qrcode` | `allowlisted`: 5, `covered`: 9 |
 | `date_time` | [date_time](./date_time.md) | `date_time` | `allowlisted`: 5, `covered`: 15 |
 | `icon_slider` | [icon_slider](./icon_slider.md) | `icon_slider` | `allowlisted`: 5, `covered`: 11 |
 | `combo_box` | [combo_box](./combo_box.md) | `combo_box` | `allowlisted`: 5, `covered`: 19 |
-| `arc` | [arc](./arc.md) | `arc` | `allowlisted`: 5, `covered`: 12 |
+| `arc` | [arc](./arc.md) | `arc` | `allowlisted`: 5, `covered`: 13 |
 | `radial_menu` | [radial_menu](./radial_menu.md) | `radial_menu` | `allowlisted`: 5, `covered`: 6 |
 | `scroll_selecter` | [scroll_selecter](./scroll_selecter.md) | `scroll_selecter` | `allowlisted`: 5, `covered`: 15 |
 | `label` | [label](./label.md) | `label` | `allowlisted`: 5, `covered`: 15 |
@@ -107,9 +104,9 @@
 | `animation` | [animation](./animation.md) | `animation` | `allowlisted`: 5, `covered`: 8 |
 | `list` | [list](./list.md) | `list` | `allowlisted`: 5, `covered`: 19 |
 | `message_box` | [message_box](./message_box.md) | `message_box` | `allowlisted`: 5, `covered`: 13 |
-| `calendar` | [calendar](./calendar.md) | `calendar` | `allowlisted`: 5, `covered`: 7 |
+| `calendar` | [calendar](./calendar.md) | `calendar` | `allowlisted`: 5, `covered`: 8 |
 | `progress_wheel` | [progress_wheel](./progress_wheel.md) | `progress_wheel` | `allowlisted`: 5, `covered`: 5 |
-| `clock` | [clock](./clock.md) | `clock` | `allowlisted`: 5, `covered`: 7 |
+| `clock` | [clock](./clock.md) | `clock` | `allowlisted`: 9, `covered`: 8 |
 
 ## 其他原生 API 分组
 
@@ -124,11 +121,11 @@
 
 | 分组 | API 条目数 | 能力文档 | 当前覆盖摘要 |
 | --- | --- | --- | --- |
-| `base` | 63 | [base](./base.md) | `allowlisted`: 3, `covered`: 60；严格 100% direct public API 缺口候选：`0` |
+| `base` | 63 | [base](./base.md) | `allowlisted`: 4, `covered`: 60；严格 100% direct public API 缺口候选：`0` |
 
 ## 可靠性说明
 
 - 本目录不使用人工摘要判断当前覆盖是否 100%。
-- 每个 group 页按 LingDongGUI symbol 逐行列出当前状态、`picoui_api`、backend proof、unit/gate 和 allowlist 原因；其中 `picoui_api` 当前仍记录 public C API 过渡态符号，会被 checker 反查 canonical public header，`backend_proof` 仍是 ledger 证据标签，尚未被 checker 逐项反查为真实 backend 符号或完整行为。
+- 每个 group 页按 LingDongGUI symbol 逐行列出当前状态、`tinyui_api`、backend proof、unit/gate 和 allowlist 原因；其中 `tinyui_api` 当前仍记录 public C API 过渡态符号，会被 checker 反查 canonical public header，`backend_proof` 仍是 ledger 证据标签，尚未被 checker 逐项反查为真实 backend 符号或完整行为。
 - `manual_artifact` 只表示 artifact/catalog/frame 证据；未人工复核时不能当人工验收通过。
 - 若 inventory 或 matrix 更新，本目录必须同步更新，并重新跑 native API exhaustiveness checker。

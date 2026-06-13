@@ -21,20 +21,20 @@
 #include "ldBase.h"
 
 enum {
-    PICOUI_LD_SIGNAL_NO_OPERATION = 0,
-    PICOUI_LD_SIGNAL_PRESS = 1,
-    PICOUI_LD_SIGNAL_HOLD_DOWN = 2,
-    PICOUI_LD_SIGNAL_RELEASE = 3,
-    PICOUI_LD_SIGNAL_CLICKED_ITEM = 12,
-    PICOUI_LD_SIGNAL_FINISHED = 13,
-    PICOUI_LD_SIGNAL_VALUE_CHANGED = 14,
+    TINYUI_LD_SIGNAL_NO_OPERATION = 0,
+    TINYUI_LD_SIGNAL_PRESS = 1,
+    TINYUI_LD_SIGNAL_HOLD_DOWN = 2,
+    TINYUI_LD_SIGNAL_RELEASE = 3,
+    TINYUI_LD_SIGNAL_CLICKED_ITEM = 12,
+    TINYUI_LD_SIGNAL_FINISHED = 13,
+    TINYUI_LD_SIGNAL_VALUE_CHANGED = 14,
 };
 
 enum {
-    PICOUI_LD_NAV_UP = 0,
-    PICOUI_LD_NAV_DOWN = 1,
-    PICOUI_LD_NAV_LEFT = 2,
-    PICOUI_LD_NAV_RIGHT = 3,
+    TINYUI_LD_NAV_UP = 0,
+    TINYUI_LD_NAV_DOWN = 1,
+    TINYUI_LD_NAV_LEFT = 2,
+    TINYUI_LD_NAV_RIGHT = 3,
 };
 
 /**
@@ -46,9 +46,9 @@ enum {
  * @return Pointer to the object
  */
 
-struct picoui_native_image picoui_native_image_wrap(void *tile, void *mask, unsigned int mask_color)
+struct tinyui_native_image tinyui_native_image_wrap(void *tile, void *mask, unsigned int mask_color)
 {
-    struct picoui_native_image image;
+    struct tinyui_native_image image;
 
     image.tile = tile;
     image.mask = mask;
@@ -63,9 +63,9 @@ struct picoui_native_image picoui_native_image_wrap(void *tile, void *mask, unsi
  * @return Pointer to the object
  */
 
-struct picoui_native_font picoui_native_font_wrap(void *font)
+struct tinyui_native_font tinyui_native_font_wrap(void *font)
 {
-    struct picoui_native_font native_font;
+    struct tinyui_native_font native_font;
 
     native_font.font = font;
     return native_font;
@@ -78,22 +78,22 @@ struct picoui_native_font picoui_native_font_wrap(void *font)
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_native_align_to_ld_grid(enum picoui_native_align align)
+int tinyui_native_align_to_ld_grid(enum tinyui_native_align align)
 {
     switch (align) {
-    case PICOUI_NATIVE_ALIGN_END:
+    case TINYUI_NATIVE_ALIGN_END:
         return ldGridAlignEnd;
-    case PICOUI_NATIVE_ALIGN_CENTER:
+    case TINYUI_NATIVE_ALIGN_CENTER:
         return ldGridAlignCenter;
-    case PICOUI_NATIVE_ALIGN_STRETCH:
+    case TINYUI_NATIVE_ALIGN_STRETCH:
         return ldGridAlignStretch;
-    case PICOUI_NATIVE_ALIGN_SPACE_EVENLY:
+    case TINYUI_NATIVE_ALIGN_SPACE_EVENLY:
         return ldGridAlignSpaceEvenly;
-    case PICOUI_NATIVE_ALIGN_SPACE_AROUND:
+    case TINYUI_NATIVE_ALIGN_SPACE_AROUND:
         return ldGridAlignSpaceAround;
-    case PICOUI_NATIVE_ALIGN_SPACE_BETWEEN:
+    case TINYUI_NATIVE_ALIGN_SPACE_BETWEEN:
         return ldGridAlignSpaceBetween;
-    case PICOUI_NATIVE_ALIGN_START:
+    case TINYUI_NATIVE_ALIGN_START:
     default:
         return ldGridAlignStart;
     }
@@ -106,24 +106,24 @@ int tinyui_native_align_to_ld_grid(enum picoui_native_align align)
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_native_signal_to_ld(enum picoui_native_signal signal)
+int tinyui_native_signal_to_ld(enum tinyui_native_signal signal)
 {
     switch (signal) {
-    case PICOUI_NATIVE_SIGNAL_PRESS:
-        return PICOUI_LD_SIGNAL_PRESS;
-    case PICOUI_NATIVE_SIGNAL_HOLD_DOWN:
-        return PICOUI_LD_SIGNAL_HOLD_DOWN;
-    case PICOUI_NATIVE_SIGNAL_RELEASE:
-        return PICOUI_LD_SIGNAL_RELEASE;
-    case PICOUI_NATIVE_SIGNAL_CLICKED_ITEM:
-        return PICOUI_LD_SIGNAL_CLICKED_ITEM;
-    case PICOUI_NATIVE_SIGNAL_FINISHED:
-        return PICOUI_LD_SIGNAL_FINISHED;
-    case PICOUI_NATIVE_SIGNAL_VALUE_CHANGED:
-        return PICOUI_LD_SIGNAL_VALUE_CHANGED;
-    case PICOUI_NATIVE_SIGNAL_NONE:
+    case TINYUI_NATIVE_SIGNAL_PRESS:
+        return TINYUI_LD_SIGNAL_PRESS;
+    case TINYUI_NATIVE_SIGNAL_HOLD_DOWN:
+        return TINYUI_LD_SIGNAL_HOLD_DOWN;
+    case TINYUI_NATIVE_SIGNAL_RELEASE:
+        return TINYUI_LD_SIGNAL_RELEASE;
+    case TINYUI_NATIVE_SIGNAL_CLICKED_ITEM:
+        return TINYUI_LD_SIGNAL_CLICKED_ITEM;
+    case TINYUI_NATIVE_SIGNAL_FINISHED:
+        return TINYUI_LD_SIGNAL_FINISHED;
+    case TINYUI_NATIVE_SIGNAL_VALUE_CHANGED:
+        return TINYUI_LD_SIGNAL_VALUE_CHANGED;
+    case TINYUI_NATIVE_SIGNAL_NONE:
     default:
-        return PICOUI_LD_SIGNAL_NO_OPERATION;
+        return TINYUI_LD_SIGNAL_NO_OPERATION;
     }
 }
 
@@ -134,14 +134,14 @@ int tinyui_native_signal_to_ld(enum picoui_native_signal signal)
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_native_readback_policy_to_backend(enum picoui_native_readback_policy policy)
+int tinyui_native_readback_policy_to_backend(enum tinyui_native_readback_policy policy)
 {
     switch (policy) {
-    case PICOUI_NATIVE_READBACK_BACKEND_FIELD:
-    case PICOUI_NATIVE_READBACK_BACKEND_COMMITTED:
-        return PICOUI_BACKEND_DATA_TRUTH_BACKEND_VALUE;
-    case PICOUI_NATIVE_READBACK_NOT_APPLICABLE:
+    case TINYUI_NATIVE_READBACK_BACKEND_FIELD:
+    case TINYUI_NATIVE_READBACK_BACKEND_COMMITTED:
+        return TINYUI_BACKEND_DATA_TRUTH_BACKEND_VALUE;
+    case TINYUI_NATIVE_READBACK_NOT_APPLICABLE:
     default:
-        return PICOUI_BACKEND_DATA_TRUTH_NOT_APPLICABLE;
+        return TINYUI_BACKEND_DATA_TRUTH_NOT_APPLICABLE;
     }
 }

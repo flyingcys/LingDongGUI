@@ -3,19 +3,19 @@
 
 #include "widget.h"
 
-struct picoui_window;
-struct picoui_image;
+struct tinyui_window;
+struct tinyui_image;
 
-struct picoui_image_source {
+struct tinyui_image_source {
     void *img_tile;
     void *mask_tile;
     unsigned int kind;
     unsigned int vres_addr;
 };
 
-struct picoui_image_props {
+struct tinyui_image_props {
     const char *id;
-    struct picoui_image_source *source;
+    struct tinyui_image_source *source;
     const char *style_class;
     void *user_data;
     int width;
@@ -27,21 +27,21 @@ struct picoui_image_props {
     int padding;
 };
 
-struct picoui_image *picoui_image_create(struct picoui_window *parent, const char *id);
+struct tinyui_image *tinyui_image_create(struct tinyui_window *parent, const char *id);
 
-struct picoui_image *picoui_image_create_with_props(struct picoui_window *parent,
-                                                    const struct picoui_image_props *props);
+struct tinyui_image *tinyui_image_create_with_props(struct tinyui_window *parent,
+                                                    const struct tinyui_image_props *props);
 
-int picoui_image_source_from_vres(unsigned int addr, struct picoui_image_source *out);
+int tinyui_image_source_from_vres(unsigned int addr, struct tinyui_image_source *out);
 
-int picoui_font_from_vres(unsigned int addr, struct picoui_font *out);
+int tinyui_font_from_vres(unsigned int addr, struct tinyui_font *out);
 
-void picoui_image_source_destroy(struct picoui_image_source *source);
+void tinyui_image_source_destroy(struct tinyui_image_source *source);
 
-void picoui_font_destroy(struct picoui_font *font);
+void tinyui_font_destroy(struct tinyui_font *font);
 
-int picoui_image_set_source(struct picoui_image *image, struct picoui_image_source *source);
+int tinyui_image_set_source(struct tinyui_image *image, struct tinyui_image_source *source);
 
-int picoui_image_set_mask_color(struct picoui_image *image, unsigned int rgb);
+int tinyui_image_set_mask_color(struct tinyui_image *image, unsigned int rgb);
 
 #endif

@@ -32,7 +32,7 @@ static ldColor tinyui_image_rgb_to_ld_color(unsigned int rgb)
     return __RGB((rgb >> 16) & 0xFFU, (rgb >> 8) & 0xFFU, rgb & 0xFFU);
 }
 
-static int tinyui_image_props_are_valid(const struct picoui_image_props *props)
+static int tinyui_image_props_are_valid(const struct tinyui_image_props *props)
 {
     return props != 0
         && props->id != 0
@@ -44,10 +44,10 @@ static int tinyui_image_props_are_valid(const struct picoui_image_props *props)
 }
 
 static int tinyui_image_finish_detach_after_backend_failure(
-    struct picoui_backend_widget *backend)
+    struct tinyui_backend_widget *backend)
 {
-    struct picoui_backend_widget *parent;
-    struct picoui_backend_widget *cursor;
+    struct tinyui_backend_widget *parent;
+    struct tinyui_backend_widget *cursor;
 
     if (backend == 0 || backend->parent == 0) {
         return 0;
@@ -74,17 +74,17 @@ static int tinyui_image_finish_detach_after_backend_failure(
     return 0;
 }
 
-static void tinyui_image_dispose_partial_impl(struct picoui_image *image)
+static void tinyui_image_dispose_partial_impl(struct tinyui_image *image)
 {
-    struct picoui_backend_widget *backend;
-    struct picoui_backend_app_state *app_state;
+    struct tinyui_backend_widget *backend;
+    struct tinyui_backend_app_state *app_state;
     int detach_result = 0;
 
     if (image == 0) {
         return;
     }
 
-    backend = (struct picoui_backend_widget *)image->widget.backend_widget;
+    backend = (struct tinyui_backend_widget *)image->widget.backend_widget;
     if (backend != 0) {
         app_state = tinyui_runtime_bridge_backend_state(backend->owner);
         if (backend->parent != 0) {
@@ -103,38 +103,38 @@ static void tinyui_image_dispose_partial_impl(struct picoui_image *image)
     free(image);
 }
 
-static struct picoui_image *tinyui_image_create_with_props_impl(
-    struct picoui_window *parent,
-    const struct picoui_image_props *props)
+static struct tinyui_image *tinyui_image_create_with_props_impl(
+    struct tinyui_window *parent,
+    const struct tinyui_image_props *props)
 {
-    struct picoui_image *image;
+    struct tinyui_image *image;
 
     if (!tinyui_image_props_are_valid(props)) {
         return 0;
     }
 
-    image = picoui_image_create(parent, props->id);
+    image = tinyui_image_create(parent, props->id);
     if (image == 0) {
         return 0;
     }
 
-    if (props->source != 0 && picoui_image_set_source(image, props->source) != 0) {
+    if (props->source != 0 && tinyui_image_set_source(image, props->source) != 0) {
         tinyui_image_dispose_partial_impl(image);
         return 0;
     }
     if (props->style_class != 0
-        && picoui_widget_set_style_class(&image->widget, props->style_class) != 0) {
+        && tinyui_widget_set_style_class(&image->widget, props->style_class) != 0) {
         tinyui_image_dispose_partial_impl(image);
         return 0;
     }
-    if (picoui_widget_set_user_data(&image->widget, props->user_data) != 0
-        || picoui_widget_set_bg_color(&image->widget, props->bg_color) != 0
-        || picoui_widget_set_text_color(&image->widget, props->text_color) != 0
-        || picoui_widget_set_border_color(&image->widget, props->border_color) != 0
-        || picoui_widget_set_radius(&image->widget, props->radius) != 0
-        || picoui_widget_set_padding(&image->widget, props->padding) != 0
+    if (tinyui_widget_set_user_data(&image->widget, props->user_data) != 0
+        || tinyui_widget_set_bg_color(&image->widget, props->bg_color) != 0
+        || tinyui_widget_set_text_color(&image->widget, props->text_color) != 0
+        || tinyui_widget_set_border_color(&image->widget, props->border_color) != 0
+        || tinyui_widget_set_radius(&image->widget, props->radius) != 0
+        || tinyui_widget_set_padding(&image->widget, props->padding) != 0
         || ((props->width > 0 || props->height > 0)
-            && picoui_widget_set_size(&image->widget, props->width, props->height) != 0)) {
+            && tinyui_widget_set_size(&image->widget, props->width, props->height) != 0)) {
         tinyui_image_dispose_partial_impl(image);
         return 0;
     }
@@ -150,12 +150,12 @@ static struct picoui_image *tinyui_image_create_with_props_impl(
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct picoui_image *picoui_image_create(struct picoui_window *parent, const char *id)
+struct tinyui_image *tinyui_image_create(struct tinyui_window *parent, const char *id)
 {
-    struct picoui_image *image;
-    struct picoui_backend_widget *backend;
-    struct picoui_backend_widget *parent_backend;
-    struct picoui_backend_app_state *app_state;
+    struct tinyui_image *image;
+    struct tinyui_backend_widget *backend;
+    struct tinyui_backend_widget *parent_backend;
+    struct tinyui_backend_app_state *app_state;
     ldImage_t *ld_image;
     uint16_t name_id;
 
@@ -163,7 +163,7 @@ struct picoui_image *picoui_image_create(struct picoui_window *parent, const cha
         return 0;
     }
 
-    parent_backend = (struct picoui_backend_widget *)parent->widget.backend_widget;
+    parent_backend = (struct tinyui_backend_widget *)parent->widget.backend_widget;
     app_state = parent_backend != 0
         ? tinyui_runtime_bridge_backend_state_from_parent(parent_backend)
         : 0;
@@ -207,7 +207,7 @@ struct picoui_image *picoui_image_create(struct picoui_window *parent, const cha
 
     if (tinyui_widget_init_child(backend,
                                          parent_backend,
-                                         PICOUI_BACKEND_WIDGET_IMAGE,
+                                         TINYUI_BACKEND_WIDGET_IMAGE,
                                          id,
                                          parent_backend->theme) != 0) {
         ldImage_depose(app_state->ld_scene, ld_image);
@@ -243,8 +243,8 @@ struct picoui_image *picoui_image_create(struct picoui_window *parent, const cha
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct picoui_image *picoui_image_create_with_props(struct picoui_window *parent,
-                                                    const struct picoui_image_props *props)
+struct tinyui_image *tinyui_image_create_with_props(struct tinyui_window *parent,
+                                                    const struct tinyui_image_props *props)
 {
     return tinyui_image_create_with_props_impl(parent, props);
 }
@@ -257,17 +257,17 @@ struct picoui_image *picoui_image_create_with_props(struct picoui_window *parent
  * @return 0 on success, -1 on failure
  */
 
-int picoui_image_set_source(struct picoui_image *image, struct picoui_image_source *source)
+int tinyui_image_set_source(struct tinyui_image *image, struct tinyui_image_source *source)
 {
-    struct picoui_backend_widget *backend;
+    struct tinyui_backend_widget *backend;
     ldImage_t *ld_image;
 
     if (image == 0 || (source != 0 && source->img_tile == 0)) {
         return -1;
     }
 
-    backend = (struct picoui_backend_widget *)image->widget.backend_widget;
-    if (backend == 0 || backend->kind != PICOUI_BACKEND_WIDGET_IMAGE || backend->ld_widget == 0) {
+    backend = (struct tinyui_backend_widget *)image->widget.backend_widget;
+    if (backend == 0 || backend->kind != TINYUI_BACKEND_WIDGET_IMAGE || backend->ld_widget == 0) {
         return -1;
     }
     ld_image = (ldImage_t *)backend->ld_widget;
@@ -288,17 +288,17 @@ int picoui_image_set_source(struct picoui_image *image, struct picoui_image_sour
  * @return 0 on success, -1 on failure
  */
 
-int picoui_image_set_mask_color(struct picoui_image *image, unsigned int rgb)
+int tinyui_image_set_mask_color(struct tinyui_image *image, unsigned int rgb)
 {
-    struct picoui_backend_widget *backend;
+    struct tinyui_backend_widget *backend;
     ldImage_t *ld_image;
 
     if (image == 0) {
         return -1;
     }
 
-    backend = (struct picoui_backend_widget *)image->widget.backend_widget;
-    if (backend == 0 || backend->kind != PICOUI_BACKEND_WIDGET_IMAGE || backend->ld_widget == 0) {
+    backend = (struct tinyui_backend_widget *)image->widget.backend_widget;
+    if (backend == 0 || backend->kind != TINYUI_BACKEND_WIDGET_IMAGE || backend->ld_widget == 0) {
         return -1;
     }
     ld_image = (ldImage_t *)backend->ld_widget;

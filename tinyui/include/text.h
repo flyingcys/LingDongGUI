@@ -1,14 +1,14 @@
 #ifndef TINYUI_TEXT_H
 #define TINYUI_TEXT_H
 
-struct picoui_window;
-struct picoui_image_source;
-struct picoui_text;
+struct tinyui_window;
+struct tinyui_image_source;
+struct tinyui_text;
 
-struct picoui_text_props {
+struct tinyui_text_props {
     const char *id;
     const char *text;
-    const struct picoui_font *font;
+    const struct tinyui_font *font;
     const char *style_class;
     void *user_data;
     int width;
@@ -20,30 +20,30 @@ struct picoui_text_props {
     int padding;
 };
 
-struct picoui_text *picoui_text_create(struct picoui_window *parent, const char *id);
+struct tinyui_text *tinyui_text_create(struct tinyui_window *parent, const char *id);
 
-struct picoui_text *picoui_text_create_with_props(struct picoui_window *parent,
-                                                  const struct picoui_text_props *props);
+struct tinyui_text *tinyui_text_create_with_props(struct tinyui_window *parent,
+                                                  const struct tinyui_text_props *props);
 
-int picoui_text_set_text(struct picoui_text *text, const char *value);
+int tinyui_text_set_text(struct tinyui_text *text, const char *value);
 
-int picoui_text_set_static_text(struct picoui_text *text, const char *value);
+int tinyui_text_set_static_text(struct tinyui_text *text, const char *value);
 
-int picoui_text_set_font(struct picoui_text *text, const struct picoui_font *font);
+int tinyui_text_set_font(struct tinyui_text *text, const struct tinyui_font *font);
 
-int picoui_text_set_transparent(struct picoui_text *text, int transparent);
+int tinyui_text_set_transparent(struct tinyui_text *text, int transparent);
 
-int picoui_text_set_text_color(struct picoui_text *text, unsigned int rgb);
+int tinyui_text_set_text_color(struct tinyui_text *text, unsigned int rgb);
 
-int picoui_text_set_bg_color(struct picoui_text *text, unsigned int rgb);
+int tinyui_text_set_bg_color(struct tinyui_text *text, unsigned int rgb);
 
-int picoui_text_set_background_source(struct picoui_text *text,
-                                      struct picoui_image_source *source);
+int tinyui_text_set_background_source(struct tinyui_text *text,
+                                      struct tinyui_image_source *source);
 
-int picoui_text_set_consumed_font(struct picoui_text *text, const struct picoui_font *font);
+int tinyui_text_set_consumed_font(struct tinyui_text *text, const struct tinyui_font *font);
 
-int picoui_text_scroll_seek(struct picoui_text *text, int offset);
+int tinyui_text_scroll_seek(struct tinyui_text *text, int offset);
 
-int picoui_text_scroll_move(struct picoui_text *text, int move_value);
+int tinyui_text_scroll_move(struct tinyui_text *text, int move_value);
 
 #endif

@@ -4,7 +4,7 @@
 /*
  * INTERNAL / NON-CANONICAL -- DO NOT USE FOR NEW CODE.
  *
- * This header exposes the old picoui_app_* startup path, which has been
+ * This header exposes the old tinyui_app_* startup path, which has been
  * superseded by the canonical tinyui_init / tinyui_screen_create /
  * tinyui_screen_load / tinyui_timer_handler chain declared in runtime.h.
  *
@@ -17,37 +17,37 @@
  * Removal target: after all demo/* and internal callers are migrated.
  */
 
-struct picoui_app;
-struct picoui_app_timer;
-struct picoui_background;
-struct picoui_window;
+struct tinyui_app;
+struct tinyui_app_timer;
+struct tinyui_background;
+struct tinyui_window;
 
-typedef void (*picoui_app_timer_cb_t)(struct picoui_app *app,
-                                      struct picoui_app_timer *timer,
+typedef void (*tinyui_app_timer_cb_t)(struct tinyui_app *app,
+                                      struct tinyui_app_timer *timer,
                                       void *user_data);
 
-struct picoui_app *picoui_app_create(void);
-int picoui_app_run(struct picoui_app *app, struct picoui_window *window);
-int picoui_app_run_background(struct picoui_app *app, struct picoui_background *background);
-int picoui_app_set_window(struct picoui_app *app, struct picoui_window *window);
-int picoui_app_set_background(struct picoui_app *app, struct picoui_background *background);
-int picoui_app_switch_window(struct picoui_app *app,
-                             struct picoui_window *window,
+struct tinyui_app *tinyui_app_create(void);
+int tinyui_app_run(struct tinyui_app *app, struct tinyui_window *window);
+int tinyui_app_run_background(struct tinyui_app *app, struct tinyui_background *background);
+int tinyui_app_set_window(struct tinyui_app *app, struct tinyui_window *window);
+int tinyui_app_set_background(struct tinyui_app *app, struct tinyui_background *background);
+int tinyui_app_switch_window(struct tinyui_app *app,
+                             struct tinyui_window *window,
                              int mode,
                              unsigned int duration_ms);
-int picoui_app_switch_background(struct picoui_app *app,
-                                 struct picoui_background *background,
+int tinyui_app_switch_background(struct tinyui_app *app,
+                                 struct tinyui_background *background,
                                  int mode,
                                  unsigned int duration_ms);
-struct picoui_app_timer *picoui_app_timer_create(struct picoui_app *app);
-int picoui_app_timer_start(struct picoui_app_timer *timer,
+struct tinyui_app_timer *tinyui_app_timer_create(struct tinyui_app *app);
+int tinyui_app_timer_start(struct tinyui_app_timer *timer,
                            unsigned int interval_ms,
                            int repeat,
-                           picoui_app_timer_cb_t callback,
+                           tinyui_app_timer_cb_t callback,
                            void *user_data);
-int picoui_app_timer_stop(struct picoui_app_timer *timer);
-int picoui_app_timer_is_running(const struct picoui_app_timer *timer);
-void picoui_app_timer_destroy(struct picoui_app_timer *timer);
-void picoui_app_destroy(struct picoui_app *app);
+int tinyui_app_timer_stop(struct tinyui_app_timer *timer);
+int tinyui_app_timer_is_running(const struct tinyui_app_timer *timer);
+void tinyui_app_timer_destroy(struct tinyui_app_timer *timer);
+void tinyui_app_destroy(struct tinyui_app *app);
 
 #endif

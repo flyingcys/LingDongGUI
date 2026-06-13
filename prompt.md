@@ -2,4 +2,4 @@
   来，第一个版本发布要做这些已经做出来的控件完全对齐功能。必须做到。之前整理了对齐文档，可以在这个文档上再补齐
 
 
-/goal 严格按照 docs/picoui-serial/J-线计划索引.md 以及 spec 和 plan，subagent 依次开发，不要跳过，不要随意扩散，一个一个开发，直到所有任务开发完成
+/goal 严格按照 docs/tinyui-serial/J-线计划索引.md 以及 spec 和 plan，subagent 依次开发，不要跳过，不要随意扩散，一个一个开发，直到所有任务开发完成

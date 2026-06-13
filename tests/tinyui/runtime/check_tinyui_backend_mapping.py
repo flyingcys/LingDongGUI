@@ -134,7 +134,7 @@ def _parse_marker_ids(stdout: str, marker: str) -> set[str]:
 
 
 def _parse_smoke_layout_marker(stdout: str) -> int:
-    prefix = "PICOUI_SMOKE_LAYOUT_USED="
+    prefix = "TINYUI_SMOKE_LAYOUT_USED="
     for line in stdout.splitlines():
         if not line.startswith(prefix):
             continue
@@ -227,16 +227,16 @@ def _assert_target_matrix_complete(target_matrix: dict[str, dict[str, object]]) 
         expected = target_matrix[target]
         if expected["requires_real_widget_ids"] and not expected["real_ids"]:
             raise AssertionError(
-                f"Demo '{target}' requires PICOUI_BACKEND_REAL_WIDGET_IDS but has no expected ids.\n"
+                f"Demo '{target}' requires TINYUI_BACKEND_REAL_WIDGET_IDS but has no expected ids.\n"
                 f"categories: {expected['categories']}\n"
                 f"reasons: {expected['reasons']}"
             )
 
 
 def _assert_no_fallback(target: str, stdout: str, stderr: str) -> None:
-    if "PICOUI_BACKEND_INTERACTIVE_BOUNDARY=FAKE_FALLBACK" not in stdout:
+    if "TINYUI_BACKEND_INTERACTIVE_BOUNDARY=FAKE_FALLBACK" not in stdout:
         return
-    fallback_ids = _parse_marker_ids(stdout, "PICOUI_BACKEND_FALLBACK_WIDGET_IDS")
+    fallback_ids = _parse_marker_ids(stdout, "TINYUI_BACKEND_FALLBACK_WIDGET_IDS")
     raise AssertionError(
         f"Demo '{target}' should not expose fallback backend boundary.\n"
         f"fallback ids: {sorted(fallback_ids)}\n"
@@ -253,9 +253,9 @@ def _assert_real_mapping(target: str, expected: dict[str, object], stdout: str, 
             f"stderr:\n{stderr}"
         )
 
-    if "PICOUI_BACKEND_STATIC_MAPPING=REAL_LDGUI" not in stdout:
+    if "TINYUI_BACKEND_STATIC_MAPPING=REAL_LDGUI" not in stdout:
         raise AssertionError(
-            f"Demo '{target}' missing formal real-mapping marker PICOUI_BACKEND_STATIC_MAPPING=REAL_LDGUI.\n"
+            f"Demo '{target}' missing formal real-mapping marker TINYUI_BACKEND_STATIC_MAPPING=REAL_LDGUI.\n"
             "This checker only accepts explicit runtime evidence that the demo entered the real LingDongGUI mapping path.\n"
             "It does not require a dedicated backend_*.c file layout, but it does require the marker contract to remain truthful.\n"
             f"categories: {expected['categories']}\n"
@@ -267,7 +267,7 @@ def _assert_real_mapping(target: str, expected: dict[str, object], stdout: str, 
     if not expected["requires_real_widget_ids"]:
         return
 
-    real_ids = _parse_marker_ids(stdout, "PICOUI_BACKEND_REAL_WIDGET_IDS")
+    real_ids = _parse_marker_ids(stdout, "TINYUI_BACKEND_REAL_WIDGET_IDS")
     missing_ids = [widget_id for widget_id in expected["real_ids"] if widget_id not in real_ids]
     if missing_ids:
         raise AssertionError(
@@ -283,20 +283,20 @@ def _assert_real_mapping(target: str, expected: dict[str, object], stdout: str, 
 
 
 def _assert_demo_excluded_from_formal_mapping(target: str, stdout: str, stderr: str) -> None:
-    if "PICOUI_RUNTIME_READY" not in stdout:
+    if "TINYUI_RUNTIME_READY" not in stdout:
         raise AssertionError(
             f"Demo '{target}' no longer reports runtime-ready state.\n"
             f"stdout:\n{stdout}\n"
             f"stderr:\n{stderr}"
         )
-    if "PICOUI_BACKEND_STATIC_MAPPING=REAL_LDGUI" in stdout:
+    if "TINYUI_BACKEND_STATIC_MAPPING=REAL_LDGUI" in stdout:
         raise AssertionError(
             f"Demo '{target}' still emits formal REAL_LDGUI mapping markers.\n"
             "R0 honesty requires this demo to stay outside the formal mapping conclusion until the temporary smoke path is isolated.\n"
             f"stdout:\n{stdout}\n"
             f"stderr:\n{stderr}"
         )
-    if "PICOUI_BACKEND_TEMPORARY_SMOKE_PATH=EXCLUDED_FORMAL_MAPPING" not in stdout:
+    if "TINYUI_BACKEND_TEMPORARY_SMOKE_PATH=EXCLUDED_FORMAL_MAPPING" not in stdout:
         raise AssertionError(
             f"Demo '{target}' must explicitly report temporary smoke-path evidence.\n"
             f"stdout:\n{stdout}\n"
@@ -321,7 +321,7 @@ subprocess.run(
 for target in TARGETS:
     env = os.environ.copy()
     env["SDL_VIDEODRIVER"] = env.get("SDL_VIDEODRIVER", "dummy")
-    env["PICOUI_DEMO_AUTO_QUIT_MS"] = "1200"
+    env["TINYUI_DEMO_AUTO_QUIT_MS"] = "1200"
     completed = subprocess.run(
         [str(_find_executable(target))],
         check=False,
@@ -337,7 +337,7 @@ for target in TARGETS:
             f"stderr:\n{completed.stderr}"
         )
 
-    if "PICOUI_RUNTIME_READY" not in completed.stdout:
+    if "TINYUI_RUNTIME_READY" not in completed.stdout:
         raise AssertionError(
             f"Demo '{target}' missing runtime ready marker.\n"
             f"stdout:\n{completed.stdout}\n"

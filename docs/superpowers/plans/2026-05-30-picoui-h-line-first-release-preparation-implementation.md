@@ -1,4 +1,4 @@
-# PicoUI H线第一版本发布准备 Implementation Plan
+# TINYUI H线第一版本发布准备 Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -6,7 +6,7 @@
 
 **Architecture:** 本计划不扩控件数量，不建立新输入系统，只围绕当前 `9` 控件做发布准备。任务严格串行，每个 Task 交给 fresh subagent，写面不重叠；代码改动阶段前必须跑 GitNexus impact，阶段结束后必须做独立 review。
 
-**Tech Stack:** Markdown serial docs、Python3 gate scripts、CTest/CMake、PicoUI runtime scripts、GitNexus、LingDongGUI
+**Tech Stack:** Markdown serial docs、Python3 gate scripts、CTest/CMake、TINYUI runtime scripts、GitNexus、LingDongGUI
 
 ---
 
@@ -24,11 +24,11 @@
 ### 文档基线组
 
 **文件：**
-- Modify: `docs/picoui-serial/H-线计划索引.md`
-- Modify: `docs/picoui-serial/H-线发布差距与LingDongGUI控件对比.md`
-- Modify: `picoui/docs/demo_guide.md`
-- Modify: `docs/picoui-serial/C-线人工窗口验收记录.md`
-- Optional Create: `docs/picoui-serial/H-线第一版发布说明.md`
+- Modify: `docs/tinyui-serial/H-线计划索引.md`
+- Modify: `docs/tinyui-serial/H-线发布差距与LingDongGUI控件对比.md`
+- Modify: `tinyui/docs/demo_guide.md`
+- Modify: `docs/tinyui-serial/C-线人工窗口验收记录.md`
+- Optional Create: `docs/tinyui-serial/H-线第一版发布说明.md`
 
 职责：
 
@@ -38,9 +38,9 @@
 ### release matrix 组
 
 **文件：**
-- Create: `tests/picoui/contract/picoui_release_capability_matrix.json`
-- Create: `tests/picoui/contract/check_picoui_release_capability_matrix.py`
-- Modify: `tests/picoui/CMakeLists.txt`
+- Create: `tests/tinyui/contract/tinyui_release_capability_matrix.json`
+- Create: `tests/tinyui/contract/check_tinyui_release_capability_matrix.py`
+- Modify: `tests/tinyui/CMakeLists.txt`
 
 职责：
 
@@ -51,11 +51,11 @@
 ### 当前 9 控件合同组
 
 **文件：**
-- Modify: `docs/picoui-serial/H-线发布差距与LingDongGUI控件对比.md`
-- Optional Create: `docs/picoui-serial/H-线当前9控件发布合同.md`
-- Optional Modify: `tests/picoui/unit/test_picoui_theme.c`
-- Optional Modify: `tests/picoui/unit/test_picoui_list.c`
-- Optional Modify: `tests/picoui/unit/test_picoui_widgets.c`
+- Modify: `docs/tinyui-serial/H-线发布差距与LingDongGUI控件对比.md`
+- Optional Create: `docs/tinyui-serial/H-线当前9控件发布合同.md`
+- Optional Modify: `tests/tinyui/unit/test_tinyui_theme.c`
+- Optional Modify: `tests/tinyui/unit/test_tinyui_list.c`
+- Optional Modify: `tests/tinyui/unit/test_tinyui_widgets.c`
 
 职责：
 
@@ -65,9 +65,9 @@
 ### 发布收尾组
 
 **文件：**
-- Modify: `picoui/docs/demo_guide.md`
-- Optional Create: `docs/picoui-serial/H-线发布测试矩阵.md`
-- Optional Create: `docs/picoui-serial/H-线发布closeout.md`
+- Modify: `tinyui/docs/demo_guide.md`
+- Optional Create: `docs/tinyui-serial/H-线发布测试矩阵.md`
+- Optional Create: `docs/tinyui-serial/H-线发布closeout.md`
 
 职责：
 
@@ -80,20 +80,20 @@
 ### Task 1: H0-H1 口径冻结与基线文档收口
 
 **Files:**
-- Modify: `docs/picoui-serial/H-线计划索引.md`
-- Modify: `docs/picoui-serial/H-线发布差距与LingDongGUI控件对比.md`
-- Modify: `picoui/docs/demo_guide.md`
-- Reference: `docs/superpowers/specs/2026-05-30-picoui-h-line-first-release-preparation-design.md`
+- Modify: `docs/tinyui-serial/H-线计划索引.md`
+- Modify: `docs/tinyui-serial/H-线发布差距与LingDongGUI控件对比.md`
+- Modify: `tinyui/docs/demo_guide.md`
+- Reference: `docs/superpowers/specs/2026-05-30-tinyui-h-line-first-release-preparation-design.md`
 
 - [ ] **Step 1: 复核当前 H 线文档和 G 线真相源**
 
 Run:
 
 ```bash
-sed -n '1,260p' docs/picoui-serial/H-线计划索引.md
-sed -n '1,260p' docs/picoui-serial/H-线发布差距与LingDongGUI控件对比.md
-sed -n '1,220p' docs/picoui-serial/G-线计划索引.md
-sed -n '1,220p' docs/picoui-serial/G-线剩余缺口合同决策入口.md
+sed -n '1,260p' docs/tinyui-serial/H-线计划索引.md
+sed -n '1,260p' docs/tinyui-serial/H-线发布差距与LingDongGUI控件对比.md
+sed -n '1,220p' docs/tinyui-serial/G-线计划索引.md
+sed -n '1,220p' docs/tinyui-serial/G-线剩余缺口合同决策入口.md
 ```
 
 Expected:
@@ -113,7 +113,7 @@ Expected:
 
 要求：
 
-- 在 `picoui/docs/demo_guide.md` 里明确 demo catalog 是发布阅读材料的一部分。
+- 在 `tinyui/docs/demo_guide.md` 里明确 demo catalog 是发布阅读材料的一部分。
 - 保留证据层分层，不把 demo 可运行写成人工验收。
 
 - [ ] **Step 4: 文档自检**
@@ -121,10 +121,10 @@ Expected:
 Run:
 
 ```bash
-git diff --check -- docs/picoui-serial/H-线计划索引.md \
-                  docs/picoui-serial/H-线发布差距与LingDongGUI控件对比.md \
-                  picoui/docs/demo_guide.md
-rg -n "progress_bar|line_edit|combo_box" docs/picoui-serial/H-线计划索引.md
+git diff --check -- docs/tinyui-serial/H-线计划索引.md \
+                  docs/tinyui-serial/H-线发布差距与LingDongGUI控件对比.md \
+                  tinyui/docs/demo_guide.md
+rg -n "progress_bar|line_edit|combo_box" docs/tinyui-serial/H-线计划索引.md
 ```
 
 Expected:
@@ -142,9 +142,9 @@ Expected:
 ### Task 2: H2 release matrix schema 设计
 
 **Files:**
-- Create: `tests/picoui/contract/picoui_release_capability_matrix.json`
-- Modify: `docs/picoui-serial/H-线计划索引.md`
-- Modify: `docs/picoui-serial/H-线发布差距与LingDongGUI控件对比.md`
+- Create: `tests/tinyui/contract/tinyui_release_capability_matrix.json`
+- Modify: `docs/tinyui-serial/H-线计划索引.md`
+- Modify: `docs/tinyui-serial/H-线发布差距与LingDongGUI控件对比.md`
 
 - [ ] **Step 1: 先定义 release matrix 字段**
 
@@ -175,10 +175,10 @@ Expected:
 Run:
 
 ```bash
-python3 -m json.tool tests/picoui/contract/picoui_release_capability_matrix.json >/dev/null
-git diff --check -- tests/picoui/contract/picoui_release_capability_matrix.json \
-                  docs/picoui-serial/H-线计划索引.md \
-                  docs/picoui-serial/H-线发布差距与LingDongGUI控件对比.md
+python3 -m json.tool tests/tinyui/contract/tinyui_release_capability_matrix.json >/dev/null
+git diff --check -- tests/tinyui/contract/tinyui_release_capability_matrix.json \
+                  docs/tinyui-serial/H-线计划索引.md \
+                  docs/tinyui-serial/H-线发布差距与LingDongGUI控件对比.md
 ```
 
 Expected:
@@ -195,17 +195,17 @@ Expected:
 ### Task 3: H3 release matrix gate 落地
 
 **Files:**
-- Create: `tests/picoui/contract/check_picoui_release_capability_matrix.py`
-- Modify: `tests/picoui/CMakeLists.txt`
-- Test: `tests/picoui/contract/picoui_release_capability_matrix.json`
+- Create: `tests/tinyui/contract/check_tinyui_release_capability_matrix.py`
+- Modify: `tests/tinyui/CMakeLists.txt`
+- Test: `tests/tinyui/contract/tinyui_release_capability_matrix.json`
 
 - [ ] **Step 1: 对将修改的符号跑 GitNexus impact**
 
 Run:
 
 ```text
-impact target: check_picoui_widget_contract_matrix
-impact target: tests/picoui/CMakeLists.txt
+impact target: check_tinyui_widget_contract_matrix
+impact target: tests/tinyui/CMakeLists.txt
 ```
 
 Expected:
@@ -226,17 +226,17 @@ Expected:
 
 要求：
 
-- 在 `tests/picoui/CMakeLists.txt` 注册 `check_picoui_release_capability_matrix`。
-- label 至少包含 `picoui;contract;release`.
+- 在 `tests/tinyui/CMakeLists.txt` 注册 `check_tinyui_release_capability_matrix`。
+- label 至少包含 `tinyui;contract;release`.
 
 - [ ] **Step 4: 跑 gate**
 
 Run:
 
 ```bash
-ctest --test-dir build -N -R check_picoui_release_capability_matrix
-ctest --test-dir build -R check_picoui_release_capability_matrix --output-on-failure
-python3 tests/picoui/contract/check_picoui_release_capability_matrix.py
+ctest --test-dir build -N -R check_tinyui_release_capability_matrix
+ctest --test-dir build -R check_tinyui_release_capability_matrix --output-on-failure
+python3 tests/tinyui/contract/check_tinyui_release_capability_matrix.py
 ```
 
 Expected:
@@ -259,11 +259,11 @@ Expected:
 ### Task 4: H4-H6 当前 9 控件 release contract 与 `image/list` 限制硬化
 
 **Files:**
-- Modify: `docs/picoui-serial/H-线发布差距与LingDongGUI控件对比.md`
-- Optional Create: `docs/picoui-serial/H-线当前9控件发布合同.md`
-- Optional Modify: `tests/picoui/unit/test_picoui_theme.c`
-- Optional Modify: `tests/picoui/unit/test_picoui_list.c`
-- Optional Modify: `tests/picoui/unit/test_picoui_widgets.c`
+- Modify: `docs/tinyui-serial/H-线发布差距与LingDongGUI控件对比.md`
+- Optional Create: `docs/tinyui-serial/H-线当前9控件发布合同.md`
+- Optional Modify: `tests/tinyui/unit/test_tinyui_theme.c`
+- Optional Modify: `tests/tinyui/unit/test_tinyui_list.c`
+- Optional Modify: `tests/tinyui/unit/test_tinyui_widgets.c`
 
 - [ ] **Step 1: 列出现有 `image/list` 非 support 项与现有测试**
 
@@ -271,8 +271,8 @@ Run:
 
 ```bash
 rg -n "image|list|style_class|user_data|enabled|padding|theme|marker" \
-  tests/picoui/unit \
-  docs/superpowers/specs/2026-05-29-picoui-g-line-current-widget-capability-gap-matrix.md
+  tests/tinyui/unit \
+  docs/superpowers/specs/2026-05-29-tinyui-g-line-current-widget-capability-gap-matrix.md
 ```
 
 Expected:
@@ -316,16 +316,16 @@ Expected:
 ### Task 5: H7 demo catalog 收口
 
 **Files:**
-- Modify: `picoui/docs/demo_guide.md`
-- Optional Create: `docs/picoui-serial/H-线demo-catalog.md`
+- Modify: `tinyui/docs/demo_guide.md`
+- Optional Create: `docs/tinyui-serial/H-线demo-catalog.md`
 
 - [ ] **Step 1: 盘点当前 demo**
 
 Run:
 
 ```bash
-sed -n '1,260p' picoui/docs/demo_guide.md
-sed -n '1,120p' tests/picoui/runtime/check_picoui_visible_ui.py
+sed -n '1,260p' tinyui/docs/demo_guide.md
+sed -n '1,120p' tests/tinyui/runtime/check_tinyui_visible_ui.py
 ```
 
 Expected:
@@ -344,7 +344,7 @@ Expected:
 Run:
 
 ```bash
-git diff --check -- picoui/docs/demo_guide.md docs/picoui-serial/H-线demo-catalog.md
+git diff --check -- tinyui/docs/demo_guide.md docs/tinyui-serial/H-线demo-catalog.md
 ```
 
 Expected:
@@ -354,18 +354,18 @@ Expected:
 ### Task 6: H8 最小 manual artifact 收口
 
 **Files:**
-- Modify: `docs/picoui-serial/C-线人工窗口验收记录.md`
-- Modify: `docs/picoui-serial/H-线计划索引.md`
-- Modify: `docs/picoui-serial/H-线发布差距与LingDongGUI控件对比.md`
-- Reference: `tests/picoui/runtime/check_picoui_manual_window_artifact.py`
+- Modify: `docs/tinyui-serial/C-线人工窗口验收记录.md`
+- Modify: `docs/tinyui-serial/H-线计划索引.md`
+- Modify: `docs/tinyui-serial/H-线发布差距与LingDongGUI控件对比.md`
+- Reference: `tests/tinyui/runtime/check_tinyui_manual_window_artifact.py`
 
 - [ ] **Step 1: 复核现有 manual artifact 能力边界**
 
 Run:
 
 ```bash
-sed -n '1,240p' tests/picoui/runtime/check_picoui_manual_window_artifact.py
-rg -n "basic_widgets|settings_panel" docs/picoui-serial/C-线人工窗口验收记录.md
+sed -n '1,240p' tests/tinyui/runtime/check_tinyui_manual_window_artifact.py
+rg -n "basic_widgets|settings_panel" docs/tinyui-serial/C-线人工窗口验收记录.md
 ```
 
 Expected:
@@ -395,10 +395,10 @@ Expected:
 ### Task 7: H9-H10 public API 边界与发布测试矩阵冻结
 
 **Files:**
-- Modify: `docs/picoui-serial/H-线计划索引.md`
-- Optional Create: `docs/picoui-serial/H-线发布测试矩阵.md`
-- Reference: `tests/picoui/contract/check_picoui_public_api.py`
-- Reference: `tests/picoui/CMakeLists.txt`
+- Modify: `docs/tinyui-serial/H-线计划索引.md`
+- Optional Create: `docs/tinyui-serial/H-线发布测试矩阵.md`
+- Reference: `tests/tinyui/contract/check_tinyui_public_api.py`
+- Reference: `tests/tinyui/CMakeLists.txt`
 
 - [ ] **Step 1: 汇总发布前必须跑的命令**
 
@@ -417,7 +417,7 @@ Expected:
 
 要求：
 
-- 写明 `runtime/visible/mapping` 不并行抢 `build/picoui-runtime`。
+- 写明 `runtime/visible/mapping` 不并行抢 `build/tinyui-runtime`。
 - 写明 `manual artifact` 不接入强制 CTest。
 
 - [ ] **Step 3: 验证 public API gate 仍可用**
@@ -425,8 +425,8 @@ Expected:
 Run:
 
 ```bash
-python3 tests/picoui/contract/check_picoui_public_api.py
-python3 tests/picoui/contract/check_picoui_demo_boundary.py
+python3 tests/tinyui/contract/check_tinyui_public_api.py
+python3 tests/tinyui/contract/check_tinyui_demo_boundary.py
 ```
 
 Expected:
@@ -436,9 +436,9 @@ Expected:
 ### Task 8: H11 发布文档包收口
 
 **Files:**
-- Create: `docs/picoui-serial/H-线第一版发布说明.md`
-- Optional Create: `docs/picoui-serial/H-线已支持控件清单.md`
-- Modify: `docs/picoui-serial/H-线发布差距与LingDongGUI控件对比.md`
+- Create: `docs/tinyui-serial/H-线第一版发布说明.md`
+- Optional Create: `docs/tinyui-serial/H-线已支持控件清单.md`
+- Modify: `docs/tinyui-serial/H-线发布差距与LingDongGUI控件对比.md`
 
 - [ ] **Step 1: 写 release notes 初稿**
 
@@ -460,9 +460,9 @@ Expected:
 Run:
 
 ```bash
-git diff --check -- docs/picoui-serial/H-线第一版发布说明.md \
-                  docs/picoui-serial/H-线已支持控件清单.md \
-                  docs/picoui-serial/H-线发布差距与LingDongGUI控件对比.md
+git diff --check -- docs/tinyui-serial/H-线第一版发布说明.md \
+                  docs/tinyui-serial/H-线已支持控件清单.md \
+                  docs/tinyui-serial/H-线发布差距与LingDongGUI控件对比.md
 ```
 
 Expected:
@@ -472,7 +472,7 @@ Expected:
 ### Task 9: H12-H13 独立发布 review 与 closeout
 
 **Files:**
-- Optional Create: `docs/picoui-serial/H-线发布closeout.md`
+- Optional Create: `docs/tinyui-serial/H-线发布closeout.md`
 - Reference: 所有 H 线文档与 gate
 
 - [ ] **Step 1: 运行发布前命令集**
@@ -482,11 +482,11 @@ Run:
 ```bash
 ctest --test-dir build --output-on-failure -L unit
 ctest --test-dir build --output-on-failure -L contract
-ctest --test-dir build --output-on-failure -R check_picoui_release_capability_matrix
+ctest --test-dir build --output-on-failure -R check_tinyui_release_capability_matrix
 ctest --test-dir build --output-on-failure -L mapping
 ctest --test-dir build --output-on-failure -L visible
-python3 tests/picoui/contract/check_picoui_public_api.py
-python3 tests/picoui/contract/check_picoui_demo_boundary.py
+python3 tests/tinyui/contract/check_tinyui_public_api.py
+python3 tests/tinyui/contract/check_tinyui_demo_boundary.py
 git diff --check
 ```
 

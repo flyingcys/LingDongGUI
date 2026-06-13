@@ -46,11 +46,11 @@ static arm_2d_tile_t *const g_icon_slider_masks[] = {
     (arm_2d_tile_t *)&c_tilePointerSecMask,
 };
 
-#define PICOUI_ICON_SLIDER_NATIVE_MAX_ITEMS 8
+#define TINYUI_ICON_SLIDER_NATIVE_MAX_ITEMS 8
 
 static ldIconSlider_t *tinyui_icon_slider_get_ld(void *backend_widget)
 {
-    struct picoui_backend_widget *widget = backend_widget;
+    struct tinyui_backend_widget *widget = backend_widget;
 
     if (widget == 0 || widget->ld_widget == 0) {
         return 0;
@@ -63,8 +63,8 @@ static int tinyui_icon_slider_backend_set_selected_index(void *backend_widget, i
 
 static bool tinyui_icon_slider_native_slot(struct ld_scene_t *scene, ldMsg_t msg)
 {
-    struct picoui_backend_widget *backend;
-    struct picoui_icon_slider *icon_slider;
+    struct tinyui_backend_widget *backend;
+    struct tinyui_icon_slider *icon_slider;
     int selected_index;
     int previous_selected_index;
 
@@ -74,12 +74,12 @@ static bool tinyui_icon_slider_native_slot(struct ld_scene_t *scene, ldMsg_t msg
         return false;
     }
 
-    backend = (struct picoui_backend_widget *)((ldBase_t *)msg.ptSender)->pInfo;
+    backend = (struct tinyui_backend_widget *)((ldBase_t *)msg.ptSender)->pInfo;
     if (backend == 0 || backend->host_widget == 0) {
         return false;
     }
 
-    icon_slider = (struct picoui_icon_slider *)backend->host_widget;
+    icon_slider = (struct tinyui_icon_slider *)backend->host_widget;
     selected_index = (int)msg.value;
     if (selected_index < 0 || selected_index >= icon_slider->item_count) {
         return false;
@@ -104,8 +104,8 @@ static bool tinyui_icon_slider_native_slot(struct ld_scene_t *scene, ldMsg_t msg
         return false;
     }
     backend->data_model_epoch++;
-    backend->last_data_source = PICOUI_BACKEND_DATA_SOURCE_NATIVE_EVENT;
-    backend->last_signal = PICOUI_BACKEND_SIGNAL_VALUE_CHANGED;
+    backend->last_data_source = TINYUI_BACKEND_DATA_SOURCE_NATIVE_EVENT;
+    backend->last_signal = TINYUI_BACKEND_SIGNAL_VALUE_CHANGED;
     backend->dispatch_count++;
     if (icon_slider->cb != 0) {
         icon_slider->cb(icon_slider, selected_index, icon_slider->user_data);
@@ -115,16 +115,16 @@ static bool tinyui_icon_slider_native_slot(struct ld_scene_t *scene, ldMsg_t msg
 
 static int tinyui_icon_slider_backend_add_item(void *backend_widget, const char *id, const char *text)
 {
-    struct picoui_backend_widget *widget = backend_widget;
+    struct tinyui_backend_widget *widget = backend_widget;
     ldIconSlider_t *ld_icon_slider;
     int index;
 
     if (widget == 0 ||
-        widget->kind != PICOUI_BACKEND_WIDGET_ICON_SLIDER ||
+        widget->kind != TINYUI_BACKEND_WIDGET_ICON_SLIDER ||
         widget->ld_widget == 0 ||
         id == 0 ||
         text == 0 ||
-        widget->list_item_count >= PICOUI_ICON_SLIDER_NATIVE_MAX_ITEMS) {
+        widget->list_item_count >= TINYUI_ICON_SLIDER_NATIVE_MAX_ITEMS) {
         return -1;
     }
 
@@ -146,21 +146,21 @@ static int tinyui_icon_slider_backend_add_item(void *backend_widget, const char 
 static int tinyui_icon_slider_backend_add_item_with_source(void *backend_widget,
                                                            const char *id,
                                                            const char *text,
-                                                           struct picoui_image_source *source)
+                                                           struct tinyui_image_source *source)
 {
-    struct picoui_backend_widget *widget = backend_widget;
+    struct tinyui_backend_widget *widget = backend_widget;
     ldIconSlider_t *ld_icon_slider;
     int index;
 
     if (widget == 0 ||
-        widget->kind != PICOUI_BACKEND_WIDGET_ICON_SLIDER ||
+        widget->kind != TINYUI_BACKEND_WIDGET_ICON_SLIDER ||
         widget->ld_widget == 0 ||
         id == 0 ||
         text == 0 ||
         source == 0 ||
         source->img_tile == 0 ||
         source->mask_tile == 0 ||
-        widget->list_item_count >= PICOUI_ICON_SLIDER_NATIVE_MAX_ITEMS) {
+        widget->list_item_count >= TINYUI_ICON_SLIDER_NATIVE_MAX_ITEMS) {
         return -1;
     }
 
@@ -181,11 +181,11 @@ static int tinyui_icon_slider_backend_add_item_with_source(void *backend_widget,
 
 static int tinyui_icon_slider_backend_set_selected_index(void *backend_widget, int index)
 {
-    struct picoui_backend_widget *widget = backend_widget;
+    struct tinyui_backend_widget *widget = backend_widget;
     ldIconSlider_t *ld_icon_slider;
 
     if (widget == 0 ||
-        widget->kind != PICOUI_BACKEND_WIDGET_ICON_SLIDER ||
+        widget->kind != TINYUI_BACKEND_WIDGET_ICON_SLIDER ||
         widget->ld_widget == 0 ||
         index < 0 ||
         index >= widget->list_item_count) {
@@ -252,7 +252,7 @@ static int tinyui_icon_slider_backend_set_speed(void *backend_widget, int speed)
 
 static int tinyui_icon_slider_bind_host(void *backend_widget)
 {
-    struct picoui_backend_widget *backend = backend_widget;
+    struct tinyui_backend_widget *backend = backend_widget;
     ldIconSlider_t *ld_icon_slider;
 
     if (backend == 0) {
@@ -270,7 +270,7 @@ static int tinyui_icon_slider_bind_host(void *backend_widget)
     return 0;
 }
 
-static int tinyui_icon_slider_props_are_valid(const struct picoui_icon_slider_props *props)
+static int tinyui_icon_slider_props_are_valid(const struct tinyui_icon_slider_props *props)
 {
     return props != 0 &&
            props->id != 0 &&
@@ -283,7 +283,7 @@ static int tinyui_icon_slider_props_are_valid(const struct picoui_icon_slider_pr
            props->pages >= 0;
 }
 
-static struct picoui_icon_slider *tinyui_icon_slider_create_with_backend_config(struct picoui_widget *parent,
+static struct tinyui_icon_slider *tinyui_icon_slider_create_with_backend_config(struct tinyui_widget *parent,
                                                                                 const char *id,
                                                                                 int width,
                                                                                 int height,
@@ -293,10 +293,10 @@ static struct picoui_icon_slider *tinyui_icon_slider_create_with_backend_config(
                                                                                 int rows,
                                                                                 int pages)
 {
-    struct picoui_icon_slider *icon_slider;
-    struct picoui_backend_widget *backend;
-    struct picoui_backend_widget *parent_backend;
-    struct picoui_backend_app_state *app_state;
+    struct tinyui_icon_slider *icon_slider;
+    struct tinyui_backend_widget *backend;
+    struct tinyui_backend_widget *parent_backend;
+    struct tinyui_backend_app_state *app_state;
     ldIconSlider_t *ld_icon_slider;
     uint16_t name_id;
 
@@ -320,7 +320,7 @@ static struct picoui_icon_slider *tinyui_icon_slider_create_with_backend_config(
         pages = 1;
     }
 
-    parent_backend = (struct picoui_backend_widget *)parent->backend_widget;
+    parent_backend = (struct tinyui_backend_widget *)parent->backend_widget;
     app_state = tinyui_runtime_bridge_backend_state_from_parent(parent_backend);
     if (parent_backend->ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
         return 0;
@@ -366,7 +366,7 @@ static struct picoui_icon_slider *tinyui_icon_slider_create_with_backend_config(
 
     if (tinyui_widget_init_child(backend,
                                          parent_backend,
-                                         PICOUI_BACKEND_WIDGET_ICON_SLIDER,
+                                         TINYUI_BACKEND_WIDGET_ICON_SLIDER,
                                          id,
                                          parent_backend->theme) != 0) {
         ldIconSlider_depose(app_state->ld_scene, ld_icon_slider);
@@ -377,7 +377,7 @@ static struct picoui_icon_slider *tinyui_icon_slider_create_with_backend_config(
     backend->ld_widget = ld_icon_slider;
     backend->ld_name_id = name_id;
     backend->value = -1;
-    backend->last_signal = PICOUI_BACKEND_SIGNAL_NONE;
+    backend->last_signal = TINYUI_BACKEND_SIGNAL_NONE;
     if (tinyui_widget_attach_child(parent_backend, backend) != 0) {
         ldIconSlider_depose(app_state->ld_scene, ld_icon_slider);
         free(backend);
@@ -416,7 +416,7 @@ static struct picoui_icon_slider *tinyui_icon_slider_create_with_backend_config(
  * @return Pointer to the object
  */
 
-struct picoui_icon_slider *picoui_icon_slider_create(struct picoui_widget *parent, const char *id)
+struct tinyui_icon_slider *tinyui_icon_slider_create(struct tinyui_widget *parent, const char *id)
 {
     return tinyui_icon_slider_create_with_backend_config(parent, id, 220, 86, 48, 4, 4, 1, 2);
 }
@@ -429,9 +429,9 @@ struct picoui_icon_slider *picoui_icon_slider_create(struct picoui_widget *paren
  * @return Pointer to the object
  */
 
-struct picoui_icon_slider *picoui_icon_slider_init(struct picoui_widget *parent, const char *id)
+struct tinyui_icon_slider *tinyui_icon_slider_init(struct tinyui_widget *parent, const char *id)
 {
-    return picoui_icon_slider_create(parent, id);
+    return tinyui_icon_slider_create(parent, id);
 }
 
 /**
@@ -442,12 +442,12 @@ struct picoui_icon_slider *picoui_icon_slider_init(struct picoui_widget *parent,
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct picoui_icon_slider *picoui_icon_slider_create_with_props(
-    struct picoui_widget *parent,
-    const struct picoui_icon_slider_props *props
+struct tinyui_icon_slider *tinyui_icon_slider_create_with_props(
+    struct tinyui_widget *parent,
+    const struct tinyui_icon_slider_props *props
 )
 {
-    struct picoui_icon_slider *icon_slider;
+    struct tinyui_icon_slider *icon_slider;
 
     if (!tinyui_icon_slider_props_are_valid(props)) {
         return 0;
@@ -466,10 +466,10 @@ struct picoui_icon_slider *picoui_icon_slider_create_with_props(
         return 0;
     }
 
-    if (picoui_widget_set_user_data(&icon_slider->widget, props->user_data) != 0 ||
+    if (tinyui_widget_set_user_data(&icon_slider->widget, props->user_data) != 0 ||
         (props->style_class != 0 &&
-         picoui_widget_set_style_class(&icon_slider->widget, props->style_class) != 0) ||
-        picoui_icon_slider_set_horizontal(icon_slider, props->horizontal != 0) != 0) {
+         tinyui_widget_set_style_class(&icon_slider->widget, props->style_class) != 0) ||
+        tinyui_icon_slider_set_horizontal(icon_slider, props->horizontal != 0) != 0) {
         free(icon_slider);
         return 0;
     }
@@ -485,11 +485,11 @@ struct picoui_icon_slider *picoui_icon_slider_create_with_props(
  * @return 0 on success, -1 on failure
  */
 
-int picoui_icon_slider_add_item(struct picoui_icon_slider *icon_slider, const char *id, const char *text)
+int tinyui_icon_slider_add_item(struct tinyui_icon_slider *icon_slider, const char *id, const char *text)
 {
     int index;
 
-    if (icon_slider == 0 || id == 0 || text == 0 || icon_slider->item_count >= PICOUI_LIST_MAX_ITEMS) {
+    if (icon_slider == 0 || id == 0 || text == 0 || icon_slider->item_count >= TINYUI_LIST_MAX_ITEMS) {
         return -1;
     }
 
@@ -513,10 +513,10 @@ int picoui_icon_slider_add_item(struct picoui_icon_slider *icon_slider, const ch
  * @return 0 on success, -1 on failure
  */
 
-int picoui_icon_slider_add_item_with_source(struct picoui_icon_slider *icon_slider,
+int tinyui_icon_slider_add_item_with_source(struct tinyui_icon_slider *icon_slider,
                                             const char *id,
                                             const char *text,
-                                            struct picoui_image_source *source)
+                                            struct tinyui_image_source *source)
 {
     int index;
 
@@ -526,7 +526,7 @@ int picoui_icon_slider_add_item_with_source(struct picoui_icon_slider *icon_slid
         || source == 0
         || source->img_tile == 0
         || source->mask_tile == 0
-        || icon_slider->item_count >= PICOUI_LIST_MAX_ITEMS) {
+        || icon_slider->item_count >= TINYUI_LIST_MAX_ITEMS) {
         return -1;
     }
 
@@ -554,12 +554,12 @@ int picoui_icon_slider_add_item_with_source(struct picoui_icon_slider *icon_slid
  * @return 0 on success, -1 on failure
  */
 
-int picoui_icon_slider_add_icon(struct picoui_icon_slider *icon_slider,
+int tinyui_icon_slider_add_icon(struct tinyui_icon_slider *icon_slider,
                                 const char *id,
                                 const char *text,
-                                struct picoui_image_source *source)
+                                struct tinyui_image_source *source)
 {
-    return picoui_icon_slider_add_item_with_source(icon_slider, id, text, source);
+    return tinyui_icon_slider_add_item_with_source(icon_slider, id, text, source);
 }
 
 /**
@@ -570,7 +570,7 @@ int picoui_icon_slider_add_icon(struct picoui_icon_slider *icon_slider,
  * @return 0 on success, -1 on failure
  */
 
-int picoui_icon_slider_set_selected_index(struct picoui_icon_slider *icon_slider, int index)
+int tinyui_icon_slider_set_selected_index(struct tinyui_icon_slider *icon_slider, int index)
 {
     if (icon_slider == 0 || index < 0 || index >= icon_slider->item_count) {
         return -1;
@@ -591,7 +591,7 @@ int picoui_icon_slider_set_selected_index(struct picoui_icon_slider *icon_slider
  * @return -1 on failure
  */
 
-int picoui_icon_slider_get_selected_index(const struct picoui_icon_slider *icon_slider)
+int tinyui_icon_slider_get_selected_index(const struct tinyui_icon_slider *icon_slider)
 {
     int selected_index;
 
@@ -602,7 +602,7 @@ int picoui_icon_slider_get_selected_index(const struct picoui_icon_slider *icon_
     selected_index =
         tinyui_icon_slider_backend_get_selected_index((void *)icon_slider->widget.backend_widget);
     if (selected_index >= 0 && selected_index < icon_slider->item_count) {
-        ((struct picoui_icon_slider *)icon_slider)->selected_index = selected_index;
+        ((struct tinyui_icon_slider *)icon_slider)->selected_index = selected_index;
         return selected_index;
     }
 
@@ -617,7 +617,7 @@ int picoui_icon_slider_get_selected_index(const struct picoui_icon_slider *icon_
  * @return 0 on success, -1 on failure
  */
 
-int picoui_icon_slider_set_horizontal(struct picoui_icon_slider *icon_slider, int horizontal)
+int tinyui_icon_slider_set_horizontal(struct tinyui_icon_slider *icon_slider, int horizontal)
 {
     if (icon_slider == 0) {
         return -1;
@@ -639,9 +639,9 @@ int picoui_icon_slider_set_horizontal(struct picoui_icon_slider *icon_slider, in
  * @return 0 on success, -1 on failure
  */
 
-int picoui_icon_slider_set_horizontal_scroll(struct picoui_icon_slider *icon_slider, int horizontal)
+int tinyui_icon_slider_set_horizontal_scroll(struct tinyui_icon_slider *icon_slider, int horizontal)
 {
-    return picoui_icon_slider_set_horizontal(icon_slider, horizontal);
+    return tinyui_icon_slider_set_horizontal(icon_slider, horizontal);
 }
 
 /**
@@ -652,7 +652,7 @@ int picoui_icon_slider_set_horizontal_scroll(struct picoui_icon_slider *icon_sli
  * @return 0 on success, -1 on failure
  */
 
-int picoui_icon_slider_get_horizontal(const struct picoui_icon_slider *icon_slider, int *horizontal)
+int tinyui_icon_slider_get_horizontal(const struct tinyui_icon_slider *icon_slider, int *horizontal)
 {
     if (icon_slider == 0 || horizontal == 0) {
         return -1;
@@ -674,7 +674,7 @@ int picoui_icon_slider_get_horizontal(const struct picoui_icon_slider *icon_slid
  * @return 0 on success, -1 on failure
  */
 
-int picoui_icon_slider_set_speed(struct picoui_icon_slider *icon_slider, int speed)
+int tinyui_icon_slider_set_speed(struct tinyui_icon_slider *icon_slider, int speed)
 {
     if (icon_slider == 0 || speed <= 0) {
         return -1;
@@ -696,8 +696,8 @@ int picoui_icon_slider_set_speed(struct picoui_icon_slider *icon_slider, int spe
  * @param[in] user_data User data pointer
  */
 
-void picoui_icon_slider_set_on_selected(struct picoui_icon_slider *icon_slider,
-                                        void (*callback)(struct picoui_icon_slider *icon_slider,
+void tinyui_icon_slider_set_on_selected(struct tinyui_icon_slider *icon_slider,
+                                        void (*callback)(struct tinyui_icon_slider *icon_slider,
                                                          int index,
                                                          void *user_data),
                                         void *user_data)

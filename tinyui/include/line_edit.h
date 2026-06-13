@@ -4,20 +4,20 @@
 #include "layout.h"
 #include "widget.h"
 
-struct picoui_window;
-struct picoui_line_edit;
-typedef void (*picoui_line_edit_finished_cb)(struct picoui_line_edit *line_edit, void *user_data);
+struct tinyui_window;
+struct tinyui_line_edit;
+typedef void (*tinyui_line_edit_finished_cb)(struct tinyui_line_edit *line_edit, void *user_data);
 
-enum picoui_line_edit_type {
-    PICOUI_LINE_EDIT_TYPE_STRING = 0,
-    PICOUI_LINE_EDIT_TYPE_INT,
-    PICOUI_LINE_EDIT_TYPE_FLOAT,
+enum tinyui_line_edit_type {
+    TINYUI_LINE_EDIT_TYPE_STRING = 0,
+    TINYUI_LINE_EDIT_TYPE_INT,
+    TINYUI_LINE_EDIT_TYPE_FLOAT,
 };
 
-struct picoui_line_edit_props {
+struct tinyui_line_edit_props {
     const char *id;
     const char *text;
-    enum picoui_line_edit_type type;
+    enum tinyui_line_edit_type type;
     unsigned int keyboard_binding;
     const char *style_class;
     void *user_data;
@@ -32,42 +32,42 @@ struct picoui_line_edit_props {
     int has_keyboard_binding;
 };
 
-struct picoui_line_edit *picoui_line_edit_create(struct picoui_window *parent, const char *id);
+struct tinyui_line_edit *tinyui_line_edit_create(struct tinyui_window *parent, const char *id);
 
-struct picoui_line_edit *picoui_line_edit_create_with_props(
-    struct picoui_window *parent,
-    const struct picoui_line_edit_props *props);
+struct tinyui_line_edit *tinyui_line_edit_create_with_props(
+    struct tinyui_window *parent,
+    const struct tinyui_line_edit_props *props);
 
-struct picoui_line_edit *picoui_line_edit_init(struct picoui_window *parent, const char *id);
+struct tinyui_line_edit *tinyui_line_edit_init(struct tinyui_window *parent, const char *id);
 
-int picoui_line_edit_set_text(struct picoui_line_edit *line_edit, const char *text);
+int tinyui_line_edit_set_text(struct tinyui_line_edit *line_edit, const char *text);
 
-const char *picoui_line_edit_get_text(const struct picoui_line_edit *line_edit);
+const char *tinyui_line_edit_get_text(const struct tinyui_line_edit *line_edit);
 
-int picoui_line_edit_set_align(struct picoui_line_edit *line_edit, enum picoui_align align);
+int tinyui_line_edit_set_align(struct tinyui_line_edit *line_edit, enum tinyui_align align);
 
-int picoui_line_edit_set_color(struct picoui_line_edit *line_edit,
+int tinyui_line_edit_set_color(struct tinyui_line_edit *line_edit,
                                unsigned int text_color,
                                unsigned int background_color,
                                unsigned int frame_color);
 
-int picoui_line_edit_set_type(struct picoui_line_edit *line_edit, enum picoui_line_edit_type type);
+int tinyui_line_edit_set_type(struct tinyui_line_edit *line_edit, enum tinyui_line_edit_type type);
 
-int picoui_line_edit_get_type(const struct picoui_line_edit *line_edit,
-                              enum picoui_line_edit_type *type);
+int tinyui_line_edit_get_type(const struct tinyui_line_edit *line_edit,
+                              enum tinyui_line_edit_type *type);
 
-int picoui_line_edit_set_keyboard(struct picoui_line_edit *line_edit, unsigned int keyboard_binding);
+int tinyui_line_edit_set_keyboard(struct tinyui_line_edit *line_edit, unsigned int keyboard_binding);
 
-int picoui_line_edit_set_keyboard_binding(struct picoui_line_edit *line_edit,
+int tinyui_line_edit_set_keyboard_binding(struct tinyui_line_edit *line_edit,
                                           unsigned int keyboard_binding);
 
-int picoui_line_edit_get_keyboard_binding(const struct picoui_line_edit *line_edit,
+int tinyui_line_edit_get_keyboard_binding(const struct tinyui_line_edit *line_edit,
                                           unsigned int *keyboard_binding);
 
-int picoui_line_edit_get_editing(const struct picoui_line_edit *line_edit, int *editing);
+int tinyui_line_edit_get_editing(const struct tinyui_line_edit *line_edit, int *editing);
 
-int picoui_line_edit_set_on_edit_finished(struct picoui_line_edit *line_edit,
-                                          picoui_line_edit_finished_cb cb,
+int tinyui_line_edit_set_on_edit_finished(struct tinyui_line_edit *line_edit,
+                                          tinyui_line_edit_finished_cb cb,
                                           void *user_data);
 
 #endif

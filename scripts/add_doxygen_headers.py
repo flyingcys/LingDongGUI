@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-为 picoui 下所有 .c 文件中非 static 函数加入标准 doxygen 注释模板。
+为 tinyui 下所有 .c 文件中非 static 函数加入标准 doxygen 注释模板。
 @param[in] / @return 留空占位，供手工填写。
 
 策略：逐字符扫描文件，找到 '{' 后往回找函数签名。
@@ -666,7 +666,7 @@ def main():
     os.chdir(project_root)
 
     all_files = []
-    for root_dir, dirs, files in os.walk('picoui'):
+    for root_dir, dirs, files in os.walk('tinyui'):
         dirs[:] = [d for d in dirs if not d.startswith('.')]
         for f in files:
             if f.endswith('.c') or f.endswith('.h'):

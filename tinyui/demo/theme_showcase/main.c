@@ -18,57 +18,57 @@
 
 #include "tinyui.h"
 
-static void make_ui(struct picoui_window *win)
+static void make_ui(struct tinyui_window *win)
 {
-    struct picoui_label *title = picoui_label_create(win, "title");
-    struct picoui_text *body = picoui_text_create(win, "body");
-    struct picoui_button *accent = picoui_button_create(win, "accent");
+    struct tinyui_label *title = tinyui_label_create(win, "title");
+    struct tinyui_text *body = tinyui_text_create(win, "body");
+    struct tinyui_button *accent = tinyui_button_create(win, "accent");
 
-    picoui_flex_set_flow(win, PICOUI_FLEX_FLOW_COLUMN);
-    picoui_flex_set_align(win,
-                          PICOUI_ALIGN_CENTER,
-                          PICOUI_ALIGN_CENTER,
-                          PICOUI_ALIGN_CENTER);
-    picoui_flex_set_gap(win, 12, 12);
+    tinyui_flex_set_flow(win, TINYUI_FLEX_FLOW_COLUMN);
+    tinyui_flex_set_align(win,
+                          TINYUI_ALIGN_CENTER,
+                          TINYUI_ALIGN_CENTER,
+                          TINYUI_ALIGN_CENTER);
+    tinyui_flex_set_gap(win, 12, 12);
 
-    picoui_label_set_text(title, "Theme");
-    picoui_text_set_text(body, "Accent preview");
-    picoui_button_set_text(accent, "Primary");
+    tinyui_label_set_text(title, "Theme");
+    tinyui_text_set_text(body, "Accent preview");
+    tinyui_button_set_text(accent, "Primary");
 }
 
 static int run_demo(void)
 {
-    struct picoui_theme *theme = picoui_theme_create();
-    struct picoui_app *app = picoui_app_create();
-    struct picoui_window *win;
+    struct tinyui_theme *theme = tinyui_theme_create();
+    struct tinyui_app *app = tinyui_app_create();
+    struct tinyui_window *win;
 
     if (theme == 0 || app == 0) {
-        picoui_theme_destroy(theme);
-        picoui_app_destroy(app);
+        tinyui_theme_destroy(theme);
+        tinyui_app_destroy(app);
         return 1;
     }
 
-    if (picoui_app_set_theme(app, theme) != 0) {
-        picoui_theme_destroy(theme);
-        picoui_app_destroy(app);
+    if (tinyui_app_set_theme(app, theme) != 0) {
+        tinyui_theme_destroy(theme);
+        tinyui_app_destroy(app);
         return 1;
     }
 
-    win = picoui_window_create(app, "root");
+    win = tinyui_window_create(app, "root");
     if (win == 0) {
-        picoui_theme_destroy(theme);
-        picoui_app_destroy(app);
+        tinyui_theme_destroy(theme);
+        tinyui_app_destroy(app);
         return 1;
     }
 
     make_ui(win);
-    if (picoui_app_run(app, win) != 0) {
-        picoui_app_destroy(app);
-        picoui_theme_destroy(theme);
+    if (tinyui_app_run(app, win) != 0) {
+        tinyui_app_destroy(app);
+        tinyui_theme_destroy(theme);
         return 1;
     }
-    picoui_app_destroy(app);
-    picoui_theme_destroy(theme);
+    tinyui_app_destroy(app);
+    tinyui_theme_destroy(theme);
     return 0;
 }
 

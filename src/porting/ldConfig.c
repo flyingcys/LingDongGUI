@@ -18,7 +18,7 @@ static int s_ld_cfg_touch_log_enabled = 0;
 static int ldCfgTouchLogEnabled(void)
 {
     if (!s_ld_cfg_touch_log_init) {
-        const char *env = getenv("PICOUI_TOUCH_LOG");
+        const char *env = getenv("TINYUI_TOUCH_LOG");
         s_ld_cfg_touch_log_enabled = (env != NULL && env[0] != '\0' && env[0] != '0') ? 1 : 0;
         s_ld_cfg_touch_log_init = 1;
     }
@@ -78,7 +78,7 @@ bool ldCfgTouchGetPoint(int16_t *x,int16_t *y)
         *y=-1;
     }
     if (ldCfgTouchLogEnabled()) {
-        printf("[PICOUI_TOUCH][GET] pressed=%d raw=(%d,%d) out=(%d,%d)\n",
+        printf("[TINYUI_TOUCH][GET] pressed=%d raw=(%d,%d) out=(%d,%d)\n",
                s_ld_cfg_touch_pressed ? 1 : 0,
                s_ld_cfg_touch_x,
                s_ld_cfg_touch_y,
@@ -95,7 +95,7 @@ void ldCfgTouchSetPoint(int16_t x, int16_t y, bool pressed)
     s_ld_cfg_touch_x = x;
     s_ld_cfg_touch_y = y;
     if (ldCfgTouchLogEnabled()) {
-        printf("[PICOUI_TOUCH][SET] pressed=%d point=(%d,%d)\n",
+        printf("[TINYUI_TOUCH][SET] pressed=%d point=(%d,%d)\n",
                pressed ? 1 : 0,
                x,
                y);

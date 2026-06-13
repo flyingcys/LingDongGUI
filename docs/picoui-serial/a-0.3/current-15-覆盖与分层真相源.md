@@ -1,19 +1,19 @@
 # Current-15 覆盖与分层真相源
 
-> 说明：这份文档是 `a-0.3` 在 2026-05-31 冻结的 `current-15` 阶段快照，不再代表当前主仓 truth-source。当前主仓以 `tests/picoui/contract/picoui_release_capability_matrix.json` 与 `docs/superpowers/reviews/2026-06-01-picoui-a-0-3-a-0-4-a-0-5-deep-review.md` 为准。
+> 说明：这份文档是 `a-0.3` 在 2026-05-31 冻结的 `current-15` 阶段快照，不再代表当前主仓 truth-source。当前主仓以 `tests/tinyui/contract/tinyui_release_capability_matrix.json` 与 `docs/superpowers/reviews/2026-06-01-tinyui-a-0-3-a-0-4-a-0-5-deep-review.md` 为准。
 
 ## 目标
 
 这份文档只回答 `a-0.3-R1 / R2` 的两个问题：
 
-1. `a-0.3` 冻结时的 PicoUI public widget 到底已经覆盖到哪里。
+1. `a-0.3` 冻结时的 TINYUI public widget 到底已经覆盖到哪里。
 2. 当时 `15` 个已接入控件分别处在哪个中间层级。
 
 它不是当前主仓 release closeout，也不是后续版本计划。
 
-## current PicoUI public widget 清单
+## current TINYUI public widget 清单
 
-以 `a-0.3` 冻结时的 `picoui/include/picoui/*.h` 导出集合为准，排除 `app/layout/theme/widget/picoui` 五个基础入口后，当时 current public widget 共 `15` 个：
+以 `a-0.3` 冻结时的 `tinyui/include/tinyui/*.h` 导出集合为准，排除 `app/layout/theme/widget/tinyui` 五个基础入口后，当时 current public widget 共 `15` 个：
 
 1. `window`
 2. `label`
@@ -37,7 +37,7 @@
 
 current-15 对应关系如下：
 
-| PicoUI public widget | LingDongGUI backend widget | 当前层级 |
+| TINYUI public widget | LingDongGUI backend widget | 当前层级 |
 | --- | --- | --- |
 | `window` | `ldWindow` | `full parity complete` |
 | `label` | `ldLabel` | `full parity complete` |
@@ -57,7 +57,7 @@ current-15 对应关系如下：
 
 ## 当前未覆盖控件
 
-在该快照时点，current public widget 之外，仍未接入 PicoUI public API 的 LingDongGUI 控件共 `11` 个：
+在该快照时点，current public widget 之外，仍未接入 TINYUI public API 的 LingDongGUI 控件共 `11` 个：
 
 1. `line_edit`
 2. `keyboard`
@@ -127,8 +127,8 @@ current-15 对应关系如下：
 该历史快照的计数固定为：
 
 1. `ldgui_wrappable_widget_total = 26`
-2. `picoui_wrapped_widget_total = 15`
-3. `picoui_not_wrapped_widget_total = 11`
+2. `tinyui_wrapped_widget_total = 15`
+3. `tinyui_not_wrapped_widget_total = 11`
 4. `full_parity_complete_total = 4`
 5. `stable_contract_total = 5`
 6. `minimal_vertical_slice_total = 6`

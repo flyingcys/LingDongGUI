@@ -12,7 +12,7 @@
         "flex_grid_padding_gap",
         "background_image_mask"
       ],
-      "picoui_widget": "picoui_window",
+      "tinyui_widget": "tinyui_window",
       "status": "existing_release_contract"
     },
     {
@@ -24,7 +24,7 @@
         "text_color_align",
         "background_image_mask"
       ],
-      "picoui_widget": "picoui_label",
+      "tinyui_widget": "tinyui_label",
       "status": "existing_release_contract"
     },
     {
@@ -36,7 +36,7 @@
         "callbacks_signal_bridge",
         "press_release_image"
       ],
-      "picoui_widget": "picoui_button",
+      "tinyui_widget": "tinyui_button",
       "status": "existing_release_contract"
     },
     {
@@ -48,7 +48,7 @@
         "signal_toggle",
         "text_color_align"
       ],
-      "picoui_widget": "picoui_checkbox",
+      "tinyui_widget": "tinyui_checkbox",
       "status": "existing_release_contract"
     },
     {
@@ -60,7 +60,7 @@
         "signal_toggle",
         "style_colors"
       ],
-      "picoui_widget": "picoui_switch",
+      "tinyui_widget": "tinyui_switch",
       "status": "existing_release_contract"
     },
     {
@@ -72,7 +72,7 @@
         "indicator_image_mask",
         "value_changed_signal"
       ],
-      "picoui_widget": "picoui_slider",
+      "tinyui_widget": "tinyui_slider",
       "status": "existing_release_contract"
     },
     {
@@ -84,7 +84,7 @@
         "scroll_static_text",
         "bg_text_align"
       ],
-      "picoui_widget": "picoui_text",
+      "tinyui_widget": "tinyui_text",
       "status": "existing_release_contract"
     },
     {
@@ -96,7 +96,7 @@
         "set_image_mask",
         "set_mask_color"
       ],
-      "picoui_widget": "picoui_image",
+      "tinyui_widget": "tinyui_image",
       "status": "existing_release_contract"
     },
     {
@@ -108,7 +108,7 @@
         "set_item_widget",
         "padding_margin_selection"
       ],
-      "picoui_widget": "picoui_list",
+      "tinyui_widget": "tinyui_list",
       "status": "existing_release_contract"
     },
     {
@@ -120,7 +120,7 @@
         "set_image_frame_image",
         "set_color_orientation_inverted"
       ],
-      "picoui_widget": "picoui_progress_bar",
+      "tinyui_widget": "tinyui_progress_bar",
       "status": "existing_release_contract"
     },
     {
@@ -132,7 +132,7 @@
         "set_text",
         "version_zoom_configuration"
       ],
-      "picoui_widget": "picoui_qrcode",
+      "tinyui_widget": "tinyui_qrcode",
       "status": "existing_release_contract"
     },
     {
@@ -144,7 +144,7 @@
         "set_wheel_color",
         "set_dot_color"
       ],
-      "picoui_widget": "picoui_progress_wheel",
+      "tinyui_widget": "tinyui_progress_wheel",
       "status": "existing_release_contract"
     },
     {
@@ -156,7 +156,7 @@
         "set_callback",
         "set_string_button_background_colors"
       ],
-      "picoui_widget": "picoui_message_box",
+      "tinyui_widget": "tinyui_message_box",
       "status": "existing_release_contract"
     },
     {
@@ -168,7 +168,7 @@
         "set_date_time",
         "set_align_color_transparent"
       ],
-      "picoui_widget": "picoui_date_time",
+      "tinyui_widget": "tinyui_date_time",
       "status": "existing_release_contract"
     },
     {
@@ -180,7 +180,7 @@
         "set_pointer_images",
         "set_step_second"
       ],
-      "picoui_widget": "picoui_clock",
+      "tinyui_widget": "tinyui_clock",
       "status": "existing_release_contract"
     },
     {
@@ -192,7 +192,7 @@
         "set_align_color",
         "finished_signal_bridge"
       ],
-      "picoui_widget": "picoui_line_edit",
+      "tinyui_widget": "tinyui_line_edit",
       "status": "existing_release_contract"
     },
     {
@@ -204,7 +204,7 @@
         "target_navigation",
         "finished_runtime_bridge"
       ],
-      "picoui_widget": "picoui_keyboard",
+      "tinyui_widget": "tinyui_keyboard",
       "status": "existing_release_contract"
     },
     {
@@ -216,7 +216,7 @@
         "dropdown_indicator_image",
         "selection_readback"
       ],
-      "picoui_widget": "picoui_combo_box",
+      "tinyui_widget": "tinyui_combo_box",
       "status": "existing_release_contract"
     },
     {
@@ -228,7 +228,7 @@
         "indicator_image_color",
         "edit_mode_selection_readback"
       ],
-      "picoui_widget": "picoui_scroll_selecter",
+      "tinyui_widget": "tinyui_scroll_selecter",
       "status": "existing_release_contract"
     },
     {
@@ -240,7 +240,7 @@
         "progress_trail_colors",
         "value_readback"
       ],
-      "picoui_widget": "picoui_arc",
+      "tinyui_widget": "tinyui_arc",
       "status": "existing_release_contract"
     },
     {
@@ -252,7 +252,7 @@
         "pointer_image_color",
         "scale_tick_configuration"
       ],
-      "picoui_widget": "picoui_gauge",
+      "tinyui_widget": "tinyui_gauge",
       "status": "existing_release_contract"
     },
     {
@@ -264,7 +264,7 @@
         "axis_grid_configuration",
         "color_style_resources"
       ],
-      "picoui_widget": "picoui_graph",
+      "tinyui_widget": "tinyui_graph",
       "status": "existing_release_contract"
     },
     {
@@ -276,7 +276,7 @@
         "row_col_configuration",
         "cell_style_alignment"
       ],
-      "picoui_widget": "picoui_table",
+      "tinyui_widget": "tinyui_table",
       "status": "existing_release_contract"
     },
     {
@@ -288,7 +288,7 @@
         "day_name_grid",
         "cell_color_font_style"
       ],
-      "picoui_widget": "picoui_calendar",
+      "tinyui_widget": "tinyui_calendar",
       "status": "existing_release_contract"
     },
     {
@@ -300,7 +300,7 @@
         "selection_speed",
         "default_offset_click"
       ],
-      "picoui_widget": "picoui_icon_slider",
+      "tinyui_widget": "tinyui_icon_slider",
       "status": "existing_release_contract"
     },
     {
@@ -312,7 +312,7 @@
         "selection_offset_speed",
         "click_default_item"
       ],
-      "picoui_widget": "picoui_radial_menu",
+      "tinyui_widget": "tinyui_radial_menu",
       "status": "existing_release_contract"
     },
     {
@@ -324,7 +324,7 @@
         "show_frame_tile",
         "frame_lifecycle"
       ],
-      "picoui_widget": "picoui_animation",
+      "tinyui_widget": "tinyui_animation",
       "status": "existing_release_contract"
     },
     {
@@ -336,7 +336,7 @@
         "clear_command_list",
         "push_portable_draw_commands"
       ],
-      "picoui_widget": "picoui_canvas",
+      "tinyui_widget": "tinyui_canvas",
       "status": "existing_release_contract"
     }
   ]

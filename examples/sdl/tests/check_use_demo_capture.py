@@ -81,13 +81,13 @@ def main() -> int:
     args = parser.parse_args()
 
     if args.demo == "5":
-        settings_demo = REPO_ROOT / "picoui" / "demo" / "settings_panel" / "main.c"
+        settings_demo = REPO_ROOT / "tinyui" / "demo" / "settings_panel" / "main.c"
         demo_source = settings_demo.read_text(encoding="utf-8")
         forbidden_markers = (
             ".width =",
             ".height =",
-            "picoui_widget_set_size(",
-            "picoui_widget_set_pos(",
+            "tinyui_widget_set_size(",
+            "tinyui_widget_set_pos(",
         )
         if any(marker in demo_source for marker in forbidden_markers):
             raise AssertionError(

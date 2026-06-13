@@ -19,32 +19,32 @@
 #include "clock_basic/clock_basic.h"
 #include "tinyui.h"
 
-static void make_ui(struct picoui_window *win)
+static void make_ui(struct tinyui_window *win)
 {
-    struct picoui_clock_props props = {
+    struct tinyui_clock_props props = {
         .id = "clock",
         .step_second = 1,
     };
-    struct picoui_clock *clock =
-        picoui_clock_create_with_props((struct picoui_widget *)win, &props);
+    struct tinyui_clock *clock =
+        tinyui_clock_create_with_props((struct tinyui_widget *)win, &props);
 
-    picoui_grid_set_columns(win, (const int[]){240, 0}, 2);
-    picoui_grid_set_rows(win, (const int[]){220, 0}, 2);
-    picoui_grid_set_gap(win, 16, 16);
-    picoui_grid_set_align(win, PICOUI_ALIGN_CENTER, PICOUI_ALIGN_CENTER);
-    picoui_window_set_padding_group(win, 24, 24, 24, 24);
+    tinyui_grid_set_columns(win, (const int[]){240, 0}, 2);
+    tinyui_grid_set_rows(win, (const int[]){220, 0}, 2);
+    tinyui_grid_set_gap(win, 16, 16);
+    tinyui_grid_set_align(win, TINYUI_ALIGN_CENTER, TINYUI_ALIGN_CENTER);
+    tinyui_window_set_padding_group(win, 24, 24, 24, 24);
 
-    picoui_widget_set_size((struct picoui_widget *)clock, 200, 200);
-    picoui_widget_set_grid_cell((struct picoui_widget *)clock,
+    tinyui_widget_set_size((struct tinyui_widget *)clock, 200, 200);
+    tinyui_widget_set_grid_cell((struct tinyui_widget *)clock,
                                 0, 0, 1, 1,
-                                PICOUI_ALIGN_CENTER,
-                                PICOUI_ALIGN_CENTER);
+                                TINYUI_ALIGN_CENTER,
+                                TINYUI_ALIGN_CENTER);
 }
 
 void tinyui_demo_clock_basic(void)
 {
     tinyui_obj_t *screen = tinyui_screen_create();
-    struct picoui_window *win = (struct picoui_window *)screen;
+    struct tinyui_window *win = (struct tinyui_window *)screen;
 
     if (win == 0) {
         return;

@@ -6,7 +6,7 @@
 
 **Architecture:** 先完成目录层面的原地演化，再收口 public include 路径、顶层 umbrella header 和 include path，保留内部实现暂时仍可通过旧测试树编译，但不再保留双顶层目录并行。
 
-**Tech Stack:** Git move/rename、CMake include path、C11 头文件、现有 `picoui/include` 与试点 `tinyui/include`。
+**Tech Stack:** Git move/rename、CMake include path、C11 头文件、现有 `tinyui/include` 与试点 `tinyui/include`。
 
 ---
 
@@ -18,10 +18,10 @@
 
 修改：
 
-- 顶层目录：`picoui/ -> tinyui/`
+- 顶层目录：`tinyui/ -> tinyui/`
 - `tinyui/include/*`
 - `cmake/LingDongGUI.cmake`
-- `tests/picoui/CMakeLists.txt`
+- `tests/tinyui/CMakeLists.txt`
 - `docs/v2.1/线计划索引.md`
 - `docs/v2.1/plans/stages/README.md`
 
@@ -34,14 +34,14 @@
 ### Task 1: 收口顶层产品目录
 
 **Files:**
-- Move: `picoui/` -> `tinyui/`
+- Move: `tinyui/` -> `tinyui/`
 - Delete later: legacy parallel `tinyui/include/*` source locations if duplicated
 
 - [x] **Step 1: 写 fail-first 目录 contract**
 
-Extend `tests/picoui/contract/check_tinyui_v21_transition_guards.py` so V1 closeout expects:
+Extend `tests/tinyui/contract/check_tinyui_v21_transition_guards.py` so V1 closeout expects:
 
-- `picoui_dir_exists == false`
+- `tinyui_dir_exists == false`
 - `tinyui_dir_exists == true`
 - `tinyui/include/*` contains the unified public include tree
 
@@ -50,10 +50,10 @@ Extend `tests/picoui/contract/check_tinyui_v21_transition_guards.py` so V1 close
 Run:
 
 ```bash
-python3 tests/picoui/contract/check_tinyui_v21_transition_guards.py
+python3 tests/tinyui/contract/check_tinyui_v21_transition_guards.py
 ```
 
-Expected: FAIL，因为当前仍同时存在 `picoui/` 与试点 `tinyui/`。
+Expected: FAIL，因为当前仍同时存在 `tinyui/` 与试点 `tinyui/`。
 
 - [x] **Step 3: 执行目录迁移**
 
@@ -64,7 +64,7 @@ Required end state after the move:
 - `tinyui/include/*`
 - `tinyui/src/*`
 - `tinyui/demo/*`
-- no parallel product root named `picoui/`
+- no parallel product root named `tinyui/`
 
 - [x] **Step 4: 吸收试点 include 树**
 
@@ -72,15 +72,15 @@ Merge the current pilot `tinyui/include/*` content into the unified `tinyui/incl
 
 - [x] **Step 5: 回填 inventory**
 
-Update `tests/picoui/contract/tinyui_v21_transition_inventory.json`:
+Update `tests/tinyui/contract/tinyui_v21_transition_inventory.json`:
 
 ```json
 {
   "baseline": {
-    "picoui_dir_exists": false,
+    "tinyui_dir_exists": false,
     "tinyui_dir_exists": true,
     "backend_c_files": 35,
-    "picoui_public_api_count": 559,
+    "tinyui_public_api_count": 559,
     "tinyui_public_api_count": 39
   }
 }
@@ -93,7 +93,7 @@ Use measured counts if they changed.
 Run:
 
 ```bash
-python3 tests/picoui/contract/check_tinyui_v21_transition_guards.py
+python3 tests/tinyui/contract/check_tinyui_v21_transition_guards.py
 git diff --check
 ```
 
@@ -104,7 +104,7 @@ Expected: PASS。
 **Files:**
 - Modify: unified `tinyui/include/*`
 - Modify: `cmake/LingDongGUI.cmake`
-- Modify: `tests/picoui/CMakeLists.txt`
+- Modify: `tests/tinyui/CMakeLists.txt`
 
 - [x] **Step 1: 统一 umbrella header**
 
@@ -126,7 +126,7 @@ Ensure the canonical public umbrella header is:
 
 and that the canonical product umbrella header is `tinyui/include/tinyui.h`.
 
-At the end of `V1`, `tinyui/include/picoui/*` may still remain as a temporary
+At the end of `V1`, `tinyui/include/tinyui/*` may still remain as a temporary
 compatibility subtree so existing product-layer callers can keep compiling.
 Removing that compatibility umbrella belongs to later naming-cleanup phases,
 not `V1`.
@@ -138,7 +138,7 @@ Update build scripts and tests so product-layer include roots resolve through `t
 Concrete places to update:
 
 - `cmake/LingDongGUI.cmake`
-- `tests/picoui/CMakeLists.txt` or its renamed successor once V4 migrates test directories
+- `tests/tinyui/CMakeLists.txt` or its renamed successor once V4 migrates test directories
 
 - [x] **Step 3: 跑 focused compile proof**
 
@@ -146,7 +146,7 @@ Run:
 
 ```bash
 rtk cmake -S . -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
-rtk cmake --build build --target test_picoui_runtime_model test_picoui_switch
+rtk cmake --build build --target test_tinyui_runtime_model test_tinyui_switch
 ```
 
 Expected: PASS，说明目录迁移后最小 runtime/widget 入口仍可编译。

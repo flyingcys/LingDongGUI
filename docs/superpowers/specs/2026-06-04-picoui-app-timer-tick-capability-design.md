@@ -1,25 +1,25 @@
-# PicoUI App Timer / Tick Capability Design
+# TINYUI App Timer / Tick Capability Design
 
 **日期**：2026-06-04  
-**范围**：`picoui/app` public 定时器/帧驱动能力  
-**目标用户**：只使用 `picoui_*` public API 的 demo / 应用作者
+**范围**：`tinyui/app` public 定时器/帧驱动能力  
+**目标用户**：只使用 `tinyui_*` public API 的 demo / 应用作者
 
 ## 1. 背景
 
-当前 `picoui/demo/layout_parity` 与 `picoui/demo/legacy_widget_parity` 都已经建立了结构 baseline，但还缺老 SDL truth-source 里的周期行为：
+当前 `tinyui/demo/layout_parity` 与 `tinyui/demo/legacy_widget_parity` 都已经建立了结构 baseline，但还缺老 SDL truth-source 里的周期行为：
 
 1. `layout_parity`
    - 老 `uiLayoutLoop()` 每 `1200ms` 在 `170 / 220` 之间切换 `flex row` 宽度。
 2. `legacy_widget_parity`
    - 老 `uiWidgetLegacyLoop()` 每 `100ms` 驱动 `arc/gauge` 动画。
 
-现在的 PicoUI public app 面只有：
+现在的 TINYUI public app 面只有：
 
-- `picoui_app_create()`
-- `picoui_app_run()`
-- `picoui_app_set_window()`
-- `picoui_app_switch_window()`
-- `picoui_app_destroy()`
+- `tinyui_app_create()`
+- `tinyui_app_run()`
+- `tinyui_app_set_window()`
+- `tinyui_app_switch_window()`
+- `tinyui_app_destroy()`
 
 它没有任何 public `timer / tick / frame callback` 注册接口。  
 backend SDL loop 虽然每帧在跑，但 `.loop / .frameStart / .frameComplete` 没有暴露成 public hook，demo 无法合法表达老页面行为。
@@ -33,23 +33,23 @@ backend SDL loop 虽然每帧在跑，但 `.loop / .frameStart / .frameComplete`
 - `examples/common/demo/layout/uiLayout.c`
 - `examples/common/demo/widget/uiWidgetLegacy.c`
 
-### 2.2 PicoUI public app / backend 真相源
+### 2.2 TINYUI public app / backend 真相源
 
-- `picoui/include/picoui/app.h`
-- `picoui/src/core/app.c`
-- `picoui/src/backend/ldgui/backend_app.c`
+- `tinyui/include/tinyui/app.h`
+- `tinyui/src/core/app.c`
+- `tinyui/src/backend/ldgui/backend_app.c`
 
 ### 2.3 当前需求承接页
 
-- `picoui/demo/layout_parity/main.c`
-- `picoui/demo/legacy_widget_parity/main.c`
-- `docs/superpowers/reviews/2026-06-04-picoui-three-parity-demo-gap-audit.md`
+- `tinyui/demo/layout_parity/main.c`
+- `tinyui/demo/legacy_widget_parity/main.c`
+- `docs/superpowers/reviews/2026-06-04-tinyui-three-parity-demo-gap-audit.md`
 
 ## 3. 目标
 
-为 PicoUI 增加一组“public app 级定时器能力”，满足以下要求：
+为 TINYUI 增加一组“public app 级定时器能力”，满足以下要求：
 
-1. 只能通过 `picoui_*` public API 使用。
+1. 只能通过 `tinyui_*` public API 使用。
 2. 允许 demo / 应用在 app 事件循环里注册周期任务。
 3. 支持“到期后回调”这种一步到位的语义，而不是只给一个每帧裸 hook。
 4. 可以同时解锁：
@@ -61,12 +61,12 @@ backend SDL loop 虽然每帧在跑，但 `.loop / .frameStart / .frameComplete`
 
 这条线不做以下事情：
 
-1. 不引入 PicoUI 专属 fake renderer。
+1. 不引入 TINYUI 专属 fake renderer。
 2. 不做复杂调度系统：
    - 不做优先级
    - 不做线程
    - 不做跨 app 全局 scheduler
-3. 不把 LingDongGUI 的 `ldTimeOut()` 直接暴露成 PicoUI public API。
+3. 不把 LingDongGUI 的 `ldTimeOut()` 直接暴露成 TINYUI public API。
 4. 不顺手补：
    - `legacy_widget_parity` 真实图片资源 exact-match
    - `grid_parity` 内容 fidelity
@@ -77,7 +77,7 @@ backend SDL loop 虽然每帧在跑，但 `.loop / .frameStart / .frameComplete`
 
 ### 5.1 Public capability，不是 demo patch
 
-能力必须挂在 `picoui/app` 公共层，而不是只给某个 demo 写一段 backend special case。
+能力必须挂在 `tinyui/app` 公共层，而不是只给某个 demo 写一段 backend special case。
 
 ### 5.2 一步到位采用 timer 语义
 
@@ -89,7 +89,7 @@ backend SDL loop 虽然每帧在跑，但 `.loop / .frameStart / .frameComplete`
 虽然选的是 timer 方案，但仍然要保持小：
 
 1. 单线程
-2. 绑定到单个 `picoui_app`
+2. 绑定到单个 `tinyui_app`
 3. 回调在 app 主循环线程执行
 4. 不承诺实时精度，只承诺“在 backend loop 驱动下尽快触发”
 
@@ -103,7 +103,7 @@ timer 只负责调度，不负责替 demo 保存动画角度、宽度切换状�
 
 形式：
 
-- `picoui_app_set_frame_callback(app, cb, user_data)`
+- `tinyui_app_set_frame_callback(app, cb, user_data)`
 
 优点：
 
@@ -136,7 +136,7 @@ timer 只负责调度，不负责替 demo 保存动画角度、宽度切换状�
 1. 比纯 tick callback 多一层 API 和状态管理
 2. 需要定义 timer 生命周期
 
-### 方案 C：把 `ldTimeOut()` 包装成 PicoUI 公共函数
+### 方案 C：把 `ldTimeOut()` 包装成 TINYUI 公共函数
 
 优点：
 
@@ -145,7 +145,7 @@ timer 只负责调度，不负责替 demo 保存动画角度、宽度切换状�
 缺点：
 
 1. 泄漏底层实现语义
-2. 不符合 PicoUI 作为上层 API 的边界
+2. 不符合 TINYUI 作为上层 API 的边界
 3. 容易把 backend/private 行为直接搬进 public 面
 
 ### 选择结果
@@ -159,17 +159,17 @@ timer 只负责调度，不负责替 demo 保存动画角度、宽度切换状�
 
 新增一个 public timer 句柄类型：
 
-- `struct picoui_app_timer`
+- `struct tinyui_app_timer`
 
-它是 app 级资源，由 `picoui_app` 管理生命周期。
+它是 app 级资源，由 `tinyui_app` 管理生命周期。
 
 ## 7.2 新回调类型
 
 新增回调签名：
 
 ```c
-typedef void (*picoui_app_timer_cb_t)(struct picoui_app *app,
-                                      struct picoui_app_timer *timer,
+typedef void (*tinyui_app_timer_cb_t)(struct tinyui_app *app,
+                                      struct tinyui_app_timer *timer,
                                       void *user_data);
 ```
 
@@ -183,15 +183,15 @@ typedef void (*picoui_app_timer_cb_t)(struct picoui_app *app,
 
 建议新增以下接口：
 
-1. `struct picoui_app_timer *picoui_app_timer_create(struct picoui_app *app);`
-2. `int picoui_app_timer_start(struct picoui_app_timer *timer,
+1. `struct tinyui_app_timer *tinyui_app_timer_create(struct tinyui_app *app);`
+2. `int tinyui_app_timer_start(struct tinyui_app_timer *timer,
                                unsigned int interval_ms,
                                int repeat,
-                               picoui_app_timer_cb_t callback,
+                               tinyui_app_timer_cb_t callback,
                                void *user_data);`
-3. `int picoui_app_timer_stop(struct picoui_app_timer *timer);`
-4. `int picoui_app_timer_is_running(const struct picoui_app_timer *timer);`
-5. `void picoui_app_timer_destroy(struct picoui_app_timer *timer);`
+3. `int tinyui_app_timer_stop(struct tinyui_app_timer *timer);`
+4. `int tinyui_app_timer_is_running(const struct tinyui_app_timer *timer);`
+5. `void tinyui_app_timer_destroy(struct tinyui_app_timer *timer);`
 
 语义约束：
 
@@ -205,10 +205,10 @@ typedef void (*picoui_app_timer_cb_t)(struct picoui_app *app,
 
 ## 7.4 生命周期规则
 
-1. timer 必须绑定到某个 `picoui_app`。
-2. `picoui_app_destroy(app)` 时，app 持有的 timer 全部失效并清理。
-3. timer 回调只会在 `picoui_app_run()` 驱动的主循环中执行。
-4. 不承诺在 `picoui_app_run()` 之外触发。
+1. timer 必须绑定到某个 `tinyui_app`。
+2. `tinyui_app_destroy(app)` 时，app 持有的 timer 全部失效并清理。
+3. timer 回调只会在 `tinyui_app_run()` 驱动的主循环中执行。
+4. 不承诺在 `tinyui_app_run()` 之外触发。
 
 ## 8. 实现架构
 
@@ -216,20 +216,20 @@ typedef void (*picoui_app_timer_cb_t)(struct picoui_app *app,
 
 文件：
 
-- `picoui/include/picoui/app.h`
-- `picoui/src/core/app.c`
+- `tinyui/include/tinyui/app.h`
+- `tinyui/src/core/app.c`
 
 职责：
 
 1. 暴露新 public 类型和函数声明。
 2. 做最小参数校验。
-3. 管理 `picoui_app` 持有的 timer 列表或数组。
+3. 管理 `tinyui_app` 持有的 timer 列表或数组。
 
 ## 8.2 Backend 层
 
 文件：
 
-- `picoui/src/backend/ldgui/backend_app.c`
+- `tinyui/src/backend/ldgui/backend_app.c`
 
 职责：
 
@@ -294,7 +294,7 @@ typedef void (*picoui_app_timer_cb_t)(struct picoui_app *app,
 
 - interval: `1200ms`
 - callback 内切换紧凑/宽松状态
-- 再通过现有 `picoui_widget_set_width()` 或等价 public API 改容器宽度
+- 再通过现有 `tinyui_widget_set_width()` 或等价 public API 改容器宽度
 
 ### 10.2 `legacy_widget_parity`
 
@@ -324,7 +324,7 @@ typedef void (*picoui_app_timer_cb_t)(struct picoui_app *app,
 
 验证：
 
-1. 在 `picoui_app_run()` 驱动下 timer 会触发
+1. 在 `tinyui_app_run()` 驱动下 timer 会触发
 2. repeating timer 能多次触发
 3. one-shot 只触发一次
 
@@ -339,7 +339,7 @@ typedef void (*picoui_app_timer_cb_t)(struct picoui_app *app,
 
 完成后才能诚实地说：
 
-1. PicoUI public app 层已具备通用 timer/tick capability。
+1. TINYUI public app 层已具备通用 timer/tick capability。
 2. `layout_parity` 缺的 runtime behavior capability 已补通。
 3. `legacy_widget_parity` 的老页面动画不再被 capability 缺口阻塞。
 

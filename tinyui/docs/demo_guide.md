@@ -1,6 +1,6 @@
 # TinyUI Demo 运行指南
 
-本文只描述当前 `v2.1` 的 current-facing demo 真相，不复述旧 `PicoUI/a-0.x` serial 文档阶段细节。
+本文只描述当前 `v2.1` 的 current-facing demo 真相，不复述旧 `TINYUI/a-0.x` serial 文档阶段细节。
 
 ## 真相源
 
@@ -8,8 +8,8 @@
 - runtime smoke：`tests/tinyui/runtime/check_tinyui_runtime.py`
 - backend mapping：`tests/tinyui/runtime/check_tinyui_backend_mapping.py`
 - automatic visible：`tests/tinyui/runtime/check_tinyui_visible_ui.py --all`
-- manual artifact 生成入口：`tests/picoui/runtime/check_picoui_manual_window_artifact.py`
-- manual artifact truth-source：`docs/picoui-serial/C-线人工窗口验收记录.md`
+- manual artifact 生成入口：`tests/tinyui/runtime/check_tinyui_manual_window_artifact.py`
+- manual artifact truth-source：`docs/tinyui-serial/C-线人工窗口验收记录.md`
 - release / capability truth-source：`tests/tinyui/contract/tinyui_release_capability_matrix.json`
 
 ## demo target
@@ -81,8 +81,8 @@ build\tinyui-runtime\examples\sdl\tinyui_hello_world_demo.exe
    - `python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --all`
    - 证明 `SDL_VIDEODRIVER=dummy + PPM readback` 下可显示、可读、可判定
 4. `manual artifact`
-   - `python3 tests/picoui/runtime/check_picoui_manual_window_artifact.py --demo basic_widgets`
-   - `python3 tests/picoui/runtime/check_picoui_manual_window_artifact.py --demo settings_panel`
+   - `python3 tests/tinyui/runtime/check_tinyui_manual_window_artifact.py --demo basic_widgets`
+   - `python3 tests/tinyui/runtime/check_tinyui_manual_window_artifact.py --demo settings_panel`
    - 这是历史保留的人工窗口 artifact 入口；脚本当前实际构建和运行的是 `tinyui_*_demo`，默认 build 目录也是 `build/tinyui-runtime`
 
 这些证据层不能混写：
@@ -111,9 +111,9 @@ rtk ctest --test-dir build -L 'tinyui' --output-on-failure
 
 当前 manual artifact truth 仍保留在历史链路：
 
-- 脚本入口：`tests/picoui/runtime/check_picoui_manual_window_artifact.py`
+- 脚本入口：`tests/tinyui/runtime/check_tinyui_manual_window_artifact.py`
 - artifact 根目录：`artifacts/tinyui/manual-window/`
-- 记录真相源：`docs/picoui-serial/C-线人工窗口验收记录.md`
+- 记录真相源：`docs/tinyui-serial/C-线人工窗口验收记录.md`
 
 这是当前仓库的过渡态，不应误写成 canonical `tests/tinyui/runtime/*` 已完全承接 manual artifact。
 
@@ -127,11 +127,11 @@ rtk ctest --test-dir build -L 'tinyui' --output-on-failure
 
 每个 TinyUI demo 都是单独 target，需要显式指定 `--target`。
 
-### 为什么文档里还会看到 `picoui`
+### 为什么文档里还会看到 `tinyui`
 
 当前允许两类保留命中：
 
 - 历史 serial 文档和历史 manual artifact 入口
 - 仍处过渡态的 public C API / compatibility subtree
 
-`v2.1` 当前要求的是 canonical truth、header、contract、test、CMake 和 current-facing 文档统一到 `tinyui`，不是把所有 `picoui` 文本命中清零。
+`v2.1` 当前要求的是 canonical truth、header、contract、test、CMake 和 current-facing 文档统一到 `tinyui`，不是把所有 `tinyui` 文本命中清零。

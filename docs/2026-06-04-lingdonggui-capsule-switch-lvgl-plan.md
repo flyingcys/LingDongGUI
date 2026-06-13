@@ -2,10 +2,10 @@
 
 ## 背景
 
-PicoUI `basic_widgets` 当前已经解决了两个明显问题：
+TINYUI `basic_widgets` 当前已经解决了两个明显问题：
 
 - `switch` 从 `(0,0)` 回到真实 grid padding 位置，目标 bbox 为 `(16,24)-(63,47)`。
-- PicoUI SDL runtime 的 root/background/capture 已统一到 `480x320`，不再出现右侧和底部黑块。
+- TINYUI SDL runtime 的 root/background/capture 已统一到 `480x320`，不再出现右侧和底部黑块。
 
 但截图中 `switch` track 左右端仍偏方，圆角不够接近 LVGL。继续在 `ldSwitch.c` 内盲目调整 `draw_round_corner_box()` 不是正确方向，因为 LingDongGUI 当前缺少一个能表达 LVGL `LV_RADIUS_CIRCLE` 语义的通用胶囊绘制能力。
 
@@ -110,9 +110,9 @@ void ldBaseDrawCapsule(arm_2d_tile_t *ptTile,
 - horizontal on 的左右中点必须是 track 色，证明端部仍完整。
 - vertical 同理检查上下端。
 
-### 4. PicoUI runtime 截图
+### 4. TINYUI runtime 截图
 
-`tests/picoui/runtime/check_picoui_runtime.py` 必须明确断言 `picoui_basic_widgets_demo`：
+`tests/tinyui/runtime/check_tinyui_runtime.py` 必须明确断言 `tinyui_basic_widgets_demo`：
 
 - capture size 为 `480x320`。
 - 右侧和底部背景不是黑条。
@@ -122,16 +122,16 @@ void ldBaseDrawCapsule(arm_2d_tile_t *ptTile,
 
 ## CMake 尺寸一致性要求
 
-当前 `LD_CFG_SCREEN_WIDTH=480` 等宏不能只加在 `picoui_backend_ldgui` 上。PicoUI runtime 涉及以下 target：
+当前 `LD_CFG_SCREEN_WIDTH=480` 等宏不能只加在 `tinyui_backend_ldgui` 上。TINYUI runtime 涉及以下 target：
 
-- `picoui_backend_ldgui`
+- `tinyui_backend_ldgui`
 - `longdonggui`
 - `longdonggui_porting_default`
 - demo executable
 
 这些编译单元必须看到一致的 `LD_CFG_SCREEN_WIDTH=480`、`LD_CFG_SCREEN_HEIGHT=320`、`LD_CFG_PFB_WIDTH=480`，否则 root/window/capture/touch clamp 可能尺寸不一致。
 
-实现时应优先用一个 CMake helper 或 INTERFACE target 集中定义 PicoUI runtime screen config，避免只在单个 target 上追加宏。
+实现时应优先用一个 CMake helper 或 INTERFACE target 集中定义 TINYUI runtime screen config，避免只在单个 target 上追加宏。
 
 ## 写面
 
@@ -142,14 +142,14 @@ void ldBaseDrawCapsule(arm_2d_tile_t *ptTile,
 - `src/gui/ldSwitch.c`
 - `examples/sdl/tests/switch/test_ldswitch_widget.c`
 - `examples/sdl/tests/check_switch_capture_matrix.py`
-- `tests/picoui/runtime/check_picoui_runtime.py`
+- `tests/tinyui/runtime/check_tinyui_runtime.py`
 - `cmake/LingDongGUI.cmake`
-- 必要时同步更新 `docs/2026-06-04-picoui-switch-lvgl-visual-alignment-standard.md`
+- 必要时同步更新 `docs/2026-06-04-tinyui-switch-lvgl-visual-alignment-standard.md`
 
 禁止：
 
-- 修改 `picoui/demo/basic_widgets/main.c` 来硬编码坐标或视觉。
-- 在 `picoui/src/backend/ldgui/backend_app.c` 添加 fake switch 绘制。
+- 修改 `tinyui/demo/basic_widgets/main.c` 来硬编码坐标或视觉。
+- 在 `tinyui/src/backend/ldgui/backend_app.c` 添加 fake switch 绘制。
 - 用更宽松的采样断言掩盖视觉问题。
 
 ## 验证命令
@@ -157,11 +157,11 @@ void ldBaseDrawCapsule(arm_2d_tile_t *ptTile,
 实现后至少运行：
 
 ```bash
-cmake --build build --target test_picoui_window test_picoui_switch test_picoui_theme test_picoui_widgets
-./build/tests/picoui/test_picoui_window
-./build/tests/picoui/test_picoui_switch
-./build/tests/picoui/test_picoui_theme
-./build/tests/picoui/test_picoui_widgets
+cmake --build build --target test_tinyui_window test_tinyui_switch test_tinyui_theme test_tinyui_widgets
+./build/tests/tinyui/test_tinyui_window
+./build/tests/tinyui/test_tinyui_switch
+./build/tests/tinyui/test_tinyui_theme
+./build/tests/tinyui/test_tinyui_widgets
 ```
 
 ```bash
@@ -172,7 +172,7 @@ python3 examples/sdl/tests/check_switch_capture_matrix.py --build-dir build/sdl-
 ```
 
 ```bash
-python3 tests/picoui/runtime/check_picoui_runtime.py --demo basic_widgets --build-dir build/picoui-runtime
+python3 tests/tinyui/runtime/check_tinyui_runtime.py --demo basic_widgets --build-dir build/tinyui-runtime
 ```
 
 并生成一次真实 PPM 采样，确认：

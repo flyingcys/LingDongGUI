@@ -1,19 +1,19 @@
-# PicoUI C线计划索引
+# TINYUI C线计划索引
 
-- `A线` 收口索引：`docs/picoui-serial/A-线计划索引.md`
-- `B线` 收口索引：`docs/picoui-serial/B-线计划索引.md`
-- `PicoUI` 总设计真相源：`docs/superpowers/specs/2026-05-26-picoui-abstraction-layer-design.md`
-- `PicoUI` 测试架构真相源：`docs/superpowers/specs/2026-05-26-picoui-lingdonggui-test-architecture-design.md`
-- `B线` 可见 UI 设计真相源：`docs/superpowers/specs/2026-05-27-picoui-b-line-visible-ui-design.md`
-- `B线` 实施口径：`docs/superpowers/plans/2026-05-27-picoui-b-line-visible-ui-implementation.md`
-- `C线` 总设计真相源：`docs/superpowers/specs/2026-05-29-picoui-c-line-gate-hardening-design.md`
-- `C线` 总实施口径：`docs/superpowers/plans/2026-05-29-picoui-c-line-gate-hardening-implementation.md`
+- `A线` 收口索引：`docs/tinyui-serial/A-线计划索引.md`
+- `B线` 收口索引：`docs/tinyui-serial/B-线计划索引.md`
+- `TINYUI` 总设计真相源：`docs/superpowers/specs/2026-05-26-tinyui-abstraction-layer-design.md`
+- `TINYUI` 测试架构真相源：`docs/superpowers/specs/2026-05-26-tinyui-lingdonggui-test-architecture-design.md`
+- `B线` 可见 UI 设计真相源：`docs/superpowers/specs/2026-05-27-tinyui-b-line-visible-ui-design.md`
+- `B线` 实施口径：`docs/superpowers/plans/2026-05-27-tinyui-b-line-visible-ui-implementation.md`
+- `C线` 总设计真相源：`docs/superpowers/specs/2026-05-29-tinyui-c-line-gate-hardening-design.md`
+- `C线` 总实施口径：`docs/superpowers/plans/2026-05-29-tinyui-c-line-gate-hardening-implementation.md`
 - 当前仓库硬规则：`AGENTS.md`
 
 ## 当前状态
 
-- `A线` 已把 `PicoUI -> LingDongGUI` 真实 backend 主线收口。
-- `B线` 已建立自动 visible gate，并覆盖 6 个 `picoui` demos：
+- `A线` 已把 `TINYUI -> LingDongGUI` 真实 backend 主线收口。
+- `B线` 已建立自动 visible gate，并覆盖 6 个 `tinyui` demos：
   - `hello_world`
   - `basic_widgets`
   - `layout_flex`
@@ -23,8 +23,8 @@
 - `B线` 当前证据强于 `capture 非空`，但仍主要是 `SDL_VIDEODRIVER=dummy + PPM readback` 的自动化 visible gate。
 - 最新 review 明确了三个后续风险：
   - 文档中“真实窗口”表述容易被误读成肉眼 OS 窗口验收已经完成。
-  - `ctest --test-dir build -L picoui --output-on-failure` 当前没有包含完整 visible gate 和 backend mapping gate。
-  - `check_picoui_backend_mapping.py` 的映射矩阵比 visible gate 覆盖面窄。
+  - `ctest --test-dir build -L tinyui --output-on-failure` 当前没有包含完整 visible gate 和 backend mapping gate。
+  - `check_tinyui_backend_mapping.py` 的映射矩阵比 visible gate 覆盖面窄。
 
 ## C线目标
 
@@ -45,27 +45,27 @@
 - 最终验证命令：通过。
 - 后续允许进入新能力线，但必须继续遵守本文的 gate 分层和新增能力同步规则。
 - `2026-05-29` post-review：当前工作树无未提交变更；`C线` 代码和文档口径一致，未发现阻断 D 线启动的问题。
-- 下一阶段入口：`docs/picoui-serial/D-线计划索引.md`。
+- 下一阶段入口：`docs/tinyui-serial/D-线计划索引.md`。
 - 后续仍禁止：
-  - 用 `ctest --test-dir build -L picoui --output-on-failure` 单独替代 `visible` / `mapping` / manual artifact 层级。
+  - 用 `ctest --test-dir build -L tinyui --output-on-failure` 单独替代 `visible` / `mapping` / manual artifact 层级。
   - 把 `dummy SDL + PPM readback` 说成人工 OS 窗口验收。
   - 为了让 mapping marker 通过而改 demo 表达的用户意图。
 
 ## 2026-05-29 review 收口结论
 
 - 代码侧：
-  - `tests/picoui/CMakeLists.txt` 已注册 `check_picoui_visible_ui` 和 `check_picoui_backend_mapping`。
-  - `check_picoui_backend_mapping.py` 已覆盖 6 个 `picoui` demo，并为每个 demo 写明 `PICOUI_BACKEND_REAL_WIDGET_IDS` 期望。
-  - `check_picoui_visible_ui.py --all` 仍是 automatic visible gate，覆盖 6 个 demo。
-  - `check_picoui_manual_window_artifact.py` 是可选人工窗口 artifact gate，未接入 CTest，未替代自动 gate。
+  - `tests/tinyui/CMakeLists.txt` 已注册 `check_tinyui_visible_ui` 和 `check_tinyui_backend_mapping`。
+  - `check_tinyui_backend_mapping.py` 已覆盖 6 个 `tinyui` demo，并为每个 demo 写明 `PICOUI_BACKEND_REAL_WIDGET_IDS` 期望。
+  - `check_tinyui_visible_ui.py --all` 仍是 automatic visible gate，覆盖 6 个 demo。
+  - `check_tinyui_manual_window_artifact.py` 是可选人工窗口 artifact gate，未接入 CTest，未替代自动 gate。
 - 文档侧：
   - `A/B/C` 三线均已区分 `smoke gate`、`backend mapping gate`、`automatic visible gate`、`manual window artifact gate`。
   - `C-线人工窗口验收记录.md` 当前只记录 artifact 已生成，未声称人工 OS 窗口验收通过。
   - 新增 demo/widget/layout/theme 的 gate 同步规则已写入 C 线、测试架构文档和 demo guide。
 - 仍需保持的边界：
-  - `backend_app.c` 仍是 host harness / temporary smoke path 的承载点；不要把它扩回 PicoUI 专属 fake renderer。
-  - `backend_app.c` 当前 runtime present 前仍通过 `picoui_backend_apply_real_widget_layout()` 做固定 padding / row height / cursor 线性排布；这不阻断 C 线门禁工程化，但会阻断“真实 flex/grid 可见语义闭环”的更高声明。
-  - `ctest -L picoui` 可以作为总入口，但汇报时仍要单独说明 `visible` 和 `mapping` 是否执行。
+  - `backend_app.c` 仍是 host harness / temporary smoke path 的承载点；不要把它扩回 TINYUI 专属 fake renderer。
+  - `backend_app.c` 当前 runtime present 前仍通过 `tinyui_backend_apply_real_widget_layout()` 做固定 padding / row height / cursor 线性排布；这不阻断 C 线门禁工程化，但会阻断“真实 flex/grid 可见语义闭环”的更高声明。
+  - `ctest -L tinyui` 可以作为总入口，但汇报时仍要单独说明 `visible` 和 `mapping` 是否执行。
   - `manual artifact` 只能支持 artifact 存在和人工记录，不能替代 automatic visible correctness。
 - 推进判断：
   - 可以启动 D 线新能力推进。
@@ -114,7 +114,7 @@
   - 本文存在，并成为 `C线` 唯一入口索引。
   - 后续执行者可以只读本文就知道下一步先做什么、不能做什么。
 - 收口证据：
-  - `docs/picoui-serial/C-线计划索引.md` 已创建。
+  - `docs/tinyui-serial/C-线计划索引.md` 已创建。
   - `git status --short` 只显示预期文档变更。
 
 ### C1 文档口径收紧
@@ -122,12 +122,12 @@
 - 当前目标：
   - 修正 `B线` 文档中容易把自动 visible gate 过度解释成“人工真实窗口验收”的表述。
 - 必须修改的文件：
-  - `docs/picoui-serial/B-线计划索引.md`
-  - `docs/picoui-serial/C-线计划索引.md`
-  - `docs/superpowers/specs/2026-05-27-picoui-b-line-visible-ui-design.md`
-  - `docs/superpowers/plans/2026-05-27-picoui-b-line-visible-ui-implementation.md`
-  - `docs/superpowers/specs/2026-05-26-picoui-lingdonggui-test-architecture-design.md`
-  - `picoui/docs/demo_guide.md`
+  - `docs/tinyui-serial/B-线计划索引.md`
+  - `docs/tinyui-serial/C-线计划索引.md`
+  - `docs/superpowers/specs/2026-05-27-tinyui-b-line-visible-ui-design.md`
+  - `docs/superpowers/plans/2026-05-27-tinyui-b-line-visible-ui-implementation.md`
+  - `docs/superpowers/specs/2026-05-26-tinyui-lingdonggui-test-architecture-design.md`
+  - `tinyui/docs/demo_guide.md`
 - 必须完成的事情：
   - 把“真实窗口里 UI 可正常显示、可读、可判定”收紧为“自动 visible gate 已证明 dummy SDL + PPM readback 下可显示、可读、可判定”。
   - 保留用户真实窗口反馈作为 `B线` 启动背景，不再把它写成已经有完整人工验收 artifact。
@@ -145,11 +145,11 @@
 
 ```bash
 rg -n "真实窗口|visible gate|SDL_VIDEODRIVER|PICOUI_CAPTURE_FILE|人工|manual" \
-  docs/picoui-serial/B-线计划索引.md \
-  docs/superpowers/specs/2026-05-27-picoui-b-line-visible-ui-design.md \
-  docs/superpowers/plans/2026-05-27-picoui-b-line-visible-ui-implementation.md \
-  docs/superpowers/specs/2026-05-26-picoui-lingdonggui-test-architecture-design.md \
-  picoui/docs/demo_guide.md
+  docs/tinyui-serial/B-线计划索引.md \
+  docs/superpowers/specs/2026-05-27-tinyui-b-line-visible-ui-design.md \
+  docs/superpowers/plans/2026-05-27-tinyui-b-line-visible-ui-implementation.md \
+  docs/superpowers/specs/2026-05-26-tinyui-lingdonggui-test-architecture-design.md \
+  tinyui/docs/demo_guide.md
 ```
 
 - 收口证据：
@@ -159,16 +159,16 @@ rg -n "真实窗口|visible gate|SDL_VIDEODRIVER|PICOUI_CAPTURE_FILE|人工|manu
 ### C2 visible gate 接入 CTest
 
 - 当前目标：
-  - 让 `check_picoui_visible_ui.py --all` 成为 `ctest` 可执行的正式门禁，而不是只能靠人工记得单独运行。
+  - 让 `check_tinyui_visible_ui.py --all` 成为 `ctest` 可执行的正式门禁，而不是只能靠人工记得单独运行。
 - 必须修改的文件：
-  - `tests/picoui/CMakeLists.txt`
-  - 必要时修改 `tests/picoui/runtime/check_picoui_visible_ui.py`
-  - 必要时修改 `docs/superpowers/specs/2026-05-26-picoui-lingdonggui-test-architecture-design.md`
+  - `tests/tinyui/CMakeLists.txt`
+  - 必要时修改 `tests/tinyui/runtime/check_tinyui_visible_ui.py`
+  - 必要时修改 `docs/superpowers/specs/2026-05-26-tinyui-lingdonggui-test-architecture-design.md`
 - 必须完成的事情：
-  - 新增 CTest 名称：`check_picoui_visible_ui`
+  - 新增 CTest 名称：`check_tinyui_visible_ui`
   - 脚本参数固定为 `--all`
   - 标签至少包含：
-    - `picoui`
+    - `tinyui`
     - `runtime`
     - `visible`
   - 失败时必须保留当前脚本的具体失败语义，例如：
@@ -177,40 +177,40 @@ rg -n "真实窗口|visible gate|SDL_VIDEODRIVER|PICOUI_CAPTURE_FILE|人工|manu
     - `duplicate-column/structure check failed`
     - `FAKE_FALLBACK`
 - 阶段完成判定：
-  - `ctest --test-dir build -R check_picoui_visible_ui --output-on-failure` 可直接执行。
+  - `ctest --test-dir build -R check_tinyui_visible_ui --output-on-failure` 可直接执行。
   - `ctest --test-dir build -L visible --output-on-failure` 能跑到该测试。
 - 验证命令：
 
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
-rtk cmake --build build --target check_picoui_visible_ui
-ctest --test-dir build -R check_picoui_visible_ui --output-on-failure
+rtk cmake --build build --target check_tinyui_visible_ui
+ctest --test-dir build -R check_tinyui_visible_ui --output-on-failure
 ctest --test-dir build -L visible --output-on-failure
 ```
 
 - 收口证据：
-  - `check_picoui_visible_ui` 在 CTest 中可见并通过。
-  - `python3 tests/picoui/runtime/check_picoui_visible_ui.py --all` 仍可独立通过。
-  - 本轮已接入 `tests/picoui/CMakeLists.txt`，CTest 名称为 `check_picoui_visible_ui`，固定参数为 `--all`，labels 为 `picoui;runtime;visible`。
+  - `check_tinyui_visible_ui` 在 CTest 中可见并通过。
+  - `python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --all` 仍可独立通过。
+  - 本轮已接入 `tests/tinyui/CMakeLists.txt`，CTest 名称为 `check_tinyui_visible_ui`，固定参数为 `--all`，labels 为 `tinyui;runtime;visible`。
   - 本轮验证通过：
     - `rtk cmake -S . -B build -DUSE_DEMO=0`
-    - `ctest --test-dir build -N -R check_picoui_visible_ui`
-    - `ctest --test-dir build -R check_picoui_visible_ui --output-on-failure`
+    - `ctest --test-dir build -N -R check_tinyui_visible_ui`
+    - `ctest --test-dir build -R check_tinyui_visible_ui --output-on-failure`
     - `ctest --test-dir build -L visible --output-on-failure`
-    - `python3 tests/picoui/runtime/check_picoui_visible_ui.py --all`
+    - `python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --all`
 
 ### C3 backend mapping gate 接入 CTest
 
 - 当前目标：
-  - 让 `check_picoui_backend_mapping.py` 成为 `ctest` 可执行的正式门禁。
+  - 让 `check_tinyui_backend_mapping.py` 成为 `ctest` 可执行的正式门禁。
 - 必须修改的文件：
-  - `tests/picoui/CMakeLists.txt`
-  - 必要时修改 `tests/picoui/runtime/check_picoui_backend_mapping.py`
-  - 必要时修改 `docs/superpowers/specs/2026-05-26-picoui-lingdonggui-test-architecture-design.md`
+  - `tests/tinyui/CMakeLists.txt`
+  - 必要时修改 `tests/tinyui/runtime/check_tinyui_backend_mapping.py`
+  - 必要时修改 `docs/superpowers/specs/2026-05-26-tinyui-lingdonggui-test-architecture-design.md`
 - 必须完成的事情：
-  - 新增 CTest 名称：`check_picoui_backend_mapping`
+  - 新增 CTest 名称：`check_tinyui_backend_mapping`
   - 标签至少包含：
-    - `picoui`
+    - `tinyui`
     - `runtime`
     - `backend`
     - `mapping`
@@ -219,45 +219,45 @@ ctest --test-dir build -L visible --output-on-failure
     - `PICOUI_BACKEND_REAL_WIDGET_IDS=...`
     - 禁止 `PICOUI_BACKEND_INTERACTIVE_BOUNDARY=FAKE_FALLBACK`
 - 阶段完成判定：
-  - `ctest --test-dir build -R check_picoui_backend_mapping --output-on-failure` 可直接执行。
+  - `ctest --test-dir build -R check_tinyui_backend_mapping --output-on-failure` 可直接执行。
   - `ctest --test-dir build -L mapping --output-on-failure` 能跑到该测试。
 - 验证命令：
 
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
-rtk cmake --build build --target check_picoui_backend_mapping
-ctest --test-dir build -R check_picoui_backend_mapping --output-on-failure
+rtk cmake --build build --target check_tinyui_backend_mapping
+ctest --test-dir build -R check_tinyui_backend_mapping --output-on-failure
 ctest --test-dir build -L mapping --output-on-failure
 ```
 
 - 收口证据：
-  - `check_picoui_backend_mapping` 在 CTest 中可见并通过。
-  - `python3 tests/picoui/runtime/check_picoui_backend_mapping.py` 仍可独立通过。
-  - 本轮已接入 `tests/picoui/CMakeLists.txt`，CTest 名称为 `check_picoui_backend_mapping`，labels 为 `picoui;runtime;backend;mapping`。
+  - `check_tinyui_backend_mapping` 在 CTest 中可见并通过。
+  - `python3 tests/tinyui/runtime/check_tinyui_backend_mapping.py` 仍可独立通过。
+  - 本轮已接入 `tests/tinyui/CMakeLists.txt`，CTest 名称为 `check_tinyui_backend_mapping`，labels 为 `tinyui;runtime;backend;mapping`。
   - 本轮验证命令：
-    - `ctest --test-dir build -N -R check_picoui_backend_mapping`
-    - `ctest --test-dir build -R check_picoui_backend_mapping --output-on-failure`
+    - `ctest --test-dir build -N -R check_tinyui_backend_mapping`
+    - `ctest --test-dir build -R check_tinyui_backend_mapping --output-on-failure`
     - `ctest --test-dir build -L mapping --output-on-failure`
-    - `python3 tests/picoui/runtime/check_picoui_backend_mapping.py`
+    - `python3 tests/tinyui/runtime/check_tinyui_backend_mapping.py`
 
 ### C4 gate 执行矩阵与 CI/本地运行口径
 
 - 当前目标：
-  - 固定后续每次 PicoUI 改动必须跑哪些 gate，避免 `ctest -L picoui` 与 standalone 脚本再次分裂。
+  - 固定后续每次 TINYUI 改动必须跑哪些 gate，避免 `ctest -L tinyui` 与 standalone 脚本再次分裂。
 - 必须修改的文件：
-  - `docs/superpowers/specs/2026-05-26-picoui-lingdonggui-test-architecture-design.md`
-  - `docs/picoui-serial/C-线计划索引.md`
-  - `picoui/docs/demo_guide.md`
+  - `docs/superpowers/specs/2026-05-26-tinyui-lingdonggui-test-architecture-design.md`
+  - `docs/tinyui-serial/C-线计划索引.md`
+  - `tinyui/docs/demo_guide.md`
   - 当前存在 `.github/workflows/cmake-single-platform.yml`，但它是 pack/release workflow，不在 `C4` 内改动。
 - 必须完成的事情：
   - 明确主项目当前存在 `.github/workflows/cmake-single-platform.yml`。
   - 明确该 workflow 是 `workflow_dispatch` / `release published` 触发的 `build pack` workflow，执行 `gen_pack.sh` 与 `Open-CMSIS-Pack/gen-pack-action`，不是现有测试 workflow。
   - 明确 `C4` 只记录本地 gate 矩阵，不改 workflow、不新造 CI 框架。
-  - 若以后给主项目 CI 接入 PicoUI gate，必须复用本阶段固定的同一 gate 矩阵，不另开一套说法。
+  - 若以后给主项目 CI 接入 TINYUI gate，必须复用本阶段固定的同一 gate 矩阵，不另开一套说法。
   - 明确最小本地门禁：
 
 ```bash
-ctest --test-dir build -L picoui --output-on-failure
+ctest --test-dir build -L tinyui --output-on-failure
 ctest --test-dir build -L visible --output-on-failure
 ctest --test-dir build -L mapping --output-on-failure
 ```
@@ -265,10 +265,10 @@ ctest --test-dir build -L mapping --output-on-failure
   - 明确完整本地门禁：
 
 ```bash
-python3 tests/picoui/runtime/check_picoui_runtime.py
-python3 tests/picoui/runtime/check_picoui_visible_ui.py --all
-python3 tests/picoui/runtime/check_picoui_backend_mapping.py
-ctest --test-dir build -L picoui --output-on-failure
+python3 tests/tinyui/runtime/check_tinyui_runtime.py
+python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --all
+python3 tests/tinyui/runtime/check_tinyui_backend_mapping.py
+ctest --test-dir build -L tinyui --output-on-failure
 ```
 
   - 明确汇报规则：
@@ -277,12 +277,12 @@ ctest --test-dir build -L picoui --output-on-failure
     - `backend mapping gate` 通过，只能说 marker 覆盖的 backend 映射通过。
     - `manual artifact gate` 通过后，才允许说人工窗口验收通过。
 - 阶段完成判定：
-  - 后续执行者不会再只跑 `ctest -L picoui` 就声称完整 B/C 线通过。
+  - 后续执行者不会再只跑 `ctest -L tinyui` 就声称完整 B/C 线通过。
   - 文档中每个 gate 都有命令、用途和不能证明的边界。
   - 当前游标只推进到 `C4 / C4 review`，禁止 `C4 review` 收口前进入 `C5`。
 - 收口证据：
-  - `.github/workflows/cmake-single-platform.yml` 的 pack/release workflow 现状已写清；后续 CI 若接入 PicoUI gate，必须复用同一矩阵。
-  - `rg -n "smoke gate|visible gate|backend mapping gate|manual artifact gate|ctest --test-dir build -L" docs picoui/docs` 输出清晰。
+  - `.github/workflows/cmake-single-platform.yml` 的 pack/release workflow 现状已写清；后续 CI 若接入 TINYUI gate，必须复用同一矩阵。
+  - `rg -n "smoke gate|visible gate|backend mapping gate|manual artifact gate|ctest --test-dir build -L" docs tinyui/docs` 输出清晰。
   - `git diff --check` 通过。
 
 ### C5 扩展 backend mapping matrix
@@ -290,10 +290,10 @@ ctest --test-dir build -L picoui --output-on-failure
 - 当前目标：
   - 让 backend mapping gate 的覆盖面与当前 6 个 demo 的 visible matrix 对齐，避免“部分 mapping 检查”被误读成“所有 demo 的所有 widget id 都已检查”。
 - 必须修改的文件：
-  - `tests/picoui/runtime/check_picoui_backend_mapping.py`
-  - 必要时修改 `picoui/demo/*/main.c`
-  - 必要时修改 `picoui/src/backend/ldgui/backend_app.c`
-  - `docs/superpowers/specs/2026-05-26-picoui-lingdonggui-test-architecture-design.md`
+  - `tests/tinyui/runtime/check_tinyui_backend_mapping.py`
+  - 必要时修改 `tinyui/demo/*/main.c`
+  - 必要时修改 `tinyui/src/backend/ldgui/backend_app.c`
+  - `docs/superpowers/specs/2026-05-26-tinyui-lingdonggui-test-architecture-design.md`
 - 必须完成的事情：
   - 先把当前脚本内的覆盖矩阵显式结构化，至少区分：
     - `static_mapping_targets`
@@ -309,9 +309,9 @@ ctest --test-dir build -L picoui --output-on-failure
 - 验证命令：
 
 ```bash
-python3 tests/picoui/runtime/check_picoui_backend_mapping.py
-ctest --test-dir build -R check_picoui_backend_mapping --output-on-failure
-python3 tests/picoui/runtime/check_picoui_visible_ui.py --all
+python3 tests/tinyui/runtime/check_tinyui_backend_mapping.py
+ctest --test-dir build -R check_tinyui_backend_mapping --output-on-failure
+python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --all
 ```
 
 - 收口证据：
@@ -319,12 +319,12 @@ python3 tests/picoui/runtime/check_picoui_visible_ui.py --all
   - visible gate 仍覆盖 6 个 demo 并通过。
   - 本轮已把脚本矩阵显式拆成 `static_mapping_targets`、`interactive_mapping_targets`、`layout_mapping_targets`、`theme_mapping_targets`。
   - 6 个 demo 均要求 `PICOUI_BACKEND_REAL_WIDGET_IDS`，没有为了 marker 修改 demo 或 backend：
-    - `picoui_hello_world_demo`：`title`, `ok`
-    - `picoui_basic_widgets_demo`：`wifi`, `agree`, `volume`, `submit`, `title`, `logo`
-    - `picoui_layout_flex_demo`：`first`, `second`, `third`
-    - `picoui_layout_grid_demo`：`title`, `left`, `right`
-    - `picoui_theme_showcase_demo`：`title`, `body`, `accent`
-    - `picoui_settings_panel_demo`：`title`, `wifi`, `brightness`, `apply`
+    - `tinyui_hello_world_demo`：`title`, `ok`
+    - `tinyui_basic_widgets_demo`：`wifi`, `agree`, `volume`, `submit`, `title`, `logo`
+    - `tinyui_layout_flex_demo`：`first`, `second`, `third`
+    - `tinyui_layout_grid_demo`：`title`, `left`, `right`
+    - `tinyui_theme_showcase_demo`：`title`, `body`, `accent`
+    - `tinyui_settings_panel_demo`：`title`, `wifi`, `brightness`, `apply`
   - layout/theme demo 的 marker 只证明命名对象进入真实 backend tree，不证明 layout solver、theme/style readback 或人工窗口验收；这些仍分别由 unit test、visible gate、C6 artifact gate 证明。
   - 当前游标只推进到 `C5 / C5 review`，禁止 `C5 review` 收口前进入 `C6`。
 
@@ -333,20 +333,20 @@ python3 tests/picoui/runtime/check_picoui_visible_ui.py --all
 - 当前目标：
   - 若后续需要继续使用“真实窗口”表述，补一条可复现的人工窗口 artifact gate。
 - 必须修改的文件：
-  - 新增 `tests/picoui/runtime/check_picoui_manual_window_artifact.py`
-  - 修改 `picoui/docs/demo_guide.md`
-  - 新增 `docs/picoui-serial/C-线人工窗口验收记录.md`
+  - 新增 `tests/tinyui/runtime/check_tinyui_manual_window_artifact.py`
+  - 修改 `tinyui/docs/demo_guide.md`
+  - 新增 `docs/tinyui-serial/C-线人工窗口验收记录.md`
 - 必须完成的事情：
   - 定义非 dummy SDL 运行方式，默认不在无窗口 CI 中强制执行。
   - 产出 artifact 路径，例如：
 
 ```text
-artifacts/picoui/manual-window/<demo-name>/frame.ppm
+artifacts/tinyui/manual-window/<demo-name>/frame.ppm
 ```
 
   - 至少覆盖：
-    - `picoui_basic_widgets_demo`
-    - `picoui_settings_panel_demo`
+    - `tinyui_basic_widgets_demo`
+    - `tinyui_settings_panel_demo`
   - 记录运行环境：
     - 日期
     - 平台
@@ -361,9 +361,9 @@ artifacts/picoui/manual-window/<demo-name>/frame.ppm
 
 ```bash
 rtk cmake -S . -B build -DUSE_DEMO=0
-rtk cmake --build build --target picoui_basic_widgets_demo picoui_settings_panel_demo
-python3 tests/picoui/runtime/check_picoui_manual_window_artifact.py --demo basic_widgets
-python3 tests/picoui/runtime/check_picoui_manual_window_artifact.py --demo settings_panel
+rtk cmake --build build --target tinyui_basic_widgets_demo tinyui_settings_panel_demo
+python3 tests/tinyui/runtime/check_tinyui_manual_window_artifact.py --demo basic_widgets
+python3 tests/tinyui/runtime/check_tinyui_manual_window_artifact.py --demo settings_panel
 ```
 
 - 收口证据：
@@ -378,15 +378,15 @@ python3 tests/picoui/runtime/check_picoui_manual_window_artifact.py --demo setti
 - 当前目标：
   - 固定后续新增 demo、新增 widget、新增 layout/theme 行为时必须同步维护哪些 gate。
 - 必须修改的文件：
-  - `docs/picoui-serial/C-线计划索引.md`
-  - `docs/superpowers/specs/2026-05-26-picoui-lingdonggui-test-architecture-design.md`
-  - `picoui/docs/demo_guide.md`
+  - `docs/tinyui-serial/C-线计划索引.md`
+  - `docs/superpowers/specs/2026-05-26-tinyui-lingdonggui-test-architecture-design.md`
+  - `tinyui/docs/demo_guide.md`
   - 必要时修改 `AGENTS.md` 或项目局部规则文档；若修改全局规则，必须先单独 review。
 - 必须完成的事情：
   - 新增 demo 时，必须同步：
-    - `check_picoui_runtime.py`
-    - `check_picoui_visible_ui.py`
-    - `check_picoui_backend_mapping.py` 的适用矩阵或豁免说明
+    - `check_tinyui_runtime.py`
+    - `check_tinyui_visible_ui.py`
+    - `check_tinyui_backend_mapping.py` 的适用矩阵或豁免说明
     - demo guide
     - 对应 serial 文档阶段状态
   - 新增 widget 时，必须同步：
@@ -400,16 +400,16 @@ python3 tests/picoui/runtime/check_picoui_manual_window_artifact.py --demo setti
     - visible gate 或明确的不可见理由
     - gate matrix 文档
   - 明确不能只改 demo 或只改 backend 而不更新 gate matrix。
-  - 明确新增规则不能用 `ctest -L picoui` 单独替代 visible/mapping/manual artifact 层级。
+  - 明确新增规则不能用 `ctest -L tinyui` 单独替代 visible/mapping/manual artifact 层级。
 - C7 gate 同步清单：
   - **新增 demo**：
-    - 必须加入 `tests/picoui/runtime/check_picoui_runtime.py` 的 runtime smoke 覆盖，或在 serial 文档中写明为什么该 demo 不属于 runtime smoke。
-    - 必须加入 `tests/picoui/runtime/check_picoui_visible_ui.py` 的 visible matrix，或写明不可见理由与替代证据。
-    - 必须加入 `tests/picoui/runtime/check_picoui_backend_mapping.py` 的 mapping matrix，或在脚本矩阵与文档中写明豁免原因。
-    - 必须更新 `picoui/docs/demo_guide.md` 的 demo 列表、用途、证据层级和 gate 同步要求。
+    - 必须加入 `tests/tinyui/runtime/check_tinyui_runtime.py` 的 runtime smoke 覆盖，或在 serial 文档中写明为什么该 demo 不属于 runtime smoke。
+    - 必须加入 `tests/tinyui/runtime/check_tinyui_visible_ui.py` 的 visible matrix，或写明不可见理由与替代证据。
+    - 必须加入 `tests/tinyui/runtime/check_tinyui_backend_mapping.py` 的 mapping matrix，或在脚本矩阵与文档中写明豁免原因。
+    - 必须更新 `tinyui/docs/demo_guide.md` 的 demo 列表、用途、证据层级和 gate 同步要求。
     - 必须更新对应 serial 文档阶段状态，说明该 demo 是否已经进入 smoke、visible、mapping、manual artifact 证据层。
   - **新增 widget**：
-    - 必须同步 public API contract，避免 `picoui_*` public header 泄漏 `ld*`、`arm_2d_*`、`SIGNAL_*`。
+    - 必须同步 public API contract，避免 `tinyui_*` public header 泄漏 `ld*`、`arm_2d_*`、`SIGNAL_*`。
     - 必须同步 backend mapping test，证明该 widget 已落到真实 `LingDongGUI` 对象或明确仍不支持。
     - 必须提供 visible gate 样本；若 widget 本身不可见，必须写明不可见理由和由哪个可见父对象、manual artifact 或 contract gate 覆盖。
     - 必须写明 theme/style 支持或拒绝说明，不能默认把未实现能力写成支持。
@@ -421,14 +421,14 @@ python3 tests/picoui/runtime/check_picoui_manual_window_artifact.py --demo setti
   - **禁止事项**：
     - 禁止只改 demo 让页面“看起来用了新能力”，却不更新 runtime/visible/mapping matrix。
     - 禁止只改 backend 或底层字段，却不更新 demo、public contract 和 gate matrix。
-    - 禁止用 `ctest --test-dir build -L picoui --output-on-failure` 单独替代 `visible`、`mapping`、manual artifact 或 standalone runtime 脚本层级。
+    - 禁止用 `ctest --test-dir build -L tinyui --output-on-failure` 单独替代 `visible`、`mapping`、manual artifact 或 standalone runtime 脚本层级。
 - 阶段完成判定：
   - 后续开发不会只改 demo 或只改 backend，却忘记更新 gate matrix。
   - 每类新增工作都有固定验收路径。
   - 当前游标只推进到 `C7 / C7 review`，禁止 `C7 review` 收口前进入 `C8`。
 - 收口证据：
   - 文档存在“新增 demo/widget/layout/theme 的 gate 同步清单”。
-  - `rg -n "新增 demo|新增 widget|gate 同步|visible matrix|mapping matrix|新增 layout|新增 theme" docs picoui/docs` 能找到唯一口径。
+  - `rg -n "新增 demo|新增 widget|gate 同步|visible matrix|mapping matrix|新增 layout|新增 theme" docs tinyui/docs` 能找到唯一口径。
 
 ### C8 C线 closeout review 与收口
 
@@ -442,10 +442,10 @@ python3 tests/picoui/runtime/check_picoui_manual_window_artifact.py --demo setti
 
 ```bash
 git status --short
-python3 tests/picoui/runtime/check_picoui_runtime.py
-python3 tests/picoui/runtime/check_picoui_visible_ui.py --all
-python3 tests/picoui/runtime/check_picoui_backend_mapping.py
-ctest --test-dir build -L picoui --output-on-failure
+python3 tests/tinyui/runtime/check_tinyui_runtime.py
+python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --all
+python3 tests/tinyui/runtime/check_tinyui_backend_mapping.py
+ctest --test-dir build -L tinyui --output-on-failure
 ctest --test-dir build -L visible --output-on-failure
 ctest --test-dir build -L mapping --output-on-failure
 git diff --check
@@ -465,10 +465,10 @@ git diff --check
   - 本轮 closeout review：通过，无阻塞问题。
   - 本轮最终验证通过：
     - `git status --short`
-    - `python3 tests/picoui/runtime/check_picoui_runtime.py`
-    - `python3 tests/picoui/runtime/check_picoui_visible_ui.py --all`
-    - `python3 tests/picoui/runtime/check_picoui_backend_mapping.py`
-    - `ctest --test-dir build -L picoui --output-on-failure`
+    - `python3 tests/tinyui/runtime/check_tinyui_runtime.py`
+    - `python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --all`
+    - `python3 tests/tinyui/runtime/check_tinyui_backend_mapping.py`
+    - `ctest --test-dir build -L tinyui --output-on-failure`
     - `ctest --test-dir build -L visible --output-on-failure`
     - `ctest --test-dir build -L mapping --output-on-failure`
     - `git diff --check`
@@ -489,15 +489,15 @@ git diff --check
 1. 不开始新控件开发。
 2. 不开始新 public API 设计。
 3. 不把 `dummy SDL + PPM readback` 说成人工窗口验收。
-4. 不只跑 `ctest -L picoui` 就声明 `B/C` 线完整通过。
+4. 不只跑 `ctest -L tinyui` 就声明 `B/C` 线完整通过。
 5. 不为了让 mapping marker 通过而改 demo 表达的用户意图。
 
 ## 推荐阅读顺序
 
-1. 先读 `docs/picoui-serial/A-线计划索引.md`
-2. 再读 `docs/picoui-serial/B-线计划索引.md`
+1. 先读 `docs/tinyui-serial/A-线计划索引.md`
+2. 再读 `docs/tinyui-serial/B-线计划索引.md`
 3. 再读本文
-4. 再读 `docs/superpowers/specs/2026-05-26-picoui-lingdonggui-test-architecture-design.md`
+4. 再读 `docs/superpowers/specs/2026-05-26-tinyui-lingdonggui-test-architecture-design.md`
 5. 最后读具体阶段会修改的脚本和 CMake 文件
 
 ## 退出口径
@@ -505,9 +505,9 @@ git diff --check
 下面条件同时成立后，`C线` 才能收口：
 
 - 文档明确区分 `dummy SDL + PPM readback` 和人工 OS 窗口验收。
-- `check_picoui_visible_ui.py --all` 已接入 CTest。
-- `check_picoui_backend_mapping.py` 已接入 CTest。
-- `ctest -L picoui`、`ctest -L visible`、`ctest -L mapping` 的关系已写清。
+- `check_tinyui_visible_ui.py --all` 已接入 CTest。
+- `check_tinyui_backend_mapping.py` 已接入 CTest。
+- `ctest -L tinyui`、`ctest -L visible`、`ctest -L mapping` 的关系已写清。
 - backend mapping matrix 不再被误读成 6 个 demo 全量 id 覆盖。
 - 新增 demo/widget/layout/theme 的 gate 同步规则已写清。
 - 若文档继续声称人工窗口验收，则必须有人工窗口 artifact 记录；否则只能声称自动 visible gate 通过。

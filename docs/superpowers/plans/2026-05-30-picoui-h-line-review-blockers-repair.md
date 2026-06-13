@@ -1,4 +1,4 @@
-# PicoUI H线 Review Blockers Repair Implementation Plan
+# TINYUI H线 Review Blockers Repair Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -23,8 +23,8 @@
 ### release matrix 修复组
 
 **文件：**
-- Modify: `tests/picoui/contract/check_picoui_release_capability_matrix.py`
-- Reference: `tests/picoui/contract/picoui_release_capability_matrix.json`
+- Modify: `tests/tinyui/contract/check_tinyui_release_capability_matrix.py`
+- Reference: `tests/tinyui/contract/tinyui_release_capability_matrix.json`
 
 职责：
 
@@ -34,7 +34,7 @@
 ### list 合同测试修复组
 
 **文件：**
-- Modify: `tests/picoui/unit/test_picoui_list.c`
+- Modify: `tests/tinyui/unit/test_tinyui_list.c`
 
 职责：
 
@@ -44,11 +44,11 @@
 ### 文档收口组
 
 **文件：**
-- Modify: `docs/picoui-serial/H-线计划索引.md`
-- Modify: `docs/picoui-serial/H-线第一版发布说明.md`
-- Modify: `docs/picoui-serial/H-线发布测试矩阵.md`
-- Modify: `docs/picoui-serial/H-线发布差距与LingDongGUI控件对比.md`
-- Modify: `docs/picoui-serial/C-线人工窗口验收记录.md`
+- Modify: `docs/tinyui-serial/H-线计划索引.md`
+- Modify: `docs/tinyui-serial/H-线第一版发布说明.md`
+- Modify: `docs/tinyui-serial/H-线发布测试矩阵.md`
+- Modify: `docs/tinyui-serial/H-线发布差距与LingDongGUI控件对比.md`
+- Modify: `docs/tinyui-serial/C-线人工窗口验收记录.md`
 
 职责：
 
@@ -60,16 +60,16 @@
 ### Task 1: 修复 release matrix gate 强度
 
 **Files:**
-- Modify: `tests/picoui/contract/check_picoui_release_capability_matrix.py`
-- Reference: `tests/picoui/contract/picoui_release_capability_matrix.json`
+- Modify: `tests/tinyui/contract/check_tinyui_release_capability_matrix.py`
+- Reference: `tests/tinyui/contract/tinyui_release_capability_matrix.json`
 
 - [ ] **Step 1: 记录 impact 与当前基线**
 
 Run:
 
 ```bash
-python3 tests/picoui/contract/check_picoui_release_capability_matrix.py
-ctest --test-dir build --output-on-failure -R check_picoui_release_capability_matrix
+python3 tests/tinyui/contract/check_tinyui_release_capability_matrix.py
+ctest --test-dir build --output-on-failure -R check_tinyui_release_capability_matrix
 ```
 
 Expected:
@@ -81,17 +81,17 @@ Expected:
 
 做法：
 
-- 临时复制 `tests/picoui/contract/picoui_release_capability_matrix.json` 到临时文件。
+- 临时复制 `tests/tinyui/contract/tinyui_release_capability_matrix.json` 到临时文件。
 - 在临时文件里把一个 wrapped 控件改成 `deferred`，再把 `summary.capability_status_counts.support` 改错。
 - 让脚本支持读取临时路径，或在测试步骤里临时替换目标文件后运行脚本，确认当前版本不会报错。
 
 Run:
 
 ```bash
-cp tests/picoui/contract/picoui_release_capability_matrix.json /tmp/picoui_release_capability_matrix.json
+cp tests/tinyui/contract/tinyui_release_capability_matrix.json /tmp/tinyui_release_capability_matrix.json
 # 手工把 /tmp 中一个 wrapped 控件改成 deferred，并改错 summary 统计
-PICOUI_RELEASE_MATRIX_JSON=/tmp/picoui_release_capability_matrix.json \
-python3 tests/picoui/contract/check_picoui_release_capability_matrix.py
+PICOUI_RELEASE_MATRIX_JSON=/tmp/tinyui_release_capability_matrix.json \
+python3 tests/tinyui/contract/check_tinyui_release_capability_matrix.py
 ```
 
 Expected:
@@ -112,10 +112,10 @@ Expected:
 Run:
 
 ```bash
-python3 tests/picoui/contract/check_picoui_release_capability_matrix.py
-ctest --test-dir build --output-on-failure -R check_picoui_release_capability_matrix
-PICOUI_RELEASE_MATRIX_JSON=/tmp/picoui_release_capability_matrix.json \
-python3 tests/picoui/contract/check_picoui_release_capability_matrix.py
+python3 tests/tinyui/contract/check_tinyui_release_capability_matrix.py
+ctest --test-dir build --output-on-failure -R check_tinyui_release_capability_matrix
+PICOUI_RELEASE_MATRIX_JSON=/tmp/tinyui_release_capability_matrix.json \
+python3 tests/tinyui/contract/check_tinyui_release_capability_matrix.py
 ```
 
 Expected:
@@ -126,20 +126,20 @@ Expected:
 ### Task 2: 收紧 list 单测合同
 
 **Files:**
-- Modify: `tests/picoui/unit/test_picoui_list.c`
+- Modify: `tests/tinyui/unit/test_tinyui_list.c`
 
 - [ ] **Step 1: 记录 impact 与当前测试基线**
 
 Run:
 
 ```bash
-ctest --test-dir build --output-on-failure -R test_picoui_list
+ctest --test-dir build --output-on-failure -R test_tinyui_list
 ```
 
 Expected:
 
-- 当前 `test_picoui_list` 通过，作为修复前基线。
-- GitNexus 对 `tests/picoui/unit/test_picoui_list.c:main` 上游风险为 `LOW`。
+- 当前 `test_tinyui_list` 通过，作为修复前基线。
+- GitNexus 对 `tests/tinyui/unit/test_tinyui_list.c:main` 上游风险为 `LOW`。
 
 - [ ] **Step 2: 先把测试改成更小合同并看 RED**
 
@@ -156,7 +156,7 @@ Expected:
 Run:
 
 ```bash
-ctest --test-dir build --output-on-failure -R test_picoui_list
+ctest --test-dir build --output-on-failure -R test_tinyui_list
 ```
 
 Expected:
@@ -167,30 +167,30 @@ Expected:
 
 要求：
 
-- 只在测试函数前补 1 行短注释，明确本测试只约束 “PicoUI item id 不是 backend widget identity”，不约束 backend 内部存储策略。
+- 只在测试函数前补 1 行短注释，明确本测试只约束 “TINYUI item id 不是 backend widget identity”，不约束 backend 内部存储策略。
 
 - [ ] **Step 4: 跑 GREEN**
 
 Run:
 
 ```bash
-ctest --test-dir build --output-on-failure -R test_picoui_list
+ctest --test-dir build --output-on-failure -R test_tinyui_list
 ctest --test-dir build --output-on-failure -L unit
 ```
 
 Expected:
 
-- `test_picoui_list` 通过。
+- `test_tinyui_list` 通过。
 - `unit` 集合通过。
 
 ### Task 3: 同步 H 线文档与验证记录
 
 **Files:**
-- Modify: `docs/picoui-serial/H-线计划索引.md`
-- Modify: `docs/picoui-serial/H-线第一版发布说明.md`
-- Modify: `docs/picoui-serial/H-线发布测试矩阵.md`
-- Modify: `docs/picoui-serial/H-线发布差距与LingDongGUI控件对比.md`
-- Modify: `docs/picoui-serial/C-线人工窗口验收记录.md`
+- Modify: `docs/tinyui-serial/H-线计划索引.md`
+- Modify: `docs/tinyui-serial/H-线第一版发布说明.md`
+- Modify: `docs/tinyui-serial/H-线发布测试矩阵.md`
+- Modify: `docs/tinyui-serial/H-线发布差距与LingDongGUI控件对比.md`
+- Modify: `docs/tinyui-serial/C-线人工窗口验收记录.md`
 
 - [ ] **Step 1: 写入 review blockers 与修复后 current state**
 
@@ -219,12 +219,12 @@ Expected:
 Run:
 
 ```bash
-git diff --check -- docs/picoui-serial/H-线计划索引.md \
-                  docs/picoui-serial/H-线第一版发布说明.md \
-                  docs/picoui-serial/H-线发布测试矩阵.md \
-                  docs/picoui-serial/H-线发布差距与LingDongGUI控件对比.md \
-                  docs/picoui-serial/C-线人工窗口验收记录.md
-rg -n "Darwin \\+ cocoa.*桌面窗口截图|自动桌面窗口截图存在" docs/picoui-serial
+git diff --check -- docs/tinyui-serial/H-线计划索引.md \
+                  docs/tinyui-serial/H-线第一版发布说明.md \
+                  docs/tinyui-serial/H-线发布测试矩阵.md \
+                  docs/tinyui-serial/H-线发布差距与LingDongGUI控件对比.md \
+                  docs/tinyui-serial/C-线人工窗口验收记录.md
+rg -n "Darwin \\+ cocoa.*桌面窗口截图|自动桌面窗口截图存在" docs/tinyui-serial
 ```
 
 Expected:
@@ -242,11 +242,11 @@ Expected:
 Run:
 
 ```bash
-python3 tests/picoui/contract/check_picoui_release_capability_matrix.py
-ctest --test-dir build --output-on-failure -R check_picoui_release_capability_matrix
-ctest --test-dir build --output-on-failure -R test_picoui_list
-python3 tests/picoui/contract/check_picoui_public_api.py
-python3 tests/picoui/contract/check_picoui_demo_boundary.py
+python3 tests/tinyui/contract/check_tinyui_release_capability_matrix.py
+ctest --test-dir build --output-on-failure -R check_tinyui_release_capability_matrix
+ctest --test-dir build --output-on-failure -R test_tinyui_list
+python3 tests/tinyui/contract/check_tinyui_public_api.py
+python3 tests/tinyui/contract/check_tinyui_demo_boundary.py
 git diff --check
 ```
 
@@ -261,12 +261,12 @@ Run:
 ```bash
 ctest --test-dir build --output-on-failure -L unit
 ctest --test-dir build --output-on-failure -L contract
-ctest --test-dir build --output-on-failure -L picoui
+ctest --test-dir build --output-on-failure -L tinyui
 ```
 
 Expected:
 
-- `unit`、`contract`、`picoui` 全通过。
+- `unit`、`contract`、`tinyui` 全通过。
 
 - [ ] **Step 3: detect_changes 与 review**
 

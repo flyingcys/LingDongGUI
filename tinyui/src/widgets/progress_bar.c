@@ -27,7 +27,7 @@
 int tinyui_runtime_bridge_unbind_host(void *backend_widget);
 int tinyui_runtime_bridge_detach_from_parent(void *backend_widget);
 
-struct picoui_progress_bar_test_dispose_snapshot {
+struct tinyui_progress_bar_test_dispose_snapshot {
     int kind;
     int cleanup_complete;
     int cleanup_incomplete;
@@ -43,7 +43,7 @@ struct picoui_progress_bar_test_dispose_snapshot {
     int ld_pinfo_cleared;
 };
 
-static struct picoui_progress_bar_test_dispose_snapshot
+static struct tinyui_progress_bar_test_dispose_snapshot
     tinyui_progress_bar_last_dispose_snapshot;
 static int tinyui_progress_bar_last_dispose_snapshot_valid = 0;
 
@@ -58,25 +58,25 @@ static ldColor tinyui_progress_bar_rgb_to_ld_color(unsigned int rgb)
     return __RGB((rgb >> 16) & 0xFFU, (rgb >> 8) & 0xFFU, rgb & 0xFFU);
 }
 
-static struct picoui_backend_widget *tinyui_progress_bar_backend(struct picoui_progress_bar *bar)
+static struct tinyui_backend_widget *tinyui_progress_bar_backend(struct tinyui_progress_bar *bar)
 {
-    struct picoui_backend_widget *backend;
+    struct tinyui_backend_widget *backend;
 
     if (bar == 0 || bar->widget.backend_widget == 0) {
         return 0;
     }
 
-    backend = (struct picoui_backend_widget *)bar->widget.backend_widget;
-    if (backend->kind != PICOUI_BACKEND_WIDGET_PROGRESS_BAR || backend->ld_widget == 0) {
+    backend = (struct tinyui_backend_widget *)bar->widget.backend_widget;
+    if (backend->kind != TINYUI_BACKEND_WIDGET_PROGRESS_BAR || backend->ld_widget == 0) {
         return 0;
     }
 
     return backend;
 }
 
-static ldProgressBar_t *tinyui_progress_bar_get_ld(struct picoui_progress_bar *bar)
+static ldProgressBar_t *tinyui_progress_bar_get_ld(struct tinyui_progress_bar *bar)
 {
-    struct picoui_backend_widget *backend = tinyui_progress_bar_backend(bar);
+    struct tinyui_backend_widget *backend = tinyui_progress_bar_backend(bar);
 
     if (backend == 0) {
         return 0;
@@ -86,10 +86,10 @@ static ldProgressBar_t *tinyui_progress_bar_get_ld(struct picoui_progress_bar *b
 }
 
 static int tinyui_progress_bar_finish_detach_after_backend_failure(
-    struct picoui_backend_widget *backend)
+    struct tinyui_backend_widget *backend)
 {
-    struct picoui_backend_widget *parent;
-    struct picoui_backend_widget *cursor;
+    struct tinyui_backend_widget *parent;
+    struct tinyui_backend_widget *cursor;
 
     if (backend == 0 || backend->parent == 0) {
         return 0;
@@ -116,10 +116,10 @@ static int tinyui_progress_bar_finish_detach_after_backend_failure(
     return 0;
 }
 
-static void tinyui_progress_bar_dispose_partial_impl(struct picoui_progress_bar *bar)
+static void tinyui_progress_bar_dispose_partial_impl(struct tinyui_progress_bar *bar)
 {
-    struct picoui_backend_widget *backend;
-    struct picoui_backend_app_state *app_state;
+    struct tinyui_backend_widget *backend;
+    struct tinyui_backend_app_state *app_state;
     ldBase_t *ld_base;
     int detach_result = 0;
     int unbind_result = 0;
@@ -128,7 +128,7 @@ static void tinyui_progress_bar_dispose_partial_impl(struct picoui_progress_bar 
         return;
     }
 
-    backend = (struct picoui_backend_widget *)bar->widget.backend_widget;
+    backend = (struct tinyui_backend_widget *)bar->widget.backend_widget;
     if (backend != 0) {
         app_state = tinyui_runtime_bridge_backend_state(backend->owner);
         ld_base = (ldBase_t *)backend->ld_widget;
@@ -171,7 +171,7 @@ static void tinyui_progress_bar_dispose_partial_impl(struct picoui_progress_bar 
     free(bar);
 }
 
-void tinyui_progress_bar_test_dispose_partial(struct picoui_progress_bar *bar)
+void tinyui_progress_bar_test_dispose_partial(struct tinyui_progress_bar *bar)
 {
     tinyui_progress_bar_dispose_partial_impl(bar);
 }
@@ -182,7 +182,7 @@ void tinyui_progress_bar_test_reset_state(void)
 }
 
 int tinyui_progress_bar_test_take_last_dispose_snapshot(
-    struct picoui_progress_bar_test_dispose_snapshot *snapshot)
+    struct tinyui_progress_bar_test_dispose_snapshot *snapshot)
 {
     if (snapshot == 0 || tinyui_progress_bar_last_dispose_snapshot_valid == 0) {
         return -1;
@@ -194,7 +194,7 @@ int tinyui_progress_bar_test_take_last_dispose_snapshot(
     return 0;
 }
 
-static int tinyui_progress_bar_props_are_valid(const struct picoui_progress_bar_props *props)
+static int tinyui_progress_bar_props_are_valid(const struct tinyui_progress_bar_props *props)
 {
     return props != 0
         && props->id != 0
@@ -202,35 +202,35 @@ static int tinyui_progress_bar_props_are_valid(const struct picoui_progress_bar_
         && props->percent <= 100;
 }
 
-static struct picoui_progress_bar *tinyui_progress_bar_create_with_props_impl(
-    struct picoui_window *parent,
-    const struct picoui_progress_bar_props *props,
+static struct tinyui_progress_bar *tinyui_progress_bar_create_with_props_impl(
+    struct tinyui_window *parent,
+    const struct tinyui_progress_bar_props *props,
     int fail_before_inverted)
 {
-    struct picoui_progress_bar *bar;
+    struct tinyui_progress_bar *bar;
 
     if (!tinyui_progress_bar_props_are_valid(props)) {
         return 0;
     }
 
-    bar = picoui_progress_bar_create(parent, props->id);
+    bar = tinyui_progress_bar_create(parent, props->id);
     if (bar == 0) {
         return 0;
     }
 
-    if (picoui_widget_set_user_data(&bar->widget, props->user_data) != 0) {
+    if (tinyui_widget_set_user_data(&bar->widget, props->user_data) != 0) {
         tinyui_progress_bar_dispose_partial_impl(bar);
         return 0;
     }
     if (props->style_class != 0
-        && picoui_widget_set_style_class(&bar->widget, props->style_class) != 0) {
+        && tinyui_widget_set_style_class(&bar->widget, props->style_class) != 0) {
         tinyui_progress_bar_dispose_partial_impl(bar);
         return 0;
     }
-    if (picoui_progress_bar_set_percent(bar, props->percent) != 0
-        || picoui_progress_bar_set_horizontal(bar, props->horizontal) != 0
+    if (tinyui_progress_bar_set_percent(bar, props->percent) != 0
+        || tinyui_progress_bar_set_horizontal(bar, props->horizontal) != 0
         || fail_before_inverted != 0
-        || picoui_progress_bar_set_inverted(bar, props->inverted) != 0) {
+        || tinyui_progress_bar_set_inverted(bar, props->inverted) != 0) {
         tinyui_progress_bar_dispose_partial_impl(bar);
         return 0;
     }
@@ -246,12 +246,12 @@ static struct picoui_progress_bar *tinyui_progress_bar_create_with_props_impl(
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct picoui_progress_bar *picoui_progress_bar_create(struct picoui_window *parent, const char *id)
+struct tinyui_progress_bar *tinyui_progress_bar_create(struct tinyui_window *parent, const char *id)
 {
-    struct picoui_progress_bar *bar;
-    struct picoui_backend_widget *backend;
-    struct picoui_backend_widget *parent_backend;
-    struct picoui_backend_app_state *app_state;
+    struct tinyui_progress_bar *bar;
+    struct tinyui_backend_widget *backend;
+    struct tinyui_backend_widget *parent_backend;
+    struct tinyui_backend_app_state *app_state;
     ldProgressBar_t *ld_progress_bar;
     uint16_t name_id;
 
@@ -259,7 +259,7 @@ struct picoui_progress_bar *picoui_progress_bar_create(struct picoui_window *par
         return 0;
     }
 
-    parent_backend = (struct picoui_backend_widget *)parent->widget.backend_widget;
+    parent_backend = (struct tinyui_backend_widget *)parent->widget.backend_widget;
     app_state = tinyui_runtime_bridge_backend_state_from_parent(parent_backend);
     if (parent_backend == 0 || parent_backend->ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
         return 0;
@@ -299,7 +299,7 @@ struct picoui_progress_bar *picoui_progress_bar_create(struct picoui_window *par
 
     if (tinyui_widget_init_child(backend,
                                          parent_backend,
-                                         PICOUI_BACKEND_WIDGET_PROGRESS_BAR,
+                                         TINYUI_BACKEND_WIDGET_PROGRESS_BAR,
                                          id,
                                          parent_backend->theme) != 0) {
         ldProgressBar_depose(app_state->ld_scene, ld_progress_bar);
@@ -310,7 +310,7 @@ struct picoui_progress_bar *picoui_progress_bar_create(struct picoui_window *par
     backend->ld_widget = ld_progress_bar;
     backend->ld_name_id = name_id;
     backend->value = 0;
-    backend->last_signal = PICOUI_BACKEND_SIGNAL_NONE;
+    backend->last_signal = TINYUI_BACKEND_SIGNAL_NONE;
     if (tinyui_widget_attach_child(parent_backend, backend) != 0) {
         ldProgressBar_depose(app_state->ld_scene, ld_progress_bar);
         free(backend);
@@ -326,11 +326,11 @@ struct picoui_progress_bar *picoui_progress_bar_create(struct picoui_window *par
         tinyui_progress_bar_dispose_partial_impl(bar);
         return 0;
     }
-    if (picoui_progress_bar_set_percent(bar, 0) != 0
-        || picoui_progress_bar_set_horizontal(bar, 0) != 0
-        || picoui_progress_bar_set_color(bar, 0xDDE2EAU, 0x2057C4U) != 0
-        || picoui_progress_bar_set_frame_color(bar, 0x586277U, 1) != 0
-        || picoui_progress_bar_set_inverted(bar, 0) != 0) {
+    if (tinyui_progress_bar_set_percent(bar, 0) != 0
+        || tinyui_progress_bar_set_horizontal(bar, 0) != 0
+        || tinyui_progress_bar_set_color(bar, 0xDDE2EAU, 0x2057C4U) != 0
+        || tinyui_progress_bar_set_frame_color(bar, 0x586277U, 1) != 0
+        || tinyui_progress_bar_set_inverted(bar, 0) != 0) {
         tinyui_progress_bar_dispose_partial_impl(bar);
         return 0;
     }
@@ -345,9 +345,9 @@ struct picoui_progress_bar *picoui_progress_bar_create(struct picoui_window *par
  * @return Pointer to the object
  */
 
-struct picoui_progress_bar *picoui_progress_bar_init(struct picoui_window *parent, const char *id)
+struct tinyui_progress_bar *tinyui_progress_bar_init(struct tinyui_window *parent, const char *id)
 {
-    return picoui_progress_bar_create(parent, id);
+    return tinyui_progress_bar_create(parent, id);
 }
 
 /**
@@ -358,16 +358,16 @@ struct picoui_progress_bar *picoui_progress_bar_init(struct picoui_window *paren
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct picoui_progress_bar *picoui_progress_bar_create_with_props(
-    struct picoui_window *parent,
-    const struct picoui_progress_bar_props *props)
+struct tinyui_progress_bar *tinyui_progress_bar_create_with_props(
+    struct tinyui_window *parent,
+    const struct tinyui_progress_bar_props *props)
 {
     return tinyui_progress_bar_create_with_props_impl(parent, props, 0);
 }
 
-struct picoui_progress_bar *tinyui_progress_bar_test_create_with_props_fail_before_inverted(
-    struct picoui_window *parent,
-    const struct picoui_progress_bar_props *props)
+struct tinyui_progress_bar *tinyui_progress_bar_test_create_with_props_fail_before_inverted(
+    struct tinyui_window *parent,
+    const struct tinyui_progress_bar_props *props)
 {
     return tinyui_progress_bar_create_with_props_impl(parent, props, 1);
 }
@@ -380,10 +380,10 @@ struct picoui_progress_bar *tinyui_progress_bar_test_create_with_props_fail_befo
  * @return 0 on success, -1 on failure
  */
 
-int picoui_progress_bar_set_percent(struct picoui_progress_bar *bar, int percent)
+int tinyui_progress_bar_set_percent(struct tinyui_progress_bar *bar, int percent)
 {
     ldProgressBar_t *ld_progress_bar;
-    struct picoui_backend_widget *backend;
+    struct tinyui_backend_widget *backend;
 
     if (bar == 0 || percent < 0 || percent > 100) {
         return -1;
@@ -408,7 +408,7 @@ int picoui_progress_bar_set_percent(struct picoui_progress_bar *bar, int percent
  * @return -1 on failure
  */
 
-int picoui_progress_bar_get_percent(const struct picoui_progress_bar *bar)
+int tinyui_progress_bar_get_percent(const struct tinyui_progress_bar *bar)
 {
     ldProgressBar_t *ld_progress_bar;
 
@@ -416,7 +416,7 @@ int picoui_progress_bar_get_percent(const struct picoui_progress_bar *bar)
         return -1;
     }
 
-    ld_progress_bar = tinyui_progress_bar_get_ld((struct picoui_progress_bar *)bar);
+    ld_progress_bar = tinyui_progress_bar_get_ld((struct tinyui_progress_bar *)bar);
     if (ld_progress_bar == 0) {
         return -1;
     }
@@ -432,7 +432,7 @@ int picoui_progress_bar_get_percent(const struct picoui_progress_bar *bar)
  * @return 0 on success, -1 on failure
  */
 
-int picoui_progress_bar_set_horizontal(struct picoui_progress_bar *bar, int horizontal)
+int tinyui_progress_bar_set_horizontal(struct tinyui_progress_bar *bar, int horizontal)
 {
     ldProgressBar_t *ld_progress_bar;
 
@@ -457,7 +457,7 @@ int picoui_progress_bar_set_horizontal(struct picoui_progress_bar *bar, int hori
  * @return -1 on failure
  */
 
-int picoui_progress_bar_get_horizontal(const struct picoui_progress_bar *bar)
+int tinyui_progress_bar_get_horizontal(const struct tinyui_progress_bar *bar)
 {
     ldProgressBar_t *ld_progress_bar;
 
@@ -465,7 +465,7 @@ int picoui_progress_bar_get_horizontal(const struct picoui_progress_bar *bar)
         return -1;
     }
 
-    ld_progress_bar = tinyui_progress_bar_get_ld((struct picoui_progress_bar *)bar);
+    ld_progress_bar = tinyui_progress_bar_get_ld((struct tinyui_progress_bar *)bar);
     if (ld_progress_bar == 0) {
         return -1;
     }
@@ -482,14 +482,14 @@ int picoui_progress_bar_get_horizontal(const struct picoui_progress_bar *bar)
  * @return -1 on failure
  */
 
-int picoui_progress_bar_set_image(struct picoui_progress_bar *bar,
-                                  struct picoui_image_source *bg_source,
-                                  struct picoui_image_source *fg_source)
+int tinyui_progress_bar_set_image(struct tinyui_progress_bar *bar,
+                                  struct tinyui_image_source *bg_source,
+                                  struct tinyui_image_source *fg_source)
 {
-    if (picoui_progress_bar_set_bg_source(bar, bg_source) != 0) {
+    if (tinyui_progress_bar_set_bg_source(bar, bg_source) != 0) {
         return -1;
     }
-    return picoui_progress_bar_set_fg_source(bar, fg_source);
+    return tinyui_progress_bar_set_fg_source(bar, fg_source);
 }
 
 /**
@@ -500,7 +500,7 @@ int picoui_progress_bar_set_image(struct picoui_progress_bar *bar,
  * @return 0 on success, -1 on failure
  */
 
-int picoui_progress_bar_set_bg_source(struct picoui_progress_bar *bar, struct picoui_image_source *source)
+int tinyui_progress_bar_set_bg_source(struct tinyui_progress_bar *bar, struct tinyui_image_source *source)
 {
     ldProgressBar_t *ld_progress_bar;
 
@@ -530,7 +530,7 @@ int picoui_progress_bar_set_bg_source(struct picoui_progress_bar *bar, struct pi
  * @return 0 on success, -1 on failure
  */
 
-int picoui_progress_bar_set_fg_source(struct picoui_progress_bar *bar, struct picoui_image_source *source)
+int tinyui_progress_bar_set_fg_source(struct tinyui_progress_bar *bar, struct tinyui_image_source *source)
 {
     ldProgressBar_t *ld_progress_bar;
 
@@ -560,7 +560,7 @@ int picoui_progress_bar_set_fg_source(struct picoui_progress_bar *bar, struct pi
  * @return 0 on success, -1 on failure
  */
 
-int picoui_progress_bar_set_frame_source(struct picoui_progress_bar *bar, struct picoui_image_source *source)
+int tinyui_progress_bar_set_frame_source(struct tinyui_progress_bar *bar, struct tinyui_image_source *source)
 {
     ldProgressBar_t *ld_progress_bar;
 
@@ -587,7 +587,7 @@ int picoui_progress_bar_set_frame_source(struct picoui_progress_bar *bar, struct
  * @return 0 on success, -1 on failure
  */
 
-int picoui_progress_bar_set_color(struct picoui_progress_bar *bar, unsigned int bg_color, unsigned int fg_color)
+int tinyui_progress_bar_set_color(struct tinyui_progress_bar *bar, unsigned int bg_color, unsigned int fg_color)
 {
     ldProgressBar_t *ld_progress_bar;
 
@@ -617,7 +617,7 @@ int picoui_progress_bar_set_color(struct picoui_progress_bar *bar, unsigned int 
  * @return 0 on success, -1 on failure
  */
 
-int picoui_progress_bar_set_frame_color(struct picoui_progress_bar *bar,
+int tinyui_progress_bar_set_frame_color(struct tinyui_progress_bar *bar,
                                         unsigned int frame_color,
                                         int frame_color_size)
 {
@@ -648,7 +648,7 @@ int picoui_progress_bar_set_frame_color(struct picoui_progress_bar *bar,
  * @return 0 on success, -1 on failure
  */
 
-int picoui_progress_bar_set_inverted(struct picoui_progress_bar *bar, int inverted)
+int tinyui_progress_bar_set_inverted(struct tinyui_progress_bar *bar, int inverted)
 {
     ldProgressBar_t *ld_progress_bar;
 
@@ -673,7 +673,7 @@ int picoui_progress_bar_set_inverted(struct picoui_progress_bar *bar, int invert
  * @return -1 on failure
  */
 
-int picoui_progress_bar_get_inverted(const struct picoui_progress_bar *bar)
+int tinyui_progress_bar_get_inverted(const struct tinyui_progress_bar *bar)
 {
     ldProgressBar_t *ld_progress_bar;
 
@@ -681,7 +681,7 @@ int picoui_progress_bar_get_inverted(const struct picoui_progress_bar *bar)
         return -1;
     }
 
-    ld_progress_bar = tinyui_progress_bar_get_ld((struct picoui_progress_bar *)bar);
+    ld_progress_bar = tinyui_progress_bar_get_ld((struct tinyui_progress_bar *)bar);
     if (ld_progress_bar == 0) {
         return -1;
     }

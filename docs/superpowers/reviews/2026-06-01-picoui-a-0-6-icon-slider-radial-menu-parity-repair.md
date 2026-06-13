@@ -1,17 +1,17 @@
-# PicoUI a-0.6 icon_slider / radial_menu parity repair 记录
+# TINYUI a-0.6 icon_slider / radial_menu parity repair 记录
 
 ## 背景
 
-`2026-06-01` 的 `a-0.6` review 先确认过一个真实问题：当前主仓虽然把 `icon_slider / radial_menu` 接进了 PicoUI public widget 集，也把 runtime / mapping / visible / manual artifact gate 接到了 final release catalog，但这两个控件当时还不能诚实地写成 `full_parity_complete`。
+`2026-06-01` 的 `a-0.6` review 先确认过一个真实问题：当前主仓虽然把 `icon_slider / radial_menu` 接进了 TINYUI public widget 集，也把 runtime / mapping / visible / manual artifact gate 接到了 final release catalog，但这两个控件当时还不能诚实地写成 `full_parity_complete`。
 
 根因不是 gate 没跑，而是 public props 和真实 LingDongGUI backend 之间仍然脱节：
 
 1. `icon_slider`
-   - `picoui_icon_slider_create_with_props()` 只把 `icon_width / icon_space / columns / rows / pages` 留在 host struct。
-   - `picoui_backend_create_icon_slider()` 仍用硬编码 `46 / 2 / 4 / 1 / 2` 调 `ldIconSlider_init(...)`。
+   - `tinyui_icon_slider_create_with_props()` 只把 `icon_width / icon_space / columns / rows / pages` 留在 host struct。
+   - `tinyui_backend_create_icon_slider()` 仍用硬编码 `46 / 2 / 4 / 1 / 2` 调 `ldIconSlider_init(...)`。
 2. `radial_menu`
-   - `picoui_radial_menu_create_with_props()` 只把 `x_axis / y_axis / item_max` 留在 host struct。
-   - `picoui_backend_create_radial_menu()` 仍用硬编码 `68 / 46 / 5` 调 `ldRadialMenu_init(...)`。
+   - `tinyui_radial_menu_create_with_props()` 只把 `x_axis / y_axis / item_max` 留在 host struct。
+   - `tinyui_backend_create_radial_menu()` 仍用硬编码 `68 / 46 / 5` 调 `ldRadialMenu_init(...)`。
 
 这会制造一种假完成：
 
@@ -58,8 +58,8 @@
 
 本轮实际落地方式：
 
-1. `backend.h` 扩展 `picoui_backend_create_icon_slider(...)` 与 `picoui_backend_create_radial_menu(...)` 的 constructor 参数面。
-2. `picoui/src/widgets/icon_slider.c` / `picoui/src/widgets/radial_menu.c` 新增 backend-config helper。
+1. `backend.h` 扩展 `tinyui_backend_create_icon_slider(...)` 与 `tinyui_backend_create_radial_menu(...)` 的 constructor 参数面。
+2. `tinyui/src/widgets/icon_slider.c` / `tinyui/src/widgets/radial_menu.c` 新增 backend-config helper。
 3. `create()` 继续走默认参数；`create_with_props()` 直接把 public props 传入 backend constructor。
 4. `backend_icon_slider.c` / `backend_radial_menu.c` 去掉旧硬编码，改为把透传参数送入 `ldIconSlider_init(...)` / `ldRadialMenu_init(...)`。
 5. 保持 demo 调用面不变，只修正 public props 不失真。
@@ -68,10 +68,10 @@
 
 修完代码与测试后，再同步：
 
-1. `tests/picoui/contract/picoui_release_capability_matrix.json`
-2. `docs/picoui-serial/a-0.6-final-release-closeout.md`
-3. `docs/picoui-serial/a-0.4-a-0.6-后续版本记录.md`
-4. 必要时 `picoui/docs/demo_guide.md`
+1. `tests/tinyui/contract/tinyui_release_capability_matrix.json`
+2. `docs/tinyui-serial/a-0.6-final-release-closeout.md`
+3. `docs/tinyui-serial/a-0.4-a-0.6-后续版本记录.md`
+4. 必要时 `tinyui/docs/demo_guide.md`
 
 同步原则：
 
@@ -100,19 +100,19 @@
 
 代码：
 
-1. `picoui/src/widgets/icon_slider.c`
-2. `picoui/src/backend/ldgui/backend_icon_slider.c`
-3. `picoui/src/widgets/radial_menu.c`
-4. `picoui/src/backend/ldgui/backend_radial_menu.c`
-5. `picoui/src/backend/ldgui/backend.h`
+1. `tinyui/src/widgets/icon_slider.c`
+2. `tinyui/src/backend/ldgui/backend_icon_slider.c`
+3. `tinyui/src/widgets/radial_menu.c`
+4. `tinyui/src/backend/ldgui/backend_radial_menu.c`
+5. `tinyui/src/backend/ldgui/backend.h`
 
 测试：
 
-1. `tests/picoui/unit/test_picoui_icon_slider.c`
-2. `tests/picoui/unit/test_picoui_radial_menu.c`
+1. `tests/tinyui/unit/test_tinyui_icon_slider.c`
+2. `tests/tinyui/unit/test_tinyui_radial_menu.c`
 
 文档 / truth-source：
 
-1. `docs/picoui-serial/a-0.6-final-release-closeout.md`
-2. `docs/picoui-serial/a-0.4-a-0.6-后续版本记录.md`
-3. `tests/picoui/contract/picoui_release_capability_matrix.json`
+1. `docs/tinyui-serial/a-0.6-final-release-closeout.md`
+2. `docs/tinyui-serial/a-0.4-a-0.6-后续版本记录.md`
+3. `tests/tinyui/contract/tinyui_release_capability_matrix.json`

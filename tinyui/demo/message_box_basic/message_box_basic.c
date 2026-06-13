@@ -19,28 +19,28 @@
 #include "message_box_basic/message_box_basic.h"
 #include "tinyui.h"
 
-static void make_ui(struct picoui_window *win)
+static void make_ui(struct tinyui_window *win)
 {
-    struct picoui_label *title = picoui_label_create(win, "title");
-    struct picoui_message_box *message_box;
-    struct picoui_message_box_props props = {
+    struct tinyui_label *title = tinyui_label_create(win, "title");
+    struct tinyui_message_box *message_box;
+    struct tinyui_message_box_props props = {
         .id = "message_box",
         .title = "Update",
         .message = "Apply settings?",
         .confirm_text = "OK",
     };
 
-    picoui_label_set_text(title, "Message Box");
-    message_box = picoui_message_box_create_with_props((struct picoui_widget *)win, &props);
+    tinyui_label_set_text(title, "Message Box");
+    message_box = tinyui_message_box_create_with_props((struct tinyui_widget *)win, &props);
     if (message_box != 0) {
-        (void)picoui_widget_set_pos((struct picoui_widget *)message_box, 110, 180);
+        (void)tinyui_widget_set_pos((struct tinyui_widget *)message_box, 110, 180);
     }
 }
 
 void tinyui_demo_message_box_basic(void)
 {
     tinyui_obj_t *screen = tinyui_screen_create();
-    struct picoui_window *win = (struct picoui_window *)screen;
+    struct tinyui_window *win = (struct tinyui_window *)screen;
     if (win == 0) return;
     make_ui(win);
     tinyui_screen_load(screen);

@@ -4,9 +4,9 @@
 
 **Goal:** 冻结 `v2.0` 末态为 `v2.1` 的起跑基线，并建立 rename/目录/backend 退场守门，避免后续大规模迁移失控。
 
-**Architecture:** 新增 `v2.1` inventory 与 Python guard checker，量化当前 `picoui/`、`tinyui/`、`backend_*`、`picoui_*` 的真实分布，并把文档索引接到新的 `docs/v2.1` 真相源上。
+**Architecture:** 新增 `v2.1` inventory 与 Python guard checker，量化当前 `tinyui/`、`tinyui/`、`backend_*`、`tinyui_*` 的真实分布，并把文档索引接到新的 `docs/v2.1` 真相源上。
 
-**Tech Stack:** Python 3、JSON、CTest、现有 `tests/picoui/contract/*`、现有 `docs/v2.0/*` 与新 `docs/v2.1/*`。
+**Tech Stack:** Python 3、JSON、CTest、现有 `tests/tinyui/contract/*`、现有 `docs/v2.0/*` 与新 `docs/v2.1/*`。
 
 ---
 
@@ -14,14 +14,14 @@
 
 新增：
 
-- `tests/picoui/contract/check_tinyui_v21_transition_guards.py`
-- `tests/picoui/contract/tinyui_v21_transition_inventory.json`
+- `tests/tinyui/contract/check_tinyui_v21_transition_guards.py`
+- `tests/tinyui/contract/tinyui_v21_transition_inventory.json`
 - `docs/v2.1/2026-06-10-tinyui-v2-1-baseline-inventory.md`
 - `docs/v2.1/线计划索引.md`
 
 修改：
 
-- `tests/picoui/CMakeLists.txt`
+- `tests/tinyui/CMakeLists.txt`
 - `docs/v2.1/plans/stages/README.md`
 
 ---
@@ -29,13 +29,13 @@
 ### Task 1: 建立 v2.1 inventory 与 guard checker
 
 **Files:**
-- Create: `tests/picoui/contract/check_tinyui_v21_transition_guards.py`
-- Create: `tests/picoui/contract/tinyui_v21_transition_inventory.json`
-- Modify: `tests/picoui/CMakeLists.txt`
+- Create: `tests/tinyui/contract/check_tinyui_v21_transition_guards.py`
+- Create: `tests/tinyui/contract/tinyui_v21_transition_inventory.json`
+- Modify: `tests/tinyui/CMakeLists.txt`
 
 - [x] **Step 1: 写 baseline guard checker，并支持打印当前实测值**
 
-Create `tests/picoui/contract/check_tinyui_v21_transition_guards.py`:
+Create `tests/tinyui/contract/check_tinyui_v21_transition_guards.py`:
 
 ```python
 #!/usr/bin/env python3
@@ -47,12 +47,12 @@ import re
 import sys
 
 ROOT = Path(__file__).resolve().parents[3]
-INVENTORY = ROOT / "tests" / "picoui" / "contract" / "tinyui_v21_transition_inventory.json"
+INVENTORY = ROOT / "tests" / "tinyui" / "contract" / "tinyui_v21_transition_inventory.json"
 
-PICOUI_DIR = ROOT / "picoui"
+PICOUI_DIR = ROOT / "tinyui"
 TINYUI_DIR = ROOT / "tinyui"
-BACKEND_DIR = ROOT / "picoui" / "src" / "backend" / "ldgui"
-PICOUI_HEADERS = sorted((ROOT / "picoui" / "include").rglob("*.h"))
+BACKEND_DIR = ROOT / "tinyui" / "src" / "backend" / "ldgui"
+PICOUI_HEADERS = sorted((ROOT / "tinyui" / "include").rglob("*.h"))
 TINYUI_HEADERS = sorted((ROOT / "tinyui" / "include").rglob("*.h"))
 
 def count_prefix(headers: list[Path], prefix: str) -> int:
@@ -66,10 +66,10 @@ def count_prefix(headers: list[Path], prefix: str) -> int:
 def main() -> int:
     if len(sys.argv) > 1 and sys.argv[1] == "--print-current":
         actual = {
-            "picoui_dir_exists": PICOUI_DIR.exists(),
+            "tinyui_dir_exists": PICOUI_DIR.exists(),
             "tinyui_dir_exists": TINYUI_DIR.exists(),
             "backend_c_files": len(sorted(BACKEND_DIR.glob("backend_*.c"))),
-            "picoui_public_api_count": count_prefix(PICOUI_HEADERS, "picoui_"),
+            "tinyui_public_api_count": count_prefix(PICOUI_HEADERS, "tinyui_"),
             "tinyui_public_api_count": count_prefix(PICOUI_HEADERS + TINYUI_HEADERS, "tinyui_"),
         }
         print(json.dumps(actual, ensure_ascii=False, sort_keys=True, indent=2))
@@ -79,10 +79,10 @@ def main() -> int:
         return 1
     inv = json.loads(INVENTORY.read_text(encoding="utf-8"))
     actual = {
-        "picoui_dir_exists": PICOUI_DIR.exists(),
+        "tinyui_dir_exists": PICOUI_DIR.exists(),
         "tinyui_dir_exists": TINYUI_DIR.exists(),
         "backend_c_files": len(sorted(BACKEND_DIR.glob("backend_*.c"))),
-        "picoui_public_api_count": count_prefix(PICOUI_HEADERS, "picoui_"),
+        "tinyui_public_api_count": count_prefix(PICOUI_HEADERS, "tinyui_"),
         "tinyui_public_api_count": count_prefix(PICOUI_HEADERS + TINYUI_HEADERS, "tinyui_"),
     }
     for key, expected in inv["baseline"].items():
@@ -102,22 +102,22 @@ if __name__ == "__main__":
 Run:
 
 ```bash
-python3 tests/picoui/contract/check_tinyui_v21_transition_guards.py --print-current
+python3 tests/tinyui/contract/check_tinyui_v21_transition_guards.py --print-current
 ```
 
 Expected: 输出当前工作树的真实基线 JSON；这一步不做通过/失败判定，只采集基线。
 
 - [x] **Step 3: 用实测值建立 inventory**
 
-Create `tests/picoui/contract/tinyui_v21_transition_inventory.json` from the exact JSON emitted in Step 2:
+Create `tests/tinyui/contract/tinyui_v21_transition_inventory.json` from the exact JSON emitted in Step 2:
 
 ```json
 {
   "baseline": {
-    "picoui_dir_exists": true,
+    "tinyui_dir_exists": true,
     "tinyui_dir_exists": true,
     "backend_c_files": 35,
-    "picoui_public_api_count": 559,
+    "tinyui_public_api_count": 559,
     "tinyui_public_api_count": 34
   }
 }
@@ -127,12 +127,12 @@ Only use the exact measured values from Step 2. Do not hand-write guessed number
 
 - [x] **Step 4: 在 CTest 注册 guard**
 
-Add to `tests/picoui/CMakeLists.txt`:
+Add to `tests/tinyui/CMakeLists.txt`:
 
 ```cmake
 ld_add_python_test(check_tinyui_v21_transition_guards
     SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/contract/check_tinyui_v21_transition_guards.py"
-    LABELS "picoui;contract;tinyui_v21;transition"
+    LABELS "tinyui;contract;tinyui_v21;transition"
 )
 ```
 
@@ -141,7 +141,7 @@ ld_add_python_test(check_tinyui_v21_transition_guards
 Run:
 
 ```bash
-python3 tests/picoui/contract/check_tinyui_v21_transition_guards.py
+python3 tests/tinyui/contract/check_tinyui_v21_transition_guards.py
 rtk ctest --test-dir build -R '^check_tinyui_v21_transition_guards$' --output-on-failure
 ```
 
@@ -158,15 +158,15 @@ Expected: PASS。
 
 Create `docs/v2.1/2026-06-10-tinyui-v2-1-baseline-inventory.md` with:
 
-- 当前顶层产品目录：`picoui/` 与试点 `tinyui/`
-- 当前 shared layers：`picoui/src/core`、`display`、`indev`、`layout`、`theme`、`tick`
-- 当前 backend 目录：`picoui/src/backend/ldgui`
-- 当前 widget 目录：`picoui/src/widgets`
-- 当前 contract/test/perf 目录：`tests/picoui/*`
+- 当前顶层产品目录：`tinyui/` 与试点 `tinyui/`
+- 当前 shared layers：`tinyui/src/core`、`display`、`indev`、`layout`、`theme`、`tick`
+- 当前 backend 目录：`tinyui/src/backend/ldgui`
+- 当前 widget 目录：`tinyui/src/widgets`
+- 当前 contract/test/perf 目录：`tests/tinyui/*`
 - 当前 broad gates：
-  - `rtk ctest --test-dir build -L 'picoui' --output-on-failure`
+  - `rtk ctest --test-dir build -L 'tinyui' --output-on-failure`
   - `rtk ctest --test-dir build -L 'perf' --output-on-failure`
-  - `rtk ctest --test-dir build/picoui-runtime -R 'check_picoui_runtime|check_picoui_visible_ui|check_picoui_backend_mapping' --output-on-failure`
+  - `rtk ctest --test-dir build/tinyui-runtime -R 'check_tinyui_runtime|check_tinyui_visible_ui|check_tinyui_backend_mapping' --output-on-failure`
   - `git diff --check`
 
 - [x] **Step 2: 建立顶层索引**
@@ -193,7 +193,7 @@ Append under `V0` in `docs/v2.1/plans/stages/README.md`:
 Run:
 
 ```bash
-rtk ctest --test-dir build -R 'check_tinyui_v21_transition_guards|check_picoui_tinyui_transition_guards' --output-on-failure
+rtk ctest --test-dir build -R 'check_tinyui_v21_transition_guards|check_tinyui_tinyui_transition_guards' --output-on-failure
 git diff --check
 ```
 

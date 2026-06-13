@@ -1503,8 +1503,8 @@ def _find_executable(build_dir: Path, target: str) -> Path:
 def _run_demo(build_dir: Path, target: str, capture_path: Path) -> subprocess.CompletedProcess[str]:
     env = os.environ.copy()
     env["SDL_VIDEODRIVER"] = env.get("SDL_VIDEODRIVER", "dummy")
-    env["PICOUI_DEMO_AUTO_QUIT_MS"] = "1200"
-    env["PICOUI_CAPTURE_FILE"] = str(capture_path)
+    env["TINYUI_DEMO_AUTO_QUIT_MS"] = "1200"
+    env["TINYUI_CAPTURE_FILE"] = str(capture_path)
     return subprocess.run(
         [str(_find_executable(build_dir, target))],
         check=False,
@@ -1516,7 +1516,7 @@ def _run_demo(build_dir: Path, target: str, capture_path: Path) -> subprocess.Co
 
 
 def _assert_no_unexpected_fallback(demo: str, stdout: str) -> None:
-    if "PICOUI_BACKEND_INTERACTIVE_BOUNDARY=FAKE_FALLBACK" not in stdout:
+    if "TINYUI_BACKEND_INTERACTIVE_BOUNDARY=FAKE_FALLBACK" not in stdout:
         return
     raise AssertionError(
         f"VISIBLE FAIL: {demo} still uses backend fallback widgets.\n"
@@ -1525,7 +1525,7 @@ def _assert_no_unexpected_fallback(demo: str, stdout: str) -> None:
 
 
 def _assert_real_mapping_honesty(demo: str, stdout: str) -> None:
-    expected = "PICOUI_BACKEND_STATIC_MAPPING=REAL_LDGUI"
+    expected = "TINYUI_BACKEND_STATIC_MAPPING=REAL_LDGUI"
     if expected in stdout:
         return
     raise AssertionError(
@@ -1536,7 +1536,7 @@ def _assert_real_mapping_honesty(demo: str, stdout: str) -> None:
 
 
 def _assert_basic_widgets_image_source_boundary(stdout: str) -> None:
-    expected = "PICOUI_BACKEND_IMAGE_SOURCE=logo:img=null,mask=null"
+    expected = "TINYUI_BACKEND_IMAGE_SOURCE=logo:img=null,mask=null"
 
     if expected not in stdout:
         raise AssertionError(
@@ -1548,13 +1548,13 @@ def _assert_basic_widgets_image_source_boundary(stdout: str) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Check TinyUI v2.0/PicoUI visible correctness evidence for selected demos."
+        description="Check TinyUI v2.0/TINYUI visible correctness evidence for selected demos."
     )
     parser.add_argument("--demo", choices=sorted(DEMOS), default="basic_widgets")
     parser.add_argument(
         "--all",
         action="store_true",
-        help="check every TinyUI v2.0/PicoUI demo visible gate",
+        help="check every TinyUI v2.0/TINYUI demo visible gate",
     )
     parser.add_argument(
         "--build-dir",
@@ -1589,7 +1589,7 @@ def main() -> None:
                         f"stdout:\n{completed.stdout}\n"
                         f"stderr:\n{completed.stderr}"
                     )
-                if "PICOUI_RUNTIME_READY" not in completed.stdout:
+                if "TINYUI_RUNTIME_READY" not in completed.stdout:
                     raise AssertionError(
                         f"SMOKE FAIL: demo '{target}' did not report entering a runtime loop.\n"
                         f"stdout:\n{completed.stdout}\n"

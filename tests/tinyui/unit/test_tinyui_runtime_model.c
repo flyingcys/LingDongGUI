@@ -5,10 +5,10 @@
 #include <stddef.h>
 #include <stdlib.h>
 
-static void test_shared_sources_no_longer_include_picoui_paths(void)
+static void test_shared_sources_no_longer_include_tinyui_paths(void)
 {
     int status = system(
-        "rg -n '#include \"picoui/' "
+        "rg -n '#include \"tinyui/' "
         "tinyui/src/core tinyui/src/display tinyui/src/indev tinyui/src/layout "
         "tinyui/src/theme tinyui/src/tick tinyui/src/osal >/dev/null");
 
@@ -21,7 +21,7 @@ static void test_runtime_internal_state_uses_tinyui_prefix(void)
         "python3 - <<'PY'\n"
         "from pathlib import Path\n"
         "text = Path('/Users/cys/embedded/LingDongGUI/tinyui/src/core/runtime.c').read_text()\n"
-        "raise SystemExit(1 if 'g_picoui_runtime_app' in text else 0)\n"
+        "raise SystemExit(1 if 'g_tinyui_runtime_app' in text else 0)\n"
         "PY");
     int new_status = system(
         "python3 - <<'PY'\n"
@@ -75,7 +75,7 @@ static void test_timer_handler_after_init_returns_status(void)
 
 int main(void)
 {
-    test_shared_sources_no_longer_include_picoui_paths();
+    test_shared_sources_no_longer_include_tinyui_paths();
     test_runtime_internal_state_uses_tinyui_prefix();
     test_runtime_init_create_load_teardown();
     test_timer_handler_before_init_returns_error();
