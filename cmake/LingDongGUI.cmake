@@ -108,10 +108,6 @@ function(ld_apply_tinyui_runtime_screen_config target)
     )
 endfunction()
 
-function(ld_apply_picoui_runtime_screen_config target)
-    ld_apply_tinyui_runtime_screen_config(${target})
-endfunction()
-
 function(ld_define_core_targets)
     if(TARGET longdonggui)
         return()
@@ -146,6 +142,26 @@ function(ld_define_core_targets)
     target_include_directories(longdonggui_porting_default PUBLIC ${LD_COMMON_INCLUDE_DIRS})
     target_link_libraries(longdonggui_porting_default PUBLIC longdonggui)
     ld_apply_common_target_config(longdonggui_porting_default)
+
+    set(LD_TINYUI_BACKEND_LDGUI_DIR "${LD_REPO_ROOT}/tinyui/src/backend/ldgui")
+
+    add_library(tinyui_backend_ldgui_porting STATIC
+        "${LD_TINYUI_BACKEND_LDGUI_DIR}/tinyui_ldgui_port.c"
+        "${LD_TINYUI_BACKEND_LDGUI_DIR}/tinyui_ldgui_disp_adapter.c"
+        ${LD_PERF_COUNTER_SOURCES}
+    )
+    target_include_directories(tinyui_backend_ldgui_porting PUBLIC
+        "${LD_TINYUI_BACKEND_LDGUI_DIR}"
+        "${LD_REPO_ROOT}/tinyui/include"
+        "${LD_REPO_ROOT}/tinyui/src/core"
+        "${LD_REPO_ROOT}/tinyui/src/backend/ldgui"
+        ${LD_COMMON_INCLUDE_DIRS}
+    )
+    target_compile_definitions(tinyui_backend_ldgui_porting PRIVATE
+        __ARM_2D_USER_APP_CFG_H__="tinyui_ldgui_port_config.h"
+    )
+    target_link_libraries(tinyui_backend_ldgui_porting PUBLIC longdonggui tinyui_core)
+    ld_apply_common_target_config(tinyui_backend_ldgui_porting)
 
     add_library(longdonggui_host STATIC
         ${LD_LONGDONGGUI_GUI_SOURCES}
@@ -207,7 +223,7 @@ function(ld_define_core_targets)
         ${LD_COMMON_INCLUDE_DIRS}
     )
     ld_apply_common_target_config(tinyui_core)
-    add_library(picoui_core ALIAS tinyui_core)
+    add_library(tinyui_core ALIAS tinyui_core)
 
     set(LD_TINYUI_BACKEND_LDGUI_SOURCES
         ${LD_REPO_ROOT}/tinyui/src/core/runtime_host.c
@@ -221,7 +237,7 @@ function(ld_define_core_targets)
             ${LD_REPO_ROOT}/tinyui/src/backend/ldgui
             ${LD_REPO_ROOT}/tinyui
         )
-        target_link_libraries(${LD_TINYUI_BACKEND_TARGET} PUBLIC tinyui_core longdonggui longdonggui_porting_default)
+        target_link_libraries(${LD_TINYUI_BACKEND_TARGET} PUBLIC tinyui_core longdonggui tinyui_backend_ldgui_porting)
         if(LD_TINYUI_BACKEND_TARGET STREQUAL "tinyui_backend_ldgui_runtime")
             ld_apply_tinyui_runtime_screen_config(${LD_TINYUI_BACKEND_TARGET})
         endif()
@@ -245,8 +261,8 @@ function(ld_define_core_targets)
         endif()
         ld_apply_common_target_config(${LD_TINYUI_BACKEND_TARGET})
     endforeach()
-    add_library(picoui_backend_ldgui ALIAS tinyui_backend_ldgui)
-    add_library(picoui_backend_ldgui_runtime ALIAS tinyui_backend_ldgui_runtime)
+    add_library(tinyui_backend_ldgui ALIAS tinyui_backend_ldgui)
+    add_library(tinyui_backend_ldgui_runtime ALIAS tinyui_backend_ldgui_runtime)
 
     add_library(tinyui_port_sdl STATIC
         ${LD_REPO_ROOT}/tinyui/port/sdl/sdl.c
@@ -276,7 +292,7 @@ function(ld_define_core_targets)
         target_link_libraries(tinyui_port_sdl PUBLIC ${SDL2_LIBRARIES})
     endif()
     ld_apply_common_target_config(tinyui_port_sdl)
-    add_library(picoui_port_sdl ALIAS tinyui_port_sdl)
+    add_library(tinyui_port_sdl ALIAS tinyui_port_sdl)
 endfunction()
 
 function(ld_add_c_unit_test target)
