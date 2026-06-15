@@ -240,6 +240,7 @@ int tinyui_widget_release_backend_focus(void *backend_widget);
 void tinyui_widget_init_data_model(struct tinyui_backend_widget *backend);
 
 int tinyui_runtime_host_step_app(struct tinyui_app *app);
+void tinyui_runtime_host_shutdown_app(struct tinyui_app *app);
 int tinyui_window_apply_flex_flow(struct tinyui_window *window, enum tinyui_flex_flow flow);
 int tinyui_window_apply_flex_align(struct tinyui_window *window,
                                    enum tinyui_align main_align,

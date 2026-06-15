@@ -10,6 +10,11 @@ FORBIDDEN_PATTERNS = {
     "arm_2d_*": re.compile(r"\barm_2d_[A-Za-z0-9_]+\b"),
     "SIGNAL_*": re.compile(r"\bSIGNAL_[A-Za-z0-9_]+\b"),
 }
+OPAQUE_ASSET_DECL_RE = re.compile(
+    r"^\s*(typedef\s+struct\s+arm_2d_tile_t\s+arm_2d_tile_t;|"
+    r"extern\s+const\s+arm_2d_tile_t\s+c_tile[A-Za-z0-9_]+;)\s*$",
+    re.M,
+)
 REQUIRED_DEMOS = {
     "hello_world",
     "basic_widgets",
@@ -35,11 +40,7 @@ REQUIRED_DEMOS = {
     "layout_parity",
     "grid_parity",
 }
-REQUIRED_TARGETS = (
-    "tinyui_legacy_widget_parity_demo",
-    "tinyui_layout_parity_demo",
-    "tinyui_grid_parity_demo",
-)
+REQUIRED_RUNNER_TARGET = "tinyui_demo"
 DEMO_MARKERS = {
     "legacy_widget_parity": (
         "tinyui_image_create",
@@ -102,8 +103,13 @@ DEMO_ABSENT_MARKERS = {
 
 def main() -> int:
     cmake_text = SDL_CMAKE.read_text(encoding="utf-8")
-    for target in REQUIRED_TARGETS:
-        assert target in cmake_text, f"missing parity demo target: {target}"
+    assert f"add_tinyui_demo({REQUIRED_RUNNER_TARGET}" in cmake_text, (
+        f"missing single TinyUI demo runner target: {REQUIRED_RUNNER_TARGET}"
+    )
+    for demo_name in ("legacy_widget_parity", "layout_parity", "grid_parity"):
+        assert f"{demo_name}/{demo_name}.c" in cmake_text, (
+            f"single TinyUI demo runner does not compile parity demo: {demo_name}"
+        )
 
     demo_sources = sorted(DEMO_DIR.glob("**/*.c"))
     assert demo_sources, "expected TinyUI demo sources"
@@ -114,12 +120,13 @@ def main() -> int:
 
     for source in demo_sources:
         text = source.read_text(encoding="utf-8")
+        text = OPAQUE_ASSET_DECL_RE.sub("", text)
         for label, pattern in FORBIDDEN_PATTERNS.items():
             match = pattern.search(text)
             assert match is None, f"{source.name} leaks forbidden token: {match.group(0)} ({label})"
 
     for demo_name, markers in DEMO_MARKERS.items():
-        demo_source = DEMO_DIR / demo_name / "main.c"
+        demo_source = DEMO_DIR / demo_name / f"{demo_name}.c"
         assert demo_source.exists(), f"missing parity demo source: {demo_source.relative_to(ROOT)}"
         demo_text = demo_source.read_text(encoding="utf-8")
         for marker in markers:

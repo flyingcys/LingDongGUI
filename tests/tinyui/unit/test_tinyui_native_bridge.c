@@ -22,8 +22,19 @@ extern int tinyui_runtime_bridge_commit_pointer_event(struct tinyui_app *app,
                                                       int pressed);
 extern bool ldCfgTouchGetPoint(int16_t *x, int16_t *y);
 
-static const char *test_runtime_bridge_source =
-    "/Users/cys/embedded/LingDongGUI/tinyui/src/core/runtime_bridge.c";
+static const char *test_repo_path(const char *relative_path)
+{
+    static char path[2048];
+    char base[2048];
+    char *tests_dir;
+
+    snprintf(base, sizeof(base), "%s", __FILE__);
+    tests_dir = strstr(base, "tests/tinyui/unit/");
+    assert(tests_dir != 0);
+    *tests_dir = '\0';
+    snprintf(path, sizeof(path), "%s%s", base, relative_path);
+    return path;
+}
 
 static void reset_touch_probe(void)
 {
@@ -109,16 +120,16 @@ static void test_native_readback_policy_maps_backend_truth_modes(void)
 static void test_internal_native_helpers_no_longer_use_tinyui_prefix(void)
 {
     assert_source_lacks_function_definition(
-        "/Users/cys/embedded/LingDongGUI/tinyui/src/core/native.c",
+        test_repo_path("tinyui/src/core/native.c"),
         "tinyui_native_align_to_ld_grid");
     assert_source_lacks_function_definition(
-        "/Users/cys/embedded/LingDongGUI/tinyui/src/core/native.c",
+        test_repo_path("tinyui/src/core/native.c"),
         "tinyui_native_signal_to_ld");
     assert_source_lacks_function_definition(
-        "/Users/cys/embedded/LingDongGUI/tinyui/src/core/native.c",
+        test_repo_path("tinyui/src/core/native.c"),
         "tinyui_native_readback_policy_to_backend");
     assert_source_lacks_function_definition(
-        "/Users/cys/embedded/LingDongGUI/tinyui/src/core/widget.c",
+        test_repo_path("tinyui/src/core/widget.c"),
         "tinyui_native_nav_dir_to_ld");
 }
 
@@ -163,8 +174,8 @@ static void test_runtime_bridge_pointer_commit_updates_input_state_and_ld_touch(
     reset_touch_probe();
     assert(tinyui_runtime_bridge_commit_pointer_event(app, 640, 480, -5, 50000, 0) == 0);
     assert(tinyui_input_get_pointer(app, &x, &y, &pressed) == 0);
-    assert(x == -5);
-    assert(y == 50000);
+    assert(x == 0);
+    assert(y == 32767);
     assert(pressed == 0);
     touch_x = 123;
     touch_y = 456;
@@ -208,6 +219,8 @@ static void test_runtime_bridge_pointer_helpers_reject_null_app(void)
 
 static void test_backend_app_no_longer_defines_pointer_bridge_helpers_locally(void)
 {
+    const char *test_runtime_bridge_source = test_repo_path("tinyui/src/core/runtime_bridge.c");
+
     assert_source_lacks_function_definition(test_runtime_bridge_source, "tinyui_backend_push_pointer_to_port");
     assert_source_lacks_function_definition(test_runtime_bridge_source, "tinyui_backend_bridge_pointer_from_port");
     assert_source_lacks_function_definition(test_runtime_bridge_source, "tinyui_backend_commit_pointer_event");

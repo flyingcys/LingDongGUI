@@ -8,7 +8,7 @@ CONTRACT_DIR = ROOT / "tests" / "tinyui" / "contract"
 MATRIX_JSON = ROOT / "tests" / "tinyui" / "contract" / "tinyui_release_capability_matrix.json"
 INVENTORY_JSON = CONTRACT_DIR / "ldgui_public_api_inventory.json"
 LEDGER_JSON = CONTRACT_DIR / "native_api_gap_ledger.json"
-TINYUI_INCLUDE_DIR = ROOT / "tinyui" / "include" / "tinyui"
+TINYUI_INCLUDE_DIR = ROOT / "tinyui" / "include"
 
 VALID_COVERAGE_KINDS = {
     "native_setter_parity",

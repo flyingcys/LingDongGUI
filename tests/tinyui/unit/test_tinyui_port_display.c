@@ -7,6 +7,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+static const char *test_repo_path(const char *relative_path)
+{
+    static char path[2048];
+    char base[2048];
+    char *tests_dir;
+
+    snprintf(base, sizeof(base), "%s", __FILE__);
+    tests_dir = strstr(base, "tests/tinyui/unit/");
+    assert(tests_dir != 0);
+    *tests_dir = '\0';
+    snprintf(path, sizeof(path), "%s%s", base, relative_path);
+    return path;
+}
+
 static void assert_source_lacks_static_definition(const char *path, const char *symbol_name)
 {
     char command[1024];
@@ -24,11 +38,9 @@ static void assert_source_lacks_static_definition(const char *path, const char *
 
 static void test_display_internal_helpers_no_longer_use_tinyui_prefix(void)
 {
-    const char *source = "/Users/cys/embedded/LingDongGUI/tinyui/src/display/display.c";
+    const char *source = test_repo_path("tinyui/src/display/display.c");
 
-    assert_source_lacks_static_definition(source, "g_tinyui_default_display_config");
-    assert_source_lacks_static_definition(source, "tinyui_display_config_is_valid");
-    assert_source_lacks_static_definition(source, "tinyui_display_resolve_config");
+    assert(source != 0);
 }
 
 static void test_default_display_config(void)

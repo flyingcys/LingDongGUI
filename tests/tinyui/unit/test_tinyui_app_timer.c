@@ -7,8 +7,21 @@
 #include <stdlib.h>
 #include <string.h>
 
-static const char *test_self_binary_path =
-    "/Users/cys/embedded/LingDongGUI/build/tests/tinyui/test_tinyui_app_timer";
+static const char *test_self_binary_path = 0;
+
+static const char *test_repo_path(const char *relative_path)
+{
+    static char path[2048];
+    char base[2048];
+    char *tests_dir;
+
+    snprintf(base, sizeof(base), "%s", __FILE__);
+    tests_dir = strstr(base, "tests/tinyui/unit/");
+    assert(tests_dir != 0);
+    *tests_dir = '\0';
+    snprintf(path, sizeof(path), "%s%s", base, relative_path);
+    return path;
+}
 
 static void assert_command_success(const char *command)
 {
@@ -338,23 +351,28 @@ static void test_timer_pump_skips_detached_successor_after_callback_relink(void)
 
 static void test_timer_pump_backend_symbol_is_no_longer_public(void)
 {
-    assert_command_success("test -f ../../libtinyui_backend_ldgui.a");
-    assert_command_success("test -f /Users/cys/embedded/LingDongGUI/build/tests/tinyui/test_tinyui_app_timer");
-    assert_archive_lacks_symbol("../../libtinyui_backend_ldgui.a", "tinyui_backend_test_pump_timers");
+    char exists_command[4096];
+
+    assert_command_success("test -f ../../libtinyui_backend_ldgui_porting.a");
+    snprintf(exists_command, sizeof(exists_command), "test -f %s", test_self_binary_path);
+    assert_command_success(exists_command);
+    assert_archive_lacks_symbol("../../libtinyui_backend_ldgui_porting.a", "tinyui_backend_test_pump_timers");
     assert_self_binary_lacks_symbol("tinyui_backend_test_pump_timers");
 }
 
 static void test_app_timer_internal_seam_uses_tinyui_prefix(void)
 {
-    assert_source_lacks_text("/Users/cys/embedded/LingDongGUI/tinyui/src/core/app.c",
-                             "static void tinyui_app_timer_unlink");
-    assert_source_contains_text("/Users/cys/embedded/LingDongGUI/tinyui/src/core/app.c",
+    assert_source_contains_text(test_repo_path("tinyui/src/core/app.c"),
                                 "static void tinyui_app_timer_unlink");
     assert_self_binary_lacks_symbol("tinyui_app_timer_unlink");
 }
 
-int main(void)
+int main(int argc, char **argv)
 {
+    (void)argc;
+    test_self_binary_path = (argv != NULL && argv[0] != NULL)
+        ? argv[0]
+        : test_repo_path("build/tests/tinyui/test_tinyui_app_timer");
     assert_self_binary_lacks_symbol("tinyui_backend_test_pump_timers");
     test_timer_rejects_null_app();
     test_timer_callback_contract_shape();

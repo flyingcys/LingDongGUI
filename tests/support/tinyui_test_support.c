@@ -12,6 +12,11 @@
 int tinyui_backend_widget_unbind_host(void *backend_widget);
 int tinyui_backend_widget_detach_from_parent(void *backend_widget);
 
+uint32_t arm_2d_helper_get_reference_clock_frequency(void)
+{
+    return 1000000u;
+}
+
 static struct tinyui_image_test_dispose_snapshot g_image_snapshot;
 static int g_image_snapshot_valid = 0;
 static struct tinyui_qrcode_test_dispose_snapshot g_qrcode_snapshot;

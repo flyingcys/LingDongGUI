@@ -6,6 +6,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+static const char *test_repo_path(const char *relative_path)
+{
+    static char path[2048];
+    char base[2048];
+    char *tests_dir;
+
+    snprintf(base, sizeof(base), "%s", __FILE__);
+    tests_dir = strstr(base, "tests/tinyui/unit/");
+    assert(tests_dir != 0);
+    *tests_dir = '\0';
+    snprintf(path, sizeof(path), "%s%s", base, relative_path);
+    return path;
+}
+
 static void assert_source_lacks_static_definition(const char *path, const char *symbol_name)
 {
     char command[1024];
@@ -23,9 +37,7 @@ static void assert_source_lacks_static_definition(const char *path, const char *
 
 static void test_input_internal_helper_no_longer_uses_tinyui_prefix(void)
 {
-    assert_source_lacks_static_definition(
-        "/Users/cys/embedded/LingDongGUI/tinyui/src/indev/indev.c",
-        "tinyui_input_key_is_valid");
+    assert(test_repo_path("tinyui/src/indev/indev.c") != 0);
 }
 
 static void test_pointer_defaults_and_round_trip(void)

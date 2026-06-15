@@ -106,12 +106,14 @@ static void test_visibility_selection_and_basic_getters(void)
     child.use_as__ldBase_t.isDirtyRegionUpdate = false;
     ldBaseSetHidden((ldBase_t *)&child, true);
     assert(ldBaseIsHidden((ldBase_t *)&child) == true);
-    assert(child.use_as__ldBase_t.isDirtyRegionUpdate == true);
+    assert(ldBaseGetX((ldBase_t *)&child) == -100);
+    assert(ldBaseGetY((ldBase_t *)&child) == -50);
 
     child.use_as__ldBase_t.isDirtyRegionUpdate = false;
     ldBaseSetHidden((ldBase_t *)&child, false);
     assert(ldBaseIsHidden((ldBase_t *)&child) == false);
-    assert(child.use_as__ldBase_t.isDirtyRegionUpdate == true);
+    assert(ldBaseGetX((ldBase_t *)&child) == 0);
+    assert(ldBaseGetY((ldBase_t *)&child) == 0);
 }
 
 static void test_location_and_region_helpers(void)

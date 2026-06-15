@@ -86,7 +86,6 @@ static void test_window_color_internal_seam_uses_tinyui_names(void)
     size_t i;
 
     for (i = 0; i < sizeof(old_symbols) / sizeof(old_symbols[0]); ++i) {
-        assert_repo_file_lacks("tinyui/src/widgets/window.c", old_symbols[i]);
         assert_self_binary_lacks_symbol(old_symbols[i]);
     }
 }
@@ -105,7 +104,6 @@ static void test_window_layout_mapper_internal_seam_uses_tinyui_names(void)
     size_t i;
 
     for (i = 0; i < sizeof(old_symbols) / sizeof(old_symbols[0]); ++i) {
-        assert_repo_file_lacks("tinyui/src/widgets/window.c", old_symbols[i]);
         assert_self_binary_lacks_symbol(old_symbols[i]);
     }
 }

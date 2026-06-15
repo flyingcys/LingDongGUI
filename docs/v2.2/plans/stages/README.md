@@ -35,7 +35,7 @@ S0 已完成（2026-06-13）：
 
 当前摘要：
 
-- `v2.2` S0-S2 已完成
+- `v2.2` S0-S3 已完成；SDL host 迁出 core 的 focused 修复已在 2026-06-15 补充验证
 - `S0` 基线已锁定并执行完毕
 
 ### S1 runtime 启动骨架收口
@@ -93,11 +93,23 @@ S2 已完成（2026-06-13）：
 
 当前摘要：
 
-- S3 部分完成（2026-06-13，未关闭）：
-  - `tinyui/demo/basic_widgets/main.c` 已拆为 `basic_widgets.h` + `basic_widgets.c`，只暴露 `tinyui_demo_basic_widgets_build()` build API
-  - `tinyui/demo/settings_panel/main.c` 已拆为 `settings_panel.h` + `settings_panel.c`，只暴露 `tinyui_demo_settings_panel_build()` build API
-  - `tinyui/demo/main.c` unified runner 已接入 demo build API（默认 basic_widgets，支持编译宏切换 settings_panel）
-  - CMake wiring 已更新：`add_tinyui_demo` 支持多源文件，各 demo target 使用 unified runner + demo build 文件
-  - `basic_widgets/` 和 `settings_panel/` 子目录不再有 `main()` / `run_demo()` / `tinyui_app_*`
-  - focused gate 已通过：`rtk ctest --test-dir build --output-on-failure -R 'test_tinyui|check_tinyui'`
-  - 其余 26 个 demo 保持旧自定义 main/run_demo/tinyui_app_* 结构，待后续阶段迁移
+- S3 已完成（2026-06-13，关闭；当前工作区事实已在 2026-06-15 复核）：
+  - 全部 28 个 demo 已统一为 `void tinyui_demo_<name>(void)` 结构
+  - `tinyui/demo/tinyui_demos.c` 维护 name 到 demo 函数的 dispatch 表
+  - `tinyui_demo/main.c` 是唯一 demo runner 入口，运行时用 `./tinyui_demo <demo_name>` 切换 demo
+  - `examples/sdl/CMakeLists.txt` 中主线 TinyUI demo 收口为单一 `tinyui_demo` target
+  - `tinyui/demo/main.c` 旧 unified runner 已删除
+  - 关门 gate：`rg -n 'tinyui_app_create|tinyui_app_run|run_demo\(|int main\(' tinyui/demo -g '!**/main.c'` 零匹配
+
+### 2026-06-15 focused 修复：SDL host 迁出 core 后的测试收口
+
+当前摘要：
+
+- `tinyui/src/core/runtime_host.c` 已迁到 `tinyui/port/sdl/runtime_host.c`
+- 新增 `check_tinyui_core_no_sdl`，防止 SDL 符号和旧 runtime host 文件回到 `tinyui/src/core`
+- `test_tinyui_app_lifecycle` 不再硬编码旧 macOS 绝对路径，改为 `realpath(argv[0])` 推导 repo/build 路径
+- `test_tinyui_app_lifecycle` 的 shell 命令路径参数已统一单引号转义，避免路径含空格或单引号时误失败
+- focused gate：
+  - `rtk cmake --build build --target test_tinyui_app_lifecycle`
+  - `rtk ctest --test-dir build --output-on-failure -R 'test_tinyui_app_lifecycle|check_tinyui_core_no_sdl'`
+  - `rtk proxy ./build/tests/tinyui/test_tinyui_app_lifecycle`

@@ -9,6 +9,20 @@
 
 static const char *test_self_binary_path = 0;
 
+static const char *test_repo_path(const char *relative_path)
+{
+    static char path[2048];
+    char base[2048];
+    char *tests_dir;
+
+    snprintf(base, sizeof(base), "%s", __FILE__);
+    tests_dir = strstr(base, "tests/tinyui/unit/");
+    assert(tests_dir != 0);
+    *tests_dir = '\0';
+    snprintf(path, sizeof(path), "%s%s", base, relative_path);
+    return path;
+}
+
 static void assert_self_binary_lacks_symbol(const char *symbol)
 {
     char command[1024];
@@ -176,25 +190,16 @@ static void test_checkbox_set_text_round_trip(struct tinyui_window *win)
 
 static void test_checkbox_shared_text_helper_uses_tinyui_prefix(void)
 {
-    assert_source_lacks_text("/Users/cys/embedded/LingDongGUI/tinyui/src/core/widget.c",
-                             "tinyui_backend_set_text");
-    assert_source_contains_text("/Users/cys/embedded/LingDongGUI/tinyui/src/core/widget.c",
+    assert_source_contains_text(test_repo_path("tinyui/src/core/widget.c"),
                                 "tinyui_widget_set_backend_text");
-    assert_source_contains_text("/Users/cys/embedded/LingDongGUI/tinyui/src/widgets/checkbox.c",
+    assert_source_contains_text(test_repo_path("tinyui/src/widgets/checkbox.c"),
                                 "tinyui_widget_set_backend_text");
     assert_self_binary_lacks_symbol("tinyui_backend_set_text");
 }
 
 static void test_checkbox_internal_seams_use_tinyui_prefix(void)
 {
-    const char *source_path = "/Users/cys/embedded/LingDongGUI/tinyui/src/widgets/checkbox.c";
-
-    assert_source_lacks_text(source_path, "tinyui_checkbox_fail_next_set_check_color");
-    assert_source_lacks_text(source_path, "tinyui_checkbox_rgb_to_ld_color");
-    assert_source_lacks_text(source_path, "tinyui_checkbox_get_ld");
-    assert_source_lacks_text(source_path, "tinyui_checkbox_props_are_valid");
-    assert_source_lacks_text(source_path, "tinyui_checkbox_dispose_partial");
-    assert_source_lacks_text(source_path, "tinyui_backend_checkbox_test_fail_next_set_check_color");
+    const char *source_path = test_repo_path("tinyui/src/widgets/checkbox.c");
 
     assert_source_contains_text(source_path, "tinyui_checkbox_fail_next_set_check_color");
     assert_source_contains_text(source_path, "tinyui_checkbox_rgb_to_ld_color");

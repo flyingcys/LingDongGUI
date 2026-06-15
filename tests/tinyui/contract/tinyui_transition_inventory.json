@@ -3,7 +3,6 @@
     "backend_c_files": 0,
     "app_header_exists": true,
     "app_source_exists": true,
-    "tinyui_public_api_count": 551,
-    "tinyui_public_api_count": 24
+    "tinyui_public_api_count": 584
   }
 }

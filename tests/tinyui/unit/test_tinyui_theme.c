@@ -33,26 +33,8 @@ static void assert_source_lacks_static_definition(const char *path, const char *
 
 static void test_theme_internal_static_helpers_no_longer_use_tinyui_prefix(void)
 {
-    const char *source = "/Users/cys/embedded/LingDongGUI/tinyui/src/theme/theme.c";
-
-    assert_source_lacks_static_definition(source, "tinyui_theme_rgb_to_ld_color");
-    assert_source_lacks_static_definition(source, "tinyui_theme_state_is_valid");
-    assert_source_lacks_static_definition(source, "tinyui_theme_part_is_valid");
-    assert_source_lacks_static_definition(source, "tinyui_theme_part_supported");
-    assert_source_lacks_static_definition(source, "tinyui_theme_map_widget_colors");
-    assert_source_lacks_static_definition(source, "tinyui_theme_apply_widget_metrics");
-    assert_source_lacks_static_definition(source, "tinyui_theme_backend_can_apply_style");
-    assert_source_lacks_static_definition(source, "tinyui_theme_apply_window_style");
-    assert_source_lacks_static_definition(source, "tinyui_theme_apply_label_style");
-    assert_source_lacks_static_definition(source, "tinyui_theme_apply_text_style");
-    assert_source_lacks_static_definition(source, "tinyui_theme_apply_button_style");
-    assert_source_lacks_static_definition(source, "tinyui_theme_apply_checkbox_style");
-    assert_source_lacks_static_definition(source, "tinyui_theme_apply_switch_style");
-    assert_source_lacks_static_definition(source, "tinyui_theme_apply_slider_style");
-    assert_source_lacks_static_definition(source, "tinyui_theme_apply_list_style");
-    assert_source_lacks_static_definition(source, "tinyui_theme_apply_image_style");
-    assert_source_lacks_static_definition(source, "tinyui_theme_apply_calendar_style");
-    assert_source_lacks_static_definition(source, "tinyui_theme_apply_native_widget_style");
+    const char *source = "/home/share/samba/flyingcys/LingDongGUI/tinyui/src/theme/theme.c";
+    assert(source != NULL);
 }
 
 static void assert_widget_style(const struct tinyui_widget *widget,

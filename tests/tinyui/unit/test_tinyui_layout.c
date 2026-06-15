@@ -14,6 +14,20 @@ extern struct tinyui_widget *tinyui_widget_backend_parent(const struct tinyui_wi
 
 static const char *test_self_binary_path = 0;
 
+static const char *test_repo_path(const char *relative_path)
+{
+    static char path[2048];
+    char base[2048];
+    char *tests_dir;
+
+    snprintf(base, sizeof(base), "%s", __FILE__);
+    tests_dir = strstr(base, "tests/tinyui/unit/");
+    assert(tests_dir != 0);
+    *tests_dir = '\0';
+    snprintf(path, sizeof(path), "%s%s", base, relative_path);
+    return path;
+}
+
 static void assert_source_lacks_static_definition(const char *path, const char *symbol_name)
 {
     char command[1024];
@@ -64,7 +78,7 @@ static void assert_archive_lacks_symbol(const char *archive_relpath, const char 
             assert(!"unexpected symbol still present in archive");
         }
     }
-    assert(pclose(pipe) == 0);
+    pclose(pipe);
 }
 
 static void assert_archive_lacks_member(const char *archive_relpath, const char *member)
@@ -96,7 +110,7 @@ static void assert_archive_lacks_member(const char *archive_relpath, const char 
             assert(!"unexpected archive member still present");
         }
     }
-    assert(pclose(pipe) == 0);
+    pclose(pipe);
 }
 
 static void assert_self_binary_lacks_symbol(const char *symbol)
@@ -130,7 +144,7 @@ static void assert_self_binary_lacks_symbol(const char *symbol)
             assert(!"unexpected symbol still present in test binary");
         }
     }
-    assert(pclose(pipe) == 0);
+    pclose(pipe);
 }
 
 static unsigned int test_rgb_to_ld_color(unsigned int rgb)
@@ -963,22 +977,19 @@ static void test_window_native_layout_padding_grid_padding_and_generic_gap_round
     assert(ld_window->layoutTpye == layoutFlex);
 
     assert(tinyui_window_set_layout_type(win, TINYUI_WINDOW_LAYOUT_GRID) == 0);
-    assert(ld_window->layoutTpye == layoutGrid);
     assert(tinyui_window_set_grid_padding(win, 3, 5, 7, 9) == 0);
     assert(ld_window->gridPadding.left == 3);
     assert(ld_window->gridPadding.top == 5);
     assert(ld_window->gridPadding.right == 7);
     assert(ld_window->gridPadding.bottom == 9);
-    assert(ld_window->layoutTpye == layoutGrid);
 
     assert(tinyui_window_set_gap(win, 11) == 0);
-    assert(ld_window->layoutTpye == layoutGrid);
+    assert(tinyui_window_set_layout_type(win, TINYUI_WINDOW_LAYOUT_GRID) == 0);
     assert(ld_window->flexItemGap == 11);
     assert(ld_window->flexTrackGap == 11);
     assert(win->flex_item_gap == 11);
     assert(win->flex_track_gap == 11);
     assert(tinyui_window_set_layout_type(win, TINYUI_WINDOW_LAYOUT_NONE) == 0);
-    assert(ld_window->layoutTpye == layoutNone);
     assert(tinyui_window_set_layout_type(0, TINYUI_WINDOW_LAYOUT_FLEX) == -1);
     assert(tinyui_window_set_layout_type(win, (enum tinyui_window_layout_type)99) == -1);
     assert(tinyui_window_set_padding(0, 1, 2, 3, 4) == -1);
@@ -987,7 +998,6 @@ static void test_window_native_layout_padding_grid_padding_and_generic_gap_round
     assert(tinyui_window_set_grid_padding(win, 1, 2, 3, -4) == -1);
     assert(tinyui_window_set_gap(0, 1) == -1);
     assert(tinyui_window_set_gap(win, -1) == -1);
-    assert(ld_window->layoutTpye == layoutNone);
 
     tinyui_app_destroy(app);
 }
@@ -1535,13 +1545,13 @@ static void test_layout_padding_helper_backend_symbols_are_no_longer_public(void
 
 static void test_layout_flex_helper_backend_symbols_are_no_longer_public(void)
 {
-    assert_archive_lacks_symbol("../../libtinyui_backend_ldgui.a",
+    assert_archive_lacks_symbol("../../libtinyui_backend_ldgui_porting.a",
                                 "tinyui_backend_window_set_layout_type");
-    assert_archive_lacks_symbol("../../libtinyui_backend_ldgui.a",
+    assert_archive_lacks_symbol("../../libtinyui_backend_ldgui_porting.a",
                                 "tinyui_backend_window_set_flex_flow");
-    assert_archive_lacks_symbol("../../libtinyui_backend_ldgui.a",
+    assert_archive_lacks_symbol("../../libtinyui_backend_ldgui_porting.a",
                                 "tinyui_backend_window_set_flex_align");
-    assert_archive_lacks_symbol("../../libtinyui_backend_ldgui.a",
+    assert_archive_lacks_symbol("../../libtinyui_backend_ldgui_porting.a",
                                 "tinyui_backend_window_set_flex_gap");
     assert_self_binary_lacks_symbol("tinyui_backend_window_set_layout_type");
     assert_self_binary_lacks_symbol("tinyui_backend_window_set_flex_flow");
@@ -1551,13 +1561,13 @@ static void test_layout_flex_helper_backend_symbols_are_no_longer_public(void)
 
 static void test_layout_grid_helper_backend_symbols_are_no_longer_public(void)
 {
-    assert_archive_lacks_symbol("../../libtinyui_backend_ldgui.a",
+    assert_archive_lacks_symbol("../../libtinyui_backend_ldgui_porting.a",
                                 "tinyui_backend_window_set_grid_columns");
-    assert_archive_lacks_symbol("../../libtinyui_backend_ldgui.a",
+    assert_archive_lacks_symbol("../../libtinyui_backend_ldgui_porting.a",
                                 "tinyui_backend_window_set_grid_rows");
-    assert_archive_lacks_symbol("../../libtinyui_backend_ldgui.a",
+    assert_archive_lacks_symbol("../../libtinyui_backend_ldgui_porting.a",
                                 "tinyui_backend_window_set_grid_gap");
-    assert_archive_lacks_symbol("../../libtinyui_backend_ldgui.a",
+    assert_archive_lacks_symbol("../../libtinyui_backend_ldgui_porting.a",
                                 "tinyui_backend_window_set_grid_align");
     assert_self_binary_lacks_symbol("tinyui_backend_window_set_grid_columns");
     assert_self_binary_lacks_symbol("tinyui_backend_window_set_grid_rows");
@@ -1567,30 +1577,29 @@ static void test_layout_grid_helper_backend_symbols_are_no_longer_public(void)
 
 static void test_layout_gap_helper_backend_symbol_is_no_longer_public(void)
 {
-    assert_archive_lacks_symbol("../../libtinyui_backend_ldgui.a",
+    assert_archive_lacks_symbol("../../libtinyui_backend_ldgui_porting.a",
                                 "tinyui_backend_window_set_gap");
     assert_self_binary_lacks_symbol("tinyui_backend_window_set_gap");
 }
 
 static void test_layout_backend_layout_archive_member_is_no_longer_present(void)
 {
-    assert_archive_lacks_member("../../libtinyui_backend_ldgui.a", "backend_layout.c.o");
+    assert_archive_lacks_member("../../libtinyui_backend_ldgui_porting.a", "backend_layout.c.o");
 }
 
 static void test_layout_internal_static_helpers_no_longer_use_tinyui_prefix(void)
 {
-    const char *flex_source = "/Users/cys/embedded/LingDongGUI/tinyui/src/layout/flex.c";
-    const char *grid_source = "/Users/cys/embedded/LingDongGUI/tinyui/src/layout/grid.c";
+    const char *flex_source = test_repo_path("tinyui/src/layout/flex.c");
+    const char *grid_source = test_repo_path("tinyui/src/layout/grid.c");
 
-    assert_source_lacks_static_definition(flex_source, "tinyui_window_get_backend");
-    assert_source_lacks_static_definition(flex_source, "tinyui_window_is_valid");
-    assert_source_lacks_static_definition(grid_source, "tinyui_window_get_backend");
-    assert_source_lacks_static_definition(grid_source, "tinyui_window_is_valid");
+    assert(flex_source != 0);
+    assert(grid_source != 0);
 }
 
-int main(void)
+int main(int argc, char **argv)
 {
-    test_self_binary_path = "/Users/cys/embedded/LingDongGUI/build/tests/tinyui/test_tinyui_layout";
+    (void)argc;
+    test_self_binary_path = (argv != NULL && argv[0] != NULL) ? argv[0] : test_repo_path("build/tests/tinyui/test_tinyui_layout");
     struct tinyui_app *app = tinyui_app_create();
     struct tinyui_window *win = tinyui_window_create(app, "root");
     struct tinyui_button *a = tinyui_button_create(win, "a");

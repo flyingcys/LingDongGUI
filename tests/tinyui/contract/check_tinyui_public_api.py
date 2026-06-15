@@ -14,7 +14,7 @@ INVENTORY_JSON = CONTRACT_DIR / "ldgui_public_api_inventory.json"
 LEDGER_JSON = CONTRACT_DIR / "native_api_gap_ledger.json"
 
 LEGACY_RUNTIME_PROBE = """\
-#include "tinyui/runtime.h"
+#include "runtime.h"
 int main(void) { return tinyui_init() != 0 ? tinyui_init() : 0; }
 """
 ALLOWED_FUNCTION_PREFIX = "tinyui_"
@@ -225,8 +225,7 @@ def _assert_inventory_contract_rows() -> None:
 
 
 def check_legacy_runtime_header_compiles() -> None:
-    """Verify `#include "tinyui/runtime.h"` compiles and both tinyui_* and
-    tinyui_* entry points are accessible."""
+    """Verify the current public runtime header compiles."""
     with tempfile.NamedTemporaryFile("w", suffix=".c", encoding="utf-8", delete=False) as probe:
         probe.write(LEGACY_RUNTIME_PROBE)
         probe_path = Path(probe.name)
@@ -236,7 +235,6 @@ def check_legacy_runtime_header_compiles() -> None:
                 "cc",
                 "-fsyntax-only",
                 "-I", str(PUBLIC_DIR),
-                "-I", str(LEGACY_PUBLIC_DIR),
                 str(probe_path),
             ],
             cwd=ROOT,
@@ -248,16 +246,13 @@ def check_legacy_runtime_header_compiles() -> None:
     finally:
         probe_path.unlink(missing_ok=True)
     assert result.returncode == 0, (
-        f"legacy header `#include \"tinyui/runtime.h\"` failed to compile:\n"
+        f"public header `#include \"runtime.h\"` failed to compile:\n"
         + result.stdout + result.stderr
     )
 
 
 def main() -> int:
-    compat_names = {header.name for header in LEGACY_PUBLIC_DIR.glob("*.h")}
-    headers = sorted(
-        header for header in PUBLIC_DIR.glob("*.h") if header.name in compat_names
-    )
+    headers = sorted(PUBLIC_DIR.glob("*.h"))
     assert headers, "expected TINYUI public headers to exist"
     for header in headers:
         text = resolve_public_header_text(header)

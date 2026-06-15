@@ -91,6 +91,18 @@ static int tinyui_runtime_host_benchmark_log_enabled(void)
     return enabled;
 }
 
+static unsigned int tinyui_runtime_host_default_tick_source(void *user_data)
+{
+    (void)user_data;
+    return (unsigned int)SDL_GetTicks();
+}
+
+static void tinyui_runtime_host_default_delay(unsigned int ms, void *user_data)
+{
+    (void)user_data;
+    SDL_Delay((Uint32)ms);
+}
+
 static void tinyui_runtime_host_runtime_bootstrap(void)
 {
     static int initialized = 0;
@@ -510,6 +522,127 @@ static struct tinyui_runtime_host_state *tinyui_runtime_host_state_from_app(stru
     return (struct tinyui_runtime_host_state *)app_state->runtime_state;
 }
 
+static int tinyui_runtime_host_ensure_window(struct tinyui_app *app,
+                                             struct tinyui_runtime_host_state *state)
+{
+    struct tinyui_display_config display = {0};
+
+    if (app == NULL || state == NULL) {
+        return -1;
+    }
+
+    if (tinyui_display_get_config(app, &display) != 0) {
+        return -1;
+    }
+
+    state->display_width = display.width;
+    state->display_height = display.height;
+
+    if (state->window != NULL && state->renderer != NULL && state->texture != NULL
+        && state->real_pixels != NULL && state->present_pixels != NULL) {
+        return 0;
+    }
+
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0) {
+        fprintf(stderr, "TINYUI runtime SDL_Init failed: %s\n", SDL_GetError());
+        return -1;
+    }
+
+    state->window = SDL_CreateWindow("TINYUI Demo",
+                                     SDL_WINDOWPOS_CENTERED,
+                                     SDL_WINDOWPOS_CENTERED,
+                                     state->display_width,
+                                     state->display_height,
+                                     SDL_WINDOW_SHOWN);
+    if (state->window == NULL) {
+        fprintf(stderr, "TINYUI runtime SDL_CreateWindow failed: %s\n", SDL_GetError());
+        SDL_Quit();
+        return -1;
+    }
+
+    state->renderer = SDL_CreateRenderer(state->window, -1, SDL_RENDERER_ACCELERATED);
+    if (state->renderer == NULL) {
+        state->renderer = SDL_CreateRenderer(state->window, -1, SDL_RENDERER_SOFTWARE);
+    }
+    if (state->renderer == NULL) {
+        fprintf(stderr, "TINYUI runtime SDL_CreateRenderer failed: %s\n", SDL_GetError());
+        SDL_DestroyWindow(state->window);
+        state->window = NULL;
+        SDL_Quit();
+        return -1;
+    }
+
+    state->texture = SDL_CreateTexture(state->renderer,
+                                       SDL_PIXELFORMAT_ARGB8888,
+                                       SDL_TEXTUREACCESS_STREAMING,
+                                       state->display_width,
+                                       state->display_height);
+    if (state->texture == NULL) {
+        fprintf(stderr, "TINYUI runtime SDL_CreateTexture failed: %s\n", SDL_GetError());
+        SDL_DestroyRenderer(state->renderer);
+        SDL_DestroyWindow(state->window);
+        state->renderer = NULL;
+        state->window = NULL;
+        SDL_Quit();
+        return -1;
+    }
+
+    state->real_pixels = calloc((size_t)state->display_width * (size_t)state->display_height,
+                                sizeof(*state->real_pixels));
+    if (state->real_pixels == NULL) {
+        SDL_DestroyTexture(state->texture);
+        SDL_DestroyRenderer(state->renderer);
+        SDL_DestroyWindow(state->window);
+        state->texture = NULL;
+        state->renderer = NULL;
+        state->window = NULL;
+        SDL_Quit();
+        return -1;
+    }
+
+    state->present_pixels = calloc((size_t)state->display_width * (size_t)state->display_height,
+                                   sizeof(*state->present_pixels));
+    if (state->present_pixels == NULL) {
+        free(state->real_pixels);
+        SDL_DestroyTexture(state->texture);
+        SDL_DestroyRenderer(state->renderer);
+        SDL_DestroyWindow(state->window);
+        state->real_pixels = NULL;
+        state->texture = NULL;
+        state->renderer = NULL;
+        state->window = NULL;
+        SDL_Quit();
+        return -1;
+    }
+
+    state->real_tile = (arm_2d_tile_t) {
+        .tRegion = {
+            .tLocation = {
+                .iX = 0,
+                .iY = 0,
+            },
+            .tSize = {
+                .iWidth = state->display_width,
+                .iHeight = state->display_height,
+            },
+        },
+        .tInfo = {
+            .bIsRoot = true,
+            .bHasEnforcedColour = true,
+            .tColourInfo = {
+                .chScheme = __DISP0_COLOUR_FORMAT__,
+            },
+        },
+        .pchBuffer = (uint8_t *)state->real_pixels,
+    };
+
+    state->start_ticks = tinyui_tick_get(app);
+    state->screen_create_start_ticks = state->start_ticks;
+    state->screen_create_end_ticks = state->start_ticks;
+    state->benchmark_screen_create_logged = 0;
+    return 0;
+}
+
 static struct tinyui_backend_app_state *tinyui_runtime_host_app_state_from_window(struct tinyui_window *window)
 {
     return tinyui_runtime_bridge_backend_state_from_window(window);
@@ -640,18 +773,37 @@ static int tinyui_runtime_host_prepare_runtime_state(struct tinyui_app *app,
                                                      struct tinyui_runtime_host_state **state_out)
 {
     struct tinyui_runtime_host_state *state;
+    struct tinyui_backend_app_state *app_state;
 
     if (app == NULL || state_out == NULL) {
         return -1;
     }
 
-    state = tinyui_runtime_host_state_from_app(app);
-    if (state == NULL && tinyui_runtime_bridge_init_app(app) != 0) {
+    if (tinyui_runtime_bridge_init_app(app) != 0) {
         return -1;
     }
-    state = tinyui_runtime_host_state_from_app(app);
-    if (state == NULL) {
+
+    app_state = tinyui_runtime_bridge_backend_state(app);
+    if (app_state == NULL) {
         return -1;
+    }
+
+    state = (struct tinyui_runtime_host_state *)app_state->runtime_state;
+    if (state == NULL) {
+        state = calloc(1, sizeof(*state));
+        if (state == NULL) {
+            return -1;
+        }
+        state->display_width = 480;
+        state->display_height = 320;
+        app_state->runtime_state = state;
+    }
+
+    if (app->tick_port.callback == NULL) {
+        (void)tinyui_tick_set_source(app, tinyui_runtime_host_default_tick_source, NULL);
+    }
+    if (app->os_port.delay == NULL) {
+        (void)tinyui_os_set_delay_callback(app, tinyui_runtime_host_default_delay, NULL);
     }
 
     *state_out = state;
@@ -712,7 +864,7 @@ static int tinyui_runtime_host_prepare_runtime(struct tinyui_app *app, struct ti
 
     state->auto_quit_ms = tinyui_runtime_host_parse_auto_quit_ms();
 
-    if (tinyui_runtime_bridge_ensure_window(app) != 0) {
+    if (tinyui_runtime_host_ensure_window(app, state) != 0) {
         return -1;
     }
     if (app_state->ld_scene->ptMsgQueue == NULL) {
@@ -828,6 +980,37 @@ int tinyui_runtime_host_step_app(struct tinyui_app *app)
     }
 
     return 0;
+}
+
+void tinyui_runtime_host_shutdown_app(struct tinyui_app *app)
+{
+    struct tinyui_backend_app_state *app_state;
+    struct tinyui_runtime_host_state *state;
+
+    app_state = tinyui_runtime_bridge_backend_state(app);
+    if (app_state == NULL) {
+        return;
+    }
+
+    state = (struct tinyui_runtime_host_state *)app_state->runtime_state;
+    if (state == NULL) {
+        return;
+    }
+
+    if (state->renderer != NULL) {
+        SDL_DestroyRenderer(state->renderer);
+    }
+    if (state->texture != NULL) {
+        SDL_DestroyTexture(state->texture);
+    }
+    if (state->window != NULL) {
+        SDL_DestroyWindow(state->window);
+    }
+    SDL_Quit();
+    free(state->present_pixels);
+    free(state->real_pixels);
+    free(state);
+    app_state->runtime_state = NULL;
 }
 
 /**

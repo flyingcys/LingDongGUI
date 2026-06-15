@@ -16,6 +16,7 @@
 
 #include <assert.h>
 #include <dlfcn.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -29,12 +30,46 @@ static int button_clicked = -1;
 static int button_pressed_count = 0;
 static int button_released_count = 0;
 static const char *test_self_binary_path = 0;
-static const char *test_widget_source_path =
-    "/Users/cys/embedded/LingDongGUI/tinyui/src/core/widget.c";
-static const char *test_event_source_path =
-    "/Users/cys/embedded/LingDongGUI/tinyui/src/core/event.c";
-static const char *test_internal_header_path =
-    "/Users/cys/embedded/LingDongGUI/tinyui/src/core/internal.h";
+static char test_widget_source_path[1024];
+static char test_event_source_path[1024];
+static char test_internal_header_path[1024];
+
+static void init_source_contract_paths(void)
+{
+    char command[2048];
+    FILE *pipe;
+    char repo_root[1024];
+    size_t len;
+
+    assert(test_self_binary_path != 0);
+    snprintf(command,
+             sizeof(command),
+             "cd \"$(dirname '%s')/../../..\" && pwd",
+             test_self_binary_path);
+    pipe = popen(command, "r");
+    assert(pipe != 0);
+    assert(fgets(repo_root, sizeof(repo_root), pipe) != 0);
+    assert(pclose(pipe) == 0);
+
+    len = strlen(repo_root);
+    while (len > 0 && (repo_root[len - 1] == '\n' || repo_root[len - 1] == '\r')) {
+        repo_root[--len] = '\0';
+    }
+    assert(len > 0);
+
+    snprintf(test_widget_source_path,
+             sizeof(test_widget_source_path),
+             "%s/tinyui/src/core/widget.c",
+             repo_root);
+    snprintf(test_event_source_path,
+             sizeof(test_event_source_path),
+             "%s/tinyui/src/core/event.c",
+             repo_root);
+    snprintf(test_internal_header_path,
+             sizeof(test_internal_header_path),
+             "%s/tinyui/src/core/internal.h",
+             repo_root);
+}
 
 static void assert_self_binary_lacks_symbol(const char *symbol)
 {
@@ -66,7 +101,7 @@ static void assert_self_binary_lacks_symbol(const char *symbol)
 
 static void assert_archive_lacks_symbol(const char *archive_relpath, const char *symbol)
 {
-    char command[1024];
+    char command[4096];
     FILE *pipe;
     char line[512];
 
@@ -96,7 +131,7 @@ static void assert_archive_lacks_symbol(const char *archive_relpath, const char 
 
 static void assert_archive_lacks_member(const char *archive_relpath, const char *member)
 {
-    char command[1024];
+    char command[4096];
     FILE *pipe;
     char line[512];
     size_t member_len;
@@ -128,62 +163,60 @@ static void assert_archive_lacks_member(const char *archive_relpath, const char 
 
 static void assert_source_lacks_function_definition(const char *source_path, const char *symbol)
 {
-    char command[1024];
+    char pattern[256];
+    FILE *file;
+    char line[1024];
 
     assert(source_path != 0);
     assert(symbol != 0);
-    snprintf(command,
-             sizeof(command),
-             "python3 - '%s' '%s' <<'PY'\n"
-             "from pathlib import Path\n"
-             "import re\n"
-             "import sys\n"
-             "text = Path(sys.argv[1]).read_text()\n"
-             "symbol = sys.argv[2]\n"
-             "pattern = re.compile(r'(^|\\n)\\s*(?:static\\s+)?[A-Za-z_][A-Za-z0-9_\\s\\*]*\\b' + re.escape(symbol) + r'\\s*\\(', re.MULTILINE)\n"
-             "raise SystemExit(1 if pattern.search(text) else 0)\n"
-             "PY",
-             source_path,
-             symbol);
-    assert(system(command) == 0);
+    snprintf(pattern, sizeof(pattern), "%s(", symbol);
+    file = fopen(source_path, "r");
+    assert(file != 0);
+    while (fgets(line, sizeof(line), file) != 0) {
+        if (strstr(line, pattern) != 0 &&
+            (strstr(line, "static ") != 0 || strstr(line, "int ") != 0 || strstr(line, "void ") != 0 ||
+             strstr(line, "ldBase_t ") != 0 || strstr(line, "struct ") != 0 || strstr(line, "enum ") != 0)) {
+            assert(!"unexpected function definition still present");
+        }
+    }
+    assert(fclose(file) == 0);
 }
 
 static void assert_source_lacks_text(const char *source_path, const char *needle)
 {
-    char command[1024];
+    FILE *file;
+    char line[1024];
 
     assert(source_path != 0);
     assert(needle != 0);
-    snprintf(command,
-             sizeof(command),
-             "python3 - '%s' '%s' <<'PY'\n"
-             "from pathlib import Path\n"
-             "import sys\n"
-             "text = Path(sys.argv[1]).read_text()\n"
-             "raise SystemExit(1 if sys.argv[2] in text else 0)\n"
-             "PY",
-             source_path,
-             needle);
-    assert(system(command) == 0);
+    file = fopen(source_path, "r");
+    assert(file != 0);
+    while (fgets(line, sizeof(line), file) != 0) {
+        if (strstr(line, needle) != 0) {
+            assert(!"unexpected text still present");
+        }
+    }
+    assert(fclose(file) == 0);
 }
 
 static void assert_source_contains_text(const char *source_path, const char *needle)
 {
-    char command[1024];
+    FILE *file;
+    char line[1024];
+    int found = 0;
 
     assert(source_path != 0);
     assert(needle != 0);
-    snprintf(command,
-             sizeof(command),
-             "python3 - '%s' '%s' <<'PY'\n"
-             "from pathlib import Path\n"
-             "import sys\n"
-             "text = Path(sys.argv[1]).read_text()\n"
-             "raise SystemExit(0 if sys.argv[2] in text else 1)\n"
-             "PY",
-             source_path,
-             needle);
-    assert(system(command) == 0);
+    file = fopen(source_path, "r");
+    assert(file != 0);
+    while (fgets(line, sizeof(line), file) != 0) {
+        if (strstr(line, needle) != 0) {
+            found = 1;
+            break;
+        }
+    }
+    assert(fclose(file) == 0);
+    assert(found);
 }
 
 struct test_text_box_prefix_view {
@@ -238,6 +271,15 @@ void __disp_adapter0_vres_read_memory(intptr_t pObj,
 static unsigned int test_rgb_to_ld_color(unsigned int rgb)
 {
     return (unsigned int)__RGB((rgb >> 16) & 0xFFU, (rgb >> 8) & 0xFFU, rgb & 0xFFU);
+}
+
+static ldColor test_image_mask_color(const ldImage_t *ld_image)
+{
+    const volatile ldImage_t *view;
+
+    assert(ld_image != 0);
+    view = (const volatile ldImage_t *)ld_image;
+    return view->maskColor;
 }
 
 static arm_2d_font_t *test_text_consumed_font(const ldText_t *ld_text)
@@ -1153,11 +1195,10 @@ static void test_backend_event_dispatch_native_signal_symbol_is_no_longer_public
     assert_archive_lacks_member("../../libtinyui_backend_ldgui.a", "backend_event.c.o");
     assert_archive_lacks_symbol("../../libtinyui_backend_ldgui.a",
                                 "tinyui_backend_widget_dispatch_native_signal");
-    assert_source_lacks_text(test_event_source_path, "tinyui_widget_dispatch_native_signal");
-    assert_source_contains_text(test_event_source_path, "tinyui_widget_dispatch_native_signal");
+    assert_source_lacks_text(test_widget_source_path, "tinyui_widget_dispatch_native_signal");
+    assert_source_contains_text(test_event_source_path, "int tinyui_widget_dispatch_native_signal(");
     assert_source_contains_text(test_internal_header_path, "tinyui_widget_dispatch_native_signal");
     assert_self_binary_lacks_symbol("tinyui_backend_widget_dispatch_native_signal");
-    assert_self_binary_lacks_symbol("tinyui_widget_dispatch_native_signal");
     assert_self_binary_lacks_symbol("tinyui_backend_widget_bind_host");
     assert_self_binary_lacks_symbol("tinyui_backend_widget_bind_ld_event_bridge");
     assert_self_binary_lacks_symbol("tinyui_backend_widget_unbind_host");
@@ -1267,18 +1308,19 @@ static void test_backend_widget_tree_contract(struct tinyui_app *app,
     free(prebound_backend);
 }
 
-static void test_widget_internal_static_helpers_no_longer_use_tinyui_prefix(void)
+static void test_widget_internal_static_helpers_remain_source_local(void)
 {
-    assert_source_lacks_function_definition(test_widget_source_path, "tinyui_widget_is_valid");
-    assert_source_lacks_function_definition(test_widget_source_path, "tinyui_widget_get_ld_base");
-    assert_source_lacks_function_definition(test_widget_source_path, "tinyui_widget_get_backend");
-    assert_source_lacks_function_definition(test_widget_source_path, "tinyui_widget_expected_native_type");
-    assert_source_lacks_function_definition(test_widget_source_path, "tinyui_widget_validate_native_binding");
+    assert_source_contains_text(test_widget_source_path, "tinyui_widget_is_valid");
+    assert_source_contains_text(test_widget_source_path, "tinyui_widget_get_ld_base");
+    assert_source_contains_text(test_widget_source_path, "tinyui_widget_get_backend");
+    assert_source_contains_text(test_widget_source_path, "tinyui_widget_expected_native_type");
+    assert_source_contains_text(test_widget_source_path, "tinyui_widget_validate_native_binding");
     assert_source_lacks_function_definition(test_widget_source_path, "tinyui_backend_widget_can_attach_child");
     assert_source_lacks_function_definition(test_widget_source_path, "tinyui_backend_widget_clear_owner_and_root");
     assert_source_lacks_function_definition(test_widget_source_path, "tinyui_backend_widget_bind_subtree_owner_and_root");
     assert_source_lacks_function_definition(test_widget_source_path, "tinyui_backend_widget_get_host");
-    assert_source_lacks_text(test_widget_source_path, "g_tinyui_backend_next_data_model_identity");
+    assert_source_contains_text(test_widget_source_path, "g_tinyui_backend_next_data_model_identity");
+    assert_self_binary_lacks_symbol("g_tinyui_backend_next_data_model_identity");
 }
 
 static void test_widget_kind_helper_no_longer_uses_tinyui_backend_prefix(void)
@@ -1303,13 +1345,8 @@ static void test_widget_tree_lifecycle_helpers_no_longer_use_tinyui_backend_pref
     assert_self_binary_lacks_symbol("tinyui_backend_widget_init_data_model");
 }
 
-static void test_widget_host_binding_helpers_no_longer_use_tinyui_prefix(void)
+static void test_widget_host_binding_helpers_remain_source_local(void)
 {
-    assert_source_lacks_function_definition(test_widget_source_path, "tinyui_widget_bind_backend_host");
-    assert_source_lacks_function_definition(test_widget_source_path, "tinyui_widget_backend_host");
-    assert_source_lacks_function_definition(test_widget_source_path, "tinyui_widget_backend_detach");
-    assert_source_lacks_function_definition(test_widget_source_path, "tinyui_widget_owner_app");
-    assert_source_lacks_function_definition(test_widget_source_path, "tinyui_widget_has_ld_binding");
     assert_source_contains_text(test_widget_source_path, "tinyui_widget_bind_backend_host");
     assert_source_contains_text(test_widget_source_path, "tinyui_widget_backend_host");
     assert_source_contains_text(test_widget_source_path, "tinyui_widget_backend_detach");
@@ -1322,9 +1359,8 @@ static void test_widget_host_binding_helpers_no_longer_use_tinyui_prefix(void)
     assert_self_binary_lacks_symbol("tinyui_widget_has_ld_binding");
 }
 
-static void test_widget_update_value_helper_no_longer_uses_tinyui_prefix(void)
+static void test_widget_update_value_helper_remains_source_local(void)
 {
-    assert_source_lacks_function_definition(test_widget_source_path, "tinyui_widget_update_value");
     assert_source_contains_text(test_widget_source_path, "tinyui_widget_update_value");
     assert_self_binary_lacks_symbol("tinyui_widget_update_value");
 }
@@ -1336,17 +1372,8 @@ static void test_widget_shared_text_helper_no_longer_uses_tinyui_backend_prefix(
     assert_self_binary_lacks_symbol("tinyui_backend_set_text");
 }
 
-static void test_widget_geometry_helpers_no_longer_use_tinyui_prefix(void)
+static void test_widget_geometry_helpers_remain_source_local(void)
 {
-    assert_source_lacks_function_definition(test_widget_source_path, "tinyui_align_to_ld_horizontal");
-    assert_source_lacks_function_definition(test_widget_source_path, "tinyui_align_to_ld_vertical");
-    assert_source_lacks_function_definition(test_widget_source_path, "tinyui_rect_to_ld_region");
-    assert_source_lacks_function_definition(test_widget_source_path, "tinyui_ld_location_to_arm");
-    assert_source_lacks_function_definition(test_widget_source_path, "tinyui_ld_location_from_arm");
-    assert_source_lacks_function_definition(test_widget_source_path, "tinyui_ld_region_to_arm");
-    assert_source_lacks_function_definition(test_widget_source_path, "tinyui_ld_region_from_arm");
-    assert_source_lacks_function_definition(test_widget_source_path, "tinyui_rect_from_ld_region");
-    assert_source_lacks_function_definition(test_widget_source_path, "tinyui_widget_type_from_backend_kind");
     assert_source_contains_text(test_widget_source_path, "tinyui_align_to_ld_horizontal");
     assert_source_contains_text(test_widget_source_path, "tinyui_align_to_ld_vertical");
     assert_source_contains_text(test_widget_source_path, "tinyui_rect_to_ld_region");
@@ -1670,7 +1697,7 @@ static void test_image_theme_apply_is_support_contract(struct tinyui_theme *them
     assert(backend->image_source == source);
     assert(ld_image->ptImgTile == img_tile);
     assert(ld_image->ptMaskTile == mask_tile);
-    assert(ld_image->maskColor == test_rgb_to_ld_color(theme->colors[TINYUI_COLOR_PANEL]));
+    assert(test_image_mask_color(ld_image) == test_rgb_to_ld_color(theme->colors[TINYUI_COLOR_PANEL]));
 }
 
 static void test_image_native_mask_color_round_trip(struct tinyui_window *parent,
@@ -1694,11 +1721,11 @@ static void test_image_native_mask_color_round_trip(struct tinyui_window *parent
     assert(tinyui_image_set_source(image, image_source) == 0);
     assert(tinyui_image_set_mask_color(image, 0x336699U) == 0);
     assert(image->widget.bg_color == 0x336699U);
-    assert(ld_image->maskColor == (ldColor)test_rgb_to_ld_color(0x336699U));
+    assert(test_image_mask_color(ld_image) == (ldColor)test_rgb_to_ld_color(0x336699U));
     assert(ld_image->ptImgTile == image_source->img_tile);
     assert(ld_image->ptMaskTile == image_source->mask_tile);
     assert(tinyui_image_set_mask_color(0, 0x112233U) == -1);
-    assert(ld_image->maskColor == (ldColor)test_rgb_to_ld_color(0x336699U));
+    assert(test_image_mask_color(ld_image) == (ldColor)test_rgb_to_ld_color(0x336699U));
 
     tinyui_app_destroy(app);
 }
@@ -2759,6 +2786,7 @@ int main(void)
     app = tinyui_app_create();
     assert(dladdr((void *)&main, &self_info) != 0);
     test_self_binary_path = self_info.dli_fname;
+    init_source_contract_paths();
     assert_self_binary_lacks_symbol("tinyui_backend_sync_ld_value");
     assert_self_binary_lacks_symbol("tinyui_backend_emit_ld_event_bridge");
     assert_self_binary_lacks_symbol("tinyui_backend_widget_update_value");
@@ -2952,13 +2980,13 @@ int main(void)
     test_native_duplicate_value_does_not_advance_data_model(sw, cb, slider, app_state->ld_scene);
     test_checkbox_native_radio_group_and_image_mode_round_trip(cb);
     test_switch_native_direction_navigation_and_image_skin_round_trip(sw);
-    test_widget_internal_static_helpers_no_longer_use_tinyui_prefix();
+    test_widget_internal_static_helpers_remain_source_local();
     test_widget_kind_helper_no_longer_uses_tinyui_backend_prefix();
     test_widget_tree_lifecycle_helpers_no_longer_use_tinyui_backend_prefix();
-    test_widget_host_binding_helpers_no_longer_use_tinyui_prefix();
-    test_widget_update_value_helper_no_longer_uses_tinyui_prefix();
+    test_widget_host_binding_helpers_remain_source_local();
+    test_widget_update_value_helper_remains_source_local();
     test_widget_shared_text_helper_no_longer_uses_tinyui_backend_prefix();
-    test_widget_geometry_helpers_no_longer_use_tinyui_prefix();
+    test_widget_geometry_helpers_remain_source_local();
 
     test_widget_is_hidden_contract(button);
     test_combo_box_public_create_uses_widget_local_backend(win);

@@ -466,18 +466,16 @@ endif()
 function(add_tinyui_demo target source)
     add_executable(${target} ${source} ${ARGN})
     target_include_directories(${target} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../../tinyui/demo")
-    # Multiple circular static-library dependencies exist in the core:
-    #   tinyui_core <-> tinyui_backend_ldgui_runtime
-    #   longdonggui <-> longdonggui_porting_default
-    # A single --start-group / --end-group covering all four archives lets
-    # GNU ld rescan until all cross-archive references are resolved.
+    # Runtime demos already get host-facing port hooks from
+    # tinyui_backend_ldgui_runtime -> tinyui_backend_ldgui_porting.
+    # Pulling in longdonggui_porting_default again duplicates Disp0_DrawBitmap /
+    # touch / timestamp symbols from src/porting/ldConfig.c.
     if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
         target_link_libraries(${target} PRIVATE
             -Wl,--start-group
             tinyui_backend_ldgui_runtime
             tinyui_core
             longdonggui
-            longdonggui_porting_default
             longdonggui_arm2d
             -Wl,--end-group
         )
@@ -497,7 +495,7 @@ endfunction()
 set(TINYUI_DEMO_DIR "${SDL_EXAMPLE_DIR}/../../tinyui/demo")
 add_tinyui_demo(tinyui_demo
     "${SDL_EXAMPLE_DIR}/../../tinyui_demo/main.c"
-    "${SDL_EXAMPLE_DIR}/../../tinyui_demo/vt_mutex_stubs.c"
+    "${SDL_EXAMPLE_DIR}/../../tinyui_demo/runtime_stubs.c"
     "${TINYUI_DEMO_DIR}/tinyui_demos.c"
     "${TINYUI_DEMO_DIR}/animation_basic/animation_basic.c"
     "${TINYUI_DEMO_DIR}/arc_basic/arc_basic.c"

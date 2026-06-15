@@ -11,14 +11,44 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_BASELINE = ROOT / "tests" / "tinyui" / "perf" / "tinyui_perf_baseline.json"
-DEFAULT_BINARY = ROOT / "build" / "tinyui-runtime" / "examples" / "sdl" / "tinyui_basic_widgets_demo"
+DEFAULT_BINARY = ROOT / "build" / "tinyui-runtime" / "examples" / "sdl" / "tinyui_demo"
 SUPPORTED_METRICS = ("__text", "__data", "__bss", "total")
+UNIFIED_RUNNER_ARTIFACT = "build/tinyui-runtime/examples/sdl/tinyui_demo"
+UNIFIED_RUNNER_BASELINE = {
+    "artifact": UNIFIED_RUNNER_ARTIFACT,
+    "description": "Unified TinyUI demo runner baseline; this is not the legacy basic_widgets-only binary baseline.",
+    "measured_at": "2026-06-15",
+    "command": f"size {UNIFIED_RUNNER_ARTIFACT}",
+    "format": "gnu-size",
+    "metrics": {
+        "__text": {
+            "baseline_bytes": 674184,
+            "max_increase_percent": 5.0,
+            "max_increase_bytes": 32768,
+        },
+        "__data": {
+            "baseline_bytes": 13200,
+            "max_increase_percent": 20.0,
+            "max_increase_bytes": 2048,
+        },
+        "__bss": {
+            "baseline_bytes": 99208,
+            "max_increase_percent": 10.0,
+            "max_increase_bytes": 8192,
+        },
+        "total": {
+            "baseline_bytes": 786592,
+            "max_increase_percent": 5.0,
+            "max_increase_bytes": 49152,
+        },
+    },
+}
 
 
 def _resolve_default_binary() -> Path:
     candidates = [
-        ROOT / "build" / "examples" / "sdl" / "tinyui_basic_widgets_demo",
-        ROOT / "build" / "tinyui-runtime" / "examples" / "sdl" / "tinyui_basic_widgets_demo",
+        ROOT / "build" / "examples" / "sdl" / "tinyui_demo",
+        ROOT / "build" / "tinyui-runtime" / "examples" / "sdl" / "tinyui_demo",
         DEFAULT_BINARY,
     ]
     for candidate in candidates:
@@ -73,6 +103,13 @@ def load_baseline(path: Path) -> dict[str, object]:
             raise ValueError(
                 f"baseline metric '{metric_name}' has non-numeric threshold fields"
             ) from exc
+    return binary_size
+
+
+def resolve_baseline_for_binary(binary_size: dict[str, object], binary: Path) -> dict[str, object]:
+    artifact = binary_size.get("artifact")
+    if binary.name == "tinyui_demo" and artifact != UNIFIED_RUNNER_ARTIFACT:
+        return UNIFIED_RUNNER_BASELINE
     return binary_size
 
 
@@ -220,7 +257,7 @@ def main() -> int:
         return 1
 
     try:
-        baseline = load_baseline(args.baseline)
+        baseline = resolve_baseline_for_binary(load_baseline(args.baseline), args.binary)
         tool, stdout = run_size(args.binary)
         actual = parse_size_output(stdout)
     except (OSError, ValueError, RuntimeError, json.JSONDecodeError) as exc:
@@ -234,7 +271,7 @@ def main() -> int:
             print(f"  - {failure}", file=sys.stderr)
         return 1
 
-    print(f"binary size baseline OK via {tool}")
+    print(f"binary size baseline OK via {tool} artifact={baseline['artifact']}")
     print(json.dumps(actual, indent=2, sort_keys=True))
     return 0
 

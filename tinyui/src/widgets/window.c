@@ -511,6 +511,7 @@ static int tinyui_window_apply_generic_gap_impl(struct tinyui_window *window, in
 {
     struct tinyui_backend_widget *backend = tinyui_window_get_backend(window);
     ldWindow_t *ld_window = tinyui_window_get_ld_window(window);
+    ldLayoutType_t layout_type;
 
     if (window == 0 || backend == 0 || ld_window == 0 || gap < 0) {
         return -1;
@@ -520,7 +521,9 @@ static int tinyui_window_apply_generic_gap_impl(struct tinyui_window *window, in
     window->flex_track_gap = gap;
     backend->window_layout.flex_item_gap = gap;
     backend->window_layout.flex_track_gap = gap;
+    layout_type = ld_window->layoutTpye;
     ldWindowSetGap(ld_window, (int16_t)gap);
+    ld_window->layoutTpye = layout_type;
     return 0;
 }
 

@@ -10,6 +10,7 @@ ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_BUILD = ROOT / "build" / "tinyui-runtime"
 RTK = shutil.which("rtk") or "rtk"
 DEMO_TIMEOUT_SECONDS = 6
+DEMO_TARGET = "tinyui_demo"
 RUNTIME_SCREEN_DEFINES = {
     "LD_CFG_SCREEN_WIDTH": "480",
     "LD_CFG_SCREEN_HEIGHT": "320",
@@ -17,32 +18,32 @@ RUNTIME_SCREEN_DEFINES = {
 }
 ON_TRACK = (33, 150, 243)
 BLACK = (0, 0, 0)
-TARGETS = [
-    "tinyui_hello_world_demo",
-    "tinyui_basic_widgets_demo",
-    "tinyui_layout_flex_demo",
-    "tinyui_layout_grid_demo",
-    "tinyui_theme_showcase_demo",
-    "tinyui_settings_panel_demo",
-    "tinyui_list_basic_demo",
-    "tinyui_progress_bar_basic_demo",
-    "tinyui_arc_basic_demo",
-    "tinyui_gauge_basic_demo",
-    "tinyui_icon_slider_basic_demo",
-    "tinyui_radial_menu_basic_demo",
-    "tinyui_progress_wheel_basic_demo",
-    "tinyui_qrcode_basic_demo",
-    "tinyui_message_box_basic_demo",
-    "tinyui_date_time_basic_demo",
-    "tinyui_clock_basic_demo",
-    "tinyui_keyboard_basic_demo",
-    "tinyui_line_edit_basic_demo",
-    "tinyui_combo_box_basic_demo",
-    "tinyui_scroll_selecter_basic_demo",
-    "tinyui_table_basic_demo",
-    "tinyui_graph_basic_demo",
-    "tinyui_calendar_basic_demo",
-    "tinyui_animation_basic_demo",
+DEMOS = [
+    "hello_world",
+    "basic_widgets",
+    "layout_flex",
+    "layout_grid",
+    "theme_showcase",
+    "settings_panel",
+    "list_basic",
+    "progress_bar_basic",
+    "arc_basic",
+    "gauge_basic",
+    "icon_slider_basic",
+    "radial_menu_basic",
+    "progress_wheel_basic",
+    "qrcode_basic",
+    "message_box_basic",
+    "date_time_basic",
+    "clock_basic",
+    "keyboard_basic",
+    "line_edit_basic",
+    "combo_box_basic",
+    "scroll_selecter_basic",
+    "table_basic",
+    "graph_basic",
+    "calendar_basic",
+    "animation_basic",
 ]
 
 
@@ -62,15 +63,16 @@ def _parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def _targets_for_demo(demo: str) -> list[str]:
+def _demos_for_arg(demo: str) -> list[str]:
     if demo == "all":
-        return TARGETS
-    if demo in TARGETS:
+        return DEMOS
+    if demo in DEMOS:
         return [demo]
-    target = f"tinyui_{demo}_demo"
-    if target in TARGETS:
-        return [target]
-    raise AssertionError(f"Unknown TinyUI runtime demo '{demo}'. Known targets: {', '.join(TARGETS)}")
+    if demo.startswith("tinyui_") and demo.endswith("_demo"):
+        short_name = demo[len("tinyui_") : -len("_demo")]
+        if short_name in DEMOS:
+            return [short_name]
+    raise AssertionError(f"Unknown TinyUI runtime demo '{demo}'. Known demos: {', '.join(DEMOS)}")
 
 
 def _read_ppm(path: Path) -> tuple[int, int, bytes]:
@@ -406,8 +408,8 @@ def _assert_tinyui_runtime_screen_defines(build_dir: Path) -> None:
         raise AssertionError(f"missing compile_commands.json: {compile_db_path}")
     compile_commands = json.loads(compile_db_path.read_text())
     for source_suffix in (
-        "tinyui/src/core/runtime_host.c",
-        "tinyui/demo/main.c",
+        "tinyui/port/sdl/runtime_host.c",
+        "tinyui/demo/tinyui_demos.c",
     ):
         _assert_compile_unit_has_screen_defines(compile_commands, source_suffix)
     for source_suffix in (
@@ -422,37 +424,37 @@ def _assert_tinyui_runtime_screen_defines(build_dir: Path) -> None:
 def main() -> None:
     args = _parse_args()
     build_dir = args.build_dir
-    targets = _targets_for_demo(args.demo)
+    demos = _demos_for_arg(args.demo)
 
     subprocess.run([
         RTK, "cmake", "-S", str(ROOT), "-B", str(build_dir), "-DUSE_DEMO=0", "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
     ], check=True)
     _assert_tinyui_runtime_screen_defines(build_dir)
     subprocess.run([
-        RTK, "cmake", "--build", str(build_dir), "--target", *targets
+        RTK, "cmake", "--build", str(build_dir), "--target", DEMO_TARGET
     ], check=True)
 
-    for target in targets:
-        candidates = [
-            build_dir / "examples" / "sdl" / target,
-            build_dir / target,
-            build_dir / "examples" / target,
-        ]
-        executable = next((path for path in candidates if path.is_file()), None)
-        if executable is None:
-            candidate_paths = ", ".join(str(path) for path in candidates)
-            raise FileNotFoundError(
-                f"Could not find executable for target '{target}'. Checked: {candidate_paths}"
-            )
+    candidates = [
+        build_dir / "examples" / "sdl" / DEMO_TARGET,
+        build_dir / DEMO_TARGET,
+        build_dir / "examples" / DEMO_TARGET,
+    ]
+    executable = next((path for path in candidates if path.is_file()), None)
+    if executable is None:
+        candidate_paths = ", ".join(str(path) for path in candidates)
+        raise FileNotFoundError(
+            f"Could not find executable for target '{DEMO_TARGET}'. Checked: {candidate_paths}"
+        )
 
+    for demo in demos:
         env = os.environ.copy()
         env["SDL_VIDEODRIVER"] = env.get("SDL_VIDEODRIVER", "dummy")
         env["TINYUI_DEMO_AUTO_QUIT_MS"] = "1200"
-        with tempfile.TemporaryDirectory(prefix=f"{target}-") as tmpdir:
+        with tempfile.TemporaryDirectory(prefix=f"{demo}-") as tmpdir:
             capture_path = Path(tmpdir) / "frame.ppm"
             env["TINYUI_CAPTURE_FILE"] = str(capture_path)
             completed = subprocess.run(
-                [str(executable)],
+                [str(executable), demo],
                 check=False,
                 timeout=DEMO_TIMEOUT_SECONDS,
                 capture_output=True,
@@ -461,33 +463,33 @@ def main() -> None:
             )
             if not capture_path.is_file() or capture_path.stat().st_size <= 32:
                 raise AssertionError(
-                    f"Demo '{target}' did not produce a capture frame.\n"
+                    f"Demo '{demo}' did not produce a capture frame.\n"
                     f"stdout:\n{completed.stdout}\n"
                     f"stderr:\n{completed.stderr}"
                 )
-            if target == "tinyui_basic_widgets_demo":
+            if demo == "basic_widgets":
                 _assert_basic_widgets_capture(capture_path, completed.stdout)
         if completed.returncode != 0:
             raise RuntimeError(
-                f"Demo '{target}' exited with {completed.returncode}.\n"
+                f"Demo '{demo}' exited with {completed.returncode}.\n"
                 f"stdout:\n{completed.stdout}\n"
                 f"stderr:\n{completed.stderr}"
             )
         if "TINYUI_RUNTIME_READY" not in completed.stdout:
             raise AssertionError(
-                f"Demo '{target}' did not report entering a visible runtime loop.\n"
+                f"Demo '{demo}' did not report entering a visible runtime loop.\n"
                 f"stdout:\n{completed.stdout}\n"
                 f"stderr:\n{completed.stderr}"
             )
         _assert_optional_benchmark_markers(completed.stdout)
-        if target == "tinyui_basic_widgets_demo" and "TINYUI_RUNTIME_LOOP" not in completed.stdout:
+        if demo == "basic_widgets" and "TINYUI_FOCUS_RUNTIME_READY=1" not in completed.stdout:
             raise AssertionError(
                 "basic_widgets still does not prove the app-free runtime main path.\n"
-                "expected marker: TINYUI_RUNTIME_LOOP\n"
+                "expected marker: TINYUI_FOCUS_RUNTIME_READY=1\n"
                 f"stdout:\n{completed.stdout}\n"
                 f"stderr:\n{completed.stderr}"
             )
-        _assert_no_smoke_layout(target, completed.stdout, completed.stderr)
+        _assert_no_smoke_layout(demo, completed.stdout, completed.stderr)
 
 
 if __name__ == "__main__":

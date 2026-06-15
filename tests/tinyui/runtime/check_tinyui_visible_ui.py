@@ -11,35 +11,36 @@ ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_BUILD = ROOT / "build" / "tinyui-runtime"
 RTK = shutil.which("rtk") or "rtk"
 DEMO_TIMEOUT_SECONDS = 6
+DEMO_TARGET = "tinyui_demo"
 DEMOS = {
-    "hello_world": "tinyui_hello_world_demo",
-    "basic_widgets": "tinyui_basic_widgets_demo",
-    "layout_flex": "tinyui_layout_flex_demo",
-    "layout_grid": "tinyui_layout_grid_demo",
-    "theme_showcase": "tinyui_theme_showcase_demo",
-    "settings_panel": "tinyui_settings_panel_demo",
-    "list_basic": "tinyui_list_basic_demo",
-    "progress_bar_basic": "tinyui_progress_bar_basic_demo",
-    "arc_basic": "tinyui_arc_basic_demo",
-    "gauge_basic": "tinyui_gauge_basic_demo",
-    "icon_slider_basic": "tinyui_icon_slider_basic_demo",
-    "radial_menu_basic": "tinyui_radial_menu_basic_demo",
-    "progress_wheel_basic": "tinyui_progress_wheel_basic_demo",
-    "qrcode_basic": "tinyui_qrcode_basic_demo",
-    "message_box_basic": "tinyui_message_box_basic_demo",
-    "date_time_basic": "tinyui_date_time_basic_demo",
-    "clock_basic": "tinyui_clock_basic_demo",
-    "keyboard_basic": "tinyui_keyboard_basic_demo",
-    "line_edit_basic": "tinyui_line_edit_basic_demo",
-    "combo_box_basic": "tinyui_combo_box_basic_demo",
-    "scroll_selecter_basic": "tinyui_scroll_selecter_basic_demo",
-    "table_basic": "tinyui_table_basic_demo",
-    "graph_basic": "tinyui_graph_basic_demo",
-    "calendar_basic": "tinyui_calendar_basic_demo",
-    "animation_basic": "tinyui_animation_basic_demo",
-    "legacy_widget_parity": "tinyui_legacy_widget_parity_demo",
-    "layout_parity": "tinyui_layout_parity_demo",
-    "grid_parity": "tinyui_grid_parity_demo",
+    "hello_world": "hello_world",
+    "basic_widgets": "basic_widgets",
+    "layout_flex": "layout_flex",
+    "layout_grid": "layout_grid",
+    "theme_showcase": "theme_showcase",
+    "settings_panel": "settings_panel",
+    "list_basic": "list_basic",
+    "progress_bar_basic": "progress_bar_basic",
+    "arc_basic": "arc_basic",
+    "gauge_basic": "gauge_basic",
+    "icon_slider_basic": "icon_slider_basic",
+    "radial_menu_basic": "radial_menu_basic",
+    "progress_wheel_basic": "progress_wheel_basic",
+    "qrcode_basic": "qrcode_basic",
+    "message_box_basic": "message_box_basic",
+    "date_time_basic": "date_time_basic",
+    "clock_basic": "clock_basic",
+    "keyboard_basic": "keyboard_basic",
+    "line_edit_basic": "line_edit_basic",
+    "combo_box_basic": "combo_box_basic",
+    "scroll_selecter_basic": "scroll_selecter_basic",
+    "table_basic": "table_basic",
+    "graph_basic": "graph_basic",
+    "calendar_basic": "calendar_basic",
+    "animation_basic": "animation_basic",
+    "legacy_widget_parity": "legacy_widget_parity",
+    "layout_parity": "layout_parity",
+    "grid_parity": "grid_parity",
 }
 THEME_BG = (0xF6, 0xF8, 0xFA)
 WHITE_BG = (0xFF, 0xFF, 0xFF)
@@ -1485,28 +1486,28 @@ def _assert_calendar_basic_visible(path: Path) -> None:
         )
 
 
-def _find_executable(build_dir: Path, target: str) -> Path:
+def _find_executable(build_dir: Path) -> Path:
     candidates = [
-        build_dir / "examples" / "sdl" / target,
-        build_dir / target,
-        build_dir / "examples" / target,
+        build_dir / "examples" / "sdl" / DEMO_TARGET,
+        build_dir / DEMO_TARGET,
+        build_dir / "examples" / DEMO_TARGET,
     ]
     executable = next((path for path in candidates if path.is_file()), None)
     if executable is None:
         candidate_paths = ", ".join(str(path) for path in candidates)
         raise FileNotFoundError(
-            f"Could not find executable for target '{target}'. Checked: {candidate_paths}"
+            f"Could not find executable for target '{DEMO_TARGET}'. Checked: {candidate_paths}"
         )
     return executable
 
 
-def _run_demo(build_dir: Path, target: str, capture_path: Path) -> subprocess.CompletedProcess[str]:
+def _run_demo(build_dir: Path, demo: str, capture_path: Path) -> subprocess.CompletedProcess[str]:
     env = os.environ.copy()
     env["SDL_VIDEODRIVER"] = env.get("SDL_VIDEODRIVER", "dummy")
     env["TINYUI_DEMO_AUTO_QUIT_MS"] = "1200"
     env["TINYUI_CAPTURE_FILE"] = str(capture_path)
     return subprocess.run(
-        [str(_find_executable(build_dir, target))],
+        [str(_find_executable(build_dir)), demo],
         check=False,
         timeout=DEMO_TIMEOUT_SECONDS,
         capture_output=True,
@@ -1574,30 +1575,30 @@ def main() -> None:
     try:
         subprocess.run([RTK, "cmake", "-S", str(ROOT), "-B", str(build_dir), "-DUSE_DEMO=0"], check=True)
         subprocess.run(
-            [RTK, "cmake", "--build", str(build_dir), "--target", *(DEMOS[demo] for demo in selected)],
+            [RTK, "cmake", "--build", str(build_dir), "--target", DEMO_TARGET],
             check=True,
         )
 
         for demo in selected:
-            target = DEMOS[demo]
-            with tempfile.TemporaryDirectory(prefix=f"{target}-visible-") as tmpdir:
+            demo_arg = DEMOS[demo]
+            with tempfile.TemporaryDirectory(prefix=f"{demo}-visible-") as tmpdir:
                 capture_path = Path(tmpdir) / "frame.ppm"
-                completed = _run_demo(build_dir, target, capture_path)
+                completed = _run_demo(build_dir, demo_arg, capture_path)
                 if completed.returncode != 0:
                     raise RuntimeError(
-                        f"SMOKE FAIL: demo '{target}' exited with {completed.returncode}.\n"
+                        f"SMOKE FAIL: demo '{demo}' exited with {completed.returncode}.\n"
                         f"stdout:\n{completed.stdout}\n"
                         f"stderr:\n{completed.stderr}"
                     )
                 if "TINYUI_RUNTIME_READY" not in completed.stdout:
                     raise AssertionError(
-                        f"SMOKE FAIL: demo '{target}' did not report entering a runtime loop.\n"
+                        f"SMOKE FAIL: demo '{demo}' did not report entering a runtime loop.\n"
                         f"stdout:\n{completed.stdout}\n"
                         f"stderr:\n{completed.stderr}"
                     )
                 if not capture_path.is_file() or capture_path.stat().st_size <= 32:
                     raise AssertionError(
-                        f"SMOKE FAIL: demo '{target}' did not produce a capture frame.\n"
+                        f"SMOKE FAIL: demo '{demo}' did not produce a capture frame.\n"
                         f"stdout:\n{completed.stdout}\n"
                         f"stderr:\n{completed.stderr}"
                     )

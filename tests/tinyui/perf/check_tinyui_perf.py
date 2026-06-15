@@ -11,7 +11,8 @@ ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_BUILD = ROOT / "build" / "tinyui-runtime"
 DEFAULT_BASELINE = ROOT / "tests" / "tinyui" / "perf" / "tinyui_perf_baseline.json"
 RTK = shutil.which("rtk") or "rtk"
-TARGET = "tinyui_basic_widgets_demo"
+TARGET = "tinyui_demo"
+DEMO = "basic_widgets"
 DEMO_TIMEOUT_SECONDS = 8
 
 
@@ -103,7 +104,7 @@ def _run_benchmark(build_dir: Path) -> subprocess.CompletedProcess[str]:
         capture_path = Path(tmpdir) / "frame.ppm"
         env["TINYUI_CAPTURE_FILE"] = str(capture_path)
         completed = subprocess.run(
-            [str(_find_executable(build_dir))],
+            [str(_find_executable(build_dir)), DEMO],
             check=False,
             timeout=DEMO_TIMEOUT_SECONDS,
             capture_output=True,
@@ -112,7 +113,7 @@ def _run_benchmark(build_dir: Path) -> subprocess.CompletedProcess[str]:
         )
     if completed.returncode != 0:
         raise RuntimeError(
-            f"Demo '{TARGET}' exited with {completed.returncode}.\n"
+            f"Demo '{DEMO}' exited with {completed.returncode}.\n"
             f"stdout:\n{completed.stdout}\n"
             f"stderr:\n{completed.stderr}"
         )

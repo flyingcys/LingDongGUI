@@ -1,6 +1,5 @@
 #include <assert.h>
 #include <math.h>
-#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -255,26 +254,6 @@ q31_t arm_cos_q31(q31_t x)
 }
 
 void ldGuiUpdateScene(void) {}
-
-void *pvPortMalloc(size_t xWantedSize)
-{
-    return malloc(xWantedSize);
-}
-
-void vPortFree(void *pv)
-{
-    free(pv);
-}
-
-size_t xPortGetFreeHeapSize(void)
-{
-    return 0;
-}
-
-void *pvPortRealloc(uint8_t *srcaddr, size_t xWantedSize)
-{
-    return realloc(srcaddr, xWantedSize);
-}
 
 arm_2d_region_t *arm_2d_helper_control_get_absolute_region(arm_2d_control_node_t *ptNode,
                                                            arm_2d_region_t *ptOutRegion,

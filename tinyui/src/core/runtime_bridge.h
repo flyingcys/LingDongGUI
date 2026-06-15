@@ -25,7 +25,6 @@ int tinyui_runtime_bridge_init_app(struct tinyui_app *app);
 int tinyui_runtime_bridge_run_app(struct tinyui_app *app, struct tinyui_window *window);
 void tinyui_runtime_bridge_shutdown_app(struct tinyui_app *app);
 void tinyui_runtime_bridge_begin_screen_create(struct tinyui_app *app);
-int tinyui_runtime_bridge_ensure_window(struct tinyui_app *app);
 int tinyui_runtime_bridge_step_app(struct tinyui_app *app);
 int16_t tinyui_runtime_bridge_map_pointer_axis(int value,
                                                int window_extent,

@@ -709,6 +709,7 @@ void ldBaseSetHidden(ldBase_t* ptWidget,bool isHidden)
     }
     ptWidget->isHidden=isHidden;
     _ldBaseMove(ptWidget,x,y);
+    ptWidget->isDirtyRegionUpdate = true;
     ldBaseMarkParentLayoutDirty(ptWidget);
 }
 

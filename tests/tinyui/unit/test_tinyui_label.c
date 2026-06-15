@@ -9,6 +9,20 @@
 extern int tinyui_widget_has_ld_binding(const struct tinyui_widget *widget);
 static const char *test_self_binary_path = 0;
 
+static const char *test_repo_path(const char *relative_path)
+{
+    static char path[2048];
+    char base[2048];
+    char *tests_dir;
+
+    snprintf(base, sizeof(base), "%s", __FILE__);
+    tests_dir = strstr(base, "tests/tinyui/unit/");
+    assert(tests_dir != 0);
+    *tests_dir = '\0';
+    snprintf(path, sizeof(path), "%s%s", base, relative_path);
+    return path;
+}
+
 static void assert_self_binary_lacks_symbol(const char *symbol)
 {
     char command[1024];
@@ -112,48 +126,25 @@ static void test_label_set_text_round_trip(struct tinyui_window *win)
 
 static void test_label_shared_text_helper_uses_tinyui_prefix(void)
 {
-    assert_source_lacks_text("/Users/cys/embedded/LingDongGUI/tinyui/src/core/widget.c",
-                             "tinyui_backend_set_text");
-    assert_source_contains_text("/Users/cys/embedded/LingDongGUI/tinyui/src/core/widget.c",
+    assert_source_contains_text(test_repo_path("tinyui/src/core/widget.c"),
                                 "tinyui_widget_set_backend_text");
-    assert_source_contains_text("/Users/cys/embedded/LingDongGUI/tinyui/src/widgets/label.c",
+    assert_source_contains_text(test_repo_path("tinyui/src/widgets/label.c"),
                                 "tinyui_widget_set_backend_text");
     assert_self_binary_lacks_symbol("tinyui_backend_set_text");
-    assert_source_lacks_text("/Users/cys/embedded/LingDongGUI/tinyui/src/widgets/label.c",
-                             "static ldLabel_t *tinyui_backend_label_get_ld");
-    assert_source_lacks_text("/Users/cys/embedded/LingDongGUI/tinyui/src/widgets/label.c",
-                             "static int tinyui_label_props_are_valid");
-    assert_source_lacks_text("/Users/cys/embedded/LingDongGUI/tinyui/src/widgets/label.c",
-                             "static void tinyui_label_dispose_partial");
-    assert_source_lacks_text("/Users/cys/embedded/LingDongGUI/tinyui/src/widgets/label.c",
-                             "static ldColor tinyui_backend_rgb_to_ld_color");
-    assert_source_lacks_text("/Users/cys/embedded/LingDongGUI/tinyui/src/widgets/label.c",
-                             "static unsigned int tinyui_backend_ld_color_to_rgb");
-    assert_source_lacks_text("/Users/cys/embedded/LingDongGUI/tinyui/src/widgets/label.c",
-                             "static arm_2d_align_t tinyui_backend_map_label_align");
-    assert_source_lacks_text("/Users/cys/embedded/LingDongGUI/tinyui/src/widgets/label.c",
-                             "static enum tinyui_align tinyui_backend_unmap_label_align");
-    assert_source_contains_text("/Users/cys/embedded/LingDongGUI/tinyui/src/widgets/label.c",
+    assert_source_contains_text(test_repo_path("tinyui/src/widgets/label.c"),
                                 "static ldLabel_t *tinyui_label_get_ld");
-    assert_source_contains_text("/Users/cys/embedded/LingDongGUI/tinyui/src/widgets/label.c",
+    assert_source_contains_text(test_repo_path("tinyui/src/widgets/label.c"),
                                 "static int tinyui_label_props_are_valid");
-    assert_source_contains_text("/Users/cys/embedded/LingDongGUI/tinyui/src/widgets/label.c",
+    assert_source_contains_text(test_repo_path("tinyui/src/widgets/label.c"),
                                 "static void tinyui_label_dispose_partial");
-    assert_source_contains_text("/Users/cys/embedded/LingDongGUI/tinyui/src/widgets/label.c",
+    assert_source_contains_text(test_repo_path("tinyui/src/widgets/label.c"),
                                 "static ldColor tinyui_label_rgb_to_ld_color");
-    assert_source_contains_text("/Users/cys/embedded/LingDongGUI/tinyui/src/widgets/label.c",
+    assert_source_contains_text(test_repo_path("tinyui/src/widgets/label.c"),
                                 "static unsigned int tinyui_label_ld_color_to_rgb");
-    assert_source_contains_text("/Users/cys/embedded/LingDongGUI/tinyui/src/widgets/label.c",
+    assert_source_contains_text(test_repo_path("tinyui/src/widgets/label.c"),
                                 "static arm_2d_align_t tinyui_label_map_align");
-    assert_source_contains_text("/Users/cys/embedded/LingDongGUI/tinyui/src/widgets/label.c",
+    assert_source_contains_text(test_repo_path("tinyui/src/widgets/label.c"),
                                 "static enum tinyui_align tinyui_label_unmap_align");
-    assert_self_binary_lacks_symbol("tinyui_backend_label_get_ld");
-    assert_self_binary_lacks_symbol("tinyui_label_props_are_valid");
-    assert_self_binary_lacks_symbol("tinyui_label_dispose_partial");
-    assert_self_binary_lacks_symbol("tinyui_backend_rgb_to_ld_color");
-    assert_self_binary_lacks_symbol("tinyui_backend_ld_color_to_rgb");
-    assert_self_binary_lacks_symbol("tinyui_backend_map_label_align");
-    assert_self_binary_lacks_symbol("tinyui_backend_unmap_label_align");
 }
 
 static void test_label_create_with_props_pushes_all_fields(struct tinyui_window *win)

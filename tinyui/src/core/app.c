@@ -20,6 +20,7 @@
 #include "runtime_bridge.h"
 #include "app.h"
 #include "background.h"
+#include "../drivers/tinyui_ldgui_port.h"
 #include "../../../src/misc/xBtnAction.h"
 
 #include <stdlib.h>
@@ -142,6 +143,8 @@ struct tinyui_app *tinyui_app_create(void)
         free(app);
         return NULL;
     }
+
+    ldgui_port_set_current_app(app);
 
     return app;
 }
@@ -378,6 +381,10 @@ void tinyui_app_destroy(struct tinyui_app *app)
         timer = next;
     }
     app->timers = NULL;
+
+    if (ldgui_port_get_current_app() == app) {
+        ldgui_port_set_current_app(NULL);
+    }
 
     tinyui_runtime_bridge_shutdown_app(app);
     xBtnDestroy();

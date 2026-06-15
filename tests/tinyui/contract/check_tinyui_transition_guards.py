@@ -9,25 +9,15 @@ import sys
 ROOT = Path(__file__).resolve().parents[3]
 INVENTORY = ROOT / "tests" / "tinyui" / "contract" / "tinyui_transition_inventory.json"
 BACKEND_DIR = ROOT / "tinyui" / "src" / "backend" / "ldgui"
-APP_HEADER = ROOT / "tinyui" / "include" / "tinyui" / "app.h"
+APP_HEADER = ROOT / "tinyui" / "include" / "app.h"
 APP_SOURCE = ROOT / "tinyui" / "src" / "core" / "app.c"
-TINYUI_PUBLIC_HEADERS = sorted((ROOT / "tinyui" / "include" / "tinyui").glob("*.h"))
 TINYUI_INCLUDE_DIR = ROOT / "tinyui" / "include"
-TINYUI_HEADERS = [
-    TINYUI_INCLUDE_DIR / "tinyui.h",
-    TINYUI_INCLUDE_DIR / "core.h",
-    TINYUI_INCLUDE_DIR / "obj.h",
-    TINYUI_INCLUDE_DIR / "screen.h",
-    TINYUI_INCLUDE_DIR / "label.h",
-    TINYUI_INCLUDE_DIR / "button.h",
-    TINYUI_INCLUDE_DIR / "switch.h",
-]
+TINYUI_HEADERS = sorted(TINYUI_INCLUDE_DIR.glob("*.h"))
 API_PATTERN_TEMPLATE = r"\b{prefix}[A-Za-z0-9_]*\s*\("
 REQUIRED_BASELINE_KEYS = (
     "backend_c_files",
     "app_header_exists",
     "app_source_exists",
-    "tinyui_public_api_count",
     "tinyui_public_api_count",
 )
 
@@ -60,7 +50,6 @@ def collect_actual() -> dict[str, object]:
         "backend_c_files": len(sorted(BACKEND_DIR.glob("*.c"))),
         "app_header_exists": APP_HEADER.exists(),
         "app_source_exists": APP_SOURCE.exists(),
-        "tinyui_public_api_count": count_api(TINYUI_PUBLIC_HEADERS, "tinyui_"),
         "tinyui_public_api_count": count_api(TINYUI_HEADERS, "tinyui_"),
     }
 

@@ -8,114 +8,115 @@ ROOT = Path(__file__).resolve().parents[3]
 BUILD = ROOT / "build" / "tinyui-runtime"
 RTK = shutil.which("rtk") or "rtk"
 DEMO_TIMEOUT_SECONDS = 6
+DEMO_TARGET = "tinyui_demo"
 static_mapping_targets = {
-    "tinyui_hello_world_demo": {
+    "hello_world": {
         "real_ids": ["title", "ok"],
         "reason": "static label/button demo; runtime marker can prove named widgets use real LingDongGUI backend objects.",
     },
-    "tinyui_theme_showcase_demo": {
+    "theme_showcase": {
         "real_ids": ["title", "body", "accent"],
         "reason": "theme showcase has stable named widgets; marker proves real backend objects, not full theme semantics.",
     },
 }
 interactive_mapping_targets = {
-    "tinyui_basic_widgets_demo": {
+    "basic_widgets": {
         "real_ids": ["wifi", "agree", "volume", "submit", "title", "logo"],
         "reason": "basic widget demo has stable static and interactive widget ids.",
     },
-    "tinyui_settings_panel_demo": {
+    "settings_panel": {
         "real_ids": ["title", "wifi", "brightness", "apply"],
         "reason": "settings panel has stable interactive widget ids that previously risked fallback behavior.",
     },
-    "tinyui_list_basic_demo": {
+    "list_basic": {
         "real_ids": ["list"],
         "reason": "list demo proves the list object itself is a real LingDongGUI widget; item ids are intentionally excluded from the real widget marker contract.",
     },
-    "tinyui_progress_bar_basic_demo": {
+    "progress_bar_basic": {
         "real_ids": ["primary", "secondary", "title"],
         "reason": "progress bar demo proves both horizontal and vertical progress bars are real LingDongGUI widgets.",
     },
-    "tinyui_arc_basic_demo": {
+    "arc_basic": {
         "real_ids": ["title", "arc"],
         "reason": "arc demo proves the arc widget is a real LingDongGUI widget with named backend ids.",
     },
-    "tinyui_gauge_basic_demo": {
+    "gauge_basic": {
         "real_ids": ["title", "gauge"],
         "reason": "gauge demo proves the gauge widget is a real LingDongGUI widget with named backend ids.",
     },
-    "tinyui_icon_slider_basic_demo": {
+    "icon_slider_basic": {
         "real_ids": ["title", "icon_slider"],
         "reason": "icon slider demo proves the composite icon slider widget is a real LingDongGUI widget.",
     },
-    "tinyui_radial_menu_basic_demo": {
+    "radial_menu_basic": {
         "real_ids": ["title", "radial_menu"],
         "reason": "radial menu demo proves the composite radial menu widget is a real LingDongGUI widget.",
     },
-    "tinyui_progress_wheel_basic_demo": {
+    "progress_wheel_basic": {
         "real_ids": ["title", "wheel"],
         "reason": "progress wheel demo proves the progress wheel widget is a real LingDongGUI widget.",
     },
-    "tinyui_qrcode_basic_demo": {
+    "qrcode_basic": {
         "real_ids": ["title", "qrcode"],
         "reason": "qrcode demo proves the QR code widget is a real LingDongGUI widget.",
     },
-    "tinyui_message_box_basic_demo": {
+    "message_box_basic": {
         "real_ids": ["message_box"],
         "reason": "message_box demo should prove the dialog widget is a real LingDongGUI widget and no longer depend on temporary smoke-path exclusion.",
     },
-    "tinyui_date_time_basic_demo": {
+    "date_time_basic": {
         "real_ids": ["title", "date_time"],
         "reason": "date_time demo proves the date-time widget is a real LingDongGUI widget.",
     },
-    "tinyui_clock_basic_demo": {
+    "clock_basic": {
         "real_ids": ["clock"],
         "reason": "clock demo proves the clock widget itself is a real LingDongGUI widget.",
     },
-    "tinyui_keyboard_basic_demo": {
+    "keyboard_basic": {
         "real_ids": ["keyboard_demo_input", "keyboard_demo_keyboard"],
         "reason": "keyboard demo proves both the edit target and keyboard widget are real LingDongGUI widgets.",
     },
-    "tinyui_line_edit_basic_demo": {
+    "line_edit_basic": {
         "real_ids": ["title", "line_edit"],
         "reason": "line_edit demo proves the editable text widget is a real LingDongGUI widget.",
     },
-    "tinyui_combo_box_basic_demo": {
+    "combo_box_basic": {
         "real_ids": ["title", "combo_box"],
         "reason": "combo_box demo proves the dropdown widget is a real LingDongGUI widget.",
     },
-    "tinyui_scroll_selecter_basic_demo": {
+    "scroll_selecter_basic": {
         "real_ids": ["title", "scroll_selecter"],
         "reason": "scroll_selecter demo proves the scroll selecter widget is a real LingDongGUI widget.",
     },
-    "tinyui_table_basic_demo": {
+    "table_basic": {
         "real_ids": ["table"],
         "reason": "table demo proves the table widget itself is a real LingDongGUI widget.",
     },
-    "tinyui_graph_basic_demo": {
+    "graph_basic": {
         "real_ids": ["title", "graph"],
         "reason": "graph demo proves the graph widget itself is a real LingDongGUI widget.",
     },
-    "tinyui_calendar_basic_demo": {
+    "calendar_basic": {
         "real_ids": ["title", "calendar"],
         "reason": "calendar demo proves the calendar widget itself is a real LingDongGUI widget.",
     },
-    "tinyui_animation_basic_demo": {
+    "animation_basic": {
         "real_ids": ["title", "animation"],
         "reason": "animation demo proves the animation widget itself is a real LingDongGUI widget with a frame tile source.",
     },
 }
 layout_mapping_targets = {
-    "tinyui_layout_flex_demo": {
+    "layout_flex": {
         "real_ids": ["first", "second", "third"],
         "reason": "layout ids prove child widgets enter the real backend tree; layout solver semantics stay in layout tests and visible gate.",
     },
-    "tinyui_layout_grid_demo": {
+    "layout_grid": {
         "real_ids": ["title", "left", "right"],
         "reason": "grid ids prove named cells enter the real backend tree; placement correctness stays in layout tests and visible gate.",
     },
 }
 theme_mapping_targets = {
-    "tinyui_theme_showcase_demo": {
+    "theme_showcase": {
         "real_ids": ["title", "body", "accent"],
         "reason": "theme ids prove themed sample widgets are real backend objects; style color/readback stays in theme tests and visible gate.",
     },
@@ -145,17 +146,17 @@ def _parse_smoke_layout_marker(stdout: str) -> int:
     raise AssertionError(f"Missing marker line '{prefix}'.\nstdout:\n{stdout}")
 
 
-def _find_executable(target: str) -> Path:
+def _find_executable() -> Path:
     candidates = [
-        BUILD / "examples" / "sdl" / target,
-        BUILD / target,
-        BUILD / "examples" / target,
+        BUILD / "examples" / "sdl" / DEMO_TARGET,
+        BUILD / DEMO_TARGET,
+        BUILD / "examples" / DEMO_TARGET,
     ]
     executable = next((path for path in candidates if path.is_file()), None)
     if executable is None:
         candidate_paths = ", ".join(str(path) for path in candidates)
         raise FileNotFoundError(
-            f"Could not find executable for target '{target}'. Checked: {candidate_paths}"
+            f"Could not find executable for target '{DEMO_TARGET}'. Checked: {candidate_paths}"
         )
     return executable
 
@@ -188,31 +189,31 @@ def _merge_target_matrix() -> dict[str, dict[str, object]]:
 
 def _assert_target_matrix_complete(target_matrix: dict[str, dict[str, object]]) -> None:
     expected_targets = {
-        "tinyui_hello_world_demo",
-        "tinyui_basic_widgets_demo",
-        "tinyui_layout_flex_demo",
-        "tinyui_layout_grid_demo",
-        "tinyui_theme_showcase_demo",
-        "tinyui_settings_panel_demo",
-        "tinyui_list_basic_demo",
-        "tinyui_progress_bar_basic_demo",
-        "tinyui_arc_basic_demo",
-        "tinyui_gauge_basic_demo",
-        "tinyui_icon_slider_basic_demo",
-        "tinyui_radial_menu_basic_demo",
-        "tinyui_progress_wheel_basic_demo",
-        "tinyui_qrcode_basic_demo",
-        "tinyui_message_box_basic_demo",
-        "tinyui_date_time_basic_demo",
-        "tinyui_clock_basic_demo",
-        "tinyui_keyboard_basic_demo",
-        "tinyui_line_edit_basic_demo",
-        "tinyui_combo_box_basic_demo",
-        "tinyui_scroll_selecter_basic_demo",
-        "tinyui_table_basic_demo",
-        "tinyui_graph_basic_demo",
-        "tinyui_calendar_basic_demo",
-        "tinyui_animation_basic_demo",
+        "hello_world",
+        "basic_widgets",
+        "layout_flex",
+        "layout_grid",
+        "theme_showcase",
+        "settings_panel",
+        "list_basic",
+        "progress_bar_basic",
+        "arc_basic",
+        "gauge_basic",
+        "icon_slider_basic",
+        "radial_menu_basic",
+        "progress_wheel_basic",
+        "qrcode_basic",
+        "message_box_basic",
+        "date_time_basic",
+        "clock_basic",
+        "keyboard_basic",
+        "line_edit_basic",
+        "combo_box_basic",
+        "scroll_selecter_basic",
+        "table_basic",
+        "graph_basic",
+        "calendar_basic",
+        "animation_basic",
     }
     missing_targets = sorted(expected_targets - set(target_matrix))
     unexpected_targets = sorted(set(target_matrix) - expected_targets)
@@ -314,7 +315,7 @@ subprocess.run(
     check=True,
 )
 subprocess.run(
-    [RTK, "cmake", "--build", str(BUILD), "--target", *TARGETS],
+    [RTK, "cmake", "--build", str(BUILD), "--target", DEMO_TARGET],
     check=True,
 )
 
@@ -323,7 +324,7 @@ for target in TARGETS:
     env["SDL_VIDEODRIVER"] = env.get("SDL_VIDEODRIVER", "dummy")
     env["TINYUI_DEMO_AUTO_QUIT_MS"] = "1200"
     completed = subprocess.run(
-        [str(_find_executable(target))],
+        [str(_find_executable()), target],
         check=False,
         timeout=DEMO_TIMEOUT_SECONDS,
         capture_output=True,

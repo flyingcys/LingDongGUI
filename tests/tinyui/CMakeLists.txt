@@ -53,6 +53,9 @@ function(ld_register_tinyui_unit_test test_src)
         MAIN_LIB tinyui_backend_ldgui
         LABELS "tinyui;unit"
     )
+    if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+        target_compile_definitions(${tinyui_target} PRIVATE _GNU_SOURCE)
+    endif()
 endfunction()
 
 foreach(test_src IN LISTS TINYUI_UNIT_TESTS)
@@ -81,6 +84,11 @@ ld_add_python_test(check_tinyui_demo_boundary
 ld_add_python_test(check_tinyui_transition_guards
     SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/contract/check_tinyui_transition_guards.py"
     LABELS "tinyui;contract;transition"
+)
+
+ld_add_python_test(check_tinyui_core_no_sdl
+    SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/contract/check_tinyui_core_no_sdl.py"
+    LABELS "tinyui;contract;port"
 )
 
 ld_add_python_test(check_tinyui_v21_transition_guards

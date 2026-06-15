@@ -218,3 +218,37 @@ rtk python3 tests/tinyui/contract/check_tinyui_v21_transition_guards.py --print-
 1. 继续迁移剩余 active demo 到 unified runner
 2. 跑 S3 residue scan closeout
 3. 把 legacy runtime header link probe 固化成自动 gate
+
+## 2026-06-15 focused 修复记录
+
+本次修复范围：
+
+- `tinyui/src/core/runtime_host.c` 迁出 core 后，`test_tinyui_app_lifecycle` 仍依赖旧 macOS 绝对路径，导致当前 Linux 工作区中 `nm` 执行失败并触发 `pclose(pipe) == 0` 断言。
+- 新增 `check_tinyui_core_no_sdl`，固化 `tinyui/src/core` 不得重新出现 SDL 符号或旧 `runtime_host.c`。
+
+处理结果：
+
+- `test_tinyui_app_lifecycle` 改为用 `realpath(argv[0])` 推导当前 repo/build 路径。
+- 测试二进制、SDL runtime host 源码、统一 demo runner、临时 stdout/stderr/capture 路径均按当前工作区生成。
+- 所有进入 `system()` / `popen()` 的路径参数均做 shell 单引号转义，避免路径含空格或单引号时误失败。
+- animation demo smoke 改为运行统一 runner：`tinyui_demo animation_basic`。
+
+Review 记录：
+
+- 第一轮独立 review 发现路径未 shell 引用，判定 `Request changes`。
+- 同一 worker 修复后复审通过，结论 `Approve`。
+
+已验证：
+
+```bash
+rtk cmake --build build --target test_tinyui_app_lifecycle
+rtk ctest --test-dir build --output-on-failure -R 'test_tinyui_app_lifecycle|check_tinyui_core_no_sdl'
+rtk proxy ./build/tests/tinyui/test_tinyui_app_lifecycle
+```
+
+结果摘要：
+
+- `test_tinyui_app_lifecycle`：PASS
+- `check_tinyui_core_no_sdl`：PASS
+- 直接相对路径执行测试二进制：PASS
+- GitNexus MCP 当前未注册 `LingDongGUI`，只返回 `edgeio-js`、`cde`，因此本次无法执行符号级 impact / detect_changes。

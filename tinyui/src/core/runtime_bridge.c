@@ -9,214 +9,7 @@
 #include "../../../src/gui/ldSwitch.h"
 #include "../../../src/gui/ldGui.h"
 #include "../../../src/misc/ldMsg.h"
-#include <stdio.h>
 #include <stdlib.h>
-
-typedef struct SDL_Window SDL_Window;
-typedef struct SDL_Renderer SDL_Renderer;
-typedef struct SDL_Texture SDL_Texture;
-uint32_t SDL_GetTicks(void);
-void SDL_Delay(uint32_t ms);
-void SDL_DestroyRenderer(SDL_Renderer *renderer);
-void SDL_DestroyTexture(SDL_Texture *texture);
-void SDL_DestroyWindow(SDL_Window *window);
-void SDL_Quit(void);
-int SDL_Init(uint32_t flags);
-const char *SDL_GetError(void);
-SDL_Window *SDL_CreateWindow(const char *title, int x, int y, int w, int h, uint32_t flags);
-SDL_Renderer *SDL_CreateRenderer(SDL_Window *window, int index, uint32_t flags);
-SDL_Texture *SDL_CreateTexture(SDL_Renderer *renderer,
-                               uint32_t format,
-                               int access,
-                               int w,
-                               int h);
-
-struct tinyui_runtime_bridge_backend_runtime_state {
-    SDL_Window *window;
-    SDL_Renderer *renderer;
-    SDL_Texture *texture;
-    COLOUR_INT *real_pixels;
-    uint32_t *present_pixels;
-    arm_2d_tile_t real_tile;
-    uint32_t start_ticks;
-    uint32_t screen_create_start_ticks;
-    uint32_t screen_create_end_ticks;
-    uint32_t auto_quit_ms;
-    int display_width;
-    int display_height;
-    int ready_logged;
-    int capture_written;
-    int static_mapping_logged;
-    int fallback_boundary_logged;
-    int temporary_smoke_logged;
-    int smoke_layout_used;
-    int smoke_layout_marker_logged;
-    int benchmark_screen_create_logged;
-    int benchmark_first_frame_logged;
-};
-
-#ifndef SDL_INIT_VIDEO
-#define SDL_INIT_VIDEO 0x00000020u
-#endif
-
-#ifndef SDL_INIT_EVENTS
-#define SDL_INIT_EVENTS 0x00004000u
-#endif
-
-#ifndef SDL_WINDOWPOS_CENTERED
-#define SDL_WINDOWPOS_CENTERED 0x2FFF0000u
-#endif
-
-#ifndef SDL_WINDOW_SHOWN
-#define SDL_WINDOW_SHOWN 0x00000004u
-#endif
-
-#ifndef SDL_RENDERER_SOFTWARE
-#define SDL_RENDERER_SOFTWARE 0x00000001u
-#endif
-
-#ifndef SDL_RENDERER_ACCELERATED
-#define SDL_RENDERER_ACCELERATED 0x00000002u
-#endif
-
-#ifndef SDL_PIXELFORMAT_ARGB8888
-#define SDL_PIXELFORMAT_ARGB8888 372645892u
-#endif
-
-#ifndef SDL_TEXTUREACCESS_STREAMING
-#define SDL_TEXTUREACCESS_STREAMING 1
-#endif
-
-static unsigned int tinyui_runtime_bridge_default_tick_source(void *user_data)
-{
-    (void)user_data;
-    return (unsigned int)SDL_GetTicks();
-}
-
-static void tinyui_runtime_bridge_default_delay(unsigned int ms, void *user_data)
-{
-    (void)user_data;
-    SDL_Delay((uint32_t)ms);
-}
-
-static int tinyui_runtime_bridge_ensure_window_from_state(
-    struct tinyui_app *app,
-    struct tinyui_runtime_bridge_backend_runtime_state *state)
-{
-    struct tinyui_display_config display = {0};
-
-    if (state == NULL) {
-        return -1;
-    }
-
-    if (tinyui_display_get_config(app, &display) != 0) {
-        return -1;
-    }
-
-    state->display_width = display.width;
-    state->display_height = display.height;
-
-    if (state->window != NULL && state->renderer != NULL && state->texture != NULL
-        && state->real_pixels != NULL && state->present_pixels != NULL) {
-        return 0;
-    }
-
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0) {
-        fprintf(stderr, "TINYUI runtime SDL_Init failed: %s\n", SDL_GetError());
-        return -1;
-    }
-
-    state->window = SDL_CreateWindow("TINYUI Demo",
-                                     SDL_WINDOWPOS_CENTERED,
-                                     SDL_WINDOWPOS_CENTERED,
-                                     state->display_width,
-                                     state->display_height,
-                                     SDL_WINDOW_SHOWN);
-    if (state->window == NULL) {
-        fprintf(stderr, "TINYUI runtime SDL_CreateWindow failed: %s\n", SDL_GetError());
-        SDL_Quit();
-        return -1;
-    }
-
-    state->renderer = SDL_CreateRenderer(state->window, -1, SDL_RENDERER_ACCELERATED);
-    if (state->renderer == NULL) {
-        state->renderer = SDL_CreateRenderer(state->window, -1, SDL_RENDERER_SOFTWARE);
-    }
-    if (state->renderer == NULL) {
-        fprintf(stderr, "TINYUI runtime SDL_CreateRenderer failed: %s\n", SDL_GetError());
-        SDL_DestroyWindow(state->window);
-        state->window = NULL;
-        SDL_Quit();
-        return -1;
-    }
-
-    state->texture = SDL_CreateTexture(state->renderer,
-                                       SDL_PIXELFORMAT_ARGB8888,
-                                       SDL_TEXTUREACCESS_STREAMING,
-                                       state->display_width,
-                                       state->display_height);
-    if (state->texture == NULL) {
-        fprintf(stderr, "TINYUI runtime SDL_CreateTexture failed: %s\n", SDL_GetError());
-        SDL_DestroyRenderer(state->renderer);
-        SDL_DestroyWindow(state->window);
-        state->renderer = NULL;
-        state->window = NULL;
-        SDL_Quit();
-        return -1;
-    }
-
-    state->real_pixels = calloc((size_t)state->display_width * (size_t)state->display_height,
-                                sizeof(*state->real_pixels));
-    if (state->real_pixels == NULL) {
-        SDL_DestroyTexture(state->texture);
-        SDL_DestroyRenderer(state->renderer);
-        SDL_DestroyWindow(state->window);
-        state->texture = NULL;
-        state->renderer = NULL;
-        state->window = NULL;
-        SDL_Quit();
-        return -1;
-    }
-
-    state->present_pixels = calloc((size_t)state->display_width * (size_t)state->display_height,
-                                   sizeof(*state->present_pixels));
-    if (state->present_pixels == NULL) {
-        free(state->real_pixels);
-        SDL_DestroyTexture(state->texture);
-        SDL_DestroyRenderer(state->renderer);
-        SDL_DestroyWindow(state->window);
-        state->real_pixels = NULL;
-        state->texture = NULL;
-        state->renderer = NULL;
-        state->window = NULL;
-        SDL_Quit();
-        return -1;
-    }
-
-    state->real_tile = (arm_2d_tile_t) {
-        .tRegion = {
-            .tLocation = {
-                .iX = 0,
-                .iY = 0,
-            },
-            .tSize = {
-                .iWidth = state->display_width,
-                .iHeight = state->display_height,
-            },
-        },
-        .tInfo = {
-            .bIsRoot = true,
-            .bHasEnforcedColour = true,
-            .tColourInfo = {
-                .chScheme = __DISP0_COLOUR_FORMAT__,
-            },
-        },
-        .pchBuffer = (uint8_t *)state->real_pixels,
-    };
-
-    state->start_ticks = tinyui_tick_get(app);
-    return 0;
-}
 
 void ldBaseNodeRemove(arm_2d_control_node_t *ptNode);
 int tinyui_runtime_bridge_bind_ld_event_bridge(void *backend_widget,
@@ -371,7 +164,6 @@ int tinyui_runtime_bridge_bind_theme(struct tinyui_app *app, struct tinyui_theme
 
 int tinyui_runtime_bridge_init_app(struct tinyui_app *app)
 {
-    struct tinyui_runtime_bridge_backend_runtime_state *state;
     struct tinyui_backend_app_state *app_state;
 
     if (app == NULL) {
@@ -382,36 +174,20 @@ int tinyui_runtime_bridge_init_app(struct tinyui_app *app)
         return 0;
     }
 
-    state = calloc(1, sizeof(*state));
-    if (state == NULL) {
-        return -1;
-    }
-
     app_state = calloc(1, sizeof(*app_state));
     if (app_state == NULL) {
-        free(state);
         return -1;
     }
 
-    state->display_width = 480;
-    state->display_height = 320;
     app_state->ld_scene = calloc(1, sizeof(*app_state->ld_scene));
     if (app_state->ld_scene == NULL) {
         free(app_state);
-        free(state);
         return -1;
     }
 
     app_state->theme = app->theme;
     app_state->next_ld_name_id = 0;
     app_state->ld_scene->bUserAllocated = true;
-    app_state->runtime_state = state;
-    if (app->tick_port.callback == NULL) {
-        (void)tinyui_tick_set_source(app, tinyui_runtime_bridge_default_tick_source, NULL);
-    }
-    if (app->os_port.delay == NULL) {
-        (void)tinyui_os_set_delay_callback(app, tinyui_runtime_bridge_default_delay, NULL);
-    }
     app->backend_app = app_state;
     return 0;
 }
@@ -447,7 +223,6 @@ int tinyui_runtime_bridge_step_app(struct tinyui_app *app)
 void tinyui_runtime_bridge_shutdown_app(struct tinyui_app *app)
 {
     struct tinyui_backend_app_state *app_state;
-    struct tinyui_runtime_bridge_backend_runtime_state *state;
 
     if (app == NULL) {
         return;
@@ -458,22 +233,7 @@ void tinyui_runtime_bridge_shutdown_app(struct tinyui_app *app)
         return;
     }
 
-    state = (struct tinyui_runtime_bridge_backend_runtime_state *)app_state->runtime_state;
-    if (state != NULL && state->renderer != NULL) {
-        SDL_DestroyRenderer(state->renderer);
-    }
-    if (state != NULL && state->texture != NULL) {
-        SDL_DestroyTexture(state->texture);
-    }
-    if (state != NULL && state->window != NULL) {
-        SDL_DestroyWindow(state->window);
-    }
-    SDL_Quit();
-    if (state != NULL) {
-        free(state->present_pixels);
-        free(state->real_pixels);
-        free(state);
-    }
+    tinyui_runtime_host_shutdown_app(app);
     if (app_state->ld_scene != NULL) {
         ldGuiDespose(app_state->ld_scene);
     }
@@ -482,38 +242,9 @@ void tinyui_runtime_bridge_shutdown_app(struct tinyui_app *app)
     app->backend_app = NULL;
 }
 
-int tinyui_runtime_bridge_ensure_window(struct tinyui_app *app)
-{
-    struct tinyui_backend_app_state *app_state;
-
-    if (app == NULL) {
-        return -1;
-    }
-
-    app_state = tinyui_runtime_bridge_backend_state(app);
-    if (app_state == NULL || app_state->runtime_state == NULL) {
-        return -1;
-    }
-
-    return tinyui_runtime_bridge_ensure_window_from_state(
-        app,
-        (struct tinyui_runtime_bridge_backend_runtime_state *)app_state->runtime_state);
-}
-
 void tinyui_runtime_bridge_begin_screen_create(struct tinyui_app *app)
 {
-    struct tinyui_backend_app_state *app_state;
-    struct tinyui_runtime_bridge_backend_runtime_state *state;
-
-    app_state = tinyui_runtime_bridge_backend_state(app);
-    if (app_state == NULL || app_state->runtime_state == NULL) {
-        return;
-    }
-
-    state = (struct tinyui_runtime_bridge_backend_runtime_state *)app_state->runtime_state;
-    state->screen_create_start_ticks = tinyui_tick_get(app);
-    state->screen_create_end_ticks = state->screen_create_start_ticks;
-    state->benchmark_screen_create_logged = 0;
+    (void)app;
 }
 
 int16_t tinyui_runtime_bridge_map_pointer_axis(int value, int window_extent, int target_extent)

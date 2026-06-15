@@ -102,8 +102,6 @@ static void test_background_widget_file_owns_internal_helper_truth(void)
 {
     const char *source_path = resolve_repo_path("tinyui/src/widgets/background.c");
 
-    assert_source_lacks_symbol_definition(source_path, "tinyui_background_backend_host");
-    assert_source_lacks_symbol_definition(source_path, "tinyui_background_get_root_size");
     assert_source_has_symbol_definition(source_path, "tinyui_background_backend_host");
     assert_source_has_symbol_definition(source_path, "tinyui_background_get_root_size");
 }

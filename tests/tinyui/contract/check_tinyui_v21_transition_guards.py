@@ -12,9 +12,7 @@ ROOT = Path(__file__).resolve().parents[3]
 INVENTORY = ROOT / "tests" / "tinyui" / "contract" / "tinyui_v21_transition_inventory.json"
 
 TINYUI_DIR = ROOT / "tinyui"
-TINYUI_DIR = ROOT / "tinyui"
 BACKEND_DIR = ROOT / "tinyui" / "src" / "backend" / "ldgui"
-TINYUI_HEADERS = sorted((ROOT / "tinyui" / "include" / "tinyui").rglob("*.h"))
 TINYUI_HEADERS = sorted((ROOT / "tinyui" / "include").rglob("*.h"))
 TINYUI_TOP_HEADERS = sorted((ROOT / "tinyui" / "include").glob("*.h"))
 TINYUI_INCLUDE_PROBE = """\
@@ -30,7 +28,6 @@ int main(void) { return 0; }
 
 REQUIRED_BASELINE_KEYS = (
     "tinyui_dir_exists",
-    "tinyui_dir_exists",
     "backend_c_files",
     "backend_compat_includes",
     "top_level_wrapper_forward_count",
@@ -38,7 +35,6 @@ REQUIRED_BASELINE_KEYS = (
     "compat_public_header_count",
     "tinyui_public_header_count",
     "compat_public_headers_require_followup",
-    "tinyui_public_api_count",
     "tinyui_public_api_count",
 )
 
@@ -74,7 +70,6 @@ def collect_actual() -> dict[str, object]:
     compat_only = {header.name for header in TINYUI_HEADERS} - {header.name for header in TINYUI_TOP_HEADERS}
     return {
         "tinyui_dir_exists": TINYUI_DIR.exists(),
-        "tinyui_dir_exists": TINYUI_DIR.exists(),
         "backend_c_files": len(sorted(BACKEND_DIR.glob("*.c"))),
         "backend_compat_includes": backend_compat_includes,
         "top_level_wrapper_forward_count": len(top_level_wrapper_forward_names),
@@ -82,7 +77,6 @@ def collect_actual() -> dict[str, object]:
         "compat_public_header_count": len(TINYUI_HEADERS),
         "tinyui_public_header_count": len(TINYUI_TOP_HEADERS),
         "compat_public_headers_require_followup": sorted(compat_only),
-        "tinyui_public_api_count": count_prefix(TINYUI_HEADERS, "tinyui_"),
         "tinyui_public_api_count": count_prefix(TINYUI_HEADERS, "tinyui_"),
     }
 

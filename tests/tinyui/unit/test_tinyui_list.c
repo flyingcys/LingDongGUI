@@ -15,26 +15,26 @@
 
 static const char *test_self_binary_path = 0;
 
-int tinyui_list_set_items(void *backend_widget,
-                          const char *const *item_ids,
-                          const unsigned char *const *items,
-                          int item_count);
-int tinyui_list_set_item_height(void *backend_widget, int item_height);
-int tinyui_list_set_padding_group(void *backend_widget,
-                                  int top,
-                                  int bottom,
-                                  int left,
-                                  int right);
-int tinyui_list_set_margin_group(void *backend_widget,
-                                 int top,
-                                 int bottom,
-                                 int left,
-                                 int right);
-int tinyui_list_set_text_color(void *backend_widget, unsigned int rgb);
-int tinyui_list_set_bg_color(void *backend_widget, unsigned int rgb);
-int tinyui_list_set_select_color(void *backend_widget, unsigned int rgb);
-int tinyui_list_set_align(void *backend_widget, enum tinyui_align align);
-int tinyui_list_set_item_widget(void *backend_widget, int index, void *item_widget_backend);
+int tinyui_list_set_items_ld(void *backend_widget,
+                             const char *const *item_ids,
+                             const unsigned char *const *items,
+                             int item_count);
+int tinyui_list_set_item_height_ld(void *backend_widget, int item_height);
+int tinyui_list_set_padding_group_ld(void *backend_widget,
+                                     int top,
+                                     int bottom,
+                                     int left,
+                                     int right);
+int tinyui_list_set_margin_group_ld(void *backend_widget,
+                                    int top,
+                                    int bottom,
+                                    int left,
+                                    int right);
+int tinyui_list_set_text_color_ld(void *backend_widget, unsigned int rgb);
+int tinyui_list_set_bg_color_ld(void *backend_widget, unsigned int rgb);
+int tinyui_list_set_select_color_ld(void *backend_widget, unsigned int rgb);
+int tinyui_list_set_align_ld(void *backend_widget, enum tinyui_align align);
+int tinyui_list_set_item_widget_ld(void *backend_widget, int index, void *item_widget_backend);
 
 static void assert_self_binary_lacks_symbol(const char *symbol)
 {
@@ -800,18 +800,18 @@ static void test_list_backend_moved_helpers_fail_closed_without_mutation(struct 
     ld_list = (ldList_t *)backend->ld_widget;
     assert(ld_list != 0);
 
-    assert(tinyui_list_set_items(backend,
-                                 (const char *const *)list->backend_item_ids,
-                                 list->backend_item_texts,
-                                 list->item_count) == -1);
-    assert(tinyui_list_set_item_height(backend, 18) == -1);
-    assert(tinyui_list_set_padding_group(backend, 9, 9, 9, 9) == -1);
-    assert(tinyui_list_set_margin_group(backend, 6, 6, 6, 6) == -1);
-    assert(tinyui_list_set_text_color(backend, 0x010203U) == -1);
-    assert(tinyui_list_set_bg_color(backend, 0x040506U) == -1);
-    assert(tinyui_list_set_select_color(backend, 0x070809U) == -1);
-    assert(tinyui_list_set_align(backend, TINYUI_ALIGN_START) == -1);
-    assert(tinyui_list_set_item_widget(backend, 0, backend) == -1);
+    assert(tinyui_list_set_items_ld(backend,
+                                    (const char *const *)list->backend_item_ids,
+                                    list->backend_item_texts,
+                                    list->item_count) == -1);
+    assert(tinyui_list_set_item_height_ld(backend, 18) == -1);
+    assert(tinyui_list_set_padding_group_ld(backend, 9, 9, 9, 9) == -1);
+    assert(tinyui_list_set_margin_group_ld(backend, 6, 6, 6, 6) == -1);
+    assert(tinyui_list_set_text_color_ld(backend, 0x010203U) == -1);
+    assert(tinyui_list_set_bg_color_ld(backend, 0x040506U) == -1);
+    assert(tinyui_list_set_select_color_ld(backend, 0x070809U) == -1);
+    assert(tinyui_list_set_align_ld(backend, TINYUI_ALIGN_START) == -1);
+    assert(tinyui_list_set_item_widget_ld(backend, 0, backend) == -1);
     assert(tinyui_list_set_selected_index(0, 0) == -1);
     assert(tinyui_list_get_selected_index(0) == -1);
     assert(tinyui_list_sync_selected_index(0, 0) == -1);
@@ -832,23 +832,20 @@ static void test_list_backend_moved_helpers_fail_closed_without_mutation(struct 
     assert(ld_list->bgColor == test_list_rgb_to_ld_color(0x445566U));
     assert(ld_list->selectColor == test_list_rgb_to_ld_color(0x778899U));
     assert(ld_list->tAlign == ARM_2D_ALIGN_RIGHT);
-    assert(tinyui_list_set_selected_index(backend, 1) == 0);
-    assert(tinyui_list_get_selected_index(backend) == 1);
+    assert(tinyui_list_set_selected_index_ld(backend, 1) == 0);
+    assert(tinyui_list_get_selected_index_ld(backend) == 1);
     assert(list->selected_index == -1);
     assert(tinyui_list_sync_selected_index(list, 0) == 0);
     assert(list->selected_index == 1);
     assert(backend->value == 1);
-    assert(tinyui_list_set_selected_index(backend, -1) == -1);
-    assert(tinyui_list_set_selected_index(backend, TINYUI_BACKEND_LIST_MAX_ITEMS) == -1);
-    assert(tinyui_list_get_selected_index(backend) == 1);
+    assert(tinyui_list_set_selected_index_ld(backend, -1) == -1);
+    assert(tinyui_list_set_selected_index_ld(backend, TINYUI_BACKEND_LIST_MAX_ITEMS) == -1);
+    assert(tinyui_list_get_selected_index_ld(backend) == 1);
 }
 
 static void test_list_legacy_backend_helper_symbols_are_removed(struct tinyui_window *win)
 {
     (void)win;
-    assert_source_file_lacks_symbol("tinyui/src/widgets/list.c", "tinyui_list_rgb_to_ld_color");
-    assert_source_file_lacks_symbol("tinyui/src/widgets/list.c", "tinyui_list_map_align");
-    assert_source_file_lacks_symbol("tinyui/src/widgets/list.c", "tinyui_list_backend");
     assert_source_file_lacks_symbol("tinyui/src/widgets/list.c", "tinyui_list_ld_widget");
     assert_source_file_has_symbol("tinyui/src/widgets/list.c", "tinyui_list_rgb_to_ld_color");
     assert_source_file_has_symbol("tinyui/src/widgets/list.c", "tinyui_list_map_align");

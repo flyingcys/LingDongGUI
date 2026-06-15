@@ -225,47 +225,9 @@ function(ld_define_core_targets)
     ld_apply_common_target_config(tinyui_core)
     add_library(tinyui_core ALIAS tinyui_core)
 
-    set(LD_TINYUI_BACKEND_LDGUI_SOURCES
-        ${LD_REPO_ROOT}/tinyui/src/core/runtime_host.c
-    )
-
-    foreach(LD_TINYUI_BACKEND_TARGET IN ITEMS tinyui_backend_ldgui tinyui_backend_ldgui_runtime)
-        add_library(${LD_TINYUI_BACKEND_TARGET} STATIC ${LD_TINYUI_BACKEND_LDGUI_SOURCES})
-        target_include_directories(${LD_TINYUI_BACKEND_TARGET} PUBLIC
-            ${LD_REPO_ROOT}/tinyui/include
-            ${LD_REPO_ROOT}/tinyui/src/core
-            ${LD_REPO_ROOT}/tinyui/src/drivers
-            ${LD_REPO_ROOT}/tinyui
-        )
-        target_link_libraries(${LD_TINYUI_BACKEND_TARGET} PUBLIC tinyui_core longdonggui tinyui_backend_ldgui_porting)
-        if(LD_TINYUI_BACKEND_TARGET STREQUAL "tinyui_backend_ldgui_runtime")
-            ld_apply_tinyui_runtime_screen_config(${LD_TINYUI_BACKEND_TARGET})
-        endif()
-        if(WIN32)
-            if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-                set(LD_SDL2_ROOT "${LD_EXAMPLES_DIR}/sdl/sdl2/64")
-            else()
-                set(LD_SDL2_ROOT "${LD_EXAMPLES_DIR}/sdl/sdl2/32")
-            endif()
-            target_include_directories(${LD_TINYUI_BACKEND_TARGET} PUBLIC "${LD_SDL2_ROOT}/include/SDL2")
-            target_link_directories(${LD_TINYUI_BACKEND_TARGET} PUBLIC "${LD_SDL2_ROOT}/lib")
-            target_link_libraries(${LD_TINYUI_BACKEND_TARGET} PUBLIC SDL2 SDL2main)
-        else()
-            find_package(PkgConfig REQUIRED)
-            pkg_check_modules(SDL2 REQUIRED sdl2)
-            target_include_directories(${LD_TINYUI_BACKEND_TARGET} PUBLIC ${SDL2_INCLUDE_DIRS})
-            target_link_directories(${LD_TINYUI_BACKEND_TARGET} PUBLIC ${SDL2_LIBRARY_DIRS})
-            target_compile_options(${LD_TINYUI_BACKEND_TARGET} PRIVATE ${SDL2_CFLAGS_OTHER})
-            target_link_options(${LD_TINYUI_BACKEND_TARGET} PRIVATE ${SDL2_LDFLAGS_OTHER})
-            target_link_libraries(${LD_TINYUI_BACKEND_TARGET} PUBLIC ${SDL2_LIBRARIES})
-        endif()
-        ld_apply_common_target_config(${LD_TINYUI_BACKEND_TARGET})
-    endforeach()
-    add_library(tinyui_backend_ldgui ALIAS tinyui_backend_ldgui)
-    add_library(tinyui_backend_ldgui_runtime ALIAS tinyui_backend_ldgui_runtime)
-
     add_library(tinyui_port_sdl STATIC
         ${LD_REPO_ROOT}/tinyui/port/sdl/sdl.c
+        ${LD_REPO_ROOT}/tinyui/port/sdl/runtime_host.c
     )
     target_include_directories(tinyui_port_sdl PUBLIC
         ${LD_REPO_ROOT}/tinyui/include
@@ -291,8 +253,28 @@ function(ld_define_core_targets)
         target_link_options(tinyui_port_sdl PRIVATE ${SDL2_LDFLAGS_OTHER})
         target_link_libraries(tinyui_port_sdl PUBLIC ${SDL2_LIBRARIES})
     endif()
+    ld_apply_tinyui_runtime_screen_config(tinyui_port_sdl)
     ld_apply_common_target_config(tinyui_port_sdl)
     add_library(tinyui_port_sdl ALIAS tinyui_port_sdl)
+
+    foreach(LD_TINYUI_BACKEND_TARGET IN ITEMS tinyui_backend_ldgui tinyui_backend_ldgui_runtime)
+        add_library(${LD_TINYUI_BACKEND_TARGET} INTERFACE)
+        target_include_directories(${LD_TINYUI_BACKEND_TARGET} INTERFACE
+            ${LD_REPO_ROOT}/tinyui/include
+            ${LD_REPO_ROOT}/tinyui/src/core
+            ${LD_REPO_ROOT}/tinyui/src/drivers
+            ${LD_REPO_ROOT}/tinyui
+        )
+        target_link_libraries(${LD_TINYUI_BACKEND_TARGET} INTERFACE
+            tinyui_core
+            longdonggui
+            tinyui_backend_ldgui_porting
+            tinyui_port_sdl
+        )
+    endforeach()
+    add_library(tinyui_backend_ldgui ALIAS tinyui_backend_ldgui)
+    add_library(tinyui_backend_ldgui_runtime ALIAS tinyui_backend_ldgui_runtime)
+
 endfunction()
 
 function(ld_add_c_unit_test target)
