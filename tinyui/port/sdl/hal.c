@@ -1,7 +1,8 @@
 /* tinyui/port/sdl/hal.c
  * SDL 平台适配层 — 对应 lv_port_pc_vscode 的 hal_init()。
  * 只做 SDL 调用：窗口生命周期、输入事件泵、像素呈现。
- * 不含任何 LingDongGUI / arm_2d 调用。
+ * 不调用任何 LingDongGUI / arm_2d 渲染 API（如 arm_2d_helper_init、arm_2d_*绘制函数）。
+ * arm_2d_tile_t 用于描述像素缓冲区格式（数据结构），不属于渲染调用。
  */
 #include "host_internal.h"
 #include "display.h"
