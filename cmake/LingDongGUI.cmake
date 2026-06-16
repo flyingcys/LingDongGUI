@@ -226,8 +226,9 @@ function(ld_define_core_targets)
     add_library(tinyui_core ALIAS tinyui_core)
 
     add_library(tinyui_port_sdl STATIC
-        ${LD_REPO_ROOT}/tinyui/port/sdl/sdl.c
-        ${LD_REPO_ROOT}/tinyui/port/sdl/runtime_host.c
+        ${LD_REPO_ROOT}/tinyui/port/sdl/hal.c
+        ${LD_REPO_ROOT}/tinyui/port/sdl/observe.c
+        ${LD_REPO_ROOT}/tinyui/port/sdl/step.c
     )
     target_include_directories(tinyui_port_sdl PUBLIC
         ${LD_REPO_ROOT}/tinyui/include

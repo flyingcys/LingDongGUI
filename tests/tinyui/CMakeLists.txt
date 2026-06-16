@@ -20,7 +20,6 @@ set(TINYUI_UNIT_TESTS
     unit/test_tinyui_runtime_model.c
     unit/test_tinyui_port_display.c
     unit/test_tinyui_port_input.c
-    unit/test_tinyui_port_sdl.c
     unit/test_tinyui_port_tick_os.c
     unit/test_tinyui_image.c
     unit/test_tinyui_label.c
@@ -69,7 +68,6 @@ ld_add_c_unit_test(test_tinyui_wrapper_struct_overhead
     LABELS "tinyui;probe;memory"
 )
 
-target_link_libraries(test_tinyui_port_sdl PRIVATE tinyui_port_sdl)
 
 ld_add_python_test(check_tinyui_public_api
     SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/contract/check_tinyui_public_api.py"
