@@ -58,5 +58,6 @@ Uint32 tinyui_runtime_host_parse_auto_quit_ms(void);
 int    tinyui_runtime_host_write_capture(struct tinyui_runtime_host_state *state);
 void   tinyui_runtime_host_log_runtime_ready(struct tinyui_app *app,
                                              struct tinyui_runtime_host_state *state);
+void   tinyui_runtime_host_log_smoke_layout_marker(struct tinyui_runtime_host_state *state);
 
 #endif /* TINYUI_PORT_SDL_HOST_INTERNAL_H */

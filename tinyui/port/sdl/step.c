@@ -208,11 +208,7 @@ static void tinyui_runtime_host_render(struct tinyui_runtime_host_state *state, 
                    (size_t)state->display_width * (size_t)state->display_height *
                        sizeof(*state->real_pixels));
             tinyui_runtime_host_apply_smoke_cursor_layout(state, root_widget, x, &y);
-            if (!state->smoke_layout_marker_logged) {
-                printf("TINYUI_SMOKE_LAYOUT_USED=%d\n", state->smoke_layout_used ? 1 : 0);
-                fflush(stdout);
-                state->smoke_layout_marker_logged = 1;
-            }
+            tinyui_runtime_host_log_smoke_layout_marker(state);
             ldGuiFrameStart(app_state->ld_scene);
             ldGuiTouchProcess(app_state->ld_scene);
             ldMsgProcess(app_state->ld_scene);
@@ -374,18 +370,23 @@ void tinyui_runtime_host_shutdown_app(struct tinyui_app *app)
         return;
     }
 
-    if (state->renderer != NULL) {
-        SDL_DestroyRenderer(state->renderer);
-    }
+    free(state->present_pixels);
+    free(state->real_pixels);
+    state->present_pixels = NULL;
+    state->real_pixels = NULL;
     if (state->texture != NULL) {
         SDL_DestroyTexture(state->texture);
+        state->texture = NULL;
+    }
+    if (state->renderer != NULL) {
+        SDL_DestroyRenderer(state->renderer);
+        state->renderer = NULL;
     }
     if (state->window != NULL) {
         SDL_DestroyWindow(state->window);
+        state->window = NULL;
     }
     SDL_Quit();
-    free(state->present_pixels);
-    free(state->real_pixels);
     free(state);
     app_state->runtime_state = NULL;
 }

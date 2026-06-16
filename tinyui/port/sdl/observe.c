@@ -380,3 +380,13 @@ void tinyui_runtime_host_log_runtime_ready(struct tinyui_app *app,
     state->screen_create_end_ticks = SDL_GetTicks();
     tinyui_runtime_host_log_screen_create_benchmark(state);
 }
+
+void tinyui_runtime_host_log_smoke_layout_marker(struct tinyui_runtime_host_state *state)
+{
+    if (state == NULL || state->smoke_layout_marker_logged) {
+        return;
+    }
+    printf("TINYUI_SMOKE_LAYOUT_USED=%d\n", state->smoke_layout_used ? 1 : 0);
+    fflush(stdout);
+    state->smoke_layout_marker_logged = 1;
+}
