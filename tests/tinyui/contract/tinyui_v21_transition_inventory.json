@@ -5,11 +5,9 @@
     "backend_compat_includes": [],
     "top_level_wrapper_forward_count": 0,
     "top_level_wrapper_forward_names": [],
-    "compat_public_header_count": 45,
+    "compat_public_header_count": 44,
     "tinyui_public_header_count": 44,
-    "compat_public_headers_require_followup": [
-      "sdl.h"
-    ],
-    "tinyui_public_api_count": 585
+    "compat_public_headers_require_followup": [],
+    "tinyui_public_api_count": 584
   }
 }
