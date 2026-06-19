@@ -19,7 +19,6 @@
 #ifndef TINYUI_H
 #define TINYUI_H
 
-#include "core.h"
 #include "app.h"
 #include "animation.h"
 #include "arc.h"
@@ -50,7 +49,6 @@
 #include "qrcode.h"
 #include "radial_menu.h"
 #include "runtime.h"
-#include "screen.h"
 #include "scroll_selecter.h"
 #include "slider.h"
 #include "label.h"
