@@ -455,34 +455,27 @@ static void test_theme_apply_requires_theme_owned_native_style_dispatch(void)
     tinyui_theme_destroy(theme);
 }
 
-static void test_app_set_theme_syncs_runtime_bridge_state(void)
+static void test_app_set_theme_updates_app_theme(void)
 {
     struct tinyui_app *app = tinyui_app_create();
     struct tinyui_theme *theme = tinyui_theme_create();
-    struct tinyui_app *app_state;
 
     assert(app != NULL);
     assert(theme != NULL);
-
-    app_state = app;
-    assert(app_state != NULL);
     assert(app->theme == NULL);
-    assert(app_state->theme == NULL);
 
     assert(tinyui_app_set_theme(app, theme) == 0);
     assert(app->theme == theme);
-    assert(app_state->theme == theme);
 
     assert(tinyui_app_set_theme(NULL, theme) == -1);
     assert(tinyui_app_set_theme(app, NULL) == -1);
     assert(app->theme == theme);
-    assert(app_state->theme == theme);
 
     tinyui_app_destroy(app);
     tinyui_theme_destroy(theme);
 }
 
-static void test_app_set_theme_does_not_dirty_public_state_when_runtime_bind_fails(void)
+static void test_app_set_theme_null_arg_guard_fires(void)
 {
     struct tinyui_theme *theme = tinyui_theme_create();
     struct tinyui_app *app = tinyui_app_create();
@@ -569,7 +562,7 @@ int main(void)
     assert(tinyui_theme_set_metric(theme, TINYUI_METRIC_BORDER_WIDTH, -1) == -1);
     assert(tinyui_theme_set_metric(theme, TINYUI_METRIC_CONTROL_HEIGHT, 19) == 0);
 
-    test_app_set_theme_syncs_runtime_bridge_state();
+    test_app_set_theme_updates_app_theme();
     test_theme_apply_requires_theme_owned_native_style_dispatch();
 
     app = tinyui_app_create();
@@ -772,7 +765,7 @@ int main(void)
 
     test_image_theme_and_enabled_are_support_not_reject();
     test_theme_native_parts_apply_to_real_backend_fields();
-    test_app_set_theme_does_not_dirty_public_state_when_runtime_bind_fails();
+    test_app_set_theme_null_arg_guard_fires();
     test_theme_shared_style_apply_helpers_reject_null_and_unsupported_backend();
     test_theme_internal_style_apply_helper_no_longer_uses_tinyui_prefix();
 

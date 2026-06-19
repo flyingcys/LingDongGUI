@@ -22,7 +22,7 @@
  *
  * This header contains:
  *   - Shared enums (widget kind, signal, data truth, data source)
- *   - Backend widget tree and app state structs
+ *   - Backend widget tree structs
  *   - Layout cache structs (embedded in struct tinyui_backend_widget)
  *   - App lifecycle declarations
  *

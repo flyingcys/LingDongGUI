@@ -218,9 +218,7 @@ void tinyui_runtime_bridge_shutdown_app(struct tinyui_app *app)
     }
 
     tinyui_runtime_host_shutdown_app(app);
-    if (app->ld_scene != NULL) {
-        ldGuiDespose(app->ld_scene);
-    }
+    ldGuiDespose(app->ld_scene);
     free(app->ld_scene);
     app->ld_scene = NULL;
 }
