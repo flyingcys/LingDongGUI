@@ -112,20 +112,6 @@ static int tinyui_runtime_host_widget_needs_fallback(const struct tinyui_backend
            (!tinyui_runtime_host_widget_is_supported_real(widget) || widget->ld_widget == NULL);
 }
 
-static int tinyui_runtime_host_widget_excludes_formal_mapping(const struct tinyui_backend_widget *widget)
-{
-    while (widget != NULL) {
-        if ((widget->runtime_evidence_flags & TINYUI_BACKEND_EVIDENCE_EXCLUDE_FORMAL_MAPPING) != 0U) {
-            return 1;
-        }
-        if (widget->first_child != NULL && tinyui_runtime_host_widget_excludes_formal_mapping(widget->first_child)) {
-            return 1;
-        }
-        widget = widget->next_sibling;
-    }
-    return 0;
-}
-
 static void tinyui_runtime_host_append_widget_ids(const struct tinyui_backend_widget *widget,
                                              int (*predicate)(const struct tinyui_backend_widget *widget),
                                              char *buffer,
@@ -220,20 +206,6 @@ int tinyui_runtime_host_window_has_real_layout(const struct tinyui_backend_widge
     return ld_window->layoutTpye == layoutFlex || ld_window->layoutTpye == layoutGrid;
 }
 
-int tinyui_runtime_host_widget_allows_smoke_layout(const struct tinyui_backend_widget *widget)
-{
-    while (widget != NULL) {
-        if ((widget->runtime_evidence_flags & TINYUI_BACKEND_EVIDENCE_ALLOW_SMOKE_LAYOUT) != 0U) {
-            return 1;
-        }
-        if (widget->first_child != NULL && tinyui_runtime_host_widget_allows_smoke_layout(widget->first_child)) {
-            return 1;
-        }
-        widget = widget->next_sibling;
-    }
-    return 0;
-}
-
 void tinyui_runtime_host_log_mapping_markers(struct tinyui_runtime_host_state *state,
                                                const struct tinyui_backend_widget *root)
 {
@@ -257,20 +229,11 @@ void tinyui_runtime_host_log_mapping_markers(struct tinyui_runtime_host_state *s
                                      sizeof(fallback_ids),
                                      &fallback_used);
 
-    if (real_used > 0 &&
-        !tinyui_runtime_host_widget_excludes_formal_mapping(root->first_child) &&
-        !state->static_mapping_logged) {
+    if (real_used > 0 && !state->static_mapping_logged) {
         printf("TINYUI_BACKEND_STATIC_MAPPING=REAL_LDGUI\n");
         printf("TINYUI_BACKEND_REAL_WIDGET_IDS=%s\n", real_ids);
         fflush(stdout);
         state->static_mapping_logged = 1;
-    }
-
-    if (tinyui_runtime_host_widget_excludes_formal_mapping(root->first_child) &&
-        !state->temporary_smoke_logged) {
-        printf("TINYUI_BACKEND_TEMPORARY_SMOKE_PATH=EXCLUDED_FORMAL_MAPPING\n");
-        fflush(stdout);
-        state->temporary_smoke_logged = 1;
     }
 
     if (fallback_used > 0 && !state->fallback_boundary_logged) {

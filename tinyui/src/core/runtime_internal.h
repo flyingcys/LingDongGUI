@@ -24,7 +24,6 @@
  *   - Shared enums (widget kind, signal, data truth, data source)
  *   - Backend widget tree and app state structs
  *   - Layout cache structs (embedded in struct tinyui_backend_widget)
- *   - Runtime evidence flags
  *   - App lifecycle declarations
  *
  * NOTE: The shared enums reside here rather than in internal.h because
@@ -97,13 +96,6 @@ enum tinyui_backend_signal {
     TINYUI_BACKEND_SIGNAL_RELEASED,
 };
 
-/* ── Evidence flags ────────────────────────────────────────────── */
-
-enum tinyui_backend_runtime_evidence_flags {
-    TINYUI_BACKEND_EVIDENCE_EXCLUDE_FORMAL_MAPPING = 1 << 0,
-    TINYUI_BACKEND_EVIDENCE_ALLOW_SMOKE_LAYOUT = 1 << 1,
-};
-
 /* ── Layout cache (embedded in struct tinyui_backend_widget) ───── */
 
 struct tinyui_backend_layout_window_state {
@@ -171,13 +163,9 @@ struct tinyui_backend_widget {
     uint16_t ld_name_id;
     const char *list_item_ids[TINYUI_BACKEND_LIST_MAX_ITEMS];
     uint16_t list_item_count;
-    uint16_t reserved_list_padding;
     int16_t edit_result_on_finish;
-    uint16_t reserved_edit_padding;
     struct tinyui_backend_layout_window_state window_layout;
     struct tinyui_backend_layout_child_state child_layout;
-    uint16_t runtime_evidence_flags;
-    uint16_t open;
 };
 
 struct tinyui_backend_app_state {
@@ -185,8 +173,6 @@ struct tinyui_backend_app_state {
     struct ld_scene_t *ld_scene;
     uint16_t next_ld_name_id;
     void *runtime_state;
-    int last_window_switch_mode;
-    unsigned int last_window_switch_duration_ms;
 };
 
 /* ── Test snapshot forward declarations ────────────────────────── */

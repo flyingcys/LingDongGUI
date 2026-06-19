@@ -175,14 +175,8 @@ static void tinyui_runtime_host_apply_smoke_cursor_layout(struct tinyui_runtime_
                                                      int x,
                                                      int *cursor_y)
 {
-    if (root == NULL || root->first_child == NULL || tinyui_runtime_host_window_has_real_layout(root) ||
-        !tinyui_runtime_host_widget_allows_smoke_layout(root->first_child)) {
-        return;
-    }
-
-    /* Explicit opt-in only: keep temporary smoke layout out of generic non-layout demos. */
-    state->smoke_layout_used = 1;
-    tinyui_runtime_host_apply_real_widget_layout(state, root->first_child, x, cursor_y);
+    /* smoke layout permanently disabled: runtime_evidence_flags removed in Phase 0 */
+    (void)state; (void)root; (void)x; (void)cursor_y;
 }
 
 static void tinyui_runtime_host_render(struct tinyui_runtime_host_state *state, struct tinyui_window *window)

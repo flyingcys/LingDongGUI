@@ -451,26 +451,12 @@ int tinyui_runtime_bridge_window_is_owned_by(const struct tinyui_app *app,
 
 void tinyui_runtime_bridge_reset_window_switch(struct tinyui_app *app)
 {
-    struct tinyui_backend_app_state *app_state = tinyui_runtime_bridge_backend_state(app);
-
-    if (app_state == 0) {
-        return;
-    }
-
-    app_state->last_window_switch_mode = 0;
-    app_state->last_window_switch_duration_ms = 0;
+    (void)app;  /* last_window_switch_* fields removed in Phase 0 */
 }
 
 void tinyui_runtime_bridge_set_window_switch(struct tinyui_app *app,
                                              int mode,
                                              unsigned int duration_ms)
 {
-    struct tinyui_backend_app_state *app_state = tinyui_runtime_bridge_backend_state(app);
-
-    if (app_state == 0) {
-        return;
-    }
-
-    app_state->last_window_switch_mode = mode;
-    app_state->last_window_switch_duration_ms = duration_ms;
+    (void)app; (void)mode; (void)duration_ms;  /* last_window_switch_* fields removed in Phase 0 */
 }

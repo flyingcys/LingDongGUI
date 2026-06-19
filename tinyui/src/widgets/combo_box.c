@@ -76,7 +76,6 @@ static bool tinyui_combo_box_native_slot(struct ld_scene_t *scene, ldMsg_t msg)
     }
 
     if (msg.signal == SIGNAL_PRESS) {
-        backend->open = ld_combo_box->isExpand ? 1 : 0;
         return false;
     }
 
@@ -94,14 +93,12 @@ static bool tinyui_combo_box_native_slot(struct ld_scene_t *scene, ldMsg_t msg)
         if (previous_selected_index >= 0 && previous_selected_index < combo_box->item_count) {
             ldComboBoxSetSelectItem(ld_combo_box, (uint8_t)previous_selected_index);
         }
-        backend->open = ld_combo_box->isExpand ? 1 : 0;
         return false;
     }
 
     ldComboBoxSetSelectItem(ld_combo_box, (uint8_t)selected_index);
     combo_box->selected_index = selected_index;
     backend->value = selected_index;
-    backend->open = ld_combo_box->isExpand ? 1 : 0;
     (void)tinyui_widget_claim_backend_focus(backend);
     if (combo_box->cb != 0) {
         combo_box->cb(combo_box, selected_index, combo_box->user_data);
