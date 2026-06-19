@@ -31,7 +31,7 @@ static void make_ui(struct tinyui_window *win)
     tinyui_grid_set_rows(win, rows, 3);
     tinyui_grid_set_gap(win, 12, 12);
     tinyui_grid_set_align(win, TINYUI_ALIGN_START, TINYUI_ALIGN_START);
-    tinyui_window_set_padding_group(win, 24, 24, 24, 24);
+    tinyui_window_set_padding(win, 24, 24, 24, 24);
 
     title = tinyui_label_create(win, "title");
     graph = tinyui_graph_create_with_props(

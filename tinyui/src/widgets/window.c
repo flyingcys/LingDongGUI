@@ -189,7 +189,7 @@ static struct tinyui_window_backend_host *tinyui_window_get_backend_host(struct 
     return (struct tinyui_window_backend_host *)tinyui_window_get_backend(window);
 }
 
-static void tinyui_window_apply_padding_contract(struct tinyui_window *window);
+static void tinyui_window_sync_padding(struct tinyui_window *window);
 
 static int tinyui_window_apply_layout_type_impl(struct tinyui_window *window,
                                                 enum tinyui_window_layout_type type);
@@ -260,38 +260,7 @@ int tinyui_window_apply_uniform_padding(struct tinyui_window *window, int paddin
     backend->window_layout.grid_padding_right = padding;
     backend->window_layout.grid_padding_bottom = padding;
     backend->window_layout.has_explicit_grid_padding = 0;
-    tinyui_window_apply_padding_contract(window);
-    return 0;
-}
-
-int tinyui_window_apply_explicit_padding(struct tinyui_window *window,
-                                         int left,
-                                         int top,
-                                         int right,
-                                         int bottom)
-{
-    struct tinyui_backend_widget *backend = tinyui_window_get_backend(window);
-    ldWindow_t *ld_window = tinyui_window_get_ld_window(window);
-    ldLayoutType_t layout_type;
-
-    if (window == 0 || backend == 0 || ld_window == 0
-        || left < 0 || top < 0 || right < 0 || bottom < 0) {
-        return -1;
-    }
-
-    backend->window_layout.padding_left = left;
-    backend->window_layout.padding_top = top;
-    backend->window_layout.padding_right = right;
-    backend->window_layout.padding_bottom = bottom;
-    backend->window_layout.has_explicit_flex_padding = 1;
-    layout_type = ld_window->layoutTpye;
-    ldWindowSetPadding(ld_window, (ldPadding_t){
-        .left = (int16_t)left,
-        .top = (int16_t)top,
-        .right = (int16_t)right,
-        .bottom = (int16_t)bottom,
-    });
-    ld_window->layoutTpye = layout_type;
+    tinyui_window_sync_padding(window);
     return 0;
 }
 
@@ -382,15 +351,16 @@ void tinyui_window_test_fail_next_set_bg_color(void)
     tinyui_window_fail_next_set_bg_color = 1;
 }
 
-static int tinyui_window_set_padding_group_impl(struct tinyui_window *window,
-                                                int left,
-                                                int top,
-                                                int right,
-                                                int bottom)
+static int tinyui_window_apply_padding_group(struct tinyui_window *window,
+                                              int left,
+                                              int top,
+                                              int right,
+                                              int bottom)
 {
     struct tinyui_window_backend_host *host = tinyui_window_get_backend_host(window);
+    struct tinyui_backend_widget *backend = tinyui_window_get_backend(window);
 
-    if (host == 0) {
+    if (host == 0 || backend == 0) {
         return -1;
     }
 
@@ -403,11 +373,16 @@ static int tinyui_window_set_padding_group_impl(struct tinyui_window *window,
     host->padding_group.right = (int16_t)right;
     host->padding_group.bottom = (int16_t)bottom;
     host->has_padding_group = 1;
-    tinyui_window_apply_padding_contract(window);
+    backend->window_layout.padding_left = left;
+    backend->window_layout.padding_top = top;
+    backend->window_layout.padding_right = right;
+    backend->window_layout.padding_bottom = bottom;
+    backend->window_layout.has_explicit_flex_padding = 1;
+    tinyui_window_sync_padding(window);
     return 0;
 }
 
-static void tinyui_window_apply_padding_contract(struct tinyui_window *window)
+static void tinyui_window_sync_padding(struct tinyui_window *window)
 {
     struct tinyui_window_backend_host *host = tinyui_window_get_backend_host(window);
     struct tinyui_backend_widget *backend = tinyui_window_get_backend(window);
@@ -464,7 +439,7 @@ static int tinyui_window_apply_layout_type_impl(struct tinyui_window *window,
     }
 
     ldWindowSetLayout(ld_window, tinyui_window_map_layout_type(type));
-    tinyui_window_apply_padding_contract(window);
+    tinyui_window_sync_padding(window);
     return 0;
 }
 
@@ -503,7 +478,7 @@ static int tinyui_window_apply_flex_contract_impl(struct tinyui_window *window,
                          tinyui_window_map_flex_cross_align(cross_align));
     ldWindowSetFlexTrackAlign(ld_window, tinyui_window_map_flex_track_align(track_align));
     ldWindowSetFlexGap(ld_window, (int16_t)item_gap, (int16_t)track_gap);
-    tinyui_window_apply_padding_contract(window);
+    tinyui_window_sync_padding(window);
     return 0;
 }
 
@@ -537,7 +512,7 @@ int tinyui_window_apply_flex_flow(struct tinyui_window *window, enum tinyui_flex
 
     window->flex_flow = flow;
     ldWindowSetFlexFlow(ld_window, tinyui_window_map_flex_flow(flow));
-    tinyui_window_apply_padding_contract(window);
+    tinyui_window_sync_padding(window);
     return 0;
 }
 
@@ -559,7 +534,7 @@ int tinyui_window_apply_flex_align(struct tinyui_window *window,
                          tinyui_window_map_flex_main_align(main_align),
                          tinyui_window_map_flex_cross_align(cross_align));
     ldWindowSetFlexTrackAlign(ld_window, tinyui_window_map_flex_track_align(track_align));
-    tinyui_window_apply_padding_contract(window);
+    tinyui_window_sync_padding(window);
     return 0;
 }
 
@@ -577,7 +552,7 @@ int tinyui_window_apply_flex_gap(struct tinyui_window *window, int item_gap, int
     backend->window_layout.flex_item_gap = item_gap;
     backend->window_layout.flex_track_gap = track_gap;
     ldWindowSetFlexGap(ld_window, (int16_t)item_gap, (int16_t)track_gap);
-    tinyui_window_apply_padding_contract(window);
+    tinyui_window_sync_padding(window);
     return 0;
 }
 
@@ -602,7 +577,7 @@ int tinyui_window_apply_grid_columns(struct tinyui_window *window, const int *tr
                             backend->window_layout.grid_row_count > 0
                                 ? backend->window_layout.grid_rows
                                 : NULL);
-    tinyui_window_apply_padding_contract(window);
+    tinyui_window_sync_padding(window);
     return 0;
 }
 
@@ -627,7 +602,7 @@ int tinyui_window_apply_grid_rows(struct tinyui_window *window, const int *track
                                 ? backend->window_layout.grid_cols
                                 : NULL,
                             backend->window_layout.grid_rows);
-    tinyui_window_apply_padding_contract(window);
+    tinyui_window_sync_padding(window);
     return 0;
 }
 
@@ -645,7 +620,7 @@ int tinyui_window_apply_grid_gap(struct tinyui_window *window, int row_gap, int 
     backend->window_layout.grid_row_gap = row_gap;
     backend->window_layout.grid_col_gap = col_gap;
     ldWindowSetGridGap(ld_window, (int16_t)row_gap, (int16_t)col_gap);
-    tinyui_window_apply_padding_contract(window);
+    tinyui_window_sync_padding(window);
     return 0;
 }
 
@@ -667,7 +642,7 @@ int tinyui_window_apply_grid_align(struct tinyui_window *window,
     ldWindowSetGridAlign(ld_window,
                          tinyui_window_map_grid_align(col_align),
                          tinyui_window_map_grid_align(row_align));
-    tinyui_window_apply_padding_contract(window);
+    tinyui_window_sync_padding(window);
     return 0;
 }
 
@@ -889,11 +864,11 @@ struct tinyui_window *tinyui_window_create_with_props(struct tinyui_app *app,
         || tinyui_widget_set_padding(&window->widget, props->padding) != 0
         || tinyui_window_set_background_source(window, props->background_source) != 0
         || (props->has_padding_group != 0
-            && tinyui_window_set_padding_group(window,
-                                               props->padding_left,
-                                               props->padding_top,
-                                               props->padding_right,
-                                               props->padding_bottom) != 0)) {
+            && tinyui_window_set_padding(window,
+                                         props->padding_left,
+                                         props->padding_top,
+                                         props->padding_right,
+                                         props->padding_bottom) != 0)) {
         tinyui_window_dispose_partial(window);
         return 0;
     }
@@ -1089,34 +1064,6 @@ int tinyui_window_get_color(struct tinyui_window *window, unsigned int *rgb)
 }
 
 /**
- * @brief Set padding group of window
- *
- * @param[in] window Window instance
- * @param[in] left Left padding
- * @param[in] top Top padding
- * @param[in] right Right padding
- * @param[in] bottom Bottom padding
- * @return -1 on failure
- */
-
-int tinyui_window_set_padding_group(struct tinyui_window *window,
-                                    int left,
-                                    int top,
-                                    int right,
-                                    int bottom)
-{
-    if (!tinyui_window_is_valid(window)
-        || left < 0
-        || top < 0
-        || right < 0
-        || bottom < 0) {
-        return -1;
-    }
-
-    return tinyui_window_set_padding_group_impl(window, left, top, right, bottom);
-}
-
-/**
  * @brief Set layout type of window
  *
  * @param[in] window Window instance
@@ -1162,7 +1109,7 @@ int tinyui_window_set_padding(struct tinyui_window *window,
         return -1;
     }
 
-    return tinyui_window_apply_explicit_padding(window, left, top, right, bottom);
+    return tinyui_window_apply_padding_group(window, left, top, right, bottom);
 }
 
 /**
@@ -1212,17 +1159,29 @@ int tinyui_window_set_gap(struct tinyui_window *window, int gap)
 
 
 /**
- * @brief Get padding left of window
+ * @brief Get padding group of window
  *
- * @param[out] window Window instance
- * @return -1 on failure
+ * @param[in] window Window instance
+ * @param[out] left Left padding
+ * @param[out] top Top padding
+ * @param[out] right Right padding
+ * @param[out] bottom Bottom padding
+ * @return 0 on success, -1 on failure
  */
 
-int tinyui_window_get_padding_left(struct tinyui_window *window)
+int tinyui_window_get_padding_group(struct tinyui_window *window,
+                                    int *left,
+                                    int *top,
+                                    int *right,
+                                    int *bottom)
 {
     ldWindow_t *ld_window;
 
-    if (!tinyui_window_is_valid(window)) {
+    if (!tinyui_window_is_valid(window)
+        || left == 0
+        || top == 0
+        || right == 0
+        || bottom == 0) {
         return -1;
     }
 
@@ -1230,71 +1189,9 @@ int tinyui_window_get_padding_left(struct tinyui_window *window)
     if (ld_window == 0 || ld_window->pLayoutPaddingGroup == 0) {
         return -1;
     }
-    return ld_window->pLayoutPaddingGroup->left;
-}
-
-/**
- * @brief Get padding top of window
- *
- * @param[out] window Window instance
- * @return -1 on failure
- */
-
-int tinyui_window_get_padding_top(struct tinyui_window *window)
-{
-    ldWindow_t *ld_window;
-
-    if (!tinyui_window_is_valid(window)) {
-        return -1;
-    }
-
-    ld_window = tinyui_window_get_ld_window(window);
-    if (ld_window == 0 || ld_window->pLayoutPaddingGroup == 0) {
-        return -1;
-    }
-    return ld_window->pLayoutPaddingGroup->top;
-}
-
-/**
- * @brief Get padding right of window
- *
- * @param[out] window Window instance
- * @return -1 on failure
- */
-
-int tinyui_window_get_padding_right(struct tinyui_window *window)
-{
-    ldWindow_t *ld_window;
-
-    if (!tinyui_window_is_valid(window)) {
-        return -1;
-    }
-
-    ld_window = tinyui_window_get_ld_window(window);
-    if (ld_window == 0 || ld_window->pLayoutPaddingGroup == 0) {
-        return -1;
-    }
-    return ld_window->pLayoutPaddingGroup->right;
-}
-
-/**
- * @brief Get padding bottom of window
- *
- * @param[out] window Window instance
- * @return -1 on failure
- */
-
-int tinyui_window_get_padding_bottom(struct tinyui_window *window)
-{
-    ldWindow_t *ld_window;
-
-    if (!tinyui_window_is_valid(window)) {
-        return -1;
-    }
-
-    ld_window = tinyui_window_get_ld_window(window);
-    if (ld_window == 0 || ld_window->pLayoutPaddingGroup == 0) {
-        return -1;
-    }
-    return ld_window->pLayoutPaddingGroup->bottom;
+    *left = ld_window->pLayoutPaddingGroup->left;
+    *top = ld_window->pLayoutPaddingGroup->top;
+    *right = ld_window->pLayoutPaddingGroup->right;
+    *bottom = ld_window->pLayoutPaddingGroup->bottom;
+    return 0;
 }

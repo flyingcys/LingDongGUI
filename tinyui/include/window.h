@@ -48,12 +48,6 @@ int tinyui_window_set_color(struct tinyui_window *window, unsigned int rgb);
 
 int tinyui_window_get_color(struct tinyui_window *window, unsigned int *rgb);
 
-int tinyui_window_set_padding_group(struct tinyui_window *window,
-                                    int left,
-                                    int top,
-                                    int right,
-                                    int bottom);
-
 int tinyui_window_set_layout_type(struct tinyui_window *window,
                                   enum tinyui_window_layout_type type);
 
@@ -70,14 +64,6 @@ int tinyui_window_set_grid_padding(struct tinyui_window *window,
                                    int bottom);
 
 int tinyui_window_set_gap(struct tinyui_window *window, int gap);
-
-int tinyui_window_get_padding_left(struct tinyui_window *window);
-
-int tinyui_window_get_padding_top(struct tinyui_window *window);
-
-int tinyui_window_get_padding_right(struct tinyui_window *window);
-
-int tinyui_window_get_padding_bottom(struct tinyui_window *window);
 
 int tinyui_window_get_padding_group(struct tinyui_window *window,
                                     int *left,

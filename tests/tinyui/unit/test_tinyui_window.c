@@ -249,7 +249,7 @@ static void test_window_padding_group_round_trip(struct tinyui_window *win)
     struct tinyui_backend_widget *backend;
     ldWindow_t *ld_win;
 
-    assert(tinyui_window_set_padding_group(win, 10, 20, 30, 40) == 0);
+    assert(tinyui_window_set_padding(win, 10, 20, 30, 40) == 0);
 
     backend = (struct tinyui_backend_widget *)win->widget.backend_widget;
     ld_win = (ldWindow_t *)backend->ld_widget;
@@ -299,7 +299,7 @@ static void test_window_grid_padding_positions_switch(struct tinyui_window *win)
     assert(tinyui_grid_set_columns(win, cols, 2) == 0);
     assert(tinyui_grid_set_rows(win, rows, 2) == 0);
     assert(tinyui_grid_set_gap(win, 12, 12) == 0);
-    assert(tinyui_window_set_padding_group(win, 16, 24, 16, 16) == 0);
+    assert(tinyui_window_set_padding(win, 16, 24, 16, 16) == 0);
 
     sw = tinyui_switch_create(win, "window_grid_padding_switch");
     assert(sw != 0);

@@ -50,7 +50,7 @@ static void make_ui(struct tinyui_window *win)
 
     tinyui_window_set_color(win, 0xF5F6F8U);
     tinyui_window_set_layout_type(win, TINYUI_WINDOW_LAYOUT_GRID);
-    tinyui_window_set_padding_group(win, 12, 8, 12, 8);
+    tinyui_window_set_padding(win, 12, 8, 12, 8);
     tinyui_grid_set_columns(win, root_cols, 2);
     tinyui_grid_set_rows(win, root_rows, 5);
     tinyui_grid_set_gap(win, 12, 12);
@@ -86,7 +86,7 @@ static void make_ui(struct tinyui_window *win)
                                 TINYUI_ALIGN_STRETCH);
     tinyui_window_set_color(canvas, 0xE8ECF2U);
     tinyui_window_set_layout_type(canvas, TINYUI_WINDOW_LAYOUT_GRID);
-    tinyui_window_set_padding_group(canvas, 12, 12, 12, 12);
+    tinyui_window_set_padding(canvas, 12, 12, 12, 12);
     tinyui_grid_set_columns(canvas, canvas_cols, 4);
     tinyui_grid_set_rows(canvas, canvas_rows, 4);
     tinyui_grid_set_gap(canvas, 12, 12);

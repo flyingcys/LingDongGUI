@@ -79,7 +79,7 @@ DEMO_MARKERS = {
         "tinyui_arc_set_quarter_source",
     ),
     "layout_parity": (
-        "tinyui_window_set_padding_group",
+        "tinyui_window_set_padding",
         "tinyui_flex_set_flow",
         "tinyui_text_set_text",
     ),

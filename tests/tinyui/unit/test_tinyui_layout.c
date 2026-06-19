@@ -939,18 +939,22 @@ static void test_window_padding_group_round_trip_to_ldwindow(void)
     const struct tinyui_backend_widget *win_backend = win->widget.backend_widget;
     const ldWindow_t *ld_window = (const ldWindow_t *)win_backend->ld_widget;
 
-    assert(tinyui_window_set_padding_group(win, 4, 6, 8, 10) == 0);
-    assert(tinyui_window_get_padding_left(win) == 4);
-    assert(tinyui_window_get_padding_top(win) == 6);
-    assert(tinyui_window_get_padding_right(win) == 8);
-    assert(tinyui_window_get_padding_bottom(win) == 10);
-    assert(ld_window->pLayoutPaddingGroup != 0);
-    assert(ld_window->pLayoutPaddingGroup->left == 4);
-    assert(ld_window->pLayoutPaddingGroup->top == 6);
-    assert(ld_window->pLayoutPaddingGroup->right == 8);
-    assert(ld_window->pLayoutPaddingGroup->bottom == 10);
+    {
+        int pl = 0, pt = 0, pr = 0, pb = 0;
+        assert(tinyui_window_set_padding(win, 4, 6, 8, 10) == 0);
+        assert(tinyui_window_get_padding_group(win, &pl, &pt, &pr, &pb) == 0);
+        assert(pl == 4);
+        assert(pt == 6);
+        assert(pr == 8);
+        assert(pb == 10);
+        assert(ld_window->pLayoutPaddingGroup != 0);
+        assert(ld_window->pLayoutPaddingGroup->left == 4);
+        assert(ld_window->pLayoutPaddingGroup->top == 6);
+        assert(ld_window->pLayoutPaddingGroup->right == 8);
+        assert(ld_window->pLayoutPaddingGroup->bottom == 10);
+    }
 
-    assert(tinyui_window_set_padding_group(win, 1, 2, 3, 4) == 0);
+    assert(tinyui_window_set_padding(win, 1, 2, 3, 4) == 0);
     assert(ld_window->pLayoutPaddingGroup != 0);
     assert(ld_window->pLayoutPaddingGroup->left == 1);
     assert(ld_window->pLayoutPaddingGroup->top == 2);
@@ -1067,7 +1071,7 @@ static void test_window_padding_group_survives_followup_layout_updates(void)
     const struct tinyui_backend_widget *win_backend = win->widget.backend_widget;
     const ldWindow_t *ld_window = (const ldWindow_t *)win_backend->ld_widget;
 
-    assert(tinyui_window_set_padding_group(win, 2, 4, 6, 8) == 0);
+    assert(tinyui_window_set_padding(win, 2, 4, 6, 8) == 0);
     assert(ld_window->pLayoutPaddingGroup != 0);
     assert(ld_window->pLayoutPaddingGroup->left == 2);
     assert(ld_window->pLayoutPaddingGroup->top == 4);
@@ -1172,7 +1176,7 @@ static void test_child_window_public_api_binds_real_parent_and_hosts_layout_chil
            (ldBase_t *)root_backend->ld_widget);
 
     assert(tinyui_window_set_layout_type(child, TINYUI_WINDOW_LAYOUT_FLEX) == 0);
-    assert(tinyui_window_set_padding_group(child, 8, 10, 8, 10) == 0);
+    assert(tinyui_window_set_padding(child, 8, 10, 8, 10) == 0);
     assert(tinyui_flex_set_flow(child, TINYUI_FLEX_FLOW_ROW_WRAP) == 0);
     assert(tinyui_flex_set_gap(child, 6, 4) == 0);
     assert(tinyui_widget_set_size((struct tinyui_widget *)child, 220, 80) == 0);
@@ -1230,7 +1234,7 @@ static void test_layout_setters_with_missing_native_binding_reject_without_mutat
     win_backend->ld_widget = 0;
     item_backend->ld_widget = 0;
 
-    assert(tinyui_window_set_padding_group(win, 2, 4, 6, 8) == -1);
+    assert(tinyui_window_set_padding(win, 2, 4, 6, 8) == -1);
     assert(tinyui_flex_set_flow(win, TINYUI_FLEX_FLOW_COLUMN_WRAP) == -1);
     assert(tinyui_flex_set_align(win,
                                  TINYUI_ALIGN_END,

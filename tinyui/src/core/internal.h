@@ -224,11 +224,6 @@ int tinyui_window_apply_flex_align(struct tinyui_window *window,
                                    enum tinyui_align track_align);
 int tinyui_window_apply_flex_gap(struct tinyui_window *window, int item_gap, int track_gap);
 int tinyui_window_apply_uniform_padding(struct tinyui_window *window, int padding);
-int tinyui_window_apply_explicit_padding(struct tinyui_window *window,
-                                         int left,
-                                         int top,
-                                         int right,
-                                         int bottom);
 int tinyui_window_apply_explicit_grid_padding(struct tinyui_window *window,
                                               int left,
                                               int top,

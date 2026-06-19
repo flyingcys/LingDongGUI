@@ -61,7 +61,7 @@ static int make_ui(struct tinyui_window *win)
     tinyui_grid_set_rows(win, rows, 7);
     tinyui_grid_set_gap(win, 12, 12);
     tinyui_grid_set_align(win, TINYUI_ALIGN_START, TINYUI_ALIGN_START);
-    tinyui_window_set_padding_group(win, 16, 24, 16, 16);
+    tinyui_window_set_padding(win, 16, 24, 16, 16);
 
     tinyui_widget_set_size((struct tinyui_widget *)sw, 48, 24);
     tinyui_widget_set_size((struct tinyui_widget *)cb, 220, 30);

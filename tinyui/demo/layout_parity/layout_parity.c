@@ -86,7 +86,7 @@ static void populate_flex_row_sample(struct tinyui_window *sample)
     struct tinyui_button *row_e;
 
     tinyui_window_set_layout_type(sample, TINYUI_WINDOW_LAYOUT_FLEX);
-    tinyui_window_set_padding_group(sample, 8, 8, 8, 8);
+    tinyui_window_set_padding(sample, 8, 8, 8, 8);
     tinyui_flex_set_flow(sample, TINYUI_FLEX_FLOW_ROW_WRAP);
     tinyui_flex_set_align(sample,
                           TINYUI_ALIGN_START,
@@ -118,7 +118,7 @@ static void populate_flex_column_sample(struct tinyui_window *sample)
     struct tinyui_button *col_free;
 
     tinyui_window_set_layout_type(sample, TINYUI_WINDOW_LAYOUT_FLEX);
-    tinyui_window_set_padding_group(sample, 10, 8, 10, 8);
+    tinyui_window_set_padding(sample, 10, 8, 10, 8);
     tinyui_flex_set_flow(sample, TINYUI_FLEX_FLOW_COLUMN);
     tinyui_flex_set_align(sample,
                           TINYUI_ALIGN_START,
@@ -153,7 +153,7 @@ static void populate_legacy_row_sample(struct tinyui_window *sample)
     struct tinyui_text *badge;
 
     tinyui_window_set_layout_type(sample, TINYUI_WINDOW_LAYOUT_FLEX);
-    tinyui_window_set_padding_group(sample, 8, 12, 8, 12);
+    tinyui_window_set_padding(sample, 8, 12, 8, 12);
     tinyui_flex_set_flow(sample, TINYUI_FLEX_FLOW_ROW);
     tinyui_flex_set_align(sample,
                           TINYUI_ALIGN_START,
@@ -197,7 +197,7 @@ static void populate_legacy_column_sample(struct tinyui_window *sample)
     struct tinyui_button *legacy_bottom;
 
     tinyui_window_set_layout_type(sample, TINYUI_WINDOW_LAYOUT_FLEX);
-    tinyui_window_set_padding_group(sample, 8, 8, 8, 8);
+    tinyui_window_set_padding(sample, 8, 8, 8, 8);
     tinyui_flex_set_flow(sample, TINYUI_FLEX_FLOW_COLUMN);
     tinyui_flex_set_align(sample,
                           TINYUI_ALIGN_START,
@@ -225,7 +225,7 @@ static void make_ui(struct tinyui_window *win, struct layout_parity_runtime *run
 
     tinyui_window_set_color(win, 0xF5F6F8U);
     tinyui_window_set_layout_type(win, TINYUI_WINDOW_LAYOUT_FLEX);
-    tinyui_window_set_padding_group(win, 12, 8, 12, 8);
+    tinyui_window_set_padding(win, 12, 8, 12, 8);
     tinyui_flex_set_flow(win, TINYUI_FLEX_FLOW_ROW_WRAP);
     tinyui_flex_set_align(win,
                           TINYUI_ALIGN_START,

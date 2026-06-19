@@ -2348,10 +2348,14 @@ static void test_props_initial_values(struct tinyui_app *app,
         assert(ld_window->pLayoutPaddingGroup->top == win_props.padding_top);
         assert(ld_window->pLayoutPaddingGroup->right == win_props.padding_right);
         assert(ld_window->pLayoutPaddingGroup->bottom == win_props.padding_bottom);
-        assert(tinyui_window_get_padding_left(props_win) == win_props.padding_left);
-        assert(tinyui_window_get_padding_top(props_win) == win_props.padding_top);
-        assert(tinyui_window_get_padding_right(props_win) == win_props.padding_right);
-        assert(tinyui_window_get_padding_bottom(props_win) == win_props.padding_bottom);
+        {
+            int pl = 0, pt = 0, pr = 0, pb = 0;
+            assert(tinyui_window_get_padding_group(props_win, &pl, &pt, &pr, &pb) == 0);
+            assert(pl == win_props.padding_left);
+            assert(pt == win_props.padding_top);
+            assert(pr == win_props.padding_right);
+            assert(pb == win_props.padding_bottom);
+        }
         assert(ld_window->ptImgTile == win_props.background_source->img_tile);
         assert(ld_window->ptMaskTile == win_props.background_source->mask_tile);
     }
