@@ -15,27 +15,6 @@
 
 static const char *test_self_binary_path = 0;
 
-int tinyui_list_set_items_ld(void *backend_widget,
-                             const char *const *item_ids,
-                             const unsigned char *const *items,
-                             int item_count);
-int tinyui_list_set_item_height_ld(void *backend_widget, int item_height);
-int tinyui_list_set_padding_group_ld(void *backend_widget,
-                                     int top,
-                                     int bottom,
-                                     int left,
-                                     int right);
-int tinyui_list_set_margin_group_ld(void *backend_widget,
-                                    int top,
-                                    int bottom,
-                                    int left,
-                                    int right);
-int tinyui_list_set_text_color_ld(void *backend_widget, unsigned int rgb);
-int tinyui_list_set_bg_color_ld(void *backend_widget, unsigned int rgb);
-int tinyui_list_set_select_color_ld(void *backend_widget, unsigned int rgb);
-int tinyui_list_set_align_ld(void *backend_widget, enum tinyui_align align);
-int tinyui_list_set_item_widget_ld(void *backend_widget, int index, void *item_widget_backend);
-
 static void assert_self_binary_lacks_symbol(const char *symbol)
 {
     char command[1024];
@@ -792,18 +771,6 @@ static void test_list_backend_moved_helpers_fail_closed_without_mutation(struct 
     ld_list = (ldList_t *)backend->ld_widget;
     assert(ld_list != 0);
 
-    assert(tinyui_list_set_items_ld(backend,
-                                    (const char *const *)list->backend_item_ids,
-                                    list->backend_item_texts,
-                                    list->item_count) == -1);
-    assert(tinyui_list_set_item_height_ld(backend, 18) == -1);
-    assert(tinyui_list_set_padding_group_ld(backend, 9, 9, 9, 9) == -1);
-    assert(tinyui_list_set_margin_group_ld(backend, 6, 6, 6, 6) == -1);
-    assert(tinyui_list_set_text_color_ld(backend, 0x010203U) == -1);
-    assert(tinyui_list_set_bg_color_ld(backend, 0x040506U) == -1);
-    assert(tinyui_list_set_select_color_ld(backend, 0x070809U) == -1);
-    assert(tinyui_list_set_align_ld(backend, TINYUI_ALIGN_START) == -1);
-    assert(tinyui_list_set_item_widget_ld(backend, 0, backend) == -1);
     assert(tinyui_list_set_selected_index(0, 0) == -1);
     assert(tinyui_list_get_selected_index(0) == -1);
     assert(tinyui_list_sync_selected_index(0, 0) == -1);
