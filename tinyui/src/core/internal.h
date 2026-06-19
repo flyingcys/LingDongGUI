@@ -135,15 +135,6 @@ int tinyui_native_align_to_ld_grid(enum tinyui_native_align align);
 
 int tinyui_native_nav_dir_to_ld(enum tinyui_native_nav_dir dir);
 
-/**
- * @brief Native platform: signal to ld
- *
- * @param[in] signal signal
- * @return 0 on success, -1 on failure
- */
-
-int tinyui_native_signal_to_ld(enum tinyui_native_signal signal);
-
 int tinyui_widget_init_root(void *backend_widget,
                                     struct tinyui_app *owner,
                                     enum tinyui_backend_widget_kind kind,

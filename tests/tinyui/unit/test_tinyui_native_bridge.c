@@ -96,17 +96,6 @@ static void test_native_nav_dir_maps_all_ld_nav_values(void)
     assert(tinyui_native_nav_dir_to_ld(TINYUI_NATIVE_NAV_BACK) == NAV_BACK);
 }
 
-static void test_native_signal_maps_all_ld_signal_values(void)
-{
-    assert(tinyui_native_signal_to_ld(TINYUI_NATIVE_SIGNAL_NONE) == SIGNAL_NO_OPERATION);
-    assert(tinyui_native_signal_to_ld(TINYUI_NATIVE_SIGNAL_PRESS) == SIGNAL_PRESS);
-    assert(tinyui_native_signal_to_ld(TINYUI_NATIVE_SIGNAL_HOLD_DOWN) == SIGNAL_HOLD_DOWN);
-    assert(tinyui_native_signal_to_ld(TINYUI_NATIVE_SIGNAL_RELEASE) == SIGNAL_RELEASE);
-    assert(tinyui_native_signal_to_ld(TINYUI_NATIVE_SIGNAL_CLICKED_ITEM) == SIGNAL_CLICKED_ITEM);
-    assert(tinyui_native_signal_to_ld(TINYUI_NATIVE_SIGNAL_FINISHED) == SIGNAL_FINISHED);
-    assert(tinyui_native_signal_to_ld(TINYUI_NATIVE_SIGNAL_VALUE_CHANGED) == SIGNAL_VALUE_CHANGED);
-}
-
 static void test_internal_native_helpers_no_longer_use_tinyui_prefix(void)
 {
     assert_source_lacks_function_definition(
@@ -223,7 +212,6 @@ int main(void)
     test_native_font_preserves_font_pointer();
     test_native_align_maps_all_ldgrid_align_values();
     test_native_nav_dir_maps_all_ld_nav_values();
-    test_native_signal_maps_all_ld_signal_values();
     test_internal_native_helpers_no_longer_use_tinyui_prefix();
     test_runtime_bridge_reports_scene_presence();
     test_runtime_bridge_pointer_axis_clamps_into_ld_touch_range();

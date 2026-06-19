@@ -20,23 +20,6 @@
 #include "internal.h"
 #include "ldBase.h"
 
-enum {
-    TINYUI_LD_SIGNAL_NO_OPERATION = 0,
-    TINYUI_LD_SIGNAL_PRESS = 1,
-    TINYUI_LD_SIGNAL_HOLD_DOWN = 2,
-    TINYUI_LD_SIGNAL_RELEASE = 3,
-    TINYUI_LD_SIGNAL_CLICKED_ITEM = 12,
-    TINYUI_LD_SIGNAL_FINISHED = 13,
-    TINYUI_LD_SIGNAL_VALUE_CHANGED = 14,
-};
-
-enum {
-    TINYUI_LD_NAV_UP = 0,
-    TINYUI_LD_NAV_DOWN = 1,
-    TINYUI_LD_NAV_LEFT = 2,
-    TINYUI_LD_NAV_RIGHT = 3,
-};
-
 /**
  * @brief Native platform: image wrap
  *
@@ -99,31 +82,4 @@ int tinyui_native_align_to_ld_grid(enum tinyui_native_align align)
     }
 }
 
-/**
- * @brief Native platform: signal to ld
- *
- * @param[in] signal signal
- * @return 0 on success, -1 on failure
- */
-
-int tinyui_native_signal_to_ld(enum tinyui_native_signal signal)
-{
-    switch (signal) {
-    case TINYUI_NATIVE_SIGNAL_PRESS:
-        return TINYUI_LD_SIGNAL_PRESS;
-    case TINYUI_NATIVE_SIGNAL_HOLD_DOWN:
-        return TINYUI_LD_SIGNAL_HOLD_DOWN;
-    case TINYUI_NATIVE_SIGNAL_RELEASE:
-        return TINYUI_LD_SIGNAL_RELEASE;
-    case TINYUI_NATIVE_SIGNAL_CLICKED_ITEM:
-        return TINYUI_LD_SIGNAL_CLICKED_ITEM;
-    case TINYUI_NATIVE_SIGNAL_FINISHED:
-        return TINYUI_LD_SIGNAL_FINISHED;
-    case TINYUI_NATIVE_SIGNAL_VALUE_CHANGED:
-        return TINYUI_LD_SIGNAL_VALUE_CHANGED;
-    case TINYUI_NATIVE_SIGNAL_NONE:
-    default:
-        return TINYUI_LD_SIGNAL_NO_OPERATION;
-    }
-}
 
