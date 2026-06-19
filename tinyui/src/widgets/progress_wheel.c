@@ -334,7 +334,6 @@ struct tinyui_progress_wheel *tinyui_progress_wheel_create(struct tinyui_widget 
     backend->ld_widget = ld_progress_wheel;
     backend->ld_name_id = name_id;
     backend->value = 0;
-    backend->last_signal = TINYUI_BACKEND_SIGNAL_NONE;
     if (tinyui_widget_attach_child(parent_backend, backend) != 0) {
         ldProgressWheel_depose(app_state->ld_scene, ld_progress_wheel);
         free(backend);

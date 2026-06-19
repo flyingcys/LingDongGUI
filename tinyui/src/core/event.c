@@ -410,11 +410,7 @@ int tinyui_widget_dispatch_signal(void *backend_widget,
         }
 
         backend->value = value;
-        backend->data_model_epoch++;
-        backend->last_data_source = TINYUI_BACKEND_DATA_SOURCE_SETTER;
         tinyui_widget_sync_ld_value(backend, widget, value);
-        backend->last_signal = signal;
-        backend->dispatch_count++;
         tinyui_widget_emit_ld_event_bridge(backend, signal, value);
         if (cb != 0) {
             tinyui_widget_emit_value_changed(cb, widget, value, user_data);
@@ -446,8 +442,6 @@ int tinyui_widget_dispatch_event(void *backend_widget,
         if (tinyui_widget_claim_focus_for_signal(backend, signal) != 0) {
             return -1;
         }
-        backend->last_signal = signal;
-        backend->dispatch_count++;
         tinyui_widget_emit_event(cb, widget, user_data);
         return 0;
     }
@@ -470,9 +464,6 @@ int tinyui_widget_dispatch_native_signal(void *backend_widget,
     if (host_widget == 0) {
         return -1;
     }
-
-    backend->last_native_signal = native_signal;
-    backend->last_native_value = native_value;
 
     if (host_widget->enabled == 0 || host_widget->visible == 0) {
         tinyui_widget_restore_rejected_list_selection(backend);
@@ -526,10 +517,6 @@ int tinyui_widget_dispatch_native_signal(void *backend_widget,
                                                          : TINYUI_BACKEND_SIGNAL_RELEASED) != 0) {
                 return -1;
             }
-            backend->last_signal = native_signal == SIGNAL_PRESS
-                                 ? TINYUI_BACKEND_SIGNAL_PRESSED
-                                 : TINYUI_BACKEND_SIGNAL_RELEASED;
-            backend->dispatch_count++;
             if (keyboard->event_cb != 0) {
                 keyboard->event_cb(keyboard, key_code, native_signal, keyboard->event_user_data);
             }
@@ -555,11 +542,7 @@ int tinyui_widget_dispatch_native_signal(void *backend_widget,
         }
         checkbox->checked = normalized_value;
         backend->value = normalized_value;
-        backend->data_model_epoch++;
-        backend->last_data_source = TINYUI_BACKEND_DATA_SOURCE_NATIVE_EVENT;
         tinyui_widget_sync_ld_value(backend, host_widget, normalized_value);
-        backend->last_signal = TINYUI_BACKEND_SIGNAL_VALUE_CHANGED;
-        backend->dispatch_count++;
         tinyui_widget_emit_value_changed(checkbox->cb,
                                          host_widget,
                                          normalized_value,
@@ -584,11 +567,7 @@ int tinyui_widget_dispatch_native_signal(void *backend_widget,
         }
         sw->checked = normalized_value;
         backend->value = normalized_value;
-        backend->data_model_epoch++;
-        backend->last_data_source = TINYUI_BACKEND_DATA_SOURCE_NATIVE_EVENT;
         tinyui_widget_sync_ld_value(backend, host_widget, normalized_value);
-        backend->last_signal = TINYUI_BACKEND_SIGNAL_VALUE_CHANGED;
-        backend->dispatch_count++;
         tinyui_widget_emit_value_changed(sw->cb,
                                          host_widget,
                                          normalized_value,
@@ -613,11 +592,7 @@ int tinyui_widget_dispatch_native_signal(void *backend_widget,
         }
         slider->value = widget_value;
         backend->value = widget_value;
-        backend->data_model_epoch++;
-        backend->last_data_source = TINYUI_BACKEND_DATA_SOURCE_NATIVE_EVENT;
         tinyui_widget_sync_ld_value(backend, host_widget, widget_value);
-        backend->last_signal = TINYUI_BACKEND_SIGNAL_VALUE_CHANGED;
-        backend->dispatch_count++;
         tinyui_widget_emit_value_changed(slider->cb,
                                          host_widget,
                                          widget_value,
@@ -654,10 +629,6 @@ int tinyui_widget_dispatch_native_signal(void *backend_widget,
         if (was_selected_index == selected_index && was_backend_value == selected_index) {
             return 0;
         }
-        backend->data_model_epoch++;
-        backend->last_data_source = TINYUI_BACKEND_DATA_SOURCE_NATIVE_EVENT;
-        backend->last_signal = TINYUI_BACKEND_SIGNAL_VALUE_CHANGED;
-        backend->dispatch_count++;
         if (list->cb != 0) {
             list->cb(list, selected_index, list->user_data);
         }

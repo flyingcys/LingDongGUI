@@ -356,7 +356,6 @@ struct tinyui_gauge *tinyui_gauge_create(struct tinyui_widget *parent, const cha
     backend->ld_widget = ld_gauge;
     backend->ld_name_id = name_id;
     backend->value = 0;
-    backend->last_signal = TINYUI_BACKEND_SIGNAL_NONE;
     if (tinyui_widget_attach_child(parent_backend, backend) != 0) {
         ldGauge_depose(app_state->ld_scene, ld_gauge);
         free(backend);

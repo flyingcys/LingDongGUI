@@ -172,7 +172,6 @@ struct tinyui_checkbox *tinyui_checkbox_create(struct tinyui_window *parent, con
     }
     backend->ld_widget = ld_checkbox;
     backend->ld_name_id = name_id;
-    backend->last_signal = TINYUI_BACKEND_SIGNAL_NONE;
     if (tinyui_widget_attach_child(parent_backend, backend) != 0) {
         ldCheckBox_depose(app_state->ld_scene, ld_checkbox);
         free(backend);
@@ -231,8 +230,6 @@ struct tinyui_checkbox *tinyui_checkbox_create_with_props(struct tinyui_window *
         tinyui_checkbox_dispose_partial(checkbox);
         return 0;
     }
-    backend->last_signal = TINYUI_BACKEND_SIGNAL_NONE;
-    backend->dispatch_count = 0;
     checkbox->cb = props->on_toggled;
     checkbox->user_data = props->user_data;
     if (tinyui_widget_set_user_data(&checkbox->widget, props->user_data) != 0) {

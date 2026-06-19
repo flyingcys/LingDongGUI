@@ -136,7 +136,6 @@ static int tinyui_switch_attach_native(struct tinyui_switch *sw,
 
     widget->ld_widget = ld_switch;
     widget->ld_name_id = name_id;
-    widget->last_signal = TINYUI_BACKEND_SIGNAL_NONE;
     if (tinyui_widget_attach_child(parent_widget, widget) != 0) {
         ldSwitch_depose(app_state->ld_scene, ld_switch);
         free(widget);
@@ -243,8 +242,6 @@ struct tinyui_switch *tinyui_switch_create_with_props(struct tinyui_window *pare
         free(sw);
         return 0;
     }
-    backend->last_signal = TINYUI_BACKEND_SIGNAL_NONE;
-    backend->dispatch_count = 0;
     sw->cb = props->on_toggled;
     sw->user_data = props->user_data;
     if (tinyui_widget_set_user_data(&sw->widget, props->user_data) != 0) {

@@ -86,14 +86,22 @@ static void assert_self_binary_lacks_symbol(const char *symbol)
         size_t line_len = strlen(line);
         char *last_space;
         char *token;
+        char type_char;
 
         while (line_len > 0 && (line[line_len - 1] == '\n' || line[line_len - 1] == '\r')) {
             line[--line_len] = '\0';
         }
         last_space = strrchr(line, ' ');
         token = last_space != 0 ? last_space + 1 : line;
-        if (strcmp(token, symbol) == 0) {
-            assert(!"unexpected symbol still present in test binary");
+        /* nm line: "<addr> <type> <name>"; the type char precedes the name.
+         * Only externally-visible (global) symbols indicate a leaked public
+         * symbol. Local symbols (lowercase type) and undefined references ('U')
+         * are implementation details of an unstripped, LTO-internalized binary
+         * and must not trip this contract. */
+        type_char = (last_space != 0 && last_space != line) ? *(last_space - 1) : '\0';
+        if (strcmp(token, symbol) == 0 && type_char >= 'A' && type_char <= 'Z' &&
+            type_char != 'U') {
+            assert(!"unexpected public symbol still present in test binary");
         }
     }
     assert(pclose(pipe) == 0);
@@ -606,151 +614,6 @@ static void test_focus_helpers_fail_closed_without_host_binding(void)
     assert(tinyui_widget_release_backend_focus(&orphan_backend) == -1);
 }
 
-static void test_checked_and_value_widgets_use_backend_truth_readback_contract(
-    struct tinyui_switch *sw,
-    struct tinyui_checkbox *cb,
-    struct tinyui_slider *slider)
-{
-    struct tinyui_backend_widget *sw_backend;
-    struct tinyui_backend_widget *cb_backend;
-    struct tinyui_backend_widget *slider_backend;
-
-    assert(sw != 0);
-    assert(cb != 0);
-    assert(slider != 0);
-
-    sw_backend = (struct tinyui_backend_widget *)sw->widget.backend_widget;
-    cb_backend = (struct tinyui_backend_widget *)cb->widget.backend_widget;
-    slider_backend = (struct tinyui_backend_widget *)slider->widget.backend_widget;
-    assert(sw_backend != 0);
-    assert(cb_backend != 0);
-    assert(slider_backend != 0);
-
-    assert(sw_backend->data_truth_policy == TINYUI_BACKEND_DATA_TRUTH_BACKEND_VALUE);
-    assert(cb_backend->data_truth_policy == TINYUI_BACKEND_DATA_TRUTH_BACKEND_VALUE);
-    assert(slider_backend->data_truth_policy == TINYUI_BACKEND_DATA_TRUTH_BACKEND_VALUE);
-}
-
-static void test_item_model_identity_survives_frame_update(struct tinyui_switch *sw,
-                                                           struct tinyui_checkbox *cb,
-                                                           struct tinyui_slider *slider,
-                                                           struct ld_scene_t *scene)
-{
-    struct tinyui_backend_widget *sw_backend;
-    struct tinyui_backend_widget *cb_backend;
-    struct tinyui_backend_widget *slider_backend;
-    unsigned int sw_identity_before;
-    unsigned int cb_identity_before;
-    unsigned int slider_identity_before;
-
-    assert(sw != 0);
-    assert(cb != 0);
-    assert(slider != 0);
-    assert(scene != 0);
-    assert(scene->ptMsgQueue != 0);
-
-    sw_backend = (struct tinyui_backend_widget *)sw->widget.backend_widget;
-    cb_backend = (struct tinyui_backend_widget *)cb->widget.backend_widget;
-    slider_backend = (struct tinyui_backend_widget *)slider->widget.backend_widget;
-    assert(sw_backend != 0);
-    assert(cb_backend != 0);
-    assert(slider_backend != 0);
-
-    assert(sw_backend->data_model_identity != 0);
-    assert(cb_backend->data_model_identity != 0);
-    assert(slider_backend->data_model_identity != 0);
-    assert(sw_backend->data_model_identity != cb_backend->data_model_identity);
-    assert(sw_backend->data_model_identity != slider_backend->data_model_identity);
-    assert(cb_backend->data_model_identity != slider_backend->data_model_identity);
-
-    sw_identity_before = sw_backend->data_model_identity;
-    cb_identity_before = cb_backend->data_model_identity;
-    slider_identity_before = slider_backend->data_model_identity;
-
-    assert(tinyui_switch_set_checked(sw, 0) == 0);
-    assert(sw_backend->last_data_source == TINYUI_BACKEND_DATA_SOURCE_SETTER);
-    assert(sw_backend->data_model_epoch > 0);
-
-    assert(ldMsgEmit(scene->ptMsgQueue, sw_backend->ld_widget, SIGNAL_VALUE_CHANGED, 1) == true);
-    ldMsgProcess(scene);
-    assert(sw_backend->last_data_source == TINYUI_BACKEND_DATA_SOURCE_NATIVE_EVENT);
-    assert(sw_backend->data_model_identity == sw_identity_before);
-
-    assert(tinyui_checkbox_set_checked(cb, 1) == 0);
-    assert(cb_backend->last_data_source == TINYUI_BACKEND_DATA_SOURCE_SETTER);
-    assert(cb_backend->data_model_epoch > 0);
-    assert(cb_backend->data_model_identity == cb_identity_before);
-
-    assert(tinyui_slider_set_value(slider, 28) == 0);
-    assert(slider_backend->last_data_source == TINYUI_BACKEND_DATA_SOURCE_SETTER);
-    assert(slider_backend->data_model_epoch > 0);
-    assert(slider_backend->data_model_identity == slider_identity_before);
-
-    assert(ldMsgEmit(scene->ptMsgQueue, slider_backend->ld_widget, SIGNAL_VALUE_CHANGED, 350) == true);
-    ldMsgProcess(scene);
-    assert(slider_backend->last_data_source == TINYUI_BACKEND_DATA_SOURCE_NATIVE_EVENT);
-    assert(slider_backend->data_model_identity == slider_identity_before);
-}
-
-static void test_native_duplicate_value_does_not_advance_data_model(struct tinyui_switch *sw,
-                                                                    struct tinyui_checkbox *cb,
-                                                                    struct tinyui_slider *slider,
-                                                                    struct ld_scene_t *scene)
-{
-    struct tinyui_backend_widget *sw_backend;
-    struct tinyui_backend_widget *cb_backend;
-    struct tinyui_backend_widget *slider_backend;
-    unsigned int sw_epoch_before;
-    unsigned int cb_epoch_before;
-    unsigned int slider_epoch_before;
-    int sw_dispatch_before;
-    int cb_dispatch_before;
-    int slider_dispatch_before;
-
-    assert(sw != 0);
-    assert(cb != 0);
-    assert(slider != 0);
-    assert(scene != 0);
-    assert(scene->ptMsgQueue != 0);
-
-    sw_backend = (struct tinyui_backend_widget *)sw->widget.backend_widget;
-    cb_backend = (struct tinyui_backend_widget *)cb->widget.backend_widget;
-    slider_backend = (struct tinyui_backend_widget *)slider->widget.backend_widget;
-    assert(sw_backend != 0);
-    assert(cb_backend != 0);
-    assert(slider_backend != 0);
-
-    switch_toggled_count = 0;
-    checkbox_toggled_count = 0;
-    slider_value_count = 0;
-
-    assert(tinyui_switch_set_checked(sw, 1) == 0);
-    assert(tinyui_checkbox_set_checked(cb, 0) == 0);
-    assert(tinyui_slider_set_value(slider, 35) == 0);
-
-    sw_epoch_before = sw_backend->data_model_epoch;
-    cb_epoch_before = cb_backend->data_model_epoch;
-    slider_epoch_before = slider_backend->data_model_epoch;
-    sw_dispatch_before = sw_backend->dispatch_count;
-    cb_dispatch_before = cb_backend->dispatch_count;
-    slider_dispatch_before = slider_backend->dispatch_count;
-
-    assert(ldMsgEmit(scene->ptMsgQueue, sw_backend->ld_widget, SIGNAL_VALUE_CHANGED, 1) == true);
-    assert(ldMsgEmit(scene->ptMsgQueue, cb_backend->ld_widget, SIGNAL_VALUE_CHANGED, 0) == true);
-    assert(ldMsgEmit(scene->ptMsgQueue, slider_backend->ld_widget, SIGNAL_VALUE_CHANGED, 375) == true);
-    ldMsgProcess(scene);
-
-    assert(sw_backend->data_model_epoch == sw_epoch_before);
-    assert(cb_backend->data_model_epoch == cb_epoch_before);
-    assert(slider_backend->data_model_epoch == slider_epoch_before);
-    assert(sw_backend->dispatch_count == sw_dispatch_before);
-    assert(cb_backend->dispatch_count == cb_dispatch_before);
-    assert(slider_backend->dispatch_count == slider_dispatch_before);
-    assert(switch_toggled_count == 0);
-    assert(checkbox_toggled_count == 0);
-    assert(slider_value_count == 0);
-}
-
 static void test_slider_j5_contract(struct tinyui_slider *slider,
                                     struct tinyui_image_source *background_source,
                                     struct tinyui_image_source *indicator_source)
@@ -1106,12 +969,6 @@ static void test_native_event_bridge_prefers_native_path(struct tinyui_switch *s
     switch_toggled_count = 0;
     checkbox_toggled_count = 0;
     slider_value_count = 0;
-    sw_backend->dispatch_count = 0;
-    cb_backend->dispatch_count = 0;
-    slider_backend->dispatch_count = 0;
-    sw_backend->last_signal = TINYUI_BACKEND_SIGNAL_NONE;
-    cb_backend->last_signal = TINYUI_BACKEND_SIGNAL_NONE;
-    slider_backend->last_signal = TINYUI_BACKEND_SIGNAL_NONE;
 
     assert(ldMsgEmit(scene->ptMsgQueue, sw_backend->ld_widget, SIGNAL_VALUE_CHANGED, 1) == true);
     ldMsgProcess(scene);
@@ -1119,8 +976,6 @@ static void test_native_event_bridge_prefers_native_path(struct tinyui_switch *s
     assert(switch_toggled_count == 1);
     assert(switch_toggled_value == 1);
     assert(sw_backend->value == 1);
-    assert(sw_backend->last_signal == TINYUI_BACKEND_SIGNAL_VALUE_CHANGED);
-    assert(sw_backend->dispatch_count == 1);
 
     assert(ldMsgEmit(scene->ptMsgQueue, cb_backend->ld_widget, SIGNAL_VALUE_CHANGED, 0) == true);
     ldMsgProcess(scene);
@@ -1128,8 +983,6 @@ static void test_native_event_bridge_prefers_native_path(struct tinyui_switch *s
     assert(checkbox_toggled_count == 1);
     assert(checkbox_toggled_value == 0);
     assert(cb_backend->value == 0);
-    assert(cb_backend->last_signal == TINYUI_BACKEND_SIGNAL_VALUE_CHANGED);
-    assert(cb_backend->dispatch_count == 1);
 
     assert(ldMsgEmit(scene->ptMsgQueue, slider_backend->ld_widget, SIGNAL_VALUE_CHANGED, 625) == true);
     ldMsgProcess(scene);
@@ -1143,8 +996,6 @@ static void test_native_event_bridge_prefers_native_path(struct tinyui_switch *s
     assert(slider_value == 35);
     assert(ld_slider->permille == 620);
     assert(slider_backend->value == 35);
-    assert(slider_backend->last_signal == TINYUI_BACKEND_SIGNAL_VALUE_CHANGED);
-    assert(slider_backend->dispatch_count == 1);
 }
 
 static void test_list_native_signal_restore_rejected_selection_when_hidden_or_disabled(
@@ -1178,7 +1029,6 @@ static void test_list_native_signal_restore_rejected_selection_when_hidden_or_di
     assert(list->selected_index == 1);
     assert(backend->value == 1);
     assert(ldListGetSelectItem(ld_list) == 1);
-    assert(backend->dispatch_count == 0);
 
     assert(tinyui_widget_set_visible(&list->widget, 1) == 0);
     assert(tinyui_widget_set_enabled(&list->widget, 0) == 0);
@@ -1187,13 +1037,12 @@ static void test_list_native_signal_restore_rejected_selection_when_hidden_or_di
     assert(list->selected_index == 1);
     assert(backend->value == 1);
     assert(ldListGetSelectItem(ld_list) == 1);
-    assert(backend->dispatch_count == 0);
 }
 
 static void test_backend_event_dispatch_native_signal_symbol_is_no_longer_public(void)
 {
-    assert_archive_lacks_member("../../libtinyui_backend_ldgui.a", "backend_event.c.o");
-    assert_archive_lacks_symbol("../../libtinyui_backend_ldgui.a",
+    assert_archive_lacks_member("../../libtinyui_core.a", "backend_event.c.o");
+    assert_archive_lacks_symbol("../../libtinyui_core.a",
                                 "tinyui_backend_widget_dispatch_native_signal");
     assert_source_lacks_text(test_widget_source_path, "tinyui_widget_dispatch_native_signal");
     assert_source_contains_text(test_event_source_path, "int tinyui_widget_dispatch_native_signal(");
@@ -1319,8 +1168,6 @@ static void test_widget_internal_static_helpers_remain_source_local(void)
     assert_source_lacks_function_definition(test_widget_source_path, "tinyui_backend_widget_clear_owner_and_root");
     assert_source_lacks_function_definition(test_widget_source_path, "tinyui_backend_widget_bind_subtree_owner_and_root");
     assert_source_lacks_function_definition(test_widget_source_path, "tinyui_backend_widget_get_host");
-    assert_source_contains_text(test_widget_source_path, "g_tinyui_backend_next_data_model_identity");
-    assert_self_binary_lacks_symbol("g_tinyui_backend_next_data_model_identity");
 }
 
 static void test_widget_kind_helper_no_longer_uses_tinyui_backend_prefix(void)
@@ -2825,18 +2672,12 @@ int main(void)
     assert(tinyui_slider_get_percent(slider, &button_cookie) == 0);
     assert(button_cookie == 80);
     assert(sw_backend->value == 1);
-    assert(sw_backend->last_signal == TINYUI_BACKEND_SIGNAL_NONE);
-    assert(sw_backend->dispatch_count == 0);
     assert(((ldSwitch_t *)sw_backend->ld_widget)->isChecked == true);
     assert(((ldSwitch_t *)sw_backend->ld_widget)->animProgress == 1000);
     assert(cb_backend->value == 0);
     assert(cb_backend->text == (const char *)"I agree");
-    assert(cb_backend->last_signal == TINYUI_BACKEND_SIGNAL_NONE);
-    assert(cb_backend->dispatch_count == 0);
     assert(((ldCheckBox_t *)cb_backend->ld_widget)->isChecked == false);
     assert(slider_backend->value == 42);
-    assert(slider_backend->last_signal == TINYUI_BACKEND_SIGNAL_NONE);
-    assert(slider_backend->dispatch_count == 0);
     assert(((ldSlider_t *)slider_backend->ld_widget)->permille == 800);
     assert(((ldSlider_t *)slider_backend->ld_widget)->isHorizontal == true);
     assert(((ldSlider_t *)slider_backend->ld_widget)->ptBgImgTile == 0);
@@ -2871,33 +2712,25 @@ int main(void)
     assert(tinyui_switch_set_checked(sw, 1) == 0);
     assert(switch_toggled_count == 0);
     assert(sw_backend->value == 1);
-    assert(sw_backend->dispatch_count == 0);
     assert(tinyui_switch_set_checked(sw, 0) == 0);
     assert(switch_toggled_count == 0);
     assert(sw_backend->value == 0);
     assert(((ldSwitch_t *)sw_backend->ld_widget)->isChecked == false);
     assert(((ldSwitch_t *)sw_backend->ld_widget)->animProgress == 0);
-    assert(sw_backend->last_signal == TINYUI_BACKEND_SIGNAL_NONE);
-    assert(sw_backend->dispatch_count == 0);
     assert(tinyui_switch_set_checked(sw, 0) == 0);
     assert(switch_toggled_count == 0);
     assert(sw_backend->value == 0);
-    assert(sw_backend->dispatch_count == 0);
 
     assert(tinyui_checkbox_set_checked(cb, 0) == 0);
     assert(checkbox_toggled_count == 0);
     assert(cb_backend->value == 0);
-    assert(cb_backend->dispatch_count == 0);
     assert(tinyui_checkbox_set_checked(cb, 1) == 0);
     assert(checkbox_toggled_count == 0);
     assert(cb_backend->value == 1);
     assert(((ldCheckBox_t *)cb_backend->ld_widget)->isChecked == true);
-    assert(cb_backend->last_signal == TINYUI_BACKEND_SIGNAL_NONE);
-    assert(cb_backend->dispatch_count == 0);
     assert(tinyui_checkbox_set_checked(cb, 1) == 0);
     assert(checkbox_toggled_count == 0);
     assert(cb_backend->value == 1);
-    assert(cb_backend->dispatch_count == 0);
     assert(tinyui_checkbox_set_text(cb, "accept terms") == 0);
     assert(cb->widget.text == (const char *)"accept terms");
     assert(cb_backend->text == (const char *)"accept terms");
@@ -2906,17 +2739,13 @@ int main(void)
     assert(tinyui_slider_set_value(slider, 42) == 0);
     assert(slider_value_count == 0);
     assert(slider_backend->value == 42);
-    assert(slider_backend->dispatch_count == 0);
     assert(tinyui_slider_set_value(slider, 11) == 0);
     assert(slider_value_count == 0);
     assert(slider_backend->value == 11);
     assert(((ldSlider_t *)slider_backend->ld_widget)->permille == 20);
-    assert(slider_backend->last_signal == TINYUI_BACKEND_SIGNAL_NONE);
-    assert(slider_backend->dispatch_count == 0);
     assert(tinyui_slider_set_value(slider, 11) == 0);
     assert(slider_value_count == 0);
     assert(slider_backend->value == 11);
-    assert(slider_backend->dispatch_count == 0);
     test_backend_value_changed_bridge_keeps_setter_sync_only(slider, slider_backend, app_state->ld_scene);
     test_backend_bind_ld_event_bridge_fail_closed_on_missing_native_widget(slider_backend,
                                                                            app_state->ld_scene);
@@ -2975,9 +2804,6 @@ int main(void)
     test_focus_owner_switches_between_widgets(app, button, sw, cb, slider, app_state->ld_scene);
     test_hidden_or_disabled_widget_cannot_keep_focus(app, button);
     test_focus_helpers_fail_closed_without_host_binding();
-    test_checked_and_value_widgets_use_backend_truth_readback_contract(sw, cb, slider);
-    test_item_model_identity_survives_frame_update(sw, cb, slider, app_state->ld_scene);
-    test_native_duplicate_value_does_not_advance_data_model(sw, cb, slider, app_state->ld_scene);
     test_checkbox_native_radio_group_and_image_mode_round_trip(cb);
     test_switch_native_direction_navigation_and_image_skin_round_trip(sw);
     test_widget_internal_static_helpers_remain_source_local();

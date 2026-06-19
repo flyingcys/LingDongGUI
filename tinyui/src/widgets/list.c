@@ -140,7 +140,6 @@ struct tinyui_list *tinyui_list_create(struct tinyui_widget *parent, const char 
     backend->ld_widget = ld_list;
     backend->ld_name_id = name_id;
     backend->value = -1;
-    backend->last_signal = TINYUI_BACKEND_SIGNAL_NONE;
     if (tinyui_widget_attach_child(parent_backend, backend) != 0) {
         ldList_depose(app_state->ld_scene, ld_list);
         free(backend);

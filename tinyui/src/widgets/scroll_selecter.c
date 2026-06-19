@@ -396,7 +396,6 @@ struct tinyui_scroll_selecter *tinyui_scroll_selecter_create(struct tinyui_windo
     backend->ld_widget = ld_scroll_selecter;
     backend->ld_name_id = name_id;
     backend->value = -1;
-    backend->last_signal = TINYUI_BACKEND_SIGNAL_NONE;
     if (tinyui_widget_attach_child(parent_backend, backend) != 0) {
         ldScrollSelecter_depose(app_state->ld_scene, ld_scroll_selecter);
         free(backend);

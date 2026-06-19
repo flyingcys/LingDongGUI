@@ -171,13 +171,12 @@ static uint64_t make_hold_down_value_y(uint16_t offset_y)
 
 static void reset_list_signal_counters(struct tinyui_backend_widget *backend)
 {
+    (void)backend;
     list_selected_count = 0;
     list_selected_index = -1;
     list_selected_user_data = 0;
     native_list_clicked_count = 0;
     native_list_clicked_index = -1;
-    backend->dispatch_count = 0;
-    backend->last_signal = TINYUI_BACKEND_SIGNAL_NONE;
 }
 
 static struct tinyui_backend_app_state *list_app_state(struct tinyui_list *list)
@@ -320,8 +319,6 @@ static void test_enabled_contract_and_native_selected_bridge(struct tinyui_windo
     assert(tinyui_list_get_selected_index(list) == -1);
     assert(ldListGetSelectItem(ld_list) == -1);
     assert(backend->value == -1);
-    assert(backend->last_signal == TINYUI_BACKEND_SIGNAL_NONE);
-    assert(backend->dispatch_count == 0);
     assert(ld_list->offset == 0);
     assert(ld_list->use_as__ldBase_t.isDirtyRegionUpdate == false);
 
@@ -359,10 +356,6 @@ static void test_enabled_contract_and_native_selected_bridge(struct tinyui_windo
     assert(list_selected_user_data == &user_cookie);
     assert(tinyui_list_get_selected_index(list) == 0);
     assert(backend->value == 0);
-    assert(backend->last_signal == TINYUI_BACKEND_SIGNAL_VALUE_CHANGED);
-    assert(backend->last_native_signal == SIGNAL_CLICKED_ITEM);
-    assert(backend->last_native_value == 0);
-    assert(backend->dispatch_count == 1);
 
     reset_list_signal_counters(backend);
     assert(tinyui_widget_set_enabled(&list->widget, 1) == 0);
@@ -489,7 +482,6 @@ static void test_selected_index_readback_matches_native_queue_after_preselected_
         assert(list_selected_index == 0);
         assert(list_selected_user_data == &user_cookie);
         assert(backend->value == 0);
-        assert(backend->dispatch_count == 1);
     }
 
     tinyui_app_destroy(app);

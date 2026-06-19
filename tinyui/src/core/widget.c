@@ -113,8 +113,6 @@ static int tinyui_widget_is_valid(struct tinyui_widget *widget)
     return widget != 0;
 }
 
-static unsigned int g_tinyui_backend_next_data_model_identity = 1;
-
 static ldBase_t *tinyui_widget_get_ld_base(struct tinyui_widget *widget)
 {
     struct tinyui_backend_widget *backend_widget;
@@ -213,32 +211,6 @@ int tinyui_native_nav_dir_to_ld(enum tinyui_native_nav_dir dir)
     }
 }
 
-void tinyui_widget_init_data_model(struct tinyui_backend_widget *backend)
-{
-    if (backend == 0) {
-        return;
-    }
-
-    switch (backend->kind) {
-    case TINYUI_BACKEND_WIDGET_CHECKBOX:
-    case TINYUI_BACKEND_WIDGET_SWITCH:
-    case TINYUI_BACKEND_WIDGET_SLIDER:
-    case TINYUI_BACKEND_WIDGET_LIST:
-    case TINYUI_BACKEND_WIDGET_COMBO_BOX:
-    case TINYUI_BACKEND_WIDGET_SCROLL_SELECTER:
-        backend->data_truth_policy = TINYUI_BACKEND_DATA_TRUTH_BACKEND_VALUE;
-        backend->data_model_identity = g_tinyui_backend_next_data_model_identity++;
-        if (backend->data_model_identity == 0) {
-            backend->data_model_identity = g_tinyui_backend_next_data_model_identity++;
-        }
-        break;
-    default:
-        backend->data_truth_policy = TINYUI_BACKEND_DATA_TRUTH_NOT_APPLICABLE;
-        backend->data_model_identity = 0;
-        break;
-    }
-}
-
 int tinyui_widget_claim_backend_focus(void *backend_widget)
 {
     struct tinyui_backend_widget *backend;
@@ -284,8 +256,6 @@ int tinyui_widget_update_value(void *backend_widget,
     }
 
     backend->value = value;
-    backend->data_model_epoch++;
-    backend->last_data_source = TINYUI_BACKEND_DATA_SOURCE_SETTER;
     tinyui_widget_sync_ld_value(backend, widget, value);
     (void)cb;
     (void)user_data;

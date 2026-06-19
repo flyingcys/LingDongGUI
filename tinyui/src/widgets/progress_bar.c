@@ -310,7 +310,6 @@ struct tinyui_progress_bar *tinyui_progress_bar_create(struct tinyui_window *par
     backend->ld_widget = ld_progress_bar;
     backend->ld_name_id = name_id;
     backend->value = 0;
-    backend->last_signal = TINYUI_BACKEND_SIGNAL_NONE;
     if (tinyui_widget_attach_child(parent_backend, backend) != 0) {
         ldProgressBar_depose(app_state->ld_scene, ld_progress_bar);
         free(backend);

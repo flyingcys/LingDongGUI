@@ -10,7 +10,9 @@
 #include <unistd.h>
 
 static char test_self_binary_path[PATH_MAX];
-static char test_runtime_host_source[PATH_MAX];
+static char test_step_source[PATH_MAX];
+static char test_observe_source[PATH_MAX];
+static char test_hal_source[PATH_MAX];
 static char test_animation_demo_path[PATH_MAX];
 
 static void shell_quote_path(char *quoted, size_t quoted_size, const char *path)
@@ -65,9 +67,17 @@ static void init_test_paths(const char *self_binary_path)
     assert(build_root_len < sizeof(build_root));
     snprintf(build_root, sizeof(build_root), "%s/build", repo_root);
 
-    snprintf(test_runtime_host_source,
-             sizeof(test_runtime_host_source),
-             "%s/tinyui/port/sdl/runtime_host.c",
+    snprintf(test_step_source,
+             sizeof(test_step_source),
+             "%s/tinyui/port/sdl/step.c",
+             repo_root);
+    snprintf(test_observe_source,
+             sizeof(test_observe_source),
+             "%s/tinyui/port/sdl/observe.c",
+             repo_root);
+    snprintf(test_hal_source,
+             sizeof(test_hal_source),
+             "%s/tinyui/port/sdl/hal.c",
              repo_root);
     snprintf(test_animation_demo_path,
              sizeof(test_animation_demo_path),
@@ -254,23 +264,23 @@ static void test_app_rejects_null(void)
 
 static void test_app_backend_wrappers_are_no_longer_public(void)
 {
-    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_app_init");
+    assert_source_lacks_function_definition(test_step_source, "tinyui_backend_app_init");
     assert_self_binary_lacks_symbol("tinyui_backend_app_init");
-    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_app_run");
+    assert_source_lacks_function_definition(test_step_source, "tinyui_backend_app_run");
     assert_self_binary_lacks_symbol("tinyui_backend_app_run");
-    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_app_shutdown");
+    assert_source_lacks_function_definition(test_step_source, "tinyui_backend_app_shutdown");
     assert_self_binary_lacks_symbol("tinyui_backend_app_shutdown");
-    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_ensure_window");
-    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_runtime_step");
+    assert_source_lacks_function_definition(test_hal_source, "tinyui_backend_ensure_window");
+    assert_source_lacks_function_definition(test_step_source, "tinyui_backend_runtime_step");
     assert_self_binary_lacks_symbol("tinyui_backend_runtime_step");
 }
 
 static void test_runtime_prepare_helpers_exist(void)
 {
-    assert_source_has_function_definition(test_runtime_host_source, "tinyui_runtime_host_prepare_runtime_state");
-    assert_source_has_function_definition(test_runtime_host_source, "tinyui_runtime_host_prepare_runtime_scene");
-    assert_source_has_function_definition(test_runtime_host_source, "tinyui_runtime_host_log_runtime_ready");
-    assert_source_has_function_definition(test_runtime_host_source, "tinyui_runtime_host_prepare_runtime");
+    assert_source_has_function_definition(test_step_source, "tinyui_runtime_host_prepare_runtime_state");
+    assert_source_has_function_definition(test_step_source, "tinyui_runtime_host_prepare_runtime_scene");
+    assert_source_has_function_definition(test_observe_source, "tinyui_runtime_host_log_runtime_ready");
+    assert_source_has_function_definition(test_step_source, "tinyui_runtime_host_prepare_runtime");
 }
 
 static void test_runtime_step_uses_event_pump_helper(void)
@@ -278,14 +288,14 @@ static void test_runtime_step_uses_event_pump_helper(void)
     char command[8192];
     char quoted_path[4096];
 
-    assert_source_has_function_definition(test_runtime_host_source, "tinyui_runtime_host_step_app");
-    assert_source_has_function_definition(test_runtime_host_source, "tinyui_runtime_host_pump_sdl_events");
-    assert_source_has_function_definition(test_runtime_host_source, "tinyui_runtime_host_render");
-    assert_source_has_function_definition(test_runtime_host_source, "tinyui_runtime_host_write_capture");
-    assert_source_has_function_definition(test_runtime_host_source, "tinyui_runtime_host_log_mapping_markers");
-    assert_source_has_function_definition(test_runtime_host_source, "tinyui_runtime_host_apply_smoke_cursor_layout");
+    assert_source_has_function_definition(test_step_source, "tinyui_runtime_host_step_app");
+    assert_source_has_function_definition(test_hal_source, "tinyui_runtime_host_pump_sdl_events");
+    assert_source_has_function_definition(test_step_source, "tinyui_runtime_host_render");
+    assert_source_has_function_definition(test_observe_source, "tinyui_runtime_host_write_capture");
+    assert_source_has_function_definition(test_observe_source, "tinyui_runtime_host_log_mapping_markers");
+    assert_source_has_function_definition(test_step_source, "tinyui_runtime_host_apply_smoke_cursor_layout");
 
-    shell_quote_path(quoted_path, sizeof(quoted_path), test_runtime_host_source);
+    shell_quote_path(quoted_path, sizeof(quoted_path), test_step_source);
     snprintf(command,
              sizeof(command),
              "python3 - %s <<'PY'\n"
@@ -306,11 +316,11 @@ static void test_runtime_host_internal_bootstrap_helpers_no_longer_use_tinyui_pr
     char command[8192];
     char quoted_path[4096];
 
-    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_touch_log_enabled");
-    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_runtime_bootstrap");
-    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_runtime_page_init");
-    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_runtime_page_quit");
-    shell_quote_path(quoted_path, sizeof(quoted_path), test_runtime_host_source);
+    assert_source_lacks_function_definition(test_observe_source, "tinyui_backend_touch_log_enabled");
+    assert_source_lacks_function_definition(test_step_source, "tinyui_backend_runtime_bootstrap");
+    assert_source_lacks_function_definition(test_step_source, "tinyui_backend_runtime_page_init");
+    assert_source_lacks_function_definition(test_step_source, "tinyui_backend_runtime_page_quit");
+    shell_quote_path(quoted_path, sizeof(quoted_path), test_step_source);
     snprintf(command,
              sizeof(command),
              "rg -n \"struct[[:space:]]+tinyui_backend_runtime_state|g_tinyui_backend_runtime_page\" %s >/dev/null",
@@ -320,40 +330,40 @@ static void test_runtime_host_internal_bootstrap_helpers_no_longer_use_tinyui_pr
 
 static void test_runtime_host_internal_mapping_helpers_no_longer_use_tinyui_prefix(void)
 {
-    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_widget_is_supported_real");
-    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_widget_is_real_mapped");
-    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_append_id");
-    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_widget_needs_fallback");
-    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_window_has_real_layout");
-    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_widget_excludes_formal_mapping");
-    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_widget_allows_smoke_layout");
-    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_append_widget_ids");
+    assert_source_lacks_function_definition(test_observe_source, "tinyui_backend_widget_is_supported_real");
+    assert_source_lacks_function_definition(test_observe_source, "tinyui_backend_widget_is_real_mapped");
+    assert_source_lacks_function_definition(test_observe_source, "tinyui_backend_append_id");
+    assert_source_lacks_function_definition(test_observe_source, "tinyui_backend_widget_needs_fallback");
+    assert_source_lacks_function_definition(test_observe_source, "tinyui_backend_window_has_real_layout");
+    assert_source_lacks_function_definition(test_observe_source, "tinyui_backend_widget_excludes_formal_mapping");
+    assert_source_lacks_function_definition(test_observe_source, "tinyui_backend_widget_allows_smoke_layout");
+    assert_source_lacks_function_definition(test_observe_source, "tinyui_backend_append_widget_ids");
 }
 
 static void test_runtime_host_internal_render_helpers_no_longer_use_tinyui_prefix(void)
 {
-    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_log_image_source_marker");
-    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_parse_auto_quit_ms");
-    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_pixel_to_rgb888");
-    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_pixel_to_argb8888");
-    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_runtime_state_from_app");
-    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_app_state_from_window");
-    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_present_real_frame");
-    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_apply_real_widget_layout");
-    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_log_mapping_markers");
-    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_write_capture");
-    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_apply_smoke_cursor_layout");
-    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_render");
+    assert_source_lacks_function_definition(test_observe_source, "tinyui_backend_log_image_source_marker");
+    assert_source_lacks_function_definition(test_observe_source, "tinyui_backend_parse_auto_quit_ms");
+    assert_source_lacks_function_definition(test_hal_source, "tinyui_backend_pixel_to_rgb888");
+    assert_source_lacks_function_definition(test_hal_source, "tinyui_backend_pixel_to_argb8888");
+    assert_source_lacks_function_definition(test_step_source, "tinyui_backend_runtime_state_from_app");
+    assert_source_lacks_function_definition(test_step_source, "tinyui_backend_app_state_from_window");
+    assert_source_lacks_function_definition(test_hal_source, "tinyui_backend_present_real_frame");
+    assert_source_lacks_function_definition(test_step_source, "tinyui_backend_apply_real_widget_layout");
+    assert_source_lacks_function_definition(test_observe_source, "tinyui_backend_log_mapping_markers");
+    assert_source_lacks_function_definition(test_observe_source, "tinyui_backend_write_capture");
+    assert_source_lacks_function_definition(test_step_source, "tinyui_backend_apply_smoke_cursor_layout");
+    assert_source_lacks_function_definition(test_step_source, "tinyui_backend_render");
 }
 
 static void test_runtime_host_internal_step_helpers_no_longer_use_tinyui_prefix(void)
 {
-    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_prepare_runtime_state");
-    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_prepare_runtime_scene");
-    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_log_runtime_ready");
-    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_prepare_runtime");
-    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_pump_sdl_events");
-    assert_source_lacks_function_definition(test_runtime_host_source, "tinyui_backend_step_app");
+    assert_source_lacks_function_definition(test_step_source, "tinyui_backend_prepare_runtime_state");
+    assert_source_lacks_function_definition(test_step_source, "tinyui_backend_prepare_runtime_scene");
+    assert_source_lacks_function_definition(test_observe_source, "tinyui_backend_log_runtime_ready");
+    assert_source_lacks_function_definition(test_step_source, "tinyui_backend_prepare_runtime");
+    assert_source_lacks_function_definition(test_hal_source, "tinyui_backend_pump_sdl_events");
+    assert_source_lacks_function_definition(test_step_source, "tinyui_backend_step_app");
 }
 
 int main(int argc, char **argv)

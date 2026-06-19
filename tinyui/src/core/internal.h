@@ -144,14 +144,6 @@ int tinyui_native_nav_dir_to_ld(enum tinyui_native_nav_dir dir);
 
 int tinyui_native_signal_to_ld(enum tinyui_native_signal signal);
 
-/**
- * @brief Native platform: readback policy to backend
- *
- * @param[in] policy policy
- * @return 0 on success, -1 on failure
- */
-
-int tinyui_native_readback_policy_to_backend(enum tinyui_native_readback_policy policy);
 int tinyui_widget_init_root(void *backend_widget,
                                     struct tinyui_app *owner,
                                     enum tinyui_backend_widget_kind kind,
@@ -231,13 +223,6 @@ int tinyui_widget_claim_backend_focus(void *backend_widget);
  * @return 0 on success, -1 on failure
  */
 int tinyui_widget_release_backend_focus(void *backend_widget);
-
-/**
- * @brief Initialize data model for backend widget
- *
- * @param[in] backend backend
- */
-void tinyui_widget_init_data_model(struct tinyui_backend_widget *backend);
 
 int tinyui_runtime_host_step_app(struct tinyui_app *app);
 void tinyui_runtime_host_shutdown_app(struct tinyui_app *app);

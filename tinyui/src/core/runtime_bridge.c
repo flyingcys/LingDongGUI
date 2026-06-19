@@ -347,7 +347,6 @@ int tinyui_runtime_bridge_bind_host(void *backend_widget, struct tinyui_widget *
         return -1;
     }
     backend->edit_result_on_finish = TINYUI_EDIT_RESULT_NONE;
-    tinyui_widget_init_data_model(backend);
     app_state = tinyui_runtime_bridge_backend_state(backend->owner);
     if (app_state != NULL && app_state->ld_scene != NULL && backend->ld_widget != NULL) {
         if (tinyui_runtime_bridge_bind_ld_event_bridge(backend,

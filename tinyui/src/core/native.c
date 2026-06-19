@@ -127,21 +127,3 @@ int tinyui_native_signal_to_ld(enum tinyui_native_signal signal)
     }
 }
 
-/**
- * @brief Native platform: readback policy to backend
- *
- * @param[in] policy policy
- * @return 0 on success, -1 on failure
- */
-
-int tinyui_native_readback_policy_to_backend(enum tinyui_native_readback_policy policy)
-{
-    switch (policy) {
-    case TINYUI_NATIVE_READBACK_BACKEND_FIELD:
-    case TINYUI_NATIVE_READBACK_BACKEND_COMMITTED:
-        return TINYUI_BACKEND_DATA_TRUTH_BACKEND_VALUE;
-    case TINYUI_NATIVE_READBACK_NOT_APPLICABLE:
-    default:
-        return TINYUI_BACKEND_DATA_TRUTH_NOT_APPLICABLE;
-    }
-}

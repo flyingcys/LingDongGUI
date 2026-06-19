@@ -102,8 +102,6 @@ static bool tinyui_combo_box_native_slot(struct ld_scene_t *scene, ldMsg_t msg)
     combo_box->selected_index = selected_index;
     backend->value = selected_index;
     backend->open = ld_combo_box->isExpand ? 1 : 0;
-    backend->last_signal = TINYUI_BACKEND_SIGNAL_VALUE_CHANGED;
-    backend->dispatch_count += 1;
     (void)tinyui_widget_claim_backend_focus(backend);
     if (combo_box->cb != 0) {
         combo_box->cb(combo_box, selected_index, combo_box->user_data);
@@ -164,7 +162,6 @@ static void *tinyui_combo_box_create_backend_local(void *parent, const char *id)
     widget->ld_widget = ld_combo_box;
     widget->ld_name_id = name_id;
     widget->value = -1;
-    widget->last_signal = TINYUI_BACKEND_SIGNAL_NONE;
     if (tinyui_widget_attach_child(parent, widget) != 0) {
         ldComboBox_depose(app_state->ld_scene, ld_combo_box);
         free(widget);

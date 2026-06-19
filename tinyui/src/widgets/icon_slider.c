@@ -103,10 +103,6 @@ static bool tinyui_icon_slider_native_slot(struct ld_scene_t *scene, ldMsg_t msg
     if (previous_selected_index == selected_index) {
         return false;
     }
-    backend->data_model_epoch++;
-    backend->last_data_source = TINYUI_BACKEND_DATA_SOURCE_NATIVE_EVENT;
-    backend->last_signal = TINYUI_BACKEND_SIGNAL_VALUE_CHANGED;
-    backend->dispatch_count++;
     if (icon_slider->cb != 0) {
         icon_slider->cb(icon_slider, selected_index, icon_slider->user_data);
     }
@@ -377,7 +373,6 @@ static struct tinyui_icon_slider *tinyui_icon_slider_create_with_backend_config(
     backend->ld_widget = ld_icon_slider;
     backend->ld_name_id = name_id;
     backend->value = -1;
-    backend->last_signal = TINYUI_BACKEND_SIGNAL_NONE;
     if (tinyui_widget_attach_child(parent_backend, backend) != 0) {
         ldIconSlider_depose(app_state->ld_scene, ld_icon_slider);
         free(backend);

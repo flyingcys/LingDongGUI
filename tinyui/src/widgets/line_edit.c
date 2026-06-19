@@ -80,8 +80,6 @@ static bool tinyui_line_edit_native_slot(struct ld_scene_t *scene, ldMsg_t msg)
     }
 
     line_edit = (struct tinyui_line_edit *)backend->host_widget;
-    backend->last_native_signal = msg.signal;
-    backend->last_native_value = msg.value;
     if (msg.signal == SIGNAL_PRESS) {
         line_edit->editing = 1;
         backend->edit_result_on_finish = TINYUI_EDIT_RESULT_COMMIT;

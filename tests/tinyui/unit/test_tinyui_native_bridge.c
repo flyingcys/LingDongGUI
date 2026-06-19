@@ -107,16 +107,6 @@ static void test_native_signal_maps_all_ld_signal_values(void)
     assert(tinyui_native_signal_to_ld(TINYUI_NATIVE_SIGNAL_VALUE_CHANGED) == SIGNAL_VALUE_CHANGED);
 }
 
-static void test_native_readback_policy_maps_backend_truth_modes(void)
-{
-    assert(tinyui_native_readback_policy_to_backend(TINYUI_NATIVE_READBACK_NOT_APPLICABLE)
-           == TINYUI_BACKEND_DATA_TRUTH_NOT_APPLICABLE);
-    assert(tinyui_native_readback_policy_to_backend(TINYUI_NATIVE_READBACK_BACKEND_FIELD)
-           == TINYUI_BACKEND_DATA_TRUTH_BACKEND_VALUE);
-    assert(tinyui_native_readback_policy_to_backend(TINYUI_NATIVE_READBACK_BACKEND_COMMITTED)
-           == TINYUI_BACKEND_DATA_TRUTH_BACKEND_VALUE);
-}
-
 static void test_internal_native_helpers_no_longer_use_tinyui_prefix(void)
 {
     assert_source_lacks_function_definition(
@@ -234,7 +224,6 @@ int main(void)
     test_native_align_maps_all_ldgrid_align_values();
     test_native_nav_dir_maps_all_ld_nav_values();
     test_native_signal_maps_all_ld_signal_values();
-    test_native_readback_policy_maps_backend_truth_modes();
     test_internal_native_helpers_no_longer_use_tinyui_prefix();
     test_runtime_bridge_reports_scene_presence();
     test_runtime_bridge_pointer_axis_clamps_into_ld_touch_range();

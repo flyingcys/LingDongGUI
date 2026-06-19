@@ -206,7 +206,6 @@ struct tinyui_slider *tinyui_slider_create(struct tinyui_window *parent, const c
     }
     backend->ld_widget = ld_slider;
     backend->ld_name_id = name_id;
-    backend->last_signal = TINYUI_BACKEND_SIGNAL_NONE;
     if (tinyui_widget_attach_child(parent_backend, backend) != 0) {
         ldSlider_depose(app_state->ld_scene, ld_slider);
         free(backend);

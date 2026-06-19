@@ -33,14 +33,15 @@ static int test_repo_root(char *buffer, size_t size)
 
 static int test_source_has_function_definition(const char *relative_path, const char *name)
 {
+    char repo_root[PATH_MAX];
     char path[PATH_MAX];
     char line[512];
     FILE *fp;
 
-    if (test_repo_root(path, sizeof(path)) != 0) {
+    if (test_repo_root(repo_root, sizeof(repo_root)) != 0) {
         return 0;
     }
-    if (snprintf(path, sizeof(path), "%s/%s", path, relative_path) < 0) {
+    if (snprintf(path, sizeof(path), "%s/%s", repo_root, relative_path) < 0) {
         return 0;
     }
 
@@ -74,18 +75,6 @@ static unsigned int encode_rgb_to_ld_color(unsigned int rgb)
     return ((red >> 3) << 11) | ((green >> 2) << 5) | (blue >> 3);
 }
 
-static void assert_scroll_selecter_backend_metadata(const struct tinyui_backend_widget *backend,
-                                                    unsigned int expected_identity)
-{
-    assert(backend != 0);
-    assert(backend->kind == TINYUI_BACKEND_WIDGET_SCROLL_SELECTER);
-    assert(backend->data_truth_policy == TINYUI_BACKEND_DATA_TRUTH_BACKEND_VALUE);
-    assert(backend->data_model_identity != 0);
-    if (expected_identity != 0) {
-        assert(backend->data_model_identity == expected_identity);
-    }
-}
-
 static void test_scroll_selecter_selected_item_matches_backend_truth(void)
 {
     struct tinyui_app *app = tinyui_app_create();
@@ -94,7 +83,6 @@ static void test_scroll_selecter_selected_item_matches_backend_truth(void)
     struct tinyui_backend_widget *backend;
     struct tinyui_backend_widget *parent_backend;
     ldScrollSelecter_t *ld_scroll_selecter;
-    unsigned int data_model_identity;
 
     assert(app != 0);
     win = tinyui_window_create(app, "root");
@@ -108,25 +96,19 @@ static void test_scroll_selecter_selected_item_matches_backend_truth(void)
 
     backend = (struct tinyui_backend_widget *)scroll_selecter->widget.backend_widget;
     parent_backend = (struct tinyui_backend_widget *)win->widget.backend_widget;
-    assert_scroll_selecter_backend_metadata(backend, 0);
     assert(parent_backend != 0);
     assert(backend->owner == parent_backend->owner);
     assert(backend->root == parent_backend->root);
     assert(backend->parent == parent_backend);
     assert(backend->ld_name_id != 0);
     assert(backend->host_widget == &scroll_selecter->widget);
-    assert(parent_backend->data_truth_policy == TINYUI_BACKEND_DATA_TRUTH_NOT_APPLICABLE);
-    assert(parent_backend->data_model_identity == 0);
-    data_model_identity = backend->data_model_identity;
     ld_scroll_selecter = (ldScrollSelecter_t *)backend->ld_widget;
     assert(ld_scroll_selecter != 0);
     assert(((ldBase_t *)ld_scroll_selecter)->pInfo == backend);
 
     assert(tinyui_scroll_selecter_set_selected_index(scroll_selecter, 1) == 0);
-    assert_scroll_selecter_backend_metadata(backend, data_model_identity);
     ldScrollSelecterSetSelectItemNum(ld_scroll_selecter, 2);
     assert(tinyui_scroll_selecter_get_selected_index(scroll_selecter) == 2);
-    assert_scroll_selecter_backend_metadata(backend, data_model_identity);
     tinyui_app_destroy(app);
 }
 
@@ -140,11 +122,11 @@ static void test_scroll_selecter_internal_seams_are_tinyui_named(void)
 {
     const char *widget_source = "tinyui/src/widgets/scroll_selecter.c";
 
-    assert_source_lacks_function_definition(widget_source, "tinyui_scroll_selecter_props_are_valid");
-    assert_source_lacks_function_definition(widget_source, "tinyui_scroll_selecter_rgb_to_ld_color");
-    assert_source_lacks_function_definition(widget_source, "tinyui_scroll_selecter_backend_from_widget");
-    assert_source_lacks_function_definition(widget_source, "tinyui_scroll_selecter_ld_from_backend");
-    assert_source_lacks_function_definition(widget_source, "tinyui_scroll_selecter_selected_text_from_public_state");
+    assert_source_lacks_function_definition(widget_source, "picoui_scroll_selecter_props_are_valid");
+    assert_source_lacks_function_definition(widget_source, "picoui_scroll_selecter_rgb_to_ld_color");
+    assert_source_lacks_function_definition(widget_source, "picoui_scroll_selecter_backend_from_widget");
+    assert_source_lacks_function_definition(widget_source, "picoui_scroll_selecter_ld_from_backend");
+    assert_source_lacks_function_definition(widget_source, "picoui_scroll_selecter_selected_text_from_public_state");
 
     assert(test_source_has_function_definition(widget_source, "tinyui_scroll_selecter_props_are_valid"));
     assert(test_source_has_function_definition(widget_source, "tinyui_scroll_selecter_rgb_to_ld_color"));
@@ -161,7 +143,6 @@ static void test_scroll_selecter_edit_mode_and_navigation_mode_are_distinct(void
     struct tinyui_backend_widget *backend;
     ldScrollSelecter_t *ld_scroll_selecter;
     int is_edit = -1;
-    unsigned int data_model_identity;
 
     assert(app != 0);
     win = tinyui_window_create(app, "root");
@@ -170,19 +151,15 @@ static void test_scroll_selecter_edit_mode_and_navigation_mode_are_distinct(void
     assert(scroll_selecter != 0);
 
     backend = (struct tinyui_backend_widget *)scroll_selecter->widget.backend_widget;
-    assert_scroll_selecter_backend_metadata(backend, 0);
-    data_model_identity = backend->data_model_identity;
     ld_scroll_selecter = (ldScrollSelecter_t *)backend->ld_widget;
     assert(ld_scroll_selecter != 0);
 
     assert(tinyui_scroll_selecter_get_edit_mode(scroll_selecter, &is_edit) == 0);
     assert(is_edit == 1);
-    assert_scroll_selecter_backend_metadata(backend, data_model_identity);
     assert(tinyui_scroll_selecter_set_edit_mode(scroll_selecter, 0) == 0);
     assert(tinyui_scroll_selecter_get_edit_mode(scroll_selecter, &is_edit) == 0);
     assert(is_edit == 0);
     assert(ld_scroll_selecter->isEdit == false);
-    assert_scroll_selecter_backend_metadata(backend, data_model_identity);
 
     tinyui_app_destroy(app);
 }

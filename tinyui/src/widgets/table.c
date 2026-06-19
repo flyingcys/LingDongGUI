@@ -240,9 +240,6 @@ static bool tinyui_table_native_slot(struct ld_scene_t *scene, ldMsg_t msg)
         return false;
     }
 
-    backend->last_native_signal = msg.signal;
-    backend->last_native_value = msg.value;
-
     (void)tinyui_table_sync_current_cell_local(table, &row, &column);
     item = ldTableGetItem(ld_table, (uint8_t)row, (uint8_t)column);
 

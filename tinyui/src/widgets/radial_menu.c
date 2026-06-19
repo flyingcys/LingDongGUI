@@ -100,10 +100,6 @@ static bool tinyui_radial_menu_native_slot(struct ld_scene_t *scene, ldMsg_t msg
     if (previous_selected_index == selected_index) {
         return false;
     }
-    backend->data_model_epoch++;
-    backend->last_data_source = TINYUI_BACKEND_DATA_SOURCE_NATIVE_EVENT;
-    backend->last_signal = TINYUI_BACKEND_SIGNAL_VALUE_CHANGED;
-    backend->dispatch_count++;
     if (radial_menu->cb != 0) {
         radial_menu->cb(radial_menu, selected_index, radial_menu->user_data);
     }
@@ -402,7 +398,6 @@ static struct tinyui_radial_menu *tinyui_radial_menu_create_with_backend_config(
     backend->ld_widget = ld_radial_menu;
     backend->ld_name_id = name_id;
     backend->value = -1;
-    backend->last_signal = TINYUI_BACKEND_SIGNAL_NONE;
     if (tinyui_widget_attach_child(parent_backend, backend) != 0) {
         ldRadialMenu_depose(app_state->ld_scene, ld_radial_menu);
         free(backend);

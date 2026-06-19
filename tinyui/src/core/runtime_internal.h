@@ -97,17 +97,6 @@ enum tinyui_backend_signal {
     TINYUI_BACKEND_SIGNAL_RELEASED,
 };
 
-enum tinyui_backend_data_truth_policy {
-    TINYUI_BACKEND_DATA_TRUTH_NOT_APPLICABLE = 0,
-    TINYUI_BACKEND_DATA_TRUTH_BACKEND_VALUE,
-};
-
-enum tinyui_backend_data_value_source {
-    TINYUI_BACKEND_DATA_SOURCE_NONE = 0,
-    TINYUI_BACKEND_DATA_SOURCE_SETTER,
-    TINYUI_BACKEND_DATA_SOURCE_NATIVE_EVENT,
-};
-
 /* ── Evidence flags ────────────────────────────────────────────── */
 
 enum tinyui_backend_runtime_evidence_flags {
@@ -177,21 +166,12 @@ struct tinyui_backend_widget {
     struct tinyui_backend_widget *ld_event_bridge_next;
     struct tinyui_image_source *image_source;
     int value;
-    int16_t last_signal;
-    uint16_t reserved_signal_padding;
-    uint32_t last_native_signal;
-    uint64_t last_native_value;
-    int dispatch_count;
     struct tinyui_theme *theme;
     void *ld_widget;
     uint16_t ld_name_id;
     const char *list_item_ids[TINYUI_BACKEND_LIST_MAX_ITEMS];
     uint16_t list_item_count;
     uint16_t reserved_list_padding;
-    unsigned int data_model_identity;
-    unsigned int data_model_epoch;
-    int16_t data_truth_policy;
-    int16_t last_data_source;
     int16_t edit_result_on_finish;
     uint16_t reserved_edit_padding;
     struct tinyui_backend_layout_window_state window_layout;

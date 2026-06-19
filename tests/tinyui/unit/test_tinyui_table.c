@@ -245,8 +245,6 @@ static void test_table_edit_commit_updates_model_and_visible_text(void)
     assert(strcmp(tinyui_table_get_cell_text(table, 0, 0), "after") == 0);
     assert(table->widget.last_edit_result == TINYUI_EDIT_RESULT_COMMIT);
     assert(table->widget.pending_edit_result == TINYUI_EDIT_RESULT_NONE);
-    assert(backend->last_native_signal == SIGNAL_FINISHED);
-    assert(backend->last_native_value == 0);
     assert(tinyui_widget_is_editing_owner(&table->widget) == 0);
     tinyui_app_destroy(app);
 }
@@ -292,8 +290,6 @@ static void test_table_reuses_editable_cell_contract(void)
     ldMsgProcess(app_state->ld_scene);
     assert(tinyui_widget_is_editing_owner(&table->widget) == 0);
     assert(table->widget.last_edit_result == TINYUI_EDIT_RESULT_COMMIT);
-    assert(backend->last_native_signal == SIGNAL_FINISHED);
-    assert(backend->last_native_value == 0);
     tinyui_app_destroy(app);
 }
 
@@ -345,8 +341,6 @@ static void test_table_final_release_contract_covers_non_commit_exit_boundary(vo
     assert(tinyui_widget_is_editing_owner(&table->widget) == 0);
     assert(table->widget.last_edit_result == TINYUI_EDIT_RESULT_CANCEL);
     assert(table->widget.pending_edit_result == TINYUI_EDIT_RESULT_NONE);
-    assert(backend->last_native_signal == SIGNAL_PRESS);
-    assert(backend->last_native_value == make_signal_value_xy(10, 10));
     assert(strcmp(tinyui_table_get_cell_text(table, 0, 0), "before") == 0);
     assert(strcmp((const char *)ldTableGetItemText(ld_table, 0, 0), "before") == 0);
 
@@ -1119,46 +1113,46 @@ static void test_table_legacy_bind_host_symbol_is_removed(void)
 
 static void test_table_navigate_and_sync_current_cell_backend_symbols_are_no_longer_public(void)
 {
-    assert_archive_lacks_member("../../libtinyui_backend_ldgui.a", "backend_table.c.o");
-    assert_archive_lacks_symbol("../../libtinyui_backend_ldgui.a",
+    assert_archive_lacks_member("../../libtinyui_core.a", "backend_table.c.o");
+    assert_archive_lacks_symbol("../../libtinyui_core.a",
                                 "tinyui_backend_table_set_keyboard_binding");
-    assert_archive_lacks_symbol("../../libtinyui_backend_ldgui.a",
+    assert_archive_lacks_symbol("../../libtinyui_core.a",
                                 "tinyui_backend_table_get_keyboard_binding");
-    assert_archive_lacks_symbol("../../libtinyui_backend_ldgui.a",
+    assert_archive_lacks_symbol("../../libtinyui_core.a",
                                 "tinyui_backend_table_set_cell_text");
-    assert_archive_lacks_symbol("../../libtinyui_backend_ldgui.a",
+    assert_archive_lacks_symbol("../../libtinyui_core.a",
                                 "tinyui_backend_table_get_cell_text");
-    assert_archive_lacks_symbol("../../libtinyui_backend_ldgui.a",
+    assert_archive_lacks_symbol("../../libtinyui_core.a",
                                 "tinyui_backend_table_set_cell_editable");
-    assert_archive_lacks_symbol("../../libtinyui_backend_ldgui.a",
+    assert_archive_lacks_symbol("../../libtinyui_core.a",
                                 "tinyui_backend_table_set_item_align");
-    assert_archive_lacks_symbol("../../libtinyui_backend_ldgui.a",
+    assert_archive_lacks_symbol("../../libtinyui_core.a",
                                 "tinyui_backend_table_get_item_align");
-    assert_archive_lacks_symbol("../../libtinyui_backend_ldgui.a",
+    assert_archive_lacks_symbol("../../libtinyui_core.a",
                                 "tinyui_backend_table_get_item_editable");
-    assert_archive_lacks_symbol("../../libtinyui_backend_ldgui.a",
+    assert_archive_lacks_symbol("../../libtinyui_core.a",
                                 "tinyui_backend_table_get_item_region");
-    assert_archive_lacks_symbol("../../libtinyui_backend_ldgui.a",
+    assert_archive_lacks_symbol("../../libtinyui_core.a",
                                 "tinyui_backend_table_set_excel_type");
-    assert_archive_lacks_symbol("../../libtinyui_backend_ldgui.a",
+    assert_archive_lacks_symbol("../../libtinyui_core.a",
                                 "tinyui_backend_table_set_item_width");
-    assert_archive_lacks_symbol("../../libtinyui_backend_ldgui.a",
+    assert_archive_lacks_symbol("../../libtinyui_core.a",
                                 "tinyui_backend_table_set_item_height");
-    assert_archive_lacks_symbol("../../libtinyui_backend_ldgui.a",
+    assert_archive_lacks_symbol("../../libtinyui_core.a",
                                 "tinyui_backend_table_set_item_color");
-    assert_archive_lacks_symbol("../../libtinyui_backend_ldgui.a",
+    assert_archive_lacks_symbol("../../libtinyui_core.a",
                                 "tinyui_backend_table_set_bg_color");
-    assert_archive_lacks_symbol("../../libtinyui_backend_ldgui.a",
+    assert_archive_lacks_symbol("../../libtinyui_core.a",
                                 "tinyui_backend_table_set_item_static_text");
-    assert_archive_lacks_symbol("../../libtinyui_backend_ldgui.a",
+    assert_archive_lacks_symbol("../../libtinyui_core.a",
                                 "tinyui_backend_table_set_item_font");
-    assert_archive_lacks_symbol("../../libtinyui_backend_ldgui.a",
+    assert_archive_lacks_symbol("../../libtinyui_core.a",
                                 "tinyui_backend_table_set_item_image");
-    assert_archive_lacks_symbol("../../libtinyui_backend_ldgui.a",
+    assert_archive_lacks_symbol("../../libtinyui_core.a",
                                 "tinyui_backend_table_set_item_button");
-    assert_archive_lacks_symbol("../../libtinyui_backend_ldgui.a",
+    assert_archive_lacks_symbol("../../libtinyui_core.a",
                                 "tinyui_backend_table_set_selected_cell");
-    assert_archive_lacks_symbol("../../libtinyui_backend_ldgui.a",
+    assert_archive_lacks_symbol("../../libtinyui_core.a",
                                 "tinyui_backend_table_set_current_cell");
     assert_self_binary_lacks_symbol("tinyui_backend_table_navigate");
     assert_self_binary_lacks_symbol("tinyui_backend_table_sync_current_cell");
