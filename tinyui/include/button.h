@@ -64,8 +64,6 @@ struct tinyui_button *tinyui_button_create(struct tinyui_window *parent, const c
 struct tinyui_button *tinyui_button_create_with_props(struct tinyui_window *parent,
                                                       const struct tinyui_button_props *props);
 
-struct tinyui_button *tinyui_button_init(struct tinyui_window *parent, const char *id);
-
 int tinyui_button_set_text(struct tinyui_button *button, const char *text);
 
 int tinyui_button_get_text(struct tinyui_button *button, const char **text);

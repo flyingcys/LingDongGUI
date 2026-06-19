@@ -21,8 +21,6 @@ struct tinyui_progress_bar *tinyui_progress_bar_create_with_props(
     struct tinyui_window *parent,
     const struct tinyui_progress_bar_props *props);
 
-struct tinyui_progress_bar *tinyui_progress_bar_init(struct tinyui_window *parent, const char *id);
-
 int tinyui_progress_bar_set_percent(struct tinyui_progress_bar *bar, int percent);
 
 int tinyui_progress_bar_get_percent(const struct tinyui_progress_bar *bar);

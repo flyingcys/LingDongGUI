@@ -23,17 +23,16 @@ struct tinyui_slider_props {
     int radius;
     int padding;
 
+    /* Sentinel defaults: -1 = unset (use backend default), 0 = horizontal off, 1 = horizontal on */
     int horizontal;
+    /* Sentinel default: NULL = unset (no image source applied) */
     struct tinyui_image_source *background_source;
+    /* Sentinel default: NULL = unset (no image source applied) */
     struct tinyui_image_source *indicator_source;
+    /* Sentinel default: -1 = unset (use backend default width) */
     int indicator_width;
+    /* Sentinel default: -1 = unset (use backend default slim size) */
     int slim_size;
-
-    int has_horizontal;
-    int has_background_source;
-    int has_indicator_source;
-    int has_indicator_width;
-    int has_slim_size;
 };
 
 struct tinyui_slider *tinyui_slider_create(struct tinyui_window *parent, const char *id);
@@ -41,8 +40,6 @@ struct tinyui_slider *tinyui_slider_create(struct tinyui_window *parent, const c
 struct tinyui_slider *tinyui_slider_create_with_props(
     struct tinyui_window *parent,
     const struct tinyui_slider_props *props);
-
-struct tinyui_slider *tinyui_slider_init(struct tinyui_window *parent, const char *id);
 
 int tinyui_slider_set_value(struct tinyui_slider *slider, int value);
 

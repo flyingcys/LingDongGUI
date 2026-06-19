@@ -337,19 +337,6 @@ struct tinyui_progress_bar *tinyui_progress_bar_create(struct tinyui_window *par
 }
 
 /**
- * @brief progress bar init
- *
- * @param[in] parent Parent widget
- * @param[in] id Widget identifier string
- * @return Pointer to the object
- */
-
-struct tinyui_progress_bar *tinyui_progress_bar_init(struct tinyui_window *parent, const char *id)
-{
-    return tinyui_progress_bar_create(parent, id);
-}
-
-/**
  * @brief Create progress bar widget with properties
  *
  * @param[in] parent Parent widget

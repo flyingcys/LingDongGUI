@@ -464,11 +464,6 @@ struct tinyui_calendar *tinyui_calendar_create(struct tinyui_window *parent, con
     return calendar;
 }
 
-struct tinyui_calendar *tinyui_calendar_init(struct tinyui_window *parent, const char *id)
-{
-    return tinyui_calendar_create(parent, id);
-}
-
 struct tinyui_calendar *tinyui_calendar_create_with_props(struct tinyui_window *parent,
                                                           const struct tinyui_calendar_props *props)
 {

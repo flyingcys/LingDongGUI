@@ -301,22 +301,6 @@ struct tinyui_graph *tinyui_graph_create(struct tinyui_window *parent,
 }
 
 /**
- * @brief graph init
- *
- * @param[in] parent Parent widget
- * @param[in] id Widget identifier string
- * @param[in] series_max series max
- * @return Pointer to the object
- */
-
-struct tinyui_graph *tinyui_graph_init(struct tinyui_window *parent,
-                                       const char *id,
-                                       int series_max)
-{
-    return tinyui_graph_create(parent, id, series_max);
-}
-
-/**
  * @brief Create graph widget with properties
  *
  * @param[in] parent Parent widget

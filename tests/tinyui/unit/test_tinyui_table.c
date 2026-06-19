@@ -862,7 +862,7 @@ static void test_table_r4_aliases_and_native_getters_round_trip(void)
     assert(win != 0);
     keyboard = tinyui_keyboard_create(win, "table_r4_alias_keyboard");
     assert(keyboard != 0);
-    table = tinyui_table_init(win, "table_r4_alias", 3, 3);
+    table = tinyui_table_create(win, "table_r4_alias", 3, 3);
     assert(table != 0);
 
     backend = (struct tinyui_backend_widget *)table->widget.backend_widget;

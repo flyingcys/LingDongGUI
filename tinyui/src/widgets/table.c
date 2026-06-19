@@ -485,24 +485,6 @@ struct tinyui_table *tinyui_table_create_with_props(struct tinyui_window *parent
 }
 
 /**
- * @brief table init
- *
- * @param[in] parent Parent widget
- * @param[in] id Widget identifier string
- * @param[in] rows Row definitions
- * @param[in] columns Column definitions
- * @return Pointer to the object
- */
-
-struct tinyui_table *tinyui_table_init(struct tinyui_window *parent,
-                                       const char *id,
-                                       int rows,
-                                       int columns)
-{
-    return tinyui_table_create(parent, id, rows, columns);
-}
-
-/**
  * @brief Set keyboard of table widget
  *
  * @param[in] table table

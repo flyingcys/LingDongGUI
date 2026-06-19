@@ -3004,7 +3004,7 @@
           "status": "covered",
           "native_api": "ldButtonInit",
           "coverage_kind": "shared_api_equivalence",
-          "tinyui_api": "tinyui_button_init",
+          "tinyui_api": "tinyui_button_create",
           "backend_proof": "tinyui_backend_create_button",
           "unit_test": "test_button_init_native_parity",
           "gate_evidence": [
@@ -3021,7 +3021,7 @@
           "shared_policy_evidence": [
             "Focused unit test proves shared base or alias path hits the real native widget fields."
           ],
-          "equivalence_proof": "tinyui_button_init allocates and binds real ldButton widget, covering native init semantics.",
+          "equivalence_proof": "tinyui_button_create allocates and binds real ldButton widget, covering native init semantics.",
           "policy_category": "direct_covered",
           "group_kind": "widget"
         },
@@ -3280,7 +3280,7 @@
           "status": "covered",
           "native_api": "ldButton_init",
           "coverage_kind": "init_parameter_parity",
-          "tinyui_api": "tinyui_button_init",
+          "tinyui_api": "tinyui_button_create",
           "backend_proof": "tinyui_backend_create_button",
           "unit_test": "test_button_init_native_parity",
           "gate_evidence": [
@@ -3297,7 +3297,7 @@
           "shared_policy_evidence": [
             "Focused unit test proves shared base or alias path hits the real native widget fields."
           ],
-          "equivalence_proof": "tinyui_button_init allocates and binds real ldButton widget, covering native init semantics.",
+          "equivalence_proof": "tinyui_button_create allocates and binds real ldButton widget, covering native init semantics.",
           "policy_category": "direct_covered",
           "group_kind": "widget"
         },
@@ -3626,7 +3626,7 @@
           "status": "covered",
           "native_api": "ldCalendar_init",
           "coverage_kind": "shared_api_equivalence",
-          "tinyui_api": "tinyui_calendar_init",
+          "tinyui_api": "tinyui_calendar_create",
           "backend_proof": "tinyui_backend_create_calendar",
           "unit_test": "test_calendar_init_and_aliases_match_backend_truth",
           "gate_evidence": [
@@ -3643,7 +3643,7 @@
           "shared_policy_evidence": [
             "Focused unit test proves the claimed native parity path."
           ],
-          "equivalence_proof": "tinyui_calendar_init delegates to real calendar create path.",
+          "equivalence_proof": "tinyui_calendar_create delegates to real calendar create path.",
           "policy_category": "direct_covered",
           "group_kind": "widget"
         },
@@ -7138,7 +7138,7 @@
           "status": "covered",
           "native_api": "ldGraph_init",
           "coverage_kind": "shared_api_equivalence",
-          "tinyui_api": "tinyui_graph_init",
+          "tinyui_api": "tinyui_graph_create",
           "backend_proof": "tinyui_backend_create_graph",
           "unit_test": "test_graph_init_and_shared_base_aliases_round_trip",
           "gate_evidence": [
@@ -7155,7 +7155,7 @@
           "shared_policy_evidence": [
             "Focused unit test proves the claimed native parity path."
           ],
-          "equivalence_proof": "tinyui_graph_init delegates to real graph create path.",
+          "equivalence_proof": "tinyui_graph_create delegates to real graph create path.",
           "policy_category": "direct_covered",
           "group_kind": "widget"
         },
@@ -11109,7 +11109,7 @@
           "status": "covered",
           "native_api": "ldProgressBarInit",
           "coverage_kind": "shared_api_equivalence",
-          "tinyui_api": "tinyui_progress_bar_init",
+          "tinyui_api": "tinyui_progress_bar_create",
           "backend_proof": "tinyui_backend_create_progress_bar",
           "unit_test": "test_progress_bar_init_native_parity",
           "gate_evidence": [
@@ -11126,7 +11126,7 @@
           "shared_policy_evidence": [
             "Focused unit test proves shared base or alias path hits the real native widget fields."
           ],
-          "equivalence_proof": "tinyui_progress_bar_init allocates and binds real ldProgressBar widget, covering native init semantics.",
+          "equivalence_proof": "tinyui_progress_bar_create allocates and binds real ldProgressBar widget, covering native init semantics.",
           "policy_category": "direct_covered",
           "group_kind": "widget"
         },
@@ -11491,7 +11491,7 @@
           "status": "covered",
           "native_api": "ldProgressBar_init",
           "coverage_kind": "init_parameter_parity",
-          "tinyui_api": "tinyui_progress_bar_init",
+          "tinyui_api": "tinyui_progress_bar_create",
           "backend_proof": "tinyui_backend_create_progress_bar",
           "unit_test": "test_progress_bar_init_native_parity",
           "gate_evidence": [
@@ -11508,7 +11508,7 @@
           "shared_policy_evidence": [
             "Focused unit test proves shared base or alias path hits the real native widget fields."
           ],
-          "equivalence_proof": "tinyui_progress_bar_init allocates and binds real ldProgressBar widget, covering native init semantics.",
+          "equivalence_proof": "tinyui_progress_bar_create allocates and binds real ldProgressBar widget, covering native init semantics.",
           "policy_category": "direct_covered",
           "group_kind": "widget"
         },
@@ -13096,7 +13096,7 @@
           "status": "covered",
           "native_api": "ldSliderInit",
           "coverage_kind": "shared_api_equivalence",
-          "tinyui_api": "tinyui_slider_init",
+          "tinyui_api": "tinyui_slider_create",
           "backend_proof": "tinyui_backend_create_slider",
           "unit_test": "test_slider_init_native_parity",
           "gate_evidence": [
@@ -13113,7 +13113,7 @@
           "shared_policy_evidence": [
             "Focused unit test proves shared base or alias path hits the real native widget fields."
           ],
-          "equivalence_proof": "tinyui_slider_init allocates and binds real ldSlider widget, covering native init semantics.",
+          "equivalence_proof": "tinyui_slider_create allocates and binds real ldSlider widget, covering native init semantics.",
           "policy_category": "direct_covered",
           "group_kind": "widget"
         },
@@ -13453,7 +13453,7 @@
           "status": "covered",
           "native_api": "ldSlider_init",
           "coverage_kind": "init_parameter_parity",
-          "tinyui_api": "tinyui_slider_init",
+          "tinyui_api": "tinyui_slider_create",
           "backend_proof": "tinyui_backend_create_slider",
           "unit_test": "test_slider_init_native_parity",
           "gate_evidence": [
@@ -13470,7 +13470,7 @@
           "shared_policy_evidence": [
             "Focused unit test proves shared base or alias path hits the real native widget fields."
           ],
-          "equivalence_proof": "tinyui_slider_init allocates and binds real ldSlider widget, covering native init semantics.",
+          "equivalence_proof": "tinyui_slider_create allocates and binds real ldSlider widget, covering native init semantics.",
           "policy_category": "direct_covered",
           "group_kind": "widget"
         },
@@ -14718,7 +14718,7 @@
           "status": "covered",
           "native_api": "ldTableInit",
           "coverage_kind": "macro_alias_parity",
-          "tinyui_api": "tinyui_table_init",
+          "tinyui_api": "tinyui_table_create",
           "backend_proof": "tinyui_backend_create_table",
           "unit_test": "test_table_r4_aliases_and_native_getters_round_trip",
           "gate_evidence": [
@@ -14735,7 +14735,7 @@
           "shared_policy_evidence": [
             "Focused unit test proves shared table alias/getter path hits the real ldTable/native widget fields."
           ],
-          "equivalence_proof": "tinyui_table_init allocates and binds real ldTable widget, covering native init semantics.",
+          "equivalence_proof": "tinyui_table_create allocates and binds real ldTable widget, covering native init semantics.",
           "policy_category": "direct_covered",
           "group_kind": "widget"
         },
@@ -15169,7 +15169,7 @@
           "status": "covered",
           "native_api": "ldTable_init",
           "coverage_kind": "init_parameter_parity",
-          "tinyui_api": "tinyui_table_init",
+          "tinyui_api": "tinyui_table_create",
           "backend_proof": "tinyui_backend_create_table",
           "unit_test": "test_table_r4_aliases_and_native_getters_round_trip",
           "gate_evidence": [
@@ -15186,7 +15186,7 @@
           "shared_policy_evidence": [
             "Focused unit test proves shared table alias/getter path hits the real ldTable/native widget fields."
           ],
-          "equivalence_proof": "tinyui_table_init allocates and binds real ldTable widget, covering native init semantics.",
+          "equivalence_proof": "tinyui_table_create allocates and binds real ldTable widget, covering native init semantics.",
           "policy_category": "direct_covered",
           "group_kind": "widget"
         },

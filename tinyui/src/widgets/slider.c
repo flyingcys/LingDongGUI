@@ -119,15 +119,13 @@ static int tinyui_slider_props_are_valid(const struct tinyui_slider_props *props
         && props->min_value <= props->max_value
         && props->value >= props->min_value
         && props->value <= props->max_value
-        && (props->has_background_source == 0
-            || props->background_source == 0
+        && (props->background_source == 0
             || props->background_source->img_tile != 0)
-        && (props->has_indicator_source == 0
-            || props->indicator_source == 0
+        && (props->indicator_source == 0
             || props->indicator_source->img_tile != 0)
-        && (props->has_indicator_width == 0
+        && (props->indicator_width == -1
             || (props->indicator_width >= 0 && props->indicator_width <= 255))
-        && (props->has_slim_size == 0
+        && (props->slim_size == -1
             || (props->slim_size >= 0 && props->slim_size <= 255))
         && props->width >= 0
         && props->height >= 0
@@ -227,19 +225,6 @@ struct tinyui_slider *tinyui_slider_create(struct tinyui_window *parent, const c
 }
 
 /**
- * @brief slider init
- *
- * @param[in] parent Parent widget
- * @param[in] id Widget identifier string
- * @return Pointer to the object
- */
-
-struct tinyui_slider *tinyui_slider_init(struct tinyui_window *parent, const char *id)
-{
-    return tinyui_slider_create(parent, id);
-}
-
-/**
  * @brief Create slider widget with properties
  *
  * @param[in] parent Parent widget
@@ -267,15 +252,15 @@ struct tinyui_slider *tinyui_slider_create_with_props(struct tinyui_window *pare
     slider->user_data = 0;
     if (tinyui_slider_set_range(slider, props->min_value, props->max_value) != 0
         || tinyui_slider_set_value(slider, props->value) != 0
-        || (props->has_horizontal != 0
+        || (props->horizontal != -1
             && tinyui_slider_set_horizontal(slider, props->horizontal) != 0)
-        || (props->has_background_source != 0
+        || (props->background_source != 0
             && tinyui_slider_set_background_source(slider, props->background_source) != 0)
-        || (props->has_indicator_source != 0
+        || (props->indicator_source != 0
             && tinyui_slider_set_indicator_source(slider, props->indicator_source) != 0)
-        || (props->has_indicator_width != 0
+        || (props->indicator_width != -1
             && tinyui_slider_set_indicator_width(slider, props->indicator_width) != 0)
-        || (props->has_slim_size != 0
+        || (props->slim_size != -1
             && tinyui_slider_set_slim_size(slider, props->slim_size) != 0)) {
         tinyui_slider_dispose_partial(slider);
         return 0;

@@ -2121,32 +2121,26 @@ static void test_props_invalid_values_do_not_attach_backend_children(struct tiny
     };
     struct tinyui_slider_props bad_slider_indicator_width = {
         .id = "bad_slider_indicator_width",
-        .has_indicator_width = 1,
-        .indicator_width = -1,
+        .indicator_width = -2,
     };
     struct tinyui_slider_props bad_slider_indicator_width_oversize = {
         .id = "bad_slider_indicator_width_oversize",
-        .has_indicator_width = 1,
         .indicator_width = 256,
     };
     struct tinyui_slider_props bad_slider_slim_size = {
         .id = "bad_slider_slim_size",
-        .has_slim_size = 1,
-        .slim_size = -1,
+        .slim_size = -2,
     };
     struct tinyui_slider_props bad_slider_slim_size_oversize = {
         .id = "bad_slider_slim_size_oversize",
-        .has_slim_size = 1,
         .slim_size = 256,
     };
     struct tinyui_slider_props bad_slider_background = {
         .id = "bad_slider_background",
-        .has_background_source = 1,
         .background_source = &bad_image_source,
     };
     struct tinyui_slider_props bad_slider_indicator = {
         .id = "bad_slider_indicator",
-        .has_indicator_source = 1,
         .indicator_source = &bad_image_source,
     };
 
@@ -2290,11 +2284,6 @@ static void test_props_initial_values(struct tinyui_app *app,
         image_source,
         12,
         5,
-        1,
-        1,
-        1,
-        1,
-        1,
     };
     struct tinyui_button_props button_props = {
         .id = "props_button",
@@ -2594,16 +2583,11 @@ int main(void)
         0,
         0,
         0,
-        0,
-        &image_source,
-        &image_source,
-        123,
-        17,
+        -1,
         0,
         0,
-        0,
-        0,
-        0,
+        -1,
+        -1,
     };
     struct tinyui_font font = {"Sans", 14};
     arm_2d_tile_t button_release_tile = {0};

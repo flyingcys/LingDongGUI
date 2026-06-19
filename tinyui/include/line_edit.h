@@ -38,8 +38,6 @@ struct tinyui_line_edit *tinyui_line_edit_create_with_props(
     struct tinyui_window *parent,
     const struct tinyui_line_edit_props *props);
 
-struct tinyui_line_edit *tinyui_line_edit_init(struct tinyui_window *parent, const char *id);
-
 int tinyui_line_edit_set_text(struct tinyui_line_edit *line_edit, const char *text);
 
 const char *tinyui_line_edit_get_text(const struct tinyui_line_edit *line_edit);

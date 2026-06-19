@@ -40,11 +40,6 @@ struct tinyui_table *tinyui_table_create(struct tinyui_window *parent,
 struct tinyui_table *tinyui_table_create_with_props(struct tinyui_window *parent,
                                                     const struct tinyui_table_props *props);
 
-struct tinyui_table *tinyui_table_init(struct tinyui_window *parent,
-                                       const char *id,
-                                       int rows,
-                                       int columns);
-
 int tinyui_table_set_keyboard(struct tinyui_table *table, unsigned int keyboard_binding);
 
 int tinyui_table_set_keyboard_binding(struct tinyui_table *table, unsigned int keyboard_binding);

@@ -21,10 +21,6 @@ struct tinyui_graph *tinyui_graph_create(struct tinyui_window *parent,
 struct tinyui_graph *tinyui_graph_create_with_props(struct tinyui_window *parent,
                                                     const struct tinyui_graph_props *props);
 
-struct tinyui_graph *tinyui_graph_init(struct tinyui_window *parent,
-                                       const char *id,
-                                       int series_max);
-
 int tinyui_graph_set_axis(struct tinyui_graph *graph, int x_axis, int y_axis);
 
 int tinyui_graph_set_axis_offset(struct tinyui_graph *graph, int axis_offset);

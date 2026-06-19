@@ -172,7 +172,6 @@ static void test_slider_create_with_props_failure_rolls_back_attached_child(stru
             .min_value = 0,
             .max_value = 100,
             .value = 10,
-            .has_indicator_width = 1,
             .indicator_width = 12,
         });
 
@@ -202,7 +201,6 @@ static void test_slider_create_with_props_failure_rolls_back_attached_child(stru
                    .min_value = 0,
                    .max_value = 100,
                    .value = 10,
-                   .has_indicator_width = 1,
                    .indicator_width = 12,
                }) != 0);
 }
@@ -211,8 +209,8 @@ static void test_slider_rejects_null_args(struct tinyui_window *win)
 {
     assert(tinyui_slider_create(0, "id") == 0);
     assert(tinyui_slider_create(win, 0) == 0);
-    assert(tinyui_slider_init(0, "id") == 0);
-    assert(tinyui_slider_init(win, 0) == 0);
+    assert(tinyui_slider_create(0, "id") == 0);
+    assert(tinyui_slider_create(win, 0) == 0);
     assert(tinyui_slider_create_with_props(0, &(struct tinyui_slider_props){.id = "p"}) == 0);
     assert(tinyui_slider_create_with_props(win, 0) == 0);
     assert(tinyui_slider_create_with_props(win, &(struct tinyui_slider_props){.id = 0}) == 0);

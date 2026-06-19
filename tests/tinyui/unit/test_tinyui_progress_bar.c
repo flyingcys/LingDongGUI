@@ -368,7 +368,7 @@ static void test_progress_bar_native_skin_color_and_inverted_round_trip(struct t
 
 static void test_progress_bar_init_image_and_shared_base_aliases_round_trip(struct tinyui_window *win)
 {
-    struct tinyui_progress_bar *bar = tinyui_progress_bar_init(win, "progress_alias");
+    struct tinyui_progress_bar *bar = tinyui_progress_bar_create(win, "progress_alias");
     struct tinyui_backend_widget *backend;
     ldProgressBar_t *ld_progress_bar;
     arm_2d_tile_t bg_tile = {0};

@@ -1857,7 +1857,7 @@
           "signature": "#define ldButtonInit(nameId,parentNameId,x,y,width,height) ldButton_init(ptScene,NULL,nameId,parentNameId,x,y,width,height)",
           "macro_target": "ldButton_init",
           "required": true,
-          "tinyui_api": "tinyui_button_init",
+          "tinyui_api": "tinyui_button_create",
           "backend_proof": "tinyui_backend_create_button",
           "unit_test": "test_button_init_native_parity",
           "gate_evidence": [
@@ -2043,7 +2043,7 @@
           "category": "init",
           "signature": "ldButton_t *ldButton_init(ld_scene_t *ptScene, ldButton_t *ptWidget, uint16_t nameId, uint16_t parentNameId, int16_t x, int16_t y, int16_t width, int16_t height);",
           "required": true,
-          "tinyui_api": "tinyui_button_init",
+          "tinyui_api": "tinyui_button_create",
           "backend_proof": "tinyui_backend_create_button",
           "unit_test": "test_button_init_native_parity",
           "gate_evidence": [
@@ -2263,7 +2263,7 @@
           "category": "init",
           "signature": "ldCalendar_t* ldCalendar_init(ld_scene_t *ptScene, ldCalendar_t *ptWidget, uint16_t nameId, uint16_t parentNameId, int16_t x, int16_t y, int16_t width, int16_t height, arm_2d_font_t *ptFont, uint16_t year, uint8_t month, uint8_t day);",
           "required": true,
-          "tinyui_api": "tinyui_calendar_init",
+          "tinyui_api": "tinyui_calendar_create",
           "backend_proof": "tinyui_backend_create_calendar",
           "unit_test": "test_calendar_init_and_aliases_match_backend_truth",
           "gate_evidence": [
@@ -4686,7 +4686,7 @@
           "category": "init",
           "signature": "ldGraph_t* ldGraph_init(ld_scene_t *ptScene, ldGraph_t *ptWidget, uint16_t nameId, uint16_t parentNameId, int16_t x, int16_t y, int16_t width, int16_t height, uint8_t seriesMax);",
           "required": true,
-          "tinyui_api": "tinyui_graph_init",
+          "tinyui_api": "tinyui_graph_create",
           "backend_proof": "tinyui_backend_create_graph",
           "unit_test": "test_graph_init_and_shared_base_aliases_round_trip",
           "gate_evidence": [
@@ -7504,7 +7504,7 @@
           "signature": "#define ldProgressBarInit(nameId,parentNameId,x,y,width,height) ldProgressBar_init(ptScene,NULL,nameId,parentNameId,x,y,width,height)",
           "macro_target": "ldProgressBar_init",
           "required": true,
-          "tinyui_api": "tinyui_progress_bar_init",
+          "tinyui_api": "tinyui_progress_bar_create",
           "backend_proof": "tinyui_backend_create_progress_bar",
           "unit_test": "test_progress_bar_init_native_parity",
           "gate_evidence": [
@@ -7764,7 +7764,7 @@
           "category": "init",
           "signature": "ldProgressBar_t* ldProgressBar_init(ld_scene_t *ptScene, ldProgressBar_t *ptWidget, uint16_t nameId, uint16_t parentNameId, int16_t x, int16_t y, int16_t width, int16_t height);",
           "required": true,
-          "tinyui_api": "tinyui_progress_bar_init",
+          "tinyui_api": "tinyui_progress_bar_create",
           "backend_proof": "tinyui_backend_create_progress_bar",
           "unit_test": "test_progress_bar_init_native_parity",
           "gate_evidence": [
@@ -8796,7 +8796,7 @@
           "signature": "#define ldSliderInit(nameId,parentNameId,x,y,width,height) ldSlider_init(ptScene,NULL,nameId,parentNameId,x,y,width,height)",
           "macro_target": "ldSlider_init",
           "required": true,
-          "tinyui_api": "tinyui_slider_init",
+          "tinyui_api": "tinyui_slider_create",
           "backend_proof": "tinyui_backend_create_slider",
           "unit_test": "test_slider_init_native_parity",
           "gate_evidence": [
@@ -9039,7 +9039,7 @@
           "category": "init",
           "signature": "ldSlider_t* ldSlider_init(ld_scene_t *ptScene, ldSlider_t *ptWidget, uint16_t nameId, uint16_t parentNameId, int16_t x, int16_t y, int16_t width, int16_t height);",
           "required": true,
-          "tinyui_api": "tinyui_slider_init",
+          "tinyui_api": "tinyui_slider_create",
           "backend_proof": "tinyui_backend_create_slider",
           "unit_test": "test_slider_init_native_parity",
           "gate_evidence": [
@@ -9998,7 +9998,7 @@
           "signature": "#define ldTableInit(nameId,parentNameId,x,y,width,height,rowCount,columnCount,itemSpace) ldTable_init(ptScene,NULL,nameId,parentNameId,x,y,width,height,rowCount,columnCount,itemSpace)",
           "macro_target": "ldTable_init",
           "required": true,
-          "tinyui_api": "tinyui_table_init",
+          "tinyui_api": "tinyui_table_create",
           "backend_proof": "tinyui_backend_create_table",
           "unit_test": "test_table_r4_aliases_and_native_getters_round_trip",
           "gate_evidence": [
@@ -10303,7 +10303,7 @@
           "category": "init",
           "signature": "ldTable_t* ldTable_init(ld_scene_t *ptScene, ldTable_t *ptWidget, uint16_t nameId, uint16_t parentNameId, int16_t x, int16_t y, int16_t width, int16_t height, uint8_t rowCount, uint8_t columnCount, uint8_t itemSpace);",
           "required": true,
-          "tinyui_api": "tinyui_table_init",
+          "tinyui_api": "tinyui_table_create",
           "backend_proof": "tinyui_backend_create_table",
           "unit_test": "test_table_r4_aliases_and_native_getters_round_trip",
           "gate_evidence": [

@@ -210,19 +210,6 @@ struct tinyui_button *tinyui_button_create(struct tinyui_window *parent, const c
 }
 
 /**
- * @brief button init
- *
- * @param[in] parent Parent widget
- * @param[in] id Widget identifier string
- * @return Pointer to the object
- */
-
-struct tinyui_button *tinyui_button_init(struct tinyui_window *parent, const char *id)
-{
-    return tinyui_button_create(parent, id);
-}
-
-/**
  * @brief Create button widget with properties
  *
  * @param[in] parent Parent widget
