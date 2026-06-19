@@ -16077,9 +16077,9 @@
       "notes": "R3 review fix: window/layout native row closed; R4/R5/R6 rows unchanged.",
       "required": true,
       "coverage_kind": "native_setter_parity",
-      "tinyui_api": "tinyui_window_set_padding_group",
-      "backend_proof": "tinyui_backend_window_set_padding_group",
-      "unit_test": "test_window_padding_group_round_trip_to_ldwindow",
+      "tinyui_api": "tinyui_window_set_padding",
+      "backend_proof": "tinyui_backend_window_set_padding",
+      "unit_test": "test_window_padding_group_round_trip",
       "gate_evidence": [
         "ctest:test_tinyui_layout"
       ],
