@@ -391,7 +391,7 @@ int main(void)
     struct tinyui_backend_widget *checkbox_backend;
     struct tinyui_backend_widget *switch_backend;
     struct tinyui_backend_widget *slider_backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     int pressed_by_id = -1;
     int button_name_id = -1;
     int checkbox_name_id = -1;
@@ -427,7 +427,7 @@ int main(void)
     assert(checkbox_backend != 0);
     assert(switch_backend != 0);
     assert(slider_backend != 0);
-    app_state = (struct tinyui_backend_app_state *)app->backend_app;
+    app_state = app;
     assert(app_state != 0);
     assert(app_state->ld_scene != 0);
     assert(ldMsgInit(&app_state->ld_scene->ptMsgQueue, 8) == true);

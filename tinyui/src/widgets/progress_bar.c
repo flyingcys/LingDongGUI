@@ -119,7 +119,7 @@ static int tinyui_progress_bar_finish_detach_after_backend_failure(
 static void tinyui_progress_bar_dispose_partial_impl(struct tinyui_progress_bar *bar)
 {
     struct tinyui_backend_widget *backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     ldBase_t *ld_base;
     int detach_result = 0;
     int unbind_result = 0;
@@ -251,7 +251,7 @@ struct tinyui_progress_bar *tinyui_progress_bar_create(struct tinyui_window *par
     struct tinyui_progress_bar *bar;
     struct tinyui_backend_widget *backend;
     struct tinyui_backend_widget *parent_backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     ldProgressBar_t *ld_progress_bar;
     uint16_t name_id;
 

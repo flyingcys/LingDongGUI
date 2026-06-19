@@ -74,7 +74,7 @@ static int tinyui_slider_should_fail_indicator_width(const struct tinyui_slider 
 static void tinyui_slider_dispose_partial(struct tinyui_slider *slider)
 {
     struct tinyui_backend_widget *backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
 
     if (slider == 0) {
         return;
@@ -148,7 +148,7 @@ struct tinyui_slider *tinyui_slider_create(struct tinyui_window *parent, const c
     struct tinyui_slider *slider;
     struct tinyui_backend_widget *backend;
     struct tinyui_backend_widget *parent_backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     ldSlider_t *ld_slider;
     uint16_t name_id;
 

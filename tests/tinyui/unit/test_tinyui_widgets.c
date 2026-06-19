@@ -1888,7 +1888,7 @@ static void test_image_padding_is_cached_only_and_not_native_layout_contract(str
 }
 
 static void test_button_j4_contract(struct tinyui_window *parent,
-                                    struct tinyui_backend_app_state *app_state,
+                                    struct tinyui_app *app_state,
                                     struct tinyui_image_source *release_source,
                                     struct tinyui_image_source *press_source,
                                     const struct tinyui_font *font)
@@ -2625,7 +2625,7 @@ int main(void)
     struct tinyui_backend_widget *label_backend;
     struct tinyui_backend_widget *text_backend;
     struct tinyui_backend_widget *image_backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     int button_cookie = 7;
     int common_cookie = 9;
     Dl_info self_info;
@@ -2658,7 +2658,7 @@ int main(void)
     label_backend = label->widget.backend_widget;
     text_backend = text->widget.backend_widget;
     image_backend = image->widget.backend_widget;
-    app_state = (struct tinyui_backend_app_state *)app->backend_app;
+    app_state = app;
     assert(app_state != 0);
     assert(app_state->ld_scene != 0);
     assert(ldMsgInit(&app_state->ld_scene->ptMsgQueue, 8) == true);

@@ -119,7 +119,7 @@ static void test_date_time_manual_values_survive_frame_start(struct tinyui_windo
     struct tinyui_date_time *dt =
         tinyui_date_time_create((struct tinyui_widget *)win, "date_time_manual");
     struct tinyui_backend_widget *backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     ldDateTime_t *ld_date_time;
 
     assert(dt != 0);
@@ -129,7 +129,7 @@ static void test_date_time_manual_values_survive_frame_start(struct tinyui_windo
 
     backend = (struct tinyui_backend_widget *)dt->widget.backend_widget;
     assert(backend != 0);
-    app_state = (struct tinyui_backend_app_state *)backend->owner->backend_app;
+    app_state = backend->owner;
     assert(app_state != 0);
     ld_date_time = (ldDateTime_t *)backend->ld_widget;
     assert(ld_date_time != 0);
@@ -228,7 +228,7 @@ static void test_date_time_native_transparent_color_and_align_round_trip(struct 
         tinyui_date_time_create((struct tinyui_widget *)win, "date_time_native_style");
     struct tinyui_backend_widget *backend;
     ldDateTime_t *ld_date_time;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     int year = 0;
     int month = 0;
     int day = 0;
@@ -241,7 +241,7 @@ static void test_date_time_native_transparent_color_and_align_round_trip(struct 
     assert(backend != 0);
     ld_date_time = (ldDateTime_t *)backend->ld_widget;
     assert(ld_date_time != 0);
-    app_state = (struct tinyui_backend_app_state *)backend->owner->backend_app;
+    app_state = backend->owner;
     assert(app_state != 0);
 
     assert(tinyui_date_time_set_text_color(dt, 0x112233U) == 0);

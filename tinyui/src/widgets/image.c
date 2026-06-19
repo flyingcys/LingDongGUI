@@ -77,7 +77,7 @@ static int tinyui_image_finish_detach_after_backend_failure(
 static void tinyui_image_dispose_partial_impl(struct tinyui_image *image)
 {
     struct tinyui_backend_widget *backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     int detach_result = 0;
 
     if (image == 0) {
@@ -155,7 +155,7 @@ struct tinyui_image *tinyui_image_create(struct tinyui_window *parent, const cha
     struct tinyui_image *image;
     struct tinyui_backend_widget *backend;
     struct tinyui_backend_widget *parent_backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     ldImage_t *ld_image;
     uint16_t name_id;
 

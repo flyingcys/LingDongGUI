@@ -60,7 +60,7 @@ struct tinyui_background *tinyui_background_create(struct tinyui_app *app, const
 {
     struct tinyui_background *background;
     struct tinyui_background_backend_host *host;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     ldWindow_t *ld_root;
     int16_t root_width;
     int16_t root_height;

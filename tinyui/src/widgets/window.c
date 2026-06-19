@@ -343,7 +343,7 @@ static void tinyui_window_init_defaults(struct tinyui_window *window, const char
 static void tinyui_window_dispose_partial(struct tinyui_window *window)
 {
     struct tinyui_backend_widget *backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     int clears_scene_root = 0;
 
     if (window == 0 || window->widget.backend_widget == 0) {
@@ -353,7 +353,7 @@ static void tinyui_window_dispose_partial(struct tinyui_window *window)
 
     backend = (struct tinyui_backend_widget *)window->widget.backend_widget;
     app_state = backend->owner != 0
-        ? (struct tinyui_backend_app_state *)backend->owner->backend_app
+        ? tinyui_runtime_bridge_backend_state(backend->owner)
         : 0;
 
     (void)tinyui_runtime_bridge_unbind_host(backend);
@@ -720,7 +720,7 @@ struct tinyui_window *tinyui_window_create(struct tinyui_app *app, const char *i
 {
     struct tinyui_window *window;
     struct tinyui_window_backend_host *host;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     ldWindow_t *ld_root;
     int16_t root_width;
     int16_t root_height;
@@ -729,7 +729,7 @@ struct tinyui_window *tinyui_window_create(struct tinyui_app *app, const char *i
         return 0;
     }
 
-    app_state = (struct tinyui_backend_app_state *)app->backend_app;
+    app_state = tinyui_runtime_bridge_backend_state(app);
     if (app_state == 0 || app_state->ld_scene == 0) {
         return 0;
     }
@@ -780,7 +780,7 @@ struct tinyui_window *tinyui_window_create_child(struct tinyui_window *parent, c
     struct tinyui_window *window;
     struct tinyui_window_backend_host *host;
     struct tinyui_backend_widget *parent_backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     ldWindow_t *ld_window;
     uint16_t name_id;
 
@@ -944,7 +944,7 @@ int tinyui_window_set_background_source(struct tinyui_window *window,
 int tinyui_window_set_background_offset(struct tinyui_window *window, int offset_x, int offset_y)
 {
     struct tinyui_backend_widget *backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     int16_t root_width = 0;
     int16_t root_height = 0;
     ldWindow_t *ld_window;

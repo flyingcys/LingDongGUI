@@ -74,7 +74,7 @@ static arm_2d_font_t *tinyui_button_resolve_font(const struct tinyui_font *font)
 static void tinyui_button_dispose_partial(struct tinyui_button *button)
 {
     struct tinyui_button_backend_host *host;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
 
     if (button == 0) {
         return;
@@ -119,7 +119,7 @@ static struct tinyui_button *tinyui_button_alloc(struct tinyui_window *parent, c
     struct tinyui_button *button;
     struct tinyui_button_backend_host *host;
     struct tinyui_backend_widget *parent_backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     ldButton_t *ld_button;
     uint16_t name_id;
 

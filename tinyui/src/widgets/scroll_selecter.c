@@ -334,7 +334,7 @@ struct tinyui_scroll_selecter *tinyui_scroll_selecter_create(struct tinyui_windo
     struct tinyui_scroll_selecter *scroll_selecter;
     struct tinyui_backend_widget *backend;
     struct tinyui_backend_widget *parent_backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     ldScrollSelecter_t *ld_scroll_selecter;
     uint16_t name_id;
 

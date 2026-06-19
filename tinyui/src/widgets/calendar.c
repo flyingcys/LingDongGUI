@@ -99,7 +99,7 @@ static void *tinyui_calendar_create_backend_local(void *parent, const char *id)
 {
     struct tinyui_backend_widget *widget;
     struct tinyui_backend_widget *parent_widget = parent;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     ldCalendar_t *ld_calendar;
     uint16_t name_id;
 
@@ -407,7 +407,7 @@ static int tinyui_calendar_sync_grid(struct tinyui_calendar *calendar)
 static void tinyui_calendar_dispose_partial(struct tinyui_calendar *calendar)
 {
     struct tinyui_backend_widget *backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
 
     if (calendar == 0) {
         return;

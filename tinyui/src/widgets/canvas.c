@@ -138,7 +138,7 @@ struct tinyui_canvas *tinyui_canvas_create(struct tinyui_window *parent, const c
     struct tinyui_canvas *canvas;
     struct tinyui_backend_widget *backend;
     struct tinyui_backend_widget *parent_backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     ldCanvas_t *ld_canvas;
     uint16_t name_id;
 

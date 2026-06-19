@@ -749,8 +749,8 @@ static void test_window_background_offset_round_trip_to_scene_root(void)
     struct tinyui_window *win = tinyui_window_create(app, "root");
     struct tinyui_display_config display = {0};
     const struct tinyui_backend_widget *win_backend = win->widget.backend_widget;
-    const struct tinyui_backend_app_state *app_state =
-        (const struct tinyui_backend_app_state *)app->backend_app;
+    const struct tinyui_app *app_state =
+        app;
     const ldWindow_t *ld_window = (const ldWindow_t *)win_backend->ld_widget;
     const ldBase_t *ld_root = (const ldBase_t *)app_state->ld_scene->ptNodeRoot;
     int offset_x = 0;

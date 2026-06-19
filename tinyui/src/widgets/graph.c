@@ -207,7 +207,7 @@ struct tinyui_graph *tinyui_graph_create(struct tinyui_window *parent,
     struct tinyui_graph *graph;
     struct tinyui_backend_widget *backend;
     struct tinyui_backend_widget *parent_backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     ldGraph_t *ld_graph;
     uint16_t name_id;
 

@@ -123,7 +123,7 @@ static int tinyui_runtime_host_widget_is_supported_real(const struct tinyui_back
 
 static struct tinyui_runtime_host_state *tinyui_runtime_host_state_from_app(struct tinyui_app *app)
 {
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
 
     app_state = tinyui_runtime_bridge_backend_state(app);
     if (app_state == NULL) {
@@ -132,7 +132,7 @@ static struct tinyui_runtime_host_state *tinyui_runtime_host_state_from_app(stru
     return (struct tinyui_runtime_host_state *)app_state->runtime_state;
 }
 
-static struct tinyui_backend_app_state *tinyui_runtime_host_app_state_from_window(struct tinyui_window *window)
+static struct tinyui_app *tinyui_runtime_host_app_state_from_window(struct tinyui_window *window)
 {
     return tinyui_runtime_bridge_backend_state_from_window(window);
 }
@@ -183,7 +183,7 @@ static void tinyui_runtime_host_render(struct tinyui_runtime_host_state *state, 
 {
     const struct tinyui_backend_widget *root;
     const struct tinyui_backend_widget *root_widget;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     int x = TINYUI_RUNTIME_PADDING;
     int y = TINYUI_RUNTIME_PADDING + 20;
 
@@ -221,7 +221,7 @@ static int tinyui_runtime_host_prepare_runtime_state(struct tinyui_app *app,
                                                      struct tinyui_runtime_host_state **state_out)
 {
     struct tinyui_runtime_host_state *state;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
 
     if (app == NULL || state_out == NULL) {
         return -1;
@@ -260,9 +260,9 @@ static int tinyui_runtime_host_prepare_runtime_state(struct tinyui_app *app,
 
 static int tinyui_runtime_host_prepare_runtime_scene(struct tinyui_app *app,
                                                      struct tinyui_window *window,
-                                                     struct tinyui_backend_app_state **app_state_out)
+                                                     struct tinyui_app **app_state_out)
 {
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
 
     if (app == NULL || window == NULL || app_state_out == NULL) {
         return -1;
@@ -282,7 +282,7 @@ static int tinyui_runtime_host_prepare_runtime_scene(struct tinyui_app *app,
 static int tinyui_runtime_host_prepare_runtime(struct tinyui_app *app, struct tinyui_window *window)
 {
     struct tinyui_runtime_host_state *state;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
 
     if (tinyui_runtime_host_prepare_runtime_state(app, &state) != 0) {
         return -1;
@@ -351,7 +351,7 @@ int tinyui_runtime_host_step_app(struct tinyui_app *app)
 
 void tinyui_runtime_host_shutdown_app(struct tinyui_app *app)
 {
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     struct tinyui_runtime_host_state *state;
 
     app_state = tinyui_runtime_bridge_backend_state(app);

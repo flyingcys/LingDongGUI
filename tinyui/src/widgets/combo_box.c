@@ -110,7 +110,7 @@ static void *tinyui_combo_box_create_backend_local(void *parent, const char *id)
 {
     struct tinyui_backend_widget *widget;
     struct tinyui_backend_widget *parent_widget = parent;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     ldComboBox_t *ld_combo_box;
     uint16_t name_id;
 
@@ -403,7 +403,7 @@ int tinyui_combo_box_get_open(void *backend_widget, int *is_open)
 static void tinyui_combo_box_dispose_partial(struct tinyui_combo_box *combo_box)
 {
     struct tinyui_backend_widget *backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
 
     if (combo_box == 0) {
         return;

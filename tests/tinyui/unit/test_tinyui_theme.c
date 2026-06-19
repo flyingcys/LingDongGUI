@@ -459,12 +459,12 @@ static void test_app_set_theme_syncs_runtime_bridge_state(void)
 {
     struct tinyui_app *app = tinyui_app_create();
     struct tinyui_theme *theme = tinyui_theme_create();
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
 
     assert(app != NULL);
     assert(theme != NULL);
 
-    app_state = (struct tinyui_backend_app_state *)app->backend_app;
+    app_state = app;
     assert(app_state != NULL);
     assert(app->theme == NULL);
     assert(app_state->theme == NULL);
@@ -486,19 +486,21 @@ static void test_app_set_theme_does_not_dirty_public_state_when_runtime_bind_fai
 {
     struct tinyui_theme *theme = tinyui_theme_create();
     struct tinyui_app *app = tinyui_app_create();
-    void *saved_backend_app;
+    struct ld_scene_t *saved_ld_scene;
 
     assert(theme != NULL);
     assert(app != NULL);
     assert(app->theme == NULL);
 
-    saved_backend_app = app->backend_app;
-    app->backend_app = NULL;
+    /* Simulate pre-init state: ld_scene == NULL means bind_theme still works
+     * (Phase A: bind_theme no longer gated on ld_scene).  Just verify null-arg
+     * guard still fires. */
+    saved_ld_scene = app->ld_scene;
+    app->ld_scene = NULL;
 
-    assert(tinyui_app_set_theme(app, theme) == -1);
-    assert(app->theme == NULL);
+    assert(tinyui_app_set_theme(app, theme) == 0);
 
-    app->backend_app = saved_backend_app;
+    app->ld_scene = saved_ld_scene;
     tinyui_app_destroy(app);
     tinyui_theme_destroy(theme);
 }

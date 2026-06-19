@@ -264,9 +264,9 @@ static void test_clock_system_time_provider_round_trip(struct tinyui_window *win
     assert(clock->use_system_time == 0);
     assert(tinyui_clock_get_use_system_time(clock) == 0);
     assert(ld_clock->isAutoSysTime == false);
-    ldClock_on_frame_start(((struct tinyui_backend_app_state *)backend->owner->backend_app)->ld_scene, ld_clock);
+    ldClock_on_frame_start(backend->owner->ld_scene, ld_clock);
     frozen_radian = ld_clock->pointerInfo[2].radian;
-    ldClock_on_frame_start(((struct tinyui_backend_app_state *)backend->owner->backend_app)->ld_scene, ld_clock);
+    ldClock_on_frame_start(backend->owner->ld_scene, ld_clock);
     assert(ld_clock->pointerInfo[2].radian == frozen_radian);
 
     assert(tinyui_clock_set_use_system_time(clock, 1) == 0);

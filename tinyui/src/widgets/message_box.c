@@ -90,7 +90,7 @@ struct tinyui_message_box *tinyui_message_box_create(struct tinyui_widget *paren
     struct tinyui_message_box *box;
     struct tinyui_backend_widget *backend;
     struct tinyui_backend_widget *parent_backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     ldMessageBox_t *ld_message_box;
     uint16_t name_id;
 

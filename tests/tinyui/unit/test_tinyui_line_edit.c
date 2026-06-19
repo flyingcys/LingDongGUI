@@ -93,7 +93,7 @@ static void on_line_edit_finished(struct tinyui_line_edit *line_edit, void *user
     line_edit_finished_user_data = user_data;
 }
 
-static void ensure_line_edit_msg_queue(struct tinyui_backend_app_state *app_state)
+static void ensure_line_edit_msg_queue(struct tinyui_app *app_state)
 {
     assert(app_state != 0);
     assert(app_state->ld_scene != 0);
@@ -170,7 +170,7 @@ static void test_line_edit_readback_matches_backend_after_finished_boundary(stru
     struct tinyui_app *app;
     struct tinyui_line_edit *line_edit;
     struct tinyui_backend_widget *backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     ldLineEdit_t *ld_line_edit;
     int editing = -1;
     int finish_cookie = 17;
@@ -185,7 +185,7 @@ static void test_line_edit_readback_matches_backend_after_finished_boundary(stru
 
     backend = (struct tinyui_backend_widget *)line_edit->widget.backend_widget;
     assert(backend != 0);
-    app_state = (struct tinyui_backend_app_state *)app->backend_app;
+    app_state = app;
     assert(app_state != 0);
     ensure_line_edit_msg_queue(app_state);
     ld_line_edit = (ldLineEdit_t *)backend->ld_widget;
@@ -216,7 +216,7 @@ static void test_line_edit_finished_boundary_clears_editing_state_without_reason
     struct tinyui_app *app;
     struct tinyui_line_edit *line_edit;
     struct tinyui_backend_widget *backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     int editing = -1;
 
     app = ((struct tinyui_backend_widget *)win->widget.backend_widget)->owner;
@@ -225,7 +225,7 @@ static void test_line_edit_finished_boundary_clears_editing_state_without_reason
 
     backend = (struct tinyui_backend_widget *)line_edit->widget.backend_widget;
     assert(backend != 0);
-    app_state = (struct tinyui_backend_app_state *)app->backend_app;
+    app_state = app;
     assert(app_state != 0);
     ensure_line_edit_msg_queue(app_state);
 
@@ -246,7 +246,7 @@ static void test_line_edit_commit_and_cancel_paths_are_distinct(struct tinyui_wi
     struct tinyui_line_edit *line_edit;
     struct tinyui_keyboard *keyboard;
     struct tinyui_backend_widget *backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     ldLineEdit_t *ld_line_edit;
     int editing = -1;
     int finish_cookie = 23;
@@ -263,7 +263,7 @@ static void test_line_edit_commit_and_cancel_paths_are_distinct(struct tinyui_wi
 
     backend = (struct tinyui_backend_widget *)line_edit->widget.backend_widget;
     assert(backend != 0);
-    app_state = (struct tinyui_backend_app_state *)app->backend_app;
+    app_state = app;
     assert(app_state != 0);
     ensure_line_edit_msg_queue(app_state);
     ld_line_edit = (ldLineEdit_t *)backend->ld_widget;

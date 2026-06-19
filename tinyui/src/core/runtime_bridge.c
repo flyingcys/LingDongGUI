@@ -114,7 +114,7 @@ static int tinyui_runtime_bridge_connect_native_events(struct tinyui_backend_wid
     return 0;
 }
 
-struct tinyui_backend_app_state *tinyui_runtime_bridge_backend_state_from_parent(void *backend_widget)
+struct tinyui_app *tinyui_runtime_bridge_backend_state_from_parent(void *backend_widget)
 {
     struct tinyui_backend_widget *parent_widget = backend_widget;
 
@@ -127,7 +127,7 @@ struct tinyui_backend_app_state *tinyui_runtime_bridge_backend_state_from_parent
 
 struct ld_scene_t *tinyui_runtime_bridge_scene_from_parent(void *backend_widget)
 {
-    struct tinyui_backend_app_state *app_state =
+    struct tinyui_app *app_state =
         tinyui_runtime_bridge_backend_state_from_parent(backend_widget);
 
     if (app_state == 0) {
@@ -139,7 +139,7 @@ struct ld_scene_t *tinyui_runtime_bridge_scene_from_parent(void *backend_widget)
 
 uint16_t tinyui_runtime_bridge_next_name_id(void *backend_widget)
 {
-    struct tinyui_backend_app_state *app_state =
+    struct tinyui_app *app_state =
         tinyui_runtime_bridge_backend_state_from_parent(backend_widget);
 
     if (app_state == 0) {
@@ -151,44 +151,31 @@ uint16_t tinyui_runtime_bridge_next_name_id(void *backend_widget)
 
 int tinyui_runtime_bridge_bind_theme(struct tinyui_app *app, struct tinyui_theme *theme)
 {
-    struct tinyui_backend_app_state *app_state = tinyui_runtime_bridge_backend_state(app);
-
-    if (app == 0 || theme == 0 || app_state == 0) {
+    if (app == 0 || theme == 0) {
         return -1;
     }
 
     app->theme = theme;
-    app_state->theme = theme;
     return 0;
 }
 
 int tinyui_runtime_bridge_init_app(struct tinyui_app *app)
 {
-    struct tinyui_backend_app_state *app_state;
-
     if (app == NULL) {
         return -1;
     }
 
-    if (app->backend_app != NULL) {
+    if (app->ld_scene != NULL) {
         return 0;
     }
 
-    app_state = calloc(1, sizeof(*app_state));
-    if (app_state == NULL) {
+    app->ld_scene = calloc(1, sizeof(*app->ld_scene));
+    if (app->ld_scene == NULL) {
         return -1;
     }
 
-    app_state->ld_scene = calloc(1, sizeof(*app_state->ld_scene));
-    if (app_state->ld_scene == NULL) {
-        free(app_state);
-        return -1;
-    }
-
-    app_state->theme = app->theme;
-    app_state->next_ld_name_id = 0;
-    app_state->ld_scene->bUserAllocated = true;
-    app->backend_app = app_state;
+    app->next_ld_name_id = 0;
+    app->ld_scene->bUserAllocated = true;
     return 0;
 }
 
@@ -222,24 +209,20 @@ int tinyui_runtime_bridge_step_app(struct tinyui_app *app)
 
 void tinyui_runtime_bridge_shutdown_app(struct tinyui_app *app)
 {
-    struct tinyui_backend_app_state *app_state;
-
     if (app == NULL) {
         return;
     }
 
-    app_state = tinyui_runtime_bridge_backend_state(app);
-    if (app_state == NULL) {
+    if (app->ld_scene == NULL) {
         return;
     }
 
     tinyui_runtime_host_shutdown_app(app);
-    if (app_state->ld_scene != NULL) {
-        ldGuiDespose(app_state->ld_scene);
+    if (app->ld_scene != NULL) {
+        ldGuiDespose(app->ld_scene);
     }
-    free(app_state->ld_scene);
-    free(app_state);
-    app->backend_app = NULL;
+    free(app->ld_scene);
+    app->ld_scene = NULL;
 }
 
 void tinyui_runtime_bridge_begin_screen_create(struct tinyui_app *app)
@@ -337,7 +320,7 @@ int tinyui_runtime_bridge_commit_pointer_event(struct tinyui_app *app,
 int tinyui_runtime_bridge_bind_host(void *backend_widget, struct tinyui_widget *widget)
 {
     struct tinyui_backend_widget *backend = backend_widget;
-    struct tinyui_backend_app_state *app_state = NULL;
+    struct tinyui_app *app_state = NULL;
 
     if (backend == 0 || widget == 0) {
         return -1;
@@ -412,19 +395,15 @@ int tinyui_runtime_bridge_detach_from_parent(void *backend_widget)
 
 int tinyui_runtime_bridge_has_scene(const struct tinyui_app *app)
 {
-    return app != 0 && app->backend_app != 0;
+    return app != 0 && app->ld_scene != 0;
 }
 
-struct tinyui_backend_app_state *tinyui_runtime_bridge_backend_state(struct tinyui_app *app)
+struct tinyui_app *tinyui_runtime_bridge_backend_state(struct tinyui_app *app)
 {
-    if (app == 0 || app->backend_app == 0) {
-        return 0;
-    }
-
-    return (struct tinyui_backend_app_state *)app->backend_app;
+    return app == 0 ? 0 : app;
 }
 
-struct tinyui_backend_app_state *tinyui_runtime_bridge_backend_state_from_window(struct tinyui_window *window)
+struct tinyui_app *tinyui_runtime_bridge_backend_state_from_window(struct tinyui_window *window)
 {
     const struct tinyui_backend_widget *backend = 0;
 

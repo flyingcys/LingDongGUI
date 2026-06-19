@@ -72,7 +72,7 @@ static int tinyui_checkbox_props_are_valid(const struct tinyui_checkbox_props *p
 static void tinyui_checkbox_dispose_partial(struct tinyui_checkbox *checkbox)
 {
     struct tinyui_backend_widget *backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
 
     if (checkbox == 0) {
         return;
@@ -112,7 +112,7 @@ struct tinyui_checkbox *tinyui_checkbox_create(struct tinyui_window *parent, con
     struct tinyui_checkbox *checkbox;
     struct tinyui_backend_widget *backend;
     struct tinyui_backend_widget *parent_backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     ldCheckBox_t *ld_checkbox;
     uint16_t name_id;
 

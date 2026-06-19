@@ -205,7 +205,7 @@ static void test_message_box_confirm_callback_bridge(struct tinyui_window *win)
         tinyui_message_box_create((struct tinyui_widget *)win, "message_box_state");
     struct tinyui_backend_widget *backend;
     ldMessageBox_t *ld_message_box;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
 
     assert(box != 0);
     assert(tinyui_message_box_set_title(box, "Confirm") == 0);
@@ -221,7 +221,7 @@ static void test_message_box_confirm_callback_bridge(struct tinyui_window *win)
     assert(tinyui_message_box_get_confirm_text(box) != 0);
     backend = (struct tinyui_backend_widget *)box->widget.backend_widget;
     assert(backend != 0);
-    app_state = (struct tinyui_backend_app_state *)backend->owner->backend_app;
+    app_state = backend->owner;
     assert(app_state != 0);
     ld_message_box = (ldMessageBox_t *)backend->ld_widget;
     assert(ld_message_box != 0);
@@ -351,7 +351,7 @@ static void test_message_box_multi_button_callback_reports_clicked_index(struct 
         tinyui_message_box_create((struct tinyui_widget *)win, "message_box_multi_cb");
     struct tinyui_backend_widget *backend;
     ldMessageBox_t *ld_message_box;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
 
     assert(box != 0);
     assert(tinyui_message_box_set_buttons(box, buttons, 3) == 0);
@@ -364,7 +364,7 @@ static void test_message_box_multi_button_callback_reports_clicked_index(struct 
 
     backend = (struct tinyui_backend_widget *)box->widget.backend_widget;
     assert(backend != 0);
-    app_state = (struct tinyui_backend_app_state *)backend->owner->backend_app;
+    app_state = backend->owner;
     assert(app_state != 0);
     ld_message_box = (ldMessageBox_t *)backend->ld_widget;
     assert(ld_message_box != 0);
@@ -436,7 +436,7 @@ static void test_message_box_modal_hit_and_dismiss_returns_focus_to_underlay(str
         tinyui_message_box_create((struct tinyui_widget *)win, "message_box_modal");
     struct tinyui_backend_widget *button_backend;
     struct tinyui_backend_widget *box_backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     ldButton_t *ld_button;
     ldMessageBox_t *ld_message_box;
     int press_cookie = 77;
@@ -454,7 +454,7 @@ static void test_message_box_modal_hit_and_dismiss_returns_focus_to_underlay(str
     box_backend = (struct tinyui_backend_widget *)box->widget.backend_widget;
     assert(button_backend != 0);
     assert(box_backend != 0);
-    app_state = (struct tinyui_backend_app_state *)box_backend->owner->backend_app;
+    app_state = box_backend->owner;
     assert(app_state != 0);
     ldMsgDeinit(&app_state->ld_scene->ptMsgQueue);
     assert(ldMsgInit(&app_state->ld_scene->ptMsgQueue, 8) == true);

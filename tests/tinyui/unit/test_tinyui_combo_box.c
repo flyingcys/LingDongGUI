@@ -122,7 +122,7 @@ static void test_combo_box_open_close_and_selected_item_truth(void)
     struct tinyui_window *win;
     struct tinyui_combo_box *combo_box;
     struct tinyui_backend_widget *backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     ldComboBox_t *ld_combo_box;
     int is_open = -1;
 
@@ -139,7 +139,7 @@ static void test_combo_box_open_close_and_selected_item_truth(void)
 
     backend = (struct tinyui_backend_widget *)combo_box->widget.backend_widget;
     assert(backend != 0);
-    app_state = (struct tinyui_backend_app_state *)backend->owner->backend_app;
+    app_state = backend->owner;
     assert(app_state != 0);
     assert(app_state->ld_scene != 0);
     assert(ldMsgInit(&app_state->ld_scene->ptMsgQueue, 8) == true);
@@ -184,7 +184,7 @@ static void test_combo_box_reuses_selection_contract(void)
     struct tinyui_window *win;
     struct tinyui_combo_box *combo_box;
     struct tinyui_backend_widget *backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     ldComboBox_t *ld_combo_box;
     int cookie = 11;
 
@@ -204,7 +204,7 @@ static void test_combo_box_reuses_selection_contract(void)
 
     backend = (struct tinyui_backend_widget *)combo_box->widget.backend_widget;
     assert(backend != 0);
-    app_state = (struct tinyui_backend_app_state *)backend->owner->backend_app;
+    app_state = backend->owner;
     assert(app_state != 0);
     assert(app_state->ld_scene != 0);
     assert(ldMsgInit(&app_state->ld_scene->ptMsgQueue, 8) == true);

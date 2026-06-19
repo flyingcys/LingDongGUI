@@ -168,13 +168,6 @@ struct tinyui_backend_widget {
     struct tinyui_backend_layout_child_state child_layout;
 };
 
-struct tinyui_backend_app_state {
-    struct tinyui_theme *theme;
-    struct ld_scene_t *ld_scene;
-    uint16_t next_ld_name_id;
-    void *runtime_state;
-};
-
 /* ── Test snapshot forward declarations ────────────────────────── */
 
 struct tinyui_progress_wheel_test_dispose_snapshot;

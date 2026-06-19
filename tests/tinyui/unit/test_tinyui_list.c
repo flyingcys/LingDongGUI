@@ -158,7 +158,7 @@ static void reset_list_signal_counters(struct tinyui_backend_widget *backend)
     native_list_clicked_index = -1;
 }
 
-static struct tinyui_backend_app_state *list_app_state(struct tinyui_list *list)
+static struct tinyui_app *list_app_state(struct tinyui_list *list)
 {
     struct tinyui_backend_widget *backend;
 
@@ -166,8 +166,8 @@ static struct tinyui_backend_app_state *list_app_state(struct tinyui_list *list)
     backend = (struct tinyui_backend_widget *)list->widget.backend_widget;
     assert(backend != 0);
     assert(backend->owner != 0);
-    assert(backend->owner->backend_app != 0);
-    return (struct tinyui_backend_app_state *)backend->owner->backend_app;
+    assert(backend->owner->ld_scene != 0);
+    return backend->owner;
 }
 
 static void assert_list_selectable_state(struct tinyui_list *list, int expected_enabled)
@@ -245,7 +245,7 @@ static void test_enabled_contract_and_native_selected_bridge(struct tinyui_windo
     struct tinyui_widget *parent;
     struct tinyui_list *list;
     struct tinyui_backend_widget *backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     ldList_t *ld_list;
 
     (void)win;
@@ -263,7 +263,7 @@ static void test_enabled_contract_and_native_selected_bridge(struct tinyui_windo
     backend = (struct tinyui_backend_widget *)list->widget.backend_widget;
     assert(backend != 0);
     assert(backend->owner != 0);
-    app_state = (struct tinyui_backend_app_state *)backend->owner->backend_app;
+    app_state = backend->owner;
     assert(app_state != 0);
     assert(app_state->ld_scene != 0);
     assert(app_state->ld_scene->ptMsgQueue != 0
@@ -408,7 +408,7 @@ static void test_selected_index_readback_matches_native_queue_after_preselected_
     struct tinyui_widget *parent;
     struct tinyui_list *list;
     struct tinyui_backend_widget *backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     ldList_t *ld_list;
     int user_cookie = 71;
 
@@ -429,7 +429,7 @@ static void test_selected_index_readback_matches_native_queue_after_preselected_
 
     backend = (struct tinyui_backend_widget *)list->widget.backend_widget;
     assert(backend != 0);
-    app_state = (struct tinyui_backend_app_state *)backend->owner->backend_app;
+    app_state = backend->owner;
     assert(app_state != 0);
     assert(app_state->ld_scene != 0);
     assert(app_state->ld_scene->ptMsgQueue != 0
@@ -511,7 +511,7 @@ static void test_hidden_or_disabled_list_releases_focus_and_rejects_native_selec
     struct tinyui_widget *parent;
     struct tinyui_list *list;
     struct tinyui_backend_widget *backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     ldList_t *ld_list;
 
     (void)win;
@@ -1042,7 +1042,7 @@ static void test_repeated_native_clicked_item_same_index_is_noop_contract(struct
     struct tinyui_widget *parent;
     struct tinyui_list *list;
     struct tinyui_backend_widget *backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     int user_cookie = 61;
 
     (void)win;

@@ -323,7 +323,7 @@ static struct tinyui_radial_menu *tinyui_radial_menu_create_with_backend_config(
     struct tinyui_radial_menu *radial_menu;
     struct tinyui_backend_widget *backend;
     struct tinyui_backend_widget *parent_backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     ldRadialMenu_t *ld_radial_menu;
     uint16_t name_id;
 

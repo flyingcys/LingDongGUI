@@ -60,7 +60,7 @@ static void test_app_switch_window_persists_switch_metadata_contract(void)
     struct tinyui_app *app = tinyui_app_create();
     struct tinyui_window *win_a;
     struct tinyui_window *win_b;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
 
     assert(app != 0);
     win_a = tinyui_window_create(app, "win_switch_a");
@@ -68,7 +68,7 @@ static void test_app_switch_window_persists_switch_metadata_contract(void)
     assert(win_a != 0);
     assert(win_b != 0);
 
-    app_state = (struct tinyui_backend_app_state *)app->backend_app;
+    app_state = app;
     assert(app_state != 0);
 
     assert(tinyui_app_switch_window(app, win_a, 0, 0) == 0);

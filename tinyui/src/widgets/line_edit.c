@@ -106,7 +106,7 @@ static void *tinyui_line_edit_create_backend_local(void *parent, const char *id)
 {
     struct tinyui_backend_widget *widget;
     struct tinyui_backend_widget *parent_widget = parent;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     ldLineEdit_t *ld_line_edit;
     uint16_t name_id;
 
@@ -333,7 +333,7 @@ int tinyui_line_edit_get_editing_ld(void *backend_widget, int *editing)
 static void tinyui_line_edit_dispose_partial(struct tinyui_line_edit *line_edit)
 {
     struct tinyui_backend_widget *backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
 
     if (line_edit == 0) {
         return;

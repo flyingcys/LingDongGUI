@@ -326,7 +326,7 @@ static void test_calendar_system_date_provider_round_trip(void)
     assert(tinyui_calendar_set_date(calendar, 2024, 2, 29) == 0);
     assert(tinyui_calendar_set_use_system_date(calendar, 1) == 0);
     assert(tinyui_calendar_get_use_system_date(calendar) == 1);
-    ldCalendar_on_frame_start(backend->owner->backend_app ? ((struct tinyui_backend_app_state *)backend->owner->backend_app)->ld_scene : NULL,
+    ldCalendar_on_frame_start(backend->owner != NULL ? backend->owner->ld_scene : NULL,
                               ld_calendar);
     assert(tinyui_calendar_get_date(calendar, &year, &month, &day) == 0);
     assert(year >= 1970);

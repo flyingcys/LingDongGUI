@@ -130,7 +130,7 @@ static int tinyui_gauge_finish_detach_after_backend_failure(
 static void tinyui_gauge_dispose_partial_impl(struct tinyui_gauge *gauge)
 {
     struct tinyui_backend_widget *backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     ldBase_t *ld_base;
     int detach_result = 0;
     int unbind_result = 0;
@@ -234,7 +234,7 @@ struct tinyui_gauge *tinyui_gauge_create(struct tinyui_widget *parent, const cha
     struct tinyui_gauge *gauge;
     struct tinyui_backend_widget *backend;
     struct tinyui_backend_widget *parent_backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     ldGauge_t *ld_gauge;
     arm_2d_tile_t *bg_img_tile;
     arm_2d_tile_t *bg_mask_tile;

@@ -217,7 +217,7 @@ static void tinyui_progress_wheel_disable_dirty_regions(void *backend_widget)
 static void tinyui_progress_wheel_dispose_partial_impl(struct tinyui_progress_wheel *wheel)
 {
     struct tinyui_backend_widget *backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     ldBase_t *ld_base;
     int detach_result = 0;
     int unbind_result = 0;
@@ -269,7 +269,7 @@ struct tinyui_progress_wheel *tinyui_progress_wheel_create(struct tinyui_widget 
     struct tinyui_progress_wheel *wheel;
     struct tinyui_backend_widget *backend;
     struct tinyui_backend_widget *parent_backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     ldProgressWheel_t *ld_progress_wheel;
     uint16_t name_id;
 

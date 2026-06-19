@@ -237,7 +237,7 @@ struct tinyui_keyboard *tinyui_keyboard_create(struct tinyui_window *parent, con
     struct tinyui_keyboard *keyboard;
     struct tinyui_backend_widget *backend;
     struct tinyui_backend_widget *parent_backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     ldKeyboard_t *ld_keyboard;
     uint16_t name_id;
 
@@ -504,7 +504,7 @@ int tinyui_keyboard_button_update(struct tinyui_keyboard *keyboard, unsigned int
 int tinyui_keyboard_click(struct tinyui_keyboard *keyboard)
 {
     struct tinyui_backend_widget *backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     ldKeyboard_t *ld_keyboard;
 
     if (keyboard == 0) {

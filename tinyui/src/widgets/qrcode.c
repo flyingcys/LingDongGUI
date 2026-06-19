@@ -83,7 +83,7 @@ static int tinyui_qrcode_finish_detach_after_backend_failure(
 static void tinyui_qrcode_dispose_partial_impl(struct tinyui_qrcode *qrcode)
 {
     struct tinyui_backend_widget *backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     int detach_result = 0;
 
     if (qrcode == 0) {
@@ -148,7 +148,7 @@ struct tinyui_qrcode *tinyui_qrcode_create(struct tinyui_widget *parent, const c
     struct tinyui_qrcode *qrcode;
     struct tinyui_backend_widget *backend;
     struct tinyui_backend_widget *parent_backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     ldQRCode_t *ld_qrcode;
     uint16_t name_id;
     static unsigned char empty_text[] = "";

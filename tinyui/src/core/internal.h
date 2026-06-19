@@ -303,7 +303,9 @@ struct tinyui_widget {
 };
 
 struct tinyui_app {
-    void *backend_app;
+    struct ld_scene_t  *ld_scene;           /* 原 backend_app.ld_scene */
+    uint16_t            next_ld_name_id;    /* 原 backend_app.next_ld_name_id */
+    void               *runtime_state;      /* 原 backend_app.runtime_state (SDL host per-app) */
     struct tinyui_theme *theme;
     struct tinyui_window *root_window;
     struct tinyui_widget *focus_owner;

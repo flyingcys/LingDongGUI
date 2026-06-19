@@ -126,7 +126,7 @@ static uint64_t make_signal_value_xy(uint16_t x, uint16_t y)
     return ((uint64_t)x << 16) | (uint64_t)y;
 }
 
-static void ensure_table_msg_queue(struct tinyui_backend_app_state *app_state)
+static void ensure_table_msg_queue(struct tinyui_app *app_state)
 {
     assert(app_state != 0);
     assert(app_state->ld_scene != 0);
@@ -204,7 +204,7 @@ static void test_table_edit_commit_updates_model_and_visible_text(void)
     struct tinyui_table *table;
     struct tinyui_keyboard *keyboard;
     struct tinyui_backend_widget *backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     ldTable_t *ld_table;
 
     app = tinyui_app_create();
@@ -221,7 +221,7 @@ static void test_table_edit_commit_updates_model_and_visible_text(void)
 
     backend = (struct tinyui_backend_widget *)table->widget.backend_widget;
     assert(backend != 0);
-    app_state = (struct tinyui_backend_app_state *)backend->owner->backend_app;
+    app_state = backend->owner;
     assert(app_state != 0);
     ensure_table_msg_queue(app_state);
     ld_table = (ldTable_t *)backend->ld_widget;
@@ -255,7 +255,7 @@ static void test_table_reuses_editable_cell_contract(void)
     struct tinyui_window *win;
     struct tinyui_table *table;
     struct tinyui_backend_widget *backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
 
     app = tinyui_app_create();
     assert(app != 0);
@@ -267,7 +267,7 @@ static void test_table_reuses_editable_cell_contract(void)
 
     backend = (struct tinyui_backend_widget *)table->widget.backend_widget;
     assert(backend != 0);
-    app_state = (struct tinyui_backend_app_state *)backend->owner->backend_app;
+    app_state = backend->owner;
     assert(app_state != 0);
     ensure_table_msg_queue(app_state);
 
@@ -300,7 +300,7 @@ static void test_table_final_release_contract_covers_non_commit_exit_boundary(vo
     struct tinyui_table *table;
     struct tinyui_keyboard *keyboard;
     struct tinyui_backend_widget *backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     ldTable_t *ld_table;
 
     app = tinyui_app_create();
@@ -318,7 +318,7 @@ static void test_table_final_release_contract_covers_non_commit_exit_boundary(vo
     backend = (struct tinyui_backend_widget *)table->widget.backend_widget;
     assert(backend != 0);
     assert(backend->kind == TINYUI_BACKEND_WIDGET_TABLE);
-    app_state = (struct tinyui_backend_app_state *)backend->owner->backend_app;
+    app_state = backend->owner;
     assert(app_state != 0);
     ensure_table_msg_queue(app_state);
     ld_table = (ldTable_t *)backend->ld_widget;

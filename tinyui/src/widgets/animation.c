@@ -59,7 +59,7 @@ static int tinyui_animation_attach_native(struct tinyui_animation *animation,
 {
     struct tinyui_backend_widget *backend;
     struct tinyui_backend_widget *parent_backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     ldAnimation_t *ld_animation;
     uint16_t name_id;
 

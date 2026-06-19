@@ -98,7 +98,7 @@ struct tinyui_date_time *tinyui_date_time_create(struct tinyui_widget *parent, c
     struct tinyui_date_time *dt;
     struct tinyui_backend_widget *backend;
     struct tinyui_backend_widget *parent_backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     ldDateTime_t *ld_date_time;
     uint16_t name_id;
 

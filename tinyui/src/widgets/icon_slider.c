@@ -292,7 +292,7 @@ static struct tinyui_icon_slider *tinyui_icon_slider_create_with_backend_config(
     struct tinyui_icon_slider *icon_slider;
     struct tinyui_backend_widget *backend;
     struct tinyui_backend_widget *parent_backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     ldIconSlider_t *ld_icon_slider;
     uint16_t name_id;
 

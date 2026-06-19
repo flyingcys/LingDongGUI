@@ -343,10 +343,10 @@ static void test_window_create_with_props_failure_rolls_back_root_binding(void)
         .id = "root_props_fail",
         .bg_color = 0x112233,
     };
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
 
     assert(app != 0);
-    app_state = (struct tinyui_backend_app_state *)app->backend_app;
+    app_state = app;
     assert(app_state != 0);
     assert(app_state->ld_scene != 0);
     assert(app_state->ld_scene->ptNodeRoot == 0);

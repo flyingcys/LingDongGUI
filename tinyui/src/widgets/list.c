@@ -80,7 +80,7 @@ struct tinyui_list *tinyui_list_create(struct tinyui_widget *parent, const char 
     struct tinyui_list *list;
     struct tinyui_backend_widget *backend;
     struct tinyui_backend_widget *parent_backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     ldList_t *ld_list;
     uint16_t name_id;
 

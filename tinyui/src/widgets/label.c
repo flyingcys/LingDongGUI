@@ -102,7 +102,7 @@ static int tinyui_label_props_are_valid(const struct tinyui_label_props *props)
 static void tinyui_label_dispose_partial(struct tinyui_label *label)
 {
     struct tinyui_backend_widget *backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
 
     if (label == 0) {
         return;
@@ -137,7 +137,7 @@ struct tinyui_label *tinyui_label_create(struct tinyui_window *parent, const cha
     struct tinyui_label *label;
     struct tinyui_backend_widget *backend;
     struct tinyui_backend_widget *parent_backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     ldLabel_t *ld_label;
     uint16_t name_id;
 

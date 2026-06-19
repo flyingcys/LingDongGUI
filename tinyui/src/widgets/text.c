@@ -78,7 +78,7 @@ static arm_2d_font_t *tinyui_text_resolve_font(const struct tinyui_font *font)
 static void tinyui_text_dispose_partial(struct tinyui_text *text)
 {
     struct tinyui_backend_widget *backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
 
     if (text == 0) {
         return;
@@ -254,7 +254,7 @@ struct tinyui_text *tinyui_text_create(struct tinyui_window *parent, const char 
     struct tinyui_text *text;
     struct tinyui_backend_widget *backend;
     struct tinyui_backend_widget *parent_backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     ldText_t *ld_text;
     uint16_t name_id;
 

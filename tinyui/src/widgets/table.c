@@ -98,7 +98,7 @@ static int tinyui_table_finish_detach_after_backend_failure(struct tinyui_backen
 static void tinyui_table_dispose_partial(struct tinyui_table *table)
 {
     struct tinyui_backend_widget *backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     ldBase_t *ld_base;
     int detach_result = 0;
     int unbind_result = 0;
@@ -342,7 +342,7 @@ struct tinyui_table *tinyui_table_create(struct tinyui_window *parent,
     struct tinyui_table *table;
     struct tinyui_backend_widget *backend;
     struct tinyui_backend_widget *parent_backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     ldTable_t *ld_table;
     uint16_t name_id;
 
@@ -616,7 +616,7 @@ void tinyui_table_test_reset_state(void)
 int tinyui_tabel_show_keyboard(struct tinyui_table *table)
 {
     struct tinyui_backend_widget *backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     ldTable_t *ld_table;
     ldTableItem_t *item;
 
@@ -629,7 +629,7 @@ int tinyui_tabel_show_keyboard(struct tinyui_table *table)
     if (backend == 0 || ld_table == 0) {
         return -1;
     }
-    app_state = (struct tinyui_backend_app_state *)backend->owner->backend_app;
+    app_state = tinyui_runtime_bridge_backend_state(backend->owner);
     if (app_state == 0 || app_state->ld_scene == 0) {
         return -1;
     }

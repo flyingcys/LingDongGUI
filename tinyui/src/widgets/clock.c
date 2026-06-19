@@ -128,7 +128,7 @@ struct tinyui_clock *tinyui_clock_create(struct tinyui_widget *parent, const cha
     struct tinyui_clock *clock;
     struct tinyui_backend_widget *backend;
     struct tinyui_backend_widget *parent_backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     ldClock_t *ld_clock;
     arm_2d_tile_t *hour_img_tile;
     arm_2d_tile_t *hour_mask_tile;

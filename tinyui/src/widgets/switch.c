@@ -80,7 +80,7 @@ static int tinyui_switch_attach_native(struct tinyui_switch *sw,
 {
     struct tinyui_backend_widget *widget;
     struct tinyui_backend_widget *parent_widget;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     ldSwitch_t *ld_switch;
     uint16_t name_id;
 
@@ -603,7 +603,7 @@ int tinyui_switch_can_navigate(struct tinyui_switch *sw, int direction, int *can
 int tinyui_switch_navigate(struct tinyui_switch *sw, int direction)
 {
     struct tinyui_backend_widget *backend;
-    struct tinyui_backend_app_state *app_state;
+    struct tinyui_app *app_state;
     ldSwitch_t *ld_switch;
     int ld_dir;
 
