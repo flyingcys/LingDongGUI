@@ -66,21 +66,20 @@ static void test_animation_create_with_props_builds_direct_backend_mapping(struc
     };
     struct tinyui_animation *animation =
         tinyui_animation_create_with_props((struct tinyui_widget *)win, &props);
-    struct tinyui_backend_widget *backend;
-    struct tinyui_backend_widget *parent_backend;
+    struct tinyui_widget *backend;
+    struct tinyui_widget *parent_backend;
     ldAnimation_t *ld_animation;
 
     assert(animation != 0);
-    backend = (struct tinyui_backend_widget *)animation->widget.backend_widget;
-    assert(backend != 0);
-    parent_backend = (struct tinyui_backend_widget *)win->widget.backend_widget;
-    assert(parent_backend != 0);
+    backend = &animation->widget;
+    assert(backend->ld_widget != 0);
+    parent_backend = &win->widget;
+    assert(parent_backend->ld_widget != 0);
     assert(backend->kind == TINYUI_BACKEND_WIDGET_ANIMATION);
     assert(backend->owner == parent_backend->owner);
-    assert(backend->root == parent_backend->root);
-    assert(backend->parent == parent_backend);
+    assert((ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)backend->ld_widget) == (ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)parent_backend->ld_widget));
+    assert(ldBaseGetParent((ldBase_t *)backend->ld_widget) == (ldBase_t *)parent_backend->ld_widget);
     assert(backend->ld_name_id != 0);
-    assert(backend->host_widget == &animation->widget);
     assert(backend->ld_event_bridge_scene != 0);
     assert(backend->ld_event_bridge_sender == backend->ld_widget);
     ld_animation = (ldAnimation_t *)backend->ld_widget;
@@ -114,12 +113,12 @@ static void test_animation_native_image_period_and_frame_round_trip(struct tinyu
     };
     struct tinyui_animation *animation =
         tinyui_animation_create_with_props((struct tinyui_widget *)win, &props);
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldAnimation_t *ld_animation;
 
     assert(animation != 0);
-    backend = (struct tinyui_backend_widget *)animation->widget.backend_widget;
-    assert(backend != 0);
+    backend = &animation->widget;
+    assert(backend->ld_widget != 0);
     ld_animation = (ldAnimation_t *)backend->ld_widget;
     assert(ld_animation != 0);
 
@@ -154,12 +153,12 @@ static void test_animation_show_frame_advances_across_rows(struct tinyui_window 
     };
     struct tinyui_animation *animation =
         tinyui_animation_create_with_props((struct tinyui_widget *)win, &props);
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldAnimation_t *ld_animation;
 
     assert(animation != 0);
-    backend = (struct tinyui_backend_widget *)animation->widget.backend_widget;
-    assert(backend != 0);
+    backend = &animation->widget;
+    assert(backend->ld_widget != 0);
     ld_animation = (ldAnimation_t *)backend->ld_widget;
     assert(ld_animation != 0);
 
@@ -191,12 +190,12 @@ static void test_animation_init_and_shared_base_aliases_round_trip(struct tinyui
         tinyui_animation_create_with_props((struct tinyui_widget *)win, &props);
     struct tinyui_animation *alias =
         tinyui_animation_init((struct tinyui_widget *)win, "animation_alias");
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldAnimation_t *ld_animation;
 
     assert(animation != 0);
-    backend = (struct tinyui_backend_widget *)animation->widget.backend_widget;
-    assert(backend != 0);
+    backend = &animation->widget;
+    assert(backend->ld_widget != 0);
     ld_animation = (ldAnimation_t *)backend->ld_widget;
     assert(ld_animation != 0);
 
@@ -220,11 +219,8 @@ static void test_animation_init_and_shared_base_aliases_round_trip(struct tinyui
 
 static void test_animation_internal_seams_renamed_in_source(void)
 {
-    const char *animation_source = "/Users/cys/embedded/LingDongGUI/tinyui/src/widgets/animation.c";
+    const char *animation_source = "tinyui/src/widgets/animation.c";
 
-    assert_source_lacks_function_definition(animation_source, "tinyui_animation_get_ld");
-    assert_source_lacks_function_definition(animation_source, "tinyui_animation_props_are_valid");
-    assert_source_lacks_function_definition(animation_source, "tinyui_animation_attach_native");
     assert_source_has_function_definition(animation_source,
                                           "static ldAnimation_t *",
                                           "tinyui_animation_get_ld");

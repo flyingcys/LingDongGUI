@@ -105,24 +105,23 @@ static void test_keyboard_create_builds_direct_backend_mapping(void)
     struct tinyui_app *app;
     struct tinyui_window *win;
     struct tinyui_keyboard *keyboard;
-    struct tinyui_backend_widget *backend;
-    struct tinyui_backend_widget *parent_backend;
+    struct tinyui_widget *backend;
+    struct tinyui_widget *parent_backend;
     ldKeyboard_t *ld_keyboard;
 
     win = test_window_create(&app);
     keyboard = tinyui_keyboard_create(win, "keyboard_direct_mapping");
     assert(keyboard != 0);
 
-    backend = (struct tinyui_backend_widget *)keyboard->widget.backend_widget;
-    parent_backend = (struct tinyui_backend_widget *)win->widget.backend_widget;
-    assert(backend != 0);
-    assert(parent_backend != 0);
+    backend = &keyboard->widget;
+    parent_backend = &win->widget;
+    assert(backend->ld_widget != 0);
+    assert(parent_backend->ld_widget != 0);
     assert(backend->kind == TINYUI_BACKEND_WIDGET_KEYBOARD);
     assert(backend->owner == parent_backend->owner);
-    assert(backend->root == parent_backend->root);
-    assert(backend->parent == parent_backend);
+    assert((ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)backend->ld_widget) == (ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)parent_backend->ld_widget));
+    assert(ldBaseGetParent((ldBase_t *)backend->ld_widget) == (ldBase_t *)parent_backend->ld_widget);
     assert(backend->ld_name_id != 0);
-    assert(backend->host_widget == &keyboard->widget);
     assert(backend->ld_event_bridge_scene != 0);
     assert(backend->ld_event_bridge_sender == backend->ld_widget);
     ld_keyboard = (ldKeyboard_t *)backend->ld_widget;
@@ -201,7 +200,7 @@ static void test_keyboard_dispatches_ascii_into_editing_owner_before_focus_owner
     assert(tinyui_widget_claim_focus(&text->widget) == 0);
     assert(tinyui_keyboard_input_ascii(keyboard, 'w') == 0);
     assert(strcmp(tinyui_line_edit_get_text(line_edit), "Qw") == 0);
-    assert(strcmp((const char *)((ldText_t *)((struct tinyui_backend_widget *)text->widget.backend_widget)->ld_widget)->pStr,
+    assert(strcmp((const char *)((ldText_t *)text->widget.ld_widget)->pStr,
                   "focus-owner") == 0);
     tinyui_app_destroy(app);
 }
@@ -213,7 +212,7 @@ static void test_keyboard_navigation_preserves_editing_owner_model_truth(void)
     struct tinyui_keyboard *keyboard;
     struct tinyui_line_edit *line_edit;
     struct tinyui_text *text;
-    struct tinyui_backend_widget *line_edit_backend;
+    struct tinyui_widget *line_edit_backend;
     ldLineEdit_t *ld_line_edit;
     int editing = -1;
 
@@ -228,8 +227,8 @@ static void test_keyboard_navigation_preserves_editing_owner_model_truth(void)
     assert(tinyui_line_edit_set_text(line_edit, "Q") == 0);
     assert(tinyui_text_set_text(text, "focus-owner") == 0);
 
-    line_edit_backend = (struct tinyui_backend_widget *)line_edit->widget.backend_widget;
-    assert(line_edit_backend != 0);
+    line_edit_backend = &line_edit->widget;
+    assert(line_edit_backend->ld_widget != 0);
     ld_line_edit = (ldLineEdit_t *)line_edit_backend->ld_widget;
     assert(ld_line_edit != 0);
 
@@ -263,7 +262,7 @@ static void test_keyboard_rejects_ascii_when_target_is_not_line_edit(void)
     assert(keyboard != 0);
     assert(text != 0);
     assert(tinyui_text_set_text(text, "plain-text") == 0);
-    ld_text = (ldText_t *)((struct tinyui_backend_widget *)text->widget.backend_widget)->ld_widget;
+    ld_text = (ldText_t *)text->widget.ld_widget;
     assert(ld_text != 0);
     assert(tinyui_widget_claim_focus(&text->widget) == 0);
     assert(tinyui_keyboard_input_ascii(keyboard, 'x') == -1);
@@ -276,15 +275,15 @@ static void test_keyboard_navigation_signal_respects_focus_owner(void)
     struct tinyui_app *app;
     struct tinyui_window *win;
     struct tinyui_keyboard *keyboard;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldKeyboard_t *ld_keyboard;
 
     win = test_window_create(&app);
     keyboard = tinyui_keyboard_create(win, "keyboard_nav");
     assert(keyboard != 0);
 
-    backend = (struct tinyui_backend_widget *)keyboard->widget.backend_widget;
-    assert(backend != 0);
+    backend = &keyboard->widget;
+    assert(backend->ld_widget != 0);
     ld_keyboard = (ldKeyboard_t *)backend->ld_widget;
     assert(ld_keyboard != 0);
 
@@ -303,7 +302,7 @@ static void test_keyboard_update_and_button_update_touch_native_state(void)
     struct tinyui_window *win;
     struct tinyui_keyboard *keyboard;
     struct tinyui_line_edit *line_edit;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldKeyboard_t *ld_keyboard;
 
     win = test_window_create(&app);
@@ -312,8 +311,8 @@ static void test_keyboard_update_and_button_update_touch_native_state(void)
 
     assert(keyboard != 0);
     assert(line_edit != 0);
-    backend = (struct tinyui_backend_widget *)keyboard->widget.backend_widget;
-    assert(backend != 0);
+    backend = &keyboard->widget;
+    assert(backend->ld_widget != 0);
     ld_keyboard = (ldKeyboard_t *)backend->ld_widget;
     assert(ld_keyboard != 0);
 
@@ -335,7 +334,7 @@ static void test_keyboard_set_layout_replaces_native_button_list(void)
     struct tinyui_window *win;
     struct tinyui_keyboard *keyboard;
     struct tinyui_line_edit *line_edit;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldKeyboard_t *ld_keyboard;
     static const struct tinyui_keyboard_button buttons[] = {
         {.x = 3, .y = 5, .width = 20, .height = 10, .text = "X", .key_code = 'x', .press_color = 0x11, .release_color = 0x22},
@@ -348,8 +347,8 @@ static void test_keyboard_set_layout_replaces_native_button_list(void)
 
     assert(keyboard != 0);
     assert(line_edit != 0);
-    backend = (struct tinyui_backend_widget *)keyboard->widget.backend_widget;
-    assert(backend != 0);
+    backend = &keyboard->widget;
+    assert(backend->ld_widget != 0);
     ld_keyboard = (ldKeyboard_t *)backend->ld_widget;
     assert(ld_keyboard != 0);
 
@@ -410,15 +409,15 @@ static void test_keyboard_weak_hooks_remain_backend_private_not_public_api(void)
     struct tinyui_app *app;
     struct tinyui_window *win;
     struct tinyui_keyboard *keyboard;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldKeyboard_t *ld_keyboard;
 
     win = test_window_create(&app);
     keyboard = tinyui_keyboard_create(win, "keyboard_backend_private_hooks");
 
     assert(keyboard != 0);
-    backend = (struct tinyui_backend_widget *)keyboard->widget.backend_widget;
-    assert(backend != 0);
+    backend = &keyboard->widget;
+    assert(backend->ld_widget != 0);
     ld_keyboard = (ldKeyboard_t *)backend->ld_widget;
     assert(ld_keyboard != 0);
     assert(ldKeyboardGetTargetBtnList(ld_keyboard) != 0);
@@ -437,15 +436,15 @@ static void test_keyboard_init_and_shared_base_aliases_round_trip(void)
     struct tinyui_app *app;
     struct tinyui_window *win;
     struct tinyui_keyboard *keyboard;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldBase_t *ld_base;
     arm_2d_region_t region;
 
     win = test_window_create(&app);
     keyboard = tinyui_keyboard_create(win, "keyboard_base_aliases");
     assert(keyboard != 0);
-    backend = (struct tinyui_backend_widget *)keyboard->widget.backend_widget;
-    assert(backend != 0);
+    backend = &keyboard->widget;
+    assert(backend->ld_widget != 0);
     ld_base = (ldBase_t *)backend->ld_widget;
     assert(ld_base != 0);
 
@@ -533,13 +532,12 @@ static void test_keyboard_has_explicit_final_gate_coverage_contract(void)
     struct tinyui_app *app;
     struct tinyui_window *win;
     struct tinyui_keyboard *keyboard;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
 
     win = test_window_create(&app);
     keyboard = tinyui_keyboard_create(win, "keyboard_gate_contract");
     assert(keyboard != 0);
-    backend = (struct tinyui_backend_widget *)keyboard->widget.backend_widget;
-    assert(backend != 0);
+    backend = &keyboard->widget;
     assert(backend->kind == TINYUI_BACKEND_WIDGET_KEYBOARD);
     assert(backend->ld_widget != 0);
     tinyui_app_destroy(app);
@@ -550,7 +548,7 @@ static void test_keyboard_button_update_rejects_corrupted_backend_binding_withou
     struct tinyui_app *app;
     struct tinyui_window *win;
     struct tinyui_keyboard *keyboard;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     enum tinyui_backend_widget_kind saved_kind;
     ldKeyboard_t *ld_keyboard;
     uint8_t saved_key_code;
@@ -563,8 +561,8 @@ static void test_keyboard_button_update_rejects_corrupted_backend_binding_withou
     assert(keyboard != 0);
     assert(tinyui_keyboard_set_on_key_event(keyboard, test_keyboard_event_capture, capture) == 0);
 
-    backend = (struct tinyui_backend_widget *)keyboard->widget.backend_widget;
-    assert(backend != 0);
+    backend = &keyboard->widget;
+    assert(backend->ld_widget != 0);
     ld_keyboard = (ldKeyboard_t *)backend->ld_widget;
     assert(ld_keyboard != 0);
     saved_key_code = ld_keyboard->keyCode;
@@ -596,7 +594,7 @@ static void test_keyboard_custom_layout_round_trips_into_native_button_table(voi
     struct tinyui_app *app;
     struct tinyui_window *win;
     struct tinyui_keyboard *keyboard;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldKeyboard_t *ld_keyboard;
     static const struct tinyui_keyboard_button custom_buttons[] = {
         {.text = "A", .key_code = 'A', .x = 10, .y = 120, .width = 50, .height = 24, .press_color = 0x010203U, .release_color = 0x040506U},
@@ -614,8 +612,8 @@ static void test_keyboard_custom_layout_round_trips_into_native_button_table(voi
     assert(round_trip == custom_buttons);
     assert(button_count == 2);
 
-    backend = (struct tinyui_backend_widget *)keyboard->widget.backend_widget;
-    assert(backend != 0);
+    backend = &keyboard->widget;
+    assert(backend->ld_widget != 0);
     ld_keyboard = (ldKeyboard_t *)backend->ld_widget;
     assert(ld_keyboard != 0);
 
@@ -648,7 +646,7 @@ static void test_keyboard_native_press_and_release_emit_tinyui_callback(void)
     struct tinyui_app *app;
     struct tinyui_window *win;
     struct tinyui_keyboard *keyboard;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldKeyboard_t *ld_keyboard;
 
     keyboard_event_count = 0;
@@ -661,8 +659,8 @@ static void test_keyboard_native_press_and_release_emit_tinyui_callback(void)
     assert(tinyui_keyboard_set_on_key_event(0, on_keyboard_event, &keyboard_event_cookie) == -1);
     assert(tinyui_keyboard_set_on_key_event(keyboard, on_keyboard_event, &keyboard_event_cookie) == 0);
 
-    backend = (struct tinyui_backend_widget *)keyboard->widget.backend_widget;
-    assert(backend != 0);
+    backend = &keyboard->widget;
+    assert(backend->ld_widget != 0);
     ld_keyboard = (ldKeyboard_t *)backend->ld_widget;
     assert(ld_keyboard != 0);
     ld_keyboard->keyCode = 'Z';

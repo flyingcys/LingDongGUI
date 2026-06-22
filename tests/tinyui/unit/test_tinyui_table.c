@@ -2,6 +2,7 @@
 #include "keyboard.h"
 #include "table.h"
 #include "window.h"
+#include "../../../src/gui/ldBase.h"
 #include "../../../src/gui/ldTable.h"
 #include "../../../src/misc/ldMsg.h"
 #include "internal.h"
@@ -138,7 +139,7 @@ static void test_table_current_cell_matches_backend_truth(void)
     struct tinyui_app *app;
     struct tinyui_window *win;
     struct tinyui_table *table;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldTable_t *ld_table;
 
     app = tinyui_app_create();
@@ -148,8 +149,8 @@ static void test_table_current_cell_matches_backend_truth(void)
     table = tinyui_table_create(win, "table_truth", 3, 3);
     assert(table != 0);
 
-    backend = (struct tinyui_backend_widget *)table->widget.backend_widget;
-    assert(backend != 0);
+    backend = &table->widget;
+    assert(backend->ld_widget != 0);
     ld_table = (ldTable_t *)backend->ld_widget;
     assert(ld_table != 0);
 
@@ -168,8 +169,8 @@ static void test_table_create_builds_direct_backend_mapping(void)
     struct tinyui_app *app;
     struct tinyui_window *win;
     struct tinyui_table *table;
-    struct tinyui_backend_widget *backend;
-    struct tinyui_backend_widget *parent_backend;
+    struct tinyui_widget *backend;
+    struct tinyui_widget *parent_backend;
     ldTable_t *ld_table;
 
     app = tinyui_app_create();
@@ -179,16 +180,15 @@ static void test_table_create_builds_direct_backend_mapping(void)
     table = tinyui_table_create(win, "table_direct_mapping", 3, 3);
     assert(table != 0);
 
-    backend = (struct tinyui_backend_widget *)table->widget.backend_widget;
-    parent_backend = (struct tinyui_backend_widget *)win->widget.backend_widget;
-    assert(backend != 0);
-    assert(parent_backend != 0);
+    backend = &table->widget;
+    parent_backend = &win->widget;
+    assert(backend->ld_widget != 0);
+    assert(parent_backend->ld_widget != 0);
     assert(backend->kind == TINYUI_BACKEND_WIDGET_TABLE);
     assert(backend->owner == parent_backend->owner);
-    assert(backend->root == parent_backend->root);
-    assert(backend->parent == parent_backend);
+    assert((ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)backend->ld_widget) == (ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)parent_backend->ld_widget));
+    assert(ldBaseGetParent((ldBase_t *)backend->ld_widget) == (ldBase_t *)parent_backend->ld_widget);
     assert(backend->ld_name_id != 0);
-    assert(backend->host_widget == &table->widget);
     assert(backend->ld_event_bridge_scene != 0);
     assert(backend->ld_event_bridge_sender == backend->ld_widget);
     ld_table = (ldTable_t *)backend->ld_widget;
@@ -203,7 +203,7 @@ static void test_table_edit_commit_updates_model_and_visible_text(void)
     struct tinyui_window *win;
     struct tinyui_table *table;
     struct tinyui_keyboard *keyboard;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     struct tinyui_app *app_state;
     ldTable_t *ld_table;
 
@@ -219,8 +219,8 @@ static void test_table_edit_commit_updates_model_and_visible_text(void)
     assert(tinyui_table_set_cell_editable(table, 0, 0, 1, 16) == 0);
     assert(tinyui_table_set_cell_text(table, 0, 0, "before") == 0);
 
-    backend = (struct tinyui_backend_widget *)table->widget.backend_widget;
-    assert(backend != 0);
+    backend = &table->widget;
+    assert(backend->ld_widget != 0);
     app_state = backend->owner;
     assert(app_state != 0);
     ensure_table_msg_queue(app_state);
@@ -254,7 +254,7 @@ static void test_table_reuses_editable_cell_contract(void)
     struct tinyui_app *app;
     struct tinyui_window *win;
     struct tinyui_table *table;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     struct tinyui_app *app_state;
 
     app = tinyui_app_create();
@@ -265,8 +265,8 @@ static void test_table_reuses_editable_cell_contract(void)
     assert(table != 0);
     assert(tinyui_table_set_cell_editable(table, 0, 0, 1, 16) == 0);
 
-    backend = (struct tinyui_backend_widget *)table->widget.backend_widget;
-    assert(backend != 0);
+    backend = &table->widget;
+    assert(backend->ld_widget != 0);
     app_state = backend->owner;
     assert(app_state != 0);
     ensure_table_msg_queue(app_state);
@@ -299,7 +299,7 @@ static void test_table_final_release_contract_covers_non_commit_exit_boundary(vo
     struct tinyui_window *win;
     struct tinyui_table *table;
     struct tinyui_keyboard *keyboard;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     struct tinyui_app *app_state;
     ldTable_t *ld_table;
 
@@ -315,8 +315,8 @@ static void test_table_final_release_contract_covers_non_commit_exit_boundary(vo
     assert(tinyui_table_set_cell_editable(table, 0, 0, 1, 16) == 0);
     assert(tinyui_table_set_cell_text(table, 0, 0, "before") == 0);
 
-    backend = (struct tinyui_backend_widget *)table->widget.backend_widget;
-    assert(backend != 0);
+    backend = &table->widget;
+    assert(backend->ld_widget != 0);
     assert(backend->kind == TINYUI_BACKEND_WIDGET_TABLE);
     app_state = backend->owner;
     assert(app_state != 0);
@@ -352,7 +352,7 @@ static void test_table_native_item_image_button_and_excel_type_round_trip(void)
     struct tinyui_app *app;
     struct tinyui_window *win;
     struct tinyui_table *table;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldTable_t *ld_table;
     ldTableItem_t *image_item;
     ldTableItem_t *button_item;
@@ -385,8 +385,8 @@ static void test_table_native_item_image_button_and_excel_type_round_trip(void)
                                         1) == 0);
     assert(tinyui_table_set_excel_type(table) == 0);
 
-    backend = (struct tinyui_backend_widget *)table->widget.backend_widget;
-    assert(backend != 0);
+    backend = &table->widget;
+    assert(backend->ld_widget != 0);
     ld_table = (ldTable_t *)backend->ld_widget;
     assert(ld_table != 0);
 
@@ -437,7 +437,7 @@ static void test_table_native_size_align_color_font_region_and_navigation_round_
     struct tinyui_app *app;
     struct tinyui_window *win;
     struct tinyui_table *table;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldTable_t *ld_table;
     struct tinyui_table_region region;
 
@@ -456,8 +456,8 @@ static void test_table_native_size_align_color_font_region_and_navigation_round_
     assert(tinyui_table_set_current_cell(table, 1, 1) == 0);
     assert(tinyui_table_navigate(table, TINYUI_NATIVE_NAV_RIGHT) == 0);
 
-    backend = (struct tinyui_backend_widget *)table->widget.backend_widget;
-    assert(backend != 0);
+    backend = &table->widget;
+    assert(backend->ld_widget != 0);
     ld_table = (ldTable_t *)backend->ld_widget;
     assert(ld_table != 0);
 
@@ -494,7 +494,7 @@ static void test_table_native_static_text_background_and_getters_round_trip(void
     struct tinyui_app *app;
     struct tinyui_window *win;
     struct tinyui_table *table;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldTable_t *ld_table;
     ldTableItem_t *item;
 
@@ -511,8 +511,8 @@ static void test_table_native_static_text_background_and_getters_round_trip(void
     assert(tinyui_table_set_cell_editable(table, 2, 2, 1, 12) == 0);
     assert(tinyui_table_set_selected_cell(table, 2, 2) == 0);
 
-    backend = (struct tinyui_backend_widget *)table->widget.backend_widget;
-    assert(backend != 0);
+    backend = &table->widget;
+    assert(backend->ld_widget != 0);
     ld_table = (ldTable_t *)backend->ld_widget;
     assert(ld_table != 0);
     item = ldTableGetItem(ld_table, 0, 2);
@@ -542,7 +542,7 @@ static void test_table_sync_current_cell_rejects_corrupted_backend_binding(void)
     struct tinyui_app *app;
     struct tinyui_window *win;
     struct tinyui_table *table;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     enum tinyui_backend_widget_kind saved_kind;
 
     app = tinyui_app_create();
@@ -556,8 +556,8 @@ static void test_table_sync_current_cell_rejects_corrupted_backend_binding(void)
     assert(table->current_row == 1);
     assert(table->current_column == 2);
 
-    backend = (struct tinyui_backend_widget *)table->widget.backend_widget;
-    assert(backend != 0);
+    backend = &table->widget;
+    assert(backend->ld_widget != 0);
     saved_kind = backend->kind;
     backend->kind = TINYUI_BACKEND_WIDGET_LABEL;
 
@@ -577,7 +577,7 @@ static void test_table_set_current_and_selected_cell_tolerate_corrupted_backend_
     struct tinyui_app *app;
     struct tinyui_window *win;
     struct tinyui_table *table;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldTable_t *ld_table;
     enum tinyui_backend_widget_kind saved_kind;
 
@@ -588,8 +588,8 @@ static void test_table_set_current_and_selected_cell_tolerate_corrupted_backend_
     table = tinyui_table_create(win, "table_corrupted_setter", 3, 3);
     assert(table != 0);
 
-    backend = (struct tinyui_backend_widget *)table->widget.backend_widget;
-    assert(backend != 0);
+    backend = &table->widget;
+    assert(backend->ld_widget != 0);
     ld_table = (ldTable_t *)backend->ld_widget;
     assert(ld_table != 0);
     saved_kind = backend->kind;
@@ -616,7 +616,7 @@ static void test_table_cell_text_and_editable_reject_corrupted_backend_binding(v
     struct tinyui_app *app;
     struct tinyui_window *win;
     struct tinyui_table *table;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldTable_t *ld_table;
 
     app = tinyui_app_create();
@@ -626,8 +626,8 @@ static void test_table_cell_text_and_editable_reject_corrupted_backend_binding(v
     table = tinyui_table_create(win, "table_cell_corrupt", 2, 2);
     assert(table != 0);
 
-    backend = (struct tinyui_backend_widget *)table->widget.backend_widget;
-    assert(backend != 0);
+    backend = &table->widget;
+    assert(backend->ld_widget != 0);
     ld_table = (ldTable_t *)backend->ld_widget;
     assert(ld_table != 0);
 
@@ -649,7 +649,7 @@ static void test_table_item_align_and_region_reject_corrupted_backend_binding(vo
     struct tinyui_app *app;
     struct tinyui_window *win;
     struct tinyui_table *table;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldTable_t *ld_table;
     struct tinyui_table_region region;
 
@@ -660,8 +660,8 @@ static void test_table_item_align_and_region_reject_corrupted_backend_binding(vo
     table = tinyui_table_create(win, "table_item_meta_corrupt", 3, 3);
     assert(table != 0);
 
-    backend = (struct tinyui_backend_widget *)table->widget.backend_widget;
-    assert(backend != 0);
+    backend = &table->widget;
+    assert(backend->ld_widget != 0);
     ld_table = (ldTable_t *)backend->ld_widget;
     assert(ld_table != 0);
 
@@ -691,7 +691,7 @@ static void test_table_style_setters_reject_corrupted_backend_binding(void)
     struct tinyui_app *app;
     struct tinyui_window *win;
     struct tinyui_table *table;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldTable_t *ld_table;
     ldTableItem_t *item;
 
@@ -702,8 +702,8 @@ static void test_table_style_setters_reject_corrupted_backend_binding(void)
     table = tinyui_table_create(win, "table_style_corrupt", 3, 3);
     assert(table != 0);
 
-    backend = (struct tinyui_backend_widget *)table->widget.backend_widget;
-    assert(backend != 0);
+    backend = &table->widget;
+    assert(backend->ld_widget != 0);
     ld_table = (ldTable_t *)backend->ld_widget;
     assert(ld_table != 0);
 
@@ -743,7 +743,7 @@ static void test_table_image_and_button_reject_corrupted_backend_binding(void)
     struct tinyui_app *app;
     struct tinyui_window *win;
     struct tinyui_table *table;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldTable_t *ld_table;
     ldTableItem_t *image_item;
     ldTableItem_t *button_item;
@@ -762,17 +762,16 @@ static void test_table_image_and_button_reject_corrupted_backend_binding(void)
     table = tinyui_table_create(win, "table_image_button_corrupt", 2, 2);
     assert(table != 0);
 
-    backend = (struct tinyui_backend_widget *)table->widget.backend_widget;
-    assert(backend != 0);
-    ld_table = (ldTable_t *)backend->ld_widget;
-    assert(ld_table != 0);
-
     assert(tinyui_table_set_item_image(table, 0, 0, 4, 4, &image_src, 0xFFFFFFU) == 0);
     assert(tinyui_table_set_item_button(table, 0, 1, 2, 2,
                                         &release_src, 0xAAAAAAU,
                                         &press_src, 0xBBBBBBU,
                                         1) == 0);
 
+    backend = &table->widget;
+    assert(backend->ld_widget != 0);
+    ld_table = (ldTable_t *)backend->ld_widget;
+    assert(ld_table != 0);
     image_item = ldTableGetItem(ld_table, 0, 0);
     button_item = ldTableGetItem(ld_table, 0, 1);
     assert(image_item != 0);
@@ -811,8 +810,8 @@ static void test_table_get_keyboard_binding_rejects_corrupted_backend_binding(vo
     struct tinyui_window *win;
     struct tinyui_keyboard *keyboard;
     struct tinyui_table *table;
-    struct tinyui_backend_widget *backend;
-    struct tinyui_backend_widget *keyboard_backend;
+    struct tinyui_widget *backend;
+    struct tinyui_widget *keyboard_backend;
     enum tinyui_backend_widget_kind saved_kind;
     unsigned int keyboard_binding = 0;
 
@@ -825,12 +824,12 @@ static void test_table_get_keyboard_binding_rejects_corrupted_backend_binding(vo
     table = tinyui_table_create(win, "table_keyboard_corrupted", 3, 3);
     assert(table != 0);
 
-    keyboard_backend = (struct tinyui_backend_widget *)keyboard->widget.backend_widget;
-    assert(keyboard_backend != 0);
+    keyboard_backend = &keyboard->widget;
+    assert(keyboard_backend->ld_widget != 0);
     assert(tinyui_table_set_keyboard_binding(table, keyboard_backend->ld_name_id) == 0);
 
-    backend = (struct tinyui_backend_widget *)table->widget.backend_widget;
-    assert(backend != 0);
+    backend = &table->widget;
+    assert(backend->ld_widget != 0);
     saved_kind = backend->kind;
     backend->kind = TINYUI_BACKEND_WIDGET_LABEL;
 
@@ -850,8 +849,8 @@ static void test_table_r4_aliases_and_native_getters_round_trip(void)
     struct tinyui_window *win;
     struct tinyui_table *table;
     struct tinyui_keyboard *keyboard;
-    struct tinyui_backend_widget *backend;
-    struct tinyui_backend_widget *keyboard_backend;
+    struct tinyui_widget *backend;
+    struct tinyui_widget *keyboard_backend;
     ldTable_t *ld_table;
     ldTableItem_t *item;
     unsigned int keyboard_binding = 0;
@@ -865,12 +864,12 @@ static void test_table_r4_aliases_and_native_getters_round_trip(void)
     table = tinyui_table_create(win, "table_r4_alias", 3, 3);
     assert(table != 0);
 
-    backend = (struct tinyui_backend_widget *)table->widget.backend_widget;
-    assert(backend != 0);
+    backend = &table->widget;
+    assert(backend->ld_widget != 0);
     ld_table = (ldTable_t *)backend->ld_widget;
     assert(ld_table != 0);
-    keyboard_backend = (struct tinyui_backend_widget *)keyboard->widget.backend_widget;
-    assert(keyboard_backend != 0);
+    keyboard_backend = &keyboard->widget;
+    assert(keyboard_backend->ld_widget != 0);
 
     assert(tinyui_table_set_keyboard(table, keyboard_backend->ld_name_id) == 0);
     assert(tinyui_table_get_keyboard_binding(table, &keyboard_binding) == 0);
@@ -931,8 +930,8 @@ static void test_table_create_with_props_applies_keyboard_and_size_contract(void
     struct tinyui_window *win;
     struct tinyui_keyboard *keyboard;
     struct tinyui_table *table;
-    struct tinyui_backend_widget *backend;
-    struct tinyui_backend_widget *keyboard_backend;
+    struct tinyui_widget *backend;
+    struct tinyui_widget *keyboard_backend;
     ldTable_t *ld_table;
     unsigned int keyboard_binding = 0;
     const struct tinyui_table_props props = {
@@ -959,8 +958,8 @@ static void test_table_create_with_props_applies_keyboard_and_size_contract(void
     keyboard = tinyui_keyboard_create(win, "table_props_keyboard");
     assert(keyboard != 0);
 
-    keyboard_backend = (struct tinyui_backend_widget *)keyboard->widget.backend_widget;
-    assert(keyboard_backend != 0);
+    keyboard_backend = &keyboard->widget;
+    assert(keyboard_backend->ld_widget != 0);
 
     {
         struct tinyui_table_props bound_props = props;
@@ -969,8 +968,8 @@ static void test_table_create_with_props_applies_keyboard_and_size_contract(void
     }
 
     assert(table != 0);
-    backend = (struct tinyui_backend_widget *)table->widget.backend_widget;
-    assert(backend != 0);
+    backend = &table->widget;
+    assert(backend->ld_widget != 0);
     ld_table = (ldTable_t *)backend->ld_widget;
     assert(ld_table != 0);
 
@@ -1043,9 +1042,9 @@ static void test_table_create_with_props_keyboard_failure_rolls_back_attached_ch
 {
     struct tinyui_app *app;
     struct tinyui_window *win;
-    struct tinyui_backend_widget *parent_backend;
-    struct tinyui_backend_widget *tail;
-    struct tinyui_backend_widget *next_before = 0;
+    ldBase_t *win_ld;
+    ldBase_t *tail_ld;
+    ldBase_t *next_before_ld = 0;
     struct tinyui_table *probe;
     struct tinyui_table *table;
     struct tinyui_table_test_dispose_snapshot snapshot = {0};
@@ -1055,14 +1054,13 @@ static void test_table_create_with_props_keyboard_failure_rolls_back_attached_ch
     win = tinyui_window_create(app, "table_props_fail_root");
     assert(win != 0);
 
-    parent_backend = (struct tinyui_backend_widget *)win->widget.backend_widget;
-    assert(parent_backend != 0);
-    tail = parent_backend->first_child;
-    while (tail != 0 && tail->next_sibling != 0) {
-        tail = tail->next_sibling;
+    win_ld = (ldBase_t *)win->widget.ld_widget;
+    tail_ld = ldBaseGetChildList(win_ld);
+    while (tail_ld != 0 && ldBaseGetNextSibling(tail_ld) != 0) {
+        tail_ld = ldBaseGetNextSibling(tail_ld);
     }
-    if (tail != 0) {
-        next_before = tail->next_sibling;
+    if (tail_ld != 0) {
+        next_before_ld = ldBaseGetNextSibling(tail_ld);
     }
 
     tinyui_table_test_reset_state();
@@ -1097,10 +1095,10 @@ static void test_table_create_with_props_keyboard_failure_rolls_back_attached_ch
     assert(snapshot.event_bridge_cleared == 1);
     assert(snapshot.ld_pinfo_cleared == 1);
     assert(tinyui_table_test_take_last_dispose_snapshot(&snapshot) == -1);
-    if (tail != 0) {
-        assert(tail->next_sibling == next_before);
+    if (tail_ld != 0) {
+        assert(ldBaseGetNextSibling(tail_ld) == next_before_ld);
     } else {
-        assert(parent_backend->first_child == 0);
+        assert(ldBaseGetChildList(win_ld) == 0);
     }
 
     tinyui_app_destroy(app);

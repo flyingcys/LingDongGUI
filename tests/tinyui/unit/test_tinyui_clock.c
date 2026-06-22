@@ -4,6 +4,7 @@
 #include "widget.h"
 #include "window.h"
 #include "../../../src/gui/ldClock.h"
+#include "../../../src/gui/ldBase.h"
 #include "internal.h"
 #include "tinyui_test_support.h"
 
@@ -102,21 +103,20 @@ static void test_clock_create_builds_direct_backend_mapping(struct tinyui_window
 {
     struct tinyui_clock *clock =
         tinyui_clock_create((struct tinyui_widget *)win, "clock_direct_mapping");
-    struct tinyui_backend_widget *backend;
-    struct tinyui_backend_widget *parent_backend;
+    struct tinyui_widget *backend;
+    struct tinyui_widget *parent_backend;
     ldClock_t *ld_clock;
 
     assert(clock != 0);
-    backend = (struct tinyui_backend_widget *)clock->widget.backend_widget;
-    assert(backend != 0);
-    parent_backend = (struct tinyui_backend_widget *)win->widget.backend_widget;
-    assert(parent_backend != 0);
+    backend = &clock->widget;
+    assert(backend->ld_widget != 0);
+    parent_backend = &win->widget;
+    assert(parent_backend->ld_widget != 0);
     assert(backend->kind == TINYUI_BACKEND_WIDGET_CLOCK);
     assert(backend->owner == parent_backend->owner);
-    assert(backend->root == parent_backend->root);
-    assert(backend->parent == parent_backend);
+    assert((ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)backend->ld_widget) == (ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)parent_backend->ld_widget));
+    assert(ldBaseGetParent((ldBase_t *)backend->ld_widget) == (ldBase_t *)parent_backend->ld_widget);
     assert(backend->ld_name_id != 0);
-    assert(backend->host_widget == &clock->widget);
     assert(backend->ld_event_bridge_scene != 0);
     assert(backend->ld_event_bridge_sender == backend->ld_widget);
     ld_clock = (ldClock_t *)backend->ld_widget;
@@ -149,12 +149,12 @@ static void test_clock_step_second_state(struct tinyui_window *win)
 {
     struct tinyui_clock *clock =
         tinyui_clock_create((struct tinyui_widget *)win, "clock_step_second");
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldClock_t *ld_clock;
 
     assert(clock != 0);
-    backend = (struct tinyui_backend_widget *)clock->widget.backend_widget;
-    assert(backend != 0);
+    backend = &clock->widget;
+    assert(backend->ld_widget != 0);
     ld_clock = (ldClock_t *)backend->ld_widget;
     assert(ld_clock != 0);
     assert(clock->step_second == 0);
@@ -222,12 +222,12 @@ static void test_clock_release_contract_covers_time_source_and_configuration_bou
                                            .style_class = "clock-card",
                                            .step_second = 1,
                                        });
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldClock_t *ld_clock;
 
     assert(clock != 0);
-    backend = (struct tinyui_backend_widget *)clock->widget.backend_widget;
-    assert(backend != 0);
+    backend = &clock->widget;
+    assert(backend->ld_widget != 0);
     assert(backend->kind == TINYUI_BACKEND_WIDGET_CLOCK);
     assert(backend->style_class == (const char *)"clock-card");
     ld_clock = (ldClock_t *)backend->ld_widget;
@@ -248,13 +248,13 @@ static void test_clock_system_time_provider_round_trip(struct tinyui_window *win
 {
     struct tinyui_clock *clock =
         tinyui_clock_create((struct tinyui_widget *)win, "clock_system_provider");
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldClock_t *ld_clock;
     float frozen_radian;
 
     assert(clock != 0);
-    backend = (struct tinyui_backend_widget *)clock->widget.backend_widget;
-    assert(backend != 0);
+    backend = &clock->widget;
+    assert(backend->ld_widget != 0);
     ld_clock = (ldClock_t *)backend->ld_widget;
     assert(ld_clock != 0);
     assert(clock->use_system_time == 1);
@@ -281,7 +281,7 @@ static void test_clock_native_background_pointer_mask_and_anchor_round_trip(stru
 {
     struct tinyui_clock *clock =
         tinyui_clock_create((struct tinyui_widget *)win, "clock_native_assets");
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldClock_t *ld_clock;
     arm_2d_tile_t bg_tile = {
         .tRegion = {
@@ -341,8 +341,8 @@ static void test_clock_native_background_pointer_mask_and_anchor_round_trip(stru
     };
 
     assert(clock != 0);
-    backend = (struct tinyui_backend_widget *)clock->widget.backend_widget;
-    assert(backend != 0);
+    backend = &clock->widget;
+    assert(backend->ld_widget != 0);
     ld_clock = (ldClock_t *)backend->ld_widget;
     assert(ld_clock != 0);
 
@@ -439,7 +439,7 @@ static void test_clock_init_and_image_aliases_round_trip(struct tinyui_window *w
 {
     struct tinyui_clock *clock =
         tinyui_clock_init((struct tinyui_widget *)win, "clock_alias");
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldClock_t *ld_clock;
     arm_2d_tile_t bg_tile = {
         .tRegion = {
@@ -475,8 +475,8 @@ static void test_clock_init_and_image_aliases_round_trip(struct tinyui_window *w
     };
 
     assert(clock != 0);
-    backend = (struct tinyui_backend_widget *)clock->widget.backend_widget;
-    assert(backend != 0);
+    backend = &clock->widget;
+    assert(backend->ld_widget != 0);
     ld_clock = (ldClock_t *)backend->ld_widget;
     assert(ld_clock != 0);
 
@@ -498,7 +498,7 @@ static void test_clock_destroy_releases_owned_tiles_without_freeing_external_sou
     struct tinyui_app *app = tinyui_app_create();
     struct tinyui_window *win;
     struct tinyui_clock *clock;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldClock_t *ld_clock;
     arm_2d_tile_t *default_hour_img_tile;
     arm_2d_tile_t *default_hour_mask_tile;
@@ -570,8 +570,8 @@ static void test_clock_destroy_releases_owned_tiles_without_freeing_external_sou
     assert(win != 0);
     clock = tinyui_clock_create((struct tinyui_widget *)win, "clock_destroy");
     assert(clock != 0);
-    backend = (struct tinyui_backend_widget *)clock->widget.backend_widget;
-    assert(backend != 0);
+    backend = &clock->widget;
+    assert(backend->ld_widget != 0);
     ld_clock = (ldClock_t *)backend->ld_widget;
     assert(ld_clock != 0);
 
@@ -622,16 +622,12 @@ int main(void)
 {
     struct tinyui_app *app = tinyui_app_create();
     struct tinyui_window *win;
-    const char *clock_source = "/Users/cys/embedded/LingDongGUI/tinyui/src/widgets/clock.c";
+    const char *clock_source = "tinyui/src/widgets/clock.c";
 
     assert(app != 0);
     win = tinyui_window_create(app, "root");
     assert(win != 0);
 
-    assert_source_lacks_function_definition(clock_source, "tinyui_clock_props_are_valid");
-    assert_source_lacks_function_definition(clock_source, "tinyui_clock_get_ld");
-    assert_source_lacks_function_definition(clock_source, "tinyui_clock_apply_background");
-    assert_source_lacks_function_definition(clock_source, "tinyui_clock_apply_pointer");
     assert_source_has_function_definition(clock_source, "static int ", "tinyui_clock_props_are_valid");
     assert_source_has_function_definition(clock_source, "static ldClock_t *", "tinyui_clock_get_ld");
     assert_source_has_function_definition(clock_source, "static int ", "tinyui_clock_apply_background");

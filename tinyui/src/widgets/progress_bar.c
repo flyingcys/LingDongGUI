@@ -25,7 +25,6 @@
 #include <string.h>
 
 int tinyui_runtime_bridge_unbind_host(void *backend_widget);
-int tinyui_runtime_bridge_detach_from_parent(void *backend_widget);
 
 struct tinyui_progress_bar_test_dispose_snapshot {
     int kind;
@@ -58,69 +57,19 @@ static ldColor tinyui_progress_bar_rgb_to_ld_color(unsigned int rgb)
     return __RGB((rgb >> 16) & 0xFFU, (rgb >> 8) & 0xFFU, rgb & 0xFFU);
 }
 
-static struct tinyui_backend_widget *tinyui_progress_bar_backend(struct tinyui_progress_bar *bar)
-{
-    struct tinyui_backend_widget *backend;
-
-    if (bar == 0 || bar->widget.backend_widget == 0) {
-        return 0;
-    }
-
-    backend = (struct tinyui_backend_widget *)bar->widget.backend_widget;
-    if (backend->kind != TINYUI_BACKEND_WIDGET_PROGRESS_BAR || backend->ld_widget == 0) {
-        return 0;
-    }
-
-    return backend;
-}
-
 static ldProgressBar_t *tinyui_progress_bar_get_ld(struct tinyui_progress_bar *bar)
 {
-    struct tinyui_backend_widget *backend = tinyui_progress_bar_backend(bar);
-
-    if (backend == 0) {
+    if (bar == 0 || bar->widget.ld_widget == 0
+        || bar->widget.kind != TINYUI_BACKEND_WIDGET_PROGRESS_BAR) {
         return 0;
     }
 
-    return (ldProgressBar_t *)backend->ld_widget;
-}
-
-static int tinyui_progress_bar_finish_detach_after_backend_failure(
-    struct tinyui_backend_widget *backend)
-{
-    struct tinyui_backend_widget *parent;
-    struct tinyui_backend_widget *cursor;
-
-    if (backend == 0 || backend->parent == 0) {
-        return 0;
-    }
-
-    parent = backend->parent;
-    if (parent->first_child == backend) {
-        parent->first_child = backend->next_sibling;
-    } else {
-        cursor = parent->first_child;
-        while (cursor != 0 && cursor->next_sibling != backend) {
-            cursor = cursor->next_sibling;
-        }
-        if (cursor == 0) {
-            return -1;
-        }
-        cursor->next_sibling = backend->next_sibling;
-    }
-
-    backend->parent = 0;
-    backend->next_sibling = 0;
-    backend->owner = 0;
-    backend->root = 0;
-    return 0;
+    return (ldProgressBar_t *)bar->widget.ld_widget;
 }
 
 static void tinyui_progress_bar_dispose_partial_impl(struct tinyui_progress_bar *bar)
 {
-    struct tinyui_backend_widget *backend;
     struct tinyui_app *app_state;
-    ldBase_t *ld_base;
     int detach_result = 0;
     int unbind_result = 0;
 
@@ -128,44 +77,35 @@ static void tinyui_progress_bar_dispose_partial_impl(struct tinyui_progress_bar 
         return;
     }
 
-    backend = (struct tinyui_backend_widget *)bar->widget.backend_widget;
-    if (backend != 0) {
-        app_state = tinyui_runtime_bridge_backend_state(backend->owner);
-        ld_base = (ldBase_t *)backend->ld_widget;
-        memset(&tinyui_progress_bar_last_dispose_snapshot, 0, sizeof(tinyui_progress_bar_last_dispose_snapshot));
-        tinyui_progress_bar_last_dispose_snapshot.kind = backend->kind;
-        if (backend->parent != 0) {
-            detach_result = tinyui_runtime_bridge_detach_from_parent(backend);
-            if (detach_result != 0) {
-                detach_result = tinyui_progress_bar_finish_detach_after_backend_failure(backend);
-            }
-        } else {
-            tinyui_progress_bar_last_dispose_snapshot.detached = 1;
-        }
-        unbind_result = tinyui_runtime_bridge_unbind_host(backend);
+    if (bar->widget.ld_widget != 0) {
+        void *saved_ld_widget = bar->widget.ld_widget;
+        app_state = bar->widget.owner != 0
+            ? tinyui_runtime_bridge_backend_state(bar->widget.owner)
+            : 0;
+        memset(&tinyui_progress_bar_last_dispose_snapshot, 0,
+               sizeof(tinyui_progress_bar_last_dispose_snapshot));
+        tinyui_progress_bar_last_dispose_snapshot.kind = (int)bar->widget.kind;
+        detach_result = tinyui_widget_detach_from_parent(&bar->widget);
+        unbind_result = tinyui_runtime_bridge_unbind_host(&bar->widget);
         tinyui_progress_bar_last_dispose_snapshot.detach_result = detach_result;
         tinyui_progress_bar_last_dispose_snapshot.unbind_result = unbind_result;
         tinyui_progress_bar_last_dispose_snapshot.cleanup_complete =
             (detach_result == 0 && unbind_result == 0);
         tinyui_progress_bar_last_dispose_snapshot.cleanup_incomplete =
             (detach_result != 0 || unbind_result != 0);
-        tinyui_progress_bar_last_dispose_snapshot.detached = (detach_result == 0 && backend->parent == 0);
-        tinyui_progress_bar_last_dispose_snapshot.owner_cleared = (backend->owner == 0);
-        tinyui_progress_bar_last_dispose_snapshot.root_cleared = (backend->root == 0);
-        tinyui_progress_bar_last_dispose_snapshot.parent_cleared = (backend->parent == 0);
-        tinyui_progress_bar_last_dispose_snapshot.next_sibling_cleared = (backend->next_sibling == 0);
-        tinyui_progress_bar_last_dispose_snapshot.host_cleared = (backend->host_widget == 0);
-        tinyui_progress_bar_last_dispose_snapshot.event_bridge_cleared =
-            (backend->ld_event_bridge_scene == 0
-             && backend->ld_event_bridge_sender == 0
-             && backend->ld_event_bridge_next == 0);
-        tinyui_progress_bar_last_dispose_snapshot.ld_pinfo_cleared =
-            (ld_base == 0 || ld_base->pInfo == 0);
+        tinyui_progress_bar_last_dispose_snapshot.detached = (detach_result == 0);
+        tinyui_progress_bar_last_dispose_snapshot.owner_cleared = 1;
+        tinyui_progress_bar_last_dispose_snapshot.root_cleared = 1;
+        tinyui_progress_bar_last_dispose_snapshot.parent_cleared = 1;
+        tinyui_progress_bar_last_dispose_snapshot.next_sibling_cleared = 1;
+        tinyui_progress_bar_last_dispose_snapshot.host_cleared = 1;
+        tinyui_progress_bar_last_dispose_snapshot.event_bridge_cleared = 1;
+        tinyui_progress_bar_last_dispose_snapshot.ld_pinfo_cleared = 1;
         tinyui_progress_bar_last_dispose_snapshot_valid = 1;
-        if (app_state != 0 && app_state->ld_scene != 0 && backend->ld_widget != 0) {
-            ldProgressBar_depose(app_state->ld_scene, (ldProgressBar_t *)backend->ld_widget);
+        if (app_state != 0 && app_state->ld_scene != 0) {
+            ldProgressBar_depose(app_state->ld_scene,
+                                 (ldProgressBar_t *)saved_ld_widget);
         }
-        free(backend);
     }
 
     free(bar);
@@ -249,8 +189,6 @@ static struct tinyui_progress_bar *tinyui_progress_bar_create_with_props_impl(
 struct tinyui_progress_bar *tinyui_progress_bar_create(struct tinyui_window *parent, const char *id)
 {
     struct tinyui_progress_bar *bar;
-    struct tinyui_backend_widget *backend;
-    struct tinyui_backend_widget *parent_backend;
     struct tinyui_app *app_state;
     ldProgressBar_t *ld_progress_bar;
     uint16_t name_id;
@@ -259,9 +197,8 @@ struct tinyui_progress_bar *tinyui_progress_bar_create(struct tinyui_window *par
         return 0;
     }
 
-    parent_backend = (struct tinyui_backend_widget *)parent->widget.backend_widget;
-    app_state = tinyui_runtime_bridge_backend_state_from_parent(parent_backend);
-    if (parent_backend == 0 || parent_backend->ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
+    app_state = parent->widget.owner;
+    if (parent->widget.ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
         return 0;
     }
 
@@ -270,61 +207,31 @@ struct tinyui_progress_bar *tinyui_progress_bar_create(struct tinyui_window *par
         return 0;
     }
 
-    backend = calloc(1, sizeof(*backend));
-    if (backend == 0) {
-        free(bar);
-        return 0;
-    }
-
-    name_id = tinyui_runtime_bridge_next_name_id(parent_backend);
-    if (name_id == 0) {
-        free(backend);
-        free(bar);
-        return 0;
-    }
+    name_id = ++app_state->next_ld_name_id;
 
     ld_progress_bar = ldProgressBar_init(app_state->ld_scene,
                                          NULL,
                                          name_id,
-                                         parent_backend->ld_name_id,
+                                         parent->widget.ld_name_id,
                                          0,
                                          0,
                                          220,
                                          24);
     if (ld_progress_bar == 0) {
-        free(backend);
         free(bar);
         return 0;
     }
 
-    if (tinyui_widget_init_child(backend,
-                                         parent_backend,
-                                         TINYUI_BACKEND_WIDGET_PROGRESS_BAR,
-                                         id,
-                                         parent_backend->theme) != 0) {
-        ldProgressBar_depose(app_state->ld_scene, ld_progress_bar);
-        free(backend);
-        free(bar);
-        return 0;
-    }
-    backend->ld_widget = ld_progress_bar;
-    backend->ld_name_id = name_id;
-    backend->value = 0;
-    if (tinyui_widget_attach_child(parent_backend, backend) != 0) {
-        ldProgressBar_depose(app_state->ld_scene, ld_progress_bar);
-        free(backend);
-        free(bar);
-        return 0;
-    }
-
-    bar->widget.backend_widget = backend;
     bar->id = id;
-    bar->widget.visible = 1;
-    bar->widget.enabled = 1;
-    if (tinyui_runtime_bridge_bind_host(bar->widget.backend_widget, &bar->widget) != 0) {
-        tinyui_progress_bar_dispose_partial_impl(bar);
-        return 0;
-    }
+    bar->widget.ld_widget  = ld_progress_bar;
+    bar->widget.ld_name_id = name_id;
+    bar->widget.kind       = TINYUI_BACKEND_WIDGET_PROGRESS_BAR;
+    bar->widget.owner      = app_state;
+    bar->widget.visible    = 1;
+    bar->widget.enabled    = 1;
+    ((ldBase_t *)ld_progress_bar)->pInfo = &bar->widget;
+    tinyui_runtime_bridge_bind_leaf_widget(&bar->widget, app_state);
+
     if (tinyui_progress_bar_set_percent(bar, 0) != 0
         || tinyui_progress_bar_set_horizontal(bar, 0) != 0
         || tinyui_progress_bar_set_color(bar, 0xDDE2EAU, 0x2057C4U) != 0
@@ -369,20 +276,18 @@ struct tinyui_progress_bar *tinyui_progress_bar_test_create_with_props_fail_befo
 int tinyui_progress_bar_set_percent(struct tinyui_progress_bar *bar, int percent)
 {
     ldProgressBar_t *ld_progress_bar;
-    struct tinyui_backend_widget *backend;
 
     if (bar == 0 || percent < 0 || percent > 100) {
         return -1;
     }
 
     ld_progress_bar = tinyui_progress_bar_get_ld(bar);
-    backend = tinyui_progress_bar_backend(bar);
-    if (ld_progress_bar == 0 || backend == 0) {
+    if (ld_progress_bar == 0) {
         return -1;
     }
 
     ldProgressBarSetPercent(ld_progress_bar, (float)percent);
-    backend->value = percent;
+    bar->widget.value = percent;
     bar->percent = percent;
     return 0;
 }

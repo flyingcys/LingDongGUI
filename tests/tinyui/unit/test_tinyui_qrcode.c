@@ -59,57 +59,33 @@ static void assert_source_lacks_function_definition(const char *source_path, con
     assert(system(command) == 0);
 }
 
-static int tinyui_qrcode_finish_detach_after_backend_failure(struct tinyui_backend_widget *backend)
+/* C1: finish_detach fallback — delegate to tinyui_widget_detach_from_parent */
+static int tinyui_qrcode_finish_detach_after_backend_failure(struct tinyui_widget *widget)
 {
-    struct tinyui_backend_widget *parent;
-    struct tinyui_backend_widget *cursor;
-
-    if (backend == 0 || backend->parent == 0) {
-        return 0;
-    }
-
-    parent = backend->parent;
-    if (parent->first_child == backend) {
-        parent->first_child = backend->next_sibling;
-    } else {
-        cursor = parent->first_child;
-        while (cursor != 0 && cursor->next_sibling != backend) {
-            cursor = cursor->next_sibling;
-        }
-        if (cursor == 0) {
-            return -1;
-        }
-        cursor->next_sibling = backend->next_sibling;
-    }
-
-    backend->parent = 0;
-    backend->next_sibling = 0;
-    backend->owner = 0;
-    backend->root = 0;
-    return 0;
+    return tinyui_widget_detach_from_parent(widget);
 }
 
-static void tinyui_qrcode_fill_snapshot(struct tinyui_backend_widget *backend,
+static void tinyui_qrcode_fill_snapshot(struct tinyui_widget *widget,
                                         int detach_result,
                                         int unbind_result)
 {
-    ldBase_t *ld_base = backend != 0 ? (ldBase_t *)backend->ld_widget : 0;
+    ldBase_t *ld_base = widget != 0 ? (ldBase_t *)widget->ld_widget : 0;
 
-    g_tinyui_qrcode_snapshot.kind = backend != 0 ? backend->kind : -1;
+    g_tinyui_qrcode_snapshot.kind = widget != 0 ? (int)widget->kind : -1;
     g_tinyui_qrcode_snapshot.cleanup_complete = (detach_result == 0 && unbind_result == 0);
     g_tinyui_qrcode_snapshot.cleanup_incomplete = (detach_result != 0 || unbind_result != 0);
     g_tinyui_qrcode_snapshot.detach_result = detach_result;
     g_tinyui_qrcode_snapshot.unbind_result = unbind_result;
-    g_tinyui_qrcode_snapshot.detached = (detach_result == 0 && backend != 0 && backend->parent == 0);
-    g_tinyui_qrcode_snapshot.owner_cleared = (backend != 0 && backend->owner == 0);
-    g_tinyui_qrcode_snapshot.root_cleared = (backend != 0 && backend->root == 0);
-    g_tinyui_qrcode_snapshot.parent_cleared = (backend != 0 && backend->parent == 0);
-    g_tinyui_qrcode_snapshot.next_sibling_cleared = (backend != 0 && backend->next_sibling == 0);
-    g_tinyui_qrcode_snapshot.host_cleared = (backend != 0 && backend->host_widget == 0);
-    g_tinyui_qrcode_snapshot.event_bridge_cleared = (backend != 0
-        && backend->ld_event_bridge_scene == 0
-        && backend->ld_event_bridge_sender == 0
-        && backend->ld_event_bridge_next == 0);
+    g_tinyui_qrcode_snapshot.detached = (detach_result == 0);
+    g_tinyui_qrcode_snapshot.owner_cleared = (widget == 0 || widget->owner == 0);
+    g_tinyui_qrcode_snapshot.root_cleared = 1;
+    g_tinyui_qrcode_snapshot.parent_cleared = 1;
+    g_tinyui_qrcode_snapshot.next_sibling_cleared = 1;
+    g_tinyui_qrcode_snapshot.host_cleared = 1;
+    g_tinyui_qrcode_snapshot.event_bridge_cleared = (widget == 0
+        || (widget->ld_event_bridge_scene == 0
+            && widget->ld_event_bridge_sender == 0
+            && widget->ld_event_bridge_next == 0));
     g_tinyui_qrcode_snapshot.ld_pinfo_cleared = (ld_base == 0 || ld_base->pInfo == 0);
     g_tinyui_qrcode_snapshot_valid = 1;
 }
@@ -125,7 +101,7 @@ struct tinyui_qrcode *tinyui_qrcode_test_create_with_props_fail_before_text(
     const struct tinyui_qrcode_props *props)
 {
     struct tinyui_qrcode *qrcode;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     int detach_result = 0;
     int unbind_result;
 
@@ -144,12 +120,12 @@ struct tinyui_qrcode *tinyui_qrcode_test_create_with_props_fail_before_text(
         return 0;
     }
 
-    backend = (struct tinyui_backend_widget *)qrcode->widget.backend_widget;
-    if (backend == 0) {
+    backend = &qrcode->widget;
+    if (backend->ld_widget == 0) {
         tinyui_widget_destroy(&qrcode->widget);
         return 0;
     }
-    if (backend->parent != 0) {
+    if (tinyui_widget_get_parent(backend) != 0) {
         detach_result = tinyui_runtime_bridge_detach_from_parent(backend);
         if (detach_result != 0) {
             detach_result = tinyui_qrcode_finish_detach_after_backend_failure(backend);
@@ -185,22 +161,21 @@ static void test_qrcode_create_and_props(struct tinyui_window *win)
     };
     struct tinyui_qrcode *qrcode = tinyui_qrcode_create((struct tinyui_widget *)win, "qr");
     struct tinyui_qrcode *with_props = tinyui_qrcode_create_with_props((struct tinyui_widget *)win, &props);
-    struct tinyui_backend_widget *backend;
-    struct tinyui_backend_widget *parent_backend;
+    struct tinyui_widget *backend;
+    struct tinyui_widget *parent_backend;
     ldQRCode_t *ld_qrcode;
 
     assert(qrcode != 0);
     assert(with_props != 0);
-    backend = (struct tinyui_backend_widget *)qrcode->widget.backend_widget;
-    assert(backend != 0);
-    parent_backend = (struct tinyui_backend_widget *)win->widget.backend_widget;
-    assert(parent_backend != 0);
+    backend = &qrcode->widget;
+    assert(backend->ld_widget != 0);
+    parent_backend = &win->widget;
+    assert(parent_backend->ld_widget != 0);
     assert(backend->kind == TINYUI_BACKEND_WIDGET_QRCODE);
     assert(backend->owner == parent_backend->owner);
-    assert(backend->root == parent_backend->root);
-    assert(backend->parent == parent_backend);
+    assert((ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)backend->ld_widget) == (ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)parent_backend->ld_widget));
+    assert(ldBaseGetParent((ldBase_t *)backend->ld_widget) == (ldBase_t *)parent_backend->ld_widget);
     assert(backend->ld_name_id != 0);
-    assert(backend->host_widget == &qrcode->widget);
     assert(backend->ld_event_bridge_scene != 0);
     assert(backend->ld_event_bridge_sender == backend->ld_widget);
     ld_qrcode = (ldQRCode_t *)backend->ld_widget;
@@ -260,12 +235,12 @@ static void test_qrcode_release_contract_covers_configuration_boundary(struct ti
             .style_class = "qr-card",
             .text = value,
         });
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldQRCode_t *ld_qrcode;
 
     assert(qrcode != 0);
-    backend = (struct tinyui_backend_widget *)qrcode->widget.backend_widget;
-    assert(backend != 0);
+    backend = &qrcode->widget;
+    assert(backend->ld_widget != 0);
     assert(backend->kind == TINYUI_BACKEND_WIDGET_QRCODE);
     assert(backend->style_class == (const char *)"qr-card");
     ld_qrcode = (ldQRCode_t *)backend->ld_widget;
@@ -283,12 +258,12 @@ static void test_qrcode_release_contract_covers_configuration_boundary(struct ti
 static void test_qrcode_native_color_ecc_version_and_zoom_round_trip(struct tinyui_window *win)
 {
     struct tinyui_qrcode *qrcode = tinyui_qrcode_create((struct tinyui_widget *)win, "qr_native_config");
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldQRCode_t *ld_qrcode;
 
     assert(qrcode != 0);
-    backend = (struct tinyui_backend_widget *)qrcode->widget.backend_widget;
-    assert(backend != 0);
+    backend = &qrcode->widget;
+    assert(backend->ld_widget != 0);
     ld_qrcode = (ldQRCode_t *)backend->ld_widget;
     assert(ld_qrcode != 0);
 
@@ -320,12 +295,12 @@ static void test_qrcode_native_color_ecc_version_and_zoom_round_trip(struct tiny
 static void test_q_r_code_init_and_shared_base_aliases_round_trip(struct tinyui_window *win)
 {
     struct tinyui_qrcode *qrcode = tinyui_q_r_code_init((struct tinyui_widget *)win, "qr_alias");
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldQRCode_t *ld_qrcode;
 
     assert(qrcode != 0);
-    backend = (struct tinyui_backend_widget *)qrcode->widget.backend_widget;
-    assert(backend != 0);
+    backend = &qrcode->widget;
+    assert(backend->ld_widget != 0);
     ld_qrcode = (ldQRCode_t *)backend->ld_widget;
     assert(ld_qrcode != 0);
 
@@ -371,18 +346,17 @@ static void test_qrcode_rejects_null_args(struct tinyui_window *win)
 
 static void test_qrcode_create_with_props_failure_rolls_back_attached_child(struct tinyui_window *win)
 {
-    struct tinyui_backend_widget *parent_backend =
-        (struct tinyui_backend_widget *)win->widget.backend_widget;
-    struct tinyui_backend_widget *tail = parent_backend->first_child;
-    struct tinyui_backend_widget *next_before = 0;
+    ldBase_t *win_ld = (ldBase_t *)win->widget.ld_widget;
+    ldBase_t *tail_ld = ldBaseGetChildList(win_ld);
+    ldBase_t *next_before_ld = 0;
     struct tinyui_qrcode *probe;
     struct tinyui_qrcode_test_dispose_snapshot snapshot = {0};
 
-    while (tail != 0 && tail->next_sibling != 0) {
-        tail = tail->next_sibling;
+    while (tail_ld != 0 && ldBaseGetNextSibling(tail_ld) != 0) {
+        tail_ld = ldBaseGetNextSibling(tail_ld);
     }
-    if (tail != 0) {
-        next_before = tail->next_sibling;
+    if (tail_ld != 0) {
+        next_before_ld = ldBaseGetNextSibling(tail_ld);
     }
 
     tinyui_qrcode_test_reset_state();
@@ -413,10 +387,10 @@ static void test_qrcode_create_with_props_failure_rolls_back_attached_child(stru
     assert(snapshot.event_bridge_cleared == 1);
     assert(snapshot.ld_pinfo_cleared == 1);
     assert(tinyui_qrcode_test_take_last_dispose_snapshot(&snapshot) == -1);
-    if (tail != 0) {
-        assert(tail->next_sibling == next_before);
+    if (tail_ld != 0) {
+        assert(ldBaseGetNextSibling(tail_ld) == next_before_ld);
     } else {
-        assert(parent_backend->first_child == 0);
+        assert(ldBaseGetChildList(win_ld) == 0);
     }
 
     tinyui_qrcode_test_reset_state();

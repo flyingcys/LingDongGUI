@@ -232,12 +232,12 @@ static void test_window_flex_contract_internal_seam_uses_tinyui_names(void)
 
 static void test_window_create_and_backend_mapping(struct tinyui_window *win)
 {
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldWindow_t *ld_win;
 
     assert(win != 0);
-    backend = (struct tinyui_backend_widget *)win->widget.backend_widget;
-    assert(backend != 0);
+    backend = &win->widget;
+    assert(backend->ld_widget != 0);
     assert(backend->kind == TINYUI_BACKEND_WIDGET_WINDOW);
     ld_win = (ldWindow_t *)backend->ld_widget;
     assert(ld_win != 0);
@@ -246,12 +246,12 @@ static void test_window_create_and_backend_mapping(struct tinyui_window *win)
 
 static void test_window_padding_group_round_trip(struct tinyui_window *win)
 {
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldWindow_t *ld_win;
 
     assert(tinyui_window_set_padding(win, 10, 20, 30, 40) == 0);
 
-    backend = (struct tinyui_backend_widget *)win->widget.backend_widget;
+    backend = &win->widget;
     ld_win = (ldWindow_t *)backend->ld_widget;
     assert(ld_win->flexPadding.left == 10);
     assert(ld_win->flexPadding.top == 20);
@@ -265,11 +265,11 @@ static void test_window_padding_group_round_trip(struct tinyui_window *win)
 
 static void test_window_widget_base_api_round_trip(struct tinyui_window *win)
 {
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     struct tinyui_display_config display = {0};
     ldBase_t *ld_base;
 
-    backend = (struct tinyui_backend_widget *)win->widget.backend_widget;
+    backend = &win->widget;
     ld_base = (ldBase_t *)backend->ld_widget;
 
     assert(tinyui_display_get_config(backend->owner, &display) == 0);
@@ -291,8 +291,8 @@ static void test_window_grid_padding_positions_switch(struct tinyui_window *win)
     const int cols[] = {220, 0};
     const int rows[] = {24, 0};
     struct tinyui_switch *sw;
-    struct tinyui_backend_widget *window_backend;
-    struct tinyui_backend_widget *switch_backend;
+    struct tinyui_widget *window_backend;
+    struct tinyui_widget *switch_backend;
     ldWindow_t *ld_win;
     ldBase_t *ld_switch;
 
@@ -312,8 +312,8 @@ static void test_window_grid_padding_positions_switch(struct tinyui_window *win)
                                        TINYUI_ALIGN_START,
                                        TINYUI_ALIGN_START) == 0);
 
-    window_backend = (struct tinyui_backend_widget *)win->widget.backend_widget;
-    switch_backend = (struct tinyui_backend_widget *)sw->widget.backend_widget;
+    window_backend = &win->widget;
+    switch_backend = &sw->widget;
     ld_win = (ldWindow_t *)window_backend->ld_widget;
     ld_switch = (ldBase_t *)switch_backend->ld_widget;
 
@@ -366,7 +366,7 @@ static void test_window_create_with_props_applies_bg_color_without_backend_const
         .bg_color = 0x112233,
     };
     struct tinyui_window *win;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldWindow_t *ld_win;
 
     assert(app != 0);
@@ -374,8 +374,8 @@ static void test_window_create_with_props_applies_bg_color_without_backend_const
     assert(win != 0);
     assert(win->widget.bg_color == 0x112233);
 
-    backend = (struct tinyui_backend_widget *)win->widget.backend_widget;
-    assert(backend != 0);
+    backend = &win->widget;
+    assert(backend->ld_widget != 0);
     ld_win = (ldWindow_t *)backend->ld_widget;
     assert(ld_win != 0);
     assert(ldWindowGetColor(ld_win) == __RGB(0x11, 0x22, 0x33));
@@ -388,7 +388,7 @@ static void test_window_public_constructors_keep_v2_direct_create_truth(void)
     struct tinyui_app *app = tinyui_app_create();
     struct tinyui_window *win = tinyui_window_create(app, "root_public_truth");
     struct tinyui_background *bg = tinyui_background_create(app, "bg_public_truth");
-    struct tinyui_backend_widget *win_backend;
+    struct tinyui_widget *win_backend;
     unsigned int bg_color = 0;
     int bg_offset_x = 0;
     int bg_offset_y = 0;
@@ -397,11 +397,18 @@ static void test_window_public_constructors_keep_v2_direct_create_truth(void)
     assert(win != 0);
     assert(bg != 0);
 
-    win_backend = (struct tinyui_backend_widget *)win->widget.backend_widget;
-    assert(win_backend != 0);
+    win_backend = &win->widget;
+    assert(win_backend->ld_widget != 0);
     assert(win_backend->kind == TINYUI_BACKEND_WIDGET_WINDOW);
     assert(win_backend->owner == app);
-    assert(win_backend->root == win_backend);
+    /* After C1 phantom-root change, user window is a child of the scene phantom root
+     * (nameId=0).  Verify: window has a parent and that parent is the actual root. */
+    {
+        ldBase_t *scene_root = (ldBase_t *)ldBaseGetRootNode(
+            (arm_2d_control_node_t *)win_backend->ld_widget);
+        assert(scene_root != (ldBase_t *)win_backend->ld_widget);
+        assert(ldBaseGetParent((ldBase_t *)win_backend->ld_widget) == scene_root);
+    }
     assert(tinyui_background_set_color(bg, 0x224466U) == 0);
     assert(tinyui_background_get_color(bg, &bg_color) == 0);
     assert(bg_color == 0x204462U);

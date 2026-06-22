@@ -4,6 +4,7 @@
 #include "widget.h"
 #include "window.h"
 #include "../../../src/gui/ldGui.h"
+#include "../../../src/gui/ldBase.h"
 #include "../../../src/gui/ldMessageBox.h"
 #include "../../../src/misc/ldMsg.h"
 #include "internal.h"
@@ -139,21 +140,20 @@ static void test_message_box_create_builds_direct_backend_mapping(struct tinyui_
 {
     struct tinyui_message_box *box =
         tinyui_message_box_create((struct tinyui_widget *)win, "message_box_direct_mapping");
-    struct tinyui_backend_widget *backend;
-    struct tinyui_backend_widget *parent_backend;
+    struct tinyui_widget *backend;
+    struct tinyui_widget *parent_backend;
     ldMessageBox_t *ld_message_box;
 
     assert(box != 0);
-    backend = (struct tinyui_backend_widget *)box->widget.backend_widget;
-    parent_backend = (struct tinyui_backend_widget *)win->widget.backend_widget;
-    assert(backend != 0);
-    assert(parent_backend != 0);
+    backend = &box->widget;
+    parent_backend = &win->widget;
+    assert(backend->ld_widget != 0);
+    assert(parent_backend->ld_widget != 0);
     assert(backend->kind == TINYUI_BACKEND_WIDGET_MESSAGE_BOX);
     assert(backend->owner == parent_backend->owner);
-    assert(backend->root == parent_backend->root);
-    assert(backend->parent == parent_backend);
+    assert((ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)backend->ld_widget) == (ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)parent_backend->ld_widget));
+    assert(ldBaseGetParent((ldBase_t *)backend->ld_widget) == (ldBase_t *)parent_backend->ld_widget);
     assert(backend->ld_name_id != 0);
-    assert(backend->host_widget == &box->widget);
     assert(backend->ld_event_bridge_scene != 0);
     assert(backend->ld_event_bridge_sender == backend->ld_widget);
     ld_message_box = (ldMessageBox_t *)backend->ld_widget;
@@ -169,7 +169,7 @@ static void test_message_box_widget_file_owns_native_helper_truth(struct tinyui_
     };
     struct tinyui_message_box *box =
         tinyui_message_box_create((struct tinyui_widget *)win, "message_box_widget_truth");
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldMessageBox_t *ld_message_box;
 
     assert(box != 0);
@@ -180,8 +180,8 @@ static void test_message_box_widget_file_owns_native_helper_truth(struct tinyui_
     assert(tinyui_message_box_set_button_colors(box, 0x0A0B0CU, 0x0D0E0FU) == 0);
     assert(tinyui_message_box_set_bg_color(box, 0x102030U) == 0);
 
-    backend = (struct tinyui_backend_widget *)box->widget.backend_widget;
-    assert(backend != 0);
+    backend = &box->widget;
+    assert(backend->ld_widget != 0);
     ld_message_box = (ldMessageBox_t *)backend->ld_widget;
     assert(ld_message_box != 0);
 
@@ -203,7 +203,7 @@ static void test_message_box_confirm_callback_bridge(struct tinyui_window *win)
     int user_cookie = 23;
     struct tinyui_message_box *box =
         tinyui_message_box_create((struct tinyui_widget *)win, "message_box_state");
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldMessageBox_t *ld_message_box;
     struct tinyui_app *app_state;
 
@@ -219,8 +219,8 @@ static void test_message_box_confirm_callback_bridge(struct tinyui_window *win)
     assert(tinyui_message_box_get_title(box) != 0);
     assert(tinyui_message_box_get_message(box) != 0);
     assert(tinyui_message_box_get_confirm_text(box) != 0);
-    backend = (struct tinyui_backend_widget *)box->widget.backend_widget;
-    assert(backend != 0);
+    backend = &box->widget;
+    assert(backend->ld_widget != 0);
     app_state = backend->owner;
     assert(app_state != 0);
     ld_message_box = (ldMessageBox_t *)backend->ld_widget;
@@ -267,7 +267,7 @@ static void test_message_box_final_release_contract_covers_multi_action_and_read
     };
     struct tinyui_message_box *box =
         tinyui_message_box_create((struct tinyui_widget *)win, "message_box_release_ready");
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldMessageBox_t *ld_message_box;
 
     assert(box != 0);
@@ -278,8 +278,8 @@ static void test_message_box_final_release_contract_covers_multi_action_and_read
     assert(tinyui_message_box_get_message(box) != 0);
     assert(tinyui_message_box_get_confirm_text(box) != 0);
 
-    backend = (struct tinyui_backend_widget *)box->widget.backend_widget;
-    assert(backend != 0);
+    backend = &box->widget;
+    assert(backend->ld_widget != 0);
     assert(backend->kind == TINYUI_BACKEND_WIDGET_MESSAGE_BOX);
     ld_message_box = (ldMessageBox_t *)backend->ld_widget;
     assert(ld_message_box != 0);
@@ -308,12 +308,12 @@ static void test_message_box_native_multi_button_and_color_round_trip(struct tin
     };
     struct tinyui_message_box *box =
         tinyui_message_box_create((struct tinyui_widget *)win, "message_box_native");
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldMessageBox_t *ld_message_box;
 
     assert(box != 0);
-    backend = (struct tinyui_backend_widget *)box->widget.backend_widget;
-    assert(backend != 0);
+    backend = &box->widget;
+    assert(backend->ld_widget != 0);
     ld_message_box = (ldMessageBox_t *)backend->ld_widget;
     assert(ld_message_box != 0);
 
@@ -349,7 +349,7 @@ static void test_message_box_multi_button_callback_reports_clicked_index(struct 
     int user_cookie = 31;
     struct tinyui_message_box *box =
         tinyui_message_box_create((struct tinyui_widget *)win, "message_box_multi_cb");
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldMessageBox_t *ld_message_box;
     struct tinyui_app *app_state;
 
@@ -362,8 +362,8 @@ static void test_message_box_multi_button_callback_reports_clicked_index(struct 
     confirm_user_data = 0;
     confirm_button_index = -1;
 
-    backend = (struct tinyui_backend_widget *)box->widget.backend_widget;
-    assert(backend != 0);
+    backend = &box->widget;
+    assert(backend->ld_widget != 0);
     app_state = backend->owner;
     assert(app_state != 0);
     ld_message_box = (ldMessageBox_t *)backend->ld_widget;
@@ -387,12 +387,12 @@ static void test_message_box_init_aliases_and_shared_base_round_trip(struct tiny
     int user_cookie = 41;
     struct tinyui_message_box *box =
         tinyui_message_box_init((struct tinyui_widget *)win, "message_box_alias");
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldMessageBox_t *ld_message_box;
 
     assert(box != 0);
-    backend = (struct tinyui_backend_widget *)box->widget.backend_widget;
-    assert(backend != 0);
+    backend = &box->widget;
+    assert(backend->ld_widget != 0);
     ld_message_box = (ldMessageBox_t *)backend->ld_widget;
     assert(ld_message_box != 0);
 
@@ -434,8 +434,8 @@ static void test_message_box_modal_hit_and_dismiss_returns_focus_to_underlay(str
         tinyui_button_create(win, "message_box_underlay_button");
     struct tinyui_message_box *box =
         tinyui_message_box_create((struct tinyui_widget *)win, "message_box_modal");
-    struct tinyui_backend_widget *button_backend;
-    struct tinyui_backend_widget *box_backend;
+    struct tinyui_widget *button_backend;
+    struct tinyui_widget *box_backend;
     struct tinyui_app *app_state;
     ldButton_t *ld_button;
     ldMessageBox_t *ld_message_box;
@@ -450,10 +450,10 @@ static void test_message_box_modal_hit_and_dismiss_returns_focus_to_underlay(str
     assert(tinyui_message_box_set_confirm_text(box, "OK") == 0);
     assert(tinyui_button_set_on_pressed(underlay, on_underlay_pressed, &press_cookie) == 0);
 
-    button_backend = (struct tinyui_backend_widget *)underlay->widget.backend_widget;
-    box_backend = (struct tinyui_backend_widget *)box->widget.backend_widget;
-    assert(button_backend != 0);
-    assert(box_backend != 0);
+    button_backend = &underlay->widget;
+    box_backend = &box->widget;
+    assert(button_backend->ld_widget != 0);
+    assert(box_backend->ld_widget != 0);
     app_state = box_backend->owner;
     assert(app_state != 0);
     ldMsgDeinit(&app_state->ld_scene->ptMsgQueue);
@@ -530,9 +530,6 @@ static void test_message_box_internal_seams_renamed_to_tinyui(void)
     const char *widget_source = resolve_repo_path("tinyui/src/widgets/message_box.c");
 
     assert(widget_source != 0);
-    assert_source_lacks_function_definition(widget_source, "tinyui_message_box_props_are_valid");
-    assert_source_lacks_function_definition(widget_source, "tinyui_message_box_get_ld");
-    assert_source_lacks_function_definition(widget_source, "tinyui_message_box_confirm_bridge");
     assert_source_has_function_definition(widget_source, "tinyui_message_box_props_are_valid");
     assert_source_has_function_definition(widget_source, "tinyui_message_box_get_ld");
     assert_source_has_function_definition(widget_source, "tinyui_message_box_confirm_bridge");

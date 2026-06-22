@@ -74,18 +74,15 @@ static enum tinyui_align tinyui_label_unmap_align(arm_2d_align_t align)
 
 static ldLabel_t *tinyui_label_get_ld(struct tinyui_label *label)
 {
-    struct tinyui_backend_widget *backend;
-
-    if (label == NULL || label->widget.backend_widget == NULL) {
+    if (label == NULL || label->widget.ld_widget == NULL) {
         return NULL;
     }
 
-    backend = (struct tinyui_backend_widget *)label->widget.backend_widget;
-    if (backend->kind != TINYUI_BACKEND_WIDGET_LABEL || backend->ld_widget == NULL) {
+    if (label->widget.kind != TINYUI_BACKEND_WIDGET_LABEL) {
         return NULL;
     }
 
-    return (ldLabel_t *)backend->ld_widget;
+    return (ldLabel_t *)label->widget.ld_widget;
 }
 
 static int tinyui_label_props_are_valid(const struct tinyui_label_props *props)
@@ -101,24 +98,22 @@ static int tinyui_label_props_are_valid(const struct tinyui_label_props *props)
 
 static void tinyui_label_dispose_partial(struct tinyui_label *label)
 {
-    struct tinyui_backend_widget *backend;
     struct tinyui_app *app_state;
 
     if (label == 0) {
         return;
     }
 
-    backend = (struct tinyui_backend_widget *)label->widget.backend_widget;
-    if (backend != 0) {
-        app_state = tinyui_runtime_bridge_backend_state(backend->owner);
-        if (backend->parent != 0) {
-            (void)tinyui_runtime_bridge_detach_from_parent(backend);
+    if (label->widget.ld_widget != 0) {
+        void *saved_ld_widget = label->widget.ld_widget;
+        app_state = label->widget.owner != 0
+            ? tinyui_runtime_bridge_backend_state(label->widget.owner)
+            : 0;
+        (void)tinyui_widget_detach_from_parent(&label->widget);
+        (void)tinyui_runtime_bridge_unbind_host(&label->widget);
+        if (app_state != 0 && app_state->ld_scene != 0) {
+            ldLabel_depose(app_state->ld_scene, (ldLabel_t *)saved_ld_widget);
         }
-        (void)tinyui_runtime_bridge_unbind_host(backend);
-        if (app_state != 0 && app_state->ld_scene != 0 && backend->ld_widget != 0) {
-            ldLabel_depose(app_state->ld_scene, (ldLabel_t *)backend->ld_widget);
-        }
-        free(backend);
     }
 
     free(label);
@@ -135,8 +130,6 @@ static void tinyui_label_dispose_partial(struct tinyui_label *label)
 struct tinyui_label *tinyui_label_create(struct tinyui_window *parent, const char *id)
 {
     struct tinyui_label *label;
-    struct tinyui_backend_widget *backend;
-    struct tinyui_backend_widget *parent_backend;
     struct tinyui_app *app_state;
     ldLabel_t *ld_label;
     uint16_t name_id;
@@ -145,9 +138,8 @@ struct tinyui_label *tinyui_label_create(struct tinyui_window *parent, const cha
         return 0;
     }
 
-    parent_backend = (struct tinyui_backend_widget *)parent->widget.backend_widget;
-    app_state = tinyui_runtime_bridge_backend_state_from_parent(parent_backend);
-    if (parent_backend == 0 || parent_backend->ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
+    app_state = parent->widget.owner;
+    if (parent->widget.ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
         return 0;
     }
 
@@ -156,61 +148,32 @@ struct tinyui_label *tinyui_label_create(struct tinyui_window *parent, const cha
         return 0;
     }
 
-    backend = calloc(1, sizeof(*backend));
-    if (backend == 0) {
-        free(label);
-        return 0;
-    }
-
-    name_id = tinyui_runtime_bridge_next_name_id(parent_backend);
-    if (name_id == 0) {
-        free(backend);
-        free(label);
-        return 0;
-    }
+    name_id = ++app_state->next_ld_name_id;
 
     ld_label = ldLabel_init(app_state->ld_scene,
                             NULL,
                             name_id,
-                            parent_backend->ld_name_id,
+                            parent->widget.ld_name_id,
                             0,
                             0,
                             220,
                             28,
                             NULL);
     if (ld_label == 0) {
-        free(backend);
-        free(label);
-        return 0;
-    }
-
-    if (tinyui_widget_init_child(backend,
-                                         parent_backend,
-                                         TINYUI_BACKEND_WIDGET_LABEL,
-                                         id,
-                                         parent_backend->theme) != 0) {
-        ldLabel_depose(app_state->ld_scene, ld_label);
-        free(backend);
-        free(label);
-        return 0;
-    }
-    backend->ld_widget = ld_label;
-    backend->ld_name_id = name_id;
-    if (tinyui_widget_attach_child(parent_backend, backend) != 0) {
-        ldLabel_depose(app_state->ld_scene, ld_label);
-        free(backend);
         free(label);
         return 0;
     }
 
     label->id = id;
-    label->widget.backend_widget = backend;
-    label->widget.visible = 1;
-    label->widget.enabled = 1;
-    if (tinyui_runtime_bridge_bind_host(label->widget.backend_widget, &label->widget) != 0) {
-        free(label);
-        return 0;
-    }
+    label->widget.ld_widget  = ld_label;
+    label->widget.ld_name_id = name_id;
+    label->widget.kind       = TINYUI_BACKEND_WIDGET_LABEL;
+    label->widget.owner      = app_state;
+    label->widget.visible    = 1;
+    label->widget.enabled    = 1;
+    ((ldBase_t *)ld_label)->pInfo = &label->widget;
+    (void)tinyui_runtime_bridge_bind_leaf_widget(&label->widget, app_state);
+
     return label;
 }
 
@@ -290,7 +253,7 @@ int tinyui_label_set_text(struct tinyui_label *label, const char *text)
     if (tinyui_widget_set_text(&label->widget, text) != 0) {
         return -1;
     }
-    return tinyui_widget_set_backend_text(label->widget.backend_widget, text);
+    return tinyui_widget_set_backend_text(&label->widget, text);
 }
 
 /**
@@ -303,7 +266,7 @@ const char *tinyui_label_get_text(struct tinyui_label *label)
 {
     ldLabel_t *ld_label;
 
-    if (label == 0 || label->widget.backend_widget == 0) {
+    if (label == 0 || label->widget.ld_widget == 0) {
         return 0;
     }
 
@@ -337,7 +300,6 @@ int tinyui_label_set_font(struct tinyui_label *label, const struct tinyui_font *
     }
 
     label->widget.font = font;
-    ((struct tinyui_backend_widget *)label->widget.backend_widget)->font = font;
     if (font != NULL) {
         ldLabelSetFont(ld_label, (arm_2d_font_t *)font);
     } else {

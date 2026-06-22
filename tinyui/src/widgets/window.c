@@ -27,16 +27,16 @@
 
 struct tinyui_image_source;
 
-static int tinyui_window_fail_next_set_bg_color = 0;
+static int s_window_set_bg_color_fail_flag = 0;
 
 #define TINYUI_WINDOW_LAYOUT_MAX_TRACKS TINYUI_BACKEND_LAYOUT_MAX_TRACKS
 
-static ldColor tinyui_window_rgb_to_ld_color(unsigned int rgb)
+static ldColor s_rgb_to_ld_color(unsigned int rgb)
 {
     return __RGB((rgb >> 16) & 0xFFU, (rgb >> 8) & 0xFFU, rgb & 0xFFU);
 }
 
-static unsigned int tinyui_window_ld_color_to_rgb(ldColor color)
+static unsigned int s_ld_color_to_rgb(ldColor color)
 {
     uint32_t red = ((uint32_t)color >> 11) & 0x1FU;
     uint32_t green = ((uint32_t)color >> 5) & 0x3FU;
@@ -48,7 +48,7 @@ static unsigned int tinyui_window_ld_color_to_rgb(ldColor color)
     return (red << 16) | (green << 8) | blue;
 }
 
-static ldFlexFlow_t tinyui_window_map_flex_flow(enum tinyui_flex_flow flow)
+static ldFlexFlow_t s_flex_flow_to_ld(enum tinyui_flex_flow flow)
 {
     switch (flow) {
     case TINYUI_FLEX_FLOW_COLUMN:
@@ -71,7 +71,7 @@ static ldFlexFlow_t tinyui_window_map_flex_flow(enum tinyui_flex_flow flow)
     }
 }
 
-static ldFlexMainAlign_t tinyui_window_map_flex_main_align(enum tinyui_align align)
+static ldFlexMainAlign_t s_flex_main_align_to_ld(enum tinyui_align align)
 {
     switch (align) {
     case TINYUI_ALIGN_CENTER:
@@ -91,7 +91,7 @@ static ldFlexMainAlign_t tinyui_window_map_flex_main_align(enum tinyui_align ali
     }
 }
 
-static ldFlexCrossAlign_t tinyui_window_map_flex_cross_align(enum tinyui_align align)
+static ldFlexCrossAlign_t s_flex_cross_align_to_ld(enum tinyui_align align)
 {
     switch (align) {
     case TINYUI_ALIGN_CENTER:
@@ -108,7 +108,7 @@ static ldFlexCrossAlign_t tinyui_window_map_flex_cross_align(enum tinyui_align a
     }
 }
 
-static ldFlexTrackAlign_t tinyui_window_map_flex_track_align(enum tinyui_align align)
+static ldFlexTrackAlign_t s_flex_track_align_to_ld(enum tinyui_align align)
 {
     switch (align) {
     case TINYUI_ALIGN_CENTER:
@@ -128,12 +128,12 @@ static ldFlexTrackAlign_t tinyui_window_map_flex_track_align(enum tinyui_align a
     }
 }
 
-static ldGridAlign_t tinyui_window_map_grid_align(enum tinyui_align align)
+static ldGridAlign_t s_grid_align_to_ld(enum tinyui_align align)
 {
     return (ldGridAlign_t)tinyui_native_align_to_ld_grid((enum tinyui_native_align)align);
 }
 
-static int16_t tinyui_window_map_grid_track(int value)
+static int16_t s_grid_track_to_ld(int value)
 {
     if (value == 0) {
         return LD_GRID_TEMPLATE_LAST;
@@ -147,7 +147,7 @@ static int16_t tinyui_window_map_grid_track(int value)
     return (int16_t)value;
 }
 
-static int tinyui_window_copy_grid_tracks(int *dst, int16_t *backend_dst, const int *src, int count)
+static int s_copy_grid_tracks(int *dst, int16_t *backend_dst, const int *src, int count)
 {
     int i;
 
@@ -157,7 +157,7 @@ static int tinyui_window_copy_grid_tracks(int *dst, int16_t *backend_dst, const 
 
     for (i = 0; i < count; ++i) {
         dst[i] = src[i];
-        backend_dst[i] = tinyui_window_map_grid_track(src[i]);
+        backend_dst[i] = s_grid_track_to_ld(src[i]);
     }
     for (; i < TINYUI_LAYOUT_MAX_TRACKS; ++i) {
         dst[i] = 0;
@@ -175,26 +175,30 @@ struct tinyui_window_backend_host {
 int tinyui_runtime_bridge_unbind_host(void *backend_widget);
 int tinyui_runtime_bridge_detach_from_parent(void *backend_widget);
 
-static struct tinyui_backend_widget *tinyui_window_get_backend(struct tinyui_window *window)
+static struct tinyui_backend_widget *tinyui_window_backend_of(struct tinyui_window *window)
+{
+    if (window == 0 || window->backend_host == 0) {
+        return 0;
+    }
+
+    return &window->backend_host->widget;
+}
+
+static struct tinyui_window_backend_host *tinyui_window_host_of(struct tinyui_window *window)
 {
     if (window == 0) {
         return 0;
     }
 
-    return (struct tinyui_backend_widget *)window->widget.backend_widget;
-}
-
-static struct tinyui_window_backend_host *tinyui_window_get_backend_host(struct tinyui_window *window)
-{
-    return (struct tinyui_window_backend_host *)tinyui_window_get_backend(window);
+    return window->backend_host;
 }
 
 static void tinyui_window_sync_padding(struct tinyui_window *window);
 
-static int tinyui_window_apply_layout_type_impl(struct tinyui_window *window,
+static int tinyui_window_do_set_layout_type(struct tinyui_window *window,
                                                 enum tinyui_window_layout_type type);
 
-static int tinyui_window_apply_flex_contract_impl(struct tinyui_window *window,
+static int tinyui_window_do_set_flex_contract(struct tinyui_window *window,
                                                   enum tinyui_flex_flow flow,
                                                   enum tinyui_align main_align,
                                                   enum tinyui_align cross_align,
@@ -202,23 +206,23 @@ static int tinyui_window_apply_flex_contract_impl(struct tinyui_window *window,
                                                   int item_gap,
                                                   int track_gap);
 
-static int tinyui_window_apply_generic_gap_impl(struct tinyui_window *window, int gap);
+static int tinyui_window_do_set_gap(struct tinyui_window *window, int gap);
 
-static ldWindow_t *tinyui_window_get_ld_window(struct tinyui_window *window)
+static ldWindow_t *tinyui_window_ld_of(struct tinyui_window *window)
 {
-    struct tinyui_backend_widget *backend = tinyui_window_get_backend(window);
     ldBase_t *ld_base;
 
-    if (backend == 0 || backend->ld_widget == 0) {
+    /* C1: use the folded widget fields as the authoritative source */
+    if (window == 0 || window->widget.ld_widget == 0) {
         return 0;
     }
 
-    if (backend->kind != TINYUI_BACKEND_WIDGET_WINDOW &&
-        backend->kind != TINYUI_BACKEND_WIDGET_BACKGROUND) {
+    if (window->widget.kind != TINYUI_BACKEND_WIDGET_WINDOW &&
+        window->widget.kind != TINYUI_BACKEND_WIDGET_BACKGROUND) {
         return 0;
     }
 
-    ld_base = (ldBase_t *)backend->ld_widget;
+    ld_base = (ldBase_t *)window->widget.ld_widget;
     if (ld_base->widgetType != widgetTypeWindow &&
         ld_base->widgetType != widgetTypeBackground) {
         return 0;
@@ -227,7 +231,7 @@ static ldWindow_t *tinyui_window_get_ld_window(struct tinyui_window *window)
     return (ldWindow_t *)ld_base;
 }
 
-static ldLayoutType_t tinyui_window_map_layout_type(enum tinyui_window_layout_type type)
+static ldLayoutType_t tinyui_window_layout_type_to_ld(enum tinyui_window_layout_type type)
 {
     switch (type) {
     case TINYUI_WINDOW_LAYOUT_FLEX:
@@ -242,8 +246,8 @@ static ldLayoutType_t tinyui_window_map_layout_type(enum tinyui_window_layout_ty
 
 int tinyui_window_apply_uniform_padding(struct tinyui_window *window, int padding)
 {
-    struct tinyui_backend_widget *backend = tinyui_window_get_backend(window);
-    ldWindow_t *ld_window = tinyui_window_get_ld_window(window);
+    struct tinyui_backend_widget *backend = tinyui_window_backend_of(window);
+    ldWindow_t *ld_window = tinyui_window_ld_of(window);
 
     if (window == 0 || backend == 0 || ld_window == 0 || padding < 0) {
         return -1;
@@ -270,8 +274,8 @@ int tinyui_window_apply_explicit_grid_padding(struct tinyui_window *window,
                                               int right,
                                               int bottom)
 {
-    struct tinyui_backend_widget *backend = tinyui_window_get_backend(window);
-    ldWindow_t *ld_window = tinyui_window_get_ld_window(window);
+    struct tinyui_backend_widget *backend = tinyui_window_backend_of(window);
+    ldWindow_t *ld_window = tinyui_window_ld_of(window);
     ldLayoutType_t layout_type;
 
     if (window == 0 || backend == 0 || ld_window == 0
@@ -284,6 +288,12 @@ int tinyui_window_apply_explicit_grid_padding(struct tinyui_window *window,
     backend->window_layout.grid_padding_right = right;
     backend->window_layout.grid_padding_bottom = bottom;
     backend->window_layout.has_explicit_grid_padding = 1;
+    /* C1: also update the Phase C folded fields on the window struct */
+    window->grid_padding_left = (int16_t)left;
+    window->grid_padding_top = (int16_t)top;
+    window->grid_padding_right = (int16_t)right;
+    window->grid_padding_bottom = (int16_t)bottom;
+    window->has_explicit_grid_padding = 1;
     layout_type = ld_window->layoutTpye;
     ldWindowSetGridPadding(ld_window, (ldPadding_t){
         .left = (int16_t)left,
@@ -295,10 +305,11 @@ int tinyui_window_apply_explicit_grid_padding(struct tinyui_window *window,
     return 0;
 }
 
-static void tinyui_window_init_defaults(struct tinyui_window *window, const char *id, void *backend_widget)
+static void tinyui_window_set_defaults(struct tinyui_window *window, const char *id,
+                                        struct tinyui_window_backend_host *host)
 {
     window->id = id;
-    window->widget.backend_widget = backend_widget;
+    window->backend_host = host;
     window->widget.visible = 1;
     window->widget.enabled = 1;
     window->flex_flow = TINYUI_FLEX_FLOW_ROW;
@@ -309,46 +320,57 @@ static void tinyui_window_init_defaults(struct tinyui_window *window, const char
     window->grid_row_align = TINYUI_ALIGN_START;
 }
 
-static void tinyui_window_dispose_partial(struct tinyui_window *window)
+static void tinyui_window_do_free_internal(struct tinyui_window *window)
 {
-    struct tinyui_backend_widget *backend;
     struct tinyui_app *app_state;
+    ldWindow_t *ld_win;
     int clears_scene_root = 0;
 
-    if (window == 0 || window->widget.backend_widget == 0) {
+    if (window == 0) {
         free(window);
         return;
     }
 
-    backend = (struct tinyui_backend_widget *)window->widget.backend_widget;
-    app_state = backend->owner != 0
-        ? tinyui_runtime_bridge_backend_state(backend->owner)
+    app_state = window->widget.owner != 0
+        ? tinyui_runtime_bridge_backend_state(window->widget.owner)
         : 0;
 
-    (void)tinyui_runtime_bridge_unbind_host(backend);
-    if (backend->parent != 0) {
-        (void)tinyui_runtime_bridge_detach_from_parent(backend);
+    /* Save ld_win before detach_from_parent clears widget->ld_widget. */
+    ld_win = (ldWindow_t *)window->widget.ld_widget;
+
+    (void)tinyui_runtime_bridge_unbind_host(&window->widget);
+    if (window->widget.ld_widget != 0
+        && ldBaseGetParent((ldBase_t *)window->widget.ld_widget) != 0) {
+        (void)tinyui_runtime_bridge_detach_from_parent(&window->widget);
     }
-    if (backend->parent == 0
+    if (ld_win != 0
+        && ldBaseGetParent((ldBase_t *)ld_win) == 0
         && app_state != 0
         && app_state->ld_scene != 0
-        && app_state->ld_scene->ptNodeRoot == (arm_2d_control_node_t *)backend->ld_widget) {
+        && app_state->ld_scene->ptNodeRoot == (arm_2d_control_node_t *)ld_win) {
         clears_scene_root = 1;
     }
-    if (app_state != 0 && app_state->ld_scene != 0 && backend->ld_widget != 0) {
-        ldWindow_depose(app_state->ld_scene, (ldWindow_t *)backend->ld_widget);
+    if (app_state != 0 && app_state->ld_scene != 0 && ld_win != 0) {
+        ldWindow_depose(app_state->ld_scene, ld_win);
         if (clears_scene_root) {
             app_state->ld_scene->ptNodeRoot = 0;
+        } else {
+            /* C1 phantom root: if no user windows remain, depose phantom too. */
+            ldBase_t *phantom = (ldBase_t *)app_state->ld_scene->ptNodeRoot;
+            if (phantom != NULL && ldBaseGetChildList(phantom) == NULL) {
+                ldWindow_depose(app_state->ld_scene, (ldWindow_t *)phantom);
+                app_state->ld_scene->ptNodeRoot = 0;
+            }
         }
     }
 
-    free(backend);
+    free(window->backend_host);
     free(window);
 }
 
 void tinyui_window_test_fail_next_set_bg_color(void)
 {
-    tinyui_window_fail_next_set_bg_color = 1;
+    s_window_set_bg_color_fail_flag = 1;
 }
 
 static int tinyui_window_apply_padding_group(struct tinyui_window *window,
@@ -357,14 +379,14 @@ static int tinyui_window_apply_padding_group(struct tinyui_window *window,
                                               int right,
                                               int bottom)
 {
-    struct tinyui_window_backend_host *host = tinyui_window_get_backend_host(window);
-    struct tinyui_backend_widget *backend = tinyui_window_get_backend(window);
+    struct tinyui_window_backend_host *host = tinyui_window_host_of(window);
+    struct tinyui_backend_widget *backend = tinyui_window_backend_of(window);
 
     if (host == 0 || backend == 0) {
         return -1;
     }
 
-    if (tinyui_window_get_ld_window(window) == 0) {
+    if (tinyui_window_ld_of(window) == 0) {
         return -1;
     }
 
@@ -378,14 +400,20 @@ static int tinyui_window_apply_padding_group(struct tinyui_window *window,
     backend->window_layout.padding_right = right;
     backend->window_layout.padding_bottom = bottom;
     backend->window_layout.has_explicit_flex_padding = 1;
+    /* C1: also update the Phase C folded fields on the window struct */
+    window->padding_left = (int16_t)left;
+    window->padding_top = (int16_t)top;
+    window->padding_right = (int16_t)right;
+    window->padding_bottom = (int16_t)bottom;
+    window->has_explicit_flex_padding = 1;
     tinyui_window_sync_padding(window);
     return 0;
 }
 
 static void tinyui_window_sync_padding(struct tinyui_window *window)
 {
-    struct tinyui_window_backend_host *host = tinyui_window_get_backend_host(window);
-    struct tinyui_backend_widget *backend = tinyui_window_get_backend(window);
+    struct tinyui_window_backend_host *host = tinyui_window_host_of(window);
+    struct tinyui_backend_widget *backend = tinyui_window_backend_of(window);
     ldLayoutType_t layout_type;
     ldPadding_t flex_padding;
     ldPadding_t grid_padding;
@@ -395,7 +423,7 @@ static void tinyui_window_sync_padding(struct tinyui_window *window)
         return;
     }
 
-    ld_window = tinyui_window_get_ld_window(window);
+    ld_window = tinyui_window_ld_of(window);
     if (ld_window == 0) {
         return;
     }
@@ -426,10 +454,10 @@ static void tinyui_window_sync_padding(struct tinyui_window *window)
     ld_window->layoutTpye = layout_type;
 }
 
-static int tinyui_window_apply_layout_type_impl(struct tinyui_window *window,
+static int tinyui_window_do_set_layout_type(struct tinyui_window *window,
                                                 enum tinyui_window_layout_type type)
 {
-    ldWindow_t *ld_window = tinyui_window_get_ld_window(window);
+    ldWindow_t *ld_window = tinyui_window_ld_of(window);
 
     if (window == 0 || ld_window == 0
         || (type != TINYUI_WINDOW_LAYOUT_NONE
@@ -438,12 +466,12 @@ static int tinyui_window_apply_layout_type_impl(struct tinyui_window *window,
         return -1;
     }
 
-    ldWindowSetLayout(ld_window, tinyui_window_map_layout_type(type));
+    ldWindowSetLayout(ld_window, tinyui_window_layout_type_to_ld(type));
     tinyui_window_sync_padding(window);
     return 0;
 }
 
-static int tinyui_window_apply_flex_contract_impl(struct tinyui_window *window,
+static int tinyui_window_do_set_flex_contract(struct tinyui_window *window,
                                                   enum tinyui_flex_flow flow,
                                                   enum tinyui_align main_align,
                                                   enum tinyui_align cross_align,
@@ -451,8 +479,8 @@ static int tinyui_window_apply_flex_contract_impl(struct tinyui_window *window,
                                                   int item_gap,
                                                   int track_gap)
 {
-    struct tinyui_backend_widget *backend = tinyui_window_get_backend(window);
-    ldWindow_t *ld_window = tinyui_window_get_ld_window(window);
+    struct tinyui_backend_widget *backend = tinyui_window_backend_of(window);
+    ldWindow_t *ld_window = tinyui_window_ld_of(window);
 
     if (window == 0 || backend == 0 || ld_window == 0 || item_gap < 0 || track_gap < 0) {
         return -1;
@@ -472,20 +500,20 @@ static int tinyui_window_apply_flex_contract_impl(struct tinyui_window *window,
     backend->window_layout.flex_item_gap = item_gap;
     backend->window_layout.flex_track_gap = track_gap;
 
-    ldWindowSetFlexFlow(ld_window, tinyui_window_map_flex_flow(flow));
+    ldWindowSetFlexFlow(ld_window, s_flex_flow_to_ld(flow));
     ldWindowSetFlexAlign(ld_window,
-                         tinyui_window_map_flex_main_align(main_align),
-                         tinyui_window_map_flex_cross_align(cross_align));
-    ldWindowSetFlexTrackAlign(ld_window, tinyui_window_map_flex_track_align(track_align));
+                         s_flex_main_align_to_ld(main_align),
+                         s_flex_cross_align_to_ld(cross_align));
+    ldWindowSetFlexTrackAlign(ld_window, s_flex_track_align_to_ld(track_align));
     ldWindowSetFlexGap(ld_window, (int16_t)item_gap, (int16_t)track_gap);
     tinyui_window_sync_padding(window);
     return 0;
 }
 
-static int tinyui_window_apply_generic_gap_impl(struct tinyui_window *window, int gap)
+static int tinyui_window_do_set_gap(struct tinyui_window *window, int gap)
 {
-    struct tinyui_backend_widget *backend = tinyui_window_get_backend(window);
-    ldWindow_t *ld_window = tinyui_window_get_ld_window(window);
+    struct tinyui_backend_widget *backend = tinyui_window_backend_of(window);
+    ldWindow_t *ld_window = tinyui_window_ld_of(window);
     ldLayoutType_t layout_type;
 
     if (window == 0 || backend == 0 || ld_window == 0 || gap < 0) {
@@ -504,14 +532,14 @@ static int tinyui_window_apply_generic_gap_impl(struct tinyui_window *window, in
 
 int tinyui_window_apply_flex_flow(struct tinyui_window *window, enum tinyui_flex_flow flow)
 {
-    ldWindow_t *ld_window = tinyui_window_get_ld_window(window);
+    ldWindow_t *ld_window = tinyui_window_ld_of(window);
 
     if (window == 0 || ld_window == 0) {
         return -1;
     }
 
     window->flex_flow = flow;
-    ldWindowSetFlexFlow(ld_window, tinyui_window_map_flex_flow(flow));
+    ldWindowSetFlexFlow(ld_window, s_flex_flow_to_ld(flow));
     tinyui_window_sync_padding(window);
     return 0;
 }
@@ -521,7 +549,7 @@ int tinyui_window_apply_flex_align(struct tinyui_window *window,
                                    enum tinyui_align cross_align,
                                    enum tinyui_align track_align)
 {
-    ldWindow_t *ld_window = tinyui_window_get_ld_window(window);
+    ldWindow_t *ld_window = tinyui_window_ld_of(window);
 
     if (window == 0 || ld_window == 0) {
         return -1;
@@ -531,17 +559,17 @@ int tinyui_window_apply_flex_align(struct tinyui_window *window,
     window->flex_cross_align = cross_align;
     window->flex_track_align = track_align;
     ldWindowSetFlexAlign(ld_window,
-                         tinyui_window_map_flex_main_align(main_align),
-                         tinyui_window_map_flex_cross_align(cross_align));
-    ldWindowSetFlexTrackAlign(ld_window, tinyui_window_map_flex_track_align(track_align));
+                         s_flex_main_align_to_ld(main_align),
+                         s_flex_cross_align_to_ld(cross_align));
+    ldWindowSetFlexTrackAlign(ld_window, s_flex_track_align_to_ld(track_align));
     tinyui_window_sync_padding(window);
     return 0;
 }
 
 int tinyui_window_apply_flex_gap(struct tinyui_window *window, int item_gap, int track_gap)
 {
-    struct tinyui_backend_widget *backend = tinyui_window_get_backend(window);
-    ldWindow_t *ld_window = tinyui_window_get_ld_window(window);
+    struct tinyui_backend_widget *backend = tinyui_window_backend_of(window);
+    ldWindow_t *ld_window = tinyui_window_ld_of(window);
 
     if (window == 0 || backend == 0 || ld_window == 0 || item_gap < 0 || track_gap < 0) {
         return -1;
@@ -558,13 +586,13 @@ int tinyui_window_apply_flex_gap(struct tinyui_window *window, int item_gap, int
 
 int tinyui_window_apply_grid_columns(struct tinyui_window *window, const int *tracks, int count)
 {
-    struct tinyui_backend_widget *backend = tinyui_window_get_backend(window);
-    ldWindow_t *ld_window = tinyui_window_get_ld_window(window);
+    struct tinyui_backend_widget *backend = tinyui_window_backend_of(window);
+    ldWindow_t *ld_window = tinyui_window_ld_of(window);
     int window_tracks[TINYUI_LAYOUT_MAX_TRACKS];
     int16_t backend_tracks[TINYUI_LAYOUT_MAX_TRACKS];
 
     if (window == 0 || backend == 0 || ld_window == 0
-        || tinyui_window_copy_grid_tracks(window_tracks, backend_tracks, tracks, count) != 0) {
+        || s_copy_grid_tracks(window_tracks, backend_tracks, tracks, count) != 0) {
         return -1;
     }
 
@@ -583,13 +611,13 @@ int tinyui_window_apply_grid_columns(struct tinyui_window *window, const int *tr
 
 int tinyui_window_apply_grid_rows(struct tinyui_window *window, const int *tracks, int count)
 {
-    struct tinyui_backend_widget *backend = tinyui_window_get_backend(window);
-    ldWindow_t *ld_window = tinyui_window_get_ld_window(window);
+    struct tinyui_backend_widget *backend = tinyui_window_backend_of(window);
+    ldWindow_t *ld_window = tinyui_window_ld_of(window);
     int window_tracks[TINYUI_LAYOUT_MAX_TRACKS];
     int16_t backend_tracks[TINYUI_LAYOUT_MAX_TRACKS];
 
     if (window == 0 || backend == 0 || ld_window == 0
-        || tinyui_window_copy_grid_tracks(window_tracks, backend_tracks, tracks, count) != 0) {
+        || s_copy_grid_tracks(window_tracks, backend_tracks, tracks, count) != 0) {
         return -1;
     }
 
@@ -608,8 +636,8 @@ int tinyui_window_apply_grid_rows(struct tinyui_window *window, const int *track
 
 int tinyui_window_apply_grid_gap(struct tinyui_window *window, int row_gap, int col_gap)
 {
-    struct tinyui_backend_widget *backend = tinyui_window_get_backend(window);
-    ldWindow_t *ld_window = tinyui_window_get_ld_window(window);
+    struct tinyui_backend_widget *backend = tinyui_window_backend_of(window);
+    ldWindow_t *ld_window = tinyui_window_ld_of(window);
 
     if (window == 0 || backend == 0 || ld_window == 0 || row_gap < 0 || col_gap < 0) {
         return -1;
@@ -628,8 +656,8 @@ int tinyui_window_apply_grid_align(struct tinyui_window *window,
                                    enum tinyui_align col_align,
                                    enum tinyui_align row_align)
 {
-    struct tinyui_backend_widget *backend = tinyui_window_get_backend(window);
-    ldWindow_t *ld_window = tinyui_window_get_ld_window(window);
+    struct tinyui_backend_widget *backend = tinyui_window_backend_of(window);
+    ldWindow_t *ld_window = tinyui_window_ld_of(window);
 
     if (window == 0 || backend == 0 || ld_window == 0) {
         return -1;
@@ -640,13 +668,13 @@ int tinyui_window_apply_grid_align(struct tinyui_window *window,
     backend->window_layout.grid_col_align = col_align;
     backend->window_layout.grid_row_align = row_align;
     ldWindowSetGridAlign(ld_window,
-                         tinyui_window_map_grid_align(col_align),
-                         tinyui_window_map_grid_align(row_align));
+                         s_grid_align_to_ld(col_align),
+                         s_grid_align_to_ld(row_align));
     tinyui_window_sync_padding(window);
     return 0;
 }
 
-static void tinyui_window_get_root_size(struct tinyui_app *app, int16_t *width, int16_t *height)
+static void tinyui_window_compute_display_root_size(struct tinyui_app *app, int16_t *width, int16_t *height)
 {
     struct tinyui_display_config config = {0};
 
@@ -666,12 +694,12 @@ static void tinyui_window_get_root_size(struct tinyui_app *app, int16_t *width, 
     }
 }
 
-static int tinyui_window_is_valid(struct tinyui_window *window)
+static int tinyui_window_ok(struct tinyui_window *window)
 {
-    return window != 0 && window->widget.backend_widget != 0;
+    return window != 0 && window->backend_host != 0;
 }
 
-static int tinyui_window_props_are_valid(const struct tinyui_window_props *props)
+static int tinyui_window_props_ok(const struct tinyui_window_props *props)
 {
     return props != 0
         && props->id != 0
@@ -714,24 +742,40 @@ struct tinyui_window *tinyui_window_create(struct tinyui_app *app, const char *i
         return 0;
     }
 
-    tinyui_window_get_root_size(app, &root_width, &root_height);
-    ld_root = ldWindow_init(app_state->ld_scene, NULL, 0, 0, 0, 0, root_width, root_height);
-    if (ld_root == 0) {
-        free(host);
-        return 0;
+    tinyui_window_compute_display_root_size(app, &root_width, &root_height);
+
+    /* Phantom scene root (nameId=0): created once, never exposed as a user
+     * widget.  All user windows are children of this node, preventing the
+     * "second window replaces first as scene root" collision. */
+    if (app_state->ld_scene->ptNodeRoot == 0) {
+        if (ldWindow_init(app_state->ld_scene, NULL, 0, 0, 0, 0,
+                          root_width, root_height) == 0) {
+            free(host);
+            return 0;
+        }
     }
 
-    if (tinyui_widget_init_root(&host->widget,
-                                        app,
-                                        TINYUI_BACKEND_WIDGET_WINDOW,
-                                        id,
-                                        app->theme) != 0) {
-        ldWindow_depose(app_state->ld_scene, ld_root);
-        free(host);
-        return 0;
+    {
+        uint16_t name_id = ++app_state->next_ld_name_id;
+        ld_root = ldWindow_init(app_state->ld_scene, NULL, name_id, 0, 0, 0,
+                                root_width, root_height);
+        if (ld_root == 0) {
+            free(host);
+            return 0;
+        }
+
+        if (tinyui_widget_init_root(&host->widget,
+                                            app,
+                                            TINYUI_BACKEND_WIDGET_WINDOW,
+                                            id,
+                                            app->theme) != 0) {
+            ldWindow_depose(app_state->ld_scene, ld_root);
+            free(host);
+            return 0;
+        }
+        host->widget.ld_widget = ld_root;
+        host->widget.ld_name_id = name_id;
     }
-    host->widget.ld_widget = ld_root;
-    host->widget.ld_name_id = 0;
 
     window = calloc(1, sizeof(*window));
     if (window == 0) {
@@ -740,8 +784,8 @@ struct tinyui_window *tinyui_window_create(struct tinyui_app *app, const char *i
         return 0;
     }
 
-    tinyui_window_init_defaults(window, id, &host->widget);
-    if (tinyui_runtime_bridge_bind_host(window->widget.backend_widget, &window->widget) != 0) {
+    tinyui_window_set_defaults(window, id, host);
+    if (tinyui_runtime_bridge_bind_host(&host->widget, &window->widget) != 0) {
         ldWindow_depose(app_state->ld_scene, ld_root);
         free(host);
         free(window);
@@ -759,11 +803,11 @@ struct tinyui_window *tinyui_window_create_child(struct tinyui_window *parent, c
     ldWindow_t *ld_window;
     uint16_t name_id;
 
-    if (parent == 0 || id == 0 || parent->widget.backend_widget == 0) {
+    if (parent == 0 || id == 0 || parent->backend_host == 0) {
         return 0;
     }
 
-    parent_backend = (struct tinyui_backend_widget *)parent->widget.backend_widget;
+    parent_backend = &parent->backend_host->widget;
     app_state = tinyui_runtime_bridge_backend_state_from_parent(parent_backend);
     if (app_state == 0 || app_state->ld_scene == 0 || parent_backend->ld_widget == 0) {
         return 0;
@@ -817,8 +861,8 @@ struct tinyui_window *tinyui_window_create_child(struct tinyui_window *parent, c
         return 0;
     }
 
-    tinyui_window_init_defaults(window, id, &host->widget);
-    if (tinyui_runtime_bridge_bind_host(window->widget.backend_widget, &window->widget) != 0) {
+    tinyui_window_set_defaults(window, id, host);
+    if (tinyui_runtime_bridge_bind_host(&host->widget, &window->widget) != 0) {
         (void)tinyui_runtime_bridge_detach_from_parent(&host->widget);
         ldWindow_depose(app_state->ld_scene, ld_window);
         free(host);
@@ -841,7 +885,7 @@ struct tinyui_window *tinyui_window_create_with_props(struct tinyui_app *app,
 {
     struct tinyui_window *window;
 
-    if (!tinyui_window_props_are_valid(props)) {
+    if (!tinyui_window_props_ok(props)) {
         return 0;
     }
 
@@ -852,7 +896,7 @@ struct tinyui_window *tinyui_window_create_with_props(struct tinyui_app *app,
 
     if (props->style_class != 0
         && tinyui_widget_set_style_class(&window->widget, props->style_class) != 0) {
-        tinyui_window_dispose_partial(window);
+        tinyui_window_do_free_internal(window);
         return 0;
     }
     if (tinyui_widget_set_user_data(&window->widget, props->user_data) != 0
@@ -869,7 +913,7 @@ struct tinyui_window *tinyui_window_create_with_props(struct tinyui_app *app,
                                          props->padding_top,
                                          props->padding_right,
                                          props->padding_bottom) != 0)) {
-        tinyui_window_dispose_partial(window);
+        tinyui_window_do_free_internal(window);
         return 0;
     }
 
@@ -889,14 +933,14 @@ int tinyui_window_set_background_source(struct tinyui_window *window,
 {
     ldWindow_t *ld_window;
 
-    if (!tinyui_window_is_valid(window)) {
+    if (!tinyui_window_ok(window)) {
         return -1;
     }
     if (source != 0 && source->img_tile == 0) {
         return -1;
     }
 
-    ld_window = tinyui_window_get_ld_window(window);
+    ld_window = tinyui_window_ld_of(window);
     if (ld_window == 0) {
         return -1;
     }
@@ -918,7 +962,6 @@ int tinyui_window_set_background_source(struct tinyui_window *window,
 
 int tinyui_window_set_background_offset(struct tinyui_window *window, int offset_x, int offset_y)
 {
-    struct tinyui_backend_widget *backend;
     struct tinyui_app *app_state;
     int16_t root_width = 0;
     int16_t root_height = 0;
@@ -926,22 +969,21 @@ int tinyui_window_set_background_offset(struct tinyui_window *window, int offset
     int16_t bg_width;
     int16_t bg_height;
 
-    if (!tinyui_window_is_valid(window)) {
+    if (!tinyui_window_ok(window)) {
         return -1;
     }
 
-    backend = tinyui_window_get_backend(window);
-    if (backend == 0 || backend->owner == 0) {
+    if (window->widget.owner == 0) {
         return -1;
     }
 
-    app_state = tinyui_runtime_bridge_backend_state(backend->owner);
-    ld_window = tinyui_window_get_ld_window(window);
+    app_state = tinyui_runtime_bridge_backend_state(window->widget.owner);
+    ld_window = tinyui_window_ld_of(window);
     if (app_state == 0 || app_state->ld_scene == 0 || ld_window == 0) {
         return -1;
     }
 
-    tinyui_window_get_root_size(backend->owner, &root_width, &root_height);
+    tinyui_window_compute_display_root_size(window->widget.owner, &root_width, &root_height);
     bg_width = ld_window->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iWidth;
     bg_height = ld_window->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iHeight;
     if (bg_width <= 0) {
@@ -958,19 +1000,31 @@ int tinyui_window_set_background_offset(struct tinyui_window *window, int offset
     }
 
     ldBaseBgMove(app_state->ld_scene, bg_width, bg_height, (int16_t)offset_x, (int16_t)offset_y);
+
+    /* Set window position and size.  With a phantom scene root the user window
+     * is a child of the phantom, so we must also sync its size to the extended
+     * scene size that ldBaseBgMove computed on the phantom. */
     if (ld_window != (ldWindow_t *)app_state->ld_scene->ptNodeRoot) {
+        ldBase_t *phantom = (ldBase_t *)app_state->ld_scene->ptNodeRoot;
+        int16_t ext_w = phantom != 0
+            ? phantom->use_as__arm_2d_control_node_t.tRegion.tSize.iWidth
+            : bg_width;
+        int16_t ext_h = phantom != 0
+            ? phantom->use_as__arm_2d_control_node_t.tRegion.tSize.iHeight
+            : bg_height;
         ldBaseSetX((ldBase_t *)ld_window, (int16_t)offset_x);
         ldBaseSetY((ldBase_t *)ld_window, (int16_t)offset_y);
-    }
-
-    if (ld_window->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iWidth < bg_width) {
-        ldBaseSetWidth((ldBase_t *)ld_window, bg_width);
-    }
-    if (ld_window->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iHeight < bg_height) {
-        ldBaseSetHeight((ldBase_t *)ld_window, bg_height);
-    }
-
-    if (ld_window == (ldWindow_t *)app_state->ld_scene->ptNodeRoot) {
+        ldBaseSetWidth((ldBase_t *)ld_window, ext_w);
+        ldBaseSetHeight((ldBase_t *)ld_window, ext_h);
+        bg_width = ext_w;
+        bg_height = ext_h;
+    } else {
+        if (ld_window->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iWidth < bg_width) {
+            ldBaseSetWidth((ldBase_t *)ld_window, bg_width);
+        }
+        if (ld_window->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iHeight < bg_height) {
+            ldBaseSetHeight((ldBase_t *)ld_window, bg_height);
+        }
         ldBaseSetX((ldBase_t *)ld_window, (int16_t)offset_x);
         ldBaseSetY((ldBase_t *)ld_window, (int16_t)offset_y);
     }
@@ -998,7 +1052,7 @@ int tinyui_window_get_background_offset(struct tinyui_window *window,
                                         int *offset_x,
                                         int *offset_y)
 {
-    if (!tinyui_window_is_valid(window) || offset_x == 0 || offset_y == 0) {
+    if (!tinyui_window_ok(window) || offset_x == 0 || offset_y == 0) {
         return -1;
     }
 
@@ -1019,22 +1073,22 @@ int tinyui_window_set_color(struct tinyui_window *window, unsigned int rgb)
 {
     ldWindow_t *ld_window;
 
-    if (!tinyui_window_is_valid(window) || rgb > 0xFFFFFFU) {
+    if (!tinyui_window_ok(window) || rgb > 0xFFFFFFU) {
         return -1;
     }
 
-    if (tinyui_window_fail_next_set_bg_color != 0) {
-        tinyui_window_fail_next_set_bg_color = 0;
+    if (s_window_set_bg_color_fail_flag != 0) {
+        s_window_set_bg_color_fail_flag = 0;
         return -1;
     }
 
-    ld_window = tinyui_window_get_ld_window(window);
+    ld_window = tinyui_window_ld_of(window);
     if (ld_window == 0) {
         return -1;
     }
 
     window->widget.bg_color = rgb;
-    ldWindowSetColor(ld_window, tinyui_window_rgb_to_ld_color(rgb));
+    ldWindowSetColor(ld_window, s_rgb_to_ld_color(rgb));
     return 0;
 }
 
@@ -1050,16 +1104,16 @@ int tinyui_window_get_color(struct tinyui_window *window, unsigned int *rgb)
 {
     ldWindow_t *ld_window;
 
-    if (!tinyui_window_is_valid(window) || rgb == 0) {
+    if (!tinyui_window_ok(window) || rgb == 0) {
         return -1;
     }
 
-    ld_window = tinyui_window_get_ld_window(window);
+    ld_window = tinyui_window_ld_of(window);
     if (ld_window == 0) {
         return -1;
     }
 
-    *rgb = tinyui_window_ld_color_to_rgb(ldWindowGetColor(ld_window));
+    *rgb = s_ld_color_to_rgb(ldWindowGetColor(ld_window));
     return 0;
 }
 
@@ -1074,14 +1128,14 @@ int tinyui_window_get_color(struct tinyui_window *window, unsigned int *rgb)
 int tinyui_window_set_layout_type(struct tinyui_window *window,
                                   enum tinyui_window_layout_type type)
 {
-    if (!tinyui_window_is_valid(window)
+    if (!tinyui_window_ok(window)
         || (type != TINYUI_WINDOW_LAYOUT_NONE
             && type != TINYUI_WINDOW_LAYOUT_FLEX
             && type != TINYUI_WINDOW_LAYOUT_GRID)) {
         return -1;
     }
 
-    return tinyui_window_apply_layout_type_impl(window, type);
+    return tinyui_window_do_set_layout_type(window, type);
 }
 
 /**
@@ -1101,7 +1155,7 @@ int tinyui_window_set_padding(struct tinyui_window *window,
                               int right,
                               int bottom)
 {
-    if (!tinyui_window_is_valid(window)
+    if (!tinyui_window_ok(window)
         || left < 0
         || top < 0
         || right < 0
@@ -1129,7 +1183,7 @@ int tinyui_window_set_grid_padding(struct tinyui_window *window,
                                    int right,
                                    int bottom)
 {
-    if (!tinyui_window_is_valid(window)
+    if (!tinyui_window_ok(window)
         || left < 0
         || top < 0
         || right < 0
@@ -1150,11 +1204,11 @@ int tinyui_window_set_grid_padding(struct tinyui_window *window,
 
 int tinyui_window_set_gap(struct tinyui_window *window, int gap)
 {
-    if (!tinyui_window_is_valid(window) || gap < 0) {
+    if (!tinyui_window_ok(window) || gap < 0) {
         return -1;
     }
 
-    return tinyui_window_apply_generic_gap_impl(window, gap);
+    return tinyui_window_do_set_gap(window, gap);
 }
 
 
@@ -1177,7 +1231,7 @@ int tinyui_window_get_padding_group(struct tinyui_window *window,
 {
     ldWindow_t *ld_window;
 
-    if (!tinyui_window_is_valid(window)
+    if (!tinyui_window_ok(window)
         || left == 0
         || top == 0
         || right == 0
@@ -1185,7 +1239,7 @@ int tinyui_window_get_padding_group(struct tinyui_window *window,
         return -1;
     }
 
-    ld_window = tinyui_window_get_ld_window(window);
+    ld_window = tinyui_window_ld_of(window);
     if (ld_window == 0 || ld_window->pLayoutPaddingGroup == 0) {
         return -1;
     }
@@ -1194,4 +1248,13 @@ int tinyui_window_get_padding_group(struct tinyui_window *window,
     *right = ld_window->pLayoutPaddingGroup->right;
     *bottom = ld_window->pLayoutPaddingGroup->bottom;
     return 0;
+}
+
+void *tinyui_window_get_backend_widget(struct tinyui_window *window)
+{
+    if (window == 0 || window->backend_host == 0) {
+        return 0;
+    }
+
+    return &window->backend_host->widget;
 }

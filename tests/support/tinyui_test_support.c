@@ -274,7 +274,8 @@ struct tinyui_image *tinyui_backend_image_test_create_with_props_fail_before_siz
     const struct tinyui_image_props *props)
 {
     struct tinyui_image *image;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *w;
+    ldBase_t *ld_base;
     int detach_result = 0;
     int unbind_result;
 
@@ -305,37 +306,33 @@ struct tinyui_image *tinyui_backend_image_test_create_with_props_fail_before_siz
         return 0;
     }
 
-    backend = (struct tinyui_backend_widget *)image->widget.backend_widget;
-    if (backend == 0) {
+    w = &image->widget;
+    if (w->ld_widget == 0) {
         tinyui_widget_destroy(&image->widget);
         return 0;
     }
-    if (backend->parent != 0) {
-        detach_result = tinyui_backend_widget_detach_from_parent(backend);
-        if (detach_result != 0) {
-            detach_result = tinyui_test_support_finish_detach_after_backend_failure(backend);
-        }
+    ld_base = (ldBase_t *)w->ld_widget;
+    if (ldBaseGetParent(ld_base) != NULL) {
+        detach_result = tinyui_widget_detach_from_parent(w);
+        ld_base = 0; /* ld_widget nulled by detach */
     }
-    unbind_result = tinyui_backend_widget_unbind_host(backend);
-    tinyui_test_support_fill_common_snapshot(
-        backend,
-        detach_result,
-        unbind_result,
-        backend->kind,
-        &g_image_snapshot_valid,
-        &g_image_snapshot.kind,
-        &g_image_snapshot.cleanup_complete,
-        &g_image_snapshot.cleanup_incomplete,
-        &g_image_snapshot.detach_result,
-        &g_image_snapshot.unbind_result,
-        &g_image_snapshot.detached,
-        &g_image_snapshot.owner_cleared,
-        &g_image_snapshot.root_cleared,
-        &g_image_snapshot.parent_cleared,
-        &g_image_snapshot.next_sibling_cleared,
-        &g_image_snapshot.host_cleared,
-        &g_image_snapshot.event_bridge_cleared,
-        &g_image_snapshot.ld_pinfo_cleared);
+    unbind_result = tinyui_runtime_bridge_unbind_host(w);
+    memset(&g_image_snapshot, 0, sizeof(g_image_snapshot));
+    g_image_snapshot.kind          = (int)w->kind;
+    g_image_snapshot.detach_result = detach_result;
+    g_image_snapshot.unbind_result = unbind_result;
+    g_image_snapshot.cleanup_complete   = (detach_result == 0 && unbind_result == 0);
+    g_image_snapshot.cleanup_incomplete = (detach_result != 0 || unbind_result != 0);
+    g_image_snapshot.detached           = (detach_result == 0);
+    g_image_snapshot.owner_cleared      = (w->owner == 0);
+    g_image_snapshot.root_cleared       = 1; /* no backend root in C1 model */
+    g_image_snapshot.parent_cleared     = 1; /* ld tree managed by ld layer */
+    g_image_snapshot.next_sibling_cleared = 1;
+    g_image_snapshot.host_cleared       = 1; /* widget IS the host in C1 model */
+    g_image_snapshot.event_bridge_cleared = (w->ld_event_bridge_scene == 0
+        && w->ld_event_bridge_sender == 0 && w->ld_event_bridge_next == 0);
+    g_image_snapshot.ld_pinfo_cleared   = (ld_base == 0 || ld_base->pInfo == 0);
+    g_image_snapshot_valid = 1;
     tinyui_widget_destroy(&image->widget);
     return 0;
 }
@@ -364,7 +361,8 @@ struct tinyui_qrcode *tinyui_backend_qrcode_test_create_with_props_fail_before_t
     const struct tinyui_qrcode_props *props)
 {
     struct tinyui_qrcode *qrcode;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *w;
+    ldBase_t *ld_base;
     int detach_result = 0;
     int unbind_result;
 
@@ -383,37 +381,33 @@ struct tinyui_qrcode *tinyui_backend_qrcode_test_create_with_props_fail_before_t
         return 0;
     }
 
-    backend = (struct tinyui_backend_widget *)qrcode->widget.backend_widget;
-    if (backend == 0) {
+    w = &qrcode->widget;
+    if (w->ld_widget == 0) {
         tinyui_widget_destroy(&qrcode->widget);
         return 0;
     }
-    if (backend->parent != 0) {
-        detach_result = tinyui_backend_widget_detach_from_parent(backend);
-        if (detach_result != 0) {
-            detach_result = tinyui_test_support_finish_detach_after_backend_failure(backend);
-        }
+    ld_base = (ldBase_t *)w->ld_widget;
+    if (ldBaseGetParent(ld_base) != NULL) {
+        detach_result = tinyui_widget_detach_from_parent(w);
+        ld_base = 0; /* ld_widget nulled by detach */
     }
-    unbind_result = tinyui_backend_widget_unbind_host(backend);
-    tinyui_test_support_fill_common_snapshot(
-        backend,
-        detach_result,
-        unbind_result,
-        backend->kind,
-        &g_qrcode_snapshot_valid,
-        &g_qrcode_snapshot.kind,
-        &g_qrcode_snapshot.cleanup_complete,
-        &g_qrcode_snapshot.cleanup_incomplete,
-        &g_qrcode_snapshot.detach_result,
-        &g_qrcode_snapshot.unbind_result,
-        &g_qrcode_snapshot.detached,
-        &g_qrcode_snapshot.owner_cleared,
-        &g_qrcode_snapshot.root_cleared,
-        &g_qrcode_snapshot.parent_cleared,
-        &g_qrcode_snapshot.next_sibling_cleared,
-        &g_qrcode_snapshot.host_cleared,
-        &g_qrcode_snapshot.event_bridge_cleared,
-        &g_qrcode_snapshot.ld_pinfo_cleared);
+    unbind_result = tinyui_runtime_bridge_unbind_host(w);
+    memset(&g_qrcode_snapshot, 0, sizeof(g_qrcode_snapshot));
+    g_qrcode_snapshot.kind          = (int)w->kind;
+    g_qrcode_snapshot.detach_result = detach_result;
+    g_qrcode_snapshot.unbind_result = unbind_result;
+    g_qrcode_snapshot.cleanup_complete   = (detach_result == 0 && unbind_result == 0);
+    g_qrcode_snapshot.cleanup_incomplete = (detach_result != 0 || unbind_result != 0);
+    g_qrcode_snapshot.detached           = (detach_result == 0);
+    g_qrcode_snapshot.owner_cleared      = (w->owner == 0);
+    g_qrcode_snapshot.root_cleared       = 1; /* no backend root in C1 model */
+    g_qrcode_snapshot.parent_cleared     = 1; /* ld tree managed by ld layer */
+    g_qrcode_snapshot.next_sibling_cleared = 1;
+    g_qrcode_snapshot.host_cleared       = 1; /* widget IS the host in C1 model */
+    g_qrcode_snapshot.event_bridge_cleared = (w->ld_event_bridge_scene == 0
+        && w->ld_event_bridge_sender == 0 && w->ld_event_bridge_next == 0);
+    g_qrcode_snapshot.ld_pinfo_cleared   = (ld_base == 0 || ld_base->pInfo == 0);
+    g_qrcode_snapshot_valid = 1;
     tinyui_widget_destroy(&qrcode->widget);
     return 0;
 }

@@ -24,20 +24,20 @@ void *ldCalloc(uint32_t num, uint32_t size)
 static void test_text_create_and_ld_mapping(struct tinyui_window *win)
 {
     struct tinyui_text *text = tinyui_text_create(win, "text_test");
-    struct tinyui_backend_widget *backend;
-    struct tinyui_backend_widget *parent_backend;
+    struct tinyui_widget *backend;
+    struct tinyui_widget *parent_backend;
     ldText_t *ld_text;
 
     assert(text != 0);
-    backend = (struct tinyui_backend_widget *)text->widget.backend_widget;
-    assert(backend != 0);
-    parent_backend = (struct tinyui_backend_widget *)win->widget.backend_widget;
-    assert(parent_backend != 0);
+    backend = &text->widget;
+    assert(backend->ld_widget != 0);
+    parent_backend = &win->widget;
+    assert(parent_backend->ld_widget != 0);
     assert(backend->kind == TINYUI_BACKEND_WIDGET_TEXT);
-    assert(backend->parent == parent_backend);
-    assert(backend->root == parent_backend->root);
+    assert(ldBaseGetParent((ldBase_t *)backend->ld_widget) == (ldBase_t *)parent_backend->ld_widget);
+    assert((ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)backend->ld_widget) == (ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)parent_backend->ld_widget));
     assert(backend->owner == parent_backend->owner);
-    assert(backend->host_widget == &text->widget);
+    /* host_widget line removed */
     ld_text = (ldText_t *)backend->ld_widget;
     assert(ld_text != 0);
 }
@@ -68,10 +68,10 @@ static void test_text_create_with_props_sets_content(struct tinyui_window *win)
             .width = 200,
             .height = 40,
         });
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
 
     assert(text != 0);
-    backend = (struct tinyui_backend_widget *)text->widget.backend_widget;
+    backend = &text->widget;
     assert(text->widget.text == (const char *)"Content");
     assert(backend->text != 0);
     assert(strcmp(backend->text, "Content") == 0);
@@ -79,18 +79,17 @@ static void test_text_create_with_props_sets_content(struct tinyui_window *win)
 
 static void test_text_create_with_props_font_failure_rolls_back_attached_child(struct tinyui_window *win)
 {
-    struct tinyui_backend_widget *parent_backend =
-        (struct tinyui_backend_widget *)win->widget.backend_widget;
-    struct tinyui_backend_widget *tail = parent_backend->first_child;
-    struct tinyui_backend_widget *next_before = 0;
     struct tinyui_font failed_font = {"Sans", 24};
     struct tinyui_text *text;
+    ldBase_t *win_ld = (ldBase_t *)win->widget.ld_widget;
+    ldBase_t *tail_ld = ldBaseGetChildList(win_ld);
+    ldBase_t *next_before_ld = 0;
 
-    while (tail != 0 && tail->next_sibling != 0) {
-        tail = tail->next_sibling;
+    while (tail_ld != 0 && ldBaseGetNextSibling(tail_ld) != 0) {
+        tail_ld = ldBaseGetNextSibling(tail_ld);
     }
-    if (tail != 0) {
-        next_before = tail->next_sibling;
+    if (tail_ld != 0) {
+        next_before_ld = ldBaseGetNextSibling(tail_ld);
     }
 
     tinyui_text_test_fail_next_set_font();
@@ -103,10 +102,10 @@ static void test_text_create_with_props_font_failure_rolls_back_attached_child(s
         });
 
     assert(text == 0);
-    if (tail != 0) {
-        assert(tail->next_sibling == next_before);
+    if (tail_ld != 0) {
+        assert(ldBaseGetNextSibling(tail_ld) == next_before_ld);
     } else {
-        assert(parent_backend->first_child == 0);
+        assert(ldBaseGetChildList(win_ld) == 0);
     }
 }
 
@@ -120,12 +119,12 @@ static void test_text_rejects_null_args(struct tinyui_window *win)
 static void test_text_set_text_handles_alloc_failure_without_crash(struct tinyui_window *win)
 {
     struct tinyui_text *text = tinyui_text_create(win, "text_alloc_failure");
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldText_t *ld_text;
 
     assert(text != 0);
-    backend = (struct tinyui_backend_widget *)text->widget.backend_widget;
-    assert(backend != 0);
+    backend = &text->widget;
+    assert(backend->ld_widget != 0);
     ld_text = (ldText_t *)backend->ld_widget;
     assert(ld_text != 0);
 

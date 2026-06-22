@@ -408,7 +408,8 @@ def _assert_tinyui_runtime_screen_defines(build_dir: Path) -> None:
         raise AssertionError(f"missing compile_commands.json: {compile_db_path}")
     compile_commands = json.loads(compile_db_path.read_text())
     for source_suffix in (
-        "tinyui/port/sdl/runtime_host.c",
+        "tinyui/port/sdl/step.c",
+        "tinyui/port/sdl/observe.c",
         "tinyui/demo/tinyui_demos.c",
     ):
         _assert_compile_unit_has_screen_defines(compile_commands, source_suffix)

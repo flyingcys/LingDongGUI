@@ -25,9 +25,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-int tinyui_runtime_bridge_unbind_host(void *backend_widget);
-int tinyui_runtime_bridge_detach_from_parent(void *backend_widget);
-
 static int tinyui_qrcode_props_are_valid(const struct tinyui_qrcode_props *props)
 {
     return props != 0 && props->id != 0 && props->text != 0;
@@ -35,75 +32,34 @@ static int tinyui_qrcode_props_are_valid(const struct tinyui_qrcode_props *props
 
 static ldQRCode_t *tinyui_qrcode_get_ld(const struct tinyui_qrcode *qrcode)
 {
-    struct tinyui_backend_widget *backend;
-
-    if (qrcode == 0 || qrcode->widget.backend_widget == 0) {
+    if (qrcode == 0 || qrcode->widget.ld_widget == 0) {
         return 0;
     }
 
-    backend = (struct tinyui_backend_widget *)qrcode->widget.backend_widget;
-    if (backend->kind != TINYUI_BACKEND_WIDGET_QRCODE || backend->ld_widget == 0) {
+    if (qrcode->widget.kind != TINYUI_BACKEND_WIDGET_QRCODE) {
         return 0;
     }
 
-    return (ldQRCode_t *)backend->ld_widget;
-}
-
-static int tinyui_qrcode_finish_detach_after_backend_failure(
-    struct tinyui_backend_widget *backend)
-{
-    struct tinyui_backend_widget *parent;
-    struct tinyui_backend_widget *cursor;
-
-    if (backend == 0 || backend->parent == 0) {
-        return 0;
-    }
-
-    parent = backend->parent;
-    if (parent->first_child == backend) {
-        parent->first_child = backend->next_sibling;
-    } else {
-        cursor = parent->first_child;
-        while (cursor != 0 && cursor->next_sibling != backend) {
-            cursor = cursor->next_sibling;
-        }
-        if (cursor == 0) {
-            return -1;
-        }
-        cursor->next_sibling = backend->next_sibling;
-    }
-
-    backend->parent = 0;
-    backend->next_sibling = 0;
-    backend->owner = 0;
-    backend->root = 0;
-    return 0;
+    return (ldQRCode_t *)qrcode->widget.ld_widget;
 }
 
 static void tinyui_qrcode_dispose_partial_impl(struct tinyui_qrcode *qrcode)
 {
-    struct tinyui_backend_widget *backend;
     struct tinyui_app *app_state;
-    int detach_result = 0;
+    ldQRCode_t *ld_qrcode;
 
     if (qrcode == 0) {
         return;
     }
 
-    backend = (struct tinyui_backend_widget *)qrcode->widget.backend_widget;
-    if (backend != 0) {
-        app_state = tinyui_runtime_bridge_backend_state(backend->owner);
-        if (backend->parent != 0) {
-            detach_result = tinyui_runtime_bridge_detach_from_parent(backend);
-            if (detach_result != 0) {
-                detach_result = tinyui_qrcode_finish_detach_after_backend_failure(backend);
-            }
+    if (qrcode->widget.ld_widget != 0) {
+        app_state = tinyui_runtime_bridge_backend_state(qrcode->widget.owner);
+        ld_qrcode = (ldQRCode_t *)qrcode->widget.ld_widget;
+        (void)tinyui_runtime_bridge_detach_from_parent(&qrcode->widget);
+        (void)tinyui_runtime_bridge_unbind_host(&qrcode->widget);
+        if (app_state != 0 && app_state->ld_scene != 0) {
+            ldQRCode_depose(app_state->ld_scene, ld_qrcode);
         }
-        (void)tinyui_runtime_bridge_unbind_host(backend);
-        if (app_state != 0 && app_state->ld_scene != 0 && backend->ld_widget != 0) {
-            ldQRCode_depose(app_state->ld_scene, (ldQRCode_t *)backend->ld_widget);
-        }
-        free(backend);
     }
 
     free(qrcode);
@@ -146,20 +102,17 @@ static struct tinyui_qrcode *tinyui_qrcode_create_with_props_impl(
 struct tinyui_qrcode *tinyui_qrcode_create(struct tinyui_widget *parent, const char *id)
 {
     struct tinyui_qrcode *qrcode;
-    struct tinyui_backend_widget *backend;
-    struct tinyui_backend_widget *parent_backend;
     struct tinyui_app *app_state;
     ldQRCode_t *ld_qrcode;
     uint16_t name_id;
     static unsigned char empty_text[] = "";
 
-    if (parent == 0 || id == 0 || parent->backend_widget == 0) {
+    if (parent == 0 || id == 0 || parent->ld_widget == 0) {
         return 0;
     }
 
-    parent_backend = (struct tinyui_backend_widget *)parent->backend_widget;
-    app_state = tinyui_runtime_bridge_backend_state_from_parent(parent_backend);
-    if (parent_backend->ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
+    app_state = tinyui_runtime_bridge_backend_state(parent->owner);
+    if (app_state == 0 || app_state->ld_scene == 0) {
         return 0;
     }
 
@@ -168,22 +121,15 @@ struct tinyui_qrcode *tinyui_qrcode_create(struct tinyui_widget *parent, const c
         return 0;
     }
 
-    backend = calloc(1, sizeof(*backend));
-    if (backend == 0) {
-        free(qrcode);
-        return 0;
-    }
-
-    name_id = tinyui_runtime_bridge_next_name_id(parent_backend);
+    name_id = ++app_state->next_ld_name_id;
     if (name_id == 0) {
-        free(backend);
         free(qrcode);
         return 0;
     }
     ld_qrcode = ldQRCode_init(app_state->ld_scene,
                               NULL,
                               name_id,
-                              parent_backend->ld_name_id,
+                              parent->ld_name_id,
                               0,
                               0,
                               128,
@@ -195,44 +141,25 @@ struct tinyui_qrcode *tinyui_qrcode_create(struct tinyui_widget *parent, const c
                               2,
                               4);
     if (ld_qrcode == 0) {
-        free(backend);
         free(qrcode);
         return 0;
     }
 
-    if (tinyui_widget_init_child(backend,
-                                         parent_backend,
-                                         TINYUI_BACKEND_WIDGET_QRCODE,
-                                         id,
-                                         parent_backend->theme) != 0) {
-        ldQRCode_depose(app_state->ld_scene, ld_qrcode);
-        free(backend);
-        free(qrcode);
-        return 0;
-    }
-    backend->ld_widget = ld_qrcode;
-    backend->ld_name_id = name_id;
-    backend->text = (const char *)empty_text;
-    if (tinyui_widget_attach_child(parent_backend, backend) != 0) {
-        ldQRCode_depose(app_state->ld_scene, ld_qrcode);
-        free(backend);
-        free(qrcode);
-        return 0;
-    }
-
-    qrcode->widget.backend_widget = backend;
+    qrcode->widget.kind = TINYUI_BACKEND_WIDGET_QRCODE;
+    qrcode->widget.owner = app_state;
+    qrcode->widget.ld_widget = ld_qrcode;
+    qrcode->widget.ld_name_id = name_id;
+    qrcode->widget.visible = 1;
+    qrcode->widget.enabled = 1;
     qrcode->id = id;
     qrcode->qr_color = 0x000000U;
     qrcode->bg_color = 0xFFFFFFU;
     qrcode->ecc = 0;
     qrcode->max_version = 2;
     qrcode->zoom = 4;
-    qrcode->widget.visible = 1;
-    qrcode->widget.enabled = 1;
-    if (tinyui_runtime_bridge_bind_host(qrcode->widget.backend_widget, &qrcode->widget) != 0) {
-        tinyui_qrcode_dispose_partial_impl(qrcode);
-        return 0;
-    }
+    qrcode->text = (const char *)empty_text;
+    ((ldBase_t *)ld_qrcode)->pInfo = &qrcode->widget;
+    tinyui_runtime_bridge_bind_leaf_widget(&qrcode->widget, app_state);
     return qrcode;
 }
 
@@ -274,7 +201,6 @@ struct tinyui_qrcode *tinyui_qrcode_create_with_props(struct tinyui_widget *pare
 int tinyui_qrcode_set_text(struct tinyui_qrcode *qrcode, const char *text)
 {
     ldQRCode_t *ld_qrcode;
-    struct tinyui_backend_widget *backend;
 
     if (qrcode == 0 || text == 0) {
         return -1;
@@ -286,8 +212,6 @@ int tinyui_qrcode_set_text(struct tinyui_qrcode *qrcode, const char *text)
     }
 
     ldQRCodeSetText(ld_qrcode, (uint8_t *)text);
-    backend = (struct tinyui_backend_widget *)qrcode->widget.backend_widget;
-    backend->text = text;
     qrcode->text = text;
     return 0;
 }

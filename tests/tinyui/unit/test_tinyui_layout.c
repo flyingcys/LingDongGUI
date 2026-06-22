@@ -158,10 +158,8 @@ static void test_grid_layout_setters_sync_to_real_ld_window_and_children(void)
     struct tinyui_window *win = tinyui_window_create(app, "root");
     struct tinyui_button *a = tinyui_button_create(win, "a");
     struct tinyui_button *b = tinyui_button_create(win, "b");
-    const struct tinyui_backend_widget *win_backend = win->widget.backend_widget;
-    const struct tinyui_backend_widget *b_backend = b->widget.backend_widget;
-    const ldWindow_t *ld_window = (const ldWindow_t *)win_backend->ld_widget;
-    const ldBase_t *ld_b = (const ldBase_t *)b_backend->ld_widget;
+    const ldWindow_t *ld_window = (const ldWindow_t *)win->widget.ld_widget;
+    const ldBase_t *ld_b = (const ldBase_t *)b->widget.ld_widget;
 
     assert(tinyui_grid_set_columns(win, (int[]){80, -1, 0}, 3) == 0);
     assert(tinyui_grid_set_rows(win, (int[]){24, -1, 0}, 3) == 0);
@@ -213,10 +211,8 @@ static void test_grid_layout_rejects_invalid_gap_and_cell_span(void)
     struct tinyui_app *app = tinyui_app_create();
     struct tinyui_window *win = tinyui_window_create(app, "root");
     struct tinyui_button *a = tinyui_button_create(win, "a");
-    const struct tinyui_backend_widget *win_backend = win->widget.backend_widget;
-    const struct tinyui_backend_widget *a_backend = a->widget.backend_widget;
-    const ldWindow_t *ld_window = (const ldWindow_t *)win_backend->ld_widget;
-    const ldBase_t *ld_a = (const ldBase_t *)a_backend->ld_widget;
+    const ldWindow_t *ld_window = (const ldWindow_t *)win->widget.ld_widget;
+    const ldBase_t *ld_a = (const ldBase_t *)a->widget.ld_widget;
 
     assert(tinyui_grid_set_gap(win, 4, 5) == 0);
     assert(tinyui_widget_set_padding((struct tinyui_widget *)win, 3) == 0);
@@ -259,8 +255,7 @@ static void test_window_native_grid_descriptors_round_trip_to_ldwindow(void)
 {
     struct tinyui_app *app = tinyui_app_create();
     struct tinyui_window *win = tinyui_window_create(app, "root");
-    const struct tinyui_backend_widget *win_backend = win->widget.backend_widget;
-    const ldWindow_t *ld_window = (const ldWindow_t *)win_backend->ld_widget;
+    const ldWindow_t *ld_window = (const ldWindow_t *)win->widget.ld_widget;
     const int initial_cols[] = {48, -2, -3, 0};
     const int initial_rows[] = {20, -2, 0};
 
@@ -315,12 +310,9 @@ static void test_flex_layout_setters_sync_to_real_ld_window_and_children(void)
     struct tinyui_window *win = tinyui_window_create(app, "root");
     struct tinyui_button *a = tinyui_button_create(win, "a");
     struct tinyui_button *b = tinyui_button_create(win, "b");
-    const struct tinyui_backend_widget *win_backend = win->widget.backend_widget;
-    const struct tinyui_backend_widget *a_backend = a->widget.backend_widget;
-    const struct tinyui_backend_widget *b_backend = b->widget.backend_widget;
-    const ldWindow_t *ld_window = (const ldWindow_t *)win_backend->ld_widget;
-    const ldBase_t *ld_a = (const ldBase_t *)a_backend->ld_widget;
-    const ldBase_t *ld_b = (const ldBase_t *)b_backend->ld_widget;
+    const ldWindow_t *ld_window = (const ldWindow_t *)win->widget.ld_widget;
+    const ldBase_t *ld_a = (const ldBase_t *)a->widget.ld_widget;
+    const ldBase_t *ld_b = (const ldBase_t *)b->widget.ld_widget;
 
     assert(tinyui_flex_set_flow(win, TINYUI_FLEX_FLOW_ROW_WRAP) == 0);
     assert(tinyui_flex_set_align(win,
@@ -360,8 +352,7 @@ static void test_widget_native_base_flags_round_trip_to_ldbase(void)
     struct tinyui_app *app = tinyui_app_create();
     struct tinyui_window *win = tinyui_window_create(app, "root");
     struct tinyui_button *button = tinyui_button_create(win, "stateful");
-    const struct tinyui_backend_widget *backend = button->widget.backend_widget;
-    ldBase_t *ld_base = (ldBase_t *)backend->ld_widget;
+    ldBase_t *ld_base = (ldBase_t *)button->widget.ld_widget;
 
     assert(tinyui_widget_set_opacity((struct tinyui_widget *)button, 123) == 0);
     assert(tinyui_widget_set_selectable((struct tinyui_widget *)button, 1) == 0);
@@ -400,8 +391,7 @@ static void test_widget_native_flex_min_max_round_trip_to_ldbase(void)
     struct tinyui_app *app = tinyui_app_create();
     struct tinyui_window *win = tinyui_window_create(app, "root");
     struct tinyui_button *button = tinyui_button_create(win, "flexy");
-    const struct tinyui_backend_widget *backend = button->widget.backend_widget;
-    const ldBase_t *ld_base = (const ldBase_t *)backend->ld_widget;
+    const ldBase_t *ld_base = (const ldBase_t *)button->widget.ld_widget;
 
     assert(tinyui_widget_set_flex_min_width((struct tinyui_widget *)button, 24) == 0);
     assert(tinyui_widget_set_flex_min_height((struct tinyui_widget *)button, 12) == 0);
@@ -425,8 +415,7 @@ static void test_widget_native_base_getters_round_trip_to_ldbase(void)
     struct tinyui_app *app = tinyui_app_create();
     struct tinyui_window *win = tinyui_window_create(app, "root");
     struct tinyui_button *button = tinyui_button_create(win, "getter_stateful");
-    const struct tinyui_backend_widget *backend = button->widget.backend_widget;
-    ldBase_t *ld_base = (ldBase_t *)backend->ld_widget;
+    ldBase_t *ld_base = (ldBase_t *)button->widget.ld_widget;
 
     assert(tinyui_widget_set_pos((struct tinyui_widget *)button, 17, 23) == 0);
     assert(tinyui_widget_set_size((struct tinyui_widget *)button, 91, 37) == 0);
@@ -477,12 +466,9 @@ static void test_widget_tree_name_and_type_queries_round_trip_to_ldbase(void)
     struct tinyui_window *win = tinyui_window_create(app, "root");
     struct tinyui_button *a = tinyui_button_create(win, "a");
     struct tinyui_button *b = tinyui_button_create(win, "b");
-    const struct tinyui_backend_widget *win_backend = win->widget.backend_widget;
-    const struct tinyui_backend_widget *a_backend = a->widget.backend_widget;
-    const struct tinyui_backend_widget *b_backend = b->widget.backend_widget;
-    const ldBase_t *ld_win = (const ldBase_t *)win_backend->ld_widget;
-    const ldBase_t *ld_a = (const ldBase_t *)a_backend->ld_widget;
-    const ldBase_t *ld_b = (const ldBase_t *)b_backend->ld_widget;
+    const ldBase_t *ld_win = (const ldBase_t *)win->widget.ld_widget;
+    const ldBase_t *ld_a = (const ldBase_t *)a->widget.ld_widget;
+    const ldBase_t *ld_b = (const ldBase_t *)b->widget.ld_widget;
     int b_name_id = tinyui_widget_get_name_id((const struct tinyui_widget *)b);
 
     assert(tinyui_widget_get_parent((const struct tinyui_widget *)a) == (struct tinyui_widget *)win);
@@ -520,14 +506,10 @@ static void test_widget_remove_from_parent_updates_tinyui_and_ldbase_tree(void)
     struct tinyui_button *a = tinyui_button_create(win, "a");
     struct tinyui_button *b = tinyui_button_create(win, "b");
     struct tinyui_button *c = tinyui_button_create(win, "c");
-    const struct tinyui_backend_widget *win_backend = win->widget.backend_widget;
-    const struct tinyui_backend_widget *a_backend = a->widget.backend_widget;
-    const struct tinyui_backend_widget *b_backend = b->widget.backend_widget;
-    const struct tinyui_backend_widget *c_backend = c->widget.backend_widget;
-    ldBase_t *ld_win = (ldBase_t *)win_backend->ld_widget;
-    ldBase_t *ld_a = (ldBase_t *)a_backend->ld_widget;
-    ldBase_t *ld_b = (ldBase_t *)b_backend->ld_widget;
-    ldBase_t *ld_c = (ldBase_t *)c_backend->ld_widget;
+    ldBase_t *ld_win = (ldBase_t *)win->widget.ld_widget;
+    ldBase_t *ld_a = (ldBase_t *)a->widget.ld_widget;
+    ldBase_t *ld_b = (ldBase_t *)b->widget.ld_widget;
+    ldBase_t *ld_c = (ldBase_t *)c->widget.ld_widget;
     int b_name_id = tinyui_widget_get_name_id((const struct tinyui_widget *)b);
 
     assert(tinyui_widget_get_child_count((const struct tinyui_widget *)win) == 3);
@@ -561,10 +543,8 @@ static void test_widget_destroy_detaches_focus_and_invalidates_backend_binding(v
     struct tinyui_window *win = tinyui_window_create(app, "root");
     struct tinyui_button *a = tinyui_button_create(win, "a");
     struct tinyui_button *b = tinyui_button_create(win, "b");
-    const struct tinyui_backend_widget *win_backend = win->widget.backend_widget;
-    struct tinyui_backend_widget *b_backend = b->widget.backend_widget;
-    ldBase_t *ld_win = (ldBase_t *)win_backend->ld_widget;
-    ldBase_t *ld_b = (ldBase_t *)b_backend->ld_widget;
+    ldBase_t *ld_win = (ldBase_t *)win->widget.ld_widget;
+    ldBase_t *ld_b = (ldBase_t *)b->widget.ld_widget;
     int b_name_id = tinyui_widget_get_name_id((const struct tinyui_widget *)b);
 
     assert(tinyui_widget_claim_focus((struct tinyui_widget *)b) == 0);
@@ -583,8 +563,7 @@ static void test_widget_destroy_detaches_focus_and_invalidates_backend_binding(v
     assert(tinyui_widget_get_first_child((const struct tinyui_widget *)win) == (struct tinyui_widget *)a);
     assert(ldBaseGetParent(ld_b) == 0);
     assert(ldBaseGetChildCount(ld_win) == 1);
-    assert(b->widget.backend_widget == 0);
-    assert(b_backend->host_widget == 0);
+    assert(b->widget.ld_widget == 0);
 
     assert(tinyui_widget_destroy((struct tinyui_widget *)b) == -1);
     assert(tinyui_widget_destroy((struct tinyui_widget *)win) == -1);
@@ -693,8 +672,7 @@ static void test_window_color_round_trip_to_ldwindow(void)
 {
     struct tinyui_app *app = tinyui_app_create();
     struct tinyui_window *win = tinyui_window_create(app, "root");
-    const struct tinyui_backend_widget *win_backend = win->widget.backend_widget;
-    const ldWindow_t *ld_window = (const ldWindow_t *)win_backend->ld_widget;
+    const ldWindow_t *ld_window = (const ldWindow_t *)win->widget.ld_widget;
     unsigned int rgb = 0;
 
     assert(tinyui_window_set_color(win, 0x336699U) == 0);
@@ -724,8 +702,7 @@ static void test_window_background_source_round_trip_to_ldwindow(void)
     };
     struct tinyui_app *app = tinyui_app_create();
     struct tinyui_window *win = tinyui_window_create(app, "root");
-    const struct tinyui_backend_widget *win_backend = win->widget.backend_widget;
-    const ldWindow_t *ld_window = (const ldWindow_t *)win_backend->ld_widget;
+    const ldWindow_t *ld_window = (const ldWindow_t *)win->widget.ld_widget;
 
     assert(tinyui_window_set_background_source(win, &source) == 0);
     assert(ld_window->ptImgTile == source.img_tile);
@@ -748,10 +725,9 @@ static void test_window_background_offset_round_trip_to_scene_root(void)
     struct tinyui_app *app = tinyui_app_create();
     struct tinyui_window *win = tinyui_window_create(app, "root");
     struct tinyui_display_config display = {0};
-    const struct tinyui_backend_widget *win_backend = win->widget.backend_widget;
     const struct tinyui_app *app_state =
         app;
-    const ldWindow_t *ld_window = (const ldWindow_t *)win_backend->ld_widget;
+    const ldWindow_t *ld_window = (const ldWindow_t *)win->widget.ld_widget;
     const ldBase_t *ld_root = (const ldBase_t *)app_state->ld_scene->ptNodeRoot;
     int offset_x = 0;
     int offset_y = 0;
@@ -825,9 +801,7 @@ static void test_background_widget_public_contract_round_trip(void)
     };
     struct tinyui_app *app = tinyui_app_create();
     struct tinyui_background *background = tinyui_background_create(app, "bg_root");
-    const struct tinyui_backend_widget *backend =
-        (const struct tinyui_backend_widget *)background->window.widget.backend_widget;
-    const ldWindow_t *ld_window = (const ldWindow_t *)backend->ld_widget;
+    const ldWindow_t *ld_window = (const ldWindow_t *)background->window.widget.ld_widget;
     unsigned int rgb = 0;
     int offset_x = 0;
     int offset_y = 0;
@@ -875,12 +849,9 @@ static void test_flex_layout_relayout_uses_ld_window_without_cursor_override(voi
     struct tinyui_window *win = tinyui_window_create(app, "root");
     struct tinyui_button *a = tinyui_button_create(win, "a");
     struct tinyui_button *b = tinyui_button_create(win, "b");
-    const struct tinyui_backend_widget *win_backend = win->widget.backend_widget;
-    const struct tinyui_backend_widget *a_backend = a->widget.backend_widget;
-    const struct tinyui_backend_widget *b_backend = b->widget.backend_widget;
-    ldWindow_t *ld_window = (ldWindow_t *)win_backend->ld_widget;
-    const ldBase_t *ld_a = (const ldBase_t *)a_backend->ld_widget;
-    const ldBase_t *ld_b = (const ldBase_t *)b_backend->ld_widget;
+    ldWindow_t *ld_window = (ldWindow_t *)win->widget.ld_widget;
+    const ldBase_t *ld_a = (const ldBase_t *)a->widget.ld_widget;
+    const ldBase_t *ld_b = (const ldBase_t *)b->widget.ld_widget;
 
     assert(tinyui_flex_set_flow(win, TINYUI_FLEX_FLOW_ROW) == 0);
     assert(tinyui_flex_set_gap(win, 12, 0) == 0);
@@ -910,8 +881,7 @@ static void test_window_padding_survives_layout_type_switches(void)
 {
     struct tinyui_app *app = tinyui_app_create();
     struct tinyui_window *win = tinyui_window_create(app, "root");
-    const struct tinyui_backend_widget *win_backend = win->widget.backend_widget;
-    ldWindow_t *ld_window = (ldWindow_t *)win_backend->ld_widget;
+    ldWindow_t *ld_window = (ldWindow_t *)win->widget.ld_widget;
 
     assert(tinyui_widget_set_padding((struct tinyui_widget *)win, 9) == 0);
     assert(tinyui_grid_set_columns(win, (int[]){40, 0}, 2) == 0);
@@ -936,8 +906,7 @@ static void test_window_padding_group_round_trip_to_ldwindow(void)
 {
     struct tinyui_app *app = tinyui_app_create();
     struct tinyui_window *win = tinyui_window_create(app, "root");
-    const struct tinyui_backend_widget *win_backend = win->widget.backend_widget;
-    const ldWindow_t *ld_window = (const ldWindow_t *)win_backend->ld_widget;
+    const ldWindow_t *ld_window = (const ldWindow_t *)win->widget.ld_widget;
 
     {
         int pl = 0, pt = 0, pr = 0, pb = 0;
@@ -968,8 +937,7 @@ static void test_window_native_layout_padding_grid_padding_and_generic_gap_round
 {
     struct tinyui_app *app = tinyui_app_create();
     struct tinyui_window *win = tinyui_window_create(app, "root");
-    const struct tinyui_backend_widget *win_backend = win->widget.backend_widget;
-    const ldWindow_t *ld_window = (const ldWindow_t *)win_backend->ld_widget;
+    const ldWindow_t *ld_window = (const ldWindow_t *)win->widget.ld_widget;
 
     assert(tinyui_window_set_layout_type(win, TINYUI_WINDOW_LAYOUT_FLEX) == 0);
     assert(ld_window->layoutTpye == layoutFlex);
@@ -1010,8 +978,7 @@ static void test_window_explicit_flex_padding_survives_followup_flex_updates(voi
 {
     struct tinyui_app *app = tinyui_app_create();
     struct tinyui_window *win = tinyui_window_create(app, "root");
-    const struct tinyui_backend_widget *win_backend = win->widget.backend_widget;
-    const ldWindow_t *ld_window = (const ldWindow_t *)win_backend->ld_widget;
+    const ldWindow_t *ld_window = (const ldWindow_t *)win->widget.ld_widget;
 
     assert(tinyui_window_set_layout_type(win, TINYUI_WINDOW_LAYOUT_FLEX) == 0);
     assert(tinyui_window_set_padding(win, 2, 4, 6, 8) == 0);
@@ -1040,8 +1007,7 @@ static void test_window_explicit_grid_padding_survives_followup_grid_updates(voi
 {
     struct tinyui_app *app = tinyui_app_create();
     struct tinyui_window *win = tinyui_window_create(app, "root");
-    const struct tinyui_backend_widget *win_backend = win->widget.backend_widget;
-    const ldWindow_t *ld_window = (const ldWindow_t *)win_backend->ld_widget;
+    const ldWindow_t *ld_window = (const ldWindow_t *)win->widget.ld_widget;
 
     assert(tinyui_window_set_layout_type(win, TINYUI_WINDOW_LAYOUT_GRID) == 0);
     assert(tinyui_window_set_grid_padding(win, 3, 5, 7, 9) == 0);
@@ -1068,8 +1034,7 @@ static void test_window_padding_group_survives_followup_layout_updates(void)
 {
     struct tinyui_app *app = tinyui_app_create();
     struct tinyui_window *win = tinyui_window_create(app, "root");
-    const struct tinyui_backend_widget *win_backend = win->widget.backend_widget;
-    const ldWindow_t *ld_window = (const ldWindow_t *)win_backend->ld_widget;
+    const ldWindow_t *ld_window = (const ldWindow_t *)win->widget.ld_widget;
 
     assert(tinyui_window_set_padding(win, 2, 4, 6, 8) == 0);
     assert(ld_window->pLayoutPaddingGroup != 0);
@@ -1117,8 +1082,7 @@ static void test_grid_layout_shorter_template_clears_stale_tail(void)
 {
     struct tinyui_app *app = tinyui_app_create();
     struct tinyui_window *win = tinyui_window_create(app, "root");
-    const struct tinyui_backend_widget *win_backend = win->widget.backend_widget;
-    const ldWindow_t *ld_window = (const ldWindow_t *)win_backend->ld_widget;
+    const ldWindow_t *ld_window = (const ldWindow_t *)win->widget.ld_widget;
 
     assert(tinyui_grid_set_columns(win, (int[]){48, -2, 0}, 3) == 0);
     assert(tinyui_grid_set_rows(win, (int[]){20, 0}, 2) == 0);
@@ -1148,9 +1112,6 @@ static void test_child_window_public_api_binds_real_parent_and_hosts_layout_chil
     struct tinyui_window *root = tinyui_window_create(app, "root");
     struct tinyui_window *child = tinyui_window_create_child(root, "section");
     struct tinyui_button *item;
-    const struct tinyui_backend_widget *root_backend;
-    const struct tinyui_backend_widget *child_backend;
-    const struct tinyui_backend_widget *item_backend;
     const ldWindow_t *child_ld_window;
     const ldBase_t *item_ld_base;
 
@@ -1159,21 +1120,17 @@ static void test_child_window_public_api_binds_real_parent_and_hosts_layout_chil
     item = tinyui_button_create(child, "item");
     assert(item != 0);
 
-    root_backend = root->widget.backend_widget;
-    child_backend = child->widget.backend_widget;
-    item_backend = item->widget.backend_widget;
-    child_ld_window = (const ldWindow_t *)child_backend->ld_widget;
-    item_ld_base = (const ldBase_t *)item_backend->ld_widget;
+    child_ld_window = (const ldWindow_t *)child->widget.ld_widget;
+    item_ld_base = (const ldBase_t *)item->widget.ld_widget;
 
-    assert(child_backend->parent == root_backend);
-    assert(root_backend->first_child == child_backend);
-    assert(child_backend->kind == TINYUI_BACKEND_WIDGET_WINDOW);
-    assert(child_backend->root == root_backend);
-    assert(child_backend->owner == root_backend->owner);
-    assert(item_backend->parent == child_backend);
-    assert(child_backend->first_child == item_backend);
-    assert(ldBaseGetParent((ldBase_t *)child_ld_window) ==
-           (ldBase_t *)root_backend->ld_widget);
+    assert(ldBaseGetParent((ldBase_t *)child->widget.ld_widget) == (ldBase_t *)root->widget.ld_widget);
+    assert(ldBaseGetChildList((ldBase_t *)root->widget.ld_widget) == (ldBase_t *)child->widget.ld_widget);
+    assert(child->widget.kind == TINYUI_BACKEND_WIDGET_WINDOW);
+    assert((ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)child->widget.ld_widget) == (ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)root->widget.ld_widget));
+    assert(child->widget.owner == root->widget.owner);
+    assert(ldBaseGetParent((ldBase_t *)item->widget.ld_widget) == (ldBase_t *)child->widget.ld_widget);
+    assert(ldBaseGetChildList((ldBase_t *)child->widget.ld_widget) == (ldBase_t *)item->widget.ld_widget);
+    assert(ldBaseGetParent((ldBase_t *)child_ld_window) == (ldBase_t *)root->widget.ld_widget);
 
     assert(tinyui_window_set_layout_type(child, TINYUI_WINDOW_LAYOUT_FLEX) == 0);
     assert(tinyui_window_set_padding(child, 8, 10, 8, 10) == 0);
@@ -1199,8 +1156,6 @@ static void test_layout_setters_with_missing_native_binding_reject_without_mutat
     struct tinyui_app *app = tinyui_app_create();
     struct tinyui_window *win = tinyui_window_create(app, "root");
     struct tinyui_button *item = tinyui_button_create(win, "item");
-    struct tinyui_backend_widget *win_backend = win->widget.backend_widget;
-    struct tinyui_backend_widget *item_backend = item->widget.backend_widget;
     const int original_cols[] = {11, 22, 0};
     const int original_rows[] = {7, 9, 0};
     int i;
@@ -1231,8 +1186,8 @@ static void test_layout_setters_with_missing_native_binding_reject_without_mutat
         win->grid_rows[i] = original_rows[i];
     }
 
-    win_backend->ld_widget = 0;
-    item_backend->ld_widget = 0;
+    win->widget.ld_widget = 0;
+    item->widget.ld_widget = 0;
 
     assert(tinyui_window_set_padding(win, 2, 4, 6, 8) == -1);
     assert(tinyui_flex_set_flow(win, TINYUI_FLEX_FLOW_COLUMN_WRAP) == -1);
@@ -1342,9 +1297,8 @@ static void test_layout_child_setter_rejects_corrupted_binding_without_mutating_
     struct tinyui_app *app = tinyui_app_create();
     struct tinyui_window *win = tinyui_window_create(app, "root");
     struct tinyui_button *button = tinyui_button_create(win, "corrupted_binding");
-    struct tinyui_backend_widget *backend = button->widget.backend_widget;
-    ldBase_t *ld_base = (ldBase_t *)backend->ld_widget;
-    enum tinyui_backend_widget_kind original_kind = backend->kind;
+    ldBase_t *ld_base = (ldBase_t *)button->widget.ld_widget;
+    enum tinyui_backend_widget_kind original_kind = button->widget.kind;
     int original_widget_type = ld_base->widgetType;
 
     assert(tinyui_widget_set_ignore_layout((struct tinyui_widget *)button, 1) == 0);
@@ -1357,7 +1311,7 @@ static void test_layout_child_setter_rejects_corrupted_binding_without_mutating_
     assert(button->widget.ignore_layout == 1);
     assert(ld_base->ignoreLayout == true);
 
-    backend->kind = original_kind;
+    button->widget.kind = original_kind;
     ld_base->widgetType = original_widget_type;
 
     tinyui_app_destroy(app);
@@ -1367,9 +1321,8 @@ static void test_layout_window_padding_setters_reject_corrupted_binding_without_
 {
     struct tinyui_app *app = tinyui_app_create();
     struct tinyui_window *win = tinyui_window_create(app, "layout_corrupted_window");
-    struct tinyui_backend_widget *backend = win->widget.backend_widget;
-    ldBase_t *ld_base = (ldBase_t *)backend->ld_widget;
-    ldWindow_t *ld_window = (ldWindow_t *)backend->ld_widget;
+    ldBase_t *ld_base = (ldBase_t *)win->widget.ld_widget;
+    ldWindow_t *ld_window = (ldWindow_t *)win->widget.ld_widget;
     int original_widget_type = ld_base->widgetType;
 
     assert(tinyui_window_set_padding(win, 2, 4, 6, 8) == 0);
@@ -1398,16 +1351,16 @@ static void test_layout_window_padding_setters_reject_corrupted_binding_without_
     assert(ld_window->gridPadding.top == 5);
     assert(ld_window->gridPadding.right == 7);
     assert(ld_window->gridPadding.bottom == 9);
-    assert(backend->window_layout.padding_left == 2);
-    assert(backend->window_layout.padding_top == 4);
-    assert(backend->window_layout.padding_right == 6);
-    assert(backend->window_layout.padding_bottom == 8);
-    assert(backend->window_layout.grid_padding_left == 3);
-    assert(backend->window_layout.grid_padding_top == 5);
-    assert(backend->window_layout.grid_padding_right == 7);
-    assert(backend->window_layout.grid_padding_bottom == 9);
-    assert(backend->window_layout.has_explicit_flex_padding == 1);
-    assert(backend->window_layout.has_explicit_grid_padding == 1);
+    assert(win->padding_left == 2);
+    assert(win->padding_top == 4);
+    assert(win->padding_right == 6);
+    assert(win->padding_bottom == 8);
+    assert(win->grid_padding_left == 3);
+    assert(win->grid_padding_top == 5);
+    assert(win->grid_padding_right == 7);
+    assert(win->grid_padding_bottom == 9);
+    assert(win->has_explicit_flex_padding == 1);
+    assert(win->has_explicit_grid_padding == 1);
 
     ld_base->widgetType = original_widget_type;
 
@@ -1418,9 +1371,8 @@ static void test_layout_grid_setters_reject_corrupted_binding_without_mutating_c
 {
     struct tinyui_app *app = tinyui_app_create();
     struct tinyui_window *win = tinyui_window_create(app, "layout_corrupted_grid");
-    struct tinyui_backend_widget *backend = win->widget.backend_widget;
-    ldBase_t *ld_base = (ldBase_t *)backend->ld_widget;
-    ldWindow_t *ld_window = (ldWindow_t *)backend->ld_widget;
+    ldBase_t *ld_base = (ldBase_t *)win->widget.ld_widget;
+    ldWindow_t *ld_window = (ldWindow_t *)win->widget.ld_widget;
     int original_widget_type = ld_base->widgetType;
     int original_cols[3] = {80, -1, 0};
     int original_rows[3] = {24, -2, 0};
@@ -1448,12 +1400,12 @@ static void test_layout_grid_setters_reject_corrupted_binding_without_mutating_c
     assert(win->flex_main_align == TINYUI_ALIGN_START);
     assert(win->flex_cross_align == TINYUI_ALIGN_START);
     assert(win->flex_track_align == TINYUI_ALIGN_START);
-    assert(backend->window_layout.grid_col_count == 3);
-    assert(backend->window_layout.grid_row_count == 3);
-    assert(backend->window_layout.grid_row_gap == 5);
-    assert(backend->window_layout.grid_col_gap == 7);
-    assert(backend->window_layout.grid_col_align == TINYUI_ALIGN_END);
-    assert(backend->window_layout.grid_row_align == TINYUI_ALIGN_SPACE_AROUND);
+    assert(win->grid_col_count == 3);
+    assert(win->grid_row_count == 3);
+    assert(win->grid_row_gap == 5);
+    assert(win->grid_col_gap == 7);
+    assert(win->grid_col_align == TINYUI_ALIGN_END);
+    assert(win->grid_row_align == TINYUI_ALIGN_SPACE_AROUND);
     assert(ld_window->flexFlow == ldFlexFlowRow);
     assert(ld_window->flexMainAlign == ldFlexMainAlignStart);
     assert(ld_window->flexCrossAlign == ldFlexCrossAlignStart);
@@ -1472,9 +1424,12 @@ static void test_layout_grid_setters_reject_corrupted_binding_without_mutating_c
     assert(ld_window->gridRowDsc[0] == 24);
     assert(ld_window->gridRowDsc[1] == LD_GRID_CONTENT);
     assert(ld_window->gridRowDsc[2] == LD_GRID_TEMPLATE_LAST);
-    for (i = 0; i < 3; ++i) {
-        assert(backend->window_layout.grid_cols[i] == ld_window->gridColDsc[i]);
-        assert(backend->window_layout.grid_rows[i] == ld_window->gridRowDsc[i]);
+    {
+        struct tinyui_backend_widget *bk = (struct tinyui_backend_widget *)win->backend_host;
+        for (i = 0; i < 3; ++i) {
+            assert(bk->window_layout.grid_cols[i] == ld_window->gridColDsc[i]);
+            assert(bk->window_layout.grid_rows[i] == ld_window->gridRowDsc[i]);
+        }
     }
     assert(ld_window->gridRowGap == 5);
     assert(ld_window->gridColumnGap == 7);
@@ -1490,16 +1445,13 @@ static void test_layout_window_gap_setter_rejects_corrupted_binding_without_muta
 {
     struct tinyui_app *app = tinyui_app_create();
     struct tinyui_window *win = tinyui_window_create(app, "layout_corrupted_gap");
-    struct tinyui_backend_widget *backend = win->widget.backend_widget;
-    ldBase_t *ld_base = (ldBase_t *)backend->ld_widget;
-    ldWindow_t *ld_window = (ldWindow_t *)backend->ld_widget;
+    ldBase_t *ld_base = (ldBase_t *)win->widget.ld_widget;
+    ldWindow_t *ld_window = (ldWindow_t *)win->widget.ld_widget;
     int original_widget_type = ld_base->widgetType;
 
     assert(tinyui_window_set_gap(win, 11) == 0);
     assert(win->flex_item_gap == 11);
     assert(win->flex_track_gap == 11);
-    assert(backend->window_layout.flex_item_gap == 11);
-    assert(backend->window_layout.flex_track_gap == 11);
     assert(ld_window->flexItemGap == 11);
     assert(ld_window->flexTrackGap == 11);
 
@@ -1508,8 +1460,6 @@ static void test_layout_window_gap_setter_rejects_corrupted_binding_without_muta
     assert(tinyui_window_set_gap(win, 17) == -1);
     assert(win->flex_item_gap == 11);
     assert(win->flex_track_gap == 11);
-    assert(backend->window_layout.flex_item_gap == 11);
-    assert(backend->window_layout.flex_track_gap == 11);
     assert(ld_window->flexItemGap == 11);
     assert(ld_window->flexTrackGap == 11);
 

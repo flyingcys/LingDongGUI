@@ -122,7 +122,7 @@ static void test_calendar_date_readback_matches_backend_truth(void)
     struct tinyui_app *app;
     struct tinyui_window *win;
     struct tinyui_calendar *calendar;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldCalendar_t *ld_calendar;
     int year = 0;
     int month = 0;
@@ -144,8 +144,8 @@ static void test_calendar_date_readback_matches_backend_truth(void)
     assert(month == 6);
     assert(day == 15);
 
-    backend = (struct tinyui_backend_widget *)calendar->widget.backend_widget;
-    assert(backend != 0);
+    backend = &calendar->widget;
+    assert(backend->ld_widget != 0);
     ld_calendar = (ldCalendar_t *)backend->ld_widget;
     assert(ld_calendar != 0);
     ldCalendarGetDate(ld_calendar, &backend_year, &backend_month, &backend_day);
@@ -161,7 +161,7 @@ static void test_calendar_header_and_grid_visible_output_match_date_contract(voi
     struct tinyui_app *app;
     struct tinyui_window *win;
     struct tinyui_calendar *calendar;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldCalendar_t *ld_calendar;
 
     app = tinyui_app_create();
@@ -191,8 +191,8 @@ static void test_calendar_header_and_grid_visible_output_match_date_contract(voi
     assert(tinyui_calendar_get_grid_value(calendar, 0, 0) == 31);
     assert(tinyui_calendar_is_current_month_cell(calendar, 0, 0) == 0);
 
-    backend = (struct tinyui_backend_widget *)calendar->widget.backend_widget;
-    assert(backend != 0);
+    backend = &calendar->widget;
+    assert(backend->ld_widget != 0);
     ld_calendar = (ldCalendar_t *)backend->ld_widget;
     assert(ld_calendar != 0);
     assert(ld_calendar->isHeader == true);
@@ -208,7 +208,7 @@ static void test_calendar_final_release_contract_covers_full_feature_boundary(vo
     struct tinyui_app *app;
     struct tinyui_window *win;
     struct tinyui_calendar *calendar;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldCalendar_t *ld_calendar;
 
     app = tinyui_app_create();
@@ -230,8 +230,8 @@ static void test_calendar_final_release_contract_covers_full_feature_boundary(vo
         });
     assert(calendar != 0);
 
-    backend = (struct tinyui_backend_widget *)calendar->widget.backend_widget;
-    assert(backend != 0);
+    backend = &calendar->widget;
+    assert(backend->ld_widget != 0);
     assert(backend->kind == TINYUI_BACKEND_WIDGET_CALENDAR);
     assert(backend->style_class == (const char *)"calendar-card");
     ld_calendar = (ldCalendar_t *)backend->ld_widget;
@@ -258,7 +258,7 @@ static void test_calendar_native_day_names_and_colors_round_trip(void)
     struct tinyui_app *app;
     struct tinyui_window *win;
     struct tinyui_calendar *calendar;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldCalendar_t *ld_calendar;
     static const char *day_names[7] = {
         "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat",
@@ -276,8 +276,8 @@ static void test_calendar_native_day_names_and_colors_round_trip(void)
     assert(tinyui_calendar_set_item_color(calendar, 0x445566U) == 0);
     assert(tinyui_calendar_set_text_color(calendar, 0x778899U) == 0);
 
-    backend = (struct tinyui_backend_widget *)calendar->widget.backend_widget;
-    assert(backend != 0);
+    backend = &calendar->widget;
+    assert(backend->ld_widget != 0);
     ld_calendar = (ldCalendar_t *)backend->ld_widget;
     assert(ld_calendar != 0);
 
@@ -305,7 +305,7 @@ static void test_calendar_system_date_provider_round_trip(void)
     struct tinyui_app *app;
     struct tinyui_window *win;
     struct tinyui_calendar *calendar;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldCalendar_t *ld_calendar;
     int year = 0;
     int month = 0;
@@ -318,8 +318,8 @@ static void test_calendar_system_date_provider_round_trip(void)
     calendar = tinyui_calendar_create(win, "calendar_system_date");
     assert(calendar != 0);
 
-    backend = (struct tinyui_backend_widget *)calendar->widget.backend_widget;
-    assert(backend != 0);
+    backend = &calendar->widget;
+    assert(backend->ld_widget != 0);
     ld_calendar = (ldCalendar_t *)backend->ld_widget;
     assert(ld_calendar != 0);
 
@@ -351,7 +351,7 @@ static void test_calendar_init_and_aliases_match_backend_truth(void)
     struct tinyui_app *app;
     struct tinyui_window *win;
     struct tinyui_calendar *calendar;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldBase_t *ld_base;
     int year = 0;
     int month = 0;
@@ -371,8 +371,8 @@ static void test_calendar_init_and_aliases_match_backend_truth(void)
     assert(tinyui_calendar_set_header_format(calendar, "yy/mm/dd") == 0);
     assert(strcmp(tinyui_calendar_get_header_format(calendar), "yy/mm/dd") == 0);
 
-    backend = (struct tinyui_backend_widget *)calendar->widget.backend_widget;
-    assert(backend != 0);
+    backend = &calendar->widget;
+    assert(backend->ld_widget != 0);
     ld_base = (ldBase_t *)backend->ld_widget;
     assert(ld_base != 0);
     tinyui_app_destroy(app);
@@ -420,17 +420,17 @@ static void test_calendar_grid_out_of_bounds(struct tinyui_window *win)
 static void test_calendar_public_create_uses_widget_local_backend(struct tinyui_window *win)
 {
     struct tinyui_calendar *calendar;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
 
     assert(win != 0);
     calendar = tinyui_calendar_create(win, "calendar_widget_local");
     assert(calendar != 0);
 
-    backend = (struct tinyui_backend_widget *)calendar->widget.backend_widget;
-    assert(backend != 0);
+    backend = &calendar->widget;
+    assert(backend->ld_widget != 0);
     assert(backend->kind == TINYUI_BACKEND_WIDGET_CALENDAR);
-    assert(backend->host_widget == &calendar->widget);
-    assert(backend->parent == win->widget.backend_widget);
+    /* host_widget line removed */
+    assert(ldBaseGetParent((ldBase_t *)backend->ld_widget) == (ldBase_t *)win->widget.ld_widget);
     assert(backend->ld_widget != 0);
 }
 

@@ -58,6 +58,13 @@ struct ld_scene_t;
 
 /* ── Shared enums ──────────────────────────────────────────────── */
 
+/* enum tinyui_backend_widget_kind is defined in internal.h when this file is
+ * reached via that header (TINYUI_BACKEND_WIDGET_KIND_DEFINED is set there).
+ * When runtime_internal.h is included directly (e.g. in unit tests that skip
+ * internal.h), we define it here as a fallback. */
+#ifndef TINYUI_BACKEND_WIDGET_KIND_DEFINED
+#define TINYUI_BACKEND_WIDGET_KIND_DEFINED
+
 enum tinyui_backend_widget_kind {
     TINYUI_BACKEND_WIDGET_WINDOW = 0,
     TINYUI_BACKEND_WIDGET_BACKGROUND,
@@ -88,6 +95,8 @@ enum tinyui_backend_widget_kind {
     TINYUI_BACKEND_WIDGET_CALENDAR,
     TINYUI_BACKEND_WIDGET_CANVAS,
 };
+
+#endif /* TINYUI_BACKEND_WIDGET_KIND_DEFINED */
 
 enum tinyui_backend_signal {
     TINYUI_BACKEND_SIGNAL_NONE = 0,

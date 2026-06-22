@@ -24,8 +24,11 @@
 
 #include <stdlib.h>
 
-struct tinyui_background_backend_host {
+/* Must mirror the definition in window.c — background is also a root window. */
+struct tinyui_window_backend_host {
     struct tinyui_backend_widget widget;
+    ldPadding_t padding_group;
+    int has_padding_group;
 };
 
 static void tinyui_background_get_root_size(struct tinyui_app *app, int16_t *width, int16_t *height)
@@ -48,6 +51,15 @@ static void tinyui_background_get_root_size(struct tinyui_app *app, int16_t *wid
     }
 }
 
+static struct tinyui_window_backend_host *tinyui_background_backend_host(
+    struct tinyui_background *bg)
+{
+    if (bg == 0) {
+        return 0;
+    }
+    return bg->window.backend_host;
+}
+
 /**
  * @brief Create background widget
  *
@@ -59,7 +71,7 @@ static void tinyui_background_get_root_size(struct tinyui_app *app, int16_t *wid
 struct tinyui_background *tinyui_background_create(struct tinyui_app *app, const char *id)
 {
     struct tinyui_background *background;
-    struct tinyui_background_backend_host *host;
+    struct tinyui_window_backend_host *host;
     struct tinyui_app *app_state;
     ldWindow_t *ld_root;
     int16_t root_width;
@@ -106,7 +118,7 @@ struct tinyui_background *tinyui_background_create(struct tinyui_app *app, const
     }
 
     background->window.id = id;
-    background->window.widget.backend_widget = &host->widget;
+    background->window.backend_host = host;
     background->window.widget.visible = 1;
     background->window.widget.enabled = 1;
     background->window.flex_flow = TINYUI_FLEX_FLOW_ROW;
@@ -115,7 +127,7 @@ struct tinyui_background *tinyui_background_create(struct tinyui_app *app, const
     background->window.flex_track_align = TINYUI_ALIGN_START;
     background->window.grid_col_align = TINYUI_ALIGN_START;
     background->window.grid_row_align = TINYUI_ALIGN_START;
-    if (tinyui_runtime_bridge_bind_host(background->window.widget.backend_widget,
+    if (tinyui_runtime_bridge_bind_host(&host->widget,
                                         &background->window.widget) != 0) {
         free(background);
         return 0;

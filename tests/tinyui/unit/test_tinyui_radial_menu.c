@@ -2,6 +2,7 @@
 #include "radial_menu.h"
 #include "widget.h"
 #include "window.h"
+#include "../../../src/gui/ldBase.h"
 #include "../../../src/gui/ldRadialMenu.h"
 #include "internal.h"
 
@@ -60,20 +61,6 @@ static void assert_source_lacks_definition(const char *relative_path, const char
 static void test_radial_menu_internal_seam_names_are_tinyui_local(void)
 {
     const char *widget_source = "tinyui/src/widgets/radial_menu.c";
-
-    assert_source_lacks_definition(widget_source, "static ldRadialMenu_t *tinyui_radial_menu_get_ld(");
-    assert_source_lacks_definition(widget_source, "static int tinyui_radial_menu_backend_set_selected_index(");
-    assert_source_lacks_definition(widget_source, "static bool tinyui_radial_menu_native_slot(");
-    assert_source_lacks_definition(widget_source, "static int tinyui_radial_menu_backend_add_item(");
-    assert_source_lacks_definition(widget_source, "static int tinyui_radial_menu_backend_add_item_with_source(");
-    assert_source_lacks_definition(widget_source, "static int tinyui_radial_menu_backend_get_selected_index(");
-    assert_source_lacks_definition(widget_source, "static int tinyui_radial_menu_backend_offset_selection(");
-    assert_source_lacks_definition(widget_source, "static int tinyui_radial_menu_backend_set_default_item(");
-    assert_source_lacks_definition(widget_source, "static int tinyui_radial_menu_backend_click_item(");
-    assert_source_lacks_definition(widget_source, "static int tinyui_radial_menu_backend_offset_item(");
-    assert_source_lacks_definition(widget_source, "static int tinyui_radial_menu_bind_host(");
-    assert_source_lacks_definition(widget_source, "static int tinyui_radial_menu_props_are_valid(");
-    assert_source_lacks_definition(widget_source, "static struct tinyui_radial_menu *tinyui_radial_menu_create_with_backend_config(");
 
     assert_source_contains_definition(widget_source, "static ldRadialMenu_t *tinyui_radial_menu_get_ld(");
     assert_source_contains_definition(widget_source, "static int tinyui_radial_menu_backend_set_selected_index(");
@@ -180,8 +167,8 @@ static void test_radial_menu_create_builds_direct_backend_mapping(void)
     struct tinyui_app *app;
     struct tinyui_window *win;
     struct tinyui_radial_menu *radial_menu;
-    struct tinyui_backend_widget *backend;
-    struct tinyui_backend_widget *parent_backend;
+    struct tinyui_widget *backend;
+    struct tinyui_widget *parent_backend;
     ldRadialMenu_t *ld_radial_menu;
 
     app = tinyui_app_create();
@@ -192,16 +179,15 @@ static void test_radial_menu_create_builds_direct_backend_mapping(void)
     radial_menu = tinyui_radial_menu_create((struct tinyui_widget *)win, "radial_menu_direct");
     assert(radial_menu != 0);
 
-    backend = (struct tinyui_backend_widget *)radial_menu->widget.backend_widget;
-    parent_backend = (struct tinyui_backend_widget *)win->widget.backend_widget;
-    assert(backend != 0);
-    assert(parent_backend != 0);
+    backend = &radial_menu->widget;
+    parent_backend = &win->widget;
+    assert(backend->ld_widget != 0);
+    assert(parent_backend->ld_widget != 0);
     assert(backend->kind == TINYUI_BACKEND_WIDGET_RADIAL_MENU);
     assert(backend->owner == parent_backend->owner);
-    assert(backend->root == parent_backend->root);
-    assert(backend->parent == parent_backend);
+    assert((ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)backend->ld_widget) == (ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)parent_backend->ld_widget));
+    assert(ldBaseGetParent((ldBase_t *)backend->ld_widget) == (ldBase_t *)parent_backend->ld_widget);
     assert(backend->ld_name_id != 0);
-    assert(backend->host_widget == &radial_menu->widget);
     assert(backend->ld_event_bridge_scene != 0);
     assert(backend->ld_event_bridge_sender == backend->ld_widget);
     ld_radial_menu = (ldRadialMenu_t *)backend->ld_widget;
@@ -216,7 +202,7 @@ static void test_radial_menu_create_with_props_pushes_backend_geometry(void)
     struct tinyui_app *app;
     struct tinyui_window *win;
     struct tinyui_radial_menu *radial_menu;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldRadialMenu_t *ld_radial_menu;
     const struct tinyui_radial_menu_props props = {
         .id = "radial_menu",
@@ -237,8 +223,8 @@ static void test_radial_menu_create_with_props_pushes_backend_geometry(void)
     assert(radial_menu != 0);
     assert(tinyui_radial_menu_add_item(radial_menu, "weather") == 0);
 
-    backend = (struct tinyui_backend_widget *)radial_menu->widget.backend_widget;
-    assert(backend != 0);
+    backend = &radial_menu->widget;
+    assert(backend->ld_widget != 0);
     ld_radial_menu = (ldRadialMenu_t *)backend->ld_widget;
     assert(ld_radial_menu != 0);
 
@@ -257,7 +243,7 @@ static void test_radial_menu_native_click_default_offset_round_trip(void)
     struct tinyui_app *app;
     struct tinyui_window *win;
     struct tinyui_radial_menu *radial_menu;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldRadialMenu_t *ld_radial_menu;
     arm_2d_tile_t item_img = {
         .tRegion = {
@@ -281,8 +267,8 @@ static void test_radial_menu_native_click_default_offset_round_trip(void)
 
     radial_menu = tinyui_radial_menu_create((struct tinyui_widget *)win, "radial_menu_native");
     assert(radial_menu != 0);
-    backend = (struct tinyui_backend_widget *)radial_menu->widget.backend_widget;
-    assert(backend != 0);
+    backend = &radial_menu->widget;
+    assert(backend->ld_widget != 0);
     ld_radial_menu = (ldRadialMenu_t *)backend->ld_widget;
     assert(ld_radial_menu != 0);
 
@@ -314,7 +300,7 @@ static void test_radial_menu_init_and_alias_round_trip(void)
     struct tinyui_app *app;
     struct tinyui_window *win;
     struct tinyui_radial_menu *radial_menu;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldRadialMenu_t *ld_radial_menu;
     arm_2d_tile_t item_img = {
         .tRegion = {
@@ -338,8 +324,8 @@ static void test_radial_menu_init_and_alias_round_trip(void)
 
     radial_menu = tinyui_radial_menu_init((struct tinyui_widget *)win, "radial_menu_alias");
     assert(radial_menu != 0);
-    backend = (struct tinyui_backend_widget *)radial_menu->widget.backend_widget;
-    assert(backend != 0);
+    backend = &radial_menu->widget;
+    assert(backend->ld_widget != 0);
     ld_radial_menu = (ldRadialMenu_t *)backend->ld_widget;
     assert(ld_radial_menu != 0);
 

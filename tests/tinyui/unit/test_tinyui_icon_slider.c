@@ -50,19 +50,6 @@ static void test_icon_slider_internal_seams_renamed(void)
     strcat(widget_path_buf, "/tinyui/src/widgets/icon_slider.c");
     widget_path = widget_path_buf;
 
-    assert(!test_source_contains_symbol_definition(widget_path, "tinyui_icon_slider_get_ld"));
-    assert(!test_source_contains_symbol_definition(widget_path, "tinyui_icon_slider_backend_set_selected_index"));
-    assert(!test_source_contains_symbol_definition(widget_path, "tinyui_icon_slider_native_slot"));
-    assert(!test_source_contains_symbol_definition(widget_path, "tinyui_icon_slider_backend_add_item"));
-    assert(!test_source_contains_symbol_definition(widget_path, "tinyui_icon_slider_backend_add_item_with_source"));
-    assert(!test_source_contains_symbol_definition(widget_path, "tinyui_icon_slider_backend_get_selected_index"));
-    assert(!test_source_contains_symbol_definition(widget_path, "tinyui_icon_slider_backend_set_horizontal"));
-    assert(!test_source_contains_symbol_definition(widget_path, "tinyui_icon_slider_backend_get_horizontal"));
-    assert(!test_source_contains_symbol_definition(widget_path, "tinyui_icon_slider_backend_set_speed"));
-    assert(!test_source_contains_symbol_definition(widget_path, "tinyui_icon_slider_bind_host"));
-    assert(!test_source_contains_symbol_definition(widget_path, "tinyui_icon_slider_props_are_valid"));
-    assert(!test_source_contains_symbol_definition(widget_path, "tinyui_icon_slider_create_with_backend_config"));
-
     assert(test_source_contains_symbol_definition(widget_path, "tinyui_icon_slider_get_ld"));
     assert(test_source_contains_symbol_definition(widget_path, "tinyui_icon_slider_backend_set_selected_index"));
     assert(test_source_contains_symbol_definition(widget_path, "tinyui_icon_slider_native_slot"));
@@ -146,8 +133,8 @@ static void test_icon_slider_create_builds_direct_backend_mapping(void)
     struct tinyui_app *app;
     struct tinyui_window *win;
     struct tinyui_icon_slider *icon_slider;
-    struct tinyui_backend_widget *backend;
-    struct tinyui_backend_widget *parent_backend;
+    struct tinyui_widget *backend;
+    struct tinyui_widget *parent_backend;
     ldIconSlider_t *ld_icon_slider;
 
     app = tinyui_app_create();
@@ -158,16 +145,15 @@ static void test_icon_slider_create_builds_direct_backend_mapping(void)
     icon_slider = tinyui_icon_slider_create((struct tinyui_widget *)win, "icon_slider_direct");
     assert(icon_slider != 0);
 
-    backend = (struct tinyui_backend_widget *)icon_slider->widget.backend_widget;
-    parent_backend = (struct tinyui_backend_widget *)win->widget.backend_widget;
+    backend = &icon_slider->widget;
+    parent_backend = &win->widget;
     assert(backend != 0);
     assert(parent_backend != 0);
     assert(backend->kind == TINYUI_BACKEND_WIDGET_ICON_SLIDER);
     assert(backend->owner == parent_backend->owner);
-    assert(backend->root == parent_backend->root);
-    assert(backend->parent == parent_backend);
+    assert((ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)backend->ld_widget) == (ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)parent_backend->ld_widget));
+    assert(ldBaseGetParent((ldBase_t *)backend->ld_widget) == (ldBase_t *)parent_backend->ld_widget);
     assert(backend->ld_name_id != 0);
-    assert(backend->host_widget == &icon_slider->widget);
     assert(backend->ld_event_bridge_scene != 0);
     assert(backend->ld_event_bridge_sender == backend->ld_widget);
     ld_icon_slider = (ldIconSlider_t *)backend->ld_widget;
@@ -182,7 +168,7 @@ static void test_icon_slider_create_with_props_pushes_backend_dimensions(void)
     struct tinyui_app *app;
     struct tinyui_window *win;
     struct tinyui_icon_slider *icon_slider;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldIconSlider_t *ld_icon_slider;
     const struct tinyui_icon_slider_props props = {
         .id = "icon_slider",
@@ -203,8 +189,8 @@ static void test_icon_slider_create_with_props_pushes_backend_dimensions(void)
 
     icon_slider = tinyui_icon_slider_create_with_props((struct tinyui_widget *)win, &props);
     assert(icon_slider != 0);
-    backend = (struct tinyui_backend_widget *)icon_slider->widget.backend_widget;
-    assert(backend != 0);
+    backend = &icon_slider->widget;
+    assert(backend->ld_widget != 0);
     ld_icon_slider = (ldIconSlider_t *)backend->ld_widget;
     assert(ld_icon_slider != 0);
 
@@ -225,7 +211,7 @@ static void test_icon_slider_native_icon_images_and_speed_round_trip(void)
     struct tinyui_app *app;
     struct tinyui_window *win;
     struct tinyui_icon_slider *icon_slider;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldIconSlider_t *ld_icon_slider;
     arm_2d_tile_t icon_img = {
         .tRegion = {
@@ -249,8 +235,8 @@ static void test_icon_slider_native_icon_images_and_speed_round_trip(void)
 
     icon_slider = tinyui_icon_slider_create((struct tinyui_widget *)win, "icon_slider_native");
     assert(icon_slider != 0);
-    backend = (struct tinyui_backend_widget *)icon_slider->widget.backend_widget;
-    assert(backend != 0);
+    backend = &icon_slider->widget;
+    assert(backend->ld_widget != 0);
     ld_icon_slider = (ldIconSlider_t *)backend->ld_widget;
     assert(ld_icon_slider != 0);
 
@@ -274,7 +260,7 @@ static void test_icon_slider_init_aliases_and_shared_base_round_trip(void)
     struct tinyui_app *app;
     struct tinyui_window *win;
     struct tinyui_icon_slider *icon_slider;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldIconSlider_t *ld_icon_slider;
     arm_2d_tile_t icon_img = {
         .tRegion = {
@@ -298,8 +284,8 @@ static void test_icon_slider_init_aliases_and_shared_base_round_trip(void)
 
     icon_slider = tinyui_icon_slider_init((struct tinyui_widget *)win, "icon_slider_alias");
     assert(icon_slider != 0);
-    backend = (struct tinyui_backend_widget *)icon_slider->widget.backend_widget;
-    assert(backend != 0);
+    backend = &icon_slider->widget;
+    assert(backend->ld_widget != 0);
     ld_icon_slider = (ldIconSlider_t *)backend->ld_widget;
     assert(ld_icon_slider != 0);
 

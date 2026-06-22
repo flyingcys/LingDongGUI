@@ -25,28 +25,22 @@
 #include <stdlib.h>
 #include <string.h>
 
-struct tinyui_button_backend_host {
-    struct tinyui_backend_widget widget;
-    xBtnInfo_t action_info;
-};
-
 extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
 extern const arm_2d_a1_font_t ARM_2D_FONT_16x24;
-int tinyui_runtime_bridge_unbind_host(void *backend_widget);
-int tinyui_runtime_bridge_detach_from_parent(void *backend_widget);
 
 static int tinyui_button_fail_next_set_font = 0;
 
 static ldButton_t *tinyui_button_get_ld(const struct tinyui_button *button)
 {
-    const struct tinyui_backend_widget *backend;
-
-    if (button == 0 || button->widget.backend_widget == 0) {
+    if (button == 0 || button->widget.ld_widget == 0) {
         return 0;
     }
 
-    backend = (const struct tinyui_backend_widget *)button->widget.backend_widget;
-    return (ldButton_t *)backend->ld_widget;
+    if (button->widget.kind != TINYUI_BACKEND_WIDGET_BUTTON) {
+        return 0;
+    }
+
+    return (ldButton_t *)button->widget.ld_widget;
 }
 
 static arm_2d_font_t *tinyui_button_default_font(void)
@@ -73,25 +67,22 @@ static arm_2d_font_t *tinyui_button_resolve_font(const struct tinyui_font *font)
 
 static void tinyui_button_dispose_partial(struct tinyui_button *button)
 {
-    struct tinyui_button_backend_host *host;
     struct tinyui_app *app_state;
 
     if (button == 0) {
         return;
     }
 
-    host = (struct tinyui_button_backend_host *)button->widget.backend_widget;
-    if (host != 0) {
-        app_state = tinyui_runtime_bridge_backend_state(host->widget.owner);
-        xBtnRemove(&host->action_info);
-        if (host->widget.parent != 0) {
-            (void)tinyui_runtime_bridge_detach_from_parent(&host->widget);
+    if (button->widget.ld_widget != 0) {
+        void *saved_ld = button->widget.ld_widget;
+        app_state = button->widget.owner != 0
+            ? tinyui_runtime_bridge_backend_state(button->widget.owner)
+            : 0;
+        xBtnRemove(&button->action_info);
+        (void)tinyui_widget_detach_from_parent(&button->widget);
+        if (app_state != 0 && app_state->ld_scene != 0) {
+            ldButton_depose(app_state->ld_scene, (ldButton_t *)saved_ld);
         }
-        (void)tinyui_runtime_bridge_unbind_host(&host->widget);
-        if (app_state != 0 && app_state->ld_scene != 0 && host->widget.ld_widget != 0) {
-            ldButton_depose(app_state->ld_scene, (ldButton_t *)host->widget.ld_widget);
-        }
-        free(host);
     }
 
     free(button);
@@ -117,8 +108,6 @@ static int tinyui_button_props_are_valid(const struct tinyui_button_props *props
 static struct tinyui_button *tinyui_button_alloc(struct tinyui_window *parent, const char *id)
 {
     struct tinyui_button *button;
-    struct tinyui_button_backend_host *host;
-    struct tinyui_backend_widget *parent_backend;
     struct tinyui_app *app_state;
     ldButton_t *ld_button;
     uint16_t name_id;
@@ -127,9 +116,8 @@ static struct tinyui_button *tinyui_button_alloc(struct tinyui_window *parent, c
         return 0;
     }
 
-    parent_backend = (struct tinyui_backend_widget *)parent->widget.backend_widget;
-    app_state = tinyui_runtime_bridge_backend_state_from_parent(parent_backend);
-    if (parent_backend == 0 || parent_backend->ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
+    app_state = parent->widget.owner;
+    if (parent->widget.ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
         return 0;
     }
 
@@ -138,61 +126,32 @@ static struct tinyui_button *tinyui_button_alloc(struct tinyui_window *parent, c
         return 0;
     }
 
-    host = calloc(1, sizeof(*host));
-    if (host == 0) {
-        free(button);
-        return 0;
-    }
-
-    name_id = tinyui_runtime_bridge_next_name_id(parent_backend);
-    if (name_id == 0) {
-        free(host);
-        free(button);
-        return 0;
-    }
+    name_id = ++app_state->next_ld_name_id;
 
     ld_button = ldButton_init(app_state->ld_scene,
                               NULL,
                               name_id,
-                              parent_backend->ld_name_id,
+                              parent->widget.ld_name_id,
                               0,
                               0,
                               160,
                               36);
     if (ld_button == 0) {
-        free(host);
-        free(button);
-        return 0;
-    }
-
-    if (tinyui_widget_init_child(&host->widget,
-                                         parent_backend,
-                                         TINYUI_BACKEND_WIDGET_BUTTON,
-                                         id,
-                                         parent_backend->theme) != 0) {
-        ldButton_depose(app_state->ld_scene, ld_button);
-        free(host);
-        free(button);
-        return 0;
-    }
-    host->widget.ld_widget = ld_button;
-    host->widget.ld_name_id = name_id;
-    _xBtnInit(name_id, (isBtnPressFunc)ldButtonActionIsPressById, &host->action_info);
-    if (tinyui_widget_attach_child(parent_backend, &host->widget) != 0) {
-        ldButton_depose(app_state->ld_scene, ld_button);
-        free(host);
         free(button);
         return 0;
     }
 
     button->id = id;
-    button->widget.backend_widget = &host->widget;
-    button->widget.visible = 1;
-    button->widget.enabled = 1;
-    if (tinyui_runtime_bridge_bind_host(button->widget.backend_widget, &button->widget) != 0) {
-        free(button);
-        return 0;
-    }
+    button->widget.ld_widget  = ld_button;
+    button->widget.ld_name_id = name_id;
+    button->widget.kind       = TINYUI_BACKEND_WIDGET_BUTTON;
+    button->widget.owner      = app_state;
+    button->widget.visible    = 1;
+    button->widget.enabled    = 1;
+    ((ldBase_t *)ld_button)->pInfo = &button->widget;
+    _xBtnInit(name_id, (isBtnPressFunc)ldButtonActionIsPressById, &button->action_info);
+    tinyui_runtime_bridge_bind_leaf_widget(&button->widget, app_state);
+
     return button;
 }
 
@@ -314,7 +273,7 @@ int tinyui_button_set_text(struct tinyui_button *button, const char *text)
     if (tinyui_widget_set_text(&button->widget, text) != 0) {
         return -1;
     }
-    return tinyui_widget_set_backend_text(button->widget.backend_widget, text);
+    return tinyui_widget_set_backend_text(&button->widget, text);
 }
 
 /**
@@ -795,14 +754,25 @@ int tinyui_button_get_pressed_by_name_id(const struct tinyui_widget *root,
                                          int name_id,
                                          int *pressed)
 {
+    ldBase_t *ld_found;
     struct tinyui_widget *widget;
 
-    if (root == 0 || pressed == 0) {
+    if (root == 0 || pressed == 0 || name_id <= 0 || name_id > 65535) {
         return -1;
     }
 
-    widget = tinyui_widget_find_by_name_id(root, name_id);
-    if (widget == 0 || tinyui_widget_get_type(widget) != TINYUI_WIDGET_TYPE_BUTTON) {
+    if (root->ld_widget == 0) {
+        return -1;
+    }
+
+    ld_found = (ldBase_t *)ldBaseGetWidget(
+        (arm_2d_control_node_t *)root->ld_widget, (uint16_t)name_id);
+    if (ld_found == 0 || ld_found->pInfo == 0) {
+        return -1;
+    }
+
+    widget = (struct tinyui_widget *)ld_found->pInfo;
+    if (tinyui_widget_get_type(widget) != TINYUI_WIDGET_TYPE_BUTTON) {
         return -1;
     }
 
@@ -822,14 +792,25 @@ int tinyui_button_get_action_state_by_name_id(const struct tinyui_widget *root,
                                               int name_id,
                                               enum tinyui_button_action_state action)
 {
+    ldBase_t *ld_found;
     struct tinyui_widget *widget;
 
-    if (root == 0 || name_id < 0 || name_id > 65535) {
+    if (root == 0 || name_id <= 0 || name_id > 65535) {
         return -1;
     }
 
-    widget = tinyui_widget_find_by_name_id(root, name_id);
-    if (widget == 0 || tinyui_widget_get_type(widget) != TINYUI_WIDGET_TYPE_BUTTON) {
+    if (root->ld_widget == 0) {
+        return -1;
+    }
+
+    ld_found = (ldBase_t *)ldBaseGetWidget(
+        (arm_2d_control_node_t *)root->ld_widget, (uint16_t)name_id);
+    if (ld_found == 0 || ld_found->pInfo == 0) {
+        return -1;
+    }
+
+    widget = (struct tinyui_widget *)ld_found->pInfo;
+    if (tinyui_widget_get_type(widget) != TINYUI_WIDGET_TYPE_BUTTON) {
         return -1;
     }
 

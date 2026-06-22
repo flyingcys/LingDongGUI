@@ -308,13 +308,11 @@ static void assert_text_native_r3_state(const struct tinyui_text *text,
                                         const struct tinyui_image_source *expected_bg_source,
                                         int expected_scroll_offset)
 {
-    const struct tinyui_backend_widget *backend;
     const ldText_t *ld_text;
 
     assert(text != 0);
-    backend = text->widget.backend_widget;
-    assert(backend != 0);
-    ld_text = (const ldText_t *)backend->ld_widget;
+    assert(text->widget.ld_widget != 0);
+    ld_text = (const ldText_t *)text->widget.ld_widget;
     assert(ld_text != 0);
     assert(text->widget.text == expected_text);
     assert(ld_text->pStr != 0);
@@ -330,8 +328,7 @@ static void assert_text_native_r3_state(const struct tinyui_text *text,
 
 static void assert_button_has_no_bound_images(const struct tinyui_button *button)
 {
-    const struct tinyui_backend_widget *backend = button->widget.backend_widget;
-    const ldButton_t *ld_button = (const ldButton_t *)backend->ld_widget;
+    const ldButton_t *ld_button = (const ldButton_t *)button->widget.ld_widget;
 
     assert(ld_button != 0);
     assert(ld_button->ptReleaseImgTile == 0);
@@ -344,8 +341,7 @@ static void assert_button_has_bound_images(const struct tinyui_button *button,
                                            const struct tinyui_image_source *release_source,
                                            const struct tinyui_image_source *press_source)
 {
-    const struct tinyui_backend_widget *backend = button->widget.backend_widget;
-    const ldButton_t *ld_button = (const ldButton_t *)backend->ld_widget;
+    const ldButton_t *ld_button = (const ldButton_t *)button->widget.ld_widget;
 
     assert(ld_button != 0);
     assert(ld_button->ptReleaseImgTile == (release_source != 0 ? release_source->img_tile : 0));
@@ -358,8 +354,7 @@ static void assert_slider_has_bound_images(const struct tinyui_slider *slider,
                                            const struct tinyui_image_source *background_source,
                                            const struct tinyui_image_source *indicator_source)
 {
-    const struct tinyui_backend_widget *backend = slider->widget.backend_widget;
-    const ldSlider_t *ld_slider = (const ldSlider_t *)backend->ld_widget;
+    const ldSlider_t *ld_slider = (const ldSlider_t *)slider->widget.ld_widget;
 
     assert(ld_slider != 0);
     assert(ld_slider->ptBgImgTile == (background_source != 0 ? background_source->img_tile : 0));
@@ -372,8 +367,7 @@ static void assert_checkbox_has_bound_images(const struct tinyui_checkbox *check
                                              const struct tinyui_image_source *unchecked_source,
                                              const struct tinyui_image_source *checked_source)
 {
-    const struct tinyui_backend_widget *backend = checkbox->widget.backend_widget;
-    const ldCheckBox_t *ld_checkbox = (const ldCheckBox_t *)backend->ld_widget;
+    const ldCheckBox_t *ld_checkbox = (const ldCheckBox_t *)checkbox->widget.ld_widget;
 
     assert(ld_checkbox != 0);
     assert(ld_checkbox->ptUncheckedImgTile == (unchecked_source != 0 ? unchecked_source->img_tile : 0));
@@ -387,8 +381,7 @@ static void assert_switch_has_bound_images(const struct tinyui_switch *sw,
                                            const struct tinyui_image_source *on_source,
                                            const struct tinyui_image_source *knob_source)
 {
-    const struct tinyui_backend_widget *backend = sw->widget.backend_widget;
-    const ldSwitch_t *ld_switch = (const ldSwitch_t *)backend->ld_widget;
+    const ldSwitch_t *ld_switch = (const ldSwitch_t *)sw->widget.ld_widget;
 
     assert(ld_switch != 0);
     assert(ld_switch->ptOffImgTile == (off_source != 0 ? off_source->img_tile : 0));
@@ -462,9 +455,9 @@ static void test_focus_owner_switches_between_widgets(struct tinyui_app *app,
     int slider_enter_before;
     int slider_leave_before;
     int slider_change_before;
-    struct tinyui_backend_widget *sw_backend;
-    struct tinyui_backend_widget *cb_backend;
-    struct tinyui_backend_widget *slider_backend;
+    struct tinyui_widget *sw_backend;
+    struct tinyui_widget *cb_backend;
+    struct tinyui_widget *slider_backend;
 
     assert(app != 0);
     assert(button != 0);
@@ -473,16 +466,15 @@ static void test_focus_owner_switches_between_widgets(struct tinyui_app *app,
     assert(slider != 0);
     assert(scene != 0);
     assert(scene->ptMsgQueue != 0);
-    assert(button->widget.backend_widget != 0);
-    assert(sw->widget.backend_widget != 0);
-    assert(cb->widget.backend_widget != 0);
-    assert(slider->widget.backend_widget != 0);
+    assert(sw->widget.ld_widget != 0);
+    assert(cb->widget.ld_widget != 0);
+    assert(slider->widget.ld_widget != 0);
     if (app->focus_owner != 0) {
         assert(tinyui_widget_release_focus(app->focus_owner) == 0);
     }
-    sw_backend = (struct tinyui_backend_widget *)sw->widget.backend_widget;
-    cb_backend = (struct tinyui_backend_widget *)cb->widget.backend_widget;
-    slider_backend = (struct tinyui_backend_widget *)slider->widget.backend_widget;
+    sw_backend = &sw->widget;
+    cb_backend = &cb->widget;
+    slider_backend = &slider->widget;
 
     button_enter_before = button->widget.focus_enter_count;
     button_leave_before = button->widget.focus_leave_count;
@@ -502,7 +494,7 @@ static void test_focus_owner_switches_between_widgets(struct tinyui_app *app,
     assert(tinyui_button_set_on_pressed(button, on_button_pressed, 0) == 0);
 
     assert(app->focus_owner == 0);
-    assert(tinyui_widget_dispatch_native_signal(button->widget.backend_widget, SIGNAL_PRESS, 0) == 0);
+    assert(tinyui_widget_dispatch_native_signal(&button->widget, SIGNAL_PRESS, 0) == 0);
     assert(app->focus_owner == &button->widget);
     assert(button->widget.has_focus == 1);
     assert(button->widget.focus_enter_count == button_enter_before + 1);
@@ -555,15 +547,13 @@ static void test_focus_owner_switches_between_widgets(struct tinyui_app *app,
 static void test_hidden_or_disabled_widget_cannot_keep_focus(struct tinyui_app *app,
                                                              struct tinyui_button *button)
 {
-    struct tinyui_backend_widget *backend;
     int focus_enter_before;
     int focus_leave_before;
 
     assert(app != 0);
     assert(button != 0);
 
-    backend = (struct tinyui_backend_widget *)button->widget.backend_widget;
-    assert(backend != 0);
+    assert(button->widget.ld_widget != 0);
     if (app->focus_owner != 0) {
         assert(tinyui_widget_release_focus(app->focus_owner) == 0);
     }
@@ -571,7 +561,7 @@ static void test_hidden_or_disabled_widget_cannot_keep_focus(struct tinyui_app *
     focus_enter_before = button->widget.focus_enter_count;
     focus_leave_before = button->widget.focus_leave_count;
 
-    assert(tinyui_widget_dispatch_native_signal(backend, SIGNAL_PRESS, 0) == 0);
+    assert(tinyui_widget_dispatch_native_signal(&button->widget, SIGNAL_PRESS, 0) == 0);
     assert(app->focus_owner == &button->widget);
     assert(button->widget.has_focus == 1);
     assert(button->widget.focus_enter_count == focus_enter_before + 1);
@@ -584,7 +574,7 @@ static void test_hidden_or_disabled_widget_cannot_keep_focus(struct tinyui_app *
     assert(button->widget.last_focus_event == TINYUI_FOCUS_EVENT_LEAVE);
 
     assert(tinyui_widget_set_visible(&button->widget, 1) == 0);
-    assert(tinyui_widget_dispatch_native_signal(backend, SIGNAL_PRESS, 0) == 0);
+    assert(tinyui_widget_dispatch_native_signal(&button->widget, SIGNAL_PRESS, 0) == 0);
     assert(app->focus_owner == &button->widget);
     assert(button->widget.has_focus == 1);
     assert(button->widget.focus_enter_count == focus_enter_before + 2);
@@ -595,7 +585,7 @@ static void test_hidden_or_disabled_widget_cannot_keep_focus(struct tinyui_app *
     assert(button->widget.has_focus == 0);
     assert(button->widget.focus_leave_count == focus_leave_before + 2);
     assert(button->widget.last_focus_event == TINYUI_FOCUS_EVENT_LEAVE);
-    assert(tinyui_widget_dispatch_native_signal(backend, SIGNAL_PRESS, 0) == 0);
+    assert(tinyui_widget_dispatch_native_signal(&button->widget, SIGNAL_PRESS, 0) == 0);
     assert(app->focus_owner == 0);
     assert(button->widget.has_focus == 0);
     assert(button->widget.focus_enter_count == focus_enter_before + 2);
@@ -618,7 +608,6 @@ static void test_slider_j5_contract(struct tinyui_slider *slider,
                                     struct tinyui_image_source *background_source,
                                     struct tinyui_image_source *indicator_source)
 {
-    struct tinyui_backend_widget *backend;
     ldSlider_t *ld_slider;
     int horizontal = -1;
     int percent = -1;
@@ -628,8 +617,8 @@ static void test_slider_j5_contract(struct tinyui_slider *slider,
     };
 
     assert(slider != 0);
-    backend = slider->widget.backend_widget;
-    ld_slider = (ldSlider_t *)backend->ld_widget;
+    assert(slider->widget.ld_widget != 0);
+    ld_slider = (ldSlider_t *)slider->widget.ld_widget;
     assert(ld_slider != 0);
 
     assert(tinyui_slider_set_range(slider, -20, 80) == 0);
@@ -716,7 +705,6 @@ static void test_slider_j5_contract(struct tinyui_slider *slider,
 
 static void test_checkbox_native_radio_group_and_image_mode_round_trip(struct tinyui_checkbox *checkbox)
 {
-    struct tinyui_backend_widget *backend;
     ldCheckBox_t *ld_checkbox;
     arm_2d_tile_t unchecked_tile = {0};
     arm_2d_tile_t unchecked_mask_tile = {0};
@@ -736,8 +724,8 @@ static void test_checkbox_native_radio_group_and_image_mode_round_trip(struct ti
     };
 
     assert(checkbox != 0);
-    backend = checkbox->widget.backend_widget;
-    ld_checkbox = (ldCheckBox_t *)backend->ld_widget;
+    assert(checkbox->widget.ld_widget != 0);
+    ld_checkbox = (ldCheckBox_t *)checkbox->widget.ld_widget;
     assert(ld_checkbox != 0);
 
     assert(tinyui_checkbox_set_check_color(checkbox, 0xAA5500U) == 0);
@@ -781,7 +769,6 @@ static void test_checkbox_native_radio_group_and_image_mode_round_trip(struct ti
 
 static void test_switch_native_direction_navigation_and_image_skin_round_trip(struct tinyui_switch *sw)
 {
-    struct tinyui_backend_widget *backend;
     ldSwitch_t *ld_switch;
     int horizontal = -1;
     int direction = -1;
@@ -811,8 +798,8 @@ static void test_switch_native_direction_navigation_and_image_skin_round_trip(st
     };
 
     assert(sw != 0);
-    backend = sw->widget.backend_widget;
-    ld_switch = (ldSwitch_t *)backend->ld_widget;
+    assert(sw->widget.ld_widget != 0);
+    ld_switch = (ldSwitch_t *)sw->widget.ld_widget;
     assert(ld_switch != 0);
 
     assert(tinyui_switch_set_off_source(sw, &off_source) == 0);
@@ -904,7 +891,7 @@ static void test_switch_native_direction_navigation_and_image_skin_round_trip(st
 }
 
 static void test_backend_value_changed_bridge_keeps_setter_sync_only(struct tinyui_slider *slider,
-                                                                     struct tinyui_backend_widget *slider_backend,
+                                                                     struct tinyui_widget *slider_backend,
                                                                      struct ld_scene_t *scene)
 {
     ldBase_t sender = {0};
@@ -927,7 +914,7 @@ static void test_backend_value_changed_bridge_keeps_setter_sync_only(struct tiny
 }
 
 static void test_backend_bind_ld_event_bridge_fail_closed_on_missing_native_widget(
-    struct tinyui_backend_widget *slider_backend,
+    struct tinyui_widget *slider_backend,
     struct ld_scene_t *scene)
 {
     ldBase_t sender = {0};
@@ -953,9 +940,9 @@ static void test_native_event_bridge_prefers_native_path(struct tinyui_switch *s
                                                          struct tinyui_slider *slider,
                                                          struct ld_scene_t *scene)
 {
-    struct tinyui_backend_widget *sw_backend = sw->widget.backend_widget;
-    struct tinyui_backend_widget *cb_backend = cb->widget.backend_widget;
-    struct tinyui_backend_widget *slider_backend = slider->widget.backend_widget;
+    struct tinyui_widget *sw_backend = &sw->widget;
+    struct tinyui_widget *cb_backend = &cb->widget;
+    struct tinyui_widget *slider_backend = &slider->widget;
     ldSlider_t *ld_slider = (ldSlider_t *)slider_backend->ld_widget;
 
     switch_toggled_count = 0;
@@ -1003,7 +990,7 @@ static void test_list_native_signal_restore_rejected_selection_when_hidden_or_di
     struct ld_scene_t *scene)
 {
     struct tinyui_list *list;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldList_t *ld_list;
 
     assert(win != 0);
@@ -1016,8 +1003,9 @@ static void test_list_native_signal_restore_rejected_selection_when_hidden_or_di
     assert(tinyui_list_add_item(list, "c", "C") == 0);
     assert(tinyui_list_set_selected_index(list, 1) == 0);
 
-    backend = list->widget.backend_widget;
+    backend = &list->widget;
     assert(backend != 0);
+    assert(backend->ld_widget != 0);
     ld_list = (ldList_t *)backend->ld_widget;
     assert(ld_list != 0);
 
@@ -1064,20 +1052,22 @@ static void test_backend_widget_tree_contract(struct tinyui_app *app,
                                               struct tinyui_text *text,
                                               struct tinyui_image *image)
 {
-    struct tinyui_backend_widget *win_backend = win->widget.backend_widget;
-    struct tinyui_backend_widget *sw_backend = sw->widget.backend_widget;
-    struct tinyui_backend_widget *cb_backend = cb->widget.backend_widget;
-    struct tinyui_backend_widget *slider_backend = slider->widget.backend_widget;
-    struct tinyui_backend_widget *label_backend = label->widget.backend_widget;
-    struct tinyui_backend_widget *button_backend = button->widget.backend_widget;
-    struct tinyui_backend_widget *text_backend = text->widget.backend_widget;
-    struct tinyui_backend_widget *image_backend = image->widget.backend_widget;
+    struct tinyui_backend_widget *win_backend = (struct tinyui_backend_widget *)tinyui_window_get_backend_widget(win);
+    struct tinyui_widget *sw_backend = &sw->widget;
+    struct tinyui_widget *cb_backend = &cb->widget;
+    struct tinyui_widget *slider_backend = &slider->widget;
+    struct tinyui_widget *label_backend = &label->widget;
+    struct tinyui_widget *button_backend = &button->widget;
+    struct tinyui_widget *text_backend = &text->widget;
+    struct tinyui_widget *image_backend = &image->widget;
     struct tinyui_backend_widget *dialog_backend;
     struct tinyui_window *dialog_window;
     struct tinyui_backend_widget *orphan_backend;
     struct tinyui_backend_widget *prebound_backend;
     struct tinyui_label *nested_label;
-    struct tinyui_backend_widget *nested_label_backend;
+    struct tinyui_widget *nested_label_backend;
+
+    assert(win_backend != 0);
 
     assert(tinyui_widget_is_kind(win_backend, TINYUI_BACKEND_WIDGET_WINDOW) == 1);
     assert(tinyui_widget_is_kind(sw_backend, TINYUI_BACKEND_WIDGET_SWITCH) == 1);
@@ -1099,37 +1089,44 @@ static void test_backend_widget_tree_contract(struct tinyui_app *app,
     assert(text_backend->owner == app);
     assert(image_backend->owner == app);
 
-    assert(win_backend->root == win_backend);
-    assert(sw_backend->root == win_backend);
-    assert(cb_backend->root == win_backend);
-    assert(slider_backend->root == win_backend);
-    assert(label_backend->root == win_backend);
-    assert(button_backend->root == win_backend);
-    assert(text_backend->root == win_backend);
-    assert(image_backend->root == win_backend);
+    /* root/tree checks: with phantom scene root, all widgets share one root above win */
+    {
+        ldBase_t *scene_root = (ldBase_t *)ldBaseGetRootNode(
+            (arm_2d_control_node_t *)win->widget.ld_widget);
+        assert(scene_root != (ldBase_t *)win->widget.ld_widget);
+        assert(ldBaseGetParent((ldBase_t *)win->widget.ld_widget) == scene_root);
+        assert((ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)sw->widget.ld_widget) == scene_root);
+        assert((ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)cb->widget.ld_widget) == scene_root);
+        assert((ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)slider->widget.ld_widget) == scene_root);
+        assert((ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)label->widget.ld_widget) == scene_root);
+        assert((ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)button->widget.ld_widget) == scene_root);
+        assert((ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)text->widget.ld_widget) == scene_root);
+        assert((ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)image->widget.ld_widget) == scene_root);
+    }
 
-    assert(win_backend->first_child == sw_backend);
-    assert(sw_backend->next_sibling == cb_backend);
-    assert(cb_backend->next_sibling == slider_backend);
-    assert(slider_backend->next_sibling == button_backend);
-    assert(button_backend->next_sibling == label_backend);
-    assert(label_backend->next_sibling == text_backend);
-    assert(text_backend->next_sibling == image_backend);
-    assert(image_backend->next_sibling == 0);
+    /* child/sibling checks: use ld tree API */
+    assert(ldBaseGetChildList((ldBase_t *)win->widget.ld_widget) == (ldBase_t *)sw->widget.ld_widget);
+    assert(ldBaseGetNextSibling((ldBase_t *)sw->widget.ld_widget) == (ldBase_t *)cb->widget.ld_widget);
+    assert(ldBaseGetNextSibling((ldBase_t *)cb->widget.ld_widget) == (ldBase_t *)slider->widget.ld_widget);
+    assert(ldBaseGetNextSibling((ldBase_t *)slider->widget.ld_widget) == (ldBase_t *)button->widget.ld_widget);
+    assert(ldBaseGetNextSibling((ldBase_t *)button->widget.ld_widget) == (ldBase_t *)label->widget.ld_widget);
+    assert(ldBaseGetNextSibling((ldBase_t *)label->widget.ld_widget) == (ldBase_t *)text->widget.ld_widget);
+    assert(ldBaseGetNextSibling((ldBase_t *)text->widget.ld_widget) == (ldBase_t *)image->widget.ld_widget);
+    assert(ldBaseGetNextSibling((ldBase_t *)image->widget.ld_widget) == 0);
 
     dialog_window = tinyui_window_create(app, "dialog");
     assert(dialog_window != 0);
-    dialog_backend = dialog_window->widget.backend_widget;
+    dialog_backend = (struct tinyui_backend_widget *)tinyui_window_get_backend_widget(dialog_window);
     assert(dialog_backend != 0);
 
     nested_label = tinyui_label_create(dialog_window, "bad-nested-label");
     assert(nested_label != 0);
-    nested_label_backend = nested_label->widget.backend_widget;
+    nested_label_backend = &nested_label->widget;
     assert(nested_label_backend != 0);
     assert(nested_label_backend->kind == TINYUI_BACKEND_WIDGET_LABEL);
-    assert(nested_label_backend->parent == dialog_backend);
+    assert(ldBaseGetParent((ldBase_t *)nested_label->widget.ld_widget) == (ldBase_t *)dialog_window->widget.ld_widget);
     assert(nested_label_backend->owner == app);
-    assert(nested_label_backend->root == dialog_backend);
+    assert((ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)nested_label->widget.ld_widget) == (ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)dialog_window->widget.ld_widget));
     assert(tinyui_widget_attach_child(win_backend, dialog_backend) == -1);
 
     orphan_backend = calloc(1, sizeof(*orphan_backend));
@@ -1233,7 +1230,6 @@ static void test_widget_geometry_helpers_remain_source_local(void)
 }
 
 static void assert_widget_props(const struct tinyui_widget *widget,
-                                const struct tinyui_backend_widget *backend,
                                 const char *style_class,
                                 void *user_data,
                                 unsigned int bg_color,
@@ -1249,16 +1245,19 @@ static void assert_widget_props(const struct tinyui_widget *widget,
     assert(widget->border_color == border_color);
     assert(widget->radius == radius);
     assert(widget->padding == padding);
-    assert(backend->style_class == style_class);
-    assert(backend->user_data == user_data);
 }
 
-static int backend_child_count(const struct tinyui_backend_widget *parent)
+static int ld_child_count(const struct tinyui_widget *widget)
 {
-    const struct tinyui_backend_widget *child;
+    ldBase_t *child;
     int count = 0;
 
-    for (child = parent->first_child; child != 0; child = child->next_sibling) {
+    if (widget->ld_widget == 0) {
+        return 0;
+    }
+    for (child = ldBaseGetChildList((ldBase_t *)widget->ld_widget);
+         child != 0;
+         child = ldBaseGetNextSibling(child)) {
         count++;
     }
     return count;
@@ -1266,18 +1265,14 @@ static int backend_child_count(const struct tinyui_backend_widget *parent)
 
 static void assert_backend_tree_unchanged(const struct tinyui_window *parent, int expected_count)
 {
-    const struct tinyui_backend_widget *backend = parent->widget.backend_widget;
-
-    assert(backend_child_count(backend) == expected_count);
+    assert(ld_child_count(&parent->widget) == expected_count);
 }
 
 static void assert_image_has_no_bound_source(const struct tinyui_image *image)
 {
-    const struct tinyui_backend_widget *backend = image->widget.backend_widget;
-    const ldImage_t *ld_image = (const ldImage_t *)backend->ld_widget;
+    const ldImage_t *ld_image = (const ldImage_t *)image->widget.ld_widget;
 
     assert(image->source == 0);
-    assert(backend->image_source == 0);
     assert(ld_image != 0);
     assert(ld_image->ptImgTile == 0);
     assert(ld_image->ptMaskTile == 0);
@@ -1286,11 +1281,9 @@ static void assert_image_has_no_bound_source(const struct tinyui_image *image)
 static void assert_image_has_bound_source(const struct tinyui_image *image,
                                           const struct tinyui_image_source *source)
 {
-    const struct tinyui_backend_widget *backend = image->widget.backend_widget;
-    const ldImage_t *ld_image = (const ldImage_t *)backend->ld_widget;
+    const ldImage_t *ld_image = (const ldImage_t *)image->widget.ld_widget;
 
     assert(image->source == source);
-    assert(backend->image_source == source);
     assert(ld_image->ptImgTile == source->img_tile);
     assert(ld_image->ptMaskTile == source->mask_tile);
 }
@@ -1312,8 +1305,7 @@ static unsigned int quantize_rgb_to_ld_roundtrip(unsigned int rgb)
 
 static void assert_label_has_no_background_source(const struct tinyui_label *label)
 {
-    const struct tinyui_backend_widget *backend = label->widget.backend_widget;
-    const ldLabel_t *ld_label = (const ldLabel_t *)backend->ld_widget;
+    const ldLabel_t *ld_label = (const ldLabel_t *)label->widget.ld_widget;
 
     assert(ld_label != 0);
     assert(ld_label->ptImgTile == 0);
@@ -1323,8 +1315,7 @@ static void assert_label_has_no_background_source(const struct tinyui_label *lab
 static void assert_label_has_background_source(const struct tinyui_label *label,
                                                const struct tinyui_image_source *source)
 {
-    const struct tinyui_backend_widget *backend = label->widget.backend_widget;
-    const ldLabel_t *ld_label = (const ldLabel_t *)backend->ld_widget;
+    const ldLabel_t *ld_label = (const ldLabel_t *)label->widget.ld_widget;
 
     assert(ld_label != 0);
     assert(ld_label->ptImgTile == source->img_tile);
@@ -1346,8 +1337,7 @@ static void test_label_parity_contract(struct tinyui_label *label,
         .img_tile = image_source->img_tile,
         .mask_tile = 0,
     };
-    struct tinyui_backend_widget *backend = label->widget.backend_widget;
-    ldLabel_t *ld_label = (ldLabel_t *)backend->ld_widget;
+    ldLabel_t *ld_label = (ldLabel_t *)label->widget.ld_widget;
 
     assert(label != 0);
     assert(ld_label != 0);
@@ -1464,7 +1454,6 @@ static void test_label_props_j3_contract(struct tinyui_window *parent,
         .background_source = image_source,
     };
     struct tinyui_label *transparent_label = tinyui_label_create_with_props(parent, &transparent_props);
-    struct tinyui_backend_widget *backend;
     ldLabel_t *ld_label;
     int transparent = -1;
 
@@ -1472,9 +1461,8 @@ static void test_label_props_j3_contract(struct tinyui_window *parent,
     assert(background_props.align == TINYUI_ALIGN_END);
     assert(background_props.background_source == image_source);
 
-    backend = transparent_label->widget.backend_widget;
-    assert(backend != 0);
-    ld_label = (ldLabel_t *)backend->ld_widget;
+    assert(transparent_label->widget.ld_widget != 0);
+    ld_label = (ldLabel_t *)transparent_label->widget.ld_widget;
     assert(ld_label != 0);
     assert(tinyui_label_get_transparent(transparent_label, &transparent) == 0);
     assert(transparent == 1);
@@ -1484,8 +1472,7 @@ static void test_label_props_j3_contract(struct tinyui_window *parent,
 static void test_image_source_boundary(struct tinyui_window *parent,
                                        struct tinyui_image_source *image_source)
 {
-    struct tinyui_backend_widget *parent_backend = parent->widget.backend_widget;
-    int child_count = backend_child_count(parent_backend);
+    int child_count = ld_child_count(&parent->widget);
     struct tinyui_image_props empty_props = {
         .id = "empty_image",
     };
@@ -1514,24 +1501,21 @@ static void test_image_source_boundary(struct tinyui_window *parent,
     assert_image_has_no_bound_source(image);
     assert(tinyui_image_set_source(image, image_source) == 0);
     assert_image_has_bound_source(image, image_source);
-    assert(backend_child_count(parent_backend) == child_count + 2);
+    assert(ld_child_count(&parent->widget) == child_count + 2);
 }
 
 static void test_image_theme_apply_is_support_contract(struct tinyui_theme *theme,
                                                        struct tinyui_image *image,
                                                        struct tinyui_image_source *image_source)
 {
-    const struct tinyui_backend_widget *backend = image->widget.backend_widget;
-    const ldImage_t *ld_image = (const ldImage_t *)backend->ld_widget;
+    const ldImage_t *ld_image = (const ldImage_t *)image->widget.ld_widget;
     struct tinyui_image_source *source = image_source;
     arm_2d_tile_t *img_tile = ld_image->ptImgTile;
     arm_2d_tile_t *mask_tile = ld_image->ptMaskTile;
 
     assert(tinyui_image_set_source(image, image_source) == 0);
-    assert(backend != 0);
-    assert(backend->kind == TINYUI_BACKEND_WIDGET_IMAGE);
-    assert(backend->ld_widget != 0);
-    assert(backend->theme == theme);
+    assert(image->widget.ld_widget != 0);
+    assert(image->widget.kind == TINYUI_BACKEND_WIDGET_IMAGE);
     img_tile = ld_image->ptImgTile;
     mask_tile = ld_image->ptMaskTile;
     assert(tinyui_theme_apply_to_widget(theme, &image->widget, TINYUI_PART_MAIN, TINYUI_STATE_DEFAULT) == 0);
@@ -1541,7 +1525,6 @@ static void test_image_theme_apply_is_support_contract(struct tinyui_theme *them
     assert(image->widget.radius == theme->metrics[TINYUI_METRIC_RADIUS]);
     assert(image->widget.padding == theme->metrics[TINYUI_METRIC_PADDING]);
     assert(image->source == source);
-    assert(backend->image_source == source);
     assert(ld_image->ptImgTile == img_tile);
     assert(ld_image->ptMaskTile == mask_tile);
     assert(test_image_mask_color(ld_image) == test_rgb_to_ld_color(theme->colors[TINYUI_COLOR_PANEL]));
@@ -1553,16 +1536,14 @@ static void test_image_native_mask_color_round_trip(struct tinyui_window *parent
     struct tinyui_app *app = tinyui_app_create();
     struct tinyui_window *win = tinyui_window_create(app, "image_mask_root");
     struct tinyui_image *image = tinyui_image_create(win, "image_mask_color");
-    const struct tinyui_backend_widget *backend;
     const ldImage_t *ld_image;
 
     (void)parent;
     assert(app != 0);
     assert(win != 0);
     assert(image != 0);
-    backend = image->widget.backend_widget;
-    assert(backend != 0);
-    ld_image = (const ldImage_t *)backend->ld_widget;
+    assert(image->widget.ld_widget != 0);
+    ld_image = (const ldImage_t *)image->widget.ld_widget;
     assert(ld_image != 0);
 
     assert(tinyui_image_set_source(image, image_source) == 0);
@@ -1580,21 +1561,18 @@ static void test_image_native_mask_color_round_trip(struct tinyui_window *parent
 static void test_text_font_null_falls_back_to_default_contract(struct tinyui_window *parent)
 {
     struct tinyui_text *text = tinyui_text_create(parent, "text_font_null_fallback");
-    struct tinyui_backend_widget *backend;
     ldText_t *ld_text;
     arm_2d_font_t *initial_font;
 
     assert(text != 0);
-    backend = text->widget.backend_widget;
-    assert(backend != 0);
-    ld_text = (ldText_t *)backend->ld_widget;
+    assert(text->widget.ld_widget != 0);
+    ld_text = (ldText_t *)text->widget.ld_widget;
     assert(ld_text != 0);
 
     initial_font = test_text_consumed_font(ld_text);
     assert(initial_font != 0);
     assert(tinyui_text_set_font(text, 0) == 0);
     assert(text->widget.font == 0);
-    assert(backend->font == 0);
     assert(test_text_consumed_font(ld_text) != 0);
     assert(test_text_consumed_font(ld_text) == initial_font);
 }
@@ -1604,15 +1582,13 @@ static void test_text_font_runtime_rebind_updates_real_ldtext_and_public_cache(s
     struct tinyui_font small_font = {"Sans", 8};
     struct tinyui_font large_font = {"Sans", 24};
     struct tinyui_text *text = tinyui_text_create(parent, "text_font_rebind");
-    struct tinyui_backend_widget *backend;
     ldText_t *ld_text;
     arm_2d_font_t *small_real_font;
     arm_2d_font_t *large_real_font;
 
     assert(text != 0);
-    backend = text->widget.backend_widget;
-    assert(backend != 0);
-    ld_text = (ldText_t *)backend->ld_widget;
+    assert(text->widget.ld_widget != 0);
+    ld_text = (ldText_t *)text->widget.ld_widget;
     assert(ld_text != 0);
 
     assert(tinyui_text_set_font(text, &small_font) == 0);
@@ -1620,7 +1596,6 @@ static void test_text_font_runtime_rebind_updates_real_ldtext_and_public_cache(s
     assert(small_real_font != 0);
     assert(small_real_font != (arm_2d_font_t *)&small_font);
     assert(text->widget.font == &small_font);
-    assert(backend->font == &small_font);
 
     assert(tinyui_text_set_font(text, &large_font) == 0);
     large_real_font = test_text_consumed_font(ld_text);
@@ -1629,7 +1604,6 @@ static void test_text_font_runtime_rebind_updates_real_ldtext_and_public_cache(s
     assert(large_real_font != small_real_font);
     assert(ld_text->ptFont == large_real_font);
     assert(text->widget.font == &large_font);
-    assert(backend->font == &large_font);
 }
 
 static void test_text_font_backend_failure_does_not_split_state(struct tinyui_window *parent)
@@ -1637,14 +1611,12 @@ static void test_text_font_backend_failure_does_not_split_state(struct tinyui_wi
     struct tinyui_font good_font = {"Sans", 24};
     struct tinyui_font failed_font = {"Sans", 8};
     struct tinyui_text *text = tinyui_text_create(parent, "text_font_failure_atomicity");
-    struct tinyui_backend_widget *backend;
     ldText_t *ld_text;
     arm_2d_font_t *old_real_font;
 
     assert(text != 0);
-    backend = text->widget.backend_widget;
-    assert(backend != 0);
-    ld_text = (ldText_t *)backend->ld_widget;
+    assert(text->widget.ld_widget != 0);
+    ld_text = (ldText_t *)text->widget.ld_widget;
     assert(ld_text != 0);
 
     assert(tinyui_text_set_font(text, &good_font) == 0);
@@ -1654,7 +1626,6 @@ static void test_text_font_backend_failure_does_not_split_state(struct tinyui_wi
     tinyui_text_test_fail_next_set_font();
     assert(tinyui_text_set_font(text, &failed_font) == -1);
     assert(text->widget.font == &good_font);
-    assert(backend->font == &good_font);
     assert(test_text_consumed_font(ld_text) == old_real_font);
     assert(ld_text->ptFont == old_real_font);
 }
@@ -1667,7 +1638,6 @@ static void test_text_native_r3_style_background_static_and_scroll_round_trip(
     struct tinyui_app *app = tinyui_app_create();
     struct tinyui_window *win = tinyui_window_create(app, "text_native_r3_root");
     struct tinyui_text *text = tinyui_text_create(win, "text_native_r3");
-    struct tinyui_backend_widget *backend;
     ldText_t *ld_text;
     struct tinyui_image_source invalid_source = {
         .img_tile = 0,
@@ -1682,9 +1652,8 @@ static void test_text_native_r3_style_background_static_and_scroll_round_trip(
     assert(app != 0);
     assert(win != 0);
     assert(text != 0);
-    backend = text->widget.backend_widget;
-    assert(backend != 0);
-    ld_text = (ldText_t *)backend->ld_widget;
+    assert(text->widget.ld_widget != 0);
+    ld_text = (ldText_t *)text->widget.ld_widget;
     assert(ld_text != 0);
 
     assert(tinyui_text_set_static_text(text, static_body) == 0);
@@ -1746,7 +1715,6 @@ static void test_vres_image_source_factory_round_trip(void)
     struct tinyui_window *win = tinyui_window_create(app, "vres_image_root");
     struct tinyui_image *image = tinyui_image_create(win, "vres_image");
     struct tinyui_image_source vres_source = {0};
-    const struct tinyui_backend_widget *backend;
     const ldImage_t *ld_image;
 
     assert(app != 0);
@@ -1760,9 +1728,8 @@ static void test_vres_image_source_factory_round_trip(void)
     assert(((arm_2d_vres_t *)vres_source.img_tile)->pTarget == k_test_vres_image_addr + 16U);
     assert(tinyui_image_set_source(image, &vres_source) == 0);
 
-    backend = image->widget.backend_widget;
-    assert(backend != 0);
-    ld_image = (const ldImage_t *)backend->ld_widget;
+    assert(image->widget.ld_widget != 0);
+    ld_image = (const ldImage_t *)image->widget.ld_widget;
     assert(ld_image != 0);
     assert(ld_image->ptImgTile == vres_source.img_tile);
     assert(ld_image->ptMaskTile == 0);
@@ -1777,7 +1744,6 @@ static void test_vres_font_factory_round_trip(void)
     struct tinyui_window *win = tinyui_window_create(app, "vres_font_root");
     struct tinyui_text *text = tinyui_text_create(win, "vres_text");
     struct tinyui_font vres_font = {0};
-    const struct tinyui_backend_widget *text_backend;
     ldText_t *ld_text;
     arm_2d_font_t *text_font;
 
@@ -1792,9 +1758,8 @@ static void test_vres_font_factory_round_trip(void)
 
     assert(tinyui_text_set_font(text, &vres_font) == 0);
 
-    text_backend = text->widget.backend_widget;
-    assert(text_backend != 0);
-    ld_text = (ldText_t *)text_backend->ld_widget;
+    assert(text->widget.ld_widget != 0);
+    ld_text = (ldText_t *)text->widget.ld_widget;
     assert(ld_text != 0);
     text_font = test_text_consumed_font(ld_text);
     assert(text_font != (arm_2d_font_t *)&ARM_2D_FONT_6x8);
@@ -1811,21 +1776,15 @@ static void test_image_style_class_and_user_data_are_stable_widget_metadata_cont
     struct tinyui_window *parent)
 {
     struct tinyui_image *image = tinyui_image_create(parent, "image_metadata_only");
-    struct tinyui_backend_widget *backend;
     const char *style_class = "image-metadata-only";
     int cookie = 41;
 
     assert(image != 0);
-    backend = image->widget.backend_widget;
-    assert(backend != 0);
     assert(tinyui_widget_set_style_class(&image->widget, style_class) == 0);
     assert(tinyui_widget_set_user_data(&image->widget, &cookie) == 0);
     assert(image->widget.style_class != 0);
     assert(strcmp(image->widget.style_class, style_class) == 0);
     assert(image->widget.user_data == &cookie);
-    assert(backend->style_class != 0);
-    assert(strcmp(backend->style_class, style_class) == 0);
-    assert(backend->user_data == &cookie);
 }
 
 static void test_image_theme_style_parts_remain_explicitly_rejected(struct tinyui_theme *theme,
@@ -1853,13 +1812,11 @@ static void test_image_theme_style_parts_remain_explicitly_rejected(struct tinyu
 static void test_image_enabled_is_support_contract(struct tinyui_window *parent)
 {
     struct tinyui_image *image = tinyui_image_create(parent, "image_enabled_reject");
-    struct tinyui_backend_widget *backend;
     ldBase_t *ld_base;
 
     assert(image != 0);
-    backend = image->widget.backend_widget;
-    assert(backend != 0);
-    ld_base = (ldBase_t *)backend->ld_widget;
+    assert(image->widget.ld_widget != 0);
+    ld_base = (ldBase_t *)image->widget.ld_widget;
     assert(ld_base != 0);
     assert(image->widget.enabled == 1);
     assert(tinyui_widget_set_enabled(&image->widget, 0) == 0);
@@ -1873,17 +1830,15 @@ static void test_image_enabled_is_support_contract(struct tinyui_window *parent)
 
 static void test_image_padding_is_cached_only_and_not_native_layout_contract(struct tinyui_image *image)
 {
-    struct tinyui_backend_widget *backend;
     int padding_before;
 
     assert(image != 0);
-    backend = image->widget.backend_widget;
-    assert(backend != 0);
+    assert(image->widget.ld_widget != 0);
 
     padding_before = image->widget.padding;
     assert(tinyui_widget_set_padding(&image->widget, 6) == 0);
     assert(image->widget.padding == 6);
-    assert(backend->kind == TINYUI_BACKEND_WIDGET_IMAGE);
+    assert(image->widget.kind == TINYUI_BACKEND_WIDGET_IMAGE);
     assert(padding_before >= 0);
 }
 
@@ -1910,7 +1865,6 @@ static void test_button_j4_contract(struct tinyui_window *parent,
         .img_tile = 0,
         .mask_tile = release_source->mask_tile,
     };
-    struct tinyui_backend_widget *backend;
     ldButton_t *ld_button;
     int transparent = -1;
     int checkable = -1;
@@ -1922,8 +1876,8 @@ static void test_button_j4_contract(struct tinyui_window *parent,
 
     assert(button != 0);
     assert(props_button != 0);
-    backend = button->widget.backend_widget;
-    ld_button = (ldButton_t *)backend->ld_widget;
+    assert(button->widget.ld_widget != 0);
+    ld_button = (ldButton_t *)button->widget.ld_widget;
     assert(ld_button != 0);
 
     assert_button_has_no_bound_images(button);
@@ -2034,7 +1988,7 @@ static void test_button_j4_contract(struct tinyui_window *parent,
     assert(pressed == 1);
     assert(tinyui_button_get_text(props_button, &text) == 0);
     assert(strcmp(text, "Button J4") == 0);
-    assert(ldButtonGetFont((ldButton_t *)((struct tinyui_backend_widget *)props_button->widget.backend_widget)->ld_widget)
+    assert(ldButtonGetFont((ldButton_t *)props_button->widget.ld_widget)
            == (arm_2d_font_t *)&ARM_2D_FONT_6x8);
 
     assert(tinyui_button_set_image(button, release_source, press_source) == 0);
@@ -2043,26 +1997,26 @@ static void test_button_j4_contract(struct tinyui_window *parent,
 
     assert(tinyui_button_set_checkable(button, 0) == 0);
     assert(tinyui_button_set_pressed(button, 0) == 0);
-    assert(ldMsgEmit(app_state->ld_scene->ptMsgQueue, backend->ld_widget, SIGNAL_PRESS, 0) == true);
+    assert(ldMsgEmit(app_state->ld_scene->ptMsgQueue, button->widget.ld_widget, SIGNAL_PRESS, 0) == true);
     ldMsgProcess(app_state->ld_scene);
     assert(tinyui_button_get_pressed(button, &pressed) == 0);
     assert(pressed == 1);
-    assert(ldMsgEmit(app_state->ld_scene->ptMsgQueue, backend->ld_widget, SIGNAL_RELEASE, 0) == true);
+    assert(ldMsgEmit(app_state->ld_scene->ptMsgQueue, button->widget.ld_widget, SIGNAL_RELEASE, 0) == true);
     ldMsgProcess(app_state->ld_scene);
     assert(tinyui_button_get_pressed(button, &pressed) == 0);
     assert(pressed == 0);
 
     assert(tinyui_button_set_checkable(button, 1) == 0);
     assert(tinyui_button_set_pressed(button, 0) == 0);
-    assert(ldMsgEmit(app_state->ld_scene->ptMsgQueue, backend->ld_widget, SIGNAL_PRESS, 0) == true);
+    assert(ldMsgEmit(app_state->ld_scene->ptMsgQueue, button->widget.ld_widget, SIGNAL_PRESS, 0) == true);
     ldMsgProcess(app_state->ld_scene);
     assert(tinyui_button_get_pressed(button, &pressed) == 0);
     assert(pressed == 1);
-    assert(ldMsgEmit(app_state->ld_scene->ptMsgQueue, backend->ld_widget, SIGNAL_RELEASE, 0) == true);
+    assert(ldMsgEmit(app_state->ld_scene->ptMsgQueue, button->widget.ld_widget, SIGNAL_RELEASE, 0) == true);
     ldMsgProcess(app_state->ld_scene);
     assert(tinyui_button_get_pressed(button, &pressed) == 0);
     assert(pressed == 1);
-    assert(ldMsgEmit(app_state->ld_scene->ptMsgQueue, backend->ld_widget, SIGNAL_PRESS, 0) == true);
+    assert(ldMsgEmit(app_state->ld_scene->ptMsgQueue, button->widget.ld_widget, SIGNAL_PRESS, 0) == true);
     ldMsgProcess(app_state->ld_scene);
     assert(tinyui_button_get_pressed(button, &pressed) == 0);
     assert(pressed == 0);
@@ -2080,8 +2034,7 @@ static void test_button_j4_contract(struct tinyui_window *parent,
 static void test_props_invalid_values_do_not_attach_backend_children(struct tinyui_window *parent,
                                                                      struct tinyui_image_source *image_source)
 {
-    struct tinyui_backend_widget *parent_backend = parent->widget.backend_widget;
-    int child_count = backend_child_count(parent_backend);
+    int child_count = ld_child_count(&parent->widget);
     struct tinyui_label_props bad_label_padding = {
         .id = "bad_label_padding",
         .padding = -1,
@@ -2330,7 +2283,6 @@ static void test_props_initial_values(struct tinyui_app *app,
     assert(props_button->id == (const char *)"props_button");
 
     assert_widget_props(&props_win->widget,
-                        props_win->widget.backend_widget,
                         "window-card",
                         common_cookie,
                         0x101112,
@@ -2339,8 +2291,7 @@ static void test_props_initial_values(struct tinyui_app *app,
                         3,
                         4);
     {
-        struct tinyui_backend_widget *props_win_backend =
-            (struct tinyui_backend_widget *)props_win->widget.backend_widget;
+        struct tinyui_backend_widget *props_win_backend = tinyui_window_get_backend_widget(props_win);
         ldWindow_t *ld_window = (ldWindow_t *)props_win_backend->ld_widget;
         assert(ld_window != 0);
         assert(ld_window->pLayoutPaddingGroup != 0);
@@ -2360,7 +2311,6 @@ static void test_props_initial_values(struct tinyui_app *app,
         assert(ld_window->ptMaskTile == win_props.background_source->mask_tile);
     }
     assert_widget_props(&props_label->widget,
-                        props_label->widget.backend_widget,
                         "label-title",
                         common_cookie,
                         0x212223,
@@ -2373,7 +2323,6 @@ static void test_props_initial_values(struct tinyui_app *app,
     assert(tinyui_label_get_bg_color(props_label, &rgb) == 0);
     assert(rgb == quantize_rgb_to_ld_roundtrip(0x212223U));
     assert_widget_props(&props_text->widget,
-                        props_text->widget.backend_widget,
                         "text-body",
                         common_cookie,
                         0x313233,
@@ -2382,7 +2331,6 @@ static void test_props_initial_values(struct tinyui_app *app,
                         7,
                         8);
     assert_widget_props(&props_image->widget,
-                        props_image->widget.backend_widget,
                         "image-frame",
                         common_cookie,
                         0x414243,
@@ -2391,7 +2339,6 @@ static void test_props_initial_values(struct tinyui_app *app,
                         9,
                         10);
     assert_widget_props(&props_cb->widget,
-                        props_cb->widget.backend_widget,
                         "checkbox-row",
                         common_cookie,
                         0x515253,
@@ -2400,7 +2347,6 @@ static void test_props_initial_values(struct tinyui_app *app,
                         11,
                         12);
     assert_widget_props(&props_sw->widget,
-                        props_sw->widget.backend_widget,
                         "switch-row",
                         common_cookie,
                         0x616263,
@@ -2409,7 +2355,6 @@ static void test_props_initial_values(struct tinyui_app *app,
                         13,
                         14);
     assert_widget_props(&props_slider->widget,
-                        props_slider->widget.backend_widget,
                         "slider-row",
                         common_cookie,
                         0x717273,
@@ -2418,7 +2363,6 @@ static void test_props_initial_values(struct tinyui_app *app,
                         15,
                         16);
     assert_widget_props(&props_button->widget,
-                        props_button->widget.backend_widget,
                         "button-primary",
                         button_cookie,
                         0x818283,
@@ -2429,18 +2373,15 @@ static void test_props_initial_values(struct tinyui_app *app,
 
     assert(props_label->widget.text == (const char *)"Props label");
     assert(props_label->widget.font == font);
-    assert(((struct tinyui_backend_widget *)props_label->widget.backend_widget)->font == font);
     assert(props_label->widget.width == 101);
     assert(props_label->widget.height == 21);
 
     assert(props_text->widget.text == (const char *)"Props body");
     assert(props_text->widget.font == font);
-    assert(((struct tinyui_backend_widget *)props_text->widget.backend_widget)->font == font);
     assert(props_text->widget.width == 102);
     assert(props_text->widget.height == 22);
 
     assert(props_image->source == image_source);
-    assert(((struct tinyui_backend_widget *)props_image->widget.backend_widget)->image_source == image_source);
     assert(props_image->widget.width == 103);
     assert(props_image->widget.height == 23);
 
@@ -2468,9 +2409,9 @@ static void test_props_initial_values(struct tinyui_app *app,
     assert(props_slider->widget.width == 106);
     assert(props_slider->widget.height == 26);
     assert_slider_has_bound_images(props_slider, image_source, image_source);
-    assert(((ldSlider_t *)((struct tinyui_backend_widget *)props_slider->widget.backend_widget)->ld_widget)->isHorizontal == false);
-    assert(((ldSlider_t *)((struct tinyui_backend_widget *)props_slider->widget.backend_widget)->ld_widget)->indicWidth == 12);
-    assert(((ldSlider_t *)((struct tinyui_backend_widget *)props_slider->widget.backend_widget)->ld_widget)->slimSize == 5);
+    assert(((ldSlider_t *)props_slider->widget.ld_widget)->isHorizontal == false);
+    assert(((ldSlider_t *)props_slider->widget.ld_widget)->indicWidth == 12);
+    assert(((ldSlider_t *)props_slider->widget.ld_widget)->slimSize == 5);
     assert(props_button->widget.text == (const char *)"Props button");
     assert(props_button->on_clicked == on_button_clicked);
     assert(props_button->user_data == button_cookie);
@@ -2478,10 +2419,10 @@ static void test_props_initial_values(struct tinyui_app *app,
     assert(props_button->widget.width == 107);
     assert(props_button->widget.height == 27);
     assert_button_has_bound_images(props_button, image_source, image_source);
-    assert(ldButtonGetTransparent((ldButton_t *)((struct tinyui_backend_widget *)props_button->widget.backend_widget)->ld_widget) == true);
-    assert(ldButtonGetCheckable((ldButton_t *)((struct tinyui_backend_widget *)props_button->widget.backend_widget)->ld_widget) == true);
-    assert(ldButtonGetKeyValue((ldButton_t *)((struct tinyui_backend_widget *)props_button->widget.backend_widget)->ld_widget) == 0x3344U);
-    assert(ldButtonGetPress((ldButton_t *)((struct tinyui_backend_widget *)props_button->widget.backend_widget)->ld_widget) == true);
+    assert(ldButtonGetTransparent((ldButton_t *)props_button->widget.ld_widget) == true);
+    assert(ldButtonGetCheckable((ldButton_t *)props_button->widget.ld_widget) == true);
+    assert(ldButtonGetKeyValue((ldButton_t *)props_button->widget.ld_widget) == 0x3344U);
+    assert(ldButtonGetPress((ldButton_t *)props_button->widget.ld_widget) == true);
 
     test_props_invalid_values_do_not_attach_backend_children(props_win, image_source);
 
@@ -2516,10 +2457,10 @@ static void test_widget_destroy_clears_backend(struct tinyui_window *win)
 
     assert(label != 0);
     widget = &label->widget;
-    assert(widget->backend_widget != 0);
+    assert(widget->ld_widget != 0);
 
     assert(tinyui_widget_destroy(widget) == 0);
-    assert(widget->backend_widget == 0);
+    assert(widget->ld_widget == 0);
 
     assert(tinyui_widget_destroy(0) == -1);
 }
@@ -2527,18 +2468,13 @@ static void test_widget_destroy_clears_backend(struct tinyui_window *win)
 static void test_combo_box_public_create_uses_widget_local_backend(struct tinyui_window *win)
 {
     struct tinyui_combo_box *combo_box;
-    struct tinyui_backend_widget *backend;
 
     assert(win != 0);
     combo_box = tinyui_combo_box_create(win, "combo_box_widget_local");
     assert(combo_box != 0);
 
-    backend = (struct tinyui_backend_widget *)combo_box->widget.backend_widget;
-    assert(backend != 0);
-    assert(backend->kind == TINYUI_BACKEND_WIDGET_COMBO_BOX);
-    assert(backend->host_widget == &combo_box->widget);
-    assert(backend->parent == win->widget.backend_widget);
-    assert(backend->ld_widget != 0);
+    assert(combo_box->widget.ld_widget != 0);
+    assert(combo_box->widget.kind == TINYUI_BACKEND_WIDGET_COMBO_BOX);
 }
 
 int main(void)
@@ -2606,13 +2542,13 @@ int main(void)
         .img_tile = &button_press_tile,
         .mask_tile = &button_press_mask_tile,
     };
-    struct tinyui_backend_widget *sw_backend;
-    struct tinyui_backend_widget *cb_backend;
-    struct tinyui_backend_widget *slider_backend;
-    struct tinyui_backend_widget *button_backend;
-    struct tinyui_backend_widget *label_backend;
-    struct tinyui_backend_widget *text_backend;
-    struct tinyui_backend_widget *image_backend;
+    struct tinyui_widget *sw_backend;
+    struct tinyui_widget *cb_backend;
+    struct tinyui_widget *slider_backend;
+    struct tinyui_widget *button_backend;
+    struct tinyui_widget *label_backend;
+    struct tinyui_widget *text_backend;
+    struct tinyui_widget *image_backend;
     struct tinyui_app *app_state;
     int button_cookie = 7;
     int common_cookie = 9;
@@ -2639,13 +2575,13 @@ int main(void)
     image = tinyui_image_create(win, "logo");
 
     assert(theme && sw && cb && slider && button && label && text && image);
-    sw_backend = sw->widget.backend_widget;
-    cb_backend = cb->widget.backend_widget;
-    slider_backend = slider->widget.backend_widget;
-    button_backend = button->widget.backend_widget;
-    label_backend = label->widget.backend_widget;
-    text_backend = text->widget.backend_widget;
-    image_backend = image->widget.backend_widget;
+    sw_backend = &sw->widget;
+    cb_backend = &cb->widget;
+    slider_backend = &slider->widget;
+    button_backend = &button->widget;
+    label_backend = &label->widget;
+    text_backend = &text->widget;
+    image_backend = &image->widget;
     app_state = app;
     assert(app_state != 0);
     assert(app_state->ld_scene != 0);

@@ -48,23 +48,24 @@ static arm_2d_tile_t *const g_icon_slider_masks[] = {
 
 #define TINYUI_ICON_SLIDER_NATIVE_MAX_ITEMS 8
 
-static ldIconSlider_t *tinyui_icon_slider_get_ld(void *backend_widget)
+/* C1: backend_widget is gone; pass struct tinyui_widget * directly */
+static ldIconSlider_t *tinyui_icon_slider_get_ld(struct tinyui_widget *w)
 {
-    struct tinyui_backend_widget *widget = backend_widget;
-
-    if (widget == 0 || widget->ld_widget == 0) {
+    if (w == 0 || w->ld_widget == 0 || w->kind != TINYUI_BACKEND_WIDGET_ICON_SLIDER) {
         return 0;
     }
 
-    return (ldIconSlider_t *)widget->ld_widget;
+    return (ldIconSlider_t *)w->ld_widget;
 }
 
-static int tinyui_icon_slider_backend_set_selected_index(void *backend_widget, int index);
+static int tinyui_icon_slider_backend_set_selected_index(struct tinyui_widget *w, int index);
 
 static bool tinyui_icon_slider_native_slot(struct ld_scene_t *scene, ldMsg_t msg)
 {
-    struct tinyui_backend_widget *backend;
+    /* C1-T7: pInfo now points to tinyui_widget, not tinyui_backend_widget */
+    struct tinyui_widget *w;
     struct tinyui_icon_slider *icon_slider;
+    ldIconSlider_t *ld_icon_slider;
     int selected_index;
     int previous_selected_index;
 
@@ -74,12 +75,12 @@ static bool tinyui_icon_slider_native_slot(struct ld_scene_t *scene, ldMsg_t msg
         return false;
     }
 
-    backend = (struct tinyui_backend_widget *)((ldBase_t *)msg.ptSender)->pInfo;
-    if (backend == 0 || backend->host_widget == 0) {
+    w = (struct tinyui_widget *)((ldBase_t *)msg.ptSender)->pInfo;
+    if (w == 0) {
         return false;
     }
 
-    icon_slider = (struct tinyui_icon_slider *)backend->host_widget;
+    icon_slider = (struct tinyui_icon_slider *)w;
     selected_index = (int)msg.value;
     if (selected_index < 0 || selected_index >= icon_slider->item_count) {
         return false;
@@ -90,16 +91,23 @@ static bool tinyui_icon_slider_native_slot(struct ld_scene_t *scene, ldMsg_t msg
         return false;
     }
 
-    if (tinyui_widget_claim_backend_focus(backend) != 0) {
+    if (tinyui_widget_claim_backend_focus(w) != 0) {
         return false;
     }
 
-    if (tinyui_icon_slider_backend_set_selected_index(backend, selected_index) != 0) {
+    /* Inline set_selected_index using folded fields (C1-T7) */
+    if (w->kind != TINYUI_BACKEND_WIDGET_ICON_SLIDER ||
+        w->ld_widget == 0 ||
+        selected_index < 0 ||
+        selected_index >= (int)w->list_item_count) {
         return false;
     }
+    ld_icon_slider = (ldIconSlider_t *)w->ld_widget;
+    ld_icon_slider->selectIconOrPage = (uint8_t)selected_index;
+    ld_icon_slider->isWaitMove = true;
+    w->value = selected_index;
 
     icon_slider->selected_index = selected_index;
-    backend->value = selected_index;
     if (previous_selected_index == selected_index) {
         return false;
     }
@@ -109,99 +117,94 @@ static bool tinyui_icon_slider_native_slot(struct ld_scene_t *scene, ldMsg_t msg
     return false;
 }
 
-static int tinyui_icon_slider_backend_add_item(void *backend_widget, const char *id, const char *text)
+static int tinyui_icon_slider_backend_add_item(struct tinyui_widget *w, const char *id, const char *text)
 {
-    struct tinyui_backend_widget *widget = backend_widget;
     ldIconSlider_t *ld_icon_slider;
     int index;
 
-    if (widget == 0 ||
-        widget->kind != TINYUI_BACKEND_WIDGET_ICON_SLIDER ||
-        widget->ld_widget == 0 ||
+    if (w == 0 ||
+        w->kind != TINYUI_BACKEND_WIDGET_ICON_SLIDER ||
+        w->ld_widget == 0 ||
         id == 0 ||
         text == 0 ||
-        widget->list_item_count >= TINYUI_ICON_SLIDER_NATIVE_MAX_ITEMS) {
+        w->list_item_count >= TINYUI_ICON_SLIDER_NATIVE_MAX_ITEMS) {
         return -1;
     }
 
-    ld_icon_slider = tinyui_icon_slider_get_ld(backend_widget);
+    ld_icon_slider = tinyui_icon_slider_get_ld(w);
     if (ld_icon_slider == 0) {
         return -1;
     }
 
-    index = widget->list_item_count;
+    index = w->list_item_count;
     ldIconSliderAddIcon(ld_icon_slider,
                         g_icon_slider_tiles[index % 4],
                         g_icon_slider_masks[index % 4],
                         (const uint8_t *)text);
-    widget->list_item_ids[index] = id;
-    widget->list_item_count++;
+    w->list_item_count++;
     return 0;
 }
 
-static int tinyui_icon_slider_backend_add_item_with_source(void *backend_widget,
+static int tinyui_icon_slider_backend_add_item_with_source(struct tinyui_widget *w,
                                                            const char *id,
                                                            const char *text,
                                                            struct tinyui_image_source *source)
 {
-    struct tinyui_backend_widget *widget = backend_widget;
     ldIconSlider_t *ld_icon_slider;
     int index;
 
-    if (widget == 0 ||
-        widget->kind != TINYUI_BACKEND_WIDGET_ICON_SLIDER ||
-        widget->ld_widget == 0 ||
+    if (w == 0 ||
+        w->kind != TINYUI_BACKEND_WIDGET_ICON_SLIDER ||
+        w->ld_widget == 0 ||
         id == 0 ||
         text == 0 ||
         source == 0 ||
         source->img_tile == 0 ||
         source->mask_tile == 0 ||
-        widget->list_item_count >= TINYUI_ICON_SLIDER_NATIVE_MAX_ITEMS) {
+        w->list_item_count >= TINYUI_ICON_SLIDER_NATIVE_MAX_ITEMS) {
         return -1;
     }
 
-    ld_icon_slider = tinyui_icon_slider_get_ld(backend_widget);
+    ld_icon_slider = tinyui_icon_slider_get_ld(w);
     if (ld_icon_slider == 0) {
         return -1;
     }
 
-    index = widget->list_item_count;
+    index = w->list_item_count;
     ldIconSliderAddIcon(ld_icon_slider,
                         source->img_tile,
                         source->mask_tile,
                         (const uint8_t *)text);
-    widget->list_item_ids[index] = id;
-    widget->list_item_count++;
+    w->list_item_count++;
     return 0;
 }
 
-static int tinyui_icon_slider_backend_set_selected_index(void *backend_widget, int index)
+static int tinyui_icon_slider_backend_set_selected_index(struct tinyui_widget *w, int index)
 {
-    struct tinyui_backend_widget *widget = backend_widget;
     ldIconSlider_t *ld_icon_slider;
 
-    if (widget == 0 ||
-        widget->kind != TINYUI_BACKEND_WIDGET_ICON_SLIDER ||
-        widget->ld_widget == 0 ||
+    if (w == 0 ||
+        w->kind != TINYUI_BACKEND_WIDGET_ICON_SLIDER ||
+        w->ld_widget == 0 ||
         index < 0 ||
-        index >= widget->list_item_count) {
+        index >= w->list_item_count) {
         return -1;
     }
 
-    ld_icon_slider = tinyui_icon_slider_get_ld(backend_widget);
+    ld_icon_slider = tinyui_icon_slider_get_ld(w);
     if (ld_icon_slider == 0) {
         return -1;
     }
 
     ld_icon_slider->selectIconOrPage = (uint8_t)index;
     ld_icon_slider->isWaitMove = true;
-    widget->value = index;
+    w->value = index;
     return 0;
 }
 
-static int tinyui_icon_slider_backend_get_selected_index(void *backend_widget)
+static int tinyui_icon_slider_backend_get_selected_index(struct tinyui_widget *w)
 {
-    ldIconSlider_t *ld_icon_slider = tinyui_icon_slider_get_ld(backend_widget);
+    ldIconSlider_t *ld_icon_slider = tinyui_icon_slider_get_ld(w);
 
     if (ld_icon_slider == 0) {
         return -1;
@@ -210,9 +213,9 @@ static int tinyui_icon_slider_backend_get_selected_index(void *backend_widget)
     return (int)ld_icon_slider->selectIconOrPage;
 }
 
-static int tinyui_icon_slider_backend_set_horizontal(void *backend_widget, int horizontal)
+static int tinyui_icon_slider_backend_set_horizontal(struct tinyui_widget *w, int horizontal)
 {
-    ldIconSlider_t *ld_icon_slider = tinyui_icon_slider_get_ld(backend_widget);
+    ldIconSlider_t *ld_icon_slider = tinyui_icon_slider_get_ld(w);
 
     if (ld_icon_slider == 0) {
         return -1;
@@ -222,9 +225,9 @@ static int tinyui_icon_slider_backend_set_horizontal(void *backend_widget, int h
     return 0;
 }
 
-static int tinyui_icon_slider_backend_get_horizontal(void *backend_widget, int *horizontal)
+static int tinyui_icon_slider_backend_get_horizontal(struct tinyui_widget *w, int *horizontal)
 {
-    ldIconSlider_t *ld_icon_slider = tinyui_icon_slider_get_ld(backend_widget);
+    ldIconSlider_t *ld_icon_slider = tinyui_icon_slider_get_ld(w);
 
     if (ld_icon_slider == 0 || horizontal == 0) {
         return -1;
@@ -234,9 +237,9 @@ static int tinyui_icon_slider_backend_get_horizontal(void *backend_widget, int *
     return 0;
 }
 
-static int tinyui_icon_slider_backend_set_speed(void *backend_widget, int speed)
+static int tinyui_icon_slider_backend_set_speed(struct tinyui_widget *w, int speed)
 {
-    ldIconSlider_t *ld_icon_slider = tinyui_icon_slider_get_ld(backend_widget);
+    ldIconSlider_t *ld_icon_slider = tinyui_icon_slider_get_ld(w);
 
     if (ld_icon_slider == 0 || speed <= 0) {
         return -1;
@@ -246,16 +249,15 @@ static int tinyui_icon_slider_backend_set_speed(void *backend_widget, int speed)
     return 0;
 }
 
-static int tinyui_icon_slider_bind_host(void *backend_widget)
+static int tinyui_icon_slider_bind_host(struct tinyui_widget *w)
 {
-    struct tinyui_backend_widget *backend = backend_widget;
     ldIconSlider_t *ld_icon_slider;
 
-    if (backend == 0) {
+    if (w == 0) {
         return -1;
     }
 
-    ld_icon_slider = tinyui_icon_slider_get_ld(backend_widget);
+    ld_icon_slider = tinyui_icon_slider_get_ld(w);
     if (ld_icon_slider == 0) {
         return -1;
     }
@@ -290,13 +292,11 @@ static struct tinyui_icon_slider *tinyui_icon_slider_create_with_backend_config(
                                                                                 int pages)
 {
     struct tinyui_icon_slider *icon_slider;
-    struct tinyui_backend_widget *backend;
-    struct tinyui_backend_widget *parent_backend;
     struct tinyui_app *app_state;
     ldIconSlider_t *ld_icon_slider;
     uint16_t name_id;
 
-    if (parent == 0 || id == 0 || parent->backend_widget == 0) {
+    if (parent == 0 || id == 0) {
         return 0;
     }
 
@@ -316,9 +316,9 @@ static struct tinyui_icon_slider *tinyui_icon_slider_create_with_backend_config(
         pages = 1;
     }
 
-    parent_backend = (struct tinyui_backend_widget *)parent->backend_widget;
-    app_state = tinyui_runtime_bridge_backend_state_from_parent(parent_backend);
-    if (parent_backend->ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
+    /* C1: app_state and ld fields are directly on parent widget */
+    app_state = parent->owner;
+    if (parent->ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
         return 0;
     }
 
@@ -327,15 +327,8 @@ static struct tinyui_icon_slider *tinyui_icon_slider_create_with_backend_config(
         return 0;
     }
 
-    backend = calloc(1, sizeof(*backend));
-    if (backend == 0) {
-        free(icon_slider);
-        return 0;
-    }
-
-    name_id = tinyui_runtime_bridge_next_name_id(parent_backend);
+    name_id = ++app_state->next_ld_name_id;
     if (name_id == 0) {
-        free(backend);
         free(icon_slider);
         return 0;
     }
@@ -343,7 +336,7 @@ static struct tinyui_icon_slider *tinyui_icon_slider_create_with_backend_config(
     ld_icon_slider = ldIconSlider_init(app_state->ld_scene,
                                        NULL,
                                        name_id,
-                                       parent_backend->ld_name_id,
+                                       parent->ld_name_id,
                                        0,
                                        0,
                                        (int16_t)width,
@@ -355,32 +348,21 @@ static struct tinyui_icon_slider *tinyui_icon_slider_create_with_backend_config(
                                        (uint8_t)pages,
                                        (arm_2d_font_t *)&ARM_2D_FONT_6x8);
     if (ld_icon_slider == 0) {
-        free(backend);
         free(icon_slider);
         return 0;
     }
 
-    if (tinyui_widget_init_child(backend,
-                                         parent_backend,
-                                         TINYUI_BACKEND_WIDGET_ICON_SLIDER,
-                                         id,
-                                         parent_backend->theme) != 0) {
-        ldIconSlider_depose(app_state->ld_scene, ld_icon_slider);
-        free(backend);
-        free(icon_slider);
-        return 0;
-    }
-    backend->ld_widget = ld_icon_slider;
-    backend->ld_name_id = name_id;
-    backend->value = -1;
-    if (tinyui_widget_attach_child(parent_backend, backend) != 0) {
-        ldIconSlider_depose(app_state->ld_scene, ld_icon_slider);
-        free(backend);
-        free(icon_slider);
-        return 0;
-    }
+    /* C1: set ld fields directly on widget (no separate backend allocation) */
+    icon_slider->widget.ld_widget = ld_icon_slider;
+    icon_slider->widget.ld_name_id = name_id;
+    icon_slider->widget.kind = TINYUI_BACKEND_WIDGET_ICON_SLIDER;
+    icon_slider->widget.owner = app_state;
+    icon_slider->widget.value = -1;
+    icon_slider->widget.visible = 1;
+    icon_slider->widget.enabled = 1;
+    ((ldBase_t *)ld_icon_slider)->pInfo = &icon_slider->widget;
+    tinyui_runtime_bridge_bind_leaf_widget(&icon_slider->widget, app_state);
 
-    icon_slider->widget.backend_widget = backend;
     icon_slider->id = id;
     icon_slider->selected_index = -1;
     icon_slider->horizontal = 1;
@@ -389,13 +371,11 @@ static struct tinyui_icon_slider *tinyui_icon_slider_create_with_backend_config(
     icon_slider->columns = columns;
     icon_slider->rows = rows;
     icon_slider->pages = pages;
-    icon_slider->widget.visible = 1;
-    icon_slider->widget.enabled = 1;
-    if (tinyui_runtime_bridge_bind_host(icon_slider->widget.backend_widget, &icon_slider->widget) != 0 ||
-        tinyui_icon_slider_bind_host(icon_slider->widget.backend_widget) != 0) {
-        (void)tinyui_runtime_bridge_detach_from_parent(icon_slider->widget.backend_widget);
-        ldIconSlider_depose(app_state->ld_scene, ld_icon_slider);
-        free(backend);
+
+    if (tinyui_icon_slider_bind_host(&icon_slider->widget) != 0) {
+        if (app_state->ld_scene != 0) {
+            ldIconSlider_depose(app_state->ld_scene, ld_icon_slider);
+        }
         free(icon_slider);
         return 0;
     }
@@ -488,7 +468,7 @@ int tinyui_icon_slider_add_item(struct tinyui_icon_slider *icon_slider, const ch
         return -1;
     }
 
-    if (tinyui_icon_slider_backend_add_item(icon_slider->widget.backend_widget, id, text) != 0) {
+    if (tinyui_icon_slider_backend_add_item(&icon_slider->widget, id, text) != 0) {
         return -1;
     }
 
@@ -525,7 +505,7 @@ int tinyui_icon_slider_add_item_with_source(struct tinyui_icon_slider *icon_slid
         return -1;
     }
 
-    if (tinyui_icon_slider_backend_add_item_with_source(icon_slider->widget.backend_widget,
+    if (tinyui_icon_slider_backend_add_item_with_source(&icon_slider->widget,
                                                         id,
                                                         text,
                                                         source) != 0) {
@@ -571,7 +551,7 @@ int tinyui_icon_slider_set_selected_index(struct tinyui_icon_slider *icon_slider
         return -1;
     }
 
-    if (tinyui_icon_slider_backend_set_selected_index(icon_slider->widget.backend_widget, index) != 0) {
+    if (tinyui_icon_slider_backend_set_selected_index(&icon_slider->widget, index) != 0) {
         return -1;
     }
 
@@ -595,7 +575,7 @@ int tinyui_icon_slider_get_selected_index(const struct tinyui_icon_slider *icon_
     }
 
     selected_index =
-        tinyui_icon_slider_backend_get_selected_index((void *)icon_slider->widget.backend_widget);
+        tinyui_icon_slider_backend_get_selected_index((struct tinyui_widget *)&icon_slider->widget);
     if (selected_index >= 0 && selected_index < icon_slider->item_count) {
         ((struct tinyui_icon_slider *)icon_slider)->selected_index = selected_index;
         return selected_index;
@@ -618,7 +598,7 @@ int tinyui_icon_slider_set_horizontal(struct tinyui_icon_slider *icon_slider, in
         return -1;
     }
 
-    if (tinyui_icon_slider_backend_set_horizontal(icon_slider->widget.backend_widget, horizontal != 0) != 0) {
+    if (tinyui_icon_slider_backend_set_horizontal(&icon_slider->widget, horizontal != 0) != 0) {
         return -1;
     }
 
@@ -653,7 +633,7 @@ int tinyui_icon_slider_get_horizontal(const struct tinyui_icon_slider *icon_slid
         return -1;
     }
 
-    if (tinyui_icon_slider_backend_get_horizontal((void *)icon_slider->widget.backend_widget, horizontal) == 0) {
+    if (tinyui_icon_slider_backend_get_horizontal((struct tinyui_widget *)&icon_slider->widget, horizontal) == 0) {
         return 0;
     }
 
@@ -675,7 +655,7 @@ int tinyui_icon_slider_set_speed(struct tinyui_icon_slider *icon_slider, int spe
         return -1;
     }
 
-    if (tinyui_icon_slider_backend_set_speed(icon_slider->widget.backend_widget, speed) != 0) {
+    if (tinyui_icon_slider_backend_set_speed(&icon_slider->widget, speed) != 0) {
         return -1;
     }
 

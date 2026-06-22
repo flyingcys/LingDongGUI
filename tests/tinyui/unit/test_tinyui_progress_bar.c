@@ -59,21 +59,20 @@ static void test_progress_bar_create_and_backend_mapping(struct tinyui_window *w
     const char *progress_bar_widget_source_path =
         tinyui_test_repo_path_from_file(__FILE__, "tinyui/src/widgets/progress_bar.c");
     struct tinyui_progress_bar *bar = tinyui_progress_bar_create(win, "progress_direct_mapping");
-    struct tinyui_backend_widget *backend;
-    struct tinyui_backend_widget *parent_backend;
+    struct tinyui_widget *backend;
+    struct tinyui_widget *parent_backend;
     ldProgressBar_t *ld_progress_bar;
 
     assert(bar != 0);
-    backend = (struct tinyui_backend_widget *)bar->widget.backend_widget;
-    assert(backend != 0);
-    parent_backend = (struct tinyui_backend_widget *)win->widget.backend_widget;
-    assert(parent_backend != 0);
+    backend = &bar->widget;
+    assert(backend->ld_widget != 0);
+    parent_backend = &win->widget;
+    assert(parent_backend->ld_widget != 0);
     assert(backend->kind == TINYUI_BACKEND_WIDGET_PROGRESS_BAR);
     assert(backend->owner == parent_backend->owner);
-    assert(backend->root == parent_backend->root);
-    assert(backend->parent == parent_backend);
+    assert((ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)backend->ld_widget) == (ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)parent_backend->ld_widget));
+    assert(ldBaseGetParent((ldBase_t *)backend->ld_widget) == (ldBase_t *)parent_backend->ld_widget);
     assert(backend->ld_name_id != 0);
-    assert(backend->host_widget == &bar->widget);
     assert(backend->ld_event_bridge_scene != 0);
     assert(backend->ld_event_bridge_sender == backend->ld_widget);
     ld_progress_bar = (ldProgressBar_t *)backend->ld_widget;
@@ -86,8 +85,6 @@ static void test_progress_bar_create_and_backend_mapping(struct tinyui_window *w
                                        "tinyui_progress_bar_create_with_props_impl") == 1);
     assert(tinyui_test_source_contains(progress_bar_widget_source_path,
                                        "tinyui_backend_progress_bar_test_create_with_props_fail_before_inverted") == 0);
-    assert(tinyui_test_source_contains(progress_bar_widget_source_path,
-                                       "tinyui_progress_bar_create_with_props_impl") == 0);
 }
 
 static void test_progress_bar_create_and_props(struct tinyui_window *win)
@@ -180,19 +177,18 @@ static void test_progress_bar_horizontal_state(struct tinyui_window *win)
 
 static void test_progress_bar_create_with_props_failure_rolls_back_attached_child(struct tinyui_window *win)
 {
-    struct tinyui_backend_widget *parent_backend =
-        (struct tinyui_backend_widget *)win->widget.backend_widget;
-    struct tinyui_backend_widget *tail = parent_backend->first_child;
-    struct tinyui_backend_widget *next_before = 0;
+    ldBase_t *win_ld = (ldBase_t *)win->widget.ld_widget;
+    ldBase_t *tail_ld = ldBaseGetChildList(win_ld);
+    ldBase_t *next_before_ld = 0;
     struct tinyui_progress_bar *probe;
     struct tinyui_progress_bar *bar;
     struct tinyui_progress_bar_test_dispose_snapshot snapshot = {0};
 
-    while (tail != 0 && tail->next_sibling != 0) {
-        tail = tail->next_sibling;
+    while (tail_ld != 0 && ldBaseGetNextSibling(tail_ld) != 0) {
+        tail_ld = ldBaseGetNextSibling(tail_ld);
     }
-    if (tail != 0) {
-        next_before = tail->next_sibling;
+    if (tail_ld != 0) {
+        next_before_ld = ldBaseGetNextSibling(tail_ld);
     }
 
     tinyui_progress_bar_test_reset_state();
@@ -225,10 +221,10 @@ static void test_progress_bar_create_with_props_failure_rolls_back_attached_chil
     assert(snapshot.event_bridge_cleared == 1);
     assert(snapshot.ld_pinfo_cleared == 1);
     assert(tinyui_progress_bar_test_take_last_dispose_snapshot(&snapshot) == -1);
-    if (tail != 0) {
-        assert(tail->next_sibling == next_before);
+    if (tail_ld != 0) {
+        assert(ldBaseGetNextSibling(tail_ld) == next_before_ld);
     } else {
-        assert(parent_backend->first_child == 0);
+        assert(ldBaseGetChildList(win_ld) == 0);
     }
 
     tinyui_progress_bar_test_reset_state();
@@ -279,12 +275,12 @@ static void test_progress_bar_release_contract_covers_theme_and_config_boundary(
             .percent = 40,
             .horizontal = 1,
         });
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldProgressBar_t *ld_progress_bar;
 
     assert(bar != 0);
-    backend = (struct tinyui_backend_widget *)bar->widget.backend_widget;
-    assert(backend != 0);
+    backend = &bar->widget;
+    assert(backend->ld_widget != 0);
     assert(backend->kind == TINYUI_BACKEND_WIDGET_PROGRESS_BAR);
     assert(backend->style_class != 0);
     assert(strcmp(backend->style_class, "meter") == 0);
@@ -303,7 +299,7 @@ static void test_progress_bar_release_contract_covers_theme_and_config_boundary(
 static void test_progress_bar_native_skin_color_and_inverted_round_trip(struct tinyui_window *win)
 {
     struct tinyui_progress_bar *bar = tinyui_progress_bar_create(win, "progress_native_skin");
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldProgressBar_t *ld_progress_bar;
     arm_2d_tile_t bg_tile = {0};
     arm_2d_tile_t bg_mask = {0};
@@ -329,8 +325,8 @@ static void test_progress_bar_native_skin_color_and_inverted_round_trip(struct t
     };
 
     assert(bar != 0);
-    backend = (struct tinyui_backend_widget *)bar->widget.backend_widget;
-    assert(backend != 0);
+    backend = &bar->widget;
+    assert(backend->ld_widget != 0);
     ld_progress_bar = (ldProgressBar_t *)backend->ld_widget;
     assert(ld_progress_bar != 0);
 
@@ -369,7 +365,7 @@ static void test_progress_bar_native_skin_color_and_inverted_round_trip(struct t
 static void test_progress_bar_init_image_and_shared_base_aliases_round_trip(struct tinyui_window *win)
 {
     struct tinyui_progress_bar *bar = tinyui_progress_bar_create(win, "progress_alias");
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldProgressBar_t *ld_progress_bar;
     arm_2d_tile_t bg_tile = {0};
     arm_2d_tile_t bg_mask = {0};
@@ -391,8 +387,8 @@ static void test_progress_bar_init_image_and_shared_base_aliases_round_trip(stru
     };
 
     assert(bar != 0);
-    backend = (struct tinyui_backend_widget *)bar->widget.backend_widget;
-    assert(backend != 0);
+    backend = &bar->widget;
+    assert(backend->ld_widget != 0);
     ld_progress_bar = (ldProgressBar_t *)backend->ld_widget;
     assert(ld_progress_bar != 0);
 

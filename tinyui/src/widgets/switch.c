@@ -18,36 +18,17 @@
 
 #include "internal.h"
 #include "switch.h"
-#include "runtime_bridge.h"
-#include "ldSwitch.h"
+#include "../core/runtime_bridge.h"
+#include "../../../src/gui/ldSwitch.h"
 
 #include <stdlib.h>
 
-static struct tinyui_backend_widget *tinyui_switch_backend(struct tinyui_switch *sw)
-{
-    struct tinyui_backend_widget *backend;
-
-    if (sw == 0 || sw->widget.backend_widget == 0) {
-        return 0;
-    }
-
-    backend = (struct tinyui_backend_widget *)sw->widget.backend_widget;
-    if (backend->kind != TINYUI_BACKEND_WIDGET_SWITCH || backend->ld_widget == 0) {
-        return 0;
-    }
-
-    return backend;
-}
-
 static ldSwitch_t *tinyui_switch_get_ld(struct tinyui_switch *sw)
 {
-    struct tinyui_backend_widget *backend = tinyui_switch_backend(sw);
-
-    if (backend == 0) {
+    if (sw == 0 || sw->widget.kind != TINYUI_BACKEND_WIDGET_SWITCH || sw->widget.ld_widget == 0) {
         return 0;
     }
-
-    return (ldSwitch_t *)backend->ld_widget;
+    return (ldSwitch_t *)sw->widget.ld_widget;
 }
 
 static int tinyui_switch_nav_dir_to_ld(int direction, int *ld_dir)
@@ -78,43 +59,33 @@ static int tinyui_switch_attach_native(struct tinyui_switch *sw,
                                        struct tinyui_window *parent,
                                        const char *id)
 {
-    struct tinyui_backend_widget *widget;
-    struct tinyui_backend_widget *parent_widget;
     struct tinyui_app *app_state;
     ldSwitch_t *ld_switch;
     uint16_t name_id;
 
-    if (sw == 0 || parent == 0 || id == 0 || parent->widget.backend_widget == 0) {
+    if (sw == 0 || parent == 0 || id == 0 || parent->widget.ld_widget == 0) {
         return -1;
     }
 
-    parent_widget = (struct tinyui_backend_widget *)parent->widget.backend_widget;
-    app_state = tinyui_runtime_bridge_backend_state_from_parent(parent_widget);
-    if (app_state == 0 || app_state->ld_scene == 0 || parent_widget->ld_widget == 0) {
+    app_state = parent->widget.owner;
+    if (app_state == 0 || app_state->ld_scene == 0) {
         return -1;
     }
 
-    widget = calloc(1, sizeof(*widget));
-    if (widget == 0) {
-        return -1;
-    }
-
-    name_id = tinyui_runtime_bridge_next_name_id(parent_widget);
+    name_id = ++app_state->next_ld_name_id;
     if (name_id == 0) {
-        free(widget);
         return -1;
     }
 
     ld_switch = ldSwitch_init(app_state->ld_scene,
                               0,
                               name_id,
-                              parent_widget->ld_name_id,
+                              parent->widget.ld_name_id,
                               0,
                               0,
                               48,
                               24);
     if (ld_switch == 0) {
-        free(widget);
         return -1;
     }
 
@@ -124,32 +95,12 @@ static int tinyui_switch_attach_native(struct tinyui_switch *sw,
                      GLCD_COLOR_WHITE,
                      GLCD_COLOR_WHITE);
 
-    if (tinyui_widget_init_child(widget,
-                                         parent_widget,
-                                         TINYUI_BACKEND_WIDGET_SWITCH,
-                                         id,
-                                         parent_widget->theme) != 0) {
-        ldSwitch_depose(app_state->ld_scene, ld_switch);
-        free(widget);
-        return -1;
-    }
-
-    widget->ld_widget = ld_switch;
-    widget->ld_name_id = name_id;
-    if (tinyui_widget_attach_child(parent_widget, widget) != 0) {
-        ldSwitch_depose(app_state->ld_scene, ld_switch);
-        free(widget);
-        return -1;
-    }
-
-    sw->widget.backend_widget = widget;
-    if (tinyui_runtime_bridge_bind_host(sw->widget.backend_widget, &sw->widget) != 0) {
-        (void)tinyui_runtime_bridge_detach_from_parent(sw->widget.backend_widget);
-        ldSwitch_depose(app_state->ld_scene, ld_switch);
-        free(widget);
-        sw->widget.backend_widget = 0;
-        return -1;
-    }
+    sw->widget.ld_widget  = ld_switch;
+    sw->widget.ld_name_id = name_id;
+    sw->widget.kind       = TINYUI_BACKEND_WIDGET_SWITCH;
+    sw->widget.owner      = app_state;
+    ((ldBase_t *)ld_switch)->pInfo = &sw->widget;
+    tinyui_runtime_bridge_bind_leaf_widget(&sw->widget, app_state);
 
     return 0;
 }
@@ -219,7 +170,6 @@ struct tinyui_switch *tinyui_switch_create_with_props(struct tinyui_window *pare
                                                       const struct tinyui_switch_props *props)
 {
     struct tinyui_switch *sw;
-    struct tinyui_backend_widget *backend;
 
     if (!tinyui_switch_props_are_valid(props)) {
         return 0;
@@ -230,11 +180,10 @@ struct tinyui_switch *tinyui_switch_create_with_props(struct tinyui_window *pare
         return 0;
     }
 
-    backend = (struct tinyui_backend_widget *)sw->widget.backend_widget;
     sw->checked = props->checked != 0;
     sw->cb = 0;
     sw->user_data = 0;
-    if (tinyui_widget_update_value(backend,
+    if (tinyui_widget_update_value(&sw->widget,
                                    sw->checked,
                                    0,
                                    &sw->widget,
@@ -302,12 +251,12 @@ int tinyui_switch_set_checked(struct tinyui_switch *sw, int checked)
         return 0;
     }
 
-    if (sw->widget.backend_widget == 0) {
+    if (sw->widget.ld_widget == 0) {
         return -1;
     }
 
     sw->checked = normalized_checked;
-    return tinyui_widget_update_value(sw->widget.backend_widget,
+    return tinyui_widget_update_value(&sw->widget,
                                       sw->checked,
                                       sw->cb,
                                       &sw->widget,
@@ -602,7 +551,6 @@ int tinyui_switch_can_navigate(struct tinyui_switch *sw, int direction, int *can
 
 int tinyui_switch_navigate(struct tinyui_switch *sw, int direction)
 {
-    struct tinyui_backend_widget *backend;
     struct tinyui_app *app_state;
     ldSwitch_t *ld_switch;
     int ld_dir;
@@ -611,20 +559,19 @@ int tinyui_switch_navigate(struct tinyui_switch *sw, int direction)
         return -1;
     }
 
-    backend = tinyui_switch_backend(sw);
-    if (backend == 0 || tinyui_switch_nav_dir_to_ld(direction, &ld_dir) != 0) {
+    if (tinyui_switch_nav_dir_to_ld(direction, &ld_dir) != 0) {
         return -1;
     }
 
-    app_state = tinyui_runtime_bridge_backend_state_from_parent(backend);
-    ld_switch = (ldSwitch_t *)backend->ld_widget;
-    if (app_state == 0 || app_state->ld_scene == 0 || ld_switch == 0) {
+    ld_switch = tinyui_switch_get_ld(sw);
+    app_state = sw->widget.owner;
+    if (ld_switch == 0 || app_state == 0 || app_state->ld_scene == 0) {
         return -1;
     }
 
     ldSwitchNavigate(app_state->ld_scene, ld_switch, (ldNavDir_t)ld_dir);
     sw->checked = ldSwitchIsChecked(ld_switch) ? 1 : 0;
-    backend->value = sw->checked;
+    sw->widget.value = sw->checked;
     return 0;
 }
 

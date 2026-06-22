@@ -2,6 +2,7 @@
 #include "graph.h"
 #include "window.h"
 #include "../../../src/gui/ldGraph.h"
+#include "../../../src/gui/ldBase.h"
 #include "internal.h"
 #include "tinyui_test_support.h"
 
@@ -53,21 +54,20 @@ static arm_2d_tile_t g_large_graph_point_mask = {
 static void test_graph_create_builds_direct_backend_mapping(struct tinyui_window *win)
 {
     struct tinyui_graph *graph = tinyui_graph_create(win, "graph_direct_mapping", 2);
-    struct tinyui_backend_widget *backend;
-    struct tinyui_backend_widget *parent_backend;
+    struct tinyui_widget *backend;
+    struct tinyui_widget *parent_backend;
     ldGraph_t *ld_graph;
 
     assert(graph != 0);
-    backend = (struct tinyui_backend_widget *)graph->widget.backend_widget;
-    assert(backend != 0);
-    parent_backend = (struct tinyui_backend_widget *)win->widget.backend_widget;
-    assert(parent_backend != 0);
+    backend = &graph->widget;
+    assert(backend->ld_widget != 0);
+    parent_backend = &win->widget;
+    assert(parent_backend->ld_widget != 0);
     assert(backend->kind == TINYUI_BACKEND_WIDGET_GRAPH);
     assert(backend->owner == parent_backend->owner);
-    assert(backend->root == parent_backend->root);
-    assert(backend->parent == parent_backend);
+    assert((ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)backend->ld_widget) == (ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)parent_backend->ld_widget));
+    assert(ldBaseGetParent((ldBase_t *)backend->ld_widget) == (ldBase_t *)parent_backend->ld_widget);
     assert(backend->ld_name_id != 0);
-    assert(backend->host_widget == &graph->widget);
     assert(backend->ld_event_bridge_scene != 0);
     assert(backend->ld_event_bridge_sender == backend->ld_widget);
     ld_graph = (ldGraph_t *)backend->ld_widget;
@@ -81,7 +81,7 @@ static void test_graph_series_value_readback_survives_frame_update(void)
     struct tinyui_app *app;
     struct tinyui_window *win;
     struct tinyui_graph *graph;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldGraph_t *ld_graph;
     int series;
 
@@ -101,8 +101,8 @@ static void test_graph_series_value_readback_survives_frame_update(void)
     assert(tinyui_graph_get_series_count(graph) == 1);
     assert(tinyui_graph_get_value(graph, series, 2) == 55);
 
-    backend = (struct tinyui_backend_widget *)graph->widget.backend_widget;
-    assert(backend != 0);
+    backend = &graph->widget;
+    assert(backend->ld_widget != 0);
     ld_graph = (ldGraph_t *)backend->ld_widget;
     assert(ld_graph != 0);
     assert(ld_graph->seriesCount == 1);
@@ -115,7 +115,7 @@ static void test_graph_visible_output_matches_series_updates(void)
     struct tinyui_app *app;
     struct tinyui_window *win;
     struct tinyui_graph *graph;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldGraph_t *ld_graph;
     int series;
 
@@ -136,8 +136,8 @@ static void test_graph_visible_output_matches_series_updates(void)
     assert(tinyui_graph_get_value(graph, series, 1) == 25);
     assert(tinyui_graph_get_value(graph, series, 2) == 45);
 
-    backend = (struct tinyui_backend_widget *)graph->widget.backend_widget;
-    assert(backend != 0);
+    backend = &graph->widget;
+    assert(backend->ld_widget != 0);
     ld_graph = (ldGraph_t *)backend->ld_widget;
     assert(ld_graph != 0);
     assert(ld_graph->pSeries[series].pValueList[0] == 15);
@@ -151,7 +151,7 @@ static void test_graph_final_release_contract_covers_advanced_readback_boundary(
     struct tinyui_app *app;
     struct tinyui_window *win;
     struct tinyui_graph *graph;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldGraph_t *ld_graph;
     int first_series;
     int second_series;
@@ -184,8 +184,8 @@ static void test_graph_final_release_contract_covers_advanced_readback_boundary(
     assert(tinyui_graph_set_value(graph, second_series, 2, 15) == 0);
     assert(tinyui_graph_set_value(graph, second_series, 3, 20) == 0);
 
-    backend = (struct tinyui_backend_widget *)graph->widget.backend_widget;
-    assert(backend != 0);
+    backend = &graph->widget;
+    assert(backend->ld_widget != 0);
     assert(backend->kind == TINYUI_BACKEND_WIDGET_GRAPH);
     assert(backend->style_class == (const char *)"chart-card");
     ld_graph = (ldGraph_t *)backend->ld_widget;
@@ -209,7 +209,7 @@ static void test_graph_native_axis_grid_and_point_mask_round_trip(void)
     struct tinyui_app *app;
     struct tinyui_window *win;
     struct tinyui_graph *graph;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldGraph_t *ld_graph;
     struct tinyui_image_source point_source = {
         .img_tile = (arm_2d_tile_t *)&c_tileWhiteDotMask,
@@ -230,8 +230,8 @@ static void test_graph_native_axis_grid_and_point_mask_round_trip(void)
     assert(tinyui_graph_set_grid_offset(graph, 11) == 0);
     assert(tinyui_graph_set_point_mask_source(graph, &point_source) == 0);
 
-    backend = (struct tinyui_backend_widget *)graph->widget.backend_widget;
-    assert(backend != 0);
+    backend = &graph->widget;
+    assert(backend->ld_widget != 0);
     ld_graph = (ldGraph_t *)backend->ld_widget;
     assert(ld_graph != 0);
 
@@ -266,7 +266,7 @@ static void test_graph_move_add_and_set_value_reject_invalid_inputs_without_poll
     struct tinyui_app *app;
     struct tinyui_window *win;
     struct tinyui_graph *graph;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldGraph_t *ld_graph;
     int first_series;
     int second_series;
@@ -290,8 +290,8 @@ static void test_graph_move_add_and_set_value_reject_invalid_inputs_without_poll
     assert(tinyui_graph_set_value(graph, second_series, 1, 14) == 0);
     assert(tinyui_graph_set_value(graph, second_series, 2, 21) == 0);
 
-    backend = (struct tinyui_backend_widget *)graph->widget.backend_widget;
-    assert(backend != 0);
+    backend = &graph->widget;
+    assert(backend->ld_widget != 0);
     ld_graph = (ldGraph_t *)backend->ld_widget;
     assert(ld_graph != 0);
 
@@ -323,7 +323,7 @@ static void test_graph_init_and_shared_base_aliases_round_trip(void)
     struct tinyui_app *app;
     struct tinyui_window *win;
     struct tinyui_graph *graph;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldBase_t *ld_base;
 
     app = tinyui_app_create();
@@ -332,8 +332,8 @@ static void test_graph_init_and_shared_base_aliases_round_trip(void)
     assert(win != 0);
     graph = tinyui_graph_create(win, "graph_base_aliases", 2);
     assert(graph != 0);
-    backend = (struct tinyui_backend_widget *)graph->widget.backend_widget;
-    assert(backend != 0);
+    backend = &graph->widget;
+    assert(backend->ld_widget != 0);
     ld_base = (ldBase_t *)backend->ld_widget;
     assert(ld_base != 0);
 
@@ -359,7 +359,7 @@ static void test_graph_rejects_non_graph_backend_binding(void)
     struct tinyui_app *app;
     struct tinyui_window *win;
     struct tinyui_graph *graph;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldGraph_t *ld_graph;
     int original_kind;
     int original_x_axis;
@@ -378,8 +378,8 @@ static void test_graph_rejects_non_graph_backend_binding(void)
     graph = tinyui_graph_create(win, "graph_binding_guard", 2);
     assert(graph != 0);
 
-    backend = (struct tinyui_backend_widget *)graph->widget.backend_widget;
-    assert(backend != 0);
+    backend = &graph->widget;
+    assert(backend->ld_widget != 0);
     ld_graph = (ldGraph_t *)backend->ld_widget;
     assert(ld_graph != 0);
 
@@ -428,7 +428,7 @@ static void test_graph_point_mask_larger_than_frame_space_is_accepted_and_synced
     struct tinyui_app *app;
     struct tinyui_window *win;
     struct tinyui_graph *graph;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldGraph_t *ld_graph;
     struct tinyui_image_source large_point_source = {
         .img_tile = &g_large_graph_point_mask,
@@ -443,8 +443,8 @@ static void test_graph_point_mask_larger_than_frame_space_is_accepted_and_synced
     graph = tinyui_graph_create(win, "graph_large_mask", 2);
     assert(graph != 0);
 
-    backend = (struct tinyui_backend_widget *)graph->widget.backend_widget;
-    assert(backend != 0);
+    backend = &graph->widget;
+    assert(backend->ld_widget != 0);
     ld_graph = (ldGraph_t *)backend->ld_widget;
     assert(ld_graph != 0);
 

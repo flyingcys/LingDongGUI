@@ -148,7 +148,7 @@ static uint64_t make_hold_down_value_y(uint16_t offset_y)
     return (uint64_t)offset_y << 32;
 }
 
-static void reset_list_signal_counters(struct tinyui_backend_widget *backend)
+static void reset_list_signal_counters(struct tinyui_widget *backend)
 {
     (void)backend;
     list_selected_count = 0;
@@ -160,10 +160,10 @@ static void reset_list_signal_counters(struct tinyui_backend_widget *backend)
 
 static struct tinyui_app *list_app_state(struct tinyui_list *list)
 {
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
 
     assert(list != 0);
-    backend = (struct tinyui_backend_widget *)list->widget.backend_widget;
+    backend = &list->widget;
     assert(backend != 0);
     assert(backend->owner != 0);
     assert(backend->owner->ld_scene != 0);
@@ -172,11 +172,11 @@ static struct tinyui_app *list_app_state(struct tinyui_list *list)
 
 static void assert_list_selectable_state(struct tinyui_list *list, int expected_enabled)
 {
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldBase_t *ld_base;
 
     assert(list != 0);
-    backend = (struct tinyui_backend_widget *)list->widget.backend_widget;
+    backend = &list->widget;
     assert(backend != 0);
     ld_base = (ldBase_t *)backend->ld_widget;
     assert(ld_base != 0);
@@ -195,21 +195,20 @@ static void test_create_and_props(struct tinyui_window *win)
     };
     struct tinyui_list *list = tinyui_list_create(parent, "list");
     struct tinyui_list *list_with_props = tinyui_list_create_with_props(parent, &props);
-    struct tinyui_backend_widget *backend;
-    struct tinyui_backend_widget *parent_backend;
+    struct tinyui_widget *backend;
+    struct tinyui_widget *parent_backend;
 
     assert(list != 0);
     assert(list_with_props != 0);
-    backend = (struct tinyui_backend_widget *)list->widget.backend_widget;
-    parent_backend = (struct tinyui_backend_widget *)win->widget.backend_widget;
+    backend = &list->widget;
+    parent_backend = &win->widget;
     assert(backend != 0);
     assert(parent_backend != 0);
     assert(backend->kind == TINYUI_BACKEND_WIDGET_LIST);
     assert(backend->owner == parent_backend->owner);
-    assert(backend->root == parent_backend->root);
-    assert(backend->parent == parent_backend);
+    assert((ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)backend->ld_widget) == (ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)parent_backend->ld_widget));
+    assert(ldBaseGetParent((ldBase_t *)backend->ld_widget) == (ldBase_t *)parent_backend->ld_widget);
     assert(backend->ld_name_id != 0);
-    assert(backend->host_widget == &list->widget);
     assert(backend->ld_widget != 0);
     assert(((ldBase_t *)backend->ld_widget)->pInfo == backend);
 }
@@ -244,7 +243,7 @@ static void test_enabled_contract_and_native_selected_bridge(struct tinyui_windo
     int user_cookie = 23;
     struct tinyui_widget *parent;
     struct tinyui_list *list;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     struct tinyui_app *app_state;
     ldList_t *ld_list;
 
@@ -260,7 +259,7 @@ static void test_enabled_contract_and_native_selected_bridge(struct tinyui_windo
     assert(tinyui_list_add_item(list, "item_bluetooth", "Bluetooth") == 0);
     tinyui_list_set_on_selected(list, on_list_selected, &user_cookie);
 
-    backend = (struct tinyui_backend_widget *)list->widget.backend_widget;
+    backend = &list->widget;
     assert(backend != 0);
     assert(backend->owner != 0);
     app_state = backend->owner;
@@ -407,7 +406,7 @@ static void test_selected_index_readback_matches_native_queue_after_preselected_
     struct tinyui_window *owned_win;
     struct tinyui_widget *parent;
     struct tinyui_list *list;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     struct tinyui_app *app_state;
     ldList_t *ld_list;
     int user_cookie = 71;
@@ -427,7 +426,7 @@ static void test_selected_index_readback_matches_native_queue_after_preselected_
     assert(tinyui_list_set_selected_index(list, 1) == 0);
     assert(tinyui_list_get_selected_index(list) == 1);
 
-    backend = (struct tinyui_backend_widget *)list->widget.backend_widget;
+    backend = &list->widget;
     assert(backend != 0);
     app_state = backend->owner;
     assert(app_state != 0);
@@ -450,7 +449,7 @@ static void test_selected_index_readback_matches_native_queue_after_preselected_
                      make_signal_value_xy(10, 10)) == true);
     ldMsgProcess(app_state->ld_scene);
     {
-        int backend_selected = tinyui_list_get_selected_index(list->widget.backend_widget);
+        int backend_selected = tinyui_list_get_selected_index(&list->widget);
         int public_selected = tinyui_list_get_selected_index(list);
         assert(native_list_clicked_count == 1);
         assert(native_list_clicked_index == 0);
@@ -473,7 +472,7 @@ static void test_selected_index_getter_resynchronizes_internal_and_backend_cache
     struct tinyui_window *owned_win;
     struct tinyui_widget *parent;
     struct tinyui_list *list;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldList_t *ld_list;
 
     (void)win;
@@ -488,7 +487,7 @@ static void test_selected_index_getter_resynchronizes_internal_and_backend_cache
     assert(tinyui_list_add_item(list, "item_bluetooth", "Bluetooth") == 0);
     assert(tinyui_list_set_selected_index(list, 0) == 0);
 
-    backend = (struct tinyui_backend_widget *)list->widget.backend_widget;
+    backend = &list->widget;
     assert(backend != 0);
     ld_list = (ldList_t *)backend->ld_widget;
     assert(ld_list != 0);
@@ -510,7 +509,7 @@ static void test_hidden_or_disabled_list_releases_focus_and_rejects_native_selec
     struct tinyui_window *owned_win;
     struct tinyui_widget *parent;
     struct tinyui_list *list;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     struct tinyui_app *app_state;
     ldList_t *ld_list;
 
@@ -525,7 +524,7 @@ static void test_hidden_or_disabled_list_releases_focus_and_rejects_native_selec
     assert(tinyui_list_add_item(list, "item_wifi", "Wi-Fi") == 0);
     assert(tinyui_list_add_item(list, "item_bluetooth", "Bluetooth") == 0);
 
-    backend = (struct tinyui_backend_widget *)list->widget.backend_widget;
+    backend = &list->widget;
     assert(backend != 0);
     app_state = list_app_state(list);
     assert(app_state->ld_scene != 0);
@@ -605,7 +604,7 @@ static void test_selected_index_getter_clears_to_backend_unselected_truth(struct
     struct tinyui_window *owned_win;
     struct tinyui_widget *parent;
     struct tinyui_list *list;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldList_t *ld_list;
 
     (void)win;
@@ -620,7 +619,7 @@ static void test_selected_index_getter_clears_to_backend_unselected_truth(struct
     assert(tinyui_list_add_item(list, "item_bluetooth", "Bluetooth") == 0);
     assert(tinyui_list_set_selected_index(list, 1) == 0);
 
-    backend = (struct tinyui_backend_widget *)list->widget.backend_widget;
+    backend = &list->widget;
     assert(backend != 0);
     ld_list = (ldList_t *)backend->ld_widget;
     assert(ld_list != 0);
@@ -640,7 +639,7 @@ static void test_list_item_marker_is_support_not_reject(struct tinyui_window *wi
 {
     struct tinyui_widget *parent = (struct tinyui_widget *)win;
     struct tinyui_list *list = tinyui_list_create(parent, "list_marker_support");
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldList_t *ld_list;
 
     assert(list != 0);
@@ -648,7 +647,7 @@ static void test_list_item_marker_is_support_not_reject(struct tinyui_window *wi
     assert(tinyui_list_add_item(list, "item_bluetooth", "Bluetooth") == 0);
     assert(tinyui_list_add_item(list, "item_display", "Display") == 0);
 
-    backend = (struct tinyui_backend_widget *)list->widget.backend_widget;
+    backend = &list->widget;
     assert(backend != 0);
     ld_list = (ldList_t *)backend->ld_widget;
     assert(ld_list != 0);
@@ -675,11 +674,11 @@ static void test_list_native_item_height_padding_margin_round_trip(struct tinyui
 {
     struct tinyui_widget *parent = (struct tinyui_widget *)win;
     struct tinyui_list *list = tinyui_list_create(parent, "list_native_spacing");
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldList_t *ld_list;
 
     assert(list != 0);
-    backend = (struct tinyui_backend_widget *)list->widget.backend_widget;
+    backend = &list->widget;
     assert(backend != 0);
     ld_list = (ldList_t *)backend->ld_widget;
     assert(ld_list != 0);
@@ -722,11 +721,11 @@ static void test_list_native_color_and_align_round_trip(struct tinyui_window *wi
 {
     struct tinyui_widget *parent = (struct tinyui_widget *)win;
     struct tinyui_list *list = tinyui_list_create(parent, "list_native_color_align");
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldList_t *ld_list;
 
     assert(list != 0);
-    backend = (struct tinyui_backend_widget *)list->widget.backend_widget;
+    backend = &list->widget;
     assert(backend != 0);
     ld_list = (ldList_t *)backend->ld_widget;
     assert(ld_list != 0);
@@ -752,7 +751,7 @@ static void test_list_backend_moved_helpers_fail_closed_without_mutation(struct 
 {
     struct tinyui_widget *parent = (struct tinyui_widget *)win;
     struct tinyui_list *list = tinyui_list_create(parent, "list_backend_helper_guard");
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldList_t *ld_list;
 
     assert(list != 0);
@@ -766,7 +765,7 @@ static void test_list_backend_moved_helpers_fail_closed_without_mutation(struct 
     assert(tinyui_list_set_select_color(list, 0x778899U) == 0);
     assert(tinyui_list_set_align(list, TINYUI_ALIGN_END) == 0);
 
-    backend = (struct tinyui_backend_widget *)list->widget.backend_widget;
+    backend = &list->widget;
     assert(backend != 0);
     ld_list = (ldList_t *)backend->ld_widget;
     assert(ld_list != 0);
@@ -846,7 +845,7 @@ static void test_list_backend_selected_index_sync_rejects_corrupted_binding_with
 {
     struct tinyui_widget *parent = (struct tinyui_widget *)win;
     struct tinyui_list *list = tinyui_list_create(parent, "list_sync_binding_guard");
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     enum tinyui_backend_widget_kind original_kind;
 
     assert(list != 0);
@@ -854,7 +853,7 @@ static void test_list_backend_selected_index_sync_rejects_corrupted_binding_with
     assert(tinyui_list_add_item(list, "item_bluetooth", "Bluetooth") == 0);
     assert(tinyui_list_set_selected_index(list, 1) == 0);
 
-    backend = (struct tinyui_backend_widget *)list->widget.backend_widget;
+    backend = &list->widget;
     assert(backend != 0);
     assert(backend->value == 1);
 
@@ -873,12 +872,12 @@ static void test_list_rejects_corrupted_backend_binding_without_mutating_widget_
 {
     struct tinyui_widget *parent = (struct tinyui_widget *)win;
     struct tinyui_list *list = tinyui_list_create(parent, "list_binding_guard_style");
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldList_t *ld_list;
     enum tinyui_backend_widget_kind original_kind;
 
     assert(list != 0);
-    backend = (struct tinyui_backend_widget *)list->widget.backend_widget;
+    backend = &list->widget;
     assert(backend != 0);
     ld_list = (ldList_t *)backend->ld_widget;
     assert(ld_list != 0);
@@ -915,10 +914,10 @@ static void test_list_native_item_widget_reparents_backend_tree(struct tinyui_wi
     struct tinyui_list *list;
     struct tinyui_list *nested_list;
     struct tinyui_button *button;
-    struct tinyui_backend_widget *list_backend;
-    struct tinyui_backend_widget *nested_list_backend;
-    struct tinyui_backend_widget *button_backend;
-    struct tinyui_backend_widget *window_backend;
+    struct tinyui_widget *list_backend;
+    struct tinyui_widget *nested_list_backend;
+    struct tinyui_widget *button_backend;
+    struct tinyui_widget *window_backend;
     ldList_t *ld_list;
     ldList_t *ld_nested_list;
     ldBase_t *ld_button;
@@ -938,10 +937,10 @@ static void test_list_native_item_widget_reparents_backend_tree(struct tinyui_wi
     assert(tinyui_list_add_item(list, "item_wifi", "Wi-Fi") == 0);
     assert(tinyui_list_add_item(list, "item_bluetooth", "Bluetooth") == 0);
 
-    list_backend = (struct tinyui_backend_widget *)list->widget.backend_widget;
-    nested_list_backend = (struct tinyui_backend_widget *)nested_list->widget.backend_widget;
-    button_backend = (struct tinyui_backend_widget *)button->widget.backend_widget;
-    window_backend = (struct tinyui_backend_widget *)owned_win->widget.backend_widget;
+    list_backend = &list->widget;
+    nested_list_backend = &nested_list->widget;
+    button_backend = &button->widget;
+    window_backend = &owned_win->widget;
     assert(list_backend != 0);
     assert(nested_list_backend != 0);
     assert(button_backend != 0);
@@ -953,27 +952,21 @@ static void test_list_native_item_widget_reparents_backend_tree(struct tinyui_wi
     assert(ld_nested_list != 0);
     assert(ld_button != 0);
 
-    assert(nested_list_backend->parent == window_backend);
-    assert(nested_list_backend->owner == app);
-    assert(nested_list_backend->root == window_backend);
-    assert(button_backend->parent == nested_list_backend);
-    assert(button_backend->owner == app);
-    assert(button_backend->root == window_backend);
     assert(ldBaseGetParent((ldBase_t *)ld_nested_list) == (ldBase_t *)window_backend->ld_widget);
+    assert(nested_list_backend->owner == app);
+    assert((ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)nested_list_backend->ld_widget) == (ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)window_backend->ld_widget));
     assert(ldBaseGetParent(ld_button) == (ldBase_t *)ld_nested_list);
+    assert(button_backend->owner == app);
+    assert((ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)button_backend->ld_widget) == (ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)window_backend->ld_widget));
 
     assert(tinyui_list_set_item_widget(list, 1, &nested_list->widget) == 0);
 
-    assert(nested_list_backend->parent == list_backend);
-    assert(nested_list_backend->owner == app);
-    assert(nested_list_backend->root == window_backend);
     assert(ldBaseGetParent((ldBase_t *)ld_nested_list) == (ldBase_t *)ld_list);
-    assert(nested_list_backend->next_sibling == 0);
-    assert(list_backend->first_child == nested_list_backend);
-    assert(button_backend->parent == nested_list_backend);
-    assert(button_backend->owner == app);
-    assert(button_backend->root == window_backend);
+    assert(nested_list_backend->owner == app);
+    assert((ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)nested_list_backend->ld_widget) == (ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)window_backend->ld_widget));
     assert(ldBaseGetParent(ld_button) == (ldBase_t *)ld_nested_list);
+    assert(button_backend->owner == app);
+    assert((ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)button_backend->ld_widget) == (ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)window_backend->ld_widget));
 
     assert(tinyui_list_set_item_widget(list, -1, &nested_list->widget) == -1);
     assert(tinyui_list_set_item_widget(list, 2, &nested_list->widget) == -1);
@@ -990,9 +983,9 @@ static void test_list_set_item_widget_rejects_corrupted_binding_without_reparent
     struct tinyui_widget *parent;
     struct tinyui_list *list;
     struct tinyui_list *nested_list;
-    struct tinyui_backend_widget *list_backend;
-    struct tinyui_backend_widget *nested_list_backend;
-    struct tinyui_backend_widget *window_backend;
+    struct tinyui_widget *list_backend;
+    struct tinyui_widget *nested_list_backend;
+    struct tinyui_widget *window_backend;
     ldList_t *ld_list;
     ldList_t *ld_nested_list;
     enum tinyui_backend_widget_kind original_kind;
@@ -1009,9 +1002,9 @@ static void test_list_set_item_widget_rejects_corrupted_binding_without_reparent
     assert(nested_list != 0);
     assert(tinyui_list_add_item(list, "item_wifi", "Wi-Fi") == 0);
 
-    list_backend = (struct tinyui_backend_widget *)list->widget.backend_widget;
-    nested_list_backend = (struct tinyui_backend_widget *)nested_list->widget.backend_widget;
-    window_backend = (struct tinyui_backend_widget *)owned_win->widget.backend_widget;
+    list_backend = &list->widget;
+    nested_list_backend = &nested_list->widget;
+    window_backend = &owned_win->widget;
     assert(list_backend != 0);
     assert(nested_list_backend != 0);
     assert(window_backend != 0);
@@ -1024,11 +1017,10 @@ static void test_list_set_item_widget_rejects_corrupted_binding_without_reparent
     list_backend->kind = TINYUI_BACKEND_WIDGET_GRAPH;
 
     assert(tinyui_list_set_item_widget(list, 0, &nested_list->widget) == -1);
-    assert(nested_list_backend->parent == window_backend);
-    assert(nested_list_backend->owner == app);
-    assert(nested_list_backend->root == window_backend);
-    assert(list_backend->first_child == 0);
     assert(ldBaseGetParent((ldBase_t *)ld_nested_list) == (ldBase_t *)window_backend->ld_widget);
+    assert(nested_list_backend->owner == app);
+    assert((ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)nested_list_backend->ld_widget) == (ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)window_backend->ld_widget));
+    assert(ldBaseGetChildList((ldBase_t *)ld_list) == 0);
     assert(ld_list->itemCount == 1);
 
     list_backend->kind = original_kind;
@@ -1041,7 +1033,7 @@ static void test_repeated_native_clicked_item_same_index_is_noop_contract(struct
     struct tinyui_window *owned_win;
     struct tinyui_widget *parent;
     struct tinyui_list *list;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     struct tinyui_app *app_state;
     int user_cookie = 61;
 
@@ -1057,7 +1049,7 @@ static void test_repeated_native_clicked_item_same_index_is_noop_contract(struct
     assert(tinyui_list_add_item(list, "item_bluetooth", "Bluetooth") == 0);
     tinyui_list_set_on_selected(list, on_list_selected, &user_cookie);
 
-    backend = (struct tinyui_backend_widget *)list->widget.backend_widget;
+    backend = &list->widget;
     assert(backend != 0);
     app_state = list_app_state(list);
     assert(app_state->ld_scene != 0);
@@ -1094,7 +1086,7 @@ static void test_list_selected_index_getter_rejects_corrupted_native_truth_witho
 {
     struct tinyui_widget *parent = (struct tinyui_widget *)win;
     struct tinyui_list *list = tinyui_list_create(parent, "list_selected_binding_guard");
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldList_t *ld_list;
 
     assert(list != 0);
@@ -1102,7 +1094,7 @@ static void test_list_selected_index_getter_rejects_corrupted_native_truth_witho
     assert(tinyui_list_add_item(list, "item_bluetooth", "Bluetooth") == 0);
     assert(tinyui_list_set_selected_index(list, 1) == 0);
 
-    backend = (struct tinyui_backend_widget *)list->widget.backend_widget;
+    backend = &list->widget;
     assert(backend != 0);
     ld_list = (ldList_t *)backend->ld_widget;
     assert(ld_list != 0);
@@ -1120,10 +1112,10 @@ static void test_list_widget_user_data_is_distinct_from_on_selected_cookie(struc
     int callback_cookie = 202;
     struct tinyui_widget *parent = (struct tinyui_widget *)win;
     struct tinyui_list *list = tinyui_list_create(parent, "list_metadata_user_data");
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
 
     assert(list != 0);
-    backend = (struct tinyui_backend_widget *)list->widget.backend_widget;
+    backend = &list->widget;
     assert(backend != 0);
 
     assert(tinyui_widget_set_user_data(&list->widget, &widget_cookie) == 0);
@@ -1147,10 +1139,10 @@ static void test_list_style_class_and_user_data_are_stable_widget_metadata_contr
     int widget_cookie = 303;
     struct tinyui_widget *parent = (struct tinyui_widget *)win;
     struct tinyui_list *list = tinyui_list_create(parent, "list_metadata_style");
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
 
     assert(list != 0);
-    backend = (struct tinyui_backend_widget *)list->widget.backend_widget;
+    backend = &list->widget;
     assert(backend != 0);
 
     assert(tinyui_widget_set_style_class(&list->widget, style_class) == 0);
@@ -1169,10 +1161,10 @@ static void test_list_item_ids_are_tinyui_data_not_backend_widget_identity(struc
 {
     struct tinyui_widget *parent = (struct tinyui_widget *)win;
     struct tinyui_list *list = tinyui_list_create(parent, "list_item_contract");
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
 
     assert(list != 0);
-    backend = (struct tinyui_backend_widget *)list->widget.backend_widget;
+    backend = &list->widget;
     assert(backend != 0);
     assert(backend->ld_widget != 0);
 
@@ -1183,10 +1175,10 @@ static void test_list_item_ids_are_tinyui_data_not_backend_widget_identity(struc
     assert(backend->list_item_count == 2);
 
     assert(list->items[0].id != list->id);
-    assert(list->items[0].id != backend->id);
+    assert(list->items[0].id != list->id);
     assert(list->items[0].id != (const char *)backend->ld_widget);
     assert(list->items[1].id != list->id);
-    assert(list->items[1].id != backend->id);
+    assert(list->items[1].id != list->id);
     assert(list->items[1].id != (const char *)backend->ld_widget);
 }
 

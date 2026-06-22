@@ -250,8 +250,7 @@ static void test_app_multiple_windows(void)
     struct tinyui_window *w2 = tinyui_window_create(app, "win2");
     assert(w1 != 0);
     assert(w2 != 0);
-    // verify windows have different backend widgets
-    assert(w1->widget.backend_widget != w2->widget.backend_widget);
+    assert(w1->widget.ld_widget != w2->widget.ld_widget);
     tinyui_app_destroy(app);
 }
 

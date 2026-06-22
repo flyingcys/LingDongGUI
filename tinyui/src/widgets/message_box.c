@@ -34,23 +34,18 @@ static int tinyui_message_box_props_are_valid(const struct tinyui_message_box_pr
 
 static ldMessageBox_t *tinyui_message_box_get_ld(struct tinyui_message_box *box)
 {
-    struct tinyui_backend_widget *backend;
-
-    if (box == 0 || box->widget.backend_widget == 0) {
+    if (box == 0 || box->widget.ld_widget == 0
+        || box->widget.kind != TINYUI_BACKEND_WIDGET_MESSAGE_BOX) {
         return 0;
     }
 
-    backend = (struct tinyui_backend_widget *)box->widget.backend_widget;
-    if (backend->kind != TINYUI_BACKEND_WIDGET_MESSAGE_BOX || backend->ld_widget == 0) {
-        return 0;
-    }
-
-    return (ldMessageBox_t *)backend->ld_widget;
+    return (ldMessageBox_t *)box->widget.ld_widget;
 }
 
 static void tinyui_message_box_confirm_bridge(ld_scene_t *scene, ldMessageBox_t *ld_message_box)
 {
-    struct tinyui_backend_widget *backend;
+    /* C1-T7: pInfo now points to tinyui_widget, not tinyui_backend_widget */
+    struct tinyui_widget *w;
     struct tinyui_message_box *box;
 
     (void)scene;
@@ -59,12 +54,12 @@ static void tinyui_message_box_confirm_bridge(ld_scene_t *scene, ldMessageBox_t 
         return;
     }
 
-    backend = (struct tinyui_backend_widget *)((ldBase_t *)ld_message_box)->pInfo;
-    if (backend == 0 || backend->host_widget == 0) {
+    w = (struct tinyui_widget *)((ldBase_t *)ld_message_box)->pInfo;
+    if (w == 0) {
         return;
     }
 
-    box = (struct tinyui_message_box *)backend->host_widget;
+    box = (struct tinyui_message_box *)w;
     if (box->widget.enabled == 0 || box->widget.visible == 0) {
         return;
     }
@@ -88,19 +83,16 @@ static void tinyui_message_box_confirm_bridge(ld_scene_t *scene, ldMessageBox_t 
 struct tinyui_message_box *tinyui_message_box_create(struct tinyui_widget *parent, const char *id)
 {
     struct tinyui_message_box *box;
-    struct tinyui_backend_widget *backend;
-    struct tinyui_backend_widget *parent_backend;
     struct tinyui_app *app_state;
     ldMessageBox_t *ld_message_box;
     uint16_t name_id;
 
-    if (parent == 0 || id == 0 || parent->backend_widget == 0) {
+    if (parent == 0 || id == 0 || parent->ld_widget == 0) {
         return 0;
     }
 
-    parent_backend = (struct tinyui_backend_widget *)parent->backend_widget;
-    app_state = tinyui_runtime_bridge_backend_state_from_parent(parent_backend);
-    if (parent_backend->ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
+    app_state = parent->owner;
+    if (app_state == 0 || app_state->ld_scene == 0) {
         return 0;
     }
 
@@ -109,64 +101,31 @@ struct tinyui_message_box *tinyui_message_box_create(struct tinyui_widget *paren
         return 0;
     }
 
-    backend = calloc(1, sizeof(*backend));
-    if (backend == 0) {
-        free(box);
-        return 0;
-    }
-
-    name_id = tinyui_runtime_bridge_next_name_id(parent_backend);
-    if (name_id == 0) {
-        free(backend);
-        free(box);
-        return 0;
-    }
+    name_id = ++app_state->next_ld_name_id;
 
     ld_message_box = ldMessageBox_init(app_state->ld_scene,
                                        NULL,
                                        name_id,
-                                       parent_backend->ld_name_id,
+                                       parent->ld_name_id,
                                        0,
                                        0,
                                        260,
                                        140,
                                        (arm_2d_font_t *)&ARM_2D_FONT_6x8);
     if (ld_message_box == 0) {
-        free(backend);
         free(box);
         return 0;
     }
 
-    if (tinyui_widget_init_child(backend,
-                                         parent_backend,
-                                         TINYUI_BACKEND_WIDGET_MESSAGE_BOX,
-                                         id,
-                                         parent_backend->theme) != 0) {
-        ldMessageBox_depose(app_state->ld_scene, ld_message_box);
-        free(backend);
-        free(box);
-        return 0;
-    }
-    backend->ld_widget = ld_message_box;
-    backend->ld_name_id = name_id;
-    if (tinyui_widget_attach_child(parent_backend, backend) != 0) {
-        ldMessageBox_depose(app_state->ld_scene, ld_message_box);
-        free(backend);
-        free(box);
-        return 0;
-    }
-
-    box->widget.backend_widget = backend;
     box->id = id;
-    box->widget.visible = 1;
-    box->widget.enabled = 1;
-    if (tinyui_runtime_bridge_bind_host(box->widget.backend_widget, &box->widget) != 0) {
-        (void)tinyui_runtime_bridge_detach_from_parent(box->widget.backend_widget);
-        ldMessageBox_depose(app_state->ld_scene, ld_message_box);
-        free(backend);
-        free(box);
-        return 0;
-    }
+    box->widget.ld_widget  = ld_message_box;
+    box->widget.ld_name_id = name_id;
+    box->widget.kind       = TINYUI_BACKEND_WIDGET_MESSAGE_BOX;
+    box->widget.owner      = app_state;
+    box->widget.visible    = 1;
+    box->widget.enabled    = 1;
+    ((ldBase_t *)ld_message_box)->pInfo = &box->widget;
+    tinyui_runtime_bridge_bind_leaf_widget(&box->widget, app_state);
     return box;
 }
 
@@ -302,21 +261,18 @@ int tinyui_message_box_set_msg(struct tinyui_message_box *box, const char *messa
 int tinyui_message_box_set_confirm_text(struct tinyui_message_box *box, const char *text)
 {
     ldMessageBox_t *ld_message_box;
-    struct tinyui_backend_widget *backend;
 
     if (box == 0 || text == 0) {
         return -1;
     }
 
     ld_message_box = tinyui_message_box_get_ld(box);
-    backend = (struct tinyui_backend_widget *)box->widget.backend_widget;
-    if (ld_message_box == 0 || backend == 0) {
+    if (ld_message_box == 0) {
         return -1;
     }
 
-    backend->text = text;
-    ldMessageBoxSetBtn(ld_message_box, (const uint8_t **)&backend->text, 1);
     box->confirm_text = text;
+    ldMessageBoxSetBtn(ld_message_box, (const uint8_t **)&box->confirm_text, 1);
     return 0;
 }
 

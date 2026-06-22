@@ -98,12 +98,12 @@ static void assert_checkbox_has_bound_images(const struct tinyui_checkbox *check
                                              const struct tinyui_image_source *expected_unchecked,
                                              const struct tinyui_image_source *expected_checked)
 {
-    const struct tinyui_backend_widget *backend;
+    const struct tinyui_widget *backend;
     const ldCheckBox_t *ld_checkbox;
 
     assert(checkbox != 0);
-    backend = (const struct tinyui_backend_widget *)checkbox->widget.backend_widget;
-    assert(backend != 0);
+    backend = &checkbox->widget;
+    assert(backend->ld_widget != 0);
     ld_checkbox = (const ldCheckBox_t *)backend->ld_widget;
     assert(ld_checkbox != 0);
     assert(ld_checkbox->ptUncheckedImgTile
@@ -119,12 +119,12 @@ static void assert_checkbox_has_bound_images(const struct tinyui_checkbox *check
 static void test_checkbox_create_and_ld_mapping(struct tinyui_window *win)
 {
     struct tinyui_checkbox *checkbox = tinyui_checkbox_create(win, "cb_test");
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldBase_t *ld_base;
 
     assert(checkbox != 0);
-    backend = (struct tinyui_backend_widget *)checkbox->widget.backend_widget;
-    assert(backend != 0);
+    backend = &checkbox->widget;
+    assert(backend->ld_widget != 0);
     assert(backend->kind == TINYUI_BACKEND_WIDGET_CHECKBOX);
     ld_base = (ldBase_t *)backend->ld_widget;
     assert(ld_base != 0);
@@ -140,12 +140,12 @@ static void test_checkbox_create_with_props_pushes_all_fields(struct tinyui_wind
             .text = "Agree",
             .checked = 1,
         });
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldCheckBox_t *ld_checkbox;
 
     assert(checkbox != 0);
-    backend = (struct tinyui_backend_widget *)checkbox->widget.backend_widget;
-    assert(backend != 0);
+    backend = &checkbox->widget;
+    assert(backend->ld_widget != 0);
     assert(backend->text != 0);
     assert(strcmp(backend->text, "Agree") == 0);
     ld_checkbox = (ldCheckBox_t *)backend->ld_widget;
@@ -156,12 +156,12 @@ static void test_checkbox_create_with_props_pushes_all_fields(struct tinyui_wind
 static void test_checkbox_set_checked_round_trip(struct tinyui_window *win)
 {
     struct tinyui_checkbox *checkbox = tinyui_checkbox_create(win, "cb_checked");
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldCheckBox_t *ld_checkbox;
 
     assert(checkbox != 0);
-    backend = (struct tinyui_backend_widget *)checkbox->widget.backend_widget;
-    assert(backend != 0);
+    backend = &checkbox->widget;
+    assert(backend->ld_widget != 0);
     ld_checkbox = (ldCheckBox_t *)backend->ld_widget;
     assert(ld_checkbox != 0);
 
@@ -179,11 +179,11 @@ static void test_checkbox_set_checked_round_trip(struct tinyui_window *win)
 static void test_checkbox_set_text_round_trip(struct tinyui_window *win)
 {
     struct tinyui_checkbox *checkbox = tinyui_checkbox_create(win, "cb_text");
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
 
     assert(checkbox != 0);
     assert(tinyui_checkbox_set_text(checkbox, "Label") == 0);
-    backend = (struct tinyui_backend_widget *)checkbox->widget.backend_widget;
+    backend = &checkbox->widget;
     assert(backend->text != 0);
     assert(strcmp(backend->text, "Label") == 0);
 }
@@ -212,7 +212,7 @@ static void test_checkbox_internal_seams_use_tinyui_prefix(void)
 static void test_checkbox_native_helper_behaviors(struct tinyui_window *win)
 {
     struct tinyui_checkbox *checkbox = tinyui_checkbox_create(win, "cb_native");
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldCheckBox_t *ld_checkbox;
     arm_2d_tile_t unchecked_tile = {0};
     arm_2d_tile_t unchecked_mask_tile = {0};
@@ -228,8 +228,8 @@ static void test_checkbox_native_helper_behaviors(struct tinyui_window *win)
     };
 
     assert(checkbox != 0);
-    backend = (struct tinyui_backend_widget *)checkbox->widget.backend_widget;
-    assert(backend != 0);
+    backend = &checkbox->widget;
+    assert(backend->ld_widget != 0);
     ld_checkbox = (ldCheckBox_t *)backend->ld_widget;
     assert(ld_checkbox != 0);
 
@@ -263,7 +263,7 @@ static void test_checkbox_native_helper_behaviors(struct tinyui_window *win)
 static void test_checkbox_rejects_null_args(struct tinyui_window *win)
 {
     struct tinyui_checkbox *checkbox = tinyui_checkbox_create(win, "cb_invalid");
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldCheckBox_t *ld_checkbox;
     arm_2d_tile_t unchecked_mask_tile = {0};
     arm_2d_tile_t checked_mask_tile = {0};
@@ -277,8 +277,8 @@ static void test_checkbox_rejects_null_args(struct tinyui_window *win)
     };
 
     assert(checkbox != 0);
-    backend = (struct tinyui_backend_widget *)checkbox->widget.backend_widget;
-    assert(backend != 0);
+    backend = &checkbox->widget;
+    assert(backend->ld_widget != 0);
     ld_checkbox = (ldCheckBox_t *)backend->ld_widget;
     assert(ld_checkbox != 0);
 

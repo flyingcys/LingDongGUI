@@ -35,18 +35,11 @@ static ldColor tinyui_checkbox_rgb_to_ld_color(unsigned int rgb)
 
 static ldCheckBox_t *tinyui_checkbox_get_ld(struct tinyui_checkbox *checkbox)
 {
-    struct tinyui_backend_widget *backend;
-
-    if (checkbox == 0 || checkbox->widget.backend_widget == 0) {
+    if (checkbox == 0 || checkbox->widget.ld_widget == 0
+        || checkbox->widget.kind != TINYUI_BACKEND_WIDGET_CHECKBOX) {
         return 0;
     }
-
-    backend = (struct tinyui_backend_widget *)checkbox->widget.backend_widget;
-    if (backend->kind != TINYUI_BACKEND_WIDGET_CHECKBOX || backend->ld_widget == 0) {
-        return 0;
-    }
-
-    return (ldCheckBox_t *)backend->ld_widget;
+    return (ldCheckBox_t *)checkbox->widget.ld_widget;
 }
 
 static int tinyui_checkbox_props_are_valid(const struct tinyui_checkbox_props *props)
@@ -71,24 +64,22 @@ static int tinyui_checkbox_props_are_valid(const struct tinyui_checkbox_props *p
 
 static void tinyui_checkbox_dispose_partial(struct tinyui_checkbox *checkbox)
 {
-    struct tinyui_backend_widget *backend;
     struct tinyui_app *app_state;
 
     if (checkbox == 0) {
         return;
     }
 
-    backend = (struct tinyui_backend_widget *)checkbox->widget.backend_widget;
-    if (backend != 0) {
-        app_state = tinyui_runtime_bridge_backend_state(backend->owner);
-        if (backend->parent != 0) {
-            (void)tinyui_runtime_bridge_detach_from_parent(backend);
+    if (checkbox->widget.ld_widget != 0) {
+        void *saved_ld_widget = checkbox->widget.ld_widget;
+        app_state = checkbox->widget.owner != 0
+            ? tinyui_runtime_bridge_backend_state(checkbox->widget.owner)
+            : 0;
+        (void)tinyui_widget_detach_from_parent(&checkbox->widget);
+        (void)tinyui_runtime_bridge_unbind_host(&checkbox->widget);
+        if (app_state != 0 && app_state->ld_scene != 0) {
+            ldCheckBox_depose(app_state->ld_scene, (ldCheckBox_t *)saved_ld_widget);
         }
-        (void)tinyui_runtime_bridge_unbind_host(backend);
-        if (app_state != 0 && app_state->ld_scene != 0 && backend->ld_widget != 0) {
-            ldCheckBox_depose(app_state->ld_scene, (ldCheckBox_t *)backend->ld_widget);
-        }
-        free(backend);
     }
 
     free(checkbox);
@@ -110,8 +101,6 @@ void tinyui_checkbox_test_fail_next_set_check_color(void)
 struct tinyui_checkbox *tinyui_checkbox_create(struct tinyui_window *parent, const char *id)
 {
     struct tinyui_checkbox *checkbox;
-    struct tinyui_backend_widget *backend;
-    struct tinyui_backend_widget *parent_backend;
     struct tinyui_app *app_state;
     ldCheckBox_t *ld_checkbox;
     uint16_t name_id;
@@ -120,9 +109,8 @@ struct tinyui_checkbox *tinyui_checkbox_create(struct tinyui_window *parent, con
         return 0;
     }
 
-    parent_backend = (struct tinyui_backend_widget *)parent->widget.backend_widget;
-    app_state = tinyui_runtime_bridge_backend_state_from_parent(parent_backend);
-    if (parent_backend == 0 || parent_backend->ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
+    app_state = parent->widget.owner;
+    if (parent->widget.ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
         return 0;
     }
 
@@ -131,62 +119,33 @@ struct tinyui_checkbox *tinyui_checkbox_create(struct tinyui_window *parent, con
         return 0;
     }
 
-    backend = calloc(1, sizeof(*backend));
-    if (backend == 0) {
-        free(checkbox);
-        return 0;
-    }
-
-    name_id = tinyui_runtime_bridge_next_name_id(parent_backend);
-    if (name_id == 0) {
-        free(backend);
-        free(checkbox);
-        return 0;
-    }
+    name_id = ++app_state->next_ld_name_id;
 
     ld_checkbox = ldCheckBox_init(app_state->ld_scene,
                                   NULL,
                                   name_id,
-                                  parent_backend->ld_name_id,
+                                  parent->widget.ld_name_id,
                                   0,
                                   0,
                                   220,
                                   30);
     if (ld_checkbox == 0) {
-        free(backend);
         free(checkbox);
         return 0;
     }
     ldCheckBoxSetColor(ld_checkbox, __RGB(238, 233, 224), __RGB(32, 87, 196));
     ldCheckBoxSetTextColor(ld_checkbox, __RGB(32, 87, 196));
 
-    if (tinyui_widget_init_child(backend,
-                                         parent_backend,
-                                         TINYUI_BACKEND_WIDGET_CHECKBOX,
-                                         id,
-                                         parent_backend->theme) != 0) {
-        ldCheckBox_depose(app_state->ld_scene, ld_checkbox);
-        free(backend);
-        free(checkbox);
-        return 0;
-    }
-    backend->ld_widget = ld_checkbox;
-    backend->ld_name_id = name_id;
-    if (tinyui_widget_attach_child(parent_backend, backend) != 0) {
-        ldCheckBox_depose(app_state->ld_scene, ld_checkbox);
-        free(backend);
-        free(checkbox);
-        return 0;
-    }
-
     checkbox->id = id;
-    checkbox->widget.backend_widget = backend;
-    checkbox->widget.visible = 1;
-    checkbox->widget.enabled = 1;
-    if (tinyui_runtime_bridge_bind_host(checkbox->widget.backend_widget, &checkbox->widget) != 0) {
-        tinyui_checkbox_dispose_partial(checkbox);
-        return 0;
-    }
+    checkbox->widget.ld_widget  = ld_checkbox;
+    checkbox->widget.ld_name_id = name_id;
+    checkbox->widget.kind       = TINYUI_BACKEND_WIDGET_CHECKBOX;
+    checkbox->widget.owner      = app_state;
+    checkbox->widget.visible    = 1;
+    checkbox->widget.enabled    = 1;
+    ((ldBase_t *)ld_checkbox)->pInfo = &checkbox->widget;
+    (void)tinyui_runtime_bridge_bind_leaf_widget(&checkbox->widget, app_state);
+
     return checkbox;
 }
 
@@ -202,7 +161,6 @@ struct tinyui_checkbox *tinyui_checkbox_create_with_props(struct tinyui_window *
                                                           const struct tinyui_checkbox_props *props)
 {
     struct tinyui_checkbox *checkbox;
-    struct tinyui_backend_widget *backend;
 
     if (!tinyui_checkbox_props_are_valid(props)) {
         return 0;
@@ -220,9 +178,8 @@ struct tinyui_checkbox *tinyui_checkbox_create_with_props(struct tinyui_window *
         tinyui_checkbox_dispose_partial(checkbox);
         return 0;
     }
-    backend = (struct tinyui_backend_widget *)checkbox->widget.backend_widget;
     checkbox->checked = props->checked != 0;
-    if (tinyui_widget_update_value(backend,
+    if (tinyui_widget_update_value(&checkbox->widget,
                                    checkbox->checked,
                                    0,
                                    &checkbox->widget,
@@ -288,12 +245,12 @@ int tinyui_checkbox_set_checked(struct tinyui_checkbox *checkbox, int checked)
         return 0;
     }
 
-    if (checkbox->widget.backend_widget == 0) {
+    if (checkbox->widget.ld_widget == 0) {
         return -1;
     }
 
     checkbox->checked = normalized_checked;
-    return tinyui_widget_update_value(checkbox->widget.backend_widget,
+    return tinyui_widget_update_value(&checkbox->widget,
                                       checkbox->checked,
                                       checkbox->cb,
                                       &checkbox->widget,
@@ -333,7 +290,7 @@ int tinyui_checkbox_set_text(struct tinyui_checkbox *checkbox, const char *text)
     if (tinyui_widget_set_text(&checkbox->widget, text) != 0) {
         return -1;
     }
-    return tinyui_widget_set_backend_text(checkbox->widget.backend_widget, text);
+    return tinyui_widget_set_backend_text(&checkbox->widget, text);
 }
 
 /**

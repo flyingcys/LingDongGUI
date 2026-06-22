@@ -19,6 +19,7 @@
 #ifndef TINYUI_H
 #define TINYUI_H
 
+#include "app.h"
 #include "animation.h"
 #include "arc.h"
 #include "background.h"

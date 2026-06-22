@@ -1,5 +1,6 @@
 #include "internal.h"
 #include "ldDateTime.h"
+#include "../../../src/gui/ldBase.h"
 #include "app.h"
 #include "date_time.h"
 #include "widget.h"
@@ -54,10 +55,6 @@ static void assert_date_time_internal_seam_renamed(void)
     assert(strstr(source, "tinyui_date_time_map_align") != NULL);
     assert(strstr(source, "tinyui_date_time_get_ld") != NULL);
     assert(strstr(source, "tinyui_date_time_props_are_valid") != NULL);
-    assert(strstr(source, "tinyui_date_time_rgb_to_ld_color") == NULL);
-    assert(strstr(source, "tinyui_date_time_map_align") == NULL);
-    assert(strstr(source, "tinyui_date_time_get_ld") == NULL);
-    assert(strstr(source, "tinyui_date_time_props_are_valid") == NULL);
 
     free(source);
 }
@@ -81,20 +78,19 @@ static void test_date_time_create_and_props(struct tinyui_window *win)
         tinyui_date_time_create((struct tinyui_widget *)win, "date_time");
     struct tinyui_date_time *with_props =
         tinyui_date_time_create_with_props((struct tinyui_widget *)win, &props);
-    struct tinyui_backend_widget *backend;
-    struct tinyui_backend_widget *parent_backend;
+    struct tinyui_widget *backend;
+    struct tinyui_widget *parent_backend;
 
     assert(dt != 0);
     assert(with_props != 0);
-    backend = (struct tinyui_backend_widget *)dt->widget.backend_widget;
-    parent_backend = (struct tinyui_backend_widget *)win->widget.backend_widget;
-    assert(backend != 0);
-    assert(parent_backend != 0);
+    backend = &dt->widget;
+    parent_backend = &win->widget;
+    assert(backend->ld_widget != 0);
+    assert(parent_backend->ld_widget != 0);
     assert(backend->kind == TINYUI_BACKEND_WIDGET_DATE_TIME);
-    assert(backend->parent == parent_backend);
-    assert(backend->root == parent_backend->root);
+    assert(ldBaseGetParent((ldBase_t *)backend->ld_widget) == (ldBase_t *)parent_backend->ld_widget);
+    assert((ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)backend->ld_widget) == (ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)parent_backend->ld_widget));
     assert(backend->owner == parent_backend->owner);
-    assert(backend->host_widget == &dt->widget);
     assert(tinyui_date_time_get_format(dt) != 0);
     assert(strcmp(tinyui_date_time_get_format(dt), "yyyy-mm-dd hh:nn:ss") == 0);
     assert(tinyui_date_time_get_format(with_props) != 0);
@@ -118,7 +114,7 @@ static void test_date_time_manual_values_survive_frame_start(struct tinyui_windo
 {
     struct tinyui_date_time *dt =
         tinyui_date_time_create((struct tinyui_widget *)win, "date_time_manual");
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     struct tinyui_app *app_state;
     ldDateTime_t *ld_date_time;
 
@@ -127,8 +123,8 @@ static void test_date_time_manual_values_survive_frame_start(struct tinyui_windo
     assert(tinyui_date_time_set_date(dt, 2026, 5, 31) == 0);
     assert(tinyui_date_time_set_time(dt, 12, 34, 56) == 0);
 
-    backend = (struct tinyui_backend_widget *)dt->widget.backend_widget;
-    assert(backend != 0);
+    backend = &dt->widget;
+    assert(backend->ld_widget != 0);
     app_state = backend->owner;
     assert(app_state != 0);
     ld_date_time = (ldDateTime_t *)backend->ld_widget;
@@ -179,7 +175,7 @@ static void test_date_time_final_release_contract_covers_public_readback_and_mod
 {
     struct tinyui_date_time *dt =
         tinyui_date_time_create((struct tinyui_widget *)win, "date_time_release_ready");
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldDateTime_t *ld_date_time;
     int year = 0;
     int month = 0;
@@ -193,8 +189,8 @@ static void test_date_time_final_release_contract_covers_public_readback_and_mod
     assert(tinyui_date_time_set_date(dt, 2026, 6, 1) == 0);
     assert(tinyui_date_time_set_time(dt, 8, 9, 10) == 0);
 
-    backend = (struct tinyui_backend_widget *)dt->widget.backend_widget;
-    assert(backend != 0);
+    backend = &dt->widget;
+    assert(backend->ld_widget != 0);
     assert(backend->kind == TINYUI_BACKEND_WIDGET_DATE_TIME);
     ld_date_time = (ldDateTime_t *)backend->ld_widget;
     assert(ld_date_time != 0);
@@ -226,7 +222,7 @@ static void test_date_time_native_transparent_color_and_align_round_trip(struct 
 {
     struct tinyui_date_time *dt =
         tinyui_date_time_create((struct tinyui_widget *)win, "date_time_native_style");
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldDateTime_t *ld_date_time;
     struct tinyui_app *app_state;
     int year = 0;
@@ -237,8 +233,8 @@ static void test_date_time_native_transparent_color_and_align_round_trip(struct 
     int second = 0;
 
     assert(dt != 0);
-    backend = (struct tinyui_backend_widget *)dt->widget.backend_widget;
-    assert(backend != 0);
+    backend = &dt->widget;
+    assert(backend->ld_widget != 0);
     ld_date_time = (ldDateTime_t *)backend->ld_widget;
     assert(ld_date_time != 0);
     app_state = backend->owner;
@@ -293,7 +289,7 @@ static void test_date_time_rejects_corrupted_backend_binding_without_mutating_na
 {
     struct tinyui_date_time *dt =
         tinyui_date_time_create((struct tinyui_widget *)win, "date_time_binding_guard");
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldDateTime_t *ld_date_time;
     int original_kind;
     int year = 0;
@@ -304,8 +300,8 @@ static void test_date_time_rejects_corrupted_backend_binding_without_mutating_na
     int second = 0;
 
     assert(dt != 0);
-    backend = (struct tinyui_backend_widget *)dt->widget.backend_widget;
-    assert(backend != 0);
+    backend = &dt->widget;
+    assert(backend->ld_widget != 0);
     ld_date_time = (ldDateTime_t *)backend->ld_widget;
     assert(ld_date_time != 0);
 
@@ -355,12 +351,12 @@ static void test_date_time_init_and_shared_base_aliases_round_trip(struct tinyui
 {
     struct tinyui_date_time *dt =
         tinyui_date_time_init((struct tinyui_widget *)win, "date_time_alias");
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldDateTime_t *ld_date_time;
 
     assert(dt != 0);
-    backend = (struct tinyui_backend_widget *)dt->widget.backend_widget;
-    assert(backend != 0);
+    backend = &dt->widget;
+    assert(backend->ld_widget != 0);
     ld_date_time = (ldDateTime_t *)backend->ld_widget;
     assert(ld_date_time != 0);
 

@@ -1,6 +1,7 @@
 #include "app.h"
 #include "scroll_selecter.h"
 #include "window.h"
+#include "../../../src/gui/ldBase.h"
 #include "../../../src/gui/ldScrollSelecter.h"
 #include "internal.h"
 
@@ -80,8 +81,8 @@ static void test_scroll_selecter_selected_item_matches_backend_truth(void)
     struct tinyui_app *app = tinyui_app_create();
     struct tinyui_window *win;
     struct tinyui_scroll_selecter *scroll_selecter;
-    struct tinyui_backend_widget *backend;
-    struct tinyui_backend_widget *parent_backend;
+    struct tinyui_widget *backend;
+    struct tinyui_widget *parent_backend;
     ldScrollSelecter_t *ld_scroll_selecter;
 
     assert(app != 0);
@@ -94,14 +95,13 @@ static void test_scroll_selecter_selected_item_matches_backend_truth(void)
     assert(tinyui_scroll_selecter_add_item(scroll_selecter, "display", "Display") == 0);
     assert(tinyui_scroll_selecter_set_selected_index(scroll_selecter, 0) == 0);
 
-    backend = (struct tinyui_backend_widget *)scroll_selecter->widget.backend_widget;
-    parent_backend = (struct tinyui_backend_widget *)win->widget.backend_widget;
-    assert(parent_backend != 0);
+    backend = &scroll_selecter->widget;
+    parent_backend = &win->widget;
+    assert(parent_backend->ld_widget != 0);
     assert(backend->owner == parent_backend->owner);
-    assert(backend->root == parent_backend->root);
-    assert(backend->parent == parent_backend);
+    assert((ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)backend->ld_widget) == (ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)parent_backend->ld_widget));
+    assert(ldBaseGetParent((ldBase_t *)backend->ld_widget) == (ldBase_t *)parent_backend->ld_widget);
     assert(backend->ld_name_id != 0);
-    assert(backend->host_widget == &scroll_selecter->widget);
     ld_scroll_selecter = (ldScrollSelecter_t *)backend->ld_widget;
     assert(ld_scroll_selecter != 0);
     assert(((ldBase_t *)ld_scroll_selecter)->pInfo == backend);
@@ -140,7 +140,7 @@ static void test_scroll_selecter_edit_mode_and_navigation_mode_are_distinct(void
     struct tinyui_app *app = tinyui_app_create();
     struct tinyui_window *win;
     struct tinyui_scroll_selecter *scroll_selecter;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldScrollSelecter_t *ld_scroll_selecter;
     int is_edit = -1;
 
@@ -150,7 +150,7 @@ static void test_scroll_selecter_edit_mode_and_navigation_mode_are_distinct(void
     scroll_selecter = tinyui_scroll_selecter_create(win, "scroll_mode");
     assert(scroll_selecter != 0);
 
-    backend = (struct tinyui_backend_widget *)scroll_selecter->widget.backend_widget;
+    backend = &scroll_selecter->widget;
     ld_scroll_selecter = (ldScrollSelecter_t *)backend->ld_widget;
     assert(ld_scroll_selecter != 0);
 
@@ -169,7 +169,7 @@ static void test_scroll_selecter_final_visual_and_edit_contract_is_release_ready
     struct tinyui_app *app = tinyui_app_create();
     struct tinyui_window *win;
     struct tinyui_scroll_selecter *scroll_selecter;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldScrollSelecter_t *ld_scroll_selecter;
     int is_edit = -1;
 
@@ -182,8 +182,8 @@ static void test_scroll_selecter_final_visual_and_edit_contract_is_release_ready
     assert(tinyui_scroll_selecter_add_item(scroll_selecter, "bluetooth", "Bluetooth") == 0);
     assert(tinyui_scroll_selecter_add_item(scroll_selecter, "display", "Display") == 0);
 
-    backend = (struct tinyui_backend_widget *)scroll_selecter->widget.backend_widget;
-    assert(backend != 0);
+    backend = &scroll_selecter->widget;
+    assert(backend->ld_widget != 0);
     assert(backend->kind == TINYUI_BACKEND_WIDGET_SCROLL_SELECTER);
     assert(backend->ld_widget != 0);
     ld_scroll_selecter = (ldScrollSelecter_t *)backend->ld_widget;
@@ -213,7 +213,7 @@ static void test_scroll_selecter_native_style_image_speed_and_select_text_round_
     struct tinyui_app *app = tinyui_app_create();
     struct tinyui_window *win;
     struct tinyui_scroll_selecter *scroll_selecter;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldScrollSelecter_t *ld_scroll_selecter;
     arm_2d_tile_t bg_tile = {0};
     arm_2d_tile_t bg_mask_tile = {0};
@@ -241,8 +241,8 @@ static void test_scroll_selecter_native_style_image_speed_and_select_text_round_
     assert(tinyui_scroll_selecter_add_item(scroll_selecter, "bluetooth", "Bluetooth") == 0);
     assert(tinyui_scroll_selecter_add_item(scroll_selecter, "display", "Display") == 0);
 
-    backend = (struct tinyui_backend_widget *)scroll_selecter->widget.backend_widget;
-    assert(backend != 0);
+    backend = &scroll_selecter->widget;
+    assert(backend->ld_widget != 0);
     ld_scroll_selecter = (ldScrollSelecter_t *)backend->ld_widget;
     assert(ld_scroll_selecter != 0);
 
@@ -277,7 +277,7 @@ static void test_scroll_selecter_selected_text_readback_matches_backend_truth(vo
     struct tinyui_app *app = tinyui_app_create();
     struct tinyui_window *win;
     struct tinyui_scroll_selecter *scroll_selecter;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldScrollSelecter_t *ld_scroll_selecter;
 
     assert(app != 0);
@@ -290,8 +290,8 @@ static void test_scroll_selecter_selected_text_readback_matches_backend_truth(vo
     assert(tinyui_scroll_selecter_add_item(scroll_selecter, "display", "Display") == 0);
     assert(tinyui_scroll_selecter_set_selected_index(scroll_selecter, 2) == 0);
 
-    backend = (struct tinyui_backend_widget *)scroll_selecter->widget.backend_widget;
-    assert(backend != 0);
+    backend = &scroll_selecter->widget;
+    assert(backend->ld_widget != 0);
     ld_scroll_selecter = (ldScrollSelecter_t *)backend->ld_widget;
     assert(ld_scroll_selecter != 0);
 
@@ -306,7 +306,7 @@ static void test_scroll_selecter_native_api_aliases_match_backend_truth(void)
     struct tinyui_app *app = tinyui_app_create();
     struct tinyui_window *win;
     struct tinyui_scroll_selecter *scroll_selecter;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldScrollSelecter_t *ld_scroll_selecter;
     const char *item_ids[] = {"wifi", "bluetooth", "display"};
     const char *texts[] = {"Wi-Fi", "Bluetooth", "Display"};
@@ -329,8 +329,8 @@ static void test_scroll_selecter_native_api_aliases_match_backend_truth(void)
     assert(tinyui_scroll_selecter_set_indicator_image(scroll_selecter, &indicator_source) == 0);
     assert(strcmp(tinyui_scroll_selecter_get_select_text(scroll_selecter), "Bluetooth") == 0);
 
-    backend = (struct tinyui_backend_widget *)scroll_selecter->widget.backend_widget;
-    assert(backend != 0);
+    backend = &scroll_selecter->widget;
+    assert(backend->ld_widget != 0);
     ld_scroll_selecter = (ldScrollSelecter_t *)backend->ld_widget;
     assert(ld_scroll_selecter != 0);
     assert(ldScrollSelecterGetSelectItemNum(ld_scroll_selecter) == 1);
@@ -347,7 +347,7 @@ static void test_scroll_selecter_init_and_native_base_aliases_round_trip(void)
     struct tinyui_app *app = tinyui_app_create();
     struct tinyui_window *win;
     struct tinyui_scroll_selecter *scroll_selecter;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldBase_t *ld_base;
 
     assert(app != 0);
@@ -355,8 +355,8 @@ static void test_scroll_selecter_init_and_native_base_aliases_round_trip(void)
     assert(win != 0);
     scroll_selecter = tinyui_scroll_selecter_create(win, "scroll_base");
     assert(scroll_selecter != 0);
-    backend = (struct tinyui_backend_widget *)scroll_selecter->widget.backend_widget;
-    assert(backend != 0);
+    backend = &scroll_selecter->widget;
+    assert(backend->ld_widget != 0);
     ld_base = (ldBase_t *)backend->ld_widget;
     assert(ld_base != 0);
 
@@ -399,7 +399,7 @@ static void test_scroll_selecter_set_items_resets_native_and_public_selection_to
     struct tinyui_app *app = tinyui_app_create();
     struct tinyui_window *win;
     struct tinyui_scroll_selecter *scroll_selecter;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldScrollSelecter_t *ld_scroll_selecter;
     const char *replacement_ids[] = {"opt_a", "opt_b"};
     const char *replacement_texts[] = {"Alpha", "Beta"};
@@ -414,8 +414,8 @@ static void test_scroll_selecter_set_items_resets_native_and_public_selection_to
     assert(tinyui_scroll_selecter_add_item(scroll_selecter, "display", "Display") == 0);
     assert(tinyui_scroll_selecter_set_selected_index(scroll_selecter, 2) == 0);
 
-    backend = (struct tinyui_backend_widget *)scroll_selecter->widget.backend_widget;
-    assert(backend != 0);
+    backend = &scroll_selecter->widget;
+    assert(backend->ld_widget != 0);
     ld_scroll_selecter = (ldScrollSelecter_t *)backend->ld_widget;
     assert(ld_scroll_selecter != 0);
     assert(ldScrollSelecterGetSelectItemNum(ld_scroll_selecter) == 2);
@@ -436,7 +436,7 @@ static void test_scroll_selecter_corrupted_backend_binding_preserves_public_sele
     struct tinyui_app *app = tinyui_app_create();
     struct tinyui_window *win;
     struct tinyui_scroll_selecter *scroll_selecter;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldScrollSelecter_t *ld_scroll_selecter;
     const char *replacement_ids[] = {"opt_a", "opt_b"};
     const char *replacement_texts[] = {"Alpha", "Beta"};
@@ -452,8 +452,8 @@ static void test_scroll_selecter_corrupted_backend_binding_preserves_public_sele
     assert(tinyui_scroll_selecter_add_item(scroll_selecter, "display", "Display") == 0);
     assert(tinyui_scroll_selecter_set_selected_index(scroll_selecter, 1) == 0);
 
-    backend = (struct tinyui_backend_widget *)scroll_selecter->widget.backend_widget;
-    assert(backend != 0);
+    backend = &scroll_selecter->widget;
+    assert(backend->ld_widget != 0);
     ld_scroll_selecter = (ldScrollSelecter_t *)backend->ld_widget;
     assert(ld_scroll_selecter != 0);
 
@@ -477,7 +477,7 @@ static void test_scroll_selecter_corrupted_backend_binding_rejects_edit_mutation
     struct tinyui_app *app = tinyui_app_create();
     struct tinyui_window *win;
     struct tinyui_scroll_selecter *scroll_selecter;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldScrollSelecter_t *ld_scroll_selecter;
     enum tinyui_backend_widget_kind saved_kind;
     int is_edit = -1;
@@ -489,8 +489,8 @@ static void test_scroll_selecter_corrupted_backend_binding_rejects_edit_mutation
     assert(scroll_selecter != 0);
     assert(tinyui_scroll_selecter_set_edit_mode(scroll_selecter, 0) == 0);
 
-    backend = (struct tinyui_backend_widget *)scroll_selecter->widget.backend_widget;
-    assert(backend != 0);
+    backend = &scroll_selecter->widget;
+    assert(backend->ld_widget != 0);
     ld_scroll_selecter = (ldScrollSelecter_t *)backend->ld_widget;
     assert(ld_scroll_selecter != 0);
     assert(ld_scroll_selecter->isEdit == false);

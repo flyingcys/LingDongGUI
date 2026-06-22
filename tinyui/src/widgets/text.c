@@ -27,6 +27,10 @@
 extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
 extern const arm_2d_a1_font_t ARM_2D_FONT_16x24;
 
+struct tinyui_image_source;
+int tinyui_runtime_bridge_unbind_host(void *backend_widget);
+int tinyui_runtime_bridge_detach_from_parent(void *backend_widget);
+
 static int tinyui_text_fail_next_set_font = 0;
 
 static ldColor tinyui_text_rgb_to_ld_color(unsigned int rgb)
@@ -36,7 +40,7 @@ static ldColor tinyui_text_rgb_to_ld_color(unsigned int rgb)
 
 static ldText_t *tinyui_text_get_ld_text(void *backend_widget)
 {
-    struct tinyui_backend_widget *widget = backend_widget;
+    struct tinyui_widget *widget = backend_widget;
 
     if (widget == NULL || widget->kind != TINYUI_BACKEND_WIDGET_TEXT || widget->ld_widget == NULL) {
         return NULL;
@@ -77,24 +81,21 @@ static arm_2d_font_t *tinyui_text_resolve_font(const struct tinyui_font *font)
 
 static void tinyui_text_dispose_partial(struct tinyui_text *text)
 {
-    struct tinyui_backend_widget *backend;
     struct tinyui_app *app_state;
+    void *ld_widget;
 
     if (text == 0) {
         return;
     }
 
-    backend = (struct tinyui_backend_widget *)text->widget.backend_widget;
-    if (backend != 0) {
-        app_state = tinyui_runtime_bridge_backend_state(backend->owner);
-        if (backend->parent != 0) {
-            (void)tinyui_runtime_bridge_detach_from_parent(backend);
+    ld_widget = text->widget.ld_widget;
+    app_state = text->widget.owner;
+    if (ld_widget != 0) {
+        (void)tinyui_widget_detach_from_parent(&text->widget);
+        (void)tinyui_runtime_bridge_unbind_host(&text->widget);
+        if (app_state != 0 && app_state->ld_scene != 0) {
+            ldText_depose(app_state->ld_scene, (ldText_t *)ld_widget);
         }
-        (void)tinyui_runtime_bridge_unbind_host(backend);
-        if (app_state != 0 && app_state->ld_scene != 0 && backend->ld_widget != 0) {
-            ldText_depose(app_state->ld_scene, (ldText_t *)backend->ld_widget);
-        }
-        free(backend);
     }
 
     free(text);
@@ -107,7 +108,7 @@ void tinyui_text_test_fail_next_set_font(void)
 
 int tinyui_text_set_font_ld(void *backend_widget, const void *font)
 {
-    struct tinyui_backend_widget *widget = backend_widget;
+    struct tinyui_widget *widget = backend_widget;
     const struct tinyui_font *tinyui_font = (const struct tinyui_font *)font;
     ldText_t *ld_text;
     arm_2d_font_t *resolved_font;
@@ -142,7 +143,7 @@ int tinyui_text_set_font_ld(void *backend_widget, const void *font)
 
 int tinyui_text_set_static_text_ld(void *backend_widget, const char *text)
 {
-    struct tinyui_backend_widget *widget = backend_widget;
+    struct tinyui_widget *widget = backend_widget;
     ldText_t *ld_text = tinyui_text_get_ld_text(backend_widget);
 
     if (ld_text == NULL || text == NULL) {
@@ -193,7 +194,6 @@ int tinyui_text_set_bg_color_ld(void *backend_widget, unsigned int rgb)
 int tinyui_text_set_background_source_ld(void *backend_widget,
                                          struct tinyui_image_source *source)
 {
-    struct tinyui_backend_widget *widget = backend_widget;
     ldText_t *ld_text = tinyui_text_get_ld_text(backend_widget);
 
     if (ld_text == NULL || (source != NULL && source->img_tile == NULL)) {
@@ -203,7 +203,6 @@ int tinyui_text_set_background_source_ld(void *backend_widget,
     ldTextSetBackgroundImage(ld_text,
                              source != NULL ? source->img_tile : NULL,
                              source != NULL ? source->mask_tile : NULL);
-    widget->image_source = source;
     return 0;
 }
 
@@ -252,8 +251,6 @@ static int tinyui_text_props_are_valid(const struct tinyui_text_props *props)
 struct tinyui_text *tinyui_text_create(struct tinyui_window *parent, const char *id)
 {
     struct tinyui_text *text;
-    struct tinyui_backend_widget *backend;
-    struct tinyui_backend_widget *parent_backend;
     struct tinyui_app *app_state;
     ldText_t *ld_text;
     uint16_t name_id;
@@ -262,11 +259,8 @@ struct tinyui_text *tinyui_text_create(struct tinyui_window *parent, const char 
         return 0;
     }
 
-    parent_backend = (struct tinyui_backend_widget *)parent->widget.backend_widget;
-    app_state = parent_backend != 0
-        ? tinyui_runtime_bridge_backend_state_from_parent(parent_backend)
-        : 0;
-    if (parent_backend == 0 || parent_backend->ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
+    app_state = parent->widget.owner;
+    if (parent->widget.ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
         return 0;
     }
 
@@ -275,23 +269,12 @@ struct tinyui_text *tinyui_text_create(struct tinyui_window *parent, const char 
         return 0;
     }
 
-    backend = calloc(1, sizeof(*backend));
-    if (backend == 0) {
-        free(text);
-        return 0;
-    }
-
-    name_id = tinyui_runtime_bridge_next_name_id(parent_backend);
-    if (name_id == 0) {
-        free(backend);
-        free(text);
-        return 0;
-    }
+    name_id = ++app_state->next_ld_name_id;
 
     ld_text = ldText_init(app_state->ld_scene,
                           NULL,
                           name_id,
-                          parent_backend->ld_name_id,
+                          parent->widget.ld_name_id,
                           0,
                           0,
                           220,
@@ -300,41 +283,20 @@ struct tinyui_text *tinyui_text_create(struct tinyui_window *parent, const char 
                           TEXT_BOX_LINE_ALIGN_LEFT,
                           false);
     if (ld_text == 0) {
-        free(backend);
         free(text);
         return 0;
     }
 
-    if (tinyui_widget_init_child(backend,
-                                         parent_backend,
-                                         TINYUI_BACKEND_WIDGET_TEXT,
-                                         id,
-                                         parent_backend->theme) != 0) {
-        ldText_depose(app_state->ld_scene, ld_text);
-        free(backend);
-        free(text);
-        return 0;
-    }
-    backend->ld_widget = ld_text;
-    backend->ld_name_id = name_id;
-    if (tinyui_widget_attach_child(parent_backend, backend) != 0) {
-        ldText_depose(app_state->ld_scene, ld_text);
-        free(backend);
-        free(text);
-        return 0;
-    }
-
-    text->widget.backend_widget = backend;
     text->id = id;
-    text->widget.visible = 1;
-    text->widget.enabled = 1;
-    if (tinyui_runtime_bridge_bind_host(text->widget.backend_widget, &text->widget) != 0) {
-        (void)tinyui_runtime_bridge_detach_from_parent(text->widget.backend_widget);
-        ldText_depose(app_state->ld_scene, ld_text);
-        free(backend);
-        free(text);
-        return 0;
-    }
+    text->widget.ld_widget  = ld_text;
+    text->widget.ld_name_id = name_id;
+    text->widget.kind       = TINYUI_BACKEND_WIDGET_TEXT;
+    text->widget.owner      = app_state;
+    text->widget.visible    = 1;
+    text->widget.enabled    = 1;
+    ((ldBase_t *)ld_text)->pInfo = &text->widget;
+    (void)tinyui_runtime_bridge_bind_leaf_widget(&text->widget, app_state);
+
     return text;
 }
 
@@ -408,7 +370,7 @@ int tinyui_text_set_text(struct tinyui_text *text, const char *value)
     if (tinyui_widget_set_text(&text->widget, value) != 0) {
         return -1;
     }
-    return tinyui_widget_set_backend_text(text->widget.backend_widget, value);
+    return tinyui_widget_set_backend_text(&text->widget, value);
 }
 
 /**
@@ -425,7 +387,7 @@ int tinyui_text_set_static_text(struct tinyui_text *text, const char *value)
         return -1;
     }
 
-    if (tinyui_text_set_static_text_ld(text->widget.backend_widget, value) != 0) {
+    if (tinyui_text_set_static_text_ld(&text->widget, value) != 0) {
         return -1;
     }
     text->widget.text = value;
@@ -446,7 +408,7 @@ int tinyui_text_set_font(struct tinyui_text *text, const struct tinyui_font *fon
         return -1;
     }
 
-    if (tinyui_text_set_font_ld(text->widget.backend_widget, font) != 0) {
+    if (tinyui_text_set_font_ld(&text->widget, font) != 0) {
         return -1;
     }
 
@@ -468,7 +430,7 @@ int tinyui_text_set_transparent(struct tinyui_text *text, int transparent)
         return -1;
     }
 
-    return tinyui_text_set_transparent_ld(text->widget.backend_widget, transparent);
+    return tinyui_text_set_transparent_ld(&text->widget, transparent);
 }
 
 /**
@@ -485,7 +447,7 @@ int tinyui_text_set_text_color(struct tinyui_text *text, unsigned int rgb)
         return -1;
     }
 
-    if (tinyui_text_set_text_color_ld(text->widget.backend_widget, rgb) != 0) {
+    if (tinyui_text_set_text_color_ld(&text->widget, rgb) != 0) {
         return -1;
     }
     text->widget.text_color = rgb;
@@ -506,7 +468,7 @@ int tinyui_text_set_bg_color(struct tinyui_text *text, unsigned int rgb)
         return -1;
     }
 
-    if (tinyui_text_set_bg_color_ld(text->widget.backend_widget, rgb) != 0) {
+    if (tinyui_text_set_bg_color_ld(&text->widget, rgb) != 0) {
         return -1;
     }
     text->widget.bg_color = rgb;
@@ -528,7 +490,7 @@ int tinyui_text_set_background_source(struct tinyui_text *text,
         return -1;
     }
 
-    return tinyui_text_set_background_source_ld(text->widget.backend_widget, source);
+    return tinyui_text_set_background_source_ld(&text->widget, source);
 }
 
 /**
@@ -558,7 +520,7 @@ int tinyui_text_scroll_seek(struct tinyui_text *text, int offset)
         return -1;
     }
 
-    return tinyui_text_scroll_seek_ld(text->widget.backend_widget, offset);
+    return tinyui_text_scroll_seek_ld(&text->widget, offset);
 }
 
 /**
@@ -575,5 +537,5 @@ int tinyui_text_scroll_move(struct tinyui_text *text, int move_value)
         return -1;
     }
 
-    return tinyui_text_scroll_move_ld(text->widget.backend_widget, move_value);
+    return tinyui_text_scroll_move_ld(&text->widget, move_value);
 }

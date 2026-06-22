@@ -101,8 +101,8 @@ int main(void)
         .img_tile = &image_tile,
         .mask_tile = &mask_tile,
     };
-    const struct tinyui_backend_widget *backend;
-    const struct tinyui_backend_widget *parent_backend;
+    const struct tinyui_widget *backend;
+    const struct tinyui_widget *parent_backend;
     const ldCanvas_t *ld_canvas;
     const char *repo_root = repo_root_from_file(__FILE__);
     char canvas_source_path[1200];
@@ -148,14 +148,13 @@ int main(void)
     assert(tinyui_canvas_get_command_count(canvas, &command_count) == 0);
     assert(command_count == 5);
 
-    backend = canvas->widget.backend_widget;
-    assert(backend != 0);
-    parent_backend = win->widget.backend_widget;
-    assert(parent_backend != 0);
-    assert(backend->parent == parent_backend);
-    assert(backend->root == parent_backend->root);
+    backend = &canvas->widget;
+    assert(backend->ld_widget != 0);
+    parent_backend = &win->widget;
+    assert(parent_backend->ld_widget != 0);
+    assert(ldBaseGetParent((ldBase_t *)backend->ld_widget) == (ldBase_t *)parent_backend->ld_widget);
+    assert((ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)backend->ld_widget) == (ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)parent_backend->ld_widget));
     assert(backend->owner == parent_backend->owner);
-    assert(backend->host_widget == &canvas->widget);
     ld_canvas = (const ldCanvas_t *)backend->ld_widget;
     assert(ld_canvas != 0);
     assert(ld_canvas->use_as__ldBase_t.widgetType == widgetTypeCanvas);

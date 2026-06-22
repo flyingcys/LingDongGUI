@@ -18,18 +18,9 @@
 
 #include "internal.h"
 #include "layout.h"
-static struct tinyui_backend_widget *tinyui_window_get_backend(struct tinyui_window *window)
-{
-    if (window == 0 || window->widget.backend_widget == 0) {
-        return 0;
-    }
-
-    return (struct tinyui_backend_widget *)window->widget.backend_widget;
-}
-
 static int tinyui_window_is_valid(struct tinyui_window *window)
 {
-    return tinyui_window_get_backend(window) != 0;
+    return window != 0 && window->widget.ld_widget != 0;
 }
 
 /**

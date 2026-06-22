@@ -3,6 +3,7 @@
 #include "line_edit.h"
 #include "widget.h"
 #include "window.h"
+#include "../../../src/gui/ldBase.h"
 #include "../../../src/gui/ldLineEdit.h"
 #include "../../../src/misc/ldMsg.h"
 #include "internal.h"
@@ -106,7 +107,7 @@ static void ensure_line_edit_msg_queue(struct tinyui_app *app_state)
 static void test_line_edit_create_with_props_sets_text_and_type(struct tinyui_window *win)
 {
     struct tinyui_line_edit *line_edit;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldLineEdit_t *ld_line_edit;
     enum tinyui_line_edit_type type = TINYUI_LINE_EDIT_TYPE_FLOAT;
     unsigned int keyboard_binding = 0;
@@ -125,8 +126,8 @@ static void test_line_edit_create_with_props_sets_text_and_type(struct tinyui_wi
         });
 
     assert(line_edit != 0);
-    backend = (struct tinyui_backend_widget *)line_edit->widget.backend_widget;
-    assert(backend != 0);
+    backend = &line_edit->widget;
+    assert(backend->ld_widget != 0);
     ld_line_edit = (ldLineEdit_t *)backend->ld_widget;
     assert(ld_line_edit != 0);
     assert(strcmp(tinyui_line_edit_get_text(line_edit), "42") == 0);
@@ -141,13 +142,13 @@ static void test_line_edit_create_with_props_sets_text_and_type(struct tinyui_wi
 static void test_line_edit_align_and_color_write_backend_state(struct tinyui_window *win)
 {
     struct tinyui_line_edit *line_edit;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldLineEdit_t *ld_line_edit;
 
     line_edit = tinyui_line_edit_create(win, "line_edit_style");
     assert(line_edit != 0);
-    backend = (struct tinyui_backend_widget *)line_edit->widget.backend_widget;
-    assert(backend != 0);
+    backend = &line_edit->widget;
+    assert(backend->ld_widget != 0);
     ld_line_edit = (ldLineEdit_t *)backend->ld_widget;
     assert(ld_line_edit != 0);
 
@@ -169,13 +170,13 @@ static void test_line_edit_readback_matches_backend_after_finished_boundary(stru
 {
     struct tinyui_app *app;
     struct tinyui_line_edit *line_edit;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     struct tinyui_app *app_state;
     ldLineEdit_t *ld_line_edit;
     int editing = -1;
     int finish_cookie = 17;
 
-    app = ((struct tinyui_backend_widget *)win->widget.backend_widget)->owner;
+    app = win->widget.owner;
     line_edit = tinyui_line_edit_create(win, "line_edit_readback");
     assert(line_edit != 0);
     assert(tinyui_line_edit_set_text(line_edit, "before") == 0);
@@ -183,8 +184,8 @@ static void test_line_edit_readback_matches_backend_after_finished_boundary(stru
                                                  on_line_edit_finished,
                                                  &finish_cookie) == 0);
 
-    backend = (struct tinyui_backend_widget *)line_edit->widget.backend_widget;
-    assert(backend != 0);
+    backend = &line_edit->widget;
+    assert(backend->ld_widget != 0);
     app_state = app;
     assert(app_state != 0);
     ensure_line_edit_msg_queue(app_state);
@@ -215,16 +216,16 @@ static void test_line_edit_finished_boundary_clears_editing_state_without_reason
 {
     struct tinyui_app *app;
     struct tinyui_line_edit *line_edit;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     struct tinyui_app *app_state;
     int editing = -1;
 
-    app = ((struct tinyui_backend_widget *)win->widget.backend_widget)->owner;
+    app = win->widget.owner;
     line_edit = tinyui_line_edit_create(win, "line_edit_finish_state");
     assert(line_edit != 0);
 
-    backend = (struct tinyui_backend_widget *)line_edit->widget.backend_widget;
-    assert(backend != 0);
+    backend = &line_edit->widget;
+    assert(backend->ld_widget != 0);
     app_state = app;
     assert(app_state != 0);
     ensure_line_edit_msg_queue(app_state);
@@ -245,13 +246,13 @@ static void test_line_edit_commit_and_cancel_paths_are_distinct(struct tinyui_wi
     struct tinyui_app *app;
     struct tinyui_line_edit *line_edit;
     struct tinyui_keyboard *keyboard;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     struct tinyui_app *app_state;
     ldLineEdit_t *ld_line_edit;
     int editing = -1;
     int finish_cookie = 23;
 
-    app = ((struct tinyui_backend_widget *)win->widget.backend_widget)->owner;
+    app = win->widget.owner;
     line_edit = tinyui_line_edit_create(win, "line_edit_commit_cancel");
     keyboard = tinyui_keyboard_create(win, "line_edit_commit_cancel_keyboard");
     assert(line_edit != 0);
@@ -261,8 +262,8 @@ static void test_line_edit_commit_and_cancel_paths_are_distinct(struct tinyui_wi
                                                  on_line_edit_finished,
                                                  &finish_cookie) == 0);
 
-    backend = (struct tinyui_backend_widget *)line_edit->widget.backend_widget;
-    assert(backend != 0);
+    backend = &line_edit->widget;
+    assert(backend->ld_widget != 0);
     app_state = app;
     assert(app_state != 0);
     ensure_line_edit_msg_queue(app_state);
@@ -353,7 +354,7 @@ static void test_line_edit_set_keyboard_alias_matches_binding_contract(struct ti
 static void test_line_edit_init_and_shared_base_aliases_round_trip(struct tinyui_window *win)
 {
     struct tinyui_line_edit *line_edit = tinyui_line_edit_create(win, "line_edit_base_aliases");
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     /* volatile: this function clusters writes through ld* setters (separate TU)
      * with read-back assertions on adjacent ldBase_t bitfields. Under -Ofast
      * -flto the non-volatile reads get coalesced/hoisted and observe stale
@@ -362,8 +363,8 @@ static void test_line_edit_init_and_shared_base_aliases_round_trip(struct tinyui
     volatile ldBase_t *ld_base;
 
     assert(line_edit != 0);
-    backend = (struct tinyui_backend_widget *)line_edit->widget.backend_widget;
-    assert(backend != 0);
+    backend = &line_edit->widget;
+    assert(backend->ld_widget != 0);
     ld_base = (volatile ldBase_t *)backend->ld_widget;
     assert(ld_base != 0);
 
@@ -432,17 +433,15 @@ static void test_line_edit_error_paths_boundary_values(struct tinyui_window *win
 static void test_line_edit_public_create_uses_widget_local_backend(struct tinyui_window *win)
 {
     struct tinyui_line_edit *line_edit;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
 
     assert(win != 0);
     line_edit = tinyui_line_edit_create(win, "line_edit_widget_local");
     assert(line_edit != 0);
 
-    backend = (struct tinyui_backend_widget *)line_edit->widget.backend_widget;
-    assert(backend != 0);
+    backend = &line_edit->widget;
     assert(backend->kind == TINYUI_BACKEND_WIDGET_TEXT);
-    assert(backend->host_widget == &line_edit->widget);
-    assert(backend->parent == win->widget.backend_widget);
+    assert(ldBaseGetParent((ldBase_t *)backend->ld_widget) == (ldBase_t *)win->widget.ld_widget);
     assert(backend->ld_widget != 0);
 }
 

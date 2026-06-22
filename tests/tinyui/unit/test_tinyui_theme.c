@@ -33,7 +33,7 @@ static void assert_source_lacks_static_definition(const char *path, const char *
 
 static void test_theme_internal_static_helpers_no_longer_use_tinyui_prefix(void)
 {
-    const char *source = "/home/share/samba/flyingcys/LingDongGUI/tinyui/src/theme/theme.c";
+    const char *source = "tinyui/src/theme/theme.c";
     assert(source != NULL);
 }
 
@@ -54,23 +54,19 @@ static void assert_widget_style(const struct tinyui_widget *widget,
 
 static int backend_width(const struct tinyui_widget *widget)
 {
-    const struct tinyui_backend_widget *backend = (const struct tinyui_backend_widget *)widget->backend_widget;
     const ldBase_t *ld_base;
 
-    assert(backend != NULL);
-    assert(backend->ld_widget != NULL);
-    ld_base = (const ldBase_t *)backend->ld_widget;
+    assert(widget->ld_widget != NULL);
+    ld_base = (const ldBase_t *)widget->ld_widget;
     return ld_base->use_as__arm_2d_control_node_t.tRegion.tSize.iWidth;
 }
 
 static int backend_height(const struct tinyui_widget *widget)
 {
-    const struct tinyui_backend_widget *backend = (const struct tinyui_backend_widget *)widget->backend_widget;
     const ldBase_t *ld_base;
 
-    assert(backend != NULL);
-    assert(backend->ld_widget != NULL);
-    ld_base = (const ldBase_t *)backend->ld_widget;
+    assert(widget->ld_widget != NULL);
+    ld_base = (const ldBase_t *)widget->ld_widget;
     return ld_base->use_as__arm_2d_control_node_t.tRegion.tSize.iHeight;
 }
 
@@ -99,12 +95,10 @@ static void assert_button_backend_style(const struct tinyui_button *button,
                                         unsigned int press_color,
                                         unsigned int text_color)
 {
-    const struct tinyui_backend_widget *backend = (const struct tinyui_backend_widget *)button->widget.backend_widget;
     const ldButton_t *ld_button;
 
-    assert(backend != NULL);
-    assert(backend->ld_widget != NULL);
-    ld_button = (const ldButton_t *)backend->ld_widget;
+    assert(button->widget.ld_widget != NULL);
+    ld_button = (const ldButton_t *)button->widget.ld_widget;
     assert(ld_button->releaseColor == tinyui_test_rgb_to_ld_color(release_color));
     assert(ld_button->pressColor == tinyui_test_rgb_to_ld_color(press_color));
     assert(ld_button->textColor == tinyui_test_rgb_to_ld_color(text_color));
@@ -115,12 +109,10 @@ static void assert_checkbox_backend_style(const struct tinyui_checkbox *checkbox
                                           unsigned int fg_color,
                                           unsigned int text_color)
 {
-    const struct tinyui_backend_widget *backend = (const struct tinyui_backend_widget *)checkbox->widget.backend_widget;
     const ldCheckBox_t *ld_checkbox;
 
-    assert(backend != NULL);
-    assert(backend->ld_widget != NULL);
-    ld_checkbox = (const ldCheckBox_t *)backend->ld_widget;
+    assert(checkbox->widget.ld_widget != NULL);
+    ld_checkbox = (const ldCheckBox_t *)checkbox->widget.ld_widget;
     assert(ld_checkbox->bgColor == tinyui_test_rgb_to_ld_color(bg_color));
     assert(ld_checkbox->fgColor == tinyui_test_rgb_to_ld_color(fg_color));
     assert(ld_checkbox->textColor == tinyui_test_rgb_to_ld_color(text_color));
@@ -132,12 +124,10 @@ static void assert_switch_backend_style(const struct tinyui_switch *sw,
                                         unsigned int knob,
                                         unsigned int border)
 {
-    const struct tinyui_backend_widget *backend = (const struct tinyui_backend_widget *)sw->widget.backend_widget;
     const ldSwitch_t *ld_switch;
 
-    assert(backend != NULL);
-    assert(backend->ld_widget != NULL);
-    ld_switch = (const ldSwitch_t *)backend->ld_widget;
+    assert(sw->widget.ld_widget != NULL);
+    ld_switch = (const ldSwitch_t *)sw->widget.ld_widget;
     assert(ld_switch->offTrackColor == tinyui_test_rgb_to_ld_color(off_track));
     assert(ld_switch->onTrackColor == tinyui_test_rgb_to_ld_color(on_track));
     assert(ld_switch->knobColor == tinyui_test_rgb_to_ld_color(knob));
@@ -149,12 +139,10 @@ static void assert_slider_backend_style(const struct tinyui_slider *slider,
                                         unsigned int frame_color,
                                         unsigned int indic_color)
 {
-    const struct tinyui_backend_widget *backend = (const struct tinyui_backend_widget *)slider->widget.backend_widget;
     const ldSlider_t *ld_slider;
 
-    assert(backend != NULL);
-    assert(backend->ld_widget != NULL);
-    ld_slider = (const ldSlider_t *)backend->ld_widget;
+    assert(slider->widget.ld_widget != NULL);
+    ld_slider = (const ldSlider_t *)slider->widget.ld_widget;
     assert(ld_slider->bgColor == tinyui_test_rgb_to_ld_color(bg_color));
     assert(ld_slider->frameColor == tinyui_test_rgb_to_ld_color(frame_color));
     assert(ld_slider->indicColor == tinyui_test_rgb_to_ld_color(indic_color));
@@ -162,24 +150,20 @@ static void assert_slider_backend_style(const struct tinyui_slider *slider,
 
 static void assert_window_backend_style(const struct tinyui_window *window, unsigned int bg_color)
 {
-    const struct tinyui_backend_widget *backend = (const struct tinyui_backend_widget *)window->widget.backend_widget;
     const ldWindow_t *ld_window;
 
-    assert(backend != NULL);
-    assert(backend->ld_widget != NULL);
-    ld_window = (const ldWindow_t *)backend->ld_widget;
+    assert(window->widget.ld_widget != NULL);
+    ld_window = (const ldWindow_t *)window->widget.ld_widget;
     assert(ld_window->bgColor == tinyui_test_rgb_to_ld_color(bg_color));
 }
 
 static void assert_window_backend_padding(const struct tinyui_window *window, int padding)
 {
-    const struct tinyui_backend_widget *backend = (const struct tinyui_backend_widget *)window->widget.backend_widget;
     const ldWindow_t *ld_window;
 
-    assert(backend != NULL);
-    assert(backend->ld_widget != NULL);
-    ld_window = (const ldWindow_t *)backend->ld_widget;
-    assert(backend->window_layout.padding == padding);
+    assert(window->widget.ld_widget != NULL);
+    ld_window = (const ldWindow_t *)window->widget.ld_widget;
+    assert(window->widget.padding == padding);
     assert(ld_window->flexPadding.left == padding);
     assert(ld_window->flexPadding.top == padding);
     assert(ld_window->flexPadding.right == padding);
@@ -195,12 +179,10 @@ static void assert_button_backend_metrics(const struct tinyui_button *button,
                                           int radius,
                                           int padding)
 {
-    const struct tinyui_backend_widget *backend = (const struct tinyui_backend_widget *)button->widget.backend_widget;
     const ldButton_t *ld_button;
 
-    assert(backend != NULL);
-    assert(backend->ld_widget != NULL);
-    ld_button = (const ldButton_t *)backend->ld_widget;
+    assert(button->widget.ld_widget != NULL);
+    ld_button = (const ldButton_t *)button->widget.ld_widget;
     assert(ld_button->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iHeight == height);
     assert(button->widget.radius == radius);
     assert(button->widget.padding == padding);
@@ -210,12 +192,10 @@ static void assert_label_backend_style(const struct tinyui_label *label,
                                        unsigned int bg_color,
                                        unsigned int text_color)
 {
-    const struct tinyui_backend_widget *backend = (const struct tinyui_backend_widget *)label->widget.backend_widget;
     const ldLabel_t *ld_label;
 
-    assert(backend != NULL);
-    assert(backend->ld_widget != NULL);
-    ld_label = (const ldLabel_t *)backend->ld_widget;
+    assert(label->widget.ld_widget != NULL);
+    ld_label = (const ldLabel_t *)label->widget.ld_widget;
     assert(ld_label->bgColor == tinyui_test_rgb_to_ld_color(bg_color));
     assert(ld_label->textColor == tinyui_test_rgb_to_ld_color(text_color));
 }
@@ -224,12 +204,10 @@ static void assert_text_backend_style(const struct tinyui_text *text,
                                       unsigned int bg_color,
                                       unsigned int text_color)
 {
-    const struct tinyui_backend_widget *backend = (const struct tinyui_backend_widget *)text->widget.backend_widget;
     const ldText_t *ld_text;
 
-    assert(backend != NULL);
-    assert(backend->ld_widget != NULL);
-    ld_text = (const ldText_t *)backend->ld_widget;
+    assert(text->widget.ld_widget != NULL);
+    ld_text = (const ldText_t *)text->widget.ld_widget;
     assert(ld_text->bgColor == tinyui_test_rgb_to_ld_color(bg_color));
     assert(ld_text->textColor == tinyui_test_rgb_to_ld_color(text_color));
 }
@@ -239,12 +217,10 @@ static void assert_list_backend_style(const struct tinyui_list *list,
                                       unsigned int text_color,
                                       unsigned int select_color)
 {
-    const struct tinyui_backend_widget *backend = (const struct tinyui_backend_widget *)list->widget.backend_widget;
     const ldList_t *ld_list;
 
-    assert(backend != NULL);
-    assert(backend->ld_widget != NULL);
-    ld_list = (const ldList_t *)backend->ld_widget;
+    assert(list->widget.ld_widget != NULL);
+    ld_list = (const ldList_t *)list->widget.ld_widget;
     assert(ld_list->bgColor == tinyui_test_rgb_to_ld_color(bg_color));
     assert(ld_list->textColor == tinyui_test_rgb_to_ld_color(text_color));
     assert(ld_list->selectColor == tinyui_test_rgb_to_ld_color(select_color));
@@ -253,12 +229,10 @@ static void assert_list_backend_style(const struct tinyui_list *list,
 static void assert_list_backend_text_color(const struct tinyui_list *list,
                                            unsigned int text_color)
 {
-    const struct tinyui_backend_widget *backend = (const struct tinyui_backend_widget *)list->widget.backend_widget;
     const ldList_t *ld_list;
 
-    assert(backend != NULL);
-    assert(backend->ld_widget != NULL);
-    ld_list = (const ldList_t *)backend->ld_widget;
+    assert(list->widget.ld_widget != NULL);
+    ld_list = (const ldList_t *)list->widget.ld_widget;
     assert(ld_list->textColor == tinyui_test_rgb_to_ld_color(text_color));
 }
 
@@ -267,12 +241,10 @@ static void assert_calendar_backend_style(const struct tinyui_calendar *calendar
                                           unsigned int item_color,
                                           unsigned int text_color)
 {
-    const struct tinyui_backend_widget *backend = (const struct tinyui_backend_widget *)calendar->widget.backend_widget;
     const ldCalendar_t *ld_calendar;
 
-    assert(backend != NULL);
-    assert(backend->ld_widget != NULL);
-    ld_calendar = (const ldCalendar_t *)backend->ld_widget;
+    assert(calendar->widget.ld_widget != NULL);
+    ld_calendar = (const ldCalendar_t *)calendar->widget.ld_widget;
     assert(ld_calendar->bgColor == tinyui_test_rgb_to_ld_color(bg_color));
     assert(ld_calendar->itemColor == tinyui_test_rgb_to_ld_color(item_color));
     assert(ld_calendar->textColor == tinyui_test_rgb_to_ld_color(text_color));
@@ -284,7 +256,6 @@ static void test_image_theme_and_enabled_are_support_not_reject(void)
     struct tinyui_app *app = tinyui_app_create();
     struct tinyui_window *win;
     struct tinyui_image *image;
-    struct tinyui_backend_widget *backend;
     ldImage_t *ld_image;
 
     assert(theme != NULL);
@@ -305,10 +276,8 @@ static void test_image_theme_and_enabled_are_support_not_reject(void)
     assert(win != NULL);
     assert(image != NULL);
 
-    backend = (struct tinyui_backend_widget *)image->widget.backend_widget;
-    assert(backend != NULL);
-    ld_image = (ldImage_t *)backend->ld_widget;
-    assert(ld_image != NULL);
+    assert(image->widget.ld_widget != NULL);
+    ld_image = (ldImage_t *)image->widget.ld_widget;
 
     assert(tinyui_theme_apply_to_widget(theme,
                                         &image->widget,
@@ -321,10 +290,10 @@ static void test_image_theme_and_enabled_are_support_not_reject(void)
 
     assert(tinyui_widget_set_enabled(&image->widget, 0) == 0);
     assert(image->widget.enabled == 0);
-    assert(((ldBase_t *)backend->ld_widget)->isSelectable == false);
+    assert(((ldBase_t *)image->widget.ld_widget)->isSelectable == false);
     assert(tinyui_widget_set_enabled(&image->widget, 1) == 0);
     assert(image->widget.enabled == 1);
-    assert(((ldBase_t *)backend->ld_widget)->isSelectable == true);
+    assert(((ldBase_t *)image->widget.ld_widget)->isSelectable == true);
 
     tinyui_app_destroy(app);
     tinyui_theme_destroy(theme);
@@ -522,7 +491,7 @@ static void test_theme_shared_style_apply_helpers_reject_null_and_unsupported_ba
 
 static void test_theme_internal_style_apply_helper_no_longer_uses_tinyui_prefix(void)
 {
-    const char *source = "/Users/cys/embedded/LingDongGUI/tinyui/src/theme/theme.c";
+    const char *source = "tinyui/src/theme/theme.c";
 
     assert_source_lacks_static_definition(source, "tinyui_theme_apply_widget_style");
 }
@@ -541,7 +510,8 @@ int main(void)
     struct tinyui_list *list;
     struct tinyui_image *image;
     struct tinyui_label *failed_label;
-    struct tinyui_backend_widget *failed_backend;
+    ldLabel_t *failed_ld_label;
+    void *saved_ld_widget;
     int failed_width;
     int failed_height;
     unsigned int failed_backend_bg;
@@ -600,25 +570,24 @@ int main(void)
     assert_backend_size(&label->widget, 220, 19);
     assert_label_backend_style(label, 0x222222U, 0x666666U);
 
-    failed_backend = (struct tinyui_backend_widget *)failed_label->widget.backend_widget;
-    assert(failed_backend != NULL);
-    assert(failed_backend->theme == theme);
     failed_width = backend_width(&failed_label->widget);
     failed_height = backend_height(&failed_label->widget);
-    failed_backend_bg = ((ldLabel_t *)failed_backend->ld_widget)->bgColor;
-    failed_backend_text = ((ldLabel_t *)failed_backend->ld_widget)->textColor;
-    failed_backend->theme = NULL;
+    failed_ld_label = (ldLabel_t *)failed_label->widget.ld_widget;
+    failed_backend_bg = failed_ld_label->bgColor;
+    failed_backend_text = failed_ld_label->textColor;
+    saved_ld_widget = failed_label->widget.ld_widget;
+    failed_label->widget.ld_widget = NULL; /* force apply_to_widget failure */
     assert(tinyui_theme_apply_to_widget(theme,
                                         &failed_label->widget,
                                         TINYUI_PART_MAIN,
                                         TINYUI_STATE_DISABLED)
            == -1);
-    failed_backend->theme = theme;
+    failed_label->widget.ld_widget = saved_ld_widget;
     assert_widget_style(&failed_label->widget, 0U, 0U, 0U, 0, 0);
     assert(backend_width(&failed_label->widget) == failed_width);
     assert(backend_height(&failed_label->widget) == failed_height);
-    assert(((ldLabel_t *)failed_backend->ld_widget)->bgColor == failed_backend_bg);
-    assert(((ldLabel_t *)failed_backend->ld_widget)->textColor == failed_backend_text);
+    assert(failed_ld_label->bgColor == failed_backend_bg);
+    assert(failed_ld_label->textColor == failed_backend_text);
 
     assert(tinyui_theme_apply_to_widget(theme,
                                         &text->widget,
@@ -742,26 +711,26 @@ int main(void)
            == 0);
     assert_widget_style(&image->widget, 0x333333U, 0x111111U, 0x444444U, 3, 5);
     assert(image->widget.height == 0);
-    assert(((ldImage_t *)((struct tinyui_backend_widget *)image->widget.backend_widget)->ld_widget)->maskColor
+    assert(((ldImage_t *)image->widget.ld_widget)->maskColor
            == tinyui_test_rgb_to_ld_color(0x333333U));
 
     assert(label->widget.visible == 1);
-    assert(ldBaseIsHidden((ldBase_t *)((struct tinyui_backend_widget *)label->widget.backend_widget)->ld_widget) == false);
+    assert(ldBaseIsHidden((ldBase_t *)label->widget.ld_widget) == false);
     assert(tinyui_widget_set_visible(&label->widget, 0) == 0);
     assert(label->widget.visible == 0);
-    assert(ldBaseIsHidden((ldBase_t *)((struct tinyui_backend_widget *)label->widget.backend_widget)->ld_widget) == true);
+    assert(ldBaseIsHidden((ldBase_t *)label->widget.ld_widget) == true);
     assert(tinyui_widget_set_visible(&label->widget, 1) == 0);
     assert(label->widget.visible == 1);
-    assert(ldBaseIsHidden((ldBase_t *)((struct tinyui_backend_widget *)label->widget.backend_widget)->ld_widget) == false);
+    assert(ldBaseIsHidden((ldBase_t *)label->widget.ld_widget) == false);
 
     assert(sw->widget.enabled == 1);
-    assert(ldSwitchIsDisabled((ldSwitch_t *)((struct tinyui_backend_widget *)sw->widget.backend_widget)->ld_widget) == false);
+    assert(ldSwitchIsDisabled((ldSwitch_t *)sw->widget.ld_widget) == false);
     assert(tinyui_widget_set_enabled(&sw->widget, 0) == 0);
     assert(sw->widget.enabled == 0);
-    assert(ldSwitchIsDisabled((ldSwitch_t *)((struct tinyui_backend_widget *)sw->widget.backend_widget)->ld_widget) == true);
+    assert(ldSwitchIsDisabled((ldSwitch_t *)sw->widget.ld_widget) == true);
     assert(tinyui_widget_set_enabled(&sw->widget, 1) == 0);
     assert(sw->widget.enabled == 1);
-    assert(ldSwitchIsDisabled((ldSwitch_t *)((struct tinyui_backend_widget *)sw->widget.backend_widget)->ld_widget) == false);
+    assert(ldSwitchIsDisabled((ldSwitch_t *)sw->widget.ld_widget) == false);
 
     test_image_theme_and_enabled_are_support_not_reject();
     test_theme_native_parts_apply_to_real_backend_fields();

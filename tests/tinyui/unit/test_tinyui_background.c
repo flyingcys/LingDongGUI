@@ -62,12 +62,12 @@ static void assert_source_has_symbol_definition(const char *path, const char *na
 
 static void test_background_create_and_backend_mapping(struct tinyui_background *bg)
 {
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldBase_t *ld_base;
 
     assert(bg != 0);
-    backend = (struct tinyui_backend_widget *)bg->window.widget.backend_widget;
-    assert(backend != 0);
+    backend = &bg->window.widget;
+    assert(backend->ld_widget != 0);
     assert(backend->kind == TINYUI_BACKEND_WIDGET_BACKGROUND);
     ld_base = (ldBase_t *)backend->ld_widget;
     assert(ld_base != 0);
@@ -76,10 +76,10 @@ static void test_background_create_and_backend_mapping(struct tinyui_background 
 
 static void test_background_window_accepts_widget_base_api(struct tinyui_background *bg)
 {
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldBase_t *ld_base;
 
-    backend = (struct tinyui_backend_widget *)bg->window.widget.backend_widget;
+    backend = &bg->window.widget;
     ld_base = (ldBase_t *)backend->ld_widget;
 
     assert(tinyui_widget_set_pos(&bg->window.widget, 10, 20) == 0);

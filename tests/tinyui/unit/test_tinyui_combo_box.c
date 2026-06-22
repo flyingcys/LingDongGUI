@@ -121,7 +121,7 @@ static void test_combo_box_open_close_and_selected_item_truth(void)
     struct tinyui_app *app;
     struct tinyui_window *win;
     struct tinyui_combo_box *combo_box;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     struct tinyui_app *app_state;
     ldComboBox_t *ld_combo_box;
     int is_open = -1;
@@ -137,8 +137,8 @@ static void test_combo_box_open_close_and_selected_item_truth(void)
     assert(tinyui_combo_box_add_item(combo_box, "display", "Display") == 0);
     assert(tinyui_combo_box_set_selected_index(combo_box, 0) == 0);
 
-    backend = (struct tinyui_backend_widget *)combo_box->widget.backend_widget;
-    assert(backend != 0);
+    backend = &combo_box->widget;
+    assert(backend->ld_widget != 0);
     app_state = backend->owner;
     assert(app_state != 0);
     assert(app_state->ld_scene != 0);
@@ -170,7 +170,7 @@ static void test_combo_box_open_close_and_selected_item_truth(void)
     assert(native_combo_clicked_count == 1);
     assert(native_combo_clicked_index == 2);
     assert(tinyui_combo_box_get_selected_index(combo_box) == 2);
-    assert(((struct tinyui_backend_widget *)combo_box->widget.backend_widget)->value == 2);
+    assert(combo_box->widget.value == 2);
 
     ld_combo_box->isExpand = false;
     assert(tinyui_combo_box_is_open(combo_box, &is_open) == 0);
@@ -183,7 +183,7 @@ static void test_combo_box_reuses_selection_contract(void)
     struct tinyui_app *app;
     struct tinyui_window *win;
     struct tinyui_combo_box *combo_box;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     struct tinyui_app *app_state;
     ldComboBox_t *ld_combo_box;
     int cookie = 11;
@@ -202,8 +202,8 @@ static void test_combo_box_reuses_selection_contract(void)
     combo_selected_index = -1;
     combo_selected_user_data = 0;
 
-    backend = (struct tinyui_backend_widget *)combo_box->widget.backend_widget;
-    assert(backend != 0);
+    backend = &combo_box->widget;
+    assert(backend->ld_widget != 0);
     app_state = backend->owner;
     assert(app_state != 0);
     assert(app_state->ld_scene != 0);
@@ -237,7 +237,7 @@ static void test_combo_box_final_visual_and_selection_contract_is_release_ready(
     struct tinyui_app *app;
     struct tinyui_window *win;
     struct tinyui_combo_box *combo_box;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldComboBox_t *ld_combo_box;
     int is_open = -1;
 
@@ -252,8 +252,8 @@ static void test_combo_box_final_visual_and_selection_contract_is_release_ready(
     assert(tinyui_combo_box_add_item(combo_box, "display", "Display") == 0);
     assert(tinyui_combo_box_set_selected_index(combo_box, 1) == 0);
 
-    backend = (struct tinyui_backend_widget *)combo_box->widget.backend_widget;
-    assert(backend != 0);
+    backend = &combo_box->widget;
+    assert(backend->ld_widget != 0);
     assert(backend->kind == TINYUI_BACKEND_WIDGET_COMBO_BOX);
     ld_combo_box = (ldComboBox_t *)backend->ld_widget;
     assert(ld_combo_box != 0);
@@ -271,7 +271,7 @@ static void test_combo_box_native_color_item_max_and_dropdown_image_round_trip(v
     struct tinyui_app *app;
     struct tinyui_window *win;
     struct tinyui_combo_box *combo_box;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldComboBox_t *ld_combo_box;
     arm_2d_tile_t dropdown_tile = {0};
     arm_2d_tile_t dropdown_mask_tile = {0};
@@ -294,8 +294,8 @@ static void test_combo_box_native_color_item_max_and_dropdown_image_round_trip(v
     assert(tinyui_combo_box_add_item(combo_box, "bluetooth", "Bluetooth") == 0);
     assert(tinyui_combo_box_add_item(combo_box, "display", "Display") == 0);
 
-    backend = (struct tinyui_backend_widget *)combo_box->widget.backend_widget;
-    assert(backend != 0);
+    backend = &combo_box->widget;
+    assert(backend->ld_widget != 0);
     ld_combo_box = (ldComboBox_t *)backend->ld_widget;
     assert(ld_combo_box != 0);
 
@@ -323,7 +323,7 @@ static void test_combo_box_native_item_text_readback_matches_backend_truth(void)
     struct tinyui_app *app;
     struct tinyui_window *win;
     struct tinyui_combo_box *combo_box;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldComboBox_t *ld_combo_box;
 
     app = tinyui_app_create();
@@ -336,8 +336,8 @@ static void test_combo_box_native_item_text_readback_matches_backend_truth(void)
     assert(tinyui_combo_box_add_item(combo_box, "bluetooth", "Bluetooth") == 0);
     assert(tinyui_combo_box_add_item(combo_box, "display", "Display") == 0);
 
-    backend = (struct tinyui_backend_widget *)combo_box->widget.backend_widget;
-    assert(backend != 0);
+    backend = &combo_box->widget;
+    assert(backend->ld_widget != 0);
     ld_combo_box = (ldComboBox_t *)backend->ld_widget;
     assert(ld_combo_box != 0);
 
@@ -354,7 +354,7 @@ static void test_combo_box_native_api_aliases_match_backend_truth(void)
     struct tinyui_app *app;
     struct tinyui_window *win;
     struct tinyui_combo_box *combo_box;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldComboBox_t *ld_combo_box;
     const char *item_ids[] = {"wifi", "bluetooth", "display"};
     const char *texts[] = {"Wi-Fi", "Bluetooth", "Display"};
@@ -378,8 +378,8 @@ static void test_combo_box_native_api_aliases_match_backend_truth(void)
     assert(tinyui_combo_box_set_frame_color(combo_box, 0x212223U) == 0);
     assert(tinyui_combo_box_set_dropdown_image(combo_box, &dropdown_source) == 0);
 
-    backend = (struct tinyui_backend_widget *)combo_box->widget.backend_widget;
-    assert(backend != 0);
+    backend = &combo_box->widget;
+    assert(backend->ld_widget != 0);
     ld_combo_box = (ldComboBox_t *)backend->ld_widget;
     assert(ld_combo_box != 0);
     assert(ldComboBoxGetSelectItem(ld_combo_box) == 1);
@@ -396,7 +396,7 @@ static void test_combo_box_shared_base_aliases_round_trip(void)
     struct tinyui_app *app;
     struct tinyui_window *win;
     struct tinyui_combo_box *combo_box;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     /* volatile: this function clusters writes through ld* setters (separate TU)
      * with read-back assertions on adjacent ldBase_t bitfields. Under -Ofast
      * -flto the non-volatile reads get coalesced/hoisted and observe stale
@@ -410,8 +410,8 @@ static void test_combo_box_shared_base_aliases_round_trip(void)
     assert(win != 0);
     combo_box = tinyui_combo_box_create(win, "combo_base");
     assert(combo_box != 0);
-    backend = (struct tinyui_backend_widget *)combo_box->widget.backend_widget;
-    assert(backend != 0);
+    backend = &combo_box->widget;
+    assert(backend->ld_widget != 0);
     ld_base = (volatile ldBase_t *)backend->ld_widget;
     assert(ld_base != 0);
 
@@ -437,7 +437,7 @@ static void test_combo_box_uses_native_static_items_contract(void)
     struct tinyui_app *app;
     struct tinyui_window *win;
     struct tinyui_combo_box *combo_box;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldComboBox_t *ld_combo_box;
 
     app = tinyui_app_create();
@@ -450,8 +450,8 @@ static void test_combo_box_uses_native_static_items_contract(void)
     assert(tinyui_combo_box_add_item(combo_box, "bluetooth", "Bluetooth") == 0);
     assert(tinyui_combo_box_add_item(combo_box, "display", "Display") == 0);
 
-    backend = (struct tinyui_backend_widget *)combo_box->widget.backend_widget;
-    assert(backend != 0);
+    backend = &combo_box->widget;
+    assert(backend->ld_widget != 0);
     ld_combo_box = (ldComboBox_t *)backend->ld_widget;
     assert(ld_combo_box != 0);
 

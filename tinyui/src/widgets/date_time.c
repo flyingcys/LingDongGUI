@@ -54,18 +54,15 @@ static int tinyui_date_time_map_align(enum tinyui_align align, arm_2d_align_t *o
 
 static ldDateTime_t *tinyui_date_time_get_ld(struct tinyui_date_time *dt)
 {
-    struct tinyui_backend_widget *backend;
-
-    if (dt == NULL || dt->widget.backend_widget == NULL) {
+    if (dt == NULL || dt->widget.ld_widget == NULL) {
         return NULL;
     }
 
-    backend = (struct tinyui_backend_widget *)dt->widget.backend_widget;
-    if (backend->kind != TINYUI_BACKEND_WIDGET_DATE_TIME || backend->ld_widget == NULL) {
+    if (dt->widget.kind != TINYUI_BACKEND_WIDGET_DATE_TIME) {
         return NULL;
     }
 
-    return (ldDateTime_t *)backend->ld_widget;
+    return (ldDateTime_t *)dt->widget.ld_widget;
 }
 
 static int tinyui_date_time_props_are_valid(const struct tinyui_date_time_props *props)
@@ -96,19 +93,16 @@ static int tinyui_date_time_props_are_valid(const struct tinyui_date_time_props 
 struct tinyui_date_time *tinyui_date_time_create(struct tinyui_widget *parent, const char *id)
 {
     struct tinyui_date_time *dt;
-    struct tinyui_backend_widget *backend;
-    struct tinyui_backend_widget *parent_backend;
     struct tinyui_app *app_state;
     ldDateTime_t *ld_date_time;
     uint16_t name_id;
 
-    if (parent == 0 || id == 0 || parent->backend_widget == 0) {
+    if (parent == 0 || id == 0 || parent->ld_widget == 0) {
         return 0;
     }
 
-    parent_backend = (struct tinyui_backend_widget *)parent->backend_widget;
-    app_state = tinyui_runtime_bridge_backend_state_from_parent(parent_backend);
-    if (parent_backend->ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
+    app_state = tinyui_runtime_bridge_backend_state(parent->owner);
+    if (app_state == 0 || app_state->ld_scene == 0) {
         return 0;
     }
 
@@ -117,15 +111,8 @@ struct tinyui_date_time *tinyui_date_time_create(struct tinyui_widget *parent, c
         return 0;
     }
 
-    backend = calloc(1, sizeof(*backend));
-    if (backend == 0) {
-        free(dt);
-        return 0;
-    }
-
-    name_id = tinyui_runtime_bridge_next_name_id(parent_backend);
+    name_id = ++app_state->next_ld_name_id;
     if (name_id == 0) {
-        free(backend);
         free(dt);
         return 0;
     }
@@ -133,49 +120,26 @@ struct tinyui_date_time *tinyui_date_time_create(struct tinyui_widget *parent, c
     ld_date_time = ldDateTime_init(app_state->ld_scene,
                                    NULL,
                                    name_id,
-                                   parent_backend->ld_name_id,
+                                   parent->ld_name_id,
                                    0,
                                    0,
                                    240,
                                    32,
                                    (arm_2d_font_t *)&ARM_2D_FONT_6x8);
     if (ld_date_time == 0) {
-        free(backend);
         free(dt);
         return 0;
     }
 
-    if (tinyui_widget_init_child(backend,
-                                         parent_backend,
-                                         TINYUI_BACKEND_WIDGET_DATE_TIME,
-                                         id,
-                                         parent_backend->theme) != 0) {
-        ldDateTime_depose(app_state->ld_scene, ld_date_time);
-        free(backend);
-        free(dt);
-        return 0;
-    }
-    backend->ld_widget = ld_date_time;
-    backend->ld_name_id = name_id;
-    backend->text = (const char *)ld_date_time->formatStr;
-    if (tinyui_widget_attach_child(parent_backend, backend) != 0) {
-        ldDateTime_depose(app_state->ld_scene, ld_date_time);
-        free(backend);
-        free(dt);
-        return 0;
-    }
-
-    dt->widget.backend_widget = backend;
+    dt->widget.kind = TINYUI_BACKEND_WIDGET_DATE_TIME;
+    dt->widget.owner = app_state;
+    dt->widget.ld_widget = ld_date_time;
+    dt->widget.ld_name_id = name_id;
     dt->id = id;
     dt->widget.visible = 1;
     dt->widget.enabled = 1;
-    if (tinyui_runtime_bridge_bind_host(dt->widget.backend_widget, &dt->widget) != 0) {
-        (void)tinyui_runtime_bridge_detach_from_parent(dt->widget.backend_widget);
-        ldDateTime_depose(app_state->ld_scene, ld_date_time);
-        free(backend);
-        free(dt);
-        return 0;
-    }
+    ((ldBase_t *)ld_date_time)->pInfo = &dt->widget;
+    tinyui_runtime_bridge_bind_leaf_widget(&dt->widget, app_state);
     if (tinyui_date_time_set_format(dt, "yyyy-mm-dd hh:nn:ss") != 0
         || tinyui_date_time_set_text_color(dt, 0x000000U) != 0
         || tinyui_date_time_set_bg_color(dt, 0xFFFFFFU) != 0
@@ -259,7 +223,6 @@ struct tinyui_date_time *tinyui_date_time_create_with_props(
 int tinyui_date_time_set_format(struct tinyui_date_time *dt, const char *format)
 {
     ldDateTime_t *ld_date_time;
-    struct tinyui_backend_widget *backend;
 
     if (dt == 0 || format == 0) {
         return -1;
@@ -271,8 +234,6 @@ int tinyui_date_time_set_format(struct tinyui_date_time *dt, const char *format)
     }
 
     ldDateTimeSetFormat(ld_date_time, (const uint8_t *)format);
-    backend = (struct tinyui_backend_widget *)dt->widget.backend_widget;
-    backend->text = format;
     dt->format = format;
     dt->use_system_time = 0;
     return 0;

@@ -67,69 +67,30 @@ static unsigned int tinyui_arc_ld_color_to_rgb(ldColor color)
     return (red << 16) | (green << 8) | blue;
 }
 
-static struct tinyui_backend_widget *tinyui_arc_backend(struct tinyui_arc *arc)
-{
-    struct tinyui_backend_widget *backend;
-
-    if (arc == 0 || arc->widget.backend_widget == 0) {
-        return 0;
-    }
-
-    backend = (struct tinyui_backend_widget *)arc->widget.backend_widget;
-    if (backend->kind != TINYUI_BACKEND_WIDGET_ARC || backend->ld_widget == 0) {
-        return 0;
-    }
-
-    return backend;
-}
-
 static ldArc_t *tinyui_arc_get_ld(struct tinyui_arc *arc)
 {
-    struct tinyui_backend_widget *backend = tinyui_arc_backend(arc);
-
-    if (backend == 0) {
+    if (arc == 0 || arc->widget.ld_widget == 0
+        || arc->widget.kind != TINYUI_BACKEND_WIDGET_ARC) {
         return 0;
     }
 
-    return (ldArc_t *)backend->ld_widget;
+    return (ldArc_t *)arc->widget.ld_widget;
 }
 
 static int tinyui_arc_finish_detach_after_backend_failure(
     struct tinyui_backend_widget *backend)
 {
-    struct tinyui_backend_widget *parent;
-    struct tinyui_backend_widget *cursor;
-
-    if (backend == 0 || backend->parent == 0) {
-        return 0;
-    }
-
-    parent = backend->parent;
-    if (parent->first_child == backend) {
-        parent->first_child = backend->next_sibling;
-    } else {
-        cursor = parent->first_child;
-        while (cursor != 0 && cursor->next_sibling != backend) {
-            cursor = cursor->next_sibling;
-        }
-        if (cursor == 0) {
-            return -1;
-        }
-        cursor->next_sibling = backend->next_sibling;
-    }
-
-    backend->parent = 0;
-    backend->next_sibling = 0;
-    backend->owner = 0;
-    backend->root = 0;
+    /* C1: backend is no longer a separate allocation; this helper is kept for
+     * structural compatibility but is a no-op in the folded model. */
+    (void)backend;
     return 0;
 }
 
 static void tinyui_arc_dispose_partial_impl(struct tinyui_arc *arc)
 {
-    struct tinyui_backend_widget *backend;
     struct tinyui_app *app_state;
     ldBase_t *ld_base;
+    void *ld_widget_saved;
     int detach_result = 0;
     int unbind_result = 0;
 
@@ -137,44 +98,38 @@ static void tinyui_arc_dispose_partial_impl(struct tinyui_arc *arc)
         return;
     }
 
-    backend = (struct tinyui_backend_widget *)arc->widget.backend_widget;
-    if (backend != 0) {
-        app_state = tinyui_runtime_bridge_backend_state(backend->owner);
-        ld_base = (ldBase_t *)backend->ld_widget;
+    if (arc->widget.ld_widget != 0) {
+        app_state = arc->widget.owner != 0
+            ? tinyui_runtime_bridge_backend_state(arc->widget.owner)
+            : 0;
+        ld_widget_saved = arc->widget.ld_widget;
+        ld_base = (ldBase_t *)ld_widget_saved;
         memset(&tinyui_arc_last_dispose_snapshot, 0, sizeof(tinyui_arc_last_dispose_snapshot));
-        tinyui_arc_last_dispose_snapshot.kind = backend->kind;
-        if (backend->parent != 0) {
-            detach_result = tinyui_runtime_bridge_detach_from_parent(backend);
-            if (detach_result != 0) {
-                detach_result = tinyui_arc_finish_detach_after_backend_failure(backend);
-            }
-        } else {
-            tinyui_arc_last_dispose_snapshot.detached = 1;
-        }
-        unbind_result = tinyui_runtime_bridge_unbind_host(backend);
+        tinyui_arc_last_dispose_snapshot.kind = (int)arc->widget.kind;
+        detach_result = tinyui_widget_detach_from_parent(&arc->widget);
+        unbind_result = tinyui_runtime_bridge_unbind_host(&arc->widget);
         tinyui_arc_last_dispose_snapshot.detach_result = detach_result;
         tinyui_arc_last_dispose_snapshot.unbind_result = unbind_result;
         tinyui_arc_last_dispose_snapshot.cleanup_complete =
             (detach_result == 0 && unbind_result == 0);
         tinyui_arc_last_dispose_snapshot.cleanup_incomplete =
             (detach_result != 0 || unbind_result != 0);
-        tinyui_arc_last_dispose_snapshot.detached = (detach_result == 0 && backend->parent == 0);
-        tinyui_arc_last_dispose_snapshot.owner_cleared = (backend->owner == 0);
-        tinyui_arc_last_dispose_snapshot.root_cleared = (backend->root == 0);
-        tinyui_arc_last_dispose_snapshot.parent_cleared = (backend->parent == 0);
-        tinyui_arc_last_dispose_snapshot.next_sibling_cleared = (backend->next_sibling == 0);
-        tinyui_arc_last_dispose_snapshot.host_cleared = (backend->host_widget == 0);
+        tinyui_arc_last_dispose_snapshot.detached = (detach_result == 0);
+        tinyui_arc_last_dispose_snapshot.owner_cleared = (arc->widget.owner == 0);
+        tinyui_arc_last_dispose_snapshot.root_cleared = 1;
+        tinyui_arc_last_dispose_snapshot.parent_cleared = 1;
+        tinyui_arc_last_dispose_snapshot.next_sibling_cleared = 1;
+        tinyui_arc_last_dispose_snapshot.host_cleared = 1;
         tinyui_arc_last_dispose_snapshot.event_bridge_cleared =
-            (backend->ld_event_bridge_scene == 0
-             && backend->ld_event_bridge_sender == 0
-             && backend->ld_event_bridge_next == 0);
+            (arc->widget.ld_event_bridge_scene == 0
+             && arc->widget.ld_event_bridge_sender == 0
+             && arc->widget.ld_event_bridge_next == 0);
         tinyui_arc_last_dispose_snapshot.ld_pinfo_cleared =
             (ld_base == 0 || ld_base->pInfo == 0);
         tinyui_arc_last_dispose_snapshot_valid = 1;
-        if (app_state != 0 && app_state->ld_scene != 0 && backend->ld_widget != 0) {
-            ldArc_depose(app_state->ld_scene, (ldArc_t *)backend->ld_widget);
+        if (app_state != 0 && app_state->ld_scene != 0 && ld_widget_saved != 0) {
+            ldArc_depose(app_state->ld_scene, (ldArc_t *)ld_widget_saved);
         }
-        free(backend);
     }
 
     free(arc);
@@ -237,21 +192,18 @@ static int tinyui_arc_props_are_valid(const struct tinyui_arc_props *props)
 struct tinyui_arc *tinyui_arc_create(struct tinyui_widget *parent, const char *id)
 {
     struct tinyui_arc *arc;
-    struct tinyui_backend_widget *backend;
-    struct tinyui_backend_widget *parent_backend;
     struct tinyui_app *app_state;
     ldArc_t *ld_arc;
     arm_2d_tile_t *arc_img_tile;
     arm_2d_tile_t *arc_mask_tile;
     uint16_t name_id;
 
-    if (parent == 0 || id == 0 || parent->backend_widget == 0) {
+    if (parent == 0 || id == 0 || parent->ld_widget == 0) {
         return 0;
     }
 
-    parent_backend = (struct tinyui_backend_widget *)parent->backend_widget;
-    app_state = tinyui_runtime_bridge_backend_state_from_parent(parent_backend);
-    if (parent_backend->ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
+    app_state = parent->owner;
+    if (app_state == 0 || app_state->ld_scene == 0) {
         return 0;
     }
 
@@ -260,15 +212,8 @@ struct tinyui_arc *tinyui_arc_create(struct tinyui_widget *parent, const char *i
         return 0;
     }
 
-    backend = calloc(1, sizeof(*backend));
-    if (backend == 0) {
-        free(arc);
-        return 0;
-    }
-
     arc_img_tile = malloc(sizeof(*arc_img_tile));
     if (arc_img_tile == 0) {
-        free(backend);
         free(arc);
         return 0;
     }
@@ -277,25 +222,17 @@ struct tinyui_arc *tinyui_arc_create(struct tinyui_widget *parent, const char *i
     arc_mask_tile = malloc(sizeof(*arc_mask_tile));
     if (arc_mask_tile == 0) {
         free(arc_img_tile);
-        free(backend);
         free(arc);
         return 0;
     }
     *arc_mask_tile = c_tileQuaterArcMask;
 
-    name_id = tinyui_runtime_bridge_next_name_id(parent_backend);
-    if (name_id == 0) {
-        free(arc_mask_tile);
-        free(arc_img_tile);
-        free(backend);
-        free(arc);
-        return 0;
-    }
+    name_id = ++app_state->next_ld_name_id;
 
     ld_arc = ldArc_init(app_state->ld_scene,
                         0,
                         name_id,
-                        parent_backend->ld_name_id,
+                        parent->ld_name_id,
                         0,
                         0,
                         160,
@@ -306,38 +243,23 @@ struct tinyui_arc *tinyui_arc_create(struct tinyui_widget *parent, const char *i
     if (ld_arc == 0) {
         free(arc_mask_tile);
         free(arc_img_tile);
-        free(backend);
         free(arc);
         return 0;
     }
     ldArcSetQuarterImage(ld_arc, arc_img_tile, arc_mask_tile, true, true);
 
-    if (tinyui_widget_init_child(backend,
-                                         parent_backend,
-                                         TINYUI_BACKEND_WIDGET_ARC,
-                                         id,
-                                         parent_backend->theme) != 0) {
-        ldArc_depose(app_state->ld_scene, ld_arc);
-        free(backend);
-        free(arc);
-        return 0;
-    }
-    backend->ld_widget = ld_arc;
-    backend->ld_name_id = name_id;
-    if (tinyui_widget_attach_child(parent_backend, backend) != 0) {
-        ldArc_depose(app_state->ld_scene, ld_arc);
-        free(backend);
-        free(arc);
-        return 0;
-    }
-
     arc->id = id;
-    arc->widget.backend_widget = backend;
-    arc->widget.visible = 1;
-    arc->widget.enabled = 1;
-    arc->parent_color = (unsigned int)GLCD_COLOR_WHITE;
-    if (tinyui_runtime_bridge_bind_host(arc->widget.backend_widget, &arc->widget) != 0
-        || tinyui_arc_set_background_angle(arc, 0.0f, 360.0f) != 0
+    arc->widget.ld_widget  = ld_arc;
+    arc->widget.ld_name_id = name_id;
+    arc->widget.kind       = TINYUI_BACKEND_WIDGET_ARC;
+    arc->widget.owner      = app_state;
+    arc->widget.visible    = 1;
+    arc->widget.enabled    = 1;
+    arc->parent_color      = (unsigned int)GLCD_COLOR_WHITE;
+    ((ldBase_t *)ld_arc)->pInfo = &arc->widget;
+    tinyui_runtime_bridge_bind_leaf_widget(&arc->widget, app_state);
+
+    if (tinyui_arc_set_background_angle(arc, 0.0f, 360.0f) != 0
         || tinyui_arc_set_foreground_angle(arc, 0.0f) != 0
         || tinyui_arc_set_rotation_angle(arc, 0.0f) != 0
         || tinyui_arc_set_color(arc, 0xFFFFFFU, 0xADD8E6U) != 0) {

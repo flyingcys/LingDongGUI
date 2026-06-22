@@ -46,20 +46,15 @@ static arm_2d_align_t tinyui_canvas_align_to_ld(enum tinyui_align align)
 static int tinyui_canvas_push_native(struct tinyui_canvas *canvas,
                                      const struct tinyui_canvas_command *src)
 {
-    struct tinyui_backend_widget *backend;
     ldCanvas_t *ld_canvas;
     ldCanvasCommand_t command;
 
-    if (canvas == 0 || src == 0 || canvas->widget.backend_widget == 0) {
+    if (canvas == 0 || src == 0 || canvas->widget.kind != TINYUI_BACKEND_WIDGET_CANVAS
+        || canvas->widget.ld_widget == 0) {
         return -1;
     }
 
-    backend = (struct tinyui_backend_widget *)canvas->widget.backend_widget;
-    if (backend->kind != TINYUI_BACKEND_WIDGET_CANVAS || backend->ld_widget == 0) {
-        return -1;
-    }
-
-    ld_canvas = (ldCanvas_t *)backend->ld_widget;
+    ld_canvas = (ldCanvas_t *)canvas->widget.ld_widget;
     command = (ldCanvasCommand_t){
         .kind = (ldCanvasCommandKind_t)src->kind,
         .region = {
@@ -86,26 +81,21 @@ static int tinyui_canvas_push_native(struct tinyui_canvas *canvas,
 
 static int tinyui_canvas_clear_native(struct tinyui_canvas *canvas)
 {
-    struct tinyui_backend_widget *backend;
     ldCanvas_t *ld_canvas;
 
-    if (canvas == 0 || canvas->widget.backend_widget == 0) {
+    if (canvas == 0 || canvas->widget.kind != TINYUI_BACKEND_WIDGET_CANVAS
+        || canvas->widget.ld_widget == 0) {
         return -1;
     }
 
-    backend = (struct tinyui_backend_widget *)canvas->widget.backend_widget;
-    if (backend->kind != TINYUI_BACKEND_WIDGET_CANVAS || backend->ld_widget == 0) {
-        return -1;
-    }
-
-    ld_canvas = (ldCanvas_t *)backend->ld_widget;
+    ld_canvas = (ldCanvas_t *)canvas->widget.ld_widget;
     ldCanvasClear(ld_canvas);
     return 0;
 }
 
 static int tinyui_canvas_is_valid(const struct tinyui_canvas *canvas)
 {
-    return canvas != 0 && canvas->widget.backend_widget != 0;
+    return canvas != 0 && canvas->widget.ld_widget != 0;
 }
 
 static int tinyui_canvas_push(struct tinyui_canvas *canvas,
@@ -136,8 +126,6 @@ static int tinyui_canvas_push(struct tinyui_canvas *canvas,
 struct tinyui_canvas *tinyui_canvas_create(struct tinyui_window *parent, const char *id)
 {
     struct tinyui_canvas *canvas;
-    struct tinyui_backend_widget *backend;
-    struct tinyui_backend_widget *parent_backend;
     struct tinyui_app *app_state;
     ldCanvas_t *ld_canvas;
     uint16_t name_id;
@@ -146,11 +134,8 @@ struct tinyui_canvas *tinyui_canvas_create(struct tinyui_window *parent, const c
         return 0;
     }
 
-    parent_backend = (struct tinyui_backend_widget *)parent->widget.backend_widget;
-    app_state = parent_backend != 0
-        ? tinyui_runtime_bridge_backend_state_from_parent(parent_backend)
-        : 0;
-    if (parent_backend == 0 || parent_backend->ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
+    app_state = parent->widget.owner;
+    if (app_state == 0 || app_state->ld_scene == 0 || parent->widget.ld_widget == 0) {
         return 0;
     }
 
@@ -159,56 +144,23 @@ struct tinyui_canvas *tinyui_canvas_create(struct tinyui_window *parent, const c
         return 0;
     }
 
-    backend = calloc(1, sizeof(*backend));
-    if (backend == 0) {
-        free(canvas);
-        return 0;
-    }
+    name_id = ++app_state->next_ld_name_id;
 
-    name_id = tinyui_runtime_bridge_next_name_id(parent_backend);
-    if (name_id == 0) {
-        free(backend);
-        free(canvas);
-        return 0;
-    }
-
-    ld_canvas = ldCanvas_init(app_state->ld_scene, NULL, name_id, parent_backend->ld_name_id, 0, 0, 0, 0);
+    ld_canvas = ldCanvas_init(app_state->ld_scene, NULL, name_id, parent->widget.ld_name_id, 0, 0, 0, 0);
     if (ld_canvas == 0) {
-        free(backend);
         free(canvas);
         return 0;
     }
 
-    if (tinyui_widget_init_child(backend,
-                                         parent_backend,
-                                         TINYUI_BACKEND_WIDGET_CANVAS,
-                                         id,
-                                         parent_backend->theme) != 0) {
-        ldCanvas_depose(app_state->ld_scene, ld_canvas);
-        free(backend);
-        free(canvas);
-        return 0;
-    }
-    backend->ld_widget = ld_canvas;
-    backend->ld_name_id = name_id;
-    if (tinyui_widget_attach_child(parent_backend, backend) != 0) {
-        ldCanvas_depose(app_state->ld_scene, ld_canvas);
-        free(backend);
-        free(canvas);
-        return 0;
-    }
-
-    canvas->widget.backend_widget = backend;
-    canvas->id = id;
+    canvas->widget.kind = TINYUI_BACKEND_WIDGET_CANVAS;
+    canvas->widget.owner = app_state;
+    canvas->widget.ld_widget = ld_canvas;
+    canvas->widget.ld_name_id = name_id;
     canvas->widget.visible = 1;
     canvas->widget.enabled = 1;
-    if (tinyui_runtime_bridge_bind_host(canvas->widget.backend_widget, &canvas->widget) != 0) {
-        (void)tinyui_runtime_bridge_detach_from_parent(canvas->widget.backend_widget);
-        ldCanvas_depose(app_state->ld_scene, ld_canvas);
-        free(backend);
-        free(canvas);
-        return 0;
-    }
+    canvas->id = id;
+    ((ldBase_t *)ld_canvas)->pInfo = &canvas->widget;
+    tinyui_runtime_bridge_bind_leaf_widget(&canvas->widget, app_state);
     return canvas;
 }
 

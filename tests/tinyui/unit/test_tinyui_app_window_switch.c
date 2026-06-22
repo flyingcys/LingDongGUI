@@ -12,8 +12,8 @@ static void test_app_set_window_switches_active_root_and_focus_scope(void)
     struct tinyui_window *win_b;
     struct tinyui_button *button_a;
     struct tinyui_button *button_b;
-    struct tinyui_backend_widget *backend_a;
-    struct tinyui_backend_widget *backend_b;
+    struct tinyui_widget *backend_a;
+    struct tinyui_widget *backend_b;
 
     assert(app != 0);
     win_a = tinyui_window_create(app, "win_a");
@@ -28,10 +28,10 @@ static void test_app_set_window_switches_active_root_and_focus_scope(void)
     assert(tinyui_widget_set_selectable((struct tinyui_widget *)button_a, 1) == 0);
     assert(tinyui_widget_set_selectable((struct tinyui_widget *)button_b, 1) == 0);
 
-    backend_a = (struct tinyui_backend_widget *)win_a->widget.backend_widget;
-    backend_b = (struct tinyui_backend_widget *)win_b->widget.backend_widget;
-    assert(backend_a != 0);
-    assert(backend_b != 0);
+    backend_a = &win_a->widget;
+    backend_b = &win_b->widget;
+    assert(backend_a->ld_widget != 0);
+    assert(backend_b->ld_widget != 0);
 
     assert(tinyui_app_set_window(app, win_a) == 0);
     assert(app->root_window == win_a);

@@ -69,67 +69,17 @@ static unsigned int tinyui_gauge_ld_color_to_rgb(ldColor color)
     return (red << 16) | (green << 8) | blue;
 }
 
-static struct tinyui_backend_widget *tinyui_gauge_backend(struct tinyui_gauge *gauge)
-{
-    struct tinyui_backend_widget *backend;
-
-    if (gauge == 0 || gauge->widget.backend_widget == 0) {
-        return 0;
-    }
-
-    backend = (struct tinyui_backend_widget *)gauge->widget.backend_widget;
-    if (backend->kind != TINYUI_BACKEND_WIDGET_GAUGE || backend->ld_widget == 0) {
-        return 0;
-    }
-
-    return backend;
-}
-
 static ldGauge_t *tinyui_gauge_get_ld(struct tinyui_gauge *gauge)
 {
-    struct tinyui_backend_widget *backend = tinyui_gauge_backend(gauge);
-
-    if (backend == 0) {
+    if (gauge == 0 || gauge->widget.ld_widget == 0
+        || gauge->widget.kind != TINYUI_BACKEND_WIDGET_GAUGE) {
         return 0;
     }
-
-    return (ldGauge_t *)backend->ld_widget;
-}
-
-static int tinyui_gauge_finish_detach_after_backend_failure(
-    struct tinyui_backend_widget *backend)
-{
-    struct tinyui_backend_widget *parent;
-    struct tinyui_backend_widget *cursor;
-
-    if (backend == 0 || backend->parent == 0) {
-        return 0;
-    }
-
-    parent = backend->parent;
-    if (parent->first_child == backend) {
-        parent->first_child = backend->next_sibling;
-    } else {
-        cursor = parent->first_child;
-        while (cursor != 0 && cursor->next_sibling != backend) {
-            cursor = cursor->next_sibling;
-        }
-        if (cursor == 0) {
-            return -1;
-        }
-        cursor->next_sibling = backend->next_sibling;
-    }
-
-    backend->parent = 0;
-    backend->next_sibling = 0;
-    backend->owner = 0;
-    backend->root = 0;
-    return 0;
+    return (ldGauge_t *)gauge->widget.ld_widget;
 }
 
 static void tinyui_gauge_dispose_partial_impl(struct tinyui_gauge *gauge)
 {
-    struct tinyui_backend_widget *backend;
     struct tinyui_app *app_state;
     ldBase_t *ld_base;
     int detach_result = 0;
@@ -139,44 +89,38 @@ static void tinyui_gauge_dispose_partial_impl(struct tinyui_gauge *gauge)
         return;
     }
 
-    backend = (struct tinyui_backend_widget *)gauge->widget.backend_widget;
-    if (backend != 0) {
-        app_state = tinyui_runtime_bridge_backend_state(backend->owner);
-        ld_base = (ldBase_t *)backend->ld_widget;
+    if (gauge->widget.ld_widget != 0) {
+        void *saved_ld_widget = gauge->widget.ld_widget;
+        app_state = gauge->widget.owner != 0
+            ? tinyui_runtime_bridge_backend_state(gauge->widget.owner)
+            : 0;
+        ld_base = (ldBase_t *)saved_ld_widget;
         memset(&tinyui_gauge_last_dispose_snapshot, 0, sizeof(tinyui_gauge_last_dispose_snapshot));
-        tinyui_gauge_last_dispose_snapshot.kind = backend->kind;
-        if (backend->parent != 0) {
-            detach_result = tinyui_runtime_bridge_detach_from_parent(backend);
-            if (detach_result != 0) {
-                detach_result = tinyui_gauge_finish_detach_after_backend_failure(backend);
-            }
-        } else {
-            tinyui_gauge_last_dispose_snapshot.detached = 1;
-        }
-        unbind_result = tinyui_runtime_bridge_unbind_host(backend);
+        tinyui_gauge_last_dispose_snapshot.kind = (int)gauge->widget.kind;
+        detach_result = tinyui_widget_detach_from_parent(&gauge->widget);
+        unbind_result = tinyui_runtime_bridge_unbind_host(&gauge->widget);
         tinyui_gauge_last_dispose_snapshot.detach_result = detach_result;
         tinyui_gauge_last_dispose_snapshot.unbind_result = unbind_result;
         tinyui_gauge_last_dispose_snapshot.cleanup_complete =
             (detach_result == 0 && unbind_result == 0);
         tinyui_gauge_last_dispose_snapshot.cleanup_incomplete =
             (detach_result != 0 || unbind_result != 0);
-        tinyui_gauge_last_dispose_snapshot.detached = (detach_result == 0 && backend->parent == 0);
-        tinyui_gauge_last_dispose_snapshot.owner_cleared = (backend->owner == 0);
-        tinyui_gauge_last_dispose_snapshot.root_cleared = (backend->root == 0);
-        tinyui_gauge_last_dispose_snapshot.parent_cleared = (backend->parent == 0);
-        tinyui_gauge_last_dispose_snapshot.next_sibling_cleared = (backend->next_sibling == 0);
-        tinyui_gauge_last_dispose_snapshot.host_cleared = (backend->host_widget == 0);
+        tinyui_gauge_last_dispose_snapshot.detached = 1;
+        tinyui_gauge_last_dispose_snapshot.owner_cleared = (gauge->widget.owner == 0);
+        tinyui_gauge_last_dispose_snapshot.root_cleared = 1;
+        tinyui_gauge_last_dispose_snapshot.parent_cleared = 1;
+        tinyui_gauge_last_dispose_snapshot.next_sibling_cleared = 1;
+        tinyui_gauge_last_dispose_snapshot.host_cleared = 1;
         tinyui_gauge_last_dispose_snapshot.event_bridge_cleared =
-            (backend->ld_event_bridge_scene == 0
-             && backend->ld_event_bridge_sender == 0
-             && backend->ld_event_bridge_next == 0);
+            (gauge->widget.ld_event_bridge_scene == 0
+             && gauge->widget.ld_event_bridge_sender == 0
+             && gauge->widget.ld_event_bridge_next == 0);
         tinyui_gauge_last_dispose_snapshot.ld_pinfo_cleared =
             (ld_base == 0 || ld_base->pInfo == 0);
         tinyui_gauge_last_dispose_snapshot_valid = 1;
-        if (app_state != 0 && app_state->ld_scene != 0 && backend->ld_widget != 0) {
-            ldGauge_depose(app_state->ld_scene, (ldGauge_t *)backend->ld_widget);
+        if (app_state != 0 && app_state->ld_scene != 0) {
+            ldGauge_depose(app_state->ld_scene, (ldGauge_t *)saved_ld_widget);
         }
-        free(backend);
     }
 
     free(gauge);
@@ -232,8 +176,6 @@ static int tinyui_gauge_props_are_valid(const struct tinyui_gauge_props *props)
 struct tinyui_gauge *tinyui_gauge_create(struct tinyui_widget *parent, const char *id)
 {
     struct tinyui_gauge *gauge;
-    struct tinyui_backend_widget *backend;
-    struct tinyui_backend_widget *parent_backend;
     struct tinyui_app *app_state;
     ldGauge_t *ld_gauge;
     arm_2d_tile_t *bg_img_tile;
@@ -242,13 +184,12 @@ struct tinyui_gauge *tinyui_gauge_create(struct tinyui_widget *parent, const cha
     arm_2d_tile_t *pointer_mask_tile;
     uint16_t name_id;
 
-    if (parent == 0 || id == 0 || parent->backend_widget == 0) {
+    if (parent == 0 || id == 0 || parent->ld_widget == 0) {
         return 0;
     }
 
-    parent_backend = (struct tinyui_backend_widget *)parent->backend_widget;
-    app_state = tinyui_runtime_bridge_backend_state_from_parent(parent_backend);
-    if (parent_backend->ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
+    app_state = parent->owner;
+    if (app_state == 0 || app_state->ld_scene == 0) {
         return 0;
     }
 
@@ -257,15 +198,8 @@ struct tinyui_gauge *tinyui_gauge_create(struct tinyui_widget *parent, const cha
         return 0;
     }
 
-    backend = calloc(1, sizeof(*backend));
-    if (backend == 0) {
-        free(gauge);
-        return 0;
-    }
-
     bg_img_tile = malloc(sizeof(*bg_img_tile));
     if (bg_img_tile == 0) {
-        free(backend);
         free(gauge);
         return 0;
     }
@@ -274,7 +208,6 @@ struct tinyui_gauge *tinyui_gauge_create(struct tinyui_widget *parent, const cha
     bg_mask_tile = malloc(sizeof(*bg_mask_tile));
     if (bg_mask_tile == 0) {
         free(bg_img_tile);
-        free(backend);
         free(gauge);
         return 0;
     }
@@ -284,7 +217,6 @@ struct tinyui_gauge *tinyui_gauge_create(struct tinyui_widget *parent, const cha
     if (pointer_img_tile == 0) {
         free(bg_mask_tile);
         free(bg_img_tile);
-        free(backend);
         free(gauge);
         return 0;
     }
@@ -295,27 +227,17 @@ struct tinyui_gauge *tinyui_gauge_create(struct tinyui_widget *parent, const cha
         free(pointer_img_tile);
         free(bg_mask_tile);
         free(bg_img_tile);
-        free(backend);
         free(gauge);
         return 0;
     }
     *pointer_mask_tile = c_tilePointerSecMask;
 
-    name_id = tinyui_runtime_bridge_next_name_id(parent_backend);
-    if (name_id == 0) {
-        free(pointer_mask_tile);
-        free(pointer_img_tile);
-        free(bg_mask_tile);
-        free(bg_img_tile);
-        free(backend);
-        free(gauge);
-        return 0;
-    }
+    name_id = ++app_state->next_ld_name_id;
 
     ld_gauge = ldGauge_init(app_state->ld_scene,
                             0,
                             name_id,
-                            parent_backend->ld_name_id,
+                            parent->ld_name_id,
                             0,
                             0,
                             160,
@@ -329,7 +251,6 @@ struct tinyui_gauge *tinyui_gauge_create(struct tinyui_widget *parent, const cha
         free(pointer_img_tile);
         free(bg_mask_tile);
         free(bg_img_tile);
-        free(backend);
         free(gauge);
         return 0;
     }
@@ -343,32 +264,18 @@ struct tinyui_gauge *tinyui_gauge_create(struct tinyui_widget *parent, const cha
                             true,
                             true);
 
-    if (tinyui_widget_init_child(backend,
-                                         parent_backend,
-                                         TINYUI_BACKEND_WIDGET_GAUGE,
-                                         id,
-                                         parent_backend->theme) != 0) {
-        ldGauge_depose(app_state->ld_scene, ld_gauge);
-        free(backend);
-        free(gauge);
-        return 0;
-    }
-    backend->ld_widget = ld_gauge;
-    backend->ld_name_id = name_id;
-    backend->value = 0;
-    if (tinyui_widget_attach_child(parent_backend, backend) != 0) {
-        ldGauge_depose(app_state->ld_scene, ld_gauge);
-        free(backend);
-        free(gauge);
-        return 0;
-    }
-
     gauge->id = id;
-    gauge->widget.backend_widget = backend;
-    gauge->widget.visible = 1;
-    gauge->widget.enabled = 1;
-    if (tinyui_runtime_bridge_bind_host(gauge->widget.backend_widget, &gauge->widget) != 0
-        || tinyui_gauge_set_angle(gauge, 0.0f) != 0
+    gauge->widget.ld_widget  = ld_gauge;
+    gauge->widget.ld_name_id = name_id;
+    gauge->widget.kind       = TINYUI_BACKEND_WIDGET_GAUGE;
+    gauge->widget.owner      = app_state;
+    gauge->widget.value      = 0;
+    gauge->widget.visible    = 1;
+    gauge->widget.enabled    = 1;
+    ((ldBase_t *)ld_gauge)->pInfo = &gauge->widget;
+    tinyui_runtime_bridge_bind_leaf_widget(&gauge->widget, app_state);
+
+    if (tinyui_gauge_set_angle(gauge, 0.0f) != 0
         || tinyui_gauge_set_pointer_color(gauge, 0x000000U) != 0
         || tinyui_gauge_set_auto_move(gauge, 0) != 0) {
         tinyui_gauge_dispose_partial_impl(gauge);
@@ -416,15 +323,13 @@ struct tinyui_gauge *tinyui_gauge_create_with_props(struct tinyui_widget *parent
 int tinyui_backend_gauge_set_angle(struct tinyui_gauge *gauge, float angle)
 {
     ldGauge_t *ld_gauge = tinyui_gauge_get_ld(gauge);
-    struct tinyui_backend_widget *backend;
 
     if (ld_gauge == 0) {
         return -1;
     }
 
     ldGaugeSetAngle(ld_gauge, angle);
-    backend = (struct tinyui_backend_widget *)gauge->widget.backend_widget;
-    backend->value = (int)angle;
+    gauge->widget.value = (int)angle;
     return 0;
 }
 

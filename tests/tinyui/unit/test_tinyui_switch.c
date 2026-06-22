@@ -13,12 +13,12 @@ static void test_switch_create_and_backend_mapping(struct tinyui_window *win)
 {
     tinyui_obj_t *obj = tinyui_switch_create((tinyui_obj_t *)win, "switch_test");
     struct tinyui_switch *sw = (struct tinyui_switch *)obj;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldBase_t *ld_base;
 
     assert(sw != 0);
-    backend = (struct tinyui_backend_widget *)sw->widget.backend_widget;
-    assert(backend != 0);
+    backend = &sw->widget;
+    assert(backend->ld_widget != 0);
     assert(backend->kind == TINYUI_BACKEND_WIDGET_SWITCH);
     ld_base = (ldBase_t *)backend->ld_widget;
     assert(ld_base != 0);
@@ -31,21 +31,20 @@ static void test_switch_create_builds_direct_backend_mapping(struct tinyui_windo
 {
     tinyui_obj_t *obj = tinyui_switch_create((tinyui_obj_t *)win, "switch_direct");
     struct tinyui_switch *sw = (struct tinyui_switch *)obj;
-    struct tinyui_backend_widget *backend;
-    struct tinyui_backend_widget *parent_backend;
+    struct tinyui_widget *backend;
+    struct tinyui_widget *parent_backend;
     ldSwitch_t *ld_switch;
 
     assert(sw != 0);
-    backend = (struct tinyui_backend_widget *)sw->widget.backend_widget;
-    parent_backend = (struct tinyui_backend_widget *)win->widget.backend_widget;
-    assert(backend != 0);
-    assert(parent_backend != 0);
+    backend = &sw->widget;
+    parent_backend = &win->widget;
+    assert(backend->ld_widget != 0);
+    assert(parent_backend->ld_widget != 0);
     assert(backend->kind == TINYUI_BACKEND_WIDGET_SWITCH);
     assert(backend->owner == parent_backend->owner);
-    assert(backend->root == parent_backend->root);
-    assert(backend->parent == parent_backend);
+    assert((ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)backend->ld_widget) == (ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)parent_backend->ld_widget));
+    assert(ldBaseGetParent((ldBase_t *)backend->ld_widget) == (ldBase_t *)parent_backend->ld_widget);
     assert(backend->ld_name_id != 0);
-    assert(backend->host_widget == &sw->widget);
     assert(backend->ld_event_bridge_scene != 0);
     assert(backend->ld_event_bridge_sender == backend->ld_widget);
     ld_switch = (ldSwitch_t *)backend->ld_widget;
@@ -84,12 +83,12 @@ static void test_switch_create_with_props_pushes_fields(struct tinyui_window *wi
             .disabled = 1,
             .has_disabled = 1,
         });
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldSwitch_t *ld_sw;
 
     assert(sw != 0);
-    backend = (struct tinyui_backend_widget *)sw->widget.backend_widget;
-    assert(backend != 0);
+    backend = &sw->widget;
+    assert(backend->ld_widget != 0);
     ld_sw = (ldSwitch_t *)backend->ld_widget;
     assert(ld_sw != 0);
     assert(ld_sw->isChecked == true);
@@ -102,12 +101,12 @@ static void test_switch_set_checked_round_trip(struct tinyui_window *win)
 {
     tinyui_obj_t *obj = tinyui_switch_create((tinyui_obj_t *)win, "sw_checked");
     struct tinyui_switch *sw = (struct tinyui_switch *)obj;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldSwitch_t *ld_sw;
 
     assert(sw != 0);
-    backend = (struct tinyui_backend_widget *)sw->widget.backend_widget;
-    assert(backend != 0);
+    backend = &sw->widget;
+    assert(backend->ld_widget != 0);
     ld_sw = (ldSwitch_t *)backend->ld_widget;
     assert(ld_sw != 0);
 
@@ -126,13 +125,13 @@ static void test_switch_set_disabled_round_trip(struct tinyui_window *win)
 {
     tinyui_obj_t *obj = tinyui_switch_create((tinyui_obj_t *)win, "sw_disabled");
     struct tinyui_switch *sw = (struct tinyui_switch *)obj;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldSwitch_t *ld_sw;
     int disabled = -1;
 
     assert(sw != 0);
-    backend = (struct tinyui_backend_widget *)sw->widget.backend_widget;
-    assert(backend != 0);
+    backend = &sw->widget;
+    assert(backend->ld_widget != 0);
     ld_sw = (ldSwitch_t *)backend->ld_widget;
     assert(ld_sw != 0);
 

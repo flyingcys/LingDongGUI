@@ -19,8 +19,50 @@
 #ifndef TINYUI_INTERNAL_H
 #define TINYUI_INTERNAL_H
 
+#include <stddef.h> /* size_t */
+
+/* ── enum tinyui_backend_widget_kind — canonical location ─────────────────
+ * Declared here so that struct tinyui_widget (below) can embed it as a
+ * field without pulling in the full runtime_internal.h first.
+ * runtime_internal.h checks TINYUI_BACKEND_WIDGET_KIND_DEFINED and skips
+ * its own copy when this header has already been processed.
+ * ──────────────────────────────────────────────────────────────────────── */
+#define TINYUI_BACKEND_WIDGET_KIND_DEFINED
+
+enum tinyui_backend_widget_kind {
+    TINYUI_BACKEND_WIDGET_WINDOW = 0,
+    TINYUI_BACKEND_WIDGET_BACKGROUND,
+    TINYUI_BACKEND_WIDGET_LABEL,
+    TINYUI_BACKEND_WIDGET_BUTTON,
+    TINYUI_BACKEND_WIDGET_CHECKBOX,
+    TINYUI_BACKEND_WIDGET_SWITCH,
+    TINYUI_BACKEND_WIDGET_SLIDER,
+    TINYUI_BACKEND_WIDGET_ARC,
+    TINYUI_BACKEND_WIDGET_GAUGE,
+    TINYUI_BACKEND_WIDGET_ICON_SLIDER,
+    TINYUI_BACKEND_WIDGET_RADIAL_MENU,
+    TINYUI_BACKEND_WIDGET_PROGRESS_BAR,
+    TINYUI_BACKEND_WIDGET_QRCODE,
+    TINYUI_BACKEND_WIDGET_PROGRESS_WHEEL,
+    TINYUI_BACKEND_WIDGET_ANIMATION,
+    TINYUI_BACKEND_WIDGET_LIST,
+    TINYUI_BACKEND_WIDGET_MESSAGE_BOX,
+    TINYUI_BACKEND_WIDGET_DATE_TIME,
+    TINYUI_BACKEND_WIDGET_CLOCK,
+    TINYUI_BACKEND_WIDGET_TEXT,
+    TINYUI_BACKEND_WIDGET_KEYBOARD,
+    TINYUI_BACKEND_WIDGET_COMBO_BOX,
+    TINYUI_BACKEND_WIDGET_SCROLL_SELECTER,
+    TINYUI_BACKEND_WIDGET_TABLE,
+    TINYUI_BACKEND_WIDGET_GRAPH,
+    TINYUI_BACKEND_WIDGET_IMAGE,
+    TINYUI_BACKEND_WIDGET_CALENDAR,
+    TINYUI_BACKEND_WIDGET_CANVAS,
+};
+
 #include "runtime_internal.h"
 #include "app.h"
+#include "../../../src/misc/xBtnAction.h"
 
 /* Forward declarations for widget types used in internal function declarations.
  * These must appear before any function declaration that uses them as parameter
@@ -157,6 +199,8 @@ int tinyui_widget_is_kind(const void *backend_widget,
                           enum tinyui_backend_widget_kind kind);
 int tinyui_runtime_bridge_unbind_host(void *backend_widget);
 int tinyui_runtime_bridge_detach_from_parent(void *backend_widget);
+int tinyui_runtime_bridge_bind_leaf_widget(struct tinyui_widget *widget,
+                                            struct tinyui_app *app);
 int tinyui_widget_bind_backend_host(struct tinyui_widget *widget, void *backend_widget);
 struct tinyui_widget *tinyui_widget_backend_host(const void *backend_widget);
 int tinyui_widget_backend_detach(void *backend_widget);
@@ -172,8 +216,7 @@ void tinyui_widget_emit_event(tinyui_event_cb cb,
 void tinyui_widget_emit_clicked(tinyui_event_cb cb,
                                 struct tinyui_widget *widget,
                                 void *user_data);
-void tinyui_widget_sync_ld_value(struct tinyui_backend_widget *backend,
-                                 struct tinyui_widget *widget,
+void tinyui_widget_sync_ld_value(struct tinyui_widget *widget,
                                  int value);
 int tinyui_widget_update_value(void *backend_widget,
                                int value,
@@ -181,7 +224,7 @@ int tinyui_widget_update_value(void *backend_widget,
                                struct tinyui_widget *widget,
                                void *user_data);
 int tinyui_widget_set_backend_text(void *backend_widget, const char *text);
-void tinyui_widget_emit_ld_event_bridge(struct tinyui_backend_widget *backend,
+void tinyui_widget_emit_ld_event_bridge(struct tinyui_widget *widget,
                                         enum tinyui_backend_signal signal,
                                         int value);
 int tinyui_widget_dispatch_signal(void *backend_widget,
@@ -255,7 +298,6 @@ enum tinyui_edit_result {
 };
 
 struct tinyui_widget {
-    void *backend_widget;
     int x;
     int y;
     int width;
@@ -295,6 +337,17 @@ struct tinyui_widget {
     enum tinyui_focus_event last_focus_event;
     enum tinyui_edit_result pending_edit_result;
     enum tinyui_edit_result last_edit_result;
+    /* ── folded backend fields (Phase C) ──────────────────────────── */
+    void *ld_widget;
+    uint16_t ld_name_id;
+    enum tinyui_backend_widget_kind kind;
+    struct tinyui_app *owner;
+    struct ld_scene_t *ld_event_bridge_scene;
+    void *ld_event_bridge_sender;
+    struct tinyui_widget *ld_event_bridge_next;
+    int value;
+    uint16_t list_item_count;
+    enum tinyui_edit_result edit_result_on_finish;
 };
 
 struct tinyui_app {
@@ -317,6 +370,9 @@ struct tinyui_theme {
     int metrics[TINYUI_METRIC_COUNT];
 };
 
+/* Forward declaration — full definition is in window.c */
+struct tinyui_window_backend_host;
+
 struct tinyui_window {
     struct tinyui_widget widget;
     const char *id;
@@ -336,6 +392,19 @@ struct tinyui_window {
     int grid_col_gap;
     enum tinyui_align grid_col_align;
     enum tinyui_align grid_row_align;
+    /* ── padding fields (Phase C, from tinyui_backend_layout_window_state) */
+    int16_t padding_left;
+    int16_t padding_top;
+    int16_t padding_right;
+    int16_t padding_bottom;
+    uint8_t has_explicit_flex_padding;
+    int16_t grid_padding_left;
+    int16_t grid_padding_top;
+    int16_t grid_padding_right;
+    int16_t grid_padding_bottom;
+    uint8_t has_explicit_grid_padding;
+    /* ── C1 backend host pointer (replaces widget.backend_widget for windows) */
+    struct tinyui_window_backend_host *backend_host;
 };
 
 struct tinyui_background {
@@ -401,6 +470,7 @@ struct tinyui_button {
     void *on_pressed_user_data;
     tinyui_event_cb on_released;
     void *on_released_user_data;
+    xBtnInfo_t action_info;
 };
 
 struct tinyui_keyboard {
@@ -649,6 +719,7 @@ struct tinyui_line_edit {
 struct tinyui_combo_box {
     struct tinyui_widget widget;
     const char *id;
+    void *_host_backend; /* C1: replaces widget.backend_widget */
     struct tinyui_list_item items[TINYUI_LIST_MAX_ITEMS];
     const char *backend_item_ids[TINYUI_LIST_MAX_ITEMS];
     const unsigned char *backend_item_texts[TINYUI_LIST_MAX_ITEMS];
@@ -663,6 +734,7 @@ struct tinyui_combo_box {
 struct tinyui_scroll_selecter {
     struct tinyui_widget widget;
     const char *id;
+    void *_host_backend; /* C1: replaces widget.backend_widget */
     struct tinyui_list_item items[TINYUI_LIST_MAX_ITEMS];
     const char *backend_item_ids[TINYUI_LIST_MAX_ITEMS];
     const unsigned char *backend_item_texts[TINYUI_LIST_MAX_ITEMS];
@@ -704,6 +776,44 @@ struct tinyui_table {
     int current_row;
     int current_column;
 };
+
+/* ── Phase C1 core helper declarations ────────────────────────────────────── */
+
+/**
+ * @brief Generic leaf widget factory (C1-T4 name-locked).
+ *
+ * Allocates @p host_size bytes for the host object (whose first member must be
+ * struct tinyui_widget), calls @p ld_init_cb to create the backing ld widget,
+ * attaches it to the ld tree under @p parent, and binds pInfo.
+ *
+ * @param[in] parent      Parent window (must not be NULL)
+ * @param[in] kind        Backend widget kind for the new leaf
+ * @param[in] ld_init_cb  Callback that allocates and initialises the ld widget.
+ *                        Receives @p ctx plus the scene, name_id and
+ *                        parent_name_id; must return the new ld widget pointer
+ *                        (NULL on failure).
+ * @param[in] ctx         Opaque context forwarded to @p ld_init_cb
+ * @param[in] host_size   sizeof of the concrete host struct (>= sizeof(struct
+ *                        tinyui_widget))
+ * @return Pointer to the embedded struct tinyui_widget on success, NULL on failure
+ */
+struct tinyui_widget *tinyui_widget_create_leaf(
+    struct tinyui_window *parent,
+    enum tinyui_backend_widget_kind kind,
+    void *(*ld_init_cb)(void *ctx, struct ld_scene_t *scene,
+                        uint16_t name_id, uint16_t parent_name_id),
+    void *ctx,
+    size_t host_size);
+
+/**
+ * @brief Detach widget from parent in the ld tree
+ */
+int tinyui_widget_detach_from_parent(struct tinyui_widget *w);
+
+/**
+ * @brief Common destroy: detach + unbind + ld_depose_cb + free
+ */
+void tinyui_widget_destroy_common(struct tinyui_widget *w, void (*ld_depose_cb)(void *));
 
 /**
  * @brief Claim input focus
@@ -768,5 +878,18 @@ int tinyui_widget_release_editing(struct tinyui_widget *widget);
  */
 
 int tinyui_widget_is_editing_owner(const struct tinyui_widget *widget);
+
+/**
+ * @brief Get the backend widget pointer for a window (C1 transition helper).
+ *
+ * Returns a pointer to the struct tinyui_backend_widget embedded in the
+ * window's backend host.  Widget files that create child backends under a
+ * window parent must call this instead of accessing backend_host directly
+ * (whose full definition lives only in window.c).
+ *
+ * @param[in] window  Window instance (may be NULL)
+ * @return Pointer to the embedded struct tinyui_backend_widget, or NULL
+ */
+void *tinyui_window_get_backend_widget(struct tinyui_window *window);
 
 #endif

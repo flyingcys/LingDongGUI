@@ -32,6 +32,7 @@
 #include "../../../src/gui/ldWindow.h"
 
 #include <stdlib.h>
+#include <string.h>
 #include <stdint.h>
 
 void ldBaseSetHeight(ldBase_t *ptWidget, int16_t height);
@@ -137,12 +138,10 @@ static int tinyui_theme_apply_widget_metrics(const struct tinyui_theme *theme,
                                              struct tinyui_widget *widget,
                                              enum tinyui_backend_widget_kind kind)
 {
-    struct tinyui_backend_widget *backend_widget = (struct tinyui_backend_widget *)widget->backend_widget;
-
     if (kind != TINYUI_BACKEND_WIDGET_WINDOW && kind != TINYUI_BACKEND_WIDGET_IMAGE) {
         widget->height = theme->metrics[TINYUI_METRIC_CONTROL_HEIGHT];
-        if (backend_widget != 0 && backend_widget->ld_widget != 0) {
-            ldBaseSetHeight((ldBase_t *)backend_widget->ld_widget,
+        if (widget->ld_widget != 0) {
+            ldBaseSetHeight((ldBase_t *)widget->ld_widget,
                             (int16_t)theme->metrics[TINYUI_METRIC_CONTROL_HEIGHT]);
         }
     }
@@ -506,12 +505,11 @@ int tinyui_theme_apply_to_widget(struct tinyui_theme *theme,
                                  enum tinyui_part part,
                                  enum tinyui_state state)
 {
-    struct tinyui_backend_widget *backend_widget;
     unsigned int bg_color;
     unsigned int text_color;
     unsigned int border_color;
 
-    if (theme == 0 || widget == 0 || widget->backend_widget == 0) {
+    if (theme == 0 || widget == 0 || widget->ld_widget == 0) {
         return -1;
     }
 
@@ -519,28 +517,37 @@ int tinyui_theme_apply_to_widget(struct tinyui_theme *theme,
         return -1;
     }
 
-    backend_widget = (struct tinyui_backend_widget *)widget->backend_widget;
-    if (!tinyui_theme_part_supported(backend_widget->kind, part)) {
+    if (!tinyui_theme_part_supported(widget->kind, part)) {
         return -1;
     }
-    if (!tinyui_theme_backend_can_apply_style(backend_widget)) {
+    /* C1: use widget->ld_widget + widget->kind instead of backend fields */
+    if (widget->ld_widget == 0) {
         return -1;
     }
 
     tinyui_theme_map_widget_colors(theme, part, state, &bg_color, &text_color, &border_color);
-    if (tinyui_theme_apply_widget_metrics(theme, widget, backend_widget->kind) != 0) {
+    if (tinyui_theme_apply_widget_metrics(theme, widget, widget->kind) != 0) {
         return -1;
     }
 
     widget->bg_color = bg_color;
     widget->text_color = text_color;
     widget->border_color = border_color;
-    return tinyui_theme_apply_native_widget_style(backend_widget,
-                                                  part,
-                                                  state,
-                                                  bg_color,
-                                                  text_color,
-                                                  border_color);
+
+    {
+        /* C1: build a minimal proxy so sub-functions read correct struct fields */
+        struct tinyui_backend_widget proxy;
+        memset(&proxy, 0, sizeof(proxy));
+        proxy.ld_widget = widget->ld_widget;
+        proxy.kind      = widget->kind;
+        proxy.theme     = theme;
+        return tinyui_theme_apply_native_widget_style(&proxy,
+                                                      part,
+                                                      state,
+                                                      bg_color,
+                                                      text_color,
+                                                      border_color);
+    }
 }
 
 /**

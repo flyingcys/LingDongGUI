@@ -290,12 +290,12 @@ static void test_button_create_with_props_pushes_all_fields(struct tinyui_window
             .width = 120,
             .height = 36,
         });
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldBase_t *ld_base;
 
     assert(btn != 0);
-    backend = (struct tinyui_backend_widget *)btn->widget.backend_widget;
-    assert(backend != 0);
+    backend = &btn->widget;
+    assert(backend->ld_widget != 0);
     assert(backend->kind == TINYUI_BACKEND_WIDGET_BUTTON);
     assert(backend->text != 0);
     assert(strcmp(backend->text, "PropsBtn") == 0);
@@ -308,21 +308,20 @@ static void test_button_create_with_props_pushes_all_fields(struct tinyui_window
 
 static void test_button_create_with_props_failure_rolls_back_attached_child(struct tinyui_window *win)
 {
-    struct tinyui_backend_widget *parent_backend =
-        (struct tinyui_backend_widget *)win->widget.backend_widget;
-    struct tinyui_backend_widget *tail = parent_backend->first_child;
-    struct tinyui_backend_widget *next_before = 0;
+    ldBase_t *win_ld = (ldBase_t *)win->widget.ld_widget;
+    ldBase_t *tail_ld = ldBaseGetChildList(win_ld);
+    ldBase_t *next_before_ld = 0;
     struct tinyui_button *button;
     struct tinyui_font failing_font = {
         .family = "Sans",
         .size = 12,
     };
 
-    while (tail != 0 && tail->next_sibling != 0) {
-        tail = tail->next_sibling;
+    while (tail_ld != 0 && ldBaseGetNextSibling(tail_ld) != 0) {
+        tail_ld = ldBaseGetNextSibling(tail_ld);
     }
-    if (tail != 0) {
-        next_before = tail->next_sibling;
+    if (tail_ld != 0) {
+        next_before_ld = ldBaseGetNextSibling(tail_ld);
     }
 
     tinyui_button_test_fail_next_set_font();
@@ -335,21 +334,21 @@ static void test_button_create_with_props_failure_rolls_back_attached_child(stru
         });
 
     assert(button == 0);
-    if (tail != 0) {
-        assert(tail->next_sibling == next_before);
+    if (tail_ld != 0) {
+        assert(ldBaseGetNextSibling(tail_ld) == next_before_ld);
     } else {
-        assert(parent_backend->first_child == 0);
+        assert(ldBaseGetChildList(win_ld) == 0);
     }
 }
 
 static void test_button_set_text_round_trip(struct tinyui_window *win)
 {
     struct tinyui_button *btn = tinyui_button_create(win, "btn_text");
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
 
     assert(btn != 0);
     assert(tinyui_button_set_text(btn, "NewLabel") == 0);
-    backend = (struct tinyui_backend_widget *)btn->widget.backend_widget;
+    backend = &btn->widget;
     assert(backend->text != 0);
     assert(strcmp(backend->text, "NewLabel") == 0);
 }
@@ -387,10 +386,10 @@ int main(void)
     struct tinyui_checkbox *checkbox = tinyui_checkbox_create(win, "accept");
     struct tinyui_switch *sw = tinyui_switch_create(win, "power");
     struct tinyui_slider *slider = tinyui_slider_create(win, "level");
-    struct tinyui_backend_widget *backend;
-    struct tinyui_backend_widget *checkbox_backend;
-    struct tinyui_backend_widget *switch_backend;
-    struct tinyui_backend_widget *slider_backend;
+    struct tinyui_widget *backend;
+    struct tinyui_widget *checkbox_backend;
+    struct tinyui_widget *switch_backend;
+    struct tinyui_widget *slider_backend;
     struct tinyui_app *app_state;
     int pressed_by_id = -1;
     int button_name_id = -1;
@@ -419,14 +418,14 @@ int main(void)
     assert(checkbox != 0);
     assert(sw != 0);
     assert(slider != 0);
-    backend = button->widget.backend_widget;
-    checkbox_backend = checkbox->widget.backend_widget;
-    switch_backend = sw->widget.backend_widget;
-    slider_backend = slider->widget.backend_widget;
-    assert(backend != 0);
-    assert(checkbox_backend != 0);
-    assert(switch_backend != 0);
-    assert(slider_backend != 0);
+    backend = &button->widget;
+    checkbox_backend = &checkbox->widget;
+    switch_backend = &sw->widget;
+    slider_backend = &slider->widget;
+    assert(backend->ld_widget != 0);
+    assert(checkbox_backend->ld_widget != 0);
+    assert(switch_backend->ld_widget != 0);
+    assert(slider_backend->ld_widget != 0);
     app_state = app;
     assert(app_state != 0);
     assert(app_state->ld_scene != 0);
@@ -513,7 +512,7 @@ int main(void)
                                                      button_name_id,
                                                      TINYUI_BUTTON_ACTION_PRESS) == -1);
 
-    assert(tinyui_widget_dispatch_event(button->widget.backend_widget,
+    assert(tinyui_widget_dispatch_event(&button->widget,
                                         TINYUI_BACKEND_SIGNAL_PRESSED,
                                         button->on_pressed,
                                         &button->widget,
@@ -526,7 +525,7 @@ int main(void)
     assert(last_press_widget == &button->widget);
     assert(last_press_cookie == press_cookie);
 
-    assert(tinyui_widget_dispatch_event(button->widget.backend_widget,
+    assert(tinyui_widget_dispatch_event(&button->widget,
                                         TINYUI_BACKEND_SIGNAL_RELEASED,
                                         button->on_released,
                                         &button->widget,
@@ -544,7 +543,7 @@ int main(void)
                                         on_pressed,
                                         &button->widget,
                                         &press_cookie) == -1);
-    assert(tinyui_widget_dispatch_event(button->widget.backend_widget,
+    assert(tinyui_widget_dispatch_event(&button->widget,
                                         TINYUI_BACKEND_SIGNAL_VALUE_CHANGED,
                                         button->on_pressed,
                                         &button->widget,
@@ -628,12 +627,12 @@ int main(void)
     assert(tinyui_widget_set_enabled(&button->widget, 1) == 0);
 
     assert(tinyui_widget_set_visible(&button->widget, 0) == 0);
-    assert(tinyui_widget_dispatch_event(button->widget.backend_widget,
+    assert(tinyui_widget_dispatch_event(&button->widget,
                                         TINYUI_BACKEND_SIGNAL_PRESSED,
                                         button->on_pressed,
                                         &button->widget,
                                         button->on_pressed_user_data) == 0);
-    assert(tinyui_widget_dispatch_event(button->widget.backend_widget,
+    assert(tinyui_widget_dispatch_event(&button->widget,
                                         TINYUI_BACKEND_SIGNAL_RELEASED,
                                         button->on_released,
                                         &button->widget,
@@ -711,7 +710,7 @@ int main(void)
     assert(last_value_cookie == slider_cookie);
 
     assert(tinyui_widget_set_visible(&checkbox->widget, 0) == 0);
-    assert(tinyui_widget_dispatch_signal(checkbox->widget.backend_widget,
+    assert(tinyui_widget_dispatch_signal(&checkbox->widget,
                                          TINYUI_BACKEND_SIGNAL_VALUE_CHANGED,
                                          1,
                                          checkbox->cb,

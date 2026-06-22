@@ -25,18 +25,15 @@
 
 static ldAnimation_t *tinyui_animation_get_ld(struct tinyui_animation *animation)
 {
-    struct tinyui_backend_widget *backend;
-
-    if (animation == 0 || animation->widget.backend_widget == 0) {
+    if (animation == 0 || animation->widget.ld_widget == 0) {
         return 0;
     }
 
-    backend = (struct tinyui_backend_widget *)animation->widget.backend_widget;
-    if (backend->kind != TINYUI_BACKEND_WIDGET_ANIMATION || backend->ld_widget == 0) {
+    if (animation->widget.kind != TINYUI_BACKEND_WIDGET_ANIMATION) {
         return 0;
     }
 
-    return (ldAnimation_t *)backend->ld_widget;
+    return (ldAnimation_t *)animation->widget.ld_widget;
 }
 
 static int tinyui_animation_props_are_valid(const struct tinyui_animation_props *props)
@@ -50,6 +47,8 @@ static int tinyui_animation_props_are_valid(const struct tinyui_animation_props 
         && props->source->img_tile != 0;
 }
 
+int tinyui_runtime_bridge_unbind_host(void *backend_widget);
+
 static int tinyui_animation_attach_native(struct tinyui_animation *animation,
                                           struct tinyui_widget *parent,
                                           int width,
@@ -57,37 +56,28 @@ static int tinyui_animation_attach_native(struct tinyui_animation *animation,
                                           struct tinyui_image_source *source,
                                           int period_ms)
 {
-    struct tinyui_backend_widget *backend;
-    struct tinyui_backend_widget *parent_backend;
     struct tinyui_app *app_state;
     ldAnimation_t *ld_animation;
     uint16_t name_id;
 
-    if (animation == 0 || parent == 0 || parent->backend_widget == 0 || source == 0 || source->img_tile == 0) {
+    if (animation == 0 || parent == 0 || parent->ld_widget == 0 || source == 0 || source->img_tile == 0) {
         return -1;
     }
 
-    parent_backend = (struct tinyui_backend_widget *)parent->backend_widget;
-    app_state = tinyui_runtime_bridge_backend_state_from_parent(parent_backend);
-    if (parent_backend->ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
+    app_state = tinyui_runtime_bridge_backend_state(parent->owner);
+    if (app_state == 0 || app_state->ld_scene == 0) {
         return -1;
     }
 
-    backend = calloc(1, sizeof(*backend));
-    if (backend == 0) {
-        return -1;
-    }
-
-    name_id = tinyui_runtime_bridge_next_name_id(parent_backend);
+    name_id = ++app_state->next_ld_name_id;
     if (name_id == 0) {
-        free(backend);
         return -1;
     }
 
     ld_animation = ldAnimation_init(app_state->ld_scene,
                                     NULL,
                                     name_id,
-                                    parent_backend->ld_name_id,
+                                    parent->ld_name_id,
                                     0,
                                     0,
                                     (int16_t)width,
@@ -95,35 +85,15 @@ static int tinyui_animation_attach_native(struct tinyui_animation *animation,
                                     source->img_tile,
                                     (uint16_t)period_ms);
     if (ld_animation == 0) {
-        free(backend);
         return -1;
     }
 
-    if (tinyui_widget_init_child(backend,
-                                         parent_backend,
-                                         TINYUI_BACKEND_WIDGET_ANIMATION,
-                                         animation->id,
-                                         parent_backend->theme) != 0) {
-        ldAnimation_depose(app_state->ld_scene, ld_animation);
-        free(backend);
-        return -1;
-    }
-    backend->ld_widget = ld_animation;
-    backend->ld_name_id = name_id;
-    if (tinyui_widget_attach_child(parent_backend, backend) != 0) {
-        ldAnimation_depose(app_state->ld_scene, ld_animation);
-        free(backend);
-        return -1;
-    }
-
-    animation->widget.backend_widget = backend;
-    if (tinyui_runtime_bridge_bind_host(animation->widget.backend_widget, &animation->widget) != 0) {
-        (void)tinyui_runtime_bridge_detach_from_parent(animation->widget.backend_widget);
-        ldAnimation_depose(app_state->ld_scene, ld_animation);
-        free(backend);
-        animation->widget.backend_widget = 0;
-        return -1;
-    }
+    animation->widget.kind = TINYUI_BACKEND_WIDGET_ANIMATION;
+    animation->widget.owner = app_state;
+    animation->widget.ld_widget = ld_animation;
+    animation->widget.ld_name_id = name_id;
+    ((ldBase_t *)ld_animation)->pInfo = &animation->widget;
+    tinyui_runtime_bridge_bind_leaf_widget(&animation->widget, app_state);
 
     return 0;
 }
@@ -140,7 +110,7 @@ struct tinyui_animation *tinyui_animation_create(struct tinyui_widget *parent, c
 {
     struct tinyui_animation *animation;
 
-    if (parent == 0 || id == 0 || parent->backend_widget == 0) {
+    if (parent == 0 || id == 0 || parent->ld_widget == 0) {
         return 0;
     }
 
@@ -182,7 +152,7 @@ struct tinyui_animation *tinyui_animation_create_with_props(
 {
     struct tinyui_animation *animation;
 
-    if (!tinyui_animation_props_are_valid(props) || parent == 0 || parent->backend_widget == 0) {
+    if (!tinyui_animation_props_are_valid(props) || parent == 0 || parent->ld_widget == 0) {
         return 0;
     }
 

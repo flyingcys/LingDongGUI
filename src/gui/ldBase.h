@@ -248,7 +248,7 @@ typedef struct {
     bool isSelected:1;
     bool isSelectable:1;
     bool isCorner:1;
-}ldBase_t;
+} __attribute__((may_alias)) ldBase_t;
 
 typedef enum{
     typeString,

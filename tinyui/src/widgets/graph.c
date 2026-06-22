@@ -23,58 +23,30 @@
 
 #include <stdlib.h>
 
-static struct tinyui_backend_widget *tinyui_graph_backend(struct tinyui_graph *graph)
-{
-    struct tinyui_backend_widget *backend;
-
-    if (graph == 0 || graph->widget.backend_widget == 0) {
-        return 0;
-    }
-
-    backend = (struct tinyui_backend_widget *)graph->widget.backend_widget;
-    if (backend->kind != TINYUI_BACKEND_WIDGET_GRAPH || backend->ld_widget == 0) {
-        return 0;
-    }
-
-    return backend;
-}
-
-static struct tinyui_backend_widget *tinyui_graph_backend_const(const struct tinyui_graph *graph)
-{
-    struct tinyui_backend_widget *backend;
-
-    if (graph == 0 || graph->widget.backend_widget == 0) {
-        return 0;
-    }
-
-    backend = (struct tinyui_backend_widget *)graph->widget.backend_widget;
-    if (backend->kind != TINYUI_BACKEND_WIDGET_GRAPH || backend->ld_widget == 0) {
-        return 0;
-    }
-
-    return backend;
-}
-
 static ldGraph_t *tinyui_graph_get_ld(struct tinyui_graph *graph)
 {
-    struct tinyui_backend_widget *backend = tinyui_graph_backend(graph);
-
-    if (backend == 0) {
+    if (graph == 0 || graph->widget.ld_widget == 0) {
         return 0;
     }
 
-    return (ldGraph_t *)backend->ld_widget;
+    if (graph->widget.kind != TINYUI_BACKEND_WIDGET_GRAPH) {
+        return 0;
+    }
+
+    return (ldGraph_t *)graph->widget.ld_widget;
 }
 
 static const ldGraph_t *tinyui_graph_get_ld_const(const struct tinyui_graph *graph)
 {
-    struct tinyui_backend_widget *backend = tinyui_graph_backend_const(graph);
-
-    if (backend == 0) {
+    if (graph == 0 || graph->widget.ld_widget == 0) {
         return 0;
     }
 
-    return (const ldGraph_t *)backend->ld_widget;
+    if (graph->widget.kind != TINYUI_BACKEND_WIDGET_GRAPH) {
+        return 0;
+    }
+
+    return (const ldGraph_t *)graph->widget.ld_widget;
 }
 
 static int tinyui_graph_props_are_valid(const struct tinyui_graph_props *props)
@@ -205,8 +177,6 @@ struct tinyui_graph *tinyui_graph_create(struct tinyui_window *parent,
                                          int series_max)
 {
     struct tinyui_graph *graph;
-    struct tinyui_backend_widget *backend;
-    struct tinyui_backend_widget *parent_backend;
     struct tinyui_app *app_state;
     ldGraph_t *ld_graph;
     uint16_t name_id;
@@ -215,11 +185,8 @@ struct tinyui_graph *tinyui_graph_create(struct tinyui_window *parent,
         return 0;
     }
 
-    parent_backend = (struct tinyui_backend_widget *)parent->widget.backend_widget;
-    app_state = parent_backend != 0
-        ? tinyui_runtime_bridge_backend_state_from_parent(parent_backend)
-        : 0;
-    if (parent_backend == 0 || parent_backend->ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
+    app_state = parent->widget.owner;
+    if (app_state == 0 || app_state->ld_scene == 0 || parent->widget.ld_widget == 0) {
         return 0;
     }
 
@@ -228,30 +195,17 @@ struct tinyui_graph *tinyui_graph_create(struct tinyui_window *parent,
         return 0;
     }
 
-    backend = calloc(1, sizeof(*backend));
-    if (backend == 0) {
-        free(graph);
-        return 0;
-    }
-
-    name_id = tinyui_runtime_bridge_next_name_id(parent_backend);
-    if (name_id == 0) {
-        free(backend);
-        free(graph);
-        return 0;
-    }
-
+    name_id = ++app_state->next_ld_name_id;
     ld_graph = ldGraph_init(app_state->ld_scene,
                             NULL,
                             name_id,
-                            parent_backend->ld_name_id,
+                            parent->widget.ld_name_id,
                             0,
                             0,
                             240,
                             120,
                             (uint8_t)series_max);
     if (ld_graph == 0) {
-        free(backend);
         free(graph);
         return 0;
     }
@@ -261,26 +215,13 @@ struct tinyui_graph *tinyui_graph_create(struct tinyui_window *parent,
     ldGraphSetAxis(ld_graph, 100, 100, 5);
     ldGraphSetPointImageMask(ld_graph, (arm_2d_tile_t *)&c_tileWhiteDotMask);
 
-    if (tinyui_widget_init_child(backend,
-                                         parent_backend,
-                                         TINYUI_BACKEND_WIDGET_GRAPH,
-                                         id,
-                                         parent_backend->theme) != 0) {
-        ldGraph_depose(app_state->ld_scene, ld_graph);
-        free(backend);
-        free(graph);
-        return 0;
-    }
-    backend->ld_widget = ld_graph;
-    backend->ld_name_id = name_id;
-    if (tinyui_widget_attach_child(parent_backend, backend) != 0) {
-        ldGraph_depose(app_state->ld_scene, ld_graph);
-        free(backend);
-        free(graph);
-        return 0;
-    }
+    graph->widget.kind = TINYUI_BACKEND_WIDGET_GRAPH;
+    graph->widget.owner = app_state;
+    graph->widget.ld_widget = ld_graph;
+    graph->widget.ld_name_id = name_id;
+    ((ldBase_t *)ld_graph)->pInfo = &graph->widget;
+    tinyui_runtime_bridge_bind_leaf_widget(&graph->widget, app_state);
 
-    graph->widget.backend_widget = backend;
     graph->id = id;
     graph->series_max = series_max;
     graph->x_axis = 100;
@@ -290,13 +231,6 @@ struct tinyui_graph *tinyui_graph_create(struct tinyui_window *parent,
     graph->grid_offset = 20;
     graph->widget.visible = 1;
     graph->widget.enabled = 1;
-    if (tinyui_runtime_bridge_bind_host(graph->widget.backend_widget, &graph->widget) != 0) {
-        (void)tinyui_runtime_bridge_detach_from_parent(graph->widget.backend_widget);
-        ldGraph_depose(app_state->ld_scene, ld_graph);
-        free(backend);
-        free(graph);
-        return 0;
-    }
     return graph;
 }
 

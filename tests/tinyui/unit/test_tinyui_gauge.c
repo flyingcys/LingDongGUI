@@ -159,21 +159,20 @@ static void test_gauge_internal_seam_names_are_gone(void)
 static void test_gauge_create_and_backend_mapping(struct tinyui_window *win)
 {
     struct tinyui_gauge *gauge = tinyui_gauge_create((struct tinyui_widget *)win, "gauge_direct_mapping");
-    struct tinyui_backend_widget *backend;
-    struct tinyui_backend_widget *parent_backend;
+    struct tinyui_widget *backend;
+    struct tinyui_widget *parent_backend;
     ldGauge_t *ld_gauge;
 
     assert(gauge != 0);
-    backend = (struct tinyui_backend_widget *)gauge->widget.backend_widget;
+    backend = &gauge->widget;
     assert(backend != 0);
-    parent_backend = (struct tinyui_backend_widget *)win->widget.backend_widget;
+    parent_backend = &win->widget;
     assert(parent_backend != 0);
     assert(backend->kind == TINYUI_BACKEND_WIDGET_GAUGE);
     assert(backend->owner == parent_backend->owner);
-    assert(backend->root == parent_backend->root);
-    assert(backend->parent == parent_backend);
+    assert((ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)backend->ld_widget) == (ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)parent_backend->ld_widget));
+    assert(ldBaseGetParent((ldBase_t *)backend->ld_widget) == (ldBase_t *)parent_backend->ld_widget);
     assert(backend->ld_name_id != 0);
-    assert(backend->host_widget == &gauge->widget);
     assert(backend->ld_event_bridge_scene != 0);
     assert(backend->ld_event_bridge_sender == backend->ld_widget);
     ld_gauge = (ldGauge_t *)backend->ld_widget;
@@ -226,7 +225,7 @@ static void test_gauge_rejects_invalid_inputs(struct tinyui_window *win)
 static void test_gauge_native_background_pointer_and_centre_offset_round_trip(struct tinyui_window *win)
 {
     struct tinyui_gauge *gauge = tinyui_gauge_create((struct tinyui_widget *)win, "gauge_native_resources");
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldGauge_t *ld_gauge;
     arm_2d_tile_t bg_img = {
         .tRegion = {
@@ -258,8 +257,8 @@ static void test_gauge_native_background_pointer_and_centre_offset_round_trip(st
     };
 
     assert(gauge != 0);
-    backend = (struct tinyui_backend_widget *)gauge->widget.backend_widget;
-    assert(backend != 0);
+    backend = &gauge->widget;
+    assert(backend->ld_widget != 0);
     ld_gauge = (ldGauge_t *)backend->ld_widget;
     assert(ld_gauge != 0);
 
@@ -282,7 +281,7 @@ static void test_gauge_native_background_pointer_and_centre_offset_round_trip(st
 static void test_gauge_native_trail_and_progress_bar_round_trip(struct tinyui_window *win)
 {
     struct tinyui_gauge *gauge = tinyui_gauge_create((struct tinyui_widget *)win, "gauge_native_trail");
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldGauge_t *ld_gauge;
     arm_2d_tile_t bg_trail_mask = {
         .tRegion = {
@@ -304,8 +303,8 @@ static void test_gauge_native_trail_and_progress_bar_round_trip(struct tinyui_wi
     };
 
     assert(gauge != 0);
-    backend = (struct tinyui_backend_widget *)gauge->widget.backend_widget;
-    assert(backend != 0);
+    backend = &gauge->widget;
+    assert(backend->ld_widget != 0);
     ld_gauge = (ldGauge_t *)backend->ld_widget;
     assert(ld_gauge != 0);
 
@@ -326,12 +325,12 @@ static void test_gauge_native_trail_and_progress_bar_round_trip(struct tinyui_wi
 static void test_gauge_init_and_shared_base_aliases_round_trip(struct tinyui_window *win)
 {
     struct tinyui_gauge *gauge = tinyui_gauge_init((struct tinyui_widget *)win, "gauge_alias");
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldGauge_t *ld_gauge;
 
     assert(gauge != 0);
-    backend = (struct tinyui_backend_widget *)gauge->widget.backend_widget;
-    assert(backend != 0);
+    backend = &gauge->widget;
+    assert(backend->ld_widget != 0);
     ld_gauge = (ldGauge_t *)backend->ld_widget;
     assert(ld_gauge != 0);
 
@@ -357,18 +356,17 @@ static void test_gauge_init_and_shared_base_aliases_round_trip(struct tinyui_win
 
 static void test_gauge_create_with_props_failure_rolls_back_attached_child(struct tinyui_window *win)
 {
-    struct tinyui_backend_widget *parent_backend =
-        (struct tinyui_backend_widget *)win->widget.backend_widget;
-    struct tinyui_backend_widget *tail = parent_backend->first_child;
-    struct tinyui_backend_widget *next_before = 0;
+    ldBase_t *win_ld = (ldBase_t *)win->widget.ld_widget;
+    ldBase_t *tail_ld = ldBaseGetChildList(win_ld);
+    ldBase_t *next_before_ld = 0;
     struct tinyui_gauge_test_dispose_snapshot snapshot = {0};
     struct tinyui_gauge *gauge;
 
-    while (tail != 0 && tail->next_sibling != 0) {
-        tail = tail->next_sibling;
+    while (tail_ld != 0 && ldBaseGetNextSibling(tail_ld) != 0) {
+        tail_ld = ldBaseGetNextSibling(tail_ld);
     }
-    if (tail != 0) {
-        next_before = tail->next_sibling;
+    if (tail_ld != 0) {
+        next_before_ld = ldBaseGetNextSibling(tail_ld);
     }
 
     gauge = tinyui_gauge_test_create_with_props_fail_before_centre_offset(
@@ -398,10 +396,10 @@ static void test_gauge_create_with_props_failure_rolls_back_attached_child(struc
     assert(snapshot.event_bridge_cleared == 1);
     assert(snapshot.ld_pinfo_cleared == 1);
     assert(tinyui_gauge_test_take_last_dispose_snapshot(&snapshot) == -1);
-    if (tail != 0) {
-        assert(tail->next_sibling == next_before);
+    if (tail_ld != 0) {
+        assert(ldBaseGetNextSibling(tail_ld) == next_before_ld);
     } else {
-        assert(parent_backend->first_child == 0);
+        assert(ldBaseGetChildList(win_ld) == 0);
     }
 }
 
@@ -422,7 +420,7 @@ static void test_gauge_destroy_releases_owned_tiles_without_freeing_external_sou
     struct tinyui_app *app = tinyui_app_create();
     struct tinyui_window *win;
     struct tinyui_gauge *gauge;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldGauge_t *ld_gauge;
     arm_2d_tile_t *default_bg_img_tile;
     arm_2d_tile_t *default_bg_mask_tile;
@@ -464,8 +462,8 @@ static void test_gauge_destroy_releases_owned_tiles_without_freeing_external_sou
     assert(win != 0);
     gauge = tinyui_gauge_create((struct tinyui_widget *)win, "gauge_destroy");
     assert(gauge != 0);
-    backend = (struct tinyui_backend_widget *)gauge->widget.backend_widget;
-    assert(backend != 0);
+    backend = &gauge->widget;
+    assert(backend->ld_widget != 0);
     ld_gauge = (ldGauge_t *)backend->ld_widget;
     assert(ld_gauge != 0);
 

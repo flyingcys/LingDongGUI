@@ -2,6 +2,7 @@
 #include "progress_wheel.h"
 #include "widget.h"
 #include "window.h"
+#include "../../../src/gui/ldBase.h"
 #include "../../../src/gui/ldProgressWheel.h"
 #include "internal.h"
 
@@ -27,7 +28,7 @@
     } while (0)
 
 extern int tinyui_widget_has_ld_binding(const struct tinyui_widget *widget);
-struct tinyui_progress_wheel_cfg_bridge {
+struct __attribute__((may_alias)) tinyui_progress_wheel_cfg_bridge {
     struct {
         const arm_2d_tile_t *ptileArcMask;
         const arm_2d_tile_t *ptileDotMask;
@@ -97,21 +98,20 @@ static void test_progress_wheel_create_and_backend_mapping(struct tinyui_window 
 {
     struct tinyui_progress_wheel *wheel =
         tinyui_progress_wheel_create((struct tinyui_widget *)win, "wheel_direct_mapping");
-    struct tinyui_backend_widget *backend;
-    struct tinyui_backend_widget *parent_backend;
+    struct tinyui_widget *backend;
+    struct tinyui_widget *parent_backend;
     ldProgressWheel_t *ld_progress_wheel;
 
     assert(wheel != 0);
-    backend = (struct tinyui_backend_widget *)wheel->widget.backend_widget;
-    assert(backend != 0);
-    parent_backend = (struct tinyui_backend_widget *)win->widget.backend_widget;
-    assert(parent_backend != 0);
+    backend = &wheel->widget;
+    assert(backend->ld_widget != 0);
+    parent_backend = &win->widget;
+    assert(parent_backend->ld_widget != 0);
     assert(backend->kind == TINYUI_BACKEND_WIDGET_PROGRESS_WHEEL);
     assert(backend->owner == parent_backend->owner);
-    assert(backend->root == parent_backend->root);
-    assert(backend->parent == parent_backend);
+    assert((ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)backend->ld_widget) == (ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)parent_backend->ld_widget));
+    assert(ldBaseGetParent((ldBase_t *)backend->ld_widget) == (ldBase_t *)parent_backend->ld_widget);
     assert(backend->ld_name_id != 0);
-    assert(backend->host_widget == &wheel->widget);
     assert(backend->ld_event_bridge_scene != 0);
     assert(backend->ld_event_bridge_sender == backend->ld_widget);
     ld_progress_wheel = (ldProgressWheel_t *)backend->ld_widget;
@@ -174,13 +174,13 @@ static void test_progress_wheel_rejects_invalid_inputs(struct tinyui_window *win
 static void test_progress_wheel_release_contract_covers_animation_and_style_boundary(
     struct tinyui_progress_wheel *wheel)
 {
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldProgressWheel_t *ld_progress_wheel;
     struct tinyui_progress_wheel_cfg_bridge *bridge;
 
     assert(wheel != 0);
-    backend = (struct tinyui_backend_widget *)wheel->widget.backend_widget;
-    assert(backend != 0);
+    backend = &wheel->widget;
+    assert(backend->ld_widget != 0);
     assert(backend->kind == TINYUI_BACKEND_WIDGET_PROGRESS_WHEEL);
     assert(backend->style_class == (const char *)"wheel");
     assert(backend->user_data != 0);
@@ -198,13 +198,13 @@ static void test_progress_wheel_release_contract_covers_animation_and_style_boun
 
 static void test_progress_wheel_native_color_and_dot_enable_round_trip(struct tinyui_progress_wheel *wheel)
 {
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldProgressWheel_t *ld_progress_wheel;
     struct tinyui_progress_wheel_cfg_bridge *bridge;
 
     assert(wheel != 0);
-    backend = (struct tinyui_backend_widget *)wheel->widget.backend_widget;
-    assert(backend != 0);
+    backend = &wheel->widget;
+    assert(backend->ld_widget != 0);
     ld_progress_wheel = (ldProgressWheel_t *)backend->ld_widget;
     assert(ld_progress_wheel != 0);
     bridge = (struct tinyui_progress_wheel_cfg_bridge *)&ld_progress_wheel->tWheel;
@@ -230,16 +230,17 @@ static void test_progress_wheel_native_color_and_dot_enable_round_trip(struct ti
 
 static void test_progress_wheel_progress_alias_round_trip(struct tinyui_progress_wheel *wheel)
 {
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldProgressWheel_t *ld_progress_wheel;
 
     assert(wheel != 0);
-    backend = (struct tinyui_backend_widget *)wheel->widget.backend_widget;
-    assert(backend != 0);
+    backend = &wheel->widget;
+    assert(backend->ld_widget != 0);
     ld_progress_wheel = (ldProgressWheel_t *)backend->ld_widget;
     assert(ld_progress_wheel != 0);
 
     assert(tinyui_progress_wheel_set_progress(wheel, 37) == 0);
+    __asm__ volatile("" ::: "memory");
     assert(tinyui_progress_wheel_get_percent(wheel) == 37);
     assert(ld_progress_wheel->iProgress == 370);
 }
@@ -247,18 +248,17 @@ static void test_progress_wheel_progress_alias_round_trip(struct tinyui_progress
 static void test_progress_wheel_create_with_props_failure_rolls_back_attached_child(
     struct tinyui_window *win)
 {
-    struct tinyui_backend_widget *parent_backend =
-        (struct tinyui_backend_widget *)win->widget.backend_widget;
-    struct tinyui_backend_widget *tail = parent_backend->first_child;
-    struct tinyui_backend_widget *next_before = 0;
+    ldBase_t *win_ld = (ldBase_t *)win->widget.ld_widget;
+    ldBase_t *tail_ld = ldBaseGetChildList(win_ld);
+    ldBase_t *next_before_ld = 0;
     struct tinyui_progress_wheel *probe;
     struct tinyui_progress_wheel_test_dispose_snapshot snapshot = {0};
 
-    while (tail != 0 && tail->next_sibling != 0) {
-        tail = tail->next_sibling;
+    while (tail_ld != 0 && ldBaseGetNextSibling(tail_ld) != 0) {
+        tail_ld = ldBaseGetNextSibling(tail_ld);
     }
-    if (tail != 0) {
-        next_before = tail->next_sibling;
+    if (tail_ld != 0) {
+        next_before_ld = ldBaseGetNextSibling(tail_ld);
     }
 
     tinyui_progress_wheel_test_reset_state();
@@ -289,10 +289,10 @@ static void test_progress_wheel_create_with_props_failure_rolls_back_attached_ch
     assert(snapshot.event_bridge_cleared == 1);
     assert(snapshot.ld_pinfo_cleared == 1);
     assert(tinyui_progress_wheel_test_take_last_dispose_snapshot(&snapshot) == -1);
-    if (tail != 0) {
-        assert(tail->next_sibling == next_before);
+    if (tail_ld != 0) {
+        assert(ldBaseGetNextSibling(tail_ld) == next_before_ld);
     } else {
-        assert(parent_backend->first_child == 0);
+        assert(ldBaseGetChildList(win_ld) == 0);
     }
 
     tinyui_progress_wheel_test_reset_state();
