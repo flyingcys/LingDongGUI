@@ -23,9 +23,8 @@
 
 /* ── enum tinyui_backend_widget_kind — canonical location ─────────────────
  * Declared here so that struct tinyui_widget (below) can embed it as a
- * field without pulling in the full runtime_internal.h first.
- * runtime_internal.h checks TINYUI_BACKEND_WIDGET_KIND_DEFINED and skips
- * its own copy when this header has already been processed.
+ * field. (Phase C3-T4: runtime_internal.h was deleted; its surviving
+ * shared enums/constants were folded into this header.)
  * ──────────────────────────────────────────────────────────────────────── */
 #define TINYUI_BACKEND_WIDGET_KIND_DEFINED
 
@@ -60,7 +59,20 @@ enum tinyui_backend_widget_kind {
     TINYUI_BACKEND_WIDGET_CANVAS,
 };
 
-#include "runtime_internal.h"
+/* ── shared backend signals (folded from runtime_internal.h) ─────────────── */
+enum tinyui_backend_signal {
+    TINYUI_BACKEND_SIGNAL_NONE = 0,
+    TINYUI_BACKEND_SIGNAL_VALUE_CHANGED,
+    TINYUI_BACKEND_SIGNAL_PRESSED,
+    TINYUI_BACKEND_SIGNAL_RELEASED,
+};
+
+/* ── shared constants (folded from runtime_internal.h) ───────────────────── */
+#define TINYUI_BACKEND_LAYOUT_MAX_TRACKS 16
+#define TINYUI_BACKEND_LIST_MAX_ITEMS 16
+
+struct ld_scene_t;
+
 #include "app.h"
 #include "../../../src/misc/xBtnAction.h"
 

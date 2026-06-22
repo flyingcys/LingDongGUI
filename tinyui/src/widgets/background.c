@@ -18,6 +18,7 @@
 
 #include "internal.h"
 #include "background.h"
+#include "window.h"
 #include "../core/runtime_bridge.h"
 #include "../../../src/gui/ldWindow.h"
 #include "../../../src/porting/ldConfig.h"
