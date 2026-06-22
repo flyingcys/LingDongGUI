@@ -628,8 +628,8 @@ int main(void)
     win = tinyui_window_create(app, "root");
     assert(win != 0);
 
-    assert_source_has_function_definition(clock_source, "static int ", "tinyui_clock_props_are_valid");
-    assert_source_has_function_definition(clock_source, "static ldClock_t *", "tinyui_clock_get_ld");
+    assert_source_lacks_function_definition(clock_source, "tinyui_clock_props_are_valid");
+    assert_source_lacks_function_definition(clock_source, "tinyui_clock_get_ld");
     assert_source_has_function_definition(clock_source, "static int ", "tinyui_clock_apply_background");
     assert_source_has_function_definition(clock_source, "static int ", "tinyui_clock_apply_pointer");
 

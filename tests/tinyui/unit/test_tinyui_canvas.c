@@ -123,12 +123,8 @@ int main(void)
     assert_source_lacks_function_definition(canvas_source, "tinyui_canvas_clear_native");
     assert_source_lacks_function_definition(canvas_source, "tinyui_canvas_is_valid");
     assert_source_lacks_function_definition(canvas_source, "tinyui_canvas_push");
-    assert_source_has_function_definition(canvas_source, "tinyui_canvas_rgb_to_ld");
-    assert_source_has_function_definition(canvas_source, "tinyui_canvas_align_to_ld");
-    assert_source_has_function_definition(canvas_source, "tinyui_canvas_push_native");
-    assert_source_has_function_definition(canvas_source, "tinyui_canvas_clear_native");
-    assert_source_has_function_definition(canvas_source, "tinyui_canvas_is_valid");
-    assert_source_has_function_definition(canvas_source, "tinyui_canvas_push");
+    (void)assert_source_has_function_definition;
+    (void)source_has_function_definition;
     assert(tinyui_widget_set_size((struct tinyui_widget *)canvas, 120, 80) == 0);
 
     assert(tinyui_canvas_fill_rect(canvas, 1, 2, 30, 40, 0x112233U, 200) == 0);

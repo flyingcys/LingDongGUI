@@ -25,90 +25,46 @@
 
 extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
 
-static ldColor tinyui_canvas_rgb_to_ld(unsigned int rgb)
-{
-    return __RGB((rgb >> 16) & 0xFFU, (rgb >> 8) & 0xFFU, rgb & 0xFFU);
-}
-
-static arm_2d_align_t tinyui_canvas_align_to_ld(enum tinyui_align align)
-{
-    switch (align) {
-    case TINYUI_ALIGN_START:
-        return ARM_2D_ALIGN_LEFT;
-    case TINYUI_ALIGN_END:
-        return ARM_2D_ALIGN_RIGHT;
-    case TINYUI_ALIGN_CENTER:
-    default:
-        return ARM_2D_ALIGN_CENTRE;
-    }
-}
-
-static int tinyui_canvas_push_native(struct tinyui_canvas *canvas,
-                                     const struct tinyui_canvas_command *src)
+static int canvas_push(struct tinyui_canvas *canvas,
+                       const struct tinyui_canvas_command *command)
 {
     ldCanvas_t *ld_canvas;
-    ldCanvasCommand_t command;
+    ldCanvasCommand_t native;
+    int rc;
 
-    if (canvas == 0 || src == 0 || canvas->widget.kind != TINYUI_BACKEND_WIDGET_CANVAS
-        || canvas->widget.ld_widget == 0) {
-        return -1;
-    }
-
-    ld_canvas = (ldCanvas_t *)canvas->widget.ld_widget;
-    command = (ldCanvasCommand_t){
-        .kind = (ldCanvasCommandKind_t)src->kind,
-        .region = {
-            .tLocation = {.iX = (int16_t)src->x, .iY = (int16_t)src->y},
-            .tSize = {.iWidth = (int16_t)src->width, .iHeight = (int16_t)src->height},
-        },
-        .x1 = (int16_t)src->x1,
-        .y1 = (int16_t)src->y1,
-        .lineSize = (uint8_t)src->line_size,
-        .color0 = tinyui_canvas_rgb_to_ld(src->rgb0),
-        .color1 = tinyui_canvas_rgb_to_ld(src->rgb1),
-        .opacity0 = (uint8_t)src->opacity0,
-        .opacity1 = (uint8_t)src->opacity1,
-        .scale = src->scale,
-        .align = tinyui_canvas_align_to_ld(src->align),
-        .pStr = (uint8_t *)src->text,
-        .ptFont = (arm_2d_font_t *)(canvas->widget.font != 0 ? canvas->widget.font : (const void *)&ARM_2D_FONT_6x8),
-        .ptImgTile = src->source != 0 ? src->source->img_tile : 0,
-        .ptMaskTile = src->source != 0 ? src->source->mask_tile : 0,
-    };
-
-    return ldCanvasPushCommand(ld_canvas, &command);
-}
-
-static int tinyui_canvas_clear_native(struct tinyui_canvas *canvas)
-{
-    ldCanvas_t *ld_canvas;
-
-    if (canvas == 0 || canvas->widget.kind != TINYUI_BACKEND_WIDGET_CANVAS
-        || canvas->widget.ld_widget == 0) {
-        return -1;
-    }
-
-    ld_canvas = (ldCanvas_t *)canvas->widget.ld_widget;
-    ldCanvasClear(ld_canvas);
-    return 0;
-}
-
-static int tinyui_canvas_is_valid(const struct tinyui_canvas *canvas)
-{
-    return canvas != 0 && canvas->widget.ld_widget != 0;
-}
-
-static int tinyui_canvas_push(struct tinyui_canvas *canvas,
-                              const struct tinyui_canvas_command *command)
-{
-    if (!tinyui_canvas_is_valid(canvas)
+    if (canvas == 0
         || command == 0
+        || canvas->widget.ld_widget == 0
+        || canvas->widget.kind != TINYUI_BACKEND_WIDGET_CANVAS
         || canvas->command_count >= TINYUI_CANVAS_MAX_COMMANDS) {
         return -1;
     }
 
+    ld_canvas = (ldCanvas_t *)canvas->widget.ld_widget;
+    native = (ldCanvasCommand_t){
+        .kind = (ldCanvasCommandKind_t)command->kind,
+        .region = {
+            .tLocation = {.iX = (int16_t)command->x, .iY = (int16_t)command->y},
+            .tSize = {.iWidth = (int16_t)command->width, .iHeight = (int16_t)command->height},
+        },
+        .x1 = (int16_t)command->x1,
+        .y1 = (int16_t)command->y1,
+        .lineSize = (uint8_t)command->line_size,
+        .color0 = (ldColor)tinyui_rgb_to_ld_color(command->rgb0),
+        .color1 = (ldColor)tinyui_rgb_to_ld_color(command->rgb1),
+        .opacity0 = (uint8_t)command->opacity0,
+        .opacity1 = (uint8_t)command->opacity1,
+        .scale = command->scale,
+        .align = (arm_2d_align_t)tinyui_align_to_arm2d(command->align),
+        .pStr = (uint8_t *)command->text,
+        .ptFont = (arm_2d_font_t *)(canvas->widget.font != 0 ? canvas->widget.font : (const void *)&ARM_2D_FONT_6x8),
+        .ptImgTile = command->source != 0 ? command->source->img_tile : 0,
+        .ptMaskTile = command->source != 0 ? command->source->mask_tile : 0,
+    };
+
     canvas->commands[canvas->command_count++] = *command;
-    if (tinyui_canvas_push_native(canvas, command) != 0) {
+    rc = ldCanvasPushCommand(ld_canvas, &native);
+    if (rc != 0) {
         canvas->command_count--;
         return -1;
     }
@@ -173,12 +129,14 @@ struct tinyui_canvas *tinyui_canvas_create(struct tinyui_window *parent, const c
 
 int tinyui_canvas_clear(struct tinyui_canvas *canvas)
 {
-    if (!tinyui_canvas_is_valid(canvas)) {
+    if (canvas == 0 || canvas->widget.ld_widget == 0
+        || canvas->widget.kind != TINYUI_BACKEND_WIDGET_CANVAS) {
         return -1;
     }
 
     canvas->command_count = 0;
-    return tinyui_canvas_clear_native(canvas);
+    ldCanvasClear((ldCanvas_t *)canvas->widget.ld_widget);
+    return 0;
 }
 
 /**
@@ -217,7 +175,7 @@ int tinyui_canvas_fill_rect(struct tinyui_canvas *canvas,
         .rgb0 = rgb,
         .opacity0 = opacity,
     };
-    return tinyui_canvas_push(canvas, &command);
+    return canvas_push(canvas, &command);
 }
 
 /**
@@ -266,7 +224,7 @@ int tinyui_canvas_draw_line(struct tinyui_canvas *canvas,
         .opacity0 = opacity_max,
         .opacity1 = opacity_min,
     };
-    return tinyui_canvas_push(canvas, &command);
+    return canvas_push(canvas, &command);
 }
 
 /**
@@ -308,7 +266,7 @@ int tinyui_canvas_draw_image(struct tinyui_canvas *canvas,
         .opacity0 = opacity,
         .source = source,
     };
-    return tinyui_canvas_push(canvas, &command);
+    return canvas_push(canvas, &command);
 }
 
 /**
@@ -350,7 +308,7 @@ int tinyui_canvas_draw_image_scaled(struct tinyui_canvas *canvas,
         .opacity0 = opacity,
         .source = source,
     };
-    return tinyui_canvas_push(canvas, &command);
+    return canvas_push(canvas, &command);
 }
 
 /**
@@ -400,7 +358,7 @@ int tinyui_canvas_draw_text(struct tinyui_canvas *canvas,
         .align = align,
         .text = text,
     };
-    return tinyui_canvas_push(canvas, &command);
+    return canvas_push(canvas, &command);
 }
 
 /**
@@ -413,7 +371,7 @@ int tinyui_canvas_draw_text(struct tinyui_canvas *canvas,
 
 int tinyui_canvas_get_command_count(const struct tinyui_canvas *canvas, int *count)
 {
-    if (!tinyui_canvas_is_valid(canvas) || count == 0) {
+    if (canvas == 0 || canvas->widget.ld_widget == 0 || count == 0) {
         return -1;
     }
 

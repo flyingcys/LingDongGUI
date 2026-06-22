@@ -28,31 +28,34 @@ extern const arm_2d_tile_t c_tilePointerSecGRAY8;
 extern const arm_2d_tile_t c_tilePointerSecMask;
 extern const arm_2d_tile_t c_tileClockface;
 
-static int tinyui_clock_props_are_valid(const struct tinyui_clock_props *props)
+/* ---- test seam state ---- */
+static ld_scene_t *s_clock_depose_scene = NULL;
+
+static void tinyui_clock_ld_depose_cb(void *ld_widget)
+{
+    if (s_clock_depose_scene != NULL) {
+        ldClock_depose(s_clock_depose_scene, (ldClock_t *)ld_widget);
+        s_clock_depose_scene = NULL;
+    }
+}
+
+static int clock_props_valid(const struct tinyui_clock_props *props)
 {
     return props != 0 && props->id != 0 && (props->step_second == 0 || props->step_second == 1);
 }
 
-static ldClock_t *tinyui_clock_get_ld(struct tinyui_clock *clock)
-{
-    if (clock == NULL || clock->widget.ld_widget == NULL
-        || clock->widget.kind != TINYUI_BACKEND_WIDGET_CLOCK) {
-        return NULL;
-    }
-
-    return (ldClock_t *)clock->widget.ld_widget;
-}
-
 static int tinyui_clock_apply_background(struct tinyui_clock *clock)
 {
-    ldClock_t *ld_clock = tinyui_clock_get_ld(clock);
+    ldClock_t *ld_clock;
     arm_2d_tile_t *img_tile;
     arm_2d_tile_t *mask_tile;
 
-    if (ld_clock == NULL) {
+    if (clock == 0 || clock->widget.ld_widget == 0
+        || clock->widget.kind != TINYUI_BACKEND_WIDGET_CLOCK) {
         return -1;
     }
 
+    ld_clock = (ldClock_t *)clock->widget.ld_widget;
     img_tile = clock->background_source != NULL ? clock->background_source->img_tile : ld_clock->ptBgImgTile;
     mask_tile = clock->background_source != NULL ? clock->background_source->mask_tile : ld_clock->ptBgMaskTile;
     ldClockSetBackgroundImage(ld_clock, img_tile, mask_tile, (ldColor)clock->mask_color);
@@ -61,16 +64,19 @@ static int tinyui_clock_apply_background(struct tinyui_clock *clock)
 
 static int tinyui_clock_apply_pointer(struct tinyui_clock *clock, int index)
 {
-    ldClock_t *ld_clock = tinyui_clock_get_ld(clock);
+    ldClock_t *ld_clock;
     struct tinyui_image_source *source;
     arm_2d_tile_t *img_tile;
     arm_2d_tile_t *mask_tile;
     float x;
     float y;
 
-    if (ld_clock == NULL) {
+    if (clock == 0 || clock->widget.ld_widget == 0
+        || clock->widget.kind != TINYUI_BACKEND_WIDGET_CLOCK) {
         return -1;
     }
+
+    ld_clock = (ldClock_t *)clock->widget.ld_widget;
 
     switch (index) {
     case 0:
@@ -264,7 +270,7 @@ struct tinyui_clock *tinyui_clock_create(struct tinyui_widget *parent, const cha
     clock->widget.enabled    = 1;
     clock->widget.value      = 0;
     ((ldBase_t *)ld_clock)->pInfo = &clock->widget;
-    tinyui_runtime_bridge_bind_leaf_widget(&clock->widget, app_state);
+    (void)tinyui_runtime_bridge_bind_leaf_widget(&clock->widget, app_state);
 
     clock->mask_color = 0;
     clock->hour_anchor_x = 0.0f;
@@ -275,7 +281,8 @@ struct tinyui_clock *tinyui_clock_create(struct tinyui_widget *parent, const cha
     clock->second_anchor_y = 100.0f;
     clock->use_system_time = 1;
     if (tinyui_clock_set_step_second(clock, 0) != 0) {
-        free(clock);
+        s_clock_depose_scene = clock->widget.ld_event_bridge_scene;
+        tinyui_widget_destroy_common(&clock->widget, tinyui_clock_ld_depose_cb);
         return 0;
     }
     return clock;
@@ -304,18 +311,12 @@ struct tinyui_clock *tinyui_clock_init(struct tinyui_widget *parent, const char 
 
 int tinyui_clock_set_use_system_time(struct tinyui_clock *clock, int enabled)
 {
-    ldClock_t *ld_clock;
-
-    if (clock == 0) {
+    if (clock == 0 || clock->widget.ld_widget == 0
+        || clock->widget.kind != TINYUI_BACKEND_WIDGET_CLOCK) {
         return -1;
     }
 
-    ld_clock = tinyui_clock_get_ld(clock);
-    if (ld_clock == NULL) {
-        return -1;
-    }
-
-    ldClockSetAutoSysTime(ld_clock, enabled != 0);
+    ldClockSetAutoSysTime((ldClock_t *)clock->widget.ld_widget, enabled != 0);
     clock->use_system_time = enabled != 0;
     return 0;
 }
@@ -336,15 +337,12 @@ int tinyui_clock_get_use_system_time(const struct tinyui_clock *clock)
 {
     ldClock_t *ld_clock;
 
-    if (clock == 0) {
+    if (clock == 0 || clock->widget.ld_widget == 0
+        || clock->widget.kind != TINYUI_BACKEND_WIDGET_CLOCK) {
         return -1;
     }
 
-    ld_clock = tinyui_clock_get_ld((struct tinyui_clock *)clock);
-    if (ld_clock == NULL) {
-        return -1;
-    }
-
+    ld_clock = (ldClock_t *)clock->widget.ld_widget;
     ((struct tinyui_clock *)clock)->use_system_time = ld_clock->isAutoSysTime ? 1 : 0;
     return ((struct tinyui_clock *)clock)->use_system_time;
 }
@@ -363,7 +361,7 @@ struct tinyui_clock *tinyui_clock_create_with_props(
 {
     struct tinyui_clock *clock;
 
-    if (!tinyui_clock_props_are_valid(props)) {
+    if (!clock_props_valid(props)) {
         return 0;
     }
 
@@ -372,12 +370,9 @@ struct tinyui_clock *tinyui_clock_create_with_props(
         return 0;
     }
 
-    if (props->style_class != 0
-        && tinyui_widget_set_style_class(&clock->widget, props->style_class) != 0) {
-        free(clock);
-        return 0;
-    }
-    if (tinyui_widget_set_user_data(&clock->widget, props->user_data) != 0
+    if ((props->style_class != 0
+         && tinyui_widget_set_style_class(&clock->widget, props->style_class) != 0)
+        || tinyui_widget_set_user_data(&clock->widget, props->user_data) != 0
         || tinyui_clock_set_step_second(clock, props->step_second) != 0
         || (props->background_source != 0
             && tinyui_clock_set_background_source(clock, props->background_source) != 0)
@@ -391,7 +386,8 @@ struct tinyui_clock *tinyui_clock_create_with_props(
         || tinyui_clock_set_hour_anchor(clock, props->hour_anchor_x, props->hour_anchor_y) != 0
         || tinyui_clock_set_minute_anchor(clock, props->minute_anchor_x, props->minute_anchor_y) != 0
         || tinyui_clock_set_second_anchor(clock, props->second_anchor_x, props->second_anchor_y) != 0) {
-        free(clock);
+        s_clock_depose_scene = clock->widget.ld_event_bridge_scene;
+        tinyui_widget_destroy_common(&clock->widget, tinyui_clock_ld_depose_cb);
         return 0;
     }
 
@@ -408,18 +404,13 @@ struct tinyui_clock *tinyui_clock_create_with_props(
 
 int tinyui_clock_set_step_second(struct tinyui_clock *clock, int step_second)
 {
-    ldClock_t *ld_clock;
-
-    if (clock == 0 || (step_second != 0 && step_second != 1)) {
+    if (clock == 0 || (step_second != 0 && step_second != 1)
+        || clock->widget.ld_widget == 0
+        || clock->widget.kind != TINYUI_BACKEND_WIDGET_CLOCK) {
         return -1;
     }
 
-    ld_clock = tinyui_clock_get_ld(clock);
-    if (ld_clock == NULL) {
-        return -1;
-    }
-
-    ldClockSetStepSecond(ld_clock, step_second != 0);
+    ldClockSetStepSecond((ldClock_t *)clock->widget.ld_widget, step_second != 0);
     clock->widget.value = step_second;
     clock->step_second = step_second;
     return 0;
@@ -436,15 +427,12 @@ int tinyui_clock_get_step_second(const struct tinyui_clock *clock)
 {
     ldClock_t *ld_clock;
 
-    if (clock == 0) {
+    if (clock == 0 || clock->widget.ld_widget == 0
+        || clock->widget.kind != TINYUI_BACKEND_WIDGET_CLOCK) {
         return -1;
     }
 
-    ld_clock = tinyui_clock_get_ld((struct tinyui_clock *)clock);
-    if (ld_clock == NULL) {
-        return -1;
-    }
-
+    ld_clock = (ldClock_t *)clock->widget.ld_widget;
     ((struct tinyui_clock *)clock)->step_second = ld_clock->isStepSecond ? 1 : 0;
     return ((struct tinyui_clock *)clock)->step_second;
 }

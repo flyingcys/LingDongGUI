@@ -24,15 +24,18 @@
 #include <stdlib.h>
 #include <string.h>
 
-int tinyui_runtime_bridge_unbind_host(void *backend_widget);
-int tinyui_runtime_bridge_detach_from_parent(void *backend_widget);
+/* ---- test seam state ---- */
+static ld_scene_t *s_image_depose_scene = NULL;
 
-static ldColor tinyui_image_rgb_to_ld_color(unsigned int rgb)
+static void tinyui_image_ld_depose_cb(void *ld_widget)
 {
-    return __RGB((rgb >> 16) & 0xFFU, (rgb >> 8) & 0xFFU, rgb & 0xFFU);
+    if (s_image_depose_scene != NULL) {
+        ldImage_depose(s_image_depose_scene, (ldImage_t *)ld_widget);
+        s_image_depose_scene = NULL;
+    }
 }
 
-static int tinyui_image_props_are_valid(const struct tinyui_image_props *props)
+static int image_props_valid(const struct tinyui_image_props *props)
 {
     return props != 0
         && props->id != 0
@@ -41,68 +44,6 @@ static int tinyui_image_props_are_valid(const struct tinyui_image_props *props)
         && props->height >= 0
         && props->radius >= 0
         && props->padding >= 0;
-}
-
-static void tinyui_image_dispose_partial_impl(struct tinyui_image *image)
-{
-    struct tinyui_app *app_state;
-
-    if (image == 0) {
-        return;
-    }
-
-    if (image->widget.ld_widget != 0) {
-        void *saved_ld_widget = image->widget.ld_widget;
-        app_state = image->widget.owner != 0
-            ? tinyui_runtime_bridge_backend_state(image->widget.owner)
-            : 0;
-        (void)tinyui_widget_detach_from_parent(&image->widget);
-        (void)tinyui_runtime_bridge_unbind_host(&image->widget);
-        if (app_state != 0 && app_state->ld_scene != 0) {
-            ldImage_depose(app_state->ld_scene, (ldImage_t *)saved_ld_widget);
-        }
-    }
-
-    free(image);
-}
-
-static struct tinyui_image *tinyui_image_create_with_props_impl(
-    struct tinyui_window *parent,
-    const struct tinyui_image_props *props)
-{
-    struct tinyui_image *image;
-
-    if (!tinyui_image_props_are_valid(props)) {
-        return 0;
-    }
-
-    image = tinyui_image_create(parent, props->id);
-    if (image == 0) {
-        return 0;
-    }
-
-    if (props->source != 0 && tinyui_image_set_source(image, props->source) != 0) {
-        tinyui_image_dispose_partial_impl(image);
-        return 0;
-    }
-    if (props->style_class != 0
-        && tinyui_widget_set_style_class(&image->widget, props->style_class) != 0) {
-        tinyui_image_dispose_partial_impl(image);
-        return 0;
-    }
-    if (tinyui_widget_set_user_data(&image->widget, props->user_data) != 0
-        || tinyui_widget_set_bg_color(&image->widget, props->bg_color) != 0
-        || tinyui_widget_set_text_color(&image->widget, props->text_color) != 0
-        || tinyui_widget_set_border_color(&image->widget, props->border_color) != 0
-        || tinyui_widget_set_radius(&image->widget, props->radius) != 0
-        || tinyui_widget_set_padding(&image->widget, props->padding) != 0
-        || ((props->width > 0 || props->height > 0)
-            && tinyui_widget_set_size(&image->widget, props->width, props->height) != 0)) {
-        tinyui_image_dispose_partial_impl(image);
-        return 0;
-    }
-
-    return image;
 }
 
 /**
@@ -175,7 +116,34 @@ struct tinyui_image *tinyui_image_create(struct tinyui_window *parent, const cha
 struct tinyui_image *tinyui_image_create_with_props(struct tinyui_window *parent,
                                                     const struct tinyui_image_props *props)
 {
-    return tinyui_image_create_with_props_impl(parent, props);
+    struct tinyui_image *image;
+
+    if (!image_props_valid(props)) {
+        return 0;
+    }
+
+    image = tinyui_image_create(parent, props->id);
+    if (image == 0) {
+        return 0;
+    }
+
+    if ((props->source != 0 && tinyui_image_set_source(image, props->source) != 0)
+        || (props->style_class != 0
+            && tinyui_widget_set_style_class(&image->widget, props->style_class) != 0)
+        || tinyui_widget_set_user_data(&image->widget, props->user_data) != 0
+        || tinyui_widget_set_bg_color(&image->widget, props->bg_color) != 0
+        || tinyui_widget_set_text_color(&image->widget, props->text_color) != 0
+        || tinyui_widget_set_border_color(&image->widget, props->border_color) != 0
+        || tinyui_widget_set_radius(&image->widget, props->radius) != 0
+        || tinyui_widget_set_padding(&image->widget, props->padding) != 0
+        || ((props->width > 0 || props->height > 0)
+            && tinyui_widget_set_size(&image->widget, props->width, props->height) != 0)) {
+        s_image_depose_scene = image->widget.ld_event_bridge_scene;
+        tinyui_widget_destroy_common(&image->widget, tinyui_image_ld_depose_cb);
+        return 0;
+    }
+
+    return image;
 }
 
 /**
@@ -188,8 +156,6 @@ struct tinyui_image *tinyui_image_create_with_props(struct tinyui_window *parent
 
 int tinyui_image_set_source(struct tinyui_image *image, struct tinyui_image_source *source)
 {
-    ldImage_t *ld_image;
-
     if (image == 0 || (source != 0 && source->img_tile == 0)) {
         return -1;
     }
@@ -197,9 +163,8 @@ int tinyui_image_set_source(struct tinyui_image *image, struct tinyui_image_sour
     if (image->widget.ld_widget == 0 || image->widget.kind != TINYUI_BACKEND_WIDGET_IMAGE) {
         return -1;
     }
-    ld_image = (ldImage_t *)image->widget.ld_widget;
 
-    ldImageSetImage(ld_image,
+    ldImageSetImage((ldImage_t *)image->widget.ld_widget,
                     source != 0 ? source->img_tile : 0,
                     source != 0 ? source->mask_tile : 0);
     image->source = source;
@@ -216,8 +181,6 @@ int tinyui_image_set_source(struct tinyui_image *image, struct tinyui_image_sour
 
 int tinyui_image_set_mask_color(struct tinyui_image *image, unsigned int rgb)
 {
-    ldImage_t *ld_image;
-
     if (image == 0) {
         return -1;
     }
@@ -225,9 +188,9 @@ int tinyui_image_set_mask_color(struct tinyui_image *image, unsigned int rgb)
     if (image->widget.ld_widget == 0 || image->widget.kind != TINYUI_BACKEND_WIDGET_IMAGE) {
         return -1;
     }
-    ld_image = (ldImage_t *)image->widget.ld_widget;
 
-    ldImageSetMaskColor(ld_image, tinyui_image_rgb_to_ld_color(rgb));
+    ldImageSetMaskColor((ldImage_t *)image->widget.ld_widget,
+                        (ldColor)tinyui_rgb_to_ld_color(rgb));
     image->widget.bg_color = rgb;
     return 0;
 }
