@@ -23,117 +23,6 @@ static int tinyui_runtime_host_benchmark_log_enabled(void)
     return enabled;
 }
 
-static int tinyui_runtime_host_widget_is_supported_real(const struct tinyui_backend_widget *widget)
-{
-    if (widget == NULL) {
-        return 1;
-    }
-
-    switch (widget->kind) {
-    case TINYUI_BACKEND_WIDGET_BACKGROUND:
-    case TINYUI_BACKEND_WIDGET_WINDOW:
-    case TINYUI_BACKEND_WIDGET_LABEL:
-    case TINYUI_BACKEND_WIDGET_BUTTON:
-    case TINYUI_BACKEND_WIDGET_CHECKBOX:
-    case TINYUI_BACKEND_WIDGET_TEXT:
-    case TINYUI_BACKEND_WIDGET_IMAGE:
-    case TINYUI_BACKEND_WIDGET_SWITCH:
-    case TINYUI_BACKEND_WIDGET_SLIDER:
-    case TINYUI_BACKEND_WIDGET_ARC:
-    case TINYUI_BACKEND_WIDGET_GAUGE:
-    case TINYUI_BACKEND_WIDGET_ICON_SLIDER:
-    case TINYUI_BACKEND_WIDGET_RADIAL_MENU:
-    case TINYUI_BACKEND_WIDGET_PROGRESS_BAR:
-    case TINYUI_BACKEND_WIDGET_QRCODE:
-    case TINYUI_BACKEND_WIDGET_PROGRESS_WHEEL:
-    case TINYUI_BACKEND_WIDGET_ANIMATION:
-    case TINYUI_BACKEND_WIDGET_LIST:
-    case TINYUI_BACKEND_WIDGET_COMBO_BOX:
-    case TINYUI_BACKEND_WIDGET_SCROLL_SELECTER:
-    case TINYUI_BACKEND_WIDGET_TABLE:
-    case TINYUI_BACKEND_WIDGET_GRAPH:
-    case TINYUI_BACKEND_WIDGET_CALENDAR:
-    case TINYUI_BACKEND_WIDGET_DATE_TIME:
-    case TINYUI_BACKEND_WIDGET_MESSAGE_BOX:
-    case TINYUI_BACKEND_WIDGET_CLOCK:
-    case TINYUI_BACKEND_WIDGET_KEYBOARD:
-        return 1;
-    default:
-        return 0;
-    }
-}
-
-static int tinyui_runtime_host_widget_is_real_mapped(const struct tinyui_backend_widget *widget)
-{
-    return widget != NULL &&
-           widget->kind != TINYUI_BACKEND_WIDGET_WINDOW &&
-           widget->kind != TINYUI_BACKEND_WIDGET_BACKGROUND &&
-           tinyui_runtime_host_widget_is_supported_real(widget) &&
-           widget->ld_widget != NULL;
-}
-
-static void tinyui_runtime_host_append_id(const char *id,
-                                     char *buffer,
-                                     size_t buffer_size,
-                                     size_t *used)
-{
-    int written;
-
-    if (id == NULL || id[0] == '\0') {
-        return;
-    }
-
-    if (*used > 0 && *used + 1 < buffer_size) {
-        buffer[*used] = ',';
-        *used += 1;
-        buffer[*used] = '\0';
-    }
-
-    if (*used + 1 >= buffer_size) {
-        return;
-    }
-
-    written = snprintf(buffer + *used, buffer_size - *used, "%s", id);
-    if (written > 0) {
-        size_t advance = (size_t)written;
-        if (advance >= buffer_size - *used) {
-            *used = buffer_size - 1;
-        } else {
-            *used += advance;
-        }
-    }
-}
-
-static int tinyui_runtime_host_widget_needs_fallback(const struct tinyui_backend_widget *widget)
-{
-    return widget != NULL &&
-           widget->kind != TINYUI_BACKEND_WIDGET_WINDOW &&
-           widget->kind != TINYUI_BACKEND_WIDGET_BACKGROUND &&
-           (!tinyui_runtime_host_widget_is_supported_real(widget) || widget->ld_widget == NULL);
-}
-
-static void tinyui_runtime_host_append_widget_ids(const struct tinyui_backend_widget *widget,
-                                             int (*predicate)(const struct tinyui_backend_widget *widget),
-                                             char *buffer,
-                                             size_t buffer_size,
-                                             size_t *used)
-{
-    while (widget != NULL) {
-        if (predicate(widget) && widget->id != NULL && widget->id[0] != '\0') {
-            tinyui_runtime_host_append_id(widget->id, buffer, buffer_size, used);
-        }
-
-        if (widget->first_child != NULL) {
-            tinyui_runtime_host_append_widget_ids(widget->first_child,
-                                             predicate,
-                                             buffer,
-                                             buffer_size,
-                                             used);
-        }
-
-        widget = widget->next_sibling;
-    }
-}
 
 /* ---- 外部可见函数（在 host_internal.h 中已声明）---- */
 
@@ -206,41 +95,50 @@ int tinyui_runtime_host_window_has_real_layout(const struct tinyui_backend_widge
     return ld_window->layoutTpye == layoutFlex || ld_window->layoutTpye == layoutGrid;
 }
 
-void tinyui_runtime_host_log_mapping_markers(struct tinyui_runtime_host_state *state,
-                                               const struct tinyui_backend_widget *root)
+static size_t tinyui_runtime_host_count_real_in_ld_tree(ldBase_t *node)
 {
-    char real_ids[256] = {0};
-    char fallback_ids[256] = {0};
-    size_t real_used = 0;
-    size_t fallback_used = 0;
+    size_t count = 0;
 
-    if (state == NULL || root == NULL) {
+    while (node != NULL) {
+        struct tinyui_widget *w = (struct tinyui_widget *)node->pInfo;
+
+        if (w != NULL && w->ld_widget != NULL &&
+            w->kind != TINYUI_BACKEND_WIDGET_WINDOW &&
+            w->kind != TINYUI_BACKEND_WIDGET_BACKGROUND) {
+            count++;
+        }
+
+        {
+            ldBase_t *child = ldBaseGetChildList(node);
+            if (child != NULL) {
+                count += tinyui_runtime_host_count_real_in_ld_tree(child);
+            }
+        }
+
+        node = ldBaseGetNextSibling(node);
+    }
+
+    return count;
+}
+
+void tinyui_runtime_host_log_mapping_markers(struct tinyui_runtime_host_state *state,
+                                              const struct tinyui_widget *root_widget)
+{
+    size_t real_count = 0;
+
+    if (state == NULL || root_widget == NULL || root_widget->ld_widget == NULL) {
         return;
     }
 
-    tinyui_runtime_host_append_widget_ids(root->first_child,
-                                     tinyui_runtime_host_widget_is_real_mapped,
-                                     real_ids,
-                                     sizeof(real_ids),
-                                     &real_used);
-    tinyui_runtime_host_append_widget_ids(root->first_child,
-                                     tinyui_runtime_host_widget_needs_fallback,
-                                     fallback_ids,
-                                     sizeof(fallback_ids),
-                                     &fallback_used);
-
-    if (real_used > 0 && !state->static_mapping_logged) {
-        printf("TINYUI_BACKEND_STATIC_MAPPING=REAL_LDGUI\n");
-        printf("TINYUI_BACKEND_REAL_WIDGET_IDS=%s\n", real_ids);
-        fflush(stdout);
-        state->static_mapping_logged = 1;
+    {
+        ldBase_t *first_child = ldBaseGetChildList((ldBase_t *)root_widget->ld_widget);
+        real_count = tinyui_runtime_host_count_real_in_ld_tree(first_child);
     }
 
-    if (fallback_used > 0 && !state->fallback_boundary_logged) {
-        printf("TINYUI_BACKEND_INTERACTIVE_BOUNDARY=FAKE_FALLBACK\n");
-        printf("TINYUI_BACKEND_FALLBACK_WIDGET_IDS=%s\n", fallback_ids);
+    if (real_count > 0 && !state->static_mapping_logged) {
+        printf("TINYUI_BACKEND_STATIC_MAPPING=REAL_LDGUI\n");
         fflush(stdout);
-        state->fallback_boundary_logged = 1;
+        state->static_mapping_logged = 1;
     }
 }
 

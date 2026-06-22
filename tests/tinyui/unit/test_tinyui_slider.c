@@ -10,28 +10,27 @@
 
 extern int tinyui_widget_has_ld_binding(const struct tinyui_widget *widget);
 void tinyui_slider_test_fail_indicator_width_for_id(const char *id);
-const struct tinyui_backend_widget *tinyui_slider_test_last_disposed_backend(void);
+const struct tinyui_widget *tinyui_slider_test_last_disposed_backend(void);
 
 static const char *test_source_file_path = __FILE__;
 
 static void test_slider_create_and_backend_mapping(struct tinyui_window *win)
 {
     struct tinyui_slider *slider = tinyui_slider_create(win, "sl_test");
-    struct tinyui_backend_widget *backend;
-    struct tinyui_backend_widget *parent_backend;
+    struct tinyui_widget *backend;
+    struct tinyui_widget *parent_backend;
     ldSlider_t *ld_slider;
 
     assert(slider != 0);
-    backend = (struct tinyui_backend_widget *)slider->widget.backend_widget;
-    assert(backend != 0);
-    parent_backend = (struct tinyui_backend_widget *)win->widget.backend_widget;
-    assert(parent_backend != 0);
+    backend = &slider->widget;
+    assert(backend->ld_widget != 0);
+    parent_backend = &win->widget;
+    assert(parent_backend->ld_widget != 0);
     assert(backend->kind == TINYUI_BACKEND_WIDGET_SLIDER);
     assert(backend->owner == parent_backend->owner);
-    assert(backend->root == parent_backend->root);
-    assert(backend->parent == parent_backend);
+    assert((ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)backend->ld_widget) == (ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)parent_backend->ld_widget));
+    assert(ldBaseGetParent((ldBase_t *)backend->ld_widget) == (ldBase_t *)parent_backend->ld_widget);
     assert(backend->ld_name_id != 0);
-    assert(backend->host_widget == &slider->widget);
     assert(backend->ld_event_bridge_scene != 0);
     assert(backend->ld_event_bridge_sender == backend->ld_widget);
     ld_slider = (ldSlider_t *)backend->ld_widget;
@@ -53,7 +52,7 @@ static void test_slider_create_with_props_pushes_range(struct tinyui_window *win
             .max_value = 100,
             .value = 50,
         });
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldSlider_t *ld_slider;
 
     assert(slider != 0);
@@ -61,8 +60,8 @@ static void test_slider_create_with_props_pushes_range(struct tinyui_window *win
     assert(slider->min_value == 10);
     assert(slider->max_value == 100);
 
-    backend = (struct tinyui_backend_widget *)slider->widget.backend_widget;
-    assert(backend != 0);
+    backend = &slider->widget;
+    assert(backend->ld_widget != 0);
     assert(backend->kind == TINYUI_BACKEND_WIDGET_SLIDER);
 
     ld_slider = (ldSlider_t *)backend->ld_widget;
@@ -88,12 +87,12 @@ static void test_slider_set_range_and_value_round_trip(struct tinyui_window *win
         .img_tile = &indic_tile,
         .mask_tile = &indic_mask,
     };
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *backend;
     ldSlider_t *ld_slider;
 
     assert(slider != 0);
-    backend = (struct tinyui_backend_widget *)slider->widget.backend_widget;
-    assert(backend != 0);
+    backend = &slider->widget;
+    assert(backend->ld_widget != 0);
     ld_slider = (ldSlider_t *)backend->ld_widget;
     assert(ld_slider != 0);
 
@@ -150,18 +149,17 @@ static void test_slider_set_range_and_value_round_trip(struct tinyui_window *win
 
 static void test_slider_create_with_props_failure_rolls_back_attached_child(struct tinyui_window *win)
 {
-    struct tinyui_backend_widget *parent_backend =
-        (struct tinyui_backend_widget *)win->widget.backend_widget;
-    struct tinyui_backend_widget *tail = parent_backend->first_child;
-    struct tinyui_backend_widget *next_before = 0;
+    ldBase_t *win_ld = (ldBase_t *)win->widget.ld_widget;
+    ldBase_t *tail_ld = ldBaseGetChildList(win_ld);
+    ldBase_t *next_before_ld = 0;
     struct tinyui_slider *slider;
-    const struct tinyui_backend_widget *disposed_backend;
+    const struct tinyui_widget *disposed_backend;
 
-    while (tail != 0 && tail->next_sibling != 0) {
-        tail = tail->next_sibling;
+    while (tail_ld != 0 && ldBaseGetNextSibling(tail_ld) != 0) {
+        tail_ld = ldBaseGetNextSibling(tail_ld);
     }
-    if (tail != 0) {
-        next_before = tail->next_sibling;
+    if (tail_ld != 0) {
+        next_before_ld = ldBaseGetNextSibling(tail_ld);
     }
 
     tinyui_slider_test_fail_indicator_width_for_id("sl_fail_indicator_width");
@@ -179,19 +177,15 @@ static void test_slider_create_with_props_failure_rolls_back_attached_child(stru
     disposed_backend = tinyui_slider_test_last_disposed_backend();
     assert(disposed_backend != 0);
     assert(disposed_backend->kind == TINYUI_BACKEND_WIDGET_SLIDER);
-    assert(disposed_backend->parent == 0);
     assert(disposed_backend->owner == 0);
-    assert(disposed_backend->root == 0);
-    assert(disposed_backend->host_widget == 0);
     assert(disposed_backend->ld_event_bridge_scene == 0);
     assert(disposed_backend->ld_event_bridge_sender == 0);
     assert(disposed_backend->ld_event_bridge_next == 0);
-    assert(disposed_backend->next_sibling == 0);
     assert(((const ldBase_t *)disposed_backend->ld_widget)->pInfo == 0);
-    if (tail != 0) {
-        assert(tail->next_sibling == next_before);
+    if (tail_ld != 0) {
+        assert(ldBaseGetNextSibling(tail_ld) == next_before_ld);
     } else {
-        assert(parent_backend->first_child == 0);
+        assert(ldBaseGetChildList(win_ld) == 0);
     }
 
     assert(tinyui_slider_create_with_props(
@@ -285,11 +279,9 @@ static void test_slider_internal_seams_are_renamed(void)
         "tinyui_slider_fail_indicator_width_id",
         "tinyui_slider_last_disposed_backend_snapshot",
         "tinyui_slider_last_disposed_backend_valid",
-        "tinyui_slider_backend(",
         "tinyui_slider_get_ld(",
         "tinyui_slider_should_fail_indicator_width(",
         "tinyui_slider_dispose_partial(",
-        "tinyui_slider_props_are_valid(",
         "tinyui_backend_slider_test_fail_indicator_width_for_id(",
         "tinyui_backend_slider_test_last_disposed_backend(",
     };
@@ -297,7 +289,6 @@ static void test_slider_internal_seams_are_renamed(void)
     size_t i;
 
     assert(file_contains_pattern(slider_source_path, "tinyui_slider_backend(") != 0);
-    assert(file_contains_pattern(slider_source_path, "tinyui_slider_get_ld(") != 0);
     assert(file_contains_pattern(slider_source_path, "tinyui_slider_props_are_valid(") != 0);
     assert(file_contains_pattern(slider_source_path,
                                  "tinyui_slider_test_last_disposed_backend(")

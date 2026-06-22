@@ -1,4 +1,5 @@
 set(TINYUI_UNIT_TESTS
+    unit/test_tinyui_core_helpers.c
     unit/test_tinyui_smoke.c
     unit/test_tinyui_native_bridge.c
     unit/test_tinyui_theme.c
@@ -52,6 +53,7 @@ function(ld_register_tinyui_unit_test test_src)
         MAIN_LIB tinyui_backend_ldgui
         LABELS "tinyui;unit"
     )
+    set_tests_properties(${tinyui_target} PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=dummy")
     if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
         target_compile_definitions(${tinyui_target} PRIVATE _GNU_SOURCE)
     endif()

@@ -181,8 +181,6 @@ static void tinyui_runtime_host_apply_smoke_cursor_layout(struct tinyui_runtime_
 
 static void tinyui_runtime_host_render(struct tinyui_runtime_host_state *state, struct tinyui_window *window)
 {
-    const struct tinyui_backend_widget *root;
-    const struct tinyui_backend_widget *root_widget;
     struct tinyui_app *app_state;
     int x = TINYUI_RUNTIME_PADDING;
     int y = TINYUI_RUNTIME_PADDING + 20;
@@ -190,25 +188,23 @@ static void tinyui_runtime_host_render(struct tinyui_runtime_host_state *state, 
     SDL_SetRenderDrawColor(state->renderer, 0x2E, 0x34, 0x40, 0xFF);
     SDL_RenderClear(state->renderer);
 
-    root = (const struct tinyui_backend_widget *)window->widget.backend_widget;
-    if (root != NULL && root->first_child != NULL) {
-        root_widget = (const struct tinyui_backend_widget *)window->widget.backend_widget;
+    if (window->widget.ld_widget != NULL) {
         app_state = tinyui_runtime_host_app_state_from_window(window);
-        tinyui_runtime_host_log_mapping_markers(state, root);
+        tinyui_runtime_host_log_mapping_markers(state, &window->widget);
         if (app_state != NULL && app_state->ld_scene != NULL && state->real_pixels != NULL) {
             state->smoke_layout_used = 0;
             memset(state->real_pixels,
                    0,
                    (size_t)state->display_width * (size_t)state->display_height *
                        sizeof(*state->real_pixels));
-            tinyui_runtime_host_apply_smoke_cursor_layout(state, root_widget, x, &y);
+            tinyui_runtime_host_apply_smoke_cursor_layout(state, NULL, x, &y);
             tinyui_runtime_host_log_smoke_layout_marker(state);
             ldGuiFrameStart(app_state->ld_scene);
             ldGuiTouchProcess(app_state->ld_scene);
             ldMsgProcess(app_state->ld_scene);
             ldGuiDraw(app_state->ld_scene, &state->real_tile, true);
             ldGuiFrameComplete(app_state->ld_scene);
-            tinyui_runtime_host_log_image_source_marker(root->first_child);
+            tinyui_runtime_host_log_image_source_marker(NULL);
             tinyui_runtime_host_present_real_frame(state);
         }
     }

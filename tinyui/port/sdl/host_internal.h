@@ -51,7 +51,7 @@ void   tinyui_runtime_host_log_screen_create_benchmark(struct tinyui_runtime_hos
 void   tinyui_runtime_host_log_first_frame_benchmark(struct tinyui_runtime_host_state *state);
 int    tinyui_runtime_host_window_has_real_layout(const struct tinyui_backend_widget *widget);
 void   tinyui_runtime_host_log_mapping_markers(struct tinyui_runtime_host_state *state,
-                                               const struct tinyui_backend_widget *root);
+                                               const struct tinyui_widget *root_widget);
 void   tinyui_runtime_host_log_image_source_marker(const struct tinyui_backend_widget *widget);
 Uint32 tinyui_runtime_host_parse_auto_quit_ms(void);
 int    tinyui_runtime_host_write_capture(struct tinyui_runtime_host_state *state);
