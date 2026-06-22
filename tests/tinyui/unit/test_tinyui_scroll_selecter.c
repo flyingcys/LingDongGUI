@@ -128,11 +128,31 @@ static void test_scroll_selecter_internal_seams_are_tinyui_named(void)
     assert_source_lacks_function_definition(widget_source, "picoui_scroll_selecter_ld_from_backend");
     assert_source_lacks_function_definition(widget_source, "picoui_scroll_selecter_selected_text_from_public_state");
 
-    assert(test_source_has_function_definition(widget_source, "tinyui_scroll_selecter_props_are_valid"));
-    assert(test_source_has_function_definition(widget_source, "tinyui_scroll_selecter_rgb_to_ld_color"));
-    assert(test_source_has_function_definition(widget_source, "tinyui_scroll_selecter_backend_from_widget"));
-    assert(test_source_has_function_definition(widget_source, "tinyui_scroll_selecter_get_ld"));
+    assert(test_source_has_function_definition(widget_source, "tinyui_scroll_selecter_props_valid"));
+    assert(test_source_has_function_definition(widget_source, "tinyui_scroll_selecter_ld_depose_cb"));
+    assert(test_source_has_function_definition(widget_source, "tinyui_scroll_selecter_rollback"));
     assert(test_source_has_function_definition(widget_source, "tinyui_scroll_selecter_selected_text_from_public_state"));
+
+    assert_source_lacks_function_definition(widget_source, "tinyui_scroll_selecter_rgb_to_ld_color");
+    assert_source_lacks_function_definition(widget_source, "tinyui_scroll_selecter_get_ld");
+    assert_source_lacks_function_definition(widget_source, "tinyui_scroll_selecter_backend_from_widget");
+    assert_source_lacks_function_definition(widget_source, "tinyui_scroll_selecter_widget_is_valid");
+
+    assert_source_lacks_function_definition(widget_source, "tinyui_backend_scroll_selecter_set_items");
+    assert_source_lacks_function_definition(widget_source, "tinyui_backend_scroll_selecter_set_text_color");
+    assert_source_lacks_function_definition(widget_source, "tinyui_backend_scroll_selecter_set_bg_color");
+    assert_source_lacks_function_definition(widget_source, "tinyui_backend_scroll_selecter_set_indicator_color");
+    assert_source_lacks_function_definition(widget_source, "tinyui_backend_scroll_selecter_set_bg_source");
+    assert_source_lacks_function_definition(widget_source, "tinyui_backend_scroll_selecter_set_indicator_source");
+    assert_source_lacks_function_definition(widget_source, "tinyui_backend_scroll_selecter_set_transparent");
+    assert_source_lacks_function_definition(widget_source, "tinyui_backend_scroll_selecter_set_speed");
+    assert_source_lacks_function_definition(widget_source, "tinyui_backend_scroll_selecter_set_select_text");
+    assert_source_lacks_function_definition(widget_source, "tinyui_backend_scroll_selecter_set_selected_index");
+    assert_source_lacks_function_definition(widget_source, "tinyui_backend_scroll_selecter_get_selected_index");
+    assert_source_lacks_function_definition(widget_source, "tinyui_backend_scroll_selecter_get_selected_text");
+    assert_source_lacks_function_definition(widget_source, "tinyui_backend_scroll_selecter_sync_selected_index");
+    assert_source_lacks_function_definition(widget_source, "tinyui_backend_scroll_selecter_set_edit_mode");
+    assert_source_lacks_function_definition(widget_source, "tinyui_backend_scroll_selecter_get_edit_mode");
 }
 
 static void test_scroll_selecter_edit_mode_and_navigation_mode_are_distinct(void)

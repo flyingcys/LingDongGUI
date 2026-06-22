@@ -805,10 +805,12 @@ static void test_list_legacy_backend_helper_symbols_are_removed(struct tinyui_wi
 {
     (void)win;
     assert_source_file_lacks_symbol("tinyui/src/widgets/list.c", "tinyui_list_ld_widget");
-    assert_source_file_has_symbol("tinyui/src/widgets/list.c", "tinyui_list_rgb_to_ld_color");
-    assert_source_file_has_symbol("tinyui/src/widgets/list.c", "tinyui_list_map_align");
-    assert_source_file_has_symbol("tinyui/src/widgets/list.c", "tinyui_list_backend");
-    assert_source_file_has_symbol("tinyui/src/widgets/list.c", "tinyui_list_get_ld");
+    /* Phase C2: private color/align/backend/get_ld helpers folded into core helpers
+     * (tinyui_rgb_to_ld_color / tinyui_align_to_arm2d) and direct ld_widget casts. */
+    assert_source_file_lacks_symbol("tinyui/src/widgets/list.c", "tinyui_list_rgb_to_ld_color");
+    assert_source_file_lacks_symbol("tinyui/src/widgets/list.c", "tinyui_list_map_align");
+    assert_source_file_lacks_symbol("tinyui/src/widgets/list.c", "tinyui_list_backend");
+    assert_source_file_lacks_symbol("tinyui/src/widgets/list.c", "tinyui_list_get_ld");
     assert_source_file_lacks_symbol("tinyui/src/widgets/list.c", "tinyui_backend_list_set_items");
     assert_source_file_lacks_symbol("tinyui/src/widgets/list.c", "tinyui_backend_list_set_item_height");
     assert_source_file_lacks_symbol("tinyui/src/widgets/list.c", "tinyui_backend_list_set_padding_group");

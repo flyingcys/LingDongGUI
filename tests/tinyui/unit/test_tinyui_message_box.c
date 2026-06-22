@@ -531,7 +531,7 @@ static void test_message_box_internal_seams_renamed_to_tinyui(void)
 
     assert(widget_source != 0);
     assert_source_has_function_definition(widget_source, "tinyui_message_box_props_are_valid");
-    assert_source_has_function_definition(widget_source, "tinyui_message_box_get_ld");
+    assert_source_lacks_function_definition(widget_source, "tinyui_message_box_get_ld");
     assert_source_has_function_definition(widget_source, "tinyui_message_box_confirm_bridge");
 }
 
