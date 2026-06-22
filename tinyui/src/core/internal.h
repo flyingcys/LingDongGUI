@@ -816,6 +816,23 @@ int tinyui_widget_detach_from_parent(struct tinyui_widget *w);
 void tinyui_widget_destroy_common(struct tinyui_widget *w, void (*ld_depose_cb)(void *));
 
 /**
+ * @brief Convert RGB888 packed value to ldColor (RGB565 via __RGB macro)
+ *        Return type widens to unsigned int to avoid pulling arm_2d types here.
+ */
+unsigned int tinyui_rgb_to_ld_color(unsigned int rgb888);
+
+/**
+ * @brief Convert ldColor (RGB565) back to approximately RGB888
+ */
+unsigned int tinyui_ld_color_to_rgb(unsigned int color);
+
+/**
+ * @brief Map tinyui_align to arm_2d_align_t (horizontal axis, START/CENTER/END)
+ *        Return is int compatible with arm_2d_align_t enum.
+ */
+int tinyui_align_to_arm2d(enum tinyui_align align);
+
+/**
  * @brief Claim input focus
  *
  * @param[in] widget Widget instance

@@ -1985,19 +1985,19 @@ int tinyui_focus_navigate(struct tinyui_app *app, enum tinyui_native_nav_dir dir
 /**
  * @brief Convert RGB888 packed value to ldColor (RGB565 via __RGB macro)
  */
-ldColor tinyui_rgb_to_ld_color(unsigned int rgb888)
+unsigned int tinyui_rgb_to_ld_color(unsigned int rgb888)
 {
-    return __RGB((rgb888 >> 16) & 0xFFU, (rgb888 >> 8) & 0xFFU, rgb888 & 0xFFU);
+    return (unsigned int)__RGB((rgb888 >> 16) & 0xFFU, (rgb888 >> 8) & 0xFFU, rgb888 & 0xFFU);
 }
 
 /**
  * @brief Convert ldColor (RGB565) back to approximately RGB888
  */
-unsigned int tinyui_ld_color_to_rgb(ldColor color)
+unsigned int tinyui_ld_color_to_rgb(unsigned int color)
 {
-    uint32_t red   = ((uint32_t)color >> 11) & 0x1FU;
-    uint32_t green = ((uint32_t)color >> 5)  & 0x3FU;
-    uint32_t blue  = (uint32_t)color         & 0x1FU;
+    uint32_t red   = (color >> 11) & 0x1FU;
+    uint32_t green = (color >> 5)  & 0x3FU;
+    uint32_t blue  = color         & 0x1FU;
 
     red   = (red   << 3) | (red   >> 2);
     green = (green << 2) | (green >> 4);
@@ -2008,7 +2008,7 @@ unsigned int tinyui_ld_color_to_rgb(ldColor color)
 /**
  * @brief Map tinyui_align to arm_2d_align_t (horizontal axis, START/CENTER/END)
  */
-arm_2d_align_t tinyui_align_to_arm2d(enum tinyui_align align)
+int tinyui_align_to_arm2d(enum tinyui_align align)
 {
     switch (align) {
     case TINYUI_ALIGN_START:
@@ -2130,9 +2130,17 @@ struct tinyui_widget *tinyui_widget_create_leaf(
     w->ld_name_id = name_id;
     w->kind       = kind;
 
-    /* 7. Attach to ld tree under parent */
-    ldBaseNodeAdd((arm_2d_control_node_t *)parent->widget.ld_widget,
-                  (arm_2d_control_node_t *)ld_widget);
+    /* 7. Attach to ld tree under parent
+     *    Note: most ld<Xxx>_init() functions already auto-attach the new
+     *    node to its parent (looked up via parent_name_id). Only fall back
+     *    to manual ldBaseNodeAdd when the ld widget has no parent yet — this
+     *    keeps create_leaf usable for ld widgets that don't auto-attach
+     *    while avoiding the double-attach that produces a cyclic child list. */
+    if (ldBaseGetParent((ldBase_t *)ld_widget) == 0
+        && parent->widget.ld_widget != 0) {
+        ldBaseNodeAdd((arm_2d_control_node_t *)parent->widget.ld_widget,
+                      (arm_2d_control_node_t *)ld_widget);
+    }
 
     /* 8. Bind pInfo so ld events find this widget */
     ((ldBase_t *)ld_widget)->pInfo = w;

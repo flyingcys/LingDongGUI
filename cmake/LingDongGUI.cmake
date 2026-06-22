@@ -281,7 +281,7 @@ endfunction()
 function(ld_add_c_unit_test target)
     cmake_parse_arguments(LDTEST "" "SUPPORT_LIB;MAIN_LIB;TEST_NAME" "SOURCES;LABELS" ${ARGN})
     add_executable(${target} ${LDTEST_SOURCES})
-    if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+    if(CMAKE_C_COMPILER_ID MATCHES "GNU" OR (CMAKE_C_COMPILER_ID MATCHES "Clang" AND NOT APPLE))
         target_link_libraries(${target} PRIVATE
             ${LDTEST_SUPPORT_LIB}
             -Wl,--start-group

@@ -470,7 +470,16 @@ function(add_tinyui_demo target source)
     # tinyui_backend_ldgui_runtime -> tinyui_backend_ldgui_porting.
     # Pulling in longdonggui_porting_default again duplicates Disp0_DrawBitmap /
     # touch / timestamp symbols from src/porting/ldConfig.c.
-    if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+    if(CMAKE_C_COMPILER_ID MATCHES "GNU")
+        target_link_libraries(${target} PRIVATE
+            -Wl,--start-group
+            tinyui_backend_ldgui_runtime
+            tinyui_core
+            longdonggui
+            longdonggui_arm2d
+            -Wl,--end-group
+        )
+    elseif(CMAKE_C_COMPILER_ID MATCHES "Clang" AND NOT APPLE)
         target_link_libraries(${target} PRIVATE
             -Wl,--start-group
             tinyui_backend_ldgui_runtime

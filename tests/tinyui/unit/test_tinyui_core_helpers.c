@@ -105,6 +105,15 @@ static void *test_leaf_ld_init(void *ctx,
                                 0, 0, 80, 20, NULL);
 }
 
+static struct ld_scene_t *g_test_scene = NULL;
+
+static void test_leaf_ld_depose(void *ld_widget)
+{
+    if (ld_widget != NULL && g_test_scene != NULL) {
+        ldLabel_depose(g_test_scene, (ldLabel_t *)ld_widget);
+    }
+}
+
 static void test_widget_create_leaf_basic(struct tinyui_window *win)
 {
     struct tinyui_widget *w;
@@ -119,8 +128,10 @@ static void test_widget_create_leaf_basic(struct tinyui_window *win)
         CHECK(w->ld_widget != NULL);
         CHECK(w->ld_name_id > 0);
         CHECK(w->kind == TINYUI_BACKEND_WIDGET_LABEL);
-        /* Clean up */
-        tinyui_widget_destroy_common(w, NULL);
+        g_test_scene = w->owner->ld_scene;
+        /* Clean up — pass a real depose so the ld widget is properly disposed */
+        tinyui_widget_destroy_common(w, test_leaf_ld_depose);
+        g_test_scene = NULL;
     }
 }
 
