@@ -310,6 +310,9 @@ static void test_calendar_system_date_provider_round_trip(void)
     int year = 0;
     int month = 0;
     int day = 0;
+    int found_day_one = 0;
+    int week = 0;
+    int weekday = 0;
 
     app = tinyui_app_create();
     assert(app != 0);
@@ -332,7 +335,22 @@ static void test_calendar_system_date_provider_round_trip(void)
     assert(year >= 1970);
     assert(month >= 1 && month <= 12);
     assert(day >= 1 && day <= 31);
-    assert(tinyui_calendar_get_grid_value(calendar, 0, ldBaseGetWeek((uint16_t)year, (uint8_t)month, 1)) == 1);
+    for (week = 0; week < 6 && !found_day_one; ++week) {
+        for (weekday = 0; weekday < 7; ++weekday) {
+            int grid_value = tinyui_calendar_get_grid_value(calendar, week, weekday);
+            int is_current = tinyui_calendar_is_current_month_cell(calendar, week, weekday);
+
+            assert(grid_value >= 0 && grid_value <= 31);
+            assert(is_current == 0 || is_current == 1);
+            if (grid_value == 1 && is_current == 1) {
+                found_day_one = 1;
+                assert((ld_calendar->calBuf[week * 7 + weekday] & 0x7F) == 1);
+                assert((ld_calendar->calBuf[week * 7 + weekday] & 0x80) != 0);
+                break;
+            }
+        }
+    }
+    assert(found_day_one == 1);
 
     assert(tinyui_calendar_set_use_system_date(calendar, 0) == 0);
     assert(tinyui_calendar_get_use_system_date(calendar) == 0);

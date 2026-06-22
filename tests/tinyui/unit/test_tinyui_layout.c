@@ -902,6 +902,76 @@ static void test_window_padding_survives_layout_type_switches(void)
     tinyui_app_destroy(app);
 }
 
+static void test_grid_setters_promote_window_to_grid_layout(void)
+{
+    struct tinyui_app *app = tinyui_app_create();
+    struct tinyui_window *win = tinyui_window_create(app, "root");
+    ldWindow_t *ld_window = (ldWindow_t *)win->widget.ld_widget;
+
+    assert(ld_window->layoutTpye == layoutNone);
+    assert(tinyui_grid_set_columns(win, (int[]){120, -1, 0}, 3) == 0);
+    assert(ld_window->layoutTpye == layoutGrid);
+
+    assert(tinyui_window_set_layout_type(win, TINYUI_WINDOW_LAYOUT_NONE) == 0);
+    assert(ld_window->layoutTpye == layoutNone);
+    assert(tinyui_grid_set_rows(win, (int[]){24, -1, 0}, 3) == 0);
+    assert(ld_window->layoutTpye == layoutGrid);
+
+    tinyui_app_destroy(app);
+}
+
+static void test_grid_layout_positions_basic_widgets_like_demo(void)
+{
+    struct tinyui_app *app = tinyui_app_create();
+    struct tinyui_window *win = tinyui_window_create(app, "root");
+    struct tinyui_switch *sw = tinyui_switch_create(win, "wifi");
+    struct tinyui_checkbox *cb = tinyui_checkbox_create(win, "agree");
+    struct tinyui_slider *slider = tinyui_slider_create(win, "volume");
+    struct tinyui_button *button = tinyui_button_create(win, "submit");
+    struct tinyui_text *text = tinyui_text_create(win, "title");
+    struct tinyui_image *image = tinyui_image_create(win, "logo");
+    ldWindow_t *ld_window = (ldWindow_t *)win->widget.ld_widget;
+    ldBase_t *ld_sw = (ldBase_t *)sw->widget.ld_widget;
+    ldBase_t *ld_cb = (ldBase_t *)cb->widget.ld_widget;
+    ldBase_t *ld_slider = (ldBase_t *)slider->widget.ld_widget;
+    ldBase_t *ld_button = (ldBase_t *)button->widget.ld_widget;
+    ldBase_t *ld_text = (ldBase_t *)text->widget.ld_widget;
+    ldBase_t *ld_image = (ldBase_t *)image->widget.ld_widget;
+    const int cols[] = {220, 0};
+    const int rows[] = {24, 30, 30, 36, 28, 64, 0};
+
+    assert(tinyui_grid_set_columns(win, cols, 2) == 0);
+    assert(tinyui_grid_set_rows(win, rows, 7) == 0);
+    assert(tinyui_grid_set_gap(win, 12, 12) == 0);
+    assert(tinyui_grid_set_align(win, TINYUI_ALIGN_START, TINYUI_ALIGN_START) == 0);
+    assert(tinyui_window_set_padding(win, 16, 24, 16, 16) == 0);
+
+    assert(tinyui_widget_set_size((struct tinyui_widget *)sw, 48, 24) == 0);
+    assert(tinyui_widget_set_size((struct tinyui_widget *)cb, 220, 30) == 0);
+    assert(tinyui_widget_set_size((struct tinyui_widget *)slider, 220, 30) == 0);
+    assert(tinyui_widget_set_size((struct tinyui_widget *)button, 160, 36) == 0);
+    assert(tinyui_widget_set_size((struct tinyui_widget *)text, 220, 28) == 0);
+    assert(tinyui_widget_set_size((struct tinyui_widget *)image, 220, 60) == 0);
+
+    assert(tinyui_widget_set_grid_cell((struct tinyui_widget *)sw, 0, 0, 1, 1, TINYUI_ALIGN_START, TINYUI_ALIGN_START) == 0);
+    assert(tinyui_widget_set_grid_cell((struct tinyui_widget *)cb, 0, 1, 1, 1, TINYUI_ALIGN_START, TINYUI_ALIGN_START) == 0);
+    assert(tinyui_widget_set_grid_cell((struct tinyui_widget *)slider, 0, 2, 1, 1, TINYUI_ALIGN_START, TINYUI_ALIGN_START) == 0);
+    assert(tinyui_widget_set_grid_cell((struct tinyui_widget *)button, 0, 3, 1, 1, TINYUI_ALIGN_START, TINYUI_ALIGN_START) == 0);
+    assert(tinyui_widget_set_grid_cell((struct tinyui_widget *)text, 0, 4, 1, 1, TINYUI_ALIGN_START, TINYUI_ALIGN_START) == 0);
+    assert(tinyui_widget_set_grid_cell((struct tinyui_widget *)image, 0, 5, 1, 1, TINYUI_ALIGN_START, TINYUI_ALIGN_START) == 0);
+
+    assert(ld_window->layoutTpye == layoutGrid);
+    ldWindow_on_frame_start(app->ld_scene, ld_window);
+
+    assert(ldBaseGetY(ld_sw) < ldBaseGetY(ld_cb));
+    assert(ldBaseGetY(ld_cb) < ldBaseGetY(ld_slider));
+    assert(ldBaseGetY(ld_slider) < ldBaseGetY(ld_button));
+    assert(ldBaseGetY(ld_button) < ldBaseGetY(ld_text));
+    assert(ldBaseGetY(ld_text) < ldBaseGetY(ld_image));
+
+    tinyui_app_destroy(app);
+}
+
 static void test_window_padding_group_round_trip_to_ldwindow(void)
 {
     struct tinyui_app *app = tinyui_app_create();
@@ -1591,6 +1661,8 @@ int main(int argc, char **argv)
     test_widget_focus_navigation_public_api();
     test_flex_layout_relayout_uses_ld_window_without_cursor_override();
     test_window_padding_survives_layout_type_switches();
+    test_grid_setters_promote_window_to_grid_layout();
+    test_grid_layout_positions_basic_widgets_like_demo();
     test_window_padding_group_round_trip_to_ldwindow();
     test_window_color_round_trip_to_ldwindow();
     test_window_background_source_round_trip_to_ldwindow();

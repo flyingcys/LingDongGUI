@@ -22,6 +22,9 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
+#if defined(_POSIX_VERSION) || defined(CLOCK_REALTIME) || defined(__APPLE__)
+#include <time.h>
+#endif
 
 /* ─── 全局 app 指针 ─── */
 static struct tinyui_app *s_ldgui_current_app;
@@ -73,9 +76,18 @@ void VT_leave_global_mutex(void)
     }
 }
 
-/* ─── ③ tick → tinyui tick_port.callback（ms → us）─── */
+/* ─── ③ tick / host wall clock ─── */
 int64_t arm_2d_helper_get_system_timestamp(void)
 {
+#if defined(_POSIX_VERSION) || defined(CLOCK_REALTIME) || defined(__APPLE__)
+    struct timespec timestamp;
+
+    if (clock_gettime(CLOCK_REALTIME, &timestamp) == 0) {
+        return (int64_t)timestamp.tv_sec * 1000000LL
+             + (int64_t)timestamp.tv_nsec / 1000LL;
+    }
+#endif
+
     struct tinyui_app *app = s_ldgui_current_app;
     if (app == NULL || app->tick_port.callback == NULL) {
         return 0;

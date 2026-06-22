@@ -324,6 +324,10 @@ int tinyui_runtime_host_write_capture(struct tinyui_runtime_host_state *state)
         return 0;
     }
 
+    if (state->rendered_frames < 3U) {
+        return 0;
+    }
+
     if (path == NULL || path[0] == '\0') {
         return 0;
     }

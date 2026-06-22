@@ -27,6 +27,7 @@
 #include "text.h"
 #include "widget.h"
 #include "window.h"
+#include <stdio.h>
 
 static void on_wifi_changed(struct tinyui_widget *widget, int value, void *user_data)
 {
@@ -53,7 +54,16 @@ static int make_ui(struct tinyui_window *win)
     const int cols[] = {220, 0};
     const int rows[] = {24, 30, 30, 36, 28, 64, 0};
 
-    if (sw == 0 || cb == 0 || slider == 0 || button == 0 || text == 0) {
+    if (sw == 0 || cb == 0 || slider == 0 || button == 0 || text == 0 || image == 0) {
+        fprintf(stdout,
+                "TINYUI_BASIC_WIDGETS_DEBUG make_ui_create_failed sw=%p cb=%p slider=%p button=%p text=%p image=%p\n",
+                (void *)sw,
+                (void *)cb,
+                (void *)slider,
+                (void *)button,
+                (void *)text,
+                (void *)image);
+        fflush(stdout);
         return -1;
     }
 
@@ -101,6 +111,9 @@ void tinyui_demo_basic_widgets(void)
         return;
     }
 
-    make_ui(win);
+    if (make_ui(win) != 0) {
+        return;
+    }
+
     tinyui_screen_load(screen);
 }

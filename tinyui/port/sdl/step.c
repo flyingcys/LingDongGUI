@@ -13,10 +13,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define TINYUI_RUNTIME_PADDING 16
-#define TINYUI_RUNTIME_ROW_HEIGHT 34
-#define TINYUI_RUNTIME_ROW_GAP 10
-
 /**
  * @brief   attribute
  *
@@ -137,54 +133,6 @@ static struct tinyui_app *tinyui_runtime_host_app_state_from_window(struct tinyu
     return tinyui_runtime_bridge_backend_state_from_window(window);
 }
 
-static void tinyui_runtime_host_apply_real_widget_layout(struct tinyui_runtime_host_state *state,
-                                                    const struct tinyui_widget *widget,
-                                                    int x,
-                                                    int *cursor_y)
-{
-    /* Walk the ld tree (not the deleted backend first_child/next_sibling links):
-     * each ld node's pInfo points back to its struct tinyui_widget. */
-    if (widget == NULL || widget->ld_widget == NULL) {
-        return;
-    }
-
-    {
-        ldBase_t *node = ldBaseGetChildList((ldBase_t *)widget->ld_widget);
-        while (node != NULL) {
-            struct tinyui_widget *w = (struct tinyui_widget *)node->pInfo;
-
-            if (w != NULL
-                && w->kind != TINYUI_BACKEND_WIDGET_WINDOW
-                && w->kind != TINYUI_BACKEND_WIDGET_BACKGROUND) {
-                int height = TINYUI_RUNTIME_ROW_HEIGHT;
-
-                if (w->kind == TINYUI_BACKEND_WIDGET_IMAGE) {
-                    height = 56;
-                }
-
-                if (tinyui_runtime_host_widget_is_supported_real(w) && w->ld_widget != NULL) {
-                    arm_2d_region_t region = ldBaseGetRegion((ldBase_t *)w->ld_widget);
-                    region.tLocation.iX = (int16_t)x;
-                    region.tLocation.iY = (int16_t)(*cursor_y);
-                    ldBaseSetRegion((ldBase_t *)w->ld_widget, region);
-                    height = region.tSize.iHeight > 0 ? region.tSize.iHeight : height;
-                }
-
-                *cursor_y += height + TINYUI_RUNTIME_ROW_GAP;
-            }
-
-            {
-                struct tinyui_widget *cw = (struct tinyui_widget *)node->pInfo;
-                if (cw != NULL) {
-                    tinyui_runtime_host_apply_real_widget_layout(state, cw, x, cursor_y);
-                }
-            }
-
-            node = ldBaseGetNextSibling(node);
-        }
-    }
-}
-
 static void tinyui_runtime_host_apply_smoke_cursor_layout(struct tinyui_runtime_host_state *state,
                                                      const struct tinyui_widget *root,
                                                      int x,
@@ -197,8 +145,6 @@ static void tinyui_runtime_host_apply_smoke_cursor_layout(struct tinyui_runtime_
 static void tinyui_runtime_host_render(struct tinyui_runtime_host_state *state, struct tinyui_window *window)
 {
     struct tinyui_app *app_state;
-    int x = TINYUI_RUNTIME_PADDING;
-    int y = TINYUI_RUNTIME_PADDING + 20;
 
     SDL_SetRenderDrawColor(state->renderer, 0x2E, 0x34, 0x40, 0xFF);
     SDL_RenderClear(state->renderer);
@@ -212,7 +158,6 @@ static void tinyui_runtime_host_render(struct tinyui_runtime_host_state *state, 
                    0,
                    (size_t)state->display_width * (size_t)state->display_height *
                        sizeof(*state->real_pixels));
-            tinyui_runtime_host_apply_smoke_cursor_layout(state, NULL, x, &y);
             tinyui_runtime_host_log_smoke_layout_marker(state);
             ldGuiFrameStart(app_state->ld_scene);
             ldGuiTouchProcess(app_state->ld_scene);
@@ -221,6 +166,7 @@ static void tinyui_runtime_host_render(struct tinyui_runtime_host_state *state, 
             ldGuiFrameComplete(app_state->ld_scene);
             tinyui_runtime_host_log_image_source_marker(NULL);
             tinyui_runtime_host_present_real_frame(state);
+            state->rendered_frames += 1U;
         }
     }
 

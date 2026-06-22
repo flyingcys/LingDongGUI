@@ -380,6 +380,8 @@ struct tinyui_window {
     int flex_track_gap;
     int grid_cols[TINYUI_LAYOUT_MAX_TRACKS];
     int grid_rows[TINYUI_LAYOUT_MAX_TRACKS];
+    int16_t backend_grid_cols[TINYUI_LAYOUT_MAX_TRACKS];
+    int16_t backend_grid_rows[TINYUI_LAYOUT_MAX_TRACKS];
     int grid_col_count;
     int grid_row_count;
     int grid_row_gap;

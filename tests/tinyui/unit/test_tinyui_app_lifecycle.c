@@ -14,6 +14,7 @@ static char test_step_source[PATH_MAX];
 static char test_observe_source[PATH_MAX];
 static char test_hal_source[PATH_MAX];
 static char test_animation_demo_path[PATH_MAX];
+static char test_tinyui_header_source[PATH_MAX];
 
 static void shell_quote_path(char *quoted, size_t quoted_size, const char *path)
 {
@@ -107,6 +108,10 @@ static void init_test_paths(const char *self_binary_path)
              sizeof(test_animation_demo_path),
              "%s/examples/sdl/tinyui_demo",
              build_root);
+    snprintf(test_tinyui_header_source,
+             sizeof(test_tinyui_header_source),
+             "%s/tinyui/include/tinyui.h",
+             repo_root);
 }
 
 static void assert_self_binary_lacks_symbol(const char *symbol)
@@ -298,6 +303,17 @@ static void test_app_backend_wrappers_are_no_longer_public(void)
     assert_self_binary_lacks_symbol("tinyui_backend_runtime_step");
 }
 
+static void test_tinyui_umbrella_no_longer_reexports_app_header(void)
+{
+    char *tinyui_header_text;
+
+    tinyui_header_text = read_entire_file(test_tinyui_header_source);
+    assert(strstr(tinyui_header_text, "#ifndef TINYUI_H") != NULL);
+    assert(strstr(tinyui_header_text, "#include \"animation.h\"") != NULL);
+    assert(strstr(tinyui_header_text, "#include \"app.h\"") == NULL);
+    free(tinyui_header_text);
+}
+
 static void test_runtime_prepare_helpers_exist(void)
 {
     assert_source_has_function_definition(test_step_source, "tinyui_runtime_host_prepare_runtime_state");
@@ -401,6 +417,7 @@ int main(int argc, char **argv)
     test_app_multiple_windows();
     test_app_rejects_null();
     test_app_backend_wrappers_are_no_longer_public();
+    test_tinyui_umbrella_no_longer_reexports_app_header();
     test_runtime_prepare_helpers_exist();
     test_runtime_step_uses_event_pump_helper();
     test_runtime_host_internal_bootstrap_helpers_no_longer_use_tinyui_prefix();

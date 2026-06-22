@@ -22,6 +22,7 @@ struct tinyui_runtime_host_state {
     Uint32         screen_create_start_ticks;
     Uint32         screen_create_end_ticks;
     Uint32         auto_quit_ms;
+    Uint32         rendered_frames;
     int            display_width;
     int            display_height;
     int            ready_logged;

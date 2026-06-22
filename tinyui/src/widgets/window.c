@@ -574,10 +574,10 @@ int tinyui_window_apply_grid_columns(struct tinyui_window *window, const int *tr
 {
     ldWindow_t *ld_window = tinyui_window_ld_of(window);
     int window_tracks[TINYUI_LAYOUT_MAX_TRACKS];
-    int16_t backend_tracks[TINYUI_LAYOUT_MAX_TRACKS];
+    int i;
 
     if (window == 0 || ld_window == 0
-        || s_copy_grid_tracks(window_tracks, backend_tracks, tracks, count) != 0) {
+        || s_copy_grid_tracks(window_tracks, window->backend_grid_cols, tracks, count) != 0) {
         return -1;
     }
 
@@ -585,14 +585,12 @@ int tinyui_window_apply_grid_columns(struct tinyui_window *window, const int *tr
     window->grid_col_count = count;
 
     {
-        int16_t row_tracks[TINYUI_LAYOUT_MAX_TRACKS];
-        int i;
         for (i = 0; i < TINYUI_LAYOUT_MAX_TRACKS; ++i) {
-            row_tracks[i] = s_grid_track_to_ld(window->grid_rows[i]);
+            window->backend_grid_rows[i] = s_grid_track_to_ld(window->grid_rows[i]);
         }
         ldWindowSetGridDscArray(ld_window,
-                                backend_tracks,
-                                window->grid_row_count > 0 ? row_tracks : NULL);
+                                window->backend_grid_cols,
+                                window->grid_row_count > 0 ? window->backend_grid_rows : NULL);
     }
     tinyui_window_sync_padding(window);
     return 0;
@@ -602,10 +600,10 @@ int tinyui_window_apply_grid_rows(struct tinyui_window *window, const int *track
 {
     ldWindow_t *ld_window = tinyui_window_ld_of(window);
     int window_tracks[TINYUI_LAYOUT_MAX_TRACKS];
-    int16_t backend_tracks[TINYUI_LAYOUT_MAX_TRACKS];
+    int i;
 
     if (window == 0 || ld_window == 0
-        || s_copy_grid_tracks(window_tracks, backend_tracks, tracks, count) != 0) {
+        || s_copy_grid_tracks(window_tracks, window->backend_grid_rows, tracks, count) != 0) {
         return -1;
     }
 
@@ -613,14 +611,12 @@ int tinyui_window_apply_grid_rows(struct tinyui_window *window, const int *track
     window->grid_row_count = count;
 
     {
-        int16_t col_tracks[TINYUI_LAYOUT_MAX_TRACKS];
-        int i;
         for (i = 0; i < TINYUI_LAYOUT_MAX_TRACKS; ++i) {
-            col_tracks[i] = s_grid_track_to_ld(window->grid_cols[i]);
+            window->backend_grid_cols[i] = s_grid_track_to_ld(window->grid_cols[i]);
         }
         ldWindowSetGridDscArray(ld_window,
-                                window->grid_col_count > 0 ? col_tracks : NULL,
-                                backend_tracks);
+                                window->grid_col_count > 0 ? window->backend_grid_cols : NULL,
+                                window->backend_grid_rows);
     }
     tinyui_window_sync_padding(window);
     return 0;
