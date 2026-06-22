@@ -23,33 +23,18 @@
 
 #include <stdlib.h>
 
-static ldGraph_t *tinyui_graph_get_ld(struct tinyui_graph *graph)
+/* ---- C2 depose closure state (file-static, single-threaded scope) ---- */
+static ld_scene_t *s_graph_depose_scene = NULL;
+
+static void tinyui_graph_ld_depose_cb(void *ld_widget)
 {
-    if (graph == 0 || graph->widget.ld_widget == 0) {
-        return 0;
+    if (s_graph_depose_scene != NULL) {
+        ldGraph_depose(s_graph_depose_scene, (ldGraph_t *)ld_widget);
+        s_graph_depose_scene = NULL;
     }
-
-    if (graph->widget.kind != TINYUI_BACKEND_WIDGET_GRAPH) {
-        return 0;
-    }
-
-    return (ldGraph_t *)graph->widget.ld_widget;
 }
 
-static const ldGraph_t *tinyui_graph_get_ld_const(const struct tinyui_graph *graph)
-{
-    if (graph == 0 || graph->widget.ld_widget == 0) {
-        return 0;
-    }
-
-    if (graph->widget.kind != TINYUI_BACKEND_WIDGET_GRAPH) {
-        return 0;
-    }
-
-    return (const ldGraph_t *)graph->widget.ld_widget;
-}
-
-static int tinyui_graph_props_are_valid(const struct tinyui_graph_props *props)
+static int graph_props_valid(const struct tinyui_graph_props *props)
 {
     return props != 0 &&
            props->id != 0 &&
@@ -59,13 +44,13 @@ static int tinyui_graph_props_are_valid(const struct tinyui_graph_props *props)
            props->height >= 0;
 }
 
-static int tinyui_graph_apply_native_geometry_candidate(struct tinyui_graph *graph,
-                                                        int x_axis,
-                                                        int y_axis,
-                                                        int axis_offset,
-                                                        int frame_space,
-                                                        int grid_offset,
-                                                        struct tinyui_image_source *point_mask_source)
+static int graph_apply_native_geometry_candidate(struct tinyui_graph *graph,
+                                                  int x_axis,
+                                                  int y_axis,
+                                                  int axis_offset,
+                                                  int frame_space,
+                                                  int grid_offset,
+                                                  struct tinyui_image_source *point_mask_source)
 {
     struct tinyui_graph_native_snapshot {
         uint16_t x_axis_max;
@@ -87,10 +72,11 @@ static int tinyui_graph_apply_native_geometry_candidate(struct tinyui_graph *gra
     if (graph == 0) {
         return -1;
     }
-    ld_graph = tinyui_graph_get_ld(graph);
-    if (ld_graph == 0) {
+    if (graph->widget.ld_widget == 0
+        || graph->widget.kind != TINYUI_BACKEND_WIDGET_GRAPH) {
         return -1;
     }
+    ld_graph = (ldGraph_t *)graph->widget.ld_widget;
 
     snapshot.x_axis_max = ld_graph->xAxisMax;
     snapshot.y_axis_max = ld_graph->yAxisMax;
@@ -220,7 +206,7 @@ struct tinyui_graph *tinyui_graph_create(struct tinyui_window *parent,
     graph->widget.ld_widget = ld_graph;
     graph->widget.ld_name_id = name_id;
     ((ldBase_t *)ld_graph)->pInfo = &graph->widget;
-    tinyui_runtime_bridge_bind_leaf_widget(&graph->widget, app_state);
+    (void)tinyui_runtime_bridge_bind_leaf_widget(&graph->widget, app_state);
 
     graph->id = id;
     graph->series_max = series_max;
@@ -247,7 +233,7 @@ struct tinyui_graph *tinyui_graph_create_with_props(struct tinyui_window *parent
 {
     struct tinyui_graph *graph;
 
-    if (!tinyui_graph_props_are_valid(props)) {
+    if (!graph_props_valid(props)) {
         return 0;
     }
 
@@ -256,18 +242,13 @@ struct tinyui_graph *tinyui_graph_create_with_props(struct tinyui_window *parent
         return 0;
     }
 
-    if (tinyui_widget_set_user_data(&graph->widget, props->user_data) != 0) {
-        free(graph);
-        return 0;
-    }
-    if (props->style_class != 0 &&
-        tinyui_widget_set_style_class(&graph->widget, props->style_class) != 0) {
-        free(graph);
-        return 0;
-    }
-    if ((props->width > 0 || props->height > 0) &&
-        tinyui_widget_set_size(&graph->widget, props->width, props->height) != 0) {
-        free(graph);
+    if (tinyui_widget_set_user_data(&graph->widget, props->user_data) != 0
+        || (props->style_class != 0
+            && tinyui_widget_set_style_class(&graph->widget, props->style_class) != 0)
+        || ((props->width > 0 || props->height > 0)
+            && tinyui_widget_set_size(&graph->widget, props->width, props->height) != 0)) {
+        s_graph_depose_scene = graph->widget.ld_event_bridge_scene;
+        tinyui_widget_destroy_common(&graph->widget, tinyui_graph_ld_depose_cb);
         return 0;
     }
 
@@ -289,13 +270,13 @@ int tinyui_graph_set_axis(struct tinyui_graph *graph, int x_axis, int y_axis)
         return -1;
     }
 
-    return tinyui_graph_apply_native_geometry_candidate(graph,
-                                                        x_axis,
-                                                        y_axis,
-                                                        graph->axis_offset,
-                                                        graph->frame_space,
-                                                        graph->grid_offset,
-                                                        graph->point_mask_source);
+    return graph_apply_native_geometry_candidate(graph,
+                                                  x_axis,
+                                                  y_axis,
+                                                  graph->axis_offset,
+                                                  graph->frame_space,
+                                                  graph->grid_offset,
+                                                  graph->point_mask_source);
 }
 
 /**
@@ -312,13 +293,13 @@ int tinyui_graph_set_axis_offset(struct tinyui_graph *graph, int axis_offset)
         return -1;
     }
 
-    return tinyui_graph_apply_native_geometry_candidate(graph,
-                                                        graph->x_axis,
-                                                        graph->y_axis,
-                                                        axis_offset,
-                                                        graph->frame_space,
-                                                        graph->grid_offset,
-                                                        graph->point_mask_source);
+    return graph_apply_native_geometry_candidate(graph,
+                                                  graph->x_axis,
+                                                  graph->y_axis,
+                                                  axis_offset,
+                                                  graph->frame_space,
+                                                  graph->grid_offset,
+                                                  graph->point_mask_source);
 }
 
 /**
@@ -335,13 +316,13 @@ int tinyui_graph_set_frame_space(struct tinyui_graph *graph, int frame_space)
         return -1;
     }
 
-    return tinyui_graph_apply_native_geometry_candidate(graph,
-                                                        graph->x_axis,
-                                                        graph->y_axis,
-                                                        graph->axis_offset,
-                                                        frame_space,
-                                                        graph->grid_offset,
-                                                        graph->point_mask_source);
+    return graph_apply_native_geometry_candidate(graph,
+                                                  graph->x_axis,
+                                                  graph->y_axis,
+                                                  graph->axis_offset,
+                                                  frame_space,
+                                                  graph->grid_offset,
+                                                  graph->point_mask_source);
 }
 
 /**
@@ -358,13 +339,13 @@ int tinyui_graph_set_grid_offset(struct tinyui_graph *graph, int grid_offset)
         return -1;
     }
 
-    return tinyui_graph_apply_native_geometry_candidate(graph,
-                                                        graph->x_axis,
-                                                        graph->y_axis,
-                                                        graph->axis_offset,
-                                                        graph->frame_space,
-                                                        grid_offset,
-                                                        graph->point_mask_source);
+    return graph_apply_native_geometry_candidate(graph,
+                                                  graph->x_axis,
+                                                  graph->y_axis,
+                                                  graph->axis_offset,
+                                                  graph->frame_space,
+                                                  grid_offset,
+                                                  graph->point_mask_source);
 }
 
 /**
@@ -381,13 +362,13 @@ int tinyui_graph_set_point_mask_source(struct tinyui_graph *graph, struct tinyui
         return -1;
     }
 
-    return tinyui_graph_apply_native_geometry_candidate(graph,
-                                                        graph->x_axis,
-                                                        graph->y_axis,
-                                                        graph->axis_offset,
-                                                        graph->frame_space,
-                                                        graph->grid_offset,
-                                                        source);
+    return graph_apply_native_geometry_candidate(graph,
+                                                  graph->x_axis,
+                                                  graph->y_axis,
+                                                  graph->axis_offset,
+                                                  graph->frame_space,
+                                                  graph->grid_offset,
+                                                  source);
 }
 
 /**
@@ -424,10 +405,11 @@ int tinyui_graph_add_series(struct tinyui_graph *graph,
     if (graph == 0 || line_size < 0 || point_max <= 0 || point_max > TINYUI_GRAPH_MAX_POINTS) {
         return -1;
     }
-    ld_graph = tinyui_graph_get_ld(graph);
-    if (ld_graph == 0) {
+    if (graph->widget.ld_widget == 0
+        || graph->widget.kind != TINYUI_BACKEND_WIDGET_GRAPH) {
         return -1;
     }
+    ld_graph = (ldGraph_t *)graph->widget.ld_widget;
 
     series_index = (int)ldGraphAddSeries(ld_graph,
                                          (ldColor)series_color,
@@ -466,8 +448,12 @@ int tinyui_graph_set_value(struct tinyui_graph *graph,
         value < 0) {
         return -1;
     }
-    ld_graph = tinyui_graph_get_ld(graph);
-    if (ld_graph == 0 || series_index >= ld_graph->seriesCount ||
+    if (graph->widget.ld_widget == 0
+        || graph->widget.kind != TINYUI_BACKEND_WIDGET_GRAPH) {
+        return -1;
+    }
+    ld_graph = (ldGraph_t *)graph->widget.ld_widget;
+    if (series_index >= ld_graph->seriesCount ||
         value_index >= ld_graph->pSeries[series_index].valueCountMax) {
         return -1;
     }
@@ -492,8 +478,12 @@ int tinyui_graph_move_add(struct tinyui_graph *graph, int series_index, int valu
     if (graph == 0 || series_index < 0 || series_index >= graph->series_count || value < 0) {
         return -1;
     }
-    ld_graph = tinyui_graph_get_ld(graph);
-    if (ld_graph == 0 || series_index >= ld_graph->seriesCount) {
+    if (graph->widget.ld_widget == 0
+        || graph->widget.kind != TINYUI_BACKEND_WIDGET_GRAPH) {
+        return -1;
+    }
+    ld_graph = (ldGraph_t *)graph->widget.ld_widget;
+    if (series_index >= ld_graph->seriesCount) {
         return -1;
     }
 
@@ -510,15 +500,13 @@ int tinyui_graph_move_add(struct tinyui_graph *graph, int series_index, int valu
 
 int tinyui_graph_get_series_count(const struct tinyui_graph *graph)
 {
-    const ldGraph_t *ld_graph;
+    ldGraph_t *ld_graph;
 
-    if (graph == 0) {
+    if (graph == 0 || graph->widget.ld_widget == 0
+        || graph->widget.kind != TINYUI_BACKEND_WIDGET_GRAPH) {
         return -1;
     }
-    ld_graph = tinyui_graph_get_ld_const(graph);
-    if (ld_graph == 0) {
-        return -1;
-    }
+    ld_graph = (ldGraph_t *)graph->widget.ld_widget;
 
     return (int)ld_graph->seriesCount;
 }
@@ -534,13 +522,14 @@ int tinyui_graph_get_series_count(const struct tinyui_graph *graph)
 
 int tinyui_graph_get_value(const struct tinyui_graph *graph, int series_index, int value_index)
 {
-    const ldGraph_t *ld_graph;
+    ldGraph_t *ld_graph;
 
-    if (graph == 0) {
+    if (graph == 0 || graph->widget.ld_widget == 0
+        || graph->widget.kind != TINYUI_BACKEND_WIDGET_GRAPH) {
         return -1;
     }
-    ld_graph = tinyui_graph_get_ld_const(graph);
-    if (ld_graph == 0 || series_index < 0 || series_index >= ld_graph->seriesCount ||
+    ld_graph = (ldGraph_t *)graph->widget.ld_widget;
+    if (series_index < 0 || series_index >= ld_graph->seriesCount ||
         value_index < 0 || value_index >= ld_graph->pSeries[series_index].valueCountMax) {
         return -1;
     }

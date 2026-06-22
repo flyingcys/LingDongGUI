@@ -428,12 +428,12 @@ int main(void)
     assert(widget_source != 0);
     assert_source_lacks_function_definition(widget_source, "tinyui_backend_arc_test_take_last_dispose_snapshot");
     assert_source_lacks_function_definition(widget_source, "tinyui_backend_arc_test_create_with_props_fail_before_parent_color");
+    assert_source_lacks_function_definition(widget_source, "tinyui_arc_rgb_to_ld_color");
+    assert_source_lacks_function_definition(widget_source, "tinyui_arc_ld_color_to_rgb");
+    assert_source_lacks_function_definition(widget_source, "tinyui_arc_get_ld");
+    assert_source_lacks_function_definition(widget_source, "tinyui_arc_finish_detach_after_backend_failure");
+    assert_source_lacks_function_definition(widget_source, "tinyui_arc_dispose_partial_impl");
     assert_source_has_function_definition(widget_source, "static int ", "tinyui_arc_props_are_valid");
-    assert_source_has_function_definition(widget_source, "static ldColor ", "tinyui_arc_rgb_to_ld_color");
-    assert_source_has_function_definition(widget_source, "static unsigned int ", "tinyui_arc_ld_color_to_rgb");
-    assert_source_has_function_definition(widget_source, "static ldArc_t *", "tinyui_arc_get_ld");
-    assert_source_has_function_definition(widget_source, "static int ", "tinyui_arc_finish_detach_after_backend_failure");
-    assert_source_has_function_definition(widget_source, "static void ", "tinyui_arc_dispose_partial_impl");
     assert_source_has_function_definition(widget_source, "int ", "tinyui_arc_test_take_last_dispose_snapshot");
     assert_source_has_function_definition(widget_source, "struct tinyui_arc *", "tinyui_arc_test_create_with_props_fail_before_parent_color");
 

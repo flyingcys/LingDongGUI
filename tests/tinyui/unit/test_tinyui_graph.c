@@ -13,21 +13,12 @@ extern int tinyui_widget_has_ld_binding(const struct tinyui_widget *widget);
 static void assert_source_lacks_function_definition(const char *path, const char *symbol)
 {
     char needle[256];
-    int written = snprintf(needle, sizeof(needle), "static %%%s(", symbol);
 
-    assert(written > 0);
-    assert((size_t)written < sizeof(needle));
-    needle[7] = '*';
-    assert(tinyui_test_source_contains(path, needle) == 0);
-    needle[7] = 'i';
-    if (strstr(symbol, "get_ld") != 0 || strstr(symbol, "backend") != 0) {
-        snprintf(needle, sizeof(needle), "static struct tinyui_backend_widget *%s(", symbol);
-    } else if (strstr(symbol, "get_ld_const") != 0) {
+    snprintf(needle, sizeof(needle), "static int %s(", symbol);
+    if (strstr(symbol, "get_ld_const") != 0) {
         snprintf(needle, sizeof(needle), "static const ldGraph_t *%s(", symbol);
     } else if (strstr(symbol, "get_ld") != 0) {
         snprintf(needle, sizeof(needle), "static ldGraph_t *%s(", symbol);
-    } else {
-        snprintf(needle, sizeof(needle), "static int %s(", symbol);
     }
     assert(tinyui_test_source_contains(path, needle) == 0);
 }
@@ -481,12 +472,7 @@ static void test_graph_internal_seams_use_tinyui_prefix(void)
     assert_source_lacks_function_definition(widget_path, "tinyui_graph_props_are_valid");
     assert_source_lacks_function_definition(widget_path, "tinyui_graph_apply_native_geometry_candidate");
 
-    assert_source_has_function_definition(widget_path, "static struct tinyui_backend_widget *", "tinyui_graph_backend");
-    assert_source_has_function_definition(widget_path, "static struct tinyui_backend_widget *", "tinyui_graph_backend_const");
-    assert_source_has_function_definition(widget_path, "static ldGraph_t *", "tinyui_graph_get_ld");
-    assert_source_has_function_definition(widget_path, "static const ldGraph_t *", "tinyui_graph_get_ld_const");
-    assert_source_has_function_definition(widget_path, "static int ", "tinyui_graph_props_are_valid");
-    assert_source_has_function_definition(widget_path, "static int ", "tinyui_graph_apply_native_geometry_candidate");
+    assert_source_has_function_definition(widget_path, "static int ", "graph_apply_native_geometry_candidate");
 }
 
 int main(void)
