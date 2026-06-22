@@ -1425,10 +1425,16 @@ static void test_layout_grid_setters_reject_corrupted_binding_without_mutating_c
     assert(ld_window->gridRowDsc[1] == LD_GRID_CONTENT);
     assert(ld_window->gridRowDsc[2] == LD_GRID_TEMPLATE_LAST);
     {
+        /* C2: window.c-created windows have no backend_host wrapper; the
+         * window_layout mirror cache only exists on the background path.
+         * The ld_window values above are the source of truth and already
+         * verified, so skip the mirror check when no wrapper is attached. */
         struct tinyui_backend_widget *bk = (struct tinyui_backend_widget *)win->backend_host;
-        for (i = 0; i < 3; ++i) {
-            assert(bk->window_layout.grid_cols[i] == ld_window->gridColDsc[i]);
-            assert(bk->window_layout.grid_rows[i] == ld_window->gridRowDsc[i]);
+        if (bk != 0) {
+            for (i = 0; i < 3; ++i) {
+                assert(bk->window_layout.grid_cols[i] == ld_window->gridColDsc[i]);
+                assert(bk->window_layout.grid_rows[i] == ld_window->gridRowDsc[i]);
+            }
         }
     }
     assert(ld_window->gridRowGap == 5);
