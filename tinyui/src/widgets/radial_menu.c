@@ -49,21 +49,33 @@ static arm_2d_tile_t *const g_radial_menu_masks[] = {
 
 #define TINYUI_RADIAL_MENU_NATIVE_MAX_ITEMS 5
 
-/* C1: backend_widget is gone; pass struct tinyui_widget * directly */
-static ldRadialMenu_t *tinyui_radial_menu_get_ld(struct tinyui_widget *w)
-{
-    if (w == 0 || w->ld_widget == 0 || w->kind != TINYUI_BACKEND_WIDGET_RADIAL_MENU) {
-        return 0;
-    }
+static ld_scene_t *s_radial_menu_depose_scene = NULL;
 
-    return (ldRadialMenu_t *)w->ld_widget;
+static void tinyui_radial_menu_ld_depose_cb(void *ld_widget)
+{
+    if (s_radial_menu_depose_scene != NULL) {
+        ldRadialMenu_depose(s_radial_menu_depose_scene, (ldRadialMenu_t *)ld_widget);
+        s_radial_menu_depose_scene = NULL;
+    }
 }
 
-static int tinyui_radial_menu_backend_set_selected_index(struct tinyui_widget *w, int index);
+static void tinyui_radial_menu_rollback(struct tinyui_radial_menu *radial_menu)
+{
+    if (radial_menu == 0) {
+        return;
+    }
+    if (radial_menu->widget.ld_widget != 0) {
+        s_radial_menu_depose_scene = radial_menu->widget.owner != 0
+            ? radial_menu->widget.owner->ld_scene
+            : NULL;
+        tinyui_widget_destroy_common(&radial_menu->widget, tinyui_radial_menu_ld_depose_cb);
+    } else {
+        free(radial_menu);
+    }
+}
 
 static bool tinyui_radial_menu_native_slot(struct ld_scene_t *scene, ldMsg_t msg)
 {
-    /* C1-T7: pInfo now points to tinyui_widget, not tinyui_backend_widget */
     struct tinyui_widget *w;
     struct tinyui_radial_menu *radial_menu;
     int selected_index;
@@ -106,191 +118,6 @@ static bool tinyui_radial_menu_native_slot(struct ld_scene_t *scene, ldMsg_t msg
     return false;
 }
 
-static int tinyui_radial_menu_backend_add_item(struct tinyui_widget *w, const char *id)
-{
-    ldRadialMenu_t *ld_radial_menu;
-    int index;
-
-    if (w == 0 ||
-        w->kind != TINYUI_BACKEND_WIDGET_RADIAL_MENU ||
-        w->ld_widget == 0 ||
-        id == 0 ||
-        (int)w->list_item_count >= TINYUI_RADIAL_MENU_NATIVE_MAX_ITEMS) {
-        return -1;
-    }
-
-    ld_radial_menu = tinyui_radial_menu_get_ld(w);
-    if (ld_radial_menu == 0) {
-        return -1;
-    }
-
-    index = (int)w->list_item_count;
-    ldRadialMenuAddItem(ld_radial_menu,
-                        g_radial_menu_tiles[index % 5],
-                        g_radial_menu_masks[index % 5]);
-    w->list_item_count++;
-    if (w->value < 0) {
-        w->value = 0;
-    }
-    return 0;
-}
-
-static int tinyui_radial_menu_backend_add_item_with_source(struct tinyui_widget *w,
-                                                           const char *id,
-                                                           struct tinyui_image_source *source)
-{
-    ldRadialMenu_t *ld_radial_menu;
-    int index;
-
-    if (w == 0 ||
-        w->kind != TINYUI_BACKEND_WIDGET_RADIAL_MENU ||
-        w->ld_widget == 0 ||
-        id == 0 ||
-        source == 0 ||
-        source->img_tile == 0 ||
-        source->mask_tile == 0 ||
-        (int)w->list_item_count >= TINYUI_RADIAL_MENU_NATIVE_MAX_ITEMS) {
-        return -1;
-    }
-
-    ld_radial_menu = tinyui_radial_menu_get_ld(w);
-    if (ld_radial_menu == 0) {
-        return -1;
-    }
-
-    index = (int)w->list_item_count;
-    ldRadialMenuAddItem(ld_radial_menu, source->img_tile, source->mask_tile);
-    w->list_item_count++;
-    if (w->value < 0) {
-        w->value = 0;
-    }
-    return 0;
-}
-
-static int tinyui_radial_menu_backend_set_selected_index(struct tinyui_widget *w, int index)
-{
-    ldRadialMenu_t *ld_radial_menu;
-
-    if (w == 0 ||
-        w->kind != TINYUI_BACKEND_WIDGET_RADIAL_MENU ||
-        w->ld_widget == 0 ||
-        index < 0 ||
-        index >= (int)w->list_item_count) {
-        return -1;
-    }
-
-    ld_radial_menu = tinyui_radial_menu_get_ld(w);
-    if (ld_radial_menu == 0) {
-        return -1;
-    }
-
-    ldRadialMenuSetDefaultItem(ld_radial_menu, (uint8_t)index);
-    w->value = index;
-    return 0;
-}
-
-static int tinyui_radial_menu_backend_get_selected_index(struct tinyui_widget *w)
-{
-    ldRadialMenu_t *ld_radial_menu = tinyui_radial_menu_get_ld(w);
-
-    if (ld_radial_menu == 0) {
-        return -1;
-    }
-
-    return (int)ld_radial_menu->selectItem;
-}
-
-static int tinyui_radial_menu_backend_offset_selection(struct tinyui_widget *w, int offset)
-{
-    int item_count;
-    int next_index;
-
-    if (w == 0 ||
-        w->kind != TINYUI_BACKEND_WIDGET_RADIAL_MENU ||
-        w->ld_widget == 0 ||
-        (int)w->list_item_count <= 0) {
-        return -1;
-    }
-
-    item_count = (int)w->list_item_count;
-    next_index = tinyui_radial_menu_backend_get_selected_index(w);
-    if (next_index < 0) {
-        next_index = 0;
-    }
-    next_index = (next_index + offset) % item_count;
-    if (next_index < 0) {
-        next_index += item_count;
-    }
-
-    return tinyui_radial_menu_backend_set_selected_index(w, next_index);
-}
-
-static int tinyui_radial_menu_backend_set_default_item(struct tinyui_widget *w, int index)
-{
-    return tinyui_radial_menu_backend_set_selected_index(w, index);
-}
-
-static int tinyui_radial_menu_backend_click_item(struct tinyui_widget *w, int index)
-{
-    ldRadialMenu_t *ld_radial_menu;
-
-    if (w == 0 ||
-        w->kind != TINYUI_BACKEND_WIDGET_RADIAL_MENU ||
-        w->ld_widget == 0 ||
-        index < 0 ||
-        index >= (int)w->list_item_count) {
-        return -1;
-    }
-
-    ld_radial_menu = tinyui_radial_menu_get_ld(w);
-    if (ld_radial_menu == 0) {
-        return -1;
-    }
-
-    ldRadialMenuSetClickItem(ld_radial_menu, (uint8_t)index);
-    w->value = index;
-    return 0;
-}
-
-static int tinyui_radial_menu_backend_offset_item(struct tinyui_widget *w, int offset)
-{
-    ldRadialMenu_t *ld_radial_menu;
-
-    if (w == 0 ||
-        w->kind != TINYUI_BACKEND_WIDGET_RADIAL_MENU ||
-        w->ld_widget == 0 ||
-        (int)w->list_item_count <= 0) {
-        return -1;
-    }
-
-    ld_radial_menu = tinyui_radial_menu_get_ld(w);
-    if (ld_radial_menu == 0) {
-        return -1;
-    }
-
-    ldRadialMenuSetOffsetItem(ld_radial_menu, (int8_t)offset);
-    return 0;
-}
-
-static int tinyui_radial_menu_bind_host(struct tinyui_widget *w)
-{
-    ldRadialMenu_t *ld_radial_menu;
-
-    if (w == 0) {
-        return -1;
-    }
-
-    ld_radial_menu = tinyui_radial_menu_get_ld(w);
-    if (ld_radial_menu == 0) {
-        return -1;
-    }
-
-    if (!ldMsgConnect(ld_radial_menu, SIGNAL_CLICKED_ITEM, tinyui_radial_menu_native_slot)) {
-        return -1;
-    }
-    return 0;
-}
-
 static int tinyui_radial_menu_props_are_valid(const struct tinyui_radial_menu_props *props)
 {
     return props != 0 &&
@@ -303,13 +130,13 @@ static int tinyui_radial_menu_props_are_valid(const struct tinyui_radial_menu_pr
            props->default_index >= -1;
 }
 
-static struct tinyui_radial_menu *tinyui_radial_menu_create_with_backend_config(struct tinyui_widget *parent,
-                                                                                const char *id,
-                                                                                int width,
-                                                                                int height,
-                                                                                int x_axis,
-                                                                                int y_axis,
-                                                                                int item_max)
+static struct tinyui_radial_menu *tinyui_radial_menu_create_internal(struct tinyui_widget *parent,
+                                                                     const char *id,
+                                                                     int width,
+                                                                     int height,
+                                                                     int x_axis,
+                                                                     int y_axis,
+                                                                     int item_max)
 {
     struct tinyui_radial_menu *radial_menu;
     struct tinyui_app *app_state;
@@ -333,7 +160,6 @@ static struct tinyui_radial_menu *tinyui_radial_menu_create_with_backend_config(
         item_max = 1;
     }
 
-    /* C1: app_state and ld fields are directly on parent widget */
     app_state = parent->owner;
     if (parent->ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
         return 0;
@@ -366,7 +192,6 @@ static struct tinyui_radial_menu *tinyui_radial_menu_create_with_backend_config(
         return 0;
     }
 
-    /* C1: set ld fields directly on widget (no separate backend allocation) */
     radial_menu->widget.ld_widget = ld_radial_menu;
     radial_menu->widget.ld_name_id = name_id;
     radial_menu->widget.kind = TINYUI_BACKEND_WIDGET_RADIAL_MENU;
@@ -383,9 +208,8 @@ static struct tinyui_radial_menu *tinyui_radial_menu_create_with_backend_config(
     radial_menu->y_axis = y_axis;
     radial_menu->item_max = item_max;
 
-    if (tinyui_radial_menu_bind_host(&radial_menu->widget) != 0) {
-        ldRadialMenu_depose(app_state->ld_scene, ld_radial_menu);
-        free(radial_menu);
+    if (!ldMsgConnect(ld_radial_menu, SIGNAL_CLICKED_ITEM, tinyui_radial_menu_native_slot)) {
+        tinyui_radial_menu_rollback(radial_menu);
         return 0;
     }
 
@@ -402,7 +226,7 @@ static struct tinyui_radial_menu *tinyui_radial_menu_create_with_backend_config(
 
 struct tinyui_radial_menu *tinyui_radial_menu_create(struct tinyui_widget *parent, const char *id)
 {
-    return tinyui_radial_menu_create_with_backend_config(parent, id, 194, 96, 68, 46, 5);
+    return tinyui_radial_menu_create_internal(parent, id, 194, 96, 68, 46, 5);
 }
 
 /**
@@ -437,13 +261,13 @@ struct tinyui_radial_menu *tinyui_radial_menu_create_with_props(
         return 0;
     }
 
-    radial_menu = tinyui_radial_menu_create_with_backend_config(parent,
-                                                                props->id,
-                                                                props->width > 0 ? props->width : 194,
-                                                                props->height > 0 ? props->height : 96,
-                                                                props->x_axis > 0 ? props->x_axis : 68,
-                                                                props->y_axis > 0 ? props->y_axis : 46,
-                                                                props->item_max > 0 ? props->item_max : 5);
+    radial_menu = tinyui_radial_menu_create_internal(parent,
+                                                     props->id,
+                                                     props->width > 0 ? props->width : 194,
+                                                     props->height > 0 ? props->height : 96,
+                                                     props->x_axis > 0 ? props->x_axis : 68,
+                                                     props->y_axis > 0 ? props->y_axis : 46,
+                                                     props->item_max > 0 ? props->item_max : 5);
     if (radial_menu == 0) {
         return 0;
     }
@@ -453,7 +277,7 @@ struct tinyui_radial_menu *tinyui_radial_menu_create_with_props(
          tinyui_widget_set_style_class(&radial_menu->widget, props->style_class) != 0) ||
         ((props->width > 0 || props->height > 0) &&
          tinyui_widget_set_size(&radial_menu->widget, props->width, props->height) != 0)) {
-        free(radial_menu);
+        tinyui_radial_menu_rollback(radial_menu);
         return 0;
     }
 
@@ -474,13 +298,26 @@ struct tinyui_radial_menu *tinyui_radial_menu_create_with_props(
 int tinyui_radial_menu_add_item(struct tinyui_radial_menu *radial_menu, const char *id)
 {
     int index;
+    ldRadialMenu_t *ld_radial_menu;
 
     if (radial_menu == 0 || id == 0 || radial_menu->item_count >= TINYUI_LIST_MAX_ITEMS) {
         return -1;
     }
 
-    if (tinyui_radial_menu_backend_add_item(&radial_menu->widget, id) != 0) {
+    ld_radial_menu = (ldRadialMenu_t *)radial_menu->widget.ld_widget;
+    if (ld_radial_menu == 0 ||
+        radial_menu->widget.kind != TINYUI_BACKEND_WIDGET_RADIAL_MENU ||
+        (int)radial_menu->widget.list_item_count >= TINYUI_RADIAL_MENU_NATIVE_MAX_ITEMS) {
         return -1;
+    }
+
+    index = (int)radial_menu->widget.list_item_count;
+    ldRadialMenuAddItem(ld_radial_menu,
+                        g_radial_menu_tiles[index % 5],
+                        g_radial_menu_masks[index % 5]);
+    radial_menu->widget.list_item_count++;
+    if (radial_menu->widget.value < 0) {
+        radial_menu->widget.value = 0;
     }
 
     index = radial_menu->item_count++;
@@ -490,16 +327,10 @@ int tinyui_radial_menu_add_item(struct tinyui_radial_menu *radial_menu, const ch
         radial_menu->selected_index = 0;
     }
     if (radial_menu->selected_index >= 0 &&
-        radial_menu->selected_index < radial_menu->item_count &&
-        tinyui_radial_menu_backend_set_selected_index(&radial_menu->widget,
-                                                      radial_menu->selected_index) != 0) {
-        radial_menu->item_count--;
-        radial_menu->items[index].id = 0;
-        radial_menu->items[index].text = 0;
-        if (radial_menu->item_count == 0) {
-            radial_menu->selected_index = -1;
-        }
-        return -1;
+        radial_menu->selected_index < radial_menu->item_count) {
+        ldRadialMenuSetDefaultItem(ld_radial_menu,
+                                   (uint8_t)radial_menu->selected_index);
+        radial_menu->widget.value = radial_menu->selected_index;
     }
     return 0;
 }
@@ -518,6 +349,7 @@ int tinyui_radial_menu_add_item_with_source(struct tinyui_radial_menu *radial_me
                                             struct tinyui_image_source *source)
 {
     int index;
+    ldRadialMenu_t *ld_radial_menu;
 
     if (radial_menu == 0
         || id == 0
@@ -528,8 +360,18 @@ int tinyui_radial_menu_add_item_with_source(struct tinyui_radial_menu *radial_me
         return -1;
     }
 
-    if (tinyui_radial_menu_backend_add_item_with_source(&radial_menu->widget, id, source) != 0) {
+    ld_radial_menu = (ldRadialMenu_t *)radial_menu->widget.ld_widget;
+    if (ld_radial_menu == 0 ||
+        radial_menu->widget.kind != TINYUI_BACKEND_WIDGET_RADIAL_MENU ||
+        (int)radial_menu->widget.list_item_count >= TINYUI_RADIAL_MENU_NATIVE_MAX_ITEMS) {
         return -1;
+    }
+
+    index = (int)radial_menu->widget.list_item_count;
+    ldRadialMenuAddItem(ld_radial_menu, source->img_tile, source->mask_tile);
+    radial_menu->widget.list_item_count++;
+    if (radial_menu->widget.value < 0) {
+        radial_menu->widget.value = 0;
     }
 
     index = radial_menu->item_count++;
@@ -540,17 +382,10 @@ int tinyui_radial_menu_add_item_with_source(struct tinyui_radial_menu *radial_me
         radial_menu->selected_index = 0;
     }
     if (radial_menu->selected_index >= 0 &&
-        radial_menu->selected_index < radial_menu->item_count &&
-        tinyui_radial_menu_backend_set_selected_index(&radial_menu->widget,
-                                                      radial_menu->selected_index) != 0) {
-        radial_menu->item_count--;
-        radial_menu->items[index].id = 0;
-        radial_menu->items[index].text = 0;
-        radial_menu->item_sources[index] = 0;
-        if (radial_menu->item_count == 0) {
-            radial_menu->selected_index = -1;
-        }
-        return -1;
+        radial_menu->selected_index < radial_menu->item_count) {
+        ldRadialMenuSetDefaultItem(ld_radial_menu,
+                                   (uint8_t)radial_menu->selected_index);
+        radial_menu->widget.value = radial_menu->selected_index;
     }
     return 0;
 }
@@ -581,14 +416,21 @@ int tinyui_radial_menu_add_item_with_image(struct tinyui_radial_menu *radial_men
 
 int tinyui_radial_menu_set_selected_index(struct tinyui_radial_menu *radial_menu, int index)
 {
+    ldRadialMenu_t *ld_radial_menu;
+
     if (radial_menu == 0 || index < 0 || index >= radial_menu->item_count) {
         return -1;
     }
 
-    if (tinyui_radial_menu_backend_set_selected_index(&radial_menu->widget, index) != 0) {
+    ld_radial_menu = (ldRadialMenu_t *)radial_menu->widget.ld_widget;
+    if (ld_radial_menu == 0 ||
+        radial_menu->widget.kind != TINYUI_BACKEND_WIDGET_RADIAL_MENU ||
+        index >= (int)radial_menu->widget.list_item_count) {
         return -1;
     }
 
+    ldRadialMenuSetDefaultItem(ld_radial_menu, (uint8_t)index);
+    radial_menu->widget.value = index;
     radial_menu->selected_index = index;
     return 0;
 }
@@ -602,17 +444,20 @@ int tinyui_radial_menu_set_selected_index(struct tinyui_radial_menu *radial_menu
 
 int tinyui_radial_menu_get_selected_index(const struct tinyui_radial_menu *radial_menu)
 {
-    int selected_index;
+    ldRadialMenu_t *ld_radial_menu;
 
     if (radial_menu == 0) {
         return -1;
     }
 
-    selected_index =
-        tinyui_radial_menu_backend_get_selected_index((struct tinyui_widget *)&radial_menu->widget);
-    if (selected_index >= 0 && selected_index < radial_menu->item_count) {
-        ((struct tinyui_radial_menu *)radial_menu)->selected_index = selected_index;
-        return selected_index;
+    ld_radial_menu = (ldRadialMenu_t *)radial_menu->widget.ld_widget;
+    if (ld_radial_menu != 0) {
+        int ld_index = (int)ld_radial_menu->selectItem;
+
+        if (ld_index >= 0 && ld_index < radial_menu->item_count) {
+            ((struct tinyui_radial_menu *)radial_menu)->selected_index = ld_index;
+            return ld_index;
+        }
     }
 
     return radial_menu->selected_index;
@@ -628,19 +473,35 @@ int tinyui_radial_menu_get_selected_index(const struct tinyui_radial_menu *radia
 
 int tinyui_radial_menu_offset_selection(struct tinyui_radial_menu *radial_menu, int offset)
 {
-    int selected_index;
+    ldRadialMenu_t *ld_radial_menu;
+    int item_count;
+    int next_index;
 
     if (radial_menu == 0 || radial_menu->item_count <= 0) {
         return -1;
     }
 
-    if (tinyui_radial_menu_backend_offset_selection(&radial_menu->widget, offset) != 0) {
+    ld_radial_menu = (ldRadialMenu_t *)radial_menu->widget.ld_widget;
+    if (ld_radial_menu == 0 ||
+        radial_menu->widget.kind != TINYUI_BACKEND_WIDGET_RADIAL_MENU ||
+        (int)radial_menu->widget.list_item_count <= 0) {
         return -1;
     }
 
-    selected_index = tinyui_radial_menu_backend_get_selected_index(&radial_menu->widget);
-    if (selected_index >= 0 && selected_index < radial_menu->item_count) {
-        radial_menu->selected_index = selected_index;
+    item_count = (int)radial_menu->widget.list_item_count;
+    next_index = (int)ld_radial_menu->selectItem;
+    if (next_index < 0) {
+        next_index = 0;
+    }
+    next_index = (next_index + offset) % item_count;
+    if (next_index < 0) {
+        next_index += item_count;
+    }
+
+    ldRadialMenuSetDefaultItem(ld_radial_menu, (uint8_t)next_index);
+    radial_menu->widget.value = next_index;
+    if (next_index >= 0 && next_index < radial_menu->item_count) {
+        radial_menu->selected_index = next_index;
     }
     return 0;
 }
@@ -655,16 +516,7 @@ int tinyui_radial_menu_offset_selection(struct tinyui_radial_menu *radial_menu, 
 
 int tinyui_radial_menu_set_default_item(struct tinyui_radial_menu *radial_menu, int index)
 {
-    if (radial_menu == 0 || index < 0 || index >= radial_menu->item_count) {
-        return -1;
-    }
-
-    if (tinyui_radial_menu_backend_set_default_item(&radial_menu->widget, index) != 0) {
-        return -1;
-    }
-
-    radial_menu->selected_index = index;
-    return 0;
+    return tinyui_radial_menu_set_selected_index(radial_menu, index);
 }
 
 /**
@@ -677,14 +529,21 @@ int tinyui_radial_menu_set_default_item(struct tinyui_radial_menu *radial_menu, 
 
 int tinyui_radial_menu_click_item(struct tinyui_radial_menu *radial_menu, int index)
 {
+    ldRadialMenu_t *ld_radial_menu;
+
     if (radial_menu == 0 || index < 0 || index >= radial_menu->item_count) {
         return -1;
     }
 
-    if (tinyui_radial_menu_backend_click_item(&radial_menu->widget, index) != 0) {
+    ld_radial_menu = (ldRadialMenu_t *)radial_menu->widget.ld_widget;
+    if (ld_radial_menu == 0 ||
+        radial_menu->widget.kind != TINYUI_BACKEND_WIDGET_RADIAL_MENU ||
+        index >= (int)radial_menu->widget.list_item_count) {
         return -1;
     }
 
+    ldRadialMenuSetClickItem(ld_radial_menu, (uint8_t)index);
+    radial_menu->widget.value = index;
     radial_menu->selected_index = index;
     return 0;
 }
@@ -712,19 +571,34 @@ int tinyui_radial_menu_set_click_item(struct tinyui_radial_menu *radial_menu, in
 
 int tinyui_radial_menu_offset_item(struct tinyui_radial_menu *radial_menu, int offset)
 {
-    int selected_index;
+    ldRadialMenu_t *ld_radial_menu;
+    int item_count;
+    int next_index;
 
     if (radial_menu == 0 || radial_menu->item_count <= 0) {
         return -1;
     }
 
-    if (tinyui_radial_menu_backend_offset_item(&radial_menu->widget, offset) != 0) {
+    ld_radial_menu = (ldRadialMenu_t *)radial_menu->widget.ld_widget;
+    if (ld_radial_menu == 0 ||
+        radial_menu->widget.kind != TINYUI_BACKEND_WIDGET_RADIAL_MENU ||
+        (int)radial_menu->widget.list_item_count <= 0) {
         return -1;
     }
 
-    selected_index = tinyui_radial_menu_backend_get_selected_index(&radial_menu->widget);
-    if (selected_index >= 0 && selected_index < radial_menu->item_count) {
-        radial_menu->selected_index = selected_index;
+    item_count = (int)radial_menu->widget.list_item_count;
+    next_index = (int)ld_radial_menu->selectItem;
+    if (next_index < 0) {
+        next_index = 0;
+    }
+    next_index = (next_index + offset) % item_count;
+    if (next_index < 0) {
+        next_index += item_count;
+    }
+
+    ldRadialMenuSetOffsetItem(ld_radial_menu, (int8_t)offset);
+    if (next_index >= 0 && next_index < radial_menu->item_count) {
+        radial_menu->selected_index = next_index;
     }
     return 0;
 }

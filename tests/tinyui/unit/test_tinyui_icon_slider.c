@@ -50,16 +50,9 @@ static void test_icon_slider_internal_seams_renamed(void)
     strcat(widget_path_buf, "/tinyui/src/widgets/icon_slider.c");
     widget_path = widget_path_buf;
 
-    assert(test_source_contains_symbol_definition(widget_path, "tinyui_icon_slider_get_ld"));
-    assert(test_source_contains_symbol_definition(widget_path, "tinyui_icon_slider_backend_set_selected_index"));
+    assert(test_source_contains_symbol_definition(widget_path, "tinyui_icon_slider_ld_depose_cb"));
+    assert(test_source_contains_symbol_definition(widget_path, "tinyui_icon_slider_rollback"));
     assert(test_source_contains_symbol_definition(widget_path, "tinyui_icon_slider_native_slot"));
-    assert(test_source_contains_symbol_definition(widget_path, "tinyui_icon_slider_backend_add_item"));
-    assert(test_source_contains_symbol_definition(widget_path, "tinyui_icon_slider_backend_add_item_with_source"));
-    assert(test_source_contains_symbol_definition(widget_path, "tinyui_icon_slider_backend_get_selected_index"));
-    assert(test_source_contains_symbol_definition(widget_path, "tinyui_icon_slider_backend_set_horizontal"));
-    assert(test_source_contains_symbol_definition(widget_path, "tinyui_icon_slider_backend_get_horizontal"));
-    assert(test_source_contains_symbol_definition(widget_path, "tinyui_icon_slider_backend_set_speed"));
-    assert(test_source_contains_symbol_definition(widget_path, "tinyui_icon_slider_bind_host"));
     assert(test_source_contains_symbol_definition(widget_path, "tinyui_icon_slider_props_are_valid"));
     assert(test_source_contains_symbol_definition(widget_path, "tinyui_icon_slider_create_with_backend_config"));
 }

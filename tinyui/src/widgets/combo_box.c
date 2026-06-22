@@ -27,40 +27,35 @@
 
 extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
 
-int tinyui_runtime_bridge_unbind_host(void *backend_widget);
-int tinyui_runtime_bridge_detach_from_parent(void *backend_widget);
 int tinyui_runtime_bridge_bind_leaf_widget(struct tinyui_widget *widget, struct tinyui_app *app);
 
-static ldColor tinyui_combo_box_rgb_to_ld_color(unsigned int rgb)
-{
-    unsigned int red = (rgb >> 16) & 0xFFU;
-    unsigned int green = (rgb >> 8) & 0xFFU;
-    unsigned int blue = rgb & 0xFFU;
+static ld_scene_t *s_combo_box_depose_scene = NULL;
 
-    return (ldColor)(((red >> 3) << 11) | ((green >> 2) << 5) | (blue >> 3));
+static void tinyui_combo_box_ld_depose_cb(void *ld_widget)
+{
+    if (s_combo_box_depose_scene != NULL) {
+        ldComboBox_depose(s_combo_box_depose_scene, (ldComboBox_t *)ld_widget);
+        s_combo_box_depose_scene = NULL;
+    }
 }
 
-static ldComboBox_t *tinyui_combo_box_get_ld(struct tinyui_combo_box *combo_box)
+static void tinyui_combo_box_rollback(struct tinyui_combo_box *combo_box)
 {
-    if (combo_box == NULL || combo_box->widget.ld_widget == NULL) {
-        return NULL;
+    if (combo_box == 0) {
+        return;
     }
-
-    return (ldComboBox_t *)combo_box->widget.ld_widget;
-}
-
-static ldComboBox_t *tinyui_combo_box_get_ld_const(const struct tinyui_combo_box *combo_box)
-{
-    if (combo_box == NULL || combo_box->widget.ld_widget == NULL) {
-        return NULL;
+    if (combo_box->widget.ld_widget != 0) {
+        s_combo_box_depose_scene = combo_box->widget.owner != 0
+            ? combo_box->widget.owner->ld_scene
+            : NULL;
+        tinyui_widget_destroy_common(&combo_box->widget, tinyui_combo_box_ld_depose_cb);
+    } else {
+        free(combo_box);
     }
-
-    return (ldComboBox_t *)combo_box->widget.ld_widget;
 }
 
 static bool tinyui_combo_box_native_slot(struct ld_scene_t *scene, ldMsg_t msg)
 {
-    /* C1-T7: pInfo now points to tinyui_widget, not tinyui_backend_widget */
     struct tinyui_widget *w;
     struct tinyui_combo_box *combo_box;
     ldComboBox_t *ld_combo_box;
@@ -143,10 +138,7 @@ int tinyui_combo_box_set_items(struct tinyui_combo_box *combo_box,
         return -1;
     }
 
-    ld_combo_box = tinyui_combo_box_get_ld(combo_box);
-    if (ld_combo_box == NULL) {
-        return -1;
-    }
+    ld_combo_box = (ldComboBox_t *)combo_box->widget.ld_widget;
 
     ldComboBoxSetStaticItems(ld_combo_box, (uint8_t **)items, (uint8_t)item_count);
     for (i = 0; i < item_count; ++i) {
@@ -156,146 +148,22 @@ int tinyui_combo_box_set_items(struct tinyui_combo_box *combo_box,
     return 0;
 }
 
-static int tinyui_combo_box_set_text_color_ld(struct tinyui_combo_box *combo_box, unsigned int rgb)
-{
-    ldComboBox_t *ld_combo_box = tinyui_combo_box_get_ld(combo_box);
-
-    if (ld_combo_box == NULL) {
-        return -1;
-    }
-
-    ldComboBoxSetTextColor(ld_combo_box, tinyui_combo_box_rgb_to_ld_color(rgb));
-    return 0;
-}
-
-static int tinyui_combo_box_set_bg_color_ld(struct tinyui_combo_box *combo_box, unsigned int rgb)
-{
-    ldComboBox_t *ld_combo_box = tinyui_combo_box_get_ld(combo_box);
-
-    if (ld_combo_box == NULL) {
-        return -1;
-    }
-
-    ldComboBoxSetBackgroundColor(ld_combo_box, tinyui_combo_box_rgb_to_ld_color(rgb));
-    return 0;
-}
-
-static int tinyui_combo_box_set_frame_color_ld(struct tinyui_combo_box *combo_box, unsigned int rgb)
-{
-    ldComboBox_t *ld_combo_box = tinyui_combo_box_get_ld(combo_box);
-
-    if (ld_combo_box == NULL) {
-        return -1;
-    }
-
-    ldComboBoxSetFrameColor(ld_combo_box, tinyui_combo_box_rgb_to_ld_color(rgb));
-    return 0;
-}
-
-static int tinyui_combo_box_set_select_color_ld(struct tinyui_combo_box *combo_box, unsigned int rgb)
-{
-    ldComboBox_t *ld_combo_box = tinyui_combo_box_get_ld(combo_box);
-
-    if (ld_combo_box == NULL) {
-        return -1;
-    }
-
-    ldComboBoxSetSelectColor(ld_combo_box, tinyui_combo_box_rgb_to_ld_color(rgb));
-    return 0;
-}
-
-static int tinyui_combo_box_set_item_max_ld(struct tinyui_combo_box *combo_box, int item_max)
-{
-    ldComboBox_t *ld_combo_box;
-
-    if (combo_box == NULL ||
-        combo_box->widget.kind != TINYUI_BACKEND_WIDGET_COMBO_BOX ||
-        combo_box->widget.ld_widget == NULL ||
-        item_max <= 0 ||
-        item_max > TINYUI_BACKEND_LIST_MAX_ITEMS ||
-        item_max < (int)combo_box->widget.list_item_count) {
-        return -1;
-    }
-
-    ld_combo_box = tinyui_combo_box_get_ld(combo_box);
-    if (ld_combo_box == NULL) {
-        return -1;
-    }
-
-    ldComboBoxSetItemMax(ld_combo_box, (uint8_t)item_max);
-    return 0;
-}
-
-static int tinyui_combo_box_set_dropdown_source_ld(struct tinyui_combo_box *combo_box,
-                                                    struct tinyui_image_source *source)
-{
-    ldComboBox_t *ld_combo_box = tinyui_combo_box_get_ld(combo_box);
-
-    if (ld_combo_box == NULL || source == NULL || source->img_tile == NULL) {
-        return -1;
-    }
-
-    ldComboBoxSetDropdownImage(ld_combo_box, source->img_tile, source->mask_tile);
-    return 0;
-}
-
-static int tinyui_combo_box_set_selected_index_ld(struct tinyui_combo_box *combo_box, int index)
-{
-    ldComboBox_t *ld_combo_box;
-
-    if (combo_box == NULL ||
-        combo_box->widget.kind != TINYUI_BACKEND_WIDGET_COMBO_BOX ||
-        combo_box->widget.ld_widget == NULL ||
-        index < 0 ||
-        index >= (int)combo_box->widget.list_item_count) {
-        return -1;
-    }
-
-    ld_combo_box = tinyui_combo_box_get_ld(combo_box);
-    if (ld_combo_box == NULL) {
-        return -1;
-    }
-
-    ldComboBoxSetSelectItem(ld_combo_box, (uint8_t)index);
-    combo_box->widget.value = index;
-    return 0;
-}
-
-static int tinyui_combo_box_get_selected_index_ld(const struct tinyui_combo_box *combo_box)
-{
-    ldComboBox_t *ld_combo_box = tinyui_combo_box_get_ld_const(combo_box);
-
-    if (ld_combo_box == NULL) {
-        return -1;
-    }
-
-    if (ld_combo_box->itemCount == 0) {
-        return -1;
-    }
-    return (int)ldComboBoxGetSelectItem(ld_combo_box);
-}
-
-static const char *tinyui_combo_box_get_text_ld(const struct tinyui_combo_box *combo_box, int index)
-{
-    ldComboBox_t *ld_combo_box = tinyui_combo_box_get_ld_const(combo_box);
-
-    if (ld_combo_box == NULL || index < 0) {
-        return NULL;
-    }
-
-    return (const char *)ldComboBoxGetText(ld_combo_box, (uint8_t)index);
-}
-
 int tinyui_combo_box_sync_selected_index(struct tinyui_combo_box *combo_box,
                                          int *selected_index_out)
 {
+    ldComboBox_t *ld_combo_box;
     int selected_index;
 
     if (combo_box == NULL || combo_box->widget.ld_widget == NULL) {
         return -1;
     }
 
-    selected_index = tinyui_combo_box_get_selected_index_ld(combo_box);
+    ld_combo_box = (ldComboBox_t *)combo_box->widget.ld_widget;
+    if (ld_combo_box->itemCount == 0) {
+        return -1;
+    }
+
+    selected_index = (int)ldComboBoxGetSelectItem(ld_combo_box);
     if (selected_index < 0 || selected_index >= combo_box->item_count) {
         return -1;
     }
@@ -312,14 +180,11 @@ int tinyui_combo_box_bind_host(struct tinyui_combo_box *combo_box)
 {
     ldComboBox_t *ld_combo_box;
 
-    if (combo_box == NULL) {
+    if (combo_box == NULL || combo_box->widget.ld_widget == NULL) {
         return -1;
     }
 
-    ld_combo_box = tinyui_combo_box_get_ld(combo_box);
-    if (ld_combo_box == NULL) {
-        return -1;
-    }
+    ld_combo_box = (ldComboBox_t *)combo_box->widget.ld_widget;
 
     if (!ldMsgConnect(ld_combo_box, SIGNAL_PRESS, tinyui_combo_box_native_slot)) {
         return -1;
@@ -328,42 +193,6 @@ int tinyui_combo_box_bind_host(struct tinyui_combo_box *combo_box)
         return -1;
     }
     return 0;
-}
-
-int tinyui_combo_box_get_open(struct tinyui_combo_box *combo_box, int *is_open)
-{
-    ldComboBox_t *ld_combo_box = tinyui_combo_box_get_ld(combo_box);
-
-    if (ld_combo_box == NULL || is_open == NULL) {
-        return -1;
-    }
-
-    *is_open = ld_combo_box->isExpand ? 1 : 0;
-    return 0;
-}
-
-static void combo_box_release_partial(struct tinyui_combo_box *combo_box)
-{
-    struct tinyui_app *app_state;
-    ldComboBox_t *ld_combo_box;
-
-    if (combo_box == 0) {
-        return;
-    }
-
-    ld_combo_box = (ldComboBox_t *)combo_box->widget.ld_widget;
-    app_state = combo_box->widget.owner
-        ? tinyui_runtime_bridge_backend_state(combo_box->widget.owner)
-        : 0;
-    if (ld_combo_box != 0) {
-        (void)tinyui_runtime_bridge_detach_from_parent(&combo_box->widget);
-        (void)tinyui_runtime_bridge_unbind_host(&combo_box->widget);
-        if (app_state != 0 && app_state->ld_scene != 0) {
-            ldComboBox_depose(app_state->ld_scene, ld_combo_box);
-        }
-    }
-
-    free(combo_box);
 }
 
 struct tinyui_combo_box *tinyui_combo_box_create(struct tinyui_window *parent, const char *id)
@@ -417,7 +246,7 @@ struct tinyui_combo_box *tinyui_combo_box_create(struct tinyui_window *parent, c
     combo_box->widget.enabled = 1;
 
     if (tinyui_combo_box_bind_host(combo_box) != 0) {
-        combo_box_release_partial(combo_box);
+        tinyui_combo_box_rollback(combo_box);
         return 0;
     }
     return combo_box;
@@ -443,17 +272,17 @@ struct tinyui_combo_box *tinyui_combo_box_create_with_props(struct tinyui_window
         tinyui_widget_set_border_color(&combo_box->widget, props->border_color) != 0 ||
         tinyui_widget_set_radius(&combo_box->widget, props->radius) != 0 ||
         tinyui_widget_set_padding(&combo_box->widget, props->padding) != 0) {
-        combo_box_release_partial(combo_box);
+        tinyui_combo_box_rollback(combo_box);
         return 0;
     }
     if (props->style_class != 0 &&
         tinyui_widget_set_style_class(&combo_box->widget, props->style_class) != 0) {
-        combo_box_release_partial(combo_box);
+        tinyui_combo_box_rollback(combo_box);
         return 0;
     }
     if ((props->width > 0 || props->height > 0) &&
         tinyui_widget_set_size(&combo_box->widget, props->width, props->height) != 0) {
-        combo_box_release_partial(combo_box);
+        tinyui_combo_box_rollback(combo_box);
         return 0;
     }
 
@@ -516,13 +345,19 @@ int tinyui_combo_box_set_select_item(struct tinyui_combo_box *combo_box, int ind
 
 int tinyui_combo_box_set_selected_index(struct tinyui_combo_box *combo_box, int index)
 {
-    if (combo_box == 0 || index < 0 || index >= combo_box->item_count) {
+    ldComboBox_t *ld_combo_box;
+
+    if (combo_box == 0 ||
+        combo_box->widget.kind != TINYUI_BACKEND_WIDGET_COMBO_BOX ||
+        combo_box->widget.ld_widget == 0 ||
+        index < 0 ||
+        index >= (int)combo_box->widget.list_item_count) {
         return -1;
     }
 
-    if (tinyui_combo_box_set_selected_index_ld(combo_box, index) != 0) {
-        return -1;
-    }
+    ld_combo_box = (ldComboBox_t *)combo_box->widget.ld_widget;
+    ldComboBoxSetSelectItem(ld_combo_box, (uint8_t)index);
+    combo_box->widget.value = index;
     combo_box->selected_index = index;
     return 0;
 }
@@ -550,31 +385,39 @@ int tinyui_combo_box_get_selected_index(const struct tinyui_combo_box *combo_box
 
 const char *tinyui_combo_box_get_text(const struct tinyui_combo_box *combo_box, int index)
 {
-    if (combo_box == 0 || index < 0) {
+    ldComboBox_t *ld_combo_box;
+
+    if (combo_box == 0 || index < 0 || combo_box->widget.ld_widget == 0) {
         return 0;
     }
 
-    return tinyui_combo_box_get_text_ld(combo_box, index);
+    ld_combo_box = (ldComboBox_t *)combo_box->widget.ld_widget;
+    return (const char *)ldComboBoxGetText(ld_combo_box, (uint8_t)index);
 }
 
 int tinyui_combo_box_is_open(const struct tinyui_combo_box *combo_box, int *is_open)
 {
-    if (combo_box == 0 || is_open == 0) {
+    ldComboBox_t *ld_combo_box;
+
+    if (combo_box == 0 || is_open == 0 || combo_box->widget.ld_widget == 0) {
         return -1;
     }
 
-    return tinyui_combo_box_get_open((struct tinyui_combo_box *)combo_box, is_open);
+    ld_combo_box = (ldComboBox_t *)combo_box->widget.ld_widget;
+    *is_open = ld_combo_box->isExpand ? 1 : 0;
+    return 0;
 }
 
 int tinyui_combo_box_set_text_color(struct tinyui_combo_box *combo_box, unsigned int rgb)
 {
-    if (combo_box == 0) {
+    ldComboBox_t *ld_combo_box;
+
+    if (combo_box == 0 || combo_box->widget.ld_widget == 0) {
         return -1;
     }
 
-    if (tinyui_combo_box_set_text_color_ld(combo_box, rgb) != 0) {
-        return -1;
-    }
+    ld_combo_box = (ldComboBox_t *)combo_box->widget.ld_widget;
+    ldComboBoxSetTextColor(ld_combo_box, (ldColor)tinyui_rgb_to_ld_color(rgb));
     combo_box->widget.text_color = rgb;
     return 0;
 }
@@ -586,48 +429,61 @@ int tinyui_combo_box_set_background_color(struct tinyui_combo_box *combo_box, un
 
 int tinyui_combo_box_set_bg_color(struct tinyui_combo_box *combo_box, unsigned int rgb)
 {
-    if (combo_box == 0) {
+    ldComboBox_t *ld_combo_box;
+
+    if (combo_box == 0 || combo_box->widget.ld_widget == 0) {
         return -1;
     }
 
-    if (tinyui_combo_box_set_bg_color_ld(combo_box, rgb) != 0) {
-        return -1;
-    }
+    ld_combo_box = (ldComboBox_t *)combo_box->widget.ld_widget;
+    ldComboBoxSetBackgroundColor(ld_combo_box, (ldColor)tinyui_rgb_to_ld_color(rgb));
     combo_box->widget.bg_color = rgb;
     return 0;
 }
 
 int tinyui_combo_box_set_frame_color(struct tinyui_combo_box *combo_box, unsigned int rgb)
 {
-    if (combo_box == 0) {
+    ldComboBox_t *ld_combo_box;
+
+    if (combo_box == 0 || combo_box->widget.ld_widget == 0) {
         return -1;
     }
 
-    if (tinyui_combo_box_set_frame_color_ld(combo_box, rgb) != 0) {
-        return -1;
-    }
+    ld_combo_box = (ldComboBox_t *)combo_box->widget.ld_widget;
+    ldComboBoxSetFrameColor(ld_combo_box, (ldColor)tinyui_rgb_to_ld_color(rgb));
     combo_box->widget.border_color = rgb;
     return 0;
 }
 
 int tinyui_combo_box_set_select_color(struct tinyui_combo_box *combo_box, unsigned int rgb)
 {
-    if (combo_box == 0) {
+    ldComboBox_t *ld_combo_box;
+
+    if (combo_box == 0 || combo_box->widget.ld_widget == 0) {
         return -1;
     }
 
-    return tinyui_combo_box_set_select_color_ld(combo_box, rgb);
+    ld_combo_box = (ldComboBox_t *)combo_box->widget.ld_widget;
+    ldComboBoxSetSelectColor(ld_combo_box, (ldColor)tinyui_rgb_to_ld_color(rgb));
+    return 0;
 }
 
 int tinyui_combo_box_set_item_max(struct tinyui_combo_box *combo_box, int item_max)
 {
-    if (combo_box == 0 || item_max < combo_box->item_count || item_max <= 0 || item_max > TINYUI_LIST_MAX_ITEMS) {
+    ldComboBox_t *ld_combo_box;
+
+    if (combo_box == 0 ||
+        combo_box->widget.kind != TINYUI_BACKEND_WIDGET_COMBO_BOX ||
+        combo_box->widget.ld_widget == 0 ||
+        item_max <= 0 ||
+        item_max > TINYUI_BACKEND_LIST_MAX_ITEMS ||
+        item_max < combo_box->item_count ||
+        item_max < (int)combo_box->widget.list_item_count) {
         return -1;
     }
 
-    if (tinyui_combo_box_set_item_max_ld(combo_box, item_max) != 0) {
-        return -1;
-    }
+    ld_combo_box = (ldComboBox_t *)combo_box->widget.ld_widget;
+    ldComboBoxSetItemMax(ld_combo_box, (uint8_t)item_max);
     combo_box->item_max = item_max;
     return 0;
 }
@@ -635,13 +491,15 @@ int tinyui_combo_box_set_item_max(struct tinyui_combo_box *combo_box, int item_m
 int tinyui_combo_box_set_dropdown_source(struct tinyui_combo_box *combo_box,
                                          struct tinyui_image_source *source)
 {
-    if (combo_box == 0 || source == 0 || source->img_tile == 0) {
+    ldComboBox_t *ld_combo_box;
+
+    if (combo_box == 0 || combo_box->widget.ld_widget == 0 ||
+        source == 0 || source->img_tile == 0) {
         return -1;
     }
 
-    if (tinyui_combo_box_set_dropdown_source_ld(combo_box, source) != 0) {
-        return -1;
-    }
+    ld_combo_box = (ldComboBox_t *)combo_box->widget.ld_widget;
+    ldComboBoxSetDropdownImage(ld_combo_box, source->img_tile, source->mask_tile);
     combo_box->dropdown_source = source;
     return 0;
 }

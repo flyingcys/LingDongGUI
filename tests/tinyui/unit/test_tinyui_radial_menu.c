@@ -62,19 +62,20 @@ static void test_radial_menu_internal_seam_names_are_tinyui_local(void)
 {
     const char *widget_source = "tinyui/src/widgets/radial_menu.c";
 
-    assert_source_contains_definition(widget_source, "static ldRadialMenu_t *tinyui_radial_menu_get_ld(");
-    assert_source_contains_definition(widget_source, "static int tinyui_radial_menu_backend_set_selected_index(");
+    /* Phase C2: backend_* functions eliminated, replaced by inlined ld calls */
+    assert_source_lacks_definition(widget_source, "static ldRadialMenu_t *tinyui_radial_menu_get_ld(");
+    assert_source_lacks_definition(widget_source, "static int tinyui_radial_menu_backend_");
+    assert_source_lacks_definition(widget_source, "static int tinyui_radial_menu_bind_host(");
+    assert_source_lacks_definition(widget_source, "tinyui_radial_menu_create_with_backend_config");
+
+    /* Remaining internal helpers */
     assert_source_contains_definition(widget_source, "static bool tinyui_radial_menu_native_slot(");
-    assert_source_contains_definition(widget_source, "static int tinyui_radial_menu_backend_add_item(");
-    assert_source_contains_definition(widget_source, "static int tinyui_radial_menu_backend_add_item_with_source(");
-    assert_source_contains_definition(widget_source, "static int tinyui_radial_menu_backend_get_selected_index(");
-    assert_source_contains_definition(widget_source, "static int tinyui_radial_menu_backend_offset_selection(");
-    assert_source_contains_definition(widget_source, "static int tinyui_radial_menu_backend_set_default_item(");
-    assert_source_contains_definition(widget_source, "static int tinyui_radial_menu_backend_click_item(");
-    assert_source_contains_definition(widget_source, "static int tinyui_radial_menu_backend_offset_item(");
-    assert_source_contains_definition(widget_source, "static int tinyui_radial_menu_bind_host(");
     assert_source_contains_definition(widget_source, "static int tinyui_radial_menu_props_are_valid(");
-    assert_source_contains_definition(widget_source, "static struct tinyui_radial_menu *tinyui_radial_menu_create_with_backend_config(");
+    assert_source_contains_definition(widget_source, "static struct tinyui_radial_menu *tinyui_radial_menu_create_internal(");
+
+    /* C2 depose/rollback seam */
+    assert_source_contains_definition(widget_source, "static void tinyui_radial_menu_ld_depose_cb(");
+    assert_source_contains_definition(widget_source, "static void tinyui_radial_menu_rollback(");
 }
 
 static void radial_menu_on_selected(struct tinyui_radial_menu *radial_menu, int index, void *user_data)
