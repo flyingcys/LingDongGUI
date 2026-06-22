@@ -221,9 +221,9 @@ static void test_animation_internal_seams_renamed_in_source(void)
 {
     const char *animation_source = "tinyui/src/widgets/animation.c";
 
-    assert_source_has_function_definition(animation_source,
-                                          "static ldAnimation_t *",
-                                          "tinyui_animation_get_ld");
+    /* Phase C2: get_ld helper collapsed — setters cast widget.ld_widget directly. */
+    assert_source_lacks_function_definition(animation_source,
+                                            "tinyui_animation_get_ld");
     assert_source_has_function_definition(animation_source,
                                           "static int ",
                                           "tinyui_animation_props_are_valid");

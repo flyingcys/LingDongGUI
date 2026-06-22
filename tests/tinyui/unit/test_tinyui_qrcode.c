@@ -19,10 +19,15 @@ static const char *test_source_file_path = __FILE__;
 
 static const char *resolve_repo_path(const char *repo_relative_path)
 {
-    static char resolved_path[1024];
+    /* Two independent slots so callers can hold two resolved paths concurrently
+     * (previously a single static buffer aliased qrcode_source_path and
+     * test_source_path, causing the second resolve to clobber the first). */
+    static char resolved_path[2][1024];
+    static int slot = 0;
     char base_path[1024];
     char *tests_dir;
     size_t base_len;
+    char *out;
 
     assert(test_source_file_path != 0);
     assert(repo_relative_path != 0);
@@ -32,9 +37,11 @@ static const char *resolve_repo_path(const char *repo_relative_path)
     assert(tests_dir != 0);
     *tests_dir = '\0';
     base_len = strlen(base_path);
-    assert(base_len + strlen(repo_relative_path) + 1 < sizeof(resolved_path));
-    snprintf(resolved_path, sizeof(resolved_path), "%s%s", base_path, repo_relative_path);
-    return resolved_path;
+    assert(base_len + strlen(repo_relative_path) + 1 < sizeof(resolved_path[0]));
+    out = resolved_path[slot];
+    slot = (slot + 1) % 2;
+    snprintf(out, sizeof(resolved_path[0]), "%s%s", base_path, repo_relative_path);
+    return out;
 }
 
 static void assert_source_lacks_function_definition(const char *source_path, const char *symbol)

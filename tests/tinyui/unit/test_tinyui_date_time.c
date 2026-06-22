@@ -51,10 +51,17 @@ static void assert_date_time_internal_seam_renamed(void)
 {
     char *source = read_date_time_widget_source();
 
-    assert(strstr(source, "tinyui_date_time_rgb_to_ld_color") != NULL);
-    assert(strstr(source, "tinyui_date_time_map_align") != NULL);
-    assert(strstr(source, "tinyui_date_time_get_ld") != NULL);
+    /* Phase C2: private helpers below were collapsed into core helpers. */
+    assert(strstr(source, "tinyui_date_time_rgb_to_ld_color") == NULL);
+    assert(strstr(source, "tinyui_date_time_map_align") == NULL);
+    assert(strstr(source, "tinyui_date_time_get_ld") == NULL);
+    /* Phase C2: props validator kept, backend lookup kept as 1-line wrapper. */
     assert(strstr(source, "tinyui_date_time_props_are_valid") != NULL);
+    assert(strstr(source, "tinyui_date_time_backend") != NULL);
+    /* Phase C2: uses core helpers instead of private copies. */
+    assert(strstr(source, "tinyui_rgb_to_ld_color") != NULL);
+    assert(strstr(source, "tinyui_align_to_arm2d") != NULL);
+    assert(strstr(source, "tinyui_widget_destroy_common") != NULL);
 
     free(source);
 }
