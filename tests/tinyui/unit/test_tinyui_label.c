@@ -131,20 +131,33 @@ static void test_label_shared_text_helper_uses_tinyui_prefix(void)
     assert_source_contains_text(test_repo_path("tinyui/src/widgets/label.c"),
                                 "tinyui_widget_set_backend_text");
     assert_self_binary_lacks_symbol("tinyui_backend_set_text");
-    assert_source_contains_text(test_repo_path("tinyui/src/widgets/label.c"),
-                                "static ldLabel_t *tinyui_label_get_ld");
+    /* Phase C2: helpers below were collapsed into core helpers. */
+    assert_source_lacks_text(test_repo_path("tinyui/src/widgets/label.c"),
+                             "static ldLabel_t *tinyui_label_get_ld");
+    assert_source_lacks_text(test_repo_path("tinyui/src/widgets/label.c"),
+                             "static void tinyui_label_dispose_partial");
+    assert_source_lacks_text(test_repo_path("tinyui/src/widgets/label.c"),
+                             "static ldColor tinyui_label_rgb_to_ld_color");
+    assert_source_lacks_text(test_repo_path("tinyui/src/widgets/label.c"),
+                             "static unsigned int tinyui_label_ld_color_to_rgb");
+    assert_source_lacks_text(test_repo_path("tinyui/src/widgets/label.c"),
+                             "static arm_2d_align_t tinyui_label_map_align");
     assert_source_contains_text(test_repo_path("tinyui/src/widgets/label.c"),
                                 "static int tinyui_label_props_are_valid");
+    /* Phase C2: backend lookup helper + unmap_align kept as 1-line wrappers. */
     assert_source_contains_text(test_repo_path("tinyui/src/widgets/label.c"),
-                                "static void tinyui_label_dispose_partial");
-    assert_source_contains_text(test_repo_path("tinyui/src/widgets/label.c"),
-                                "static ldColor tinyui_label_rgb_to_ld_color");
-    assert_source_contains_text(test_repo_path("tinyui/src/widgets/label.c"),
-                                "static unsigned int tinyui_label_ld_color_to_rgb");
-    assert_source_contains_text(test_repo_path("tinyui/src/widgets/label.c"),
-                                "static arm_2d_align_t tinyui_label_map_align");
+                                "static ldLabel_t *tinyui_label_backend");
     assert_source_contains_text(test_repo_path("tinyui/src/widgets/label.c"),
                                 "static enum tinyui_align tinyui_label_unmap_align");
+    /* Phase C2: uses core helpers instead of private copies. */
+    assert_source_contains_text(test_repo_path("tinyui/src/widgets/label.c"),
+                                "tinyui_rgb_to_ld_color");
+    assert_source_contains_text(test_repo_path("tinyui/src/widgets/label.c"),
+                                "tinyui_ld_color_to_rgb");
+    assert_source_contains_text(test_repo_path("tinyui/src/widgets/label.c"),
+                                "tinyui_align_to_arm2d");
+    assert_source_contains_text(test_repo_path("tinyui/src/widgets/label.c"),
+                                "tinyui_widget_destroy_common");
 }
 
 static void test_label_create_with_props_pushes_all_fields(struct tinyui_window *win)

@@ -22,42 +22,31 @@
 #include "../../../src/gui/ldLabel.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
 
 struct tinyui_image_source;
-int tinyui_runtime_bridge_unbind_host(void *backend_widget);
-int tinyui_runtime_bridge_detach_from_parent(void *backend_widget);
 
-static ldColor tinyui_label_rgb_to_ld_color(unsigned int rgb)
+/* ---- test seam state ---- */
+static ld_scene_t *s_label_depose_scene = NULL;
+
+static void tinyui_label_ld_depose_cb(void *ld_widget)
 {
-    return __RGB((rgb >> 16) & 0xFFU, (rgb >> 8) & 0xFFU, rgb & 0xFFU);
-}
-
-static unsigned int tinyui_label_ld_color_to_rgb(ldColor color)
-{
-    uint32_t red = ((uint32_t)color >> 11) & 0x1FU;
-    uint32_t green = ((uint32_t)color >> 5) & 0x3FU;
-    uint32_t blue = (uint32_t)color & 0x1FU;
-
-    red = (red << 3) | (red >> 2);
-    green = (green << 2) | (green >> 4);
-    blue = (blue << 3) | (blue >> 2);
-    return (unsigned int)((red << 16) | (green << 8) | blue);
-}
-
-static arm_2d_align_t tinyui_label_map_align(enum tinyui_align align)
-{
-    switch (align) {
-    case TINYUI_ALIGN_START:
-        return ARM_2D_ALIGN_LEFT;
-    case TINYUI_ALIGN_END:
-        return ARM_2D_ALIGN_RIGHT;
-    case TINYUI_ALIGN_CENTER:
-        return ARM_2D_ALIGN_CENTRE;
-    default:
-        return ARM_2D_ALIGN_CENTRE;
+    if (s_label_depose_scene != NULL) {
+        ldLabel_depose(s_label_depose_scene, (ldLabel_t *)ld_widget);
+        s_label_depose_scene = NULL;
     }
+}
+
+static ldLabel_t *tinyui_label_backend(struct tinyui_label *label)
+{
+    if (label == 0 || label->widget.ld_widget == 0
+        || label->widget.kind != TINYUI_BACKEND_WIDGET_LABEL) {
+        return 0;
+    }
+
+    return (ldLabel_t *)label->widget.ld_widget;
 }
 
 static enum tinyui_align tinyui_label_unmap_align(arm_2d_align_t align)
@@ -72,19 +61,6 @@ static enum tinyui_align tinyui_label_unmap_align(arm_2d_align_t align)
     }
 }
 
-static ldLabel_t *tinyui_label_get_ld(struct tinyui_label *label)
-{
-    if (label == NULL || label->widget.ld_widget == NULL) {
-        return NULL;
-    }
-
-    if (label->widget.kind != TINYUI_BACKEND_WIDGET_LABEL) {
-        return NULL;
-    }
-
-    return (ldLabel_t *)label->widget.ld_widget;
-}
-
 static int tinyui_label_props_are_valid(const struct tinyui_label_props *props)
 {
     return props != 0
@@ -94,29 +70,6 @@ static int tinyui_label_props_are_valid(const struct tinyui_label_props *props)
         && props->radius >= 0
         && props->padding >= 0
         && (props->background_source == 0 || props->background_source->img_tile != 0);
-}
-
-static void tinyui_label_dispose_partial(struct tinyui_label *label)
-{
-    struct tinyui_app *app_state;
-
-    if (label == 0) {
-        return;
-    }
-
-    if (label->widget.ld_widget != 0) {
-        void *saved_ld_widget = label->widget.ld_widget;
-        app_state = label->widget.owner != 0
-            ? tinyui_runtime_bridge_backend_state(label->widget.owner)
-            : 0;
-        (void)tinyui_widget_detach_from_parent(&label->widget);
-        (void)tinyui_runtime_bridge_unbind_host(&label->widget);
-        if (app_state != 0 && app_state->ld_scene != 0) {
-            ldLabel_depose(app_state->ld_scene, (ldLabel_t *)saved_ld_widget);
-        }
-    }
-
-    free(label);
 }
 
 /**
@@ -199,37 +152,23 @@ struct tinyui_label *tinyui_label_create_with_props(struct tinyui_window *parent
         return 0;
     }
 
-    if (props->text != 0 && tinyui_label_set_text(label, props->text) != 0) {
-        tinyui_label_dispose_partial(label);
-        return 0;
-    }
-    if (props->font != 0 && tinyui_label_set_font(label, props->font) != 0) {
-        tinyui_label_dispose_partial(label);
-        return 0;
-    }
-    if (props->style_class != 0
-        && tinyui_widget_set_style_class(&label->widget, props->style_class) != 0) {
-        tinyui_label_dispose_partial(label);
-        return 0;
-    }
-    if (tinyui_widget_set_user_data(&label->widget, props->user_data) != 0
+    if ((props->text != 0 && tinyui_label_set_text(label, props->text) != 0)
+        || (props->font != 0 && tinyui_label_set_font(label, props->font) != 0)
+        || (props->style_class != 0
+            && tinyui_widget_set_style_class(&label->widget, props->style_class) != 0)
+        || tinyui_widget_set_user_data(&label->widget, props->user_data) != 0
         || tinyui_widget_set_border_color(&label->widget, props->border_color) != 0
         || tinyui_widget_set_radius(&label->widget, props->radius) != 0
-        || tinyui_widget_set_padding(&label->widget, props->padding) != 0) {
-        tinyui_label_dispose_partial(label);
-        return 0;
-    }
-    if ((props->width > 0 || props->height > 0)
-        && tinyui_widget_set_size(&label->widget, props->width, props->height) != 0) {
-        tinyui_label_dispose_partial(label);
-        return 0;
-    }
-    if (tinyui_label_set_bg_color(label, props->bg_color) != 0
+        || tinyui_widget_set_padding(&label->widget, props->padding) != 0
+        || ((props->width > 0 || props->height > 0)
+            && tinyui_widget_set_size(&label->widget, props->width, props->height) != 0)
+        || tinyui_label_set_bg_color(label, props->bg_color) != 0
         || tinyui_label_set_text_color(label, props->text_color) != 0
         || tinyui_label_set_background_source(label, props->background_source) != 0
         || tinyui_label_set_transparent(label, props->transparent) != 0
         || tinyui_label_set_align(label, props->align) != 0) {
-        tinyui_label_dispose_partial(label);
+        s_label_depose_scene = label->widget.ld_event_bridge_scene;
+        tinyui_widget_destroy_common(&label->widget, tinyui_label_ld_depose_cb);
         return 0;
     }
 
@@ -264,14 +203,9 @@ int tinyui_label_set_text(struct tinyui_label *label, const char *text)
 
 const char *tinyui_label_get_text(struct tinyui_label *label)
 {
-    ldLabel_t *ld_label;
+    ldLabel_t *ld_label = tinyui_label_backend(label);
 
-    if (label == 0 || label->widget.ld_widget == 0) {
-        return 0;
-    }
-
-    ld_label = tinyui_label_get_ld(label);
-    if (ld_label == NULL) {
+    if (ld_label == 0) {
         return 0;
     }
 
@@ -288,14 +222,9 @@ const char *tinyui_label_get_text(struct tinyui_label *label)
 
 int tinyui_label_set_font(struct tinyui_label *label, const struct tinyui_font *font)
 {
-    ldLabel_t *ld_label;
+    ldLabel_t *ld_label = tinyui_label_backend(label);
 
-    if (label == 0) {
-        return -1;
-    }
-
-    ld_label = tinyui_label_get_ld(label);
-    if (ld_label == NULL) {
+    if (ld_label == 0) {
         return -1;
     }
 
@@ -324,12 +253,12 @@ int tinyui_label_set_text_color(struct tinyui_label *label, unsigned int rgb)
         return -1;
     }
 
-    ld_label = tinyui_label_get_ld(label);
-    if (ld_label == NULL) {
+    ld_label = tinyui_label_backend(label);
+    if (ld_label == 0) {
         return -1;
     }
 
-    ldLabelSetTextColor(ld_label, tinyui_label_rgb_to_ld_color(rgb));
+    ldLabelSetTextColor(ld_label, (ldColor)tinyui_rgb_to_ld_color(rgb));
     return 0;
 }
 
@@ -349,12 +278,12 @@ int tinyui_label_get_text_color(struct tinyui_label *label, unsigned int *rgb)
         return -1;
     }
 
-    ld_label = tinyui_label_get_ld(label);
-    if (ld_label == NULL) {
+    ld_label = tinyui_label_backend(label);
+    if (ld_label == 0) {
         return -1;
     }
 
-    *rgb = tinyui_label_ld_color_to_rgb(ldLabelGetTextColor(ld_label));
+    *rgb = tinyui_ld_color_to_rgb((unsigned int)ldLabelGetTextColor(ld_label));
     return 0;
 }
 
@@ -374,12 +303,12 @@ int tinyui_label_set_bg_color(struct tinyui_label *label, unsigned int rgb)
         return -1;
     }
 
-    ld_label = tinyui_label_get_ld(label);
-    if (ld_label == NULL) {
+    ld_label = tinyui_label_backend(label);
+    if (ld_label == 0) {
         return -1;
     }
 
-    ldLabelSetBackgroundColor(ld_label, tinyui_label_rgb_to_ld_color(rgb));
+    ldLabelSetBackgroundColor(ld_label, (ldColor)tinyui_rgb_to_ld_color(rgb));
     return 0;
 }
 
@@ -399,12 +328,12 @@ int tinyui_label_get_bg_color(struct tinyui_label *label, unsigned int *rgb)
         return -1;
     }
 
-    ld_label = tinyui_label_get_ld(label);
-    if (ld_label == NULL) {
+    ld_label = tinyui_label_backend(label);
+    if (ld_label == 0) {
         return -1;
     }
 
-    *rgb = tinyui_label_ld_color_to_rgb(ldLabelGetBackgroundColor(ld_label));
+    *rgb = tinyui_ld_color_to_rgb((unsigned int)ldLabelGetBackgroundColor(ld_label));
     return 0;
 }
 
@@ -418,14 +347,9 @@ int tinyui_label_get_bg_color(struct tinyui_label *label, unsigned int *rgb)
 
 int tinyui_label_set_transparent(struct tinyui_label *label, int transparent)
 {
-    ldLabel_t *ld_label;
+    ldLabel_t *ld_label = tinyui_label_backend(label);
 
-    if (label == 0) {
-        return -1;
-    }
-
-    ld_label = tinyui_label_get_ld(label);
-    if (ld_label == NULL) {
+    if (ld_label == 0) {
         return -1;
     }
 
@@ -449,8 +373,8 @@ int tinyui_label_get_transparent(struct tinyui_label *label, int *transparent)
         return -1;
     }
 
-    ld_label = tinyui_label_get_ld(label);
-    if (ld_label == NULL) {
+    ld_label = tinyui_label_backend(label);
+    if (ld_label == 0) {
         return -1;
     }
 
@@ -468,21 +392,16 @@ int tinyui_label_get_transparent(struct tinyui_label *label, int *transparent)
 
 int tinyui_label_set_align(struct tinyui_label *label, enum tinyui_align align)
 {
-    ldLabel_t *ld_label;
+    ldLabel_t *ld_label = tinyui_label_backend(label);
 
-    if (label == 0) {
-        return -1;
-    }
-
-    ld_label = tinyui_label_get_ld(label);
-    if (ld_label == NULL) {
+    if (ld_label == 0) {
         return -1;
     }
     if (align != TINYUI_ALIGN_START && align != TINYUI_ALIGN_CENTER && align != TINYUI_ALIGN_END) {
         return -1;
     }
 
-    ldLabelSetAlign(ld_label, tinyui_label_map_align(align));
+    ldLabelSetAlign(ld_label, (arm_2d_align_t)tinyui_align_to_arm2d(align));
     return 0;
 }
 
@@ -502,8 +421,8 @@ int tinyui_label_get_align(struct tinyui_label *label, enum tinyui_align *align)
         return -1;
     }
 
-    ld_label = tinyui_label_get_ld(label);
-    if (ld_label == NULL) {
+    ld_label = tinyui_label_backend(label);
+    if (ld_label == 0) {
         return -1;
     }
 
@@ -528,8 +447,8 @@ int tinyui_label_set_background_source(struct tinyui_label *label,
         return -1;
     }
 
-    ld_label = tinyui_label_get_ld(label);
-    if (ld_label == NULL) {
+    ld_label = tinyui_label_backend(label);
+    if (ld_label == 0) {
         return -1;
     }
 
