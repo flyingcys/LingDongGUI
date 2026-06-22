@@ -47,25 +47,49 @@ static void init_test_paths(const char *self_binary_path)
     char resolved_self_binary_path[PATH_MAX];
     char repo_root[PATH_MAX];
     char build_root[PATH_MAX];
-    const char *build_tests_dir;
-    size_t repo_root_len;
-    size_t build_root_len;
+    char file_dir[PATH_MAX];
+    char *last_slash;
+    char command[PATH_MAX * 2];
+    FILE *pipe;
+    size_t len;
 
     assert(self_binary_path != NULL);
     assert(realpath(self_binary_path, resolved_self_binary_path) != NULL);
     assert(strlen(resolved_self_binary_path) < sizeof(test_self_binary_path));
     strcpy(test_self_binary_path, resolved_self_binary_path);
 
-    build_tests_dir = strstr(test_self_binary_path, "/build/tests/tinyui/");
-    assert(build_tests_dir != NULL);
-    repo_root_len = (size_t)(build_tests_dir - test_self_binary_path);
-    assert(repo_root_len < sizeof(repo_root));
-    memcpy(repo_root, test_self_binary_path, repo_root_len);
-    repo_root[repo_root_len] = '\0';
+    /* Derive repo root from the test source file path (__FILE__) rather than
+     * the binary location — build dir depth varies (build/tests/tinyui vs
+     * build/<config>/tests/tinyui), but __FILE__ is always
+     * <repo>/tests/tinyui/unit/test_tinyui_app_lifecycle.c. */
+    assert(strlen(__FILE__) < sizeof(file_dir));
+    strcpy(file_dir, __FILE__);
+    last_slash = strrchr(file_dir, '/');
+    assert(last_slash != 0);
+    *last_slash = '\0';
+    snprintf(command, sizeof(command),
+             "cd \"%s/../../..\" && pwd", file_dir);
+    pipe = popen(command, "r");
+    assert(pipe != 0);
+    assert(fgets(repo_root, sizeof(repo_root), pipe) != 0);
+    assert(pclose(pipe) == 0);
+    len = strlen(repo_root);
+    while (len > 0 && (repo_root[len - 1] == '\n' || repo_root[len - 1] == '\r')) {
+        repo_root[--len] = '\0';
+    }
+    assert(len > 0);
 
-    build_root_len = repo_root_len + strlen("/build");
-    assert(build_root_len < sizeof(build_root));
-    snprintf(build_root, sizeof(build_root), "%s/build", repo_root);
+    /* Find the build root by walking up from the binary until tests/tinyui
+     * is found, then take its parent. */
+    {
+        const char *tests_dir = strstr(test_self_binary_path, "/tests/tinyui/");
+        size_t build_root_len;
+        assert(tests_dir != NULL);
+        build_root_len = (size_t)(tests_dir - test_self_binary_path);
+        assert(build_root_len < sizeof(build_root));
+        memcpy(build_root, test_self_binary_path, build_root_len);
+        build_root[build_root_len] = '\0';
+    }
 
     snprintf(test_step_source,
              sizeof(test_step_source),

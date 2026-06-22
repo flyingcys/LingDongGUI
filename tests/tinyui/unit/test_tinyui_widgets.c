@@ -42,10 +42,14 @@ static void init_source_contract_paths(void)
     size_t len;
 
     assert(test_self_binary_path != 0);
+    /* Derive repo root from the test source file path (__FILE__) rather than
+     * the binary location — the build dir depth varies (build/tests/tinyui
+     * vs build/<config>/tests/tinyui), but __FILE__ is always
+     * <repo>/tests/tinyui/unit/test_tinyui_widgets.c. */
     snprintf(command,
              sizeof(command),
              "cd \"$(dirname '%s')/../../..\" && pwd",
-             test_self_binary_path);
+             __FILE__);
     pipe = popen(command, "r");
     assert(pipe != 0);
     assert(fgets(repo_root, sizeof(repo_root), pipe) != 0);

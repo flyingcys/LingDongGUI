@@ -241,7 +241,10 @@ static void test_window_create_and_backend_mapping(struct tinyui_window *win)
     assert(backend->kind == TINYUI_BACKEND_WIDGET_WINDOW);
     ld_win = (ldWindow_t *)backend->ld_widget;
     assert(ld_win != 0);
-    assert(ld_win->use_as__ldBase_t.widgetType == widgetTypeBackground);
+    /* tinyui_window_create produces a user window (nameId != 0) which
+     * ldWindow_init tags as widgetTypeWindow. Only the phantom scene root
+     * (nameId == 0) is tagged widgetTypeBackground. */
+    assert(ld_win->use_as__ldBase_t.widgetType == widgetTypeWindow);
 }
 
 static void test_window_padding_group_round_trip(struct tinyui_window *win)

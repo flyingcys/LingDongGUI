@@ -54,9 +54,11 @@ static void assert_source_file_lacks_symbol(const char *relative_path, const cha
     assert(symbol != 0);
     source = fopen(relative_path, "r");
     if (source == 0) {
-        assert(test_self_binary_path != 0);
-        assert(strlen(test_self_binary_path) < sizeof(binary_dir));
-        strcpy(binary_dir, test_self_binary_path);
+        /* Derive repo root from the test source file path — build dir depth
+         * varies (build/tests/tinyui vs build/<config>/tests/tinyui), but
+         * __FILE__ is always <repo>/tests/tinyui/unit/test_tinyui_list.c. */
+        assert(strlen(__FILE__) < sizeof(binary_dir));
+        strcpy(binary_dir, __FILE__);
         last_slash = strrchr(binary_dir, '/');
         assert(last_slash != 0);
         *last_slash = '\0';
@@ -96,9 +98,11 @@ static void assert_source_file_has_symbol(const char *relative_path, const char 
     assert(symbol != 0);
     source = fopen(relative_path, "r");
     if (source == 0) {
-        assert(test_self_binary_path != 0);
-        assert(strlen(test_self_binary_path) < sizeof(binary_dir));
-        strcpy(binary_dir, test_self_binary_path);
+        /* Derive repo root from the test source file path — build dir depth
+         * varies (build/tests/tinyui vs build/<config>/tests/tinyui), but
+         * __FILE__ is always <repo>/tests/tinyui/unit/test_tinyui_list.c. */
+        assert(strlen(__FILE__) < sizeof(binary_dir));
+        strcpy(binary_dir, __FILE__);
         last_slash = strrchr(binary_dir, '/');
         assert(last_slash != 0);
         *last_slash = '\0';
