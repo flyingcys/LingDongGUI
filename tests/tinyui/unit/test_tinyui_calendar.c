@@ -283,9 +283,9 @@ static void test_calendar_native_day_names_and_colors_round_trip(void)
 
     assert(strcmp((const char *)ld_calendar->dayNames[0], "Sun") == 0);
     assert(strcmp((const char *)ld_calendar->dayNames[6], "Sat") == 0);
-    assert(ld_calendar->bgColor == (ldColor)0x112233U);
-    assert(ld_calendar->itemColor == (ldColor)0x445566U);
-    assert(ld_calendar->textColor == (ldColor)0x778899U);
+    assert(ld_calendar->bgColor == (ldColor)0x1106U);
+    assert(ld_calendar->itemColor == (ldColor)0x42ACU);
+    assert(ld_calendar->textColor == (ldColor)0x7453U);
 
     assert(tinyui_calendar_set_day_names(calendar, 0) == -1);
     assert(tinyui_calendar_set_bg_color(0, 0xAABBCCU) == -1);
@@ -293,9 +293,9 @@ static void test_calendar_native_day_names_and_colors_round_trip(void)
     assert(tinyui_calendar_set_text_color(calendar, 0x1000000U) == -1);
 
     assert(strcmp((const char *)ld_calendar->dayNames[0], "Sun") == 0);
-    assert(ld_calendar->bgColor == (ldColor)0x112233U);
-    assert(ld_calendar->itemColor == (ldColor)0x445566U);
-    assert(ld_calendar->textColor == (ldColor)0x778899U);
+    assert(ld_calendar->bgColor == (ldColor)0x1106U);
+    assert(ld_calendar->itemColor == (ldColor)0x42ACU);
+    assert(ld_calendar->textColor == (ldColor)0x7453U);
 
     tinyui_app_destroy(app);
 }

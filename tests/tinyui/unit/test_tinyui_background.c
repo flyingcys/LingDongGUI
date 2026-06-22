@@ -102,8 +102,13 @@ static void test_background_widget_file_owns_internal_helper_truth(void)
 {
     const char *source_path = resolve_repo_path("tinyui/src/widgets/background.c");
 
-    assert_source_has_symbol_definition(source_path, "tinyui_background_backend_host");
-    assert_source_has_symbol_definition(source_path, "tinyui_background_get_root_size");
+    /* Phase C2: the local accessor tinyui_background_backend_host() and the
+     * standalone tinyui_background_get_root_size() helper are gone — the host
+     * pointer is reached directly via window->backend_host, and the screen
+     * dimensions are read inline inside tinyui_background_create.  Pin down
+     * the post-C2 contract: neither helper may reappear. */
+    assert_source_lacks_symbol_definition(source_path, "tinyui_background_backend_host");
+    assert_source_lacks_symbol_definition(source_path, "tinyui_background_get_root_size");
 }
 
 int main(void)

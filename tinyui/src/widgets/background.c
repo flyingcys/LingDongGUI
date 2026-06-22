@@ -24,41 +24,17 @@
 
 #include <stdlib.h>
 
-/* Must mirror the definition in window.c — background is also a root window. */
+/* Mirror the definition in window.c — background is also a root window and
+ * still piggy-backs on window.c's APIs (set_color, set_background_offset,
+ * set_padding ...) which dereference window->backend_host.  Once window.c
+ * collapses its own wrapper (separate C2 task), this and the host calloc
+ * below can both be deleted, leaving only the single calloc of struct
+ * tinyui_background that already embeds struct tinyui_window. */
 struct tinyui_window_backend_host {
     struct tinyui_backend_widget widget;
     ldPadding_t padding_group;
     int has_padding_group;
 };
-
-static void tinyui_background_get_root_size(struct tinyui_app *app, int16_t *width, int16_t *height)
-{
-    struct tinyui_display_config config = {0};
-
-    if (width == 0 || height == 0) {
-        return;
-    }
-
-    *width = LD_CFG_SCREEN_WIDTH;
-    *height = LD_CFG_SCREEN_HEIGHT;
-    if (app == 0) {
-        return;
-    }
-
-    if (tinyui_display_get_config(app, &config) == 0 && config.width > 0 && config.height > 0) {
-        *width = (int16_t)config.width;
-        *height = (int16_t)config.height;
-    }
-}
-
-static struct tinyui_window_backend_host *tinyui_background_backend_host(
-    struct tinyui_background *bg)
-{
-    if (bg == 0) {
-        return 0;
-    }
-    return bg->window.backend_host;
-}
 
 /**
  * @brief Create background widget
@@ -74,16 +50,22 @@ struct tinyui_background *tinyui_background_create(struct tinyui_app *app, const
     struct tinyui_window_backend_host *host;
     struct tinyui_app *app_state;
     ldWindow_t *ld_root;
-    int16_t root_width;
-    int16_t root_height;
+    int16_t root_width = LD_CFG_SCREEN_WIDTH;
+    int16_t root_height = LD_CFG_SCREEN_HEIGHT;
+    struct tinyui_display_config config = {0};
 
     if (app == 0 || id == 0) {
         return 0;
     }
 
-    app_state = tinyui_runtime_bridge_backend_state(app);
-    if (app_state == 0 || app_state->ld_scene == 0) {
+    app_state = app;
+    if (app_state->ld_scene == 0) {
         return 0;
+    }
+
+    if (tinyui_display_get_config(app, &config) == 0 && config.width > 0 && config.height > 0) {
+        root_width  = (int16_t)config.width;
+        root_height = (int16_t)config.height;
     }
 
     host = calloc(1, sizeof(*host));
@@ -91,7 +73,6 @@ struct tinyui_background *tinyui_background_create(struct tinyui_app *app, const
         return 0;
     }
 
-    tinyui_background_get_root_size(app, &root_width, &root_height);
     ld_root = ldWindow_init(app_state->ld_scene, NULL, 0, 0, 0, 0, root_width, root_height);
     if (ld_root == 0) {
         free(host);
@@ -99,15 +80,15 @@ struct tinyui_background *tinyui_background_create(struct tinyui_app *app, const
     }
 
     if (tinyui_widget_init_root(&host->widget,
-                                        app,
-                                        TINYUI_BACKEND_WIDGET_BACKGROUND,
-                                        id,
-                                        app->theme) != 0) {
+                                app,
+                                TINYUI_BACKEND_WIDGET_BACKGROUND,
+                                id,
+                                app->theme) != 0) {
         ldWindow_depose(app_state->ld_scene, ld_root);
         free(host);
         return 0;
     }
-    host->widget.ld_widget = ld_root;
+    host->widget.ld_widget  = ld_root;
     host->widget.ld_name_id = 0;
 
     background = calloc(1, sizeof(*background));
@@ -121,12 +102,12 @@ struct tinyui_background *tinyui_background_create(struct tinyui_app *app, const
     background->window.backend_host = host;
     background->window.widget.visible = 1;
     background->window.widget.enabled = 1;
-    background->window.flex_flow = TINYUI_FLEX_FLOW_ROW;
-    background->window.flex_main_align = TINYUI_ALIGN_START;
-    background->window.flex_cross_align = TINYUI_ALIGN_START;
-    background->window.flex_track_align = TINYUI_ALIGN_START;
-    background->window.grid_col_align = TINYUI_ALIGN_START;
-    background->window.grid_row_align = TINYUI_ALIGN_START;
+    background->window.flex_flow         = TINYUI_FLEX_FLOW_ROW;
+    background->window.flex_main_align   = TINYUI_ALIGN_START;
+    background->window.flex_cross_align  = TINYUI_ALIGN_START;
+    background->window.flex_track_align  = TINYUI_ALIGN_START;
+    background->window.grid_col_align    = TINYUI_ALIGN_START;
+    background->window.grid_row_align    = TINYUI_ALIGN_START;
     if (tinyui_runtime_bridge_bind_host(&host->widget,
                                         &background->window.widget) != 0) {
         free(background);
