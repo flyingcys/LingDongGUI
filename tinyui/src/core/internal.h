@@ -278,7 +278,7 @@ int tinyui_window_apply_grid_gap(struct tinyui_window *window, int row_gap, int 
 int tinyui_window_apply_grid_align(struct tinyui_window *window,
                                    enum tinyui_align col_align,
                                    enum tinyui_align row_align);
-int tinyui_theme_apply_widget_style(void *backend_widget,
+int tinyui_theme_apply_widget_style(struct tinyui_widget *widget,
                                     enum tinyui_part part,
                                     enum tinyui_state state,
                                     unsigned int bg_color,
