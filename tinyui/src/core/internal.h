@@ -403,6 +403,9 @@ struct tinyui_window {
     int16_t grid_padding_right;
     int16_t grid_padding_bottom;
     uint8_t has_explicit_grid_padding;
+    /* ── padding_group storage (ldWindow keeps the pointer alive)
+     * Allocated lazily in tinyui_window_sync_padding. */
+    void *padding_group_storage;
     /* ── C1 backend host pointer (replaces widget.backend_widget for windows) */
     struct tinyui_window_backend_host *backend_host;
 };
