@@ -30,17 +30,26 @@ extern const arm_2d_a1_font_t ARM_2D_FONT_16x24;
 
 static int tinyui_button_fail_next_set_font = 0;
 
-static ldButton_t *tinyui_button_get_ld(const struct tinyui_button *button)
+/* ── dispose machinery: rollback-on-create-failure path ─────────────────
+ * Mirrors the arc/gauge pattern.  The depose callback receives only the
+ * raw ld widget pointer, so the scene needed by ldButton_depose is parked
+ * in a file-static between rollback and destroy_common.
+ *
+ * The function tinyui_button_rollback is the rollback entry called
+ * from tinyui_button_create_with_props on prop-application failure; it
+ * removes the action_info first (xBtnRemove must run while the ld widget
+ * is still alive) and then defers to tinyui_widget_destroy_common, which
+ * detaches the ld node, clears pInfo, invokes the depose cb and frees the
+ * host struct in a single sweep. */
+
+static ld_scene_t *s_button_depose_scene = 0;
+
+static void tinyui_button_ld_depose_cb(void *ld_widget)
 {
-    if (button == 0 || button->widget.ld_widget == 0) {
-        return 0;
+    if (s_button_depose_scene != 0) {
+        ldButton_depose(s_button_depose_scene, (ldButton_t *)ld_widget);
+        s_button_depose_scene = 0;
     }
-
-    if (button->widget.kind != TINYUI_BACKEND_WIDGET_BUTTON) {
-        return 0;
-    }
-
-    return (ldButton_t *)button->widget.ld_widget;
 }
 
 static arm_2d_font_t *tinyui_button_default_font(void)
@@ -65,27 +74,23 @@ static arm_2d_font_t *tinyui_button_resolve_font(const struct tinyui_font *font)
     return tinyui_button_default_font();
 }
 
-static void tinyui_button_dispose_partial(struct tinyui_button *button)
+static void tinyui_button_rollback(struct tinyui_button *button)
 {
-    struct tinyui_app *app_state;
-
     if (button == 0) {
         return;
     }
 
     if (button->widget.ld_widget != 0) {
-        void *saved_ld = button->widget.ld_widget;
-        app_state = button->widget.owner != 0
-            ? tinyui_runtime_bridge_backend_state(button->widget.owner)
-            : 0;
+        /* xBtnRemove must run while the ld widget (and its name_id) is still
+         * registered with xBtnAction, before destroy_common detaches it. */
         xBtnRemove(&button->action_info);
-        (void)tinyui_widget_detach_from_parent(&button->widget);
-        if (app_state != 0 && app_state->ld_scene != 0) {
-            ldButton_depose(app_state->ld_scene, (ldButton_t *)saved_ld);
-        }
+        s_button_depose_scene = button->widget.owner != 0
+            ? button->widget.owner->ld_scene
+            : 0;
+        tinyui_widget_destroy_common(&button->widget, tinyui_button_ld_depose_cb);
+    } else {
+        free(button);
     }
-
-    free(button);
 }
 
 void tinyui_button_test_fail_next_set_font(void)
@@ -193,25 +198,25 @@ struct tinyui_button *tinyui_button_create_with_props(struct tinyui_window *pare
     button->on_clicked = props->on_clicked;
     button->user_data = props->user_data;
     if (tinyui_widget_set_user_data(&button->widget, props->user_data) != 0) {
-        tinyui_button_dispose_partial(button);
+        tinyui_button_rollback(button);
         return 0;
     }
     if (props->text != 0 && tinyui_button_set_text(button, props->text) != 0) {
-        tinyui_button_dispose_partial(button);
+        tinyui_button_rollback(button);
         return 0;
     }
     if (props->font != 0 && tinyui_button_set_font(button, props->font) != 0) {
-        tinyui_button_dispose_partial(button);
+        tinyui_button_rollback(button);
         return 0;
     }
     if ((props->width > 0 || props->height > 0)
         && tinyui_widget_set_size(&button->widget, props->width, props->height) != 0) {
-        tinyui_button_dispose_partial(button);
+        tinyui_button_rollback(button);
         return 0;
     }
     if (props->style_class != 0
         && tinyui_widget_set_style_class(&button->widget, props->style_class) != 0) {
-        tinyui_button_dispose_partial(button);
+        tinyui_button_rollback(button);
         return 0;
     }
     if (tinyui_widget_set_bg_color(&button->widget, props->bg_color) != 0
@@ -219,7 +224,7 @@ struct tinyui_button *tinyui_button_create_with_props(struct tinyui_window *pare
         || tinyui_widget_set_border_color(&button->widget, props->border_color) != 0
         || tinyui_widget_set_radius(&button->widget, props->radius) != 0
         || tinyui_widget_set_padding(&button->widget, props->padding) != 0) {
-        tinyui_button_dispose_partial(button);
+        tinyui_button_rollback(button);
         return 0;
     }
     if (tinyui_button_set_release_image(button, props->release_image) != 0
@@ -228,7 +233,7 @@ struct tinyui_button *tinyui_button_create_with_props(struct tinyui_window *pare
         || tinyui_button_set_checkable(button, props->checkable) != 0
         || tinyui_button_set_key_value(button, props->key_value) != 0
         || tinyui_button_set_pressed(button, props->pressed) != 0) {
-        tinyui_button_dispose_partial(button);
+        tinyui_button_rollback(button);
         return 0;
     }
 
@@ -292,7 +297,7 @@ int tinyui_button_get_text(struct tinyui_button *button, const char **text)
         return -1;
     }
 
-    ld_button = tinyui_button_get_ld(button);
+    ld_button = (ldButton_t *)button->widget.ld_widget;
     if (ld_button == 0) {
         return -1;
     }
@@ -318,7 +323,7 @@ int tinyui_button_set_font(struct tinyui_button *button, const struct tinyui_fon
         return -1;
     }
 
-    ld_button = tinyui_button_get_ld(button);
+    ld_button = (ldButton_t *)button->widget.ld_widget;
     if (ld_button == 0) {
         return -1;
     }
@@ -375,7 +380,7 @@ int tinyui_button_set_color(struct tinyui_button *button,
         return -1;
     }
 
-    ld_button = tinyui_button_get_ld(button);
+    ld_button = (ldButton_t *)button->widget.ld_widget;
     if (ld_button == 0) {
         return -1;
     }
@@ -402,7 +407,7 @@ int tinyui_button_get_release_color(struct tinyui_button *button, unsigned int *
         return -1;
     }
 
-    ld_button = tinyui_button_get_ld(button);
+    ld_button = (ldButton_t *)button->widget.ld_widget;
     if (ld_button == 0) {
         return -1;
     }
@@ -427,7 +432,7 @@ int tinyui_button_get_press_color(struct tinyui_button *button, unsigned int *rg
         return -1;
     }
 
-    ld_button = tinyui_button_get_ld(button);
+    ld_button = (ldButton_t *)button->widget.ld_widget;
     if (ld_button == 0) {
         return -1;
     }
@@ -453,7 +458,7 @@ int tinyui_button_set_release_image(struct tinyui_button *button,
         return -1;
     }
 
-    ld_button = tinyui_button_get_ld(button);
+    ld_button = (ldButton_t *)button->widget.ld_widget;
     if (ld_button == 0) {
         return -1;
     }
@@ -483,7 +488,7 @@ int tinyui_button_set_press_image(struct tinyui_button *button,
         return -1;
     }
 
-    ld_button = tinyui_button_get_ld(button);
+    ld_button = (ldButton_t *)button->widget.ld_widget;
     if (ld_button == 0) {
         return -1;
     }
@@ -531,7 +536,7 @@ int tinyui_button_set_transparent(struct tinyui_button *button, int transparent)
         return -1;
     }
 
-    ld_button = tinyui_button_get_ld(button);
+    ld_button = (ldButton_t *)button->widget.ld_widget;
     if (ld_button == 0) {
         return -1;
     }
@@ -556,7 +561,7 @@ int tinyui_button_get_transparent(struct tinyui_button *button, int *transparent
         return -1;
     }
 
-    ld_button = tinyui_button_get_ld(button);
+    ld_button = (ldButton_t *)button->widget.ld_widget;
     if (ld_button == 0) {
         return -1;
     }
@@ -581,7 +586,7 @@ int tinyui_button_set_checkable(struct tinyui_button *button, int checkable)
         return -1;
     }
 
-    ld_button = tinyui_button_get_ld(button);
+    ld_button = (ldButton_t *)button->widget.ld_widget;
     if (ld_button == 0) {
         return -1;
     }
@@ -606,7 +611,7 @@ int tinyui_button_get_checkable(struct tinyui_button *button, int *checkable)
         return -1;
     }
 
-    ld_button = tinyui_button_get_ld(button);
+    ld_button = (ldButton_t *)button->widget.ld_widget;
     if (ld_button == 0) {
         return -1;
     }
@@ -631,7 +636,7 @@ int tinyui_button_set_key_value(struct tinyui_button *button, unsigned int key_v
         return -1;
     }
 
-    ld_button = tinyui_button_get_ld(button);
+    ld_button = (ldButton_t *)button->widget.ld_widget;
     if (ld_button == 0) {
         return -1;
     }
@@ -656,7 +661,7 @@ int tinyui_button_get_key_value(struct tinyui_button *button, unsigned int *key_
         return -1;
     }
 
-    ld_button = tinyui_button_get_ld(button);
+    ld_button = (ldButton_t *)button->widget.ld_widget;
     if (ld_button == 0) {
         return -1;
     }
@@ -681,7 +686,7 @@ int tinyui_button_set_pressed(struct tinyui_button *button, int pressed)
         return -1;
     }
 
-    ld_button = tinyui_button_get_ld(button);
+    ld_button = (ldButton_t *)button->widget.ld_widget;
     if (ld_button == 0) {
         return -1;
     }
@@ -719,7 +724,7 @@ int tinyui_button_get_pressed(struct tinyui_button *button, int *pressed)
         return -1;
     }
 
-    ld_button = tinyui_button_get_ld(button);
+    ld_button = (ldButton_t *)button->widget.ld_widget;
     if (ld_button == 0) {
         return -1;
     }
@@ -833,15 +838,13 @@ int tinyui_button_set_text_color(struct tinyui_button *button, unsigned int text
         return -1;
     }
 
-    ld_button = tinyui_button_get_ld(button);
+    ld_button = (ldButton_t *)button->widget.ld_widget;
     if (ld_button == 0) {
         return -1;
     }
 
     ldButtonSetTextColor(ld_button,
-                         (ldColor)__RGB((text_color >> 16) & 0xFFU,
-                                        (text_color >> 8) & 0xFFU,
-                                        text_color & 0xFFU));
+                         (ldColor)tinyui_rgb_to_ld_color(text_color));
     button->widget.text_color = text_color;
     return 0;
 }
@@ -862,7 +865,7 @@ int tinyui_button_get_text_color(struct tinyui_button *button, unsigned int *rgb
         return -1;
     }
 
-    ld_button = tinyui_button_get_ld(button);
+    ld_button = (ldButton_t *)button->widget.ld_widget;
     if (ld_button == 0) {
         return -1;
     }

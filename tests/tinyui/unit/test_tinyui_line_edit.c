@@ -447,9 +447,6 @@ static void test_line_edit_public_create_uses_widget_local_backend(struct tinyui
 
 static void test_line_edit_internal_helpers_no_longer_use_tinyui_backend_prefix(void)
 {
-    assert_source_lacks_function_definition(test_line_edit_source_path, "tinyui_line_edit_type_is_valid");
-    assert_source_lacks_function_definition(test_line_edit_source_path, "tinyui_line_edit_keyboard_binding_is_valid");
-    assert_source_lacks_function_definition(test_line_edit_source_path, "tinyui_line_edit_props_are_valid");
     assert_source_lacks_function_definition(test_line_edit_source_path, "tinyui_line_edit_dispose_partial");
     assert_source_lacks_function_definition(test_line_edit_source_path, "tinyui_backend_line_edit_get_ld");
     assert_source_lacks_function_definition(test_line_edit_source_path, "tinyui_backend_line_edit_align_to_ld");

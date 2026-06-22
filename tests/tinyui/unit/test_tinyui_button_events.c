@@ -255,18 +255,19 @@ static void test_button_internal_seams_use_tinyui_prefix(void)
     assert_repo_file_lacks("tinyui/src/widgets/button.c", "picoui_button_alloc");
     assert_repo_file_lacks("tinyui/src/widgets/button.c", "picoui_button_set_event");
     assert_repo_file_lacks("tinyui/src/widgets/button.c", "picoui_button_get_ld");
+    assert_repo_file_lacks("tinyui/src/widgets/button.c", "tinyui_button_get_ld");
     assert_repo_file_lacks("tinyui/src/widgets/button.c", "picoui_button_default_font");
     assert_repo_file_lacks("tinyui/src/widgets/button.c", "picoui_button_resolve_font");
     assert_repo_file_lacks("tinyui/src/widgets/button.c", "picoui_button_dispose_partial");
+    assert_repo_file_lacks("tinyui/src/widgets/button.c", "tinyui_button_dispose_partial");
     assert_repo_file_lacks("tinyui/src/widgets/button.c", "picoui_button_props_are_valid");
     assert_repo_file_lacks("tinyui/src/widgets/button.c", "picoui_button_fail_next_set_font");
     assert_repo_file_lacks("tinyui/src/widgets/button.c", "picoui_backend_button_test_fail_next_set_font");
     assert_repo_file_contains("tinyui/src/widgets/button.c", "tinyui_button_alloc");
     assert_repo_file_contains("tinyui/src/widgets/button.c", "tinyui_button_set_event");
-    assert_repo_file_contains("tinyui/src/widgets/button.c", "tinyui_button_get_ld");
     assert_repo_file_contains("tinyui/src/widgets/button.c", "tinyui_button_default_font");
     assert_repo_file_contains("tinyui/src/widgets/button.c", "tinyui_button_resolve_font");
-    assert_repo_file_contains("tinyui/src/widgets/button.c", "tinyui_button_dispose_partial");
+    assert_repo_file_contains("tinyui/src/widgets/button.c", "tinyui_button_rollback");
     assert_repo_file_contains("tinyui/src/widgets/button.c", "tinyui_button_props_are_valid");
     assert_repo_file_contains("tinyui/src/widgets/button.c", "tinyui_button_fail_next_set_font");
     assert_repo_file_contains("tinyui/src/widgets/button.c", "tinyui_button_test_fail_next_set_font");
@@ -275,7 +276,7 @@ static void test_button_internal_seams_use_tinyui_prefix(void)
     assert_self_binary_lacks_symbol("tinyui_button_resolve_font");
     assert_self_binary_lacks_symbol("tinyui_button_alloc");
     assert_self_binary_lacks_symbol("tinyui_button_set_event");
-    assert_self_binary_lacks_symbol("tinyui_button_dispose_partial");
+    assert_self_binary_lacks_symbol("tinyui_button_rollback");
     assert_self_binary_lacks_symbol("tinyui_button_props_are_valid");
     assert_self_binary_lacks_symbol("tinyui_backend_button_test_fail_next_set_font");
 }
