@@ -46,7 +46,7 @@ def _resolve_limits(payload: dict[str, object]) -> tuple[dict[str, dict[str, int
         raise ValueError("baseline missing benchmark.wrapper_struct_overhead.metrics object")
 
     limits: dict[str, dict[str, int]] = {}
-    for key in ("widget_wrapper_struct_bytes", "switch_wrapper_struct_delta_bytes", "backend_widget_struct_bytes"):
+    for key in ("widget_wrapper_struct_bytes", "switch_wrapper_struct_delta_bytes"):
         rule = metrics.get(key)
         if not isinstance(rule, dict):
             raise ValueError(f"baseline missing benchmark.wrapper_struct_overhead.metrics.{key}")
@@ -82,7 +82,7 @@ def _find_probe_executable(build_dir: Path) -> Path:
     return executable
 
 
-def _run_probe(build_dir: Path) -> tuple[int, int, int]:
+def _run_probe(build_dir: Path) -> tuple[int, int]:
     subprocess.run(
         [RTK, "cmake", "--build", str(build_dir), "--target", PROBE_TARGET],
         check=True,
@@ -100,20 +100,16 @@ def _run_probe(build_dir: Path) -> tuple[int, int, int]:
             values["widget_wrapper_struct_bytes"] = int(line.split("=", 1)[1].strip())
         if line.startswith("TINYUI_BENCHMARK_SWITCH_WRAPPER_STRUCT_DELTA_BYTES="):
             values["switch_wrapper_struct_delta_bytes"] = int(line.split("=", 1)[1].strip())
-        if line.startswith("TINYUI_BENCHMARK_BACKEND_WIDGET_STRUCT_BYTES="):
-            values["backend_widget_struct_bytes"] = int(line.split("=", 1)[1].strip())
 
     required = (
         "widget_wrapper_struct_bytes",
         "switch_wrapper_struct_delta_bytes",
-        "backend_widget_struct_bytes",
     )
     if any(key not in values for key in required):
         raise ValueError(f"probe did not emit expected markers.\nstdout:\n{completed.stdout}")
     return (
         values["widget_wrapper_struct_bytes"],
         values["switch_wrapper_struct_delta_bytes"],
-        values["backend_widget_struct_bytes"],
     )
 
 
@@ -123,12 +119,6 @@ def _run_self_test() -> None:
         actual_bytes=184,
         baseline_bytes=192,
         max_allowed_bytes=256,
-    )
-    _assert_wrapper_metric_within_gate(
-        "backend_widget_struct_bytes",
-        actual_bytes=120,
-        baseline_bytes=128,
-        max_allowed_bytes=160,
     )
     print("SELFTEST_GREEN wrapper-regression-gate")
 
@@ -149,13 +139,10 @@ def main() -> None:
     widget_wrapper_struct_limit = int(limits["widget_wrapper_struct_bytes"]["max_allowed_bytes"])
     switch_wrapper_struct_delta_baseline = int(limits["switch_wrapper_struct_delta_bytes"]["baseline_bytes"])
     switch_wrapper_struct_delta_limit = int(limits["switch_wrapper_struct_delta_bytes"]["max_allowed_bytes"])
-    backend_widget_struct_baseline = int(limits["backend_widget_struct_bytes"]["baseline_bytes"])
-    backend_widget_struct_limit = int(limits["backend_widget_struct_bytes"]["max_allowed_bytes"])
     try:
         _configure_build(DEFAULT_BUILD)
         (widget_wrapper_struct_bytes,
-         switch_wrapper_struct_delta_bytes,
-         backend_widget_struct_bytes) = _run_probe(DEFAULT_BUILD)
+         switch_wrapper_struct_delta_bytes) = _run_probe(DEFAULT_BUILD)
     except (OSError, ValueError, subprocess.CalledProcessError, json.JSONDecodeError) as exc:
         print(str(exc), file=sys.stderr)
         raise SystemExit(1)
@@ -172,12 +159,6 @@ def main() -> None:
         baseline_bytes=switch_wrapper_struct_delta_baseline,
         max_allowed_bytes=switch_wrapper_struct_delta_limit,
     )
-    _assert_wrapper_metric_within_gate(
-        "backend_widget_struct_bytes",
-        actual_bytes=backend_widget_struct_bytes,
-        baseline_bytes=backend_widget_struct_baseline,
-        max_allowed_bytes=backend_widget_struct_limit,
-    )
 
     print(
         "TINYUI_WRAPPER_STRUCT_OVERHEAD_OK "
@@ -186,9 +167,7 @@ def main() -> None:
         f"widget_wrapper_struct_bytes={widget_wrapper_struct_bytes}/"
         f"{widget_wrapper_struct_baseline}-{widget_wrapper_struct_limit} "
         f"switch_wrapper_struct_delta_bytes={switch_wrapper_struct_delta_bytes}/"
-        f"{switch_wrapper_struct_delta_baseline}-{switch_wrapper_struct_delta_limit} "
-        f"backend_widget_struct_bytes={backend_widget_struct_bytes}/"
-        f"{backend_widget_struct_baseline}-{backend_widget_struct_limit}"
+        f"{switch_wrapper_struct_delta_baseline}-{switch_wrapper_struct_delta_limit}"
     )
 
 

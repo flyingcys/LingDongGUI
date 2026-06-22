@@ -177,18 +177,6 @@ int tinyui_native_align_to_ld_grid(enum tinyui_native_align align);
 
 int tinyui_native_nav_dir_to_ld(enum tinyui_native_nav_dir dir);
 
-int tinyui_widget_init_root(void *backend_widget,
-                                    struct tinyui_app *owner,
-                                    enum tinyui_backend_widget_kind kind,
-                                    const char *id,
-                                    struct tinyui_theme *theme);
-int tinyui_widget_init_child(void *backend_widget,
-                                     void *parent,
-                                     enum tinyui_backend_widget_kind kind,
-                                     const char *id,
-                                     struct tinyui_theme *theme);
-int tinyui_widget_attach_child(void *parent, void *child);
-int tinyui_runtime_bridge_bind_host(void *backend_widget, struct tinyui_widget *widget);
 int tinyui_runtime_bridge_bind_ld_event_bridge(void *backend_widget,
                                                struct ld_scene_t *scene,
                                                void *sender);
@@ -201,9 +189,6 @@ int tinyui_runtime_bridge_unbind_host(void *backend_widget);
 int tinyui_runtime_bridge_detach_from_parent(void *backend_widget);
 int tinyui_runtime_bridge_bind_leaf_widget(struct tinyui_widget *widget,
                                             struct tinyui_app *app);
-int tinyui_widget_bind_backend_host(struct tinyui_widget *widget, void *backend_widget);
-struct tinyui_widget *tinyui_widget_backend_host(const void *backend_widget);
-int tinyui_widget_backend_detach(void *backend_widget);
 struct tinyui_app *tinyui_widget_owner_app(const struct tinyui_widget *widget);
 int tinyui_widget_has_ld_binding(const struct tinyui_widget *widget);
 void tinyui_widget_emit_value_changed(tinyui_value_changed_cb cb,
@@ -370,9 +355,6 @@ struct tinyui_theme {
     int metrics[TINYUI_METRIC_COUNT];
 };
 
-/* Forward declaration — full definition is in window.c */
-struct tinyui_window_backend_host;
-
 struct tinyui_window {
     struct tinyui_widget widget;
     const char *id;
@@ -406,8 +388,6 @@ struct tinyui_window {
     /* ── padding_group storage (ldWindow keeps the pointer alive)
      * Allocated lazily in tinyui_window_sync_padding. */
     void *padding_group_storage;
-    /* ── C1 backend host pointer (replaces widget.backend_widget for windows) */
-    struct tinyui_window_backend_host *backend_host;
 };
 
 struct tinyui_background {
@@ -900,15 +880,14 @@ int tinyui_widget_release_editing(struct tinyui_widget *widget);
 int tinyui_widget_is_editing_owner(const struct tinyui_widget *widget);
 
 /**
- * @brief Get the backend widget pointer for a window (C1 transition helper).
+ * @brief Get the backend widget pointer for a window (C3 transition helper).
  *
- * Returns a pointer to the struct tinyui_backend_widget embedded in the
- * window's backend host.  Widget files that create child backends under a
- * window parent must call this instead of accessing backend_host directly
- * (whose full definition lives only in window.c).
+ * Returns a pointer to the struct tinyui_widget embedded in the window.
+ * After C3-T4 the legacy backend_widget wrapper is gone — this helper now
+ * returns &window->widget directly.
  *
  * @param[in] window  Window instance (may be NULL)
- * @return Pointer to the embedded struct tinyui_backend_widget, or NULL
+ * @return Pointer to the embedded struct tinyui_widget, or NULL
  */
 void *tinyui_window_get_backend_widget(struct tinyui_window *window);
 

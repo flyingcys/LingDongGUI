@@ -74,10 +74,6 @@
         "switch_wrapper_struct_delta_bytes": {
           "baseline_bytes": 32,
           "max_allowed_bytes": 32
-        },
-        "backend_widget_struct_bytes": {
-          "baseline_bytes": 496,
-          "max_allowed_bytes": 512
         }
       }
     }

@@ -174,31 +174,10 @@ static int s_copy_grid_tracks(int *dst, int16_t *backend_dst, const int *src, in
     return 0;
 }
 
-/* ── legacy wrapper layout (C2-residual) ───────────────────────────────────
- * The window itself no longer allocates this wrapper — the window struct
- * carries its own folded padding fields and ld_widget pointer.  The wrapper
- * is kept available only because background.c still constructs one of
- * these and stores it via window->backend_host (it has its own layout-
- * compatible local definition).  When background.c collapses its wrapper
- * in a future task, this struct and the field can both be removed.
- *
- * For windows created by tinyui_window_create / tinyui_window_create_child,
- * window->backend_host is NULL — every accessor below tolerates that and
- * falls back to the folded fields on struct tinyui_window. */
-struct tinyui_window_backend_host {
-    struct tinyui_backend_widget widget;
-    ldPadding_t padding_group;
-    int has_padding_group;
-};
-
-static struct tinyui_backend_widget *tinyui_window_backend_of(struct tinyui_window *window)
-{
-    if (window == 0 || window->backend_host == 0) {
-        return 0;
-    }
-
-    return &window->backend_host->widget;
-}
+/* C3-T4: the legacy `struct tinyui_window_backend_host` wrapper has been
+ * deleted — every window (window.c and background.c paths alike) now folds
+ * its binding state directly onto struct tinyui_window.  The accessors below
+ * read the folded fields exclusively. */
 
 static void tinyui_window_sync_padding(struct tinyui_window *window);
 
@@ -219,8 +198,7 @@ static ldWindow_t *tinyui_window_ld_of(struct tinyui_window *window)
 {
     ldBase_t *ld_base;
 
-    /* C2: read the folded widget fields directly; the wrapper backend
-     * (window->backend_host) is no longer required to resolve the
+    /* C2: read the folded widget fields directly to resolve the
      * underlying ld widget. */
     if (window == 0 || window->widget.ld_widget == 0) {
         return 0;
@@ -255,7 +233,6 @@ static ldLayoutType_t tinyui_window_layout_type_to_ld(enum tinyui_window_layout_
 
 int tinyui_window_apply_uniform_padding(struct tinyui_window *window, int padding)
 {
-    struct tinyui_backend_widget *backend;
     ldWindow_t *ld_window = tinyui_window_ld_of(window);
 
     if (window == 0 || ld_window == 0 || padding < 0) {
@@ -274,21 +251,6 @@ int tinyui_window_apply_uniform_padding(struct tinyui_window *window, int paddin
     window->grid_padding_bottom = (int16_t)padding;
     window->has_explicit_grid_padding = 0;
 
-    /* Mirror to the legacy wrapper if one is present (background path). */
-    backend = tinyui_window_backend_of(window);
-    if (backend != 0) {
-        backend->window_layout.padding = padding;
-        backend->window_layout.padding_left = padding;
-        backend->window_layout.padding_top = padding;
-        backend->window_layout.padding_right = padding;
-        backend->window_layout.padding_bottom = padding;
-        backend->window_layout.has_explicit_flex_padding = 0;
-        backend->window_layout.grid_padding_left = padding;
-        backend->window_layout.grid_padding_top = padding;
-        backend->window_layout.grid_padding_right = padding;
-        backend->window_layout.grid_padding_bottom = padding;
-        backend->window_layout.has_explicit_grid_padding = 0;
-    }
     tinyui_window_sync_padding(window);
     return 0;
 }
@@ -299,7 +261,6 @@ int tinyui_window_apply_explicit_grid_padding(struct tinyui_window *window,
                                               int right,
                                               int bottom)
 {
-    struct tinyui_backend_widget *backend;
     ldWindow_t *ld_window = tinyui_window_ld_of(window);
     ldLayoutType_t layout_type;
 
@@ -316,16 +277,6 @@ int tinyui_window_apply_explicit_grid_padding(struct tinyui_window *window,
     window->grid_padding_bottom = (int16_t)bottom;
     window->has_explicit_grid_padding = 1;
 
-    /* Mirror to the wrapper if it exists (background path). */
-    backend = tinyui_window_backend_of(window);
-    if (backend != 0) {
-        backend->window_layout.grid_padding_left = left;
-        backend->window_layout.grid_padding_top = top;
-        backend->window_layout.grid_padding_right = right;
-        backend->window_layout.grid_padding_bottom = bottom;
-        backend->window_layout.has_explicit_grid_padding = 1;
-    }
-
     layout_type = ld_window->layoutTpye;
     ldWindowSetGridPadding(ld_window, (ldPadding_t){
         .left = (int16_t)left,
@@ -340,11 +291,6 @@ int tinyui_window_apply_explicit_grid_padding(struct tinyui_window *window,
 static void tinyui_window_set_defaults(struct tinyui_window *window, const char *id)
 {
     window->id = id;
-    /* window->backend_host is left at its caller-determined value:
-     *   - NULL for windows created via tinyui_window_create*
-     *   - non-NULL for background-created window structs (background.c sets
-     *     it before this function runs in its own create path)
-     */
     window->widget.visible = 1;
     window->widget.enabled = 1;
     window->flex_flow = TINYUI_FLEX_FLOW_ROW;
@@ -408,10 +354,7 @@ static void tinyui_window_do_free_internal(struct tinyui_window *window)
         }
     }
 
-    /* free(NULL) is a no-op — safe for the window.c path where backend_host
-     * was never allocated, and correct for the background.c path which
-     * does allocate one. */
-    free(window->backend_host);
+    /* C3-T4: no wrapper to free — single free of the window struct. */
     free(window->padding_group_storage);
     free(window);
 }
@@ -427,8 +370,6 @@ static int tinyui_window_apply_padding_group(struct tinyui_window *window,
                                               int right,
                                               int bottom)
 {
-    struct tinyui_backend_widget *backend;
-
     if (window == 0) {
         return -1;
     }
@@ -446,29 +387,12 @@ static int tinyui_window_apply_padding_group(struct tinyui_window *window,
     window->padding_bottom = (int16_t)bottom;
     window->has_explicit_flex_padding = 1;
 
-    /* Mirror to the wrapper if present (background path). */
-    backend = tinyui_window_backend_of(window);
-    if (backend != 0) {
-        backend->window_layout.padding_left = left;
-        backend->window_layout.padding_top = top;
-        backend->window_layout.padding_right = right;
-        backend->window_layout.padding_bottom = bottom;
-        backend->window_layout.has_explicit_flex_padding = 1;
-    }
-    if (window->backend_host != 0) {
-        window->backend_host->padding_group.left = (int16_t)left;
-        window->backend_host->padding_group.top = (int16_t)top;
-        window->backend_host->padding_group.right = (int16_t)right;
-        window->backend_host->padding_group.bottom = (int16_t)bottom;
-        window->backend_host->has_padding_group = 1;
-    }
     tinyui_window_sync_padding(window);
     return 0;
 }
 
 static void tinyui_window_sync_padding(struct tinyui_window *window)
 {
-    struct tinyui_backend_widget *backend;
     ldLayoutType_t layout_type;
     ldPadding_t flex_padding;
     ldPadding_t grid_padding;
@@ -485,7 +409,7 @@ static void tinyui_window_sync_padding(struct tinyui_window *window)
         return;
     }
 
-    /* C2: source padding from the folded fields by default. */
+    /* C3-T4: source padding from the folded fields (single source of truth). */
     flex_padding = (ldPadding_t){
         .left = window->padding_left,
         .top = window->padding_top,
@@ -499,44 +423,20 @@ static void tinyui_window_sync_padding(struct tinyui_window *window)
         .bottom = window->grid_padding_bottom,
     };
 
-    /* If the legacy wrapper exists (background path), prefer its
-     * window_layout view to maintain bit-exact behaviour. */
-    backend = tinyui_window_backend_of(window);
-    if (backend != 0) {
-        flex_padding = (ldPadding_t){
-            .left = (int16_t)backend->window_layout.padding_left,
-            .top = (int16_t)backend->window_layout.padding_top,
-            .right = (int16_t)backend->window_layout.padding_right,
-            .bottom = (int16_t)backend->window_layout.padding_bottom,
-        };
-        grid_padding = (ldPadding_t){
-            .left = (int16_t)backend->window_layout.grid_padding_left,
-            .top = (int16_t)backend->window_layout.grid_padding_top,
-            .right = (int16_t)backend->window_layout.grid_padding_right,
-            .bottom = (int16_t)backend->window_layout.grid_padding_bottom,
-        };
+    /* padding-group: derive from folded fields. ldWindowSetPaddingGroup stores
+     * the pointer, so the storage must outlive this call — use the heap-
+     * allocated padding_group_storage that persists for the window's life. */
+    has_padding_group = window->has_explicit_flex_padding;
+    if (window->padding_group_storage == 0) {
+        window->padding_group_storage = calloc(1, sizeof(ldPadding_t));
     }
-
-    /* padding-group: read from wrapper if attached, otherwise derive from
-     * folded fields. Note: ldWindowSetPaddingGroup stores the pointer, so
-     * the storage must outlive this call — use the wrapper's padding_group
-     * (background path) or a heap-allocated copy that persists. */
-    if (window->backend_host != 0) {
-        has_padding_group = window->backend_host->has_padding_group;
-        padding_group = window->backend_host->padding_group;
-    } else {
-        has_padding_group = window->has_explicit_flex_padding;
-        if (window->padding_group_storage == 0) {
-            window->padding_group_storage = calloc(1, sizeof(ldPadding_t));
-        }
-        if (window->padding_group_storage != 0) {
-            ldPadding_t *stored = (ldPadding_t *)window->padding_group_storage;
-            stored->left   = window->padding_left;
-            stored->top    = window->padding_top;
-            stored->right  = window->padding_right;
-            stored->bottom = window->padding_bottom;
-            padding_group  = *stored;
-        }
+    if (window->padding_group_storage != 0) {
+        ldPadding_t *stored = (ldPadding_t *)window->padding_group_storage;
+        stored->left   = window->padding_left;
+        stored->top    = window->padding_top;
+        stored->right  = window->padding_right;
+        stored->bottom = window->padding_bottom;
+        padding_group  = *stored;
     }
 
     layout_type = ld_window->layoutTpye;
@@ -548,11 +448,7 @@ static void tinyui_window_sync_padding(struct tinyui_window *window)
     ldWindowSetGridPadding(ld_window, grid_padding);
     if (has_padding_group) {
         /* ldWindow stores the pointer; point at persistent storage. */
-        if (window->backend_host != 0) {
-            ldWindowSetPaddingGroup(ld_window, &window->backend_host->padding_group);
-        } else {
-            ldWindowSetPaddingGroup(ld_window, (ldPadding_t *)window->padding_group_storage);
-        }
+        ldWindowSetPaddingGroup(ld_window, (ldPadding_t *)window->padding_group_storage);
     }
     ld_window->layoutTpye = layout_type;
 }
@@ -582,7 +478,6 @@ static int tinyui_window_do_set_flex_contract(struct tinyui_window *window,
                                                   int item_gap,
                                                   int track_gap)
 {
-    struct tinyui_backend_widget *backend;
     ldWindow_t *ld_window = tinyui_window_ld_of(window);
 
     if (window == 0 || ld_window == 0 || item_gap < 0 || track_gap < 0) {
@@ -596,16 +491,6 @@ static int tinyui_window_do_set_flex_contract(struct tinyui_window *window,
     window->flex_item_gap = item_gap;
     window->flex_track_gap = track_gap;
 
-    backend = tinyui_window_backend_of(window);
-    if (backend != 0) {
-        backend->window_layout.flex_flow = flow;
-        backend->window_layout.flex_main_align = main_align;
-        backend->window_layout.flex_cross_align = cross_align;
-        backend->window_layout.flex_track_align = track_align;
-        backend->window_layout.flex_item_gap = item_gap;
-        backend->window_layout.flex_track_gap = track_gap;
-    }
-
     ldWindowSetFlexFlow(ld_window, s_flex_flow_to_ld(flow));
     ldWindowSetFlexAlign(ld_window,
                          s_flex_main_align_to_ld(main_align),
@@ -618,7 +503,6 @@ static int tinyui_window_do_set_flex_contract(struct tinyui_window *window,
 
 static int tinyui_window_do_set_gap(struct tinyui_window *window, int gap)
 {
-    struct tinyui_backend_widget *backend;
     ldWindow_t *ld_window = tinyui_window_ld_of(window);
     ldLayoutType_t layout_type;
 
@@ -629,11 +513,6 @@ static int tinyui_window_do_set_gap(struct tinyui_window *window, int gap)
     window->flex_item_gap = gap;
     window->flex_track_gap = gap;
 
-    backend = tinyui_window_backend_of(window);
-    if (backend != 0) {
-        backend->window_layout.flex_item_gap = gap;
-        backend->window_layout.flex_track_gap = gap;
-    }
     layout_type = ld_window->layoutTpye;
     ldWindowSetGap(ld_window, (int16_t)gap);
     ld_window->layoutTpye = layout_type;
@@ -678,7 +557,6 @@ int tinyui_window_apply_flex_align(struct tinyui_window *window,
 
 int tinyui_window_apply_flex_gap(struct tinyui_window *window, int item_gap, int track_gap)
 {
-    struct tinyui_backend_widget *backend;
     ldWindow_t *ld_window = tinyui_window_ld_of(window);
 
     if (window == 0 || ld_window == 0 || item_gap < 0 || track_gap < 0) {
@@ -687,11 +565,6 @@ int tinyui_window_apply_flex_gap(struct tinyui_window *window, int item_gap, int
 
     window->flex_item_gap = item_gap;
     window->flex_track_gap = track_gap;
-    backend = tinyui_window_backend_of(window);
-    if (backend != 0) {
-        backend->window_layout.flex_item_gap = item_gap;
-        backend->window_layout.flex_track_gap = track_gap;
-    }
     ldWindowSetFlexGap(ld_window, (int16_t)item_gap, (int16_t)track_gap);
     tinyui_window_sync_padding(window);
     return 0;
@@ -699,7 +572,6 @@ int tinyui_window_apply_flex_gap(struct tinyui_window *window, int item_gap, int
 
 int tinyui_window_apply_grid_columns(struct tinyui_window *window, const int *tracks, int count)
 {
-    struct tinyui_backend_widget *backend;
     ldWindow_t *ld_window = tinyui_window_ld_of(window);
     int window_tracks[TINYUI_LAYOUT_MAX_TRACKS];
     int16_t backend_tracks[TINYUI_LAYOUT_MAX_TRACKS];
@@ -712,17 +584,7 @@ int tinyui_window_apply_grid_columns(struct tinyui_window *window, const int *tr
     memcpy(window->grid_cols, window_tracks, sizeof(window->grid_cols));
     window->grid_col_count = count;
 
-    backend = tinyui_window_backend_of(window);
-    if (backend != 0) {
-        memcpy(backend->window_layout.grid_cols, backend_tracks,
-               sizeof(backend->window_layout.grid_cols));
-        backend->window_layout.grid_col_count = count;
-        ldWindowSetGridDscArray(ld_window,
-                                backend->window_layout.grid_cols,
-                                backend->window_layout.grid_row_count > 0
-                                    ? backend->window_layout.grid_rows
-                                    : NULL);
-    } else {
+    {
         int16_t row_tracks[TINYUI_LAYOUT_MAX_TRACKS];
         int i;
         for (i = 0; i < TINYUI_LAYOUT_MAX_TRACKS; ++i) {
@@ -738,7 +600,6 @@ int tinyui_window_apply_grid_columns(struct tinyui_window *window, const int *tr
 
 int tinyui_window_apply_grid_rows(struct tinyui_window *window, const int *tracks, int count)
 {
-    struct tinyui_backend_widget *backend;
     ldWindow_t *ld_window = tinyui_window_ld_of(window);
     int window_tracks[TINYUI_LAYOUT_MAX_TRACKS];
     int16_t backend_tracks[TINYUI_LAYOUT_MAX_TRACKS];
@@ -751,17 +612,7 @@ int tinyui_window_apply_grid_rows(struct tinyui_window *window, const int *track
     memcpy(window->grid_rows, window_tracks, sizeof(window->grid_rows));
     window->grid_row_count = count;
 
-    backend = tinyui_window_backend_of(window);
-    if (backend != 0) {
-        memcpy(backend->window_layout.grid_rows, backend_tracks,
-               sizeof(backend->window_layout.grid_rows));
-        backend->window_layout.grid_row_count = count;
-        ldWindowSetGridDscArray(ld_window,
-                                backend->window_layout.grid_col_count > 0
-                                    ? backend->window_layout.grid_cols
-                                    : NULL,
-                                backend->window_layout.grid_rows);
-    } else {
+    {
         int16_t col_tracks[TINYUI_LAYOUT_MAX_TRACKS];
         int i;
         for (i = 0; i < TINYUI_LAYOUT_MAX_TRACKS; ++i) {
@@ -777,7 +628,6 @@ int tinyui_window_apply_grid_rows(struct tinyui_window *window, const int *track
 
 int tinyui_window_apply_grid_gap(struct tinyui_window *window, int row_gap, int col_gap)
 {
-    struct tinyui_backend_widget *backend;
     ldWindow_t *ld_window = tinyui_window_ld_of(window);
 
     if (window == 0 || ld_window == 0 || row_gap < 0 || col_gap < 0) {
@@ -786,11 +636,6 @@ int tinyui_window_apply_grid_gap(struct tinyui_window *window, int row_gap, int 
 
     window->grid_row_gap = row_gap;
     window->grid_col_gap = col_gap;
-    backend = tinyui_window_backend_of(window);
-    if (backend != 0) {
-        backend->window_layout.grid_row_gap = row_gap;
-        backend->window_layout.grid_col_gap = col_gap;
-    }
     ldWindowSetGridGap(ld_window, (int16_t)row_gap, (int16_t)col_gap);
     tinyui_window_sync_padding(window);
     return 0;
@@ -800,7 +645,6 @@ int tinyui_window_apply_grid_align(struct tinyui_window *window,
                                    enum tinyui_align col_align,
                                    enum tinyui_align row_align)
 {
-    struct tinyui_backend_widget *backend;
     ldWindow_t *ld_window = tinyui_window_ld_of(window);
 
     if (window == 0 || ld_window == 0) {
@@ -809,11 +653,6 @@ int tinyui_window_apply_grid_align(struct tinyui_window *window,
 
     window->grid_col_align = col_align;
     window->grid_row_align = row_align;
-    backend = tinyui_window_backend_of(window);
-    if (backend != 0) {
-        backend->window_layout.grid_col_align = col_align;
-        backend->window_layout.grid_row_align = row_align;
-    }
     ldWindowSetGridAlign(ld_window,
                          s_grid_align_to_ld(col_align),
                          s_grid_align_to_ld(row_align));
@@ -914,7 +753,6 @@ struct tinyui_window *tinyui_window_create(struct tinyui_app *app, const char *i
     }
 
     tinyui_window_set_defaults(window, id);
-    window->backend_host = 0; /* C2: no wrapper for window.c path */
 
     /* C2: fold the binding directly onto the widget struct (no host wrapper). */
     window->widget.ld_widget = ld_root;
@@ -976,7 +814,6 @@ struct tinyui_window *tinyui_window_create_child(struct tinyui_window *parent, c
     }
 
     tinyui_window_set_defaults(window, id);
-    window->backend_host = 0; /* C2: no wrapper for window.c path */
 
     /* C2: fold the binding directly onto the widget struct (no host wrapper). */
     window->widget.ld_widget = ld_window;
@@ -1379,10 +1216,6 @@ void *tinyui_window_get_backend_widget(struct tinyui_window *window)
     if (window == 0) {
         return 0;
     }
-    /* When the legacy wrapper is present (background path), expose it;
-     * otherwise expose the folded widget directly. */
-    if (window->backend_host != 0) {
-        return &window->backend_host->widget;
-    }
+    /* C3-T4: the wrapper is gone — expose the folded widget directly. */
     return &window->widget;
 }

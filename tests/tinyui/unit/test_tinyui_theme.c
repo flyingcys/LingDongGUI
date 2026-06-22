@@ -469,7 +469,7 @@ static void test_app_set_theme_null_arg_guard_fires(void)
 
 static void test_theme_shared_style_apply_helpers_reject_null_and_unsupported_backend(void)
 {
-    struct tinyui_backend_widget backend = {0};
+    struct tinyui_widget backend = {0};
 
     assert(tinyui_theme_apply_widget_style(0,
                                            TINYUI_PART_MAIN,

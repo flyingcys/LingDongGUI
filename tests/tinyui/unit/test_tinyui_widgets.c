@@ -593,7 +593,7 @@ static void test_hidden_or_disabled_widget_cannot_keep_focus(struct tinyui_app *
 
 static void test_focus_helpers_fail_closed_without_host_binding(void)
 {
-    struct tinyui_backend_widget orphan_backend;
+    struct tinyui_widget orphan_backend;
 
     memset(&orphan_backend, 0, sizeof(orphan_backend));
     orphan_backend.kind = TINYUI_BACKEND_WIDGET_BUTTON;
@@ -1052,7 +1052,7 @@ static void test_backend_widget_tree_contract(struct tinyui_app *app,
                                               struct tinyui_text *text,
                                               struct tinyui_image *image)
 {
-    struct tinyui_backend_widget *win_backend = (struct tinyui_backend_widget *)tinyui_window_get_backend_widget(win);
+    struct tinyui_widget *win_backend = (struct tinyui_widget *)tinyui_window_get_backend_widget(win);
     struct tinyui_widget *sw_backend = &sw->widget;
     struct tinyui_widget *cb_backend = &cb->widget;
     struct tinyui_widget *slider_backend = &slider->widget;
@@ -1060,10 +1060,8 @@ static void test_backend_widget_tree_contract(struct tinyui_app *app,
     struct tinyui_widget *button_backend = &button->widget;
     struct tinyui_widget *text_backend = &text->widget;
     struct tinyui_widget *image_backend = &image->widget;
-    struct tinyui_backend_widget *dialog_backend;
+    struct tinyui_widget *dialog_backend;
     struct tinyui_window *dialog_window;
-    struct tinyui_backend_widget *orphan_backend;
-    struct tinyui_backend_widget *prebound_backend;
     struct tinyui_label *nested_label;
     struct tinyui_widget *nested_label_backend;
 
@@ -1116,7 +1114,7 @@ static void test_backend_widget_tree_contract(struct tinyui_app *app,
 
     dialog_window = tinyui_window_create(app, "dialog");
     assert(dialog_window != 0);
-    dialog_backend = (struct tinyui_backend_widget *)tinyui_window_get_backend_widget(dialog_window);
+    dialog_backend = (struct tinyui_widget *)tinyui_window_get_backend_widget(dialog_window);
     assert(dialog_backend != 0);
 
     nested_label = tinyui_label_create(dialog_window, "bad-nested-label");
@@ -1127,31 +1125,6 @@ static void test_backend_widget_tree_contract(struct tinyui_app *app,
     assert(ldBaseGetParent((ldBase_t *)nested_label->widget.ld_widget) == (ldBase_t *)dialog_window->widget.ld_widget);
     assert(nested_label_backend->owner == app);
     assert((ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)nested_label->widget.ld_widget) == (ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)dialog_window->widget.ld_widget));
-    assert(tinyui_widget_attach_child(win_backend, dialog_backend) == -1);
-
-    orphan_backend = calloc(1, sizeof(*orphan_backend));
-    assert(orphan_backend != 0);
-    assert(tinyui_widget_init_child(orphan_backend,
-                                    win_backend,
-                                    TINYUI_BACKEND_WIDGET_LABEL,
-                                    "orphan-shared-attach",
-                                    win_backend->theme) == 0);
-    assert(tinyui_widget_attach_child(win_backend, orphan_backend) == 0);
-    assert(orphan_backend->parent == win_backend);
-    assert(orphan_backend->owner == app);
-    assert(orphan_backend->root == win_backend);
-
-    prebound_backend = calloc(1, sizeof(*prebound_backend));
-    assert(prebound_backend != 0);
-    assert(tinyui_widget_init_child(prebound_backend,
-                                    win_backend,
-                                    TINYUI_BACKEND_WIDGET_LABEL,
-                                    "prebound-shared-attach",
-                                    win_backend->theme) == 0);
-    prebound_backend->parent = win_backend;
-    assert(tinyui_widget_attach_child(win_backend, prebound_backend) == -1);
-
-    free(prebound_backend);
 }
 
 static void test_widget_internal_static_helpers_remain_source_local(void)
@@ -1191,14 +1164,12 @@ static void test_widget_tree_lifecycle_helpers_no_longer_use_tinyui_backend_pref
 
 static void test_widget_host_binding_helpers_remain_source_local(void)
 {
-    assert_source_contains_text(test_widget_source_path, "tinyui_widget_bind_backend_host");
-    assert_source_contains_text(test_widget_source_path, "tinyui_widget_backend_host");
-    assert_source_contains_text(test_widget_source_path, "tinyui_widget_backend_detach");
+    /* C3-T4: the legacy bind_backend_host / backend_host / backend_detach
+     * helpers have been deleted (folded model).  The remaining source-local
+     * helpers that operate directly on struct tinyui_widget are still
+     * expected to be present in widget.c. */
     assert_source_contains_text(test_widget_source_path, "tinyui_widget_owner_app");
     assert_source_contains_text(test_widget_source_path, "tinyui_widget_has_ld_binding");
-    assert_self_binary_lacks_symbol("tinyui_widget_bind_backend_host");
-    assert_self_binary_lacks_symbol("tinyui_widget_backend_host");
-    assert_self_binary_lacks_symbol("tinyui_widget_backend_detach");
     assert_self_binary_lacks_symbol("tinyui_widget_owner_app");
     assert_self_binary_lacks_symbol("tinyui_widget_has_ld_binding");
 }
@@ -2291,7 +2262,7 @@ static void test_props_initial_values(struct tinyui_app *app,
                         3,
                         4);
     {
-        struct tinyui_backend_widget *props_win_backend = tinyui_window_get_backend_widget(props_win);
+        struct tinyui_widget *props_win_backend = (struct tinyui_widget *)tinyui_window_get_backend_widget(props_win);
         ldWindow_t *ld_window = (ldWindow_t *)props_win_backend->ld_widget;
         assert(ld_window != 0);
         assert(ld_window->pLayoutPaddingGroup != 0);

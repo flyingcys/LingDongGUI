@@ -20,20 +20,10 @@
  * @file runtime_internal.h
  * @brief Runtime/backend internal types shared across the framework.
  *
- * This header contains:
- *   - Shared enums (widget kind, signal, data truth, data source)
- *   - Backend widget tree structs
- *   - Layout cache structs (embedded in struct tinyui_backend_widget)
- *   - App lifecycle declarations
- *
- * NOTE: The shared enums reside here rather than in internal.h because
- * they are used as members of struct tinyui_backend_widget, which is
- * also defined here.  Putting them in internal.h would create a circular
- * dependency since internal.h includes this header.
- *
- * NOTE: struct tinyui_backend_layout_window_state and
- * struct tinyui_backend_layout_child_state also reside here because they
- * are embedded by-value in struct tinyui_backend_widget.
+ * After Phase C3-T4 the legacy backend mirror type and the layout cache
+ * structs have been deleted — real binding state now lives
+ * folded onto struct tinyui_widget / struct tinyui_window directly.  What
+ * remains here are the shared enums and constants that have no better home.
  */
 
 #ifndef TINYUI_RUNTIME_INTERNAL_H
@@ -44,11 +34,6 @@
 #include "widget.h"
 #include "window.h"
 
-struct tinyui_app;
-struct tinyui_theme;
-struct tinyui_widget;
-struct tinyui_window;
-struct tinyui_image_source;
 struct ld_scene_t;
 
 /* ── Constants ─────────────────────────────────────────────────── */
@@ -104,103 +89,5 @@ enum tinyui_backend_signal {
     TINYUI_BACKEND_SIGNAL_PRESSED,
     TINYUI_BACKEND_SIGNAL_RELEASED,
 };
-
-/* ── Layout cache (embedded in struct tinyui_backend_widget) ───── */
-
-struct tinyui_backend_layout_window_state {
-    int16_t flex_flow;
-    int16_t flex_main_align;
-    int16_t flex_cross_align;
-    int16_t flex_track_align;
-    int16_t padding;
-    int16_t padding_left;
-    int16_t padding_top;
-    int16_t padding_right;
-    int16_t padding_bottom;
-    uint8_t has_explicit_flex_padding;
-    int16_t grid_padding_left;
-    int16_t grid_padding_top;
-    int16_t grid_padding_right;
-    int16_t grid_padding_bottom;
-    uint8_t has_explicit_grid_padding;
-    int16_t flex_item_gap;
-    int16_t flex_track_gap;
-    int16_t grid_cols[TINYUI_BACKEND_LAYOUT_MAX_TRACKS];
-    int16_t grid_rows[TINYUI_BACKEND_LAYOUT_MAX_TRACKS];
-    int16_t grid_col_count;
-    int16_t grid_row_count;
-    int16_t grid_row_gap;
-    int16_t grid_col_gap;
-    int16_t grid_col_align;
-    int16_t grid_row_align;
-};
-
-struct tinyui_backend_layout_child_state {
-    int16_t flex_grow;
-    uint8_t flex_new_track;
-    uint8_t ignore_layout;
-    int16_t grid_col;
-    int16_t grid_row;
-    int16_t grid_col_span;
-    int16_t grid_row_span;
-    int16_t grid_x_align;
-    int16_t grid_y_align;
-};
-
-/* ── Backend widget tree ───────────────────────────────────────── */
-
-struct tinyui_backend_widget {
-    struct tinyui_app *owner;
-    struct tinyui_widget *host_widget;
-    struct tinyui_backend_widget *root;
-    struct tinyui_backend_widget *parent;
-    struct tinyui_backend_widget *first_child;
-    struct tinyui_backend_widget *next_sibling;
-    const char *id;
-    enum tinyui_backend_widget_kind kind;
-    const char *text;
-    const char *style_class;
-    const void *font;
-    void *user_data;
-    struct ld_scene_t *ld_event_bridge_scene;
-    void *ld_event_bridge_sender;
-    struct tinyui_backend_widget *ld_event_bridge_next;
-    struct tinyui_image_source *image_source;
-    int value;
-    struct tinyui_theme *theme;
-    void *ld_widget;
-    uint16_t ld_name_id;
-    const char *list_item_ids[TINYUI_BACKEND_LIST_MAX_ITEMS];
-    uint16_t list_item_count;
-    int16_t edit_result_on_finish;
-    struct tinyui_backend_layout_window_state window_layout;
-    struct tinyui_backend_layout_child_state child_layout;
-};
-
-/* ── Test snapshot forward declarations ────────────────────────── */
-
-struct tinyui_progress_wheel_test_dispose_snapshot;
-struct tinyui_table_test_dispose_snapshot;
-
-/* ── App backend lifecycle ─────────────────────────────────────── */
-
-int tinyui_backend_app_init(struct tinyui_app *app);
-int tinyui_backend_app_run(struct tinyui_app *app, struct tinyui_window *window);
-void tinyui_backend_app_shutdown(struct tinyui_app *app);
-
-/* ── Test-only helpers ─────────────────────────────────────────── */
-
-void tinyui_backend_progress_wheel_test_reset_state(void);
-void tinyui_backend_progress_wheel_test_fail_next_set_percent(void);
-int tinyui_backend_progress_wheel_test_take_last_dispose_snapshot(
-    struct tinyui_progress_wheel_test_dispose_snapshot *snapshot);
-void tinyui_backend_progress_wheel_test_capture_dispose_snapshot(
-    struct tinyui_backend_widget *backend,
-    int detach_result,
-    int unbind_result);
-void tinyui_backend_table_test_fail_next_set_keyboard_binding(void);
-void tinyui_backend_table_test_reset_state(void);
-int tinyui_backend_table_test_take_last_dispose_snapshot(
-    struct tinyui_table_test_dispose_snapshot *snapshot);
 
 #endif /* TINYUI_RUNTIME_INTERNAL_H */

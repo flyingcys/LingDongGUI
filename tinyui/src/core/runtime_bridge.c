@@ -12,9 +12,6 @@
 #include <stdlib.h>
 
 void ldBaseNodeRemove(arm_2d_control_node_t *ptNode);
-int tinyui_runtime_bridge_bind_ld_event_bridge(void *backend_widget,
-                                               struct ld_scene_t *scene,
-                                               void *sender);
 
 static bool tinyui_runtime_bridge_ld_event_bridge_slot(struct ld_scene_t *scene, ldMsg_t msg)
 {
@@ -26,7 +23,7 @@ static bool tinyui_runtime_bridge_ld_event_bridge_slot(struct ld_scene_t *scene,
         return false;
     }
 
-    /* C1-T5: pInfo now points to tinyui_widget, not tinyui_backend_widget */
+    /* C1-T5: pInfo now points to tinyui_widget (folded model) */
     widget = (struct tinyui_widget *)((ldBase_t *)msg.ptSender)->pInfo;
     if (widget == NULL) {
         return false;
@@ -113,41 +110,6 @@ static int tinyui_runtime_bridge_connect_native_events(struct tinyui_widget *wid
     }
 
     return 0;
-}
-
-struct tinyui_app *tinyui_runtime_bridge_backend_state_from_parent(void *backend_widget)
-{
-    struct tinyui_backend_widget *parent_widget = backend_widget;
-
-    if (parent_widget == 0 || parent_widget->owner == 0) {
-        return 0;
-    }
-
-    return tinyui_runtime_bridge_backend_state(parent_widget->owner);
-}
-
-struct ld_scene_t *tinyui_runtime_bridge_scene_from_parent(void *backend_widget)
-{
-    struct tinyui_app *app_state =
-        tinyui_runtime_bridge_backend_state_from_parent(backend_widget);
-
-    if (app_state == 0) {
-        return 0;
-    }
-
-    return app_state->ld_scene;
-}
-
-uint16_t tinyui_runtime_bridge_next_name_id(void *backend_widget)
-{
-    struct tinyui_app *app_state =
-        tinyui_runtime_bridge_backend_state_from_parent(backend_widget);
-
-    if (app_state == 0) {
-        return 0;
-    }
-
-    return ++app_state->next_ld_name_id;
 }
 
 int tinyui_runtime_bridge_bind_theme(struct tinyui_app *app, struct tinyui_theme *theme)
@@ -314,43 +276,6 @@ int tinyui_runtime_bridge_commit_pointer_event(struct tinyui_app *app,
     }
 
     return tinyui_runtime_bridge_bridge_pointer_from_port(app, window_width, window_height);
-}
-
-int tinyui_runtime_bridge_bind_host(void *backend_widget, struct tinyui_widget *widget)
-{
-    struct tinyui_backend_widget *backend = backend_widget;
-    struct tinyui_app *app_state = NULL;
-
-    if (backend == 0 || widget == 0) {
-        return -1;
-    }
-
-    /* C1: bind_backend_host now only sets backend->host_widget; also copy
-     * key fields from backend into the folded widget fields. */
-    if (tinyui_widget_bind_backend_host(widget, backend) != 0) {
-        return -1;
-    }
-
-    /* Fold backend state into widget */
-    widget->ld_widget   = backend->ld_widget;
-    widget->ld_name_id  = backend->ld_name_id;
-    widget->kind        = backend->kind;
-    widget->owner       = backend->owner;
-    widget->value       = backend->value;
-    widget->edit_result_on_finish = TINYUI_EDIT_RESULT_NONE;
-    backend->edit_result_on_finish = TINYUI_EDIT_RESULT_NONE;
-
-    app_state = tinyui_runtime_bridge_backend_state(backend->owner);
-    if (app_state != NULL && app_state->ld_scene != NULL && backend->ld_widget != NULL) {
-        /* C1: pass the folded widget (not the backend) now that bind_ld_event_bridge
-         * uses struct tinyui_widget *. widget already has ld_widget/kind/owner folded in. */
-        if (tinyui_runtime_bridge_bind_ld_event_bridge(widget,
-                                                       app_state->ld_scene,
-                                                       backend->ld_widget) != 0) {
-            return -1;
-        }
-    }
-    return 0;
 }
 
 int tinyui_runtime_bridge_bind_ld_event_bridge(void *backend_widget,
