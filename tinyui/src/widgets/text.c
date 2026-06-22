@@ -28,209 +28,47 @@ extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
 extern const arm_2d_a1_font_t ARM_2D_FONT_16x24;
 
 struct tinyui_image_source;
-int tinyui_runtime_bridge_unbind_host(void *backend_widget);
-int tinyui_runtime_bridge_detach_from_parent(void *backend_widget);
 
-static int tinyui_text_fail_next_set_font = 0;
+/* ---- test seam state ---- */
+static int s_fail_next_set_font = 0;
+static ld_scene_t *s_text_depose_scene = NULL;
 
-static ldColor tinyui_text_rgb_to_ld_color(unsigned int rgb)
+static void tinyui_text_ld_depose_cb(void *ld_widget)
 {
-    return __RGB((rgb >> 16) & 0xFFU, (rgb >> 8) & 0xFFU, rgb & 0xFFU);
-}
-
-static ldText_t *tinyui_text_get_ld_text(void *backend_widget)
-{
-    struct tinyui_widget *widget = backend_widget;
-
-    if (widget == NULL || widget->kind != TINYUI_BACKEND_WIDGET_TEXT || widget->ld_widget == NULL) {
-        return NULL;
+    if (s_text_depose_scene != NULL) {
+        ldText_depose(s_text_depose_scene, (ldText_t *)ld_widget);
+        s_text_depose_scene = NULL;
     }
-    return (ldText_t *)widget->ld_widget;
 }
 
-static int tinyui_text_apply_consumed_font(ldText_t *ld_text, arm_2d_font_t *font)
-{
-    if (ld_text == NULL || font == NULL) {
-        return -1;
-    }
-
-    return ldTextSetConsumedFont(ld_text, font);
-}
-
-static arm_2d_font_t *tinyui_text_default_font(void)
+static arm_2d_font_t *tinyui_text_default_font_internal(void)
 {
     return (arm_2d_font_t *)&ARM_2D_FONT_6x8;
 }
 
-static arm_2d_font_t *tinyui_text_resolve_font(const struct tinyui_font *font)
+static arm_2d_font_t *tinyui_text_resolve_font_internal(const struct tinyui_font *font)
 {
     if (font != NULL && font->kind == TINYUI_FONT_KIND_VRES && font->vres_addr != 0) {
         return (arm_2d_font_t *)ldBaseGetVresFont(font->vres_addr);
     }
 
     if (font == NULL || font->family == NULL || font->size <= 0) {
-        return tinyui_text_default_font();
+        return tinyui_text_default_font_internal();
     }
 
     if (strcmp(font->family, "Sans") == 0 && font->size >= 20) {
         return (arm_2d_font_t *)&ARM_2D_FONT_16x24;
     }
 
-    return tinyui_text_default_font();
-}
-
-static void tinyui_text_dispose_partial(struct tinyui_text *text)
-{
-    struct tinyui_app *app_state;
-    void *ld_widget;
-
-    if (text == 0) {
-        return;
-    }
-
-    ld_widget = text->widget.ld_widget;
-    app_state = text->widget.owner;
-    if (ld_widget != 0) {
-        (void)tinyui_widget_detach_from_parent(&text->widget);
-        (void)tinyui_runtime_bridge_unbind_host(&text->widget);
-        if (app_state != 0 && app_state->ld_scene != 0) {
-            ldText_depose(app_state->ld_scene, (ldText_t *)ld_widget);
-        }
-    }
-
-    free(text);
+    return tinyui_text_default_font_internal();
 }
 
 void tinyui_text_test_fail_next_set_font(void)
 {
-    tinyui_text_fail_next_set_font = 1;
+    s_fail_next_set_font = 1;
 }
 
-int tinyui_text_set_font_ld(void *backend_widget, const void *font)
-{
-    struct tinyui_widget *widget = backend_widget;
-    const struct tinyui_font *tinyui_font = (const struct tinyui_font *)font;
-    ldText_t *ld_text;
-    arm_2d_font_t *resolved_font;
-
-    if (widget == NULL || widget->kind != TINYUI_BACKEND_WIDGET_TEXT || widget->ld_widget == NULL) {
-        return -1;
-    }
-
-    ld_text = (ldText_t *)widget->ld_widget;
-
-    if (tinyui_text_fail_next_set_font != 0) {
-        tinyui_text_fail_next_set_font = 0;
-        return -1;
-    }
-
-    resolved_font = tinyui_text_resolve_font(tinyui_font);
-    if (resolved_font == NULL) {
-        return -1;
-    }
-
-    if (font != NULL && ldTextSetFont(ld_text, resolved_font) != 0) {
-        return -1;
-    }
-
-    if (font == NULL && tinyui_text_apply_consumed_font(ld_text, resolved_font) != 0) {
-        return -1;
-    }
-
-    widget->font = font;
-    return 0;
-}
-
-int tinyui_text_set_static_text_ld(void *backend_widget, const char *text)
-{
-    struct tinyui_widget *widget = backend_widget;
-    ldText_t *ld_text = tinyui_text_get_ld_text(backend_widget);
-
-    if (ld_text == NULL || text == NULL) {
-        return -1;
-    }
-
-    ldTextSetStaticText(ld_text, (const uint8_t *)text);
-    widget->text = text;
-    return 0;
-}
-
-int tinyui_text_set_transparent_ld(void *backend_widget, int transparent)
-{
-    ldText_t *ld_text = tinyui_text_get_ld_text(backend_widget);
-
-    if (ld_text == NULL) {
-        return -1;
-    }
-
-    ldTextSetTransparent(ld_text, transparent != 0);
-    return 0;
-}
-
-int tinyui_text_set_text_color_ld(void *backend_widget, unsigned int rgb)
-{
-    ldText_t *ld_text = tinyui_text_get_ld_text(backend_widget);
-
-    if (ld_text == NULL) {
-        return -1;
-    }
-
-    ldTextSetTextColor(ld_text, tinyui_text_rgb_to_ld_color(rgb));
-    return 0;
-}
-
-int tinyui_text_set_bg_color_ld(void *backend_widget, unsigned int rgb)
-{
-    ldText_t *ld_text = tinyui_text_get_ld_text(backend_widget);
-
-    if (ld_text == NULL) {
-        return -1;
-    }
-
-    ldTextSetBackgroundColor(ld_text, tinyui_text_rgb_to_ld_color(rgb));
-    return 0;
-}
-
-int tinyui_text_set_background_source_ld(void *backend_widget,
-                                         struct tinyui_image_source *source)
-{
-    ldText_t *ld_text = tinyui_text_get_ld_text(backend_widget);
-
-    if (ld_text == NULL || (source != NULL && source->img_tile == NULL)) {
-        return -1;
-    }
-
-    ldTextSetBackgroundImage(ld_text,
-                             source != NULL ? source->img_tile : NULL,
-                             source != NULL ? source->mask_tile : NULL);
-    return 0;
-}
-
-int tinyui_text_scroll_seek_ld(void *backend_widget, int offset)
-{
-    ldText_t *ld_text = tinyui_text_get_ld_text(backend_widget);
-
-    if (ld_text == NULL) {
-        return -1;
-    }
-
-    ldTextScrollSeek(ld_text, (int16_t)offset);
-    return 0;
-}
-
-int tinyui_text_scroll_move_ld(void *backend_widget, int move_value)
-{
-    ldText_t *ld_text = tinyui_text_get_ld_text(backend_widget);
-
-    if (ld_text == NULL || move_value < -128 || move_value > 127) {
-        return -1;
-    }
-
-    ldTextScrollMove(ld_text, (int8_t)move_value);
-    return 0;
-}
-
-static int tinyui_text_props_are_valid(const struct tinyui_text_props *props)
+static int text_props_valid(const struct tinyui_text_props *props)
 {
     return props != 0
         && props->id != 0
@@ -313,7 +151,7 @@ struct tinyui_text *tinyui_text_create_with_props(struct tinyui_window *parent,
 {
     struct tinyui_text *text;
 
-    if (!tinyui_text_props_are_valid(props)) {
+    if (!text_props_valid(props)) {
         return 0;
     }
 
@@ -322,31 +160,20 @@ struct tinyui_text *tinyui_text_create_with_props(struct tinyui_window *parent,
         return 0;
     }
 
-    if (props->text != 0 && tinyui_text_set_text(text, props->text) != 0) {
-        tinyui_text_dispose_partial(text);
-        return 0;
-    }
-    if (props->font != 0 && tinyui_text_set_font(text, props->font) != 0) {
-        tinyui_text_dispose_partial(text);
-        return 0;
-    }
-    if (props->style_class != 0
-        && tinyui_widget_set_style_class(&text->widget, props->style_class) != 0) {
-        tinyui_text_dispose_partial(text);
-        return 0;
-    }
-    if (tinyui_widget_set_user_data(&text->widget, props->user_data) != 0
+    if ((props->text != 0 && tinyui_text_set_text(text, props->text) != 0)
+        || (props->font != 0 && tinyui_text_set_font(text, props->font) != 0)
+        || (props->style_class != 0
+            && tinyui_widget_set_style_class(&text->widget, props->style_class) != 0)
+        || tinyui_widget_set_user_data(&text->widget, props->user_data) != 0
         || tinyui_widget_set_bg_color(&text->widget, props->bg_color) != 0
         || tinyui_widget_set_text_color(&text->widget, props->text_color) != 0
         || tinyui_widget_set_border_color(&text->widget, props->border_color) != 0
         || tinyui_widget_set_radius(&text->widget, props->radius) != 0
-        || tinyui_widget_set_padding(&text->widget, props->padding) != 0) {
-        tinyui_text_dispose_partial(text);
-        return 0;
-    }
-    if ((props->width > 0 || props->height > 0)
-        && tinyui_widget_set_size(&text->widget, props->width, props->height) != 0) {
-        tinyui_text_dispose_partial(text);
+        || tinyui_widget_set_padding(&text->widget, props->padding) != 0
+        || ((props->width > 0 || props->height > 0)
+            && tinyui_widget_set_size(&text->widget, props->width, props->height) != 0)) {
+        s_text_depose_scene = text->widget.ld_event_bridge_scene;
+        tinyui_widget_destroy_common(&text->widget, tinyui_text_ld_depose_cb);
         return 0;
     }
 
@@ -383,13 +210,12 @@ int tinyui_text_set_text(struct tinyui_text *text, const char *value)
 
 int tinyui_text_set_static_text(struct tinyui_text *text, const char *value)
 {
-    if (text == 0 || value == 0) {
+    if (text == 0 || value == 0 || text->widget.ld_widget == 0
+        || text->widget.kind != TINYUI_BACKEND_WIDGET_TEXT) {
         return -1;
     }
 
-    if (tinyui_text_set_static_text_ld(&text->widget, value) != 0) {
-        return -1;
-    }
+    ldTextSetStaticText((ldText_t *)text->widget.ld_widget, (const uint8_t *)value);
     text->widget.text = value;
     return 0;
 }
@@ -404,11 +230,30 @@ int tinyui_text_set_static_text(struct tinyui_text *text, const char *value)
 
 int tinyui_text_set_font(struct tinyui_text *text, const struct tinyui_font *font)
 {
-    if (text == 0) {
+    ldText_t *ld_text;
+    arm_2d_font_t *resolved_font;
+
+    if (text == 0 || text->widget.ld_widget == 0
+        || text->widget.kind != TINYUI_BACKEND_WIDGET_TEXT) {
         return -1;
     }
 
-    if (tinyui_text_set_font_ld(&text->widget, font) != 0) {
+    ld_text = (ldText_t *)text->widget.ld_widget;
+
+    if (s_fail_next_set_font != 0) {
+        s_fail_next_set_font = 0;
+        return -1;
+    }
+
+    resolved_font = tinyui_text_resolve_font_internal(font);
+    if (resolved_font == NULL) {
+        return -1;
+    }
+
+    if (font != NULL && ldTextSetFont(ld_text, resolved_font) != 0) {
+        return -1;
+    }
+    if (font == NULL && ldTextSetConsumedFont(ld_text, resolved_font) != 0) {
         return -1;
     }
 
@@ -426,11 +271,13 @@ int tinyui_text_set_font(struct tinyui_text *text, const struct tinyui_font *fon
 
 int tinyui_text_set_transparent(struct tinyui_text *text, int transparent)
 {
-    if (text == 0) {
+    if (text == 0 || text->widget.ld_widget == 0
+        || text->widget.kind != TINYUI_BACKEND_WIDGET_TEXT) {
         return -1;
     }
 
-    return tinyui_text_set_transparent_ld(&text->widget, transparent);
+    ldTextSetTransparent((ldText_t *)text->widget.ld_widget, transparent != 0);
+    return 0;
 }
 
 /**
@@ -443,13 +290,13 @@ int tinyui_text_set_transparent(struct tinyui_text *text, int transparent)
 
 int tinyui_text_set_text_color(struct tinyui_text *text, unsigned int rgb)
 {
-    if (text == 0) {
+    if (text == 0 || text->widget.ld_widget == 0
+        || text->widget.kind != TINYUI_BACKEND_WIDGET_TEXT) {
         return -1;
     }
 
-    if (tinyui_text_set_text_color_ld(&text->widget, rgb) != 0) {
-        return -1;
-    }
+    ldTextSetTextColor((ldText_t *)text->widget.ld_widget,
+                       (ldColor)tinyui_rgb_to_ld_color(rgb));
     text->widget.text_color = rgb;
     return 0;
 }
@@ -464,13 +311,13 @@ int tinyui_text_set_text_color(struct tinyui_text *text, unsigned int rgb)
 
 int tinyui_text_set_bg_color(struct tinyui_text *text, unsigned int rgb)
 {
-    if (text == 0) {
+    if (text == 0 || text->widget.ld_widget == 0
+        || text->widget.kind != TINYUI_BACKEND_WIDGET_TEXT) {
         return -1;
     }
 
-    if (tinyui_text_set_bg_color_ld(&text->widget, rgb) != 0) {
-        return -1;
-    }
+    ldTextSetBackgroundColor((ldText_t *)text->widget.ld_widget,
+                             (ldColor)tinyui_rgb_to_ld_color(rgb));
     text->widget.bg_color = rgb;
     return 0;
 }
@@ -486,11 +333,16 @@ int tinyui_text_set_bg_color(struct tinyui_text *text, unsigned int rgb)
 int tinyui_text_set_background_source(struct tinyui_text *text,
                                       struct tinyui_image_source *source)
 {
-    if (text == 0 || (source != 0 && source->img_tile == 0)) {
+    if (text == 0 || (source != 0 && source->img_tile == 0)
+        || text->widget.ld_widget == 0
+        || text->widget.kind != TINYUI_BACKEND_WIDGET_TEXT) {
         return -1;
     }
 
-    return tinyui_text_set_background_source_ld(&text->widget, source);
+    ldTextSetBackgroundImage((ldText_t *)text->widget.ld_widget,
+                             source != NULL ? source->img_tile : NULL,
+                             source != NULL ? source->mask_tile : NULL);
+    return 0;
 }
 
 /**
@@ -516,11 +368,13 @@ int tinyui_text_set_consumed_font(struct tinyui_text *text, const struct tinyui_
 
 int tinyui_text_scroll_seek(struct tinyui_text *text, int offset)
 {
-    if (text == 0) {
+    if (text == 0 || text->widget.ld_widget == 0
+        || text->widget.kind != TINYUI_BACKEND_WIDGET_TEXT) {
         return -1;
     }
 
-    return tinyui_text_scroll_seek_ld(&text->widget, offset);
+    ldTextScrollSeek((ldText_t *)text->widget.ld_widget, (int16_t)offset);
+    return 0;
 }
 
 /**
@@ -533,9 +387,12 @@ int tinyui_text_scroll_seek(struct tinyui_text *text, int offset)
 
 int tinyui_text_scroll_move(struct tinyui_text *text, int move_value)
 {
-    if (text == 0) {
+    if (text == 0 || move_value < -128 || move_value > 127
+        || text->widget.ld_widget == 0
+        || text->widget.kind != TINYUI_BACKEND_WIDGET_TEXT) {
         return -1;
     }
 
-    return tinyui_text_scroll_move_ld(&text->widget, move_value);
+    ldTextScrollMove((ldText_t *)text->widget.ld_widget, (int8_t)move_value);
+    return 0;
 }
