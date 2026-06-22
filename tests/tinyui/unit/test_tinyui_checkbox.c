@@ -201,12 +201,17 @@ static void test_checkbox_internal_seams_use_tinyui_prefix(void)
 {
     const char *source_path = test_repo_path("tinyui/src/widgets/checkbox.c");
 
-    assert_source_contains_text(source_path, "tinyui_checkbox_fail_next_set_check_color");
-    assert_source_contains_text(source_path, "tinyui_checkbox_rgb_to_ld_color");
-    assert_source_contains_text(source_path, "tinyui_checkbox_get_ld");
-    assert_source_contains_text(source_path, "tinyui_checkbox_props_are_valid");
-    assert_source_contains_text(source_path, "tinyui_checkbox_dispose_partial");
-    assert_source_contains_text(source_path, "tinyui_checkbox_test_fail_next_set_check_color");
+    /* C2 migration: legacy private seams collapsed into core helpers
+     * (tinyui_widget_create_leaf / tinyui_widget_destroy_common /
+     *  tinyui_rgb_to_ld_color). Verify the old names are gone and the
+     *  new backend accessor + props validator are present. */
+    assert_source_contains_text(source_path, "tinyui_checkbox_backend(");
+    assert_source_contains_text(source_path, "checkbox_props_valid(");
+    assert_source_lacks_text(source_path, "tinyui_checkbox_fail_next_set_check_color");
+    assert_source_lacks_text(source_path, "tinyui_checkbox_rgb_to_ld_color");
+    assert_source_lacks_text(source_path, "tinyui_checkbox_get_ld");
+    assert_source_lacks_text(source_path, "tinyui_checkbox_dispose_partial");
+    assert_source_lacks_text(source_path, "tinyui_checkbox_test_fail_next_set_check_color");
 }
 
 static void test_checkbox_native_helper_behaviors(struct tinyui_window *win)

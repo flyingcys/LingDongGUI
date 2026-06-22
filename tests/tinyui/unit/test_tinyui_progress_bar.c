@@ -48,7 +48,7 @@ __attribute__((weak)) int tinyui_progress_bar_test_take_last_dispose_snapshot(
     return -1;
 }
 
-__attribute__((weak)) void tinyui_progress_bar_test_dispose_partial(
+__attribute__((weak)) void tinyui_progress_bar_test_destroy(
     struct tinyui_progress_bar *bar)
 {
     (void)bar;
@@ -248,7 +248,7 @@ static void test_progress_bar_dispose_partial_snapshot_marks_cleanup_complete(
     bar = tinyui_progress_bar_create(win, "progress_detach_fail");
     assert(bar != 0);
 
-    tinyui_progress_bar_test_dispose_partial(bar);
+    tinyui_progress_bar_test_destroy(bar);
     assert(tinyui_progress_bar_test_take_last_dispose_snapshot(&snapshot) == 0);
     assert(snapshot.cleanup_complete == 1);
     assert(snapshot.cleanup_incomplete == 0);

@@ -28,6 +28,10 @@
     } while (0)
 
 extern int tinyui_widget_has_ld_binding(const struct tinyui_widget *widget);
+extern void tinyui_progress_wheel_test_reset_state(void);
+extern void tinyui_progress_wheel_test_fail_next_set_percent(void);
+extern const struct tinyui_widget *tinyui_progress_wheel_test_last_disposed_backend(void);
+
 struct __attribute__((may_alias)) tinyui_progress_wheel_cfg_bridge {
     struct {
         const arm_2d_tile_t *ptileArcMask;
@@ -41,36 +45,6 @@ struct __attribute__((may_alias)) tinyui_progress_wheel_cfg_bridge {
         uint32_t u2StartPosition : 2;
     } tCFG;
 };
-struct tinyui_progress_wheel_test_dispose_snapshot {
-    int kind;
-    int cleanup_complete;
-    int cleanup_incomplete;
-    int detach_result;
-    int unbind_result;
-    int detached;
-    int owner_cleared;
-    int root_cleared;
-    int parent_cleared;
-    int next_sibling_cleared;
-    int host_cleared;
-    int event_bridge_cleared;
-    int ld_pinfo_cleared;
-};
-
-__attribute__((weak)) void tinyui_progress_wheel_test_reset_state(void)
-{
-}
-
-__attribute__((weak)) void tinyui_progress_wheel_test_fail_next_set_percent(void)
-{
-}
-
-__attribute__((weak)) int tinyui_progress_wheel_test_take_last_dispose_snapshot(
-    struct tinyui_progress_wheel_test_dispose_snapshot *snapshot)
-{
-    (void)snapshot;
-    return -1;
-}
 
 static struct tinyui_progress_wheel *test_progress_wheel_create_and_props(struct tinyui_window *win)
 {
@@ -252,7 +226,7 @@ static void test_progress_wheel_create_with_props_failure_rolls_back_attached_ch
     ldBase_t *tail_ld = ldBaseGetChildList(win_ld);
     ldBase_t *next_before_ld = 0;
     struct tinyui_progress_wheel *probe;
-    struct tinyui_progress_wheel_test_dispose_snapshot snapshot = {0};
+    const struct tinyui_widget *disposed_backend;
 
     while (tail_ld != 0 && ldBaseGetNextSibling(tail_ld) != 0) {
         tail_ld = ldBaseGetNextSibling(tail_ld);
@@ -274,21 +248,14 @@ static void test_progress_wheel_create_with_props_failure_rolls_back_attached_ch
                    .style_class = "wheel-fail",
                    .percent = 24,
                }) == 0);
-    assert(tinyui_progress_wheel_test_take_last_dispose_snapshot(&snapshot) == 0);
-    assert(snapshot.kind == TINYUI_BACKEND_WIDGET_PROGRESS_WHEEL);
-    assert(snapshot.cleanup_complete == 1);
-    assert(snapshot.cleanup_incomplete == 0);
-    assert(snapshot.detach_result == 0);
-    assert(snapshot.unbind_result == 0);
-    assert(snapshot.detached == 1);
-    assert(snapshot.owner_cleared == 1);
-    assert(snapshot.root_cleared == 1);
-    assert(snapshot.parent_cleared == 1);
-    assert(snapshot.next_sibling_cleared == 1);
-    assert(snapshot.host_cleared == 1);
-    assert(snapshot.event_bridge_cleared == 1);
-    assert(snapshot.ld_pinfo_cleared == 1);
-    assert(tinyui_progress_wheel_test_take_last_dispose_snapshot(&snapshot) == -1);
+    disposed_backend = tinyui_progress_wheel_test_last_disposed_backend();
+    assert(disposed_backend != 0);
+    assert(disposed_backend->kind == TINYUI_BACKEND_WIDGET_PROGRESS_WHEEL);
+    assert(disposed_backend->owner == 0);
+    assert(disposed_backend->ld_event_bridge_scene == 0);
+    assert(disposed_backend->ld_event_bridge_sender == 0);
+    assert(disposed_backend->ld_event_bridge_next == 0);
+    assert(((const ldBase_t *)disposed_backend->ld_widget)->pInfo == 0);
     if (tail_ld != 0) {
         assert(ldBaseGetNextSibling(tail_ld) == next_before_ld);
     } else {

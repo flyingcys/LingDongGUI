@@ -25,9 +25,19 @@
 #include <stdlib.h>
 #include <string.h>
 
-int tinyui_runtime_bridge_unbind_host(void *backend_widget);
-
+/* ---- test seam state ---- */
 static int tinyui_progress_wheel_fail_next_set_percent = 0;
+static struct tinyui_widget s_disposed_widget_snapshot;
+static int s_disposed_widget_valid = 0;
+static ld_scene_t *s_progress_wheel_depose_scene = NULL;
+
+static void tinyui_progress_wheel_ld_depose_cb(void *ld_widget)
+{
+    if (s_progress_wheel_depose_scene != NULL) {
+        ldProgressWheel_depose(s_progress_wheel_depose_scene, (ldProgressWheel_t *)ld_widget);
+        s_progress_wheel_depose_scene = NULL;
+    }
+}
 
 struct __attribute__((may_alias)) tinyui_progress_wheel_cfg_bridge {
     struct {
@@ -43,108 +53,26 @@ struct __attribute__((may_alias)) tinyui_progress_wheel_cfg_bridge {
     } tCFG;
 };
 
-static ldColor tinyui_progress_wheel_rgb_to_ld_color(unsigned int rgb)
+void tinyui_progress_wheel_test_fail_next_set_percent(void)
 {
-    return __RGB((rgb >> 16) & 0xFFU, (rgb >> 8) & 0xFFU, rgb & 0xFFU);
-}
-
-struct tinyui_progress_wheel_test_dispose_snapshot {
-    int kind;
-    int cleanup_complete;
-    int cleanup_incomplete;
-    int detach_result;
-    int unbind_result;
-    int detached;
-    int owner_cleared;
-    int root_cleared;
-    int parent_cleared;
-    int next_sibling_cleared;
-    int host_cleared;
-    int event_bridge_cleared;
-    int ld_pinfo_cleared;
-};
-
-static struct tinyui_progress_wheel_test_dispose_snapshot
-    tinyui_progress_wheel_last_dispose_snapshot;
-static int tinyui_progress_wheel_last_dispose_snapshot_valid = 0;
-
-static ldProgressWheel_t *tinyui_progress_wheel_get_ld(struct tinyui_progress_wheel *wheel)
-{
-    if (wheel == 0 || wheel->widget.ld_widget == 0
-        || wheel->widget.kind != TINYUI_BACKEND_WIDGET_PROGRESS_WHEEL) {
-        return 0;
-    }
-
-    return (ldProgressWheel_t *)wheel->widget.ld_widget;
-}
-
-
-static void tinyui_progress_wheel_test_reset_internal_state(void)
-{
-    memset(&tinyui_progress_wheel_last_dispose_snapshot,
-           0,
-           sizeof(tinyui_progress_wheel_last_dispose_snapshot));
-    tinyui_progress_wheel_last_dispose_snapshot_valid = 0;
+    tinyui_progress_wheel_fail_next_set_percent = 1;
 }
 
 void tinyui_progress_wheel_test_reset_state(void)
 {
-    tinyui_progress_wheel_test_reset_internal_state();
+    memset(&s_disposed_widget_snapshot, 0, sizeof(s_disposed_widget_snapshot));
+    s_disposed_widget_valid = 0;
+    tinyui_progress_wheel_fail_next_set_percent = 0;
+    s_progress_wheel_depose_scene = NULL;
 }
 
-int tinyui_progress_wheel_test_take_last_dispose_snapshot(
-    struct tinyui_progress_wheel_test_dispose_snapshot *snapshot)
+const struct tinyui_widget *tinyui_progress_wheel_test_last_disposed_backend(void)
 {
-    if (snapshot == 0 || tinyui_progress_wheel_last_dispose_snapshot_valid == 0) {
-        return -1;
+    if (s_disposed_widget_valid == 0) {
+        return 0;
     }
 
-    *snapshot = tinyui_progress_wheel_last_dispose_snapshot;
-    memset(&tinyui_progress_wheel_last_dispose_snapshot,
-           0,
-           sizeof(tinyui_progress_wheel_last_dispose_snapshot));
-    tinyui_progress_wheel_last_dispose_snapshot_valid = 0;
-    return 0;
-}
-
-static void tinyui_progress_wheel_capture_dispose_snapshot(
-    struct tinyui_widget *widget,
-    int detach_result,
-    int unbind_result)
-{
-    ldBase_t *ld_base = widget != 0 ? (ldBase_t *)widget->ld_widget : 0;
-
-    memset(&tinyui_progress_wheel_last_dispose_snapshot,
-           0,
-           sizeof(tinyui_progress_wheel_last_dispose_snapshot));
-    tinyui_progress_wheel_last_dispose_snapshot.kind =
-        widget != 0 ? (int)widget->kind : 0;
-    tinyui_progress_wheel_last_dispose_snapshot.detach_result = detach_result;
-    tinyui_progress_wheel_last_dispose_snapshot.unbind_result = unbind_result;
-    tinyui_progress_wheel_last_dispose_snapshot.cleanup_complete =
-        (detach_result == 0 && unbind_result == 0);
-    tinyui_progress_wheel_last_dispose_snapshot.cleanup_incomplete =
-        (detach_result != 0 || unbind_result != 0);
-    tinyui_progress_wheel_last_dispose_snapshot.detached = (detach_result == 0);
-    tinyui_progress_wheel_last_dispose_snapshot.owner_cleared =
-        (widget == 0 || widget->owner == 0);
-    tinyui_progress_wheel_last_dispose_snapshot.root_cleared = 1;
-    tinyui_progress_wheel_last_dispose_snapshot.parent_cleared = 1;
-    tinyui_progress_wheel_last_dispose_snapshot.next_sibling_cleared = 1;
-    tinyui_progress_wheel_last_dispose_snapshot.host_cleared = 1;
-    tinyui_progress_wheel_last_dispose_snapshot.event_bridge_cleared =
-        (widget == 0
-         || (widget->ld_event_bridge_scene == 0
-             && widget->ld_event_bridge_sender == 0
-             && widget->ld_event_bridge_next == 0));
-    tinyui_progress_wheel_last_dispose_snapshot.ld_pinfo_cleared =
-        (ld_base == 0 || ld_base->pInfo == 0);
-    tinyui_progress_wheel_last_dispose_snapshot_valid = 1;
-}
-
-void tinyui_progress_wheel_test_fail_next_set_percent(void)
-{
-    tinyui_progress_wheel_fail_next_set_percent = 1;
+    return &s_disposed_widget_snapshot;
 }
 
 static void tinyui_progress_wheel_disable_dirty_regions(ldProgressWheel_t *ld_progress_wheel)
@@ -159,33 +87,16 @@ static void tinyui_progress_wheel_disable_dirty_regions(ldProgressWheel_t *ld_pr
     bridge->tCFG.bUseDirtyRegions = false;
 }
 
-static void tinyui_progress_wheel_dispose_partial_impl(struct tinyui_progress_wheel *wheel)
+static void tinyui_progress_wheel_capture_disposed_snapshot(struct tinyui_progress_wheel *wheel)
 {
-    struct tinyui_app *app_state;
-    int detach_result = 0;
-    int unbind_result = 0;
-
     if (wheel == 0) {
         return;
     }
-
-    if (wheel->widget.ld_widget != 0) {
-        void *saved_ld_widget = wheel->widget.ld_widget;
-        app_state = wheel->widget.owner != 0
-            ? tinyui_runtime_bridge_backend_state(wheel->widget.owner)
-            : 0;
-        detach_result = tinyui_widget_detach_from_parent(&wheel->widget);
-        unbind_result = tinyui_runtime_bridge_unbind_host(&wheel->widget);
-        tinyui_progress_wheel_capture_dispose_snapshot(&wheel->widget,
-                                                       detach_result,
-                                                       unbind_result);
-        if (app_state != 0 && app_state->ld_scene != 0) {
-            ldProgressWheel_depose(app_state->ld_scene,
-                                   (ldProgressWheel_t *)saved_ld_widget);
-        }
-    }
-
-    free(wheel);
+    memset(&s_disposed_widget_snapshot, 0, sizeof(s_disposed_widget_snapshot));
+    s_disposed_widget_snapshot.ld_widget = wheel->widget.ld_widget;
+    s_disposed_widget_snapshot.kind      = wheel->widget.kind;
+    s_disposed_widget_valid = 1;
+    s_progress_wheel_depose_scene = wheel->widget.ld_event_bridge_scene;
 }
 
 static int tinyui_progress_wheel_props_are_valid(const struct tinyui_progress_wheel_props *props)
@@ -253,12 +164,13 @@ struct tinyui_progress_wheel *tinyui_progress_wheel_create(struct tinyui_widget 
     wheel->widget.visible    = 1;
     wheel->widget.enabled    = 1;
     ((ldBase_t *)ld_progress_wheel)->pInfo = &wheel->widget;
-    tinyui_runtime_bridge_bind_leaf_widget(&wheel->widget, app_state);
+    (void)tinyui_runtime_bridge_bind_leaf_widget(&wheel->widget, app_state);
     tinyui_progress_wheel_disable_dirty_regions(ld_progress_wheel);
 
     if (tinyui_progress_wheel_set_percent(wheel, 0) != 0
         || tinyui_progress_wheel_set_dot_enabled(wheel, 1) != 0) {
-        tinyui_progress_wheel_dispose_partial_impl(wheel);
+        tinyui_progress_wheel_capture_disposed_snapshot(wheel);
+        tinyui_widget_destroy_common(&wheel->widget, tinyui_progress_wheel_ld_depose_cb);
         return 0;
     }
     return wheel;
@@ -300,14 +212,12 @@ struct tinyui_progress_wheel *tinyui_progress_wheel_create_with_props(
         return 0;
     }
 
-    if (props->style_class != 0
-        && tinyui_widget_set_style_class(&wheel->widget, props->style_class) != 0) {
-        tinyui_progress_wheel_dispose_partial_impl(wheel);
-        return 0;
-    }
-    if (tinyui_widget_set_user_data(&wheel->widget, props->user_data) != 0
+    if ((props->style_class != 0
+         && tinyui_widget_set_style_class(&wheel->widget, props->style_class) != 0)
+        || tinyui_widget_set_user_data(&wheel->widget, props->user_data) != 0
         || tinyui_progress_wheel_set_percent(wheel, props->percent) != 0) {
-        tinyui_progress_wheel_dispose_partial_impl(wheel);
+        tinyui_progress_wheel_capture_disposed_snapshot(wheel);
+        tinyui_widget_destroy_common(&wheel->widget, tinyui_progress_wheel_ld_depose_cb);
         return 0;
     }
     return wheel;
@@ -323,14 +233,12 @@ struct tinyui_progress_wheel *tinyui_progress_wheel_create_with_props(
 
 int tinyui_progress_wheel_set_percent(struct tinyui_progress_wheel *wheel, int percent)
 {
-    ldProgressWheel_t *ld_progress_wheel;
-
     if (wheel == 0 || percent < 0 || percent > 100) {
         return -1;
     }
 
-    ld_progress_wheel = tinyui_progress_wheel_get_ld(wheel);
-    if (ld_progress_wheel == 0) {
+    if (wheel->widget.ld_widget == 0
+        || wheel->widget.kind != TINYUI_BACKEND_WIDGET_PROGRESS_WHEEL) {
         return -1;
     }
 
@@ -339,7 +247,8 @@ int tinyui_progress_wheel_set_percent(struct tinyui_progress_wheel *wheel, int p
         return -1;
     }
 
-    ldProgressWheelSetProgress(ld_progress_wheel, (int16_t)(percent * 10));
+    ldProgressWheelSetProgress((ldProgressWheel_t *)wheel->widget.ld_widget,
+                               (int16_t)(percent * 10));
     wheel->widget.value = percent;
     wheel->percent = percent;
     return 0;
@@ -384,18 +293,17 @@ int tinyui_progress_wheel_get_percent(const struct tinyui_progress_wheel *wheel)
 
 int tinyui_progress_wheel_set_wheel_color(struct tinyui_progress_wheel *wheel, unsigned int rgb)
 {
-    ldProgressWheel_t *ld_progress_wheel;
-
     if (wheel == 0 || rgb > 0xFFFFFFU) {
         return -1;
     }
 
-    ld_progress_wheel = tinyui_progress_wheel_get_ld(wheel);
-    if (ld_progress_wheel == 0) {
+    if (wheel->widget.ld_widget == 0
+        || wheel->widget.kind != TINYUI_BACKEND_WIDGET_PROGRESS_WHEEL) {
         return -1;
     }
 
-    ldProgressWheelSetWheelColor(ld_progress_wheel, tinyui_progress_wheel_rgb_to_ld_color(rgb));
+    ldProgressWheelSetWheelColor((ldProgressWheel_t *)wheel->widget.ld_widget,
+                                 (ldColor)tinyui_rgb_to_ld_color(rgb));
     wheel->wheel_color = rgb;
     return 0;
 }
@@ -410,19 +318,17 @@ int tinyui_progress_wheel_set_wheel_color(struct tinyui_progress_wheel *wheel, u
 
 int tinyui_progress_wheel_set_dot_color(struct tinyui_progress_wheel *wheel, unsigned int rgb)
 {
-    ldProgressWheel_t *ld_progress_wheel;
-
     if (wheel == 0 || rgb > 0xFFFFFFU) {
         return -1;
     }
 
-    ld_progress_wheel = tinyui_progress_wheel_get_ld(wheel);
-    if (ld_progress_wheel == 0) {
+    if (wheel->widget.ld_widget == 0
+        || wheel->widget.kind != TINYUI_BACKEND_WIDGET_PROGRESS_WHEEL) {
         return -1;
     }
 
-    ldProgressWheelSetDotColor(ld_progress_wheel,
-                               tinyui_progress_wheel_rgb_to_ld_color(rgb),
+    ldProgressWheelSetDotColor((ldProgressWheel_t *)wheel->widget.ld_widget,
+                               (ldColor)tinyui_rgb_to_ld_color(rgb),
                                wheel->dot_enabled != 0);
     wheel->dot_color = rgb;
     return 0;
@@ -438,19 +344,17 @@ int tinyui_progress_wheel_set_dot_color(struct tinyui_progress_wheel *wheel, uns
 
 int tinyui_progress_wheel_set_dot_enabled(struct tinyui_progress_wheel *wheel, int enabled)
 {
-    ldProgressWheel_t *ld_progress_wheel;
-
     if (wheel == 0) {
         return -1;
     }
 
-    ld_progress_wheel = tinyui_progress_wheel_get_ld(wheel);
-    if (ld_progress_wheel == 0) {
+    if (wheel->widget.ld_widget == 0
+        || wheel->widget.kind != TINYUI_BACKEND_WIDGET_PROGRESS_WHEEL) {
         return -1;
     }
 
-    ldProgressWheelSetDotColor(ld_progress_wheel,
-                               tinyui_progress_wheel_rgb_to_ld_color(wheel->dot_color),
+    ldProgressWheelSetDotColor((ldProgressWheel_t *)wheel->widget.ld_widget,
+                               (ldColor)tinyui_rgb_to_ld_color(wheel->dot_color),
                                enabled != 0);
     wheel->dot_enabled = enabled != 0 ? 1 : 0;
     return 0;
