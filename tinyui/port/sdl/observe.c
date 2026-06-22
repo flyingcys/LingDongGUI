@@ -80,7 +80,7 @@ void tinyui_runtime_host_log_first_frame_benchmark(struct tinyui_runtime_host_st
     state->benchmark_first_frame_logged = 1;
 }
 
-int tinyui_runtime_host_window_has_real_layout(const struct tinyui_backend_widget *widget)
+int tinyui_runtime_host_window_has_real_layout(const struct tinyui_widget *widget)
 {
     ldWindow_t *ld_window;
 
@@ -95,6 +95,61 @@ int tinyui_runtime_host_window_has_real_layout(const struct tinyui_backend_widge
     return ld_window->layoutTpye == layoutFlex || ld_window->layoutTpye == layoutGrid;
 }
 
+/* Read the user-visible id of a widget. Phase C folded the backend `id` mirror
+ * out of struct tinyui_widget; the id now lives on each concrete widget sub-
+ * struct (e.g. struct tinyui_image) as the first member after `widget`.
+ * Dispatch by kind so the read stays type-safe and does not rely on layout
+ * coincidence across 28 different sub-structs. Returns NULL for window/
+ * background (window carries its own id but is a container, not a real leaf)
+ * and for any widget sub-struct that has no id field. */
+static const char *tinyui_runtime_host_widget_id(const struct tinyui_widget *w)
+{
+    if (w == NULL) {
+        return NULL;
+    }
+
+    switch (w->kind) {
+    case TINYUI_BACKEND_WIDGET_LABEL:      return ((const struct tinyui_label *)w)->id;
+    case TINYUI_BACKEND_WIDGET_BUTTON:     return ((const struct tinyui_button *)w)->id;
+    case TINYUI_BACKEND_WIDGET_CHECKBOX:   return ((const struct tinyui_checkbox *)w)->id;
+    case TINYUI_BACKEND_WIDGET_SWITCH:     return ((const struct tinyui_switch *)w)->id;
+    case TINYUI_BACKEND_WIDGET_SLIDER:     return ((const struct tinyui_slider *)w)->id;
+    case TINYUI_BACKEND_WIDGET_ARC:        return ((const struct tinyui_arc *)w)->id;
+    case TINYUI_BACKEND_WIDGET_GAUGE:      return ((const struct tinyui_gauge *)w)->id;
+    case TINYUI_BACKEND_WIDGET_ICON_SLIDER:return ((const struct tinyui_icon_slider *)w)->id;
+    case TINYUI_BACKEND_WIDGET_RADIAL_MENU:return ((const struct tinyui_radial_menu *)w)->id;
+    case TINYUI_BACKEND_WIDGET_PROGRESS_BAR:return ((const struct tinyui_progress_bar *)w)->id;
+    case TINYUI_BACKEND_WIDGET_QRCODE:     return ((const struct tinyui_qrcode *)w)->id;
+    case TINYUI_BACKEND_WIDGET_PROGRESS_WHEEL:return ((const struct tinyui_progress_wheel *)w)->id;
+    case TINYUI_BACKEND_WIDGET_ANIMATION:  return ((const struct tinyui_animation *)w)->id;
+    case TINYUI_BACKEND_WIDGET_LIST:       return ((const struct tinyui_list *)w)->id;
+    case TINYUI_BACKEND_WIDGET_MESSAGE_BOX:return ((const struct tinyui_message_box *)w)->id;
+    case TINYUI_BACKEND_WIDGET_DATE_TIME:  return ((const struct tinyui_date_time *)w)->id;
+    case TINYUI_BACKEND_WIDGET_CLOCK:      return ((const struct tinyui_clock *)w)->id;
+    case TINYUI_BACKEND_WIDGET_TEXT:       return ((const struct tinyui_text *)w)->id;
+    case TINYUI_BACKEND_WIDGET_KEYBOARD:   return ((const struct tinyui_keyboard *)w)->id;
+    case TINYUI_BACKEND_WIDGET_COMBO_BOX:  return ((const struct tinyui_combo_box *)w)->id;
+    case TINYUI_BACKEND_WIDGET_SCROLL_SELECTER:return ((const struct tinyui_scroll_selecter *)w)->id;
+    case TINYUI_BACKEND_WIDGET_TABLE:      return ((const struct tinyui_table *)w)->id;
+    case TINYUI_BACKEND_WIDGET_GRAPH:      return ((const struct tinyui_graph *)w)->id;
+    case TINYUI_BACKEND_WIDGET_IMAGE:      return ((const struct tinyui_image *)w)->id;
+    case TINYUI_BACKEND_WIDGET_CALENDAR:   return ((const struct tinyui_calendar *)w)->id;
+    case TINYUI_BACKEND_WIDGET_CANVAS:     return ((const struct tinyui_canvas *)w)->id;
+    case TINYUI_BACKEND_WIDGET_WINDOW:
+    case TINYUI_BACKEND_WIDGET_BACKGROUND:
+    default:
+        return NULL;
+    }
+}
+
+static int tinyui_runtime_host_widget_is_real_leaf(const struct tinyui_widget *w)
+{
+    return w != NULL
+        && w->ld_widget != NULL
+        && w->kind != TINYUI_BACKEND_WIDGET_WINDOW
+        && w->kind != TINYUI_BACKEND_WIDGET_BACKGROUND;
+}
+
 static size_t tinyui_runtime_host_count_real_in_ld_tree(ldBase_t *node)
 {
     size_t count = 0;
@@ -102,9 +157,7 @@ static size_t tinyui_runtime_host_count_real_in_ld_tree(ldBase_t *node)
     while (node != NULL) {
         struct tinyui_widget *w = (struct tinyui_widget *)node->pInfo;
 
-        if (w != NULL && w->ld_widget != NULL &&
-            w->kind != TINYUI_BACKEND_WIDGET_WINDOW &&
-            w->kind != TINYUI_BACKEND_WIDGET_BACKGROUND) {
+        if (tinyui_runtime_host_widget_is_real_leaf(w)) {
             count++;
         }
 
@@ -119,6 +172,54 @@ static size_t tinyui_runtime_host_count_real_in_ld_tree(ldBase_t *node)
     }
 
     return count;
+}
+
+/* Collect the comma-separated list of real widget ids from the ld subtree.
+ * Writes at most `cap-1` ids and NUL-terminates; returns the number of ids
+ * that were written (excluding the terminator). ids without an id field are
+ * skipped. The buffer is flushed by the caller. */
+static size_t tinyui_runtime_host_collect_real_widget_ids(ldBase_t *node,
+                                                          char *buf,
+                                                          size_t cap,
+                                                          size_t *written)
+{
+    while (node != NULL && *written + 1 < cap) {
+        struct tinyui_widget *w = (struct tinyui_widget *)node->pInfo;
+
+        if (tinyui_runtime_host_widget_is_real_leaf(w)) {
+            const char *id = tinyui_runtime_host_widget_id(w);
+            if (id != NULL && id[0] != '\0') {
+                size_t id_len = strlen(id);
+                size_t avail = cap - *written;
+                int need_sep = (*written > 0);
+
+                if (need_sep) {
+                    if (avail < 2) {
+                        break;
+                    }
+                    buf[*written] = ',';
+                    (*written)++;
+                    avail--;
+                }
+                if (id_len >= avail) {
+                    id_len = avail - 1;
+                }
+                memcpy(buf + *written, id, id_len);
+                *written += id_len;
+            }
+        }
+
+        {
+            ldBase_t *child = ldBaseGetChildList(node);
+            if (child != NULL) {
+                tinyui_runtime_host_collect_real_widget_ids(child, buf, cap, written);
+            }
+        }
+
+        node = ldBaseGetNextSibling(node);
+    }
+
+    return *written;
 }
 
 void tinyui_runtime_host_log_mapping_markers(struct tinyui_runtime_host_state *state,
@@ -140,25 +241,54 @@ void tinyui_runtime_host_log_mapping_markers(struct tinyui_runtime_host_state *s
         fflush(stdout);
         state->static_mapping_logged = 1;
     }
+
+    if (real_count > 0 && !state->real_widget_ids_logged) {
+        char buf[1024];
+        size_t written = 0;
+        ldBase_t *first_child = ldBaseGetChildList((ldBase_t *)root_widget->ld_widget);
+
+        buf[0] = '\0';
+        tinyui_runtime_host_collect_real_widget_ids(first_child, buf, sizeof(buf), &written);
+        buf[written] = '\0';
+        printf("TINYUI_BACKEND_REAL_WIDGET_IDS=%s\n", buf);
+        fflush(stdout);
+        state->real_widget_ids_logged = 1;
+    }
 }
 
-void tinyui_runtime_host_log_image_source_marker(const struct tinyui_backend_widget *widget)
+void tinyui_runtime_host_log_image_source_marker(const struct tinyui_widget *widget)
 {
-    while (widget != NULL) {
-        if (widget->kind == TINYUI_BACKEND_WIDGET_IMAGE && widget->id != NULL && widget->ld_widget != NULL) {
-            ldImage_t *ld_image = (ldImage_t *)widget->ld_widget;
+    /* Walk the ld tree (not the deleted backend first_child/next_sibling links).
+     * `widget` is the root of the walk when non-NULL; step.c passes NULL to
+     * suppress the traversal entirely. */
+    if (widget == NULL) {
+        return;
+    }
 
+    if (widget->kind == TINYUI_BACKEND_WIDGET_IMAGE && widget->ld_widget != NULL) {
+        const char *id = tinyui_runtime_host_widget_id(widget);
+        ldImage_t *ld_image = (ldImage_t *)widget->ld_widget;
+
+        if (id != NULL) {
             printf("TINYUI_BACKEND_IMAGE_SOURCE=%s:img=%s,mask=%s\n",
-                   widget->id,
+                   id,
                    ld_image->ptImgTile != NULL ? "set" : "null",
                    ld_image->ptMaskTile != NULL ? "set" : "null");
         }
+    }
 
-        if (widget->first_child != NULL) {
-            tinyui_runtime_host_log_image_source_marker(widget->first_child);
+    {
+        ldBase_t *child = ldBaseGetChildList((ldBase_t *)widget->ld_widget);
+        if (child != NULL) {
+            /* Recurse via the ld tree: each ld child's pInfo gives the widget. */
+            while (child != NULL) {
+                struct tinyui_widget *cw = (struct tinyui_widget *)child->pInfo;
+                if (cw != NULL) {
+                    tinyui_runtime_host_log_image_source_marker(cw);
+                }
+                child = ldBaseGetNextSibling(child);
+            }
         }
-
-        widget = widget->next_sibling;
     }
 }
 

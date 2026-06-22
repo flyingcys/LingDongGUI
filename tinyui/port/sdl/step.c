@@ -81,7 +81,7 @@ static const ldPageFuncGroup_t g_tinyui_runtime_host_page = {
     .pointer = NULL,
 };
 
-static int tinyui_runtime_host_widget_is_supported_real(const struct tinyui_backend_widget *widget)
+static int tinyui_runtime_host_widget_is_supported_real(const struct tinyui_widget *widget)
 {
     if (widget == NULL) {
         return 1;
@@ -138,44 +138,59 @@ static struct tinyui_app *tinyui_runtime_host_app_state_from_window(struct tinyu
 }
 
 static void tinyui_runtime_host_apply_real_widget_layout(struct tinyui_runtime_host_state *state,
-                                                    const struct tinyui_backend_widget *widget,
+                                                    const struct tinyui_widget *widget,
                                                     int x,
                                                     int *cursor_y)
 {
-    while (widget != NULL) {
-        if (widget->kind != TINYUI_BACKEND_WIDGET_WINDOW
-            && widget->kind != TINYUI_BACKEND_WIDGET_BACKGROUND) {
-            int height = TINYUI_RUNTIME_ROW_HEIGHT;
+    /* Walk the ld tree (not the deleted backend first_child/next_sibling links):
+     * each ld node's pInfo points back to its struct tinyui_widget. */
+    if (widget == NULL || widget->ld_widget == NULL) {
+        return;
+    }
 
-            if (widget->kind == TINYUI_BACKEND_WIDGET_IMAGE) {
-                height = 56;
+    {
+        ldBase_t *node = ldBaseGetChildList((ldBase_t *)widget->ld_widget);
+        while (node != NULL) {
+            struct tinyui_widget *w = (struct tinyui_widget *)node->pInfo;
+
+            if (w != NULL
+                && w->kind != TINYUI_BACKEND_WIDGET_WINDOW
+                && w->kind != TINYUI_BACKEND_WIDGET_BACKGROUND) {
+                int height = TINYUI_RUNTIME_ROW_HEIGHT;
+
+                if (w->kind == TINYUI_BACKEND_WIDGET_IMAGE) {
+                    height = 56;
+                }
+
+                if (tinyui_runtime_host_widget_is_supported_real(w) && w->ld_widget != NULL) {
+                    arm_2d_region_t region = ldBaseGetRegion((ldBase_t *)w->ld_widget);
+                    region.tLocation.iX = (int16_t)x;
+                    region.tLocation.iY = (int16_t)(*cursor_y);
+                    ldBaseSetRegion((ldBase_t *)w->ld_widget, region);
+                    height = region.tSize.iHeight > 0 ? region.tSize.iHeight : height;
+                }
+
+                *cursor_y += height + TINYUI_RUNTIME_ROW_GAP;
             }
 
-            if (tinyui_runtime_host_widget_is_supported_real(widget) && widget->ld_widget != NULL) {
-                arm_2d_region_t region = ldBaseGetRegion((ldBase_t *)widget->ld_widget);
-                region.tLocation.iX = (int16_t)x;
-                region.tLocation.iY = (int16_t)(*cursor_y);
-                ldBaseSetRegion((ldBase_t *)widget->ld_widget, region);
-                height = region.tSize.iHeight > 0 ? region.tSize.iHeight : height;
+            {
+                struct tinyui_widget *cw = (struct tinyui_widget *)node->pInfo;
+                if (cw != NULL) {
+                    tinyui_runtime_host_apply_real_widget_layout(state, cw, x, cursor_y);
+                }
             }
 
-            *cursor_y += height + TINYUI_RUNTIME_ROW_GAP;
+            node = ldBaseGetNextSibling(node);
         }
-
-        if (widget->first_child != NULL) {
-            tinyui_runtime_host_apply_real_widget_layout(state, widget->first_child, x, cursor_y);
-        }
-
-        widget = widget->next_sibling;
     }
 }
 
 static void tinyui_runtime_host_apply_smoke_cursor_layout(struct tinyui_runtime_host_state *state,
-                                                     const struct tinyui_backend_widget *root,
+                                                     const struct tinyui_widget *root,
                                                      int x,
                                                      int *cursor_y)
 {
-    /* smoke layout permanently disabled: runtime_evidence_flags removed in Phase 0 */
+    /* smoke layout permanently disabled */
     (void)state; (void)root; (void)x; (void)cursor_y;
 }
 
