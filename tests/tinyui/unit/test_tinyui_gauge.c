@@ -36,28 +36,27 @@ static unsigned int test_rgb_round_trip(unsigned int rgb)
 }
 
 extern int tinyui_widget_has_ld_binding(const struct tinyui_widget *widget);
+static struct tinyui_widget g_disposed_backend_snapshot;
+static int g_disposed_backend_valid = 0;
 
-struct tinyui_gauge_test_dispose_snapshot {
-    int kind;
-    int cleanup_complete;
-    int cleanup_incomplete;
-    int detach_result;
-    int unbind_result;
-    int detached;
-    int owner_cleared;
-    int root_cleared;
-    int parent_cleared;
-    int next_sibling_cleared;
-    int host_cleared;
-    int event_bridge_cleared;
-    int ld_pinfo_cleared;
-};
-
-__attribute__((weak)) int tinyui_gauge_test_take_last_dispose_snapshot(
-    struct tinyui_gauge_test_dispose_snapshot *snapshot)
+void tinyui_test_capture_destroyed_widget_snapshot(const struct tinyui_widget *widget)
 {
-    (void)snapshot;
-    return -1;
+    if (widget == 0) {
+        memset(&g_disposed_backend_snapshot, 0, sizeof(g_disposed_backend_snapshot));
+        g_disposed_backend_valid = 0;
+        return;
+    }
+
+    g_disposed_backend_snapshot = *widget;
+    g_disposed_backend_valid = 1;
+}
+
+static const struct tinyui_widget *tinyui_gauge_test_last_disposed_backend(void)
+{
+    if (g_disposed_backend_valid == 0) {
+        return 0;
+    }
+    return &g_disposed_backend_snapshot;
 }
 
 __attribute__((weak)) struct tinyui_gauge *
@@ -154,6 +153,8 @@ static void test_gauge_internal_seam_names_are_gone(void)
 
     assert(source_path != NULL);
     assert(test_source_path != NULL);
+    assert(tinyui_test_source_contains(source_path,
+                                       "tinyui_gauge_test_take_last_dispose_snapshot(") == 0);
 }
 
 static void test_gauge_create_and_backend_mapping(struct tinyui_window *win)
@@ -359,8 +360,8 @@ static void test_gauge_create_with_props_failure_rolls_back_attached_child(struc
     ldBase_t *win_ld = (ldBase_t *)win->widget.ld_widget;
     ldBase_t *tail_ld = ldBaseGetChildList(win_ld);
     ldBase_t *next_before_ld = 0;
-    struct tinyui_gauge_test_dispose_snapshot snapshot = {0};
     struct tinyui_gauge *gauge;
+    const struct tinyui_widget *disposed_backend;
 
     while (tail_ld != 0 && ldBaseGetNextSibling(tail_ld) != 0) {
         tail_ld = ldBaseGetNextSibling(tail_ld);
@@ -369,6 +370,7 @@ static void test_gauge_create_with_props_failure_rolls_back_attached_child(struc
         next_before_ld = ldBaseGetNextSibling(tail_ld);
     }
 
+    tinyui_test_capture_destroyed_widget_snapshot(0);
     gauge = tinyui_gauge_test_create_with_props_fail_before_centre_offset(
         (struct tinyui_widget *)win,
         &(struct tinyui_gauge_props){
@@ -381,21 +383,14 @@ static void test_gauge_create_with_props_failure_rolls_back_attached_child(struc
         });
 
     assert(gauge == 0);
-    assert(tinyui_gauge_test_take_last_dispose_snapshot(&snapshot) == 0);
-    assert(snapshot.kind == TINYUI_BACKEND_WIDGET_GAUGE);
-    assert(snapshot.cleanup_complete == 1);
-    assert(snapshot.cleanup_incomplete == 0);
-    assert(snapshot.detach_result == 0);
-    assert(snapshot.unbind_result == 0);
-    assert(snapshot.detached == 1);
-    assert(snapshot.owner_cleared == 1);
-    assert(snapshot.root_cleared == 1);
-    assert(snapshot.parent_cleared == 1);
-    assert(snapshot.next_sibling_cleared == 1);
-    assert(snapshot.host_cleared == 1);
-    assert(snapshot.event_bridge_cleared == 1);
-    assert(snapshot.ld_pinfo_cleared == 1);
-    assert(tinyui_gauge_test_take_last_dispose_snapshot(&snapshot) == -1);
+    disposed_backend = tinyui_gauge_test_last_disposed_backend();
+    assert(disposed_backend != 0);
+    assert(disposed_backend->kind == TINYUI_BACKEND_WIDGET_GAUGE);
+    assert(disposed_backend->owner == 0);
+    assert(disposed_backend->ld_event_bridge_scene == 0);
+    assert(disposed_backend->ld_event_bridge_sender == 0);
+    assert(disposed_backend->ld_event_bridge_next == 0);
+    assert(disposed_backend->ld_widget == 0);
     if (tail_ld != 0) {
         assert(ldBaseGetNextSibling(tail_ld) == next_before_ld);
     } else {

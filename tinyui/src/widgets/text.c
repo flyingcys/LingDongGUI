@@ -78,6 +78,25 @@ static int text_props_valid(const struct tinyui_text_props *props)
         && props->padding >= 0;
 }
 
+static void *tinyui_text_ld_init(void *ctx,
+                                 struct ld_scene_t *scene,
+                                 uint16_t name_id,
+                                 uint16_t parent_name_id)
+{
+    (void)ctx;
+    return ldText_init(scene,
+                       NULL,
+                       name_id,
+                       parent_name_id,
+                       0,
+                       0,
+                       220,
+                       48,
+                       NULL,
+                       TEXT_BOX_LINE_ALIGN_LEFT,
+                       false);
+}
+
 /**
  * @brief Create text widget
  *
@@ -89,51 +108,19 @@ static int text_props_valid(const struct tinyui_text_props *props)
 struct tinyui_text *tinyui_text_create(struct tinyui_window *parent, const char *id)
 {
     struct tinyui_text *text;
-    struct tinyui_app *app_state;
-    ldText_t *ld_text;
-    uint16_t name_id;
 
     if (parent == 0 || id == 0) {
         return 0;
     }
-
-    app_state = parent->widget.owner;
-    if (parent->widget.ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
-        return 0;
-    }
-
-    text = calloc(1, sizeof(*text));
+    text = (struct tinyui_text *)tinyui_widget_create_leaf(&parent->widget,
+                                                           TINYUI_BACKEND_WIDGET_TEXT,
+                                                           tinyui_text_ld_init,
+                                                           0,
+                                                           sizeof(*text));
     if (text == 0) {
         return 0;
     }
-
-    name_id = ++app_state->next_ld_name_id;
-
-    ld_text = ldText_init(app_state->ld_scene,
-                          NULL,
-                          name_id,
-                          parent->widget.ld_name_id,
-                          0,
-                          0,
-                          220,
-                          48,
-                          NULL,
-                          TEXT_BOX_LINE_ALIGN_LEFT,
-                          false);
-    if (ld_text == 0) {
-        free(text);
-        return 0;
-    }
-
     text->id = id;
-    text->widget.ld_widget  = ld_text;
-    text->widget.ld_name_id = name_id;
-    text->widget.kind       = TINYUI_BACKEND_WIDGET_TEXT;
-    text->widget.owner      = app_state;
-    text->widget.visible    = 1;
-    text->widget.enabled    = 1;
-    ((ldBase_t *)ld_text)->pInfo = &text->widget;
-    (void)tinyui_runtime_bridge_bind_leaf_widget(&text->widget, app_state);
 
     return text;
 }

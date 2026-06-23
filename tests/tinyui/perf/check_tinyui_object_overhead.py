@@ -116,8 +116,8 @@ def _run_probe(build_dir: Path) -> tuple[int, int]:
 def _run_self_test() -> None:
     _assert_wrapper_metric_within_gate(
         "widget_wrapper_struct_bytes",
-        actual_bytes=184,
-        baseline_bytes=192,
+        actual_bytes=240,
+        baseline_bytes=240,
         max_allowed_bytes=256,
     )
     print("SELFTEST_GREEN wrapper-regression-gate")

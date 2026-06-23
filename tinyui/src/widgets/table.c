@@ -27,31 +27,7 @@
 #include "../../../src/gui/ldBase.h"
 
 extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
-int tinyui_runtime_bridge_bind_leaf_widget(struct tinyui_widget *widget, struct tinyui_app *app);
 
-/* ---- test seam state ----
- * Snapshot machinery moved out of the production dispose path:
- * the closure-style depose callback installs the saved kind/scene,
- * destroy_common does the actual teardown, and the test getter
- * exposes the resulting snapshot. */
-struct tinyui_table_test_dispose_snapshot {
-    int kind;
-    int cleanup_complete;
-    int cleanup_incomplete;
-    int detach_result;
-    int unbind_result;
-    int detached;
-    int owner_cleared;
-    int root_cleared;
-    int parent_cleared;
-    int next_sibling_cleared;
-    int host_cleared;
-    int event_bridge_cleared;
-    int ld_pinfo_cleared;
-};
-
-static struct tinyui_table_test_dispose_snapshot s_table_last_snapshot;
-static int s_table_last_snapshot_valid = 0;
 static ld_scene_t *s_table_depose_scene = NULL;
 static int s_table_fail_next_set_keyboard_binding = 0;
 
@@ -65,12 +41,6 @@ static int tinyui_table_keyboard_binding_is_valid(unsigned int keyboard_binding)
     return keyboard_binding > 0U && keyboard_binding <= 0xFFFFU;
 }
 
-void tinyui_table_test_reset_dispose_snapshot(void)
-{
-    memset(&s_table_last_snapshot, 0, sizeof(s_table_last_snapshot));
-    s_table_last_snapshot_valid = 0;
-}
-
 static void tinyui_table_ld_depose_cb(void *ld_widget)
 {
     if (s_table_depose_scene != NULL) {
@@ -79,32 +49,12 @@ static void tinyui_table_ld_depose_cb(void *ld_widget)
     }
 }
 
-static void tinyui_table_capture_snapshot(struct tinyui_table *table)
-{
-    memset(&s_table_last_snapshot, 0, sizeof(s_table_last_snapshot));
-    s_table_last_snapshot.kind                 = (int)table->widget.kind;
-    s_table_last_snapshot.detach_result        = 0;
-    s_table_last_snapshot.unbind_result        = 0;
-    s_table_last_snapshot.cleanup_complete     = 1;
-    s_table_last_snapshot.cleanup_incomplete   = 0;
-    s_table_last_snapshot.detached             = 1;
-    s_table_last_snapshot.owner_cleared        = 1;
-    s_table_last_snapshot.root_cleared         = 1;
-    s_table_last_snapshot.parent_cleared       = 1;
-    s_table_last_snapshot.next_sibling_cleared = 1;
-    s_table_last_snapshot.host_cleared         = 1;
-    s_table_last_snapshot.event_bridge_cleared = 1;
-    s_table_last_snapshot.ld_pinfo_cleared     = 1;
-    s_table_last_snapshot_valid                = 1;
-}
-
 static void tinyui_table_rollback(struct tinyui_table *table)
 {
     if (table == 0) {
         return;
     }
     if (table->widget.ld_widget != 0) {
-        tinyui_table_capture_snapshot(table);
         s_table_depose_scene = table->widget.owner != 0
             ? table->widget.owner->ld_scene
             : NULL;
@@ -130,6 +80,30 @@ static int tinyui_table_props_are_valid(const struct tinyui_table_props *props)
 static int tinyui_table_sync_current_cell_local(struct tinyui_table *table,
                                                 int *row_out,
                                                 int *column_out);
+
+static void *tinyui_table_ld_init(void *ctx,
+                                  struct ld_scene_t *scene,
+                                  uint16_t name_id,
+                                  uint16_t parent_name_id)
+{
+    const struct tinyui_table *table = (const struct tinyui_table *)ctx;
+
+    if (table == NULL) {
+        return 0;
+    }
+
+    return ldTable_init(scene,
+                        NULL,
+                        name_id,
+                        parent_name_id,
+                        0,
+                        0,
+                        220,
+                        120,
+                        (uint8_t)table->row_count,
+                        (uint8_t)table->column_count,
+                        4);
+}
 
 static bool tinyui_table_native_slot(struct ld_scene_t *scene, ldMsg_t msg)
 {
@@ -252,55 +226,30 @@ struct tinyui_table *tinyui_table_create(struct tinyui_window *parent,
                                          int columns)
 {
     struct tinyui_table *table;
-    struct tinyui_app *app_state;
-    ldTable_t *ld_table;
-    uint16_t name_id;
+    struct tinyui_table ctx = {0};
 
     if (parent == 0 || id == 0 || !tinyui_table_dims_are_valid(rows, columns)) {
         return 0;
     }
 
-    app_state = parent->widget.owner;
-    if (parent->widget.ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
+    if (parent->widget.ld_widget == 0 || parent->widget.owner == 0) {
         return 0;
     }
 
-    table = calloc(1, sizeof(*table));
+    ctx.row_count = rows;
+    ctx.column_count = columns;
+    table = (struct tinyui_table *)tinyui_widget_create_leaf(&parent->widget,
+                                                             TINYUI_BACKEND_WIDGET_TABLE,
+                                                             tinyui_table_ld_init,
+                                                             &ctx,
+                                                             sizeof(*table));
     if (table == 0) {
         return 0;
     }
 
-    name_id = ++app_state->next_ld_name_id;
-    if (name_id == 0) {
-        free(table);
-        return 0;
-    }
-
-    ld_table = ldTable_init(app_state->ld_scene,
-                            NULL,
-                            name_id,
-                            parent->widget.ld_name_id,
-                            0,
-                            0,
-                            220,
-                            120,
-                            (uint8_t)rows,
-                            (uint8_t)columns,
-                            4);
-    if (ld_table == 0) {
-        free(table);
-        return 0;
-    }
-
     table->id = id;
-    table->widget.ld_widget  = ld_table;
-    table->widget.ld_name_id = name_id;
-    table->widget.kind       = TINYUI_BACKEND_WIDGET_TABLE;
-    table->widget.owner      = app_state;
     table->widget.visible    = 1;
     table->widget.enabled    = 1;
-    ((ldBase_t *)ld_table)->pInfo = &table->widget;
-    tinyui_runtime_bridge_bind_leaf_widget(&table->widget, app_state);
     table->row_count = rows;
     table->column_count = columns;
     table->current_row = 0;
@@ -437,19 +386,6 @@ int tinyui_table_get_keyboard_binding(const struct tinyui_table *table, unsigned
     return 0;
 }
 
-int tinyui_table_test_take_last_dispose_snapshot(
-    struct tinyui_table_test_dispose_snapshot *snapshot)
-{
-    if (snapshot == 0 || s_table_last_snapshot_valid == 0) {
-        return -1;
-    }
-
-    *snapshot = s_table_last_snapshot;
-    memset(&s_table_last_snapshot, 0, sizeof(s_table_last_snapshot));
-    s_table_last_snapshot_valid = 0;
-    return 0;
-}
-
 void tinyui_table_test_fail_next_set_keyboard_binding(void)
 {
     s_table_fail_next_set_keyboard_binding = 1;
@@ -458,7 +394,6 @@ void tinyui_table_test_fail_next_set_keyboard_binding(void)
 void tinyui_table_test_reset_state(void)
 {
     s_table_fail_next_set_keyboard_binding = 0;
-    tinyui_table_test_reset_dispose_snapshot();
 }
 
 /**

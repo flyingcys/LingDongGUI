@@ -110,52 +110,47 @@ static int tinyui_button_props_are_valid(const struct tinyui_button_props *props
         && props->padding >= 0;
 }
 
+static void *tinyui_button_ld_init(void *ctx,
+                                   struct ld_scene_t *scene,
+                                   uint16_t name_id,
+                                   uint16_t parent_name_id)
+{
+    (void)ctx;
+    return ldButton_init(scene,
+                         NULL,
+                         name_id,
+                         parent_name_id,
+                         0,
+                         0,
+                         160,
+                         36);
+}
+
 static struct tinyui_button *tinyui_button_alloc(struct tinyui_window *parent, const char *id)
 {
     struct tinyui_button *button;
-    struct tinyui_app *app_state;
-    ldButton_t *ld_button;
-    uint16_t name_id;
 
     if (parent == 0 || id == 0) {
         return 0;
     }
 
-    app_state = parent->widget.owner;
-    if (parent->widget.ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
+    if (parent->widget.ld_widget == 0 || parent->widget.owner == 0) {
         return 0;
     }
 
-    button = calloc(1, sizeof(*button));
+    button = (struct tinyui_button *)tinyui_widget_create_leaf(&parent->widget,
+                                                               TINYUI_BACKEND_WIDGET_BUTTON,
+                                                               tinyui_button_ld_init,
+                                                               0,
+                                                               sizeof(*button));
     if (button == 0) {
         return 0;
     }
 
-    name_id = ++app_state->next_ld_name_id;
-
-    ld_button = ldButton_init(app_state->ld_scene,
-                              NULL,
-                              name_id,
-                              parent->widget.ld_name_id,
-                              0,
-                              0,
-                              160,
-                              36);
-    if (ld_button == 0) {
-        free(button);
-        return 0;
-    }
-
     button->id = id;
-    button->widget.ld_widget  = ld_button;
-    button->widget.ld_name_id = name_id;
-    button->widget.kind       = TINYUI_BACKEND_WIDGET_BUTTON;
-    button->widget.owner      = app_state;
     button->widget.visible    = 1;
     button->widget.enabled    = 1;
-    ((ldBase_t *)ld_button)->pInfo = &button->widget;
-    _xBtnInit(name_id, (isBtnPressFunc)ldButtonActionIsPressById, &button->action_info);
-    tinyui_runtime_bridge_bind_leaf_widget(&button->widget, app_state);
+    _xBtnInit(button->widget.ld_name_id, (isBtnPressFunc)ldButtonActionIsPressById, &button->action_info);
 
     return button;
 }

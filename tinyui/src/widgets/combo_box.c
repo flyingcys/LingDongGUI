@@ -27,8 +27,6 @@
 
 extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
 
-int tinyui_runtime_bridge_bind_leaf_widget(struct tinyui_widget *widget, struct tinyui_app *app);
-
 static ld_scene_t *s_combo_box_depose_scene = NULL;
 
 static void tinyui_combo_box_ld_depose_cb(void *ld_widget)
@@ -120,6 +118,23 @@ static int combo_box_props_valid(const struct tinyui_combo_box_props *props)
            props->padding >= 0;
 }
 
+static void *tinyui_combo_box_ld_init(void *ctx,
+                                      struct ld_scene_t *scene,
+                                      uint16_t name_id,
+                                      uint16_t parent_name_id)
+{
+    (void)ctx;
+    return ldComboBox_init(scene,
+                           NULL,
+                           name_id,
+                           parent_name_id,
+                           0,
+                           0,
+                           220,
+                           32,
+                           (arm_2d_font_t *)&ARM_2D_FONT_6x8);
+}
+
 int tinyui_combo_box_set_items(struct tinyui_combo_box *combo_box,
                                const char *const *item_ids,
                                const unsigned char *const *items,
@@ -198,46 +213,23 @@ int tinyui_combo_box_bind_host(struct tinyui_combo_box *combo_box)
 struct tinyui_combo_box *tinyui_combo_box_create(struct tinyui_window *parent, const char *id)
 {
     struct tinyui_combo_box *combo_box;
-    struct tinyui_app *app_state;
-    ldComboBox_t *ld_combo_box;
-    uint16_t name_id;
 
     if (parent == 0 || id == 0) {
         return 0;
     }
-
-    app_state = parent->widget.owner;
-    if (app_state == NULL || app_state->ld_scene == NULL || parent->widget.ld_widget == NULL) {
+    if (parent->widget.owner == NULL || parent->widget.ld_widget == NULL) {
         return 0;
     }
 
-    combo_box = calloc(1, sizeof(*combo_box));
+    combo_box = (struct tinyui_combo_box *)tinyui_widget_create_leaf(&parent->widget,
+                                                                     TINYUI_BACKEND_WIDGET_COMBO_BOX,
+                                                                     tinyui_combo_box_ld_init,
+                                                                     0,
+                                                                     sizeof(*combo_box));
     if (combo_box == 0) {
         return 0;
     }
-
-    name_id = ++app_state->next_ld_name_id;
-    ld_combo_box = ldComboBox_init(app_state->ld_scene,
-                                   NULL,
-                                   name_id,
-                                   parent->widget.ld_name_id,
-                                   0,
-                                   0,
-                                   220,
-                                   32,
-                                   (arm_2d_font_t *)&ARM_2D_FONT_6x8);
-    if (ld_combo_box == NULL) {
-        free(combo_box);
-        return 0;
-    }
-
-    combo_box->widget.kind = TINYUI_BACKEND_WIDGET_COMBO_BOX;
-    combo_box->widget.owner = app_state;
-    combo_box->widget.ld_widget = ld_combo_box;
-    combo_box->widget.ld_name_id = name_id;
     combo_box->widget.value = -1;
-    ((ldBase_t *)ld_combo_box)->pInfo = &combo_box->widget;
-    tinyui_runtime_bridge_bind_leaf_widget(&combo_box->widget, app_state);
 
     combo_box->id = id;
     combo_box->item_max = TINYUI_LIST_MAX_ITEMS;

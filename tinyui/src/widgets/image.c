@@ -46,6 +46,24 @@ static int image_props_valid(const struct tinyui_image_props *props)
         && props->padding >= 0;
 }
 
+static void *tinyui_image_ld_init(void *ctx,
+                                  struct ld_scene_t *scene,
+                                  uint16_t name_id,
+                                  uint16_t parent_name_id)
+{
+    (void)ctx;
+    return ldImage_init(scene,
+                        NULL,
+                        name_id,
+                        parent_name_id,
+                        0,
+                        0,
+                        220,
+                        56,
+                        NULL,
+                        NULL);
+}
+
 /**
  * @brief Create image widget
  *
@@ -57,50 +75,19 @@ static int image_props_valid(const struct tinyui_image_props *props)
 struct tinyui_image *tinyui_image_create(struct tinyui_window *parent, const char *id)
 {
     struct tinyui_image *image;
-    struct tinyui_app *app_state;
-    ldImage_t *ld_image;
-    uint16_t name_id;
 
     if (parent == 0 || id == 0) {
         return 0;
     }
-
-    app_state = parent->widget.owner;
-    if (parent->widget.ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
-        return 0;
-    }
-
-    image = calloc(1, sizeof(*image));
+    image = (struct tinyui_image *)tinyui_widget_create_leaf(&parent->widget,
+                                                             TINYUI_BACKEND_WIDGET_IMAGE,
+                                                             tinyui_image_ld_init,
+                                                             0,
+                                                             sizeof(*image));
     if (image == 0) {
         return 0;
     }
-
-    name_id = ++app_state->next_ld_name_id;
-
-    ld_image = ldImage_init(app_state->ld_scene,
-                            NULL,
-                            name_id,
-                            parent->widget.ld_name_id,
-                            0,
-                            0,
-                            220,
-                            56,
-                            NULL,
-                            NULL);
-    if (ld_image == 0) {
-        free(image);
-        return 0;
-    }
-
     image->id = id;
-    image->widget.ld_widget  = ld_image;
-    image->widget.ld_name_id = name_id;
-    image->widget.kind       = TINYUI_BACKEND_WIDGET_IMAGE;
-    image->widget.owner      = app_state;
-    image->widget.visible    = 1;
-    image->widget.enabled    = 1;
-    ((ldBase_t *)ld_image)->pInfo = &image->widget;
-    (void)tinyui_runtime_bridge_bind_leaf_widget(&image->widget, app_state);
 
     return image;
 }

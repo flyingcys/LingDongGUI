@@ -24,29 +24,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* ---- test seam state ----
- * Snapshot machinery moved out of the production dispose path:
- * the closure-style depose callback installs the saved kind/scene,
- * destroy_common does the actual teardown, and the test getter
- * exposes the resulting snapshot. */
-struct tinyui_progress_bar_test_dispose_snapshot {
-    int kind;
-    int cleanup_complete;
-    int cleanup_incomplete;
-    int detach_result;
-    int unbind_result;
-    int detached;
-    int owner_cleared;
-    int root_cleared;
-    int parent_cleared;
-    int next_sibling_cleared;
-    int host_cleared;
-    int event_bridge_cleared;
-    int ld_pinfo_cleared;
-};
-
-static struct tinyui_progress_bar_test_dispose_snapshot s_pb_last_snapshot;
-static int s_pb_last_snapshot_valid = 0;
 static ld_scene_t *s_pb_depose_scene = NULL;
 
 static void tinyui_progress_bar_ld_depose_cb(void *ld_widget)
@@ -57,32 +34,12 @@ static void tinyui_progress_bar_ld_depose_cb(void *ld_widget)
     }
 }
 
-static void tinyui_progress_bar_capture_snapshot(struct tinyui_progress_bar *bar)
-{
-    memset(&s_pb_last_snapshot, 0, sizeof(s_pb_last_snapshot));
-    s_pb_last_snapshot.kind                 = (int)bar->widget.kind;
-    s_pb_last_snapshot.detach_result        = 0;
-    s_pb_last_snapshot.unbind_result        = 0;
-    s_pb_last_snapshot.cleanup_complete     = 1;
-    s_pb_last_snapshot.cleanup_incomplete   = 0;
-    s_pb_last_snapshot.detached             = 1;
-    s_pb_last_snapshot.owner_cleared        = 1;
-    s_pb_last_snapshot.root_cleared         = 1;
-    s_pb_last_snapshot.parent_cleared       = 1;
-    s_pb_last_snapshot.next_sibling_cleared = 1;
-    s_pb_last_snapshot.host_cleared         = 1;
-    s_pb_last_snapshot.event_bridge_cleared = 1;
-    s_pb_last_snapshot.ld_pinfo_cleared     = 1;
-    s_pb_last_snapshot_valid                = 1;
-}
-
 static void tinyui_progress_bar_rollback(struct tinyui_progress_bar *bar)
 {
     if (bar == 0) {
         return;
     }
     if (bar->widget.ld_widget != 0) {
-        tinyui_progress_bar_capture_snapshot(bar);
         s_pb_depose_scene = bar->widget.owner != 0 ? bar->widget.owner->ld_scene : NULL;
         tinyui_widget_destroy_common(&bar->widget, tinyui_progress_bar_ld_depose_cb);
     } else {
@@ -95,31 +52,21 @@ void tinyui_progress_bar_test_destroy(struct tinyui_progress_bar *bar)
     tinyui_progress_bar_rollback(bar);
 }
 
-void tinyui_progress_bar_test_reset_state(void)
-{
-    memset(&s_pb_last_snapshot, 0, sizeof(s_pb_last_snapshot));
-    s_pb_last_snapshot_valid = 0;
-}
-
-int tinyui_progress_bar_test_take_last_dispose_snapshot(
-    struct tinyui_progress_bar_test_dispose_snapshot *snapshot)
-{
-    if (snapshot == 0 || s_pb_last_snapshot_valid == 0) {
-        return -1;
-    }
-
-    *snapshot = s_pb_last_snapshot;
-    memset(&s_pb_last_snapshot, 0, sizeof(s_pb_last_snapshot));
-    s_pb_last_snapshot_valid = 0;
-    return 0;
-}
-
 static int tinyui_progress_bar_props_are_valid(const struct tinyui_progress_bar_props *props)
 {
     return props != 0
         && props->id != 0
         && props->percent >= 0
         && props->percent <= 100;
+}
+
+static void *tinyui_progress_bar_ld_init(void *ctx,
+                                         struct ld_scene_t *scene,
+                                         uint16_t name_id,
+                                         uint16_t parent_name_id)
+{
+    (void)ctx;
+    return ldProgressBar_init(scene, NULL, name_id, parent_name_id, 0, 0, 220, 24);
 }
 
 static struct tinyui_progress_bar *tinyui_progress_bar_create_with_props_impl(
@@ -169,48 +116,19 @@ static struct tinyui_progress_bar *tinyui_progress_bar_create_with_props_impl(
 struct tinyui_progress_bar *tinyui_progress_bar_create(struct tinyui_window *parent, const char *id)
 {
     struct tinyui_progress_bar *bar;
-    struct tinyui_app *app_state;
-    ldProgressBar_t *ld_progress_bar;
-    uint16_t name_id;
 
     if (parent == 0 || id == 0) {
         return 0;
     }
-
-    app_state = parent->widget.owner;
-    if (parent->widget.ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
-        return 0;
-    }
-
-    bar = calloc(1, sizeof(*bar));
+    bar = (struct tinyui_progress_bar *)tinyui_widget_create_leaf(&parent->widget,
+                                                                  TINYUI_BACKEND_WIDGET_PROGRESS_BAR,
+                                                                  tinyui_progress_bar_ld_init,
+                                                                  0,
+                                                                  sizeof(*bar));
     if (bar == 0) {
         return 0;
     }
-
-    name_id = ++app_state->next_ld_name_id;
-
-    ld_progress_bar = ldProgressBar_init(app_state->ld_scene,
-                                         NULL,
-                                         name_id,
-                                         parent->widget.ld_name_id,
-                                         0,
-                                         0,
-                                         220,
-                                         24);
-    if (ld_progress_bar == 0) {
-        free(bar);
-        return 0;
-    }
-
     bar->id = id;
-    bar->widget.ld_widget  = ld_progress_bar;
-    bar->widget.ld_name_id = name_id;
-    bar->widget.kind       = TINYUI_BACKEND_WIDGET_PROGRESS_BAR;
-    bar->widget.owner      = app_state;
-    bar->widget.visible    = 1;
-    bar->widget.enabled    = 1;
-    ((ldBase_t *)ld_progress_bar)->pInfo = &bar->widget;
-    (void)tinyui_runtime_bridge_bind_leaf_widget(&bar->widget, app_state);
 
     if (tinyui_progress_bar_set_percent(bar, 0) != 0
         || tinyui_progress_bar_set_horizontal(bar, 0) != 0

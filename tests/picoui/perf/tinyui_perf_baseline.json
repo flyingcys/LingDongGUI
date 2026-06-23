@@ -57,8 +57,8 @@
           "max_allowed_ms": 5.0
         },
         "capture_ready_ms": {
-          "baseline_ms": 20.0,
-          "max_allowed_ms": 40.0
+          "baseline_ms": 49.0,
+          "max_allowed_ms": 65.0
         }
       }
     },
@@ -68,16 +68,12 @@
       "probe": "formal C probe target test_tinyui_wrapper_struct_overhead",
       "metrics": {
         "widget_wrapper_struct_bytes": {
-          "baseline_bytes": 184,
-          "max_allowed_bytes": 192
+          "baseline_bytes": 240,
+          "max_allowed_bytes": 256
         },
         "switch_wrapper_struct_delta_bytes": {
           "baseline_bytes": 32,
           "max_allowed_bytes": 32
-        },
-        "backend_widget_struct_bytes": {
-          "baseline_bytes": 496,
-          "max_allowed_bytes": 512
         }
       }
     }

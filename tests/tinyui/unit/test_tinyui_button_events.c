@@ -263,6 +263,7 @@ static void test_button_internal_seams_use_tinyui_prefix(void)
     assert_repo_file_lacks("tinyui/src/widgets/button.c", "picoui_button_props_are_valid");
     assert_repo_file_lacks("tinyui/src/widgets/button.c", "picoui_button_fail_next_set_font");
     assert_repo_file_lacks("tinyui/src/widgets/button.c", "picoui_backend_button_test_fail_next_set_font");
+    assert_repo_file_contains("tinyui/src/widgets/button.c", "tinyui_widget_create_leaf");
     assert_repo_file_contains("tinyui/src/widgets/button.c", "tinyui_button_alloc");
     assert_repo_file_contains("tinyui/src/widgets/button.c", "tinyui_button_set_event");
     assert_repo_file_contains("tinyui/src/widgets/button.c", "tinyui_button_default_font");

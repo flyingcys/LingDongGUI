@@ -472,6 +472,7 @@ static void test_line_edit_public_create_uses_widget_local_backend(struct tinyui
 
 static void test_line_edit_internal_helpers_no_longer_use_tinyui_backend_prefix(void)
 {
+    assert_source_lacks_function_definition(test_line_edit_source_path, "tinyui_line_edit_alloc");
     assert_source_lacks_function_definition(test_line_edit_source_path, "tinyui_line_edit_dispose_partial");
     assert_source_lacks_function_definition(test_line_edit_source_path, "tinyui_backend_line_edit_get_ld");
     assert_source_lacks_function_definition(test_line_edit_source_path, "tinyui_backend_line_edit_align_to_ld");
@@ -488,6 +489,19 @@ static void test_line_edit_internal_helpers_no_longer_use_tinyui_backend_prefix(
     assert_source_lacks_function_definition(test_line_edit_source_path, "tinyui_backend_line_edit_get_keyboard_binding");
     assert_source_lacks_function_definition(test_line_edit_source_path, "tinyui_backend_line_edit_bind_host");
     assert_source_lacks_function_definition(test_line_edit_source_path, "tinyui_backend_line_edit_get_editing");
+    {
+        char command[1024];
+        snprintf(command,
+                 sizeof(command),
+                 "python3 - '%s' <<'PY'\n"
+                 "from pathlib import Path\n"
+                 "import sys\n"
+                 "text = Path(sys.argv[1]).read_text()\n"
+                 "raise SystemExit(0 if 'tinyui_widget_create_leaf' in text else 1)\n"
+                 "PY",
+                 test_line_edit_source_path);
+        assert(system(command) == 0);
+    }
     assert_self_binary_lacks_symbol("tinyui_backend_line_edit_set_text");
     assert_self_binary_lacks_symbol("tinyui_backend_line_edit_set_align");
     assert_self_binary_lacks_symbol("tinyui_backend_line_edit_set_color");

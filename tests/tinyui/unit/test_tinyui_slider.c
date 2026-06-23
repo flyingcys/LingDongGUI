@@ -10,7 +10,28 @@
 
 extern int tinyui_widget_has_ld_binding(const struct tinyui_widget *widget);
 void tinyui_slider_test_fail_indicator_width_for_id(const char *id);
-const struct tinyui_widget *tinyui_slider_test_last_disposed_backend(void);
+static struct tinyui_widget g_disposed_backend_snapshot;
+static int g_disposed_backend_valid = 0;
+
+void tinyui_test_capture_destroyed_widget_snapshot(const struct tinyui_widget *widget)
+{
+    if (widget == 0) {
+        memset(&g_disposed_backend_snapshot, 0, sizeof(g_disposed_backend_snapshot));
+        g_disposed_backend_valid = 0;
+        return;
+    }
+
+    g_disposed_backend_snapshot = *widget;
+    g_disposed_backend_valid = 1;
+}
+
+const struct tinyui_widget *tinyui_slider_test_last_disposed_backend(void)
+{
+    if (g_disposed_backend_valid == 0) {
+        return 0;
+    }
+    return &g_disposed_backend_snapshot;
+}
 
 static const char *test_source_file_path = __FILE__;
 
@@ -162,6 +183,7 @@ static void test_slider_create_with_props_failure_rolls_back_attached_child(stru
         next_before_ld = ldBaseGetNextSibling(tail_ld);
     }
 
+    tinyui_test_capture_destroyed_widget_snapshot(0);
     tinyui_slider_test_fail_indicator_width_for_id("sl_fail_indicator_width");
     slider = tinyui_slider_create_with_props(
         win,
@@ -181,7 +203,7 @@ static void test_slider_create_with_props_failure_rolls_back_attached_child(stru
     assert(disposed_backend->ld_event_bridge_scene == 0);
     assert(disposed_backend->ld_event_bridge_sender == 0);
     assert(disposed_backend->ld_event_bridge_next == 0);
-    assert(((const ldBase_t *)disposed_backend->ld_widget)->pInfo == 0);
+    assert(disposed_backend->ld_widget == 0);
     if (tail_ld != 0) {
         assert(ldBaseGetNextSibling(tail_ld) == next_before_ld);
     } else {
@@ -291,12 +313,15 @@ static void test_slider_internal_seams_are_renamed(void)
     assert(file_contains_pattern(slider_source_path, "tinyui_slider_backend(") != 0);
     assert(file_contains_pattern(slider_source_path, "tinyui_slider_props_are_valid(") != 0);
     assert(file_contains_pattern(slider_source_path,
-                                 "tinyui_slider_test_last_disposed_backend(")
-           != 0);
+                                 "tinyui_test_capture_destroyed_widget_snapshot(")
+           == 0);
 
     for (i = 0; i < sizeof(old_internal_symbols) / sizeof(old_internal_symbols[0]); ++i) {
         assert(file_contains_pattern(slider_source_path, old_internal_symbols[i]) == 0);
     }
+    assert(file_contains_pattern(slider_source_path,
+                                 "tinyui_slider_test_last_disposed_backend(")
+           == 0);
 }
 
 int main(void)

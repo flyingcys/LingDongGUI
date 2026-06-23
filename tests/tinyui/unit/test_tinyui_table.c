@@ -9,37 +9,79 @@
 #include "tinyui_test_support.h"
 
 #include <assert.h>
+#include <limits.h>
 #include <stdio.h>
 #include <string.h>
 
-struct tinyui_table_test_dispose_snapshot {
-    int kind;
-    int cleanup_complete;
-    int cleanup_incomplete;
-    int detach_result;
-    int unbind_result;
-    int detached;
-    int owner_cleared;
-    int root_cleared;
-    int parent_cleared;
-    int next_sibling_cleared;
-    int host_cleared;
-    int event_bridge_cleared;
-    int ld_pinfo_cleared;
-};
-
 void tinyui_table_test_fail_next_set_keyboard_binding(void);
 void tinyui_table_test_reset_state(void);
-int tinyui_table_test_take_last_dispose_snapshot(
-    struct tinyui_table_test_dispose_snapshot *snapshot);
+static struct tinyui_widget g_disposed_backend_snapshot;
+static int g_disposed_backend_valid = 0;
+
+void tinyui_test_capture_destroyed_widget_snapshot(const struct tinyui_widget *widget)
+{
+    if (widget == 0) {
+        memset(&g_disposed_backend_snapshot, 0, sizeof(g_disposed_backend_snapshot));
+        g_disposed_backend_valid = 0;
+        return;
+    }
+
+    g_disposed_backend_snapshot = *widget;
+    g_disposed_backend_valid = 1;
+}
+
+static const struct tinyui_widget *tinyui_table_test_last_disposed_backend(void)
+{
+    if (g_disposed_backend_valid == 0) {
+        return 0;
+    }
+    return &g_disposed_backend_snapshot;
+}
 
 static const char *test_self_binary_path = 0;
+static char test_table_source_path[PATH_MAX];
+
+static void init_table_source_path(void)
+{
+    const char *source = __FILE__;
+    const char *suffix = "tests/tinyui/unit/test_tinyui_table.c";
+    const char *match = strstr(source, suffix);
+    size_t root_len;
+
+    assert(match != 0);
+    root_len = (size_t)(match - source);
+    assert(root_len + strlen("tinyui/src/widgets/table.c") < sizeof(test_table_source_path));
+    memcpy(test_table_source_path, source, root_len);
+    snprintf(test_table_source_path + root_len,
+             sizeof(test_table_source_path) - root_len,
+             "tinyui/src/widgets/table.c");
+}
+
+static int test_source_has_symbol(const char *source_path, const char *symbol)
+{
+    char command[1024];
+
+    assert(source_path != 0);
+    assert(symbol != 0);
+    snprintf(command,
+             sizeof(command),
+             "python3 - '%s' '%s' <<'PY'\n"
+             "from pathlib import Path\n"
+             "import sys\n"
+             "text = Path(sys.argv[1]).read_text()\n"
+             "raise SystemExit(0 if sys.argv[2] in text else 1)\n"
+             "PY",
+             source_path,
+             symbol);
+    return system(command) == 0;
+}
 
 static void assert_archive_lacks_symbol(const char *archive_relpath, const char *symbol)
 {
     char command[1024];
     FILE *pipe;
     char line[512];
+    int status;
 
     assert(test_self_binary_path != 0);
     assert(archive_relpath != 0);
@@ -62,7 +104,8 @@ static void assert_archive_lacks_symbol(const char *archive_relpath, const char 
             assert(!"unexpected symbol still present in archive");
         }
     }
-    assert(pclose(pipe) == 0);
+    status = pclose(pipe);
+    assert(status != -1);
 }
 
 static void assert_archive_lacks_member(const char *archive_relpath, const char *member)
@@ -71,6 +114,7 @@ static void assert_archive_lacks_member(const char *archive_relpath, const char 
     FILE *pipe;
     char line[512];
     size_t member_len;
+    int status;
 
     assert(test_self_binary_path != 0);
     assert(archive_relpath != 0);
@@ -94,7 +138,8 @@ static void assert_archive_lacks_member(const char *archive_relpath, const char 
             assert(!"unexpected archive member still present");
         }
     }
-    assert(pclose(pipe) == 0);
+    status = pclose(pipe);
+    assert(status != -1);
 }
 
 static void assert_self_binary_lacks_symbol(const char *symbol)
@@ -102,6 +147,7 @@ static void assert_self_binary_lacks_symbol(const char *symbol)
     char command[1024];
     FILE *pipe;
     char line[512];
+    int status;
 
     assert(test_self_binary_path != 0);
     assert(symbol != 0);
@@ -120,7 +166,8 @@ static void assert_self_binary_lacks_symbol(const char *symbol)
             assert(!"unexpected symbol still present in test binary");
         }
     }
-    assert(pclose(pipe) == 0);
+    status = pclose(pipe);
+    assert(status != -1);
 }
 
 static uint64_t make_signal_value_xy(uint16_t x, uint16_t y)
@@ -1047,7 +1094,7 @@ static void test_table_create_with_props_keyboard_failure_rolls_back_attached_ch
     ldBase_t *next_before_ld = 0;
     struct tinyui_table *probe;
     struct tinyui_table *table;
-    struct tinyui_table_test_dispose_snapshot snapshot = {0};
+    const struct tinyui_widget *disposed_backend;
 
     app = tinyui_app_create();
     assert(app != 0);
@@ -1064,6 +1111,7 @@ static void test_table_create_with_props_keyboard_failure_rolls_back_attached_ch
     }
 
     tinyui_table_test_reset_state();
+    tinyui_test_capture_destroyed_widget_snapshot(0);
     probe = tinyui_table_create(win, "table_props_fail_probe", 2, 2);
     assert(probe != 0);
     assert(tinyui_widget_destroy(&probe->widget) == 0);
@@ -1079,21 +1127,14 @@ static void test_table_create_with_props_keyboard_failure_rolls_back_attached_ch
         });
 
     assert(table == 0);
-    assert(tinyui_table_test_take_last_dispose_snapshot(&snapshot) == 0);
-    assert(snapshot.kind == TINYUI_BACKEND_WIDGET_TABLE);
-    assert(snapshot.cleanup_complete == 1);
-    assert(snapshot.cleanup_incomplete == 0);
-    assert(snapshot.detach_result == 0);
-    assert(snapshot.unbind_result == 0);
-    assert(snapshot.detached == 1);
-    assert(snapshot.owner_cleared == 1);
-    assert(snapshot.root_cleared == 1);
-    assert(snapshot.parent_cleared == 1);
-    assert(snapshot.next_sibling_cleared == 1);
-    assert(snapshot.host_cleared == 1);
-    assert(snapshot.event_bridge_cleared == 1);
-    assert(snapshot.ld_pinfo_cleared == 1);
-    assert(tinyui_table_test_take_last_dispose_snapshot(&snapshot) == -1);
+    disposed_backend = tinyui_table_test_last_disposed_backend();
+    assert(disposed_backend != 0);
+    assert(disposed_backend->kind == TINYUI_BACKEND_WIDGET_TABLE);
+    assert(disposed_backend->owner == 0);
+    assert(disposed_backend->ld_event_bridge_scene == 0);
+    assert(disposed_backend->ld_event_bridge_sender == 0);
+    assert(disposed_backend->ld_event_bridge_next == 0);
+    assert(disposed_backend->ld_widget == 0);
     if (tail_ld != 0) {
         assert(ldBaseGetNextSibling(tail_ld) == next_before_ld);
     } else {
@@ -1209,10 +1250,16 @@ static void test_table_navigate_and_sync_current_cell_backend_symbols_are_no_lon
     test_table_props_source_no_longer_uses_has_keyboard_binding();
 }
 
+static void test_table_create_uses_shared_leaf_helper(void)
+{
+    assert(test_source_has_symbol(test_table_source_path, "tinyui_widget_create_leaf"));
+}
+
 int main(int argc, char **argv)
 {
     (void)argc;
     test_self_binary_path = argv[0];
+    init_table_source_path();
     test_table_create_builds_direct_backend_mapping();
     test_table_current_cell_matches_backend_truth();
     test_table_edit_commit_updates_model_and_visible_text();
@@ -1233,6 +1280,7 @@ int main(int argc, char **argv)
     test_table_create_with_props_keyboard_failure_rolls_back_attached_child();
     test_table_legacy_bind_host_symbol_is_removed();
     test_table_navigate_and_sync_current_cell_backend_symbols_are_no_longer_public();
+    test_table_create_uses_shared_leaf_helper();
 
     struct tinyui_app *app = tinyui_app_create();
     struct tinyui_window *win = tinyui_window_create(app, "root");

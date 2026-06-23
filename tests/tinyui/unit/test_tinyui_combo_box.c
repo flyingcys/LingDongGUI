@@ -491,6 +491,7 @@ static void test_combo_box_get_open_round_trip(struct tinyui_window *win)
 
 static void test_combo_box_internal_helpers_no_longer_use_tinyui_backend_prefix(void)
 {
+    assert(test_source_has_function_definition(test_combo_box_source_path, "tinyui_widget_create_leaf"));
     assert_source_lacks_function_definition(test_combo_box_source_path, "tinyui_backend_combo_box_rgb_to_ld_color");
     assert_source_lacks_function_definition(test_combo_box_source_path, "tinyui_backend_combo_box_get_ld");
     assert_source_lacks_function_definition(test_combo_box_source_path, "tinyui_backend_combo_box_native_slot");

@@ -29,32 +29,16 @@ extern const arm_2d_tile_t c_tileQuaterArcMask;
 extern const arm_2d_tile_t c_tilePointerSecGRAY8;
 extern const arm_2d_tile_t c_tilePointerSecMask;
 
-/* ---- test seam state ----
- * Snapshot machinery moved out of the production dispose path:
- * the closure-style depose callback installs the saved kind/scene,
- * destroy_common does the actual teardown, and the test getter
- * exposes the resulting snapshot. */
-struct tinyui_gauge_test_dispose_snapshot {
-    int kind;
-    int cleanup_complete;
-    int cleanup_incomplete;
-    int detach_result;
-    int unbind_result;
-    int detached;
-    int owner_cleared;
-    int root_cleared;
-    int parent_cleared;
-    int next_sibling_cleared;
-    int host_cleared;
-    int event_bridge_cleared;
-    int ld_pinfo_cleared;
-};
-
-static struct tinyui_gauge_test_dispose_snapshot s_gauge_last_snapshot;
-static int s_gauge_last_snapshot_valid = 0;
 static ld_scene_t *s_gauge_depose_scene = NULL;
 
 static int tinyui_gauge_props_are_valid(const struct tinyui_gauge_props *props);
+
+struct tinyui_gauge_create_ctx {
+    arm_2d_tile_t *bg_img_tile;
+    arm_2d_tile_t *bg_mask_tile;
+    arm_2d_tile_t *pointer_img_tile;
+    arm_2d_tile_t *pointer_mask_tile;
+};
 
 static void tinyui_gauge_ld_depose_cb(void *ld_widget)
 {
@@ -64,32 +48,12 @@ static void tinyui_gauge_ld_depose_cb(void *ld_widget)
     }
 }
 
-static void tinyui_gauge_capture_snapshot(struct tinyui_gauge *gauge)
-{
-    memset(&s_gauge_last_snapshot, 0, sizeof(s_gauge_last_snapshot));
-    s_gauge_last_snapshot.kind                 = (int)gauge->widget.kind;
-    s_gauge_last_snapshot.detach_result        = 0;
-    s_gauge_last_snapshot.unbind_result        = 0;
-    s_gauge_last_snapshot.cleanup_complete     = 1;
-    s_gauge_last_snapshot.cleanup_incomplete   = 0;
-    s_gauge_last_snapshot.detached             = 1;
-    s_gauge_last_snapshot.owner_cleared        = 1;
-    s_gauge_last_snapshot.root_cleared         = 1;
-    s_gauge_last_snapshot.parent_cleared       = 1;
-    s_gauge_last_snapshot.next_sibling_cleared = 1;
-    s_gauge_last_snapshot.host_cleared         = 1;
-    s_gauge_last_snapshot.event_bridge_cleared = 1;
-    s_gauge_last_snapshot.ld_pinfo_cleared     = 1;
-    s_gauge_last_snapshot_valid                = 1;
-}
-
 static void tinyui_gauge_rollback(struct tinyui_gauge *gauge)
 {
     if (gauge == 0) {
         return;
     }
     if (gauge->widget.ld_widget != 0) {
-        tinyui_gauge_capture_snapshot(gauge);
         s_gauge_depose_scene = gauge->widget.owner != 0
             ? gauge->widget.owner->ld_scene
             : NULL;
@@ -99,19 +63,52 @@ static void tinyui_gauge_rollback(struct tinyui_gauge *gauge)
     }
 }
 
-int tinyui_gauge_test_take_last_dispose_snapshot(
-    struct tinyui_gauge_test_dispose_snapshot *snapshot)
+static void *tinyui_gauge_ld_init(void *ctx,
+                                  struct ld_scene_t *scene,
+                                  uint16_t name_id,
+                                  uint16_t parent_name_id)
 {
-    if (snapshot == 0 || s_gauge_last_snapshot_valid == 0) {
-        return -1;
+    struct tinyui_gauge_create_ctx *create_ctx = (struct tinyui_gauge_create_ctx *)ctx;
+    ldGauge_t *ld_gauge;
+
+    if (create_ctx == 0
+        || create_ctx->bg_img_tile == 0
+        || create_ctx->bg_mask_tile == 0
+        || create_ctx->pointer_img_tile == 0
+        || create_ctx->pointer_mask_tile == 0) {
+        return 0;
     }
 
-    *snapshot = s_gauge_last_snapshot;
-    memset(&s_gauge_last_snapshot, 0, sizeof(s_gauge_last_snapshot));
-    s_gauge_last_snapshot_valid = 0;
-    return 0;
-}
+    ld_gauge = ldGauge_init(scene,
+                            0,
+                            name_id,
+                            parent_name_id,
+                            0,
+                            0,
+                            160,
+                            160,
+                            create_ctx->bg_img_tile,
+                            create_ctx->bg_mask_tile,
+                            0,
+                            0);
+    if (ld_gauge == 0) {
+        return 0;
+    }
 
+    ldGaugeSetBackgroundImage(ld_gauge,
+                              create_ctx->bg_img_tile,
+                              create_ctx->bg_mask_tile,
+                              true,
+                              true);
+    ldGaugeBindPointerImage(ld_gauge,
+                            create_ctx->pointer_img_tile,
+                            create_ctx->pointer_mask_tile,
+                            (int16_t)(create_ctx->pointer_mask_tile->tRegion.tSize.iWidth >> 1),
+                            (int16_t)(create_ctx->pointer_mask_tile->tRegion.tSize.iHeight),
+                            true,
+                            true);
+    return ld_gauge;
+}
 struct tinyui_gauge *tinyui_gauge_test_create_with_props_fail_before_centre_offset(
     struct tinyui_widget *parent,
     const struct tinyui_gauge_props *props)
@@ -149,31 +146,18 @@ static int tinyui_gauge_props_are_valid(const struct tinyui_gauge_props *props)
 struct tinyui_gauge *tinyui_gauge_create(struct tinyui_widget *parent, const char *id)
 {
     struct tinyui_gauge *gauge;
-    struct tinyui_app *app_state;
-    ldGauge_t *ld_gauge;
     arm_2d_tile_t *bg_img_tile;
     arm_2d_tile_t *bg_mask_tile;
     arm_2d_tile_t *pointer_img_tile;
     arm_2d_tile_t *pointer_mask_tile;
-    uint16_t name_id;
+    struct tinyui_gauge_create_ctx ctx;
 
     if (parent == 0 || id == 0 || parent->ld_widget == 0) {
         return 0;
     }
 
-    app_state = parent->owner;
-    if (app_state == 0 || app_state->ld_scene == 0) {
-        return 0;
-    }
-
-    gauge = calloc(1, sizeof(*gauge));
-    if (gauge == 0) {
-        return 0;
-    }
-
     bg_img_tile = malloc(sizeof(*bg_img_tile));
     if (bg_img_tile == 0) {
-        free(gauge);
         return 0;
     }
     *bg_img_tile = c_tileQuaterArcGRAY8;
@@ -181,7 +165,6 @@ struct tinyui_gauge *tinyui_gauge_create(struct tinyui_widget *parent, const cha
     bg_mask_tile = malloc(sizeof(*bg_mask_tile));
     if (bg_mask_tile == 0) {
         free(bg_img_tile);
-        free(gauge);
         return 0;
     }
     *bg_mask_tile = c_tileQuaterArcMask;
@@ -190,7 +173,6 @@ struct tinyui_gauge *tinyui_gauge_create(struct tinyui_widget *parent, const cha
     if (pointer_img_tile == 0) {
         free(bg_mask_tile);
         free(bg_img_tile);
-        free(gauge);
         return 0;
     }
     *pointer_img_tile = c_tilePointerSecGRAY8;
@@ -200,53 +182,29 @@ struct tinyui_gauge *tinyui_gauge_create(struct tinyui_widget *parent, const cha
         free(pointer_img_tile);
         free(bg_mask_tile);
         free(bg_img_tile);
-        free(gauge);
         return 0;
     }
     *pointer_mask_tile = c_tilePointerSecMask;
 
-    name_id = ++app_state->next_ld_name_id;
-
-    ld_gauge = ldGauge_init(app_state->ld_scene,
-                            0,
-                            name_id,
-                            parent->ld_name_id,
-                            0,
-                            0,
-                            160,
-                            160,
-                            bg_img_tile,
-                            bg_mask_tile,
-                            0,
-                            0);
-    if (ld_gauge == 0) {
+    ctx.bg_img_tile = bg_img_tile;
+    ctx.bg_mask_tile = bg_mask_tile;
+    ctx.pointer_img_tile = pointer_img_tile;
+    ctx.pointer_mask_tile = pointer_mask_tile;
+    gauge = (struct tinyui_gauge *)tinyui_widget_create_leaf(parent,
+                                                             TINYUI_BACKEND_WIDGET_GAUGE,
+                                                             tinyui_gauge_ld_init,
+                                                             &ctx,
+                                                             sizeof(*gauge));
+    if (gauge == 0) {
         free(pointer_mask_tile);
         free(pointer_img_tile);
         free(bg_mask_tile);
         free(bg_img_tile);
-        free(gauge);
         return 0;
     }
 
-    ldGaugeSetBackgroundImage(ld_gauge, bg_img_tile, bg_mask_tile, true, true);
-    ldGaugeBindPointerImage(ld_gauge,
-                            pointer_img_tile,
-                            pointer_mask_tile,
-                            (int16_t)(pointer_mask_tile->tRegion.tSize.iWidth >> 1),
-                            (int16_t)(pointer_mask_tile->tRegion.tSize.iHeight),
-                            true,
-                            true);
-
     gauge->id = id;
-    gauge->widget.ld_widget  = ld_gauge;
-    gauge->widget.ld_name_id = name_id;
-    gauge->widget.kind       = TINYUI_BACKEND_WIDGET_GAUGE;
-    gauge->widget.owner      = app_state;
     gauge->widget.value      = 0;
-    gauge->widget.visible    = 1;
-    gauge->widget.enabled    = 1;
-    ((ldBase_t *)ld_gauge)->pInfo = &gauge->widget;
-    tinyui_runtime_bridge_bind_leaf_widget(&gauge->widget, app_state);
 
     if (tinyui_gauge_set_angle(gauge, 0.0f) != 0
         || tinyui_gauge_set_pointer_color(gauge, 0x000000U) != 0

@@ -1821,6 +1821,12 @@ int tinyui_widget_detach_from_parent(struct tinyui_widget *w)
 /**
  * @brief Common destroy: detach + unbind (clear pInfo + bridge) + ld_depose_cb + free
  */
+__attribute__((weak)) void tinyui_test_capture_destroyed_widget_snapshot(
+    const struct tinyui_widget *widget)
+{
+    (void)widget;
+}
+
 void tinyui_widget_destroy_common(struct tinyui_widget *w, void (*ld_depose_cb)(void *))
 {
     void *ld_widget;
@@ -1839,6 +1845,7 @@ void tinyui_widget_destroy_common(struct tinyui_widget *w, void (*ld_depose_cb)(
 
     /* Clear bridge fields */
     w->ld_widget               = 0;
+    w->owner                   = 0;
     w->ld_event_bridge_scene   = 0;
     w->ld_event_bridge_sender  = 0;
     w->ld_event_bridge_next    = 0;
@@ -1846,6 +1853,10 @@ void tinyui_widget_destroy_common(struct tinyui_widget *w, void (*ld_depose_cb)(
     /* Depose native widget */
     if (ld_depose_cb != 0 && ld_widget != 0) {
         ld_depose_cb(ld_widget);
+    }
+
+    if (tinyui_test_capture_destroyed_widget_snapshot != 0) {
+        tinyui_test_capture_destroyed_widget_snapshot(w);
     }
 
     free(w);
@@ -1861,7 +1872,7 @@ void tinyui_widget_destroy_common(struct tinyui_widget *w, void (*ld_depose_cb)(
  * binds pInfo so ld events can reach the host widget.
  */
 struct tinyui_widget *tinyui_widget_create_leaf(
-    struct tinyui_window *parent,
+    struct tinyui_widget *parent,
     enum tinyui_backend_widget_kind kind,
     void *(*ld_init_cb)(void *ctx, struct ld_scene_t *scene,
                         uint16_t name_id, uint16_t parent_name_id),
@@ -1878,8 +1889,8 @@ struct tinyui_widget *tinyui_widget_create_leaf(
         return 0;
     }
 
-    owner = parent->widget.owner;
-    if (owner == 0 || owner->ld_scene == 0) {
+    owner = parent->owner;
+    if (parent->ld_widget == 0 || owner == 0 || owner->ld_scene == 0) {
         return 0;
     }
 
@@ -1896,7 +1907,7 @@ struct tinyui_widget *tinyui_widget_create_leaf(
     name_id = owner->next_ld_name_id++;
 
     /* 4. Obtain parent name_id (0 is acceptable for the root window) */
-    parent_name_id = parent->widget.ld_name_id;
+    parent_name_id = parent->ld_name_id;
 
     /* 5. Create the backing ld widget */
     ld_widget = ld_init_cb(ctx, owner->ld_scene, name_id, parent_name_id);
@@ -1917,8 +1928,8 @@ struct tinyui_widget *tinyui_widget_create_leaf(
      *    keeps create_leaf usable for ld widgets that don't auto-attach
      *    while avoiding the double-attach that produces a cyclic child list. */
     if (ldBaseGetParent((ldBase_t *)ld_widget) == 0
-        && parent->widget.ld_widget != 0) {
-        ldBaseNodeAdd((arm_2d_control_node_t *)parent->widget.ld_widget,
+        && parent->ld_widget != 0) {
+        ldBaseNodeAdd((arm_2d_control_node_t *)parent->ld_widget,
                       (arm_2d_control_node_t *)ld_widget);
     }
 
@@ -1928,6 +1939,13 @@ struct tinyui_widget *tinyui_widget_create_leaf(
     /* 9. Default visibility / enabled */
     w->visible = 1;
     w->enabled = 1;
+
+    /* 10. Bind runtime event bridge */
+    if (tinyui_runtime_bridge_bind_leaf_widget(w, owner) != 0) {
+        ((ldBase_t *)ld_widget)->pInfo = 0;
+        free(w);
+        return 0;
+    }
 
     return w;
 }

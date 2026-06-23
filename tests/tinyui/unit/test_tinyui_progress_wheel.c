@@ -7,8 +7,10 @@
 #include "internal.h"
 
 #include <assert.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #ifdef assert
 #undef assert
@@ -30,7 +32,64 @@
 extern int tinyui_widget_has_ld_binding(const struct tinyui_widget *widget);
 extern void tinyui_progress_wheel_test_reset_state(void);
 extern void tinyui_progress_wheel_test_fail_next_set_percent(void);
-extern const struct tinyui_widget *tinyui_progress_wheel_test_last_disposed_backend(void);
+static char test_progress_wheel_source_path[PATH_MAX];
+static struct tinyui_widget g_disposed_backend_snapshot;
+static int g_disposed_backend_valid = 0;
+
+static void init_progress_wheel_source_path(void)
+{
+    const char *source = __FILE__;
+    const char *suffix = "tests/tinyui/unit/test_tinyui_progress_wheel.c";
+    const char *match = strstr(source, suffix);
+    size_t root_len;
+
+    assert(match != 0);
+    root_len = (size_t)(match - source);
+    assert(root_len + strlen("tinyui/src/widgets/progress_wheel.c") < sizeof(test_progress_wheel_source_path));
+    memcpy(test_progress_wheel_source_path, source, root_len);
+    snprintf(test_progress_wheel_source_path + root_len,
+             sizeof(test_progress_wheel_source_path) - root_len,
+             "tinyui/src/widgets/progress_wheel.c");
+}
+
+static int test_source_has_symbol(const char *source_path, const char *symbol)
+{
+    char command[1024];
+
+    assert(source_path != 0);
+    assert(symbol != 0);
+    snprintf(command,
+             sizeof(command),
+             "python3 - '%s' '%s' <<'PY'\n"
+             "from pathlib import Path\n"
+             "import sys\n"
+             "text = Path(sys.argv[1]).read_text()\n"
+             "raise SystemExit(0 if sys.argv[2] in text else 1)\n"
+             "PY",
+             source_path,
+             symbol);
+    return system(command) == 0;
+}
+
+void tinyui_test_capture_destroyed_widget_snapshot(const struct tinyui_widget *widget)
+{
+    if (widget == 0) {
+        memset(&g_disposed_backend_snapshot, 0, sizeof(g_disposed_backend_snapshot));
+        g_disposed_backend_valid = 0;
+        return;
+    }
+
+    g_disposed_backend_snapshot = *widget;
+    g_disposed_backend_valid = 1;
+}
+
+static const struct tinyui_widget *tinyui_progress_wheel_test_last_disposed_backend(void)
+{
+    if (g_disposed_backend_valid == 0) {
+        return 0;
+    }
+    return &g_disposed_backend_snapshot;
+}
 
 struct __attribute__((may_alias)) tinyui_progress_wheel_cfg_bridge {
     struct {
@@ -236,6 +295,7 @@ static void test_progress_wheel_create_with_props_failure_rolls_back_attached_ch
     }
 
     tinyui_progress_wheel_test_reset_state();
+    tinyui_test_capture_destroyed_widget_snapshot(0);
     probe = tinyui_progress_wheel_create((struct tinyui_widget *)win, "wheel_fail_percent");
     assert(probe != 0);
     assert(tinyui_widget_destroy(&probe->widget) == 0);
@@ -255,7 +315,7 @@ static void test_progress_wheel_create_with_props_failure_rolls_back_attached_ch
     assert(disposed_backend->ld_event_bridge_scene == 0);
     assert(disposed_backend->ld_event_bridge_sender == 0);
     assert(disposed_backend->ld_event_bridge_next == 0);
-    assert(((const ldBase_t *)disposed_backend->ld_widget)->pInfo == 0);
+    assert(disposed_backend->ld_widget == 0);
     if (tail_ld != 0) {
         assert(ldBaseGetNextSibling(tail_ld) == next_before_ld);
     } else {
@@ -282,12 +342,18 @@ static void test_progress_wheel_rejects_null_args(struct tinyui_window *win)
     assert(tinyui_progress_wheel_set_dot_enabled(0, 1) == -1);
 }
 
+static void test_progress_wheel_create_uses_shared_leaf_helper(void)
+{
+    assert(test_source_has_symbol(test_progress_wheel_source_path, "tinyui_widget_create_leaf"));
+}
+
 int main(void)
 {
     struct tinyui_app *app = tinyui_app_create();
     struct tinyui_window *win;
     struct tinyui_progress_wheel *wheel_with_props;
 
+    init_progress_wheel_source_path();
     assert(app != 0);
     win = tinyui_window_create(app, "root");
     assert(win != 0);
@@ -301,6 +367,7 @@ int main(void)
     test_progress_wheel_progress_alias_round_trip(wheel_with_props);
     test_progress_wheel_create_with_props_failure_rolls_back_attached_child(win);
     test_progress_wheel_rejects_null_args(win);
+    test_progress_wheel_create_uses_shared_leaf_helper();
 
     tinyui_app_destroy(app);
     return 0;

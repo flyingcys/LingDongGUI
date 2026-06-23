@@ -52,6 +52,22 @@ static void tinyui_list_rollback(struct tinyui_list *list)
     }
 }
 
+static void *tinyui_list_ld_init(void *ctx,
+                                 struct ld_scene_t *scene,
+                                 uint16_t name_id,
+                                 uint16_t parent_name_id)
+{
+    ldList_t *ld_list;
+
+    (void)ctx;
+    ld_list = ldList_init(scene, NULL, name_id, parent_name_id, 0, 0, 220, 96);
+    if (ld_list == 0) {
+        return 0;
+    }
+    ldListSetSelectItem(ld_list, -1);
+    return ld_list;
+}
+
 /**
  * @brief Create list widget
  *
@@ -63,52 +79,21 @@ static void tinyui_list_rollback(struct tinyui_list *list)
 struct tinyui_list *tinyui_list_create(struct tinyui_widget *parent, const char *id)
 {
     struct tinyui_list *list;
-    struct tinyui_app *app_state;
-    ldList_t *ld_list;
-    uint16_t name_id;
 
     if (parent == 0 || id == 0 || parent->ld_widget == 0) {
         return 0;
     }
-
-    app_state = parent->owner;
-    if (app_state == 0 || app_state->ld_scene == 0) {
-        return 0;
-    }
-
-    list = calloc(1, sizeof(*list));
+    list = (struct tinyui_list *)tinyui_widget_create_leaf(parent,
+                                                           TINYUI_BACKEND_WIDGET_LIST,
+                                                           tinyui_list_ld_init,
+                                                           0,
+                                                           sizeof(*list));
     if (list == 0) {
         return 0;
     }
-
-    name_id = ++app_state->next_ld_name_id;
-
-    ld_list = ldList_init(app_state->ld_scene,
-                          NULL,
-                          name_id,
-                          parent->ld_name_id,
-                          0,
-                          0,
-                          220,
-                          96);
-    if (ld_list == 0) {
-        free(list);
-        return 0;
-    }
-
-    ldListSetSelectItem(ld_list, -1);
-
-    list->widget.ld_widget  = ld_list;
-    list->widget.ld_name_id = name_id;
-    list->widget.kind       = TINYUI_BACKEND_WIDGET_LIST;
-    list->widget.owner      = app_state;
     list->widget.value      = -1;
-    list->widget.visible    = 1;
-    list->widget.enabled    = 1;
     list->id = id;
     list->selected_index = -1;
-    ((ldBase_t *)ld_list)->pInfo = &list->widget;
-    tinyui_runtime_bridge_bind_leaf_widget(&list->widget, app_state);
 
     return list;
 }

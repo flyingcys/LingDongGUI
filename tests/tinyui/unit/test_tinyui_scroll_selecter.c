@@ -122,6 +122,7 @@ static void test_scroll_selecter_internal_seams_are_tinyui_named(void)
 {
     const char *widget_source = "tinyui/src/widgets/scroll_selecter.c";
 
+    assert(test_source_has_function_definition(widget_source, "tinyui_widget_create_leaf"));
     assert_source_lacks_function_definition(widget_source, "picoui_scroll_selecter_props_are_valid");
     assert_source_lacks_function_definition(widget_source, "picoui_scroll_selecter_rgb_to_ld_color");
     assert_source_lacks_function_definition(widget_source, "picoui_scroll_selecter_backend_from_widget");

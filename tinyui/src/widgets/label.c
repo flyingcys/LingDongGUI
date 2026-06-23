@@ -28,6 +28,10 @@ extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
 
 struct tinyui_image_source;
 
+struct tinyui_label_create_ctx {
+    const char *id;
+};
+
 /* ---- test seam state ---- */
 static ld_scene_t *s_label_depose_scene = NULL;
 
@@ -72,6 +76,15 @@ static int tinyui_label_props_are_valid(const struct tinyui_label_props *props)
         && (props->background_source == 0 || props->background_source->img_tile != 0);
 }
 
+static void *tinyui_label_ld_init(void *ctx,
+                                  struct ld_scene_t *scene,
+                                  uint16_t name_id,
+                                  uint16_t parent_name_id)
+{
+    (void)ctx;
+    return ldLabel_init(scene, NULL, name_id, parent_name_id, 0, 0, 220, 28, NULL);
+}
+
 /**
  * @brief Create label widget
  *
@@ -83,49 +96,20 @@ static int tinyui_label_props_are_valid(const struct tinyui_label_props *props)
 struct tinyui_label *tinyui_label_create(struct tinyui_window *parent, const char *id)
 {
     struct tinyui_label *label;
-    struct tinyui_app *app_state;
-    ldLabel_t *ld_label;
-    uint16_t name_id;
+    struct tinyui_label_create_ctx ctx = {.id = id};
 
     if (parent == 0 || id == 0) {
         return 0;
     }
-
-    app_state = parent->widget.owner;
-    if (parent->widget.ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
-        return 0;
-    }
-
-    label = calloc(1, sizeof(*label));
+    label = (struct tinyui_label *)tinyui_widget_create_leaf(&parent->widget,
+                                                             TINYUI_BACKEND_WIDGET_LABEL,
+                                                             tinyui_label_ld_init,
+                                                             &ctx,
+                                                             sizeof(*label));
     if (label == 0) {
         return 0;
     }
-
-    name_id = ++app_state->next_ld_name_id;
-
-    ld_label = ldLabel_init(app_state->ld_scene,
-                            NULL,
-                            name_id,
-                            parent->widget.ld_name_id,
-                            0,
-                            0,
-                            220,
-                            28,
-                            NULL);
-    if (ld_label == 0) {
-        free(label);
-        return 0;
-    }
-
     label->id = id;
-    label->widget.ld_widget  = ld_label;
-    label->widget.ld_name_id = name_id;
-    label->widget.kind       = TINYUI_BACKEND_WIDGET_LABEL;
-    label->widget.owner      = app_state;
-    label->widget.visible    = 1;
-    label->widget.enabled    = 1;
-    ((ldBase_t *)ld_label)->pInfo = &label->widget;
-    (void)tinyui_runtime_bridge_bind_leaf_widget(&label->widget, app_state);
 
     return label;
 }

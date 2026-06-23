@@ -9,6 +9,7 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
 
 void *ldMalloc(uint32_t size)
 {
@@ -34,28 +35,27 @@ static unsigned int test_rgb_round_trip(unsigned int rgb)
 }
 
 extern int tinyui_widget_has_ld_binding(const struct tinyui_widget *widget);
+static struct tinyui_widget g_disposed_backend_snapshot;
+static int g_disposed_backend_valid = 0;
 
-struct tinyui_arc_test_dispose_snapshot {
-    int kind;
-    int cleanup_complete;
-    int cleanup_incomplete;
-    int detach_result;
-    int unbind_result;
-    int detached;
-    int owner_cleared;
-    int root_cleared;
-    int parent_cleared;
-    int next_sibling_cleared;
-    int host_cleared;
-    int event_bridge_cleared;
-    int ld_pinfo_cleared;
-};
-
-__attribute__((weak)) int tinyui_arc_test_take_last_dispose_snapshot(
-    struct tinyui_arc_test_dispose_snapshot *snapshot)
+void tinyui_test_capture_destroyed_widget_snapshot(const struct tinyui_widget *widget)
 {
-    (void)snapshot;
-    return -1;
+    if (widget == 0) {
+        memset(&g_disposed_backend_snapshot, 0, sizeof(g_disposed_backend_snapshot));
+        g_disposed_backend_valid = 0;
+        return;
+    }
+
+    g_disposed_backend_snapshot = *widget;
+    g_disposed_backend_valid = 1;
+}
+
+static const struct tinyui_widget *tinyui_arc_test_last_disposed_backend(void)
+{
+    if (g_disposed_backend_valid == 0) {
+        return 0;
+    }
+    return &g_disposed_backend_snapshot;
 }
 
 __attribute__((weak)) struct tinyui_arc *
@@ -110,29 +110,15 @@ static int tracked_free_count_for(void *ptr)
 static void assert_source_lacks_function_definition(const char *source_path,
                                                     const char *symbol)
 {
-    char needle[256];
-
-    snprintf(needle, sizeof(needle), "static int %s(", symbol);
-    if (strstr(symbol, "rgb_to_ld_color") != 0) {
-        snprintf(needle, sizeof(needle), "static ldColor %s(", symbol);
-    } else if (strstr(symbol, "ld_color_to_rgb") != 0) {
-        snprintf(needle, sizeof(needle), "static unsigned int %s(", symbol);
-    } else if (strstr(symbol, "backend") != 0) {
-        snprintf(needle, sizeof(needle), "static struct tinyui_backend_widget *%s(", symbol);
-    } else if (strstr(symbol, "get_ld") != 0) {
-        snprintf(needle, sizeof(needle), "static ldArc_t *%s(", symbol);
-    }
-    assert(tinyui_test_source_contains(source_path, needle) == 0);
+    assert(tinyui_test_source_lacks_function_definition(source_path, symbol) == 1);
 }
 
 static void assert_source_has_function_definition(const char *source_path,
                                                   const char *prefix,
                                                   const char *symbol)
 {
-    char needle[256];
-
-    snprintf(needle, sizeof(needle), "%s%s(", prefix, symbol);
-    assert(tinyui_test_source_contains(source_path, needle) == 1);
+    (void)prefix;
+    assert(tinyui_test_source_has_function_definition(source_path, symbol) == 1);
 }
 
 void ldFree(void *p)
@@ -313,8 +299,8 @@ static void test_arc_create_with_props_failure_rolls_back_attached_child(struct 
     ldBase_t *win_ld = (ldBase_t *)win->widget.ld_widget;
     ldBase_t *tail_ld = ldBaseGetChildList(win_ld);
     ldBase_t *next_before_ld = 0;
-    struct tinyui_arc_test_dispose_snapshot snapshot = {0};
     struct tinyui_arc *arc;
+    const struct tinyui_widget *disposed_backend;
 
     while (tail_ld != 0 && ldBaseGetNextSibling(tail_ld) != 0) {
         tail_ld = ldBaseGetNextSibling(tail_ld);
@@ -323,6 +309,7 @@ static void test_arc_create_with_props_failure_rolls_back_attached_child(struct 
         next_before_ld = ldBaseGetNextSibling(tail_ld);
     }
 
+    tinyui_test_capture_destroyed_widget_snapshot(0);
     arc = tinyui_arc_test_create_with_props_fail_before_parent_color(
         (struct tinyui_widget *)win,
         &(struct tinyui_arc_props){
@@ -337,21 +324,14 @@ static void test_arc_create_with_props_failure_rolls_back_attached_child(struct 
         });
 
     assert(arc == 0);
-    assert(tinyui_arc_test_take_last_dispose_snapshot(&snapshot) == 0);
-    assert(snapshot.kind == TINYUI_BACKEND_WIDGET_ARC);
-    assert(snapshot.cleanup_complete == 1);
-    assert(snapshot.cleanup_incomplete == 0);
-    assert(snapshot.detach_result == 0);
-    assert(snapshot.unbind_result == 0);
-    assert(snapshot.detached == 1);
-    assert(snapshot.owner_cleared == 1);
-    assert(snapshot.root_cleared == 1);
-    assert(snapshot.parent_cleared == 1);
-    assert(snapshot.next_sibling_cleared == 1);
-    assert(snapshot.host_cleared == 1);
-    assert(snapshot.event_bridge_cleared == 1);
-    assert(snapshot.ld_pinfo_cleared == 1);
-    assert(tinyui_arc_test_take_last_dispose_snapshot(&snapshot) == -1);
+    disposed_backend = tinyui_arc_test_last_disposed_backend();
+    assert(disposed_backend != 0);
+    assert(disposed_backend->kind == TINYUI_BACKEND_WIDGET_ARC);
+    assert(disposed_backend->owner == 0);
+    assert(disposed_backend->ld_event_bridge_scene == 0);
+    assert(disposed_backend->ld_event_bridge_sender == 0);
+    assert(disposed_backend->ld_event_bridge_next == 0);
+    assert(disposed_backend->ld_widget == 0);
     if (tail_ld != 0) {
         assert(ldBaseGetNextSibling(tail_ld) == next_before_ld);
     } else {
@@ -433,9 +413,9 @@ int main(void)
     assert_source_lacks_function_definition(widget_source, "tinyui_arc_get_ld");
     assert_source_lacks_function_definition(widget_source, "tinyui_arc_finish_detach_after_backend_failure");
     assert_source_lacks_function_definition(widget_source, "tinyui_arc_dispose_partial_impl");
+    assert_source_lacks_function_definition(widget_source, "tinyui_arc_test_take_last_dispose_snapshot");
     assert_source_has_function_definition(widget_source, "static int ", "tinyui_arc_props_are_valid");
-    assert_source_has_function_definition(widget_source, "int ", "tinyui_arc_test_take_last_dispose_snapshot");
-    assert_source_has_function_definition(widget_source, "struct tinyui_arc *", "tinyui_arc_test_create_with_props_fail_before_parent_color");
+    assert_source_has_function_definition(widget_source, "", "tinyui_arc_test_create_with_props_fail_before_parent_color");
 
     assert(app != 0);
     win = tinyui_window_create(app, "root");

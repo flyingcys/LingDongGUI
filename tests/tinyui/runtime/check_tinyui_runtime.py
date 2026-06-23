@@ -8,6 +8,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_BUILD = ROOT / "build" / "tinyui-runtime"
+BASELINE_DIR = ROOT / "tests" / "tinyui" / "runtime" / "baselines"
 RTK = shutil.which("rtk") or "rtk"
 DEMO_TIMEOUT_SECONDS = 6
 DEMO_TARGET = "tinyui_demo"
@@ -81,6 +82,26 @@ def _read_ppm(path: Path) -> tuple[int, int, bytes]:
     _, dims = header.split(b"\n", 1)
     width_token, height_token = dims.split()
     return int(width_token), int(height_token), pixels
+
+
+def _assert_matches_baseline(path: Path, demo: str) -> None:
+    baseline_path = BASELINE_DIR / f"{demo}.ppm"
+    if not baseline_path.is_file():
+        raise AssertionError(f"missing runtime baseline capture for demo '{demo}': {baseline_path}")
+
+    width, height, pixels = _read_ppm(path)
+    baseline_width, baseline_height, baseline_pixels = _read_ppm(baseline_path)
+    if (width, height) != (baseline_width, baseline_height):
+        raise AssertionError(
+            f"runtime capture size drift for demo '{demo}': "
+            f"actual={width}x{height} baseline={baseline_width}x{baseline_height}"
+        )
+    if pixels != baseline_pixels:
+        raise AssertionError(
+            f"runtime capture drift for demo '{demo}'.\n"
+            f"baseline: {baseline_path}\n"
+            "expected pixel-identical SDL output for the archived formal baseline."
+        )
 
 
 def _pixel(width: int, pixels: bytes, x: int, y: int) -> tuple[int, int, int]:
@@ -468,6 +489,8 @@ def main() -> None:
                     f"stdout:\n{completed.stdout}\n"
                     f"stderr:\n{completed.stderr}"
                 )
+            if demo in ("hello_world", "basic_widgets", "layout_flex"):
+                _assert_matches_baseline(capture_path, demo)
             if demo == "basic_widgets":
                 _assert_basic_widgets_capture(capture_path, completed.stdout)
         if completed.returncode != 0:

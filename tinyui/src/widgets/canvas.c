@@ -71,6 +71,15 @@ static int canvas_push(struct tinyui_canvas *canvas,
     return 0;
 }
 
+static void *tinyui_canvas_ld_init(void *ctx,
+                                   struct ld_scene_t *scene,
+                                   uint16_t name_id,
+                                   uint16_t parent_name_id)
+{
+    (void)ctx;
+    return ldCanvas_init(scene, NULL, name_id, parent_name_id, 0, 0, 0, 0);
+}
+
 /**
  * @brief Create canvas widget
  *
@@ -82,41 +91,19 @@ static int canvas_push(struct tinyui_canvas *canvas,
 struct tinyui_canvas *tinyui_canvas_create(struct tinyui_window *parent, const char *id)
 {
     struct tinyui_canvas *canvas;
-    struct tinyui_app *app_state;
-    ldCanvas_t *ld_canvas;
-    uint16_t name_id;
 
     if (parent == 0 || id == 0) {
         return 0;
     }
-
-    app_state = parent->widget.owner;
-    if (app_state == 0 || app_state->ld_scene == 0 || parent->widget.ld_widget == 0) {
-        return 0;
-    }
-
-    canvas = calloc(1, sizeof(*canvas));
+    canvas = (struct tinyui_canvas *)tinyui_widget_create_leaf(&parent->widget,
+                                                               TINYUI_BACKEND_WIDGET_CANVAS,
+                                                               tinyui_canvas_ld_init,
+                                                               0,
+                                                               sizeof(*canvas));
     if (canvas == 0) {
         return 0;
     }
-
-    name_id = ++app_state->next_ld_name_id;
-
-    ld_canvas = ldCanvas_init(app_state->ld_scene, NULL, name_id, parent->widget.ld_name_id, 0, 0, 0, 0);
-    if (ld_canvas == 0) {
-        free(canvas);
-        return 0;
-    }
-
-    canvas->widget.kind = TINYUI_BACKEND_WIDGET_CANVAS;
-    canvas->widget.owner = app_state;
-    canvas->widget.ld_widget = ld_canvas;
-    canvas->widget.ld_name_id = name_id;
-    canvas->widget.visible = 1;
-    canvas->widget.enabled = 1;
     canvas->id = id;
-    ((ldBase_t *)ld_canvas)->pInfo = &canvas->widget;
-    tinyui_runtime_bridge_bind_leaf_widget(&canvas->widget, app_state);
     return canvas;
 }
 

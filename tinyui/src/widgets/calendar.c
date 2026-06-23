@@ -114,6 +114,36 @@ static int calendar_props_valid(const struct tinyui_calendar_props *props)
            props->header_format != 0;
 }
 
+static void *tinyui_calendar_ld_init(void *ctx,
+                                     struct ld_scene_t *scene,
+                                     uint16_t name_id,
+                                     uint16_t parent_name_id)
+{
+    ldCalendar_t *ld_calendar;
+
+    (void)ctx;
+    ld_calendar = ldCalendar_init(scene,
+                                  NULL,
+                                  name_id,
+                                  parent_name_id,
+                                  0,
+                                  0,
+                                  280,
+                                  180,
+                                  (arm_2d_font_t *)&ARM_2D_FONT_6x8,
+                                  2026,
+                                  6,
+                                  15);
+    if (ld_calendar == NULL) {
+        return 0;
+    }
+
+    ldCalendarSetDayNames(ld_calendar, s_day_names);
+    ldCalendarSetHeader(ld_calendar, true);
+    ldCalendarSetHeaderFormat(ld_calendar, (uint8_t *)"yyyy-mm-dd");
+    return ld_calendar;
+}
+
 static int tinyui_calendar_set_day_names_ld(struct tinyui_widget *widget, const char *const day_names[7])
 {
     ldCalendar_t *ld_calendar = (widget != NULL) ? (ldCalendar_t *)widget->ld_widget : NULL;
@@ -338,60 +368,19 @@ static int calendar_sync_grid_local(struct tinyui_calendar *calendar)
 struct tinyui_calendar *tinyui_calendar_create(struct tinyui_window *parent, const char *id)
 {
     struct tinyui_calendar *calendar;
-    struct tinyui_app *app_state;
-    ldCalendar_t *ld_calendar;
-    uint16_t name_id;
 
     if (parent == 0 || id == 0) {
         return 0;
     }
-
-    app_state = parent->widget.owner;
-    if (app_state == NULL || app_state->ld_scene == NULL || parent->widget.ld_widget == NULL) {
-        return 0;
-    }
-
-    calendar = calloc(1, sizeof(*calendar));
+    calendar = (struct tinyui_calendar *)tinyui_widget_create_leaf(&parent->widget,
+                                                                   TINYUI_BACKEND_WIDGET_CALENDAR,
+                                                                   tinyui_calendar_ld_init,
+                                                                   0,
+                                                                   sizeof(*calendar));
     if (calendar == 0) {
         return 0;
     }
-
-    name_id = ++app_state->next_ld_name_id;
-    if (name_id == 0) {
-        free(calendar);
-        return 0;
-    }
-
-    ld_calendar = ldCalendar_init(app_state->ld_scene,
-                                  NULL,
-                                  name_id,
-                                  parent->widget.ld_name_id,
-                                  0,
-                                  0,
-                                  280,
-                                  180,
-                                  (arm_2d_font_t *)&ARM_2D_FONT_6x8,
-                                  2026,
-                                  6,
-                                  15);
-    if (ld_calendar == NULL) {
-        free(calendar);
-        return 0;
-    }
-
-    ldCalendarSetDayNames(ld_calendar, s_day_names);
-    ldCalendarSetHeader(ld_calendar, true);
-    ldCalendarSetHeaderFormat(ld_calendar, (uint8_t *)"yyyy-mm-dd");
-
-    calendar->widget.kind       = TINYUI_BACKEND_WIDGET_CALENDAR;
-    calendar->widget.owner      = app_state;
-    calendar->widget.ld_widget  = ld_calendar;
-    calendar->widget.ld_name_id = name_id;
-    calendar->widget.visible    = 1;
-    calendar->widget.enabled    = 1;
-    calendar->id                = id;
-    ((ldBase_t *)ld_calendar)->pInfo = &calendar->widget;
-    tinyui_runtime_bridge_bind_leaf_widget(&calendar->widget, app_state);
+    calendar->id = id;
 
     if (tinyui_calendar_set_date(calendar, 2026, 6, 15) != 0 ||
         tinyui_calendar_set_header_visible(calendar, 1) != 0 ||

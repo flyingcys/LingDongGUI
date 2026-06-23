@@ -25,7 +25,6 @@
 #include <string.h>
 
 extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
-int tinyui_runtime_bridge_bind_leaf_widget(struct tinyui_widget *widget, struct tinyui_app *app);
 
 static ld_scene_t *s_scroll_selecter_depose_scene = NULL;
 
@@ -62,6 +61,23 @@ static int tinyui_scroll_selecter_props_valid(const struct tinyui_scroll_selecte
            props->padding >= 0;
 }
 
+static void *tinyui_scroll_selecter_ld_init(void *ctx,
+                                            struct ld_scene_t *scene,
+                                            uint16_t name_id,
+                                            uint16_t parent_name_id)
+{
+    (void)ctx;
+    return ldScrollSelecter_init(scene,
+                                 NULL,
+                                 name_id,
+                                 parent_name_id,
+                                 0,
+                                 0,
+                                 180,
+                                 72,
+                                 (arm_2d_font_t *)&ARM_2D_FONT_6x8);
+}
+
 static const char *tinyui_scroll_selecter_selected_text_from_public_state(
     const struct tinyui_scroll_selecter *scroll_selecter
 )
@@ -91,51 +107,23 @@ static const char *tinyui_scroll_selecter_selected_text_from_public_state(
 struct tinyui_scroll_selecter *tinyui_scroll_selecter_create(struct tinyui_window *parent, const char *id)
 {
     struct tinyui_scroll_selecter *scroll_selecter;
-    struct tinyui_app *app_state;
-    ldScrollSelecter_t *ld_scroll_selecter;
-    uint16_t name_id;
 
     if (parent == 0 || id == 0) {
         return 0;
     }
-
-    app_state = parent->widget.owner;
-    if (parent->widget.ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
+    if (parent->widget.ld_widget == 0 || parent->widget.owner == 0) {
         return 0;
     }
 
-    scroll_selecter = calloc(1, sizeof(*scroll_selecter));
+    scroll_selecter = (struct tinyui_scroll_selecter *)tinyui_widget_create_leaf(&parent->widget,
+                                                                                 TINYUI_BACKEND_WIDGET_SCROLL_SELECTER,
+                                                                                 tinyui_scroll_selecter_ld_init,
+                                                                                 0,
+                                                                                 sizeof(*scroll_selecter));
     if (scroll_selecter == 0) {
         return 0;
     }
-
-    name_id = ++app_state->next_ld_name_id;
-    if (name_id == 0) {
-        free(scroll_selecter);
-        return 0;
-    }
-
-    ld_scroll_selecter = ldScrollSelecter_init(app_state->ld_scene,
-                                               NULL,
-                                               name_id,
-                                               parent->widget.ld_name_id,
-                                               0,
-                                               0,
-                                               180,
-                                               72,
-                                               (arm_2d_font_t *)&ARM_2D_FONT_6x8);
-    if (ld_scroll_selecter == 0) {
-        free(scroll_selecter);
-        return 0;
-    }
-
-    scroll_selecter->widget.kind = TINYUI_BACKEND_WIDGET_SCROLL_SELECTER;
-    scroll_selecter->widget.ld_widget = ld_scroll_selecter;
-    scroll_selecter->widget.ld_name_id = name_id;
-    scroll_selecter->widget.owner = app_state;
     scroll_selecter->widget.value = -1;
-    ((ldBase_t *)ld_scroll_selecter)->pInfo = &scroll_selecter->widget;
-    tinyui_runtime_bridge_bind_leaf_widget(&scroll_selecter->widget, app_state);
 
     scroll_selecter->id = id;
     scroll_selecter->selected_index = -1;

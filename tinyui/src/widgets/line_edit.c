@@ -120,54 +120,51 @@ static int tinyui_line_edit_props_are_valid(const struct tinyui_line_edit_props 
             tinyui_line_edit_keyboard_binding_is_valid(props->keyboard_binding));
 }
 
+static void *tinyui_line_edit_ld_init(void *ctx,
+                                      struct ld_scene_t *scene,
+                                      uint16_t name_id,
+                                      uint16_t parent_name_id)
+{
+    (void)ctx;
+    return ldLineEdit_init(scene,
+                           NULL,
+                           name_id,
+                           parent_name_id,
+                           0,
+                           0,
+                           220,
+                           32,
+                           (arm_2d_font_t *)&ARM_2D_FONT_6x8,
+                           TINYUI_BACKEND_LINE_EDIT_TEXT_MAX);
+}
+
 struct tinyui_line_edit *tinyui_line_edit_create(struct tinyui_window *parent, const char *id)
 {
     struct tinyui_line_edit *line_edit;
-    struct tinyui_app *app_state;
     ldLineEdit_t *ld_line_edit;
-    uint16_t name_id;
 
     if (parent == 0 || id == 0) {
         return 0;
     }
 
-    app_state = parent->widget.owner;
-    if (parent->widget.ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
+    if (parent->widget.ld_widget == 0 || parent->widget.owner == 0) {
         return 0;
     }
 
-    line_edit = calloc(1, sizeof(*line_edit));
+    line_edit = (struct tinyui_line_edit *)tinyui_widget_create_leaf(&parent->widget,
+                                                                     TINYUI_BACKEND_WIDGET_TEXT,
+                                                                     tinyui_line_edit_ld_init,
+                                                                     0,
+                                                                     sizeof(*line_edit));
     if (line_edit == 0) {
-        return 0;
-    }
-
-    name_id = ++app_state->next_ld_name_id;
-
-    ld_line_edit = ldLineEdit_init(app_state->ld_scene,
-                                   NULL,
-                                   name_id,
-                                   parent->widget.ld_name_id,
-                                   0,
-                                   0,
-                                   220,
-                                   32,
-                                   (arm_2d_font_t *)&ARM_2D_FONT_6x8,
-                                   TINYUI_BACKEND_LINE_EDIT_TEXT_MAX);
-    if (ld_line_edit == NULL) {
-        free(line_edit);
         return 0;
     }
 
     line_edit->id = id;
     line_edit->type = TINYUI_LINE_EDIT_TYPE_STRING;
-    line_edit->widget.ld_widget  = ld_line_edit;
-    line_edit->widget.ld_name_id = name_id;
-    line_edit->widget.kind       = TINYUI_BACKEND_WIDGET_TEXT;
-    line_edit->widget.owner      = app_state;
     line_edit->widget.visible    = 1;
     line_edit->widget.enabled    = 1;
-    ((ldBase_t *)ld_line_edit)->pInfo = &line_edit->widget;
-    tinyui_runtime_bridge_bind_leaf_widget(&line_edit->widget, app_state);
+    ld_line_edit = (ldLineEdit_t *)line_edit->widget.ld_widget;
 
     if (!ldMsgConnect(ld_line_edit, SIGNAL_PRESS, tinyui_line_edit_native_slot)
         || !ldMsgConnect(ld_line_edit, SIGNAL_FINISHED, tinyui_line_edit_native_slot)) {

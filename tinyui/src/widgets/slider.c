@@ -24,10 +24,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* ---- test seam state ---- */
 static const char *s_fail_test_id = 0;
-static struct tinyui_widget s_disposed_widget_snapshot;
-static int s_disposed_widget_valid = 0;
 static ld_scene_t *s_slider_depose_scene = NULL;
 
 static void tinyui_slider_ld_depose_cb(void *ld_widget)
@@ -53,15 +50,6 @@ void tinyui_slider_test_fail_indicator_width_for_id(const char *id)
     s_fail_test_id = id;
 }
 
-const struct tinyui_widget *tinyui_slider_test_last_disposed_backend(void)
-{
-    if (s_disposed_widget_valid == 0) {
-        return 0;
-    }
-
-    return &s_disposed_widget_snapshot;
-}
-
 static int tinyui_slider_props_are_valid(const struct tinyui_slider_props *props)
 {
     return props != 0
@@ -83,6 +71,15 @@ static int tinyui_slider_props_are_valid(const struct tinyui_slider_props *props
         && props->padding >= 0;
 }
 
+static void *tinyui_slider_ld_init(void *ctx,
+                                   struct ld_scene_t *scene,
+                                   uint16_t name_id,
+                                   uint16_t parent_name_id)
+{
+    (void)ctx;
+    return ldSlider_init(scene, NULL, name_id, parent_name_id, 0, 0, 220, 30);
+}
+
 /**
  * @brief Create slider widget
  *
@@ -94,50 +91,21 @@ static int tinyui_slider_props_are_valid(const struct tinyui_slider_props *props
 struct tinyui_slider *tinyui_slider_create(struct tinyui_window *parent, const char *id)
 {
     struct tinyui_slider *slider;
-    struct tinyui_app *app_state;
-    ldSlider_t *ld_slider;
-    uint16_t name_id;
 
     if (parent == 0 || id == 0) {
         return 0;
     }
-
-    app_state = parent->widget.owner;
-    if (parent->widget.ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
-        return 0;
-    }
-
-    slider = calloc(1, sizeof(*slider));
+    slider = (struct tinyui_slider *)tinyui_widget_create_leaf(&parent->widget,
+                                                               TINYUI_BACKEND_WIDGET_SLIDER,
+                                                               tinyui_slider_ld_init,
+                                                               0,
+                                                               sizeof(*slider));
     if (slider == 0) {
         return 0;
     }
-
-    name_id = ++app_state->next_ld_name_id;
-
-    ld_slider = ldSlider_init(app_state->ld_scene,
-                              NULL,
-                              name_id,
-                              parent->widget.ld_name_id,
-                              0,
-                              0,
-                              220,
-                              30);
-    if (ld_slider == 0) {
-        free(slider);
-        return 0;
-    }
-
     slider->id = id;
-    slider->widget.ld_widget  = ld_slider;
-    slider->widget.ld_name_id = name_id;
-    slider->widget.kind       = TINYUI_BACKEND_WIDGET_SLIDER;
-    slider->widget.owner      = app_state;
     slider->min_value = 0;
     slider->max_value = 100;
-    slider->widget.visible = 1;
-    slider->widget.enabled = 1;
-    ((ldBase_t *)ld_slider)->pInfo = &slider->widget;
-    (void)tinyui_runtime_bridge_bind_leaf_widget(&slider->widget, app_state);
 
     return slider;
 }
@@ -180,10 +148,6 @@ struct tinyui_slider *tinyui_slider_create_with_props(struct tinyui_window *pare
             && tinyui_slider_set_indicator_width(slider, props->indicator_width) != 0)
         || (props->slim_size != -1
             && tinyui_slider_set_slim_size(slider, props->slim_size) != 0)) {
-        memset(&s_disposed_widget_snapshot, 0, sizeof(s_disposed_widget_snapshot));
-        s_disposed_widget_snapshot.ld_widget = slider->widget.ld_widget;
-        s_disposed_widget_snapshot.kind      = slider->widget.kind;
-        s_disposed_widget_valid = 1;
         s_slider_depose_scene = slider->widget.ld_event_bridge_scene;
         tinyui_widget_destroy_common(&slider->widget, tinyui_slider_ld_depose_cb);
         return 0;

@@ -783,7 +783,7 @@ struct tinyui_table {
  * struct tinyui_widget), calls @p ld_init_cb to create the backing ld widget,
  * attaches it to the ld tree under @p parent, and binds pInfo.
  *
- * @param[in] parent      Parent window (must not be NULL)
+ * @param[in] parent      Parent widget (must not be NULL)
  * @param[in] kind        Backend widget kind for the new leaf
  * @param[in] ld_init_cb  Callback that allocates and initialises the ld widget.
  *                        Receives @p ctx plus the scene, name_id and
@@ -795,7 +795,7 @@ struct tinyui_table {
  * @return Pointer to the embedded struct tinyui_widget on success, NULL on failure
  */
 struct tinyui_widget *tinyui_widget_create_leaf(
-    struct tinyui_window *parent,
+    struct tinyui_widget *parent,
     enum tinyui_backend_widget_kind kind,
     void *(*ld_init_cb)(void *ctx, struct ld_scene_t *scene,
                         uint16_t name_id, uint16_t parent_name_id),

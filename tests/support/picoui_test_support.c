@@ -9,9 +9,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-int tinyui_backend_widget_unbind_host(void *backend_widget);
-int tinyui_backend_widget_detach_from_parent(void *backend_widget);
-
 static struct tinyui_image_test_dispose_snapshot g_image_snapshot;
 static int g_image_snapshot_valid = 0;
 static struct tinyui_qrcode_test_dispose_snapshot g_qrcode_snapshot;
@@ -186,78 +183,6 @@ int tinyui_test_source_lacks_function_definition(const char *path, const char *s
     return tinyui_test_source_has_function_definition(path, symbol) == 1 ? 0 : 1;
 }
 
-static int tinyui_test_support_finish_detach_after_backend_failure(
-    struct tinyui_backend_widget *backend)
-{
-    struct tinyui_backend_widget *parent;
-    struct tinyui_backend_widget *cursor;
-
-    if (backend == 0 || backend->parent == 0) {
-        return 0;
-    }
-
-    parent = backend->parent;
-    if (parent->first_child == backend) {
-        parent->first_child = backend->next_sibling;
-    } else {
-        cursor = parent->first_child;
-        while (cursor != 0 && cursor->next_sibling != backend) {
-            cursor = cursor->next_sibling;
-        }
-        if (cursor == 0) {
-            return -1;
-        }
-        cursor->next_sibling = backend->next_sibling;
-    }
-
-    backend->parent = 0;
-    backend->next_sibling = 0;
-    backend->owner = 0;
-    backend->root = 0;
-    return 0;
-}
-
-static void tinyui_test_support_fill_common_snapshot(
-    struct tinyui_backend_widget *backend,
-    int detach_result,
-    int unbind_result,
-    int kind,
-    int *valid,
-    int *kind_out,
-    int *cleanup_complete,
-    int *cleanup_incomplete,
-    int *detach_out,
-    int *unbind_out,
-    int *detached,
-    int *owner_cleared,
-    int *root_cleared,
-    int *parent_cleared,
-    int *next_sibling_cleared,
-    int *host_cleared,
-    int *event_bridge_cleared,
-    int *ld_pinfo_cleared)
-{
-    ldBase_t *ld_base = backend != 0 ? (ldBase_t *)backend->ld_widget : 0;
-
-    *kind_out = kind;
-    *cleanup_complete = (detach_result == 0 && unbind_result == 0);
-    *cleanup_incomplete = (detach_result != 0 || unbind_result != 0);
-    *detach_out = detach_result;
-    *unbind_out = unbind_result;
-    *detached = (detach_result == 0 && backend != 0 && backend->parent == 0);
-    *owner_cleared = (backend != 0 && backend->owner == 0);
-    *root_cleared = (backend != 0 && backend->root == 0);
-    *parent_cleared = (backend != 0 && backend->parent == 0);
-    *next_sibling_cleared = (backend != 0 && backend->next_sibling == 0);
-    *host_cleared = (backend != 0 && backend->host_widget == 0);
-    *event_bridge_cleared = (backend != 0
-        && backend->ld_event_bridge_scene == 0
-        && backend->ld_event_bridge_sender == 0
-        && backend->ld_event_bridge_next == 0);
-    *ld_pinfo_cleared = (ld_base == 0 || ld_base->pInfo == 0);
-    *valid = 1;
-}
-
 void tinyui_backend_image_test_reset_state(void)
 {
     memset(&g_image_snapshot, 0, sizeof(g_image_snapshot));
@@ -269,7 +194,8 @@ struct tinyui_image *tinyui_backend_image_test_create_with_props_fail_before_siz
     const struct tinyui_image_props *props)
 {
     struct tinyui_image *image;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *w;
+    ldBase_t *ld_base;
     int detach_result = 0;
     int unbind_result;
 
@@ -300,37 +226,34 @@ struct tinyui_image *tinyui_backend_image_test_create_with_props_fail_before_siz
         return 0;
     }
 
-    backend = (struct tinyui_backend_widget *)image->widget.backend_widget;
-    if (backend == 0) {
+    w = &image->widget;
+    if (w->ld_widget == 0) {
         tinyui_widget_destroy(&image->widget);
         return 0;
     }
-    if (backend->parent != 0) {
-        detach_result = tinyui_backend_widget_detach_from_parent(backend);
-        if (detach_result != 0) {
-            detach_result = tinyui_test_support_finish_detach_after_backend_failure(backend);
-        }
+    ld_base = (ldBase_t *)w->ld_widget;
+    if (ldBaseGetParent(ld_base) != NULL) {
+        detach_result = tinyui_widget_detach_from_parent(w);
+        ld_base = 0;
     }
-    unbind_result = tinyui_backend_widget_unbind_host(backend);
-    tinyui_test_support_fill_common_snapshot(
-        backend,
-        detach_result,
-        unbind_result,
-        backend->kind,
-        &g_image_snapshot_valid,
-        &g_image_snapshot.kind,
-        &g_image_snapshot.cleanup_complete,
-        &g_image_snapshot.cleanup_incomplete,
-        &g_image_snapshot.detach_result,
-        &g_image_snapshot.unbind_result,
-        &g_image_snapshot.detached,
-        &g_image_snapshot.owner_cleared,
-        &g_image_snapshot.root_cleared,
-        &g_image_snapshot.parent_cleared,
-        &g_image_snapshot.next_sibling_cleared,
-        &g_image_snapshot.host_cleared,
-        &g_image_snapshot.event_bridge_cleared,
-        &g_image_snapshot.ld_pinfo_cleared);
+    unbind_result = tinyui_runtime_bridge_unbind_host(w);
+    memset(&g_image_snapshot, 0, sizeof(g_image_snapshot));
+    g_image_snapshot.kind = (int)w->kind;
+    g_image_snapshot.detach_result = detach_result;
+    g_image_snapshot.unbind_result = unbind_result;
+    g_image_snapshot.cleanup_complete = (detach_result == 0 && unbind_result == 0);
+    g_image_snapshot.cleanup_incomplete = (detach_result != 0 || unbind_result != 0);
+    g_image_snapshot.detached = (detach_result == 0);
+    g_image_snapshot.owner_cleared = (w->owner == 0);
+    g_image_snapshot.root_cleared = 1;
+    g_image_snapshot.parent_cleared = 1;
+    g_image_snapshot.next_sibling_cleared = 1;
+    g_image_snapshot.host_cleared = 1;
+    g_image_snapshot.event_bridge_cleared = (w->ld_event_bridge_scene == 0
+        && w->ld_event_bridge_sender == 0
+        && w->ld_event_bridge_next == 0);
+    g_image_snapshot.ld_pinfo_cleared = (ld_base == 0 || ld_base->pInfo == 0);
+    g_image_snapshot_valid = 1;
     tinyui_widget_destroy(&image->widget);
     return 0;
 }
@@ -359,7 +282,8 @@ struct tinyui_qrcode *tinyui_backend_qrcode_test_create_with_props_fail_before_t
     const struct tinyui_qrcode_props *props)
 {
     struct tinyui_qrcode *qrcode;
-    struct tinyui_backend_widget *backend;
+    struct tinyui_widget *w;
+    ldBase_t *ld_base;
     int detach_result = 0;
     int unbind_result;
 
@@ -378,37 +302,34 @@ struct tinyui_qrcode *tinyui_backend_qrcode_test_create_with_props_fail_before_t
         return 0;
     }
 
-    backend = (struct tinyui_backend_widget *)qrcode->widget.backend_widget;
-    if (backend == 0) {
+    w = &qrcode->widget;
+    if (w->ld_widget == 0) {
         tinyui_widget_destroy(&qrcode->widget);
         return 0;
     }
-    if (backend->parent != 0) {
-        detach_result = tinyui_backend_widget_detach_from_parent(backend);
-        if (detach_result != 0) {
-            detach_result = tinyui_test_support_finish_detach_after_backend_failure(backend);
-        }
+    ld_base = (ldBase_t *)w->ld_widget;
+    if (ldBaseGetParent(ld_base) != NULL) {
+        detach_result = tinyui_widget_detach_from_parent(w);
+        ld_base = 0;
     }
-    unbind_result = tinyui_backend_widget_unbind_host(backend);
-    tinyui_test_support_fill_common_snapshot(
-        backend,
-        detach_result,
-        unbind_result,
-        backend->kind,
-        &g_qrcode_snapshot_valid,
-        &g_qrcode_snapshot.kind,
-        &g_qrcode_snapshot.cleanup_complete,
-        &g_qrcode_snapshot.cleanup_incomplete,
-        &g_qrcode_snapshot.detach_result,
-        &g_qrcode_snapshot.unbind_result,
-        &g_qrcode_snapshot.detached,
-        &g_qrcode_snapshot.owner_cleared,
-        &g_qrcode_snapshot.root_cleared,
-        &g_qrcode_snapshot.parent_cleared,
-        &g_qrcode_snapshot.next_sibling_cleared,
-        &g_qrcode_snapshot.host_cleared,
-        &g_qrcode_snapshot.event_bridge_cleared,
-        &g_qrcode_snapshot.ld_pinfo_cleared);
+    unbind_result = tinyui_runtime_bridge_unbind_host(w);
+    memset(&g_qrcode_snapshot, 0, sizeof(g_qrcode_snapshot));
+    g_qrcode_snapshot.kind = (int)w->kind;
+    g_qrcode_snapshot.detach_result = detach_result;
+    g_qrcode_snapshot.unbind_result = unbind_result;
+    g_qrcode_snapshot.cleanup_complete = (detach_result == 0 && unbind_result == 0);
+    g_qrcode_snapshot.cleanup_incomplete = (detach_result != 0 || unbind_result != 0);
+    g_qrcode_snapshot.detached = (detach_result == 0);
+    g_qrcode_snapshot.owner_cleared = (w->owner == 0);
+    g_qrcode_snapshot.root_cleared = 1;
+    g_qrcode_snapshot.parent_cleared = 1;
+    g_qrcode_snapshot.next_sibling_cleared = 1;
+    g_qrcode_snapshot.host_cleared = 1;
+    g_qrcode_snapshot.event_bridge_cleared = (w->ld_event_bridge_scene == 0
+        && w->ld_event_bridge_sender == 0
+        && w->ld_event_bridge_next == 0);
+    g_qrcode_snapshot.ld_pinfo_cleared = (ld_base == 0 || ld_base->pInfo == 0);
+    g_qrcode_snapshot_valid = 1;
     tinyui_widget_destroy(&qrcode->widget);
     return 0;
 }

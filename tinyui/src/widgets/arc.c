@@ -28,32 +28,14 @@
 extern const arm_2d_tile_t c_tileQuaterArcGRAY8;
 extern const arm_2d_tile_t c_tileQuaterArcMask;
 
-/* ---- test seam state ----
- * Snapshot machinery moved out of the production dispose path:
- * the closure-style depose callback installs the saved kind/scene,
- * destroy_common does the actual teardown, and the test getter
- * exposes the resulting snapshot. */
-struct tinyui_arc_test_dispose_snapshot {
-    int kind;
-    int cleanup_complete;
-    int cleanup_incomplete;
-    int detach_result;
-    int unbind_result;
-    int detached;
-    int owner_cleared;
-    int root_cleared;
-    int parent_cleared;
-    int next_sibling_cleared;
-    int host_cleared;
-    int event_bridge_cleared;
-    int ld_pinfo_cleared;
-};
-
-static struct tinyui_arc_test_dispose_snapshot s_arc_last_snapshot;
-static int s_arc_last_snapshot_valid = 0;
 static ld_scene_t *s_arc_depose_scene = NULL;
 
 static int tinyui_arc_props_are_valid(const struct tinyui_arc_props *props);
+
+struct tinyui_arc_create_ctx {
+    arm_2d_tile_t *arc_img_tile;
+    arm_2d_tile_t *arc_mask_tile;
+};
 
 static void tinyui_arc_ld_depose_cb(void *ld_widget)
 {
@@ -63,32 +45,12 @@ static void tinyui_arc_ld_depose_cb(void *ld_widget)
     }
 }
 
-static void tinyui_arc_capture_snapshot(struct tinyui_arc *arc)
-{
-    memset(&s_arc_last_snapshot, 0, sizeof(s_arc_last_snapshot));
-    s_arc_last_snapshot.kind                 = (int)arc->widget.kind;
-    s_arc_last_snapshot.detach_result        = 0;
-    s_arc_last_snapshot.unbind_result        = 0;
-    s_arc_last_snapshot.cleanup_complete     = 1;
-    s_arc_last_snapshot.cleanup_incomplete   = 0;
-    s_arc_last_snapshot.detached             = 1;
-    s_arc_last_snapshot.owner_cleared        = 1;
-    s_arc_last_snapshot.root_cleared         = 1;
-    s_arc_last_snapshot.parent_cleared       = 1;
-    s_arc_last_snapshot.next_sibling_cleared = 1;
-    s_arc_last_snapshot.host_cleared         = 1;
-    s_arc_last_snapshot.event_bridge_cleared = 1;
-    s_arc_last_snapshot.ld_pinfo_cleared     = 1;
-    s_arc_last_snapshot_valid                = 1;
-}
-
 static void tinyui_arc_rollback(struct tinyui_arc *arc)
 {
     if (arc == 0) {
         return;
     }
     if (arc->widget.ld_widget != 0) {
-        tinyui_arc_capture_snapshot(arc);
         s_arc_depose_scene = arc->widget.owner != 0 ? arc->widget.owner->ld_scene : NULL;
         tinyui_widget_destroy_common(&arc->widget, tinyui_arc_ld_depose_cb);
     } else {
@@ -96,19 +58,39 @@ static void tinyui_arc_rollback(struct tinyui_arc *arc)
     }
 }
 
-int tinyui_arc_test_take_last_dispose_snapshot(
-    struct tinyui_arc_test_dispose_snapshot *snapshot)
+static void *tinyui_arc_ld_init(void *ctx,
+                                struct ld_scene_t *scene,
+                                uint16_t name_id,
+                                uint16_t parent_name_id)
 {
-    if (snapshot == 0 || s_arc_last_snapshot_valid == 0) {
-        return -1;
+    struct tinyui_arc_create_ctx *create_ctx = (struct tinyui_arc_create_ctx *)ctx;
+    ldArc_t *ld_arc;
+
+    if (create_ctx == 0 || create_ctx->arc_img_tile == 0 || create_ctx->arc_mask_tile == 0) {
+        return 0;
     }
 
-    *snapshot = s_arc_last_snapshot;
-    memset(&s_arc_last_snapshot, 0, sizeof(s_arc_last_snapshot));
-    s_arc_last_snapshot_valid = 0;
-    return 0;
+    ld_arc = ldArc_init(scene,
+                        0,
+                        name_id,
+                        parent_name_id,
+                        0,
+                        0,
+                        160,
+                        160,
+                        create_ctx->arc_img_tile,
+                        create_ctx->arc_mask_tile,
+                        GLCD_COLOR_WHITE);
+    if (ld_arc == 0) {
+        return 0;
+    }
+    ldArcSetQuarterImage(ld_arc,
+                         create_ctx->arc_img_tile,
+                         create_ctx->arc_mask_tile,
+                         true,
+                         true);
+    return ld_arc;
 }
-
 struct tinyui_arc *tinyui_arc_test_create_with_props_fail_before_parent_color(
     struct tinyui_widget *parent,
     const struct tinyui_arc_props *props)
@@ -153,29 +135,16 @@ static int tinyui_arc_props_are_valid(const struct tinyui_arc_props *props)
 struct tinyui_arc *tinyui_arc_create(struct tinyui_widget *parent, const char *id)
 {
     struct tinyui_arc *arc;
-    struct tinyui_app *app_state;
-    ldArc_t *ld_arc;
     arm_2d_tile_t *arc_img_tile;
     arm_2d_tile_t *arc_mask_tile;
-    uint16_t name_id;
+    struct tinyui_arc_create_ctx ctx;
 
     if (parent == 0 || id == 0 || parent->ld_widget == 0) {
         return 0;
     }
 
-    app_state = parent->owner;
-    if (app_state == 0 || app_state->ld_scene == 0) {
-        return 0;
-    }
-
-    arc = calloc(1, sizeof(*arc));
-    if (arc == 0) {
-        return 0;
-    }
-
     arc_img_tile = malloc(sizeof(*arc_img_tile));
     if (arc_img_tile == 0) {
-        free(arc);
         return 0;
     }
     *arc_img_tile = c_tileQuaterArcGRAY8;
@@ -183,42 +152,25 @@ struct tinyui_arc *tinyui_arc_create(struct tinyui_widget *parent, const char *i
     arc_mask_tile = malloc(sizeof(*arc_mask_tile));
     if (arc_mask_tile == 0) {
         free(arc_img_tile);
-        free(arc);
         return 0;
     }
     *arc_mask_tile = c_tileQuaterArcMask;
 
-    name_id = ++app_state->next_ld_name_id;
-
-    ld_arc = ldArc_init(app_state->ld_scene,
-                        0,
-                        name_id,
-                        parent->ld_name_id,
-                        0,
-                        0,
-                        160,
-                        160,
-                        arc_img_tile,
-                        arc_mask_tile,
-                        GLCD_COLOR_WHITE);
-    if (ld_arc == 0) {
+    ctx.arc_img_tile = arc_img_tile;
+    ctx.arc_mask_tile = arc_mask_tile;
+    arc = (struct tinyui_arc *)tinyui_widget_create_leaf(parent,
+                                                         TINYUI_BACKEND_WIDGET_ARC,
+                                                         tinyui_arc_ld_init,
+                                                         &ctx,
+                                                         sizeof(*arc));
+    if (arc == 0) {
         free(arc_mask_tile);
         free(arc_img_tile);
-        free(arc);
         return 0;
     }
-    ldArcSetQuarterImage(ld_arc, arc_img_tile, arc_mask_tile, true, true);
 
     arc->id = id;
-    arc->widget.ld_widget  = ld_arc;
-    arc->widget.ld_name_id = name_id;
-    arc->widget.kind       = TINYUI_BACKEND_WIDGET_ARC;
-    arc->widget.owner      = app_state;
-    arc->widget.visible    = 1;
-    arc->widget.enabled    = 1;
     arc->parent_color      = (unsigned int)GLCD_COLOR_WHITE;
-    ((ldBase_t *)ld_arc)->pInfo = &arc->widget;
-    (void)tinyui_runtime_bridge_bind_leaf_widget(&arc->widget, app_state);
 
     if (tinyui_arc_set_background_angle(arc, 0.0f, 360.0f) != 0
         || tinyui_arc_set_foreground_angle(arc, 0.0f) != 0

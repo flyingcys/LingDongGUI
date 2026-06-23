@@ -74,6 +74,26 @@ static int tinyui_switch_props_are_valid(const struct tinyui_switch_props *props
         && props->padding >= 0;
 }
 
+static void *tinyui_switch_ld_init(void *ctx,
+                                   struct ld_scene_t *scene,
+                                   uint16_t name_id,
+                                   uint16_t parent_name_id)
+{
+    ldSwitch_t *ld_switch;
+
+    (void)ctx;
+    ld_switch = ldSwitch_init(scene, 0, name_id, parent_name_id, 0, 0, 48, 24);
+    if (ld_switch == 0) {
+        return 0;
+    }
+    ldSwitchSetColor(ld_switch,
+                     __RGB(224, 224, 224),
+                     __RGB(33, 150, 243),
+                     GLCD_COLOR_WHITE,
+                     GLCD_COLOR_WHITE);
+    return ld_switch;
+}
+
 /**
  * @brief Create switch widget
  *
@@ -85,58 +105,19 @@ static int tinyui_switch_props_are_valid(const struct tinyui_switch_props *props
 struct tinyui_switch *tinyui_switch_create(struct tinyui_window *parent, const char *id)
 {
     struct tinyui_switch *sw;
-    struct tinyui_app *app_state;
-    ldSwitch_t *ld_switch;
-    uint16_t name_id;
 
     if (parent == 0 || id == 0) {
         return 0;
     }
-
-    app_state = parent->widget.owner;
-    if (parent->widget.ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
-        return 0;
-    }
-
-    sw = calloc(1, sizeof(*sw));
+    sw = (struct tinyui_switch *)tinyui_widget_create_leaf(&parent->widget,
+                                                           TINYUI_BACKEND_WIDGET_SWITCH,
+                                                           tinyui_switch_ld_init,
+                                                           0,
+                                                           sizeof(*sw));
     if (sw == 0) {
         return 0;
     }
-
-    name_id = ++app_state->next_ld_name_id;
-    if (name_id == 0) {
-        free(sw);
-        return 0;
-    }
-
-    ld_switch = ldSwitch_init(app_state->ld_scene,
-                              0,
-                              name_id,
-                              parent->widget.ld_name_id,
-                              0,
-                              0,
-                              48,
-                              24);
-    if (ld_switch == 0) {
-        free(sw);
-        return 0;
-    }
-
-    ldSwitchSetColor(ld_switch,
-                     __RGB(224, 224, 224),
-                     __RGB(33, 150, 243),
-                     GLCD_COLOR_WHITE,
-                     GLCD_COLOR_WHITE);
-
     sw->id = id;
-    sw->widget.ld_widget  = ld_switch;
-    sw->widget.ld_name_id = name_id;
-    sw->widget.kind       = TINYUI_BACKEND_WIDGET_SWITCH;
-    sw->widget.owner      = app_state;
-    sw->widget.visible    = 1;
-    sw->widget.enabled    = 1;
-    ((ldBase_t *)ld_switch)->pInfo = &sw->widget;
-    (void)tinyui_runtime_bridge_bind_leaf_widget(&sw->widget, app_state);
 
     return sw;
 }
