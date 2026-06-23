@@ -473,6 +473,7 @@ static void test_graph_internal_seams_use_tinyui_prefix(void)
     assert_source_lacks_function_definition(widget_path, "tinyui_graph_apply_native_geometry_candidate");
 
     assert_source_has_function_definition(widget_path, "static int ", "graph_apply_native_geometry_candidate");
+    assert(tinyui_test_source_contains(widget_path, "tinyui_widget_create_leaf(") == 1);
 }
 
 int main(void)

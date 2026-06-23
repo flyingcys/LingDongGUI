@@ -51,6 +51,14 @@ static arm_2d_tile_t *const g_radial_menu_masks[] = {
 
 static ld_scene_t *s_radial_menu_depose_scene = NULL;
 
+struct tinyui_radial_menu_create_ctx {
+    int width;
+    int height;
+    int x_axis;
+    int y_axis;
+    int item_max;
+};
+
 static void tinyui_radial_menu_ld_depose_cb(void *ld_widget)
 {
     if (s_radial_menu_depose_scene != NULL) {
@@ -72,6 +80,31 @@ static void tinyui_radial_menu_rollback(struct tinyui_radial_menu *radial_menu)
     } else {
         free(radial_menu);
     }
+}
+
+static void *tinyui_radial_menu_ld_init(void *ctx,
+                                        struct ld_scene_t *scene,
+                                        uint16_t name_id,
+                                        uint16_t parent_name_id)
+{
+    const struct tinyui_radial_menu_create_ctx *create_ctx =
+        (const struct tinyui_radial_menu_create_ctx *)ctx;
+
+    if (create_ctx == 0) {
+        return 0;
+    }
+
+    return ldRadialMenu_init(scene,
+                             NULL,
+                             name_id,
+                             parent_name_id,
+                             0,
+                             0,
+                             (int16_t)create_ctx->width,
+                             (int16_t)create_ctx->height,
+                             (uint16_t)create_ctx->x_axis,
+                             (uint16_t)create_ctx->y_axis,
+                             (uint8_t)create_ctx->item_max);
 }
 
 static bool tinyui_radial_menu_native_slot(struct ld_scene_t *scene, ldMsg_t msg)
@@ -139,9 +172,8 @@ static struct tinyui_radial_menu *tinyui_radial_menu_create_internal(struct tiny
                                                                      int item_max)
 {
     struct tinyui_radial_menu *radial_menu;
-    struct tinyui_app *app_state;
     ldRadialMenu_t *ld_radial_menu;
-    uint16_t name_id;
+    struct tinyui_radial_menu_create_ctx create_ctx;
 
     if (parent == 0 || id == 0) {
         return 0;
@@ -160,47 +192,35 @@ static struct tinyui_radial_menu *tinyui_radial_menu_create_internal(struct tiny
         item_max = 1;
     }
 
-    app_state = parent->owner;
-    if (parent->ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
+    if (parent->ld_widget == 0 || parent->owner == 0 || parent->owner->ld_scene == 0) {
         return 0;
     }
 
-    radial_menu = calloc(1, sizeof(*radial_menu));
+    create_ctx.width = width;
+    create_ctx.height = height;
+    create_ctx.x_axis = x_axis;
+    create_ctx.y_axis = y_axis;
+    create_ctx.item_max = item_max;
+
+    radial_menu = (struct tinyui_radial_menu *)tinyui_widget_create_leaf(
+        parent,
+        TINYUI_BACKEND_WIDGET_RADIAL_MENU,
+        tinyui_radial_menu_ld_init,
+        &create_ctx,
+        sizeof(*radial_menu));
     if (radial_menu == 0) {
         return 0;
     }
 
-    name_id = ++app_state->next_ld_name_id;
-    if (name_id == 0) {
-        free(radial_menu);
-        return 0;
-    }
-
-    ld_radial_menu = ldRadialMenu_init(app_state->ld_scene,
-                                       NULL,
-                                       name_id,
-                                       parent->ld_name_id,
-                                       0,
-                                       0,
-                                       (int16_t)width,
-                                       (int16_t)height,
-                                       (uint16_t)x_axis,
-                                       (uint16_t)y_axis,
-                                       (uint8_t)item_max);
+    ld_radial_menu = (ldRadialMenu_t *)radial_menu->widget.ld_widget;
     if (ld_radial_menu == 0) {
-        free(radial_menu);
+        tinyui_radial_menu_rollback(radial_menu);
         return 0;
     }
 
-    radial_menu->widget.ld_widget = ld_radial_menu;
-    radial_menu->widget.ld_name_id = name_id;
-    radial_menu->widget.kind = TINYUI_BACKEND_WIDGET_RADIAL_MENU;
-    radial_menu->widget.owner = app_state;
     radial_menu->widget.value = -1;
     radial_menu->widget.visible = 1;
     radial_menu->widget.enabled = 1;
-    ((ldBase_t *)ld_radial_menu)->pInfo = &radial_menu->widget;
-    tinyui_runtime_bridge_bind_leaf_widget(&radial_menu->widget, app_state);
 
     radial_menu->id = id;
     radial_menu->selected_index = -1;

@@ -301,6 +301,27 @@ static void tinyui_window_set_defaults(struct tinyui_window *window, const char 
     window->grid_row_align = TINYUI_ALIGN_START;
 }
 
+static void *tinyui_window_ld_init_child(void *ctx,
+                                         ld_scene_t *scene,
+                                         uint16_t name_id,
+                                         uint16_t parent_name_id)
+{
+    (void)ctx;
+
+    if (scene == 0) {
+        return 0;
+    }
+
+    return ldWindow_init(scene,
+                         NULL,
+                         name_id,
+                         parent_name_id,
+                         0,
+                         0,
+                         160,
+                         80);
+}
+
 static void tinyui_window_do_free_internal(struct tinyui_window *window)
 {
     struct tinyui_app *app_state;
@@ -785,62 +806,22 @@ struct tinyui_window *tinyui_window_create(struct tinyui_app *app, const char *i
 struct tinyui_window *tinyui_window_create_child(struct tinyui_window *parent, const char *id)
 {
     struct tinyui_window *window;
-    struct tinyui_app *app_state;
-    ldWindow_t *ld_window;
-    uint16_t name_id;
-    uint16_t parent_name_id;
 
     if (parent == 0 || id == 0 || parent->widget.ld_widget == 0
         || parent->widget.owner == 0) {
         return 0;
     }
 
-    app_state = tinyui_runtime_bridge_backend_state(parent->widget.owner);
-    if (app_state == 0 || app_state->ld_scene == 0) {
-        return 0;
-    }
-
-    parent_name_id = parent->widget.ld_name_id;
-    name_id = ++app_state->next_ld_name_id;
-    if (name_id == 0) {
-        return 0;
-    }
-
-    ld_window = ldWindow_init(app_state->ld_scene,
-                              NULL,
-                              name_id,
-                              parent_name_id,
-                              0,
-                              0,
-                              160,
-                              80);
-    if (ld_window == 0) {
-        return 0;
-    }
-
-    window = calloc(1, sizeof(*window));
+    window = (struct tinyui_window *)tinyui_widget_create_leaf(&parent->widget,
+                                                               TINYUI_BACKEND_WIDGET_WINDOW,
+                                                               tinyui_window_ld_init_child,
+                                                               0,
+                                                               sizeof(*window));
     if (window == 0) {
-        ldWindow_depose(app_state->ld_scene, ld_window);
         return 0;
     }
 
     tinyui_window_set_defaults(window, id);
-
-    /* C2: fold the binding directly onto the widget struct (no host wrapper). */
-    window->widget.ld_widget = ld_window;
-    window->widget.ld_name_id = name_id;
-    window->widget.kind = TINYUI_BACKEND_WIDGET_WINDOW;
-    window->widget.owner = parent->widget.owner;
-    ((ldBase_t *)ld_window)->pInfo = &window->widget;
-
-    if (tinyui_runtime_bridge_bind_leaf_widget(&window->widget,
-                                               parent->widget.owner) != 0) {
-        ((ldBase_t *)ld_window)->pInfo = 0;
-        window->widget.ld_widget = 0;
-        ldWindow_depose(app_state->ld_scene, ld_window);
-        free(window);
-        return 0;
-    }
     return window;
 }
 

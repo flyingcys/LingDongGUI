@@ -50,6 +50,44 @@ static arm_2d_tile_t *const g_icon_slider_masks[] = {
 
 static ld_scene_t *s_icon_slider_depose_scene = NULL;
 
+struct tinyui_icon_slider_create_ctx {
+    int width;
+    int height;
+    int icon_width;
+    int icon_space;
+    int columns;
+    int rows;
+    int pages;
+};
+
+static void *tinyui_icon_slider_ld_init(void *ctx,
+                                        struct ld_scene_t *scene,
+                                        uint16_t name_id,
+                                        uint16_t parent_name_id)
+{
+    const struct tinyui_icon_slider_create_ctx *create_ctx;
+
+    create_ctx = (const struct tinyui_icon_slider_create_ctx *)ctx;
+    if (scene == 0 || create_ctx == 0) {
+        return 0;
+    }
+
+    return ldIconSlider_init(scene,
+                             NULL,
+                             name_id,
+                             parent_name_id,
+                             0,
+                             0,
+                             (int16_t)create_ctx->width,
+                             (int16_t)create_ctx->height,
+                             (int16_t)create_ctx->icon_width,
+                             (uint8_t)create_ctx->icon_space,
+                             (uint8_t)create_ctx->columns,
+                             (uint8_t)create_ctx->rows,
+                             (uint8_t)create_ctx->pages,
+                             (arm_2d_font_t *)&ARM_2D_FONT_6x8);
+}
+
 static void tinyui_icon_slider_ld_depose_cb(void *ld_widget)
 {
     if (s_icon_slider_depose_scene != NULL) {
@@ -152,9 +190,8 @@ static struct tinyui_icon_slider *tinyui_icon_slider_create_with_backend_config(
                                                                                 int pages)
 {
     struct tinyui_icon_slider *icon_slider;
-    struct tinyui_app *app_state;
     ldIconSlider_t *ld_icon_slider;
-    uint16_t name_id;
+    struct tinyui_icon_slider_create_ctx create_ctx;
 
     if (parent == 0 || id == 0) {
         return 0;
@@ -176,50 +213,30 @@ static struct tinyui_icon_slider *tinyui_icon_slider_create_with_backend_config(
         pages = 1;
     }
 
-    app_state = parent->owner;
-    if (parent->ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
+    if (parent->ld_widget == 0 || parent->owner == 0 || parent->owner->ld_scene == 0) {
         return 0;
     }
 
-    icon_slider = calloc(1, sizeof(*icon_slider));
+    create_ctx.width = width;
+    create_ctx.height = height;
+    create_ctx.icon_width = icon_width;
+    create_ctx.icon_space = icon_space;
+    create_ctx.columns = columns;
+    create_ctx.rows = rows;
+    create_ctx.pages = pages;
+
+    icon_slider = (struct tinyui_icon_slider *)tinyui_widget_create_leaf(parent,
+                                                                         TINYUI_BACKEND_WIDGET_ICON_SLIDER,
+                                                                         tinyui_icon_slider_ld_init,
+                                                                         &create_ctx,
+                                                                         sizeof(*icon_slider));
     if (icon_slider == 0) {
         return 0;
     }
 
-    name_id = ++app_state->next_ld_name_id;
-    if (name_id == 0) {
-        free(icon_slider);
-        return 0;
-    }
-
-    ld_icon_slider = ldIconSlider_init(app_state->ld_scene,
-                                       NULL,
-                                       name_id,
-                                       parent->ld_name_id,
-                                       0,
-                                       0,
-                                       (int16_t)width,
-                                       (int16_t)height,
-                                       (int16_t)icon_width,
-                                       (uint8_t)icon_space,
-                                       (uint8_t)columns,
-                                       (uint8_t)rows,
-                                       (uint8_t)pages,
-                                       (arm_2d_font_t *)&ARM_2D_FONT_6x8);
-    if (ld_icon_slider == 0) {
-        free(icon_slider);
-        return 0;
-    }
-
-    icon_slider->widget.ld_widget = ld_icon_slider;
-    icon_slider->widget.ld_name_id = name_id;
-    icon_slider->widget.kind = TINYUI_BACKEND_WIDGET_ICON_SLIDER;
-    icon_slider->widget.owner = app_state;
     icon_slider->widget.value = -1;
     icon_slider->widget.visible = 1;
     icon_slider->widget.enabled = 1;
-    ((ldBase_t *)ld_icon_slider)->pInfo = &icon_slider->widget;
-    tinyui_runtime_bridge_bind_leaf_widget(&icon_slider->widget, app_state);
 
     icon_slider->id = id;
     icon_slider->selected_index = -1;
@@ -230,6 +247,7 @@ static struct tinyui_icon_slider *tinyui_icon_slider_create_with_backend_config(
     icon_slider->rows = rows;
     icon_slider->pages = pages;
 
+    ld_icon_slider = (ldIconSlider_t *)icon_slider->widget.ld_widget;
     if (!ldMsgConnect(ld_icon_slider, SIGNAL_CLICKED_ITEM, tinyui_icon_slider_native_slot)) {
         tinyui_icon_slider_rollback(icon_slider);
         return 0;

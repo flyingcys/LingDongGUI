@@ -93,6 +93,33 @@ static void tinyui_message_box_confirm_bridge(ld_scene_t *scene, ldMessageBox_t 
     }
 }
 
+struct tinyui_message_box_create_ctx {
+    arm_2d_font_t *font;
+};
+
+static void *tinyui_message_box_ld_init(void *ctx,
+                                        ld_scene_t *scene,
+                                        uint16_t name_id,
+                                        uint16_t parent_name_id)
+{
+    struct tinyui_message_box_create_ctx *create_ctx;
+
+    if (scene == 0 || ctx == 0) {
+        return 0;
+    }
+
+    create_ctx = (struct tinyui_message_box_create_ctx *)ctx;
+    return ldMessageBox_init(scene,
+                             NULL,
+                             name_id,
+                             parent_name_id,
+                             0,
+                             0,
+                             260,
+                             140,
+                             create_ctx->font);
+}
+
 /* ── create ────────────────────────────────────────────────────────────── */
 
 /**
@@ -107,8 +134,7 @@ struct tinyui_message_box *tinyui_message_box_create(struct tinyui_widget *paren
 {
     struct tinyui_message_box *box;
     struct tinyui_app *app_state;
-    ldMessageBox_t *ld_message_box;
-    uint16_t name_id;
+    struct tinyui_message_box_create_ctx ctx;
 
     if (parent == 0 || id == 0 || parent->ld_widget == 0) {
         return 0;
@@ -119,36 +145,19 @@ struct tinyui_message_box *tinyui_message_box_create(struct tinyui_widget *paren
         return 0;
     }
 
-    box = calloc(1, sizeof(*box));
+    ctx.font = (arm_2d_font_t *)&ARM_2D_FONT_6x8;
+
+    box = (struct tinyui_message_box *)tinyui_widget_create_leaf(
+        parent,
+        TINYUI_BACKEND_WIDGET_MESSAGE_BOX,
+        tinyui_message_box_ld_init,
+        &ctx,
+        sizeof(*box));
     if (box == 0) {
         return 0;
     }
 
-    name_id = ++app_state->next_ld_name_id;
-
-    ld_message_box = ldMessageBox_init(app_state->ld_scene,
-                                       NULL,
-                                       name_id,
-                                       parent->ld_name_id,
-                                       0,
-                                       0,
-                                       260,
-                                       140,
-                                       (arm_2d_font_t *)&ARM_2D_FONT_6x8);
-    if (ld_message_box == 0) {
-        free(box);
-        return 0;
-    }
-
     box->id = id;
-    box->widget.ld_widget  = ld_message_box;
-    box->widget.ld_name_id = name_id;
-    box->widget.kind       = TINYUI_BACKEND_WIDGET_MESSAGE_BOX;
-    box->widget.owner      = app_state;
-    box->widget.visible    = 1;
-    box->widget.enabled    = 1;
-    ((ldBase_t *)ld_message_box)->pInfo = &box->widget;
-    tinyui_runtime_bridge_bind_leaf_widget(&box->widget, app_state);
     return box;
 }
 

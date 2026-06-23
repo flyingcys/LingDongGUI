@@ -31,12 +31,99 @@ extern const arm_2d_tile_t c_tileClockface;
 /* ---- test seam state ---- */
 static ld_scene_t *s_clock_depose_scene = NULL;
 
+struct tinyui_clock_create_ctx {
+    arm_2d_tile_t *hour_img_tile;
+    arm_2d_tile_t *hour_mask_tile;
+    arm_2d_tile_t *minute_img_tile;
+    arm_2d_tile_t *minute_mask_tile;
+    arm_2d_tile_t *second_img_tile;
+    arm_2d_tile_t *second_mask_tile;
+};
+
 static void tinyui_clock_ld_depose_cb(void *ld_widget)
 {
     if (s_clock_depose_scene != NULL) {
         ldClock_depose(s_clock_depose_scene, (ldClock_t *)ld_widget);
         s_clock_depose_scene = NULL;
     }
+}
+
+static void tinyui_clock_rollback(struct tinyui_clock *clock)
+{
+    if (clock == 0) {
+        return;
+    }
+    if (clock->widget.ld_widget != 0) {
+        s_clock_depose_scene = clock->widget.owner != 0
+            ? clock->widget.owner->ld_scene
+            : NULL;
+        tinyui_widget_destroy_common(&clock->widget, tinyui_clock_ld_depose_cb);
+    } else {
+        free(clock);
+    }
+}
+
+static void *tinyui_clock_ld_init(void *ctx,
+                                  struct ld_scene_t *scene,
+                                  uint16_t name_id,
+                                  uint16_t parent_name_id)
+{
+    struct tinyui_clock_create_ctx *create_ctx = (struct tinyui_clock_create_ctx *)ctx;
+    ldClock_t *ld_clock;
+
+    if (create_ctx == 0
+        || create_ctx->hour_img_tile == 0
+        || create_ctx->hour_mask_tile == 0
+        || create_ctx->minute_img_tile == 0
+        || create_ctx->minute_mask_tile == 0
+        || create_ctx->second_img_tile == 0
+        || create_ctx->second_mask_tile == 0) {
+        return 0;
+    }
+
+    ld_clock = ldClock_init(scene,
+                            NULL,
+                            name_id,
+                            parent_name_id,
+                            0,
+                            0,
+                            200,
+                            200);
+    if (ld_clock == 0) {
+        return 0;
+    }
+
+    ldClockBindHourPointerImage(ld_clock,
+                                create_ctx->hour_img_tile,
+                                create_ctx->hour_mask_tile,
+                                0,
+                                (float)(create_ctx->hour_mask_tile->tRegion.tSize.iWidth >> 1),
+                                (float)create_ctx->hour_mask_tile->tRegion.tSize.iHeight,
+                                true,
+                                true);
+    ldClockBindMinutePointerImage(ld_clock,
+                                  create_ctx->minute_img_tile,
+                                  create_ctx->minute_mask_tile,
+                                  0,
+                                  (float)(create_ctx->minute_mask_tile->tRegion.tSize.iWidth >> 1),
+                                  (float)create_ctx->minute_mask_tile->tRegion.tSize.iHeight,
+                                  true,
+                                  true);
+    ldClockBindSecondPointerImage(ld_clock,
+                                  create_ctx->second_img_tile,
+                                  create_ctx->second_mask_tile,
+                                  0,
+                                  (float)(create_ctx->second_mask_tile->tRegion.tSize.iWidth >> 1),
+                                  100.0f,
+                                  true,
+                                  true);
+    ldClockBindBackgroundImage(ld_clock,
+                               (arm_2d_tile_t *)&c_tileClockface,
+                               NULL,
+                               0,
+                               false,
+                               false);
+    return ld_clock;
 }
 
 static int clock_props_valid(const struct tinyui_clock_props *props)
@@ -126,33 +213,20 @@ static int tinyui_clock_apply_pointer(struct tinyui_clock *clock, int index)
 struct tinyui_clock *tinyui_clock_create(struct tinyui_widget *parent, const char *id)
 {
     struct tinyui_clock *clock;
-    struct tinyui_app *app_state;
-    ldClock_t *ld_clock;
     arm_2d_tile_t *hour_img_tile;
     arm_2d_tile_t *hour_mask_tile;
     arm_2d_tile_t *minute_img_tile;
     arm_2d_tile_t *minute_mask_tile;
     arm_2d_tile_t *second_img_tile;
     arm_2d_tile_t *second_mask_tile;
-    uint16_t name_id;
+    struct tinyui_clock_create_ctx ctx;
 
     if (parent == 0 || id == 0 || parent->ld_widget == 0) {
         return 0;
     }
 
-    app_state = parent->owner;
-    if (app_state == 0 || app_state->ld_scene == 0) {
-        return 0;
-    }
-
-    clock = calloc(1, sizeof(*clock));
-    if (clock == 0) {
-        return 0;
-    }
-
     hour_img_tile = malloc(sizeof(*hour_img_tile));
     if (hour_img_tile == 0) {
-        free(clock);
         return 0;
     }
     *hour_img_tile = c_tilePointerSecGRAY8;
@@ -161,7 +235,6 @@ struct tinyui_clock *tinyui_clock_create(struct tinyui_widget *parent, const cha
     hour_mask_tile = malloc(sizeof(*hour_mask_tile));
     if (hour_mask_tile == 0) {
         free(hour_img_tile);
-        free(clock);
         return 0;
     }
     *hour_mask_tile = c_tilePointerSecMask;
@@ -171,7 +244,6 @@ struct tinyui_clock *tinyui_clock_create(struct tinyui_widget *parent, const cha
     if (minute_img_tile == 0) {
         free(hour_mask_tile);
         free(hour_img_tile);
-        free(clock);
         return 0;
     }
     *minute_img_tile = c_tilePointerSecGRAY8;
@@ -181,7 +253,6 @@ struct tinyui_clock *tinyui_clock_create(struct tinyui_widget *parent, const cha
         free(minute_img_tile);
         free(hour_mask_tile);
         free(hour_img_tile);
-        free(clock);
         return 0;
     }
     *minute_mask_tile = c_tilePointerSecMask;
@@ -192,7 +263,6 @@ struct tinyui_clock *tinyui_clock_create(struct tinyui_widget *parent, const cha
         free(minute_img_tile);
         free(hour_mask_tile);
         free(hour_img_tile);
-        free(clock);
         return 0;
     }
     *second_img_tile = c_tilePointerSecGRAY8;
@@ -204,73 +274,30 @@ struct tinyui_clock *tinyui_clock_create(struct tinyui_widget *parent, const cha
         free(minute_img_tile);
         free(hour_mask_tile);
         free(hour_img_tile);
-        free(clock);
         return 0;
     }
     *second_mask_tile = c_tilePointerSecMask;
 
-    name_id = ++app_state->next_ld_name_id;
-
-    ld_clock = ldClock_init(app_state->ld_scene,
-                            NULL,
-                            name_id,
-                            parent->ld_name_id,
-                            0,
-                            0,
-                            200,
-                            200);
-    if (ld_clock == 0) {
+    ctx.hour_img_tile = hour_img_tile;
+    ctx.hour_mask_tile = hour_mask_tile;
+    ctx.minute_img_tile = minute_img_tile;
+    ctx.minute_mask_tile = minute_mask_tile;
+    ctx.second_img_tile = second_img_tile;
+    ctx.second_mask_tile = second_mask_tile;
+    clock = (struct tinyui_clock *)tinyui_widget_create_leaf(parent,
+                                                             TINYUI_BACKEND_WIDGET_CLOCK,
+                                                             tinyui_clock_ld_init,
+                                                             &ctx,
+                                                             sizeof(*clock));
+    if (clock == 0) {
         free(second_mask_tile);
         free(second_img_tile);
         free(minute_mask_tile);
         free(minute_img_tile);
         free(hour_mask_tile);
         free(hour_img_tile);
-        free(clock);
         return 0;
     }
-
-    ldClockBindHourPointerImage(ld_clock,
-                                hour_img_tile,
-                                hour_mask_tile,
-                                0,
-                                (float)(hour_mask_tile->tRegion.tSize.iWidth >> 1),
-                                (float)hour_mask_tile->tRegion.tSize.iHeight,
-                                true,
-                                true);
-    ldClockBindMinutePointerImage(ld_clock,
-                                  minute_img_tile,
-                                  minute_mask_tile,
-                                  0,
-                                  (float)(minute_mask_tile->tRegion.tSize.iWidth >> 1),
-                                  (float)minute_mask_tile->tRegion.tSize.iHeight,
-                                  true,
-                                  true);
-    ldClockBindSecondPointerImage(ld_clock,
-                                  second_img_tile,
-                                  second_mask_tile,
-                                  0,
-                                  (float)(second_mask_tile->tRegion.tSize.iWidth >> 1),
-                                  100.0f,
-                                  true,
-                                  true);
-    ldClockBindBackgroundImage(ld_clock,
-                               (arm_2d_tile_t *)&c_tileClockface,
-                               NULL,
-                               0,
-                               false,
-                               false);
-
-    clock->id = id;
-    clock->widget.ld_widget  = ld_clock;
-    clock->widget.ld_name_id = name_id;
-    clock->widget.kind       = TINYUI_BACKEND_WIDGET_CLOCK;
-    clock->widget.owner      = app_state;
-    clock->widget.visible    = 1;
-    clock->widget.enabled    = 1;
-    clock->widget.value      = 0;
-    ((ldBase_t *)ld_clock)->pInfo = &clock->widget;
-    (void)tinyui_runtime_bridge_bind_leaf_widget(&clock->widget, app_state);
 
     clock->mask_color = 0;
     clock->hour_anchor_x = 0.0f;
@@ -280,9 +307,10 @@ struct tinyui_clock *tinyui_clock_create(struct tinyui_widget *parent, const cha
     clock->second_anchor_x = 0.0f;
     clock->second_anchor_y = 100.0f;
     clock->use_system_time = 1;
+    clock->id = id;
+    clock->widget.value = 0;
     if (tinyui_clock_set_step_second(clock, 0) != 0) {
-        s_clock_depose_scene = clock->widget.ld_event_bridge_scene;
-        tinyui_widget_destroy_common(&clock->widget, tinyui_clock_ld_depose_cb);
+        tinyui_clock_rollback(clock);
         return 0;
     }
     return clock;
@@ -386,8 +414,7 @@ struct tinyui_clock *tinyui_clock_create_with_props(
         || tinyui_clock_set_hour_anchor(clock, props->hour_anchor_x, props->hour_anchor_y) != 0
         || tinyui_clock_set_minute_anchor(clock, props->minute_anchor_x, props->minute_anchor_y) != 0
         || tinyui_clock_set_second_anchor(clock, props->second_anchor_x, props->second_anchor_y) != 0) {
-        s_clock_depose_scene = clock->widget.ld_event_bridge_scene;
-        tinyui_widget_destroy_common(&clock->widget, tinyui_clock_ld_depose_cb);
+        tinyui_clock_rollback(clock);
         return 0;
     }
 

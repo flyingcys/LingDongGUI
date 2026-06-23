@@ -27,7 +27,10 @@
 
 extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
 void ldKeyboardInputAscii(ldKeyboard_t *ptWidget, uint8_t ascii);
-int tinyui_runtime_bridge_bind_leaf_widget(struct tinyui_widget *widget, struct tinyui_app *app);
+
+struct tinyui_keyboard_create_ctx {
+    arm_2d_font_t *font;
+};
 
 /* ── C2 depose machinery ─────────────────────────────────────────────────── */
 
@@ -99,6 +102,25 @@ static int tinyui_keyboard_props_are_valid(const struct tinyui_keyboard_props *p
         && props->height >= 0
         && props->radius >= 0
         && props->padding >= 0;
+}
+
+static void *tinyui_keyboard_ld_init(void *ctx,
+                                     struct ld_scene_t *scene,
+                                     uint16_t name_id,
+                                     uint16_t parent_name_id)
+{
+    struct tinyui_keyboard_create_ctx *create_ctx =
+        (struct tinyui_keyboard_create_ctx *)ctx;
+
+    if (create_ctx == 0 || scene == 0 || create_ctx->font == 0) {
+        return 0;
+    }
+
+    return ldKeyboard_init(scene,
+                           NULL,
+                           name_id,
+                           parent_name_id,
+                           create_ctx->font);
 }
 
 static int tinyui_keyboard_get_selected_key_code_internal(const struct tinyui_keyboard *keyboard,
@@ -247,46 +269,30 @@ static void tinyui_keyboard_prepare_local(ldKeyboard_t *ld_keyboard,
 
 struct tinyui_keyboard *tinyui_keyboard_create(struct tinyui_window *parent, const char *id)
 {
+    struct tinyui_keyboard_create_ctx create_ctx;
     struct tinyui_keyboard *keyboard;
-    struct tinyui_app *app_state;
-    ldKeyboard_t *ld_keyboard;
-    uint16_t name_id;
 
     if (parent == 0 || id == 0) {
         return 0;
     }
 
-    app_state = parent->widget.owner;
-    if (parent->widget.ld_widget == 0 || app_state == 0 || app_state->ld_scene == 0) {
+    if (parent->widget.ld_widget == 0 || parent->widget.owner == 0) {
         return 0;
     }
 
-    keyboard = calloc(1, sizeof(*keyboard));
+    create_ctx.font = (arm_2d_font_t *)&ARM_2D_FONT_6x8;
+    keyboard = (struct tinyui_keyboard *)tinyui_widget_create_leaf(&parent->widget,
+                                                                   TINYUI_BACKEND_WIDGET_KEYBOARD,
+                                                                   tinyui_keyboard_ld_init,
+                                                                   &create_ctx,
+                                                                   sizeof(*keyboard));
     if (keyboard == 0) {
         return 0;
     }
 
-    name_id = ++app_state->next_ld_name_id;
-
-    ld_keyboard = ldKeyboard_init(app_state->ld_scene,
-                                  NULL,
-                                  name_id,
-                                  parent->widget.ld_name_id,
-                                  (arm_2d_font_t *)&ARM_2D_FONT_6x8);
-    if (ld_keyboard == 0) {
-        free(keyboard);
-        return 0;
-    }
-
     keyboard->id = id;
-    keyboard->widget.ld_widget  = ld_keyboard;
-    keyboard->widget.ld_name_id = name_id;
-    keyboard->widget.kind       = TINYUI_BACKEND_WIDGET_KEYBOARD;
-    keyboard->widget.owner      = app_state;
     keyboard->widget.visible    = 1;
     keyboard->widget.enabled    = 1;
-    ((ldBase_t *)ld_keyboard)->pInfo = &keyboard->widget;
-    tinyui_runtime_bridge_bind_leaf_widget(&keyboard->widget, app_state);
 
     return keyboard;
 }

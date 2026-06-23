@@ -55,6 +55,48 @@ static void test_icon_slider_internal_seams_renamed(void)
     assert(test_source_contains_symbol_definition(widget_path, "tinyui_icon_slider_native_slot"));
     assert(test_source_contains_symbol_definition(widget_path, "tinyui_icon_slider_props_are_valid"));
     assert(test_source_contains_symbol_definition(widget_path, "tinyui_icon_slider_create_with_backend_config"));
+    assert(test_source_contains_symbol_definition(widget_path, "tinyui_icon_slider_ld_init"));
+}
+
+static bool test_source_contains_text(const char *path, const char *needle)
+{
+    FILE *fp;
+    char line[1024];
+
+    fp = fopen(path, "r");
+    if (fp == 0) {
+        return false;
+    }
+
+    while (fgets(line, sizeof(line), fp) != 0) {
+        if (strstr(line, needle) != 0) {
+            fclose(fp);
+            return true;
+        }
+    }
+
+    fclose(fp);
+    return false;
+}
+
+static void test_icon_slider_create_uses_create_leaf(void)
+{
+    const char *source_path = __FILE__;
+    const char *widget_path;
+    char widget_path_buf[1024];
+    const char *marker = "/tests/tinyui/unit/test_tinyui_icon_slider.c";
+    const char *marker_pos = strstr(source_path, marker);
+    size_t prefix_len;
+
+    assert(marker_pos != 0);
+    prefix_len = (size_t)(marker_pos - source_path);
+    assert(prefix_len + strlen("/tinyui/src/widgets/icon_slider.c") < sizeof(widget_path_buf));
+    memcpy(widget_path_buf, source_path, prefix_len);
+    widget_path_buf[prefix_len] = '\0';
+    strcat(widget_path_buf, "/tinyui/src/widgets/icon_slider.c");
+    widget_path = widget_path_buf;
+
+    assert(test_source_contains_text(widget_path, "tinyui_widget_create_leaf("));
 }
 
 static void icon_slider_on_selected(struct tinyui_icon_slider *icon_slider, int index, void *user_data)

@@ -25,6 +25,25 @@
 
 /* ---- test seam state ---- */
 static ld_scene_t *s_animation_depose_scene = NULL;
+static arm_2d_tile_t s_animation_default_tile = {
+    .tRegion = {
+        .tSize = {
+            .iWidth = 1,
+            .iHeight = 1,
+        },
+    },
+};
+static struct tinyui_image_source s_animation_default_source = {
+    .img_tile = &s_animation_default_tile,
+    .mask_tile = 0,
+};
+
+struct tinyui_animation_create_ctx {
+    int width;
+    int height;
+    int period_ms;
+    struct tinyui_image_source *source;
+};
 
 static void tinyui_animation_ld_depose_cb(void *ld_widget)
 {
@@ -45,53 +64,76 @@ static int tinyui_animation_props_are_valid(const struct tinyui_animation_props 
         && props->source->img_tile != 0;
 }
 
-static int tinyui_animation_attach_native(struct tinyui_animation *animation,
-                                          struct tinyui_widget *parent,
-                                          int width,
-                                          int height,
-                                          struct tinyui_image_source *source,
-                                          int period_ms)
+static void *tinyui_animation_ld_init(void *ctx,
+                                      struct ld_scene_t *scene,
+                                      uint16_t name_id,
+                                      uint16_t parent_name_id)
 {
-    struct tinyui_app *app_state;
-    ldAnimation_t *ld_animation;
-    uint16_t name_id;
+    struct tinyui_animation_create_ctx *create_ctx = (struct tinyui_animation_create_ctx *)ctx;
+    struct tinyui_image_source *source;
+    int width;
+    int height;
+    int period_ms;
 
-    if (animation == 0 || parent == 0 || parent->ld_widget == 0 || source == 0 || source->img_tile == 0) {
-        return -1;
+    if (create_ctx == 0 || scene == 0) {
+        return 0;
     }
 
-    app_state = parent->owner;
-    if (app_state == 0 || app_state->ld_scene == 0) {
-        return -1;
+    source = create_ctx->source;
+    width = create_ctx->width;
+    height = create_ctx->height;
+    period_ms = create_ctx->period_ms;
+    if (source == 0 || source->img_tile == 0
+        || width <= 0 || width > INT16_MAX
+        || height <= 0 || height > INT16_MAX
+        || period_ms <= 0 || period_ms > 0xFFFF) {
+        return 0;
     }
 
-    name_id = ++app_state->next_ld_name_id;
-    if (name_id == 0) {
-        return -1;
+    return ldAnimation_init(scene,
+                            NULL,
+                            name_id,
+                            parent_name_id,
+                            0,
+                            0,
+                            (int16_t)width,
+                            (int16_t)height,
+                            source->img_tile,
+                            (uint16_t)period_ms);
+}
+
+static struct tinyui_animation *tinyui_animation_alloc(struct tinyui_widget *parent,
+                                                       const char *id,
+                                                       int width,
+                                                       int height,
+                                                       struct tinyui_image_source *source,
+                                                       int period_ms)
+{
+    struct tinyui_animation_create_ctx create_ctx;
+    struct tinyui_animation *animation;
+
+    if (parent == 0 || id == 0 || parent->ld_widget == 0
+        || source == 0 || source->img_tile == 0) {
+        return 0;
     }
 
-    ld_animation = ldAnimation_init(app_state->ld_scene,
-                                    NULL,
-                                    name_id,
-                                    parent->ld_name_id,
-                                    0,
-                                    0,
-                                    (int16_t)width,
-                                    (int16_t)height,
-                                    source->img_tile,
-                                    (uint16_t)period_ms);
-    if (ld_animation == 0) {
-        return -1;
+    create_ctx.width = width;
+    create_ctx.height = height;
+    create_ctx.period_ms = period_ms;
+    create_ctx.source = source;
+    animation = (struct tinyui_animation *)tinyui_widget_create_leaf(parent,
+                                                                     TINYUI_BACKEND_WIDGET_ANIMATION,
+                                                                     tinyui_animation_ld_init,
+                                                                     &create_ctx,
+                                                                     sizeof(*animation));
+    if (animation == 0) {
+        return 0;
     }
 
-    animation->widget.kind = TINYUI_BACKEND_WIDGET_ANIMATION;
-    animation->widget.owner = app_state;
-    animation->widget.ld_widget = ld_animation;
-    animation->widget.ld_name_id = name_id;
-    ((ldBase_t *)ld_animation)->pInfo = &animation->widget;
-    tinyui_runtime_bridge_bind_leaf_widget(&animation->widget, app_state);
-
-    return 0;
+    animation->id = id;
+    animation->widget.visible = 1;
+    animation->widget.enabled = 1;
+    return animation;
 }
 
 /**
@@ -104,21 +146,7 @@ static int tinyui_animation_attach_native(struct tinyui_animation *animation,
 
 struct tinyui_animation *tinyui_animation_create(struct tinyui_widget *parent, const char *id)
 {
-    struct tinyui_animation *animation;
-
-    if (parent == 0 || id == 0 || parent->ld_widget == 0) {
-        return 0;
-    }
-
-    animation = calloc(1, sizeof(*animation));
-    if (animation == 0) {
-        return 0;
-    }
-
-    animation->id = id;
-    animation->widget.visible = 1;
-    animation->widget.enabled = 1;
-    return animation;
+    return tinyui_animation_alloc(parent, id, 1, 1, &s_animation_default_source, 1);
 }
 
 /**
@@ -152,23 +180,19 @@ struct tinyui_animation *tinyui_animation_create_with_props(
         return 0;
     }
 
-    animation = tinyui_animation_create(parent, props->id);
+    animation = tinyui_animation_alloc(parent,
+                                       props->id,
+                                       props->width,
+                                       props->height,
+                                       props->source,
+                                       props->period_ms);
     if (animation == 0) {
         return 0;
     }
 
-    if (tinyui_animation_attach_native(animation,
-                                       parent,
-                                       props->width,
-                                       props->height,
-                                       props->source,
-                                       props->period_ms) != 0) {
-        free(animation);
-        return 0;
-    }
-
     if (tinyui_animation_set_source(animation, props->source) != 0
-        || tinyui_animation_set_period_ms(animation, props->period_ms) != 0) {
+        || tinyui_animation_set_period_ms(animation, props->period_ms) != 0
+        || tinyui_widget_set_size(&animation->widget, props->width, props->height) != 0) {
         s_animation_depose_scene = animation->widget.ld_event_bridge_scene;
         tinyui_widget_destroy_common(&animation->widget, tinyui_animation_ld_depose_cb);
         return 0;

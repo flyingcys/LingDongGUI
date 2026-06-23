@@ -60,6 +60,26 @@ static void assert_source_has_symbol_definition(const char *path, const char *na
     assert(test_source_contains_symbol_definition(path, name));
 }
 
+static int test_source_contains_text(const char *path, const char *needle)
+{
+    char command[1024];
+
+    assert(path != 0);
+    assert(needle != 0);
+    snprintf(command,
+             sizeof(command),
+             "python3 - '%s' '%s' <<'PY'\n"
+             "from pathlib import Path\n"
+             "import sys\n"
+             "text = Path(sys.argv[1]).read_text()\n"
+             "needle = sys.argv[2]\n"
+             "raise SystemExit(0 if needle in text else 1)\n"
+             "PY",
+             path,
+             needle);
+    return system(command) == 0;
+}
+
 static void test_background_create_and_backend_mapping(struct tinyui_background *bg)
 {
     struct tinyui_widget *backend;
@@ -109,6 +129,8 @@ static void test_background_widget_file_owns_internal_helper_truth(void)
      * the post-C3 contract: neither helper may reappear. */
     assert_source_lacks_symbol_definition(source_path, "tinyui_background_backend_host");
     assert_source_lacks_symbol_definition(source_path, "tinyui_background_get_root_size");
+    assert(!test_source_contains_text(source_path, "tinyui_widget_create_leaf("));
+    assert(test_source_contains_text(source_path, "ldWindow_init(app_state->ld_scene, NULL, 0, 0, 0, 0,"));
 }
 
 int main(void)

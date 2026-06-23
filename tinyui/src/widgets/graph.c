@@ -44,6 +44,44 @@ static int graph_props_valid(const struct tinyui_graph_props *props)
            props->height >= 0;
 }
 
+struct tinyui_graph_create_ctx {
+    int series_max;
+};
+
+static void *tinyui_graph_ld_init(void *ctx,
+                                  struct ld_scene_t *scene,
+                                  uint16_t name_id,
+                                  uint16_t parent_name_id)
+{
+    const struct tinyui_graph_create_ctx *create_ctx =
+        (const struct tinyui_graph_create_ctx *)ctx;
+    ldGraph_t *ld_graph;
+
+    if (create_ctx == 0) {
+        return 0;
+    }
+
+    ld_graph = ldGraph_init(scene,
+                            NULL,
+                            name_id,
+                            parent_name_id,
+                            0,
+                            0,
+                            240,
+                            120,
+                            (uint8_t)create_ctx->series_max);
+    if (ld_graph == 0) {
+        return 0;
+    }
+
+    ldGraphSetFrameSpace(ld_graph, 8, false);
+    ldGraphSetGridOffset(ld_graph, 20);
+    ldGraphSetAxis(ld_graph, 100, 100, 5);
+    ldGraphSetPointImageMask(ld_graph, (arm_2d_tile_t *)&c_tileWhiteDotMask);
+
+    return ld_graph;
+}
+
 static int graph_apply_native_geometry_candidate(struct tinyui_graph *graph,
                                                   int x_axis,
                                                   int y_axis,
@@ -163,50 +201,27 @@ struct tinyui_graph *tinyui_graph_create(struct tinyui_window *parent,
                                          int series_max)
 {
     struct tinyui_graph *graph;
-    struct tinyui_app *app_state;
-    ldGraph_t *ld_graph;
-    uint16_t name_id;
+    struct tinyui_graph_create_ctx create_ctx;
 
     if (parent == 0 || id == 0 || series_max <= 0 || series_max > TINYUI_GRAPH_MAX_SERIES) {
         return 0;
     }
 
-    app_state = parent->widget.owner;
-    if (app_state == 0 || app_state->ld_scene == 0 || parent->widget.ld_widget == 0) {
+    if (parent->widget.owner == 0
+        || parent->widget.owner->ld_scene == 0
+        || parent->widget.ld_widget == 0) {
         return 0;
     }
 
-    graph = calloc(1, sizeof(*graph));
+    create_ctx.series_max = series_max;
+    graph = (struct tinyui_graph *)tinyui_widget_create_leaf(&parent->widget,
+                                                             TINYUI_BACKEND_WIDGET_GRAPH,
+                                                             tinyui_graph_ld_init,
+                                                             &create_ctx,
+                                                             sizeof(*graph));
     if (graph == 0) {
         return 0;
     }
-
-    name_id = ++app_state->next_ld_name_id;
-    ld_graph = ldGraph_init(app_state->ld_scene,
-                            NULL,
-                            name_id,
-                            parent->widget.ld_name_id,
-                            0,
-                            0,
-                            240,
-                            120,
-                            (uint8_t)series_max);
-    if (ld_graph == 0) {
-        free(graph);
-        return 0;
-    }
-
-    ldGraphSetFrameSpace(ld_graph, 8, false);
-    ldGraphSetGridOffset(ld_graph, 20);
-    ldGraphSetAxis(ld_graph, 100, 100, 5);
-    ldGraphSetPointImageMask(ld_graph, (arm_2d_tile_t *)&c_tileWhiteDotMask);
-
-    graph->widget.kind = TINYUI_BACKEND_WIDGET_GRAPH;
-    graph->widget.owner = app_state;
-    graph->widget.ld_widget = ld_graph;
-    graph->widget.ld_name_id = name_id;
-    ((ldBase_t *)ld_graph)->pInfo = &graph->widget;
-    (void)tinyui_runtime_bridge_bind_leaf_widget(&graph->widget, app_state);
 
     graph->id = id;
     graph->series_max = series_max;

@@ -78,6 +78,26 @@ static void assert_source_has_function_definition(const char *path, const char *
     assert(test_source_contains_function_definition(path, name));
 }
 
+static int test_source_contains_text(const char *path, const char *needle)
+{
+    char command[1024];
+
+    assert(path != 0);
+    assert(needle != 0);
+    snprintf(command,
+             sizeof(command),
+             "python3 - '%s' '%s' <<'PY'\n"
+             "from pathlib import Path\n"
+             "import sys\n"
+             "text = Path(sys.argv[1]).read_text()\n"
+             "needle = sys.argv[2]\n"
+             "raise SystemExit(0 if needle in text else 1)\n"
+             "PY",
+             path,
+             needle);
+    return system(command) == 0;
+}
+
 static uint64_t make_signal_value_xy(uint16_t x, uint16_t y)
 {
     return ((uint64_t)x << 16) | (uint64_t)y;
@@ -535,6 +555,15 @@ static void test_message_box_internal_seams_renamed_to_tinyui(void)
     assert_source_has_function_definition(widget_source, "tinyui_message_box_confirm_bridge");
 }
 
+static void test_message_box_create_path_uses_core_leaf_helper(void)
+{
+    const char *widget_source = resolve_repo_path("tinyui/src/widgets/message_box.c");
+
+    assert(widget_source != 0);
+    assert_source_has_function_definition(widget_source, "tinyui_message_box_ld_init");
+    assert(test_source_contains_text(widget_source, "tinyui_widget_create_leaf("));
+}
+
 int main(void)
 {
     struct tinyui_app *app = tinyui_app_create();
@@ -557,6 +586,7 @@ int main(void)
     test_message_box_rejects_null_args(win);
     test_message_box_confirm_callback_fires(win);
     test_message_box_internal_seams_renamed_to_tinyui();
+    test_message_box_create_path_uses_core_leaf_helper();
 
     tinyui_app_destroy(app);
     return 0;

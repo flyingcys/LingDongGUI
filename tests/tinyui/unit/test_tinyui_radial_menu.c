@@ -67,11 +67,16 @@ static void test_radial_menu_internal_seam_names_are_tinyui_local(void)
     assert_source_lacks_definition(widget_source, "static int tinyui_radial_menu_backend_");
     assert_source_lacks_definition(widget_source, "static int tinyui_radial_menu_bind_host(");
     assert_source_lacks_definition(widget_source, "tinyui_radial_menu_create_with_backend_config");
+    assert_source_lacks_definition(widget_source, "radial_menu = calloc(1, sizeof(*radial_menu))");
+    assert_source_lacks_definition(widget_source, "name_id = ++app_state->next_ld_name_id;");
+    assert_source_lacks_definition(widget_source, "tinyui_runtime_bridge_bind_leaf_widget(&radial_menu->widget, app_state)");
 
     /* Remaining internal helpers */
     assert_source_contains_definition(widget_source, "static bool tinyui_radial_menu_native_slot(");
     assert_source_contains_definition(widget_source, "static int tinyui_radial_menu_props_are_valid(");
     assert_source_contains_definition(widget_source, "static struct tinyui_radial_menu *tinyui_radial_menu_create_internal(");
+    assert_source_contains_definition(widget_source, "tinyui_widget_create_leaf(");
+    assert_source_contains_definition(widget_source, "static void *tinyui_radial_menu_ld_init(");
 
     /* C2 depose/rollback seam */
     assert_source_contains_definition(widget_source, "static void tinyui_radial_menu_ld_depose_cb(");

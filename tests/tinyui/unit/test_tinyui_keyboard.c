@@ -16,6 +16,25 @@
 
 static const char *test_self_binary_path = 0;
 
+static void assert_source_contains(const char *path, const char *needle)
+{
+    FILE *fp;
+    char line[1024];
+
+    assert(path != 0);
+    assert(needle != 0);
+    fp = fopen(path, "r");
+    assert(fp != 0);
+    while (fgets(line, sizeof(line), fp) != 0) {
+        if (strstr(line, needle) != 0) {
+            assert(fclose(fp) == 0);
+            return;
+        }
+    }
+    assert(fclose(fp) == 0);
+    assert(!"expected source marker not found");
+}
+
 static void assert_self_binary_lacks_symbol(const char *symbol)
 {
     char command[1024];
@@ -678,9 +697,15 @@ static void test_keyboard_native_press_and_release_emit_tinyui_callback(void)
     tinyui_app_destroy(app);
 }
 
+static void test_keyboard_create_path_uses_core_leaf_helper(void)
+{
+    assert_source_contains("tinyui/src/widgets/keyboard.c", "tinyui_widget_create_leaf(");
+}
+
 int main(void)
 {
     test_self_binary_path = "tests/tinyui/test_tinyui_keyboard";
+    test_keyboard_create_path_uses_core_leaf_helper();
     test_keyboard_create_builds_direct_backend_mapping();
     test_keyboard_dispatches_ascii_into_focused_line_edit();
     test_keyboard_dispatches_ascii_into_editing_owner_before_focus_owner();

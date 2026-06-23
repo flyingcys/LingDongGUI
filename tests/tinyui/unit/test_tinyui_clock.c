@@ -632,6 +632,7 @@ int main(void)
     assert_source_lacks_function_definition(clock_source, "tinyui_clock_get_ld");
     assert_source_has_function_definition(clock_source, "static int ", "tinyui_clock_apply_background");
     assert_source_has_function_definition(clock_source, "static int ", "tinyui_clock_apply_pointer");
+    assert(tinyui_test_source_contains(clock_source, "tinyui_widget_create_leaf(") == 1);
 
     test_clock_create_builds_direct_backend_mapping(win);
     test_clock_create_and_props(win);

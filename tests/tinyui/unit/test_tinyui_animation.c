@@ -228,8 +228,9 @@ static void test_animation_internal_seams_renamed_in_source(void)
                                           "static int ",
                                           "tinyui_animation_props_are_valid");
     assert_source_has_function_definition(animation_source,
-                                          "static int ",
-                                          "tinyui_animation_attach_native");
+                                          "static void *",
+                                          "tinyui_animation_ld_init");
+    assert(tinyui_test_source_contains(animation_source, "tinyui_widget_create_leaf(") == 1);
 }
 
 int main(void)

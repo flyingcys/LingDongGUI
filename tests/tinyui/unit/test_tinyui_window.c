@@ -49,6 +49,21 @@ static void assert_repo_file_lacks(const char *relative_path, const char *needle
     assert(strstr(content, needle) == 0);
 }
 
+static void assert_repo_file_contains(const char *relative_path, const char *needle)
+{
+    FILE *file;
+    char content[32768];
+    size_t bytes_read;
+
+    file = open_repo_file_from_test_source(relative_path);
+    assert(file != 0);
+    bytes_read = fread(content, 1, sizeof(content) - 1, file);
+    assert(ferror(file) == 0);
+    content[bytes_read] = '\0';
+    assert(fclose(file) == 0);
+    assert(strstr(content, needle) != 0);
+}
+
 static void assert_self_binary_lacks_symbol(const char *symbol)
 {
     char command[PATH_MAX + 32];
@@ -149,6 +164,13 @@ static void test_window_init_defaults_internal_seam_uses_tinyui_names(void)
         assert_repo_file_lacks("tinyui/src/widgets/window.c", old_symbols[i]);
         assert_self_binary_lacks_symbol(old_symbols[i]);
     }
+}
+
+static void test_window_create_path_boundary_truth(void)
+{
+    assert_repo_file_contains("tinyui/src/widgets/window.c", "tinyui_widget_create_leaf(&parent->widget");
+    assert_repo_file_contains("tinyui/src/widgets/window.c", "struct tinyui_window *tinyui_window_create(struct tinyui_app *app, const char *id)");
+    assert_repo_file_contains("tinyui/src/widgets/window.c", "ldWindow_init(app_state->ld_scene, NULL, 0, 0, 0, 0,");
 }
 
 static void test_window_root_size_internal_seam_uses_tinyui_names(void)
@@ -438,6 +460,7 @@ int main(void)
     test_window_native_access_internal_seam_uses_tinyui_names();
     test_window_validation_internal_seam_uses_tinyui_names();
     test_window_init_defaults_internal_seam_uses_tinyui_names();
+    test_window_create_path_boundary_truth();
     test_window_root_size_internal_seam_uses_tinyui_names();
     test_window_dispose_partial_internal_seam_uses_tinyui_names();
     test_window_generic_gap_internal_seam_uses_tinyui_names();
