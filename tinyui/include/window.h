@@ -21,7 +21,7 @@ struct tinyui_window_props {
     int radius;
     int padding;
     struct tinyui_image_source *background_source;
-    int has_padding_group;
+    /* Sentinel defaults: -1 = unset (use backend default padding on that edge) */
     int padding_left;
     int padding_top;
     int padding_right;

@@ -2,6 +2,7 @@
 #include "../../../src/gui/ldBase.h"
 #include "../../../src/gui/ldCheckBox.h"
 #include "internal.h"
+#include "tinyui_test_support.h"
 #include <assert.h>
 #include <dlfcn.h>
 #include <stdio.h>
@@ -133,12 +134,29 @@ static void test_checkbox_create_and_ld_mapping(struct tinyui_window *win)
 
 static void test_checkbox_create_with_props_pushes_all_fields(struct tinyui_window *win)
 {
+    arm_2d_tile_t unchecked_tile = {0};
+    arm_2d_tile_t unchecked_mask_tile = {0};
+    arm_2d_tile_t checked_tile = {0};
+    arm_2d_tile_t checked_mask_tile = {0};
+    struct tinyui_image_source unchecked_source = {
+        .img_tile = &unchecked_tile,
+        .mask_tile = &unchecked_mask_tile,
+    };
+    struct tinyui_image_source checked_source = {
+        .img_tile = &checked_tile,
+        .mask_tile = &checked_mask_tile,
+    };
     struct tinyui_checkbox *checkbox = tinyui_checkbox_create_with_props(
         win,
         &(struct tinyui_checkbox_props){
             .id = "cb_props",
             .text = "Agree",
             .checked = 1,
+            .check_color = 0x224466U,
+            .unchecked_source = &unchecked_source,
+            .checked_source = &checked_source,
+            .radio_group = 7,
+            .string_left_space = 22,
         });
     struct tinyui_widget *backend;
     ldCheckBox_t *ld_checkbox;
@@ -151,6 +169,11 @@ static void test_checkbox_create_with_props_pushes_all_fields(struct tinyui_wind
     ld_checkbox = (ldCheckBox_t *)backend->ld_widget;
     assert(ld_checkbox != 0);
     assert(ld_checkbox->isChecked == true);
+    assert(ld_checkbox->fgColor == (ldColor)test_rgb_to_ld_color(0x224466U));
+    assert_checkbox_has_bound_images(checkbox, &unchecked_source, &checked_source);
+    assert(ld_checkbox->isRadioButton == true);
+    assert(ld_checkbox->radioButtonGroup == 7);
+    assert(ld_checkbox->boxWidth == 22);
 }
 
 static void test_checkbox_set_checked_round_trip(struct tinyui_window *win)
@@ -306,6 +329,42 @@ static void test_checkbox_rejects_null_args(struct tinyui_window *win)
     assert(ld_checkbox->boxWidth == 14);
 }
 
+static void test_checkbox_create_with_props_accepts_sentinel_defaults(struct tinyui_window *win)
+{
+    struct tinyui_checkbox *checkbox = tinyui_checkbox_create_with_props(
+        win,
+        &(struct tinyui_checkbox_props){
+            .id = "cb_props_sentinel_defaults",
+            .radio_group = -1,
+            .string_left_space = -1,
+        });
+    struct tinyui_widget *backend;
+    ldCheckBox_t *ld_checkbox;
+
+    assert(checkbox != 0);
+    backend = &checkbox->widget;
+    assert(backend->ld_widget != 0);
+    ld_checkbox = (ldCheckBox_t *)backend->ld_widget;
+    assert(ld_checkbox != 0);
+    assert(ld_checkbox->isRadioButton == false);
+    assert(ld_checkbox->radioButtonGroup == 0);
+    assert(ld_checkbox->boxWidth == 14);
+}
+
+static void test_checkbox_props_source_no_longer_uses_has_flags(void)
+{
+    assert(tinyui_test_source_contains("tinyui/include/checkbox.h", "has_check_color") == 0);
+    assert(tinyui_test_source_contains("tinyui/include/checkbox.h", "has_unchecked_source") == 0);
+    assert(tinyui_test_source_contains("tinyui/include/checkbox.h", "has_checked_source") == 0);
+    assert(tinyui_test_source_contains("tinyui/include/checkbox.h", "has_radio_group") == 0);
+    assert(tinyui_test_source_contains("tinyui/include/checkbox.h", "has_string_left_space") == 0);
+    assert(tinyui_test_source_contains("tinyui/src/widgets/checkbox.c", "props->has_check_color") == 0);
+    assert(tinyui_test_source_contains("tinyui/src/widgets/checkbox.c", "props->has_unchecked_source") == 0);
+    assert(tinyui_test_source_contains("tinyui/src/widgets/checkbox.c", "props->has_checked_source") == 0);
+    assert(tinyui_test_source_contains("tinyui/src/widgets/checkbox.c", "props->has_radio_group") == 0);
+    assert(tinyui_test_source_contains("tinyui/src/widgets/checkbox.c", "props->has_string_left_space") == 0);
+}
+
 int main(void)
 {
     struct tinyui_app *app = tinyui_app_create();
@@ -325,6 +384,8 @@ int main(void)
     test_checkbox_internal_seams_use_tinyui_prefix();
     test_checkbox_native_helper_behaviors(win);
     test_checkbox_rejects_null_args(win);
+    test_checkbox_create_with_props_accepts_sentinel_defaults(win);
+    test_checkbox_props_source_no_longer_uses_has_flags();
 
     tinyui_app_destroy(app);
     return 0;

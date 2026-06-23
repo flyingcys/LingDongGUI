@@ -686,14 +686,29 @@ static int tinyui_window_ok(struct tinyui_window *window)
 
 static int tinyui_window_props_ok(const struct tinyui_window_props *props)
 {
-    return props != 0
-        && props->id != 0
-        && props->radius >= 0
-        && props->padding >= 0
+    int has_padding_sentinel;
+    int has_explicit_padding_group;
+
+    has_padding_sentinel = props != 0
+        && (props->padding_left == -1
+            || props->padding_top == -1
+            || props->padding_right == -1
+            || props->padding_bottom == -1);
+    has_explicit_padding_group = props != 0
         && props->padding_left >= 0
         && props->padding_top >= 0
         && props->padding_right >= 0
         && props->padding_bottom >= 0;
+
+    return props != 0
+        && props->id != 0
+        && props->radius >= 0
+        && props->padding >= 0
+        && ((has_padding_sentinel && props->padding_left == -1
+             && props->padding_top == -1
+             && props->padding_right == -1
+             && props->padding_bottom == -1)
+            || has_explicit_padding_group);
 }
 
 /**
@@ -864,7 +879,7 @@ struct tinyui_window *tinyui_window_create_with_props(struct tinyui_app *app,
         || tinyui_widget_set_radius(&window->widget, props->radius) != 0
         || tinyui_widget_set_padding(&window->widget, props->padding) != 0
         || tinyui_window_set_background_source(window, props->background_source) != 0
-        || (props->has_padding_group != 0
+        || (props->padding_left != -1
             && tinyui_window_set_padding(window,
                                          props->padding_left,
                                          props->padding_top,

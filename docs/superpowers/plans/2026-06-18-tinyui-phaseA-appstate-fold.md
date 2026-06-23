@@ -10,7 +10,125 @@
 
 ---
 
+## 0.4 当前执行快照（2026-06-23，持续更新）
+
+> 只记录已经由当前代码与 focused verification 坐实的事实；未闭环项不写成完成。
+
+### 已完成并验证
+
+- **`struct tinyui_app` 已持有 `ld_scene / next_ld_name_id / runtime_state`。**
+  - 当前真相：`tinyui/src/core/internal.h` 的 `struct tinyui_app` 已直接定义这 3 个字段，`void *backend_app` 已不存在。
+
+- **`tinyui_runtime_bridge_backend_state*` 访问器已退化为返回 `struct tinyui_app *`。**
+  - 当前真相：
+    - `tinyui/src/core/runtime_bridge.h` 中
+      - `tinyui_runtime_bridge_backend_state`
+      - `tinyui_runtime_bridge_backend_state_from_window`
+      - `tinyui_runtime_bridge_backend_state_from_parent`
+      当前都返回 `struct tinyui_app *`
+    - 当前源码侧使用点已直接按 `app_state->ld_scene` / `app_state->runtime_state` 读取
+
+- **Phase A 目标里的 `backend_app` 代码路径已基本从 `tinyui/include/src/port` 消失。**
+  - 当前真相：
+    - `rtk rg -n "backend_app\\b|tinyui_backend_app_state" tinyui/include tinyui/src tinyui/port`
+      当前只剩 0 命中或文档外影子清零
+    - `tinyui/include/tinyui.h` 里也不再透传 `app.h`
+
+- **Phase A 相关 transition 基线当前为已通过状态。**
+  - 当前真相：
+    - `tests/tinyui/contract/tinyui_transition_inventory.json`
+      - `backend_c_files: 0`
+      - `app_header_exists: true`
+      - `app_source_exists: true`
+      - `tinyui_public_api_count: 546`
+  - focused verification：
+    - `rtk ctest --test-dir build/tinyui-runtime -R '^(check_tinyui_transition_guards|check_tinyui_v21_transition_guards)$' --output-on-failure`
+
+- **app 生命周期最小回归当前为已通过状态。**
+  - focused verification：
+    - `rtk ctest --test-dir build/tinyui-runtime -R '^(check_tinyui_transition_guards|check_tinyui_v21_transition_guards|test_tinyui_app_lifecycle)$' --output-on-failure`
+
+- **`next_ld_name_id` 已确认仍归属 `struct tinyui_app`，但“唯一自增点在 runtime_bridge.c”这一旧计划假设已不再成立。**
+  - 当前真相：
+    - `tinyui/src/core/runtime_bridge.c` 在 `tinyui_runtime_bridge_init_app` 中执行 `app->next_ld_name_id = 0`
+    - `tinyui/src/core/widget.c` 在通用创建路径中执行 `name_id = owner->next_ld_name_id++`
+    - 多个 widget 源文件当前直接执行 `name_id = ++app_state->next_ld_name_id`
+  - 结论：
+    - Phase A 的“字段已折叠进 `tinyui_app`”这一目标已实现
+    - 但旧计划里关于“唯一自增点 / 唯一分配路径”的描述已经过时，后续 closeout 不能再沿用该假设
+
+- **当前 `name_id` 分配模型更接近“并存双轨”，不是单一 helper 收敛。**
+  - 当前真相：
+    - `tinyui/src/core/widget.c` 的 `tinyui_widget_create_leaf` 会：
+      - 读取 `parent->widget.owner`
+      - 执行 `name_id = owner->next_ld_name_id++`
+      - 再调用传入的 `ld_init_cb(...)`
+    - 但多个 widget 仍各自直接分配：
+      - 例如 `tinyui/src/widgets/button.c` 的 `tinyui_button_alloc`
+      - 例如 `tinyui/src/widgets/list.c` 的创建路径
+      - 都是在本地先执行 `++app_state->next_ld_name_id`，再直接调用对应 `ld*init`
+  - 当前判断：
+    - 这是“通用 leaf helper 路径”和“widget 自建路径”并存
+    - 目前不能把它描述成“所有 widget 已统一走 `tinyui_widget_create_leaf`”
+    - 更准确地说：`tinyui_widget_create_leaf` 已实现、已声明、已有测试覆盖，但当前还不是生产 create 主路径的统一入口
+    - helper 当前使用**后置自增**，而多数生产 widget 路径使用**前置自增**；若未来要统一收敛，这个首值语义差异必须单独处理
+
+- **现有 `find_by_name_id` 语义当前未见回退证据。**
+  - 当前真相：
+    - `tinyui/src/core/widget.c` 的 `tinyui_widget_find_by_name_id` 仍按 `ld_name_id` 从 ld tree 查询
+    - 只要 widget 最终把分配出的 `name_id` 写回 `widget.ld_name_id`，查找语义就保持一致
+  - focused verification：
+    - `rtk ctest --test-dir build/tinyui-runtime -R '^(test_tinyui_(button_events|list|window|table|combo_box|calendar))$' --output-on-failure`
+  - 当前结论：
+    - 至少在本轮覆盖到的 create/find 相关子集上，没有看到因为多路径分配而导致的 `name_id` 查找回退
+
+### 本轮补核差异（2026-06-23）
+
+- **旧文档中关于 `name_id` 的若干表述已与当前树不一致。**
+  - 当前 `rtk rg -n "next_ld_name_id|tinyui_runtime_bridge_backend_state|tinyui_runtime_bridge_app_from|backend_app\\b|tinyui_backend_app_state" tinyui/include tinyui/src tinyui/port` 结果表明：
+    - `backend_app` / `tinyui_backend_app_state` 旧路径已清空
+    - `next_ld_name_id` 仍有多处真实使用点，分布在 `core/widget.c` 与多个 `widgets/*.c`
+  - 因此，本文后续 Task 中凡是写着“唯一自增点在 `runtime_bridge.c`”或“仅 1 处自增”的段落，应视为**历史计划假设**，不是当前代码真相
+
+- **Phase A closeout 现阶段更适合核对“字段归属与行为未回退”，而不是继续追求旧版单点分配模型。**
+  - 本轮 focused verification 只证明：
+    - `tinyui_app` 持有状态字段
+    - transition guard 通过
+    - `test_tinyui_app_lifecycle` 通过
+    - `button/list/window/table/combo_box/calendar` 子集在当前 `name_id` 并存分配模型下仍通过
+    - `tinyui_widget_find_by_name_id` 当前语义仍建立在 ld tree 的 `name_id + pInfo` 绑定之上，而不是建立在“唯一自增 helper”之上
+  - 本轮**未**证明：
+    - 所有 widget 的 `name_id` 分配路径已统一收敛到单一 helper
+    - 历史计划 Task 6 中描述的“唯一自增点”模型仍成立
+
+### 当前 closeout 判定
+
+- **Phase A 的代码目标现在可以判定为已完成。**
+  - 当前依据：
+    - `tinyui_app` 已直接持有 `ld_scene / next_ld_name_id / runtime_state`
+    - `backend_app` / `tinyui_backend_app_state` 旧代码路径已从 `tinyui/include`、`tinyui/src`、`tinyui/port` 清空
+    - 访问器已退化为返回 `struct tinyui_app *`
+    - `name_id` 相关 create/find 行为在当前模型下未见回退
+  - focused verification：
+    - `rtk ctest --test-dir build/tinyui-runtime -R '^(test_tinyui_(core_helpers|native_bridge|theme|widgets|button_events|list|app_lifecycle|app_timer|runtime_model|port_display|port_input|port_tick_os|app_window_switch|event|combo_box|table|window|calendar))$' --output-on-failure`
+    - `rtk ctest --test-dir build/tinyui-runtime -R '^(check_tinyui_public_api|check_tinyui_transition_guards|check_tinyui_v21_transition_guards|check_tinyui_widget_contract_matrix|check_tinyui_release_capability_matrix)$' --output-on-failure`
+
+- **不再把“统一到单一 `tinyui_widget_create_leaf` helper”当成 Phase A closeout blocker。**
+  - 当前判断：
+    - 这属于后续收敛/简化方向，不影响 Phase A 的 app_state 折叠目标是否完成
+    - Phase A 真正要求的是字段归属、访问器退化、旧 app_state 路径删除，以及相关行为不回退；这些当前都已坐实
+
+- **仍有两类失败/漂移存在，但不应继续挂在 Phase A 名下。**
+  - `test_tinyui_layout` 的 grid 布局断言失败：
+    - 表现为 `test_grid_layout_positions_basic_widgets_like_demo` 中 `text/image` 的纵向相对位置断言失败
+    - 更像 layout 行为漂移，不是 app_state 折叠问题
+  - `check_tinyui_runtime` 的 demo 编译失败：
+    - `tinyui/demo/keyboard_basic/keyboard_basic.c` 仍在使用 `line_edit_props.has_keyboard_binding`
+    - 这是 Phase B sentinel API 收口后的 demo 跟进缺失，不是 Phase A blocker
+
 ## 0. 起始状态核实结论(写 plan 时已逐项 Read 核实,执行前请复核)
+
+> **历史说明（2026-06-23 回看）:** 本节是 2026-06-18 写 plan 时的起始态快照，**不是当前代码真相**。其中凡是声称 `struct tinyui_backend_app_state` / `void *backend_app` / 旧访问器返回类型仍存在的表述，当前都应以本文 `0.4 当前执行快照` 为准。
 
 > **重要纠偏:Phase 0 尚未合入(与任务书"前置假设 Phase 0 已完成"不符)。** 执行本相位前必须确认 Phase 0 已合入;若未合入,见下方两条处置。
 
@@ -38,6 +156,8 @@
 
 ### 0.2 经核实的全量 blast radius(本相位真实写面,远大于"3 访问器 + 3 裸访问")
 
+> **历史说明（2026-06-23 回看）:** 本节的 blast radius 是基于 2026-06-18 的迁移前状态估算。当前仓库已经跨过这一步，不能再把这里的“待改文件数 / 旧类型命中数”直接当成现状。
+
 > **关键认知:删除 `struct tinyui_backend_app_state` 类型会连锁触碰所有引用该类型名的 translation unit。** 任务书第 3/4 条描述的是"逻辑改动点"(访问器退化 + 3 处裸访问),但 spec §3.2/§4 + 任务书第 2 条要求**删除类型本身**,而几乎每个 widget `.c` 都把局部变量声明为 `struct tinyui_backend_app_state *app_state;`,删类型后这些声明全部要改。实测:
 
 | 写面 | 文件数 | 触碰点 | 说明 |
@@ -57,11 +177,13 @@
 
 ### 0.3 迁移策略决策(锁定,执行不得偏离)
 
+> **历史说明（2026-06-23 回看）:** 本节里“访问器退化”与“批量类型替换”的大方向仍可作为历史背景参考，但其中关于 `name_id` 的单点分配假设已经失效，不能直接沿用到当前 closeout 判断。
+
 **访问器返回类型从 `struct tinyui_backend_app_state *` 改为 `struct tinyui_app *`。** 理由:`tinyui_app` 折叠后即持有 `ld_scene/next_ld_name_id/runtime_state`,访问器只需返回 app 自身(对 `_from_parent`/`_from_window` 仍做"经 backend->owner / window->widget.backend_widget 推导出 app"的工作,推导逻辑不变,只是返回 app 而非 app_state)。所有调用方把局部变量类型由 `struct tinyui_backend_app_state *app_state` 改为 `struct tinyui_app *app_state`(**变量名 `app_state` 保留不改**,以缩小 diff;仅类型变),字段访问 `app_state->ld_scene` 原样可用(因为现在 `app_state` 是 `tinyui_app*`,而 `ld_scene` 已是 `tinyui_app` 的字段)。
 
 > 这一策略让 ~389 处 `app_state->ld_scene` **无需逐处改写**(只要把局部变量的*声明类型*换掉 + 把 3 处裸 cast 改成调访问器),极大降低出错面。`runtime_state` 同理。
 
-**name_id 分配时序保护(高风险 #3):** `++app_state->next_ld_name_id`(`runtime_bridge.c:149`)是**唯一**自增分配点(已 `rg` 核实:全仓仅 L149 自增、L189 初始化为 0)。折叠后改为 `++app->next_ld_name_id`,**语义、调用次序、返回值完全不变**。Task 6 单列验证步骤证明此点。
+**name_id 分配时序保护(高风险 #3，历史假设已失效):** 本段原先假设 `++app_state->next_ld_name_id` 是**唯一**自增分配点；该假设与 2026-06-23 当前代码真相不符。当前应以 `0.4 当前执行快照` 为准：`next_ld_name_id` 仍是 app 级单一计数器，但分配路径是 `core/widget.c` helper 与多个 `widgets/*.c` 生产路径并存，而不是单点自增。
 
 ---
 
@@ -202,17 +324,21 @@
 **Files:**
 - `tinyui/port/sdl/step.c:126,132,135-137,192,230,245,253,269-271,291,360,368,391`
 
+> **历史说明（2026-06-23 回看）:** 本 Task 内关于“唯一自增点”“`tinyui_runtime_bridge_next_name_id` 调用次序”的若干验收项，已经不适配当前代码真相。若后续继续补文档或 closeout，应改成验证“多路径分配下 `ld_name_id` / `find_by_name_id` 语义未回退”，而不是继续验证旧版单点模型。
+
 - [ ] 读 step.c 这些点确认字段用法:`rg -n 'tinyui_backend_app_state|app_state->(ld_scene|runtime_state)' tinyui/port/sdl/step.c`。确认只触碰 `ld_scene` 与 `runtime_state`(0.2 普查已证实)。
 - [ ] **改局部声明**:8 处 `struct tinyui_backend_app_state *app_state;`(含 `static ... *tinyui_runtime_host_app_state_from_window(...)` 返回类型 L135 与 `prepare_runtime_scene(..., struct tinyui_backend_app_state **app_state_out)` 形参 L269/271)全部改为 `struct tinyui_app *`。
   - `tinyui_runtime_host_app_state_from_window`(L135)返回类型 → `struct tinyui_app *`,函数体 `return tinyui_runtime_bridge_backend_state_from_window(window);` 不变(现返回 app)。
   - `tinyui_runtime_host_prepare_runtime_scene` 的 `struct tinyui_backend_app_state **app_state_out` → `struct tinyui_app **app_state_out`;内部 `*app_state_out = app_state;` 不变。
 - [ ] **字段访问保持**:`app_state->ld_scene`(L204/212/213/214/215/216/278 等)、`app_state->runtime_state`(L132/245/253/368/391)直读不变(现 `app_state` 是 `tinyui_app*`,字段已在 app 上)。
 - [ ] **编译 port + 全库**:`cd build && cmake --build . 2>&1 | tail -8`(预期全部 target 绿,含 `libtinyui_port_sdl.a`)。
-- [ ] **【高风险 #3 — name_id 分配时序验证,本相位必做单列步骤】**:
-  - **静态核验唯一自增点**:`rg -n 'next_ld_name_id' tinyui/src tinyui/port`(预期仅 `runtime_bridge.c` 1 处自增 `++app->next_ld_name_id` + 1 处 `= 0` 初始化;**无第二处自增**)。
-  - **静态核验调用次序未变**:`rg -n 'tinyui_runtime_bridge_next_name_id' tinyui/src/widgets | wc -l`(预期与改前相同,约 25 处;每个 create 在 `ldXxx_init` **之前**取 name_id —— 抽查 `button.c`、`window.c`、`list.c` 确认 `name_id = tinyui_runtime_bridge_next_name_id(parent...)` 仍在对应 `ldXxx_init(...)` 调用之前)。核验命令:`rg -n -B2 -A6 'tinyui_runtime_bridge_next_name_id' tinyui/src/widgets/button.c tinyui/src/widgets/window.c tinyui/src/widgets/list.c`,人工确认 `next_name_id` 行号 < 同函数内 `ld*_init` 行号。
-  - **动态回归核验**:`cd build && ctest -R 'test_tinyui_(button_events|list|window|table|combo_box|calendar)$' --output-on-failure`(这些用例覆盖父子 name_id 分配 + `find_by_name_id`;**预期全绿**,证明分配序、返回值、查找一致)。
-  - 在 Task 报告里记录:"name_id 唯一自增点 `runtime_bridge.c` `++app->next_ld_name_id`,折叠前后语义/次序/返回值一致,上述用例绿。"
+- [ ] **【高风险 #3 — name_id 分配时序验证,本段大半已过时】**:
+  - **已过时的旧假设**：把 `next_ld_name_id` 当作“仅 1 处自增”的单点模型。
+  - **当前更合适的核验方向**：
+    - `rtk rg -n 'next_ld_name_id' tinyui/src tinyui/port`，确认当前是“单一计数器、多处分配路径”
+    - 抽查 `core/widget.c` 与 `widgets/button.c|window.c|list.c`，确认 helper 路径与生产路径并存
+    - `ctest -R 'test_tinyui_(button_events|list|window|table|combo_box|calendar)$' --output-on-failure`，确认当前多路径模型下 `ld_name_id` / `find_by_name_id` 相关子集未回退
+  - **当前报告口径**应改为：`name_id` 仍由 `tinyui_app` 持有的单一计数器提供，但当前并未统一收敛为单一 helper；closeout 应验证行为未回退，而不是继续声称“唯一自增点已成立”。
 - [ ] (不 commit,继续 Task 7 修测试,再整体回归。)
 
 ---
@@ -237,6 +363,8 @@
 ## Task 8 — 相位整体回归 + 提交
 
 **Files:** 无（验证 + commit）
+
+> **历史说明（2026-06-23 回看）:** 本 Task 是原始执行计划的验收尾段，不代表当前仓库仍需要按同一顺序重跑一遍。当前若继续 closeout，应以 `0.4 当前执行快照` 中尚未补强的证据缺口为准。
 
 - [ ] **全量重建**:`cd build && cmake --build . 2>&1 | tail -5`(预期所有 target 绿)。
 - [ ] **`test_tinyui_app_lifecycle` 单跑**(spec §4 指定验收):`cd build && ctest -R '^test_tinyui_app_lifecycle$' --output-on-failure`(预期 `Passed`)。

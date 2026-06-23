@@ -17,6 +17,7 @@ struct tinyui_table_region {
 
 struct tinyui_table_props {
     const char *id;
+    /* Sentinel default: 0 = unset (no keyboard binding applied) */
     unsigned int keyboard_binding;
     int rows;
     int columns;
@@ -29,7 +30,6 @@ struct tinyui_table_props {
     unsigned int border_color;
     int radius;
     int padding;
-    int has_keyboard_binding;
 };
 
 struct tinyui_table *tinyui_table_create(struct tinyui_window *parent,

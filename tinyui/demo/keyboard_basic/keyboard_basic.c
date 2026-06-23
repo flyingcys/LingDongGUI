@@ -27,7 +27,6 @@ static int make_ui(struct tinyui_window *win)
                 .id = "keyboard_demo_input",
                 .text = "abc",
                 .keyboard_binding = 1U,
-                .has_keyboard_binding = 1,
                 .width = 220,
                 .height = 32,
             }) == 0) {

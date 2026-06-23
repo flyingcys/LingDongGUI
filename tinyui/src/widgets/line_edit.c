@@ -115,8 +115,8 @@ static int tinyui_line_edit_props_are_valid(const struct tinyui_line_edit_props 
            props->height >= 0 &&
            props->radius >= 0 &&
            props->padding >= 0 &&
-           (props->has_type == 0 || tinyui_line_edit_type_is_valid(props->type)) &&
-           (props->has_keyboard_binding == 0 ||
+           (props->type == -1 || tinyui_line_edit_type_is_valid(props->type)) &&
+           (props->keyboard_binding == 0U ||
             tinyui_line_edit_keyboard_binding_is_valid(props->keyboard_binding));
 }
 
@@ -193,8 +193,8 @@ struct tinyui_line_edit *tinyui_line_edit_create_with_props(struct tinyui_window
     }
 
     if ((props->text != 0 && tinyui_line_edit_set_text(line_edit, props->text) != 0) ||
-        (props->has_type != 0 && tinyui_line_edit_set_type(line_edit, props->type) != 0) ||
-        (props->has_keyboard_binding != 0 &&
+        (props->type != -1 && tinyui_line_edit_set_type(line_edit, props->type) != 0) ||
+        (props->keyboard_binding != 0U &&
          tinyui_line_edit_set_keyboard_binding(line_edit, props->keyboard_binding) != 0)) {
         tinyui_line_edit_rollback(line_edit);
         return 0;

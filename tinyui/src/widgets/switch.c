@@ -62,17 +62,12 @@ static int tinyui_switch_props_are_valid(const struct tinyui_switch_props *props
 {
     return props != 0
         && props->id != 0
-        && (props->has_off_source == 0
-            || props->off_source == 0
-            || props->off_source->img_tile != 0)
-        && (props->has_on_source == 0
-            || props->on_source == 0
-            || props->on_source->img_tile != 0)
-        && (props->has_knob_source == 0
-            || props->knob_source == 0
-            || props->knob_source->img_tile != 0)
-        && (props->has_direction == 0
-            || (props->direction >= 0 && props->direction <= 2))
+        && (props->off_source == 0 || props->off_source->img_tile != 0)
+        && (props->on_source == 0 || props->on_source->img_tile != 0)
+        && (props->knob_source == 0 || props->knob_source->img_tile != 0)
+        && (props->horizontal == -1 || props->horizontal == 0 || props->horizontal == 1)
+        && (props->direction == -1 || (props->direction >= 0 && props->direction <= 2))
+        && (props->disabled == -1 || props->disabled == 0 || props->disabled == 1)
         && props->width >= 0
         && props->height >= 0
         && props->radius >= 0
@@ -186,17 +181,17 @@ struct tinyui_switch *tinyui_switch_create_with_props(struct tinyui_window *pare
         || tinyui_widget_set_border_color(&sw->widget, props->border_color) != 0
         || tinyui_widget_set_radius(&sw->widget, props->radius) != 0
         || tinyui_widget_set_padding(&sw->widget, props->padding) != 0
-        || (props->has_off_source != 0
+        || (props->off_source != 0
             && tinyui_switch_set_off_source(sw, props->off_source) != 0)
-        || (props->has_on_source != 0
+        || (props->on_source != 0
             && tinyui_switch_set_on_source(sw, props->on_source) != 0)
-        || (props->has_knob_source != 0
+        || (props->knob_source != 0
             && tinyui_switch_set_knob_source(sw, props->knob_source) != 0)
-        || (props->has_horizontal != 0
+        || (props->horizontal != -1
             && tinyui_switch_set_horizontal(sw, props->horizontal) != 0)
-        || (props->has_direction != 0
+        || (props->direction != -1
             && tinyui_switch_set_direction(sw, props->direction) != 0)
-        || (props->has_disabled != 0
+        || (props->disabled != -1
             && tinyui_switch_set_disabled(sw, props->disabled) != 0)) {
         s_switch_depose_scene = sw->widget.ld_event_bridge_scene;
         tinyui_widget_destroy_common(&sw->widget, tinyui_switch_ld_depose_cb);

@@ -7,6 +7,7 @@
 #include "../../../src/gui/ldLineEdit.h"
 #include "../../../src/misc/ldMsg.h"
 #include "internal.h"
+#include "tinyui_test_support.h"
 
 #include <assert.h>
 #include <dlfcn.h>
@@ -119,8 +120,6 @@ static void test_line_edit_create_with_props_sets_text_and_type(struct tinyui_wi
             .text = "42",
             .type = TINYUI_LINE_EDIT_TYPE_INT,
             .keyboard_binding = 9U,
-            .has_type = 1,
-            .has_keyboard_binding = 1,
             .width = 180,
             .height = 32,
         });
@@ -333,10 +332,28 @@ static void test_line_edit_rejects_invalid_keyboard_binding(struct tinyui_window
                win,
                &(struct tinyui_line_edit_props){
                    .id = "line_edit_bad_props",
-                   .keyboard_binding = 0U,
-                   .has_keyboard_binding = 1,
+                   .keyboard_binding = 0x10000U,
                })
            == 0);
+}
+
+static void test_line_edit_create_with_props_accepts_sentinel_defaults(struct tinyui_window *win)
+{
+    struct tinyui_line_edit *line_edit = tinyui_line_edit_create_with_props(
+        win,
+        &(struct tinyui_line_edit_props){
+            .id = "line_edit_sentinel_defaults",
+            .type = -1,
+            .keyboard_binding = 0U,
+        });
+    enum tinyui_line_edit_type type = TINYUI_LINE_EDIT_TYPE_FLOAT;
+    unsigned int keyboard_binding = 123U;
+
+    assert(line_edit != 0);
+    assert(tinyui_line_edit_get_type(line_edit, &type) == 0);
+    assert(type == TINYUI_LINE_EDIT_TYPE_STRING);
+    assert(tinyui_line_edit_get_keyboard_binding(line_edit, &keyboard_binding) == 0);
+    assert(keyboard_binding == 0U);
 }
 
 static void test_line_edit_set_keyboard_alias_matches_binding_contract(struct tinyui_window *win)
@@ -349,6 +366,14 @@ static void test_line_edit_set_keyboard_alias_matches_binding_contract(struct ti
     assert(tinyui_line_edit_get_keyboard_binding(line_edit, &keyboard_binding) == 0);
     assert(keyboard_binding == 15U);
     assert(tinyui_line_edit_set_keyboard(0, 15U) == -1);
+}
+
+static void test_line_edit_props_source_no_longer_uses_has_flags(void)
+{
+    assert(tinyui_test_source_contains("tinyui/include/line_edit.h", "has_type") == 0);
+    assert(tinyui_test_source_contains("tinyui/include/line_edit.h", "has_keyboard_binding") == 0);
+    assert(tinyui_test_source_contains("tinyui/src/widgets/line_edit.c", "props->has_type") == 0);
+    assert(tinyui_test_source_contains("tinyui/src/widgets/line_edit.c", "props->has_keyboard_binding") == 0);
 }
 
 static void test_line_edit_init_and_shared_base_aliases_round_trip(struct tinyui_window *win)
@@ -496,7 +521,9 @@ int main(void)
     test_line_edit_commit_and_cancel_paths_are_distinct(win);
     test_line_edit_submit_cancel_reason_contract_is_release_ready(win);
     test_line_edit_rejects_invalid_keyboard_binding(win);
+    test_line_edit_create_with_props_accepts_sentinel_defaults(win);
     test_line_edit_set_keyboard_alias_matches_binding_contract(win);
+    test_line_edit_props_source_no_longer_uses_has_flags();
     test_line_edit_init_and_shared_base_aliases_round_trip(win);
 
     test_line_edit_error_paths_null_args(win);

@@ -123,7 +123,7 @@ static int tinyui_table_props_are_valid(const struct tinyui_table_props *props)
            props->height >= 0 &&
            props->radius >= 0 &&
            props->padding >= 0 &&
-           (props->has_keyboard_binding == 0 ||
+           (props->keyboard_binding == 0U ||
             tinyui_table_keyboard_binding_is_valid(props->keyboard_binding));
 }
 
@@ -334,7 +334,7 @@ struct tinyui_table *tinyui_table_create_with_props(struct tinyui_window *parent
         return 0;
     }
 
-    if ((props->has_keyboard_binding != 0 &&
+    if ((props->keyboard_binding != 0U &&
          tinyui_table_set_keyboard_binding(table, props->keyboard_binding) != 0) ||
         tinyui_widget_set_user_data(&table->widget, props->user_data) != 0 ||
         tinyui_widget_set_bg_color(&table->widget, props->bg_color) != 0 ||

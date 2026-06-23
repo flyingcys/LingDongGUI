@@ -6,6 +6,7 @@
 #include "../../../src/gui/ldTable.h"
 #include "../../../src/misc/ldMsg.h"
 #include "internal.h"
+#include "tinyui_test_support.h"
 
 #include <assert.h>
 #include <stdio.h>
@@ -948,7 +949,6 @@ static void test_table_create_with_props_applies_keyboard_and_size_contract(void
         .border_color = 0x708090U,
         .radius = 6,
         .padding = 4,
-        .has_keyboard_binding = 1,
     };
 
     app = tinyui_app_create();
@@ -1075,7 +1075,6 @@ static void test_table_create_with_props_keyboard_failure_rolls_back_attached_ch
             .id = "table_props_fail_keyboard",
             .rows = 2,
             .columns = 2,
-            .has_keyboard_binding = 1,
             .keyboard_binding = 7U,
         });
 
@@ -1102,6 +1101,40 @@ static void test_table_create_with_props_keyboard_failure_rolls_back_attached_ch
     }
 
     tinyui_app_destroy(app);
+}
+
+static void test_table_create_with_props_accepts_keyboard_binding_sentinel_default(void)
+{
+    struct tinyui_app *app;
+    struct tinyui_window *win;
+    struct tinyui_table *table;
+    unsigned int keyboard_binding = 123U;
+
+    app = tinyui_app_create();
+    assert(app != 0);
+    win = tinyui_window_create(app, "table_keyboard_sentinel_root");
+    assert(win != 0);
+
+    table = tinyui_table_create_with_props(
+        win,
+        &(struct tinyui_table_props){
+            .id = "table_keyboard_sentinel",
+            .rows = 2,
+            .columns = 2,
+            .keyboard_binding = 0U,
+        });
+
+    assert(table != 0);
+    assert(tinyui_table_get_keyboard_binding(table, &keyboard_binding) == 0);
+    assert(keyboard_binding == 0U);
+
+    tinyui_app_destroy(app);
+}
+
+static void test_table_props_source_no_longer_uses_has_keyboard_binding(void)
+{
+    assert(tinyui_test_source_contains("tinyui/include/table.h", "has_keyboard_binding") == 0);
+    assert(tinyui_test_source_contains("tinyui/src/widgets/table.c", "props->has_keyboard_binding") == 0);
 }
 
 static void test_table_legacy_bind_host_symbol_is_removed(void)
@@ -1172,6 +1205,8 @@ static void test_table_navigate_and_sync_current_cell_backend_symbols_are_no_lon
     assert_self_binary_lacks_symbol("tinyui_backend_table_set_item_button");
     assert_self_binary_lacks_symbol("tinyui_backend_table_set_selected_cell");
     assert_self_binary_lacks_symbol("tinyui_backend_table_set_current_cell");
+    test_table_create_with_props_accepts_keyboard_binding_sentinel_default();
+    test_table_props_source_no_longer_uses_has_keyboard_binding();
 }
 
 int main(int argc, char **argv)

@@ -233,8 +233,6 @@ static void make_ui(struct tinyui_window *win, struct legacy_widget_runtime *run
             .text = "123",
             .type = TINYUI_LINE_EDIT_TYPE_STRING,
             .keyboard_binding = 1U,
-            .has_type = 1,
-            .has_keyboard_binding = 1,
             .width = 100,
             .height = 32,
         });

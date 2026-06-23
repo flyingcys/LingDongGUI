@@ -10,6 +10,90 @@
 
 ---
 
+## 0.5 当前执行快照（2026-06-23，持续更新）
+
+> 只记录已经由当前代码与 focused verification 坐实的事实；未闭环项不写成完成。
+
+### 已完成并验证
+
+- **B3 `app.h` 从 umbrella 移除已完成。**
+  - 当前真相：`tinyui/include/tinyui.h` 已不再 `#include "app.h"`。
+  - focused verification：
+    - `rtk ctest --test-dir build/tinyui-runtime -R '^test_tinyui_app_lifecycle$' --output-on-failure`
+    - `rtk ctest --test-dir build/tinyui-runtime -R 'test_tinyui_app_(lifecycle|timer|window_switch)' --output-on-failure`
+    - `rtk ctest --test-dir build/tinyui-runtime -R '^check_tinyui_public_api$' --output-on-failure`
+
+- **B6 的当前树真相已部分闭环：`core.h` / `screen.h` 已不存在，相关 include/probe 已收口。**
+  - 当前真相：
+    - `tinyui/include/core.h` 不存在
+    - `tinyui/include/screen.h` 不存在
+    - `tinyui/include/tinyui.h` 不再引用这两个头
+    - transition guard 当前通过
+  - focused verification：
+    - `rtk ctest --test-dir build/tinyui-runtime -R '^check_tinyui_transition_guards$' --output-on-failure`
+    - `rtk ctest --test-dir build/tinyui-runtime -R '^check_tinyui_v21_transition_guards$' --output-on-failure`
+
+- **public props sentinel 收口已在当前树推进并通过 focused test：**
+  - `tinyui/include/switch.h` + `tinyui/src/widgets/switch.c`
+    - 已去掉 `has_off_source/has_on_source/has_knob_source/has_horizontal/has_direction/has_disabled`
+    - 改为 `off/on/knob_source == NULL`、`horizontal/direction/disabled == -1` sentinel
+    - focused verification：
+      - `rtk cmake --build build/tinyui-runtime --target test_tinyui_switch test_tinyui_widgets`
+      - `rtk ctest --test-dir build/tinyui-runtime -R '^(test_tinyui_switch|test_tinyui_widgets)$' --output-on-failure`
+      - `rtk ctest --test-dir build/tinyui-runtime -R '^check_tinyui_public_api$' --output-on-failure`
+  - `tinyui/include/window.h` + `tinyui/src/widgets/window.c`
+    - 已去掉 `has_padding_group`
+    - 改为 `padding_left/top/right/bottom == -1` sentinel；四边全显式时才下发 flex padding
+    - focused verification：
+      - `rtk cmake --build build/tinyui-runtime --target test_tinyui_widgets test_tinyui_window`
+      - `rtk ctest --test-dir build/tinyui-runtime -R '^(test_tinyui_widgets|test_tinyui_window)$' --output-on-failure`
+      - `rtk ctest --test-dir build/tinyui-runtime -R '^check_tinyui_public_api$' --output-on-failure`
+  - `tinyui/include/line_edit.h` + `tinyui/src/widgets/line_edit.c`
+    - 已去掉 `has_type/has_keyboard_binding`
+    - 改为 `type == -1`、`keyboard_binding == 0` sentinel
+    - focused verification：
+      - `rtk cmake --build build/tinyui-runtime --target test_tinyui_line_edit`
+      - `rtk ctest --test-dir build/tinyui-runtime -R '^test_tinyui_line_edit$' --output-on-failure`
+      - `rtk ctest --test-dir build/tinyui-runtime -R '^check_tinyui_public_api$' --output-on-failure`
+  - `tinyui/include/table.h` + `tinyui/src/widgets/table.c`
+    - 已去掉 `has_keyboard_binding`
+    - 改为 `keyboard_binding == 0` sentinel
+    - focused verification：
+      - `rtk cmake --build build/tinyui-runtime --target test_tinyui_table`
+      - `rtk ctest --test-dir build/tinyui-runtime -R '^test_tinyui_table$' --output-on-failure`
+      - `rtk ctest --test-dir build/tinyui-runtime -R '^check_tinyui_public_api$' --output-on-failure`
+  - `tinyui/include/checkbox.h` + `tinyui/src/widgets/checkbox.c`
+    - 已去掉 `has_check_color/has_unchecked_source/has_checked_source/has_radio_group/has_string_left_space`
+    - 改为 `check_color == 0`、`unchecked_source/checked_source == NULL`、`radio_group == -1`、`string_left_space == -1` sentinel
+    - focused verification：
+      - `rtk cmake --build build/tinyui-runtime --target test_tinyui_checkbox`
+      - `rtk ctest --test-dir build/tinyui-runtime -R '^test_tinyui_checkbox$' --output-on-failure`
+      - `rtk ctest --test-dir build/tinyui-runtime -R '^check_tinyui_public_api$' --output-on-failure`
+
+### 当前 closeout 判定
+
+- **Phase B 现在可以判定为已完成。**
+  - 当前依据：
+    - 7 个纯 `_init` 别名已从当前代码树与测试树清空；保留的 `_init` 仅剩 spec 明确不在本相位范围内的 10 个 `struct tinyui_widget *parent` 路径
+    - `obj.h` inline alias 层已删，只保留 typedef
+    - `app.h` 已从 `tinyui.h` umbrella 移除，但文件本身保留
+    - `core.h` / `screen.h` 已删除，umbrella 与 v21 probe 已收口
+    - `window` 的 flex padding 入口已收敛到 `set_padding + get_padding_group`，旧 `set_padding_group` / 单 getter 路径已清空
+    - `switch / window / line_edit / table / checkbox` 的 public props sentinel 收口已落地
+    - 受 sentinel API 影响的 demo 调用方已跟进，`check_tinyui_runtime` 当前通过
+
+- **当前代码树中，B 相位原计划的主要 API 收敛项已不再有源码残留。**
+  - 当前真相：
+    - `/usr/bin/rg` 检查 `tinyui_(button|calendar|graph|line_edit|progress_bar|slider|table)_init` 在 `tinyui/include`、`tinyui/src`、`tests` 下已无命中
+    - `tinyui_window_set_padding_group` 与 `tinyui_window_get_padding_left/top/right/bottom` 在 `tinyui/include`、`tinyui/src`、`tinyui/demo`、`tests` 下已无命中
+    - `tinyui/include/obj.h` 已无 `tinyui_obj_*` inline 别名
+    - `tinyui/include/core.h` / `tinyui/include/screen.h` 已不存在
+
+- **本相位当前没有额外 blocker。**
+  - 说明：
+    - 文档下半部分的 B1/B5/B8 等任务仍保留为原始执行计划参考
+    - 但对当前树而言，这些任务描述中的“待做项”大部分已经成为历史状态，不能再当作未完成证据
+
 ## 0. 起始状态与全局事实(执行前必读)
 
 > 本相位 **独立于 Phase 0 / A / C**(spec §4:"Phase B 独立,可与 0/A 并行或任意穿插")。起始状态 = 其前置相位(若有)已合入;若单独执行,直接基于 `dev-nanoui` 当前 `tinyui/src`。

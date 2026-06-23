@@ -13,6 +13,7 @@
 #include "../../../src/gui/ldWindow.h"
 #include "../../../src/misc/ldMsg.h"
 #include "internal.h"
+#include "tinyui_test_support.h"
 
 #include <assert.h>
 #include <dlfcn.h>
@@ -2116,7 +2117,6 @@ static void test_props_initial_values(struct tinyui_app *app,
         .radius = 3,
         .padding = 4,
         .background_source = image_source,
-        .has_padding_group = 1,
         .padding_left = 2,
         .padding_top = 3,
         .padding_right = 4,
@@ -2191,6 +2191,9 @@ static void test_props_initial_values(struct tinyui_app *app,
         .border_color = 0x676869,
         .radius = 13,
         .padding = 14,
+        .horizontal = -1,
+        .direction = -1,
+        .disabled = -1,
     };
     struct tinyui_slider_props slider_props = {
         "props_slider",
@@ -2411,6 +2414,27 @@ static void test_props_initial_values(struct tinyui_app *app,
     assert(tinyui_slider_create_with_props(props_win, 0) == 0);
 }
 
+static void test_window_create_with_props_accepts_padding_sentinel_defaults(struct tinyui_app *app)
+{
+    struct tinyui_window *window = tinyui_window_create_with_props(
+        app,
+        &(struct tinyui_window_props){
+            .id = "padding_sentinel_window",
+            .padding_left = -1,
+            .padding_top = -1,
+            .padding_right = -1,
+            .padding_bottom = -1,
+        });
+
+    assert(window != 0);
+}
+
+static void test_window_props_padding_source_no_longer_uses_has_padding_group(void)
+{
+    assert(tinyui_test_source_contains("tinyui/include/window.h", "has_padding_group") == 0);
+    assert(tinyui_test_source_contains("tinyui/src/widgets/window.c", "props->has_padding_group") == 0);
+}
+
 static void test_widget_is_hidden_contract(struct tinyui_button *button)
 {
     assert(button != 0);
@@ -2464,6 +2488,9 @@ int main(void)
         .checked = 1,
         .on_toggled = on_switch_toggle,
         .user_data = 0,
+        .horizontal = -1,
+        .direction = -1,
+        .disabled = -1,
     };
     struct tinyui_checkbox_props cb_props = {
         .id = "agree",
@@ -2562,6 +2589,8 @@ int main(void)
     assert(app_state->ld_scene != 0);
     assert(ldMsgInit(&app_state->ld_scene->ptMsgQueue, 8) == true);
     test_backend_widget_tree_contract(app, win, sw, cb, slider, label, button, text, image);
+    test_window_create_with_props_accepts_padding_sentinel_defaults(app);
+    test_window_props_padding_source_no_longer_uses_has_padding_group();
     assert(switch_toggled_count == 0);
     assert(checkbox_toggled_count == 0);
     assert(slider_value_count == 0);

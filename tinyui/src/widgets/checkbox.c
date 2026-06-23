@@ -47,15 +47,13 @@ static int checkbox_props_valid(const struct tinyui_checkbox_props *props)
 {
     return props != 0
         && props->id != 0
-        && (props->has_unchecked_source == 0
-            || props->unchecked_source == 0
+        && (props->unchecked_source == 0
             || props->unchecked_source->img_tile != 0)
-        && (props->has_checked_source == 0
-            || props->checked_source == 0
+        && (props->checked_source == 0
             || props->checked_source->img_tile != 0)
-        && (props->has_radio_group == 0
+        && (props->radio_group == -1
             || (props->radio_group >= 0 && props->radio_group <= 255))
-        && (props->has_string_left_space == 0
+        && (props->string_left_space == -1
             || (props->string_left_space >= 0 && props->string_left_space <= 65535))
         && props->width >= 0
         && props->height >= 0
@@ -164,15 +162,15 @@ struct tinyui_checkbox *tinyui_checkbox_create_with_props(struct tinyui_window *
         || tinyui_widget_set_border_color(&checkbox->widget, props->border_color) != 0
         || tinyui_widget_set_radius(&checkbox->widget, props->radius) != 0
         || tinyui_widget_set_padding(&checkbox->widget, props->padding) != 0
-        || (props->has_check_color != 0
+        || (props->check_color != 0U
             && tinyui_checkbox_set_check_color(checkbox, props->check_color) != 0)
-        || (props->has_unchecked_source != 0
+        || (props->unchecked_source != 0
             && tinyui_checkbox_set_unchecked_source(checkbox, props->unchecked_source) != 0)
-        || (props->has_checked_source != 0
+        || (props->checked_source != 0
             && tinyui_checkbox_set_checked_source(checkbox, props->checked_source) != 0)
-        || (props->has_radio_group != 0
+        || (props->radio_group != -1
             && tinyui_checkbox_set_radio_group(checkbox, props->radio_group) != 0)
-        || (props->has_string_left_space != 0
+        || (props->string_left_space != -1
             && tinyui_checkbox_set_string_left_space(checkbox, props->string_left_space) != 0)) {
         s_checkbox_depose_scene = checkbox->widget.owner != 0
                                   ? checkbox->widget.owner->ld_scene

@@ -17,7 +17,9 @@ enum tinyui_line_edit_type {
 struct tinyui_line_edit_props {
     const char *id;
     const char *text;
+    /* Sentinel default: -1 = unset (use backend default type) */
     enum tinyui_line_edit_type type;
+    /* Sentinel default: 0 = unset (no keyboard binding applied) */
     unsigned int keyboard_binding;
     const char *style_class;
     void *user_data;
@@ -28,8 +30,6 @@ struct tinyui_line_edit_props {
     unsigned int border_color;
     int radius;
     int padding;
-    int has_type;
-    int has_keyboard_binding;
 };
 
 struct tinyui_line_edit *tinyui_line_edit_create(struct tinyui_window *parent, const char *id);

@@ -38,19 +38,18 @@ struct tinyui_switch_props {
     unsigned int border_color;
     int radius;
     int padding;
+    /* Sentinel default: NULL = unset (no image source applied) */
     struct tinyui_image_source *off_source;
+    /* Sentinel default: NULL = unset (no image source applied) */
     struct tinyui_image_source *on_source;
+    /* Sentinel default: NULL = unset (no image source applied) */
     struct tinyui_image_source *knob_source;
+    /* Sentinel default: -1 = unset (use backend default), 0 = horizontal off, 1 = horizontal on */
     int horizontal;
+    /* Sentinel default: -1 = unset (use backend default direction) */
     int direction;
+    /* Sentinel default: -1 = unset (use backend default enabled state) */
     int disabled;
-
-    int has_off_source;
-    int has_on_source;
-    int has_knob_source;
-    int has_horizontal;
-    int has_direction;
-    int has_disabled;
 };
 
 struct tinyui_switch *tinyui_switch_create(struct tinyui_window *parent, const char *id);

@@ -40,8 +40,6 @@ static void make_ui(struct tinyui_window *win)
             .text = "192.168.0.10",
             .type = TINYUI_LINE_EDIT_TYPE_STRING,
             .keyboard_binding = 1U,
-            .has_type = 1,
-            .has_keyboard_binding = 1,
             .width = 240,
             .height = 32,
         });

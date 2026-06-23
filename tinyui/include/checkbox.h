@@ -19,16 +19,16 @@ struct tinyui_checkbox_props {
     unsigned int border_color;
     int radius;
     int padding;
+    /* Sentinel default: 0 = unset (use backend default check color) */
     unsigned int check_color;
+    /* Sentinel default: NULL = unset (no unchecked source applied) */
     struct tinyui_image_source *unchecked_source;
+    /* Sentinel default: NULL = unset (no checked source applied) */
     struct tinyui_image_source *checked_source;
+    /* Sentinel default: -1 = unset (not a radio button) */
     int radio_group;
+    /* Sentinel default: -1 = unset (use backend default spacing) */
     int string_left_space;
-    int has_check_color;
-    int has_unchecked_source;
-    int has_checked_source;
-    int has_radio_group;
-    int has_string_left_space;
 };
 
 struct tinyui_checkbox *tinyui_checkbox_create(struct tinyui_window *parent, const char *id);
