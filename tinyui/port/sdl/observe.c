@@ -256,39 +256,52 @@ void tinyui_runtime_host_log_mapping_markers(struct tinyui_runtime_host_state *s
     }
 }
 
+static void tinyui_runtime_host_log_image_source_marker_in_ld_tree(ldBase_t *node)
+{
+    while (node != NULL) {
+        struct tinyui_widget *widget = (struct tinyui_widget *)node->pInfo;
+
+        if (widget != NULL &&
+            widget->kind == TINYUI_BACKEND_WIDGET_IMAGE &&
+            widget->ld_widget == node) {
+            const char *id = tinyui_runtime_host_widget_id(widget);
+            ldImage_t *ld_image = (ldImage_t *)node;
+
+            if (id != NULL) {
+                printf("TINYUI_BACKEND_IMAGE_SOURCE=%s:img=%s,mask=%s\n",
+                       id,
+                       ld_image->ptImgTile != NULL ? "set" : "null",
+                       ld_image->ptMaskTile != NULL ? "set" : "null");
+            }
+        }
+
+        {
+            ldBase_t *child = ldBaseGetChildList(node);
+            if (child != NULL) {
+                tinyui_runtime_host_log_image_source_marker_in_ld_tree(child);
+            }
+        }
+
+        node = ldBaseGetNextSibling(node);
+    }
+}
+
 void tinyui_runtime_host_log_image_source_marker(const struct tinyui_widget *widget)
 {
-    /* Walk the ld tree (not the deleted backend first_child/next_sibling links).
-     * `widget` is the root of the walk when non-NULL; step.c passes NULL to
-     * suppress the traversal entirely. */
-    if (widget == NULL) {
+    struct tinyui_runtime_host_state *state;
+
+    if (widget == NULL || widget->ld_widget == NULL || widget->owner == NULL) {
         return;
     }
 
-    if (widget->kind == TINYUI_BACKEND_WIDGET_IMAGE && widget->ld_widget != NULL) {
-        const char *id = tinyui_runtime_host_widget_id(widget);
-        ldImage_t *ld_image = (ldImage_t *)widget->ld_widget;
-
-        if (id != NULL) {
-            printf("TINYUI_BACKEND_IMAGE_SOURCE=%s:img=%s,mask=%s\n",
-                   id,
-                   ld_image->ptImgTile != NULL ? "set" : "null",
-                   ld_image->ptMaskTile != NULL ? "set" : "null");
-        }
+    state = (struct tinyui_runtime_host_state *)widget->owner->runtime_state;
+    if (state != NULL && state->image_source_logged) {
+        return;
     }
 
-    {
-        ldBase_t *child = ldBaseGetChildList((ldBase_t *)widget->ld_widget);
-        if (child != NULL) {
-            /* Recurse via the ld tree: each ld child's pInfo gives the widget. */
-            while (child != NULL) {
-                struct tinyui_widget *cw = (struct tinyui_widget *)child->pInfo;
-                if (cw != NULL) {
-                    tinyui_runtime_host_log_image_source_marker(cw);
-                }
-                child = ldBaseGetNextSibling(child);
-            }
-        }
+    tinyui_runtime_host_log_image_source_marker_in_ld_tree((ldBase_t *)widget->ld_widget);
+    if (state != NULL) {
+        state->image_source_logged = 1;
     }
 }
 

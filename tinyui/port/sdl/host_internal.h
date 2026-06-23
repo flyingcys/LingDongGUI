@@ -29,6 +29,7 @@ struct tinyui_runtime_host_state {
     int            capture_written;
     int            static_mapping_logged;
     int            real_widget_ids_logged;
+    int            image_source_logged;
     int            fallback_boundary_logged;
     int            temporary_smoke_logged;
     int            smoke_layout_used;

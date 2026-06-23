@@ -126,6 +126,29 @@
     - `tinyui/demo/keyboard_basic/keyboard_basic.c` 仍在使用 `line_edit_props.has_keyboard_binding`
     - 这是 Phase B sentinel API 收口后的 demo 跟进缺失，不是 Phase A blocker
 
+### 0.5 closeout 补记（2026-06-23）
+
+- **此前挂在 closeout 上的 `test_tinyui_layout` 已完成复核，当前不再构成 Phase A blocker。**
+  - 本轮处理方式：
+    - 先单独重建并运行 `test_tinyui_layout`
+    - 对 `test_grid_layout_positions_basic_widgets_like_demo` 做一次临时调试打印，确认 `switch/checkbox/slider/button/text/image` 的 Y 坐标严格递增
+    - 临时调试代码已在确认后移除
+  - 当前结论：
+    - 当前代码树下，`test_tinyui_layout` 通过
+    - 先前失败更接近旧二进制/旧构建状态残留，不是 app_state 折叠带来的现行回退
+
+- **Phase A closeout 现在不再保留额外未解 blocker。**
+  - 说明：
+    - `line_edit` sentinel 相关 demo/runtime 问题已在 Phase B 侧收口
+    - layout focused 复核当前已通过，且未发现与 `tinyui_app` 持有 `ld_scene / next_ld_name_id / runtime_state` 的折叠相关的新回退
+
+- **最终验证已覆盖到当前完整 runtime 测试树。**
+  - focused / full verification：
+    - `rtk ctest --test-dir build/tinyui-runtime -R '^test_tinyui_layout$' --output-on-failure`
+    - `rtk ctest --test-dir build/tinyui-runtime --output-on-failure`
+  - 当前结果：
+    - `build/tinyui-runtime` 共 72/72 通过
+
 ## 0. 起始状态核实结论(写 plan 时已逐项 Read 核实,执行前请复核)
 
 > **历史说明（2026-06-23 回看）:** 本节是 2026-06-18 写 plan 时的起始态快照，**不是当前代码真相**。其中凡是声称 `struct tinyui_backend_app_state` / `void *backend_app` / 旧访问器返回类型仍存在的表述，当前都应以本文 `0.4 当前执行快照` 为准。

@@ -164,7 +164,7 @@ static void tinyui_runtime_host_render(struct tinyui_runtime_host_state *state, 
             ldMsgProcess(app_state->ld_scene);
             ldGuiDraw(app_state->ld_scene, &state->real_tile, true);
             ldGuiFrameComplete(app_state->ld_scene);
-            tinyui_runtime_host_log_image_source_marker(NULL);
+            tinyui_runtime_host_log_image_source_marker(&window->widget);
             tinyui_runtime_host_present_real_frame(state);
             state->rendered_frames += 1U;
         }

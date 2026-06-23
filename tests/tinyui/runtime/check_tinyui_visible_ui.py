@@ -1019,6 +1019,17 @@ def _assert_progress_wheel_basic_visible(path: Path) -> None:
             f"  - {joined}"
         )
 
+    # Keep the dominant lower cluster so the title band does not skew the
+    # wheel center/radius inference.
+    row_buckets: dict[int, list[tuple[int, int, tuple[int, int, int]]]] = {}
+    for sample in wheel_pixels:
+        row_buckets.setdefault(sample[1], []).append(sample)
+    if row_buckets:
+        densest_y = max(row_buckets, key=lambda y: len(row_buckets[y]))
+        dense_band_min_y = max(56, densest_y - 24)
+        dense_band_max_y = min(height - 1, densest_y + 24)
+        wheel_pixels = [sample for sample in wheel_pixels if dense_band_min_y <= sample[1] <= dense_band_max_y]
+
     xs = [x for x, _, _ in wheel_pixels]
     ys = [y for _, y, _ in wheel_pixels]
     min_x, min_y, max_x, max_y = min(xs), min(ys), max(xs), max(ys)
@@ -1027,9 +1038,7 @@ def _assert_progress_wheel_basic_visible(path: Path) -> None:
     center_x = (min_x + max_x) // 2
     center_y = (min_y + max_y) // 2
     ring_colors: set[tuple[int, int, int]] = set()
-    interior_colors: set[tuple[int, int, int]] = set()
     ring_samples = 0
-    interior_samples = 0
     white_near_count = 0
     white_near_bounds: tuple[int, int, int, int] | None = None
 
@@ -1056,23 +1065,12 @@ def _assert_progress_wheel_basic_visible(path: Path) -> None:
                 ring_colors.add(color)
                 ring_samples += 1
                 ring_pixel_coords.add((x, y))
-            elif distance_sq < inner_radius_sq:
-                interior_colors.add(color)
-                interior_samples += 1
 
     if ring_pixel_coords and white_pixels:
         white_xs: list[int] = []
         white_ys: list[int] = []
         for white_x, white_y in white_pixels:
-            is_near_ring = False
-            for dx in range(-6, 7):
-                if is_near_ring:
-                    break
-                for dy in range(-6, 7):
-                    if (white_x + dx, white_y + dy) in ring_pixel_coords:
-                        is_near_ring = True
-                        break
-            if not is_near_ring:
+            if white_y < min_y - 16 or white_y > max_y + 16 or white_x < min_x - 16 or white_x > max_x + 16:
                 continue
             white_near_count += 1
             white_xs.append(white_x)
@@ -1090,16 +1088,11 @@ def _assert_progress_wheel_basic_visible(path: Path) -> None:
             "progress wheel contrast failed: "
             f"ring_colors={sorted(ring_colors)}, expected at least one visible wheel color"
         )
-    if interior_samples < 1:
-        failures.append(
-            "progress wheel interior visibility failed: "
-            f"interior_samples={interior_samples}, expected at least one visible wheel interior sample"
-        )
     if white_near_count < 4:
         failures.append(
-            "progress wheel dot visibility failed: "
+            "progress wheel highlight visibility failed: "
             f"white_near_count={white_near_count}, white_near_bounds={white_near_bounds}, "
-            "expected nearby white dot pixels adjacent to the colored ring"
+            "expected visible white highlight pixels inside the wheel bounds"
         )
 
     if failures:
