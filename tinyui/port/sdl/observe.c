@@ -80,21 +80,6 @@ void tinyui_runtime_host_log_first_frame_benchmark(struct tinyui_runtime_host_st
     state->benchmark_first_frame_logged = 1;
 }
 
-int tinyui_runtime_host_window_has_real_layout(const struct tinyui_widget *widget)
-{
-    ldWindow_t *ld_window;
-
-    if (widget == NULL
-        || (widget->kind != TINYUI_BACKEND_WIDGET_WINDOW
-            && widget->kind != TINYUI_BACKEND_WIDGET_BACKGROUND)
-        || widget->ld_widget == NULL) {
-        return 0;
-    }
-
-    ld_window = (ldWindow_t *)widget->ld_widget;
-    return ld_window->layoutTpye == layoutFlex || ld_window->layoutTpye == layoutGrid;
-}
-
 /* Read the user-visible id of a widget. Phase C folded the backend `id` mirror
  * out of struct tinyui_widget; the id now lives on each concrete widget sub-
  * struct (e.g. struct tinyui_image) as the first member after `widget`.

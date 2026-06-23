@@ -165,3 +165,49 @@ struct tinyui_app {
 | 测试 | 删约 380 处 backend 内部断言;全量 ctest / contract / runtime / perf gate 绿 |
 | 行为 | SDL demo 真实输出逐页与改前一致(截图比对) |
 | 能力 | 不丢失任何用户控件能力(27/27 widget-like 覆盖不变) |
+
+---
+
+## 9. 完成核验结果(2026-06-23,代码评审 + 修复后)
+
+> 本节记录实现完成后的核验结论,不修改上文任何需求基准。基线 = `52f06fa`(Phase 0 前),核验 HEAD = `b6ee68a` + 本轮评审修复。
+> 核验方式:4 个独立 subagent 分相位评审 + 主线程收敛/最终验证;计数用 `command grep`(规避代理吞 grep)。
+
+### 9.1 §8 度量逐项核对
+
+| 维度 | 目标 | 实测结果 | 结论 |
+|---|---|---|---|
+| 代码行数 | 净减 4,000–5,000 | `tinyui/src` 26,119 → 21,462 = **净减 4,657 行** | ✅ 达标 |
+| 结构 | 两类型消失、三层→单层 | `struct tinyui_backend_widget` / `tinyui_backend_app_state` 全仓 **0 处**;`runtime_internal.h` 已删 | ✅ 达标 |
+| 内存 | 每 widget 省 1 calloc、删 496–512B backend、净省 ~430B | 折叠后 `tinyui_widget` = **240B**(perf gate 上限 256B);`backend_widget`(496–512B)已删;每 widget 单 calloc | ✅ 达标 |
+| 测试 | 全量 ctest / contract / runtime / perf gate 绿 | **全量 ctest 72/72 通过**(含 contract / runtime / perf / 130s 的 `visible_ui` 截图门) | ✅ 达标 |
+| 行为 | SDL demo 真实输出逐页一致 | `check_tinyui_visible_ui` / `check_*_runtime` / `check_tinyui_backend_mapping` 全绿 | ✅ 达标 |
+| 能力 | 27/27 widget-like 覆盖不变 | `check_tinyui_widget_contract_matrix` / `release_capability_matrix` 全绿 | ✅ 达标 |
+
+### 9.2 评审中发现并已修复的缺陷(5 项)
+
+| # | 严重度 | 位置 | 问题 | 修复 |
+|---|---|---|---|---|
+| 1 | Critical | `src/gui/ldKeyboard.c:ldKeyboardClick` | 当 `keyCode` 在当前布局无对应按钮时 `getBtnByKeyCode` 返回 NULL,随即解引用 → `test_tinyui_keyboard` SEGFAULT。**经核验为既有 driver 隐性缺陷**(driver/init/解析路径/测试与基线 `52f06fa` 完全一致,`editType` 默认 0=typeString 取无数字的 qwerty 表),并非本次重构引入;旧 build 目录过期掩盖了它。 | 加 `pBtnInfo == NULL` 早退守卫(有效按键路径不变) |
+| 2 | Important | `core/widget.c:tinyui_widget_create_leaf` | 第 10 步 `bind_leaf_widget` 失败时仅 `pInfo=0;free(w)`,泄漏已创建/已挂树的 ld widget 并留下 `pInfo==NULL` 的幽灵节点(`child_count` 偏大、getter 返回空宿主)。仅 `ldMsgConnect` 耗尽时可达,但 C1-T4 要求的回滚无泄漏未满足。 | 回滚改为镜像 `destroy_common`:`ldBaseNodeRemove` + 清 pInfo + 经 `ptGuiFunc->depose` 泛型销毁 + `free`(不新增 cb 形参,29 调用点不受影响) |
+| 3 | Important | `core/widget.c:tinyui_widget_destroy` | `detach_from_parent` 先把 `ld_widget` 置 0,导致随后 `unbind_host` 的 `if(ld_widget!=0)` 清 pInfo 被跳过 → ld 节点 pInfo 残留(相对基线的清理回归)。 | 调整顺序:先 `unbind_host` 再 `detach_from_parent`,恢复基线语义(共享 helper 不动) |
+| 4 | Minor | `widgets/combo_box.c:native_slot` | 重选同一项仍触发 `value_changed`(姊妹件 radial_menu/icon_slider 有去重守卫,combo_box 漏)。 | 补 `previous == current` 去重守卫,`widget->value` 仍同步、用户 cb 不重复触发 |
+| 5 | Minor | `widgets/clock.c` | 指针/掩码 tile 用 libc `malloc` 分配,却由 `ldClock_depose` 经 `ldFree` 释放 → 非 STDLIB(TLSF/heap4/lwmem)下跨分配器隐患。 | 6 处 tile `malloc`→`ldMalloc`,两条回滚路径对应 `free`→`ldFree`(宿主 `free(clock)` 仍走 libc,正确) |
+
+附:删除 `port/sdl/step.c`、`observe.c` 中 2 个零调用的死函数(`*_is_supported_real` / `*_has_real_layout`)。
+本轮修复仅触及 7 个文件,均为预期范围内(`git status` 核对),全量 ctest 仍 72/72。
+
+### 9.3 已知/可接受遗留项(本次不在范围,均为既有问题或刻意保留)
+
+- **list-item 复合控件 pInfo 冲突(高风险登记册 #1 的未尽项)**:`ldList.c:468` 内部把列表项节点的 `pInfo` 覆盖为 `arm_2d_location_t*`;若把 TinyUI 控件作为列表项,树 getter / `get_pressed_by_name_id` 会把 4 字节块当 `tinyui_widget*` 越界读。**该问题在重构前同样存在**(那时 pInfo 存的是 `backend_widget*`),非本次回归。建议:文档化"列表项不放复合控件"约束,或在读取方加类型守卫。
+- **keyboard 动态布局 teardown 泄漏**:`set_buttons` 分配的 `layout_entries`/文本/`native_layout` 仅在回滚与复用时释放;沿用"宿主对象生命周期=整场景、公共 API 不单独 free 单控件"的既有模型,正常销毁路径不释放。建议:文档化"销毁前调用 `set_buttons(kbd, NULL, 0)`"契约。
+- **公共销毁路径不单独 free 宿主**:`tinyui_widget_destroy` 只 detach+unbind,不 free 宿主也不 depose ld(与基线一致;真正的单 free 在 create 失败回滚路径,即高风险登记册 #4)。属"整场景生命周期"既有设计,非回归——本次重构后由双结构泄漏降为单结构,严格更优。
+- **产品 `.c` 内的故障注入桩**(`button/text/table/slider/progress_wheel/window` 的 `*_test_fail_*`):单测断言其在 widget 源码中存在,为约定的故障注入缝,**刻意保留**(与已正确移到测试侧的快照脚手架不同)。
+- **`demo/animation_basic` 引用 `arm_2d_tile_t` 资产符号**:仅作 `(void*)` 图像资产指针,非渲染 API 调用,`check_tinyui_demo_boundary` 通过;按字面 demo 边界规则属临界,判定为外部资产引用、可接受。
+
+### 9.4 与 plan 的偏差(均为更优收敛,语义等价)
+
+- **Phase A**:3 个访问器(`backend_state`/`_from_window`/`_from_parent`)**被彻底移除**而非"退化为返回 `tinyui_app*`"——Phase C 把 `owner` 直接折进 `tinyui_widget` 后,控件直接 `widget->owner`,比 Phase A 计划的中间态更干净。`name_id` 双轨(`create_leaf` 与 `window_create`)均为前置自增、同一 app 级计数器,首值=1,时序保持。
+- **Phase B**:`set_grid_padding` 作为独立能力**保留**(非 8→2 全塌);flex padding 入口收敛为 `set_padding`+1 getter,与 spec §3.4 一致。
+
+**总体结论:实现满足开发文档(本 spec)全部需求与验收标准。** 评审发现的 Critical/Important 缺陷已修复并回归验证;遗留项均为既有问题或刻意设计,已在 §9.3 登记。

@@ -225,55 +225,55 @@ struct tinyui_clock *tinyui_clock_create(struct tinyui_widget *parent, const cha
         return 0;
     }
 
-    hour_img_tile = malloc(sizeof(*hour_img_tile));
+    hour_img_tile = ldMalloc(sizeof(*hour_img_tile));
     if (hour_img_tile == 0) {
         return 0;
     }
     *hour_img_tile = c_tilePointerSecGRAY8;
     hour_img_tile->tRegion.tSize.iHeight = 67;
 
-    hour_mask_tile = malloc(sizeof(*hour_mask_tile));
+    hour_mask_tile = ldMalloc(sizeof(*hour_mask_tile));
     if (hour_mask_tile == 0) {
-        free(hour_img_tile);
+        ldFree(hour_img_tile);
         return 0;
     }
     *hour_mask_tile = c_tilePointerSecMask;
     hour_mask_tile->tRegion.tSize.iHeight = 67;
 
-    minute_img_tile = malloc(sizeof(*minute_img_tile));
+    minute_img_tile = ldMalloc(sizeof(*minute_img_tile));
     if (minute_img_tile == 0) {
-        free(hour_mask_tile);
-        free(hour_img_tile);
+        ldFree(hour_mask_tile);
+        ldFree(hour_img_tile);
         return 0;
     }
     *minute_img_tile = c_tilePointerSecGRAY8;
 
-    minute_mask_tile = malloc(sizeof(*minute_mask_tile));
+    minute_mask_tile = ldMalloc(sizeof(*minute_mask_tile));
     if (minute_mask_tile == 0) {
-        free(minute_img_tile);
-        free(hour_mask_tile);
-        free(hour_img_tile);
+        ldFree(minute_img_tile);
+        ldFree(hour_mask_tile);
+        ldFree(hour_img_tile);
         return 0;
     }
     *minute_mask_tile = c_tilePointerSecMask;
 
-    second_img_tile = malloc(sizeof(*second_img_tile));
+    second_img_tile = ldMalloc(sizeof(*second_img_tile));
     if (second_img_tile == 0) {
-        free(minute_mask_tile);
-        free(minute_img_tile);
-        free(hour_mask_tile);
-        free(hour_img_tile);
+        ldFree(minute_mask_tile);
+        ldFree(minute_img_tile);
+        ldFree(hour_mask_tile);
+        ldFree(hour_img_tile);
         return 0;
     }
     *second_img_tile = c_tilePointerSecGRAY8;
 
-    second_mask_tile = malloc(sizeof(*second_mask_tile));
+    second_mask_tile = ldMalloc(sizeof(*second_mask_tile));
     if (second_mask_tile == 0) {
-        free(second_img_tile);
-        free(minute_mask_tile);
-        free(minute_img_tile);
-        free(hour_mask_tile);
-        free(hour_img_tile);
+        ldFree(second_img_tile);
+        ldFree(minute_mask_tile);
+        ldFree(minute_img_tile);
+        ldFree(hour_mask_tile);
+        ldFree(hour_img_tile);
         return 0;
     }
     *second_mask_tile = c_tilePointerSecMask;
@@ -290,12 +290,12 @@ struct tinyui_clock *tinyui_clock_create(struct tinyui_widget *parent, const cha
                                                              &ctx,
                                                              sizeof(*clock));
     if (clock == 0) {
-        free(second_mask_tile);
-        free(second_img_tile);
-        free(minute_mask_tile);
-        free(minute_img_tile);
-        free(hour_mask_tile);
-        free(hour_img_tile);
+        ldFree(second_mask_tile);
+        ldFree(second_img_tile);
+        ldFree(minute_mask_tile);
+        ldFree(minute_img_tile);
+        ldFree(hour_mask_tile);
+        ldFree(hour_img_tile);
         return 0;
     }
 

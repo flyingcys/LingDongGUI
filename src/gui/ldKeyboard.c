@@ -1029,6 +1029,11 @@ void ldKeyboardClick(ld_scene_t *ptScene, ldKeyboard_t *ptWidget, uint8_t signal
     const kbBtnInfo_t *pBtnList = ldKeyboardGetTargetBtnList(ptWidget);
     const kbBtnInfo_t *pBtnInfo = getBtnByKeyCode(pBtnList, ptWidget->keyCode);
 
+    if (pBtnInfo == NULL)
+    {
+        return;
+    }
+
     u64Temp = pBtnInfo->region.tLocation.iX;
     u64Temp <<= 16;
     u64Temp += pBtnInfo->region.tLocation.iY;

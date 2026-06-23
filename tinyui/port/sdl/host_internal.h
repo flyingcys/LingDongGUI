@@ -52,7 +52,6 @@ int          tinyui_runtime_host_pump_sdl_events(struct tinyui_app *app,
 int    tinyui_runtime_host_touch_log_enabled(void);
 void   tinyui_runtime_host_log_screen_create_benchmark(struct tinyui_runtime_host_state *state);
 void   tinyui_runtime_host_log_first_frame_benchmark(struct tinyui_runtime_host_state *state);
-int    tinyui_runtime_host_window_has_real_layout(const struct tinyui_widget *widget);
 void   tinyui_runtime_host_log_mapping_markers(struct tinyui_runtime_host_state *state,
                                                const struct tinyui_widget *root_widget);
 void   tinyui_runtime_host_log_image_source_marker(const struct tinyui_widget *widget);

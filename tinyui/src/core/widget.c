@@ -1112,10 +1112,13 @@ int tinyui_widget_destroy(struct tinyui_widget *widget)
         }
     }
 
-    if (tinyui_runtime_bridge_detach_from_parent(widget) != 0) {
+    /* Unbind BEFORE detach: unbind_host clears the ld node's pInfo only while
+     * widget->ld_widget is still set, and detach_from_parent nulls ld_widget.
+     * Reversing the order would skip the pInfo clear (regression vs baseline). */
+    if (tinyui_runtime_bridge_unbind_host(widget) != 0) {
         return -1;
     }
-    if (tinyui_runtime_bridge_unbind_host(widget) != 0) {
+    if (tinyui_runtime_bridge_detach_from_parent(widget) != 0) {
         return -1;
     }
     return 0;
@@ -1927,7 +1930,16 @@ struct tinyui_widget *tinyui_widget_create_leaf(
 
     /* 10. Bind runtime event bridge */
     if (tinyui_runtime_bridge_bind_leaf_widget(w, owner) != 0) {
-        ((ldBase_t *)ld_widget)->pInfo = 0;
+        /* Roll back the partially-created leaf with no leak and no phantom
+         * node: detach from the ld tree, clear pInfo, then depose the ld
+         * widget via its generic func-table depose (same NodeRemove-then-
+         * depose order as tinyui_widget_destroy_common). */
+        ldBase_t *ld_base = (ldBase_t *)ld_widget;
+        ldBaseNodeRemove((arm_2d_control_node_t *)ld_widget);
+        ld_base->pInfo = 0;
+        if (ld_base->ptGuiFunc != 0 && ld_base->ptGuiFunc->depose != 0) {
+            ld_base->ptGuiFunc->depose(owner->ld_scene, ld_widget);
+        }
         free(w);
         return 0;
     }

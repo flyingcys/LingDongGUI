@@ -77,46 +77,6 @@ static const ldPageFuncGroup_t g_tinyui_runtime_host_page = {
     .pointer = NULL,
 };
 
-static int tinyui_runtime_host_widget_is_supported_real(const struct tinyui_widget *widget)
-{
-    if (widget == NULL) {
-        return 1;
-    }
-
-    switch (widget->kind) {
-    case TINYUI_BACKEND_WIDGET_BACKGROUND:
-    case TINYUI_BACKEND_WIDGET_WINDOW:
-    case TINYUI_BACKEND_WIDGET_LABEL:
-    case TINYUI_BACKEND_WIDGET_BUTTON:
-    case TINYUI_BACKEND_WIDGET_CHECKBOX:
-    case TINYUI_BACKEND_WIDGET_TEXT:
-    case TINYUI_BACKEND_WIDGET_IMAGE:
-    case TINYUI_BACKEND_WIDGET_SWITCH:
-    case TINYUI_BACKEND_WIDGET_SLIDER:
-    case TINYUI_BACKEND_WIDGET_ARC:
-    case TINYUI_BACKEND_WIDGET_GAUGE:
-    case TINYUI_BACKEND_WIDGET_ICON_SLIDER:
-    case TINYUI_BACKEND_WIDGET_RADIAL_MENU:
-    case TINYUI_BACKEND_WIDGET_PROGRESS_BAR:
-    case TINYUI_BACKEND_WIDGET_QRCODE:
-    case TINYUI_BACKEND_WIDGET_PROGRESS_WHEEL:
-    case TINYUI_BACKEND_WIDGET_ANIMATION:
-    case TINYUI_BACKEND_WIDGET_LIST:
-    case TINYUI_BACKEND_WIDGET_COMBO_BOX:
-    case TINYUI_BACKEND_WIDGET_SCROLL_SELECTER:
-    case TINYUI_BACKEND_WIDGET_TABLE:
-    case TINYUI_BACKEND_WIDGET_GRAPH:
-    case TINYUI_BACKEND_WIDGET_CALENDAR:
-    case TINYUI_BACKEND_WIDGET_DATE_TIME:
-    case TINYUI_BACKEND_WIDGET_MESSAGE_BOX:
-    case TINYUI_BACKEND_WIDGET_CLOCK:
-    case TINYUI_BACKEND_WIDGET_KEYBOARD:
-        return 1;
-    default:
-        return 0;
-    }
-}
-
 static struct tinyui_runtime_host_state *tinyui_runtime_host_state_from_app(struct tinyui_app *app)
 {
     if (app == NULL) {

@@ -102,6 +102,9 @@ static bool tinyui_combo_box_native_slot(struct ld_scene_t *scene, ldMsg_t msg)
     combo_box->selected_index = selected_index;
     w->value = selected_index;
     (void)tinyui_widget_claim_backend_focus(w);
+    if (previous_selected_index == selected_index) {
+        return false;
+    }
     if (combo_box->cb != 0) {
         combo_box->cb(combo_box, selected_index, combo_box->user_data);
     }
