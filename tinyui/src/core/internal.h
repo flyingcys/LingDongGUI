@@ -189,16 +189,16 @@ int tinyui_native_align_to_ld_grid(enum tinyui_native_align align);
 
 int tinyui_native_nav_dir_to_ld(enum tinyui_native_nav_dir dir);
 
-int tinyui_runtime_bridge_bind_ld_event_bridge(void *backend_widget,
+int tinyui_runtime_bridge_bind_ld_event_bridge(struct tinyui_widget *widget,
                                                struct ld_scene_t *scene,
                                                void *sender);
-int tinyui_list_set_selected_index_ld(void *backend_widget, int index);
-int tinyui_list_get_selected_index_ld(void *backend_widget);
+int tinyui_list_set_selected_index_ld(void *widget, int index);
+int tinyui_list_get_selected_index_ld(void *widget);
 int tinyui_list_sync_selected_index(struct tinyui_list *list, int *selected_index_out);
-int tinyui_widget_is_kind(const void *backend_widget,
+int tinyui_widget_is_kind(const struct tinyui_widget *widget,
                           enum tinyui_backend_widget_kind kind);
-int tinyui_runtime_bridge_unbind_host(void *backend_widget);
-int tinyui_runtime_bridge_detach_from_parent(void *backend_widget);
+int tinyui_runtime_bridge_unbind_host(struct tinyui_widget *widget);
+int tinyui_runtime_bridge_detach_from_parent(struct tinyui_widget *widget);
 int tinyui_runtime_bridge_bind_leaf_widget(struct tinyui_widget *widget,
                                             struct tinyui_app *app);
 struct tinyui_app *tinyui_widget_owner_app(const struct tinyui_widget *widget);
@@ -215,45 +215,42 @@ void tinyui_widget_emit_clicked(tinyui_event_cb cb,
                                 void *user_data);
 void tinyui_widget_sync_ld_value(struct tinyui_widget *widget,
                                  int value);
-int tinyui_widget_update_value(void *backend_widget,
+int tinyui_widget_update_value(struct tinyui_widget *widget,
                                int value,
                                tinyui_value_changed_cb cb,
-                               struct tinyui_widget *widget,
                                void *user_data);
-int tinyui_widget_set_backend_text(void *backend_widget, const char *text);
+int tinyui_widget_set_backend_text(struct tinyui_widget *widget, const char *text);
 void tinyui_widget_emit_ld_event_bridge(struct tinyui_widget *widget,
                                         enum tinyui_backend_signal signal,
                                         int value);
-int tinyui_widget_dispatch_signal(void *backend_widget,
+int tinyui_widget_dispatch_signal(struct tinyui_widget *widget,
                                   enum tinyui_backend_signal signal,
                                   int value,
                                   tinyui_value_changed_cb cb,
-                                  struct tinyui_widget *widget,
                                   void *user_data);
-int tinyui_widget_dispatch_event(void *backend_widget,
+int tinyui_widget_dispatch_event(struct tinyui_widget *widget,
                                  enum tinyui_backend_signal signal,
                                  tinyui_event_cb cb,
-                                 struct tinyui_widget *widget,
                                  void *user_data);
-int tinyui_widget_dispatch_native_signal(void *backend_widget,
+int tinyui_widget_dispatch_native_signal(struct tinyui_widget *widget,
                                          uint32_t native_signal,
                                          uint64_t native_value);
 
 /**
- * @brief Claim backend focus for a widget
+ * @brief Claim focus for a widget
  *
- * @param[in] backend_widget backend widget
+ * @param[in] widget widget
  * @return 0 on success, -1 on failure
  */
-int tinyui_widget_claim_backend_focus(void *backend_widget);
+int tinyui_widget_claim_backend_focus(struct tinyui_widget *widget);
 
 /**
- * @brief Release backend focus from a widget
+ * @brief Release focus from a widget
  *
- * @param[in] backend_widget backend widget
+ * @param[in] widget widget
  * @return 0 on success, -1 on failure
  */
-int tinyui_widget_release_backend_focus(void *backend_widget);
+int tinyui_widget_release_backend_focus(struct tinyui_widget *widget);
 
 int tinyui_runtime_host_step_app(struct tinyui_app *app);
 void tinyui_runtime_host_shutdown_app(struct tinyui_app *app);
@@ -716,7 +713,7 @@ struct tinyui_line_edit {
 struct tinyui_combo_box {
     struct tinyui_widget widget;
     const char *id;
-    void *_host_backend; /* C1: replaces widget.backend_widget */
+    void *_host_backend; /* Native dropdown host object owned by ldComboBox. */
     struct tinyui_list_item items[TINYUI_LIST_MAX_ITEMS];
     const char *backend_item_ids[TINYUI_LIST_MAX_ITEMS];
     const unsigned char *backend_item_texts[TINYUI_LIST_MAX_ITEMS];
@@ -731,7 +728,7 @@ struct tinyui_combo_box {
 struct tinyui_scroll_selecter {
     struct tinyui_widget widget;
     const char *id;
-    void *_host_backend; /* C1: replaces widget.backend_widget */
+    void *_host_backend; /* Native picker host object owned by ldScrollSelecter. */
     struct tinyui_list_item items[TINYUI_LIST_MAX_ITEMS];
     const char *backend_item_ids[TINYUI_LIST_MAX_ITEMS];
     const unsigned char *backend_item_texts[TINYUI_LIST_MAX_ITEMS];
@@ -894,11 +891,10 @@ int tinyui_widget_release_editing(struct tinyui_widget *widget);
 int tinyui_widget_is_editing_owner(const struct tinyui_widget *widget);
 
 /**
- * @brief Get the backend widget pointer for a window (C3 transition helper).
+ * @brief Get the folded core widget stored in a window host object.
  *
- * Returns a pointer to the struct tinyui_widget embedded in the window.
- * After C3-T4 the legacy backend_widget wrapper is gone — this helper now
- * returns &window->widget directly.
+ * This is a compatibility accessor for tests and internal seams that need the
+ * embedded struct tinyui_widget.
  *
  * @param[in] window  Window instance (may be NULL)
  * @return Pointer to the embedded struct tinyui_widget, or NULL

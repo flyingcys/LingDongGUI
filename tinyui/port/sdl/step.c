@@ -119,18 +119,19 @@ static int tinyui_runtime_host_widget_is_supported_real(const struct tinyui_widg
 
 static struct tinyui_runtime_host_state *tinyui_runtime_host_state_from_app(struct tinyui_app *app)
 {
-    struct tinyui_app *app_state;
-
-    app_state = tinyui_runtime_bridge_backend_state(app);
-    if (app_state == NULL) {
+    if (app == NULL) {
         return NULL;
     }
-    return (struct tinyui_runtime_host_state *)app_state->runtime_state;
+    return (struct tinyui_runtime_host_state *)app->runtime_state;
 }
 
 static struct tinyui_app *tinyui_runtime_host_app_state_from_window(struct tinyui_window *window)
 {
-    return tinyui_runtime_bridge_backend_state_from_window(window);
+    if (window == NULL) {
+        return NULL;
+    }
+
+    return window->widget.owner;
 }
 
 static void tinyui_runtime_host_apply_smoke_cursor_layout(struct tinyui_runtime_host_state *state,
@@ -188,10 +189,10 @@ static int tinyui_runtime_host_prepare_runtime_state(struct tinyui_app *app,
         return -1;
     }
 
-    app_state = tinyui_runtime_bridge_backend_state(app);
-    if (app_state == NULL) {
+    if (app == NULL) {
         return -1;
     }
+    app_state = app;
 
     state = (struct tinyui_runtime_host_state *)app_state->runtime_state;
     if (state == NULL) {
@@ -311,10 +312,10 @@ void tinyui_runtime_host_shutdown_app(struct tinyui_app *app)
     struct tinyui_app *app_state;
     struct tinyui_runtime_host_state *state;
 
-    app_state = tinyui_runtime_bridge_backend_state(app);
-    if (app_state == NULL) {
+    if (app == NULL) {
         return;
     }
+    app_state = app;
 
     state = (struct tinyui_runtime_host_state *)app_state->runtime_state;
     if (state == NULL) {

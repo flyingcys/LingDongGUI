@@ -493,9 +493,7 @@ int tinyui_keyboard_click(struct tinyui_keyboard *keyboard)
         return -1;
     }
 
-    app_state = keyboard->widget.owner != 0
-        ? tinyui_runtime_bridge_backend_state(keyboard->widget.owner)
-        : 0;
+    app_state = keyboard->widget.owner;
     ld_keyboard = (ldKeyboard_t *)keyboard->widget.ld_widget;
     if (app_state == 0 || app_state->ld_scene == 0 || ld_keyboard == 0) {
         return -1;

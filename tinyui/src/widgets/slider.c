@@ -198,7 +198,6 @@ int tinyui_slider_set_value(struct tinyui_slider *slider, int value)
     return tinyui_widget_update_value(&slider->widget,
                                       slider->value,
                                       slider->cb,
-                                      &slider->widget,
                                       slider->user_data);
 }
 
@@ -251,7 +250,6 @@ int tinyui_slider_set_range(struct tinyui_slider *slider, int min_value, int max
         return tinyui_widget_update_value(&slider->widget,
                                           slider->value,
                                           0,
-                                          &slider->widget,
                                           0);
     }
 

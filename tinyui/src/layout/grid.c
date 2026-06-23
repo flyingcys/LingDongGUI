@@ -18,10 +18,6 @@
 
 #include "internal.h"
 #include "layout.h"
-static int tinyui_window_is_valid(struct tinyui_window *window)
-{
-    return window != 0 && window->widget.ld_widget != 0;
-}
 
 /**
  * @brief Set columns of grid widget
@@ -34,7 +30,7 @@ static int tinyui_window_is_valid(struct tinyui_window *window)
 
 int tinyui_grid_set_columns(struct tinyui_window *window, const int *tracks, int count)
 {
-    if (!tinyui_window_is_valid(window)) {
+    if (window == 0 || window->widget.ld_widget == 0) {
         return -1;
     }
 
@@ -52,7 +48,7 @@ int tinyui_grid_set_columns(struct tinyui_window *window, const int *tracks, int
 
 int tinyui_grid_set_rows(struct tinyui_window *window, const int *tracks, int count)
 {
-    if (!tinyui_window_is_valid(window)) {
+    if (window == 0 || window->widget.ld_widget == 0) {
         return -1;
     }
 
@@ -70,7 +66,7 @@ int tinyui_grid_set_rows(struct tinyui_window *window, const int *tracks, int co
 
 int tinyui_grid_set_gap(struct tinyui_window *window, int row_gap, int col_gap)
 {
-    if (!tinyui_window_is_valid(window) || row_gap < 0 || col_gap < 0) {
+    if (window == 0 || window->widget.ld_widget == 0 || row_gap < 0 || col_gap < 0) {
         return -1;
     }
 
@@ -90,7 +86,7 @@ int tinyui_grid_set_align(struct tinyui_window *window,
                           enum tinyui_align col_align,
                           enum tinyui_align row_align)
 {
-    if (!tinyui_window_is_valid(window)) {
+    if (window == 0 || window->widget.ld_widget == 0) {
         return -1;
     }
 

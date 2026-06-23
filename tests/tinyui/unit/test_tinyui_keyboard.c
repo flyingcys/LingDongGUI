@@ -11,10 +11,32 @@
 
 #include <assert.h>
 #include <dlfcn.h>
+#include <limits.h>
 #include <stdio.h>
 #include <string.h>
 
 static const char *test_self_binary_path = 0;
+static const char *test_source_file_path = __FILE__;
+
+static const char *resolve_repo_path(const char *repo_relative_path)
+{
+    static char resolved_path[PATH_MAX];
+    char base_path[PATH_MAX];
+    char *tests_dir;
+    size_t base_len;
+
+    assert(test_source_file_path != 0);
+    assert(repo_relative_path != 0);
+    assert(strlen(test_source_file_path) < sizeof(base_path));
+    snprintf(base_path, sizeof(base_path), "%s", test_source_file_path);
+    tests_dir = strstr(base_path, "tests/tinyui/unit/");
+    assert(tests_dir != 0);
+    *tests_dir = '\0';
+    base_len = strlen(base_path);
+    assert(base_len + strlen(repo_relative_path) + 1 < sizeof(resolved_path));
+    snprintf(resolved_path, sizeof(resolved_path), "%s%s", base_path, repo_relative_path);
+    return resolved_path;
+}
 
 static void assert_source_contains(const char *path, const char *needle)
 {
@@ -699,7 +721,8 @@ static void test_keyboard_native_press_and_release_emit_tinyui_callback(void)
 
 static void test_keyboard_create_path_uses_core_leaf_helper(void)
 {
-    assert_source_contains("tinyui/src/widgets/keyboard.c", "tinyui_widget_create_leaf(");
+    assert_source_contains(resolve_repo_path("tinyui/src/widgets/keyboard.c"),
+                           "tinyui_widget_create_leaf(");
 }
 
 int main(void)

@@ -150,7 +150,6 @@ struct tinyui_switch *tinyui_switch_create_with_props(struct tinyui_window *pare
     if (tinyui_widget_update_value(&sw->widget,
                                    sw->checked,
                                    0,
-                                   &sw->widget,
                                    0) != 0
         || tinyui_widget_set_user_data(&sw->widget, props->user_data) != 0
         || (props->style_class != 0
@@ -212,7 +211,6 @@ int tinyui_switch_set_checked(struct tinyui_switch *sw, int checked)
     return tinyui_widget_update_value(&sw->widget,
                                       sw->checked,
                                       sw->cb,
-                                      &sw->widget,
                                       sw->user_data);
 }
 

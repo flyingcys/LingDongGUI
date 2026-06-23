@@ -8,8 +8,6 @@ struct tinyui_theme;
 struct tinyui_window;
 
 int tinyui_runtime_bridge_has_scene(const struct tinyui_app *app);
-struct tinyui_app *tinyui_runtime_bridge_backend_state(struct tinyui_app *app);
-struct tinyui_app *tinyui_runtime_bridge_backend_state_from_window(struct tinyui_window *window);
 int tinyui_runtime_bridge_window_is_owned_by(const struct tinyui_app *app,
                                              const struct tinyui_window *window);
 int tinyui_runtime_bridge_bind_theme(struct tinyui_app *app, struct tinyui_theme *theme);

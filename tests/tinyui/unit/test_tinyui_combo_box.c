@@ -80,6 +80,48 @@ static void assert_source_lacks_function_definition(const char *source_path, con
     assert(system(command) == 0);
 }
 
+static int test_source_has_function_definition(const char *source_path, const char *symbol)
+{
+    char command[1024];
+
+    assert(source_path != 0);
+    assert(symbol != 0);
+    snprintf(command,
+             sizeof(command),
+             "python3 - '%s' '%s' <<'PY'\n"
+             "from pathlib import Path\n"
+             "import re\n"
+             "import sys\n"
+             "text = Path(sys.argv[1]).read_text()\n"
+             "symbol = sys.argv[2]\n"
+             "pattern = re.compile(r'(^|\\n)\\s*(?:static\\s+)?[A-Za-z_][A-Za-z0-9_\\s\\*]*\\b' + re.escape(symbol) + r'\\s*\\(', re.MULTILINE)\n"
+             "raise SystemExit(0 if pattern.search(text) else 1)\n"
+             "PY",
+             source_path,
+             symbol);
+    return system(command) == 0;
+}
+
+static int test_source_contains_text(const char *source_path, const char *needle)
+{
+    char command[1024];
+
+    assert(source_path != 0);
+    assert(needle != 0);
+    snprintf(command,
+             sizeof(command),
+             "python3 - '%s' '%s' <<'PY'\n"
+             "from pathlib import Path\n"
+             "import sys\n"
+             "text = Path(sys.argv[1]).read_text()\n"
+             "needle = sys.argv[2]\n"
+             "raise SystemExit(0 if needle in text else 1)\n"
+             "PY",
+             source_path,
+             needle);
+    return system(command) == 0;
+}
+
 static unsigned int encode_rgb_to_ld_color(unsigned int rgb)
 {
     unsigned int red = (rgb >> 16) & 0xFFU;
@@ -491,7 +533,7 @@ static void test_combo_box_get_open_round_trip(struct tinyui_window *win)
 
 static void test_combo_box_internal_helpers_no_longer_use_tinyui_backend_prefix(void)
 {
-    assert(test_source_has_function_definition(test_combo_box_source_path, "tinyui_widget_create_leaf"));
+    assert(test_source_contains_text(test_combo_box_source_path, "tinyui_widget_create_leaf("));
     assert_source_lacks_function_definition(test_combo_box_source_path, "tinyui_backend_combo_box_rgb_to_ld_color");
     assert_source_lacks_function_definition(test_combo_box_source_path, "tinyui_backend_combo_box_get_ld");
     assert_source_lacks_function_definition(test_combo_box_source_path, "tinyui_backend_combo_box_native_slot");

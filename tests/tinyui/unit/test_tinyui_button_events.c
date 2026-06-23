@@ -517,7 +517,6 @@ int main(void)
     assert(tinyui_widget_dispatch_event(&button->widget,
                                         TINYUI_BACKEND_SIGNAL_PRESSED,
                                         button->on_pressed,
-                                        &button->widget,
                                         button->on_pressed_user_data) == 0);
     assert(press_count == 1);
     assert(release_count == 0);
@@ -530,7 +529,6 @@ int main(void)
     assert(tinyui_widget_dispatch_event(&button->widget,
                                         TINYUI_BACKEND_SIGNAL_RELEASED,
                                         button->on_released,
-                                        &button->widget,
                                         button->on_released_user_data) == 0);
     assert(press_count == 1);
     assert(release_count == 1);
@@ -543,12 +541,10 @@ int main(void)
     assert(tinyui_widget_dispatch_event(0,
                                         TINYUI_BACKEND_SIGNAL_PRESSED,
                                         on_pressed,
-                                        &button->widget,
                                         &press_cookie) == -1);
     assert(tinyui_widget_dispatch_event(&button->widget,
                                         TINYUI_BACKEND_SIGNAL_VALUE_CHANGED,
                                         button->on_pressed,
-                                        &button->widget,
                                         button->on_pressed_user_data) == -1);
 
     press_count = 0;
@@ -632,12 +628,10 @@ int main(void)
     assert(tinyui_widget_dispatch_event(&button->widget,
                                         TINYUI_BACKEND_SIGNAL_PRESSED,
                                         button->on_pressed,
-                                        &button->widget,
                                         button->on_pressed_user_data) == 0);
     assert(tinyui_widget_dispatch_event(&button->widget,
                                         TINYUI_BACKEND_SIGNAL_RELEASED,
                                         button->on_released,
-                                        &button->widget,
                                         button->on_released_user_data) == 0);
     assert(press_count == 1);
     assert(release_count == 1);
@@ -716,7 +710,6 @@ int main(void)
                                          TINYUI_BACKEND_SIGNAL_VALUE_CHANGED,
                                          1,
                                          checkbox->cb,
-                                         &checkbox->widget,
                                          checkbox->user_data) == 0);
     assert(ldMsgEmit(app_state->ld_scene->ptMsgQueue,
                      checkbox_backend->ld_widget,

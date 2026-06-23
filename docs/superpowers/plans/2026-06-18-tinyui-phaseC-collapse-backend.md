@@ -296,8 +296,8 @@
 
 ## 相位验收 checklist（Phase C 完成判据）
 
-- [ ] **类型消失**：`grep -rn 'tinyui_backend_widget' tinyui/src tinyui/port`（`dangerouslyDisableSandbox=true`）→ **预期 0**；`runtime_internal.h` 已删（或不再含 `struct tinyui_backend_widget`/`tinyui_backend_app_state`）。
-- [ ] **单层模型**：`struct tinyui_widget` 持 folded ld 绑定字段，无 `backend_widget` 成员；29 个 widget 每个**单 calloc / 单 free**，create 走 `tinyui_widget_create_leaf`、dispose 走 `tinyui_widget_destroy_common`。
+- [ ] **类型消失**：`struct tinyui_backend_widget` / `struct tinyui_backend_app_state` / `runtime_internal.h` 在生产代码中已消失；`tinyui/src` / `tinyui/port` 不再存在对这两个 struct 或 `backend_app` 的结构依赖。允许保留 `enum tinyui_backend_widget_kind` 这一 folded kind 名称。
+- [ ] **单层模型**：`struct tinyui_widget` 持 folded ld 绑定字段，无 `backend_widget` 成员；29 个 widget 每个**单 calloc / 单 free**；绝大多数 leaf/child create 走 `tinyui_widget_create_leaf`、dispose 走 `tinyui_widget_destroy_common`。`background` 与 root `window` 保留真实 `ldWindow_init` 专门路径，作为 root/container 边界的有意例外，不再视为 C3 缺口。
 - [ ] **样板收敛**：`grep -rn '_dispose_partial\|finish_detach_after_backend_failure\|_rgb_to_ld_color\|_ld_color_to_rgb' tinyui/src/widgets` → 仅余 window 的 4 个 flex/grid 专属映射（不属上述模式），其余清零；颜色/align/detach/create/destroy 全部复用 6 个 core helper。
 - [ ] **5 条高风险落地确认**：#1 pInfo 指向 `tinyui_widget`（core + 7 widget，比 spec 多 keyboard）、#2 value guard 用 `w->value`、#3 name_id 在 ld 创建前取序不变、#4 单 free 在 create_leaf 回滚链、#5 button/window/background 三 wrapper 内联字段（`action_info`/`padding_group`）已并入单对象。
 - [ ] **perf 处置**：`backend_widget_struct_bytes` metric 已删、探针 `sizeof(backend_widget)` 行已删；`widget_wrapper_struct_bytes` 已据实重测改 baseline；`check_tinyui_object_overhead` 绿。

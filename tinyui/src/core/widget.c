@@ -120,12 +120,9 @@ static int tinyui_widget_validate_native_binding(const struct tinyui_widget *wid
     return ldBaseGetWidgetType((ldBase_t *)ld_base) == expected_type;
 }
 
-int tinyui_widget_is_kind(const void *backend_widget,
+int tinyui_widget_is_kind(const struct tinyui_widget *widget,
                           enum tinyui_backend_widget_kind kind)
 {
-    /* C1 transition: backend_widget parameter interpreted as tinyui_widget * */
-    const struct tinyui_widget *widget = (const struct tinyui_widget *)backend_widget;
-
     if (widget == 0) {
         return 0;
     }
@@ -153,11 +150,8 @@ int tinyui_native_nav_dir_to_ld(enum tinyui_native_nav_dir dir)
     }
 }
 
-int tinyui_widget_claim_backend_focus(void *backend_widget)
+int tinyui_widget_claim_backend_focus(struct tinyui_widget *widget)
 {
-    /* C1 transition: backend_widget param is a tinyui_widget * */
-    struct tinyui_widget *widget = (struct tinyui_widget *)backend_widget;
-
     if (widget == 0) {
         return -1;
     }
@@ -165,11 +159,8 @@ int tinyui_widget_claim_backend_focus(void *backend_widget)
     return tinyui_widget_claim_focus(widget);
 }
 
-int tinyui_widget_release_backend_focus(void *backend_widget)
+int tinyui_widget_release_backend_focus(struct tinyui_widget *widget)
 {
-    /* C1 transition: backend_widget param is a tinyui_widget * */
-    struct tinyui_widget *widget = (struct tinyui_widget *)backend_widget;
-
     if (widget == 0) {
         return -1;
     }
@@ -177,14 +168,11 @@ int tinyui_widget_release_backend_focus(void *backend_widget)
     return tinyui_widget_release_focus(widget);
 }
 
-int tinyui_widget_update_value(void *backend_widget,
+int tinyui_widget_update_value(struct tinyui_widget *widget,
                                int value,
                                tinyui_value_changed_cb cb,
-                               struct tinyui_widget *widget,
                                void *user_data)
 {
-    /* C1: backend_widget is unused; value written to widget directly */
-    (void)backend_widget;
     if (widget == 0) {
         return -1;
     }
@@ -461,11 +449,8 @@ int tinyui_widget_set_text(struct tinyui_widget *widget, const char *text)
     return 0;
 }
 
-int tinyui_widget_set_backend_text(void *backend_widget, const char *text)
+int tinyui_widget_set_backend_text(struct tinyui_widget *widget, const char *text)
 {
-    /* C1 transition: backend_widget interpreted as tinyui_widget * */
-    struct tinyui_widget *widget = (struct tinyui_widget *)backend_widget;
-
     if (widget == NULL || text == NULL) {
         return -1;
     }
@@ -1904,7 +1889,7 @@ struct tinyui_widget *tinyui_widget_create_leaf(
     w->owner = owner;
 
     /* 3. Assign name_id before calling ld_init so ld sees the correct id */
-    name_id = owner->next_ld_name_id++;
+    name_id = ++owner->next_ld_name_id;
 
     /* 4. Obtain parent name_id (0 is acceptable for the root window) */
     parent_name_id = parent->ld_name_id;

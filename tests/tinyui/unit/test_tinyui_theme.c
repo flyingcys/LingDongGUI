@@ -35,6 +35,7 @@ static void test_theme_internal_static_helpers_no_longer_use_tinyui_prefix(void)
 {
     const char *source = "tinyui/src/theme/theme.c";
     assert(source != NULL);
+    assert_source_lacks_static_definition(source, "tinyui_theme_rgb_to_ld_color");
 }
 
 static void assert_widget_style(const struct tinyui_widget *widget,

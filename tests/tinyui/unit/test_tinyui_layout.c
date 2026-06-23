@@ -43,6 +43,14 @@ static void assert_source_lacks_static_definition(const char *path, const char *
     }
 }
 
+static void test_layout_facades_reuse_window_validity_contract(void)
+{
+    assert_source_lacks_static_definition(test_repo_path("tinyui/src/layout/flex.c"),
+                                          "tinyui_window_is_valid");
+    assert_source_lacks_static_definition(test_repo_path("tinyui/src/layout/grid.c"),
+                                          "tinyui_window_is_valid");
+}
+
 static void assert_archive_lacks_symbol(const char *archive_relpath, const char *symbol)
 {
     char command[1024];
@@ -1648,6 +1656,7 @@ int main(int argc, char **argv)
     tinyui_app_destroy(app);
     test_grid_layout_setters_sync_to_real_ld_window_and_children();
     test_grid_layout_rejects_invalid_gap_and_cell_span();
+    test_layout_facades_reuse_window_validity_contract();
     test_window_native_grid_descriptors_round_trip_to_ldwindow();
     test_flex_layout_setters_sync_to_real_ld_window_and_children();
     test_widget_native_base_flags_round_trip_to_ldbase();

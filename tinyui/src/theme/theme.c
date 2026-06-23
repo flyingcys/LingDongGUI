@@ -37,11 +37,6 @@
 
 void ldBaseSetHeight(ldBase_t *ptWidget, int16_t height);
 
-static ldColor tinyui_theme_rgb_to_ld_color(unsigned int rgb)
-{
-    return __RGB((rgb >> 16) & 0xFFU, (rgb >> 8) & 0xFFU, rgb & 0xFFU);
-}
-
 static const unsigned int TINYUI_THEME_V0_COLORS[TINYUI_COLOR_COUNT] = {
     [TINYUI_COLOR_TEXT_PRIMARY] = 0x1F2328U,
     [TINYUI_COLOR_BG] = 0xF6F8FAU,
@@ -165,7 +160,7 @@ static int tinyui_theme_backend_can_apply_style(const struct tinyui_widget *widg
 static void tinyui_theme_apply_window_style(struct tinyui_widget *widget,
                                             unsigned int bg_color)
 {
-    ldWindowSetColor((ldWindow_t *)widget->ld_widget, tinyui_theme_rgb_to_ld_color(bg_color));
+    ldWindowSetColor((ldWindow_t *)widget->ld_widget, tinyui_rgb_to_ld_color(bg_color));
 }
 
 static void tinyui_theme_apply_label_style(struct tinyui_widget *widget,
@@ -174,8 +169,8 @@ static void tinyui_theme_apply_label_style(struct tinyui_widget *widget,
 {
     ldLabel_t *ld_label = (ldLabel_t *)widget->ld_widget;
 
-    ldLabelSetBackgroundColor(ld_label, tinyui_theme_rgb_to_ld_color(bg_color));
-    ldLabelSetTextColor(ld_label, tinyui_theme_rgb_to_ld_color(text_color));
+    ldLabelSetBackgroundColor(ld_label, tinyui_rgb_to_ld_color(bg_color));
+    ldLabelSetTextColor(ld_label, tinyui_rgb_to_ld_color(text_color));
 }
 
 static void tinyui_theme_apply_text_style(struct tinyui_widget *widget,
@@ -184,8 +179,8 @@ static void tinyui_theme_apply_text_style(struct tinyui_widget *widget,
 {
     ldText_t *ld_text = (ldText_t *)widget->ld_widget;
 
-    ldTextSetBackgroundColor(ld_text, tinyui_theme_rgb_to_ld_color(bg_color));
-    ldTextSetTextColor(ld_text, tinyui_theme_rgb_to_ld_color(text_color));
+    ldTextSetBackgroundColor(ld_text, tinyui_rgb_to_ld_color(bg_color));
+    ldTextSetTextColor(ld_text, tinyui_rgb_to_ld_color(text_color));
 }
 
 static void tinyui_theme_apply_button_style(struct tinyui_widget *widget,
@@ -194,15 +189,15 @@ static void tinyui_theme_apply_button_style(struct tinyui_widget *widget,
                                             unsigned int text_color)
 {
     ldButton_t *ld_button = (ldButton_t *)widget->ld_widget;
-    ldColor release_color = tinyui_theme_rgb_to_ld_color(bg_color);
-    ldColor press_color = tinyui_theme_rgb_to_ld_color(bg_color);
+    ldColor release_color = tinyui_rgb_to_ld_color(bg_color);
+    ldColor press_color = tinyui_rgb_to_ld_color(bg_color);
 
     if (state != TINYUI_STATE_PRESSED) {
-        press_color = tinyui_theme_rgb_to_ld_color(widget->owner->theme->colors[TINYUI_COLOR_ACCENT]);
+        press_color = tinyui_rgb_to_ld_color(widget->owner->theme->colors[TINYUI_COLOR_ACCENT]);
     }
 
     ldButtonSetColor(ld_button, release_color, press_color);
-    ldButtonSetTextColor(ld_button, tinyui_theme_rgb_to_ld_color(text_color));
+    ldButtonSetTextColor(ld_button, tinyui_rgb_to_ld_color(text_color));
 }
 
 static void tinyui_theme_apply_checkbox_style(struct tinyui_widget *widget,
@@ -212,17 +207,17 @@ static void tinyui_theme_apply_checkbox_style(struct tinyui_widget *widget,
                                               unsigned int border_color)
 {
     ldCheckBox_t *ld_checkbox = (ldCheckBox_t *)widget->ld_widget;
-    ldColor main_bg = tinyui_theme_rgb_to_ld_color(widget->owner->theme->colors[TINYUI_COLOR_PANEL]);
-    ldColor indicator_color = tinyui_theme_rgb_to_ld_color(border_color);
+    ldColor main_bg = tinyui_rgb_to_ld_color(widget->owner->theme->colors[TINYUI_COLOR_PANEL]);
+    ldColor indicator_color = tinyui_rgb_to_ld_color(border_color);
 
     if (part == TINYUI_PART_INDICATOR) {
-        indicator_color = tinyui_theme_rgb_to_ld_color(bg_color);
+        indicator_color = tinyui_rgb_to_ld_color(bg_color);
     } else if (part == TINYUI_PART_MAIN) {
-        main_bg = tinyui_theme_rgb_to_ld_color(bg_color);
+        main_bg = tinyui_rgb_to_ld_color(bg_color);
     }
 
     ldCheckBoxSetColor(ld_checkbox, main_bg, indicator_color);
-    ldCheckBoxSetTextColor(ld_checkbox, tinyui_theme_rgb_to_ld_color(text_color));
+    ldCheckBoxSetTextColor(ld_checkbox, tinyui_rgb_to_ld_color(text_color));
 }
 
 static void tinyui_theme_apply_switch_style(struct tinyui_widget *widget,
@@ -258,10 +253,10 @@ static void tinyui_theme_apply_switch_style(struct tinyui_widget *widget,
     }
 
     ldSwitchSetColor(ld_switch,
-                     tinyui_theme_rgb_to_ld_color(off_track),
-                     tinyui_theme_rgb_to_ld_color(on_track),
-                     tinyui_theme_rgb_to_ld_color(knob_color),
-                     tinyui_theme_rgb_to_ld_color(edge_color));
+                     tinyui_rgb_to_ld_color(off_track),
+                     tinyui_rgb_to_ld_color(on_track),
+                     tinyui_rgb_to_ld_color(knob_color),
+                     tinyui_rgb_to_ld_color(edge_color));
 }
 
 static void tinyui_theme_apply_slider_style(struct tinyui_widget *widget,
@@ -291,9 +286,9 @@ static void tinyui_theme_apply_slider_style(struct tinyui_widget *widget,
     }
 
     ldSliderSetColor(ld_slider,
-                     tinyui_theme_rgb_to_ld_color(slider_bg),
-                     tinyui_theme_rgb_to_ld_color(slider_frame),
-                     tinyui_theme_rgb_to_ld_color(slider_indic));
+                     tinyui_rgb_to_ld_color(slider_bg),
+                     tinyui_rgb_to_ld_color(slider_frame),
+                     tinyui_rgb_to_ld_color(slider_indic));
 }
 
 static void tinyui_theme_apply_list_style(struct tinyui_widget *widget,
@@ -306,11 +301,11 @@ static void tinyui_theme_apply_list_style(struct tinyui_widget *widget,
 
     switch (part) {
     case TINYUI_PART_MAIN:
-        ldListSetBackgroundColor(ld_list, tinyui_theme_rgb_to_ld_color(bg_color));
-        ldListSetSelectColor(ld_list, tinyui_theme_rgb_to_ld_color(border_color));
+        ldListSetBackgroundColor(ld_list, tinyui_rgb_to_ld_color(bg_color));
+        ldListSetSelectColor(ld_list, tinyui_rgb_to_ld_color(border_color));
         break;
     case TINYUI_PART_TEXT:
-        ldListSetTextColor(ld_list, tinyui_theme_rgb_to_ld_color(text_color));
+        ldListSetTextColor(ld_list, tinyui_rgb_to_ld_color(text_color));
         break;
     default:
         break;
@@ -320,7 +315,7 @@ static void tinyui_theme_apply_list_style(struct tinyui_widget *widget,
 static void tinyui_theme_apply_image_style(struct tinyui_widget *widget,
                                            unsigned int bg_color)
 {
-    ldImageSetMaskColor((ldImage_t *)widget->ld_widget, tinyui_theme_rgb_to_ld_color(bg_color));
+    ldImageSetMaskColor((ldImage_t *)widget->ld_widget, tinyui_rgb_to_ld_color(bg_color));
 }
 
 static void tinyui_theme_apply_calendar_style(struct tinyui_widget *widget,
@@ -333,11 +328,11 @@ static void tinyui_theme_apply_calendar_style(struct tinyui_widget *widget,
 
     switch (part) {
     case TINYUI_PART_MAIN:
-        ld_calendar->bgColor = tinyui_theme_rgb_to_ld_color(bg_color);
-        ld_calendar->itemColor = tinyui_theme_rgb_to_ld_color(border_color);
+        ld_calendar->bgColor = tinyui_rgb_to_ld_color(bg_color);
+        ld_calendar->itemColor = tinyui_rgb_to_ld_color(border_color);
         break;
     case TINYUI_PART_TEXT:
-        ld_calendar->textColor = tinyui_theme_rgb_to_ld_color(text_color);
+        ld_calendar->textColor = tinyui_rgb_to_ld_color(text_color);
         break;
     default:
         break;

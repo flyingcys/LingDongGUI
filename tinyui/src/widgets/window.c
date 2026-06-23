@@ -333,9 +333,7 @@ static void tinyui_window_do_free_internal(struct tinyui_window *window)
         return;
     }
 
-    app_state = window->widget.owner != 0
-        ? tinyui_runtime_bridge_backend_state(window->widget.owner)
-        : 0;
+    app_state = window->widget.owner;
 
     /* Save ld_win before detach clears widget->ld_widget. */
     ld_win = (ldWindow_t *)window->widget.ld_widget;
@@ -753,7 +751,7 @@ struct tinyui_window *tinyui_window_create(struct tinyui_app *app, const char *i
         return 0;
     }
 
-    app_state = tinyui_runtime_bridge_backend_state(app);
+    app_state = app;
     if (app_state == 0 || app_state->ld_scene == 0) {
         return 0;
     }
@@ -930,7 +928,7 @@ int tinyui_window_set_background_offset(struct tinyui_window *window, int offset
         return -1;
     }
 
-    app_state = tinyui_runtime_bridge_backend_state(window->widget.owner);
+    app_state = window->widget.owner;
     ld_window = tinyui_window_ld_of(window);
     if (app_state == 0 || app_state->ld_scene == 0 || ld_window == 0) {
         return -1;
@@ -1208,6 +1206,5 @@ void *tinyui_window_get_backend_widget(struct tinyui_window *window)
     if (window == 0) {
         return 0;
     }
-    /* C3-T4: the wrapper is gone — expose the folded widget directly. */
     return &window->widget;
 }

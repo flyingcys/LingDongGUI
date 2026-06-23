@@ -35,7 +35,7 @@ static int                 s_pfb_inited;
 IMPL_PFB_ON_DRAW(ldgui_port_pfb_draw_handler)
 {
     struct tinyui_app *app = (struct tinyui_app *)pTarget;
-    struct tinyui_app *app_state = tinyui_runtime_bridge_backend_state(app);
+    struct tinyui_app *app_state = app;
     if (app_state != NULL && app_state->ld_scene != NULL) {
         ldGuiDraw(app_state->ld_scene, (arm_2d_tile_t *)ptTile, bIsNewFrame);
     }
@@ -129,7 +129,7 @@ void tinyui_backend_step(struct tinyui_app *app)
 
     ldgui_port_set_current_app(app);
 
-    struct tinyui_app *app_state = tinyui_runtime_bridge_backend_state(app);
+    struct tinyui_app *app_state = app;
     if (app_state == NULL || app_state->ld_scene == NULL) return;
 
     ldGuiFrameStart(app_state->ld_scene);

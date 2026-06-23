@@ -278,13 +278,10 @@ int tinyui_runtime_bridge_commit_pointer_event(struct tinyui_app *app,
     return tinyui_runtime_bridge_bridge_pointer_from_port(app, window_width, window_height);
 }
 
-int tinyui_runtime_bridge_bind_ld_event_bridge(void *backend_widget,
+int tinyui_runtime_bridge_bind_ld_event_bridge(struct tinyui_widget *widget,
                                                struct ld_scene_t *scene,
                                                void *sender)
 {
-    /* C1: backend_widget is tinyui_widget * (folded layout) */
-    struct tinyui_widget *widget = (struct tinyui_widget *)backend_widget;
-
     if (widget == 0 || scene == 0 || sender == 0) {
         return -1;
     }
@@ -298,11 +295,8 @@ int tinyui_runtime_bridge_bind_ld_event_bridge(void *backend_widget,
     return 0;
 }
 
-int tinyui_runtime_bridge_unbind_host(void *backend_widget)
+int tinyui_runtime_bridge_unbind_host(struct tinyui_widget *widget)
 {
-    /* C1: backend_widget is now tinyui_widget * for migrated widgets */
-    struct tinyui_widget *widget = (struct tinyui_widget *)backend_widget;
-
     if (widget == 0) {
         return -1;
     }
@@ -317,11 +311,8 @@ int tinyui_runtime_bridge_unbind_host(void *backend_widget)
     return 0;
 }
 
-int tinyui_runtime_bridge_detach_from_parent(void *backend_widget)
+int tinyui_runtime_bridge_detach_from_parent(struct tinyui_widget *widget)
 {
-    /* C1: backend_widget is tinyui_widget * for migrated widgets */
-    struct tinyui_widget *widget = (struct tinyui_widget *)backend_widget;
-
     if (widget == 0) {
         return -1;
     }
@@ -337,21 +328,6 @@ int tinyui_runtime_bridge_detach_from_parent(void *backend_widget)
 int tinyui_runtime_bridge_has_scene(const struct tinyui_app *app)
 {
     return app != 0 && app->ld_scene != 0;
-}
-
-struct tinyui_app *tinyui_runtime_bridge_backend_state(struct tinyui_app *app)
-{
-    return app == 0 ? 0 : app;
-}
-
-struct tinyui_app *tinyui_runtime_bridge_backend_state_from_window(struct tinyui_window *window)
-{
-    if (window == 0) {
-        return 0;
-    }
-
-    /* C1: owner is now a folded field in struct tinyui_widget */
-    return tinyui_runtime_bridge_backend_state(window->widget.owner);
 }
 
 int tinyui_runtime_bridge_window_is_owned_by(const struct tinyui_app *app,

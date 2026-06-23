@@ -136,7 +136,6 @@ struct tinyui_checkbox *tinyui_checkbox_create_with_props(struct tinyui_window *
             tinyui_widget_update_value(&checkbox->widget,
                                        checkbox->checked,
                                        0,
-                                       &checkbox->widget,
                                        0) != 0)
         || tinyui_widget_set_user_data(&checkbox->widget, props->user_data) != 0
         || (props->style_class != 0
@@ -198,7 +197,6 @@ int tinyui_checkbox_set_checked(struct tinyui_checkbox *checkbox, int checked)
     return tinyui_widget_update_value(&checkbox->widget,
                                       checkbox->checked,
                                       checkbox->cb,
-                                      &checkbox->widget,
                                       checkbox->user_data);
 }
 

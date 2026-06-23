@@ -386,16 +386,12 @@ int tinyui_widget_is_editing_owner(const struct tinyui_widget *widget)
     return owner->editing_owner == widget;
 }
 
-int tinyui_widget_dispatch_signal(void *backend_widget,
+int tinyui_widget_dispatch_signal(struct tinyui_widget *widget,
                                   enum tinyui_backend_signal signal,
                                   int value,
                                   tinyui_value_changed_cb cb,
-                                  struct tinyui_widget *widget,
                                   void *user_data)
 {
-    /* C1: backend_widget param unused; widget carries all state */
-    (void)backend_widget;
-
     if (widget == 0) {
         return -1;
     }
@@ -421,13 +417,12 @@ int tinyui_widget_dispatch_signal(void *backend_widget,
     return -1;
 }
 
-int tinyui_widget_dispatch_event(void *backend_widget,
+int tinyui_widget_dispatch_event(struct tinyui_widget *widget,
                                  enum tinyui_backend_signal signal,
                                  tinyui_event_cb cb,
-                                 struct tinyui_widget *widget,
                                  void *user_data)
 {
-    if (backend_widget == 0 || widget == 0) {
+    if (widget == 0) {
         return -1;
     }
 
@@ -447,13 +442,10 @@ int tinyui_widget_dispatch_event(void *backend_widget,
     return -1;
 }
 
-int tinyui_widget_dispatch_native_signal(void *backend_widget,
+int tinyui_widget_dispatch_native_signal(struct tinyui_widget *widget,
                                          uint32_t native_signal,
                                          uint64_t native_value)
 {
-    /* C1: backend_widget is tinyui_widget * (pInfo was updated in C1-T5) */
-    struct tinyui_widget *widget = (struct tinyui_widget *)backend_widget;
-
     if (widget == 0) {
         return -1;
     }
@@ -472,7 +464,6 @@ int tinyui_widget_dispatch_native_signal(void *backend_widget,
             return tinyui_widget_dispatch_event(widget,
                                                 TINYUI_BACKEND_SIGNAL_PRESSED,
                                                 button->on_pressed,
-                                                widget,
                                                 button->on_pressed_user_data);
         }
         if (native_signal == SIGNAL_HOLD_DOWN) {
@@ -484,7 +475,6 @@ int tinyui_widget_dispatch_native_signal(void *backend_widget,
             rc = tinyui_widget_dispatch_event(widget,
                                               TINYUI_BACKEND_SIGNAL_RELEASED,
                                               button->on_released,
-                                              widget,
                                               button->on_released_user_data);
             if (rc != 0) {
                 return rc;
