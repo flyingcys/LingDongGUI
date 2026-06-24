@@ -345,6 +345,8 @@ struct tinyui_widget {
     /* ── B2 运行期生命周期:活宿主注册表链接 ── */
     struct tinyui_widget *reg_prev;
     struct tinyui_widget *reg_next;
+    /* ── B2:宿主侧额外清理(仅 keyboard/button 等用,可空)。在 ld depose 前调用,ld 仍存活 ── */
+    void (*host_cleanup)(struct tinyui_widget *w);
 };
 
 struct tinyui_app {
