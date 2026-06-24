@@ -58,9 +58,22 @@ static void test_destroy_leaf_removes_from_tree(void)
     tinyui_app_destroy(app);
 }
 
+static void test_shutdown_does_not_leak(void)
+{
+    struct tinyui_app *app = tinyui_app_create();
+    assert(app != 0);
+    struct tinyui_window *win = tinyui_window_create(app, "root");
+    assert(win != 0);
+    struct tinyui_label *l1 = tinyui_label_create(win, "a");
+    struct tinyui_label *l2 = tinyui_label_create(win, "b");
+    (void)l1; (void)l2;
+    tinyui_app_destroy(app);
+}
+
 int main(void)
 {
     test_registry_register_lookup_unregister();
     test_destroy_leaf_removes_from_tree();
+    test_shutdown_does_not_leak();
     return 0;
 }

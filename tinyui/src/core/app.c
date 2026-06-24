@@ -388,7 +388,30 @@ void tinyui_app_destroy(struct tinyui_app *app)
     }
     ldgui_port_unregister_scene_app(app->ld_scene);
 
-    tinyui_runtime_bridge_shutdown_app(app);
+    /* B2: 关机前对剩余宿主做 host_cleanup（ld 仍存活） */
+    {
+        struct tinyui_widget *w;
+        for (w = app->host_list_head; w != 0; w = w->reg_next) {
+            if (w->host_cleanup != 0) {
+                w->host_cleanup(w);
+                w->host_cleanup = 0;
+            }
+        }
+    }
+
+    tinyui_runtime_bridge_shutdown_app(app);   /* ldGuiDespose: free 全部 ld */
     xBtnDestroy();
+
+    /* B2: ld 已 depose，回收所有宿主结构 */
+    {
+        struct tinyui_widget *w = app->host_list_head;
+        while (w != 0) {
+            struct tinyui_widget *next_w = w->reg_next;
+            free(w);
+            w = next_w;
+        }
+        app->host_list_head = 0;
+    }
+
     free(app);
 }
