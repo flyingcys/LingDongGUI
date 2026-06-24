@@ -342,6 +342,9 @@ struct tinyui_widget {
     int value;
     uint16_t list_item_count;
     enum tinyui_edit_result edit_result_on_finish;
+    /* ── B2 运行期生命周期:活宿主注册表链接 ── */
+    struct tinyui_widget *reg_prev;
+    struct tinyui_widget *reg_next;
 };
 
 struct tinyui_app {
@@ -357,6 +360,8 @@ struct tinyui_app {
     struct tinyui_input_port_state input_port;
     struct tinyui_tick_port_state tick_port;
     struct tinyui_os_port_state os_port;
+    /* ── B2:活宿主侵入式双向链表头 ── */
+    struct tinyui_widget *host_list_head;
 };
 
 struct tinyui_theme {
@@ -791,6 +796,11 @@ struct tinyui_table {
  *                        tinyui_widget))
  * @return Pointer to the embedded struct tinyui_widget on success, NULL on failure
  */
+void tinyui_app_register_host(struct tinyui_app *app, struct tinyui_widget *w);
+void tinyui_app_unregister_host(struct tinyui_app *app, struct tinyui_widget *w);
+struct tinyui_widget *tinyui_app_lookup_host(const struct tinyui_app *app, uint16_t name_id);
+struct tinyui_widget *tinyui_widget_from_ld(const void *ld_node);
+
 struct tinyui_widget *tinyui_widget_create_leaf(
     struct tinyui_widget *parent,
     enum tinyui_backend_widget_kind kind,
