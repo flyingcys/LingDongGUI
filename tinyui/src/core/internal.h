@@ -254,24 +254,12 @@ int tinyui_widget_release_backend_focus(struct tinyui_widget *widget);
 
 int tinyui_runtime_host_step_app(struct tinyui_app *app);
 void tinyui_runtime_host_shutdown_app(struct tinyui_app *app);
-int tinyui_window_apply_flex_flow(struct tinyui_window *window, enum tinyui_flex_flow flow);
-int tinyui_window_apply_flex_align(struct tinyui_window *window,
-                                   enum tinyui_align main_align,
-                                   enum tinyui_align cross_align,
-                                   enum tinyui_align track_align);
-int tinyui_window_apply_flex_gap(struct tinyui_window *window, int item_gap, int track_gap);
 int tinyui_window_apply_uniform_padding(struct tinyui_window *window, int padding);
 int tinyui_window_apply_explicit_grid_padding(struct tinyui_window *window,
                                               int left,
                                               int top,
                                               int right,
                                               int bottom);
-int tinyui_window_apply_grid_columns(struct tinyui_window *window, const int *tracks, int count);
-int tinyui_window_apply_grid_rows(struct tinyui_window *window, const int *tracks, int count);
-int tinyui_window_apply_grid_gap(struct tinyui_window *window, int row_gap, int col_gap);
-int tinyui_window_apply_grid_align(struct tinyui_window *window,
-                                   enum tinyui_align col_align,
-                                   enum tinyui_align row_align);
 int tinyui_theme_apply_widget_style(struct tinyui_widget *widget,
                                     enum tinyui_part part,
                                     enum tinyui_state state,

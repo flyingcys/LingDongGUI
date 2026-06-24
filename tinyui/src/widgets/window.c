@@ -19,6 +19,7 @@
 #include "internal.h"
 #include "widget.h"
 #include "window.h"
+#include "internal/window_internal.h"
 #include "../core/runtime_bridge.h"
 #include "../../../src/gui/ldWindow.h"
 #include "../../../src/porting/ldConfig.h"
@@ -52,149 +53,20 @@ static unsigned int s_ld_color_to_rgb_legacy(unsigned int color)
     return (red << 16) | (green << 8) | blue;
 }
 
-/* ── window-private flex/grid align mappings ─────────────────────────────
- * These mappings are window-private (flex_main / flex_cross / flex_track
- * / grid) and intentionally NOT merged into the core
- * tinyui_align_to_arm2d helper.  Keep them here. */
-static ldFlexFlow_t s_flex_flow_to_ld(enum tinyui_flex_flow flow)
-{
-    switch (flow) {
-    case TINYUI_FLEX_FLOW_COLUMN:
-        return ldFlexFlowColumn;
-    case TINYUI_FLEX_FLOW_ROW_WRAP:
-        return ldFlexFlowRowWrap;
-    case TINYUI_FLEX_FLOW_COLUMN_WRAP:
-        return ldFlexFlowColumnWrap;
-    case TINYUI_FLEX_FLOW_ROW_REVERSE:
-        return ldFlexFlowRowReverse;
-    case TINYUI_FLEX_FLOW_COLUMN_REVERSE:
-        return ldFlexFlowColumnReverse;
-    case TINYUI_FLEX_FLOW_ROW_WRAP_REVERSE:
-        return ldFlexFlowRowWrapReverse;
-    case TINYUI_FLEX_FLOW_COLUMN_WRAP_REVERSE:
-        return ldFlexFlowColumnWrapReverse;
-    case TINYUI_FLEX_FLOW_ROW:
-    default:
-        return ldFlexFlowRow;
-    }
-}
-
-static ldFlexMainAlign_t s_flex_main_align_to_ld(enum tinyui_align align)
-{
-    switch (align) {
-    case TINYUI_ALIGN_CENTER:
-        return ldFlexMainAlignCenter;
-    case TINYUI_ALIGN_END:
-        return ldFlexMainAlignEnd;
-    case TINYUI_ALIGN_SPACE_EVENLY:
-        return ldFlexMainAlignSpaceEvenly;
-    case TINYUI_ALIGN_SPACE_AROUND:
-        return ldFlexMainAlignSpaceAround;
-    case TINYUI_ALIGN_SPACE_BETWEEN:
-        return ldFlexMainAlignSpaceBetween;
-    case TINYUI_ALIGN_STRETCH:
-    case TINYUI_ALIGN_START:
-    default:
-        return ldFlexMainAlignStart;
-    }
-}
-
-static ldFlexCrossAlign_t s_flex_cross_align_to_ld(enum tinyui_align align)
-{
-    switch (align) {
-    case TINYUI_ALIGN_CENTER:
-        return ldFlexCrossAlignCenter;
-    case TINYUI_ALIGN_END:
-        return ldFlexCrossAlignEnd;
-    case TINYUI_ALIGN_STRETCH:
-    case TINYUI_ALIGN_SPACE_EVENLY:
-    case TINYUI_ALIGN_SPACE_AROUND:
-    case TINYUI_ALIGN_SPACE_BETWEEN:
-    case TINYUI_ALIGN_START:
-    default:
-        return ldFlexCrossAlignStart;
-    }
-}
-
-static ldFlexTrackAlign_t s_flex_track_align_to_ld(enum tinyui_align align)
-{
-    switch (align) {
-    case TINYUI_ALIGN_CENTER:
-        return ldFlexTrackAlignCenter;
-    case TINYUI_ALIGN_END:
-        return ldFlexTrackAlignEnd;
-    case TINYUI_ALIGN_SPACE_BETWEEN:
-        return ldFlexTrackAlignSpaceBetween;
-    case TINYUI_ALIGN_SPACE_AROUND:
-        return ldFlexTrackAlignSpaceAround;
-    case TINYUI_ALIGN_SPACE_EVENLY:
-        return ldFlexTrackAlignSpaceEvenly;
-    case TINYUI_ALIGN_STRETCH:
-    case TINYUI_ALIGN_START:
-    default:
-        return ldFlexTrackAlignStart;
-    }
-}
-
-static ldGridAlign_t s_grid_align_to_ld(enum tinyui_align align)
-{
-    return (ldGridAlign_t)tinyui_native_align_to_ld_grid((enum tinyui_native_align)align);
-}
-
-static int16_t s_grid_track_to_ld(int value)
-{
-    if (value == 0) {
-        return LD_GRID_TEMPLATE_LAST;
-    }
-    if (value == -2) {
-        return LD_GRID_CONTENT;
-    }
-    if (value < 0) {
-        return LD_GRID_FR((-value) - 1);
-    }
-    return (int16_t)value;
-}
-
-static int s_copy_grid_tracks(int *dst, int16_t *backend_dst, const int *src, int count)
-{
-    int i;
-
-    if (dst == 0 || backend_dst == 0 || src == 0 || count <= 0 || count > TINYUI_LAYOUT_MAX_TRACKS) {
-        return -1;
-    }
-
-    for (i = 0; i < count; ++i) {
-        dst[i] = src[i];
-        backend_dst[i] = s_grid_track_to_ld(src[i]);
-    }
-    for (; i < TINYUI_LAYOUT_MAX_TRACKS; ++i) {
-        dst[i] = 0;
-        backend_dst[i] = LD_GRID_TEMPLATE_LAST;
-    }
-    return 0;
-}
+/* flex/grid align + track mappings now live in src/layout/flex.c and
+ * src/layout/grid.c, next to the public tinyui_flex and tinyui_grid setters. */
 
 /* C3-T4: the legacy `struct tinyui_window_backend_host` wrapper has been
  * deleted — every window (window.c and background.c paths alike) now folds
  * its binding state directly onto struct tinyui_window.  The accessors below
  * read the folded fields exclusively. */
 
-static void tinyui_window_sync_padding(struct tinyui_window *window);
-
 static int tinyui_window_do_set_layout_type(struct tinyui_window *window,
                                                 enum tinyui_window_layout_type type);
 
-static int tinyui_window_do_set_flex_contract(struct tinyui_window *window,
-                                                  enum tinyui_flex_flow flow,
-                                                  enum tinyui_align main_align,
-                                                  enum tinyui_align cross_align,
-                                                  enum tinyui_align track_align,
-                                                  int item_gap,
-                                                  int track_gap);
-
 static int tinyui_window_do_set_gap(struct tinyui_window *window, int gap);
 
-static ldWindow_t *tinyui_window_ld_of(struct tinyui_window *window)
+ldWindow_t *tinyui_window_ld_of(struct tinyui_window *window)
 {
     ldBase_t *ld_base;
 
@@ -408,7 +280,7 @@ static int tinyui_window_apply_padding_group(struct tinyui_window *window,
     return 0;
 }
 
-static void tinyui_window_sync_padding(struct tinyui_window *window)
+void tinyui_window_sync_padding(struct tinyui_window *window)
 {
     ldLayoutType_t layout_type;
     ldPadding_t flex_padding;
@@ -487,37 +359,6 @@ static int tinyui_window_do_set_layout_type(struct tinyui_window *window,
     return 0;
 }
 
-static int tinyui_window_do_set_flex_contract(struct tinyui_window *window,
-                                                  enum tinyui_flex_flow flow,
-                                                  enum tinyui_align main_align,
-                                                  enum tinyui_align cross_align,
-                                                  enum tinyui_align track_align,
-                                                  int item_gap,
-                                                  int track_gap)
-{
-    ldWindow_t *ld_window = tinyui_window_ld_of(window);
-
-    if (window == 0 || ld_window == 0 || item_gap < 0 || track_gap < 0) {
-        return -1;
-    }
-
-    window->flex_flow = flow;
-    window->flex_main_align = main_align;
-    window->flex_cross_align = cross_align;
-    window->flex_track_align = track_align;
-    window->flex_item_gap = item_gap;
-    window->flex_track_gap = track_gap;
-
-    ldWindowSetFlexFlow(ld_window, s_flex_flow_to_ld(flow));
-    ldWindowSetFlexAlign(ld_window,
-                         s_flex_main_align_to_ld(main_align),
-                         s_flex_cross_align_to_ld(cross_align));
-    ldWindowSetFlexTrackAlign(ld_window, s_flex_track_align_to_ld(track_align));
-    ldWindowSetFlexGap(ld_window, (int16_t)item_gap, (int16_t)track_gap);
-    tinyui_window_sync_padding(window);
-    return 0;
-}
-
 static int tinyui_window_do_set_gap(struct tinyui_window *window, int gap)
 {
     ldWindow_t *ld_window = tinyui_window_ld_of(window);
@@ -533,143 +374,6 @@ static int tinyui_window_do_set_gap(struct tinyui_window *window, int gap)
     layout_type = ld_window->layoutTpye;
     ldWindowSetGap(ld_window, (int16_t)gap);
     ld_window->layoutTpye = layout_type;
-    return 0;
-}
-
-int tinyui_window_apply_flex_flow(struct tinyui_window *window, enum tinyui_flex_flow flow)
-{
-    ldWindow_t *ld_window = tinyui_window_ld_of(window);
-
-    if (window == 0 || ld_window == 0) {
-        return -1;
-    }
-
-    window->flex_flow = flow;
-    ldWindowSetFlexFlow(ld_window, s_flex_flow_to_ld(flow));
-    tinyui_window_sync_padding(window);
-    return 0;
-}
-
-int tinyui_window_apply_flex_align(struct tinyui_window *window,
-                                   enum tinyui_align main_align,
-                                   enum tinyui_align cross_align,
-                                   enum tinyui_align track_align)
-{
-    ldWindow_t *ld_window = tinyui_window_ld_of(window);
-
-    if (window == 0 || ld_window == 0) {
-        return -1;
-    }
-
-    window->flex_main_align = main_align;
-    window->flex_cross_align = cross_align;
-    window->flex_track_align = track_align;
-    ldWindowSetFlexAlign(ld_window,
-                         s_flex_main_align_to_ld(main_align),
-                         s_flex_cross_align_to_ld(cross_align));
-    ldWindowSetFlexTrackAlign(ld_window, s_flex_track_align_to_ld(track_align));
-    tinyui_window_sync_padding(window);
-    return 0;
-}
-
-int tinyui_window_apply_flex_gap(struct tinyui_window *window, int item_gap, int track_gap)
-{
-    ldWindow_t *ld_window = tinyui_window_ld_of(window);
-
-    if (window == 0 || ld_window == 0 || item_gap < 0 || track_gap < 0) {
-        return -1;
-    }
-
-    window->flex_item_gap = item_gap;
-    window->flex_track_gap = track_gap;
-    ldWindowSetFlexGap(ld_window, (int16_t)item_gap, (int16_t)track_gap);
-    tinyui_window_sync_padding(window);
-    return 0;
-}
-
-int tinyui_window_apply_grid_columns(struct tinyui_window *window, const int *tracks, int count)
-{
-    ldWindow_t *ld_window = tinyui_window_ld_of(window);
-    int window_tracks[TINYUI_LAYOUT_MAX_TRACKS];
-    int i;
-
-    if (window == 0 || ld_window == 0
-        || s_copy_grid_tracks(window_tracks, window->backend_grid_cols, tracks, count) != 0) {
-        return -1;
-    }
-
-    memcpy(window->grid_cols, window_tracks, sizeof(window->grid_cols));
-    window->grid_col_count = count;
-
-    {
-        for (i = 0; i < TINYUI_LAYOUT_MAX_TRACKS; ++i) {
-            window->backend_grid_rows[i] = s_grid_track_to_ld(window->grid_rows[i]);
-        }
-        ldWindowSetGridDscArray(ld_window,
-                                window->backend_grid_cols,
-                                window->grid_row_count > 0 ? window->backend_grid_rows : NULL);
-    }
-    tinyui_window_sync_padding(window);
-    return 0;
-}
-
-int tinyui_window_apply_grid_rows(struct tinyui_window *window, const int *tracks, int count)
-{
-    ldWindow_t *ld_window = tinyui_window_ld_of(window);
-    int window_tracks[TINYUI_LAYOUT_MAX_TRACKS];
-    int i;
-
-    if (window == 0 || ld_window == 0
-        || s_copy_grid_tracks(window_tracks, window->backend_grid_rows, tracks, count) != 0) {
-        return -1;
-    }
-
-    memcpy(window->grid_rows, window_tracks, sizeof(window->grid_rows));
-    window->grid_row_count = count;
-
-    {
-        for (i = 0; i < TINYUI_LAYOUT_MAX_TRACKS; ++i) {
-            window->backend_grid_cols[i] = s_grid_track_to_ld(window->grid_cols[i]);
-        }
-        ldWindowSetGridDscArray(ld_window,
-                                window->grid_col_count > 0 ? window->backend_grid_cols : NULL,
-                                window->backend_grid_rows);
-    }
-    tinyui_window_sync_padding(window);
-    return 0;
-}
-
-int tinyui_window_apply_grid_gap(struct tinyui_window *window, int row_gap, int col_gap)
-{
-    ldWindow_t *ld_window = tinyui_window_ld_of(window);
-
-    if (window == 0 || ld_window == 0 || row_gap < 0 || col_gap < 0) {
-        return -1;
-    }
-
-    window->grid_row_gap = row_gap;
-    window->grid_col_gap = col_gap;
-    ldWindowSetGridGap(ld_window, (int16_t)row_gap, (int16_t)col_gap);
-    tinyui_window_sync_padding(window);
-    return 0;
-}
-
-int tinyui_window_apply_grid_align(struct tinyui_window *window,
-                                   enum tinyui_align col_align,
-                                   enum tinyui_align row_align)
-{
-    ldWindow_t *ld_window = tinyui_window_ld_of(window);
-
-    if (window == 0 || ld_window == 0) {
-        return -1;
-    }
-
-    window->grid_col_align = col_align;
-    window->grid_row_align = row_align;
-    ldWindowSetGridAlign(ld_window,
-                         s_grid_align_to_ld(col_align),
-                         s_grid_align_to_ld(row_align));
-    tinyui_window_sync_padding(window);
     return 0;
 }
 
