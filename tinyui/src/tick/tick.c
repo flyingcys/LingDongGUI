@@ -1,5 +1,5 @@
 #include "internal.h"
-#include "tick.h"
+#include "tick/tick.h"
 
 #include <stddef.h>
 

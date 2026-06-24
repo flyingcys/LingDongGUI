@@ -38,7 +38,7 @@
  */
 
 #include "tinyui_demos.h"
-#include "runtime.h"
+#include "tinyui.h"
 #include <stdio.h>
 
 int main(int argc, char **argv)

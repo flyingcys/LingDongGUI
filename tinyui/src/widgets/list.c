@@ -17,13 +17,12 @@
  */
 
 #include "internal.h"
-#include "list.h"
-#include "widget.h"
+#include "widgets/list.h"
+#include "core/widget.h"
 #include "../core/runtime_bridge.h"
 #include "../../../src/gui/ldBase.h"
 #include "../../../src/gui/ldList.h"
 
-#include <stdlib.h>
 
 #define TINYUI_HIDDEN __attribute__((visibility("hidden")))
 
@@ -37,7 +36,7 @@ static void tinyui_list_rollback(struct tinyui_list *list)
     if (list->widget.ld_widget != 0) {
         tinyui_widget_destroy_common(&list->widget);
     } else {
-        free(list);
+        ldFree(list);
     }
 }
 

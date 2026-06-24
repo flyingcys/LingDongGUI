@@ -5,9 +5,9 @@
  * arm_2d_tile_t 用于描述像素缓冲区格式（数据结构），不属于渲染调用。
  */
 #include "host_internal.h"
-#include "display.h"
-#include "tick.h"
-#include "osal.h"
+#include "display/display.h"
+#include "tick/tick.h"
+#include "osal/osal.h"
 #include <SDL.h>
 #include <stdio.h>
 #include <stdlib.h>

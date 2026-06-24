@@ -1,7 +1,7 @@
-#include "app.h"
-#include "icon_slider.h"
-#include "widget.h"
-#include "window.h"
+#include "core/app.h"
+#include "widgets/icon_slider.h"
+#include "core/widget.h"
+#include "widgets/window.h"
 #include "../../../src/gui/ldIconSlider.h"
 #include "internal.h"
 

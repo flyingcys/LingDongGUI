@@ -1,5 +1,5 @@
-#include "app.h"
-#include "display.h"
+#include "core/app.h"
+#include "display/display.h"
 
 #include <assert.h>
 #include <stddef.h>

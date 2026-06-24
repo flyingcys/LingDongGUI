@@ -17,12 +17,11 @@
  */
 
 #include "internal.h"
-#include "table.h"
+#include "widgets/table.h"
 #include "../core/runtime_bridge.h"
 #include "../../../src/gui/ldTable.h"
 #include "../../../src/misc/ldMsg.h"
 
-#include <stdlib.h>
 #include <string.h>
 #include "../../../src/gui/ldBase.h"
 
@@ -48,7 +47,7 @@ static void tinyui_table_rollback(struct tinyui_table *table)
     if (table->widget.ld_widget != 0) {
         tinyui_widget_destroy_common(&table->widget);
     } else {
-        free(table);
+        ldFree(table);
     }
 }
 

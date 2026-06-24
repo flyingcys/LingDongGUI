@@ -19,7 +19,7 @@
 #ifndef TINYUI_BUTTON_H
 #define TINYUI_BUTTON_H
 
-#include "obj.h"
+#include "core/obj.h"
 
 struct tinyui_window;
 struct tinyui_button;

@@ -17,14 +17,14 @@
  */
 
 #include "settings_panel/settings_panel.h"
-#include "runtime.h"
-#include "button.h"
-#include "label.h"
-#include "layout.h"
-#include "slider.h"
-#include "switch.h"
-#include "widget.h"
-#include "window.h"
+#include "tinyui.h"
+
+
+
+
+
+
+
 
 static int make_ui(struct tinyui_window *win)
 {

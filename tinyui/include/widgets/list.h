@@ -1,7 +1,7 @@
 #ifndef TINYUI_LIST_H
 #define TINYUI_LIST_H
 
-#include "widget.h"
+#include "core/widget.h"
 
 struct tinyui_widget;
 struct tinyui_list;

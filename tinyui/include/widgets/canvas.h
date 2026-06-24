@@ -1,8 +1,8 @@
 #ifndef TINYUI_CANVAS_H
 #define TINYUI_CANVAS_H
 
-#include "image.h"
-#include "theme.h"
+#include "widgets/image.h"
+#include "theme/theme.h"
 
 struct tinyui_window;
 struct tinyui_canvas;

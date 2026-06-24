@@ -17,16 +17,16 @@
  */
 
 #include "basic_widgets/basic_widgets.h"
-#include "runtime.h"
-#include "button.h"
-#include "checkbox.h"
-#include "image.h"
-#include "layout.h"
-#include "slider.h"
-#include "switch.h"
-#include "text.h"
-#include "widget.h"
-#include "window.h"
+#include "tinyui.h"
+
+
+
+
+
+
+
+
+
 #include <stdio.h>
 
 static void on_wifi_changed(struct tinyui_widget *widget, int value, void *user_data)

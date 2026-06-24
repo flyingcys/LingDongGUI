@@ -1,5 +1,5 @@
 #include "internal.h"
-#include "display.h"
+#include "display/display.h"
 
 #include <stddef.h>
 

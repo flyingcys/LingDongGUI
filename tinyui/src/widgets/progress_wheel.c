@@ -17,7 +17,7 @@
  */
 
 #include "internal.h"
-#include "progress_wheel.h"
+#include "widgets/progress_wheel.h"
 #include "../../../src/gui/ldBase.h"
 #include "../../../src/gui/ldProgressWheel.h"
 #include "../core/runtime_bridge.h"

@@ -1,5 +1,5 @@
 #include "tinyui.h"
-#include "app.h"
+#include "core/app.h"
 
 #include <assert.h>
 #include <stddef.h>

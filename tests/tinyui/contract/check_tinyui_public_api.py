@@ -14,7 +14,7 @@ INVENTORY_JSON = CONTRACT_DIR / "ldgui_public_api_inventory.json"
 LEDGER_JSON = CONTRACT_DIR / "native_api_gap_ledger.json"
 
 LEGACY_RUNTIME_PROBE = """\
-#include "runtime.h"
+#include "core/runtime.h"
 int main(void) { return tinyui_init() != 0 ? tinyui_init() : 0; }
 """
 ALLOWED_FUNCTION_PREFIX = "tinyui_"

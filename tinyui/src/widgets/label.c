@@ -17,7 +17,7 @@
  */
 
 #include "internal.h"
-#include "label.h"
+#include "widgets/label.h"
 #include "../core/runtime_bridge.h"
 #include "../../../src/gui/ldLabel.h"
 

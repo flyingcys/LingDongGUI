@@ -1,5 +1,5 @@
-#include "runtime.h"
-#include "window.h"
+#include "core/runtime.h"
+#include "widgets/window.h"
 
 #include <assert.h>
 #include <stddef.h>

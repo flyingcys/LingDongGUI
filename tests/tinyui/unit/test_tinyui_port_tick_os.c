@@ -1,6 +1,6 @@
-#include "app.h"
-#include "osal.h"
-#include "tick.h"
+#include "core/app.h"
+#include "osal/osal.h"
+#include "tick/tick.h"
 
 #include <assert.h>
 #include <stddef.h>

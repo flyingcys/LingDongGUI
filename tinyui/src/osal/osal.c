@@ -1,5 +1,5 @@
 #include "internal.h"
-#include "osal.h"
+#include "osal/osal.h"
 
 #include <stddef.h>
 

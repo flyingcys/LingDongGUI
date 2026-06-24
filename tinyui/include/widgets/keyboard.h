@@ -1,7 +1,7 @@
 #ifndef TINYUI_KEYBOARD_H
 #define TINYUI_KEYBOARD_H
 
-#include "widget.h"
+#include "core/widget.h"
 
 struct tinyui_window;
 struct tinyui_keyboard;

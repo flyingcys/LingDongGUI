@@ -17,8 +17,8 @@
  */
 
 #include "internal.h"
-#include "date_time.h"
-#include "widget.h"
+#include "widgets/date_time.h"
+#include "core/widget.h"
 #include "../core/runtime_bridge.h"
 #include "../../../src/gui/ldDateTime.h"
 

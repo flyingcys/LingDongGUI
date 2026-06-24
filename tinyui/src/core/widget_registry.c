@@ -1,4 +1,3 @@
-#include <stdlib.h>
 #include "internal.h"
 #include "../drivers/tinyui_ldgui_port.h"
 #include "../../../src/gui/ldBase.h"
@@ -54,7 +53,7 @@ void tinyui_app_free_name_id(struct tinyui_app *app, uint16_t id)
     }
     if (app->free_name_id_count >= app->free_name_id_cap) {
         new_cap = (app->free_name_id_cap == 0) ? 8 : (uint16_t)(app->free_name_id_cap * 2);
-        p = realloc(app->free_name_ids, (size_t)new_cap * sizeof(uint16_t));
+        p = ldRealloc(app->free_name_ids, (size_t)new_cap * sizeof(uint16_t));
         if (p == 0) {
             return; /* drop on OOM — id is lost; no crash */
         }

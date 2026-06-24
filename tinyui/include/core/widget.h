@@ -1,9 +1,9 @@
 #ifndef TINYUI_WIDGET_H
 #define TINYUI_WIDGET_H
 
-#include "layout.h"
-#include "native.h"
-#include "theme.h"
+#include "layout/layout.h"
+#include "core/native.h"
+#include "theme/theme.h"
 
 struct tinyui_widget;
 struct tinyui_app;

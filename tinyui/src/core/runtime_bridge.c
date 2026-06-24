@@ -9,7 +9,6 @@
 #include "../../../src/gui/ldSwitch.h"
 #include "../../../src/gui/ldGui.h"
 #include "../../../src/misc/ldMsg.h"
-#include <stdlib.h>
 
 void ldBaseNodeRemove(arm_2d_control_node_t *ptNode);
 
@@ -128,7 +127,7 @@ int tinyui_runtime_bridge_init_app(struct tinyui_app *app)
         return 0;
     }
 
-    app->ld_scene = calloc(1, sizeof(*app->ld_scene));
+    app->ld_scene = ldCalloc(1, sizeof(*app->ld_scene));
     if (app->ld_scene == NULL) {
         return -1;
     }
@@ -178,7 +177,7 @@ void tinyui_runtime_bridge_shutdown_app(struct tinyui_app *app)
 
     tinyui_runtime_host_shutdown_app(app);
     ldGuiDespose(app->ld_scene);
-    free(app->ld_scene);
+    ldFree(app->ld_scene);
     app->ld_scene = NULL;
 }
 

@@ -17,7 +17,7 @@
  */
 
 #include "internal/window_internal.h"
-#include "layout.h"
+#include "layout/layout.h"
 #include <string.h>
 
 /* ── grid track / align mappings ────────────────────────────────────────────

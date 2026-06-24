@@ -17,7 +17,7 @@
  */
 
 #include "internal.h"
-#include "canvas.h"
+#include "widgets/canvas.h"
 #include "../core/runtime_bridge.h"
 #include "../../../src/gui/ldCanvas.h"
 

@@ -17,7 +17,7 @@
  */
 
 #include "internal.h"
-#include "slider.h"
+#include "widgets/slider.h"
 #include "../core/runtime_bridge.h"
 #include "../../../src/gui/ldSlider.h"
 

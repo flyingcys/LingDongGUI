@@ -17,13 +17,12 @@
  */
 
 #include "internal.h"
-#include "background.h"
-#include "window.h"
+#include "widgets/background.h"
+#include "widgets/window.h"
 #include "../core/runtime_bridge.h"
 #include "../../../src/gui/ldWindow.h"
 #include "../../../src/porting/ldConfig.h"
 
-#include <stdlib.h>
 
 /* C3-T4: background is a single calloc of struct tinyui_background (which
  * embeds struct tinyui_window) — no separate host wrapper.  Binding state
@@ -67,7 +66,7 @@ struct tinyui_background *tinyui_background_create(struct tinyui_app *app, const
     }
 
     /* C3-T4: single calloc — fold binding state directly onto the window. */
-    background = calloc(1, sizeof(*background));
+    background = ldCalloc(1, sizeof(*background));
     if (background == 0) {
         ldWindow_depose(app_state->ld_scene, ld_root);
         return 0;
@@ -94,7 +93,7 @@ struct tinyui_background *tinyui_background_create(struct tinyui_app *app, const
         tinyui_app_unregister_host(app_state, &background->window.widget);
         background->window.widget.ld_widget = 0;
         ldWindow_depose(app_state->ld_scene, ld_root);
-        free(background);
+        ldFree(background);
         return 0;
     }
 

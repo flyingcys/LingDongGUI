@@ -1,6 +1,6 @@
-#include "app.h"
-#include "button.h"
-#include "window.h"
+#include "core/app.h"
+#include "widgets/button.h"
+#include "widgets/window.h"
 #include "internal.h"
 
 #include <assert.h>

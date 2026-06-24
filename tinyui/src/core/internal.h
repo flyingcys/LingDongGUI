@@ -73,7 +73,7 @@ enum tinyui_backend_signal {
 
 struct ld_scene_t;
 
-#include "app.h"
+#include "core/app.h"
 #include "../../../src/misc/xBtnAction.h"
 
 /* Forward declarations for widget types used in internal function declarations.
@@ -99,23 +99,23 @@ struct tinyui_gauge;
 struct tinyui_progress_wheel_props;
 struct tinyui_calendar;
 struct tinyui_canvas;
-#include "combo_box.h"
-#include "canvas.h"
-#include "calendar.h"
-#include "keyboard.h"
-#include "native.h"
-#include "display.h"
-#include "indev.h"
-#include "osal.h"
-#include "tick.h"
-#include "line_edit.h"
-#include "message_box.h"
-#include "graph.h"
-#include "icon_slider.h"
-#include "scroll_selecter.h"
-#include "radial_menu.h"
-#include "table.h"
-#include "theme.h"
+#include "widgets/combo_box.h"
+#include "widgets/canvas.h"
+#include "widgets/calendar.h"
+#include "widgets/keyboard.h"
+#include "core/native.h"
+#include "display/display.h"
+#include "indev/indev.h"
+#include "osal/osal.h"
+#include "tick/tick.h"
+#include "widgets/line_edit.h"
+#include "widgets/message_box.h"
+#include "widgets/graph.h"
+#include "widgets/icon_slider.h"
+#include "widgets/scroll_selecter.h"
+#include "widgets/radial_menu.h"
+#include "widgets/table.h"
+#include "theme/theme.h"
 
 #define TINYUI_LAYOUT_MAX_TRACKS 16
 #define TINYUI_LIST_MAX_ITEMS 16

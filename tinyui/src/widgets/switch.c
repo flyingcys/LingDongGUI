@@ -17,7 +17,7 @@
  */
 
 #include "internal.h"
-#include "switch.h"
+#include "widgets/switch.h"
 #include "../core/runtime_bridge.h"
 #include "../../../src/gui/ldSwitch.h"
 

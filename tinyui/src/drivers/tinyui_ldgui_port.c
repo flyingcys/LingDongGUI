@@ -16,8 +16,8 @@
 #include "tinyui_ldgui_port_config.h"
 #include "internal.h"
 
-#include "display.h"   /* tinyui_display_get_config, tinyui_area, tinyui_display_config */
-#include "indev.h"     /* tinyui_input_get_pointer, tinyui_input_push_pointer */
+#include "display/display.h"   /* tinyui_display_get_config, tinyui_area, tinyui_display_config */
+#include "indev/indev.h"     /* tinyui_input_get_pointer, tinyui_input_push_pointer */
 
 #include <stddef.h>
 #include <stdint.h>

@@ -1,7 +1,7 @@
 #ifndef TINYUI_SLIDER_H
 #define TINYUI_SLIDER_H
 
-#include "widget.h"
+#include "core/widget.h"
 
 struct tinyui_window;
 struct tinyui_slider;

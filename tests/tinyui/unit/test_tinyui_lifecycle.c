@@ -2,10 +2,10 @@
 #include <string.h>
 #include "internal.h"
 #include "tinyui.h"
-#include "window.h"
-#include "keyboard.h"
-#include "list.h"
-#include "button.h"
+#include "widgets/window.h"
+#include "widgets/keyboard.h"
+#include "widgets/list.h"
+#include "widgets/button.h"
 #include "../../../src/gui/ldBase.h"
 #include "../../../src/misc/xBtnAction.h"
 

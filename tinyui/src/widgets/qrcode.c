@@ -17,8 +17,8 @@
  */
 
 #include "internal.h"
-#include "qrcode.h"
-#include "widget.h"
+#include "widgets/qrcode.h"
+#include "core/widget.h"
 #include "../core/runtime_bridge.h"
 #include "../../../src/gui/ldQRCode.h"
 

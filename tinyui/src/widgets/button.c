@@ -17,12 +17,11 @@
  */
 
 #include "internal.h"
-#include "button.h"
+#include "widgets/button.h"
 #include "../core/runtime_bridge.h"
 #include "../../../src/gui/ldButton.h"
 #include "../../../src/misc/xBtnAction.h"
 
-#include <stdlib.h>
 #include <string.h>
 
 extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
@@ -78,7 +77,7 @@ static void tinyui_button_rollback(struct tinyui_button *button)
         xBtnRemove(&button->action_info);
         tinyui_widget_destroy_common(&button->widget);
     } else {
-        free(button);
+        ldFree(button);
     }
 }
 

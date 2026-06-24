@@ -17,13 +17,12 @@
  */
 
 #include "internal.h"
-#include "keyboard.h"
+#include "widgets/keyboard.h"
 #include "../core/runtime_bridge.h"
 #include "ldLineEdit.h"
 #include "ldKeyboard.h"
 
 #include <string.h>
-#include <stdlib.h>
 
 extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
 void ldKeyboardInputAscii(ldKeyboard_t *ptWidget, uint8_t ascii);
@@ -58,7 +57,7 @@ static void tinyui_keyboard_free_layout(struct tinyui_keyboard *keyboard)
 
     if (keyboard->layout_entries == 0) {
         if (native_layout != 0) {
-            free(native_layout);
+            ldFree(native_layout);
         }
         keyboard->native_layout = 0;
         keyboard->layout_count = 0;
@@ -66,11 +65,11 @@ static void tinyui_keyboard_free_layout(struct tinyui_keyboard *keyboard)
     }
 
     for (i = 0; i < keyboard->layout_count; ++i) {
-        free(keyboard->layout_entries[i].text);
+        ldFree(keyboard->layout_entries[i].text);
     }
-    free(keyboard->layout_entries);
+    ldFree(keyboard->layout_entries);
     if (native_layout != 0 && native_layout != (void *)keyboard->layout_entries) {
-        free(native_layout);
+        ldFree(native_layout);
     }
     keyboard->layout_entries = 0;
     keyboard->native_layout = 0;
@@ -86,7 +85,7 @@ static void tinyui_keyboard_rollback(struct tinyui_keyboard *keyboard)
         tinyui_keyboard_free_layout(keyboard);
         tinyui_widget_destroy_common(&keyboard->widget);
     } else {
-        free(keyboard);
+        ldFree(keyboard);
     }
 }
 
@@ -184,7 +183,7 @@ static const kbBtnInfo_t *tinyui_keyboard_get_custom_button_list_from_host(struc
         return (const kbBtnInfo_t *)keyboard->native_layout;
     }
 
-    native_buttons = calloc((size_t)keyboard->layout_count + 1U, sizeof(*native_buttons));
+    native_buttons = ldCalloc((size_t)keyboard->layout_count + 1U, sizeof(*native_buttons));
     if (native_buttons == 0) {
         return 0;
     }
@@ -576,7 +575,7 @@ int tinyui_keyboard_set_buttons(struct tinyui_keyboard *keyboard,
         return 0;
     }
 
-    entries = calloc((size_t)count, sizeof(*entries));
+    entries = ldCalloc((size_t)count, sizeof(*entries));
     if (entries == 0) {
         return -1;
     }
@@ -585,17 +584,23 @@ int tinyui_keyboard_set_buttons(struct tinyui_keyboard *keyboard,
         if (buttons[i].text == 0 || buttons[i].key_code > 0xFFU ||
             buttons[i].width < 0 || buttons[i].height < 0) {
             while (--i >= 0) {
-                free(entries[i].text);
+                ldFree(entries[i].text);
             }
-            free(entries);
+            ldFree(entries);
             return -1;
         }
-        entries[i].text = strdup(buttons[i].text);
+        {
+            size_t text_len = strlen(buttons[i].text) + 1U;
+            entries[i].text = (char *)ldMalloc(text_len);
+            if (entries[i].text != 0) {
+                memcpy(entries[i].text, buttons[i].text, text_len);
+            }
+        }
         if (entries[i].text == 0) {
             while (--i >= 0) {
-                free(entries[i].text);
+                ldFree(entries[i].text);
             }
-            free(entries);
+            ldFree(entries);
             return -1;
         }
         entries[i].key_code = buttons[i].key_code;

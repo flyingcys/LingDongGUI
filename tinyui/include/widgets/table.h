@@ -1,8 +1,8 @@
 #ifndef TINYUI_TABLE_H
 #define TINYUI_TABLE_H
 
-#include "native.h"
-#include "widget.h"
+#include "core/native.h"
+#include "core/widget.h"
 
 struct tinyui_window;
 struct tinyui_table;

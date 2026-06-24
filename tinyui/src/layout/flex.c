@@ -17,7 +17,7 @@
  */
 
 #include "internal/window_internal.h"
-#include "layout.h"
+#include "layout/layout.h"
 
 /* ── flex align mappings (flex_main / flex_cross / flex_track) ───────────────
  * These mappings are flex-private and intentionally NOT merged into the core

@@ -19,7 +19,7 @@
 #ifndef TINYUI_SWITCH_H
 #define TINYUI_SWITCH_H
 
-#include "obj.h"
+#include "core/obj.h"
 
 struct tinyui_window;
 struct tinyui_switch;

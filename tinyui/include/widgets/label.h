@@ -19,7 +19,7 @@
 #ifndef TINYUI_LABEL_H
 #define TINYUI_LABEL_H
 
-#include "obj.h"
+#include "core/obj.h"
 
 struct tinyui_window;
 struct tinyui_label;

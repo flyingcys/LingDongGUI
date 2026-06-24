@@ -17,7 +17,7 @@
  */
 
 #include "internal.h"
-#include "widget.h"
+#include "core/widget.h"
 #include "arm_2d.h"
 #include "../../../src/gui/ldBase.h"
 #include "../../../src/gui/ldGui.h"
@@ -25,7 +25,6 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <stdlib.h>
 
 typedef struct ldLabel_t ldLabel_t;
 typedef struct ldText_t ldText_t;
@@ -1853,7 +1852,7 @@ static void tinyui_destroy_reclaim_hosts_in_subtree(struct tinyui_app *app, ldBa
             }
             tinyui_app_free_name_id(app, host->ld_name_id);
             tinyui_app_unregister_host(app, host);
-            free(host);
+            ldFree(host);
         }
     }
 }
@@ -1898,7 +1897,7 @@ void tinyui_widget_destroy_common(struct tinyui_widget *w)
         tinyui_test_capture_destroyed_widget_snapshot(w);
     }
 
-    free(w);
+    ldFree(w);
 }
 
 /* ── C1-T4: tinyui_widget_create_leaf ─────────────────────────────────────── */
@@ -1934,7 +1933,7 @@ struct tinyui_widget *tinyui_widget_create_leaf(
     }
 
     /* 1. Allocate host object (zeroed) */
-    w = (struct tinyui_widget *)calloc(1, host_size);
+    w = (struct tinyui_widget *)ldCalloc(1, host_size);
     if (w == 0) {
         return 0;
     }
@@ -1951,7 +1950,7 @@ struct tinyui_widget *tinyui_widget_create_leaf(
     /* 5. Create the backing ld widget */
     ld_widget = ld_init_cb(ctx, owner->ld_scene, name_id, parent_name_id);
     if (ld_widget == 0) {
-        free(w);
+        ldFree(w);
         return 0;
     }
 
@@ -1990,7 +1989,7 @@ struct tinyui_widget *tinyui_widget_create_leaf(
         if (ld_base->ptGuiFunc != 0 && ld_base->ptGuiFunc->depose != 0) {
             ld_base->ptGuiFunc->depose(owner->ld_scene, ld_widget);
         }
-        free(w);
+        ldFree(w);
         return 0;
     }
 

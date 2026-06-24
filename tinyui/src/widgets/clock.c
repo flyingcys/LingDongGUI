@@ -17,12 +17,11 @@
  */
 
 #include "internal.h"
-#include "clock.h"
-#include "widget.h"
+#include "widgets/clock.h"
+#include "core/widget.h"
 #include "../core/runtime_bridge.h"
 #include "../../../src/gui/ldClock.h"
 
-#include <stdlib.h>
 
 extern const arm_2d_tile_t c_tilePointerSecGRAY8;
 extern const arm_2d_tile_t c_tilePointerSecMask;
@@ -48,7 +47,7 @@ static void tinyui_clock_rollback(struct tinyui_clock *clock)
     if (clock->widget.ld_widget != 0) {
         tinyui_widget_destroy_common(&clock->widget);
     } else {
-        free(clock);
+        ldFree(clock);
     }
 }
 

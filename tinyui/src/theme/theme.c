@@ -18,7 +18,7 @@
 
 #include "internal.h"
 #include "runtime_bridge.h"
-#include "theme.h"
+#include "theme/theme.h"
 #include "../../../src/gui/ldBase.h"
 #include "../../../src/gui/ldButton.h"
 #include "../../../src/gui/ldCalendar.h"
@@ -31,7 +31,6 @@
 #include "../../../src/gui/ldText.h"
 #include "../../../src/gui/ldWindow.h"
 
-#include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
 
@@ -417,7 +416,7 @@ int tinyui_theme_apply_widget_style(struct tinyui_widget *widget,
 
 struct tinyui_theme *tinyui_theme_create(void)
 {
-    struct tinyui_theme *theme = calloc(1, sizeof(struct tinyui_theme));
+    struct tinyui_theme *theme = ldCalloc(1, sizeof(struct tinyui_theme));
     int i;
 
     if (theme == 0) {
@@ -443,7 +442,7 @@ struct tinyui_theme *tinyui_theme_create(void)
 
 void tinyui_theme_destroy(struct tinyui_theme *theme)
 {
-    free(theme);
+    ldFree(theme);
 }
 
 /**

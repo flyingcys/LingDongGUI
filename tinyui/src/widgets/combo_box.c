@@ -17,13 +17,12 @@
  */
 
 #include "internal.h"
-#include "combo_box.h"
+#include "widgets/combo_box.h"
 
 #include "../core/runtime_bridge.h"
 #include "../../../src/gui/ldBase.h"
 #include "../../../src/gui/ldComboBox.h"
 
-#include <stdlib.h>
 
 extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
 
@@ -37,7 +36,7 @@ static void tinyui_combo_box_rollback(struct tinyui_combo_box *combo_box)
     if (combo_box->widget.ld_widget != 0) {
         tinyui_widget_destroy_common(&combo_box->widget);
     } else {
-        free(combo_box);
+        ldFree(combo_box);
     }
 }
 

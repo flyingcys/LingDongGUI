@@ -17,7 +17,7 @@
  */
 
 #include "internal.h"
-#include "image.h"
+#include "widgets/image.h"
 #include "../core/runtime_bridge.h"
 #include "../../../src/gui/ldImage.h"
 

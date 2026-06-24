@@ -1,5 +1,5 @@
 #include "internal.h"
-#include "indev.h"
+#include "indev/indev.h"
 
 #include <stddef.h>
 

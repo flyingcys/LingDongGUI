@@ -1,7 +1,7 @@
 #ifndef TINYUI_RUNTIME_H
 #define TINYUI_RUNTIME_H
 
-#include "widget.h"
+#include "core/widget.h"
 
 /**
  * @brief Initialize TinyUI runtime

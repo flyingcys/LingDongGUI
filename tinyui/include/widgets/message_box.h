@@ -1,7 +1,7 @@
 #ifndef TINYUI_MESSAGE_BOX_H
 #define TINYUI_MESSAGE_BOX_H
 
-#include "widget.h"
+#include "core/widget.h"
 
 struct tinyui_message_box;
 

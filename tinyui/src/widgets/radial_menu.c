@@ -17,14 +17,13 @@
  */
 
 #include "internal.h"
-#include "radial_menu.h"
-#include "widget.h"
+#include "widgets/radial_menu.h"
+#include "core/widget.h"
 #include "../core/runtime_bridge.h"
 #include "../../../src/gui/ldBase.h"
 #include "../../../src/gui/ldRadialMenu.h"
 #include "../../../src/misc/ldMsg.h"
 
-#include <stdlib.h>
 
 extern const arm_2d_tile_t c_tileQuaterArcGRAY8;
 extern const arm_2d_tile_t c_tileQuaterArcMask;
@@ -67,7 +66,7 @@ static void tinyui_radial_menu_rollback(struct tinyui_radial_menu *radial_menu)
     if (radial_menu->widget.ld_widget != 0) {
         tinyui_widget_destroy_common(&radial_menu->widget);
     } else {
-        free(radial_menu);
+        ldFree(radial_menu);
     }
 }
 

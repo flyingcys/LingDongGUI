@@ -17,14 +17,13 @@
  */
 
 #include "internal.h"
-#include "icon_slider.h"
-#include "widget.h"
+#include "widgets/icon_slider.h"
+#include "core/widget.h"
 #include "../core/runtime_bridge.h"
 #include "../../../src/gui/ldBase.h"
 #include "../../../src/gui/ldIconSlider.h"
 #include "../../../src/misc/ldMsg.h"
 
-#include <stdlib.h>
 
 extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
 extern const arm_2d_tile_t c_tileQuaterArcGRAY8;
@@ -96,7 +95,7 @@ static void tinyui_icon_slider_rollback(struct tinyui_icon_slider *icon_slider)
     if (icon_slider->widget.ld_widget != 0) {
         tinyui_widget_destroy_common(&icon_slider->widget);
     } else {
-        free(icon_slider);
+        ldFree(icon_slider);
     }
 }
 

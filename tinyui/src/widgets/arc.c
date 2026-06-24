@@ -17,12 +17,11 @@
  */
 
 #include "internal.h"
-#include "arc.h"
-#include "widget.h"
+#include "widgets/arc.h"
+#include "core/widget.h"
 #include "../core/runtime_bridge.h"
 #include "../../../src/gui/ldArc.h"
 
-#include <stdlib.h>
 #include <string.h>
 
 extern const arm_2d_tile_t c_tileQuaterArcGRAY8;
@@ -45,7 +44,7 @@ static void tinyui_arc_rollback(struct tinyui_arc *arc)
     if (arc->widget.ld_widget != 0) {
         tinyui_widget_destroy_common(&arc->widget);
     } else {
-        free(arc);
+        ldFree(arc);
     }
 }
 
@@ -134,15 +133,15 @@ struct tinyui_arc *tinyui_arc_create(struct tinyui_widget *parent, const char *i
         return 0;
     }
 
-    arc_img_tile = malloc(sizeof(*arc_img_tile));
+    arc_img_tile = ldMalloc(sizeof(*arc_img_tile));
     if (arc_img_tile == 0) {
         return 0;
     }
     *arc_img_tile = c_tileQuaterArcGRAY8;
 
-    arc_mask_tile = malloc(sizeof(*arc_mask_tile));
+    arc_mask_tile = ldMalloc(sizeof(*arc_mask_tile));
     if (arc_mask_tile == 0) {
-        free(arc_img_tile);
+        ldFree(arc_img_tile);
         return 0;
     }
     *arc_mask_tile = c_tileQuaterArcMask;
@@ -155,8 +154,8 @@ struct tinyui_arc *tinyui_arc_create(struct tinyui_widget *parent, const char *i
                                                          &ctx,
                                                          sizeof(*arc));
     if (arc == 0) {
-        free(arc_mask_tile);
-        free(arc_img_tile);
+        ldFree(arc_mask_tile);
+        ldFree(arc_img_tile);
         return 0;
     }
 

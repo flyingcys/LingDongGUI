@@ -17,14 +17,13 @@
  */
 
 #include "internal.h"
-#include "widget.h"
-#include "window.h"
+#include "core/widget.h"
+#include "widgets/window.h"
 #include "internal/window_internal.h"
 #include "../core/runtime_bridge.h"
 #include "../../../src/gui/ldWindow.h"
 #include "../../../src/porting/ldConfig.h"
 
-#include <stdlib.h>
 #include <string.h>
 
 struct tinyui_image_source;
@@ -201,7 +200,7 @@ static void tinyui_window_do_free_internal(struct tinyui_window *window)
     int clears_scene_root = 0;
 
     if (window == 0) {
-        free(window);
+        ldFree(window);
         return;
     }
 
@@ -244,8 +243,8 @@ static void tinyui_window_do_free_internal(struct tinyui_window *window)
     }
 
     /* C3-T4: no wrapper to free — single free of the window struct. */
-    free(window->padding_group_storage);
-    free(window);
+    ldFree(window->padding_group_storage);
+    ldFree(window);
 }
 
 void tinyui_window_test_fail_next_set_bg_color(void)
@@ -317,7 +316,7 @@ void tinyui_window_sync_padding(struct tinyui_window *window)
      * allocated padding_group_storage that persists for the window's life. */
     has_padding_group = window->has_explicit_flex_padding;
     if (window->padding_group_storage == 0) {
-        window->padding_group_storage = calloc(1, sizeof(ldPadding_t));
+        window->padding_group_storage = ldCalloc(1, sizeof(ldPadding_t));
     }
     if (window->padding_group_storage != 0) {
         ldPadding_t *stored = (ldPadding_t *)window->padding_group_storage;
@@ -478,7 +477,7 @@ struct tinyui_window *tinyui_window_create(struct tinyui_app *app, const char *i
     }
 
     /* C2: single calloc — the wrapper struct is gone. */
-    window = calloc(1, sizeof(*window));
+    window = ldCalloc(1, sizeof(*window));
     if (window == 0) {
         ldWindow_depose(app_state->ld_scene, ld_root);
         return 0;
@@ -497,7 +496,7 @@ struct tinyui_window *tinyui_window_create(struct tinyui_app *app, const char *i
         tinyui_app_unregister_host(app_state, &window->widget);
         window->widget.ld_widget = 0;
         ldWindow_depose(app_state->ld_scene, ld_root);
-        free(window);
+        ldFree(window);
         return 0;
     }
     return window;

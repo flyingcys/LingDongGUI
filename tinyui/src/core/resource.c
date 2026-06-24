@@ -17,7 +17,7 @@
  */
 
 #include "internal.h"
-#include "image.h"
+#include "widgets/image.h"
 #include "../../../src/gui/ldBase.h"
 
 #include <string.h>

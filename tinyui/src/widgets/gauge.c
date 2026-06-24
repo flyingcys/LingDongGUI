@@ -17,11 +17,10 @@
  */
 
 #include "internal.h"
-#include "gauge.h"
+#include "widgets/gauge.h"
 #include "../core/runtime_bridge.h"
 #include "../../../src/gui/ldGauge.h"
 
-#include <stdlib.h>
 #include <string.h>
 
 extern const arm_2d_tile_t c_tileQuaterArcGRAY8;
@@ -48,7 +47,7 @@ static void tinyui_gauge_rollback(struct tinyui_gauge *gauge)
     if (gauge->widget.ld_widget != 0) {
         tinyui_widget_destroy_common(&gauge->widget);
     } else {
-        free(gauge);
+        ldFree(gauge);
     }
 }
 
@@ -145,32 +144,32 @@ struct tinyui_gauge *tinyui_gauge_create(struct tinyui_widget *parent, const cha
         return 0;
     }
 
-    bg_img_tile = malloc(sizeof(*bg_img_tile));
+    bg_img_tile = ldMalloc(sizeof(*bg_img_tile));
     if (bg_img_tile == 0) {
         return 0;
     }
     *bg_img_tile = c_tileQuaterArcGRAY8;
 
-    bg_mask_tile = malloc(sizeof(*bg_mask_tile));
+    bg_mask_tile = ldMalloc(sizeof(*bg_mask_tile));
     if (bg_mask_tile == 0) {
-        free(bg_img_tile);
+        ldFree(bg_img_tile);
         return 0;
     }
     *bg_mask_tile = c_tileQuaterArcMask;
 
-    pointer_img_tile = malloc(sizeof(*pointer_img_tile));
+    pointer_img_tile = ldMalloc(sizeof(*pointer_img_tile));
     if (pointer_img_tile == 0) {
-        free(bg_mask_tile);
-        free(bg_img_tile);
+        ldFree(bg_mask_tile);
+        ldFree(bg_img_tile);
         return 0;
     }
     *pointer_img_tile = c_tilePointerSecGRAY8;
 
-    pointer_mask_tile = malloc(sizeof(*pointer_mask_tile));
+    pointer_mask_tile = ldMalloc(sizeof(*pointer_mask_tile));
     if (pointer_mask_tile == 0) {
-        free(pointer_img_tile);
-        free(bg_mask_tile);
-        free(bg_img_tile);
+        ldFree(pointer_img_tile);
+        ldFree(bg_mask_tile);
+        ldFree(bg_img_tile);
         return 0;
     }
     *pointer_mask_tile = c_tilePointerSecMask;
@@ -185,10 +184,10 @@ struct tinyui_gauge *tinyui_gauge_create(struct tinyui_widget *parent, const cha
                                                              &ctx,
                                                              sizeof(*gauge));
     if (gauge == 0) {
-        free(pointer_mask_tile);
-        free(pointer_img_tile);
-        free(bg_mask_tile);
-        free(bg_img_tile);
+        ldFree(pointer_mask_tile);
+        ldFree(pointer_img_tile);
+        ldFree(bg_mask_tile);
+        ldFree(bg_img_tile);
         return 0;
     }
 

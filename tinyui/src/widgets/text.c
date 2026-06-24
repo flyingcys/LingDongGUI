@@ -17,7 +17,7 @@
  */
 
 #include "internal.h"
-#include "text.h"
+#include "widgets/text.h"
 #include "../core/runtime_bridge.h"
 #include "../../../src/gui/ldText.h"
 

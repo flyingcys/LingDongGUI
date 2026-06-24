@@ -17,11 +17,10 @@
  */
 
 #include "internal.h"
-#include "progress_bar.h"
+#include "widgets/progress_bar.h"
 #include "../core/runtime_bridge.h"
 #include "../../../src/gui/ldProgressBar.h"
 
-#include <stdlib.h>
 #include <string.h>
 
 
@@ -34,7 +33,7 @@ static void tinyui_progress_bar_rollback(struct tinyui_progress_bar *bar)
     if (bar->widget.ld_widget != 0) {
         tinyui_widget_destroy_common(&bar->widget);
     } else {
-        free(bar);
+        ldFree(bar);
     }
 }
 

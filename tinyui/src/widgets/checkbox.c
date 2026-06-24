@@ -17,7 +17,7 @@
  */
 
 #include "internal.h"
-#include "checkbox.h"
+#include "widgets/checkbox.h"
 #include "../core/runtime_bridge.h"
 #include "../../../src/gui/ldCheckBox.h"
 

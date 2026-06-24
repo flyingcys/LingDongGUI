@@ -17,11 +17,10 @@
  */
 
 #include "internal.h"
-#include "scroll_selecter.h"
+#include "widgets/scroll_selecter.h"
 #include "../../../src/gui/ldScrollSelecter.h"
 #include "../../../src/gui/ldBase.h"
 
-#include <stdlib.h>
 #include <string.h>
 
 extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
@@ -36,7 +35,7 @@ static void tinyui_scroll_selecter_rollback(struct tinyui_scroll_selecter *scrol
     if (scroll_selecter->widget.ld_widget != 0) {
         tinyui_widget_destroy_common(&scroll_selecter->widget);
     } else {
-        free(scroll_selecter);
+        ldFree(scroll_selecter);
     }
 }
 

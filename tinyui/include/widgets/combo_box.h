@@ -1,7 +1,7 @@
 #ifndef TINYUI_COMBO_BOX_H
 #define TINYUI_COMBO_BOX_H
 
-#include "widget.h"
+#include "core/widget.h"
 
 struct tinyui_window;
 struct tinyui_combo_box;

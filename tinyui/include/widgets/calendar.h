@@ -1,7 +1,7 @@
 #ifndef TINYUI_CALENDAR_H
 #define TINYUI_CALENDAR_H
 
-#include "widget.h"
+#include "core/widget.h"
 
 struct tinyui_window;
 struct tinyui_calendar;

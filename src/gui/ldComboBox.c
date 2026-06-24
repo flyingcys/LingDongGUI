@@ -457,7 +457,7 @@ void ldComboBoxSetItemMax(ldComboBox_t *ptWidget, uint8_t itemMax)
     {
         return;
     }
-    ptWidget->ppItemStrGroup = malloc(sizeof(uint8_t*) * itemMax);
+    ptWidget->ppItemStrGroup = ldMalloc(sizeof(uint8_t*) * itemMax);
     ptWidget->itemMax         = itemMax;
     ptWidget->itemCount      = 0;
 }

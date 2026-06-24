@@ -1,5 +1,5 @@
 #include "internal.h"
-#include "background.h"
+#include "widgets/background.h"
 #include "tinyui.h"
 #include "ldBase.h"
 #include "ldWindow.h"

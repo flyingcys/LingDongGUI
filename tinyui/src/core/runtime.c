@@ -1,7 +1,7 @@
 #include "internal.h"
 #include "runtime_bridge.h"
-#include "runtime.h"
-#include "window.h"
+#include "core/runtime.h"
+#include "widgets/window.h"
 
 #include <stdlib.h>
 

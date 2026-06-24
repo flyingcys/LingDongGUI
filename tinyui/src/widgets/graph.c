@@ -17,7 +17,7 @@
  */
 
 #include "internal.h"
-#include "graph.h"
+#include "widgets/graph.h"
 #include "../core/runtime_bridge.h"
 #include "../../../src/gui/ldGraph.h"
 

@@ -1,7 +1,7 @@
 #ifndef TINYUI_SCROLL_SELECTER_H
 #define TINYUI_SCROLL_SELECTER_H
 
-#include "widget.h"
+#include "core/widget.h"
 
 struct tinyui_window;
 struct tinyui_scroll_selecter;

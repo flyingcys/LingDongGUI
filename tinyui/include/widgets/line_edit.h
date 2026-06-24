@@ -1,8 +1,8 @@
 #ifndef TINYUI_LINE_EDIT_H
 #define TINYUI_LINE_EDIT_H
 
-#include "layout.h"
-#include "widget.h"
+#include "layout/layout.h"
+#include "core/widget.h"
 
 struct tinyui_window;
 struct tinyui_line_edit;

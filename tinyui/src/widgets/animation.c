@@ -17,7 +17,7 @@
  */
 
 #include "internal.h"
-#include "animation.h"
+#include "widgets/animation.h"
 #include "../core/runtime_bridge.h"
 #include "../../../src/gui/ldAnimation.h"
 

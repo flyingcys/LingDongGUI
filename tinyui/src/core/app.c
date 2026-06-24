@@ -18,12 +18,11 @@
 
 #include "internal.h"
 #include "runtime_bridge.h"
-#include "app.h"
-#include "background.h"
+#include "core/app.h"
+#include "widgets/background.h"
 #include "../drivers/tinyui_ldgui_port.h"
 #include "../../../src/misc/xBtnAction.h"
 
-#include <stdlib.h>
 
 static void tinyui_app_timer_unlink(struct tinyui_app_timer *timer)
 {
@@ -71,7 +70,7 @@ void tinyui_app_pump_timers(struct tinyui_app *app, unsigned int now_ticks)
         return;
     }
 
-    snapshot = calloc(timer_count, sizeof(*snapshot));
+    snapshot = ldCalloc(timer_count, sizeof(*snapshot));
     if (snapshot == NULL) {
         return;
     }
@@ -123,7 +122,7 @@ void tinyui_app_pump_timers(struct tinyui_app *app, unsigned int now_ticks)
         }
     }
 
-    free(snapshot);
+    ldFree(snapshot);
 }
 
 /**
@@ -134,13 +133,13 @@ void tinyui_app_pump_timers(struct tinyui_app *app, unsigned int now_ticks)
 
 struct tinyui_app *tinyui_app_create(void)
 {
-    struct tinyui_app *app = calloc(1, sizeof(struct tinyui_app));
+    struct tinyui_app *app = ldCalloc(1, sizeof(struct tinyui_app));
     if (app == NULL) {
         return NULL;
     }
 
     if (tinyui_runtime_bridge_init_app(app) != 0) {
-        free(app);
+        ldFree(app);
         return NULL;
     }
 
@@ -270,7 +269,7 @@ struct tinyui_app_timer *tinyui_app_timer_create(struct tinyui_app *app)
         return NULL;
     }
 
-    timer = calloc(1, sizeof(struct tinyui_app_timer));
+    timer = ldCalloc(1, sizeof(struct tinyui_app_timer));
     if (timer == NULL) {
         return NULL;
     }
@@ -357,7 +356,7 @@ void tinyui_app_timer_destroy(struct tinyui_app_timer *timer)
     }
 
     tinyui_app_timer_unlink(timer);
-    free(timer);
+    ldFree(timer);
 }
 
 /**
@@ -378,7 +377,7 @@ void tinyui_app_destroy(struct tinyui_app *app)
     timer = app->timers;
     while (timer != NULL) {
         next = timer->next;
-        free(timer);
+        ldFree(timer);
         timer = next;
     }
     app->timers = NULL;
@@ -407,14 +406,14 @@ void tinyui_app_destroy(struct tinyui_app *app)
         struct tinyui_widget *w = app->host_list_head;
         while (w != 0) {
             struct tinyui_widget *next_w = w->reg_next;
-            free(w);
+            ldFree(w);
             w = next_w;
         }
         app->host_list_head = 0;
     }
 
-    free(app->free_name_ids);
+    ldFree(app->free_name_ids);
     app->free_name_ids = 0;
 
-    free(app);
+    ldFree(app);
 }

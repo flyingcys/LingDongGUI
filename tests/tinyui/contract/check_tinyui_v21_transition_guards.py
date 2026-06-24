@@ -18,8 +18,8 @@ TINYUI_TOP_HEADERS = sorted((ROOT / "tinyui" / "include").glob("*.h"))
 TINYUI_INCLUDE_PROBE = """\
 #include "tinyui.h"
 #include "obj.h"
-#include "label.h"
-#include "button.h"
+#include "widgets/label.h"
+#include "widgets/button.h"
 #include "switch.h"
 int main(void) { return 0; }
 """

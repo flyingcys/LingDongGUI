@@ -17,13 +17,12 @@
  */
 
 #include "internal.h"
-#include "line_edit.h"
+#include "widgets/line_edit.h"
 
 #include "../core/runtime_bridge.h"
 #include "../../../src/gui/ldBase.h"
 #include "../../../src/gui/ldLineEdit.h"
 
-#include <stdlib.h>
 
 extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
 
@@ -39,7 +38,7 @@ static void tinyui_line_edit_rollback(struct tinyui_line_edit *line_edit)
     if (line_edit->widget.ld_widget != 0) {
         tinyui_widget_destroy_common(&line_edit->widget);
     } else {
-        free(line_edit);
+        ldFree(line_edit);
     }
 }
 

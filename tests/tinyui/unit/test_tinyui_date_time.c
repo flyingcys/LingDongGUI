@@ -1,10 +1,10 @@
 #include "internal.h"
 #include "ldDateTime.h"
 #include "../../../src/gui/ldBase.h"
-#include "app.h"
-#include "date_time.h"
-#include "widget.h"
-#include "window.h"
+#include "core/app.h"
+#include "widgets/date_time.h"
+#include "core/widget.h"
+#include "widgets/window.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>

@@ -1,5 +1,5 @@
-#include "app.h"
-#include "indev.h"
+#include "core/app.h"
+#include "indev/indev.h"
 
 #include <assert.h>
 #include <stddef.h>

@@ -17,11 +17,10 @@
  */
 
 #include "internal.h"
-#include "calendar.h"
+#include "widgets/calendar.h"
 #include "../../../src/gui/ldCalendar.h"
 #include "../../../src/gui/ldBase.h"
 
-#include <stdlib.h>
 
 extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
 int tinyui_runtime_bridge_bind_leaf_widget(struct tinyui_widget *widget, struct tinyui_app *app);
@@ -36,7 +35,7 @@ static void tinyui_calendar_rollback(struct tinyui_calendar *calendar)
     if (calendar->widget.ld_widget != 0) {
         tinyui_widget_destroy_common(&calendar->widget);
     } else {
-        free(calendar);
+        ldFree(calendar);
     }
 }
 
