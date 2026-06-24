@@ -364,6 +364,10 @@ struct tinyui_app {
     struct tinyui_os_port_state os_port;
     /* ── B2:活宿主侵入式双向链表头 ── */
     struct tinyui_widget *host_list_head;
+    /* ── P4-4.3: nameId 空闲表（防 uint16 单调回绕） ── */
+    uint16_t           *free_name_ids;
+    uint16_t            free_name_id_count;
+    uint16_t            free_name_id_cap;
 };
 
 struct tinyui_theme {
@@ -801,6 +805,8 @@ struct tinyui_table {
 void tinyui_app_register_host(struct tinyui_app *app, struct tinyui_widget *w);
 void tinyui_app_unregister_host(struct tinyui_app *app, struct tinyui_widget *w);
 struct tinyui_widget *tinyui_app_lookup_host(const struct tinyui_app *app, uint16_t name_id);
+uint16_t tinyui_app_alloc_name_id(struct tinyui_app *app);
+void tinyui_app_free_name_id(struct tinyui_app *app, uint16_t id);
 struct tinyui_widget *tinyui_widget_from_ld(const void *ld_node);
 struct tinyui_widget *tinyui_widget_from_ld_scene(const struct ld_scene_t *scene, const void *ld_node);
 

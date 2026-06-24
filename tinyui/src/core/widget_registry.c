@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include "internal.h"
 #include "../drivers/tinyui_ldgui_port.h"
 #include "../../../src/gui/ldBase.h"
@@ -30,6 +31,37 @@ void tinyui_app_unregister_host(struct tinyui_app *app, struct tinyui_widget *w)
     }
     w->reg_prev = 0;
     w->reg_next = 0;
+}
+
+uint16_t tinyui_app_alloc_name_id(struct tinyui_app *app)
+{
+    if (app == 0) {
+        return 0;
+    }
+    if (app->free_name_id_count > 0) {
+        return app->free_name_ids[--app->free_name_id_count];
+    }
+    return ++app->next_ld_name_id;
+}
+
+void tinyui_app_free_name_id(struct tinyui_app *app, uint16_t id)
+{
+    uint16_t *p;
+    uint16_t new_cap;
+
+    if (app == 0 || id == 0) {
+        return;
+    }
+    if (app->free_name_id_count >= app->free_name_id_cap) {
+        new_cap = (app->free_name_id_cap == 0) ? 8 : (uint16_t)(app->free_name_id_cap * 2);
+        p = realloc(app->free_name_ids, (size_t)new_cap * sizeof(uint16_t));
+        if (p == 0) {
+            return; /* drop on OOM — id is lost; no crash */
+        }
+        app->free_name_ids = p;
+        app->free_name_id_cap = new_cap;
+    }
+    app->free_name_ids[app->free_name_id_count++] = id;
 }
 
 struct tinyui_widget *tinyui_app_lookup_host(const struct tinyui_app *app, uint16_t name_id)

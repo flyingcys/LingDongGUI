@@ -766,7 +766,7 @@ struct tinyui_window *tinyui_window_create(struct tinyui_app *app, const char *i
         }
     }
 
-    name_id = ++app_state->next_ld_name_id;
+    name_id = tinyui_app_alloc_name_id(app_state);
     ld_root = ldWindow_init(app_state->ld_scene, NULL, name_id, 0, 0, 0,
                             root_width, root_height);
     if (ld_root == 0) {

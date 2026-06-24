@@ -38,6 +38,13 @@ struct tinyui_keyboard_create_ctx {
 
 /* Free dynamic layout resources BEFORE tinyui_widget_destroy_common frees
  * the host struct.  Also called by tinyui_keyboard_set_buttons during reuse. */
+static void tinyui_keyboard_free_layout(struct tinyui_keyboard *keyboard);
+
+static void tinyui_keyboard_host_cleanup(struct tinyui_widget *w)
+{
+    tinyui_keyboard_free_layout((struct tinyui_keyboard *)w);
+}
+
 static void tinyui_keyboard_free_layout(struct tinyui_keyboard *keyboard)
 {
     int i;
@@ -278,6 +285,7 @@ struct tinyui_keyboard *tinyui_keyboard_create(struct tinyui_window *parent, con
     keyboard->id = id;
     keyboard->widget.visible    = 1;
     keyboard->widget.enabled    = 1;
+    keyboard->widget.host_cleanup = tinyui_keyboard_host_cleanup;
 
     return keyboard;
 }

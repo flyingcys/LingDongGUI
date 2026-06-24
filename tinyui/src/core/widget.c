@@ -1865,6 +1865,7 @@ static void tinyui_destroy_reclaim_hosts_in_subtree(struct tinyui_app *app, ldBa
             if (host->host_cleanup != 0) {
                 host->host_cleanup(host);
             }
+            tinyui_app_free_name_id(app, host->ld_name_id);
             tinyui_app_unregister_host(app, host);
             free(host);
         }
@@ -1886,6 +1887,7 @@ void tinyui_widget_destroy_common(struct tinyui_widget *w)
     /* Idempotent unregister — safe whether called via destroy or rollback */
     if (owner != 0) {
         tinyui_app_unregister_host(owner, w);
+        tinyui_app_free_name_id(owner, w->ld_name_id);
     }
 
     if (w->host_cleanup != 0) {
@@ -1955,7 +1957,7 @@ struct tinyui_widget *tinyui_widget_create_leaf(
     w->owner = owner;
 
     /* 3. Assign name_id before calling ld_init so ld sees the correct id */
-    name_id = ++owner->next_ld_name_id;
+    name_id = tinyui_app_alloc_name_id(owner);
 
     /* 4. Obtain parent name_id (0 is acceptable for the root window) */
     parent_name_id = parent->ld_name_id;

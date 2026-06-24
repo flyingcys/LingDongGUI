@@ -413,5 +413,8 @@ void tinyui_app_destroy(struct tinyui_app *app)
         app->host_list_head = 0;
     }
 
+    free(app->free_name_ids);
+    app->free_name_ids = 0;
+
     free(app);
 }
