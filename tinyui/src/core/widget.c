@@ -20,6 +20,7 @@
 #include "widget.h"
 #include "arm_2d.h"
 #include "../../../src/gui/ldBase.h"
+#include "../../../src/gui/ldGui.h"
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -1083,6 +1084,8 @@ int tinyui_widget_remove_from_parent(struct tinyui_widget *widget)
     return tinyui_runtime_bridge_detach_from_parent(widget);
 }
 
+static void tinyui_destroy_reclaim_hosts_in_subtree(struct tinyui_app *app, ldBase_t *node);
+
 /**
  * @brief Destroy widget widget
  *
@@ -1099,11 +1102,18 @@ int tinyui_widget_destroy(struct tinyui_widget *widget)
         return -1;
     }
 
-    if (widget->kind == TINYUI_BACKEND_WIDGET_WINDOW || widget->ld_widget == 0) {
+    if (widget->ld_widget == 0) {
         return -1;
     }
 
     owner = widget->owner;
+
+    /* Root window cannot be destroyed individually */
+    if (owner != 0 && owner->root_window != 0 &&
+        &owner->root_window->widget == widget) {
+        return -1;
+    }
+
     if (owner != 0) {
         if (owner->focus_owner == widget) {
             (void)tinyui_widget_release_focus(widget);
@@ -1111,6 +1121,18 @@ int tinyui_widget_destroy(struct tinyui_widget *widget)
         if (owner->editing_owner == widget) {
             (void)tinyui_widget_release_editing(widget);
         }
+    }
+
+    /* Container path: reclaim all hosts in subtree (including this one), then
+     * let ldGuiDisposeNodeTree tear down the entire ld subtree. */
+    if (ldBaseGetChildList((ldBase_t *)widget->ld_widget) != 0) {
+        ldBase_t *ld_root = (ldBase_t *)widget->ld_widget; /* save before free */
+        /* reclaim_hosts_in_subtree handles the container host itself too */
+        tinyui_destroy_reclaim_hosts_in_subtree(owner, ld_root);
+        if (owner != 0 && owner->ld_scene != 0) {
+            ldGuiDisposeNodeTree(owner->ld_scene, ld_root);
+        }
+        return 0;
     }
 
     tinyui_app_unregister_host(owner, widget);
@@ -1809,6 +1831,44 @@ __attribute__((weak)) void tinyui_test_capture_destroyed_widget_snapshot(
     const struct tinyui_widget *widget)
 {
     (void)widget;
+}
+
+/* Depth-first: reclaim host structs in subtree while ld is still alive.
+ * ldGuiDisposeNodeTree tears down the ld side afterwards. */
+static void tinyui_destroy_reclaim_hosts_in_subtree(struct tinyui_app *app, ldBase_t *node)
+{
+    ldBase_t *child;
+    ldBase_t *next;
+
+    if (node == 0 || app == 0) {
+        return;
+    }
+
+    child = ldBaseGetChildList(node);
+    while (child != 0) {
+        next = ldBaseGetNextSibling(child);
+        tinyui_destroy_reclaim_hosts_in_subtree(app, child);
+        child = next;
+    }
+
+    {
+        struct tinyui_widget *host = tinyui_app_lookup_host(app, node->nameId);
+        if (host != 0) {
+            if (host->owner != 0) {
+                if (host->owner->focus_owner == host) {
+                    (void)tinyui_widget_release_focus(host);
+                }
+                if (host->owner->editing_owner == host) {
+                    (void)tinyui_widget_release_editing(host);
+                }
+            }
+            if (host->host_cleanup != 0) {
+                host->host_cleanup(host);
+            }
+            tinyui_app_unregister_host(app, host);
+            free(host);
+        }
+    }
 }
 
 void tinyui_widget_destroy_common(struct tinyui_widget *w)

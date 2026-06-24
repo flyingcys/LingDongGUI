@@ -23,7 +23,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static void ldGuiDisposeNodeTree(ld_scene_t *ptScene, ldBase_t *ptWidget)
+void ldGuiDisposeNodeTree(ld_scene_t *ptScene, ldBase_t *ptWidget)
 {
     ldBase_t *ptChild;
 

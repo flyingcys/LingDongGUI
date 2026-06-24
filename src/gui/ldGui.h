@@ -65,6 +65,7 @@ extern bool cursorBlinkFlag;
 
 void ldGuiLoad(ld_scene_t *ptScene);
 void ldGuiDespose(ld_scene_t *ptScene);
+void ldGuiDisposeNodeTree(ld_scene_t *ptScene, ldBase_t *ptWidget);
 void ldGuiFrameStart(ld_scene_t *ptScene);
 void ldGuiFrameComplete(ld_scene_t *ptScene);
 void ldGuiDraw(ld_scene_t *ptScene,arm_2d_tile_t *ptTile,bool bIsNewFrame);

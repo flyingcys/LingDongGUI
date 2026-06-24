@@ -2,6 +2,7 @@
 #include <string.h>
 #include "internal.h"
 #include "tinyui.h"
+#include "window.h"
 #include "../../../src/gui/ldBase.h"
 
 static void test_registry_register_lookup_unregister(void)
@@ -70,10 +71,38 @@ static void test_shutdown_does_not_leak(void)
     tinyui_app_destroy(app);
 }
 
+static void test_destroy_container_reclaims_subtree(void)
+{
+    struct tinyui_app *app;
+    struct tinyui_window *root = p2_make_window(&app);
+    struct tinyui_window *child = tinyui_window_create_child(root, "child_panel");
+    struct tinyui_label *l1;
+    struct tinyui_label *l2;
+    uint16_t cid, id1, id2;
+
+    assert(child != 0);
+    l1 = tinyui_label_create(child, "c1");
+    l2 = tinyui_label_create(child, "c2");
+    assert(l1 != 0);
+    assert(l2 != 0);
+
+    cid = child->widget.ld_name_id;
+    id1 = l1->widget.ld_name_id;
+    id2 = l2->widget.ld_name_id;
+
+    assert(tinyui_widget_destroy(&child->widget) == 0);
+    assert(tinyui_app_lookup_host(app, cid) == 0);
+    assert(tinyui_app_lookup_host(app, id1) == 0);
+    assert(tinyui_app_lookup_host(app, id2) == 0);
+
+    tinyui_app_destroy(app);
+}
+
 int main(void)
 {
     test_registry_register_lookup_unregister();
     test_destroy_leaf_removes_from_tree();
     test_shutdown_does_not_leak();
+    test_destroy_container_reclaims_subtree();
     return 0;
 }

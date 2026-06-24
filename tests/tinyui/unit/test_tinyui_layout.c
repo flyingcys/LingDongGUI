@@ -555,6 +555,9 @@ static void test_widget_destroy_detaches_focus_and_invalidates_backend_binding(v
     ldBase_t *ld_b = (ldBase_t *)b->widget.ld_widget;
     int b_name_id = tinyui_widget_get_name_id((const struct tinyui_widget *)b);
 
+    /* Mark win as root_window so B2 protection applies */
+    tinyui_app_set_window(app, win);
+
     assert(tinyui_widget_claim_focus((struct tinyui_widget *)b) == 0);
     assert(tinyui_widget_is_focus_owner((const struct tinyui_widget *)b) == 1);
     assert(tinyui_widget_get_child_count((const struct tinyui_widget *)win) == 2);
@@ -567,6 +570,7 @@ static void test_widget_destroy_detaches_focus_and_invalidates_backend_binding(v
     assert(tinyui_widget_get_first_child((const struct tinyui_widget *)win) == (struct tinyui_widget *)a);
     assert(ldBaseGetChildCount(ld_win) == 1);
 
+    /* Root window (registered via tinyui_app_set_window) is protected from destroy */
     assert(tinyui_widget_destroy((struct tinyui_widget *)win) == -1);
     assert(tinyui_widget_destroy(0) == -1);
 
