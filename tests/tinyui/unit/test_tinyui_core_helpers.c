@@ -20,7 +20,6 @@
  * Unit tests for Phase C1 core helper functions:
  *   - tinyui_rgb_to_ld_color / tinyui_ld_color_to_rgb
  *   - tinyui_align_to_arm2d
- *   - tinyui_widget_detach_from_parent (declaration check)
  *   - tinyui_widget_destroy_common     (declaration check)
  *   - tinyui_widget_create_leaf        (C1-T4)
  */

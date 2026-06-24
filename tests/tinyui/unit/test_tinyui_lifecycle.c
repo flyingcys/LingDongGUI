@@ -5,7 +5,9 @@
 #include "window.h"
 #include "keyboard.h"
 #include "list.h"
+#include "button.h"
 #include "../../../src/gui/ldBase.h"
+#include "../../../src/misc/xBtnAction.h"
 
 static void test_registry_register_lookup_unregister(void)
 {
@@ -154,6 +156,33 @@ static void test_name_id_reused_after_destroy(void)
     tinyui_app_destroy(app);
 }
 
+/* P4: a runtime-destroyed button must unlink its action_info from the global
+ * xBtnLink list (via host_cleanup -> xBtnRemove) BEFORE the host is freed.
+ * Otherwise xBtnAction keeps a dangling node into freed host memory, which is
+ * walked on the next xBtnTick / xBtnGetState / shutdown xBtnDestroy -> UAF.
+ * ldButton_depose does NOT call xBtnRemove, so the host_cleanup hook is the
+ * only thing that closes this gap (mirrors keyboard's host_cleanup). */
+static void test_destroy_button_unregisters_from_xbtn(void)
+{
+    struct tinyui_app *app;
+    struct tinyui_window *win = p2_make_window(&app);
+    struct tinyui_button *btn = tinyui_button_create(win, "b");
+    uint16_t id;
+
+    assert(btn != 0);
+    id = btn->widget.ld_name_id;
+
+    /* freshly-created button is registered with xBtnAction and idle */
+    assert(xBtnGetState(id, BTN_NO_OPERATION) == 1);
+
+    assert(tinyui_widget_destroy(&btn->widget) == 0);
+
+    /* after destroy the button must no longer be found in xBtnLink */
+    assert(xBtnGetState(id, BTN_NO_OPERATION) == 0);
+
+    tinyui_app_destroy(app);
+}
+
 int main(void)
 {
     test_registry_register_lookup_unregister();
@@ -163,5 +192,6 @@ int main(void)
     test_keyboard_host_cleanup_frees_layout();
     test_composite_list_item_no_pinfo_clash();
     test_name_id_reused_after_destroy();
+    test_destroy_button_unregisters_from_xbtn();
     return 0;
 }

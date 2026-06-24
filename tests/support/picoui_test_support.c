@@ -233,7 +233,7 @@ struct tinyui_image *tinyui_backend_image_test_create_with_props_fail_before_siz
     }
     ld_base = (ldBase_t *)w->ld_widget;
     if (ldBaseGetParent(ld_base) != NULL) {
-        detach_result = tinyui_widget_detach_from_parent(w);
+        detach_result = tinyui_runtime_bridge_detach_from_parent(w);
         ld_base = 0;
     }
     unbind_result = tinyui_runtime_bridge_unbind_host(w);
@@ -309,7 +309,7 @@ struct tinyui_qrcode *tinyui_backend_qrcode_test_create_with_props_fail_before_t
     }
     ld_base = (ldBase_t *)w->ld_widget;
     if (ldBaseGetParent(ld_base) != NULL) {
-        detach_result = tinyui_widget_detach_from_parent(w);
+        detach_result = tinyui_runtime_bridge_detach_from_parent(w);
         ld_base = 0;
     }
     unbind_result = tinyui_runtime_bridge_unbind_host(w);

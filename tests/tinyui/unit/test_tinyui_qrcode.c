@@ -66,10 +66,10 @@ static void assert_source_lacks_function_definition(const char *source_path, con
     assert(system(command) == 0);
 }
 
-/* C1: finish_detach fallback — delegate to tinyui_widget_detach_from_parent */
+/* C1: finish_detach fallback — delegate to tinyui_runtime_bridge_detach_from_parent */
 static int tinyui_qrcode_finish_detach_after_backend_failure(struct tinyui_widget *widget)
 {
-    return tinyui_widget_detach_from_parent(widget);
+    return tinyui_runtime_bridge_detach_from_parent(widget);
 }
 
 static void tinyui_qrcode_fill_snapshot(struct tinyui_widget *widget,

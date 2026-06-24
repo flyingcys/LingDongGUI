@@ -65,7 +65,7 @@ static int tinyui_image_finish_detach_after_backend_failure(struct tinyui_widget
         }
     }
 
-    return tinyui_widget_detach_from_parent(backend);
+    return tinyui_runtime_bridge_detach_from_parent(backend);
 }
 
 static void tinyui_image_fill_snapshot(struct tinyui_widget *backend,
@@ -143,7 +143,7 @@ struct tinyui_image *tinyui_image_test_create_with_props_fail_before_size(
         return 0;
     }
     if (ldBaseGetParent((ldBase_t *)backend->ld_widget) != 0) {
-        detach_result = tinyui_widget_detach_from_parent(backend);
+        detach_result = tinyui_runtime_bridge_detach_from_parent(backend);
         if (detach_result != 0) {
             detach_result = tinyui_image_finish_detach_after_backend_failure(backend);
         }

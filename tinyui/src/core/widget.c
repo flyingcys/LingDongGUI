@@ -1811,20 +1811,6 @@ int tinyui_align_to_arm2d(enum tinyui_align align)
 /* ── C1-T3: detach / destroy_common helpers ────────────────────────────────── */
 
 /**
- * @brief Detach widget from parent in the ld tree
- */
-int tinyui_widget_detach_from_parent(struct tinyui_widget *w)
-{
-    if (w == 0 || w->ld_widget == 0) {
-        return -1;
-    }
-
-    ldBaseNodeRemove((arm_2d_control_node_t *)w->ld_widget);
-    w->ld_widget = 0;
-    return 0;
-}
-
-/**
  * @brief Common destroy: host_cleanup + depose ld via ptGuiFunc + free host
  */
 __attribute__((weak)) void tinyui_test_capture_destroyed_widget_snapshot(

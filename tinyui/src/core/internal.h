@@ -819,11 +819,6 @@ struct tinyui_widget *tinyui_widget_create_leaf(
     size_t host_size);
 
 /**
- * @brief Detach widget from parent in the ld tree
- */
-int tinyui_widget_detach_from_parent(struct tinyui_widget *w);
-
-/**
  * @brief Common destroy: host_cleanup + depose ld via ptGuiFunc + free host
  */
 void tinyui_widget_destroy_common(struct tinyui_widget *w);

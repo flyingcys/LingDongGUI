@@ -82,6 +82,15 @@ static void tinyui_button_rollback(struct tinyui_button *button)
     }
 }
 
+/* Runtime-destroy hook: ldButton_depose does NOT call xBtnRemove, so the host
+ * must unlink its embedded action_info from the global xBtnLink before its
+ * memory is freed. Invoked by destroy_common / subtree reclaim / app teardown
+ * while the ld widget is still alive (mirrors keyboard host_cleanup). */
+static void tinyui_button_host_cleanup(struct tinyui_widget *w)
+{
+    xBtnRemove(&((struct tinyui_button *)w)->action_info);
+}
+
 void tinyui_button_test_fail_next_set_font(void)
 {
     tinyui_button_fail_next_set_font = 1;
@@ -139,6 +148,7 @@ static struct tinyui_button *tinyui_button_alloc(struct tinyui_window *parent, c
     button->id = id;
     button->widget.visible    = 1;
     button->widget.enabled    = 1;
+    button->widget.host_cleanup = tinyui_button_host_cleanup;
     _xBtnInit(button->widget.ld_name_id, (isBtnPressFunc)ldButtonActionIsPressById, &button->action_info);
 
     return button;
