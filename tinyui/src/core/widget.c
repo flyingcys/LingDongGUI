@@ -1093,6 +1093,7 @@ int tinyui_widget_remove_from_parent(struct tinyui_widget *widget)
 int tinyui_widget_destroy(struct tinyui_widget *widget)
 {
     struct tinyui_app *owner;
+    ldBase_t *ld_base;
 
     if (!tinyui_widget_is_valid(widget)) {
         return -1;
@@ -1112,12 +1113,19 @@ int tinyui_widget_destroy(struct tinyui_widget *widget)
         }
     }
 
-    if (tinyui_runtime_bridge_unbind_host(widget) != 0) {
-        return -1;
+    if (widget->host_cleanup != 0) {
+        widget->host_cleanup(widget);
     }
-    if (tinyui_runtime_bridge_detach_from_parent(widget) != 0) {
-        return -1;
+
+    tinyui_app_unregister_host(owner, widget);
+
+    ld_base = (ldBase_t *)widget->ld_widget;
+    if (ld_base->ptGuiFunc != 0 && ld_base->ptGuiFunc->depose != 0) {
+        ld_base->ptGuiFunc->depose(owner != 0 ? owner->ld_scene : 0, widget->ld_widget);
+    } else {
+        ldBaseNodeRemove((arm_2d_control_node_t *)widget->ld_widget);
     }
+    free(widget);
     return 0;
 }
 

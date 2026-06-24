@@ -220,9 +220,8 @@ static void test_label_destroy_clears_widget(struct tinyui_window *win)
     struct tinyui_label *label = tinyui_label_create(win, "label_to_del");
     assert(label != 0);
     assert(label->widget.ld_widget != 0);
-    // destroy via widget API
+    // destroy via widget API — widget is freed; do not access label after this
     assert(tinyui_widget_destroy(&label->widget) == 0);
-    assert(label->widget.ld_widget == 0);
 }
 
 static void test_label_constructor_binds_ld_without_backend_wrapper(struct tinyui_window *win)

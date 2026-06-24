@@ -559,21 +559,14 @@ static void test_widget_destroy_detaches_focus_and_invalidates_backend_binding(v
     assert(tinyui_widget_is_focus_owner((const struct tinyui_widget *)b) == 1);
     assert(tinyui_widget_get_child_count((const struct tinyui_widget *)win) == 2);
 
+    /* b and ld_b are freed after destroy; only access app/win/a after this */
     assert(tinyui_widget_destroy((struct tinyui_widget *)b) == 0);
-    assert(tinyui_widget_is_focus_owner((const struct tinyui_widget *)b) == 0);
     assert(app->focus_owner == 0);
-    assert(tinyui_widget_get_parent((const struct tinyui_widget *)b) == 0);
-    assert(tinyui_widget_get_root((const struct tinyui_widget *)b) == 0);
-    assert(tinyui_widget_get_name_id((const struct tinyui_widget *)b) == -1);
-    assert(tinyui_widget_get_type((const struct tinyui_widget *)b) == TINYUI_WIDGET_TYPE_UNKNOWN);
     assert(tinyui_widget_find_by_name_id((const struct tinyui_widget *)win, b_name_id) == 0);
     assert(tinyui_widget_get_child_count((const struct tinyui_widget *)win) == 1);
     assert(tinyui_widget_get_first_child((const struct tinyui_widget *)win) == (struct tinyui_widget *)a);
-    assert(ldBaseGetParent(ld_b) == 0);
     assert(ldBaseGetChildCount(ld_win) == 1);
-    assert(b->widget.ld_widget == 0);
 
-    assert(tinyui_widget_destroy((struct tinyui_widget *)b) == -1);
     assert(tinyui_widget_destroy((struct tinyui_widget *)win) == -1);
     assert(tinyui_widget_destroy(0) == -1);
 

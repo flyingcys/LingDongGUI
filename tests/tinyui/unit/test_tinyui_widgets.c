@@ -2458,8 +2458,8 @@ static void test_widget_destroy_clears_backend(struct tinyui_window *win)
     widget = &label->widget;
     assert(widget->ld_widget != 0);
 
+    // widget is freed after destroy; do not access widget after this
     assert(tinyui_widget_destroy(widget) == 0);
-    assert(widget->ld_widget == 0);
 
     assert(tinyui_widget_destroy(0) == -1);
 }
