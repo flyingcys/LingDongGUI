@@ -177,6 +177,7 @@ function(ld_define_core_targets)
         ${LD_REPO_ROOT}/tinyui/src/core/runtime.c
         ${LD_REPO_ROOT}/tinyui/src/core/runtime_bridge.c
         ${LD_REPO_ROOT}/tinyui/src/core/widget.c
+        ${LD_REPO_ROOT}/tinyui/src/core/widget_registry.c
         ${LD_REPO_ROOT}/tinyui/src/core/event.c
         ${LD_REPO_ROOT}/tinyui/src/core/resource.c
         ${LD_REPO_ROOT}/tinyui/src/display/display.c

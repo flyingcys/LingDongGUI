@@ -42,6 +42,7 @@ set(TINYUI_UNIT_TESTS
     unit/test_tinyui_window.c
     unit/test_tinyui_graph.c
     unit/test_tinyui_calendar.c
+    unit/test_tinyui_lifecycle.c
 )
 
 function(ld_register_tinyui_unit_test test_src)
