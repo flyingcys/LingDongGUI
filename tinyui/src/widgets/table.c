@@ -115,13 +115,11 @@ static bool tinyui_table_native_slot(struct ld_scene_t *scene, ldMsg_t msg)
     int column = 0;
     int was_focus_owner = 0;
 
-    (void)scene;
-
     if (msg.ptSender == NULL) {
         return false;
     }
 
-    w = (struct tinyui_widget *)((ldBase_t *)msg.ptSender)->pInfo;
+    w = tinyui_widget_from_ld_scene(scene, msg.ptSender);
     if (w == NULL) {
         return false;
     }

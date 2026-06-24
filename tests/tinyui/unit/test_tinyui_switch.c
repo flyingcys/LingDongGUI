@@ -50,7 +50,7 @@ static void test_switch_create_builds_direct_backend_mapping(struct tinyui_windo
     assert(backend->ld_event_bridge_sender == backend->ld_widget);
     ld_switch = (ldSwitch_t *)backend->ld_widget;
     assert(ld_switch != 0);
-    assert(((ldBase_t *)ld_switch)->pInfo == backend);
+    assert(tinyui_app_lookup_host(backend->owner, backend->ld_name_id) == backend);
 }
 
 static void test_switch_default_geometry_matches_capsule_track(void)

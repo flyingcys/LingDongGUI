@@ -119,13 +119,11 @@ static bool tinyui_icon_slider_native_slot(struct ld_scene_t *scene, ldMsg_t msg
     int selected_index;
     int previous_selected_index;
 
-    (void)scene;
-
     if (msg.ptSender == 0 || msg.signal != SIGNAL_CLICKED_ITEM) {
         return false;
     }
 
-    w = (struct tinyui_widget *)((ldBase_t *)msg.ptSender)->pInfo;
+    w = tinyui_widget_from_ld_scene(scene, msg.ptSender);
     if (w == 0) {
         return false;
     }

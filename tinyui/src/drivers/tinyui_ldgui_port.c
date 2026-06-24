@@ -39,6 +39,64 @@ struct tinyui_app *ldgui_port_get_current_app(void)
     return s_ldgui_current_app;
 }
 
+/* ─── scene→app 注册表（固定大小，足够测试场景使用）─── */
+#define LDGUI_PORT_SCENE_REGISTRY_SIZE 16
+
+static struct {
+    struct ld_scene_t *scene;
+    struct tinyui_app *app;
+} s_scene_app_registry[LDGUI_PORT_SCENE_REGISTRY_SIZE];
+
+void ldgui_port_register_scene_app(struct ld_scene_t *scene, struct tinyui_app *app)
+{
+    int i;
+    if (scene == NULL || app == NULL) {
+        return;
+    }
+    for (i = 0; i < LDGUI_PORT_SCENE_REGISTRY_SIZE; i++) {
+        if (s_scene_app_registry[i].scene == scene) {
+            s_scene_app_registry[i].app = app;
+            return;
+        }
+    }
+    for (i = 0; i < LDGUI_PORT_SCENE_REGISTRY_SIZE; i++) {
+        if (s_scene_app_registry[i].scene == NULL) {
+            s_scene_app_registry[i].scene = scene;
+            s_scene_app_registry[i].app = app;
+            return;
+        }
+    }
+}
+
+void ldgui_port_unregister_scene_app(struct ld_scene_t *scene)
+{
+    int i;
+    if (scene == NULL) {
+        return;
+    }
+    for (i = 0; i < LDGUI_PORT_SCENE_REGISTRY_SIZE; i++) {
+        if (s_scene_app_registry[i].scene == scene) {
+            s_scene_app_registry[i].scene = NULL;
+            s_scene_app_registry[i].app = NULL;
+            return;
+        }
+    }
+}
+
+struct tinyui_app *ldgui_port_get_app_for_scene(const struct ld_scene_t *scene)
+{
+    int i;
+    if (scene == NULL) {
+        return NULL;
+    }
+    for (i = 0; i < LDGUI_PORT_SCENE_REGISTRY_SIZE; i++) {
+        if (s_scene_app_registry[i].scene == scene) {
+            return s_scene_app_registry[i].app;
+        }
+    }
+    return NULL;
+}
+
 /* ─── ① LCD flush → tinyui display_port.flush_callback ─── */
 int32_t Disp0_DrawBitmap(int16_t x, int16_t y, int16_t width, int16_t height,
                          const uint8_t *bitmap)

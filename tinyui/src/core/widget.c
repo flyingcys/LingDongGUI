@@ -214,7 +214,7 @@ struct tinyui_widget *tinyui_widget_backend_parent(const struct tinyui_widget *w
         return 0;
     }
 
-    return (struct tinyui_widget *)ld_parent->pInfo;
+    return tinyui_app_lookup_host(widget->owner, ld_parent->nameId);
 }
 
 static int tinyui_align_to_ld_horizontal(enum tinyui_align align)
@@ -1112,9 +1112,6 @@ int tinyui_widget_destroy(struct tinyui_widget *widget)
         }
     }
 
-    /* Unbind BEFORE detach: unbind_host clears the ld node's pInfo only while
-     * widget->ld_widget is still set, and detach_from_parent nulls ld_widget.
-     * Reversing the order would skip the pInfo clear (regression vs baseline). */
     if (tinyui_runtime_bridge_unbind_host(widget) != 0) {
         return -1;
     }
@@ -1299,7 +1296,7 @@ struct tinyui_widget *tinyui_widget_get_parent(const struct tinyui_widget *widge
         return 0;
     }
 
-    return (struct tinyui_widget *)ld_parent->pInfo;
+    return tinyui_app_lookup_host(widget->owner, ld_parent->nameId);
 }
 
 /**
@@ -1324,7 +1321,7 @@ struct tinyui_widget *tinyui_widget_get_first_child(const struct tinyui_widget *
         return 0;
     }
 
-    return (struct tinyui_widget *)ld_child->pInfo;
+    return tinyui_app_lookup_host(widget->owner, ld_child->nameId);
 }
 
 /**
@@ -1349,7 +1346,7 @@ struct tinyui_widget *tinyui_widget_get_next_sibling(const struct tinyui_widget 
         return 0;
     }
 
-    return (struct tinyui_widget *)ld_sibling->pInfo;
+    return tinyui_app_lookup_host(widget->owner, ld_sibling->nameId);
 }
 
 /**
@@ -1368,13 +1365,14 @@ struct tinyui_widget *tinyui_widget_get_root(const struct tinyui_widget *widget)
         return 0;
     }
 
-    /* Walk up the LD tree, tracking the last node with a non-NULL pInfo.
-     * With a phantom scene root (pInfo==NULL), this returns the topmost
+    /* Walk up the LD tree, tracking the last node with a registered host.
+     * With a phantom scene root (no host), this returns the topmost
      * user-visible root rather than the phantom. */
     ld_node = (ldBase_t *)widget->ld_widget;
     while (ld_node != 0) {
-        if (ld_node->pInfo != 0) {
-            last_valid = (struct tinyui_widget *)ld_node->pInfo;
+        struct tinyui_widget *host = tinyui_app_lookup_host(widget->owner, ld_node->nameId);
+        if (host != 0) {
+            last_valid = host;
         }
         ld_node = ldBaseGetParent(ld_node);
     }
@@ -1435,7 +1433,7 @@ int tinyui_widget_get_name_id(const struct tinyui_widget *widget)
  * @return Pointer to the object on success, NULL on failure
  */
 
-static struct tinyui_widget *find_widget_by_name_id_in_ld(ldBase_t *node, int name_id)
+static struct tinyui_widget *find_widget_by_name_id_in_ld(struct tinyui_app *app, ldBase_t *node, int name_id)
 {
     struct tinyui_widget *found;
     ldBase_t *child;
@@ -1444,10 +1442,10 @@ static struct tinyui_widget *find_widget_by_name_id_in_ld(ldBase_t *node, int na
         return 0;
     }
     if ((int)ldBaseGetNameId(node) == name_id) {
-        return (struct tinyui_widget *)node->pInfo;
+        return tinyui_app_lookup_host(app, (uint16_t)name_id);
     }
     for (child = ldBaseGetChildList(node); child != 0; child = ldBaseGetNextSibling(child)) {
-        found = find_widget_by_name_id_in_ld(child, name_id);
+        found = find_widget_by_name_id_in_ld(app, child, name_id);
         if (found != 0) {
             return found;
         }
@@ -1466,7 +1464,7 @@ struct tinyui_widget *tinyui_widget_find_by_name_id(const struct tinyui_widget *
     if (ld_root == 0) {
         return 0;
     }
-    return find_widget_by_name_id_in_ld(ld_root, name_id);
+    return find_widget_by_name_id_in_ld(root->owner, ld_root, name_id);
 }
 
 /**
@@ -1800,14 +1798,13 @@ int tinyui_widget_detach_from_parent(struct tinyui_widget *w)
         return -1;
     }
 
-    ((ldBase_t *)w->ld_widget)->pInfo = 0;
     ldBaseNodeRemove((arm_2d_control_node_t *)w->ld_widget);
     w->ld_widget = 0;
     return 0;
 }
 
 /**
- * @brief Common destroy: detach + unbind (clear pInfo + bridge) + ld_depose_cb + free
+ * @brief Common destroy: detach + unbind + ld_depose_cb + free
  */
 __attribute__((weak)) void tinyui_test_capture_destroyed_widget_snapshot(
     const struct tinyui_widget *widget)
@@ -1828,7 +1825,6 @@ void tinyui_widget_destroy_common(struct tinyui_widget *w, void (*ld_depose_cb)(
     /* Detach from ld tree */
     if (ld_widget != 0) {
         ldBaseNodeRemove((arm_2d_control_node_t *)ld_widget);
-        ((ldBase_t *)ld_widget)->pInfo = 0;
     }
 
     /* Clear bridge fields */
@@ -1921,8 +1917,8 @@ struct tinyui_widget *tinyui_widget_create_leaf(
                       (arm_2d_control_node_t *)ld_widget);
     }
 
-    /* 8. Bind pInfo so ld events find this widget */
-    ((ldBase_t *)ld_widget)->pInfo = w;
+    /* 8. 注册宿主(ld 事件经 nameId 反查到此 widget) */
+    tinyui_app_register_host(owner, w);
 
     /* 9. Default visibility / enabled */
     w->visible = 1;
@@ -1931,12 +1927,11 @@ struct tinyui_widget *tinyui_widget_create_leaf(
     /* 10. Bind runtime event bridge */
     if (tinyui_runtime_bridge_bind_leaf_widget(w, owner) != 0) {
         /* Roll back the partially-created leaf with no leak and no phantom
-         * node: detach from the ld tree, clear pInfo, then depose the ld
-         * widget via its generic func-table depose (same NodeRemove-then-
-         * depose order as tinyui_widget_destroy_common). */
+         * node: unregister host, detach from the ld tree, then depose the ld
+         * widget via its generic func-table depose. */
         ldBase_t *ld_base = (ldBase_t *)ld_widget;
+        tinyui_app_unregister_host(owner, w);
         ldBaseNodeRemove((arm_2d_control_node_t *)ld_widget);
-        ld_base->pInfo = 0;
         if (ld_base->ptGuiFunc != 0 && ld_base->ptGuiFunc->depose != 0) {
             ld_base->ptGuiFunc->depose(owner->ld_scene, ld_widget);
         }

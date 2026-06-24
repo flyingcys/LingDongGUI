@@ -65,17 +65,14 @@ static int tinyui_message_box_props_are_valid(const struct tinyui_message_box_pr
 
 static void tinyui_message_box_confirm_bridge(ld_scene_t *scene, ldMessageBox_t *ld_message_box)
 {
-    /* C1-T7: pInfo now points to tinyui_widget */
     struct tinyui_widget *w;
     struct tinyui_message_box *box;
-
-    (void)scene;
 
     if (ld_message_box == 0) {
         return;
     }
 
-    w = (struct tinyui_widget *)((ldBase_t *)ld_message_box)->pInfo;
+    w = tinyui_widget_from_ld_scene(scene, ld_message_box);
     if (w == 0) {
         return;
     }

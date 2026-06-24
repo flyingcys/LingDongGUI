@@ -121,7 +121,7 @@ static void test_clock_create_builds_direct_backend_mapping(struct tinyui_window
     assert(backend->ld_event_bridge_sender == backend->ld_widget);
     ld_clock = (ldClock_t *)backend->ld_widget;
     assert(ld_clock != 0);
-    assert(((ldBase_t *)ld_clock)->pInfo == backend);
+    assert(tinyui_app_lookup_host(backend->owner, backend->ld_name_id) == backend);
     assert(tinyui_widget_has_ld_binding(&clock->widget) == 1);
 }
 

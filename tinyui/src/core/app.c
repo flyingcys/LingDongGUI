@@ -145,6 +145,7 @@ struct tinyui_app *tinyui_app_create(void)
     }
 
     ldgui_port_set_current_app(app);
+    ldgui_port_register_scene_app(app->ld_scene, app);
 
     return app;
 }
@@ -385,6 +386,7 @@ void tinyui_app_destroy(struct tinyui_app *app)
     if (ldgui_port_get_current_app() == app) {
         ldgui_port_set_current_app(NULL);
     }
+    ldgui_port_unregister_scene_app(app->ld_scene);
 
     tinyui_runtime_bridge_shutdown_app(app);
     xBtnDestroy();

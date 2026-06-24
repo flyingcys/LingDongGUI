@@ -343,9 +343,7 @@ static void tinyui_window_do_free_internal(struct tinyui_window *window)
     window->widget.ld_event_bridge_scene = 0;
     window->widget.ld_event_bridge_sender = 0;
     window->widget.ld_event_bridge_next = 0;
-    if (ld_win != 0) {
-        ((ldBase_t *)ld_win)->pInfo = 0;
-    }
+    tinyui_app_unregister_host(app_state, &window->widget);
 
     /* C2: detach the ld node from its parent directly. */
     if (ld_win != 0 && ldBaseGetParent((ldBase_t *)ld_win) != 0) {
@@ -789,10 +787,10 @@ struct tinyui_window *tinyui_window_create(struct tinyui_app *app, const char *i
     window->widget.ld_name_id = name_id;
     window->widget.kind = TINYUI_BACKEND_WIDGET_WINDOW;
     window->widget.owner = app_state;
-    ((ldBase_t *)ld_root)->pInfo = &window->widget;
+    tinyui_app_register_host(app_state, &window->widget);
 
     if (tinyui_runtime_bridge_bind_leaf_widget(&window->widget, app_state) != 0) {
-        ((ldBase_t *)ld_root)->pInfo = 0;
+        tinyui_app_unregister_host(app_state, &window->widget);
         window->widget.ld_widget = 0;
         ldWindow_depose(app_state->ld_scene, ld_root);
         free(window);

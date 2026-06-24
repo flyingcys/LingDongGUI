@@ -17,14 +17,11 @@ static bool tinyui_runtime_bridge_ld_event_bridge_slot(struct ld_scene_t *scene,
 {
     struct tinyui_widget *widget = NULL;
 
-    (void)scene;
-
     if (msg.ptSender == NULL) {
         return false;
     }
 
-    /* C1-T5: pInfo now points to tinyui_widget (folded model) */
-    widget = (struct tinyui_widget *)((ldBase_t *)msg.ptSender)->pInfo;
+    widget = tinyui_widget_from_ld_scene(scene, msg.ptSender);
     if (widget == NULL) {
         return false;
     }
@@ -46,7 +43,6 @@ static int tinyui_runtime_bridge_connect_native_events(struct tinyui_widget *wid
     }
 
     sender = (ldBase_t *)widget->ld_widget;
-    sender->pInfo = widget;
 
     switch (widget->kind) {
     case TINYUI_BACKEND_WIDGET_BUTTON:
@@ -301,9 +297,6 @@ int tinyui_runtime_bridge_unbind_host(struct tinyui_widget *widget)
         return -1;
     }
 
-    if (widget->ld_widget != 0) {
-        ((ldBase_t *)widget->ld_widget)->pInfo = 0;
-    }
     widget->owner = 0;
     widget->ld_event_bridge_scene = 0;
     widget->ld_event_bridge_sender = 0;

@@ -187,7 +187,7 @@ static void test_qrcode_create_and_props(struct tinyui_window *win)
     assert(backend->ld_event_bridge_sender == backend->ld_widget);
     ld_qrcode = (ldQRCode_t *)backend->ld_widget;
     assert(ld_qrcode != 0);
-    assert(((ldBase_t *)ld_qrcode)->pInfo == backend);
+    assert(tinyui_app_lookup_host(backend->owner, backend->ld_name_id) == backend);
     assert(tinyui_widget_has_ld_binding(&qrcode->widget) == 1);
     assert(tinyui_qrcode_get_text(qrcode) != 0);
     assert(strcmp(tinyui_qrcode_get_text(qrcode), "") == 0);

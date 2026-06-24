@@ -190,7 +190,7 @@ static void test_image_create_and_ld_mapping(struct tinyui_window *win)
     assert(backend->ld_event_bridge_sender == backend->ld_widget);
     ld_img = (ldImage_t *)backend->ld_widget;
     assert(ld_img != 0);
-    assert(((ldBase_t *)ld_img)->pInfo == backend);
+    assert(tinyui_app_lookup_host(backend->owner, backend->ld_name_id) == backend);
     assert(tinyui_widget_has_ld_binding(&img->widget) == 1);
 }
 

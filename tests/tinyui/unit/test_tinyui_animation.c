@@ -84,7 +84,7 @@ static void test_animation_create_with_props_builds_direct_backend_mapping(struc
     assert(backend->ld_event_bridge_sender == backend->ld_widget);
     ld_animation = (ldAnimation_t *)backend->ld_widget;
     assert(ld_animation != 0);
-    assert(((ldBase_t *)ld_animation)->pInfo == backend);
+    assert(tinyui_app_lookup_host(backend->owner, backend->ld_name_id) == backend);
     assert(tinyui_widget_has_ld_binding(&animation->widget) == 1);
     assert(animation->source == &source);
     assert(animation->period_ms == 120);

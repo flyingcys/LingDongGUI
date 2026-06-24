@@ -73,7 +73,7 @@ static void test_progress_bar_create_and_backend_mapping(struct tinyui_window *w
     assert(backend->ld_event_bridge_sender == backend->ld_widget);
     ld_progress_bar = (ldProgressBar_t *)backend->ld_widget;
     assert(ld_progress_bar != 0);
-    assert(((ldBase_t *)ld_progress_bar)->pInfo == backend);
+    assert(tinyui_app_lookup_host(backend->owner, backend->ld_name_id) == backend);
     assert(tinyui_widget_has_ld_binding(&bar->widget) == 1);
     assert(tinyui_test_source_contains(progress_bar_widget_source_path,
                                        "tinyui_progress_bar_test_create_with_props_fail_before_inverted") == 1);

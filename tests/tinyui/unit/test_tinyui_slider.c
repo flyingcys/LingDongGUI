@@ -56,7 +56,7 @@ static void test_slider_create_and_backend_mapping(struct tinyui_window *win)
     assert(backend->ld_event_bridge_sender == backend->ld_widget);
     ld_slider = (ldSlider_t *)backend->ld_widget;
     assert(ld_slider != 0);
-    assert(((ldBase_t *)ld_slider)->pInfo == backend);
+    assert(tinyui_app_lookup_host(backend->owner, backend->ld_name_id) == backend);
     assert(slider->min_value == 0);
     assert(slider->max_value == 100);
     assert(slider->value == 0);

@@ -104,7 +104,7 @@ static void test_scroll_selecter_selected_item_matches_backend_truth(void)
     assert(backend->ld_name_id != 0);
     ld_scroll_selecter = (ldScrollSelecter_t *)backend->ld_widget;
     assert(ld_scroll_selecter != 0);
-    assert(((ldBase_t *)ld_scroll_selecter)->pInfo == backend);
+    assert(tinyui_app_lookup_host(backend->owner, backend->ld_name_id) == backend);
 
     assert(tinyui_scroll_selecter_set_selected_index(scroll_selecter, 1) == 0);
     ldScrollSelecterSetSelectItemNum(ld_scroll_selecter, 2);

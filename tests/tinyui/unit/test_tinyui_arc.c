@@ -188,7 +188,7 @@ static void test_arc_create_and_backend_mapping(struct tinyui_window *win)
     assert(backend->ld_event_bridge_sender == backend->ld_widget);
     ld_arc = (ldArc_t *)backend->ld_widget;
     assert(ld_arc != 0);
-    assert(((ldBase_t *)ld_arc)->pInfo == backend);
+    assert(tinyui_app_lookup_host(backend->owner, backend->ld_name_id) == backend);
     assert(tinyui_widget_has_ld_binding(&arc->widget) == 1);
 }
 

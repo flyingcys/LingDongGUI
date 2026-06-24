@@ -767,11 +767,11 @@ int tinyui_button_get_pressed_by_name_id(const struct tinyui_widget *root,
 
     ld_found = (ldBase_t *)ldBaseGetWidget(
         (arm_2d_control_node_t *)root->ld_widget, (uint16_t)name_id);
-    if (ld_found == 0 || ld_found->pInfo == 0) {
+    widget = ld_found != 0 ? tinyui_widget_from_ld(ld_found) : 0;
+    if (widget == 0) {
         return -1;
     }
 
-    widget = (struct tinyui_widget *)ld_found->pInfo;
     if (tinyui_widget_get_type(widget) != TINYUI_WIDGET_TYPE_BUTTON) {
         return -1;
     }
@@ -805,11 +805,11 @@ int tinyui_button_get_action_state_by_name_id(const struct tinyui_widget *root,
 
     ld_found = (ldBase_t *)ldBaseGetWidget(
         (arm_2d_control_node_t *)root->ld_widget, (uint16_t)name_id);
-    if (ld_found == 0 || ld_found->pInfo == 0) {
+    widget = ld_found != 0 ? tinyui_widget_from_ld(ld_found) : 0;
+    if (widget == 0) {
         return -1;
     }
 
-    widget = (struct tinyui_widget *)ld_found->pInfo;
     if (tinyui_widget_get_type(widget) != TINYUI_WIDGET_TYPE_BUTTON) {
         return -1;
     }

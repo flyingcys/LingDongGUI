@@ -214,7 +214,7 @@ static void test_create_and_props(struct tinyui_window *win)
     assert(ldBaseGetParent((ldBase_t *)backend->ld_widget) == (ldBase_t *)parent_backend->ld_widget);
     assert(backend->ld_name_id != 0);
     assert(backend->ld_widget != 0);
-    assert(((ldBase_t *)backend->ld_widget)->pInfo == backend);
+    assert(tinyui_app_lookup_host(backend->owner, backend->ld_name_id) == backend);
 }
 
 static void test_list_legacy_backend_constructor_is_disabled(struct tinyui_window *win)

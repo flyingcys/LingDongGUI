@@ -88,10 +88,10 @@ struct tinyui_background *tinyui_background_create(struct tinyui_app *app, const
     background->window.widget.ld_name_id = 0;
     background->window.widget.kind       = TINYUI_BACKEND_WIDGET_BACKGROUND;
     background->window.widget.owner      = app_state;
-    ((ldBase_t *)ld_root)->pInfo = &background->window.widget;
+    tinyui_app_register_host(app_state, &background->window.widget);
 
     if (tinyui_runtime_bridge_bind_leaf_widget(&background->window.widget, app_state) != 0) {
-        ((ldBase_t *)ld_root)->pInfo = 0;
+        tinyui_app_unregister_host(app_state, &background->window.widget);
         background->window.widget.ld_widget = 0;
         ldWindow_depose(app_state->ld_scene, ld_root);
         free(background);

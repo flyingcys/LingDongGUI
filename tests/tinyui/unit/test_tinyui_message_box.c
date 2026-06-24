@@ -178,7 +178,7 @@ static void test_message_box_create_builds_direct_backend_mapping(struct tinyui_
     assert(backend->ld_event_bridge_sender == backend->ld_widget);
     ld_message_box = (ldMessageBox_t *)backend->ld_widget;
     assert(ld_message_box != 0);
-    assert(((ldBase_t *)ld_message_box)->pInfo == backend);
+    assert(tinyui_app_lookup_host(backend->owner, backend->ld_name_id) == backend);
 }
 
 static void test_message_box_widget_file_owns_native_helper_truth(struct tinyui_window *win)

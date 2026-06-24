@@ -229,11 +229,9 @@ static const kbBtnInfo_t *tinyui_keyboard_get_custom_button_list_from_host(struc
 }
 
 static void tinyui_keyboard_prepare_local(ldKeyboard_t *ld_keyboard,
-                                          struct tinyui_line_edit *line_edit)
+                                          struct tinyui_line_edit *line_edit,
+                                          struct tinyui_keyboard *keyboard_host)
 {
-    /* C1-T7: pInfo points to tinyui_widget */
-    struct tinyui_widget *w;
-    struct tinyui_keyboard *keyboard_host;
     const kbBtnInfo_t *custom_buttons;
 
     if (ld_keyboard == 0) {
@@ -243,8 +241,6 @@ static void tinyui_keyboard_prepare_local(ldKeyboard_t *ld_keyboard,
     if (line_edit != 0) {
         ld_keyboard->editType = (ldEditType_t)line_edit->type;
     }
-    w = (struct tinyui_widget *)((ldBase_t *)ld_keyboard)->pInfo;
-    keyboard_host = (w != 0) ? (struct tinyui_keyboard *)w : 0;
     custom_buttons = tinyui_keyboard_get_custom_button_list_from_host(keyboard_host);
     if (ld_keyboard->pBtnList == 0 || ld_keyboard->isWaitInit) {
         ld_keyboard->pBtnList = custom_buttons != 0
@@ -371,7 +367,7 @@ int tinyui_keyboard_input_ascii(struct tinyui_keyboard *keyboard, unsigned int a
         return -1;
     }
 
-    tinyui_keyboard_prepare_local(ld_keyboard, line_edit);
+    tinyui_keyboard_prepare_local(ld_keyboard, line_edit, keyboard);
     ld_keyboard->ppStr = &ld_line_edit->pText;
     ld_keyboard->strMax = ld_line_edit->textMax;
     ld_keyboard->editorId = line_edit->widget.ld_name_id;
@@ -406,7 +402,7 @@ int tinyui_keyboard_navigate(struct tinyui_keyboard *keyboard, int direction)
         return -1;
     }
 
-    tinyui_keyboard_prepare_local(ld_keyboard, tinyui_keyboard_get_target_line_edit_local(&keyboard->widget));
+    tinyui_keyboard_prepare_local(ld_keyboard, tinyui_keyboard_get_target_line_edit_local(&keyboard->widget), keyboard);
     ldKeyboardNavigate(ld_keyboard, (ldNavDir_t)direction);
     return 0;
 }
@@ -432,7 +428,7 @@ int tinyui_keyboard_update(struct tinyui_keyboard *keyboard)
         return -1;
     }
 
-    tinyui_keyboard_prepare_local(ld_keyboard, tinyui_keyboard_get_target_line_edit_local(&keyboard->widget));
+    tinyui_keyboard_prepare_local(ld_keyboard, tinyui_keyboard_get_target_line_edit_local(&keyboard->widget), keyboard);
     ldKeyboardUpdate(ld_keyboard);
     return 0;
 }
@@ -459,7 +455,7 @@ int tinyui_keyboard_button_update(struct tinyui_keyboard *keyboard, unsigned int
         return -1;
     }
 
-    tinyui_keyboard_prepare_local(ld_keyboard, tinyui_keyboard_get_target_line_edit_local(&keyboard->widget));
+    tinyui_keyboard_prepare_local(ld_keyboard, tinyui_keyboard_get_target_line_edit_local(&keyboard->widget), keyboard);
     ld_keyboard->keyCode = (uint8_t)key_code;
     ld_keyboard->isKeySelect = true;
     ldKeyboardBtnUpdate(ld_keyboard, (uint8_t)key_code);

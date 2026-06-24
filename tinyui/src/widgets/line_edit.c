@@ -56,17 +56,14 @@ static void tinyui_line_edit_rollback(struct tinyui_line_edit *line_edit)
 
 static bool tinyui_line_edit_native_slot(struct ld_scene_t *scene, ldMsg_t msg)
 {
-    /* C1-T7: pInfo now points to tinyui_widget directly */
     struct tinyui_widget *w;
     struct tinyui_line_edit *line_edit;
-
-    (void)scene;
 
     if (msg.ptSender == NULL) {
         return false;
     }
 
-    w = (struct tinyui_widget *)((ldBase_t *)msg.ptSender)->pInfo;
+    w = tinyui_widget_from_ld_scene(scene, msg.ptSender);
     if (w == NULL) {
         return false;
     }

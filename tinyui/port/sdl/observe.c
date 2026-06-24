@@ -135,12 +135,13 @@ static int tinyui_runtime_host_widget_is_real_leaf(const struct tinyui_widget *w
         && w->kind != TINYUI_BACKEND_WIDGET_BACKGROUND;
 }
 
-static size_t tinyui_runtime_host_count_real_in_ld_tree(ldBase_t *node)
+static size_t tinyui_runtime_host_count_real_in_ld_tree(ldBase_t *node,
+                                                         struct tinyui_app *app)
 {
     size_t count = 0;
 
     while (node != NULL) {
-        struct tinyui_widget *w = (struct tinyui_widget *)node->pInfo;
+        struct tinyui_widget *w = tinyui_app_lookup_host(app, node->nameId);
 
         if (tinyui_runtime_host_widget_is_real_leaf(w)) {
             count++;
@@ -149,7 +150,7 @@ static size_t tinyui_runtime_host_count_real_in_ld_tree(ldBase_t *node)
         {
             ldBase_t *child = ldBaseGetChildList(node);
             if (child != NULL) {
-                count += tinyui_runtime_host_count_real_in_ld_tree(child);
+                count += tinyui_runtime_host_count_real_in_ld_tree(child, app);
             }
         }
 
@@ -166,10 +167,11 @@ static size_t tinyui_runtime_host_count_real_in_ld_tree(ldBase_t *node)
 static size_t tinyui_runtime_host_collect_real_widget_ids(ldBase_t *node,
                                                           char *buf,
                                                           size_t cap,
-                                                          size_t *written)
+                                                          size_t *written,
+                                                          struct tinyui_app *app)
 {
     while (node != NULL && *written + 1 < cap) {
-        struct tinyui_widget *w = (struct tinyui_widget *)node->pInfo;
+        struct tinyui_widget *w = tinyui_app_lookup_host(app, node->nameId);
 
         if (tinyui_runtime_host_widget_is_real_leaf(w)) {
             const char *id = tinyui_runtime_host_widget_id(w);
@@ -197,7 +199,7 @@ static size_t tinyui_runtime_host_collect_real_widget_ids(ldBase_t *node,
         {
             ldBase_t *child = ldBaseGetChildList(node);
             if (child != NULL) {
-                tinyui_runtime_host_collect_real_widget_ids(child, buf, cap, written);
+                tinyui_runtime_host_collect_real_widget_ids(child, buf, cap, written, app);
             }
         }
 
@@ -218,7 +220,7 @@ void tinyui_runtime_host_log_mapping_markers(struct tinyui_runtime_host_state *s
 
     {
         ldBase_t *first_child = ldBaseGetChildList((ldBase_t *)root_widget->ld_widget);
-        real_count = tinyui_runtime_host_count_real_in_ld_tree(first_child);
+        real_count = tinyui_runtime_host_count_real_in_ld_tree(first_child, root_widget->owner);
     }
 
     if (real_count > 0 && !state->static_mapping_logged) {
@@ -233,7 +235,8 @@ void tinyui_runtime_host_log_mapping_markers(struct tinyui_runtime_host_state *s
         ldBase_t *first_child = ldBaseGetChildList((ldBase_t *)root_widget->ld_widget);
 
         buf[0] = '\0';
-        tinyui_runtime_host_collect_real_widget_ids(first_child, buf, sizeof(buf), &written);
+        tinyui_runtime_host_collect_real_widget_ids(first_child, buf, sizeof(buf), &written,
+                                                    root_widget->owner);
         buf[written] = '\0';
         printf("TINYUI_BACKEND_REAL_WIDGET_IDS=%s\n", buf);
         fflush(stdout);
@@ -241,10 +244,11 @@ void tinyui_runtime_host_log_mapping_markers(struct tinyui_runtime_host_state *s
     }
 }
 
-static void tinyui_runtime_host_log_image_source_marker_in_ld_tree(ldBase_t *node)
+static void tinyui_runtime_host_log_image_source_marker_in_ld_tree(ldBase_t *node,
+                                                                     struct tinyui_app *app)
 {
     while (node != NULL) {
-        struct tinyui_widget *widget = (struct tinyui_widget *)node->pInfo;
+        struct tinyui_widget *widget = tinyui_app_lookup_host(app, node->nameId);
 
         if (widget != NULL &&
             widget->kind == TINYUI_BACKEND_WIDGET_IMAGE &&
@@ -263,7 +267,7 @@ static void tinyui_runtime_host_log_image_source_marker_in_ld_tree(ldBase_t *nod
         {
             ldBase_t *child = ldBaseGetChildList(node);
             if (child != NULL) {
-                tinyui_runtime_host_log_image_source_marker_in_ld_tree(child);
+                tinyui_runtime_host_log_image_source_marker_in_ld_tree(child, app);
             }
         }
 
@@ -284,7 +288,8 @@ void tinyui_runtime_host_log_image_source_marker(const struct tinyui_widget *wid
         return;
     }
 
-    tinyui_runtime_host_log_image_source_marker_in_ld_tree((ldBase_t *)widget->ld_widget);
+    tinyui_runtime_host_log_image_source_marker_in_ld_tree((ldBase_t *)widget->ld_widget,
+                                                            widget->owner);
     if (state != NULL) {
         state->image_source_logged = 1;
     }

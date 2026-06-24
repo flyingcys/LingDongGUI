@@ -167,7 +167,7 @@ static void test_keyboard_create_builds_direct_backend_mapping(void)
     assert(backend->ld_event_bridge_sender == backend->ld_widget);
     ld_keyboard = (ldKeyboard_t *)backend->ld_widget;
     assert(ld_keyboard != 0);
-    assert(((ldBase_t *)ld_keyboard)->pInfo == backend);
+    assert(tinyui_app_lookup_host(backend->owner, backend->ld_name_id) == backend);
     tinyui_app_destroy(app);
 }
 

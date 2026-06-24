@@ -198,7 +198,7 @@ static void test_radial_menu_create_builds_direct_backend_mapping(void)
     assert(backend->ld_event_bridge_sender == backend->ld_widget);
     ld_radial_menu = (ldRadialMenu_t *)backend->ld_widget;
     assert(ld_radial_menu != 0);
-    assert(((ldBase_t *)ld_radial_menu)->pInfo == backend);
+    assert(tinyui_app_lookup_host(backend->owner, backend->ld_name_id) == backend);
 
     tinyui_app_destroy(app);
 }

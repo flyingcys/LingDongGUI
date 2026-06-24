@@ -193,7 +193,7 @@ static void test_icon_slider_create_builds_direct_backend_mapping(void)
     assert(backend->ld_event_bridge_sender == backend->ld_widget);
     ld_icon_slider = (ldIconSlider_t *)backend->ld_widget;
     assert(ld_icon_slider != 0);
-    assert(((ldBase_t *)ld_icon_slider)->pInfo == backend);
+    assert(tinyui_app_lookup_host(backend->owner, backend->ld_name_id) == backend);
 
     tinyui_app_destroy(app);
 }

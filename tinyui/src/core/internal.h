@@ -800,6 +800,7 @@ void tinyui_app_register_host(struct tinyui_app *app, struct tinyui_widget *w);
 void tinyui_app_unregister_host(struct tinyui_app *app, struct tinyui_widget *w);
 struct tinyui_widget *tinyui_app_lookup_host(const struct tinyui_app *app, uint16_t name_id);
 struct tinyui_widget *tinyui_widget_from_ld(const void *ld_node);
+struct tinyui_widget *tinyui_widget_from_ld_scene(const struct ld_scene_t *scene, const void *ld_node);
 
 struct tinyui_widget *tinyui_widget_create_leaf(
     struct tinyui_widget *parent,
