@@ -29,7 +29,6 @@ extern const arm_2d_tile_t c_tilePointerSecMask;
 extern const arm_2d_tile_t c_tileClockface;
 
 /* ---- test seam state ---- */
-static ld_scene_t *s_clock_depose_scene = NULL;
 
 struct tinyui_clock_create_ctx {
     arm_2d_tile_t *hour_img_tile;
@@ -40,13 +39,6 @@ struct tinyui_clock_create_ctx {
     arm_2d_tile_t *second_mask_tile;
 };
 
-static void tinyui_clock_ld_depose_cb(void *ld_widget)
-{
-    if (s_clock_depose_scene != NULL) {
-        ldClock_depose(s_clock_depose_scene, (ldClock_t *)ld_widget);
-        s_clock_depose_scene = NULL;
-    }
-}
 
 static void tinyui_clock_rollback(struct tinyui_clock *clock)
 {
@@ -54,10 +46,7 @@ static void tinyui_clock_rollback(struct tinyui_clock *clock)
         return;
     }
     if (clock->widget.ld_widget != 0) {
-        s_clock_depose_scene = clock->widget.owner != 0
-            ? clock->widget.owner->ld_scene
-            : NULL;
-        tinyui_widget_destroy_common(&clock->widget, tinyui_clock_ld_depose_cb);
+        tinyui_widget_destroy_common(&clock->widget);
     } else {
         free(clock);
     }

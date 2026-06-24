@@ -24,15 +24,7 @@
 #include <stdlib.h>
 
 /* ---- C2 depose closure state (file-static, single-threaded scope) ---- */
-static ld_scene_t *s_switch_depose_scene = NULL;
 
-static void tinyui_switch_ld_depose_cb(void *ld_widget)
-{
-    if (s_switch_depose_scene != NULL) {
-        ldSwitch_depose(s_switch_depose_scene, (ldSwitch_t *)ld_widget);
-        s_switch_depose_scene = NULL;
-    }
-}
 
 static int tinyui_switch_nav_dir_to_ld(int direction, int *ld_dir)
 {
@@ -173,8 +165,7 @@ struct tinyui_switch *tinyui_switch_create_with_props(struct tinyui_window *pare
             && tinyui_switch_set_direction(sw, props->direction) != 0)
         || (props->disabled != -1
             && tinyui_switch_set_disabled(sw, props->disabled) != 0)) {
-        s_switch_depose_scene = sw->widget.ld_event_bridge_scene;
-        tinyui_widget_destroy_common(&sw->widget, tinyui_switch_ld_depose_cb);
+        tinyui_widget_destroy_common(&sw->widget);
         return 0;
     }
     sw->cb = props->on_toggled;

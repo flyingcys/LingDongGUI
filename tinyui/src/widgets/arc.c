@@ -28,7 +28,6 @@
 extern const arm_2d_tile_t c_tileQuaterArcGRAY8;
 extern const arm_2d_tile_t c_tileQuaterArcMask;
 
-static ld_scene_t *s_arc_depose_scene = NULL;
 
 static int tinyui_arc_props_are_valid(const struct tinyui_arc_props *props);
 
@@ -37,13 +36,6 @@ struct tinyui_arc_create_ctx {
     arm_2d_tile_t *arc_mask_tile;
 };
 
-static void tinyui_arc_ld_depose_cb(void *ld_widget)
-{
-    if (s_arc_depose_scene != NULL) {
-        ldArc_depose(s_arc_depose_scene, (ldArc_t *)ld_widget);
-        s_arc_depose_scene = NULL;
-    }
-}
 
 static void tinyui_arc_rollback(struct tinyui_arc *arc)
 {
@@ -51,8 +43,7 @@ static void tinyui_arc_rollback(struct tinyui_arc *arc)
         return;
     }
     if (arc->widget.ld_widget != 0) {
-        s_arc_depose_scene = arc->widget.owner != 0 ? arc->widget.owner->ld_scene : NULL;
-        tinyui_widget_destroy_common(&arc->widget, tinyui_arc_ld_depose_cb);
+        tinyui_widget_destroy_common(&arc->widget);
     } else {
         free(arc);
     }

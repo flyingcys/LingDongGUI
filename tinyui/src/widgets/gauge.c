@@ -29,7 +29,6 @@ extern const arm_2d_tile_t c_tileQuaterArcMask;
 extern const arm_2d_tile_t c_tilePointerSecGRAY8;
 extern const arm_2d_tile_t c_tilePointerSecMask;
 
-static ld_scene_t *s_gauge_depose_scene = NULL;
 
 static int tinyui_gauge_props_are_valid(const struct tinyui_gauge_props *props);
 
@@ -40,13 +39,6 @@ struct tinyui_gauge_create_ctx {
     arm_2d_tile_t *pointer_mask_tile;
 };
 
-static void tinyui_gauge_ld_depose_cb(void *ld_widget)
-{
-    if (s_gauge_depose_scene != NULL) {
-        ldGauge_depose(s_gauge_depose_scene, (ldGauge_t *)ld_widget);
-        s_gauge_depose_scene = NULL;
-    }
-}
 
 static void tinyui_gauge_rollback(struct tinyui_gauge *gauge)
 {
@@ -54,10 +46,7 @@ static void tinyui_gauge_rollback(struct tinyui_gauge *gauge)
         return;
     }
     if (gauge->widget.ld_widget != 0) {
-        s_gauge_depose_scene = gauge->widget.owner != 0
-            ? gauge->widget.owner->ld_scene
-            : NULL;
-        tinyui_widget_destroy_common(&gauge->widget, tinyui_gauge_ld_depose_cb);
+        tinyui_widget_destroy_common(&gauge->widget);
     } else {
         free(gauge);
     }

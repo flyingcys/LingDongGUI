@@ -24,7 +24,6 @@
 #include <stdlib.h>
 
 /* ---- test seam state ---- */
-static ld_scene_t *s_animation_depose_scene = NULL;
 static arm_2d_tile_t s_animation_default_tile = {
     .tRegion = {
         .tSize = {
@@ -45,13 +44,6 @@ struct tinyui_animation_create_ctx {
     struct tinyui_image_source *source;
 };
 
-static void tinyui_animation_ld_depose_cb(void *ld_widget)
-{
-    if (s_animation_depose_scene != NULL) {
-        ldAnimation_depose(s_animation_depose_scene, (ldAnimation_t *)ld_widget);
-        s_animation_depose_scene = NULL;
-    }
-}
 
 static int tinyui_animation_props_are_valid(const struct tinyui_animation_props *props)
 {
@@ -193,8 +185,7 @@ struct tinyui_animation *tinyui_animation_create_with_props(
     if (tinyui_animation_set_source(animation, props->source) != 0
         || tinyui_animation_set_period_ms(animation, props->period_ms) != 0
         || tinyui_widget_set_size(&animation->widget, props->width, props->height) != 0) {
-        s_animation_depose_scene = animation->widget.ld_event_bridge_scene;
-        tinyui_widget_destroy_common(&animation->widget, tinyui_animation_ld_depose_cb);
+        tinyui_widget_destroy_common(&animation->widget);
         return 0;
     }
 
@@ -208,8 +199,7 @@ struct tinyui_animation *tinyui_animation_create_with_props(
         || tinyui_widget_set_user_data(&animation->widget, props->user_data) != 0
         || (props->style_class != 0
             && tinyui_widget_set_style_class(&animation->widget, props->style_class) != 0)) {
-        s_animation_depose_scene = animation->widget.ld_event_bridge_scene;
-        tinyui_widget_destroy_common(&animation->widget, tinyui_animation_ld_depose_cb);
+        tinyui_widget_destroy_common(&animation->widget);
         return 0;
     }
 

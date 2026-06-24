@@ -24,15 +24,7 @@
 #include <stdlib.h>
 
 /* ---- test seam state ---- */
-static ld_scene_t *s_checkbox_depose_scene = NULL;
 
-static void tinyui_checkbox_ld_depose_cb(void *ld_widget)
-{
-    if (s_checkbox_depose_scene != NULL) {
-        ldCheckBox_depose(s_checkbox_depose_scene, (ldCheckBox_t *)ld_widget);
-        s_checkbox_depose_scene = NULL;
-    }
-}
 
 static ldCheckBox_t *tinyui_checkbox_backend(struct tinyui_checkbox *checkbox)
 {
@@ -157,10 +149,7 @@ struct tinyui_checkbox *tinyui_checkbox_create_with_props(struct tinyui_window *
             && tinyui_checkbox_set_radio_group(checkbox, props->radio_group) != 0)
         || (props->string_left_space != -1
             && tinyui_checkbox_set_string_left_space(checkbox, props->string_left_space) != 0)) {
-        s_checkbox_depose_scene = checkbox->widget.owner != 0
-                                  ? checkbox->widget.owner->ld_scene
-                                  : 0;
-        tinyui_widget_destroy_common(&checkbox->widget, tinyui_checkbox_ld_depose_cb);
+        tinyui_widget_destroy_common(&checkbox->widget);
         return 0;
     }
     checkbox->cb = props->on_toggled;

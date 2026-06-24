@@ -42,15 +42,7 @@ static int tinyui_button_fail_next_set_font = 0;
  * detaches the ld node, clears pInfo, invokes the depose cb and frees the
  * host struct in a single sweep. */
 
-static ld_scene_t *s_button_depose_scene = 0;
 
-static void tinyui_button_ld_depose_cb(void *ld_widget)
-{
-    if (s_button_depose_scene != 0) {
-        ldButton_depose(s_button_depose_scene, (ldButton_t *)ld_widget);
-        s_button_depose_scene = 0;
-    }
-}
 
 static arm_2d_font_t *tinyui_button_default_font(void)
 {
@@ -84,10 +76,7 @@ static void tinyui_button_rollback(struct tinyui_button *button)
         /* xBtnRemove must run while the ld widget (and its name_id) is still
          * registered with xBtnAction, before destroy_common detaches it. */
         xBtnRemove(&button->action_info);
-        s_button_depose_scene = button->widget.owner != 0
-            ? button->widget.owner->ld_scene
-            : 0;
-        tinyui_widget_destroy_common(&button->widget, tinyui_button_ld_depose_cb);
+        tinyui_widget_destroy_common(&button->widget);
     } else {
         free(button);
     }

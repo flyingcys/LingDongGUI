@@ -26,15 +26,7 @@
 #include <string.h>
 
 static int tinyui_progress_wheel_fail_next_set_percent = 0;
-static ld_scene_t *s_progress_wheel_depose_scene = NULL;
 
-static void tinyui_progress_wheel_ld_depose_cb(void *ld_widget)
-{
-    if (s_progress_wheel_depose_scene != NULL) {
-        ldProgressWheel_depose(s_progress_wheel_depose_scene, (ldProgressWheel_t *)ld_widget);
-        s_progress_wheel_depose_scene = NULL;
-    }
-}
 
 struct __attribute__((may_alias)) tinyui_progress_wheel_cfg_bridge {
     struct {
@@ -58,7 +50,6 @@ void tinyui_progress_wheel_test_fail_next_set_percent(void)
 void tinyui_progress_wheel_test_reset_state(void)
 {
     tinyui_progress_wheel_fail_next_set_percent = 0;
-    s_progress_wheel_depose_scene = NULL;
 }
 
 static void tinyui_progress_wheel_disable_dirty_regions(ldProgressWheel_t *ld_progress_wheel)
@@ -73,13 +64,6 @@ static void tinyui_progress_wheel_disable_dirty_regions(ldProgressWheel_t *ld_pr
     bridge->tCFG.bUseDirtyRegions = false;
 }
 
-static void tinyui_progress_wheel_capture_disposed_snapshot(struct tinyui_progress_wheel *wheel)
-{
-    if (wheel == 0) {
-        return;
-    }
-    s_progress_wheel_depose_scene = wheel->widget.ld_event_bridge_scene;
-}
 
 static int tinyui_progress_wheel_props_are_valid(const struct tinyui_progress_wheel_props *props)
 {
@@ -148,8 +132,7 @@ struct tinyui_progress_wheel *tinyui_progress_wheel_create(struct tinyui_widget 
 
     if (tinyui_progress_wheel_set_percent(wheel, 0) != 0
         || tinyui_progress_wheel_set_dot_enabled(wheel, 1) != 0) {
-        tinyui_progress_wheel_capture_disposed_snapshot(wheel);
-        tinyui_widget_destroy_common(&wheel->widget, tinyui_progress_wheel_ld_depose_cb);
+        tinyui_widget_destroy_common(&wheel->widget);
         return 0;
     }
     return wheel;
@@ -195,8 +178,7 @@ struct tinyui_progress_wheel *tinyui_progress_wheel_create_with_props(
          && tinyui_widget_set_style_class(&wheel->widget, props->style_class) != 0)
         || tinyui_widget_set_user_data(&wheel->widget, props->user_data) != 0
         || tinyui_progress_wheel_set_percent(wheel, props->percent) != 0) {
-        tinyui_progress_wheel_capture_disposed_snapshot(wheel);
-        tinyui_widget_destroy_common(&wheel->widget, tinyui_progress_wheel_ld_depose_cb);
+        tinyui_widget_destroy_common(&wheel->widget);
         return 0;
     }
     return wheel;

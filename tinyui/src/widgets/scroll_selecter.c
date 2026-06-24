@@ -26,15 +26,7 @@
 
 extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
 
-static ld_scene_t *s_scroll_selecter_depose_scene = NULL;
 
-static void tinyui_scroll_selecter_ld_depose_cb(void *ld_widget)
-{
-    if (s_scroll_selecter_depose_scene != NULL) {
-        ldScrollSelecter_depose(s_scroll_selecter_depose_scene, (ldScrollSelecter_t *)ld_widget);
-        s_scroll_selecter_depose_scene = NULL;
-    }
-}
 
 static void tinyui_scroll_selecter_rollback(struct tinyui_scroll_selecter *scroll_selecter)
 {
@@ -42,10 +34,7 @@ static void tinyui_scroll_selecter_rollback(struct tinyui_scroll_selecter *scrol
         return;
     }
     if (scroll_selecter->widget.ld_widget != 0) {
-        s_scroll_selecter_depose_scene = scroll_selecter->widget.owner != 0
-            ? scroll_selecter->widget.owner->ld_scene
-            : NULL;
-        tinyui_widget_destroy_common(&scroll_selecter->widget, tinyui_scroll_selecter_ld_depose_cb);
+        tinyui_widget_destroy_common(&scroll_selecter->widget);
     } else {
         free(scroll_selecter);
     }

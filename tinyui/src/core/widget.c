@@ -1113,19 +1113,10 @@ int tinyui_widget_destroy(struct tinyui_widget *widget)
         }
     }
 
-    if (widget->host_cleanup != 0) {
-        widget->host_cleanup(widget);
-    }
-
     tinyui_app_unregister_host(owner, widget);
 
-    ld_base = (ldBase_t *)widget->ld_widget;
-    if (ld_base->ptGuiFunc != 0 && ld_base->ptGuiFunc->depose != 0) {
-        ld_base->ptGuiFunc->depose(owner != 0 ? owner->ld_scene : 0, widget->ld_widget);
-    } else {
-        ldBaseNodeRemove((arm_2d_control_node_t *)widget->ld_widget);
-    }
-    free(widget);
+    /* host_cleanup + depose + free 都在 destroy_common */
+    tinyui_widget_destroy_common(widget);
     return 0;
 }
 
@@ -1812,7 +1803,7 @@ int tinyui_widget_detach_from_parent(struct tinyui_widget *w)
 }
 
 /**
- * @brief Common destroy: detach + unbind + ld_depose_cb + free
+ * @brief Common destroy: host_cleanup + depose ld via ptGuiFunc + free host
  */
 __attribute__((weak)) void tinyui_test_capture_destroyed_widget_snapshot(
     const struct tinyui_widget *widget)
@@ -1820,32 +1811,40 @@ __attribute__((weak)) void tinyui_test_capture_destroyed_widget_snapshot(
     (void)widget;
 }
 
-void tinyui_widget_destroy_common(struct tinyui_widget *w, void (*ld_depose_cb)(void *))
+void tinyui_widget_destroy_common(struct tinyui_widget *w)
 {
-    void *ld_widget;
+    struct tinyui_app *owner;
+    ldBase_t *ld_base;
+    struct ld_scene_t *scene;
 
     if (w == 0) {
         return;
     }
 
-    ld_widget = w->ld_widget;
+    owner = w->owner;
 
-    /* Detach from ld tree */
-    if (ld_widget != 0) {
-        ldBaseNodeRemove((arm_2d_control_node_t *)ld_widget);
+    /* Idempotent unregister — safe whether called via destroy or rollback */
+    if (owner != 0) {
+        tinyui_app_unregister_host(owner, w);
     }
 
-    /* Clear bridge fields */
-    w->ld_widget               = 0;
-    w->owner                   = 0;
-    w->ld_event_bridge_scene   = 0;
-    w->ld_event_bridge_sender  = 0;
-    w->ld_event_bridge_next    = 0;
-
-    /* Depose native widget */
-    if (ld_depose_cb != 0 && ld_widget != 0) {
-        ld_depose_cb(ld_widget);
+    if (w->host_cleanup != 0) {
+        w->host_cleanup(w);
     }
+
+    scene = (owner != 0) ? owner->ld_scene : 0;
+    ld_base = (ldBase_t *)w->ld_widget;
+    if (ld_base != 0 && ld_base->ptGuiFunc != 0 && ld_base->ptGuiFunc->depose != 0) {
+        ld_base->ptGuiFunc->depose(scene, w->ld_widget);
+    } else if (ld_base != 0) {
+        ldBaseNodeRemove((arm_2d_control_node_t *)w->ld_widget);
+    }
+
+    /* Clear volatile fields before snapshot so tests see post-teardown state */
+    w->owner = 0;
+    w->ld_widget = 0;
+    w->ld_event_bridge_scene = 0;
+    w->ld_event_bridge_sender = 0;
 
     if (tinyui_test_capture_destroyed_widget_snapshot != 0) {
         tinyui_test_capture_destroyed_widget_snapshot(w);

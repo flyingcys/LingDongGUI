@@ -27,15 +27,7 @@
 
 #define TINYUI_HIDDEN __attribute__((visibility("hidden")))
 
-static ld_scene_t *s_list_depose_scene = NULL;
 
-static void tinyui_list_ld_depose_cb(void *ld_widget)
-{
-    if (s_list_depose_scene != NULL) {
-        ldList_depose(s_list_depose_scene, (ldList_t *)ld_widget);
-        s_list_depose_scene = NULL;
-    }
-}
 
 static void tinyui_list_rollback(struct tinyui_list *list)
 {
@@ -43,10 +35,7 @@ static void tinyui_list_rollback(struct tinyui_list *list)
         return;
     }
     if (list->widget.ld_widget != 0) {
-        s_list_depose_scene = list->widget.owner != 0
-            ? list->widget.owner->ld_scene
-            : NULL;
-        tinyui_widget_destroy_common(&list->widget, tinyui_list_ld_depose_cb);
+        tinyui_widget_destroy_common(&list->widget);
     } else {
         free(list);
     }

@@ -26,15 +26,7 @@
 extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
 int tinyui_runtime_bridge_bind_leaf_widget(struct tinyui_widget *widget, struct tinyui_app *app);
 
-static ld_scene_t *s_calendar_depose_scene = NULL;
 
-static void tinyui_calendar_ld_depose_cb(void *ld_widget)
-{
-    if (s_calendar_depose_scene != NULL) {
-        ldCalendar_depose(s_calendar_depose_scene, (ldCalendar_t *)ld_widget);
-        s_calendar_depose_scene = NULL;
-    }
-}
 
 static void tinyui_calendar_rollback(struct tinyui_calendar *calendar)
 {
@@ -42,10 +34,7 @@ static void tinyui_calendar_rollback(struct tinyui_calendar *calendar)
         return;
     }
     if (calendar->widget.ld_widget != 0) {
-        s_calendar_depose_scene = calendar->widget.owner != 0
-            ? calendar->widget.owner->ld_scene
-            : NULL;
-        tinyui_widget_destroy_common(&calendar->widget, tinyui_calendar_ld_depose_cb);
+        tinyui_widget_destroy_common(&calendar->widget);
     } else {
         free(calendar);
     }

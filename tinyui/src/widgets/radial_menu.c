@@ -49,7 +49,6 @@ static arm_2d_tile_t *const g_radial_menu_masks[] = {
 
 #define TINYUI_RADIAL_MENU_NATIVE_MAX_ITEMS 5
 
-static ld_scene_t *s_radial_menu_depose_scene = NULL;
 
 struct tinyui_radial_menu_create_ctx {
     int width;
@@ -59,13 +58,6 @@ struct tinyui_radial_menu_create_ctx {
     int item_max;
 };
 
-static void tinyui_radial_menu_ld_depose_cb(void *ld_widget)
-{
-    if (s_radial_menu_depose_scene != NULL) {
-        ldRadialMenu_depose(s_radial_menu_depose_scene, (ldRadialMenu_t *)ld_widget);
-        s_radial_menu_depose_scene = NULL;
-    }
-}
 
 static void tinyui_radial_menu_rollback(struct tinyui_radial_menu *radial_menu)
 {
@@ -73,10 +65,7 @@ static void tinyui_radial_menu_rollback(struct tinyui_radial_menu *radial_menu)
         return;
     }
     if (radial_menu->widget.ld_widget != 0) {
-        s_radial_menu_depose_scene = radial_menu->widget.owner != 0
-            ? radial_menu->widget.owner->ld_scene
-            : NULL;
-        tinyui_widget_destroy_common(&radial_menu->widget, tinyui_radial_menu_ld_depose_cb);
+        tinyui_widget_destroy_common(&radial_menu->widget);
     } else {
         free(radial_menu);
     }

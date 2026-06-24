@@ -31,15 +31,7 @@ struct tinyui_image_source;
 
 /* ---- test seam state ---- */
 static int s_fail_next_set_font = 0;
-static ld_scene_t *s_text_depose_scene = NULL;
 
-static void tinyui_text_ld_depose_cb(void *ld_widget)
-{
-    if (s_text_depose_scene != NULL) {
-        ldText_depose(s_text_depose_scene, (ldText_t *)ld_widget);
-        s_text_depose_scene = NULL;
-    }
-}
 
 static arm_2d_font_t *tinyui_text_default_font_internal(void)
 {
@@ -159,8 +151,7 @@ struct tinyui_text *tinyui_text_create_with_props(struct tinyui_window *parent,
         || tinyui_widget_set_padding(&text->widget, props->padding) != 0
         || ((props->width > 0 || props->height > 0)
             && tinyui_widget_set_size(&text->widget, props->width, props->height) != 0)) {
-        s_text_depose_scene = text->widget.ld_event_bridge_scene;
-        tinyui_widget_destroy_common(&text->widget, tinyui_text_ld_depose_cb);
+        tinyui_widget_destroy_common(&text->widget);
         return 0;
     }
 

@@ -26,15 +26,7 @@
 #include <string.h>
 
 /* ---- test seam state ---- */
-static ld_scene_t *s_qrcode_depose_scene = NULL;
 
-static void tinyui_qrcode_ld_depose_cb(void *ld_widget)
-{
-    if (s_qrcode_depose_scene != NULL) {
-        ldQRCode_depose(s_qrcode_depose_scene, (ldQRCode_t *)ld_widget);
-        s_qrcode_depose_scene = NULL;
-    }
-}
 
 static int qrcode_props_valid(const struct tinyui_qrcode_props *props)
 {
@@ -138,8 +130,7 @@ struct tinyui_qrcode *tinyui_qrcode_create_with_props(struct tinyui_widget *pare
          && tinyui_widget_set_style_class(&qrcode->widget, props->style_class) != 0)
         || tinyui_widget_set_user_data(&qrcode->widget, props->user_data) != 0
         || tinyui_qrcode_set_text(qrcode, props->text) != 0) {
-        s_qrcode_depose_scene = qrcode->widget.ld_event_bridge_scene;
-        tinyui_widget_destroy_common(&qrcode->widget, tinyui_qrcode_ld_depose_cb);
+        tinyui_widget_destroy_common(&qrcode->widget);
         return 0;
     }
 

@@ -25,15 +25,7 @@
 #include <string.h>
 
 /* ---- test seam state ---- */
-static ld_scene_t *s_image_depose_scene = NULL;
 
-static void tinyui_image_ld_depose_cb(void *ld_widget)
-{
-    if (s_image_depose_scene != NULL) {
-        ldImage_depose(s_image_depose_scene, (ldImage_t *)ld_widget);
-        s_image_depose_scene = NULL;
-    }
-}
 
 static int image_props_valid(const struct tinyui_image_props *props)
 {
@@ -125,8 +117,7 @@ struct tinyui_image *tinyui_image_create_with_props(struct tinyui_window *parent
         || tinyui_widget_set_padding(&image->widget, props->padding) != 0
         || ((props->width > 0 || props->height > 0)
             && tinyui_widget_set_size(&image->widget, props->width, props->height) != 0)) {
-        s_image_depose_scene = image->widget.ld_event_bridge_scene;
-        tinyui_widget_destroy_common(&image->widget, tinyui_image_ld_depose_cb);
+        tinyui_widget_destroy_common(&image->widget);
         return 0;
     }
 

@@ -27,15 +27,7 @@
 
 extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
 
-static ld_scene_t *s_combo_box_depose_scene = NULL;
 
-static void tinyui_combo_box_ld_depose_cb(void *ld_widget)
-{
-    if (s_combo_box_depose_scene != NULL) {
-        ldComboBox_depose(s_combo_box_depose_scene, (ldComboBox_t *)ld_widget);
-        s_combo_box_depose_scene = NULL;
-    }
-}
 
 static void tinyui_combo_box_rollback(struct tinyui_combo_box *combo_box)
 {
@@ -43,10 +35,7 @@ static void tinyui_combo_box_rollback(struct tinyui_combo_box *combo_box)
         return;
     }
     if (combo_box->widget.ld_widget != 0) {
-        s_combo_box_depose_scene = combo_box->widget.owner != 0
-            ? combo_box->widget.owner->ld_scene
-            : NULL;
-        tinyui_widget_destroy_common(&combo_box->widget, tinyui_combo_box_ld_depose_cb);
+        tinyui_widget_destroy_common(&combo_box->widget);
     } else {
         free(combo_box);
     }

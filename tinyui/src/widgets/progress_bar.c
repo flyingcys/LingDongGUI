@@ -24,15 +24,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-static ld_scene_t *s_pb_depose_scene = NULL;
 
-static void tinyui_progress_bar_ld_depose_cb(void *ld_widget)
-{
-    if (s_pb_depose_scene != NULL) {
-        ldProgressBar_depose(s_pb_depose_scene, (ldProgressBar_t *)ld_widget);
-        s_pb_depose_scene = NULL;
-    }
-}
 
 static void tinyui_progress_bar_rollback(struct tinyui_progress_bar *bar)
 {
@@ -40,8 +32,7 @@ static void tinyui_progress_bar_rollback(struct tinyui_progress_bar *bar)
         return;
     }
     if (bar->widget.ld_widget != 0) {
-        s_pb_depose_scene = bar->widget.owner != 0 ? bar->widget.owner->ld_scene : NULL;
-        tinyui_widget_destroy_common(&bar->widget, tinyui_progress_bar_ld_depose_cb);
+        tinyui_widget_destroy_common(&bar->widget);
     } else {
         free(bar);
     }

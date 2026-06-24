@@ -130,7 +130,6 @@ static void test_scroll_selecter_internal_seams_are_tinyui_named(void)
     assert_source_lacks_function_definition(widget_source, "picoui_scroll_selecter_selected_text_from_public_state");
 
     assert(test_source_has_function_definition(widget_source, "tinyui_scroll_selecter_props_valid"));
-    assert(test_source_has_function_definition(widget_source, "tinyui_scroll_selecter_ld_depose_cb"));
     assert(test_source_has_function_definition(widget_source, "tinyui_scroll_selecter_rollback"));
     assert(test_source_has_function_definition(widget_source, "tinyui_scroll_selecter_selected_text_from_public_state"));
 

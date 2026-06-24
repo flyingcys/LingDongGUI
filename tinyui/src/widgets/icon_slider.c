@@ -48,7 +48,6 @@ static arm_2d_tile_t *const g_icon_slider_masks[] = {
 
 #define TINYUI_ICON_SLIDER_NATIVE_MAX_ITEMS 8
 
-static ld_scene_t *s_icon_slider_depose_scene = NULL;
 
 struct tinyui_icon_slider_create_ctx {
     int width;
@@ -88,13 +87,6 @@ static void *tinyui_icon_slider_ld_init(void *ctx,
                              (arm_2d_font_t *)&ARM_2D_FONT_6x8);
 }
 
-static void tinyui_icon_slider_ld_depose_cb(void *ld_widget)
-{
-    if (s_icon_slider_depose_scene != NULL) {
-        ldIconSlider_depose(s_icon_slider_depose_scene, (ldIconSlider_t *)ld_widget);
-        s_icon_slider_depose_scene = NULL;
-    }
-}
 
 static void tinyui_icon_slider_rollback(struct tinyui_icon_slider *icon_slider)
 {
@@ -102,10 +94,7 @@ static void tinyui_icon_slider_rollback(struct tinyui_icon_slider *icon_slider)
         return;
     }
     if (icon_slider->widget.ld_widget != 0) {
-        s_icon_slider_depose_scene = icon_slider->widget.owner != 0
-            ? icon_slider->widget.owner->ld_scene
-            : NULL;
-        tinyui_widget_destroy_common(&icon_slider->widget, tinyui_icon_slider_ld_depose_cb);
+        tinyui_widget_destroy_common(&icon_slider->widget);
     } else {
         free(icon_slider);
     }

@@ -29,15 +29,7 @@ extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
 
 /* ── C2 depose / rollback ──────────────────────────────────────────────── */
 
-static ld_scene_t *s_message_box_depose_scene = NULL;
 
-static void s_message_box_depose_cb(void *ld_widget)
-{
-    if (s_message_box_depose_scene != NULL) {
-        ldMessageBox_depose(s_message_box_depose_scene, (ldMessageBox_t *)ld_widget);
-        s_message_box_depose_scene = NULL;
-    }
-}
 
 static void tinyui_message_box_rollback(struct tinyui_message_box *box)
 {
@@ -45,10 +37,7 @@ static void tinyui_message_box_rollback(struct tinyui_message_box *box)
         return;
     }
     if (box->widget.ld_widget != 0) {
-        s_message_box_depose_scene = box->widget.owner != 0
-            ? box->widget.owner->ld_scene
-            : NULL;
-        tinyui_widget_destroy_common(&box->widget, s_message_box_depose_cb);
+        tinyui_widget_destroy_common(&box->widget);
     } else {
         free(box);
     }

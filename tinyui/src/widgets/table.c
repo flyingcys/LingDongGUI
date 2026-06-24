@@ -28,7 +28,6 @@
 
 extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
 
-static ld_scene_t *s_table_depose_scene = NULL;
 static int s_table_fail_next_set_keyboard_binding = 0;
 
 static int tinyui_table_dims_are_valid(int rows, int columns)
@@ -41,24 +40,13 @@ static int tinyui_table_keyboard_binding_is_valid(unsigned int keyboard_binding)
     return keyboard_binding > 0U && keyboard_binding <= 0xFFFFU;
 }
 
-static void tinyui_table_ld_depose_cb(void *ld_widget)
-{
-    if (s_table_depose_scene != NULL) {
-        ldTable_depose(s_table_depose_scene, (ldTable_t *)ld_widget);
-        s_table_depose_scene = NULL;
-    }
-}
-
 static void tinyui_table_rollback(struct tinyui_table *table)
 {
     if (table == 0) {
         return;
     }
     if (table->widget.ld_widget != 0) {
-        s_table_depose_scene = table->widget.owner != 0
-            ? table->widget.owner->ld_scene
-            : NULL;
-        tinyui_widget_destroy_common(&table->widget, tinyui_table_ld_depose_cb);
+        tinyui_widget_destroy_common(&table->widget);
     } else {
         free(table);
     }

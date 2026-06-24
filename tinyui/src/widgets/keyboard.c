@@ -34,15 +34,7 @@ struct tinyui_keyboard_create_ctx {
 
 /* ── C2 depose machinery ─────────────────────────────────────────────────── */
 
-static ld_scene_t *s_keyboard_depose_scene = NULL;
 
-static void tinyui_keyboard_ld_depose_cb(void *ld_widget)
-{
-    if (s_keyboard_depose_scene != NULL) {
-        ldKeyboard_depose(s_keyboard_depose_scene, (ldKeyboard_t *)ld_widget);
-        s_keyboard_depose_scene = NULL;
-    }
-}
 
 /* Free dynamic layout resources BEFORE tinyui_widget_destroy_common frees
  * the host struct.  Also called by tinyui_keyboard_set_buttons during reuse. */
@@ -85,10 +77,7 @@ static void tinyui_keyboard_rollback(struct tinyui_keyboard *keyboard)
     }
     if (keyboard->widget.ld_widget != 0) {
         tinyui_keyboard_free_layout(keyboard);
-        s_keyboard_depose_scene = keyboard->widget.owner != 0
-            ? keyboard->widget.owner->ld_scene
-            : NULL;
-        tinyui_widget_destroy_common(&keyboard->widget, tinyui_keyboard_ld_depose_cb);
+        tinyui_widget_destroy_common(&keyboard->widget);
     } else {
         free(keyboard);
     }

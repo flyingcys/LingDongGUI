@@ -33,15 +33,7 @@ struct tinyui_label_create_ctx {
 };
 
 /* ---- test seam state ---- */
-static ld_scene_t *s_label_depose_scene = NULL;
 
-static void tinyui_label_ld_depose_cb(void *ld_widget)
-{
-    if (s_label_depose_scene != NULL) {
-        ldLabel_depose(s_label_depose_scene, (ldLabel_t *)ld_widget);
-        s_label_depose_scene = NULL;
-    }
-}
 
 static ldLabel_t *tinyui_label_backend(struct tinyui_label *label)
 {
@@ -151,8 +143,7 @@ struct tinyui_label *tinyui_label_create_with_props(struct tinyui_window *parent
         || tinyui_label_set_background_source(label, props->background_source) != 0
         || tinyui_label_set_transparent(label, props->transparent) != 0
         || tinyui_label_set_align(label, props->align) != 0) {
-        s_label_depose_scene = label->widget.ld_event_bridge_scene;
-        tinyui_widget_destroy_common(&label->widget, tinyui_label_ld_depose_cb);
+        tinyui_widget_destroy_common(&label->widget);
         return 0;
     }
 

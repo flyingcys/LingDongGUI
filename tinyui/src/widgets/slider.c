@@ -25,15 +25,7 @@
 #include <string.h>
 
 static const char *s_fail_test_id = 0;
-static ld_scene_t *s_slider_depose_scene = NULL;
 
-static void tinyui_slider_ld_depose_cb(void *ld_widget)
-{
-    if (s_slider_depose_scene != NULL) {
-        ldSlider_depose(s_slider_depose_scene, (ldSlider_t *)ld_widget);
-        s_slider_depose_scene = NULL;
-    }
-}
 
 static ldSlider_t *tinyui_slider_backend(struct tinyui_slider *slider)
 {
@@ -148,8 +140,7 @@ struct tinyui_slider *tinyui_slider_create_with_props(struct tinyui_window *pare
             && tinyui_slider_set_indicator_width(slider, props->indicator_width) != 0)
         || (props->slim_size != -1
             && tinyui_slider_set_slim_size(slider, props->slim_size) != 0)) {
-        s_slider_depose_scene = slider->widget.ld_event_bridge_scene;
-        tinyui_widget_destroy_common(&slider->widget, tinyui_slider_ld_depose_cb);
+        tinyui_widget_destroy_common(&slider->widget);
         return 0;
     }
 

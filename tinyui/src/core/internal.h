@@ -818,9 +818,9 @@ struct tinyui_widget *tinyui_widget_create_leaf(
 int tinyui_widget_detach_from_parent(struct tinyui_widget *w);
 
 /**
- * @brief Common destroy: detach + unbind + ld_depose_cb + free
+ * @brief Common destroy: host_cleanup + depose ld via ptGuiFunc + free host
  */
-void tinyui_widget_destroy_common(struct tinyui_widget *w, void (*ld_depose_cb)(void *));
+void tinyui_widget_destroy_common(struct tinyui_widget *w);
 
 /**
  * @brief Convert RGB888 packed value to ldColor (RGB565 via __RGB macro)

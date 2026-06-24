@@ -27,15 +27,7 @@
 extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
 
 /* ---- test seam state ---- */
-static ld_scene_t *s_date_time_depose_scene = NULL;
 
-static void tinyui_date_time_ld_depose_cb(void *ld_widget)
-{
-    if (s_date_time_depose_scene != NULL) {
-        ldDateTime_depose(s_date_time_depose_scene, (ldDateTime_t *)ld_widget);
-        s_date_time_depose_scene = NULL;
-    }
-}
 
 static ldDateTime_t *tinyui_date_time_backend(struct tinyui_date_time *dt)
 {
@@ -111,8 +103,7 @@ struct tinyui_date_time *tinyui_date_time_create(struct tinyui_widget *parent, c
         || tinyui_date_time_set_transparent(dt, 0) != 0
         || tinyui_date_time_set_date(dt, 2026, 1, 1) != 0
         || tinyui_date_time_set_time(dt, 12, 0, 0) != 0) {
-        s_date_time_depose_scene = dt->widget.owner != 0 ? dt->widget.owner->ld_scene : 0;
-        tinyui_widget_destroy_common(&dt->widget, tinyui_date_time_ld_depose_cb);
+        tinyui_widget_destroy_common(&dt->widget);
         return 0;
     }
     return dt;
@@ -164,10 +155,7 @@ struct tinyui_date_time *tinyui_date_time_create_with_props(
         || tinyui_date_time_set_transparent(dt, props->transparent) != 0
         || tinyui_date_time_set_date(dt, props->year, props->month, props->day) != 0
         || tinyui_date_time_set_time(dt, props->hour, props->minute, props->second) != 0) {
-        s_date_time_depose_scene = dt->widget.owner != 0
-                                       ? dt->widget.owner->ld_scene
-                                       : 0;
-        tinyui_widget_destroy_common(&dt->widget, tinyui_date_time_ld_depose_cb);
+        tinyui_widget_destroy_common(&dt->widget);
         return 0;
     }
 

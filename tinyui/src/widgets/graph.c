@@ -24,15 +24,7 @@
 #include <stdlib.h>
 
 /* ---- C2 depose closure state (file-static, single-threaded scope) ---- */
-static ld_scene_t *s_graph_depose_scene = NULL;
 
-static void tinyui_graph_ld_depose_cb(void *ld_widget)
-{
-    if (s_graph_depose_scene != NULL) {
-        ldGraph_depose(s_graph_depose_scene, (ldGraph_t *)ld_widget);
-        s_graph_depose_scene = NULL;
-    }
-}
 
 static int graph_props_valid(const struct tinyui_graph_props *props)
 {
@@ -262,8 +254,7 @@ struct tinyui_graph *tinyui_graph_create_with_props(struct tinyui_window *parent
             && tinyui_widget_set_style_class(&graph->widget, props->style_class) != 0)
         || ((props->width > 0 || props->height > 0)
             && tinyui_widget_set_size(&graph->widget, props->width, props->height) != 0)) {
-        s_graph_depose_scene = graph->widget.ld_event_bridge_scene;
-        tinyui_widget_destroy_common(&graph->widget, tinyui_graph_ld_depose_cb);
+        tinyui_widget_destroy_common(&graph->widget);
         return 0;
     }
 

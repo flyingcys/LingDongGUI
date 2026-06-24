@@ -29,15 +29,7 @@ extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
 
 #define TINYUI_BACKEND_LINE_EDIT_TEXT_MAX 255
 
-static ld_scene_t *s_line_edit_depose_scene = NULL;
 
-static void tinyui_line_edit_ld_depose_cb(void *ld_widget)
-{
-    if (s_line_edit_depose_scene != NULL) {
-        ldLineEdit_depose(s_line_edit_depose_scene, (ldLineEdit_t *)ld_widget);
-        s_line_edit_depose_scene = NULL;
-    }
-}
 
 static void tinyui_line_edit_rollback(struct tinyui_line_edit *line_edit)
 {
@@ -45,10 +37,7 @@ static void tinyui_line_edit_rollback(struct tinyui_line_edit *line_edit)
         return;
     }
     if (line_edit->widget.ld_widget != 0) {
-        s_line_edit_depose_scene = line_edit->widget.owner != 0
-            ? line_edit->widget.owner->ld_scene
-            : NULL;
-        tinyui_widget_destroy_common(&line_edit->widget, tinyui_line_edit_ld_depose_cb);
+        tinyui_widget_destroy_common(&line_edit->widget);
     } else {
         free(line_edit);
     }

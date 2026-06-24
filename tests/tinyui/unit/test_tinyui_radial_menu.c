@@ -78,8 +78,7 @@ static void test_radial_menu_internal_seam_names_are_tinyui_local(void)
     assert_source_contains_definition(widget_source, "tinyui_widget_create_leaf(");
     assert_source_contains_definition(widget_source, "static void *tinyui_radial_menu_ld_init(");
 
-    /* C2 depose/rollback seam */
-    assert_source_contains_definition(widget_source, "static void tinyui_radial_menu_ld_depose_cb(");
+    /* B2: ld_depose_cb eliminated; destroy_common derives scene from host */
     assert_source_contains_definition(widget_source, "static void tinyui_radial_menu_rollback(");
 }
 
