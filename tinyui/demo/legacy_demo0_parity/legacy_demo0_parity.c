@@ -25,6 +25,7 @@ struct legacy_demo0_runtime {
     struct tinyui_gauge *gauge;
     struct tinyui_arc *arc;
     float angle;
+    unsigned int frame_accumulated_ms;
 };
 
 struct legacy_demo0_sources {
@@ -79,7 +80,12 @@ static const char *const g_calendar_day_names[7] = {
 };
 
 static struct legacy_demo0_sources g_sources;
+static struct legacy_demo0_runtime g_runtime;
 static int g_sources_ready;
+
+enum {
+    LEGACY_DEMO0_FRAME_INTERVAL_MS = 100,
+};
 
 static int load_source(enum tinyui_builtin_image image, struct tinyui_image_source *source)
 {
@@ -280,7 +286,7 @@ static void build_legacy_demo0(struct tinyui_window *win, struct legacy_demo0_ru
     if (label != 0) {
         tinyui_label_set_text(label, "123");
         tinyui_label_set_bg_color(label, 0xD3D3D3U);
-        tinyui_label_set_align(label, TINYUI_ALIGN_END);
+        tinyui_label_set_align(label, TINYUI_ALIGN_START);
         tinyui_widget_set_pos((struct tinyui_widget *)label, 100, 50);
         tinyui_widget_set_size((struct tinyui_widget *)label, 100, 50);
         tinyui_widget_set_corner((struct tinyui_widget *)label, 1);
@@ -319,7 +325,7 @@ static void build_legacy_demo0(struct tinyui_window *win, struct legacy_demo0_ru
 
     if (switch_label != 0) {
         tinyui_label_set_text(switch_label, "OFF");
-        tinyui_label_set_align(switch_label, TINYUI_ALIGN_CENTER);
+        tinyui_label_set_align(switch_label, TINYUI_ALIGN_START);
         tinyui_widget_set_pos((struct tinyui_widget *)switch_label, 356, 218);
         tinyui_widget_set_size((struct tinyui_widget *)switch_label, 60, 40);
         tinyui_widget_set_selectable((struct tinyui_widget *)switch_label, 1);
@@ -512,7 +518,7 @@ static void build_legacy_demo0(struct tinyui_window *win, struct legacy_demo0_ru
     }
 }
 
-static void tick_runtime(struct legacy_demo0_runtime *runtime)
+static void update_runtime_angle(struct legacy_demo0_runtime *runtime)
 {
     if (runtime == 0) {
         return;
@@ -526,9 +532,23 @@ static void tick_runtime(struct legacy_demo0_runtime *runtime)
     }
 }
 
+void tinyui_demo_legacy_demo0_parity_frame(unsigned int elapsed_ms)
+{
+    struct legacy_demo0_runtime *runtime = &g_runtime;
+
+    if (runtime->gauge == 0 || runtime->arc == 0) {
+        return;
+    }
+
+    runtime->frame_accumulated_ms += elapsed_ms;
+    while (runtime->frame_accumulated_ms >= LEGACY_DEMO0_FRAME_INTERVAL_MS) {
+        runtime->frame_accumulated_ms -= LEGACY_DEMO0_FRAME_INTERVAL_MS;
+        update_runtime_angle(runtime);
+    }
+}
+
 void tinyui_demo_legacy_demo0_parity(void)
 {
-    static struct legacy_demo0_runtime runtime;
     tinyui_obj_t *screen = tinyui_screen_create();
     struct tinyui_window *win = (struct tinyui_window *)screen;
 
@@ -538,12 +558,12 @@ void tinyui_demo_legacy_demo0_parity(void)
         return;
     }
 
-    runtime.image = 0;
-    runtime.switch_label = 0;
-    runtime.gauge = 0;
-    runtime.arc = 0;
-    runtime.angle = 120.0f;
-    build_legacy_demo0(win, &runtime);
+    g_runtime.image = 0;
+    g_runtime.switch_label = 0;
+    g_runtime.gauge = 0;
+    g_runtime.arc = 0;
+    g_runtime.angle = 120.0f;
+    g_runtime.frame_accumulated_ms = 0;
+    build_legacy_demo0(win, &g_runtime);
     tinyui_screen_load(screen);
-    tick_runtime(&runtime);
 }

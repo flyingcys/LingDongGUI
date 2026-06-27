@@ -39,10 +39,13 @@
 
 #include "tinyui_demos.h"
 #include "tinyui.h"
+#include <SDL.h>
 #include <stdio.h>
 
 int main(int argc, char **argv)
 {
+    unsigned int previous_ticks;
+
     if (tinyui_init() != 0) {
         return 1;
     }
@@ -53,8 +56,15 @@ int main(int argc, char **argv)
         return 1;
     }
 
+    previous_ticks = SDL_GetTicks();
     for (;;) {
+        unsigned int current_ticks = SDL_GetTicks();
+        unsigned int elapsed_ms = current_ticks - previous_ticks;
         int step = tinyui_timer_handler();
+
+        previous_ticks = current_ticks;
+        tinyui_demos_frame(elapsed_ms);
+
         if (step < 0) {
             tinyui_deinit();
             return 1;

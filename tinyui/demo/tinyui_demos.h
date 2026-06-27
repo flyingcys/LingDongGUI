@@ -62,6 +62,7 @@ void tinyui_demo_layout_flex(void);
 void tinyui_demo_layout_grid(void);
 void tinyui_demo_layout_parity(void);
 void tinyui_demo_legacy_demo0_parity(void);
+void tinyui_demo_legacy_demo0_parity_frame(unsigned int elapsed_ms);
 void tinyui_demo_legacy_widget_parity(void);
 void tinyui_demo_line_edit_basic(void);
 void tinyui_demo_list_basic(void);
@@ -86,7 +87,12 @@ void tinyui_demo_theme_showcase(void);
  * size <= 0: run the first demo (hello_world).
  * Returns true if the demo was found and launched, false otherwise.
  */
+typedef void (*tinyui_demo_frame_cb_t)(unsigned int elapsed_ms);
+
 bool tinyui_demos_create(char *info[], int size);
+
+/* Dispatch the selected demo's optional per-frame callback. */
+void tinyui_demos_frame(unsigned int elapsed_ms);
 
 /* Print the list of available demo names to stdout */
 void tinyui_demos_show_help(void);

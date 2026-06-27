@@ -107,6 +107,10 @@ DEMO_MARKERS = {
         "tinyui_switch_set_on_toggled(sw, on_switch_toggled, switch_label)",
         "tinyui_table_set_keyboard_binding(table, 22)",
         "tinyui_line_edit_set_keyboard_binding(line_edit, 22)",
+        "void tinyui_demo_legacy_demo0_parity_frame(unsigned int elapsed_ms)",
+        "tinyui_demo_legacy_demo0_parity_frame",
+        "LEGACY_DEMO0_FRAME_INTERVAL_MS",
+        "runtime.frame_accumulated_ms",
         "tinyui_arc_set_rotation_angle(runtime->arc, runtime->angle)",
         "tinyui_gauge_set_angle(runtime->gauge, runtime->angle)",
         "10, 10",
@@ -174,6 +178,9 @@ DEMO_ABSENT_MARKERS = {
         "tinyui_window_create_with_props",
         "tinyui_flex_set_align",
         "tinyui_flex_set_gap",
+        "tick_runtime(&runtime)",
+        "tinyui_label_set_align(label, TINYUI_ALIGN_END)",
+        "tinyui_label_set_align(switch_label, TINYUI_ALIGN_CENTER)",
     ),
     "grid_parity": (
         'tinyui_widget_set_grid_cell((struct tinyui_widget *)panel_g',
@@ -195,6 +202,12 @@ def main() -> int:
     assert "void tinyui_demo_legacy_demo0_parity(void);" in demos_h_text, (
         "tinyui_demos.h missing legacy_demo0_parity declaration"
     )
+    assert "typedef void (*tinyui_demo_frame_cb_t)(unsigned int elapsed_ms);" in demos_h_text, (
+        "tinyui_demos.h missing demo frame callback type"
+    )
+    assert "void tinyui_demos_frame(unsigned int elapsed_ms);" in demos_h_text, (
+        "tinyui_demos.h missing per-frame dispatcher declaration"
+    )
 
     demos_c_text = (ROOT / "tinyui" / "demo" / "tinyui_demos.c").read_text(encoding="utf-8")
     assert '"legacy_demo0_parity"' in demos_c_text, (
@@ -202,6 +215,20 @@ def main() -> int:
     )
     assert "tinyui_demo_legacy_demo0_parity" in demos_c_text, (
         "tinyui_demos.c missing legacy_demo0_parity entry point registration"
+    )
+    assert "tinyui_demo_legacy_demo0_parity_frame" in demos_c_text, (
+        "tinyui_demos.c missing legacy_demo0_parity frame callback registration"
+    )
+    assert "tinyui_demo_frame_cb_t frame_cb;" in demos_c_text, (
+        "tinyui_demos.c missing optional frame callback in demo registry"
+    )
+    assert "void tinyui_demos_frame(unsigned int elapsed_ms)" in demos_c_text, (
+        "tinyui_demos.c missing per-frame dispatcher"
+    )
+
+    runner_text = (DEMO_RUNNER_DIR / "main.c").read_text(encoding="utf-8")
+    assert "tinyui_demos_frame(elapsed_ms);" in runner_text, (
+        "tinyui_demo/main.c must call demo frame hook every main-loop iteration"
     )
 
     demo_sources = sorted(DEMO_DIR.glob("**/*.c"))

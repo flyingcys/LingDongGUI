@@ -35,47 +35,51 @@ typedef void (*demo_method_cb)(void);
 typedef struct {
     const char     *name;
     demo_method_cb  entry_cb;
+    tinyui_demo_frame_cb_t frame_cb;
 } demo_entry_info_t;
 
 static const demo_entry_info_t demos_entry_info[] = {
-    { "animation_basic",       tinyui_demo_animation_basic       },
-    { "arc_basic",             tinyui_demo_arc_basic             },
-    { "basic_widgets",         tinyui_demo_basic_widgets         },
-    { "calendar_basic",        tinyui_demo_calendar_basic        },
-    { "clock_basic",           tinyui_demo_clock_basic           },
-    { "combo_box_basic",       tinyui_demo_combo_box_basic       },
-    { "date_time_basic",       tinyui_demo_date_time_basic       },
-    { "gauge_basic",           tinyui_demo_gauge_basic           },
-    { "graph_basic",           tinyui_demo_graph_basic           },
-    { "grid_parity",           tinyui_demo_grid_parity           },
-    { "hello_world",           tinyui_demo_hello_world           },
-    { "icon_slider_basic",     tinyui_demo_icon_slider_basic     },
-    { "keyboard_basic",        tinyui_demo_keyboard_basic        },
-    { "layout_flex",           tinyui_demo_layout_flex           },
-    { "layout_grid",           tinyui_demo_layout_grid           },
-    { "layout_parity",         tinyui_demo_layout_parity         },
-    { "legacy_demo0_parity",   tinyui_demo_legacy_demo0_parity   },
-    { "legacy_widget_parity",  tinyui_demo_legacy_widget_parity  },
-    { "line_edit_basic",       tinyui_demo_line_edit_basic       },
-    { "list_basic",            tinyui_demo_list_basic            },
-    { "message_box_basic",     tinyui_demo_message_box_basic     },
-    { "progress_bar_basic",    tinyui_demo_progress_bar_basic    },
-    { "progress_wheel_basic",  tinyui_demo_progress_wheel_basic  },
-    { "qrcode_basic",          tinyui_demo_qrcode_basic          },
-    { "radial_menu_basic",     tinyui_demo_radial_menu_basic     },
-    { "scroll_selecter_basic", tinyui_demo_scroll_selecter_basic },
-    { "settings_panel",        tinyui_demo_settings_panel        },
-    { "table_basic",           tinyui_demo_table_basic           },
-    { "theme_showcase",        tinyui_demo_theme_showcase        },
-    { "", NULL }  /* sentinel */
+    { "animation_basic",       tinyui_demo_animation_basic,       NULL                                  },
+    { "arc_basic",             tinyui_demo_arc_basic,             NULL                                  },
+    { "basic_widgets",         tinyui_demo_basic_widgets,         NULL                                  },
+    { "calendar_basic",        tinyui_demo_calendar_basic,        NULL                                  },
+    { "clock_basic",           tinyui_demo_clock_basic,           NULL                                  },
+    { "combo_box_basic",       tinyui_demo_combo_box_basic,       NULL                                  },
+    { "date_time_basic",       tinyui_demo_date_time_basic,       NULL                                  },
+    { "gauge_basic",           tinyui_demo_gauge_basic,           NULL                                  },
+    { "graph_basic",           tinyui_demo_graph_basic,           NULL                                  },
+    { "grid_parity",           tinyui_demo_grid_parity,           NULL                                  },
+    { "hello_world",           tinyui_demo_hello_world,           NULL                                  },
+    { "icon_slider_basic",     tinyui_demo_icon_slider_basic,     NULL                                  },
+    { "keyboard_basic",        tinyui_demo_keyboard_basic,        NULL                                  },
+    { "layout_flex",           tinyui_demo_layout_flex,           NULL                                  },
+    { "layout_grid",           tinyui_demo_layout_grid,           NULL                                  },
+    { "layout_parity",         tinyui_demo_layout_parity,         NULL                                  },
+    { "legacy_demo0_parity",   tinyui_demo_legacy_demo0_parity,   tinyui_demo_legacy_demo0_parity_frame },
+    { "legacy_widget_parity",  tinyui_demo_legacy_widget_parity,  NULL                                  },
+    { "line_edit_basic",       tinyui_demo_line_edit_basic,       NULL                                  },
+    { "list_basic",            tinyui_demo_list_basic,            NULL                                  },
+    { "message_box_basic",     tinyui_demo_message_box_basic,     NULL                                  },
+    { "progress_bar_basic",    tinyui_demo_progress_bar_basic,    NULL                                  },
+    { "progress_wheel_basic",  tinyui_demo_progress_wheel_basic,  NULL                                  },
+    { "qrcode_basic",          tinyui_demo_qrcode_basic,          NULL                                  },
+    { "radial_menu_basic",     tinyui_demo_radial_menu_basic,     NULL                                  },
+    { "scroll_selecter_basic", tinyui_demo_scroll_selecter_basic, NULL                                  },
+    { "settings_panel",        tinyui_demo_settings_panel,        NULL                                  },
+    { "table_basic",           tinyui_demo_table_basic,           NULL                                  },
+    { "theme_showcase",        tinyui_demo_theme_showcase,        NULL                                  },
+    { "", NULL, NULL }  /* sentinel */
 };
 
 #define TINYUI_DEMOS_COUNT \
     ((int)(sizeof(demos_entry_info) / sizeof(demo_entry_info_t)) - 1)
 
+static const demo_entry_info_t *current_demo_entry;
+
 bool tinyui_demos_create(char *info[], int size)
 {
     const int count = TINYUI_DEMOS_COUNT;
+    current_demo_entry = NULL;
 
     if (count <= 0) {
         printf("tinyui_demos: no demos available\n");
@@ -104,11 +108,19 @@ bool tinyui_demos_create(char *info[], int size)
     }
 
     if (entry->entry_cb) {
+        current_demo_entry = entry;
         entry->entry_cb();
         return true;
     }
 
     return false;
+}
+
+void tinyui_demos_frame(unsigned int elapsed_ms)
+{
+    if (current_demo_entry != NULL && current_demo_entry->frame_cb != NULL) {
+        current_demo_entry->frame_cb(elapsed_ms);
+    }
 }
 
 void tinyui_demos_show_help(void)
