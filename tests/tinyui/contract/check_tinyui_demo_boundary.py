@@ -205,8 +205,14 @@ def main() -> int:
     assert "typedef void (*tinyui_demo_frame_cb_t)(unsigned int elapsed_ms);" in demos_h_text, (
         "tinyui_demos.h missing demo frame callback type"
     )
+    assert "struct tinyui_display_config;" in demos_h_text, (
+        "tinyui_demos.h must forward-declare tinyui_display_config for runner display contracts"
+    )
     assert "void tinyui_demos_frame(unsigned int elapsed_ms);" in demos_h_text, (
         "tinyui_demos.h missing per-frame dispatcher declaration"
+    )
+    assert "bool tinyui_demos_get_display_config" in demos_h_text, (
+        "tinyui_demos.h missing per-demo display config lookup declaration"
     )
 
     demos_c_text = (ROOT / "tinyui" / "demo" / "tinyui_demos.c").read_text(encoding="utf-8")
@@ -222,11 +228,29 @@ def main() -> int:
     assert "tinyui_demo_frame_cb_t frame_cb;" in demos_c_text, (
         "tinyui_demos.c missing optional frame callback in demo registry"
     )
+    assert re.search(r"\bint\s+display_width;", demos_c_text) and re.search(r"\bint\s+display_height;", demos_c_text), (
+        "tinyui_demos.c demo registry must carry per-demo display dimensions"
+    )
+    assert '{ "legacy_demo0_parity",   tinyui_demo_legacy_demo0_parity,   tinyui_demo_legacy_demo0_parity_frame, 1024, 600 }' in demos_c_text, (
+        "legacy_demo0_parity must request the legacy demo0 1024x600 runtime viewport"
+    )
+    assert "{ \"animation_basic\",       tinyui_demo_animation_basic,       NULL,                                  480,  320 }" in demos_c_text, (
+        "default TinyUI demos must keep the existing 480x320 runtime viewport"
+    )
+    assert "tinyui_demos_get_display_config" in demos_c_text, (
+        "tinyui_demos.c missing per-demo display config lookup implementation"
+    )
     assert "void tinyui_demos_frame(unsigned int elapsed_ms)" in demos_c_text, (
         "tinyui_demos.c missing per-frame dispatcher"
     )
 
     runner_text = (DEMO_RUNNER_DIR / "main.c").read_text(encoding="utf-8")
+    assert "tinyui_display_set_default_config" in runner_text, (
+        "tinyui_demo/main.c must apply selected demo display config before creating the demo"
+    )
+    assert "tinyui_demos_get_display_config(argv + 1, argc - 1" in runner_text, (
+        "tinyui_demo/main.c must resolve display config from the selected demo name"
+    )
     assert "tinyui_demos_frame(elapsed_ms);" in runner_text, (
         "tinyui_demo/main.c must call demo frame hook every main-loop iteration"
     )

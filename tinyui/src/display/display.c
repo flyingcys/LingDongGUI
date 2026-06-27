@@ -10,6 +10,7 @@ static const struct tinyui_display_config g_tinyui_default_display_config = {
     .buffer_height = 0,
     .user_data = NULL,
 };
+static struct tinyui_display_config g_tinyui_runner_default_display_config;
 
 static int tinyui_display_config_is_valid(const struct tinyui_display_config *config)
 {
@@ -37,10 +38,23 @@ static const struct tinyui_display_config *tinyui_display_resolve_config(
     const struct tinyui_display_port_state *state)
 {
     if (state == NULL || !tinyui_display_config_is_valid(&state->config)) {
+        if (tinyui_display_config_is_valid(&g_tinyui_runner_default_display_config)) {
+            return &g_tinyui_runner_default_display_config;
+        }
         return &g_tinyui_default_display_config;
     }
 
     return &state->config;
+}
+
+int tinyui_display_set_default_config(const struct tinyui_display_config *config)
+{
+    if (!tinyui_display_config_is_valid(config)) {
+        return -1;
+    }
+
+    g_tinyui_runner_default_display_config = *config;
+    return 0;
 }
 
 int tinyui_display_set_config(struct tinyui_app *app, const struct tinyui_display_config *config)

@@ -100,11 +100,24 @@ function(ld_apply_common_target_config target)
 endfunction()
 
 function(ld_apply_tinyui_runtime_screen_config target)
+    set(tinyui_runtime_screen_width 480)
+    set(tinyui_runtime_screen_height 320)
+
+    get_target_property(existing_width ${target} TINYUI_RUNTIME_SCREEN_WIDTH)
+    if(existing_width)
+        set(tinyui_runtime_screen_width ${existing_width})
+    endif()
+
+    get_target_property(existing_height ${target} TINYUI_RUNTIME_SCREEN_HEIGHT)
+    if(existing_height)
+        set(tinyui_runtime_screen_height ${existing_height})
+    endif()
+
     target_compile_definitions(${target}
         PRIVATE
-            LD_CFG_SCREEN_WIDTH=480
-            LD_CFG_SCREEN_HEIGHT=320
-            LD_CFG_PFB_WIDTH=480
+            LD_CFG_SCREEN_WIDTH=${tinyui_runtime_screen_width}
+            LD_CFG_SCREEN_HEIGHT=${tinyui_runtime_screen_height}
+            LD_CFG_PFB_WIDTH=${tinyui_runtime_screen_width}
     )
 endfunction()
 

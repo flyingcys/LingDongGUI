@@ -42,11 +42,21 @@
 #include <SDL.h>
 #include <stdio.h>
 
+int tinyui_display_set_default_config(const struct tinyui_display_config *config);
+
 int main(int argc, char **argv)
 {
     unsigned int previous_ticks;
+    struct tinyui_display_config display_config = {0};
 
     if (tinyui_init() != 0) {
+        return 1;
+    }
+
+    if (!tinyui_demos_get_display_config(argv + 1, argc - 1, &display_config) ||
+        tinyui_display_set_default_config(&display_config) != 0) {
+        tinyui_demos_show_help();
+        tinyui_deinit();
         return 1;
     }
 

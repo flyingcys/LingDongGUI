@@ -41,6 +41,8 @@
 extern "C" {
 #endif
 
+struct tinyui_display_config;
+
 /* ------------------------------------------------------------------ */
 /* All demo entry points (alphabetical)                                */
 /* ------------------------------------------------------------------ */
@@ -90,6 +92,11 @@ void tinyui_demo_theme_showcase(void);
 typedef void (*tinyui_demo_frame_cb_t)(unsigned int elapsed_ms);
 
 bool tinyui_demos_create(char *info[], int size);
+
+/* Resolve the selected demo's runner display size. */
+bool tinyui_demos_get_display_config(char *info[],
+                                     int size,
+                                     struct tinyui_display_config *out_config);
 
 /* Dispatch the selected demo's optional per-frame callback. */
 void tinyui_demos_frame(unsigned int elapsed_ms);

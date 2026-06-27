@@ -156,12 +156,17 @@ static int tinyui_runtime_host_prepare_runtime_state(struct tinyui_app *app,
 
     state = (struct tinyui_runtime_host_state *)app_state->runtime_state;
     if (state == NULL) {
+        struct tinyui_display_config display = {0};
+
+        if (tinyui_display_get_config(app, &display) != 0) {
+            return -1;
+        }
         state = calloc(1, sizeof(*state));
         if (state == NULL) {
             return -1;
         }
-        state->display_width = 480;
-        state->display_height = 320;
+        state->display_width = display.width;
+        state->display_height = display.height;
         app_state->runtime_state = state;
     }
 
