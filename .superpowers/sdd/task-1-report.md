@@ -48,3 +48,9 @@
 1. 收到 review 后，补强 `tests/tinyui/contract/check_tinyui_demo_boundary.py`，让它显式断言 `legacy_demo0_parity` 也必须出现在 `examples/sdl/CMakeLists.txt` 的 `tinyui_demo` 编译列表中。
 2. 先临时移除 `examples/sdl/CMakeLists.txt` 中的 `legacy_demo0_parity/legacy_demo0_parity.c`，运行 contract 测试确认断言失败。
 3. 恢复该 CMake 条目后，重新运行 contract 测试与 `cmake --build build --target tinyui_demo -j2`，两者均通过。
+
+## Review 持续修复补记
+
+1. 将 `legacy_demo0_parity` 的 contract 再收紧为最小骨架边界：必须包含 `tinyui_screen_create` 和 `tinyui_screen_load`。
+2. 同时显式禁止提前出现 parity 阶段痕迹，如 `tinyui_image_create`、`tinyui_button_create`、`tinyui_checkbox_create`、`tinyui_switch_create`、`tinyui_widget_set_pos`、`tinyui_widget_set_size` 等。
+3. 先临时在 `legacy_demo0_parity.c` 中加入 `tinyui_button_create`，确认 contract 失败；随后删除该痕迹恢复最小骨架并重新通过。

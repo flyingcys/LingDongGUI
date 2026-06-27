@@ -92,6 +92,10 @@ DEMO_MARKERS = {
         "tinyui_flex_set_flow",
         "tinyui_text_set_text",
     ),
+    "legacy_demo0_parity": (
+        "tinyui_screen_create",
+        "tinyui_screen_load",
+    ),
     "grid_parity": (
         "tinyui_window_create_child",
         "tinyui_grid_set_columns",
@@ -104,6 +108,19 @@ DEMO_MARKERS = {
 }
 
 DEMO_ABSENT_MARKERS = {
+    "legacy_demo0_parity": (
+        "tinyui_image_create",
+        "tinyui_button_create",
+        "tinyui_checkbox_create",
+        "tinyui_switch_create",
+        "tinyui_widget_set_pos",
+        "tinyui_widget_set_size",
+        "tinyui_widget_set_grid_cell",
+        "tinyui_window_create_child",
+        "tinyui_flex_set_flow",
+        "tinyui_grid_set_columns",
+        "tinyui_grid_set_rows",
+    ),
     "grid_parity": (
         'tinyui_widget_set_grid_cell((struct tinyui_widget *)panel_g',
     ),
