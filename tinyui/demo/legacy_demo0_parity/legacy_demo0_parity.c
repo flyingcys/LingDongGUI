@@ -29,7 +29,7 @@ static const char *const g_legacy_demo0_truth_fields[] = {
     "switch_label@356, 218:OFF",
     "qrcode@500, 10:legacy token",
     "g_legacy_qrcode_truth",
-    "\"l\" \"d\" \"g\" \"u\" \"i\"",
+    "{'l', 'd', 'g', 'u', 'i', '\\0'}",
     "list@850, 280:1/10/123/99/7",
     "\"title\"",
     "message_box@200, 150:title/12345678abcdefg\\n99556",
@@ -38,7 +38,7 @@ static const char *const g_legacy_demo0_truth_fields[] = {
     "\"yyyy - mm - dd\"",
 };
 
-static const char g_legacy_qrcode_truth[] = "l" "d" "g" "u" "i";
+static const char g_legacy_qrcode_truth[] = {'l', 'd', 'g', 'u', 'i', '\0'};
 
 void tinyui_demo_legacy_demo0_parity(void)
 {
