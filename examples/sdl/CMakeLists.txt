@@ -170,203 +170,205 @@ elseif(USE_DEMO STREQUAL "6")
     )
 endif()
 
-enable_testing()
-find_package(Python3 COMPONENTS Interpreter REQUIRED)
+if(ENABLE_TEST)
+    enable_testing()
+    find_package(Python3 COMPONENTS Interpreter REQUIRED)
 
-add_executable(ldswitch_internal_test
-    "${SDL_EXAMPLE_DIR}/tests/switch/test_ldswitch_internal.c"
-    "${REPO_SRC_DIR}/gui/ldSwitchInternal.c"
-)
-
-target_include_directories(ldswitch_internal_test PRIVATE
-    "${REPO_SRC_DIR}/gui"
-)
-
-target_compile_options(ldswitch_internal_test PRIVATE
-    -fdiagnostics-color=always
-    -g
-    -std=gnu11
-)
-
-add_test(NAME ldswitch_internal_test COMMAND ldswitch_internal_test)
-set_tests_properties(ldswitch_internal_test PROPERTIES LABELS "sdl;unit")
-
-add_executable(ldswitch_widget_test
-    "${SDL_EXAMPLE_DIR}/tests/switch/test_ldswitch_widget.c"
-    "${REPO_SRC_DIR}/gui/ldSwitchInternal.c"
-)
-
-target_include_directories(ldswitch_widget_test PRIVATE
-    "${REPO_SRC_DIR}/gui"
-    "${REPO_SRC_DIR}/misc"
-    "${REPO_SRC_DIR}/porting"
-    "${COMMON_DIR}/Arm-2D"
-    "${COMMON_DIR}/Arm-2D/Helper/Include"
-    "${COMMON_DIR}/Arm-2D/Library/Include"
-    "${COMMON_DIR}/math"
-    "${ARM2D_CONTROLS_DIR}"
-)
-
-target_compile_definitions(ldswitch_widget_test PRIVATE
-    RTE_Acceleration_Arm_2D_Alpha_Blending
-)
-
-target_compile_options(ldswitch_widget_test PRIVATE
-    -fdiagnostics-color=always
-    -g
-    -std=gnu11
-)
-
-add_test(NAME ldswitch_widget_test COMMAND ldswitch_widget_test)
-set_tests_properties(ldswitch_widget_test PROPERTIES LABELS "sdl;unit")
-
-add_executable(uiwidget_swipe_logic_test
-    "${SDL_EXAMPLE_DIR}/tests/swipe/test_uiwidget_swipe_logic.c"
-    "${DEMO_DIR}/widget/uiWidgetSwipeLogic.c"
-)
-
-target_include_directories(uiwidget_swipe_logic_test PRIVATE
-    "${DEMO_DIR}/widget"
-)
-
-target_compile_options(uiwidget_swipe_logic_test PRIVATE
-    -fdiagnostics-color=always
-    -g
-    -std=gnu11
-)
-
-add_test(NAME uiwidget_swipe_logic_test COMMAND uiwidget_swipe_logic_test)
-set_tests_properties(uiwidget_swipe_logic_test PROPERTIES LABELS "sdl;unit")
-
-add_executable(layout_window_test
-    "${SDL_EXAMPLE_DIR}/tests/layout/test_layout_window.c"
-    ${ARM2D_LIBRARY_SOURCES}
-    "${REPO_SRC_DIR}/gui/ldWindowLayoutInternal.c"
-    "${REPO_SRC_DIR}/gui/ldBase.c"
-    "${REPO_SRC_DIR}/gui/ldSwitch.c"
-    "${REPO_SRC_DIR}/gui/ldSwitchInternal.c"
-    "${REPO_SRC_DIR}/gui/ldWindow.c"
-    "${REPO_SRC_DIR}/porting/ldArm2dUserDrawCircle.c"
-    ${MISC_SOURCES}
-)
-
-target_include_directories(layout_window_test PRIVATE
-    "${SDL_EXAMPLE_DIR}/user"
-    "${COMMON_DIR}/Arm-2D"
-    "${COMMON_DIR}/Arm-2D/Helper/Include"
-    "${COMMON_DIR}/Arm-2D/Library/Include"
-    "${COMMON_DIR}/Arm-2D/Library/Source"
-    "${ARM2D_CONTROLS_DIR}"
-    "${COMMON_DIR}/math"
-    "${REPO_SRC_DIR}/gui"
-    "${REPO_SRC_DIR}/misc"
-    "${REPO_SRC_DIR}/porting"
-)
-
-target_compile_definitions(layout_window_test PRIVATE
-    __va_list=va_list
-    RTE_Acceleration_Arm_2D_Helper_Disp_Adapter0
-    RTE_Acceleration_Arm_2D_Alpha_Blending
-    "-D__ARM_2D_USER_APP_CFG_H__=\"ldConfig.h\""
-    "-DARM_SECTION(x)="
-)
-
-target_compile_options(layout_window_test PRIVATE
-    -fdiagnostics-color=always
-    -g
-    -std=gnu11
-    -ffunction-sections
-    -fdata-sections
-    -fno-ms-extensions
-    -Wno-macro-redefined
-    "-D__ARM_2D_USER_APP_CFG_H__=\"ldConfig.h\""
-    "-DARM_SECTION(x)="
-)
-
-if(APPLE)
-    target_link_options(layout_window_test PRIVATE
-        -Wl,-dead_strip
+    add_executable(ldswitch_internal_test
+        "${SDL_EXAMPLE_DIR}/tests/switch/test_ldswitch_internal.c"
+        "${REPO_SRC_DIR}/gui/ldSwitchInternal.c"
     )
-else()
-    target_link_options(layout_window_test PRIVATE
-        -Wl,--gc-sections
+
+    target_include_directories(ldswitch_internal_test PRIVATE
+        "${REPO_SRC_DIR}/gui"
+    )
+
+    target_compile_options(ldswitch_internal_test PRIVATE
+        -fdiagnostics-color=always
+        -g
+        -std=gnu11
+    )
+
+    add_test(NAME ldswitch_internal_test COMMAND ldswitch_internal_test)
+    set_tests_properties(ldswitch_internal_test PROPERTIES LABELS "sdl;unit")
+
+    add_executable(ldswitch_widget_test
+        "${SDL_EXAMPLE_DIR}/tests/switch/test_ldswitch_widget.c"
+        "${REPO_SRC_DIR}/gui/ldSwitchInternal.c"
+    )
+
+    target_include_directories(ldswitch_widget_test PRIVATE
+        "${REPO_SRC_DIR}/gui"
+        "${REPO_SRC_DIR}/misc"
+        "${REPO_SRC_DIR}/porting"
+        "${COMMON_DIR}/Arm-2D"
+        "${COMMON_DIR}/Arm-2D/Helper/Include"
+        "${COMMON_DIR}/Arm-2D/Library/Include"
+        "${COMMON_DIR}/math"
+        "${ARM2D_CONTROLS_DIR}"
+    )
+
+    target_compile_definitions(ldswitch_widget_test PRIVATE
+        RTE_Acceleration_Arm_2D_Alpha_Blending
+    )
+
+    target_compile_options(ldswitch_widget_test PRIVATE
+        -fdiagnostics-color=always
+        -g
+        -std=gnu11
+    )
+
+    add_test(NAME ldswitch_widget_test COMMAND ldswitch_widget_test)
+    set_tests_properties(ldswitch_widget_test PROPERTIES LABELS "sdl;unit")
+
+    add_executable(uiwidget_swipe_logic_test
+        "${SDL_EXAMPLE_DIR}/tests/swipe/test_uiwidget_swipe_logic.c"
+        "${DEMO_DIR}/widget/uiWidgetSwipeLogic.c"
+    )
+
+    target_include_directories(uiwidget_swipe_logic_test PRIVATE
+        "${DEMO_DIR}/widget"
+    )
+
+    target_compile_options(uiwidget_swipe_logic_test PRIVATE
+        -fdiagnostics-color=always
+        -g
+        -std=gnu11
+    )
+
+    add_test(NAME uiwidget_swipe_logic_test COMMAND uiwidget_swipe_logic_test)
+    set_tests_properties(uiwidget_swipe_logic_test PROPERTIES LABELS "sdl;unit")
+
+    add_executable(layout_window_test
+        "${SDL_EXAMPLE_DIR}/tests/layout/test_layout_window.c"
+        ${ARM2D_LIBRARY_SOURCES}
+        "${REPO_SRC_DIR}/gui/ldWindowLayoutInternal.c"
+        "${REPO_SRC_DIR}/gui/ldBase.c"
+        "${REPO_SRC_DIR}/gui/ldSwitch.c"
+        "${REPO_SRC_DIR}/gui/ldSwitchInternal.c"
+        "${REPO_SRC_DIR}/gui/ldWindow.c"
+        "${REPO_SRC_DIR}/porting/ldArm2dUserDrawCircle.c"
+        ${MISC_SOURCES}
+    )
+
+    target_include_directories(layout_window_test PRIVATE
+        "${SDL_EXAMPLE_DIR}/user"
+        "${COMMON_DIR}/Arm-2D"
+        "${COMMON_DIR}/Arm-2D/Helper/Include"
+        "${COMMON_DIR}/Arm-2D/Library/Include"
+        "${COMMON_DIR}/Arm-2D/Library/Source"
+        "${ARM2D_CONTROLS_DIR}"
+        "${COMMON_DIR}/math"
+        "${REPO_SRC_DIR}/gui"
+        "${REPO_SRC_DIR}/misc"
+        "${REPO_SRC_DIR}/porting"
+    )
+
+    target_compile_definitions(layout_window_test PRIVATE
+        __va_list=va_list
+        RTE_Acceleration_Arm_2D_Helper_Disp_Adapter0
+        RTE_Acceleration_Arm_2D_Alpha_Blending
+        "-D__ARM_2D_USER_APP_CFG_H__=\"ldConfig.h\""
+        "-DARM_SECTION(x)="
+    )
+
+    target_compile_options(layout_window_test PRIVATE
+        -fdiagnostics-color=always
+        -g
+        -std=gnu11
+        -ffunction-sections
+        -fdata-sections
+        -fno-ms-extensions
+        -Wno-macro-redefined
+        "-D__ARM_2D_USER_APP_CFG_H__=\"ldConfig.h\""
+        "-DARM_SECTION(x)="
+    )
+
+    if(APPLE)
+        target_link_options(layout_window_test PRIVATE
+            -Wl,-dead_strip
+        )
+    else()
+        target_link_options(layout_window_test PRIVATE
+            -Wl,--gc-sections
+        )
+    endif()
+
+    if(NOT WIN32)
+        target_link_libraries(layout_window_test PRIVATE m)
+    endif()
+
+    add_test(NAME layout_window_test COMMAND layout_window_test)
+    set_tests_properties(layout_window_test PROPERTIES LABELS "sdl;unit")
+
+    add_test(
+        NAME check_use_demo_0_legacy_widget
+        COMMAND "${Python3_EXECUTABLE}" "${SDL_EXAMPLE_DIR}/tests/check_use_demo_0_legacy_widget.py"
+    )
+    set_tests_properties(check_use_demo_0_legacy_widget PROPERTIES
+        WORKING_DIRECTORY "${SDL_EXAMPLE_DIR}"
+        LABELS "sdl;contract"
+    )
+
+    add_test(
+        NAME check_switch_focus_routing
+        COMMAND "${Python3_EXECUTABLE}" "${SDL_EXAMPLE_DIR}/tests/check_switch_focus_routing.py"
+    )
+    set_tests_properties(check_switch_focus_routing PROPERTIES
+        WORKING_DIRECTORY "${SDL_EXAMPLE_DIR}"
+        LABELS "sdl;contract"
+    )
+
+    add_test(
+        NAME check_use_demo_5_grid_widget
+        COMMAND "${Python3_EXECUTABLE}" "${SDL_EXAMPLE_DIR}/tests/check_use_demo_5_grid_widget.py"
+    )
+    set_tests_properties(check_use_demo_5_grid_widget PROPERTIES
+        WORKING_DIRECTORY "${SDL_EXAMPLE_DIR}"
+        LABELS "sdl;contract"
+    )
+
+    add_test(
+        NAME check_use_demo_6_widget_swipe
+        COMMAND "${Python3_EXECUTABLE}" "${SDL_EXAMPLE_DIR}/tests/check_use_demo_6_widget_swipe.py"
+    )
+    set_tests_properties(check_use_demo_6_widget_swipe PROPERTIES
+        WORKING_DIRECTORY "${SDL_EXAMPLE_DIR}"
+        LABELS "sdl;contract"
+    )
+
+    add_test(
+        NAME check_use_demo_0_runtime
+        COMMAND "${Python3_EXECUTABLE}" "${SDL_EXAMPLE_DIR}/tests/check_use_demo_runtime.py"
+                --demo 0
+                --build-dir "${CMAKE_BINARY_DIR}/runtime-demo-0"
+    )
+    set_tests_properties(check_use_demo_0_runtime PROPERTIES
+        WORKING_DIRECTORY "${SDL_EXAMPLE_DIR}"
+        LABELS "sdl;runtime"
+    )
+
+    add_test(
+        NAME check_use_demo_6_runtime
+        COMMAND "${Python3_EXECUTABLE}" "${SDL_EXAMPLE_DIR}/tests/check_use_demo_runtime.py"
+                --demo 6
+                --build-dir "${CMAKE_BINARY_DIR}/runtime-demo-6"
+    )
+    set_tests_properties(check_use_demo_6_runtime PROPERTIES
+        WORKING_DIRECTORY "${SDL_EXAMPLE_DIR}"
+        LABELS "sdl;runtime"
+    )
+
+    add_test(
+        NAME check_switch_capture_matrix
+        COMMAND "${Python3_EXECUTABLE}" "${SDL_EXAMPLE_DIR}/tests/check_switch_capture_matrix.py"
+                --build-dir "${CMAKE_BINARY_DIR}/switch-capture-demo-0"
+    )
+    set_tests_properties(check_switch_capture_matrix PROPERTIES
+        WORKING_DIRECTORY "${SDL_EXAMPLE_DIR}"
+        LABELS "sdl;runtime"
     )
 endif()
-
-if(NOT WIN32)
-    target_link_libraries(layout_window_test PRIVATE m)
-endif()
-
-add_test(NAME layout_window_test COMMAND layout_window_test)
-set_tests_properties(layout_window_test PROPERTIES LABELS "sdl;unit")
-
-add_test(
-    NAME check_use_demo_0_legacy_widget
-    COMMAND "${Python3_EXECUTABLE}" "${SDL_EXAMPLE_DIR}/tests/check_use_demo_0_legacy_widget.py"
-)
-set_tests_properties(check_use_demo_0_legacy_widget PROPERTIES
-    WORKING_DIRECTORY "${SDL_EXAMPLE_DIR}"
-    LABELS "sdl;contract"
-)
-
-add_test(
-    NAME check_switch_focus_routing
-    COMMAND "${Python3_EXECUTABLE}" "${SDL_EXAMPLE_DIR}/tests/check_switch_focus_routing.py"
-)
-set_tests_properties(check_switch_focus_routing PROPERTIES
-    WORKING_DIRECTORY "${SDL_EXAMPLE_DIR}"
-    LABELS "sdl;contract"
-)
-
-add_test(
-    NAME check_use_demo_5_grid_widget
-    COMMAND "${Python3_EXECUTABLE}" "${SDL_EXAMPLE_DIR}/tests/check_use_demo_5_grid_widget.py"
-)
-set_tests_properties(check_use_demo_5_grid_widget PROPERTIES
-    WORKING_DIRECTORY "${SDL_EXAMPLE_DIR}"
-    LABELS "sdl;contract"
-)
-
-add_test(
-    NAME check_use_demo_6_widget_swipe
-    COMMAND "${Python3_EXECUTABLE}" "${SDL_EXAMPLE_DIR}/tests/check_use_demo_6_widget_swipe.py"
-)
-set_tests_properties(check_use_demo_6_widget_swipe PROPERTIES
-    WORKING_DIRECTORY "${SDL_EXAMPLE_DIR}"
-    LABELS "sdl;contract"
-)
-
-add_test(
-    NAME check_use_demo_0_runtime
-    COMMAND "${Python3_EXECUTABLE}" "${SDL_EXAMPLE_DIR}/tests/check_use_demo_runtime.py"
-            --demo 0
-            --build-dir "${CMAKE_BINARY_DIR}/runtime-demo-0"
-)
-set_tests_properties(check_use_demo_0_runtime PROPERTIES
-    WORKING_DIRECTORY "${SDL_EXAMPLE_DIR}"
-    LABELS "sdl;runtime"
-)
-
-add_test(
-    NAME check_use_demo_6_runtime
-    COMMAND "${Python3_EXECUTABLE}" "${SDL_EXAMPLE_DIR}/tests/check_use_demo_runtime.py"
-            --demo 6
-            --build-dir "${CMAKE_BINARY_DIR}/runtime-demo-6"
-)
-set_tests_properties(check_use_demo_6_runtime PROPERTIES
-    WORKING_DIRECTORY "${SDL_EXAMPLE_DIR}"
-    LABELS "sdl;runtime"
-)
-
-add_test(
-    NAME check_switch_capture_matrix
-    COMMAND "${Python3_EXECUTABLE}" "${SDL_EXAMPLE_DIR}/tests/check_switch_capture_matrix.py"
-            --build-dir "${CMAKE_BINARY_DIR}/switch-capture-demo-0"
-)
-set_tests_properties(check_switch_capture_matrix PROPERTIES
-    WORKING_DIRECTORY "${SDL_EXAMPLE_DIR}"
-    LABELS "sdl;runtime"
-)
 
 add_executable(ldgui_sdl_demo
     ${SDL_DEMO_CORE_SOURCES}
