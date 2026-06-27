@@ -309,7 +309,7 @@ static void test_tinyui_umbrella_no_longer_reexports_app_header(void)
 
     tinyui_header_text = read_entire_file(test_tinyui_header_source);
     assert(strstr(tinyui_header_text, "#ifndef TINYUI_H") != NULL);
-    assert(strstr(tinyui_header_text, "#include \"animation.h\"") != NULL);
+    assert(strstr(tinyui_header_text, "#include \"widgets/animation.h\"") != NULL);
     assert(strstr(tinyui_header_text, "#include \"app.h\"") == NULL);
     free(tinyui_header_text);
 }

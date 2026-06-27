@@ -238,6 +238,9 @@ static void test_clock_release_contract_covers_time_source_and_configuration_bou
     assert(ld_clock->pointerInfo[0].ptImgTile != 0);
     assert(ld_clock->pointerInfo[1].ptImgTile != 0);
     assert(ld_clock->pointerInfo[2].ptImgTile != 0);
+    assert(ld_clock->pointerInfo[0].rotationCentre.fY == 67.0f);
+    assert(ld_clock->pointerInfo[1].rotationCentre.fY == 100.0f);
+    assert(ld_clock->pointerInfo[2].rotationCentre.fY == 100.0f);
     assert(tinyui_clock_get_use_system_time(clock) == 1);
     assert(tinyui_clock_set_step_second(clock, 0) == 0);
     assert(tinyui_clock_get_step_second(clock) == 0);
@@ -595,6 +598,14 @@ static void test_clock_destroy_releases_owned_tiles_without_freeing_external_sou
     tracked_free_watch(&external_minute_mask);
     tracked_free_watch(&external_second_tile);
     tracked_free_watch(&external_second_mask);
+
+    assert(tinyui_clock_set_mask_color(clock, 0x000000U) == 0);
+    assert(tracked_free_count_for(default_hour_img_tile) == 0);
+    assert(tracked_free_count_for(default_hour_mask_tile) == 0);
+    assert(tracked_free_count_for(default_minute_img_tile) == 0);
+    assert(tracked_free_count_for(default_minute_mask_tile) == 0);
+    assert(tracked_free_count_for(default_second_img_tile) == 0);
+    assert(tracked_free_count_for(default_second_mask_tile) == 0);
 
     assert(tinyui_clock_set_background_source(clock, &bg_source) == 0);
     assert(tinyui_clock_set_hour_pointer_source(clock, &hour_source) == 0);

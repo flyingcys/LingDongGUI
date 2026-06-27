@@ -4,17 +4,25 @@ import re
 
 ROOT = Path(__file__).resolve().parents[3]
 DEMO_DIR = ROOT / "tinyui" / "demo"
+DEMO_RUNNER_DIR = ROOT / "tinyui_demo"
+DEMO_GUIDE = ROOT / "tinyui" / "docs" / "demo_guide.md"
 SDL_CMAKE = ROOT / "examples" / "sdl" / "CMakeLists.txt"
 FORBIDDEN_PATTERNS = {
-    "ld*": re.compile(r"\bld[A-Za-z0-9_]+\b"),
-    "arm_2d_*": re.compile(r"\barm_2d_[A-Za-z0-9_]+\b"),
+    "LingDongGUI": re.compile(r"LingDongGUI"),
+    "lingdonggui": re.compile(r"lingdonggui"),
+    "Arm-2D": re.compile(r"Arm-2D"),
+    "arm2d": re.compile(r"arm2d", re.I),
+    "arm_2d": re.compile(r"arm_2d[A-Za-z0-9_]*"),
     "SIGNAL_*": re.compile(r"\bSIGNAL_[A-Za-z0-9_]+\b"),
+    "ld*": re.compile(r"\bld(?:[A-Za-z0-9_]*|\*)\b|\bld\*"),
+    "c_tile*": re.compile(r"\bc_tile[A-Za-z0-9_]*\b"),
+    "IMAGE_*": re.compile(r"\bIMAGE_[A-Za-z0-9_]*\b"),
+    ".img_tile": re.compile(r"\.img_tile\b"),
+    ".mask_tile": re.compile(r"\.mask_tile\b"),
+    "uiImages.h": re.compile(r"uiImages\.h"),
+    "src/gui": re.compile(r"src/gui/"),
+    "src/misc": re.compile(r"src/misc/"),
 }
-OPAQUE_ASSET_DECL_RE = re.compile(
-    r"^\s*(typedef\s+struct\s+arm_2d_tile_t\s+arm_2d_tile_t;|"
-    r"extern\s+const\s+arm_2d_tile_t\s+c_tile[A-Za-z0-9_]+;)\s*$",
-    re.M,
-)
 REQUIRED_DEMOS = {
     "hello_world",
     "basic_widgets",
@@ -118,12 +126,20 @@ def main() -> int:
     missing = sorted(REQUIRED_DEMOS - found_demos)
     assert not missing, f"missing TinyUI demos: {', '.join(missing)}"
 
-    for source in demo_sources:
+    boundary_sources = sorted(DEMO_DIR.glob("**/*.[ch]"))
+    boundary_sources.extend(sorted(DEMO_RUNNER_DIR.glob("**/*.[ch]")))
+    boundary_sources.append(DEMO_GUIDE)
+    assert boundary_sources, "expected TinyUI demo boundary sources"
+
+    for source in boundary_sources:
+        assert source.exists(), f"missing TinyUI demo boundary source: {source.relative_to(ROOT)}"
         text = source.read_text(encoding="utf-8")
-        text = OPAQUE_ASSET_DECL_RE.sub("", text)
         for label, pattern in FORBIDDEN_PATTERNS.items():
             match = pattern.search(text)
-            assert match is None, f"{source.name} leaks forbidden token: {match.group(0)} ({label})"
+            rel = source.relative_to(ROOT)
+            assert match is None, (
+                f"{rel} leaks forbidden token: {match.group(0)} ({label})"
+            )
 
     for demo_name, markers in DEMO_MARKERS.items():
         demo_source = DEMO_DIR / demo_name / f"{demo_name}.c"

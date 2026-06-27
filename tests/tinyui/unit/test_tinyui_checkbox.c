@@ -353,11 +353,11 @@ static void test_checkbox_create_with_props_accepts_sentinel_defaults(struct tin
 
 static void test_checkbox_props_source_no_longer_uses_has_flags(void)
 {
-    assert(tinyui_test_source_contains("tinyui/include/checkbox.h", "has_check_color") == 0);
-    assert(tinyui_test_source_contains("tinyui/include/checkbox.h", "has_unchecked_source") == 0);
-    assert(tinyui_test_source_contains("tinyui/include/checkbox.h", "has_checked_source") == 0);
-    assert(tinyui_test_source_contains("tinyui/include/checkbox.h", "has_radio_group") == 0);
-    assert(tinyui_test_source_contains("tinyui/include/checkbox.h", "has_string_left_space") == 0);
+    assert(tinyui_test_source_contains("tinyui/include/widgets/checkbox.h", "has_check_color") == 0);
+    assert(tinyui_test_source_contains("tinyui/include/widgets/checkbox.h", "has_unchecked_source") == 0);
+    assert(tinyui_test_source_contains("tinyui/include/widgets/checkbox.h", "has_checked_source") == 0);
+    assert(tinyui_test_source_contains("tinyui/include/widgets/checkbox.h", "has_radio_group") == 0);
+    assert(tinyui_test_source_contains("tinyui/include/widgets/checkbox.h", "has_string_left_space") == 0);
     assert(tinyui_test_source_contains("tinyui/src/widgets/checkbox.c", "props->has_check_color") == 0);
     assert(tinyui_test_source_contains("tinyui/src/widgets/checkbox.c", "props->has_unchecked_source") == 0);
     assert(tinyui_test_source_contains("tinyui/src/widgets/checkbox.c", "props->has_checked_source") == 0);

@@ -26,7 +26,7 @@ ALLOWLISTED_COVERAGE_KINDS = {
 VALID_GAP_STATUSES = {
     "covered",
     "missing_tinyui_api",
-    "missing_backend_proof",
+    "missing_runtime_visible_evidence",
     "missing_unit",
     "missing_gate",
     "overwrapped",
@@ -49,7 +49,7 @@ VALID_POLICY_CATEGORIES = {
     "base_tree_policy",
     "resource_time_helper_policy",
     "drawing_helper_policy",
-    "backend_private_hook",
+    "runtime_private_hook",
     "native_action_private",
     "enum_only_semantics",
 }
@@ -62,7 +62,7 @@ REQUIRED_ROW_FIELDS = {
     "native_api",
     "coverage_kind",
     "tinyui_api",
-    "backend_proof",
+    "evidence_tag",
     "unit_test",
     "gate_evidence",
     "gap_status",
@@ -73,7 +73,7 @@ LEDGER_ALIGNED_FIELDS = {
     "group_kind",
     "coverage_kind",
     "tinyui_api",
-    "backend_proof",
+    "evidence_tag",
     "unit_test",
     "required",
     "planned_task",
@@ -89,10 +89,10 @@ LEDGER_ALIGNED_FIELDS = {
 
 VALID_SHARED_POLICIES = {
     "shared_api_equivalence",
-    "backend_proof_only",
+    "public_api_evidence_only",
     "allowlisted_tree_helper",
     "missing_tinyui_api",
-    "missing_backend_proof",
+    "missing_runtime_visible_evidence",
 }
 
 
@@ -170,7 +170,7 @@ def _assert_row_shape(native_api: str, row: dict) -> None:
         assert policy_category == "direct_covered", (
             f"{native_api} covered row must use policy_category=direct_covered"
         )
-        for field in ("tinyui_api", "backend_proof", "unit_test"):
+        for field in ("tinyui_api", "evidence_tag", "unit_test"):
             assert isinstance(row.get(field), str) and row[field], (
                 f"{native_api} covered row must have concrete {field}"
             )

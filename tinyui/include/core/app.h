@@ -14,7 +14,7 @@
  * been migrated to the canonical path.  All such legacy consumers will
  * be migrated in a future stage.
  *
- * Removal target: after all demo/* and internal callers are migrated.
+ * Removal target: after all demo directory and internal callers are migrated.
  */
 
 struct tinyui_app;

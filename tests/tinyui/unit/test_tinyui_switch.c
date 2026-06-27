@@ -215,7 +215,7 @@ static void test_switch_rejects_null_args(struct tinyui_window *win)
 
 static void test_switch_props_source_no_longer_uses_has_flags(void)
 {
-    const char *header_source = "tinyui/include/switch.h";
+    const char *header_source = "tinyui/include/widgets/switch.h";
     const char *widget_source = "tinyui/src/widgets/switch.c";
 
     assert(tinyui_test_source_contains(header_source, "has_off_source") == 0);

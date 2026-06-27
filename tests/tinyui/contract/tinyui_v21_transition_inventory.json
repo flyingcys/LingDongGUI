@@ -5,9 +5,9 @@
     "backend_compat_includes": [],
     "top_level_wrapper_forward_count": 0,
     "top_level_wrapper_forward_names": [],
-    "compat_public_header_count": 42,
-    "tinyui_public_header_count": 42,
+    "compat_public_header_count": 0,
+    "tinyui_public_header_count": 1,
     "compat_public_headers_require_followup": [],
-    "tinyui_public_api_count": 546
+    "tinyui_public_api_count": 548
   }
 }

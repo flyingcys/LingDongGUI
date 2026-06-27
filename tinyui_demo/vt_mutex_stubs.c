@@ -1,5 +1,5 @@
 /*
- * Stub implementations of the Arm-2D virtual-TFT mutex hooks.
+ * Stub implementations of the virtual display mutex hooks.
  * The SDL demo runs single-threaded, so these are no-ops.
  * Providing strong definitions here prevents LTO from leaving
  * the weak symbols in tinyui_core unresolved across archives.

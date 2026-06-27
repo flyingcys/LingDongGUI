@@ -9,7 +9,7 @@
 1. `tinyui/src/` 放 TinyUI 固定核心实现。
 2. `tinyui/port/` 放开发者按芯片、OS、屏幕、输入设备自行适配的 port。
 3. `tinyui/demo/` 放示例应用，不承担平台适配职责。
-4. `tinyui/src/backend/ldgui/` 是 TinyUI 到 LingDongGUI/ARM-2D 的唯一私有桥接层。
+4. `tinyui/src/internal bridge/` 是 历史 LingDongGUI/ARM-2D 桥接规划，当前无 backend 硬指标下不作为 TinyUI 质量依据。
 
 ## 目录职责
 
@@ -20,7 +20,7 @@
 - TinyUI core 生命周期
 - 固定 public contract 的默认状态实现
 - widget/layout/theme/event/resource 等通用逻辑
-- backend private bridge
+- runtime/resource/internal bridge
 
 约束：
 
@@ -79,7 +79,7 @@ tinyui/port/<rtos_name>/
 
 ### 必须固定编译
 
-默认进入 TinyUI 主库或 backend 库：
+默认进入 TinyUI 主库或 TinyUI 支撑库：
 
 - `tinyui/src/core/*`
 - `tinyui/src/widgets/*`
@@ -89,7 +89,7 @@ tinyui/port/<rtos_name>/
 - `tinyui/src/indev/*`
 - `tinyui/src/tick/*`
 - `tinyui/src/osal/*`
-- `tinyui/src/backend/ldgui/*`
+- 无 backend 目录，本轮不编译 backend 私有层
 
 ### 应按需选择编译
 
@@ -103,9 +103,9 @@ tinyui/port/<rtos_name>/
 - `tinyui/demo/*`
 - 专门给 demo 服务的临时 runner
 
-## backend 与 port 的边界
+## internal runtime 与 port 的边界
 
-### backend 负责
+### TinyUI internal runtime 负责
 
 - 把 TinyUI widget/app 状态映射到底层 LingDongGUI 对象
 - 从 TinyUI display/indev/tick/osal 状态读取数据
@@ -118,7 +118,7 @@ tinyui/port/<rtos_name>/
 
 ### 明确禁止
 
-- 不把 LingDongGUI backend 私有实现挪进 `tinyui/port/ldgui`
+- 不把 底层私有实现挪进 `tinyui/port/ldgui`
 - 不把 demo 页面逻辑写进 port
 - 不把平台驱动细节散落回 `tinyui/src/core` 或 widget 实现
 

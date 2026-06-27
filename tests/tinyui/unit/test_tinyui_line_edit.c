@@ -370,8 +370,8 @@ static void test_line_edit_set_keyboard_alias_matches_binding_contract(struct ti
 
 static void test_line_edit_props_source_no_longer_uses_has_flags(void)
 {
-    assert(tinyui_test_source_contains("tinyui/include/line_edit.h", "has_type") == 0);
-    assert(tinyui_test_source_contains("tinyui/include/line_edit.h", "has_keyboard_binding") == 0);
+    assert(tinyui_test_source_contains("tinyui/include/widgets/line_edit.h", "has_type") == 0);
+    assert(tinyui_test_source_contains("tinyui/include/widgets/line_edit.h", "has_keyboard_binding") == 0);
     assert(tinyui_test_source_contains("tinyui/src/widgets/line_edit.c", "props->has_type") == 0);
     assert(tinyui_test_source_contains("tinyui/src/widgets/line_edit.c", "props->has_keyboard_binding") == 0);
 }

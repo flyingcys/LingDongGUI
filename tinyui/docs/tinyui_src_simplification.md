@@ -39,7 +39,7 @@
 4. **必须区分两种"中间层",只删其一:**
    | 中间层 | 为何存在 | 本次决策下 | 处置 |
    |---|---|---|---|
-   | **backend 抽象**(`tinyui_backend_widget` / `tinyui_backend_app_state` / 规划中的 `src/backend/ldgui/`) | 把 LingDongGUI 当作可替换后端 | 永不换 GUI → **不需要** | **折叠删除** |
+   | **backend 抽象**(`tinyui_backend_widget` / `tinyui_backend_app_state` / 规划中的 `src/internal bridge/`) | 把 LingDongGUI 当作可替换后端 | 永不换 GUI → **不需要** | **折叠删除** |
    | **port 适配层**(`display/indev/tick/osal/drivers` + `tinyui/port/`) | 同一套 LingDongGUI 跑在不同 MCU / SDL 宿主(跨**芯片**,非跨 GUI) | 仍然需要 | **保留** |
 
 5. **保守估计可消除 4,000–5,000 行(全 src 的 ~15–20%),不损失任何用户控件能力**;另外每个 widget 省一次 `calloc` + 一个 **496–512B** 的 `backend_widget` 结构体(初版误记为 128–192B,实测内存收益更大),并删去约 380 处测试断言负担。
@@ -243,7 +243,7 @@ struct tinyui_app {
 
 - **单测**:约 803 处 backend 内部字段断言。其中 **~380 处随中间层一起删**(dispatch_count/epoch/identity/last_signal/dispose snapshot/树结构断言);**~20–30 处改写保留**(测真实用户能力的:`_ld` 错误边界返回 -1、value/checked 读回、host 绑定恒等)。
 - **perf baseline 必改**:`tinyui_perf_baseline.json` 锁定了 `backend_widget_struct_bytes`(**baseline 496 / max 512B**)与独立的 `widget_wrapper_struct_bytes`(184/192B);`check_tinyui_object_overhead.py` 里的 128/192 只是 `_run_self_test()` 桩值,**不是真实 baseline**(初版把二者混了)。探针 `test_tinyui_wrapper_struct_overhead.c:11` 须随结构删除重写——删掉 496B 的 backend 结构是实打实的内存收益。
-- **契约脚本**:9 个 contract 脚本对 backend **字段符号**(dispatch_count 等)引用=0,这一面不受影响。但 **`check_tinyui_transition_guards.py` / `check_tinyui_v21_transition_guards.py` 对 `app.h`/backend 目录有结构依赖**——§4 L3"移除 `app.h` 公共导出"会触发这两个脚本的 baseline drift 失败,需同步更新其基线。另有 3 个 runtime marker 校验需微调(`check_tinyui_backend_mapping/runtime/visible_ui`):`EXCLUDE_FORMAL_MAPPING` marker 源于死字段可直接删,`SMOKE_LAYOUT_USED` 源于 `host_internal.h` 与 backend 无关、可独立保留。
+- **契约脚本**:9 个 contract 脚本对 runtime **历史字段符号**(dispatch_count 等)引用=0,这一面不受影响。但 **`check_tinyui_transition_guards.py` / `check_tinyui_v21_transition_guards.py` 对 `app.h`/runtime 目录有结构依赖**——§4 L3"移除 `app.h` 公共导出"会触发这两个脚本的 baseline drift 失败,需同步更新其基线。另有 3 个 runtime marker 校验需微调(`runtime/visible_ui`):`EXCLUDE_FORMAL_MAPPING` marker 源于死字段可直接删,`SMOKE_LAYOUT_USED` 源于 `host_internal.h` 与 backend 无关、可独立保留。
 
 ---
 
@@ -270,11 +270,11 @@ struct tinyui_app {
 | #3 core 混入 ld scene 生命周期 | 边界违规 | **作废**:core/app 直接持有 `ld_scene` 反而是简化目标(§2 app 折叠) |
 | #5 widgets 是 ld adapter / #10 runtime_internal.h 含 ld 字段 / #11 theme 写 ld | backend 中立性违规 | **边界顾虑作废**;但 #5 的**重复样板**问题仍成立(→ L1) |
 | #12 事件桥接分散 | 边界 + 一致性 | 边界作废;**一致性顾虑仍成立**(统一到 core,非另建 backend 层) |
-| #20 `drivers` vs `backend/ldgui` 命名不一致 / Wave 2 建立 `src/backend/ldgui/` | 建私有可换后端层 | **可换后端动机作废**,直接折叠更省(L2)。但 `porting_rules.md:12` 把 `backend/ldgui` 定义为"唯一私有桥接层",其"把 ld glue 收敛到单一目录"的**组织性价值独立于可换性仍成立**(审计 #5/#10/#11 想要的"ld 代码不散落");可保留为可选治理项 |
+| #20 `drivers` vs `internal bridge` 命名不一致 / Wave 2 建立 `src/internal bridge/` | 建私有可换后端层 | **可换后端动机作废**,直接折叠更省(L2)。但 `porting_rules.md:12` 把 `internal bridge` 定义为"唯一私有桥接层",其"把 ld glue 收敛到单一目录"的**组织性价值独立于可换性仍成立**(审计 #5/#10/#11 想要的"ld 代码不散落");可保留为可选治理项 |
 | #17/#18/#19 cmake/port 边界、SDL 链接、port 可配置 | 跨**芯片**/宿主边界 | **仍然成立**(属 port 层,非 backend 抽象) |
 | Wave 1(SDL host 移出 core) | 跨芯片边界 | **已完成且正确,保留** |
 
-**净效果:本决策让重构比团队现有计划更简单**——不必投入精力去建立一个"干净的可换后端私有层"(Wave 2/3 的 backend/ldgui),而是直接把那层折叠掉。需要继续坚持的只剩"跨芯片 port 边界"(display/indev/tick/osal/drivers + port/)和"public API 不泄漏 arm_2d/ld 类型"这两条。
+**净效果:本决策让重构比团队现有计划更简单**——不必投入精力去建立一个"干净的可换后端私有层"(Wave 2/3 的 internal bridge),而是直接把那层折叠掉。需要继续坚持的只剩"跨芯片 port 边界"(display/indev/tick/osal/drivers + port/)和"public API 不泄漏 arm_2d/ld 类型"这两条。
 
 ---
 

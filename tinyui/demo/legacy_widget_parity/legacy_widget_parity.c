@@ -18,97 +18,64 @@
 
 #include "legacy_widget_parity/legacy_widget_parity.h"
 #include "tinyui.h"
-#include "../../../examples/common/demo/widget/images/uiImages.h"
 
 struct legacy_widget_runtime {
     struct tinyui_gauge *gauge;
     struct tinyui_arc *arc;
 };
 
-static struct tinyui_image_source s_legacy_image_source = {
-    .img_tile = IMAGE_LETTER_PAPER_BMP,
-    .mask_tile = NULL,
+struct legacy_widget_sources {
+    struct tinyui_image_source paper;
+    struct tinyui_image_source button_release;
+    struct tinyui_image_source button_press;
+    struct tinyui_image_source progress_bg;
+    struct tinyui_image_source progress_fg;
+    struct tinyui_image_source slider_bg;
+    struct tinyui_image_source slider_indicator;
+    struct tinyui_image_source weather;
+    struct tinyui_image_source note;
+    struct tinyui_image_source book;
+    struct tinyui_image_source chart;
+    struct tinyui_image_source gauge_bg;
+    struct tinyui_image_source gauge_pointer;
+    struct tinyui_image_source arc_quarter;
 };
 
-static struct tinyui_image_source s_legacy_button_release_source = {
-    .img_tile = IMAGE_KEYRELEASE_PNG,
-    .mask_tile = IMAGE_KEYRELEASE_PNG_Mask,
-};
+static struct legacy_widget_sources s_sources;
+static int s_sources_ready;
 
-static struct tinyui_image_source s_legacy_button_press_source = {
-    .img_tile = IMAGE_KEYPRESS_PNG,
-    .mask_tile = IMAGE_KEYPRESS_PNG_Mask,
-};
+static int load_source(enum tinyui_builtin_image image,
+                       struct tinyui_image_source *source)
+{
+    return tinyui_image_source_from_builtin(image, source);
+}
 
-static struct tinyui_image_source s_legacy_progress_bg_source = {
-    .img_tile = IMAGE_PROGRESSBARBG_BMP,
-    .mask_tile = NULL,
-};
+static int ensure_legacy_sources(void)
+{
+    if (s_sources_ready != 0) {
+        return 0;
+    }
 
-static struct tinyui_image_source s_legacy_progress_fg_source = {
-    .img_tile = IMAGE_PROGRESSBARFG_BMP,
-    .mask_tile = NULL,
-};
+    if (load_source(TINYUI_BUILTIN_IMAGE_LETTER_PAPER, &s_sources.paper) != 0
+        || load_source(TINYUI_BUILTIN_IMAGE_KEY_RELEASE, &s_sources.button_release) != 0
+        || load_source(TINYUI_BUILTIN_IMAGE_KEY_PRESS, &s_sources.button_press) != 0
+        || load_source(TINYUI_BUILTIN_IMAGE_PROGRESS_BG, &s_sources.progress_bg) != 0
+        || load_source(TINYUI_BUILTIN_IMAGE_PROGRESS_FG, &s_sources.progress_fg) != 0
+        || load_source(TINYUI_BUILTIN_IMAGE_SLIDER_BG, &s_sources.slider_bg) != 0
+        || load_source(TINYUI_BUILTIN_IMAGE_SLIDER_INDICATOR, &s_sources.slider_indicator) != 0
+        || load_source(TINYUI_BUILTIN_IMAGE_WEATHER, &s_sources.weather) != 0
+        || load_source(TINYUI_BUILTIN_IMAGE_NOTE, &s_sources.note) != 0
+        || load_source(TINYUI_BUILTIN_IMAGE_BOOK, &s_sources.book) != 0
+        || load_source(TINYUI_BUILTIN_IMAGE_CHART, &s_sources.chart) != 0
+        || load_source(TINYUI_BUILTIN_IMAGE_GAUGE_BG, &s_sources.gauge_bg) != 0
+        || load_source(TINYUI_BUILTIN_IMAGE_GAUGE_POINTER, &s_sources.gauge_pointer) != 0
+        || load_source(TINYUI_BUILTIN_IMAGE_ARC_QUARTER, &s_sources.arc_quarter) != 0) {
+        return -1;
+    }
 
-static struct tinyui_image_source s_legacy_text_bg_source = {
-    .img_tile = IMAGE_LETTER_PAPER_BMP,
-    .mask_tile = NULL,
-};
-
-static struct tinyui_image_source s_legacy_slider_bg_source = {
-    .img_tile = IMAGE_SLIDER_PNG,
-    .mask_tile = IMAGE_SLIDER_PNG_Mask,
-};
-
-static struct tinyui_image_source s_legacy_slider_indicator_source = {
-    .img_tile = IMAGE_INDICATOR_PNG,
-    .mask_tile = IMAGE_INDICATOR_PNG_Mask,
-};
-
-static struct tinyui_image_source s_legacy_radial_weather_source = {
-    .img_tile = IMAGE_WEATHER_PNG,
-    .mask_tile = IMAGE_WEATHER_PNG_Mask,
-};
-
-static struct tinyui_image_source s_legacy_radial_note_source = {
-    .img_tile = IMAGE_NOTE_PNG,
-    .mask_tile = IMAGE_NOTE_PNG_Mask,
-};
-
-static struct tinyui_image_source s_legacy_icon_note_source = {
-    .img_tile = IMAGE_NOTE_PNG,
-    .mask_tile = IMAGE_NOTE_PNG_Mask,
-};
-
-static struct tinyui_image_source s_legacy_icon_book_source = {
-    .img_tile = IMAGE_BOOK_PNG,
-    .mask_tile = IMAGE_BOOK_PNG_Mask,
-};
-
-static struct tinyui_image_source s_legacy_icon_weather_source = {
-    .img_tile = IMAGE_WEATHER_PNG,
-    .mask_tile = IMAGE_WEATHER_PNG_Mask,
-};
-
-static struct tinyui_image_source s_legacy_icon_chart_source = {
-    .img_tile = IMAGE_CHART_PNG,
-    .mask_tile = IMAGE_CHART_PNG_Mask,
-};
-
-static struct tinyui_image_source s_legacy_gauge_bg_source = {
-    .img_tile = IMAGE_GAUGE_PNG,
-    .mask_tile = IMAGE_GAUGE_PNG_Mask,
-};
-
-static struct tinyui_image_source s_legacy_gauge_pointer_source = {
-    .img_tile = IMAGE_GAUGEPOINTER_PNG,
-    .mask_tile = IMAGE_GAUGEPOINTER_PNG_Mask,
-};
-
-static struct tinyui_image_source s_legacy_arc_quarter_source = {
-    .img_tile = IMAGE_ARC_QUARTER_PNG_Mask,
-    .mask_tile = IMAGE_ARC_QUARTER_MASK_PNG_Mask,
-};
+    s_sources_ready = 1;
+    return 0;
+}
 
 static void on_switch_changed(struct tinyui_widget *widget, int value, void *user_data)
 {
@@ -199,6 +166,10 @@ static void make_ui(struct tinyui_window *win, struct legacy_widget_runtime *run
     struct tinyui_arc *arc;
     struct tinyui_window *child_window;
 
+    if (ensure_legacy_sources() != 0) {
+        return;
+    }
+
     tinyui_window_set_color(win, 0xF5F6F8U);
 
     image = tinyui_image_create(win, "legacy_image");
@@ -257,7 +228,7 @@ static void make_ui(struct tinyui_window *win, struct legacy_widget_runtime *run
     child_window = tinyui_window_create_child(win, "legacy_child_panel");
 
     if (image != 0) {
-        tinyui_image_set_source(image, &s_legacy_image_source);
+        tinyui_image_set_source(image, &s_sources.paper);
         tinyui_widget_set_pos((struct tinyui_widget *)image, 100, 120);
         tinyui_widget_set_size((struct tinyui_widget *)image, 80, 50);
         tinyui_widget_set_bg_color((struct tinyui_widget *)image, 0xE9ECEFU);
@@ -268,8 +239,8 @@ static void make_ui(struct tinyui_window *win, struct legacy_widget_runtime *run
     if (button != 0) {
         tinyui_button_set_text(button, "123");
         tinyui_button_set_image(button,
-                                &s_legacy_button_release_source,
-                                &s_legacy_button_press_source);
+                                &s_sources.button_release,
+                                &s_sources.button_press);
         tinyui_widget_set_pos((struct tinyui_widget *)button, 10, 10);
         tinyui_widget_set_size((struct tinyui_widget *)button, 88, 56);
         tinyui_widget_set_bg_color((struct tinyui_widget *)button, 0x1D3557U);
@@ -333,8 +304,8 @@ static void make_ui(struct tinyui_window *win, struct legacy_widget_runtime *run
     if (bar != 0) {
         tinyui_progress_bar_set_percent(bar, 45);
         tinyui_progress_bar_set_image(bar,
-                                      &s_legacy_progress_bg_source,
-                                      &s_legacy_progress_fg_source);
+                                      &s_sources.progress_bg,
+                                      &s_sources.progress_fg);
         tinyui_progress_bar_set_color(bar, 0xCED4DAU, 0x457B9DU);
         tinyui_progress_bar_set_frame_color(bar, 0x6C757DU, 1);
         tinyui_widget_set_pos((struct tinyui_widget *)bar, 10, 500);
@@ -343,7 +314,7 @@ static void make_ui(struct tinyui_window *win, struct legacy_widget_runtime *run
 
     if (text != 0) {
         tinyui_text_set_text(text, "123\n12333");
-        tinyui_text_set_background_source(text, &s_legacy_text_bg_source);
+        tinyui_text_set_background_source(text, &s_sources.paper);
         tinyui_text_set_bg_color(text, 0xF2E8CFU);
         tinyui_widget_set_pos((struct tinyui_widget *)text, 300, 10);
         tinyui_widget_set_size((struct tinyui_widget *)text, 150, 200);
@@ -353,8 +324,8 @@ static void make_ui(struct tinyui_window *win, struct legacy_widget_runtime *run
     if (slider_h != 0) {
         tinyui_slider_set_percent(slider_h, 42);
         tinyui_slider_set_image(slider_h,
-                                &s_legacy_slider_bg_source,
-                                &s_legacy_slider_indicator_source);
+                                &s_sources.slider_bg,
+                                &s_sources.slider_indicator);
         tinyui_slider_set_color(slider_h, 0xCED4DAU, 0xADB5BDU, 0xD62828U);
         tinyui_widget_set_pos((struct tinyui_widget *)slider_h, 50, 300);
         tinyui_widget_set_size((struct tinyui_widget *)slider_h, 317, 24);
@@ -364,8 +335,8 @@ static void make_ui(struct tinyui_window *win, struct legacy_widget_runtime *run
         tinyui_slider_set_horizontal(slider_v, 0);
         tinyui_slider_set_percent(slider_v, 42);
         tinyui_slider_set_image(slider_v,
-                                &s_legacy_slider_bg_source,
-                                &s_legacy_slider_indicator_source);
+                                &s_sources.slider_bg,
+                                &s_sources.slider_indicator);
         tinyui_slider_set_color(slider_v, 0xCED4DAU, 0xADB5BDU, 0x2A9D8FU);
         tinyui_widget_set_pos((struct tinyui_widget *)slider_v, 400, 300);
         tinyui_widget_set_size((struct tinyui_widget *)slider_v, 30, 110);
@@ -443,21 +414,21 @@ static void make_ui(struct tinyui_window *win, struct legacy_widget_runtime *run
     }
 
     if (radial_menu != 0) {
-        tinyui_radial_menu_add_item_with_source(radial_menu, "weather", &s_legacy_radial_weather_source);
-        tinyui_radial_menu_add_item_with_source(radial_menu, "note", &s_legacy_radial_note_source);
-        tinyui_radial_menu_add_item_with_source(radial_menu, "weather2", &s_legacy_radial_weather_source);
-        tinyui_radial_menu_add_item_with_source(radial_menu, "note2", &s_legacy_radial_note_source);
+        tinyui_radial_menu_add_item_with_source(radial_menu, "weather", &s_sources.weather);
+        tinyui_radial_menu_add_item_with_source(radial_menu, "note", &s_sources.note);
+        tinyui_radial_menu_add_item_with_source(radial_menu, "weather2", &s_sources.weather);
+        tinyui_radial_menu_add_item_with_source(radial_menu, "note2", &s_sources.note);
         tinyui_radial_menu_set_selected_index(radial_menu, 1);
         tinyui_widget_set_pos((struct tinyui_widget *)radial_menu, 500, 200);
         tinyui_widget_set_size((struct tinyui_widget *)radial_menu, 150, 100);
     }
 
     if (icon_slider != 0) {
-        tinyui_icon_slider_add_item_with_source(icon_slider, "11", "11", &s_legacy_icon_note_source);
-        tinyui_icon_slider_add_item_with_source(icon_slider, "22", "22", &s_legacy_icon_book_source);
-        tinyui_icon_slider_add_item_with_source(icon_slider, "33", "33", &s_legacy_icon_weather_source);
-        tinyui_icon_slider_add_item_with_source(icon_slider, "44", "44", &s_legacy_icon_chart_source);
-        tinyui_icon_slider_add_item_with_source(icon_slider, "55", "55", &s_legacy_icon_note_source);
+        tinyui_icon_slider_add_item_with_source(icon_slider, "11", "11", &s_sources.note);
+        tinyui_icon_slider_add_item_with_source(icon_slider, "22", "22", &s_sources.book);
+        tinyui_icon_slider_add_item_with_source(icon_slider, "33", "33", &s_sources.weather);
+        tinyui_icon_slider_add_item_with_source(icon_slider, "44", "44", &s_sources.chart);
+        tinyui_icon_slider_add_item_with_source(icon_slider, "55", "55", &s_sources.note);
         tinyui_icon_slider_set_selected_index(icon_slider, 1);
         tinyui_widget_set_pos((struct tinyui_widget *)icon_slider, 500, 350);
         tinyui_widget_set_size((struct tinyui_widget *)icon_slider, 170, 86);
@@ -475,8 +446,8 @@ static void make_ui(struct tinyui_window *win, struct legacy_widget_runtime *run
 
     if (gauge != 0) {
         tinyui_gauge_set_angle(gauge, 120.0f);
-        tinyui_gauge_set_bg_source(gauge, &s_legacy_gauge_bg_source);
-        tinyui_gauge_set_pointer_source(gauge, &s_legacy_gauge_pointer_source);
+        tinyui_gauge_set_bg_source(gauge, &s_sources.gauge_bg);
+        tinyui_gauge_set_pointer_source(gauge, &s_sources.gauge_pointer);
         tinyui_gauge_set_pointer_color(gauge, 0x0000FFU);
         tinyui_widget_set_pos((struct tinyui_widget *)gauge, 700, 300);
         tinyui_widget_set_size((struct tinyui_widget *)gauge, 120, 98);
@@ -491,7 +462,7 @@ static void make_ui(struct tinyui_window *win, struct legacy_widget_runtime *run
     }
 
     if (arc != 0) {
-        tinyui_arc_set_quarter_source(arc, &s_legacy_arc_quarter_source);
+        tinyui_arc_set_quarter_source(arc, &s_sources.arc_quarter);
         tinyui_widget_set_pos((struct tinyui_widget *)arc, 450, 450);
         tinyui_widget_set_size((struct tinyui_widget *)arc, 103, 103);
     }

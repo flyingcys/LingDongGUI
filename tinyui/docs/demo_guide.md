@@ -5,8 +5,9 @@
 ## 真相源
 
 - demo target 清单：`examples/sdl/CMakeLists.txt`
+- demo boundary：`tests/tinyui/contract/check_tinyui_demo_boundary.py`
+- deprecated API usage：`tests/tinyui/contract/check_tinyui_deprecated_api_usage.py`
 - runtime smoke：`tests/tinyui/runtime/check_tinyui_runtime.py`
-- backend mapping：`tests/tinyui/runtime/check_tinyui_backend_mapping.py`
 - automatic visible：`tests/tinyui/runtime/check_tinyui_visible_ui.py --all`
 - manual artifact 生成入口：`tests/tinyui/runtime/check_tinyui_manual_window_artifact.py`
 - manual artifact truth-source：`docs/tinyui-serial/C-线人工窗口验收记录.md`
@@ -50,7 +51,7 @@
 建议从仓库根目录执行：
 
 ```bash
-cd /Users/cys/embedded/LingDongGUI
+cd <repo>
 rtk cmake -S . -B build
 rtk cmake --build build -j8 --target tinyui_hello_world_demo
 ```
@@ -69,18 +70,21 @@ build\tinyui-runtime\examples\sdl\tinyui_hello_world_demo.exe
 
 ## 自动 gate
 
-当前 demo 证据分四层：
+当前 demo 证据分五层：
 
-1. `runtime smoke`
+1. `demo boundary`
+   - `python3 tests/tinyui/contract/check_tinyui_demo_boundary.py`
+   - 证明 `tinyui/demo`、`tinyui_demo` 和本指南不泄漏底层符号、底层图片宏或底层资源字段
+2. `deprecated API usage`
+   - `python3 tests/tinyui/contract/check_tinyui_deprecated_api_usage.py`
+   - 证明 demo 和 current-facing 文档不继续使用历史兼容别名
+3. `runtime smoke`
    - `python3 tests/tinyui/runtime/check_tinyui_runtime.py`
    - 证明可 build、可启动、可 capture、可回归
-2. `backend mapping`
-   - `python3 tests/tinyui/runtime/check_tinyui_backend_mapping.py`
-   - 证明 marker 覆盖的真实 backend 映射，不等于 visible
-3. `automatic visible`
+4. `automatic visible`
    - `python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --all`
    - 证明 `SDL_VIDEODRIVER=dummy + PPM readback` 下可显示、可读、可判定
-4. `manual artifact`
+5. `manual artifact`
    - `python3 tests/tinyui/runtime/check_tinyui_manual_window_artifact.py --demo basic_widgets`
    - `python3 tests/tinyui/runtime/check_tinyui_manual_window_artifact.py --demo settings_panel`
    - 这是历史保留的人工窗口 artifact 入口；脚本当前实际构建和运行的是 `tinyui_*_demo`，默认 build 目录也是 `build/tinyui-runtime`
@@ -94,17 +98,22 @@ build\tinyui-runtime\examples\sdl\tinyui_hello_world_demo.exe
 ## 最小本地门禁
 
 ```bash
-rtk ctest --test-dir build -L 'tinyui' --output-on-failure
-rtk ctest --test-dir build -R 'check_tinyui_runtime|check_tinyui_visible_ui|check_tinyui_backend_mapping' --output-on-failure
+rtk python3 tests/tinyui/contract/check_tinyui_demo_boundary.py
+rtk python3 tests/tinyui/contract/check_tinyui_deprecated_api_usage.py
+rtk ctest --test-dir build -R 'check_tinyui_runtime|check_tinyui_visible_ui' --output-on-failure
 ```
 
 完整本地门禁：
 
 ```bash
+python3 tests/tinyui/contract/check_tinyui_demo_boundary.py
+python3 tests/tinyui/contract/check_tinyui_deprecated_api_usage.py
+python3 tests/tinyui/contract/check_tinyui_public_api.py
+python3 tests/tinyui/contract/check_tinyui_release_capability_matrix.py
+python3 tests/tinyui/contract/check_tinyui_native_api_exhaustiveness.py
 python3 tests/tinyui/runtime/check_tinyui_runtime.py
 python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --all
-python3 tests/tinyui/runtime/check_tinyui_backend_mapping.py
-rtk ctest --test-dir build -L 'tinyui' --output-on-failure
+rtk ctest --test-dir build -R 'test_tinyui_|check_tinyui_(public_api|demo_boundary|deprecated_api_usage|release_capability_matrix|native_api_exhaustiveness|runtime|visible_ui)' --output-on-failure
 ```
 
 ## manual artifact

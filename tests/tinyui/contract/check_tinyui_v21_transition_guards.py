@@ -13,14 +13,20 @@ INVENTORY = ROOT / "tests" / "tinyui" / "contract" / "tinyui_v21_transition_inve
 
 TINYUI_DIR = ROOT / "tinyui"
 BACKEND_DIR = ROOT / "tinyui" / "src" / "backend" / "ldgui"
-TINYUI_HEADERS = sorted((ROOT / "tinyui" / "include").rglob("*.h"))
-TINYUI_TOP_HEADERS = sorted((ROOT / "tinyui" / "include").glob("*.h"))
+TINYUI_INCLUDE_DIR = ROOT / "tinyui" / "include"
+TINYUI_COMPAT_DIR = TINYUI_INCLUDE_DIR / "tinyui"
+TINYUI_HEADERS = sorted(
+    header for header in TINYUI_INCLUDE_DIR.rglob("*.h")
+    if "internal" not in header.relative_to(TINYUI_INCLUDE_DIR).parts
+)
+TINYUI_TOP_HEADERS = sorted(TINYUI_INCLUDE_DIR.glob("*.h"))
+TINYUI_COMPAT_HEADERS = sorted(TINYUI_COMPAT_DIR.rglob("*.h")) if TINYUI_COMPAT_DIR.exists() else []
 TINYUI_INCLUDE_PROBE = """\
 #include "tinyui.h"
-#include "obj.h"
+#include "core/obj.h"
 #include "widgets/label.h"
 #include "widgets/button.h"
-#include "switch.h"
+#include "widgets/switch.h"
 int main(void) { return 0; }
 """
 
@@ -65,16 +71,19 @@ def collect_actual() -> dict[str, object]:
         for header in TINYUI_TOP_HEADERS
         if re.search(r'#include "tinyui/[^"]+"', header.read_text(encoding="utf-8"))
     )
-    compat_only = {header.name for header in TINYUI_HEADERS} - {header.name for header in TINYUI_TOP_HEADERS}
+    compat_only = sorted(
+        str(header.relative_to(TINYUI_COMPAT_DIR))
+        for header in TINYUI_COMPAT_HEADERS
+    )
     return {
         "tinyui_dir_exists": TINYUI_DIR.exists(),
         "backend_c_files": len(sorted(BACKEND_DIR.glob("*.c"))),
         "backend_compat_includes": backend_compat_includes,
         "top_level_wrapper_forward_count": len(top_level_wrapper_forward_names),
         "top_level_wrapper_forward_names": top_level_wrapper_forward_names,
-        "compat_public_header_count": len(TINYUI_HEADERS),
+        "compat_public_header_count": len(TINYUI_COMPAT_HEADERS),
         "tinyui_public_header_count": len(TINYUI_TOP_HEADERS),
-        "compat_public_headers_require_followup": sorted(compat_only),
+        "compat_public_headers_require_followup": compat_only,
         "tinyui_public_api_count": count_prefix(TINYUI_HEADERS, "tinyui_"),
     }
 

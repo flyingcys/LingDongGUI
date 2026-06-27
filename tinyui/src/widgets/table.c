@@ -382,13 +382,13 @@ void tinyui_table_test_reset_state(void)
 }
 
 /**
- * @brief tabel show keyboard
+ * @brief Show keyboard for current editable table cell
  *
  * @param[in] table table
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_tabel_show_keyboard(struct tinyui_table *table)
+int tinyui_table_show_keyboard(struct tinyui_table *table)
 {
     struct tinyui_app *app_state;
     ldTable_t *ld_table;
@@ -414,6 +414,11 @@ int tinyui_tabel_show_keyboard(struct tinyui_table *table)
 
     _ldTabelShowKeyboard(app_state->ld_scene, ld_table, item);
     return 0;
+}
+
+int tinyui_tabel_show_keyboard(struct tinyui_table *table)
+{
+    return tinyui_table_show_keyboard(table);
 }
 
 /**

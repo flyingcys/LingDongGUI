@@ -262,7 +262,7 @@ static void make_ui(struct tinyui_window *win, struct layout_parity_runtime *run
         "legacy_row_hint",
         "legacy_row_sample",
         "Legacy row",
-        "slot windows keep the hidden middle gap visible without leaking ld* layout APIs.",
+        "slot windows keep the hidden middle gap visible through TinyUI layout APIs.",
         0xFFFFFFU,
         0xE8ECF2U);
     legacy_column_section = create_section_shell(

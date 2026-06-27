@@ -109,6 +109,17 @@ THEME_API_POLICY = {
 INCLUDE_FORWARD_RE = re.compile(r'^\s*#include\s+"(?P<target>tinyui/[^"]+)"\s*$', re.M)
 
 
+def _header_path(name: str) -> Path:
+    groups = {
+        "layout": "layout",
+        "theme": "theme",
+        "widget": "core",
+    }
+    if name in groups:
+        return PUBLIC_DIR / groups[name] / f"{name}.h"
+    return PUBLIC_DIR / "widgets" / f"{name}.h"
+
+
 def _load_header_text(header: Path) -> str:
     text = header.read_text(encoding="utf-8")
     match = INCLUDE_FORWARD_RE.search(text)
@@ -161,12 +172,12 @@ def _extract_status_matrix(text: str) -> dict[str, list[str]]:
 
 
 def _expected_header_functions(widget: str) -> set[str]:
-    widget_header = PUBLIC_DIR / f"{widget}.h"
+    widget_header = _header_path(widget)
     expected = _public_functions(widget_header)
-    expected |= _public_functions(PUBLIC_DIR / "widget.h")
-    expected |= _public_functions(PUBLIC_DIR / "theme.h")
+    expected |= _public_functions(_header_path("widget"))
+    expected |= _public_functions(_header_path("theme"))
     if widget == "window":
-        expected |= _public_functions(PUBLIC_DIR / "layout.h")
+        expected |= _public_functions(_header_path("layout"))
     return expected
 
 
@@ -192,7 +203,7 @@ def main() -> int:
 
     widget_header_functions = {
         function
-        for function in _public_functions(PUBLIC_DIR / "widget.h")
+        for function in _public_functions(_header_path("widget"))
         if function.startswith("tinyui_widget_")
     }
     policy_functions = set(WIDGET_API_POLICY)
@@ -223,7 +234,7 @@ def main() -> int:
         unknown = sorted(documented - expected)
         assert not unknown, f"{widget} documents API not found in public headers: {unknown}"
 
-        direct_public = _public_functions(PUBLIC_DIR / f"{widget}.h")
+        direct_public = _public_functions(_header_path(widget))
 
         missing_widget_setters = sorted(_expected_widget_setters(widget) - documented)
         assert not missing_widget_setters, (

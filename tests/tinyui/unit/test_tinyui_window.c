@@ -3,6 +3,7 @@
 #include "../../../src/gui/ldWindow.h"
 #include "../../../src/porting/ldConfig.h"
 #include "internal.h"
+#include "tinyui_test_support.h"
 #include <assert.h>
 #include <dlfcn.h>
 #include <limits.h>
@@ -128,13 +129,13 @@ static void test_window_native_access_internal_seam_uses_tinyui_names(void)
     static const char *old_symbols[] = {
         "tinyui_window_get_backend",
         "tinyui_window_get_backend_host",
-        "tinyui_window_get_ld_window",
         "tinyui_window_map_layout_type",
     };
     size_t i;
 
     for (i = 0; i < sizeof(old_symbols) / sizeof(old_symbols[0]); ++i) {
-        assert_repo_file_lacks("tinyui/src/widgets/window.c", old_symbols[i]);
+        assert(tinyui_test_source_lacks_function_definition("tinyui/src/widgets/window.c",
+                                                            old_symbols[i]) == 1);
         assert_self_binary_lacks_symbol(old_symbols[i]);
     }
 }

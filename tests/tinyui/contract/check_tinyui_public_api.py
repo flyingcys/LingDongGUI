@@ -62,7 +62,7 @@ ALLOWLISTED_COVERAGE_KINDS = {
 VALID_GAP_STATUSES = {
     "covered",
     "missing_tinyui_api",
-    "missing_backend_proof",
+    "missing_runtime_visible_evidence",
     "missing_unit",
     "missing_gate",
     "overwrapped",

@@ -23,6 +23,7 @@ set(TINYUI_UNIT_TESTS
     unit/test_tinyui_port_input.c
     unit/test_tinyui_port_tick_os.c
     unit/test_tinyui_image.c
+    unit/test_tinyui_resource.c
     unit/test_tinyui_label.c
     unit/test_tinyui_message_box.c
     unit/test_tinyui_app_window_switch.c
@@ -79,6 +80,11 @@ ld_add_python_test(check_tinyui_public_api
 
 ld_add_python_test(check_tinyui_demo_boundary
     SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/contract/check_tinyui_demo_boundary.py"
+    LABELS "tinyui;contract"
+)
+
+ld_add_python_test(check_tinyui_deprecated_api_usage
+    SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/contract/check_tinyui_deprecated_api_usage.py"
     LABELS "tinyui;contract"
 )
 

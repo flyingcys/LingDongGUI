@@ -9,10 +9,13 @@ import sys
 ROOT = Path(__file__).resolve().parents[3]
 INVENTORY = ROOT / "tests" / "tinyui" / "contract" / "tinyui_transition_inventory.json"
 BACKEND_DIR = ROOT / "tinyui" / "src" / "backend" / "ldgui"
-APP_HEADER = ROOT / "tinyui" / "include" / "app.h"
 APP_SOURCE = ROOT / "tinyui" / "src" / "core" / "app.c"
 TINYUI_INCLUDE_DIR = ROOT / "tinyui" / "include"
-TINYUI_HEADERS = sorted(TINYUI_INCLUDE_DIR.glob("*.h"))
+APP_HEADER = TINYUI_INCLUDE_DIR / "core" / "app.h"
+TINYUI_HEADERS = sorted(
+    header for header in TINYUI_INCLUDE_DIR.rglob("*.h")
+    if "internal" not in header.relative_to(TINYUI_INCLUDE_DIR).parts
+)
 API_PATTERN_TEMPLATE = r"\b{prefix}[A-Za-z0-9_]*\s*\("
 REQUIRED_BASELINE_KEYS = (
     "backend_c_files",

@@ -19,13 +19,23 @@
 #include "animation_basic/animation_basic.h"
 #include "tinyui.h"
 
-typedef struct arm_2d_tile_t arm_2d_tile_t;
-extern const arm_2d_tile_t c_tileQuaterArcGRAY8;
+static struct tinyui_image_source s_animation_source;
+static int s_animation_source_ready;
 
-static struct tinyui_image_source s_animation_source = {
-    .img_tile = (void *)&c_tileQuaterArcGRAY8,
-    .mask_tile = 0,
-};
+static int ensure_animation_source(void)
+{
+    if (s_animation_source_ready != 0) {
+        return 0;
+    }
+
+    if (tinyui_image_source_from_builtin(TINYUI_BUILTIN_IMAGE_ARC_QUARTER,
+                                         &s_animation_source) != 0) {
+        return -1;
+    }
+
+    s_animation_source_ready = 1;
+    return 0;
+}
 
 static void make_ui(struct tinyui_window *win)
 {
@@ -38,6 +48,10 @@ static void make_ui(struct tinyui_window *win)
         .period_ms = 120,
         .source = &s_animation_source,
     };
+
+    if (ensure_animation_source() != 0) {
+        return;
+    }
 
     title = tinyui_label_create(win, "title");
     animation = tinyui_animation_create_with_props((struct tinyui_widget *)win, &props);

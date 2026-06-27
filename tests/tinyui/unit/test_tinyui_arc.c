@@ -21,6 +21,11 @@ void *ldCalloc(uint32_t num, uint32_t size)
     return calloc((size_t)num, (size_t)size);
 }
 
+void *ldRealloc(void *ptr, uint32_t newSize)
+{
+    return realloc(ptr, (size_t)newSize);
+}
+
 static unsigned int test_rgb_round_trip(unsigned int rgb)
 {
     ldColor color = __RGB((rgb >> 16) & 0xFFU, (rgb >> 8) & 0xFFU, rgb & 0xFFU);

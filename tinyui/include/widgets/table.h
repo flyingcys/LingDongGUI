@@ -46,6 +46,8 @@ int tinyui_table_set_keyboard_binding(struct tinyui_table *table, unsigned int k
 
 int tinyui_table_get_keyboard_binding(const struct tinyui_table *table, unsigned int *keyboard_binding);
 
+int tinyui_table_show_keyboard(struct tinyui_table *table);
+
 int tinyui_tabel_show_keyboard(struct tinyui_table *table);
 
 int tinyui_table_set_item_text(struct tinyui_table *table,

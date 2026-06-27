@@ -1701,6 +1701,7 @@ static void test_vres_image_source_factory_round_trip(void)
     assert(tinyui_image_source_from_vres(k_test_vres_image_addr, &vres_source) == 0);
     assert(vres_source.img_tile != 0);
     assert(vres_source.mask_tile == 0);
+    assert(vres_source.kind == TINYUI_IMAGE_SOURCE_KIND_VRES);
     assert(((arm_2d_vres_t *)vres_source.img_tile)->pTarget == k_test_vres_image_addr + 16U);
     assert(tinyui_image_set_source(image, &vres_source) == 0);
 
@@ -2431,7 +2432,7 @@ static void test_window_create_with_props_accepts_padding_sentinel_defaults(stru
 
 static void test_window_props_padding_source_no_longer_uses_has_padding_group(void)
 {
-    assert(tinyui_test_source_contains("tinyui/include/window.h", "has_padding_group") == 0);
+    assert(tinyui_test_source_contains("tinyui/include/widgets/window.h", "has_padding_group") == 0);
     assert(tinyui_test_source_contains("tinyui/src/widgets/window.c", "props->has_padding_group") == 0);
 }
 

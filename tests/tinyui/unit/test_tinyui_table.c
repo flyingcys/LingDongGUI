@@ -960,6 +960,7 @@ static void test_table_r4_aliases_and_native_getters_round_trip(void)
     assert(tinyui_table_get_current_row(table) == 1);
     assert(tinyui_table_get_current_column(table) == 1);
 
+    assert(tinyui_table_show_keyboard(table) == 0);
     assert(tinyui_tabel_show_keyboard(table) == 0);
     assert(tinyui_widget_is_hidden(&keyboard->widget) == 0);
 
@@ -1174,7 +1175,7 @@ static void test_table_create_with_props_accepts_keyboard_binding_sentinel_defau
 
 static void test_table_props_source_no_longer_uses_has_keyboard_binding(void)
 {
-    assert(tinyui_test_source_contains("tinyui/include/table.h", "has_keyboard_binding") == 0);
+    assert(tinyui_test_source_contains("tinyui/include/widgets/table.h", "has_keyboard_binding") == 0);
     assert(tinyui_test_source_contains("tinyui/src/widgets/table.c", "props->has_keyboard_binding") == 0);
 }
 

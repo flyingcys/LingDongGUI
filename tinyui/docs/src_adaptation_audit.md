@@ -8,7 +8,7 @@
 
 - `tinyui/src/` 放 TinyUI 固定核心实现，不承载板级、OS、显示驱动、输入驱动差异。
 - `tinyui/port/` 放 SDL host、板卡、RTOS、屏幕 flush、触摸采样、tick source、delay/lock 等平台适配。
-- `tinyui/src/backend/ldgui/` 应是 TinyUI 到 LingDongGUI/ARM-2D 的唯一私有桥接层。
+- `tinyui/src/internal bridge/` 应是 历史 LingDongGUI/ARM-2D 桥接规划，当前无 backend 硬指标下不作为 TinyUI 质量依据。
 - demo 只能表达用户意图，不承担适配补丁职责。
 
 ## 审计范围
@@ -111,7 +111,7 @@ LingDongGUI scene、Arm-2D tile、`ldGuiDraw()` 是具体 backend 细节。core 
 
 建议归属：
 
-- `ld_scene_t`、frame start/complete、touch/msg/draw 全部迁到 `tinyui/src/backend/ldgui/`。
+- `ld_scene_t`、frame start/complete、touch/msg/draw 全部迁到 `tinyui/src/internal bridge/`。
 - core 只持有不透明 `backend_app`，通过 backend ops 初始化、step、shutdown。
 - `runtime_internal.h` 不应出现 `ld_scene_t` 字段。
 
@@ -150,7 +150,7 @@ widgets/theme 层应表达 TinyUI public object、状态和用户能力，不应
 
 建议归属：
 
-- `ld*` include 与 `ld*_init/Set/Get/depose` 迁到 `tinyui/src/backend/ldgui/*`。
+- `ld*` include 与 `ld*_init/Set/Get/depose` 迁到 无 backend 目录，本轮不编译 backend 私有层。
 - `tinyui/src/widgets/*` 只维护 TinyUI 状态模型，并通过 backend interface/vtable 同步。
 - theme 层只计算 resolved style，具体 `ld*` 颜色、尺寸、字段映射由 backend theme adapter 执行。
 
@@ -171,7 +171,7 @@ public API 不应要求用户理解 Arm-2D tile/font 或 LingDongGUI VRES/ldFree
 建议归属：
 
 - public API 改成 backend-neutral resource/font/image handle 或 loader descriptor。
-- `tinyui_native_image_wrap()`、VRES loader、tile/font wrapper 移到 `backend/ldgui` 或 compat adapter。
+- `tinyui_native_image_wrap()`、VRES loader、tile/font wrapper 移到 `internal bridge` 或 compat adapter。
 - `tinyui.h` 不默认 include backend/native escape hatch。
 
 ### 7. LingDongGUI display adapter 用 `flush_callback == NULL` 暗号识别 SDL/host
@@ -209,7 +209,7 @@ backend 不应通过 `flush_callback == NULL` 推断 SDL host。更严重的是 
 建议归属：
 
 - 移除 core runtime 的 cursor layout。
-- layout model 由 `tinyui/src/layout` 保存，ldgui backend adapter 执行 apply。
+- layout model 由 `tinyui/src/layout` 保存，历史适配层规划 执行 apply。
 - demo 不通过硬编码坐标掩盖 backend/layout 缺口。
 
 ### 9. demo/test 环境变量进入通用 runtime
@@ -268,7 +268,7 @@ theme 层应负责 token、part、state 的通用解析，而不是直接操作 
 建议归属：
 
 - `theme.c` 只输出 resolved style。
-- `backend/ldgui/theme_adapter.c` 负责把 resolved style apply 到 `ld*`。
+- `internal bridge/theme_adapter.c` 负责把 resolved style apply 到 `ld*`。
 
 ### 12. 事件 bridge 分散在 core 和具体 widget 中
 
@@ -288,7 +288,7 @@ theme 层应负责 token、part、state 的通用解析，而不是直接操作 
 
 - 统一收敛到 ldgui backend event adapter。
 - widgets 只接收 backend-neutral event/value-change/edit-result。
-- backend adapter 统一维护 `ldMsgConnect()`、`pInfo`、native signal 到 TinyUI event 的转换。
+- 历史适配层规划 统一维护 `ldMsgConnect()`、`pInfo`、native signal 到 TinyUI event 的转换。
 
 ### 13. 特殊控件重复实现 backend detach/unbind/depose 生命周期
 
@@ -307,7 +307,7 @@ backend tree/lifecycle 是基础设施，不应散落在各控件。重复实现
 
 - 提供统一 `tinyui_backend_widget_destroy()`、`tinyui_backend_widget_detach()`。
 - widget destroy 只释放 TinyUI 数据和 public state。
-- backend adapter 负责释放对应 `ld*` object。
+- 历史适配层规划 负责释放对应 `ld*` object。
 
 ### 14. widget 创建逻辑硬编码默认尺寸、字体和内置视觉资源
 
@@ -327,7 +327,7 @@ backend tree/lifecycle 是基础设施，不应散落在各控件。重复实现
 建议归属：
 
 - 默认尺寸进入 theme metrics 或 widget default props。
-- 默认资源进入 ldgui backend adapter 或 resource provider。
+- 默认资源进入 历史适配层规划 或 resource provider。
 - public widget 只表达用户可配置能力，不直接引用 Arm-2D 全局资源。
 
 ### 15. layout 真实映射被塞进 window widget
@@ -348,7 +348,7 @@ layout 层现在没有独立 model，真实逻辑挂在 `window.c`，并且直�
 
 - `tinyui/src/layout` 维护 backend-neutral layout model。
 - `window.c` 只保存/暴露窗口状态。
-- ldgui backend adapter 把 layout model apply 到 `ldWindow`。
+- 历史适配层规划 把 layout model apply 到 `ldWindow`。
 
 ### 16. keyboard/table/line_edit public API 透出 backend binding 和 native signal
 
@@ -365,7 +365,7 @@ layout 层现在没有独立 model，真实逻辑挂在 `window.c`，并且直�
 建议归属：
 
 - public API 使用 TinyUI keyboard object handle、edit target、key event enum。
-- `ld_name_id`、keyboard binding、native signal 留在 ldgui backend adapter。
+- `ld_name_id`、keyboard binding、native signal 留在 历史适配层规划。
 
 ### 17. `tinyui_core` 构建目标 PUBLIC 暴露 backend driver include
 
@@ -380,7 +380,7 @@ layout 层现在没有独立 model，真实逻辑挂在 `window.c`，并且直�
 
 建议归属：
 
-- `tinyui/src/drivers` 或迁移后的 `backend/ldgui` include 只能 PRIVATE 给 backend target。
+- `tinyui/src/drivers` 或迁移后的 `internal bridge` include 只能 PRIVATE 给 backend target。
 - `tinyui_core` PUBLIC include 只保留 `tinyui/include`。
 
 ### 18. backend runtime target 直接链接 SDL2，绕过专门 SDL port
@@ -420,22 +420,22 @@ SDL port 是专门 port，但它无法让调用方配置窗口尺寸、颜色格
 
 ## P2 问题
 
-### 20. `src/drivers` 与文档声明的 `src/backend/ldgui` 不一致
+### 20. `src/drivers` 与文档声明的 `src/internal bridge` 不一致
 
 证据：
 
-- `tinyui/docs/porting_rules.md:12` 声明 `tinyui/src/backend/ldgui/` 是唯一私有桥接层。
-- `tinyui/docs/porting_rules.md:92` 将 `tinyui/src/backend/ldgui/*` 列入默认编译。
+- `tinyui/docs/porting_rules.md:12` 声明 `tinyui/src/internal bridge/` 是唯一私有桥接层。
+- `tinyui/docs/porting_rules.md:92` 将 无 backend 目录，本轮不编译 backend 私有层 列入默认编译。
 - `cmake/LingDongGUI.cmake:146` 实际设置 `LD_TINYUI_BACKEND_LDGUI_DIR` 为 `tinyui/src/drivers`。
-- 当前 checkout 没有 `tinyui/src/backend/ldgui/` 目录。
+- 当前 checkout 没有 `tinyui/src/internal bridge/` 目录。
 
 为什么不合理：
 
-文档和实现命名不一致，会让后续开发者不知道 backend 私有代码应该放在 `drivers` 还是 `backend/ldgui`，也会混淆“芯片 driver”和“GUI backend adapter”。
+文档和实现命名不一致，会让后续开发者不知道 backend 私有代码应该放在 `drivers` 还是 `internal bridge`，也会混淆“芯片 driver”和“GUI 历史适配层规划”。
 
 建议归属：
 
-- 建立 `tinyui/src/backend/ldgui/`。
+- 建立 `tinyui/src/internal bridge/`。
 - 将 `tinyui_ldgui_port.*`、`tinyui_ldgui_disp_adapter.c` 和后续 ldgui adapter 迁入。
 - `drivers` 若保留，应只表示真实设备 driver，不表示 GUI backend。
 
@@ -478,7 +478,7 @@ SDL port 是专门 port，但它无法让调用方配置窗口尺寸、颜色格
 tinyui/include/tinyui/*.h
 tinyui/include/tinyui/runtime/*.h
 tinyui/include/tinyui/port/*.h
-tinyui/include/tinyui/backend/ldgui/*.h
+tinyui/include/tinyui/internal bridge/*.h
 ```
 
 - 保留旧路径转发头，避免一次性破坏兼容。
@@ -550,7 +550,7 @@ LVGL-like 默认实例可以保留，但底层通用层不应被全局单例绑�
 
 建议归属：
 
-- 补 LingDongGUI 正式 API 或 ldgui backend adapter capability。
+- 补 LingDongGUI 正式 API 或 历史适配层规划 capability。
 - widget 层不要直接假定后端私有结构布局。
 
 ## 建议整改顺序
@@ -583,7 +583,7 @@ LVGL-like 默认实例可以保留，但底层通用层不应被全局单例绑�
 
 目标：
 
-- 新建或落实 `tinyui/src/backend/ldgui/`。
+- 新建或落实 `tinyui/src/internal bridge/`。
 - 迁移 `tinyui/src/drivers/tinyui_ldgui_*`。
 - 迁移 core 中 `ld_scene`、`ld_widget`、`ld_name_id`、event bridge 字段。
 - `tinyui_core` 不 PUBLIC include backend-private 目录。
@@ -591,7 +591,7 @@ LVGL-like 默认实例可以保留，但底层通用层不应被全局单例绑�
 验收：
 
 - `runtime_internal.h` 不出现 `ld_scene_t`、`ld_widget`、`ld_name_id`。
-- `tinyui_core` target 不 include `tinyui/src/drivers` 或 `tinyui/src/backend/ldgui`。
+- `tinyui_core` target 不 include `tinyui/src/drivers` 或 `tinyui/src/internal bridge`。
 
 ### Wave 3：widgets/theme/layout 变成 TinyUI 状态层
 
@@ -630,7 +630,7 @@ LVGL-like 默认实例可以保留，但底层通用层不应被全局单例绑�
 rg -n "SDL_|#include <SDL" tinyui/src
 rg -n "../../../src/gui|../../../src/misc|#include \"ld[A-Z]|SIGNAL_|arm_2d|ARM_2D_|COLOUR_INT" tinyui/src/core tinyui/src/widgets tinyui/src/theme tinyui/src/layout
 rg -n "TINYUI_.*SMOKE|FAKE_FALLBACK|TINYUI_DEMO|TINYUI_CAPTURE|TINYUI_BENCHMARK|getenv|fopen" tinyui/src
-rg -n "tinyui/src/drivers|tinyui/src/backend/ldgui|SDL2" cmake/LingDongGUI.cmake tests/tinyui/CMakeLists.txt examples/sdl/CMakeLists.txt
+rg -n "tinyui/src/drivers|tinyui/src/internal bridge|SDL2" cmake/LingDongGUI.cmake tests/tinyui/CMakeLists.txt examples/sdl/CMakeLists.txt
 ```
 
 这些命令不是完成标准，只是快速发现边界回归。最终完成仍要以真实 LingDongGUI 输出、SDL demo 运行、CMake target 边界和 public API contract 检查为准。

@@ -175,6 +175,13 @@ static int tinyui_clock_apply_pointer(struct tinyui_clock *clock, int index)
 
     img_tile = source != NULL ? source->img_tile : ld_clock->pointerInfo[index].ptImgTile;
     mask_tile = source != NULL ? source->mask_tile : ld_clock->pointerInfo[index].ptMaskTile;
+    if (source == NULL) {
+        ld_clock->pointerInfo[index].maskColor = (ldColor)clock->mask_color;
+        ld_clock->pointerInfo[index].rotationCentre = (arm_2d_point_float_t){x, y};
+        ld_clock->use_as__ldBase_t.isDirtyRegionUpdate = true;
+        ld_clock->use_as__ldBase_t.ptItemRegionList[index].isDRUpdate = true;
+        return 0;
+    }
     switch (index) {
     case 0:
         ldClockSetHourPointerImage(ld_clock, img_tile, mask_tile, (ldColor)clock->mask_color, x, y);
@@ -392,16 +399,22 @@ struct tinyui_clock *tinyui_clock_create_with_props(
         || tinyui_clock_set_step_second(clock, props->step_second) != 0
         || (props->background_source != 0
             && tinyui_clock_set_background_source(clock, props->background_source) != 0)
-        || (props->hour_pointer_source != 0
-            && tinyui_clock_set_hour_pointer_source(clock, props->hour_pointer_source) != 0)
-        || (props->minute_pointer_source != 0
-            && tinyui_clock_set_minute_pointer_source(clock, props->minute_pointer_source) != 0)
-        || (props->second_pointer_source != 0
-            && tinyui_clock_set_second_pointer_source(clock, props->second_pointer_source) != 0)
         || tinyui_clock_set_mask_color(clock, props->mask_color) != 0
-        || tinyui_clock_set_hour_anchor(clock, props->hour_anchor_x, props->hour_anchor_y) != 0
-        || tinyui_clock_set_minute_anchor(clock, props->minute_anchor_x, props->minute_anchor_y) != 0
-        || tinyui_clock_set_second_anchor(clock, props->second_anchor_x, props->second_anchor_y) != 0) {
+        || (props->hour_pointer_source != 0
+            && (tinyui_clock_set_hour_pointer_source(clock, props->hour_pointer_source) != 0
+                || tinyui_clock_set_hour_anchor(clock,
+                                                props->hour_anchor_x,
+                                                props->hour_anchor_y) != 0))
+        || (props->minute_pointer_source != 0
+            && (tinyui_clock_set_minute_pointer_source(clock, props->minute_pointer_source) != 0
+                || tinyui_clock_set_minute_anchor(clock,
+                                                  props->minute_anchor_x,
+                                                  props->minute_anchor_y) != 0))
+        || (props->second_pointer_source != 0
+            && (tinyui_clock_set_second_pointer_source(clock, props->second_pointer_source) != 0
+                || tinyui_clock_set_second_anchor(clock,
+                                                  props->second_anchor_x,
+                                                  props->second_anchor_y) != 0))) {
         tinyui_clock_rollback(clock);
         return 0;
     }

@@ -27,7 +27,7 @@ ALLOWLISTED_COVERAGE_KINDS = {
 VALID_GAP_STATUSES = {
     "covered",
     "missing_tinyui_api",
-    "missing_backend_proof",
+    "missing_runtime_visible_evidence",
     "missing_unit",
     "missing_gate",
     "overwrapped",
@@ -50,7 +50,7 @@ VALID_POLICY_CATEGORIES = {
     "base_tree_policy",
     "resource_time_helper_policy",
     "drawing_helper_policy",
-    "backend_private_hook",
+    "runtime_private_hook",
     "native_action_private",
     "enum_only_semantics",
 }
@@ -69,7 +69,7 @@ LEDGER_ALIGNED_FIELDS = {
     "group_kind",
     "coverage_kind",
     "tinyui_api",
-    "backend_proof",
+    "evidence_tag",
     "unit_test",
     "required",
     "planned_task",
@@ -84,33 +84,6 @@ LEDGER_ALIGNED_FIELDS = {
 }
 EXPECTED_GATE_CATALOG = {
     "runtime": {
-        "tinyui_hello_world_demo",
-        "tinyui_basic_widgets_demo",
-        "tinyui_layout_flex_demo",
-        "tinyui_layout_grid_demo",
-        "tinyui_theme_showcase_demo",
-        "tinyui_settings_panel_demo",
-        "tinyui_list_basic_demo",
-        "tinyui_progress_bar_basic_demo",
-        "tinyui_arc_basic_demo",
-        "tinyui_gauge_basic_demo",
-        "tinyui_icon_slider_basic_demo",
-        "tinyui_radial_menu_basic_demo",
-        "tinyui_progress_wheel_basic_demo",
-        "tinyui_qrcode_basic_demo",
-        "tinyui_message_box_basic_demo",
-        "tinyui_date_time_basic_demo",
-        "tinyui_clock_basic_demo",
-        "tinyui_keyboard_basic_demo",
-        "tinyui_line_edit_basic_demo",
-        "tinyui_combo_box_basic_demo",
-        "tinyui_scroll_selecter_basic_demo",
-        "tinyui_table_basic_demo",
-        "tinyui_graph_basic_demo",
-        "tinyui_calendar_basic_demo",
-        "tinyui_animation_basic_demo",
-    },
-    "mapping": {
         "tinyui_hello_world_demo",
         "tinyui_basic_widgets_demo",
         "tinyui_layout_flex_demo",
@@ -368,7 +341,7 @@ def _assert_native_api_rows(
         if group_kind == "widget" and non_direct_policy_categories <= {
             "lifecycle_internal",
             "render_pipeline_internal",
-            "backend_private_hook",
+                "runtime_private_hook",
             "native_action_private",
             "enum_only_semantics",
         }:
@@ -435,7 +408,7 @@ def _assert_native_api_rows(
                 assert policy_category == "direct_covered", (
                     f"{native_api} covered row must use policy_category=direct_covered"
                 )
-                for field in ("tinyui_api", "backend_proof", "unit_test"):
+                for field in ("tinyui_api", "evidence_tag", "unit_test"):
                     assert capability.get(field), f"{native_api} covered row missing {field}"
                 _assert_public_tinyui_api(native_api, capability.get("tinyui_api"), public_tinyui_symbols)
                 assert gate_evidence, (
