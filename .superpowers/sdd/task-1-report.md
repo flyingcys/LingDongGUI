@@ -42,3 +42,9 @@
 - 没有修改 `legacy_widget_parity`。
 - 没有修改 runtime 或 widget 实现。
 - 工作区内存在其他未相关修改，未触碰。
+
+## Review 修复补记
+
+1. 收到 review 后，补强 `tests/tinyui/contract/check_tinyui_demo_boundary.py`，让它显式断言 `legacy_demo0_parity` 也必须出现在 `examples/sdl/CMakeLists.txt` 的 `tinyui_demo` 编译列表中。
+2. 先临时移除 `examples/sdl/CMakeLists.txt` 中的 `legacy_demo0_parity/legacy_demo0_parity.c`，运行 contract 测试确认断言失败。
+3. 恢复该 CMake 条目后，重新运行 contract 测试与 `cmake --build build --target tinyui_demo -j2`，两者均通过。

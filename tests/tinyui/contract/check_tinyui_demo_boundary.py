@@ -115,7 +115,7 @@ def main() -> int:
     assert f"add_tinyui_demo({REQUIRED_RUNNER_TARGET}" in cmake_text, (
         f"missing single TinyUI demo runner target: {REQUIRED_RUNNER_TARGET}"
     )
-    for demo_name in ("legacy_widget_parity", "layout_parity", "grid_parity"):
+    for demo_name in ("legacy_widget_parity", "layout_parity", "grid_parity", "legacy_demo0_parity"):
         assert f"{demo_name}/{demo_name}.c" in cmake_text, (
             f"single TinyUI demo runner does not compile parity demo: {demo_name}"
         )
