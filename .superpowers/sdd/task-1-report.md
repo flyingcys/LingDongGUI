@@ -54,3 +54,9 @@
 1. 将 `legacy_demo0_parity` 的 contract 再收紧为最小骨架边界：必须包含 `tinyui_screen_create` 和 `tinyui_screen_load`。
 2. 同时显式禁止提前出现 parity 阶段痕迹，如 `tinyui_image_create`、`tinyui_button_create`、`tinyui_checkbox_create`、`tinyui_switch_create`、`tinyui_widget_set_pos`、`tinyui_widget_set_size` 等。
 3. 先临时在 `legacy_demo0_parity.c` 中加入 `tinyui_button_create`，确认 contract 失败；随后删除该痕迹恢复最小骨架并重新通过。
+
+## Review 进一步收紧补记
+
+1. 按 reviewer 要求，把 `legacy_demo0_parity` 的最小骨架约束继续收紧为“除 `tinyui_screen_create` / `tinyui_screen_load` 外，不允许出现控件创建或布局构建痕迹”。
+2. 补齐并扩展禁止集合，覆盖 `tinyui_text_create`、`tinyui_slider_create`、`tinyui_progress_bar_create`、`tinyui_list_create`、`tinyui_combo_box_create` 等最小必要集合外的痕迹。
+3. 先临时在 `legacy_demo0_parity.c` 中加入 `tinyui_text_create`，确认 contract 失败；随后删除该痕迹恢复纯 screen 骨架并重新通过。
