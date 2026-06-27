@@ -54,6 +54,7 @@ static const demo_entry_info_t demos_entry_info[] = {
     { "layout_flex",           tinyui_demo_layout_flex           },
     { "layout_grid",           tinyui_demo_layout_grid           },
     { "layout_parity",         tinyui_demo_layout_parity         },
+    { "legacy_demo0_parity",   tinyui_demo_legacy_demo0_parity   },
     { "legacy_widget_parity",  tinyui_demo_legacy_widget_parity  },
     { "line_edit_basic",       tinyui_demo_line_edit_basic       },
     { "list_basic",            tinyui_demo_list_basic            },

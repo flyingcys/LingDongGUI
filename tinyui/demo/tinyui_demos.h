@@ -61,6 +61,7 @@ void tinyui_demo_keyboard_basic(void);
 void tinyui_demo_layout_flex(void);
 void tinyui_demo_layout_grid(void);
 void tinyui_demo_layout_parity(void);
+void tinyui_demo_legacy_demo0_parity(void);
 void tinyui_demo_legacy_widget_parity(void);
 void tinyui_demo_line_edit_basic(void);
 void tinyui_demo_list_basic(void);

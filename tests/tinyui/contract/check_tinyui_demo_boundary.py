@@ -47,6 +47,7 @@ REQUIRED_DEMOS = {
     "legacy_widget_parity",
     "layout_parity",
     "grid_parity",
+    "legacy_demo0_parity",
 }
 REQUIRED_RUNNER_TARGET = "tinyui_demo"
 DEMO_MARKERS = {

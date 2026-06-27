@@ -524,6 +524,7 @@ add_tinyui_demo(tinyui_demo
     "${TINYUI_DEMO_DIR}/layout_flex/layout_flex.c"
     "${TINYUI_DEMO_DIR}/layout_grid/layout_grid.c"
     "${TINYUI_DEMO_DIR}/layout_parity/layout_parity.c"
+    "${TINYUI_DEMO_DIR}/legacy_demo0_parity/legacy_demo0_parity.c"
     "${TINYUI_DEMO_DIR}/legacy_widget_parity/legacy_widget_parity.c"
     "${TINYUI_DEMO_DIR}/line_edit_basic/line_edit_basic.c"
     "${TINYUI_DEMO_DIR}/list_basic/list_basic.c"
