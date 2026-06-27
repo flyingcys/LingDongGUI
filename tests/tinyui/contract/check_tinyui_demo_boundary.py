@@ -120,6 +120,7 @@ DEMO_ABSENT_MARKERS = {
         "tinyui_list_create",
         "tinyui_combo_box_create",
         "tinyui_calendar_create",
+        "tinyui_clock_create",
         "tinyui_message_box_create",
         "tinyui_graph_create",
         "tinyui_table_create",
@@ -130,6 +131,10 @@ DEMO_ABSENT_MARKERS = {
         "tinyui_line_edit_create",
         "tinyui_keyboard_create",
         "tinyui_arc_create",
+        "tinyui_scroll_selecter_create",
+        "tinyui_date_time_create",
+        "tinyui_animation_create",
+        "tinyui_window_create",
         "tinyui_widget_set_pos",
         "tinyui_widget_set_size",
         "tinyui_widget_set_grid_cell",
@@ -140,6 +145,34 @@ DEMO_ABSENT_MARKERS = {
         "tinyui_widget_set_ignore_layout",
         "tinyui_window_set_padding",
         "tinyui_text_set_text",
+        "tinyui_label_create_with_props",
+        "tinyui_text_create_with_props",
+        "tinyui_image_create_with_props",
+        "tinyui_button_create_with_props",
+        "tinyui_checkbox_create_with_props",
+        "tinyui_switch_create_with_props",
+        "tinyui_slider_create_with_props",
+        "tinyui_progress_bar_create_with_props",
+        "tinyui_list_create_with_props",
+        "tinyui_combo_box_create_with_props",
+        "tinyui_calendar_create_with_props",
+        "tinyui_clock_create_with_props",
+        "tinyui_message_box_create_with_props",
+        "tinyui_graph_create_with_props",
+        "tinyui_table_create_with_props",
+        "tinyui_radial_menu_create_with_props",
+        "tinyui_icon_slider_create_with_props",
+        "tinyui_qrcode_create_with_props",
+        "tinyui_gauge_create_with_props",
+        "tinyui_line_edit_create_with_props",
+        "tinyui_keyboard_create_with_props",
+        "tinyui_arc_create_with_props",
+        "tinyui_scroll_selecter_create_with_props",
+        "tinyui_date_time_create_with_props",
+        "tinyui_animation_create_with_props",
+        "tinyui_window_create_with_props",
+        "tinyui_flex_set_align",
+        "tinyui_flex_set_gap",
     ),
     "grid_parity": (
         'tinyui_widget_set_grid_cell((struct tinyui_widget *)panel_g',
@@ -156,6 +189,19 @@ def main() -> int:
         assert f"{demo_name}/{demo_name}.c" in cmake_text, (
             f"single TinyUI demo runner does not compile parity demo: {demo_name}"
         )
+
+    demos_h_text = (ROOT / "tinyui" / "demo" / "tinyui_demos.h").read_text(encoding="utf-8")
+    assert "void tinyui_demo_legacy_demo0_parity(void);" in demos_h_text, (
+        "tinyui_demos.h missing legacy_demo0_parity declaration"
+    )
+
+    demos_c_text = (ROOT / "tinyui" / "demo" / "tinyui_demos.c").read_text(encoding="utf-8")
+    assert '"legacy_demo0_parity"' in demos_c_text, (
+        "tinyui_demos.c missing legacy_demo0_parity registration name"
+    )
+    assert "tinyui_demo_legacy_demo0_parity" in demos_c_text, (
+        "tinyui_demos.c missing legacy_demo0_parity entry point registration"
+    )
 
     demo_sources = sorted(DEMO_DIR.glob("**/*.c"))
     assert demo_sources, "expected TinyUI demo sources"

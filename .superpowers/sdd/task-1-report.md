@@ -60,3 +60,9 @@
 1. 按 reviewer 要求，把 `legacy_demo0_parity` 的最小骨架约束继续收紧为“除 `tinyui_screen_create` / `tinyui_screen_load` 外，不允许出现控件创建或布局构建痕迹”。
 2. 补齐并扩展禁止集合，覆盖 `tinyui_text_create`、`tinyui_slider_create`、`tinyui_progress_bar_create`、`tinyui_list_create`、`tinyui_combo_box_create` 等最小必要集合外的痕迹。
 3. 先临时在 `legacy_demo0_parity.c` 中加入 `tinyui_text_create`，确认 contract 失败；随后删除该痕迹恢复纯 screen 骨架并重新通过。
+
+## 注册契约补记
+
+1. 在 `tests/tinyui/contract/check_tinyui_demo_boundary.py` 中显式断言 `tinyui/demo/tinyui_demos.h` 含有 `void tinyui_demo_legacy_demo0_parity(void);`。
+2. 同时显式断言 `tinyui/demo/tinyui_demos.c` 含有 `legacy_demo0_parity` 到 `tinyui_demo_legacy_demo0_parity` 的注册。
+3. 先临时删除 `tinyui_demos.c` 中 `legacy_demo0_parity` 的注册行，确认 contract 失败；随后恢复注册并重新通过。
