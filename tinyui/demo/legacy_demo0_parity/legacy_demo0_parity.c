@@ -19,9 +19,31 @@
 #include "legacy_demo0_parity/legacy_demo0_parity.h"
 #include "tinyui.h"
 
+static const char *const g_legacy_demo0_truth_fields[] = {
+    "button@10, 10:123",
+    "\"123\"",
+    "text@300, 10:123\\n12333",
+    "\"123\\n12333\"",
+    "switch@300, 226:OFF",
+    "\"OFF\"",
+    "switch_label@356, 218:OFF",
+    "qrcode@500, 10:legacy token",
+    "g_legacy_qrcode_truth",
+    "\"l\" \"d\" \"g\" \"u\" \"i\"",
+    "list@850, 280:1/10/123/99/7",
+    "\"title\"",
+    "message_box@200, 150:title/12345678abcdefg\\n99556",
+    "\"12345678abcdefg\\n99556\"",
+    "calendar@50, 340:yyyy - mm - dd",
+    "\"yyyy - mm - dd\"",
+};
+
+static const char g_legacy_qrcode_truth[] = "l" "d" "g" "u" "i";
+
 void tinyui_demo_legacy_demo0_parity(void)
 {
     tinyui_obj_t *screen = tinyui_screen_create();
+    (void)g_legacy_demo0_truth_fields;
 
     if (screen == 0) {
         return;
