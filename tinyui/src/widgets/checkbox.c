@@ -47,8 +47,6 @@ static void *tinyui_checkbox_ld_init(void *ctx,
     if (ld_checkbox == 0) {
         return 0;
     }
-    ldCheckBoxSetColor(ld_checkbox, __RGB(238, 233, 224), __RGB(32, 87, 196));
-    ldCheckBoxSetTextColor(ld_checkbox, __RGB(32, 87, 196));
     return ld_checkbox;
 }
 
@@ -81,6 +79,7 @@ static int checkbox_props_valid(const struct tinyui_checkbox_props *props)
 struct tinyui_checkbox *tinyui_checkbox_create(struct tinyui_window *parent, const char *id)
 {
     struct tinyui_checkbox *checkbox;
+    ldCheckBox_t *ld_checkbox;
 
     if (parent == 0 || id == 0) {
         return 0;
@@ -94,6 +93,17 @@ struct tinyui_checkbox *tinyui_checkbox_create(struct tinyui_window *parent, con
         return 0;
     }
     checkbox->id = id;
+    ld_checkbox = tinyui_checkbox_backend(checkbox);
+    if (ld_checkbox == 0) {
+        tinyui_widget_destroy_common(&checkbox->widget);
+        return 0;
+    }
+    checkbox->widget.font = 0;
+    ld_checkbox->ptFont = tinyui_resolve_ld_font(0, 12);
+    if (ld_checkbox->ptFont == 0) {
+        tinyui_widget_destroy_common(&checkbox->widget);
+        return 0;
+    }
 
     return checkbox;
 }

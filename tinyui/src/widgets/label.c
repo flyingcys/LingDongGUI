@@ -24,8 +24,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
-
 struct tinyui_image_source;
 
 struct tinyui_label_create_ctx {
@@ -55,6 +53,32 @@ static enum tinyui_align tinyui_label_unmap_align(arm_2d_align_t align)
     default:
         return TINYUI_ALIGN_CENTER;
     }
+}
+
+static int tinyui_label_align_is_valid(enum tinyui_align align)
+{
+    return align == TINYUI_ALIGN_START || align == TINYUI_ALIGN_CENTER || align == TINYUI_ALIGN_END;
+}
+
+static arm_2d_align_t tinyui_label_map_text_align(enum tinyui_align x_align,
+                                                  enum tinyui_align y_align)
+{
+    int align = tinyui_align_to_arm2d(x_align);
+
+    switch (y_align) {
+    case TINYUI_ALIGN_START:
+        align |= ARM_2D_ALIGN_TOP;
+        break;
+    case TINYUI_ALIGN_END:
+        align |= ARM_2D_ALIGN_BOTTOM;
+        break;
+    case TINYUI_ALIGN_CENTER:
+    default:
+        align |= ARM_2D_ALIGN_TOP | ARM_2D_ALIGN_BOTTOM;
+        break;
+    }
+
+    return (arm_2d_align_t)align;
 }
 
 static int tinyui_label_props_are_valid(const struct tinyui_label_props *props)
@@ -102,6 +126,10 @@ struct tinyui_label *tinyui_label_create(struct tinyui_window *parent, const cha
         return 0;
     }
     label->id = id;
+    if (tinyui_label_set_font(label, NULL) != 0) {
+        tinyui_widget_destroy_common(&label->widget);
+        return 0;
+    }
 
     return label;
 }
@@ -198,17 +226,19 @@ const char *tinyui_label_get_text(struct tinyui_label *label)
 int tinyui_label_set_font(struct tinyui_label *label, const struct tinyui_font *font)
 {
     ldLabel_t *ld_label = tinyui_label_backend(label);
+    arm_2d_font_t *resolved_font;
 
     if (ld_label == 0) {
         return -1;
     }
 
-    label->widget.font = font;
-    if (font != NULL) {
-        ldLabelSetFont(ld_label, (arm_2d_font_t *)font);
-    } else {
-        ldLabelSetFont(ld_label, (arm_2d_font_t *)&ARM_2D_FONT_6x8);
+    resolved_font = tinyui_resolve_ld_font(font, 12);
+    if (resolved_font == 0) {
+        return -1;
     }
+
+    label->widget.font = font;
+    ldLabelSetFont(ld_label, resolved_font);
     return 0;
 }
 
@@ -372,7 +402,7 @@ int tinyui_label_set_align(struct tinyui_label *label, enum tinyui_align align)
     if (ld_label == 0) {
         return -1;
     }
-    if (align != TINYUI_ALIGN_START && align != TINYUI_ALIGN_CENTER && align != TINYUI_ALIGN_END) {
+    if (!tinyui_label_align_is_valid(align)) {
         return -1;
     }
 
@@ -402,6 +432,30 @@ int tinyui_label_get_align(struct tinyui_label *label, enum tinyui_align *align)
     }
 
     *align = tinyui_label_unmap_align(ldLabelGetAlign(ld_label));
+    return 0;
+}
+
+/**
+ * @brief Set horizontal and vertical text alignment of label widget
+ *
+ * @param[in] label Label widget instance
+ * @param[in] x_align START/CENTER/END map to left/center/right
+ * @param[in] y_align START/CENTER/END map to top/middle/bottom
+ * @return -1 on failure
+ */
+
+int tinyui_label_set_text_align(struct tinyui_label *label,
+                                enum tinyui_align x_align,
+                                enum tinyui_align y_align)
+{
+    ldLabel_t *ld_label = tinyui_label_backend(label);
+
+    if (ld_label == 0 || !tinyui_label_align_is_valid(x_align)
+        || !tinyui_label_align_is_valid(y_align)) {
+        return -1;
+    }
+
+    ldLabelSetAlign(ld_label, tinyui_label_map_text_align(x_align, y_align));
     return 0;
 }
 

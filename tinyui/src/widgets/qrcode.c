@@ -33,6 +33,60 @@ static int qrcode_props_valid(const struct tinyui_qrcode_props *props)
     return props != 0 && props->id != 0 && props->text != 0;
 }
 
+static int qrcode_apply_optional_props(struct tinyui_qrcode *qrcode,
+                                       const struct tinyui_qrcode_props *props)
+{
+    unsigned int present_mask = props->present_mask;
+
+    if (present_mask == 0) {
+        if (props->bg_color == 0 && props->max_version == 0 && props->zoom == 0
+            && props->qr_color == 0 && props->ecc == 0) {
+            return 0;
+        }
+
+        if (tinyui_qrcode_set_qr_color(qrcode, props->qr_color) != 0) {
+            return -1;
+        }
+        if (tinyui_qrcode_set_bg_color(qrcode, props->bg_color) != 0) {
+            return -1;
+        }
+        if (tinyui_qrcode_set_ecc(qrcode, props->ecc) != 0) {
+            return -1;
+        }
+        if (props->max_version != 0
+            && tinyui_qrcode_set_max_version(qrcode, props->max_version) != 0) {
+            return -1;
+        }
+        if (props->zoom != 0 && tinyui_qrcode_set_zoom(qrcode, props->zoom) != 0) {
+            return -1;
+        }
+        return 0;
+    }
+
+    if ((present_mask & TINYUI_QRCODE_PROP_QR_COLOR) != 0
+        && tinyui_qrcode_set_qr_color(qrcode, props->qr_color) != 0) {
+        return -1;
+    }
+    if ((present_mask & TINYUI_QRCODE_PROP_BG_COLOR) != 0
+        && tinyui_qrcode_set_bg_color(qrcode, props->bg_color) != 0) {
+        return -1;
+    }
+    if ((present_mask & TINYUI_QRCODE_PROP_ECC) != 0
+        && tinyui_qrcode_set_ecc(qrcode, props->ecc) != 0) {
+        return -1;
+    }
+    if ((present_mask & TINYUI_QRCODE_PROP_MAX_VERSION) != 0
+        && tinyui_qrcode_set_max_version(qrcode, props->max_version) != 0) {
+        return -1;
+    }
+    if ((present_mask & TINYUI_QRCODE_PROP_ZOOM) != 0
+        && tinyui_qrcode_set_zoom(qrcode, props->zoom) != 0) {
+        return -1;
+    }
+
+    return 0;
+}
+
 static void *tinyui_qrcode_ld_init(void *ctx,
                                    struct ld_scene_t *scene,
                                    uint16_t name_id,
@@ -69,6 +123,7 @@ struct tinyui_qrcode *tinyui_qrcode_create(struct tinyui_widget *parent, const c
 {
     struct tinyui_qrcode *qrcode;
     static unsigned char empty_text[] = "";
+    ldQRCode_t *ld_qrcode;
 
     if (parent == 0 || id == 0 || parent->ld_widget == 0) {
         return 0;
@@ -81,13 +136,18 @@ struct tinyui_qrcode *tinyui_qrcode_create(struct tinyui_widget *parent, const c
     if (qrcode == 0) {
         return 0;
     }
+    ld_qrcode = (ldQRCode_t *)qrcode->widget.ld_widget;
+    if (ld_qrcode == 0) {
+        tinyui_widget_destroy_common(&qrcode->widget);
+        return 0;
+    }
     qrcode->id = id;
-    qrcode->qr_color = 0x000000U;
-    qrcode->bg_color = 0xFFFFFFU;
-    qrcode->ecc = 0;
-    qrcode->max_version = 2;
-    qrcode->zoom = 4;
-    qrcode->text = (const char *)empty_text;
+    qrcode->qr_color = (unsigned int)ld_qrcode->qrColor;
+    qrcode->bg_color = (unsigned int)ld_qrcode->bgColor;
+    qrcode->ecc = (int)ld_qrcode->qrEcc;
+    qrcode->max_version = (int)ld_qrcode->qrMaxVersion;
+    qrcode->zoom = (int)ld_qrcode->qrZoom;
+    qrcode->text = ld_qrcode->pStr != 0 ? (const char *)ld_qrcode->pStr : (const char *)empty_text;
     return qrcode;
 }
 
@@ -129,7 +189,8 @@ struct tinyui_qrcode *tinyui_qrcode_create_with_props(struct tinyui_widget *pare
     if ((props->style_class != 0
          && tinyui_widget_set_style_class(&qrcode->widget, props->style_class) != 0)
         || tinyui_widget_set_user_data(&qrcode->widget, props->user_data) != 0
-        || tinyui_qrcode_set_text(qrcode, props->text) != 0) {
+        || tinyui_qrcode_set_text(qrcode, props->text) != 0
+        || qrcode_apply_optional_props(qrcode, props) != 0) {
         tinyui_widget_destroy_common(&qrcode->widget);
         return 0;
     }
@@ -201,7 +262,7 @@ int tinyui_qrcode_set_qr_color(struct tinyui_qrcode *qrcode, unsigned int rgb)
         return -1;
     }
 
-    ((ldQRCode_t *)qrcode->widget.ld_widget)->qrColor = (ldColor)rgb;
+    ((ldQRCode_t *)qrcode->widget.ld_widget)->qrColor = (ldColor)tinyui_rgb_to_ld_color(rgb);
     qrcode->qr_color = rgb;
     return 0;
 }
@@ -221,7 +282,7 @@ int tinyui_qrcode_set_bg_color(struct tinyui_qrcode *qrcode, unsigned int rgb)
         return -1;
     }
 
-    ((ldQRCode_t *)qrcode->widget.ld_widget)->bgColor = (ldColor)rgb;
+    ((ldQRCode_t *)qrcode->widget.ld_widget)->bgColor = (ldColor)tinyui_rgb_to_ld_color(rgb);
     qrcode->bg_color = rgb;
     return 0;
 }

@@ -5,6 +5,7 @@
 #include "widgets/date_time.h"
 #include "core/widget.h"
 #include "widgets/window.h"
+#include "../../../examples/common/demo/widget/fonts/uiFonts.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -87,6 +88,8 @@ static void test_date_time_create_and_props(struct tinyui_window *win)
         tinyui_date_time_create_with_props((struct tinyui_widget *)win, &props);
     struct tinyui_widget *backend;
     struct tinyui_widget *parent_backend;
+    ldDateTime_t *ld_date_time;
+    ldDateTime_t *ld_date_time_with_props;
 
     assert(dt != 0);
     assert(with_props != 0);
@@ -98,18 +101,42 @@ static void test_date_time_create_and_props(struct tinyui_window *win)
     assert(ldBaseGetParent((ldBase_t *)backend->ld_widget) == (ldBase_t *)parent_backend->ld_widget);
     assert((ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)backend->ld_widget) == (ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)parent_backend->ld_widget));
     assert(backend->owner == parent_backend->owner);
+    ld_date_time = (ldDateTime_t *)backend->ld_widget;
+    ld_date_time_with_props = (ldDateTime_t *)with_props->widget.ld_widget;
+    assert(ld_date_time != 0);
+    assert(ld_date_time_with_props != 0);
     assert(tinyui_date_time_get_format(dt) != 0);
     assert(strcmp(tinyui_date_time_get_format(dt), "yyyy-mm-dd hh:nn:ss") == 0);
+    assert(ld_date_time->isAutoSysTime == true);
+    assert(ld_date_time->isTransparent == true);
+    assert(ld_date_time->tAlign == ARM_2D_ALIGN_CENTRE);
     assert(tinyui_date_time_get_format(with_props) != 0);
     assert(strcmp(tinyui_date_time_get_format(with_props), props.format) == 0);
+    assert(ld_date_time_with_props->isAutoSysTime == false);
+    assert(ld_date_time_with_props->isTransparent == false);
 }
 
 static void test_date_time_setters(struct tinyui_window *win)
 {
     struct tinyui_date_time *dt =
         tinyui_date_time_create((struct tinyui_widget *)win, "date_time_setters");
+    struct tinyui_font font = {
+        .family = "Sans",
+        .size = 20,
+    };
+    ldDateTime_t *ld_date_time;
 
     assert(dt != 0);
+    ld_date_time = (ldDateTime_t *)dt->widget.ld_widget;
+    assert(ld_date_time != 0);
+    assert(ld_date_time->ptFont == (arm_2d_font_t *)FONT_ARIAL_12);
+    assert(tinyui_date_time_set_font(dt, &font) == 0);
+    assert(dt->widget.font == &font);
+    assert(ld_date_time->ptFont == (arm_2d_font_t *)&ARM_2D_FONT_16x24);
+    font.family = "Arial";
+    font.size = 16;
+    assert(tinyui_date_time_set_font(dt, &font) == 0);
+    assert(ld_date_time->ptFont == (arm_2d_font_t *)FONT_ARIAL_16_A8);
     assert(tinyui_date_time_set_format(dt, "hh:nn:ss") == 0);
     assert(tinyui_date_time_get_format(dt) != 0);
     assert(strcmp(tinyui_date_time_get_format(dt), "hh:nn:ss") == 0);
@@ -147,6 +174,10 @@ static void test_date_time_rejects_invalid_inputs(struct tinyui_window *win)
 {
     struct tinyui_date_time *dt =
         tinyui_date_time_create((struct tinyui_widget *)win, "date_time_invalid");
+    struct tinyui_font bad_font = {
+        .kind = TINYUI_FONT_KIND_VRES,
+        .vres_addr = 0,
+    };
 
     assert(dt != 0);
     assert(tinyui_date_time_create(0, "date_time") == 0);
@@ -164,6 +195,7 @@ static void test_date_time_rejects_invalid_inputs(struct tinyui_window *win)
     assert(tinyui_date_time_set_format(0, "yyyy-mm-dd") == -1);
     assert(tinyui_date_time_set_date(0, 2026, 5, 31) == -1);
     assert(tinyui_date_time_set_time(0, 12, 34, 56) == -1);
+    assert(tinyui_date_time_set_font(0, &bad_font) == -1);
     assert(tinyui_date_time_set_format(dt, 0) == -1);
     assert(tinyui_date_time_set_date(dt, 2026, 0, 31) == -1);
     assert(tinyui_date_time_set_date(dt, 2026, 13, 31) == -1);
@@ -175,6 +207,7 @@ static void test_date_time_rejects_invalid_inputs(struct tinyui_window *win)
     assert(tinyui_date_time_set_time(dt, 12, 60, 56) == -1);
     assert(tinyui_date_time_set_time(dt, 12, 34, -1) == -1);
     assert(tinyui_date_time_set_time(dt, 12, 34, 60) == -1);
+    assert(tinyui_date_time_set_font(dt, &bad_font) == 0);
 }
 
 static void test_date_time_final_release_contract_covers_public_readback_and_modes(
@@ -291,6 +324,34 @@ static void test_date_time_native_transparent_color_and_align_round_trip(struct 
     assert(tinyui_date_time_get_use_system_time(0) == -1);
 }
 
+static void test_date_time_props_font_overrides_default(struct tinyui_window *win)
+{
+    struct tinyui_font font = {
+        .family = "Sans",
+        .size = 20,
+    };
+    struct tinyui_date_time_props props = {
+        .id = "date_time_props_font",
+        .font = &font,
+        .format = "yyyy-mm-dd hh:nn:ss",
+        .year = 2026,
+        .month = 5,
+        .day = 31,
+        .hour = 12,
+        .minute = 34,
+        .second = 56,
+    };
+    struct tinyui_date_time *dt =
+        tinyui_date_time_create_with_props((struct tinyui_widget *)win, &props);
+    ldDateTime_t *ld_date_time;
+
+    assert(dt != 0);
+    ld_date_time = (ldDateTime_t *)dt->widget.ld_widget;
+    assert(ld_date_time != 0);
+    assert(dt->widget.font == &font);
+    assert(ld_date_time->ptFont == (arm_2d_font_t *)&ARM_2D_FONT_16x24);
+}
+
 static void test_date_time_rejects_corrupted_backend_binding_without_mutating_native(
     struct tinyui_window *win)
 {
@@ -397,6 +458,7 @@ int main(void)
     assert(win != 0);
 
     test_date_time_create_and_props(win);
+    test_date_time_props_font_overrides_default(win);
     test_date_time_setters(win);
     test_date_time_manual_values_survive_frame_start(win);
     test_date_time_rejects_invalid_inputs(win);

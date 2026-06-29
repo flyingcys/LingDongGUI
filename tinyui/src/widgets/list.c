@@ -23,7 +23,6 @@
 #include "../../../src/gui/ldBase.h"
 #include "../../../src/gui/ldList.h"
 
-
 #define TINYUI_HIDDEN __attribute__((visibility("hidden")))
 
 
@@ -144,7 +143,10 @@ int tinyui_list_add_item(struct tinyui_list *list, const char *id, const char *t
     next_count = index + 1;
     list->backend_item_ids[index] = id;
     list->backend_item_texts[index] = (const unsigned char *)text;
-    ldListSetText(ld_list, list->backend_item_texts, (uint8_t)next_count, NULL);
+    ldListSetText(ld_list,
+                  list->backend_item_texts,
+                  (uint8_t)next_count,
+                  tinyui_resolve_ld_font(0, 12));
     list->widget.list_item_count = (uint16_t)next_count;
 
     list->items[index].id = id;

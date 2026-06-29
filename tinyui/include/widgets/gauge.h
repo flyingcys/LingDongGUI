@@ -27,6 +27,14 @@ float tinyui_gauge_get_angle(const struct tinyui_gauge *gauge);
 int tinyui_gauge_set_bg_source(struct tinyui_gauge *gauge, struct tinyui_image_source *source);
 int tinyui_gauge_set_background_image(struct tinyui_gauge *gauge, struct tinyui_image_source *source);
 int tinyui_gauge_set_pointer_source(struct tinyui_gauge *gauge, struct tinyui_image_source *source);
+int tinyui_gauge_set_pointer_source_with_origin(struct tinyui_gauge *gauge,
+                                                struct tinyui_image_source *source,
+                                                int origin_x,
+                                                int origin_y);
+int tinyui_gauge_set_pointer_mask_source(struct tinyui_gauge *gauge,
+                                         struct tinyui_image_source *source,
+                                         int origin_x,
+                                         int origin_y);
 int tinyui_gauge_set_centre_offset(struct tinyui_gauge *gauge, int centre_offset_x, int centre_offset_y);
 int tinyui_gauge_set_trail(struct tinyui_gauge *gauge,
                            struct tinyui_image_source *bg_trail_source,

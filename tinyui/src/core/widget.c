@@ -20,7 +20,19 @@
 #include "core/widget.h"
 #include "arm_2d.h"
 #include "../../../src/gui/ldBase.h"
+#include "../../../src/gui/ldButton.h"
+#include "../../../src/gui/ldCheckBox.h"
+#include "../../../src/gui/ldComboBox.h"
+#include "../../../src/gui/ldDateTime.h"
 #include "../../../src/gui/ldGui.h"
+#include "../../../src/gui/ldIconSlider.h"
+#include "../../../src/gui/ldKeyboard.h"
+#include "../../../src/gui/ldLabel.h"
+#include "../../../src/gui/ldLineEdit.h"
+#include "../../../src/gui/ldList.h"
+#include "../../../src/gui/ldMessageBox.h"
+#include "../../../src/gui/ldScrollSelecter.h"
+#include "../../../src/gui/ldTable.h"
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -60,6 +72,115 @@ void ldTextSetText(ldText_t *ptWidget, uint8_t *pStr);
 void ldQRCodeSetText(ldQRCode_t *ptWidget, uint8_t *pStr);
 void ldButtonSetText(ldButton_t *ptWidget, uint8_t *pStr);
 void ldCheckBoxSetText(ldCheckBox_t *ptWidget, arm_2d_font_t *ptFont, uint8_t *pStr);
+
+static void tinyui_scroll_selecter_sync_native_size(ldScrollSelecter_t *scroll_selecter)
+{
+    int16_t height;
+
+    if (scroll_selecter == 0 || scroll_selecter->ptFont == 0) {
+        return;
+    }
+
+    height = scroll_selecter->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iHeight;
+    height = (int16_t)(height / 3 * 3);
+    scroll_selecter->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iHeight = height;
+    scroll_selecter->use_as__ldBase_t.tTempRegion =
+        scroll_selecter->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion;
+
+    scroll_selecter->itemSpace =
+        height - scroll_selecter->ptFont->tCharSize.iHeight * 3;
+    if (scroll_selecter->itemSpace > 0) {
+        scroll_selecter->itemSpace = scroll_selecter->itemSpace >> 1;
+        scroll_selecter->isEdit = true;
+    } else {
+        scroll_selecter->isEdit = false;
+        scroll_selecter->itemSpace = height - scroll_selecter->ptFont->tCharSize.iHeight;
+        if (scroll_selecter->itemSpace > 0) {
+            scroll_selecter->itemSpace = scroll_selecter->itemSpace >> 1;
+        } else {
+            scroll_selecter->itemSpace = 0;
+        }
+    }
+    scroll_selecter->scrollOffset =
+        (int16_t)(-scroll_selecter->itemSelect *
+                  (scroll_selecter->itemSpace + scroll_selecter->ptFont->tCharSize.iHeight));
+}
+
+__attribute__((weak)) void tinyui_test_on_prepare_native_depose(
+    const struct tinyui_widget *widget)
+{
+    (void)widget;
+}
+
+static void tinyui_clear_static_font_ref(arm_2d_font_t **font)
+{
+    if (font != 0 && tinyui_ld_font_is_static(*font)) {
+        *font = 0;
+    }
+}
+
+void tinyui_widget_prepare_native_depose(struct tinyui_widget *widget)
+{
+    ldTable_t *table;
+    unsigned int count;
+    unsigned int i;
+
+    if (widget == 0 || widget->ld_widget == 0) {
+        return;
+    }
+
+    tinyui_test_on_prepare_native_depose(widget);
+
+    switch (widget->kind) {
+    case TINYUI_BACKEND_WIDGET_LABEL:
+        tinyui_clear_static_font_ref(&((ldLabel_t *)widget->ld_widget)->ptFont);
+        break;
+    case TINYUI_BACKEND_WIDGET_BUTTON:
+        tinyui_clear_static_font_ref(&((ldButton_t *)widget->ld_widget)->ptFont);
+        break;
+    case TINYUI_BACKEND_WIDGET_CHECKBOX:
+        tinyui_clear_static_font_ref(&((ldCheckBox_t *)widget->ld_widget)->ptFont);
+        break;
+    case TINYUI_BACKEND_WIDGET_DATE_TIME:
+        tinyui_clear_static_font_ref(&((ldDateTime_t *)widget->ld_widget)->ptFont);
+        break;
+    case TINYUI_BACKEND_WIDGET_LIST:
+        tinyui_clear_static_font_ref(&((ldList_t *)widget->ld_widget)->ptFont);
+        break;
+    case TINYUI_BACKEND_WIDGET_MESSAGE_BOX:
+        tinyui_clear_static_font_ref(&((ldMessageBox_t *)widget->ld_widget)->ptFont);
+        break;
+    case TINYUI_BACKEND_WIDGET_KEYBOARD:
+        tinyui_clear_static_font_ref(&((ldKeyboard_t *)widget->ld_widget)->ptFont);
+        break;
+    case TINYUI_BACKEND_WIDGET_COMBO_BOX:
+        tinyui_clear_static_font_ref(&((ldComboBox_t *)widget->ld_widget)->ptFont);
+        break;
+    case TINYUI_BACKEND_WIDGET_SCROLL_SELECTER:
+        tinyui_clear_static_font_ref(&((ldScrollSelecter_t *)widget->ld_widget)->ptFont);
+        break;
+    case TINYUI_BACKEND_WIDGET_TEXT:
+        if (((ldBase_t *)widget->ld_widget)->widgetType == widgetTypeLineEdit) {
+            tinyui_clear_static_font_ref(&((ldLineEdit_t *)widget->ld_widget)->ptFont);
+        }
+        break;
+    case TINYUI_BACKEND_WIDGET_ICON_SLIDER:
+        tinyui_clear_static_font_ref(&((ldIconSlider_t *)widget->ld_widget)->ptFont);
+        break;
+    case TINYUI_BACKEND_WIDGET_TABLE:
+        table = (ldTable_t *)widget->ld_widget;
+        if (table->ptItemInfo == 0) {
+            break;
+        }
+        count = (unsigned int)table->rowCount * (unsigned int)table->columnCount;
+        for (i = 0; i < count; ++i) {
+            tinyui_clear_static_font_ref(&table->ptItemInfo[i].ptFont);
+        }
+        break;
+    default:
+        break;
+    }
+}
 
 static int tinyui_widget_is_valid(struct tinyui_widget *widget)
 {
@@ -427,6 +548,11 @@ int tinyui_widget_set_size(struct tinyui_widget *widget, int width, int height)
     if (ld_base != 0) {
         ldBaseSetWidth(ld_base, (int16_t)width);
         ldBaseSetHeight(ld_base, (int16_t)height);
+        if (widget->kind == TINYUI_BACKEND_WIDGET_COMBO_BOX) {
+            ((ldComboBox_t *)widget->ld_widget)->itemHeight = (int16_t)height;
+        } else if (widget->kind == TINYUI_BACKEND_WIDGET_SCROLL_SELECTER) {
+            tinyui_scroll_selecter_sync_native_size((ldScrollSelecter_t *)widget->ld_widget);
+        }
     }
     return 0;
 }
@@ -471,10 +597,16 @@ int tinyui_widget_set_backend_text(struct tinyui_widget *widget, const char *tex
             ldButtonSetText((ldButton_t *)widget->ld_widget, (uint8_t *)text);
             break;
         case TINYUI_BACKEND_WIDGET_CHECKBOX:
-            ldCheckBoxSetText((ldCheckBox_t *)widget->ld_widget,
-                              (arm_2d_font_t *)widget->font,
-                              (uint8_t *)text);
+        {
+            ldCheckBox_t *ld_checkbox = (ldCheckBox_t *)widget->ld_widget;
+            arm_2d_font_t *font = (arm_2d_font_t *)widget->font;
+
+            if (font == NULL) {
+                font = ld_checkbox->ptFont;
+            }
+            ldCheckBoxSetText(ld_checkbox, font, (uint8_t *)text);
             break;
+        }
         default:
             break;
         }
@@ -1847,6 +1979,7 @@ static void tinyui_destroy_reclaim_hosts_in_subtree(struct tinyui_app *app, ldBa
                     (void)tinyui_widget_release_editing(host);
                 }
             }
+            tinyui_widget_prepare_native_depose(host);
             if (host->host_cleanup != 0) {
                 host->host_cleanup(host);
             }
@@ -1878,6 +2011,8 @@ void tinyui_widget_destroy_common(struct tinyui_widget *w)
     if (w->host_cleanup != 0) {
         w->host_cleanup(w);
     }
+
+    tinyui_widget_prepare_native_depose(w);
 
     scene = (owner != 0) ? owner->ld_scene : 0;
     ld_base = (ldBase_t *)w->ld_widget;

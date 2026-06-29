@@ -359,9 +359,17 @@ int tinyui_slider_set_indicator_source(struct tinyui_slider *slider,
                                        struct tinyui_image_source *source)
 {
     ldSlider_t *ld_slider;
+    arm_2d_tile_t *indicator_tile;
 
     if (slider == 0 || (source != 0 && source->img_tile == 0)) {
         return -1;
+    }
+    if (source != 0) {
+        indicator_tile = (arm_2d_tile_t *)source->img_tile;
+        if (indicator_tile->tRegion.tSize.iWidth < 0 ||
+            indicator_tile->tRegion.tSize.iWidth > 255) {
+            return -1;
+        }
     }
 
     ld_slider = tinyui_slider_backend(slider);
@@ -374,6 +382,9 @@ int tinyui_slider_set_indicator_source(struct tinyui_slider *slider,
                      ld_slider->ptBgMaskTile,
                      source != 0 ? source->img_tile : 0,
                      source != 0 ? source->mask_tile : 0);
+    if (source != 0) {
+        ldSliderSetIndicatorWidth(ld_slider, (uint8_t)indicator_tile->tRegion.tSize.iWidth);
+    }
     return 0;
 }
 

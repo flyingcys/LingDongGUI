@@ -121,6 +121,18 @@ static void test_runtime_bridge_reports_scene_presence(void)
     tinyui_app_destroy(app);
 }
 
+static void test_runtime_bridge_initializes_legacy_dirty_region(void)
+{
+    struct tinyui_app *app = tinyui_app_create();
+
+    assert(app != NULL);
+    assert(app->ld_scene != NULL);
+    assert(app->ld_scene->use_as__arm_2d_scene_t.ptDirtyRegion ==
+           &app->ld_scene->tDirtyRegionItem);
+
+    tinyui_app_destroy(app);
+}
+
 static void test_runtime_bridge_pointer_axis_clamps_into_ld_touch_range(void)
 {
     (void)tinyui_runtime_bridge_map_pointer_axis(100, 640, 480);
@@ -214,6 +226,7 @@ int main(void)
     test_native_nav_dir_maps_all_ld_nav_values();
     test_internal_native_helpers_no_longer_use_tinyui_prefix();
     test_runtime_bridge_reports_scene_presence();
+    test_runtime_bridge_initializes_legacy_dirty_region();
     test_runtime_bridge_pointer_axis_clamps_into_ld_touch_range();
     test_runtime_bridge_pointer_commit_updates_input_state_and_ld_touch();
     test_runtime_bridge_pointer_bridge_reads_existing_input_state();

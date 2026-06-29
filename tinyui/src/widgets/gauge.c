@@ -285,8 +285,25 @@ int tinyui_gauge_set_background_image(struct tinyui_gauge *gauge, struct tinyui_
 
 int tinyui_gauge_set_pointer_source(struct tinyui_gauge *gauge, struct tinyui_image_source *source)
 {
-    ldGauge_t *ld_gauge;
     arm_2d_tile_t *mask_tile;
+
+    if (source == 0 || source->mask_tile == 0) {
+        return -1;
+    }
+
+    mask_tile = (arm_2d_tile_t *)source->mask_tile;
+    return tinyui_gauge_set_pointer_source_with_origin(gauge,
+                                                       source,
+                                                       (int)(mask_tile->tRegion.tSize.iWidth >> 1),
+                                                       (int)mask_tile->tRegion.tSize.iHeight);
+}
+
+int tinyui_gauge_set_pointer_source_with_origin(struct tinyui_gauge *gauge,
+                                                struct tinyui_image_source *source,
+                                                int origin_x,
+                                                int origin_y)
+{
+    ldGauge_t *ld_gauge;
 
     if (gauge == 0 || source == 0 || source->img_tile == 0 || source->mask_tile == 0
         || gauge->widget.ld_widget == 0
@@ -295,12 +312,36 @@ int tinyui_gauge_set_pointer_source(struct tinyui_gauge *gauge, struct tinyui_im
     }
 
     ld_gauge = (ldGauge_t *)gauge->widget.ld_widget;
-    mask_tile = (arm_2d_tile_t *)source->mask_tile;
     ldGaugeBindPointerImage(ld_gauge,
                             source->img_tile,
                             source->mask_tile,
-                            (int16_t)(mask_tile->tRegion.tSize.iWidth >> 1),
-                            (int16_t)(mask_tile->tRegion.tSize.iHeight),
+                            (int16_t)origin_x,
+                            (int16_t)origin_y,
+                            false,
+                            false);
+    gauge->pointer_source = source;
+    return 0;
+}
+
+int tinyui_gauge_set_pointer_mask_source(struct tinyui_gauge *gauge,
+                                         struct tinyui_image_source *source,
+                                         int origin_x,
+                                         int origin_y)
+{
+    ldGauge_t *ld_gauge;
+
+    if (gauge == 0 || source == 0 || source->mask_tile == 0
+        || gauge->widget.ld_widget == 0
+        || gauge->widget.kind != TINYUI_BACKEND_WIDGET_GAUGE) {
+        return -1;
+    }
+
+    ld_gauge = (ldGauge_t *)gauge->widget.ld_widget;
+    ldGaugeBindPointerImage(ld_gauge,
+                            0,
+                            source->mask_tile,
+                            (int16_t)origin_x,
+                            (int16_t)origin_y,
                             false,
                             false);
     gauge->pointer_source = source;

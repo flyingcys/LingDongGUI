@@ -23,11 +23,20 @@
 #include "../../../src/gui/ldDateTime.h"
 
 #include <stdlib.h>
-
-extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
+#include <string.h>
 
 /* ---- test seam state ---- */
 
+
+static arm_2d_font_t *tinyui_date_time_default_font(void)
+{
+    return tinyui_resolve_ld_font(0, 12);
+}
+
+static arm_2d_font_t *tinyui_date_time_resolve_font(const struct tinyui_font *font)
+{
+    return font == 0 ? tinyui_date_time_default_font() : tinyui_resolve_ld_font(font, 12);
+}
 
 static ldDateTime_t *tinyui_date_time_backend(struct tinyui_date_time *dt)
 {
@@ -69,7 +78,7 @@ static void *tinyui_date_time_ld_init(void *ctx,
                            0,
                            240,
                            32,
-                           (arm_2d_font_t *)&ARM_2D_FONT_6x8);
+                           tinyui_date_time_default_font());
 }
 
 /**
@@ -83,6 +92,7 @@ static void *tinyui_date_time_ld_init(void *ctx,
 struct tinyui_date_time *tinyui_date_time_create(struct tinyui_widget *parent, const char *id)
 {
     struct tinyui_date_time *dt;
+    ldDateTime_t *ld_date_time;
 
     if (parent == 0 || id == 0 || parent->ld_widget == 0) {
         return 0;
@@ -96,16 +106,24 @@ struct tinyui_date_time *tinyui_date_time_create(struct tinyui_widget *parent, c
         return 0;
     }
     dt->id = id;
-    if (tinyui_date_time_set_format(dt, "yyyy-mm-dd hh:nn:ss") != 0
-        || tinyui_date_time_set_text_color(dt, 0x000000U) != 0
-        || tinyui_date_time_set_bg_color(dt, 0xFFFFFFU) != 0
-        || tinyui_date_time_set_align(dt, TINYUI_ALIGN_CENTER) != 0
-        || tinyui_date_time_set_transparent(dt, 0) != 0
-        || tinyui_date_time_set_date(dt, 2026, 1, 1) != 0
-        || tinyui_date_time_set_time(dt, 12, 0, 0) != 0) {
+    if (tinyui_date_time_set_font(dt, NULL) != 0) {
         tinyui_widget_destroy_common(&dt->widget);
         return 0;
     }
+    ld_date_time = tinyui_date_time_backend(dt);
+    if (ld_date_time == NULL) {
+        tinyui_widget_destroy_common(&dt->widget);
+        return 0;
+    }
+    dt->format = (const char *)ld_date_time->formatStr;
+    dt->year = ld_date_time->year;
+    dt->month = ld_date_time->month;
+    dt->day = ld_date_time->day;
+    dt->hour = ld_date_time->hour;
+    dt->minute = ld_date_time->minute;
+    dt->second = ld_date_time->second;
+    dt->transparent = ld_date_time->isTransparent ? 1 : 0;
+    dt->use_system_time = ld_date_time->isAutoSysTime ? 1 : 0;
     return dt;
 }
 
@@ -148,6 +166,7 @@ struct tinyui_date_time *tinyui_date_time_create_with_props(
     if ((props->style_class != 0
             && tinyui_widget_set_style_class(&dt->widget, props->style_class) != 0)
         || tinyui_widget_set_user_data(&dt->widget, props->user_data) != 0
+        || (props->font != 0 && tinyui_date_time_set_font(dt, props->font) != 0)
         || tinyui_date_time_set_format(dt, props->format) != 0
         || tinyui_date_time_set_text_color(dt, props->text_color) != 0
         || tinyui_date_time_set_bg_color(dt, props->bg_color) != 0
@@ -251,6 +270,30 @@ int tinyui_date_time_set_time(struct tinyui_date_time *dt, int hour, int minute,
     dt->minute = minute;
     dt->second = second;
     dt->use_system_time = 0;
+    return 0;
+}
+
+int tinyui_date_time_set_font(struct tinyui_date_time *dt, const struct tinyui_font *font)
+{
+    ldDateTime_t *ld_date_time;
+    arm_2d_font_t *resolved_font;
+
+    if (dt == 0) {
+        return -1;
+    }
+
+    ld_date_time = tinyui_date_time_backend(dt);
+    if (ld_date_time == NULL) {
+        return -1;
+    }
+
+    resolved_font = tinyui_date_time_resolve_font(font);
+    if (resolved_font == NULL) {
+        return -1;
+    }
+
+    ld_date_time->ptFont = resolved_font;
+    dt->widget.font = font;
     return 0;
 }
 

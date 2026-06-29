@@ -537,5 +537,4 @@ add_tinyui_demo(tinyui_demo
     "${TINYUI_DEMO_DIR}/settings_panel/settings_panel.c"
     "${TINYUI_DEMO_DIR}/table_basic/table_basic.c"
     "${TINYUI_DEMO_DIR}/theme_showcase/theme_showcase.c"
-    ${WIDGET_IMAGE_SOURCES}
 )

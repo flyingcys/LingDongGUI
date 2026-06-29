@@ -13,6 +13,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+int tinyui_backend_init(struct tinyui_app *app);
+void tinyui_backend_step(struct tinyui_app *app);
+
 /**
  * @brief   attribute
  *
@@ -120,11 +123,7 @@ static void tinyui_runtime_host_render(struct tinyui_runtime_host_state *state, 
                    (size_t)state->display_width * (size_t)state->display_height *
                        sizeof(*state->real_pixels));
             tinyui_runtime_host_log_smoke_layout_marker(state);
-            ldGuiFrameStart(app_state->ld_scene);
-            ldGuiTouchProcess(app_state->ld_scene);
-            ldMsgProcess(app_state->ld_scene);
-            ldGuiDraw(app_state->ld_scene, &state->real_tile, true);
-            ldGuiFrameComplete(app_state->ld_scene);
+            tinyui_backend_step(app_state);
             tinyui_runtime_host_log_image_source_marker(&window->widget);
             tinyui_runtime_host_present_real_frame(state);
             state->rendered_frames += 1U;
@@ -218,6 +217,10 @@ static int tinyui_runtime_host_prepare_runtime(struct tinyui_app *app, struct ti
     state->auto_quit_ms = tinyui_runtime_host_parse_auto_quit_ms();
 
     if (tinyui_runtime_host_ensure_window(app, state) != 0) {
+        return -1;
+    }
+    (void)tinyui_display_set_flush_callback(app, tinyui_runtime_host_copy_flush_pixels, state);
+    if (tinyui_backend_init(app) != 0) {
         return -1;
     }
     if (app_state->ld_scene->ptMsgQueue == NULL) {

@@ -18,13 +18,12 @@
 
 #include "internal.h"
 #include "widgets/line_edit.h"
+#include "widgets/keyboard.h"
 
 #include "../core/runtime_bridge.h"
 #include "../../../src/gui/ldBase.h"
 #include "../../../src/gui/ldLineEdit.h"
 
-
-extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
 
 #define TINYUI_BACKEND_LINE_EDIT_TEXT_MAX 255
 
@@ -119,7 +118,7 @@ static void *tinyui_line_edit_ld_init(void *ctx,
                            0,
                            220,
                            32,
-                           (arm_2d_font_t *)&ARM_2D_FONT_6x8,
+                           tinyui_resolve_ld_font(0, 12),
                            TINYUI_BACKEND_LINE_EDIT_TEXT_MAX);
 }
 
@@ -311,6 +310,21 @@ int tinyui_line_edit_set_keyboard_binding(struct tinyui_line_edit *line_edit,
                           (uint16_t)keyboard_binding);
     line_edit->keyboard_binding = keyboard_binding;
     return 0;
+}
+
+int tinyui_line_edit_set_keyboard_widget(struct tinyui_line_edit *line_edit,
+                                         struct tinyui_keyboard *keyboard)
+{
+    if (line_edit == 0 ||
+        keyboard == 0 ||
+        line_edit->widget.owner == 0 ||
+        keyboard->widget.owner != line_edit->widget.owner ||
+        keyboard->widget.ld_widget == 0 ||
+        keyboard->widget.kind != TINYUI_BACKEND_WIDGET_KEYBOARD) {
+        return -1;
+    }
+
+    return tinyui_line_edit_set_keyboard_binding(line_edit, keyboard->widget.ld_name_id);
 }
 
 int tinyui_line_edit_get_keyboard_binding(const struct tinyui_line_edit *line_edit,

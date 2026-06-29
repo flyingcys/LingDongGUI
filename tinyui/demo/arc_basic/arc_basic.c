@@ -18,7 +18,6 @@
 
 #include "arc_basic/arc_basic.h"
 #include "tinyui.h"
-
 static void make_ui(struct tinyui_window *win)
 {
     struct tinyui_label *title;

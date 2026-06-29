@@ -24,7 +24,6 @@
 
 #include <string.h>
 
-extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
 void ldKeyboardInputAscii(ldKeyboard_t *ptWidget, uint8_t ascii);
 
 struct tinyui_keyboard_create_ctx {
@@ -271,7 +270,10 @@ struct tinyui_keyboard *tinyui_keyboard_create(struct tinyui_window *parent, con
         return 0;
     }
 
-    create_ctx.font = (arm_2d_font_t *)&ARM_2D_FONT_6x8;
+    create_ctx.font = tinyui_resolve_ld_font(0, 12);
+    if (create_ctx.font == 0) {
+        return 0;
+    }
     keyboard = (struct tinyui_keyboard *)tinyui_widget_create_leaf(&parent->widget,
                                                                    TINYUI_BACKEND_WIDGET_KEYBOARD,
                                                                    tinyui_keyboard_ld_init,

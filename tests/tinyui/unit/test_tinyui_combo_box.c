@@ -439,6 +439,7 @@ static void test_combo_box_shared_base_aliases_round_trip(void)
     struct tinyui_window *win;
     struct tinyui_combo_box *combo_box;
     struct tinyui_widget *backend;
+    ldComboBox_t *ld_combo_box;
     /* volatile: this function clusters writes through ld* setters (separate TU)
      * with read-back assertions on adjacent ldBase_t bitfields. Under -Ofast
      * -flto the non-volatile reads get coalesced/hoisted and observe stale
@@ -454,12 +455,18 @@ static void test_combo_box_shared_base_aliases_round_trip(void)
     assert(combo_box != 0);
     backend = &combo_box->widget;
     assert(backend->ld_widget != 0);
+    ld_combo_box = (ldComboBox_t *)backend->ld_widget;
+    assert(ld_combo_box != 0);
     ld_base = (volatile ldBase_t *)backend->ld_widget;
     assert(ld_base != 0);
 
     assert(tinyui_widget_set_pos(&combo_box->widget, 12, 34) == 0);
+    assert(tinyui_widget_set_size(&combo_box->widget, 100, 30) == 0);
     assert(ld_base->use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 12);
     assert(ld_base->use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 34);
+    assert(ld_base->use_as__arm_2d_control_node_t.tRegion.tSize.iWidth == 100);
+    assert(ld_base->use_as__arm_2d_control_node_t.tRegion.tSize.iHeight == 30);
+    assert(ld_combo_box->itemHeight == 30);
     assert(tinyui_widget_set_visible(&combo_box->widget, 0) == 0);
     assert(tinyui_widget_set_opacity(&combo_box->widget, 77) == 0);
     assert(tinyui_widget_set_selectable(&combo_box->widget, 1) == 0);

@@ -19,6 +19,8 @@
 #include "legacy_demo0_parity/legacy_demo0_parity.h"
 #include "tinyui.h"
 
+#include <stdlib.h>
+
 struct legacy_demo0_runtime {
     struct tinyui_image *image;
     struct tinyui_label *switch_label;
@@ -65,6 +67,14 @@ static const char *const g_legacy_demo0_truth_fields[] = {
 };
 
 static const char g_legacy_qrcode_truth[] = {'l', 'd', 'g', 'u', 'i', '\0'};
+static const struct tinyui_font g_font_arial_12 = {
+    .family = "Arial",
+    .size = 12,
+};
+static const struct tinyui_font g_font_arial_16 = {
+    .family = "Arial",
+    .size = 16,
+};
 static const char *const g_scroll_ids[] = {"1", "10", "123", "99", "7"};
 static const char *const g_icon_ids[] = {"11", "22", "33", "44", "55"};
 static const char *const g_combo_ids[] = {"11", "22", "00"};
@@ -143,30 +153,34 @@ static void on_switch_toggled(struct tinyui_widget *widget, int value, void *use
 
 static void seed_graph(struct tinyui_graph *graph)
 {
-    static const int series_a[16] = {32, 8, 47, 30, 18, 25, 1, 42, 55, 38, 27, 13, 69, 4, 49, 16};
-    static const int series_b[16] = {68, 6, 11, 50, 21, 43, 35, 3, 58, 40, 9, 24, 73, 17, 29, 52};
     int a;
     int b;
     int i;
 
     tinyui_graph_set_axis(graph, 80, 80);
+    tinyui_graph_set_axis_offset(graph, 5);
     tinyui_graph_set_grid_offset(graph, 4);
-    a = tinyui_graph_add_series(graph, 0xD62828U, 2, 16);
-    b = tinyui_graph_add_series(graph, 0xD9D9D9U, 2, 16);
+    a = tinyui_graph_add_series(graph, 0xFF0000U, 2, 16);
+    b = tinyui_graph_add_series(graph, 0xC0C0C0U, 2, 16);
+    srand(10);
     for (i = 0; i < 16; i++) {
         if (a >= 0) {
-            tinyui_graph_set_value(graph, a, i, series_a[i]);
+            tinyui_graph_set_value(graph, a, i, rand() % 81);
         }
+    }
+    for (i = 0; i < 16; i++) {
         if (b >= 0) {
-            tinyui_graph_set_value(graph, b, i, series_b[i]);
+            tinyui_graph_set_value(graph, b, i, rand() % 81);
         }
     }
 }
 
-static void seed_table(struct tinyui_table *table)
+static void seed_table(struct tinyui_table *table, struct tinyui_keyboard *keyboard)
 {
     tinyui_table_set_excel_type(table);
-    tinyui_table_set_keyboard_binding(table, 22);
+    if (keyboard != 0) {
+        tinyui_table_set_keyboard_widget(table, keyboard);
+    }
     tinyui_table_set_cell_text(table, 1, 1, "id");
     tinyui_table_set_cell_text(table, 1, 2, "name");
     tinyui_table_set_cell_text(table, 1, 3, "size");
@@ -184,7 +198,7 @@ static void build_legacy_demo0(struct tinyui_window *win, struct legacy_demo0_ru
     struct tinyui_button *button;
     struct tinyui_button *list_item_button;
     struct tinyui_button *nested_button;
-    struct tinyui_label *panel;
+    struct tinyui_window *panel;
     struct tinyui_label *label;
     struct tinyui_checkbox *radio_a;
     struct tinyui_checkbox *radio_b;
@@ -216,11 +230,9 @@ static void build_legacy_demo0(struct tinyui_window *win, struct legacy_demo0_ru
         return;
     }
 
-    tinyui_window_set_color(win, 0x000000U);
-
     image = tinyui_image_create(win, "demo0_image");
     button = tinyui_button_create(win, "demo0_button");
-    panel = tinyui_label_create(win, "demo0_panel");
+    panel = tinyui_window_create_child(win, "demo0_panel");
     label = tinyui_label_create(win, "demo0_label");
     radio_a = tinyui_checkbox_create(win, "demo0_radio_a");
     radio_b = tinyui_checkbox_create(win, "demo0_radio_b");
@@ -266,6 +278,7 @@ static void build_legacy_demo0(struct tinyui_window *win, struct legacy_demo0_ru
 
     if (button != 0) {
         tinyui_button_set_text(button, "123");
+        tinyui_button_set_font(button, &g_font_arial_16);
         tinyui_button_set_image(button, &g_sources.button_release, &g_sources.button_press);
         tinyui_button_set_text_color(button, 0xFFFFFFU);
         tinyui_button_set_on_released(button, on_button_released, runtime);
@@ -275,8 +288,7 @@ static void build_legacy_demo0(struct tinyui_window *win, struct legacy_demo0_ru
     }
 
     if (panel != 0) {
-        tinyui_label_set_text(panel, "");
-        tinyui_label_set_bg_color(panel, 0x00FF00U);
+        tinyui_window_set_color(panel, 0x00FF00U);
         tinyui_widget_set_pos((struct tinyui_widget *)panel, 200, 95);
         tinyui_widget_set_size((struct tinyui_widget *)panel, 20, 20);
         tinyui_widget_set_corner((struct tinyui_widget *)panel, 1);
@@ -285,8 +297,9 @@ static void build_legacy_demo0(struct tinyui_window *win, struct legacy_demo0_ru
 
     if (label != 0) {
         tinyui_label_set_text(label, "123");
-        tinyui_label_set_bg_color(label, 0xD3D3D3U);
-        tinyui_label_set_align(label, TINYUI_ALIGN_START);
+        tinyui_label_set_font(label, &g_font_arial_12);
+        tinyui_label_set_bg_color(label, 0xC0C0C0U);
+        tinyui_label_set_text_align(label, TINYUI_ALIGN_START, TINYUI_ALIGN_END);
         tinyui_widget_set_pos((struct tinyui_widget *)label, 100, 50);
         tinyui_widget_set_size((struct tinyui_widget *)label, 100, 50);
         tinyui_widget_set_corner((struct tinyui_widget *)label, 1);
@@ -325,13 +338,15 @@ static void build_legacy_demo0(struct tinyui_window *win, struct legacy_demo0_ru
 
     if (switch_label != 0) {
         tinyui_label_set_text(switch_label, "OFF");
-        tinyui_label_set_align(switch_label, TINYUI_ALIGN_START);
+        tinyui_label_set_font(switch_label, &g_font_arial_16);
+        tinyui_label_set_text_align(switch_label, TINYUI_ALIGN_START, TINYUI_ALIGN_CENTER);
         tinyui_widget_set_pos((struct tinyui_widget *)switch_label, 356, 218);
         tinyui_widget_set_size((struct tinyui_widget *)switch_label, 60, 40);
         tinyui_widget_set_selectable((struct tinyui_widget *)switch_label, 1);
     }
 
     if (bar != 0) {
+        tinyui_progress_bar_set_horizontal(bar, 1);
         tinyui_progress_bar_set_percent(bar, 45);
         tinyui_progress_bar_set_image(bar, &g_sources.progress_bg, &g_sources.progress_fg);
         tinyui_widget_set_pos((struct tinyui_widget *)bar, 10, 500);
@@ -341,7 +356,9 @@ static void build_legacy_demo0(struct tinyui_window *win, struct legacy_demo0_ru
 
     if (text != 0) {
         tinyui_text_set_background_source(text, &g_sources.paper);
+        tinyui_text_set_font(text, &g_font_arial_12);
         tinyui_text_set_text(text, "123\n12333");
+        tinyui_text_set_scroll_enabled(text, 1);
         tinyui_widget_set_pos((struct tinyui_widget *)text, 300, 10);
         tinyui_widget_set_size((struct tinyui_widget *)text, 150, 200);
         tinyui_widget_set_corner((struct tinyui_widget *)text, 1);
@@ -352,7 +369,7 @@ static void build_legacy_demo0(struct tinyui_window *win, struct legacy_demo0_ru
         tinyui_slider_set_percent(slider_h, 42);
         tinyui_slider_set_image(slider_h, &g_sources.slider_bg, &g_sources.slider_indicator);
         tinyui_widget_set_pos((struct tinyui_widget *)slider_h, 50, 300);
-        tinyui_widget_set_size((struct tinyui_widget *)slider_h, 317, 24);
+        tinyui_widget_set_size((struct tinyui_widget *)slider_h, 317, 34);
     }
 
     if (slider_v != 0) {
@@ -365,30 +382,32 @@ static void build_legacy_demo0(struct tinyui_window *win, struct legacy_demo0_ru
     }
 
     if (radial_menu != 0) {
+        tinyui_radial_menu_set_geometry(radial_menu, 150, 100, 100, 80, 5);
         tinyui_radial_menu_add_item_with_source(radial_menu, "weather", &g_sources.weather);
         tinyui_radial_menu_add_item_with_source(radial_menu, "note", &g_sources.note);
         tinyui_radial_menu_add_item_with_source(radial_menu, "weather2", &g_sources.weather);
         tinyui_radial_menu_add_item_with_source(radial_menu, "note2", &g_sources.note);
         tinyui_widget_set_pos((struct tinyui_widget *)radial_menu, 500, 200);
-        tinyui_widget_set_size((struct tinyui_widget *)radial_menu, 150, 100);
         tinyui_widget_set_corner((struct tinyui_widget *)radial_menu, 1);
         tinyui_widget_set_selectable((struct tinyui_widget *)radial_menu, 1);
     }
 
     if (date_time != 0) {
+        tinyui_date_time_set_font(date_time, &g_font_arial_12);
+        tinyui_date_time_set_use_system_time(date_time, 1);
         tinyui_widget_set_pos((struct tinyui_widget *)date_time, 600, 100);
         tinyui_widget_set_size((struct tinyui_widget *)date_time, 200, 50);
         tinyui_widget_set_selectable((struct tinyui_widget *)date_time, 1);
     }
 
     if (icon_slider != 0) {
+        tinyui_icon_slider_set_layout(icon_slider, 150, 65, 48, 2, 5, 1, 1);
         tinyui_icon_slider_add_item_with_source(icon_slider, g_icon_ids[0], g_icon_ids[0], &g_sources.note);
         tinyui_icon_slider_add_item_with_source(icon_slider, g_icon_ids[1], g_icon_ids[1], &g_sources.book);
         tinyui_icon_slider_add_item_with_source(icon_slider, g_icon_ids[2], g_icon_ids[2], &g_sources.weather);
         tinyui_icon_slider_add_item_with_source(icon_slider, g_icon_ids[3], g_icon_ids[3], &g_sources.chart);
         tinyui_icon_slider_add_item_with_source(icon_slider, g_icon_ids[4], g_icon_ids[4], &g_sources.note);
         tinyui_widget_set_pos((struct tinyui_widget *)icon_slider, 500, 350);
-        tinyui_widget_set_size((struct tinyui_widget *)icon_slider, 150, 65);
         tinyui_widget_set_corner((struct tinyui_widget *)icon_slider, 1);
         tinyui_widget_set_selectable((struct tinyui_widget *)icon_slider, 1);
     }
@@ -416,7 +435,8 @@ static void build_legacy_demo0(struct tinyui_window *win, struct legacy_demo0_ru
 
     if (gauge != 0) {
         tinyui_gauge_set_bg_source(gauge, &g_sources.gauge_bg);
-        tinyui_gauge_set_pointer_source(gauge, &g_sources.gauge_pointer);
+        tinyui_gauge_set_centre_offset(gauge, 0, 10);
+        tinyui_gauge_set_pointer_mask_source(gauge, &g_sources.gauge_pointer, 5, 45);
         tinyui_gauge_set_pointer_color(gauge, 0x0000FFU);
         tinyui_gauge_set_angle(gauge, 120.0f);
         tinyui_widget_set_pos((struct tinyui_widget *)gauge, 700, 300);
@@ -432,14 +452,15 @@ static void build_legacy_demo0(struct tinyui_window *win, struct legacy_demo0_ru
     }
 
     if (graph != 0) {
-        seed_graph(graph);
         tinyui_widget_set_pos((struct tinyui_widget *)graph, 830, 10);
         tinyui_widget_set_size((struct tinyui_widget *)graph, 100, 100);
+        seed_graph(graph);
         tinyui_widget_set_selectable((struct tinyui_widget *)graph, 1);
     }
 
     if (table != 0) {
-        seed_table(table);
+        tinyui_table_set_item_space(table, 1);
+        seed_table(table, keyboard);
         tinyui_widget_set_pos((struct tinyui_widget *)table, 780, 150);
         tinyui_widget_set_size((struct tinyui_widget *)table, 200, 100);
         tinyui_widget_set_selectable((struct tinyui_widget *)table, 1);
@@ -447,7 +468,9 @@ static void build_legacy_demo0(struct tinyui_window *win, struct legacy_demo0_ru
 
     if (line_edit != 0) {
         tinyui_line_edit_set_text(line_edit, "123");
-        tinyui_line_edit_set_keyboard_binding(line_edit, 22);
+        if (keyboard != 0) {
+            tinyui_line_edit_set_keyboard_widget(line_edit, keyboard);
+        }
         tinyui_widget_set_pos((struct tinyui_widget *)line_edit, 850, 400);
         tinyui_widget_set_size((struct tinyui_widget *)line_edit, 100, 50);
         tinyui_widget_set_corner((struct tinyui_widget *)line_edit, 1);
@@ -460,6 +483,7 @@ static void build_legacy_demo0(struct tinyui_window *win, struct legacy_demo0_ru
         nested_button = tinyui_button_create(child_window, "demo0_nested_button");
         if (nested_button != 0) {
             tinyui_button_set_text(nested_button, "123");
+            tinyui_button_set_font(nested_button, &g_font_arial_16);
             tinyui_widget_set_pos((struct tinyui_widget *)nested_button, 8, 3);
             tinyui_widget_set_size((struct tinyui_widget *)nested_button, 30, 30);
         }
@@ -473,6 +497,7 @@ static void build_legacy_demo0(struct tinyui_window *win, struct legacy_demo0_ru
         tinyui_arc_set_quarter_source(arc, &g_sources.arc_quarter);
         tinyui_arc_set_background_angle(arc, 0.0f, 350.0f);
         tinyui_arc_set_foreground_angle(arc, 30.0f);
+        tinyui_arc_set_parent_color(arc, 0xF0F0F0U);
         tinyui_arc_set_color(arc, 0xADD8E6U, 0x90EE90U);
         tinyui_widget_set_pos((struct tinyui_widget *)arc, 450, 450);
         tinyui_widget_set_size((struct tinyui_widget *)arc, 103, 103);
@@ -486,12 +511,12 @@ static void build_legacy_demo0(struct tinyui_window *win, struct legacy_demo0_ru
         tinyui_list_add_item(list, g_scroll_ids[3], g_scroll_ids[3]);
         tinyui_list_add_item(list, g_scroll_ids[4], g_scroll_ids[4]);
         tinyui_list_set_align(list, TINYUI_ALIGN_START);
+        tinyui_list_set_selected_index(list, 0);
         tinyui_widget_set_pos((struct tinyui_widget *)list, 850, 280);
         tinyui_widget_set_size((struct tinyui_widget *)list, 100, 100);
         tinyui_widget_set_selectable((struct tinyui_widget *)list, 1);
         list_item_button = tinyui_button_create(win, "demo0_list_item_button");
         if (list_item_button != 0) {
-            tinyui_button_set_text(list_item_button, "1");
             tinyui_widget_set_pos((struct tinyui_widget *)list_item_button, 10, 3);
             tinyui_widget_set_size((struct tinyui_widget *)list_item_button, 20, 20);
             tinyui_list_set_item_widget(list, 1, (struct tinyui_widget *)list_item_button);
@@ -499,10 +524,11 @@ static void build_legacy_demo0(struct tinyui_window *win, struct legacy_demo0_ru
     }
 
     if (message_box != 0) {
+        tinyui_message_box_set_layout(message_box, 200, 150);
         tinyui_message_box_set_title(message_box, "title");
         tinyui_message_box_set_message(message_box, "12345678abcdefg\n99556");
         tinyui_message_box_set_buttons(message_box, g_message_buttons, 3);
-        tinyui_widget_set_pos((struct tinyui_widget *)message_box, 200, 150);
+        tinyui_widget_set_center((struct tinyui_widget *)message_box);
     }
 
     if (calendar != 0) {

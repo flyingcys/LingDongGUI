@@ -4,6 +4,7 @@
 #include "widgets/window.h"
 #include "../../../src/gui/ldBase.h"
 #include "../../../src/gui/ldRadialMenu.h"
+#include "../../../examples/common/demo/widget/images/uiImages.h"
 #include "internal.h"
 
 #include <assert.h>
@@ -243,6 +244,114 @@ static void test_radial_menu_create_with_props_pushes_backend_geometry(void)
     tinyui_app_destroy(app);
 }
 
+static void test_radial_menu_set_geometry_before_items_updates_backend(void)
+{
+    struct tinyui_app *app;
+    struct tinyui_window *win;
+    struct tinyui_radial_menu *radial_menu;
+    ldRadialMenu_t *ld_radial_menu;
+
+    app = tinyui_app_create();
+    assert(app != 0);
+    win = tinyui_window_create(app, "root");
+    assert(win != 0);
+
+    radial_menu = tinyui_radial_menu_create((struct tinyui_widget *)win, "radial_menu");
+    assert(radial_menu != 0);
+    ld_radial_menu = (ldRadialMenu_t *)radial_menu->widget.ld_widget;
+    assert(ld_radial_menu != 0);
+
+    assert(tinyui_radial_menu_set_geometry(radial_menu, 150, 100, 100, 80, 5) == 0);
+    assert(ld_radial_menu->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iWidth == 150);
+    assert(ld_radial_menu->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iHeight == 100);
+    assert(ld_radial_menu->originPos.iX == 75);
+    assert(ld_radial_menu->originPos.iY == 50);
+    assert(ld_radial_menu->xAxis == 100);
+    assert(ld_radial_menu->yAxis == 80);
+    assert(ld_radial_menu->itemMax == 5);
+    assert(tinyui_radial_menu_add_item(radial_menu, "weather") == 0);
+    assert(tinyui_radial_menu_set_geometry(radial_menu, 150, 100, 100, 80, 5) == -1);
+    assert(tinyui_radial_menu_set_geometry(0, 150, 100, 100, 80, 5) == -1);
+    assert(tinyui_radial_menu_set_geometry(radial_menu, 0, 100, 100, 80, 5) == -1);
+    assert(tinyui_radial_menu_set_geometry(radial_menu, 150, 100, 100, 80, 0) == -1);
+
+    tinyui_app_destroy(app);
+}
+
+static void test_radial_menu_add_item_does_not_implicitly_set_native_default(void)
+{
+    struct tinyui_app *app;
+    struct tinyui_window *win;
+    struct tinyui_radial_menu *radial_menu;
+    ldRadialMenu_t *ld_radial_menu;
+
+    app = tinyui_app_create();
+    assert(app != 0);
+    win = tinyui_window_create(app, "root");
+    assert(win != 0);
+
+    radial_menu = tinyui_radial_menu_create((struct tinyui_widget *)win, "radial_menu");
+    assert(radial_menu != 0);
+    ld_radial_menu = (ldRadialMenu_t *)radial_menu->widget.ld_widget;
+    assert(ld_radial_menu != 0);
+    assert(tinyui_radial_menu_add_item(radial_menu, "weather") == 0);
+    assert(tinyui_radial_menu_add_item(radial_menu, "note") == 0);
+    assert(tinyui_radial_menu_add_item(radial_menu, "book") == 0);
+    assert(ld_radial_menu->nowAngle == 0);
+    assert(tinyui_radial_menu_set_default_item(radial_menu, 1) == 0);
+    assert(ld_radial_menu->selectItem == 1);
+
+    tinyui_app_destroy(app);
+}
+
+static void test_radial_menu_legacy_demo0_source_sequence_matches_backend_truth(void)
+{
+    struct tinyui_app *app;
+    struct tinyui_window *win;
+    struct tinyui_radial_menu *radial_menu;
+    ldRadialMenu_t *ld_radial_menu;
+    struct tinyui_image_source weather_source = {
+        .img_tile = IMAGE_WEATHER_PNG,
+        .mask_tile = IMAGE_WEATHER_PNG_Mask,
+    };
+    struct tinyui_image_source note_source = {
+        .img_tile = IMAGE_NOTE_PNG,
+        .mask_tile = IMAGE_NOTE_PNG_Mask,
+    };
+
+    app = tinyui_app_create();
+    assert(app != 0);
+    win = tinyui_window_create(app, "root");
+    assert(win != 0);
+
+    radial_menu = tinyui_radial_menu_create((struct tinyui_widget *)win, "radial_menu_legacy_demo0");
+    assert(radial_menu != 0);
+    ld_radial_menu = (ldRadialMenu_t *)radial_menu->widget.ld_widget;
+    assert(ld_radial_menu != 0);
+
+    assert(tinyui_radial_menu_set_geometry(radial_menu, 150, 100, 100, 80, 5) == 0);
+    assert(tinyui_radial_menu_add_item_with_source(radial_menu, "weather", &weather_source) == 0);
+    assert(tinyui_radial_menu_add_item_with_source(radial_menu, "note", &note_source) == 0);
+    assert(tinyui_radial_menu_add_item_with_source(radial_menu, "weather2", &weather_source) == 0);
+    assert(tinyui_radial_menu_add_item_with_source(radial_menu, "note2", &note_source) == 0);
+
+    assert(ld_radial_menu->use_as__ldBase_t.itemCount == 4);
+    assert(ld_radial_menu->ptItemInfoList[0].ptImgTile == IMAGE_WEATHER_PNG);
+    assert(ld_radial_menu->ptItemInfoList[0].ptMaskTile == IMAGE_WEATHER_PNG_Mask);
+    assert(ld_radial_menu->ptItemInfoList[1].ptImgTile == IMAGE_NOTE_PNG);
+    assert(ld_radial_menu->ptItemInfoList[1].ptMaskTile == IMAGE_NOTE_PNG_Mask);
+    assert(ld_radial_menu->ptItemInfoList[2].ptImgTile == IMAGE_WEATHER_PNG);
+    assert(ld_radial_menu->ptItemInfoList[2].ptMaskTile == IMAGE_WEATHER_PNG_Mask);
+    assert(ld_radial_menu->ptItemInfoList[3].ptImgTile == IMAGE_NOTE_PNG);
+    assert(ld_radial_menu->ptItemInfoList[3].ptMaskTile == IMAGE_NOTE_PNG_Mask);
+    assert(ld_radial_menu->selectItem == 0);
+    assert(ld_radial_menu->targetItem == 0);
+    assert(ld_radial_menu->nowAngle == 0);
+    assert(ld_radial_menu->_itemOffset == 0);
+
+    tinyui_app_destroy(app);
+}
+
 static void test_radial_menu_native_click_default_offset_round_trip(void)
 {
     struct tinyui_app *app;
@@ -379,6 +488,9 @@ int main(void)
     test_radial_menu_create_with_default_index_defers_selection_until_items_exist();
     test_radial_menu_create_builds_direct_backend_mapping();
     test_radial_menu_create_with_props_pushes_backend_geometry();
+    test_radial_menu_set_geometry_before_items_updates_backend();
+    test_radial_menu_add_item_does_not_implicitly_set_native_default();
+    test_radial_menu_legacy_demo0_source_sequence_matches_backend_truth();
     test_radial_menu_native_click_default_offset_round_trip();
     test_radial_menu_init_and_alias_round_trip();
     test_radial_menu_rejects_null_args();

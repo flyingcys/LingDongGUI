@@ -6,6 +6,7 @@
 #include "../../../src/gui/ldBase.h"
 #include "../../../src/gui/ldList.h"
 #include "../../../src/misc/ldMsg.h"
+#include "../../../examples/common/demo/widget/fonts/uiFonts.h"
 #include "internal.h"
 
 #include <assert.h>
@@ -228,10 +229,14 @@ static void test_items_selection_and_callback_contract(struct tinyui_window *win
     int user_cookie = 7;
     struct tinyui_widget *parent = (struct tinyui_widget *)win;
     struct tinyui_list *list = tinyui_list_create(parent, "list");
+    ldList_t *ld_list;
 
     assert(list != 0);
     assert(tinyui_list_get_selected_index(list) == -1);
     assert(tinyui_list_add_item(list, "item_wifi", "Wi-Fi") == 0);
+    ld_list = (ldList_t *)list->widget.ld_widget;
+    assert(ld_list != 0);
+    assert(ld_list->ptFont == (arm_2d_font_t *)FONT_ARIAL_12);
     assert(tinyui_list_add_item(list, "item_bluetooth", "Bluetooth") == 0);
     assert(tinyui_list_add_item(list, "item_display", "Display") == 0);
     assert(tinyui_list_set_selected_index(list, 2) == 0);

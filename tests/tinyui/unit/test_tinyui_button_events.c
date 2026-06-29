@@ -2,6 +2,7 @@
 #include "../../../src/gui/ldButton.h"
 #include "../../../src/gui/ldGui.h"
 #include "../../../src/misc/ldMsg.h"
+#include "../../../examples/common/demo/widget/fonts/uiFonts.h"
 #include "internal.h"
 
 #include <assert.h>
@@ -10,7 +11,6 @@
 #include <stdio.h>
 #include <string.h>
 
-extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
 extern int tinyui_widget_has_ld_binding(const struct tinyui_widget *widget);
 void tinyui_button_test_fail_next_set_font(void);
 
@@ -347,12 +347,33 @@ static void test_button_set_text_round_trip(struct tinyui_window *win)
 {
     struct tinyui_button *btn = tinyui_button_create(win, "btn_text");
     struct tinyui_widget *backend;
+    ldButton_t *ld_button;
 
     assert(btn != 0);
+    ld_button = (ldButton_t *)btn->widget.ld_widget;
+    assert(ld_button != 0);
+    assert(ldButtonGetFont(ld_button) == (arm_2d_font_t *)FONT_ARIAL_12);
     assert(tinyui_button_set_text(btn, "NewLabel") == 0);
     backend = &btn->widget;
     assert(backend->text != 0);
     assert(strcmp(backend->text, "NewLabel") == 0);
+}
+
+static void test_button_set_font_maps_public_font_to_legacy_font(struct tinyui_window *win)
+{
+    struct tinyui_font arial16 = {
+        .family = "Arial",
+        .size = 16,
+    };
+    struct tinyui_button *btn = tinyui_button_create(win, "btn_font");
+    ldButton_t *ld_button;
+
+    assert(btn != 0);
+    ld_button = (ldButton_t *)btn->widget.ld_widget;
+    assert(ld_button != 0);
+    assert(tinyui_button_set_font(btn, &arial16) == 0);
+    assert(btn->widget.font == &arial16);
+    assert(ldButtonGetFont(ld_button) == (arm_2d_font_t *)FONT_ARIAL_16_A8);
 }
 
 static void test_button_set_style_class(struct tinyui_window *win)
@@ -750,11 +771,12 @@ int main(void)
     assert(tinyui_widget_set_visible(&slider->widget, 1) == 0);
 
     ldMsgDeinit(&app_state->ld_scene->ptMsgQueue);
-    ldButtonSetFont((ldButton_t *)backend->ld_widget, (arm_2d_font_t *)&ARM_2D_FONT_6x8);
+    ldButtonSetFont((ldButton_t *)backend->ld_widget, (arm_2d_font_t *)FONT_ARIAL_12);
 
     test_shared_emit_helpers_no_longer_use_tinyui_backend_prefix();
     test_button_create_with_props_pushes_all_fields(win);
     test_button_set_text_round_trip(win);
+    test_button_set_font_maps_public_font_to_legacy_font(win);
     test_button_set_style_class(win);
     test_button_rejects_null_args(win);
 

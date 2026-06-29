@@ -636,6 +636,25 @@ void ldTextSetBackgroundColor(ldText_t *ptWidget, ldColor bgColor)
     ptWidget->ptImgTile=NULL;
 }
 
+void ldTextSetScrollEnabled(ldText_t *ptWidget, bool isScroll)
+{
+    assert(NULL != ptWidget);
+    if(ptWidget == NULL)
+    {
+        return;
+    }
+    if(isScroll)
+    {
+        ldMsgConnect(ptWidget,SIGNAL_PRESS,slotTextVerticalScroll);
+        ldMsgConnect(ptWidget,SIGNAL_HOLD_DOWN,slotTextVerticalScroll);
+        ldMsgConnect(ptWidget,SIGNAL_RELEASE,slotTextVerticalScroll);
+    }
+    else
+    {
+        ldMsgDelConnect(ptWidget);
+    }
+}
+
 void ldTextScrollSeek(ldText_t *ptWidget,int16_t offset)
 {
     assert(NULL != ptWidget);

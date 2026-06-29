@@ -276,12 +276,56 @@ static void test_gauge_native_background_pointer_and_centre_offset_round_trip(st
     assert(ld_gauge->ptBgMaskTile == &bg_mask);
     assert(ld_gauge->ptPointerImgTile == &pointer_img);
     assert(ld_gauge->ptPointerMaskTile == &pointer_mask);
+    assert(ld_gauge->pointerOriginOffsetX == 5);
+    assert(ld_gauge->pointerOriginOffsetY == 26);
     assert(ld_gauge->centreOffsetX == -7);
     assert(ld_gauge->centreOffsetY == 9);
 
     assert(tinyui_gauge_set_bg_source(0, &bg_source) == -1);
     assert(tinyui_gauge_set_pointer_source(0, &pointer_source) == -1);
     assert(tinyui_gauge_set_centre_offset(0, 1, 2) == -1);
+}
+
+static void test_gauge_pointer_source_origin_and_mask_only_round_trip(struct tinyui_window *win)
+{
+    struct tinyui_gauge *gauge =
+        tinyui_gauge_create((struct tinyui_widget *)win, "gauge_pointer_origin");
+    ldGauge_t *ld_gauge;
+    arm_2d_tile_t pointer_img = {
+        .tRegion = {
+            .tSize = { .iWidth = 11, .iHeight = 50 },
+        },
+    };
+    arm_2d_tile_t pointer_mask = {
+        .tRegion = {
+            .tSize = { .iWidth = 11, .iHeight = 50 },
+        },
+    };
+    struct tinyui_image_source pointer_source = {
+        .img_tile = &pointer_img,
+        .mask_tile = &pointer_mask,
+    };
+
+    assert(gauge != 0);
+    ld_gauge = (ldGauge_t *)gauge->widget.ld_widget;
+    assert(ld_gauge != 0);
+
+    assert(tinyui_gauge_set_pointer_source_with_origin(gauge, &pointer_source, 5, 45) == 0);
+    assert(ld_gauge->ptPointerImgTile == &pointer_img);
+    assert(ld_gauge->ptPointerMaskTile == &pointer_mask);
+    assert(ld_gauge->pointerOriginOffsetX == 5);
+    assert(ld_gauge->pointerOriginOffsetY == 45);
+
+    assert(tinyui_gauge_set_pointer_mask_source(gauge, &pointer_source, 5, 45) == 0);
+    assert(ld_gauge->ptPointerImgTile == 0);
+    assert(ld_gauge->ptPointerMaskTile == &pointer_mask);
+    assert(ld_gauge->pointerOriginOffsetX == 5);
+    assert(ld_gauge->pointerOriginOffsetY == 45);
+
+    assert(tinyui_gauge_set_pointer_source_with_origin(0, &pointer_source, 5, 45) == -1);
+    assert(tinyui_gauge_set_pointer_source_with_origin(gauge, 0, 5, 45) == -1);
+    assert(tinyui_gauge_set_pointer_mask_source(0, &pointer_source, 5, 45) == -1);
+    assert(tinyui_gauge_set_pointer_mask_source(gauge, 0, 5, 45) == -1);
 }
 
 static void test_gauge_native_trail_and_progress_bar_round_trip(struct tinyui_window *win)
@@ -509,6 +553,7 @@ int main(void)
     test_gauge_rejects_invalid_inputs(win);
     test_gauge_internal_seam_names_are_gone();
     test_gauge_native_background_pointer_and_centre_offset_round_trip(win);
+    test_gauge_pointer_source_origin_and_mask_only_round_trip(win);
     test_gauge_native_trail_and_progress_bar_round_trip(win);
     test_gauge_init_and_shared_base_aliases_round_trip(win);
     test_gauge_create_with_props_failure_rolls_back_attached_child(win);

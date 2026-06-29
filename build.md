@@ -31,3 +31,37 @@ cmake --build build --target tinyui_hello_world_demo && ./build/examples/sdl/tin
 
 
    PICOUI_TOUCH_LOG=1 ./build/examples/sdl/tinyui_basic_widgets_demo > 1.log 2>&1
+
+
+./build/examples/sdl/tinyui_demo animation_basic
+./build/examples/sdl/tinyui_demo arc_basic
+./build/examples/sdl/tinyui_demo basic_widgets
+./build/examples/sdl/tinyui_demo calendar_basic
+./build/examples/sdl/tinyui_demo clock_basic
+./build/examples/sdl/tinyui_demo combo_box_basic
+./build/examples/sdl/tinyui_demo date_time_basic
+./build/examples/sdl/tinyui_demo gauge_basic
+./build/examples/sdl/tinyui_demo graph_basic
+./build/examples/sdl/tinyui_demo grid_parity
+./build/examples/sdl/tinyui_demo hello_world
+./build/examples/sdl/tinyui_demo icon_slider_basic
+./build/examples/sdl/tinyui_demo keyboard_basic
+./build/examples/sdl/tinyui_demo layout_flex
+./build/examples/sdl/tinyui_demo layout_grid
+./build/examples/sdl/tinyui_demo layout_parity
+./build/examples/sdl/tinyui_demo legacy_widget_parity
+./build/examples/sdl/tinyui_demo line_edit_basic
+./build/examples/sdl/tinyui_demo list_basic
+./build/examples/sdl/tinyui_demo message_box_basic
+./build/examples/sdl/tinyui_demo progress_bar_basic
+./build/examples/sdl/tinyui_demo progress_wheel_basic
+./build/examples/sdl/tinyui_demo qrcode_basic
+./build/examples/sdl/tinyui_demo radial_menu_basic
+./build/examples/sdl/tinyui_demo scroll_selecter_basic
+./build/examples/sdl/tinyui_demo settings_panel
+./build/examples/sdl/tinyui_demo table_basic
+./build/examples/sdl/tinyui_demo theme_showcase
+
+
+./build/examples/sdl/tinyui_demo legacy_demo0_parity
+./build-legacy0/ldgui_sdl_demo

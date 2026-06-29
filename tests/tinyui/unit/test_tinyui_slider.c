@@ -98,8 +98,16 @@ static void test_slider_set_range_and_value_round_trip(struct tinyui_window *win
     int horizontal;
     arm_2d_tile_t bg_tile = {0};
     arm_2d_tile_t bg_mask = {0};
-    arm_2d_tile_t indic_tile = {0};
-    arm_2d_tile_t indic_mask = {0};
+    arm_2d_tile_t indic_tile = {
+        .tRegion = {
+            .tSize = { .iWidth = 11, .iHeight = 26 },
+        },
+    };
+    arm_2d_tile_t indic_mask = {
+        .tRegion = {
+            .tSize = { .iWidth = 11, .iHeight = 26 },
+        },
+    };
     struct tinyui_image_source background_source = {
         .img_tile = &bg_tile,
         .mask_tile = &bg_mask,
@@ -160,12 +168,56 @@ static void test_slider_set_range_and_value_round_trip(struct tinyui_window *win
     assert(ld_slider->ptBgMaskTile == &bg_mask);
     assert(ld_slider->ptIndicImgTile == &indic_tile);
     assert(ld_slider->ptIndicMaskTile == &indic_mask);
+    assert(ld_slider->indicWidth == 11U);
 
     assert(tinyui_slider_set_indicator_width(slider, 21) == 0);
     assert(ld_slider->indicWidth == 21U);
 
     assert(tinyui_slider_set_slim_size(slider, 9) == 0);
     assert(ld_slider->slimSize == 9U);
+}
+
+static void test_slider_indicator_source_sets_native_width(struct tinyui_window *win)
+{
+    struct tinyui_slider *slider = tinyui_slider_create(win, "sl_indicator_source_width");
+    ldSlider_t *ld_slider;
+    arm_2d_tile_t indic_tile = {
+        .tRegion = {
+            .tSize = { .iWidth = 24, .iHeight = 34 },
+        },
+    };
+    arm_2d_tile_t indic_mask = {
+        .tRegion = {
+            .tSize = { .iWidth = 24, .iHeight = 34 },
+        },
+    };
+    struct tinyui_image_source indicator_source = {
+        .img_tile = &indic_tile,
+        .mask_tile = &indic_mask,
+    };
+    arm_2d_tile_t oversized_tile = {
+        .tRegion = {
+            .tSize = { .iWidth = 300, .iHeight = 34 },
+        },
+    };
+    struct tinyui_image_source oversized_source = {
+        .img_tile = &oversized_tile,
+        .mask_tile = &indic_mask,
+    };
+
+    assert(slider != 0);
+    ld_slider = (ldSlider_t *)slider->widget.ld_widget;
+    assert(ld_slider != 0);
+
+    assert(tinyui_slider_set_indicator_source(slider, &indicator_source) == 0);
+    assert(ld_slider->ptIndicImgTile == &indic_tile);
+    assert(ld_slider->ptIndicMaskTile == &indic_mask);
+    assert(ld_slider->indicWidth == 24U);
+
+    assert(tinyui_slider_set_indicator_source(slider, &oversized_source) == -1);
+    assert(ld_slider->ptIndicImgTile == &indic_tile);
+    assert(ld_slider->ptIndicMaskTile == &indic_mask);
+    assert(ld_slider->indicWidth == 24U);
 }
 
 static void test_slider_create_with_props_failure_rolls_back_attached_child(struct tinyui_window *win)
@@ -337,6 +389,7 @@ int main(void)
     test_slider_create_with_props_pushes_range(win);
     test_slider_create_with_props_failure_rolls_back_attached_child(win);
     test_slider_set_range_and_value_round_trip(win);
+    test_slider_indicator_source_sets_native_width(win);
     test_slider_rejects_null_args(win);
     test_slider_internal_seams_are_renamed();
 

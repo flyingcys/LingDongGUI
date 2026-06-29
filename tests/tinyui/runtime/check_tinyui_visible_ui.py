@@ -38,6 +38,7 @@ DEMOS = {
     "graph_basic": "graph_basic",
     "calendar_basic": "calendar_basic",
     "animation_basic": "animation_basic",
+    "legacy_demo0_parity": "legacy_demo0_parity",
     "legacy_widget_parity": "legacy_widget_parity",
     "layout_parity": "layout_parity",
     "grid_parity": "grid_parity",
@@ -544,6 +545,138 @@ def _assert_legacy_widget_parity_visible(path: Path) -> None:
         )
 
 
+def _assert_legacy_demo0_parity_visible(path: Path) -> None:
+    width, height, bg, bounds, non_bg_area, non_bg_color_count, p90, p99 = _capture_visible_metrics(path)
+    _, _, pixels = _read_ppm(path)
+    failures: list[str] = []
+
+    if width != 1024 or height != 600:
+        raise AssertionError(f"VISIBLE FAIL: unexpected legacy_demo0_parity capture size: {width}x{height}")
+
+    if min(
+        _color_distance(bg, (0xD3, 0xD3, 0xD3)),
+        _color_distance(bg, THEME_BG),
+        _color_distance(bg, WHITE_BG),
+    ) > 64 or _luma(bg) < 180.0:
+        failures.append(
+            "legacy demo0 background parity failed: "
+            f"background={bg}, expected a legacy-like light background instead of a dark root"
+        )
+
+    min_x, min_y, max_x, max_y = bounds
+    visible_width = max_x - min_x + 1
+    visible_height = max_y - min_y + 1
+    if visible_width < 900 or visible_height < 520:
+        failures.append(
+            "legacy demo0 coverage failed: "
+            f"content_bounds=({min_x},{min_y})-({max_x},{max_y}), expected at least 900x520"
+        )
+
+    if non_bg_area < 50000 or non_bg_color_count < 5:
+        failures.append(
+            "legacy demo0 readability failed: "
+            f"non_bg_area={non_bg_area}, non_bg_color_count={non_bg_color_count}, "
+            "expected >=50000 px and >=5 visible colors"
+        )
+
+    if p90 < 30.0 or p99 < 70.0:
+        failures.append(
+            "legacy demo0 luma floor failed: "
+            f"p90_luma={p90:.1f}, p99_luma={p99:.1f}, expected p90>=30 and p99>=70"
+        )
+
+    def region_metrics(x0: int, y0: int, x1: int, y1: int) -> tuple[int, int, int, int, int, int]:
+        non_bg = 0
+        unique_colors: set[tuple[int, int, int]] = set()
+        green_pixels = 0
+        dark_rows = 0
+        best_dark_run = 0
+        current_dark_run = 0
+        active_rows = 0
+        active_columns = 0
+
+        for y in range(y0, y1):
+            row_non_bg = 0
+            row_dark = 0
+            for x in range(x0, x1):
+                color = _pixel(width, pixels, x, y)
+                if _is_background(color, bg):
+                    continue
+                non_bg += 1
+                row_non_bg += 1
+                unique_colors.add(color)
+                if color[1] > 150 and color[1] > color[0] + 30 and color[1] > color[2] + 30:
+                    green_pixels += 1
+                if _luma(color) < 80.0:
+                    row_dark += 1
+            if row_non_bg >= 5:
+                active_rows += 1
+            if row_dark >= 3:
+                dark_rows += 1
+                current_dark_run += 1
+                best_dark_run = max(best_dark_run, current_dark_run)
+            else:
+                current_dark_run = 0
+
+        for x in range(x0, x1):
+            column_non_bg = 0
+            for y in range(y0, y1):
+                if not _is_background(_pixel(width, pixels, x, y), bg):
+                    column_non_bg += 1
+            if column_non_bg >= 5:
+                active_columns += 1
+
+        return non_bg, len(unique_colors), green_pixels, dark_rows, best_dark_run, min(active_rows, active_columns)
+
+    panel_non_bg, panel_unique, panel_green, _, _, panel_span = region_metrics(190, 85, 235, 135)
+    if panel_green < 200 or panel_non_bg < 350 or panel_span < 18:
+        failures.append(
+            "legacy demo0 green panel missing: "
+            f"panel_non_bg={panel_non_bg}, panel_green={panel_green}, panel_unique={panel_unique}, "
+            f"panel_span={panel_span}, expected a visible green 20x20 panel near (200,95)"
+        )
+
+    graph_non_bg, graph_unique, _, graph_dark_rows, graph_dark_run, graph_span = region_metrics(830, 10, 930, 110)
+    if graph_non_bg < 1500 or graph_unique < 20 or graph_dark_rows < 20 or graph_dark_run < 8 or graph_span < 50:
+        failures.append(
+            "legacy demo0 graph structure missing: "
+            f"graph_non_bg={graph_non_bg}, graph_unique={graph_unique}, graph_dark_rows={graph_dark_rows}, "
+            f"graph_dark_run={graph_dark_run}, graph_span={graph_span}, expected visible polyline/point structure"
+        )
+
+    dt_non_bg, dt_unique, _, dt_dark_rows, dt_dark_run, dt_span = region_metrics(608, 108, 792, 142)
+    if dt_non_bg < 250 or dt_unique < 2 or dt_dark_rows < 4 or dt_dark_run < 4 or dt_span < 20:
+        failures.append(
+            "legacy demo0 date_time text band missing: "
+            f"dt_non_bg={dt_non_bg}, dt_unique={dt_unique}, dt_dark_rows={dt_dark_rows}, "
+            f"dt_dark_run={dt_dark_run}, dt_span={dt_span}, expected visible dynamic text inside date_time region"
+        )
+
+    button_non_bg, button_unique, _, _, _, button_span = region_metrics(10, 10, 89, 63)
+    if button_non_bg < 2000 or button_unique < 20 or button_span < 35:
+        failures.append(
+            "legacy demo0 top-left anchor missing: "
+            f"button_non_bg={button_non_bg}, button_unique={button_unique}, button_span={button_span}, "
+            "expected visible button structure near (10,10)"
+        )
+
+    calendar_non_bg, calendar_unique, _, calendar_dark_rows, calendar_dark_run, calendar_span = region_metrics(50, 340, 350, 490)
+    if calendar_non_bg < 2500 or calendar_unique < 10 or calendar_dark_rows < 20 or calendar_dark_run < 4 or calendar_span < 60:
+        failures.append(
+            "legacy demo0 lower-left anchor missing: "
+            f"calendar_non_bg={calendar_non_bg}, calendar_unique={calendar_unique}, "
+            f"calendar_dark_rows={calendar_dark_rows}, calendar_dark_run={calendar_dark_run}, "
+            f"calendar_span={calendar_span}, expected visible calendar structure near (50,340)"
+        )
+
+    if failures:
+        joined = "\n  - ".join(failures)
+        raise AssertionError(
+            "VISIBLE FAIL: legacy_demo0_parity capture is non-empty, but demo0 parity structure is not established.\n"
+            f"  - {joined}"
+        )
+
+
 def _capture_visible_metrics(path: Path) -> tuple[int, int, tuple[int, int, int], tuple[int, int, int, int], int, int, float, float]:
     width, height, pixels = _read_ppm(path)
     sampled_luma = _sample_luma(width, height, pixels)
@@ -850,6 +983,24 @@ def _assert_arc_basic_visible(path: Path) -> None:
         failures.append(
             "arc color contrast failed: "
             f"colors={sorted(colors)}, expected foreground/background arc contrast"
+        )
+
+    center_x = (min_x + max_x) / 2.0
+    center_y = (min_y + max_y) / 2.0
+    inner_radius = max(12.0, min(visible_width, visible_height) * 0.16)
+    inner_non_bg = 0
+    for y in range(min_y, max_y + 1):
+        for x in range(min_x, max_x + 1):
+            dx = x - center_x
+            dy = y - center_y
+            if dx * dx + dy * dy > inner_radius * inner_radius:
+                continue
+            if not _is_background(_pixel(width, pixels, x, y), bg):
+                inner_non_bg += 1
+    if inner_non_bg > 32:
+        failures.append(
+            "arc hollow-center failed: "
+            f"inner_non_bg={inner_non_bg}, inner_radius={inner_radius:.1f}, expected a readable center hole instead of filled wedge fragments"
         )
 
     if failures:
@@ -1627,6 +1778,8 @@ def main() -> None:
                     _assert_clock_basic_visible(capture_path)
                 elif demo == "calendar_basic":
                     _assert_calendar_basic_visible(capture_path)
+                elif demo == "legacy_demo0_parity":
+                    _assert_legacy_demo0_parity_visible(capture_path)
                 elif demo == "legacy_widget_parity":
                     _assert_legacy_widget_parity_visible(capture_path)
                 elif demo == "layout_parity":

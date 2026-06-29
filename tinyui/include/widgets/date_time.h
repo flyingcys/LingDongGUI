@@ -9,6 +9,7 @@ struct tinyui_date_time_props {
     const char *id;
     const char *style_class;
     void *user_data;
+    const struct tinyui_font *font;
     const char *format;
     unsigned int text_color;
     unsigned int bg_color;
@@ -35,6 +36,8 @@ int tinyui_date_time_set_format(struct tinyui_date_time *dt, const char *format)
 int tinyui_date_time_set_date(struct tinyui_date_time *dt, int year, int month, int day);
 
 int tinyui_date_time_set_time(struct tinyui_date_time *dt, int hour, int minute, int second);
+
+int tinyui_date_time_set_font(struct tinyui_date_time *dt, const struct tinyui_font *font);
 
 int tinyui_date_time_set_text_color(struct tinyui_date_time *dt, unsigned int rgb);
 

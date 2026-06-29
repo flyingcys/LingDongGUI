@@ -319,6 +319,9 @@ Uint32 tinyui_runtime_host_parse_auto_quit_ms(void)
 int tinyui_runtime_host_write_capture(struct tinyui_runtime_host_state *state)
 {
     const char *path = getenv("TINYUI_CAPTURE_FILE");
+    const char *min_frames_env = getenv("TINYUI_CAPTURE_MIN_FRAMES");
+    unsigned long min_frames = 1UL;
+    char *end = NULL;
     FILE *fp;
     int x;
     int y;
@@ -327,7 +330,17 @@ int tinyui_runtime_host_write_capture(struct tinyui_runtime_host_state *state)
         return 0;
     }
 
-    if (state->rendered_frames < 3U) {
+    if (min_frames_env != NULL && min_frames_env[0] != '\0') {
+        unsigned long parsed = strtoul(min_frames_env, &end, 10);
+        if (end != min_frames_env && (end == NULL || *end == '\0') && parsed > 0UL) {
+            if (parsed > 60000UL) {
+                parsed = 60000UL;
+            }
+            min_frames = parsed;
+        }
+    }
+
+    if (state->rendered_frames < (Uint32)min_frames) {
         return 0;
     }
 

@@ -42,6 +42,8 @@ static arm_2d_tile_t g_large_graph_point_mask = {
     },
 };
 
+extern const arm_2d_tile_t c_tile_graphDefalutDot_Mask;
+
 static void test_graph_create_builds_direct_backend_mapping(struct tinyui_window *win)
 {
     struct tinyui_graph *graph = tinyui_graph_create(win, "graph_direct_mapping", 2);
@@ -65,6 +67,43 @@ static void test_graph_create_builds_direct_backend_mapping(struct tinyui_window
     assert(ld_graph != 0);
     assert(tinyui_app_lookup_host(backend->owner, backend->ld_name_id) == backend);
     assert(tinyui_widget_has_ld_binding(&graph->widget) == 1);
+}
+
+static void test_graph_native_defaults_are_not_overridden_on_create(void)
+{
+    struct tinyui_app *app;
+    struct tinyui_window *win;
+    struct tinyui_graph *graph;
+    struct tinyui_widget *backend;
+    ldGraph_t *ld_graph;
+
+    app = tinyui_app_create();
+    assert(app != 0);
+    win = tinyui_window_create(app, "graph_defaults_root");
+    assert(win != 0);
+    graph = tinyui_graph_create(win, "graph_defaults", 2);
+    assert(graph != 0);
+
+    backend = &graph->widget;
+    assert(backend->ld_widget != 0);
+    ld_graph = (ldGraph_t *)backend->ld_widget;
+    assert(ld_graph != 0);
+
+    assert(ld_graph->frameSpace == 10);
+    assert(ld_graph->gridOffset == 5);
+    assert(ld_graph->ptPointMaskTile == &c_tile_graphDefalutDot_Mask);
+    assert(ld_graph->xAxisMax == 220);
+    assert(ld_graph->yAxisMax == 220);
+    assert(ld_graph->xAxisOffset == 5);
+
+    assert(graph->frame_space == 10);
+    assert(graph->grid_offset == 5);
+    assert(graph->axis_offset == 5);
+    assert(graph->x_axis == 220);
+    assert(graph->y_axis == 100);
+    assert(graph->point_mask_source == 0);
+
+    tinyui_app_destroy(app);
 }
 
 static void test_graph_series_value_readback_survives_frame_update(void)
@@ -97,6 +136,7 @@ static void test_graph_series_value_readback_survives_frame_update(void)
     ld_graph = (ldGraph_t *)backend->ld_widget;
     assert(ld_graph != 0);
     assert(ld_graph->seriesCount == 1);
+    assert(ld_graph->pSeries[series].seriesColor == (ldColor)tinyui_rgb_to_ld_color(0x2057C4U));
     assert(ld_graph->pSeries[series].pValueList[2] == 55);
     tinyui_app_destroy(app);
 }
@@ -207,6 +247,7 @@ static void test_graph_native_axis_grid_and_point_mask_round_trip(void)
         .mask_tile = (arm_2d_tile_t *)&c_tileWhiteDotMask,
     };
     int expected_extent;
+    uint16_t expected_axis_offset;
 
     app = tinyui_app_create();
     assert(app != 0);
@@ -229,12 +270,14 @@ static void test_graph_native_axis_grid_and_point_mask_round_trip(void)
     expected_extent =
         ld_graph->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iWidth -
         ld_graph->frameSpace * 2;
+    expected_axis_offset = (uint16_t)(7 * ld_graph->xScale);
     assert(ld_graph->xAxisMax == (uint16_t)expected_extent);
     assert(ld_graph->yAxisMax == (uint16_t)expected_extent);
-    assert(ld_graph->xAxisOffset == 7);
+    assert(ld_graph->xAxisOffset == expected_axis_offset);
     assert(ld_graph->frameSpace == 14);
     assert(ld_graph->gridOffset == 11);
     assert(ld_graph->ptPointMaskTile == point_source.mask_tile);
+    assert(ld_graph->use_as__ldBase_t.isCorner == true);
 
     assert(tinyui_graph_set_axis(graph, 0, 90) == -1);
     assert(tinyui_graph_set_axis_offset(graph, -1) == -1);
@@ -244,10 +287,11 @@ static void test_graph_native_axis_grid_and_point_mask_round_trip(void)
 
     assert(ld_graph->xAxisMax == (uint16_t)expected_extent);
     assert(ld_graph->yAxisMax == (uint16_t)expected_extent);
-    assert(ld_graph->xAxisOffset == 7);
+    assert(ld_graph->xAxisOffset == expected_axis_offset);
     assert(ld_graph->frameSpace == 14);
     assert(ld_graph->gridOffset == 11);
     assert(ld_graph->ptPointMaskTile == point_source.mask_tile);
+    assert(ld_graph->use_as__ldBase_t.isCorner == true);
 
     tinyui_app_destroy(app);
 }
@@ -486,6 +530,7 @@ int main(void)
     assert(win != 0);
 
     test_graph_create_builds_direct_backend_mapping(win);
+    test_graph_native_defaults_are_not_overridden_on_create();
     test_graph_series_value_readback_survives_frame_update();
     test_graph_visible_output_matches_series_updates();
     test_graph_final_release_contract_covers_advanced_readback_boundary();

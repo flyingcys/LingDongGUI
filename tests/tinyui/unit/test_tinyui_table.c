@@ -5,6 +5,7 @@
 #include "../../../src/gui/ldBase.h"
 #include "../../../src/gui/ldTable.h"
 #include "../../../src/misc/ldMsg.h"
+#include "../../../examples/common/demo/widget/fonts/uiFonts.h"
 #include "internal.h"
 #include "tinyui_test_support.h"
 
@@ -242,6 +243,7 @@ static void test_table_create_builds_direct_backend_mapping(void)
     ld_table = (ldTable_t *)backend->ld_widget;
     assert(ld_table != 0);
     assert(tinyui_app_lookup_host(backend->owner, backend->ld_name_id) == backend);
+    assert(ld_table->itemSpace == 4);
     tinyui_app_destroy(app);
 }
 
@@ -467,7 +469,7 @@ static void test_table_native_item_image_button_and_excel_type_round_trip(void)
     assert(ldTableGetItemHeight(ld_table, 0) == 22);
     assert(strcmp((const char *)ldTableGetItemText(ld_table, 1, 0), "1") == 0);
     assert(strcmp((const char *)ldTableGetItemText(ld_table, 0, 1), "A") == 0);
-    assert(ldTableGetItemFont(ld_table, 1, 0) == (arm_2d_font_t *)&ARM_2D_FONT_6x8);
+    assert(ldTableGetItemFont(ld_table, 1, 0) == (arm_2d_font_t *)FONT_ARIAL_12);
     assert(ldTableGetItemEditable(ld_table, 1, 1) == true);
 
     assert(tinyui_table_set_item_image(table, 0, 1, 0, 0, 0, 0xABCDEFU) == -1);
@@ -513,10 +515,11 @@ static void test_table_native_size_align_color_font_region_and_navigation_round_
     assert(ldTableGetItemHeight(ld_table, 2) == 26);
     assert(ldTableGetItemTextColor(ld_table, 1, 1) == (ldColor)0x112233U);
     assert(ldTableGetItemBackgroundColor(ld_table, 1, 1) == (ldColor)0x445566U);
-    assert(ldTableGetItemFont(ld_table, 1, 1) == (arm_2d_font_t *)&ARM_2D_FONT_6x8);
+    assert(ldTableGetItemFont(ld_table, 1, 1) == (arm_2d_font_t *)FONT_ARIAL_12);
     assert(ldTableGetItemAlign(ld_table, 1, 1) == ARM_2D_ALIGN_CENTRE);
     assert(tinyui_table_get_current_row(table) == 1);
     assert(tinyui_table_get_current_column(table) == 2);
+    assert(ld_table->itemSpace == 4);
 
     region = tinyui_table_get_item_region(table, 1, 1);
     assert(region.width == 88);
@@ -533,6 +536,41 @@ static void test_table_native_size_align_color_font_region_and_navigation_round_
     assert(ldTableGetItemHeight(ld_table, 2) == 26);
     assert(tinyui_table_get_current_row(table) == 1);
     assert(tinyui_table_get_current_column(table) == 2);
+
+    tinyui_app_destroy(app);
+}
+
+static void test_table_item_space_round_trip(void)
+{
+    struct tinyui_app *app;
+    struct tinyui_window *win;
+    struct tinyui_table *table;
+    ldTable_t *ld_table;
+    struct tinyui_table_region region;
+
+    app = tinyui_app_create();
+    assert(app != 0);
+    win = tinyui_window_create(app, "table_item_space_root");
+    assert(win != 0);
+    table = tinyui_table_create(win, "table_item_space", 3, 3);
+    assert(table != 0);
+    ld_table = (ldTable_t *)table->widget.ld_widget;
+    assert(ld_table != 0);
+
+    assert(ld_table->itemSpace == 4);
+    assert(tinyui_table_set_excel_type(table) == 0);
+    assert(tinyui_table_set_item_width(table, 1, 88) == 0);
+    assert(tinyui_table_set_item_space(table, 1) == 0);
+    assert(ld_table->itemSpace == 1);
+
+    region = tinyui_table_get_item_region(table, 1, 1);
+    assert(region.width == 88);
+    assert(region.height == ldTableGetItemHeight(ld_table, 1));
+    assert(region.x == 37);
+    assert(region.y == 24);
+
+    assert(tinyui_table_set_item_space(table, 256U) == -1);
+    assert(ld_table->itemSpace == 1);
 
     tinyui_app_destroy(app);
 }
@@ -780,8 +818,8 @@ static void test_table_style_setters_reject_corrupted_backend_binding(void)
     assert(ldTableGetItemHeight(ld_table, 1) == 18);
     assert(ldTableGetItemTextColor(ld_table, 1, 1) == (ldColor)0xABCDEFU);
     assert(ldTableGetItemBackgroundColor(ld_table, 1, 1) == (ldColor)0x123456U);
-    assert(ldTableGetItemFont(ld_table, 1, 1) == (arm_2d_font_t *)&ARM_2D_FONT_6x8);
-    assert(item->ptFont == (arm_2d_font_t *)&ARM_2D_FONT_6x8);
+    assert(ldTableGetItemFont(ld_table, 1, 1) == (arm_2d_font_t *)FONT_ARIAL_12);
+    assert(item->ptFont == (arm_2d_font_t *)FONT_ARIAL_12);
 
     tinyui_app_destroy(app);
 }
@@ -889,6 +927,79 @@ static void test_table_get_keyboard_binding_rejects_corrupted_backend_binding(vo
     assert(tinyui_table_get_keyboard_binding(table, &keyboard_binding) == 0);
     assert(keyboard_binding == keyboard_backend->ld_name_id);
     tinyui_app_destroy(app);
+}
+
+static void test_table_set_keyboard_widget_uses_native_id(void)
+{
+    struct tinyui_app *app;
+    struct tinyui_window *win;
+    struct tinyui_table *table;
+    struct tinyui_keyboard *keyboard;
+    ldTable_t *ld_table;
+    unsigned int keyboard_binding = 0;
+
+    app = tinyui_app_create();
+    assert(app != 0);
+    win = tinyui_window_create(app, "table_keyboard_widget_root");
+    assert(win != 0);
+    table = tinyui_table_create(win, "table_keyboard_widget", 3, 3);
+    keyboard = tinyui_keyboard_create(win, "table_keyboard_native");
+    assert(table != 0);
+    assert(keyboard != 0);
+    assert(table->widget.ld_widget != 0);
+    ld_table = (ldTable_t *)table->widget.ld_widget;
+    assert(ld_table != 0);
+
+    assert(tinyui_table_set_keyboard_widget(table, keyboard) == 0);
+    assert(tinyui_table_get_keyboard_binding(table, &keyboard_binding) == 0);
+    assert(keyboard_binding == keyboard->widget.ld_name_id);
+    assert(table->keyboard_binding == keyboard->widget.ld_name_id);
+    assert(ld_table->kbNameId == keyboard->widget.ld_name_id);
+
+    assert(tinyui_table_set_keyboard_widget(0, keyboard) == -1);
+    assert(tinyui_table_set_keyboard_widget(table, 0) == -1);
+    tinyui_app_destroy(app);
+}
+
+static void test_table_set_keyboard_widget_rejects_cross_owner(void)
+{
+    struct tinyui_app *app_a;
+    struct tinyui_app *app_b;
+    struct tinyui_window *win_a;
+    struct tinyui_window *win_b;
+    struct tinyui_table *table;
+    struct tinyui_keyboard *keyboard_a;
+    struct tinyui_keyboard *keyboard_b;
+    ldTable_t *ld_table;
+
+    app_a = tinyui_app_create();
+    app_b = tinyui_app_create();
+    assert(app_a != 0);
+    assert(app_b != 0);
+    win_a = tinyui_window_create(app_a, "table_owner_a");
+    win_b = tinyui_window_create(app_b, "table_owner_b");
+    assert(win_a != 0);
+    assert(win_b != 0);
+
+    table = tinyui_table_create(win_a, "table_cross_owner", 3, 3);
+    keyboard_a = tinyui_keyboard_create(win_a, "table_keyboard_same_owner");
+    keyboard_b = tinyui_keyboard_create(win_b, "table_keyboard_other_owner");
+    assert(table != 0);
+    assert(keyboard_a != 0);
+    assert(keyboard_b != 0);
+
+    ld_table = (ldTable_t *)table->widget.ld_widget;
+    assert(ld_table != 0);
+    assert(tinyui_table_set_keyboard_widget(table, keyboard_a) == 0);
+    assert(ld_table->kbNameId == keyboard_a->widget.ld_name_id);
+    assert(table->keyboard_binding == keyboard_a->widget.ld_name_id);
+
+    assert(tinyui_table_set_keyboard_widget(table, keyboard_b) == -1);
+    assert(ld_table->kbNameId == keyboard_a->widget.ld_name_id);
+    assert(table->keyboard_binding == keyboard_a->widget.ld_name_id);
+
+    tinyui_app_destroy(app_b);
+    tinyui_app_destroy(app_a);
 }
 
 static void test_table_r4_aliases_and_native_getters_round_trip(void)
@@ -1268,6 +1379,7 @@ int main(int argc, char **argv)
     test_table_final_release_contract_covers_non_commit_exit_boundary();
     test_table_native_item_image_button_and_excel_type_round_trip();
     test_table_native_size_align_color_font_region_and_navigation_round_trip();
+    test_table_item_space_round_trip();
     test_table_native_static_text_background_and_getters_round_trip();
     test_table_sync_current_cell_rejects_corrupted_backend_binding();
     test_table_set_current_and_selected_cell_tolerate_corrupted_backend_binding();
@@ -1276,6 +1388,8 @@ int main(int argc, char **argv)
     test_table_style_setters_reject_corrupted_backend_binding();
     test_table_image_and_button_reject_corrupted_backend_binding();
     test_table_get_keyboard_binding_rejects_corrupted_backend_binding();
+    test_table_set_keyboard_widget_uses_native_id();
+    test_table_set_keyboard_widget_rejects_cross_owner();
     test_table_r4_aliases_and_native_getters_round_trip();
     test_table_create_with_props_applies_keyboard_and_size_contract();
     test_table_create_with_props_keyboard_failure_rolls_back_attached_child();

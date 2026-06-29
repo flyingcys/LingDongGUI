@@ -42,6 +42,8 @@ int tinyui_text_set_background_source(struct tinyui_text *text,
 
 int tinyui_text_set_consumed_font(struct tinyui_text *text, const struct tinyui_font *font);
 
+int tinyui_text_set_scroll_enabled(struct tinyui_text *text, int enabled);
+
 int tinyui_text_scroll_seek(struct tinyui_text *text, int offset);
 
 int tinyui_text_scroll_move(struct tinyui_text *text, int move_value);

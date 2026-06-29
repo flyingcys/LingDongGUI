@@ -240,6 +240,43 @@ static void test_icon_slider_create_with_props_pushes_backend_dimensions(void)
     tinyui_app_destroy(app);
 }
 
+static void test_icon_slider_set_layout_before_items_updates_backend(void)
+{
+    struct tinyui_app *app;
+    struct tinyui_window *win;
+    struct tinyui_icon_slider *icon_slider;
+    ldIconSlider_t *ld_icon_slider;
+
+    app = tinyui_app_create();
+    assert(app != 0);
+    win = tinyui_window_create(app, "root");
+    assert(win != 0);
+
+    icon_slider = tinyui_icon_slider_create((struct tinyui_widget *)win, "icon_slider");
+    assert(icon_slider != 0);
+    ld_icon_slider = (ldIconSlider_t *)icon_slider->widget.ld_widget;
+    assert(ld_icon_slider != 0);
+
+    assert(tinyui_icon_slider_set_layout(icon_slider, 150, 65, 48, 2, 5, 1, 1) == 0);
+    assert(ld_icon_slider->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iWidth == 150);
+    assert(ld_icon_slider->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iHeight == 65);
+    assert(ld_icon_slider->iconWidth == 48);
+    assert(ld_icon_slider->iconSpace == 2);
+    assert(ld_icon_slider->columnCount == 5);
+    assert(ld_icon_slider->rowCount == 1);
+    assert(ld_icon_slider->pageMax == 1);
+    assert(ld_icon_slider->iconMax == 5);
+    assert(ld_icon_slider->hasVerticalBorder == true);
+    assert(ld_icon_slider->hasHorizontalBorder == false);
+    assert(tinyui_icon_slider_add_item(icon_slider, "mail", "Mail") == 0);
+    assert(tinyui_icon_slider_set_layout(icon_slider, 150, 65, 48, 2, 5, 1, 1) == -1);
+    assert(tinyui_icon_slider_set_layout(0, 150, 65, 48, 2, 5, 1, 1) == -1);
+    assert(tinyui_icon_slider_set_layout(icon_slider, 0, 65, 48, 2, 5, 1, 1) == -1);
+    assert(tinyui_icon_slider_set_layout(icon_slider, 150, 65, 48, 2, 0, 1, 1) == -1);
+
+    tinyui_app_destroy(app);
+}
+
 static void test_icon_slider_native_icon_images_and_speed_round_trip(void)
 {
     struct tinyui_app *app;
@@ -373,6 +410,7 @@ int main(void)
     test_icon_slider_rejects_items_beyond_native_capacity();
     test_icon_slider_create_builds_direct_backend_mapping();
     test_icon_slider_create_with_props_pushes_backend_dimensions();
+    test_icon_slider_set_layout_before_items_updates_backend();
     test_icon_slider_native_icon_images_and_speed_round_trip();
     test_icon_slider_init_aliases_and_shared_base_round_trip();
     test_icon_slider_rejects_null_args(win);

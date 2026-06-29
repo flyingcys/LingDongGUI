@@ -368,6 +368,68 @@ static void test_line_edit_set_keyboard_alias_matches_binding_contract(struct ti
     assert(tinyui_line_edit_set_keyboard(0, 15U) == -1);
 }
 
+static void test_line_edit_set_keyboard_widget_uses_native_id(struct tinyui_window *win)
+{
+    struct tinyui_line_edit *line_edit = tinyui_line_edit_create(win, "line_edit_keyboard_widget");
+    struct tinyui_keyboard *keyboard = tinyui_keyboard_create(win, "line_edit_keyboard_native");
+    ldLineEdit_t *ld_line_edit;
+    unsigned int keyboard_binding = 0;
+
+    assert(line_edit != 0);
+    assert(keyboard != 0);
+    assert(line_edit->widget.ld_widget != 0);
+    ld_line_edit = (ldLineEdit_t *)line_edit->widget.ld_widget;
+    assert(ld_line_edit != 0);
+
+    assert(tinyui_line_edit_set_keyboard_widget(line_edit, keyboard) == 0);
+    assert(tinyui_line_edit_get_keyboard_binding(line_edit, &keyboard_binding) == 0);
+    assert(keyboard_binding == keyboard->widget.ld_name_id);
+    assert(ld_line_edit->kbNameId == keyboard->widget.ld_name_id);
+    assert(line_edit->keyboard_binding == keyboard->widget.ld_name_id);
+
+    assert(tinyui_line_edit_set_keyboard_widget(0, keyboard) == -1);
+    assert(tinyui_line_edit_set_keyboard_widget(line_edit, 0) == -1);
+}
+
+static void test_line_edit_set_keyboard_widget_rejects_cross_owner(void)
+{
+    struct tinyui_app *app_a = tinyui_app_create();
+    struct tinyui_app *app_b = tinyui_app_create();
+    struct tinyui_window *win_a;
+    struct tinyui_window *win_b;
+    struct tinyui_line_edit *line_edit;
+    struct tinyui_keyboard *keyboard_a;
+    struct tinyui_keyboard *keyboard_b;
+    ldLineEdit_t *ld_line_edit;
+
+    assert(app_a != 0);
+    assert(app_b != 0);
+    win_a = tinyui_window_create(app_a, "line_edit_owner_a");
+    win_b = tinyui_window_create(app_b, "line_edit_owner_b");
+    assert(win_a != 0);
+    assert(win_b != 0);
+
+    line_edit = tinyui_line_edit_create(win_a, "line_edit_cross_owner");
+    keyboard_a = tinyui_keyboard_create(win_a, "line_edit_keyboard_same_owner");
+    keyboard_b = tinyui_keyboard_create(win_b, "line_edit_keyboard_other_owner");
+    assert(line_edit != 0);
+    assert(keyboard_a != 0);
+    assert(keyboard_b != 0);
+
+    ld_line_edit = (ldLineEdit_t *)line_edit->widget.ld_widget;
+    assert(ld_line_edit != 0);
+    assert(tinyui_line_edit_set_keyboard_widget(line_edit, keyboard_a) == 0);
+    assert(ld_line_edit->kbNameId == keyboard_a->widget.ld_name_id);
+    assert(line_edit->keyboard_binding == keyboard_a->widget.ld_name_id);
+
+    assert(tinyui_line_edit_set_keyboard_widget(line_edit, keyboard_b) == -1);
+    assert(ld_line_edit->kbNameId == keyboard_a->widget.ld_name_id);
+    assert(line_edit->keyboard_binding == keyboard_a->widget.ld_name_id);
+
+    tinyui_app_destroy(app_b);
+    tinyui_app_destroy(app_a);
+}
+
 static void test_line_edit_props_source_no_longer_uses_has_flags(void)
 {
     assert(tinyui_test_source_contains("tinyui/include/widgets/line_edit.h", "has_type") == 0);
@@ -537,6 +599,8 @@ int main(void)
     test_line_edit_rejects_invalid_keyboard_binding(win);
     test_line_edit_create_with_props_accepts_sentinel_defaults(win);
     test_line_edit_set_keyboard_alias_matches_binding_contract(win);
+    test_line_edit_set_keyboard_widget_uses_native_id(win);
+    test_line_edit_set_keyboard_widget_rejects_cross_owner();
     test_line_edit_props_source_no_longer_uses_has_flags();
     test_line_edit_init_and_shared_base_aliases_round_trip(win);
 

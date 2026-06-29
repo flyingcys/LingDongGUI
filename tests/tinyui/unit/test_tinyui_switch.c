@@ -51,6 +51,10 @@ static void test_switch_create_builds_direct_backend_mapping(struct tinyui_windo
     ld_switch = (ldSwitch_t *)backend->ld_widget;
     assert(ld_switch != 0);
     assert(tinyui_app_lookup_host(backend->owner, backend->ld_name_id) == backend);
+    assert(ld_switch->offTrackColor == __RGB(224, 224, 224));
+    assert(ld_switch->onTrackColor == __RGB(33, 150, 243));
+    assert(ld_switch->knobColor == GLCD_COLOR_WHITE);
+    assert(ld_switch->borderColor == GLCD_COLOR_WHITE);
 }
 
 static void test_switch_default_geometry_matches_capsule_track(void)

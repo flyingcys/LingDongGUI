@@ -66,6 +66,26 @@ static void assert_source_lacks_function_definition(const char *source_path, con
     assert(system(command) == 0);
 }
 
+static void assert_source_lacks_pattern(const char *source_path, const char *pattern)
+{
+    char command[1024];
+
+    assert(source_path != 0);
+    assert(pattern != 0);
+    snprintf(command,
+             sizeof(command),
+             "python3 - '%s' '%s' <<'PY'\n"
+             "from pathlib import Path\n"
+             "import sys\n"
+             "text = Path(sys.argv[1]).read_text()\n"
+             "pattern = sys.argv[2]\n"
+             "raise SystemExit(1 if pattern in text else 0)\n"
+             "PY",
+             source_path,
+             pattern);
+    assert(system(command) == 0);
+}
+
 /* C1: finish_detach fallback — delegate to tinyui_runtime_bridge_detach_from_parent */
 static int tinyui_qrcode_finish_detach_after_backend_failure(struct tinyui_widget *widget)
 {
@@ -165,17 +185,26 @@ static void test_qrcode_create_and_props(struct tinyui_window *win)
         .style_class = "qr-code",
         .user_data = &user_cookie,
         .text = "https://example.local/props",
+        .qr_color = 0x123456U,
+        .bg_color = 0xABCDEFU,
+        .ecc = 2,
+        .max_version = 5,
+        .zoom = 7,
     };
     struct tinyui_qrcode *qrcode = tinyui_qrcode_create((struct tinyui_widget *)win, "qr");
     struct tinyui_qrcode *with_props = tinyui_qrcode_create_with_props((struct tinyui_widget *)win, &props);
     struct tinyui_widget *backend;
+    struct tinyui_widget *with_props_backend;
     struct tinyui_widget *parent_backend;
     ldQRCode_t *ld_qrcode;
+    ldQRCode_t *with_props_ld_qrcode;
 
     assert(qrcode != 0);
     assert(with_props != 0);
     backend = &qrcode->widget;
+    with_props_backend = &with_props->widget;
     assert(backend->ld_widget != 0);
+    assert(with_props_backend->ld_widget != 0);
     parent_backend = &win->widget;
     assert(parent_backend->ld_widget != 0);
     assert(backend->kind == TINYUI_BACKEND_WIDGET_QRCODE);
@@ -191,8 +220,25 @@ static void test_qrcode_create_and_props(struct tinyui_window *win)
     assert(tinyui_widget_has_ld_binding(&qrcode->widget) == 1);
     assert(tinyui_qrcode_get_text(qrcode) != 0);
     assert(strcmp(tinyui_qrcode_get_text(qrcode), "") == 0);
+    assert(qrcode->qr_color == (unsigned int)ld_qrcode->qrColor);
+    assert(qrcode->bg_color == (unsigned int)ld_qrcode->bgColor);
+    assert(qrcode->ecc == (int)ld_qrcode->qrEcc);
+    assert(qrcode->max_version == (int)ld_qrcode->qrMaxVersion);
+    assert(qrcode->zoom == (int)ld_qrcode->qrZoom);
     assert(tinyui_qrcode_get_text(with_props) != 0);
     assert(strcmp(tinyui_qrcode_get_text(with_props), props.text) == 0);
+    with_props_ld_qrcode = (ldQRCode_t *)with_props_backend->ld_widget;
+    assert(with_props_ld_qrcode != 0);
+    assert(with_props->qr_color == props.qr_color);
+    assert(with_props->bg_color == props.bg_color);
+    assert(with_props->ecc == props.ecc);
+    assert(with_props->max_version == props.max_version);
+    assert(with_props->zoom == props.zoom);
+    assert(with_props_ld_qrcode->qrColor == (ldColor)tinyui_rgb_to_ld_color(props.qr_color));
+    assert(with_props_ld_qrcode->bgColor == (ldColor)tinyui_rgb_to_ld_color(props.bg_color));
+    assert(with_props_ld_qrcode->qrEcc == (uint8_t)props.ecc);
+    assert(with_props_ld_qrcode->qrMaxVersion == (uint8_t)props.max_version);
+    assert(with_props_ld_qrcode->qrZoom == (uint8_t)props.zoom);
 }
 
 static void test_qrcode_set_get_text(struct tinyui_window *win)
@@ -262,6 +308,161 @@ static void test_qrcode_release_contract_covers_configuration_boundary(struct ti
     assert(ld_qrcode->qrZoom == 4);
 }
 
+static void test_qrcode_create_with_props_keeps_backend_defaults_for_unspecified_config(
+    struct tinyui_window *win)
+{
+    struct tinyui_qrcode *qrcode = tinyui_qrcode_create_with_props(
+        (struct tinyui_widget *)win,
+        &(struct tinyui_qrcode_props){
+            .id = "qr_default_config_from_props",
+            .style_class = "qr-defaults",
+            .text = "https://example.local/default-config",
+        });
+    ldQRCode_t *ld_qrcode;
+
+    assert(qrcode != 0);
+    ld_qrcode = (ldQRCode_t *)qrcode->widget.ld_widget;
+    assert(ld_qrcode != 0);
+    assert(qrcode->qr_color == (unsigned int)ld_qrcode->qrColor);
+    assert(qrcode->bg_color == (unsigned int)ld_qrcode->bgColor);
+    assert(qrcode->ecc == (int)ld_qrcode->qrEcc);
+    assert(qrcode->max_version == (int)ld_qrcode->qrMaxVersion);
+    assert(qrcode->zoom == (int)ld_qrcode->qrZoom);
+}
+
+static void test_qrcode_create_with_props_applies_explicit_zero_valued_config(
+    struct tinyui_window *win)
+{
+    struct tinyui_qrcode *defaults_qrcode = tinyui_qrcode_create_with_props(
+        (struct tinyui_widget *)win,
+        &(struct tinyui_qrcode_props){
+            .id = "qr_explicit_zero_defaults",
+            .style_class = "qr-defaults",
+            .text = "https://example.local/explicit-zero-defaults",
+        });
+    struct tinyui_qrcode *zero_value_qrcode = tinyui_qrcode_create_with_props(
+        (struct tinyui_widget *)win,
+        &(struct tinyui_qrcode_props){
+            .id = "qr_explicit_zero_values",
+            .style_class = "qr-explicit-zero",
+            .text = "https://example.local/explicit-zero-values",
+            .qr_color = 0x000000U,
+            .bg_color = 0xA0B0C0U,
+            .ecc = 0,
+            .max_version = 3,
+            .zoom = 5,
+        });
+    struct tinyui_qrcode *black_bg_qrcode = tinyui_qrcode_create_with_props(
+        (struct tinyui_widget *)win,
+        &(struct tinyui_qrcode_props){
+            .id = "qr_explicit_black_bg",
+            .style_class = "qr-explicit-black-bg",
+            .text = "https://example.local/explicit-black-bg",
+            .qr_color = 0x123456U,
+            .bg_color = 0x000000U,
+            .ecc = 2,
+            .max_version = 6,
+            .zoom = 8,
+        });
+    ldQRCode_t *defaults_ld_qrcode;
+    ldQRCode_t *zero_value_ld_qrcode;
+    ldQRCode_t *black_bg_ld_qrcode;
+
+    assert(defaults_qrcode != 0);
+    assert(zero_value_qrcode != 0);
+    assert(black_bg_qrcode != 0);
+
+    defaults_ld_qrcode = (ldQRCode_t *)defaults_qrcode->widget.ld_widget;
+    zero_value_ld_qrcode = (ldQRCode_t *)zero_value_qrcode->widget.ld_widget;
+    black_bg_ld_qrcode = (ldQRCode_t *)black_bg_qrcode->widget.ld_widget;
+    assert(defaults_ld_qrcode != 0);
+    assert(zero_value_ld_qrcode != 0);
+    assert(black_bg_ld_qrcode != 0);
+
+    assert(defaults_qrcode->qr_color == (unsigned int)defaults_ld_qrcode->qrColor);
+    assert(defaults_qrcode->ecc == (int)defaults_ld_qrcode->qrEcc);
+    assert(defaults_qrcode->bg_color == (unsigned int)defaults_ld_qrcode->bgColor);
+    assert(defaults_qrcode->max_version == (int)defaults_ld_qrcode->qrMaxVersion);
+    assert(defaults_qrcode->zoom == (int)defaults_ld_qrcode->qrZoom);
+
+    assert(zero_value_qrcode->qr_color == 0x000000U);
+    assert(zero_value_ld_qrcode->qrColor == (ldColor)0x000000U);
+    assert(zero_value_qrcode->ecc == 0);
+    assert(zero_value_ld_qrcode->qrEcc == 0);
+    assert(zero_value_qrcode->bg_color == 0xA0B0C0U);
+    assert(zero_value_ld_qrcode->bgColor == (ldColor)tinyui_rgb_to_ld_color(0xA0B0C0U));
+    assert(zero_value_qrcode->max_version == 3);
+    assert(zero_value_ld_qrcode->qrMaxVersion == 3);
+    assert(zero_value_qrcode->zoom == 5);
+    assert(zero_value_ld_qrcode->qrZoom == 5);
+
+    assert(zero_value_qrcode->bg_color != defaults_qrcode->bg_color);
+    assert(zero_value_qrcode->max_version != defaults_qrcode->max_version);
+    assert(zero_value_qrcode->zoom != defaults_qrcode->zoom);
+
+    assert(black_bg_qrcode->bg_color == 0x000000U);
+    assert(black_bg_ld_qrcode->bgColor == (ldColor)0x000000U);
+    assert(black_bg_qrcode->bg_color != defaults_qrcode->bg_color);
+    assert(black_bg_qrcode->qr_color == 0x123456U);
+    assert(black_bg_ld_qrcode->qrColor == (ldColor)tinyui_rgb_to_ld_color(0x123456U));
+    assert(black_bg_qrcode->ecc == 2);
+    assert(black_bg_ld_qrcode->qrEcc == 2);
+    assert(black_bg_qrcode->max_version == 6);
+    assert(black_bg_ld_qrcode->qrMaxVersion == 6);
+    assert(black_bg_qrcode->zoom == 8);
+    assert(black_bg_ld_qrcode->qrZoom == 8);
+}
+
+static void test_qrcode_create_with_props_presence_flags_distinguish_zero_values_from_omitted(
+    struct tinyui_window *win)
+{
+    struct tinyui_qrcode_props presence_props = {0};
+    struct tinyui_qrcode *defaults_qrcode = tinyui_qrcode_create_with_props(
+        (struct tinyui_widget *)win,
+        &(struct tinyui_qrcode_props){
+            .id = "qr_presence_defaults",
+            .style_class = "qr-presence-defaults",
+            .text = "https://example.local/presence-defaults",
+        });
+    struct tinyui_qrcode *presence_qrcode;
+    ldQRCode_t *defaults_ld_qrcode;
+    ldQRCode_t *presence_ld_qrcode;
+
+    presence_props.id = "qr_presence_zero_values";
+    presence_props.style_class = "qr-presence-zero-values";
+    presence_props.text = "https://example.local/presence-zero-values";
+    presence_props.qr_color = 0x000000U;
+    presence_props.bg_color = 0x000000U;
+    presence_props.ecc = 0;
+    presence_props.present_mask = TINYUI_QRCODE_PROP_QR_COLOR
+                                | TINYUI_QRCODE_PROP_BG_COLOR
+                                | TINYUI_QRCODE_PROP_ECC;
+    presence_qrcode = tinyui_qrcode_create_with_props((struct tinyui_widget *)win, &presence_props);
+
+    assert(defaults_qrcode != 0);
+    assert(presence_qrcode != 0);
+
+    defaults_ld_qrcode = (ldQRCode_t *)defaults_qrcode->widget.ld_widget;
+    presence_ld_qrcode = (ldQRCode_t *)presence_qrcode->widget.ld_widget;
+    assert(defaults_ld_qrcode != 0);
+    assert(presence_ld_qrcode != 0);
+
+    assert(defaults_qrcode->bg_color == (unsigned int)defaults_ld_qrcode->bgColor);
+    assert(defaults_qrcode->max_version == (int)defaults_ld_qrcode->qrMaxVersion);
+    assert(defaults_qrcode->zoom == (int)defaults_ld_qrcode->qrZoom);
+
+    assert(presence_qrcode->qr_color == 0x000000U);
+    assert(presence_ld_qrcode->qrColor == (ldColor)0x000000U);
+    assert(presence_qrcode->bg_color == 0x000000U);
+    assert(presence_ld_qrcode->bgColor == (ldColor)0x000000U);
+    assert(presence_qrcode->ecc == 0);
+    assert(presence_ld_qrcode->qrEcc == 0);
+    assert(presence_qrcode->max_version == defaults_qrcode->max_version);
+    assert(presence_ld_qrcode->qrMaxVersion == defaults_ld_qrcode->qrMaxVersion);
+    assert(presence_qrcode->zoom == defaults_qrcode->zoom);
+    assert(presence_ld_qrcode->qrZoom == defaults_ld_qrcode->qrZoom);
+}
+
 static void test_qrcode_native_color_ecc_version_and_zoom_round_trip(struct tinyui_window *win)
 {
     struct tinyui_qrcode *qrcode = tinyui_qrcode_create((struct tinyui_widget *)win, "qr_native_config");
@@ -280,8 +481,8 @@ static void test_qrcode_native_color_ecc_version_and_zoom_round_trip(struct tiny
     assert(tinyui_qrcode_set_max_version(qrcode, 5) == 0);
     assert(tinyui_qrcode_set_zoom(qrcode, 7) == 0);
 
-    assert(ld_qrcode->qrColor == (ldColor)0x112233U);
-    assert(ld_qrcode->bgColor == (ldColor)0x445566U);
+    assert(ld_qrcode->qrColor == (ldColor)tinyui_rgb_to_ld_color(0x112233U));
+    assert(ld_qrcode->bgColor == (ldColor)tinyui_rgb_to_ld_color(0x445566U));
     assert(ld_qrcode->qrEcc == 2);
     assert(ld_qrcode->qrMaxVersion == 5);
     assert(ld_qrcode->qrZoom == 7);
@@ -292,8 +493,8 @@ static void test_qrcode_native_color_ecc_version_and_zoom_round_trip(struct tiny
     assert(tinyui_qrcode_set_max_version(qrcode, 0) == -1);
     assert(tinyui_qrcode_set_zoom(qrcode, 0) == -1);
 
-    assert(ld_qrcode->qrColor == (ldColor)0x112233U);
-    assert(ld_qrcode->bgColor == (ldColor)0x445566U);
+    assert(ld_qrcode->qrColor == (ldColor)tinyui_rgb_to_ld_color(0x112233U));
+    assert(ld_qrcode->bgColor == (ldColor)tinyui_rgb_to_ld_color(0x445566U));
     assert(ld_qrcode->qrEcc == 2);
     assert(ld_qrcode->qrMaxVersion == 5);
     assert(ld_qrcode->qrZoom == 7);
@@ -429,6 +630,8 @@ static void test_qrcode_shared_widget_helpers_reject_null(void)
                                             "tinyui_qrcode_dispose_partial_impl");
     assert_source_lacks_function_definition(qrcode_source_path,
                                             "tinyui_qrcode_create_with_props_impl");
+    assert_source_lacks_pattern(qrcode_source_path, "props->qr_color != 0");
+    assert_source_lacks_pattern(qrcode_source_path, "props->ecc != 0");
     assert_source_lacks_function_definition(test_source_path,
                                             "tinyui_backend_qrcode_test_reset_state");
     assert_source_lacks_function_definition(test_source_path,
@@ -450,6 +653,9 @@ int main(void)
     test_qrcode_set_get_text(win);
     test_qrcode_rejects_invalid_inputs(win);
     test_qrcode_release_contract_covers_configuration_boundary(win);
+    test_qrcode_create_with_props_keeps_backend_defaults_for_unspecified_config(win);
+    test_qrcode_create_with_props_applies_explicit_zero_valued_config(win);
+    test_qrcode_create_with_props_presence_flags_distinguish_zero_values_from_omitted(win);
     test_qrcode_native_color_ecc_version_and_zoom_round_trip(win);
     test_q_r_code_init_and_shared_base_aliases_round_trip(win);
     test_qrcode_rejects_null_args(win);

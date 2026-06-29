@@ -1,6 +1,8 @@
 #include "tinyui.h"
 #include "../../../src/gui/ldBase.h"
 #include "../../../src/gui/ldText.h"
+#include "../../../src/misc/ldMsg.h"
+#include "../../../examples/common/demo/widget/fonts/uiFonts.h"
 #include "internal.h"
 #include <assert.h>
 #include <stdio.h>
@@ -40,6 +42,24 @@ static void test_text_create_and_ld_mapping(struct tinyui_window *win)
     /* host_widget line removed */
     ld_text = (ldText_t *)backend->ld_widget;
     assert(ld_text != 0);
+    assert(ld_text->ptFont == (arm_2d_font_t *)FONT_ARIAL_12);
+}
+
+static void test_text_set_font_maps_public_font_to_legacy_font(struct tinyui_window *win)
+{
+    struct tinyui_font arial16 = {
+        .family = "Arial",
+        .size = 16,
+    };
+    struct tinyui_text *text = tinyui_text_create(win, "text_font");
+    ldText_t *ld_text;
+
+    assert(text != 0);
+    ld_text = (ldText_t *)text->widget.ld_widget;
+    assert(ld_text != 0);
+    assert(tinyui_text_set_font(text, &arial16) == 0);
+    assert(text->widget.font == &arial16);
+    assert(ld_text->ptFont == (arm_2d_font_t *)FONT_ARIAL_16_A8);
 }
 
 static void test_text_set_transparent_round_trip(struct tinyui_window *win)
@@ -56,6 +76,39 @@ static void test_text_scroll_seek_and_move(struct tinyui_window *win)
     assert(tinyui_text_set_static_text(text, "Scrollable text content") == 0);
     assert(tinyui_text_scroll_seek(text, 0) == 0);
     assert(tinyui_text_scroll_move(text, 1) == 0);
+}
+
+static int text_has_signal_connection(ldText_t *ld_text, uint8_t signal)
+{
+    ldAssn_t *assn = ((ldBase_t *)ld_text)->ptAssn;
+
+    while (assn != 0) {
+        if (assn->signal == signal) {
+            return 1;
+        }
+        assn = assn->ptNext;
+    }
+
+    return 0;
+}
+
+static void test_text_scroll_enabled_connects_native_scroll_signals(struct tinyui_window *win)
+{
+    struct tinyui_text *text = tinyui_text_create(win, "text_scroll_enabled");
+    ldText_t *ld_text;
+
+    assert(text != 0);
+    ld_text = (ldText_t *)text->widget.ld_widget;
+    assert(ld_text != 0);
+    assert(text_has_signal_connection(ld_text, SIGNAL_PRESS) == 0);
+    assert(text_has_signal_connection(ld_text, SIGNAL_HOLD_DOWN) == 0);
+    assert(text_has_signal_connection(ld_text, SIGNAL_RELEASE) == 0);
+    assert(tinyui_text_set_scroll_enabled(text, 1) == 0);
+    assert(text_has_signal_connection(ld_text, SIGNAL_PRESS) == 1);
+    assert(text_has_signal_connection(ld_text, SIGNAL_HOLD_DOWN) == 1);
+    assert(text_has_signal_connection(ld_text, SIGNAL_RELEASE) == 1);
+    assert(tinyui_text_set_scroll_enabled(text, 1) == 0);
+    assert(tinyui_text_set_scroll_enabled(0, 1) == -1);
 }
 
 static void test_text_create_with_props_sets_content(struct tinyui_window *win)
@@ -244,6 +297,7 @@ static void test_text_legacy_backend_helper_names_are_gone(const char *binary_pa
         "set_text_color",
         "set_bg_color",
         "set_background_source",
+        "set_scroll_enabled",
         "scroll_seek",
         "scroll_move",
         "test_fail_next_set_font",
@@ -292,8 +346,10 @@ int main(int argc, char **argv)
 
     test_text_legacy_backend_helper_names_are_gone(argv[0]);
     test_text_create_and_ld_mapping(win);
+    test_text_set_font_maps_public_font_to_legacy_font(win);
     test_text_set_transparent_round_trip(win);
     test_text_scroll_seek_and_move(win);
+    test_text_scroll_enabled_connects_native_scroll_signals(win);
     test_text_create_with_props_sets_content(win);
     test_text_shared_text_helper_uses_tinyui_prefix(argv[0]);
     test_text_create_with_props_font_failure_rolls_back_attached_child(win);

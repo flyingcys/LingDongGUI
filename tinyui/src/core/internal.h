@@ -124,6 +124,7 @@ struct tinyui_canvas;
 #define TINYUI_CANVAS_MAX_COMMANDS 64
 
 typedef struct arm_2d_tile_t arm_2d_tile_t;
+typedef struct arm_2d_font_t arm_2d_font_t;
 
 struct tinyui_font;
 struct tinyui_message_box;
@@ -266,6 +267,8 @@ int tinyui_theme_apply_widget_style(struct tinyui_widget *widget,
                                     unsigned int bg_color,
                                     unsigned int text_color,
                                     unsigned int border_color);
+arm_2d_font_t *tinyui_resolve_ld_font(const struct tinyui_font *font,
+                                      int default_size);
 
 enum tinyui_focus_event {
     TINYUI_FOCUS_EVENT_NONE = 0,
@@ -810,6 +813,9 @@ struct tinyui_widget *tinyui_widget_create_leaf(
  * @brief Common destroy: host_cleanup + depose ld via ptGuiFunc + free host
  */
 void tinyui_widget_destroy_common(struct tinyui_widget *w);
+
+int tinyui_ld_font_is_static(const arm_2d_font_t *font);
+void tinyui_widget_prepare_native_depose(struct tinyui_widget *widget);
 
 /**
  * @brief Convert RGB888 packed value to ldColor (RGB565 via __RGB macro)

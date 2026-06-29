@@ -6,6 +6,7 @@
 
 #include "internal.h"
 #include "runtime_bridge.h"
+#include "display/display.h"
 #include <SDL.h>
 #include "arm_2d.h"
 #include "ldGui.h"
@@ -42,6 +43,9 @@ struct tinyui_runtime_host_state {
 unsigned int tinyui_runtime_host_default_tick_source(void *user_data);
 void         tinyui_runtime_host_default_delay(unsigned int ms, void *user_data);
 uint32_t     tinyui_runtime_host_pixel_to_rgb888(COLOUR_INT pixel);
+void         tinyui_runtime_host_copy_flush_pixels(const struct tinyui_area *area,
+                                                   const void *pixels,
+                                                   void *user_data);
 int          tinyui_runtime_host_ensure_window(struct tinyui_app *app,
                                                struct tinyui_runtime_host_state *state);
 void         tinyui_runtime_host_present_real_frame(struct tinyui_runtime_host_state *state);

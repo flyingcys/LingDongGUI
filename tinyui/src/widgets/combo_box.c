@@ -24,10 +24,6 @@
 #include "../../../src/gui/ldComboBox.h"
 
 
-extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
-
-
-
 static void tinyui_combo_box_rollback(struct tinyui_combo_box *combo_box)
 {
     if (combo_box == 0) {
@@ -121,7 +117,7 @@ static void *tinyui_combo_box_ld_init(void *ctx,
                            0,
                            220,
                            32,
-                           (arm_2d_font_t *)&ARM_2D_FONT_6x8);
+                           tinyui_resolve_ld_font(0, 12));
 }
 
 int tinyui_combo_box_set_items(struct tinyui_combo_box *combo_box,

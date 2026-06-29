@@ -18,6 +18,7 @@
 
 #include "internal.h"
 #include "widgets/table.h"
+#include "widgets/keyboard.h"
 #include "../core/runtime_bridge.h"
 #include "../../../src/gui/ldTable.h"
 #include "../../../src/misc/ldMsg.h"
@@ -25,9 +26,12 @@
 #include <string.h>
 #include "../../../src/gui/ldBase.h"
 
-extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
-
 static int s_table_fail_next_set_keyboard_binding = 0;
+
+static arm_2d_font_t *tinyui_table_default_font(void)
+{
+    return tinyui_resolve_ld_font(0, 12);
+}
 
 static int tinyui_table_dims_are_valid(int rows, int columns)
 {
@@ -341,6 +345,20 @@ int tinyui_table_set_keyboard_binding(struct tinyui_table *table, unsigned int k
     return 0;
 }
 
+int tinyui_table_set_keyboard_widget(struct tinyui_table *table, struct tinyui_keyboard *keyboard)
+{
+    if (table == 0 ||
+        keyboard == 0 ||
+        table->widget.owner == 0 ||
+        keyboard->widget.owner != table->widget.owner ||
+        keyboard->widget.ld_widget == 0 ||
+        keyboard->widget.kind != TINYUI_BACKEND_WIDGET_KEYBOARD) {
+        return -1;
+    }
+
+    return tinyui_table_set_keyboard_binding(table, keyboard->widget.ld_name_id);
+}
+
 /**
  * @brief Get keyboard binding of table widget
  *
@@ -368,6 +386,24 @@ int tinyui_table_get_keyboard_binding(const struct tinyui_table *table, unsigned
     }
 
     *keyboard_binding = table->keyboard_binding;
+    return 0;
+}
+
+int tinyui_table_set_item_space(struct tinyui_table *table, unsigned int item_space)
+{
+    ldTable_t *ld_table;
+
+    if (table == 0 || item_space > 255U) {
+        return -1;
+    }
+
+    ld_table = (ldTable_t *)table->widget.ld_widget;
+    if (ld_table == 0 || table->widget.kind != TINYUI_BACKEND_WIDGET_TABLE) {
+        return -1;
+    }
+
+    ld_table->itemSpace = (uint8_t)item_space;
+    ld_table->use_as__ldBase_t.isDirtyRegionUpdate = true;
     return 0;
 }
 
@@ -452,7 +488,7 @@ int tinyui_table_set_cell_text(struct tinyui_table *table,
 
     item = ldTableGetItem(ld_table, (uint8_t)row, (uint8_t)column);
     if (item != 0 && item->ptFont == 0) {
-        ldTableSetItemFont(ld_table, (uint8_t)row, (uint8_t)column, (arm_2d_font_t *)&ARM_2D_FONT_6x8);
+        ldTableSetItemFont(ld_table, (uint8_t)row, (uint8_t)column, tinyui_table_default_font());
     }
     ldTableSetItemText(ld_table, (uint8_t)row, (uint8_t)column, (uint8_t *)text);
     return 0;
@@ -549,7 +585,7 @@ int tinyui_table_set_cell_editable(struct tinyui_table *table,
                            editable != 0,
                            (uint8_t)text_max);
     if (editable != 0) {
-        ldTableSetItemFont(ld_table, (uint8_t)row, (uint8_t)column, (arm_2d_font_t *)&ARM_2D_FONT_6x8);
+        ldTableSetItemFont(ld_table, (uint8_t)row, (uint8_t)column, tinyui_table_default_font());
     }
     return 0;
 }
@@ -697,7 +733,7 @@ int tinyui_table_set_excel_type(struct tinyui_table *table)
         return -1;
     }
 
-    ldTableSetExcelType(ld_table, (arm_2d_font_t *)&ARM_2D_FONT_6x8);
+    ldTableSetExcelType(ld_table, tinyui_table_default_font());
     return 0;
 }
 
@@ -905,7 +941,7 @@ int tinyui_table_set_item_font(struct tinyui_table *table, int row, int column)
         return -1;
     }
 
-    ldTableSetItemFont(ld_table, (uint8_t)row, (uint8_t)column, (arm_2d_font_t *)&ARM_2D_FONT_6x8);
+    ldTableSetItemFont(ld_table, (uint8_t)row, (uint8_t)column, tinyui_table_default_font());
     return 0;
 }
 

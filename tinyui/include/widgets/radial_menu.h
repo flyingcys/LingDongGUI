@@ -30,6 +30,12 @@ int tinyui_radial_menu_add_item_with_source(struct tinyui_radial_menu *radial_me
 int tinyui_radial_menu_add_item_with_image(struct tinyui_radial_menu *radial_menu,
                                            const char *id,
                                            struct tinyui_image_source *source);
+int tinyui_radial_menu_set_geometry(struct tinyui_radial_menu *radial_menu,
+                                    int width,
+                                    int height,
+                                    int x_axis,
+                                    int y_axis,
+                                    int item_max);
 int tinyui_radial_menu_set_selected_index(struct tinyui_radial_menu *radial_menu, int index);
 int tinyui_radial_menu_get_selected_index(const struct tinyui_radial_menu *radial_menu);
 int tinyui_radial_menu_offset_selection(struct tinyui_radial_menu *radial_menu, int offset);

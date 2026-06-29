@@ -9,6 +9,7 @@
 #include "../../../src/gui/ldSwitch.h"
 #include "../../../src/gui/ldGui.h"
 #include "../../../src/misc/ldMsg.h"
+#include "arm_2d_helper_scene.h"
 
 void ldBaseNodeRemove(arm_2d_control_node_t *ptNode);
 
@@ -134,6 +135,9 @@ int tinyui_runtime_bridge_init_app(struct tinyui_app *app)
 
     app->next_ld_name_id = 0;
     app->ld_scene->bUserAllocated = true;
+    arm_2d_scene_player_dynamic_dirty_region_init(
+        &app->ld_scene->tDirtyRegionItem,
+        &app->ld_scene->use_as__arm_2d_scene_t);
     return 0;
 }
 
@@ -176,6 +180,9 @@ void tinyui_runtime_bridge_shutdown_app(struct tinyui_app *app)
     }
 
     tinyui_runtime_host_shutdown_app(app);
+    arm_2d_scene_player_dynamic_dirty_region_depose(
+        &app->ld_scene->tDirtyRegionItem,
+        &app->ld_scene->use_as__arm_2d_scene_t);
     ldGuiDespose(app->ld_scene);
     ldFree(app->ld_scene);
     app->ld_scene = NULL;

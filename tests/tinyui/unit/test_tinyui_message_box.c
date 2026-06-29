@@ -359,6 +359,42 @@ static void test_message_box_native_multi_button_and_color_round_trip(struct tin
     assert(tinyui_message_box_set_bg_color(0, 0) == -1);
 }
 
+static void test_message_box_layout_updates_native_regions(struct tinyui_window *win)
+{
+    static const char *buttons[] = {
+        "Cancel",
+        "Apply",
+        "Reset",
+    };
+    struct tinyui_message_box *box =
+        tinyui_message_box_create((struct tinyui_widget *)win, "message_box_layout");
+    ldMessageBox_t *ld_message_box;
+    ldBase_t *ld_base;
+
+    assert(box != 0);
+    assert(tinyui_message_box_set_buttons(box, buttons, 3) == 0);
+
+    ld_message_box = (ldMessageBox_t *)box->widget.ld_widget;
+    assert(ld_message_box != 0);
+    ld_base = (ldBase_t *)ld_message_box;
+
+    assert(tinyui_message_box_set_layout(box, 200, 150) == 0);
+    assert(ld_base->use_as__arm_2d_control_node_t.tRegion.tSize.iWidth == 200);
+    assert(ld_base->use_as__arm_2d_control_node_t.tRegion.tSize.iHeight == 150);
+    assert(ld_message_box->titleHeight == 26);
+    assert(ld_message_box->msgHeight == 78);
+    assert(ld_message_box->btnRegion.tLocation.iX == 10);
+    assert(ld_message_box->btnRegion.tLocation.iY == 114);
+    assert(ld_message_box->btnRegion.tSize.iWidth == 56);
+    assert(ld_message_box->btnRegion.tSize.iHeight == 26);
+    assert(ld_message_box->btnCount == 3);
+    assert(ld_message_box->ppBtnStrGroup == (const uint8_t **)buttons);
+
+    assert(tinyui_message_box_set_layout(0, 200, 150) == -1);
+    assert(tinyui_message_box_set_layout(box, 0, 150) == -1);
+    assert(tinyui_message_box_set_layout(box, 200, 0) == -1);
+}
+
 static void test_message_box_multi_button_callback_reports_clicked_index(struct tinyui_window *win)
 {
     static const char *buttons[] = {
@@ -580,6 +616,7 @@ int main(void)
     test_message_box_rejects_invalid_inputs(win);
     test_message_box_final_release_contract_covers_multi_action_and_readback_boundary(win);
     test_message_box_native_multi_button_and_color_round_trip(win);
+    test_message_box_layout_updates_native_regions(win);
     test_message_box_multi_button_callback_reports_clicked_index(win);
     test_message_box_init_aliases_and_shared_base_round_trip(win);
     test_message_box_modal_hit_and_dismiss_returns_focus_to_underlay(win);

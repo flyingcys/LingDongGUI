@@ -1,5 +1,7 @@
 #include "tinyui.h"
 #include "../../../src/gui/ldBase.h"
+#include "../../../src/gui/ldLabel.h"
+#include "../../../examples/common/demo/widget/fonts/uiFonts.h"
 #include "internal.h"
 #include <assert.h>
 #include <dlfcn.h>
@@ -108,9 +110,13 @@ static void test_label_set_text_round_trip(struct tinyui_window *win)
 {
     struct tinyui_label *label = tinyui_label_create(win, "label_text");
     struct tinyui_widget *backend;
+    ldLabel_t *ld_label;
     int cookie = 7;
 
     assert(label != 0);
+    ld_label = (ldLabel_t *)label->widget.ld_widget;
+    assert(ld_label != 0);
+    assert(ldLabelGetFont(ld_label) == (arm_2d_font_t *)FONT_ARIAL_12);
     assert(tinyui_label_set_text(label, "Hello TINYUI") == 0);
     backend = &label->widget;
     assert(backend->text != 0);
@@ -122,6 +128,61 @@ static void test_label_set_text_round_trip(struct tinyui_window *win)
     assert(tinyui_widget_set_user_data(&label->widget, &cookie) == 0);
     assert(label->widget.user_data == &cookie);
     assert(backend->user_data == &cookie);
+}
+
+static void test_label_set_font_maps_public_font_to_legacy_font(struct tinyui_window *win)
+{
+    struct tinyui_font arial16 = {
+        .family = "Arial",
+        .size = 16,
+    };
+    struct tinyui_label *label = tinyui_label_create(win, "label_font");
+    ldLabel_t *ld_label;
+
+    assert(label != 0);
+    ld_label = (ldLabel_t *)label->widget.ld_widget;
+    assert(ld_label != 0);
+    assert(tinyui_label_set_font(label, &arial16) == 0);
+    assert(label->widget.font == &arial16);
+    assert(ldLabelGetFont(ld_label) == (arm_2d_font_t *)FONT_ARIAL_16_A8);
+}
+
+static void test_label_text_align_maps_both_axes(struct tinyui_window *win)
+{
+    struct tinyui_label *label = tinyui_label_create(win, "label_text_align");
+    ldLabel_t *ld_label;
+
+    assert(label != 0);
+    ld_label = (ldLabel_t *)label->widget.ld_widget;
+    assert(ld_label != 0);
+    assert(tinyui_label_set_text_align(label, TINYUI_ALIGN_START, TINYUI_ALIGN_END) == 0);
+    assert(ldLabelGetAlign(ld_label) == (ARM_2D_ALIGN_LEFT | ARM_2D_ALIGN_BOTTOM));
+    assert(tinyui_label_set_text_align(label, TINYUI_ALIGN_START, TINYUI_ALIGN_CENTER) == 0);
+    assert(ldLabelGetAlign(ld_label) == ARM_2D_ALIGN_MIDDLE_LEFT);
+    assert(tinyui_label_set_text_align(0, TINYUI_ALIGN_START, TINYUI_ALIGN_END) == -1);
+    assert(tinyui_label_set_text_align(label, (enum tinyui_align)99, TINYUI_ALIGN_END) == -1);
+    assert(tinyui_label_set_text_align(label, TINYUI_ALIGN_START, (enum tinyui_align)99) == -1);
+}
+
+static void test_label_legacy_demo0_background_color_matches_ldgui(struct tinyui_window *win)
+{
+    struct tinyui_label *label = tinyui_label_create(win, "label_legacy_demo0_color");
+    ldLabel_t *ld_label;
+
+    assert(label != 0);
+    ld_label = (ldLabel_t *)label->widget.ld_widget;
+    assert(ld_label != 0);
+
+    assert(tinyui_label_set_bg_color(label, 0xC0C0C0U) == 0);
+    assert(ld_label->bgColor == GLCD_COLOR_LIGHT_GREY);
+}
+
+static void test_label_legacy_demo0_source_uses_ldgui_light_grey(void)
+{
+    assert_source_contains_text(test_repo_path("tinyui/demo/legacy_demo0_parity/legacy_demo0_parity.c"),
+                                "tinyui_label_set_bg_color(label, 0xC0C0C0U)");
+    assert_source_lacks_text(test_repo_path("tinyui/demo/legacy_demo0_parity/legacy_demo0_parity.c"),
+                             "tinyui_label_set_bg_color(label, 0xD3D3D3U)");
 }
 
 static void test_label_shared_text_helper_uses_tinyui_prefix(void)
@@ -246,6 +307,10 @@ int main(void)
     test_label_create_and_ld_mapping(win);
     test_label_constructor_binds_ld_without_backend_wrapper(win);
     test_label_set_text_round_trip(win);
+    test_label_set_font_maps_public_font_to_legacy_font(win);
+    test_label_text_align_maps_both_axes(win);
+    test_label_legacy_demo0_background_color_matches_ldgui(win);
+    test_label_legacy_demo0_source_uses_ldgui_light_grey();
     test_label_shared_text_helper_uses_tinyui_prefix();
     test_label_create_with_props_pushes_all_fields(win);
     test_label_create_with_props_failure_rolls_back_attached_child(win);

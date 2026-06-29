@@ -87,6 +87,7 @@ int ldTextSetFont(ldText_t *ptWidget, arm_2d_font_t *ptFont);
 int ldTextSetConsumedFont(ldText_t *ptWidget, arm_2d_font_t *ptFont);
 void ldTextSetBackgroundImage(ldText_t *ptWidget, arm_2d_tile_t *ptImgTile, arm_2d_tile_t *ptMaskTile);
 void ldTextSetBackgroundColor(ldText_t *ptWidget, ldColor bgColor);
+void ldTextSetScrollEnabled(ldText_t *ptWidget, bool isScroll);
 void ldTextScrollSeek(ldText_t *ptWidget,int16_t offset);
 void ldTextScrollMove(ldText_t *ptWidget, int8_t moveValue);
 

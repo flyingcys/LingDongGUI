@@ -6,6 +6,7 @@
 
 struct tinyui_window;
 struct tinyui_table;
+struct tinyui_keyboard;
 struct tinyui_image_source;
 
 struct tinyui_table_region {
@@ -44,7 +45,11 @@ int tinyui_table_set_keyboard(struct tinyui_table *table, unsigned int keyboard_
 
 int tinyui_table_set_keyboard_binding(struct tinyui_table *table, unsigned int keyboard_binding);
 
+int tinyui_table_set_keyboard_widget(struct tinyui_table *table, struct tinyui_keyboard *keyboard);
+
 int tinyui_table_get_keyboard_binding(const struct tinyui_table *table, unsigned int *keyboard_binding);
+
+int tinyui_table_set_item_space(struct tinyui_table *table, unsigned int item_space);
 
 int tinyui_table_show_keyboard(struct tinyui_table *table);
 

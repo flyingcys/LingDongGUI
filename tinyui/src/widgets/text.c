@@ -24,35 +24,15 @@
 #include <stdlib.h>
 #include <string.h>
 
-extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
-extern const arm_2d_a1_font_t ARM_2D_FONT_16x24;
-
 struct tinyui_image_source;
 
 /* ---- test seam state ---- */
 static int s_fail_next_set_font = 0;
 
 
-static arm_2d_font_t *tinyui_text_default_font_internal(void)
-{
-    return (arm_2d_font_t *)&ARM_2D_FONT_6x8;
-}
-
 static arm_2d_font_t *tinyui_text_resolve_font_internal(const struct tinyui_font *font)
 {
-    if (font != NULL && font->kind == TINYUI_FONT_KIND_VRES && font->vres_addr != 0) {
-        return (arm_2d_font_t *)ldBaseGetVresFont(font->vres_addr);
-    }
-
-    if (font == NULL || font->family == NULL || font->size <= 0) {
-        return tinyui_text_default_font_internal();
-    }
-
-    if (strcmp(font->family, "Sans") == 0 && font->size >= 20) {
-        return (arm_2d_font_t *)&ARM_2D_FONT_16x24;
-    }
-
-    return tinyui_text_default_font_internal();
+    return tinyui_resolve_ld_font(font, 12);
 }
 
 void tinyui_text_test_fail_next_set_font(void)
@@ -113,6 +93,10 @@ struct tinyui_text *tinyui_text_create(struct tinyui_window *parent, const char 
         return 0;
     }
     text->id = id;
+    if (tinyui_text_set_font(text, NULL) != 0) {
+        tinyui_widget_destroy_common(&text->widget);
+        return 0;
+    }
 
     return text;
 }
@@ -334,6 +318,17 @@ int tinyui_text_set_background_source(struct tinyui_text *text,
 int tinyui_text_set_consumed_font(struct tinyui_text *text, const struct tinyui_font *font)
 {
     return tinyui_text_set_font(text, font);
+}
+
+int tinyui_text_set_scroll_enabled(struct tinyui_text *text, int enabled)
+{
+    if (text == 0 || text->widget.ld_widget == 0
+        || text->widget.kind != TINYUI_BACKEND_WIDGET_TEXT) {
+        return -1;
+    }
+
+    ldTextSetScrollEnabled((ldText_t *)text->widget.ld_widget, enabled != 0);
+    return 0;
 }
 
 /**

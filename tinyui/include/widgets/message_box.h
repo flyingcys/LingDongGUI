@@ -35,6 +35,8 @@ int tinyui_message_box_set_msg(struct tinyui_message_box *box, const char *messa
 
 int tinyui_message_box_set_confirm_text(struct tinyui_message_box *box, const char *text);
 
+int tinyui_message_box_set_layout(struct tinyui_message_box *box, int width, int height);
+
 int tinyui_message_box_set_buttons(struct tinyui_message_box *box, const char *const *buttons, int count);
 
 int tinyui_message_box_set_btn(struct tinyui_message_box *box, const char *const *buttons, int count);

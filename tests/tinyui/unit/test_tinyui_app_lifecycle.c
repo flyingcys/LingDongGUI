@@ -1,5 +1,6 @@
 #include "tinyui.h"
 #include "internal.h"
+#include "../../tinyui/port/sdl/host_internal.h"
 
 #include <assert.h>
 #include <limits.h>
@@ -13,8 +14,14 @@ static char test_self_binary_path[PATH_MAX];
 static char test_step_source[PATH_MAX];
 static char test_observe_source[PATH_MAX];
 static char test_hal_source[PATH_MAX];
+static char test_driver_source[PATH_MAX];
 static char test_animation_demo_path[PATH_MAX];
 static char test_tinyui_header_source[PATH_MAX];
+
+extern uint32_t tinyui_runtime_host_pixel_to_rgb888(COLOUR_INT pixel);
+extern void tinyui_runtime_host_copy_flush_pixels(const struct tinyui_area *area,
+                                                  const void *pixels,
+                                                  void *user_data);
 
 static void shell_quote_path(char *quoted, size_t quoted_size, const char *path)
 {
@@ -103,6 +110,10 @@ static void init_test_paths(const char *self_binary_path)
     snprintf(test_hal_source,
              sizeof(test_hal_source),
              "%s/tinyui/port/sdl/hal.c",
+             repo_root);
+    snprintf(test_driver_source,
+             sizeof(test_driver_source),
+             "%s/tinyui/src/drivers/tinyui_ldgui_disp_adapter.c",
              repo_root);
     snprintf(test_animation_demo_path,
              sizeof(test_animation_demo_path),
@@ -261,6 +272,65 @@ static void test_runtime_markers_are_logged_once_per_run(void)
     free(stdout_text);
 }
 
+static void test_runtime_legacy_demo0_parity_starts_with_pfb_host(void)
+{
+    char tmp_template[] = "/tmp/test_tinyui_legacy_demo0_pfb.XXXXXX";
+    char stdout_path[1024];
+    char stderr_path[1024];
+    char capture_path[1024];
+    char command[8192];
+    char quoted_stdout_path[4096];
+    char quoted_stderr_path[4096];
+    char quoted_capture_path[4096];
+    char quoted_demo_path[4096];
+    FILE *fp;
+    int status;
+    char *tmp_dir = mkdtemp(tmp_template);
+
+    assert(tmp_dir != NULL);
+    snprintf(stdout_path, sizeof(stdout_path), "%s/stdout.txt", tmp_dir);
+    snprintf(stderr_path, sizeof(stderr_path), "%s/stderr.txt", tmp_dir);
+    snprintf(capture_path, sizeof(capture_path), "%s/frame.ppm", tmp_dir);
+    shell_quote_path(quoted_stdout_path, sizeof(quoted_stdout_path), stdout_path);
+    shell_quote_path(quoted_stderr_path, sizeof(quoted_stderr_path), stderr_path);
+    shell_quote_path(quoted_capture_path, sizeof(quoted_capture_path), capture_path);
+    shell_quote_path(quoted_demo_path, sizeof(quoted_demo_path), test_animation_demo_path);
+    snprintf(command,
+             sizeof(command),
+             "TINYUI_DEMO_AUTO_QUIT_MS=200 TINYUI_CAPTURE_FILE=%s SDL_VIDEODRIVER=dummy %s legacy_demo0_parity >%s 2>%s",
+             quoted_capture_path,
+             quoted_demo_path,
+             quoted_stdout_path,
+             quoted_stderr_path);
+
+    status = system(command);
+    assert(status != -1);
+    assert(WIFEXITED(status));
+    assert(WEXITSTATUS(status) == 0);
+
+    fp = fopen(capture_path, "rb");
+    assert(fp != NULL);
+    {
+        int byte;
+        int has_nonzero_pixel = 0;
+        int newlines = 0;
+
+        while ((byte = fgetc(fp)) != EOF && newlines < 3) {
+            if (byte == '\n') {
+                newlines += 1;
+            }
+        }
+        while ((byte = fgetc(fp)) != EOF) {
+            if (byte != 0) {
+                has_nonzero_pixel = 1;
+                break;
+            }
+        }
+        assert(has_nonzero_pixel);
+    }
+    fclose(fp);
+}
+
 // Test 1: create + destroy bare app
 static void test_app_create_and_destroy(void)
 {
@@ -350,6 +420,134 @@ static void test_runtime_step_uses_event_pump_helper(void)
     assert(system(command) == 0);
 }
 
+static void test_runtime_host_render_uses_backend_pfb_step(void)
+{
+    char command[8192];
+    char quoted_path[4096];
+
+    assert_source_has_function_definition(test_step_source, "tinyui_runtime_host_render");
+    shell_quote_path(quoted_path, sizeof(quoted_path), test_step_source);
+    snprintf(command,
+             sizeof(command),
+             "python3 - %s <<'PY'\n"
+             "from pathlib import Path\n"
+             "import sys\n"
+             "text = Path(sys.argv[1]).read_text()\n"
+             "start = text.index('static void tinyui_runtime_host_render(')\n"
+             "end = text.index('\\n}', start) + 2\n"
+             "body = text[start:end]\n"
+             "ok = (\n"
+             "    'tinyui_backend_step(app_state);' in body\n"
+             "    and 'ldGuiDraw(app_state->ld_scene, &state->real_tile, true);' not in body\n"
+             ")\n"
+             "raise SystemExit(0 if ok else 1)\n"
+             "PY",
+             quoted_path);
+    assert(system(command) == 0);
+}
+
+static void test_ldgui_pfb_draw_handler_uses_legacy_dirty_region_flow(void)
+{
+    char command[8192];
+    char quoted_path[4096];
+
+    shell_quote_path(quoted_path, sizeof(quoted_path), test_driver_source);
+    snprintf(command,
+             sizeof(command),
+             "python3 - %s <<'PY'\n"
+             "from pathlib import Path\n"
+             "import sys\n"
+             "text = Path(sys.argv[1]).read_text()\n"
+             "start = text.index('static void ldgui_port_update_widget_dirty_region(')\n"
+             "end = text.index('/* ─── PFB flush handler ─── */', start)\n"
+             "body = text[start:end]\n"
+             "ok = (\n"
+             "    'arm_2d_dynamic_dirty_region_wait_next' in body\n"
+             "    and 'arm_2d_dynamic_dirty_region_update' in body\n"
+             "    and 'arm_2d_helper_control_enum_get_next_node' in body\n"
+             "    and 'ldgui_port_update_widget_dirty_region(scene,' in body\n"
+             ")\n"
+             "raise SystemExit(0 if ok else 1)\n"
+             "PY",
+             quoted_path);
+    assert(system(command) == 0);
+}
+
+static void test_backend_step_uses_scene_dirty_region_list(void)
+{
+    char command[8192];
+    char quoted_path[4096];
+
+    shell_quote_path(quoted_path, sizeof(quoted_path), test_driver_source);
+    snprintf(command,
+             sizeof(command),
+             "python3 - %s <<'PY'\n"
+             "from pathlib import Path\n"
+             "import sys\n"
+             "text = Path(sys.argv[1]).read_text()\n"
+             "ok = (\n"
+             "    'app_state->ld_scene->use_as__arm_2d_scene_t.ptDirtyRegion' in text\n"
+             "    and 'arm_2d_helper_pfb_task(&s_tPFBHelper, NULL)' not in text\n"
+             ")\n"
+             "raise SystemExit(0 if ok else 1)\n"
+             "PY",
+             quoted_path);
+    assert(system(command) == 0);
+}
+
+static void test_runtime_host_registers_display_flush_callback(void)
+{
+    char command[8192];
+    char quoted_path[4096];
+
+    assert_source_has_function_definition(test_step_source, "tinyui_runtime_host_prepare_runtime");
+    assert_source_has_function_definition(test_hal_source, "tinyui_runtime_host_copy_flush_pixels");
+    shell_quote_path(quoted_path, sizeof(quoted_path), test_step_source);
+    snprintf(command,
+             sizeof(command),
+             "rg -n \"tinyui_display_set_flush_callback\\(app,\\s*tinyui_runtime_host_copy_flush_pixels,\\s*state\\)\" %s >/dev/null",
+             quoted_path);
+    assert(system(command) == 0);
+}
+
+static void test_runtime_host_flush_callback_copies_pfb_block_into_real_frame(void)
+{
+    COLOUR_INT frame[20];
+    const COLOUR_INT block[6] = {
+        (COLOUR_INT)0x0001U, (COLOUR_INT)0x0002U, (COLOUR_INT)0x0003U,
+        (COLOUR_INT)0x0004U, (COLOUR_INT)0x0005U, (COLOUR_INT)0x0006U,
+    };
+    struct tinyui_area area = {
+        .x = 1,
+        .y = 2,
+        .width = 3,
+        .height = 2,
+    };
+    struct tinyui_runtime_host_state state;
+    int i;
+
+    for (i = 0; i < (int)(sizeof(frame) / sizeof(frame[0])); ++i) {
+        frame[i] = (COLOUR_INT)0xAAAAU;
+    }
+    memset(&state, 0, sizeof(state));
+    state.real_pixels = frame;
+    state.display_width = 5;
+    state.display_height = 4;
+
+    tinyui_runtime_host_copy_flush_pixels(&area, block, &state);
+
+    assert(frame[11] == (COLOUR_INT)0x0001U);
+    assert(frame[12] == (COLOUR_INT)0x0002U);
+    assert(frame[13] == (COLOUR_INT)0x0003U);
+    assert(frame[16] == (COLOUR_INT)0x0004U);
+    assert(frame[17] == (COLOUR_INT)0x0005U);
+    assert(frame[18] == (COLOUR_INT)0x0006U);
+    assert(frame[0] == (COLOUR_INT)0xAAAAU);
+    assert(frame[10] == (COLOUR_INT)0xAAAAU);
+    assert(frame[14] == (COLOUR_INT)0xAAAAU);
+    assert(frame[19] == (COLOUR_INT)0xAAAAU);
+}
+
 static void test_runtime_host_internal_bootstrap_helpers_no_longer_use_tinyui_prefix(void)
 {
     char command[8192];
@@ -405,6 +603,76 @@ static void test_runtime_host_internal_step_helpers_no_longer_use_tinyui_prefix(
     assert_source_lacks_function_definition(test_step_source, "tinyui_backend_step_app");
 }
 
+static void test_runtime_host_rgb565_expands_like_legacy_sdl_capture(void)
+{
+#if __DISP0_CFG_COLOUR_DEPTH__ == 16
+    assert(tinyui_runtime_host_pixel_to_rgb888((COLOUR_INT)0xC618U) == 0xC0C0C0U);
+    assert(tinyui_runtime_host_pixel_to_rgb888((COLOUR_INT)0xFFFFU) == 0xF8FCF8U);
+    assert(tinyui_runtime_host_pixel_to_rgb888((COLOUR_INT)0x55DCU) == 0x50B8E0U);
+#endif
+}
+
+static void test_runtime_host_capture_defaults_to_first_rendered_frame(void)
+{
+    char tmp_template[] = "/tmp/test_tinyui_capture_first_frame.XXXXXX";
+    char capture_path[1024];
+    char *tmp_dir = mkdtemp(tmp_template);
+    COLOUR_INT pixels[1] = {(COLOUR_INT)0xC618U};
+    struct tinyui_runtime_host_state state;
+    FILE *fp;
+
+    assert(tmp_dir != NULL);
+    snprintf(capture_path, sizeof(capture_path), "%s/frame.ppm", tmp_dir);
+    assert(setenv("TINYUI_CAPTURE_FILE", capture_path, 1) == 0);
+    assert(unsetenv("TINYUI_CAPTURE_MIN_FRAMES") == 0);
+
+    memset(&state, 0, sizeof(state));
+    state.real_pixels = pixels;
+    state.display_width = 1;
+    state.display_height = 1;
+    state.rendered_frames = 1U;
+
+    assert(tinyui_runtime_host_write_capture(&state) == 0);
+    assert(state.capture_written == 1);
+    fp = fopen(capture_path, "rb");
+    assert(fp != NULL);
+    fclose(fp);
+}
+
+static void test_runtime_host_capture_min_frames_can_wait_for_stable_frame(void)
+{
+    char tmp_template[] = "/tmp/test_tinyui_capture_min_frames.XXXXXX";
+    char capture_path[1024];
+    char *tmp_dir = mkdtemp(tmp_template);
+    COLOUR_INT pixels[1] = {(COLOUR_INT)0xC618U};
+    struct tinyui_runtime_host_state state;
+    FILE *fp;
+
+    assert(tmp_dir != NULL);
+    snprintf(capture_path, sizeof(capture_path), "%s/frame.ppm", tmp_dir);
+    assert(setenv("TINYUI_CAPTURE_FILE", capture_path, 1) == 0);
+    assert(setenv("TINYUI_CAPTURE_MIN_FRAMES", "3", 1) == 0);
+
+    memset(&state, 0, sizeof(state));
+    state.real_pixels = pixels;
+    state.display_width = 1;
+    state.display_height = 1;
+    state.rendered_frames = 2U;
+
+    assert(tinyui_runtime_host_write_capture(&state) == 0);
+    assert(state.capture_written == 0);
+    fp = fopen(capture_path, "rb");
+    assert(fp == NULL);
+
+    state.rendered_frames = 3U;
+    assert(tinyui_runtime_host_write_capture(&state) == 0);
+    assert(state.capture_written == 1);
+    fp = fopen(capture_path, "rb");
+    assert(fp != NULL);
+    fclose(fp);
+    assert(unsetenv("TINYUI_CAPTURE_MIN_FRAMES") == 0);
+}
+
 int main(int argc, char **argv)
 {
     (void)argc;
@@ -420,9 +688,18 @@ int main(int argc, char **argv)
     test_tinyui_umbrella_no_longer_reexports_app_header();
     test_runtime_prepare_helpers_exist();
     test_runtime_step_uses_event_pump_helper();
+    test_runtime_host_render_uses_backend_pfb_step();
+    test_ldgui_pfb_draw_handler_uses_legacy_dirty_region_flow();
+    test_backend_step_uses_scene_dirty_region_list();
+    test_runtime_host_registers_display_flush_callback();
+    test_runtime_host_flush_callback_copies_pfb_block_into_real_frame();
     test_runtime_host_internal_bootstrap_helpers_no_longer_use_tinyui_prefix();
     test_runtime_host_internal_mapping_helpers_no_longer_use_tinyui_prefix();
     test_runtime_host_internal_render_helpers_no_longer_use_tinyui_prefix();
+    test_runtime_host_rgb565_expands_like_legacy_sdl_capture();
+    test_runtime_host_capture_defaults_to_first_rendered_frame();
+    test_runtime_host_capture_min_frames_can_wait_for_stable_frame();
+    test_runtime_legacy_demo0_parity_starts_with_pfb_host();
     test_runtime_host_internal_step_helpers_no_longer_use_tinyui_prefix();
     test_runtime_markers_are_logged_once_per_run();
     return 0;

@@ -22,7 +22,6 @@
 #include "../../../src/gui/ldBase.h"
 
 
-extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
 int tinyui_runtime_bridge_bind_leaf_widget(struct tinyui_widget *widget, struct tinyui_app *app);
 
 
@@ -118,7 +117,7 @@ static void *tinyui_calendar_ld_init(void *ctx,
                                   0,
                                   280,
                                   180,
-                                  (arm_2d_font_t *)&ARM_2D_FONT_6x8,
+                                  tinyui_resolve_ld_font(0, 12),
                                   2026,
                                   6,
                                   15);

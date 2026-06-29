@@ -70,6 +70,10 @@ int tinyui_label_set_align(struct tinyui_label *label, enum tinyui_align align);
 
 int tinyui_label_get_align(struct tinyui_label *label, enum tinyui_align *align);
 
+int tinyui_label_set_text_align(struct tinyui_label *label,
+                                enum tinyui_align x_align,
+                                enum tinyui_align y_align);
+
 int tinyui_label_set_background_source(struct tinyui_label *label,
                                        struct tinyui_image_source *source);
 

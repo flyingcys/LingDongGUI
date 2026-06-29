@@ -23,10 +23,6 @@
 
 #include <string.h>
 
-extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
-
-
-
 static void tinyui_scroll_selecter_rollback(struct tinyui_scroll_selecter *scroll_selecter)
 {
     if (scroll_selecter == 0) {
@@ -63,7 +59,7 @@ static void *tinyui_scroll_selecter_ld_init(void *ctx,
                                  0,
                                  180,
                                  72,
-                                 (arm_2d_font_t *)&ARM_2D_FONT_6x8);
+                                 tinyui_resolve_ld_font(0, 12));
 }
 
 static const char *tinyui_scroll_selecter_selected_text_from_public_state(

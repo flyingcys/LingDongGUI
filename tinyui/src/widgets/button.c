@@ -24,9 +24,6 @@
 
 #include <string.h>
 
-extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
-extern const arm_2d_a1_font_t ARM_2D_FONT_16x24;
-
 static int tinyui_button_fail_next_set_font = 0;
 
 /* ── dispose machinery: rollback-on-create-failure path ─────────────────
@@ -45,24 +42,12 @@ static int tinyui_button_fail_next_set_font = 0;
 
 static arm_2d_font_t *tinyui_button_default_font(void)
 {
-    return (arm_2d_font_t *)&ARM_2D_FONT_6x8;
+    return tinyui_resolve_ld_font(0, 12);
 }
 
 static arm_2d_font_t *tinyui_button_resolve_font(const struct tinyui_font *font)
 {
-    if (font != NULL && font->kind == TINYUI_FONT_KIND_VRES && font->vres_addr != 0) {
-        return (arm_2d_font_t *)ldBaseGetVresFont(font->vres_addr);
-    }
-
-    if (font == NULL || font->family == NULL || font->size <= 0) {
-        return tinyui_button_default_font();
-    }
-
-    if (strcmp(font->family, "Sans") == 0 && font->size >= 20) {
-        return (arm_2d_font_t *)&ARM_2D_FONT_16x24;
-    }
-
-    return tinyui_button_default_font();
+    return font == 0 ? tinyui_button_default_font() : tinyui_resolve_ld_font(font, 12);
 }
 
 static void tinyui_button_rollback(struct tinyui_button *button)
@@ -163,7 +148,16 @@ static struct tinyui_button *tinyui_button_alloc(struct tinyui_window *parent, c
 
 struct tinyui_button *tinyui_button_create(struct tinyui_window *parent, const char *id)
 {
-    return tinyui_button_alloc(parent, id);
+    struct tinyui_button *button = tinyui_button_alloc(parent, id);
+
+    if (button == 0) {
+        return 0;
+    }
+    if (tinyui_button_set_font(button, NULL) != 0) {
+        tinyui_button_rollback(button);
+        return 0;
+    }
+    return button;
 }
 
 /**

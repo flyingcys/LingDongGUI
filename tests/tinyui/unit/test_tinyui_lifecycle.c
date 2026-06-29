@@ -6,8 +6,23 @@
 #include "widgets/keyboard.h"
 #include "widgets/list.h"
 #include "widgets/button.h"
+#include "widgets/checkbox.h"
+#include "widgets/table.h"
 #include "../../../src/gui/ldBase.h"
+#include "../../../src/gui/ldButton.h"
+#include "../../../src/gui/ldCheckBox.h"
+#include "../../../src/gui/ldLabel.h"
+#include "../../../src/gui/ldTable.h"
 #include "../../../src/misc/xBtnAction.h"
+#include "../../../examples/common/demo/widget/fonts/uiFonts.h"
+
+static int g_prepare_native_depose_count = 0;
+
+void tinyui_test_on_prepare_native_depose(const struct tinyui_widget *widget)
+{
+    (void)widget;
+    g_prepare_native_depose_count++;
+}
 
 static void test_registry_register_lookup_unregister(void)
 {
@@ -183,6 +198,93 @@ static void test_destroy_button_unregisters_from_xbtn(void)
     tinyui_app_destroy(app);
 }
 
+static void test_prepare_native_depose_detaches_static_fonts(void)
+{
+    struct tinyui_app *app;
+    struct tinyui_window *win = p2_make_window(&app);
+    struct tinyui_label *label = tinyui_label_create(win, "static_label");
+    struct tinyui_button *button = tinyui_button_create(win, "static_button");
+    struct tinyui_checkbox *checkbox = tinyui_checkbox_create(win, "static_checkbox");
+    struct tinyui_table *table = tinyui_table_create(win, "static_table", 2, 2);
+    ldLabel_t *ld_label;
+    ldButton_t *ld_button;
+    ldCheckBox_t *ld_checkbox;
+    ldTable_t *ld_table;
+    ldTableItem_t *item;
+
+    assert(label != 0);
+    assert(button != 0);
+    assert(checkbox != 0);
+    assert(table != 0);
+    ld_label = (ldLabel_t *)label->widget.ld_widget;
+    ld_button = (ldButton_t *)button->widget.ld_widget;
+    ld_checkbox = (ldCheckBox_t *)checkbox->widget.ld_widget;
+    ld_table = (ldTable_t *)table->widget.ld_widget;
+    assert(ld_label != 0);
+    assert(ld_button != 0);
+    assert(ld_checkbox != 0);
+    assert(ld_table != 0);
+    assert(tinyui_table_set_excel_type(table) == 0);
+    item = &ld_table->ptItemInfo[ld_table->columnCount];
+
+    assert(ld_label->ptFont == (arm_2d_font_t *)FONT_ARIAL_12);
+    assert(ld_button->ptFont == (arm_2d_font_t *)FONT_ARIAL_12);
+    assert(ld_checkbox->ptFont == (arm_2d_font_t *)FONT_ARIAL_12);
+    assert(item->ptFont == (arm_2d_font_t *)FONT_ARIAL_12);
+
+    tinyui_widget_prepare_native_depose(&label->widget);
+    tinyui_widget_prepare_native_depose(&button->widget);
+    tinyui_widget_prepare_native_depose(&checkbox->widget);
+    tinyui_widget_prepare_native_depose(&table->widget);
+
+    assert(ld_label->ptFont == 0);
+    assert(ld_button->ptFont == 0);
+    assert(ld_checkbox->ptFont == 0);
+    assert(item->ptFont == 0);
+
+    tinyui_app_destroy(app);
+}
+
+static void test_prepare_native_depose_keeps_non_static_fonts(void)
+{
+    struct tinyui_app *app;
+    struct tinyui_window *win = p2_make_window(&app);
+    struct tinyui_label *label = tinyui_label_create(win, "dynamic_label");
+    ldLabel_t *ld_label;
+    arm_2d_font_t non_static_font;
+
+    assert(label != 0);
+    ld_label = (ldLabel_t *)label->widget.ld_widget;
+    assert(ld_label != 0);
+    memset(&non_static_font, 0, sizeof(non_static_font));
+    ld_label->ptFont = &non_static_font;
+
+    tinyui_widget_prepare_native_depose(&label->widget);
+
+    assert(ld_label->ptFont == &non_static_font);
+    ld_label->ptFont = 0;
+    tinyui_app_destroy(app);
+}
+
+static void test_app_destroy_prepares_native_depose_for_remaining_hosts(void)
+{
+    struct tinyui_app *app;
+    struct tinyui_window *win = p2_make_window(&app);
+    struct tinyui_label *label = tinyui_label_create(win, "shutdown_label");
+    ldLabel_t *ld_label;
+    int before_count;
+
+    assert(label != 0);
+    ld_label = (ldLabel_t *)label->widget.ld_widget;
+    assert(ld_label != 0);
+    assert(ld_label->ptFont == (arm_2d_font_t *)FONT_ARIAL_12);
+
+    before_count = g_prepare_native_depose_count;
+    tinyui_app_destroy(app);
+
+    assert(g_prepare_native_depose_count > before_count);
+}
+
 int main(void)
 {
     test_registry_register_lookup_unregister();
@@ -193,5 +295,8 @@ int main(void)
     test_composite_list_item_no_pinfo_clash();
     test_name_id_reused_after_destroy();
     test_destroy_button_unregisters_from_xbtn();
+    test_prepare_native_depose_detaches_static_fonts();
+    test_prepare_native_depose_keeps_non_static_fonts();
+    test_app_destroy_prepares_native_depose_for_remaining_hosts();
     return 0;
 }

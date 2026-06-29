@@ -368,6 +368,7 @@ static void test_scroll_selecter_init_and_native_base_aliases_round_trip(void)
     struct tinyui_window *win;
     struct tinyui_scroll_selecter *scroll_selecter;
     struct tinyui_widget *backend;
+    ldScrollSelecter_t *ld_scroll_selecter;
     ldBase_t *ld_base;
 
     assert(app != 0);
@@ -377,12 +378,20 @@ static void test_scroll_selecter_init_and_native_base_aliases_round_trip(void)
     assert(scroll_selecter != 0);
     backend = &scroll_selecter->widget;
     assert(backend->ld_widget != 0);
+    ld_scroll_selecter = (ldScrollSelecter_t *)backend->ld_widget;
+    assert(ld_scroll_selecter != 0);
     ld_base = (ldBase_t *)backend->ld_widget;
     assert(ld_base != 0);
 
     assert(tinyui_widget_set_pos(&scroll_selecter->widget, 21, 43) == 0);
+    assert(tinyui_widget_set_size(&scroll_selecter->widget, 30, 50) == 0);
     assert(ld_base->use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 21);
     assert(ld_base->use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 43);
+    assert(ld_base->use_as__arm_2d_control_node_t.tRegion.tSize.iWidth == 30);
+    assert(ld_base->use_as__arm_2d_control_node_t.tRegion.tSize.iHeight == 48);
+    assert(ld_scroll_selecter->itemSpace == 6);
+    assert(ld_scroll_selecter->isEdit == true);
+    assert(ld_scroll_selecter->scrollOffset == 0);
     tinyui_app_destroy(app);
 }
 

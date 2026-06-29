@@ -24,8 +24,6 @@
 #include "../../../src/gui/ldBase.h"
 
 
-extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
-
 /* ── C2 depose / rollback ──────────────────────────────────────────────── */
 
 
@@ -130,7 +128,10 @@ struct tinyui_message_box *tinyui_message_box_create(struct tinyui_widget *paren
         return 0;
     }
 
-    ctx.font = (arm_2d_font_t *)&ARM_2D_FONT_6x8;
+    ctx.font = tinyui_resolve_ld_font(0, 12);
+    if (ctx.font == 0) {
+        return 0;
+    }
 
     box = (struct tinyui_message_box *)tinyui_widget_create_leaf(
         parent,
@@ -272,6 +273,33 @@ int tinyui_message_box_set_confirm_text(struct tinyui_message_box *box, const ch
     box->confirm_text = text;
     ldMessageBoxSetBtn((ldMessageBox_t *)box->widget.ld_widget,
                        (const uint8_t **)&box->confirm_text, 1);
+    return 0;
+}
+
+int tinyui_message_box_set_layout(struct tinyui_message_box *box, int width, int height)
+{
+    ldMessageBox_t *ld_message_box;
+    ldBase_t *ld_base;
+    const uint8_t **button_group;
+    uint8_t button_count;
+
+    if (box == 0 || width <= 0 || height <= 0 || box->widget.ld_widget == 0) {
+        return -1;
+    }
+
+    ld_message_box = (ldMessageBox_t *)box->widget.ld_widget;
+    ld_base = (ldBase_t *)ld_message_box;
+    ldBaseSetWidth(ld_base, (int16_t)width);
+    ldBaseSetHeight(ld_base, (int16_t)height);
+    ld_message_box->titleHeight = (uint8_t)((height
+                                             - ld_message_box->padding.top
+                                             - ld_message_box->padding.bottom) / 5);
+    ld_message_box->msgHeight = (uint8_t)(ld_message_box->titleHeight * 3);
+    button_group = ld_message_box->ppBtnStrGroup;
+    button_count = ld_message_box->btnCount;
+    if (button_group != 0 && button_count != 0) {
+        ldMessageBoxSetBtn(ld_message_box, button_group, button_count);
+    }
     return 0;
 }
 

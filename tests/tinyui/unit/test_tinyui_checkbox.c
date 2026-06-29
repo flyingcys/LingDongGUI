@@ -1,6 +1,7 @@
 #include "tinyui.h"
 #include "../../../src/gui/ldBase.h"
 #include "../../../src/gui/ldCheckBox.h"
+#include "../../../examples/common/demo/widget/fonts/uiFonts.h"
 #include "internal.h"
 #include "tinyui_test_support.h"
 #include <assert.h>
@@ -203,9 +204,14 @@ static void test_checkbox_set_text_round_trip(struct tinyui_window *win)
 {
     struct tinyui_checkbox *checkbox = tinyui_checkbox_create(win, "cb_text");
     struct tinyui_widget *backend;
+    ldCheckBox_t *ld_checkbox;
 
     assert(checkbox != 0);
+    ld_checkbox = (ldCheckBox_t *)checkbox->widget.ld_widget;
+    assert(ld_checkbox != 0);
+    assert(ld_checkbox->ptFont == (arm_2d_font_t *)FONT_ARIAL_12);
     assert(tinyui_checkbox_set_text(checkbox, "Label") == 0);
+    assert(ld_checkbox->ptFont == (arm_2d_font_t *)FONT_ARIAL_12);
     backend = &checkbox->widget;
     assert(backend->text != 0);
     assert(strcmp(backend->text, "Label") == 0);
@@ -260,6 +266,10 @@ static void test_checkbox_native_helper_behaviors(struct tinyui_window *win)
     assert(backend->ld_widget != 0);
     ld_checkbox = (ldCheckBox_t *)backend->ld_widget;
     assert(ld_checkbox != 0);
+
+    assert(ld_checkbox->bgColor == GLCD_COLOR_WHITE);
+    assert(ld_checkbox->fgColor == GLCD_COLOR_BLACK);
+    assert(ld_checkbox->textColor == GLCD_COLOR_BLACK);
 
     assert(tinyui_checkbox_set_check_color(checkbox, 0xAA5500U) == 0);
     assert(ld_checkbox->fgColor == (ldColor)test_rgb_to_ld_color(0xAA5500U));

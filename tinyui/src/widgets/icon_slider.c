@@ -25,7 +25,6 @@
 #include "../../../src/misc/ldMsg.h"
 
 
-extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
 extern const arm_2d_tile_t c_tileQuaterArcGRAY8;
 extern const arm_2d_tile_t c_tileQuaterArcMask;
 extern const arm_2d_tile_t c_tilePointerSecGRAY8;
@@ -46,6 +45,7 @@ static arm_2d_tile_t *const g_icon_slider_masks[] = {
 };
 
 #define TINYUI_ICON_SLIDER_NATIVE_MAX_ITEMS 8
+#define TINYUI_ICON_SLIDER_IMAGE_FONT_SPACE 1
 
 
 struct tinyui_icon_slider_create_ctx {
@@ -83,7 +83,7 @@ static void *tinyui_icon_slider_ld_init(void *ctx,
                              (uint8_t)create_ctx->columns,
                              (uint8_t)create_ctx->rows,
                              (uint8_t)create_ctx->pages,
-                             (arm_2d_font_t *)&ARM_2D_FONT_6x8);
+                             tinyui_resolve_ld_font(0, 12));
 }
 
 
@@ -163,6 +163,61 @@ static int tinyui_icon_slider_props_are_valid(const struct tinyui_icon_slider_pr
            props->columns >= 0 &&
            props->rows >= 0 &&
            props->pages >= 0;
+}
+
+static void tinyui_icon_slider_apply_native_layout(ldIconSlider_t *ld_icon_slider,
+                                                   int width,
+                                                   int height,
+                                                   int icon_width,
+                                                   int icon_space,
+                                                   int columns,
+                                                   int rows,
+                                                   int pages)
+{
+    ldBaseSetWidth((ldBase_t *)ld_icon_slider, (int16_t)width);
+    ldBaseSetHeight((ldBase_t *)ld_icon_slider, (int16_t)height);
+    ld_icon_slider->iconWidth = (int16_t)icon_width;
+    ld_icon_slider->iconSpace = (uint8_t)icon_space;
+    ld_icon_slider->columnCount = (uint8_t)columns;
+    ld_icon_slider->rowCount = (uint8_t)rows;
+    ld_icon_slider->pageMax = (uint8_t)pages;
+    ld_icon_slider->iconMax = (uint16_t)(rows * columns * pages);
+    ld_icon_slider->scrollOffset = 0;
+    ld_icon_slider->selectIconOrPage = 0;
+    ld_icon_slider->isWaitMove = false;
+
+    if (rows == 1) {
+        if (columns == 1) {
+            ld_icon_slider->hasVerticalBorder = false;
+            ld_icon_slider->hasHorizontalBorder = false;
+        } else {
+            ld_icon_slider->hasVerticalBorder = true;
+            ld_icon_slider->hasHorizontalBorder = false;
+        }
+    } else if (columns == 1) {
+        ld_icon_slider->hasVerticalBorder = false;
+        ld_icon_slider->hasHorizontalBorder = true;
+    } else {
+        ld_icon_slider->hasVerticalBorder = true;
+        ld_icon_slider->hasHorizontalBorder = true;
+    }
+
+    ld_icon_slider->isScrollEn = true;
+    if (pages == 1 && (rows == 1 || columns == 1)) {
+        if (rows < columns) {
+            ld_icon_slider->isHorizontalScroll = true;
+            if (width >= ld_icon_slider->iconMax * (icon_width + icon_space)) {
+                ld_icon_slider->isScrollEn = false;
+            }
+        } else {
+            ld_icon_slider->isHorizontalScroll = false;
+            if (height >= ld_icon_slider->iconMax
+                * (icon_width + icon_space + ld_icon_slider->ptFont->tCharSize.iHeight
+                   + TINYUI_ICON_SLIDER_IMAGE_FONT_SPACE)) {
+                ld_icon_slider->isScrollEn = false;
+            }
+        }
+    }
 }
 
 static struct tinyui_icon_slider *tinyui_icon_slider_create_with_backend_config(struct tinyui_widget *parent,
@@ -353,6 +408,50 @@ int tinyui_icon_slider_add_icon(struct tinyui_icon_slider *icon_slider,
                                 struct tinyui_image_source *source)
 {
     return tinyui_icon_slider_add_item_with_source(icon_slider, id, text, source);
+}
+
+int tinyui_icon_slider_set_layout(struct tinyui_icon_slider *icon_slider,
+                                  int width,
+                                  int height,
+                                  int icon_width,
+                                  int icon_space,
+                                  int columns,
+                                  int rows,
+                                  int pages)
+{
+    ldIconSlider_t *ld_icon_slider;
+    int icon_max;
+
+    if (icon_slider == 0 || width <= 0 || height <= 0 || icon_width <= 0
+        || icon_space < 0 || columns <= 0 || rows <= 0 || pages <= 0
+        || icon_slider->widget.ld_widget == 0
+        || icon_slider->widget.kind != TINYUI_BACKEND_WIDGET_ICON_SLIDER
+        || icon_slider->widget.list_item_count != 0) {
+        return -1;
+    }
+
+    icon_max = columns * rows * pages;
+    if (icon_max <= 0 || icon_max > TINYUI_ICON_SLIDER_NATIVE_MAX_ITEMS) {
+        return -1;
+    }
+
+    ld_icon_slider = (ldIconSlider_t *)icon_slider->widget.ld_widget;
+    tinyui_icon_slider_apply_native_layout(ld_icon_slider,
+                                           width,
+                                           height,
+                                           icon_width,
+                                           icon_space,
+                                           columns,
+                                           rows,
+                                           pages);
+    icon_slider->icon_width = icon_width;
+    icon_slider->icon_space = icon_space;
+    icon_slider->columns = columns;
+    icon_slider->rows = rows;
+    icon_slider->pages = pages;
+    icon_slider->selected_index = -1;
+    icon_slider->widget.value = -1;
+    return 0;
 }
 
 int tinyui_icon_slider_set_selected_index(struct tinyui_icon_slider *icon_slider, int index)

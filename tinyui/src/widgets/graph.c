@@ -40,6 +40,23 @@ struct tinyui_graph_create_ctx {
     int series_max;
 };
 
+static int graph_host_axis_from_native(const ldGraph_t *ld_graph, float scale)
+{
+    int extent;
+
+    if (ld_graph == 0 || scale <= 0.0f) {
+        return 0;
+    }
+
+    extent = ld_graph->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iWidth -
+             ld_graph->frameSpace * 2;
+    if (extent <= 0) {
+        return 0;
+    }
+
+    return (int)((float)extent / scale + 0.5f);
+}
+
 static void *tinyui_graph_ld_init(void *ctx,
                                   struct ld_scene_t *scene,
                                   uint16_t name_id,
@@ -65,11 +82,6 @@ static void *tinyui_graph_ld_init(void *ctx,
     if (ld_graph == 0) {
         return 0;
     }
-
-    ldGraphSetFrameSpace(ld_graph, 8, false);
-    ldGraphSetGridOffset(ld_graph, 20);
-    ldGraphSetAxis(ld_graph, 100, 100, 5);
-    ldGraphSetPointImageMask(ld_graph, (arm_2d_tile_t *)&c_tileWhiteDotMask);
 
     return ld_graph;
 }
@@ -130,9 +142,10 @@ static int graph_apply_native_geometry_candidate(struct tinyui_graph *graph,
         point_mask_tile = 0;
     }
 
-    ldGraphSetFrameSpace(ld_graph, (uint8_t)effective_frame_space, false);
-    ldGraphSetAxis(ld_graph, (uint16_t)x_axis, (uint16_t)y_axis, ld_graph->xAxisOffset);
-    ldGraphSetAxisOffset(ld_graph, (uint16_t)axis_offset);
+    ldGraphSetFrameSpace(ld_graph,
+                         (uint8_t)effective_frame_space,
+                         ld_graph->use_as__ldBase_t.isCorner);
+    ldGraphSetAxis(ld_graph, (uint16_t)x_axis, (uint16_t)y_axis, (uint16_t)axis_offset);
     ldGraphSetGridOffset(ld_graph, (uint8_t)grid_offset);
     if (point_mask_source != 0) {
         ldGraphSetPointImageMask(ld_graph, point_mask_tile);
@@ -146,7 +159,7 @@ static int graph_apply_native_geometry_candidate(struct tinyui_graph *graph,
     if (ld_graph->gridOffset != (uint8_t)grid_offset) {
         goto fail;
     }
-    if (ld_graph->xAxisOffset != (uint16_t)axis_offset) {
+    if (ld_graph->xAxisOffset != (uint16_t)(axis_offset * ld_graph->xScale)) {
         goto fail;
     }
     if (point_mask_source != 0 && ld_graph->ptPointMaskTile != point_mask_tile) {
@@ -194,6 +207,7 @@ struct tinyui_graph *tinyui_graph_create(struct tinyui_window *parent,
 {
     struct tinyui_graph *graph;
     struct tinyui_graph_create_ctx create_ctx;
+    ldGraph_t *ld_graph;
 
     if (parent == 0 || id == 0 || series_max <= 0 || series_max > TINYUI_GRAPH_MAX_SERIES) {
         return 0;
@@ -217,11 +231,17 @@ struct tinyui_graph *tinyui_graph_create(struct tinyui_window *parent,
 
     graph->id = id;
     graph->series_max = series_max;
-    graph->x_axis = 100;
-    graph->y_axis = 100;
-    graph->axis_offset = 5;
-    graph->frame_space = 8;
-    graph->grid_offset = 20;
+    ld_graph = (ldGraph_t *)graph->widget.ld_widget;
+    if (ld_graph == 0) {
+        tinyui_widget_destroy_common(&graph->widget);
+        return 0;
+    }
+    graph->x_axis = graph_host_axis_from_native(ld_graph, ld_graph->xScale);
+    graph->y_axis = graph_host_axis_from_native(ld_graph, ld_graph->yScale);
+    graph->axis_offset = (int)ld_graph->xAxisOffset;
+    graph->frame_space = (int)ld_graph->frameSpace;
+    graph->grid_offset = (int)ld_graph->gridOffset;
+    graph->point_mask_source = 0;
     graph->widget.visible = 1;
     graph->widget.enabled = 1;
     return graph;
@@ -418,7 +438,7 @@ int tinyui_graph_add_series(struct tinyui_graph *graph,
     ld_graph = (ldGraph_t *)graph->widget.ld_widget;
 
     series_index = (int)ldGraphAddSeries(ld_graph,
-                                         (ldColor)series_color,
+                                         (ldColor)tinyui_rgb_to_ld_color(series_color),
                                          (uint8_t)line_size,
                                          (uint16_t)point_max);
     if (series_index < 0 || series_index >= TINYUI_GRAPH_MAX_SERIES) {

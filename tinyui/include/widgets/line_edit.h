@@ -6,6 +6,7 @@
 
 struct tinyui_window;
 struct tinyui_line_edit;
+struct tinyui_keyboard;
 typedef void (*tinyui_line_edit_finished_cb)(struct tinyui_line_edit *line_edit, void *user_data);
 
 enum tinyui_line_edit_type {
@@ -58,6 +59,9 @@ int tinyui_line_edit_set_keyboard(struct tinyui_line_edit *line_edit, unsigned i
 
 int tinyui_line_edit_set_keyboard_binding(struct tinyui_line_edit *line_edit,
                                           unsigned int keyboard_binding);
+
+int tinyui_line_edit_set_keyboard_widget(struct tinyui_line_edit *line_edit,
+                                         struct tinyui_keyboard *keyboard);
 
 int tinyui_line_edit_get_keyboard_binding(const struct tinyui_line_edit *line_edit,
                                           unsigned int *keyboard_binding);

@@ -49,6 +49,13 @@ set(LD_ARM2D_CLOCK_ASSET_SOURCES
     "${LD_ARM2D_ASSET_DIR}/arm_2d_asset_pointer_sec.c"
     "${LD_ARM2D_ASSET_DIR}/arm_2d_asset_clockface.c"
 )
+set(LD_TINYUI_DEFAULT_RESOURCE_SOURCES
+    "${LD_DEMO_DIR}/widget/fonts/arial_12.c"
+    "${LD_DEMO_DIR}/widget/fonts/arial_16.c"
+)
+file(GLOB LD_TINYUI_DEFAULT_IMAGE_RESOURCE_SOURCES CONFIGURE_DEPENDS
+    "${LD_DEMO_DIR}/widget/images/*.c"
+)
 
 set(LD_COMMON_INCLUDE_DIRS
     "${LD_GUI_DIR}"
@@ -229,6 +236,8 @@ function(ld_define_core_targets)
         ${LD_REPO_ROOT}/tinyui/src/widgets/background.c
         ${LD_REPO_ROOT}/tinyui/src/widgets/list.c
         ${LD_REPO_ROOT}/tinyui/src/widgets/message_box.c
+        ${LD_TINYUI_DEFAULT_RESOURCE_SOURCES}
+        ${LD_TINYUI_DEFAULT_IMAGE_RESOURCE_SOURCES}
     )
     target_include_directories(tinyui_core PUBLIC
         ${LD_REPO_ROOT}/tinyui/include

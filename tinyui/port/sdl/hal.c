@@ -33,9 +33,9 @@ uint32_t tinyui_runtime_host_pixel_to_rgb888(COLOUR_INT pixel)
     uint32_t green = ((uint32_t)pixel >> 5) & 0x3FU;
     uint32_t blue = (uint32_t)pixel & 0x1FU;
 
-    red = (red << 3) | (red >> 2);
-    green = (green << 2) | (green >> 4);
-    blue = (blue << 3) | (blue >> 2);
+    red <<= 3;
+    green <<= 2;
+    blue <<= 3;
     return (red << 16) | (green << 8) | blue;
 #elif __DISP0_CFG_COLOUR_DEPTH__ == 32
     return (uint32_t)pixel & 0x00FFFFFFU;
@@ -49,6 +49,63 @@ uint32_t tinyui_runtime_host_pixel_to_rgb888(COLOUR_INT pixel)
 static uint32_t tinyui_runtime_host_pixel_to_argb8888(COLOUR_INT pixel)
 {
     return 0xFF000000U | tinyui_runtime_host_pixel_to_rgb888(pixel);
+}
+
+void tinyui_runtime_host_copy_flush_pixels(const struct tinyui_area *area,
+                                           const void *pixels,
+                                           void *user_data)
+{
+    struct tinyui_runtime_host_state *state = (struct tinyui_runtime_host_state *)user_data;
+    const COLOUR_INT *source = (const COLOUR_INT *)pixels;
+    int src_x0;
+    int src_y0;
+    int dst_x0;
+    int dst_y0;
+    int copy_width;
+    int copy_height;
+    int row;
+
+    if (area == NULL || source == NULL || state == NULL || state->real_pixels == NULL ||
+        state->display_width <= 0 || state->display_height <= 0 ||
+        area->width <= 0 || area->height <= 0) {
+        return;
+    }
+
+    src_x0 = 0;
+    src_y0 = 0;
+    dst_x0 = area->x;
+    dst_y0 = area->y;
+    copy_width = area->width;
+    copy_height = area->height;
+
+    if (dst_x0 < 0) {
+        src_x0 = -dst_x0;
+        copy_width -= src_x0;
+        dst_x0 = 0;
+    }
+    if (dst_y0 < 0) {
+        src_y0 = -dst_y0;
+        copy_height -= src_y0;
+        dst_y0 = 0;
+    }
+    if (dst_x0 + copy_width > state->display_width) {
+        copy_width = state->display_width - dst_x0;
+    }
+    if (dst_y0 + copy_height > state->display_height) {
+        copy_height = state->display_height - dst_y0;
+    }
+    if (copy_width <= 0 || copy_height <= 0) {
+        return;
+    }
+
+    for (row = 0; row < copy_height; ++row) {
+        const COLOUR_INT *source_row =
+            source + (size_t)(src_y0 + row) * (size_t)area->width + (size_t)src_x0;
+        COLOUR_INT *dest_row =
+            state->real_pixels + (size_t)(dst_y0 + row) * (size_t)state->display_width +
+            (size_t)dst_x0;
+        memcpy(dest_row, source_row, (size_t)copy_width * sizeof(*dest_row));
+    }
 }
 
 int tinyui_runtime_host_ensure_window(struct tinyui_app *app,

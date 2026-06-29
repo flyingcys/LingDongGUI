@@ -78,11 +78,6 @@ static void *tinyui_switch_ld_init(void *ctx,
     if (ld_switch == 0) {
         return 0;
     }
-    ldSwitchSetColor(ld_switch,
-                     __RGB(224, 224, 224),
-                     __RGB(33, 150, 243),
-                     GLCD_COLOR_WHITE,
-                     GLCD_COLOR_WHITE);
     return ld_switch;
 }
 

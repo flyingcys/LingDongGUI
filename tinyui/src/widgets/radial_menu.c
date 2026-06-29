@@ -412,6 +412,37 @@ int tinyui_radial_menu_add_item_with_image(struct tinyui_radial_menu *radial_men
     return tinyui_radial_menu_add_item_with_source(radial_menu, id, source);
 }
 
+int tinyui_radial_menu_set_geometry(struct tinyui_radial_menu *radial_menu,
+                                    int width,
+                                    int height,
+                                    int x_axis,
+                                    int y_axis,
+                                    int item_max)
+{
+    ldRadialMenu_t *ld_radial_menu;
+
+    if (radial_menu == 0 || width <= 0 || height <= 0 || x_axis <= 0 || y_axis <= 0
+        || item_max <= 0 || item_max > TINYUI_RADIAL_MENU_NATIVE_MAX_ITEMS
+        || radial_menu->widget.ld_widget == 0
+        || radial_menu->widget.kind != TINYUI_BACKEND_WIDGET_RADIAL_MENU
+        || radial_menu->widget.list_item_count != 0) {
+        return -1;
+    }
+
+    ld_radial_menu = (ldRadialMenu_t *)radial_menu->widget.ld_widget;
+    ldBaseSetWidth((ldBase_t *)ld_radial_menu, (int16_t)width);
+    ldBaseSetHeight((ldBase_t *)ld_radial_menu, (int16_t)height);
+    ld_radial_menu->originPos.iX = (int16_t)(width >> 1);
+    ld_radial_menu->originPos.iY = (int16_t)(height >> 1);
+    ld_radial_menu->xAxis = (uint16_t)x_axis;
+    ld_radial_menu->yAxis = (uint16_t)y_axis;
+    ld_radial_menu->itemMax = (uint8_t)item_max;
+    radial_menu->x_axis = x_axis;
+    radial_menu->y_axis = y_axis;
+    radial_menu->item_max = item_max;
+    return 0;
+}
+
 /**
  * @brief Set selected index of radial menu widget
  *

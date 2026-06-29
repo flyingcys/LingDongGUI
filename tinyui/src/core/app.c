@@ -391,6 +391,7 @@ void tinyui_app_destroy(struct tinyui_app *app)
     {
         struct tinyui_widget *w;
         for (w = app->host_list_head; w != 0; w = w->reg_next) {
+            tinyui_widget_prepare_native_depose(w);
             if (w->host_cleanup != 0) {
                 w->host_cleanup(w);
                 w->host_cleanup = 0;

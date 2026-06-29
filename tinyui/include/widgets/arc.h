@@ -14,6 +14,7 @@ struct tinyui_arc_props {
     float fg_end_angle;
     float rotation_angle;
     struct tinyui_image_source *quarter_source;
+    int has_parent_color;
     unsigned int parent_color;
     unsigned int bg_color;
     unsigned int fg_color;

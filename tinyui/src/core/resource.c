@@ -19,12 +19,53 @@
 #include "internal.h"
 #include "widgets/image.h"
 #include "../../../examples/common/demo/widget/images/uiImages.h"
+#include "../../../examples/common/demo/widget/fonts/uiFonts.h"
 #include "../../../src/gui/ldBase.h"
 
 #include <string.h>
 
-extern const arm_2d_tile_t c_tileQuaterArcGRAY8;
-extern const arm_2d_tile_t c_tileQuaterArcMask;
+extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
+extern const arm_2d_a1_font_t ARM_2D_FONT_16x24;
+
+arm_2d_font_t *tinyui_resolve_ld_font(const struct tinyui_font *font,
+                                      int default_size)
+{
+    int size = default_size;
+
+    if (font != 0 && font->kind == TINYUI_FONT_KIND_VRES && font->vres_addr != 0) {
+        return (arm_2d_font_t *)ldBaseGetVresFont(font->vres_addr);
+    }
+
+    if (font != 0 && font->family != 0 && font->size > 0) {
+        size = font->size;
+        if (strcmp(font->family, "Arial") == 0) {
+            if (size >= 16) {
+                return (arm_2d_font_t *)FONT_ARIAL_16_A8;
+            }
+            return (arm_2d_font_t *)FONT_ARIAL_12;
+        }
+        if (strcmp(font->family, "Sans") == 0 && size >= 20) {
+            return (arm_2d_font_t *)&ARM_2D_FONT_16x24;
+        }
+        return (arm_2d_font_t *)&ARM_2D_FONT_6x8;
+    }
+
+    if (size >= 16) {
+        return (arm_2d_font_t *)FONT_ARIAL_16_A8;
+    }
+    if (size >= 12) {
+        return (arm_2d_font_t *)FONT_ARIAL_12;
+    }
+    return (arm_2d_font_t *)&ARM_2D_FONT_6x8;
+}
+
+int tinyui_ld_font_is_static(const arm_2d_font_t *font)
+{
+    return font == (const arm_2d_font_t *)FONT_ARIAL_12
+        || font == (const arm_2d_font_t *)FONT_ARIAL_16_A8
+        || font == (const arm_2d_font_t *)&ARM_2D_FONT_6x8
+        || font == (const arm_2d_font_t *)&ARM_2D_FONT_16x24;
+}
 
 /**
  * @brief Image source: from vres
@@ -112,8 +153,8 @@ int tinyui_image_source_from_builtin(enum tinyui_builtin_image image,
         mask_tile = IMAGE_GAUGEPOINTER_PNG_Mask;
         break;
     case TINYUI_BUILTIN_IMAGE_ARC_QUARTER:
-        img_tile = (void *)&c_tileQuaterArcGRAY8;
-        mask_tile = (void *)&c_tileQuaterArcMask;
+        img_tile = IMAGE_ARC_QUARTER_PNG_Mask;
+        mask_tile = IMAGE_ARC_QUARTER_MASK_PNG_Mask;
         break;
     default:
         return -1;

@@ -65,6 +65,21 @@ foreach(test_src IN LISTS TINYUI_UNIT_TESTS)
     ld_register_tinyui_unit_test("${test_src}")
 endforeach()
 
+if(TARGET test_tinyui_app_lifecycle AND TARGET tinyui_demo)
+    add_dependencies(test_tinyui_app_lifecycle tinyui_demo)
+endif()
+
+add_executable(test_tinyui_backend_link_default_resources
+    "${CMAKE_CURRENT_SOURCE_DIR}/unit/test_tinyui_backend_link_default_resources.c"
+)
+target_link_libraries(test_tinyui_backend_link_default_resources PRIVATE tinyui_backend_ldgui)
+ld_apply_common_target_config(test_tinyui_backend_link_default_resources)
+add_test(NAME test_tinyui_backend_link_default_resources COMMAND test_tinyui_backend_link_default_resources)
+set_tests_properties(test_tinyui_backend_link_default_resources PROPERTIES
+    ENVIRONMENT "SDL_VIDEODRIVER=dummy"
+    LABELS "tinyui;unit;link"
+)
+
 ld_add_c_unit_test(test_tinyui_wrapper_struct_overhead
     SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/unit/test_tinyui_wrapper_struct_overhead.c"
     SUPPORT_LIB tinyui_test_support

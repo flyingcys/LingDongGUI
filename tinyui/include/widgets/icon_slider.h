@@ -36,6 +36,14 @@ int tinyui_icon_slider_add_icon(struct tinyui_icon_slider *icon_slider,
                                 const char *id,
                                 const char *text,
                                 struct tinyui_image_source *source);
+int tinyui_icon_slider_set_layout(struct tinyui_icon_slider *icon_slider,
+                                  int width,
+                                  int height,
+                                  int icon_width,
+                                  int icon_space,
+                                  int columns,
+                                  int rows,
+                                  int pages);
 int tinyui_icon_slider_set_selected_index(struct tinyui_icon_slider *icon_slider, int index);
 int tinyui_icon_slider_get_selected_index(const struct tinyui_icon_slider *icon_slider);
 int tinyui_icon_slider_set_horizontal(struct tinyui_icon_slider *icon_slider, int horizontal);

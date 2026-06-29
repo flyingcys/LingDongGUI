@@ -4,6 +4,7 @@
 #include "widgets/window.h"
 #include "../../../src/gui/ldBase.h"
 #include "../../../src/gui/ldArc.h"
+#include "../../../examples/common/demo/widget/images/uiImages.h"
 #include "internal.h"
 #include "tinyui_test_support.h"
 
@@ -126,6 +127,18 @@ static void assert_source_has_function_definition(const char *source_path,
     assert(tinyui_test_source_has_function_definition(source_path, symbol) == 1);
 }
 
+static arm_2d_tile_t make_rgb565_tile(uint16_t *buffer, int16_t width, int16_t height)
+{
+    arm_2d_tile_t tile = {0};
+
+    tile.bIsRoot = true;
+    tile.tInfo.tColourInfo.chScheme = ARM_2D_COLOUR_RGB565;
+    tile.tRegion.tSize.iWidth = width;
+    tile.tRegion.tSize.iHeight = height;
+    tile.phwBuffer = buffer;
+    return tile;
+}
+
 void ldFree(void *p)
 {
     int i;
@@ -178,6 +191,8 @@ static void test_arc_create_and_backend_mapping(struct tinyui_window *win)
     struct tinyui_widget *backend;
     struct tinyui_widget *parent_backend;
     ldArc_t *ld_arc;
+    const arm_2d_tile_t *legacy_img_tile = IMAGE_ARC_QUARTER_PNG_Mask;
+    const arm_2d_tile_t *legacy_mask_tile = IMAGE_ARC_QUARTER_MASK_PNG_Mask;
 
     assert(arc != 0);
     backend = &arc->widget;
@@ -195,6 +210,14 @@ static void test_arc_create_and_backend_mapping(struct tinyui_window *win)
     assert(ld_arc != 0);
     assert(tinyui_app_lookup_host(backend->owner, backend->ld_name_id) == backend);
     assert(tinyui_widget_has_ld_binding(&arc->widget) == 1);
+    assert(ld_arc->ptImgTile != 0);
+    assert(ld_arc->ptMaskTile != 0);
+    assert(ld_arc->ptImgTile->tRegion.tSize.iWidth == 53);
+    assert(ld_arc->ptImgTile->tRegion.tSize.iHeight == 53);
+    assert(ld_arc->ptMaskTile->tRegion.tSize.iWidth == 53);
+    assert(ld_arc->ptMaskTile->tRegion.tSize.iHeight == 53);
+    assert(ld_arc->ptImgTile->pchBuffer == legacy_img_tile->pchBuffer);
+    assert(ld_arc->ptMaskTile->pchBuffer == legacy_mask_tile->pchBuffer);
 }
 
 static void test_arc_value_and_angle_readback_match_backend_truth(struct tinyui_window *win)
@@ -282,10 +305,161 @@ static void test_arc_native_quarter_image_mask_and_parent_color_round_trip(struc
 
     assert(ld_arc->ptImgTile == &quarter_img);
     assert(ld_arc->ptMaskTile == &quarter_mask);
-    assert(ld_arc->parentColor == (ldColor)0x223344U);
+    assert(ld_arc->parentColor == (ldColor)tinyui_rgb_to_ld_color(0x223344U));
 
     assert(tinyui_arc_set_quarter_source(0, &quarter_source) == -1);
     assert(tinyui_arc_set_parent_color(0, 0x111111U) == -1);
+}
+
+static void test_arc_parent_color_uses_ld_color_encoding(struct tinyui_window *win)
+{
+    struct tinyui_arc *arc = tinyui_arc_create((struct tinyui_widget *)win, "arc_parent_color_encoding");
+    ldArc_t *ld_arc;
+
+    assert(arc != 0);
+    ld_arc = (ldArc_t *)arc->widget.ld_widget;
+    assert(ld_arc != 0);
+
+    assert(tinyui_arc_set_parent_color(arc, 0xF0F0F0U) == 0);
+    assert(ld_arc->parentColor == (ldColor)tinyui_rgb_to_ld_color(0xF0F0F0U));
+    assert(ld_arc->parentColor != (ldColor)0xF0F0F0U);
+}
+
+static void test_arc_create_with_props_preserves_default_parent_color_when_unspecified(struct tinyui_window *win)
+{
+    struct tinyui_arc *arc =
+        tinyui_arc_create_with_props((struct tinyui_widget *)win,
+                                     &(struct tinyui_arc_props){
+                                         .id = "arc_props_default_parent_color",
+                                         .bg_start_angle = 30.0f,
+                                         .bg_end_angle = 300.0f,
+                                         .fg_end_angle = 45.0f,
+                                         .rotation_angle = 12.0f,
+                                         .bg_color = 0xCCD5E3U,
+                                         .fg_color = 0x2B6CB0U,
+                                     });
+    ldArc_t *ld_arc;
+
+    assert(arc != 0);
+    ld_arc = (ldArc_t *)arc->widget.ld_widget;
+    assert(ld_arc != 0);
+    assert(arc->parent_color == 0xF0F0F0U);
+    assert(ld_arc->parentColor == (ldColor)tinyui_rgb_to_ld_color(0xF0F0F0U));
+}
+
+static void test_arc_create_with_props_accepts_black_parent_color(struct tinyui_window *win)
+{
+    struct tinyui_arc *arc =
+        tinyui_arc_create_with_props((struct tinyui_widget *)win,
+                                     &(struct tinyui_arc_props){
+                                         .id = "arc_props_black_parent_color",
+                                         .bg_start_angle = 30.0f,
+                                         .bg_end_angle = 300.0f,
+                                         .fg_end_angle = 45.0f,
+                                         .rotation_angle = 12.0f,
+                                         .has_parent_color = 1,
+                                         .parent_color = 0x000000U,
+                                         .bg_color = 0xCCD5E3U,
+                                         .fg_color = 0x2B6CB0U,
+                                     });
+    ldArc_t *ld_arc;
+
+    assert(arc != 0);
+    ld_arc = (ldArc_t *)arc->widget.ld_widget;
+    assert(ld_arc != 0);
+    assert(arc->parent_color == 0x000000U);
+    assert(ld_arc->parentColor == (ldColor)tinyui_rgb_to_ld_color(0x000000U));
+}
+
+static void test_arc_legacy_demo0_parity_parameters_map_to_backend(struct tinyui_window *win)
+{
+    struct tinyui_image_source quarter_source = {
+        .img_tile = IMAGE_ARC_QUARTER_PNG_Mask,
+        .mask_tile = IMAGE_ARC_QUARTER_MASK_PNG_Mask,
+    };
+    struct tinyui_arc *arc = tinyui_arc_create((struct tinyui_widget *)win, "arc_legacy_demo0_parity");
+    ldArc_t *ld_arc;
+
+    assert(arc != 0);
+    ld_arc = (ldArc_t *)arc->widget.ld_widget;
+    assert(ld_arc != 0);
+
+    assert(tinyui_arc_set_quarter_source(arc, &quarter_source) == 0);
+    assert(tinyui_arc_set_background_angle(arc, 0.0f, 350.0f) == 0);
+    assert(tinyui_arc_set_foreground_angle(arc, 30.0f) == 0);
+    assert(tinyui_arc_set_parent_color(arc, 0xF0F0F0U) == 0);
+    assert(tinyui_arc_set_color(arc, 0xADD8E6U, 0x90EE90U) == 0);
+
+    assert(ld_arc->ptImgTile == IMAGE_ARC_QUARTER_PNG_Mask);
+    assert(ld_arc->ptMaskTile == IMAGE_ARC_QUARTER_MASK_PNG_Mask);
+    assert(ld_arc->ptImgTile->tRegion.tSize.iWidth == 53);
+    assert(ld_arc->ptImgTile->tRegion.tSize.iHeight == 53);
+    assert(ld_arc->ptMaskTile->tRegion.tSize.iWidth == 53);
+    assert(ld_arc->ptMaskTile->tRegion.tSize.iHeight == 53);
+    assert(ldArcGetBackgroundStartAngle(ld_arc) == 0.0f);
+    assert(ldArcGetBackgroundAngle(ld_arc) == 350.0f);
+    assert(ldArcGetForegroundAngle(ld_arc) == 30.0f);
+    assert(ldArcGetRotationAngle(ld_arc) == 0.0f);
+    assert(ldArcGetBackgroundColor(ld_arc) == (ldColor)tinyui_rgb_to_ld_color(0xADD8E6U));
+    assert(ldArcGetForegroundColor(ld_arc) == (ldColor)tinyui_rgb_to_ld_color(0x90EE90U));
+    assert(ld_arc->parentColor == (ldColor)tinyui_rgb_to_ld_color(0xF0F0F0U));
+}
+
+static void test_arc_builtin_quarter_source_matches_legacy_backend_tiles(struct tinyui_window *win)
+{
+    struct tinyui_image_source source = {0};
+    struct tinyui_arc *arc = tinyui_arc_create((struct tinyui_widget *)win, "arc_builtin_quarter_legacy");
+    ldArc_t *ld_arc;
+
+    assert(arc != 0);
+    ld_arc = (ldArc_t *)arc->widget.ld_widget;
+    assert(ld_arc != 0);
+
+    assert(tinyui_image_source_from_builtin(TINYUI_BUILTIN_IMAGE_ARC_QUARTER, &source) == 0);
+    assert(tinyui_arc_set_quarter_source(arc, &source) == 0);
+    assert(ld_arc->ptImgTile == IMAGE_ARC_QUARTER_PNG_Mask);
+    assert(ld_arc->ptMaskTile == IMAGE_ARC_QUARTER_MASK_PNG_Mask);
+    assert(ld_arc->ptImgTile->tRegion.tSize.iWidth == 53);
+    assert(ld_arc->ptImgTile->tRegion.tSize.iHeight == 53);
+    assert(ld_arc->ptMaskTile->tRegion.tSize.iWidth == 53);
+    assert(ld_arc->ptMaskTile->tRegion.tSize.iHeight == 53);
+}
+
+static void test_arc_legacy_demo0_source_preserves_initial_rotation_phase(void)
+{
+    assert(tinyui_test_source_contains("tinyui/demo/legacy_demo0_parity/legacy_demo0_parity.c",
+                                       "runtime->angle = 120.0f;") == 1);
+    assert(tinyui_test_source_contains("tinyui/demo/legacy_demo0_parity/legacy_demo0_parity.c",
+                                       "tinyui_arc_set_rotation_angle(arc, 120.0f)") == 0);
+}
+
+static void test_arc_show_prepares_when_first_active_pfb_is_not_new_frame(struct tinyui_window *win)
+{
+    static uint16_t target_buffer[128 * 128];
+    arm_2d_tile_t target = make_rgb565_tile(target_buffer, 128, 128);
+    struct tinyui_image_source quarter_source = {
+        .img_tile = IMAGE_ARC_QUARTER_PNG_Mask,
+        .mask_tile = IMAGE_ARC_QUARTER_MASK_PNG_Mask,
+    };
+    struct tinyui_arc *arc = tinyui_arc_create((struct tinyui_widget *)win,
+                                               "arc_late_active_pfb");
+    ldArc_t *ld_arc;
+
+    memset(target_buffer, 0, sizeof(target_buffer));
+    assert(arc != 0);
+    ld_arc = (ldArc_t *)arc->widget.ld_widget;
+    assert(ld_arc != 0);
+
+    assert(tinyui_arc_set_quarter_source(arc, &quarter_source) == 0);
+    assert(tinyui_arc_set_background_angle(arc, 0.0f, 350.0f) == 0);
+    assert(tinyui_arc_set_foreground_angle(arc, 30.0f) == 0);
+    assert(tinyui_arc_set_parent_color(arc, 0xF0F0F0U) == 0);
+    assert(tinyui_arc_set_color(arc, 0xADD8E6U, 0x90EE90U) == 0);
+    assert(tinyui_widget_set_pos((struct tinyui_widget *)arc, 0, 0) == 0);
+    assert(tinyui_widget_set_size((struct tinyui_widget *)arc, 103, 103) == 0);
+
+    ldArc_show(arc->widget.ld_event_bridge_scene, ld_arc, &target, false);
+    arm_2d_op_wait_async(NULL);
 }
 
 static void test_arc_init_alias_matches_backend_truth(struct tinyui_window *win)
@@ -431,6 +605,13 @@ int main(void)
     test_arc_value_and_angle_readback_match_backend_truth(win);
     test_arc_rejects_invalid_inputs(win);
     test_arc_native_quarter_image_mask_and_parent_color_round_trip(win);
+    test_arc_parent_color_uses_ld_color_encoding(win);
+    test_arc_create_with_props_preserves_default_parent_color_when_unspecified(win);
+    test_arc_create_with_props_accepts_black_parent_color(win);
+    test_arc_legacy_demo0_parity_parameters_map_to_backend(win);
+    test_arc_builtin_quarter_source_matches_legacy_backend_tiles(win);
+    test_arc_legacy_demo0_source_preserves_initial_rotation_phase();
+    test_arc_show_prepares_when_first_active_pfb_is_not_new_frame(win);
     test_arc_init_alias_matches_backend_truth(win);
     test_arc_create_with_props_failure_rolls_back_attached_child(win);
     test_arc_rejects_null_args(win);

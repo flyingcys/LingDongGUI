@@ -22,6 +22,14 @@
 struct tinyui_widget;
 struct tinyui_qrcode;
 
+enum tinyui_qrcode_prop_mask {
+    TINYUI_QRCODE_PROP_QR_COLOR = 1 << 0,
+    TINYUI_QRCODE_PROP_BG_COLOR = 1 << 1,
+    TINYUI_QRCODE_PROP_ECC = 1 << 2,
+    TINYUI_QRCODE_PROP_MAX_VERSION = 1 << 3,
+    TINYUI_QRCODE_PROP_ZOOM = 1 << 4,
+};
+
 struct tinyui_qrcode_props {
     const char *id;
     const char *style_class;
@@ -32,6 +40,7 @@ struct tinyui_qrcode_props {
     int ecc;
     int max_version;
     int zoom;
+    unsigned int present_mask;
 };
 
 struct tinyui_qrcode *tinyui_qrcode_create(struct tinyui_widget *parent, const char *id);

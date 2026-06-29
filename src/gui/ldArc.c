@@ -291,6 +291,47 @@ static void _ldArcDrawQuarter(arm_2d_tile_t *pTarget,arm_2d_region_t canvas,arm_
     }
 }
 
+#if ARM_2D_COLOUR == ARM_2D_COLOUR_GRAY8
+#define LD_ARC_PREPARE_FILL_TRANSFORMED_MASK \
+    arm_2dp_gray8_fill_colour_with_transformed_mask_and_opacity_prepare
+#elif ARM_2D_COLOUR == ARM_2D_COLOUR_RGB565
+#define LD_ARC_PREPARE_FILL_TRANSFORMED_MASK \
+    arm_2dp_rgb565_fill_colour_with_transformed_mask_and_opacity_prepare
+#elif ARM_2D_COLOUR == ARM_2D_COLOUR_CCCN888
+#define LD_ARC_PREPARE_FILL_TRANSFORMED_MASK \
+    arm_2dp_cccn888_fill_colour_with_transformed_mask_and_opacity_prepare
+#else
+#error "Unsupported ARM_2D_COLOUR for ldArc transformed mask fill"
+#endif
+
+static void _ldArcFillTransformedMask(arm_2d_op_fill_cl_msk_opa_trans_t *ptOP,
+                                      arm_2d_tile_t *ptMaskTile,
+                                      arm_2d_tile_t *ptTarget,
+                                      arm_2d_region_t *ptRegion,
+                                      arm_2d_point_float_t tCentre,
+                                      float fAngle,
+                                      ldColor color,
+                                      uint8_t opacity,
+                                      arm_2d_point_float_t *ptTargetCentre)
+{
+    if (ptOP == NULL || ptMaskTile == NULL || ptTarget == NULL || ptRegion == NULL) {
+        return;
+    }
+
+    LD_ARC_PREPARE_FILL_TRANSFORMED_MASK(ptOP,
+                                          ptMaskTile,
+                                          tCentre,
+                                          fAngle,
+                                          1.0f,
+                                          1.0f,
+                                          color,
+                                          opacity);
+    arm_2dp_tile_transform_xy((arm_2d_op_trans_t *)ptOP,
+                              ptTarget,
+                              ptRegion,
+                              ptTargetCentre);
+}
+
 void ldArc_show(ld_scene_t *ptScene, ldArc_t *ptWidget, const arm_2d_tile_t *ptTile, bool bIsNewFrame)
 {
     assert(NULL != ptWidget);
@@ -376,17 +417,15 @@ void ldArc_show(ld_scene_t *ptScene, ldArc_t *ptWidget, const arm_2d_tile_t *ptT
                         {
                             tempAngle-=360.0;
                         }
-                        arm_2dp_fill_colour_with_mask_opacity_and_transform_xy(&ptWidget->op[i],
-                                                                           ptWidget->ptImgTile,
-                                                                           &tTarget,
-                                                                           &showRegion,
-                                                                           quarterMaskCenter,
-                                                                           ANGLE_2_RADIAN(tempAngle),
-                                                                           1.0,
-                                                                           1.0,
-                                                                           ptWidget->color[i],
-                                                                           ptWidget->use_as__ldBase_t.opacity,
-                                                                           &bgCentre);
+                        _ldArcFillTransformedMask(&ptWidget->op[i],
+                                                  ptWidget->ptImgTile,
+                                                  &tTarget,
+                                                  &showRegion,
+                                                  quarterMaskCenter,
+                                                  ANGLE_2_RADIAN(tempAngle),
+                                                  ptWidget->color[i],
+                                                  ptWidget->use_as__ldBase_t.opacity,
+                                                  &bgCentre);
 
                         tempAngle=fStartAngle[i];
                         tempAngle+=90;
@@ -394,17 +433,15 @@ void ldArc_show(ld_scene_t *ptScene, ldArc_t *ptWidget, const arm_2d_tile_t *ptT
                         {
                             tempAngle-=360.0;
                         }
-                        arm_2dp_fill_colour_with_mask_opacity_and_transform_xy(&ptWidget->op2[i],
-                                                                           ptWidget->ptImgTile,
-                                                                           &tTarget,
-                                                                           &showRegion,
-                                                                           quarterMaskCenter,
-                                                                           ANGLE_2_RADIAN(tempAngle),
-                                                                           1.0,
-                                                                           1.0,
-                                                                           ptWidget->color[i],
-                                                                           ptWidget->use_as__ldBase_t.opacity,
-                                                                           &bgCentre);
+                        _ldArcFillTransformedMask(&ptWidget->op2[i],
+                                                  ptWidget->ptImgTile,
+                                                  &tTarget,
+                                                  &showRegion,
+                                                  quarterMaskCenter,
+                                                  ANGLE_2_RADIAN(tempAngle),
+                                                  ptWidget->color[i],
+                                                  ptWidget->use_as__ldBase_t.opacity,
+                                                  &bgCentre);
                     }
                     else// 小于90度圆弧
                     {
@@ -414,17 +451,15 @@ void ldArc_show(ld_scene_t *ptScene, ldArc_t *ptWidget, const arm_2d_tile_t *ptT
                             tempAngle-=360.0;
                         }
 
-                        arm_2dp_fill_colour_with_mask_opacity_and_transform_xy(&ptWidget->op[i],
-                                                                           ptWidget->ptImgTile,
-                                                                           &tTarget,
-                                                                           &showRegion,
-                                                                           quarterMaskCenter,
-                                                                           ANGLE_2_RADIAN(tempAngle),
-                                                                           1.0,
-                                                                           1.0,
-                                                                           ptWidget->color[i],
-                                                                           ptWidget->use_as__ldBase_t.opacity,
-                                                                           &bgCentre);
+                        _ldArcFillTransformedMask(&ptWidget->op[i],
+                                                  ptWidget->ptImgTile,
+                                                  &tTarget,
+                                                  &showRegion,
+                                                  quarterMaskCenter,
+                                                  ANGLE_2_RADIAN(tempAngle),
+                                                  ptWidget->color[i],
+                                                  ptWidget->use_as__ldBase_t.opacity,
+                                                  &bgCentre);
 
                         tempAngle=fStartAngle[i];
                         if(tempAngle>=360.0)
@@ -434,17 +469,15 @@ void ldArc_show(ld_scene_t *ptScene, ldArc_t *ptWidget, const arm_2d_tile_t *ptT
 
                         if((tempAngle!=0)&&(tempAngle!=90)&&(tempAngle!=180)&&(tempAngle!=270))
                         {
-                            arm_2dp_fill_colour_with_mask_opacity_and_transform_xy(&ptWidget->op2[i],
-                                                                           ptWidget->ptMaskTile,
-                                                                           &tTarget,
-                                                                           &showRegion,
-                                                                           quarterMaskCenter,
-                                                                           ANGLE_2_RADIAN(tempAngle),
-                                                                           1.0,
-                                                                           1.0,
-                                                                           ptWidget->parentColor,
-                                                                           ptWidget->use_as__ldBase_t.opacity,
-                                                                           &bgCentre);
+                            _ldArcFillTransformedMask(&ptWidget->op2[i],
+                                                      ptWidget->ptMaskTile,
+                                                      &tTarget,
+                                                      &showRegion,
+                                                      quarterMaskCenter,
+                                                      ANGLE_2_RADIAN(tempAngle),
+                                                      ptWidget->parentColor,
+                                                      ptWidget->use_as__ldBase_t.opacity,
+                                                      &bgCentre);
 
                             if((fEndAngle[0]-fStartAngle[0])>90)// 大于270度圆弧
                             {
@@ -453,18 +486,15 @@ void ldArc_show(ld_scene_t *ptScene, ldArc_t *ptWidget, const arm_2d_tile_t *ptT
                                 {
                                     tempAngle-=360.0;
                                 }
-                                arm_2dp_fill_colour_with_mask_opacity_and_transform_xy(&ptWidget->op3,
-                                                                                       ptWidget->ptImgTile,
-                                                                                       &tTarget,
-                                                                                       &showRegion,
-                                                                                       quarterMaskCenter,
-                                                                                       ARM_2D_ANGLE(tempAngle),
-                                                                                       1.0,
-                                                                                       1.0,
-                                                                                       ptWidget->color[0],
-                                                                                       ptWidget->use_as__ldBase_t.opacity,
-                                                                                       &bgCentre
-                                                                                       );
+                                _ldArcFillTransformedMask(&ptWidget->op3,
+                                                          ptWidget->ptImgTile,
+                                                          &tTarget,
+                                                          &showRegion,
+                                                          quarterMaskCenter,
+                                                          ARM_2D_ANGLE(tempAngle),
+                                                          ptWidget->color[0],
+                                                          ptWidget->use_as__ldBase_t.opacity,
+                                                          &bgCentre);
                             }
                         }
                     }
@@ -478,17 +508,15 @@ void ldArc_show(ld_scene_t *ptScene, ldArc_t *ptWidget, const arm_2d_tile_t *ptT
                         tempAngle-=360.0;
                     }
 
-                    arm_2dp_fill_colour_with_mask_opacity_and_transform_xy(&ptWidget->op[i],
-                                                                           ptWidget->ptImgTile,
-                                                                           &tTarget,
-                                                                           &showRegion,
-                                                                           quarterMaskCenter,
-                                                                           ANGLE_2_RADIAN(tempAngle),
-                                                                           1.0,
-                                                                           1.0,
-                                                                           ptWidget->color[i],
-                                                                           ptWidget->use_as__ldBase_t.opacity,
-                                                                           &bgCentre);
+                    _ldArcFillTransformedMask(&ptWidget->op[i],
+                                              ptWidget->ptImgTile,
+                                              &tTarget,
+                                              &showRegion,
+                                              quarterMaskCenter,
+                                              ANGLE_2_RADIAN(tempAngle),
+                                              ptWidget->color[i],
+                                              ptWidget->use_as__ldBase_t.opacity,
+                                              &bgCentre);
 
                     showRegion.tLocation=_ldArcGetStartEndAreaPos (startQuarter,tTarget_canvas.tSize);
 
@@ -500,17 +528,15 @@ void ldArc_show(ld_scene_t *ptScene, ldArc_t *ptWidget, const arm_2d_tile_t *ptT
                     }
                     if((tempAngle!=90)&&(tempAngle!=180)&&(tempAngle!=270)&&(tempAngle!=360))
                     {
-                        arm_2dp_fill_colour_with_mask_opacity_and_transform_xy(&ptWidget->op2[i],
-                                                                           ptWidget->ptImgTile,
-                                                                           &tTarget,
-                                                                           &showRegion,
-                                                                           quarterMaskCenter,
-                                                                           ANGLE_2_RADIAN(tempAngle),
-                                                                           1.0,
-                                                                           1.0,
-                                                                           ptWidget->color[i],
-                                                                           ptWidget->use_as__ldBase_t.opacity,
-                                                                           &bgCentre);
+                        _ldArcFillTransformedMask(&ptWidget->op2[i],
+                                                  ptWidget->ptImgTile,
+                                                  &tTarget,
+                                                  &showRegion,
+                                                  quarterMaskCenter,
+                                                  ANGLE_2_RADIAN(tempAngle),
+                                                  ptWidget->color[i],
+                                                  ptWidget->use_as__ldBase_t.opacity,
+                                                  &bgCentre);
                     }
                 }
                 arm_2d_op_wait_async(NULL);
