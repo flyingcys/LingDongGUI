@@ -141,7 +141,12 @@ int64_t arm_2d_helper_get_system_timestamp(void)
     struct timespec timestamp;
 
     if (clock_gettime(CLOCK_REALTIME, &timestamp) == 0) {
-        return (int64_t)timestamp.tv_sec * 1000000LL
+        static int s_tzset_done = 0;
+        if (!s_tzset_done) {
+            s_tzset_done = 1;
+            tzset();
+        }
+        return (int64_t)(timestamp.tv_sec - timezone) * 1000000LL
              + (int64_t)timestamp.tv_nsec / 1000LL;
     }
 #endif
