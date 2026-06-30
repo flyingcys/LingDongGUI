@@ -584,6 +584,8 @@ void tinyui_demo_legacy_demo0_parity(void)
         return;
     }
 
+    tinyui_window_set_color(win, 0xF0F0F0U);
+
     g_runtime.image = 0;
     g_runtime.switch_label = 0;
     g_runtime.gauge = 0;
