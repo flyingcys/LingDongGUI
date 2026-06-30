@@ -741,6 +741,7 @@ int tinyui_window_set_color(struct tinyui_window *window, unsigned int rgb)
 
     window->widget.bg_color = rgb;
     ldWindowSetColor(ld_window, (ldColor)tinyui_rgb_to_ld_color(rgb));
+    ld_window->isTransparent = false;
     return 0;
 }
 

@@ -74,7 +74,7 @@ static void ldgui_port_update_widget_dirty_region(ld_scene_t *scene,
                     region.tLocation.iX += widget_location->iX;
                     region.tLocation.iY += widget_location->iY;
                     arm_2d_dynamic_dirty_region_update(&scene->tDirtyRegionItem,
-                                                       (arm_2d_tile_t *)ptTile,
+                                                       NULL,
                                                        &region,
                                                        TINYUI_LDGUI_SCENE_DR_UPDATE);
                     break;
@@ -97,7 +97,7 @@ static void ldgui_port_update_widget_dirty_region(ld_scene_t *scene,
                 region.tLocation.iX += widget_location->iX;
                 region.tLocation.iY += widget_location->iY;
                 arm_2d_dynamic_dirty_region_update(&scene->tDirtyRegionItem,
-                                                   (arm_2d_tile_t *)ptTile,
+                                                   NULL,
                                                    &region,
                                                    TINYUI_LDGUI_SCENE_DR_UPDATE);
                 break;
@@ -122,7 +122,7 @@ static void ldgui_port_update_widget_dirty_region(ld_scene_t *scene,
                 item->tTempItemRegion.tLocation.iX += widget_location->iX;
                 item->tTempItemRegion.tLocation.iY += widget_location->iY;
                 arm_2d_dynamic_dirty_region_update(&scene->tDirtyRegionItem,
-                                                   (arm_2d_tile_t *)ptTile,
+                                                   NULL,
                                                    &item->tTempItemRegion,
                                                    TINYUI_LDGUI_SCENE_DR_UPDATE);
 
