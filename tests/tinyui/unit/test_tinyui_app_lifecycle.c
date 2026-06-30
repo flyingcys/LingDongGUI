@@ -467,6 +467,12 @@ static void test_ldgui_pfb_draw_handler_uses_legacy_dirty_region_flow(void)
              "    and 'arm_2d_dynamic_dirty_region_update' in body\n"
              "    and 'arm_2d_helper_control_enum_get_next_node' in body\n"
              "    and 'ldgui_port_update_widget_dirty_region(scene,' in body\n"
+             "    and 'arm_2d_dynamic_dirty_region_update(&scene->tDirtyRegionItem,\\n"
+             "                                                   ptTile,' in body\n"
+             "    and 'arm_2d_dynamic_dirty_region_update(&scene->tDirtyRegionItem,\\n"
+             "                                                       ptTile,' in body\n"
+             "    and 'arm_2d_dynamic_dirty_region_update(&scene->tDirtyRegionItem,\\n"
+             "                                                   NULL,' not in body\n"
              ")\n"
              "raise SystemExit(0 if ok else 1)\n"
              "PY",

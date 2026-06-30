@@ -9,6 +9,7 @@
 #include "tinyui_test_support.h"
 
 #include <assert.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -137,6 +138,36 @@ static arm_2d_tile_t make_rgb565_tile(uint16_t *buffer, int16_t width, int16_t h
     tile.tRegion.tSize.iHeight = height;
     tile.phwBuffer = buffer;
     return tile;
+}
+
+static uint16_t swap_rgb565_bytes(uint16_t color)
+{
+    return (uint16_t)((color << 8) | (color >> 8));
+}
+
+static uint16_t repeat_rgb565_low_byte(uint16_t color)
+{
+    uint16_t low = (uint16_t)(color & 0x00FFU);
+
+    return (uint16_t)((low << 8) | low);
+}
+
+static int count_rgb565_pixels(const uint16_t *buffer, size_t count, uint16_t color)
+{
+    int matches = 0;
+    size_t i;
+
+    for (i = 0; i < count; ++i) {
+        if (buffer[i] == color) {
+            matches++;
+        }
+    }
+    return matches;
+}
+
+static uint16_t rgb565_at(const uint16_t *buffer, int width, int x, int y)
+{
+    return buffer[(size_t)y * (size_t)width + (size_t)x];
 }
 
 void ldFree(void *p)
@@ -462,6 +493,174 @@ static void test_arc_show_prepares_when_first_active_pfb_is_not_new_frame(struct
     arm_2d_op_wait_async(NULL);
 }
 
+static void test_arc_show_normalizes_large_rotation_angles(struct tinyui_window *win)
+{
+    static uint16_t expected_buffer[128 * 128];
+    static uint16_t actual_buffer[128 * 128];
+    arm_2d_tile_t expected = make_rgb565_tile(expected_buffer, 128, 128);
+    arm_2d_tile_t actual = make_rgb565_tile(actual_buffer, 128, 128);
+    struct tinyui_image_source quarter_source = {
+        .img_tile = IMAGE_ARC_QUARTER_PNG_Mask,
+        .mask_tile = IMAGE_ARC_QUARTER_MASK_PNG_Mask,
+    };
+    struct tinyui_arc *arc = tinyui_arc_create((struct tinyui_widget *)win,
+                                               "arc_large_rotation");
+    ldArc_t *ld_arc;
+    int i;
+
+    assert(arc != 0);
+    ld_arc = (ldArc_t *)arc->widget.ld_widget;
+    assert(ld_arc != 0);
+
+    for (i = 0; i < (int)(sizeof(expected_buffer) / sizeof(expected_buffer[0])); ++i) {
+        expected_buffer[i] = (uint16_t)tinyui_rgb_to_ld_color(0xF0F0F0U);
+        actual_buffer[i] = expected_buffer[i];
+    }
+    assert(tinyui_arc_set_quarter_source(arc, &quarter_source) == 0);
+    assert(tinyui_arc_set_background_angle(arc, 0.0f, 350.0f) == 0);
+    assert(tinyui_arc_set_foreground_angle(arc, 30.0f) == 0);
+    assert(tinyui_arc_set_parent_color(arc, 0xF0F0F0U) == 0);
+    assert(tinyui_arc_set_color(arc, 0xADD8E6U, 0x90EE90U) == 0);
+    assert(tinyui_widget_set_pos((struct tinyui_widget *)arc, 0, 0) == 0);
+    assert(tinyui_widget_set_size((struct tinyui_widget *)arc, 103, 103) == 0);
+
+    assert(tinyui_arc_set_rotation_angle(arc, 80.0f) == 0);
+    ldArc_show(arc->widget.ld_event_bridge_scene, ld_arc, &expected, true);
+    arm_2d_op_wait_async(NULL);
+
+    assert(tinyui_arc_set_rotation_angle(arc, 440.0f) == 0);
+    ldArc_show(arc->widget.ld_event_bridge_scene, ld_arc, &actual, true);
+    arm_2d_op_wait_async(NULL);
+
+    for (i = 0; i < (int)(sizeof(expected_buffer) / sizeof(expected_buffer[0])); ++i) {
+        if (actual_buffer[i] != expected_buffer[i]) {
+            fprintf(stderr,
+                    "arc large-rotation mismatch index=%d x=%d y=%d expected=0x%04x actual=0x%04x\n",
+                    i,
+                    i % 128,
+                    i / 128,
+                    (unsigned int)expected_buffer[i],
+                    (unsigned int)actual_buffer[i]);
+        }
+        assert(actual_buffer[i] == expected_buffer[i]);
+    }
+}
+
+static void test_arc_show_uses_rgb565_order_for_transformed_segments(struct tinyui_window *win)
+{
+    static uint16_t target_buffer[128 * 128];
+    arm_2d_tile_t target = make_rgb565_tile(target_buffer, 128, 128);
+    struct tinyui_image_source quarter_source = {
+        .img_tile = IMAGE_ARC_QUARTER_PNG_Mask,
+        .mask_tile = IMAGE_ARC_QUARTER_MASK_PNG_Mask,
+    };
+    struct tinyui_arc *arc = tinyui_arc_create((struct tinyui_widget *)win,
+                                               "arc_rgb565_transform_order");
+    ldArc_t *ld_arc;
+    const uint16_t parent_color = (uint16_t)tinyui_rgb_to_ld_color(0xF0F0F0U);
+    const uint16_t foreground_color = (uint16_t)tinyui_rgb_to_ld_color(0x90EE90U);
+    const uint16_t background_color = (uint16_t)tinyui_rgb_to_ld_color(0xADD8E6U);
+    const uint16_t swapped_foreground_color = swap_rgb565_bytes(foreground_color);
+    const uint16_t repeated_foreground_low_byte = repeat_rgb565_low_byte(foreground_color);
+    const uint16_t repeated_background_low_byte = repeat_rgb565_low_byte(background_color);
+    const size_t pixel_count = sizeof(target_buffer) / sizeof(target_buffer[0]);
+    int swapped_count;
+    int repeated_count;
+    size_t i;
+
+    assert(arc != 0);
+    ld_arc = (ldArc_t *)arc->widget.ld_widget;
+    assert(ld_arc != 0);
+
+    for (i = 0; i < pixel_count; ++i) {
+        target_buffer[i] = parent_color;
+    }
+
+    assert(tinyui_arc_set_quarter_source(arc, &quarter_source) == 0);
+    assert(tinyui_arc_set_background_angle(arc, 0.0f, 350.0f) == 0);
+    assert(tinyui_arc_set_foreground_angle(arc, 30.0f) == 0);
+    assert(tinyui_arc_set_parent_color(arc, 0xF0F0F0U) == 0);
+    assert(tinyui_arc_set_color(arc, 0xADD8E6U, 0x90EE90U) == 0);
+    assert(tinyui_widget_set_pos((struct tinyui_widget *)arc, 0, 0) == 0);
+    assert(tinyui_widget_set_size((struct tinyui_widget *)arc, 103, 103) == 0);
+    assert(tinyui_arc_set_rotation_angle(arc, 120.0f) == 0);
+
+    ldArc_show(arc->widget.ld_event_bridge_scene, ld_arc, &target, true);
+    arm_2d_op_wait_async(NULL);
+
+    swapped_count = count_rgb565_pixels(target_buffer,
+                                        pixel_count,
+                                        swapped_foreground_color);
+    if (swapped_count != 0) {
+        fprintf(stderr,
+                "arc transformed RGB565 order mismatch color=0x%04x swapped=0x%04x count=%d\n",
+                (unsigned int)foreground_color,
+                (unsigned int)swapped_foreground_color,
+                swapped_count);
+    }
+    assert(swapped_count == 0);
+
+    repeated_count = count_rgb565_pixels(target_buffer,
+                                         pixel_count,
+                                         repeated_foreground_low_byte)
+                   + count_rgb565_pixels(target_buffer,
+                                         pixel_count,
+                                         repeated_background_low_byte);
+    if (repeated_count != 0) {
+        fprintf(stderr,
+                "arc transformed RGB565 low-byte repeat mismatch bg=0x%04x fg=0x%04x repeated_bg=0x%04x repeated_fg=0x%04x count=%d\n",
+                (unsigned int)background_color,
+                (unsigned int)foreground_color,
+                (unsigned int)repeated_background_low_byte,
+                (unsigned int)repeated_foreground_low_byte,
+                repeated_count);
+    }
+    assert(repeated_count == 0);
+}
+
+static void test_arc_show_clears_dirty_widget_region_to_parent_color(struct tinyui_window *win)
+{
+    static uint16_t target_buffer[128 * 128];
+    arm_2d_tile_t target = make_rgb565_tile(target_buffer, 128, 128);
+    struct tinyui_image_source quarter_source = {
+        .img_tile = IMAGE_ARC_QUARTER_PNG_Mask,
+        .mask_tile = IMAGE_ARC_QUARTER_MASK_PNG_Mask,
+    };
+    struct tinyui_arc *arc = tinyui_arc_create((struct tinyui_widget *)win,
+                                               "arc_dirty_region_clear");
+    ldArc_t *ld_arc;
+    const uint16_t parent_color = (uint16_t)tinyui_rgb_to_ld_color(0xF0F0F0U);
+    const uint16_t stale_color = swap_rgb565_bytes(
+        (uint16_t)tinyui_rgb_to_ld_color(0x90EE90U));
+    const size_t pixel_count = sizeof(target_buffer) / sizeof(target_buffer[0]);
+    size_t i;
+
+    assert(arc != 0);
+    ld_arc = (ldArc_t *)arc->widget.ld_widget;
+    assert(ld_arc != 0);
+
+    for (i = 0; i < pixel_count; ++i) {
+        target_buffer[i] = stale_color;
+    }
+
+    assert(tinyui_arc_set_quarter_source(arc, &quarter_source) == 0);
+    assert(tinyui_arc_set_background_angle(arc, 0.0f, 350.0f) == 0);
+    assert(tinyui_arc_set_foreground_angle(arc, 30.0f) == 0);
+    assert(tinyui_arc_set_parent_color(arc, 0xF0F0F0U) == 0);
+    assert(tinyui_arc_set_color(arc, 0xADD8E6U, 0x90EE90U) == 0);
+    assert(tinyui_widget_set_pos((struct tinyui_widget *)arc, 0, 0) == 0);
+    assert(tinyui_widget_set_size((struct tinyui_widget *)arc, 103, 103) == 0);
+    assert(tinyui_arc_set_rotation_angle(arc, 120.0f) == 0);
+
+    ldArc_show(arc->widget.ld_event_bridge_scene, ld_arc, &target, true);
+    arm_2d_op_wait_async(NULL);
+
+    assert(rgb565_at(target_buffer, 128, 0, 0) == parent_color);
+    assert(rgb565_at(target_buffer, 128, 102, 0) == parent_color);
+    assert(rgb565_at(target_buffer, 128, 0, 102) == parent_color);
+    assert(rgb565_at(target_buffer, 128, 102, 102) == parent_color);
+}
+
 static void test_arc_init_alias_matches_backend_truth(struct tinyui_window *win)
 {
     struct tinyui_arc *arc = tinyui_arc_init((struct tinyui_widget *)win, "arc_alias");
@@ -612,6 +811,9 @@ int main(void)
     test_arc_builtin_quarter_source_matches_legacy_backend_tiles(win);
     test_arc_legacy_demo0_source_preserves_initial_rotation_phase();
     test_arc_show_prepares_when_first_active_pfb_is_not_new_frame(win);
+    test_arc_show_normalizes_large_rotation_angles(win);
+    test_arc_show_uses_rgb565_order_for_transformed_segments(win);
+    test_arc_show_clears_dirty_widget_region_to_parent_color(win);
     test_arc_init_alias_matches_backend_truth(win);
     test_arc_create_with_props_failure_rolls_back_attached_child(win);
     test_arc_rejects_null_args(win);

@@ -249,6 +249,17 @@ static uint8_t _ldArcGetQuarterDraw(float fStartAngle,float fEndAngle)
     return retFlag;
 }
 
+static float _ldArcNormalizeAngle(float fAngle)
+{
+    while (fAngle >= 360.0f) {
+        fAngle -= 360.0f;
+    }
+    while (fAngle < 0.0f) {
+        fAngle += 360.0f;
+    }
+    return fAngle;
+}
+
 static void _ldArcDrawQuarter(arm_2d_tile_t *pTarget,arm_2d_region_t canvas,arm_2d_tile_t *pMaskRes,uint8_t quarterFlag,ldColor color,uint8_t opacity)
 {
     arm_2d_region_t maskRegion;
@@ -291,17 +302,17 @@ static void _ldArcDrawQuarter(arm_2d_tile_t *pTarget,arm_2d_region_t canvas,arm_
     }
 }
 
-#if ARM_2D_COLOUR == ARM_2D_COLOUR_GRAY8
+#if LD_CFG_COLOR_DEPTH == 8
 #define LD_ARC_PREPARE_FILL_TRANSFORMED_MASK \
     arm_2dp_gray8_fill_colour_with_transformed_mask_and_opacity_prepare
-#elif ARM_2D_COLOUR == ARM_2D_COLOUR_RGB565
+#elif LD_CFG_COLOR_DEPTH == 16
 #define LD_ARC_PREPARE_FILL_TRANSFORMED_MASK \
     arm_2dp_rgb565_fill_colour_with_transformed_mask_and_opacity_prepare
-#elif ARM_2D_COLOUR == ARM_2D_COLOUR_CCCN888
+#elif LD_CFG_COLOR_DEPTH == 32
 #define LD_ARC_PREPARE_FILL_TRANSFORMED_MASK \
     arm_2dp_cccn888_fill_colour_with_transformed_mask_and_opacity_prepare
 #else
-#error "Unsupported ARM_2D_COLOUR for ldArc transformed mask fill"
+#error "Unsupported LD_CFG_COLOR_DEPTH for ldArc transformed mask fill"
 #endif
 
 static void _ldArcFillTransformedMask(arm_2d_op_fill_cl_msk_opa_trans_t *ptOP,
@@ -370,6 +381,12 @@ void ldArc_show(ld_scene_t *ptScene, ldArc_t *ptWidget, const arm_2d_tile_t *ptT
                 break;
             }
 
+            ldBaseColor(&tTarget,
+                        &tTarget_canvas,
+                        ptWidget->parentColor,
+                        ptWidget->use_as__ldBase_t.opacity);
+            arm_2d_op_wait_async(NULL);
+
             arm_2d_point_float_t quarterMaskCenter={
                 .fX=ptWidget->ptImgTile->tRegion.tSize.iWidth-2,
                 .fY=ptWidget->ptImgTile->tRegion.tSize.iHeight-2,
@@ -382,8 +399,11 @@ void ldArc_show(ld_scene_t *ptScene, ldArc_t *ptWidget, const arm_2d_tile_t *ptT
 
             for(uint8_t i=0;i<2;i++)
             {
-                fStartAngle[i]=(float)(ptWidget->startAngle_x10[i]+ptWidget->rotationAngle_x10)/10.0;
-                fEndAngle[i]=(float)(ptWidget->endAngle_x10[i]+ptWidget->rotationAngle_x10)/10.0;
+                fStartAngle[i] = _ldArcNormalizeAngle(
+                    (float)(ptWidget->startAngle_x10[i] + ptWidget->rotationAngle_x10) / 10.0f);
+                fEndAngle[i] = fStartAngle[i]
+                              + (float)(ptWidget->endAngle_x10[i]
+                                        - ptWidget->startAngle_x10[i]) / 10.0f;
 
                 startQuarter = fStartAngle[i] / 90;
                 endQuarter = fEndAngle[i] / 90;
@@ -413,10 +433,7 @@ void ldArc_show(ld_scene_t *ptScene, ldArc_t *ptWidget, const arm_2d_tile_t *ptT
                     {
 
                         tempAngle=fEndAngle[i];
-                        if(tempAngle>=360.0)
-                        {
-                            tempAngle-=360.0;
-                        }
+                        tempAngle = _ldArcNormalizeAngle(tempAngle);
                         _ldArcFillTransformedMask(&ptWidget->op[i],
                                                   ptWidget->ptImgTile,
                                                   &tTarget,
@@ -429,10 +446,7 @@ void ldArc_show(ld_scene_t *ptScene, ldArc_t *ptWidget, const arm_2d_tile_t *ptT
 
                         tempAngle=fStartAngle[i];
                         tempAngle+=90;
-                        if(tempAngle>=360.0)
-                        {
-                            tempAngle-=360.0;
-                        }
+                        tempAngle = _ldArcNormalizeAngle(tempAngle);
                         _ldArcFillTransformedMask(&ptWidget->op2[i],
                                                   ptWidget->ptImgTile,
                                                   &tTarget,
@@ -446,10 +460,7 @@ void ldArc_show(ld_scene_t *ptScene, ldArc_t *ptWidget, const arm_2d_tile_t *ptT
                     else// 小于90度圆弧
                     {
                         tempAngle=fEndAngle[i];
-                        if(tempAngle>=360.0)
-                        {
-                            tempAngle-=360.0;
-                        }
+                        tempAngle = _ldArcNormalizeAngle(tempAngle);
 
                         _ldArcFillTransformedMask(&ptWidget->op[i],
                                                   ptWidget->ptImgTile,
@@ -462,10 +473,7 @@ void ldArc_show(ld_scene_t *ptScene, ldArc_t *ptWidget, const arm_2d_tile_t *ptT
                                                   &bgCentre);
 
                         tempAngle=fStartAngle[i];
-                        if(tempAngle>=360.0)
-                        {
-                            tempAngle-=360.0;
-                        }
+                        tempAngle = _ldArcNormalizeAngle(tempAngle);
 
                         if((tempAngle!=0)&&(tempAngle!=90)&&(tempAngle!=180)&&(tempAngle!=270))
                         {
@@ -482,10 +490,7 @@ void ldArc_show(ld_scene_t *ptScene, ldArc_t *ptWidget, const arm_2d_tile_t *ptT
                             if((fEndAngle[0]-fStartAngle[0])>90)// 大于270度圆弧
                             {
                                 tempAngle=fEndAngle[0];
-                                if(tempAngle>=360.0)
-                                {
-                                    tempAngle-=360.0;
-                                }
+                                tempAngle = _ldArcNormalizeAngle(tempAngle);
                                 _ldArcFillTransformedMask(&ptWidget->op3,
                                                           ptWidget->ptImgTile,
                                                           &tTarget,
@@ -503,10 +508,7 @@ void ldArc_show(ld_scene_t *ptScene, ldArc_t *ptWidget, const arm_2d_tile_t *ptT
                 {
                     showRegion.tLocation=_ldArcGetStartEndAreaPos (endQuarter,tTarget_canvas.tSize);
                     tempAngle=fEndAngle[i];
-                    if(tempAngle>=360.0)
-                    {
-                        tempAngle-=360.0;
-                    }
+                    tempAngle = _ldArcNormalizeAngle(tempAngle);
 
                     _ldArcFillTransformedMask(&ptWidget->op[i],
                                               ptWidget->ptImgTile,
@@ -522,10 +524,7 @@ void ldArc_show(ld_scene_t *ptScene, ldArc_t *ptWidget, const arm_2d_tile_t *ptT
 
                     tempAngle=fStartAngle[i];
                     tempAngle+=90;
-                    if(tempAngle>=360.0)
-                    {
-                        tempAngle-=360.0;
-                    }
+                    tempAngle = _ldArcNormalizeAngle(tempAngle);
                     if((tempAngle!=90)&&(tempAngle!=180)&&(tempAngle!=270)&&(tempAngle!=360))
                     {
                         _ldArcFillTransformedMask(&ptWidget->op2[i],
@@ -585,6 +584,7 @@ void ldArcSetRotationAngle(ldArc_t *ptWidget,float rotationAngle)
         return;
     }
     ptWidget->use_as__ldBase_t.isDirtyRegionUpdate = true;
+    rotationAngle = _ldArcNormalizeAngle(rotationAngle);
     ptWidget->rotationAngle_x10=rotationAngle*10;
 }
 
