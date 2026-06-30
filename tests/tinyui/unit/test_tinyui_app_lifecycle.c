@@ -439,6 +439,7 @@ static void test_runtime_host_render_uses_backend_pfb_step(void)
              "ok = (\n"
              "    'tinyui_backend_step(app_state);' in body\n"
              "    and 'ldGuiDraw(app_state->ld_scene, &state->real_tile, true);' not in body\n"
+             "    and 'memset(state->real_pixels,' not in body\n"
              ")\n"
              "raise SystemExit(0 if ok else 1)\n"
              "PY",

@@ -521,6 +521,7 @@ void ldGaugeBindPointerImage(ldGauge_t *ptWidget,
     {
         ptWidget->use_as__ldBase_t.ptItemRegionList[0].itemRegion=ptWidget->ptPointerMaskTile->tRegion;
     }
+    ptWidget->use_as__ldBase_t.ptItemRegionList[0].tTempItemRegion=ptWidget->use_as__ldBase_t.ptItemRegionList[0].itemRegion;
 }
 
 void ldGaugeSetPointerImage(ldGauge_t *ptWidget,arm_2d_tile_t *ptPointerImgTile,arm_2d_tile_t *ptPointerMaskTile,int16_t pointerOriginOffsetX,int16_t pointerOriginOffsetY)

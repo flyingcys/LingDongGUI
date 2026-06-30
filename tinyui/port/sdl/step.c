@@ -118,10 +118,6 @@ static void tinyui_runtime_host_render(struct tinyui_runtime_host_state *state, 
         tinyui_runtime_host_log_mapping_markers(state, &window->widget);
         if (app_state != NULL && app_state->ld_scene != NULL && state->real_pixels != NULL) {
             state->smoke_layout_used = 0;
-            memset(state->real_pixels,
-                   0,
-                   (size_t)state->display_width * (size_t)state->display_height *
-                       sizeof(*state->real_pixels));
             tinyui_runtime_host_log_smoke_layout_marker(state);
             tinyui_backend_step(app_state);
             tinyui_runtime_host_log_image_source_marker(&window->widget);
