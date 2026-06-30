@@ -476,6 +476,8 @@ function(add_tinyui_demo target source)
         target_link_libraries(${target} PRIVATE
             -Wl,--start-group
             tinyui_backend_ldgui_runtime
+            tinyui_backend_ldgui_porting
+            tinyui_port_sdl
             tinyui_core
             longdonggui
             longdonggui_arm2d
@@ -485,6 +487,8 @@ function(add_tinyui_demo target source)
         target_link_libraries(${target} PRIVATE
             -Wl,--start-group
             tinyui_backend_ldgui_runtime
+            tinyui_backend_ldgui_porting
+            tinyui_port_sdl
             tinyui_core
             longdonggui
             longdonggui_arm2d
