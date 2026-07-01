@@ -707,7 +707,9 @@ static void test_window_background_source_round_trip_to_ldwindow(void)
     };
     struct tinyui_app *app = tinyui_app_create();
     struct tinyui_window *win = tinyui_window_create(app, "root");
-    const ldWindow_t *ld_window = (const ldWindow_t *)win->widget.ld_widget;
+    /* -Ofast -flto can keep the pre-clear image pointer comparison across the
+     * setter call even after ldWindowSetImage() has cleared memory. */
+    volatile ldWindow_t *ld_window = (volatile ldWindow_t *)win->widget.ld_widget;
 
     assert(tinyui_window_set_background_source(win, &source) == 0);
     assert(ld_window->ptImgTile == source.img_tile);
@@ -732,8 +734,10 @@ static void test_window_background_offset_round_trip_to_scene_root(void)
     struct tinyui_display_config display = {0};
     const struct tinyui_app *app_state =
         app;
-    const ldWindow_t *ld_window = (const ldWindow_t *)win->widget.ld_widget;
-    const ldBase_t *ld_root = (const ldBase_t *)app_state->ld_scene->ptNodeRoot;
+    volatile ldWindow_t *ld_window = (volatile ldWindow_t *)win->widget.ld_widget;
+    volatile ldBase_t *ld_root = (volatile ldBase_t *)app_state->ld_scene->ptNodeRoot;
+    int16_t screen_width;
+    int16_t screen_height;
     int offset_x = 0;
     int offset_y = 0;
     int expected_min_x;
@@ -743,6 +747,7 @@ static void test_window_background_offset_round_trip_to_scene_root(void)
 
     assert(tinyui_window_set_background_offset(win, 12, -18) == 0);
     assert(tinyui_display_get_config(app, &display) == 0);
+    ldBaseGetScreenSizeForScene(app_state->ld_scene, &screen_width, &screen_height);
     assert(tinyui_window_get_background_offset(win, &offset_x, &offset_y) == 0);
     assert(offset_x == 12);
     assert(offset_y == -18);
@@ -750,12 +755,12 @@ static void test_window_background_offset_round_trip_to_scene_root(void)
     assert(ld_root->use_as__arm_2d_control_node_t.tRegion.tLocation.iY == -18);
     expected_min_x = offset_x < 0 ? offset_x : 0;
     expected_min_y = offset_y < 0 ? offset_y : 0;
-    expected_max_x = (offset_x + display.width) > LD_CFG_SCREEN_WIDTH
+    expected_max_x = (offset_x + display.width) > screen_width
                          ? (offset_x + display.width)
-                         : LD_CFG_SCREEN_WIDTH;
-    expected_max_y = (offset_y + display.height) > LD_CFG_SCREEN_HEIGHT
+                         : screen_width;
+    expected_max_y = (offset_y + display.height) > screen_height
                          ? (offset_y + display.height)
-                         : LD_CFG_SCREEN_HEIGHT;
+                         : screen_height;
     assert(ld_root->use_as__arm_2d_control_node_t.tRegion.tSize.iWidth == expected_max_x - expected_min_x);
     assert(ld_root->use_as__arm_2d_control_node_t.tRegion.tSize.iHeight == expected_max_y - expected_min_y);
     assert(ld_window->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 12);
@@ -773,12 +778,12 @@ static void test_window_background_offset_round_trip_to_scene_root(void)
     assert(ld_root->use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 9);
     expected_min_x = offset_x < 0 ? offset_x : 0;
     expected_min_y = offset_y < 0 ? offset_y : 0;
-    expected_max_x = (offset_x + display.width) > LD_CFG_SCREEN_WIDTH
+    expected_max_x = (offset_x + display.width) > screen_width
                          ? (offset_x + display.width)
-                         : LD_CFG_SCREEN_WIDTH;
-    expected_max_y = (offset_y + display.height) > LD_CFG_SCREEN_HEIGHT
+                         : screen_width;
+    expected_max_y = (offset_y + display.height) > screen_height
                          ? (offset_y + display.height)
-                         : LD_CFG_SCREEN_HEIGHT;
+                         : screen_height;
     assert(ld_root->use_as__arm_2d_control_node_t.tRegion.tSize.iWidth >= expected_max_x - expected_min_x);
     assert(ld_root->use_as__arm_2d_control_node_t.tRegion.tSize.iHeight >= expected_max_y - expected_min_y);
     assert(ld_window->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iX == -24);

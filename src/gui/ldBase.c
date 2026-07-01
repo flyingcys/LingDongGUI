@@ -52,6 +52,37 @@
 #pragma clang diagnostic ignored "-Wmissing-variable-declarations"
 #endif
 
+__WEAK void ldCfgScreenGetSize(int16_t *width, int16_t *height)
+{
+    if (width != NULL)
+    {
+        *width = LD_CFG_SCREEN_WIDTH;
+    }
+    if (height != NULL)
+    {
+        *height = LD_CFG_SCREEN_HEIGHT;
+    }
+}
+
+__WEAK void ldCfgScreenGetSizeForScene(ld_scene_t *ptScene, int16_t *width, int16_t *height)
+{
+    (void)ptScene;
+    ldCfgScreenGetSize(width, height);
+}
+
+__WEAK void ldCfgBgMoveDidUpdate(ld_scene_t *ptScene,
+                                 int16_t bgWidth,
+                                 int16_t bgHeight,
+                                 int16_t offsetX,
+                                 int16_t offsetY)
+{
+    (void)ptScene;
+    (void)bgWidth;
+    (void)bgHeight;
+    (void)offsetX;
+    (void)offsetY;
+}
+
 #if LD_MEM_MODE == MEM_MODE_TLFS
 static void *pTlsfMem = NULL;
 __attribute__((aligned(4))) uint8_t ucHeap[LD_MEM_SIZE];
@@ -1012,22 +1043,57 @@ uint16_t ldBaseGetChildCount(ldBase_t* ptWidget)
     return count;
 }
 
+void ldBaseGetScreenSize(int16_t *width, int16_t *height)
+{
+    ldBaseGetScreenSizeForScene(NULL, width, height);
+}
+
+void ldBaseGetScreenSizeForScene(ld_scene_t *ptScene, int16_t *width, int16_t *height)
+{
+    int16_t screenWidth = LD_CFG_SCREEN_WIDTH;
+    int16_t screenHeight = LD_CFG_SCREEN_HEIGHT;
+
+    ldCfgScreenGetSizeForScene(ptScene, &screenWidth, &screenHeight);
+    if (screenWidth <= 0)
+    {
+        screenWidth = LD_CFG_SCREEN_WIDTH;
+    }
+    if (screenHeight <= 0)
+    {
+        screenHeight = LD_CFG_SCREEN_HEIGHT;
+    }
+
+    if (width != NULL)
+    {
+        *width = screenWidth;
+    }
+    if (height != NULL)
+    {
+        *height = screenHeight;
+    }
+}
+
 void ldBaseBgMove(ld_scene_t *ptScene, int16_t bgWidth,int16_t bgHeight,int16_t offsetX,int16_t offsetY)
 {
     ldBase_t *ptWidget= (ldBase_t *)ptScene->ptNodeRoot;
+    int16_t screenWidth;
+    int16_t screenHeight;
+
+    ldBaseGetScreenSizeForScene(ptScene, &screenWidth, &screenHeight);
 
     ldBaseMove(ptWidget,offsetX,offsetY);
 
     int16_t minX = MIN(0, offsetX);
     int16_t minY = MIN(0, offsetY);
-    int16_t maxX = MAX(LD_CFG_SCREEN_WIDTH, offsetX + bgWidth);
-    int16_t maxY = MAX(LD_CFG_SCREEN_HEIGHT, offsetY + bgHeight);
+    int16_t maxX = MAX(screenWidth, offsetX + bgWidth);
+    int16_t maxY = MAX(screenHeight, offsetY + bgHeight);
 
     ptWidget->use_as__arm_2d_control_node_t.tRegion.tSize.iWidth=maxX-minX;
     ptWidget->use_as__arm_2d_control_node_t.tRegion.tSize.iHeight=maxY-minY;
 
     extern void ldGuiUpdateScene(void);
 
+    ldCfgBgMoveDidUpdate(ptScene, bgWidth, bgHeight, offsetX, offsetY);
     ldGuiUpdateScene();
 }
 

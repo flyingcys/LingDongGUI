@@ -235,11 +235,14 @@ void _ldTabelShowKeyboard(ld_scene_t *ptScene,ldTable_t *ptWidget,ldTableItem_t 
         ldKeyboardSetHidden((ldBase_t *)kb,false);
 
         arm_2d_region_t itemRegion= _ldTableGetItemRegion(ptWidget,ptWidget->currentRow,ptWidget->currentColumn);
+        int16_t screenWidth;
+        int16_t screenHeight;
+        ldBaseGetScreenSizeForScene(ptScene, &screenWidth, &screenHeight);
 
-        if((itemRegion.tLocation.iY+itemRegion.tSize.iHeight+ptWidget->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY)>(LD_CFG_SCREEN_HEIGHT>>1))
+        if((itemRegion.tLocation.iY+itemRegion.tSize.iHeight+ptWidget->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tLocation.iY)>(screenHeight>>1))
         {
-            ldKeyboardMove((ldBase_t *)kb,0,LD_CFG_SCREEN_HEIGHT>>1);
-            ldBaseBgMove(ptScene,LD_CFG_SCREEN_WIDTH,LD_CFG_SCREEN_HEIGHT,0,-(LD_CFG_SCREEN_HEIGHT>>1));
+            ldKeyboardMove((ldBase_t *)kb,0,screenHeight>>1);
+            ldBaseBgMove(ptScene,screenWidth,screenHeight,0,-(screenHeight>>1));
         }
         else
         {

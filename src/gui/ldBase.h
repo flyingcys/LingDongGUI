@@ -316,6 +316,8 @@ ldBase_t* ldBaseGetParent(ldBase_t* ptWidget);
 ldBase_t* ldBaseGetChildList(ldBase_t* ptWidget);
 ldBase_t* ldBaseGetNextSibling(ldBase_t* ptWidget);
 uint16_t ldBaseGetChildCount(ldBase_t* ptWidget);
+void ldBaseGetScreenSize(int16_t *width, int16_t *height);
+void ldBaseGetScreenSizeForScene(ld_scene_t *ptScene, int16_t *width, int16_t *height);
 void ldBaseBgMove(ld_scene_t *ptScene, int16_t bgWidth,int16_t bgHeight,int16_t offsetX,int16_t offsetY);
 arm_2d_region_t ldBaseGetAlignRegion(arm_2d_region_t parentRegion,arm_2d_region_t childRegion,arm_2d_align_t tAlign);
 arm_2d_control_node_t *ldBaseGetRootNode(arm_2d_control_node_t *ptNode);

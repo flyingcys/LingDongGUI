@@ -357,6 +357,10 @@ static void test_table_reuses_editable_cell_contract(void)
 
 static void test_table_double_press_blank_excel_cell_keeps_font_for_editing(void)
 {
+    enum {
+        TEST_RUNTIME_WIDTH = 1024,
+        TEST_RUNTIME_HEIGHT = 600,
+    };
     struct tinyui_app *app;
     struct tinyui_window *win;
     struct tinyui_keyboard *keyboard;
@@ -365,11 +369,21 @@ static void test_table_double_press_blank_excel_cell_keeps_font_for_editing(void
     struct tinyui_app *app_state;
     ldTable_t *ld_table;
     ldTableItem_t *item;
+    arm_2d_region_t keyboard_region;
+    arm_2d_region_t root_region;
     arm_2d_tile_t draw_tile;
-    static uint16_t draw_buffer[LD_CFG_SCREEN_WIDTH * LD_CFG_SCREEN_HEIGHT];
+    static uint16_t draw_buffer[TEST_RUNTIME_WIDTH * TEST_RUNTIME_HEIGHT];
+    struct tinyui_display_config display = {
+        .width = TEST_RUNTIME_WIDTH,
+        .height = TEST_RUNTIME_HEIGHT,
+        .color_format = TINYUI_COLOR_FORMAT_RGB565,
+        .buffer_height = 0,
+        .user_data = 0,
+    };
 
     app = tinyui_app_create();
     assert(app != 0);
+    assert(tinyui_display_set_config(app, &display) == 0);
     win = tinyui_window_create(app, "table_excel_click_root");
     assert(win != 0);
     keyboard = tinyui_keyboard_create(win, "table_excel_keyboard");
@@ -412,9 +426,18 @@ static void test_table_double_press_blank_excel_cell_keeps_font_for_editing(void
     assert(item->isEditing == true);
     assert(item->ptFont != 0);
     assert(((ldBase_t *)keyboard->widget.ld_widget)->isHidden == false);
+    keyboard_region = ldBaseGetRegion((ldBase_t *)keyboard->widget.ld_widget);
+    root_region = ldBaseGetRegion((ldBase_t *)app_state->ld_scene->ptNodeRoot);
+    assert(keyboard_region.tLocation.iX == 0);
+    assert(keyboard_region.tLocation.iY == 0);
+    assert(keyboard_region.tSize.iWidth == 1024);
+    assert(keyboard_region.tSize.iHeight == 600);
+    assert(root_region.tLocation.iY == 0);
+    assert(root_region.tSize.iWidth == 1024);
+    assert(root_region.tSize.iHeight == 600);
 
     memset(draw_buffer, 0, sizeof(draw_buffer));
-    draw_tile = make_table_rgb565_tile(draw_buffer, LD_CFG_SCREEN_WIDTH, LD_CFG_SCREEN_HEIGHT);
+    draw_tile = make_table_rgb565_tile(draw_buffer, TEST_RUNTIME_WIDTH, TEST_RUNTIME_HEIGHT);
     ldTable_show(app_state->ld_scene, ld_table, &draw_tile, true);
 
     tinyui_app_destroy(app);

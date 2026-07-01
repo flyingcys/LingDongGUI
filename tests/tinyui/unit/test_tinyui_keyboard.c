@@ -1,4 +1,5 @@
 #include "core/app.h"
+#include "display/display.h"
 #include "widgets/keyboard.h"
 #include "widgets/line_edit.h"
 #include "widgets/text.h"
@@ -92,6 +93,11 @@ static int keyboard_event_cookie = 0;
 static int keyboard_draw_count = 0;
 static unsigned int keyboard_draw_last_key_code = 0;
 static int keyboard_draw_cookie = 0;
+
+static uint64_t make_signal_value_xy(uint16_t x, uint16_t y)
+{
+    return ((uint64_t)x << 16) | y;
+}
 
 static void on_keyboard_event(struct tinyui_keyboard *keyboard,
                               unsigned int key_code,
@@ -518,10 +524,14 @@ static void test_hidden_keyboard_set_pos_then_line_edit_press_keeps_native_state
     arm_2d_location_t press_point = {0};
     arm_2d_region_t region;
     arm_2d_region_t temp_region;
-    int16_t screen_width = LD_CFG_SCREEN_WIDTH;
-    int16_t screen_height = LD_CFG_SCREEN_HEIGHT;
+    struct tinyui_display_config display = {0};
+    int16_t screen_width;
+    int16_t screen_height;
 
     win = test_window_create(&app);
+    assert(tinyui_display_get_config(app, &display) == 0);
+    screen_width = (int16_t)display.width;
+    screen_height = (int16_t)display.height;
     keyboard = tinyui_keyboard_create(win, "keyboard_line_edit_crash_path");
     line_edit = tinyui_line_edit_create(win, "line_edit_opens_keyboard");
 
@@ -561,6 +571,231 @@ static void test_hidden_keyboard_set_pos_then_line_edit_press_keeps_native_state
 
     ldGuiClickedAction(app->ld_scene, SIGNAL_RELEASE, press_point);
     ldMsgProcess(app->ld_scene);
+    tinyui_app_destroy(app);
+}
+
+static void test_keyboard_uses_runtime_viewport_for_legacy_demo0_keyboard_model(void)
+{
+    struct tinyui_app *app;
+    struct tinyui_window *win;
+    struct tinyui_keyboard *keyboard;
+    struct tinyui_line_edit *line_edit;
+    struct tinyui_display_config display = {
+        .width = 1024,
+        .height = 600,
+        .color_format = TINYUI_COLOR_FORMAT_RGB565,
+        .buffer_height = 0,
+        .user_data = 0,
+    };
+    ldKeyboard_t *ld_keyboard;
+    ldLineEdit_t *ld_line_edit;
+    ldBase_t *ld_keyboard_base;
+    ldBase_t *ld_root;
+    ldBase_t *ld_window_base;
+    arm_2d_region_t keyboard_region;
+    arm_2d_region_t root_region;
+    arm_2d_region_t window_region;
+    arm_2d_location_t press_point = {900, 425};
+
+    app = tinyui_app_create();
+    assert(app != 0);
+    assert(tinyui_display_set_config(app, &display) == 0);
+    win = tinyui_window_create(app, "runtime_1024_root");
+    assert(win != 0);
+    keyboard = tinyui_keyboard_create(win, "runtime_1024_keyboard");
+    line_edit = tinyui_line_edit_create(win, "runtime_1024_line_edit");
+    assert(keyboard != 0);
+    assert(line_edit != 0);
+
+    assert(tinyui_line_edit_set_keyboard_widget(line_edit, keyboard) == 0);
+    assert(tinyui_widget_set_pos(&line_edit->widget, 850, 400) == 0);
+    assert(tinyui_widget_set_size(&line_edit->widget, 100, 50) == 0);
+    assert(tinyui_widget_set_pos(&keyboard->widget, 780, 450) == 0);
+
+    ld_keyboard = (ldKeyboard_t *)keyboard->widget.ld_widget;
+    ld_line_edit = (ldLineEdit_t *)line_edit->widget.ld_widget;
+    ld_keyboard_base = (ldBase_t *)ld_keyboard;
+    ld_window_base = (ldBase_t *)win->widget.ld_widget;
+    assert(ld_keyboard != 0);
+    assert(ld_line_edit != 0);
+    assert(ld_window_base != 0);
+
+    keyboard_region = ldBaseGetRegion(ld_keyboard_base);
+    assert(keyboard_region.tSize.iWidth == 1024);
+    assert(keyboard_region.tSize.iHeight == 600);
+
+    if (app->ld_scene->ptMsgQueue != 0) {
+        ldMsgDeinit(&app->ld_scene->ptMsgQueue);
+    }
+    assert(ldMsgInit(&app->ld_scene->ptMsgQueue, 8) == true);
+
+    ldGuiClickedAction(app->ld_scene, SIGNAL_PRESS, press_point);
+    ldMsgProcess(app->ld_scene);
+
+    keyboard_region = ldBaseGetRegion(ld_keyboard_base);
+    assert(ld_keyboard_base->isHidden == false);
+    assert(keyboard_region.tLocation.iX == 0);
+    assert(keyboard_region.tLocation.iY == 300);
+    assert(keyboard_region.tSize.iWidth == 1024);
+    assert(keyboard_region.tSize.iHeight == 600);
+
+    ld_root = (ldBase_t *)app->ld_scene->ptNodeRoot;
+    root_region = ldBaseGetRegion(ld_root);
+    assert(root_region.tLocation.iX == 0);
+    assert(root_region.tLocation.iY == -300);
+    assert(root_region.tSize.iWidth == 1024);
+    assert(root_region.tSize.iHeight == 900);
+    window_region = ldBaseGetRegion(ld_window_base);
+    assert(window_region.tLocation.iX == 0);
+    assert(window_region.tLocation.iY == -300);
+    assert(window_region.tSize.iWidth == 1024);
+    assert(window_region.tSize.iHeight == 900);
+
+    ld_keyboard->pBtnList = ldKeyboardGetTargetBtnList(ld_keyboard);
+    ld_keyboard->isWaitInit = false;
+    ldMsgEmit(app->ld_scene->ptMsgQueue,
+              ld_keyboard,
+              SIGNAL_PRESS,
+              make_signal_value_xy(20, 320));
+    ldMsgProcess(app->ld_scene);
+    assert(strcmp((const char *)ldLineEditGetText(ld_line_edit), "q") == 0);
+
+    ld_keyboard->keyCode = 3;
+    ld_keyboard->isClick = true;
+    ldKeyboardCallback(ld_keyboard, SIGNAL_RELEASE);
+    assert(ld_keyboard->pBtnList == numBtnInfo);
+    ldMsgEmit(app->ld_scene->ptMsgQueue,
+              ld_keyboard,
+              SIGNAL_PRESS,
+              make_signal_value_xy(390, 524));
+    ldMsgProcess(app->ld_scene);
+    assert(strcmp((const char *)ldLineEditGetText(ld_line_edit), "q0") == 0);
+
+    tinyui_app_destroy(app);
+}
+
+static void test_keyboard_runtime_viewport_is_resolved_from_event_scene(void)
+{
+    struct tinyui_app *app_a;
+    struct tinyui_app *app_b;
+    struct tinyui_window *win_a;
+    struct tinyui_window *win_b;
+    struct tinyui_keyboard *keyboard_a;
+    struct tinyui_keyboard *keyboard_b;
+    struct tinyui_line_edit *line_edit_a;
+    struct tinyui_display_config display_a = {
+        .width = 1024,
+        .height = 600,
+        .color_format = TINYUI_COLOR_FORMAT_RGB565,
+        .buffer_height = 0,
+        .user_data = 0,
+    };
+    struct tinyui_display_config display_b = {
+        .width = 480,
+        .height = 320,
+        .color_format = TINYUI_COLOR_FORMAT_RGB565,
+        .buffer_height = 0,
+        .user_data = 0,
+    };
+    ldBase_t *ld_keyboard_base_a;
+    arm_2d_region_t keyboard_region;
+    arm_2d_location_t press_point = {900, 425};
+
+    app_a = tinyui_app_create();
+    assert(app_a != 0);
+    assert(tinyui_display_set_config(app_a, &display_a) == 0);
+    win_a = tinyui_window_create(app_a, "runtime_scene_a_root");
+    assert(win_a != 0);
+    keyboard_a = tinyui_keyboard_create(win_a, "runtime_scene_a_keyboard");
+    line_edit_a = tinyui_line_edit_create(win_a, "runtime_scene_a_line_edit");
+    assert(keyboard_a != 0);
+    assert(line_edit_a != 0);
+    assert(tinyui_line_edit_set_keyboard_widget(line_edit_a, keyboard_a) == 0);
+    assert(tinyui_widget_set_pos(&line_edit_a->widget, 850, 400) == 0);
+    assert(tinyui_widget_set_size(&line_edit_a->widget, 100, 50) == 0);
+
+    app_b = tinyui_app_create();
+    assert(app_b != 0);
+    assert(tinyui_display_set_config(app_b, &display_b) == 0);
+    win_b = tinyui_window_create(app_b, "runtime_scene_b_root");
+    assert(win_b != 0);
+    keyboard_b = tinyui_keyboard_create(win_b, "runtime_scene_b_keyboard");
+    assert(keyboard_b != 0);
+
+    if (app_a->ld_scene->ptMsgQueue != 0) {
+        ldMsgDeinit(&app_a->ld_scene->ptMsgQueue);
+    }
+    assert(ldMsgInit(&app_a->ld_scene->ptMsgQueue, 8) == true);
+
+    ldGuiClickedAction(app_a->ld_scene, SIGNAL_PRESS, press_point);
+    ldMsgProcess(app_a->ld_scene);
+
+    ld_keyboard_base_a = (ldBase_t *)keyboard_a->widget.ld_widget;
+    assert(ld_keyboard_base_a != 0);
+    keyboard_region = ldBaseGetRegion(ld_keyboard_base_a);
+    assert(keyboard_region.tLocation.iY == 300);
+    assert(keyboard_region.tSize.iWidth == 1024);
+    assert(keyboard_region.tSize.iHeight == 600);
+
+    tinyui_app_destroy(app_b);
+    tinyui_app_destroy(app_a);
+}
+
+static void test_keyboard_bg_move_syncs_only_related_root_window(void)
+{
+    struct tinyui_app *app;
+    struct tinyui_window *win_a;
+    struct tinyui_window *win_b;
+    struct tinyui_keyboard *keyboard;
+    struct tinyui_line_edit *line_edit;
+    struct tinyui_display_config display = {
+        .width = 1024,
+        .height = 600,
+        .color_format = TINYUI_COLOR_FORMAT_RGB565,
+        .buffer_height = 0,
+        .user_data = 0,
+    };
+    ldBase_t *ld_window_a;
+    ldBase_t *ld_window_b;
+    arm_2d_region_t window_a_region;
+    arm_2d_region_t window_b_region;
+    arm_2d_location_t press_point = {900, 425};
+
+    app = tinyui_app_create();
+    assert(app != 0);
+    assert(tinyui_display_set_config(app, &display) == 0);
+    win_b = tinyui_window_create(app, "sibling_window");
+    assert(win_b != 0);
+    win_a = tinyui_window_create(app, "related_window");
+    assert(win_a != 0);
+    keyboard = tinyui_keyboard_create(win_a, "related_keyboard");
+    line_edit = tinyui_line_edit_create(win_a, "related_line_edit");
+    assert(keyboard != 0);
+    assert(line_edit != 0);
+    assert(tinyui_line_edit_set_keyboard_widget(line_edit, keyboard) == 0);
+    assert(tinyui_widget_set_pos(&line_edit->widget, 850, 400) == 0);
+    assert(tinyui_widget_set_size(&line_edit->widget, 100, 50) == 0);
+
+    ld_window_a = (ldBase_t *)win_a->widget.ld_widget;
+    ld_window_b = (ldBase_t *)win_b->widget.ld_widget;
+    assert(ld_window_a != 0);
+    assert(ld_window_b != 0);
+
+    if (app->ld_scene->ptMsgQueue != 0) {
+        ldMsgDeinit(&app->ld_scene->ptMsgQueue);
+    }
+    assert(ldMsgInit(&app->ld_scene->ptMsgQueue, 8) == true);
+
+    ldGuiClickedAction(app->ld_scene, SIGNAL_PRESS, press_point);
+    ldMsgProcess(app->ld_scene);
+
+    window_a_region = ldBaseGetRegion(ld_window_a);
+    window_b_region = ldBaseGetRegion(ld_window_b);
+    assert(window_a_region.tLocation.iY == -300);
+    assert(window_a_region.tSize.iHeight == 900);
+    assert(window_b_region.tLocation.iY == 0);
+    assert(window_b_region.tSize.iHeight == 600);
+
     tinyui_app_destroy(app);
 }
 
@@ -804,6 +1039,9 @@ int main(void)
     test_keyboard_weak_hooks_remain_backend_private_not_public_api();
     test_keyboard_init_and_shared_base_aliases_round_trip();
     test_hidden_keyboard_set_pos_then_line_edit_press_keeps_native_state_bounded();
+    test_keyboard_uses_runtime_viewport_for_legacy_demo0_keyboard_model();
+    test_keyboard_runtime_viewport_is_resolved_from_event_scene();
+    test_keyboard_bg_move_syncs_only_related_root_window();
     test_keyboard_exit_clears_focus_or_edit_session();
     test_keyboard_click_respects_focus_owner();
     test_keyboard_click_and_exit_backend_symbols_are_no_longer_public();

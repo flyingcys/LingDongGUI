@@ -8,7 +8,16 @@ extern "C" {
 #include "stdint.h"
 #include "stdbool.h"
 
+struct ld_scene_t;
+
 void ldCfgTouchSetPoint(int16_t x, int16_t y, bool pressed);
+void ldCfgScreenGetSize(int16_t *width, int16_t *height);
+void ldCfgScreenGetSizeForScene(struct ld_scene_t *ptScene, int16_t *width, int16_t *height);
+void ldCfgBgMoveDidUpdate(struct ld_scene_t *ptScene,
+                          int16_t bgWidth,
+                          int16_t bgHeight,
+                          int16_t offsetX,
+                          int16_t offsetY);
 
 //-------- <<< Use Configuration Wizard in Context Menu >>> -----------------
 
