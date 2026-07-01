@@ -519,8 +519,7 @@ int tinyui_widget_set_pos(struct tinyui_widget *widget, int x, int y)
     widget->y = y;
     ld_base = tinyui_widget_get_ld_base(widget);
     if (ld_base != 0) {
-        ldBaseSetX(ld_base, (int16_t)x);
-        ldBaseSetY(ld_base, (int16_t)y);
+        ldBaseMove(ld_base, (int16_t)x, (int16_t)y);
     }
     return 0;
 }

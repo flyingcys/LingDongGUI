@@ -2450,6 +2450,32 @@ static void test_widget_is_hidden_contract(struct tinyui_button *button)
     assert(tinyui_widget_is_hidden(0) == -1);
 }
 
+static void test_hidden_widget_set_pos_preserves_visible_position(struct tinyui_window *win)
+{
+    struct tinyui_button *button;
+    ldBase_t *ld_button;
+    arm_2d_region_t region;
+
+    assert(win != 0);
+    button = tinyui_button_create(win, "hidden_set_pos_button");
+    assert(button != 0);
+    ld_button = (ldBase_t *)button->widget.ld_widget;
+    assert(ld_button != 0);
+
+    assert(tinyui_widget_set_pos(&button->widget, 11, 17) == 0);
+    assert(tinyui_widget_set_size(&button->widget, 30, 20) == 0);
+    assert(tinyui_widget_set_visible(&button->widget, 0) == 0);
+    assert(ld_button->isHidden == true);
+
+    assert(tinyui_widget_set_pos(&button->widget, 123, 87) == 0);
+    assert(ld_button->isHidden == true);
+
+    assert(tinyui_widget_set_visible(&button->widget, 1) == 0);
+    region = ldBaseGetRegion(ld_button);
+    assert(region.tLocation.iX == 123);
+    assert(region.tLocation.iY == 87);
+}
+
 static void test_widget_destroy_clears_backend(struct tinyui_window *win)
 {
     struct tinyui_label *label = tinyui_label_create(win, "label_to_destroy");
@@ -2682,6 +2708,7 @@ int main(void)
     test_list_native_signal_restore_rejected_selection_when_hidden_or_disabled(win,
                                                                                app_state->ld_scene);
     test_backend_event_dispatch_native_signal_symbol_is_no_longer_public();
+    test_hidden_widget_set_pos_preserves_visible_position(win);
 
     assert(tinyui_switch_set_on_toggled(sw, on_switch_toggle, 0) == 0);
     assert(tinyui_checkbox_set_on_toggled(cb, on_checkbox_toggle, 0) == 0);

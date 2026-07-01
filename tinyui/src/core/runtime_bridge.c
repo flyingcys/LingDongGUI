@@ -10,8 +10,72 @@
 #include "../../../src/gui/ldGui.h"
 #include "../../../src/misc/ldMsg.h"
 #include "arm_2d_helper_scene.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 void ldBaseNodeRemove(arm_2d_control_node_t *ptNode);
+
+static int tinyui_runtime_bridge_touch_log_enabled(void);
+
+static const char *tinyui_runtime_bridge_signal_name(uint8_t signal)
+{
+    switch (signal) {
+    case SIGNAL_PRESS: return "press";
+    case SIGNAL_HOLD_DOWN: return "hold";
+    case SIGNAL_RELEASE: return "release";
+    case SIGNAL_CLICKED_ITEM: return "clicked_item";
+    case SIGNAL_FINISHED: return "finished";
+    case SIGNAL_VALUE_CHANGED: return "value_changed";
+    default: return "unknown";
+    }
+}
+
+static const char *tinyui_runtime_bridge_kind_name(enum tinyui_backend_widget_kind kind)
+{
+    switch (kind) {
+    case TINYUI_BACKEND_WIDGET_WINDOW: return "window";
+    case TINYUI_BACKEND_WIDGET_BACKGROUND: return "background";
+    case TINYUI_BACKEND_WIDGET_LABEL: return "label";
+    case TINYUI_BACKEND_WIDGET_BUTTON: return "button";
+    case TINYUI_BACKEND_WIDGET_CHECKBOX: return "checkbox";
+    case TINYUI_BACKEND_WIDGET_SWITCH: return "switch";
+    case TINYUI_BACKEND_WIDGET_SLIDER: return "slider";
+    case TINYUI_BACKEND_WIDGET_ARC: return "arc";
+    case TINYUI_BACKEND_WIDGET_GAUGE: return "gauge";
+    case TINYUI_BACKEND_WIDGET_ICON_SLIDER: return "icon_slider";
+    case TINYUI_BACKEND_WIDGET_RADIAL_MENU: return "radial_menu";
+    case TINYUI_BACKEND_WIDGET_PROGRESS_BAR: return "progress_bar";
+    case TINYUI_BACKEND_WIDGET_QRCODE: return "qrcode";
+    case TINYUI_BACKEND_WIDGET_PROGRESS_WHEEL: return "progress_wheel";
+    case TINYUI_BACKEND_WIDGET_ANIMATION: return "animation";
+    case TINYUI_BACKEND_WIDGET_LIST: return "list";
+    case TINYUI_BACKEND_WIDGET_MESSAGE_BOX: return "message_box";
+    case TINYUI_BACKEND_WIDGET_DATE_TIME: return "date_time";
+    case TINYUI_BACKEND_WIDGET_CLOCK: return "clock";
+    case TINYUI_BACKEND_WIDGET_TEXT: return "text";
+    case TINYUI_BACKEND_WIDGET_KEYBOARD: return "keyboard";
+    case TINYUI_BACKEND_WIDGET_COMBO_BOX: return "combo_box";
+    case TINYUI_BACKEND_WIDGET_SCROLL_SELECTER: return "scroll_selecter";
+    case TINYUI_BACKEND_WIDGET_TABLE: return "table";
+    case TINYUI_BACKEND_WIDGET_GRAPH: return "graph";
+    case TINYUI_BACKEND_WIDGET_IMAGE: return "image";
+    case TINYUI_BACKEND_WIDGET_CALENDAR: return "calendar";
+    case TINYUI_BACKEND_WIDGET_CANVAS: return "canvas";
+    default: return "unknown";
+    }
+}
+
+static const char *tinyui_runtime_bridge_widget_id(const struct tinyui_widget *widget)
+{
+    const char *const *id_field;
+
+    if (widget == NULL) {
+        return "(null)";
+    }
+
+    id_field = (const char *const *)((const char *)widget + sizeof(*widget));
+    return (id_field != NULL && *id_field != NULL) ? *id_field : "(no-id)";
+}
 
 static bool tinyui_runtime_bridge_ld_event_bridge_slot(struct ld_scene_t *scene, ldMsg_t msg)
 {
@@ -24,6 +88,16 @@ static bool tinyui_runtime_bridge_ld_event_bridge_slot(struct ld_scene_t *scene,
     widget = tinyui_widget_from_ld_scene(scene, msg.ptSender);
     if (widget == NULL) {
         return false;
+    }
+
+    if (tinyui_runtime_bridge_touch_log_enabled()) {
+        printf("[TINYUI_TOUCH][TINYUI] signal=%s id=%s kind=%s ld_id=%u value=0x%llx\n",
+               tinyui_runtime_bridge_signal_name(msg.signal),
+               tinyui_runtime_bridge_widget_id(widget),
+               tinyui_runtime_bridge_kind_name(widget->kind),
+               (unsigned int)widget->ld_name_id,
+               (unsigned long long)msg.value);
+        fflush(stdout);
     }
 
     tinyui_widget_dispatch_native_signal(widget, msg.signal, msg.value);

@@ -95,6 +95,10 @@ void ldMsgProcess(void *ptScene)
     while(xQueueDequeue(((ld_scene_t*)ptScene)->ptMsgQueue,&tMsg,sizeof (ldMsg_t)))
     {
         ptWidget=(ldBase_t*)tMsg.ptSender;
+        if(ptWidget == NULL)
+        {
+            continue;
+        }
         ptNext=ptWidget->ptAssn;
 
         while(ptNext!=NULL)

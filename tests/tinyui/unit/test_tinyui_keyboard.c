@@ -4,9 +4,11 @@
 #include "widgets/text.h"
 #include "widgets/window.h"
 #include "../../../src/gui/ldBase.h"
+#include "../../../src/gui/ldGui.h"
 #include "../../../src/gui/ldKeyboard.h"
 #include "../../../src/gui/ldLineEdit.h"
 #include "../../../src/gui/ldText.h"
+#include "../../../src/misc/ldMsg.h"
 #include "internal.h"
 
 #include <assert.h>
@@ -494,10 +496,71 @@ static void test_keyboard_init_and_shared_base_aliases_round_trip(void)
     assert(tinyui_widget_set_opacity(&keyboard->widget, 55) == 0);
 
     region = ldBaseGetRegion(ld_base);
+    assert(ld_base->isHidden == true);
+    assert(region.tLocation.iX != 9);
+    assert(region.tLocation.iY != 19);
+    assert(ld_base->opacity == 55);
+    assert(tinyui_widget_set_visible(&keyboard->widget, 1) == 0);
+    region = ldBaseGetRegion(ld_base);
     assert(region.tLocation.iX == 9);
     assert(region.tLocation.iY == 19);
+    tinyui_app_destroy(app);
+}
+
+static void test_hidden_keyboard_set_pos_then_line_edit_press_keeps_native_state_bounded(void)
+{
+    struct tinyui_app *app;
+    struct tinyui_window *win;
+    struct tinyui_keyboard *keyboard;
+    struct tinyui_line_edit *line_edit;
+    ldKeyboard_t *ld_keyboard;
+    ldBase_t *ld_base;
+    arm_2d_location_t press_point = {0};
+    arm_2d_region_t region;
+    arm_2d_region_t temp_region;
+    int16_t screen_width = LD_CFG_SCREEN_WIDTH;
+    int16_t screen_height = LD_CFG_SCREEN_HEIGHT;
+
+    win = test_window_create(&app);
+    keyboard = tinyui_keyboard_create(win, "keyboard_line_edit_crash_path");
+    line_edit = tinyui_line_edit_create(win, "line_edit_opens_keyboard");
+
+    assert(keyboard != 0);
+    assert(line_edit != 0);
+    assert(tinyui_line_edit_set_keyboard_widget(line_edit, keyboard) == 0);
+    assert(tinyui_widget_set_pos(&line_edit->widget, screen_width - 140, screen_height - 90) == 0);
+    assert(tinyui_widget_set_size(&line_edit->widget, 100, 50) == 0);
+    assert(tinyui_widget_set_pos(&keyboard->widget, screen_width - 160, screen_height - 80) == 0);
+
+    ld_keyboard = (ldKeyboard_t *)keyboard->widget.ld_widget;
+    assert(ld_keyboard != 0);
+    ld_base = (ldBase_t *)ld_keyboard;
     assert(ld_base->isHidden == true);
-    assert(ld_base->opacity == 55);
+
+    if (app->ld_scene->ptMsgQueue != 0) {
+        ldMsgDeinit(&app->ld_scene->ptMsgQueue);
+    }
+    assert(ldMsgInit(&app->ld_scene->ptMsgQueue, 8) == true);
+
+    press_point.iX = screen_width - 100;
+    press_point.iY = screen_height - 70;
+    ldGuiClickedAction(app->ld_scene, SIGNAL_PRESS, press_point);
+    ldMsgProcess(app->ld_scene);
+
+    region = ldBaseGetRegion(ld_base);
+    temp_region = ld_base->tTempRegion;
+    assert(ld_base->isHidden == false);
+    assert(region.tLocation.iX == 0);
+    assert(region.tLocation.iY == (screen_height >> 1));
+    assert(temp_region.tSize.iWidth > 0);
+    assert(temp_region.tSize.iHeight > 0);
+    assert(temp_region.tSize.iWidth <= screen_width * 2);
+    assert(temp_region.tSize.iHeight <= screen_height * 2);
+
+    ldGuiFrameStart(app->ld_scene);
+
+    ldGuiClickedAction(app->ld_scene, SIGNAL_RELEASE, press_point);
+    ldMsgProcess(app->ld_scene);
     tinyui_app_destroy(app);
 }
 
@@ -740,6 +803,7 @@ int main(void)
     test_keyboard_callback_observes_button_update_and_click();
     test_keyboard_weak_hooks_remain_backend_private_not_public_api();
     test_keyboard_init_and_shared_base_aliases_round_trip();
+    test_hidden_keyboard_set_pos_then_line_edit_press_keeps_native_state_bounded();
     test_keyboard_exit_clears_focus_or_edit_session();
     test_keyboard_click_respects_focus_owner();
     test_keyboard_click_and_exit_backend_symbols_are_no_longer_public();

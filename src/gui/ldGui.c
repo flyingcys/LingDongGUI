@@ -76,10 +76,102 @@ static bool ldGuiTouchLogEnabled(void)
     return enabled != 0;
 }
 
+static const char *ldGuiWidgetTypeName(ldWidgetType_t type)
+{
+    switch(type)
+    {
+    case widgetTypeBackground: return "background";
+    case widgetTypeWindow: return "window";
+    case widgetTypeButton: return "button";
+    case widgetTypeImage: return "image";
+    case widgetTypeText: return "text";
+    case widgetTypeLineEdit: return "line_edit";
+    case widgetTypeGraph: return "graph";
+    case widgetTypeCheckBox: return "checkbox";
+    case widgetTypeSlider: return "slider";
+    case widgetTypeSwitch: return "switch";
+    case widgetTypeProgressBar: return "progress_bar";
+    case widgetTypeGauge: return "gauge";
+    case widgetTypeQRCode: return "qrcode";
+    case widgetTypeDateTime: return "date_time";
+    case widgetTypeIconSlider: return "icon_slider";
+    case widgetTypeComboBox: return "combo_box";
+    case widgetTypeArc: return "arc";
+    case widgetTypeRadialMenu: return "radial_menu";
+    case widgetTypeScrollSelecter: return "scroll_selecter";
+    case widgetTypeLabel: return "label";
+    case widgetTypeTable: return "table";
+    case widgetTypeKeyboard: return "keyboard";
+    case widgetTypeAnimation: return "animation";
+    case widgetTypeList: return "list";
+    case widgetTypeMessageBox: return "message_box";
+    case widgetTypeCalendar: return "calendar";
+    case widgetTypeProgressWheel: return "progress_wheel";
+    case widgetTypeClock: return "clock";
+    case widgetTypeCanvas: return "canvas";
+    default: return "unknown";
+    }
+}
+
+static const char *ldGuiSignalName(uint8_t signal)
+{
+    switch(signal)
+    {
+    case SIGNAL_NO_OPERATION: return "none";
+    case SIGNAL_PRESS: return "press";
+    case SIGNAL_HOLD_DOWN: return "hold";
+    case SIGNAL_RELEASE: return "release";
+    case SIGNAL_CLICKED_ITEM: return "clicked_item";
+    case SIGNAL_FINISHED: return "finished";
+    case SIGNAL_VALUE_CHANGED: return "value_changed";
+    default: return "unknown";
+    }
+}
+
+static void ldGuiLogHit(uint8_t touchSignal,
+                        const arm_2d_location_t *point,
+                        const ldBase_t *widget)
+{
+    arm_2d_region_t absolute_region = {0};
+
+    if (!ldGuiTouchLogEnabled() || point == NULL) {
+        return;
+    }
+
+    if (widget == NULL) {
+        printf("[TINYUI_TOUCH][HIT] signal=%s point=(%d,%d) widget=null\n",
+               ldGuiSignalName(touchSignal),
+               point->iX,
+               point->iY);
+        fflush(stdout);
+        return;
+    }
+
+    arm_2d_helper_control_get_absolute_region((arm_2d_control_node_t *)widget,
+                                              &absolute_region,
+                                              true);
+    printf("[TINYUI_TOUCH][HIT] signal=%s point=(%d,%d) ld_id=%u ld_type=%s region=(%d,%d,%d,%d)\n",
+           ldGuiSignalName(touchSignal),
+           point->iX,
+           point->iY,
+           (unsigned int)widget->nameId,
+           ldGuiWidgetTypeName(widget->widgetType),
+           absolute_region.tLocation.iX,
+           absolute_region.tLocation.iY,
+           absolute_region.tSize.iWidth,
+           absolute_region.tSize.iHeight);
+    fflush(stdout);
+}
+
 void ldGuiClickedAction(ld_scene_t *ptScene,uint8_t touchSignal,arm_2d_location_t tLocation)
 {
-    ldBase_t *ptWidget;
+    ldBase_t *ptWidget=NULL;
     uint64_t u64Temp=0;
+
+    if(ptScene==NULL)
+    {
+        return;
+    }
 
     switch(touchSignal)
     {
@@ -93,6 +185,7 @@ void ldGuiClickedAction(ld_scene_t *ptScene,uint8_t touchSignal,arm_2d_location_
         {
             ptWidget=(ldBase_t*)arm_2d_helper_control_find_node_with_location(ptScene->ptNodeRoot,tLocation);
         }
+        ldGuiLogHit(touchSignal,&tLocation,ptWidget);
 
 #if (USE_LOG_LEVEL>=LOG_LEVEL_DEBUG)
         if(ptWidget!=NULL)
@@ -111,13 +204,6 @@ void ldGuiClickedAction(ld_scene_t *ptScene,uint8_t touchSignal,arm_2d_location_
             u64Temp=tLocation.iX;
             u64Temp<<=16;
             u64Temp+=tLocation.iY;
-            if (ldGuiTouchLogEnabled()) {
-                printf("[TINYUI_TOUCH][HIT] signal=press widget=%u point=(%d,%d)\n",
-                       (unsigned int)ptWidget->nameId,
-                       tLocation.iX,
-                       tLocation.iY);
-                fflush(stdout);
-            }
             emit(ptWidget->nameId,touchSignal,u64Temp);
         }
         break;
@@ -127,15 +213,15 @@ void ldGuiClickedAction(ld_scene_t *ptScene,uint8_t touchSignal,arm_2d_location_
         if((prevLocation.iX!=tLocation.iX)||(prevLocation.iY!=tLocation.iY))
         {
             ptWidget=prevWidget;//不可以把static变量作为函数变量调用
+            ldGuiLogHit(touchSignal,&tLocation,ptWidget);
             if(ptWidget!=NULL)
             {
                 if (ldGuiTouchLogEnabled()) {
-                    printf("[TINYUI_TOUCH][HIT] signal=hold widget=%u point=(%d,%d) press=(%d,%d)\n",
-                           (unsigned int)ptWidget->nameId,
-                           tLocation.iX,
-                           tLocation.iY,
+                    printf("[TINYUI_TOUCH][MOVE] press=(%d,%d) current=(%d,%d)\n",
                            pressLocation.iX,
-                           pressLocation.iY);
+                           pressLocation.iY,
+                           tLocation.iX,
+                           tLocation.iY);
                     fflush(stdout);
                 }
                 u64Temp=tLocation.iX-pressLocation.iX;
@@ -155,17 +241,15 @@ void ldGuiClickedAction(ld_scene_t *ptScene,uint8_t touchSignal,arm_2d_location_
     case SIGNAL_RELEASE:
     {
         ptWidget=prevWidget;
+        ldGuiLogHit(touchSignal,&prevLocation,ptWidget);
         if(ptWidget!=NULL)
         {
-            if (ldGuiTouchLogEnabled()) {
-                printf("[TINYUI_TOUCH][HIT] signal=release widget=%u point=(%d,%d)\n",
-                       (unsigned int)ptWidget->nameId,
-                       prevLocation.iX,
-                       prevLocation.iY);
-                fflush(stdout);
-            }
             //cal speed
             deltaMoveTime=arm_2d_helper_convert_ticks_to_ms(arm_2d_helper_get_system_timestamp())-deltaMoveTime;
+            if(deltaMoveTime<=0)
+            {
+                deltaMoveTime=1;
+            }
             pressLocation.iX=(prevLocation.iX-pressLocation.iX);
             pressLocation.iY=(prevLocation.iY-pressLocation.iY);
             pressLocation.iX=(pressLocation.iX*100)/deltaMoveTime;
@@ -269,7 +353,10 @@ void ldGuiFrameStart(ld_scene_t *ptScene)
 {
     if(isFullWidgetUpdate==true)
     {
-        arm_2d_scene_player_update_scene_background(ptScene->use_as__arm_2d_scene_t.ptPlayer);
+        if(ptScene->use_as__arm_2d_scene_t.ptPlayer!=NULL)
+        {
+            arm_2d_scene_player_update_scene_background(ptScene->use_as__arm_2d_scene_t.ptPlayer);
+        }
         isFullWidgetUpdate=false;
     }
 
@@ -293,7 +380,7 @@ void ldGuiFrameStart(ld_scene_t *ptScene)
     }
 
     // draw arm 2d code
-    if(ptScene->ldGuiFuncGroup->frameStart!=NULL)
+    if(ptScene->ldGuiFuncGroup!=NULL && ptScene->ldGuiFuncGroup->frameStart!=NULL)
     {
         ptScene->ldGuiFuncGroup->frameStart(ptScene);
     }
@@ -314,7 +401,7 @@ void ldGuiDraw(ld_scene_t *ptScene,arm_2d_tile_t *ptTile,bool bIsNewFrame)
     }
 
     // draw arm 2d code
-    if(ptScene->ldGuiFuncGroup->draw!=NULL)
+    if(ptScene->ldGuiFuncGroup!=NULL && ptScene->ldGuiFuncGroup->draw!=NULL)
     {
         ptScene->ldGuiFuncGroup->draw(ptScene,ptTile,bIsNewFrame);
     }
@@ -346,7 +433,7 @@ void ldGuiFrameComplete(ld_scene_t *ptScene)
     }
 
     // draw arm 2d code
-    if(ptScene->ldGuiFuncGroup->frameComplete!=NULL)
+    if(ptScene->ldGuiFuncGroup!=NULL && ptScene->ldGuiFuncGroup->frameComplete!=NULL)
     {
         ptScene->ldGuiFuncGroup->frameComplete(ptScene);
     }

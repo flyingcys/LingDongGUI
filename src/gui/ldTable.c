@@ -1035,6 +1035,10 @@ void ldTableSetExcelType(ldTable_t *ptWidget,arm_2d_font_t* ptFont)
     {
         for(uint8_t column=1;column<ptWidget->columnCount;column++)
         {
+            if(ptFont!=NULL)
+            {
+                ldTableSetItemFont(ptWidget,row,column,ptFont);
+            }
             ldTableSetItemEditable(ptWidget,row,column,true,10);
         }
     }

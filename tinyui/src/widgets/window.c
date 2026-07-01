@@ -664,8 +664,7 @@ int tinyui_window_set_background_offset(struct tinyui_window *window, int offset
         int16_t ext_h = phantom != 0
             ? phantom->use_as__arm_2d_control_node_t.tRegion.tSize.iHeight
             : bg_height;
-        ldBaseSetX((ldBase_t *)ld_window, (int16_t)offset_x);
-        ldBaseSetY((ldBase_t *)ld_window, (int16_t)offset_y);
+        ldBaseMove((ldBase_t *)ld_window, (int16_t)offset_x, (int16_t)offset_y);
         ldBaseSetWidth((ldBase_t *)ld_window, ext_w);
         ldBaseSetHeight((ldBase_t *)ld_window, ext_h);
         bg_width = ext_w;
@@ -677,8 +676,7 @@ int tinyui_window_set_background_offset(struct tinyui_window *window, int offset
         if (ld_window->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iHeight < bg_height) {
             ldBaseSetHeight((ldBase_t *)ld_window, bg_height);
         }
-        ldBaseSetX((ldBase_t *)ld_window, (int16_t)offset_x);
-        ldBaseSetY((ldBase_t *)ld_window, (int16_t)offset_y);
+        ldBaseMove((ldBase_t *)ld_window, (int16_t)offset_x, (int16_t)offset_y);
     }
 
     if (ld_window->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iWidth < bg_width

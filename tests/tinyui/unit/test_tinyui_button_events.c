@@ -12,6 +12,12 @@
 #include <string.h>
 
 extern int tinyui_widget_has_ld_binding(const struct tinyui_widget *widget);
+extern int tinyui_runtime_bridge_commit_pointer_event(struct tinyui_app *app,
+                                                      int window_width,
+                                                      int window_height,
+                                                      int x,
+                                                      int y,
+                                                      int pressed);
 void tinyui_button_test_fail_next_set_font(void);
 
 static const char *test_self_binary_path = 0;
@@ -401,6 +407,51 @@ static void test_button_constructor_binds_ld_without_backend_wrapper(struct tiny
     assert(tinyui_widget_has_ld_binding(&btn->widget) == 1);
 }
 
+static void test_blank_click_does_not_emit_null_sender_or_crash(struct tinyui_app *app,
+                                                                struct tinyui_button *button)
+{
+    arm_2d_location_t blank = {0};
+    arm_2d_location_t button_point = {0};
+    ld_scene_t *scene;
+    ldBase_t *button_ld;
+
+    assert(app != 0);
+    assert(button != 0);
+    scene = app->ld_scene;
+    assert(scene != 0);
+    button_ld = (ldBase_t *)button->widget.ld_widget;
+    assert(button_ld != 0);
+
+    if (scene->ptMsgQueue != 0) {
+        ldMsgDeinit(&scene->ptMsgQueue);
+    }
+    assert(ldMsgInit(&scene->ptMsgQueue, 8) == true);
+
+    blank.iX = 1000;
+    blank.iY = 590;
+    ldGuiClickedAction(scene, SIGNAL_PRESS, blank);
+    ldMsgProcess(scene);
+    ldGuiClickedAction(scene, SIGNAL_RELEASE, blank);
+    ldMsgProcess(scene);
+
+    assert(ldMsgEmit(scene->ptMsgQueue, 0, SIGNAL_PRESS, 0) == true);
+    ldMsgProcess(scene);
+
+    assert(tinyui_runtime_bridge_commit_pointer_event(app, 1024, 600, 50000, 50000, 1) == 0);
+    ldGuiTouchProcess(scene);
+    ldMsgProcess(scene);
+    assert(tinyui_runtime_bridge_commit_pointer_event(app, 1024, 600, 50000, 50000, 0) == 0);
+    ldGuiTouchProcess(scene);
+    ldMsgProcess(scene);
+
+    button_point.iX = button_ld->use_as__arm_2d_control_node_t.tRegion.tLocation.iX;
+    button_point.iY = button_ld->use_as__arm_2d_control_node_t.tRegion.tLocation.iY;
+    ldGuiClickedAction(scene, SIGNAL_PRESS, button_point);
+    ldMsgProcess(scene);
+    ldGuiClickedAction(scene, SIGNAL_RELEASE, button_point);
+    ldMsgProcess(scene);
+}
+
 int main(void)
 {
     struct tinyui_app *app = tinyui_app_create();
@@ -480,6 +531,7 @@ int main(void)
     test_dispatch_entries_use_tinyui_prefix_in_core_seam();
     test_button_shared_text_helper_uses_tinyui_prefix();
     test_button_internal_seams_use_tinyui_prefix();
+    test_blank_click_does_not_emit_null_sender_or_crash(app_state, button);
     press_count = 0;
     release_count = 0;
     click_count = 0;

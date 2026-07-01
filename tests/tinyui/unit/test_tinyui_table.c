@@ -176,6 +176,18 @@ static uint64_t make_signal_value_xy(uint16_t x, uint16_t y)
     return ((uint64_t)x << 16) | (uint64_t)y;
 }
 
+static arm_2d_tile_t make_table_rgb565_tile(uint16_t *buffer, int16_t width, int16_t height)
+{
+    arm_2d_tile_t tile = {0};
+
+    tile.bIsRoot = true;
+    tile.tInfo.tColourInfo.chScheme = ARM_2D_COLOUR_RGB565;
+    tile.tRegion.tSize.iWidth = width;
+    tile.tRegion.tSize.iHeight = height;
+    tile.phwBuffer = buffer;
+    return tile;
+}
+
 static void ensure_table_msg_queue(struct tinyui_app *app_state)
 {
     assert(app_state != 0);
@@ -340,6 +352,71 @@ static void test_table_reuses_editable_cell_contract(void)
     ldMsgProcess(app_state->ld_scene);
     assert(tinyui_widget_is_editing_owner(&table->widget) == 0);
     assert(table->widget.last_edit_result == TINYUI_EDIT_RESULT_COMMIT);
+    tinyui_app_destroy(app);
+}
+
+static void test_table_double_press_blank_excel_cell_keeps_font_for_editing(void)
+{
+    struct tinyui_app *app;
+    struct tinyui_window *win;
+    struct tinyui_keyboard *keyboard;
+    struct tinyui_table *table;
+    struct tinyui_widget *backend;
+    struct tinyui_app *app_state;
+    ldTable_t *ld_table;
+    ldTableItem_t *item;
+    arm_2d_tile_t draw_tile;
+    static uint16_t draw_buffer[LD_CFG_SCREEN_WIDTH * LD_CFG_SCREEN_HEIGHT];
+
+    app = tinyui_app_create();
+    assert(app != 0);
+    win = tinyui_window_create(app, "table_excel_click_root");
+    assert(win != 0);
+    keyboard = tinyui_keyboard_create(win, "table_excel_keyboard");
+    table = tinyui_table_create(win, "table_excel_click", 10, 6);
+    assert(keyboard != 0);
+    assert(table != 0);
+    assert(tinyui_widget_set_pos(&table->widget, 780, 150) == 0);
+    assert(tinyui_widget_set_size(&table->widget, 200, 100) == 0);
+    assert(tinyui_table_set_item_space(table, 1) == 0);
+    assert(tinyui_table_set_excel_type(table) == 0);
+    assert(tinyui_table_set_keyboard_widget(table, keyboard) == 0);
+
+    backend = &table->widget;
+    assert(backend->ld_widget != 0);
+    app_state = backend->owner;
+    assert(app_state != 0);
+    ensure_table_msg_queue(app_state);
+    ld_table = (ldTable_t *)backend->ld_widget;
+    assert(ld_table != 0);
+
+    assert(ldMsgEmit(app_state->ld_scene->ptMsgQueue,
+                     backend->ld_widget,
+                     SIGNAL_PRESS,
+                     make_signal_value_xy(871, 241)) == true);
+    ldMsgProcess(app_state->ld_scene);
+    assert(ldMsgEmit(app_state->ld_scene->ptMsgQueue,
+                     backend->ld_widget,
+                     SIGNAL_RELEASE,
+                     make_signal_value_xy(871, 240)) == true);
+    ldMsgProcess(app_state->ld_scene);
+    assert(ldMsgEmit(app_state->ld_scene->ptMsgQueue,
+                     backend->ld_widget,
+                     SIGNAL_PRESS,
+                     make_signal_value_xy(895, 246)) == true);
+    ldMsgProcess(app_state->ld_scene);
+
+    item = ldTableGetItem(ld_table, ld_table->currentRow, ld_table->currentColumn);
+    assert(item != 0);
+    assert(item->isEditable == true);
+    assert(item->isEditing == true);
+    assert(item->ptFont != 0);
+    assert(((ldBase_t *)keyboard->widget.ld_widget)->isHidden == false);
+
+    memset(draw_buffer, 0, sizeof(draw_buffer));
+    draw_tile = make_table_rgb565_tile(draw_buffer, LD_CFG_SCREEN_WIDTH, LD_CFG_SCREEN_HEIGHT);
+    ldTable_show(app_state->ld_scene, ld_table, &draw_tile, true);
+
     tinyui_app_destroy(app);
 }
 
@@ -1376,6 +1453,7 @@ int main(int argc, char **argv)
     test_table_current_cell_matches_backend_truth();
     test_table_edit_commit_updates_model_and_visible_text();
     test_table_reuses_editable_cell_contract();
+    test_table_double_press_blank_excel_cell_keeps_font_for_editing();
     test_table_final_release_contract_covers_non_commit_exit_boundary();
     test_table_native_item_image_button_and_excel_type_round_trip();
     test_table_native_size_align_color_font_region_and_navigation_round_trip();
