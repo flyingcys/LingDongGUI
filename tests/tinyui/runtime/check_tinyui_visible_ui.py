@@ -676,6 +676,12 @@ def _assert_legacy_demo0_parity_visible(path: Path) -> None:
             f"arc_non_bg={arc_non_bg}, arc_green={arc_green}, arc_span={arc_span}, "
             "expected no green foreground segment in the current LDGUI SDL demo0 reference"
         )
+    if arc_non_bg < 3600 or arc_non_bg > 4300:
+        failures.append(
+            "legacy demo0 arc gap parity failed: "
+            f"arc_non_bg={arc_non_bg}, arc_span={arc_span}, "
+            "expected a three-quadrant legacy arc footprint with the current LDGUI SDL demo0 reference"
+        )
 
     if failures:
         joined = "\n  - ".join(failures)

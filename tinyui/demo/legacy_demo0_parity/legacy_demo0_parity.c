@@ -495,7 +495,7 @@ static void build_legacy_demo0(struct tinyui_window *win, struct legacy_demo0_ru
 
     if (arc != 0) {
         tinyui_arc_set_quarter_source(arc, &g_sources.arc_quarter);
-        tinyui_arc_set_background_angle(arc, 0.0f, 350.0f);
+        tinyui_arc_set_background_angle(arc, 0.0f, 270.0f);
         tinyui_arc_set_foreground_angle(arc, 0.0f);
         tinyui_arc_set_parent_color(arc, 0xF0F0F0U);
         tinyui_arc_set_color(arc, 0xADD8E6U, 0x90EE90U);
