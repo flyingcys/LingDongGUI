@@ -94,6 +94,8 @@ static int keyboard_draw_count = 0;
 static unsigned int keyboard_draw_last_key_code = 0;
 static int keyboard_draw_cookie = 0;
 
+void ldGuiClickedAction(ld_scene_t *ptScene, uint8_t touchSignal, arm_2d_location_t tLocation);
+
 static uint64_t make_signal_value_xy(uint16_t x, uint16_t y)
 {
     return ((uint64_t)x << 16) | y;
@@ -175,6 +177,7 @@ static void test_keyboard_create_builds_direct_backend_mapping(void)
     assert(backend->ld_event_bridge_sender == backend->ld_widget);
     ld_keyboard = (ldKeyboard_t *)backend->ld_widget;
     assert(ld_keyboard != 0);
+    assert(((ldBase_t *)ld_keyboard)->isHidden == true);
     assert(tinyui_app_lookup_host(backend->owner, backend->ld_name_id) == backend);
     tinyui_app_destroy(app);
 }
@@ -596,6 +599,9 @@ static void test_keyboard_uses_runtime_viewport_for_legacy_demo0_keyboard_model(
     arm_2d_region_t root_region;
     arm_2d_region_t window_region;
     arm_2d_location_t press_point = {900, 425};
+    arm_2d_location_t top_point = {900, 250};
+    arm_2d_location_t key_point = {20, 320};
+    arm_2d_control_node_t *hit_node;
 
     app = tinyui_app_create();
     assert(app != 0);
@@ -651,12 +657,14 @@ static void test_keyboard_uses_runtime_viewport_for_legacy_demo0_keyboard_model(
     assert(window_region.tSize.iWidth == 1024);
     assert(window_region.tSize.iHeight == 900);
 
+    hit_node = arm_2d_helper_control_find_node_with_location(app->ld_scene->ptNodeRoot, top_point);
+    assert(hit_node != (arm_2d_control_node_t *)ld_keyboard_base);
+    hit_node = arm_2d_helper_control_find_node_with_location(app->ld_scene->ptNodeRoot, key_point);
+    assert(hit_node == (arm_2d_control_node_t *)ld_keyboard_base);
+
     ld_keyboard->pBtnList = ldKeyboardGetTargetBtnList(ld_keyboard);
     ld_keyboard->isWaitInit = false;
-    ldMsgEmit(app->ld_scene->ptMsgQueue,
-              ld_keyboard,
-              SIGNAL_PRESS,
-              make_signal_value_xy(20, 320));
+    ldGuiClickedAction(app->ld_scene, SIGNAL_PRESS, key_point);
     ldMsgProcess(app->ld_scene);
     assert(strcmp((const char *)ldLineEditGetText(ld_line_edit), "q") == 0);
 

@@ -68,4 +68,4 @@ cmake --build build --target tinyui_hello_world_demo && ./build/examples/sdl/tin
 
 
 
-TINYUI_TOUCH_LOG=1 ./build/examples/sdl/tinyui_demo legacy_demo0_parity 2>&1 | tee /tmp/tinyui_touch.log
+TINYUI_TOUCH_LOG=1 ./build/examples/sdl/tinyui_demo legacy_demo0_parity 2>&1 | tee ./tinyui_touch.log

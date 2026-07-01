@@ -4,167 +4,581 @@ TINYUI_BACKEND_STATIC_MAPPING=REAL_LDGUI
 TINYUI_BACKEND_REAL_WIDGET_IDS=demo0_image,demo0_button,demo0_label,demo0_radio_a,demo0_radio_b,demo0_check,demo0_switch,demo0_switch_label,demo0_progress,demo0_text,demo0_slider_h,demo0_slider_v,demo0_radial,demo0_date_time,demo0_icon_slider,demo0_qrcode,demo0_scroll_selecter,demo0_gauge,demo0_combo,demo0_graph,demo0_table,demo0_line_edit,demo0_nested_button,demo0_keyboard,demo0_arc,demo0_list,demo0_list_item_button,demo0_message_box,demo0_calendar
 TINYUI_SMOKE_LAYOUT_USED=0
 TINYUI_BACKEND_IMAGE_SOURCE=demo0_image:img=set,mask=null
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(1010,304)
-[TINYUI_TOUCH][PORT->LD] raw=(1010,304) window=(1024,600) mapped=(1010,304) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(1001,290)
-[TINYUI_TOUCH][PORT->LD] raw=(1001,290) window=(1024,600) mapped=(1001,290) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(992,272)
-[TINYUI_TOUCH][PORT->LD] raw=(992,272) window=(1024,600) mapped=(992,272) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(984,259)
-[TINYUI_TOUCH][PORT->LD] raw=(984,259) window=(1024,600) mapped=(984,259) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(983,253)
-[TINYUI_TOUCH][PORT->LD] raw=(983,253) window=(1024,600) mapped=(983,253) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(981,248)
-[TINYUI_TOUCH][PORT->LD] raw=(981,248) window=(1024,600) mapped=(981,248) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(981,247)
-[TINYUI_TOUCH][PORT->LD] raw=(981,247) window=(1024,600) mapped=(981,247) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(981,248)
-[TINYUI_TOUCH][PORT->LD] raw=(981,248) window=(1024,600) mapped=(981,248) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(981,251)
-[TINYUI_TOUCH][PORT->LD] raw=(981,251) window=(1024,600) mapped=(981,251) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(981,255)
-[TINYUI_TOUCH][PORT->LD] raw=(981,255) window=(1024,600) mapped=(981,255) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(981,261)
-[TINYUI_TOUCH][PORT->LD] raw=(981,261) window=(1024,600) mapped=(981,261) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(981,268)
-[TINYUI_TOUCH][PORT->LD] raw=(981,268) window=(1024,600) mapped=(981,268) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(981,273)
-[TINYUI_TOUCH][PORT->LD] raw=(981,273) window=(1024,600) mapped=(981,273) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(981,279)
-[TINYUI_TOUCH][PORT->LD] raw=(981,279) window=(1024,600) mapped=(981,279) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(981,283)
-[TINYUI_TOUCH][PORT->LD] raw=(981,283) window=(1024,600) mapped=(981,283) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(980,291)
-[TINYUI_TOUCH][PORT->LD] raw=(980,291) window=(1024,600) mapped=(980,291) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(978,298)
-[TINYUI_TOUCH][PORT->LD] raw=(978,298) window=(1024,600) mapped=(978,298) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(976,304)
-[TINYUI_TOUCH][PORT->LD] raw=(976,304) window=(1024,600) mapped=(976,304) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(975,311)
-[TINYUI_TOUCH][PORT->LD] raw=(975,311) window=(1024,600) mapped=(975,311) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(970,330)
-[TINYUI_TOUCH][PORT->LD] raw=(970,330) window=(1024,600) mapped=(970,330) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(968,340)
-[TINYUI_TOUCH][PORT->LD] raw=(968,340) window=(1024,600) mapped=(968,340) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(966,348)
-[TINYUI_TOUCH][PORT->LD] raw=(966,348) window=(1024,600) mapped=(966,348) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(964,356)
-[TINYUI_TOUCH][PORT->LD] raw=(964,356) window=(1024,600) mapped=(964,356) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(962,364)
-[TINYUI_TOUCH][PORT->LD] raw=(962,364) window=(1024,600) mapped=(962,364) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(960,375)
-[TINYUI_TOUCH][PORT->LD] raw=(960,375) window=(1024,600) mapped=(960,375) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(958,381)
-[TINYUI_TOUCH][PORT->LD] raw=(958,381) window=(1024,600) mapped=(958,381) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(957,387)
-[TINYUI_TOUCH][PORT->LD] raw=(957,387) window=(1024,600) mapped=(957,387) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(954,394)
-[TINYUI_TOUCH][PORT->LD] raw=(954,394) window=(1024,600) mapped=(954,394) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(953,397)
-[TINYUI_TOUCH][PORT->LD] raw=(953,397) window=(1024,600) mapped=(953,397) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(952,398)
-[TINYUI_TOUCH][PORT->LD] raw=(952,398) window=(1024,600) mapped=(952,398) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(951,399)
-[TINYUI_TOUCH][PORT->LD] raw=(951,399) window=(1024,600) mapped=(951,399) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(949,400)
-[TINYUI_TOUCH][PORT->LD] raw=(949,400) window=(1024,600) mapped=(949,400) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(948,401)
-[TINYUI_TOUCH][PORT->LD] raw=(948,401) window=(1024,600) mapped=(948,401) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(945,403)
-[TINYUI_TOUCH][PORT->LD] raw=(945,403) window=(1024,600) mapped=(945,403) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(943,405)
-[TINYUI_TOUCH][PORT->LD] raw=(943,405) window=(1024,600) mapped=(943,405) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(941,407)
-[TINYUI_TOUCH][PORT->LD] raw=(941,407) window=(1024,600) mapped=(941,407) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(938,408)
-[TINYUI_TOUCH][PORT->LD] raw=(938,408) window=(1024,600) mapped=(938,408) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(934,410)
-[TINYUI_TOUCH][PORT->LD] raw=(934,410) window=(1024,600) mapped=(934,410) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(932,411)
-[TINYUI_TOUCH][PORT->LD] raw=(932,411) window=(1024,600) mapped=(932,411) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(930,413)
-[TINYUI_TOUCH][PORT->LD] raw=(930,413) window=(1024,600) mapped=(930,413) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(928,414)
-[TINYUI_TOUCH][PORT->LD] raw=(928,414) window=(1024,600) mapped=(928,414) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(926,414)
-[TINYUI_TOUCH][PORT->LD] raw=(926,414) window=(1024,600) mapped=(926,414) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(925,415)
-[TINYUI_TOUCH][PORT->LD] raw=(925,415) window=(1024,600) mapped=(925,415) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(922,416)
-[TINYUI_TOUCH][PORT->LD] raw=(922,416) window=(1024,600) mapped=(922,416) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(920,416)
-[TINYUI_TOUCH][PORT->LD] raw=(920,416) window=(1024,600) mapped=(920,416) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(918,417)
-[TINYUI_TOUCH][PORT->LD] raw=(918,417) window=(1024,600) mapped=(918,417) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(916,418)
-[TINYUI_TOUCH][PORT->LD] raw=(916,418) window=(1024,600) mapped=(916,418) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(914,418)
-[TINYUI_TOUCH][PORT->LD] raw=(914,418) window=(1024,600) mapped=(914,418) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(913,420)
-[TINYUI_TOUCH][PORT->LD] raw=(913,420) window=(1024,600) mapped=(913,420) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(911,421)
-[TINYUI_TOUCH][PORT->LD] raw=(911,421) window=(1024,600) mapped=(911,421) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(909,422)
-[TINYUI_TOUCH][PORT->LD] raw=(909,422) window=(1024,600) mapped=(909,422) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(909,423)
-[TINYUI_TOUCH][PORT->LD] raw=(909,423) window=(1024,600) mapped=(909,423) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(908,423)
-[TINYUI_TOUCH][PORT->LD] raw=(908,423) window=(1024,600) mapped=(908,423) pressed=0
-[TINYUI_TOUCH][SDL] type=down button=1 pos=(908,423)
-[TINYUI_TOUCH][PORT->LD] raw=(908,423) window=(1024,600) mapped=(908,423) pressed=1
-[TINYUI_TOUCH][HIT] signal=press point=(908,423) ld_id=24 ld_type=line_edit region=(850,400,100,50)
-[TINYUI_TOUCH][SDL] type=up button=1 pos=(908,423)
-[TINYUI_TOUCH][PORT->LD] raw=(908,423) window=(1024,600) mapped=(908,423) pressed=0
-[TINYUI_TOUCH][HIT] signal=release point=(908,423) ld_id=24 ld_type=line_edit region=(850,-200,100,50)
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(995,138)
-[TINYUI_TOUCH][PORT->LD] raw=(995,138) window=(1024,600) mapped=(995,138) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(995,140)
-[TINYUI_TOUCH][PORT->LD] raw=(995,140) window=(1024,600) mapped=(995,140) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(996,142)
-[TINYUI_TOUCH][PORT->LD] raw=(996,142) window=(1024,600) mapped=(996,142) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(996,144)
-[TINYUI_TOUCH][PORT->LD] raw=(996,144) window=(1024,600) mapped=(996,144) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(997,147)
-[TINYUI_TOUCH][PORT->LD] raw=(997,147) window=(1024,600) mapped=(997,147) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(998,151)
-[TINYUI_TOUCH][PORT->LD] raw=(998,151) window=(1024,600) mapped=(998,151) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(999,156)
-[TINYUI_TOUCH][PORT->LD] raw=(999,156) window=(1024,600) mapped=(999,156) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(1000,160)
-[TINYUI_TOUCH][PORT->LD] raw=(1000,160) window=(1024,600) mapped=(1000,160) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(1001,164)
-[TINYUI_TOUCH][PORT->LD] raw=(1001,164) window=(1024,600) mapped=(1001,164) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(1001,169)
-[TINYUI_TOUCH][PORT->LD] raw=(1001,169) window=(1024,600) mapped=(1001,169) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(1002,174)
-[TINYUI_TOUCH][PORT->LD] raw=(1002,174) window=(1024,600) mapped=(1002,174) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(1004,181)
-[TINYUI_TOUCH][PORT->LD] raw=(1004,181) window=(1024,600) mapped=(1004,181) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(1005,187)
-[TINYUI_TOUCH][PORT->LD] raw=(1005,187) window=(1024,600) mapped=(1005,187) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(1007,194)
-[TINYUI_TOUCH][PORT->LD] raw=(1007,194) window=(1024,600) mapped=(1007,194) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(1009,201)
-[TINYUI_TOUCH][PORT->LD] raw=(1009,201) window=(1024,600) mapped=(1009,201) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(1011,208)
-[TINYUI_TOUCH][PORT->LD] raw=(1011,208) window=(1024,600) mapped=(1011,208) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(1015,219)
-[TINYUI_TOUCH][PORT->LD] raw=(1015,219) window=(1024,600) mapped=(1015,219) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(1017,226)
-[TINYUI_TOUCH][PORT->LD] raw=(1017,226) window=(1024,600) mapped=(1017,226) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(1020,233)
-[TINYUI_TOUCH][PORT->LD] raw=(1020,233) window=(1024,600) mapped=(1020,233) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(1022,239)
-[TINYUI_TOUCH][PORT->LD] raw=(1022,239) window=(1024,600) mapped=(1022,239) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(1023,250)
-[TINYUI_TOUCH][PORT->LD] raw=(1023,250) window=(1024,600) mapped=(1023,250) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(1022,6)
-[TINYUI_TOUCH][PORT->LD] raw=(1022,6) window=(1024,600) mapped=(1022,6) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(1021,4)
-[TINYUI_TOUCH][PORT->LD] raw=(1021,4) window=(1024,600) mapped=(1021,4) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(1019,3)
-[TINYUI_TOUCH][PORT->LD] raw=(1019,3) window=(1024,600) mapped=(1019,3) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(1017,1)
-[TINYUI_TOUCH][PORT->LD] raw=(1017,1) window=(1024,600) mapped=(1017,1) pressed=0
-[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(1008,0)
-[TINYUI_TOUCH][PORT->LD] raw=(1008,0) window=(1024,600) mapped=(1008,0) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(409,588)
+[TINYUI_TOUCH][PORT->LD] raw=(409,588) window=(1024,600) mapped=(409,588) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(611,471)
+[TINYUI_TOUCH][PORT->LD] raw=(611,471) window=(1024,600) mapped=(611,471) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(818,344)
+[TINYUI_TOUCH][PORT->LD] raw=(818,344) window=(1024,600) mapped=(818,344) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(971,253)
+[TINYUI_TOUCH][PORT->LD] raw=(971,253) window=(1024,600) mapped=(971,253) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(1023,599)
+[TINYUI_TOUCH][PORT->LD] raw=(1023,599) window=(1024,600) mapped=(1023,599) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(1016,239)
+[TINYUI_TOUCH][PORT->LD] raw=(1016,239) window=(1024,600) mapped=(1016,239) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(975,262)
+[TINYUI_TOUCH][PORT->LD] raw=(975,262) window=(1024,600) mapped=(975,262) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(901,302)
+[TINYUI_TOUCH][PORT->LD] raw=(901,302) window=(1024,600) mapped=(901,302) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(859,319)
+[TINYUI_TOUCH][PORT->LD] raw=(859,319) window=(1024,600) mapped=(859,319) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(826,327)
+[TINYUI_TOUCH][PORT->LD] raw=(826,327) window=(1024,600) mapped=(826,327) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(773,336)
+[TINYUI_TOUCH][PORT->LD] raw=(773,336) window=(1024,600) mapped=(773,336) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(655,345)
+[TINYUI_TOUCH][PORT->LD] raw=(655,345) window=(1024,600) mapped=(655,345) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(587,350)
+[TINYUI_TOUCH][PORT->LD] raw=(587,350) window=(1024,600) mapped=(587,350) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(540,355)
+[TINYUI_TOUCH][PORT->LD] raw=(540,355) window=(1024,600) mapped=(540,355) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(521,356)
+[TINYUI_TOUCH][PORT->LD] raw=(521,356) window=(1024,600) mapped=(521,356) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(549,360)
+[TINYUI_TOUCH][PORT->LD] raw=(549,360) window=(1024,600) mapped=(549,360) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(560,361)
+[TINYUI_TOUCH][PORT->LD] raw=(560,361) window=(1024,600) mapped=(560,361) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(607,377)
+[TINYUI_TOUCH][PORT->LD] raw=(607,377) window=(1024,600) mapped=(607,377) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(612,378)
+[TINYUI_TOUCH][PORT->LD] raw=(612,378) window=(1024,600) mapped=(612,378) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(615,373)
+[TINYUI_TOUCH][PORT->LD] raw=(615,373) window=(1024,600) mapped=(615,373) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(627,365)
+[TINYUI_TOUCH][PORT->LD] raw=(627,365) window=(1024,600) mapped=(627,365) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(631,363)
+[TINYUI_TOUCH][PORT->LD] raw=(631,363) window=(1024,600) mapped=(631,363) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(627,363)
+[TINYUI_TOUCH][PORT->LD] raw=(627,363) window=(1024,600) mapped=(627,363) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(609,366)
+[TINYUI_TOUCH][PORT->LD] raw=(609,366) window=(1024,600) mapped=(609,366) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(604,367)
+[TINYUI_TOUCH][PORT->LD] raw=(604,367) window=(1024,600) mapped=(604,367) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(580,371)
+[TINYUI_TOUCH][PORT->LD] raw=(580,371) window=(1024,600) mapped=(580,371) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(562,371)
+[TINYUI_TOUCH][PORT->LD] raw=(562,371) window=(1024,600) mapped=(562,371) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(553,371)
+[TINYUI_TOUCH][PORT->LD] raw=(553,371) window=(1024,600) mapped=(553,371) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(550,371)
+[TINYUI_TOUCH][PORT->LD] raw=(550,371) window=(1024,600) mapped=(550,371) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(549,369)
+[TINYUI_TOUCH][PORT->LD] raw=(549,369) window=(1024,600) mapped=(549,369) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(548,366)
+[TINYUI_TOUCH][PORT->LD] raw=(548,366) window=(1024,600) mapped=(548,366) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(548,363)
+[TINYUI_TOUCH][PORT->LD] raw=(548,363) window=(1024,600) mapped=(548,363) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(548,359)
+[TINYUI_TOUCH][PORT->LD] raw=(548,359) window=(1024,600) mapped=(548,359) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(548,357)
+[TINYUI_TOUCH][PORT->LD] raw=(548,357) window=(1024,600) mapped=(548,357) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(548,355)
+[TINYUI_TOUCH][PORT->LD] raw=(548,355) window=(1024,600) mapped=(548,355) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(549,354)
+[TINYUI_TOUCH][PORT->LD] raw=(549,354) window=(1024,600) mapped=(549,354) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(549,353)
+[TINYUI_TOUCH][PORT->LD] raw=(549,353) window=(1024,600) mapped=(549,353) pressed=0
+[TINYUI_TOUCH][SDL] type=down button=1 pos=(549,353)
+[TINYUI_TOUCH][PORT->LD] raw=(549,353) window=(1024,600) mapped=(549,353) pressed=1
+[TINYUI_TOUCH][HIT] signal=press point=(549,353) ld_id=29 ld_type=message_box region=(412,225,200,150)
+[TINYUI_TOUCH][SDL] type=up button=1 pos=(549,353)
+[TINYUI_TOUCH][PORT->LD] raw=(549,353) window=(1024,600) mapped=(549,353) pressed=0
+[TINYUI_TOUCH][HIT] signal=release point=(549,353) ld_id=29 ld_type=message_box region=(412,225,200,150)
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(551,354)
+[TINYUI_TOUCH][PORT->LD] raw=(551,354) window=(1024,600) mapped=(551,354) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(551,355)
+[TINYUI_TOUCH][PORT->LD] raw=(551,355) window=(1024,600) mapped=(551,355) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(552,355)
+[TINYUI_TOUCH][PORT->LD] raw=(552,355) window=(1024,600) mapped=(552,355) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(553,355)
+[TINYUI_TOUCH][PORT->LD] raw=(553,355) window=(1024,600) mapped=(553,355) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(555,356)
+[TINYUI_TOUCH][PORT->LD] raw=(555,356) window=(1024,600) mapped=(555,356) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(557,356)
+[TINYUI_TOUCH][PORT->LD] raw=(557,356) window=(1024,600) mapped=(557,356) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(558,356)
+[TINYUI_TOUCH][PORT->LD] raw=(558,356) window=(1024,600) mapped=(558,356) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(559,357)
+[TINYUI_TOUCH][PORT->LD] raw=(559,357) window=(1024,600) mapped=(559,357) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(563,358)
+[TINYUI_TOUCH][PORT->LD] raw=(563,358) window=(1024,600) mapped=(563,358) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(591,360)
+[TINYUI_TOUCH][PORT->LD] raw=(591,360) window=(1024,600) mapped=(591,360) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(658,365)
+[TINYUI_TOUCH][PORT->LD] raw=(658,365) window=(1024,600) mapped=(658,365) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(858,379)
+[TINYUI_TOUCH][PORT->LD] raw=(858,379) window=(1024,600) mapped=(858,379) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(992,379)
+[TINYUI_TOUCH][PORT->LD] raw=(992,379) window=(1024,600) mapped=(992,379) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(1023,599)
+[TINYUI_TOUCH][PORT->LD] raw=(1023,599) window=(1024,600) mapped=(1023,599) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(1015,374)
+[TINYUI_TOUCH][PORT->LD] raw=(1015,374) window=(1024,600) mapped=(1015,374) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(1011,375)
+[TINYUI_TOUCH][PORT->LD] raw=(1011,375) window=(1024,600) mapped=(1011,375) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(1001,377)
+[TINYUI_TOUCH][PORT->LD] raw=(1001,377) window=(1024,600) mapped=(1001,377) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(989,379)
+[TINYUI_TOUCH][PORT->LD] raw=(989,379) window=(1024,600) mapped=(989,379) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(964,380)
+[TINYUI_TOUCH][PORT->LD] raw=(964,380) window=(1024,600) mapped=(964,380) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(911,380)
+[TINYUI_TOUCH][PORT->LD] raw=(911,380) window=(1024,600) mapped=(911,380) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(780,368)
+[TINYUI_TOUCH][PORT->LD] raw=(780,368) window=(1024,600) mapped=(780,368) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(672,342)
+[TINYUI_TOUCH][PORT->LD] raw=(672,342) window=(1024,600) mapped=(672,342) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(648,325)
+[TINYUI_TOUCH][PORT->LD] raw=(648,325) window=(1024,600) mapped=(648,325) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(643,316)
+[TINYUI_TOUCH][PORT->LD] raw=(643,316) window=(1024,600) mapped=(643,316) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(643,309)
+[TINYUI_TOUCH][PORT->LD] raw=(643,309) window=(1024,600) mapped=(643,309) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(646,307)
+[TINYUI_TOUCH][PORT->LD] raw=(646,307) window=(1024,600) mapped=(646,307) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(648,309)
+[TINYUI_TOUCH][PORT->LD] raw=(648,309) window=(1024,600) mapped=(648,309) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(644,309)
+[TINYUI_TOUCH][PORT->LD] raw=(644,309) window=(1024,600) mapped=(644,309) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(638,310)
+[TINYUI_TOUCH][PORT->LD] raw=(638,310) window=(1024,600) mapped=(638,310) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(620,312)
+[TINYUI_TOUCH][PORT->LD] raw=(620,312) window=(1024,600) mapped=(620,312) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(563,306)
+[TINYUI_TOUCH][PORT->LD] raw=(563,306) window=(1024,600) mapped=(563,306) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(493,295)
+[TINYUI_TOUCH][PORT->LD] raw=(493,295) window=(1024,600) mapped=(493,295) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(397,283)
+[TINYUI_TOUCH][PORT->LD] raw=(397,283) window=(1024,600) mapped=(397,283) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(385,278)
+[TINYUI_TOUCH][PORT->LD] raw=(385,278) window=(1024,600) mapped=(385,278) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(374,273)
+[TINYUI_TOUCH][PORT->LD] raw=(374,273) window=(1024,600) mapped=(374,273) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(354,266)
+[TINYUI_TOUCH][PORT->LD] raw=(354,266) window=(1024,600) mapped=(354,266) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(334,261)
+[TINYUI_TOUCH][PORT->LD] raw=(334,261) window=(1024,600) mapped=(334,261) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(330,260)
+[TINYUI_TOUCH][PORT->LD] raw=(330,260) window=(1024,600) mapped=(330,260) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(323,256)
+[TINYUI_TOUCH][PORT->LD] raw=(323,256) window=(1024,600) mapped=(323,256) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(319,253)
+[TINYUI_TOUCH][PORT->LD] raw=(319,253) window=(1024,600) mapped=(319,253) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(317,252)
+[TINYUI_TOUCH][PORT->LD] raw=(317,252) window=(1024,600) mapped=(317,252) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(317,249)
+[TINYUI_TOUCH][PORT->LD] raw=(317,249) window=(1024,600) mapped=(317,249) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(317,244)
+[TINYUI_TOUCH][PORT->LD] raw=(317,244) window=(1024,600) mapped=(317,244) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(315,238)
+[TINYUI_TOUCH][PORT->LD] raw=(315,238) window=(1024,600) mapped=(315,238) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(313,233)
+[TINYUI_TOUCH][PORT->LD] raw=(313,233) window=(1024,600) mapped=(313,233) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(311,230)
+[TINYUI_TOUCH][PORT->LD] raw=(311,230) window=(1024,600) mapped=(311,230) pressed=0
+[TINYUI_TOUCH][SDL] type=down button=1 pos=(311,230)
+[TINYUI_TOUCH][PORT->LD] raw=(311,230) window=(1024,600) mapped=(311,230) pressed=1
+[TINYUI_TOUCH][HIT] signal=press point=(311,230) ld_id=26 ld_type=keyboard region=(0,0,780,450)
+[TINYUI_TOUCH][SDL] type=up button=1 pos=(311,230)
+[TINYUI_TOUCH][PORT->LD] raw=(311,230) window=(1024,600) mapped=(311,230) pressed=0
+[TINYUI_TOUCH][HIT] signal=release point=(311,230) ld_id=26 ld_type=keyboard region=(0,0,780,450)
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(316,236)
+[TINYUI_TOUCH][PORT->LD] raw=(316,236) window=(1024,600) mapped=(316,236) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(323,242)
+[TINYUI_TOUCH][PORT->LD] raw=(323,242) window=(1024,600) mapped=(323,242) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(330,246)
+[TINYUI_TOUCH][PORT->LD] raw=(330,246) window=(1024,600) mapped=(330,246) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(330,245)
+[TINYUI_TOUCH][PORT->LD] raw=(330,245) window=(1024,600) mapped=(330,245) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(330,244)
+[TINYUI_TOUCH][PORT->LD] raw=(330,244) window=(1024,600) mapped=(330,244) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(330,243)
+[TINYUI_TOUCH][PORT->LD] raw=(330,243) window=(1024,600) mapped=(330,243) pressed=0
+[TINYUI_TOUCH][SDL] type=down button=1 pos=(330,243)
+[TINYUI_TOUCH][PORT->LD] raw=(330,243) window=(1024,600) mapped=(330,243) pressed=1
+[TINYUI_TOUCH][HIT] signal=press point=(330,243) ld_id=26 ld_type=keyboard region=(0,0,780,450)
+[TINYUI_TOUCH][SDL] type=up button=1 pos=(330,243)
+[TINYUI_TOUCH][PORT->LD] raw=(330,243) window=(1024,600) mapped=(330,243) pressed=0
+[TINYUI_TOUCH][HIT] signal=release point=(330,243) ld_id=26 ld_type=keyboard region=(0,0,780,450)
+[TINYUI_TOUCH][SDL] type=down button=1 pos=(330,243)
+[TINYUI_TOUCH][PORT->LD] raw=(330,243) window=(1024,600) mapped=(330,243) pressed=1
+[TINYUI_TOUCH][HIT] signal=press point=(330,243) ld_id=26 ld_type=keyboard region=(0,0,780,450)
+[TINYUI_TOUCH][SDL] type=up button=1 pos=(330,243)
+[TINYUI_TOUCH][PORT->LD] raw=(330,243) window=(1024,600) mapped=(330,243) pressed=0
+[TINYUI_TOUCH][HIT] signal=release point=(330,243) ld_id=26 ld_type=keyboard region=(0,0,780,450)
+[TINYUI_TOUCH][SDL] type=down button=1 pos=(330,243)
+[TINYUI_TOUCH][PORT->LD] raw=(330,243) window=(1024,600) mapped=(330,243) pressed=1
+[TINYUI_TOUCH][HIT] signal=press point=(330,243) ld_id=26 ld_type=keyboard region=(0,0,780,450)
+[TINYUI_TOUCH][SDL] type=up button=1 pos=(330,243)
+[TINYUI_TOUCH][PORT->LD] raw=(330,243) window=(1024,600) mapped=(330,243) pressed=0
+[TINYUI_TOUCH][HIT] signal=release point=(330,243) ld_id=26 ld_type=keyboard region=(0,0,780,450)
+[TINYUI_TOUCH][SDL] type=down button=1 pos=(330,243)
+[TINYUI_TOUCH][PORT->LD] raw=(330,243) window=(1024,600) mapped=(330,243) pressed=1
+[TINYUI_TOUCH][HIT] signal=press point=(330,243) ld_id=26 ld_type=keyboard region=(0,0,780,450)
+[TINYUI_TOUCH][SDL] type=up button=1 pos=(330,243)
+[TINYUI_TOUCH][PORT->LD] raw=(330,243) window=(1024,600) mapped=(330,243) pressed=0
+[TINYUI_TOUCH][HIT] signal=release point=(330,243) ld_id=26 ld_type=keyboard region=(0,0,780,450)
+[TINYUI_TOUCH][SDL] type=down button=1 pos=(330,243)
+[TINYUI_TOUCH][PORT->LD] raw=(330,243) window=(1024,600) mapped=(330,243) pressed=1
+[TINYUI_TOUCH][HIT] signal=press point=(330,243) ld_id=26 ld_type=keyboard region=(0,0,780,450)
+[TINYUI_TOUCH][SDL] type=up button=1 pos=(330,243)
+[TINYUI_TOUCH][PORT->LD] raw=(330,243) window=(1024,600) mapped=(330,243) pressed=0
+[TINYUI_TOUCH][HIT] signal=release point=(330,243) ld_id=26 ld_type=keyboard region=(0,0,780,450)
+[TINYUI_TOUCH][SDL] type=down button=1 pos=(330,243)
+[TINYUI_TOUCH][PORT->LD] raw=(330,243) window=(1024,600) mapped=(330,243) pressed=1
+[TINYUI_TOUCH][HIT] signal=press point=(330,243) ld_id=26 ld_type=keyboard region=(0,0,780,450)
+[TINYUI_TOUCH][SDL] type=up button=1 pos=(330,243)
+[TINYUI_TOUCH][PORT->LD] raw=(330,243) window=(1024,600) mapped=(330,243) pressed=0
+[TINYUI_TOUCH][HIT] signal=release point=(330,243) ld_id=26 ld_type=keyboard region=(0,0,780,450)
+[TINYUI_TOUCH][SDL] type=down button=1 pos=(330,243)
+[TINYUI_TOUCH][PORT->LD] raw=(330,243) window=(1024,600) mapped=(330,243) pressed=1
+[TINYUI_TOUCH][HIT] signal=press point=(330,243) ld_id=26 ld_type=keyboard region=(0,0,780,450)
+[TINYUI_TOUCH][SDL] type=up button=1 pos=(330,243)
+[TINYUI_TOUCH][PORT->LD] raw=(330,243) window=(1024,600) mapped=(330,243) pressed=0
+[TINYUI_TOUCH][HIT] signal=release point=(330,243) ld_id=26 ld_type=keyboard region=(0,0,780,450)
+[TINYUI_TOUCH][SDL] type=down button=1 pos=(330,243)
+[TINYUI_TOUCH][PORT->LD] raw=(330,243) window=(1024,600) mapped=(330,243) pressed=1
+[TINYUI_TOUCH][HIT] signal=press point=(330,243) ld_id=26 ld_type=keyboard region=(0,0,780,450)
+[TINYUI_TOUCH][SDL] type=up button=1 pos=(330,243)
+[TINYUI_TOUCH][PORT->LD] raw=(330,243) window=(1024,600) mapped=(330,243) pressed=0
+[TINYUI_TOUCH][HIT] signal=release point=(330,243) ld_id=26 ld_type=keyboard region=(0,0,780,450)
+[TINYUI_TOUCH][SDL] type=down button=1 pos=(330,243)
+[TINYUI_TOUCH][PORT->LD] raw=(330,243) window=(1024,600) mapped=(330,243) pressed=1
+[TINYUI_TOUCH][HIT] signal=press point=(330,243) ld_id=26 ld_type=keyboard region=(0,0,780,450)
+[TINYUI_TOUCH][SDL] type=up button=1 pos=(330,243)
+[TINYUI_TOUCH][PORT->LD] raw=(330,243) window=(1024,600) mapped=(330,243) pressed=0
+[TINYUI_TOUCH][HIT] signal=release point=(330,243) ld_id=26 ld_type=keyboard region=(0,0,780,450)
+[TINYUI_TOUCH][SDL] type=down button=1 pos=(330,243)
+[TINYUI_TOUCH][PORT->LD] raw=(330,243) window=(1024,600) mapped=(330,243) pressed=1
+[TINYUI_TOUCH][HIT] signal=press point=(330,243) ld_id=26 ld_type=keyboard region=(0,0,780,450)
+[TINYUI_TOUCH][SDL] type=up button=1 pos=(330,243)
+[TINYUI_TOUCH][PORT->LD] raw=(330,243) window=(1024,600) mapped=(330,243) pressed=0
+[TINYUI_TOUCH][HIT] signal=release point=(330,243) ld_id=26 ld_type=keyboard region=(0,0,780,450)
+[TINYUI_TOUCH][SDL] type=down button=1 pos=(330,243)
+[TINYUI_TOUCH][PORT->LD] raw=(330,243) window=(1024,600) mapped=(330,243) pressed=1
+[TINYUI_TOUCH][HIT] signal=press point=(330,243) ld_id=26 ld_type=keyboard region=(0,0,780,450)
+[TINYUI_TOUCH][SDL] type=up button=1 pos=(330,243)
+[TINYUI_TOUCH][PORT->LD] raw=(330,243) window=(1024,600) mapped=(330,243) pressed=0
+[TINYUI_TOUCH][HIT] signal=release point=(330,243) ld_id=26 ld_type=keyboard region=(0,0,780,450)
+[TINYUI_TOUCH][SDL] type=down button=1 pos=(330,243)
+[TINYUI_TOUCH][PORT->LD] raw=(330,243) window=(1024,600) mapped=(330,243) pressed=1
+[TINYUI_TOUCH][HIT] signal=press point=(330,243) ld_id=26 ld_type=keyboard region=(0,0,780,450)
+[TINYUI_TOUCH][SDL] type=up button=1 pos=(330,243)
+[TINYUI_TOUCH][PORT->LD] raw=(330,243) window=(1024,600) mapped=(330,243) pressed=0
+[TINYUI_TOUCH][HIT] signal=release point=(330,243) ld_id=26 ld_type=keyboard region=(0,0,780,450)
+[TINYUI_TOUCH][SDL] type=down button=1 pos=(330,243)
+[TINYUI_TOUCH][PORT->LD] raw=(330,243) window=(1024,600) mapped=(330,243) pressed=1
+[TINYUI_TOUCH][HIT] signal=press point=(330,243) ld_id=26 ld_type=keyboard region=(0,0,780,450)
+[TINYUI_TOUCH][SDL] type=up button=1 pos=(330,243)
+[TINYUI_TOUCH][PORT->LD] raw=(330,243) window=(1024,600) mapped=(330,243) pressed=0
+[TINYUI_TOUCH][HIT] signal=release point=(330,243) ld_id=26 ld_type=keyboard region=(0,0,780,450)
+[TINYUI_TOUCH][SDL] type=down button=1 pos=(330,243)
+[TINYUI_TOUCH][PORT->LD] raw=(330,243) window=(1024,600) mapped=(330,243) pressed=1
+[TINYUI_TOUCH][HIT] signal=press point=(330,243) ld_id=26 ld_type=keyboard region=(0,0,780,450)
+[TINYUI_TOUCH][SDL] type=up button=1 pos=(330,243)
+[TINYUI_TOUCH][PORT->LD] raw=(330,243) window=(1024,600) mapped=(330,243) pressed=0
+[TINYUI_TOUCH][HIT] signal=release point=(330,243) ld_id=26 ld_type=keyboard region=(0,0,780,450)
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(332,243)
+[TINYUI_TOUCH][PORT->LD] raw=(332,243) window=(1024,600) mapped=(332,243) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(368,250)
+[TINYUI_TOUCH][PORT->LD] raw=(368,250) window=(1024,600) mapped=(368,250) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(524,265)
+[TINYUI_TOUCH][PORT->LD] raw=(524,265) window=(1024,600) mapped=(524,265) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(733,281)
+[TINYUI_TOUCH][PORT->LD] raw=(733,281) window=(1024,600) mapped=(733,281) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(869,297)
+[TINYUI_TOUCH][PORT->LD] raw=(869,297) window=(1024,600) mapped=(869,297) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(912,309)
+[TINYUI_TOUCH][PORT->LD] raw=(912,309) window=(1024,600) mapped=(912,309) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(915,310)
+[TINYUI_TOUCH][PORT->LD] raw=(915,310) window=(1024,600) mapped=(915,310) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(917,317)
+[TINYUI_TOUCH][PORT->LD] raw=(917,317) window=(1024,600) mapped=(917,317) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(914,318)
+[TINYUI_TOUCH][PORT->LD] raw=(914,318) window=(1024,600) mapped=(914,318) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(917,318)
+[TINYUI_TOUCH][PORT->LD] raw=(917,318) window=(1024,600) mapped=(917,318) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(918,319)
+[TINYUI_TOUCH][PORT->LD] raw=(918,319) window=(1024,600) mapped=(918,319) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(919,322)
+[TINYUI_TOUCH][PORT->LD] raw=(919,322) window=(1024,600) mapped=(919,322) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(919,323)
+[TINYUI_TOUCH][PORT->LD] raw=(919,323) window=(1024,600) mapped=(919,323) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(919,325)
+[TINYUI_TOUCH][PORT->LD] raw=(919,325) window=(1024,600) mapped=(919,325) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(919,326)
+[TINYUI_TOUCH][PORT->LD] raw=(919,326) window=(1024,600) mapped=(919,326) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(919,328)
+[TINYUI_TOUCH][PORT->LD] raw=(919,328) window=(1024,600) mapped=(919,328) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(919,331)
+[TINYUI_TOUCH][PORT->LD] raw=(919,331) window=(1024,600) mapped=(919,331) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(919,332)
+[TINYUI_TOUCH][PORT->LD] raw=(919,332) window=(1024,600) mapped=(919,332) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(919,335)
+[TINYUI_TOUCH][PORT->LD] raw=(919,335) window=(1024,600) mapped=(919,335) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(919,341)
+[TINYUI_TOUCH][PORT->LD] raw=(919,341) window=(1024,600) mapped=(919,341) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(919,346)
+[TINYUI_TOUCH][PORT->LD] raw=(919,346) window=(1024,600) mapped=(919,346) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(918,341)
+[TINYUI_TOUCH][PORT->LD] raw=(918,341) window=(1024,600) mapped=(918,341) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(916,326)
+[TINYUI_TOUCH][PORT->LD] raw=(916,326) window=(1024,600) mapped=(916,326) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(913,310)
+[TINYUI_TOUCH][PORT->LD] raw=(913,310) window=(1024,600) mapped=(913,310) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(913,298)
+[TINYUI_TOUCH][PORT->LD] raw=(913,298) window=(1024,600) mapped=(913,298) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(913,288)
+[TINYUI_TOUCH][PORT->LD] raw=(913,288) window=(1024,600) mapped=(913,288) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(913,286)
+[TINYUI_TOUCH][PORT->LD] raw=(913,286) window=(1024,600) mapped=(913,286) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(913,282)
+[TINYUI_TOUCH][PORT->LD] raw=(913,282) window=(1024,600) mapped=(913,282) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(913,285)
+[TINYUI_TOUCH][PORT->LD] raw=(913,285) window=(1024,600) mapped=(913,285) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(916,298)
+[TINYUI_TOUCH][PORT->LD] raw=(916,298) window=(1024,600) mapped=(916,298) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(923,318)
+[TINYUI_TOUCH][PORT->LD] raw=(923,318) window=(1024,600) mapped=(923,318) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(929,336)
+[TINYUI_TOUCH][PORT->LD] raw=(929,336) window=(1024,600) mapped=(929,336) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(933,351)
+[TINYUI_TOUCH][PORT->LD] raw=(933,351) window=(1024,600) mapped=(933,351) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(934,357)
+[TINYUI_TOUCH][PORT->LD] raw=(934,357) window=(1024,600) mapped=(934,357) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(934,362)
+[TINYUI_TOUCH][PORT->LD] raw=(934,362) window=(1024,600) mapped=(934,362) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(934,371)
+[TINYUI_TOUCH][PORT->LD] raw=(934,371) window=(1024,600) mapped=(934,371) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(932,383)
+[TINYUI_TOUCH][PORT->LD] raw=(932,383) window=(1024,600) mapped=(932,383) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(929,393)
+[TINYUI_TOUCH][PORT->LD] raw=(929,393) window=(1024,600) mapped=(929,393) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(928,397)
+[TINYUI_TOUCH][PORT->LD] raw=(928,397) window=(1024,600) mapped=(928,397) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(926,399)
+[TINYUI_TOUCH][PORT->LD] raw=(926,399) window=(1024,600) mapped=(926,399) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(925,400)
+[TINYUI_TOUCH][PORT->LD] raw=(925,400) window=(1024,600) mapped=(925,400) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(924,401)
+[TINYUI_TOUCH][PORT->LD] raw=(924,401) window=(1024,600) mapped=(924,401) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(920,404)
+[TINYUI_TOUCH][PORT->LD] raw=(920,404) window=(1024,600) mapped=(920,404) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(916,408)
+[TINYUI_TOUCH][PORT->LD] raw=(916,408) window=(1024,600) mapped=(916,408) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(913,411)
+[TINYUI_TOUCH][PORT->LD] raw=(913,411) window=(1024,600) mapped=(913,411) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(911,414)
+[TINYUI_TOUCH][PORT->LD] raw=(911,414) window=(1024,600) mapped=(911,414) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(909,416)
+[TINYUI_TOUCH][PORT->LD] raw=(909,416) window=(1024,600) mapped=(909,416) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(909,418)
+[TINYUI_TOUCH][PORT->LD] raw=(909,418) window=(1024,600) mapped=(909,418) pressed=0
+[TINYUI_TOUCH][SDL] type=down button=1 pos=(909,418)
+[TINYUI_TOUCH][PORT->LD] raw=(909,418) window=(1024,600) mapped=(909,418) pressed=1
+[TINYUI_TOUCH][HIT] signal=press point=(909,418) ld_id=24 ld_type=line_edit region=(850,400,100,50)
+[TINYUI_TOUCH][SDL] type=up button=1 pos=(909,418)
+[TINYUI_TOUCH][PORT->LD] raw=(909,418) window=(1024,600) mapped=(909,418) pressed=0
+[TINYUI_TOUCH][HIT] signal=release point=(909,418) ld_id=24 ld_type=line_edit region=(850,100,100,50)
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(908,418)
+[TINYUI_TOUCH][PORT->LD] raw=(908,418) window=(1024,600) mapped=(908,418) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(902,418)
+[TINYUI_TOUCH][PORT->LD] raw=(902,418) window=(1024,600) mapped=(902,418) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(897,418)
+[TINYUI_TOUCH][PORT->LD] raw=(897,418) window=(1024,600) mapped=(897,418) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(889,419)
+[TINYUI_TOUCH][PORT->LD] raw=(889,419) window=(1024,600) mapped=(889,419) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(887,419)
+[TINYUI_TOUCH][PORT->LD] raw=(887,419) window=(1024,600) mapped=(887,419) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(886,419)
+[TINYUI_TOUCH][PORT->LD] raw=(886,419) window=(1024,600) mapped=(886,419) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(886,421)
+[TINYUI_TOUCH][PORT->LD] raw=(886,421) window=(1024,600) mapped=(886,421) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(876,425)
+[TINYUI_TOUCH][PORT->LD] raw=(876,425) window=(1024,600) mapped=(876,425) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(860,430)
+[TINYUI_TOUCH][PORT->LD] raw=(860,430) window=(1024,600) mapped=(860,430) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(833,438)
+[TINYUI_TOUCH][PORT->LD] raw=(833,438) window=(1024,600) mapped=(833,438) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(809,444)
+[TINYUI_TOUCH][PORT->LD] raw=(809,444) window=(1024,600) mapped=(809,444) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(798,445)
+[TINYUI_TOUCH][PORT->LD] raw=(798,445) window=(1024,600) mapped=(798,445) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(785,446)
+[TINYUI_TOUCH][PORT->LD] raw=(785,446) window=(1024,600) mapped=(785,446) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(757,452)
+[TINYUI_TOUCH][PORT->LD] raw=(757,452) window=(1024,600) mapped=(757,452) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(721,458)
+[TINYUI_TOUCH][PORT->LD] raw=(721,458) window=(1024,600) mapped=(721,458) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(706,450)
+[TINYUI_TOUCH][PORT->LD] raw=(706,450) window=(1024,600) mapped=(706,450) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(705,450)
+[TINYUI_TOUCH][PORT->LD] raw=(705,450) window=(1024,600) mapped=(705,450) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(703,450)
+[TINYUI_TOUCH][PORT->LD] raw=(703,450) window=(1024,600) mapped=(703,450) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(703,448)
+[TINYUI_TOUCH][PORT->LD] raw=(703,448) window=(1024,600) mapped=(703,448) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(703,450)
+[TINYUI_TOUCH][PORT->LD] raw=(703,450) window=(1024,600) mapped=(703,450) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(700,465)
+[TINYUI_TOUCH][PORT->LD] raw=(700,465) window=(1024,600) mapped=(700,465) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(682,466)
+[TINYUI_TOUCH][PORT->LD] raw=(682,466) window=(1024,600) mapped=(682,466) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(627,462)
+[TINYUI_TOUCH][PORT->LD] raw=(627,462) window=(1024,600) mapped=(627,462) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(525,428)
+[TINYUI_TOUCH][PORT->LD] raw=(525,428) window=(1024,600) mapped=(525,428) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(279,359)
+[TINYUI_TOUCH][PORT->LD] raw=(279,359) window=(1024,600) mapped=(279,359) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(151,318)
+[TINYUI_TOUCH][PORT->LD] raw=(151,318) window=(1024,600) mapped=(151,318) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(118,300)
+[TINYUI_TOUCH][PORT->LD] raw=(118,300) window=(1024,600) mapped=(118,300) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(168,325)
+[TINYUI_TOUCH][PORT->LD] raw=(168,325) window=(1024,600) mapped=(168,325) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(184,337)
+[TINYUI_TOUCH][PORT->LD] raw=(184,337) window=(1024,600) mapped=(184,337) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(176,329)
+[TINYUI_TOUCH][PORT->LD] raw=(176,329) window=(1024,600) mapped=(176,329) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(173,324)
+[TINYUI_TOUCH][PORT->LD] raw=(173,324) window=(1024,600) mapped=(173,324) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(145,279)
+[TINYUI_TOUCH][PORT->LD] raw=(145,279) window=(1024,600) mapped=(145,279) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(116,242)
+[TINYUI_TOUCH][PORT->LD] raw=(116,242) window=(1024,600) mapped=(116,242) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(43,133)
+[TINYUI_TOUCH][PORT->LD] raw=(43,133) window=(1024,600) mapped=(43,133) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(36,92)
+[TINYUI_TOUCH][PORT->LD] raw=(36,92) window=(1024,600) mapped=(36,92) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(38,70)
+[TINYUI_TOUCH][PORT->LD] raw=(38,70) window=(1024,600) mapped=(38,70) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(40,64)
+[TINYUI_TOUCH][PORT->LD] raw=(40,64) window=(1024,600) mapped=(40,64) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(40,60)
+[TINYUI_TOUCH][PORT->LD] raw=(40,60) window=(1024,600) mapped=(40,60) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(40,53)
+[TINYUI_TOUCH][PORT->LD] raw=(40,53) window=(1024,600) mapped=(40,53) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(39,41)
+[TINYUI_TOUCH][PORT->LD] raw=(39,41) window=(1024,600) mapped=(39,41) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(37,27)
+[TINYUI_TOUCH][PORT->LD] raw=(37,27) window=(1024,600) mapped=(37,27) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(30,3)
+[TINYUI_TOUCH][PORT->LD] raw=(30,3) window=(1024,600) mapped=(30,3) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(25,0)
+[TINYUI_TOUCH][PORT->LD] raw=(25,0) window=(1024,600) mapped=(25,0) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(31,0)
+[TINYUI_TOUCH][PORT->LD] raw=(31,0) window=(1024,600) mapped=(31,0) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(86,29)
+[TINYUI_TOUCH][PORT->LD] raw=(86,29) window=(1024,600) mapped=(86,29) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(226,99)
+[TINYUI_TOUCH][PORT->LD] raw=(226,99) window=(1024,600) mapped=(226,99) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(461,221)
+[TINYUI_TOUCH][PORT->LD] raw=(461,221) window=(1024,600) mapped=(461,221) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(534,260)
+[TINYUI_TOUCH][PORT->LD] raw=(534,260) window=(1024,600) mapped=(534,260) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(830,407)
+[TINYUI_TOUCH][PORT->LD] raw=(830,407) window=(1024,600) mapped=(830,407) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(979,446)
+[TINYUI_TOUCH][PORT->LD] raw=(979,446) window=(1024,600) mapped=(979,446) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(995,444)
+[TINYUI_TOUCH][PORT->LD] raw=(995,444) window=(1024,600) mapped=(995,444) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(996,444)
+[TINYUI_TOUCH][PORT->LD] raw=(996,444) window=(1024,600) mapped=(996,444) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(995,444)
+[TINYUI_TOUCH][PORT->LD] raw=(995,444) window=(1024,600) mapped=(995,444) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(987,453)
+[TINYUI_TOUCH][PORT->LD] raw=(987,453) window=(1024,600) mapped=(987,453) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(976,466)
+[TINYUI_TOUCH][PORT->LD] raw=(976,466) window=(1024,600) mapped=(976,466) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(976,467)
+[TINYUI_TOUCH][PORT->LD] raw=(976,467) window=(1024,600) mapped=(976,467) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(978,465)
+[TINYUI_TOUCH][PORT->LD] raw=(978,465) window=(1024,600) mapped=(978,465) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(997,476)
+[TINYUI_TOUCH][PORT->LD] raw=(997,476) window=(1024,600) mapped=(997,476) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(999,497)
+[TINYUI_TOUCH][PORT->LD] raw=(999,497) window=(1024,600) mapped=(999,497) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(994,514)
+[TINYUI_TOUCH][PORT->LD] raw=(994,514) window=(1024,600) mapped=(994,514) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(983,534)
+[TINYUI_TOUCH][PORT->LD] raw=(983,534) window=(1024,600) mapped=(983,534) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(971,547)
+[TINYUI_TOUCH][PORT->LD] raw=(971,547) window=(1024,600) mapped=(971,547) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(963,551)
+[TINYUI_TOUCH][PORT->LD] raw=(963,551) window=(1024,600) mapped=(963,551) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(961,552)
+[TINYUI_TOUCH][PORT->LD] raw=(961,552) window=(1024,600) mapped=(961,552) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(960,553)
+[TINYUI_TOUCH][PORT->LD] raw=(960,553) window=(1024,600) mapped=(960,553) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(957,555)
+[TINYUI_TOUCH][PORT->LD] raw=(957,555) window=(1024,600) mapped=(957,555) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(957,556)
+[TINYUI_TOUCH][PORT->LD] raw=(957,556) window=(1024,600) mapped=(957,556) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(956,557)
+[TINYUI_TOUCH][PORT->LD] raw=(956,557) window=(1024,600) mapped=(956,557) pressed=0
+[TINYUI_TOUCH][SDL] type=down button=1 pos=(956,557)
+[TINYUI_TOUCH][PORT->LD] raw=(956,557) window=(1024,600) mapped=(956,557) pressed=1
+[TINYUI_TOUCH][HIT] signal=press point=(956,557) ld_id=26 ld_type=keyboard region=(0,0,1024,600)
+[TINYUI_TOUCH][SDL] type=up button=1 pos=(956,557)
+[TINYUI_TOUCH][PORT->LD] raw=(956,557) window=(1024,600) mapped=(956,557) pressed=0
+[TINYUI_TOUCH][HIT] signal=release point=(956,557) ld_id=26 ld_type=keyboard region=(0,0,1024,600)
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(956,558)
+[TINYUI_TOUCH][PORT->LD] raw=(956,558) window=(1024,600) mapped=(956,558) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(947,558)
+[TINYUI_TOUCH][PORT->LD] raw=(947,558) window=(1024,600) mapped=(947,558) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(876,534)
+[TINYUI_TOUCH][PORT->LD] raw=(876,534) window=(1024,600) mapped=(876,534) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(707,474)
+[TINYUI_TOUCH][PORT->LD] raw=(707,474) window=(1024,600) mapped=(707,474) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(586,425)
+[TINYUI_TOUCH][PORT->LD] raw=(586,425) window=(1024,600) mapped=(586,425) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(519,406)
+[TINYUI_TOUCH][PORT->LD] raw=(519,406) window=(1024,600) mapped=(519,406) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(509,404)
+[TINYUI_TOUCH][PORT->LD] raw=(509,404) window=(1024,600) mapped=(509,404) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(541,398)
+[TINYUI_TOUCH][PORT->LD] raw=(541,398) window=(1024,600) mapped=(541,398) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(588,398)
+[TINYUI_TOUCH][PORT->LD] raw=(588,398) window=(1024,600) mapped=(588,398) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(589,398)
+[TINYUI_TOUCH][PORT->LD] raw=(589,398) window=(1024,600) mapped=(589,398) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(589,400)
+[TINYUI_TOUCH][PORT->LD] raw=(589,400) window=(1024,600) mapped=(589,400) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(589,401)
+[TINYUI_TOUCH][PORT->LD] raw=(589,401) window=(1024,600) mapped=(589,401) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(590,398)
+[TINYUI_TOUCH][PORT->LD] raw=(590,398) window=(1024,600) mapped=(590,398) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(584,393)
+[TINYUI_TOUCH][PORT->LD] raw=(584,393) window=(1024,600) mapped=(584,393) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(576,388)
+[TINYUI_TOUCH][PORT->LD] raw=(576,388) window=(1024,600) mapped=(576,388) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(568,383)
+[TINYUI_TOUCH][PORT->LD] raw=(568,383) window=(1024,600) mapped=(568,383) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(566,381)
+[TINYUI_TOUCH][PORT->LD] raw=(566,381) window=(1024,600) mapped=(566,381) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(540,364)
+[TINYUI_TOUCH][PORT->LD] raw=(540,364) window=(1024,600) mapped=(540,364) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(468,325)
+[TINYUI_TOUCH][PORT->LD] raw=(468,325) window=(1024,600) mapped=(468,325) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(344,267)
+[TINYUI_TOUCH][PORT->LD] raw=(344,267) window=(1024,600) mapped=(344,267) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(264,219)
+[TINYUI_TOUCH][PORT->LD] raw=(264,219) window=(1024,600) mapped=(264,219) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(227,159)
+[TINYUI_TOUCH][PORT->LD] raw=(227,159) window=(1024,600) mapped=(227,159) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(204,116)
+[TINYUI_TOUCH][PORT->LD] raw=(204,116) window=(1024,600) mapped=(204,116) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(185,88)
+[TINYUI_TOUCH][PORT->LD] raw=(185,88) window=(1024,600) mapped=(185,88) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(178,81)
+[TINYUI_TOUCH][PORT->LD] raw=(178,81) window=(1024,600) mapped=(178,81) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(177,80)
+[TINYUI_TOUCH][PORT->LD] raw=(177,80) window=(1024,600) mapped=(177,80) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(160,76)
+[TINYUI_TOUCH][PORT->LD] raw=(160,76) window=(1024,600) mapped=(160,76) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(109,63)
+[TINYUI_TOUCH][PORT->LD] raw=(109,63) window=(1024,600) mapped=(109,63) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(51,23)
+[TINYUI_TOUCH][PORT->LD] raw=(51,23) window=(1024,600) mapped=(51,23) pressed=0
+[TINYUI_TOUCH][SDL] type=motion buttons=0x0 pos=(12,0)
+[TINYUI_TOUCH][PORT->LD] raw=(12,0) window=(1024,600) mapped=(12,0) pressed=0

@@ -62,6 +62,8 @@ bool isFullWidgetUpdate=false;
 
 ldTimer_t sysTimer10ms=0;
 
+bool ldKeyboardHitTest(ld_scene_t *ptScene, ldKeyboard_t *ptWidget, arm_2d_location_t clickPoint);
+
 static bool ldGuiTouchLogEnabled(void)
 {
     static int initialized = 0;
@@ -74,6 +76,22 @@ static bool ldGuiTouchLogEnabled(void)
     }
 
     return enabled != 0;
+}
+
+bool __arm_2d_helper_control_user_whether_ignore_node(arm_2d_control_node_t *ptRoot,
+                                                       arm_2d_control_node_t *ptNode,
+                                                       arm_2d_location_t tLocation)
+{
+    ldBase_t *widget = (ldBase_t *)ptNode;
+
+    ARM_2D_UNUSED(ptRoot);
+
+    if (widget == NULL || widget->widgetType != widgetTypeKeyboard)
+    {
+        return false;
+    }
+
+    return !ldKeyboardHitTest(NULL, (ldKeyboard_t *)widget, tLocation);
 }
 
 static const char *ldGuiWidgetTypeName(ldWidgetType_t type)

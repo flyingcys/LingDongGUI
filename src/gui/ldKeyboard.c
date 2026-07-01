@@ -879,6 +879,49 @@ static arm_2d_region_t _keyboardResolveBtnRegion(ld_scene_t *ptScene, const ldKe
     return _keyboardResolveBtnRegionForList(ptScene, ptWidget ? (const kbBtnInfo_t *)ptWidget->pBtnList : NULL, pBtnInfo);
 }
 
+static arm_2d_region_t _keyboardResolveBtnRegionForViewport(const kbBtnInfo_t *pBtnList,
+                                                            const kbBtnInfo_t *pBtnInfo,
+                                                            int16_t screenWidth,
+                                                            int16_t screenHeight)
+{
+    arm_2d_region_t region = pBtnInfo->region;
+    int16_t index;
+
+    if (!_isDefaultBtnList(pBtnList))
+    {
+        return region;
+    }
+
+    if ((screenWidth == LD_CFG_SCREEN_WIDTH) && (screenHeight == LD_CFG_SCREEN_HEIGHT))
+    {
+        return region;
+    }
+
+    index = _defaultBtnIndex(pBtnList, pBtnInfo);
+    if (index < 0)
+    {
+        return region;
+    }
+
+    if (pBtnList == qwertyBtnList)
+    {
+        region = _resolveQwertyRegion(index, screenWidth, screenHeight);
+    }
+    else if (pBtnList == symbolBtnInfo)
+    {
+        region = _resolveSymbolRegion(index, screenWidth, screenHeight);
+    }
+    else
+    {
+        region = _resolveNumRegion(index, screenWidth, screenHeight);
+    }
+    if ((region.tSize.iWidth <= 0) || (region.tSize.iHeight <= 0))
+    {
+        return pBtnInfo->region;
+    }
+    return region;
+}
+
 static kbBtnInfo_t _keyboardResolveBtnInfo(ld_scene_t *ptScene, const ldKeyboard_t *ptWidget, const kbBtnInfo_t *pBtnInfo)
 {
     kbBtnInfo_t resolved = *pBtnInfo;
@@ -924,6 +967,89 @@ static arm_2d_region_t _keyboardGetClickRegion(ld_scene_t *ptScene, ldKeyboard_t
     }
 
     return retRegion;
+}
+
+static bool _keyboardPointHitsButton(ldKeyboard_t *ptWidget,
+                                     arm_2d_location_t clickPoint,
+                                     int16_t screenWidth,
+                                     int16_t screenHeight)
+{
+    const kbBtnInfo_t *pBtnList;
+    const kbBtnInfo_t *pBtnInfo;
+
+    if (ptWidget == NULL)
+    {
+        return false;
+    }
+
+    pBtnList = ptWidget->pBtnList != NULL
+             ? (const kbBtnInfo_t *)ptWidget->pBtnList
+             : ldKeyboardGetTargetBtnList(ptWidget);
+    if (pBtnList == NULL)
+    {
+        return false;
+    }
+
+    for (pBtnInfo = _keyboardBtnFirst(pBtnList);
+         pBtnInfo != NULL;
+         pBtnInfo = _keyboardBtnNext(pBtnList, pBtnInfo))
+    {
+        arm_2d_region_t btnRegion = _keyboardResolveBtnRegionForViewport(pBtnList,
+                                                                          pBtnInfo,
+                                                                          screenWidth,
+                                                                          screenHeight);
+        arm_2d_location_t keyboardLocation = {0};
+        keyboardLocation = ldBaseGetAbsoluteLocation((ldBase_t *)ptWidget, keyboardLocation);
+        btnRegion.tLocation.iX += keyboardLocation.iX;
+        btnRegion.tLocation.iY += keyboardLocation.iY;
+        if (arm_2d_is_point_inside_region(&btnRegion, &clickPoint))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool ldKeyboardHitTest(ld_scene_t *ptScene, ldKeyboard_t *ptWidget, arm_2d_location_t clickPoint)
+{
+    arm_2d_region_t absoluteRegion;
+    arm_2d_region_t keyboardRegion;
+    int16_t screenWidth;
+    int16_t screenHeight;
+
+    (void)ptScene;
+
+    if (ptWidget == NULL || ldBaseIsHidden((ldBase_t *)ptWidget))
+    {
+        return false;
+    }
+
+    if (arm_2d_helper_control_get_absolute_region((arm_2d_control_node_t *)ptWidget,
+                                                  &absoluteRegion,
+                                                  true) == NULL)
+    {
+        return false;
+    }
+    screenWidth = absoluteRegion.tSize.iWidth;
+    screenHeight = absoluteRegion.tSize.iHeight;
+    keyboardRegion = (arm_2d_region_t) {
+        .tLocation = {
+            .iX = absoluteRegion.tLocation.iX,
+            .iY = absoluteRegion.tLocation.iY + (screenHeight >> 1),
+        },
+        .tSize = {
+            .iWidth = screenWidth,
+            .iHeight = screenHeight >> 1,
+        },
+    };
+
+    if (arm_2d_is_point_inside_region(&keyboardRegion, &clickPoint))
+    {
+        return true;
+    }
+
+    return _keyboardPointHitsButton(ptWidget, clickPoint, screenWidth, screenHeight);
 }
 
 static void ldKeyboardUpdateForScene(ld_scene_t *ptScene, ldKeyboard_t *ptWidget)
