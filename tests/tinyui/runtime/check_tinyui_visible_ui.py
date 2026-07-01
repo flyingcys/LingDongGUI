@@ -669,6 +669,14 @@ def _assert_legacy_demo0_parity_visible(path: Path) -> None:
             f"calendar_span={calendar_span}, expected visible calendar structure near (50,340)"
         )
 
+    arc_non_bg, _, arc_green, _, _, arc_span = region_metrics(450, 450, 553, 553)
+    if arc_green != 0:
+        failures.append(
+            "legacy demo0 arc foreground parity failed: "
+            f"arc_non_bg={arc_non_bg}, arc_green={arc_green}, arc_span={arc_span}, "
+            "expected no green foreground segment in the current LDGUI SDL demo0 reference"
+        )
+
     if failures:
         joined = "\n  - ".join(failures)
         raise AssertionError(

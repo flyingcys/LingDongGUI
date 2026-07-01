@@ -417,7 +417,7 @@ static void test_arc_legacy_demo0_parity_parameters_map_to_backend(struct tinyui
 
     assert(tinyui_arc_set_quarter_source(arc, &quarter_source) == 0);
     assert(tinyui_arc_set_background_angle(arc, 0.0f, 350.0f) == 0);
-    assert(tinyui_arc_set_foreground_angle(arc, 30.0f) == 0);
+    assert(tinyui_arc_set_foreground_angle(arc, 0.0f) == 0);
     assert(tinyui_arc_set_parent_color(arc, 0xF0F0F0U) == 0);
     assert(tinyui_arc_set_color(arc, 0xADD8E6U, 0x90EE90U) == 0);
 
@@ -429,7 +429,7 @@ static void test_arc_legacy_demo0_parity_parameters_map_to_backend(struct tinyui
     assert(ld_arc->ptMaskTile->tRegion.tSize.iHeight == 53);
     assert(ldArcGetBackgroundStartAngle(ld_arc) == 0.0f);
     assert(ldArcGetBackgroundAngle(ld_arc) == 350.0f);
-    assert(ldArcGetForegroundAngle(ld_arc) == 30.0f);
+    assert(ldArcGetForegroundAngle(ld_arc) == 0.0f);
     assert(ldArcGetRotationAngle(ld_arc) == 0.0f);
     assert(ldArcGetBackgroundColor(ld_arc) == (ldColor)tinyui_rgb_to_ld_color(0xADD8E6U));
     assert(ldArcGetForegroundColor(ld_arc) == (ldColor)tinyui_rgb_to_ld_color(0x90EE90U));
