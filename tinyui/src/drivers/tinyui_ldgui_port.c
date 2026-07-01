@@ -298,7 +298,6 @@ void ldCfgBgMoveDidUpdate(struct ld_scene_t *scene,
         }
     }
     if (target != NULL) {
-        ldBaseMove(target, offsetX, offsetY);
         ldBaseSetWidth(target, ext_width);
         ldBaseSetHeight(target, ext_height);
     }

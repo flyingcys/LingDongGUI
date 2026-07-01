@@ -647,7 +647,7 @@ static void test_keyboard_uses_runtime_viewport_for_legacy_demo0_keyboard_model(
     assert(root_region.tSize.iHeight == 900);
     window_region = ldBaseGetRegion(ld_window_base);
     assert(window_region.tLocation.iX == 0);
-    assert(window_region.tLocation.iY == -300);
+    assert(window_region.tLocation.iY == 0);
     assert(window_region.tSize.iWidth == 1024);
     assert(window_region.tSize.iHeight == 900);
 
@@ -791,7 +791,7 @@ static void test_keyboard_bg_move_syncs_only_related_root_window(void)
 
     window_a_region = ldBaseGetRegion(ld_window_a);
     window_b_region = ldBaseGetRegion(ld_window_b);
-    assert(window_a_region.tLocation.iY == -300);
+    assert(window_a_region.tLocation.iY == 0);
     assert(window_a_region.tSize.iHeight == 900);
     assert(window_b_region.tLocation.iY == 0);
     assert(window_b_region.tSize.iHeight == 600);
