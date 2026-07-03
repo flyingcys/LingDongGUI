@@ -133,6 +133,12 @@ function(ld_define_core_targets)
         return()
     endif()
 
+    # TinyUI platform port selection. The default (sdl) leaves every existing
+    # demo/test bundle unchanged; mcu/none are exercised by dedicated harness
+    # targets (see tinyui_port_mcu / mcu_host_smoke), not by rewiring the
+    # default bundle.
+    set(LD_TINYUI_PORT "sdl" CACHE STRING "TinyUI platform port: sdl | mcu | none")
+
     add_library(longdonggui_arm2d STATIC
         ${LD_ARM2D_LIBRARY_SOURCES}
         ${LD_ARM2D_HELPER_SOURCES}
@@ -168,6 +174,7 @@ function(ld_define_core_targets)
     add_library(tinyui_backend_ldgui_porting STATIC
         "${LD_TINYUI_BACKEND_LDGUI_DIR}/tinyui_ldgui_port.c"
         "${LD_TINYUI_BACKEND_LDGUI_DIR}/tinyui_ldgui_disp_adapter.c"
+        "${LD_TINYUI_BACKEND_LDGUI_DIR}/tinyui_ldgui_neutral_runtime.c"
         ${LD_PERF_COUNTER_SOURCES}
     )
     target_include_directories(tinyui_backend_ldgui_porting PUBLIC
@@ -281,6 +288,51 @@ function(ld_define_core_targets)
     ld_apply_common_target_config(tinyui_port_sdl)
     add_library(tinyui_port_sdl ALIAS tinyui_port_sdl)
 
+    # ── No-SDL bundle ─────────────────────────────────────────────────────
+    # Backend-neutral consumer bundle: everything needed to run TinyUI with a
+    # platform port that is NOT SDL. Consumers add their own port (e.g.
+    # tinyui_port_mcu) to satisfy the frame-driver link contract.
+    add_library(tinyui_backend_ldgui_core INTERFACE)
+    target_link_libraries(tinyui_backend_ldgui_core INTERFACE
+        tinyui_core
+        longdonggui
+        tinyui_backend_ldgui_porting
+    )
+    target_include_directories(tinyui_backend_ldgui_core INTERFACE
+        ${LD_REPO_ROOT}/tinyui/include
+        ${LD_REPO_ROOT}/tinyui/src/core
+        ${LD_REPO_ROOT}/tinyui/src/drivers
+        ${LD_REPO_ROOT}/tinyui
+    )
+
+    # ── MCU (no-SDL) platform port ────────────────────────────────────────
+    # Provides tinyui_runtime_host_step_app / _shutdown_app by forwarding to
+    # the backend-neutral runtime loop. Contains no SDL and no hardware access,
+    # so it compiles for any target.
+    add_library(tinyui_port_mcu STATIC
+        ${LD_REPO_ROOT}/tinyui/port/mcu/tinyui_port_mcu.c
+        ${LD_REPO_ROOT}/tinyui/port/mcu/Retarget.c)
+    target_include_directories(tinyui_port_mcu PUBLIC
+        ${LD_REPO_ROOT}/tinyui/include
+        ${LD_REPO_ROOT}/tinyui/src/core
+        ${LD_REPO_ROOT}/tinyui/src/drivers
+        ${LD_REPO_ROOT}/tinyui)
+    target_link_libraries(tinyui_port_mcu PUBLIC tinyui_core)
+    ld_apply_common_target_config(tinyui_port_mcu)
+
+    # Select the platform port linked into the runtime bundle.
+    # Default "sdl" keeps every existing consumer byte-for-byte unchanged.
+    # For "mcu"/"none" builds also pass -DLD_BUILD_SDL_DEMO=OFF (the SDL demos
+    # require SDL); "none" links no port, so the consumer must add one itself
+    # (e.g. its own tinyui_port_mcu) to satisfy the frame-driver link contract.
+    if(LD_TINYUI_PORT STREQUAL "mcu")
+        set(LD_TINYUI_SELECTED_PORT tinyui_port_mcu)
+    elseif(LD_TINYUI_PORT STREQUAL "none")
+        set(LD_TINYUI_SELECTED_PORT "")
+    else()
+        set(LD_TINYUI_SELECTED_PORT tinyui_port_sdl)
+    endif()
+
     foreach(LD_TINYUI_BACKEND_TARGET IN ITEMS tinyui_backend_ldgui tinyui_backend_ldgui_runtime)
         add_library(${LD_TINYUI_BACKEND_TARGET} INTERFACE)
         target_include_directories(${LD_TINYUI_BACKEND_TARGET} INTERFACE
@@ -293,7 +345,7 @@ function(ld_define_core_targets)
             tinyui_core
             longdonggui
             tinyui_backend_ldgui_porting
-            tinyui_port_sdl
+            ${LD_TINYUI_SELECTED_PORT}
         )
     endforeach()
     add_library(tinyui_backend_ldgui ALIAS tinyui_backend_ldgui)

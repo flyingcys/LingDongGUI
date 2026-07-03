@@ -16,35 +16,6 @@
 int tinyui_backend_init(struct tinyui_app *app);
 void tinyui_backend_step(struct tinyui_app *app);
 
-/**
- * @brief   attribute
- *
- * @param[in] (weak) (weak)
- */
-
-__attribute__((weak)) void VT_enter_global_mutex(void) {}
-
-/**
- * @brief   attribute
- *
- * @param[in] (weak) (weak)
- */
-
-__attribute__((weak)) void VT_leave_global_mutex(void) {}
-
-/**
- * @brief   attribute
- *
- * @param[in] (weak) (weak)
- */
-
-__attribute__((weak)) void ldCfgTouchSetPoint(int16_t x, int16_t y, bool pressed)
-{
-    (void)x;
-    (void)y;
-    (void)pressed;
-}
-
 static void tinyui_runtime_host_runtime_bootstrap(void)
 {
     static int initialized = 0;
@@ -95,15 +66,6 @@ static struct tinyui_app *tinyui_runtime_host_app_state_from_window(struct tinyu
     }
 
     return window->widget.owner;
-}
-
-static void tinyui_runtime_host_apply_smoke_cursor_layout(struct tinyui_runtime_host_state *state,
-                                                     const struct tinyui_widget *root,
-                                                     int x,
-                                                     int *cursor_y)
-{
-    /* smoke layout permanently disabled */
-    (void)state; (void)root; (void)x; (void)cursor_y;
 }
 
 static void tinyui_runtime_host_render(struct tinyui_runtime_host_state *state, struct tinyui_window *window)

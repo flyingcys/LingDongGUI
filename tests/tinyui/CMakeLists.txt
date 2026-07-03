@@ -88,6 +88,42 @@ ld_add_c_unit_test(test_tinyui_wrapper_struct_overhead
 )
 
 
+# ── MCU no-SDL host verification harness ──────────────────────────────────
+# Gate-B artifact for the port-layer remediation: proves the MCU port
+# (tinyui_port_mcu) drives frames through the backend-neutral runtime loop and
+# renders real pixels to a user flush callback WITHOUT linking SDL (no
+# tinyui_port_sdl in the link line).
+add_executable(mcu_host_smoke
+    "${CMAKE_CURRENT_SOURCE_DIR}/port_mcu/mcu_host_smoke.c"
+)
+# GNU ld needs --start-group for the tinyui_core <-> port/porting circular refs;
+# Apple ld64 rejects --start-group (resolves whole archives), so guard it like
+# ld_add_c_unit_test does.
+if(CMAKE_C_COMPILER_ID MATCHES "GNU" OR (CMAKE_C_COMPILER_ID MATCHES "Clang" AND NOT APPLE))
+    target_link_libraries(mcu_host_smoke PRIVATE
+        -Wl,--start-group
+        tinyui_port_mcu
+        tinyui_core
+        longdonggui
+        longdonggui_arm2d
+        tinyui_backend_ldgui_porting
+        -Wl,--end-group
+        m
+    )
+else()
+    target_link_libraries(mcu_host_smoke PRIVATE
+        tinyui_port_mcu
+        tinyui_core
+        longdonggui
+        longdonggui_arm2d
+        tinyui_backend_ldgui_porting
+        m
+    )
+endif()
+ld_apply_common_target_config(mcu_host_smoke)
+add_test(NAME mcu_host_smoke COMMAND mcu_host_smoke)
+set_tests_properties(mcu_host_smoke PROPERTIES LABELS "tinyui;mcu")
+
 ld_add_python_test(check_tinyui_public_api
     SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/contract/check_tinyui_public_api.py"
     LABELS "tinyui;contract"

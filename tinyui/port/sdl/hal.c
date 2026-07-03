@@ -201,27 +201,6 @@ int tinyui_runtime_host_ensure_window(struct tinyui_app *app,
         return -1;
     }
 
-    state->real_tile = (arm_2d_tile_t) {
-        .tRegion = {
-            .tLocation = {
-                .iX = 0,
-                .iY = 0,
-            },
-            .tSize = {
-                .iWidth = state->display_width,
-                .iHeight = state->display_height,
-            },
-        },
-        .tInfo = {
-            .bIsRoot = true,
-            .bHasEnforcedColour = true,
-            .tColourInfo = {
-                .chScheme = __DISP0_COLOUR_FORMAT__,
-            },
-        },
-        .pchBuffer = (uint8_t *)state->real_pixels,
-    };
-
     state->start_ticks = tinyui_tick_get(app);
     state->screen_create_start_ticks = state->start_ticks;
     state->screen_create_end_ticks = state->start_ticks;

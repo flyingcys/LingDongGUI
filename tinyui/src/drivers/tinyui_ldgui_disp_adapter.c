@@ -4,9 +4,9 @@
  * 运行期 PFB display adapter。
  * 提供 tinyui_backend_init 和 tinyui_backend_step 公共 API。
  *
- * MCU 路径：动态分配 PFB，通过 flush_callback 推送像素到硬件。
- * SDL/host 路径：flush_callback == NULL，跳过 PFB 初始化，依赖
- *               Disp0_DrawBitmap（在 tinyui_ldgui_port.c 中）转发。
+ * 有 flush 回调：动态分配 PFB，通过 flush_callback 推送像素到硬件。
+ * 无 flush 回调（无显示硬件）：跳过 PFB 初始化，step 中 s_pfb_inited==0
+ *               时不跑 pfb_task。
  */
 
 #include "tinyui_ldgui_port.h"
@@ -209,7 +209,7 @@ int tinyui_backend_init(struct tinyui_app *app)
 {
     if (app == NULL) return -1;
 
-    /* 重入保护：已初始化则直接返回（SDL 路径为 -1，MCU 路径为 1）*/
+    /* 重入保护：已初始化（s_pfb_inited==1 或 s_pfb_mem!=NULL）则直接返回 */
     if (s_pfb_inited != 0 || s_pfb_mem != NULL) return 0;
 
     ldgui_port_set_current_app(app);
@@ -219,9 +219,10 @@ int tinyui_backend_init(struct tinyui_app *app)
     arm_2d_init();
     arm_2d_helper_init();
 
-    /* SDL/host 路径（无 flush callback）：不初始化 PFB */
+    /* 无 flush 回调（无显示硬件）：跳过 PFB 初始化，
+     * step 中 s_pfb_inited==0 时不跑 pfb_task */
     if (app->display_port.flush_callback == NULL) {
-        s_pfb_inited = -1;  /* SDL path sentinel */
+        s_pfb_inited = 0;
         return 0;
     }
 

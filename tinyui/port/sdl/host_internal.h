@@ -18,7 +18,6 @@ struct tinyui_runtime_host_state {
     SDL_Texture   *texture;
     COLOUR_INT    *real_pixels;
     uint32_t      *present_pixels;
-    arm_2d_tile_t  real_tile;
     Uint32         start_ticks;
     Uint32         screen_create_start_ticks;
     Uint32         screen_create_end_ticks;
