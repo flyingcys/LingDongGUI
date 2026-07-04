@@ -149,6 +149,8 @@ struct tinyui_display_port_state {
     struct tinyui_display_config config;
     tinyui_display_flush_cb_t flush_callback;
     void *flush_user_data;
+    tinyui_display_present_cb_t present_callback;
+    void *present_user_data;
 };
 
 struct tinyui_input_port_state {
@@ -157,6 +159,8 @@ struct tinyui_input_port_state {
     int pointer_pressed;
     enum tinyui_input_key key;
     int key_pressed;
+    tinyui_input_read_cb_t read_callback;
+    void *read_user_data;
 };
 
 struct tinyui_tick_port_state {

@@ -8,6 +8,19 @@ static int tinyui_input_key_is_valid(enum tinyui_input_key key)
     return key >= TINYUI_INPUT_KEY_NONE && key <= TINYUI_INPUT_KEY_BACK;
 }
 
+int tinyui_input_set_read_callback(struct tinyui_app *app,
+                                   tinyui_input_read_cb_t callback,
+                                   void *user_data)
+{
+    if (app == NULL) {
+        return -1;
+    }
+
+    app->input_port.read_callback = callback;
+    app->input_port.read_user_data = user_data;
+    return 0;
+}
+
 int tinyui_input_push_pointer(struct tinyui_app *app, int x, int y, int pressed)
 {
     if (app == NULL) {

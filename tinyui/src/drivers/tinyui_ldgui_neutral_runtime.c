@@ -111,11 +111,26 @@ int tinyui_backend_neutral_step(struct tinyui_app *app)
         s_neutral_inited = 1;
     }
 
+    /* LVGL 式帧:read_cb(采集/退出) → pump_timers → backend_step(→flush_cb)
+     * → present_cb(上屏) → os delay。read_cb/present_cb 均为可选;全 NULL
+     * 时行为与改造前逐字一致(MCU 直刷路径不变)。 */
+    if (app->input_port.read_callback != NULL) {
+        int rc = app->input_port.read_callback(app, app->input_port.read_user_data);
+        if (rc != 0) {
+            return rc;   /* >0 退出,<0 错误,直接冒泡给 timer_handler */
+        }
+    }
+
     /* NOTE: the application must have registered a tick source
      * (tinyui_tick_set_source) — otherwise tinyui_tick_get() returns 0 every
      * frame and timers/animations never advance (first frame still paints). */
     tinyui_app_pump_timers(app, tinyui_tick_get(app));
     tinyui_backend_step(app);
+
+    if (app->display_port.present_callback != NULL) {
+        app->display_port.present_callback(app->display_port.present_user_data);
+    }
+
     tinyui_os_delay(app, 16);
 
     return 0;

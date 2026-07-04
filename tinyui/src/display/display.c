@@ -89,3 +89,16 @@ int tinyui_display_set_flush_callback(struct tinyui_app *app,
     app->display_port.flush_user_data = user_data;
     return 0;
 }
+
+int tinyui_display_set_present_callback(struct tinyui_app *app,
+                                        tinyui_display_present_cb_t callback,
+                                        void *user_data)
+{
+    if (app == NULL) {
+        return -1;
+    }
+
+    app->display_port.present_callback = callback;
+    app->display_port.present_user_data = user_data;
+    return 0;
+}
