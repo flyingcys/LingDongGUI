@@ -50,9 +50,9 @@ int          tinyui_runtime_host_ensure_window(struct tinyui_app *app,
 void         tinyui_runtime_host_present_real_frame(struct tinyui_runtime_host_state *state);
 int          tinyui_runtime_host_pump_sdl_events(struct tinyui_app *app,
                                                  struct tinyui_runtime_host_state *state);
+int          tinyui_runtime_host_touch_log_enabled(void);
 
-/* ---- observe.c → 跨文件声明 ---- */
-int    tinyui_runtime_host_touch_log_enabled(void);
+/* ---- tests/tinyui/runtime/tinyui_sdl_observe.c(仅 ENABLE_TEST 编入)→ 跨文件声明 ---- */
 void   tinyui_runtime_host_log_screen_create_benchmark(struct tinyui_runtime_host_state *state);
 void   tinyui_runtime_host_log_first_frame_benchmark(struct tinyui_runtime_host_state *state);
 void   tinyui_runtime_host_log_mapping_markers(struct tinyui_runtime_host_state *state,

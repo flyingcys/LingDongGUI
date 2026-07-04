@@ -257,8 +257,14 @@ function(ld_define_core_targets)
 
     add_library(tinyui_port_sdl STATIC
         ${LD_REPO_ROOT}/tinyui/port/sdl/hal.c
-        ${LD_REPO_ROOT}/tinyui/port/sdl/observe.c
     )
+    # 测试观测脚手架(markers/capture/auto-quit)仅在 ENABLE_TEST 下编入,
+    # 经 tinyui_sdl_observe.h 的宏被 hal.c 调用;生产构建 port 零测试符号。
+    if(ENABLE_TEST)
+        target_sources(tinyui_port_sdl PRIVATE
+            ${LD_REPO_ROOT}/tests/tinyui/runtime/tinyui_sdl_observe.c)
+        target_compile_definitions(tinyui_port_sdl PRIVATE ENABLE_TEST)
+    endif()
     target_include_directories(tinyui_port_sdl PUBLIC
         ${LD_REPO_ROOT}/tinyui/include
         ${LD_REPO_ROOT}/tinyui/src/core

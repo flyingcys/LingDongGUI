@@ -10,6 +10,7 @@
 #include "tick/tick.h"
 #include "osal/osal.h"
 #include "tinyui_sdl.h"
+#include "tinyui_sdl_observe.h"
 #include <SDL.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -26,6 +27,22 @@ void tinyui_runtime_host_default_delay(unsigned int ms, void *user_data)
 {
     (void)user_data;
     SDL_Delay((Uint32)ms);
+}
+
+/* 触摸事件调试日志开关(TINYUI_TOUCH_LOG),供事件泵使用。属生产诊断能力
+ * (默认关闭),故随事件泵留在 hal.c;不属被移出的测试观测脚手架。 */
+int tinyui_runtime_host_touch_log_enabled(void)
+{
+    static int initialized = 0;
+    static int enabled = 0;
+
+    if (!initialized) {
+        const char *env = getenv("TINYUI_TOUCH_LOG");
+        enabled = (env != NULL && env[0] != '\0' && env[0] != '0') ? 1 : 0;
+        initialized = 1;
+    }
+
+    return enabled;
 }
 
 uint32_t tinyui_runtime_host_pixel_to_rgb888(COLOUR_INT pixel)
@@ -320,8 +337,8 @@ static void tinyui_sdl_present_cb(void *user_data)
     tinyui_runtime_host_present_real_frame(state);
     SDL_RenderPresent(state->renderer);
 
-    state->rendered_frames += 1U;
-    (void)tinyui_runtime_host_write_capture(state);
+    /* 测试观测(markers/capture/计帧);生产构建下宏展开为空,不评估实参。 */
+    TINYUI_SDL_OBSERVE_ON_PRESENT(tinyui_app_current(), state);
 }
 
 /* read_cb:泵 SDL 事件 → push 指针;SDL_QUIT 或到达 auto-quit 时限时请求退出。 */
@@ -335,8 +352,8 @@ static int tinyui_sdl_read_cb(struct tinyui_app *app, void *user_data)
         return event_result;   /* SDL_QUIT → >0 */
     }
 
-    if (state->auto_quit_ms > 0 &&
-        tinyui_tick_get(app) - state->start_ticks >= state->auto_quit_ms) {
+    /* auto-quit(测试/CI headless 退出);生产构建下宏为 0。 */
+    if (TINYUI_SDL_OBSERVE_SHOULD_QUIT(app, state)) {
         return 1;
     }
 
@@ -373,10 +390,11 @@ int tinyui_sdl_window_create(int width, int height)
     if (tinyui_runtime_host_ensure_window(app, &s_sdl_state) != 0) {
         return -1;
     }
-    s_sdl_state.auto_quit_ms = tinyui_runtime_host_parse_auto_quit_ms();
-
     (void)tinyui_display_set_flush_callback(app, tinyui_runtime_host_copy_flush_pixels, &s_sdl_state);
     (void)tinyui_display_set_present_callback(app, tinyui_sdl_present_cb, &s_sdl_state);
+
+    /* 测试观测安装(auto-quit 解析 + app→state marker 链接);生产下宏为空。 */
+    TINYUI_SDL_OBSERVE_ON_SETUP(app, &s_sdl_state);
     return 0;
 }
 

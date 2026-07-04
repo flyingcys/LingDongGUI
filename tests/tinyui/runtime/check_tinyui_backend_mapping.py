@@ -311,7 +311,7 @@ TARGETS = sorted(target_matrix)
 
 
 subprocess.run(
-    [RTK, "cmake", "-S", str(ROOT), "-B", str(BUILD), "-DUSE_DEMO=0"],
+    [RTK, "cmake", "-S", str(ROOT), "-B", str(BUILD), "-DUSE_DEMO=0", "-DENABLE_TEST=ON"],
     check=True,
 )
 subprocess.run(

@@ -1,6 +1,8 @@
-/* tinyui/port/sdl/observe.c
- * CI / 测试基础设施 — 与生产渲染路径零耦合。
- * 包含：环境变量标志、widget 分类谓词、printf 日志、PPM capture。
+/* tests/tinyui/runtime/tinyui_sdl_observe.c
+ * CI / 测试基础设施 — 仅在 ENABLE_TEST 下编入 tinyui_port_sdl。
+ * 由 hal.c 经 tinyui_sdl_observe.h 的钩子宏调用;生产 port 不含这些符号。
+ * 包含：环境变量标志、widget 分类谓词、printf marker、PPM capture、
+ * 以及 on_setup/on_present/should_quit 观测适配。
  */
 #include "host_internal.h"
 #include <stdio.h>
@@ -24,21 +26,8 @@ static int tinyui_runtime_host_benchmark_log_enabled(void)
 }
 
 
-/* ---- 外部可见函数（在 host_internal.h 中已声明）---- */
-
-int tinyui_runtime_host_touch_log_enabled(void)
-{
-    static int initialized = 0;
-    static int enabled = 0;
-
-    if (!initialized) {
-        const char *env = getenv("TINYUI_TOUCH_LOG");
-        enabled = (env != NULL && env[0] != '\0' && env[0] != '0') ? 1 : 0;
-        initialized = 1;
-    }
-
-    return enabled;
-}
+/* ---- 外部可见函数（在 host_internal.h 中已声明）----
+ * 注:tinyui_runtime_host_touch_log_enabled 已移至 hal.c(生产事件泵使用)。 */
 
 void tinyui_runtime_host_log_screen_create_benchmark(struct tinyui_runtime_host_state *state)
 {
@@ -400,4 +389,64 @@ void tinyui_runtime_host_log_smoke_layout_marker(struct tinyui_runtime_host_stat
     printf("TINYUI_SMOKE_LAYOUT_USED=%d\n", state->smoke_layout_used ? 1 : 0);
     fflush(stdout);
     state->smoke_layout_marker_logged = 1;
+}
+
+/* ── ENABLE_TEST 观测适配层 ────────────────────────────────────────────────
+ * 仅在 ENABLE_TEST 下编入 tinyui_port_sdl,由 hal.c 的 SDL 驱动经
+ * tinyui_sdl_observe.h 宏调用。把旧 step.c 的 CI marker/capture/auto-quit 编排
+ * 集中到测试侧,生产 port(ENABLE_TEST=OFF)不含任何这些符号。
+ * ──────────────────────────────────────────────────────────────────────── */
+
+/* 安装期(window_create):建立 image_source 标记所需的 app→state 链接,解析
+ * auto-quit 时限。新架构下 state 是 hal.c 文件静态,log_image_source_marker 仍
+ * 从 widget->owner->runtime_state 取 state,故在此赋值(生产不走此路径)。 */
+void tinyui_sdl_observe_on_setup(struct tinyui_app *app,
+                                 struct tinyui_runtime_host_state *state)
+{
+    if (app == NULL || state == NULL) {
+        return;
+    }
+    app->runtime_state = state;
+    state->auto_quit_ms = tinyui_runtime_host_parse_auto_quit_ms();
+}
+
+/* 每帧呈现后:发 runtime-ready / 映射 / smoke / image-source marker(各自一次),
+ * 计帧并写 PPM 截图。等价旧 step.c 的 prepare(ready)+render(markers+capture)。 */
+void tinyui_sdl_observe_on_present(struct tinyui_app *app,
+                                   struct tinyui_runtime_host_state *state)
+{
+    struct tinyui_window *window;
+
+    if (app == NULL || state == NULL) {
+        return;
+    }
+
+    tinyui_runtime_host_log_runtime_ready(app, state);
+
+    window = app->root_window;
+    if (window != NULL && window->widget.ld_widget != NULL) {
+        tinyui_runtime_host_log_mapping_markers(state, &window->widget);
+        if (app->ld_scene != NULL && state->real_pixels != NULL) {
+            state->smoke_layout_used = 0;
+            tinyui_runtime_host_log_smoke_layout_marker(state);
+            tinyui_runtime_host_log_image_source_marker(&window->widget);
+            state->rendered_frames += 1U;
+        }
+    }
+
+    (void)tinyui_runtime_host_write_capture(state);
+}
+
+/* auto-quit(TINYUI_DEMO_AUTO_QUIT_MS):headless 冒烟/CI 用,到时请求退出。 */
+int tinyui_sdl_observe_should_quit(struct tinyui_app *app,
+                                   struct tinyui_runtime_host_state *state)
+{
+    if (app == NULL || state == NULL) {
+        return 0;
+    }
+    if (state->auto_quit_ms > 0 &&
+        tinyui_tick_get(app) - state->start_ticks >= state->auto_quit_ms) {
+        return 1;
+    }
+    return 0;
 }

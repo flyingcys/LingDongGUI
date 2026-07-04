@@ -3,10 +3,9 @@
  *
  * Backend-neutral (no-SDL) frame loop for TinyUI ports.
  *
- * This mirrors the *non-SDL* setup + step performed by
- * tinyui/port/sdl/step.c (tinyui_runtime_host_prepare_runtime + the step
- * body), with every SDL concern removed: no window/renderer/texture, no
- * SDL event pump, no present, no observe/capture, no auto-quit.
+ * core 的 runtime_bridge 直接驱动这里:一次性 setup + 每帧 step。SDL 特有的
+ * 窗口/事件泵/present/观测通过 hal.c 的 read_cb/present_cb 钩子注册接入,本文件
+ * 不含任何 SDL/observe/capture/auto-quit(平台无关,MCU 复用同一循环)。
  *
  * It provides two STRONG helpers that any platform port (mcu / none) can
  * forward the core frame-driver contract to:

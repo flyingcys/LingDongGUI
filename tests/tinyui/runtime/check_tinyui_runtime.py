@@ -429,8 +429,9 @@ def _assert_tinyui_runtime_screen_defines(build_dir: Path) -> None:
         raise AssertionError(f"missing compile_commands.json: {compile_db_path}")
     compile_commands = json.loads(compile_db_path.read_text())
     for source_suffix in (
-        "tinyui/port/sdl/step.c",
-        "tinyui/port/sdl/observe.c",
+        # step.c 已删、observe.c 移出为 ENABLE_TEST-only 测试脚手架;生产 SDL
+        # port 的屏参代表源现在是 hal.c(恒编译、恒带 runtime 屏参配置)。
+        "tinyui/port/sdl/hal.c",
         "tinyui/demo/tinyui_demos.c",
     ):
         _assert_compile_unit_has_screen_defines(compile_commands, source_suffix)
@@ -449,7 +450,7 @@ def main() -> None:
     demos = _demos_for_arg(args.demo)
 
     subprocess.run([
-        RTK, "cmake", "-S", str(ROOT), "-B", str(build_dir), "-DUSE_DEMO=0", "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
+        RTK, "cmake", "-S", str(ROOT), "-B", str(build_dir), "-DUSE_DEMO=0", "-DENABLE_TEST=ON", "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
     ], check=True)
     _assert_tinyui_runtime_screen_defines(build_dir)
     subprocess.run([

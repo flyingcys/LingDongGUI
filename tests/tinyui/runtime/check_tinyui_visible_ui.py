@@ -1731,7 +1731,7 @@ def main() -> None:
         build_dir.mkdir(parents=True, exist_ok=True)
 
     try:
-        subprocess.run([RTK, "cmake", "-S", str(ROOT), "-B", str(build_dir), "-DUSE_DEMO=0"], check=True)
+        subprocess.run([RTK, "cmake", "-S", str(ROOT), "-B", str(build_dir), "-DUSE_DEMO=0", "-DENABLE_TEST=ON"], check=True)
         subprocess.run(
             [RTK, "cmake", "--build", str(build_dir), "--target", DEMO_TARGET],
             check=True,

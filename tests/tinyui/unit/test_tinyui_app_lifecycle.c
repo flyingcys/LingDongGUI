@@ -11,7 +11,7 @@
 #include <unistd.h>
 
 static char test_self_binary_path[PATH_MAX];
-static char test_step_source[PATH_MAX];
+static char test_neutral_source[PATH_MAX];
 static char test_observe_source[PATH_MAX];
 static char test_hal_source[PATH_MAX];
 static char test_driver_source[PATH_MAX];
@@ -99,13 +99,15 @@ static void init_test_paths(const char *self_binary_path)
         build_root[build_root_len] = '\0';
     }
 
-    snprintf(test_step_source,
-             sizeof(test_step_source),
-             "%s/tinyui/port/sdl/step.c",
+    /* step.c 已删:帧循环归 core 的平台无关运行时(neutral runtime)。 */
+    snprintf(test_neutral_source,
+             sizeof(test_neutral_source),
+             "%s/tinyui/src/drivers/tinyui_ldgui_neutral_runtime.c",
              repo_root);
+    /* observe.c 已移出为 ENABLE_TEST-only 测试脚手架。 */
     snprintf(test_observe_source,
              sizeof(test_observe_source),
-             "%s/tinyui/port/sdl/observe.c",
+             "%s/tests/tinyui/runtime/tinyui_sdl_observe.c",
              repo_root);
     snprintf(test_hal_source,
              sizeof(test_hal_source),
@@ -362,14 +364,14 @@ static void test_app_rejects_null(void)
 
 static void test_app_backend_wrappers_are_no_longer_public(void)
 {
-    assert_source_lacks_function_definition(test_step_source, "tinyui_backend_app_init");
+    assert_source_lacks_function_definition(test_neutral_source, "tinyui_backend_app_init");
     assert_self_binary_lacks_symbol("tinyui_backend_app_init");
-    assert_source_lacks_function_definition(test_step_source, "tinyui_backend_app_run");
+    assert_source_lacks_function_definition(test_neutral_source, "tinyui_backend_app_run");
     assert_self_binary_lacks_symbol("tinyui_backend_app_run");
-    assert_source_lacks_function_definition(test_step_source, "tinyui_backend_app_shutdown");
+    assert_source_lacks_function_definition(test_neutral_source, "tinyui_backend_app_shutdown");
     assert_self_binary_lacks_symbol("tinyui_backend_app_shutdown");
     assert_source_lacks_function_definition(test_hal_source, "tinyui_backend_ensure_window");
-    assert_source_lacks_function_definition(test_step_source, "tinyui_backend_runtime_step");
+    assert_source_lacks_function_definition(test_neutral_source, "tinyui_backend_runtime_step");
     assert_self_binary_lacks_symbol("tinyui_backend_runtime_step");
 }
 
@@ -386,10 +388,10 @@ static void test_tinyui_umbrella_no_longer_reexports_app_header(void)
 
 static void test_runtime_prepare_helpers_exist(void)
 {
-    assert_source_has_function_definition(test_step_source, "tinyui_runtime_host_prepare_runtime_state");
-    assert_source_has_function_definition(test_step_source, "tinyui_runtime_host_prepare_runtime_scene");
+    /* 新架构:一次性 setup 内联在中性帧循环里,不再有 step.c 的 prepare_* 助手。 */
+    assert_source_has_function_definition(test_neutral_source, "tinyui_backend_neutral_step");
+    assert_source_has_function_definition(test_neutral_source, "tinyui_backend_neutral_shutdown");
     assert_source_has_function_definition(test_observe_source, "tinyui_runtime_host_log_runtime_ready");
-    assert_source_has_function_definition(test_step_source, "tinyui_runtime_host_prepare_runtime");
 }
 
 static void test_runtime_step_uses_event_pump_helper(void)
@@ -397,22 +399,22 @@ static void test_runtime_step_uses_event_pump_helper(void)
     char command[8192];
     char quoted_path[4096];
 
-    assert_source_has_function_definition(test_step_source, "tinyui_runtime_host_step_app");
+    /* 新架构:SDL 输入采集是 hal.c 的 read_cb,委托给 pump 助手;
+     * marker/capture 在 ENABLE_TEST-only 的观测脚手架里。 */
+    assert_source_has_function_definition(test_hal_source, "tinyui_sdl_read_cb");
     assert_source_has_function_definition(test_hal_source, "tinyui_runtime_host_pump_sdl_events");
-    assert_source_has_function_definition(test_step_source, "tinyui_runtime_host_render");
     assert_source_has_function_definition(test_observe_source, "tinyui_runtime_host_write_capture");
     assert_source_has_function_definition(test_observe_source, "tinyui_runtime_host_log_mapping_markers");
-    assert_source_has_function_definition(test_step_source, "tinyui_runtime_host_apply_smoke_cursor_layout");
 
-    shell_quote_path(quoted_path, sizeof(quoted_path), test_step_source);
+    shell_quote_path(quoted_path, sizeof(quoted_path), test_hal_source);
     snprintf(command,
              sizeof(command),
              "python3 - %s <<'PY'\n"
              "from pathlib import Path\n"
              "import sys\n"
              "text = Path(sys.argv[1]).read_text()\n"
-             "start = text.index('int tinyui_runtime_host_step_app(')\n"
-             "pump = text.index('event_result = tinyui_runtime_host_pump_sdl_events(app, state);', start)\n"
+             "start = text.index('static int tinyui_sdl_read_cb(')\n"
+             "pump = text.index('tinyui_runtime_host_pump_sdl_events(app, state)', start)\n"
              "body = text[start:pump]\n"
              "raise SystemExit(0 if 'SDL_PollEvent' not in body else 1)\n"
              "PY",
@@ -425,20 +427,22 @@ static void test_runtime_host_render_uses_backend_pfb_step(void)
     char command[8192];
     char quoted_path[4096];
 
-    assert_source_has_function_definition(test_step_source, "tinyui_runtime_host_render");
-    shell_quote_path(quoted_path, sizeof(quoted_path), test_step_source);
+    /* 新架构:渲染由中性帧循环调用 tinyui_backend_step(PFB 管线)驱动,
+     * 不再走旧 ldGuiDraw / memset 直绘。 */
+    assert_source_has_function_definition(test_neutral_source, "tinyui_backend_neutral_step");
+    shell_quote_path(quoted_path, sizeof(quoted_path), test_neutral_source);
     snprintf(command,
              sizeof(command),
              "python3 - %s <<'PY'\n"
              "from pathlib import Path\n"
              "import sys\n"
              "text = Path(sys.argv[1]).read_text()\n"
-             "start = text.index('static void tinyui_runtime_host_render(')\n"
-             "end = text.index('\\n}', start) + 2\n"
+             "start = text.index('int tinyui_backend_neutral_step(')\n"
+             "end = text.index('tinyui_backend_neutral_shutdown', start)\n"
              "body = text[start:end]\n"
              "ok = (\n"
-             "    'tinyui_backend_step(app_state);' in body\n"
-             "    and 'ldGuiDraw(app_state->ld_scene, &state->real_tile, true);' not in body\n"
+             "    'tinyui_backend_step(app);' in body\n"
+             "    and 'ldGuiDraw(' not in body\n"
              "    and 'memset(state->real_pixels,' not in body\n"
              ")\n"
              "raise SystemExit(0 if ok else 1)\n"
@@ -507,12 +511,13 @@ static void test_runtime_host_registers_display_flush_callback(void)
     char command[8192];
     char quoted_path[4096];
 
-    assert_source_has_function_definition(test_step_source, "tinyui_runtime_host_prepare_runtime");
+    /* 新架构:flush 回调在 hal.c 的 tinyui_sdl_window_create 里注册。 */
+    assert_source_has_function_definition(test_hal_source, "tinyui_sdl_window_create");
     assert_source_has_function_definition(test_hal_source, "tinyui_runtime_host_copy_flush_pixels");
-    shell_quote_path(quoted_path, sizeof(quoted_path), test_step_source);
+    shell_quote_path(quoted_path, sizeof(quoted_path), test_hal_source);
     snprintf(command,
              sizeof(command),
-             "rg -n \"tinyui_display_set_flush_callback\\(app,\\s*tinyui_runtime_host_copy_flush_pixels,\\s*state\\)\" %s >/dev/null",
+             "rg -n \"tinyui_display_set_flush_callback\\(app,\\s*tinyui_runtime_host_copy_flush_pixels,\\s*&s_sdl_state\\)\" %s >/dev/null",
              quoted_path);
     assert(system(command) == 0);
 }
@@ -561,10 +566,10 @@ static void test_runtime_host_internal_bootstrap_helpers_no_longer_use_tinyui_pr
     char quoted_path[4096];
 
     assert_source_lacks_function_definition(test_observe_source, "tinyui_backend_touch_log_enabled");
-    assert_source_lacks_function_definition(test_step_source, "tinyui_backend_runtime_bootstrap");
-    assert_source_lacks_function_definition(test_step_source, "tinyui_backend_runtime_page_init");
-    assert_source_lacks_function_definition(test_step_source, "tinyui_backend_runtime_page_quit");
-    shell_quote_path(quoted_path, sizeof(quoted_path), test_step_source);
+    assert_source_lacks_function_definition(test_neutral_source, "tinyui_backend_runtime_bootstrap");
+    assert_source_lacks_function_definition(test_neutral_source, "tinyui_backend_runtime_page_init");
+    assert_source_lacks_function_definition(test_neutral_source, "tinyui_backend_runtime_page_quit");
+    shell_quote_path(quoted_path, sizeof(quoted_path), test_neutral_source);
     snprintf(command,
              sizeof(command),
              "rg -n \"struct[[:space:]]+tinyui_backend_runtime_state|g_tinyui_backend_runtime_page\" %s >/dev/null",
@@ -590,24 +595,24 @@ static void test_runtime_host_internal_render_helpers_no_longer_use_tinyui_prefi
     assert_source_lacks_function_definition(test_observe_source, "tinyui_backend_parse_auto_quit_ms");
     assert_source_lacks_function_definition(test_hal_source, "tinyui_backend_pixel_to_rgb888");
     assert_source_lacks_function_definition(test_hal_source, "tinyui_backend_pixel_to_argb8888");
-    assert_source_lacks_function_definition(test_step_source, "tinyui_backend_runtime_state_from_app");
-    assert_source_lacks_function_definition(test_step_source, "tinyui_backend_app_state_from_window");
+    assert_source_lacks_function_definition(test_neutral_source, "tinyui_backend_runtime_state_from_app");
+    assert_source_lacks_function_definition(test_neutral_source, "tinyui_backend_app_state_from_window");
     assert_source_lacks_function_definition(test_hal_source, "tinyui_backend_present_real_frame");
-    assert_source_lacks_function_definition(test_step_source, "tinyui_backend_apply_real_widget_layout");
+    assert_source_lacks_function_definition(test_neutral_source, "tinyui_backend_apply_real_widget_layout");
     assert_source_lacks_function_definition(test_observe_source, "tinyui_backend_log_mapping_markers");
     assert_source_lacks_function_definition(test_observe_source, "tinyui_backend_write_capture");
-    assert_source_lacks_function_definition(test_step_source, "tinyui_backend_apply_smoke_cursor_layout");
-    assert_source_lacks_function_definition(test_step_source, "tinyui_backend_render");
+    assert_source_lacks_function_definition(test_neutral_source, "tinyui_backend_apply_smoke_cursor_layout");
+    assert_source_lacks_function_definition(test_neutral_source, "tinyui_backend_render");
 }
 
 static void test_runtime_host_internal_step_helpers_no_longer_use_tinyui_prefix(void)
 {
-    assert_source_lacks_function_definition(test_step_source, "tinyui_backend_prepare_runtime_state");
-    assert_source_lacks_function_definition(test_step_source, "tinyui_backend_prepare_runtime_scene");
+    assert_source_lacks_function_definition(test_neutral_source, "tinyui_backend_prepare_runtime_state");
+    assert_source_lacks_function_definition(test_neutral_source, "tinyui_backend_prepare_runtime_scene");
     assert_source_lacks_function_definition(test_observe_source, "tinyui_backend_log_runtime_ready");
-    assert_source_lacks_function_definition(test_step_source, "tinyui_backend_prepare_runtime");
+    assert_source_lacks_function_definition(test_neutral_source, "tinyui_backend_prepare_runtime");
     assert_source_lacks_function_definition(test_hal_source, "tinyui_backend_pump_sdl_events");
-    assert_source_lacks_function_definition(test_step_source, "tinyui_backend_step_app");
+    assert_source_lacks_function_definition(test_neutral_source, "tinyui_backend_step_app");
 }
 
 static void test_runtime_host_rgb565_expands_like_legacy_sdl_capture(void)
