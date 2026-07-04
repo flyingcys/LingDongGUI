@@ -15,6 +15,12 @@
 
 void ldBaseNodeRemove(arm_2d_control_node_t *ptNode);
 
+/* 平台无关帧循环(tinyui_ldgui_neutral_runtime.c,编入 tinyui_backend_ldgui_porting)。
+ * core 直接驱动它;平台通过 display flush/present + indev read_cb + tick 注册能力,
+ * 无需再定义任何 host 帧步进符号。 */
+int  tinyui_backend_neutral_step(struct tinyui_app *app);
+void tinyui_backend_neutral_shutdown(struct tinyui_app *app);
+
 static int tinyui_runtime_bridge_touch_log_enabled(void);
 
 static const char *tinyui_runtime_bridge_signal_name(uint8_t signal)
@@ -240,7 +246,7 @@ int tinyui_runtime_bridge_run_app(struct tinyui_app *app, struct tinyui_window *
 
 int tinyui_runtime_bridge_step_app(struct tinyui_app *app)
 {
-    return tinyui_runtime_host_step_app(app);
+    return tinyui_backend_neutral_step(app);
 }
 
 void tinyui_runtime_bridge_shutdown_app(struct tinyui_app *app)
@@ -253,7 +259,7 @@ void tinyui_runtime_bridge_shutdown_app(struct tinyui_app *app)
         return;
     }
 
-    tinyui_runtime_host_shutdown_app(app);
+    tinyui_backend_neutral_shutdown(app);
     arm_2d_scene_player_dynamic_dirty_region_depose(
         &app->ld_scene->tDirtyRegionItem,
         &app->ld_scene->use_as__arm_2d_scene_t);

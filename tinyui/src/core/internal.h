@@ -145,6 +145,10 @@ struct tinyui_app_timer {
 
 void tinyui_app_pump_timers(struct tinyui_app *app, unsigned int now_ticks);
 
+/* 当前 runtime 单例 app(tinyui_init 建立);供平台 port 在安装驱动时取用。
+ * 内部 API,不进公共契约。 */
+struct tinyui_app *tinyui_app_current(void);
+
 struct tinyui_display_port_state {
     struct tinyui_display_config config;
     tinyui_display_flush_cb_t flush_callback;

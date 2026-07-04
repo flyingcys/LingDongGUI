@@ -258,12 +258,12 @@ function(ld_define_core_targets)
     add_library(tinyui_port_sdl STATIC
         ${LD_REPO_ROOT}/tinyui/port/sdl/hal.c
         ${LD_REPO_ROOT}/tinyui/port/sdl/observe.c
-        ${LD_REPO_ROOT}/tinyui/port/sdl/step.c
     )
     target_include_directories(tinyui_port_sdl PUBLIC
         ${LD_REPO_ROOT}/tinyui/include
         ${LD_REPO_ROOT}/tinyui/src/core
         ${LD_REPO_ROOT}/tinyui
+        ${LD_REPO_ROOT}/tinyui/port/sdl
     )
     target_link_libraries(tinyui_port_sdl PUBLIC tinyui_core)
     if(WIN32)

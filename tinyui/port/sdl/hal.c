@@ -6,8 +6,10 @@
  */
 #include "host_internal.h"
 #include "display/display.h"
+#include "indev/indev.h"
 #include "tick/tick.h"
 #include "osal/osal.h"
+#include "tinyui_sdl.h"
 #include <SDL.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -295,4 +297,126 @@ int tinyui_runtime_host_pump_sdl_events(struct tinyui_app *app,
     }
 
     return 0;
+}
+
+/* ─── LVGL 式平台驱动入口 ───────────────────────────────────────────────────
+ * 单窗口/单实例模型(匹配 disp adapter 的单实例 PFB)。core 的帧循环
+ * (tinyui_backend_neutral_step)每帧回调下面的 read_cb / present_cb;
+ * 窗口/缓冲生命周期由 window_create / quit 管理。
+ * ──────────────────────────────────────────────────────────────────────── */
+static struct tinyui_runtime_host_state s_sdl_state;
+
+/* present_cb:一帧渲染完成后把 real_pixels 上屏(等价旧 step.c 的 render 尾段)。 */
+static void tinyui_sdl_present_cb(void *user_data)
+{
+    struct tinyui_runtime_host_state *state = (struct tinyui_runtime_host_state *)user_data;
+
+    if (state == NULL || state->renderer == NULL) {
+        return;
+    }
+
+    SDL_SetRenderDrawColor(state->renderer, 0x2E, 0x34, 0x40, 0xFF);
+    SDL_RenderClear(state->renderer);
+    tinyui_runtime_host_present_real_frame(state);
+    SDL_RenderPresent(state->renderer);
+
+    state->rendered_frames += 1U;
+    (void)tinyui_runtime_host_write_capture(state);
+}
+
+/* read_cb:泵 SDL 事件 → push 指针;SDL_QUIT 或到达 auto-quit 时限时请求退出。 */
+static int tinyui_sdl_read_cb(struct tinyui_app *app, void *user_data)
+{
+    struct tinyui_runtime_host_state *state = (struct tinyui_runtime_host_state *)user_data;
+    int event_result;
+
+    event_result = tinyui_runtime_host_pump_sdl_events(app, state);
+    if (event_result != 0) {
+        return event_result;   /* SDL_QUIT → >0 */
+    }
+
+    if (state->auto_quit_ms > 0 &&
+        tinyui_tick_get(app) - state->start_ticks >= state->auto_quit_ms) {
+        return 1;
+    }
+
+    return 0;
+}
+
+int tinyui_sdl_window_create(int width, int height)
+{
+    struct tinyui_app *app = tinyui_app_current();
+    struct tinyui_display_config cfg = {0};
+
+    if (app == NULL || width <= 0 || height <= 0) {
+        return -1;
+    }
+
+    /* 沿用已设显示配置(格式/PFB 行高),仅以入参锁定分辨率。 */
+    (void)tinyui_display_get_config(app, &cfg);
+    cfg.width = width;
+    cfg.height = height;
+    if (tinyui_display_set_config(app, &cfg) != 0) {
+        return -1;
+    }
+
+    /* 先装 tick,ensure_window 里的 start_ticks 才有意义。 */
+    if (app->tick_port.callback == NULL) {
+        (void)tinyui_tick_set_source(app, tinyui_runtime_host_default_tick_source, NULL);
+    }
+    if (app->os_port.delay == NULL) {
+        (void)tinyui_os_set_delay_callback(app, tinyui_runtime_host_default_delay, NULL);
+    }
+
+    s_sdl_state.display_width = width;
+    s_sdl_state.display_height = height;
+    if (tinyui_runtime_host_ensure_window(app, &s_sdl_state) != 0) {
+        return -1;
+    }
+    s_sdl_state.auto_quit_ms = tinyui_runtime_host_parse_auto_quit_ms();
+
+    (void)tinyui_display_set_flush_callback(app, tinyui_runtime_host_copy_flush_pixels, &s_sdl_state);
+    (void)tinyui_display_set_present_callback(app, tinyui_sdl_present_cb, &s_sdl_state);
+    return 0;
+}
+
+int tinyui_sdl_mouse_create(void)
+{
+    struct tinyui_app *app = tinyui_app_current();
+
+    if (app == NULL) {
+        return -1;
+    }
+
+    return tinyui_input_set_read_callback(app, tinyui_sdl_read_cb, &s_sdl_state);
+}
+
+void tinyui_sdl_quit(void)
+{
+    struct tinyui_runtime_host_state *state = &s_sdl_state;
+
+    free(state->present_pixels);
+    free(state->real_pixels);
+    state->present_pixels = NULL;
+    state->real_pixels = NULL;
+    if (state->texture != NULL) {
+        SDL_DestroyTexture(state->texture);
+        state->texture = NULL;
+    }
+    if (state->renderer != NULL) {
+        SDL_DestroyRenderer(state->renderer);
+        state->renderer = NULL;
+    }
+    if (state->window != NULL) {
+        SDL_DestroyWindow(state->window);
+        state->window = NULL;
+    }
+    SDL_Quit();
+
+    /* 复位整个单实例 state,回到程序启动时的零值。旧 step.c 的 shutdown_app
+     * 会 free 掉 heap 上的 runtime_state,下次运行 calloc 出全新零值 state;
+     * 现在 state 是文件静态单例,必须显式清零,否则 capture_written /
+     * rendered_frames / *_logged 等运行期字段残留,导致 quit 后再次
+     * window_create() 的二次运行不出图(write_capture 永久早退)。 */
+    memset(state, 0, sizeof(*state));
 }

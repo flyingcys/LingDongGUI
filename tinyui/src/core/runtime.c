@@ -27,6 +27,11 @@ void tinyui_deinit(void)
     g_tinyui_runtime_app = 0;
 }
 
+struct tinyui_app *tinyui_app_current(void)
+{
+    return g_tinyui_runtime_app;
+}
+
 tinyui_obj_t *tinyui_screen_create(void)
 {
     if (g_tinyui_runtime_app == 0 && tinyui_init() != 0) {

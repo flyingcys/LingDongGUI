@@ -39,6 +39,7 @@
 
 #include "tinyui_demos.h"
 #include "tinyui.h"
+#include "tinyui_sdl.h"
 #include <SDL.h>
 #include <stdio.h>
 
@@ -66,6 +67,14 @@ int main(int argc, char **argv)
         return 1;
     }
 
+    /* 显式安装 SDL 平台驱动(对齐 LVGL hal_init):窗口 + 输入。 */
+    if (tinyui_sdl_window_create(display_config.width, display_config.height) != 0 ||
+        tinyui_sdl_mouse_create() != 0) {
+        tinyui_sdl_quit();
+        tinyui_deinit();
+        return 1;
+    }
+
     previous_ticks = SDL_GetTicks();
     for (;;) {
         unsigned int current_ticks = SDL_GetTicks();
@@ -76,10 +85,12 @@ int main(int argc, char **argv)
         tinyui_demos_frame(elapsed_ms);
 
         if (step < 0) {
+            tinyui_sdl_quit();
             tinyui_deinit();
             return 1;
         }
         if (step > 0) {
+            tinyui_sdl_quit();
             tinyui_deinit();
             return 0;
         }
