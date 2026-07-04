@@ -9,19 +9,22 @@
  * nothing and can never break the build.  Copy the pieces you need into your
  * own project and wire them to your real LCD driver and SysTick.
  *
- * Contract recap:
- *   - The core calls tinyui_runtime_host_step_app()/_shutdown_app(); the MCU
- *     port forwards those to tinyui_backend_neutral_step()/_shutdown().
- *   - Your application MUST register, before the first step:
- *       * a display config          (tinyui_display_set_config)
- *       * a display flush callback   (tinyui_display_set_flush_callback)
- *       * a tick source              (tinyui_tick_set_source)
- *   - Then just pump frames: tinyui_runtime_host_step_app(app) in your loop.
+ * 用户模型(与 tests 的 mcu_host_smoke 一致,对齐 LVGL:帧循环归 core):
+ *   - MCU 端无需定义任何 host 帧步进符号。
+ *   - 建 app:tinyui_app_create()。
+ *   - 首帧前注册能力:
+ *       * 显示配置    (tinyui_display_set_config)
+ *       * 显示 flush  (tinyui_display_set_flush_callback)
+ *       * tick 源     (tinyui_tick_set_source)
+ *       * 可选:os 锁/延时、触摸 tinyui_input_push_pointer
+ *   - 然后 for(;;) 泵帧:tinyui_backend_neutral_step(app) —— 平台无关帧循环,
+ *     未注册 read_cb/present_cb 时直接经 flush 回调把像素刷到屏。
  */
 
 #if defined(TINYUI_PORT_MCU_EXAMPLE)
 
 #include "tinyui.h"
+#include "tinyui_ldgui_port.h"  /* tinyui_backend_neutral_step / _shutdown */
 
 #include <stdint.h>
 
@@ -100,14 +103,14 @@ int main(void)
     tinyui_label_set_text(label, "Hello MCU");
     tinyui_app_set_window(app, win);
 
-    /* Frame pump: the core drives the neutral runtime loop through the port. */
+    /* Frame pump: core 的平台无关帧循环直接经 flush 回调出像素。 */
     for (;;) {
-        if (tinyui_runtime_host_step_app(app) < 0) {
+        if (tinyui_backend_neutral_step(app) < 0) {
             break;
         }
     }
 
-    tinyui_runtime_host_shutdown_app(app);
+    tinyui_backend_neutral_shutdown(app);
     tinyui_app_destroy(app);
     return 0;
 }

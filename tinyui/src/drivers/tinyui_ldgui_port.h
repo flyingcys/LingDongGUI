@@ -14,9 +14,9 @@ void ldgui_port_unregister_scene_app(struct ld_scene_t *scene);
 struct tinyui_app *ldgui_port_get_app_for_scene(const struct ld_scene_t *scene);
 
 /* Backend-neutral (no-SDL) frame loop — implemented in
- * tinyui_ldgui_neutral_runtime.c.  A platform port (mcu / none) satisfies the
- * core frame-driver contract (tinyui_runtime_host_step_app /
- * tinyui_runtime_host_shutdown_app) by forwarding to these helpers. */
+ * tinyui_ldgui_neutral_runtime.c.  core 的 runtime_bridge 直接驱动它;平台
+ * 通过 display flush/present + indev read_cb + tick 注册能力接入,无需定义
+ * 任何 host 帧步进符号(对齐 LVGL:循环归 core,平台只注册能力)。 */
 int  tinyui_backend_neutral_step(struct tinyui_app *app);
 void tinyui_backend_neutral_shutdown(struct tinyui_app *app);
 

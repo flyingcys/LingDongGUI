@@ -261,8 +261,6 @@ int tinyui_widget_claim_backend_focus(struct tinyui_widget *widget);
  */
 int tinyui_widget_release_backend_focus(struct tinyui_widget *widget);
 
-int tinyui_runtime_host_step_app(struct tinyui_app *app);
-void tinyui_runtime_host_shutdown_app(struct tinyui_app *app);
 int tinyui_window_apply_uniform_padding(struct tinyui_window *window, int padding);
 int tinyui_window_apply_explicit_grid_padding(struct tinyui_window *window,
                                               int left,
