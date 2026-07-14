@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tinyui-v2.3-performance-baseline-schema-v1",
+  "title": "TinyUI v2.3 任务8性能基线",
+  "description": "任务8专用机器性能基线；不复用任务5/6/7的静态尺寸schema。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "fingerprint", "fingerprint_sha256", "measured_at", "scenarios", "probes", "artifacts"],
+  "properties": {
+    "$schema": {"type": "string", "minLength": 1},
+    "schema_version": {"const": 1},
+    "fingerprint": {"$ref": "#/$defs/fingerprint"},
+    "fingerprint_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "measured_at": {"type": "string", "minLength": 1},
+    "scenarios": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["screen_object_create_ms", "capture_ready_ms"],
+      "properties": {
+        "screen_object_create_ms": {"$ref": "#/$defs/scenario"},
+        "capture_ready_ms": {"$ref": "#/$defs/scenario"}
+      }
+    },
+    "probes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["task5_wrapper_overhead", "task6_allocation", "task7_binary_size", "task7_minimal_symbols"],
+      "properties": {
+        "task5_wrapper_overhead": {"type": "string", "minLength": 1},
+        "task6_allocation": {"type": "string", "minLength": 1},
+        "task7_binary_size": {"type": "string", "minLength": 1},
+        "task7_minimal_symbols": {"type": "string", "minLength": 1}
+      }
+    },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["full_binary", "minimal_binary", "minimal_map", "wrapper_probe", "allocation_probe"],
+      "properties": {
+        "full_binary": {"$ref": "#/$defs/artifact"},
+        "minimal_binary": {"$ref": "#/$defs/artifact"},
+        "minimal_map": {"$ref": "#/$defs/artifact"},
+        "wrapper_probe": {"$ref": "#/$defs/artifact"},
+        "allocation_probe": {"$ref": "#/$defs/artifact"}
+      }
+    }
+  },
+  "$defs": {
+    "fingerprint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["os", "cpu", "compiler", "cmake", "optimization_flags", "tinyui_options", "ld_options", "git_commit"],
+      "properties": {
+        "os": {
+          "type": "object", "additionalProperties": false, "required": ["name", "version"],
+          "properties": {"name": {"type": "string", "minLength": 1}, "version": {"type": "string", "minLength": 1}}
+        },
+        "cpu": {
+          "type": "object", "additionalProperties": false, "required": ["model", "architecture"],
+          "properties": {"model": {"type": "string", "minLength": 1}, "architecture": {"type": "string", "minLength": 1}}
+        },
+        "compiler": {
+          "type": "object", "additionalProperties": false, "required": ["name", "version", "target_triple"],
+          "properties": {"name": {"type": "string", "minLength": 1}, "version": {"type": "string", "minLength": 1}, "target_triple": {"type": "string", "minLength": 1}}
+        },
+        "cmake": {
+          "type": "object", "additionalProperties": false, "required": ["version", "build_type"],
+          "properties": {"version": {"type": "string", "minLength": 1}, "build_type": {"type": "string"}}
+        },
+        "optimization_flags": {
+          "type": "object", "additionalProperties": false, "required": ["c", "c_release"],
+          "properties": {"c": {"type": "string"}, "c_release": {"type": "string"}}
+        },
+        "tinyui_options": {"$ref": "#/$defs/option_groups_tinyui"},
+        "ld_options": {"$ref": "#/$defs/option_groups_ld"},
+        "git_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"}
+      }
+    },
+    "option_groups_tinyui": {
+      "type": "object", "additionalProperties": false, "required": ["cmake", "environment"],
+      "properties": {
+        "cmake": {"type": "object", "patternProperties": {"^TINYUI_": {"type": "string"}}, "additionalProperties": false},
+        "environment": {"type": "object", "patternProperties": {"^TINYUI_": {"type": "string"}}, "additionalProperties": false}
+      }
+    },
+    "option_groups_ld": {
+      "type": "object", "additionalProperties": false, "required": ["cmake", "environment"],
+      "properties": {
+        "cmake": {"type": "object", "patternProperties": {"^LD_": {"type": "string"}}, "additionalProperties": false},
+        "environment": {"type": "object", "patternProperties": {"^LD_": {"type": "string"}}, "additionalProperties": false}
+      }
+    },
+    "scenario": {
+      "type": "object", "additionalProperties": false,
+      "required": ["warmup_count", "samples", "median", "p95"],
+      "properties": {
+        "warmup_count": {"const": 5},
+        "samples": {"type": "array", "minItems": 30, "maxItems": 30, "items": {"type": "number", "minimum": 0}},
+        "median": {"type": "number", "minimum": 0},
+        "p95": {"type": "number", "minimum": 0}
+      }
+    },
+    "artifact": {
+      "type": "object", "additionalProperties": false, "required": ["path", "sha256"],
+      "properties": {"path": {"type": "string", "minLength": 1}, "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}
+    }
+  }
+}

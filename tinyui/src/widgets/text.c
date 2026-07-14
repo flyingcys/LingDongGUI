@@ -295,15 +295,15 @@ int tinyui_text_set_bg_color(struct tinyui_text *text, unsigned int rgb)
 int tinyui_text_set_background_source(struct tinyui_text *text,
                                       struct tinyui_image_source *source)
 {
-    if (text == 0 || (source != 0 && source->img_tile == 0)
+    if (text == 0 || (source != 0 && tinyui_image_source_get_image_tile(source) == 0)
         || text->widget.ld_widget == 0
         || text->widget.kind != TINYUI_BACKEND_WIDGET_TEXT) {
         return -1;
     }
 
     ldTextSetBackgroundImage((ldText_t *)text->widget.ld_widget,
-                             source != NULL ? source->img_tile : NULL,
-                             source != NULL ? source->mask_tile : NULL);
+                             source != NULL ? tinyui_image_source_get_image_tile(source) : NULL,
+                             source != NULL ? tinyui_image_source_get_mask_tile(source) : NULL);
     return 0;
 }
 

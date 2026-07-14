@@ -14,6 +14,7 @@ RTK = shutil.which("rtk") or "rtk"
 TARGET = "tinyui_demo"
 DEMO = "basic_widgets"
 DEMO_TIMEOUT_SECONDS = 8
+CMAKE_BENCHMARK_OPTIONS = ("-DUSE_DEMO=0", "-DENABLE_TEST=ON")
 
 
 def _find_executable(build_dir: Path) -> Path:
@@ -86,15 +87,19 @@ def _resolve_limits(payload: dict[str, object]) -> tuple[dict[str, dict[str, flo
     return limits, "baseline"
 
 
-def _run_benchmark(build_dir: Path) -> subprocess.CompletedProcess[str]:
+def prepare_build(build_dir: Path, targets: tuple[str, ...] = (TARGET,)) -> Path:
     subprocess.run(
-        [RTK, "cmake", "-S", str(ROOT), "-B", str(build_dir), "-DUSE_DEMO=0"],
+        [RTK, "cmake", "-S", str(ROOT), "-B", str(build_dir), *CMAKE_BENCHMARK_OPTIONS],
         check=True,
     )
     subprocess.run(
-        [RTK, "cmake", "--build", str(build_dir), "--target", TARGET],
+        [RTK, "cmake", "--build", str(build_dir), "--target", *targets],
         check=True,
     )
+    return _find_executable(build_dir)
+
+
+def run_demo_once(executable: Path, demo: str = DEMO) -> subprocess.CompletedProcess[str]:
 
     env = os.environ.copy()
     env["SDL_VIDEODRIVER"] = env.get("SDL_VIDEODRIVER", "dummy")
@@ -104,7 +109,7 @@ def _run_benchmark(build_dir: Path) -> subprocess.CompletedProcess[str]:
         capture_path = Path(tmpdir) / "frame.ppm"
         env["TINYUI_CAPTURE_FILE"] = str(capture_path)
         completed = subprocess.run(
-            [str(_find_executable(build_dir)), DEMO],
+            [str(executable), demo],
             check=False,
             timeout=DEMO_TIMEOUT_SECONDS,
             capture_output=True,
@@ -118,6 +123,10 @@ def _run_benchmark(build_dir: Path) -> subprocess.CompletedProcess[str]:
             f"stderr:\n{completed.stderr}"
         )
     return completed
+
+
+def _run_benchmark(build_dir: Path) -> subprocess.CompletedProcess[str]:
+    return run_demo_once(prepare_build(build_dir))
 
 
 def _run_self_test() -> None:

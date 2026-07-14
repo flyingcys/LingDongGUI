@@ -21,6 +21,7 @@ static struct tinyui_image_test_dispose_snapshot g_image_snapshot;
 static int g_image_snapshot_valid = 0;
 static struct tinyui_qrcode_test_dispose_snapshot g_qrcode_snapshot;
 static int g_qrcode_snapshot_valid = 0;
+static struct tinyui_test_allocator_stats g_allocator_stats;
 
 static const char *const k_repo_markers[] = {
     "/tests/support/tinyui_test_support.c",
@@ -31,6 +32,43 @@ static const char *const k_repo_markers[] = {
 int tinyui_test_support_stub(void)
 {
     return 0;
+}
+
+void tinyui_test_allocator_reset(void)
+{
+    memset(&g_allocator_stats, 0, sizeof(g_allocator_stats));
+}
+
+struct tinyui_test_allocator_stats tinyui_test_allocator_snapshot(void)
+{
+    return g_allocator_stats;
+}
+
+void *tinyui_test_allocator_malloc(uint32_t size)
+{
+    g_allocator_stats.alloc_calls += 1U;
+    g_allocator_stats.bytes_requested += (size_t)size;
+    return malloc((size_t)size);
+}
+
+void *tinyui_test_allocator_calloc(uint32_t num, uint32_t size)
+{
+    g_allocator_stats.calloc_calls += 1U;
+    g_allocator_stats.bytes_requested += (size_t)num * (size_t)size;
+    return calloc((size_t)num, (size_t)size);
+}
+
+void *tinyui_test_allocator_realloc(void *ptr, uint32_t size)
+{
+    g_allocator_stats.realloc_calls += 1U;
+    g_allocator_stats.bytes_requested += (size_t)size;
+    return realloc(ptr, (size_t)size);
+}
+
+void tinyui_test_allocator_free(void *ptr)
+{
+    g_allocator_stats.free_calls += 1U;
+    free(ptr);
 }
 
 const char *tinyui_test_repo_path_from_file(const char *file, const char *relative_path)
@@ -258,7 +296,7 @@ struct tinyui_image *tinyui_backend_image_test_create_with_props_fail_before_siz
     g_image_snapshot.next_sibling_cleared = 1;
     g_image_snapshot.host_cleared       = 1; /* widget IS the host in C1 model */
     g_image_snapshot.event_bridge_cleared = (w->ld_event_bridge_scene == 0
-        && w->ld_event_bridge_sender == 0 && w->ld_event_bridge_next == 0);
+        && w->ld_event_bridge_sender == 0);
     g_image_snapshot.ld_pinfo_cleared   = (ld_base == 0 || ld_base->pInfo == 0);
     g_image_snapshot_valid = 1;
     tinyui_widget_destroy(&image->widget);
@@ -333,7 +371,7 @@ struct tinyui_qrcode *tinyui_backend_qrcode_test_create_with_props_fail_before_t
     g_qrcode_snapshot.next_sibling_cleared = 1;
     g_qrcode_snapshot.host_cleared       = 1; /* widget IS the host in C1 model */
     g_qrcode_snapshot.event_bridge_cleared = (w->ld_event_bridge_scene == 0
-        && w->ld_event_bridge_sender == 0 && w->ld_event_bridge_next == 0);
+        && w->ld_event_bridge_sender == 0);
     g_qrcode_snapshot.ld_pinfo_cleared   = (ld_base == 0 || ld_base->pInfo == 0);
     g_qrcode_snapshot_valid = 1;
     tinyui_widget_destroy(&qrcode->widget);

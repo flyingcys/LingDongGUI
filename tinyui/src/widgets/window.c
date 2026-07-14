@@ -102,6 +102,28 @@ static ldLayoutType_t tinyui_window_layout_type_to_ld(enum tinyui_window_layout_
     }
 }
 
+static int tinyui_window_layout_type_from_ld(ldLayoutType_t layout_type,
+                                             enum tinyui_window_layout_type *type)
+{
+    if (type == 0) {
+        return -1;
+    }
+
+    switch (layout_type) {
+    case layoutNone:
+        *type = TINYUI_WINDOW_LAYOUT_NONE;
+        return 0;
+    case layoutFlex:
+        *type = TINYUI_WINDOW_LAYOUT_FLEX;
+        return 0;
+    case layoutGrid:
+        *type = TINYUI_WINDOW_LAYOUT_GRID;
+        return 0;
+    default:
+        return -1;
+    }
+}
+
 int tinyui_window_apply_uniform_padding(struct tinyui_window *window, int padding)
 {
     ldWindow_t *ld_window = tinyui_window_ld_of(window);
@@ -213,7 +235,6 @@ static void tinyui_window_do_free_internal(struct tinyui_window *window)
      * No wrapper to unbind. */
     window->widget.ld_event_bridge_scene = 0;
     window->widget.ld_event_bridge_sender = 0;
-    window->widget.ld_event_bridge_next = 0;
     tinyui_app_unregister_host(app_state, &window->widget);
 
     /* C2: detach the ld node from its parent directly. */
@@ -588,7 +609,7 @@ int tinyui_window_set_background_source(struct tinyui_window *window,
     if (!tinyui_window_ok(window)) {
         return -1;
     }
-    if (source != 0 && source->img_tile == 0) {
+    if (source != 0 && tinyui_image_source_get_image_tile(source) == 0) {
         return -1;
     }
 
@@ -598,8 +619,8 @@ int tinyui_window_set_background_source(struct tinyui_window *window,
     }
 
     ldWindowSetImage(ld_window,
-                     source != 0 ? source->img_tile : 0,
-                     source != 0 ? source->mask_tile : 0);
+                     source != 0 ? tinyui_image_source_get_image_tile(source) : 0,
+                     source != 0 ? tinyui_image_source_get_mask_tile(source) : 0);
     return 0;
 }
 
@@ -789,6 +810,23 @@ int tinyui_window_set_layout_type(struct tinyui_window *window,
     return tinyui_window_do_set_layout_type(window, type);
 }
 
+int tinyui_window_get_layout_type(struct tinyui_window *window,
+                                  enum tinyui_window_layout_type *type)
+{
+    ldWindow_t *ld_window;
+
+    if (!tinyui_window_ok(window) || type == 0) {
+        return -1;
+    }
+
+    ld_window = tinyui_window_ld_of(window);
+    if (ld_window == 0) {
+        return -1;
+    }
+
+    return tinyui_window_layout_type_from_ld(ld_window->layoutTpye, type);
+}
+
 /**
  * @brief Set padding of window
  *
@@ -860,6 +898,16 @@ int tinyui_window_set_gap(struct tinyui_window *window, int gap)
     }
 
     return tinyui_window_do_set_gap(window, gap);
+}
+
+int tinyui_window_get_gap(struct tinyui_window *window)
+{
+    if (!tinyui_window_ok(window) || tinyui_window_ld_of(window) == 0
+        || window->flex_item_gap < 0) {
+        return -1;
+    }
+
+    return window->flex_item_gap;
 }
 
 

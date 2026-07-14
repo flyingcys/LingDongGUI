@@ -84,8 +84,8 @@ static int tinyui_button_props_are_valid(const struct tinyui_button_props *props
 {
     return props != 0
         && props->id != 0
-        && (props->release_image == 0 || props->release_image->img_tile != 0)
-        && (props->press_image == 0 || props->press_image->img_tile != 0)
+        && (props->release_image == 0 || tinyui_image_source_get_image_tile(props->release_image) != 0)
+        && (props->press_image == 0 || tinyui_image_source_get_image_tile(props->press_image) != 0)
         && props->width >= 0
         && props->height >= 0
         && props->radius >= 0
@@ -441,7 +441,7 @@ int tinyui_button_set_release_image(struct tinyui_button *button,
 {
     ldButton_t *ld_button;
 
-    if (button == 0 || (source != 0 && source->img_tile == 0)) {
+    if (button == 0 || (source != 0 && tinyui_image_source_get_image_tile(source) == 0)) {
         return -1;
     }
 
@@ -451,8 +451,8 @@ int tinyui_button_set_release_image(struct tinyui_button *button,
     }
 
     ldButtonSetImage(ld_button,
-                     source != NULL ? source->img_tile : NULL,
-                     source != NULL ? source->mask_tile : NULL,
+                     source != NULL ? tinyui_image_source_get_image_tile(source) : NULL,
+                     source != NULL ? tinyui_image_source_get_mask_tile(source) : NULL,
                      ld_button->ptPressImgTile,
                      ld_button->ptPressMaskTile);
     return 0;
@@ -471,7 +471,7 @@ int tinyui_button_set_press_image(struct tinyui_button *button,
 {
     ldButton_t *ld_button;
 
-    if (button == 0 || (source != 0 && source->img_tile == 0)) {
+    if (button == 0 || (source != 0 && tinyui_image_source_get_image_tile(source) == 0)) {
         return -1;
     }
 
@@ -483,8 +483,8 @@ int tinyui_button_set_press_image(struct tinyui_button *button,
     ldButtonSetImage(ld_button,
                      ld_button->ptReleaseImgTile,
                      ld_button->ptReleaseMaskTile,
-                     source != NULL ? source->img_tile : NULL,
-                     source != NULL ? source->mask_tile : NULL);
+                     source != NULL ? tinyui_image_source_get_image_tile(source) : NULL,
+                     source != NULL ? tinyui_image_source_get_mask_tile(source) : NULL);
     return 0;
 }
 

@@ -21,6 +21,9 @@
 
 #include <stddef.h> /* size_t */
 
+#include "core/result.h"
+
+
 /* ── enum tinyui_backend_widget_kind — canonical location ─────────────────
  * Declared here so that struct tinyui_widget (below) can embed it as a
  * field. (Phase C3-T4: runtime_internal.h was deleted; its surviving
@@ -126,6 +129,20 @@ struct tinyui_canvas;
 typedef struct arm_2d_tile_t arm_2d_tile_t;
 typedef struct arm_2d_font_t arm_2d_font_t;
 
+#include "resource/image_source.h"
+
+static inline arm_2d_tile_t *tinyui_image_source_get_image_tile(
+    const tinyui_image_source_t *source)
+{
+    return source == NULL ? NULL : (arm_2d_tile_t *)(void *)source->_image_private;
+}
+
+static inline arm_2d_tile_t *tinyui_image_source_get_mask_tile(
+    const tinyui_image_source_t *source)
+{
+    return source == NULL ? NULL : (arm_2d_tile_t *)(void *)source->_mask_private;
+}
+
 struct tinyui_font;
 struct tinyui_message_box;
 struct kbBtnInfo_t;
@@ -148,6 +165,7 @@ void tinyui_app_pump_timers(struct tinyui_app *app, unsigned int now_ticks);
 /* 当前 runtime 单例 app(tinyui_init 建立);供平台 port 在安装驱动时取用。
  * 内部 API,不进公共契约。 */
 struct tinyui_app *tinyui_app_current(void);
+void tinyui_runtime_set_last_result(tinyui_result_t result);
 
 struct tinyui_display_port_state {
     struct tinyui_display_config config;
@@ -289,68 +307,71 @@ enum tinyui_edit_result {
 };
 
 struct tinyui_widget {
+    /* Keep 8-byte members together so the internal base stays compact. */
+    const char *text;
+    const char *style_class;
+    void *user_data;
+    const struct tinyui_font *font;
+    /* ── folded backend fields (Phase C) ──────────────────────────── */
+    void *ld_widget;
+    struct tinyui_app *owner;
+    struct ld_scene_t *ld_event_bridge_scene;
+    void *ld_event_bridge_sender;
+    /* ── B2 运行期生命周期:活宿主注册表链接 ── */
+    struct tinyui_widget *reg_prev;
+    struct tinyui_widget *reg_next;
+    /* ── B2:宿主侧额外清理(仅 keyboard/button 等用,可空)。在 ld depose 前调用,ld 仍存活 ── */
+    void (*host_cleanup)(struct tinyui_widget *w);
+
     int x;
     int y;
     int width;
     int height;
-    const char *text;
-    const char *style_class;
-    void *user_data;
     unsigned int bg_color;
     unsigned int text_color;
     unsigned int border_color;
     int radius;
     int padding;
     int opacity;
-    const struct tinyui_font *font;
-    int visible;
-    int enabled;
-    int selectable;
-    int selected;
-    int corner;
+    unsigned int visible : 1;
+    unsigned int enabled : 1;
+    unsigned int selectable : 1;
+    unsigned int selected : 1;
+    unsigned int corner : 1;
+    unsigned int ignore_layout : 1;
+    unsigned int has_focus : 1;
+    unsigned int flex_new_track : 1;
     int flex_grow;
-    int flex_new_track;
     int flex_min_width;
     int flex_min_height;
     int flex_max_width;
     int flex_max_height;
-    int ignore_layout;
     int grid_col;
     int grid_row;
     int grid_col_span;
     int grid_row_span;
-    enum tinyui_align grid_x_align;
-    enum tinyui_align grid_y_align;
-    int has_focus;
-    int focus_enter_count;
-    int focus_leave_count;
-    int focus_change_count;
-    enum tinyui_focus_event last_focus_event;
-    enum tinyui_edit_result pending_edit_result;
-    enum tinyui_edit_result last_edit_result;
-    /* ── folded backend fields (Phase C) ──────────────────────────── */
-    void *ld_widget;
-    uint16_t ld_name_id;
-    enum tinyui_backend_widget_kind kind;
-    struct tinyui_app *owner;
-    struct ld_scene_t *ld_event_bridge_scene;
-    void *ld_event_bridge_sender;
-    struct tinyui_widget *ld_event_bridge_next;
     int value;
+
+    uint16_t focus_enter_count;
+    uint16_t focus_leave_count;
+    uint16_t focus_change_count;
+    uint16_t ld_name_id;
     uint16_t list_item_count;
-    enum tinyui_edit_result edit_result_on_finish;
-    /* ── B2 运行期生命周期:活宿主注册表链接 ── */
-    struct tinyui_widget *reg_prev;
-    struct tinyui_widget *reg_next;
-    /* ── B2:宿主侧额外清理(仅 keyboard/button 等用,可空)。在 ld depose 前调用,ld 仍存活 ── */
-    void (*host_cleanup)(struct tinyui_widget *w);
+    /* Grid alignment and backend kind are validated enum values. */
+    uint8_t grid_x_align;
+    uint8_t grid_y_align;
+    uint8_t last_focus_event;
+    uint8_t pending_edit_result;
+    uint8_t last_edit_result;
+    uint8_t kind;
+    uint8_t edit_result_on_finish;
 };
 
 struct tinyui_app {
     struct ld_scene_t  *ld_scene;
     uint16_t            next_ld_name_id;
     void               *runtime_state;
-    struct tinyui_theme *theme;
+    struct tinyui_legacy_theme *theme;
     struct tinyui_window *root_window;
     struct tinyui_widget *focus_owner;
     struct tinyui_widget *editing_owner;
@@ -367,10 +388,13 @@ struct tinyui_app {
     uint16_t            free_name_id_cap;
 };
 
-struct tinyui_theme {
+struct tinyui_legacy_theme {
     unsigned int colors[TINYUI_COLOR_COUNT];
     int metrics[TINYUI_METRIC_COUNT];
 };
+
+/* Legacy internal callers still spell this tag; keep the old layout private. */
+#define tinyui_theme tinyui_legacy_theme
 
 struct tinyui_window {
     struct tinyui_widget widget;

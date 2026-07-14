@@ -208,10 +208,23 @@ def test_use_demo_0_legacy_widget_contains_switch_demo() -> None:
     )
 
 
+def test_capture_matrix_loop_skips_absent_dynamic_widgets() -> None:
+    source = LEGACY_WIDGET_SOURCE.read_text(encoding="utf-8")
+    loop_start = source.index("static void uiWidgetLegacyLoop")
+    loop_source = source[loop_start:]
+
+    assert re.search(
+        r"if\s*\(\s*!uiWidgetLegacyCaptureMatrixEnabled\(\)\s*"
+        r"&&\s*ldTimeOut\(\s*100\s*,\s*true\s*\)\s*\)",
+        loop_source,
+    ), "capture matrix 未跳过不创建 arc/gauge 的动态更新路径"
+
+
 def main() -> int:
     tests = [
         test_use_demo_0_legacy_widget_preprocessed_expansions,
         test_use_demo_0_legacy_widget_contains_switch_demo,
+        test_capture_matrix_loop_skips_absent_dynamic_widgets,
     ]
     failures = 0
 

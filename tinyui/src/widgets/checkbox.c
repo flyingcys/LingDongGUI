@@ -55,9 +55,9 @@ static int checkbox_props_valid(const struct tinyui_checkbox_props *props)
     return props != 0
         && props->id != 0
         && (props->unchecked_source == 0
-            || props->unchecked_source->img_tile != 0)
+            || tinyui_image_source_get_image_tile(props->unchecked_source) != 0)
         && (props->checked_source == 0
-            || props->checked_source->img_tile != 0)
+            || tinyui_image_source_get_image_tile(props->checked_source) != 0)
         && (props->radio_group == -1
             || (props->radio_group >= 0 && props->radio_group <= 255))
         && (props->string_left_space == -1
@@ -296,7 +296,7 @@ int tinyui_checkbox_set_unchecked_source(struct tinyui_checkbox *checkbox,
 {
     ldCheckBox_t *ld_checkbox;
 
-    if (checkbox == 0 || (source != 0 && source->img_tile == 0)) {
+    if (checkbox == 0 || (source != 0 && tinyui_image_source_get_image_tile(source) == 0)) {
         return -1;
     }
 
@@ -306,8 +306,8 @@ int tinyui_checkbox_set_unchecked_source(struct tinyui_checkbox *checkbox,
     }
 
     ldCheckBoxSetImage(ld_checkbox,
-                       source != 0 ? source->img_tile : 0,
-                       source != 0 ? source->mask_tile : 0,
+                       source != 0 ? tinyui_image_source_get_image_tile(source) : 0,
+                       source != 0 ? tinyui_image_source_get_mask_tile(source) : 0,
                        ld_checkbox->ptCheckedImgTile,
                        ld_checkbox->ptCheckedMaskTile);
     return 0;
@@ -326,7 +326,7 @@ int tinyui_checkbox_set_checked_source(struct tinyui_checkbox *checkbox,
 {
     ldCheckBox_t *ld_checkbox;
 
-    if (checkbox == 0 || (source != 0 && source->img_tile == 0)) {
+    if (checkbox == 0 || (source != 0 && tinyui_image_source_get_image_tile(source) == 0)) {
         return -1;
     }
 
@@ -338,8 +338,8 @@ int tinyui_checkbox_set_checked_source(struct tinyui_checkbox *checkbox,
     ldCheckBoxSetImage(ld_checkbox,
                        ld_checkbox->ptUncheckedImgTile,
                        ld_checkbox->ptUncheckedMaskTile,
-                       source != 0 ? source->img_tile : 0,
-                       source != 0 ? source->mask_tile : 0);
+                       source != 0 ? tinyui_image_source_get_image_tile(source) : 0,
+                       source != 0 ? tinyui_image_source_get_mask_tile(source) : 0);
     return 0;
 }
 

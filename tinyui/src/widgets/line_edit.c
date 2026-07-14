@@ -70,7 +70,8 @@ static bool tinyui_line_edit_native_slot(struct ld_scene_t *scene, ldMsg_t msg)
         line_edit->widget.text = (ld_line_edit != NULL)
                                      ? (const char *)ldLineEditGetText(ld_line_edit)
                                      : NULL;
-        (void)tinyui_widget_mark_edit_result(&line_edit->widget, w->edit_result_on_finish);
+        (void)tinyui_widget_mark_edit_result(&line_edit->widget,
+                                             (enum tinyui_edit_result)w->edit_result_on_finish);
         (void)tinyui_widget_release_editing(&line_edit->widget);
         w->edit_result_on_finish = TINYUI_EDIT_RESULT_NONE;
         if (line_edit->on_edit_finished != 0) {

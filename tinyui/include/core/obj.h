@@ -1,29 +1,25 @@
-/*
- * Copyright (c) 2023-2026 flyingcys (flyingcys@gmail.com). All rights reserved.
- *
- * SPDX-License-Identifier: Apache-2.0
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 #ifndef TINYUI_OBJ_H
 #define TINYUI_OBJ_H
 
-#include "core/widget.h"
+#include "core/result.h"
 
-typedef struct tinyui_widget tinyui_obj_t;
-typedef enum tinyui_align tinyui_align_t;
-typedef tinyui_event_cb tinyui_event_cb;
-typedef tinyui_value_changed_cb tinyui_value_changed_cb;
+#include <stdint.h>
+
+/* Legacy implementation headers may arrive first inside the private build.
+ * Standalone canonical includes remain opaque; the compatibility branch only
+ * preserves the old internal typedef while M4 removes those headers. */
+#ifndef TINYUI_OBJ_T_DEFINED
+typedef struct tinyui_obj tinyui_obj_t;
+#define TINYUI_OBJ_T_DEFINED
+#endif
+
+tinyui_result_t tinyui_obj_delete(tinyui_obj_t *obj);
+tinyui_result_t tinyui_obj_get_id(const tinyui_obj_t *obj, uint16_t *id);
+tinyui_obj_t *tinyui_obj_find_by_id(tinyui_obj_t *root, uint16_t id);
+tinyui_obj_t *tinyui_obj_get_parent(const tinyui_obj_t *obj);
+tinyui_obj_t *tinyui_obj_get_first_child(const tinyui_obj_t *obj);
+tinyui_obj_t *tinyui_obj_get_next_sibling(const tinyui_obj_t *obj);
+tinyui_obj_t *tinyui_obj_get_root(const tinyui_obj_t *obj);
+tinyui_result_t tinyui_obj_get_child_count(const tinyui_obj_t *obj, uint16_t *count);
 
 #endif

@@ -8,6 +8,7 @@
 #include "internal.h"
 
 #include <assert.h>
+#include <stdint.h>
 
 static void test_focus_claim_release_round_trip(struct tinyui_window *win)
 {
@@ -64,6 +65,31 @@ static void test_focus_null_and_hidden_guards(struct tinyui_window *win)
     assert(tinyui_widget_set_visible(&btn->widget, 0) == 0);
     assert(tinyui_widget_claim_focus(&btn->widget) == -1);
     assert(tinyui_widget_release_focus(&btn->widget) == 0);
+}
+
+static void test_focus_counters_saturate_at_uint16_max(struct tinyui_window *win)
+{
+    struct tinyui_button *btn = tinyui_button_create(win, "btn_focus_counter_limit");
+
+    assert(btn != 0);
+    btn->widget.focus_enter_count = UINT16_MAX;
+    btn->widget.focus_change_count = UINT16_MAX;
+    assert(tinyui_widget_claim_focus(&btn->widget) == 0);
+    assert(btn->widget.focus_enter_count == UINT16_MAX);
+    assert(btn->widget.focus_change_count == UINT16_MAX);
+}
+
+static void test_focus_leave_counter_saturates_at_uint16_max(struct tinyui_window *win)
+{
+    struct tinyui_button *btn = tinyui_button_create(win, "btn_focus_leave_counter_limit");
+
+    assert(btn != 0);
+    assert(tinyui_widget_claim_focus(&btn->widget) == 0);
+    btn->widget.focus_leave_count = UINT16_MAX;
+    btn->widget.focus_change_count = UINT16_MAX;
+    assert(tinyui_widget_release_focus(&btn->widget) == 0);
+    assert(btn->widget.focus_leave_count == UINT16_MAX);
+    assert(btn->widget.focus_change_count == UINT16_MAX);
 }
 
 static void test_edit_result_marking(struct tinyui_window *win)
@@ -126,6 +152,8 @@ int main(void)
     test_focus_claim_release_round_trip(win);
     test_focus_switches_between_two_widgets(win);
     test_focus_null_and_hidden_guards(win);
+    test_focus_counters_saturate_at_uint16_max(win);
+    test_focus_leave_counter_saturates_at_uint16_max(win);
     test_edit_result_marking(win);
     test_editing_claim_release_round_trip(win);
     test_editing_guards(win);

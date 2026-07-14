@@ -58,8 +58,8 @@ static int canvas_push(struct tinyui_canvas *canvas,
         .align = (arm_2d_align_t)tinyui_align_to_arm2d(command->align),
         .pStr = (uint8_t *)command->text,
         .ptFont = (arm_2d_font_t *)(canvas->widget.font != 0 ? canvas->widget.font : (const void *)&ARM_2D_FONT_6x8),
-        .ptImgTile = command->source != 0 ? command->source->img_tile : 0,
-        .ptMaskTile = command->source != 0 ? command->source->mask_tile : 0,
+        .ptImgTile = command->source != 0 ? tinyui_image_source_get_image_tile(command->source) : 0,
+        .ptMaskTile = command->source != 0 ? tinyui_image_source_get_mask_tile(command->source) : 0,
     };
 
     canvas->commands[canvas->command_count++] = *command;
@@ -239,7 +239,7 @@ int tinyui_canvas_draw_image(struct tinyui_canvas *canvas,
 {
     struct tinyui_canvas_command command;
 
-    if (source == 0 || source->img_tile == 0 || width < 0 || height < 0 || opacity < 0 || opacity > 255) {
+    if (source == 0 || tinyui_image_source_get_image_tile(source) == 0 || width < 0 || height < 0 || opacity < 0 || opacity > 255) {
         return -1;
     }
 
@@ -281,7 +281,7 @@ int tinyui_canvas_draw_image_scaled(struct tinyui_canvas *canvas,
 {
     struct tinyui_canvas_command command;
 
-    if (source == 0 || source->img_tile == 0 || width < 0 || height < 0 || scale <= 0.0f || opacity < 0 || opacity > 255) {
+    if (source == 0 || tinyui_image_source_get_image_tile(source) == 0 || width < 0 || height < 0 || scale <= 0.0f || opacity < 0 || opacity > 255) {
         return -1;
     }
 

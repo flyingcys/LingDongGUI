@@ -18,6 +18,10 @@
 
 #include "internal.h"
 
+#include "core/event.h"
+#include "core/focus.h"
+#include "integration/input.h"
+
 #include "../../../src/gui/ldCheckBox.h"
 #include "../../../src/gui/ldList.h"
 #include "../../../src/gui/ldSlider.h"
@@ -184,15 +188,21 @@ static void tinyui_widget_note_focus_event(struct tinyui_widget *widget,
     }
 
     widget->last_focus_event = event;
-    widget->focus_change_count++;
+    if (widget->focus_change_count != UINT16_MAX) {
+        widget->focus_change_count++;
+    }
     if (event == TINYUI_FOCUS_EVENT_ENTER) {
         widget->has_focus = 1;
-        widget->focus_enter_count++;
+        if (widget->focus_enter_count != UINT16_MAX) {
+            widget->focus_enter_count++;
+        }
         return;
     }
 
     widget->has_focus = 0;
-    widget->focus_leave_count++;
+    if (widget->focus_leave_count != UINT16_MAX) {
+        widget->focus_leave_count++;
+    }
 }
 
 /**
@@ -633,4 +643,179 @@ int tinyui_widget_dispatch_native_signal(struct tinyui_widget *widget,
 int tinyui_event_stub(void)
 {
     return 0;
+}
+
+tinyui_result_t tinyui_obj_add_event_cb(tinyui_obj_t *obj,
+                                        uint32_t event_mask,
+                                        tinyui_event_cb_t cb,
+                                        void *user_data,
+                                        tinyui_event_handle_t *handle)
+{
+    (void)obj;
+    (void)event_mask;
+    (void)cb;
+    (void)user_data;
+    if (handle != NULL) {
+        *handle = 0;
+    }
+    tinyui_runtime_set_last_result(TINYUI_ERROR_NOT_SUPPORTED);
+    return TINYUI_ERROR_NOT_SUPPORTED;
+}
+
+tinyui_result_t tinyui_obj_remove_event_cb(tinyui_obj_t *obj,
+                                           tinyui_event_handle_t handle)
+{
+    (void)obj;
+    (void)handle;
+    tinyui_runtime_set_last_result(TINYUI_ERROR_NOT_SUPPORTED);
+    return TINYUI_ERROR_NOT_SUPPORTED;
+}
+
+tinyui_result_t tinyui_focus_set(tinyui_obj_t *obj)
+{
+    int result;
+
+    if (obj == NULL) {
+        tinyui_runtime_set_last_result(TINYUI_ERROR_INVALID_OBJECT);
+        return TINYUI_ERROR_INVALID_OBJECT;
+    }
+
+    result = tinyui_widget_claim_focus((struct tinyui_widget *)obj);
+    if (result != 0) {
+        tinyui_runtime_set_last_result(TINYUI_ERROR_BACKEND);
+        return TINYUI_ERROR_BACKEND;
+    }
+
+    tinyui_runtime_set_last_result(TINYUI_OK);
+    return TINYUI_OK;
+}
+
+tinyui_result_t tinyui_focus_clear(void)
+{
+    struct tinyui_app *app = tinyui_app_current();
+
+    if (app == NULL) {
+        tinyui_runtime_set_last_result(TINYUI_ERROR_INVALID_STATE);
+        return TINYUI_ERROR_INVALID_STATE;
+    }
+    if (app->focus_owner != NULL && tinyui_widget_release_focus(app->focus_owner) != 0) {
+        tinyui_runtime_set_last_result(TINYUI_ERROR_BACKEND);
+        return TINYUI_ERROR_BACKEND;
+    }
+    if (tinyui_focus_reset(app) != 0) {
+        tinyui_runtime_set_last_result(TINYUI_ERROR_BACKEND);
+        return TINYUI_ERROR_BACKEND;
+    }
+
+    tinyui_runtime_set_last_result(TINYUI_OK);
+    return TINYUI_OK;
+}
+
+tinyui_result_t tinyui_focus_move(tinyui_focus_direction_t direction)
+{
+    struct tinyui_app *app = tinyui_app_current();
+    enum tinyui_native_nav_dir native_direction;
+    int result;
+
+    if (app == NULL) {
+        tinyui_runtime_set_last_result(TINYUI_ERROR_INVALID_STATE);
+        return TINYUI_ERROR_INVALID_STATE;
+    }
+
+    switch (direction) {
+    case TINYUI_FOCUS_LEFT:
+        native_direction = TINYUI_NATIVE_NAV_LEFT;
+        break;
+    case TINYUI_FOCUS_RIGHT:
+        native_direction = TINYUI_NATIVE_NAV_RIGHT;
+        break;
+    case TINYUI_FOCUS_UP:
+        native_direction = TINYUI_NATIVE_NAV_UP;
+        break;
+    case TINYUI_FOCUS_DOWN:
+        native_direction = TINYUI_NATIVE_NAV_DOWN;
+        break;
+    case TINYUI_FOCUS_NEXT:
+    case TINYUI_FOCUS_PREVIOUS:
+        tinyui_runtime_set_last_result(TINYUI_ERROR_NOT_SUPPORTED);
+        return TINYUI_ERROR_NOT_SUPPORTED;
+    default:
+        tinyui_runtime_set_last_result(TINYUI_ERROR_OUT_OF_RANGE);
+        return TINYUI_ERROR_OUT_OF_RANGE;
+    }
+
+    result = tinyui_focus_navigate(app, native_direction);
+    tinyui_runtime_set_last_result(result == 0 ? TINYUI_OK : TINYUI_ERROR_BACKEND);
+    return result == 0 ? TINYUI_OK : TINYUI_ERROR_BACKEND;
+}
+
+tinyui_obj_t *tinyui_focus_current(void)
+{
+    struct tinyui_app *app = tinyui_app_current();
+
+    return app == NULL ? NULL : (tinyui_obj_t *)app->focus_owner;
+}
+
+tinyui_result_t tinyui_input_send_key(tinyui_key_t key, bool pressed)
+{
+    struct tinyui_app *app = tinyui_app_current();
+    enum tinyui_input_key input_key;
+    enum tinyui_native_nav_dir navigation_direction;
+
+    if (app == NULL) {
+        tinyui_runtime_set_last_result(TINYUI_ERROR_INVALID_STATE);
+        return TINYUI_ERROR_INVALID_STATE;
+    }
+
+    switch (key) {
+    case TINYUI_KEY_ENTER:
+        input_key = TINYUI_INPUT_KEY_ENTER;
+        navigation_direction = TINYUI_NATIVE_NAV_ENTER;
+        break;
+    case TINYUI_KEY_BACK:
+        input_key = TINYUI_INPUT_KEY_BACK;
+        navigation_direction = TINYUI_NATIVE_NAV_BACK;
+        break;
+    case TINYUI_KEY_LEFT:
+        input_key = TINYUI_INPUT_KEY_LEFT;
+        navigation_direction = TINYUI_NATIVE_NAV_LEFT;
+        break;
+    case TINYUI_KEY_RIGHT:
+        input_key = TINYUI_INPUT_KEY_RIGHT;
+        navigation_direction = TINYUI_NATIVE_NAV_RIGHT;
+        break;
+    case TINYUI_KEY_UP:
+        input_key = TINYUI_INPUT_KEY_UP;
+        navigation_direction = TINYUI_NATIVE_NAV_UP;
+        break;
+    case TINYUI_KEY_DOWN:
+        input_key = TINYUI_INPUT_KEY_DOWN;
+        navigation_direction = TINYUI_NATIVE_NAV_DOWN;
+        break;
+    case TINYUI_KEY_NEXT:
+    case TINYUI_KEY_PREVIOUS:
+        tinyui_runtime_set_last_result(TINYUI_ERROR_NOT_SUPPORTED);
+        return TINYUI_ERROR_NOT_SUPPORTED;
+    default:
+        tinyui_runtime_set_last_result(TINYUI_ERROR_OUT_OF_RANGE);
+        return TINYUI_ERROR_OUT_OF_RANGE;
+    }
+
+    if (tinyui_input_push_key(app, input_key, pressed) != 0) {
+        tinyui_runtime_set_last_result(TINYUI_ERROR_BACKEND);
+        return TINYUI_ERROR_BACKEND;
+    }
+
+    if (!pressed) {
+        tinyui_runtime_set_last_result(TINYUI_OK);
+        return TINYUI_OK;
+    }
+
+    if (tinyui_focus_navigate(app, navigation_direction) != 0) {
+        tinyui_runtime_set_last_result(TINYUI_ERROR_BACKEND);
+        return TINYUI_ERROR_BACKEND;
+    }
+
+    tinyui_runtime_set_last_result(TINYUI_OK);
+    return TINYUI_OK;
 }

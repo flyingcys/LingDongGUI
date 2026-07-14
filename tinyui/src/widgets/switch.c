@@ -54,9 +54,9 @@ static int tinyui_switch_props_are_valid(const struct tinyui_switch_props *props
 {
     return props != 0
         && props->id != 0
-        && (props->off_source == 0 || props->off_source->img_tile != 0)
-        && (props->on_source == 0 || props->on_source->img_tile != 0)
-        && (props->knob_source == 0 || props->knob_source->img_tile != 0)
+        && (props->off_source == 0 || tinyui_image_source_get_image_tile(props->off_source) != 0)
+        && (props->on_source == 0 || tinyui_image_source_get_image_tile(props->on_source) != 0)
+        && (props->knob_source == 0 || tinyui_image_source_get_image_tile(props->knob_source) != 0)
         && (props->horizontal == -1 || props->horizontal == 0 || props->horizontal == 1)
         && (props->direction == -1 || (props->direction >= 0 && props->direction <= 2))
         && (props->disabled == -1 || props->disabled == 0 || props->disabled == 1)
@@ -228,7 +228,7 @@ int tinyui_switch_set_off_source(struct tinyui_switch *sw, struct tinyui_image_s
 {
     ldSwitch_t *ld_switch;
 
-    if (sw == 0 || (source != 0 && source->img_tile == 0)
+    if (sw == 0 || (source != 0 && tinyui_image_source_get_image_tile(source) == 0)
         || sw->widget.ld_widget == 0
         || sw->widget.kind != TINYUI_BACKEND_WIDGET_SWITCH) {
         return -1;
@@ -236,8 +236,8 @@ int tinyui_switch_set_off_source(struct tinyui_switch *sw, struct tinyui_image_s
 
     ld_switch = (ldSwitch_t *)sw->widget.ld_widget;
     ldSwitchSetImage(ld_switch,
-                     source != 0 ? source->img_tile : 0,
-                     source != 0 ? source->mask_tile : 0,
+                     source != 0 ? tinyui_image_source_get_image_tile(source) : 0,
+                     source != 0 ? tinyui_image_source_get_mask_tile(source) : 0,
                      ld_switch->ptOnImgTile,
                      ld_switch->ptOnMaskTile,
                      ld_switch->ptKnobImgTile,
@@ -257,7 +257,7 @@ int tinyui_switch_set_on_source(struct tinyui_switch *sw, struct tinyui_image_so
 {
     ldSwitch_t *ld_switch;
 
-    if (sw == 0 || (source != 0 && source->img_tile == 0)
+    if (sw == 0 || (source != 0 && tinyui_image_source_get_image_tile(source) == 0)
         || sw->widget.ld_widget == 0
         || sw->widget.kind != TINYUI_BACKEND_WIDGET_SWITCH) {
         return -1;
@@ -267,8 +267,8 @@ int tinyui_switch_set_on_source(struct tinyui_switch *sw, struct tinyui_image_so
     ldSwitchSetImage(ld_switch,
                      ld_switch->ptOffImgTile,
                      ld_switch->ptOffMaskTile,
-                     source != 0 ? source->img_tile : 0,
-                     source != 0 ? source->mask_tile : 0,
+                     source != 0 ? tinyui_image_source_get_image_tile(source) : 0,
+                     source != 0 ? tinyui_image_source_get_mask_tile(source) : 0,
                      ld_switch->ptKnobImgTile,
                      ld_switch->ptKnobMaskTile);
     return 0;
@@ -286,7 +286,7 @@ int tinyui_switch_set_knob_source(struct tinyui_switch *sw, struct tinyui_image_
 {
     ldSwitch_t *ld_switch;
 
-    if (sw == 0 || (source != 0 && source->img_tile == 0)
+    if (sw == 0 || (source != 0 && tinyui_image_source_get_image_tile(source) == 0)
         || sw->widget.ld_widget == 0
         || sw->widget.kind != TINYUI_BACKEND_WIDGET_SWITCH) {
         return -1;
@@ -298,8 +298,8 @@ int tinyui_switch_set_knob_source(struct tinyui_switch *sw, struct tinyui_image_
                      ld_switch->ptOffMaskTile,
                      ld_switch->ptOnImgTile,
                      ld_switch->ptOnMaskTile,
-                     source != 0 ? source->img_tile : 0,
-                     source != 0 ? source->mask_tile : 0);
+                     source != 0 ? tinyui_image_source_get_image_tile(source) : 0,
+                     source != 0 ? tinyui_image_source_get_mask_tile(source) : 0);
     return 0;
 }
 

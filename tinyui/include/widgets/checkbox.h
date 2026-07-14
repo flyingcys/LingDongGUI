@@ -1,6 +1,8 @@
 #ifndef TINYUI_CHECKBOX_H
 #define TINYUI_CHECKBOX_H
 
+#include "core/widget.h"
+
 struct tinyui_window;
 struct tinyui_checkbox;
 struct tinyui_image_source;

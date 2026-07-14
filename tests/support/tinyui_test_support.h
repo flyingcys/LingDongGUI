@@ -3,11 +3,29 @@
 
 #include "tinyui.h"
 
+#include <stddef.h>
+#include <stdint.h>
+
 int tinyui_test_support_stub(void);
 const char *tinyui_test_repo_path_from_file(const char *file, const char *relative_path);
 int tinyui_test_source_contains(const char *path, const char *needle);
 int tinyui_test_source_has_function_definition(const char *path, const char *symbol);
 int tinyui_test_source_lacks_function_definition(const char *path, const char *symbol);
+
+struct tinyui_test_allocator_stats {
+    size_t alloc_calls;
+    size_t calloc_calls;
+    size_t realloc_calls;
+    size_t free_calls;
+    size_t bytes_requested;
+};
+
+void tinyui_test_allocator_reset(void);
+struct tinyui_test_allocator_stats tinyui_test_allocator_snapshot(void);
+void *tinyui_test_allocator_malloc(uint32_t size);
+void *tinyui_test_allocator_calloc(uint32_t num, uint32_t size);
+void *tinyui_test_allocator_realloc(void *ptr, uint32_t size);
+void tinyui_test_allocator_free(void *ptr);
 
 struct tinyui_image_test_dispose_snapshot {
     int kind;

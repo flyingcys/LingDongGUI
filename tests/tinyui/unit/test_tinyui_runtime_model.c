@@ -1,128 +1,60 @@
+#include "core/obj.h"
 #include "core/runtime.h"
-#include "widgets/window.h"
 
 #include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 uint32_t arm_2d_helper_get_reference_clock_frequency(void)
 {
     return 1000000u;
 }
 
-static const char *test_repo_path(const char *relative_path)
+static void test_process_requires_initialized_runtime(void)
 {
-    static char path[2048];
-    char base[2048];
-    char *tests_dir;
-
-    snprintf(base, sizeof(base), "%s", __FILE__);
-    tests_dir = strstr(base, "tests/tinyui/unit/");
-    assert(tests_dir != 0);
-    *tests_dir = '\0';
-    snprintf(path, sizeof(path), "%s%s", base, relative_path);
-    return path;
-}
-
-static void test_shared_sources_no_longer_include_tinyui_paths(void)
-{
-    char command[4096];
-
-    snprintf(command,
-             sizeof(command),
-             "cd '%s' && "
-             "rg -n '#include \"tinyui/' "
-             "tinyui/src/core tinyui/src/display tinyui/src/indev tinyui/src/layout "
-             "tinyui/src/theme tinyui/src/tick tinyui/src/osal >/dev/null",
-             test_repo_path(""));
-    int status = system(
-        command);
-
-    assert(status != 0);
-}
-
-static void test_runtime_internal_state_uses_tinyui_prefix(void)
-{
-    char old_command[4096];
-    char new_command[4096];
-    const char *runtime_source = test_repo_path("tinyui/src/core/runtime.c");
-
-    snprintf(old_command,
-             sizeof(old_command),
-             "python3 - '%s' <<'PY'\n"
-             "from pathlib import Path\n"
-             "import sys\n"
-             "text = Path(sys.argv[1]).read_text()\n"
-             "raise SystemExit(1 if 'g_tinyui_runtime_app' in text else 0)\n"
-             "PY",
-             runtime_source);
-    snprintf(new_command,
-             sizeof(new_command),
-             "python3 - '%s' <<'PY'\n"
-             "from pathlib import Path\n"
-             "import sys\n"
-             "text = Path(sys.argv[1]).read_text()\n"
-             "raise SystemExit(0 if 'g_tinyui_runtime_app' in text else 1)\n"
-             "PY",
-             runtime_source);
-
-    int old_status = system(old_command);
-    int new_status = system(new_command);
-
-    assert(old_status != 0);
-    assert(new_status == 0);
-}
-
-static void test_runtime_init_create_load_teardown(void)
-{
-    tinyui_obj_t *screen;
-
-    assert(tinyui_init() == 0);
-    screen = tinyui_screen_create();
-    assert(screen != NULL);
-    assert(tinyui_screen_load(screen) == 0);
-    tinyui_deinit();
-}
-
-static void test_timer_handler_before_init_returns_error(void)
-{
-    /* The handler must not crash or exit the process when called
-     * before tinyui_init(). It must return a stable error code. */
-    int result = tinyui_timer_handler();
-    assert(result < 0);
-}
-
-static void test_timer_handler_after_init_returns_status(void)
-{
-    /* After a full init→create→load cycle, the handler must not exit()
-     * the process. It must return <0, 0, or >0 as a library status. */
-    tinyui_obj_t *screen;
-
-    assert(tinyui_init() == 0);
-    setenv("SDL_VIDEODRIVER", "dummy", 1);
-    setenv("TINYUI_DEMO_AUTO_QUIT_MS", "1", 1);
-    screen = tinyui_screen_create();
-    assert(screen != NULL);
-    assert(tinyui_screen_load(screen) == 0);
-
-    /* Call once — must not exit, must return a valid status code.
-     * In unit test context the backend may return -1 (no display),
-     * 0 (running), or 1 (finished). All are valid non-exit paths. */
-    int result = tinyui_timer_handler();
-    assert(result >= -1 && result <= 1);
+    uint32_t next_ms = 123u;
 
     tinyui_deinit();
+    assert(tinyui_process(&next_ms) == TINYUI_ERROR_INVALID_STATE);
+    assert(next_ms == 123u);
+    assert(tinyui_process(NULL) == TINYUI_ERROR_INVALID_ARG);
+}
+
+static void test_canonical_runtime_and_object_tree(void)
+{
+    tinyui_obj_t *screen;
+    uint32_t next_ms = 0;
+    uint16_t id = 0;
+    uint16_t child_count = 0;
+
+    assert(tinyui_init() == TINYUI_OK);
+    assert(tinyui_init() == TINYUI_OK);
+    screen = tinyui_screen_create();
+    assert(screen != NULL);
+    assert(tinyui_screen_load(screen, TINYUI_SCREEN_TRANSITION_NONE, 0) == TINYUI_OK);
+    assert(tinyui_screen_active() == screen);
+    assert(tinyui_process(&next_ms) == TINYUI_OK);
+    assert(next_ms == UINT32_MAX);
+
+    assert(tinyui_screen_load(screen, TINYUI_SCREEN_TRANSITION_SLIDE_LEFT, 25) ==
+           TINYUI_ERROR_NOT_SUPPORTED);
+    assert(tinyui_obj_get_id(screen, &id) == TINYUI_OK);
+    assert(id != 0);
+    assert(tinyui_obj_find_by_id(screen, id) == screen);
+    assert(tinyui_obj_get_parent(screen) == NULL);
+    assert(tinyui_obj_get_first_child(screen) == NULL);
+    assert(tinyui_obj_get_next_sibling(screen) == NULL);
+    assert(tinyui_obj_get_root(screen) == screen);
+    assert(tinyui_obj_get_child_count(screen, &child_count) == TINYUI_OK);
+    assert(child_count == 0);
+
+    tinyui_deinit();
+    assert(tinyui_screen_active() == NULL);
 }
 
 int main(void)
 {
-    test_shared_sources_no_longer_include_tinyui_paths();
-    test_runtime_internal_state_uses_tinyui_prefix();
-    test_runtime_init_create_load_teardown();
-    test_timer_handler_before_init_returns_error();
-    test_timer_handler_after_init_returns_status();
+    test_process_requires_initialized_runtime();
+    test_canonical_runtime_and_object_tree();
     return 0;
 }

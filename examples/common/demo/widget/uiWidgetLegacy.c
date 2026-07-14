@@ -385,7 +385,7 @@ static void uiWidgetLegacyLoop(ld_scene_t *ptScene)
     ldGauge_t *ptGauge = ldBaseGetWidgetById(17);
     ldSwitch_t *ptSwitch = ldBaseGetWidgetById(UI_WIDGET_LEGACY_SWITCH_ID);
 
-    if (ldTimeOut(100, true)) {
+    if (!uiWidgetLegacyCaptureMatrixEnabled() && ldTimeOut(100, true)) {
         ldArcSetRotationAngle(ldBaseGetWidgetById(25), angle);
         ldGaugeSetAngle(ptGauge, angle);
         angle += 1;

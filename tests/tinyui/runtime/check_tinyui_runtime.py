@@ -237,6 +237,42 @@ def _band_signature(
     return non_bg, blueish, greenish, height
 
 
+def _band_column_runs(
+    width: int,
+    pixels: bytes,
+    band: tuple[int, int],
+    bg: tuple[int, int, int],
+) -> list[tuple[int, int]]:
+    occupied = []
+    for x in range(width):
+        if any(_pixel(width, pixels, x, y) != bg for y in range(band[0], band[1] + 1)):
+            occupied.append(x)
+
+    runs: list[tuple[int, int]] = []
+    if not occupied:
+        return runs
+
+    start = previous = occupied[0]
+    for value in occupied[1:]:
+        if value == previous + 1:
+            previous = value
+            continue
+        runs.append((start, previous))
+        start = previous = value
+    runs.append((start, previous))
+    return runs
+
+
+def _looks_like_checkbox_band(band: tuple[int, int], column_runs: list[tuple[int, int]]) -> bool:
+    band_height = band[1] - band[0] + 1
+    if not 10 <= band_height <= 18 or not column_runs:
+        return False
+
+    indicator_start, indicator_end = column_runs[0]
+    indicator_width = indicator_end - indicator_start + 1
+    return 8 <= indicator_width <= 18 and abs(indicator_width - band_height) <= 4
+
+
 def _parse_marker_ids(stdout: str, marker: str, *, required: bool = True) -> set[str]:
     prefix = f"{marker}="
     for line in stdout.splitlines():
@@ -337,7 +373,11 @@ def _assert_basic_widgets_capture(path: Path, stdout: str) -> None:
     switch_band = max(band_signatures, key=lambda item: item[1][2])[0]
     checkbox_candidates = [
         item for item in band_signatures
-        if item[0] != switch_band and item[1][3] <= 18 and item[1][1] > 0
+        if item[0] != switch_band
+        and _looks_like_checkbox_band(
+            item[0],
+            _band_column_runs(width, pixels, item[0], bg),
+        )
     ]
     assert checkbox_candidates, f"basic_widgets should expose a checkbox-like band, signatures={band_signatures}"
     checkbox_band = min(checkbox_candidates, key=lambda item: item[1][0])[0]

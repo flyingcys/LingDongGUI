@@ -38,6 +38,94 @@
 #include <stddef.h>
 #include <stdint.h>
 
+static struct tinyui_widget *tinyui_obj_widget(tinyui_obj_t *obj)
+{
+    return (struct tinyui_widget *)(void *)obj;
+}
+
+static const struct tinyui_widget *tinyui_obj_const_widget(const tinyui_obj_t *obj)
+{
+    return (const struct tinyui_widget *)(const void *)obj;
+}
+
+tinyui_result_t tinyui_obj_delete(tinyui_obj_t *obj)
+{
+    struct tinyui_widget *widget = tinyui_obj_widget(obj);
+
+    if (widget == 0) {
+        return TINYUI_ERROR_INVALID_OBJECT;
+    }
+    return tinyui_widget_destroy(widget) == 0 ? TINYUI_OK : TINYUI_ERROR_INVALID_STATE;
+}
+
+tinyui_result_t tinyui_obj_get_id(const tinyui_obj_t *obj, uint16_t *id)
+{
+    int name_id;
+
+    if (obj == 0) {
+        return TINYUI_ERROR_INVALID_OBJECT;
+    }
+    if (id == 0) {
+        return TINYUI_ERROR_INVALID_ARG;
+    }
+
+    name_id = tinyui_widget_get_name_id(tinyui_obj_const_widget(obj));
+    if (name_id < 0 || name_id > UINT16_MAX) {
+        return TINYUI_ERROR_INVALID_OBJECT;
+    }
+    *id = (uint16_t)name_id;
+    return TINYUI_OK;
+}
+
+tinyui_obj_t *tinyui_obj_find_by_id(tinyui_obj_t *root, uint16_t id)
+{
+    if (root == 0 || id == 0) {
+        return 0;
+    }
+    return (tinyui_obj_t *)tinyui_widget_find_by_name_id(
+        tinyui_obj_const_widget(root),
+        (int)id);
+}
+
+tinyui_obj_t *tinyui_obj_get_parent(const tinyui_obj_t *obj)
+{
+    return (tinyui_obj_t *)tinyui_widget_get_parent(tinyui_obj_const_widget(obj));
+}
+
+tinyui_obj_t *tinyui_obj_get_first_child(const tinyui_obj_t *obj)
+{
+    return (tinyui_obj_t *)tinyui_widget_get_first_child(tinyui_obj_const_widget(obj));
+}
+
+tinyui_obj_t *tinyui_obj_get_next_sibling(const tinyui_obj_t *obj)
+{
+    return (tinyui_obj_t *)tinyui_widget_get_next_sibling(tinyui_obj_const_widget(obj));
+}
+
+tinyui_obj_t *tinyui_obj_get_root(const tinyui_obj_t *obj)
+{
+    return (tinyui_obj_t *)tinyui_widget_get_root(tinyui_obj_const_widget(obj));
+}
+
+tinyui_result_t tinyui_obj_get_child_count(const tinyui_obj_t *obj, uint16_t *count)
+{
+    int child_count;
+
+    if (obj == 0) {
+        return TINYUI_ERROR_INVALID_OBJECT;
+    }
+    if (count == 0) {
+        return TINYUI_ERROR_INVALID_ARG;
+    }
+
+    child_count = tinyui_widget_get_child_count(tinyui_obj_const_widget(obj));
+    if (child_count < 0 || child_count > UINT16_MAX) {
+        return TINYUI_ERROR_INVALID_OBJECT;
+    }
+    *count = (uint16_t)child_count;
+    return TINYUI_OK;
+}
+
 typedef struct ldLabel_t ldLabel_t;
 typedef struct ldText_t ldText_t;
 typedef struct ldQRCode_t ldQRCode_t;

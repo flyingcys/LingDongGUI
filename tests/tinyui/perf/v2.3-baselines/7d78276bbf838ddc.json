@@ -1,0 +1,148 @@
+{
+  "$schema": "v2.3-performance-baseline.schema.json",
+  "artifacts": {
+    "allocation_probe": {
+      "path": "build/v2.3-m0-full/tests/tinyui/test_tinyui_steady_state_allocation",
+      "sha256": "29b4fc80d632b9e3d5e981ac7a2f1826cec7ea7b6d997fce8f356d32df9ac4d8"
+    },
+    "full_binary": {
+      "path": "build/v2.3-m0-full/examples/sdl/tinyui_demo",
+      "sha256": "99f88a7701350f1480cd5a2eead9e31607c4e5bf1ed910347bbeeed57563ef1b"
+    },
+    "minimal_binary": {
+      "path": "build/v2.3-m0-full/tests/tinyui/tinyui_minimal_consumer",
+      "sha256": "9a83a44a90dcb76238deee909c3035cac4faee5870a8f201b48568b13d57cecf"
+    },
+    "minimal_map": {
+      "path": "build/v2.3-m0-full/tests/tinyui/tinyui_minimal_consumer.map",
+      "sha256": "cb85cd36f4b1a73dc09ff38cdf9550eb085101dd102266e0e4d19572de9337dd"
+    },
+    "wrapper_probe": {
+      "path": "build/v2.3-m0-full/tests/tinyui/test_tinyui_wrapper_struct_overhead",
+      "sha256": "0424fc99f2335630c3d53d0d530654fde6846fa6b6b2ab7749318163bd2038e8"
+    }
+  },
+  "fingerprint": {
+    "cmake": {
+      "build_type": "",
+      "version": "cmake version 4.2.3"
+    },
+    "compiler": {
+      "name": "cc",
+      "target_triple": "arm64-apple-darwin25.5.0",
+      "version": "Apple clang version 21.0.0 (clang-2100.1.1.101)"
+    },
+    "cpu": {
+      "architecture": "arm64",
+      "model": "arm"
+    },
+    "git_commit": "4d65262097af49f86db093cc66536ba9eac63f6f",
+    "ld_options": {
+      "cmake": {
+        "LD_BUILD_RUNTIME_TESTS": "ON",
+        "LD_BUILD_SDL_DEMO": "ON",
+        "LD_BUILD_VISUAL_TESTS": "OFF",
+        "LD_ENABLE_COVERAGE": "OFF",
+        "LD_TINYUI_PORT": "sdl"
+      },
+      "environment": {}
+    },
+    "optimization_flags": {
+      "c": "",
+      "c_release": "-O3 -DNDEBUG"
+    },
+    "os": {
+      "name": "Darwin",
+      "version": "Darwin Kernel Version 25.5.0: Mon Apr 27 20:40:51 PDT 2026; root:xnu-12377.121.6~2/RELEASE_ARM64_T8112"
+    },
+    "tinyui_options": {
+      "cmake": {},
+      "environment": {}
+    }
+  },
+  "fingerprint_sha256": "7d78276bbf838ddcf2095ba010cedbdee29e32d355310a747eeff231b1eb900e",
+  "measured_at": "2026-07-14T02:38:38.145588+00:00",
+  "probes": {
+    "task5_wrapper_overhead": "TINYUI_SIZEOF_WIDGET_WRAPPER=192\nTINYUI_SIZEOF_WINDOW_WRAPPER=480\nTINYUI_SIZEOF_BACKGROUND_WRAPPER=480\nTINYUI_SIZEOF_CANVAS_WRAPPER=4816\nTINYUI_SIZEOF_LABEL_WRAPPER=200\nTINYUI_SIZEOF_BUTTON_WRAPPER=280\nTINYUI_SIZEOF_KEYBOARD_WRAPPER=272\nTINYUI_SIZEOF_CHECKBOX_WRAPPER=224\nTINYUI_SIZEOF_SWITCH_WRAPPER=224\nTINYUI_SIZEOF_SLIDER_WRAPPER=232\nTINYUI_SIZEOF_PROGRESS_BAR_WRAPPER=256\nTINYUI_SIZEOF_ANIMATION_WRAPPER=224\nTINYUI_SIZEOF_ARC_WRAPPER=240\nTINYUI_SIZEOF_GAUGE_WRAPPER=240\nTINYUI_SIZEOF_ICON_SLIDER_WRAPPER=640\nTINYUI_SIZEOF_RADIAL_MENU_WRAPPER=624\nTINYUI_SIZEOF_QRCODE_WRAPPER=232\nTINYUI_SIZEOF_PROGRESS_WHEEL_WRAPPER=216\nTINYUI_SIZEOF_DATE_TIME_WRAPPER=256\nTINYUI_SIZEOF_CALENDAR_WRAPPER=312\nTINYUI_SIZEOF_CLOCK_WRAPPER=272\nTINYUI_SIZEOF_LIST_WRAPPER=736\nTINYUI_SIZEOF_MESSAGE_BOX_WRAPPER=416\nTINYUI_SIZEOF_TEXT_WRAPPER=200\nTINYUI_SIZEOF_LINE_EDIT_WRAPPER=232\nTINYUI_SIZEOF_COMBO_BOX_WRAPPER=760\nTINYUI_SIZEOF_SCROLL_SELECTER_WRAPPER=760\nTINYUI_SIZEOF_IMAGE_WRAPPER=208\nTINYUI_SIZEOF_GRAPH_WRAPPER=272\nTINYUI_SIZEOF_TABLE_WRAPPER=224\nTINYUI_SIZEOF_SWITCH_WRAPPER_DELTA=32\nTINYUI_SIZEOF_BACKEND_WIDGET_LD_WINDOW=200\nTINYUI_SIZEOF_LEGACY_TIMER_NODE=48\nTINYUI_SIZEOF_LEGACY_EVENT_CALLBACK_STORAGE=32\nTINYUI_SIZEOF_RUNTIME_BOOKKEEPING=240",
+    "task6_allocation": "TINYUI_STEADY_STATE_ALLOCATIONS=0",
+    "task7_binary_size": "binary size measured via xcrun llvm-size --format=sysv artifact=/Users/cys/embedded/LingDongGUI/build/v2.3-m0-full/examples/sdl/tinyui_demo\n{\n  \"__bss\": 100418,\n  \"__data\": 405,\n  \"__text\": 390776,\n  \"total\": 817033\n}",
+    "task7_minimal_symbols": "U ___assert_rtn\n                 U ___chkstk_darwin\n                 U ___stack_chk_fail\n                 U ___stack_chk_guard\n                 U ___stdoutp\n0000000100000000 T __mh_execute_header\n                 U _bzero\n                 U _calloc\n                 U _clock_gettime\n                 U _fflush\n                 U _fmodf\n                 U _free\n                 U _getenv\n0000000100000e88 T _main\n                 U _malloc\n                 U _memcpy\n                 U _memset\n                 U _printf\n                 U _strcpy\n                 U _strlen\n                 U _strncmp\n                 U _strnlen\n                 U _timezone\n000000010001ed84 T _tinyui_button_create\n000000010001f1b0 T _tinyui_button_set_text\n000000010001a6b4 T _tinyui_deinit\n000000010001a678 T _tinyui_init\n000000010001e678 T _tinyui_label_create\n000000010001ed54 T _tinyui_label_set_text\n000000010001aedc T _tinyui_screen_create\n000000010001b334 T _tinyui_screen_load\n000000010001b36c T _tinyui_timer_handler\n                 U _tzset"
+  },
+  "scenarios": {
+    "capture_ready_ms": {
+      "median": 12.0,
+      "p95": 15.0,
+      "samples": [
+        7.0,
+        15.0,
+        10.0,
+        12.0,
+        7.0,
+        12.0,
+        13.0,
+        12.0,
+        12.0,
+        12.0,
+        12.0,
+        11.0,
+        12.0,
+        11.0,
+        12.0,
+        11.0,
+        12.0,
+        12.0,
+        12.0,
+        12.0,
+        12.0,
+        12.0,
+        15.0,
+        10.0,
+        12.0,
+        12.0,
+        13.0,
+        13.0,
+        7.0,
+        5.0
+      ],
+      "warmup_count": 5
+    },
+    "screen_object_create_ms": {
+      "median": 2.0,
+      "p95": 2.0,
+      "samples": [
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        1.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        1.0
+      ],
+      "warmup_count": 5
+    }
+  },
+  "schema_version": 1
+}

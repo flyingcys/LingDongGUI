@@ -312,6 +312,41 @@ static void test_window_widget_base_api_round_trip(struct tinyui_window *win)
     assert(ld_base->isSelected == true);
 }
 
+static void test_window_layout_type_and_gap_getters(struct tinyui_window *win)
+{
+    ldWindow_t *ld_win;
+    enum tinyui_window_layout_type layout_type = TINYUI_WINDOW_LAYOUT_NONE;
+
+    assert(win != 0);
+    ld_win = (ldWindow_t *)win->widget.ld_widget;
+    assert(ld_win != 0);
+
+    assert(tinyui_window_get_layout_type(0, &layout_type) == -1);
+    assert(tinyui_window_get_layout_type(win, 0) == -1);
+    assert(tinyui_window_get_gap(0) == -1);
+
+    assert(tinyui_window_set_layout_type(win, TINYUI_WINDOW_LAYOUT_FLEX) == 0);
+    assert(ld_win->layoutTpye == layoutFlex);
+    layout_type = TINYUI_WINDOW_LAYOUT_NONE;
+    assert(tinyui_window_get_layout_type(win, &layout_type) == 0);
+    assert(layout_type == TINYUI_WINDOW_LAYOUT_FLEX);
+
+    assert(tinyui_window_set_layout_type(win, TINYUI_WINDOW_LAYOUT_GRID) == 0);
+    assert(ld_win->layoutTpye == layoutGrid);
+    layout_type = TINYUI_WINDOW_LAYOUT_NONE;
+    assert(tinyui_window_get_layout_type(win, &layout_type) == 0);
+    assert(layout_type == TINYUI_WINDOW_LAYOUT_GRID);
+
+    assert(tinyui_window_set_gap(win, 17) == 0);
+    assert(ld_win->flexItemGap == 17);
+    assert(ld_win->flexTrackGap == 17);
+    assert(tinyui_window_get_gap(win) == 17);
+
+    ld_win->layoutTpye = layoutHorizontal;
+    assert(tinyui_window_get_layout_type(win, &layout_type) == -1);
+    assert(tinyui_window_set_layout_type(win, TINYUI_WINDOW_LAYOUT_NONE) == 0);
+}
+
 static void test_window_grid_padding_positions_switch(struct tinyui_window *win)
 {
     const int cols[] = {220, 0};
@@ -481,6 +516,7 @@ int main(void)
     test_window_padding_group_round_trip(win);
     test_window_grid_padding_positions_switch(win);
     test_window_widget_base_api_round_trip(win);
+    test_window_layout_type_and_gap_getters(win);
 
     tinyui_app_destroy(app);
     return 0;

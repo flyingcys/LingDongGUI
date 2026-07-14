@@ -43,8 +43,8 @@ static void make_ui(struct tinyui_window *win)
     struct tinyui_animation *animation;
     struct tinyui_animation_props props = {
         .id = "animation",
-        .width = 62,
-        .height = 31,
+        .width = 25,
+        .height = 25,
         .period_ms = 120,
         .source = &s_animation_source,
     };

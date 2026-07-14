@@ -1,80 +1,156 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "binary_size": {
     "artifact": "build/tinyui-runtime/examples/sdl/tinyui_basic_widgets_demo",
-    "measured_at": "2026-06-09",
+    "measured_at": "2026-07-13",
     "command": "xcrun llvm-size --format=sysv build/tinyui-runtime/examples/sdl/tinyui_basic_widgets_demo",
     "format": "llvm-size-sysv",
-    "metric_mapping": {
-      "__text": [
-        "__text",
-        ".text"
-      ],
-      "__data": [
-        "__data",
-        ".data"
-      ],
-      "__bss": [
-        "__bss",
-        ".bss"
-      ],
-      "total": [
-        "Total",
-        "dec"
-      ]
-    },
+    "metric_mapping": {"__text": ["__text", ".text"], "__data": ["__data", ".data"], "__bss": ["__bss", ".bss"], "total": ["Total", "dec"]},
     "metrics": {
-      "__text": {
-        "baseline_bytes": 121844,
-        "max_increase_percent": 5.0,
-        "max_increase_bytes": 8192
-      },
-      "__data": {
-        "baseline_bytes": 272,
-        "max_increase_percent": 25.0,
-        "max_increase_bytes": 256
-      },
-      "__bss": {
-        "baseline_bytes": 98768,
-        "max_increase_percent": 10.0,
-        "max_increase_bytes": 8192
-      },
-      "total": {
-        "baseline_bytes": 231400,
-        "max_increase_percent": 5.0,
-        "max_increase_bytes": 12288
+      "__text": {"baseline_bytes": 121844, "max_increase_percent": 5.0, "max_increase_bytes": 8192},
+      "__data": {"baseline_bytes": 272, "max_increase_percent": 25.0, "max_increase_bytes": 256},
+      "__bss": {"baseline_bytes": 98768, "max_increase_percent": 10.0, "max_increase_bytes": 8192},
+      "total": {"baseline_bytes": 231400, "max_increase_percent": 5.0, "max_increase_bytes": 12288}
+    }
+  },
+  "minimal": {
+    "artifact": "build/v2.3-m0-full/tests/tinyui/tinyui_minimal_consumer",
+    "map_artifact": "build/v2.3-m0-full/tests/tinyui/tinyui_minimal_consumer.map",
+    "measured_at": "2026-07-13",
+    "status": "current baseline; does not claim code-size trimming",
+    "required_symbols": [
+      "tinyui_init",
+      "tinyui_deinit",
+      "tinyui_screen_create",
+      "tinyui_screen_load",
+      "tinyui_timer_handler",
+      "tinyui_label_create",
+      "tinyui_label_set_text",
+      "tinyui_button_create",
+      "tinyui_button_set_text"
+    ],
+    "forbidden_symbols": [
+      "tinyui_arc_",
+      "tinyui_checkbox_",
+      "tinyui_combo_box_",
+      "tinyui_date_time_",
+      "tinyui_gauge_",
+      "tinyui_graph_",
+      "tinyui_image_",
+      "tinyui_keyboard_",
+      "tinyui_line_edit_",
+      "tinyui_list_",
+      "tinyui_message_box_",
+      "tinyui_progress_",
+      "tinyui_qrcode_",
+      "tinyui_radial_menu_",
+      "tinyui_scroll_selecter_",
+      "tinyui_slider_",
+      "tinyui_switch_",
+      "tinyui_table_",
+      "tinyui_theme_"
+    ]
+  },
+  "binary": {
+    "full": {
+      "artifact": "build/v2.3-m0-full/examples/sdl/tinyui_demo",
+      "measured_at": "2026-07-13",
+      "command": "xcrun llvm-size --format=sysv build/v2.3-m0-full/examples/sdl/tinyui_demo",
+      "format": "llvm-size-sysv",
+      "metric_mapping": {"__text": ["__text", ".text"], "__data": ["__data", ".data"], "__bss": ["__bss", ".bss"], "total": ["Total", "dec"]},
+      "status": "current baseline; does not claim code-size trimming",
+      "metrics": {
+        "__text": {"baseline_bytes": 390908, "max_increase_percent": 5.0, "max_increase_bytes": 32768},
+        "__data": {"baseline_bytes": 405, "max_increase_percent": 20.0, "max_increase_bytes": 2048},
+        "__bss": {"baseline_bytes": 100418, "max_increase_percent": 10.0, "max_increase_bytes": 8192},
+        "total": {"baseline_bytes": 817181, "max_increase_percent": 5.0, "max_increase_bytes": 49152}
+      }
+    },
+    "minimal": {
+      "artifact": "build/v2.3-m0-full/tests/tinyui/tinyui_minimal_consumer",
+      "map_artifact": "build/v2.3-m0-full/tests/tinyui/tinyui_minimal_consumer.map",
+      "measured_at": "2026-07-13",
+      "command": "xcrun llvm-size --format=sysv build/v2.3-m0-full/tests/tinyui/tinyui_minimal_consumer",
+      "format": "llvm-size-sysv",
+      "metric_mapping": {"__text": ["__text", ".text"], "__data": ["__data", ".data"], "__bss": ["__bss", ".bss"], "total": ["Total", "dec"]},
+      "status": "current baseline; does not claim code-size trimming",
+      "metrics": {
+        "__text": {"baseline_bytes": 124508, "max_increase_percent": 5.0, "max_increase_bytes": 8192},
+        "__data": {"baseline_bytes": 264, "max_increase_percent": 25.0, "max_increase_bytes": 256},
+        "__bss": {"baseline_bytes": 99448, "max_increase_percent": 10.0, "max_increase_bytes": 8192},
+        "total": {"baseline_bytes": 262375, "max_increase_percent": 5.0, "max_increase_bytes": 12288}
       }
     }
   },
   "benchmark": {
     "runtime_perf": {
       "artifact": "build/tinyui-runtime/examples/sdl/tinyui_basic_widgets_demo",
-      "measured_at": "2026-06-09",
-      "command": "env SDL_VIDEODRIVER=dummy TINYUI_DEMO_AUTO_QUIT_MS=1200 TINYUI_BENCHMARK_LOG=1 TINYUI_CAPTURE_FILE=<tmpdir>/frame.ppm build/tinyui-runtime/examples/sdl/tinyui_basic_widgets_demo",
+      "measured_at": "2026-07-13",
+      "command": "env SDL_VIDEODRIVER=dummy TINYUI_DEMO_AUTO_QUIT_MS=1200 build/tinyui-runtime/examples/sdl/tinyui_basic_widgets_demo",
       "metrics": {
-        "screen_object_create_ms": {
-          "baseline_ms": 0.0,
-          "max_allowed_ms": 5.0
-        },
-        "capture_ready_ms": {
-          "baseline_ms": 49.0,
-          "max_allowed_ms": 65.0
-        }
+        "screen_object_create_ms": {"baseline_ms": 0.0, "max_allowed_ms": 5.0},
+        "capture_ready_ms": {"baseline_ms": 49.0, "max_allowed_ms": 65.0}
       }
     },
     "wrapper_struct_overhead": {
-      "measured_at": "2026-06-09",
-      "command": "python3 tests/tinyui/perf/check_tinyui_object_overhead.py",
+      "measured_at": "2026-07-13",
+      "command": "python3 tests/tinyui/perf/check_tinyui_object_overhead.py --probe build/v2.3-m0-full/tests/tinyui/test_tinyui_wrapper_struct_overhead",
       "probe": "formal C probe target test_tinyui_wrapper_struct_overhead",
       "metrics": {
-        "widget_wrapper_struct_bytes": {
-          "baseline_bytes": 264,
-          "max_allowed_bytes": 280
-        },
-        "switch_wrapper_struct_delta_bytes": {
-          "baseline_bytes": 32,
-          "max_allowed_bytes": 32
-        }
+        "widget_wrapper_struct_bytes": {"baseline_bytes": 184, "max_increase_percent": 5.0, "max_increase_bytes": 8, "absolute_max_bytes": 192},
+        "window_wrapper_struct_bytes": {"baseline_bytes": 480, "max_increase_percent": 5.0, "max_increase_bytes": 8, "absolute_max_bytes": 488},
+        "background_wrapper_struct_bytes": {"baseline_bytes": 480, "max_increase_percent": 5.0, "max_increase_bytes": 8, "absolute_max_bytes": 488},
+        "canvas_wrapper_struct_bytes": {"baseline_bytes": 4816, "max_increase_percent": 5.0, "max_increase_bytes": 8, "absolute_max_bytes": 4824},
+        "label_wrapper_struct_bytes": {"baseline_bytes": 200, "max_increase_percent": 5.0, "max_increase_bytes": 8, "absolute_max_bytes": 208},
+        "button_wrapper_struct_bytes": {"baseline_bytes": 280, "max_increase_percent": 5.0, "max_increase_bytes": 8, "absolute_max_bytes": 288},
+        "keyboard_wrapper_struct_bytes": {"baseline_bytes": 272, "max_increase_percent": 5.0, "max_increase_bytes": 8, "absolute_max_bytes": 280},
+        "checkbox_wrapper_struct_bytes": {"baseline_bytes": 224, "max_increase_percent": 5.0, "max_increase_bytes": 8, "absolute_max_bytes": 232},
+        "switch_wrapper_struct_bytes": {"baseline_bytes": 224, "max_increase_percent": 5.0, "max_increase_bytes": 8, "absolute_max_bytes": 232},
+        "slider_wrapper_struct_bytes": {"baseline_bytes": 232, "max_increase_percent": 5.0, "max_increase_bytes": 8, "absolute_max_bytes": 240},
+        "progress_bar_wrapper_struct_bytes": {"baseline_bytes": 256, "max_increase_percent": 5.0, "max_increase_bytes": 8, "absolute_max_bytes": 264},
+        "animation_wrapper_struct_bytes": {"baseline_bytes": 224, "max_increase_percent": 5.0, "max_increase_bytes": 8, "absolute_max_bytes": 232},
+        "arc_wrapper_struct_bytes": {"baseline_bytes": 240, "max_increase_percent": 5.0, "max_increase_bytes": 8, "absolute_max_bytes": 248},
+        "gauge_wrapper_struct_bytes": {"baseline_bytes": 240, "max_increase_percent": 5.0, "max_increase_bytes": 8, "absolute_max_bytes": 248},
+        "icon_slider_wrapper_struct_bytes": {"baseline_bytes": 640, "max_increase_percent": 5.0, "max_increase_bytes": 8, "absolute_max_bytes": 648},
+        "radial_menu_wrapper_struct_bytes": {"baseline_bytes": 624, "max_increase_percent": 5.0, "max_increase_bytes": 8, "absolute_max_bytes": 632},
+        "qrcode_wrapper_struct_bytes": {"baseline_bytes": 232, "max_increase_percent": 5.0, "max_increase_bytes": 8, "absolute_max_bytes": 240},
+        "progress_wheel_wrapper_struct_bytes": {"baseline_bytes": 216, "max_increase_percent": 5.0, "max_increase_bytes": 8, "absolute_max_bytes": 224},
+        "date_time_wrapper_struct_bytes": {"baseline_bytes": 256, "max_increase_percent": 5.0, "max_increase_bytes": 8, "absolute_max_bytes": 264},
+        "calendar_wrapper_struct_bytes": {"baseline_bytes": 312, "max_increase_percent": 5.0, "max_increase_bytes": 8, "absolute_max_bytes": 320},
+        "clock_wrapper_struct_bytes": {"baseline_bytes": 272, "max_increase_percent": 5.0, "max_increase_bytes": 8, "absolute_max_bytes": 280},
+        "list_wrapper_struct_bytes": {"baseline_bytes": 736, "max_increase_percent": 5.0, "max_increase_bytes": 8, "absolute_max_bytes": 744},
+        "message_box_wrapper_struct_bytes": {"baseline_bytes": 416, "max_increase_percent": 5.0, "max_increase_bytes": 8, "absolute_max_bytes": 424},
+        "text_wrapper_struct_bytes": {"baseline_bytes": 200, "max_increase_percent": 5.0, "max_increase_bytes": 8, "absolute_max_bytes": 208},
+        "line_edit_wrapper_struct_bytes": {"baseline_bytes": 232, "max_increase_percent": 5.0, "max_increase_bytes": 8, "absolute_max_bytes": 240},
+        "combo_box_wrapper_struct_bytes": {"baseline_bytes": 760, "max_increase_percent": 5.0, "max_increase_bytes": 8, "absolute_max_bytes": 768},
+        "scroll_selecter_wrapper_struct_bytes": {"baseline_bytes": 760, "max_increase_percent": 5.0, "max_increase_bytes": 8, "absolute_max_bytes": 768},
+        "image_wrapper_struct_bytes": {"baseline_bytes": 208, "max_increase_percent": 5.0, "max_increase_bytes": 8, "absolute_max_bytes": 216},
+        "graph_wrapper_struct_bytes": {"baseline_bytes": 272, "max_increase_percent": 5.0, "max_increase_bytes": 8, "absolute_max_bytes": 280},
+        "table_wrapper_struct_bytes": {"baseline_bytes": 224, "max_increase_percent": 5.0, "max_increase_bytes": 8, "absolute_max_bytes": 232},
+        "switch_wrapper_struct_delta_bytes": {"baseline_bytes": 32, "max_increase_percent": 5.0, "max_increase_bytes": 8, "absolute_max_bytes": 32},
+        "backend_widget_struct_bytes": {"baseline_bytes": 496, "max_increase_percent": 5.0, "max_increase_bytes": 8, "absolute_max_bytes": 512},
+        "legacy_timer_node_bytes": {"baseline_bytes": 48, "max_increase_percent": 5.0, "max_increase_bytes": 8, "absolute_max_bytes": 56},
+        "legacy_event_callback_storage_bytes": {"baseline_bytes": 32, "max_increase_percent": 5.0, "max_increase_bytes": 8, "absolute_max_bytes": 40},
+        "runtime_bookkeeping_bytes": {"baseline_bytes": 240, "max_increase_percent": 5.0, "max_increase_bytes": 8, "absolute_max_bytes": 248}
+      },
+      "runtime_static_ram": {
+        "implementation": "legacy",
+        "legacy_timer_node_bytes": 48,
+        "legacy_event_callback_storage_bytes": 32,
+        "runtime_bookkeeping_bytes": 240,
+        "canonical_32bit_hard_limit_bytes": 1024
+      }
+    },
+    "steady_state_allocation": {
+      "measured_at": "2026-07-13",
+      "command": "build/v2.3-m0-full/tests/tinyui/test_tinyui_steady_state_allocation",
+      "probe": "test_tinyui_steady_state_allocation",
+      "metrics": {
+        "alloc_calls": 0,
+        "calloc_calls": 0,
+        "realloc_calls": 0,
+        "free_calls": 0,
+        "bytes_requested": 0
       }
     }
   }

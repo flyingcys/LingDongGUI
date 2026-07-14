@@ -1,28 +1,26 @@
 /*
  * Copyright (c) 2023-2026 flyingcys (flyingcys@gmail.com). All rights reserved.
- *
  * SPDX-License-Identifier: Apache-2.0
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
  */
 
 #include "internal/window_internal.h"
 #include "layout/layout.h"
 
-/* ── flex align mappings (flex_main / flex_cross / flex_track) ───────────────
- * These mappings are flex-private and intentionally NOT merged into the core
- * tinyui_align_to_arm2d helper. Keep them here next to the flex setters. */
-static ldFlexFlow_t s_flex_flow_to_ld(enum tinyui_flex_flow flow)
+#include <limits.h>
+
+static struct tinyui_window *s_window_of(tinyui_obj_t *container)
+{
+    struct tinyui_widget *widget = (struct tinyui_widget *)container;
+
+    if (widget == 0
+        || (widget->kind != TINYUI_BACKEND_WIDGET_WINDOW
+            && widget->kind != TINYUI_BACKEND_WIDGET_BACKGROUND)) {
+        return 0;
+    }
+    return (struct tinyui_window *)widget;
+}
+
+static ldFlexFlow_t s_flex_flow_to_ld(tinyui_flex_flow_t flow)
 {
     switch (flow) {
     case TINYUI_FLEX_FLOW_COLUMN:
@@ -40,12 +38,13 @@ static ldFlexFlow_t s_flex_flow_to_ld(enum tinyui_flex_flow flow)
     case TINYUI_FLEX_FLOW_COLUMN_WRAP_REVERSE:
         return ldFlexFlowColumnWrapReverse;
     case TINYUI_FLEX_FLOW_ROW:
-    default:
         return ldFlexFlowRow;
+    default:
+        return (ldFlexFlow_t)-1;
     }
 }
 
-static ldFlexMainAlign_t s_flex_main_align_to_ld(enum tinyui_align align)
+static ldFlexMainAlign_t s_flex_main_align_to_ld(tinyui_align_t align)
 {
     switch (align) {
     case TINYUI_ALIGN_CENTER:
@@ -58,31 +57,33 @@ static ldFlexMainAlign_t s_flex_main_align_to_ld(enum tinyui_align align)
         return ldFlexMainAlignSpaceAround;
     case TINYUI_ALIGN_SPACE_BETWEEN:
         return ldFlexMainAlignSpaceBetween;
-    case TINYUI_ALIGN_STRETCH:
     case TINYUI_ALIGN_START:
-    default:
+    case TINYUI_ALIGN_STRETCH:
         return ldFlexMainAlignStart;
+    default:
+        return (ldFlexMainAlign_t)-1;
     }
 }
 
-static ldFlexCrossAlign_t s_flex_cross_align_to_ld(enum tinyui_align align)
+static ldFlexCrossAlign_t s_flex_cross_align_to_ld(tinyui_align_t align)
 {
     switch (align) {
     case TINYUI_ALIGN_CENTER:
         return ldFlexCrossAlignCenter;
     case TINYUI_ALIGN_END:
         return ldFlexCrossAlignEnd;
+    case TINYUI_ALIGN_START:
     case TINYUI_ALIGN_STRETCH:
     case TINYUI_ALIGN_SPACE_EVENLY:
     case TINYUI_ALIGN_SPACE_AROUND:
     case TINYUI_ALIGN_SPACE_BETWEEN:
-    case TINYUI_ALIGN_START:
-    default:
         return ldFlexCrossAlignStart;
+    default:
+        return (ldFlexCrossAlign_t)-1;
     }
 }
 
-static ldFlexTrackAlign_t s_flex_track_align_to_ld(enum tinyui_align align)
+static ldFlexTrackAlign_t s_flex_track_align_to_ld(tinyui_align_t align)
 {
     switch (align) {
     case TINYUI_ALIGN_CENTER:
@@ -95,84 +96,91 @@ static ldFlexTrackAlign_t s_flex_track_align_to_ld(enum tinyui_align align)
         return ldFlexTrackAlignSpaceAround;
     case TINYUI_ALIGN_SPACE_EVENLY:
         return ldFlexTrackAlignSpaceEvenly;
-    case TINYUI_ALIGN_STRETCH:
     case TINYUI_ALIGN_START:
-    default:
+    case TINYUI_ALIGN_STRETCH:
         return ldFlexTrackAlignStart;
+    default:
+        return (ldFlexTrackAlign_t)-1;
     }
 }
 
-/**
- * @brief Set flow of flex widget
- *
- * @param[in] window Window instance
- * @param[in] flow flow
- * @return -1 on failure
- */
-int tinyui_flex_set_flow(struct tinyui_window *window, enum tinyui_flex_flow flow)
+tinyui_result_t tinyui_flex_set_flow(tinyui_obj_t *container,
+                                     tinyui_flex_flow_t flow)
 {
-    ldWindow_t *ld_window = tinyui_window_ld_of(window);
+    struct tinyui_window *window = s_window_of(container);
+    ldWindow_t *ld_window;
+    ldFlexFlow_t native_flow;
 
-    if (window == 0 || ld_window == 0) {
-        return -1;
+    if (window == 0) {
+        return TINYUI_ERROR_INVALID_OBJECT;
     }
-
-    window->flex_flow = flow;
-    ldWindowSetFlexFlow(ld_window, s_flex_flow_to_ld(flow));
+    native_flow = s_flex_flow_to_ld(flow);
+    if ((int)native_flow < 0) {
+        return TINYUI_ERROR_INVALID_ARG;
+    }
+    ld_window = tinyui_window_ld_of(window);
+    if (ld_window == 0) {
+        return TINYUI_ERROR_INVALID_OBJECT;
+    }
+    window->flex_flow = (enum tinyui_flex_flow)flow;
+    ldWindowSetFlexFlow(ld_window, native_flow);
     tinyui_window_sync_padding(window);
-    return 0;
+    return TINYUI_OK;
 }
 
-/**
- * @brief Set align of flex widget
- *
- * @param[in] window Window instance
- * @param[in] main_align main align
- * @param[in] cross_align cross align
- * @param[in] track_align track align
- * @return -1 on failure
- */
-int tinyui_flex_set_align(struct tinyui_window *window,
-                          enum tinyui_align main_align,
-                          enum tinyui_align cross_align,
-                          enum tinyui_align track_align)
+tinyui_result_t tinyui_flex_set_align(tinyui_obj_t *container,
+                                      tinyui_align_t main_align,
+                                      tinyui_align_t cross_align,
+                                      tinyui_align_t track_align)
 {
-    ldWindow_t *ld_window = tinyui_window_ld_of(window);
+    struct tinyui_window *window = s_window_of(container);
+    ldWindow_t *ld_window;
+    ldFlexMainAlign_t native_main;
+    ldFlexCrossAlign_t native_cross;
+    ldFlexTrackAlign_t native_track;
 
-    if (window == 0 || ld_window == 0) {
-        return -1;
+    if (window == 0) {
+        return TINYUI_ERROR_INVALID_OBJECT;
     }
-
-    window->flex_main_align = main_align;
-    window->flex_cross_align = cross_align;
-    window->flex_track_align = track_align;
-    ldWindowSetFlexAlign(ld_window,
-                         s_flex_main_align_to_ld(main_align),
-                         s_flex_cross_align_to_ld(cross_align));
-    ldWindowSetFlexTrackAlign(ld_window, s_flex_track_align_to_ld(track_align));
+    native_main = s_flex_main_align_to_ld(main_align);
+    native_cross = s_flex_cross_align_to_ld(cross_align);
+    native_track = s_flex_track_align_to_ld(track_align);
+    if ((int)native_main < 0 || (int)native_cross < 0 || (int)native_track < 0) {
+        return TINYUI_ERROR_INVALID_ARG;
+    }
+    ld_window = tinyui_window_ld_of(window);
+    if (ld_window == 0) {
+        return TINYUI_ERROR_INVALID_OBJECT;
+    }
+    window->flex_main_align = (enum tinyui_align)main_align;
+    window->flex_cross_align = (enum tinyui_align)cross_align;
+    window->flex_track_align = (enum tinyui_align)track_align;
+    ldWindowSetFlexAlign(ld_window, native_main, native_cross);
+    ldWindowSetFlexTrackAlign(ld_window, native_track);
     tinyui_window_sync_padding(window);
-    return 0;
+    return TINYUI_OK;
 }
 
-/**
- * @brief Set gap of flex widget
- *
- * @param[in] window Window instance
- * @param[in] item_gap item gap
- * @param[in] track_gap track gap
- * @return -1 on failure
- */
-int tinyui_flex_set_gap(struct tinyui_window *window, int item_gap, int track_gap)
+tinyui_result_t tinyui_flex_set_gap(tinyui_obj_t *container,
+                                    int item_gap,
+                                    int track_gap)
 {
-    ldWindow_t *ld_window = tinyui_window_ld_of(window);
+    struct tinyui_window *window = s_window_of(container);
+    ldWindow_t *ld_window;
 
-    if (window == 0 || ld_window == 0 || item_gap < 0 || track_gap < 0) {
-        return -1;
+    if (window == 0) {
+        return TINYUI_ERROR_INVALID_OBJECT;
     }
-
+    if (item_gap < 0 || track_gap < 0 || item_gap > INT16_MAX || track_gap > INT16_MAX) {
+        return TINYUI_ERROR_OUT_OF_RANGE;
+    }
+    ld_window = tinyui_window_ld_of(window);
+    if (ld_window == 0) {
+        return TINYUI_ERROR_INVALID_OBJECT;
+    }
     window->flex_item_gap = item_gap;
     window->flex_track_gap = track_gap;
     ldWindowSetFlexGap(ld_window, (int16_t)item_gap, (int16_t)track_gap);
     tinyui_window_sync_padding(window);
-    return 0;
+    return TINYUI_OK;
 }

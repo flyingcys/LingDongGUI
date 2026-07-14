@@ -2,6 +2,8 @@ import json
 import re
 from pathlib import Path
 
+from check_tinyui_public_api import _inventory_rows_by_symbol
+
 
 ROOT = Path(__file__).resolve().parents[3]
 CONTRACT_DIR = ROOT / "tests" / "tinyui" / "contract"
@@ -252,13 +254,13 @@ def _assert_matrix_header(matrix: dict) -> None:
     _non_empty_string_set(evidence_enums, "evidence_enums")
 
 
+def _inventory_symbols_from_inventory(inventory: dict) -> set[str]:
+    return set(_inventory_rows_by_symbol(inventory))
+
+
 def _inventory_symbols() -> set[str]:
     inventory = _load_json(INVENTORY_JSON)
-    symbols: set[str] = set()
-    for widget in inventory.get("widgets", []):
-        for row in widget.get("required_native_apis", []):
-            symbols.add(row["ldgui_symbol"])
-    return symbols
+    return _inventory_symbols_from_inventory(inventory)
 
 
 def _ledger_rows() -> dict[str, dict]:

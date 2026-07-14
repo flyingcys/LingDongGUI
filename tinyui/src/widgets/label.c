@@ -89,7 +89,7 @@ static int tinyui_label_props_are_valid(const struct tinyui_label_props *props)
         && props->height >= 0
         && props->radius >= 0
         && props->padding >= 0
-        && (props->background_source == 0 || props->background_source->img_tile != 0);
+        && (props->background_source == 0 || tinyui_image_source_get_image_tile(props->background_source) != 0);
 }
 
 static void *tinyui_label_ld_init(void *ctx,
@@ -472,7 +472,7 @@ int tinyui_label_set_background_source(struct tinyui_label *label,
 {
     ldLabel_t *ld_label;
 
-    if (label == 0 || (source != 0 && source->img_tile == 0)) {
+    if (label == 0 || (source != 0 && tinyui_image_source_get_image_tile(source) == 0)) {
         return -1;
     }
 
@@ -482,7 +482,7 @@ int tinyui_label_set_background_source(struct tinyui_label *label,
     }
 
     ldLabelSetBackgroundImage(ld_label,
-                              source != NULL ? source->img_tile : NULL,
-                              source != NULL ? source->mask_tile : NULL);
+                              source != NULL ? tinyui_image_source_get_image_tile(source) : NULL,
+                              source != NULL ? tinyui_image_source_get_mask_tile(source) : NULL);
     return 0;
 }

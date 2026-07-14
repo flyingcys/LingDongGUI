@@ -2,6 +2,7 @@
 #define TINYUI_ANIMATION_H
 
 struct tinyui_window;
+struct tinyui_widget;
 struct tinyui_animation;
 struct tinyui_image_source;
 

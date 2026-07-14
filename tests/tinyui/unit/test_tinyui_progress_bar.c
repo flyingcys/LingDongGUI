@@ -210,7 +210,6 @@ static void test_progress_bar_create_with_props_failure_rolls_back_attached_chil
     assert(disposed_backend->owner == 0);
     assert(disposed_backend->ld_event_bridge_scene == 0);
     assert(disposed_backend->ld_event_bridge_sender == 0);
-    assert(disposed_backend->ld_event_bridge_next == 0);
     assert(disposed_backend->ld_widget == 0);
     if (tail_ld != 0) {
         assert(ldBaseGetNextSibling(tail_ld) == next_before_ld);
@@ -246,7 +245,6 @@ static void test_progress_bar_dispose_partial_snapshot_marks_cleanup_complete(
     assert(disposed_backend->owner == 0);
     assert(disposed_backend->ld_event_bridge_scene == 0);
     assert(disposed_backend->ld_event_bridge_sender == 0);
-    assert(disposed_backend->ld_event_bridge_next == 0);
     assert(disposed_backend->ld_widget == 0);
 }
 

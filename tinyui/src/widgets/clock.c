@@ -131,8 +131,8 @@ static int tinyui_clock_apply_background(struct tinyui_clock *clock)
     }
 
     ld_clock = (ldClock_t *)clock->widget.ld_widget;
-    img_tile = clock->background_source != NULL ? clock->background_source->img_tile : ld_clock->ptBgImgTile;
-    mask_tile = clock->background_source != NULL ? clock->background_source->mask_tile : ld_clock->ptBgMaskTile;
+    img_tile = clock->background_source != NULL ? tinyui_image_source_get_image_tile(clock->background_source) : ld_clock->ptBgImgTile;
+    mask_tile = clock->background_source != NULL ? tinyui_image_source_get_mask_tile(clock->background_source) : ld_clock->ptBgMaskTile;
     ldClockSetBackgroundImage(ld_clock, img_tile, mask_tile, (ldColor)clock->mask_color);
     return 0;
 }
@@ -173,8 +173,8 @@ static int tinyui_clock_apply_pointer(struct tinyui_clock *clock, int index)
         return -1;
     }
 
-    img_tile = source != NULL ? source->img_tile : ld_clock->pointerInfo[index].ptImgTile;
-    mask_tile = source != NULL ? source->mask_tile : ld_clock->pointerInfo[index].ptMaskTile;
+    img_tile = source != NULL ? tinyui_image_source_get_image_tile(source) : ld_clock->pointerInfo[index].ptImgTile;
+    mask_tile = source != NULL ? tinyui_image_source_get_mask_tile(source) : ld_clock->pointerInfo[index].ptMaskTile;
     if (source == NULL) {
         ld_clock->pointerInfo[index].maskColor = (ldColor)clock->mask_color;
         ld_clock->pointerInfo[index].rotationCentre = (arm_2d_point_float_t){x, y};
@@ -475,7 +475,7 @@ int tinyui_clock_get_step_second(const struct tinyui_clock *clock)
 
 int tinyui_clock_set_background_source(struct tinyui_clock *clock, struct tinyui_image_source *source)
 {
-    if (clock == 0 || source == 0 || source->img_tile == 0) {
+    if (clock == 0 || source == 0 || tinyui_image_source_get_image_tile(source) == 0) {
         return -1;
     }
 
@@ -506,7 +506,7 @@ int tinyui_clock_set_background_image(struct tinyui_clock *clock, struct tinyui_
 
 int tinyui_clock_set_hour_pointer_source(struct tinyui_clock *clock, struct tinyui_image_source *source)
 {
-    if (clock == 0 || source == 0 || source->img_tile == 0) {
+    if (clock == 0 || source == 0 || tinyui_image_source_get_image_tile(source) == 0) {
         return -1;
     }
 
@@ -537,7 +537,7 @@ int tinyui_clock_set_hour_pointer_image(struct tinyui_clock *clock, struct tinyu
 
 int tinyui_clock_set_minute_pointer_source(struct tinyui_clock *clock, struct tinyui_image_source *source)
 {
-    if (clock == 0 || source == 0 || source->img_tile == 0) {
+    if (clock == 0 || source == 0 || tinyui_image_source_get_image_tile(source) == 0) {
         return -1;
     }
 
@@ -568,7 +568,7 @@ int tinyui_clock_set_minute_pointer_image(struct tinyui_clock *clock, struct tin
 
 int tinyui_clock_set_second_pointer_source(struct tinyui_clock *clock, struct tinyui_image_source *source)
 {
-    if (clock == 0 || source == 0 || source->img_tile == 0) {
+    if (clock == 0 || source == 0 || tinyui_image_source_get_image_tile(source) == 0) {
         return -1;
     }
 

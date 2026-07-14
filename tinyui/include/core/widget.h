@@ -2,13 +2,13 @@
 #define TINYUI_WIDGET_H
 
 #include "layout/layout.h"
+#include "core/obj.h"
 #include "core/native.h"
 #include "theme/theme.h"
 
 struct tinyui_widget;
 struct tinyui_app;
 struct tinyui_font;
-typedef struct tinyui_widget tinyui_obj_t;
 
 enum tinyui_font_kind {
     TINYUI_FONT_KIND_FAMILY = 0,

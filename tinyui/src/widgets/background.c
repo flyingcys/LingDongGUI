@@ -37,7 +37,7 @@
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct tinyui_background *tinyui_background_create(struct tinyui_app *app, const char *id)
+struct tinyui_background *tinyui_legacy_background_create(struct tinyui_app *app, const char *id)
 {
     struct tinyui_background *background;
     struct tinyui_app *app_state;

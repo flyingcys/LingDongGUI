@@ -5,7 +5,10 @@ struct tinyui_app;
 struct tinyui_background;
 struct tinyui_image_source;
 
-struct tinyui_background *tinyui_background_create(struct tinyui_app *app, const char *id);
+/* Temporary v2.2 migration entry; canonical runtime exposes the no-arg
+ * tinyui_background_create() from core/runtime.h. */
+struct tinyui_background *tinyui_legacy_background_create(struct tinyui_app *app,
+                                                          const char *id);
 int tinyui_background_set_source(struct tinyui_background *background,
                                  struct tinyui_image_source *source);
 int tinyui_background_set_color(struct tinyui_background *background, unsigned int rgb);

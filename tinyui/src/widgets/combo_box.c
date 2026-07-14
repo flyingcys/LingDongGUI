@@ -471,12 +471,12 @@ int tinyui_combo_box_set_dropdown_source(struct tinyui_combo_box *combo_box,
     ldComboBox_t *ld_combo_box;
 
     if (combo_box == 0 || combo_box->widget.ld_widget == 0 ||
-        source == 0 || source->img_tile == 0) {
+        source == 0 || tinyui_image_source_get_image_tile(source) == 0) {
         return -1;
     }
 
     ld_combo_box = (ldComboBox_t *)combo_box->widget.ld_widget;
-    ldComboBoxSetDropdownImage(ld_combo_box, source->img_tile, source->mask_tile);
+    ldComboBoxSetDropdownImage(ld_combo_box, tinyui_image_source_get_image_tile(source), tinyui_image_source_get_mask_tile(source));
     combo_box->dropdown_source = source;
     return 0;
 }

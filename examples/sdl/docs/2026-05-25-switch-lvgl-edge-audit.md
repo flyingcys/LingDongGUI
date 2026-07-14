@@ -137,6 +137,21 @@ LingDongGUI 现在不仅有 `ldSwitchNavigate()`，还补了 `ldSwitchCanNavigat
 
 这轮 scope 内最关键的视觉证据已经补齐；如果还要继续增强，下一步更适合做整图 diff 或主题组合矩阵。
 
+#### capture matrix 空 arc 时序回归
+
+`check_switch_capture_matrix` 曾在 legacy demo 启动较慢时触发
+`ldArcSetRotationAngle(NULL, ...)` 断言。原因是 capture matrix 初始化会提前返回，
+只创建 switch 样本，不创建普通页面的 arc/gauge；`uiWidgetLegacyLoop()` 却仍按普通页面
+路径每 100ms 更新固定 ID 25 的 arc。
+
+修复为 capture matrix 模式跳过普通页面的动态 arc/gauge 更新，并新增源码回归断言覆盖这条
+隔离约束。验证结果：
+
+- capture 模式 demo 跨过 500ms 定时点仍存活；
+- `check_switch_capture_matrix` CTest 通过；
+- `check_use_demo_0_runtime` CTest 通过；
+- `check_use_demo_0_legacy_widget.py` 的 3 项断言通过。
+
 ## 5. 建议的下一步
 
 ### P0

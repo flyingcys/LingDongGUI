@@ -1,0 +1,238 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tinyui-v2.3-baseline-schema-v1",
+  "title": "TinyUI v2.3 M0 baseline",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "binary_size", "benchmark"],
+    "properties": {
+    "schema_version": {"const": 3},
+    "binary_size": {"$ref": "#/$defs/binary_size"},
+    "minimal": {"$ref": "#/$defs/minimal_profile"},
+    "binary": {"$ref": "#/$defs/binary_profiles"},
+    "benchmark": {"$ref": "#/$defs/benchmark"}
+  },
+  "$defs": {
+    "minimal_profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifact", "map_artifact", "measured_at", "status", "required_symbols", "forbidden_symbols"],
+      "properties": {
+        "artifact": {"type": "string", "minLength": 1},
+        "map_artifact": {"type": "string", "minLength": 1},
+        "measured_at": {"type": "string", "minLength": 1},
+        "status": {"type": "string", "minLength": 1},
+        "required_symbols": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "forbidden_symbols": {"type": "array", "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "binary_profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifact", "measured_at", "command", "format", "metric_mapping", "status", "metrics"],
+      "properties": {
+        "artifact": {"type": "string", "minLength": 1},
+        "map_artifact": {"type": "string", "minLength": 1},
+        "measured_at": {"type": "string", "minLength": 1},
+        "command": {"type": "string", "minLength": 1},
+        "format": {"type": "string", "minLength": 1},
+        "metric_mapping": {"type": "object"},
+        "status": {"type": "string", "minLength": 1},
+        "metrics": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["__text", "__data", "__bss", "total"],
+          "properties": {
+            "__text": {"$ref": "#/$defs/metric_rule"},
+            "__data": {"$ref": "#/$defs/metric_rule"},
+            "__bss": {"$ref": "#/$defs/metric_rule"},
+            "total": {"$ref": "#/$defs/metric_rule"}
+          }
+        }
+      }
+    },
+    "binary_profiles": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["full", "minimal"],
+      "properties": {
+        "full": {"$ref": "#/$defs/binary_profile"},
+        "minimal": {
+          "allOf": [
+            {"$ref": "#/$defs/binary_profile"},
+            {"type": "object", "required": ["map_artifact"]}
+          ]
+        }
+      }
+    },
+    "metric_rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["baseline_bytes", "max_increase_percent", "max_increase_bytes"],
+      "properties": {
+        "baseline_bytes": {"type": "number", "minimum": 0},
+        "max_increase_percent": {"type": "number", "minimum": 0},
+        "max_increase_bytes": {"type": "number", "minimum": 0}
+      }
+    },
+    "wrapper_rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["baseline_bytes", "max_increase_percent", "max_increase_bytes", "absolute_max_bytes"],
+      "properties": {
+        "baseline_bytes": {"type": "number", "minimum": 0},
+        "max_increase_percent": {"type": "number", "minimum": 0},
+        "max_increase_bytes": {"type": "number", "minimum": 0},
+        "absolute_max_bytes": {"type": "number", "minimum": 0}
+      }
+    },
+    "runtime_metric": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["baseline_ms", "max_allowed_ms"],
+      "properties": {
+        "baseline_ms": {"type": "number", "minimum": 0},
+        "max_allowed_ms": {"type": "number", "minimum": 0}
+      }
+    },
+    "wrapper_metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["widget_wrapper_struct_bytes", "window_wrapper_struct_bytes", "background_wrapper_struct_bytes", "canvas_wrapper_struct_bytes", "label_wrapper_struct_bytes", "button_wrapper_struct_bytes", "keyboard_wrapper_struct_bytes", "checkbox_wrapper_struct_bytes", "switch_wrapper_struct_bytes", "slider_wrapper_struct_bytes", "progress_bar_wrapper_struct_bytes", "animation_wrapper_struct_bytes", "arc_wrapper_struct_bytes", "gauge_wrapper_struct_bytes", "icon_slider_wrapper_struct_bytes", "radial_menu_wrapper_struct_bytes", "qrcode_wrapper_struct_bytes", "progress_wheel_wrapper_struct_bytes", "date_time_wrapper_struct_bytes", "calendar_wrapper_struct_bytes", "clock_wrapper_struct_bytes", "list_wrapper_struct_bytes", "message_box_wrapper_struct_bytes", "text_wrapper_struct_bytes", "line_edit_wrapper_struct_bytes", "combo_box_wrapper_struct_bytes", "scroll_selecter_wrapper_struct_bytes", "image_wrapper_struct_bytes", "graph_wrapper_struct_bytes", "table_wrapper_struct_bytes", "switch_wrapper_struct_delta_bytes", "backend_widget_struct_bytes", "legacy_timer_node_bytes", "legacy_event_callback_storage_bytes", "runtime_bookkeeping_bytes"],
+      "properties": {
+        "widget_wrapper_struct_bytes": {"$ref": "#/$defs/wrapper_rule"},
+        "window_wrapper_struct_bytes": {"$ref": "#/$defs/wrapper_rule"},
+        "background_wrapper_struct_bytes": {"$ref": "#/$defs/wrapper_rule"},
+        "canvas_wrapper_struct_bytes": {"$ref": "#/$defs/wrapper_rule"},
+        "label_wrapper_struct_bytes": {"$ref": "#/$defs/wrapper_rule"},
+        "button_wrapper_struct_bytes": {"$ref": "#/$defs/wrapper_rule"},
+        "keyboard_wrapper_struct_bytes": {"$ref": "#/$defs/wrapper_rule"},
+        "checkbox_wrapper_struct_bytes": {"$ref": "#/$defs/wrapper_rule"},
+        "switch_wrapper_struct_bytes": {"$ref": "#/$defs/wrapper_rule"},
+        "slider_wrapper_struct_bytes": {"$ref": "#/$defs/wrapper_rule"},
+        "progress_bar_wrapper_struct_bytes": {"$ref": "#/$defs/wrapper_rule"},
+        "animation_wrapper_struct_bytes": {"$ref": "#/$defs/wrapper_rule"},
+        "arc_wrapper_struct_bytes": {"$ref": "#/$defs/wrapper_rule"},
+        "gauge_wrapper_struct_bytes": {"$ref": "#/$defs/wrapper_rule"},
+        "icon_slider_wrapper_struct_bytes": {"$ref": "#/$defs/wrapper_rule"},
+        "radial_menu_wrapper_struct_bytes": {"$ref": "#/$defs/wrapper_rule"},
+        "qrcode_wrapper_struct_bytes": {"$ref": "#/$defs/wrapper_rule"},
+        "progress_wheel_wrapper_struct_bytes": {"$ref": "#/$defs/wrapper_rule"},
+        "date_time_wrapper_struct_bytes": {"$ref": "#/$defs/wrapper_rule"},
+        "calendar_wrapper_struct_bytes": {"$ref": "#/$defs/wrapper_rule"},
+        "clock_wrapper_struct_bytes": {"$ref": "#/$defs/wrapper_rule"},
+        "list_wrapper_struct_bytes": {"$ref": "#/$defs/wrapper_rule"},
+        "message_box_wrapper_struct_bytes": {"$ref": "#/$defs/wrapper_rule"},
+        "text_wrapper_struct_bytes": {"$ref": "#/$defs/wrapper_rule"},
+        "line_edit_wrapper_struct_bytes": {"$ref": "#/$defs/wrapper_rule"},
+        "combo_box_wrapper_struct_bytes": {"$ref": "#/$defs/wrapper_rule"},
+        "scroll_selecter_wrapper_struct_bytes": {"$ref": "#/$defs/wrapper_rule"},
+        "image_wrapper_struct_bytes": {"$ref": "#/$defs/wrapper_rule"},
+        "graph_wrapper_struct_bytes": {"$ref": "#/$defs/wrapper_rule"},
+        "table_wrapper_struct_bytes": {"$ref": "#/$defs/wrapper_rule"},
+        "switch_wrapper_struct_delta_bytes": {"$ref": "#/$defs/wrapper_rule"},
+        "backend_widget_struct_bytes": {"$ref": "#/$defs/wrapper_rule"},
+        "legacy_timer_node_bytes": {"$ref": "#/$defs/wrapper_rule"},
+        "legacy_event_callback_storage_bytes": {"$ref": "#/$defs/wrapper_rule"},
+        "runtime_bookkeeping_bytes": {"$ref": "#/$defs/wrapper_rule"}
+      }
+    },
+    "binary_size": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifact", "measured_at", "command", "format", "metric_mapping", "metrics"],
+      "properties": {
+        "artifact": {"type": "string", "minLength": 1},
+        "measured_at": {"type": "string", "minLength": 1},
+        "command": {"type": "string", "minLength": 1},
+        "format": {"type": "string", "minLength": 1},
+        "metric_mapping": {"type": "object"},
+        "metrics": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["__text", "__data", "__bss", "total"],
+          "properties": {
+            "__text": {"$ref": "#/$defs/metric_rule"},
+            "__data": {"$ref": "#/$defs/metric_rule"},
+            "__bss": {"$ref": "#/$defs/metric_rule"},
+            "total": {"$ref": "#/$defs/metric_rule"}
+          }
+        }
+      }
+    },
+    "runtime_perf": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifact", "measured_at", "command", "metrics"],
+      "properties": {
+        "artifact": {"type": "string", "minLength": 1},
+        "measured_at": {"type": "string", "minLength": 1},
+        "command": {"type": "string", "minLength": 1},
+        "metrics": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["screen_object_create_ms", "capture_ready_ms"],
+          "properties": {
+            "screen_object_create_ms": {"$ref": "#/$defs/runtime_metric"},
+            "capture_ready_ms": {"$ref": "#/$defs/runtime_metric"}
+          }
+        }
+      }
+    },
+    "wrapper_overhead": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["measured_at", "command", "probe", "metrics", "runtime_static_ram"],
+      "properties": {
+        "measured_at": {"type": "string", "minLength": 1},
+        "command": {"type": "string", "minLength": 1},
+        "probe": {"type": "string", "minLength": 1},
+        "metrics": {"$ref": "#/$defs/wrapper_metrics"},
+        "runtime_static_ram": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["implementation", "legacy_timer_node_bytes", "legacy_event_callback_storage_bytes", "runtime_bookkeeping_bytes", "canonical_32bit_hard_limit_bytes"],
+          "properties": {
+            "implementation": {"const": "legacy"},
+            "legacy_timer_node_bytes": {"type": "number", "minimum": 0},
+            "legacy_event_callback_storage_bytes": {"type": "number", "minimum": 0},
+            "runtime_bookkeeping_bytes": {"type": "number", "minimum": 0},
+            "canonical_32bit_hard_limit_bytes": {"const": 1024}
+          }
+        }
+      }
+    },
+    "benchmark": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runtime_perf", "wrapper_struct_overhead"],
+      "properties": {
+        "runtime_perf": {"$ref": "#/$defs/runtime_perf"},
+        "wrapper_struct_overhead": {"$ref": "#/$defs/wrapper_overhead"},
+        "steady_state_allocation": {"$ref": "#/$defs/steady_state_allocation"}
+      }
+    },
+    "steady_state_allocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["measured_at", "command", "probe", "metrics"],
+      "properties": {
+        "measured_at": {"type": "string", "minLength": 1},
+        "command": {"type": "string", "minLength": 1},
+        "probe": {"type": "string", "minLength": 1},
+        "metrics": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["alloc_calls", "calloc_calls", "realloc_calls", "free_calls", "bytes_requested"],
+          "properties": {
+            "alloc_calls": {"type": "integer", "minimum": 0},
+            "calloc_calls": {"type": "integer", "minimum": 0},
+            "realloc_calls": {"type": "integer", "minimum": 0},
+            "free_calls": {"type": "integer", "minimum": 0},
+            "bytes_requested": {"type": "integer", "minimum": 0}
+          }
+        }
+      }
+    }
+  }
+}

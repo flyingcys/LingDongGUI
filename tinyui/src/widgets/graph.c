@@ -132,8 +132,8 @@ static int graph_apply_native_geometry_candidate(struct tinyui_graph *graph,
     snapshot.is_corner = ld_graph->use_as__ldBase_t.isCorner;
 
     effective_frame_space = frame_space;
-    if (point_mask_source != 0 && point_mask_source->mask_tile != 0) {
-        point_mask_tile = (arm_2d_tile_t *)point_mask_source->mask_tile;
+    if (point_mask_source != 0 && tinyui_image_source_get_mask_tile(point_mask_source) != 0) {
+        point_mask_tile = (arm_2d_tile_t *)tinyui_image_source_get_mask_tile(point_mask_source);
         point_mask_width = point_mask_tile->tRegion.tSize.iWidth;
         if (effective_frame_space < point_mask_width) {
             effective_frame_space = point_mask_width;
@@ -384,7 +384,7 @@ int tinyui_graph_set_grid_offset(struct tinyui_graph *graph, int grid_offset)
 
 int tinyui_graph_set_point_mask_source(struct tinyui_graph *graph, struct tinyui_image_source *source)
 {
-    if (graph == 0 || source == 0 || source->mask_tile == 0) {
+    if (graph == 0 || source == 0 || tinyui_image_source_get_mask_tile(source) == 0) {
         return -1;
     }
 

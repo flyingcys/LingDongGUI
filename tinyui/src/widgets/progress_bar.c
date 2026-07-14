@@ -260,7 +260,7 @@ int tinyui_progress_bar_set_bg_source(struct tinyui_progress_bar *bar, struct ti
 {
     ldProgressBar_t *ld_progress_bar;
 
-    if (bar == 0 || source == 0 || source->img_tile == 0
+    if (bar == 0 || source == 0 || tinyui_image_source_get_image_tile(source) == 0
         || bar->widget.ld_widget == 0
         || bar->widget.kind != TINYUI_BACKEND_WIDGET_PROGRESS_BAR) {
         return -1;
@@ -268,8 +268,8 @@ int tinyui_progress_bar_set_bg_source(struct tinyui_progress_bar *bar, struct ti
 
     ld_progress_bar = (ldProgressBar_t *)bar->widget.ld_widget;
     ldProgressBarSetImage(ld_progress_bar,
-                          source->img_tile,
-                          source->mask_tile,
+                          tinyui_image_source_get_image_tile(source),
+                          tinyui_image_source_get_mask_tile(source),
                           ld_progress_bar->ptFgImgTile,
                           ld_progress_bar->ptFgMaskTile);
     bar->bg_source = source;
@@ -288,7 +288,7 @@ int tinyui_progress_bar_set_fg_source(struct tinyui_progress_bar *bar, struct ti
 {
     ldProgressBar_t *ld_progress_bar;
 
-    if (bar == 0 || source == 0 || source->img_tile == 0
+    if (bar == 0 || source == 0 || tinyui_image_source_get_image_tile(source) == 0
         || bar->widget.ld_widget == 0
         || bar->widget.kind != TINYUI_BACKEND_WIDGET_PROGRESS_BAR) {
         return -1;
@@ -298,8 +298,8 @@ int tinyui_progress_bar_set_fg_source(struct tinyui_progress_bar *bar, struct ti
     ldProgressBarSetImage(ld_progress_bar,
                           ld_progress_bar->ptBgImgTile,
                           ld_progress_bar->ptBgMaskTile,
-                          source->img_tile,
-                          source->mask_tile);
+                          tinyui_image_source_get_image_tile(source),
+                          tinyui_image_source_get_mask_tile(source));
     bar->fg_source = source;
     return 0;
 }
@@ -314,15 +314,15 @@ int tinyui_progress_bar_set_fg_source(struct tinyui_progress_bar *bar, struct ti
 
 int tinyui_progress_bar_set_frame_source(struct tinyui_progress_bar *bar, struct tinyui_image_source *source)
 {
-    if (bar == 0 || source == 0 || source->img_tile == 0
+    if (bar == 0 || source == 0 || tinyui_image_source_get_image_tile(source) == 0
         || bar->widget.ld_widget == 0
         || bar->widget.kind != TINYUI_BACKEND_WIDGET_PROGRESS_BAR) {
         return -1;
     }
 
     ldProgressBarSetFrameImage((ldProgressBar_t *)bar->widget.ld_widget,
-                               source->img_tile,
-                               source->mask_tile);
+                               tinyui_image_source_get_image_tile(source),
+                               tinyui_image_source_get_mask_tile(source));
     bar->frame_source = source;
     return 0;
 }

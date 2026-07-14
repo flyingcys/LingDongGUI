@@ -1,4 +1,5 @@
 import argparse
+from collections import Counter
 import math
 import os
 import shutil
@@ -457,34 +458,75 @@ def _assert_grid_parity_visible(path: Path) -> None:
             f"p90_luma={p90:.1f}, p99_luma={p99:.1f}, expected p90>=30 and p99>=65"
         )
 
-    content_rows: list[int] = []
+    canvas_rows: list[int] = []
     for y in range(height):
-        count = 0
-        for x in range(width):
-            if not _is_background(_pixel(width, pixels, x, y), bg):
-                count += 1
-        if count >= 40:
-            content_rows.append(y)
-    content_row_runs = [run for run in _runs(content_rows) if (run[1] - run[0] + 1) >= 12]
-    if len(content_row_runs) < 2:
+        count = sum(
+            not _is_background(_pixel(width, pixels, x, y), bg)
+            for x in range(width)
+        )
+        if count >= (width * 3) // 5:
+            canvas_rows.append(y)
+    canvas_runs = [run for run in _runs(canvas_rows) if (run[1] - run[0] + 1) >= 80]
+    if not canvas_runs:
         failures.append(
-            "grid parity row-band separation failed: "
-            f"row_runs={content_row_runs}, expected main canvas band plus lower guide/overlay band"
+            "grid parity canvas visibility failed: "
+            f"canvas_runs={canvas_runs}, expected one continuous main canvas band"
         )
 
-    overlay_rows: list[int] = []
+    surface_color: tuple[int, int, int] | None = None
+    if canvas_runs:
+        canvas_y0, canvas_y1 = canvas_runs[0]
+        surface_colors = Counter(
+            _pixel(width, pixels, x, y)
+            for y in range(canvas_y0, canvas_y1 + 1)
+            for x in range(width)
+            if not _is_background(_pixel(width, pixels, x, y), bg)
+        )
+        if surface_colors:
+            surface_color = surface_colors.most_common(1)[0][0]
+
+    panel_rows: list[int] = []
+    max_panel_runs = 0
+    if surface_color is not None:
+        canvas_y0, canvas_y1 = canvas_runs[0]
+        for y in range(canvas_y0, canvas_y1 + 1):
+            surface_columns = [
+                x for x in range(width)
+                if _pixel(width, pixels, x, y) == surface_color
+            ]
+            panel_runs = [
+                run for run in _runs(surface_columns)
+                if run[1] - run[0] + 1 >= 40
+            ]
+            max_panel_runs = max(max_panel_runs, len(panel_runs))
+            if len(panel_runs) >= 2:
+                panel_rows.append(y)
+
+    panel_row_runs = [run for run in _runs(panel_rows) if run[1] - run[0] + 1 >= 12]
+    if len(panel_row_runs) < 2 or max_panel_runs < 3:
+        failures.append(
+            "grid parity panel structure failed: "
+            f"panel_row_runs={panel_row_runs}, max_panel_runs={max_panel_runs}, "
+            "expected multiple panel rows and at least three visible columns"
+        )
+
+    dark_overlay_rows: list[int] = []
     for y in range(height):
-        count = 0
-        for x in range(max(0, width - 180), width):
-            if not _is_background(_pixel(width, pixels, x, y), bg):
-                count += 1
-        if count >= 40:
-            overlay_rows.append(y)
-    overlay_runs = [run for run in _runs(overlay_rows) if (run[1] - run[0] + 1) >= 12]
-    if not overlay_runs:
+        count = sum(
+            _luma(_pixel(width, pixels, x, y)) < 100.0
+            for x in range((width * 2) // 3, width)
+        )
+        if count >= 20:
+            dark_overlay_rows.append(y)
+    dark_overlay_runs = [
+        run for run in _runs(dark_overlay_rows)
+        if run[1] - run[0] + 1 >= 12
+    ]
+    if not dark_overlay_runs:
         failures.append(
             "grid parity overlay visibility failed: "
-            "expected a dedicated visible band near the right-side overlay region"
+            f"dark_overlay_runs={dark_overlay_runs}, "
+            "expected a dedicated dark overlay near the right side"
         )
 
     if failures:
@@ -1336,46 +1378,96 @@ def _assert_qrcode_basic_visible(path: Path) -> None:
 def _assert_message_box_basic_visible(path: Path) -> None:
     _assert_common_visible(path, "message_box_basic")
     width, height, pixels = _read_ppm(path)
-    bg = _background_color(width, height, pixels)
-    bounds = _non_background_bounds(width, height, pixels, bg)
     failures: list[str] = []
 
-    if bounds is None:
-        raise AssertionError("SMOKE FAIL: capture has no non-background pixels")
+    color_counts = Counter(
+        _pixel(width, pixels, x, y)
+        for y in range(height)
+        for x in range(width)
+    )
+    page_background = color_counts.most_common(1)[0][0] if color_counts else None
+    light_surface_colors = [
+        (count, color)
+        for color, count in color_counts.items()
+        if color != page_background
+        and _luma(color) >= 180.0
+        and _color_distance(color, page_background) > BACKGROUND_TOLERANCE
+    ] if page_background is not None else []
+    dialog_fill = max(light_surface_colors, default=(0, None))[1]
 
-    min_x, min_y, max_x, max_y = bounds
-    if max_y < height // 2:
+    dialog_rows: list[int] = []
+    dialog_spans: list[tuple[int, int]] = []
+    if dialog_fill is not None:
+        for y in range(height // 3, height):
+            runs = [
+                run
+                for run in _runs([
+                    x for x in range(width)
+                    if _pixel(width, pixels, x, y) == dialog_fill
+                ])
+                if run[1] - run[0] + 1 >= max(80, width // 4)
+            ]
+            if runs:
+                dialog_rows.append(y)
+                dialog_spans.extend(runs)
+
+    dialog_runs = [run for run in _runs(dialog_rows) if run[1] - run[0] + 1 >= 40]
+    dialog_bounds = (
+        min((run[0] for run in dialog_spans), default=0),
+        min(dialog_rows, default=0) if dialog_runs else 0,
+        max((run[1] for run in dialog_spans), default=0),
+        max(dialog_rows, default=0) if dialog_runs else 0,
+    )
+    dialog_x0, dialog_y0, dialog_x1, dialog_y1 = dialog_bounds
+    if not dialog_runs:
         failures.append(
-            "message box lower-half placement failed: "
-            f"content_bounds=({min_x},{min_y})-({max_x},{max_y}), expected visible lower-half structure"
+            "message box body visibility failed: "
+            f"dialog_runs={dialog_runs}, expected one continuous lower-half dialog body"
         )
-
-    active_rows: list[int] = []
-    x0 = min_x
-    x1 = max_x
-    y0 = min_y
-    y1 = min(max_y, height - 16)
-    for y in range(y0, y1 + 1):
-        count = 0
-        for x in range(x0, x1 + 1):
-            if not _is_background(_pixel(width, pixels, x, y), bg):
-                count += 1
-        if count >= 4:
-            active_rows.append(y)
-
-    band_runs = _runs(active_rows)
-    thin_runs = [run for run in band_runs if run[1] - run[0] + 1 >= 4]
-    thick_runs = [run for run in band_runs if run[1] - run[0] + 1 >= 12]
-    if len(thin_runs) < 3 or len(thick_runs) < 1:
-        failures.append(
-            "message box vertical-band layering failed: "
-            f"row_runs={band_runs}, expected two thin text bands plus one thicker button band"
-        )
-
-    if (max_x - min_x + 1) < 140 or (max_y - min_y + 1) < 90:
+    if dialog_x1 - dialog_x0 + 1 < 140 or dialog_y1 - dialog_y0 + 1 < 90:
         failures.append(
             "message box rectangle coverage failed: "
-            f"content_bounds=({min_x},{min_y})-({max_x},{max_y}), expected at least 140x90"
+            f"dialog_bounds={dialog_bounds}, expected at least 140x90"
+        )
+
+    dialog_colors = Counter(
+        _pixel(width, pixels, x, y)
+        for y in range(dialog_y0, dialog_y1 + 1)
+        for x in range(dialog_x0, dialog_x1 + 1)
+    ) if dialog_runs else Counter()
+    button_candidates = [
+        (count, color)
+        for color, count in dialog_colors.items()
+        if color not in {page_background, dialog_fill}
+        and _luma(color) >= 120.0
+    ]
+    button_color = max(button_candidates, default=(0, None))[1]
+    button_rows: list[int] = []
+    button_spans: list[tuple[int, int]] = []
+    if button_color is not None:
+        for y in range(dialog_y0, dialog_y1 + 1):
+            runs = [
+                run
+                for run in _runs([
+                    x for x in range(dialog_x0, dialog_x1 + 1)
+                    if _pixel(width, pixels, x, y) == button_color
+                ])
+                if run[1] - run[0] + 1 >= max(100, width // 4)
+            ]
+            if runs:
+                button_rows.append(y)
+                button_spans.extend(runs)
+
+    button_runs = [run for run in _runs(button_rows) if run[1] - run[0] + 1 >= 8]
+    button_width = max(
+        (run[1] - run[0] + 1 for run in button_spans),
+        default=0,
+    )
+    if not button_runs or button_width < 120:
+        failures.append(
+            "message box button visibility failed: "
+            f"button_runs={button_runs}, button_width={button_width}, "
+            "expected one wide bottom button band"
         )
 
     if failures:
@@ -1604,37 +1696,56 @@ def _assert_calendar_basic_visible(path: Path) -> None:
         )
 
     if len(row_runs) >= 2:
-        weekday_y0, weekday_y1 = row_runs[1]
-        date_y0 = row_runs[2][0] if len(row_runs) >= 3 else min(max_y, weekday_y1 + 8)
-        date_y1 = row_runs[-2][1] if len(row_runs) >= 4 else min(max_y, date_y0 + 96)
         span = max_x - min_x + 1
-        weekday_bins = []
-        date_bins = []
-        for index in range(7):
-            x0 = min_x + (span * index) // 7
-            x1 = min_x + (span * (index + 1)) // 7 - 1
-            weekday_count = 0
-            date_count = 0
-            for y in range(weekday_y0, weekday_y1 + 1):
-                for x in range(x0, x1 + 1):
-                    if not _is_background(_pixel(width, pixels, x, y), bg):
-                        weekday_count += 1
-            for y in range(date_y0, date_y1 + 1):
-                for x in range(x0, x1 + 1):
-                    if not _is_background(_pixel(width, pixels, x, y), bg):
-                        date_count += 1
-            weekday_bins.append((x0, x1, weekday_count))
-            date_bins.append((x0, x1, date_count))
-        if sum(1 for _, _, count in weekday_bins if count >= 8) < 7:
+        weekday_candidate: tuple[int, list[tuple[int, int, int]]] | None = None
+        for row_index, (candidate_y0, candidate_y1) in enumerate(row_runs):
+            candidate_bins = []
+            for index in range(7):
+                x0 = min_x + (span * index) // 7
+                x1 = min_x + (span * (index + 1)) // 7 - 1
+                count = sum(
+                    1
+                    for y in range(candidate_y0, candidate_y1 + 1)
+                    for x in range(x0, x1 + 1)
+                    if not _is_background(_pixel(width, pixels, x, y), bg)
+                )
+                candidate_bins.append((x0, x1, count))
+            if sum(1 for _, _, count in candidate_bins if count >= 8) == 7:
+                weekday_candidate = (row_index, candidate_bins)
+                break
+
+        if weekday_candidate is None:
             failures.append(
                 "calendar weekday-grid failed: "
-                f"weekday_bins={weekday_bins}, expected seven weekday buckets with visible text"
+                f"row_runs={row_runs}, expected one row band with seven visible weekday buckets"
             )
-        if sum(1 for _, _, count in date_bins if count >= 24) < 7:
-            failures.append(
-                "calendar date-grid failed: "
-                f"date_bins={date_bins}, expected seven date buckets with visible content"
-            )
+        else:
+            weekday_index, weekday_bins = weekday_candidate
+            date_runs = row_runs[weekday_index + 1:]
+            if len(date_runs) < 5:
+                failures.append(
+                    "calendar date-row structure failed: "
+                    f"date_runs={date_runs}, expected at least five date rows after weekday row"
+                )
+            else:
+                date_y0 = date_runs[0][0]
+                date_y1 = date_runs[-1][1]
+                date_bins = []
+                for index in range(7):
+                    x0 = min_x + (span * index) // 7
+                    x1 = min_x + (span * (index + 1)) // 7 - 1
+                    count = sum(
+                        1
+                        for y in range(date_y0, date_y1 + 1)
+                        for x in range(x0, x1 + 1)
+                        if not _is_background(_pixel(width, pixels, x, y), bg)
+                    )
+                    date_bins.append((x0, x1, count))
+                if sum(1 for _, _, count in date_bins if count >= 24) < 7:
+                    failures.append(
+                        "calendar date-grid failed: "
+                        f"date_bins={date_bins}, expected seven date buckets with visible content"
+                    )
 
     if failures:
         joined = "\n  - ".join(failures)
@@ -1642,6 +1753,33 @@ def _assert_calendar_basic_visible(path: Path) -> None:
             "VISIBLE FAIL: calendar_basic capture is non-empty, but calendar header/date grid structure is not established.\n"
             f"  - {joined}"
         )
+
+
+def _run_calendar_structure_regression() -> None:
+    width, height = 480, 320
+    background = bytes(THEME_BG)
+    pixels = bytearray(background * (width * height))
+
+    def mark(x0: int, y0: int, x1: int, y1: int) -> None:
+        for y in range(y0, y1 + 1):
+            for x in range(x0, x1 + 1):
+                offset = (y * width + x) * 3
+                pixels[offset:offset + 3] = b"\x20\x40\x60"
+
+    mark(210, 20, 250, 25)
+    mark(200, 45, 270, 50)
+    for index in range(7):
+        x0 = 20 + (420 * index) // 7
+        x1 = 20 + (420 * (index + 1)) // 7 - 1
+        mark(x0 + 10, 70, x0 + 14, 77)
+        for row in range(6):
+            y0 = 100 + row * 25
+            mark(x0 + 8, y0, x0 + 16, y0 + 6)
+
+    with tempfile.TemporaryDirectory(prefix="calendar-visible-regression-") as tmpdir:
+        capture = Path(tmpdir) / "calendar.ppm"
+        capture.write_bytes(f"P6\n{width} {height}\n255\n".encode() + pixels)
+        _assert_calendar_basic_visible(capture)
 
 
 def _find_executable(build_dir: Path) -> Path:
@@ -1720,7 +1858,15 @@ def main() -> None:
         type=Path,
         help="reuse an existing build directory instead of allocating an isolated one",
     )
+    parser.add_argument(
+        "--self-test",
+        action="store_true",
+        help="run checker regression tests without configuring a build",
+    )
     args = parser.parse_args()
+    if args.self_test:
+        _run_calendar_structure_regression()
+        return
     selected = sorted(DEMOS) if args.all else [args.demo]
 
     build_dir = args.build_dir

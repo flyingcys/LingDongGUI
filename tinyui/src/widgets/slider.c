@@ -50,9 +50,9 @@ static int tinyui_slider_props_are_valid(const struct tinyui_slider_props *props
         && props->value >= props->min_value
         && props->value <= props->max_value
         && (props->background_source == 0
-            || props->background_source->img_tile != 0)
+            || tinyui_image_source_get_image_tile(props->background_source) != 0)
         && (props->indicator_source == 0
-            || props->indicator_source->img_tile != 0)
+            || tinyui_image_source_get_image_tile(props->indicator_source) != 0)
         && (props->indicator_width == -1
             || (props->indicator_width >= 0 && props->indicator_width <= 255))
         && (props->slim_size == -1
@@ -330,7 +330,7 @@ int tinyui_slider_set_background_source(struct tinyui_slider *slider,
 {
     ldSlider_t *ld_slider;
 
-    if (slider == 0 || (source != 0 && source->img_tile == 0)) {
+    if (slider == 0 || (source != 0 && tinyui_image_source_get_image_tile(source) == 0)) {
         return -1;
     }
 
@@ -340,8 +340,8 @@ int tinyui_slider_set_background_source(struct tinyui_slider *slider,
     }
 
     ldSliderSetImage(ld_slider,
-                     source != 0 ? source->img_tile : 0,
-                     source != 0 ? source->mask_tile : 0,
+                     source != 0 ? tinyui_image_source_get_image_tile(source) : 0,
+                     source != 0 ? tinyui_image_source_get_mask_tile(source) : 0,
                      ld_slider->ptIndicImgTile,
                      ld_slider->ptIndicMaskTile);
     return 0;
@@ -361,11 +361,11 @@ int tinyui_slider_set_indicator_source(struct tinyui_slider *slider,
     ldSlider_t *ld_slider;
     arm_2d_tile_t *indicator_tile;
 
-    if (slider == 0 || (source != 0 && source->img_tile == 0)) {
+    if (slider == 0 || (source != 0 && tinyui_image_source_get_image_tile(source) == 0)) {
         return -1;
     }
     if (source != 0) {
-        indicator_tile = (arm_2d_tile_t *)source->img_tile;
+        indicator_tile = (arm_2d_tile_t *)tinyui_image_source_get_image_tile(source);
         if (indicator_tile->tRegion.tSize.iWidth < 0 ||
             indicator_tile->tRegion.tSize.iWidth > 255) {
             return -1;
@@ -380,8 +380,8 @@ int tinyui_slider_set_indicator_source(struct tinyui_slider *slider,
     ldSliderSetImage(ld_slider,
                      ld_slider->ptBgImgTile,
                      ld_slider->ptBgMaskTile,
-                     source != 0 ? source->img_tile : 0,
-                     source != 0 ? source->mask_tile : 0);
+                     source != 0 ? tinyui_image_source_get_image_tile(source) : 0,
+                     source != 0 ? tinyui_image_source_get_mask_tile(source) : 0);
     if (source != 0) {
         ldSliderSetIndicatorWidth(ld_slider, (uint8_t)indicator_tile->tRegion.tSize.iWidth);
     }

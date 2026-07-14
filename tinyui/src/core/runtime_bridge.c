@@ -386,7 +386,6 @@ int tinyui_runtime_bridge_unbind_host(struct tinyui_widget *widget)
     widget->owner = 0;
     widget->ld_event_bridge_scene = 0;
     widget->ld_event_bridge_sender = 0;
-    widget->ld_event_bridge_next = 0;
     return 0;
 }
 

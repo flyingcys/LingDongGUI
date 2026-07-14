@@ -1,7 +1,12 @@
 #ifndef TINYUI_LAYOUT_H
 #define TINYUI_LAYOUT_H
 
-enum tinyui_align {
+#include "core/obj.h"
+#include "core/result.h"
+
+#include <stdint.h>
+
+typedef enum tinyui_align {
     TINYUI_ALIGN_START,
     TINYUI_ALIGN_CENTER,
     TINYUI_ALIGN_END,
@@ -9,9 +14,9 @@ enum tinyui_align {
     TINYUI_ALIGN_SPACE_EVENLY,
     TINYUI_ALIGN_SPACE_AROUND,
     TINYUI_ALIGN_SPACE_BETWEEN,
-};
+} tinyui_align_t;
 
-enum tinyui_flex_flow {
+typedef enum tinyui_flex_flow {
     TINYUI_FLEX_FLOW_ROW,
     TINYUI_FLEX_FLOW_COLUMN,
     TINYUI_FLEX_FLOW_ROW_WRAP,
@@ -20,27 +25,49 @@ enum tinyui_flex_flow {
     TINYUI_FLEX_FLOW_COLUMN_REVERSE,
     TINYUI_FLEX_FLOW_ROW_WRAP_REVERSE,
     TINYUI_FLEX_FLOW_COLUMN_WRAP_REVERSE,
+} tinyui_flex_flow_t;
+
+#define TINYUI_GRID_MAX_TRACKS 16
+
+typedef enum tinyui_grid_unit {
+    TINYUI_GRID_UNIT_PX,
+    TINYUI_GRID_UNIT_FR,
+    TINYUI_GRID_UNIT_CONTENT,
+} tinyui_grid_unit_t;
+
+typedef struct tinyui_grid_track tinyui_grid_track_t;
+
+struct tinyui_grid_track {
+    tinyui_grid_unit_t unit;
+    uint16_t value;
 };
 
-struct tinyui_window;
+tinyui_result_t tinyui_flex_set_flow(tinyui_obj_t *container,
+                                     tinyui_flex_flow_t flow);
 
-int tinyui_flex_set_flow(struct tinyui_window *window, enum tinyui_flex_flow flow);
+tinyui_result_t tinyui_flex_set_align(tinyui_obj_t *container,
+                                      tinyui_align_t main_align,
+                                      tinyui_align_t cross_align,
+                                      tinyui_align_t track_align);
 
-int tinyui_flex_set_align(struct tinyui_window *window,
-                          enum tinyui_align main_align,
-                          enum tinyui_align cross_align,
-                          enum tinyui_align track_align);
+tinyui_result_t tinyui_flex_set_gap(tinyui_obj_t *container,
+                                    int item_gap,
+                                    int track_gap);
 
-int tinyui_flex_set_gap(struct tinyui_window *window, int item_gap, int track_gap);
+tinyui_result_t tinyui_grid_set_columns(tinyui_obj_t *container,
+                                        const tinyui_grid_track_t *tracks,
+                                        uint8_t count);
 
-int tinyui_grid_set_columns(struct tinyui_window *window, const int *tracks, int count);
+tinyui_result_t tinyui_grid_set_rows(tinyui_obj_t *container,
+                                     const tinyui_grid_track_t *tracks,
+                                     uint8_t count);
 
-int tinyui_grid_set_rows(struct tinyui_window *window, const int *tracks, int count);
+tinyui_result_t tinyui_grid_set_gap(tinyui_obj_t *container,
+                                    int row_gap,
+                                    int col_gap);
 
-int tinyui_grid_set_gap(struct tinyui_window *window, int row_gap, int col_gap);
-
-int tinyui_grid_set_align(struct tinyui_window *window,
-                          enum tinyui_align col_align,
-                          enum tinyui_align row_align);
+tinyui_result_t tinyui_grid_set_align(tinyui_obj_t *container,
+                                      tinyui_align_t col_align,
+                                      tinyui_align_t row_align);
 
 #endif

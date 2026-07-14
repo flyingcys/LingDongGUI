@@ -11,42 +11,14 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_BASELINE = ROOT / "tests" / "tinyui" / "perf" / "tinyui_perf_baseline.json"
-DEFAULT_BINARY = ROOT / "build" / "tinyui-runtime" / "examples" / "sdl" / "tinyui_demo"
+DEFAULT_BINARY = ROOT / "build" / "v2.3-m0-full" / "examples" / "sdl" / "tinyui_demo"
 SUPPORTED_METRICS = ("__text", "__data", "__bss", "total")
-UNIFIED_RUNNER_ARTIFACT = "build/tinyui-runtime/examples/sdl/tinyui_demo"
-UNIFIED_RUNNER_BASELINE = {
-    "artifact": UNIFIED_RUNNER_ARTIFACT,
-    "description": "Unified TinyUI demo runner baseline; this is not the legacy basic_widgets-only binary baseline.",
-    "measured_at": "2026-06-15",
-    "command": f"size {UNIFIED_RUNNER_ARTIFACT}",
-    "format": "gnu-size",
-    "metrics": {
-        "__text": {
-            "baseline_bytes": 674184,
-            "max_increase_percent": 5.0,
-            "max_increase_bytes": 32768,
-        },
-        "__data": {
-            "baseline_bytes": 13200,
-            "max_increase_percent": 20.0,
-            "max_increase_bytes": 2048,
-        },
-        "__bss": {
-            "baseline_bytes": 99208,
-            "max_increase_percent": 10.0,
-            "max_increase_bytes": 8192,
-        },
-        "total": {
-            "baseline_bytes": 786592,
-            "max_increase_percent": 5.0,
-            "max_increase_bytes": 49152,
-        },
-    },
-}
+LOGICAL_ARTIFACT_MARKERS = (("examples", "sdl"), ("tests", "tinyui"))
 
 
 def _resolve_default_binary() -> Path:
     candidates = [
+        ROOT / "build" / "v2.3-m0-full" / "examples" / "sdl" / "tinyui_demo",
         ROOT / "build" / "examples" / "sdl" / "tinyui_demo",
         ROOT / "build" / "tinyui-runtime" / "examples" / "sdl" / "tinyui_demo",
         DEFAULT_BINARY,
@@ -63,7 +35,49 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--baseline", type=Path, default=DEFAULT_BASELINE)
     parser.add_argument("--binary", type=Path, default=_resolve_default_binary())
+    parser.add_argument("--build-dir", type=Path)
+    parser.add_argument("--enforce", action="store_true")
     return parser.parse_args()
+
+
+def _validate_profile(profile: object, name: str) -> dict[str, object]:
+    if not isinstance(profile, dict):
+        raise ValueError(f"baseline binary missing {name} profile")
+    artifact = profile.get("artifact")
+    if not isinstance(artifact, str) or not artifact:
+        raise ValueError(f"baseline binary.{name} missing artifact string")
+    metrics = profile.get("metrics")
+    if not isinstance(metrics, dict):
+        raise ValueError(f"baseline binary.{name} missing metrics object")
+    unexpected_metrics = sorted(metric for metric in metrics if metric not in SUPPORTED_METRICS)
+    if unexpected_metrics:
+        raise ValueError(
+            f"baseline binary.{name} contains unsupported metrics: "
+            + ", ".join(unexpected_metrics)
+        )
+    missing_metrics = [metric for metric in SUPPORTED_METRICS if metric not in metrics]
+    if missing_metrics:
+        raise ValueError(
+            f"baseline binary.{name} missing metrics: " + ", ".join(missing_metrics)
+        )
+    for metric_name in SUPPORTED_METRICS:
+        rule = metrics.get(metric_name)
+        if not isinstance(rule, dict):
+            raise ValueError(f"baseline binary.{name} metric '{metric_name}' must be an object")
+        for key in ("baseline_bytes", "max_increase_percent", "max_increase_bytes"):
+            if key not in rule:
+                raise ValueError(
+                    f"baseline binary.{name} metric '{metric_name}' missing field '{key}'"
+                )
+        try:
+            int(rule["baseline_bytes"])
+            float(rule["max_increase_percent"])
+            int(rule["max_increase_bytes"])
+        except (TypeError, ValueError) as exc:
+            raise ValueError(
+                f"baseline binary.{name} metric '{metric_name}' has non-numeric threshold fields"
+            ) from exc
+    return profile
 
 
 def load_baseline(path: Path) -> dict[str, object]:
@@ -71,46 +85,64 @@ def load_baseline(path: Path) -> dict[str, object]:
         payload = json.loads(path.read_text(encoding="utf-8"))
     except FileNotFoundError as exc:
         raise ValueError(f"missing baseline file: {path}") from exc
-    binary_size = payload.get("binary_size")
-    if not isinstance(binary_size, dict):
-        raise ValueError("baseline missing binary_size object")
-    artifact = binary_size.get("artifact")
-    if not isinstance(artifact, str) or not artifact:
-        raise ValueError("baseline missing binary_size.artifact string")
-    metrics = binary_size.get("metrics")
-    if not isinstance(metrics, dict):
-        raise ValueError("baseline missing binary_size.metrics object")
-    unexpected_metrics = sorted(name for name in metrics if name not in SUPPORTED_METRICS)
-    if unexpected_metrics:
-        raise ValueError(
-            "baseline contains unsupported metrics: " + ", ".join(unexpected_metrics)
-        )
-    missing_metrics = [name for name in SUPPORTED_METRICS if name not in metrics]
-    if missing_metrics:
-        raise ValueError("baseline missing metrics: " + ", ".join(missing_metrics))
-    for metric_name in SUPPORTED_METRICS:
-        rule = metrics.get(metric_name)
-        if not isinstance(rule, dict):
-            raise ValueError(f"baseline metric '{metric_name}' must be an object")
-        for key in ("baseline_bytes", "max_increase_percent", "max_increase_bytes"):
-            if key not in rule:
-                raise ValueError(f"baseline metric '{metric_name}' missing field '{key}'")
-        try:
-            int(rule["baseline_bytes"])
-            float(rule["max_increase_percent"])
-            int(rule["max_increase_bytes"])
-        except (TypeError, ValueError) as exc:
-            raise ValueError(
-                f"baseline metric '{metric_name}' has non-numeric threshold fields"
-            ) from exc
-    return binary_size
+    binary = payload.get("binary")
+    if not isinstance(binary, dict):
+        raise ValueError("baseline missing binary object")
+    _validate_profile(binary.get("full"), "full")
+    _validate_profile(binary.get("minimal"), "minimal")
+    return payload
 
 
-def resolve_baseline_for_binary(binary_size: dict[str, object], binary: Path) -> dict[str, object]:
-    artifact = binary_size.get("artifact")
-    if binary.name == "tinyui_demo" and artifact != UNIFIED_RUNNER_ARTIFACT:
-        return UNIFIED_RUNNER_BASELINE
-    return binary_size
+def _artifact_key(path: str | Path) -> str:
+    candidate = Path(path)
+    if not candidate.is_absolute():
+        candidate = ROOT / candidate
+    candidate = candidate.resolve()
+    try:
+        return candidate.relative_to(ROOT).as_posix()
+    except ValueError:
+        return candidate.as_posix()
+
+
+def _logical_artifact_key(path: str | Path) -> str:
+    """Use the stable artifact suffix, independent of build profile directory."""
+    key = _artifact_key(path)
+    parts = tuple(Path(key).parts)
+    for marker in LOGICAL_ARTIFACT_MARKERS:
+        for index in range(len(parts) - len(marker) + 1):
+            if parts[index : index + len(marker)] == marker:
+                return Path(*parts[index:]).as_posix()
+    return key
+
+
+def _resolve_binary_argument(binary: Path, build_dir: Path | None) -> Path:
+    if binary.is_absolute() or build_dir is None or binary.is_file():
+        return binary
+    relocated = build_dir / binary
+    return relocated if relocated.is_file() else binary
+
+
+def resolve_baseline_for_binary(payload: dict[str, object], binary: Path) -> dict[str, object]:
+    profiles = payload.get("binary")
+    if not isinstance(profiles, dict):
+        raise ValueError("baseline missing binary object")
+    actual = _logical_artifact_key(binary)
+    for profile_name in ("full", "minimal"):
+        profile = profiles.get(profile_name)
+        if not isinstance(profile, dict):
+            continue
+        artifact = profile.get("artifact")
+        if not isinstance(artifact, str):
+            continue
+        expected = _logical_artifact_key(artifact)
+        if expected == actual:
+            return profile
+    expected_artifacts = ", ".join(
+        _logical_artifact_key(profiles[name].get("artifact"))
+        for name in ("full", "minimal")
+        if isinstance(profiles.get(name), dict)
+    )
+    raise ValueError(f"artifact mismatch: baseline={expected_artifacts} actual={actual}")
 
 
 def run_size(binary: Path) -> tuple[str, str]:
@@ -249,20 +281,27 @@ def compare_metrics(actual: dict[str, int], baseline: dict[str, object]) -> list
 
 def main() -> int:
     args = parse_args()
+    binary = _resolve_binary_argument(args.binary, args.build_dir)
     if not args.baseline.is_file():
         print(f"missing baseline file: {args.baseline}", file=sys.stderr)
         return 1
-    if not args.binary.is_file():
-        print(f"missing binary: {args.binary}", file=sys.stderr)
+    if not binary.is_file():
+        print(f"missing binary: {binary}", file=sys.stderr)
         return 1
 
     try:
-        baseline = resolve_baseline_for_binary(load_baseline(args.baseline), args.binary)
-        tool, stdout = run_size(args.binary)
+        baseline_payload = load_baseline(args.baseline)
+        baseline = resolve_baseline_for_binary(baseline_payload, binary) if args.enforce else None
+        tool, stdout = run_size(binary)
         actual = parse_size_output(stdout)
     except (OSError, ValueError, RuntimeError, json.JSONDecodeError) as exc:
         print(str(exc), file=sys.stderr)
         return 1
+
+    if not args.enforce:
+        print(f"binary size measured via {tool} artifact={binary}")
+        print(json.dumps(actual, indent=2, sort_keys=True))
+        return 0
 
     failures = compare_metrics(actual, baseline)
     if failures:

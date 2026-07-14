@@ -281,14 +281,14 @@ int tinyui_arc_set_color(struct tinyui_arc *arc, unsigned int bg_color, unsigned
 
 int tinyui_arc_set_quarter_source(struct tinyui_arc *arc, struct tinyui_image_source *source)
 {
-    if (arc == 0 || source == 0 || source->img_tile == 0 || source->mask_tile == 0
+    if (arc == 0 || source == 0 || tinyui_image_source_get_image_tile(source) == 0 || tinyui_image_source_get_mask_tile(source) == 0
         || arc->widget.ld_widget == 0
         || arc->widget.kind != TINYUI_BACKEND_WIDGET_ARC) {
         return -1;
     }
 
     ldArcSetQuarterImage((ldArc_t *)arc->widget.ld_widget,
-                         source->img_tile, source->mask_tile, false, false);
+                         tinyui_image_source_get_image_tile(source), tinyui_image_source_get_mask_tile(source), false, false);
     arc->quarter_source = source;
     return 0;
 }

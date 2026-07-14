@@ -1,43 +1,43 @@
 #ifndef TINYUI_RUNTIME_H
 #define TINYUI_RUNTIME_H
 
-#include "core/widget.h"
+#include "core/obj.h"
 
-/**
- * @brief Initialize TinyUI runtime
- *
- * @return 0 on success, -1 on failure
- */
-int tinyui_init(void);
+#include <stdint.h>
 
-/**
- * @brief Deinitialize TinyUI runtime
- */
+typedef struct tinyui_window_props tinyui_window_props_t;
+typedef struct tinyui_background_props tinyui_background_props_t;
+
+typedef enum tinyui_screen_transition {
+    TINYUI_SCREEN_TRANSITION_NONE = 0,
+    TINYUI_SCREEN_TRANSITION_FADE_WHITE,
+    TINYUI_SCREEN_TRANSITION_FADE_BLACK,
+    TINYUI_SCREEN_TRANSITION_SLIDE_LEFT,
+    TINYUI_SCREEN_TRANSITION_SLIDE_RIGHT,
+    TINYUI_SCREEN_TRANSITION_SLIDE_UP,
+    TINYUI_SCREEN_TRANSITION_SLIDE_DOWN,
+    TINYUI_SCREEN_TRANSITION_ERASE_LEFT,
+    TINYUI_SCREEN_TRANSITION_ERASE_RIGHT,
+    TINYUI_SCREEN_TRANSITION_ERASE_UP,
+    TINYUI_SCREEN_TRANSITION_ERASE_DOWN,
+    TINYUI_SCREEN_TRANSITION_FLY_IN_LEFT,
+    TINYUI_SCREEN_TRANSITION_FLY_IN_RIGHT,
+    TINYUI_SCREEN_TRANSITION_FLY_IN_TOP,
+    TINYUI_SCREEN_TRANSITION_FLY_IN_BOTTOM,
+} tinyui_screen_transition_t;
+
+tinyui_result_t tinyui_init(void);
 void tinyui_deinit(void);
 
-/**
- * @brief Create a new screen (window)
- *
- * @return Pointer to the screen object on success, NULL on failure
- */
 tinyui_obj_t *tinyui_screen_create(void);
+tinyui_obj_t *tinyui_screen_create_with_props(const tinyui_window_props_t *props);
+tinyui_obj_t *tinyui_background_create(void);
+tinyui_obj_t *tinyui_background_create_with_props(const tinyui_background_props_t *props);
 
-/**
- * @brief Load and activate a screen
- *
- * @param[in] screen Screen object to load
- * @return 0 on success, -1 on failure
- */
-int tinyui_screen_load(tinyui_obj_t *screen);
-
-/**
- * @brief Handle timer events (call in main loop)
- *
- * Canonical LVGL-like handler for the TinyUI event loop.
- *
- * @return <0 on error, 0 while running, >0 when finished.
- *         The caller decides whether to deinit/exit.
- */
-int tinyui_timer_handler(void);
+tinyui_result_t tinyui_screen_load(tinyui_obj_t *screen,
+                                   tinyui_screen_transition_t transition,
+                                   uint32_t duration_ms);
+tinyui_obj_t *tinyui_screen_active(void);
+tinyui_result_t tinyui_process(uint32_t *next_ms);
 
 #endif

@@ -19,6 +19,7 @@ extern int tinyui_runtime_bridge_commit_pointer_event(struct tinyui_app *app,
                                                       int y,
                                                       int pressed);
 void tinyui_button_test_fail_next_set_font(void);
+void ldGuiClickedAction(ld_scene_t *ptScene, uint8_t touchSignal, arm_2d_location_t tLocation);
 
 static const char *test_self_binary_path = 0;
 static const char *test_source_file_path = __FILE__;

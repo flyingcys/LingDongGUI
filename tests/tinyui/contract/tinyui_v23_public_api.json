@@ -1,0 +1,601 @@
+{
+  "schema_version": "tinyui-v2.3-public-api-v1",
+  "entries": [
+    {
+      "kind": "typedef",
+      "name": "tinyui_screen_transition_t",
+      "header": "core/runtime.h",
+      "signature": "typedef enum tinyui_screen_transition { TINYUI_SCREEN_TRANSITION_NONE, TINYUI_SCREEN_TRANSITION_FADE_WHITE, TINYUI_SCREEN_TRANSITION_FADE_BLACK, TINYUI_SCREEN_TRANSITION_SLIDE_LEFT, TINYUI_SCREEN_TRANSITION_SLIDE_RIGHT, TINYUI_SCREEN_TRANSITION_SLIDE_UP, TINYUI_SCREEN_TRANSITION_SLIDE_DOWN, TINYUI_SCREEN_TRANSITION_ERASE_LEFT, TINYUI_SCREEN_TRANSITION_ERASE_RIGHT, TINYUI_SCREEN_TRANSITION_ERASE_UP, TINYUI_SCREEN_TRANSITION_ERASE_DOWN, TINYUI_SCREEN_TRANSITION_FLY_IN_LEFT, TINYUI_SCREEN_TRANSITION_FLY_IN_RIGHT, TINYUI_SCREEN_TRANSITION_FLY_IN_TOP, TINYUI_SCREEN_TRANSITION_FLY_IN_BOTTOM } tinyui_screen_transition_t;",
+      "availability": "always"
+    },
+    {
+      "kind": "typedef",
+      "name": "tinyui_window_props_t",
+      "header": "core/runtime.h",
+      "signature": "typedef struct tinyui_window_props tinyui_window_props_t;",
+      "availability": "always"
+    },
+    {
+      "kind": "typedef",
+      "name": "tinyui_background_props_t",
+      "header": "core/runtime.h",
+      "signature": "typedef struct tinyui_background_props tinyui_background_props_t;",
+      "availability": "always"
+    },
+    {
+      "kind": "typedef",
+      "name": "tinyui_event_code_t",
+      "header": "core/event.h",
+      "signature": "typedef enum tinyui_event_code { TINYUI_EVENT_PRESSED, TINYUI_EVENT_RELEASED, TINYUI_EVENT_CLICKED, TINYUI_EVENT_VALUE_CHANGED, TINYUI_EVENT_FOCUSED, TINYUI_EVENT_DEFOCUSED, TINYUI_EVENT_KEY, TINYUI_EVENT_DELETE } tinyui_event_code_t;",
+      "availability": "always"
+    },
+    {
+      "kind": "typedef",
+      "name": "tinyui_event_handle_t",
+      "header": "core/event.h",
+      "signature": "typedef uint32_t tinyui_event_handle_t;",
+      "availability": "always"
+    },
+    {
+      "kind": "typedef",
+      "name": "tinyui_key_event_data_t",
+      "header": "core/event.h",
+      "signature": "typedef struct tinyui_key_event_data { uint16_t key; bool pressed; } tinyui_key_event_data_t;",
+      "availability": "always"
+    },
+    {
+      "kind": "typedef",
+      "name": "tinyui_event_t",
+      "header": "core/event.h",
+      "signature": "typedef struct tinyui_event { tinyui_event_code_t code; tinyui_obj_t *target; void *user_data; union { int32_t value; tinyui_key_event_data_t key; } data; } tinyui_event_t;",
+      "availability": "always"
+    },
+    {
+      "kind": "typedef",
+      "name": "tinyui_result_t",
+      "header": "core/result.h",
+      "signature": "typedef enum tinyui_result { TINYUI_OK = 0, TINYUI_ERROR_INVALID_ARG, TINYUI_ERROR_INVALID_OBJECT, TINYUI_ERROR_INVALID_STATE, TINYUI_ERROR_NOT_SUPPORTED, TINYUI_ERROR_OUT_OF_RANGE, TINYUI_ERROR_NO_MEMORY, TINYUI_ERROR_CAPACITY, TINYUI_ERROR_BACKEND } tinyui_result_t;",
+      "availability": "always"
+    },
+    {
+      "kind": "typedef",
+      "name": "tinyui_font_t",
+      "header": "style/style.h",
+      "signature": "typedef struct tinyui_font tinyui_font_t;",
+      "availability": "always"
+    },
+    {
+      "kind": "typedef",
+      "name": "tinyui_style_t",
+      "header": "style/style.h",
+      "signature": "typedef struct tinyui_style tinyui_style_t;",
+      "availability": "always"
+    },
+    {
+      "kind": "typedef",
+      "name": "tinyui_style_field_t",
+      "header": "style/style.h",
+      "signature": "typedef enum tinyui_style_field TINYUI_STYLE_BG_COLOR = UINT32_C(1) << 0, TINYUI_STYLE_TEXT_COLOR = UINT32_C(1) << 1, TINYUI_STYLE_BORDER_COLOR = UINT32_C(1) << 2, TINYUI_STYLE_BORDER_WIDTH = UINT32_C(1) << 3, TINYUI_STYLE_RADIUS = UINT32_C(1) << 4, TINYUI_STYLE_PADDING = UINT32_C(1) << 5, TINYUI_STYLE_OPACITY = UINT32_C(1) << 6, TINYUI_STYLE_FONT = UINT32_C(1) << 7, tinyui_style_field_t;",
+      "availability": "always"
+    },
+    {
+      "kind": "typedef",
+      "name": "tinyui_part_t",
+      "header": "style/style.h",
+      "signature": "typedef enum tinyui_part TINYUI_PART_MAIN = 0, TINYUI_PART_TEXT, TINYUI_PART_INDICATOR, TINYUI_PART_KNOB, TINYUI_PART_TRACK, tinyui_part_t;",
+      "availability": "always"
+    },
+    {
+      "kind": "typedef",
+      "name": "tinyui_state_t",
+      "header": "style/style.h",
+      "signature": "typedef enum tinyui_state TINYUI_STATE_DEFAULT = 0, TINYUI_STATE_DISABLED, TINYUI_STATE_PRESSED, TINYUI_STATE_CHECKED, TINYUI_STATE_FOCUSED, tinyui_state_t;",
+      "availability": "always"
+    },
+    {
+      "kind": "typedef",
+      "name": "tinyui_color_id_t",
+      "header": "theme/theme.h",
+      "signature": "typedef enum tinyui_color_id TINYUI_COLOR_TEXT_PRIMARY = 0, TINYUI_COLOR_BG, TINYUI_COLOR_PANEL, TINYUI_COLOR_BORDER, TINYUI_COLOR_ACCENT, TINYUI_COLOR_DISABLED, TINYUI_COLOR_COUNT, tinyui_color_id_t;",
+      "availability": "always"
+    },
+    {
+      "kind": "typedef",
+      "name": "tinyui_metric_id_t",
+      "header": "theme/theme.h",
+      "signature": "typedef enum tinyui_metric_id TINYUI_METRIC_PADDING = 0, TINYUI_METRIC_RADIUS, TINYUI_METRIC_BORDER_WIDTH, TINYUI_METRIC_CONTROL_HEIGHT, TINYUI_METRIC_COUNT, tinyui_metric_id_t;",
+      "availability": "always"
+    },
+    {
+      "kind": "typedef",
+      "name": "tinyui_theme_t",
+      "header": "theme/theme.h",
+      "signature": "typedef struct tinyui_theme tinyui_theme_t;",
+      "availability": "always"
+    },
+    {
+      "kind": "typedef",
+      "name": "tinyui_obj_t",
+      "header": "core/obj.h",
+      "signature": "typedef struct tinyui_obj tinyui_obj_t;",
+      "availability": "always"
+    },
+    {
+      "kind": "typedef",
+      "name": "tinyui_event_cb_t",
+      "header": "core/event.h",
+      "signature": "typedef void (*tinyui_event_cb_t)(const tinyui_event_t *event);",
+      "availability": "always"
+    },
+    {
+      "kind": "typedef",
+      "name": "tinyui_timer_t",
+      "header": "core/timer.h",
+      "signature": "typedef struct tinyui_timer tinyui_timer_t;",
+      "availability": "always"
+    },
+    {
+      "kind": "typedef",
+      "name": "tinyui_timer_cb_t",
+      "header": "core/timer.h",
+      "signature": "typedef void (*tinyui_timer_cb_t)(tinyui_timer_t *timer, void *user_data);",
+      "availability": "always"
+    },
+    {
+      "kind": "macro",
+      "name": "TINYUI_TIMER_CAPACITY",
+      "header": "core/timer.h",
+      "signature": "#define TINYUI_TIMER_CAPACITY 16",
+      "availability": "always"
+    },
+    {
+      "kind": "macro",
+      "name": "TINYUI_EVENT_CB_CAPACITY",
+      "header": "core/event.h",
+      "signature": "#define TINYUI_EVENT_CB_CAPACITY 16",
+      "availability": "always"
+    },
+    {
+      "kind": "macro",
+      "name": "TINYUI_EVENT_MASK",
+      "header": "core/event.h",
+      "signature": "#define TINYUI_EVENT_MASK(code) (UINT32_C(1) << (code))",
+      "availability": "always"
+    },
+    {
+      "kind": "macro",
+      "name": "TINYUI_EVENT_MASK_ALL",
+      "header": "core/event.h",
+      "signature": "#define TINYUI_EVENT_MASK_ALL UINT32_MAX",
+      "availability": "always"
+    },
+    {
+      "kind": "typedef",
+      "name": "tinyui_focus_direction_t",
+      "header": "core/focus.h",
+      "signature": "typedef enum tinyui_focus_direction { TINYUI_FOCUS_NEXT, TINYUI_FOCUS_PREVIOUS, TINYUI_FOCUS_LEFT, TINYUI_FOCUS_RIGHT, TINYUI_FOCUS_UP, TINYUI_FOCUS_DOWN } tinyui_focus_direction_t;",
+      "availability": "always"
+    },
+    {
+      "kind": "typedef",
+      "name": "tinyui_key_t",
+      "header": "integration/input.h",
+      "signature": "typedef enum tinyui_key { TINYUI_KEY_ENTER, TINYUI_KEY_BACK, TINYUI_KEY_LEFT, TINYUI_KEY_RIGHT, TINYUI_KEY_UP, TINYUI_KEY_DOWN, TINYUI_KEY_NEXT, TINYUI_KEY_PREVIOUS } tinyui_key_t;",
+      "availability": "always"
+    },
+    {
+      "kind": "macro",
+      "name": "TINYUI_GRID_MAX_TRACKS",
+      "header": "layout/layout.h",
+      "signature": "#define TINYUI_GRID_MAX_TRACKS 16",
+      "availability": "always"
+    },
+    {
+      "kind": "typedef",
+      "name": "tinyui_align_t",
+      "header": "layout/layout.h",
+      "signature": "typedef enum tinyui_align TINYUI_ALIGN_START, TINYUI_ALIGN_CENTER, TINYUI_ALIGN_END, TINYUI_ALIGN_STRETCH, TINYUI_ALIGN_SPACE_EVENLY, TINYUI_ALIGN_SPACE_AROUND, TINYUI_ALIGN_SPACE_BETWEEN, tinyui_align_t;",
+      "availability": "always"
+    },
+    {
+      "kind": "typedef",
+      "name": "tinyui_flex_flow_t",
+      "header": "layout/layout.h",
+      "signature": "typedef enum tinyui_flex_flow TINYUI_FLEX_FLOW_ROW, TINYUI_FLEX_FLOW_COLUMN, TINYUI_FLEX_FLOW_ROW_WRAP, TINYUI_FLEX_FLOW_COLUMN_WRAP, TINYUI_FLEX_FLOW_ROW_REVERSE, TINYUI_FLEX_FLOW_COLUMN_REVERSE, TINYUI_FLEX_FLOW_ROW_WRAP_REVERSE, TINYUI_FLEX_FLOW_COLUMN_WRAP_REVERSE, tinyui_flex_flow_t;",
+      "availability": "always"
+    },
+    {
+      "kind": "typedef",
+      "name": "tinyui_grid_track_t",
+      "header": "layout/layout.h",
+      "signature": "typedef struct tinyui_grid_track tinyui_grid_track_t;",
+      "availability": "always"
+    },
+    {
+      "kind": "typedef",
+      "name": "tinyui_grid_unit_t",
+      "header": "layout/layout.h",
+      "signature": "typedef enum tinyui_grid_unit TINYUI_GRID_UNIT_PX, TINYUI_GRID_UNIT_FR, TINYUI_GRID_UNIT_CONTENT, tinyui_grid_unit_t;",
+      "availability": "always"
+    },
+    {
+      "kind": "typedef",
+      "name": "tinyui_builtin_font_t",
+      "header": "resource/font.h",
+      "signature": "typedef enum tinyui_builtin_font TINYUI_FONT_6X8, TINYUI_FONT_16X24, TINYUI_FONT_ARIAL_12, TINYUI_FONT_ARIAL_16_A8, tinyui_builtin_font_t;",
+      "availability": "always"
+    },
+    {
+      "kind": "typedef",
+      "name": "tinyui_font_kind_t",
+      "header": "resource/font.h",
+      "signature": "typedef enum tinyui_font_kind TINYUI_FONT_KIND_BUILTIN, TINYUI_FONT_KIND_VRES, tinyui_font_kind_t;",
+      "availability": "always"
+    },
+    {
+      "kind": "typedef",
+      "name": "tinyui_builtin_image_t",
+      "header": "resource/image_source.h",
+      "signature": "typedef enum tinyui_builtin_image TINYUI_BUILTIN_IMAGE_LETTER_PAPER = 1, TINYUI_BUILTIN_IMAGE_KEY_RELEASE, TINYUI_BUILTIN_IMAGE_KEY_PRESS, TINYUI_BUILTIN_IMAGE_PROGRESS_BG, TINYUI_BUILTIN_IMAGE_PROGRESS_FG, TINYUI_BUILTIN_IMAGE_SLIDER_BG, TINYUI_BUILTIN_IMAGE_SLIDER_INDICATOR, TINYUI_BUILTIN_IMAGE_WEATHER, TINYUI_BUILTIN_IMAGE_NOTE, TINYUI_BUILTIN_IMAGE_BOOK, TINYUI_BUILTIN_IMAGE_CHART, TINYUI_BUILTIN_IMAGE_GAUGE_BG, TINYUI_BUILTIN_IMAGE_GAUGE_POINTER, TINYUI_BUILTIN_IMAGE_ARC_QUARTER, tinyui_builtin_image_t;",
+      "availability": "always"
+    },
+    {
+      "kind": "typedef",
+      "name": "tinyui_image_source_kind_t",
+      "header": "resource/image_source.h",
+      "signature": "typedef enum tinyui_image_source_kind TINYUI_IMAGE_SOURCE_EMPTY, TINYUI_IMAGE_SOURCE_RGB565_MEMORY, TINYUI_IMAGE_SOURCE_BUILTIN, TINYUI_IMAGE_SOURCE_VRES, tinyui_image_source_kind_t;",
+      "availability": "always"
+    },
+    {
+      "kind": "typedef",
+      "name": "tinyui_image_source_t",
+      "header": "resource/image_source.h",
+      "signature": "typedef struct tinyui_image_source tinyui_image_source_t;",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_init",
+      "header": "core/runtime.h",
+      "signature": "tinyui_result_t tinyui_init(void);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_deinit",
+      "header": "core/runtime.h",
+      "signature": "void tinyui_deinit(void);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_screen_create",
+      "header": "core/runtime.h",
+      "signature": "tinyui_obj_t *tinyui_screen_create(void);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_screen_create_with_props",
+      "header": "core/runtime.h",
+      "signature": "tinyui_obj_t *tinyui_screen_create_with_props(const tinyui_window_props_t *props);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_background_create",
+      "header": "core/runtime.h",
+      "signature": "tinyui_obj_t *tinyui_background_create(void);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_background_create_with_props",
+      "header": "core/runtime.h",
+      "signature": "tinyui_obj_t *tinyui_background_create_with_props(const tinyui_background_props_t *props);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_screen_load",
+      "header": "core/runtime.h",
+      "signature": "tinyui_result_t tinyui_screen_load(tinyui_obj_t *screen, tinyui_screen_transition_t transition, uint32_t duration_ms);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_screen_active",
+      "header": "core/runtime.h",
+      "signature": "tinyui_obj_t *tinyui_screen_active(void);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_process",
+      "header": "core/runtime.h",
+      "signature": "tinyui_result_t tinyui_process(uint32_t *next_ms);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_obj_delete",
+      "header": "core/obj.h",
+      "signature": "tinyui_result_t tinyui_obj_delete(tinyui_obj_t *obj);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_obj_get_id",
+      "header": "core/obj.h",
+      "signature": "tinyui_result_t tinyui_obj_get_id(const tinyui_obj_t *obj, uint16_t *id);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_obj_find_by_id",
+      "header": "core/obj.h",
+      "signature": "tinyui_obj_t *tinyui_obj_find_by_id(tinyui_obj_t *root, uint16_t id);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_obj_get_parent",
+      "header": "core/obj.h",
+      "signature": "tinyui_obj_t *tinyui_obj_get_parent(const tinyui_obj_t *obj);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_obj_get_first_child",
+      "header": "core/obj.h",
+      "signature": "tinyui_obj_t *tinyui_obj_get_first_child(const tinyui_obj_t *obj);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_obj_get_next_sibling",
+      "header": "core/obj.h",
+      "signature": "tinyui_obj_t *tinyui_obj_get_next_sibling(const tinyui_obj_t *obj);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_obj_get_root",
+      "header": "core/obj.h",
+      "signature": "tinyui_obj_t *tinyui_obj_get_root(const tinyui_obj_t *obj);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_obj_get_child_count",
+      "header": "core/obj.h",
+      "signature": "tinyui_result_t tinyui_obj_get_child_count(const tinyui_obj_t *obj, uint16_t *count);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_obj_add_event_cb",
+      "header": "core/event.h",
+      "signature": "tinyui_result_t tinyui_obj_add_event_cb(tinyui_obj_t *obj, uint32_t event_mask, tinyui_event_cb_t cb, void *user_data, tinyui_event_handle_t *handle);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_obj_remove_event_cb",
+      "header": "core/event.h",
+      "signature": "tinyui_result_t tinyui_obj_remove_event_cb(tinyui_obj_t *obj, tinyui_event_handle_t handle);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_timer_create",
+      "header": "core/timer.h",
+      "signature": "tinyui_timer_t *tinyui_timer_create(uint32_t interval_ms, bool repeat, tinyui_timer_cb_t cb, void *user_data);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_timer_start",
+      "header": "core/timer.h",
+      "signature": "tinyui_result_t tinyui_timer_start(tinyui_timer_t *timer);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_timer_stop",
+      "header": "core/timer.h",
+      "signature": "tinyui_result_t tinyui_timer_stop(tinyui_timer_t *timer);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_timer_set_interval",
+      "header": "core/timer.h",
+      "signature": "tinyui_result_t tinyui_timer_set_interval(tinyui_timer_t *timer, uint32_t interval_ms);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_timer_delete",
+      "header": "core/timer.h",
+      "signature": "void tinyui_timer_delete(tinyui_timer_t *timer);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_last_result",
+      "header": "core/result.h",
+      "signature": "tinyui_result_t tinyui_last_result(void);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_last_error_message",
+      "header": "core/result.h",
+      "signature": "const char *tinyui_last_error_message(void);",
+      "availability": "TINYUI_ENABLE_DIAGNOSTICS"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_focus_set",
+      "header": "core/focus.h",
+      "signature": "tinyui_result_t tinyui_focus_set(tinyui_obj_t *obj);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_focus_clear",
+      "header": "core/focus.h",
+      "signature": "tinyui_result_t tinyui_focus_clear(void);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_focus_move",
+      "header": "core/focus.h",
+      "signature": "tinyui_result_t tinyui_focus_move(tinyui_focus_direction_t direction);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_focus_current",
+      "header": "core/focus.h",
+      "signature": "tinyui_obj_t *tinyui_focus_current(void);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_input_send_key",
+      "header": "integration/input.h",
+      "signature": "tinyui_result_t tinyui_input_send_key(tinyui_key_t key, bool pressed);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_theme_set",
+      "header": "theme/theme.h",
+      "signature": "tinyui_result_t tinyui_theme_set(const tinyui_theme_t *theme);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_theme_get",
+      "header": "theme/theme.h",
+      "signature": "const tinyui_theme_t *tinyui_theme_get(void);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_theme_apply",
+      "header": "theme/theme.h",
+      "signature": "tinyui_result_t tinyui_theme_apply(tinyui_obj_t *obj);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_obj_apply_style",
+      "header": "style/style.h",
+      "signature": "tinyui_result_t tinyui_obj_apply_style(tinyui_obj_t *obj, tinyui_part_t part, tinyui_state_t state, const tinyui_style_t *style);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_flex_set_align",
+      "header": "layout/layout.h",
+      "signature": "tinyui_result_t tinyui_flex_set_align(tinyui_obj_t *container, tinyui_align_t main_align, tinyui_align_t cross_align, tinyui_align_t track_align);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_flex_set_flow",
+      "header": "layout/layout.h",
+      "signature": "tinyui_result_t tinyui_flex_set_flow(tinyui_obj_t *container, tinyui_flex_flow_t flow);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_flex_set_gap",
+      "header": "layout/layout.h",
+      "signature": "tinyui_result_t tinyui_flex_set_gap(tinyui_obj_t *container, int item_gap, int track_gap);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_grid_set_align",
+      "header": "layout/layout.h",
+      "signature": "tinyui_result_t tinyui_grid_set_align(tinyui_obj_t *container, tinyui_align_t col_align, tinyui_align_t row_align);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_grid_set_columns",
+      "header": "layout/layout.h",
+      "signature": "tinyui_result_t tinyui_grid_set_columns(tinyui_obj_t *container, const tinyui_grid_track_t *tracks, uint8_t count);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_grid_set_gap",
+      "header": "layout/layout.h",
+      "signature": "tinyui_result_t tinyui_grid_set_gap(tinyui_obj_t *container, int row_gap, int col_gap);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_grid_set_rows",
+      "header": "layout/layout.h",
+      "signature": "tinyui_result_t tinyui_grid_set_rows(tinyui_obj_t *container, const tinyui_grid_track_t *tracks, uint8_t count);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_font_from_builtin",
+      "header": "resource/font.h",
+      "signature": "tinyui_result_t tinyui_font_from_builtin(tinyui_builtin_font_t builtin, tinyui_font_t *out);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_font_from_vres",
+      "header": "resource/font.h",
+      "signature": "tinyui_result_t tinyui_font_from_vres(uint32_t address, tinyui_font_t *out);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_image_source_deinit",
+      "header": "resource/image_source.h",
+      "signature": "void tinyui_image_source_deinit(tinyui_image_source_t *source);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_image_source_from_builtin",
+      "header": "resource/image_source.h",
+      "signature": "tinyui_result_t tinyui_image_source_from_builtin(tinyui_builtin_image_t image, tinyui_image_source_t *out);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_image_source_from_rgb565",
+      "header": "resource/image_source.h",
+      "signature": "tinyui_result_t tinyui_image_source_from_rgb565(const uint16_t *pixels, uint16_t width, uint16_t height, uint32_t stride, const uint8_t *mask, uint32_t mask_stride, tinyui_image_source_t *out);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_image_source_from_vres",
+      "header": "resource/image_source.h",
+      "signature": "tinyui_result_t tinyui_image_source_from_vres(uint32_t address, tinyui_image_source_t *out);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_font_deinit",
+      "header": "resource/font.h",
+      "signature": "void tinyui_font_deinit(tinyui_font_t *font);",
+      "availability": "always"
+    }
+  ],
+  "manifest_sha256": "f7b8a9b800c81685852723f262583684a668f13a81ea93f054d1ae689f5e3c8d"
+}

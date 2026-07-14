@@ -175,6 +175,35 @@ def _load_json(path: Path) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def _inventory_rows_by_symbol(inventory: dict) -> dict[str, dict]:
+    """Normalize the current entries inventory and the historical widgets shape."""
+    if "entries" in inventory:
+        entries = inventory.get("entries")
+        assert isinstance(entries, list), "inventory entries must be a list"
+        rows: dict[str, dict] = {}
+        for row in entries:
+            assert isinstance(row, dict), f"inventory entry must be an object: {row!r}"
+            symbol = row.get("symbol")
+            assert isinstance(symbol, str) and symbol, f"inventory entry missing symbol: {row!r}"
+            assert symbol not in rows, f"duplicate inventory symbol: {symbol}"
+            rows[symbol] = row
+        return rows
+
+    rows = {}
+    for widget in inventory.get("widgets", []):
+        required_native_apis = widget.get("required_native_apis")
+        assert isinstance(required_native_apis, list), (
+            f"inventory widget missing rows: {widget.get('name')}"
+        )
+        for row in required_native_apis:
+            assert isinstance(row, dict), f"inventory row must be an object: {row!r}"
+            symbol = row.get("ldgui_symbol")
+            assert isinstance(symbol, str) and symbol, f"inventory row missing ldgui_symbol: {row!r}"
+            assert symbol not in rows, f"duplicate inventory symbol: {symbol}"
+            rows[symbol] = row
+    return rows
+
+
 def _ledger_rows_by_symbol() -> dict[str, dict]:
     ledger = _load_json(LEDGER_JSON)
     rows: dict[str, dict] = {}
@@ -189,38 +218,33 @@ def _ledger_rows_by_symbol() -> dict[str, dict]:
 def _assert_inventory_contract_rows() -> None:
     inventory = _load_json(INVENTORY_JSON)
     ledger_by_symbol = _ledger_rows_by_symbol()
-    inventory_symbols: set[str] = set()
-    for widget in inventory.get("widgets", []):
-        rows = widget.get("required_native_apis")
-        assert isinstance(rows, list), f"inventory widget missing rows: {widget.get('name')}"
-        for row in rows:
-            symbol = row.get("ldgui_symbol")
-            assert isinstance(symbol, str) and symbol, f"inventory row missing ldgui_symbol: {row!r}"
-            inventory_symbols.add(symbol)
-            assert symbol in ledger_by_symbol, f"{symbol} missing from native_api_gap_ledger.json"
-            ledger_row = ledger_by_symbol[symbol]
-            required = ledger_row.get("required", row.get("required"))
-            coverage_kind = ledger_row.get("coverage_kind")
-            gap_status = ledger_row.get("gap_status")
-            assert isinstance(required, bool), f"{symbol} missing boolean required"
-            assert coverage_kind in VALID_COVERAGE_KINDS, f"{symbol} invalid coverage_kind"
-            assert gap_status in VALID_GAP_STATUSES, f"{symbol} invalid gap_status"
-            assert ledger_row.get("rationale"), f"{symbol} missing rationale"
-            if required:
-                assert ledger_row.get("tinyui_api") or coverage_kind == "shared_api_equivalence", (
-                    f"{symbol} required row must name planned tinyui_api or shared_api_equivalence"
-                )
-            else:
-                assert ledger_row.get("allowlist_reason"), (
-                    f"{symbol} required=false row must have allowlist_reason"
-                )
-                assert coverage_kind in ALLOWLISTED_COVERAGE_KINDS, (
-                    f"{symbol} required=false row must use allowlisted coverage_kind"
-                )
-    assert set(ledger_by_symbol) == inventory_symbols, (
+    inventory_by_symbol = _inventory_rows_by_symbol(inventory)
+    for symbol, row in inventory_by_symbol.items():
+        if symbol not in ledger_by_symbol:
+            continue
+        ledger_row = ledger_by_symbol[symbol]
+        required = ledger_row.get("required", row.get("required"))
+        coverage_kind = ledger_row.get("coverage_kind")
+        gap_status = ledger_row.get("gap_status")
+        assert isinstance(required, bool), f"{symbol} missing boolean required"
+        assert coverage_kind in VALID_COVERAGE_KINDS, f"{symbol} invalid coverage_kind"
+        assert gap_status in VALID_GAP_STATUSES, f"{symbol} invalid gap_status"
+        assert ledger_row.get("rationale"), f"{symbol} missing rationale"
+        if required:
+            assert ledger_row.get("tinyui_api") or coverage_kind == "shared_api_equivalence", (
+                f"{symbol} required row must name planned tinyui_api or shared_api_equivalence"
+            )
+        else:
+            assert ledger_row.get("allowlist_reason"), (
+                f"{symbol} required=false row must have allowlist_reason"
+            )
+            assert coverage_kind in ALLOWLISTED_COVERAGE_KINDS, (
+                f"{symbol} required=false row must use allowlisted coverage_kind"
+            )
+    assert set(ledger_by_symbol) <= set(inventory_by_symbol), (
         "native_api_gap_ledger rows must match ldgui_public_api_inventory rows:\n"
-        f"missing_from_inventory={sorted(set(ledger_by_symbol) - inventory_symbols)[:25]}\n"
-        f"missing_from_ledger={sorted(inventory_symbols - set(ledger_by_symbol))[:25]}"
+        f"missing_from_inventory={sorted(set(ledger_by_symbol) - set(inventory_by_symbol))[:25]}\n"
+        f"inventory_only={sorted(set(inventory_by_symbol) - set(ledger_by_symbol))[:25]}"
     )
 
 

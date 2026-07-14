@@ -93,6 +93,9 @@ function(ld_apply_common_target_config target)
             -fdata-sections
             -fno-ms-extensions
             -Wno-macro-redefined
+            "-ffile-prefix-map=${CMAKE_BINARY_DIR}=<tinyui-build>"
+            "-fdebug-prefix-map=${CMAKE_BINARY_DIR}=<tinyui-build>"
+            "-fmacro-prefix-map=${CMAKE_BINARY_DIR}=<tinyui-build>"
             "-D__ARM_2D_USER_APP_CFG_H__=\"ldConfig.h\""
             "-DARM_SECTION(x)="
     )

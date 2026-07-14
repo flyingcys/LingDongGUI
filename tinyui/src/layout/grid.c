@@ -1,179 +1,189 @@
 /*
  * Copyright (c) 2023-2026 flyingcys (flyingcys@gmail.com). All rights reserved.
- *
  * SPDX-License-Identifier: Apache-2.0
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
  */
 
 #include "internal/window_internal.h"
 #include "layout/layout.h"
-#include <string.h>
 
-/* ── grid track / align mappings ────────────────────────────────────────────
- * grid-private mappings, kept next to the grid setters. */
-static ldGridAlign_t s_grid_align_to_ld(enum tinyui_align align)
+#include <limits.h>
+
+static struct tinyui_window *s_window_of(tinyui_obj_t *container)
 {
-    return (ldGridAlign_t)tinyui_native_align_to_ld_grid((enum tinyui_native_align)align);
+    struct tinyui_widget *widget = (struct tinyui_widget *)container;
+
+    if (widget == 0
+        || (widget->kind != TINYUI_BACKEND_WIDGET_WINDOW
+            && widget->kind != TINYUI_BACKEND_WIDGET_BACKGROUND)) {
+        return 0;
+    }
+    return (struct tinyui_window *)widget;
 }
 
-static int16_t s_grid_track_to_ld(int value)
+static int s_track_to_ld(const tinyui_grid_track_t *track, int16_t *out)
 {
-    if (value == 0) {
-        return LD_GRID_TEMPLATE_LAST;
-    }
-    if (value == -2) {
-        return LD_GRID_CONTENT;
-    }
-    if (value < 0) {
-        return LD_GRID_FR((-value) - 1);
-    }
-    return (int16_t)value;
-}
-
-static int s_copy_grid_tracks(int *dst, int16_t *backend_dst, const int *src, int count)
-{
-    int i;
-
-    if (dst == 0 || backend_dst == 0 || src == 0 || count <= 0 || count > TINYUI_LAYOUT_MAX_TRACKS) {
+    if (track == 0 || out == 0) {
         return -1;
     }
+    switch (track->unit) {
+    case TINYUI_GRID_UNIT_PX:
+        if (track->value < 1 || track->value > INT16_MAX) {
+            return -1;
+        }
+        *out = (int16_t)track->value;
+        return 0;
+    case TINYUI_GRID_UNIT_FR:
+        if (track->value < 1 || track->value > UINT8_MAX) {
+            return -1;
+        }
+        *out = LD_GRID_FR(track->value);
+        return 0;
+    case TINYUI_GRID_UNIT_CONTENT:
+        if (track->value != 0) {
+            return -1;
+        }
+        *out = LD_GRID_CONTENT;
+        return 0;
+    default:
+        return -1;
+    }
+}
 
+static tinyui_result_t s_copy_tracks(int *raw,
+                                     int16_t *backend,
+                                     const tinyui_grid_track_t *tracks,
+                                     uint8_t count)
+{
+    uint8_t i;
+
+    if (count > TINYUI_GRID_MAX_TRACKS) {
+        return TINYUI_ERROR_OUT_OF_RANGE;
+    }
+    if (count != 0 && tracks == 0) {
+        return TINYUI_ERROR_INVALID_ARG;
+    }
     for (i = 0; i < count; ++i) {
-        dst[i] = src[i];
-        backend_dst[i] = s_grid_track_to_ld(src[i]);
+        if (s_track_to_ld(&tracks[i], &backend[i]) != 0) {
+            return TINYUI_ERROR_OUT_OF_RANGE;
+        }
+        raw[i] = backend[i];
     }
-    for (; i < TINYUI_LAYOUT_MAX_TRACKS; ++i) {
-        dst[i] = 0;
-        backend_dst[i] = LD_GRID_TEMPLATE_LAST;
+    for (; i < TINYUI_GRID_MAX_TRACKS; ++i) {
+        raw[i] = 0;
+        backend[i] = LD_GRID_TEMPLATE_LAST;
     }
-    return 0;
+    return TINYUI_OK;
 }
 
-/**
- * @brief Set columns of grid widget
- *
- * @param[in] window Window instance
- * @param[in] tracks tracks
- * @param[in] count Count
- * @return -1 on failure
- */
-int tinyui_grid_set_columns(struct tinyui_window *window, const int *tracks, int count)
+static void s_apply_grid(struct tinyui_window *window, ldWindow_t *ld_window)
 {
-    ldWindow_t *ld_window = tinyui_window_ld_of(window);
-    int window_tracks[TINYUI_LAYOUT_MAX_TRACKS];
-    int i;
+    ldWindowSetGridDscArray(ld_window,
+                            window->grid_col_count > 0 ? window->backend_grid_cols : 0,
+                            window->grid_row_count > 0 ? window->backend_grid_rows : 0);
+    tinyui_window_sync_padding(window);
+}
 
-    if (window == 0 || ld_window == 0
-        || s_copy_grid_tracks(window_tracks, window->backend_grid_cols, tracks, count) != 0) {
-        return -1;
+tinyui_result_t tinyui_grid_set_columns(tinyui_obj_t *container,
+                                        const tinyui_grid_track_t *tracks,
+                                        uint8_t count)
+{
+    struct tinyui_window *window = s_window_of(container);
+    ldWindow_t *ld_window;
+    tinyui_result_t result;
+
+    if (window == 0) {
+        return TINYUI_ERROR_INVALID_OBJECT;
     }
-
-    memcpy(window->grid_cols, window_tracks, sizeof(window->grid_cols));
+    result = s_copy_tracks(window->grid_cols,
+                           window->backend_grid_cols,
+                           tracks,
+                           count);
+    if (result != TINYUI_OK) {
+        return result;
+    }
+    ld_window = tinyui_window_ld_of(window);
+    if (ld_window == 0) {
+        return TINYUI_ERROR_INVALID_OBJECT;
+    }
     window->grid_col_count = count;
-
-    {
-        for (i = 0; i < TINYUI_LAYOUT_MAX_TRACKS; ++i) {
-            window->backend_grid_rows[i] = s_grid_track_to_ld(window->grid_rows[i]);
-        }
-        ldWindowSetGridDscArray(ld_window,
-                                window->backend_grid_cols,
-                                window->grid_row_count > 0 ? window->backend_grid_rows : NULL);
-    }
-    tinyui_window_sync_padding(window);
-    return 0;
+    s_apply_grid(window, ld_window);
+    return TINYUI_OK;
 }
 
-/**
- * @brief Set rows of grid widget
- *
- * @param[in] window Window instance
- * @param[in] tracks tracks
- * @param[in] count Count
- * @return -1 on failure
- */
-int tinyui_grid_set_rows(struct tinyui_window *window, const int *tracks, int count)
+tinyui_result_t tinyui_grid_set_rows(tinyui_obj_t *container,
+                                     const tinyui_grid_track_t *tracks,
+                                     uint8_t count)
 {
-    ldWindow_t *ld_window = tinyui_window_ld_of(window);
-    int window_tracks[TINYUI_LAYOUT_MAX_TRACKS];
-    int i;
+    struct tinyui_window *window = s_window_of(container);
+    ldWindow_t *ld_window;
+    tinyui_result_t result;
 
-    if (window == 0 || ld_window == 0
-        || s_copy_grid_tracks(window_tracks, window->backend_grid_rows, tracks, count) != 0) {
-        return -1;
+    if (window == 0) {
+        return TINYUI_ERROR_INVALID_OBJECT;
     }
-
-    memcpy(window->grid_rows, window_tracks, sizeof(window->grid_rows));
+    result = s_copy_tracks(window->grid_rows,
+                           window->backend_grid_rows,
+                           tracks,
+                           count);
+    if (result != TINYUI_OK) {
+        return result;
+    }
+    ld_window = tinyui_window_ld_of(window);
+    if (ld_window == 0) {
+        return TINYUI_ERROR_INVALID_OBJECT;
+    }
     window->grid_row_count = count;
-
-    {
-        for (i = 0; i < TINYUI_LAYOUT_MAX_TRACKS; ++i) {
-            window->backend_grid_cols[i] = s_grid_track_to_ld(window->grid_cols[i]);
-        }
-        ldWindowSetGridDscArray(ld_window,
-                                window->grid_col_count > 0 ? window->backend_grid_cols : NULL,
-                                window->backend_grid_rows);
-    }
-    tinyui_window_sync_padding(window);
-    return 0;
+    s_apply_grid(window, ld_window);
+    return TINYUI_OK;
 }
 
-/**
- * @brief Set gap of grid widget
- *
- * @param[in] window Window instance
- * @param[in] row_gap row gap
- * @param[in] col_gap col gap
- * @return -1 on failure
- */
-int tinyui_grid_set_gap(struct tinyui_window *window, int row_gap, int col_gap)
+tinyui_result_t tinyui_grid_set_gap(tinyui_obj_t *container,
+                                    int row_gap,
+                                    int col_gap)
 {
-    ldWindow_t *ld_window = tinyui_window_ld_of(window);
+    struct tinyui_window *window = s_window_of(container);
+    ldWindow_t *ld_window;
 
-    if (window == 0 || ld_window == 0 || row_gap < 0 || col_gap < 0) {
-        return -1;
+    if (window == 0) {
+        return TINYUI_ERROR_INVALID_OBJECT;
     }
-
+    if (row_gap < 0 || col_gap < 0 || row_gap > INT16_MAX || col_gap > INT16_MAX) {
+        return TINYUI_ERROR_OUT_OF_RANGE;
+    }
+    ld_window = tinyui_window_ld_of(window);
+    if (ld_window == 0) {
+        return TINYUI_ERROR_INVALID_OBJECT;
+    }
     window->grid_row_gap = row_gap;
     window->grid_col_gap = col_gap;
     ldWindowSetGridGap(ld_window, (int16_t)row_gap, (int16_t)col_gap);
     tinyui_window_sync_padding(window);
-    return 0;
+    return TINYUI_OK;
 }
 
-/**
- * @brief Set align of grid widget
- *
- * @param[in] window Window instance
- * @param[in] col_align col align
- * @param[in] row_align row align
- * @return -1 on failure
- */
-int tinyui_grid_set_align(struct tinyui_window *window,
-                          enum tinyui_align col_align,
-                          enum tinyui_align row_align)
+tinyui_result_t tinyui_grid_set_align(tinyui_obj_t *container,
+                                      tinyui_align_t col_align,
+                                      tinyui_align_t row_align)
 {
-    ldWindow_t *ld_window = tinyui_window_ld_of(window);
+    struct tinyui_window *window = s_window_of(container);
+    ldWindow_t *ld_window;
 
-    if (window == 0 || ld_window == 0) {
-        return -1;
+    if (window == 0) {
+        return TINYUI_ERROR_INVALID_OBJECT;
     }
-
-    window->grid_col_align = col_align;
-    window->grid_row_align = row_align;
+    if ((int)col_align < TINYUI_ALIGN_START || (int)col_align > TINYUI_ALIGN_SPACE_BETWEEN
+        || (int)row_align < TINYUI_ALIGN_START || (int)row_align > TINYUI_ALIGN_SPACE_BETWEEN) {
+        return TINYUI_ERROR_INVALID_ARG;
+    }
+    ld_window = tinyui_window_ld_of(window);
+    if (ld_window == 0) {
+        return TINYUI_ERROR_INVALID_OBJECT;
+    }
+    window->grid_col_align = (enum tinyui_align)col_align;
+    window->grid_row_align = (enum tinyui_align)row_align;
     ldWindowSetGridAlign(ld_window,
-                         s_grid_align_to_ld(col_align),
-                         s_grid_align_to_ld(row_align));
+                         (ldGridAlign_t)tinyui_native_align_to_ld_grid((enum tinyui_native_align)col_align),
+                         (ldGridAlign_t)tinyui_native_align_to_ld_grid((enum tinyui_native_align)row_align));
     tinyui_window_sync_padding(window);
-    return 0;
+    return TINYUI_OK;
 }

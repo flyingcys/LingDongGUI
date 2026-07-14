@@ -90,7 +90,7 @@ static void tinyui_image_fill_snapshot(struct tinyui_widget *backend,
     g_tinyui_image_snapshot.event_bridge_cleared = (backend != 0
         && backend->ld_event_bridge_scene == 0
         && backend->ld_event_bridge_sender == 0
-        && backend->ld_event_bridge_next == 0);
+        );
     g_tinyui_image_snapshot.ld_pinfo_cleared = (ld_base == 0 || ld_base->pInfo == 0);
     g_tinyui_image_snapshot_valid = 1;
 }

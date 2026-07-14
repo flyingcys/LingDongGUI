@@ -156,6 +156,17 @@ void ldProgressWheel_show(ld_scene_t *ptScene, ldProgressWheel_t *ptWidget, cons
         return;
     }
 
+    /* The first active PFB chunk can arrive after the frame-start chunk. */
+    bool bPrepareTransform = bIsNewFrame;
+    if (!bPrepareTransform) {
+        for (uint_fast8_t index = 0; index < 7; ++index) {
+            if (ptWidget->tWheel.tOP[index].Origin.ptTile == NULL) {
+                bPrepareTransform = true;
+                break;
+            }
+        }
+    }
+
 #if 0
     if (bIsNewFrame) {
         
@@ -178,7 +189,7 @@ void ldProgressWheel_show(ld_scene_t *ptScene, ldProgressWheel_t *ptWidget, cons
                                 &tTarget_canvas,
                                 ptWidget->iProgress,
                                 ptWidget->use_as__ldBase_t.opacity,
-                                bIsNewFrame);
+                                bPrepareTransform);
             arm_2d_op_wait_async(NULL);
         }
     }

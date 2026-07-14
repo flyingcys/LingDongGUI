@@ -31,7 +31,7 @@ static int image_props_valid(const struct tinyui_image_props *props)
 {
     return props != 0
         && props->id != 0
-        && (props->source == 0 || props->source->img_tile != 0)
+        && (props->source == 0 || tinyui_image_source_get_image_tile(props->source) != 0)
         && props->width >= 0
         && props->height >= 0
         && props->radius >= 0
@@ -134,7 +134,7 @@ struct tinyui_image *tinyui_image_create_with_props(struct tinyui_window *parent
 
 int tinyui_image_set_source(struct tinyui_image *image, struct tinyui_image_source *source)
 {
-    if (image == 0 || (source != 0 && source->img_tile == 0)) {
+    if (image == 0 || (source != 0 && tinyui_image_source_get_image_tile(source) == 0)) {
         return -1;
     }
 
@@ -143,8 +143,8 @@ int tinyui_image_set_source(struct tinyui_image *image, struct tinyui_image_sour
     }
 
     ldImageSetImage((ldImage_t *)image->widget.ld_widget,
-                    source != 0 ? source->img_tile : 0,
-                    source != 0 ? source->mask_tile : 0);
+                    source != 0 ? tinyui_image_source_get_image_tile(source) : 0,
+                    source != 0 ? tinyui_image_source_get_mask_tile(source) : 0);
     image->source = source;
     return 0;
 }

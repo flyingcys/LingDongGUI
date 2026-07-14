@@ -454,12 +454,12 @@ int tinyui_scroll_selecter_set_bg_source(struct tinyui_scroll_selecter *scroll_s
     ldScrollSelecter_t *ld_scroll_selecter;
 
     if (scroll_selecter == 0 || scroll_selecter->widget.ld_widget == 0 ||
-        source == 0 || source->img_tile == 0) {
+        source == 0 || tinyui_image_source_get_image_tile(source) == 0) {
         return -1;
     }
 
     ld_scroll_selecter = (ldScrollSelecter_t *)scroll_selecter->widget.ld_widget;
-    ldScrollSelecterSetBackgroundImage(ld_scroll_selecter, source->img_tile, source->mask_tile);
+    ldScrollSelecterSetBackgroundImage(ld_scroll_selecter, tinyui_image_source_get_image_tile(source), tinyui_image_source_get_mask_tile(source));
     scroll_selecter->bg_source = source;
     scroll_selecter->transparent = 0;
     return 0;
@@ -493,12 +493,12 @@ int tinyui_scroll_selecter_set_indicator_source(struct tinyui_scroll_selecter *s
     ldScrollSelecter_t *ld_scroll_selecter;
 
     if (scroll_selecter == 0 || scroll_selecter->widget.ld_widget == 0 ||
-        source == 0 || source->img_tile == 0) {
+        source == 0 || tinyui_image_source_get_image_tile(source) == 0) {
         return -1;
     }
 
     ld_scroll_selecter = (ldScrollSelecter_t *)scroll_selecter->widget.ld_widget;
-    ldScrollSelecterSetIndicatorImage(ld_scroll_selecter, source->img_tile, source->mask_tile);
+    ldScrollSelecterSetIndicatorImage(ld_scroll_selecter, tinyui_image_source_get_image_tile(source), tinyui_image_source_get_mask_tile(source));
     scroll_selecter->indicator_source = source;
     scroll_selecter->transparent = 0;
     return 0;

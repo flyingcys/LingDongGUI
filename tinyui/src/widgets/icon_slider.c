@@ -379,8 +379,8 @@ int tinyui_icon_slider_add_item_with_source(struct tinyui_icon_slider *icon_slid
         || id == 0
         || text == 0
         || source == 0
-        || source->img_tile == 0
-        || source->mask_tile == 0
+        || tinyui_image_source_get_image_tile(source) == 0
+        || tinyui_image_source_get_mask_tile(source) == 0
         || icon_slider->widget.ld_widget == 0
         || icon_slider->widget.list_item_count >= TINYUI_ICON_SLIDER_NATIVE_MAX_ITEMS) {
         return -1;
@@ -390,8 +390,8 @@ int tinyui_icon_slider_add_item_with_source(struct tinyui_icon_slider *icon_slid
 
     index = icon_slider->widget.list_item_count;
     ldIconSliderAddIcon(ld_icon_slider,
-                        source->img_tile,
-                        source->mask_tile,
+                        tinyui_image_source_get_image_tile(source),
+                        tinyui_image_source_get_mask_tile(source),
                         (const uint8_t *)text);
     icon_slider->widget.list_item_count++;
 

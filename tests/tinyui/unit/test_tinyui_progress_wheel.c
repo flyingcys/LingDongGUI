@@ -36,6 +36,18 @@ static char test_progress_wheel_source_path[PATH_MAX];
 static struct tinyui_widget g_disposed_backend_snapshot;
 static int g_disposed_backend_valid = 0;
 
+static arm_2d_tile_t make_rgb565_tile(uint16_t *buffer, int16_t width, int16_t height)
+{
+    arm_2d_tile_t tile = {0};
+
+    tile.bIsRoot = true;
+    tile.tInfo.tColourInfo.chScheme = ARM_2D_COLOUR_RGB565;
+    tile.tRegion.tSize.iWidth = width;
+    tile.tRegion.tSize.iHeight = height;
+    tile.phwBuffer = buffer;
+    return tile;
+}
+
 static void init_progress_wheel_source_path(void)
 {
     const char *source = __FILE__;
@@ -278,6 +290,30 @@ static void test_progress_wheel_progress_alias_round_trip(struct tinyui_progress
     assert(ld_progress_wheel->iProgress == 370);
 }
 
+static void test_progress_wheel_show_prepares_when_first_active_pfb_is_not_new_frame(
+    struct tinyui_window *win)
+{
+    static uint16_t target_buffer[128 * 128];
+    arm_2d_tile_t target = make_rgb565_tile(target_buffer, 128, 128);
+    struct tinyui_progress_wheel *wheel =
+        tinyui_progress_wheel_create((struct tinyui_widget *)win, "wheel_late_active_pfb");
+    ldProgressWheel_t *ld_progress_wheel;
+
+    memset(target_buffer, 0, sizeof(target_buffer));
+    assert(wheel != 0);
+    ld_progress_wheel = (ldProgressWheel_t *)wheel->widget.ld_widget;
+    assert(ld_progress_wheel != 0);
+    assert(tinyui_progress_wheel_set_percent(wheel, 72) == 0);
+
+    ldProgressWheel_on_load(wheel->widget.ld_event_bridge_scene, ld_progress_wheel);
+    ldProgressWheel_on_frame_start(wheel->widget.ld_event_bridge_scene, ld_progress_wheel);
+    ldProgressWheel_show(wheel->widget.ld_event_bridge_scene,
+                         ld_progress_wheel,
+                         &target,
+                         false);
+    arm_2d_op_wait_async(NULL);
+}
+
 static void test_progress_wheel_create_with_props_failure_rolls_back_attached_child(
     struct tinyui_window *win)
 {
@@ -314,7 +350,6 @@ static void test_progress_wheel_create_with_props_failure_rolls_back_attached_ch
     assert(disposed_backend->owner == 0);
     assert(disposed_backend->ld_event_bridge_scene == 0);
     assert(disposed_backend->ld_event_bridge_sender == 0);
-    assert(disposed_backend->ld_event_bridge_next == 0);
     assert(disposed_backend->ld_widget == 0);
     if (tail_ld != 0) {
         assert(ldBaseGetNextSibling(tail_ld) == next_before_ld);
@@ -365,6 +400,7 @@ int main(void)
     test_progress_wheel_release_contract_covers_animation_and_style_boundary(wheel_with_props);
     test_progress_wheel_native_color_and_dot_enable_round_trip(wheel_with_props);
     test_progress_wheel_progress_alias_round_trip(wheel_with_props);
+    test_progress_wheel_show_prepares_when_first_active_pfb_is_not_new_frame(win);
     test_progress_wheel_create_with_props_failure_rolls_back_attached_child(win);
     test_progress_wheel_rejects_null_args(win);
     test_progress_wheel_create_uses_shared_leaf_helper();

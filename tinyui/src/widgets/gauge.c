@@ -266,14 +266,14 @@ int tinyui_gauge_set_bg_source(struct tinyui_gauge *gauge, struct tinyui_image_s
 {
     ldGauge_t *ld_gauge;
 
-    if (gauge == 0 || source == 0 || source->img_tile == 0 || source->mask_tile == 0
+    if (gauge == 0 || source == 0 || tinyui_image_source_get_image_tile(source) == 0 || tinyui_image_source_get_mask_tile(source) == 0
         || gauge->widget.ld_widget == 0
         || gauge->widget.kind != TINYUI_BACKEND_WIDGET_GAUGE) {
         return -1;
     }
 
     ld_gauge = (ldGauge_t *)gauge->widget.ld_widget;
-    ldGaugeSetBackgroundImage(ld_gauge, source->img_tile, source->mask_tile, false, false);
+    ldGaugeSetBackgroundImage(ld_gauge, tinyui_image_source_get_image_tile(source), tinyui_image_source_get_mask_tile(source), false, false);
     gauge->bg_source = source;
     return 0;
 }
@@ -287,11 +287,11 @@ int tinyui_gauge_set_pointer_source(struct tinyui_gauge *gauge, struct tinyui_im
 {
     arm_2d_tile_t *mask_tile;
 
-    if (source == 0 || source->mask_tile == 0) {
+    if (source == 0 || tinyui_image_source_get_mask_tile(source) == 0) {
         return -1;
     }
 
-    mask_tile = (arm_2d_tile_t *)source->mask_tile;
+    mask_tile = (arm_2d_tile_t *)tinyui_image_source_get_mask_tile(source);
     return tinyui_gauge_set_pointer_source_with_origin(gauge,
                                                        source,
                                                        (int)(mask_tile->tRegion.tSize.iWidth >> 1),
@@ -305,7 +305,7 @@ int tinyui_gauge_set_pointer_source_with_origin(struct tinyui_gauge *gauge,
 {
     ldGauge_t *ld_gauge;
 
-    if (gauge == 0 || source == 0 || source->img_tile == 0 || source->mask_tile == 0
+    if (gauge == 0 || source == 0 || tinyui_image_source_get_image_tile(source) == 0 || tinyui_image_source_get_mask_tile(source) == 0
         || gauge->widget.ld_widget == 0
         || gauge->widget.kind != TINYUI_BACKEND_WIDGET_GAUGE) {
         return -1;
@@ -313,8 +313,8 @@ int tinyui_gauge_set_pointer_source_with_origin(struct tinyui_gauge *gauge,
 
     ld_gauge = (ldGauge_t *)gauge->widget.ld_widget;
     ldGaugeBindPointerImage(ld_gauge,
-                            source->img_tile,
-                            source->mask_tile,
+                            tinyui_image_source_get_image_tile(source),
+                            tinyui_image_source_get_mask_tile(source),
                             (int16_t)origin_x,
                             (int16_t)origin_y,
                             false,
@@ -330,7 +330,7 @@ int tinyui_gauge_set_pointer_mask_source(struct tinyui_gauge *gauge,
 {
     ldGauge_t *ld_gauge;
 
-    if (gauge == 0 || source == 0 || source->mask_tile == 0
+    if (gauge == 0 || source == 0 || tinyui_image_source_get_mask_tile(source) == 0
         || gauge->widget.ld_widget == 0
         || gauge->widget.kind != TINYUI_BACKEND_WIDGET_GAUGE) {
         return -1;
@@ -339,7 +339,7 @@ int tinyui_gauge_set_pointer_mask_source(struct tinyui_gauge *gauge,
     ld_gauge = (ldGauge_t *)gauge->widget.ld_widget;
     ldGaugeBindPointerImage(ld_gauge,
                             0,
-                            source->mask_tile,
+                            tinyui_image_source_get_mask_tile(source),
                             (int16_t)origin_x,
                             (int16_t)origin_y,
                             false,
@@ -374,8 +374,8 @@ int tinyui_gauge_set_trail(struct tinyui_gauge *gauge,
     if (gauge == 0
         || bg_trail_source == 0
         || pointer_trail_source == 0
-        || bg_trail_source->mask_tile == 0
-        || pointer_trail_source->mask_tile == 0
+        || tinyui_image_source_get_mask_tile(bg_trail_source) == 0
+        || tinyui_image_source_get_mask_tile(pointer_trail_source) == 0
         || gauge->widget.ld_widget == 0
         || gauge->widget.kind != TINYUI_BACKEND_WIDGET_GAUGE) {
         return -1;
@@ -383,8 +383,8 @@ int tinyui_gauge_set_trail(struct tinyui_gauge *gauge,
 
     ld_gauge = (ldGauge_t *)gauge->widget.ld_widget;
     ldGaugeSetTrail(ld_gauge,
-                    bg_trail_source->mask_tile,
-                    pointer_trail_source->mask_tile);
+                    tinyui_image_source_get_mask_tile(bg_trail_source),
+                    tinyui_image_source_get_mask_tile(pointer_trail_source));
     return 0;
 }
 
@@ -397,8 +397,8 @@ int tinyui_gauge_set_progress_bar(struct tinyui_gauge *gauge,
     if (gauge == 0
         || bg_progress_source == 0
         || pointer_progress_source == 0
-        || bg_progress_source->mask_tile == 0
-        || pointer_progress_source->mask_tile == 0
+        || tinyui_image_source_get_mask_tile(bg_progress_source) == 0
+        || tinyui_image_source_get_mask_tile(pointer_progress_source) == 0
         || gauge->widget.ld_widget == 0
         || gauge->widget.kind != TINYUI_BACKEND_WIDGET_GAUGE) {
         return -1;
@@ -406,8 +406,8 @@ int tinyui_gauge_set_progress_bar(struct tinyui_gauge *gauge,
 
     ld_gauge = (ldGauge_t *)gauge->widget.ld_widget;
     ldGaugeSetProgressBar(ld_gauge,
-                          bg_progress_source->mask_tile,
-                          pointer_progress_source->mask_tile);
+                          tinyui_image_source_get_mask_tile(bg_progress_source),
+                          tinyui_image_source_get_mask_tile(pointer_progress_source));
     return 0;
 }
 

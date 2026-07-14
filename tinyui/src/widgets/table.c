@@ -141,7 +141,8 @@ static bool tinyui_table_native_slot(struct ld_scene_t *scene, ldMsg_t msg)
     if (item != NULL) {
         item->isEditing = false;
     }
-    (void)tinyui_widget_mark_edit_result(&table->widget, w->edit_result_on_finish);
+    (void)tinyui_widget_mark_edit_result(&table->widget,
+                                         (enum tinyui_edit_result)w->edit_result_on_finish);
     (void)tinyui_widget_release_editing(&table->widget);
     w->edit_result_on_finish = TINYUI_EDIT_RESULT_NONE;
     return false;
@@ -633,7 +634,7 @@ int tinyui_table_set_item_image(struct tinyui_table *table,
 {
     ldTable_t *ld_table;
 
-    if (table == 0 || source == 0 || source->img_tile == 0 || source->mask_tile == 0 ||
+    if (table == 0 || source == 0 || tinyui_image_source_get_image_tile(source) == 0 || tinyui_image_source_get_mask_tile(source) == 0 ||
         mask_color > 0xFFFFFFU) {
         return -1;
     }
@@ -650,8 +651,8 @@ int tinyui_table_set_item_image(struct tinyui_table *table,
                         (uint8_t)column,
                         (int16_t)x,
                         (int16_t)y,
-                        source->img_tile,
-                        source->mask_tile,
+                        tinyui_image_source_get_image_tile(source),
+                        tinyui_image_source_get_mask_tile(source),
                         (ldColor)mask_color);
     return 0;
 }
@@ -686,8 +687,8 @@ int tinyui_table_set_item_button(struct tinyui_table *table,
     ldTable_t *ld_table;
 
     if (table == 0 || release_source == 0 || press_source == 0 ||
-        release_source->img_tile == 0 || release_source->mask_tile == 0 ||
-        press_source->img_tile == 0 || press_source->mask_tile == 0 ||
+        tinyui_image_source_get_image_tile(release_source) == 0 || tinyui_image_source_get_mask_tile(release_source) == 0 ||
+        tinyui_image_source_get_image_tile(press_source) == 0 || tinyui_image_source_get_mask_tile(press_source) == 0 ||
         release_mask_color > 0xFFFFFFU || press_mask_color > 0xFFFFFFU) {
         return -1;
     }
@@ -704,11 +705,11 @@ int tinyui_table_set_item_button(struct tinyui_table *table,
                          (uint8_t)column,
                          (int16_t)x,
                          (int16_t)y,
-                         release_source->img_tile,
-                         release_source->mask_tile,
+                         tinyui_image_source_get_image_tile(release_source),
+                         tinyui_image_source_get_mask_tile(release_source),
                          (ldColor)release_mask_color,
-                         press_source->img_tile,
-                         press_source->mask_tile,
+                         tinyui_image_source_get_image_tile(press_source),
+                         tinyui_image_source_get_mask_tile(press_source),
                          (ldColor)press_mask_color,
                          checkable != 0);
     return 0;
