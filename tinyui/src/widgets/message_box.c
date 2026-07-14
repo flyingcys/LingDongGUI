@@ -18,10 +18,29 @@
 
 #include "internal.h"
 #include "widgets/message_box.h"
-#include "core/widget.h"
+#include "internal/widget_legacy.h"
 #include "../core/runtime_bridge.h"
 #include "../../../src/gui/ldMessageBox.h"
 #include "../../../src/gui/ldBase.h"
+
+
+static struct tinyui_message_box *tinyui_message_box_as_message_box(tinyui_obj_t *obj)
+{
+    struct tinyui_widget *w = (struct tinyui_widget *)(void *)obj;
+    if (w == 0 || !tinyui_runtime_internal_widget_is_kind(w, TINYUI_BACKEND_WIDGET_MESSAGE_BOX)) {
+        return 0;
+    }
+    return (struct tinyui_message_box *)w;
+}
+
+static const struct tinyui_message_box *tinyui_message_box_as_message_box_const(const tinyui_obj_t *obj)
+{
+    const struct tinyui_widget *w = (const struct tinyui_widget *)(const void *)obj;
+    if (w == 0 || !tinyui_runtime_internal_widget_is_kind(w, TINYUI_BACKEND_WIDGET_MESSAGE_BOX)) {
+        return 0;
+    }
+    return (const struct tinyui_message_box *)w;
+}
 
 
 /* ── C2 depose / rollback ──────────────────────────────────────────────── */
@@ -34,7 +53,7 @@ static void tinyui_message_box_rollback(struct tinyui_message_box *box)
         return;
     }
     if (box->widget.ld_widget != 0) {
-        tinyui_widget_destroy_common(&box->widget);
+        tinyui_runtime_internal_widget_destroy_common(&box->widget);
     } else {
         ldFree(box);
     }
@@ -42,9 +61,9 @@ static void tinyui_message_box_rollback(struct tinyui_message_box *box)
 
 /* ── props validation ─────────────────────────────────────────────────── */
 
-static int tinyui_message_box_props_are_valid(const struct tinyui_message_box_props *props)
+static int tinyui_message_box_props_are_valid(const tinyui_message_box_props_t *props)
 {
-    return props != 0 && props->id != 0;
+    return props != 0;
 }
 
 /* ── confirm bridge (native event slot) ────────────────────────────────── */
@@ -58,7 +77,7 @@ static void tinyui_message_box_confirm_bridge(ld_scene_t *scene, ldMessageBox_t 
         return;
     }
 
-    w = tinyui_widget_from_ld_scene(scene, ld_message_box);
+    w = tinyui_runtime_internal_widget_from_ld_scene(scene, ld_message_box);
     if (w == 0) {
         return;
     }
@@ -80,7 +99,7 @@ struct tinyui_message_box_create_ctx {
     arm_2d_font_t *font;
 };
 
-static void *tinyui_message_box_ld_init(void *ctx,
+static void *tinyui_runtime_internal_message_box_ld_init(void *ctx,
                                         ld_scene_t *scene,
                                         uint16_t name_id,
                                         uint16_t parent_name_id)
@@ -113,17 +132,21 @@ static void *tinyui_message_box_ld_init(void *ctx,
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct tinyui_message_box *tinyui_message_box_create(struct tinyui_widget *parent, const char *id)
+tinyui_obj_t *tinyui_message_box_create(tinyui_obj_t *parent)
 {
+    struct tinyui_widget *parent_w = (struct tinyui_widget *)(void *)parent;
+    const char *id = "message_box";
+    if (parent_w == 0) { return 0; }
+
     struct tinyui_message_box *box;
     struct tinyui_app *app_state;
     struct tinyui_message_box_create_ctx ctx;
 
-    if (parent == 0 || id == 0 || parent->ld_widget == 0) {
+    if (parent_w == 0 || id == 0 || parent_w->ld_widget == 0) {
         return 0;
     }
 
-    app_state = parent->owner;
+    app_state = parent_w->owner;
     if (app_state == 0 || app_state->ld_scene == 0) {
         return 0;
     }
@@ -133,10 +156,10 @@ struct tinyui_message_box *tinyui_message_box_create(struct tinyui_widget *paren
         return 0;
     }
 
-    box = (struct tinyui_message_box *)tinyui_widget_create_leaf(
-        parent,
+    box = (struct tinyui_message_box *)tinyui_runtime_internal_widget_create_leaf(
+        parent_w,
         TINYUI_BACKEND_WIDGET_MESSAGE_BOX,
-        tinyui_message_box_ld_init,
+        tinyui_runtime_internal_message_box_ld_init,
         &ctx,
         sizeof(*box));
     if (box == 0) {
@@ -144,7 +167,7 @@ struct tinyui_message_box *tinyui_message_box_create(struct tinyui_widget *paren
     }
 
     box->id = id;
-    return box;
+    return (tinyui_obj_t *)box;
 }
 
 /**
@@ -155,9 +178,9 @@ struct tinyui_message_box *tinyui_message_box_create(struct tinyui_widget *paren
  * @return Pointer to the object
  */
 
-struct tinyui_message_box *tinyui_message_box_init(struct tinyui_widget *parent, const char *id)
+struct tinyui_message_box *tinyui_runtime_internal_message_box_init(struct tinyui_widget *parent, const char *id)
 {
-    return tinyui_message_box_create(parent, id);
+    return tinyui_message_box_create(parent);
 }
 
 /**
@@ -168,40 +191,60 @@ struct tinyui_message_box *tinyui_message_box_init(struct tinyui_widget *parent,
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct tinyui_message_box *tinyui_message_box_create_with_props(
-    struct tinyui_widget *parent,
-    const struct tinyui_message_box_props *props)
+tinyui_obj_t *tinyui_message_box_create_with_props(tinyui_obj_t *parent,
+                                             const tinyui_message_box_props_t *props)
 {
+    tinyui_obj_t *obj;
     struct tinyui_message_box *box;
 
-    if (!tinyui_message_box_props_are_valid(props)) {
-        return 0;
+    if (props == 0) {
+        return tinyui_message_box_create(parent);
     }
 
-    box = tinyui_message_box_create(parent, props->id);
-    if (box == 0) {
+    obj = tinyui_message_box_create(parent);
+    if (obj == 0) {
         return 0;
     }
+    box = (struct tinyui_message_box *)(void *)obj;
 
-    if (props->style_class != 0
-        && tinyui_widget_set_style_class(&box->widget, props->style_class) != 0) {
+    if ((props->fields & TINYUI_MESSAGE_BOX_FIELD_ID) != 0) {
+        /* id=0 means runtime auto-alloc; non-zero reserved for host name_id path. */
+        (void)props->id;
+    }
+    if ((props->fields & TINYUI_MESSAGE_BOX_FIELD_USER_DATA) != 0) {
+    if (tinyui_runtime_internal_widget_set_user_data(&box->widget, props->user_data) != 0) {
         tinyui_message_box_rollback(box);
         return 0;
     }
-    if (tinyui_widget_set_user_data(&box->widget, props->user_data) != 0) {
+    }
+    if ((props->fields & TINYUI_MESSAGE_BOX_FIELD_STYLE_CLASS) != 0) {
+    if (tinyui_runtime_internal_widget_set_style_class(&box->widget, props->style_class) != 0) {
         tinyui_message_box_rollback(box);
         return 0;
     }
-    if ((props->title != 0 && tinyui_message_box_set_title(box, props->title) != 0)
-        || (props->message != 0 && tinyui_message_box_set_message(box, props->message) != 0)
-        || (props->confirm_text != 0
-            && tinyui_message_box_set_confirm_text(box, props->confirm_text) != 0)) {
+    }
+    if ((props->fields & TINYUI_MESSAGE_BOX_FIELD_TITLE) != 0) {
+    if (tinyui_message_box_set_title((tinyui_obj_t *)box, props->title) != 0) {
         tinyui_message_box_rollback(box);
         return 0;
+    }
+    }
+    if ((props->fields & TINYUI_MESSAGE_BOX_FIELD_MESSAGE) != 0) {
+    if (tinyui_message_box_set_message((tinyui_obj_t *)box, props->message) != 0) {
+        tinyui_message_box_rollback(box);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_MESSAGE_BOX_FIELD_CONFIRM_TEXT) != 0) {
+    if (tinyui_message_box_set_confirm_text((tinyui_obj_t *)box, props->confirm_text) != 0) {
+        tinyui_message_box_rollback(box);
+        return 0;
+    }
     }
 
-    return box;
+    return obj;
 }
+
 
 /* ── setters: direct (ldMessageBox_t *)widget->ld_widget cast ──────────── */
 
@@ -213,8 +256,11 @@ struct tinyui_message_box *tinyui_message_box_create_with_props(
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_message_box_set_title(struct tinyui_message_box *box, const char *title)
+int tinyui_message_box_set_title(tinyui_obj_t *box_obj, const char *title)
 {
+    struct tinyui_message_box *box = tinyui_message_box_as_message_box(box_obj);
+    if (box == 0) { return -1; }
+
     if (box == 0 || title == 0 || box->widget.ld_widget == 0) {
         return -1;
     }
@@ -232,8 +278,11 @@ int tinyui_message_box_set_title(struct tinyui_message_box *box, const char *tit
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_message_box_set_message(struct tinyui_message_box *box, const char *message)
+int tinyui_message_box_set_message(tinyui_obj_t *box_obj, const char *message)
 {
+    struct tinyui_message_box *box = tinyui_message_box_as_message_box(box_obj);
+    if (box == 0) { return -1; }
+
     if (box == 0 || message == 0 || box->widget.ld_widget == 0) {
         return -1;
     }
@@ -251,9 +300,12 @@ int tinyui_message_box_set_message(struct tinyui_message_box *box, const char *m
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_message_box_set_msg(struct tinyui_message_box *box, const char *message)
+int tinyui_message_box_set_msg(tinyui_obj_t *box_obj, const char *message)
 {
-    return tinyui_message_box_set_message(box, message);
+    struct tinyui_message_box *box = tinyui_message_box_as_message_box(box_obj);
+    if (box == 0) { return -1; }
+
+    return tinyui_message_box_set_message((tinyui_obj_t *)box, message);
 }
 
 /**
@@ -264,8 +316,11 @@ int tinyui_message_box_set_msg(struct tinyui_message_box *box, const char *messa
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_message_box_set_confirm_text(struct tinyui_message_box *box, const char *text)
+int tinyui_message_box_set_confirm_text(tinyui_obj_t *box_obj, const char *text)
 {
+    struct tinyui_message_box *box = tinyui_message_box_as_message_box(box_obj);
+    if (box == 0) { return -1; }
+
     if (box == 0 || text == 0 || box->widget.ld_widget == 0) {
         return -1;
     }
@@ -276,8 +331,11 @@ int tinyui_message_box_set_confirm_text(struct tinyui_message_box *box, const ch
     return 0;
 }
 
-int tinyui_message_box_set_layout(struct tinyui_message_box *box, int width, int height)
+int tinyui_message_box_set_layout(tinyui_obj_t *box_obj, int width, int height)
 {
+    struct tinyui_message_box *box = tinyui_message_box_as_message_box(box_obj);
+    if (box == 0) { return -1; }
+
     ldMessageBox_t *ld_message_box;
     ldBase_t *ld_base;
     const uint8_t **button_group;
@@ -312,8 +370,11 @@ int tinyui_message_box_set_layout(struct tinyui_message_box *box, int width, int
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_message_box_set_buttons(struct tinyui_message_box *box, const char *const *buttons, int count)
+int tinyui_message_box_set_buttons(tinyui_obj_t *box_obj, const char *const *buttons, int count)
 {
+    struct tinyui_message_box *box = tinyui_message_box_as_message_box(box_obj);
+    if (box == 0) { return -1; }
+
     int i;
 
     if (box == 0 || buttons == 0 || count <= 0 || count > TINYUI_LIST_MAX_ITEMS
@@ -347,9 +408,12 @@ int tinyui_message_box_set_buttons(struct tinyui_message_box *box, const char *c
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_message_box_set_btn(struct tinyui_message_box *box, const char *const *buttons, int count)
+int tinyui_message_box_set_btn(tinyui_obj_t *box_obj, const char *const *buttons, int count)
 {
-    return tinyui_message_box_set_buttons(box, buttons, count);
+    struct tinyui_message_box *box = tinyui_message_box_as_message_box(box_obj);
+    if (box == 0) { return -1; }
+
+    return tinyui_message_box_set_buttons((tinyui_obj_t *)box, buttons, count);
 }
 
 /**
@@ -362,11 +426,11 @@ int tinyui_message_box_set_btn(struct tinyui_message_box *box, const char *const
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_message_box_set_string_colors(struct tinyui_message_box *box,
-                                         unsigned int title_color,
-                                         unsigned int message_color,
-                                         unsigned int button_color)
+int tinyui_message_box_set_string_colors(tinyui_obj_t *box_obj, unsigned int title_color, unsigned int message_color, unsigned int button_color)
 {
+    struct tinyui_message_box *box = tinyui_message_box_as_message_box(box_obj);
+    if (box == 0) { return -1; }
+
     if (box == 0 || box->widget.ld_widget == 0) {
         return -1;
     }
@@ -391,12 +455,12 @@ int tinyui_message_box_set_string_colors(struct tinyui_message_box *box,
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_message_box_set_string_color(struct tinyui_message_box *box,
-                                        unsigned int title_color,
-                                        unsigned int message_color,
-                                        unsigned int button_color)
+int tinyui_message_box_set_string_color(tinyui_obj_t *box_obj, unsigned int title_color, unsigned int message_color, unsigned int button_color)
 {
-    return tinyui_message_box_set_string_colors(box, title_color, message_color, button_color);
+    struct tinyui_message_box *box = tinyui_message_box_as_message_box(box_obj);
+    if (box == 0) { return -1; }
+
+    return tinyui_message_box_set_string_colors((tinyui_obj_t *)box, title_color, message_color, button_color);
 }
 
 /**
@@ -408,10 +472,11 @@ int tinyui_message_box_set_string_color(struct tinyui_message_box *box,
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_message_box_set_button_colors(struct tinyui_message_box *box,
-                                         unsigned int release_color,
-                                         unsigned int press_color)
+int tinyui_message_box_set_button_colors(tinyui_obj_t *box_obj, unsigned int release_color, unsigned int press_color)
 {
+    struct tinyui_message_box *box = tinyui_message_box_as_message_box(box_obj);
+    if (box == 0) { return -1; }
+
     if (box == 0 || box->widget.ld_widget == 0) {
         return -1;
     }
@@ -432,11 +497,12 @@ int tinyui_message_box_set_button_colors(struct tinyui_message_box *box,
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_message_box_set_button_color(struct tinyui_message_box *box,
-                                        unsigned int release_color,
-                                        unsigned int press_color)
+int tinyui_message_box_set_button_color(tinyui_obj_t *box_obj, unsigned int release_color, unsigned int press_color)
 {
-    return tinyui_message_box_set_button_colors(box, release_color, press_color);
+    struct tinyui_message_box *box = tinyui_message_box_as_message_box(box_obj);
+    if (box == 0) { return -1; }
+
+    return tinyui_message_box_set_button_colors((tinyui_obj_t *)box, release_color, press_color);
 }
 
 /**
@@ -447,8 +513,11 @@ int tinyui_message_box_set_button_color(struct tinyui_message_box *box,
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_message_box_set_bg_color(struct tinyui_message_box *box, unsigned int bg_color)
+int tinyui_message_box_set_bg_color(tinyui_obj_t *box_obj, unsigned int bg_color)
 {
+    struct tinyui_message_box *box = tinyui_message_box_as_message_box(box_obj);
+    if (box == 0) { return -1; }
+
     if (box == 0 || box->widget.ld_widget == 0) {
         return -1;
     }
@@ -466,9 +535,12 @@ int tinyui_message_box_set_bg_color(struct tinyui_message_box *box, unsigned int
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_message_box_set_background_color(struct tinyui_message_box *box, unsigned int bg_color)
+int tinyui_message_box_set_background_color(tinyui_obj_t *box_obj, unsigned int bg_color)
 {
-    return tinyui_message_box_set_bg_color(box, bg_color);
+    struct tinyui_message_box *box = tinyui_message_box_as_message_box(box_obj);
+    if (box == 0) { return -1; }
+
+    return tinyui_message_box_set_bg_color((tinyui_obj_t *)box, bg_color);
 }
 
 /**
@@ -479,16 +551,16 @@ int tinyui_message_box_set_background_color(struct tinyui_message_box *box, unsi
  * @param[in] user_data User data pointer
  */
 
-void tinyui_message_box_set_on_confirm(
-    struct tinyui_message_box *box,
-    tinyui_message_box_callback_t callback,
-    void *user_data)
+void tinyui_message_box_set_on_confirm(tinyui_obj_t *box_obj, tinyui_message_box_callback_t callback, void *user_data)
 {
+    struct tinyui_message_box *box = tinyui_message_box_as_message_box(box_obj);
+    if (box == 0) { return; }
+
     if (box == 0) {
         return;
     }
 
-    box->on_confirm = callback;
+    box->on_confirm = (void *)callback;
     box->on_confirm_user_data = user_data;
     if (callback != 0 && box->widget.ld_widget != 0) {
         ldMessageBoxSetCallback((ldMessageBox_t *)box->widget.ld_widget,
@@ -504,12 +576,12 @@ void tinyui_message_box_set_on_confirm(
  * @param[in] user_data User data pointer
  */
 
-void tinyui_message_box_set_callback(
-    struct tinyui_message_box *box,
-    tinyui_message_box_callback_t callback,
-    void *user_data)
+void tinyui_message_box_set_callback(tinyui_obj_t *box_obj, tinyui_message_box_callback_t callback, void *user_data)
 {
-    tinyui_message_box_set_on_confirm(box, callback, user_data);
+    struct tinyui_message_box *box = tinyui_message_box_as_message_box(box_obj);
+    if (box == 0) { return; }
+
+    tinyui_message_box_set_on_confirm((tinyui_obj_t *)box, callback, user_data);
 }
 
 /**
@@ -520,11 +592,11 @@ void tinyui_message_box_set_callback(
  * @param[in] user_data User data pointer
  */
 
-void tinyui_message_box_set_on_confirm_indexed(
-    struct tinyui_message_box *box,
-    tinyui_message_box_indexed_callback_t callback,
-    void *user_data)
+void tinyui_message_box_set_on_confirm_indexed(tinyui_obj_t *box_obj, tinyui_message_box_indexed_callback_t callback, void *user_data)
 {
+    struct tinyui_message_box *box = tinyui_message_box_as_message_box(box_obj);
+    if (box == 0) { return; }
+
     if (box == 0) {
         return;
     }
@@ -543,8 +615,11 @@ void tinyui_message_box_set_on_confirm_indexed(
  * @param[in] box box
  */
 
-const char *tinyui_message_box_get_title(const struct tinyui_message_box *box)
+const char * tinyui_message_box_get_title(const tinyui_obj_t *box_obj)
 {
+    const struct tinyui_message_box *box = tinyui_message_box_as_message_box_const(box_obj);
+    if (box == 0) { return 0; }
+
     if (box == 0) {
         return 0;
     }
@@ -557,8 +632,11 @@ const char *tinyui_message_box_get_title(const struct tinyui_message_box *box)
  * @param[in] box box
  */
 
-const char *tinyui_message_box_get_message(const struct tinyui_message_box *box)
+const char * tinyui_message_box_get_message(const tinyui_obj_t *box_obj)
 {
+    const struct tinyui_message_box *box = tinyui_message_box_as_message_box_const(box_obj);
+    if (box == 0) { return 0; }
+
     if (box == 0) {
         return 0;
     }
@@ -571,8 +649,11 @@ const char *tinyui_message_box_get_message(const struct tinyui_message_box *box)
  * @param[in] box box
  */
 
-const char *tinyui_message_box_get_confirm_text(const struct tinyui_message_box *box)
+const char * tinyui_message_box_get_confirm_text(const tinyui_obj_t *box_obj)
 {
+    const struct tinyui_message_box *box = tinyui_message_box_as_message_box_const(box_obj);
+    if (box == 0) { return 0; }
+
     if (box == 0) {
         return 0;
     }

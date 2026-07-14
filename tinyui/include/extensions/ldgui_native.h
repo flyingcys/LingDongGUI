@@ -1,5 +1,5 @@
-#ifndef TINYUI_NATIVE_H
-#define TINYUI_NATIVE_H
+#ifndef TINYUI_EXTENSIONS_LDGUI_NATIVE_H
+#define TINYUI_EXTENSIONS_LDGUI_NATIVE_H
 
 struct tinyui_native_image {
     void *tile;

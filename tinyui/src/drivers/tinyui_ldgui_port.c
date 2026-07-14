@@ -233,7 +233,7 @@ static ldBase_t *ldgui_port_top_window_for_keyboard_editor(struct tinyui_app *ap
         if (((ldBase_t *)keyboard)->isHidden || keyboard->editorId == 0) {
             continue;
         }
-        editor = tinyui_app_lookup_host(app, keyboard->editorId);
+        editor = tinyui_runtime_internal_app_lookup_host(app, keyboard->editorId);
         if (editor == NULL) {
             continue;
         }

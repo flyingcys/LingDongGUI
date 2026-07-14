@@ -1,14 +1,59 @@
+/*
+ * Copyright (c) 2023-2026 flyingcys (flyingcys@gmail.com). All rights reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #ifndef TINYUI_CHECKBOX_H
 #define TINYUI_CHECKBOX_H
 
-#include "core/widget.h"
+#include "core/obj.h"
+#include <stdint.h>
 
-struct tinyui_window;
-struct tinyui_checkbox;
+#ifndef TINYUI_LEGACY_VALUE_CHANGED_CB_DEFINED
+#define TINYUI_LEGACY_VALUE_CHANGED_CB_DEFINED
+typedef void (*tinyui_value_changed_cb)(tinyui_obj_t *obj, int value, void *user_data);
+#endif
+
+
 struct tinyui_image_source;
 
-struct tinyui_checkbox_props {
-    const char *id;
+typedef enum tinyui_checkbox_field {
+    TINYUI_CHECKBOX_FIELD_ID = UINT32_C(1) << 0,
+    TINYUI_CHECKBOX_FIELD_TEXT = UINT32_C(1) << 1,
+    TINYUI_CHECKBOX_FIELD_CHECKED = UINT32_C(1) << 2,
+    TINYUI_CHECKBOX_FIELD_ON_TOGGLED = UINT32_C(1) << 3,
+    TINYUI_CHECKBOX_FIELD_USER_DATA = UINT32_C(1) << 4,
+    TINYUI_CHECKBOX_FIELD_STYLE_CLASS = UINT32_C(1) << 5,
+    TINYUI_CHECKBOX_FIELD_WIDTH = UINT32_C(1) << 6,
+    TINYUI_CHECKBOX_FIELD_HEIGHT = UINT32_C(1) << 7,
+    TINYUI_CHECKBOX_FIELD_BG_COLOR = UINT32_C(1) << 8,
+    TINYUI_CHECKBOX_FIELD_TEXT_COLOR = UINT32_C(1) << 9,
+    TINYUI_CHECKBOX_FIELD_BORDER_COLOR = UINT32_C(1) << 10,
+    TINYUI_CHECKBOX_FIELD_RADIUS = UINT32_C(1) << 11,
+    TINYUI_CHECKBOX_FIELD_PADDING = UINT32_C(1) << 12,
+    TINYUI_CHECKBOX_FIELD_CHECK_COLOR = UINT32_C(1) << 13,
+    TINYUI_CHECKBOX_FIELD_UNCHECKED_SOURCE = UINT32_C(1) << 14,
+    TINYUI_CHECKBOX_FIELD_CHECKED_SOURCE = UINT32_C(1) << 15,
+    TINYUI_CHECKBOX_FIELD_RADIO_GROUP = UINT32_C(1) << 16,
+    TINYUI_CHECKBOX_FIELD_STRING_LEFT_SPACE = UINT32_C(1) << 17,
+} tinyui_checkbox_field_t;
+
+typedef struct tinyui_checkbox_props {
+    uint32_t fields;
+    uint16_t id;
     const char *text;
     int checked;
     tinyui_value_changed_cb on_toggled;
@@ -21,45 +66,36 @@ struct tinyui_checkbox_props {
     unsigned int border_color;
     int radius;
     int padding;
-    /* Sentinel default: 0 = unset (use backend default check color) */
     unsigned int check_color;
-    /* Sentinel default: NULL = unset (no unchecked source applied) */
     struct tinyui_image_source *unchecked_source;
-    /* Sentinel default: NULL = unset (no checked source applied) */
     struct tinyui_image_source *checked_source;
-    /* Sentinel default: -1 = unset (not a radio button) */
     int radio_group;
-    /* Sentinel default: -1 = unset (use backend default spacing) */
     int string_left_space;
-};
+} tinyui_checkbox_props_t;
 
-struct tinyui_checkbox *tinyui_checkbox_create(struct tinyui_window *parent, const char *id);
+tinyui_obj_t *tinyui_checkbox_create(tinyui_obj_t *parent);
 
-struct tinyui_checkbox *tinyui_checkbox_create_with_props(struct tinyui_window *parent,
-                                                          const struct tinyui_checkbox_props *props);
+tinyui_obj_t *tinyui_checkbox_create_with_props(tinyui_obj_t *parent,
+                                               const tinyui_checkbox_props_t *props);
 
-int tinyui_checkbox_set_checked(struct tinyui_checkbox *checkbox, int checked);
+int tinyui_checkbox_set_checked(tinyui_obj_t *checkbox, int checked);
 
-int tinyui_checkbox_is_checked(struct tinyui_checkbox *checkbox);
+int tinyui_checkbox_is_checked(tinyui_obj_t *checkbox);
 
-int tinyui_checkbox_set_text(struct tinyui_checkbox *checkbox, const char *text);
+int tinyui_checkbox_set_text(tinyui_obj_t *checkbox, const char *text);
 
-int tinyui_checkbox_set_check_color(struct tinyui_checkbox *checkbox, unsigned int rgb);
+int tinyui_checkbox_set_check_color(tinyui_obj_t *checkbox, unsigned int rgb);
 
-int tinyui_checkbox_set_text_color(struct tinyui_checkbox *checkbox, unsigned int rgb);
+int tinyui_checkbox_set_text_color(tinyui_obj_t *checkbox, unsigned int rgb);
 
-int tinyui_checkbox_set_unchecked_source(struct tinyui_checkbox *checkbox,
-                                         struct tinyui_image_source *source);
+int tinyui_checkbox_set_unchecked_source(tinyui_obj_t *checkbox, struct tinyui_image_source *source);
 
-int tinyui_checkbox_set_checked_source(struct tinyui_checkbox *checkbox,
-                                       struct tinyui_image_source *source);
+int tinyui_checkbox_set_checked_source(tinyui_obj_t *checkbox, struct tinyui_image_source *source);
 
-int tinyui_checkbox_set_radio_group(struct tinyui_checkbox *checkbox, int radio_group);
+int tinyui_checkbox_set_radio_group(tinyui_obj_t *checkbox, int radio_group);
 
-int tinyui_checkbox_set_string_left_space(struct tinyui_checkbox *checkbox, int space);
+int tinyui_checkbox_set_string_left_space(tinyui_obj_t *checkbox, int space);
 
-int tinyui_checkbox_set_on_toggled(struct tinyui_checkbox *checkbox,
-                                   tinyui_value_changed_cb cb,
-                                   void *user_data);
+int tinyui_checkbox_set_on_toggled(tinyui_obj_t *checkbox, tinyui_value_changed_cb cb, void *user_data);
 
-#endif
+#endif /* TINYUI_CHECKBOX_H */

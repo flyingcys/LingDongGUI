@@ -24,6 +24,25 @@
 #include <stdlib.h>
 #include <string.h>
 
+
+static struct tinyui_label *tinyui_label_as_label(tinyui_obj_t *obj)
+{
+    struct tinyui_widget *w = (struct tinyui_widget *)(void *)obj;
+    if (w == 0 || !tinyui_runtime_internal_widget_is_kind(w, TINYUI_BACKEND_WIDGET_LABEL)) {
+        return 0;
+    }
+    return (struct tinyui_label *)w;
+}
+
+static const struct tinyui_label *tinyui_label_as_label_const(const tinyui_obj_t *obj)
+{
+    const struct tinyui_widget *w = (const struct tinyui_widget *)(const void *)obj;
+    if (w == 0 || !tinyui_runtime_internal_widget_is_kind(w, TINYUI_BACKEND_WIDGET_LABEL)) {
+        return 0;
+    }
+    return (const struct tinyui_label *)w;
+}
+
 struct tinyui_image_source;
 
 struct tinyui_label_create_ctx {
@@ -81,10 +100,9 @@ static arm_2d_align_t tinyui_label_map_text_align(enum tinyui_align x_align,
     return (arm_2d_align_t)align;
 }
 
-static int tinyui_label_props_are_valid(const struct tinyui_label_props *props)
+static int tinyui_label_props_are_valid(const tinyui_label_props_t *props)
 {
     return props != 0
-        && props->id != 0
         && props->width >= 0
         && props->height >= 0
         && props->radius >= 0
@@ -92,7 +110,7 @@ static int tinyui_label_props_are_valid(const struct tinyui_label_props *props)
         && (props->background_source == 0 || tinyui_image_source_get_image_tile(props->background_source) != 0);
 }
 
-static void *tinyui_label_ld_init(void *ctx,
+static void *tinyui_runtime_internal_label_ld_init(void *ctx,
                                   struct ld_scene_t *scene,
                                   uint16_t name_id,
                                   uint16_t parent_name_id)
@@ -109,17 +127,21 @@ static void *tinyui_label_ld_init(void *ctx,
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct tinyui_label *tinyui_label_create(struct tinyui_window *parent, const char *id)
+tinyui_obj_t *tinyui_label_create(tinyui_obj_t *parent)
 {
+    struct tinyui_widget *parent_w = (struct tinyui_widget *)(void *)parent;
+    const char *id = "label";
+    if (parent_w == 0) { return 0; }
+
     struct tinyui_label *label;
     struct tinyui_label_create_ctx ctx = {.id = id};
 
-    if (parent == 0 || id == 0) {
+    if (parent_w == 0 || id == 0) {
         return 0;
     }
-    label = (struct tinyui_label *)tinyui_widget_create_leaf(&parent->widget,
+    label = (struct tinyui_label *)tinyui_runtime_internal_widget_create_leaf(parent_w,
                                                              TINYUI_BACKEND_WIDGET_LABEL,
-                                                             tinyui_label_ld_init,
+                                                             tinyui_runtime_internal_label_ld_init,
                                                              &ctx,
                                                              sizeof(*label));
     if (label == 0) {
@@ -127,11 +149,11 @@ struct tinyui_label *tinyui_label_create(struct tinyui_window *parent, const cha
     }
     label->id = id;
     if (tinyui_label_set_font(label, NULL) != 0) {
-        tinyui_widget_destroy_common(&label->widget);
+        tinyui_runtime_internal_widget_destroy_common(&label->widget);
         return 0;
     }
 
-    return label;
+    return (tinyui_obj_t *)label;
 }
 
 /**
@@ -142,41 +164,122 @@ struct tinyui_label *tinyui_label_create(struct tinyui_window *parent, const cha
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct tinyui_label *tinyui_label_create_with_props(struct tinyui_window *parent,
-                                                    const struct tinyui_label_props *props)
+tinyui_obj_t *tinyui_label_create_with_props(tinyui_obj_t *parent,
+                                             const tinyui_label_props_t *props)
 {
+    tinyui_obj_t *obj;
     struct tinyui_label *label;
 
-    if (!tinyui_label_props_are_valid(props)) {
-        return 0;
+    if (props == 0) {
+        return tinyui_label_create(parent);
     }
 
-    label = tinyui_label_create(parent, props->id);
-    if (label == 0) {
+    obj = tinyui_label_create(parent);
+    if (obj == 0) {
         return 0;
     }
+    label = (struct tinyui_label *)(void *)obj;
 
-    if ((props->text != 0 && tinyui_label_set_text(label, props->text) != 0)
-        || (props->font != 0 && tinyui_label_set_font(label, props->font) != 0)
-        || (props->style_class != 0
-            && tinyui_widget_set_style_class(&label->widget, props->style_class) != 0)
-        || tinyui_widget_set_user_data(&label->widget, props->user_data) != 0
-        || tinyui_widget_set_border_color(&label->widget, props->border_color) != 0
-        || tinyui_widget_set_radius(&label->widget, props->radius) != 0
-        || tinyui_widget_set_padding(&label->widget, props->padding) != 0
-        || ((props->width > 0 || props->height > 0)
-            && tinyui_widget_set_size(&label->widget, props->width, props->height) != 0)
-        || tinyui_label_set_bg_color(label, props->bg_color) != 0
-        || tinyui_label_set_text_color(label, props->text_color) != 0
-        || tinyui_label_set_background_source(label, props->background_source) != 0
-        || tinyui_label_set_transparent(label, props->transparent) != 0
-        || tinyui_label_set_align(label, props->align) != 0) {
-        tinyui_widget_destroy_common(&label->widget);
+    if ((props->fields & TINYUI_LABEL_FIELD_ID) != 0) {
+        /* id=0 means runtime auto-alloc; non-zero reserved for host name_id path. */
+        (void)props->id;
+    }
+    if ((props->fields & TINYUI_LABEL_FIELD_USER_DATA) != 0) {
+    if (tinyui_runtime_internal_widget_set_user_data(&label->widget, props->user_data) != 0) {
+        (void)tinyui_obj_delete((tinyui_obj_t *)label);
         return 0;
     }
+    }
+    if ((props->fields & TINYUI_LABEL_FIELD_STYLE_CLASS) != 0) {
+    if (tinyui_runtime_internal_widget_set_style_class(&label->widget, props->style_class) != 0) {
+        (void)tinyui_obj_delete((tinyui_obj_t *)label);
+        return 0;
+    }
+    }
+        if ((props->fields & TINYUI_LABEL_FIELD_WIDTH) != 0 || (props->fields & TINYUI_LABEL_FIELD_HEIGHT) != 0) {
+        int w = tinyui_runtime_internal_widget_get_width(&label->widget);
+        int h = tinyui_runtime_internal_widget_get_height(&label->widget);
+        if (w < 0) {
+            w = 0;
+        }
+        if (h < 0) {
+            h = 0;
+        }
+        if ((props->fields & TINYUI_LABEL_FIELD_WIDTH) != 0) {
+            w = props->width;
+        }
+        if ((props->fields & TINYUI_LABEL_FIELD_HEIGHT) != 0) {
+            h = props->height;
+        }
+        if (tinyui_runtime_internal_widget_set_size(&label->widget, w, h) != 0) {
+            (void)tinyui_obj_delete((tinyui_obj_t *)label);
+            return 0;
+        }
+    }
+    if ((props->fields & TINYUI_LABEL_FIELD_TEXT) != 0) {
+    if (tinyui_label_set_text((tinyui_obj_t *)label, props->text) != 0) {
+        (void)tinyui_obj_delete((tinyui_obj_t *)label);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_LABEL_FIELD_FONT) != 0) {
+    if (tinyui_label_set_font((tinyui_obj_t *)label, props->font) != 0) {
+        (void)tinyui_obj_delete((tinyui_obj_t *)label);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_LABEL_FIELD_BG_COLOR) != 0) {
+    if (tinyui_label_set_bg_color((tinyui_obj_t *)label, props->bg_color) != 0) {
+        (void)tinyui_obj_delete((tinyui_obj_t *)label);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_LABEL_FIELD_TEXT_COLOR) != 0) {
+    if (tinyui_label_set_text_color((tinyui_obj_t *)label, props->text_color) != 0) {
+        (void)tinyui_obj_delete((tinyui_obj_t *)label);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_LABEL_FIELD_BORDER_COLOR) != 0) {
+    if (tinyui_runtime_internal_widget_set_border_color(&label->widget, props->border_color) != 0) {
+        (void)tinyui_obj_delete((tinyui_obj_t *)label);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_LABEL_FIELD_RADIUS) != 0) {
+    if (tinyui_runtime_internal_widget_set_radius(&label->widget, props->radius) != 0) {
+        (void)tinyui_obj_delete((tinyui_obj_t *)label);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_LABEL_FIELD_PADDING) != 0) {
+    if (tinyui_runtime_internal_widget_set_padding(&label->widget, props->padding) != 0) {
+        (void)tinyui_obj_delete((tinyui_obj_t *)label);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_LABEL_FIELD_TRANSPARENT) != 0) {
+    if (tinyui_label_set_transparent((tinyui_obj_t *)label, props->transparent) != 0) {
+        (void)tinyui_obj_delete((tinyui_obj_t *)label);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_LABEL_FIELD_ALIGN) != 0) {
+    if (tinyui_label_set_align((tinyui_obj_t *)label, props->align) != 0) {
+        (void)tinyui_obj_delete((tinyui_obj_t *)label);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_LABEL_FIELD_BACKGROUND_SOURCE) != 0) {
+    if (tinyui_label_set_background_source((tinyui_obj_t *)label, props->background_source) != 0) {
+        (void)tinyui_obj_delete((tinyui_obj_t *)label);
+        return 0;
+    }
+    }
 
-    return label;
+    return obj;
 }
+
 
 /**
  * @brief Set text of label widget
@@ -186,16 +289,19 @@ struct tinyui_label *tinyui_label_create_with_props(struct tinyui_window *parent
  * @return -1 on failure
  */
 
-int tinyui_label_set_text(struct tinyui_label *label, const char *text)
+int tinyui_label_set_text(tinyui_obj_t *label_obj, const char *text)
 {
+    struct tinyui_label *label = tinyui_label_as_label(label_obj);
+    if (label == 0) { return -1; }
+
     if (label == 0 || text == 0) {
         return -1;
     }
 
-    if (tinyui_widget_set_text(&label->widget, text) != 0) {
+    if (tinyui_runtime_internal_widget_set_text(&label->widget, text) != 0) {
         return -1;
     }
-    return tinyui_widget_set_backend_text(&label->widget, text);
+    return tinyui_runtime_internal_widget_set_backend_text(&label->widget, text);
 }
 
 /**
@@ -204,8 +310,11 @@ int tinyui_label_set_text(struct tinyui_label *label, const char *text)
  * @param[out] label Label widget instance
  */
 
-const char *tinyui_label_get_text(struct tinyui_label *label)
+const char * tinyui_label_get_text(tinyui_obj_t *label_obj)
 {
+    struct tinyui_label *label = tinyui_label_as_label(label_obj);
+    if (label == 0) { return 0; }
+
     ldLabel_t *ld_label = tinyui_label_backend(label);
 
     if (ld_label == 0) {
@@ -223,8 +332,11 @@ const char *tinyui_label_get_text(struct tinyui_label *label)
  * @return -1 on failure
  */
 
-int tinyui_label_set_font(struct tinyui_label *label, const struct tinyui_font *font)
+int tinyui_label_set_font(tinyui_obj_t *label_obj, const struct tinyui_font *font)
 {
+    struct tinyui_label *label = tinyui_label_as_label(label_obj);
+    if (label == 0) { return -1; }
+
     ldLabel_t *ld_label = tinyui_label_backend(label);
     arm_2d_font_t *resolved_font;
 
@@ -250,11 +362,14 @@ int tinyui_label_set_font(struct tinyui_label *label, const struct tinyui_font *
  * @return -1 on failure
  */
 
-int tinyui_label_set_text_color(struct tinyui_label *label, unsigned int rgb)
+int tinyui_label_set_text_color(tinyui_obj_t *label_obj, unsigned int rgb)
 {
+    struct tinyui_label *label = tinyui_label_as_label(label_obj);
+    if (label == 0) { return -1; }
+
     ldLabel_t *ld_label;
 
-    if (label == 0 || tinyui_widget_set_text_color(&label->widget, rgb) != 0) {
+    if (label == 0 || tinyui_runtime_internal_widget_set_text_color(&label->widget, rgb) != 0) {
         return -1;
     }
 
@@ -275,8 +390,11 @@ int tinyui_label_set_text_color(struct tinyui_label *label, unsigned int rgb)
  * @return -1 on failure
  */
 
-int tinyui_label_get_text_color(struct tinyui_label *label, unsigned int *rgb)
+int tinyui_label_get_text_color(tinyui_obj_t *label_obj, unsigned int *rgb)
 {
+    struct tinyui_label *label = tinyui_label_as_label(label_obj);
+    if (label == 0) { return -1; }
+
     ldLabel_t *ld_label;
 
     if (label == 0 || rgb == 0) {
@@ -300,11 +418,14 @@ int tinyui_label_get_text_color(struct tinyui_label *label, unsigned int *rgb)
  * @return -1 on failure
  */
 
-int tinyui_label_set_bg_color(struct tinyui_label *label, unsigned int rgb)
+int tinyui_label_set_bg_color(tinyui_obj_t *label_obj, unsigned int rgb)
 {
+    struct tinyui_label *label = tinyui_label_as_label(label_obj);
+    if (label == 0) { return -1; }
+
     ldLabel_t *ld_label;
 
-    if (label == 0 || tinyui_widget_set_bg_color(&label->widget, rgb) != 0) {
+    if (label == 0 || tinyui_runtime_internal_widget_set_bg_color(&label->widget, rgb) != 0) {
         return -1;
     }
 
@@ -325,8 +446,11 @@ int tinyui_label_set_bg_color(struct tinyui_label *label, unsigned int rgb)
  * @return -1 on failure
  */
 
-int tinyui_label_get_bg_color(struct tinyui_label *label, unsigned int *rgb)
+int tinyui_label_get_bg_color(tinyui_obj_t *label_obj, unsigned int *rgb)
 {
+    struct tinyui_label *label = tinyui_label_as_label(label_obj);
+    if (label == 0) { return -1; }
+
     ldLabel_t *ld_label;
 
     if (label == 0 || rgb == 0) {
@@ -350,8 +474,11 @@ int tinyui_label_get_bg_color(struct tinyui_label *label, unsigned int *rgb)
  * @return -1 on failure
  */
 
-int tinyui_label_set_transparent(struct tinyui_label *label, int transparent)
+int tinyui_label_set_transparent(tinyui_obj_t *label_obj, int transparent)
 {
+    struct tinyui_label *label = tinyui_label_as_label(label_obj);
+    if (label == 0) { return -1; }
+
     ldLabel_t *ld_label = tinyui_label_backend(label);
 
     if (ld_label == 0) {
@@ -370,8 +497,11 @@ int tinyui_label_set_transparent(struct tinyui_label *label, int transparent)
  * @return -1 on failure
  */
 
-int tinyui_label_get_transparent(struct tinyui_label *label, int *transparent)
+int tinyui_label_get_transparent(tinyui_obj_t *label_obj, int *transparent)
 {
+    struct tinyui_label *label = tinyui_label_as_label(label_obj);
+    if (label == 0) { return -1; }
+
     ldLabel_t *ld_label;
 
     if (label == 0 || transparent == 0) {
@@ -395,8 +525,11 @@ int tinyui_label_get_transparent(struct tinyui_label *label, int *transparent)
  * @return -1 on failure
  */
 
-int tinyui_label_set_align(struct tinyui_label *label, enum tinyui_align align)
+int tinyui_label_set_align(tinyui_obj_t *label_obj, enum tinyui_align align)
 {
+    struct tinyui_label *label = tinyui_label_as_label(label_obj);
+    if (label == 0) { return -1; }
+
     ldLabel_t *ld_label = tinyui_label_backend(label);
 
     if (ld_label == 0) {
@@ -418,8 +551,11 @@ int tinyui_label_set_align(struct tinyui_label *label, enum tinyui_align align)
  * @return -1 on failure
  */
 
-int tinyui_label_get_align(struct tinyui_label *label, enum tinyui_align *align)
+int tinyui_label_get_align(tinyui_obj_t *label_obj, enum tinyui_align *align)
 {
+    struct tinyui_label *label = tinyui_label_as_label(label_obj);
+    if (label == 0) { return -1; }
+
     ldLabel_t *ld_label;
 
     if (label == 0 || align == 0) {
@@ -444,10 +580,11 @@ int tinyui_label_get_align(struct tinyui_label *label, enum tinyui_align *align)
  * @return -1 on failure
  */
 
-int tinyui_label_set_text_align(struct tinyui_label *label,
-                                enum tinyui_align x_align,
-                                enum tinyui_align y_align)
+int tinyui_label_set_text_align(tinyui_obj_t *label_obj, enum tinyui_align x_align, enum tinyui_align y_align)
 {
+    struct tinyui_label *label = tinyui_label_as_label(label_obj);
+    if (label == 0) { return -1; }
+
     ldLabel_t *ld_label = tinyui_label_backend(label);
 
     if (ld_label == 0 || !tinyui_label_align_is_valid(x_align)
@@ -467,9 +604,11 @@ int tinyui_label_set_text_align(struct tinyui_label *label,
  * @return -1 on failure
  */
 
-int tinyui_label_set_background_source(struct tinyui_label *label,
-                                       struct tinyui_image_source *source)
+int tinyui_label_set_background_source(tinyui_obj_t *label_obj, struct tinyui_image_source *source)
 {
+    struct tinyui_label *label = tinyui_label_as_label(label_obj);
+    if (label == 0) { return -1; }
+
     ldLabel_t *ld_label;
 
     if (label == 0 || (source != 0 && tinyui_image_source_get_image_tile(source) == 0)) {

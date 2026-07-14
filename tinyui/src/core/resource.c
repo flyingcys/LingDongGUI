@@ -225,7 +225,7 @@ tinyui_result_t tinyui_font_from_builtin(tinyui_builtin_font_t builtin,
         return TINYUI_ERROR_INVALID_ARG;
     }
     memset(out, 0, sizeof(*out));
-#ifdef TINYUI_WIDGET_H
+#if defined(TINYUI_WIDGET_H) || defined(TINYUI_INTERNAL_WIDGET_LEGACY_H)
     out->kind = TINYUI_FONT_KIND_FAMILY;
     switch (builtin) {
     case TINYUI_FONT_6X8:
@@ -258,7 +258,7 @@ tinyui_result_t tinyui_font_from_vres(uint32_t address, tinyui_font_t *out)
         return TINYUI_ERROR_INVALID_ARG;
     }
     memset(out, 0, sizeof(*out));
-#ifdef TINYUI_WIDGET_H
+#if defined(TINYUI_WIDGET_H) || defined(TINYUI_INTERNAL_WIDGET_LEGACY_H)
     out->kind = TINYUI_FONT_KIND_VRES;
     out->vres_addr = address;
 #else

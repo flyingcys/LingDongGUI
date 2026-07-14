@@ -12,7 +12,7 @@ typedef enum tinyui_builtin_font {
     TINYUI_FONT_ARIAL_16_A8,
 } tinyui_builtin_font_t;
 
-#ifdef TINYUI_WIDGET_H
+#if defined(TINYUI_WIDGET_H) || defined(TINYUI_INTERNAL_WIDGET_LEGACY_H)
 /* Private build compatibility for the pre-M4 widget implementation. */
 typedef enum tinyui_font_kind tinyui_font_kind_t;
 #else

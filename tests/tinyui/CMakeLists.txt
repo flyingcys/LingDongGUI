@@ -60,6 +60,9 @@ function(ld_register_tinyui_unit_test test_src)
     if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
         target_compile_definitions(${tinyui_target} PRIVATE _GNU_SOURCE)
     endif()
+    if(TINYUI_ENABLE_INTERNAL_V22_DEMO_BRIDGE)
+        target_compile_definitions(${tinyui_target} PRIVATE TINYUI_ENABLE_INTERNAL_V22_DEMO_BRIDGE=1)
+    endif()
 endfunction()
 
 foreach(test_src IN LISTS TINYUI_UNIT_TESTS)
@@ -397,4 +400,18 @@ if(LD_BUILD_RUNTIME_TESTS)
         SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/runtime/check_tinyui_backend_mapping.py"
         LABELS "tinyui;runtime;backend;mapping"
     )
+endif()
+
+
+# Task 7: private v2.2 demo bridge for in-tree legacy tests/demos.
+if(TINYUI_ENABLE_INTERNAL_V22_DEMO_BRIDGE)
+  get_property(_tinyui_targets DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY BUILDSYSTEM_TARGETS)
+  foreach(_t IN LISTS _tinyui_targets)
+    if(TARGET ${_t})
+      get_target_property(_type ${_t} TYPE)
+      if(_type STREQUAL "EXECUTABLE" OR _type STREQUAL "STATIC_LIBRARY")
+        target_compile_definitions(${_t} PRIVATE TINYUI_ENABLE_INTERNAL_V22_DEMO_BRIDGE=1)
+      endif()
+    endif()
+  endforeach()
 endif()

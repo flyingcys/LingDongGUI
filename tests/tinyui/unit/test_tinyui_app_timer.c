@@ -1,4 +1,4 @@
-#include "core/app.h"
+#include "internal/app_legacy.h"
 #include "internal.h"
 
 #include <assert.h>

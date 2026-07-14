@@ -510,7 +510,7 @@ rtk git diff --check
 
 - 产出：每个控件恰好一个 `tinyui_<widget>_create(tinyui_obj_t *parent)` 和一个 `tinyui_<widget>_create_with_props(tinyui_obj_t *parent, const tinyui_<widget>_props_t *props)`。
 
-- [ ] **步骤 1：写全控件 creator manifest 失败测试**
+- [x] **步骤 1：写全控件 creator manifest 失败测试**
 
 checker 从启用控件清单生成预期签名，拒绝返回 `struct tinyui_<widget> *`、parent 为 `struct tinyui_window *`、额外字符串 ID 参数、`*_init` creator 和缺失 presence mask 的 props。
 
@@ -522,19 +522,19 @@ rtk python3 tests/tinyui/contract/check_tinyui_widget_creator_contract.py
 
 预期：列出当前全部非 canonical creator。
 
-- [ ] **步骤 2：给每种 props 增加显式 presence mask**
+- [x] **步骤 2：给每种 props 增加显式 presence mask**
 
 每种 props 第一组字段固定包含 `uint32_t fields` 与 `uint16_t id`；`id=0` 表示 runtime 自动分配，但是否提供 id 仍由对应 presence bit 决定。颜色值 0、坐标 0、NULL resource 不再被当作“未设置”。普通 creator 等价于 `props=NULL`。
 
-- [ ] **步骤 3：统一全部 public 对象参数**
+- [x] **步骤 3：统一全部 public 对象参数**
 
 所有 widget-specific setter/getter 的对象参数改为 `tinyui_obj_t *` 或 `const tinyui_obj_t *`；实现入口先校验 internal kind，再转换为 concrete wrapper。public header 不再前置声明 concrete widget struct。
 
-- [ ] **步骤 4：保证 props creator 只复用正式 setter**
+- [x] **步骤 4：保证 props creator 只复用正式 setter**
 
 每个 `create_with_props` 必须先创建真实对象，再按固定字段顺序调用 canonical setter；任一 setter 失败时删除 backend 对象和 wrapper，返回 `NULL`，parent 不留下 child。M1 只要求链接与失败清理路径，真实 setter L4 映射在 M2/M3 验证。
 
-- [ ] **步骤 5：运行全控件 public contract 与逐符号链接**
+- [x] **步骤 5：运行全控件 public contract 与逐符号链接**
 
 ```bash
 rtk python3 tests/tinyui/contract/check_tinyui_widget_creator_contract.py
@@ -544,11 +544,13 @@ rtk cmake --build build/v2.3-m1-widgets --target tinyui_public_header_probes tin
 
 预期：所有启用控件使用统一 object API；每个声明独立 C/C++ 编译并链接。
 
-- [ ] **步骤 6：运行格式检查**
+- [x] **步骤 6：运行格式检查**
 
 ```bash
 rtk git diff --check
 ```
+
+任务 6 执行记录：creator/props/`tinyui_obj_t *` 统一 + presence-mask 门控已落地（checker 含 fields/anti-pattern/void-props/half-size/kind-fail 扫描，TDD 红→绿）。质量修复：setter kind 失败返回 -1；line_edit as_ 做 kind 校验；create_with_props 对有 setter 的字段禁止 `(void)props->`；WIDTH/HEIGHT 半边保留当前尺寸；table rows/cols 与 graph series_max 进入 create 路径；qrcode 去掉 present_mask。`tinyui_core` 与 creator contract 通过。scroll_selecter.c 改名/demo/aggregate 仍属任务 7；composite 半字段缺省读 host 当前值（radial/icon/clock/calendar/date_time/gauge），禁止 0/1970/0.5f 硬编码。
 
 ## 任务 7：移出 canonical legacy、错拼、重复 ABI 并建立受限迁移桥
 
@@ -573,17 +575,17 @@ rtk git diff --check
 
 - 产出：普通用户聚合头、安装树、最小 profile 和能力声明只含 canonical API；legacy/错拼入口只允许存在于显式私有迁移桥，并在 M4 删除。
 
-- [ ] **步骤 1：写 removed API 红色清单**
+- [x] **步骤 1：写 removed API 红色清单**
 
 checker 必须拒绝 canonical manifest、默认预处理的 public header、安装树或 minimal archive 中出现：`tinyui_app_*`、`tinyui_timer_handler`、`tinyui_widget_*`、`tinyui_tabel_*`、`tinyui_scroll_selecter_*`、`tinyui_q_r_code_*`、`tinyui_button_set_press`、`tinyui_button_get_press`、`tinyui_theme_create/destroy`、`tinyui_theme_apply_to_widget`、`tinyui_app_set_theme`、`tinyui_*_init`（唯一例外 `tinyui_init`）和 `tinyui_widget_set_style_class`。M1-M3 的默认 full archive 因仓内迁移桥可临时保留受控 legacy symbol，checker 必须验证这些符号只来自 `v22_demo_bridge.c`。
 
-- [ ] **步骤 2：把 app/widget/native legacy 移入私有迁移边界**
+- [x] **步骤 2：把 app/widget/native legacy 移入私有迁移边界**
 
 把 backend 尚需的 concrete struct、app helper 和 native converter 移入 `tinyui/src/core/internal.h` 或按职责拆分的 private 头。`app.c` 中仍需的内部函数改名为 `tinyui_runtime_internal_*` 并设为 private visibility。仓内旧 demo/测试所需入口集中放入 `internal/v22_demo_bridge.h` 与 `src/compat/v22_demo_bridge.c`，只在 `TINYUI_ENABLE_INTERNAL_V22_DEMO_BRIDGE=1` 时编译；该宏只能以 PRIVATE 方式赋给仓内旧消费者。
 
 bridge 每个函数必须转发 canonical API 或现有真实 backend 实现，错误原样传播；不允许返回固定成功、复制第二份状态或增加 fake renderer。`tinyui.h` 只在私有宏开启时条件包含 bridge，安装配置永远不定义该宏且不安装 internal 头。
 
-- [ ] **步骤 3：完成精确错拼和重复语义收口**
+- [x] **步骤 3：完成精确错拼和重复语义收口**
 
 - `scroll_selecter` 文件、类型、宏和函数统一为 `scroll_selector`。
 - `tinyui_tabel_show_keyboard` 删除，只保留 `tinyui_table_show_keyboard`。
@@ -592,11 +594,11 @@ bridge 每个函数必须转发 canonical API 或现有真实 backend 实现，�
 
 canonical 层不提供宏 alias 或 inline alias。旧符号若为仓内 demo 构建必需，只能由迁移桥导出到 full 测试构建；M4 删除后 M5 要求 archive 零命中。
 
-- [ ] **步骤 4：重写 `tinyui.h` 聚合边界**
+- [x] **步骤 4：重写 `tinyui.h` 聚合边界**
 
 它只能聚合 core result/obj/runtime/event/timer/focus、style/theme、layout、resource 和启用的 widget 头。禁止聚合 display、indev、tick、OSAL、port、integration/input 或 extensions/native；禁止出现 `ld*`、`arm_2d_*`、`SIGNAL_*`、`tile`、PFB 和 backend include。
 
-- [ ] **步骤 5：运行头、链接、泄漏和 removed API 门禁**
+- [x] **步骤 5：运行头、链接、泄漏和 removed API 门禁**
 
 ```bash
 rtk cmake --build build/v2.3-m1-widgets --target tinyui_public_header_probes tinyui_public_symbol_link_probes -j
@@ -606,7 +608,7 @@ rtk python3 tests/tinyui/contract/check_tinyui_public_api.py
 
 预期：canonical manifest、默认 `tinyui.h`、安装投影和 minimal archive 的旧符号为零；full archive 中任何临时旧符号都可追溯到唯一 bridge translation unit；`tinyui.h` 默认递归闭包没有 integration、native、backend 或 platform 泄漏。
 
-- [ ] **步骤 6：运行格式检查**
+- [x] **步骤 6：运行格式检查**
 
 ```bash
 rtk git diff --check
@@ -627,23 +629,23 @@ rtk git diff --check
 
 - 产出：每个 widget 一个 `TINYUI_ENABLE_<WIDGET>` CMake cache BOOL 和同名值宏；optional 模块为 `TINYUI_ENABLE_THEME`、`TINYUI_ENABLE_DIAGNOSTICS`、`TINYUI_ENABLE_NATIVE_INTEROP`。
 
-- [ ] **步骤 1：写 feature/source 双向一致测试**
+- [x] **步骤 1：写 feature/source 双向一致测试**
 
 checker 读取控件 manifest、CMake cache 和 `tinyui_core` sources：宏为 0 时对应 `tinyui/src/widgets/<widget>.c` 不得进入 target，宏为 1 时必须进入；每个控件恰有一个选项。特殊文件名 `qrcode.c`、`progress_wheel.c`、`scroll_selector.c` 在 manifest 中显式登记。
 
-- [ ] **步骤 2：定义全部控件开关**
+- [x] **步骤 2：定义全部控件开关**
 
 为当前 29 个控件族逐一增加 BOOL：`WINDOW`、`BACKGROUND`、`LABEL`、`BUTTON`、`CHECKBOX`、`SWITCH`、`SLIDER`、`TEXT`、`IMAGE`、`LINE_EDIT`、`KEYBOARD`、`CANVAS`、`COMBO_BOX`、`SCROLL_SELECTOR`、`TABLE`、`GRAPH`、`CALENDAR`、`ARC`、`GAUGE`、`ICON_SLIDER`、`RADIAL_MENU`、`PROGRESS_BAR`、`PROGRESS_WHEEL`、`QRCODE`、`ANIMATION`、`DATE_TIME`、`CLOCK`、`LIST`、`MESSAGE_BOX`。默认配置开启正式 demo/测试所需项；开关必须直接控制 `target_sources`，不能只控制 header 宏。
 
-- [ ] **步骤 3：定义最小 profile**
+- [x] **步骤 3：定义最小 profile**
 
 唯一入口 `-DTINYUI_PROFILE=minimal` 强制只开启 runtime、window/background root、label、button，关闭其余 25 个控件、theme、diagnostics、native interop 和 internal v2.2 demo bridge。不创建 `cmake/TinyUIMinimal.cmake`，也不增加第二个 core library 实现。
 
-- [ ] **步骤 4：把 public 聚合头与开关同步**
+- [x] **步骤 4：把 public 聚合头与开关同步**
 
 generated `tinyui_config.h` 的宏值必须是 0/1；`tinyui.h` 在宏为 1 时 include 对应 widget 头。直接 include 被关闭 widget 头必须明确产生预处理错误 `TINYUI_ENABLE_<WIDGET> is disabled`，避免声明存在但实现被裁掉。
 
-- [ ] **步骤 5：先运行最小 profile 符号红门禁，再修 source gating**
+- [x] **步骤 5：先运行最小 profile 符号红门禁，再修 source gating**
 
 ```bash
 rtk cmake -S . -B build/v2.3-m1-minimal -DENABLE_TEST=ON -DLD_BUILD_SDL_DEMO=OFF -DLD_BUILD_RUNTIME_TESTS=OFF -DLD_TINYUI_PORT=none -DTINYUI_PROFILE=minimal
@@ -655,7 +657,7 @@ rtk python3 tests/tinyui/perf/check_tinyui_minimal_symbols.py --mode enforce --b
 
 在 `tests/tinyui/CMakeLists.txt` 注册唯一 CTest `check_tinyui_minimal_profile`，它只调用 `check_tinyui_minimal_symbols.py --mode enforce`，label 为 `tinyui;contract;size;minimal`。不得再增加第二个 minimal checker。
 
-- [ ] **步骤 6：验证默认 full profile 不丢能力**
+- [x] **步骤 6：验证默认 full profile 不丢能力**
 
 ```bash
 rtk cmake -S . -B build/v2.3-m1-full -DENABLE_TEST=ON -DLD_BUILD_SDL_DEMO=ON -DLD_BUILD_RUNTIME_TESTS=ON -DLD_BUILD_VISUAL_TESTS=OFF -DLD_TINYUI_PORT=sdl
@@ -686,15 +688,15 @@ rtk git diff --check
 
 - 产出：`scan_public_identifiers()`、`scan_forbidden_allocations(functions)`、host/32-bit 条件静态断言。
 
-- [ ] **步骤 1：写反重型 checker fixture 测试**
+- [x] **步骤 1：写反重型 checker fixture 测试**
 
 fixture 分别加入 `tinyui_style_class_registry`、`tinyui_event_bubble`、`tinyui_resource_cache`、`tinyui_renderer_plugin`、`tinyui_property_database`，以及在 `tinyui_process` 函数体调用 `malloc`；checker 必须逐项拒绝。注释和字符串不计为标识符命中，防止误报文档描述。
 
-- [ ] **步骤 2：实现 public 与 runtime 两层扫描**
+- [x] **步骤 2：实现 public 与 runtime 两层扫描**
 
 public 禁止标识符前缀/片段固定为 `style_class`、`selector`、`cascade`、`bubble`、`capture`、`property_registry`、`resource_manager`、`resource_cache`、`renderer_plugin`、`draw_task`。runtime 禁止在 `tinyui_process`、event dispatch、timer dispatch、`tinyui_theme_apply`、layout setter 和普通 getter 的函数体调用 `malloc/calloc/realloc/free/ldMalloc/ldCalloc/ldFree`。
 
-- [ ] **步骤 3：增加 fixed-pool 结构预算断言**
+- [x] **步骤 3：增加 fixed-pool 结构预算断言**
 
 当 `UINTPTR_MAX == UINT32_MAX` 时，internal ABI target 必须断言：
 
@@ -711,11 +713,11 @@ _Static_assert(sizeof(tinyui_font_t) <= 16,
 
 如果当前 host 不是 32 位，host 测试必须显示 `ABI32_NOT_EXECUTED_ON_HOST`，但 CMake 同时生成 `tinyui_abi32_compile` 目标供 32 位 MCU toolchain 执行；不得把 host skip 记录成 32 位通过。
 
-- [ ] **步骤 4：把 M0 baseline pool 状态切换为 fixed_pool**
+- [x] **步骤 4：把 M0 baseline pool 状态切换为 fixed_pool**
 
 只有 `tinyui_timer_pool`、`tinyui_event_callback_pool` 和 `tinyui_runtime_bookkeeping` 三个实际固定结构存在后，才把 JSON 的 `implementation` 从 `legacy` 改为 `fixed_pool`，并写入三个实际 32 位尺寸及 sum。若 M1 只完成声明、M2 才完成池实现，则 M1 closeout 保持 `legacy` 并明确该项是 M2 阻断门禁，不能伪造为通过。
 
-- [ ] **步骤 5：注册并运行静态门禁**
+- [x] **步骤 5：注册并运行静态门禁**
 
 ```bash
 rtk python3 tests/tinyui/contract/test_check_tinyui_lightweight_architecture.py -v
@@ -726,7 +728,7 @@ rtk ctest --test-dir build/v2.3-m1-full --output-on-failure -L '^lightweight$'
 
 预期：没有重型 public/runtime 概念；host ABI probe 通过；32 位是否执行被准确标记。
 
-- [ ] **步骤 6：运行格式检查**
+- [x] **步骤 6：运行格式检查**
 
 ```bash
 rtk git diff --check
@@ -744,7 +746,7 @@ rtk git diff --check
 - 消费：任务 1-9 的 canonical manifest、full/minimal 构建和 M0 baseline。
 - 产出：M1 public ABI freeze 哈希；不产出 L3-L5 或 port 完成声明。
 
-- [ ] **步骤 1：重新生成 public contract manifest 并确认无漂移**
+- [x] **步骤 1：重新生成 public contract manifest 并确认无漂移**
 
 ```bash
 rtk python3 tests/tinyui/contract/check_tinyui_v23_public_api.py --write-hash tests/tinyui/contract/tinyui_v23_public_api.json
@@ -753,7 +755,7 @@ rtk python3 tests/tinyui/contract/check_tinyui_v23_public_api.py --check tests/t
 
 预期：输出稳定 SHA-256；第二次运行不修改文件。
 
-- [ ] **步骤 2：执行默认 full closeout**
+- [x] **步骤 2：执行默认 full closeout**
 
 ```bash
 rtk cmake -S . -B build/v2.3-m1-closeout -DENABLE_TEST=ON -DLD_BUILD_SDL_DEMO=ON -DLD_BUILD_RUNTIME_TESTS=ON -DLD_BUILD_VISUAL_TESTS=OFF -DLD_TINYUI_PORT=sdl
@@ -763,7 +765,7 @@ rtk ctest --test-dir build/v2.3-m1-closeout --output-on-failure
 
 预期：配置、全量构建和全部注册 CTest 零失败；M0 inventory、公共头、逐符号链接、wrapper、分配和性能门禁保持绿色。
 
-- [ ] **步骤 3：执行最小 profile closeout**
+- [x] **步骤 3：执行最小 profile closeout**
 
 ```bash
 rtk cmake -S . -B build/v2.3-m1-minimal-closeout -DENABLE_TEST=ON -DLD_BUILD_SDL_DEMO=OFF -DLD_BUILD_RUNTIME_TESTS=OFF -DLD_TINYUI_PORT=none -DTINYUI_PROFILE=minimal
@@ -773,7 +775,7 @@ rtk python3 tests/tinyui/perf/check_tinyui_minimal_symbols.py --mode enforce --b
 
 预期：只保留 runtime、root window/background、label、button 及其不可分割 backend 依赖；关闭控件和 optional 模块的 public 实现符号为零。
 
-- [ ] **步骤 4：执行 legacy/native/重型概念终检**
+- [x] **步骤 4：执行 legacy/native/重型概念终检**
 
 ```bash
 rtk python3 tests/tinyui/contract/check_tinyui_removed_api.py --archive build/v2.3-m1-closeout/libtinyui_core.a
@@ -784,11 +786,11 @@ rtk ctest --test-dir build/v2.3-m1-closeout --output-on-failure -L '^contract$'
 
 预期：legacy、错拼、重复 API、native 泄漏和重型 runtime 标识符均为零。
 
-- [ ] **步骤 5：运行 GitNexus 阶段影响收敛**
+- [x] **步骤 5：运行 GitNexus 阶段影响收敛**
 
 调用 GitNexus `detect_changes()`，确认受影响流程与任务 1 的迁移清单一致；重新对 `tinyui_screen_create`、`tinyui_init` 和 canonical replacement 做 upstream impact。任何未列出的 HIGH/CRITICAL 消费者必须在 M1 内迁移或明确阻断，不能留给运行时偶然暴露。
 
-- [ ] **步骤 6：运行格式检查**
+- [x] **步骤 6：运行格式检查**
 
 ```bash
 rtk git diff --check

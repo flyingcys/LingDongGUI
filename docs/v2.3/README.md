@@ -71,6 +71,6 @@ v2.3 只在以下条件同时满足时关闭：
 
 ## 当前执行进度
 
-M0 已完成。M1 已完成任务 1-5：public contract、runtime/object、event/timer/focus、style/theme/diagnostics、flex/grid/image/font descriptor。任务 6-10 尚未开始，因此 M1 仍保持“进行中”。
+M0 已完成。M1 已完成任务 1-6：public contract、runtime/object、event/timer/focus、style/theme/diagnostics、flex/grid/image/font descriptor、全控件 creator/props/object 参数统一。任务 7-10 尚未开始，因此 M1 仍保持“进行中”。
 
-M1 任务 5 的窄验证为 layout/resource contract 与 public ABI CTest `2/2`、public contract checker 单测 `11/11`，并通过 `rtk git diff --check`；未执行全量构建。font/widget legacy 兼容面与 aggregate 迁移保留到任务 7，不能据此宣称 canonical public surface 已全部收口。
+M1 任务 6 的窄验证为 widget creator contract checker 绿（29 控件，含 presence-mask 静态扫描）、全部 `create_with_props` 按 `props->fields` 门控 setter（含 half-size 保留当前边、table/graph 尺寸进入 create、setter kind 失败返回 -1）、`tinyui_core` 构建通过、`tinyui_public_header_probes_{c,cpp}` 通过；`tinyui_public_symbol_link_probes` 仍被既有 `tinyui_last_error_message` 诊断开关扫描问题挡住。`scroll_selecter.h` 已重命名为 `scroll_selector.h`，源文件改名与 legacy aggregate 清理留给任务 7。

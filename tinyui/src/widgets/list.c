@@ -18,10 +18,29 @@
 
 #include "internal.h"
 #include "widgets/list.h"
-#include "core/widget.h"
+#include "internal/widget_legacy.h"
 #include "../core/runtime_bridge.h"
 #include "../../../src/gui/ldBase.h"
 #include "../../../src/gui/ldList.h"
+
+
+static struct tinyui_list *tinyui_list_as_list(tinyui_obj_t *obj)
+{
+    struct tinyui_widget *w = (struct tinyui_widget *)(void *)obj;
+    if (w == 0 || !tinyui_runtime_internal_widget_is_kind(w, TINYUI_BACKEND_WIDGET_LIST)) {
+        return 0;
+    }
+    return (struct tinyui_list *)w;
+}
+
+static const struct tinyui_list *tinyui_list_as_list_const(const tinyui_obj_t *obj)
+{
+    const struct tinyui_widget *w = (const struct tinyui_widget *)(const void *)obj;
+    if (w == 0 || !tinyui_runtime_internal_widget_is_kind(w, TINYUI_BACKEND_WIDGET_LIST)) {
+        return 0;
+    }
+    return (const struct tinyui_list *)w;
+}
 
 #define TINYUI_HIDDEN __attribute__((visibility("hidden")))
 
@@ -33,13 +52,13 @@ static void tinyui_list_rollback(struct tinyui_list *list)
         return;
     }
     if (list->widget.ld_widget != 0) {
-        tinyui_widget_destroy_common(&list->widget);
+        tinyui_runtime_internal_widget_destroy_common(&list->widget);
     } else {
         ldFree(list);
     }
 }
 
-static void *tinyui_list_ld_init(void *ctx,
+static void *tinyui_runtime_internal_list_ld_init(void *ctx,
                                  struct ld_scene_t *scene,
                                  uint16_t name_id,
                                  uint16_t parent_name_id)
@@ -63,16 +82,20 @@ static void *tinyui_list_ld_init(void *ctx,
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct tinyui_list *tinyui_list_create(struct tinyui_widget *parent, const char *id)
+tinyui_obj_t *tinyui_list_create(tinyui_obj_t *parent)
 {
+    struct tinyui_widget *parent_w = (struct tinyui_widget *)(void *)parent;
+    const char *id = "list";
+    if (parent_w == 0) { return 0; }
+
     struct tinyui_list *list;
 
-    if (parent == 0 || id == 0 || parent->ld_widget == 0) {
+    if (parent_w == 0 || id == 0 || parent_w->ld_widget == 0) {
         return 0;
     }
-    list = (struct tinyui_list *)tinyui_widget_create_leaf(parent,
+    list = (struct tinyui_list *)tinyui_runtime_internal_widget_create_leaf(parent_w,
                                                            TINYUI_BACKEND_WIDGET_LIST,
-                                                           tinyui_list_ld_init,
+                                                           tinyui_runtime_internal_list_ld_init,
                                                            0,
                                                            sizeof(*list));
     if (list == 0) {
@@ -82,7 +105,7 @@ struct tinyui_list *tinyui_list_create(struct tinyui_widget *parent, const char 
     list->id = id;
     list->selected_index = -1;
 
-    return list;
+    return (tinyui_obj_t *)list;
 }
 
 /**
@@ -93,27 +116,42 @@ struct tinyui_list *tinyui_list_create(struct tinyui_widget *parent, const char 
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct tinyui_list *tinyui_list_create_with_props(struct tinyui_widget *parent,
-                                                  const struct tinyui_list_props *props)
+tinyui_obj_t *tinyui_list_create_with_props(tinyui_obj_t *parent,
+                                             const tinyui_list_props_t *props)
 {
+    tinyui_obj_t *obj;
     struct tinyui_list *list;
 
     if (props == 0) {
-        return 0;
+        return tinyui_list_create(parent);
     }
 
-    list = tinyui_list_create(parent, props->id);
-    if (list == 0) {
+    obj = tinyui_list_create(parent);
+    if (obj == 0) {
         return 0;
     }
+    list = (struct tinyui_list *)(void *)obj;
 
-    if (tinyui_widget_set_style_class(&list->widget, props->style_class) != 0 ||
-        tinyui_widget_set_user_data(&list->widget, props->user_data) != 0) {
+    if ((props->fields & TINYUI_LIST_FIELD_ID) != 0) {
+        /* id=0 means runtime auto-alloc; non-zero reserved for host name_id path. */
+        (void)props->id;
+    }
+    if ((props->fields & TINYUI_LIST_FIELD_USER_DATA) != 0) {
+    if (tinyui_runtime_internal_widget_set_user_data(&list->widget, props->user_data) != 0) {
         tinyui_list_rollback(list);
         return 0;
     }
-    return list;
+    }
+    if ((props->fields & TINYUI_LIST_FIELD_STYLE_CLASS) != 0) {
+    if (tinyui_runtime_internal_widget_set_style_class(&list->widget, props->style_class) != 0) {
+        tinyui_list_rollback(list);
+        return 0;
+    }
+    }
+
+    return obj;
 }
+
 
 /**
  * @brief list add item
@@ -124,8 +162,11 @@ struct tinyui_list *tinyui_list_create_with_props(struct tinyui_widget *parent,
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_list_add_item(struct tinyui_list *list, const char *id, const char *text)
+int tinyui_list_add_item(tinyui_obj_t *list_obj, const char *id, const char *text)
 {
+    struct tinyui_list *list = tinyui_list_as_list(list_obj);
+    if (list == 0) { return -1; }
+
     ldList_t *ld_list;
     int index;
     int next_count;
@@ -163,8 +204,11 @@ int tinyui_list_add_item(struct tinyui_list *list, const char *id, const char *t
  * @return -1 on failure
  */
 
-int tinyui_list_set_item_height(struct tinyui_list *list, int item_height)
+int tinyui_list_set_item_height(tinyui_obj_t *list_obj, int item_height)
 {
+    struct tinyui_list *list = tinyui_list_as_list(list_obj);
+    if (list == 0) { return -1; }
+
     ldList_t *ld_list;
 
     if (list == 0 || list->widget.ld_widget == 0 ||
@@ -189,8 +233,11 @@ int tinyui_list_set_item_height(struct tinyui_list *list, int item_height)
  * @return -1 on failure
  */
 
-int tinyui_list_set_padding_group(struct tinyui_list *list, int top, int bottom, int left, int right)
+int tinyui_list_set_padding_group(tinyui_obj_t *list_obj, int top, int bottom, int left, int right)
 {
+    struct tinyui_list *list = tinyui_list_as_list(list_obj);
+    if (list == 0) { return -1; }
+
     ldList_t *ld_list;
 
     if (list == 0 || list->widget.ld_widget == 0 ||
@@ -218,8 +265,11 @@ int tinyui_list_set_padding_group(struct tinyui_list *list, int top, int bottom,
  * @return -1 on failure
  */
 
-int tinyui_list_set_margin_group(struct tinyui_list *list, int top, int bottom, int left, int right)
+int tinyui_list_set_margin_group(tinyui_obj_t *list_obj, int top, int bottom, int left, int right)
 {
+    struct tinyui_list *list = tinyui_list_as_list(list_obj);
+    if (list == 0) { return -1; }
+
     ldList_t *ld_list;
 
     if (list == 0 || list->widget.ld_widget == 0 ||
@@ -244,8 +294,11 @@ int tinyui_list_set_margin_group(struct tinyui_list *list, int top, int bottom, 
  * @return -1 on failure
  */
 
-int tinyui_list_set_text_color(struct tinyui_list *list, unsigned int rgb)
+int tinyui_list_set_text_color(tinyui_obj_t *list_obj, unsigned int rgb)
 {
+    struct tinyui_list *list = tinyui_list_as_list(list_obj);
+    if (list == 0) { return -1; }
+
     ldList_t *ld_list;
 
     if (list == 0 || list->widget.ld_widget == 0 ||
@@ -255,7 +308,7 @@ int tinyui_list_set_text_color(struct tinyui_list *list, unsigned int rgb)
 
     ld_list = (ldList_t *)list->widget.ld_widget;
     ldListSetTextColor(ld_list, (ldColor)tinyui_rgb_to_ld_color(rgb));
-    return tinyui_widget_set_text_color(&list->widget, rgb);
+    return tinyui_runtime_internal_widget_set_text_color(&list->widget, rgb);
 }
 
 /**
@@ -266,8 +319,11 @@ int tinyui_list_set_text_color(struct tinyui_list *list, unsigned int rgb)
  * @return -1 on failure
  */
 
-int tinyui_list_set_bg_color(struct tinyui_list *list, unsigned int rgb)
+int tinyui_list_set_bg_color(tinyui_obj_t *list_obj, unsigned int rgb)
 {
+    struct tinyui_list *list = tinyui_list_as_list(list_obj);
+    if (list == 0) { return -1; }
+
     ldList_t *ld_list;
 
     if (list == 0 || list->widget.ld_widget == 0 ||
@@ -277,7 +333,7 @@ int tinyui_list_set_bg_color(struct tinyui_list *list, unsigned int rgb)
 
     ld_list = (ldList_t *)list->widget.ld_widget;
     ldListSetBackgroundColor(ld_list, (ldColor)tinyui_rgb_to_ld_color(rgb));
-    return tinyui_widget_set_bg_color(&list->widget, rgb);
+    return tinyui_runtime_internal_widget_set_bg_color(&list->widget, rgb);
 }
 
 /**
@@ -288,8 +344,11 @@ int tinyui_list_set_bg_color(struct tinyui_list *list, unsigned int rgb)
  * @return -1 on failure
  */
 
-int tinyui_list_set_select_color(struct tinyui_list *list, unsigned int rgb)
+int tinyui_list_set_select_color(tinyui_obj_t *list_obj, unsigned int rgb)
 {
+    struct tinyui_list *list = tinyui_list_as_list(list_obj);
+    if (list == 0) { return -1; }
+
     ldList_t *ld_list;
 
     if (list == 0 || list->widget.ld_widget == 0 ||
@@ -299,7 +358,7 @@ int tinyui_list_set_select_color(struct tinyui_list *list, unsigned int rgb)
 
     ld_list = (ldList_t *)list->widget.ld_widget;
     ldListSetSelectColor(ld_list, (ldColor)tinyui_rgb_to_ld_color(rgb));
-    return tinyui_widget_set_border_color(&list->widget, rgb);
+    return tinyui_runtime_internal_widget_set_border_color(&list->widget, rgb);
 }
 
 /**
@@ -310,8 +369,11 @@ int tinyui_list_set_select_color(struct tinyui_list *list, unsigned int rgb)
  * @return -1 on failure
  */
 
-int tinyui_list_set_align(struct tinyui_list *list, enum tinyui_align align)
+int tinyui_list_set_align(tinyui_obj_t *list_obj, enum tinyui_align align)
 {
+    struct tinyui_list *list = tinyui_list_as_list(list_obj);
+    if (list == 0) { return -1; }
+
     ldList_t *ld_list;
 
     if (list == 0 || list->widget.ld_widget == 0 ||
@@ -336,29 +398,32 @@ int tinyui_list_set_align(struct tinyui_list *list, enum tinyui_align align)
  * @return -1 on failure
  */
 
-int tinyui_list_set_item_widget(struct tinyui_list *list,
-                                int index,
-                                struct tinyui_widget *item_widget)
+int tinyui_list_set_item_widget(tinyui_obj_t *list_obj, int index, tinyui_obj_t *item_widget)
 {
+    struct tinyui_list *list = tinyui_list_as_list(list_obj);
+    struct tinyui_widget *item;
     ldList_t *ld_list;
     ldBase_t *ld_child;
 
-    if (list == 0 || item_widget == 0 || item_widget->ld_widget == 0) {
+    if (list == 0) { return -1; }
+
+    item = (struct tinyui_widget *)(void *)item_widget;
+    if (list == 0 || item == 0 || item->ld_widget == 0) {
         return -1;
     }
 
     if (list->widget.ld_widget == 0 ||
         list->widget.kind != TINYUI_BACKEND_WIDGET_LIST ||
-        item_widget->kind == TINYUI_BACKEND_WIDGET_WINDOW ||
-        item_widget->kind == TINYUI_BACKEND_WIDGET_BACKGROUND ||
-        item_widget->owner != list->widget.owner ||
+        item->kind == TINYUI_BACKEND_WIDGET_WINDOW ||
+        item->kind == TINYUI_BACKEND_WIDGET_BACKGROUND ||
+        item->owner != list->widget.owner ||
         index < 0 ||
         index >= list->item_count) {
         return -1;
     }
 
     ld_list = (ldList_t *)list->widget.ld_widget;
-    ld_child = (ldBase_t *)item_widget->ld_widget;
+    ld_child = (ldBase_t *)item->ld_widget;
     if (ldBaseGetParent(ld_child) != NULL) {
         ldBaseNodeRemove((arm_2d_control_node_t *)ld_child);
     }
@@ -376,8 +441,11 @@ int tinyui_list_set_item_widget(struct tinyui_list *list,
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_list_set_selected_index(struct tinyui_list *list, int index)
+int tinyui_list_set_selected_index(tinyui_obj_t *list_obj, int index)
 {
+    struct tinyui_list *list = tinyui_list_as_list(list_obj);
+    if (list == 0) { return -1; }
+
     ldList_t *ld_list;
 
     if (list == 0 || list->widget.ld_widget == 0 ||
@@ -400,8 +468,11 @@ int tinyui_list_set_selected_index(struct tinyui_list *list, int index)
  * @return -1 on failure
  */
 
-int tinyui_list_get_selected_index(const struct tinyui_list *list)
+int tinyui_list_get_selected_index(const tinyui_obj_t *list_obj)
 {
+    const struct tinyui_list *list = tinyui_list_as_list_const(list_obj);
+    if (list == 0) { return -1; }
+
     ldList_t *ld_list;
     int selected_index;
 
@@ -433,17 +504,18 @@ int tinyui_list_get_selected_index(const struct tinyui_list *list)
  * @param[in] user_data User data pointer
  */
 
-void tinyui_list_set_on_selected(struct tinyui_list *list,
-                                 void (*callback)(struct tinyui_list *list,
+void tinyui_list_set_on_selected(tinyui_obj_t *list_obj, void (*callback)(tinyui_obj_t *list,
                                                   int index,
-                                                  void *user_data),
-                                 void *user_data)
+                                                  void *user_data), void *user_data)
 {
+    struct tinyui_list *list = tinyui_list_as_list(list_obj);
+    if (list == 0) { return; }
+
     if (list == 0) {
         return;
     }
 
-    list->cb = callback;
+    list->cb = (void (*)(struct tinyui_list *, int, void *))callback;
     list->user_data = user_data;
 }
 

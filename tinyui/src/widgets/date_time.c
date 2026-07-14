@@ -18,12 +18,31 @@
 
 #include "internal.h"
 #include "widgets/date_time.h"
-#include "core/widget.h"
+#include "internal/widget_legacy.h"
 #include "../core/runtime_bridge.h"
 #include "../../../src/gui/ldDateTime.h"
 
 #include <stdlib.h>
 #include <string.h>
+
+
+static struct tinyui_date_time *tinyui_date_time_as_date_time(tinyui_obj_t *obj)
+{
+    struct tinyui_widget *w = (struct tinyui_widget *)(void *)obj;
+    if (w == 0 || !tinyui_runtime_internal_widget_is_kind(w, TINYUI_BACKEND_WIDGET_DATE_TIME)) {
+        return 0;
+    }
+    return (struct tinyui_date_time *)w;
+}
+
+static const struct tinyui_date_time *tinyui_date_time_as_date_time_const(const tinyui_obj_t *obj)
+{
+    const struct tinyui_widget *w = (const struct tinyui_widget *)(const void *)obj;
+    if (w == 0 || !tinyui_runtime_internal_widget_is_kind(w, TINYUI_BACKEND_WIDGET_DATE_TIME)) {
+        return 0;
+    }
+    return (const struct tinyui_date_time *)w;
+}
 
 /* ---- test seam state ---- */
 
@@ -47,10 +66,9 @@ static ldDateTime_t *tinyui_date_time_backend(struct tinyui_date_time *dt)
     return (ldDateTime_t *)dt->widget.ld_widget;
 }
 
-static int tinyui_date_time_props_are_valid(const struct tinyui_date_time_props *props)
+static int tinyui_date_time_props_are_valid(const tinyui_date_time_props_t *props)
 {
     return props != 0
-        && props->id != 0
         && props->format != 0
         && props->month >= 1
         && props->month <= 12
@@ -64,7 +82,7 @@ static int tinyui_date_time_props_are_valid(const struct tinyui_date_time_props 
         && props->second <= 59;
 }
 
-static void *tinyui_date_time_ld_init(void *ctx,
+static void *tinyui_runtime_internal_date_time_ld_init(void *ctx,
                                       struct ld_scene_t *scene,
                                       uint16_t name_id,
                                       uint16_t parent_name_id)
@@ -89,17 +107,21 @@ static void *tinyui_date_time_ld_init(void *ctx,
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct tinyui_date_time *tinyui_date_time_create(struct tinyui_widget *parent, const char *id)
+tinyui_obj_t *tinyui_date_time_create(tinyui_obj_t *parent)
 {
+    struct tinyui_widget *parent_w = (struct tinyui_widget *)(void *)parent;
+    const char *id = "date_time";
+    if (parent_w == 0) { return 0; }
+
     struct tinyui_date_time *dt;
     ldDateTime_t *ld_date_time;
 
-    if (parent == 0 || id == 0 || parent->ld_widget == 0) {
+    if (parent_w == 0 || id == 0 || parent_w->ld_widget == 0) {
         return 0;
     }
-    dt = (struct tinyui_date_time *)tinyui_widget_create_leaf(parent,
+    dt = (struct tinyui_date_time *)tinyui_runtime_internal_widget_create_leaf(parent_w,
                                                               TINYUI_BACKEND_WIDGET_DATE_TIME,
-                                                              tinyui_date_time_ld_init,
+                                                              tinyui_runtime_internal_date_time_ld_init,
                                                               0,
                                                               sizeof(*dt));
     if (dt == 0) {
@@ -107,12 +129,12 @@ struct tinyui_date_time *tinyui_date_time_create(struct tinyui_widget *parent, c
     }
     dt->id = id;
     if (tinyui_date_time_set_font(dt, NULL) != 0) {
-        tinyui_widget_destroy_common(&dt->widget);
+        tinyui_runtime_internal_widget_destroy_common(&dt->widget);
         return 0;
     }
     ld_date_time = tinyui_date_time_backend(dt);
     if (ld_date_time == NULL) {
-        tinyui_widget_destroy_common(&dt->widget);
+        tinyui_runtime_internal_widget_destroy_common(&dt->widget);
         return 0;
     }
     dt->format = (const char *)ld_date_time->formatStr;
@@ -124,7 +146,7 @@ struct tinyui_date_time *tinyui_date_time_create(struct tinyui_widget *parent, c
     dt->second = ld_date_time->second;
     dt->transparent = ld_date_time->isTransparent ? 1 : 0;
     dt->use_system_time = ld_date_time->isAutoSysTime ? 1 : 0;
-    return dt;
+    return (tinyui_obj_t *)dt;
 }
 
 /**
@@ -135,9 +157,9 @@ struct tinyui_date_time *tinyui_date_time_create(struct tinyui_widget *parent, c
  * @return Pointer to the object
  */
 
-struct tinyui_date_time *tinyui_date_time_init(struct tinyui_widget *parent, const char *id)
+struct tinyui_date_time *tinyui_runtime_internal_date_time_init(struct tinyui_widget *parent, const char *id)
 {
-    return tinyui_date_time_create(parent, id);
+    return tinyui_date_time_create(parent);
 }
 
 /**
@@ -148,38 +170,126 @@ struct tinyui_date_time *tinyui_date_time_init(struct tinyui_widget *parent, con
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct tinyui_date_time *tinyui_date_time_create_with_props(
-    struct tinyui_widget *parent,
-    const struct tinyui_date_time_props *props)
+tinyui_obj_t *tinyui_date_time_create_with_props(tinyui_obj_t *parent,
+                                             const tinyui_date_time_props_t *props)
 {
+    tinyui_obj_t *obj;
     struct tinyui_date_time *dt;
 
-    if (!tinyui_date_time_props_are_valid(props)) {
-        return 0;
+    if (props == 0) {
+        return tinyui_date_time_create(parent);
     }
 
-    dt = tinyui_date_time_create(parent, props->id);
-    if (dt == 0) {
+    obj = tinyui_date_time_create(parent);
+    if (obj == 0) {
         return 0;
     }
+    dt = (struct tinyui_date_time *)(void *)obj;
 
-    if ((props->style_class != 0
-            && tinyui_widget_set_style_class(&dt->widget, props->style_class) != 0)
-        || tinyui_widget_set_user_data(&dt->widget, props->user_data) != 0
-        || (props->font != 0 && tinyui_date_time_set_font(dt, props->font) != 0)
-        || tinyui_date_time_set_format(dt, props->format) != 0
-        || tinyui_date_time_set_text_color(dt, props->text_color) != 0
-        || tinyui_date_time_set_bg_color(dt, props->bg_color) != 0
-        || tinyui_date_time_set_align(dt, props->align) != 0
-        || tinyui_date_time_set_transparent(dt, props->transparent) != 0
-        || tinyui_date_time_set_date(dt, props->year, props->month, props->day) != 0
-        || tinyui_date_time_set_time(dt, props->hour, props->minute, props->second) != 0) {
-        tinyui_widget_destroy_common(&dt->widget);
+    if ((props->fields & TINYUI_DATE_TIME_FIELD_ID) != 0) {
+        (void)props->id;
+    }
+    if ((props->fields & TINYUI_DATE_TIME_FIELD_USER_DATA) != 0) {
+    if (tinyui_runtime_internal_widget_set_user_data(&dt->widget, props->user_data) != 0) {
+        (void)tinyui_obj_delete((tinyui_obj_t *)dt);
         return 0;
     }
+    }
+    if ((props->fields & TINYUI_DATE_TIME_FIELD_STYLE_CLASS) != 0) {
+    if (tinyui_runtime_internal_widget_set_style_class(&dt->widget, props->style_class) != 0) {
+        (void)tinyui_obj_delete((tinyui_obj_t *)dt);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_DATE_TIME_FIELD_FONT) != 0) {
+    if (tinyui_date_time_set_font((tinyui_obj_t *)dt, props->font) != 0) {
+        (void)tinyui_obj_delete((tinyui_obj_t *)dt);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_DATE_TIME_FIELD_FORMAT) != 0) {
+    if (tinyui_date_time_set_format((tinyui_obj_t *)dt, props->format) != 0) {
+        (void)tinyui_obj_delete((tinyui_obj_t *)dt);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_DATE_TIME_FIELD_TEXT_COLOR) != 0) {
+    if (tinyui_date_time_set_text_color((tinyui_obj_t *)dt, props->text_color) != 0) {
+        (void)tinyui_obj_delete((tinyui_obj_t *)dt);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_DATE_TIME_FIELD_BG_COLOR) != 0) {
+    if (tinyui_date_time_set_bg_color((tinyui_obj_t *)dt, props->bg_color) != 0) {
+        (void)tinyui_obj_delete((tinyui_obj_t *)dt);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_DATE_TIME_FIELD_ALIGN) != 0) {
+    if (tinyui_date_time_set_align((tinyui_obj_t *)dt, props->align) != 0) {
+        (void)tinyui_obj_delete((tinyui_obj_t *)dt);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_DATE_TIME_FIELD_TRANSPARENT) != 0) {
+    if (tinyui_date_time_set_transparent((tinyui_obj_t *)dt, props->transparent) != 0) {
+        (void)tinyui_obj_delete((tinyui_obj_t *)dt);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_DATE_TIME_FIELD_YEAR) != 0 ||
+        (props->fields & TINYUI_DATE_TIME_FIELD_MONTH) != 0 ||
+        (props->fields & TINYUI_DATE_TIME_FIELD_DAY) != 0) {
+        int y = 0;
+        int m = 0;
+        int d = 0;
+        if (tinyui_date_time_get_date((const tinyui_obj_t *)dt, &y, &m, &d) != 0) {
+            (void)tinyui_obj_delete((tinyui_obj_t *)dt);
+            return 0;
+        }
+        if ((props->fields & TINYUI_DATE_TIME_FIELD_YEAR) != 0) {
+            y = props->year;
+        }
+        if ((props->fields & TINYUI_DATE_TIME_FIELD_MONTH) != 0) {
+            m = props->month;
+        }
+        if ((props->fields & TINYUI_DATE_TIME_FIELD_DAY) != 0) {
+            d = props->day;
+        }
+            if (tinyui_date_time_set_date((tinyui_obj_t *)dt, y, m, d) != 0) {
+                (void)tinyui_obj_delete((tinyui_obj_t *)dt);
+                return 0;
+            }
+    }
+    if ((props->fields & TINYUI_DATE_TIME_FIELD_HOUR) != 0 ||
+        (props->fields & TINYUI_DATE_TIME_FIELD_MINUTE) != 0 ||
+        (props->fields & TINYUI_DATE_TIME_FIELD_SECOND) != 0) {
+        int hh = 0;
+        int mm = 0;
+        int ss = 0;
+        if (tinyui_date_time_get_time((const tinyui_obj_t *)dt, &hh, &mm, &ss) != 0) {
+            (void)tinyui_obj_delete((tinyui_obj_t *)dt);
+            return 0;
+        }
+        if ((props->fields & TINYUI_DATE_TIME_FIELD_HOUR) != 0) {
+            hh = props->hour;
+        }
+        if ((props->fields & TINYUI_DATE_TIME_FIELD_MINUTE) != 0) {
+            mm = props->minute;
+        }
+        if ((props->fields & TINYUI_DATE_TIME_FIELD_SECOND) != 0) {
+            ss = props->second;
+        }
+            if (tinyui_date_time_set_time((tinyui_obj_t *)dt, hh, mm, ss) != 0) {
+                (void)tinyui_obj_delete((tinyui_obj_t *)dt);
+                return 0;
+            }
+    }
 
-    return dt;
+    return obj;
 }
+
+
 
 /**
  * @brief Set format of date time widget
@@ -189,8 +299,11 @@ struct tinyui_date_time *tinyui_date_time_create_with_props(
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_date_time_set_format(struct tinyui_date_time *dt, const char *format)
+int tinyui_date_time_set_format(tinyui_obj_t *dt_obj, const char *format)
 {
+    struct tinyui_date_time *dt = tinyui_date_time_as_date_time(dt_obj);
+    if (dt == 0) { return -1; }
+
     ldDateTime_t *ld_date_time;
 
     if (dt == 0 || format == 0) {
@@ -218,8 +331,11 @@ int tinyui_date_time_set_format(struct tinyui_date_time *dt, const char *format)
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_date_time_set_date(struct tinyui_date_time *dt, int year, int month, int day)
+int tinyui_date_time_set_date(tinyui_obj_t *dt_obj, int year, int month, int day)
 {
+    struct tinyui_date_time *dt = tinyui_date_time_as_date_time(dt_obj);
+    if (dt == 0) { return -1; }
+
     ldDateTime_t *ld_date_time;
 
     if (dt == 0 || month < 1 || month > 12 || day < 1 || day > 31) {
@@ -249,8 +365,11 @@ int tinyui_date_time_set_date(struct tinyui_date_time *dt, int year, int month, 
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_date_time_set_time(struct tinyui_date_time *dt, int hour, int minute, int second)
+int tinyui_date_time_set_time(tinyui_obj_t *dt_obj, int hour, int minute, int second)
 {
+    struct tinyui_date_time *dt = tinyui_date_time_as_date_time(dt_obj);
+    if (dt == 0) { return -1; }
+
     ldDateTime_t *ld_date_time;
 
     if (dt == 0
@@ -273,8 +392,11 @@ int tinyui_date_time_set_time(struct tinyui_date_time *dt, int hour, int minute,
     return 0;
 }
 
-int tinyui_date_time_set_font(struct tinyui_date_time *dt, const struct tinyui_font *font)
+int tinyui_date_time_set_font(tinyui_obj_t *dt_obj, const struct tinyui_font *font)
 {
+    struct tinyui_date_time *dt = tinyui_date_time_as_date_time(dt_obj);
+    if (dt == 0) { return -1; }
+
     ldDateTime_t *ld_date_time;
     arm_2d_font_t *resolved_font;
 
@@ -305,8 +427,11 @@ int tinyui_date_time_set_font(struct tinyui_date_time *dt, const struct tinyui_f
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_date_time_set_text_color(struct tinyui_date_time *dt, unsigned int rgb)
+int tinyui_date_time_set_text_color(tinyui_obj_t *dt_obj, unsigned int rgb)
 {
+    struct tinyui_date_time *dt = tinyui_date_time_as_date_time(dt_obj);
+    if (dt == 0) { return -1; }
+
     ldDateTime_t *ld_date_time;
 
     if (dt == 0 || rgb > 0xFFFFFFU) {
@@ -331,8 +456,11 @@ int tinyui_date_time_set_text_color(struct tinyui_date_time *dt, unsigned int rg
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_date_time_set_bg_color(struct tinyui_date_time *dt, unsigned int rgb)
+int tinyui_date_time_set_bg_color(tinyui_obj_t *dt_obj, unsigned int rgb)
 {
+    struct tinyui_date_time *dt = tinyui_date_time_as_date_time(dt_obj);
+    if (dt == 0) { return -1; }
+
     ldDateTime_t *ld_date_time;
 
     if (dt == 0 || rgb > 0xFFFFFFU) {
@@ -358,9 +486,12 @@ int tinyui_date_time_set_bg_color(struct tinyui_date_time *dt, unsigned int rgb)
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_date_time_set_background_color(struct tinyui_date_time *dt, unsigned int rgb)
+int tinyui_date_time_set_background_color(tinyui_obj_t *dt_obj, unsigned int rgb)
 {
-    return tinyui_date_time_set_bg_color(dt, rgb);
+    struct tinyui_date_time *dt = tinyui_date_time_as_date_time(dt_obj);
+    if (dt == 0) { return -1; }
+
+    return tinyui_date_time_set_bg_color((tinyui_obj_t *)dt, rgb);
 }
 
 /**
@@ -371,8 +502,11 @@ int tinyui_date_time_set_background_color(struct tinyui_date_time *dt, unsigned 
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_date_time_set_align(struct tinyui_date_time *dt, enum tinyui_align align)
+int tinyui_date_time_set_align(tinyui_obj_t *dt_obj, enum tinyui_align align)
 {
+    struct tinyui_date_time *dt = tinyui_date_time_as_date_time(dt_obj);
+    if (dt == 0) { return -1; }
+
     ldDateTime_t *ld_date_time;
 
     if (dt == 0
@@ -400,8 +534,11 @@ int tinyui_date_time_set_align(struct tinyui_date_time *dt, enum tinyui_align al
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_date_time_set_transparent(struct tinyui_date_time *dt, int transparent)
+int tinyui_date_time_set_transparent(tinyui_obj_t *dt_obj, int transparent)
 {
+    struct tinyui_date_time *dt = tinyui_date_time_as_date_time(dt_obj);
+    if (dt == 0) { return -1; }
+
     ldDateTime_t *ld_date_time;
 
     if (dt == 0) {
@@ -426,8 +563,11 @@ int tinyui_date_time_set_transparent(struct tinyui_date_time *dt, int transparen
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_date_time_set_use_system_time(struct tinyui_date_time *dt, int enabled)
+int tinyui_date_time_set_use_system_time(tinyui_obj_t *dt_obj, int enabled)
 {
+    struct tinyui_date_time *dt = tinyui_date_time_as_date_time(dt_obj);
+    if (dt == 0) { return -1; }
+
     ldDateTime_t *ld_date_time;
 
     if (dt == 0) {
@@ -450,8 +590,11 @@ int tinyui_date_time_set_use_system_time(struct tinyui_date_time *dt, int enable
  * @param[in] dt dt
  */
 
-const char *tinyui_date_time_get_format(const struct tinyui_date_time *dt)
+const char * tinyui_date_time_get_format(const tinyui_obj_t *dt_obj)
 {
+    const struct tinyui_date_time *dt = tinyui_date_time_as_date_time_const(dt_obj);
+    if (dt == 0) { return 0; }
+
     ldDateTime_t *ld_date_time;
 
     if (dt == 0) {
@@ -477,8 +620,11 @@ const char *tinyui_date_time_get_format(const struct tinyui_date_time *dt)
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_date_time_get_date(const struct tinyui_date_time *dt, int *year, int *month, int *day)
+int tinyui_date_time_get_date(const tinyui_obj_t *dt_obj, int *year, int *month, int *day)
 {
+    const struct tinyui_date_time *dt = tinyui_date_time_as_date_time_const(dt_obj);
+    if (dt == 0) { return -1; }
+
     ldDateTime_t *ld_date_time;
 
     if (dt == 0 || year == 0 || month == 0 || day == 0) {
@@ -509,8 +655,11 @@ int tinyui_date_time_get_date(const struct tinyui_date_time *dt, int *year, int 
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_date_time_get_time(const struct tinyui_date_time *dt, int *hour, int *minute, int *second)
+int tinyui_date_time_get_time(const tinyui_obj_t *dt_obj, int *hour, int *minute, int *second)
 {
+    const struct tinyui_date_time *dt = tinyui_date_time_as_date_time_const(dt_obj);
+    if (dt == 0) { return -1; }
+
     ldDateTime_t *ld_date_time;
 
     if (dt == 0 || hour == 0 || minute == 0 || second == 0) {
@@ -538,8 +687,11 @@ int tinyui_date_time_get_time(const struct tinyui_date_time *dt, int *hour, int 
  * @return -1 on failure
  */
 
-int tinyui_date_time_get_transparent(const struct tinyui_date_time *dt)
+int tinyui_date_time_get_transparent(const tinyui_obj_t *dt_obj)
 {
+    const struct tinyui_date_time *dt = tinyui_date_time_as_date_time_const(dt_obj);
+    if (dt == 0) { return -1; }
+
     ldDateTime_t *ld_date_time;
 
     if (dt == 0) {
@@ -562,8 +714,11 @@ int tinyui_date_time_get_transparent(const struct tinyui_date_time *dt)
  * @return -1 on failure
  */
 
-int tinyui_date_time_get_use_system_time(const struct tinyui_date_time *dt)
+int tinyui_date_time_get_use_system_time(const tinyui_obj_t *dt_obj)
 {
+    const struct tinyui_date_time *dt = tinyui_date_time_as_date_time_const(dt_obj);
+    if (dt == 0) { return -1; }
+
     ldDateTime_t *ld_date_time;
 
     if (dt == 0) {

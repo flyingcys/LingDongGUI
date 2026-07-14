@@ -1,6 +1,6 @@
-#include "core/app.h"
+#include "internal/app_legacy.h"
 #include "widgets/progress_wheel.h"
-#include "core/widget.h"
+#include "internal/widget_legacy.h"
 #include "widgets/window.h"
 #include "../../../src/gui/ldBase.h"
 #include "../../../src/gui/ldProgressWheel.h"

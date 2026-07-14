@@ -22,6 +22,25 @@
 #include "../../../src/gui/ldBase.h"
 
 
+static struct tinyui_calendar *tinyui_calendar_as_calendar(tinyui_obj_t *obj)
+{
+    struct tinyui_widget *w = (struct tinyui_widget *)(void *)obj;
+    if (w == 0 || !tinyui_runtime_internal_widget_is_kind(w, TINYUI_BACKEND_WIDGET_CALENDAR)) {
+        return 0;
+    }
+    return (struct tinyui_calendar *)w;
+}
+
+static const struct tinyui_calendar *tinyui_calendar_as_calendar_const(const tinyui_obj_t *obj)
+{
+    const struct tinyui_widget *w = (const struct tinyui_widget *)(const void *)obj;
+    if (w == 0 || !tinyui_runtime_internal_widget_is_kind(w, TINYUI_BACKEND_WIDGET_CALENDAR)) {
+        return 0;
+    }
+    return (const struct tinyui_calendar *)w;
+}
+
+
 int tinyui_runtime_bridge_bind_leaf_widget(struct tinyui_widget *widget, struct tinyui_app *app);
 
 
@@ -32,7 +51,7 @@ static void tinyui_calendar_rollback(struct tinyui_calendar *calendar)
         return;
     }
     if (calendar->widget.ld_widget != 0) {
-        tinyui_widget_destroy_common(&calendar->widget);
+        tinyui_runtime_internal_widget_destroy_common(&calendar->widget);
     } else {
         ldFree(calendar);
     }
@@ -88,10 +107,9 @@ static int tinyui_calendar_sync_host_cache(struct tinyui_widget *widget)
     return 0;
 }
 
-static int calendar_props_valid(const struct tinyui_calendar_props *props)
+static int calendar_props_valid(const tinyui_calendar_props_t *props)
 {
     return props != 0 &&
-           props->id != 0 &&
            props->month >= 1 &&
            props->month <= 12 &&
            props->day >= 1 &&
@@ -101,7 +119,7 @@ static int calendar_props_valid(const struct tinyui_calendar_props *props)
            props->header_format != 0;
 }
 
-static void *tinyui_calendar_ld_init(void *ctx,
+static void *tinyui_runtime_internal_calendar_ld_init(void *ctx,
                                      struct ld_scene_t *scene,
                                      uint16_t name_id,
                                      uint16_t parent_name_id)
@@ -352,16 +370,20 @@ static int calendar_sync_grid_local(struct tinyui_calendar *calendar)
     return 0;
 }
 
-struct tinyui_calendar *tinyui_calendar_create(struct tinyui_window *parent, const char *id)
+tinyui_obj_t *tinyui_calendar_create(tinyui_obj_t *parent)
 {
+    struct tinyui_widget *parent_w = (struct tinyui_widget *)(void *)parent;
+    const char *id = "calendar";
+    if (parent_w == 0) { return 0; }
+
     struct tinyui_calendar *calendar;
 
-    if (parent == 0 || id == 0) {
+    if (parent_w == 0 || id == 0) {
         return 0;
     }
-    calendar = (struct tinyui_calendar *)tinyui_widget_create_leaf(&parent->widget,
+    calendar = (struct tinyui_calendar *)tinyui_runtime_internal_widget_create_leaf(parent_w,
                                                                    TINYUI_BACKEND_WIDGET_CALENDAR,
-                                                                   tinyui_calendar_ld_init,
+                                                                   tinyui_runtime_internal_calendar_ld_init,
                                                                    0,
                                                                    sizeof(*calendar));
     if (calendar == 0) {
@@ -375,49 +397,107 @@ struct tinyui_calendar *tinyui_calendar_create(struct tinyui_window *parent, con
         tinyui_calendar_rollback(calendar);
         return 0;
     }
-    return calendar;
+    return (tinyui_obj_t *)calendar;
 }
 
-struct tinyui_calendar *tinyui_calendar_create_with_props(struct tinyui_window *parent,
-                                                          const struct tinyui_calendar_props *props)
+tinyui_obj_t *tinyui_calendar_create_with_props(tinyui_obj_t *parent,
+                                             const tinyui_calendar_props_t *props)
 {
+    tinyui_obj_t *obj;
     struct tinyui_calendar *calendar;
 
-    if (!calendar_props_valid(props)) {
-        return 0;
+    if (props == 0) {
+        return tinyui_calendar_create(parent);
     }
 
-    calendar = tinyui_calendar_create(parent, props->id);
-    if (calendar == 0) {
+    obj = tinyui_calendar_create(parent);
+    if (obj == 0) {
         return 0;
+    }
+    calendar = (struct tinyui_calendar *)(void *)obj;
+
+    if ((props->fields & TINYUI_CALENDAR_FIELD_ID) != 0) {
+        (void)props->id;
+    }
+    if ((props->fields & TINYUI_CALENDAR_FIELD_USER_DATA) != 0) {
+    if (tinyui_runtime_internal_widget_set_user_data(&calendar->widget, props->user_data) != 0) {
+        tinyui_calendar_rollback(calendar);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_CALENDAR_FIELD_STYLE_CLASS) != 0) {
+    if (tinyui_runtime_internal_widget_set_style_class(&calendar->widget, props->style_class) != 0) {
+        tinyui_calendar_rollback(calendar);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_CALENDAR_FIELD_WIDTH) != 0 || (props->fields & TINYUI_CALENDAR_FIELD_HEIGHT) != 0) {
+        int w = tinyui_runtime_internal_widget_get_width(&calendar->widget);
+        int h = tinyui_runtime_internal_widget_get_height(&calendar->widget);
+        if (w < 0) {
+            w = 0;
+        }
+        if (h < 0) {
+            h = 0;
+        }
+        if ((props->fields & TINYUI_CALENDAR_FIELD_WIDTH) != 0) {
+            w = props->width;
+        }
+        if ((props->fields & TINYUI_CALENDAR_FIELD_HEIGHT) != 0) {
+            h = props->height;
+        }
+        if (tinyui_runtime_internal_widget_set_size(&calendar->widget, w, h) != 0) {
+            tinyui_calendar_rollback(calendar);
+            return 0;
+        }
+    }
+    if ((props->fields & TINYUI_CALENDAR_FIELD_YEAR) != 0 ||
+        (props->fields & TINYUI_CALENDAR_FIELD_MONTH) != 0 ||
+        (props->fields & TINYUI_CALENDAR_FIELD_DAY) != 0) {
+        int y = 0;
+        int m = 0;
+        int d = 0;
+        if (tinyui_calendar_get_date((const tinyui_obj_t *)calendar, &y, &m, &d) != 0) {
+            tinyui_calendar_rollback(calendar);
+            return 0;
+        }
+        if ((props->fields & TINYUI_CALENDAR_FIELD_YEAR) != 0) {
+            y = props->year;
+        }
+        if ((props->fields & TINYUI_CALENDAR_FIELD_MONTH) != 0) {
+            m = props->month;
+        }
+        if ((props->fields & TINYUI_CALENDAR_FIELD_DAY) != 0) {
+            d = props->day;
+        }
+            if (tinyui_calendar_set_date((tinyui_obj_t *)calendar, y, m, d) != 0) {
+                tinyui_calendar_rollback(calendar);
+                return 0;
+            }
+    }
+    if ((props->fields & TINYUI_CALENDAR_FIELD_SHOW_HEADER) != 0) {
+    if (tinyui_calendar_set_header_visible((tinyui_obj_t *)calendar, props->show_header) != 0) {
+        tinyui_calendar_rollback(calendar);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_CALENDAR_FIELD_HEADER_FORMAT) != 0) {
+    if (tinyui_calendar_set_header_format((tinyui_obj_t *)calendar, props->header_format) != 0) {
+        tinyui_calendar_rollback(calendar);
+        return 0;
+    }
     }
 
-    if (tinyui_widget_set_user_data(&calendar->widget, props->user_data) != 0) {
-        tinyui_calendar_rollback(calendar);
-        return 0;
-    }
-    if (props->style_class != 0 &&
-        tinyui_widget_set_style_class(&calendar->widget, props->style_class) != 0) {
-        tinyui_calendar_rollback(calendar);
-        return 0;
-    }
-    if ((props->width > 0 || props->height > 0) &&
-        tinyui_widget_set_size(&calendar->widget, props->width, props->height) != 0) {
-        tinyui_calendar_rollback(calendar);
-        return 0;
-    }
-    if (tinyui_calendar_set_date(calendar, props->year, props->month, props->day) != 0 ||
-        tinyui_calendar_set_header_visible(calendar, props->show_header) != 0 ||
-        tinyui_calendar_set_header_format(calendar, props->header_format) != 0) {
-        tinyui_calendar_rollback(calendar);
-        return 0;
-    }
-
-    return calendar;
+    return obj;
 }
 
-int tinyui_calendar_set_date(struct tinyui_calendar *calendar, int year, int month, int day)
+
+
+int tinyui_calendar_set_date(tinyui_obj_t *calendar_obj, int year, int month, int day)
 {
+    struct tinyui_calendar *calendar = tinyui_calendar_as_calendar(calendar_obj);
+    if (calendar == 0) { return -1; }
+
     if (calendar == 0 || month < 1 || month > 12 || day < 1 || day > 31) {
         return -1;
     }
@@ -432,8 +512,11 @@ int tinyui_calendar_set_date(struct tinyui_calendar *calendar, int year, int mon
     return calendar_sync_grid_local(calendar);
 }
 
-int tinyui_calendar_set_use_system_date(struct tinyui_calendar *calendar, int enabled)
+int tinyui_calendar_set_use_system_date(tinyui_obj_t *calendar_obj, int enabled)
 {
+    struct tinyui_calendar *calendar = tinyui_calendar_as_calendar(calendar_obj);
+    if (calendar == 0) { return -1; }
+
     if (calendar == 0) {
         return -1;
     }
@@ -446,13 +529,19 @@ int tinyui_calendar_set_use_system_date(struct tinyui_calendar *calendar, int en
     return calendar_sync_grid_local(calendar);
 }
 
-int tinyui_calendar_set_auto_sys_date(struct tinyui_calendar *calendar, int enabled)
+int tinyui_calendar_set_auto_sys_date(tinyui_obj_t *calendar_obj, int enabled)
 {
-    return tinyui_calendar_set_use_system_date(calendar, enabled);
+    struct tinyui_calendar *calendar = tinyui_calendar_as_calendar(calendar_obj);
+    if (calendar == 0) { return -1; }
+
+    return tinyui_calendar_set_use_system_date((tinyui_obj_t *)calendar, enabled);
 }
 
-int tinyui_calendar_set_day_names(struct tinyui_calendar *calendar, const char *const day_names[7])
+int tinyui_calendar_set_day_names(tinyui_obj_t *calendar_obj, const char *const day_names[7])
 {
+    struct tinyui_calendar *calendar = tinyui_calendar_as_calendar(calendar_obj);
+    if (calendar == 0) { return -1; }
+
     if (calendar == 0 || day_names == 0) {
         return -1;
     }
@@ -460,8 +549,11 @@ int tinyui_calendar_set_day_names(struct tinyui_calendar *calendar, const char *
     return tinyui_calendar_set_day_names_ld(&calendar->widget, day_names);
 }
 
-int tinyui_calendar_get_date(const struct tinyui_calendar *calendar, int *year, int *month, int *day)
+int tinyui_calendar_get_date(const tinyui_obj_t *calendar_obj, int *year, int *month, int *day)
 {
+    const struct tinyui_calendar *calendar = tinyui_calendar_as_calendar_const(calendar_obj);
+    if (calendar == 0) { return -1; }
+
     struct tinyui_calendar *mutable_calendar = (struct tinyui_calendar *)calendar;
 
     if (calendar == 0) {
@@ -483,8 +575,11 @@ int tinyui_calendar_get_date(const struct tinyui_calendar *calendar, int *year, 
     return 0;
 }
 
-int tinyui_calendar_get_use_system_date(const struct tinyui_calendar *calendar)
+int tinyui_calendar_get_use_system_date(const tinyui_obj_t *calendar_obj)
 {
+    const struct tinyui_calendar *calendar = tinyui_calendar_as_calendar_const(calendar_obj);
+    if (calendar == 0) { return -1; }
+
     int enabled = 0;
 
     if (calendar == 0) {
@@ -499,8 +594,11 @@ int tinyui_calendar_get_use_system_date(const struct tinyui_calendar *calendar)
     return enabled;
 }
 
-int tinyui_calendar_set_header_visible(struct tinyui_calendar *calendar, int visible)
+int tinyui_calendar_set_header_visible(tinyui_obj_t *calendar_obj, int visible)
 {
+    struct tinyui_calendar *calendar = tinyui_calendar_as_calendar(calendar_obj);
+    if (calendar == 0) { return -1; }
+
     if (calendar == 0) {
         return -1;
     }
@@ -512,8 +610,11 @@ int tinyui_calendar_set_header_visible(struct tinyui_calendar *calendar, int vis
     return 0;
 }
 
-int tinyui_calendar_get_header_visible(const struct tinyui_calendar *calendar)
+int tinyui_calendar_get_header_visible(const tinyui_obj_t *calendar_obj)
 {
+    const struct tinyui_calendar *calendar = tinyui_calendar_as_calendar_const(calendar_obj);
+    if (calendar == 0) { return -1; }
+
     int visible;
 
     if (calendar == 0) {
@@ -527,8 +628,11 @@ int tinyui_calendar_get_header_visible(const struct tinyui_calendar *calendar)
     return visible;
 }
 
-int tinyui_calendar_set_header_format(struct tinyui_calendar *calendar, const char *format)
+int tinyui_calendar_set_header_format(tinyui_obj_t *calendar_obj, const char *format)
 {
+    struct tinyui_calendar *calendar = tinyui_calendar_as_calendar(calendar_obj);
+    if (calendar == 0) { return -1; }
+
     if (calendar == 0 || format == 0) {
         return -1;
     }
@@ -540,8 +644,11 @@ int tinyui_calendar_set_header_format(struct tinyui_calendar *calendar, const ch
     return calendar->header_format != 0 ? 0 : -1;
 }
 
-int tinyui_calendar_set_bg_color(struct tinyui_calendar *calendar, unsigned int rgb)
+int tinyui_calendar_set_bg_color(tinyui_obj_t *calendar_obj, unsigned int rgb)
 {
+    struct tinyui_calendar *calendar = tinyui_calendar_as_calendar(calendar_obj);
+    if (calendar == 0) { return -1; }
+
     if (calendar == 0 || rgb > 0xFFFFFFU) {
         return -1;
     }
@@ -549,8 +656,11 @@ int tinyui_calendar_set_bg_color(struct tinyui_calendar *calendar, unsigned int 
     return tinyui_calendar_set_bg_color_ld(&calendar->widget, rgb);
 }
 
-int tinyui_calendar_set_item_color(struct tinyui_calendar *calendar, unsigned int rgb)
+int tinyui_calendar_set_item_color(tinyui_obj_t *calendar_obj, unsigned int rgb)
 {
+    struct tinyui_calendar *calendar = tinyui_calendar_as_calendar(calendar_obj);
+    if (calendar == 0) { return -1; }
+
     if (calendar == 0 || rgb > 0xFFFFFFU) {
         return -1;
     }
@@ -558,8 +668,11 @@ int tinyui_calendar_set_item_color(struct tinyui_calendar *calendar, unsigned in
     return tinyui_calendar_set_item_color_ld(&calendar->widget, rgb);
 }
 
-int tinyui_calendar_set_text_color(struct tinyui_calendar *calendar, unsigned int rgb)
+int tinyui_calendar_set_text_color(tinyui_obj_t *calendar_obj, unsigned int rgb)
 {
+    struct tinyui_calendar *calendar = tinyui_calendar_as_calendar(calendar_obj);
+    if (calendar == 0) { return -1; }
+
     if (calendar == 0 || rgb > 0xFFFFFFU) {
         return -1;
     }
@@ -567,8 +680,11 @@ int tinyui_calendar_set_text_color(struct tinyui_calendar *calendar, unsigned in
     return tinyui_calendar_set_text_color_ld(&calendar->widget, rgb);
 }
 
-const char *tinyui_calendar_get_header_format(const struct tinyui_calendar *calendar)
+const char * tinyui_calendar_get_header_format(const tinyui_obj_t *calendar_obj)
 {
+    const struct tinyui_calendar *calendar = tinyui_calendar_as_calendar_const(calendar_obj);
+    if (calendar == 0) { return 0; }
+
     const char *format;
 
     if (calendar == 0) {
@@ -582,8 +698,11 @@ const char *tinyui_calendar_get_header_format(const struct tinyui_calendar *cale
     return format;
 }
 
-int tinyui_calendar_get_grid_value(const struct tinyui_calendar *calendar, int week, int weekday)
+int tinyui_calendar_get_grid_value(const tinyui_obj_t *calendar_obj, int week, int weekday)
 {
+    const struct tinyui_calendar *calendar = tinyui_calendar_as_calendar_const(calendar_obj);
+    if (calendar == 0) { return -1; }
+
     int day;
     int index;
 
@@ -599,8 +718,11 @@ int tinyui_calendar_get_grid_value(const struct tinyui_calendar *calendar, int w
     return day;
 }
 
-int tinyui_calendar_is_current_month_cell(const struct tinyui_calendar *calendar, int week, int weekday)
+int tinyui_calendar_is_current_month_cell(const tinyui_obj_t *calendar_obj, int week, int weekday)
 {
+    const struct tinyui_calendar *calendar = tinyui_calendar_as_calendar_const(calendar_obj);
+    if (calendar == 0) { return -1; }
+
     int current;
     int index;
 

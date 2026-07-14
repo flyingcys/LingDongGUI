@@ -1,4 +1,4 @@
-#include "core/app.h"
+#include "internal/app_legacy.h"
 #include "widgets/scroll_selecter.h"
 #include "widgets/window.h"
 #include "../../../src/gui/ldBase.h"

@@ -2,7 +2,7 @@
 #include "../drivers/tinyui_ldgui_port.h"
 #include "../../../src/gui/ldBase.h"
 
-void tinyui_app_register_host(struct tinyui_app *app, struct tinyui_widget *w)
+void tinyui_runtime_internal_app_register_host(struct tinyui_app *app, struct tinyui_widget *w)
 {
     if (app == 0 || w == 0) {
         return;
@@ -15,7 +15,7 @@ void tinyui_app_register_host(struct tinyui_app *app, struct tinyui_widget *w)
     app->host_list_head = w;
 }
 
-void tinyui_app_unregister_host(struct tinyui_app *app, struct tinyui_widget *w)
+void tinyui_runtime_internal_app_unregister_host(struct tinyui_app *app, struct tinyui_widget *w)
 {
     if (app == 0 || w == 0) {
         return;
@@ -32,7 +32,7 @@ void tinyui_app_unregister_host(struct tinyui_app *app, struct tinyui_widget *w)
     w->reg_next = 0;
 }
 
-uint16_t tinyui_app_alloc_name_id(struct tinyui_app *app)
+uint16_t tinyui_runtime_internal_app_alloc_name_id(struct tinyui_app *app)
 {
     if (app == 0) {
         return 0;
@@ -43,7 +43,7 @@ uint16_t tinyui_app_alloc_name_id(struct tinyui_app *app)
     return ++app->next_ld_name_id;
 }
 
-void tinyui_app_free_name_id(struct tinyui_app *app, uint16_t id)
+void tinyui_runtime_internal_app_free_name_id(struct tinyui_app *app, uint16_t id)
 {
     uint16_t *p;
     uint16_t new_cap;
@@ -63,7 +63,7 @@ void tinyui_app_free_name_id(struct tinyui_app *app, uint16_t id)
     app->free_name_ids[app->free_name_id_count++] = id;
 }
 
-struct tinyui_widget *tinyui_app_lookup_host(const struct tinyui_app *app, uint16_t name_id)
+struct tinyui_widget *tinyui_runtime_internal_app_lookup_host(const struct tinyui_app *app, uint16_t name_id)
 {
     struct tinyui_widget *cur;
     if (app == 0) {
@@ -77,17 +77,17 @@ struct tinyui_widget *tinyui_app_lookup_host(const struct tinyui_app *app, uint1
     return 0;
 }
 
-struct tinyui_widget *tinyui_widget_from_ld(const void *ld_node)
+struct tinyui_widget *tinyui_runtime_internal_widget_from_ld(const void *ld_node)
 {
     struct tinyui_app *app;
     if (ld_node == 0) {
         return 0;
     }
     app = ldgui_port_get_current_app();
-    return tinyui_app_lookup_host(app, ((const ldBase_t *)ld_node)->nameId);
+    return tinyui_runtime_internal_app_lookup_host(app, ((const ldBase_t *)ld_node)->nameId);
 }
 
-struct tinyui_widget *tinyui_widget_from_ld_scene(const struct ld_scene_t *scene,
+struct tinyui_widget *tinyui_runtime_internal_widget_from_ld_scene(const struct ld_scene_t *scene,
                                                    const void *ld_node)
 {
     struct tinyui_app *app;
@@ -95,5 +95,5 @@ struct tinyui_widget *tinyui_widget_from_ld_scene(const struct ld_scene_t *scene
         return 0;
     }
     app = ldgui_port_get_app_for_scene(scene);
-    return tinyui_app_lookup_host(app, ((const ldBase_t *)ld_node)->nameId);
+    return tinyui_runtime_internal_app_lookup_host(app, ((const ldBase_t *)ld_node)->nameId);
 }

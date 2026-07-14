@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#include "core/native.h"
+#include "extensions/ldgui_native.h"
 #include "internal.h"
 #include "ldBase.h"
 

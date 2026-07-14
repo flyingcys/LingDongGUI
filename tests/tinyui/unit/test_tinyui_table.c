@@ -1,4 +1,4 @@
-#include "core/app.h"
+#include "internal/app_legacy.h"
 #include "widgets/keyboard.h"
 #include "widgets/table.h"
 #include "widgets/window.h"

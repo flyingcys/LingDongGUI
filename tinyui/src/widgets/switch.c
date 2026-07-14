@@ -23,6 +23,25 @@
 
 #include <stdlib.h>
 
+
+static struct tinyui_switch *tinyui_switch_as_switch(tinyui_obj_t *obj)
+{
+    struct tinyui_widget *w = (struct tinyui_widget *)(void *)obj;
+    if (w == 0 || !tinyui_runtime_internal_widget_is_kind(w, TINYUI_BACKEND_WIDGET_SWITCH)) {
+        return 0;
+    }
+    return (struct tinyui_switch *)w;
+}
+
+static const struct tinyui_switch *tinyui_switch_as_switch_const(const tinyui_obj_t *obj)
+{
+    const struct tinyui_widget *w = (const struct tinyui_widget *)(const void *)obj;
+    if (w == 0 || !tinyui_runtime_internal_widget_is_kind(w, TINYUI_BACKEND_WIDGET_SWITCH)) {
+        return 0;
+    }
+    return (const struct tinyui_switch *)w;
+}
+
 /* ---- C2 depose closure state (file-static, single-threaded scope) ---- */
 
 
@@ -50,10 +69,9 @@ static int tinyui_switch_nav_dir_to_ld(int direction, int *ld_dir)
     }
 }
 
-static int tinyui_switch_props_are_valid(const struct tinyui_switch_props *props)
+static int tinyui_switch_props_are_valid(const tinyui_switch_props_t *props)
 {
     return props != 0
-        && props->id != 0
         && (props->off_source == 0 || tinyui_image_source_get_image_tile(props->off_source) != 0)
         && (props->on_source == 0 || tinyui_image_source_get_image_tile(props->on_source) != 0)
         && (props->knob_source == 0 || tinyui_image_source_get_image_tile(props->knob_source) != 0)
@@ -66,7 +84,7 @@ static int tinyui_switch_props_are_valid(const struct tinyui_switch_props *props
         && props->padding >= 0;
 }
 
-static void *tinyui_switch_ld_init(void *ctx,
+static void *tinyui_runtime_internal_switch_ld_init(void *ctx,
                                    struct ld_scene_t *scene,
                                    uint16_t name_id,
                                    uint16_t parent_name_id)
@@ -89,16 +107,20 @@ static void *tinyui_switch_ld_init(void *ctx,
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct tinyui_switch *tinyui_switch_create(struct tinyui_window *parent, const char *id)
+tinyui_obj_t *tinyui_switch_create(tinyui_obj_t *parent)
 {
+    struct tinyui_widget *parent_w = (struct tinyui_widget *)(void *)parent;
+    const char *id = "switch";
+    if (parent_w == 0) { return 0; }
+
     struct tinyui_switch *sw;
 
-    if (parent == 0 || id == 0) {
+    if (parent_w == 0 || id == 0) {
         return 0;
     }
-    sw = (struct tinyui_switch *)tinyui_widget_create_leaf(&parent->widget,
+    sw = (struct tinyui_switch *)tinyui_runtime_internal_widget_create_leaf(parent_w,
                                                            TINYUI_BACKEND_WIDGET_SWITCH,
-                                                           tinyui_switch_ld_init,
+                                                           tinyui_runtime_internal_switch_ld_init,
                                                            0,
                                                            sizeof(*sw));
     if (sw == 0) {
@@ -106,7 +128,7 @@ struct tinyui_switch *tinyui_switch_create(struct tinyui_window *parent, const c
     }
     sw->id = id;
 
-    return sw;
+    return (tinyui_obj_t *)sw;
 }
 
 /**
@@ -117,56 +139,140 @@ struct tinyui_switch *tinyui_switch_create(struct tinyui_window *parent, const c
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct tinyui_switch *tinyui_switch_create_with_props(struct tinyui_window *parent,
-                                                      const struct tinyui_switch_props *props)
+tinyui_obj_t *tinyui_switch_create_with_props(tinyui_obj_t *parent,
+                                             const tinyui_switch_props_t *props)
 {
+    tinyui_obj_t *obj;
     struct tinyui_switch *sw;
 
-    if (!tinyui_switch_props_are_valid(props)) {
-        return 0;
+    if (props == 0) {
+        return tinyui_switch_create(parent);
     }
 
-    sw = tinyui_switch_create(parent, props->id);
-    if (sw == 0) {
+    obj = tinyui_switch_create(parent);
+    if (obj == 0) {
         return 0;
+    }
+    sw = (struct tinyui_switch *)(void *)obj;
+
+    if ((props->fields & TINYUI_SWITCH_FIELD_ID) != 0) {
+        /* id=0 means runtime auto-alloc; non-zero reserved for host name_id path. */
+        (void)props->id;
+    }
+    if ((props->fields & TINYUI_SWITCH_FIELD_USER_DATA) != 0) {
+    if (tinyui_runtime_internal_widget_set_user_data(&sw->widget, props->user_data) != 0) {
+        (void)tinyui_obj_delete((tinyui_obj_t *)sw);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_SWITCH_FIELD_STYLE_CLASS) != 0) {
+    if (tinyui_runtime_internal_widget_set_style_class(&sw->widget, props->style_class) != 0) {
+        (void)tinyui_obj_delete((tinyui_obj_t *)sw);
+        return 0;
+    }
+    }
+        if ((props->fields & TINYUI_SWITCH_FIELD_WIDTH) != 0 || (props->fields & TINYUI_SWITCH_FIELD_HEIGHT) != 0) {
+        int w = tinyui_runtime_internal_widget_get_width(&sw->widget);
+        int h = tinyui_runtime_internal_widget_get_height(&sw->widget);
+        if (w < 0) {
+            w = 0;
+        }
+        if (h < 0) {
+            h = 0;
+        }
+        if ((props->fields & TINYUI_SWITCH_FIELD_WIDTH) != 0) {
+            w = props->width;
+        }
+        if ((props->fields & TINYUI_SWITCH_FIELD_HEIGHT) != 0) {
+            h = props->height;
+        }
+        if (tinyui_runtime_internal_widget_set_size(&sw->widget, w, h) != 0) {
+            (void)tinyui_obj_delete((tinyui_obj_t *)sw);
+            return 0;
+        }
+    }
+    if ((props->fields & TINYUI_SWITCH_FIELD_BG_COLOR) != 0) {
+    if (tinyui_runtime_internal_widget_set_bg_color(&sw->widget, props->bg_color) != 0) {
+        (void)tinyui_obj_delete((tinyui_obj_t *)sw);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_SWITCH_FIELD_TEXT_COLOR) != 0) {
+    if (tinyui_runtime_internal_widget_set_text_color(&sw->widget, props->text_color) != 0) {
+        (void)tinyui_obj_delete((tinyui_obj_t *)sw);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_SWITCH_FIELD_BORDER_COLOR) != 0) {
+    if (tinyui_runtime_internal_widget_set_border_color(&sw->widget, props->border_color) != 0) {
+        (void)tinyui_obj_delete((tinyui_obj_t *)sw);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_SWITCH_FIELD_RADIUS) != 0) {
+    if (tinyui_runtime_internal_widget_set_radius(&sw->widget, props->radius) != 0) {
+        (void)tinyui_obj_delete((tinyui_obj_t *)sw);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_SWITCH_FIELD_PADDING) != 0) {
+    if (tinyui_runtime_internal_widget_set_padding(&sw->widget, props->padding) != 0) {
+        (void)tinyui_obj_delete((tinyui_obj_t *)sw);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_SWITCH_FIELD_CHECKED) != 0) {
+    if (tinyui_switch_set_checked((tinyui_obj_t *)sw, props->checked) != 0) {
+        (void)tinyui_obj_delete((tinyui_obj_t *)sw);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_SWITCH_FIELD_ON_TOGGLED) != 0) {
+    if (tinyui_switch_set_on_toggled((tinyui_obj_t *)sw, props->on_toggled, props->user_data) != 0) {
+        (void)tinyui_obj_delete((tinyui_obj_t *)sw);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_SWITCH_FIELD_OFF_SOURCE) != 0) {
+    if (tinyui_switch_set_off_source((tinyui_obj_t *)sw, props->off_source) != 0) {
+        (void)tinyui_obj_delete((tinyui_obj_t *)sw);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_SWITCH_FIELD_ON_SOURCE) != 0) {
+    if (tinyui_switch_set_on_source((tinyui_obj_t *)sw, props->on_source) != 0) {
+        (void)tinyui_obj_delete((tinyui_obj_t *)sw);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_SWITCH_FIELD_KNOB_SOURCE) != 0) {
+    if (tinyui_switch_set_knob_source((tinyui_obj_t *)sw, props->knob_source) != 0) {
+        (void)tinyui_obj_delete((tinyui_obj_t *)sw);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_SWITCH_FIELD_HORIZONTAL) != 0) {
+    if (tinyui_switch_set_horizontal((tinyui_obj_t *)sw, props->horizontal) != 0) {
+        (void)tinyui_obj_delete((tinyui_obj_t *)sw);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_SWITCH_FIELD_DIRECTION) != 0) {
+    if (tinyui_switch_set_direction((tinyui_obj_t *)sw, props->direction) != 0) {
+        (void)tinyui_obj_delete((tinyui_obj_t *)sw);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_SWITCH_FIELD_DISABLED) != 0) {
+    if (tinyui_switch_set_disabled((tinyui_obj_t *)sw, props->disabled) != 0) {
+        (void)tinyui_obj_delete((tinyui_obj_t *)sw);
+        return 0;
+    }
     }
 
-    sw->checked = props->checked != 0;
-    sw->cb = 0;
-    sw->user_data = 0;
-    if (tinyui_widget_update_value(&sw->widget,
-                                   sw->checked,
-                                   0,
-                                   0) != 0
-        || tinyui_widget_set_user_data(&sw->widget, props->user_data) != 0
-        || (props->style_class != 0
-            && tinyui_widget_set_style_class(&sw->widget, props->style_class) != 0)
-        || ((props->width > 0 || props->height > 0)
-            && tinyui_widget_set_size(&sw->widget, props->width, props->height) != 0)
-        || tinyui_widget_set_bg_color(&sw->widget, props->bg_color) != 0
-        || tinyui_widget_set_text_color(&sw->widget, props->text_color) != 0
-        || tinyui_widget_set_border_color(&sw->widget, props->border_color) != 0
-        || tinyui_widget_set_radius(&sw->widget, props->radius) != 0
-        || tinyui_widget_set_padding(&sw->widget, props->padding) != 0
-        || (props->off_source != 0
-            && tinyui_switch_set_off_source(sw, props->off_source) != 0)
-        || (props->on_source != 0
-            && tinyui_switch_set_on_source(sw, props->on_source) != 0)
-        || (props->knob_source != 0
-            && tinyui_switch_set_knob_source(sw, props->knob_source) != 0)
-        || (props->horizontal != -1
-            && tinyui_switch_set_horizontal(sw, props->horizontal) != 0)
-        || (props->direction != -1
-            && tinyui_switch_set_direction(sw, props->direction) != 0)
-        || (props->disabled != -1
-            && tinyui_switch_set_disabled(sw, props->disabled) != 0)) {
-        tinyui_widget_destroy_common(&sw->widget);
-        return 0;
-    }
-    sw->cb = props->on_toggled;
-    sw->user_data = props->user_data;
-    return sw;
+    return obj;
 }
+
 
 /**
  * @brief Set checked of switch widget
@@ -176,8 +282,11 @@ struct tinyui_switch *tinyui_switch_create_with_props(struct tinyui_window *pare
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_switch_set_checked(struct tinyui_switch *sw, int checked)
+int tinyui_switch_set_checked(tinyui_obj_t *sw_obj, int checked)
 {
+    struct tinyui_switch *sw = tinyui_switch_as_switch(sw_obj);
+    if (sw == 0) { return -1; }
+
     int normalized_checked;
 
     if (sw == 0) {
@@ -194,7 +303,7 @@ int tinyui_switch_set_checked(struct tinyui_switch *sw, int checked)
     }
 
     sw->checked = normalized_checked;
-    return tinyui_widget_update_value(&sw->widget,
+    return tinyui_runtime_internal_widget_update_value(&sw->widget,
                                       sw->checked,
                                       sw->cb,
                                       sw->user_data);
@@ -207,10 +316,13 @@ int tinyui_switch_set_checked(struct tinyui_switch *sw, int checked)
  * @return 0 on success
  */
 
-int tinyui_switch_is_checked(struct tinyui_switch *sw)
+int tinyui_switch_is_checked(tinyui_obj_t *sw_obj)
 {
+    struct tinyui_switch *sw = tinyui_switch_as_switch(sw_obj);
+    if (sw == 0) { return -1; }
+
     if (sw == 0) {
-        return 0;
+        return -1;
     }
 
     return sw->checked;
@@ -224,8 +336,11 @@ int tinyui_switch_is_checked(struct tinyui_switch *sw)
  * @return -1 on failure
  */
 
-int tinyui_switch_set_off_source(struct tinyui_switch *sw, struct tinyui_image_source *source)
+int tinyui_switch_set_off_source(tinyui_obj_t *sw_obj, struct tinyui_image_source *source)
 {
+    struct tinyui_switch *sw = tinyui_switch_as_switch(sw_obj);
+    if (sw == 0) { return -1; }
+
     ldSwitch_t *ld_switch;
 
     if (sw == 0 || (source != 0 && tinyui_image_source_get_image_tile(source) == 0)
@@ -253,8 +368,11 @@ int tinyui_switch_set_off_source(struct tinyui_switch *sw, struct tinyui_image_s
  * @return -1 on failure
  */
 
-int tinyui_switch_set_on_source(struct tinyui_switch *sw, struct tinyui_image_source *source)
+int tinyui_switch_set_on_source(tinyui_obj_t *sw_obj, struct tinyui_image_source *source)
 {
+    struct tinyui_switch *sw = tinyui_switch_as_switch(sw_obj);
+    if (sw == 0) { return -1; }
+
     ldSwitch_t *ld_switch;
 
     if (sw == 0 || (source != 0 && tinyui_image_source_get_image_tile(source) == 0)
@@ -282,8 +400,11 @@ int tinyui_switch_set_on_source(struct tinyui_switch *sw, struct tinyui_image_so
  * @return -1 on failure
  */
 
-int tinyui_switch_set_knob_source(struct tinyui_switch *sw, struct tinyui_image_source *source)
+int tinyui_switch_set_knob_source(tinyui_obj_t *sw_obj, struct tinyui_image_source *source)
 {
+    struct tinyui_switch *sw = tinyui_switch_as_switch(sw_obj);
+    if (sw == 0) { return -1; }
+
     ldSwitch_t *ld_switch;
 
     if (sw == 0 || (source != 0 && tinyui_image_source_get_image_tile(source) == 0)
@@ -311,8 +432,11 @@ int tinyui_switch_set_knob_source(struct tinyui_switch *sw, struct tinyui_image_
  * @return -1 on failure
  */
 
-int tinyui_switch_set_horizontal(struct tinyui_switch *sw, int horizontal)
+int tinyui_switch_set_horizontal(tinyui_obj_t *sw_obj, int horizontal)
 {
+    struct tinyui_switch *sw = tinyui_switch_as_switch(sw_obj);
+    if (sw == 0) { return -1; }
+
     if (sw == 0 || sw->widget.ld_widget == 0
         || sw->widget.kind != TINYUI_BACKEND_WIDGET_SWITCH) {
         return -1;
@@ -330,8 +454,11 @@ int tinyui_switch_set_horizontal(struct tinyui_switch *sw, int horizontal)
  * @return -1 on failure
  */
 
-int tinyui_switch_get_horizontal(struct tinyui_switch *sw, int *horizontal)
+int tinyui_switch_get_horizontal(tinyui_obj_t *sw_obj, int *horizontal)
 {
+    struct tinyui_switch *sw = tinyui_switch_as_switch(sw_obj);
+    if (sw == 0) { return -1; }
+
     if (sw == 0 || horizontal == 0 || sw->widget.ld_widget == 0
         || sw->widget.kind != TINYUI_BACKEND_WIDGET_SWITCH) {
         return -1;
@@ -349,8 +476,11 @@ int tinyui_switch_get_horizontal(struct tinyui_switch *sw, int *horizontal)
  * @return -1 on failure
  */
 
-int tinyui_switch_set_direction(struct tinyui_switch *sw, int direction)
+int tinyui_switch_set_direction(tinyui_obj_t *sw_obj, int direction)
 {
+    struct tinyui_switch *sw = tinyui_switch_as_switch(sw_obj);
+    if (sw == 0) { return -1; }
+
     if (sw == 0 || direction < 0 || direction > 2
         || sw->widget.ld_widget == 0
         || sw->widget.kind != TINYUI_BACKEND_WIDGET_SWITCH) {
@@ -369,8 +499,11 @@ int tinyui_switch_set_direction(struct tinyui_switch *sw, int direction)
  * @return -1 on failure
  */
 
-int tinyui_switch_get_direction(struct tinyui_switch *sw, int *direction)
+int tinyui_switch_get_direction(tinyui_obj_t *sw_obj, int *direction)
 {
+    struct tinyui_switch *sw = tinyui_switch_as_switch(sw_obj);
+    if (sw == 0) { return -1; }
+
     if (sw == 0 || direction == 0 || sw->widget.ld_widget == 0
         || sw->widget.kind != TINYUI_BACKEND_WIDGET_SWITCH) {
         return -1;
@@ -388,13 +521,16 @@ int tinyui_switch_get_direction(struct tinyui_switch *sw, int *direction)
  * @return -1 on failure
  */
 
-int tinyui_switch_set_disabled(struct tinyui_switch *sw, int disabled)
+int tinyui_switch_set_disabled(tinyui_obj_t *sw_obj, int disabled)
 {
+    struct tinyui_switch *sw = tinyui_switch_as_switch(sw_obj);
+    if (sw == 0) { return -1; }
+
     if (sw == 0) {
         return -1;
     }
 
-    return tinyui_widget_set_enabled(&sw->widget, disabled == 0);
+    return tinyui_runtime_internal_widget_set_enabled(&sw->widget, disabled == 0);
 }
 
 /**
@@ -405,8 +541,11 @@ int tinyui_switch_set_disabled(struct tinyui_switch *sw, int disabled)
  * @return -1 on failure
  */
 
-int tinyui_switch_get_disabled(struct tinyui_switch *sw, int *disabled)
+int tinyui_switch_get_disabled(tinyui_obj_t *sw_obj, int *disabled)
 {
+    struct tinyui_switch *sw = tinyui_switch_as_switch(sw_obj);
+    if (sw == 0) { return -1; }
+
     if (sw == 0 || disabled == 0 || sw->widget.ld_widget == 0
         || sw->widget.kind != TINYUI_BACKEND_WIDGET_SWITCH) {
         return -1;
@@ -425,8 +564,11 @@ int tinyui_switch_get_disabled(struct tinyui_switch *sw, int *disabled)
  * @return -1 on failure
  */
 
-int tinyui_switch_can_navigate(struct tinyui_switch *sw, int direction, int *can_navigate)
+int tinyui_switch_can_navigate(tinyui_obj_t *sw_obj, int direction, int *can_navigate)
 {
+    struct tinyui_switch *sw = tinyui_switch_as_switch(sw_obj);
+    if (sw == 0) { return -1; }
+
     int ld_dir;
 
     if (sw == 0 || can_navigate == 0 || direction < 1 || direction > 4
@@ -452,8 +594,11 @@ int tinyui_switch_can_navigate(struct tinyui_switch *sw, int direction, int *can
  * @return -1 on failure
  */
 
-int tinyui_switch_navigate(struct tinyui_switch *sw, int direction)
+int tinyui_switch_navigate(tinyui_obj_t *sw_obj, int direction)
 {
+    struct tinyui_switch *sw = tinyui_switch_as_switch(sw_obj);
+    if (sw == 0) { return -1; }
+
     struct tinyui_app *app_state;
     ldSwitch_t *ld_switch;
     int ld_dir;
@@ -489,10 +634,11 @@ int tinyui_switch_navigate(struct tinyui_switch *sw, int direction)
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_switch_set_on_toggled(struct tinyui_switch *sw,
-                                 tinyui_value_changed_cb cb,
-                                 void *user_data)
+int tinyui_switch_set_on_toggled(tinyui_obj_t *sw_obj, tinyui_value_changed_cb cb, void *user_data)
 {
+    struct tinyui_switch *sw = tinyui_switch_as_switch(sw_obj);
+    if (sw == 0) { return -1; }
+
     if (sw == 0) {
         return -1;
     }

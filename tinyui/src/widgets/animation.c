@@ -23,6 +23,25 @@
 
 #include <stdlib.h>
 
+
+static struct tinyui_animation *tinyui_animation_as_animation(tinyui_obj_t *obj)
+{
+    struct tinyui_widget *w = (struct tinyui_widget *)(void *)obj;
+    if (w == 0 || !tinyui_runtime_internal_widget_is_kind(w, TINYUI_BACKEND_WIDGET_ANIMATION)) {
+        return 0;
+    }
+    return (struct tinyui_animation *)w;
+}
+
+static const struct tinyui_animation *tinyui_animation_as_animation_const(const tinyui_obj_t *obj)
+{
+    const struct tinyui_widget *w = (const struct tinyui_widget *)(const void *)obj;
+    if (w == 0 || !tinyui_runtime_internal_widget_is_kind(w, TINYUI_BACKEND_WIDGET_ANIMATION)) {
+        return 0;
+    }
+    return (const struct tinyui_animation *)w;
+}
+
 /* ---- test seam state ---- */
 static arm_2d_tile_t s_animation_default_tile = {
     .tRegion = {
@@ -54,10 +73,9 @@ struct tinyui_animation_create_ctx {
 };
 
 
-static int tinyui_animation_props_are_valid(const struct tinyui_animation_props *props)
+static int tinyui_animation_props_are_valid(const tinyui_animation_props_t *props)
 {
     return props != 0
-        && props->id != 0
         && props->width > 0
         && props->height > 0
         && props->period_ms > 0
@@ -65,7 +83,7 @@ static int tinyui_animation_props_are_valid(const struct tinyui_animation_props 
         && tinyui_image_source_get_image_tile(props->source) != 0;
 }
 
-static void *tinyui_animation_ld_init(void *ctx,
+static void *tinyui_runtime_internal_animation_ld_init(void *ctx,
                                       struct ld_scene_t *scene,
                                       uint16_t name_id,
                                       uint16_t parent_name_id)
@@ -113,7 +131,7 @@ static struct tinyui_animation *tinyui_animation_alloc(struct tinyui_widget *par
     struct tinyui_animation_create_ctx create_ctx;
     struct tinyui_animation *animation;
 
-    if (parent == 0 || id == 0 || parent->ld_widget == 0
+    if (parent == 0 || id == 0 || ((struct tinyui_widget *)(void *)parent)->ld_widget == 0
         || source == 0 || tinyui_image_source_get_image_tile(source) == 0) {
         return 0;
     }
@@ -122,9 +140,9 @@ static struct tinyui_animation *tinyui_animation_alloc(struct tinyui_widget *par
     create_ctx.height = height;
     create_ctx.period_ms = period_ms;
     create_ctx.source = source;
-    animation = (struct tinyui_animation *)tinyui_widget_create_leaf(parent,
+    animation = (struct tinyui_animation *)tinyui_runtime_internal_widget_create_leaf(parent,
                                                                      TINYUI_BACKEND_WIDGET_ANIMATION,
-                                                                     tinyui_animation_ld_init,
+                                                                     tinyui_runtime_internal_animation_ld_init,
                                                                      &create_ctx,
                                                                      sizeof(*animation));
     if (animation == 0) {
@@ -145,10 +163,14 @@ static struct tinyui_animation *tinyui_animation_alloc(struct tinyui_widget *par
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct tinyui_animation *tinyui_animation_create(struct tinyui_widget *parent, const char *id)
+tinyui_obj_t *tinyui_animation_create(tinyui_obj_t *parent)
 {
+    struct tinyui_widget *parent_w = (struct tinyui_widget *)(void *)parent;
+    const char *id = "animation";
+    if (parent_w == 0) { return 0; }
+
     tinyui_animation_prepare_default_source();
-    return tinyui_animation_alloc(parent, id, 1, 1, &s_animation_default_source, 1);
+    return tinyui_animation_alloc(parent_w, id, 1, 1, &s_animation_default_source, 1);
 }
 
 /**
@@ -159,9 +181,9 @@ struct tinyui_animation *tinyui_animation_create(struct tinyui_widget *parent, c
  * @return Pointer to the object
  */
 
-struct tinyui_animation *tinyui_animation_init(struct tinyui_widget *parent, const char *id)
+struct tinyui_animation *tinyui_runtime_internal_animation_init(struct tinyui_widget *parent, const char *id)
 {
-    return tinyui_animation_create(parent, id);
+    return tinyui_animation_create(parent);
 }
 
 /**
@@ -172,49 +194,74 @@ struct tinyui_animation *tinyui_animation_init(struct tinyui_widget *parent, con
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct tinyui_animation *tinyui_animation_create_with_props(
-    struct tinyui_widget *parent,
-    const struct tinyui_animation_props *props)
+tinyui_obj_t *tinyui_animation_create_with_props(tinyui_obj_t *parent,
+                                             const tinyui_animation_props_t *props)
 {
+    tinyui_obj_t *obj;
     struct tinyui_animation *animation;
 
-    if (!tinyui_animation_props_are_valid(props) || parent == 0 || parent->ld_widget == 0) {
-        return 0;
+    if (props == 0) {
+        return tinyui_animation_create(parent);
     }
 
-    animation = tinyui_animation_alloc(parent,
-                                       props->id,
-                                       props->width,
-                                       props->height,
-                                       props->source,
-                                       props->period_ms);
-    if (animation == 0) {
+    obj = tinyui_animation_create(parent);
+    if (obj == 0) {
         return 0;
     }
+    animation = (struct tinyui_animation *)(void *)obj;
 
-    if (tinyui_animation_set_source(animation, props->source) != 0
-        || tinyui_animation_set_period_ms(animation, props->period_ms) != 0
-        || tinyui_widget_set_size(&animation->widget, props->width, props->height) != 0) {
-        tinyui_widget_destroy_common(&animation->widget);
+    if ((props->fields & TINYUI_ANIMATION_FIELD_ID) != 0) {
+        (void)props->id;
+    }
+    if ((props->fields & TINYUI_ANIMATION_FIELD_USER_DATA) != 0) {
+    if (tinyui_runtime_internal_widget_set_user_data(&animation->widget, props->user_data) != 0) {
+        (void)tinyui_obj_delete((tinyui_obj_t *)animation);
         return 0;
     }
-
-    animation->width = props->width;
-    animation->height = props->height;
-    animation->period_ms = props->period_ms;
-    animation->source = props->source;
-    animation->widget.width = props->width;
-    animation->widget.height = props->height;
-    if (tinyui_animation_show_frame(animation, 0) != 0
-        || tinyui_widget_set_user_data(&animation->widget, props->user_data) != 0
-        || (props->style_class != 0
-            && tinyui_widget_set_style_class(&animation->widget, props->style_class) != 0)) {
-        tinyui_widget_destroy_common(&animation->widget);
+    }
+    if ((props->fields & TINYUI_ANIMATION_FIELD_STYLE_CLASS) != 0) {
+    if (tinyui_runtime_internal_widget_set_style_class(&animation->widget, props->style_class) != 0) {
+        (void)tinyui_obj_delete((tinyui_obj_t *)animation);
         return 0;
     }
+    }
+    if ((props->fields & TINYUI_ANIMATION_FIELD_WIDTH) != 0 || (props->fields & TINYUI_ANIMATION_FIELD_HEIGHT) != 0) {
+        int w = tinyui_runtime_internal_widget_get_width(&animation->widget);
+        int h = tinyui_runtime_internal_widget_get_height(&animation->widget);
+        if (w < 0) {
+            w = 0;
+        }
+        if (h < 0) {
+            h = 0;
+        }
+        if ((props->fields & TINYUI_ANIMATION_FIELD_WIDTH) != 0) {
+            w = props->width;
+        }
+        if ((props->fields & TINYUI_ANIMATION_FIELD_HEIGHT) != 0) {
+            h = props->height;
+        }
+        if (tinyui_runtime_internal_widget_set_size(&animation->widget, w, h) != 0) {
+            (void)tinyui_obj_delete((tinyui_obj_t *)animation);
+            return 0;
+        }
+    }
+    if ((props->fields & TINYUI_ANIMATION_FIELD_PERIOD_MS) != 0) {
+    if (tinyui_animation_set_period_ms((tinyui_obj_t *)animation, props->period_ms) != 0) {
+        (void)tinyui_obj_delete((tinyui_obj_t *)animation);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_ANIMATION_FIELD_SOURCE) != 0) {
+    if (tinyui_animation_set_source((tinyui_obj_t *)animation, props->source) != 0) {
+        (void)tinyui_obj_delete((tinyui_obj_t *)animation);
+        return 0;
+    }
+    }
 
-    return animation;
+    return obj;
 }
+
+
 
 /**
  * @brief Set source of animation widget
@@ -224,8 +271,11 @@ struct tinyui_animation *tinyui_animation_create_with_props(
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_animation_set_source(struct tinyui_animation *animation, struct tinyui_image_source *source)
+int tinyui_animation_set_source(tinyui_obj_t *animation_obj, struct tinyui_image_source *source)
 {
+    struct tinyui_animation *animation = tinyui_animation_as_animation(animation_obj);
+    if (animation == 0) { return -1; }
+
     ldAnimation_t *ld_animation;
 
     if (animation == 0 || source == 0 || tinyui_image_source_get_image_tile(source) == 0
@@ -248,8 +298,11 @@ int tinyui_animation_set_source(struct tinyui_animation *animation, struct tinyu
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_animation_set_period_ms(struct tinyui_animation *animation, int period_ms)
+int tinyui_animation_set_period_ms(tinyui_obj_t *animation_obj, int period_ms)
 {
+    struct tinyui_animation *animation = tinyui_animation_as_animation(animation_obj);
+    if (animation == 0) { return -1; }
+
     ldAnimation_t *ld_animation;
 
     if (animation == 0 || period_ms <= 0 || period_ms > 0xFFFF
@@ -272,8 +325,11 @@ int tinyui_animation_set_period_ms(struct tinyui_animation *animation, int perio
  * @return -1 on failure
  */
 
-int tinyui_animation_show_frame(struct tinyui_animation *animation, int frame_index)
+int tinyui_animation_show_frame(tinyui_obj_t *animation_obj, int frame_index)
 {
+    struct tinyui_animation *animation = tinyui_animation_as_animation(animation_obj);
+    if (animation == 0) { return -1; }
+
     ldAnimation_t *ld_animation;
     arm_2d_tile_t *img_tile;
     int frames_per_row;

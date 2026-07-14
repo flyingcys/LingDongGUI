@@ -20,26 +20,19 @@
 #define TINYUI_H
 
 /* core */
-#include "core/app.h"
-#include "core/native.h"
+#include "core/result.h"
 #include "core/obj.h"
 #include "core/runtime.h"
-#include "core/widget.h"
+#include "core/event.h"
+#include "core/timer.h"
+#include "core/focus.h"
 
-/* display / indev / osal / tick */
-#include "display/display.h"
-#include "indev/indev.h"
-#include "osal/osal.h"
-#include "tick/tick.h"
-
-/* port */
-#include "port/port.h"
-
-/* layout */
-#include "layout/layout.h"
-
-/* theme */
+/* style / theme / layout / resource */
+#include "style/style.h"
 #include "theme/theme.h"
+#include "layout/layout.h"
+#include "resource/font.h"
+#include "resource/image_source.h"
 
 /* widgets */
 #include "widgets/animation.h"
@@ -65,11 +58,16 @@
 #include "widgets/progress_wheel.h"
 #include "widgets/qrcode.h"
 #include "widgets/radial_menu.h"
-#include "widgets/scroll_selecter.h"
+#include "widgets/scroll_selector.h"
 #include "widgets/slider.h"
 #include "widgets/switch.h"
 #include "widgets/table.h"
 #include "widgets/text.h"
 #include "widgets/window.h"
 
+/* In-tree v2.2 demo/test migration bridge only. Install trees never define this. */
+#if defined(TINYUI_ENABLE_INTERNAL_V22_DEMO_BRIDGE) && (TINYUI_ENABLE_INTERNAL_V22_DEMO_BRIDGE)
+#include "internal/v22_demo_bridge.h"
 #endif
+
+#endif /* TINYUI_H */

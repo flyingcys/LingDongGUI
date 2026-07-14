@@ -18,16 +18,35 @@
 
 #include "internal.h"
 #include "widgets/arc.h"
-#include "core/widget.h"
+#include "internal/widget_legacy.h"
 #include "../core/runtime_bridge.h"
 #include "../../../examples/common/demo/widget/images/uiImages.h"
 #include "../../../src/gui/ldArc.h"
 
 #include <string.h>
 
-static int tinyui_arc_props_are_valid(const struct tinyui_arc_props *props);
+
+static struct tinyui_arc *tinyui_arc_as_arc(tinyui_obj_t *obj)
+{
+    struct tinyui_widget *w = (struct tinyui_widget *)(void *)obj;
+    if (w == 0 || !tinyui_runtime_internal_widget_is_kind(w, TINYUI_BACKEND_WIDGET_ARC)) {
+        return 0;
+    }
+    return (struct tinyui_arc *)w;
+}
+
+static const struct tinyui_arc *tinyui_arc_as_arc_const(const tinyui_obj_t *obj)
+{
+    const struct tinyui_widget *w = (const struct tinyui_widget *)(const void *)obj;
+    if (w == 0 || !tinyui_runtime_internal_widget_is_kind(w, TINYUI_BACKEND_WIDGET_ARC)) {
+        return 0;
+    }
+    return (const struct tinyui_arc *)w;
+}
+
+static int tinyui_arc_props_are_valid(const tinyui_arc_props_t *props);
 static unsigned int tinyui_arc_resolve_parent_color(const struct tinyui_arc *arc,
-                                                    const struct tinyui_arc_props *props);
+                                                    const tinyui_arc_props_t *props);
 
 struct tinyui_arc_create_ctx {
     arm_2d_tile_t *arc_img_tile;
@@ -41,13 +60,13 @@ static void tinyui_arc_rollback(struct tinyui_arc *arc)
         return;
     }
     if (arc->widget.ld_widget != 0) {
-        tinyui_widget_destroy_common(&arc->widget);
+        tinyui_runtime_internal_widget_destroy_common(&arc->widget);
     } else {
         ldFree(arc);
     }
 }
 
-static void *tinyui_arc_ld_init(void *ctx,
+static void *tinyui_runtime_internal_arc_ld_init(void *ctx,
                                 struct ld_scene_t *scene,
                                 uint16_t name_id,
                                 uint16_t parent_name_id)
@@ -82,7 +101,7 @@ static void *tinyui_arc_ld_init(void *ctx,
 }
 struct tinyui_arc *tinyui_arc_test_create_with_props_fail_before_parent_color(
     struct tinyui_widget *parent,
-    const struct tinyui_arc_props *props)
+    const tinyui_arc_props_t *props)
 {
     struct tinyui_arc *arc;
 
@@ -90,14 +109,14 @@ struct tinyui_arc *tinyui_arc_test_create_with_props_fail_before_parent_color(
         return 0;
     }
 
-    arc = tinyui_arc_create(parent, props->id);
+    arc = tinyui_arc_create(parent);
     if (arc == 0) {
         return 0;
     }
 
     if ((props->style_class != 0
-         && tinyui_widget_set_style_class(&arc->widget, props->style_class) != 0)
-        || tinyui_widget_set_user_data(&arc->widget, props->user_data) != 0
+         && tinyui_runtime_internal_widget_set_style_class(&arc->widget, props->style_class) != 0)
+        || tinyui_runtime_internal_widget_set_user_data(&arc->widget, props->user_data) != 0
         || tinyui_arc_set_background_angle(arc, props->bg_start_angle, props->bg_end_angle) != 0
         || tinyui_arc_set_foreground_angle(arc, props->fg_end_angle) != 0
         || tinyui_arc_set_rotation_angle(arc, props->rotation_angle) != 0
@@ -111,10 +130,9 @@ struct tinyui_arc *tinyui_arc_test_create_with_props_fail_before_parent_color(
     return 0;
 }
 
-static int tinyui_arc_props_are_valid(const struct tinyui_arc_props *props)
+static int tinyui_arc_props_are_valid(const tinyui_arc_props_t *props)
 {
     return props != 0
-        && props->id != 0
         && props->bg_start_angle >= 0.0f
         && props->bg_end_angle >= props->bg_start_angle
         && props->fg_end_angle >= 0.0f
@@ -122,7 +140,7 @@ static int tinyui_arc_props_are_valid(const struct tinyui_arc_props *props)
 }
 
 static unsigned int tinyui_arc_resolve_parent_color(const struct tinyui_arc *arc,
-                                                    const struct tinyui_arc_props *props)
+                                                    const tinyui_arc_props_t *props)
 {
     if (arc == 0 || props == 0) {
         return 0xF0F0F0U;
@@ -135,14 +153,18 @@ static unsigned int tinyui_arc_resolve_parent_color(const struct tinyui_arc *arc
     return arc->parent_color;
 }
 
-struct tinyui_arc *tinyui_arc_create(struct tinyui_widget *parent, const char *id)
+tinyui_obj_t *tinyui_arc_create(tinyui_obj_t *parent)
 {
+    struct tinyui_widget *parent_w = (struct tinyui_widget *)(void *)parent;
+    const char *id = "arc";
+    if (parent_w == 0) { return 0; }
+
     struct tinyui_arc *arc;
     arm_2d_tile_t *arc_img_tile;
     arm_2d_tile_t *arc_mask_tile;
     struct tinyui_arc_create_ctx ctx;
 
-    if (parent == 0 || id == 0 || parent->ld_widget == 0) {
+    if (parent_w == 0 || id == 0 || parent_w->ld_widget == 0) {
         return 0;
     }
 
@@ -161,9 +183,9 @@ struct tinyui_arc *tinyui_arc_create(struct tinyui_widget *parent, const char *i
 
     ctx.arc_img_tile = arc_img_tile;
     ctx.arc_mask_tile = arc_mask_tile;
-    arc = (struct tinyui_arc *)tinyui_widget_create_leaf(parent,
+    arc = (struct tinyui_arc *)tinyui_runtime_internal_widget_create_leaf(parent_w,
                                                          TINYUI_BACKEND_WIDGET_ARC,
-                                                         tinyui_arc_ld_init,
+                                                         tinyui_runtime_internal_arc_ld_init,
                                                          &ctx,
                                                          sizeof(*arc));
     if (arc == 0) {
@@ -184,48 +206,109 @@ struct tinyui_arc *tinyui_arc_create(struct tinyui_widget *parent, const char *i
         return 0;
     }
 
-    return arc;
+    return (tinyui_obj_t *)arc;
 }
 
-struct tinyui_arc *tinyui_arc_init(struct tinyui_widget *parent, const char *id)
+struct tinyui_arc *tinyui_runtime_internal_arc_init(struct tinyui_widget *parent, const char *id)
 {
-    return tinyui_arc_create(parent, id);
+    return tinyui_arc_create(parent);
 }
 
-struct tinyui_arc *tinyui_arc_create_with_props(struct tinyui_widget *parent,
-                                                const struct tinyui_arc_props *props)
+tinyui_obj_t *tinyui_arc_create_with_props(tinyui_obj_t *parent,
+                                             const tinyui_arc_props_t *props)
 {
+    tinyui_obj_t *obj;
     struct tinyui_arc *arc;
 
-    if (!tinyui_arc_props_are_valid(props)) {
-        return 0;
+    if (props == 0) {
+        return tinyui_arc_create(parent);
     }
 
-    arc = tinyui_arc_create(parent, props->id);
-    if (arc == 0) {
+    obj = tinyui_arc_create(parent);
+    if (obj == 0) {
         return 0;
     }
+    arc = (struct tinyui_arc *)(void *)obj;
 
-    if ((props->style_class != 0
-         && tinyui_widget_set_style_class(&arc->widget, props->style_class) != 0)
-        || tinyui_widget_set_user_data(&arc->widget, props->user_data) != 0
-        || tinyui_arc_set_background_angle(arc, props->bg_start_angle, props->bg_end_angle) != 0
-        || tinyui_arc_set_foreground_angle(arc, props->fg_end_angle) != 0
-        || tinyui_arc_set_rotation_angle(arc, props->rotation_angle) != 0
-        || (props->quarter_source != 0
-            && tinyui_arc_set_quarter_source(arc, props->quarter_source) != 0)
-        || tinyui_arc_set_parent_color(arc,
-                                       tinyui_arc_resolve_parent_color(arc, props)) != 0
-        || tinyui_arc_set_color(arc, props->bg_color, props->fg_color) != 0) {
+    if ((props->fields & TINYUI_ARC_FIELD_ID) != 0) {
+        (void)props->id;
+    }
+    if ((props->fields & TINYUI_ARC_FIELD_USER_DATA) != 0) {
+    if (tinyui_runtime_internal_widget_set_user_data(&arc->widget, props->user_data) != 0) {
         tinyui_arc_rollback(arc);
         return 0;
     }
+    }
+    if ((props->fields & TINYUI_ARC_FIELD_STYLE_CLASS) != 0) {
+    if (tinyui_runtime_internal_widget_set_style_class(&arc->widget, props->style_class) != 0) {
+        tinyui_arc_rollback(arc);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_ARC_FIELD_BG_START_ANGLE) != 0 ||
+        (props->fields & TINYUI_ARC_FIELD_BG_END_ANGLE) != 0) {
+        float a0 = ((props->fields & TINYUI_ARC_FIELD_BG_START_ANGLE) != 0) ? props->bg_start_angle : tinyui_arc_get_background_start_angle((const tinyui_obj_t *)arc);
+        float a1 = ((props->fields & TINYUI_ARC_FIELD_BG_END_ANGLE) != 0) ? props->bg_end_angle : tinyui_arc_get_background_angle((const tinyui_obj_t *)arc);
+            if (tinyui_arc_set_background_angle((tinyui_obj_t *)arc, a0, a1) != 0) {
+                tinyui_arc_rollback(arc);
+                return 0;
+            }
+    }
+    if ((props->fields & TINYUI_ARC_FIELD_FG_END_ANGLE) != 0) {
+    if (tinyui_arc_set_foreground_angle((tinyui_obj_t *)arc, props->fg_end_angle) != 0) {
+        tinyui_arc_rollback(arc);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_ARC_FIELD_ROTATION_ANGLE) != 0) {
+    if (tinyui_arc_set_rotation_angle((tinyui_obj_t *)arc, props->rotation_angle) != 0) {
+        tinyui_arc_rollback(arc);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_ARC_FIELD_QUARTER_SOURCE) != 0) {
+    if (tinyui_arc_set_quarter_source((tinyui_obj_t *)arc, props->quarter_source) != 0) {
+        tinyui_arc_rollback(arc);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_ARC_FIELD_PARENT_COLOR) != 0) {
+    if (tinyui_arc_set_parent_color((tinyui_obj_t *)arc, props->parent_color) != 0) {
+        tinyui_arc_rollback(arc);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_ARC_FIELD_HAS_PARENT_COLOR) != 0) {
+        if (props->has_parent_color) {
+            unsigned int pc = ((props->fields & TINYUI_ARC_FIELD_PARENT_COLOR) != 0)
+                                  ? props->parent_color
+                                  : 0u;
+            if (tinyui_arc_set_parent_color((tinyui_obj_t *)arc, pc) != 0) {
+                tinyui_arc_rollback(arc);
+                return 0;
+            }
+        }
+    }
+    if ((props->fields & TINYUI_ARC_FIELD_BG_COLOR) != 0 ||
+        (props->fields & TINYUI_ARC_FIELD_FG_COLOR) != 0) {
+        unsigned int bg = ((props->fields & TINYUI_ARC_FIELD_BG_COLOR) != 0) ? props->bg_color : tinyui_arc_get_background_color((const tinyui_obj_t *)arc);
+        unsigned int fg = ((props->fields & TINYUI_ARC_FIELD_FG_COLOR) != 0) ? props->fg_color : tinyui_arc_get_foreground_color((const tinyui_obj_t *)arc);
+            if (tinyui_arc_set_color((tinyui_obj_t *)arc, bg, fg) != 0) {
+                tinyui_arc_rollback(arc);
+                return 0;
+            }
+    }
 
-    return arc;
+    return obj;
 }
 
-int tinyui_arc_set_background_angle(struct tinyui_arc *arc, float bg_start_angle, float bg_end_angle)
+
+
+int tinyui_arc_set_background_angle(tinyui_obj_t *arc_obj, float bg_start_angle, float bg_end_angle)
 {
+    struct tinyui_arc *arc = tinyui_arc_as_arc(arc_obj);
+    if (arc == 0) { return -1; }
+
     if (arc == 0 || bg_start_angle < 0.0f || bg_end_angle < bg_start_angle
         || arc->widget.ld_widget == 0
         || arc->widget.kind != TINYUI_BACKEND_WIDGET_ARC) {
@@ -238,8 +321,11 @@ int tinyui_arc_set_background_angle(struct tinyui_arc *arc, float bg_start_angle
     return 0;
 }
 
-int tinyui_arc_set_foreground_angle(struct tinyui_arc *arc, float fg_end_angle)
+int tinyui_arc_set_foreground_angle(tinyui_obj_t *arc_obj, float fg_end_angle)
 {
+    struct tinyui_arc *arc = tinyui_arc_as_arc(arc_obj);
+    if (arc == 0) { return -1; }
+
     if (arc == 0 || fg_end_angle < 0.0f
         || arc->widget.ld_widget == 0
         || arc->widget.kind != TINYUI_BACKEND_WIDGET_ARC) {
@@ -251,8 +337,11 @@ int tinyui_arc_set_foreground_angle(struct tinyui_arc *arc, float fg_end_angle)
     return 0;
 }
 
-int tinyui_arc_set_rotation_angle(struct tinyui_arc *arc, float rotation_angle)
+int tinyui_arc_set_rotation_angle(tinyui_obj_t *arc_obj, float rotation_angle)
 {
+    struct tinyui_arc *arc = tinyui_arc_as_arc(arc_obj);
+    if (arc == 0) { return -1; }
+
     if (arc == 0 || rotation_angle < 0.0f
         || arc->widget.ld_widget == 0
         || arc->widget.kind != TINYUI_BACKEND_WIDGET_ARC) {
@@ -264,8 +353,11 @@ int tinyui_arc_set_rotation_angle(struct tinyui_arc *arc, float rotation_angle)
     return 0;
 }
 
-int tinyui_arc_set_color(struct tinyui_arc *arc, unsigned int bg_color, unsigned int fg_color)
+int tinyui_arc_set_color(tinyui_obj_t *arc_obj, unsigned int bg_color, unsigned int fg_color)
 {
+    struct tinyui_arc *arc = tinyui_arc_as_arc(arc_obj);
+    if (arc == 0) { return -1; }
+
     if (arc == 0 || arc->widget.ld_widget == 0
         || arc->widget.kind != TINYUI_BACKEND_WIDGET_ARC) {
         return -1;
@@ -279,8 +371,11 @@ int tinyui_arc_set_color(struct tinyui_arc *arc, unsigned int bg_color, unsigned
     return 0;
 }
 
-int tinyui_arc_set_quarter_source(struct tinyui_arc *arc, struct tinyui_image_source *source)
+int tinyui_arc_set_quarter_source(tinyui_obj_t *arc_obj, struct tinyui_image_source *source)
 {
+    struct tinyui_arc *arc = tinyui_arc_as_arc(arc_obj);
+    if (arc == 0) { return -1; }
+
     if (arc == 0 || source == 0 || tinyui_image_source_get_image_tile(source) == 0 || tinyui_image_source_get_mask_tile(source) == 0
         || arc->widget.ld_widget == 0
         || arc->widget.kind != TINYUI_BACKEND_WIDGET_ARC) {
@@ -293,13 +388,19 @@ int tinyui_arc_set_quarter_source(struct tinyui_arc *arc, struct tinyui_image_so
     return 0;
 }
 
-int tinyui_arc_set_quarter_image(struct tinyui_arc *arc, struct tinyui_image_source *source)
+int tinyui_arc_set_quarter_image(tinyui_obj_t *arc_obj, struct tinyui_image_source *source)
 {
-    return tinyui_arc_set_quarter_source(arc, source);
+    struct tinyui_arc *arc = tinyui_arc_as_arc(arc_obj);
+    if (arc == 0) { return -1; }
+
+    return tinyui_arc_set_quarter_source((tinyui_obj_t *)arc, source);
 }
 
-int tinyui_arc_set_parent_color(struct tinyui_arc *arc, unsigned int parent_color)
+int tinyui_arc_set_parent_color(tinyui_obj_t *arc_obj, unsigned int parent_color)
 {
+    struct tinyui_arc *arc = tinyui_arc_as_arc(arc_obj);
+    if (arc == 0) { return -1; }
+
     if (arc == 0 || parent_color > 0xFFFFFFU
         || arc->widget.ld_widget == 0
         || arc->widget.kind != TINYUI_BACKEND_WIDGET_ARC) {
@@ -312,8 +413,11 @@ int tinyui_arc_set_parent_color(struct tinyui_arc *arc, unsigned int parent_colo
     return 0;
 }
 
-float tinyui_arc_get_background_start_angle(const struct tinyui_arc *arc)
+float tinyui_arc_get_background_start_angle(const tinyui_obj_t *arc_obj)
 {
+    const struct tinyui_arc *arc = tinyui_arc_as_arc_const(arc_obj);
+    if (arc == 0) { return -1; }
+
     if (arc == 0 || arc->widget.ld_widget == 0
         || arc->widget.kind != TINYUI_BACKEND_WIDGET_ARC) {
         return 0.0f;
@@ -321,8 +425,11 @@ float tinyui_arc_get_background_start_angle(const struct tinyui_arc *arc)
     return ldArcGetBackgroundStartAngle((ldArc_t *)arc->widget.ld_widget);
 }
 
-float tinyui_arc_get_background_angle(const struct tinyui_arc *arc)
+float tinyui_arc_get_background_angle(const tinyui_obj_t *arc_obj)
 {
+    const struct tinyui_arc *arc = tinyui_arc_as_arc_const(arc_obj);
+    if (arc == 0) { return -1; }
+
     ldArc_t *ld_arc;
 
     if (arc == 0 || arc->widget.ld_widget == 0
@@ -333,8 +440,11 @@ float tinyui_arc_get_background_angle(const struct tinyui_arc *arc)
     return ldArcGetBackgroundAngle(ld_arc) - ldArcGetBackgroundStartAngle(ld_arc);
 }
 
-float tinyui_arc_get_foreground_angle(const struct tinyui_arc *arc)
+float tinyui_arc_get_foreground_angle(const tinyui_obj_t *arc_obj)
 {
+    const struct tinyui_arc *arc = tinyui_arc_as_arc_const(arc_obj);
+    if (arc == 0) { return -1; }
+
     if (arc == 0 || arc->widget.ld_widget == 0
         || arc->widget.kind != TINYUI_BACKEND_WIDGET_ARC) {
         return 0.0f;
@@ -342,8 +452,11 @@ float tinyui_arc_get_foreground_angle(const struct tinyui_arc *arc)
     return ldArcGetForegroundAngle((ldArc_t *)arc->widget.ld_widget);
 }
 
-float tinyui_arc_get_rotation_angle(const struct tinyui_arc *arc)
+float tinyui_arc_get_rotation_angle(const tinyui_obj_t *arc_obj)
 {
+    const struct tinyui_arc *arc = tinyui_arc_as_arc_const(arc_obj);
+    if (arc == 0) { return -1; }
+
     if (arc == 0 || arc->widget.ld_widget == 0
         || arc->widget.kind != TINYUI_BACKEND_WIDGET_ARC) {
         return 0.0f;
@@ -351,8 +464,11 @@ float tinyui_arc_get_rotation_angle(const struct tinyui_arc *arc)
     return ldArcGetRotationAngle((ldArc_t *)arc->widget.ld_widget);
 }
 
-unsigned int tinyui_arc_get_background_color(const struct tinyui_arc *arc)
+unsigned int tinyui_arc_get_background_color(const tinyui_obj_t *arc_obj)
 {
+    const struct tinyui_arc *arc = tinyui_arc_as_arc_const(arc_obj);
+    if (arc == 0) { return -1; }
+
     if (arc == 0 || arc->widget.ld_widget == 0
         || arc->widget.kind != TINYUI_BACKEND_WIDGET_ARC) {
         return 0;
@@ -360,8 +476,11 @@ unsigned int tinyui_arc_get_background_color(const struct tinyui_arc *arc)
     return tinyui_ld_color_to_rgb((unsigned int)ldArcGetBackgroundColor((ldArc_t *)arc->widget.ld_widget));
 }
 
-unsigned int tinyui_arc_get_foreground_color(const struct tinyui_arc *arc)
+unsigned int tinyui_arc_get_foreground_color(const tinyui_obj_t *arc_obj)
 {
+    const struct tinyui_arc *arc = tinyui_arc_as_arc_const(arc_obj);
+    if (arc == 0) { return -1; }
+
     if (arc == 0 || arc->widget.ld_widget == 0
         || arc->widget.kind != TINYUI_BACKEND_WIDGET_ARC) {
         return 0;

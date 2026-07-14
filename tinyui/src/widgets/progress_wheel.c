@@ -25,6 +25,25 @@
 #include <stdlib.h>
 #include <string.h>
 
+
+static struct tinyui_progress_wheel *tinyui_progress_wheel_as_progress_wheel(tinyui_obj_t *obj)
+{
+    struct tinyui_widget *w = (struct tinyui_widget *)(void *)obj;
+    if (w == 0 || !tinyui_runtime_internal_widget_is_kind(w, TINYUI_BACKEND_WIDGET_PROGRESS_WHEEL)) {
+        return 0;
+    }
+    return (struct tinyui_progress_wheel *)w;
+}
+
+static const struct tinyui_progress_wheel *tinyui_progress_wheel_as_progress_wheel_const(const tinyui_obj_t *obj)
+{
+    const struct tinyui_widget *w = (const struct tinyui_widget *)(const void *)obj;
+    if (w == 0 || !tinyui_runtime_internal_widget_is_kind(w, TINYUI_BACKEND_WIDGET_PROGRESS_WHEEL)) {
+        return 0;
+    }
+    return (const struct tinyui_progress_wheel *)w;
+}
+
 static int tinyui_progress_wheel_fail_next_set_percent = 0;
 
 
@@ -65,12 +84,12 @@ static void tinyui_progress_wheel_disable_dirty_regions(ldProgressWheel_t *ld_pr
 }
 
 
-static int tinyui_progress_wheel_props_are_valid(const struct tinyui_progress_wheel_props *props)
+static int tinyui_progress_wheel_props_are_valid(const tinyui_progress_wheel_props_t *props)
 {
-    return props != 0 && props->id != 0 && props->percent >= 0 && props->percent <= 100;
+    return props != 0 && props->percent >= 0 && props->percent <= 100;
 }
 
-static void *tinyui_progress_wheel_ld_init(void *ctx,
+static void *tinyui_runtime_internal_progress_wheel_ld_init(void *ctx,
                                            struct ld_scene_t *scene,
                                            uint16_t name_id,
                                            uint16_t parent_name_id)
@@ -94,22 +113,26 @@ static void *tinyui_progress_wheel_ld_init(void *ctx,
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct tinyui_progress_wheel *tinyui_progress_wheel_create(struct tinyui_widget *parent, const char *id)
+tinyui_obj_t *tinyui_progress_wheel_create(tinyui_obj_t *parent)
 {
+    struct tinyui_widget *parent_w = (struct tinyui_widget *)(void *)parent;
+    const char *id = "progress_wheel";
+    if (parent_w == 0) { return 0; }
+
     struct tinyui_progress_wheel *wheel;
     ldProgressWheel_t *ld_progress_wheel;
 
-    if (parent == 0 || id == 0) {
+    if (parent_w == 0 || id == 0) {
         return 0;
     }
 
-    if (parent->ld_widget == 0 || parent->owner == 0) {
+    if (parent_w->ld_widget == 0 || parent_w->owner == 0) {
         return 0;
     }
 
-    wheel = (struct tinyui_progress_wheel *)tinyui_widget_create_leaf(parent,
+    wheel = (struct tinyui_progress_wheel *)tinyui_runtime_internal_widget_create_leaf(parent_w,
                                                                       TINYUI_BACKEND_WIDGET_PROGRESS_WHEEL,
-                                                                      tinyui_progress_wheel_ld_init,
+                                                                      tinyui_runtime_internal_progress_wheel_ld_init,
                                                                       0,
                                                                       sizeof(*wheel));
     if (wheel == 0) {
@@ -132,10 +155,10 @@ struct tinyui_progress_wheel *tinyui_progress_wheel_create(struct tinyui_widget 
 
     if (tinyui_progress_wheel_set_percent(wheel, 0) != 0
         || tinyui_progress_wheel_set_dot_enabled(wheel, 1) != 0) {
-        tinyui_widget_destroy_common(&wheel->widget);
+        tinyui_runtime_internal_widget_destroy_common(&wheel->widget);
         return 0;
     }
-    return wheel;
+    return (tinyui_obj_t *)wheel;
 }
 
 /**
@@ -146,9 +169,9 @@ struct tinyui_progress_wheel *tinyui_progress_wheel_create(struct tinyui_widget 
  * @return Pointer to the object
  */
 
-struct tinyui_progress_wheel *tinyui_progress_wheel_init(struct tinyui_widget *parent, const char *id)
+struct tinyui_progress_wheel *tinyui_runtime_internal_progress_wheel_init(struct tinyui_widget *parent, const char *id)
 {
-    return tinyui_progress_wheel_create(parent, id);
+    return tinyui_progress_wheel_create(parent);
 }
 
 /**
@@ -159,30 +182,54 @@ struct tinyui_progress_wheel *tinyui_progress_wheel_init(struct tinyui_widget *p
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct tinyui_progress_wheel *tinyui_progress_wheel_create_with_props(
-    struct tinyui_widget *parent,
-    const struct tinyui_progress_wheel_props *props)
+tinyui_obj_t *tinyui_progress_wheel_create_with_props(tinyui_obj_t *parent,
+                                             const tinyui_progress_wheel_props_t *props)
 {
+    tinyui_obj_t *obj;
     struct tinyui_progress_wheel *wheel;
 
-    if (!tinyui_progress_wheel_props_are_valid(props)) {
-        return 0;
+    if (props == 0) {
+        return tinyui_progress_wheel_create(parent);
     }
 
-    wheel = tinyui_progress_wheel_create(parent, props->id);
-    if (wheel == 0) {
+    obj = tinyui_progress_wheel_create(parent);
+    if (obj == 0) {
         return 0;
+    }
+    wheel = (struct tinyui_progress_wheel *)(void *)obj;
+
+    if ((props->fields & TINYUI_PROGRESS_WHEEL_FIELD_ID) != 0) {
+        /* id=0 means runtime auto-alloc; non-zero reserved for host name_id path. */
+        (void)props->id;
+    }
+    if ((props->fields & TINYUI_PROGRESS_WHEEL_FIELD_USER_DATA) != 0) {
+    if (tinyui_runtime_internal_widget_set_user_data(&wheel->widget, props->user_data) != 0) {
+        (void)tinyui_obj_delete((tinyui_obj_t *)wheel);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_PROGRESS_WHEEL_FIELD_STYLE_CLASS) != 0) {
+    if (tinyui_runtime_internal_widget_set_style_class(&wheel->widget, props->style_class) != 0) {
+        (void)tinyui_obj_delete((tinyui_obj_t *)wheel);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_PROGRESS_WHEEL_FIELD_PERCENT) != 0) {
+    if (tinyui_progress_wheel_set_percent((tinyui_obj_t *)wheel, props->percent) != 0) {
+        (void)tinyui_obj_delete((tinyui_obj_t *)wheel);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_PROGRESS_WHEEL_FIELD_DOT_ENABLED) != 0) {
+    if (tinyui_progress_wheel_set_dot_enabled((tinyui_obj_t *)wheel, props->dot_enabled) != 0) {
+        (void)tinyui_obj_delete((tinyui_obj_t *)wheel);
+        return 0;
+    }
     }
 
-    if ((props->style_class != 0
-         && tinyui_widget_set_style_class(&wheel->widget, props->style_class) != 0)
-        || tinyui_widget_set_user_data(&wheel->widget, props->user_data) != 0
-        || tinyui_progress_wheel_set_percent(wheel, props->percent) != 0) {
-        tinyui_widget_destroy_common(&wheel->widget);
-        return 0;
-    }
-    return wheel;
+    return obj;
 }
+
 
 /**
  * @brief Set percent of progress wheel widget
@@ -192,8 +239,11 @@ struct tinyui_progress_wheel *tinyui_progress_wheel_create_with_props(
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_progress_wheel_set_percent(struct tinyui_progress_wheel *wheel, int percent)
+int tinyui_progress_wheel_set_percent(tinyui_obj_t *wheel_obj, int percent)
 {
+    struct tinyui_progress_wheel *wheel = tinyui_progress_wheel_as_progress_wheel(wheel_obj);
+    if (wheel == 0) { return -1; }
+
     if (wheel == 0 || percent < 0 || percent > 100) {
         return -1;
     }
@@ -223,9 +273,12 @@ int tinyui_progress_wheel_set_percent(struct tinyui_progress_wheel *wheel, int p
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_progress_wheel_set_progress(struct tinyui_progress_wheel *wheel, int percent)
+int tinyui_progress_wheel_set_progress(tinyui_obj_t *wheel_obj, int percent)
 {
-    return tinyui_progress_wheel_set_percent(wheel, percent);
+    struct tinyui_progress_wheel *wheel = tinyui_progress_wheel_as_progress_wheel(wheel_obj);
+    if (wheel == 0) { return -1; }
+
+    return tinyui_progress_wheel_set_percent((tinyui_obj_t *)wheel, percent);
 }
 
 /**
@@ -235,8 +288,11 @@ int tinyui_progress_wheel_set_progress(struct tinyui_progress_wheel *wheel, int 
  * @return -1 on failure
  */
 
-int tinyui_progress_wheel_get_percent(const struct tinyui_progress_wheel *wheel)
+int tinyui_progress_wheel_get_percent(const tinyui_obj_t *wheel_obj)
 {
+    const struct tinyui_progress_wheel *wheel = tinyui_progress_wheel_as_progress_wheel_const(wheel_obj);
+    if (wheel == 0) { return -1; }
+
     if (wheel == 0) {
         return -1;
     }
@@ -252,8 +308,11 @@ int tinyui_progress_wheel_get_percent(const struct tinyui_progress_wheel *wheel)
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_progress_wheel_set_wheel_color(struct tinyui_progress_wheel *wheel, unsigned int rgb)
+int tinyui_progress_wheel_set_wheel_color(tinyui_obj_t *wheel_obj, unsigned int rgb)
 {
+    struct tinyui_progress_wheel *wheel = tinyui_progress_wheel_as_progress_wheel(wheel_obj);
+    if (wheel == 0) { return -1; }
+
     if (wheel == 0 || rgb > 0xFFFFFFU) {
         return -1;
     }
@@ -277,8 +336,11 @@ int tinyui_progress_wheel_set_wheel_color(struct tinyui_progress_wheel *wheel, u
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_progress_wheel_set_dot_color(struct tinyui_progress_wheel *wheel, unsigned int rgb)
+int tinyui_progress_wheel_set_dot_color(tinyui_obj_t *wheel_obj, unsigned int rgb)
 {
+    struct tinyui_progress_wheel *wheel = tinyui_progress_wheel_as_progress_wheel(wheel_obj);
+    if (wheel == 0) { return -1; }
+
     if (wheel == 0 || rgb > 0xFFFFFFU) {
         return -1;
     }
@@ -303,8 +365,11 @@ int tinyui_progress_wheel_set_dot_color(struct tinyui_progress_wheel *wheel, uns
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_progress_wheel_set_dot_enabled(struct tinyui_progress_wheel *wheel, int enabled)
+int tinyui_progress_wheel_set_dot_enabled(tinyui_obj_t *wheel_obj, int enabled)
 {
+    struct tinyui_progress_wheel *wheel = tinyui_progress_wheel_as_progress_wheel(wheel_obj);
+    if (wheel == 0) { return -1; }
+
     if (wheel == 0) {
         return -1;
     }
@@ -328,8 +393,11 @@ int tinyui_progress_wheel_set_dot_enabled(struct tinyui_progress_wheel *wheel, i
  * @return -1 on failure
  */
 
-int tinyui_progress_wheel_get_dot_enabled(const struct tinyui_progress_wheel *wheel)
+int tinyui_progress_wheel_get_dot_enabled(const tinyui_obj_t *wheel_obj)
 {
+    const struct tinyui_progress_wheel *wheel = tinyui_progress_wheel_as_progress_wheel_const(wheel_obj);
+    if (wheel == 0) { return -1; }
+
     if (wheel == 0) {
         return -1;
     }

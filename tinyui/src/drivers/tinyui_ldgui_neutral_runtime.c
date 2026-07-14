@@ -22,7 +22,7 @@
 
 #include "tinyui_ldgui_port.h"
 
-#include "internal.h"       /* struct tinyui_app, tinyui_app_pump_timers,
+#include "internal.h"       /* struct tinyui_app, tinyui_runtime_internal_app_pump_timers,
                              * tinyui_tick_get, tinyui_os_delay (via umbrella) */
 #include "runtime_bridge.h" /* tinyui_runtime_bridge_init_app */
 
@@ -33,7 +33,7 @@
 #include <stddef.h>
 
 /* Provided by tinyui_ldgui_disp_adapter.c (same library). */
-int  tinyui_backend_init(struct tinyui_app *app);
+int  tinyui_runtime_internal_backend_init(struct tinyui_app *app);
 void tinyui_backend_step(struct tinyui_app *app);
 
 /* ─── Static no-op page group ──────────────────────────────────────────────
@@ -41,7 +41,7 @@ void tinyui_backend_step(struct tinyui_app *app);
  * ldGuiSceneInit()/frame processing has a valid ldGuiFuncGroup with no-op
  * init/quit hooks.
  * ──────────────────────────────────────────────────────────────────────── */
-static void tinyui_backend_neutral_page_init(ld_scene_t *scene)
+static void tinyui_runtime_internal_backend_neutral_page_init(ld_scene_t *scene)
 {
     (void)scene;
 }
@@ -52,7 +52,7 @@ static void tinyui_backend_neutral_page_quit(ld_scene_t *scene)
 }
 
 static const ldPageFuncGroup_t g_tinyui_backend_neutral_page = {
-    .init = tinyui_backend_neutral_page_init,
+    .init = tinyui_runtime_internal_backend_neutral_page_init,
     .loop = NULL,
     .quit = tinyui_backend_neutral_page_quit,
     .draw = NULL,
@@ -67,7 +67,7 @@ static const ldPageFuncGroup_t g_tinyui_backend_neutral_page = {
 /* ─── tinyui_backend_neutral_step ──────────────────────────────────────────
  * One-time setup (guarded) followed by a single frame step.  Non-SDL mirror
  * of step.c's prepare_runtime + step body:
- *   setup : ensure ld_scene, install neutral page group, tinyui_backend_init
+ *   setup : ensure ld_scene, install neutral page group, tinyui_runtime_internal_backend_init
  *           (allocates PFB when a flush callback is registered), ldGuiSceneInit
  *   step  : pump app timers, tinyui_backend_step (renders + flushes tiles via
  *           app->display_port.flush_callback), then os delay ~16ms (no-op if
@@ -88,7 +88,7 @@ int tinyui_backend_neutral_step(struct tinyui_app *app)
     }
 
     if (!s_neutral_inited) {
-        /* tinyui_backend_init() also calls this, but keep the SDL parity:
+        /* tinyui_runtime_internal_backend_init() also calls this, but keep the SDL parity:
          * ensure the ld scene exists before touching it. */
         if (tinyui_runtime_bridge_init_app(app) != 0) {
             return -1;
@@ -99,7 +99,7 @@ int tinyui_backend_neutral_step(struct tinyui_app *app)
 
         app->ld_scene->ldGuiFuncGroup = &g_tinyui_backend_neutral_page;
 
-        if (tinyui_backend_init(app) != 0) {
+        if (tinyui_runtime_internal_backend_init(app) != 0) {
             return -1;
         }
 
@@ -123,7 +123,7 @@ int tinyui_backend_neutral_step(struct tinyui_app *app)
     /* NOTE: the application must have registered a tick source
      * (tinyui_tick_set_source) — otherwise tinyui_tick_get() returns 0 every
      * frame and timers/animations never advance (first frame still paints). */
-    tinyui_app_pump_timers(app, tinyui_tick_get(app));
+    tinyui_runtime_internal_app_pump_timers(app, tinyui_tick_get(app));
     tinyui_backend_step(app);
 
     if (app->display_port.present_callback != NULL) {

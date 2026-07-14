@@ -18,11 +18,30 @@
 
 #include "internal.h"
 #include "widgets/radial_menu.h"
-#include "core/widget.h"
+#include "internal/widget_legacy.h"
 #include "../core/runtime_bridge.h"
 #include "../../../src/gui/ldBase.h"
 #include "../../../src/gui/ldRadialMenu.h"
 #include "../../../src/misc/ldMsg.h"
+
+
+static struct tinyui_radial_menu *tinyui_radial_menu_as_radial_menu(tinyui_obj_t *obj)
+{
+    struct tinyui_widget *w = (struct tinyui_widget *)(void *)obj;
+    if (w == 0 || !tinyui_runtime_internal_widget_is_kind(w, TINYUI_BACKEND_WIDGET_RADIAL_MENU)) {
+        return 0;
+    }
+    return (struct tinyui_radial_menu *)w;
+}
+
+static const struct tinyui_radial_menu *tinyui_radial_menu_as_radial_menu_const(const tinyui_obj_t *obj)
+{
+    const struct tinyui_widget *w = (const struct tinyui_widget *)(const void *)obj;
+    if (w == 0 || !tinyui_runtime_internal_widget_is_kind(w, TINYUI_BACKEND_WIDGET_RADIAL_MENU)) {
+        return 0;
+    }
+    return (const struct tinyui_radial_menu *)w;
+}
 
 
 extern const arm_2d_tile_t c_tileQuaterArcGRAY8;
@@ -64,13 +83,13 @@ static void tinyui_radial_menu_rollback(struct tinyui_radial_menu *radial_menu)
         return;
     }
     if (radial_menu->widget.ld_widget != 0) {
-        tinyui_widget_destroy_common(&radial_menu->widget);
+        tinyui_runtime_internal_widget_destroy_common(&radial_menu->widget);
     } else {
         ldFree(radial_menu);
     }
 }
 
-static void *tinyui_radial_menu_ld_init(void *ctx,
+static void *tinyui_runtime_internal_radial_menu_ld_init(void *ctx,
                                         struct ld_scene_t *scene,
                                         uint16_t name_id,
                                         uint16_t parent_name_id)
@@ -106,7 +125,7 @@ static bool tinyui_radial_menu_native_slot(struct ld_scene_t *scene, ldMsg_t msg
         return false;
     }
 
-    w = tinyui_widget_from_ld_scene(scene, msg.ptSender);
+    w = tinyui_runtime_internal_widget_from_ld_scene(scene, msg.ptSender);
     if (w == 0) {
         return false;
     }
@@ -122,7 +141,7 @@ static bool tinyui_radial_menu_native_slot(struct ld_scene_t *scene, ldMsg_t msg
         return false;
     }
 
-    if (tinyui_widget_claim_backend_focus(w) != 0) {
+    if (tinyui_runtime_internal_widget_claim_backend_focus(w) != 0) {
         return false;
     }
 
@@ -137,10 +156,9 @@ static bool tinyui_radial_menu_native_slot(struct ld_scene_t *scene, ldMsg_t msg
     return false;
 }
 
-static int tinyui_radial_menu_props_are_valid(const struct tinyui_radial_menu_props *props)
+static int tinyui_radial_menu_props_are_valid(const tinyui_radial_menu_props_t *props)
 {
     return props != 0 &&
-           props->id != 0 &&
            props->width >= 0 &&
            props->height >= 0 &&
            props->x_axis >= 0 &&
@@ -178,7 +196,7 @@ static struct tinyui_radial_menu *tinyui_radial_menu_create_internal(struct tiny
         item_max = 1;
     }
 
-    if (parent->ld_widget == 0 || parent->owner == 0 || parent->owner->ld_scene == 0) {
+    if (((struct tinyui_widget *)(void *)parent)->ld_widget == 0 || ((struct tinyui_widget *)(void *)parent)->owner == 0 || ((struct tinyui_widget *)(void *)parent)->owner->ld_scene == 0) {
         return 0;
     }
 
@@ -188,10 +206,10 @@ static struct tinyui_radial_menu *tinyui_radial_menu_create_internal(struct tiny
     create_ctx.y_axis = y_axis;
     create_ctx.item_max = item_max;
 
-    radial_menu = (struct tinyui_radial_menu *)tinyui_widget_create_leaf(
+    radial_menu = (struct tinyui_radial_menu *)tinyui_runtime_internal_widget_create_leaf(
         parent,
         TINYUI_BACKEND_WIDGET_RADIAL_MENU,
-        tinyui_radial_menu_ld_init,
+        tinyui_runtime_internal_radial_menu_ld_init,
         &create_ctx,
         sizeof(*radial_menu));
     if (radial_menu == 0) {
@@ -230,9 +248,13 @@ static struct tinyui_radial_menu *tinyui_radial_menu_create_internal(struct tiny
  * @return Pointer to the object
  */
 
-struct tinyui_radial_menu *tinyui_radial_menu_create(struct tinyui_widget *parent, const char *id)
+tinyui_obj_t *tinyui_radial_menu_create(tinyui_obj_t *parent)
 {
-    return tinyui_radial_menu_create_internal(parent, id, 194, 96, 68, 46, 5);
+    struct tinyui_widget *parent_w = (struct tinyui_widget *)(void *)parent;
+    const char *id = "radial_menu";
+    if (parent_w == 0) { return 0; }
+
+    return tinyui_radial_menu_create_internal(parent_w, id, 194, 96, 68, 46, 5);
 }
 
 /**
@@ -243,9 +265,9 @@ struct tinyui_radial_menu *tinyui_radial_menu_create(struct tinyui_widget *paren
  * @return Pointer to the object
  */
 
-struct tinyui_radial_menu *tinyui_radial_menu_init(struct tinyui_widget *parent, const char *id)
+struct tinyui_radial_menu *tinyui_runtime_internal_radial_menu_init(struct tinyui_widget *parent, const char *id)
 {
-    return tinyui_radial_menu_create(parent, id);
+    return tinyui_radial_menu_create(parent);
 }
 
 /**
@@ -256,42 +278,65 @@ struct tinyui_radial_menu *tinyui_radial_menu_init(struct tinyui_widget *parent,
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct tinyui_radial_menu *tinyui_radial_menu_create_with_props(
-    struct tinyui_widget *parent,
-    const struct tinyui_radial_menu_props *props
-)
+tinyui_obj_t *tinyui_radial_menu_create_with_props(tinyui_obj_t *parent,
+                                             const tinyui_radial_menu_props_t *props)
 {
+    tinyui_obj_t *obj;
     struct tinyui_radial_menu *radial_menu;
 
-    if (!tinyui_radial_menu_props_are_valid(props)) {
-        return 0;
+    if (props == 0) {
+        return tinyui_radial_menu_create(parent);
     }
 
-    radial_menu = tinyui_radial_menu_create_internal(parent,
-                                                     props->id,
-                                                     props->width > 0 ? props->width : 194,
-                                                     props->height > 0 ? props->height : 96,
-                                                     props->x_axis > 0 ? props->x_axis : 68,
-                                                     props->y_axis > 0 ? props->y_axis : 46,
-                                                     props->item_max > 0 ? props->item_max : 5);
-    if (radial_menu == 0) {
+    obj = tinyui_radial_menu_create(parent);
+    if (obj == 0) {
         return 0;
     }
+    radial_menu = (struct tinyui_radial_menu *)(void *)obj;
 
-    if (tinyui_widget_set_user_data(&radial_menu->widget, props->user_data) != 0 ||
-        (props->style_class != 0 &&
-         tinyui_widget_set_style_class(&radial_menu->widget, props->style_class) != 0) ||
-        ((props->width > 0 || props->height > 0) &&
-         tinyui_widget_set_size(&radial_menu->widget, props->width, props->height) != 0)) {
+    if ((props->fields & TINYUI_RADIAL_MENU_FIELD_ID) != 0) {
+        (void)props->id;
+    }
+    if ((props->fields & TINYUI_RADIAL_MENU_FIELD_USER_DATA) != 0) {
+    if (tinyui_runtime_internal_widget_set_user_data(&radial_menu->widget, props->user_data) != 0) {
         tinyui_radial_menu_rollback(radial_menu);
         return 0;
     }
-
-    if (props->default_index >= 0) {
-        radial_menu->selected_index = props->default_index;
     }
-    return radial_menu;
+    if ((props->fields & TINYUI_RADIAL_MENU_FIELD_STYLE_CLASS) != 0) {
+    if (tinyui_runtime_internal_widget_set_style_class(&radial_menu->widget, props->style_class) != 0) {
+        tinyui_radial_menu_rollback(radial_menu);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_RADIAL_MENU_FIELD_WIDTH) != 0 ||
+        (props->fields & TINYUI_RADIAL_MENU_FIELD_HEIGHT) != 0 ||
+        (props->fields & TINYUI_RADIAL_MENU_FIELD_X_AXIS) != 0 ||
+        (props->fields & TINYUI_RADIAL_MENU_FIELD_Y_AXIS) != 0 ||
+        (props->fields & TINYUI_RADIAL_MENU_FIELD_ITEM_MAX) != 0) {
+        int w = ((props->fields & TINYUI_RADIAL_MENU_FIELD_WIDTH) != 0) ? props->width : tinyui_runtime_internal_widget_get_width(&radial_menu->widget);
+        int h = ((props->fields & TINYUI_RADIAL_MENU_FIELD_HEIGHT) != 0) ? props->height : tinyui_runtime_internal_widget_get_height(&radial_menu->widget);
+        int xa = ((props->fields & TINYUI_RADIAL_MENU_FIELD_X_AXIS) != 0) ? props->x_axis : radial_menu->x_axis;
+        int ya = ((props->fields & TINYUI_RADIAL_MENU_FIELD_Y_AXIS) != 0) ? props->y_axis : radial_menu->y_axis;
+        int im = ((props->fields & TINYUI_RADIAL_MENU_FIELD_ITEM_MAX) != 0) ? props->item_max : radial_menu->item_max;
+        if (w < 0) { w = 0; }
+        if (h < 0) { h = 0; }
+            if (tinyui_radial_menu_set_geometry((tinyui_obj_t *)radial_menu, w, h, xa, ya, im) != 0) {
+                tinyui_radial_menu_rollback(radial_menu);
+                return 0;
+            }
+    }
+    if ((props->fields & TINYUI_RADIAL_MENU_FIELD_DEFAULT_INDEX) != 0) {
+    if (tinyui_radial_menu_set_default_item((tinyui_obj_t *)radial_menu, props->default_index) != 0) {
+        tinyui_radial_menu_rollback(radial_menu);
+        return 0;
+    }
+    }
+
+    return obj;
 }
+
+
 
 /**
  * @brief radial menu add item
@@ -301,8 +346,11 @@ struct tinyui_radial_menu *tinyui_radial_menu_create_with_props(
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_radial_menu_add_item(struct tinyui_radial_menu *radial_menu, const char *id)
+int tinyui_radial_menu_add_item(tinyui_obj_t *radial_menu_obj, const char *id)
 {
+    struct tinyui_radial_menu *radial_menu = tinyui_radial_menu_as_radial_menu(radial_menu_obj);
+    if (radial_menu == 0) { return -1; }
+
     int index;
     ldRadialMenu_t *ld_radial_menu;
 
@@ -350,10 +398,11 @@ int tinyui_radial_menu_add_item(struct tinyui_radial_menu *radial_menu, const ch
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_radial_menu_add_item_with_source(struct tinyui_radial_menu *radial_menu,
-                                            const char *id,
-                                            struct tinyui_image_source *source)
+int tinyui_radial_menu_add_item_with_source(tinyui_obj_t *radial_menu_obj, const char *id, struct tinyui_image_source *source)
 {
+    struct tinyui_radial_menu *radial_menu = tinyui_radial_menu_as_radial_menu(radial_menu_obj);
+    if (radial_menu == 0) { return -1; }
+
     int index;
     ldRadialMenu_t *ld_radial_menu;
 
@@ -405,20 +454,19 @@ int tinyui_radial_menu_add_item_with_source(struct tinyui_radial_menu *radial_me
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_radial_menu_add_item_with_image(struct tinyui_radial_menu *radial_menu,
-                                           const char *id,
-                                           struct tinyui_image_source *source)
+int tinyui_radial_menu_add_item_with_image(tinyui_obj_t *radial_menu_obj, const char *id, struct tinyui_image_source *source)
 {
-    return tinyui_radial_menu_add_item_with_source(radial_menu, id, source);
+    struct tinyui_radial_menu *radial_menu = tinyui_radial_menu_as_radial_menu(radial_menu_obj);
+    if (radial_menu == 0) { return -1; }
+
+    return tinyui_radial_menu_add_item_with_source((tinyui_obj_t *)radial_menu, id, source);
 }
 
-int tinyui_radial_menu_set_geometry(struct tinyui_radial_menu *radial_menu,
-                                    int width,
-                                    int height,
-                                    int x_axis,
-                                    int y_axis,
-                                    int item_max)
+int tinyui_radial_menu_set_geometry(tinyui_obj_t *radial_menu_obj, int width, int height, int x_axis, int y_axis, int item_max)
 {
+    struct tinyui_radial_menu *radial_menu = tinyui_radial_menu_as_radial_menu(radial_menu_obj);
+    if (radial_menu == 0) { return -1; }
+
     ldRadialMenu_t *ld_radial_menu;
 
     if (radial_menu == 0 || width <= 0 || height <= 0 || x_axis <= 0 || y_axis <= 0
@@ -451,8 +499,11 @@ int tinyui_radial_menu_set_geometry(struct tinyui_radial_menu *radial_menu,
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_radial_menu_set_selected_index(struct tinyui_radial_menu *radial_menu, int index)
+int tinyui_radial_menu_set_selected_index(tinyui_obj_t *radial_menu_obj, int index)
 {
+    struct tinyui_radial_menu *radial_menu = tinyui_radial_menu_as_radial_menu(radial_menu_obj);
+    if (radial_menu == 0) { return -1; }
+
     ldRadialMenu_t *ld_radial_menu;
 
     if (radial_menu == 0 || index < 0 || index >= radial_menu->item_count) {
@@ -479,8 +530,11 @@ int tinyui_radial_menu_set_selected_index(struct tinyui_radial_menu *radial_menu
  * @return -1 on failure
  */
 
-int tinyui_radial_menu_get_selected_index(const struct tinyui_radial_menu *radial_menu)
+int tinyui_radial_menu_get_selected_index(const tinyui_obj_t *radial_menu_obj)
 {
+    const struct tinyui_radial_menu *radial_menu = tinyui_radial_menu_as_radial_menu_const(radial_menu_obj);
+    if (radial_menu == 0) { return -1; }
+
     ldRadialMenu_t *ld_radial_menu;
 
     if (radial_menu == 0) {
@@ -508,8 +562,11 @@ int tinyui_radial_menu_get_selected_index(const struct tinyui_radial_menu *radia
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_radial_menu_offset_selection(struct tinyui_radial_menu *radial_menu, int offset)
+int tinyui_radial_menu_offset_selection(tinyui_obj_t *radial_menu_obj, int offset)
 {
+    struct tinyui_radial_menu *radial_menu = tinyui_radial_menu_as_radial_menu(radial_menu_obj);
+    if (radial_menu == 0) { return -1; }
+
     ldRadialMenu_t *ld_radial_menu;
     int item_count;
     int next_index;
@@ -551,9 +608,12 @@ int tinyui_radial_menu_offset_selection(struct tinyui_radial_menu *radial_menu, 
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_radial_menu_set_default_item(struct tinyui_radial_menu *radial_menu, int index)
+int tinyui_radial_menu_set_default_item(tinyui_obj_t *radial_menu_obj, int index)
 {
-    return tinyui_radial_menu_set_selected_index(radial_menu, index);
+    struct tinyui_radial_menu *radial_menu = tinyui_radial_menu_as_radial_menu(radial_menu_obj);
+    if (radial_menu == 0) { return -1; }
+
+    return tinyui_radial_menu_set_selected_index((tinyui_obj_t *)radial_menu, index);
 }
 
 /**
@@ -564,8 +624,11 @@ int tinyui_radial_menu_set_default_item(struct tinyui_radial_menu *radial_menu, 
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_radial_menu_click_item(struct tinyui_radial_menu *radial_menu, int index)
+int tinyui_radial_menu_click_item(tinyui_obj_t *radial_menu_obj, int index)
 {
+    struct tinyui_radial_menu *radial_menu = tinyui_radial_menu_as_radial_menu(radial_menu_obj);
+    if (radial_menu == 0) { return -1; }
+
     ldRadialMenu_t *ld_radial_menu;
 
     if (radial_menu == 0 || index < 0 || index >= radial_menu->item_count) {
@@ -593,9 +656,12 @@ int tinyui_radial_menu_click_item(struct tinyui_radial_menu *radial_menu, int in
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_radial_menu_set_click_item(struct tinyui_radial_menu *radial_menu, int index)
+int tinyui_radial_menu_set_click_item(tinyui_obj_t *radial_menu_obj, int index)
 {
-    return tinyui_radial_menu_click_item(radial_menu, index);
+    struct tinyui_radial_menu *radial_menu = tinyui_radial_menu_as_radial_menu(radial_menu_obj);
+    if (radial_menu == 0) { return -1; }
+
+    return tinyui_radial_menu_click_item((tinyui_obj_t *)radial_menu, index);
 }
 
 /**
@@ -606,8 +672,11 @@ int tinyui_radial_menu_set_click_item(struct tinyui_radial_menu *radial_menu, in
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_radial_menu_offset_item(struct tinyui_radial_menu *radial_menu, int offset)
+int tinyui_radial_menu_offset_item(tinyui_obj_t *radial_menu_obj, int offset)
 {
+    struct tinyui_radial_menu *radial_menu = tinyui_radial_menu_as_radial_menu(radial_menu_obj);
+    if (radial_menu == 0) { return -1; }
+
     ldRadialMenu_t *ld_radial_menu;
     int item_count;
     int next_index;
@@ -648,16 +717,17 @@ int tinyui_radial_menu_offset_item(struct tinyui_radial_menu *radial_menu, int o
  * @param[in] user_data User data pointer
  */
 
-void tinyui_radial_menu_set_on_selected(struct tinyui_radial_menu *radial_menu,
-                                        void (*callback)(struct tinyui_radial_menu *radial_menu,
+void tinyui_radial_menu_set_on_selected(tinyui_obj_t *radial_menu_obj, void (*callback)(tinyui_obj_t *radial_menu,
                                                          int index,
-                                                         void *user_data),
-                                        void *user_data)
+                                                         void *user_data), void *user_data)
 {
+    struct tinyui_radial_menu *radial_menu = tinyui_radial_menu_as_radial_menu(radial_menu_obj);
+    if (radial_menu == 0) { return; }
+
     if (radial_menu == 0) {
         return;
     }
 
-    radial_menu->cb = callback;
+    radial_menu->cb = (void (*)(struct tinyui_radial_menu *, int, void *))callback;
     radial_menu->user_data = user_data;
 }

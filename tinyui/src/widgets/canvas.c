@@ -23,6 +23,25 @@
 
 #include <stdlib.h>
 
+
+static struct tinyui_canvas *tinyui_canvas_as_canvas(tinyui_obj_t *obj)
+{
+    struct tinyui_widget *w = (struct tinyui_widget *)(void *)obj;
+    if (w == 0 || !tinyui_runtime_internal_widget_is_kind(w, TINYUI_BACKEND_WIDGET_CANVAS)) {
+        return 0;
+    }
+    return (struct tinyui_canvas *)w;
+}
+
+static const struct tinyui_canvas *tinyui_canvas_as_canvas_const(const tinyui_obj_t *obj)
+{
+    const struct tinyui_widget *w = (const struct tinyui_widget *)(const void *)obj;
+    if (w == 0 || !tinyui_runtime_internal_widget_is_kind(w, TINYUI_BACKEND_WIDGET_CANVAS)) {
+        return 0;
+    }
+    return (const struct tinyui_canvas *)w;
+}
+
 extern const arm_2d_a1_font_t ARM_2D_FONT_6x8;
 
 static int canvas_push(struct tinyui_canvas *canvas,
@@ -71,7 +90,7 @@ static int canvas_push(struct tinyui_canvas *canvas,
     return 0;
 }
 
-static void *tinyui_canvas_ld_init(void *ctx,
+static void *tinyui_runtime_internal_canvas_ld_init(void *ctx,
                                    struct ld_scene_t *scene,
                                    uint16_t name_id,
                                    uint16_t parent_name_id)
@@ -88,23 +107,27 @@ static void *tinyui_canvas_ld_init(void *ctx,
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct tinyui_canvas *tinyui_canvas_create(struct tinyui_window *parent, const char *id)
+tinyui_obj_t *tinyui_canvas_create(tinyui_obj_t *parent)
 {
+    struct tinyui_widget *parent_w = (struct tinyui_widget *)(void *)parent;
+    const char *id = "canvas";
+    if (parent_w == 0) { return 0; }
+
     struct tinyui_canvas *canvas;
 
-    if (parent == 0 || id == 0) {
+    if (parent_w == 0 || id == 0) {
         return 0;
     }
-    canvas = (struct tinyui_canvas *)tinyui_widget_create_leaf(&parent->widget,
+    canvas = (struct tinyui_canvas *)tinyui_runtime_internal_widget_create_leaf(parent_w,
                                                                TINYUI_BACKEND_WIDGET_CANVAS,
-                                                               tinyui_canvas_ld_init,
+                                                               tinyui_runtime_internal_canvas_ld_init,
                                                                0,
                                                                sizeof(*canvas));
     if (canvas == 0) {
         return 0;
     }
     canvas->id = id;
-    return canvas;
+    return (tinyui_obj_t *)canvas;
 }
 
 /**
@@ -114,8 +137,11 @@ struct tinyui_canvas *tinyui_canvas_create(struct tinyui_window *parent, const c
  * @return -1 on failure
  */
 
-int tinyui_canvas_clear(struct tinyui_canvas *canvas)
+int tinyui_canvas_clear(tinyui_obj_t *canvas_obj)
 {
+    struct tinyui_canvas *canvas = tinyui_canvas_as_canvas(canvas_obj);
+    if (canvas == 0) { return -1; }
+
     if (canvas == 0 || canvas->widget.ld_widget == 0
         || canvas->widget.kind != TINYUI_BACKEND_WIDGET_CANVAS) {
         return -1;
@@ -139,14 +165,11 @@ int tinyui_canvas_clear(struct tinyui_canvas *canvas)
  * @return -1 on failure
  */
 
-int tinyui_canvas_fill_rect(struct tinyui_canvas *canvas,
-                            int x,
-                            int y,
-                            int width,
-                            int height,
-                            unsigned int rgb,
-                            int opacity)
+int tinyui_canvas_fill_rect(tinyui_obj_t *canvas_obj, int x, int y, int width, int height, unsigned int rgb, int opacity)
 {
+    struct tinyui_canvas *canvas = tinyui_canvas_as_canvas(canvas_obj);
+    if (canvas == 0) { return -1; }
+
     struct tinyui_canvas_command command;
 
     if (width < 0 || height < 0 || opacity < 0 || opacity > 255) {
@@ -180,16 +203,11 @@ int tinyui_canvas_fill_rect(struct tinyui_canvas *canvas,
  * @return -1 on failure
  */
 
-int tinyui_canvas_draw_line(struct tinyui_canvas *canvas,
-                            int x0,
-                            int y0,
-                            int x1,
-                            int y1,
-                            int line_size,
-                            unsigned int rgb,
-                            int opacity_max,
-                            int opacity_min)
+int tinyui_canvas_draw_line(tinyui_obj_t *canvas_obj, int x0, int y0, int x1, int y1, int line_size, unsigned int rgb, int opacity_max, int opacity_min)
 {
+    struct tinyui_canvas *canvas = tinyui_canvas_as_canvas(canvas_obj);
+    if (canvas == 0) { return -1; }
+
     struct tinyui_canvas_command command;
 
     if (line_size <= 0
@@ -228,15 +246,11 @@ int tinyui_canvas_draw_line(struct tinyui_canvas *canvas,
  * @return -1 on failure
  */
 
-int tinyui_canvas_draw_image(struct tinyui_canvas *canvas,
-                             int x,
-                             int y,
-                             int width,
-                             int height,
-                             struct tinyui_image_source *source,
-                             unsigned int mask_color,
-                             int opacity)
+int tinyui_canvas_draw_image(tinyui_obj_t *canvas_obj, int x, int y, int width, int height, struct tinyui_image_source *source, unsigned int mask_color, int opacity)
 {
+    struct tinyui_canvas *canvas = tinyui_canvas_as_canvas(canvas_obj);
+    if (canvas == 0) { return -1; }
+
     struct tinyui_canvas_command command;
 
     if (source == 0 || tinyui_image_source_get_image_tile(source) == 0 || width < 0 || height < 0 || opacity < 0 || opacity > 255) {
@@ -270,15 +284,11 @@ int tinyui_canvas_draw_image(struct tinyui_canvas *canvas,
  * @return -1 on failure
  */
 
-int tinyui_canvas_draw_image_scaled(struct tinyui_canvas *canvas,
-                                    int x,
-                                    int y,
-                                    int width,
-                                    int height,
-                                    struct tinyui_image_source *source,
-                                    float scale,
-                                    int opacity)
+int tinyui_canvas_draw_image_scaled(tinyui_obj_t *canvas_obj, int x, int y, int width, int height, struct tinyui_image_source *source, float scale, int opacity)
 {
+    struct tinyui_canvas *canvas = tinyui_canvas_as_canvas(canvas_obj);
+    if (canvas == 0) { return -1; }
+
     struct tinyui_canvas_command command;
 
     if (source == 0 || tinyui_image_source_get_image_tile(source) == 0 || width < 0 || height < 0 || scale <= 0.0f || opacity < 0 || opacity > 255) {
@@ -313,16 +323,11 @@ int tinyui_canvas_draw_image_scaled(struct tinyui_canvas *canvas,
  * @return -1 on failure
  */
 
-int tinyui_canvas_draw_text(struct tinyui_canvas *canvas,
-                            int x,
-                            int y,
-                            int width,
-                            int height,
-                            const char *text,
-                            enum tinyui_align align,
-                            unsigned int text_color,
-                            int opacity)
+int tinyui_canvas_draw_text(tinyui_obj_t *canvas_obj, int x, int y, int width, int height, const char *text, enum tinyui_align align, unsigned int text_color, int opacity)
 {
+    struct tinyui_canvas *canvas = tinyui_canvas_as_canvas(canvas_obj);
+    if (canvas == 0) { return -1; }
+
     struct tinyui_canvas_command command;
 
     if (text == 0
@@ -356,12 +361,71 @@ int tinyui_canvas_draw_text(struct tinyui_canvas *canvas,
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_canvas_get_command_count(const struct tinyui_canvas *canvas, int *count)
+int tinyui_canvas_get_command_count(const tinyui_obj_t *canvas_obj, int *count)
 {
+    const struct tinyui_canvas *canvas = tinyui_canvas_as_canvas_const(canvas_obj);
+    if (canvas == 0) { return -1; }
+
     if (canvas == 0 || canvas->widget.ld_widget == 0 || count == 0) {
         return -1;
     }
 
     *count = canvas->command_count;
     return 0;
+}
+
+tinyui_obj_t *tinyui_canvas_create_with_props(tinyui_obj_t *parent,
+                                             const tinyui_canvas_props_t *props)
+{
+    tinyui_obj_t *obj;
+    struct tinyui_canvas *canvas;
+
+    if (props == 0) {
+        return tinyui_canvas_create(parent);
+    }
+
+    obj = tinyui_canvas_create(parent);
+    if (obj == 0) {
+        return 0;
+    }
+    canvas = (struct tinyui_canvas *)(void *)obj;
+
+    if ((props->fields & TINYUI_CANVAS_FIELD_ID) != 0) {
+        /* id=0 means runtime auto-alloc; non-zero reserved for host name_id path. */
+        (void)props->id;
+    }
+    if ((props->fields & TINYUI_CANVAS_FIELD_USER_DATA) != 0) {
+    if (tinyui_runtime_internal_widget_set_user_data(&canvas->widget, props->user_data) != 0) {
+        (void)tinyui_obj_delete((tinyui_obj_t *)canvas);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_CANVAS_FIELD_STYLE_CLASS) != 0) {
+    if (tinyui_runtime_internal_widget_set_style_class(&canvas->widget, props->style_class) != 0) {
+        (void)tinyui_obj_delete((tinyui_obj_t *)canvas);
+        return 0;
+    }
+    }
+        if ((props->fields & TINYUI_CANVAS_FIELD_WIDTH) != 0 || (props->fields & TINYUI_CANVAS_FIELD_HEIGHT) != 0) {
+        int w = tinyui_runtime_internal_widget_get_width(&canvas->widget);
+        int h = tinyui_runtime_internal_widget_get_height(&canvas->widget);
+        if (w < 0) {
+            w = 0;
+        }
+        if (h < 0) {
+            h = 0;
+        }
+        if ((props->fields & TINYUI_CANVAS_FIELD_WIDTH) != 0) {
+            w = props->width;
+        }
+        if ((props->fields & TINYUI_CANVAS_FIELD_HEIGHT) != 0) {
+            h = props->height;
+        }
+        if (tinyui_runtime_internal_widget_set_size(&canvas->widget, w, h) != 0) {
+            (void)tinyui_obj_delete((tinyui_obj_t *)canvas);
+            return 0;
+        }
+    }
+
+    return obj;
 }

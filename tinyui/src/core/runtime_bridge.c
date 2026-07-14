@@ -91,7 +91,7 @@ static bool tinyui_runtime_bridge_ld_event_bridge_slot(struct ld_scene_t *scene,
         return false;
     }
 
-    widget = tinyui_widget_from_ld_scene(scene, msg.ptSender);
+    widget = tinyui_runtime_internal_widget_from_ld_scene(scene, msg.ptSender);
     if (widget == NULL) {
         return false;
     }
@@ -106,7 +106,7 @@ static bool tinyui_runtime_bridge_ld_event_bridge_slot(struct ld_scene_t *scene,
         fflush(stdout);
     }
 
-    tinyui_widget_dispatch_native_signal(widget, msg.signal, msg.value);
+    tinyui_runtime_internal_widget_dispatch_native_signal(widget, msg.signal, msg.value);
     return false;
 }
 

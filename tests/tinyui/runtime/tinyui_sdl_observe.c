@@ -130,7 +130,7 @@ static size_t tinyui_runtime_host_count_real_in_ld_tree(ldBase_t *node,
     size_t count = 0;
 
     while (node != NULL) {
-        struct tinyui_widget *w = tinyui_app_lookup_host(app, node->nameId);
+        struct tinyui_widget *w = tinyui_runtime_internal_app_lookup_host(app, node->nameId);
 
         if (tinyui_runtime_host_widget_is_real_leaf(w)) {
             count++;
@@ -160,7 +160,7 @@ static size_t tinyui_runtime_host_collect_real_widget_ids(ldBase_t *node,
                                                           struct tinyui_app *app)
 {
     while (node != NULL && *written + 1 < cap) {
-        struct tinyui_widget *w = tinyui_app_lookup_host(app, node->nameId);
+        struct tinyui_widget *w = tinyui_runtime_internal_app_lookup_host(app, node->nameId);
 
         if (tinyui_runtime_host_widget_is_real_leaf(w)) {
             const char *id = tinyui_runtime_host_widget_id(w);
@@ -237,7 +237,7 @@ static void tinyui_runtime_host_log_image_source_marker_in_ld_tree(ldBase_t *nod
                                                                      struct tinyui_app *app)
 {
     while (node != NULL) {
-        struct tinyui_widget *widget = tinyui_app_lookup_host(app, node->nameId);
+        struct tinyui_widget *widget = tinyui_runtime_internal_app_lookup_host(app, node->nameId);
 
         if (widget != NULL &&
             widget->kind == TINYUI_BACKEND_WIDGET_IMAGE &&

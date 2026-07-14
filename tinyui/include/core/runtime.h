@@ -5,8 +5,14 @@
 
 #include <stdint.h>
 
+#ifndef TINYUI_WINDOW_PROPS_T_DEFINED
 typedef struct tinyui_window_props tinyui_window_props_t;
+#define TINYUI_WINDOW_PROPS_T_DEFINED
+#endif
+#ifndef TINYUI_BACKGROUND_PROPS_T_DEFINED
 typedef struct tinyui_background_props tinyui_background_props_t;
+#define TINYUI_BACKGROUND_PROPS_T_DEFINED
+#endif
 
 typedef enum tinyui_screen_transition {
     TINYUI_SCREEN_TRANSITION_NONE = 0,

@@ -17,7 +17,7 @@
  */
 
 #include "internal.h"
-#include "core/widget.h"
+#include "internal/widget_legacy.h"
 #include "widgets/window.h"
 #include "internal/window_internal.h"
 #include "../core/runtime_bridge.h"
@@ -25,6 +25,25 @@
 #include "../../../src/porting/ldConfig.h"
 
 #include <string.h>
+
+
+static struct tinyui_window *tinyui_window_as_window(tinyui_obj_t *obj)
+{
+    struct tinyui_widget *w = (struct tinyui_widget *)(void *)obj;
+    if (w == 0 || !tinyui_runtime_internal_widget_is_kind(w, TINYUI_BACKEND_WIDGET_WINDOW)) {
+        return 0;
+    }
+    return (struct tinyui_window *)w;
+}
+
+static const struct tinyui_window *tinyui_window_as_window_const(const tinyui_obj_t *obj)
+{
+    const struct tinyui_widget *w = (const struct tinyui_widget *)(const void *)obj;
+    if (w == 0 || !tinyui_runtime_internal_widget_is_kind(w, TINYUI_BACKEND_WIDGET_WINDOW)) {
+        return 0;
+    }
+    return (const struct tinyui_window *)w;
+}
 
 struct tinyui_image_source;
 
@@ -235,7 +254,7 @@ static void tinyui_window_do_free_internal(struct tinyui_window *window)
      * No wrapper to unbind. */
     window->widget.ld_event_bridge_scene = 0;
     window->widget.ld_event_bridge_sender = 0;
-    tinyui_app_unregister_host(app_state, &window->widget);
+    tinyui_runtime_internal_app_unregister_host(app_state, &window->widget);
 
     /* C2: detach the ld node from its parent directly. */
     if (ld_win != 0 && ldBaseGetParent((ldBase_t *)ld_win) != 0) {
@@ -425,7 +444,7 @@ static int tinyui_window_ok(struct tinyui_window *window)
         && window->widget.owner != 0;
 }
 
-static int tinyui_window_props_ok(const struct tinyui_window_props *props)
+static int tinyui_window_props_ok(const tinyui_window_props_t *props)
 {
     int has_padding_sentinel;
     int has_explicit_padding_group;
@@ -442,7 +461,6 @@ static int tinyui_window_props_ok(const struct tinyui_window_props *props)
         && props->padding_bottom >= 0;
 
     return props != 0
-        && props->id != 0
         && props->radius >= 0
         && props->padding >= 0
         && ((has_padding_sentinel && props->padding_left == -1
@@ -460,8 +478,15 @@ static int tinyui_window_props_ok(const struct tinyui_window_props *props)
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct tinyui_window *tinyui_window_create(struct tinyui_app *app, const char *id)
+tinyui_obj_t *tinyui_window_create(tinyui_obj_t *parent)
 {
+    struct tinyui_app *app = 0;
+    const char *id = "window";
+    struct tinyui_widget *parent_w = (struct tinyui_widget *)(void *)parent;
+    if (parent_w != 0) { app = parent_w->owner; }
+    else { app = tinyui_runtime_internal_app_current(); }
+    if (app == 0) { return 0; }
+
     struct tinyui_window *window;
     struct tinyui_app *app_state;
     ldWindow_t *ld_root;
@@ -490,7 +515,7 @@ struct tinyui_window *tinyui_window_create(struct tinyui_app *app, const char *i
         }
     }
 
-    name_id = tinyui_app_alloc_name_id(app_state);
+    name_id = tinyui_runtime_internal_app_alloc_name_id(app_state);
     ld_root = ldWindow_init(app_state->ld_scene, NULL, name_id, 0, 0, 0,
                             root_width, root_height);
     if (ld_root == 0) {
@@ -511,19 +536,19 @@ struct tinyui_window *tinyui_window_create(struct tinyui_app *app, const char *i
     window->widget.ld_name_id = name_id;
     window->widget.kind = TINYUI_BACKEND_WIDGET_WINDOW;
     window->widget.owner = app_state;
-    tinyui_app_register_host(app_state, &window->widget);
+    tinyui_runtime_internal_app_register_host(app_state, &window->widget);
 
     if (tinyui_runtime_bridge_bind_leaf_widget(&window->widget, app_state) != 0) {
-        tinyui_app_unregister_host(app_state, &window->widget);
+        tinyui_runtime_internal_app_unregister_host(app_state, &window->widget);
         window->widget.ld_widget = 0;
         ldWindow_depose(app_state->ld_scene, ld_root);
         ldFree(window);
         return 0;
     }
-    return window;
+    return (tinyui_obj_t *)window;
 }
 
-struct tinyui_window *tinyui_window_create_child(struct tinyui_window *parent, const char *id)
+static struct tinyui_window *tinyui_window_create_child(struct tinyui_window *parent, const char *id)
 {
     struct tinyui_window *window;
 
@@ -532,7 +557,7 @@ struct tinyui_window *tinyui_window_create_child(struct tinyui_window *parent, c
         return 0;
     }
 
-    window = (struct tinyui_window *)tinyui_widget_create_leaf(&parent->widget,
+    window = (struct tinyui_window *)tinyui_runtime_internal_widget_create_leaf(&parent->widget,
                                                                TINYUI_BACKEND_WIDGET_WINDOW,
                                                                tinyui_window_ld_init_child,
                                                                0,
@@ -553,45 +578,91 @@ struct tinyui_window *tinyui_window_create_child(struct tinyui_window *parent, c
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct tinyui_window *tinyui_window_create_with_props(struct tinyui_app *app,
-                                                      const struct tinyui_window_props *props)
+tinyui_obj_t *tinyui_window_create_with_props(tinyui_obj_t *parent,
+                                             const tinyui_window_props_t *props)
 {
+    tinyui_obj_t *obj;
     struct tinyui_window *window;
 
-    if (!tinyui_window_props_ok(props)) {
-        return 0;
+    if (props == 0) {
+        return tinyui_window_create(parent);
     }
 
-    window = tinyui_window_create(app, props->id);
-    if (window == 0) {
+    obj = tinyui_window_create(parent);
+    if (obj == 0) {
         return 0;
+    }
+    window = (struct tinyui_window *)(void *)obj;
+
+    if ((props->fields & TINYUI_WINDOW_FIELD_ID) != 0) {
+        (void)props->id;
+    }
+    if ((props->fields & TINYUI_WINDOW_FIELD_USER_DATA) != 0) {
+    if (tinyui_runtime_internal_widget_set_user_data(&window->widget, props->user_data) != 0) {
+        (void)tinyui_obj_delete((tinyui_obj_t *)window);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_WINDOW_FIELD_STYLE_CLASS) != 0) {
+    if (tinyui_runtime_internal_widget_set_style_class(&window->widget, props->style_class) != 0) {
+        (void)tinyui_obj_delete((tinyui_obj_t *)window);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_WINDOW_FIELD_BG_COLOR) != 0) {
+    if (tinyui_window_set_color((tinyui_obj_t *)window, props->bg_color) != 0) {
+        (void)tinyui_obj_delete((tinyui_obj_t *)window);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_WINDOW_FIELD_TEXT_COLOR) != 0) {
+    if (tinyui_runtime_internal_widget_set_text_color(&window->widget, props->text_color) != 0) {
+        (void)tinyui_obj_delete((tinyui_obj_t *)window);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_WINDOW_FIELD_BORDER_COLOR) != 0) {
+    if (tinyui_runtime_internal_widget_set_border_color(&window->widget, props->border_color) != 0) {
+        (void)tinyui_obj_delete((tinyui_obj_t *)window);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_WINDOW_FIELD_RADIUS) != 0) {
+    if (tinyui_runtime_internal_widget_set_radius(&window->widget, props->radius) != 0) {
+        (void)tinyui_obj_delete((tinyui_obj_t *)window);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_WINDOW_FIELD_BACKGROUND_SOURCE) != 0) {
+    if (tinyui_window_set_background_source((tinyui_obj_t *)window, props->background_source) != 0) {
+        (void)tinyui_obj_delete((tinyui_obj_t *)window);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_WINDOW_FIELD_PADDING) != 0 ||
+        (props->fields & TINYUI_WINDOW_FIELD_PADDING_LEFT) != 0 ||
+        (props->fields & TINYUI_WINDOW_FIELD_PADDING_TOP) != 0 ||
+        (props->fields & TINYUI_WINDOW_FIELD_PADDING_RIGHT) != 0 ||
+        (props->fields & TINYUI_WINDOW_FIELD_PADDING_BOTTOM) != 0) {
+        int l = 0, t = 0, r = 0, b = 0;
+        (void)tinyui_window_get_padding_group((tinyui_obj_t *)window, &l, &t, &r, &b);
+        if ((props->fields & TINYUI_WINDOW_FIELD_PADDING) != 0) {
+            l = t = r = b = props->padding;
+        }
+        if ((props->fields & TINYUI_WINDOW_FIELD_PADDING_LEFT) != 0) { l = props->padding_left; }
+        if ((props->fields & TINYUI_WINDOW_FIELD_PADDING_TOP) != 0) { t = props->padding_top; }
+        if ((props->fields & TINYUI_WINDOW_FIELD_PADDING_RIGHT) != 0) { r = props->padding_right; }
+        if ((props->fields & TINYUI_WINDOW_FIELD_PADDING_BOTTOM) != 0) { b = props->padding_bottom; }
+            if (tinyui_window_set_padding((tinyui_obj_t *)window, l, t, r, b) != 0) {
+                (void)tinyui_obj_delete((tinyui_obj_t *)window);
+                return 0;
+            }
     }
 
-    if (props->style_class != 0
-        && tinyui_widget_set_style_class(&window->widget, props->style_class) != 0) {
-        tinyui_window_do_free_internal(window);
-        return 0;
-    }
-    if (tinyui_widget_set_user_data(&window->widget, props->user_data) != 0
-        || tinyui_widget_set_bg_color(&window->widget, props->bg_color) != 0
-        || tinyui_window_set_color(window, props->bg_color) != 0
-        || tinyui_widget_set_text_color(&window->widget, props->text_color) != 0
-        || tinyui_widget_set_border_color(&window->widget, props->border_color) != 0
-        || tinyui_widget_set_radius(&window->widget, props->radius) != 0
-        || tinyui_widget_set_padding(&window->widget, props->padding) != 0
-        || tinyui_window_set_background_source(window, props->background_source) != 0
-        || (props->padding_left != -1
-            && tinyui_window_set_padding(window,
-                                         props->padding_left,
-                                         props->padding_top,
-                                         props->padding_right,
-                                         props->padding_bottom) != 0)) {
-        tinyui_window_do_free_internal(window);
-        return 0;
-    }
-
-    return window;
+    return obj;
 }
+
+
 
 /**
  * @brief Set background source of window
@@ -601,9 +672,11 @@ struct tinyui_window *tinyui_window_create_with_props(struct tinyui_app *app,
  * @return -1 on failure
  */
 
-int tinyui_window_set_background_source(struct tinyui_window *window,
-                                        struct tinyui_image_source *source)
+int tinyui_window_set_background_source(tinyui_obj_t *window_obj, struct tinyui_image_source *source)
 {
+    struct tinyui_window *window = tinyui_window_as_window(window_obj);
+    if (window == 0) { return -1; }
+
     ldWindow_t *ld_window;
 
     if (!tinyui_window_ok(window)) {
@@ -633,8 +706,11 @@ int tinyui_window_set_background_source(struct tinyui_window *window,
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_window_set_background_offset(struct tinyui_window *window, int offset_x, int offset_y)
+int tinyui_window_set_background_offset(tinyui_obj_t *window_obj, int offset_x, int offset_y)
 {
+    struct tinyui_window *window = tinyui_window_as_window(window_obj);
+    if (window == 0) { return -1; }
+
     struct tinyui_app *app_state;
     int16_t root_width = 0;
     int16_t root_height = 0;
@@ -719,10 +795,11 @@ int tinyui_window_set_background_offset(struct tinyui_window *window, int offset
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_window_get_background_offset(struct tinyui_window *window,
-                                        int *offset_x,
-                                        int *offset_y)
+int tinyui_window_get_background_offset(tinyui_obj_t *window_obj, int *offset_x, int *offset_y)
 {
+    struct tinyui_window *window = tinyui_window_as_window(window_obj);
+    if (window == 0) { return -1; }
+
     if (!tinyui_window_ok(window) || offset_x == 0 || offset_y == 0) {
         return -1;
     }
@@ -740,8 +817,11 @@ int tinyui_window_get_background_offset(struct tinyui_window *window,
  * @return -1 on failure
  */
 
-int tinyui_window_set_color(struct tinyui_window *window, unsigned int rgb)
+int tinyui_window_set_color(tinyui_obj_t *window_obj, unsigned int rgb)
 {
+    struct tinyui_window *window = tinyui_window_as_window(window_obj);
+    if (window == 0) { return -1; }
+
     ldWindow_t *ld_window;
 
     if (!tinyui_window_ok(window) || rgb > 0xFFFFFFU) {
@@ -772,8 +852,11 @@ int tinyui_window_set_color(struct tinyui_window *window, unsigned int rgb)
  * @return -1 on failure
  */
 
-int tinyui_window_get_color(struct tinyui_window *window, unsigned int *rgb)
+int tinyui_window_get_color(tinyui_obj_t *window_obj, unsigned int *rgb)
 {
+    struct tinyui_window *window = tinyui_window_as_window(window_obj);
+    if (window == 0) { return -1; }
+
     ldWindow_t *ld_window;
 
     if (!tinyui_window_ok(window) || rgb == 0) {
@@ -797,9 +880,11 @@ int tinyui_window_get_color(struct tinyui_window *window, unsigned int *rgb)
  * @return -1 on failure
  */
 
-int tinyui_window_set_layout_type(struct tinyui_window *window,
-                                  enum tinyui_window_layout_type type)
+int tinyui_window_set_layout_type(tinyui_obj_t *window_obj, enum tinyui_window_layout_type type)
 {
+    struct tinyui_window *window = tinyui_window_as_window(window_obj);
+    if (window == 0) { return -1; }
+
     if (!tinyui_window_ok(window)
         || (type != TINYUI_WINDOW_LAYOUT_NONE
             && type != TINYUI_WINDOW_LAYOUT_FLEX
@@ -810,9 +895,11 @@ int tinyui_window_set_layout_type(struct tinyui_window *window,
     return tinyui_window_do_set_layout_type(window, type);
 }
 
-int tinyui_window_get_layout_type(struct tinyui_window *window,
-                                  enum tinyui_window_layout_type *type)
+int tinyui_window_get_layout_type(tinyui_obj_t *window_obj, enum tinyui_window_layout_type *type)
 {
+    struct tinyui_window *window = tinyui_window_as_window(window_obj);
+    if (window == 0) { return -1; }
+
     ldWindow_t *ld_window;
 
     if (!tinyui_window_ok(window) || type == 0) {
@@ -838,12 +925,11 @@ int tinyui_window_get_layout_type(struct tinyui_window *window,
  * @return -1 on failure
  */
 
-int tinyui_window_set_padding(struct tinyui_window *window,
-                              int left,
-                              int top,
-                              int right,
-                              int bottom)
+int tinyui_window_set_padding(tinyui_obj_t *window_obj, int left, int top, int right, int bottom)
 {
+    struct tinyui_window *window = tinyui_window_as_window(window_obj);
+    if (window == 0) { return -1; }
+
     if (!tinyui_window_ok(window)
         || left < 0
         || top < 0
@@ -866,12 +952,11 @@ int tinyui_window_set_padding(struct tinyui_window *window,
  * @return -1 on failure
  */
 
-int tinyui_window_set_grid_padding(struct tinyui_window *window,
-                                   int left,
-                                   int top,
-                                   int right,
-                                   int bottom)
+int tinyui_window_set_grid_padding(tinyui_obj_t *window_obj, int left, int top, int right, int bottom)
 {
+    struct tinyui_window *window = tinyui_window_as_window(window_obj);
+    if (window == 0) { return -1; }
+
     if (!tinyui_window_ok(window)
         || left < 0
         || top < 0
@@ -891,8 +976,11 @@ int tinyui_window_set_grid_padding(struct tinyui_window *window,
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_window_set_gap(struct tinyui_window *window, int gap)
+int tinyui_window_set_gap(tinyui_obj_t *window_obj, int gap)
 {
+    struct tinyui_window *window = tinyui_window_as_window(window_obj);
+    if (window == 0) { return -1; }
+
     if (!tinyui_window_ok(window) || gap < 0) {
         return -1;
     }
@@ -900,8 +988,11 @@ int tinyui_window_set_gap(struct tinyui_window *window, int gap)
     return tinyui_window_do_set_gap(window, gap);
 }
 
-int tinyui_window_get_gap(struct tinyui_window *window)
+int tinyui_window_get_gap(tinyui_obj_t *window_obj)
 {
+    struct tinyui_window *window = tinyui_window_as_window(window_obj);
+    if (window == 0) { return -1; }
+
     if (!tinyui_window_ok(window) || tinyui_window_ld_of(window) == 0
         || window->flex_item_gap < 0) {
         return -1;
@@ -922,12 +1013,11 @@ int tinyui_window_get_gap(struct tinyui_window *window)
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_window_get_padding_group(struct tinyui_window *window,
-                                    int *left,
-                                    int *top,
-                                    int *right,
-                                    int *bottom)
+int tinyui_window_get_padding_group(tinyui_obj_t *window_obj, int *left, int *top, int *right, int *bottom)
 {
+    struct tinyui_window *window = tinyui_window_as_window(window_obj);
+    if (window == 0) { return -1; }
+
     ldWindow_t *ld_window;
 
     if (!tinyui_window_ok(window)

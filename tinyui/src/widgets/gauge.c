@@ -23,13 +23,32 @@
 
 #include <string.h>
 
+
+static struct tinyui_gauge *tinyui_gauge_as_gauge(tinyui_obj_t *obj)
+{
+    struct tinyui_widget *w = (struct tinyui_widget *)(void *)obj;
+    if (w == 0 || !tinyui_runtime_internal_widget_is_kind(w, TINYUI_BACKEND_WIDGET_GAUGE)) {
+        return 0;
+    }
+    return (struct tinyui_gauge *)w;
+}
+
+static const struct tinyui_gauge *tinyui_gauge_as_gauge_const(const tinyui_obj_t *obj)
+{
+    const struct tinyui_widget *w = (const struct tinyui_widget *)(const void *)obj;
+    if (w == 0 || !tinyui_runtime_internal_widget_is_kind(w, TINYUI_BACKEND_WIDGET_GAUGE)) {
+        return 0;
+    }
+    return (const struct tinyui_gauge *)w;
+}
+
 extern const arm_2d_tile_t c_tileQuaterArcGRAY8;
 extern const arm_2d_tile_t c_tileQuaterArcMask;
 extern const arm_2d_tile_t c_tilePointerSecGRAY8;
 extern const arm_2d_tile_t c_tilePointerSecMask;
 
 
-static int tinyui_gauge_props_are_valid(const struct tinyui_gauge_props *props);
+static int tinyui_gauge_props_are_valid(const tinyui_gauge_props_t *props);
 
 struct tinyui_gauge_create_ctx {
     arm_2d_tile_t *bg_img_tile;
@@ -45,13 +64,13 @@ static void tinyui_gauge_rollback(struct tinyui_gauge *gauge)
         return;
     }
     if (gauge->widget.ld_widget != 0) {
-        tinyui_widget_destroy_common(&gauge->widget);
+        tinyui_runtime_internal_widget_destroy_common(&gauge->widget);
     } else {
         ldFree(gauge);
     }
 }
 
-static void *tinyui_gauge_ld_init(void *ctx,
+static void *tinyui_runtime_internal_gauge_ld_init(void *ctx,
                                   struct ld_scene_t *scene,
                                   uint16_t name_id,
                                   uint16_t parent_name_id)
@@ -99,7 +118,7 @@ static void *tinyui_gauge_ld_init(void *ctx,
 }
 struct tinyui_gauge *tinyui_gauge_test_create_with_props_fail_before_centre_offset(
     struct tinyui_widget *parent,
-    const struct tinyui_gauge_props *props)
+    const tinyui_gauge_props_t *props)
 {
     struct tinyui_gauge *gauge;
 
@@ -107,14 +126,14 @@ struct tinyui_gauge *tinyui_gauge_test_create_with_props_fail_before_centre_offs
         return 0;
     }
 
-    gauge = tinyui_gauge_create(parent, props->id);
+    gauge = tinyui_gauge_create(parent);
     if (gauge == 0) {
         return 0;
     }
 
     if ((props->style_class != 0
-         && tinyui_widget_set_style_class(&gauge->widget, props->style_class) != 0)
-        || tinyui_widget_set_user_data(&gauge->widget, props->user_data) != 0
+         && tinyui_runtime_internal_widget_set_style_class(&gauge->widget, props->style_class) != 0)
+        || tinyui_runtime_internal_widget_set_user_data(&gauge->widget, props->user_data) != 0
         || tinyui_gauge_set_angle(gauge, props->angle) != 0
         || (props->bg_source != 0 && tinyui_gauge_set_bg_source(gauge, props->bg_source) != 0)
         || (props->pointer_source != 0 && tinyui_gauge_set_pointer_source(gauge, props->pointer_source) != 0)) {
@@ -126,13 +145,17 @@ struct tinyui_gauge *tinyui_gauge_test_create_with_props_fail_before_centre_offs
     return 0;
 }
 
-static int tinyui_gauge_props_are_valid(const struct tinyui_gauge_props *props)
+static int tinyui_gauge_props_are_valid(const tinyui_gauge_props_t *props)
 {
-    return props != 0 && props->id != 0;
+    return props != 0;
 }
 
-struct tinyui_gauge *tinyui_gauge_create(struct tinyui_widget *parent, const char *id)
+tinyui_obj_t *tinyui_gauge_create(tinyui_obj_t *parent)
 {
+    struct tinyui_widget *parent_w = (struct tinyui_widget *)(void *)parent;
+    const char *id = "gauge";
+    if (parent_w == 0) { return 0; }
+
     struct tinyui_gauge *gauge;
     arm_2d_tile_t *bg_img_tile;
     arm_2d_tile_t *bg_mask_tile;
@@ -140,7 +163,7 @@ struct tinyui_gauge *tinyui_gauge_create(struct tinyui_widget *parent, const cha
     arm_2d_tile_t *pointer_mask_tile;
     struct tinyui_gauge_create_ctx ctx;
 
-    if (parent == 0 || id == 0 || parent->ld_widget == 0) {
+    if (parent_w == 0 || id == 0 || parent_w->ld_widget == 0) {
         return 0;
     }
 
@@ -178,9 +201,9 @@ struct tinyui_gauge *tinyui_gauge_create(struct tinyui_widget *parent, const cha
     ctx.bg_mask_tile = bg_mask_tile;
     ctx.pointer_img_tile = pointer_img_tile;
     ctx.pointer_mask_tile = pointer_mask_tile;
-    gauge = (struct tinyui_gauge *)tinyui_widget_create_leaf(parent,
+    gauge = (struct tinyui_gauge *)tinyui_runtime_internal_widget_create_leaf(parent_w,
                                                              TINYUI_BACKEND_WIDGET_GAUGE,
-                                                             tinyui_gauge_ld_init,
+                                                             tinyui_runtime_internal_gauge_ld_init,
                                                              &ctx,
                                                              sizeof(*gauge));
     if (gauge == 0) {
@@ -201,46 +224,95 @@ struct tinyui_gauge *tinyui_gauge_create(struct tinyui_widget *parent, const cha
         return 0;
     }
 
-    return gauge;
+    return (tinyui_obj_t *)gauge;
 }
 
-struct tinyui_gauge *tinyui_gauge_init(struct tinyui_widget *parent, const char *id)
+struct tinyui_gauge *tinyui_runtime_internal_gauge_init(struct tinyui_widget *parent, const char *id)
 {
-    return tinyui_gauge_create(parent, id);
+    return tinyui_gauge_create(parent);
 }
 
-struct tinyui_gauge *tinyui_gauge_create_with_props(struct tinyui_widget *parent,
-                                                    const struct tinyui_gauge_props *props)
+tinyui_obj_t *tinyui_gauge_create_with_props(tinyui_obj_t *parent,
+                                             const tinyui_gauge_props_t *props)
 {
+    tinyui_obj_t *obj;
     struct tinyui_gauge *gauge;
 
-    if (!tinyui_gauge_props_are_valid(props)) {
-        return 0;
+    if (props == 0) {
+        return tinyui_gauge_create(parent);
     }
 
-    gauge = tinyui_gauge_create(parent, props->id);
-    if (gauge == 0) {
+    obj = tinyui_gauge_create(parent);
+    if (obj == 0) {
         return 0;
     }
+    gauge = (struct tinyui_gauge *)(void *)obj;
 
-    if ((props->style_class != 0
-         && tinyui_widget_set_style_class(&gauge->widget, props->style_class) != 0)
-        || tinyui_widget_set_user_data(&gauge->widget, props->user_data) != 0
-        || tinyui_gauge_set_angle(gauge, props->angle) != 0
-        || (props->bg_source != 0 && tinyui_gauge_set_bg_source(gauge, props->bg_source) != 0)
-        || (props->pointer_source != 0 && tinyui_gauge_set_pointer_source(gauge, props->pointer_source) != 0)
-        || tinyui_gauge_set_centre_offset(gauge, props->centre_offset_x, props->centre_offset_y) != 0
-        || tinyui_gauge_set_pointer_color(gauge, props->pointer_color) != 0
-        || tinyui_gauge_set_auto_move(gauge, props->auto_move) != 0) {
+    if ((props->fields & TINYUI_GAUGE_FIELD_ID) != 0) {
+        /* id=0 means runtime auto-alloc; non-zero reserved for host name_id path. */
+        (void)props->id;
+    }
+    if ((props->fields & TINYUI_GAUGE_FIELD_USER_DATA) != 0) {
+    if (tinyui_runtime_internal_widget_set_user_data(&gauge->widget, props->user_data) != 0) {
         tinyui_gauge_rollback(gauge);
         return 0;
     }
+    }
+    if ((props->fields & TINYUI_GAUGE_FIELD_STYLE_CLASS) != 0) {
+    if (tinyui_runtime_internal_widget_set_style_class(&gauge->widget, props->style_class) != 0) {
+        tinyui_gauge_rollback(gauge);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_GAUGE_FIELD_ANGLE) != 0) {
+    if (tinyui_gauge_set_angle((tinyui_obj_t *)gauge, props->angle) != 0) {
+        tinyui_gauge_rollback(gauge);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_GAUGE_FIELD_BG_SOURCE) != 0) {
+    if (tinyui_gauge_set_bg_source((tinyui_obj_t *)gauge, props->bg_source) != 0) {
+        tinyui_gauge_rollback(gauge);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_GAUGE_FIELD_POINTER_SOURCE) != 0) {
+    if (tinyui_gauge_set_pointer_source((tinyui_obj_t *)gauge, props->pointer_source) != 0) {
+        tinyui_gauge_rollback(gauge);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_GAUGE_FIELD_CENTRE_OFFSET_X) != 0 ||
+        (props->fields & TINYUI_GAUGE_FIELD_CENTRE_OFFSET_Y) != 0) {
+        int ox = ((props->fields & TINYUI_GAUGE_FIELD_CENTRE_OFFSET_X) != 0) ? props->centre_offset_x : gauge->centre_offset_x;
+        int oy = ((props->fields & TINYUI_GAUGE_FIELD_CENTRE_OFFSET_Y) != 0) ? props->centre_offset_y : gauge->centre_offset_y;
+        if (tinyui_gauge_set_centre_offset((tinyui_obj_t *)gauge, ox, oy) != 0) {
+            tinyui_gauge_rollback(gauge);
+            return 0;
+        }
+    }
+    if ((props->fields & TINYUI_GAUGE_FIELD_POINTER_COLOR) != 0) {
+    if (tinyui_gauge_set_pointer_color((tinyui_obj_t *)gauge, props->pointer_color) != 0) {
+        tinyui_gauge_rollback(gauge);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_GAUGE_FIELD_AUTO_MOVE) != 0) {
+    if (tinyui_gauge_set_auto_move((tinyui_obj_t *)gauge, props->auto_move) != 0) {
+        tinyui_gauge_rollback(gauge);
+        return 0;
+    }
+    }
 
-    return gauge;
+    return obj;
 }
 
-int tinyui_gauge_set_angle(struct tinyui_gauge *gauge, float angle)
+
+int tinyui_gauge_set_angle(tinyui_obj_t *gauge_obj, float angle)
 {
+    struct tinyui_gauge *gauge = tinyui_gauge_as_gauge(gauge_obj);
+    if (gauge == 0) { return -1; }
+
     if (gauge == 0 || gauge->widget.ld_widget == 0
         || gauge->widget.kind != TINYUI_BACKEND_WIDGET_GAUGE) {
         return -1;
@@ -252,8 +324,11 @@ int tinyui_gauge_set_angle(struct tinyui_gauge *gauge, float angle)
     return 0;
 }
 
-float tinyui_gauge_get_angle(const struct tinyui_gauge *gauge)
+float tinyui_gauge_get_angle(const tinyui_obj_t *gauge_obj)
 {
+    const struct tinyui_gauge *gauge = tinyui_gauge_as_gauge_const(gauge_obj);
+    if (gauge == 0) { return -1; }
+
     if (gauge == 0 || gauge->widget.ld_widget == 0
         || gauge->widget.kind != TINYUI_BACKEND_WIDGET_GAUGE) {
         return 0.0f;
@@ -262,8 +337,11 @@ float tinyui_gauge_get_angle(const struct tinyui_gauge *gauge)
     return (float)((ldGauge_t *)gauge->widget.ld_widget)->_nowAngle_x10 / 10.0f;
 }
 
-int tinyui_gauge_set_bg_source(struct tinyui_gauge *gauge, struct tinyui_image_source *source)
+int tinyui_gauge_set_bg_source(tinyui_obj_t *gauge_obj, struct tinyui_image_source *source)
 {
+    struct tinyui_gauge *gauge = tinyui_gauge_as_gauge(gauge_obj);
+    if (gauge == 0) { return -1; }
+
     ldGauge_t *ld_gauge;
 
     if (gauge == 0 || source == 0 || tinyui_image_source_get_image_tile(source) == 0 || tinyui_image_source_get_mask_tile(source) == 0
@@ -278,13 +356,19 @@ int tinyui_gauge_set_bg_source(struct tinyui_gauge *gauge, struct tinyui_image_s
     return 0;
 }
 
-int tinyui_gauge_set_background_image(struct tinyui_gauge *gauge, struct tinyui_image_source *source)
+int tinyui_gauge_set_background_image(tinyui_obj_t *gauge_obj, struct tinyui_image_source *source)
 {
-    return tinyui_gauge_set_bg_source(gauge, source);
+    struct tinyui_gauge *gauge = tinyui_gauge_as_gauge(gauge_obj);
+    if (gauge == 0) { return -1; }
+
+    return tinyui_gauge_set_bg_source((tinyui_obj_t *)gauge, source);
 }
 
-int tinyui_gauge_set_pointer_source(struct tinyui_gauge *gauge, struct tinyui_image_source *source)
+int tinyui_gauge_set_pointer_source(tinyui_obj_t *gauge_obj, struct tinyui_image_source *source)
 {
+    struct tinyui_gauge *gauge = tinyui_gauge_as_gauge(gauge_obj);
+    if (gauge == 0) { return -1; }
+
     arm_2d_tile_t *mask_tile;
 
     if (source == 0 || tinyui_image_source_get_mask_tile(source) == 0) {
@@ -292,17 +376,17 @@ int tinyui_gauge_set_pointer_source(struct tinyui_gauge *gauge, struct tinyui_im
     }
 
     mask_tile = (arm_2d_tile_t *)tinyui_image_source_get_mask_tile(source);
-    return tinyui_gauge_set_pointer_source_with_origin(gauge,
+    return tinyui_gauge_set_pointer_source_with_origin((tinyui_obj_t *)gauge,
                                                        source,
                                                        (int)(mask_tile->tRegion.tSize.iWidth >> 1),
                                                        (int)mask_tile->tRegion.tSize.iHeight);
 }
 
-int tinyui_gauge_set_pointer_source_with_origin(struct tinyui_gauge *gauge,
-                                                struct tinyui_image_source *source,
-                                                int origin_x,
-                                                int origin_y)
+int tinyui_gauge_set_pointer_source_with_origin(tinyui_obj_t *gauge_obj, struct tinyui_image_source *source, int origin_x, int origin_y)
 {
+    struct tinyui_gauge *gauge = tinyui_gauge_as_gauge(gauge_obj);
+    if (gauge == 0) { return -1; }
+
     ldGauge_t *ld_gauge;
 
     if (gauge == 0 || source == 0 || tinyui_image_source_get_image_tile(source) == 0 || tinyui_image_source_get_mask_tile(source) == 0
@@ -323,11 +407,11 @@ int tinyui_gauge_set_pointer_source_with_origin(struct tinyui_gauge *gauge,
     return 0;
 }
 
-int tinyui_gauge_set_pointer_mask_source(struct tinyui_gauge *gauge,
-                                         struct tinyui_image_source *source,
-                                         int origin_x,
-                                         int origin_y)
+int tinyui_gauge_set_pointer_mask_source(tinyui_obj_t *gauge_obj, struct tinyui_image_source *source, int origin_x, int origin_y)
 {
+    struct tinyui_gauge *gauge = tinyui_gauge_as_gauge(gauge_obj);
+    if (gauge == 0) { return -1; }
+
     ldGauge_t *ld_gauge;
 
     if (gauge == 0 || source == 0 || tinyui_image_source_get_mask_tile(source) == 0
@@ -348,8 +432,11 @@ int tinyui_gauge_set_pointer_mask_source(struct tinyui_gauge *gauge,
     return 0;
 }
 
-int tinyui_gauge_set_centre_offset(struct tinyui_gauge *gauge, int centre_offset_x, int centre_offset_y)
+int tinyui_gauge_set_centre_offset(tinyui_obj_t *gauge_obj, int centre_offset_x, int centre_offset_y)
 {
+    struct tinyui_gauge *gauge = tinyui_gauge_as_gauge(gauge_obj);
+    if (gauge == 0) { return -1; }
+
     ldGauge_t *ld_gauge;
 
     if (gauge == 0 || gauge->widget.ld_widget == 0
@@ -365,10 +452,11 @@ int tinyui_gauge_set_centre_offset(struct tinyui_gauge *gauge, int centre_offset
     return 0;
 }
 
-int tinyui_gauge_set_trail(struct tinyui_gauge *gauge,
-                           struct tinyui_image_source *bg_trail_source,
-                           struct tinyui_image_source *pointer_trail_source)
+int tinyui_gauge_set_trail(tinyui_obj_t *gauge_obj, struct tinyui_image_source *bg_trail_source, struct tinyui_image_source *pointer_trail_source)
 {
+    struct tinyui_gauge *gauge = tinyui_gauge_as_gauge(gauge_obj);
+    if (gauge == 0) { return -1; }
+
     ldGauge_t *ld_gauge;
 
     if (gauge == 0
@@ -388,10 +476,11 @@ int tinyui_gauge_set_trail(struct tinyui_gauge *gauge,
     return 0;
 }
 
-int tinyui_gauge_set_progress_bar(struct tinyui_gauge *gauge,
-                                  struct tinyui_image_source *bg_progress_source,
-                                  struct tinyui_image_source *pointer_progress_source)
+int tinyui_gauge_set_progress_bar(tinyui_obj_t *gauge_obj, struct tinyui_image_source *bg_progress_source, struct tinyui_image_source *pointer_progress_source)
 {
+    struct tinyui_gauge *gauge = tinyui_gauge_as_gauge(gauge_obj);
+    if (gauge == 0) { return -1; }
+
     ldGauge_t *ld_gauge;
 
     if (gauge == 0
@@ -411,8 +500,11 @@ int tinyui_gauge_set_progress_bar(struct tinyui_gauge *gauge,
     return 0;
 }
 
-int tinyui_gauge_set_pointer_color(struct tinyui_gauge *gauge, unsigned int pointer_color)
+int tinyui_gauge_set_pointer_color(tinyui_obj_t *gauge_obj, unsigned int pointer_color)
 {
+    struct tinyui_gauge *gauge = tinyui_gauge_as_gauge(gauge_obj);
+    if (gauge == 0) { return -1; }
+
     if (gauge == 0 || gauge->widget.ld_widget == 0
         || gauge->widget.kind != TINYUI_BACKEND_WIDGET_GAUGE) {
         return -1;
@@ -424,8 +516,11 @@ int tinyui_gauge_set_pointer_color(struct tinyui_gauge *gauge, unsigned int poin
     return 0;
 }
 
-unsigned int tinyui_gauge_get_pointer_color(const struct tinyui_gauge *gauge)
+unsigned int tinyui_gauge_get_pointer_color(const tinyui_obj_t *gauge_obj)
 {
+    const struct tinyui_gauge *gauge = tinyui_gauge_as_gauge_const(gauge_obj);
+    if (gauge == 0) { return -1; }
+
     if (gauge == 0 || gauge->widget.ld_widget == 0
         || gauge->widget.kind != TINYUI_BACKEND_WIDGET_GAUGE) {
         return 0;
@@ -434,8 +529,11 @@ unsigned int tinyui_gauge_get_pointer_color(const struct tinyui_gauge *gauge)
     return tinyui_ld_color_to_rgb((unsigned int)((ldGauge_t *)gauge->widget.ld_widget)->maskColor);
 }
 
-int tinyui_gauge_set_auto_move(struct tinyui_gauge *gauge, int auto_move)
+int tinyui_gauge_set_auto_move(tinyui_obj_t *gauge_obj, int auto_move)
 {
+    struct tinyui_gauge *gauge = tinyui_gauge_as_gauge(gauge_obj);
+    if (gauge == 0) { return -1; }
+
     if (gauge == 0 || gauge->widget.ld_widget == 0
         || gauge->widget.kind != TINYUI_BACKEND_WIDGET_GAUGE) {
         return -1;
@@ -446,8 +544,11 @@ int tinyui_gauge_set_auto_move(struct tinyui_gauge *gauge, int auto_move)
     return 0;
 }
 
-int tinyui_gauge_get_auto_move(const struct tinyui_gauge *gauge)
+int tinyui_gauge_get_auto_move(const tinyui_obj_t *gauge_obj)
 {
+    const struct tinyui_gauge *gauge = tinyui_gauge_as_gauge_const(gauge_obj);
+    if (gauge == 0) { return -1; }
+
     if (gauge == 0 || gauge->widget.ld_widget == 0
         || gauge->widget.kind != TINYUI_BACKEND_WIDGET_GAUGE) {
         return -1;

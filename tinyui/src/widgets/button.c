@@ -24,6 +24,25 @@
 
 #include <string.h>
 
+
+static struct tinyui_button *tinyui_button_as_button(tinyui_obj_t *obj)
+{
+    struct tinyui_widget *w = (struct tinyui_widget *)(void *)obj;
+    if (w == 0 || !tinyui_runtime_internal_widget_is_kind(w, TINYUI_BACKEND_WIDGET_BUTTON)) {
+        return 0;
+    }
+    return (struct tinyui_button *)w;
+}
+
+static const struct tinyui_button *tinyui_button_as_button_const(const tinyui_obj_t *obj)
+{
+    const struct tinyui_widget *w = (const struct tinyui_widget *)(const void *)obj;
+    if (w == 0 || !tinyui_runtime_internal_widget_is_kind(w, TINYUI_BACKEND_WIDGET_BUTTON)) {
+        return 0;
+    }
+    return (const struct tinyui_button *)w;
+}
+
 static int tinyui_button_fail_next_set_font = 0;
 
 /* ── dispose machinery: rollback-on-create-failure path ─────────────────
@@ -34,7 +53,7 @@ static int tinyui_button_fail_next_set_font = 0;
  * The function tinyui_button_rollback is the rollback entry called
  * from tinyui_button_create_with_props on prop-application failure; it
  * removes the action_info first (xBtnRemove must run while the ld widget
- * is still alive) and then defers to tinyui_widget_destroy_common, which
+ * is still alive) and then defers to tinyui_runtime_internal_widget_destroy_common, which
  * detaches the ld node, clears pInfo, invokes the depose cb and frees the
  * host struct in a single sweep. */
 
@@ -60,7 +79,7 @@ static void tinyui_button_rollback(struct tinyui_button *button)
         /* xBtnRemove must run while the ld widget (and its name_id) is still
          * registered with xBtnAction, before destroy_common detaches it. */
         xBtnRemove(&button->action_info);
-        tinyui_widget_destroy_common(&button->widget);
+        tinyui_runtime_internal_widget_destroy_common(&button->widget);
     } else {
         ldFree(button);
     }
@@ -80,10 +99,9 @@ void tinyui_button_test_fail_next_set_font(void)
     tinyui_button_fail_next_set_font = 1;
 }
 
-static int tinyui_button_props_are_valid(const struct tinyui_button_props *props)
+static int tinyui_button_props_are_valid(const tinyui_button_props_t *props)
 {
     return props != 0
-        && props->id != 0
         && (props->release_image == 0 || tinyui_image_source_get_image_tile(props->release_image) != 0)
         && (props->press_image == 0 || tinyui_image_source_get_image_tile(props->press_image) != 0)
         && props->width >= 0
@@ -92,7 +110,7 @@ static int tinyui_button_props_are_valid(const struct tinyui_button_props *props
         && props->padding >= 0;
 }
 
-static void *tinyui_button_ld_init(void *ctx,
+static void *tinyui_runtime_internal_button_ld_init(void *ctx,
                                    struct ld_scene_t *scene,
                                    uint16_t name_id,
                                    uint16_t parent_name_id)
@@ -108,7 +126,7 @@ static void *tinyui_button_ld_init(void *ctx,
                          36);
 }
 
-static struct tinyui_button *tinyui_button_alloc(struct tinyui_window *parent, const char *id)
+static struct tinyui_button *tinyui_button_alloc(struct tinyui_widget *parent, const char *id)
 {
     struct tinyui_button *button;
 
@@ -116,13 +134,13 @@ static struct tinyui_button *tinyui_button_alloc(struct tinyui_window *parent, c
         return 0;
     }
 
-    if (parent->widget.ld_widget == 0 || parent->widget.owner == 0) {
+    if (((struct tinyui_widget *)(void *)parent)->ld_widget == 0 || ((struct tinyui_widget *)(void *)parent)->owner == 0) {
         return 0;
     }
 
-    button = (struct tinyui_button *)tinyui_widget_create_leaf(&parent->widget,
+    button = (struct tinyui_button *)tinyui_runtime_internal_widget_create_leaf(parent,
                                                                TINYUI_BACKEND_WIDGET_BUTTON,
-                                                               tinyui_button_ld_init,
+                                                               tinyui_runtime_internal_button_ld_init,
                                                                0,
                                                                sizeof(*button));
     if (button == 0) {
@@ -146,9 +164,13 @@ static struct tinyui_button *tinyui_button_alloc(struct tinyui_window *parent, c
  * @return Pointer to the object
  */
 
-struct tinyui_button *tinyui_button_create(struct tinyui_window *parent, const char *id)
+tinyui_obj_t *tinyui_button_create(tinyui_obj_t *parent)
 {
-    struct tinyui_button *button = tinyui_button_alloc(parent, id);
+    struct tinyui_widget *parent_w = (struct tinyui_widget *)(void *)parent;
+    const char *id = "button";
+    if (parent_w == 0) { return 0; }
+
+    struct tinyui_button *button = tinyui_button_alloc(parent_w, id);
 
     if (button == 0) {
         return 0;
@@ -157,7 +179,7 @@ struct tinyui_button *tinyui_button_create(struct tinyui_window *parent, const c
         tinyui_button_rollback(button);
         return 0;
     }
-    return button;
+    return (tinyui_obj_t *)button;
 }
 
 /**
@@ -168,64 +190,146 @@ struct tinyui_button *tinyui_button_create(struct tinyui_window *parent, const c
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct tinyui_button *tinyui_button_create_with_props(struct tinyui_window *parent,
-                                                      const struct tinyui_button_props *props)
+tinyui_obj_t *tinyui_button_create_with_props(tinyui_obj_t *parent,
+                                             const tinyui_button_props_t *props)
 {
+    tinyui_obj_t *obj;
     struct tinyui_button *button;
 
-    if (!tinyui_button_props_are_valid(props)) {
-        return 0;
+    if (props == 0) {
+        return tinyui_button_create(parent);
     }
 
-    button = tinyui_button_alloc(parent, props->id);
-    if (button == 0) {
+    obj = tinyui_button_create(parent);
+    if (obj == 0) {
         return 0;
+    }
+    button = (struct tinyui_button *)(void *)obj;
+
+    if ((props->fields & TINYUI_BUTTON_FIELD_ID) != 0) {
+        /* id=0 means runtime auto-alloc; non-zero reserved for host name_id path. */
+        (void)props->id;
+    }
+    if ((props->fields & TINYUI_BUTTON_FIELD_USER_DATA) != 0) {
+    if (tinyui_runtime_internal_widget_set_user_data(&button->widget, props->user_data) != 0) {
+        tinyui_button_rollback(button);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_BUTTON_FIELD_STYLE_CLASS) != 0) {
+    if (tinyui_runtime_internal_widget_set_style_class(&button->widget, props->style_class) != 0) {
+        tinyui_button_rollback(button);
+        return 0;
+    }
+    }
+        if ((props->fields & TINYUI_BUTTON_FIELD_WIDTH) != 0 || (props->fields & TINYUI_BUTTON_FIELD_HEIGHT) != 0) {
+        int w = tinyui_runtime_internal_widget_get_width(&button->widget);
+        int h = tinyui_runtime_internal_widget_get_height(&button->widget);
+        if (w < 0) {
+            w = 0;
+        }
+        if (h < 0) {
+            h = 0;
+        }
+        if ((props->fields & TINYUI_BUTTON_FIELD_WIDTH) != 0) {
+            w = props->width;
+        }
+        if ((props->fields & TINYUI_BUTTON_FIELD_HEIGHT) != 0) {
+            h = props->height;
+        }
+        if (tinyui_runtime_internal_widget_set_size(&button->widget, w, h) != 0) {
+            tinyui_button_rollback(button);
+            return 0;
+        }
+    }
+    if ((props->fields & TINYUI_BUTTON_FIELD_TEXT) != 0) {
+    if (tinyui_button_set_text((tinyui_obj_t *)button, props->text) != 0) {
+        tinyui_button_rollback(button);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_BUTTON_FIELD_FONT) != 0) {
+    if (tinyui_button_set_font((tinyui_obj_t *)button, props->font) != 0) {
+        tinyui_button_rollback(button);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_BUTTON_FIELD_BG_COLOR) != 0) {
+    if (tinyui_runtime_internal_widget_set_bg_color(&button->widget, props->bg_color) != 0) {
+        tinyui_button_rollback(button);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_BUTTON_FIELD_TEXT_COLOR) != 0) {
+    if (tinyui_button_set_text_color((tinyui_obj_t *)button, props->text_color) != 0) {
+        tinyui_button_rollback(button);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_BUTTON_FIELD_BORDER_COLOR) != 0) {
+    if (tinyui_runtime_internal_widget_set_border_color(&button->widget, props->border_color) != 0) {
+        tinyui_button_rollback(button);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_BUTTON_FIELD_RADIUS) != 0) {
+    if (tinyui_runtime_internal_widget_set_radius(&button->widget, props->radius) != 0) {
+        tinyui_button_rollback(button);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_BUTTON_FIELD_PADDING) != 0) {
+    if (tinyui_runtime_internal_widget_set_padding(&button->widget, props->padding) != 0) {
+        tinyui_button_rollback(button);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_BUTTON_FIELD_RELEASE_IMAGE) != 0) {
+    if (tinyui_button_set_release_image((tinyui_obj_t *)button, props->release_image) != 0) {
+        tinyui_button_rollback(button);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_BUTTON_FIELD_PRESS_IMAGE) != 0) {
+    if (tinyui_button_set_press_image((tinyui_obj_t *)button, props->press_image) != 0) {
+        tinyui_button_rollback(button);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_BUTTON_FIELD_TRANSPARENT) != 0) {
+    if (tinyui_button_set_transparent((tinyui_obj_t *)button, props->transparent) != 0) {
+        tinyui_button_rollback(button);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_BUTTON_FIELD_CHECKABLE) != 0) {
+    if (tinyui_button_set_checkable((tinyui_obj_t *)button, props->checkable) != 0) {
+        tinyui_button_rollback(button);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_BUTTON_FIELD_KEY_VALUE) != 0) {
+    if (tinyui_button_set_key_value((tinyui_obj_t *)button, props->key_value) != 0) {
+        tinyui_button_rollback(button);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_BUTTON_FIELD_PRESSED) != 0) {
+    if (tinyui_button_set_pressed((tinyui_obj_t *)button, props->pressed) != 0) {
+        tinyui_button_rollback(button);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_BUTTON_FIELD_ON_CLICKED) != 0) {
+    if (tinyui_button_set_on_clicked((tinyui_obj_t *)button, props->on_clicked, props->user_data) != 0) {
+        tinyui_button_rollback(button);
+        return 0;
+    }
     }
 
-    button->on_clicked = props->on_clicked;
-    button->user_data = props->user_data;
-    if (tinyui_widget_set_user_data(&button->widget, props->user_data) != 0) {
-        tinyui_button_rollback(button);
-        return 0;
-    }
-    if (props->text != 0 && tinyui_button_set_text(button, props->text) != 0) {
-        tinyui_button_rollback(button);
-        return 0;
-    }
-    if (props->font != 0 && tinyui_button_set_font(button, props->font) != 0) {
-        tinyui_button_rollback(button);
-        return 0;
-    }
-    if ((props->width > 0 || props->height > 0)
-        && tinyui_widget_set_size(&button->widget, props->width, props->height) != 0) {
-        tinyui_button_rollback(button);
-        return 0;
-    }
-    if (props->style_class != 0
-        && tinyui_widget_set_style_class(&button->widget, props->style_class) != 0) {
-        tinyui_button_rollback(button);
-        return 0;
-    }
-    if (tinyui_widget_set_bg_color(&button->widget, props->bg_color) != 0
-        || tinyui_widget_set_text_color(&button->widget, props->text_color) != 0
-        || tinyui_widget_set_border_color(&button->widget, props->border_color) != 0
-        || tinyui_widget_set_radius(&button->widget, props->radius) != 0
-        || tinyui_widget_set_padding(&button->widget, props->padding) != 0) {
-        tinyui_button_rollback(button);
-        return 0;
-    }
-    if (tinyui_button_set_release_image(button, props->release_image) != 0
-        || tinyui_button_set_press_image(button, props->press_image) != 0
-        || tinyui_button_set_transparent(button, props->transparent) != 0
-        || tinyui_button_set_checkable(button, props->checkable) != 0
-        || tinyui_button_set_key_value(button, props->key_value) != 0
-        || tinyui_button_set_pressed(button, props->pressed) != 0) {
-        tinyui_button_rollback(button);
-        return 0;
-    }
-
-    return button;
+    return obj;
 }
+
 
 static int tinyui_button_set_event(struct tinyui_button *button,
                                    tinyui_event_cb cb,
@@ -256,16 +360,19 @@ static int tinyui_button_set_event(struct tinyui_button *button,
  * @return -1 on failure
  */
 
-int tinyui_button_set_text(struct tinyui_button *button, const char *text)
+int tinyui_button_set_text(tinyui_obj_t *button_obj, const char *text)
 {
+    struct tinyui_button *button = tinyui_button_as_button(button_obj);
+    if (button == 0) { return -1; }
+
     if (button == 0 || text == 0) {
         return -1;
     }
 
-    if (tinyui_widget_set_text(&button->widget, text) != 0) {
+    if (tinyui_runtime_internal_widget_set_text(&button->widget, text) != 0) {
         return -1;
     }
-    return tinyui_widget_set_backend_text(&button->widget, text);
+    return tinyui_runtime_internal_widget_set_backend_text(&button->widget, text);
 }
 
 /**
@@ -276,8 +383,11 @@ int tinyui_button_set_text(struct tinyui_button *button, const char *text)
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_button_get_text(struct tinyui_button *button, const char **text)
+int tinyui_button_get_text(tinyui_obj_t *button_obj, const char **text)
 {
+    struct tinyui_button *button = tinyui_button_as_button(button_obj);
+    if (button == 0) { return -1; }
+
     ldButton_t *ld_button;
 
     if (button == 0 || text == 0) {
@@ -301,8 +411,11 @@ int tinyui_button_get_text(struct tinyui_button *button, const char **text)
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_button_set_font(struct tinyui_button *button, const struct tinyui_font *font)
+int tinyui_button_set_font(tinyui_obj_t *button_obj, const struct tinyui_font *font)
 {
+    struct tinyui_button *button = tinyui_button_as_button(button_obj);
+    if (button == 0) { return -1; }
+
     ldButton_t *ld_button;
     arm_2d_font_t *resolved_font;
 
@@ -338,8 +451,11 @@ int tinyui_button_set_font(struct tinyui_button *button, const struct tinyui_fon
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_button_get_font(struct tinyui_button *button, const struct tinyui_font **font)
+int tinyui_button_get_font(tinyui_obj_t *button_obj, const struct tinyui_font **font)
 {
+    struct tinyui_button *button = tinyui_button_as_button(button_obj);
+    if (button == 0) { return -1; }
+
     if (button == 0 || font == 0) {
         return -1;
     }
@@ -357,10 +473,11 @@ int tinyui_button_get_font(struct tinyui_button *button, const struct tinyui_fon
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_button_set_color(struct tinyui_button *button,
-                            unsigned int release_color,
-                            unsigned int press_color)
+int tinyui_button_set_color(tinyui_obj_t *button_obj, unsigned int release_color, unsigned int press_color)
 {
+    struct tinyui_button *button = tinyui_button_as_button(button_obj);
+    if (button == 0) { return -1; }
+
     ldButton_t *ld_button;
 
     if (button == 0 || release_color > 0xFFFFFFU || press_color > 0xFFFFFFU) {
@@ -386,8 +503,11 @@ int tinyui_button_set_color(struct tinyui_button *button,
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_button_get_release_color(struct tinyui_button *button, unsigned int *rgb)
+int tinyui_button_get_release_color(tinyui_obj_t *button_obj, unsigned int *rgb)
 {
+    struct tinyui_button *button = tinyui_button_as_button(button_obj);
+    if (button == 0) { return -1; }
+
     ldButton_t *ld_button;
 
     if (button == 0 || rgb == 0) {
@@ -411,8 +531,11 @@ int tinyui_button_get_release_color(struct tinyui_button *button, unsigned int *
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_button_get_press_color(struct tinyui_button *button, unsigned int *rgb)
+int tinyui_button_get_press_color(tinyui_obj_t *button_obj, unsigned int *rgb)
 {
+    struct tinyui_button *button = tinyui_button_as_button(button_obj);
+    if (button == 0) { return -1; }
+
     ldButton_t *ld_button;
 
     if (button == 0 || rgb == 0) {
@@ -436,9 +559,11 @@ int tinyui_button_get_press_color(struct tinyui_button *button, unsigned int *rg
  * @return -1 on failure
  */
 
-int tinyui_button_set_release_image(struct tinyui_button *button,
-                                    struct tinyui_image_source *source)
+int tinyui_button_set_release_image(tinyui_obj_t *button_obj, struct tinyui_image_source *source)
 {
+    struct tinyui_button *button = tinyui_button_as_button(button_obj);
+    if (button == 0) { return -1; }
+
     ldButton_t *ld_button;
 
     if (button == 0 || (source != 0 && tinyui_image_source_get_image_tile(source) == 0)) {
@@ -466,9 +591,11 @@ int tinyui_button_set_release_image(struct tinyui_button *button,
  * @return -1 on failure
  */
 
-int tinyui_button_set_press_image(struct tinyui_button *button,
-                                  struct tinyui_image_source *source)
+int tinyui_button_set_press_image(tinyui_obj_t *button_obj, struct tinyui_image_source *source)
 {
+    struct tinyui_button *button = tinyui_button_as_button(button_obj);
+    if (button == 0) { return -1; }
+
     ldButton_t *ld_button;
 
     if (button == 0 || (source != 0 && tinyui_image_source_get_image_tile(source) == 0)) {
@@ -497,14 +624,15 @@ int tinyui_button_set_press_image(struct tinyui_button *button,
  * @return -1 on failure
  */
 
-int tinyui_button_set_image(struct tinyui_button *button,
-                            struct tinyui_image_source *release_source,
-                            struct tinyui_image_source *press_source)
+int tinyui_button_set_image(tinyui_obj_t *button_obj, struct tinyui_image_source *release_source, struct tinyui_image_source *press_source)
 {
-    if (tinyui_button_set_release_image(button, release_source) != 0) {
+    struct tinyui_button *button = tinyui_button_as_button(button_obj);
+    if (button == 0) { return -1; }
+
+    if (tinyui_button_set_release_image((tinyui_obj_t *)button, release_source) != 0) {
         return -1;
     }
-    return tinyui_button_set_press_image(button, press_source);
+    return tinyui_button_set_press_image((tinyui_obj_t *)button, press_source);
 }
 
 /**
@@ -515,8 +643,11 @@ int tinyui_button_set_image(struct tinyui_button *button,
  * @return -1 on failure
  */
 
-int tinyui_button_set_transparent(struct tinyui_button *button, int transparent)
+int tinyui_button_set_transparent(tinyui_obj_t *button_obj, int transparent)
 {
+    struct tinyui_button *button = tinyui_button_as_button(button_obj);
+    if (button == 0) { return -1; }
+
     ldButton_t *ld_button;
 
     if (button == 0) {
@@ -540,8 +671,11 @@ int tinyui_button_set_transparent(struct tinyui_button *button, int transparent)
  * @return -1 on failure
  */
 
-int tinyui_button_get_transparent(struct tinyui_button *button, int *transparent)
+int tinyui_button_get_transparent(tinyui_obj_t *button_obj, int *transparent)
 {
+    struct tinyui_button *button = tinyui_button_as_button(button_obj);
+    if (button == 0) { return -1; }
+
     ldButton_t *ld_button;
 
     if (button == 0 || transparent == 0) {
@@ -565,8 +699,11 @@ int tinyui_button_get_transparent(struct tinyui_button *button, int *transparent
  * @return -1 on failure
  */
 
-int tinyui_button_set_checkable(struct tinyui_button *button, int checkable)
+int tinyui_button_set_checkable(tinyui_obj_t *button_obj, int checkable)
 {
+    struct tinyui_button *button = tinyui_button_as_button(button_obj);
+    if (button == 0) { return -1; }
+
     ldButton_t *ld_button;
 
     if (button == 0) {
@@ -590,8 +727,11 @@ int tinyui_button_set_checkable(struct tinyui_button *button, int checkable)
  * @return -1 on failure
  */
 
-int tinyui_button_get_checkable(struct tinyui_button *button, int *checkable)
+int tinyui_button_get_checkable(tinyui_obj_t *button_obj, int *checkable)
 {
+    struct tinyui_button *button = tinyui_button_as_button(button_obj);
+    if (button == 0) { return -1; }
+
     ldButton_t *ld_button;
 
     if (button == 0 || checkable == 0) {
@@ -615,8 +755,11 @@ int tinyui_button_get_checkable(struct tinyui_button *button, int *checkable)
  * @return -1 on failure
  */
 
-int tinyui_button_set_key_value(struct tinyui_button *button, unsigned int key_value)
+int tinyui_button_set_key_value(tinyui_obj_t *button_obj, unsigned int key_value)
 {
+    struct tinyui_button *button = tinyui_button_as_button(button_obj);
+    if (button == 0) { return -1; }
+
     ldButton_t *ld_button;
 
     if (button == 0) {
@@ -640,8 +783,11 @@ int tinyui_button_set_key_value(struct tinyui_button *button, unsigned int key_v
  * @return -1 on failure
  */
 
-int tinyui_button_get_key_value(struct tinyui_button *button, unsigned int *key_value)
+int tinyui_button_get_key_value(tinyui_obj_t *button_obj, unsigned int *key_value)
 {
+    struct tinyui_button *button = tinyui_button_as_button(button_obj);
+    if (button == 0) { return -1; }
+
     ldButton_t *ld_button;
 
     if (button == 0 || key_value == 0) {
@@ -665,8 +811,11 @@ int tinyui_button_get_key_value(struct tinyui_button *button, unsigned int *key_
  * @return -1 on failure
  */
 
-int tinyui_button_set_pressed(struct tinyui_button *button, int pressed)
+int tinyui_button_set_pressed(tinyui_obj_t *button_obj, int pressed)
 {
+    struct tinyui_button *button = tinyui_button_as_button(button_obj);
+    if (button == 0) { return -1; }
+
     ldButton_t *ld_button;
 
     if (button == 0) {
@@ -690,9 +839,12 @@ int tinyui_button_set_pressed(struct tinyui_button *button, int pressed)
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_button_set_press(struct tinyui_button *button, int pressed)
+int tinyui_runtime_internal_button_set_press(tinyui_obj_t *button_obj, int pressed)
 {
-    return tinyui_button_set_pressed(button, pressed);
+    struct tinyui_button *button = tinyui_button_as_button(button_obj);
+    if (button == 0) { return -1; }
+
+    return tinyui_button_set_pressed((tinyui_obj_t *)button, pressed);
 }
 
 /**
@@ -703,8 +855,11 @@ int tinyui_button_set_press(struct tinyui_button *button, int pressed)
  * @return -1 on failure
  */
 
-int tinyui_button_get_pressed(struct tinyui_button *button, int *pressed)
+int tinyui_button_get_pressed(tinyui_obj_t *button_obj, int *pressed)
 {
+    struct tinyui_button *button = tinyui_button_as_button(button_obj);
+    if (button == 0) { return -1; }
+
     ldButton_t *ld_button;
 
     if (button == 0 || pressed == 0) {
@@ -728,9 +883,12 @@ int tinyui_button_get_pressed(struct tinyui_button *button, int *pressed)
  * @return The property value, negative on error
  */
 
-int tinyui_button_get_press(struct tinyui_button *button, int *pressed)
+int tinyui_runtime_internal_button_get_press(tinyui_obj_t *button_obj, int *pressed)
 {
-    return tinyui_button_get_pressed(button, pressed);
+    struct tinyui_button *button = tinyui_button_as_button(button_obj);
+    if (button == 0) { return -1; }
+
+    return tinyui_button_get_pressed((tinyui_obj_t *)button, pressed);
 }
 
 /**
@@ -742,10 +900,11 @@ int tinyui_button_get_press(struct tinyui_button *button, int *pressed)
  * @return -1 on failure
  */
 
-int tinyui_button_get_pressed_by_name_id(const struct tinyui_widget *root,
-                                         int name_id,
-                                         int *pressed)
+int tinyui_button_get_pressed_by_name_id(const tinyui_obj_t *root_obj, int name_id, int *pressed)
 {
+    const struct tinyui_widget *root = (const struct tinyui_widget *)(const void *)root_obj;
+    if (root == 0) { return -1; }
+
     ldBase_t *ld_found;
     struct tinyui_widget *widget;
 
@@ -759,12 +918,12 @@ int tinyui_button_get_pressed_by_name_id(const struct tinyui_widget *root,
 
     ld_found = (ldBase_t *)ldBaseGetWidget(
         (arm_2d_control_node_t *)root->ld_widget, (uint16_t)name_id);
-    widget = ld_found != 0 ? tinyui_widget_from_ld(ld_found) : 0;
+    widget = ld_found != 0 ? tinyui_runtime_internal_widget_from_ld(ld_found) : 0;
     if (widget == 0) {
         return -1;
     }
 
-    if (tinyui_widget_get_type(widget) != TINYUI_WIDGET_TYPE_BUTTON) {
+    if (tinyui_runtime_internal_widget_get_type(widget) != TINYUI_WIDGET_TYPE_BUTTON) {
         return -1;
     }
 
@@ -780,10 +939,11 @@ int tinyui_button_get_pressed_by_name_id(const struct tinyui_widget *root,
  * @return -1 on failure
  */
 
-int tinyui_button_get_action_state_by_name_id(const struct tinyui_widget *root,
-                                              int name_id,
-                                              enum tinyui_button_action_state action)
+int tinyui_button_get_action_state_by_name_id(const tinyui_obj_t *root_obj, int name_id, enum tinyui_button_action_state action)
 {
+    const struct tinyui_widget *root = (const struct tinyui_widget *)(const void *)root_obj;
+    if (root == 0) { return -1; }
+
     ldBase_t *ld_found;
     struct tinyui_widget *widget;
 
@@ -797,12 +957,12 @@ int tinyui_button_get_action_state_by_name_id(const struct tinyui_widget *root,
 
     ld_found = (ldBase_t *)ldBaseGetWidget(
         (arm_2d_control_node_t *)root->ld_widget, (uint16_t)name_id);
-    widget = ld_found != 0 ? tinyui_widget_from_ld(ld_found) : 0;
+    widget = ld_found != 0 ? tinyui_runtime_internal_widget_from_ld(ld_found) : 0;
     if (widget == 0) {
         return -1;
     }
 
-    if (tinyui_widget_get_type(widget) != TINYUI_WIDGET_TYPE_BUTTON) {
+    if (tinyui_runtime_internal_widget_get_type(widget) != TINYUI_WIDGET_TYPE_BUTTON) {
         return -1;
     }
 
@@ -817,8 +977,11 @@ int tinyui_button_get_action_state_by_name_id(const struct tinyui_widget *root,
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_button_set_text_color(struct tinyui_button *button, unsigned int text_color)
+int tinyui_button_set_text_color(tinyui_obj_t *button_obj, unsigned int text_color)
 {
+    struct tinyui_button *button = tinyui_button_as_button(button_obj);
+    if (button == 0) { return -1; }
+
     ldButton_t *ld_button;
 
     if (button == 0 || text_color > 0xFFFFFFU) {
@@ -844,8 +1007,11 @@ int tinyui_button_set_text_color(struct tinyui_button *button, unsigned int text
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_button_get_text_color(struct tinyui_button *button, unsigned int *rgb)
+int tinyui_button_get_text_color(tinyui_obj_t *button_obj, unsigned int *rgb)
 {
+    struct tinyui_button *button = tinyui_button_as_button(button_obj);
+    if (button == 0) { return -1; }
+
     ldButton_t *ld_button;
 
     if (button == 0 || rgb == 0) {
@@ -870,10 +1036,11 @@ int tinyui_button_get_text_color(struct tinyui_button *button, unsigned int *rgb
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_button_set_on_clicked(struct tinyui_button *button,
-                                 tinyui_event_cb cb,
-                                 void *user_data)
+int tinyui_button_set_on_clicked(tinyui_obj_t *button_obj, tinyui_event_cb cb, void *user_data)
 {
+    struct tinyui_button *button = tinyui_button_as_button(button_obj);
+    if (button == 0) { return -1; }
+
     if (button == 0) {
         return -1;
     }
@@ -892,10 +1059,11 @@ int tinyui_button_set_on_clicked(struct tinyui_button *button,
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_button_set_on_pressed(struct tinyui_button *button,
-                                 tinyui_event_cb cb,
-                                 void *user_data)
+int tinyui_button_set_on_pressed(tinyui_obj_t *button_obj, tinyui_event_cb cb, void *user_data)
 {
+    struct tinyui_button *button = tinyui_button_as_button(button_obj);
+    if (button == 0) { return -1; }
+
     return tinyui_button_set_event(button, cb, user_data, 0);
 }
 
@@ -908,9 +1076,10 @@ int tinyui_button_set_on_pressed(struct tinyui_button *button,
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_button_set_on_released(struct tinyui_button *button,
-                                  tinyui_event_cb cb,
-                                  void *user_data)
+int tinyui_button_set_on_released(tinyui_obj_t *button_obj, tinyui_event_cb cb, void *user_data)
 {
+    struct tinyui_button *button = tinyui_button_as_button(button_obj);
+    if (button == 0) { return -1; }
+
     return tinyui_button_set_event(button, cb, user_data, 1);
 }

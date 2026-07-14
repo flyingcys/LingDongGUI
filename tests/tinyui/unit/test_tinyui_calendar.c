@@ -1,4 +1,4 @@
-#include "core/app.h"
+#include "internal/app_legacy.h"
 #include "widgets/calendar.h"
 #include "widgets/window.h"
 #include "../../../src/gui/ldCalendar.h"

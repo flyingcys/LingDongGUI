@@ -19,7 +19,10 @@ def scan_public_headers(root: Path) -> list[str]:
     return [
         header.relative_to(include_dir).as_posix()
         for header in sorted(include_dir.rglob("*.h"))
-        if "internal" not in header.relative_to(include_dir).parts
+        if not any(
+            part in {"internal", "extensions"}
+            for part in header.relative_to(include_dir).parts
+        )
     ]
 
 

@@ -1,5 +1,5 @@
-#ifndef TINYUI_APP_H
-#define TINYUI_APP_H
+#ifndef TINYUI_INTERNAL_APP_LEGACY_H
+#define TINYUI_INTERNAL_APP_LEGACY_H
 
 /*
  * INTERNAL / NON-CANONICAL -- DO NOT USE FOR NEW CODE.
@@ -25,6 +25,7 @@ struct tinyui_window;
 typedef void (*tinyui_app_timer_cb_t)(struct tinyui_app *app,
                                       struct tinyui_app_timer *timer,
                                       void *user_data);
+
 
 struct tinyui_app *tinyui_app_create(void);
 int tinyui_app_run(struct tinyui_app *app, struct tinyui_window *window);

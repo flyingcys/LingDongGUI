@@ -23,6 +23,24 @@
 #include "../../../src/gui/ldWindow.h"
 #include "../../../src/porting/ldConfig.h"
 
+static struct tinyui_background *tinyui_background_as_background(tinyui_obj_t *obj)
+{
+    struct tinyui_widget *w = (struct tinyui_widget *)(void *)obj;
+    if (w == 0 || !tinyui_runtime_internal_widget_is_kind(w, TINYUI_BACKEND_WIDGET_BACKGROUND)) {
+        return 0;
+    }
+    return (struct tinyui_background *)w;
+}
+
+static const struct tinyui_background *tinyui_background_as_background_const(const tinyui_obj_t *obj)
+{
+    const struct tinyui_widget *w = (const struct tinyui_widget *)(const void *)obj;
+    if (w == 0 || !tinyui_runtime_internal_widget_is_kind(w, TINYUI_BACKEND_WIDGET_BACKGROUND)) {
+        return 0;
+    }
+    return (const struct tinyui_background *)w;
+}
+
 
 /* C3-T4: background is a single calloc of struct tinyui_background (which
  * embeds struct tinyui_window) — no separate host wrapper.  Binding state
@@ -87,10 +105,10 @@ struct tinyui_background *tinyui_legacy_background_create(struct tinyui_app *app
     background->window.widget.ld_name_id = 0;
     background->window.widget.kind       = TINYUI_BACKEND_WIDGET_BACKGROUND;
     background->window.widget.owner      = app_state;
-    tinyui_app_register_host(app_state, &background->window.widget);
+    tinyui_runtime_internal_app_register_host(app_state, &background->window.widget);
 
     if (tinyui_runtime_bridge_bind_leaf_widget(&background->window.widget, app_state) != 0) {
-        tinyui_app_unregister_host(app_state, &background->window.widget);
+        tinyui_runtime_internal_app_unregister_host(app_state, &background->window.widget);
         background->window.widget.ld_widget = 0;
         ldWindow_depose(app_state->ld_scene, ld_root);
         ldFree(background);
@@ -108,9 +126,11 @@ struct tinyui_background *tinyui_legacy_background_create(struct tinyui_app *app
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_background_set_source(struct tinyui_background *background,
-                                 struct tinyui_image_source *source)
+int tinyui_background_set_source(tinyui_obj_t *background_obj, struct tinyui_image_source *source)
 {
+    struct tinyui_background *background = tinyui_background_as_background(background_obj);
+    if (background == 0) { return -1; }
+
     return tinyui_window_set_background_source((struct tinyui_window *)background, source);
 }
 
@@ -122,8 +142,11 @@ int tinyui_background_set_source(struct tinyui_background *background,
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_background_set_color(struct tinyui_background *background, unsigned int rgb)
+int tinyui_background_set_color(tinyui_obj_t *background_obj, unsigned int rgb)
 {
+    struct tinyui_background *background = tinyui_background_as_background(background_obj);
+    if (background == 0) { return -1; }
+
     return tinyui_window_set_color((struct tinyui_window *)background, rgb);
 }
 
@@ -135,8 +158,11 @@ int tinyui_background_set_color(struct tinyui_background *background, unsigned i
  * @return The property value, negative on error
  */
 
-int tinyui_background_get_color(struct tinyui_background *background, unsigned int *rgb)
+int tinyui_background_get_color(tinyui_obj_t *background_obj, unsigned int *rgb)
 {
+    struct tinyui_background *background = tinyui_background_as_background(background_obj);
+    if (background == 0) { return -1; }
+
     return tinyui_window_get_color((struct tinyui_window *)background, rgb);
 }
 
@@ -149,8 +175,11 @@ int tinyui_background_get_color(struct tinyui_background *background, unsigned i
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_background_set_offset(struct tinyui_background *background, int offset_x, int offset_y)
+int tinyui_background_set_offset(tinyui_obj_t *background_obj, int offset_x, int offset_y)
 {
+    struct tinyui_background *background = tinyui_background_as_background(background_obj);
+    if (background == 0) { return -1; }
+
     return tinyui_window_set_background_offset((struct tinyui_window *)background, offset_x, offset_y);
 }
 
@@ -163,10 +192,11 @@ int tinyui_background_set_offset(struct tinyui_background *background, int offse
  * @return The property value, negative on error
  */
 
-int tinyui_background_get_offset(struct tinyui_background *background,
-                                 int *offset_x,
-                                 int *offset_y)
+int tinyui_background_get_offset(tinyui_obj_t *background_obj, int *offset_x, int *offset_y)
 {
+    struct tinyui_background *background = tinyui_background_as_background(background_obj);
+    if (background == 0) { return -1; }
+
     return tinyui_window_get_background_offset((struct tinyui_window *)background,
                                                offset_x,
                                                offset_y);

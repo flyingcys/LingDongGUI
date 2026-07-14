@@ -19,19 +19,24 @@
 #ifndef TINYUI_QRCODE_H
 #define TINYUI_QRCODE_H
 
-struct tinyui_widget;
-struct tinyui_qrcode;
+#include "core/obj.h"
+#include <stdint.h>
 
-enum tinyui_qrcode_prop_mask {
-    TINYUI_QRCODE_PROP_QR_COLOR = 1 << 0,
-    TINYUI_QRCODE_PROP_BG_COLOR = 1 << 1,
-    TINYUI_QRCODE_PROP_ECC = 1 << 2,
-    TINYUI_QRCODE_PROP_MAX_VERSION = 1 << 3,
-    TINYUI_QRCODE_PROP_ZOOM = 1 << 4,
-};
+typedef enum tinyui_qrcode_field {
+    TINYUI_QRCODE_FIELD_ID = UINT32_C(1) << 0,
+    TINYUI_QRCODE_FIELD_STYLE_CLASS = UINT32_C(1) << 1,
+    TINYUI_QRCODE_FIELD_USER_DATA = UINT32_C(1) << 2,
+    TINYUI_QRCODE_FIELD_TEXT = UINT32_C(1) << 3,
+    TINYUI_QRCODE_FIELD_QR_COLOR = UINT32_C(1) << 4,
+    TINYUI_QRCODE_FIELD_BG_COLOR = UINT32_C(1) << 5,
+    TINYUI_QRCODE_FIELD_ECC = UINT32_C(1) << 6,
+    TINYUI_QRCODE_FIELD_MAX_VERSION = UINT32_C(1) << 7,
+    TINYUI_QRCODE_FIELD_ZOOM = UINT32_C(1) << 8,
+} tinyui_qrcode_field_t;
 
-struct tinyui_qrcode_props {
-    const char *id;
+typedef struct tinyui_qrcode_props {
+    uint32_t fields;
+    uint16_t id;
     const char *style_class;
     void *user_data;
     const char *text;
@@ -40,20 +45,26 @@ struct tinyui_qrcode_props {
     int ecc;
     int max_version;
     int zoom;
-    unsigned int present_mask;
-};
+} tinyui_qrcode_props_t;
 
-struct tinyui_qrcode *tinyui_qrcode_create(struct tinyui_widget *parent, const char *id);
-struct tinyui_qrcode *tinyui_qrcode_create_with_props(struct tinyui_widget *parent,
-                                                      const struct tinyui_qrcode_props *props);
-struct tinyui_qrcode *tinyui_q_r_code_init(struct tinyui_widget *parent, const char *id);
-int tinyui_qrcode_set_text(struct tinyui_qrcode *qrcode, const char *text);
-const char *tinyui_qrcode_get_text(const struct tinyui_qrcode *qrcode);
-int tinyui_q_r_code_set_text(struct tinyui_qrcode *qrcode, const char *text);
-int tinyui_qrcode_set_qr_color(struct tinyui_qrcode *qrcode, unsigned int rgb);
-int tinyui_qrcode_set_bg_color(struct tinyui_qrcode *qrcode, unsigned int rgb);
-int tinyui_qrcode_set_ecc(struct tinyui_qrcode *qrcode, int ecc);
-int tinyui_qrcode_set_max_version(struct tinyui_qrcode *qrcode, int max_version);
-int tinyui_qrcode_set_zoom(struct tinyui_qrcode *qrcode, int zoom);
+tinyui_obj_t *tinyui_qrcode_create(tinyui_obj_t *parent);
 
-#endif
+tinyui_obj_t *tinyui_qrcode_create_with_props(tinyui_obj_t *parent,
+                                               const tinyui_qrcode_props_t *props);
+
+int tinyui_qrcode_set_text(tinyui_obj_t *qrcode, const char *text);
+
+const char *tinyui_qrcode_get_text(const tinyui_obj_t *qrcode);
+
+
+int tinyui_qrcode_set_qr_color(tinyui_obj_t *qrcode, unsigned int rgb);
+
+int tinyui_qrcode_set_bg_color(tinyui_obj_t *qrcode, unsigned int rgb);
+
+int tinyui_qrcode_set_ecc(tinyui_obj_t *qrcode, int ecc);
+
+int tinyui_qrcode_set_max_version(tinyui_obj_t *qrcode, int max_version);
+
+int tinyui_qrcode_set_zoom(tinyui_obj_t *qrcode, int zoom);
+
+#endif /* TINYUI_QRCODE_H */

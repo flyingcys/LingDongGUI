@@ -24,6 +24,25 @@
 
 #include <string.h>
 
+
+static struct tinyui_keyboard *tinyui_keyboard_as_keyboard(tinyui_obj_t *obj)
+{
+    struct tinyui_widget *w = (struct tinyui_widget *)(void *)obj;
+    if (w == 0 || !tinyui_runtime_internal_widget_is_kind(w, TINYUI_BACKEND_WIDGET_KEYBOARD)) {
+        return 0;
+    }
+    return (struct tinyui_keyboard *)w;
+}
+
+static const struct tinyui_keyboard *tinyui_keyboard_as_keyboard_const(const tinyui_obj_t *obj)
+{
+    const struct tinyui_widget *w = (const struct tinyui_widget *)(const void *)obj;
+    if (w == 0 || !tinyui_runtime_internal_widget_is_kind(w, TINYUI_BACKEND_WIDGET_KEYBOARD)) {
+        return 0;
+    }
+    return (const struct tinyui_keyboard *)w;
+}
+
 void ldKeyboardInputAscii(ldKeyboard_t *ptWidget, uint8_t ascii);
 
 struct tinyui_keyboard_create_ctx {
@@ -34,7 +53,7 @@ struct tinyui_keyboard_create_ctx {
 
 
 
-/* Free dynamic layout resources BEFORE tinyui_widget_destroy_common frees
+/* Free dynamic layout resources BEFORE tinyui_runtime_internal_widget_destroy_common frees
  * the host struct.  Also called by tinyui_keyboard_set_buttons during reuse. */
 static void tinyui_keyboard_free_layout(struct tinyui_keyboard *keyboard);
 
@@ -80,25 +99,24 @@ static void tinyui_keyboard_rollback(struct tinyui_keyboard *keyboard)
     if (keyboard == 0) {
         return;
     }
-    if (keyboard->widget.ld_widget != 0) {
+    if (((struct tinyui_widget *)(void *)keyboard)->ld_widget != 0) {
         tinyui_keyboard_free_layout(keyboard);
-        tinyui_widget_destroy_common(&keyboard->widget);
+        tinyui_runtime_internal_widget_destroy_common(&keyboard->widget);
     } else {
         ldFree(keyboard);
     }
 }
 
-static int tinyui_keyboard_props_are_valid(const struct tinyui_keyboard_props *props)
+static int tinyui_keyboard_props_are_valid(const tinyui_keyboard_props_t *props)
 {
     return props != 0
-        && props->id != 0
         && props->width >= 0
         && props->height >= 0
         && props->radius >= 0
         && props->padding >= 0;
 }
 
-static void *tinyui_keyboard_ld_init(void *ctx,
+static void *tinyui_runtime_internal_keyboard_ld_init(void *ctx,
                                      struct ld_scene_t *scene,
                                      uint16_t name_id,
                                      uint16_t parent_name_id)
@@ -123,12 +141,12 @@ static int tinyui_keyboard_get_selected_key_code_internal(const struct tinyui_ke
     ldKeyboard_t *ld_keyboard;
 
     if (keyboard == 0 || key_code == 0 ||
-        keyboard->widget.kind != TINYUI_BACKEND_WIDGET_KEYBOARD ||
-        keyboard->widget.ld_widget == 0) {
+        ((struct tinyui_widget *)(void *)keyboard)->kind != TINYUI_BACKEND_WIDGET_KEYBOARD ||
+        ((struct tinyui_widget *)(void *)keyboard)->ld_widget == 0) {
         return -1;
     }
 
-    ld_keyboard = (ldKeyboard_t *)keyboard->widget.ld_widget;
+    ld_keyboard = (ldKeyboard_t *)((struct tinyui_widget *)(void *)keyboard)->ld_widget;
     if (ld_keyboard == 0) {
         return -1;
     }
@@ -257,16 +275,20 @@ static void tinyui_keyboard_prepare_local(ldKeyboard_t *ld_keyboard,
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct tinyui_keyboard *tinyui_keyboard_create(struct tinyui_window *parent, const char *id)
+tinyui_obj_t *tinyui_keyboard_create(tinyui_obj_t *parent)
 {
+    struct tinyui_widget *parent_w = (struct tinyui_widget *)(void *)parent;
+    const char *id = "keyboard";
+    if (parent_w == 0) { return 0; }
+
     struct tinyui_keyboard_create_ctx create_ctx;
     struct tinyui_keyboard *keyboard;
 
-    if (parent == 0 || id == 0) {
+    if (parent_w == 0 || id == 0) {
         return 0;
     }
 
-    if (parent->widget.ld_widget == 0 || parent->widget.owner == 0) {
+    if (parent_w->ld_widget == 0 || parent_w->owner == 0) {
         return 0;
     }
 
@@ -274,9 +296,9 @@ struct tinyui_keyboard *tinyui_keyboard_create(struct tinyui_window *parent, con
     if (create_ctx.font == 0) {
         return 0;
     }
-    keyboard = (struct tinyui_keyboard *)tinyui_widget_create_leaf(&parent->widget,
+    keyboard = (struct tinyui_keyboard *)tinyui_runtime_internal_widget_create_leaf(parent_w,
                                                                    TINYUI_BACKEND_WIDGET_KEYBOARD,
-                                                                   tinyui_keyboard_ld_init,
+                                                                   tinyui_runtime_internal_keyboard_ld_init,
                                                                    &create_ctx,
                                                                    sizeof(*keyboard));
     if (keyboard == 0) {
@@ -288,7 +310,7 @@ struct tinyui_keyboard *tinyui_keyboard_create(struct tinyui_window *parent, con
     keyboard->widget.enabled    = 1;
     keyboard->widget.host_cleanup = tinyui_keyboard_host_cleanup;
 
-    return keyboard;
+    return (tinyui_obj_t *)keyboard;
 }
 
 /**
@@ -299,42 +321,92 @@ struct tinyui_keyboard *tinyui_keyboard_create(struct tinyui_window *parent, con
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct tinyui_keyboard *tinyui_keyboard_create_with_props(struct tinyui_window *parent,
-                                                          const struct tinyui_keyboard_props *props)
+tinyui_obj_t *tinyui_keyboard_create_with_props(tinyui_obj_t *parent,
+                                             const tinyui_keyboard_props_t *props)
 {
+    tinyui_obj_t *obj;
     struct tinyui_keyboard *keyboard;
 
-    if (!tinyui_keyboard_props_are_valid(props)) {
-        return 0;
+    if (props == 0) {
+        return tinyui_keyboard_create(parent);
     }
 
-    keyboard = tinyui_keyboard_create(parent, props->id);
-    if (keyboard == 0) {
+    obj = tinyui_keyboard_create(parent);
+    if (obj == 0) {
         return 0;
     }
+    keyboard = (struct tinyui_keyboard *)(void *)obj;
 
-    if (tinyui_widget_set_user_data(&keyboard->widget, props->user_data) != 0
-        || tinyui_widget_set_bg_color(&keyboard->widget, props->bg_color) != 0
-        || tinyui_widget_set_text_color(&keyboard->widget, props->text_color) != 0
-        || tinyui_widget_set_border_color(&keyboard->widget, props->border_color) != 0
-        || tinyui_widget_set_radius(&keyboard->widget, props->radius) != 0
-        || tinyui_widget_set_padding(&keyboard->widget, props->padding) != 0) {
+    if ((props->fields & TINYUI_KEYBOARD_FIELD_ID) != 0) {
+        /* id=0 means runtime auto-alloc; non-zero reserved for host name_id path. */
+        (void)props->id;
+    }
+    if ((props->fields & TINYUI_KEYBOARD_FIELD_USER_DATA) != 0) {
+    if (tinyui_runtime_internal_widget_set_user_data(&keyboard->widget, props->user_data) != 0) {
         tinyui_keyboard_rollback(keyboard);
         return 0;
     }
-    if (props->style_class != 0
-        && tinyui_widget_set_style_class(&keyboard->widget, props->style_class) != 0) {
+    }
+    if ((props->fields & TINYUI_KEYBOARD_FIELD_STYLE_CLASS) != 0) {
+    if (tinyui_runtime_internal_widget_set_style_class(&keyboard->widget, props->style_class) != 0) {
         tinyui_keyboard_rollback(keyboard);
         return 0;
     }
-    if ((props->width > 0 || props->height > 0)
-        && tinyui_widget_set_size(&keyboard->widget, props->width, props->height) != 0) {
+    }
+        if ((props->fields & TINYUI_KEYBOARD_FIELD_WIDTH) != 0 || (props->fields & TINYUI_KEYBOARD_FIELD_HEIGHT) != 0) {
+        int w = tinyui_runtime_internal_widget_get_width(&keyboard->widget);
+        int h = tinyui_runtime_internal_widget_get_height(&keyboard->widget);
+        if (w < 0) {
+            w = 0;
+        }
+        if (h < 0) {
+            h = 0;
+        }
+        if ((props->fields & TINYUI_KEYBOARD_FIELD_WIDTH) != 0) {
+            w = props->width;
+        }
+        if ((props->fields & TINYUI_KEYBOARD_FIELD_HEIGHT) != 0) {
+            h = props->height;
+        }
+        if (tinyui_runtime_internal_widget_set_size(&keyboard->widget, w, h) != 0) {
+            tinyui_keyboard_rollback(keyboard);
+            return 0;
+        }
+    }
+    if ((props->fields & TINYUI_KEYBOARD_FIELD_BG_COLOR) != 0) {
+    if (tinyui_runtime_internal_widget_set_bg_color(&keyboard->widget, props->bg_color) != 0) {
         tinyui_keyboard_rollback(keyboard);
         return 0;
+    }
+    }
+    if ((props->fields & TINYUI_KEYBOARD_FIELD_TEXT_COLOR) != 0) {
+    if (tinyui_runtime_internal_widget_set_text_color(&keyboard->widget, props->text_color) != 0) {
+        tinyui_keyboard_rollback(keyboard);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_KEYBOARD_FIELD_BORDER_COLOR) != 0) {
+    if (tinyui_runtime_internal_widget_set_border_color(&keyboard->widget, props->border_color) != 0) {
+        tinyui_keyboard_rollback(keyboard);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_KEYBOARD_FIELD_RADIUS) != 0) {
+    if (tinyui_runtime_internal_widget_set_radius(&keyboard->widget, props->radius) != 0) {
+        tinyui_keyboard_rollback(keyboard);
+        return 0;
+    }
+    }
+    if ((props->fields & TINYUI_KEYBOARD_FIELD_PADDING) != 0) {
+    if (tinyui_runtime_internal_widget_set_padding(&keyboard->widget, props->padding) != 0) {
+        tinyui_keyboard_rollback(keyboard);
+        return 0;
+    }
     }
 
-    return keyboard;
+    return obj;
 }
+
 
 /**
  * @brief keyboard input ascii
@@ -344,19 +416,22 @@ struct tinyui_keyboard *tinyui_keyboard_create_with_props(struct tinyui_window *
  * @return -1 on failure
  */
 
-int tinyui_keyboard_input_ascii(struct tinyui_keyboard *keyboard, unsigned int ascii)
+int tinyui_keyboard_input_ascii(tinyui_obj_t *keyboard_obj, unsigned int ascii)
 {
+    struct tinyui_keyboard *keyboard = tinyui_keyboard_as_keyboard(keyboard_obj);
+    if (keyboard == 0) { return -1; }
+
     struct tinyui_line_edit *line_edit;
     ldKeyboard_t *ld_keyboard;
     ldLineEdit_t *ld_line_edit;
 
     if (keyboard == 0 ||
-        keyboard->widget.kind != TINYUI_BACKEND_WIDGET_KEYBOARD) {
+        ((struct tinyui_widget *)(void *)keyboard)->kind != TINYUI_BACKEND_WIDGET_KEYBOARD) {
         return -1;
     }
 
     line_edit = tinyui_keyboard_get_target_line_edit_local(&keyboard->widget);
-    ld_keyboard = (ldKeyboard_t *)keyboard->widget.ld_widget;
+    ld_keyboard = (ldKeyboard_t *)((struct tinyui_widget *)(void *)keyboard)->ld_widget;
     if (line_edit == 0 || ld_keyboard == 0) {
         return -1;
     }
@@ -382,20 +457,23 @@ int tinyui_keyboard_input_ascii(struct tinyui_keyboard *keyboard, unsigned int a
  * @return -1 on failure
  */
 
-int tinyui_keyboard_navigate(struct tinyui_keyboard *keyboard, int direction)
+int tinyui_keyboard_navigate(tinyui_obj_t *keyboard_obj, int direction)
 {
+    struct tinyui_keyboard *keyboard = tinyui_keyboard_as_keyboard(keyboard_obj);
+    if (keyboard == 0) { return -1; }
+
     ldKeyboard_t *ld_keyboard;
 
     if (keyboard == 0 ||
-        keyboard->widget.kind != TINYUI_BACKEND_WIDGET_KEYBOARD) {
+        ((struct tinyui_widget *)(void *)keyboard)->kind != TINYUI_BACKEND_WIDGET_KEYBOARD) {
         return -1;
     }
 
-    if (!tinyui_widget_is_focus_owner(&keyboard->widget)) {
+    if (!tinyui_runtime_internal_widget_is_focus_owner(&keyboard->widget)) {
         return -1;
     }
 
-    ld_keyboard = (ldKeyboard_t *)keyboard->widget.ld_widget;
+    ld_keyboard = (ldKeyboard_t *)((struct tinyui_widget *)(void *)keyboard)->ld_widget;
     if (ld_keyboard == 0) {
         return -1;
     }
@@ -412,16 +490,19 @@ int tinyui_keyboard_navigate(struct tinyui_keyboard *keyboard, int direction)
  * @return -1 on failure
  */
 
-int tinyui_keyboard_update(struct tinyui_keyboard *keyboard)
+int tinyui_keyboard_update(tinyui_obj_t *keyboard_obj)
 {
+    struct tinyui_keyboard *keyboard = tinyui_keyboard_as_keyboard(keyboard_obj);
+    if (keyboard == 0) { return -1; }
+
     ldKeyboard_t *ld_keyboard;
 
     if (keyboard == 0 ||
-        keyboard->widget.kind != TINYUI_BACKEND_WIDGET_KEYBOARD) {
+        ((struct tinyui_widget *)(void *)keyboard)->kind != TINYUI_BACKEND_WIDGET_KEYBOARD) {
         return -1;
     }
 
-    ld_keyboard = (ldKeyboard_t *)keyboard->widget.ld_widget;
+    ld_keyboard = (ldKeyboard_t *)((struct tinyui_widget *)(void *)keyboard)->ld_widget;
     if (ld_keyboard == 0) {
         return -1;
     }
@@ -439,16 +520,19 @@ int tinyui_keyboard_update(struct tinyui_keyboard *keyboard)
  * @return -1 on failure
  */
 
-int tinyui_keyboard_button_update(struct tinyui_keyboard *keyboard, unsigned int key_code)
+int tinyui_keyboard_button_update(tinyui_obj_t *keyboard_obj, unsigned int key_code)
 {
+    struct tinyui_keyboard *keyboard = tinyui_keyboard_as_keyboard(keyboard_obj);
+    if (keyboard == 0) { return -1; }
+
     ldKeyboard_t *ld_keyboard;
 
     if (keyboard == 0 || key_code > 0xFFU ||
-        keyboard->widget.kind != TINYUI_BACKEND_WIDGET_KEYBOARD) {
+        ((struct tinyui_widget *)(void *)keyboard)->kind != TINYUI_BACKEND_WIDGET_KEYBOARD) {
         return -1;
     }
 
-    ld_keyboard = (ldKeyboard_t *)keyboard->widget.ld_widget;
+    ld_keyboard = (ldKeyboard_t *)((struct tinyui_widget *)(void *)keyboard)->ld_widget;
     if (ld_keyboard == 0) {
         return -1;
     }
@@ -473,22 +557,25 @@ int tinyui_keyboard_button_update(struct tinyui_keyboard *keyboard, unsigned int
  * @return -1 on failure
  */
 
-int tinyui_keyboard_click(struct tinyui_keyboard *keyboard)
+int tinyui_keyboard_click(tinyui_obj_t *keyboard_obj)
 {
+    struct tinyui_keyboard *keyboard = tinyui_keyboard_as_keyboard(keyboard_obj);
+    if (keyboard == 0) { return -1; }
+
     struct tinyui_app *app_state;
     ldKeyboard_t *ld_keyboard;
 
     if (keyboard == 0 ||
-        keyboard->widget.kind != TINYUI_BACKEND_WIDGET_KEYBOARD) {
+        ((struct tinyui_widget *)(void *)keyboard)->kind != TINYUI_BACKEND_WIDGET_KEYBOARD) {
         return -1;
     }
 
-    if (!tinyui_widget_is_focus_owner(&keyboard->widget)) {
+    if (!tinyui_runtime_internal_widget_is_focus_owner(&keyboard->widget)) {
         return -1;
     }
 
-    app_state = keyboard->widget.owner;
-    ld_keyboard = (ldKeyboard_t *)keyboard->widget.ld_widget;
+    app_state = ((struct tinyui_widget *)(void *)keyboard)->owner;
+    ld_keyboard = (ldKeyboard_t *)((struct tinyui_widget *)(void *)keyboard)->ld_widget;
     if (app_state == 0 || app_state->ld_scene == 0 || ld_keyboard == 0) {
         return -1;
     }
@@ -507,26 +594,29 @@ int tinyui_keyboard_click(struct tinyui_keyboard *keyboard)
  * @return -1 on failure
  */
 
-int tinyui_keyboard_exit(struct tinyui_keyboard *keyboard)
+int tinyui_keyboard_exit(tinyui_obj_t *keyboard_obj)
 {
+    struct tinyui_keyboard *keyboard = tinyui_keyboard_as_keyboard(keyboard_obj);
+    if (keyboard == 0) { return -1; }
+
     struct tinyui_line_edit *line_edit;
     struct tinyui_widget *editing_owner_widget = 0;
     ldKeyboard_t *ld_keyboard;
     ldLineEdit_t *ld_line_edit = 0;
 
     if (keyboard == 0 ||
-        keyboard->widget.kind != TINYUI_BACKEND_WIDGET_KEYBOARD ||
-        keyboard->widget.ld_widget == 0) {
+        ((struct tinyui_widget *)(void *)keyboard)->kind != TINYUI_BACKEND_WIDGET_KEYBOARD ||
+        ((struct tinyui_widget *)(void *)keyboard)->ld_widget == 0) {
         return -1;
     }
 
-    ld_keyboard = (ldKeyboard_t *)keyboard->widget.ld_widget;
+    ld_keyboard = (ldKeyboard_t *)((struct tinyui_widget *)(void *)keyboard)->ld_widget;
     if (ld_keyboard == 0) {
         return -1;
     }
 
-    if (keyboard->widget.owner != 0) {
-        editing_owner_widget = keyboard->widget.owner->editing_owner;
+    if (((struct tinyui_widget *)(void *)keyboard)->owner != 0) {
+        editing_owner_widget = ((struct tinyui_widget *)(void *)keyboard)->owner->editing_owner;
     }
 
     line_edit = tinyui_keyboard_get_target_line_edit_local(&keyboard->widget);
@@ -539,14 +629,14 @@ int tinyui_keyboard_exit(struct tinyui_keyboard *keyboard)
             ((ldBase_t *)ld_line_edit)->isDirtyRegionUpdate = true;
         }
         line_edit->widget.edit_result_on_finish = TINYUI_EDIT_RESULT_CANCEL;
-        (void)tinyui_widget_mark_edit_result(&line_edit->widget, TINYUI_EDIT_RESULT_CANCEL);
-        (void)tinyui_widget_release_editing(&line_edit->widget);
+        (void)tinyui_runtime_internal_widget_mark_edit_result(&line_edit->widget, TINYUI_EDIT_RESULT_CANCEL);
+        (void)tinyui_runtime_internal_widget_release_editing(&line_edit->widget);
     } else if (editing_owner_widget != 0) {
-        (void)tinyui_widget_mark_edit_result(editing_owner_widget, TINYUI_EDIT_RESULT_CANCEL);
-        (void)tinyui_widget_release_editing(editing_owner_widget);
+        (void)tinyui_runtime_internal_widget_mark_edit_result(editing_owner_widget, TINYUI_EDIT_RESULT_CANCEL);
+        (void)tinyui_runtime_internal_widget_release_editing(editing_owner_widget);
     }
-    if (tinyui_widget_is_focus_owner(&keyboard->widget)) {
-        return tinyui_widget_release_focus(&keyboard->widget);
+    if (tinyui_runtime_internal_widget_is_focus_owner(&keyboard->widget)) {
+        return tinyui_runtime_internal_widget_release_focus(&keyboard->widget);
     }
     return 0;
 }
@@ -560,10 +650,11 @@ int tinyui_keyboard_exit(struct tinyui_keyboard *keyboard)
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_keyboard_set_buttons(struct tinyui_keyboard *keyboard,
-                                const struct tinyui_keyboard_button *buttons,
-                                int count)
+int tinyui_keyboard_set_buttons(tinyui_obj_t *keyboard_obj, const struct tinyui_keyboard_button *buttons, int count)
 {
+    struct tinyui_keyboard *keyboard = tinyui_keyboard_as_keyboard(keyboard_obj);
+    if (keyboard == 0) { return -1; }
+
     struct tinyui_keyboard_layout_entry *entries;
     int i;
 
@@ -631,10 +722,11 @@ int tinyui_keyboard_set_buttons(struct tinyui_keyboard *keyboard,
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_keyboard_get_buttons(const struct tinyui_keyboard *keyboard,
-                                const struct tinyui_keyboard_button **buttons,
-                                int *count)
+int tinyui_keyboard_get_buttons(const tinyui_obj_t *keyboard_obj, const struct tinyui_keyboard_button **buttons, int *count)
 {
+    const struct tinyui_keyboard *keyboard = tinyui_keyboard_as_keyboard_const(keyboard_obj);
+    if (keyboard == 0) { return -1; }
+
     if (keyboard == 0 || buttons == 0 || count == 0) {
         return -1;
     }
@@ -653,10 +745,11 @@ int tinyui_keyboard_get_buttons(const struct tinyui_keyboard *keyboard,
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_keyboard_set_on_key_event(struct tinyui_keyboard *keyboard,
-                                     tinyui_keyboard_event_cb cb,
-                                     void *user_data)
+int tinyui_keyboard_set_on_key_event(tinyui_obj_t *keyboard_obj, tinyui_keyboard_event_cb cb, void *user_data)
 {
+    struct tinyui_keyboard *keyboard = tinyui_keyboard_as_keyboard(keyboard_obj);
+    if (keyboard == 0) { return -1; }
+
     if (keyboard == 0) {
         return -1;
     }
@@ -673,8 +766,11 @@ int tinyui_keyboard_set_on_key_event(struct tinyui_keyboard *keyboard,
  * @return -1 on failure
  */
 
-int tinyui_keyboard_get_selected_key_code(const struct tinyui_keyboard *keyboard)
+int tinyui_keyboard_get_selected_key_code(const tinyui_obj_t *keyboard_obj)
 {
+    const struct tinyui_keyboard *keyboard = tinyui_keyboard_as_keyboard_const(keyboard_obj);
+    if (keyboard == 0) { return -1; }
+
     unsigned int key_code = 0;
 
     if (tinyui_keyboard_get_selected_key_code_internal(keyboard, &key_code) != 0) {
@@ -693,11 +789,12 @@ int tinyui_keyboard_get_selected_key_code(const struct tinyui_keyboard *keyboard
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_keyboard_set_layout(struct tinyui_keyboard *keyboard,
-                               const struct tinyui_keyboard_button *buttons,
-                               int count)
+int tinyui_keyboard_set_layout(tinyui_obj_t *keyboard_obj, const struct tinyui_keyboard_button *buttons, int count)
 {
-    return tinyui_keyboard_set_buttons(keyboard, buttons, count);
+    struct tinyui_keyboard *keyboard = tinyui_keyboard_as_keyboard(keyboard_obj);
+    if (keyboard == 0) { return -1; }
+
+    return tinyui_keyboard_set_buttons((tinyui_obj_t *)keyboard, buttons, count);
 }
 
 /**
@@ -709,11 +806,12 @@ int tinyui_keyboard_set_layout(struct tinyui_keyboard *keyboard,
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_keyboard_set_event_callback(struct tinyui_keyboard *keyboard,
-                                       tinyui_keyboard_event_cb cb,
-                                       void *user_data)
+int tinyui_keyboard_set_event_callback(tinyui_obj_t *keyboard_obj, tinyui_keyboard_event_cb cb, void *user_data)
 {
-    return tinyui_keyboard_set_on_key_event(keyboard, cb, user_data);
+    struct tinyui_keyboard *keyboard = tinyui_keyboard_as_keyboard(keyboard_obj);
+    if (keyboard == 0) { return -1; }
+
+    return tinyui_keyboard_set_on_key_event((tinyui_obj_t *)keyboard, cb, user_data);
 }
 
 /**
@@ -725,10 +823,11 @@ int tinyui_keyboard_set_event_callback(struct tinyui_keyboard *keyboard,
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_keyboard_set_draw_callback(struct tinyui_keyboard *keyboard,
-                                      tinyui_keyboard_draw_cb cb,
-                                      void *user_data)
+int tinyui_keyboard_set_draw_callback(tinyui_obj_t *keyboard_obj, tinyui_keyboard_draw_cb cb, void *user_data)
 {
+    struct tinyui_keyboard *keyboard = tinyui_keyboard_as_keyboard(keyboard_obj);
+    if (keyboard == 0) { return -1; }
+
     if (keyboard == 0) {
         return -1;
     }

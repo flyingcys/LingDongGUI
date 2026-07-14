@@ -18,13 +18,13 @@
 
 #include "internal.h"
 #include "runtime_bridge.h"
-#include "core/app.h"
+#include "internal/app_legacy.h"
 #include "widgets/background.h"
 #include "../drivers/tinyui_ldgui_port.h"
 #include "../../../src/misc/xBtnAction.h"
 
 
-static void tinyui_app_timer_unlink(struct tinyui_app_timer *timer)
+static void tinyui_runtime_internal_app_timer_unlink(struct tinyui_app_timer *timer)
 {
     struct tinyui_app_timer **cursor;
 
@@ -43,14 +43,14 @@ static void tinyui_app_timer_unlink(struct tinyui_app_timer *timer)
     }
 }
 
-void tinyui_app_pump_timers(struct tinyui_app *app, unsigned int now_ticks)
+void tinyui_runtime_internal_app_pump_timers(struct tinyui_app *app, unsigned int now_ticks)
 {
-    struct tinyui_app_timer_snapshot_entry {
+    struct tinyui_runtime_internal_app_timer_snapshot_entry {
         struct tinyui_app_timer *timer;
         struct tinyui_app_timer *expected_predecessor;
     };
 
-    struct tinyui_app_timer_snapshot_entry *snapshot;
+    struct tinyui_runtime_internal_app_timer_snapshot_entry *snapshot;
     struct tinyui_app_timer *timer;
     struct tinyui_app_timer *previous_timer = NULL;
     size_t timer_count = 0;
@@ -131,7 +131,7 @@ void tinyui_app_pump_timers(struct tinyui_app *app, unsigned int now_ticks)
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct tinyui_app *tinyui_app_create(void)
+struct tinyui_app *tinyui_runtime_internal_app_create(void)
 {
     struct tinyui_app *app = ldCalloc(1, sizeof(struct tinyui_app));
     if (app == NULL) {
@@ -157,7 +157,7 @@ struct tinyui_app *tinyui_app_create(void)
  * @return -1 on failure
  */
 
-int tinyui_app_run(struct tinyui_app *app, struct tinyui_window *window)
+int tinyui_runtime_internal_app_run(struct tinyui_app *app, struct tinyui_window *window)
 {
     if (app == NULL || !tinyui_runtime_bridge_window_is_owned_by(app, window)) {
         return -1;
@@ -174,9 +174,9 @@ int tinyui_app_run(struct tinyui_app *app, struct tinyui_window *window)
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_app_run_background(struct tinyui_app *app, struct tinyui_background *background)
+int tinyui_runtime_internal_app_run_background(struct tinyui_app *app, struct tinyui_background *background)
 {
-    return tinyui_app_run(app, (struct tinyui_window *)background);
+    return tinyui_runtime_internal_app_run(app, (struct tinyui_window *)background);
 }
 
 /**
@@ -187,7 +187,7 @@ int tinyui_app_run_background(struct tinyui_app *app, struct tinyui_background *
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_app_set_window(struct tinyui_app *app, struct tinyui_window *window)
+int tinyui_runtime_internal_app_set_window(struct tinyui_app *app, struct tinyui_window *window)
 {
     if (app == NULL || !tinyui_runtime_bridge_window_is_owned_by(app, window)) {
         return -1;
@@ -208,9 +208,9 @@ int tinyui_app_set_window(struct tinyui_app *app, struct tinyui_window *window)
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_app_set_background(struct tinyui_app *app, struct tinyui_background *background)
+int tinyui_runtime_internal_app_set_background(struct tinyui_app *app, struct tinyui_background *background)
 {
-    return tinyui_app_set_window(app, (struct tinyui_window *)background);
+    return tinyui_runtime_internal_app_set_window(app, (struct tinyui_window *)background);
 }
 
 /**
@@ -223,12 +223,12 @@ int tinyui_app_set_background(struct tinyui_app *app, struct tinyui_background *
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_app_switch_window(struct tinyui_app *app,
+int tinyui_runtime_internal_app_switch_window(struct tinyui_app *app,
                              struct tinyui_window *window,
                              int mode,
                              unsigned int duration_ms)
 {
-    if (tinyui_app_set_window(app, window) != 0) {
+    if (tinyui_runtime_internal_app_set_window(app, window) != 0) {
         return -1;
     }
 
@@ -246,12 +246,12 @@ int tinyui_app_switch_window(struct tinyui_app *app,
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_app_switch_background(struct tinyui_app *app,
+int tinyui_runtime_internal_app_switch_background(struct tinyui_app *app,
                                  struct tinyui_background *background,
                                  int mode,
                                  unsigned int duration_ms)
 {
-    return tinyui_app_switch_window(app, (struct tinyui_window *)background, mode, duration_ms);
+    return tinyui_runtime_internal_app_switch_window(app, (struct tinyui_window *)background, mode, duration_ms);
 }
 
 /**
@@ -261,7 +261,7 @@ int tinyui_app_switch_background(struct tinyui_app *app,
  * @return Timer instance on success, NULL on failure
  */
 
-struct tinyui_app_timer *tinyui_app_timer_create(struct tinyui_app *app)
+struct tinyui_app_timer *tinyui_runtime_internal_app_timer_create(struct tinyui_app *app)
 {
     struct tinyui_app_timer *timer;
 
@@ -291,7 +291,7 @@ struct tinyui_app_timer *tinyui_app_timer_create(struct tinyui_app *app)
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_app_timer_start(struct tinyui_app_timer *timer,
+int tinyui_runtime_internal_app_timer_start(struct tinyui_app_timer *timer,
                            unsigned int interval_ms,
                            int repeat,
                            tinyui_app_timer_cb_t callback,
@@ -317,7 +317,7 @@ int tinyui_app_timer_start(struct tinyui_app_timer *timer,
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_app_timer_stop(struct tinyui_app_timer *timer)
+int tinyui_runtime_internal_app_timer_stop(struct tinyui_app_timer *timer)
 {
     if (timer == NULL) {
         return -1;
@@ -334,7 +334,7 @@ int tinyui_app_timer_stop(struct tinyui_app_timer *timer)
  * @return 1 if running, 0 otherwise
  */
 
-int tinyui_app_timer_is_running(const struct tinyui_app_timer *timer)
+int tinyui_runtime_internal_app_timer_is_running(const struct tinyui_app_timer *timer)
 {
     if (timer == NULL) {
         return 0;
@@ -349,13 +349,13 @@ int tinyui_app_timer_is_running(const struct tinyui_app_timer *timer)
  * @param[in] timer Timer instance
  */
 
-void tinyui_app_timer_destroy(struct tinyui_app_timer *timer)
+void tinyui_runtime_internal_app_timer_destroy(struct tinyui_app_timer *timer)
 {
     if (timer == NULL) {
         return;
     }
 
-    tinyui_app_timer_unlink(timer);
+    tinyui_runtime_internal_app_timer_unlink(timer);
     ldFree(timer);
 }
 
@@ -365,7 +365,7 @@ void tinyui_app_timer_destroy(struct tinyui_app_timer *timer)
  * @param[in] app Application instance
  */
 
-void tinyui_app_destroy(struct tinyui_app *app)
+void tinyui_runtime_internal_app_destroy(struct tinyui_app *app)
 {
     struct tinyui_app_timer *timer;
     struct tinyui_app_timer *next;
@@ -391,7 +391,7 @@ void tinyui_app_destroy(struct tinyui_app *app)
     {
         struct tinyui_widget *w;
         for (w = app->host_list_head; w != 0; w = w->reg_next) {
-            tinyui_widget_prepare_native_depose(w);
+            tinyui_runtime_internal_widget_prepare_native_depose(w);
             if (w->host_cleanup != 0) {
                 w->host_cleanup(w);
                 w->host_cleanup = 0;

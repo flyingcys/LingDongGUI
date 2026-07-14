@@ -26,6 +26,25 @@
 #include <string.h>
 #include "../../../src/gui/ldBase.h"
 
+
+static struct tinyui_table *tinyui_table_as_table(tinyui_obj_t *obj)
+{
+    struct tinyui_widget *w = (struct tinyui_widget *)(void *)obj;
+    if (w == 0 || !tinyui_runtime_internal_widget_is_kind(w, TINYUI_BACKEND_WIDGET_TABLE)) {
+        return 0;
+    }
+    return (struct tinyui_table *)w;
+}
+
+static const struct tinyui_table *tinyui_table_as_table_const(const tinyui_obj_t *obj)
+{
+    const struct tinyui_widget *w = (const struct tinyui_widget *)(const void *)obj;
+    if (w == 0 || !tinyui_runtime_internal_widget_is_kind(w, TINYUI_BACKEND_WIDGET_TABLE)) {
+        return 0;
+    }
+    return (const struct tinyui_table *)w;
+}
+
 static int s_table_fail_next_set_keyboard_binding = 0;
 
 static arm_2d_font_t *tinyui_table_default_font(void)
@@ -49,16 +68,15 @@ static void tinyui_table_rollback(struct tinyui_table *table)
         return;
     }
     if (table->widget.ld_widget != 0) {
-        tinyui_widget_destroy_common(&table->widget);
+        tinyui_runtime_internal_widget_destroy_common(&table->widget);
     } else {
         ldFree(table);
     }
 }
 
-static int tinyui_table_props_are_valid(const struct tinyui_table_props *props)
+static int tinyui_table_props_are_valid(const tinyui_table_props_t *props)
 {
     return props != 0 &&
-           props->id != 0 &&
            tinyui_table_dims_are_valid(props->rows, props->columns) &&
            props->width >= 0 &&
            props->height >= 0 &&
@@ -72,7 +90,7 @@ static int tinyui_table_sync_current_cell_local(struct tinyui_table *table,
                                                 int *row_out,
                                                 int *column_out);
 
-static void *tinyui_table_ld_init(void *ctx,
+static void *tinyui_runtime_internal_table_ld_init(void *ctx,
                                   struct ld_scene_t *scene,
                                   uint16_t name_id,
                                   uint16_t parent_name_id)
@@ -110,7 +128,7 @@ static bool tinyui_table_native_slot(struct ld_scene_t *scene, ldMsg_t msg)
         return false;
     }
 
-    w = tinyui_widget_from_ld_scene(scene, msg.ptSender);
+    w = tinyui_runtime_internal_widget_from_ld_scene(scene, msg.ptSender);
     if (w == NULL) {
         return false;
     }
@@ -125,11 +143,11 @@ static bool tinyui_table_native_slot(struct ld_scene_t *scene, ldMsg_t msg)
     item = ldTableGetItem(ld_table, (uint8_t)row, (uint8_t)column);
 
     if (msg.signal == SIGNAL_PRESS) {
-        was_focus_owner = tinyui_widget_is_focus_owner(&table->widget);
-        (void)tinyui_widget_claim_backend_focus(w);
+        was_focus_owner = tinyui_runtime_internal_widget_is_focus_owner(&table->widget);
+        (void)tinyui_runtime_internal_widget_claim_backend_focus(w);
         if (item != NULL && item->isEditable && (item->isEditing || was_focus_owner)) {
             w->edit_result_on_finish = TINYUI_EDIT_RESULT_COMMIT;
-            (void)tinyui_widget_claim_editing(&table->widget);
+            (void)tinyui_runtime_internal_widget_claim_editing(&table->widget);
         }
         return false;
     }
@@ -141,9 +159,9 @@ static bool tinyui_table_native_slot(struct ld_scene_t *scene, ldMsg_t msg)
     if (item != NULL) {
         item->isEditing = false;
     }
-    (void)tinyui_widget_mark_edit_result(&table->widget,
+    (void)tinyui_runtime_internal_widget_mark_edit_result(&table->widget,
                                          (enum tinyui_edit_result)w->edit_result_on_finish);
-    (void)tinyui_widget_release_editing(&table->widget);
+    (void)tinyui_runtime_internal_widget_release_editing(&table->widget);
     w->edit_result_on_finish = TINYUI_EDIT_RESULT_NONE;
     return false;
 }
@@ -210,27 +228,30 @@ static int tinyui_table_sync_current_cell_local(struct tinyui_table *table,
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct tinyui_table *tinyui_table_create(struct tinyui_window *parent,
-                                         const char *id,
-                                         int rows,
-                                         int columns)
+tinyui_obj_t *tinyui_table_create(tinyui_obj_t *parent)
 {
+    struct tinyui_widget *parent_w = (struct tinyui_widget *)(void *)parent;
+    const char *id = "table";
+    if (parent_w == 0) { return 0; }
+    int rows = 1;
+    int columns = 1;
+
     struct tinyui_table *table;
     struct tinyui_table ctx = {0};
 
-    if (parent == 0 || id == 0 || !tinyui_table_dims_are_valid(rows, columns)) {
+    if (parent_w == 0 || id == 0 || !tinyui_table_dims_are_valid(rows, columns)) {
         return 0;
     }
 
-    if (parent->widget.ld_widget == 0 || parent->widget.owner == 0) {
+    if (parent_w->ld_widget == 0 || parent_w->owner == 0) {
         return 0;
     }
 
     ctx.row_count = rows;
     ctx.column_count = columns;
-    table = (struct tinyui_table *)tinyui_widget_create_leaf(&parent->widget,
+    table = (struct tinyui_table *)tinyui_runtime_internal_widget_create_leaf(parent_w,
                                                              TINYUI_BACKEND_WIDGET_TABLE,
-                                                             tinyui_table_ld_init,
+                                                             tinyui_runtime_internal_table_ld_init,
                                                              &ctx,
                                                              sizeof(*table));
     if (table == 0) {
@@ -248,7 +269,7 @@ struct tinyui_table *tinyui_table_create(struct tinyui_window *parent,
         tinyui_table_rollback(table);
         return 0;
     }
-    return table;
+    return (tinyui_obj_t *)table;
 }
 
 /**
@@ -259,44 +280,125 @@ struct tinyui_table *tinyui_table_create(struct tinyui_window *parent,
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct tinyui_table *tinyui_table_create_with_props(struct tinyui_window *parent,
-                                                    const struct tinyui_table_props *props)
+tinyui_obj_t *tinyui_table_create_with_props(tinyui_obj_t *parent,
+                                             const tinyui_table_props_t *props)
 {
+    tinyui_obj_t *obj;
     struct tinyui_table *table;
+    struct tinyui_widget *parent_w;
+    const char *id = "table";
+    int rows = 1;
+    int columns = 1;
+    struct tinyui_table ctx = {0};
 
-    if (!tinyui_table_props_are_valid(props)) {
+    if (props == 0) {
+        return tinyui_table_create(parent);
+    }
+
+    parent_w = (struct tinyui_widget *)(void *)parent;
+    if (parent_w == 0 || parent_w->ld_widget == 0 || parent_w->owner == 0) {
+        return 0;
+    }
+    if ((props->fields & TINYUI_TABLE_FIELD_ROWS) != 0) {
+        rows = props->rows;
+    }
+    if ((props->fields & TINYUI_TABLE_FIELD_COLUMNS) != 0) {
+        columns = props->columns;
+    }
+    if (!tinyui_table_dims_are_valid(rows, columns)) {
         return 0;
     }
 
-    table = tinyui_table_create(parent, props->id, props->rows, props->columns);
+    ctx.row_count = rows;
+    ctx.column_count = columns;
+    table = (struct tinyui_table *)tinyui_runtime_internal_widget_create_leaf(parent_w,
+                                                             TINYUI_BACKEND_WIDGET_TABLE,
+                                                             tinyui_runtime_internal_table_ld_init,
+                                                             &ctx,
+                                                             sizeof(*table));
     if (table == 0) {
         return 0;
     }
+    table->id = id;
+    table->widget.visible = 1;
+    table->widget.enabled = 1;
+    table->row_count = rows;
+    table->column_count = columns;
+    table->current_row = 0;
+    table->current_column = 0;
+    if (tinyui_table_bind_native_slot(table) != 0) {
+        tinyui_table_rollback(table);
+        return 0;
+    }
+    obj = (tinyui_obj_t *)table;
 
-    if ((props->keyboard_binding != 0U &&
-         tinyui_table_set_keyboard_binding(table, props->keyboard_binding) != 0) ||
-        tinyui_widget_set_user_data(&table->widget, props->user_data) != 0 ||
-        tinyui_widget_set_bg_color(&table->widget, props->bg_color) != 0 ||
-        tinyui_widget_set_text_color(&table->widget, props->text_color) != 0 ||
-        tinyui_widget_set_border_color(&table->widget, props->border_color) != 0 ||
-        tinyui_widget_set_radius(&table->widget, props->radius) != 0 ||
-        tinyui_widget_set_padding(&table->widget, props->padding) != 0) {
-        tinyui_table_rollback(table);
-        return 0;
+    if ((props->fields & TINYUI_TABLE_FIELD_ID) != 0) {
+        (void)props->id;
     }
-    if (props->style_class != 0 &&
-        tinyui_widget_set_style_class(&table->widget, props->style_class) != 0) {
-        tinyui_table_rollback(table);
-        return 0;
+    if ((props->fields & TINYUI_TABLE_FIELD_USER_DATA) != 0) {
+        if (tinyui_runtime_internal_widget_set_user_data(&table->widget, props->user_data) != 0) {
+            tinyui_table_rollback(table);
+            return 0;
+        }
     }
-    if ((props->width > 0 || props->height > 0) &&
-        tinyui_widget_set_size(&table->widget, props->width, props->height) != 0) {
-        tinyui_table_rollback(table);
-        return 0;
+    if ((props->fields & TINYUI_TABLE_FIELD_STYLE_CLASS) != 0) {
+        if (tinyui_runtime_internal_widget_set_style_class(&table->widget, props->style_class) != 0) {
+            tinyui_table_rollback(table);
+            return 0;
+        }
     }
-
-    return table;
+    if ((props->fields & TINYUI_TABLE_FIELD_WIDTH) != 0 || (props->fields & TINYUI_TABLE_FIELD_HEIGHT) != 0) {
+        int w = tinyui_runtime_internal_widget_get_width(&table->widget);
+        int h = tinyui_runtime_internal_widget_get_height(&table->widget);
+        if (w < 0) { w = 0; }
+        if (h < 0) { h = 0; }
+        if ((props->fields & TINYUI_TABLE_FIELD_WIDTH) != 0) { w = props->width; }
+        if ((props->fields & TINYUI_TABLE_FIELD_HEIGHT) != 0) { h = props->height; }
+        if (tinyui_runtime_internal_widget_set_size(&table->widget, w, h) != 0) {
+            tinyui_table_rollback(table);
+            return 0;
+        }
+    }
+    if ((props->fields & TINYUI_TABLE_FIELD_BG_COLOR) != 0) {
+        if (tinyui_runtime_internal_widget_set_bg_color(&table->widget, props->bg_color) != 0) {
+            tinyui_table_rollback(table);
+            return 0;
+        }
+    }
+    if ((props->fields & TINYUI_TABLE_FIELD_TEXT_COLOR) != 0) {
+        if (tinyui_runtime_internal_widget_set_text_color(&table->widget, props->text_color) != 0) {
+            tinyui_table_rollback(table);
+            return 0;
+        }
+    }
+    if ((props->fields & TINYUI_TABLE_FIELD_BORDER_COLOR) != 0) {
+        if (tinyui_runtime_internal_widget_set_border_color(&table->widget, props->border_color) != 0) {
+            tinyui_table_rollback(table);
+            return 0;
+        }
+    }
+    if ((props->fields & TINYUI_TABLE_FIELD_RADIUS) != 0) {
+        if (tinyui_runtime_internal_widget_set_radius(&table->widget, props->radius) != 0) {
+            tinyui_table_rollback(table);
+            return 0;
+        }
+    }
+    if ((props->fields & TINYUI_TABLE_FIELD_PADDING) != 0) {
+        if (tinyui_runtime_internal_widget_set_padding(&table->widget, props->padding) != 0) {
+            tinyui_table_rollback(table);
+            return 0;
+        }
+    }
+    if ((props->fields & TINYUI_TABLE_FIELD_KEYBOARD_BINDING) != 0) {
+        if (tinyui_table_set_keyboard_binding((tinyui_obj_t *)table, props->keyboard_binding) != 0) {
+            tinyui_table_rollback(table);
+            return 0;
+        }
+    }
+    return obj;
 }
+
+
 
 /**
  * @brief Set keyboard of table widget
@@ -306,9 +408,12 @@ struct tinyui_table *tinyui_table_create_with_props(struct tinyui_window *parent
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_table_set_keyboard(struct tinyui_table *table, unsigned int keyboard_binding)
+int tinyui_table_set_keyboard(tinyui_obj_t *table_obj, unsigned int keyboard_binding)
 {
-    return tinyui_table_set_keyboard_binding(table, keyboard_binding);
+    struct tinyui_table *table = tinyui_table_as_table(table_obj);
+    if (table == 0) { return -1; }
+
+    return tinyui_table_set_keyboard_binding((tinyui_obj_t *)table, keyboard_binding);
 }
 
 /**
@@ -319,8 +424,11 @@ int tinyui_table_set_keyboard(struct tinyui_table *table, unsigned int keyboard_
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_table_set_keyboard_binding(struct tinyui_table *table, unsigned int keyboard_binding)
+int tinyui_table_set_keyboard_binding(tinyui_obj_t *table_obj, unsigned int keyboard_binding)
 {
+    struct tinyui_table *table = tinyui_table_as_table(table_obj);
+    if (table == 0) { return -1; }
+
     ldTable_t *ld_table;
 
     if (table == 0 || !tinyui_table_keyboard_binding_is_valid(keyboard_binding)) {
@@ -346,18 +454,21 @@ int tinyui_table_set_keyboard_binding(struct tinyui_table *table, unsigned int k
     return 0;
 }
 
-int tinyui_table_set_keyboard_widget(struct tinyui_table *table, struct tinyui_keyboard *keyboard)
+int tinyui_table_set_keyboard_widget(tinyui_obj_t *table_obj, tinyui_obj_t *keyboard)
 {
+    struct tinyui_table *table = tinyui_table_as_table(table_obj);
+    if (table == 0) { return -1; }
+
     if (table == 0 ||
         keyboard == 0 ||
         table->widget.owner == 0 ||
-        keyboard->widget.owner != table->widget.owner ||
-        keyboard->widget.ld_widget == 0 ||
-        keyboard->widget.kind != TINYUI_BACKEND_WIDGET_KEYBOARD) {
+        ((struct tinyui_widget *)(void *)keyboard)->owner != table->widget.owner ||
+        ((struct tinyui_widget *)(void *)keyboard)->ld_widget == 0 ||
+        ((struct tinyui_widget *)(void *)keyboard)->kind != TINYUI_BACKEND_WIDGET_KEYBOARD) {
         return -1;
     }
 
-    return tinyui_table_set_keyboard_binding(table, keyboard->widget.ld_name_id);
+    return tinyui_table_set_keyboard_binding((tinyui_obj_t *)table, ((struct tinyui_widget *)(void *)keyboard)->ld_name_id);
 }
 
 /**
@@ -368,8 +479,11 @@ int tinyui_table_set_keyboard_widget(struct tinyui_table *table, struct tinyui_k
  * @return -1 on failure
  */
 
-int tinyui_table_get_keyboard_binding(const struct tinyui_table *table, unsigned int *keyboard_binding)
+int tinyui_table_get_keyboard_binding(const tinyui_obj_t *table_obj, unsigned int *keyboard_binding)
 {
+    const struct tinyui_table *table = tinyui_table_as_table_const(table_obj);
+    if (table == 0) { return -1; }
+
     ldTable_t *ld_table;
 
     if (table == 0 || keyboard_binding == 0) {
@@ -390,8 +504,11 @@ int tinyui_table_get_keyboard_binding(const struct tinyui_table *table, unsigned
     return 0;
 }
 
-int tinyui_table_set_item_space(struct tinyui_table *table, unsigned int item_space)
+int tinyui_table_set_item_space(tinyui_obj_t *table_obj, unsigned int item_space)
 {
+    struct tinyui_table *table = tinyui_table_as_table(table_obj);
+    if (table == 0) { return -1; }
+
     ldTable_t *ld_table;
 
     if (table == 0 || item_space > 255U) {
@@ -425,8 +542,11 @@ void tinyui_table_test_reset_state(void)
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_table_show_keyboard(struct tinyui_table *table)
+int tinyui_table_show_keyboard(tinyui_obj_t *table_obj)
 {
+    struct tinyui_table *table = tinyui_table_as_table(table_obj);
+    if (table == 0) { return -1; }
+
     struct tinyui_app *app_state;
     ldTable_t *ld_table;
     ldTableItem_t *item;
@@ -453,9 +573,12 @@ int tinyui_table_show_keyboard(struct tinyui_table *table)
     return 0;
 }
 
-int tinyui_tabel_show_keyboard(struct tinyui_table *table)
+int tinyui_runtime_internal_tabel_show_keyboard(tinyui_obj_t *table_obj)
 {
-    return tinyui_table_show_keyboard(table);
+    struct tinyui_table *table = tinyui_table_as_table(table_obj);
+    if (table == 0) { return -1; }
+
+    return tinyui_table_show_keyboard((tinyui_obj_t *)table);
 }
 
 /**
@@ -468,11 +591,11 @@ int tinyui_tabel_show_keyboard(struct tinyui_table *table)
  * @return -1 on failure
  */
 
-int tinyui_table_set_cell_text(struct tinyui_table *table,
-                               int row,
-                               int column,
-                               const char *text)
+int tinyui_table_set_cell_text(tinyui_obj_t *table_obj, int row, int column, const char *text)
 {
+    struct tinyui_table *table = tinyui_table_as_table(table_obj);
+    if (table == 0) { return -1; }
+
     ldTable_t *ld_table;
     ldTableItem_t *item;
 
@@ -505,9 +628,12 @@ int tinyui_table_set_cell_text(struct tinyui_table *table,
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_table_set_item_text(struct tinyui_table *table, int row, int column, const char *text)
+int tinyui_table_set_item_text(tinyui_obj_t *table_obj, int row, int column, const char *text)
 {
-    return tinyui_table_set_cell_text(table, row, column, text);
+    struct tinyui_table *table = tinyui_table_as_table(table_obj);
+    if (table == 0) { return -1; }
+
+    return tinyui_table_set_cell_text((tinyui_obj_t *)table, row, column, text);
 }
 
 /**
@@ -518,8 +644,11 @@ int tinyui_table_set_item_text(struct tinyui_table *table, int row, int column, 
  * @param[in] column Column index
  */
 
-const char *tinyui_table_get_cell_text(const struct tinyui_table *table, int row, int column)
+const char * tinyui_table_get_cell_text(const tinyui_obj_t *table_obj, int row, int column)
 {
+    const struct tinyui_table *table = tinyui_table_as_table_const(table_obj);
+    if (table == 0) { return 0; }
+
     ldTable_t *ld_table;
 
     if (table == 0) {
@@ -544,9 +673,12 @@ const char *tinyui_table_get_cell_text(const struct tinyui_table *table, int row
  * @param[in] column Column index
  */
 
-const char *tinyui_table_get_item_text(const struct tinyui_table *table, int row, int column)
+const char * tinyui_table_get_item_text(const tinyui_obj_t *table_obj, int row, int column)
 {
-    return tinyui_table_get_cell_text(table, row, column);
+    const struct tinyui_table *table = tinyui_table_as_table_const(table_obj);
+    if (table == 0) { return 0; }
+
+    return tinyui_table_get_cell_text((tinyui_obj_t *)table, row, column);
 }
 
 /**
@@ -560,12 +692,11 @@ const char *tinyui_table_get_item_text(const struct tinyui_table *table, int row
  * @return -1 on failure
  */
 
-int tinyui_table_set_cell_editable(struct tinyui_table *table,
-                                   int row,
-                                   int column,
-                                   int editable,
-                                   unsigned int text_max)
+int tinyui_table_set_cell_editable(tinyui_obj_t *table_obj, int row, int column, int editable, unsigned int text_max)
 {
+    struct tinyui_table *table = tinyui_table_as_table(table_obj);
+    if (table == 0) { return -1; }
+
     ldTable_t *ld_table;
 
     if (table == 0) {
@@ -602,13 +733,12 @@ int tinyui_table_set_cell_editable(struct tinyui_table *table,
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_table_set_item_editable(struct tinyui_table *table,
-                                   int row,
-                                   int column,
-                                   int editable,
-                                   unsigned int text_max)
+int tinyui_table_set_item_editable(tinyui_obj_t *table_obj, int row, int column, int editable, unsigned int text_max)
 {
-    return tinyui_table_set_cell_editable(table, row, column, editable, text_max);
+    struct tinyui_table *table = tinyui_table_as_table(table_obj);
+    if (table == 0) { return -1; }
+
+    return tinyui_table_set_cell_editable((tinyui_obj_t *)table, row, column, editable, text_max);
 }
 
 /**
@@ -624,14 +754,11 @@ int tinyui_table_set_item_editable(struct tinyui_table *table,
  * @return -1 on failure
  */
 
-int tinyui_table_set_item_image(struct tinyui_table *table,
-                                int row,
-                                int column,
-                                int x,
-                                int y,
-                                struct tinyui_image_source *source,
-                                unsigned int mask_color)
+int tinyui_table_set_item_image(tinyui_obj_t *table_obj, int row, int column, int x, int y, struct tinyui_image_source *source, unsigned int mask_color)
 {
+    struct tinyui_table *table = tinyui_table_as_table(table_obj);
+    if (table == 0) { return -1; }
+
     ldTable_t *ld_table;
 
     if (table == 0 || source == 0 || tinyui_image_source_get_image_tile(source) == 0 || tinyui_image_source_get_mask_tile(source) == 0 ||
@@ -673,17 +800,11 @@ int tinyui_table_set_item_image(struct tinyui_table *table,
  * @return -1 on failure
  */
 
-int tinyui_table_set_item_button(struct tinyui_table *table,
-                                 int row,
-                                 int column,
-                                 int x,
-                                 int y,
-                                 struct tinyui_image_source *release_source,
-                                 unsigned int release_mask_color,
-                                 struct tinyui_image_source *press_source,
-                                 unsigned int press_mask_color,
-                                 int checkable)
+int tinyui_table_set_item_button(tinyui_obj_t *table_obj, int row, int column, int x, int y, struct tinyui_image_source *release_source, unsigned int release_mask_color, struct tinyui_image_source *press_source, unsigned int press_mask_color, int checkable)
 {
+    struct tinyui_table *table = tinyui_table_as_table(table_obj);
+    if (table == 0) { return -1; }
+
     ldTable_t *ld_table;
 
     if (table == 0 || release_source == 0 || press_source == 0 ||
@@ -721,8 +842,11 @@ int tinyui_table_set_item_button(struct tinyui_table *table,
  * @return -1 on failure
  */
 
-int tinyui_table_set_excel_type(struct tinyui_table *table)
+int tinyui_table_set_excel_type(tinyui_obj_t *table_obj)
 {
+    struct tinyui_table *table = tinyui_table_as_table(table_obj);
+    if (table == 0) { return -1; }
+
     ldTable_t *ld_table;
 
     if (table == 0) {
@@ -746,9 +870,12 @@ int tinyui_table_set_excel_type(struct tinyui_table *table)
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_table_set_background_color(struct tinyui_table *table, unsigned int bg_color)
+int tinyui_table_set_background_color(tinyui_obj_t *table_obj, unsigned int bg_color)
 {
-    return tinyui_table_set_bg_color(table, bg_color);
+    struct tinyui_table *table = tinyui_table_as_table(table_obj);
+    if (table == 0) { return -1; }
+
+    return tinyui_table_set_bg_color((tinyui_obj_t *)table, bg_color);
 }
 
 /**
@@ -759,8 +886,11 @@ int tinyui_table_set_background_color(struct tinyui_table *table, unsigned int b
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_table_set_align_grid(struct tinyui_table *table, int enabled)
+int tinyui_table_set_align_grid(tinyui_obj_t *table_obj, int enabled)
 {
+    struct tinyui_table *table = tinyui_table_as_table(table_obj);
+    if (table == 0) { return -1; }
+
     ldTable_t *ld_table;
 
     if (table == 0) {
@@ -785,8 +915,11 @@ int tinyui_table_set_align_grid(struct tinyui_table *table, int enabled)
  * @return -1 on failure
  */
 
-int tinyui_table_set_item_width(struct tinyui_table *table, int column, int width)
+int tinyui_table_set_item_width(tinyui_obj_t *table_obj, int column, int width)
 {
+    struct tinyui_table *table = tinyui_table_as_table(table_obj);
+    if (table == 0) { return -1; }
+
     ldTable_t *ld_table;
 
     if (table == 0 || width <= 0) {
@@ -812,8 +945,11 @@ int tinyui_table_set_item_width(struct tinyui_table *table, int column, int widt
  * @return -1 on failure
  */
 
-int tinyui_table_set_item_height(struct tinyui_table *table, int row, int height)
+int tinyui_table_set_item_height(tinyui_obj_t *table_obj, int row, int height)
 {
+    struct tinyui_table *table = tinyui_table_as_table(table_obj);
+    if (table == 0) { return -1; }
+
     ldTable_t *ld_table;
 
     if (table == 0 || height <= 0) {
@@ -841,12 +977,11 @@ int tinyui_table_set_item_height(struct tinyui_table *table, int row, int height
  * @return -1 on failure
  */
 
-int tinyui_table_set_item_color(struct tinyui_table *table,
-                                int row,
-                                int column,
-                                unsigned int text_color,
-                                unsigned int bg_color)
+int tinyui_table_set_item_color(tinyui_obj_t *table_obj, int row, int column, unsigned int text_color, unsigned int bg_color)
 {
+    struct tinyui_table *table = tinyui_table_as_table(table_obj);
+    if (table == 0) { return -1; }
+
     ldTable_t *ld_table;
 
     if (table == 0 || text_color > 0xFFFFFFU || bg_color > 0xFFFFFFU) {
@@ -872,8 +1007,11 @@ int tinyui_table_set_item_color(struct tinyui_table *table,
  * @return -1 on failure
  */
 
-int tinyui_table_set_bg_color(struct tinyui_table *table, unsigned int bg_color)
+int tinyui_table_set_bg_color(tinyui_obj_t *table_obj, unsigned int bg_color)
 {
+    struct tinyui_table *table = tinyui_table_as_table(table_obj);
+    if (table == 0) { return -1; }
+
     ldTable_t *ld_table;
 
     if (table == 0 || bg_color > 0xFFFFFFU) {
@@ -899,8 +1037,11 @@ int tinyui_table_set_bg_color(struct tinyui_table *table, unsigned int bg_color)
  * @return -1 on failure
  */
 
-int tinyui_table_set_item_static_text(struct tinyui_table *table, int row, int column, const char *text)
+int tinyui_table_set_item_static_text(tinyui_obj_t *table_obj, int row, int column, const char *text)
 {
+    struct tinyui_table *table = tinyui_table_as_table(table_obj);
+    if (table == 0) { return -1; }
+
     ldTable_t *ld_table;
 
     if (table == 0 || text == 0) {
@@ -927,8 +1068,11 @@ int tinyui_table_set_item_static_text(struct tinyui_table *table, int row, int c
  * @return -1 on failure
  */
 
-int tinyui_table_set_item_font(struct tinyui_table *table, int row, int column)
+int tinyui_table_set_item_font(tinyui_obj_t *table_obj, int row, int column)
 {
+    struct tinyui_table *table = tinyui_table_as_table(table_obj);
+    if (table == 0) { return -1; }
+
     ldTable_t *ld_table;
 
     if (table == 0) {
@@ -953,8 +1097,11 @@ int tinyui_table_set_item_font(struct tinyui_table *table, int row, int column)
  * @return -1 on failure
  */
 
-int tinyui_table_get_align_grid(const struct tinyui_table *table)
+int tinyui_table_get_align_grid(const tinyui_obj_t *table_obj)
 {
+    const struct tinyui_table *table = tinyui_table_as_table_const(table_obj);
+    if (table == 0) { return -1; }
+
     ldTable_t *ld_table = (ldTable_t *)table->widget.ld_widget;
 
     if (ld_table == 0) {
@@ -970,8 +1117,11 @@ int tinyui_table_get_align_grid(const struct tinyui_table *table)
  * @param[in] table table
  */
 
-unsigned int tinyui_table_get_background_color(const struct tinyui_table *table)
+unsigned int tinyui_table_get_background_color(const tinyui_obj_t *table_obj)
 {
+    const struct tinyui_table *table = tinyui_table_as_table_const(table_obj);
+    if (table == 0) { return -1; }
+
     ldTable_t *ld_table = (ldTable_t *)table->widget.ld_widget;
 
     if (ld_table == 0) {
@@ -989,8 +1139,11 @@ unsigned int tinyui_table_get_background_color(const struct tinyui_table *table)
  * @param[in] column Column index
  */
 
-void *tinyui_table_get_item(const struct tinyui_table *table, int row, int column)
+void * tinyui_table_get_item(const tinyui_obj_t *table_obj, int row, int column)
 {
+    const struct tinyui_table *table = tinyui_table_as_table_const(table_obj);
+    if (table == 0) { return 0; }
+
     ldTable_t *ld_table = (ldTable_t *)table->widget.ld_widget;
 
     if (ld_table == 0 || row < 0 || column < 0 ||
@@ -1011,11 +1164,11 @@ void *tinyui_table_get_item(const struct tinyui_table *table, int row, int colum
  * @return -1 on failure
  */
 
-int tinyui_table_set_item_align(struct tinyui_table *table,
-                                int row,
-                                int column,
-                                enum tinyui_align align)
+int tinyui_table_set_item_align(tinyui_obj_t *table_obj, int row, int column, enum tinyui_align align)
 {
+    struct tinyui_table *table = tinyui_table_as_table(table_obj);
+    if (table == 0) { return -1; }
+
     ldTable_t *ld_table;
     arm_2d_align_t ld_align;
 
@@ -1044,8 +1197,11 @@ int tinyui_table_set_item_align(struct tinyui_table *table,
  * @return -1 on failure
  */
 
-int tinyui_table_get_item_align(const struct tinyui_table *table, int row, int column)
+int tinyui_table_get_item_align(const tinyui_obj_t *table_obj, int row, int column)
 {
+    const struct tinyui_table *table = tinyui_table_as_table_const(table_obj);
+    if (table == 0) { return -1; }
+
     ldTable_t *ld_table;
     arm_2d_align_t ld_align;
 
@@ -1082,8 +1238,11 @@ int tinyui_table_get_item_align(const struct tinyui_table *table, int row, int c
  * @return -1 on failure
  */
 
-int tinyui_table_get_item_editable(const struct tinyui_table *table, int row, int column)
+int tinyui_table_get_item_editable(const tinyui_obj_t *table_obj, int row, int column)
 {
+    const struct tinyui_table *table = tinyui_table_as_table_const(table_obj);
+    if (table == 0) { return -1; }
+
     ldTable_t *ld_table;
 
     if (table == 0) {
@@ -1108,8 +1267,11 @@ int tinyui_table_get_item_editable(const struct tinyui_table *table, int row, in
  * @param[in] column Column index
  */
 
-void *tinyui_table_get_item_font(const struct tinyui_table *table, int row, int column)
+void * tinyui_table_get_item_font(const tinyui_obj_t *table_obj, int row, int column)
 {
+    const struct tinyui_table *table = tinyui_table_as_table_const(table_obj);
+    if (table == 0) { return 0; }
+
     ldTable_t *ld_table = (ldTable_t *)table->widget.ld_widget;
 
     if (ld_table == 0 || row < 0 || column < 0 ||
@@ -1128,8 +1290,11 @@ void *tinyui_table_get_item_font(const struct tinyui_table *table, int row, int 
  * @return -1 on failure
  */
 
-int tinyui_table_get_item_height(const struct tinyui_table *table, int row)
+int tinyui_table_get_item_height(const tinyui_obj_t *table_obj, int row)
 {
+    const struct tinyui_table *table = tinyui_table_as_table_const(table_obj);
+    if (table == 0) { return -1; }
+
     ldTable_t *ld_table = (ldTable_t *)table->widget.ld_widget;
 
     if (ld_table == 0 || row < 0 || row >= ld_table->rowCount) {
@@ -1147,8 +1312,11 @@ int tinyui_table_get_item_height(const struct tinyui_table *table, int row)
  * @param[in] column Column index
  */
 
-unsigned int tinyui_table_get_item_text_color(const struct tinyui_table *table, int row, int column)
+unsigned int tinyui_table_get_item_text_color(const tinyui_obj_t *table_obj, int row, int column)
 {
+    const struct tinyui_table *table = tinyui_table_as_table_const(table_obj);
+    if (table == 0) { return -1; }
+
     ldTable_t *ld_table = (ldTable_t *)table->widget.ld_widget;
 
     if (ld_table == 0 || row < 0 || column < 0 ||
@@ -1167,8 +1335,11 @@ unsigned int tinyui_table_get_item_text_color(const struct tinyui_table *table, 
  * @param[in] column Column index
  */
 
-unsigned int tinyui_table_get_item_background_color(const struct tinyui_table *table, int row, int column)
+unsigned int tinyui_table_get_item_background_color(const tinyui_obj_t *table_obj, int row, int column)
 {
+    const struct tinyui_table *table = tinyui_table_as_table_const(table_obj);
+    if (table == 0) { return -1; }
+
     ldTable_t *ld_table = (ldTable_t *)table->widget.ld_widget;
 
     if (ld_table == 0 || row < 0 || column < 0 ||
@@ -1187,8 +1358,11 @@ unsigned int tinyui_table_get_item_background_color(const struct tinyui_table *t
  * @return -1 on failure
  */
 
-int tinyui_table_get_item_width(const struct tinyui_table *table, int column)
+int tinyui_table_get_item_width(const tinyui_obj_t *table_obj, int column)
 {
+    const struct tinyui_table *table = tinyui_table_as_table_const(table_obj);
+    if (table == 0) { return -1; }
+
     ldTable_t *ld_table = (ldTable_t *)table->widget.ld_widget;
 
     if (ld_table == 0 || column < 0 || column >= ld_table->columnCount) {
@@ -1206,8 +1380,11 @@ int tinyui_table_get_item_width(const struct tinyui_table *table, int column)
  * @return -1 on failure
  */
 
-int tinyui_table_navigate(struct tinyui_table *table, enum tinyui_native_nav_dir dir)
+int tinyui_table_navigate(tinyui_obj_t *table_obj, tinyui_nav_dir_t dir)
 {
+    struct tinyui_table *table = tinyui_table_as_table(table_obj);
+    if (table == 0) { return -1; }
+
     ldTable_t *ld_table;
     int ld_dir;
 
@@ -1242,8 +1419,9 @@ int tinyui_table_navigate(struct tinyui_table *table, enum tinyui_native_nav_dir
  * @return Pointer to the object
  */
 
-struct tinyui_table_region tinyui_table_get_item_region(const struct tinyui_table *table, int row, int column)
+struct tinyui_table_region tinyui_table_get_item_region(const tinyui_obj_t *table_obj, int row, int column)
 {
+    const struct tinyui_table *table = tinyui_table_as_table_const(table_obj);
     ldTable_t *ld_table;
     struct tinyui_table_region region = {0};
     arm_2d_region_t native_region;
@@ -1276,8 +1454,11 @@ struct tinyui_table_region tinyui_table_get_item_region(const struct tinyui_tabl
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_table_set_selected_cell(struct tinyui_table *table, int row, int column)
+int tinyui_table_set_selected_cell(tinyui_obj_t *table_obj, int row, int column)
 {
+    struct tinyui_table *table = tinyui_table_as_table(table_obj);
+    if (table == 0) { return -1; }
+
     ldTable_t *ld_table;
 
     if (table == 0) {
@@ -1306,13 +1487,16 @@ int tinyui_table_set_selected_cell(struct tinyui_table *table, int row, int colu
  * @return -1 on failure
  */
 
-int tinyui_table_set_item_select(struct tinyui_table *table, int row, int column, int selected)
+int tinyui_table_set_item_select(tinyui_obj_t *table_obj, int row, int column, int selected)
 {
+    struct tinyui_table *table = tinyui_table_as_table(table_obj);
+    if (table == 0) { return -1; }
+
     if (selected == 0) {
         return -1;
     }
 
-    return tinyui_table_set_selected_cell(table, row, column);
+    return tinyui_table_set_selected_cell((tinyui_obj_t *)table, row, column);
 }
 
 /**
@@ -1324,8 +1508,11 @@ int tinyui_table_set_item_select(struct tinyui_table *table, int row, int column
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_table_set_current_cell(struct tinyui_table *table, int row, int column)
+int tinyui_table_set_current_cell(tinyui_obj_t *table_obj, int row, int column)
 {
+    struct tinyui_table *table = tinyui_table_as_table(table_obj);
+    if (table == 0) { return -1; }
+
     ldTable_t *ld_table;
 
     if (table == 0) {
@@ -1351,8 +1538,11 @@ int tinyui_table_set_current_cell(struct tinyui_table *table, int row, int colum
  * @return -1 on failure
  */
 
-int tinyui_table_get_current_row(const struct tinyui_table *table)
+int tinyui_table_get_current_row(const tinyui_obj_t *table_obj)
 {
+    const struct tinyui_table *table = tinyui_table_as_table_const(table_obj);
+    if (table == 0) { return -1; }
+
     int row;
     int column;
 
@@ -1373,8 +1563,11 @@ int tinyui_table_get_current_row(const struct tinyui_table *table)
  * @return -1 on failure
  */
 
-int tinyui_table_get_current_column(const struct tinyui_table *table)
+int tinyui_table_get_current_column(const tinyui_obj_t *table_obj)
 {
+    const struct tinyui_table *table = tinyui_table_as_table_const(table_obj);
+    if (table == 0) { return -1; }
+
     int row;
     int column;
 

@@ -1,9 +1,9 @@
 #include "internal.h"
 #include "ldDateTime.h"
 #include "../../../src/gui/ldBase.h"
-#include "core/app.h"
+#include "internal/app_legacy.h"
 #include "widgets/date_time.h"
-#include "core/widget.h"
+#include "internal/widget_legacy.h"
 #include "widgets/window.h"
 #include "../../../examples/common/demo/widget/fonts/uiFonts.h"
 #include <assert.h>

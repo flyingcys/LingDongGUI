@@ -6,6 +6,8 @@
 #include "widgets/background.h"
 #include "widgets/window.h"
 
+struct tinyui_background *tinyui_legacy_background_create(struct tinyui_app *app, const char *id);
+
 #include <stdlib.h>
 
 struct tinyui_obj;
@@ -58,7 +60,7 @@ tinyui_result_t tinyui_init(void)
         return TINYUI_OK;
     }
 
-    g_tinyui_runtime_app = tinyui_app_create();
+    g_tinyui_runtime_app = tinyui_runtime_internal_app_create();
     tinyui_runtime_set_last_result(g_tinyui_runtime_app != 0 ? TINYUI_OK
                                                               : TINYUI_ERROR_NO_MEMORY);
     return g_tinyui_last_result;
@@ -71,12 +73,12 @@ void tinyui_deinit(void)
         return;
     }
 
-    tinyui_app_destroy(g_tinyui_runtime_app);
+    tinyui_runtime_internal_app_destroy(g_tinyui_runtime_app);
     g_tinyui_runtime_app = 0;
     tinyui_runtime_set_last_result(TINYUI_OK);
 }
 
-struct tinyui_app *tinyui_app_current(void)
+struct tinyui_app *tinyui_runtime_internal_app_current(void)
 {
     return g_tinyui_runtime_app;
 }
@@ -88,7 +90,7 @@ tinyui_obj_t *tinyui_screen_create(void)
     }
 
     tinyui_runtime_bridge_begin_screen_create(g_tinyui_runtime_app);
-    return (struct tinyui_obj *)tinyui_window_create(g_tinyui_runtime_app, "root");
+    return tinyui_window_create(0);
 }
 
 tinyui_obj_t *tinyui_screen_create_with_props(const tinyui_window_props_t *props)
@@ -101,9 +103,7 @@ tinyui_obj_t *tinyui_screen_create_with_props(const tinyui_window_props_t *props
         return 0;
     }
 
-    return (tinyui_obj_t *)tinyui_window_create_with_props(
-        g_tinyui_runtime_app,
-        (const struct tinyui_window_props *)props);
+    return tinyui_window_create_with_props(0, props);
 }
 
 tinyui_obj_t *tinyui_background_create(void)
@@ -119,8 +119,36 @@ tinyui_obj_t *tinyui_background_create(void)
 
 tinyui_obj_t *tinyui_background_create_with_props(const tinyui_background_props_t *props)
 {
-    (void)props;
-    return 0;
+    tinyui_obj_t *obj;
+    if (props == 0) {
+        return tinyui_background_create();
+    }
+    obj = tinyui_background_create();
+    if (obj == 0) {
+        return 0;
+    }
+    if ((props->fields & TINYUI_BACKGROUND_FIELD_SOURCE) != 0) {
+        if (tinyui_background_set_source(obj, props->source) != 0) {
+            (void)tinyui_obj_delete(obj);
+            return 0;
+        }
+    }
+    if ((props->fields & TINYUI_BACKGROUND_FIELD_COLOR) != 0) {
+        if (tinyui_background_set_color(obj, props->color) != 0) {
+            (void)tinyui_obj_delete(obj);
+            return 0;
+        }
+    }
+    if ((props->fields & (TINYUI_BACKGROUND_FIELD_OFFSET_X | TINYUI_BACKGROUND_FIELD_OFFSET_Y)) != 0) {
+        int ox = ((props->fields & TINYUI_BACKGROUND_FIELD_OFFSET_X) != 0) ? props->offset_x : 0;
+        int oy = ((props->fields & TINYUI_BACKGROUND_FIELD_OFFSET_Y) != 0) ? props->offset_y : 0;
+        if (tinyui_background_set_offset(obj, ox, oy) != 0) {
+            (void)tinyui_obj_delete(obj);
+            return 0;
+        }
+    }
+    (void)props->id;
+    return obj;
 }
 
 tinyui_result_t tinyui_screen_load(tinyui_obj_t *screen,
@@ -143,7 +171,7 @@ tinyui_result_t tinyui_screen_load(tinyui_obj_t *screen,
         return TINYUI_ERROR_INVALID_OBJECT;
     }
 
-    return tinyui_app_set_window(g_tinyui_runtime_app, (struct tinyui_window *)screen) == 0
+    return tinyui_runtime_internal_app_set_window(g_tinyui_runtime_app, (struct tinyui_window *)screen) == 0
                ? TINYUI_OK
                : TINYUI_ERROR_BACKEND;
 }
@@ -217,7 +245,7 @@ void tinyui_timer_delete(tinyui_timer_t *timer)
     tinyui_runtime_set_last_result(TINYUI_ERROR_NOT_SUPPORTED);
 }
 
-int tinyui_timer_handler(void)
+int tinyui_runtime_internal_timer_handler(void)
 {
     int step;
 

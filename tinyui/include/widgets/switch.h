@@ -20,13 +20,40 @@
 #define TINYUI_SWITCH_H
 
 #include "core/obj.h"
+#include <stdint.h>
 
-struct tinyui_window;
-struct tinyui_switch;
+#ifndef TINYUI_LEGACY_VALUE_CHANGED_CB_DEFINED
+#define TINYUI_LEGACY_VALUE_CHANGED_CB_DEFINED
+typedef void (*tinyui_value_changed_cb)(tinyui_obj_t *obj, int value, void *user_data);
+#endif
+
+
 struct tinyui_image_source;
 
-struct tinyui_switch_props {
-    const char *id;
+typedef enum tinyui_switch_field {
+    TINYUI_SWITCH_FIELD_ID = UINT32_C(1) << 0,
+    TINYUI_SWITCH_FIELD_CHECKED = UINT32_C(1) << 1,
+    TINYUI_SWITCH_FIELD_ON_TOGGLED = UINT32_C(1) << 2,
+    TINYUI_SWITCH_FIELD_USER_DATA = UINT32_C(1) << 3,
+    TINYUI_SWITCH_FIELD_STYLE_CLASS = UINT32_C(1) << 4,
+    TINYUI_SWITCH_FIELD_WIDTH = UINT32_C(1) << 5,
+    TINYUI_SWITCH_FIELD_HEIGHT = UINT32_C(1) << 6,
+    TINYUI_SWITCH_FIELD_BG_COLOR = UINT32_C(1) << 7,
+    TINYUI_SWITCH_FIELD_TEXT_COLOR = UINT32_C(1) << 8,
+    TINYUI_SWITCH_FIELD_BORDER_COLOR = UINT32_C(1) << 9,
+    TINYUI_SWITCH_FIELD_RADIUS = UINT32_C(1) << 10,
+    TINYUI_SWITCH_FIELD_PADDING = UINT32_C(1) << 11,
+    TINYUI_SWITCH_FIELD_OFF_SOURCE = UINT32_C(1) << 12,
+    TINYUI_SWITCH_FIELD_ON_SOURCE = UINT32_C(1) << 13,
+    TINYUI_SWITCH_FIELD_KNOB_SOURCE = UINT32_C(1) << 14,
+    TINYUI_SWITCH_FIELD_HORIZONTAL = UINT32_C(1) << 15,
+    TINYUI_SWITCH_FIELD_DIRECTION = UINT32_C(1) << 16,
+    TINYUI_SWITCH_FIELD_DISABLED = UINT32_C(1) << 17,
+} tinyui_switch_field_t;
+
+typedef struct tinyui_switch_props {
+    uint32_t fields;
+    uint16_t id;
     int checked;
     tinyui_value_changed_cb on_toggled;
     void *user_data;
@@ -38,53 +65,45 @@ struct tinyui_switch_props {
     unsigned int border_color;
     int radius;
     int padding;
-    /* Sentinel default: NULL = unset (no image source applied) */
     struct tinyui_image_source *off_source;
-    /* Sentinel default: NULL = unset (no image source applied) */
     struct tinyui_image_source *on_source;
-    /* Sentinel default: NULL = unset (no image source applied) */
     struct tinyui_image_source *knob_source;
-    /* Sentinel default: -1 = unset (use backend default), 0 = horizontal off, 1 = horizontal on */
     int horizontal;
-    /* Sentinel default: -1 = unset (use backend default direction) */
     int direction;
-    /* Sentinel default: -1 = unset (use backend default enabled state) */
     int disabled;
-};
+} tinyui_switch_props_t;
 
-struct tinyui_switch *tinyui_switch_create(struct tinyui_window *parent, const char *id);
+tinyui_obj_t *tinyui_switch_create(tinyui_obj_t *parent);
 
-struct tinyui_switch *tinyui_switch_create_with_props(struct tinyui_window *parent,
-                                                      const struct tinyui_switch_props *props);
+tinyui_obj_t *tinyui_switch_create_with_props(tinyui_obj_t *parent,
+                                               const tinyui_switch_props_t *props);
 
-int tinyui_switch_set_checked(struct tinyui_switch *sw, int checked);
+int tinyui_switch_set_checked(tinyui_obj_t *sw, int checked);
 
-int tinyui_switch_is_checked(struct tinyui_switch *sw);
+int tinyui_switch_is_checked(tinyui_obj_t *sw);
 
-int tinyui_switch_set_off_source(struct tinyui_switch *sw, struct tinyui_image_source *source);
+int tinyui_switch_set_off_source(tinyui_obj_t *sw, struct tinyui_image_source *source);
 
-int tinyui_switch_set_on_source(struct tinyui_switch *sw, struct tinyui_image_source *source);
+int tinyui_switch_set_on_source(tinyui_obj_t *sw, struct tinyui_image_source *source);
 
-int tinyui_switch_set_knob_source(struct tinyui_switch *sw, struct tinyui_image_source *source);
+int tinyui_switch_set_knob_source(tinyui_obj_t *sw, struct tinyui_image_source *source);
 
-int tinyui_switch_set_horizontal(struct tinyui_switch *sw, int horizontal);
+int tinyui_switch_set_horizontal(tinyui_obj_t *sw, int horizontal);
 
-int tinyui_switch_get_horizontal(struct tinyui_switch *sw, int *horizontal);
+int tinyui_switch_get_horizontal(tinyui_obj_t *sw, int *horizontal);
 
-int tinyui_switch_set_direction(struct tinyui_switch *sw, int direction);
+int tinyui_switch_set_direction(tinyui_obj_t *sw, int direction);
 
-int tinyui_switch_get_direction(struct tinyui_switch *sw, int *direction);
+int tinyui_switch_get_direction(tinyui_obj_t *sw, int *direction);
 
-int tinyui_switch_set_disabled(struct tinyui_switch *sw, int disabled);
+int tinyui_switch_set_disabled(tinyui_obj_t *sw, int disabled);
 
-int tinyui_switch_get_disabled(struct tinyui_switch *sw, int *disabled);
+int tinyui_switch_get_disabled(tinyui_obj_t *sw, int *disabled);
 
-int tinyui_switch_can_navigate(struct tinyui_switch *sw, int direction, int *can_navigate);
+int tinyui_switch_can_navigate(tinyui_obj_t *sw, int direction, int *can_navigate);
 
-int tinyui_switch_navigate(struct tinyui_switch *sw, int direction);
+int tinyui_switch_navigate(tinyui_obj_t *sw, int direction);
 
-int tinyui_switch_set_on_toggled(struct tinyui_switch *sw,
-                                 tinyui_value_changed_cb cb,
-                                 void *user_data);
+int tinyui_switch_set_on_toggled(tinyui_obj_t *sw, tinyui_value_changed_cb cb, void *user_data);
 
-#endif
+#endif /* TINYUI_SWITCH_H */

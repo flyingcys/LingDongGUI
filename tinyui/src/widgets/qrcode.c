@@ -18,76 +18,42 @@
 
 #include "internal.h"
 #include "widgets/qrcode.h"
-#include "core/widget.h"
+#include "internal/widget_legacy.h"
 #include "../core/runtime_bridge.h"
 #include "../../../src/gui/ldQRCode.h"
 
 #include <stdlib.h>
 #include <string.h>
 
+
+static struct tinyui_qrcode *tinyui_qrcode_as_qrcode(tinyui_obj_t *obj)
+{
+    struct tinyui_widget *w = (struct tinyui_widget *)(void *)obj;
+    if (w == 0 || !tinyui_runtime_internal_widget_is_kind(w, TINYUI_BACKEND_WIDGET_QRCODE)) {
+        return 0;
+    }
+    return (struct tinyui_qrcode *)w;
+}
+
+static const struct tinyui_qrcode *tinyui_qrcode_as_qrcode_const(const tinyui_obj_t *obj)
+{
+    const struct tinyui_widget *w = (const struct tinyui_widget *)(const void *)obj;
+    if (w == 0 || !tinyui_runtime_internal_widget_is_kind(w, TINYUI_BACKEND_WIDGET_QRCODE)) {
+        return 0;
+    }
+    return (const struct tinyui_qrcode *)w;
+}
+
 /* ---- test seam state ---- */
 
 
-static int qrcode_props_valid(const struct tinyui_qrcode_props *props)
+static int qrcode_props_valid(const tinyui_qrcode_props_t *props)
 {
-    return props != 0 && props->id != 0 && props->text != 0;
+    return props != 0;
 }
 
-static int qrcode_apply_optional_props(struct tinyui_qrcode *qrcode,
-                                       const struct tinyui_qrcode_props *props)
-{
-    unsigned int present_mask = props->present_mask;
 
-    if (present_mask == 0) {
-        if (props->bg_color == 0 && props->max_version == 0 && props->zoom == 0
-            && props->qr_color == 0 && props->ecc == 0) {
-            return 0;
-        }
-
-        if (tinyui_qrcode_set_qr_color(qrcode, props->qr_color) != 0) {
-            return -1;
-        }
-        if (tinyui_qrcode_set_bg_color(qrcode, props->bg_color) != 0) {
-            return -1;
-        }
-        if (tinyui_qrcode_set_ecc(qrcode, props->ecc) != 0) {
-            return -1;
-        }
-        if (props->max_version != 0
-            && tinyui_qrcode_set_max_version(qrcode, props->max_version) != 0) {
-            return -1;
-        }
-        if (props->zoom != 0 && tinyui_qrcode_set_zoom(qrcode, props->zoom) != 0) {
-            return -1;
-        }
-        return 0;
-    }
-
-    if ((present_mask & TINYUI_QRCODE_PROP_QR_COLOR) != 0
-        && tinyui_qrcode_set_qr_color(qrcode, props->qr_color) != 0) {
-        return -1;
-    }
-    if ((present_mask & TINYUI_QRCODE_PROP_BG_COLOR) != 0
-        && tinyui_qrcode_set_bg_color(qrcode, props->bg_color) != 0) {
-        return -1;
-    }
-    if ((present_mask & TINYUI_QRCODE_PROP_ECC) != 0
-        && tinyui_qrcode_set_ecc(qrcode, props->ecc) != 0) {
-        return -1;
-    }
-    if ((present_mask & TINYUI_QRCODE_PROP_MAX_VERSION) != 0
-        && tinyui_qrcode_set_max_version(qrcode, props->max_version) != 0) {
-        return -1;
-    }
-    if ((present_mask & TINYUI_QRCODE_PROP_ZOOM) != 0
-        && tinyui_qrcode_set_zoom(qrcode, props->zoom) != 0) {
-        return -1;
-    }
-
-    return 0;
-}
-
-static void *tinyui_qrcode_ld_init(void *ctx,
+static void *tinyui_runtime_internal_qrcode_ld_init(void *ctx,
                                    struct ld_scene_t *scene,
                                    uint16_t name_id,
                                    uint16_t parent_name_id)
@@ -119,18 +85,22 @@ static void *tinyui_qrcode_ld_init(void *ctx,
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct tinyui_qrcode *tinyui_qrcode_create(struct tinyui_widget *parent, const char *id)
+tinyui_obj_t *tinyui_qrcode_create(tinyui_obj_t *parent)
 {
+    struct tinyui_widget *parent_w = (struct tinyui_widget *)(void *)parent;
+    const char *id = "qrcode";
+    if (parent_w == 0) { return 0; }
+
     struct tinyui_qrcode *qrcode;
     static unsigned char empty_text[] = "";
     ldQRCode_t *ld_qrcode;
 
-    if (parent == 0 || id == 0 || parent->ld_widget == 0) {
+    if (parent_w == 0 || id == 0 || parent_w->ld_widget == 0) {
         return 0;
     }
-    qrcode = (struct tinyui_qrcode *)tinyui_widget_create_leaf(parent,
+    qrcode = (struct tinyui_qrcode *)tinyui_runtime_internal_widget_create_leaf(parent_w,
                                                                TINYUI_BACKEND_WIDGET_QRCODE,
-                                                               tinyui_qrcode_ld_init,
+                                                               tinyui_runtime_internal_qrcode_ld_init,
                                                                0,
                                                                sizeof(*qrcode));
     if (qrcode == 0) {
@@ -138,7 +108,7 @@ struct tinyui_qrcode *tinyui_qrcode_create(struct tinyui_widget *parent, const c
     }
     ld_qrcode = (ldQRCode_t *)qrcode->widget.ld_widget;
     if (ld_qrcode == 0) {
-        tinyui_widget_destroy_common(&qrcode->widget);
+        tinyui_runtime_internal_widget_destroy_common(&qrcode->widget);
         return 0;
     }
     qrcode->id = id;
@@ -148,7 +118,7 @@ struct tinyui_qrcode *tinyui_qrcode_create(struct tinyui_widget *parent, const c
     qrcode->max_version = (int)ld_qrcode->qrMaxVersion;
     qrcode->zoom = (int)ld_qrcode->qrZoom;
     qrcode->text = ld_qrcode->pStr != 0 ? (const char *)ld_qrcode->pStr : (const char *)empty_text;
-    return qrcode;
+    return (tinyui_obj_t *)qrcode;
 }
 
 /**
@@ -159,9 +129,9 @@ struct tinyui_qrcode *tinyui_qrcode_create(struct tinyui_widget *parent, const c
  * @return Pointer to the object
  */
 
-struct tinyui_qrcode *tinyui_q_r_code_init(struct tinyui_widget *parent, const char *id)
+struct tinyui_qrcode *tinyui_runtime_internal_q_r_code_init(struct tinyui_widget *parent, const char *id)
 {
-    return tinyui_qrcode_create(parent, id);
+    return tinyui_qrcode_create(parent);
 }
 
 /**
@@ -172,31 +142,79 @@ struct tinyui_qrcode *tinyui_q_r_code_init(struct tinyui_widget *parent, const c
  * @return Pointer to the object on success, NULL on failure
  */
 
-struct tinyui_qrcode *tinyui_qrcode_create_with_props(struct tinyui_widget *parent,
-                                                      const struct tinyui_qrcode_props *props)
+tinyui_obj_t *tinyui_qrcode_create_with_props(tinyui_obj_t *parent,
+                                             const tinyui_qrcode_props_t *props)
 {
+    tinyui_obj_t *obj;
     struct tinyui_qrcode *qrcode;
 
-    if (!qrcode_props_valid(props)) {
-        return 0;
+    if (props == 0) {
+        return tinyui_qrcode_create(parent);
     }
 
-    qrcode = tinyui_qrcode_create(parent, props->id);
-    if (qrcode == 0) {
+    obj = tinyui_qrcode_create(parent);
+    if (obj == 0) {
         return 0;
     }
+    qrcode = (struct tinyui_qrcode *)(void *)obj;
 
-    if ((props->style_class != 0
-         && tinyui_widget_set_style_class(&qrcode->widget, props->style_class) != 0)
-        || tinyui_widget_set_user_data(&qrcode->widget, props->user_data) != 0
-        || tinyui_qrcode_set_text(qrcode, props->text) != 0
-        || qrcode_apply_optional_props(qrcode, props) != 0) {
-        tinyui_widget_destroy_common(&qrcode->widget);
-        return 0;
+    if ((props->fields & TINYUI_QRCODE_FIELD_ID) != 0) {
+        /* id=0 means runtime auto-alloc; non-zero reserved for host name_id path. */
+        (void)props->id;
+    }
+    if ((props->fields & TINYUI_QRCODE_FIELD_USER_DATA) != 0) {
+        if (tinyui_runtime_internal_widget_set_user_data(&qrcode->widget, props->user_data) != 0) {
+            (void)tinyui_obj_delete((tinyui_obj_t *)qrcode);
+            return 0;
+        }
+    }
+    if ((props->fields & TINYUI_QRCODE_FIELD_STYLE_CLASS) != 0) {
+        if (tinyui_runtime_internal_widget_set_style_class(&qrcode->widget, props->style_class) != 0) {
+            (void)tinyui_obj_delete((tinyui_obj_t *)qrcode);
+            return 0;
+        }
+    }
+    if ((props->fields & TINYUI_QRCODE_FIELD_TEXT) != 0) {
+        if (tinyui_qrcode_set_text((tinyui_obj_t *)qrcode, props->text) != 0) {
+            (void)tinyui_obj_delete((tinyui_obj_t *)qrcode);
+            return 0;
+        }
+    }
+    if ((props->fields & TINYUI_QRCODE_FIELD_QR_COLOR) != 0) {
+        if (tinyui_qrcode_set_qr_color((tinyui_obj_t *)qrcode, props->qr_color) != 0) {
+            (void)tinyui_obj_delete((tinyui_obj_t *)qrcode);
+            return 0;
+        }
+    }
+    if ((props->fields & TINYUI_QRCODE_FIELD_BG_COLOR) != 0) {
+        if (tinyui_qrcode_set_bg_color((tinyui_obj_t *)qrcode, props->bg_color) != 0) {
+            (void)tinyui_obj_delete((tinyui_obj_t *)qrcode);
+            return 0;
+        }
+    }
+    if ((props->fields & TINYUI_QRCODE_FIELD_ECC) != 0) {
+        if (tinyui_qrcode_set_ecc((tinyui_obj_t *)qrcode, props->ecc) != 0) {
+            (void)tinyui_obj_delete((tinyui_obj_t *)qrcode);
+            return 0;
+        }
+    }
+    if ((props->fields & TINYUI_QRCODE_FIELD_MAX_VERSION) != 0) {
+        if (tinyui_qrcode_set_max_version((tinyui_obj_t *)qrcode, props->max_version) != 0) {
+            (void)tinyui_obj_delete((tinyui_obj_t *)qrcode);
+            return 0;
+        }
+    }
+    if ((props->fields & TINYUI_QRCODE_FIELD_ZOOM) != 0) {
+        if (tinyui_qrcode_set_zoom((tinyui_obj_t *)qrcode, props->zoom) != 0) {
+            (void)tinyui_obj_delete((tinyui_obj_t *)qrcode);
+            return 0;
+        }
     }
 
-    return qrcode;
+    return obj;
 }
+
+
 
 /**
  * @brief Set text of qrcode widget
@@ -206,8 +224,11 @@ struct tinyui_qrcode *tinyui_qrcode_create_with_props(struct tinyui_widget *pare
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_qrcode_set_text(struct tinyui_qrcode *qrcode, const char *text)
+int tinyui_qrcode_set_text(tinyui_obj_t *qrcode_obj, const char *text)
 {
+    struct tinyui_qrcode *qrcode = tinyui_qrcode_as_qrcode(qrcode_obj);
+    if (qrcode == 0) { return -1; }
+
     if (qrcode == 0 || text == 0 || qrcode->widget.ld_widget == 0
         || qrcode->widget.kind != TINYUI_BACKEND_WIDGET_QRCODE) {
         return -1;
@@ -226,9 +247,12 @@ int tinyui_qrcode_set_text(struct tinyui_qrcode *qrcode, const char *text)
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_q_r_code_set_text(struct tinyui_qrcode *qrcode, const char *text)
+int tinyui_runtime_internal_q_r_code_set_text(tinyui_obj_t *qrcode_obj, const char *text)
 {
-    return tinyui_qrcode_set_text(qrcode, text);
+    struct tinyui_qrcode *qrcode = tinyui_qrcode_as_qrcode(qrcode_obj);
+    if (qrcode == 0) { return -1; }
+
+    return tinyui_qrcode_set_text((tinyui_obj_t *)qrcode, text);
 }
 
 /**
@@ -237,8 +261,11 @@ int tinyui_q_r_code_set_text(struct tinyui_qrcode *qrcode, const char *text)
  * @param[in] qrcode QR code widget instance
  */
 
-const char *tinyui_qrcode_get_text(const struct tinyui_qrcode *qrcode)
+const char * tinyui_qrcode_get_text(const tinyui_obj_t *qrcode_obj)
 {
+    const struct tinyui_qrcode *qrcode = tinyui_qrcode_as_qrcode_const(qrcode_obj);
+    if (qrcode == 0) { return 0; }
+
     if (qrcode == 0 || qrcode->widget.ld_widget == 0
         || qrcode->widget.kind != TINYUI_BACKEND_WIDGET_QRCODE) {
         return 0;
@@ -255,8 +282,11 @@ const char *tinyui_qrcode_get_text(const struct tinyui_qrcode *qrcode)
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_qrcode_set_qr_color(struct tinyui_qrcode *qrcode, unsigned int rgb)
+int tinyui_qrcode_set_qr_color(tinyui_obj_t *qrcode_obj, unsigned int rgb)
 {
+    struct tinyui_qrcode *qrcode = tinyui_qrcode_as_qrcode(qrcode_obj);
+    if (qrcode == 0) { return -1; }
+
     if (qrcode == 0 || rgb > 0xFFFFFFU || qrcode->widget.ld_widget == 0
         || qrcode->widget.kind != TINYUI_BACKEND_WIDGET_QRCODE) {
         return -1;
@@ -275,8 +305,11 @@ int tinyui_qrcode_set_qr_color(struct tinyui_qrcode *qrcode, unsigned int rgb)
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_qrcode_set_bg_color(struct tinyui_qrcode *qrcode, unsigned int rgb)
+int tinyui_qrcode_set_bg_color(tinyui_obj_t *qrcode_obj, unsigned int rgb)
 {
+    struct tinyui_qrcode *qrcode = tinyui_qrcode_as_qrcode(qrcode_obj);
+    if (qrcode == 0) { return -1; }
+
     if (qrcode == 0 || rgb > 0xFFFFFFU || qrcode->widget.ld_widget == 0
         || qrcode->widget.kind != TINYUI_BACKEND_WIDGET_QRCODE) {
         return -1;
@@ -295,8 +328,11 @@ int tinyui_qrcode_set_bg_color(struct tinyui_qrcode *qrcode, unsigned int rgb)
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_qrcode_set_ecc(struct tinyui_qrcode *qrcode, int ecc)
+int tinyui_qrcode_set_ecc(tinyui_obj_t *qrcode_obj, int ecc)
 {
+    struct tinyui_qrcode *qrcode = tinyui_qrcode_as_qrcode(qrcode_obj);
+    if (qrcode == 0) { return -1; }
+
     if (qrcode == 0 || ecc < 0 || ecc > 3 || qrcode->widget.ld_widget == 0
         || qrcode->widget.kind != TINYUI_BACKEND_WIDGET_QRCODE) {
         return -1;
@@ -315,8 +351,11 @@ int tinyui_qrcode_set_ecc(struct tinyui_qrcode *qrcode, int ecc)
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_qrcode_set_max_version(struct tinyui_qrcode *qrcode, int max_version)
+int tinyui_qrcode_set_max_version(tinyui_obj_t *qrcode_obj, int max_version)
 {
+    struct tinyui_qrcode *qrcode = tinyui_qrcode_as_qrcode(qrcode_obj);
+    if (qrcode == 0) { return -1; }
+
     if (qrcode == 0 || max_version <= 0 || max_version > 40
         || qrcode->widget.ld_widget == 0
         || qrcode->widget.kind != TINYUI_BACKEND_WIDGET_QRCODE) {
@@ -336,8 +375,11 @@ int tinyui_qrcode_set_max_version(struct tinyui_qrcode *qrcode, int max_version)
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_qrcode_set_zoom(struct tinyui_qrcode *qrcode, int zoom)
+int tinyui_qrcode_set_zoom(tinyui_obj_t *qrcode_obj, int zoom)
 {
+    struct tinyui_qrcode *qrcode = tinyui_qrcode_as_qrcode(qrcode_obj);
+    if (qrcode == 0) { return -1; }
+
     if (qrcode == 0 || zoom <= 0 || qrcode->widget.ld_widget == 0
         || qrcode->widget.kind != TINYUI_BACKEND_WIDGET_QRCODE) {
         return -1;

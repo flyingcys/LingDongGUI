@@ -2,7 +2,7 @@
  * tinyui_ldgui_disp_adapter.c
  *
  * 运行期 PFB display adapter。
- * 提供 tinyui_backend_init 和 tinyui_backend_step 公共 API。
+ * 提供 tinyui_runtime_internal_backend_init 和 tinyui_backend_step 公共 API。
  *
  * 有 flush 回调：动态分配 PFB，通过 flush_callback 推送像素到硬件。
  * 无 flush 回调（无显示硬件）：跳过 PFB 初始化，step 中 s_pfb_inited==0
@@ -204,8 +204,8 @@ IMPL_PFB_ON_LOW_LV_RENDERING(ldgui_port_pfb_flush_handler)
     arm_2d_helper_pfb_report_rendering_complete(&s_tPFBHelper);
 }
 
-/* ─── tinyui_backend_init ─── */
-int tinyui_backend_init(struct tinyui_app *app)
+/* ─── tinyui_runtime_internal_backend_init ─── */
+int tinyui_runtime_internal_backend_init(struct tinyui_app *app)
 {
     if (app == NULL) return -1;
 

@@ -15,8 +15,7 @@ typedef enum tinyui_result {
 
 tinyui_result_t tinyui_last_result(void);
 
-#if defined(TINYUI_ENABLE_DIAGNOSTICS) && TINYUI_ENABLE_DIAGNOSTICS
+/* Declared always so link probes and diagnostics consumers share one symbol. */
 const char *tinyui_last_error_message(void);
-#endif
 
 #endif

@@ -501,6 +501,9 @@ function(add_tinyui_demo target source)
         ld_apply_tinyui_runtime_screen_config(${target})
     endif()
     ld_apply_common_target_config(${target})
+    if(TINYUI_ENABLE_INTERNAL_V22_DEMO_BRIDGE)
+        target_compile_definitions(${target} PRIVATE TINYUI_ENABLE_INTERNAL_V22_DEMO_BRIDGE=1)
+    endif()
     if(APPLE AND CMAKE_C_COMPILER_ID MATCHES "Clang")
         target_link_options(${target} PRIVATE
             "-Wl,-object_path_lto,${target}.lto.o"

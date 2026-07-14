@@ -224,7 +224,8 @@ function(ld_define_core_targets)
         ${LD_REPO_ROOT}/tinyui/src/widgets/canvas.c
         ${LD_REPO_ROOT}/tinyui/src/widgets/line_edit.c
         ${LD_REPO_ROOT}/tinyui/src/widgets/combo_box.c
-        ${LD_REPO_ROOT}/tinyui/src/widgets/scroll_selecter.c
+        ${LD_REPO_ROOT}/tinyui/src/widgets/scroll_selector.c
+        ${LD_REPO_ROOT}/tinyui/src/compat/v22_demo_bridge.c
         ${LD_REPO_ROOT}/tinyui/src/widgets/table.c
         ${LD_REPO_ROOT}/tinyui/src/widgets/graph.c
         ${LD_REPO_ROOT}/tinyui/src/widgets/calendar.c
@@ -255,6 +256,19 @@ function(ld_define_core_targets)
         ${LD_REPO_ROOT}/tinyui/src/drivers
         ${LD_COMMON_INCLUDE_DIRS}
     )
+    # Full/demo/test builds keep the private v2.2 migration bridge inside tinyui_core.
+    # The define is PRIVATE so install consumers never see it via usage requirements.
+    if(NOT DEFINED TINYUI_ENABLE_INTERNAL_V22_DEMO_BRIDGE)
+        set(TINYUI_ENABLE_INTERNAL_V22_DEMO_BRIDGE ON)
+    endif()
+    if(TINYUI_ENABLE_INTERNAL_V22_DEMO_BRIDGE)
+        target_compile_definitions(tinyui_core PRIVATE TINYUI_ENABLE_INTERNAL_V22_DEMO_BRIDGE=1)
+    else()
+        # Keep source list stable only when bridge is enabled.
+        get_target_property(_tinyui_core_sources tinyui_core SOURCES)
+        list(REMOVE_ITEM _tinyui_core_sources ${LD_REPO_ROOT}/tinyui/src/compat/v22_demo_bridge.c)
+        set_property(TARGET tinyui_core PROPERTY SOURCES ${_tinyui_core_sources})
+    endif()
     ld_apply_common_target_config(tinyui_core)
     add_library(tinyui_core ALIAS tinyui_core)
 

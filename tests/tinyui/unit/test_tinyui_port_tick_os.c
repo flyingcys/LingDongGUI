@@ -1,4 +1,4 @@
-#include "core/app.h"
+#include "internal/app_legacy.h"
 #include "osal/osal.h"
 #include "tick/tick.h"
 
