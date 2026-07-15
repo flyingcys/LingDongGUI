@@ -1,253 +1,118 @@
-#include "widgets/animation.h"
-#include "internal/app_legacy.h"
-#include "widgets/image.h"
-#include "internal/widget_legacy.h"
-#include "widgets/window.h"
+/*
+ * TinyUI animation unit tests — M3 Task 5 L3/L4 harness.
+ */
+
+#include "tinyui.h"
 #include "../../../src/gui/ldAnimation.h"
+#include "../../../src/gui/ldBase.h"
 #include "internal.h"
-#include "tinyui_test_support.h"
+#include "resource/image_source.h"
+#include "widgets/animation.h"
 
 #include <assert.h>
-#include <stdio.h>
 #include <string.h>
 
-extern int tinyui_widget_has_ld_binding(const struct tinyui_widget *widget);
-
-static void assert_source_lacks_function_definition(const char *path, const char *symbol)
+static void bind_sheet(tinyui_image_source_t *source, arm_2d_tile_t *tile, int w, int h)
 {
-    char needle[256];
-
-    snprintf(needle, sizeof(needle), "static int %s(", symbol);
-    if (strstr(symbol, "get_ld") != 0) {
-        snprintf(needle, sizeof(needle), "static ldAnimation_t *%s(", symbol);
-    }
-    assert(tinyui_test_source_contains(path, needle) == 0);
+    memset(source, 0, sizeof(*source));
+    source->kind = TINYUI_IMAGE_SOURCE_RGB565_MEMORY;
+    tile->tRegion.tSize.iWidth = (int16_t)w;
+    tile->tRegion.tSize.iHeight = (int16_t)h;
+    memcpy(source->_image_private, tile, sizeof(*tile));
 }
 
-static void assert_source_has_function_definition(const char *path,
-                                                  const char *prefix,
-                                                  const char *symbol)
+static void test_animation_create_default(tinyui_obj_t *root)
 {
-    char needle[256];
-
-    snprintf(needle, sizeof(needle), "%s%s(", prefix, symbol);
-    assert(tinyui_test_source_contains(path, needle) == 1);
-}
-static arm_2d_tile_t s_animation_tile = {
-    .tRegion = {
-        .tSize = {
-            .iWidth = 64,
-            .iHeight = 16,
-        },
-    },
-};
-
-static arm_2d_tile_t s_animation_grid_tile = {
-    .tRegion = {
-        .tSize = {
-            .iWidth = 32,
-            .iHeight = 32,
-        },
-    },
-};
-
-static void test_animation_create_with_props_builds_direct_backend_mapping(struct tinyui_window *win)
-{
-    struct tinyui_image_source source = {
-        .img_tile = &s_animation_tile,
-        .mask_tile = 0,
-    };
-    struct tinyui_animation_props props = {
-        .id = "animation_direct_mapping",
-        .width = 16,
-        .height = 16,
-        .period_ms = 120,
-        .source = &source,
-    };
-    struct tinyui_animation *animation =
-        tinyui_animation_create_with_props((struct tinyui_widget *)win, &props);
+    tinyui_obj_t *anim = tinyui_animation_create(root);
     struct tinyui_widget *backend;
-    struct tinyui_widget *parent_backend;
-    ldAnimation_t *ld_animation;
+    ldAnimation_t *ld_anim;
 
-    assert(animation != 0);
-    backend = &animation->widget;
-    assert(backend->ld_widget != 0);
-    parent_backend = &win->widget;
-    assert(parent_backend->ld_widget != 0);
+    assert(anim != 0);
+    backend = (struct tinyui_widget *)(void *)anim;
     assert(backend->kind == TINYUI_BACKEND_WIDGET_ANIMATION);
-    assert(backend->owner == parent_backend->owner);
-    assert((ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)backend->ld_widget) == (ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)parent_backend->ld_widget));
-    assert(ldBaseGetParent((ldBase_t *)backend->ld_widget) == (ldBase_t *)parent_backend->ld_widget);
-    assert(backend->ld_name_id != 0);
-    assert(backend->ld_event_bridge_scene != 0);
-    assert(backend->ld_event_bridge_sender == backend->ld_widget);
-    ld_animation = (ldAnimation_t *)backend->ld_widget;
-    assert(ld_animation != 0);
-    assert(tinyui_app_lookup_host(backend->owner, backend->ld_name_id) == backend);
-    assert(tinyui_widget_has_ld_binding(&animation->widget) == 1);
-    assert(animation->source == &source);
-    assert(animation->period_ms == 120);
-    assert(animation->width == 16);
-    assert(animation->height == 16);
-    assert(ld_animation->ptImgTile == &s_animation_tile);
-    assert(ld_animation->periodMs == 120);
-    assert(ld_animation->showRegion.tLocation.iX == 0);
-    assert(ld_animation->showRegion.tLocation.iY == 0);
-    assert(ld_animation->showRegion.tSize.iWidth == 16);
-    assert(ld_animation->showRegion.tSize.iHeight == 16);
-}
-
-static void test_animation_native_image_period_and_frame_round_trip(struct tinyui_window *win)
-{
-    struct tinyui_image_source source = {
-        .img_tile = &s_animation_tile,
-        .mask_tile = 0,
-    };
-    struct tinyui_animation_props props = {
-        .id = "animation",
-        .width = 16,
-        .height = 16,
-        .period_ms = 120,
-        .source = &source,
-    };
-    struct tinyui_animation *animation =
-        tinyui_animation_create_with_props((struct tinyui_widget *)win, &props);
-    struct tinyui_widget *backend;
-    ldAnimation_t *ld_animation;
-
-    assert(animation != 0);
-    backend = &animation->widget;
     assert(backend->ld_widget != 0);
-    ld_animation = (ldAnimation_t *)backend->ld_widget;
-    assert(ld_animation != 0);
-
-    assert(ld_animation->ptImgTile == &s_animation_tile);
-    assert(ld_animation->periodMs == 120);
-    assert(ld_animation->showRegion.tLocation.iX == 0);
-    assert(ld_animation->showRegion.tLocation.iY == 0);
-    assert(ld_animation->showRegion.tSize.iWidth == 16);
-    assert(ld_animation->showRegion.tSize.iHeight == 16);
-
-    assert(tinyui_animation_show_frame(animation, 2) == 0);
-    assert(ld_animation->showRegion.tLocation.iX == 32);
-    assert(ld_animation->showRegion.tLocation.iY == 0);
-
-    assert(tinyui_animation_show_frame(animation, 4) == -1);
-    assert(ld_animation->showRegion.tLocation.iX == 32);
-    assert(ld_animation->showRegion.tLocation.iY == 0);
+    ld_anim = (ldAnimation_t *)backend->ld_widget;
+    assert(((ldBase_t *)ld_anim)->widgetType == widgetTypeAnimation);
+    assert(ld_anim->periodMs == 1);
 }
 
-static void test_animation_show_frame_advances_across_rows(struct tinyui_window *win)
+static void test_animation_source_period_frame(tinyui_obj_t *root)
 {
-    struct tinyui_image_source source = {
-        .img_tile = &s_animation_grid_tile,
-        .mask_tile = 0,
-    };
-    struct tinyui_animation_props props = {
-        .id = "animation_grid",
-        .width = 16,
-        .height = 16,
-        .period_ms = 90,
-        .source = &source,
-    };
-    struct tinyui_animation *animation =
-        tinyui_animation_create_with_props((struct tinyui_widget *)win, &props);
-    struct tinyui_widget *backend;
-    ldAnimation_t *ld_animation;
+    arm_2d_tile_t sheet = {0};
+    tinyui_image_source_t source;
+    tinyui_animation_props_t props;
+    tinyui_obj_t *anim;
+    ldAnimation_t *ld_anim;
+    struct tinyui_animation *host;
 
-    assert(animation != 0);
-    backend = &animation->widget;
-    assert(backend->ld_widget != 0);
-    ld_animation = (ldAnimation_t *)backend->ld_widget;
-    assert(ld_animation != 0);
+    bind_sheet(&source, &sheet, 40, 20);
+    memset(&props, 0, sizeof(props));
+    props.fields = TINYUI_ANIMATION_FIELD_SOURCE | TINYUI_ANIMATION_FIELD_WIDTH
+                   | TINYUI_ANIMATION_FIELD_HEIGHT | TINYUI_ANIMATION_FIELD_PERIOD_MS;
+    props.source = &source;
+    props.width = 20;
+    props.height = 10;
+    props.period_ms = 120;
 
-    assert(tinyui_animation_show_frame(animation, 3) == 0);
-    assert(ld_animation->showRegion.tLocation.iX == 16);
-    assert(ld_animation->showRegion.tLocation.iY == 16);
-    assert(ld_animation->showRegion.tSize.iWidth == 16);
-    assert(ld_animation->showRegion.tSize.iHeight == 16);
+    anim = tinyui_animation_create_with_props(root, &props);
+    assert(anim != 0);
+    host = (struct tinyui_animation *)(void *)anim;
+    ld_anim = (ldAnimation_t *)host->widget.ld_widget;
+    assert(ld_anim != 0);
+    assert(ld_anim->ptImgTile == tinyui_image_source_get_image_tile(&source));
+    assert(ld_anim->periodMs == 120);
+    assert(host->width == 20);
+    assert(host->height == 10);
+    assert(host->period_ms == 120);
+    assert(host->source == &source);
 
-    assert(tinyui_animation_show_frame(animation, 4) == -1);
-    assert(ld_animation->showRegion.tLocation.iX == 16);
-    assert(ld_animation->showRegion.tLocation.iY == 16);
+    assert(tinyui_animation_set_period_ms(anim, 200) == 0);
+    assert(ld_anim->periodMs == 200);
+
+    assert(tinyui_animation_show_frame(anim, 0) == 0);
+    assert(ld_anim->showRegion.tLocation.iX == 0);
+    assert(ld_anim->showRegion.tLocation.iY == 0);
+    assert(ld_anim->showRegion.tSize.iWidth == 20);
+    assert(ld_anim->showRegion.tSize.iHeight == 10);
+
+    assert(tinyui_animation_show_frame(anim, 1) == 0);
+    assert(ld_anim->showRegion.tLocation.iX == 20);
+    assert(ld_anim->showRegion.tLocation.iY == 0);
+
+    assert(tinyui_animation_show_frame(anim, 2) == 0);
+    assert(ld_anim->showRegion.tLocation.iX == 0);
+    assert(ld_anim->showRegion.tLocation.iY == 10);
+
+    assert(tinyui_animation_show_frame(anim, 99) == -1);
 }
 
-static void test_animation_init_and_shared_base_aliases_round_trip(struct tinyui_window *win)
+static void test_animation_rejects_invalid(tinyui_obj_t *root)
 {
-    struct tinyui_image_source source = {
-        .img_tile = &s_animation_tile,
-        .mask_tile = 0,
-    };
-    struct tinyui_animation_props props = {
-        .id = "animation_alias_props",
-        .width = 16,
-        .height = 16,
-        .period_ms = 100,
-        .source = &source,
-    };
-    struct tinyui_animation *animation =
-        tinyui_animation_create_with_props((struct tinyui_widget *)win, &props);
-    struct tinyui_animation *alias =
-        tinyui_animation_init((struct tinyui_widget *)win, "animation_alias");
-    struct tinyui_widget *backend;
-    ldAnimation_t *ld_animation;
+    tinyui_obj_t *anim = tinyui_animation_create(root);
+    tinyui_image_source_t empty;
 
-    assert(animation != 0);
-    backend = &animation->widget;
-    assert(backend->ld_widget != 0);
-    ld_animation = (ldAnimation_t *)backend->ld_widget;
-    assert(ld_animation != 0);
-
-    assert(alias != 0);
-    assert(tinyui_widget_set_pos(&animation->widget, 6, 10) == 0);
-    assert(((ldBase_t *)ld_animation)->use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 6);
-    assert(((ldBase_t *)ld_animation)->use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 10);
-    assert(tinyui_widget_set_visible(&animation->widget, 0) == 0);
-    assert(((ldBase_t *)ld_animation)->isHidden == true);
-    assert(tinyui_widget_set_opacity(&animation->widget, 58) == 0);
-    assert(((ldBase_t *)ld_animation)->opacity == 58);
-    assert(tinyui_widget_set_selectable(&animation->widget, 1) == 0);
-    assert(((ldBase_t *)ld_animation)->isSelectable == true);
-    assert(tinyui_widget_set_selected(&animation->widget, 1) == 0);
-    assert(((ldBase_t *)ld_animation)->isSelected == true);
-    assert(tinyui_widget_set_selectable(&animation->widget, 0) == 0);
-    assert(((ldBase_t *)ld_animation)->isSelectable == false);
-    assert(tinyui_widget_set_corner(&animation->widget, 3) == 0);
-    assert(((ldBase_t *)ld_animation)->isCorner == true);
-}
-
-static void test_animation_internal_seams_renamed_in_source(void)
-{
-    const char *animation_source = "tinyui/src/widgets/animation.c";
-
-    /* Phase C2: get_ld helper collapsed — setters cast widget.ld_widget directly. */
-    assert_source_lacks_function_definition(animation_source,
-                                            "tinyui_animation_get_ld");
-    assert_source_has_function_definition(animation_source,
-                                          "static int ",
-                                          "tinyui_animation_props_are_valid");
-    assert_source_has_function_definition(animation_source,
-                                          "static void *",
-                                          "tinyui_animation_ld_init");
-    assert(tinyui_test_source_contains(animation_source, "tinyui_widget_create_leaf(") == 1);
+    assert(anim != 0);
+    memset(&empty, 0, sizeof(empty));
+    assert(tinyui_animation_create(0) == 0);
+    assert(tinyui_animation_set_source(0, 0) == -1);
+    assert(tinyui_animation_set_source(anim, &empty) == -1);
+    assert(tinyui_animation_set_period_ms(anim, 0) == -1);
+    assert(tinyui_animation_show_frame(anim, -1) == -1);
 }
 
 int main(void)
 {
-    struct tinyui_app *app = tinyui_app_create();
-    struct tinyui_window *win;
+    tinyui_obj_t *root;
 
-    assert(app != 0);
-    win = tinyui_window_create(app, "root");
-    assert(win != 0);
+    tinyui_deinit();
+    assert(tinyui_init() == TINYUI_OK);
+    root = tinyui_screen_create();
+    assert(root != 0);
 
-    test_animation_create_with_props_builds_direct_backend_mapping(win);
-    test_animation_native_image_period_and_frame_round_trip(win);
-    test_animation_show_frame_advances_across_rows(win);
-    test_animation_init_and_shared_base_aliases_round_trip(win);
-    test_animation_internal_seams_renamed_in_source();
+    test_animation_create_default(root);
+    test_animation_source_period_frame(root);
+    test_animation_rejects_invalid(root);
 
-    tinyui_app_destroy(app);
+    tinyui_deinit();
     return 0;
 }

@@ -19,66 +19,48 @@
 #include "settings_panel/settings_panel.h"
 #include "tinyui.h"
 
-
-
-
-
-
-
-
-static int make_ui(struct tinyui_window *win)
+tinyui_result_t tinyui_demo_settings_panel_build(tinyui_obj_t *screen)
 {
-    struct tinyui_label *title;
-    struct tinyui_switch *wifi;
-    struct tinyui_slider *brightness;
-    struct tinyui_button *apply;
-    static const int cols[] = {-2, -1, 0};
-    static const int rows[] = {32, 36, 40, 0};
+    tinyui_obj_t *title;
+    tinyui_obj_t *wifi;
+    tinyui_obj_t *brightness;
+    tinyui_obj_t *apply;
+    tinyui_result_t result;
 
-    tinyui_grid_set_columns(win, cols, 3);
-    tinyui_grid_set_rows(win, rows, 4);
-    tinyui_grid_set_gap(win, 12, 12);
-    tinyui_grid_set_align(win, TINYUI_ALIGN_STRETCH, TINYUI_ALIGN_START);
-
-    title = tinyui_label_create(win, "title");
-    wifi = tinyui_switch_create(win, "wifi");
-    brightness = tinyui_slider_create(win, "brightness");
-    apply = tinyui_button_create(win, "apply");
-
-    if (title == 0 || wifi == 0 || brightness == 0 || apply == 0) {
-        return -1;
+    if (screen == NULL) {
+        return TINYUI_ERROR_INVALID_ARG;
     }
 
-    tinyui_label_set_text(title, "Settings");
-    tinyui_widget_set_size((struct tinyui_widget *)wifi, 48, 24);
-    tinyui_switch_set_checked(wifi, 1);
-    tinyui_slider_set_value(brightness, 75);
-    tinyui_button_set_text(apply, "Apply");
-    tinyui_widget_set_grid_cell((struct tinyui_widget *)title,
-                                0, 0, 2, 1,
-                                TINYUI_ALIGN_START,
-                                TINYUI_ALIGN_CENTER);
-    tinyui_widget_set_grid_cell((struct tinyui_widget *)wifi,
-                                0, 1, 2, 1,
-                                TINYUI_ALIGN_STRETCH,
-                                TINYUI_ALIGN_CENTER);
-    tinyui_widget_set_grid_cell((struct tinyui_widget *)brightness,
-                                0, 2, 2, 1,
-                                TINYUI_ALIGN_STRETCH,
-                                TINYUI_ALIGN_CENTER);
-    tinyui_widget_set_grid_cell((struct tinyui_widget *)apply,
-                                1, 3, 1, 1,
-                                TINYUI_ALIGN_END,
-                                TINYUI_ALIGN_CENTER);
+    result = tinyui_flex_set_flow(screen, TINYUI_FLEX_FLOW_COLUMN);
+    if (result != TINYUI_OK) {
+        return result;
+    }
+    result = tinyui_flex_set_align(screen,
+                                   TINYUI_ALIGN_STRETCH,
+                                   TINYUI_ALIGN_START,
+                                   TINYUI_ALIGN_START);
+    if (result != TINYUI_OK) {
+        return result;
+    }
+    result = tinyui_flex_set_gap(screen, 12, 12);
+    if (result != TINYUI_OK) {
+        return result;
+    }
 
-    return 0;
-}
+    title = tinyui_label_create(screen);
+    wifi = tinyui_switch_create(screen);
+    brightness = tinyui_slider_create(screen);
+    apply = tinyui_button_create(screen);
+    if (title == NULL || wifi == NULL || brightness == NULL || apply == NULL) {
+        return TINYUI_ERROR_NO_MEMORY;
+    }
 
-void tinyui_demo_settings_panel(void)
-{
-    tinyui_obj_t *screen = tinyui_screen_create();
-    struct tinyui_window *win = (struct tinyui_window *)screen;
-    if (win == 0) return;
-    make_ui(win);
-    tinyui_screen_load(screen);
+    if (tinyui_label_set_text(title, "Settings") != 0
+        || tinyui_switch_set_checked(wifi, 1) != 0
+        || tinyui_slider_set_value(brightness, 75) != 0
+        || tinyui_button_set_text(apply, "Apply") != 0) {
+        return TINYUI_ERROR_BACKEND;
+    }
+
+    return TINYUI_OK;
 }

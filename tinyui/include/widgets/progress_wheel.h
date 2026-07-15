@@ -19,6 +19,13 @@
 #ifndef TINYUI_PROGRESS_WHEEL_H
 #define TINYUI_PROGRESS_WHEEL_H
 
+#include "tinyui_config.h"
+#if !TINYUI_ENABLE_PROGRESS_WHEEL
+#  ifndef TINYUI_INTERNAL_FEATURE_HEADER
+#  error "TINYUI_ENABLE_PROGRESS_WHEEL is disabled"
+#  endif
+#endif
+
 #include "core/obj.h"
 #include <stdint.h>
 

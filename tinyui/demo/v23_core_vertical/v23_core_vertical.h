@@ -16,9 +16,10 @@
  * limitations under the License.
  */
 
-#ifndef TINYUI_DEMO_SCROLL_SELECTER_BASIC_H
-#define TINYUI_DEMO_SCROLL_SELECTER_BASIC_H
+#ifndef TINYUI_DEMO_V23_CORE_VERTICAL_H
+#define TINYUI_DEMO_V23_CORE_VERTICAL_H
 
-void tinyui_demo_scroll_selecter_basic(void);
+void tinyui_demo_v23_core_vertical(void);
+void tinyui_demo_v23_core_vertical_frame(unsigned int elapsed_ms);
 
-#endif /* TINYUI_DEMO_SCROLL_SELECTER_BASIC_H */
+#endif /* TINYUI_DEMO_V23_CORE_VERTICAL_H */

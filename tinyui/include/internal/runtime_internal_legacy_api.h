@@ -1,6 +1,7 @@
 /*
  * Production-side renamed legacy ABI (Task 7).
- * Old tinyui_app_ and tinyui_widget_ names are only re-exported by v22_demo_bridge.
+ * Old public tinyui_app_ / tinyui_widget_ names are gone; only these
+ * tinyui_runtime_internal_* helpers remain for core/port/test support.
  */
 #ifndef TINYUI_RUNTIME_INTERNAL_LEGACY_API_H
 #define TINYUI_RUNTIME_INTERNAL_LEGACY_API_H

@@ -19,6 +19,8 @@
 #ifndef TINYUI_DEMO_HELLO_WORLD_H
 #define TINYUI_DEMO_HELLO_WORLD_H
 
-void tinyui_demo_hello_world(void);
+#include "tinyui.h"
+
+tinyui_result_t tinyui_demo_hello_world_build(tinyui_obj_t *screen);
 
 #endif /* TINYUI_DEMO_HELLO_WORLD_H */

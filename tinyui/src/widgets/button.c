@@ -151,6 +151,9 @@ static struct tinyui_button *tinyui_button_alloc(struct tinyui_widget *parent, c
     button->widget.visible    = 1;
     button->widget.enabled    = 1;
     button->widget.host_cleanup = tinyui_button_host_cleanup;
+    button->on_pressed_handle = 0U;
+    button->on_released_handle = 0U;
+    button->on_clicked_handle = 0U;
     _xBtnInit(button->widget.ld_name_id, (isBtnPressFunc)ldButtonActionIsPressById, &button->action_info);
 
     return button;
@@ -321,34 +324,49 @@ tinyui_obj_t *tinyui_button_create_with_props(tinyui_obj_t *parent,
     }
     }
     if ((props->fields & TINYUI_BUTTON_FIELD_ON_CLICKED) != 0) {
-    if (tinyui_button_set_on_clicked((tinyui_obj_t *)button, props->on_clicked, props->user_data) != 0) {
-        tinyui_button_rollback(button);
-        return 0;
-    }
+        /* props still carry legacy tinyui_event_cb; Task 6 set_on_* is unified-pool only.
+         * Legacy props callback shape is not expressible without a second event system —
+         * reject rather than fake-success. Prefer tinyui_obj_add_event_cb after create. */
+        if (props->on_clicked != 0) {
+            tinyui_button_rollback(button);
+            return 0;
+        }
     }
 
     return obj;
 }
 
-
-static int tinyui_button_set_event(struct tinyui_button *button,
-                                   tinyui_event_cb cb,
-                                   void *user_data,
-                                   int kind)
+static int tinyui_button_replace_event_cb(struct tinyui_button *button,
+                                          tinyui_event_handle_t *slot,
+                                          uint32_t event_mask,
+                                          tinyui_event_cb_t cb,
+                                          void *user_data)
 {
-    if (button == 0) {
+    tinyui_event_handle_t handle = 0U;
+    tinyui_result_t rc;
+
+    if (button == 0 || slot == 0) {
         return -1;
     }
 
-    if (kind == 0) {
-        button->on_pressed = cb;
-        button->on_pressed_user_data = user_data;
-    } else if (kind == 1) {
-        button->on_released = cb;
-        button->on_released_user_data = user_data;
-    } else {
+    if (*slot != 0U) {
+        (void)tinyui_obj_remove_event_cb((tinyui_obj_t *)button, *slot);
+        *slot = 0U;
+    }
+
+    if (cb == 0) {
+        return 0;
+    }
+
+    rc = tinyui_obj_add_event_cb((tinyui_obj_t *)button,
+                                 event_mask,
+                                 cb,
+                                 user_data,
+                                 &handle);
+    if (rc != TINYUI_OK) {
         return -1;
     }
+    *slot = handle;
     return 0;
 }
 
@@ -369,10 +387,7 @@ int tinyui_button_set_text(tinyui_obj_t *button_obj, const char *text)
         return -1;
     }
 
-    if (tinyui_runtime_internal_widget_set_text(&button->widget, text) != 0) {
-        return -1;
-    }
-    return tinyui_runtime_internal_widget_set_backend_text(&button->widget, text);
+    return tinyui_runtime_internal_widget_set_text(&button->widget, text);
 }
 
 /**
@@ -489,7 +504,9 @@ int tinyui_button_set_color(tinyui_obj_t *button_obj, unsigned int release_color
         return -1;
     }
 
-    ldButtonSetColor(ld_button, (ldColor)release_color, (ldColor)press_color);
+    ldButtonSetColor(ld_button,
+                     (ldColor)tinyui_rgb_to_ld_color(release_color),
+                     (ldColor)tinyui_rgb_to_ld_color(press_color));
     button->widget.bg_color = release_color;
     button->widget.border_color = press_color;
     return 0;
@@ -519,7 +536,7 @@ int tinyui_button_get_release_color(tinyui_obj_t *button_obj, unsigned int *rgb)
         return -1;
     }
 
-    *rgb = button->widget.bg_color;
+    *rgb = tinyui_ld_color_to_rgb((unsigned int)ldButtonGetReleaseColor(ld_button));
     return 0;
 }
 
@@ -547,7 +564,7 @@ int tinyui_button_get_press_color(tinyui_obj_t *button_obj, unsigned int *rgb)
         return -1;
     }
 
-    *rgb = button->widget.border_color;
+    *rgb = tinyui_ld_color_to_rgb((unsigned int)ldButtonGetPressColor(ld_button));
     return 0;
 }
 
@@ -1023,63 +1040,69 @@ int tinyui_button_get_text_color(tinyui_obj_t *button_obj, unsigned int *rgb)
         return -1;
     }
 
-    *rgb = button->widget.text_color;
+    *rgb = tinyui_ld_color_to_rgb((unsigned int)ldButtonGetTextColor(ld_button));
     return 0;
 }
 
 /**
- * @brief Set on clicked of button widget
+ * @brief Set on clicked of button widget (narrow forward to unified event pool)
  *
  * @param[in] button Button widget instance
- * @param[in] cb cb
+ * @param[in] cb Unified event callback (const tinyui_event_t *)
  * @param[in] user_data User data pointer
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_button_set_on_clicked(tinyui_obj_t *button_obj, tinyui_event_cb cb, void *user_data)
+int tinyui_button_set_on_clicked(tinyui_obj_t *button_obj, tinyui_event_cb_t cb, void *user_data)
 {
     struct tinyui_button *button = tinyui_button_as_button(button_obj);
     if (button == 0) { return -1; }
 
-    if (button == 0) {
-        return -1;
-    }
-
-    button->on_clicked = cb;
-    button->user_data = user_data;
-    return 0;
+    return tinyui_button_replace_event_cb(button,
+                                          &button->on_clicked_handle,
+                                          TINYUI_EVENT_MASK(TINYUI_EVENT_CLICKED),
+                                          cb,
+                                          user_data);
 }
 
 /**
- * @brief Set on pressed of button widget
+ * @brief Set on pressed of button widget (narrow forward to unified event pool)
  *
  * @param[in] button Button widget instance
- * @param[in] cb cb
+ * @param[in] cb Unified event callback (const tinyui_event_t *)
  * @param[in] user_data User data pointer
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_button_set_on_pressed(tinyui_obj_t *button_obj, tinyui_event_cb cb, void *user_data)
+int tinyui_button_set_on_pressed(tinyui_obj_t *button_obj, tinyui_event_cb_t cb, void *user_data)
 {
     struct tinyui_button *button = tinyui_button_as_button(button_obj);
     if (button == 0) { return -1; }
 
-    return tinyui_button_set_event(button, cb, user_data, 0);
+    return tinyui_button_replace_event_cb(button,
+                                          &button->on_pressed_handle,
+                                          TINYUI_EVENT_MASK(TINYUI_EVENT_PRESSED),
+                                          cb,
+                                          user_data);
 }
 
 /**
- * @brief Set on released of button widget
+ * @brief Set on released of button widget (narrow forward to unified event pool)
  *
  * @param[in] button Button widget instance
- * @param[in] cb cb
+ * @param[in] cb Unified event callback (const tinyui_event_t *)
  * @param[in] user_data User data pointer
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_button_set_on_released(tinyui_obj_t *button_obj, tinyui_event_cb cb, void *user_data)
+int tinyui_button_set_on_released(tinyui_obj_t *button_obj, tinyui_event_cb_t cb, void *user_data)
 {
     struct tinyui_button *button = tinyui_button_as_button(button_obj);
     if (button == 0) { return -1; }
 
-    return tinyui_button_set_event(button, cb, user_data, 1);
+    return tinyui_button_replace_event_cb(button,
+                                          &button->on_released_handle,
+                                          TINYUI_EVENT_MASK(TINYUI_EVENT_RELEASED),
+                                          cb,
+                                          user_data);
 }

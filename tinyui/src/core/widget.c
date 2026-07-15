@@ -21,6 +21,7 @@
 #include "arm_2d.h"
 #include "../../../src/gui/ldBase.h"
 #include "../../../src/gui/ldButton.h"
+#include "../../../src/gui/ldCalendar.h"
 #include "../../../src/gui/ldCheckBox.h"
 #include "../../../src/gui/ldComboBox.h"
 #include "../../../src/gui/ldDateTime.h"
@@ -31,12 +32,19 @@
 #include "../../../src/gui/ldLineEdit.h"
 #include "../../../src/gui/ldList.h"
 #include "../../../src/gui/ldMessageBox.h"
+#include "../../../src/gui/ldProgressBar.h"
+#include "../../../src/gui/ldQRCode.h"
 #include "../../../src/gui/ldScrollSelecter.h"
+#include "../../../src/gui/ldSlider.h"
+#include "../../../src/gui/ldSwitch.h"
 #include "../../../src/gui/ldTable.h"
+#include "../../../src/gui/ldText.h"
+#include "../../../src/gui/ldWindow.h"
 
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
 
 static struct tinyui_widget *tinyui_obj_widget(tinyui_obj_t *obj)
 {
@@ -48,13 +56,49 @@ static const struct tinyui_widget *tinyui_obj_const_widget(const tinyui_obj_t *o
     return (const struct tinyui_widget *)(const void *)obj;
 }
 
+static void tinyui_widget_free_owned_text(struct tinyui_widget *widget)
+{
+    if (widget == 0) {
+        return;
+    }
+    if (widget->text_owned && widget->text != 0) {
+        ldFree((void *)(uintptr_t)widget->text);
+    }
+    widget->text = 0;
+    widget->text_owned = 0;
+}
+
+static int tinyui_widget_is_deleting(const struct tinyui_widget *widget)
+{
+    return widget != 0 && widget->deleting != 0;
+}
+
 tinyui_result_t tinyui_obj_delete(tinyui_obj_t *obj)
 {
     struct tinyui_widget *widget = tinyui_obj_widget(obj);
+    struct tinyui_runtime_state *rt;
 
     if (widget == 0) {
         return TINYUI_ERROR_INVALID_OBJECT;
     }
+    if (tinyui_widget_is_deleting(widget)) {
+        return TINYUI_ERROR_INVALID_STATE;
+    }
+
+    rt = tinyui_runtime_state_get();
+    /* During process/dispatch: only mark deferred destroy for one target.
+     * Never destroy immediately while processing (avoids reentrancy / UAF).
+     * tinyui_process end flushes delete_pending via the sync destroy helper. */
+    if (rt != 0 && rt->processing) {
+        if (rt->delete_pending != 0) {
+            return TINYUI_ERROR_INVALID_STATE;
+        }
+        widget->deleting = 1;
+        rt->delete_target = obj;
+        rt->delete_pending = 1;
+        return TINYUI_OK;
+    }
+
     return tinyui_runtime_internal_widget_destroy(widget) == 0 ? TINYUI_OK : TINYUI_ERROR_INVALID_STATE;
 }
 
@@ -124,6 +168,444 @@ tinyui_result_t tinyui_obj_get_child_count(const tinyui_obj_t *obj, uint16_t *co
     }
     *count = (uint16_t)child_count;
     return TINYUI_OK;
+}
+
+static tinyui_result_t tinyui_obj_return(tinyui_result_t result)
+{
+    tinyui_runtime_set_last_result(result);
+    return result;
+}
+
+static tinyui_result_t tinyui_obj_map_internal_rc(int rc)
+{
+    if (rc == 0) {
+        return tinyui_obj_return(TINYUI_OK);
+    }
+    return tinyui_obj_return(TINYUI_ERROR_BACKEND);
+}
+
+tinyui_result_t tinyui_obj_set_pos(tinyui_obj_t *obj, int x, int y)
+{
+    struct tinyui_widget *widget = tinyui_obj_widget(obj);
+
+    if (widget == 0) {
+        return tinyui_obj_return(TINYUI_ERROR_INVALID_OBJECT);
+    }
+    if (tinyui_widget_is_deleting(widget)) {
+        return tinyui_obj_return(TINYUI_ERROR_INVALID_STATE);
+    }
+    /* Geometry always maps to ldBase when bound. */
+    return tinyui_obj_map_internal_rc(tinyui_runtime_internal_widget_set_pos(widget, x, y));
+}
+
+tinyui_result_t tinyui_obj_set_size(tinyui_obj_t *obj, int width, int height)
+{
+    struct tinyui_widget *widget = tinyui_obj_widget(obj);
+
+    if (widget == 0) {
+        return tinyui_obj_return(TINYUI_ERROR_INVALID_OBJECT);
+    }
+    if (tinyui_widget_is_deleting(widget)) {
+        return tinyui_obj_return(TINYUI_ERROR_INVALID_STATE);
+    }
+    if (width < 0 || height < 0) {
+        return tinyui_obj_return(TINYUI_ERROR_OUT_OF_RANGE);
+    }
+    return tinyui_obj_map_internal_rc(tinyui_runtime_internal_widget_set_size(widget, width, height));
+}
+
+tinyui_result_t tinyui_obj_set_text(tinyui_obj_t *obj, const char *text)
+{
+    struct tinyui_widget *widget = tinyui_obj_widget(obj);
+    int rc;
+
+    if (widget == 0) {
+        return tinyui_obj_return(TINYUI_ERROR_INVALID_OBJECT);
+    }
+    if (text == 0) {
+        return tinyui_obj_return(TINYUI_ERROR_INVALID_ARG);
+    }
+    if (tinyui_widget_is_deleting(widget)) {
+        return tinyui_obj_return(TINYUI_ERROR_INVALID_STATE);
+    }
+
+    /* Static kind→capability matrix: unsupported kinds never claim BACKEND success. */
+    switch (widget->kind) {
+    case TINYUI_BACKEND_WIDGET_LABEL:
+    case TINYUI_BACKEND_WIDGET_TEXT:
+    case TINYUI_BACKEND_WIDGET_QRCODE:
+    case TINYUI_BACKEND_WIDGET_BUTTON:
+    case TINYUI_BACKEND_WIDGET_CHECKBOX:
+    case TINYUI_BACKEND_WIDGET_LINE_EDIT:
+        break;
+    default:
+        return tinyui_obj_return(TINYUI_ERROR_NOT_SUPPORTED);
+    }
+
+    rc = tinyui_runtime_internal_widget_set_text(widget, text);
+    if (rc == -2) {
+        return tinyui_obj_return(TINYUI_ERROR_CAPACITY);
+    }
+    if (rc != 0) {
+        return tinyui_obj_return(TINYUI_ERROR_NO_MEMORY);
+    }
+    return tinyui_obj_return(TINYUI_OK);
+}
+
+tinyui_result_t tinyui_obj_set_bg_color(tinyui_obj_t *obj, unsigned int rgb)
+{
+    struct tinyui_widget *widget = tinyui_obj_widget(obj);
+
+    if (widget == 0) {
+        return tinyui_obj_return(TINYUI_ERROR_INVALID_OBJECT);
+    }
+    if (tinyui_widget_is_deleting(widget)) {
+        return tinyui_obj_return(TINYUI_ERROR_INVALID_STATE);
+    }
+    /* Capability gate before any backend touch. */
+    switch (widget->kind) {
+    case TINYUI_BACKEND_WIDGET_LABEL:
+    case TINYUI_BACKEND_WIDGET_BUTTON:
+    case TINYUI_BACKEND_WIDGET_CHECKBOX:
+    case TINYUI_BACKEND_WIDGET_SLIDER:
+    case TINYUI_BACKEND_WIDGET_TEXT:
+    case TINYUI_BACKEND_WIDGET_QRCODE:
+    case TINYUI_BACKEND_WIDGET_LIST:
+    case TINYUI_BACKEND_WIDGET_COMBO_BOX:
+    case TINYUI_BACKEND_WIDGET_SCROLL_SELECTER:
+    case TINYUI_BACKEND_WIDGET_DATE_TIME:
+    case TINYUI_BACKEND_WIDGET_MESSAGE_BOX:
+    case TINYUI_BACKEND_WIDGET_TABLE:
+    case TINYUI_BACKEND_WIDGET_LINE_EDIT:
+    case TINYUI_BACKEND_WIDGET_CALENDAR:
+    case TINYUI_BACKEND_WIDGET_WINDOW:
+    case TINYUI_BACKEND_WIDGET_BACKGROUND:
+    case TINYUI_BACKEND_WIDGET_PROGRESS_BAR:
+        break;
+    default:
+        return tinyui_obj_return(TINYUI_ERROR_NOT_SUPPORTED);
+    }
+    if (tinyui_runtime_internal_widget_set_bg_color(widget, rgb) != 0) {
+        return tinyui_obj_return(TINYUI_ERROR_BACKEND);
+    }
+    return tinyui_obj_return(TINYUI_OK);
+}
+
+tinyui_result_t tinyui_obj_set_text_color(tinyui_obj_t *obj, unsigned int rgb)
+{
+    struct tinyui_widget *widget = tinyui_obj_widget(obj);
+
+    if (widget == 0) {
+        return tinyui_obj_return(TINYUI_ERROR_INVALID_OBJECT);
+    }
+    if (tinyui_widget_is_deleting(widget)) {
+        return tinyui_obj_return(TINYUI_ERROR_INVALID_STATE);
+    }
+    switch (widget->kind) {
+    case TINYUI_BACKEND_WIDGET_LABEL:
+    case TINYUI_BACKEND_WIDGET_BUTTON:
+    case TINYUI_BACKEND_WIDGET_CHECKBOX:
+    case TINYUI_BACKEND_WIDGET_TEXT:
+    case TINYUI_BACKEND_WIDGET_LIST:
+    case TINYUI_BACKEND_WIDGET_COMBO_BOX:
+    case TINYUI_BACKEND_WIDGET_SCROLL_SELECTER:
+    case TINYUI_BACKEND_WIDGET_DATE_TIME:
+    case TINYUI_BACKEND_WIDGET_LINE_EDIT:
+    case TINYUI_BACKEND_WIDGET_CALENDAR:
+        break;
+    default:
+        return tinyui_obj_return(TINYUI_ERROR_NOT_SUPPORTED);
+    }
+    if (tinyui_runtime_internal_widget_set_text_color(widget, rgb) != 0) {
+        return tinyui_obj_return(TINYUI_ERROR_BACKEND);
+    }
+    return tinyui_obj_return(TINYUI_OK);
+}
+
+tinyui_result_t tinyui_obj_set_border_color(tinyui_obj_t *obj, unsigned int rgb)
+{
+    struct tinyui_widget *widget = tinyui_obj_widget(obj);
+
+    (void)rgb;
+    if (widget == 0) {
+        return tinyui_obj_return(TINYUI_ERROR_INVALID_OBJECT);
+    }
+    if (tinyui_widget_is_deleting(widget)) {
+        return tinyui_obj_return(TINYUI_ERROR_INVALID_STATE);
+    }
+    /* No common LD border-color field for M2 sample kinds. */
+    return tinyui_obj_return(TINYUI_ERROR_NOT_SUPPORTED);
+}
+
+tinyui_result_t tinyui_obj_set_border_width(tinyui_obj_t *obj, int width)
+{
+    struct tinyui_widget *widget = tinyui_obj_widget(obj);
+
+    (void)width;
+    if (widget == 0) {
+        return tinyui_obj_return(TINYUI_ERROR_INVALID_OBJECT);
+    }
+    if (tinyui_widget_is_deleting(widget)) {
+        return tinyui_obj_return(TINYUI_ERROR_INVALID_STATE);
+    }
+    /* No common LD border-width field for M2 samples. */
+    return tinyui_obj_return(TINYUI_ERROR_NOT_SUPPORTED);
+}
+
+tinyui_result_t tinyui_obj_set_radius(tinyui_obj_t *obj, int radius)
+{
+    struct tinyui_widget *widget = tinyui_obj_widget(obj);
+
+    if (widget == 0) {
+        return tinyui_obj_return(TINYUI_ERROR_INVALID_OBJECT);
+    }
+    if (tinyui_widget_is_deleting(widget)) {
+        return tinyui_obj_return(TINYUI_ERROR_INVALID_STATE);
+    }
+    if (radius < 0) {
+        return tinyui_obj_return(TINYUI_ERROR_OUT_OF_RANGE);
+    }
+    /* No common LD radius field for M2 sample kinds. */
+    return tinyui_obj_return(TINYUI_ERROR_NOT_SUPPORTED);
+}
+
+tinyui_result_t tinyui_obj_set_padding(tinyui_obj_t *obj, int padding)
+{
+    struct tinyui_widget *widget = tinyui_obj_widget(obj);
+
+    if (widget == 0) {
+        return tinyui_obj_return(TINYUI_ERROR_INVALID_OBJECT);
+    }
+    if (tinyui_widget_is_deleting(widget)) {
+        return tinyui_obj_return(TINYUI_ERROR_INVALID_STATE);
+    }
+    if (padding < 0) {
+        return tinyui_obj_return(TINYUI_ERROR_OUT_OF_RANGE);
+    }
+    if (widget->kind != TINYUI_BACKEND_WIDGET_WINDOW
+        && widget->kind != TINYUI_BACKEND_WIDGET_BACKGROUND) {
+        return tinyui_obj_return(TINYUI_ERROR_NOT_SUPPORTED);
+    }
+    if (tinyui_runtime_internal_widget_set_padding(widget, padding) != 0) {
+        return tinyui_obj_return(TINYUI_ERROR_BACKEND);
+    }
+    return tinyui_obj_return(TINYUI_OK);
+}
+
+tinyui_result_t tinyui_obj_set_visible(tinyui_obj_t *obj, int visible)
+{
+    struct tinyui_widget *widget = tinyui_obj_widget(obj);
+
+    if (widget == 0) {
+        return tinyui_obj_return(TINYUI_ERROR_INVALID_OBJECT);
+    }
+    if (tinyui_widget_is_deleting(widget)) {
+        return tinyui_obj_return(TINYUI_ERROR_INVALID_STATE);
+    }
+    return tinyui_obj_map_internal_rc(tinyui_runtime_internal_widget_set_visible(widget, visible));
+}
+
+tinyui_result_t tinyui_obj_set_enabled(tinyui_obj_t *obj, int enabled)
+{
+    struct tinyui_widget *widget = tinyui_obj_widget(obj);
+
+    if (widget == 0) {
+        return tinyui_obj_return(TINYUI_ERROR_INVALID_OBJECT);
+    }
+    if (tinyui_widget_is_deleting(widget)) {
+        return tinyui_obj_return(TINYUI_ERROR_INVALID_STATE);
+    }
+    return tinyui_obj_map_internal_rc(tinyui_runtime_internal_widget_set_enabled(widget, enabled));
+}
+
+tinyui_result_t tinyui_obj_set_opacity(tinyui_obj_t *obj, int opacity)
+{
+    struct tinyui_widget *widget = tinyui_obj_widget(obj);
+
+    if (widget == 0) {
+        return tinyui_obj_return(TINYUI_ERROR_INVALID_OBJECT);
+    }
+    if (tinyui_widget_is_deleting(widget)) {
+        return tinyui_obj_return(TINYUI_ERROR_INVALID_STATE);
+    }
+    if (opacity < 0 || opacity > 255) {
+        return tinyui_obj_return(TINYUI_ERROR_OUT_OF_RANGE);
+    }
+    return tinyui_obj_map_internal_rc(tinyui_runtime_internal_widget_set_opacity(widget, opacity));
+}
+
+tinyui_result_t tinyui_obj_set_selectable(tinyui_obj_t *obj, int selectable)
+{
+    struct tinyui_widget *widget = tinyui_obj_widget(obj);
+
+    if (widget == 0) {
+        return tinyui_obj_return(TINYUI_ERROR_INVALID_OBJECT);
+    }
+    if (tinyui_widget_is_deleting(widget)) {
+        return tinyui_obj_return(TINYUI_ERROR_INVALID_STATE);
+    }
+    return tinyui_obj_map_internal_rc(tinyui_runtime_internal_widget_set_selectable(widget, selectable));
+}
+
+tinyui_result_t tinyui_obj_set_selected(tinyui_obj_t *obj, int selected)
+{
+    struct tinyui_widget *widget = tinyui_obj_widget(obj);
+
+    if (widget == 0) {
+        return tinyui_obj_return(TINYUI_ERROR_INVALID_OBJECT);
+    }
+    if (tinyui_widget_is_deleting(widget)) {
+        return tinyui_obj_return(TINYUI_ERROR_INVALID_STATE);
+    }
+    return tinyui_obj_map_internal_rc(tinyui_runtime_internal_widget_set_selected(widget, selected));
+}
+
+tinyui_result_t tinyui_obj_set_flex_grow(tinyui_obj_t *obj, int grow)
+{
+    struct tinyui_widget *widget = tinyui_obj_widget(obj);
+
+    if (widget == 0) {
+        return tinyui_obj_return(TINYUI_ERROR_INVALID_OBJECT);
+    }
+    if (tinyui_widget_is_deleting(widget)) {
+        return tinyui_obj_return(TINYUI_ERROR_INVALID_STATE);
+    }
+    if (grow < 0) {
+        return tinyui_obj_return(TINYUI_ERROR_OUT_OF_RANGE);
+    }
+    return tinyui_obj_map_internal_rc(
+        tinyui_runtime_internal_widget_set_flex_grow(widget, grow));
+}
+
+tinyui_result_t tinyui_obj_set_flex_new_track(tinyui_obj_t *obj, int new_track)
+{
+    struct tinyui_widget *widget = tinyui_obj_widget(obj);
+
+    if (widget == 0) {
+        return tinyui_obj_return(TINYUI_ERROR_INVALID_OBJECT);
+    }
+    if (tinyui_widget_is_deleting(widget)) {
+        return tinyui_obj_return(TINYUI_ERROR_INVALID_STATE);
+    }
+    return tinyui_obj_map_internal_rc(
+        tinyui_runtime_internal_widget_set_flex_new_track(widget, new_track));
+}
+
+tinyui_result_t tinyui_obj_set_flex_min_width(tinyui_obj_t *obj, int min_width)
+{
+    struct tinyui_widget *widget = tinyui_obj_widget(obj);
+
+    if (widget == 0) {
+        return tinyui_obj_return(TINYUI_ERROR_INVALID_OBJECT);
+    }
+    if (tinyui_widget_is_deleting(widget)) {
+        return tinyui_obj_return(TINYUI_ERROR_INVALID_STATE);
+    }
+    if (min_width < 0) {
+        return tinyui_obj_return(TINYUI_ERROR_OUT_OF_RANGE);
+    }
+    return tinyui_obj_map_internal_rc(
+        tinyui_runtime_internal_widget_set_flex_min_width(widget, min_width));
+}
+
+tinyui_result_t tinyui_obj_set_flex_min_height(tinyui_obj_t *obj, int min_height)
+{
+    struct tinyui_widget *widget = tinyui_obj_widget(obj);
+
+    if (widget == 0) {
+        return tinyui_obj_return(TINYUI_ERROR_INVALID_OBJECT);
+    }
+    if (tinyui_widget_is_deleting(widget)) {
+        return tinyui_obj_return(TINYUI_ERROR_INVALID_STATE);
+    }
+    if (min_height < 0) {
+        return tinyui_obj_return(TINYUI_ERROR_OUT_OF_RANGE);
+    }
+    return tinyui_obj_map_internal_rc(
+        tinyui_runtime_internal_widget_set_flex_min_height(widget, min_height));
+}
+
+tinyui_result_t tinyui_obj_set_flex_max_width(tinyui_obj_t *obj, int max_width)
+{
+    struct tinyui_widget *widget = tinyui_obj_widget(obj);
+
+    if (widget == 0) {
+        return tinyui_obj_return(TINYUI_ERROR_INVALID_OBJECT);
+    }
+    if (tinyui_widget_is_deleting(widget)) {
+        return tinyui_obj_return(TINYUI_ERROR_INVALID_STATE);
+    }
+    if (max_width < 0) {
+        return tinyui_obj_return(TINYUI_ERROR_OUT_OF_RANGE);
+    }
+    return tinyui_obj_map_internal_rc(
+        tinyui_runtime_internal_widget_set_flex_max_width(widget, max_width));
+}
+
+tinyui_result_t tinyui_obj_set_flex_max_height(tinyui_obj_t *obj, int max_height)
+{
+    struct tinyui_widget *widget = tinyui_obj_widget(obj);
+
+    if (widget == 0) {
+        return tinyui_obj_return(TINYUI_ERROR_INVALID_OBJECT);
+    }
+    if (tinyui_widget_is_deleting(widget)) {
+        return tinyui_obj_return(TINYUI_ERROR_INVALID_STATE);
+    }
+    if (max_height < 0) {
+        return tinyui_obj_return(TINYUI_ERROR_OUT_OF_RANGE);
+    }
+    return tinyui_obj_map_internal_rc(
+        tinyui_runtime_internal_widget_set_flex_max_height(widget, max_height));
+}
+
+tinyui_result_t tinyui_obj_set_ignore_layout(tinyui_obj_t *obj, int ignore_layout)
+{
+    struct tinyui_widget *widget = tinyui_obj_widget(obj);
+
+    if (widget == 0) {
+        return tinyui_obj_return(TINYUI_ERROR_INVALID_OBJECT);
+    }
+    if (tinyui_widget_is_deleting(widget)) {
+        return tinyui_obj_return(TINYUI_ERROR_INVALID_STATE);
+    }
+    return tinyui_obj_map_internal_rc(
+        tinyui_runtime_internal_widget_set_ignore_layout(widget, ignore_layout));
+}
+
+tinyui_result_t tinyui_obj_set_grid_cell(tinyui_obj_t *obj,
+                                         int col,
+                                         int row,
+                                         int col_span,
+                                         int row_span,
+                                         tinyui_align_t x_align,
+                                         tinyui_align_t y_align)
+{
+    struct tinyui_widget *widget = tinyui_obj_widget(obj);
+    enum tinyui_align internal_x;
+    enum tinyui_align internal_y;
+
+    if (widget == 0) {
+        return tinyui_obj_return(TINYUI_ERROR_INVALID_OBJECT);
+    }
+    if (tinyui_widget_is_deleting(widget)) {
+        return tinyui_obj_return(TINYUI_ERROR_INVALID_STATE);
+    }
+    if (col_span <= 0 || row_span <= 0) {
+        return tinyui_obj_return(TINYUI_ERROR_OUT_OF_RANGE);
+    }
+
+    /* Public tinyui_align_t values match internal enum tinyui_align. */
+    internal_x = (enum tinyui_align)x_align;
+    internal_y = (enum tinyui_align)y_align;
+    return tinyui_obj_map_internal_rc(
+        tinyui_runtime_internal_widget_set_grid_cell(widget,
+                                                     col,
+                                                     row,
+                                                     col_span,
+                                                     row_span,
+                                                     internal_x,
+                                                     internal_y));
 }
 
 typedef struct ldLabel_t ldLabel_t;
@@ -652,53 +1134,114 @@ int tinyui_runtime_internal_widget_set_size(struct tinyui_widget *widget, int wi
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_runtime_internal_widget_set_text(struct tinyui_widget *widget, const char *text)
+int tinyui_runtime_internal_widget_set_backend_text(struct tinyui_widget *widget, const char *text)
 {
-    if (!tinyui_runtime_internal_widget_is_valid(widget) || text == 0) {
+    if (widget == NULL || text == NULL || tinyui_widget_is_deleting(widget)) {
         return -1;
     }
 
-    widget->text = text;
+    if (widget->ld_widget == NULL) {
+        return -1;
+    }
+
+    switch (widget->kind) {
+    case TINYUI_BACKEND_WIDGET_LABEL:
+        ldLabelSetText((ldLabel_t *)widget->ld_widget, (uint8_t *)(uintptr_t)text);
+        if (ldLabelGetText((ldLabel_t *)widget->ld_widget) == 0) {
+            return -1;
+        }
+        break;
+    case TINYUI_BACKEND_WIDGET_TEXT:
+        ldTextSetText((ldText_t *)widget->ld_widget, (uint8_t *)(uintptr_t)text);
+        break;
+    case TINYUI_BACKEND_WIDGET_QRCODE:
+        ldQRCodeSetText((ldQRCode_t *)widget->ld_widget, (uint8_t *)(uintptr_t)text);
+        break;
+    case TINYUI_BACKEND_WIDGET_BUTTON:
+        ldButtonSetText((ldButton_t *)widget->ld_widget, (uint8_t *)(uintptr_t)text);
+        break;
+    case TINYUI_BACKEND_WIDGET_CHECKBOX:
+    {
+        ldCheckBox_t *ld_checkbox = (ldCheckBox_t *)widget->ld_widget;
+        arm_2d_font_t *font = (arm_2d_font_t *)widget->font;
+
+        if (font == NULL) {
+            font = ld_checkbox->ptFont;
+        }
+        ldCheckBoxSetText(ld_checkbox, font, (uint8_t *)(uintptr_t)text);
+        break;
+    }
+    case TINYUI_BACKEND_WIDGET_LINE_EDIT:
+    {
+        ldLineEdit_t *ld_line_edit = (ldLineEdit_t *)widget->ld_widget;
+        size_t len = strlen(text);
+        const uint8_t *backend_text;
+
+        /* LD copies into fixed pText when textLen < textMax. */
+        if (ld_line_edit->textMax != 0 && len >= (size_t)ld_line_edit->textMax) {
+            return -2; /* CAPACITY */
+        }
+        ldLineEditSetText(ld_line_edit, (uint8_t *)(uintptr_t)text);
+        backend_text = ldLineEditGetText(ld_line_edit);
+        if (backend_text == 0 || strcmp((const char *)backend_text, text) != 0) {
+            return -1;
+        }
+        break;
+    }
+    default:
+        return -1;
+    }
+
     return 0;
 }
 
-int tinyui_runtime_internal_widget_set_backend_text(struct tinyui_widget *widget, const char *text)
+int tinyui_runtime_internal_widget_set_text(struct tinyui_widget *widget, const char *text)
 {
-    if (widget == NULL || text == NULL) {
+    char *copy;
+    const char *old_text;
+    size_t len;
+    int backend_rc;
+
+    if (!tinyui_runtime_internal_widget_is_valid(widget) || text == 0
+        || tinyui_widget_is_deleting(widget)) {
         return -1;
     }
 
-    widget->text = text;
-    if (widget->ld_widget != NULL) {
-        switch (widget->kind) {
-        case TINYUI_BACKEND_WIDGET_LABEL:
-            ldLabelSetText((ldLabel_t *)widget->ld_widget, (uint8_t *)text);
-            break;
-        case TINYUI_BACKEND_WIDGET_TEXT:
-            ldTextSetText((ldText_t *)widget->ld_widget, (uint8_t *)text);
-            break;
-        case TINYUI_BACKEND_WIDGET_QRCODE:
-            ldQRCodeSetText((ldQRCode_t *)widget->ld_widget, (uint8_t *)text);
-            break;
-        case TINYUI_BACKEND_WIDGET_BUTTON:
-            ldButtonSetText((ldButton_t *)widget->ld_widget, (uint8_t *)text);
-            break;
-        case TINYUI_BACKEND_WIDGET_CHECKBOX:
-        {
-            ldCheckBox_t *ld_checkbox = (ldCheckBox_t *)widget->ld_widget;
-            arm_2d_font_t *font = (arm_2d_font_t *)widget->font;
-
-            if (font == NULL) {
-                font = ld_checkbox->ptFont;
-            }
-            ldCheckBoxSetText(ld_checkbox, font, (uint8_t *)text);
-            break;
+    /* LINE_EDIT stores text in the fixed LD buffer; do not heap-mirror. */
+    if (widget->kind == TINYUI_BACKEND_WIDGET_LINE_EDIT) {
+        backend_rc = tinyui_runtime_internal_widget_set_backend_text(widget, text);
+        if (backend_rc != 0) {
+            return backend_rc;
         }
-        default:
-            break;
+        old_text = widget->text;
+        if (widget->text_owned && old_text != 0) {
+            ldFree((void *)(uintptr_t)old_text);
         }
+        widget->text = (const char *)ldLineEditGetText((ldLineEdit_t *)widget->ld_widget);
+        widget->text_owned = 0;
+        return 0;
     }
 
+    /* Commit order: validate → allocate copy → backend → replace owned cache. */
+    len = strlen(text);
+    copy = (char *)ldCalloc(1U, (uint32_t)(len + 1U));
+    if (copy == 0) {
+        return -1;
+    }
+    memcpy(copy, text, len + 1U);
+
+    backend_rc = tinyui_runtime_internal_widget_set_backend_text(widget, copy);
+    if (backend_rc != 0) {
+        ldFree(copy);
+        return backend_rc;
+    }
+
+    old_text = widget->text;
+    widget->text = copy;
+    if (widget->text_owned && old_text != 0 && old_text != copy) {
+        ldFree((void *)(uintptr_t)old_text);
+    }
+    widget->text_owned = 1;
     return 0;
 }
 
@@ -776,7 +1319,77 @@ int tinyui_runtime_internal_widget_set_user_data(struct tinyui_widget *widget, v
 
 int tinyui_runtime_internal_widget_set_bg_color(struct tinyui_widget *widget, unsigned int rgb)
 {
-    if (!tinyui_runtime_internal_widget_is_valid(widget)) {
+    ldColor color;
+
+    if (!tinyui_runtime_internal_widget_is_valid(widget) || widget->ld_widget == 0
+        || tinyui_widget_is_deleting(widget)) {
+        return -1;
+    }
+
+    color = (ldColor)tinyui_rgb_to_ld_color(rgb);
+
+    /* Compile-time kind→adapter: only real LD color fields. Cache after success. */
+    switch (widget->kind) {
+    case TINYUI_BACKEND_WIDGET_LABEL:
+        ldLabelSetBackgroundColor((ldLabel_t *)widget->ld_widget, color);
+        break;
+    case TINYUI_BACKEND_WIDGET_BUTTON: {
+        ldButton_t *btn = (ldButton_t *)widget->ld_widget;
+        ldButtonSetColor(btn, color, btn->pressColor);
+        break;
+    }
+    case TINYUI_BACKEND_WIDGET_CHECKBOX: {
+        ldCheckBox_t *cb = (ldCheckBox_t *)widget->ld_widget;
+        ldCheckBoxSetColor(cb, color, cb->fgColor);
+        break;
+    }
+    case TINYUI_BACKEND_WIDGET_SLIDER: {
+        ldSlider_t *slider = (ldSlider_t *)widget->ld_widget;
+        ldSliderSetColor(slider, color, slider->frameColor, slider->indicColor);
+        break;
+    }
+    case TINYUI_BACKEND_WIDGET_TEXT:
+        ldTextSetBackgroundColor((ldText_t *)widget->ld_widget, color);
+        break;
+    case TINYUI_BACKEND_WIDGET_QRCODE:
+        ((ldQRCode_t *)widget->ld_widget)->bgColor = color;
+        break;
+    case TINYUI_BACKEND_WIDGET_LIST:
+        ldListSetBackgroundColor((ldList_t *)widget->ld_widget, color);
+        break;
+    case TINYUI_BACKEND_WIDGET_COMBO_BOX:
+        ldComboBoxSetBackgroundColor((ldComboBox_t *)widget->ld_widget, color);
+        break;
+    case TINYUI_BACKEND_WIDGET_SCROLL_SELECTER:
+        ldScrollSelecterSetBackgroundColor((ldScrollSelecter_t *)widget->ld_widget, color);
+        break;
+    case TINYUI_BACKEND_WIDGET_DATE_TIME:
+        ldDateTimeSetBackgroundColor((ldDateTime_t *)widget->ld_widget, color);
+        break;
+    case TINYUI_BACKEND_WIDGET_MESSAGE_BOX:
+        ldMessageBoxSetBackgroundColor((ldMessageBox_t *)widget->ld_widget, color);
+        break;
+    case TINYUI_BACKEND_WIDGET_TABLE:
+        ldTableSetBackgroundColor((ldTable_t *)widget->ld_widget, color);
+        break;
+    case TINYUI_BACKEND_WIDGET_LINE_EDIT: {
+        ldLineEdit_t *le = (ldLineEdit_t *)widget->ld_widget;
+        ldLineEditSetColor(le, le->textColor, color, le->frameColor);
+        break;
+    }
+    case TINYUI_BACKEND_WIDGET_CALENDAR:
+        ((ldCalendar_t *)widget->ld_widget)->bgColor = color;
+        break;
+    case TINYUI_BACKEND_WIDGET_WINDOW:
+    case TINYUI_BACKEND_WIDGET_BACKGROUND:
+        ldWindowSetColor((ldWindow_t *)widget->ld_widget, color);
+        break;
+    case TINYUI_BACKEND_WIDGET_PROGRESS_BAR: {
+        ldProgressBar_t *bar = (ldProgressBar_t *)widget->ld_widget;
+        ldProgressBarSetColor(bar, color, bar->fgColor);
+        break;
+    }
+    default:
         return -1;
     }
 
@@ -794,7 +1407,49 @@ int tinyui_runtime_internal_widget_set_bg_color(struct tinyui_widget *widget, un
 
 int tinyui_runtime_internal_widget_set_text_color(struct tinyui_widget *widget, unsigned int rgb)
 {
-    if (!tinyui_runtime_internal_widget_is_valid(widget)) {
+    ldColor color;
+
+    if (!tinyui_runtime_internal_widget_is_valid(widget) || widget->ld_widget == 0
+        || tinyui_widget_is_deleting(widget)) {
+        return -1;
+    }
+
+    color = (ldColor)tinyui_rgb_to_ld_color(rgb);
+
+    switch (widget->kind) {
+    case TINYUI_BACKEND_WIDGET_LABEL:
+        ldLabelSetTextColor((ldLabel_t *)widget->ld_widget, color);
+        break;
+    case TINYUI_BACKEND_WIDGET_BUTTON:
+        ldButtonSetTextColor((ldButton_t *)widget->ld_widget, color);
+        break;
+    case TINYUI_BACKEND_WIDGET_CHECKBOX:
+        ldCheckBoxSetTextColor((ldCheckBox_t *)widget->ld_widget, color);
+        break;
+    case TINYUI_BACKEND_WIDGET_TEXT:
+        ldTextSetTextColor((ldText_t *)widget->ld_widget, color);
+        break;
+    case TINYUI_BACKEND_WIDGET_LIST:
+        ldListSetTextColor((ldList_t *)widget->ld_widget, color);
+        break;
+    case TINYUI_BACKEND_WIDGET_COMBO_BOX:
+        ldComboBoxSetTextColor((ldComboBox_t *)widget->ld_widget, color);
+        break;
+    case TINYUI_BACKEND_WIDGET_SCROLL_SELECTER:
+        ldScrollSelecterSetTextColor((ldScrollSelecter_t *)widget->ld_widget, color);
+        break;
+    case TINYUI_BACKEND_WIDGET_DATE_TIME:
+        ldDateTimeSetTextColor((ldDateTime_t *)widget->ld_widget, color);
+        break;
+    case TINYUI_BACKEND_WIDGET_LINE_EDIT: {
+        ldLineEdit_t *le = (ldLineEdit_t *)widget->ld_widget;
+        ldLineEditSetColor(le, color, le->backgroundColor, le->frameColor);
+        break;
+    }
+    case TINYUI_BACKEND_WIDGET_CALENDAR:
+        ((ldCalendar_t *)widget->ld_widget)->textColor = color;
+        break;
+    default:
         return -1;
     }
 
@@ -812,12 +1467,13 @@ int tinyui_runtime_internal_widget_set_text_color(struct tinyui_widget *widget, 
 
 int tinyui_runtime_internal_widget_set_border_color(struct tinyui_widget *widget, unsigned int rgb)
 {
-    if (!tinyui_runtime_internal_widget_is_valid(widget)) {
+    if (!tinyui_runtime_internal_widget_is_valid(widget) || tinyui_widget_is_deleting(widget)) {
         return -1;
     }
 
-    widget->border_color = rgb;
-    return 0;
+    (void)rgb;
+    /* No common LD border-color field for M2 sample kinds. */
+    return -1;
 }
 
 /**
@@ -830,12 +1486,14 @@ int tinyui_runtime_internal_widget_set_border_color(struct tinyui_widget *widget
 
 int tinyui_runtime_internal_widget_set_radius(struct tinyui_widget *widget, int radius)
 {
-    if (!tinyui_runtime_internal_widget_is_valid(widget) || radius < 0) {
+    if (!tinyui_runtime_internal_widget_is_valid(widget) || radius < 0
+        || tinyui_widget_is_deleting(widget)) {
         return -1;
     }
 
-    widget->radius = radius;
-    return 0;
+    /* No common LD radius field for M2 sample kinds; refuse fake cache success. */
+    (void)widget;
+    return -1;
 }
 
 /**
@@ -848,7 +1506,8 @@ int tinyui_runtime_internal_widget_set_radius(struct tinyui_widget *widget, int 
 
 int tinyui_runtime_internal_widget_set_padding(struct tinyui_widget *widget, int padding)
 {
-    if (!tinyui_runtime_internal_widget_is_valid(widget) || padding < 0) {
+    if (!tinyui_runtime_internal_widget_is_valid(widget) || padding < 0
+        || tinyui_widget_is_deleting(widget)) {
         return -1;
     }
 
@@ -859,10 +1518,12 @@ int tinyui_runtime_internal_widget_set_padding(struct tinyui_widget *widget, int
         if (tinyui_window_apply_uniform_padding(window, padding) != 0) {
             return -1;
         }
+        widget->padding = padding;
+        return 0;
     }
 
-    widget->padding = padding;
-    return 0;
+    /* Leaf samples have no LD padding channel. */
+    return -1;
 }
 
 /**
@@ -1314,7 +1975,6 @@ static void tinyui_destroy_reclaim_hosts_in_subtree(struct tinyui_app *app, ldBa
 int tinyui_runtime_internal_widget_destroy(struct tinyui_widget *widget)
 {
     struct tinyui_app *owner;
-    ldBase_t *ld_base;
 
     if (!tinyui_runtime_internal_widget_is_valid(widget)) {
         return -1;
@@ -1326,7 +1986,8 @@ int tinyui_runtime_internal_widget_destroy(struct tinyui_widget *widget)
 
     owner = widget->owner;
 
-    /* Root window cannot be destroyed individually */
+    /* Root window cannot be destroyed individually via public delete when it is
+     * the app's designated root_window; v2.3 screen roots still use deinit. */
     if (owner != 0 && owner->root_window != 0 &&
         &owner->root_window->widget == widget) {
         return -1;
@@ -1340,6 +2001,8 @@ int tinyui_runtime_internal_widget_destroy(struct tinyui_widget *widget)
             (void)tinyui_runtime_internal_widget_release_editing(widget);
         }
     }
+
+    widget->deleting = 1;
 
     /* Container path: reclaim all hosts in subtree (including this one), then
      * let ldGuiDisposeNodeTree tear down the entire ld subtree. */
@@ -2066,10 +2729,13 @@ static void tinyui_destroy_reclaim_hosts_in_subtree(struct tinyui_app *app, ldBa
                     (void)tinyui_runtime_internal_widget_release_editing(host);
                 }
             }
+            host->deleting = 1;
+            tinyui_event_emit_delete(host);
             tinyui_runtime_internal_widget_prepare_native_depose(host);
             if (host->host_cleanup != 0) {
                 host->host_cleanup(host);
             }
+            tinyui_widget_free_owned_text(host);
             tinyui_runtime_internal_app_free_name_id(app, host->ld_name_id);
             tinyui_runtime_internal_app_unregister_host(app, host);
             ldFree(host);
@@ -2088,6 +2754,9 @@ void tinyui_runtime_internal_widget_destroy_common(struct tinyui_widget *w)
     }
 
     owner = w->owner;
+    w->deleting = 1;
+    /* DELETE once after mark, before LD depose; clears this object's slots. */
+    tinyui_event_emit_delete(w);
 
     /* Idempotent unregister — safe whether called via destroy or rollback */
     if (owner != 0) {
@@ -2109,6 +2778,8 @@ void tinyui_runtime_internal_widget_destroy_common(struct tinyui_widget *w)
         ldBaseNodeRemove((arm_2d_control_node_t *)w->ld_widget);
     }
 
+    tinyui_widget_free_owned_text(w);
+
     /* Clear volatile fields before snapshot so tests see post-teardown state */
     w->owner = 0;
     w->ld_widget = 0;
@@ -2124,28 +2795,41 @@ void tinyui_runtime_internal_widget_destroy_common(struct tinyui_widget *w)
 
 /* ── C1-T4: tinyui_runtime_internal_widget_create_leaf ─────────────────────────────────────── */
 
+static int tinyui_runtime_internal_name_id_in_use(struct tinyui_app *app, uint16_t name_id)
+{
+    if (app == 0 || name_id == 0) {
+        return 0;
+    }
+    return tinyui_runtime_internal_app_lookup_host(app, name_id) != 0;
+}
+
 /**
- * @brief Generic leaf widget factory.
+ * @brief Generic leaf widget factory with optional explicit nameId.
  *
  * Allocates @p host_size bytes for the host object, creates the backing ld
  * widget via @p ld_init_cb, attaches it to the ld tree under @p parent, and
- * binds pInfo so ld events can reach the host widget.
+ * registers the host for nameId lookup. explicit_id 0 auto-allocates.
  */
-struct tinyui_widget *tinyui_runtime_internal_widget_create_leaf(
+struct tinyui_widget *tinyui_runtime_internal_widget_create_leaf_with_id(
     struct tinyui_widget *parent,
     enum tinyui_backend_widget_kind kind,
     void *(*ld_init_cb)(void *ctx, struct ld_scene_t *scene,
                         uint16_t name_id, uint16_t parent_name_id),
     void *ctx,
-    size_t host_size)
+    size_t host_size,
+    uint16_t explicit_id)
 {
     struct tinyui_widget *w;
     struct tinyui_app *owner;
     uint16_t name_id;
     uint16_t parent_name_id;
     void *ld_widget;
+    int id_from_pool = 0;
 
     if (parent == 0 || ld_init_cb == 0 || host_size < sizeof(struct tinyui_widget)) {
+        return 0;
+    }
+    if (tinyui_widget_is_deleting(parent)) {
         return 0;
     }
 
@@ -2154,34 +2838,51 @@ struct tinyui_widget *tinyui_runtime_internal_widget_create_leaf(
         return 0;
     }
 
+    /* Explicit ID conflict check before any backend allocation. */
+    if (explicit_id != 0) {
+        if (tinyui_runtime_internal_name_id_in_use(owner, explicit_id)) {
+            return 0;
+        }
+        name_id = explicit_id;
+    } else {
+        name_id = tinyui_runtime_internal_app_alloc_name_id(owner);
+        if (name_id == 0) {
+            return 0;
+        }
+        id_from_pool = 1;
+    }
+
     /* 1. Allocate host object (zeroed) */
-    w = (struct tinyui_widget *)ldCalloc(1, host_size);
+    w = (struct tinyui_widget *)ldCalloc(1, (uint32_t)host_size);
     if (w == 0) {
+        if (id_from_pool) {
+            tinyui_runtime_internal_app_free_name_id(owner, name_id);
+        }
         return 0;
     }
 
     /* 2. Bind owner */
     w->owner = owner;
 
-    /* 3. Assign name_id before calling ld_init so ld sees the correct id */
-    name_id = tinyui_runtime_internal_app_alloc_name_id(owner);
-
-    /* 4. Obtain parent name_id (0 is acceptable for the root window) */
+    /* 3. Obtain parent name_id (0 is acceptable for the root window) */
     parent_name_id = parent->ld_name_id;
 
-    /* 5. Create the backing ld widget */
+    /* 4. Create the backing ld widget */
     ld_widget = ld_init_cb(ctx, owner->ld_scene, name_id, parent_name_id);
     if (ld_widget == 0) {
+        if (id_from_pool) {
+            tinyui_runtime_internal_app_free_name_id(owner, name_id);
+        }
         ldFree(w);
         return 0;
     }
 
-    /* 6. Store ld binding and kind */
+    /* 5. Store ld binding and kind */
     w->ld_widget  = ld_widget;
     w->ld_name_id = name_id;
     w->kind       = kind;
 
-    /* 7. Attach to ld tree under parent
+    /* 6. Attach to ld tree under parent
      *    Note: most ld<Xxx>_init() functions already auto-attach the new
      *    node to its parent (looked up via parent_name_id). Only fall back
      *    to manual ldBaseNodeAdd when the ld widget has no parent yet — this
@@ -2193,20 +2894,23 @@ struct tinyui_widget *tinyui_runtime_internal_widget_create_leaf(
                       (arm_2d_control_node_t *)ld_widget);
     }
 
-    /* 8. 注册宿主(ld 事件经 nameId 反查到此 widget) */
+    /* 7. 注册宿主(ld 事件经 nameId 反查到此 widget) */
     tinyui_runtime_internal_app_register_host(owner, w);
 
-    /* 9. Default visibility / enabled */
+    /* 8. Default visibility / enabled */
     w->visible = 1;
     w->enabled = 1;
 
-    /* 10. Bind runtime event bridge */
+    /* 9. Bind runtime event bridge */
     if (tinyui_runtime_bridge_bind_leaf_widget(w, owner) != 0) {
         /* Roll back the partially-created leaf with no leak and no phantom
          * node: unregister host, detach from the ld tree, then depose the ld
          * widget via its generic func-table depose. */
         ldBase_t *ld_base = (ldBase_t *)ld_widget;
         tinyui_runtime_internal_app_unregister_host(owner, w);
+        if (id_from_pool) {
+            tinyui_runtime_internal_app_free_name_id(owner, name_id);
+        }
         ldBaseNodeRemove((arm_2d_control_node_t *)ld_widget);
         if (ld_base->ptGuiFunc != 0 && ld_base->ptGuiFunc->depose != 0) {
             ld_base->ptGuiFunc->depose(owner->ld_scene, ld_widget);
@@ -2216,4 +2920,20 @@ struct tinyui_widget *tinyui_runtime_internal_widget_create_leaf(
     }
 
     return w;
+}
+
+struct tinyui_widget *tinyui_runtime_internal_widget_create_leaf(
+    struct tinyui_widget *parent,
+    enum tinyui_backend_widget_kind kind,
+    void *(*ld_init_cb)(void *ctx, struct ld_scene_t *scene,
+                        uint16_t name_id, uint16_t parent_name_id),
+    void *ctx,
+    size_t host_size)
+{
+    return tinyui_runtime_internal_widget_create_leaf_with_id(parent,
+                                                              kind,
+                                                              ld_init_cb,
+                                                              ctx,
+                                                              host_size,
+                                                              0);
 }

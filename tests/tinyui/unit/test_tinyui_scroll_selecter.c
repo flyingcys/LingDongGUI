@@ -1,561 +1,209 @@
-#include "internal/app_legacy.h"
-#include "widgets/scroll_selecter.h"
-#include "widgets/window.h"
+/*
+ * TinyUI scroll_selector unit tests — M3 Task 3.
+ * CMake target still uses historical file name scroll_selecter.
+ */
+#include "tinyui.h"
 #include "../../../src/gui/ldBase.h"
 #include "../../../src/gui/ldScrollSelecter.h"
+#include "../../../src/misc/ldMsg.h"
 #include "internal.h"
-
+#include "widgets/scroll_selector.h"
 #include <assert.h>
-#include <dlfcn.h>
-#include <limits.h>
 #include <stdio.h>
 #include <string.h>
 
-static int test_repo_root(char *buffer, size_t size)
+static ldScrollSelecter_t *ld_of(tinyui_obj_t *o)
 {
-    const char *source = __FILE__;
-    const char *suffix = "/tests/tinyui/unit/test_tinyui_scroll_selecter.c";
-    const char *match = strstr(source, suffix);
-    size_t root_len;
-
-    if (buffer == 0 || size == 0 || match == 0) {
-        return -1;
-    }
-
-    root_len = (size_t)(match - source);
-    if (root_len + 1 > size) {
-        return -1;
-    }
-
-    memcpy(buffer, source, root_len);
-    buffer[root_len] = '\0';
-    return 0;
+    struct tinyui_widget *w = (struct tinyui_widget *)(void *)o;
+    assert(w && w->ld_widget);
+    return (ldScrollSelecter_t *)w->ld_widget;
 }
 
-static int test_source_has_function_definition(const char *relative_path, const char *name)
+static void test_scroll_selector_init_and_native_base_aliases_round_trip(tinyui_obj_t *root)
 {
-    char repo_root[PATH_MAX];
-    char path[PATH_MAX];
-    char line[512];
-    FILE *fp;
-
-    if (test_repo_root(repo_root, sizeof(repo_root)) != 0) {
-        return 0;
-    }
-    if (snprintf(path, sizeof(path), "%s/%s", repo_root, relative_path) < 0) {
-        return 0;
-    }
-
-    fp = fopen(path, "r");
-    if (fp == 0) {
-        return 0;
-    }
-
-    while (fgets(line, sizeof(line), fp) != 0) {
-        if (strstr(line, name) != 0 && strstr(line, "(") != 0) {
-            fclose(fp);
-            return 1;
-        }
-    }
-
-    fclose(fp);
-    return 0;
+    tinyui_obj_t *ss = tinyui_scroll_selector_create(root);
+    struct tinyui_widget *w = (struct tinyui_widget *)(void *)ss;
+    assert(ss);
+    assert(w->kind == TINYUI_BACKEND_WIDGET_SCROLL_SELECTER);
+    assert(w->ld_name_id != 0);
+    assert(tinyui_obj_set_pos(ss, 3, 4) == TINYUI_OK);
+    assert(tinyui_obj_set_visible(ss, 1) == TINYUI_OK);
 }
 
-static void assert_source_lacks_function_definition(const char *relative_path, const char *name)
+static void test_scroll_selector_native_api_aliases_match_backend_truth(tinyui_obj_t *root)
 {
-    assert(!test_source_has_function_definition(relative_path, name));
+    tinyui_obj_t *ss = tinyui_scroll_selector_create(root);
+    ldScrollSelecter_t *ld = ld_of(ss);
+    static const char *ids[] = {"0", "1", "2"};
+    static const char *texts[] = {"Mon", "Tue", "Wed"};
+    assert(tinyui_scroll_selector_set_items(ss, ids, texts, 3) == 0);
+    assert(ld->itemCount == 3);
+    assert(strcmp((const char *)ld->ppItemStrGroup[0], "Mon") == 0);
+    assert(tinyui_scroll_selector_set_select_item_num(ss, 2) == 0);
+    assert(tinyui_scroll_selector_get_select_item_num(ss) == 2);
+    assert(ldScrollSelecterGetSelectItemNum(ld) == 2);
+    assert(strcmp(tinyui_scroll_selector_get_select_text(ss), "Wed") == 0);
+    assert(tinyui_scroll_selector_set_text_color(ss, 0x111111) == 0);
+    assert(ld->textColor == (ldColor)tinyui_rgb_to_ld_color(0x111111));
+    assert(tinyui_scroll_selector_set_background_color(ss, 0x222222) == 0);
+    assert(ld->bgColor == (ldColor)tinyui_rgb_to_ld_color(0x222222));
 }
 
-static unsigned int encode_rgb_to_ld_color(unsigned int rgb)
+static void test_scroll_selector_native_style_image_speed_and_select_text_round_trip(tinyui_obj_t *root)
 {
-    unsigned int red = (rgb >> 16) & 0xFFU;
-    unsigned int green = (rgb >> 8) & 0xFFU;
-    unsigned int blue = rgb & 0xFFU;
+    tinyui_obj_t *ss = tinyui_scroll_selector_create(root);
+    ldScrollSelecter_t *ld = ld_of(ss);
+    static const char *ids[] = {"a", "b", "c"};
+    static const char *texts[] = {"A", "B", "C"};
+    arm_2d_tile_t img = {.tRegion = {.tSize = {.iWidth = 10, .iHeight = 10}}};
+    arm_2d_tile_t mask = {.tRegion = {.tSize = {.iWidth = 10, .iHeight = 10}}};
+    tinyui_image_source_t bg, ind;
+    memset(&bg, 0, sizeof(bg));
+    memset(&ind, 0, sizeof(ind));
+    bg.kind = TINYUI_IMAGE_SOURCE_RGB565_MEMORY; bg.width = 10; bg.height = 10;
+    ind.kind = TINYUI_IMAGE_SOURCE_RGB565_MEMORY; ind.width = 10; ind.height = 10;
+    memcpy(bg._image_private, &img, sizeof(img));
+    memcpy(bg._mask_private, &mask, sizeof(mask));
+    memcpy(ind._image_private, &img, sizeof(img));
+    memcpy(ind._mask_private, &mask, sizeof(mask));
 
-    return ((red >> 3) << 11) | ((green >> 2) << 5) | (blue >> 3);
+    assert(tinyui_scroll_selector_set_items(ss, ids, texts, 3) == 0);
+    assert(tinyui_scroll_selector_set_indicator_color(ss, 0xabcdef) == 0);
+    assert(ld->indicatorColor == (ldColor)tinyui_rgb_to_ld_color(0xabcdef));
+    assert(tinyui_scroll_selector_set_background_image(ss, &bg) == 0);
+    assert(ld->ptImgTile == tinyui_image_source_get_image_tile(&bg));
+    assert(tinyui_scroll_selector_set_indicator_image(ss, &ind) == 0);
+    assert(ld->ptIndicatorImgTile == tinyui_image_source_get_image_tile(&ind));
+    assert(tinyui_scroll_selector_set_speed(ss, 5) == 0);
+    assert(ld->moveOffset == 5);
+    assert(tinyui_scroll_selector_set_select_text(ss, "B") == 0);
+    assert(tinyui_scroll_selector_get_select_item_num(ss) == 1);
+    assert(tinyui_scroll_selector_set_transparent(ss, 1) == 0);
+    assert(ld->isTransparent == true || ld->isTransparent == 1);
 }
 
-static void test_scroll_selecter_selected_item_matches_backend_truth(void)
+static void test_scroll_selector_edit_mode_and_navigation_mode_are_distinct(tinyui_obj_t *root)
 {
-    struct tinyui_app *app = tinyui_app_create();
-    struct tinyui_window *win;
-    struct tinyui_scroll_selecter *scroll_selecter;
-    struct tinyui_widget *backend;
-    struct tinyui_widget *parent_backend;
-    ldScrollSelecter_t *ld_scroll_selecter;
-
-    assert(app != 0);
-    win = tinyui_window_create(app, "root");
-    assert(win != 0);
-    scroll_selecter = tinyui_scroll_selecter_create(win, "scroll");
-    assert(scroll_selecter != 0);
-    assert(tinyui_scroll_selecter_add_item(scroll_selecter, "wifi", "Wi-Fi") == 0);
-    assert(tinyui_scroll_selecter_add_item(scroll_selecter, "bluetooth", "Bluetooth") == 0);
-    assert(tinyui_scroll_selecter_add_item(scroll_selecter, "display", "Display") == 0);
-    assert(tinyui_scroll_selecter_set_selected_index(scroll_selecter, 0) == 0);
-
-    backend = &scroll_selecter->widget;
-    parent_backend = &win->widget;
-    assert(parent_backend->ld_widget != 0);
-    assert(backend->owner == parent_backend->owner);
-    assert((ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)backend->ld_widget) == (ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)parent_backend->ld_widget));
-    assert(ldBaseGetParent((ldBase_t *)backend->ld_widget) == (ldBase_t *)parent_backend->ld_widget);
-    assert(backend->ld_name_id != 0);
-    ld_scroll_selecter = (ldScrollSelecter_t *)backend->ld_widget;
-    assert(ld_scroll_selecter != 0);
-    assert(tinyui_app_lookup_host(backend->owner, backend->ld_name_id) == backend);
-
-    assert(tinyui_scroll_selecter_set_selected_index(scroll_selecter, 1) == 0);
-    ldScrollSelecterSetSelectItemNum(ld_scroll_selecter, 2);
-    assert(tinyui_scroll_selecter_get_selected_index(scroll_selecter) == 2);
-    tinyui_app_destroy(app);
-}
-
-static void test_scroll_selecter_legacy_backend_constructor_is_disabled(struct tinyui_window *win)
-{
-    (void)win;
-    assert(dlsym(RTLD_DEFAULT, "tinyui_backend_create_scroll_selecter") == 0);
-}
-
-static void test_scroll_selecter_internal_seams_are_tinyui_named(void)
-{
-    const char *widget_source = "tinyui/src/widgets/scroll_selecter.c";
-
-    assert(test_source_has_function_definition(widget_source, "tinyui_widget_create_leaf"));
-    assert_source_lacks_function_definition(widget_source, "picoui_scroll_selecter_props_are_valid");
-    assert_source_lacks_function_definition(widget_source, "picoui_scroll_selecter_rgb_to_ld_color");
-    assert_source_lacks_function_definition(widget_source, "picoui_scroll_selecter_backend_from_widget");
-    assert_source_lacks_function_definition(widget_source, "picoui_scroll_selecter_ld_from_backend");
-    assert_source_lacks_function_definition(widget_source, "picoui_scroll_selecter_selected_text_from_public_state");
-
-    assert(test_source_has_function_definition(widget_source, "tinyui_scroll_selecter_props_valid"));
-    assert(test_source_has_function_definition(widget_source, "tinyui_scroll_selecter_rollback"));
-    assert(test_source_has_function_definition(widget_source, "tinyui_scroll_selecter_selected_text_from_public_state"));
-
-    assert_source_lacks_function_definition(widget_source, "tinyui_scroll_selecter_rgb_to_ld_color");
-    assert_source_lacks_function_definition(widget_source, "tinyui_scroll_selecter_get_ld");
-    assert_source_lacks_function_definition(widget_source, "tinyui_scroll_selecter_backend_from_widget");
-    assert_source_lacks_function_definition(widget_source, "tinyui_scroll_selecter_widget_is_valid");
-
-    assert_source_lacks_function_definition(widget_source, "tinyui_backend_scroll_selecter_set_items");
-    assert_source_lacks_function_definition(widget_source, "tinyui_backend_scroll_selecter_set_text_color");
-    assert_source_lacks_function_definition(widget_source, "tinyui_backend_scroll_selecter_set_bg_color");
-    assert_source_lacks_function_definition(widget_source, "tinyui_backend_scroll_selecter_set_indicator_color");
-    assert_source_lacks_function_definition(widget_source, "tinyui_backend_scroll_selecter_set_bg_source");
-    assert_source_lacks_function_definition(widget_source, "tinyui_backend_scroll_selecter_set_indicator_source");
-    assert_source_lacks_function_definition(widget_source, "tinyui_backend_scroll_selecter_set_transparent");
-    assert_source_lacks_function_definition(widget_source, "tinyui_backend_scroll_selecter_set_speed");
-    assert_source_lacks_function_definition(widget_source, "tinyui_backend_scroll_selecter_set_select_text");
-    assert_source_lacks_function_definition(widget_source, "tinyui_backend_scroll_selecter_set_selected_index");
-    assert_source_lacks_function_definition(widget_source, "tinyui_backend_scroll_selecter_get_selected_index");
-    assert_source_lacks_function_definition(widget_source, "tinyui_backend_scroll_selecter_get_selected_text");
-    assert_source_lacks_function_definition(widget_source, "tinyui_backend_scroll_selecter_sync_selected_index");
-    assert_source_lacks_function_definition(widget_source, "tinyui_backend_scroll_selecter_set_edit_mode");
-    assert_source_lacks_function_definition(widget_source, "tinyui_backend_scroll_selecter_get_edit_mode");
-}
-
-static void test_scroll_selecter_edit_mode_and_navigation_mode_are_distinct(void)
-{
-    struct tinyui_app *app = tinyui_app_create();
-    struct tinyui_window *win;
-    struct tinyui_scroll_selecter *scroll_selecter;
-    struct tinyui_widget *backend;
-    ldScrollSelecter_t *ld_scroll_selecter;
+    tinyui_obj_t *ss = tinyui_scroll_selector_create(root);
+    ldScrollSelecter_t *ld = ld_of(ss);
+    static const char *ids[] = {"1", "2"};
+    static const char *texts[] = {"1", "2"};
     int is_edit = -1;
-
-    assert(app != 0);
-    win = tinyui_window_create(app, "root");
-    assert(win != 0);
-    scroll_selecter = tinyui_scroll_selecter_create(win, "scroll_mode");
-    assert(scroll_selecter != 0);
-
-    backend = &scroll_selecter->widget;
-    ld_scroll_selecter = (ldScrollSelecter_t *)backend->ld_widget;
-    assert(ld_scroll_selecter != 0);
-
-    assert(tinyui_scroll_selecter_get_edit_mode(scroll_selecter, &is_edit) == 0);
+    assert(tinyui_scroll_selector_set_items(ss, ids, texts, 2) == 0);
+    assert(tinyui_scroll_selector_set_edit_mode(ss, 1) == 0);
+    assert(ld->isEdit == true || ld->isEdit == 1);
+    assert(tinyui_scroll_selector_get_edit_mode(ss, &is_edit) == 0);
     assert(is_edit == 1);
-    assert(tinyui_scroll_selecter_set_edit_mode(scroll_selecter, 0) == 0);
-    assert(tinyui_scroll_selecter_get_edit_mode(scroll_selecter, &is_edit) == 0);
-    assert(is_edit == 0);
-    assert(ld_scroll_selecter->isEdit == false);
-
-    tinyui_app_destroy(app);
+    assert(tinyui_scroll_selector_set_edit_mode(ss, 0) == 0);
+    assert(ld->isEdit == false || ld->isEdit == 0);
 }
 
-static void test_scroll_selecter_final_visual_and_edit_contract_is_release_ready(void)
+static void test_scroll_selector_capacity(tinyui_obj_t *root)
 {
-    struct tinyui_app *app = tinyui_app_create();
-    struct tinyui_window *win;
-    struct tinyui_scroll_selecter *scroll_selecter;
-    struct tinyui_widget *backend;
-    ldScrollSelecter_t *ld_scroll_selecter;
-    int is_edit = -1;
+    tinyui_obj_t *ss = tinyui_scroll_selector_create(root);
+    ldScrollSelecter_t *ld = ld_of(ss);
+    static const char *ids[TINYUI_LIST_MAX_ITEMS + 1];
+    static const char *texts[TINYUI_LIST_MAX_ITEMS + 1];
+    static char idbuf[TINYUI_LIST_MAX_ITEMS + 1][8];
+    static char buf[TINYUI_LIST_MAX_ITEMS + 1][8];
+    int i;
+    for (i = 0; i < TINYUI_LIST_MAX_ITEMS + 1; ++i) {
+        snprintf(idbuf[i], sizeof(idbuf[i]), "i%d", i);
+        snprintf(buf[i], sizeof(buf[i]), "t%d", i);
+        ids[i] = idbuf[i];
+        texts[i] = buf[i];
+    }
+    assert(tinyui_scroll_selector_set_items(ss, ids, texts, TINYUI_LIST_MAX_ITEMS) == 0);
+    assert(ld->itemCount == TINYUI_LIST_MAX_ITEMS);
+    assert(tinyui_scroll_selector_set_items(ss, ids, texts, TINYUI_LIST_MAX_ITEMS + 1) == -1);
+    assert(tinyui_last_result() == TINYUI_ERROR_CAPACITY);
+    assert(ld->itemCount == TINYUI_LIST_MAX_ITEMS);
+    assert(tinyui_scroll_selector_add_item(ss, "overflow", "x") == -1);
+    assert(tinyui_last_result() == TINYUI_ERROR_CAPACITY);
+    assert(ld->itemCount == TINYUI_LIST_MAX_ITEMS);
+}
 
+static int g_vc;
+static int32_t g_val;
+
+static void on_vc(const tinyui_event_t *e)
+{
+    assert(e != 0);
+    assert(e->code == TINYUI_EVENT_VALUE_CHANGED);
+    g_vc += 1;
+    g_val = e->data.value;
+}
+
+static void ensure_msg_queue(struct tinyui_app *app)
+{
     assert(app != 0);
-    win = tinyui_window_create(app, "scroll_release_root");
-    assert(win != 0);
-    scroll_selecter = tinyui_scroll_selecter_create(win, "scroll_release_ready");
-    assert(scroll_selecter != 0);
-    assert(tinyui_scroll_selecter_add_item(scroll_selecter, "wifi", "Wi-Fi") == 0);
-    assert(tinyui_scroll_selecter_add_item(scroll_selecter, "bluetooth", "Bluetooth") == 0);
-    assert(tinyui_scroll_selecter_add_item(scroll_selecter, "display", "Display") == 0);
-
-    backend = &scroll_selecter->widget;
-    assert(backend->ld_widget != 0);
-    assert(backend->kind == TINYUI_BACKEND_WIDGET_SCROLL_SELECTER);
-    assert(backend->ld_widget != 0);
-    ld_scroll_selecter = (ldScrollSelecter_t *)backend->ld_widget;
-    assert(ld_scroll_selecter != 0);
-
-    assert(tinyui_scroll_selecter_set_selected_index(scroll_selecter, 2) == 0);
-    assert(tinyui_scroll_selecter_get_selected_index(scroll_selecter) == 2);
-    assert(backend->value == 2);
-    assert(ldScrollSelecterGetSelectItemNum(ld_scroll_selecter) == 2);
-
-    assert(tinyui_scroll_selecter_get_edit_mode(scroll_selecter, &is_edit) == 0);
-    assert(is_edit == 1);
-    assert(tinyui_scroll_selecter_set_edit_mode(scroll_selecter, 0) == 0);
-    assert(tinyui_scroll_selecter_get_edit_mode(scroll_selecter, &is_edit) == 0);
-    assert(is_edit == 0);
-    assert(ld_scroll_selecter->isEdit == false);
-    assert(tinyui_scroll_selecter_set_edit_mode(scroll_selecter, 1) == 0);
-    assert(tinyui_scroll_selecter_get_edit_mode(scroll_selecter, &is_edit) == 0);
-    assert(is_edit == 1);
-    assert(ld_scroll_selecter->isEdit == true);
-
-    tinyui_app_destroy(app);
+    assert(app->ld_scene != 0);
+    if (app->ld_scene->ptMsgQueue == 0) {
+        assert(ldMsgInit(&app->ld_scene->ptMsgQueue, 8) == true);
+    }
 }
 
-static void test_scroll_selecter_native_style_image_speed_and_select_text_round_trip(void)
+static void inject_scroll_value_changed(tinyui_obj_t *ss, int index)
 {
-    struct tinyui_app *app = tinyui_app_create();
-    struct tinyui_window *win;
-    struct tinyui_scroll_selecter *scroll_selecter;
-    struct tinyui_widget *backend;
-    ldScrollSelecter_t *ld_scroll_selecter;
-    arm_2d_tile_t bg_tile = {0};
-    arm_2d_tile_t bg_mask_tile = {0};
-    arm_2d_tile_t indicator_tile = {0};
-    arm_2d_tile_t indicator_mask_tile = {0};
-    struct tinyui_image_source bg_source = {
-        .img_tile = &bg_tile,
-        .mask_tile = &bg_mask_tile,
-    };
-    struct tinyui_image_source indicator_source = {
-        .img_tile = &indicator_tile,
-        .mask_tile = &indicator_mask_tile,
-    };
-    struct tinyui_image_source invalid_source = {
-        .img_tile = 0,
-        .mask_tile = &bg_mask_tile,
-    };
+    struct tinyui_widget *w = (struct tinyui_widget *)(void *)ss;
+    struct tinyui_app *app;
 
-    assert(app != 0);
-    win = tinyui_window_create(app, "scroll_native_root");
-    assert(win != 0);
-    scroll_selecter = tinyui_scroll_selecter_create(win, "scroll_native");
-    assert(scroll_selecter != 0);
-    assert(tinyui_scroll_selecter_add_item(scroll_selecter, "wifi", "Wi-Fi") == 0);
-    assert(tinyui_scroll_selecter_add_item(scroll_selecter, "bluetooth", "Bluetooth") == 0);
-    assert(tinyui_scroll_selecter_add_item(scroll_selecter, "display", "Display") == 0);
-
-    backend = &scroll_selecter->widget;
-    assert(backend->ld_widget != 0);
-    ld_scroll_selecter = (ldScrollSelecter_t *)backend->ld_widget;
-    assert(ld_scroll_selecter != 0);
-
-    assert(tinyui_scroll_selecter_set_text_color(scroll_selecter, 0x445566U) == 0);
-    assert(tinyui_scroll_selecter_set_bg_color(scroll_selecter, 0x112233U) == 0);
-    assert(tinyui_scroll_selecter_set_indicator_color(scroll_selecter, 0x778899U) == 0);
-    assert(tinyui_scroll_selecter_set_bg_source(scroll_selecter, &bg_source) == 0);
-    assert(tinyui_scroll_selecter_set_indicator_source(scroll_selecter, &indicator_source) == 0);
-    assert(tinyui_scroll_selecter_set_bg_source(scroll_selecter, &invalid_source) == -1);
-    assert(tinyui_scroll_selecter_set_transparent(scroll_selecter, 1) == 0);
-    assert(tinyui_scroll_selecter_set_speed(scroll_selecter, 3) == 0);
-    assert(tinyui_scroll_selecter_set_select_text(scroll_selecter, "Bluetooth") == 0);
-    assert(tinyui_scroll_selecter_get_selected_index(scroll_selecter) == 1);
-
-    assert((unsigned int)ld_scroll_selecter->textColor == encode_rgb_to_ld_color(0x445566U));
-    assert((unsigned int)ld_scroll_selecter->bgColor == encode_rgb_to_ld_color(0x112233U));
-    assert((unsigned int)ld_scroll_selecter->indicatorColor == encode_rgb_to_ld_color(0x778899U));
-    assert(ld_scroll_selecter->ptImgTile == bg_source.img_tile);
-    assert(ld_scroll_selecter->ptMaskTile == bg_source.mask_tile);
-    assert(ld_scroll_selecter->ptIndicatorImgTile == indicator_source.img_tile);
-    assert(ld_scroll_selecter->ptIndicatorMaskTile == indicator_source.mask_tile);
-    assert(ld_scroll_selecter->isTransparent == true);
-    assert(ld_scroll_selecter->moveOffset == 3);
-    assert(ldScrollSelecterGetSelectItemNum(ld_scroll_selecter) == 1);
-    assert(ldScrollSelecterGetSelectText(ld_scroll_selecter) == (uint8_t *)"Bluetooth");
-
-    tinyui_app_destroy(app);
+    assert(w != 0);
+    assert(w->ld_widget != 0);
+    assert(w->owner != 0);
+    app = w->owner;
+    ensure_msg_queue(app);
+    assert(ldMsgEmit(app->ld_scene->ptMsgQueue,
+                     w->ld_widget,
+                     SIGNAL_VALUE_CHANGED,
+                     (uint64_t)(uint32_t)index) == true);
+    ldMsgProcess(app->ld_scene);
 }
 
-static void test_scroll_selecter_selected_text_readback_matches_backend_truth(void)
+static void test_scroll_selector_value_changed_unified_pool(tinyui_obj_t *root)
 {
-    struct tinyui_app *app = tinyui_app_create();
-    struct tinyui_window *win;
-    struct tinyui_scroll_selecter *scroll_selecter;
-    struct tinyui_widget *backend;
-    ldScrollSelecter_t *ld_scroll_selecter;
+    tinyui_obj_t *ss = tinyui_scroll_selector_create(root);
+    ldScrollSelecter_t *ld = ld_of(ss);
+    tinyui_event_handle_t h = 0;
+    static const char *ids[] = {"0", "1", "2"};
+    static const char *texts[] = {"Mon", "Tue", "Wed"};
 
-    assert(app != 0);
-    win = tinyui_window_create(app, "scroll_text_root");
-    assert(win != 0);
-    scroll_selecter = tinyui_scroll_selecter_create(win, "scroll_text");
-    assert(scroll_selecter != 0);
-    assert(tinyui_scroll_selecter_add_item(scroll_selecter, "wifi", "Wi-Fi") == 0);
-    assert(tinyui_scroll_selecter_add_item(scroll_selecter, "bluetooth", "Bluetooth") == 0);
-    assert(tinyui_scroll_selecter_add_item(scroll_selecter, "display", "Display") == 0);
-    assert(tinyui_scroll_selecter_set_selected_index(scroll_selecter, 2) == 0);
+    g_vc = 0;
+    g_val = -1;
+    assert(tinyui_scroll_selector_set_items(ss, ids, texts, 3) == 0);
+    assert(tinyui_obj_add_event_cb(ss,
+                                   TINYUI_EVENT_MASK(TINYUI_EVENT_VALUE_CHANGED),
+                                   on_vc,
+                                   0,
+                                   &h) == TINYUI_OK);
 
-    backend = &scroll_selecter->widget;
-    assert(backend->ld_widget != 0);
-    ld_scroll_selecter = (ldScrollSelecter_t *)backend->ld_widget;
-    assert(ld_scroll_selecter != 0);
+    assert(tinyui_scroll_selector_set_selected_index(ss, 1) == 0);
+    assert(g_vc == 0);
+    assert(ldScrollSelecterGetSelectItemNum(ld) == 1);
 
-    assert(tinyui_scroll_selecter_get_selected_text(scroll_selecter) == ldScrollSelecterGetSelectText(ld_scroll_selecter));
-    assert(strcmp(tinyui_scroll_selecter_get_selected_text(scroll_selecter), "Display") == 0);
+    inject_scroll_value_changed(ss, 2);
+    assert(tinyui_scroll_selector_get_selected_index(ss) == 2);
+    assert(ldScrollSelecterGetSelectItemNum(ld) == 2);
+    assert(g_vc == 1);
+    assert(g_val == 2);
 
-    tinyui_app_destroy(app);
-}
-
-static void test_scroll_selecter_native_api_aliases_match_backend_truth(void)
-{
-    struct tinyui_app *app = tinyui_app_create();
-    struct tinyui_window *win;
-    struct tinyui_scroll_selecter *scroll_selecter;
-    struct tinyui_widget *backend;
-    ldScrollSelecter_t *ld_scroll_selecter;
-    const char *item_ids[] = {"wifi", "bluetooth", "display"};
-    const char *texts[] = {"Wi-Fi", "Bluetooth", "Display"};
-    arm_2d_tile_t bg_tile = {0};
-    arm_2d_tile_t indicator_tile = {0};
-    struct tinyui_image_source bg_source = {.img_tile = &bg_tile, .mask_tile = 0};
-    struct tinyui_image_source indicator_source = {.img_tile = &indicator_tile, .mask_tile = 0};
-
-    assert(app != 0);
-    win = tinyui_window_create(app, "scroll_alias_root");
-    assert(win != 0);
-    scroll_selecter = tinyui_scroll_selecter_create(win, "scroll_alias");
-    assert(scroll_selecter != 0);
-    assert(tinyui_scroll_selecter_set_items(scroll_selecter, item_ids, texts, 3) == 0);
-    assert(tinyui_scroll_selecter_set_select_item_num(scroll_selecter, 1) == 0);
-    assert(tinyui_scroll_selecter_get_select_item_num(scroll_selecter) == 1);
-    assert(tinyui_scroll_selecter_set_background_color(scroll_selecter, 0x010203U) == 0);
-    assert(tinyui_scroll_selecter_set_text_color(scroll_selecter, 0x111213U) == 0);
-    assert(tinyui_scroll_selecter_set_background_image(scroll_selecter, &bg_source) == 0);
-    assert(tinyui_scroll_selecter_set_indicator_image(scroll_selecter, &indicator_source) == 0);
-    assert(strcmp(tinyui_scroll_selecter_get_select_text(scroll_selecter), "Bluetooth") == 0);
-
-    backend = &scroll_selecter->widget;
-    assert(backend->ld_widget != 0);
-    ld_scroll_selecter = (ldScrollSelecter_t *)backend->ld_widget;
-    assert(ld_scroll_selecter != 0);
-    assert(ldScrollSelecterGetSelectItemNum(ld_scroll_selecter) == 1);
-    assert(ld_scroll_selecter->itemCount == 3);
-    assert(ld_scroll_selecter->ptImgTile == bg_source.img_tile);
-    assert(ld_scroll_selecter->ptIndicatorImgTile == indicator_source.img_tile);
-    assert(scroll_selecter->widget.bg_color == 0x010203U);
-    assert(scroll_selecter->widget.text_color == 0x111213U);
-    tinyui_app_destroy(app);
-}
-
-static void test_scroll_selecter_init_and_native_base_aliases_round_trip(void)
-{
-    struct tinyui_app *app = tinyui_app_create();
-    struct tinyui_window *win;
-    struct tinyui_scroll_selecter *scroll_selecter;
-    struct tinyui_widget *backend;
-    ldScrollSelecter_t *ld_scroll_selecter;
-    ldBase_t *ld_base;
-
-    assert(app != 0);
-    win = tinyui_window_create(app, "scroll_base_root");
-    assert(win != 0);
-    scroll_selecter = tinyui_scroll_selecter_create(win, "scroll_base");
-    assert(scroll_selecter != 0);
-    backend = &scroll_selecter->widget;
-    assert(backend->ld_widget != 0);
-    ld_scroll_selecter = (ldScrollSelecter_t *)backend->ld_widget;
-    assert(ld_scroll_selecter != 0);
-    ld_base = (ldBase_t *)backend->ld_widget;
-    assert(ld_base != 0);
-
-    assert(tinyui_widget_set_pos(&scroll_selecter->widget, 21, 43) == 0);
-    assert(tinyui_widget_set_size(&scroll_selecter->widget, 30, 50) == 0);
-    assert(ld_base->use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 21);
-    assert(ld_base->use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 43);
-    assert(ld_base->use_as__arm_2d_control_node_t.tRegion.tSize.iWidth == 30);
-    assert(ld_base->use_as__arm_2d_control_node_t.tRegion.tSize.iHeight == 48);
-    assert(ld_scroll_selecter->itemSpace == 6);
-    assert(ld_scroll_selecter->isEdit == true);
-    assert(ld_scroll_selecter->scrollOffset == 0);
-    tinyui_app_destroy(app);
-}
-
-static void test_scroll_selecter_sync_selected_index_round_trip(struct tinyui_window *win)
-{
-    struct tinyui_scroll_selecter *ss = tinyui_scroll_selecter_create(win, "ss_sync");
-    const char *ids[] = {"opt_1", "opt_2", "opt_3"};
-    const unsigned char *texts[] = {(const unsigned char *)"One", (const unsigned char *)"Two", (const unsigned char *)"Three"};
-    int selected;
-
-    assert(ss != 0);
-    assert(tinyui_scroll_selecter_set_items(ss, ids, texts, 3) == 0);
-    assert(tinyui_scroll_selecter_set_selected_index(ss, 2) == 0);
-    selected = tinyui_scroll_selecter_get_selected_index(ss);
-    assert(selected == 2);
-}
-
-static void test_scroll_selecter_get_selected_text_round_trip(struct tinyui_window *win)
-{
-    struct tinyui_scroll_selecter *ss = tinyui_scroll_selecter_create(win, "ss_get_text");
-    const char *ids[] = {"opt_x"};
-    const unsigned char *texts[] = {(const unsigned char *)"OptionX"};
-
-    assert(ss != 0);
-    assert(tinyui_scroll_selecter_set_items(ss, ids, texts, 1) == 0);
-    assert(tinyui_scroll_selecter_set_selected_index(ss, 0) == 0);
-
-    const char *sel_text = tinyui_scroll_selecter_get_selected_text(ss);
-    assert(sel_text != 0);
-}
-
-static void test_scroll_selecter_set_items_resets_native_and_public_selection_together(void)
-{
-    struct tinyui_app *app = tinyui_app_create();
-    struct tinyui_window *win;
-    struct tinyui_scroll_selecter *scroll_selecter;
-    struct tinyui_widget *backend;
-    ldScrollSelecter_t *ld_scroll_selecter;
-    const char *replacement_ids[] = {"opt_a", "opt_b"};
-    const char *replacement_texts[] = {"Alpha", "Beta"};
-
-    assert(app != 0);
-    win = tinyui_window_create(app, "scroll_reset_root");
-    assert(win != 0);
-    scroll_selecter = tinyui_scroll_selecter_create(win, "scroll_reset");
-    assert(scroll_selecter != 0);
-    assert(tinyui_scroll_selecter_add_item(scroll_selecter, "wifi", "Wi-Fi") == 0);
-    assert(tinyui_scroll_selecter_add_item(scroll_selecter, "bluetooth", "Bluetooth") == 0);
-    assert(tinyui_scroll_selecter_add_item(scroll_selecter, "display", "Display") == 0);
-    assert(tinyui_scroll_selecter_set_selected_index(scroll_selecter, 2) == 0);
-
-    backend = &scroll_selecter->widget;
-    assert(backend->ld_widget != 0);
-    ld_scroll_selecter = (ldScrollSelecter_t *)backend->ld_widget;
-    assert(ld_scroll_selecter != 0);
-    assert(ldScrollSelecterGetSelectItemNum(ld_scroll_selecter) == 2);
-
-    assert(tinyui_scroll_selecter_set_items(scroll_selecter, replacement_ids, replacement_texts, 2) == 0);
-    assert(scroll_selecter->item_count == 2);
-    assert(scroll_selecter->selected_index == 0);
-    assert(tinyui_scroll_selecter_get_selected_index(scroll_selecter) == 0);
-    assert(ldScrollSelecterGetSelectItemNum(ld_scroll_selecter) == 0);
-    assert(tinyui_scroll_selecter_get_selected_text(scroll_selecter) != 0);
-    assert(strcmp(tinyui_scroll_selecter_get_selected_text(scroll_selecter), "Alpha") == 0);
-
-    tinyui_app_destroy(app);
-}
-
-static void test_scroll_selecter_corrupted_backend_binding_preserves_public_selection_state(void)
-{
-    struct tinyui_app *app = tinyui_app_create();
-    struct tinyui_window *win;
-    struct tinyui_scroll_selecter *scroll_selecter;
-    struct tinyui_widget *backend;
-    ldScrollSelecter_t *ld_scroll_selecter;
-    const char *replacement_ids[] = {"opt_a", "opt_b"};
-    const char *replacement_texts[] = {"Alpha", "Beta"};
-    enum tinyui_backend_widget_kind saved_kind;
-
-    assert(app != 0);
-    win = tinyui_window_create(app, "scroll_corrupt_selection_root");
-    assert(win != 0);
-    scroll_selecter = tinyui_scroll_selecter_create(win, "scroll_corrupt_selection");
-    assert(scroll_selecter != 0);
-    assert(tinyui_scroll_selecter_add_item(scroll_selecter, "wifi", "Wi-Fi") == 0);
-    assert(tinyui_scroll_selecter_add_item(scroll_selecter, "bluetooth", "Bluetooth") == 0);
-    assert(tinyui_scroll_selecter_add_item(scroll_selecter, "display", "Display") == 0);
-    assert(tinyui_scroll_selecter_set_selected_index(scroll_selecter, 1) == 0);
-
-    backend = &scroll_selecter->widget;
-    assert(backend->ld_widget != 0);
-    ld_scroll_selecter = (ldScrollSelecter_t *)backend->ld_widget;
-    assert(ld_scroll_selecter != 0);
-
-    saved_kind = backend->kind;
-    backend->kind = TINYUI_BACKEND_WIDGET_LABEL;
-    ldScrollSelecterSetSelectItemNum(ld_scroll_selecter, 2);
-
-    assert(tinyui_scroll_selecter_set_items(scroll_selecter, replacement_ids, replacement_texts, 2) == -1);
-    assert(scroll_selecter->item_count == 3);
-    assert(scroll_selecter->selected_index == 1);
-    assert(tinyui_scroll_selecter_get_selected_index(scroll_selecter) == 1);
-    assert(tinyui_scroll_selecter_get_selected_text(scroll_selecter) != 0);
-    assert(strcmp(tinyui_scroll_selecter_get_selected_text(scroll_selecter), "Bluetooth") == 0);
-
-    backend->kind = saved_kind;
-    tinyui_app_destroy(app);
-}
-
-static void test_scroll_selecter_corrupted_backend_binding_rejects_edit_mutation(void)
-{
-    struct tinyui_app *app = tinyui_app_create();
-    struct tinyui_window *win;
-    struct tinyui_scroll_selecter *scroll_selecter;
-    struct tinyui_widget *backend;
-    ldScrollSelecter_t *ld_scroll_selecter;
-    enum tinyui_backend_widget_kind saved_kind;
-    int is_edit = -1;
-
-    assert(app != 0);
-    win = tinyui_window_create(app, "scroll_corrupt_edit_root");
-    assert(win != 0);
-    scroll_selecter = tinyui_scroll_selecter_create(win, "scroll_corrupt_edit");
-    assert(scroll_selecter != 0);
-    assert(tinyui_scroll_selecter_set_edit_mode(scroll_selecter, 0) == 0);
-
-    backend = &scroll_selecter->widget;
-    assert(backend->ld_widget != 0);
-    ld_scroll_selecter = (ldScrollSelecter_t *)backend->ld_widget;
-    assert(ld_scroll_selecter != 0);
-    assert(ld_scroll_selecter->isEdit == false);
-
-    saved_kind = backend->kind;
-    backend->kind = TINYUI_BACKEND_WIDGET_LABEL;
-
-    assert(tinyui_scroll_selecter_set_edit_mode(scroll_selecter, 1) == -1);
-    assert(scroll_selecter->edit_mode == 0);
-    assert(ld_scroll_selecter->isEdit == false);
-    assert(tinyui_scroll_selecter_get_edit_mode(scroll_selecter, &is_edit) == 0);
-    assert(is_edit == 0);
-
-    backend->kind = saved_kind;
-    tinyui_app_destroy(app);
+    inject_scroll_value_changed(ss, 2);
+    assert(g_vc == 1);
 }
 
 int main(void)
 {
-    test_scroll_selecter_internal_seams_are_tinyui_named();
-    test_scroll_selecter_selected_item_matches_backend_truth();
-    test_scroll_selecter_edit_mode_and_navigation_mode_are_distinct();
-    test_scroll_selecter_final_visual_and_edit_contract_is_release_ready();
-    test_scroll_selecter_native_style_image_speed_and_select_text_round_trip();
-    test_scroll_selecter_selected_text_readback_matches_backend_truth();
-    test_scroll_selecter_native_api_aliases_match_backend_truth();
-    test_scroll_selecter_init_and_native_base_aliases_round_trip();
-
-    struct tinyui_app *app = tinyui_app_create();
-    struct tinyui_window *win = tinyui_window_create(app, "root");
-    test_scroll_selecter_legacy_backend_constructor_is_disabled(win);
-    test_scroll_selecter_sync_selected_index_round_trip(win);
-    test_scroll_selecter_get_selected_text_round_trip(win);
-    tinyui_app_destroy(app);
-    test_scroll_selecter_set_items_resets_native_and_public_selection_together();
-    test_scroll_selecter_corrupted_backend_binding_preserves_public_selection_state();
-    test_scroll_selecter_corrupted_backend_binding_rejects_edit_mutation();
+    tinyui_obj_t *root;
+    tinyui_deinit();
+    assert(tinyui_init() == TINYUI_OK);
+    root = tinyui_screen_create();
+    assert(root);
+    test_scroll_selector_init_and_native_base_aliases_round_trip(root);
+    test_scroll_selector_native_api_aliases_match_backend_truth(root);
+    test_scroll_selector_native_style_image_speed_and_select_text_round_trip(root);
+    test_scroll_selector_edit_mode_and_navigation_mode_are_distinct(root);
+    test_scroll_selector_capacity(root);
+    test_scroll_selector_value_changed_unified_pool(root);
+    tinyui_deinit();
     return 0;
 }

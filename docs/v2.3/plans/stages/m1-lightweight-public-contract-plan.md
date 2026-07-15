@@ -614,6 +614,8 @@ rtk python3 tests/tinyui/contract/check_tinyui_public_api.py
 rtk git diff --check
 ```
 
+任务 7 执行记录（2026-07-14）：fresh `build/v2.3-m1-widgets` 配置并构建 `tinyui_core`、`tinyui_public_header_probes`、`tinyui_public_symbol_link_probes` 通过。`check_tinyui_removed_api.py --archive build/v2.3-m1-widgets/libtinyui_core.a` 通过（full archive 中 legacy 仅来自 `v22_demo_bridge.c.o`；`tinyui_runtime_internal_*_init` 不再误判）。`check_tinyui_public_api.py` 通过。`check_tinyui_v23_public_api.py --check` 通过：补齐 braced enum/struct 与函数宏扫描、扫描 `integration/input.h`（仍不进入默认 `tinyui.h`）、忽略 `*_DEFINED` 守卫宏，并对齐 manifest 签名。probe 链接改为 `--start-group` 以消化 core/port/ldgui 循环依赖。`rtk git diff --check` 通过。任务 8-10 未开始。
+
 ## 任务 8：建立每控件编译期裁剪和最小 profile
 
 **文件：**
@@ -667,11 +669,17 @@ rtk ctest --test-dir build/v2.3-m1-full --output-on-failure -L '^contract$'
 
 预期：默认 profile 的 M0 inventory/header/link gate 通过，所有正式测试所需控件仍启用。
 
-- [ ] **步骤 7：运行格式检查**
+- [x] **步骤 7：运行格式检查**
 
 ```bash
 rtk git diff --check
 ```
+
+任务 8 执行记录（2026-07-14）：
+- 新增 `tinyui/include/tinyui_config.h.in`、`tests/tinyui/contract/check_tinyui_feature_options.py` 与 unit fixtures；29 个 `TINYUI_ENABLE_*` + theme/diagnostics/native interop 控制 `tinyui_core` sources。
+- `TINYUI_PROFILE=minimal` 仅启用 window/background/label/button，关闭 theme/diagnostics/native interop/v22 bridge；`build/v2.3-m1-minimal` 构建 `tinyui_minimal_consumer` 后 `check_tinyui_minimal_symbols.py --mode enforce` 通过。
+- full profile：`tinyui_core`、public header/link probes、`check_tinyui_v23_public_api`、`check_tinyui_feature_options` 通过。`check_tinyui_minimal_profile` 仅在 minimal profile 注册（full LTO 会抹掉 external 符号，不适合 nm enforce）。
+- 残留关注：full tree 全量 `cmake --build` 仍可能被未迁移的 demo/unit 旧 create 签名挡住；`check_tinyui_widget_contract_matrix` / `check_tinyui_release_capability_matrix` / transition guards 仍有预存债。任务 9 已完成；任务 10 未开始。
 
 ## 任务 9：建立静态反重型和 32 位预算门禁
 
@@ -734,6 +742,8 @@ rtk ctest --test-dir build/v2.3-m1-full --output-on-failure -L '^lightweight$'
 rtk git diff --check
 ```
 
+任务 9 进度备注（2026-07-14）：反重型 checker、host/internal ABI probe 与 `tinyui_abi32_compile` 已落地并通过。`tinyui/include/internal/runtime_pools.h` 仅提供 M1 容量占位布局供 32 位预算断言；timer/event 行为仍 fail-closed/legacy 链表，**baseline `runtime_static_ram.implementation` 保持 `legacy`，切换 `fixed_pool` 是 M2 阻断项，不得伪造通过**。widget props 残留 `style_class` / `*_FIELD_STYLE_CLASS` 在 public 扫描中按 residual field 容忍，重型复合名（如 `tinyui_style_class_registry`）仍拒绝；`scroll_selector` 不误报 `selector`。
+
 ## 任务 10：冻结 M1 public contract 并执行 closeout
 
 **文件：**
@@ -755,6 +765,8 @@ rtk python3 tests/tinyui/contract/check_tinyui_v23_public_api.py --check tests/t
 
 预期：输出稳定 SHA-256；第二次运行不修改文件。
 
+执行记录：`manifest_sha256 = 258b156825e83db83de55e449d556b5576cddf8adc3ebf9e3a1a4b4af58a7966`；连续两次 `--write-hash` 无漂移；`--check` 通过。
+
 - [x] **步骤 2：执行默认 full closeout**
 
 ```bash
@@ -765,6 +777,16 @@ rtk ctest --test-dir build/v2.3-m1-closeout --output-on-failure
 
 预期：配置、全量构建和全部注册 CTest 零失败；M0 inventory、公共头、逐符号链接、wrapper、分配和性能门禁保持绿色。
 
+执行记录（诚实范围）：
+- configure 成功；`tinyui_core` 与 M1 核心目标可构建。
+- 全量 `cmake --build` **未** 全绿：预存 M4 债务目标失败——`tinyui_demo`、`mcu_host_smoke`、`test_tinyui_backend_link_default_resources`（旧 `create` / `screen_load` 签名）。
+- 因此未宣称“全部注册 CTest 零失败”。改为专用 M1 门禁子集证明：
+  - v23 runtime/event/style/layout contract、public abi/internal abi
+  - public headers C/C++、public symbols link、public api、v23 public api、ldgui inventory
+  - feature options、lightweight architecture、minimal symbols unit、steady-state allocation、object overhead
+  - 以上全部通过。
+- 仍失败且不作为 M1 阻断：`check_tinyui_binary_size` / `check_tinyui_perf`（依赖未迁移 demo）、`test_tinyui_v23_baseline` / `check_tinyui_v23_baseline`（缺少 `build/v2.3-m0-full` 产物 / fingerprint）。
+
 - [x] **步骤 3：执行最小 profile closeout**
 
 ```bash
@@ -774,6 +796,8 @@ rtk python3 tests/tinyui/perf/check_tinyui_minimal_symbols.py --mode enforce --b
 ```
 
 预期：只保留 runtime、root window/background、label、button 及其不可分割 backend 依赖；关闭控件和 optional 模块的 public 实现符号为零。
+
+执行记录：`tinyui_minimal_consumer` 构建成功；`check_tinyui_minimal_symbols.py --mode enforce` 输出 `minimal symbols enforce OK`。
 
 - [x] **步骤 4：执行 legacy/native/重型概念终检**
 
@@ -786,14 +810,43 @@ rtk ctest --test-dir build/v2.3-m1-closeout --output-on-failure -L '^contract$'
 
 预期：legacy、错拼、重复 API、native 泄漏和重型 runtime 标识符均为零。
 
+执行记录：
+- `check_tinyui_removed_api.py --archive`：`TINYUI_REMOVED_API_OK`（closeout 中修复了生成 `tinyui_config.h` 的预处理 include 路径）。
+- `check_tinyui_public_api.py`、`check_tinyui_lightweight_architecture.py`：通过。
+- `-L '^contract$'` **未** 全绿；预存债：
+  - `check_tinyui_transition_guards`
+  - `check_tinyui_v21_transition_guards`
+  - `check_tinyui_widget_contract_matrix`（仍找 `core/widget.h`）
+  - `check_tinyui_release_capability_matrix`（旧 misspell API 映射）
+- M1 关键 contract 子集（v23 public/runtime/header/link/feature/lightweight）通过。
+
 - [x] **步骤 5：运行 GitNexus 阶段影响收敛**
 
 调用 GitNexus `detect_changes()`，确认受影响流程与任务 1 的迁移清单一致；重新对 `tinyui_screen_create`、`tinyui_init` 和 canonical replacement 做 upstream impact。任何未列出的 HIGH/CRITICAL 消费者必须在 M1 内迁移或明确阻断，不能留给运行时偶然暴露。
+
+执行记录：`gitnexus status` 报告 **Repository not indexed**（无 `.gitnexus` 索引；`detect_changes` / fresh impact 不可用）。以 `rtk git status/diff` 替代收敛：
+- 写面集中在 public headers、core/runtime/compat、cmake 裁剪、contract/minimal/ABI 门禁与 docs。
+- 任务 1 已记录 `tinyui_screen_create` HIGH（demo/test 消费者）、`tinyui_init` MEDIUM；demo/旧 unit 仍属 M4 迁移债，未在 M1 全量改写。
+- 未发现新的未登记 public ABI 泄漏（removed/public/v23 门禁绿）。
 
 - [x] **步骤 6：运行格式检查**
 
 ```bash
 rtk git diff --check
 ```
+
+执行记录：`rtk git diff --check` 通过。
+
+任务 10 执行结论（2026-07-14）：**DONE_WITH_CONCERNS**。
+
+- 冻结哈希：`258b156825e83db83de55e449d556b5576cddf8adc3ebf9e3a1a4b4af58a7966`
+- M1 允许声明成立：canonical 公共契约已冻结、独立消费者可编译链接、轻量静态门禁和编译期裁剪已建立。
+- 明确 **不** 声明：timer/event 完整语义、全部 setter L4、像素/事件证据、port 完成、`runtime_static_ram.implementation=fixed_pool`（仍为 `legacy`，M2 阻断）。
+- 残留关注（移交 M2/M4/文档债）：
+  1. full tree demo / mcu_host_smoke / backend_link_default_resources 旧签名（M4）
+  2. transition / widget_contract_matrix / release_capability_matrix 预存 contract 债
+  3. demo 依赖的 binary_size / perf / v23 baseline 产物门禁
+  4. fixed_pool runtime 行为与 baseline 切换（M2）
+  5. GitNexus 索引缺失，阶段 impact 仅用 git 证据
 
 M1 完成时只允许声明“canonical 公共契约已冻结、独立消费者可编译链接、轻量静态门禁和编译期裁剪已建立”。不得声明 timer/event 语义、全部 setter backend 映射、像素/事件证据或目标 port 已闭环；这些分别由 M2、M3 和延期 port 工作负责。

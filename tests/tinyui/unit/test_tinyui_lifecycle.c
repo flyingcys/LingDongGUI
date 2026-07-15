@@ -8,6 +8,7 @@
 #include "widgets/button.h"
 #include "widgets/checkbox.h"
 #include "widgets/table.h"
+#include "widgets/label.h"
 #include "../../../src/gui/ldBase.h"
 #include "../../../src/gui/ldButton.h"
 #include "../../../src/gui/ldCheckBox.h"
@@ -33,27 +34,40 @@ static void test_registry_register_lookup_unregister(void)
     memset(&b, 0, sizeof(b));
     a.ld_name_id = 1; b.ld_name_id = 2;
 
-    tinyui_app_register_host(&app, &a);
-    tinyui_app_register_host(&app, &b);
-    assert(tinyui_app_lookup_host(&app, 1) == &a);
-    assert(tinyui_app_lookup_host(&app, 2) == &b);
-    assert(tinyui_app_lookup_host(&app, 99) == 0);
+    tinyui_runtime_internal_app_register_host(&app, &a);
+    tinyui_runtime_internal_app_register_host(&app, &b);
+    assert(tinyui_runtime_internal_app_lookup_host(&app, 1) == &a);
+    assert(tinyui_runtime_internal_app_lookup_host(&app, 2) == &b);
+    assert(tinyui_runtime_internal_app_lookup_host(&app, 99) == 0);
 
-    tinyui_app_unregister_host(&app, &a);
-    assert(tinyui_app_lookup_host(&app, 1) == 0);
-    assert(tinyui_app_lookup_host(&app, 2) == &b);
+    tinyui_runtime_internal_app_unregister_host(&app, &a);
+    assert(tinyui_runtime_internal_app_lookup_host(&app, 1) == 0);
+    assert(tinyui_runtime_internal_app_lookup_host(&app, 2) == &b);
 
-    tinyui_app_unregister_host(&app, &b);
+    tinyui_runtime_internal_app_unregister_host(&app, &b);
     assert(app.host_list_head == 0);
 }
 
 /* ---- P2 helpers ---- */
+static void p2_shutdown(struct tinyui_app *app)
+{
+    (void)app;
+    tinyui_deinit();
+}
+
 static struct tinyui_window *p2_make_window(struct tinyui_app **out_app)
 {
-    struct tinyui_app *app = tinyui_app_create();
+    tinyui_obj_t *root_obj;
+    struct tinyui_window *win;
+    struct tinyui_app *app;
+
+    tinyui_deinit();
+    assert(tinyui_init() == TINYUI_OK);
+    root_obj = tinyui_screen_create();
+    assert(root_obj != 0);
+    win = (struct tinyui_window *)(void *)root_obj;
+    app = win->widget.owner;
     assert(app != 0);
-    struct tinyui_window *win = tinyui_window_create(app, "root");
-    assert(win != 0);
     *out_app = app;
     return win;
 }
@@ -62,59 +76,67 @@ static void test_destroy_leaf_removes_from_tree(void)
 {
     struct tinyui_app *app;
     struct tinyui_window *win = p2_make_window(&app);
+    tinyui_obj_t *label_obj;
+    struct tinyui_widget *w;
+    uint16_t id;
 
-    struct tinyui_label *label = tinyui_label_create(win, "leaf");
-    assert(label != 0);
-    struct tinyui_widget *w = &label->widget;
-    uint16_t id = w->ld_name_id;
+    label_obj = tinyui_label_create((tinyui_obj_t *)win);
+    assert(label_obj != 0);
+    w = (struct tinyui_widget *)(void *)label_obj;
+    id = w->ld_name_id;
 
-    assert(tinyui_app_lookup_host(app, id) == w);
+    assert(tinyui_runtime_internal_app_lookup_host(app, id) == w);
 
-    int ret = tinyui_widget_destroy(w);
-    assert(ret == 0);
+    assert(tinyui_obj_delete(label_obj) == TINYUI_OK);
+    assert(tinyui_runtime_internal_app_lookup_host(app, id) == 0);
 
-    assert(tinyui_app_lookup_host(app, id) == 0);
-
-    tinyui_app_destroy(app);
+    p2_shutdown(app);
 }
 
 static void test_shutdown_does_not_leak(void)
 {
-    struct tinyui_app *app = tinyui_app_create();
-    assert(app != 0);
-    struct tinyui_window *win = tinyui_window_create(app, "root");
-    assert(win != 0);
-    struct tinyui_label *l1 = tinyui_label_create(win, "a");
-    struct tinyui_label *l2 = tinyui_label_create(win, "b");
-    (void)l1; (void)l2;
-    tinyui_app_destroy(app);
+    struct tinyui_app *app;
+    struct tinyui_window *win = p2_make_window(&app);
+    tinyui_obj_t *l1 = tinyui_label_create((tinyui_obj_t *)win);
+    tinyui_obj_t *l2 = tinyui_label_create((tinyui_obj_t *)win);
+    (void)l1;
+    (void)l2;
+    p2_shutdown(app);
 }
 
 static void test_destroy_container_reclaims_subtree(void)
 {
     struct tinyui_app *app;
     struct tinyui_window *root = p2_make_window(&app);
-    struct tinyui_window *child = tinyui_window_create_child(root, "child_panel");
-    struct tinyui_label *l1;
-    struct tinyui_label *l2;
+    tinyui_obj_t *child_obj;
+    tinyui_obj_t *l1;
+    tinyui_obj_t *l2;
     uint16_t cid, id1, id2;
+    struct tinyui_widget *child_w;
+    struct tinyui_widget *l1_w;
+    struct tinyui_widget *l2_w;
 
-    assert(child != 0);
-    l1 = tinyui_label_create(child, "c1");
-    l2 = tinyui_label_create(child, "c2");
+    child_obj = tinyui_window_create((tinyui_obj_t *)root);
+    assert(child_obj != 0);
+    child_w = (struct tinyui_widget *)(void *)child_obj;
+
+    l1 = tinyui_label_create(child_obj);
+    l2 = tinyui_label_create(child_obj);
     assert(l1 != 0);
     assert(l2 != 0);
+    l1_w = (struct tinyui_widget *)(void *)l1;
+    l2_w = (struct tinyui_widget *)(void *)l2;
 
-    cid = child->widget.ld_name_id;
-    id1 = l1->widget.ld_name_id;
-    id2 = l2->widget.ld_name_id;
+    cid = child_w->ld_name_id;
+    id1 = l1_w->ld_name_id;
+    id2 = l2_w->ld_name_id;
 
-    assert(tinyui_widget_destroy(&child->widget) == 0);
-    assert(tinyui_app_lookup_host(app, cid) == 0);
-    assert(tinyui_app_lookup_host(app, id1) == 0);
-    assert(tinyui_app_lookup_host(app, id2) == 0);
+    assert(tinyui_obj_delete(child_obj) == TINYUI_OK);
+    assert(tinyui_runtime_internal_app_lookup_host(app, cid) == 0);
+    assert(tinyui_runtime_internal_app_lookup_host(app, id1) == 0);
+    assert(tinyui_runtime_internal_app_lookup_host(app, id2) == 0);
 
-    tinyui_app_destroy(app);
+    p2_shutdown(app);
 }
 
 static void test_keyboard_host_cleanup_frees_layout(void)
@@ -125,101 +147,113 @@ static void test_keyboard_host_cleanup_frees_layout(void)
     };
     struct tinyui_app *app;
     struct tinyui_window *win = p2_make_window(&app);
-    struct tinyui_keyboard *kbd = tinyui_keyboard_create(win, "kbd");
+    tinyui_obj_t *kbd = tinyui_keyboard_create((tinyui_obj_t *)win);
+
     assert(kbd != 0);
     assert(tinyui_keyboard_set_buttons(kbd, buttons, 2) == 0);
-    /* host_cleanup must free the dynamic layout before ld depose */
-    assert(tinyui_widget_destroy(&kbd->widget) == 0);
-    tinyui_app_destroy(app);
+    assert(tinyui_obj_delete(kbd) == TINYUI_OK);
+    p2_shutdown(app);
 }
 
 static void test_composite_list_item_no_pinfo_clash(void)
 {
     struct tinyui_app *app;
     struct tinyui_window *win = p2_make_window(&app);
-    struct tinyui_list *list = tinyui_list_create(win, "list");
-    struct tinyui_button *item = tinyui_button_create(win, "item_btn");
+    tinyui_obj_t *list = tinyui_list_create((tinyui_obj_t *)win);
+    tinyui_obj_t *item = tinyui_button_create((tinyui_obj_t *)win);
+    struct tinyui_widget *item_w;
+
     assert(list != 0);
     assert(item != 0);
-    /* Add a default text item so index 0 is valid */
+    item_w = (struct tinyui_widget *)(void *)item;
     assert(tinyui_list_add_item(list, "item0", "Item 0") == 0);
-    /* Composite item: pInfo used by LingDongGUI for coords; TinyUI uses nameId */
-    assert(tinyui_list_set_item_widget(list, 0, &item->widget) == 0);
-    /* nameId reverse-lookup must still work (pInfo no longer touched by TinyUI) */
-    assert(tinyui_widget_from_ld(item->widget.ld_widget) == &item->widget);
-    /* Destroy list (container with item child) without crash or double-free */
-    assert(tinyui_widget_destroy(&list->widget) == 0);
-    tinyui_app_destroy(app);
+    assert(tinyui_list_set_item_widget(list, 0, item) == 0);
+    assert(tinyui_runtime_internal_widget_from_ld(item_w->ld_widget) == item_w);
+    assert(tinyui_obj_delete(list) == TINYUI_OK);
+    p2_shutdown(app);
 }
 
 static void test_name_id_reused_after_destroy(void)
 {
     struct tinyui_app *app;
     struct tinyui_window *win = p2_make_window(&app);
-    struct tinyui_label *a = tinyui_label_create(win, "a");
+    tinyui_obj_t *a = tinyui_label_create((tinyui_obj_t *)win);
     uint16_t id_a;
-    struct tinyui_label *b;
+    tinyui_obj_t *b;
+    struct tinyui_widget *a_w;
+    struct tinyui_widget *b_w;
 
     assert(a != 0);
-    id_a = a->widget.ld_name_id;
-    assert(tinyui_widget_destroy(&a->widget) == 0);
+    a_w = (struct tinyui_widget *)(void *)a;
+    id_a = a_w->ld_name_id;
+    assert(tinyui_obj_delete(a) == TINYUI_OK);
 
-    b = tinyui_label_create(win, "b");
+    b = tinyui_label_create((tinyui_obj_t *)win);
     assert(b != 0);
-    assert(b->widget.ld_name_id == id_a); /* id was returned to freelist and reused */
+    b_w = (struct tinyui_widget *)(void *)b;
+    assert(b_w->ld_name_id == id_a);
 
-    tinyui_app_destroy(app);
+    p2_shutdown(app);
 }
 
-/* P4: a runtime-destroyed button must unlink its action_info from the global
- * xBtnLink list (via host_cleanup -> xBtnRemove) BEFORE the host is freed.
- * Otherwise xBtnAction keeps a dangling node into freed host memory, which is
- * walked on the next xBtnTick / xBtnGetState / shutdown xBtnDestroy -> UAF.
- * ldButton_depose does NOT call xBtnRemove, so the host_cleanup hook is the
- * only thing that closes this gap (mirrors keyboard's host_cleanup). */
 static void test_destroy_button_unregisters_from_xbtn(void)
 {
     struct tinyui_app *app;
     struct tinyui_window *win = p2_make_window(&app);
-    struct tinyui_button *btn = tinyui_button_create(win, "b");
+    tinyui_obj_t *btn = tinyui_button_create((tinyui_obj_t *)win);
     uint16_t id;
+    struct tinyui_widget *btn_w;
 
     assert(btn != 0);
-    id = btn->widget.ld_name_id;
+    btn_w = (struct tinyui_widget *)(void *)btn;
+    id = btn_w->ld_name_id;
 
-    /* freshly-created button is registered with xBtnAction and idle */
     assert(xBtnGetState(id, BTN_NO_OPERATION) == 1);
-
-    assert(tinyui_widget_destroy(&btn->widget) == 0);
-
-    /* after destroy the button must no longer be found in xBtnLink */
+    assert(tinyui_obj_delete(btn) == TINYUI_OK);
     assert(xBtnGetState(id, BTN_NO_OPERATION) == 0);
 
-    tinyui_app_destroy(app);
+    p2_shutdown(app);
 }
 
 static void test_prepare_native_depose_detaches_static_fonts(void)
 {
     struct tinyui_app *app;
     struct tinyui_window *win = p2_make_window(&app);
-    struct tinyui_label *label = tinyui_label_create(win, "static_label");
-    struct tinyui_button *button = tinyui_button_create(win, "static_button");
-    struct tinyui_checkbox *checkbox = tinyui_checkbox_create(win, "static_checkbox");
-    struct tinyui_table *table = tinyui_table_create(win, "static_table", 2, 2);
+    tinyui_obj_t *label = tinyui_label_create((tinyui_obj_t *)win);
+    tinyui_obj_t *button = tinyui_button_create((tinyui_obj_t *)win);
+    tinyui_obj_t *checkbox = tinyui_checkbox_create((tinyui_obj_t *)win);
+    tinyui_table_props_t table_props;
+    tinyui_obj_t *table;
     ldLabel_t *ld_label;
     ldButton_t *ld_button;
     ldCheckBox_t *ld_checkbox;
     ldTable_t *ld_table;
     ldTableItem_t *item;
+    struct tinyui_widget *label_w;
+    struct tinyui_widget *button_w;
+    struct tinyui_widget *checkbox_w;
+    struct tinyui_widget *table_w;
+
+    memset(&table_props, 0, sizeof(table_props));
+    table_props.fields = TINYUI_TABLE_FIELD_ROWS | TINYUI_TABLE_FIELD_COLUMNS;
+    table_props.rows = 2;
+    table_props.columns = 2;
+    table = tinyui_table_create_with_props((tinyui_obj_t *)win, &table_props);
 
     assert(label != 0);
     assert(button != 0);
     assert(checkbox != 0);
     assert(table != 0);
-    ld_label = (ldLabel_t *)label->widget.ld_widget;
-    ld_button = (ldButton_t *)button->widget.ld_widget;
-    ld_checkbox = (ldCheckBox_t *)checkbox->widget.ld_widget;
-    ld_table = (ldTable_t *)table->widget.ld_widget;
+
+    label_w = (struct tinyui_widget *)(void *)label;
+    button_w = (struct tinyui_widget *)(void *)button;
+    checkbox_w = (struct tinyui_widget *)(void *)checkbox;
+    table_w = (struct tinyui_widget *)(void *)table;
+
+    ld_label = (ldLabel_t *)label_w->ld_widget;
+    ld_button = (ldButton_t *)button_w->ld_widget;
+    ld_checkbox = (ldCheckBox_t *)checkbox_w->ld_widget;
+    ld_table = (ldTable_t *)table_w->ld_widget;
     assert(ld_label != 0);
     assert(ld_button != 0);
     assert(ld_checkbox != 0);
@@ -232,57 +266,218 @@ static void test_prepare_native_depose_detaches_static_fonts(void)
     assert(ld_checkbox->ptFont == (arm_2d_font_t *)FONT_ARIAL_12);
     assert(item->ptFont == (arm_2d_font_t *)FONT_ARIAL_12);
 
-    tinyui_widget_prepare_native_depose(&label->widget);
-    tinyui_widget_prepare_native_depose(&button->widget);
-    tinyui_widget_prepare_native_depose(&checkbox->widget);
-    tinyui_widget_prepare_native_depose(&table->widget);
+    tinyui_runtime_internal_widget_prepare_native_depose(label_w);
+    tinyui_runtime_internal_widget_prepare_native_depose(button_w);
+    tinyui_runtime_internal_widget_prepare_native_depose(checkbox_w);
+    tinyui_runtime_internal_widget_prepare_native_depose(table_w);
 
     assert(ld_label->ptFont == 0);
     assert(ld_button->ptFont == 0);
     assert(ld_checkbox->ptFont == 0);
     assert(item->ptFont == 0);
 
-    tinyui_app_destroy(app);
+    p2_shutdown(app);
 }
 
 static void test_prepare_native_depose_keeps_non_static_fonts(void)
 {
     struct tinyui_app *app;
     struct tinyui_window *win = p2_make_window(&app);
-    struct tinyui_label *label = tinyui_label_create(win, "dynamic_label");
+    tinyui_obj_t *label = tinyui_label_create((tinyui_obj_t *)win);
     ldLabel_t *ld_label;
     arm_2d_font_t non_static_font;
+    struct tinyui_widget *label_w;
 
     assert(label != 0);
-    ld_label = (ldLabel_t *)label->widget.ld_widget;
+    label_w = (struct tinyui_widget *)(void *)label;
+    ld_label = (ldLabel_t *)label_w->ld_widget;
     assert(ld_label != 0);
     memset(&non_static_font, 0, sizeof(non_static_font));
     ld_label->ptFont = &non_static_font;
 
-    tinyui_widget_prepare_native_depose(&label->widget);
+    tinyui_runtime_internal_widget_prepare_native_depose(label_w);
 
     assert(ld_label->ptFont == &non_static_font);
     ld_label->ptFont = 0;
-    tinyui_app_destroy(app);
+    p2_shutdown(app);
 }
 
 static void test_app_destroy_prepares_native_depose_for_remaining_hosts(void)
 {
     struct tinyui_app *app;
     struct tinyui_window *win = p2_make_window(&app);
-    struct tinyui_label *label = tinyui_label_create(win, "shutdown_label");
+    tinyui_obj_t *label = tinyui_label_create((tinyui_obj_t *)win);
     ldLabel_t *ld_label;
     int before_count;
+    struct tinyui_widget *label_w;
 
     assert(label != 0);
-    ld_label = (ldLabel_t *)label->widget.ld_widget;
+    label_w = (struct tinyui_widget *)(void *)label;
+    ld_label = (ldLabel_t *)label_w->ld_widget;
     assert(ld_label != 0);
     assert(ld_label->ptFont == (arm_2d_font_t *)FONT_ARIAL_12);
 
     before_count = g_prepare_native_depose_count;
-    tinyui_app_destroy(app);
+    p2_shutdown(app);
 
     assert(g_prepare_native_depose_count > before_count);
+}
+
+/* M2 Task 2: LD tree is sole ownership truth; ID get/find; delete invalidates host. */
+static void test_v23_object_tree_and_id_queries(void)
+{
+    struct tinyui_app *app;
+    struct tinyui_window *root = p2_make_window(&app);
+    tinyui_obj_t *root_obj = (tinyui_obj_t *)root;
+    tinyui_obj_t *parent_obj;
+    tinyui_obj_t *label_obj;
+    tinyui_obj_t *first;
+    tinyui_obj_t *sibling;
+    uint16_t label_id = 0U;
+    uint16_t parent_id = 0U;
+    uint16_t count = 0U;
+    uint16_t root_count_before = 0U;
+    ldBase_t *ld_parent;
+    ldBase_t *ld_label;
+    struct tinyui_widget *parent_w;
+    struct tinyui_widget *label_w;
+
+    parent_obj = tinyui_window_create(root_obj);
+    assert(parent_obj != 0);
+    parent_w = (struct tinyui_widget *)(void *)parent_obj;
+
+    label_obj = tinyui_label_create(parent_obj);
+    assert(label_obj != 0);
+    label_w = (struct tinyui_widget *)(void *)label_obj;
+
+    assert(tinyui_obj_get_id(label_obj, &label_id) == TINYUI_OK);
+    assert(label_id != 0U);
+    assert(tinyui_obj_get_id(parent_obj, &parent_id) == TINYUI_OK);
+    assert(parent_id != 0U);
+    assert(label_id != parent_id);
+
+    assert(tinyui_obj_find_by_id(root_obj, label_id) == label_obj);
+    assert(tinyui_obj_find_by_id(root_obj, parent_id) == parent_obj);
+    assert(tinyui_obj_find_by_id(root_obj, 0U) == 0);
+    assert(tinyui_obj_get_parent(label_obj) == parent_obj);
+    assert(tinyui_obj_get_root(label_obj) == root_obj);
+    assert(tinyui_obj_get_root(parent_obj) == root_obj);
+    assert(tinyui_obj_get_child_count(parent_obj, &count) == TINYUI_OK);
+    assert(count == 1U);
+
+    first = tinyui_obj_get_first_child(parent_obj);
+    assert(first == label_obj);
+    sibling = tinyui_obj_get_next_sibling(label_obj);
+    assert(sibling == 0);
+
+    /* Tree order must come from real LD nodes, not a second TinyUI ownership tree. */
+    ld_parent = (ldBase_t *)parent_w->ld_widget;
+    ld_label = (ldBase_t *)label_w->ld_widget;
+    assert(ld_parent != 0);
+    assert(ld_label != 0);
+    assert(ldBaseGetParent(ld_label) == ld_parent);
+    assert(ldBaseGetChildList(ld_parent) == ld_label);
+    assert(ldBaseGetChildCount(ld_parent) == 1U);
+    assert(tinyui_runtime_internal_app_lookup_host(app, label_id) == label_w);
+
+    assert(tinyui_obj_get_child_count(root_obj, &root_count_before) == TINYUI_OK);
+    assert(root_count_before >= 1U);
+
+    assert(tinyui_obj_delete(parent_obj) == TINYUI_OK);
+    assert(tinyui_runtime_internal_app_lookup_host(app, parent_id) == 0);
+    assert(tinyui_runtime_internal_app_lookup_host(app, label_id) == 0);
+    assert(tinyui_obj_find_by_id(root_obj, parent_id) == 0);
+    assert(tinyui_obj_find_by_id(root_obj, label_id) == 0);
+
+    p2_shutdown(app);
+}
+
+static void test_v23_explicit_id_conflict_keeps_backend_count(void)
+{
+    struct tinyui_app *app;
+    struct tinyui_window *root = p2_make_window(&app);
+    tinyui_obj_t *root_obj = (tinyui_obj_t *)root;
+    tinyui_label_props_t props;
+    tinyui_obj_t *first;
+    tinyui_obj_t *second;
+    uint16_t count_before = 0U;
+    uint16_t count_after = 0U;
+    uint16_t first_id = 0U;
+    struct tinyui_widget *root_w = &root->widget;
+
+    memset(&props, 0, sizeof(props));
+    props.fields = TINYUI_LABEL_FIELD_ID;
+    props.id = 77U;
+
+    first = tinyui_label_create_with_props(root_obj, &props);
+    assert(first != 0);
+    assert(tinyui_obj_get_id(first, &first_id) == TINYUI_OK);
+    assert(first_id == 77U);
+    assert(tinyui_obj_find_by_id(root_obj, 77U) == first);
+
+    assert(tinyui_obj_get_child_count(root_obj, &count_before) == TINYUI_OK);
+
+    second = tinyui_label_create_with_props(root_obj, &props);
+    assert(second == 0);
+    assert(tinyui_obj_get_child_count(root_obj, &count_after) == TINYUI_OK);
+    assert(count_after == count_before);
+    assert(tinyui_obj_find_by_id(root_obj, 77U) == first);
+    assert(ldBaseGetChildCount((ldBase_t *)root_w->ld_widget) == (uint16_t)count_before);
+
+    p2_shutdown(app);
+}
+
+/* M2 Task 2 review fix: mid-process delete only marks; process flushes destroy. */
+static void test_v23_deferred_delete_flushed_by_process(void)
+{
+    struct tinyui_app *app;
+    struct tinyui_window *root = p2_make_window(&app);
+    tinyui_obj_t *root_obj = (tinyui_obj_t *)root;
+    tinyui_obj_t *label_obj;
+    tinyui_obj_t *other_obj;
+    struct tinyui_widget *label_w;
+    struct tinyui_runtime_state *rt;
+    uint16_t label_id = 0U;
+    uint32_t next_ms = 0U;
+
+    label_obj = tinyui_label_create(root_obj);
+    other_obj = tinyui_label_create(root_obj);
+    assert(label_obj != 0);
+    assert(other_obj != 0);
+    label_w = (struct tinyui_widget *)(void *)label_obj;
+    assert(tinyui_obj_get_id(label_obj, &label_id) == TINYUI_OK);
+    assert(label_id != 0U);
+    assert(tinyui_runtime_internal_app_lookup_host(app, label_id) == label_w);
+
+    rt = tinyui_runtime_state_get();
+    assert(rt != 0);
+
+    /* Simulate mid-dispatch / mid-process: delete only marks deferred. */
+    rt->processing = true;
+    assert(tinyui_obj_delete(label_obj) == TINYUI_OK);
+    assert(label_w->deleting == 1);
+    assert(rt->delete_pending == 1);
+    assert(rt->delete_target == label_obj);
+    assert(tinyui_runtime_internal_app_lookup_host(app, label_id) == label_w);
+    assert(tinyui_obj_find_by_id(root_obj, label_id) == label_obj);
+
+    /* Repeat delete / second delete while pending must not destroy immediately. */
+    assert(tinyui_obj_delete(label_obj) == TINYUI_ERROR_INVALID_STATE);
+    assert(tinyui_obj_delete(other_obj) == TINYUI_ERROR_INVALID_STATE);
+    assert(tinyui_runtime_internal_app_lookup_host(app, label_id) == label_w);
+
+    /* Setters blocked after deleting mark. */
+    assert(tinyui_runtime_internal_widget_set_text(label_w, "blocked") == -1);
+
+    /* Allow process entry; pending remains until process end flushes destroy. */
+    rt->processing = false;
+    assert(tinyui_process(&next_ms) == TINYUI_OK);
+    assert(rt->delete_pending == 0);
+    assert(rt->delete_target == 0);
+    assert(tinyui_runtime_internal_app_lookup_host(app, label_id) == 0);
+    assert(tinyui_obj_find_by_id(root_obj, label_id) == 0);
+
+    p2_shutdown(app);
 }
 
 int main(void)
@@ -298,5 +493,8 @@ int main(void)
     test_prepare_native_depose_detaches_static_fonts();
     test_prepare_native_depose_keeps_non_static_fonts();
     test_app_destroy_prepares_native_depose_for_remaining_hosts();
+    test_v23_object_tree_and_id_queries();
+    test_v23_explicit_id_conflict_keeps_backend_count();
+    test_v23_deferred_delete_flushed_by_process();
     return 0;
 }

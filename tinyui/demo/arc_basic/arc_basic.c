@@ -18,45 +18,64 @@
 
 #include "arc_basic/arc_basic.h"
 #include "tinyui.h"
-static void make_ui(struct tinyui_window *win)
+
+#include <stdio.h>
+
+static void on_arc_event(const tinyui_event_t *event)
 {
-    struct tinyui_label *title;
-    struct tinyui_arc_props props = {
-        .id = "arc",
-        .bg_start_angle = 30.0f,
-        .bg_end_angle = 300.0f,
-        .fg_end_angle = 45.0f,
-        .rotation_angle = 12.0f,
-        .bg_color = 0xCCD5E3,
-        .fg_color = 0x2B6CB0,
-    };
-    struct tinyui_arc *arc;
-
-    tinyui_grid_set_columns(win, (const int[]){240, 0}, 2);
-    tinyui_grid_set_rows(win, (const int[]){28, 180, 0}, 3);
-    tinyui_grid_set_gap(win, 16, 16);
-    tinyui_grid_set_align(win, TINYUI_ALIGN_CENTER, TINYUI_ALIGN_CENTER);
-    tinyui_window_set_padding(win, 24, 24, 24, 24);
-
-    title = tinyui_label_create(win, "title");
-    arc = tinyui_arc_create_with_props((struct tinyui_widget *)win, &props);
-
-    tinyui_label_set_text(title, "Arc");
-    tinyui_widget_set_size((struct tinyui_widget *)title, 220, 28);
-    tinyui_widget_set_size((struct tinyui_widget *)arc, 160, 160);
-    tinyui_widget_set_grid_cell((struct tinyui_widget *)title, 0, 0, 1, 1, TINYUI_ALIGN_CENTER, TINYUI_ALIGN_CENTER);
-    tinyui_widget_set_grid_cell((struct tinyui_widget *)arc, 0, 1, 1, 1, TINYUI_ALIGN_CENTER, TINYUI_ALIGN_CENTER);
-}
-
-void tinyui_demo_arc_basic(void)
-{
-    tinyui_obj_t *screen = tinyui_screen_create();
-    struct tinyui_window *win = (struct tinyui_window *)screen;
-
-    if (win == 0) {
+    if (event == NULL || event->code != TINYUI_EVENT_CLICKED) {
         return;
     }
+    printf("TINYUI_EVENT_TRACE_LINE=arc:CLICKED\n");
+    fflush(stdout);
+}
 
-    make_ui(win);
-    tinyui_screen_load(screen);
+tinyui_result_t tinyui_demo_arc_basic_build(tinyui_obj_t *screen)
+{
+    tinyui_obj_t *title;
+    tinyui_obj_t *arc;
+    tinyui_result_t style_rc;
+
+    if (screen == NULL) {
+        return TINYUI_ERROR_INVALID_ARG;
+    }
+
+    (void)tinyui_obj_set_bg_color(screen, 0xF6F8FAU);
+
+    title = tinyui_label_create(screen);
+    arc = tinyui_arc_create(screen);
+    if (title == NULL || arc == NULL) {
+        return TINYUI_ERROR_NO_MEMORY;
+    }
+
+    if (tinyui_obj_set_pos(title, 32, 24) != TINYUI_OK
+        || tinyui_obj_set_size(title, 200, 28) != TINYUI_OK
+        || tinyui_label_set_text(title, "Arc") != 0
+        || tinyui_label_set_text_color(title, 0x102030U) != 0) {
+        return TINYUI_ERROR_BACKEND;
+    }
+
+    if (tinyui_obj_set_pos(arc, 160, 80) != TINYUI_OK
+        || tinyui_obj_set_size(arc, 160, 160) != TINYUI_OK
+        || tinyui_arc_set_background_angle(arc, 30.0f, 300.0f) != 0
+        || tinyui_arc_set_foreground_angle(arc, 45.0f) != 0
+        || tinyui_arc_set_rotation_angle(arc, 12.0f) != 0
+        || tinyui_arc_set_color(arc, 0xCCD5E3U, 0x2B6CB0U) != 0) {
+        return TINYUI_ERROR_BACKEND;
+    }
+
+    style_rc = tinyui_obj_add_event_cb(arc,
+                                       TINYUI_EVENT_MASK(TINYUI_EVENT_CLICKED),
+                                       on_arc_event,
+                                       NULL,
+                                       NULL);
+    if (style_rc == TINYUI_ERROR_NOT_SUPPORTED) {
+        /* Backend may not surface click on arc; keep demo visible. */
+    } else if (style_rc != TINYUI_OK) {
+        return style_rc;
+    }
+
+    printf("TINYUI_SCENARIO=arc_basic\n");
+    fflush(stdout);
+    return TINYUI_OK;
 }

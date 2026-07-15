@@ -19,52 +19,58 @@
 #include "line_edit_basic/line_edit_basic.h"
 #include "tinyui.h"
 
-static void make_ui(struct tinyui_window *win)
+#include <string.h>
+
+tinyui_result_t tinyui_demo_line_edit_basic_build(tinyui_obj_t *screen)
 {
-    struct tinyui_label *title;
-    struct tinyui_line_edit *line_edit;
-    static const int cols[] = {280, 0};
-    static const int rows[] = {28, 36, 0};
+    tinyui_obj_t *title;
+    tinyui_obj_t *line_edit;
+    tinyui_line_edit_props_t line_edit_props;
+    tinyui_result_t result;
 
-    tinyui_grid_set_columns(win, cols, 2);
-    tinyui_grid_set_rows(win, rows, 3);
-    tinyui_grid_set_gap(win, 12, 12);
-    tinyui_grid_set_align(win, TINYUI_ALIGN_START, TINYUI_ALIGN_START);
-    tinyui_window_set_padding(win, 24, 24, 24, 24);
-
-    title = tinyui_label_create(win, "title");
-    line_edit = tinyui_line_edit_create_with_props(
-        win,
-        &(struct tinyui_line_edit_props){
-            .id = "line_edit",
-            .text = "192.168.0.10",
-            .type = TINYUI_LINE_EDIT_TYPE_STRING,
-            .keyboard_binding = 1U,
-            .width = 240,
-            .height = 32,
-        });
-
-    if (title != 0) {
-        tinyui_label_set_text(title, "Line Edit");
-        tinyui_widget_set_grid_cell((struct tinyui_widget *)title,
-                                    0, 0, 1, 1,
-                                    TINYUI_ALIGN_START,
-                                    TINYUI_ALIGN_CENTER);
+    if (screen == NULL) {
+        return TINYUI_ERROR_INVALID_ARG;
     }
 
-    if (line_edit != 0) {
-        tinyui_widget_set_grid_cell((struct tinyui_widget *)line_edit,
-                                    0, 1, 1, 1,
-                                    TINYUI_ALIGN_START,
-                                    TINYUI_ALIGN_CENTER);
+    result = tinyui_flex_set_flow(screen, TINYUI_FLEX_FLOW_COLUMN);
+    if (result != TINYUI_OK) {
+        return result;
     }
-}
+    result = tinyui_flex_set_align(screen,
+                                   TINYUI_ALIGN_START,
+                                   TINYUI_ALIGN_START,
+                                   TINYUI_ALIGN_START);
+    if (result != TINYUI_OK) {
+        return result;
+    }
+    result = tinyui_flex_set_gap(screen, 12, 12);
+    if (result != TINYUI_OK) {
+        return result;
+    }
+    if (tinyui_window_set_padding(screen, 24, 24, 24, 24) != 0) {
+        return TINYUI_ERROR_BACKEND;
+    }
 
-void tinyui_demo_line_edit_basic(void)
-{
-    tinyui_obj_t *screen = tinyui_screen_create();
-    struct tinyui_window *win = (struct tinyui_window *)screen;
-    if (win == 0) return;
-    make_ui(win);
-    tinyui_screen_load(screen);
+    memset(&line_edit_props, 0, sizeof(line_edit_props));
+    line_edit_props.fields = TINYUI_LINE_EDIT_FIELD_TEXT
+        | TINYUI_LINE_EDIT_FIELD_TYPE
+        | TINYUI_LINE_EDIT_FIELD_KEYBOARD_BINDING
+        | TINYUI_LINE_EDIT_FIELD_WIDTH | TINYUI_LINE_EDIT_FIELD_HEIGHT;
+    line_edit_props.text = "192.168.0.10";
+    line_edit_props.type = TINYUI_LINE_EDIT_TYPE_STRING;
+    line_edit_props.keyboard_binding = 1U;
+    line_edit_props.width = 240;
+    line_edit_props.height = 32;
+
+    title = tinyui_label_create(screen);
+    line_edit = tinyui_line_edit_create_with_props(screen, &line_edit_props);
+    if (title == NULL || line_edit == NULL) {
+        return TINYUI_ERROR_NO_MEMORY;
+    }
+
+    if (tinyui_label_set_text(title, "Line Edit") != 0) {
+        return TINYUI_ERROR_BACKEND;
+    }
+
+    return TINYUI_OK;
 }

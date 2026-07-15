@@ -72,14 +72,16 @@ set(LD_COMMON_INCLUDE_DIRS
 )
 
 function(ld_apply_common_target_config target)
+    # BUILD_INTERFACE only: install consumers must not inherit backend Arm-2D
+    # compile definitions via TinyUI::tinyui / static archive exports.
     target_compile_definitions(${target}
         PUBLIC
-            RTE_Acceleration_Arm_2D
-            __va_list=va_list
-            RTE_Acceleration_Arm_2D_Helper_Disp_Adapter0
-            RTE_Acceleration_Arm_2D_Alpha_Blending
-            RTE_Acceleration_Arm_2D_Transform
-            RTE_Acceleration_Arm_2D_Filter
+            $<BUILD_INTERFACE:RTE_Acceleration_Arm_2D>
+            $<BUILD_INTERFACE:__va_list=va_list>
+            $<BUILD_INTERFACE:RTE_Acceleration_Arm_2D_Helper_Disp_Adapter0>
+            $<BUILD_INTERFACE:RTE_Acceleration_Arm_2D_Alpha_Blending>
+            $<BUILD_INTERFACE:RTE_Acceleration_Arm_2D_Transform>
+            $<BUILD_INTERFACE:RTE_Acceleration_Arm_2D_Filter>
     )
 
     target_compile_options(${target}
@@ -100,9 +102,23 @@ function(ld_apply_common_target_config target)
             "-DARM_SECTION(x)="
     )
 
+    # Clang -flto emits LLVM bitcode archives that install consumers and GNU ld
+    # cannot link. Sanitizer profiles therefore force plain objects + GC of
+    # unused sections (host demos still need asset completeness, not LTO DCE).
+    set(_ld_sanitizer_build FALSE)
+    if(CMAKE_C_FLAGS MATCHES "-fsanitize=" OR CMAKE_CXX_FLAGS MATCHES "-fsanitize="
+       OR CMAKE_EXE_LINKER_FLAGS MATCHES "-fsanitize="
+       OR CMAKE_SHARED_LINKER_FLAGS MATCHES "-fsanitize=")
+        set(_ld_sanitizer_build TRUE)
+    endif()
+
     if(LD_ENABLE_COVERAGE AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
         target_compile_options(${target} PRIVATE -O0 --coverage)
         target_link_options(${target} PRIVATE --coverage)
+    elseif(TINYUI_PROFILE STREQUAL "minimal" OR _ld_sanitizer_build)
+        # Minimal / sanitizer: plain objects for nm/map/install consumers.
+        target_compile_options(${target} PRIVATE -Ofast -fno-lto)
+        target_link_options(${target} PRIVATE -Ofast -fno-lto -Wl,--gc-sections)
     else()
         target_compile_options(${target} PRIVATE -Ofast -flto)
         target_link_options(${target} PRIVATE -Ofast -flto)
@@ -142,6 +158,76 @@ function(ld_define_core_targets)
     # default bundle.
     set(LD_TINYUI_PORT "sdl" CACHE STRING "TinyUI platform port: sdl | mcu | none")
 
+    # ── TinyUI feature profile / per-widget compile-time trimming ───────────
+    set(TINYUI_PROFILE "full" CACHE STRING "TinyUI feature profile: full | minimal")
+    set_property(CACHE TINYUI_PROFILE PROPERTY STRINGS full minimal)
+
+    set(TINYUI_WIDGET_FEATURES
+        WINDOW BACKGROUND LABEL BUTTON CHECKBOX SWITCH SLIDER TEXT IMAGE
+        LINE_EDIT KEYBOARD CANVAS COMBO_BOX SCROLL_SELECTOR TABLE GRAPH
+        CALENDAR ARC GAUGE ICON_SLIDER RADIAL_MENU PROGRESS_BAR PROGRESS_WHEEL
+        QRCODE ANIMATION DATE_TIME CLOCK LIST MESSAGE_BOX
+    )
+    set(TINYUI_WIDGET_SOURCE_WINDOW window.c)
+    set(TINYUI_WIDGET_SOURCE_BACKGROUND background.c)
+    set(TINYUI_WIDGET_SOURCE_LABEL label.c)
+    set(TINYUI_WIDGET_SOURCE_BUTTON button.c)
+    set(TINYUI_WIDGET_SOURCE_CHECKBOX checkbox.c)
+    set(TINYUI_WIDGET_SOURCE_SWITCH switch.c)
+    set(TINYUI_WIDGET_SOURCE_SLIDER slider.c)
+    set(TINYUI_WIDGET_SOURCE_TEXT text.c)
+    set(TINYUI_WIDGET_SOURCE_IMAGE image.c)
+    set(TINYUI_WIDGET_SOURCE_LINE_EDIT line_edit.c)
+    set(TINYUI_WIDGET_SOURCE_KEYBOARD keyboard.c)
+    set(TINYUI_WIDGET_SOURCE_CANVAS canvas.c)
+    set(TINYUI_WIDGET_SOURCE_COMBO_BOX combo_box.c)
+    set(TINYUI_WIDGET_SOURCE_SCROLL_SELECTOR scroll_selector.c)
+    set(TINYUI_WIDGET_SOURCE_TABLE table.c)
+    set(TINYUI_WIDGET_SOURCE_GRAPH graph.c)
+    set(TINYUI_WIDGET_SOURCE_CALENDAR calendar.c)
+    set(TINYUI_WIDGET_SOURCE_ARC arc.c)
+    set(TINYUI_WIDGET_SOURCE_GAUGE gauge.c)
+    set(TINYUI_WIDGET_SOURCE_ICON_SLIDER icon_slider.c)
+    set(TINYUI_WIDGET_SOURCE_RADIAL_MENU radial_menu.c)
+    set(TINYUI_WIDGET_SOURCE_PROGRESS_BAR progress_bar.c)
+    set(TINYUI_WIDGET_SOURCE_PROGRESS_WHEEL progress_wheel.c)
+    set(TINYUI_WIDGET_SOURCE_QRCODE qrcode.c)
+    set(TINYUI_WIDGET_SOURCE_ANIMATION animation.c)
+    set(TINYUI_WIDGET_SOURCE_DATE_TIME date_time.c)
+    set(TINYUI_WIDGET_SOURCE_CLOCK clock.c)
+    set(TINYUI_WIDGET_SOURCE_LIST list.c)
+    set(TINYUI_WIDGET_SOURCE_MESSAGE_BOX message_box.c)
+
+    if(TINYUI_PROFILE STREQUAL "minimal")
+        set(_tinyui_minimal_widgets WINDOW BACKGROUND LABEL BUTTON)
+        foreach(_feature IN LISTS TINYUI_WIDGET_FEATURES)
+            set(_default OFF)
+            if(_feature IN_LIST _tinyui_minimal_widgets)
+                set(_default ON)
+            endif()
+            set(TINYUI_ENABLE_${_feature} ${_default} CACHE BOOL "Enable TinyUI widget ${_feature}" FORCE)
+        endforeach()
+        set(TINYUI_ENABLE_THEME OFF CACHE BOOL "Enable TinyUI theme module" FORCE)
+        set(TINYUI_ENABLE_DIAGNOSTICS OFF CACHE BOOL "Enable TinyUI diagnostics module" FORCE)
+        set(TINYUI_ENABLE_NATIVE_INTEROP OFF CACHE BOOL "Enable TinyUI native interop module" FORCE)
+    else()
+        foreach(_feature IN LISTS TINYUI_WIDGET_FEATURES)
+            option(TINYUI_ENABLE_${_feature} "Enable TinyUI widget ${_feature}" ON)
+        endforeach()
+        option(TINYUI_ENABLE_THEME "Enable TinyUI theme module" ON)
+        option(TINYUI_ENABLE_DIAGNOSTICS "Enable TinyUI diagnostics module" ON)
+        option(TINYUI_ENABLE_NATIVE_INTEROP "Enable TinyUI native interop module" ON)
+    endif()
+    set(TINYUI_PROFILE "${TINYUI_PROFILE}" PARENT_SCOPE)
+
+    set(TINYUI_GENERATED_INCLUDE_DIR "${CMAKE_BINARY_DIR}/generated/tinyui")
+    file(MAKE_DIRECTORY "${TINYUI_GENERATED_INCLUDE_DIR}")
+    configure_file(
+        "${LD_REPO_ROOT}/tinyui/include/tinyui_config.h.in"
+        "${TINYUI_GENERATED_INCLUDE_DIR}/tinyui_config.h"
+        @ONLY
+    )
+
     add_library(longdonggui_arm2d STATIC
         ${LD_ARM2D_LIBRARY_SOURCES}
         ${LD_ARM2D_HELPER_SOURCES}
@@ -152,14 +238,19 @@ function(ld_define_core_targets)
         ${LD_MATH_SOURCES}
         "${LD_PORTING_DIR}/ldArm2dUserDrawCircle.c"
     )
-    target_include_directories(longdonggui_arm2d PUBLIC ${LD_COMMON_INCLUDE_DIRS})
+    # BUILD_INTERFACE only: install/export must not leak Arm-2D/LingDongGUI headers.
+    foreach(_inc IN LISTS LD_COMMON_INCLUDE_DIRS)
+        target_include_directories(longdonggui_arm2d PUBLIC $<BUILD_INTERFACE:${_inc}>)
+    endforeach()
     ld_apply_common_target_config(longdonggui_arm2d)
 
     add_library(longdonggui STATIC
         ${LD_LONGDONGGUI_GUI_SOURCES}
         ${LD_LONGDONGGUI_MISC_SOURCES}
     )
-    target_include_directories(longdonggui PUBLIC ${LD_COMMON_INCLUDE_DIRS})
+    foreach(_inc IN LISTS LD_COMMON_INCLUDE_DIRS)
+        target_include_directories(longdonggui PUBLIC $<BUILD_INTERFACE:${_inc}>)
+    endforeach()
     target_link_libraries(longdonggui PUBLIC longdonggui_arm2d)
     ld_apply_common_target_config(longdonggui)
 
@@ -168,7 +259,9 @@ function(ld_define_core_targets)
         "${LD_PORTING_DIR}/arm_2d_disp_adapter_0.c"
         ${LD_PERF_COUNTER_SOURCES}
     )
-    target_include_directories(longdonggui_porting_default PUBLIC ${LD_COMMON_INCLUDE_DIRS})
+    foreach(_inc IN LISTS LD_COMMON_INCLUDE_DIRS)
+        target_include_directories(longdonggui_porting_default PUBLIC $<BUILD_INTERFACE:${_inc}>)
+    endforeach()
     target_link_libraries(longdonggui_porting_default PUBLIC longdonggui)
     ld_apply_common_target_config(longdonggui_porting_default)
 
@@ -180,13 +273,18 @@ function(ld_define_core_targets)
         "${LD_TINYUI_BACKEND_LDGUI_DIR}/tinyui_ldgui_neutral_runtime.c"
         ${LD_PERF_COUNTER_SOURCES}
     )
-    target_include_directories(tinyui_backend_ldgui_porting PUBLIC
+    foreach(_inc IN ITEMS
         "${LD_TINYUI_BACKEND_LDGUI_DIR}"
         "${LD_REPO_ROOT}/tinyui/include"
+        "${TINYUI_GENERATED_INCLUDE_DIR}"
         "${LD_REPO_ROOT}/tinyui/src/core"
         "${LD_REPO_ROOT}/tinyui/src/drivers"
-        ${LD_COMMON_INCLUDE_DIRS}
     )
+        target_include_directories(tinyui_backend_ldgui_porting PUBLIC $<BUILD_INTERFACE:${_inc}>)
+    endforeach()
+    foreach(_inc IN LISTS LD_COMMON_INCLUDE_DIRS)
+        target_include_directories(tinyui_backend_ldgui_porting PUBLIC $<BUILD_INTERFACE:${_inc}>)
+    endforeach()
     target_compile_definitions(tinyui_backend_ldgui_porting PRIVATE
         __ARM_2D_USER_APP_CFG_H__="tinyui_ldgui_port_config.h"
     )
@@ -197,11 +295,13 @@ function(ld_define_core_targets)
         ${LD_LONGDONGGUI_GUI_SOURCES}
         ${LD_LONGDONGGUI_MISC_SOURCES}
     )
-    target_include_directories(longdonggui_host PUBLIC ${LD_COMMON_INCLUDE_DIRS})
+    foreach(_inc IN LISTS LD_COMMON_INCLUDE_DIRS)
+        target_include_directories(longdonggui_host PUBLIC $<BUILD_INTERFACE:${_inc}>)
+    endforeach()
     target_link_libraries(longdonggui_host PUBLIC longdonggui_arm2d)
     ld_apply_common_target_config(longdonggui_host)
 
-    add_library(tinyui_core STATIC
+    set(_tinyui_core_sources
         ${LD_REPO_ROOT}/tinyui/src/core/app.c
         ${LD_REPO_ROOT}/tinyui/src/core/native.c
         ${LD_REPO_ROOT}/tinyui/src/core/runtime.c
@@ -214,63 +314,49 @@ function(ld_define_core_targets)
         ${LD_REPO_ROOT}/tinyui/src/indev/indev.c
         ${LD_REPO_ROOT}/tinyui/src/tick/tick.c
         ${LD_REPO_ROOT}/tinyui/src/osal/osal.c
-        ${LD_REPO_ROOT}/tinyui/src/theme/theme.c
         ${LD_REPO_ROOT}/tinyui/src/layout/flex.c
         ${LD_REPO_ROOT}/tinyui/src/layout/grid.c
-        ${LD_REPO_ROOT}/tinyui/src/widgets/window.c
-        ${LD_REPO_ROOT}/tinyui/src/widgets/label.c
-        ${LD_REPO_ROOT}/tinyui/src/widgets/text.c
-        ${LD_REPO_ROOT}/tinyui/src/widgets/keyboard.c
-        ${LD_REPO_ROOT}/tinyui/src/widgets/canvas.c
-        ${LD_REPO_ROOT}/tinyui/src/widgets/line_edit.c
-        ${LD_REPO_ROOT}/tinyui/src/widgets/combo_box.c
-        ${LD_REPO_ROOT}/tinyui/src/widgets/scroll_selector.c
-        ${LD_REPO_ROOT}/tinyui/src/compat/v22_demo_bridge.c
-        ${LD_REPO_ROOT}/tinyui/src/widgets/table.c
-        ${LD_REPO_ROOT}/tinyui/src/widgets/graph.c
-        ${LD_REPO_ROOT}/tinyui/src/widgets/calendar.c
-        ${LD_REPO_ROOT}/tinyui/src/widgets/image.c
-        ${LD_REPO_ROOT}/tinyui/src/widgets/button.c
-        ${LD_REPO_ROOT}/tinyui/src/widgets/checkbox.c
-        ${LD_REPO_ROOT}/tinyui/src/widgets/switch.c
-        ${LD_REPO_ROOT}/tinyui/src/widgets/slider.c
-        ${LD_REPO_ROOT}/tinyui/src/widgets/arc.c
-        ${LD_REPO_ROOT}/tinyui/src/widgets/gauge.c
-        ${LD_REPO_ROOT}/tinyui/src/widgets/icon_slider.c
-        ${LD_REPO_ROOT}/tinyui/src/widgets/radial_menu.c
-        ${LD_REPO_ROOT}/tinyui/src/widgets/progress_bar.c
-        ${LD_REPO_ROOT}/tinyui/src/widgets/progress_wheel.c
-        ${LD_REPO_ROOT}/tinyui/src/widgets/qrcode.c
-        ${LD_REPO_ROOT}/tinyui/src/widgets/animation.c
-        ${LD_REPO_ROOT}/tinyui/src/widgets/date_time.c
-        ${LD_REPO_ROOT}/tinyui/src/widgets/clock.c
-        ${LD_REPO_ROOT}/tinyui/src/widgets/background.c
-        ${LD_REPO_ROOT}/tinyui/src/widgets/list.c
-        ${LD_REPO_ROOT}/tinyui/src/widgets/message_box.c
         ${LD_TINYUI_DEFAULT_RESOURCE_SOURCES}
         ${LD_TINYUI_DEFAULT_IMAGE_RESOURCE_SOURCES}
     )
-    target_include_directories(tinyui_core PUBLIC
+    if(TINYUI_ENABLE_THEME)
+        list(APPEND _tinyui_core_sources ${LD_REPO_ROOT}/tinyui/src/theme/theme.c)
+    endif()
+    foreach(_feature IN LISTS TINYUI_WIDGET_FEATURES)
+        if(TINYUI_ENABLE_${_feature})
+            list(APPEND _tinyui_core_sources
+                ${LD_REPO_ROOT}/tinyui/src/widgets/${TINYUI_WIDGET_SOURCE_${_feature}})
+        endif()
+    endforeach()
+
+    add_library(tinyui_core STATIC ${_tinyui_core_sources})
+    # Public headers for in-tree builds only. Install consumers get headers solely
+    # via TinyUI::tinyui INSTALL_INTERFACE (include/), never via tinyui_core.
+    foreach(_inc IN ITEMS
         ${LD_REPO_ROOT}/tinyui/include
+        ${TINYUI_GENERATED_INCLUDE_DIR}
         ${LD_REPO_ROOT}/tinyui/src/core
         ${LD_REPO_ROOT}/tinyui/src/drivers
-        ${LD_COMMON_INCLUDE_DIRS}
     )
-    # Full/demo/test builds keep the private v2.2 migration bridge inside tinyui_core.
-    # The define is PRIVATE so install consumers never see it via usage requirements.
-    if(NOT DEFINED TINYUI_ENABLE_INTERNAL_V22_DEMO_BRIDGE)
-        set(TINYUI_ENABLE_INTERNAL_V22_DEMO_BRIDGE ON)
-    endif()
-    if(TINYUI_ENABLE_INTERNAL_V22_DEMO_BRIDGE)
-        target_compile_definitions(tinyui_core PRIVATE TINYUI_ENABLE_INTERNAL_V22_DEMO_BRIDGE=1)
+        target_include_directories(tinyui_core PUBLIC $<BUILD_INTERFACE:${_inc}>)
+    endforeach()
+    foreach(_inc IN LISTS LD_COMMON_INCLUDE_DIRS)
+        target_include_directories(tinyui_core PUBLIC $<BUILD_INTERFACE:${_inc}>)
+    endforeach()
+    # Diagnostics flag is also emitted into generated tinyui_config.h; keep the
+    # target define BUILD-only so install exports do not re-export it.
+    if(TINYUI_ENABLE_DIAGNOSTICS)
+        target_compile_definitions(tinyui_core PUBLIC $<BUILD_INTERFACE:TINYUI_ENABLE_DIAGNOSTICS=1>)
     else()
-        # Keep source list stable only when bridge is enabled.
-        get_target_property(_tinyui_core_sources tinyui_core SOURCES)
-        list(REMOVE_ITEM _tinyui_core_sources ${LD_REPO_ROOT}/tinyui/src/compat/v22_demo_bridge.c)
-        set_property(TARGET tinyui_core PROPERTY SOURCES ${_tinyui_core_sources})
+        target_compile_definitions(tinyui_core PUBLIC $<BUILD_INTERFACE:TINYUI_ENABLE_DIAGNOSTICS=0>)
     endif()
     ld_apply_common_target_config(tinyui_core)
-    add_library(tinyui_core ALIAS tinyui_core)
+    if(TINYUI_PROFILE STREQUAL "minimal")
+        # Minimal profile artifacts are inspected with nm/map; keep object code
+        # non-LTO so -fno-lto consumers can link and enumerate symbols.
+        target_compile_options(tinyui_core PRIVATE -fno-lto)
+        target_link_options(tinyui_core PRIVATE -fno-lto)
+    endif()
 
     add_library(tinyui_port_sdl STATIC
         ${LD_REPO_ROOT}/tinyui/port/sdl/hal.c
@@ -284,6 +370,7 @@ function(ld_define_core_targets)
     endif()
     target_include_directories(tinyui_port_sdl PUBLIC
         ${LD_REPO_ROOT}/tinyui/include
+        ${TINYUI_GENERATED_INCLUDE_DIR}
         ${LD_REPO_ROOT}/tinyui/src/core
         ${LD_REPO_ROOT}/tinyui
         ${LD_REPO_ROOT}/tinyui/port/sdl
@@ -309,7 +396,6 @@ function(ld_define_core_targets)
     endif()
     ld_apply_tinyui_runtime_screen_config(tinyui_port_sdl)
     ld_apply_common_target_config(tinyui_port_sdl)
-    add_library(tinyui_port_sdl ALIAS tinyui_port_sdl)
 
     # ── No-SDL bundle ─────────────────────────────────────────────────────
     # Backend-neutral consumer bundle: everything needed to run TinyUI with a
@@ -323,6 +409,7 @@ function(ld_define_core_targets)
     )
     target_include_directories(tinyui_backend_ldgui_core INTERFACE
         ${LD_REPO_ROOT}/tinyui/include
+        ${TINYUI_GENERATED_INCLUDE_DIR}
         ${LD_REPO_ROOT}/tinyui/src/core
         ${LD_REPO_ROOT}/tinyui/src/drivers
         ${LD_REPO_ROOT}/tinyui
@@ -337,6 +424,7 @@ function(ld_define_core_targets)
         ${LD_REPO_ROOT}/tinyui/port/mcu/Retarget.c)
     target_include_directories(tinyui_port_mcu PUBLIC
         ${LD_REPO_ROOT}/tinyui/include
+        ${TINYUI_GENERATED_INCLUDE_DIR}
         ${LD_REPO_ROOT}/tinyui/src/core
         ${LD_REPO_ROOT}/tinyui/src/drivers
         ${LD_REPO_ROOT}/tinyui)
@@ -358,12 +446,16 @@ function(ld_define_core_targets)
 
     foreach(LD_TINYUI_BACKEND_TARGET IN ITEMS tinyui_backend_ldgui tinyui_backend_ldgui_runtime)
         add_library(${LD_TINYUI_BACKEND_TARGET} INTERFACE)
-        target_include_directories(${LD_TINYUI_BACKEND_TARGET} INTERFACE
+        foreach(_inc IN ITEMS
             ${LD_REPO_ROOT}/tinyui/include
+            ${TINYUI_GENERATED_INCLUDE_DIR}
             ${LD_REPO_ROOT}/tinyui/src/core
             ${LD_REPO_ROOT}/tinyui/src/drivers
             ${LD_REPO_ROOT}/tinyui
         )
+            target_include_directories(${LD_TINYUI_BACKEND_TARGET} INTERFACE
+                $<BUILD_INTERFACE:${_inc}>)
+        endforeach()
         target_link_libraries(${LD_TINYUI_BACKEND_TARGET} INTERFACE
             tinyui_core
             longdonggui
@@ -371,9 +463,114 @@ function(ld_define_core_targets)
             ${LD_TINYUI_SELECTED_PORT}
         )
     endforeach()
-    add_library(tinyui_backend_ldgui ALIAS tinyui_backend_ldgui)
-    add_library(tinyui_backend_ldgui_runtime ALIAS tinyui_backend_ldgui_runtime)
 
+    # ── Install/export package target (M4 Task 6) ─────────────────────────
+    # TinyUI::tinyui is the sole user-facing target. Its INTERFACE includes are
+    # public headers only; backend/static archives are linked without exporting
+    # their private include directories.
+    add_library(tinyui INTERFACE)
+    add_library(TinyUI::tinyui ALIAS tinyui)
+    target_include_directories(tinyui INTERFACE
+        $<BUILD_INTERFACE:${LD_REPO_ROOT}/tinyui/include>
+        $<BUILD_INTERFACE:${TINYUI_GENERATED_INCLUDE_DIR}>
+        $<INSTALL_INTERFACE:include>
+    )
+    # Link order: tinyui_core before longdonggui (which pulls longdonggui_arm2d).
+    # Enough to resolve image_source/font consumer symbols without SDL port.
+    target_link_libraries(tinyui INTERFACE
+        tinyui_core
+        longdonggui
+    )
+
+    set(TINYUI_GENERATED_INCLUDE_DIR "${TINYUI_GENERATED_INCLUDE_DIR}" PARENT_SCOPE)
+    set(TINYUI_PACKAGE_VERSION "2.3.0" PARENT_SCOPE)
+
+endfunction()
+
+# Install public headers, static archives, and TinyUIConfig package files.
+# Call after ld_define_core_targets() from the top-level CMakeLists.txt.
+function(ld_install_tinyui_package)
+    if(NOT TARGET tinyui OR NOT TARGET tinyui_core OR NOT TARGET longdonggui OR NOT TARGET longdonggui_arm2d)
+        message(FATAL_ERROR "ld_install_tinyui_package: core targets missing; call ld_define_core_targets() first")
+    endif()
+    if(NOT DEFINED TINYUI_GENERATED_INCLUDE_DIR)
+        set(TINYUI_GENERATED_INCLUDE_DIR "${CMAKE_BINARY_DIR}/generated/tinyui")
+    endif()
+    if(NOT DEFINED TINYUI_PACKAGE_VERSION)
+        set(TINYUI_PACKAGE_VERSION "2.3.0")
+    endif()
+
+    include(GNUInstallDirs)
+    include(CMakePackageConfigHelpers)
+
+    # Headers: only the public contract tree (no internal/port/src/LingDongGUI/Arm-2D).
+    install(FILES
+        "${LD_REPO_ROOT}/tinyui/include/tinyui.h"
+        "${TINYUI_GENERATED_INCLUDE_DIR}/tinyui_config.h"
+        DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
+    )
+    install(DIRECTORY "${LD_REPO_ROOT}/tinyui/include/core/"
+        DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/core"
+        FILES_MATCHING PATTERN "*.h"
+    )
+    install(DIRECTORY "${LD_REPO_ROOT}/tinyui/include/widgets/"
+        DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/widgets"
+        FILES_MATCHING PATTERN "*.h"
+    )
+    install(DIRECTORY "${LD_REPO_ROOT}/tinyui/include/layout/"
+        DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/layout"
+        FILES_MATCHING PATTERN "*.h"
+    )
+    install(DIRECTORY "${LD_REPO_ROOT}/tinyui/include/theme/"
+        DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/theme"
+        FILES_MATCHING PATTERN "*.h"
+    )
+    install(DIRECTORY "${LD_REPO_ROOT}/tinyui/include/style/"
+        DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/style"
+        FILES_MATCHING PATTERN "*.h"
+    )
+    install(DIRECTORY "${LD_REPO_ROOT}/tinyui/include/resource/"
+        DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/resource"
+        FILES_MATCHING PATTERN "*.h"
+    )
+    install(FILES "${LD_REPO_ROOT}/tinyui/include/integration/input.h"
+        DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/integration"
+    )
+
+    # Libraries: implementation archives + user-facing INTERFACE target.
+    # Do NOT attach INCLUDES DESTINATION to backend archives.
+    install(TARGETS tinyui
+        EXPORT TinyUITargets
+    )
+    install(TARGETS tinyui_core longdonggui longdonggui_arm2d
+        EXPORT TinyUITargets
+        ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+        LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+        RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
+    )
+
+    set(_tinyui_cmake_install_dir "${CMAKE_INSTALL_LIBDIR}/cmake/TinyUI")
+
+    configure_package_config_file(
+        "${LD_REPO_ROOT}/cmake/TinyUIConfig.cmake.in"
+        "${CMAKE_CURRENT_BINARY_DIR}/TinyUIConfig.cmake"
+        INSTALL_DESTINATION "${_tinyui_cmake_install_dir}"
+    )
+    write_basic_package_version_file(
+        "${CMAKE_CURRENT_BINARY_DIR}/TinyUIConfigVersion.cmake"
+        VERSION "${TINYUI_PACKAGE_VERSION}"
+        COMPATIBILITY SameMajorVersion
+    )
+
+    install(EXPORT TinyUITargets
+        NAMESPACE TinyUI::
+        DESTINATION "${_tinyui_cmake_install_dir}"
+    )
+    install(FILES
+        "${CMAKE_CURRENT_BINARY_DIR}/TinyUIConfig.cmake"
+        "${CMAKE_CURRENT_BINARY_DIR}/TinyUIConfigVersion.cmake"
+        DESTINATION "${_tinyui_cmake_install_dir}"
+    )
 endfunction()
 
 function(ld_add_c_unit_test target)
@@ -381,8 +578,8 @@ function(ld_add_c_unit_test target)
     add_executable(${target} ${LDTEST_SOURCES})
     if(CMAKE_C_COMPILER_ID MATCHES "GNU" OR (CMAKE_C_COMPILER_ID MATCHES "Clang" AND NOT APPLE))
         target_link_libraries(${target} PRIVATE
-            ${LDTEST_SUPPORT_LIB}
             -Wl,--start-group
+            ${LDTEST_SUPPORT_LIB}
             ${LDTEST_MAIN_LIB}
             tinyui_core
             longdonggui

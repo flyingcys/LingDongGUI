@@ -36,6 +36,11 @@ struct tinyui_runtime_host_state {
     int            smoke_layout_marker_logged;
     int            benchmark_screen_create_logged;
     int            benchmark_first_frame_logged;
+    /* ENABLE_TEST scripted input for L5-E scenarios (observe only). */
+    int            script_enabled;
+    int            script_step;
+    int            script_done;
+    int            event_trace_header_logged;
 };
 
 /* ---- hal.c → 跨文件声明 ---- */

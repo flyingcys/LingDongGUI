@@ -19,6 +19,8 @@
 #ifndef TINYUI_DEMO_GRID_PARITY_H
 #define TINYUI_DEMO_GRID_PARITY_H
 
-void tinyui_demo_grid_parity(void);
+#include "tinyui.h"
+
+tinyui_result_t tinyui_demo_grid_parity_build(tinyui_obj_t *screen);
 
 #endif /* TINYUI_DEMO_GRID_PARITY_H */

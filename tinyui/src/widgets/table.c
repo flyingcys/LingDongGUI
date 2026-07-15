@@ -76,14 +76,80 @@ static void tinyui_table_rollback(struct tinyui_table *table)
 
 static int tinyui_table_props_are_valid(const tinyui_table_props_t *props)
 {
-    return props != 0 &&
-           tinyui_table_dims_are_valid(props->rows, props->columns) &&
-           props->width >= 0 &&
-           props->height >= 0 &&
-           props->radius >= 0 &&
-           props->padding >= 0 &&
-           (props->keyboard_binding == 0U ||
-            tinyui_table_keyboard_binding_is_valid(props->keyboard_binding));
+    int rows = 1;
+    int columns = 1;
+
+    if (props == 0) {
+        return 0;
+    }
+    if ((props->fields & TINYUI_TABLE_FIELD_ROWS) != 0) {
+        rows = props->rows;
+    }
+    if ((props->fields & TINYUI_TABLE_FIELD_COLUMNS) != 0) {
+        columns = props->columns;
+    }
+    if (!tinyui_table_dims_are_valid(rows, columns)) {
+        return 0;
+    }
+    if ((props->fields & TINYUI_TABLE_FIELD_WIDTH) != 0 && props->width < 0) {
+        return 0;
+    }
+    if ((props->fields & TINYUI_TABLE_FIELD_HEIGHT) != 0 && props->height < 0) {
+        return 0;
+    }
+    if ((props->fields & TINYUI_TABLE_FIELD_RADIUS) != 0 && props->radius < 0) {
+        return 0;
+    }
+    if ((props->fields & TINYUI_TABLE_FIELD_PADDING) != 0 && props->padding < 0) {
+        return 0;
+    }
+    if ((props->fields & TINYUI_TABLE_FIELD_KEYBOARD_BINDING) != 0
+        && props->keyboard_binding != 0U
+        && !tinyui_table_keyboard_binding_is_valid(props->keyboard_binding)) {
+        return 0;
+    }
+    /*
+     * Table has no LD global border/radius channel. Refuse those props before
+     * create so create_with_props never claims success by writing only the
+     * TinyUI host mirror (design §3.5: successful public setters must hit LD).
+     */
+    if ((props->fields
+         & (TINYUI_TABLE_FIELD_BORDER_COLOR | TINYUI_TABLE_FIELD_RADIUS))
+        != 0) {
+        return 0;
+    }
+    return 1;
+}
+
+/* Apply props text color to every existing cell via real ldTableSetItemColor. */
+static int tinyui_table_apply_global_text_color(struct tinyui_table *table,
+                                                unsigned int rgb)
+{
+    ldTable_t *ld_table;
+    ldColor text_color;
+    uint8_t row;
+    uint8_t column;
+
+    if (table == 0 || table->widget.ld_widget == 0
+        || table->widget.kind != TINYUI_BACKEND_WIDGET_TABLE) {
+        return -1;
+    }
+
+    ld_table = (ldTable_t *)table->widget.ld_widget;
+    text_color = (ldColor)tinyui_rgb_to_ld_color(rgb);
+    for (row = 0; row < ld_table->rowCount; ++row) {
+        for (column = 0; column < ld_table->columnCount; ++column) {
+            ldTableItem_t *item = ldTableGetItem(ld_table, row, column);
+            ldColor item_bg = __RGB(255, 255, 255);
+
+            if (item != 0) {
+                item_bg = item->itemBgColor;
+            }
+            ldTableSetItemColor(ld_table, row, column, text_color, item_bg);
+        }
+    }
+    table->widget.text_color = rgb;
+    return 0;
 }
 
 static int tinyui_table_sync_current_cell_local(struct tinyui_table *table,
@@ -294,6 +360,9 @@ tinyui_obj_t *tinyui_table_create_with_props(tinyui_obj_t *parent,
     if (props == 0) {
         return tinyui_table_create(parent);
     }
+    if (!tinyui_table_props_are_valid(props)) {
+        return 0;
+    }
 
     parent_w = (struct tinyui_widget *)(void *)parent;
     if (parent_w == 0 || parent_w->ld_widget == 0 || parent_w->owner == 0) {
@@ -359,40 +428,38 @@ tinyui_obj_t *tinyui_table_create_with_props(tinyui_obj_t *parent,
             return 0;
         }
     }
+    /* Table has native bg color; generic leaf style helpers reject TABLE kind. */
     if ((props->fields & TINYUI_TABLE_FIELD_BG_COLOR) != 0) {
-        if (tinyui_runtime_internal_widget_set_bg_color(&table->widget, props->bg_color) != 0) {
+        if (tinyui_table_set_bg_color((tinyui_obj_t *)table, props->bg_color) != 0) {
             tinyui_table_rollback(table);
             return 0;
         }
+        table->widget.bg_color = props->bg_color;
     }
     if ((props->fields & TINYUI_TABLE_FIELD_TEXT_COLOR) != 0) {
-        if (tinyui_runtime_internal_widget_set_text_color(&table->widget, props->text_color) != 0) {
+        /* Map to every cell via ldTableSetItemColor; no silent host-only cache. */
+        if (tinyui_table_apply_global_text_color(table, props->text_color) != 0) {
             tinyui_table_rollback(table);
             return 0;
         }
     }
-    if ((props->fields & TINYUI_TABLE_FIELD_BORDER_COLOR) != 0) {
-        if (tinyui_runtime_internal_widget_set_border_color(&table->widget, props->border_color) != 0) {
-            tinyui_table_rollback(table);
-            return 0;
-        }
-    }
-    if ((props->fields & TINYUI_TABLE_FIELD_RADIUS) != 0) {
-        if (tinyui_runtime_internal_widget_set_radius(&table->widget, props->radius) != 0) {
-            tinyui_table_rollback(table);
-            return 0;
-        }
-    }
+    /* BORDER_COLOR / RADIUS rejected in tinyui_table_props_are_valid. */
     if ((props->fields & TINYUI_TABLE_FIELD_PADDING) != 0) {
-        if (tinyui_runtime_internal_widget_set_padding(&table->widget, props->padding) != 0) {
+        /* Public "padding" for table maps to LD itemSpace (cell gap). */
+        if (tinyui_table_set_item_space((tinyui_obj_t *)table,
+                                       (unsigned int)props->padding)
+            != 0) {
             tinyui_table_rollback(table);
             return 0;
         }
+        table->widget.padding = props->padding;
     }
     if ((props->fields & TINYUI_TABLE_FIELD_KEYBOARD_BINDING) != 0) {
-        if (tinyui_table_set_keyboard_binding((tinyui_obj_t *)table, props->keyboard_binding) != 0) {
-            tinyui_table_rollback(table);
-            return 0;
+        if (props->keyboard_binding != 0U) {
+            if (tinyui_table_set_keyboard_binding((tinyui_obj_t *)table, props->keyboard_binding) != 0) {
+                tinyui_table_rollback(table);
+                return 0;
+            }
         }
     }
     return obj;
@@ -604,9 +671,12 @@ int tinyui_table_set_cell_text(tinyui_obj_t *table_obj, int row, int column, con
     }
 
     ld_table = (ldTable_t *)table->widget.ld_widget;
-    if (ld_table == 0 || table->widget.kind != TINYUI_BACKEND_WIDGET_TABLE ||
-        row < 0 || column < 0 ||
+    if (ld_table == 0 || table->widget.kind != TINYUI_BACKEND_WIDGET_TABLE) {
+        return -1;
+    }
+    if (row < 0 || column < 0 ||
         row >= ld_table->rowCount || column >= ld_table->columnCount) {
+        tinyui_runtime_set_last_result(TINYUI_ERROR_OUT_OF_RANGE);
         return -1;
     }
 
@@ -761,7 +831,9 @@ int tinyui_table_set_item_image(tinyui_obj_t *table_obj, int row, int column, in
 
     ldTable_t *ld_table;
 
-    if (table == 0 || source == 0 || tinyui_image_source_get_image_tile(source) == 0 || tinyui_image_source_get_mask_tile(source) == 0 ||
+    if (table == 0 || source == 0 || source->kind == TINYUI_IMAGE_SOURCE_EMPTY ||
+        tinyui_image_source_get_image_tile(source) == 0 ||
+        tinyui_image_source_get_mask_tile(source) == 0 ||
         mask_color > 0xFFFFFFU) {
         return -1;
     }
@@ -808,8 +880,12 @@ int tinyui_table_set_item_button(tinyui_obj_t *table_obj, int row, int column, i
     ldTable_t *ld_table;
 
     if (table == 0 || release_source == 0 || press_source == 0 ||
-        tinyui_image_source_get_image_tile(release_source) == 0 || tinyui_image_source_get_mask_tile(release_source) == 0 ||
-        tinyui_image_source_get_image_tile(press_source) == 0 || tinyui_image_source_get_mask_tile(press_source) == 0 ||
+        release_source->kind == TINYUI_IMAGE_SOURCE_EMPTY ||
+        press_source->kind == TINYUI_IMAGE_SOURCE_EMPTY ||
+        tinyui_image_source_get_image_tile(release_source) == 0 ||
+        tinyui_image_source_get_mask_tile(release_source) == 0 ||
+        tinyui_image_source_get_image_tile(press_source) == 0 ||
+        tinyui_image_source_get_mask_tile(press_source) == 0 ||
         release_mask_color > 0xFFFFFFU || press_mask_color > 0xFFFFFFU) {
         return -1;
     }
@@ -1387,21 +1463,23 @@ int tinyui_table_navigate(tinyui_obj_t *table_obj, tinyui_nav_dir_t dir)
 
     ldTable_t *ld_table;
     int ld_dir;
+    enum tinyui_native_nav_dir native_dir;
 
-    if (table == 0 ||
-        (dir != TINYUI_NATIVE_NAV_LEFT &&
-         dir != TINYUI_NATIVE_NAV_RIGHT &&
-         dir != TINYUI_NATIVE_NAV_UP &&
-         dir != TINYUI_NATIVE_NAV_DOWN)) {
+    /* Public API uses tinyui_nav_dir_t; values match native nav dirs. */
+    if (dir != TINYUI_NAV_LEFT &&
+        dir != TINYUI_NAV_RIGHT &&
+        dir != TINYUI_NAV_UP &&
+        dir != TINYUI_NAV_DOWN) {
         return -1;
     }
+    native_dir = (enum tinyui_native_nav_dir)dir;
 
     ld_table = (ldTable_t *)table->widget.ld_widget;
     if (ld_table == NULL) {
         return -1;
     }
 
-    ld_dir = tinyui_native_nav_dir_to_ld(dir);
+    ld_dir = tinyui_native_nav_dir_to_ld(native_dir);
     if (ld_dir < 0) {
         return -1;
     }

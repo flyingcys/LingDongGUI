@@ -152,6 +152,10 @@ static struct tinyui_animation *tinyui_animation_alloc(struct tinyui_widget *par
     animation->id = id;
     animation->widget.visible = 1;
     animation->widget.enabled = 1;
+    animation->width = width;
+    animation->height = height;
+    animation->period_ms = period_ms;
+    animation->source = source;
     return animation;
 }
 
@@ -244,6 +248,8 @@ tinyui_obj_t *tinyui_animation_create_with_props(tinyui_obj_t *parent,
             (void)tinyui_obj_delete((tinyui_obj_t *)animation);
             return 0;
         }
+        animation->width = w;
+        animation->height = h;
     }
     if ((props->fields & TINYUI_ANIMATION_FIELD_PERIOD_MS) != 0) {
     if (tinyui_animation_set_period_ms((tinyui_obj_t *)animation, props->period_ms) != 0) {
@@ -274,18 +280,28 @@ tinyui_obj_t *tinyui_animation_create_with_props(tinyui_obj_t *parent,
 int tinyui_animation_set_source(tinyui_obj_t *animation_obj, struct tinyui_image_source *source)
 {
     struct tinyui_animation *animation = tinyui_animation_as_animation(animation_obj);
-    if (animation == 0) { return -1; }
-
+    arm_2d_tile_t *img_tile;
     ldAnimation_t *ld_animation;
 
-    if (animation == 0 || source == 0 || tinyui_image_source_get_image_tile(source) == 0
+    if (animation == 0) {
+        return -1;
+    }
+
+    if (source == 0
         || animation->widget.ld_widget == 0
         || animation->widget.kind != TINYUI_BACKEND_WIDGET_ANIMATION) {
         return -1;
     }
 
+    img_tile = tinyui_image_source_get_image_tile(source);
+    if (img_tile == 0
+        || img_tile->tRegion.tSize.iWidth <= 0
+        || img_tile->tRegion.tSize.iHeight <= 0) {
+        return -1;
+    }
+
     ld_animation = (ldAnimation_t *)animation->widget.ld_widget;
-    ld_animation->ptImgTile = tinyui_image_source_get_image_tile(source);
+    ld_animation->ptImgTile = img_tile;
     animation->source = source;
     return 0;
 }

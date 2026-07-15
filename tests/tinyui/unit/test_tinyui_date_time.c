@@ -1,472 +1,102 @@
-#include "internal.h"
-#include "ldDateTime.h"
+/*
+ * TinyUI date_time unit tests — M3 Task 5 L3/L4 harness.
+ */
+
+#include "tinyui.h"
 #include "../../../src/gui/ldBase.h"
-#include "internal/app_legacy.h"
+#include "../../../src/gui/ldDateTime.h"
+#include "internal.h"
 #include "widgets/date_time.h"
-#include "internal/widget_legacy.h"
-#include "widgets/window.h"
-#include "../../../examples/common/demo/widget/fonts/uiFonts.h"
+
 #include <assert.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
-static char *read_date_time_widget_source(void)
+static unsigned int test_rgb_to_ld_color(unsigned int rgb)
 {
-    static const char *const candidates[] = {
-        "tinyui/src/widgets/date_time.c",
-        "../tinyui/src/widgets/date_time.c",
-        "../../tinyui/src/widgets/date_time.c",
-        "../../../tinyui/src/widgets/date_time.c",
-        "../../../../tinyui/src/widgets/date_time.c",
-    };
-    FILE *fp = NULL;
-    long size;
-    char *content;
-    size_t read_size;
-    size_t i;
-
-    for (i = 0; i < sizeof(candidates) / sizeof(candidates[0]); ++i) {
-        fp = fopen(candidates[i], "rb");
-        if (fp != NULL) {
-            break;
-        }
-    }
-
-    assert(fp != NULL);
-    assert(fseek(fp, 0, SEEK_END) == 0);
-    size = ftell(fp);
-    assert(size >= 0);
-    assert(fseek(fp, 0, SEEK_SET) == 0);
-
-    content = (char *)malloc((size_t)size + 1U);
-    assert(content != NULL);
-    read_size = fread(content, 1U, (size_t)size, fp);
-    assert(read_size == (size_t)size);
-    content[size] = '\0';
-    fclose(fp);
-    return content;
+    return (unsigned int)__RGB((rgb >> 16) & 0xFFU, (rgb >> 8) & 0xFFU, rgb & 0xFFU);
 }
 
-static void assert_date_time_internal_seam_renamed(void)
+static void test_date_time_create_and_ld_mapping(tinyui_obj_t *root)
 {
-    char *source = read_date_time_widget_source();
-
-    /* Phase C2: private helpers below were collapsed into core helpers. */
-    assert(strstr(source, "tinyui_date_time_rgb_to_ld_color") == NULL);
-    assert(strstr(source, "tinyui_date_time_map_align") == NULL);
-    assert(strstr(source, "tinyui_date_time_get_ld") == NULL);
-    /* Phase C2: props validator kept, backend lookup kept as 1-line wrapper. */
-    assert(strstr(source, "tinyui_date_time_props_are_valid") != NULL);
-    assert(strstr(source, "tinyui_date_time_backend") != NULL);
-    /* Phase C2: uses core helpers instead of private copies. */
-    assert(strstr(source, "tinyui_rgb_to_ld_color") != NULL);
-    assert(strstr(source, "tinyui_align_to_arm2d") != NULL);
-    assert(strstr(source, "tinyui_widget_destroy_common") != NULL);
-
-    free(source);
-}
-
-static void test_date_time_create_and_props(struct tinyui_window *win)
-{
-    int user_cookie = 13;
-    struct tinyui_date_time_props props = {
-        .id = "date_time_props",
-        .style_class = "date-time",
-        .user_data = &user_cookie,
-        .format = "yyyy-mm-dd hh:nn:ss",
-        .year = 2026,
-        .month = 5,
-        .day = 31,
-        .hour = 12,
-        .minute = 34,
-        .second = 56,
-    };
-    struct tinyui_date_time *dt =
-        tinyui_date_time_create((struct tinyui_widget *)win, "date_time");
-    struct tinyui_date_time *with_props =
-        tinyui_date_time_create_with_props((struct tinyui_widget *)win, &props);
+    tinyui_obj_t *dt = tinyui_date_time_create(root);
     struct tinyui_widget *backend;
-    struct tinyui_widget *parent_backend;
-    ldDateTime_t *ld_date_time;
-    ldDateTime_t *ld_date_time_with_props;
+    ldDateTime_t *ld_dt;
 
     assert(dt != 0);
-    assert(with_props != 0);
-    backend = &dt->widget;
-    parent_backend = &win->widget;
-    assert(backend->ld_widget != 0);
-    assert(parent_backend->ld_widget != 0);
+    backend = (struct tinyui_widget *)(void *)dt;
     assert(backend->kind == TINYUI_BACKEND_WIDGET_DATE_TIME);
-    assert(ldBaseGetParent((ldBase_t *)backend->ld_widget) == (ldBase_t *)parent_backend->ld_widget);
-    assert((ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)backend->ld_widget) == (ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)parent_backend->ld_widget));
-    assert(backend->owner == parent_backend->owner);
-    ld_date_time = (ldDateTime_t *)backend->ld_widget;
-    ld_date_time_with_props = (ldDateTime_t *)with_props->widget.ld_widget;
-    assert(ld_date_time != 0);
-    assert(ld_date_time_with_props != 0);
-    assert(tinyui_date_time_get_format(dt) != 0);
-    assert(strcmp(tinyui_date_time_get_format(dt), "yyyy-mm-dd hh:nn:ss") == 0);
-    assert(ld_date_time->isAutoSysTime == true);
-    assert(ld_date_time->isTransparent == true);
-    assert(ld_date_time->tAlign == ARM_2D_ALIGN_CENTRE);
-    assert(tinyui_date_time_get_format(with_props) != 0);
-    assert(strcmp(tinyui_date_time_get_format(with_props), props.format) == 0);
-    assert(ld_date_time_with_props->isAutoSysTime == false);
-    assert(ld_date_time_with_props->isTransparent == false);
+    ld_dt = (ldDateTime_t *)backend->ld_widget;
+    assert(ld_dt != 0);
+    assert(((ldBase_t *)ld_dt)->widgetType == widgetTypeDateTime);
 }
 
-static void test_date_time_setters(struct tinyui_window *win)
+static void test_date_time_explicit_values_and_system_time(tinyui_obj_t *root)
 {
-    struct tinyui_date_time *dt =
-        tinyui_date_time_create((struct tinyui_widget *)win, "date_time_setters");
-    struct tinyui_font font = {
-        .family = "Sans",
-        .size = 20,
-    };
-    ldDateTime_t *ld_date_time;
+    tinyui_obj_t *dt = tinyui_date_time_create(root);
+    ldDateTime_t *ld_dt;
+    int y = 0, m = 0, d = 0, h = 0, mi = 0, s = 0;
 
     assert(dt != 0);
-    ld_date_time = (ldDateTime_t *)dt->widget.ld_widget;
-    assert(ld_date_time != 0);
-    assert(ld_date_time->ptFont == (arm_2d_font_t *)FONT_ARIAL_12);
-    assert(tinyui_date_time_set_font(dt, &font) == 0);
-    assert(dt->widget.font == &font);
-    assert(ld_date_time->ptFont == (arm_2d_font_t *)&ARM_2D_FONT_16x24);
-    font.family = "Arial";
-    font.size = 16;
-    assert(tinyui_date_time_set_font(dt, &font) == 0);
-    assert(ld_date_time->ptFont == (arm_2d_font_t *)FONT_ARIAL_16_A8);
-    assert(tinyui_date_time_set_format(dt, "hh:nn:ss") == 0);
-    assert(tinyui_date_time_get_format(dt) != 0);
-    assert(strcmp(tinyui_date_time_get_format(dt), "hh:nn:ss") == 0);
-    assert(tinyui_date_time_set_date(dt, 2026, 5, 31) == 0);
-    assert(tinyui_date_time_set_time(dt, 12, 34, 56) == 0);
-}
+    ld_dt = (ldDateTime_t *)((struct tinyui_widget *)(void *)dt)->ld_widget;
+    assert(ld_dt != 0);
 
-static void test_date_time_manual_values_survive_frame_start(struct tinyui_window *win)
-{
-    struct tinyui_date_time *dt =
-        tinyui_date_time_create((struct tinyui_widget *)win, "date_time_manual");
-    struct tinyui_widget *backend;
-    struct tinyui_app *app_state;
-    ldDateTime_t *ld_date_time;
+    assert(tinyui_date_time_set_format(dt, "YYYY-MM-DD") == 0);
+    assert(strcmp((const char *)ld_dt->formatStr, "YYYY-MM-DD") == 0);
+    assert(strcmp(tinyui_date_time_get_format(dt), "YYYY-MM-DD") == 0);
 
-    assert(dt != 0);
-    assert(tinyui_date_time_set_format(dt, "yyyy-mm-dd hh:nn:ss") == 0);
-    assert(tinyui_date_time_set_date(dt, 2026, 5, 31) == 0);
-    assert(tinyui_date_time_set_time(dt, 12, 34, 56) == 0);
+    assert(tinyui_date_time_set_date(dt, 2026, 7, 15) == 0);
+    assert(ld_dt->year == 2026);
+    assert(ld_dt->month == 7);
+    assert(ld_dt->day == 15);
+    assert(ld_dt->isAutoSysTime == 0);
+    assert(tinyui_date_time_get_date(dt, &y, &m, &d) == 0);
+    assert(y == 2026 && m == 7 && d == 15);
 
-    backend = &dt->widget;
-    assert(backend->ld_widget != 0);
-    app_state = backend->owner;
-    assert(app_state != 0);
-    ld_date_time = (ldDateTime_t *)backend->ld_widget;
-    assert(ld_date_time != 0);
-
-    ldDateTime_on_frame_start(app_state->ld_scene, ld_date_time);
-
-    assert(ld_date_time->isAutoSysTime == false);
-    assert(strcmp((const char *)ld_date_time->formatStrTemp, "2026-05-31 12:34:56") == 0);
-}
-
-static void test_date_time_rejects_invalid_inputs(struct tinyui_window *win)
-{
-    struct tinyui_date_time *dt =
-        tinyui_date_time_create((struct tinyui_widget *)win, "date_time_invalid");
-    struct tinyui_font bad_font = {
-        .kind = TINYUI_FONT_KIND_VRES,
-        .vres_addr = 0,
-    };
-
-    assert(dt != 0);
-    assert(tinyui_date_time_create(0, "date_time") == 0);
-    assert(tinyui_date_time_create((struct tinyui_widget *)win, 0) == 0);
-    assert(tinyui_date_time_create_with_props(0,
-                                              &(struct tinyui_date_time_props){
-                                                  .id = "bad_parent",
-                                                  .format = "yyyy-mm-dd",
-                                              }) == 0);
-    assert(tinyui_date_time_create_with_props((struct tinyui_widget *)win, 0) == 0);
-    assert(tinyui_date_time_create_with_props((struct tinyui_widget *)win,
-                                              &(struct tinyui_date_time_props){
-                                                  .format = "yyyy-mm-dd",
-                                              }) == 0);
-    assert(tinyui_date_time_set_format(0, "yyyy-mm-dd") == -1);
-    assert(tinyui_date_time_set_date(0, 2026, 5, 31) == -1);
-    assert(tinyui_date_time_set_time(0, 12, 34, 56) == -1);
-    assert(tinyui_date_time_set_font(0, &bad_font) == -1);
-    assert(tinyui_date_time_set_format(dt, 0) == -1);
-    assert(tinyui_date_time_set_date(dt, 2026, 0, 31) == -1);
-    assert(tinyui_date_time_set_date(dt, 2026, 13, 31) == -1);
-    assert(tinyui_date_time_set_date(dt, 2026, 5, 0) == -1);
-    assert(tinyui_date_time_set_date(dt, 2026, 5, 32) == -1);
-    assert(tinyui_date_time_set_time(dt, -1, 34, 56) == -1);
-    assert(tinyui_date_time_set_time(dt, 24, 34, 56) == -1);
-    assert(tinyui_date_time_set_time(dt, 12, -1, 56) == -1);
-    assert(tinyui_date_time_set_time(dt, 12, 60, 56) == -1);
-    assert(tinyui_date_time_set_time(dt, 12, 34, -1) == -1);
-    assert(tinyui_date_time_set_time(dt, 12, 34, 60) == -1);
-    assert(tinyui_date_time_set_font(dt, &bad_font) == 0);
-}
-
-static void test_date_time_final_release_contract_covers_public_readback_and_modes(
-    struct tinyui_window *win)
-{
-    struct tinyui_date_time *dt =
-        tinyui_date_time_create((struct tinyui_widget *)win, "date_time_release_ready");
-    struct tinyui_widget *backend;
-    ldDateTime_t *ld_date_time;
-    int year = 0;
-    int month = 0;
-    int day = 0;
-    int hour = 0;
-    int minute = 0;
-    int second = 0;
-
-    assert(dt != 0);
-    assert(tinyui_date_time_set_format(dt, "yyyy/mm/dd hh:nn") == 0);
-    assert(tinyui_date_time_set_date(dt, 2026, 6, 1) == 0);
-    assert(tinyui_date_time_set_time(dt, 8, 9, 10) == 0);
-
-    backend = &dt->widget;
-    assert(backend->ld_widget != 0);
-    assert(backend->kind == TINYUI_BACKEND_WIDGET_DATE_TIME);
-    ld_date_time = (ldDateTime_t *)backend->ld_widget;
-    assert(ld_date_time != 0);
-
-    assert(strcmp(tinyui_date_time_get_format(dt), "yyyy/mm/dd hh:nn") == 0);
-    assert(tinyui_date_time_get_date(dt, &year, &month, &day) == 0);
-    assert(tinyui_date_time_get_time(dt, &hour, &minute, &second) == 0);
-    assert(year == 2026);
-    assert(month == 6);
-    assert(day == 1);
-    assert(hour == 8);
-    assert(minute == 9);
-    assert(second == 10);
-    assert(ld_date_time->isAutoSysTime == false);
-    assert(ld_date_time->year == 2026);
-    assert(ld_date_time->month == 6);
-    assert(ld_date_time->day == 1);
-    assert(ld_date_time->hour == 8);
-    assert(ld_date_time->minute == 9);
-    assert(ld_date_time->second == 10);
-    assert(strcmp((const char *)ld_date_time->formatStr, "yyyy/mm/dd hh:nn") == 0);
-    assert(tinyui_date_time_get_date(0, &year, &month, &day) == -1);
-    assert(tinyui_date_time_get_time(0, &hour, &minute, &second) == -1);
-    assert(tinyui_date_time_get_date(dt, 0, &month, &day) == -1);
-    assert(tinyui_date_time_get_time(dt, &hour, 0, &second) == -1);
-}
-
-static void test_date_time_native_transparent_color_and_align_round_trip(struct tinyui_window *win)
-{
-    struct tinyui_date_time *dt =
-        tinyui_date_time_create((struct tinyui_widget *)win, "date_time_native_style");
-    struct tinyui_widget *backend;
-    ldDateTime_t *ld_date_time;
-    struct tinyui_app *app_state;
-    int year = 0;
-    int month = 0;
-    int day = 0;
-    int hour = 0;
-    int minute = 0;
-    int second = 0;
-
-    assert(dt != 0);
-    backend = &dt->widget;
-    assert(backend->ld_widget != 0);
-    ld_date_time = (ldDateTime_t *)backend->ld_widget;
-    assert(ld_date_time != 0);
-    app_state = backend->owner;
-    assert(app_state != 0);
+    assert(tinyui_date_time_set_time(dt, 13, 45, 9) == 0);
+    assert(ld_dt->hour == 13 && ld_dt->minute == 45 && ld_dt->second == 9);
+    assert(tinyui_date_time_get_time(dt, &h, &mi, &s) == 0);
+    assert(h == 13 && mi == 45 && s == 9);
 
     assert(tinyui_date_time_set_text_color(dt, 0x112233U) == 0);
-    assert(tinyui_date_time_set_bg_color(dt, 0x445566U) == 0);
-    assert(tinyui_date_time_set_align(dt, TINYUI_ALIGN_END) == 0);
+    assert(ld_dt->textColor == (ldColor)test_rgb_to_ld_color(0x112233U));
+    assert(tinyui_date_time_set_background_color(dt, 0xAABBCCU) == 0);
+    assert(ld_dt->bgColor == (ldColor)test_rgb_to_ld_color(0xAABBCCU));
+
+    assert(tinyui_date_time_set_align(dt, TINYUI_ALIGN_CENTER) == 0);
     assert(tinyui_date_time_set_transparent(dt, 1) == 0);
+    assert(ld_dt->isTransparent == 1);
     assert(tinyui_date_time_get_transparent(dt) == 1);
 
-    assert(ld_date_time->textColor == __RGB(0x11, 0x22, 0x33));
-    assert(ld_date_time->bgColor == __RGB(0x44, 0x55, 0x66));
-    assert(ld_date_time->tAlign == ARM_2D_ALIGN_RIGHT);
-    assert(ld_date_time->isTransparent == true);
-
-    assert(tinyui_date_time_set_bg_color(dt, 0x778899U) == 0);
-    assert(tinyui_date_time_get_transparent(dt) == 0);
-    assert(ld_date_time->bgColor == __RGB(0x77, 0x88, 0x99));
-    assert(ld_date_time->isTransparent == false);
-
-    assert(tinyui_date_time_set_transparent(dt, 0) == 0);
-    assert(tinyui_date_time_get_transparent(dt) == 0);
-    assert(ld_date_time->isTransparent == false);
     assert(tinyui_date_time_set_use_system_time(dt, 1) == 0);
+    assert(ld_dt->isAutoSysTime == 1);
     assert(tinyui_date_time_get_use_system_time(dt) == 1);
-    assert(ld_date_time->isAutoSysTime == true);
-    ldDateTime_on_frame_start(app_state->ld_scene, ld_date_time);
-    assert(tinyui_date_time_get_date(dt, &year, &month, &day) == 0);
-    assert(tinyui_date_time_get_time(dt, &hour, &minute, &second) == 0);
-    assert(year == ld_date_time->year);
-    assert(month == ld_date_time->month);
-    assert(day == ld_date_time->day);
-    assert(hour == ld_date_time->hour);
-    assert(minute == ld_date_time->minute);
-    assert(second == ld_date_time->second);
     assert(tinyui_date_time_set_use_system_time(dt, 0) == 0);
-    assert(tinyui_date_time_get_use_system_time(dt) == 0);
-    assert(ld_date_time->isAutoSysTime == false);
-
-    assert(tinyui_date_time_set_text_color(0, 0x111111U) == -1);
-    assert(tinyui_date_time_set_bg_color(0, 0x222222U) == -1);
-    assert(tinyui_date_time_set_align(0, TINYUI_ALIGN_CENTER) == -1);
-    assert(tinyui_date_time_set_transparent(0, 1) == -1);
-    assert(tinyui_date_time_get_transparent(0) == -1);
-    assert(tinyui_date_time_set_use_system_time(0, 1) == -1);
-    assert(tinyui_date_time_get_use_system_time(0) == -1);
+    assert(ld_dt->isAutoSysTime == 0);
 }
 
-static void test_date_time_props_font_overrides_default(struct tinyui_window *win)
+static void test_date_time_rejects_invalid(tinyui_obj_t *root)
 {
-    struct tinyui_font font = {
-        .family = "Sans",
-        .size = 20,
-    };
-    struct tinyui_date_time_props props = {
-        .id = "date_time_props_font",
-        .font = &font,
-        .format = "yyyy-mm-dd hh:nn:ss",
-        .year = 2026,
-        .month = 5,
-        .day = 31,
-        .hour = 12,
-        .minute = 34,
-        .second = 56,
-    };
-    struct tinyui_date_time *dt =
-        tinyui_date_time_create_with_props((struct tinyui_widget *)win, &props);
-    ldDateTime_t *ld_date_time;
-
+    tinyui_obj_t *dt = tinyui_date_time_create(root);
     assert(dt != 0);
-    ld_date_time = (ldDateTime_t *)dt->widget.ld_widget;
-    assert(ld_date_time != 0);
-    assert(dt->widget.font == &font);
-    assert(ld_date_time->ptFont == (arm_2d_font_t *)&ARM_2D_FONT_16x24);
-}
-
-static void test_date_time_rejects_corrupted_backend_binding_without_mutating_native(
-    struct tinyui_window *win)
-{
-    struct tinyui_date_time *dt =
-        tinyui_date_time_create((struct tinyui_widget *)win, "date_time_binding_guard");
-    struct tinyui_widget *backend;
-    ldDateTime_t *ld_date_time;
-    int original_kind;
-    int year = 0;
-    int month = 0;
-    int day = 0;
-    int hour = 0;
-    int minute = 0;
-    int second = 0;
-
-    assert(dt != 0);
-    backend = &dt->widget;
-    assert(backend->ld_widget != 0);
-    ld_date_time = (ldDateTime_t *)backend->ld_widget;
-    assert(ld_date_time != 0);
-
-    assert(tinyui_date_time_set_format(dt, "yyyy/mm/dd hh:nn:ss") == 0);
-    assert(tinyui_date_time_set_date(dt, 2026, 6, 11) == 0);
-    assert(tinyui_date_time_set_time(dt, 9, 8, 7) == 0);
-    assert(tinyui_date_time_set_text_color(dt, 0x123456U) == 0);
-    assert(tinyui_date_time_set_bg_color(dt, 0xABCDEFU) == 0);
-    assert(tinyui_date_time_set_align(dt, TINYUI_ALIGN_END) == 0);
-    assert(tinyui_date_time_set_transparent(dt, 1) == 0);
-    assert(tinyui_date_time_set_use_system_time(dt, 0) == 0);
-
-    original_kind = backend->kind;
-    backend->kind = TINYUI_BACKEND_WIDGET_GRAPH;
-
-    assert(tinyui_date_time_set_format(dt, "hh:nn") == -1);
-    assert(tinyui_date_time_set_date(dt, 2030, 1, 2) == -1);
-    assert(tinyui_date_time_set_time(dt, 1, 2, 3) == -1);
-    assert(tinyui_date_time_set_text_color(dt, 0x654321U) == -1);
-    assert(tinyui_date_time_set_bg_color(dt, 0x010203U) == -1);
-    assert(tinyui_date_time_set_align(dt, TINYUI_ALIGN_START) == -1);
-    assert(tinyui_date_time_set_transparent(dt, 0) == -1);
-    assert(tinyui_date_time_set_use_system_time(dt, 1) == -1);
-    assert(tinyui_date_time_get_format(dt) == 0);
-    assert(tinyui_date_time_get_date(dt, &year, &month, &day) == -1);
-    assert(tinyui_date_time_get_time(dt, &hour, &minute, &second) == -1);
-    assert(tinyui_date_time_get_transparent(dt) == -1);
-    assert(tinyui_date_time_get_use_system_time(dt) == -1);
-
-    assert(strcmp((const char *)ld_date_time->formatStr, "yyyy/mm/dd hh:nn:ss") == 0);
-    assert(ld_date_time->year == 2026);
-    assert(ld_date_time->month == 6);
-    assert(ld_date_time->day == 11);
-    assert(ld_date_time->hour == 9);
-    assert(ld_date_time->minute == 8);
-    assert(ld_date_time->second == 7);
-    assert(ld_date_time->textColor == __RGB(0x12, 0x34, 0x56));
-    assert(ld_date_time->bgColor == __RGB(0xAB, 0xCD, 0xEF));
-    assert(ld_date_time->tAlign == ARM_2D_ALIGN_RIGHT);
-    assert(ld_date_time->isTransparent == true);
-    assert(ld_date_time->isAutoSysTime == false);
-
-    backend->kind = original_kind;
-}
-
-static void test_date_time_init_and_shared_base_aliases_round_trip(struct tinyui_window *win)
-{
-    struct tinyui_date_time *dt =
-        tinyui_date_time_init((struct tinyui_widget *)win, "date_time_alias");
-    struct tinyui_widget *backend;
-    ldDateTime_t *ld_date_time;
-
-    assert(dt != 0);
-    backend = &dt->widget;
-    assert(backend->ld_widget != 0);
-    ld_date_time = (ldDateTime_t *)backend->ld_widget;
-    assert(ld_date_time != 0);
-
-    assert(tinyui_date_time_set_background_color(dt, 0x556677U) == 0);
-    assert(ld_date_time->bgColor == __RGB(0x55, 0x66, 0x77));
-
-    assert(tinyui_widget_set_pos(&dt->widget, 10, 14) == 0);
-    assert(((ldBase_t *)ld_date_time)->use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 10);
-    assert(((ldBase_t *)ld_date_time)->use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 14);
-
-    assert(tinyui_widget_set_visible(&dt->widget, 0) == 0);
-    assert(((ldBase_t *)ld_date_time)->isHidden == true);
-    assert(tinyui_widget_set_opacity(&dt->widget, 73) == 0);
-    assert(((ldBase_t *)ld_date_time)->opacity == 73);
-    assert(tinyui_widget_set_selectable(&dt->widget, 0) == 0);
-    assert(((ldBase_t *)ld_date_time)->isSelectable == false);
-    assert(tinyui_widget_set_selected(&dt->widget, 1) == 0);
-    assert(((ldBase_t *)ld_date_time)->isSelected == false);
-    assert(tinyui_widget_set_corner(&dt->widget, 5) == 0);
-    assert(((ldBase_t *)ld_date_time)->isCorner == true);
+    assert(tinyui_date_time_create(0) == 0);
+    assert(tinyui_date_time_set_format(0, "x") == -1);
+    assert(tinyui_date_time_set_date(dt, 2026, 13, 1) == -1);
+    assert(tinyui_date_time_set_time(dt, 25, 0, 0) == -1);
 }
 
 int main(void)
 {
-    struct tinyui_app *app = tinyui_app_create();
-    struct tinyui_window *win;
+    tinyui_obj_t *root;
 
-    assert_date_time_internal_seam_renamed();
-    assert(app != 0);
-    win = tinyui_window_create(app, "root");
-    assert(win != 0);
+    tinyui_deinit();
+    assert(tinyui_init() == TINYUI_OK);
+    root = tinyui_screen_create();
+    assert(root != 0);
 
-    test_date_time_create_and_props(win);
-    test_date_time_props_font_overrides_default(win);
-    test_date_time_setters(win);
-    test_date_time_manual_values_survive_frame_start(win);
-    test_date_time_rejects_invalid_inputs(win);
-    test_date_time_final_release_contract_covers_public_readback_and_modes(win);
-    test_date_time_native_transparent_color_and_align_round_trip(win);
-    test_date_time_rejects_corrupted_backend_binding_without_mutating_native(win);
-    test_date_time_init_and_shared_base_aliases_round_trip(win);
+    test_date_time_create_and_ld_mapping(root);
+    test_date_time_explicit_values_and_system_time(root);
+    test_date_time_rejects_invalid(root);
 
-    tinyui_app_destroy(app);
+    tinyui_deinit();
     return 0;
 }

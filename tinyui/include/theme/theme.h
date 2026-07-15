@@ -1,6 +1,13 @@
 #ifndef TINYUI_THEME_H
 #define TINYUI_THEME_H
 
+#include "tinyui_config.h"
+#if !TINYUI_ENABLE_THEME
+#  ifndef TINYUI_INTERNAL_FEATURE_HEADER
+#  error "TINYUI_ENABLE_THEME is disabled"
+#  endif
+#endif
+
 #include "core/obj.h"
 #include "core/result.h"
 #include "style/style.h"

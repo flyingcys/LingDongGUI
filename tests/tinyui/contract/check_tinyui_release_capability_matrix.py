@@ -168,7 +168,42 @@ EXPECTED_GATE_CATALOG = {
     },
 }
 
-EVIDENCE_ALIAS_REWRITES = ()
+EVIDENCE_ALIAS_REWRITES = (
+    ("test_tinyui_scroll_selector", "test_tinyui_scroll_selecter"),
+)
+
+# policy_never_public may only hide non-user surfaces.
+POLICY_NEVER_PUBLIC_ALLOWED = {
+    "lifecycle_internal",
+    "render_pipeline_internal",
+    "memory_internal",
+    "runtime_host_internal",
+    "layout_solver_internal",
+    "runtime_private_hook",
+    "native_action_private",
+    "enum_only_semantics",
+    "base_tree_policy",
+    "resource_time_helper_policy",
+    "drawing_helper_policy",
+}
+
+REQUIRED_EVIDENCE_KEYS = {
+    "l1_header",
+    "l2_link_test",
+    "l3_contract_test",
+    "l4_native_test",
+    "l5_visual_test",
+    "l5_event_test",
+}
+
+L5_SCENARIO_BASELINES = {
+    "v23_core_vertical": ROOT / "tests" / "tinyui" / "runtime" / "baselines" / "v23_core_vertical.ppm",
+    "v23_value_instruments": ROOT / "tests" / "tinyui" / "runtime" / "baselines" / "v23_value_instruments.ppm",
+    "v23_selection_collection": ROOT / "tests" / "tinyui" / "runtime" / "baselines" / "v23_selection_collection.ppm",
+    "v23_input_data": ROOT / "tests" / "tinyui" / "runtime" / "baselines" / "v23_input_data.ppm",
+    "v23_media_composite": ROOT / "tests" / "tinyui" / "runtime" / "baselines" / "v23_media_composite.ppm",
+    "v23_theme_layout_resource": ROOT / "tests" / "tinyui" / "runtime" / "baselines" / "v23_theme_layout_resource.ppm",
+}
 
 
 def _load_json(path: Path) -> dict:
@@ -550,6 +585,258 @@ def _assert_manual_artifact_policy(matrix: dict) -> None:
         assert policy.get("manual_pass_evidence") == "not_reviewed"
 
 
+def _path_exists(path_value: object, *, field: str, native_api: str) -> Path:
+    assert isinstance(path_value, str) and path_value.strip(), (
+        f"{native_api} {field} must be a non-empty path string"
+    )
+    path = Path(path_value)
+    if not path.is_absolute():
+        path = ROOT / path
+    assert path.exists(), f"{native_api} {field} path does not exist: {path_value}"
+    return path
+
+
+def _assert_ppm_artifact(path: Path, *, native_api: str, field: str) -> None:
+    assert path.suffix.lower() == ".ppm", (
+        f"{native_api} {field} must be a .ppm pixel artifact, got {path.name}"
+    )
+    size = path.stat().st_size
+    assert size > 64, f"{native_api} {field} PPM is empty/too small: {path} ({size} B)"
+    header = path.read_bytes()[:64]
+    assert header.startswith(b"P3") or header.startswith(b"P6"), (
+        f"{native_api} {field} is not a PPM image: {path}"
+    )
+
+
+def _assert_not_cross_substituted(
+    evidence: dict,
+    *,
+    native_api: str,
+    requires_l5_v: bool,
+    requires_l5_e: bool,
+) -> None:
+    """Reject event-as-pixel or screenshot-as-event substitutions."""
+    visual_test = evidence.get("l5_visual_test")
+    event_test = evidence.get("l5_event_test")
+    visual_artifact = evidence.get("l5_visual_artifact")
+    event_artifact = evidence.get("l5_event_artifact")
+
+    if requires_l5_v:
+        assert visual_test not in (None, "", "not_applicable"), (
+            f"{native_api} requires L5-V but l5_visual_test is missing/not_applicable"
+        )
+        assert isinstance(visual_artifact, str) and visual_artifact, (
+            f"{native_api} requires L5-V but l5_visual_artifact is missing"
+        )
+        # Event traces / backend mapping tests cannot substitute for pixels.
+        assert "backend_mapping" not in str(visual_test), (
+            f"{native_api} L5-V must not use backend_mapping/event evidence as pixels"
+        )
+        assert "event" not in Path(str(visual_artifact)).name.lower() or str(
+            visual_artifact
+        ).endswith(".ppm"), (
+            f"{native_api} L5-V artifact must be pixel evidence, not an event log"
+        )
+        ppm = _path_exists(visual_artifact, field="l5_visual_artifact", native_api=native_api)
+        _assert_ppm_artifact(ppm, native_api=native_api, field="l5_visual_artifact")
+
+    if requires_l5_e:
+        assert event_test not in (None, ""), (
+            f"{native_api} requires L5-E but l5_event_test is missing"
+        )
+        if event_test == "not_applicable":
+            reason = evidence.get("l5_event_reason")
+            assert isinstance(reason, str) and reason.strip(), (
+                f"{native_api} L5-E not_applicable requires l5_event_reason"
+            )
+        else:
+            assert event_artifact is not None, (
+                f"{native_api} requires L5-E but l5_event_artifact is missing"
+            )
+            # Screenshots cannot substitute for events.
+            if isinstance(event_artifact, str):
+                assert not event_artifact.lower().endswith(".ppm"), (
+                    f"{native_api} L5-E must not use PPM screenshot as event evidence"
+                )
+                assert "visible_ui" not in str(event_test), (
+                    f"{native_api} L5-E must not use visible_ui/pixel test as event evidence"
+                )
+            elif isinstance(event_artifact, dict):
+                trace = event_artifact.get("trace")
+                assert trace not in (None, "", [], {}), (
+                    f"{native_api} L5-E artifact missing event trace"
+                )
+                assert event_artifact.get("kind") in {
+                    "widget_event_trace",
+                    "family_representative_event",
+                    "unit_event_state",
+                }, f"{native_api} L5-E artifact has invalid kind: {event_artifact.get('kind')!r}"
+            else:
+                raise AssertionError(
+                    f"{native_api} l5_event_artifact must be path string or trace object"
+                )
+
+
+def _assert_required_release_evidence(matrix: dict, ledger_by_symbol: dict[str, dict]) -> None:
+    """M5 Task5: every required covered row must bind real L1-L5 evidence paths."""
+    seen_ids: set[str] = set()
+    required_covered = 0
+
+    for widget in matrix.get("widgets", []):
+        widget_name = widget.get("name")
+        assert isinstance(widget_name, str) and widget_name, "widget missing name"
+        group_kind = widget.get("group_kind")
+
+        for capability in widget.get("capabilities", []):
+            native_api = capability.get("native_api")
+            assert isinstance(native_api, str) and native_api, (
+                f"{widget_name} capability missing native_api"
+            )
+            ledger_row = ledger_by_symbol[native_api]
+            required = capability.get("required")
+            gap_status = capability.get("gap_status")
+            policy_category = capability.get("policy_category")
+            direct_100_category = capability.get("direct_100_category")
+
+            # policy_never_public may not hide widget user capabilities.
+            if required is False and direct_100_category == "policy_never_public":
+                assert policy_category in POLICY_NEVER_PUBLIC_ALLOWED, (
+                    f"{native_api} policy_never_public uses disallowed policy_category="
+                    f"{policy_category!r}"
+                )
+                # Hard fail: a required=false row still classified as direct user surface.
+                if group_kind == "widget" and policy_category == "direct_covered":
+                    raise AssertionError(
+                        f"{native_api} widget user capability cannot be policy_never_public"
+                    )
+                # Heuristic: public setter/getter style symbols under widget group with
+                # non-internal policy are already blocked above; additionally reject
+                # allowlist_reason that admits user-facing capability hiding.
+                allowlist_reason = (capability.get("allowlist_reason") or "").lower()
+                # Only fail on explicit admission of hiding user capability.
+                forbidden_phrases = (
+                    "hide user capability",
+                    "规避用户能力",
+                    "隐藏用户能力",
+                    "to avoid implementing",
+                    "skip user-facing",
+                )
+                for phrase in forbidden_phrases:
+                    assert phrase not in allowlist_reason, (
+                        f"{native_api} policy_never_public appears to hide user capability: "
+                        f"{allowlist_reason!r}"
+                    )
+
+            if required is not True or gap_status != "covered":
+                continue
+
+            required_covered += 1
+            capability_id = capability.get("capability_id")
+            assert isinstance(capability_id, str) and capability_id.strip(), (
+                f"{native_api} required covered row missing capability_id"
+            )
+            assert capability_id not in seen_ids, (
+                f"duplicate capability_id: {capability_id}"
+            )
+            seen_ids.add(capability_id)
+
+            public_symbol = capability.get("public_symbol")
+            public_header = capability.get("public_header")
+            assert isinstance(public_symbol, str) and public_symbol.startswith("tinyui_"), (
+                f"{native_api} missing public_symbol"
+            )
+            assert isinstance(public_header, str) and public_header.endswith(".h"), (
+                f"{native_api} missing public_header"
+            )
+            header_path = _path_exists(public_header, field="public_header", native_api=native_api)
+            header_text = header_path.read_text(encoding="utf-8", errors="replace")
+            assert re.search(rf"\b{re.escape(public_symbol)}\s*\(", header_text), (
+                f"{native_api} public_symbol {public_symbol} not declared in {public_header}"
+            )
+
+            evidence = capability.get("evidence")
+            assert isinstance(evidence, dict), f"{native_api} missing evidence object"
+            missing_keys = sorted(REQUIRED_EVIDENCE_KEYS - set(evidence))
+            assert not missing_keys, (
+                f"{native_api} evidence missing keys: {missing_keys}"
+            )
+
+            l1 = evidence.get("l1_header")
+            assert isinstance(l1, str) and ":" in l1, (
+                f"{native_api} evidence.l1_header must be path:symbol"
+            )
+            l1_path, l1_symbol = l1.split(":", 1)
+            assert l1_path == public_header, (
+                f"{native_api} l1_header path drifted from public_header"
+            )
+            assert l1_symbol == public_symbol, (
+                f"{native_api} l1_header symbol drifted from public_symbol"
+            )
+
+            for field in ("l2_link_test", "l3_contract_test", "l4_native_test"):
+                value = evidence.get(field)
+                assert isinstance(value, str) and value.strip(), (
+                    f"{native_api} evidence.{field} must be non-empty"
+                )
+                assert value not in {"pending", "todo", "missing", "smoke"}, (
+                    f"{native_api} evidence.{field} rejects placeholder {value!r}"
+                )
+
+            # L4 unit source must exist (real backend-state harness, not smoke-only claim).
+            l4_unit_source = evidence.get("l4_unit_source")
+            if isinstance(l4_unit_source, str) and l4_unit_source:
+                unit_path = _path_exists(
+                    l4_unit_source, field="l4_unit_source", native_api=native_api
+                )
+                assert unit_path.suffix == ".c", (
+                    f"{native_api} l4_unit_source must be a C unit file: {l4_unit_source}"
+                )
+                unit_text = unit_path.read_text(encoding="utf-8", errors="replace")
+                # Reject empty/smoke-only files.
+                assert "tinyui_" in unit_text and (
+                    "ld" in unit_text.lower() or "backend" in unit_text.lower() or "assert" in unit_text
+                ), f"{native_api} l4_unit_source does not look like a real L4 harness: {l4_unit_source}"
+
+            requires_l5_v = bool(
+                capability.get("requires_l5_v", ledger_row.get("requires_l5_v"))
+            )
+            requires_l5_e = bool(
+                capability.get("requires_l5_e", ledger_row.get("requires_l5_e"))
+            )
+            assert capability.get("requires_l5_v") is requires_l5_v or capability.get(
+                "requires_l5_v"
+            ) is None, f"{native_api} requires_l5_v drifted from ledger"
+            # Prefer explicit matrix flags when present; otherwise ledger.
+            if "requires_l5_v" in capability:
+                assert capability.get("requires_l5_v") is bool(ledger_row.get("requires_l5_v")), (
+                    f"{native_api} requires_l5_v must match ledger"
+                )
+            if "requires_l5_e" in capability:
+                assert capability.get("requires_l5_e") is bool(ledger_row.get("requires_l5_e")), (
+                    f"{native_api} requires_l5_e must match ledger"
+                )
+            requires_l5_v = bool(ledger_row.get("requires_l5_v"))
+            requires_l5_e = bool(ledger_row.get("requires_l5_e"))
+
+            _assert_not_cross_substituted(
+                evidence,
+                native_api=native_api,
+                requires_l5_v=requires_l5_v,
+                requires_l5_e=requires_l5_e,
+            )
+
+            # Widget-level L5 scenario baseline must exist when widget binds v23 scenario.
+            scenario = widget.get("v23_m3_scenario")
+            if isinstance(scenario, str) and scenario in L5_SCENARIO_BASELINES:
+                baseline = L5_SCENARIO_BASELINES[scenario]
+                assert baseline.exists(), (
+                    f"{widget_name} scenario {scenario} missing baseline {baseline}"
+                )
+
+    assert required_covered > 0, "no required covered capabilities found"
+    assert len(seen_ids) == required_covered, "capability_id count mismatch"
+
+
 def main() -> int:
     matrix = _load_json(MATRIX_JSON)
     _assert_matrix_header(matrix)
@@ -562,6 +849,7 @@ def main() -> int:
     _assert_summary(matrix, capability_total, ledger_by_symbol)
     _assert_gate_catalog(matrix)
     _assert_manual_artifact_policy(matrix)
+    _assert_required_release_evidence(matrix, ledger_by_symbol)
     return 0
 
 

@@ -19,6 +19,13 @@
 #ifndef TINYUI_DATE_TIME_H
 #define TINYUI_DATE_TIME_H
 
+#include "tinyui_config.h"
+#if !TINYUI_ENABLE_DATE_TIME
+#  ifndef TINYUI_INTERNAL_FEATURE_HEADER
+#  error "TINYUI_ENABLE_DATE_TIME is disabled"
+#  endif
+#endif
+
 #include "layout/layout.h"
 
 #include "core/obj.h"

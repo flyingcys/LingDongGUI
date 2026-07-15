@@ -45,12 +45,18 @@ static void tinyui_runtime_internal_app_timer_unlink(struct tinyui_app_timer *ti
 
 void tinyui_runtime_internal_app_pump_timers(struct tinyui_app *app, unsigned int now_ticks)
 {
+    /* Fixed stack snapshot: no heap in timer dispatch (M1 lightweight gate).
+     * Capacity matches the canonical public timer pool; legacy linked lists with
+     * more nodes are truncated until M2 fixed-pool migration. */
+    enum { TINYUI_LEGACY_TIMER_SNAPSHOT_CAP = 16 };
+
     struct tinyui_runtime_internal_app_timer_snapshot_entry {
         struct tinyui_app_timer *timer;
         struct tinyui_app_timer *expected_predecessor;
     };
 
-    struct tinyui_runtime_internal_app_timer_snapshot_entry *snapshot;
+    struct tinyui_runtime_internal_app_timer_snapshot_entry snapshot[
+        TINYUI_LEGACY_TIMER_SNAPSHOT_CAP];
     struct tinyui_app_timer *timer;
     struct tinyui_app_timer *previous_timer = NULL;
     size_t timer_count = 0;
@@ -61,27 +67,16 @@ void tinyui_runtime_internal_app_pump_timers(struct tinyui_app *app, unsigned in
     }
 
     timer = app->timers;
-    while (timer != NULL) {
+    while (timer != NULL && timer_count < (size_t)TINYUI_LEGACY_TIMER_SNAPSHOT_CAP) {
+        snapshot[timer_count].timer = timer;
+        snapshot[timer_count].expected_predecessor = previous_timer;
         timer_count += 1U;
+        previous_timer = timer;
         timer = timer->next;
     }
 
     if (timer_count == 0U) {
         return;
-    }
-
-    snapshot = ldCalloc(timer_count, sizeof(*snapshot));
-    if (snapshot == NULL) {
-        return;
-    }
-
-    timer = app->timers;
-    while (timer != NULL && index < timer_count) {
-        snapshot[index].timer = timer;
-        snapshot[index].expected_predecessor = previous_timer;
-        index += 1U;
-        previous_timer = timer;
-        timer = timer->next;
     }
 
     for (index = 0; index < timer_count; ++index) {
@@ -121,8 +116,6 @@ void tinyui_runtime_internal_app_pump_timers(struct tinyui_app *app, unsigned in
             }
         }
     }
-
-    ldFree(snapshot);
 }
 
 /**

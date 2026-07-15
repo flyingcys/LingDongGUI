@@ -1,4 +1,4 @@
-#include "internal/app_legacy.h"
+#include "internal/runtime_internal_legacy_api.h"
 #include "display/display.h"
 
 #include <assert.h>
@@ -46,7 +46,7 @@ static void test_display_internal_helpers_no_longer_use_tinyui_prefix(void)
 
 static void test_default_display_config(void)
 {
-    struct tinyui_app *app = tinyui_app_create();
+    struct tinyui_app *app = tinyui_runtime_internal_app_create();
     struct tinyui_display_config config = {0};
 
     assert(app != NULL);
@@ -57,12 +57,12 @@ static void test_default_display_config(void)
     assert(config.buffer_height == 0);
     assert(config.user_data == NULL);
 
-    tinyui_app_destroy(app);
+    tinyui_runtime_internal_app_destroy(app);
 }
 
 static void test_display_config_round_trip(void)
 {
-    struct tinyui_app *app = tinyui_app_create();
+    struct tinyui_app *app = tinyui_runtime_internal_app_create();
     struct tinyui_display_config config = {
         .width = 320,
         .height = 240,
@@ -81,12 +81,12 @@ static void test_display_config_round_trip(void)
     assert(readback.buffer_height == 32);
     assert(readback.user_data == (void *)(uintptr_t)0x1234);
 
-    tinyui_app_destroy(app);
+    tinyui_runtime_internal_app_destroy(app);
 }
 
 static void test_display_rejects_invalid_config(void)
 {
-    struct tinyui_app *app = tinyui_app_create();
+    struct tinyui_app *app = tinyui_runtime_internal_app_create();
     struct tinyui_display_config config = {
         .width = 0,
         .height = 240,
@@ -105,7 +105,7 @@ static void test_display_rejects_invalid_config(void)
     config.height = -1;
     assert(tinyui_display_set_config(app, &config) == -1);
 
-    tinyui_app_destroy(app);
+    tinyui_runtime_internal_app_destroy(app);
 }
 
 int main(void)

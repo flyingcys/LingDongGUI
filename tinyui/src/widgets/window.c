@@ -30,7 +30,11 @@
 static struct tinyui_window *tinyui_window_as_window(tinyui_obj_t *obj)
 {
     struct tinyui_widget *w = (struct tinyui_widget *)(void *)obj;
-    if (w == 0 || !tinyui_runtime_internal_widget_is_kind(w, TINYUI_BACKEND_WIDGET_WINDOW)) {
+    if (w == 0) {
+        return 0;
+    }
+    if (!tinyui_runtime_internal_widget_is_kind(w, TINYUI_BACKEND_WIDGET_WINDOW)
+        && !tinyui_runtime_internal_widget_is_kind(w, TINYUI_BACKEND_WIDGET_BACKGROUND)) {
         return 0;
     }
     return (struct tinyui_window *)w;
@@ -39,7 +43,11 @@ static struct tinyui_window *tinyui_window_as_window(tinyui_obj_t *obj)
 static const struct tinyui_window *tinyui_window_as_window_const(const tinyui_obj_t *obj)
 {
     const struct tinyui_widget *w = (const struct tinyui_widget *)(const void *)obj;
-    if (w == 0 || !tinyui_runtime_internal_widget_is_kind(w, TINYUI_BACKEND_WIDGET_WINDOW)) {
+    if (w == 0) {
+        return 0;
+    }
+    if (!tinyui_runtime_internal_widget_is_kind(w, TINYUI_BACKEND_WIDGET_WINDOW)
+        && !tinyui_runtime_internal_widget_is_kind(w, TINYUI_BACKEND_WIDGET_BACKGROUND)) {
         return 0;
     }
     return (const struct tinyui_window *)w;
@@ -483,31 +491,37 @@ tinyui_obj_t *tinyui_window_create(tinyui_obj_t *parent)
     struct tinyui_app *app = 0;
     const char *id = "window";
     struct tinyui_widget *parent_w = (struct tinyui_widget *)(void *)parent;
-    if (parent_w != 0) { app = parent_w->owner; }
-    else { app = tinyui_runtime_internal_app_current(); }
-    if (app == 0) { return 0; }
-
     struct tinyui_window *window;
     struct tinyui_app *app_state;
     ldWindow_t *ld_root;
     int16_t root_width;
     int16_t root_height;
     uint16_t name_id;
+    uint16_t parent_name_id = 0;
 
+    if (parent_w != 0) {
+        app = parent_w->owner;
+        parent_name_id = parent_w->ld_name_id;
+        if (parent_w->ld_widget == 0 || app == 0) {
+            return 0;
+        }
+    } else {
+        app = tinyui_runtime_internal_app_current();
+    }
     if (app == 0 || id == 0) {
         return 0;
     }
 
     app_state = app;
-    if (app_state == 0 || app_state->ld_scene == 0) {
+    if (app_state->ld_scene == 0) {
         return 0;
     }
 
     tinyui_window_compute_display_root_size(app, &root_width, &root_height);
 
     /* Phantom scene root (nameId=0): created once, never exposed as a user
-     * widget.  All user windows are children of this node, preventing the
-     * "second window replaces first as scene root" collision. */
+     * widget.  Top-level user windows hang under this node; nested windows
+     * use the real parent nameId so LD tree queries stay truthful. */
     if (app_state->ld_scene->ptNodeRoot == 0) {
         if (ldWindow_init(app_state->ld_scene, NULL, 0, 0, 0, 0,
                           root_width, root_height) == 0) {
@@ -516,16 +530,33 @@ tinyui_obj_t *tinyui_window_create(tinyui_obj_t *parent)
     }
 
     name_id = tinyui_runtime_internal_app_alloc_name_id(app_state);
-    ld_root = ldWindow_init(app_state->ld_scene, NULL, name_id, 0, 0, 0,
-                            root_width, root_height);
-    if (ld_root == 0) {
+    if (name_id == 0) {
         return 0;
+    }
+
+    if (parent_w != 0) {
+        ld_root = ldWindow_init(app_state->ld_scene, NULL, name_id, parent_name_id,
+                                0, 0, 160, 80);
+    } else {
+        ld_root = ldWindow_init(app_state->ld_scene, NULL, name_id, 0, 0, 0,
+                                root_width, root_height);
+    }
+    if (ld_root == 0) {
+        tinyui_runtime_internal_app_free_name_id(app_state, name_id);
+        return 0;
+    }
+
+    if (ldBaseGetParent((ldBase_t *)ld_root) == 0 && parent_w != 0
+        && parent_w->ld_widget != 0) {
+        ldBaseNodeAdd((arm_2d_control_node_t *)parent_w->ld_widget,
+                      (arm_2d_control_node_t *)ld_root);
     }
 
     /* C2: single calloc — the wrapper struct is gone. */
     window = ldCalloc(1, sizeof(*window));
     if (window == 0) {
         ldWindow_depose(app_state->ld_scene, ld_root);
+        tinyui_runtime_internal_app_free_name_id(app_state, name_id);
         return 0;
     }
 
@@ -540,6 +571,7 @@ tinyui_obj_t *tinyui_window_create(tinyui_obj_t *parent)
 
     if (tinyui_runtime_bridge_bind_leaf_widget(&window->widget, app_state) != 0) {
         tinyui_runtime_internal_app_unregister_host(app_state, &window->widget);
+        tinyui_runtime_internal_app_free_name_id(app_state, name_id);
         window->widget.ld_widget = 0;
         ldWindow_depose(app_state->ld_scene, ld_root);
         ldFree(window);

@@ -165,13 +165,16 @@ tinyui_obj_t *tinyui_list_create_with_props(tinyui_obj_t *parent,
 int tinyui_list_add_item(tinyui_obj_t *list_obj, const char *id, const char *text)
 {
     struct tinyui_list *list = tinyui_list_as_list(list_obj);
-    if (list == 0) { return -1; }
-
     ldList_t *ld_list;
     int index;
     int next_count;
 
-    if (list == 0 || id == 0 || text == 0 || list->item_count >= TINYUI_LIST_MAX_ITEMS) {
+    if (list == 0 || id == 0 || text == 0) {
+        tinyui_runtime_set_last_result(TINYUI_ERROR_INVALID_ARG);
+        return -1;
+    }
+    if (list->item_count >= TINYUI_LIST_MAX_ITEMS) {
+        tinyui_runtime_set_last_result(TINYUI_ERROR_CAPACITY);
         return -1;
     }
 
@@ -193,6 +196,7 @@ int tinyui_list_add_item(tinyui_obj_t *list_obj, const char *id, const char *tex
     list->items[index].id = id;
     list->items[index].text = text;
     list->item_count = next_count;
+    tinyui_runtime_set_last_result(TINYUI_OK);
     return 0;
 }
 
@@ -308,7 +312,9 @@ int tinyui_list_set_text_color(tinyui_obj_t *list_obj, unsigned int rgb)
 
     ld_list = (ldList_t *)list->widget.ld_widget;
     ldListSetTextColor(ld_list, (ldColor)tinyui_rgb_to_ld_color(rgb));
-    return tinyui_runtime_internal_widget_set_text_color(&list->widget, rgb);
+    list->widget.text_color = rgb;
+    tinyui_runtime_set_last_result(TINYUI_OK);
+    return 0;
 }
 
 /**
@@ -333,7 +339,9 @@ int tinyui_list_set_bg_color(tinyui_obj_t *list_obj, unsigned int rgb)
 
     ld_list = (ldList_t *)list->widget.ld_widget;
     ldListSetBackgroundColor(ld_list, (ldColor)tinyui_rgb_to_ld_color(rgb));
-    return tinyui_runtime_internal_widget_set_bg_color(&list->widget, rgb);
+    list->widget.bg_color = rgb;
+    tinyui_runtime_set_last_result(TINYUI_OK);
+    return 0;
 }
 
 /**
@@ -358,7 +366,9 @@ int tinyui_list_set_select_color(tinyui_obj_t *list_obj, unsigned int rgb)
 
     ld_list = (ldList_t *)list->widget.ld_widget;
     ldListSetSelectColor(ld_list, (ldColor)tinyui_rgb_to_ld_color(rgb));
-    return tinyui_runtime_internal_widget_set_border_color(&list->widget, rgb);
+    list->widget.border_color = rgb;
+    tinyui_runtime_set_last_result(TINYUI_OK);
+    return 0;
 }
 
 /**
@@ -444,13 +454,15 @@ int tinyui_list_set_item_widget(tinyui_obj_t *list_obj, int index, tinyui_obj_t 
 int tinyui_list_set_selected_index(tinyui_obj_t *list_obj, int index)
 {
     struct tinyui_list *list = tinyui_list_as_list(list_obj);
-    if (list == 0) { return -1; }
-
     ldList_t *ld_list;
 
     if (list == 0 || list->widget.ld_widget == 0 ||
-        list->widget.kind != TINYUI_BACKEND_WIDGET_LIST ||
-        index < 0 || index >= list->item_count) {
+        list->widget.kind != TINYUI_BACKEND_WIDGET_LIST) {
+        tinyui_runtime_set_last_result(TINYUI_ERROR_INVALID_ARG);
+        return -1;
+    }
+    if (index < 0 || index >= list->item_count) {
+        tinyui_runtime_set_last_result(TINYUI_ERROR_OUT_OF_RANGE);
         return -1;
     }
 
@@ -458,6 +470,7 @@ int tinyui_list_set_selected_index(tinyui_obj_t *list_obj, int index)
     ldListSetSelectItem(ld_list, (int8_t)index);
     list->widget.value = index;
     list->selected_index = index;
+    tinyui_runtime_set_last_result(TINYUI_OK);
     return 0;
 }
 

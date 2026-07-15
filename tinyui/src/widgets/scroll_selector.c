@@ -20,9 +20,159 @@
 #include "widgets/scroll_selector.h"
 #include "../../../src/gui/ldScrollSelecter.h"
 #include "../../../src/gui/ldBase.h"
+#include "../../../src/misc/ldMsg.h"
 
 #include <string.h>
 
+static void tinyui_selection_fire_value_changed(struct tinyui_widget *widget, int32_t value)
+{
+    struct tinyui_runtime_state *rt = tinyui_runtime_state_get();
+    struct tinyui_event_callback_pool *pool;
+    struct tinyui_event_callback_slot *ordered[TINYUI_EVENT_CB_CAPACITY];
+    size_t ordered_count = 0U;
+    size_t i;
+    uint16_t epoch;
+    uint32_t mask;
+    tinyui_obj_t *target;
+    bool was_processing;
+
+    if (rt == 0 || widget == 0 || !rt->initialized) {
+        return;
+    }
+
+    pool = &rt->event_cb_pool;
+    target = (tinyui_obj_t *)(void *)widget;
+    mask = TINYUI_EVENT_MASK(TINYUI_EVENT_VALUE_CHANGED);
+
+    epoch = (uint16_t)(pool->dispatch_epoch + 1U);
+    if (epoch == 0U) {
+        epoch = 1U;
+    }
+    pool->dispatch_epoch = epoch;
+    rt->dispatch_epoch = epoch;
+
+    for (i = 0; i < (size_t)TINYUI_EVENT_CB_CAPACITY; ++i) {
+        struct tinyui_event_callback_slot *slot = &pool->slots[i];
+        if (slot->allocated == 0U || slot->cb == 0) {
+            continue;
+        }
+        if (slot->object != target || (slot->event_mask & mask) == 0U) {
+            continue;
+        }
+        if (!(slot->born_epoch < epoch)) {
+            continue;
+        }
+        ordered[ordered_count++] = slot;
+    }
+
+    for (i = 1; i < ordered_count; ++i) {
+        size_t j = i;
+        struct tinyui_event_callback_slot *cur = ordered[i];
+        while (j > 0U &&
+               ordered[j - 1U]->registration_order > cur->registration_order) {
+            ordered[j] = ordered[j - 1U];
+            j -= 1U;
+        }
+        ordered[j] = cur;
+    }
+
+    was_processing = rt->processing;
+    rt->processing = true;
+    for (i = 0; i < ordered_count; ++i) {
+        struct tinyui_event_callback_slot *slot = ordered[i];
+        uint16_t generation;
+        tinyui_event_cb_t cb;
+        tinyui_event_t event;
+
+        if (slot->allocated == 0U || slot->cb == 0) {
+            continue;
+        }
+        if (slot->object != target || (slot->event_mask & mask) == 0U) {
+            continue;
+        }
+        if (!(slot->born_epoch < epoch)) {
+            continue;
+        }
+        if (widget->deleting != 0U) {
+            break;
+        }
+
+        generation = slot->generation;
+        cb = slot->cb;
+        memset(&event, 0, sizeof(event));
+        event.code = TINYUI_EVENT_VALUE_CHANGED;
+        event.target = target;
+        event.user_data = slot->user_data;
+        event.data.value = value;
+        cb(&event);
+
+        if (slot->allocated == 0U || slot->generation != generation) {
+            continue;
+        }
+        if (widget->deleting != 0U) {
+            break;
+        }
+    }
+    rt->processing = was_processing;
+    if (!was_processing && rt->delete_pending != 0 && rt->delete_target != 0) {
+        tinyui_obj_t *delete_target = rt->delete_target;
+        struct tinyui_widget *delete_widget =
+            (struct tinyui_widget *)(void *)delete_target;
+
+        rt->delete_pending = 0;
+        rt->delete_target = 0;
+        (void)tinyui_runtime_internal_widget_destroy(delete_widget);
+    }
+}
+
+static bool tinyui_scroll_selector_native_slot(struct ld_scene_t *scene, ldMsg_t msg)
+{
+    struct tinyui_widget *w;
+    struct tinyui_scroll_selecter *scroll_selecter;
+    ldScrollSelecter_t *ld_scroll_selecter;
+    int selected_index;
+    int previous_selected_index;
+
+    if (msg.ptSender == 0 || msg.signal != SIGNAL_VALUE_CHANGED) {
+        return false;
+    }
+
+    w = tinyui_runtime_internal_widget_from_ld_scene(scene, msg.ptSender);
+    if (w == 0) {
+        return false;
+    }
+
+    scroll_selecter = (struct tinyui_scroll_selecter *)w;
+    ld_scroll_selecter = (ldScrollSelecter_t *)w->ld_widget;
+    if (ld_scroll_selecter == 0) {
+        return false;
+    }
+
+    selected_index = (int)msg.value;
+    if (selected_index < 0 || selected_index >= scroll_selecter->item_count) {
+        return false;
+    }
+
+    previous_selected_index = scroll_selecter->selected_index;
+    if (scroll_selecter->widget.visible == 0 || scroll_selecter->widget.enabled == 0) {
+        if (previous_selected_index >= 0 &&
+            previous_selected_index < scroll_selecter->item_count) {
+            ldScrollSelecterSetSelectItemNum(ld_scroll_selecter,
+                                            (int8_t)previous_selected_index);
+        }
+        return false;
+    }
+
+    ldScrollSelecterSetSelectItemNum(ld_scroll_selecter, (int8_t)selected_index);
+    scroll_selecter->selected_index = selected_index;
+    w->value = selected_index;
+    (void)tinyui_runtime_internal_widget_claim_backend_focus(w);
+    if (previous_selected_index == selected_index) {
+        return false;
+    }
+    tinyui_selection_fire_value_changed(w, (int32_t)selected_index);
+    return false;
+}
 
 static struct tinyui_scroll_selecter *tinyui_scroll_selector_as_scroll_selecter(tinyui_obj_t *obj)
 {
@@ -138,6 +288,14 @@ tinyui_obj_t *tinyui_scroll_selector_create(tinyui_obj_t *parent)
     scroll_selecter->speed = 1;
     scroll_selecter->widget.visible = 1;
     scroll_selecter->widget.enabled = 1;
+
+    if (scroll_selecter->widget.ld_widget == 0 ||
+        !ldMsgConnect(scroll_selecter->widget.ld_widget,
+                      SIGNAL_VALUE_CHANGED,
+                      tinyui_scroll_selector_native_slot)) {
+        tinyui_scroll_selector_rollback(scroll_selecter);
+        return 0;
+    }
     return (tinyui_obj_t *)scroll_selecter;
 }
 
@@ -249,8 +407,6 @@ tinyui_obj_t *tinyui_scroll_selector_create_with_props(tinyui_obj_t *parent,
 int tinyui_scroll_selector_set_items(tinyui_obj_t *scroll_selecter_obj, const char *const *item_ids, const char *const *texts, int item_count)
 {
     struct tinyui_scroll_selecter *scroll_selecter = tinyui_scroll_selector_as_scroll_selecter(scroll_selecter_obj);
-    if (scroll_selecter == 0) { return -1; }
-
     ldScrollSelecter_t *ld_scroll_selecter;
     int i;
 
@@ -259,8 +415,12 @@ int tinyui_scroll_selector_set_items(tinyui_obj_t *scroll_selecter_obj, const ch
         scroll_selecter->widget.ld_widget == 0 ||
         item_ids == 0 ||
         texts == 0 ||
-        item_count < 0 ||
-        item_count > TINYUI_LIST_MAX_ITEMS) {
+        item_count < 0) {
+        tinyui_runtime_set_last_result(TINYUI_ERROR_INVALID_ARG);
+        return -1;
+    }
+    if (item_count > TINYUI_LIST_MAX_ITEMS) {
+        tinyui_runtime_set_last_result(TINYUI_ERROR_CAPACITY);
         return -1;
     }
 
@@ -289,6 +449,7 @@ int tinyui_scroll_selector_set_items(tinyui_obj_t *scroll_selecter_obj, const ch
     } else {
         scroll_selecter->selected_index = -1;
     }
+    tinyui_runtime_set_last_result(TINYUI_OK);
     return 0;
 }
 
@@ -304,15 +465,18 @@ int tinyui_scroll_selector_set_items(tinyui_obj_t *scroll_selecter_obj, const ch
 int tinyui_scroll_selector_add_item(tinyui_obj_t *scroll_selecter_obj, const char *id, const char *text)
 {
     struct tinyui_scroll_selecter *scroll_selecter = tinyui_scroll_selector_as_scroll_selecter(scroll_selecter_obj);
-    if (scroll_selecter == 0) { return -1; }
-
     ldScrollSelecter_t *ld_scroll_selecter;
     int index;
     int next_count;
 
     if (scroll_selecter == 0 || id == 0 || text == 0 ||
         scroll_selecter->widget.ld_widget == 0 ||
-        scroll_selecter->item_count >= TINYUI_LIST_MAX_ITEMS) {
+        scroll_selecter->widget.kind != TINYUI_BACKEND_WIDGET_SCROLL_SELECTER) {
+        tinyui_runtime_set_last_result(TINYUI_ERROR_INVALID_ARG);
+        return -1;
+    }
+    if (scroll_selecter->item_count >= TINYUI_LIST_MAX_ITEMS) {
+        tinyui_runtime_set_last_result(TINYUI_ERROR_CAPACITY);
         return -1;
     }
 
@@ -331,6 +495,7 @@ int tinyui_scroll_selector_add_item(tinyui_obj_t *scroll_selecter_obj, const cha
     scroll_selecter->items[index].id = id;
     scroll_selecter->items[index].text = text;
     scroll_selecter->item_count = next_count;
+    tinyui_runtime_set_last_result(TINYUI_OK);
     return 0;
 }
 

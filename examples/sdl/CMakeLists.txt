@@ -42,7 +42,19 @@ set(ARM2D_CONTROL_SOURCES
     "${ARM2D_CONTROLS_DIR}/controls.c"
     "${ARM2D_CONTROLS_DIR}/spinning_wheel.c"
     "${ARM2D_CONTROLS_DIR}/progress_wheel.c"
+    "${ARM2D_CONTROLS_DIR}/progress_bar_drill.c"
+    "${ARM2D_CONTROLS_DIR}/progress_bar_flowing.c"
+    "${ARM2D_CONTROLS_DIR}/progress_bar_simple.c"
     "${ARM2D_CONTROLS_DIR}/text_box.c"
+)
+# Match longdonggui_arm2d asset set. GCC LTO historically dropped unused
+# host-demo references; Clang LTO keeps child-tile data refs live.
+set(ARM2D_ASSET_SOURCES
+    "${ARM2D_ASSET_DIR}/arm_2d_asset_QuaterArc.c"
+    "${ARM2D_ASSET_DIR}/arm_2d_asset_WhiteDotSmall.c"
+    "${ARM2D_ASSET_DIR}/arm_2d_asset_TinyDot.c"
+    "${ARM2D_ASSET_DIR}/arm_2d_asset_pointer_sec.c"
+    "${ARM2D_ASSET_DIR}/arm_2d_asset_clockface.c"
 )
 set(ARM2D_QRCODE_SOURCES
     "${ARM2D_QRCODE_DIR}/qrcode_box.c"
@@ -373,6 +385,7 @@ endif()
 add_executable(ldgui_sdl_demo
     ${SDL_DEMO_CORE_SOURCES}
     ${ARM2D_CONTROL_SOURCES}
+    ${ARM2D_ASSET_SOURCES}
     ${ARM2D_QRCODE_SOURCES}
     ${ARM2D_LIBRARY_SOURCES}
     ${ARM2D_HELPER_SOURCES}
@@ -406,6 +419,16 @@ target_compile_definitions(ldgui_sdl_demo PRIVATE
     RTE_Acceleration_Arm_2D_Alpha_Blending
 )
 
+# Match ld_apply_common_target_config: sanitizer builds use plain objects so
+# install consumers can link with the host linker. Asset sources above replace
+# the historical GCC -flto dead-code dependency for control/asset refs.
+set(_ldgui_sdl_demo_lto_flag -flto)
+set(_ldgui_sdl_demo_extra_link_opts "")
+if(CMAKE_C_FLAGS MATCHES "-fsanitize=" OR CMAKE_EXE_LINKER_FLAGS MATCHES "-fsanitize=")
+    set(_ldgui_sdl_demo_lto_flag -fno-lto)
+    set(_ldgui_sdl_demo_extra_link_opts -Wl,--gc-sections)
+endif()
+
 target_compile_options(ldgui_sdl_demo PRIVATE
     -fdiagnostics-color=always
     -w
@@ -417,14 +440,15 @@ target_compile_options(ldgui_sdl_demo PRIVATE
     -fno-ms-extensions
     -Wno-macro-redefined
     -Ofast
-    -flto
+    ${_ldgui_sdl_demo_lto_flag}
     "-D__ARM_2D_USER_APP_CFG_H__=\"ldConfig.h\""
     "-DARM_SECTION(x)="
 )
 
 target_link_options(ldgui_sdl_demo PRIVATE
     -Ofast
-    -flto
+    ${_ldgui_sdl_demo_lto_flag}
+    ${_ldgui_sdl_demo_extra_link_opts}
 )
 
 find_package(Threads REQUIRED)
@@ -501,9 +525,6 @@ function(add_tinyui_demo target source)
         ld_apply_tinyui_runtime_screen_config(${target})
     endif()
     ld_apply_common_target_config(${target})
-    if(TINYUI_ENABLE_INTERNAL_V22_DEMO_BRIDGE)
-        target_compile_definitions(${target} PRIVATE TINYUI_ENABLE_INTERNAL_V22_DEMO_BRIDGE=1)
-    endif()
     if(APPLE AND CMAKE_C_COMPILER_ID MATCHES "Clang")
         target_link_options(${target} PRIVATE
             "-Wl,-object_path_lto,${target}.lto.o"
@@ -512,41 +533,86 @@ function(add_tinyui_demo target source)
 endfunction()
 
 
-# Single tinyui_demo binary — all demos compiled in, select at runtime.
+# Single tinyui_demo binary — select demo at runtime.
 # Usage: ./tinyui_demo <demo_name>   (e.g. ./tinyui_demo arc_basic)
-#        ./tinyui_demo               (no args: runs first demo, animation_basic)
+#        ./tinyui_demo               (no args: hello_world)
+# Runner: tinyui_demo/main.c owns init/screen/process; demos only build(screen).
+#
+# M4 Task 2: only the unified runner + registry are linked. Registry provides
+# weak NOT_SUPPORTED stubs for all 29 builders. Task 3–5 re-add each migrated
+# tinyui/demo/<name>/<name>.c source (must match tinyui_demo_manifest.json).
+# Until then, check_tinyui_demo_boundary remains red on cmake_missing_demo_source
+# and unmigrated demo sources (expected).
 set(TINYUI_DEMO_DIR "${SDL_EXAMPLE_DIR}/../../tinyui/demo")
-add_tinyui_demo(tinyui_demo
-    "${SDL_EXAMPLE_DIR}/../../tinyui_demo/main.c"
-    "${SDL_EXAMPLE_DIR}/../../tinyui/port/sdl/tinyui_demo_runtime_stubs.c"
-    "${TINYUI_DEMO_DIR}/tinyui_demos.c"
+set(TINYUI_DEMO_MIGRATED_SOURCES
+    # M4 Task 3: basic / input / data demos (never GLOB).
+    "${TINYUI_DEMO_DIR}/hello_world/hello_world.c"
+    "${TINYUI_DEMO_DIR}/basic_widgets/basic_widgets.c"
+    "${TINYUI_DEMO_DIR}/settings_panel/settings_panel.c"
+    "${TINYUI_DEMO_DIR}/list_basic/list_basic.c"
+    "${TINYUI_DEMO_DIR}/table_basic/table_basic.c"
+    "${TINYUI_DEMO_DIR}/graph_basic/graph_basic.c"
+    "${TINYUI_DEMO_DIR}/calendar_basic/calendar_basic.c"
+    "${TINYUI_DEMO_DIR}/combo_box_basic/combo_box_basic.c"
+    "${TINYUI_DEMO_DIR}/keyboard_basic/keyboard_basic.c"
+    "${TINYUI_DEMO_DIR}/line_edit_basic/line_edit_basic.c"
+    "${TINYUI_DEMO_DIR}/scroll_selector_basic/scroll_selector_basic.c"
+    # M4 Task 4: instruments / resources / composite demos
     "${TINYUI_DEMO_DIR}/animation_basic/animation_basic.c"
     "${TINYUI_DEMO_DIR}/arc_basic/arc_basic.c"
-    "${TINYUI_DEMO_DIR}/basic_widgets/basic_widgets.c"
-    "${TINYUI_DEMO_DIR}/calendar_basic/calendar_basic.c"
     "${TINYUI_DEMO_DIR}/clock_basic/clock_basic.c"
-    "${TINYUI_DEMO_DIR}/combo_box_basic/combo_box_basic.c"
     "${TINYUI_DEMO_DIR}/date_time_basic/date_time_basic.c"
     "${TINYUI_DEMO_DIR}/gauge_basic/gauge_basic.c"
-    "${TINYUI_DEMO_DIR}/graph_basic/graph_basic.c"
-    "${TINYUI_DEMO_DIR}/grid_parity/grid_parity.c"
-    "${TINYUI_DEMO_DIR}/hello_world/hello_world.c"
     "${TINYUI_DEMO_DIR}/icon_slider_basic/icon_slider_basic.c"
-    "${TINYUI_DEMO_DIR}/keyboard_basic/keyboard_basic.c"
-    "${TINYUI_DEMO_DIR}/layout_flex/layout_flex.c"
-    "${TINYUI_DEMO_DIR}/layout_grid/layout_grid.c"
-    "${TINYUI_DEMO_DIR}/layout_parity/layout_parity.c"
-    "${TINYUI_DEMO_DIR}/legacy_demo0_parity/legacy_demo0_parity.c"
-    "${TINYUI_DEMO_DIR}/legacy_widget_parity/legacy_widget_parity.c"
-    "${TINYUI_DEMO_DIR}/line_edit_basic/line_edit_basic.c"
-    "${TINYUI_DEMO_DIR}/list_basic/list_basic.c"
     "${TINYUI_DEMO_DIR}/message_box_basic/message_box_basic.c"
     "${TINYUI_DEMO_DIR}/progress_bar_basic/progress_bar_basic.c"
     "${TINYUI_DEMO_DIR}/progress_wheel_basic/progress_wheel_basic.c"
     "${TINYUI_DEMO_DIR}/qrcode_basic/qrcode_basic.c"
     "${TINYUI_DEMO_DIR}/radial_menu_basic/radial_menu_basic.c"
-    "${TINYUI_DEMO_DIR}/scroll_selecter_basic/scroll_selecter_basic.c"
-    "${TINYUI_DEMO_DIR}/settings_panel/settings_panel.c"
-    "${TINYUI_DEMO_DIR}/table_basic/table_basic.c"
     "${TINYUI_DEMO_DIR}/theme_showcase/theme_showcase.c"
+    # M4 Task 5: layout / parity demos
+    "${TINYUI_DEMO_DIR}/layout_flex/layout_flex.c"
+    "${TINYUI_DEMO_DIR}/layout_grid/layout_grid.c"
+    "${TINYUI_DEMO_DIR}/layout_parity/layout_parity.c"
+    "${TINYUI_DEMO_DIR}/grid_parity/grid_parity.c"
+    "${TINYUI_DEMO_DIR}/legacy_widget_parity/legacy_widget_parity.c"
+    "${TINYUI_DEMO_DIR}/legacy_demo0_parity/legacy_demo0_parity.c"
+)
+add_tinyui_demo(tinyui_demo
+    "${SDL_EXAMPLE_DIR}/../../tinyui_demo/main.c"
+    "${SDL_EXAMPLE_DIR}/../../tinyui/port/sdl/tinyui_demo_runtime_stubs.c"
+    "${TINYUI_DEMO_DIR}/tinyui_demos.c"
+    ${TINYUI_DEMO_MIGRATED_SOURCES}
+)
+
+# M2 Task 8 / M3 Task 10: dedicated L5 evidence runners (not full pre-M4 demos).
+add_tinyui_demo(tinyui_v23_core_vertical
+    "${SDL_EXAMPLE_DIR}/../../tests/tinyui/runtime/v23_core_vertical_main.c"
+    "${SDL_EXAMPLE_DIR}/../../tinyui/port/sdl/tinyui_demo_runtime_stubs.c"
+    "${TINYUI_DEMO_DIR}/v23_core_vertical/v23_core_vertical.c"
+)
+add_tinyui_demo(tinyui_v23_value_instruments
+    "${SDL_EXAMPLE_DIR}/../../tests/tinyui/runtime/v23_value_instruments_main.c"
+    "${SDL_EXAMPLE_DIR}/../../tinyui/port/sdl/tinyui_demo_runtime_stubs.c"
+    "${TINYUI_DEMO_DIR}/v23_value_instruments/v23_value_instruments.c"
+)
+add_tinyui_demo(tinyui_v23_selection_collection
+    "${SDL_EXAMPLE_DIR}/../../tests/tinyui/runtime/v23_selection_collection_main.c"
+    "${SDL_EXAMPLE_DIR}/../../tinyui/port/sdl/tinyui_demo_runtime_stubs.c"
+    "${TINYUI_DEMO_DIR}/v23_selection_collection/v23_selection_collection.c"
+)
+add_tinyui_demo(tinyui_v23_input_data
+    "${SDL_EXAMPLE_DIR}/../../tests/tinyui/runtime/v23_input_data_main.c"
+    "${SDL_EXAMPLE_DIR}/../../tinyui/port/sdl/tinyui_demo_runtime_stubs.c"
+    "${TINYUI_DEMO_DIR}/v23_input_data/v23_input_data.c"
+)
+add_tinyui_demo(tinyui_v23_media_composite
+    "${SDL_EXAMPLE_DIR}/../../tests/tinyui/runtime/v23_media_composite_main.c"
+    "${SDL_EXAMPLE_DIR}/../../tinyui/port/sdl/tinyui_demo_runtime_stubs.c"
+    "${TINYUI_DEMO_DIR}/v23_media_composite/v23_media_composite.c"
+)
+add_tinyui_demo(tinyui_v23_theme_layout_resource
+    "${SDL_EXAMPLE_DIR}/../../tests/tinyui/runtime/v23_theme_layout_resource_main.c"
+    "${SDL_EXAMPLE_DIR}/../../tinyui/port/sdl/tinyui_demo_runtime_stubs.c"
+    "${TINYUI_DEMO_DIR}/v23_theme_layout_resource/v23_theme_layout_resource.c"
 )

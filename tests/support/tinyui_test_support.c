@@ -1,6 +1,8 @@
+/* Include private internal headers before public tinyui.h so resource/font.h
+ * can reuse the legacy font type layout without redefinition. */
+#include "internal.h"
 #include "tinyui_test_support.h"
 
-#include "internal.h"
 #include "../../../src/gui/ldBase.h"
 
 #include <assert.h>
@@ -249,32 +251,33 @@ struct tinyui_image *tinyui_backend_image_test_create_with_props_fail_before_siz
         return 0;
     }
 
-    image = tinyui_image_create(parent, props->id);
+    image = (struct tinyui_image *)tinyui_image_create((tinyui_obj_t *)parent);
     if (image == 0) {
         return 0;
     }
+    (void)props->id;
     if (props->source != 0 && tinyui_image_set_source(image, props->source) != 0) {
-        tinyui_widget_destroy(&image->widget);
+        tinyui_runtime_internal_widget_destroy(&image->widget);
         return 0;
     }
     if (props->style_class != 0
-        && tinyui_widget_set_style_class(&image->widget, props->style_class) != 0) {
-        tinyui_widget_destroy(&image->widget);
+        && tinyui_runtime_internal_widget_set_style_class(&image->widget, props->style_class) != 0) {
+        tinyui_runtime_internal_widget_destroy(&image->widget);
         return 0;
     }
-    if (tinyui_widget_set_user_data(&image->widget, props->user_data) != 0
-        || tinyui_widget_set_bg_color(&image->widget, props->bg_color) != 0
-        || tinyui_widget_set_text_color(&image->widget, props->text_color) != 0
-        || tinyui_widget_set_border_color(&image->widget, props->border_color) != 0
-        || tinyui_widget_set_radius(&image->widget, props->radius) != 0
-        || tinyui_widget_set_padding(&image->widget, props->padding) != 0) {
-        tinyui_widget_destroy(&image->widget);
+    if (tinyui_runtime_internal_widget_set_user_data(&image->widget, props->user_data) != 0
+        || tinyui_runtime_internal_widget_set_bg_color(&image->widget, props->bg_color) != 0
+        || tinyui_runtime_internal_widget_set_text_color(&image->widget, props->text_color) != 0
+        || tinyui_runtime_internal_widget_set_border_color(&image->widget, props->border_color) != 0
+        || tinyui_runtime_internal_widget_set_radius(&image->widget, props->radius) != 0
+        || tinyui_runtime_internal_widget_set_padding(&image->widget, props->padding) != 0) {
+        tinyui_runtime_internal_widget_destroy(&image->widget);
         return 0;
     }
 
     w = &image->widget;
     if (w->ld_widget == 0) {
-        tinyui_widget_destroy(&image->widget);
+        tinyui_runtime_internal_widget_destroy(&image->widget);
         return 0;
     }
     ld_base = (ldBase_t *)w->ld_widget;
@@ -299,7 +302,7 @@ struct tinyui_image *tinyui_backend_image_test_create_with_props_fail_before_siz
         && w->ld_event_bridge_sender == 0);
     g_image_snapshot.ld_pinfo_cleared   = (ld_base == 0 || ld_base->pInfo == 0);
     g_image_snapshot_valid = 1;
-    tinyui_widget_destroy(&image->widget);
+    tinyui_runtime_internal_widget_destroy(&image->widget);
     return 0;
 }
 
@@ -336,20 +339,21 @@ struct tinyui_qrcode *tinyui_backend_qrcode_test_create_with_props_fail_before_t
         return 0;
     }
 
-    qrcode = tinyui_qrcode_create(parent, props->id);
+    qrcode = (struct tinyui_qrcode *)tinyui_qrcode_create((tinyui_obj_t *)parent);
     if (qrcode == 0) {
         return 0;
     }
+    (void)props->id;
     if ((props->style_class != 0
-         && tinyui_widget_set_style_class(&qrcode->widget, props->style_class) != 0)
-        || tinyui_widget_set_user_data(&qrcode->widget, props->user_data) != 0) {
-        tinyui_widget_destroy(&qrcode->widget);
+         && tinyui_runtime_internal_widget_set_style_class(&qrcode->widget, props->style_class) != 0)
+        || tinyui_runtime_internal_widget_set_user_data(&qrcode->widget, props->user_data) != 0) {
+        tinyui_runtime_internal_widget_destroy(&qrcode->widget);
         return 0;
     }
 
     w = &qrcode->widget;
     if (w->ld_widget == 0) {
-        tinyui_widget_destroy(&qrcode->widget);
+        tinyui_runtime_internal_widget_destroy(&qrcode->widget);
         return 0;
     }
     ld_base = (ldBase_t *)w->ld_widget;
@@ -374,7 +378,7 @@ struct tinyui_qrcode *tinyui_backend_qrcode_test_create_with_props_fail_before_t
         && w->ld_event_bridge_sender == 0);
     g_qrcode_snapshot.ld_pinfo_cleared   = (ld_base == 0 || ld_base->pInfo == 0);
     g_qrcode_snapshot_valid = 1;
-    tinyui_widget_destroy(&qrcode->widget);
+    tinyui_runtime_internal_widget_destroy(&qrcode->widget);
     return 0;
 }
 

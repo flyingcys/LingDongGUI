@@ -19,58 +19,60 @@
 #include "calendar_basic/calendar_basic.h"
 #include "tinyui.h"
 
-static void make_ui(struct tinyui_window *win)
+#include <string.h>
+
+tinyui_result_t tinyui_demo_calendar_basic_build(tinyui_obj_t *screen)
 {
-    struct tinyui_label *title;
-    struct tinyui_calendar *calendar;
-    static const int cols[] = {320, 0};
-    static const int rows[] = {28, 196, 0};
+    tinyui_obj_t *title;
+    tinyui_obj_t *calendar;
+    tinyui_calendar_props_t calendar_props;
+    tinyui_result_t result;
 
-    tinyui_grid_set_columns(win, cols, 2);
-    tinyui_grid_set_rows(win, rows, 3);
-    tinyui_grid_set_gap(win, 12, 12);
-    tinyui_grid_set_align(win, TINYUI_ALIGN_START, TINYUI_ALIGN_START);
-    tinyui_window_set_padding(win, 24, 24, 24, 24);
-
-    title = tinyui_label_create(win, "title");
-    if (title != 0) {
-        tinyui_label_set_text(title, "Calendar");
-        tinyui_widget_set_size((struct tinyui_widget *)title, 220, 28);
-        tinyui_widget_set_grid_cell((struct tinyui_widget *)title,
-                                    0, 0, 1, 1,
-                                    TINYUI_ALIGN_START,
-                                    TINYUI_ALIGN_CENTER);
+    if (screen == NULL) {
+        return TINYUI_ERROR_INVALID_ARG;
     }
 
-    calendar = tinyui_calendar_create_with_props(
-        win,
-        &(struct tinyui_calendar_props){
-            .id = "calendar",
-            .year = 2026,
-            .month = 6,
-            .day = 15,
-            .width = 280,
-            .height = 180,
-            .show_header = 1,
-            .header_format = "yyyy/mm/dd",
-        });
-    if (calendar != 0) {
-        tinyui_widget_set_grid_cell((struct tinyui_widget *)calendar,
-                                    0, 1, 1, 1,
-                                    TINYUI_ALIGN_START,
-                                    TINYUI_ALIGN_CENTER);
+    result = tinyui_flex_set_flow(screen, TINYUI_FLEX_FLOW_COLUMN);
+    if (result != TINYUI_OK) {
+        return result;
     }
-}
-
-void tinyui_demo_calendar_basic(void)
-{
-    tinyui_obj_t *screen = tinyui_screen_create();
-    struct tinyui_window *win = (struct tinyui_window *)screen;
-
-    if (win == 0) {
-        return;
+    result = tinyui_flex_set_align(screen,
+                                   TINYUI_ALIGN_START,
+                                   TINYUI_ALIGN_START,
+                                   TINYUI_ALIGN_START);
+    if (result != TINYUI_OK) {
+        return result;
+    }
+    result = tinyui_flex_set_gap(screen, 12, 12);
+    if (result != TINYUI_OK) {
+        return result;
+    }
+    if (tinyui_window_set_padding(screen, 24, 24, 24, 24) != 0) {
+        return TINYUI_ERROR_BACKEND;
     }
 
-    make_ui(win);
-    tinyui_screen_load(screen);
+    memset(&calendar_props, 0, sizeof(calendar_props));
+    calendar_props.fields = TINYUI_CALENDAR_FIELD_YEAR | TINYUI_CALENDAR_FIELD_MONTH
+        | TINYUI_CALENDAR_FIELD_DAY | TINYUI_CALENDAR_FIELD_WIDTH
+        | TINYUI_CALENDAR_FIELD_HEIGHT | TINYUI_CALENDAR_FIELD_SHOW_HEADER
+        | TINYUI_CALENDAR_FIELD_HEADER_FORMAT;
+    calendar_props.year = 2026;
+    calendar_props.month = 6;
+    calendar_props.day = 15;
+    calendar_props.width = 280;
+    calendar_props.height = 180;
+    calendar_props.show_header = 1;
+    calendar_props.header_format = "yyyy/mm/dd";
+
+    title = tinyui_label_create(screen);
+    calendar = tinyui_calendar_create_with_props(screen, &calendar_props);
+    if (title == NULL || calendar == NULL) {
+        return TINYUI_ERROR_NO_MEMORY;
+    }
+
+    if (tinyui_label_set_text(title, "Calendar") != 0) {
+        return TINYUI_ERROR_BACKEND;
+    }
+
+    return TINYUI_OK;
 }

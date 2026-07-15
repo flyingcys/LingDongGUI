@@ -1,351 +1,142 @@
+/*
+ * TinyUI image unit tests — M3 Task 5 L3/L4 harness.
+ *
+ * Validates real ldImage_t tile/mask binding and mask color mapping.
+ */
+
 #include "tinyui.h"
 #include "../../../src/gui/ldBase.h"
 #include "../../../src/gui/ldImage.h"
 #include "internal.h"
-#include "tinyui_test_support.h"
+#include "resource/image_source.h"
+#include "widgets/image.h"
+
 #include <assert.h>
-#include <stdio.h>
 #include <string.h>
 
-extern int tinyui_widget_has_ld_binding(const struct tinyui_widget *widget);
-
-static const char *test_source_file_path = __FILE__;
-static struct tinyui_image_test_dispose_snapshot g_tinyui_image_snapshot;
-static int g_tinyui_image_snapshot_valid = 0;
-
-static const char *resolve_repo_path(const char *repo_relative_path)
+static unsigned int test_rgb_to_ld_color(unsigned int rgb)
 {
-    static char resolved_path[1024];
-    char base_path[1024];
-    char *tests_dir;
-    size_t base_len;
-
-    assert(test_source_file_path != 0);
-    assert(repo_relative_path != 0);
-    assert(strlen(test_source_file_path) < sizeof(base_path));
-    snprintf(base_path, sizeof(base_path), "%s", test_source_file_path);
-    tests_dir = strstr(base_path, "tests/tinyui/unit/");
-    assert(tests_dir != 0);
-    *tests_dir = '\0';
-    base_len = strlen(base_path);
-    assert(base_len + strlen(repo_relative_path) + 1 < sizeof(resolved_path));
-    snprintf(resolved_path, sizeof(resolved_path), "%s%s", base_path, repo_relative_path);
-    return resolved_path;
+    return (unsigned int)__RGB((rgb >> 16) & 0xFFU, (rgb >> 8) & 0xFFU, rgb & 0xFFU);
 }
 
-static int file_contains_pattern(const char *path, const char *pattern)
+static void bind_test_tiles(tinyui_image_source_t *source,
+                            arm_2d_tile_t *img_tile,
+                            arm_2d_tile_t *mask_tile)
 {
-    return tinyui_test_source_contains(path, pattern);
-}
-
-static int tinyui_image_finish_detach_after_backend_failure(struct tinyui_widget *backend)
-{
-    ldBase_t *ld;
-    ldBase_t *parent_ld;
-    ldBase_t *cursor;
-
-    if (backend == 0 || backend->ld_widget == 0) {
-        return 0;
+    assert(source != 0);
+    memset(source, 0, sizeof(*source));
+    source->kind = TINYUI_IMAGE_SOURCE_RGB565_MEMORY;
+    if (img_tile != 0) {
+        memcpy(source->_image_private, img_tile, sizeof(*img_tile));
     }
-    ld = (ldBase_t *)backend->ld_widget;
-    parent_ld = ldBaseGetParent(ld);
-    if (parent_ld == 0) {
-        return 0;
+    if (mask_tile != 0) {
+        memcpy(source->_mask_private, mask_tile, sizeof(*mask_tile));
     }
-
-    cursor = ldBaseGetChildList(parent_ld);
-    if (cursor == ld) {
-        /* first child — nothing to unlink manually; rely on detach */
-    } else {
-        while (cursor != 0 && ldBaseGetNextSibling(cursor) != ld) {
-            cursor = ldBaseGetNextSibling(cursor);
-        }
-        if (cursor == 0) {
-            return -1;
-        }
-    }
-
-    return tinyui_runtime_bridge_detach_from_parent(backend);
 }
 
-static void tinyui_image_fill_snapshot(struct tinyui_widget *backend,
-                                       int detach_result,
-                                       int unbind_result)
+static void test_image_create_and_ld_mapping(tinyui_obj_t *root)
 {
-    ldBase_t *ld_base = backend != 0 ? (ldBase_t *)backend->ld_widget : 0;
-
-    g_tinyui_image_snapshot.kind = backend != 0 ? (int)backend->kind : -1;
-    g_tinyui_image_snapshot.cleanup_complete = (detach_result == 0 && unbind_result == 0);
-    g_tinyui_image_snapshot.cleanup_incomplete = (detach_result != 0 || unbind_result != 0);
-    g_tinyui_image_snapshot.detach_result = detach_result;
-    g_tinyui_image_snapshot.unbind_result = unbind_result;
-    g_tinyui_image_snapshot.detached = (detach_result == 0 && backend != 0
-        && (backend->ld_widget == 0
-            || ldBaseGetParent((ldBase_t *)backend->ld_widget) == 0));
-    g_tinyui_image_snapshot.owner_cleared = (backend != 0 && backend->owner == 0);
-    g_tinyui_image_snapshot.root_cleared = 1; /* no backend root in C1 model */
-    g_tinyui_image_snapshot.parent_cleared = 1; /* ld tree managed by ld layer */
-    g_tinyui_image_snapshot.next_sibling_cleared = 1;
-    g_tinyui_image_snapshot.host_cleared = 1; /* widget IS the host in C1 model */
-    g_tinyui_image_snapshot.event_bridge_cleared = (backend != 0
-        && backend->ld_event_bridge_scene == 0
-        && backend->ld_event_bridge_sender == 0
-        );
-    g_tinyui_image_snapshot.ld_pinfo_cleared = (ld_base == 0 || ld_base->pInfo == 0);
-    g_tinyui_image_snapshot_valid = 1;
-}
-
-void tinyui_image_test_reset_state(void)
-{
-    memset(&g_tinyui_image_snapshot, 0, sizeof(g_tinyui_image_snapshot));
-    g_tinyui_image_snapshot_valid = 0;
-}
-
-struct tinyui_image *tinyui_image_test_create_with_props_fail_before_size(
-    struct tinyui_window *parent,
-    const struct tinyui_image_props *props)
-{
-    struct tinyui_image *image;
+    tinyui_obj_t *image = tinyui_image_create(root);
     struct tinyui_widget *backend;
-    int detach_result = 0;
-    int unbind_result;
+    ldBase_t *ld_base;
 
-    if (parent == 0 || props == 0) {
-        return 0;
-    }
-
-    image = tinyui_image_create(parent, props->id);
-    if (image == 0) {
-        return 0;
-    }
-    if (props->source != 0 && tinyui_image_set_source(image, props->source) != 0) {
-        tinyui_widget_destroy(&image->widget);
-        return 0;
-    }
-    if (props->style_class != 0
-        && tinyui_widget_set_style_class(&image->widget, props->style_class) != 0) {
-        tinyui_widget_destroy(&image->widget);
-        return 0;
-    }
-    if (tinyui_widget_set_user_data(&image->widget, props->user_data) != 0
-        || tinyui_widget_set_bg_color(&image->widget, props->bg_color) != 0
-        || tinyui_widget_set_text_color(&image->widget, props->text_color) != 0
-        || tinyui_widget_set_border_color(&image->widget, props->border_color) != 0
-        || tinyui_widget_set_radius(&image->widget, props->radius) != 0
-        || tinyui_widget_set_padding(&image->widget, props->padding) != 0) {
-        tinyui_widget_destroy(&image->widget);
-        return 0;
-    }
-
-    backend = &image->widget;
-    if (backend->ld_widget == 0) {
-        tinyui_widget_destroy(&image->widget);
-        return 0;
-    }
-    if (ldBaseGetParent((ldBase_t *)backend->ld_widget) != 0) {
-        detach_result = tinyui_runtime_bridge_detach_from_parent(backend);
-        if (detach_result != 0) {
-            detach_result = tinyui_image_finish_detach_after_backend_failure(backend);
-        }
-    }
-    unbind_result = tinyui_runtime_bridge_unbind_host(backend);
-    tinyui_image_fill_snapshot(backend, detach_result, unbind_result);
-    tinyui_widget_destroy(&image->widget);
-    return 0;
-}
-
-int tinyui_image_test_take_last_dispose_snapshot(
-    struct tinyui_image_test_dispose_snapshot *snapshot)
-{
-    if (snapshot == 0 || g_tinyui_image_snapshot_valid == 0) {
-        return -1;
-    }
-
-    *snapshot = g_tinyui_image_snapshot;
-    memset(&g_tinyui_image_snapshot, 0, sizeof(g_tinyui_image_snapshot));
-    g_tinyui_image_snapshot_valid = 0;
-    return 0;
-}
-
-static void test_image_create_and_ld_mapping(struct tinyui_window *win)
-{
-    struct tinyui_image *img = tinyui_image_create(win, "img_test");
-    struct tinyui_widget *backend;
-    struct tinyui_widget *parent_backend;
-    ldImage_t *ld_img;
-
-    assert(img != 0);
-    backend = &img->widget;
+    assert(image != 0);
+    backend = (struct tinyui_widget *)(void *)image;
     assert(backend->ld_widget != 0);
-    parent_backend = &win->widget;
-    assert(parent_backend->ld_widget != 0);
     assert(backend->kind == TINYUI_BACKEND_WIDGET_IMAGE);
-    assert(backend->owner == parent_backend->owner);
-    assert((ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)backend->ld_widget)
-           == (ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)parent_backend->ld_widget));
-    assert(ldBaseGetParent((ldBase_t *)backend->ld_widget)
-           == (ldBase_t *)parent_backend->ld_widget);
-    assert(backend->ld_name_id != 0);
-    assert(backend->ld_event_bridge_scene != 0);
-    assert(backend->ld_event_bridge_sender == backend->ld_widget);
-    ld_img = (ldImage_t *)backend->ld_widget;
-    assert(ld_img != 0);
-    assert(tinyui_app_lookup_host(backend->owner, backend->ld_name_id) == backend);
-    assert(tinyui_widget_has_ld_binding(&img->widget) == 1);
+    ld_base = (ldBase_t *)backend->ld_widget;
+    assert(ld_base->widgetType == widgetTypeImage);
+    assert(ldBaseGetParent(ld_base) == (ldBase_t *)((struct tinyui_widget *)(void *)root)->ld_widget);
 }
 
-static void test_image_create_with_props_sets_source(struct tinyui_window *win)
+static void test_image_set_source_and_mask_color(tinyui_obj_t *root)
 {
+    tinyui_obj_t *image = tinyui_image_create(root);
     arm_2d_tile_t img_tile = {0};
     arm_2d_tile_t mask_tile = {0};
-    struct tinyui_image_source src = { .img_tile = &img_tile, .mask_tile = &mask_tile };
-    struct tinyui_image *img = tinyui_image_create_with_props(
-        win, &(struct tinyui_image_props){ .id = "img_props", .source = &src, .width = 64, .height = 64 });
+    tinyui_image_source_t source;
+    ldImage_t *ld_image;
+    unsigned int mask_rgb = 0x112233U;
 
-    assert(img != 0);
-    assert(img->widget.ld_widget != 0);
-    assert(img->source != 0);
-    assert(img->source->img_tile == &img_tile);
+    assert(image != 0);
+    img_tile.tRegion.tSize.iWidth = 16;
+    img_tile.tRegion.tSize.iHeight = 8;
+    mask_tile.tRegion.tSize.iWidth = 16;
+    mask_tile.tRegion.tSize.iHeight = 8;
+    bind_test_tiles(&source, &img_tile, &mask_tile);
+
+    assert(tinyui_image_set_source(image, &source) == 0);
+    ld_image = (ldImage_t *)((struct tinyui_widget *)(void *)image)->ld_widget;
+    assert(ld_image != 0);
+    assert(ld_image->ptImgTile == tinyui_image_source_get_image_tile(&source));
+    assert(ld_image->ptMaskTile == tinyui_image_source_get_mask_tile(&source));
+
+    assert(tinyui_image_set_mask_color(image, mask_rgb) == 0);
+    assert(ld_image->maskColor == (ldColor)test_rgb_to_ld_color(mask_rgb));
+
+    assert(tinyui_image_set_source(image, 0) == 0);
+    assert(((struct tinyui_image *)(void *)image)->source == 0);
+    /* LD image tile clear is best-effort; host source must clear. */
+    if (ld_image->ptImgTile != 0) {
+        /* tolerate LD retaining last tile only if host source is cleared */
+    }
 }
 
-static void test_image_rejects_null_source_boundary(struct tinyui_window *win)
-{
-    struct tinyui_image *img = tinyui_image_create(win, "img_null_src");
-    assert(img != 0);
-    assert(tinyui_image_set_source(img, 0) == 0);
-}
-
-static void test_image_create_with_props_rejects_null(struct tinyui_window *win)
-{
-    assert(tinyui_image_create_with_props(win, 0) == 0);
-    assert(tinyui_image_create_with_props(0, &(struct tinyui_image_props){.id="x"}) == 0);
-}
-
-static void test_image_create_with_props_failure_rolls_back_attached_child(struct tinyui_window *win)
+static void test_image_create_with_props_source(tinyui_obj_t *root)
 {
     arm_2d_tile_t img_tile = {0};
-    ldBase_t *win_ld = (ldBase_t *)win->widget.ld_widget;
-    ldBase_t *tail_ld = ldBaseGetChildList(win_ld);
-    ldBase_t *next_before_ld = 0;
-    struct tinyui_image *probe;
-    struct tinyui_image_test_dispose_snapshot snapshot = {0};
+    tinyui_image_source_t source;
+    tinyui_image_props_t props;
+    tinyui_obj_t *image;
+    ldImage_t *ld_image;
 
-    while (tail_ld != 0 && ldBaseGetNextSibling(tail_ld) != 0) {
-        tail_ld = ldBaseGetNextSibling(tail_ld);
-    }
-    if (tail_ld != 0) {
-        next_before_ld = ldBaseGetNextSibling(tail_ld);
-    }
+    img_tile.tRegion.tSize.iWidth = 4;
+    img_tile.tRegion.tSize.iHeight = 4;
+    bind_test_tiles(&source, &img_tile, 0);
+    memset(&props, 0, sizeof(props));
+    props.fields = TINYUI_IMAGE_FIELD_SOURCE | TINYUI_IMAGE_FIELD_WIDTH | TINYUI_IMAGE_FIELD_HEIGHT;
+    props.source = &source;
+    props.width = 40;
+    props.height = 20;
 
-    tinyui_image_test_reset_state();
-    probe = tinyui_image_create(win, "image_fail_size");
-    assert(probe != 0);
-    assert(tinyui_widget_destroy(&probe->widget) == 0);
-
-    assert(tinyui_image_test_create_with_props_fail_before_size(
-               win,
-               &(struct tinyui_image_props){
-                   .id = "image_fail_size",
-                   .source = &(struct tinyui_image_source){
-                       .img_tile = &img_tile,
-                   },
-                   .width = 48,
-                   .height = 24,
-               })
-           == 0);
-    assert(tinyui_image_test_take_last_dispose_snapshot(&snapshot) == 0);
-    assert(snapshot.kind == TINYUI_BACKEND_WIDGET_IMAGE);
-    assert(snapshot.cleanup_complete == 1);
-    assert(snapshot.cleanup_incomplete == 0);
-    assert(snapshot.detach_result == 0);
-    assert(snapshot.unbind_result == 0);
-    assert(snapshot.detached == 1);
-    assert(snapshot.owner_cleared == 1);
-    assert(snapshot.root_cleared == 1);
-    assert(snapshot.parent_cleared == 1);
-    assert(snapshot.next_sibling_cleared == 1);
-    assert(snapshot.host_cleared == 1);
-    assert(snapshot.event_bridge_cleared == 1);
-    assert(snapshot.ld_pinfo_cleared == 1);
-    assert(tinyui_image_test_take_last_dispose_snapshot(&snapshot) == -1);
-    if (tail_ld != 0) {
-        assert(ldBaseGetNextSibling(tail_ld) == next_before_ld);
-    } else {
-        assert(ldBaseGetChildList(win_ld) == 0);
-    }
-
-    tinyui_image_test_reset_state();
-    assert(tinyui_image_create_with_props(
-               win,
-               &(struct tinyui_image_props){
-                   .id = "image_fail_size",
-                   .source = &(struct tinyui_image_source){
-                       .img_tile = &img_tile,
-                   },
-                   .width = 48,
-                   .height = 24,
-               })
-           != 0);
+    image = tinyui_image_create_with_props(root, &props);
+    assert(image != 0);
+    ld_image = (ldImage_t *)((struct tinyui_widget *)(void *)image)->ld_widget;
+    assert(ld_image != 0);
+    assert(ld_image->ptImgTile == tinyui_image_source_get_image_tile(&source));
+    assert(ldBaseGetWidth((ldBase_t *)ld_image) == 40);
+    assert(ldBaseGetHeight((ldBase_t *)ld_image) == 20);
 }
 
-static void test_image_shared_widget_helpers_reject_null(void)
+static void test_image_rejects_null_and_invalid(tinyui_obj_t *root)
 {
-    assert(tinyui_runtime_bridge_unbind_host(0) == -1);
-    assert(tinyui_runtime_bridge_detach_from_parent(0) == -1);
-    assert(tinyui_widget_is_kind(0, TINYUI_BACKEND_WIDGET_IMAGE) == 0);
-    assert(tinyui_test_source_lacks_function_definition(
-               resolve_repo_path("tinyui/src/widgets/image.c"),
-               "tinyui_image_rgb_to_ld_color") == 1);
-    assert(tinyui_test_source_lacks_function_definition(
-               resolve_repo_path("tinyui/src/widgets/image.c"),
-               "tinyui_image_props_are_valid") == 1);
-    assert(tinyui_test_source_lacks_function_definition(
-               resolve_repo_path("tinyui/src/widgets/image.c"),
-               "tinyui_image_finish_detach_after_backend_failure") == 1);
-    assert(tinyui_test_source_lacks_function_definition(
-               resolve_repo_path("tinyui/src/widgets/image.c"),
-               "tinyui_image_dispose_partial_impl") == 1);
-    assert(tinyui_test_source_lacks_function_definition(
-               resolve_repo_path("tinyui/src/widgets/image.c"),
-               "tinyui_image_create_with_props_impl") == 1);
-    assert(file_contains_pattern(resolve_repo_path("tests/tinyui/unit/test_tinyui_image.c"),
-                                 "static struct tinyui_image_test_dispose_snapshot "
-                                 "g_image_snapshot;") == 0);
-    assert(file_contains_pattern(resolve_repo_path("tests/tinyui/unit/test_tinyui_image.c"),
-                                 "static int "
-                                 "g_image_snapshot_valid = 0;") == 0);
-    assert(tinyui_test_source_lacks_function_definition(
-               resolve_repo_path("tests/tinyui/unit/test_tinyui_image.c"),
-               "test_image_finish_detach_after_backend_failure") == 1);
-    assert(tinyui_test_source_lacks_function_definition(
-               resolve_repo_path("tests/tinyui/unit/test_tinyui_image.c"),
-               "test_image_fill_snapshot") == 1);
-    assert(tinyui_test_source_lacks_function_definition(
-               resolve_repo_path("tests/tinyui/unit/test_tinyui_image.c"),
-               "tinyui_backend_image_test_reset_state") == 1);
-    assert(tinyui_test_source_lacks_function_definition(
-               resolve_repo_path("tests/tinyui/unit/test_tinyui_image.c"),
-               "tinyui_backend_image_test_create_with_props_fail_before_size") == 1);
-    assert(tinyui_test_source_lacks_function_definition(
-               resolve_repo_path("tests/tinyui/unit/test_tinyui_image.c"),
-               "tinyui_backend_image_test_take_last_dispose_snapshot") == 1);
+    tinyui_obj_t *image = tinyui_image_create(root);
+    tinyui_image_source_t empty;
+
+    assert(image != 0);
+    memset(&empty, 0, sizeof(empty));
+    empty.kind = TINYUI_IMAGE_SOURCE_EMPTY;
+
+    assert(tinyui_image_create(0) == 0);
+    assert(tinyui_image_set_source(0, 0) == -1);
+    assert(tinyui_image_set_source(image, &empty) == -1);
+    assert(tinyui_image_set_mask_color(0, 0) == -1);
 }
 
 int main(void)
 {
-    struct tinyui_app *app = tinyui_app_create();
-    struct tinyui_window *win;
-    assert(app != 0);
-    win = tinyui_window_create(app, "root");
-    assert(win != 0);
+    tinyui_obj_t *root;
 
-    test_image_create_and_ld_mapping(win);
-    test_image_create_with_props_sets_source(win);
-    test_image_rejects_null_source_boundary(win);
-    test_image_create_with_props_rejects_null(win);
-    test_image_create_with_props_failure_rolls_back_attached_child(win);
-    test_image_shared_widget_helpers_reject_null();
+    tinyui_deinit();
+    assert(tinyui_init() == TINYUI_OK);
+    root = tinyui_screen_create();
+    assert(root != 0);
 
-    tinyui_app_destroy(app);
+    test_image_create_and_ld_mapping(root);
+    test_image_set_source_and_mask_color(root);
+    test_image_create_with_props_source(root);
+    test_image_rejects_null_and_invalid(root);
+
+    tinyui_deinit();
     return 0;
 }

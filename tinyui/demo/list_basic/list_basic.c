@@ -19,46 +19,45 @@
 #include "list_basic/list_basic.h"
 #include "tinyui.h"
 
-static void make_ui(struct tinyui_window *win)
+tinyui_result_t tinyui_demo_list_basic_build(tinyui_obj_t *screen)
 {
-    struct tinyui_label *title;
-    struct tinyui_list *list;
-    static const int cols[] = {220, 0};
-    static const int rows[] = {32, 104, 0};
+    tinyui_obj_t *title;
+    tinyui_obj_t *list;
+    tinyui_result_t result;
 
-    tinyui_grid_set_columns(win, cols, 2);
-    tinyui_grid_set_rows(win, rows, 3);
-    tinyui_grid_set_gap(win, 8, 8);
-    tinyui_grid_set_align(win, TINYUI_ALIGN_START, TINYUI_ALIGN_START);
-
-    title = tinyui_label_create(win, "title");
-    list = tinyui_list_create(win, "list");
-
-    if (title != 0) {
-        tinyui_label_set_text(title, "List");
-        tinyui_widget_set_grid_cell((struct tinyui_widget *)title,
-                                    0, 0, 1, 1,
-                                    TINYUI_ALIGN_START,
-                                    TINYUI_ALIGN_CENTER);
+    if (screen == NULL) {
+        return TINYUI_ERROR_INVALID_ARG;
     }
 
-    if (list != 0) {
-        tinyui_list_add_item(list, "item_wifi", "Wi-Fi");
-        tinyui_list_add_item(list, "item_bluetooth", "Bluetooth");
-        tinyui_list_add_item(list, "item_display", "Display");
-        tinyui_list_set_selected_index(list, 0);
-        tinyui_widget_set_grid_cell((struct tinyui_widget *)list,
-                                    0, 1, 1, 1,
-                                    TINYUI_ALIGN_STRETCH,
-                                    TINYUI_ALIGN_START);
+    result = tinyui_flex_set_flow(screen, TINYUI_FLEX_FLOW_COLUMN);
+    if (result != TINYUI_OK) {
+        return result;
     }
-}
+    result = tinyui_flex_set_align(screen,
+                                   TINYUI_ALIGN_START,
+                                   TINYUI_ALIGN_START,
+                                   TINYUI_ALIGN_START);
+    if (result != TINYUI_OK) {
+        return result;
+    }
+    result = tinyui_flex_set_gap(screen, 8, 8);
+    if (result != TINYUI_OK) {
+        return result;
+    }
 
-void tinyui_demo_list_basic(void)
-{
-    tinyui_obj_t *screen = tinyui_screen_create();
-    struct tinyui_window *win = (struct tinyui_window *)screen;
-    if (win == 0) return;
-    make_ui(win);
-    tinyui_screen_load(screen);
+    title = tinyui_label_create(screen);
+    list = tinyui_list_create(screen);
+    if (title == NULL || list == NULL) {
+        return TINYUI_ERROR_NO_MEMORY;
+    }
+
+    if (tinyui_label_set_text(title, "List") != 0
+        || tinyui_list_add_item(list, "item_wifi", "Wi-Fi") != 0
+        || tinyui_list_add_item(list, "item_bluetooth", "Bluetooth") != 0
+        || tinyui_list_add_item(list, "item_display", "Display") != 0
+        || tinyui_list_set_selected_index(list, 0) != 0) {
+        return TINYUI_ERROR_BACKEND;
+    }
+
+    return TINYUI_OK;
 }

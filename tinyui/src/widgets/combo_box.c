@@ -22,7 +22,114 @@
 #include "../core/runtime_bridge.h"
 #include "../../../src/gui/ldBase.h"
 #include "../../../src/gui/ldComboBox.h"
+#include "../../../src/misc/ldMsg.h"
 
+#include <string.h>
+
+/* Fire unified event-pool callbacks from widget TUs (event_fire is static in core). */
+static void tinyui_selection_fire_value_changed(struct tinyui_widget *widget, int32_t value)
+{
+    struct tinyui_runtime_state *rt = tinyui_runtime_state_get();
+    struct tinyui_event_callback_pool *pool;
+    struct tinyui_event_callback_slot *ordered[TINYUI_EVENT_CB_CAPACITY];
+    size_t ordered_count = 0U;
+    size_t i;
+    uint16_t epoch;
+    uint32_t mask;
+    tinyui_obj_t *target;
+    bool was_processing;
+
+    if (rt == 0 || widget == 0 || !rt->initialized) {
+        return;
+    }
+
+    pool = &rt->event_cb_pool;
+    target = (tinyui_obj_t *)(void *)widget;
+    mask = TINYUI_EVENT_MASK(TINYUI_EVENT_VALUE_CHANGED);
+
+    epoch = (uint16_t)(pool->dispatch_epoch + 1U);
+    if (epoch == 0U) {
+        epoch = 1U;
+    }
+    pool->dispatch_epoch = epoch;
+    rt->dispatch_epoch = epoch;
+
+    for (i = 0; i < (size_t)TINYUI_EVENT_CB_CAPACITY; ++i) {
+        struct tinyui_event_callback_slot *slot = &pool->slots[i];
+        if (slot->allocated == 0U || slot->cb == 0) {
+            continue;
+        }
+        if (slot->object != target) {
+            continue;
+        }
+        if ((slot->event_mask & mask) == 0U) {
+            continue;
+        }
+        if (!(slot->born_epoch < epoch)) {
+            continue;
+        }
+        ordered[ordered_count++] = slot;
+    }
+
+    for (i = 1; i < ordered_count; ++i) {
+        size_t j = i;
+        struct tinyui_event_callback_slot *cur = ordered[i];
+        while (j > 0U &&
+               ordered[j - 1U]->registration_order > cur->registration_order) {
+            ordered[j] = ordered[j - 1U];
+            j -= 1U;
+        }
+        ordered[j] = cur;
+    }
+
+    was_processing = rt->processing;
+    rt->processing = true;
+    for (i = 0; i < ordered_count; ++i) {
+        struct tinyui_event_callback_slot *slot = ordered[i];
+        uint16_t generation;
+        tinyui_event_cb_t cb;
+        tinyui_event_t event;
+
+        if (slot->allocated == 0U || slot->cb == 0) {
+            continue;
+        }
+        if (slot->object != target || (slot->event_mask & mask) == 0U) {
+            continue;
+        }
+        if (!(slot->born_epoch < epoch)) {
+            continue;
+        }
+        if (widget->deleting != 0U) {
+            break;
+        }
+
+        generation = slot->generation;
+        cb = slot->cb;
+        memset(&event, 0, sizeof(event));
+        event.code = TINYUI_EVENT_VALUE_CHANGED;
+        event.target = target;
+        event.user_data = slot->user_data;
+        event.data.value = value;
+        cb(&event);
+
+        if (slot->allocated == 0U || slot->generation != generation) {
+            continue;
+        }
+        if (widget->deleting != 0U) {
+            break;
+        }
+    }
+    rt->processing = was_processing;
+    if (!was_processing && rt->delete_pending != 0 && rt->delete_target != 0) {
+        tinyui_obj_t *delete_target = rt->delete_target;
+        struct tinyui_widget *delete_widget =
+            (struct tinyui_widget *)(void *)delete_target;
+
+        rt->delete_pending = 0;
+        rt->delete_target = 0;
+        (void)tinyui_runtime_internal_widget_destroy(delete_widget);
+    }
+}
 
 static struct tinyui_combo_box *tinyui_combo_box_as_combo_box(tinyui_obj_t *obj)
 {
@@ -109,6 +216,7 @@ static bool tinyui_combo_box_native_slot(struct ld_scene_t *scene, ldMsg_t msg)
     if (combo_box->cb != 0) {
         combo_box->cb(combo_box, selected_index, combo_box->user_data);
     }
+    tinyui_selection_fire_value_changed(w, (int32_t)selected_index);
     return false;
 }
 
@@ -341,31 +449,72 @@ tinyui_obj_t *tinyui_combo_box_create_with_props(tinyui_obj_t *parent,
 int tinyui_combo_box_add_item(tinyui_obj_t *combo_box_obj, const char *id, const char *text)
 {
     struct tinyui_combo_box *combo_box = tinyui_combo_box_as_combo_box(combo_box_obj);
-    if (combo_box == 0) { return -1; }
-
+    ldComboBox_t *ld_combo_box;
     int index;
     int next_count;
 
-    if (combo_box == 0 || id == 0 || text == 0 || combo_box->item_count >= combo_box->item_max) {
+    if (combo_box == 0 || id == 0 || text == 0) {
+        tinyui_runtime_set_last_result(TINYUI_ERROR_INVALID_ARG);
+        return -1;
+    }
+    if (combo_box->widget.ld_widget == 0 ||
+        combo_box->widget.kind != TINYUI_BACKEND_WIDGET_COMBO_BOX) {
+        tinyui_runtime_set_last_result(TINYUI_ERROR_INVALID_ARG);
+        return -1;
+    }
+    if (combo_box->item_count >= combo_box->item_max ||
+        combo_box->item_count >= TINYUI_LIST_MAX_ITEMS) {
+        tinyui_runtime_set_last_result(TINYUI_ERROR_CAPACITY);
         return -1;
     }
 
+    ld_combo_box = (ldComboBox_t *)combo_box->widget.ld_widget;
     index = combo_box->item_count;
-    combo_box->backend_item_ids[index] = id;
-    combo_box->backend_item_texts[index] = (const unsigned char *)text;
     next_count = index + 1;
-    if (tinyui_combo_box_set_items(combo_box,
-                                   combo_box->backend_item_ids,
-                                   combo_box->backend_item_texts,
-                                   next_count) != 0) {
-        combo_box->backend_item_ids[index] = 0;
-        combo_box->backend_item_texts[index] = 0;
-        return -1;
+
+    /* Prefer dynamic LD path when itemMax has been configured. */
+    if (ld_combo_box->itemMax > 0 && ld_combo_box->isStatic == false) {
+        if (ld_combo_box->itemCount >= ld_combo_box->itemMax) {
+            tinyui_runtime_set_last_result(TINYUI_ERROR_CAPACITY);
+            return -1;
+        }
+        ldComboBoxAddItem(ld_combo_box, (uint8_t *)text);
+        if ((int)ld_combo_box->itemCount != next_count) {
+            tinyui_runtime_set_last_result(TINYUI_ERROR_CAPACITY);
+            return -1;
+        }
+        combo_box->backend_item_ids[index] = id;
+        combo_box->backend_item_texts[index] = (const unsigned char *)text;
+        combo_box->widget.list_item_count = (uint16_t)next_count;
+    } else if (ld_combo_box->itemMax > 0 && ld_combo_box->isStatic == true &&
+               ld_combo_box->itemCount == 0 && combo_box->item_count == 0) {
+        /* After set_item_max, first dynamic add uses AddItem which flips isStatic. */
+        ldComboBoxAddItem(ld_combo_box, (uint8_t *)text);
+        if ((int)ld_combo_box->itemCount != 1) {
+            tinyui_runtime_set_last_result(TINYUI_ERROR_CAPACITY);
+            return -1;
+        }
+        combo_box->backend_item_ids[index] = id;
+        combo_box->backend_item_texts[index] = (const unsigned char *)text;
+        combo_box->widget.list_item_count = 1;
+    } else {
+        combo_box->backend_item_ids[index] = id;
+        combo_box->backend_item_texts[index] = (const unsigned char *)text;
+        if (tinyui_combo_box_set_items(combo_box,
+                                       combo_box->backend_item_ids,
+                                       combo_box->backend_item_texts,
+                                       next_count) != 0) {
+            combo_box->backend_item_ids[index] = 0;
+            combo_box->backend_item_texts[index] = 0;
+            tinyui_runtime_set_last_result(TINYUI_ERROR_BACKEND);
+            return -1;
+        }
     }
 
     combo_box->items[index].id = id;
     combo_box->items[index].text = text;
     combo_box->item_count = next_count;
+    tinyui_runtime_set_last_result(TINYUI_OK);
     return 0;
 }
 
@@ -573,6 +722,7 @@ int tinyui_combo_box_set_item_max(tinyui_obj_t *combo_box_obj, int item_max)
     ld_combo_box = (ldComboBox_t *)combo_box->widget.ld_widget;
     ldComboBoxSetItemMax(ld_combo_box, (uint8_t)item_max);
     combo_box->item_max = item_max;
+    tinyui_runtime_set_last_result(TINYUI_OK);
     return 0;
 }
 

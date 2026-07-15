@@ -10,15 +10,14 @@ struct tinyui_widget;
 struct tinyui_app;
 struct tinyui_font;
 
+/* When public resource/font.h was already included, keep its font type layout.
+ * Private bridge/unit code that includes this header first still gets the
+ * legacy layout used by pre-M4 widget implementations. */
+#ifndef TINYUI_FONT_H
 enum tinyui_font_kind {
     TINYUI_FONT_KIND_FAMILY = 0,
     TINYUI_FONT_KIND_VRES = 1,
 };
-
-typedef void (*tinyui_value_changed_cb)(tinyui_obj_t *widget,
-                                        int value,
-                                        void *user_data);
-typedef void (*tinyui_event_cb)(tinyui_obj_t *widget, void *user_data);
 
 struct tinyui_font {
     const char *family;
@@ -26,6 +25,12 @@ struct tinyui_font {
     enum tinyui_font_kind kind;
     unsigned int vres_addr;
 };
+#endif
+
+typedef void (*tinyui_value_changed_cb)(tinyui_obj_t *widget,
+                                        int value,
+                                        void *user_data);
+typedef void (*tinyui_event_cb)(tinyui_obj_t *widget, void *user_data);
 
 struct tinyui_point {
     int x;

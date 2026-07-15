@@ -19,14 +19,23 @@
 #ifndef TINYUI_BUTTON_H
 #define TINYUI_BUTTON_H
 
+#include "tinyui_config.h"
+#if !TINYUI_ENABLE_BUTTON
+#  ifndef TINYUI_INTERNAL_FEATURE_HEADER
+#  error "TINYUI_ENABLE_BUTTON is disabled"
+#  endif
+#endif
+
 #include "core/obj.h"
 #include <stdint.h>
 
+#include "core/event.h"
+
 #ifndef TINYUI_LEGACY_EVENT_CB_DEFINED
 #define TINYUI_LEGACY_EVENT_CB_DEFINED
+/* Legacy widget-style callback kept for props/compat; set_on_* uses tinyui_event_cb_t. */
 typedef void (*tinyui_event_cb)(tinyui_obj_t *obj, void *user_data);
 #endif
-
 
 struct tinyui_font;
 struct tinyui_image_source;
@@ -139,10 +148,11 @@ int tinyui_button_get_pressed_by_name_id(const tinyui_obj_t *root, int name_id, 
 
 int tinyui_button_get_action_state_by_name_id(const tinyui_obj_t *root, int name_id, enum tinyui_button_action_state action);
 
-int tinyui_button_set_on_clicked(tinyui_obj_t *button, tinyui_event_cb cb, void *user_data);
+/* Narrow forward to tinyui_obj_add_event_cb (unified pool). Replace semantics. */
+int tinyui_button_set_on_clicked(tinyui_obj_t *button, tinyui_event_cb_t cb, void *user_data);
 
-int tinyui_button_set_on_pressed(tinyui_obj_t *button, tinyui_event_cb cb, void *user_data);
+int tinyui_button_set_on_pressed(tinyui_obj_t *button, tinyui_event_cb_t cb, void *user_data);
 
-int tinyui_button_set_on_released(tinyui_obj_t *button, tinyui_event_cb cb, void *user_data);
+int tinyui_button_set_on_released(tinyui_obj_t *button, tinyui_event_cb_t cb, void *user_data);
 
 #endif /* TINYUI_BUTTON_H */

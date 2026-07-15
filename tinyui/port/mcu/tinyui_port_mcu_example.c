@@ -9,22 +9,21 @@
  * nothing and can never break the build.  Copy the pieces you need into your
  * own project and wire them to your real LCD driver and SysTick.
  *
- * 用户模型(与 tests 的 mcu_host_smoke 一致,对齐 LVGL:帧循环归 core):
+ * 用户模型（canonical v2.3，对齐 LVGL 风格；帧循环归 core）：
  *   - MCU 端无需定义任何 host 帧步进符号。
- *   - 建 app:tinyui_app_create()。
- *   - 首帧前注册能力:
- *       * 显示配置    (tinyui_display_set_config)
- *       * 显示 flush  (tinyui_display_set_flush_callback)
- *       * tick 源     (tinyui_tick_set_source)
- *       * 可选:os 锁/延时、触摸 tinyui_input_push_pointer
- *   - 然后 for(;;) 泵帧:tinyui_backend_neutral_step(app) —— 平台无关帧循环,
- *     未注册 read_cb/present_cb 时直接经 flush 回调把像素刷到屏。
+ *   - 使用 tinyui_init() / tinyui_screen_create() / tinyui_screen_load() /
+ *     tinyui_process()，不要使用已删除的 tinyui_app_* 迁移桥。
+ *   - 首帧前注册能力（port 细节仍延期，见 docs/v2.3/deferred-port-work.md）：
+ *       * 显示配置 / flush / tick 等 integration 头
+ *       * 可选：os 锁/延时、触摸 tinyui_input_send_* / push
+ *   - 然后 for(;;) { tinyui_process(&next_ms); } 由用户/port 负责 sleep。
+ *
+ * 注意：本文件不是 L6 或生产可用证明；M4 SDL consumer/demo 也只是测试宿主证据。
  */
 
 #if defined(TINYUI_PORT_MCU_EXAMPLE)
 
 #include "tinyui.h"
-#include "tinyui_ldgui_port.h"  /* tinyui_backend_neutral_step / _shutdown */
 
 #include <stdint.h>
 
@@ -52,66 +51,64 @@ static unsigned int mcu_tick_ms(void *user_data)
     return (unsigned int)g_systick_ms;
 }
 
-/* ── Optional: arm_2d reference clock override ─────────────────────────────────
- * tinyui_port_mcu.c already provides a WEAK 1 kHz (1 ms) default. If your board
- * timer runs at a different frequency, define this STRONG version to override it
- * (arm_2d derives its millisecond unit as freq/1000):
- *
- *   uint32_t arm_2d_helper_get_reference_clock_frequency(void) { return MY_HZ; }
+/*
+ * One-shot port wiring skeleton.
+ * 真实 display/tick integration 签名以 integration/* 与 deferred-port-work 为准；
+ * 此处仅示意“在 init 之后、process 之前完成注册”。
  */
-
-/* ── One-shot port wiring ─────────────────────────────────────────────────── */
-int tinyui_port_mcu_init(struct tinyui_app *app, int width, int height)
+static int tinyui_port_mcu_board_setup(int width, int height)
 {
-    struct tinyui_display_config cfg;
-
-    cfg.width = width;
-    cfg.height = height;
-    cfg.color_format = TINYUI_COLOR_FORMAT_RGB565;
-    cfg.buffer_height = 40;   /* PFB tile height; tune for your RAM budget. */
-    cfg.user_data = NULL;
-
-    if (tinyui_display_set_config(app, &cfg) != 0) {
-        return -1;
-    }
-    if (tinyui_display_set_flush_callback(app, mcu_lcd_flush, NULL) != 0) {
-        return -1;
-    }
-    if (tinyui_tick_set_source(app, mcu_tick_ms, NULL) != 0) {
-        return -1;
-    }
+    (void)width;
+    (void)height;
+    (void)mcu_lcd_flush;
+    (void)mcu_tick_ms;
+    /* board_init(); systick_init_1ms(); lcd_init();
+     * tinyui_display_set_config(...);
+     * tinyui_display_set_flush_callback(..., mcu_lcd_flush, NULL);
+     * tinyui_tick_set_source(..., mcu_tick_ms, NULL);
+     */
     return 0;
 }
 
 /* ── Bare-metal main loop skeleton ────────────────────────────────────────── */
 int main(void)
 {
-    /* board_init(); systick_init_1ms(); lcd_init(); */
+    uint32_t next_ms = 0;
 
-    struct tinyui_app *app = tinyui_app_create();
-    if (app == NULL) {
+    if (tinyui_init() != TINYUI_OK) {
         return 1;
     }
 
-    if (tinyui_port_mcu_init(app, 480, 320) != 0) {
+    if (tinyui_port_mcu_board_setup(480, 320) != 0) {
+        tinyui_deinit();
         return 1;
     }
 
-    /* Build your UI with the TinyUI public API, e.g.: */
-    struct tinyui_window *win = tinyui_window_create(app, "root");
-    struct tinyui_label *label = tinyui_label_create(win, "title");
-    tinyui_label_set_text(label, "Hello MCU");
-    tinyui_app_set_window(app, win);
+    /* Build UI with the TinyUI public API only. */
+    tinyui_obj_t *screen = tinyui_screen_create();
+    if (screen == 0) {
+        tinyui_deinit();
+        return 1;
+    }
 
-    /* Frame pump: core 的平台无关帧循环直接经 flush 回调出像素。 */
+    tinyui_obj_t *label = tinyui_label_create(screen);
+    if (label != 0) {
+        (void)tinyui_obj_set_text(label, "Hello MCU");
+    }
+
+    if (tinyui_screen_load(screen, TINYUI_SCREEN_TRANSITION_NONE, 0) != TINYUI_OK) {
+        tinyui_deinit();
+        return 1;
+    }
+
     for (;;) {
-        if (tinyui_backend_neutral_step(app) < 0) {
+        if (tinyui_process(&next_ms) != TINYUI_OK) {
             break;
         }
+        /* board_sleep_ms(next_ms); — RTOS/idle 由集成方持有 */
     }
 
-    tinyui_backend_neutral_shutdown(app);
-    tinyui_app_destroy(app);
+    tinyui_deinit();
     return 0;
 }
 

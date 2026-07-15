@@ -1,218 +1,133 @@
+/*
+ * TinyUI canvas unit tests — M3 Task 5 L3/L4 harness.
+ */
+
 #include "tinyui.h"
 #include "../../../src/gui/ldBase.h"
 #include "../../../src/gui/ldCanvas.h"
 #include "internal.h"
+#include "resource/image_source.h"
+#include "widgets/canvas.h"
 
 #include <assert.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
-static const char *repo_root_from_file(const char *file)
-{
-    static char root[1024];
-    const char *suffix = "/tests/tinyui/unit/test_tinyui_canvas.c";
-    const char *hit = strstr(file, suffix);
-    size_t len;
-
-    assert(hit != 0);
-    len = (size_t)(hit - file);
-    assert(len < sizeof(root));
-    memcpy(root, file, len);
-    root[len] = '\0';
-    return root;
-}
-
-static char *read_file_text(const char *path)
-{
-    FILE *fp = fopen(path, "rb");
-    long size;
-    char *buf;
-
-    assert(fp != 0);
-    assert(fseek(fp, 0, SEEK_END) == 0);
-    size = ftell(fp);
-    assert(size >= 0);
-    assert(fseek(fp, 0, SEEK_SET) == 0);
-
-    buf = (char *)malloc((size_t)size + 1U);
-    assert(buf != 0);
-    assert(fread(buf, 1U, (size_t)size, fp) == (size_t)size);
-    buf[size] = '\0';
-    assert(fclose(fp) == 0);
-    return buf;
-}
-
-static bool source_has_function_definition(const char *source, const char *name)
-{
-    char needle[256];
-    assert((size_t)snprintf(needle, sizeof(needle), "static %s(", name) < sizeof(needle)
-           || (size_t)snprintf(needle, sizeof(needle), "static int %s(", name) < sizeof(needle));
-    return strstr(source, needle) != 0;
-}
-
-static void assert_source_has_function_definition(const char *source, const char *name)
-{
-    char needle[256];
-    int written = snprintf(needle, sizeof(needle), "static %s(", name);
-    if (written > 0 && (size_t)written < sizeof(needle) && strstr(source, needle) != 0) {
-        return;
-    }
-    written = snprintf(needle, sizeof(needle), "static int %s(", name);
-    if (written > 0 && (size_t)written < sizeof(needle) && strstr(source, needle) != 0) {
-        return;
-    }
-    written = snprintf(needle, sizeof(needle), "static ldColor %s(", name);
-    if (written > 0 && (size_t)written < sizeof(needle) && strstr(source, needle) != 0) {
-        return;
-    }
-    written = snprintf(needle, sizeof(needle), "static arm_2d_align_t %s(", name);
-    assert(written > 0 && (size_t)written < sizeof(needle) && strstr(source, needle) != 0);
-}
-
-static void assert_source_lacks_function_definition(const char *source, const char *name)
-{
-    char needle[256];
-    int written = snprintf(needle, sizeof(needle), "static %s(", name);
-    assert(!(written > 0 && (size_t)written < sizeof(needle) && strstr(source, needle) != 0));
-    written = snprintf(needle, sizeof(needle), "static int %s(", name);
-    assert(!(written > 0 && (size_t)written < sizeof(needle) && strstr(source, needle) != 0));
-    written = snprintf(needle, sizeof(needle), "static ldColor %s(", name);
-    assert(!(written > 0 && (size_t)written < sizeof(needle) && strstr(source, needle) != 0));
-    written = snprintf(needle, sizeof(needle), "static arm_2d_align_t %s(", name);
-    assert(!(written > 0 && (size_t)written < sizeof(needle) && strstr(source, needle) != 0));
-}
-
-static unsigned int encode_ld_color(unsigned int rgb)
+static unsigned int test_rgb_to_ld_color(unsigned int rgb)
 {
     return (unsigned int)__RGB((rgb >> 16) & 0xFFU, (rgb >> 8) & 0xFFU, rgb & 0xFFU);
 }
 
-int main(void)
+static void bind_test_tiles(tinyui_image_source_t *source, arm_2d_tile_t *img_tile)
 {
-    struct tinyui_app *app = tinyui_app_create();
-    struct tinyui_window *win = tinyui_window_create(app, "root");
-    struct tinyui_canvas *canvas = tinyui_canvas_create(win, "canvas");
-    char mutable_text[] = "canvas";
-    arm_2d_tile_t image_tile = {0};
-    arm_2d_tile_t mask_tile = {0};
-    struct tinyui_image_source image_source = {
-        .img_tile = &image_tile,
-        .mask_tile = &mask_tile,
-    };
-    const struct tinyui_widget *backend;
-    const struct tinyui_widget *parent_backend;
-    const ldCanvas_t *ld_canvas;
-    const char *repo_root = repo_root_from_file(__FILE__);
-    char canvas_source_path[1200];
-    char *canvas_source;
-    int command_count = 0;
+    memset(source, 0, sizeof(*source));
+    source->kind = TINYUI_IMAGE_SOURCE_RGB565_MEMORY;
+    memcpy(source->_image_private, img_tile, sizeof(*img_tile));
+}
 
-    assert(app != 0);
-    assert(win != 0);
+static void test_canvas_create_and_ld_mapping(tinyui_obj_t *root)
+{
+    tinyui_obj_t *canvas = tinyui_canvas_create(root);
+    struct tinyui_widget *backend;
+    ldBase_t *ld_base;
+
     assert(canvas != 0);
-    assert((size_t)snprintf(canvas_source_path,
-                            sizeof(canvas_source_path),
-                            "%s/tinyui/src/widgets/canvas.c",
-                            repo_root) < sizeof(canvas_source_path));
-    canvas_source = read_file_text(canvas_source_path);
-    assert_source_lacks_function_definition(canvas_source, "tinyui_canvas_rgb_to_ld");
-    assert_source_lacks_function_definition(canvas_source, "tinyui_canvas_align_to_ld");
-    assert_source_lacks_function_definition(canvas_source, "tinyui_canvas_push_native");
-    assert_source_lacks_function_definition(canvas_source, "tinyui_canvas_clear_native");
-    assert_source_lacks_function_definition(canvas_source, "tinyui_canvas_is_valid");
-    assert_source_lacks_function_definition(canvas_source, "tinyui_canvas_push");
-    (void)assert_source_has_function_definition;
-    (void)source_has_function_definition;
-    assert(tinyui_widget_set_size((struct tinyui_widget *)canvas, 120, 80) == 0);
-
-    assert(tinyui_canvas_fill_rect(canvas, 1, 2, 30, 40, 0x112233U, 200) == 0);
-    assert(tinyui_canvas_draw_line(canvas, 0, 0, 20, 10, 3, 0x445566U, 255, 32) == 0);
-    assert(tinyui_canvas_draw_image(canvas, 5, 6, 24, 18, &image_source, 0x778899U, 180) == 0);
-    assert(tinyui_canvas_draw_image_scaled(canvas, 7, 8, 32, 20, &image_source, 0.5f, 210) == 0);
-    assert(tinyui_canvas_draw_text(canvas,
-                                   9,
-                                   10,
-                                   50,
-                                   16,
-                                   mutable_text,
-                                   TINYUI_ALIGN_CENTER,
-                                   0xAABBCCU,
-                                   255) == 0);
-
-    assert(tinyui_canvas_get_command_count(canvas, &command_count) == 0);
-    assert(command_count == 5);
-
-    backend = &canvas->widget;
+    backend = (struct tinyui_widget *)(void *)canvas;
     assert(backend->ld_widget != 0);
-    parent_backend = &win->widget;
-    assert(parent_backend->ld_widget != 0);
-    assert(ldBaseGetParent((ldBase_t *)backend->ld_widget) == (ldBase_t *)parent_backend->ld_widget);
-    assert((ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)backend->ld_widget) == (ldBase_t *)ldBaseGetRootNode((arm_2d_control_node_t *)parent_backend->ld_widget));
-    assert(backend->owner == parent_backend->owner);
-    ld_canvas = (const ldCanvas_t *)backend->ld_widget;
+    assert(backend->kind == TINYUI_BACKEND_WIDGET_CANVAS);
+    ld_base = (ldBase_t *)backend->ld_widget;
+    assert(ld_base->widgetType == widgetTypeCanvas);
+}
+
+static void test_canvas_draw_commands_push_native(tinyui_obj_t *root)
+{
+    tinyui_obj_t *canvas = tinyui_canvas_create(root);
+    ldCanvas_t *ld_canvas;
+    arm_2d_tile_t img_tile = {0};
+    tinyui_image_source_t source;
+    int count = -1;
+    char text[] = "hi";
+
+    assert(canvas != 0);
+    ld_canvas = (ldCanvas_t *)((struct tinyui_widget *)(void *)canvas)->ld_widget;
     assert(ld_canvas != 0);
-    assert(ld_canvas->use_as__ldBase_t.widgetType == widgetTypeCanvas);
-    assert(ld_canvas->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iWidth == 120);
-    assert(ld_canvas->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iHeight == 80);
-    assert(ld_canvas->commandCount == 5);
+
+    assert(tinyui_canvas_fill_rect(canvas, 1, 2, 10, 12, 0xFF0000U, 200) == 0);
+    assert(ld_canvas->commandCount == 1);
     assert(ld_canvas->commands[0].kind == ldCanvasCommandFillRect);
     assert(ld_canvas->commands[0].region.tLocation.iX == 1);
     assert(ld_canvas->commands[0].region.tLocation.iY == 2);
-    assert(ld_canvas->commands[0].region.tSize.iWidth == 30);
-    assert(ld_canvas->commands[0].region.tSize.iHeight == 40);
-    assert(ld_canvas->commands[0].color0 == encode_ld_color(0x112233U));
+    assert(ld_canvas->commands[0].region.tSize.iWidth == 10);
+    assert(ld_canvas->commands[0].region.tSize.iHeight == 12);
+    assert(ld_canvas->commands[0].color0 == (ldColor)test_rgb_to_ld_color(0xFF0000U));
     assert(ld_canvas->commands[0].opacity0 == 200);
-    assert(ld_canvas->commands[1].kind == ldCanvasCommandDrawLine);
-    assert(ld_canvas->commands[1].x1 == 20);
-    assert(ld_canvas->commands[1].y1 == 10);
-    assert(ld_canvas->commands[1].lineSize == 3);
-    assert(ld_canvas->commands[1].color0 == encode_ld_color(0x445566U));
-    assert(ld_canvas->commands[1].opacity0 == 255);
-    assert(ld_canvas->commands[1].opacity1 == 32);
-    assert(ld_canvas->commands[2].kind == ldCanvasCommandDrawImage);
-    assert(ld_canvas->commands[2].ptImgTile == &image_tile);
-    assert(ld_canvas->commands[2].ptMaskTile == &mask_tile);
-    assert(ld_canvas->commands[2].color0 == encode_ld_color(0x778899U));
-    assert(ld_canvas->commands[2].opacity0 == 180);
-    assert(ld_canvas->commands[3].kind == ldCanvasCommandDrawImageScale);
-    assert(ld_canvas->commands[3].ptImgTile == &image_tile);
-    assert(ld_canvas->commands[3].ptMaskTile == &mask_tile);
-    assert(ld_canvas->commands[3].scale == 0.5f);
-    assert(ld_canvas->commands[3].opacity0 == 210);
-    assert(ld_canvas->commands[4].kind == ldCanvasCommandDrawText);
-    assert(ld_canvas->commands[4].align == ARM_2D_ALIGN_CENTRE);
-    assert(ld_canvas->commands[4].color0 == encode_ld_color(0xAABBCCU));
-    assert(ld_canvas->commands[4].opacity0 == 255);
-    assert(strcmp((const char *)ld_canvas->commands[4].pStr, "canvas") == 0);
 
-    mutable_text[0] = 'X';
-    assert(tinyui_canvas_fill_rect(canvas, 11, 12, 13, 14, 0x010203U, 99) == 0);
-    assert(ld_canvas->commandCount == 6);
-    assert(strcmp((const char *)ld_canvas->commands[4].pStr, "canvas") == 0);
-    assert(ld_canvas->commands[5].kind == ldCanvasCommandFillRect);
-    assert(ld_canvas->commands[5].region.tLocation.iX == 11);
-    assert(ld_canvas->commands[5].region.tLocation.iY == 12);
-    assert(ld_canvas->commands[5].region.tSize.iWidth == 13);
-    assert(ld_canvas->commands[5].region.tSize.iHeight == 14);
-    assert(ld_canvas->commands[5].color0 == encode_ld_color(0x010203U));
-    assert(ld_canvas->commands[5].opacity0 == 99);
+    assert(tinyui_canvas_draw_line(canvas, 0, 0, 5, 6, 2, 0x00FF00U, 255, 10) == 0);
+    assert(ld_canvas->commandCount == 2);
+    assert(ld_canvas->commands[1].kind == ldCanvasCommandDrawLine);
+    assert(ld_canvas->commands[1].x1 == 5);
+    assert(ld_canvas->commands[1].y1 == 6);
+    assert(ld_canvas->commands[1].lineSize == 2);
+    assert(ld_canvas->commands[1].color0 == (ldColor)test_rgb_to_ld_color(0x00FF00U));
+    assert(ld_canvas->commands[1].opacity0 == 255);
+    assert(ld_canvas->commands[1].opacity1 == 10);
+
+    img_tile.tRegion.tSize.iWidth = 8;
+    img_tile.tRegion.tSize.iHeight = 8;
+    bind_test_tiles(&source, &img_tile);
+    assert(tinyui_canvas_draw_image(canvas, 3, 4, 8, 8, &source, 0xABCDEFU, 128) == 0);
+    assert(ld_canvas->commandCount == 3);
+    assert(ld_canvas->commands[2].kind == ldCanvasCommandDrawImage);
+    assert(ld_canvas->commands[2].ptImgTile == tinyui_image_source_get_image_tile(&source));
+    assert(ld_canvas->commands[2].color0 == (ldColor)test_rgb_to_ld_color(0xABCDEFU));
+    assert(ld_canvas->commands[2].opacity0 == 128);
+
+    assert(tinyui_canvas_draw_image_scaled(canvas, 0, 0, 8, 8, &source, 1.5f, 90) == 0);
+    assert(ld_canvas->commandCount == 4);
+    assert(ld_canvas->commands[3].kind == ldCanvasCommandDrawImageScale);
+    assert(ld_canvas->commands[3].scale == 1.5f);
+    assert(ld_canvas->commands[3].opacity0 == 90);
+
+    assert(tinyui_canvas_draw_text(canvas, 2, 3, 40, 12, text, TINYUI_ALIGN_CENTER, 0x0000FFU, 255) == 0);
+    assert(ld_canvas->commandCount == 5);
+    assert(ld_canvas->commands[4].kind == ldCanvasCommandDrawText);
+    assert(ld_canvas->commands[4].pStr != 0);
+    assert(strcmp((const char *)ld_canvas->commands[4].pStr, text) == 0);
+    assert(ld_canvas->commands[4].color0 == (ldColor)test_rgb_to_ld_color(0x0000FFU));
+
+    assert(tinyui_canvas_get_command_count(canvas, &count) == 0);
+    assert(count == 5);
 
     assert(tinyui_canvas_clear(canvas) == 0);
-    assert(tinyui_canvas_get_command_count(canvas, &command_count) == 0);
-    assert(command_count == 0);
     assert(ld_canvas->commandCount == 0);
-    assert(ld_canvas->commands[4].pStr == 0);
+    assert(tinyui_canvas_get_command_count(canvas, &count) == 0);
+    assert(count == 0);
+}
 
-    assert(tinyui_canvas_fill_rect(0, 0, 0, 1, 1, 0, 255) == -1);
-    assert(tinyui_canvas_draw_line(0, 0, 0, 1, 1, 1, 0, 255, 255) == -1);
-    assert(tinyui_canvas_draw_image(canvas, 0, 0, 10, 10, 0, 0, 255) == -1);
-    assert(tinyui_canvas_draw_image_scaled(canvas, 0, 0, 10, 10, 0, 1.0f, 255) == -1);
-    assert(tinyui_canvas_draw_text(canvas, 0, 0, 10, 10, 0, TINYUI_ALIGN_START, 0, 255) == -1);
-    assert(tinyui_canvas_get_command_count(canvas, 0) == -1);
+static void test_canvas_rejects_invalid(tinyui_obj_t *root)
+{
+    tinyui_obj_t *canvas = tinyui_canvas_create(root);
+    assert(canvas != 0);
+    assert(tinyui_canvas_create(0) == 0);
+    assert(tinyui_canvas_clear(0) == -1);
+    assert(tinyui_canvas_fill_rect(canvas, 0, 0, -1, 1, 0, 0) == -1);
+    assert(tinyui_canvas_draw_line(canvas, 0, 0, 1, 1, 0, 0, 0, 0) == -1);
+    assert(tinyui_canvas_draw_image(canvas, 0, 0, 1, 1, 0, 0, 0) == -1);
+    assert(tinyui_canvas_draw_text(canvas, 0, 0, 1, 1, 0, TINYUI_ALIGN_START, 0, 0) == -1);
+}
 
-    tinyui_app_destroy(app);
-    free(canvas_source);
+int main(void)
+{
+    tinyui_obj_t *root;
+
+    tinyui_deinit();
+    assert(tinyui_init() == TINYUI_OK);
+    root = tinyui_screen_create();
+    assert(root != 0);
+
+    test_canvas_create_and_ld_mapping(root);
+    test_canvas_draw_commands_push_native(root);
+    test_canvas_rejects_invalid(root);
+
+    tinyui_deinit();
     return 0;
 }

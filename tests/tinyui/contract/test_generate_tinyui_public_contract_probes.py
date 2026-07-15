@@ -93,10 +93,13 @@ class TinyuiPublicContractProbeTests(unittest.TestCase):
                 self.assertEqual(1, source.count(f"&{function['symbol']}"))
             probes_cmake = (output_dir / "probes.cmake").read_text(encoding="utf-8")
             self.assertIn(
-                f"target_link_libraries(tinyui_public_symbol_link_{label_function['id']} "
-                "PRIVATE tinyui_backend_ldgui tinyui_port_mcu)",
+                f"tinyui_public_symbol_link_{label_function['id']}",
                 probes_cmake,
             )
+            self.assertIn("tinyui_backend_ldgui", probes_cmake)
+            self.assertIn("tinyui_port_mcu", probes_cmake)
+            self.assertIn("-Wl,--start-group", probes_cmake)
+            self.assertIn("longdonggui_arm2d", probes_cmake)
             self.assertEqual([], check_manifest(root, output_dir))
 
     def test_scans_only_external_tinyui_function_declarations(self):

@@ -20,6 +20,7 @@
 #include "internal.h"
 #include "ldBase.h"
 
+#if TINYUI_ENABLE_NATIVE_INTEROP
 /**
  * @brief Native platform: image wrap
  *
@@ -53,6 +54,7 @@ struct tinyui_native_font tinyui_native_font_wrap(void *font)
     native_font.font = font;
     return native_font;
 }
+#endif /* TINYUI_ENABLE_NATIVE_INTEROP */
 
 /**
  * @brief Native platform: align to ld grid

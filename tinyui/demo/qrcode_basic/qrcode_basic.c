@@ -19,42 +19,39 @@
 #include "qrcode_basic/qrcode_basic.h"
 #include "tinyui.h"
 
-static void make_ui(struct tinyui_window *win)
+#include <stdio.h>
+
+tinyui_result_t tinyui_demo_qrcode_basic_build(tinyui_obj_t *screen)
 {
-    struct tinyui_label *title;
-    struct tinyui_qrcode *qrcode;
-    static const int cols[] = {320, 0};
-    static const int rows[] = {28, 160, 0};
+    tinyui_obj_t *title;
+    tinyui_obj_t *qrcode;
 
-    tinyui_grid_set_columns(win, cols, 2);
-    tinyui_grid_set_rows(win, rows, 3);
-    tinyui_grid_set_gap(win, 16, 16);
-    tinyui_grid_set_align(win, TINYUI_ALIGN_CENTER, TINYUI_ALIGN_START);
-    tinyui_window_set_padding(win, 24, 24, 24, 24);
+    if (screen == NULL) {
+        return TINYUI_ERROR_INVALID_ARG;
+    }
 
-    title = tinyui_label_create(win, "title");
-    qrcode = tinyui_qrcode_create((struct tinyui_widget *)win, "qrcode");
+    (void)tinyui_obj_set_bg_color(screen, 0xF6F8FAU);
 
-    tinyui_label_set_text(title, "QR Code");
-    tinyui_qrcode_set_text(qrcode, "https://example.local/tinyui");
-    tinyui_widget_set_size((struct tinyui_widget *)title, 160, 28);
-    tinyui_widget_set_size((struct tinyui_widget *)qrcode, 128, 128);
+    title = tinyui_label_create(screen);
+    qrcode = tinyui_qrcode_create(screen);
+    if (title == NULL || qrcode == NULL) {
+        return TINYUI_ERROR_NO_MEMORY;
+    }
 
-    tinyui_widget_set_grid_cell((struct tinyui_widget *)title,
-                                0, 0, 1, 1,
-                                TINYUI_ALIGN_CENTER,
-                                TINYUI_ALIGN_CENTER);
-    tinyui_widget_set_grid_cell((struct tinyui_widget *)qrcode,
-                                0, 1, 1, 1,
-                                TINYUI_ALIGN_CENTER,
-                                TINYUI_ALIGN_START);
-}
+    if (tinyui_obj_set_pos(title, 32, 24) != TINYUI_OK
+        || tinyui_obj_set_size(title, 200, 28) != TINYUI_OK
+        || tinyui_label_set_text(title, "QR Code") != 0
+        || tinyui_label_set_text_color(title, 0x102030U) != 0) {
+        return TINYUI_ERROR_BACKEND;
+    }
 
-void tinyui_demo_qrcode_basic(void)
-{
-    tinyui_obj_t *screen = tinyui_screen_create();
-    struct tinyui_window *win = (struct tinyui_window *)screen;
-    if (win == 0) return;
-    make_ui(win);
-    tinyui_screen_load(screen);
+    if (tinyui_obj_set_pos(qrcode, 176, 80) != TINYUI_OK
+        || tinyui_obj_set_size(qrcode, 128, 128) != TINYUI_OK
+        || tinyui_qrcode_set_text(qrcode, "https://example.local/tinyui") != 0) {
+        return TINYUI_ERROR_BACKEND;
+    }
+
+    printf("TINYUI_SCENARIO=qrcode_basic\n");
+    fflush(stdout);
+    return TINYUI_OK;
 }

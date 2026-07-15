@@ -1,4 +1,4 @@
-#include "internal/app_legacy.h"
+#include "internal/runtime_internal_legacy_api.h"
 #include "indev/indev.h"
 
 #include <assert.h>
@@ -43,7 +43,7 @@ static void test_input_internal_helper_no_longer_uses_tinyui_prefix(void)
 
 static void test_pointer_defaults_and_round_trip(void)
 {
-    struct tinyui_app *app = tinyui_app_create();
+    struct tinyui_app *app = tinyui_runtime_internal_app_create();
     int x = 1;
     int y = 1;
     int pressed = 1;
@@ -63,12 +63,12 @@ static void test_pointer_defaults_and_round_trip(void)
     assert(y == 34);
     assert(pressed == 1);
 
-    tinyui_app_destroy(app);
+    tinyui_runtime_internal_app_destroy(app);
 }
 
 static void test_key_defaults_and_round_trip(void)
 {
-    struct tinyui_app *app = tinyui_app_create();
+    struct tinyui_app *app = tinyui_runtime_internal_app_create();
     enum tinyui_input_key key = TINYUI_INPUT_KEY_ENTER;
     int pressed = 1;
 
@@ -84,12 +84,12 @@ static void test_key_defaults_and_round_trip(void)
     assert(key == TINYUI_INPUT_KEY_LEFT);
     assert(pressed == 1);
 
-    tinyui_app_destroy(app);
+    tinyui_runtime_internal_app_destroy(app);
 }
 
 static void test_input_rejects_invalid_arguments(void)
 {
-    struct tinyui_app *app = tinyui_app_create();
+    struct tinyui_app *app = tinyui_runtime_internal_app_create();
     int x = 0;
     int y = 0;
     int pressed = 0;
@@ -104,7 +104,7 @@ static void test_input_rejects_invalid_arguments(void)
     assert(tinyui_input_get_key(NULL, &key, &pressed) == -1);
     assert(tinyui_input_get_key(app, NULL, &pressed) == -1);
 
-    tinyui_app_destroy(app);
+    tinyui_runtime_internal_app_destroy(app);
 }
 
 int main(void)

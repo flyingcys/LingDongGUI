@@ -19,6 +19,7 @@ set_property(CACHE USE_DEMO PROPERTY STRINGS 0 1 2 3 4 5 6)
 include(cmake/LingDongGUI.cmake)
 
 ld_define_core_targets()
+ld_install_tinyui_package()
 
 if(LD_BUILD_SDL_DEMO)
     add_subdirectory(examples/sdl)

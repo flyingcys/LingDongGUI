@@ -19,6 +19,13 @@
 #ifndef TINYUI_TEXT_H
 #define TINYUI_TEXT_H
 
+#include "tinyui_config.h"
+#if !TINYUI_ENABLE_TEXT
+#  ifndef TINYUI_INTERNAL_FEATURE_HEADER
+#  error "TINYUI_ENABLE_TEXT is disabled"
+#  endif
+#endif
+
 #include "core/obj.h"
 #include <stdint.h>
 

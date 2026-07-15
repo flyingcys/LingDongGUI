@@ -24,6 +24,108 @@
 #include "../../../src/gui/ldIconSlider.h"
 #include "../../../src/misc/ldMsg.h"
 
+#include <string.h>
+
+static void tinyui_selection_fire_value_changed(struct tinyui_widget *widget, int32_t value)
+{
+    struct tinyui_runtime_state *rt = tinyui_runtime_state_get();
+    struct tinyui_event_callback_pool *pool;
+    struct tinyui_event_callback_slot *ordered[TINYUI_EVENT_CB_CAPACITY];
+    size_t ordered_count = 0U;
+    size_t i;
+    uint16_t epoch;
+    uint32_t mask;
+    tinyui_obj_t *target;
+    bool was_processing;
+
+    if (rt == 0 || widget == 0 || !rt->initialized) {
+        return;
+    }
+
+    pool = &rt->event_cb_pool;
+    target = (tinyui_obj_t *)(void *)widget;
+    mask = TINYUI_EVENT_MASK(TINYUI_EVENT_VALUE_CHANGED);
+
+    epoch = (uint16_t)(pool->dispatch_epoch + 1U);
+    if (epoch == 0U) {
+        epoch = 1U;
+    }
+    pool->dispatch_epoch = epoch;
+    rt->dispatch_epoch = epoch;
+
+    for (i = 0; i < (size_t)TINYUI_EVENT_CB_CAPACITY; ++i) {
+        struct tinyui_event_callback_slot *slot = &pool->slots[i];
+        if (slot->allocated == 0U || slot->cb == 0) {
+            continue;
+        }
+        if (slot->object != target || (slot->event_mask & mask) == 0U) {
+            continue;
+        }
+        if (!(slot->born_epoch < epoch)) {
+            continue;
+        }
+        ordered[ordered_count++] = slot;
+    }
+
+    for (i = 1; i < ordered_count; ++i) {
+        size_t j = i;
+        struct tinyui_event_callback_slot *cur = ordered[i];
+        while (j > 0U &&
+               ordered[j - 1U]->registration_order > cur->registration_order) {
+            ordered[j] = ordered[j - 1U];
+            j -= 1U;
+        }
+        ordered[j] = cur;
+    }
+
+    was_processing = rt->processing;
+    rt->processing = true;
+    for (i = 0; i < ordered_count; ++i) {
+        struct tinyui_event_callback_slot *slot = ordered[i];
+        uint16_t generation;
+        tinyui_event_cb_t cb;
+        tinyui_event_t event;
+
+        if (slot->allocated == 0U || slot->cb == 0) {
+            continue;
+        }
+        if (slot->object != target || (slot->event_mask & mask) == 0U) {
+            continue;
+        }
+        if (!(slot->born_epoch < epoch)) {
+            continue;
+        }
+        if (widget->deleting != 0U) {
+            break;
+        }
+
+        generation = slot->generation;
+        cb = slot->cb;
+        memset(&event, 0, sizeof(event));
+        event.code = TINYUI_EVENT_VALUE_CHANGED;
+        event.target = target;
+        event.user_data = slot->user_data;
+        event.data.value = value;
+        cb(&event);
+
+        if (slot->allocated == 0U || slot->generation != generation) {
+            continue;
+        }
+        if (widget->deleting != 0U) {
+            break;
+        }
+    }
+    rt->processing = was_processing;
+    if (!was_processing && rt->delete_pending != 0 && rt->delete_target != 0) {
+        tinyui_obj_t *delete_target = rt->delete_target;
+        struct tinyui_widget *delete_widget =
+            (struct tinyui_widget *)(void *)delete_target;
+
+        rt->delete_pending = 0;
+        rt->delete_target = 0;
+        (void)tinyui_runtime_internal_widget_destroy(delete_widget);
+    }
+}
 
 static struct tinyui_icon_slider *tinyui_icon_slider_as_icon_slider(tinyui_obj_t *obj)
 {
@@ -168,6 +270,7 @@ static bool tinyui_icon_slider_native_slot(struct ld_scene_t *scene, ldMsg_t msg
     if (icon_slider->cb != 0) {
         icon_slider->cb(icon_slider, selected_index, icon_slider->user_data);
     }
+    tinyui_selection_fire_value_changed(w, (int32_t)selected_index);
     return false;
 }
 
@@ -396,39 +499,53 @@ tinyui_obj_t *tinyui_icon_slider_create_with_props(tinyui_obj_t *parent,
 int tinyui_icon_slider_add_item(tinyui_obj_t *icon_slider_obj, const char *id, const char *text)
 {
     struct tinyui_icon_slider *icon_slider = tinyui_icon_slider_as_icon_slider(icon_slider_obj);
-    if (icon_slider == 0) { return -1; }
-
     ldIconSlider_t *ld_icon_slider;
     int index;
+    uint16_t before_count;
 
-    if (icon_slider == 0 || id == 0 || text == 0
-        || icon_slider->widget.ld_widget == 0
-        || icon_slider->widget.list_item_count >= TINYUI_ICON_SLIDER_NATIVE_MAX_ITEMS) {
+    if (icon_slider == 0 || id == 0 || text == 0 ||
+        icon_slider->widget.ld_widget == 0 ||
+        icon_slider->widget.kind != TINYUI_BACKEND_WIDGET_ICON_SLIDER) {
+        tinyui_runtime_set_last_result(TINYUI_ERROR_INVALID_ARG);
+        return -1;
+    }
+    if (icon_slider->widget.list_item_count >= TINYUI_ICON_SLIDER_NATIVE_MAX_ITEMS ||
+        icon_slider->item_count >= TINYUI_LIST_MAX_ITEMS) {
+        tinyui_runtime_set_last_result(TINYUI_ERROR_CAPACITY);
         return -1;
     }
 
     ld_icon_slider = (ldIconSlider_t *)icon_slider->widget.ld_widget;
+    if (ld_icon_slider->iconCount >= ld_icon_slider->iconMax) {
+        tinyui_runtime_set_last_result(TINYUI_ERROR_CAPACITY);
+        return -1;
+    }
 
     index = icon_slider->widget.list_item_count;
+    before_count = ld_icon_slider->iconCount;
     ldIconSliderAddIcon(ld_icon_slider,
                         g_icon_slider_tiles[index % 4],
                         g_icon_slider_masks[index % 4],
                         (const uint8_t *)text);
+    if (ld_icon_slider->iconCount != (uint16_t)(before_count + 1U)) {
+        tinyui_runtime_set_last_result(TINYUI_ERROR_CAPACITY);
+        return -1;
+    }
     icon_slider->widget.list_item_count++;
 
     index = icon_slider->item_count++;
     icon_slider->items[index].id = id;
     icon_slider->items[index].text = text;
+    tinyui_runtime_set_last_result(TINYUI_OK);
     return 0;
 }
 
 int tinyui_icon_slider_add_item_with_source(tinyui_obj_t *icon_slider_obj, const char *id, const char *text, struct tinyui_image_source *source)
 {
     struct tinyui_icon_slider *icon_slider = tinyui_icon_slider_as_icon_slider(icon_slider_obj);
-    if (icon_slider == 0) { return -1; }
-
     ldIconSlider_t *ld_icon_slider;
     int index;
+    uint16_t before_count;
 
     if (icon_slider == 0
         || id == 0
@@ -437,23 +554,39 @@ int tinyui_icon_slider_add_item_with_source(tinyui_obj_t *icon_slider_obj, const
         || tinyui_image_source_get_image_tile(source) == 0
         || tinyui_image_source_get_mask_tile(source) == 0
         || icon_slider->widget.ld_widget == 0
-        || icon_slider->widget.list_item_count >= TINYUI_ICON_SLIDER_NATIVE_MAX_ITEMS) {
+        || icon_slider->widget.kind != TINYUI_BACKEND_WIDGET_ICON_SLIDER) {
+        tinyui_runtime_set_last_result(TINYUI_ERROR_INVALID_ARG);
+        return -1;
+    }
+    if (icon_slider->widget.list_item_count >= TINYUI_ICON_SLIDER_NATIVE_MAX_ITEMS ||
+        icon_slider->item_count >= TINYUI_LIST_MAX_ITEMS) {
+        tinyui_runtime_set_last_result(TINYUI_ERROR_CAPACITY);
         return -1;
     }
 
     ld_icon_slider = (ldIconSlider_t *)icon_slider->widget.ld_widget;
+    if (ld_icon_slider->iconCount >= ld_icon_slider->iconMax) {
+        tinyui_runtime_set_last_result(TINYUI_ERROR_CAPACITY);
+        return -1;
+    }
 
     index = icon_slider->widget.list_item_count;
+    before_count = ld_icon_slider->iconCount;
     ldIconSliderAddIcon(ld_icon_slider,
                         tinyui_image_source_get_image_tile(source),
                         tinyui_image_source_get_mask_tile(source),
                         (const uint8_t *)text);
+    if (ld_icon_slider->iconCount != (uint16_t)(before_count + 1U)) {
+        tinyui_runtime_set_last_result(TINYUI_ERROR_CAPACITY);
+        return -1;
+    }
     icon_slider->widget.list_item_count++;
 
     index = icon_slider->item_count++;
     icon_slider->items[index].id = id;
     icon_slider->items[index].text = text;
     icon_slider->item_sources[index] = source;
+    tinyui_runtime_set_last_result(TINYUI_OK);
     return 0;
 }
 

@@ -32,55 +32,38 @@ CAPABILITY_COLUMNS = [
 STATUS_INDEX = {name: index for index, name in enumerate(CAPABILITY_COLUMNS)}
 
 WIDGET_API_POLICY = {
-    "tinyui_widget_set_pos": CHILD_WIDGETS,
-    "tinyui_widget_set_size": CHILD_WIDGETS,
-    "tinyui_widget_set_text": TEXT_WIDGETS,
-    "tinyui_widget_set_style_class": ALL_WIDGETS,
-    "tinyui_widget_set_user_data": ALL_WIDGETS,
-    "tinyui_widget_set_bg_color": ALL_WIDGETS,
-    "tinyui_widget_set_text_color": ALL_WIDGETS,
-    "tinyui_widget_set_border_color": ALL_WIDGETS,
-    "tinyui_widget_set_radius": ALL_WIDGETS,
-    "tinyui_widget_set_padding": ALL_WIDGETS,
-    "tinyui_widget_set_visible": ALL_WIDGETS,
-    "tinyui_widget_set_enabled": ALL_WIDGETS,
-    "tinyui_widget_set_flex_grow": CHILD_WIDGETS,
-    "tinyui_widget_set_flex_new_track": CHILD_WIDGETS,
-    "tinyui_widget_set_ignore_layout": CHILD_WIDGETS,
-    "tinyui_widget_set_grid_cell": CHILD_WIDGETS,
-    "tinyui_widget_remove_from_parent": CHILD_WIDGETS,
-    "tinyui_widget_destroy": CHILD_WIDGETS,
+    "tinyui_obj_set_pos": CHILD_WIDGETS,
+    "tinyui_obj_set_size": CHILD_WIDGETS,
+    "tinyui_obj_set_text": TEXT_WIDGETS,
+    "tinyui_obj_set_bg_color": ALL_WIDGETS,
+    "tinyui_obj_set_text_color": ALL_WIDGETS,
+    "tinyui_obj_set_border_color": ALL_WIDGETS,
+    "tinyui_obj_set_radius": ALL_WIDGETS,
+    "tinyui_obj_set_padding": ALL_WIDGETS,
+    "tinyui_obj_set_visible": ALL_WIDGETS,
+    "tinyui_obj_set_enabled": ALL_WIDGETS,
+    "tinyui_obj_set_flex_grow": CHILD_WIDGETS,
+    "tinyui_obj_set_flex_new_track": CHILD_WIDGETS,
+    "tinyui_obj_set_ignore_layout": CHILD_WIDGETS,
+    "tinyui_obj_set_grid_cell": CHILD_WIDGETS,
+    "tinyui_obj_delete": CHILD_WIDGETS,
 }
 LEGACY_OPTIONAL_WIDGET_APIS = {
-    "tinyui_widget_find_by_name_id",
-    "tinyui_widget_get_absolute_pos",
-    "tinyui_widget_get_child_count",
-    "tinyui_widget_get_corner",
-    "tinyui_widget_get_first_child",
-    "tinyui_widget_get_height",
-    "tinyui_widget_get_name_id",
-    "tinyui_widget_get_next_sibling",
-    "tinyui_widget_get_opacity",
-    "tinyui_widget_get_parent",
-    "tinyui_widget_get_relative_pos",
-    "tinyui_widget_get_root",
-    "tinyui_widget_get_selectable",
-    "tinyui_widget_get_selected",
-    "tinyui_widget_get_type",
-    "tinyui_widget_get_visible",
-    "tinyui_widget_get_width",
-    "tinyui_widget_get_x",
-    "tinyui_widget_get_y",
-    "tinyui_widget_is_hidden",
-    "tinyui_widget_set_center",
-    "tinyui_widget_set_opacity",
-    "tinyui_widget_set_selectable",
-    "tinyui_widget_set_selected",
-    "tinyui_widget_set_corner",
-    "tinyui_widget_set_flex_min_width",
-    "tinyui_widget_set_flex_min_height",
-    "tinyui_widget_set_flex_max_width",
-    "tinyui_widget_set_flex_max_height",
+    "tinyui_obj_get_id",
+    "tinyui_obj_find_by_id",
+    "tinyui_obj_get_parent",
+    "tinyui_obj_get_first_child",
+    "tinyui_obj_get_next_sibling",
+    "tinyui_obj_get_root",
+    "tinyui_obj_get_child_count",
+    "tinyui_obj_set_border_width",
+    "tinyui_obj_set_opacity",
+    "tinyui_obj_set_selectable",
+    "tinyui_obj_set_selected",
+    "tinyui_obj_set_flex_min_width",
+    "tinyui_obj_set_flex_min_height",
+    "tinyui_obj_set_flex_max_width",
+    "tinyui_obj_set_flex_max_height",
 }
 
 WINDOW_LAYOUT_APIS = {
@@ -93,16 +76,16 @@ WINDOW_LAYOUT_APIS = {
     "tinyui_grid_set_align",
 }
 CHILD_LAYOUT_APIS = {
-    "tinyui_widget_set_pos",
-    "tinyui_widget_set_size",
-    "tinyui_widget_set_flex_grow",
-    "tinyui_widget_set_flex_new_track",
-    "tinyui_widget_set_ignore_layout",
-    "tinyui_widget_set_grid_cell",
-    "tinyui_widget_set_padding",
+    "tinyui_obj_set_pos",
+    "tinyui_obj_set_size",
+    "tinyui_obj_set_flex_grow",
+    "tinyui_obj_set_flex_new_track",
+    "tinyui_obj_set_ignore_layout",
+    "tinyui_obj_set_grid_cell",
+    "tinyui_obj_set_padding",
 }
 THEME_API_POLICY = {
-    "tinyui_theme_apply_to_widget": ALL_WIDGETS - {"image"},
+    "tinyui_theme_apply": ALL_WIDGETS - {"image"},
 }
 
 
@@ -115,6 +98,8 @@ def _header_path(name: str) -> Path:
         "theme": "theme",
         "widget": "core",
     }
+    if name == "widget":
+        return PUBLIC_DIR / "core" / "obj.h"
     if name in groups:
         return PUBLIC_DIR / groups[name] / f"{name}.h"
     return PUBLIC_DIR / "widgets" / f"{name}.h"
@@ -176,8 +161,9 @@ def _expected_header_functions(widget: str) -> set[str]:
     expected = _public_functions(widget_header)
     expected |= _public_functions(_header_path("widget"))
     expected |= _public_functions(_header_path("theme"))
-    if widget == "window":
-        expected |= _public_functions(_header_path("layout"))
+    # Child layout item attributes and window container layout APIs both live in
+    # layout.h under the canonical public surface.
+    expected |= _public_functions(_header_path("layout"))
     return expected
 
 
@@ -187,7 +173,7 @@ def _expected_widget_setters(widget: str) -> set[str]:
 
 def _expected_layout_apis(widget: str) -> set[str]:
     if widget == "window":
-        return WINDOW_LAYOUT_APIS | {"tinyui_widget_set_padding"}
+        return WINDOW_LAYOUT_APIS | {"tinyui_obj_set_padding"}
     return CHILD_LAYOUT_APIS
 
 
@@ -201,10 +187,14 @@ def main() -> int:
     missing_rows = sorted(set(WIDGETS) - set(rows))
     assert not missing_rows, f"matrix missing widget rows: {missing_rows}"
 
+    # Common object APIs live in core/obj.h; child layout item attrs live in layout.h.
     widget_header_functions = {
         function
-        for function in _public_functions(_header_path("widget"))
-        if function.startswith("tinyui_widget_")
+        for function in (
+            _public_functions(_header_path("widget"))
+            | _public_functions(_header_path("layout"))
+        )
+        if function.startswith("tinyui_obj_")
     }
     policy_functions = set(WIDGET_API_POLICY)
     unclassified_widget_functions = sorted(
@@ -212,11 +202,11 @@ def main() -> int:
     )
     stale_policy_functions = sorted(policy_functions - widget_header_functions)
     assert not unclassified_widget_functions, (
-        "widget.h exposes tinyui_widget_* API missing from matrix policy: "
+        "obj/layout headers expose tinyui_obj_* API missing from matrix policy: "
         f"{unclassified_widget_functions}"
     )
     assert not stale_policy_functions, (
-        "matrix policy references tinyui_widget_* API not found in widget.h: "
+        "matrix policy references tinyui_obj_* API not found in obj/layout headers: "
         f"{stale_policy_functions}"
     )
 
@@ -238,13 +228,13 @@ def main() -> int:
 
         missing_widget_setters = sorted(_expected_widget_setters(widget) - documented)
         assert not missing_widget_setters, (
-            f"{widget} missing applicable widget.h setters from matrix: {missing_widget_setters}"
+            f"{widget} missing applicable obj.h setters from matrix: {missing_widget_setters}"
         )
 
         documented_widget_setters = documented & widget_header_functions
         unexpected_widget_setters = sorted(documented_widget_setters - _expected_widget_setters(widget))
         assert not unexpected_widget_setters, (
-            f"{widget} documents non-applicable widget.h setters: {unexpected_widget_setters}"
+            f"{widget} documents non-applicable obj.h setters: {unexpected_widget_setters}"
         )
 
         missing_layout_apis = sorted(_expected_layout_apis(widget) - documented)

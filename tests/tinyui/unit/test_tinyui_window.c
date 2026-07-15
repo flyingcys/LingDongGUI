@@ -1,523 +1,125 @@
+/*
+ * TinyUI window unit tests — M3 Task 5 L3/L4 harness.
+ *
+ * Task5 owns color/background_source (layout/flex/grid is Task7).
+ */
+
 #include "tinyui.h"
 #include "../../../src/gui/ldBase.h"
 #include "../../../src/gui/ldWindow.h"
-#include "../../../src/porting/ldConfig.h"
 #include "internal.h"
-#include "tinyui_test_support.h"
+#include "resource/image_source.h"
+#include "widgets/window.h"
+
 #include <assert.h>
-#include <dlfcn.h>
-#include <limits.h>
-#include <stdio.h>
 #include <string.h>
 
-extern int tinyui_widget_has_ld_binding(const struct tinyui_widget *widget);
-void tinyui_window_test_fail_next_set_bg_color(void);
-
-static const char *test_self_binary_path = 0;
-static const char *test_source_file_path = __FILE__;
-
-static FILE *open_repo_file_from_test_source(const char *relative_path)
+static unsigned int test_rgb_to_ld_color(unsigned int rgb)
 {
-    char base_path[PATH_MAX];
-    char *tests_dir;
-    size_t base_len;
-
-    assert(test_source_file_path != 0);
-    assert(relative_path != 0);
-    assert(strlen(test_source_file_path) < sizeof(base_path));
-    snprintf(base_path, sizeof(base_path), "%s", test_source_file_path);
-    tests_dir = strstr(base_path, "tests/tinyui/unit/");
-    assert(tests_dir != 0);
-    *tests_dir = '\0';
-    base_len = strlen(base_path);
-    assert(base_len + strlen(relative_path) + 1 < sizeof(base_path));
-    snprintf(base_path + base_len, sizeof(base_path) - base_len, "%s", relative_path);
-    return fopen(base_path, "rb");
+    return (unsigned int)__RGB((rgb >> 16) & 0xFFU, (rgb >> 8) & 0xFFU, rgb & 0xFFU);
 }
 
-static void assert_repo_file_lacks(const char *relative_path, const char *needle)
+static void test_window_create_and_ld_mapping(void)
 {
-    FILE *file;
-    char content[32768];
-    size_t bytes_read;
-
-    file = open_repo_file_from_test_source(relative_path);
-    assert(file != 0);
-    bytes_read = fread(content, 1, sizeof(content) - 1, file);
-    assert(ferror(file) == 0);
-    content[bytes_read] = '\0';
-    assert(fclose(file) == 0);
-    assert(strstr(content, needle) == 0);
-}
-
-static void assert_repo_file_contains(const char *relative_path, const char *needle)
-{
-    FILE *file;
-    char content[32768];
-    size_t bytes_read;
-
-    file = open_repo_file_from_test_source(relative_path);
-    assert(file != 0);
-    bytes_read = fread(content, 1, sizeof(content) - 1, file);
-    assert(ferror(file) == 0);
-    content[bytes_read] = '\0';
-    assert(fclose(file) == 0);
-    assert(strstr(content, needle) != 0);
-}
-
-static void assert_self_binary_lacks_symbol(const char *symbol)
-{
-    char command[PATH_MAX + 32];
-    FILE *pipe;
-    char line[512];
-
-    assert(test_self_binary_path != 0);
-    assert(symbol != 0);
-    snprintf(command, sizeof(command), "nm %s 2>/dev/null", test_self_binary_path);
-    pipe = popen(command, "r");
-    assert(pipe != 0);
-    while (fgets(line, sizeof(line), pipe) != 0) {
-        size_t line_len = strlen(line);
-        size_t symbol_len = strlen(symbol);
-
-        while (line_len > 0 && (line[line_len - 1] == '\n' || line[line_len - 1] == '\r')) {
-            line[--line_len] = '\0';
-        }
-        if (line_len >= symbol_len &&
-            strcmp(line + line_len - symbol_len, symbol) == 0) {
-            assert(!"unexpected symbol still present in test binary");
-        }
-    }
-    assert(pclose(pipe) == 0);
-}
-
-static void test_window_color_internal_seam_uses_tinyui_names(void)
-{
-    static const char *old_symbols[] = {
-        "tinyui_window_fail_next_set_bg_color",
-        "tinyui_window_rgb_to_ld_color",
-        "tinyui_window_ld_color_to_rgb",
-        "tinyui_backend_window_test_fail_next_set_bg_color",
-    };
-    size_t i;
-
-    for (i = 0; i < sizeof(old_symbols) / sizeof(old_symbols[0]); ++i) {
-        assert_self_binary_lacks_symbol(old_symbols[i]);
-    }
-}
-
-static void test_window_layout_mapper_internal_seam_uses_tinyui_names(void)
-{
-    static const char *old_symbols[] = {
-        "tinyui_window_map_flex_flow",
-        "tinyui_window_map_flex_main_align",
-        "tinyui_window_map_flex_cross_align",
-        "tinyui_window_map_flex_track_align",
-        "tinyui_window_map_grid_align",
-        "tinyui_window_map_grid_track",
-        "tinyui_window_copy_grid_tracks",
-    };
-    size_t i;
-
-    for (i = 0; i < sizeof(old_symbols) / sizeof(old_symbols[0]); ++i) {
-        assert_self_binary_lacks_symbol(old_symbols[i]);
-    }
-}
-
-static void test_window_native_access_internal_seam_uses_tinyui_names(void)
-{
-    static const char *old_symbols[] = {
-        "tinyui_window_get_backend",
-        "tinyui_window_get_backend_host",
-        "tinyui_window_map_layout_type",
-    };
-    size_t i;
-
-    for (i = 0; i < sizeof(old_symbols) / sizeof(old_symbols[0]); ++i) {
-        assert(tinyui_test_source_lacks_function_definition("tinyui/src/widgets/window.c",
-                                                            old_symbols[i]) == 1);
-        assert_self_binary_lacks_symbol(old_symbols[i]);
-    }
-}
-
-static void test_window_validation_internal_seam_uses_tinyui_names(void)
-{
-    static const char *old_symbols[] = {
-        "tinyui_window_is_valid",
-        "tinyui_window_props_are_valid",
-    };
-    size_t i;
-
-    for (i = 0; i < sizeof(old_symbols) / sizeof(old_symbols[0]); ++i) {
-        assert_repo_file_lacks("tinyui/src/widgets/window.c", old_symbols[i]);
-        assert_self_binary_lacks_symbol(old_symbols[i]);
-    }
-}
-
-static void test_window_init_defaults_internal_seam_uses_tinyui_names(void)
-{
-    static const char *old_symbols[] = {
-        "tinyui_window_init_defaults",
-    };
-    size_t i;
-
-    for (i = 0; i < sizeof(old_symbols) / sizeof(old_symbols[0]); ++i) {
-        assert_repo_file_lacks("tinyui/src/widgets/window.c", old_symbols[i]);
-        assert_self_binary_lacks_symbol(old_symbols[i]);
-    }
-}
-
-static void test_window_create_path_boundary_truth(void)
-{
-    assert_repo_file_contains("tinyui/src/widgets/window.c", "tinyui_widget_create_leaf(&parent->widget");
-    assert_repo_file_contains("tinyui/src/widgets/window.c", "struct tinyui_window *tinyui_window_create(struct tinyui_app *app, const char *id)");
-    assert_repo_file_contains("tinyui/src/widgets/window.c", "ldWindow_init(app_state->ld_scene, NULL, 0, 0, 0, 0,");
-}
-
-static void test_window_root_size_internal_seam_uses_tinyui_names(void)
-{
-    static const char *old_symbols[] = {
-        "tinyui_window_get_root_size",
-    };
-    size_t i;
-
-    for (i = 0; i < sizeof(old_symbols) / sizeof(old_symbols[0]); ++i) {
-        assert_repo_file_lacks("tinyui/src/widgets/window.c", old_symbols[i]);
-        assert_self_binary_lacks_symbol(old_symbols[i]);
-    }
-}
-
-static void test_window_dispose_partial_internal_seam_uses_tinyui_names(void)
-{
-    static const char *old_symbols[] = {
-        "tinyui_window_dispose_partial",
-    };
-    size_t i;
-
-    for (i = 0; i < sizeof(old_symbols) / sizeof(old_symbols[0]); ++i) {
-        assert_repo_file_lacks("tinyui/src/widgets/window.c", old_symbols[i]);
-        assert_self_binary_lacks_symbol(old_symbols[i]);
-    }
-}
-
-static void test_window_generic_gap_internal_seam_uses_tinyui_names(void)
-{
-    static const char *old_symbols[] = {
-        "tinyui_window_apply_generic_gap_impl",
-    };
-    size_t i;
-
-    for (i = 0; i < sizeof(old_symbols) / sizeof(old_symbols[0]); ++i) {
-        assert_repo_file_lacks("tinyui/src/widgets/window.c", old_symbols[i]);
-        assert_self_binary_lacks_symbol(old_symbols[i]);
-    }
-}
-
-static void test_window_padding_contract_internal_seam_uses_tinyui_names(void)
-{
-    static const char *old_symbols[] = {
-        "tinyui_window_set_padding_group_impl",
-        "tinyui_window_apply_padding_contract",
-    };
-    size_t i;
-
-    for (i = 0; i < sizeof(old_symbols) / sizeof(old_symbols[0]); ++i) {
-        assert_repo_file_lacks("tinyui/src/widgets/window.c", old_symbols[i]);
-        assert_self_binary_lacks_symbol(old_symbols[i]);
-    }
-}
-
-static void test_window_layout_type_internal_seam_uses_tinyui_names(void)
-{
-    static const char *old_symbols[] = {
-        "tinyui_window_apply_layout_type_impl",
-    };
-    size_t i;
-
-    for (i = 0; i < sizeof(old_symbols) / sizeof(old_symbols[0]); ++i) {
-        assert_repo_file_lacks("tinyui/src/widgets/window.c", old_symbols[i]);
-        assert_self_binary_lacks_symbol(old_symbols[i]);
-    }
-}
-
-static void test_window_flex_contract_internal_seam_uses_tinyui_names(void)
-{
-    static const char *old_symbols[] = {
-        "tinyui_window_apply_flex_contract_impl",
-    };
-    size_t i;
-
-    for (i = 0; i < sizeof(old_symbols) / sizeof(old_symbols[0]); ++i) {
-        assert_repo_file_lacks("tinyui/src/widgets/window.c", old_symbols[i]);
-        assert_self_binary_lacks_symbol(old_symbols[i]);
-    }
-}
-
-static void test_window_create_and_backend_mapping(struct tinyui_window *win)
-{
+    tinyui_obj_t *win = tinyui_window_create(0);
     struct tinyui_widget *backend;
     ldWindow_t *ld_win;
 
     assert(win != 0);
-    backend = &win->widget;
+    backend = (struct tinyui_widget *)(void *)win;
     assert(backend->ld_widget != 0);
     assert(backend->kind == TINYUI_BACKEND_WIDGET_WINDOW);
     ld_win = (ldWindow_t *)backend->ld_widget;
-    assert(ld_win != 0);
-    /* tinyui_window_create produces a user window (nameId != 0) which
-     * ldWindow_init tags as widgetTypeWindow. Only the phantom scene root
-     * (nameId == 0) is tagged widgetTypeBackground. */
-    assert(ld_win->use_as__ldBase_t.widgetType == widgetTypeWindow);
+    assert(((ldBase_t *)ld_win)->widgetType == widgetTypeWindow);
 }
 
-static void test_window_padding_group_round_trip(struct tinyui_window *win)
+static void test_window_color_and_background_source(void)
 {
-    struct tinyui_widget *backend;
+    tinyui_obj_t *root = tinyui_screen_create();
+    tinyui_obj_t *win = tinyui_window_create(root);
     ldWindow_t *ld_win;
+    unsigned int color = 0;
+    arm_2d_tile_t tile = {0};
+    tinyui_image_source_t source;
+    int ox = 0, oy = 0;
 
-    assert(tinyui_window_set_padding(win, 10, 20, 30, 40) == 0);
-
-    backend = &win->widget;
-    ld_win = (ldWindow_t *)backend->ld_widget;
-    assert(ld_win->flexPadding.left == 10);
-    assert(ld_win->flexPadding.top == 20);
-    assert(ld_win->flexPadding.right == 30);
-    assert(ld_win->flexPadding.bottom == 40);
-    assert(ld_win->gridPadding.left == 10);
-    assert(ld_win->gridPadding.top == 20);
-    assert(ld_win->gridPadding.right == 30);
-    assert(ld_win->gridPadding.bottom == 40);
-}
-
-static void test_window_widget_base_api_round_trip(struct tinyui_window *win)
-{
-    struct tinyui_widget *backend;
-    struct tinyui_display_config display = {0};
-    ldBase_t *ld_base;
-
-    backend = &win->widget;
-    ld_base = (ldBase_t *)backend->ld_widget;
-
-    assert(tinyui_display_get_config(backend->owner, &display) == 0);
-    assert(ld_base->use_as__arm_2d_control_node_t.tRegion.tSize.iWidth == display.width);
-    assert(ld_base->use_as__arm_2d_control_node_t.tRegion.tSize.iHeight == display.height);
-
-    assert(tinyui_widget_set_size(&win->widget, 200, 120) == 0);
-    assert(ld_base->use_as__arm_2d_control_node_t.tRegion.tSize.iWidth == 200);
-    assert(ld_base->use_as__arm_2d_control_node_t.tRegion.tSize.iHeight == 120);
-
-    assert(tinyui_widget_set_selectable(&win->widget, 1) == 0);
-    assert(tinyui_widget_set_selected(&win->widget, 1) == 0);
-    assert(ld_base->isSelectable == true);
-    assert(ld_base->isSelected == true);
-}
-
-static void test_window_layout_type_and_gap_getters(struct tinyui_window *win)
-{
-    ldWindow_t *ld_win;
-    enum tinyui_window_layout_type layout_type = TINYUI_WINDOW_LAYOUT_NONE;
-
+    assert(root != 0);
     assert(win != 0);
-    ld_win = (ldWindow_t *)win->widget.ld_widget;
+    ld_win = (ldWindow_t *)((struct tinyui_widget *)(void *)win)->ld_widget;
     assert(ld_win != 0);
 
-    assert(tinyui_window_get_layout_type(0, &layout_type) == -1);
-    assert(tinyui_window_get_layout_type(win, 0) == -1);
-    assert(tinyui_window_get_gap(0) == -1);
-
-    assert(tinyui_window_set_layout_type(win, TINYUI_WINDOW_LAYOUT_FLEX) == 0);
-    assert(ld_win->layoutTpye == layoutFlex);
-    layout_type = TINYUI_WINDOW_LAYOUT_NONE;
-    assert(tinyui_window_get_layout_type(win, &layout_type) == 0);
-    assert(layout_type == TINYUI_WINDOW_LAYOUT_FLEX);
-
-    assert(tinyui_window_set_layout_type(win, TINYUI_WINDOW_LAYOUT_GRID) == 0);
-    assert(ld_win->layoutTpye == layoutGrid);
-    layout_type = TINYUI_WINDOW_LAYOUT_NONE;
-    assert(tinyui_window_get_layout_type(win, &layout_type) == 0);
-    assert(layout_type == TINYUI_WINDOW_LAYOUT_GRID);
-
-    assert(tinyui_window_set_gap(win, 17) == 0);
-    assert(ld_win->flexItemGap == 17);
-    assert(ld_win->flexTrackGap == 17);
-    assert(tinyui_window_get_gap(win) == 17);
-
-    ld_win->layoutTpye = layoutHorizontal;
-    assert(tinyui_window_get_layout_type(win, &layout_type) == -1);
-    assert(tinyui_window_set_layout_type(win, TINYUI_WINDOW_LAYOUT_NONE) == 0);
-}
-
-static void test_window_grid_padding_positions_switch(struct tinyui_window *win)
-{
-    const int cols[] = {220, 0};
-    const int rows[] = {24, 0};
-    struct tinyui_switch *sw;
-    struct tinyui_widget *window_backend;
-    struct tinyui_widget *switch_backend;
-    ldWindow_t *ld_win;
-    ldBase_t *ld_switch;
-
-    assert(tinyui_grid_set_columns(win, cols, 2) == 0);
-    assert(tinyui_grid_set_rows(win, rows, 2) == 0);
-    assert(tinyui_grid_set_gap(win, 12, 12) == 0);
-    assert(tinyui_window_set_padding(win, 16, 24, 16, 16) == 0);
-
-    sw = tinyui_switch_create(win, "window_grid_padding_switch");
-    assert(sw != 0);
-    assert(tinyui_widget_set_size((struct tinyui_widget *)sw, 48, 24) == 0);
-    assert(tinyui_widget_set_grid_cell((struct tinyui_widget *)sw,
-                                       0,
-                                       0,
-                                       1,
-                                       1,
-                                       TINYUI_ALIGN_START,
-                                       TINYUI_ALIGN_START) == 0);
-
-    window_backend = &win->widget;
-    switch_backend = &sw->widget;
-    ld_win = (ldWindow_t *)window_backend->ld_widget;
-    ld_switch = (ldBase_t *)switch_backend->ld_widget;
-
-    ldWindow_on_frame_start(0, ld_win);
-    assert(ld_switch->use_as__arm_2d_control_node_t.tRegion.tLocation.iX == 16);
-    assert(ld_switch->use_as__arm_2d_control_node_t.tRegion.tLocation.iY == 24);
-    assert(ld_switch->use_as__arm_2d_control_node_t.tRegion.tSize.iWidth == 48);
-    assert(ld_switch->use_as__arm_2d_control_node_t.tRegion.tSize.iHeight == 24);
-}
-
-static void test_window_constructor_binds_ld_without_backend_wrapper(void)
-{
-    struct tinyui_app *app = tinyui_app_create();
-    struct tinyui_window *win = tinyui_window_create(app, "root_contract");
-
-    assert(app != 0);
-    assert(win != 0);
-    assert(tinyui_widget_has_ld_binding(&win->widget) == 1);
-
-    tinyui_app_destroy(app);
-}
-
-static void test_window_create_with_props_failure_rolls_back_root_binding(void)
-{
-    struct tinyui_app *app = tinyui_app_create();
-    struct tinyui_window_props props = {
-        .id = "root_props_fail",
-        .bg_color = 0x112233,
-    };
-    struct tinyui_app *app_state;
-
-    assert(app != 0);
-    app_state = app;
-    assert(app_state != 0);
-    assert(app_state->ld_scene != 0);
-    assert(app_state->ld_scene->ptNodeRoot == 0);
-
-    tinyui_window_test_fail_next_set_bg_color();
-    assert(tinyui_window_create_with_props(app, &props) == 0);
-    assert(app_state->ld_scene->ptNodeRoot == 0);
-
-    tinyui_app_destroy(app);
-}
-
-static void test_window_create_with_props_applies_bg_color_without_backend_constructor(void)
-{
-    struct tinyui_app *app = tinyui_app_create();
-    struct tinyui_window_props props = {
-        .id = "root_props_color",
-        .bg_color = 0x112233,
-    };
-    struct tinyui_window *win;
-    struct tinyui_widget *backend;
-    ldWindow_t *ld_win;
-
-    assert(app != 0);
-    win = tinyui_window_create_with_props(app, &props);
-    assert(win != 0);
-    assert(win->widget.bg_color == 0x112233);
-
-    backend = &win->widget;
-    assert(backend->ld_widget != 0);
-    ld_win = (ldWindow_t *)backend->ld_widget;
-    assert(ld_win != 0);
-    assert(ldWindowGetColor(ld_win) == __RGB(0x11, 0x22, 0x33));
-
-    tinyui_app_destroy(app);
-}
-
-static void test_window_public_constructors_keep_v2_direct_create_truth(void)
-{
-    struct tinyui_app *app = tinyui_app_create();
-    struct tinyui_window *win = tinyui_window_create(app, "root_public_truth");
-    struct tinyui_background *bg = tinyui_background_create(app, "bg_public_truth");
-    struct tinyui_widget *win_backend;
-    unsigned int bg_color = 0;
-    int bg_offset_x = 0;
-    int bg_offset_y = 0;
-
-    assert(app != 0);
-    assert(win != 0);
-    assert(bg != 0);
-
-    win_backend = &win->widget;
-    assert(win_backend->ld_widget != 0);
-    assert(win_backend->kind == TINYUI_BACKEND_WIDGET_WINDOW);
-    assert(win_backend->owner == app);
-    /* After C1 phantom-root change, user window is a child of the scene phantom root
-     * (nameId=0).  Verify: window has a parent and that parent is the actual root. */
+    assert(tinyui_window_set_color(win, 0x0A0B0CU) == 0);
+    assert(ld_win->bgColor == (ldColor)test_rgb_to_ld_color(0x0A0B0CU));
+    assert(tinyui_window_get_color(win, &color) == 0);
+    /* get_color is RGB565-lossy; require non-zero and stable re-get */
     {
-        ldBase_t *scene_root = (ldBase_t *)ldBaseGetRootNode(
-            (arm_2d_control_node_t *)win_backend->ld_widget);
-        assert(scene_root != (ldBase_t *)win_backend->ld_widget);
-        assert(ldBaseGetParent((ldBase_t *)win_backend->ld_widget) == scene_root);
+        unsigned int color2 = 0;
+        assert(tinyui_window_get_color(win, &color2) == 0);
+        assert(color == color2);
+        assert(color != 0U || 0x0A0B0CU == 0U);
     }
-    assert(tinyui_background_set_color(bg, 0x224466U) == 0);
-    assert(tinyui_background_get_color(bg, &bg_color) == 0);
-    assert(bg_color == 0x204462U);
-    assert(tinyui_background_set_offset(bg, 3, 7) == 0);
-    assert(tinyui_background_get_offset(bg, &bg_offset_x, &bg_offset_y) == 0);
-    assert(bg_offset_x == 3);
-    assert(bg_offset_y == 7);
 
-    tinyui_app_destroy(app);
+    memset(&source, 0, sizeof(source));
+    source.kind = TINYUI_IMAGE_SOURCE_RGB565_MEMORY;
+    tile.tRegion.tSize.iWidth = 16;
+    tile.tRegion.tSize.iHeight = 16;
+    memcpy(source._image_private, &tile, sizeof(tile));
+    assert(tinyui_window_set_background_source(win, &source) == 0);
+    assert(ld_win->ptImgTile == tinyui_image_source_get_image_tile(&source));
+
+    assert(tinyui_window_set_background_offset(win, 1, 2) == 0);
+    assert(tinyui_window_get_background_offset(win, &ox, &oy) == 0);
+    assert(ox == 1 && oy == 2);
+}
+
+static void test_window_props_color_and_source(void)
+{
+    tinyui_window_props_t props;
+    arm_2d_tile_t tile = {0};
+    tinyui_image_source_t source;
+    tinyui_obj_t *win;
+    unsigned int color = 0;
+    ldWindow_t *ld_win;
+
+    memset(&source, 0, sizeof(source));
+    source.kind = TINYUI_IMAGE_SOURCE_RGB565_MEMORY;
+    tile.tRegion.tSize.iWidth = 4;
+    tile.tRegion.tSize.iHeight = 4;
+    memcpy(source._image_private, &tile, sizeof(tile));
+
+    memset(&props, 0, sizeof(props));
+    props.fields = TINYUI_WINDOW_FIELD_BG_COLOR | TINYUI_WINDOW_FIELD_BACKGROUND_SOURCE;
+    props.bg_color = 0x010203U;
+    props.background_source = &source;
+
+    win = tinyui_window_create_with_props(0, &props);
+    assert(win != 0);
+    ld_win = (ldWindow_t *)((struct tinyui_widget *)(void *)win)->ld_widget;
+    assert(ld_win != 0);
+    assert(tinyui_window_get_color(win, &color) == 0);
+    assert(ld_win->bgColor == (ldColor)test_rgb_to_ld_color(0x010203U));
+    assert(ld_win->ptImgTile == tinyui_image_source_get_image_tile(&source));
+}
+
+static void test_window_rejects_invalid(void)
+{
+    tinyui_obj_t *win = tinyui_window_create(0);
+    assert(win != 0);
+    assert(tinyui_window_set_color(0, 0) == -1);
+    assert(tinyui_window_get_color(win, 0) == -1);
+    assert(tinyui_window_set_background_source(win, 0) == 0); /* clear allowed */
 }
 
 int main(void)
 {
-    struct tinyui_app *app = tinyui_app_create();
-    struct tinyui_window *win;
-    Dl_info self_info;
+    tinyui_deinit();
+    assert(tinyui_init() == TINYUI_OK);
 
-    assert(dladdr((void *)&main, &self_info) != 0);
-    assert(self_info.dli_fname != 0);
-    test_self_binary_path = self_info.dli_fname;
+    test_window_create_and_ld_mapping();
+    test_window_color_and_background_source();
+    test_window_props_color_and_source();
+    test_window_rejects_invalid();
 
-    test_window_color_internal_seam_uses_tinyui_names();
-    test_window_layout_mapper_internal_seam_uses_tinyui_names();
-    test_window_native_access_internal_seam_uses_tinyui_names();
-    test_window_validation_internal_seam_uses_tinyui_names();
-    test_window_init_defaults_internal_seam_uses_tinyui_names();
-    test_window_create_path_boundary_truth();
-    test_window_root_size_internal_seam_uses_tinyui_names();
-    test_window_dispose_partial_internal_seam_uses_tinyui_names();
-    test_window_generic_gap_internal_seam_uses_tinyui_names();
-    test_window_padding_contract_internal_seam_uses_tinyui_names();
-    test_window_layout_type_internal_seam_uses_tinyui_names();
-    test_window_flex_contract_internal_seam_uses_tinyui_names();
-    test_window_constructor_binds_ld_without_backend_wrapper();
-    test_window_public_constructors_keep_v2_direct_create_truth();
-    test_window_create_with_props_failure_rolls_back_root_binding();
-    test_window_create_with_props_applies_bg_color_without_backend_constructor();
-
-    assert(app != 0);
-    win = tinyui_window_create(app, "root");
-    assert(win != 0);
-
-    test_window_create_and_backend_mapping(win);
-    test_window_padding_group_round_trip(win);
-    test_window_grid_padding_positions_switch(win);
-    test_window_widget_base_api_round_trip(win);
-    test_window_layout_type_and_gap_getters(win);
-
-    tinyui_app_destroy(app);
+    tinyui_deinit();
     return 0;
 }

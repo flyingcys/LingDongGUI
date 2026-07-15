@@ -19,6 +19,13 @@
 #ifndef TINYUI_ARC_H
 #define TINYUI_ARC_H
 
+#include "tinyui_config.h"
+#if !TINYUI_ENABLE_ARC
+#  ifndef TINYUI_INTERNAL_FEATURE_HEADER
+#  error "TINYUI_ENABLE_ARC is disabled"
+#  endif
+#endif
+
 #include "core/obj.h"
 #include <stdint.h>
 

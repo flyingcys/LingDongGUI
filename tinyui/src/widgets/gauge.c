@@ -344,7 +344,7 @@ int tinyui_gauge_set_bg_source(tinyui_obj_t *gauge_obj, struct tinyui_image_sour
 
     ldGauge_t *ld_gauge;
 
-    if (gauge == 0 || source == 0 || tinyui_image_source_get_image_tile(source) == 0 || tinyui_image_source_get_mask_tile(source) == 0
+    if (gauge == 0 || source == 0 || source->kind == TINYUI_IMAGE_SOURCE_EMPTY
         || gauge->widget.ld_widget == 0
         || gauge->widget.kind != TINYUI_BACKEND_WIDGET_GAUGE) {
         return -1;
@@ -371,7 +371,7 @@ int tinyui_gauge_set_pointer_source(tinyui_obj_t *gauge_obj, struct tinyui_image
 
     arm_2d_tile_t *mask_tile;
 
-    if (source == 0 || tinyui_image_source_get_mask_tile(source) == 0) {
+    if (source == 0 || source->kind == TINYUI_IMAGE_SOURCE_EMPTY) {
         return -1;
     }
 
@@ -389,7 +389,7 @@ int tinyui_gauge_set_pointer_source_with_origin(tinyui_obj_t *gauge_obj, struct 
 
     ldGauge_t *ld_gauge;
 
-    if (gauge == 0 || source == 0 || tinyui_image_source_get_image_tile(source) == 0 || tinyui_image_source_get_mask_tile(source) == 0
+    if (gauge == 0 || source == 0 || source->kind == TINYUI_IMAGE_SOURCE_EMPTY
         || gauge->widget.ld_widget == 0
         || gauge->widget.kind != TINYUI_BACKEND_WIDGET_GAUGE) {
         return -1;
@@ -414,7 +414,7 @@ int tinyui_gauge_set_pointer_mask_source(tinyui_obj_t *gauge_obj, struct tinyui_
 
     ldGauge_t *ld_gauge;
 
-    if (gauge == 0 || source == 0 || tinyui_image_source_get_mask_tile(source) == 0
+    if (gauge == 0 || source == 0 || source->kind == TINYUI_IMAGE_SOURCE_EMPTY
         || gauge->widget.ld_widget == 0
         || gauge->widget.kind != TINYUI_BACKEND_WIDGET_GAUGE) {
         return -1;
@@ -462,8 +462,8 @@ int tinyui_gauge_set_trail(tinyui_obj_t *gauge_obj, struct tinyui_image_source *
     if (gauge == 0
         || bg_trail_source == 0
         || pointer_trail_source == 0
-        || tinyui_image_source_get_mask_tile(bg_trail_source) == 0
-        || tinyui_image_source_get_mask_tile(pointer_trail_source) == 0
+        || bg_trail_source->kind == TINYUI_IMAGE_SOURCE_EMPTY
+        || pointer_trail_source->kind == TINYUI_IMAGE_SOURCE_EMPTY
         || gauge->widget.ld_widget == 0
         || gauge->widget.kind != TINYUI_BACKEND_WIDGET_GAUGE) {
         return -1;
@@ -486,8 +486,8 @@ int tinyui_gauge_set_progress_bar(tinyui_obj_t *gauge_obj, struct tinyui_image_s
     if (gauge == 0
         || bg_progress_source == 0
         || pointer_progress_source == 0
-        || tinyui_image_source_get_mask_tile(bg_progress_source) == 0
-        || tinyui_image_source_get_mask_tile(pointer_progress_source) == 0
+        || bg_progress_source->kind == TINYUI_IMAGE_SOURCE_EMPTY
+        || pointer_progress_source->kind == TINYUI_IMAGE_SOURCE_EMPTY
         || gauge->widget.ld_widget == 0
         || gauge->widget.kind != TINYUI_BACKEND_WIDGET_GAUGE) {
         return -1;

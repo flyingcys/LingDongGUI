@@ -19,79 +19,76 @@
 #include "table_basic/table_basic.h"
 #include "tinyui.h"
 
-static void make_ui(struct tinyui_window *win)
+#include <string.h>
+
+tinyui_result_t tinyui_demo_table_basic_build(tinyui_obj_t *screen)
 {
-    struct tinyui_label *title;
-    struct tinyui_label *hint;
-    struct tinyui_table *table;
-    static const int cols[] = {260, 0};
-    static const int rows[] = {28, 22, 120, 0};
+    tinyui_obj_t *title;
+    tinyui_obj_t *hint;
+    tinyui_obj_t *table;
+    tinyui_table_props_t table_props;
+    tinyui_result_t result;
 
-    tinyui_grid_set_columns(win, cols, 2);
-    tinyui_grid_set_rows(win, rows, 4);
-    tinyui_grid_set_gap(win, 12, 12);
-    tinyui_grid_set_align(win, TINYUI_ALIGN_START, TINYUI_ALIGN_START);
-    tinyui_window_set_padding(win, 24, 24, 24, 24);
-
-    title = tinyui_label_create(win, "title");
-    hint = tinyui_label_create(win, "hint");
-    table = tinyui_table_create_with_props(
-        win,
-        &(struct tinyui_table_props){
-            .id = "table",
-            .rows = 3,
-            .columns = 3,
-            .width = 220,
-            .height = 120,
-        });
-
-    if (title != 0) {
-        tinyui_label_set_text(title, "Table");
-        tinyui_widget_set_size((struct tinyui_widget *)title, 220, 28);
-        tinyui_widget_set_grid_cell((struct tinyui_widget *)title,
-                                    0, 0, 1, 1,
-                                    TINYUI_ALIGN_START,
-                                    TINYUI_ALIGN_CENTER);
+    if (screen == NULL) {
+        return TINYUI_ERROR_INVALID_ARG;
     }
 
-    if (hint != 0) {
-        tinyui_label_set_text(hint, "Editable cell reuses the shared R1 commit boundary.");
-        tinyui_widget_set_size((struct tinyui_widget *)hint, 260, 22);
-        tinyui_widget_set_grid_cell((struct tinyui_widget *)hint,
-                                    0, 1, 1, 1,
-                                    TINYUI_ALIGN_START,
-                                    TINYUI_ALIGN_CENTER);
+    result = tinyui_flex_set_flow(screen, TINYUI_FLEX_FLOW_COLUMN);
+    if (result != TINYUI_OK) {
+        return result;
+    }
+    result = tinyui_flex_set_align(screen,
+                                   TINYUI_ALIGN_START,
+                                   TINYUI_ALIGN_START,
+                                   TINYUI_ALIGN_START);
+    if (result != TINYUI_OK) {
+        return result;
+    }
+    result = tinyui_flex_set_gap(screen, 12, 12);
+    if (result != TINYUI_OK) {
+        return result;
+    }
+    if (tinyui_window_set_padding(screen, 24, 24, 24, 24) != 0) {
+        return TINYUI_ERROR_BACKEND;
     }
 
-    if (table != 0) {
-        tinyui_table_set_cell_text(table, 0, 0, "A1");
-        tinyui_table_set_cell_text(table, 0, 1, "B1");
-        tinyui_table_set_cell_text(table, 0, 2, "C1");
-        tinyui_table_set_cell_text(table, 1, 0, "A2");
-        tinyui_table_set_cell_text(table, 1, 1, "Edit");
-        tinyui_table_set_cell_text(table, 1, 2, "C2");
-        tinyui_table_set_cell_text(table, 2, 0, "A3");
-        tinyui_table_set_cell_text(table, 2, 1, "B3");
-        tinyui_table_set_cell_text(table, 2, 2, "C3");
-        tinyui_table_set_cell_editable(table, 1, 1, 1, 16);
-        tinyui_table_set_current_cell(table, 1, 1);
-        tinyui_widget_set_bg_color((struct tinyui_widget *)table, 0xD8EBD0U);
-        tinyui_widget_set_text_color((struct tinyui_widget *)table, 0x203020U);
-        tinyui_widget_set_border_color((struct tinyui_widget *)table, 0x418F1FU);
-        tinyui_widget_set_radius((struct tinyui_widget *)table, 4);
-        tinyui_widget_set_padding((struct tinyui_widget *)table, 6);
-        tinyui_widget_set_grid_cell((struct tinyui_widget *)table,
-                                    0, 2, 1, 1,
-                                    TINYUI_ALIGN_START,
-                                    TINYUI_ALIGN_CENTER);
-    }
-}
+    memset(&table_props, 0, sizeof(table_props));
+    /* border/radius 无 LD 全局通道，不得写入 props 假成功；padding→itemSpace。 */
+    table_props.fields = TINYUI_TABLE_FIELD_ROWS | TINYUI_TABLE_FIELD_COLUMNS
+        | TINYUI_TABLE_FIELD_WIDTH | TINYUI_TABLE_FIELD_HEIGHT
+        | TINYUI_TABLE_FIELD_BG_COLOR | TINYUI_TABLE_FIELD_TEXT_COLOR
+        | TINYUI_TABLE_FIELD_PADDING;
+    table_props.rows = 3;
+    table_props.columns = 3;
+    table_props.width = 220;
+    table_props.height = 120;
+    table_props.bg_color = 0xD8EBD0U;
+    table_props.text_color = 0x203020U;
+    table_props.padding = 6;
 
-void tinyui_demo_table_basic(void)
-{
-    tinyui_obj_t *screen = tinyui_screen_create();
-    struct tinyui_window *win = (struct tinyui_window *)screen;
-    if (win == 0) return;
-    make_ui(win);
-    tinyui_screen_load(screen);
+    title = tinyui_label_create(screen);
+    hint = tinyui_label_create(screen);
+    table = tinyui_table_create_with_props(screen, &table_props);
+    if (title == NULL || hint == NULL || table == NULL) {
+        return TINYUI_ERROR_NO_MEMORY;
+    }
+
+    if (tinyui_label_set_text(title, "Table") != 0
+        || tinyui_label_set_text(
+               hint, "Editable cell reuses the shared R1 commit boundary.") != 0
+        || tinyui_table_set_cell_text(table, 0, 0, "A1") != 0
+        || tinyui_table_set_cell_text(table, 0, 1, "B1") != 0
+        || tinyui_table_set_cell_text(table, 0, 2, "C1") != 0
+        || tinyui_table_set_cell_text(table, 1, 0, "A2") != 0
+        || tinyui_table_set_cell_text(table, 1, 1, "Edit") != 0
+        || tinyui_table_set_cell_text(table, 1, 2, "C2") != 0
+        || tinyui_table_set_cell_text(table, 2, 0, "A3") != 0
+        || tinyui_table_set_cell_text(table, 2, 1, "B3") != 0
+        || tinyui_table_set_cell_text(table, 2, 2, "C3") != 0
+        || tinyui_table_set_cell_editable(table, 1, 1, 1, 16) != 0
+        || tinyui_table_set_current_cell(table, 1, 1) != 0) {
+        return TINYUI_ERROR_BACKEND;
+    }
+
+    return TINYUI_OK;
 }

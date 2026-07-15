@@ -19,53 +19,51 @@
 #include "progress_bar_basic/progress_bar_basic.h"
 #include "tinyui.h"
 
-static void make_ui(struct tinyui_window *win)
+#include <stdio.h>
+
+tinyui_result_t tinyui_demo_progress_bar_basic_build(tinyui_obj_t *screen)
 {
-    struct tinyui_label *title;
-    struct tinyui_progress_bar *primary;
-    struct tinyui_progress_bar *secondary;
-    static const int cols[] = {80, 320, 0};
-    static const int rows[] = {28, 24, 144, 0};
+    tinyui_obj_t *title;
+    tinyui_obj_t *primary;
+    tinyui_obj_t *secondary;
 
-    tinyui_grid_set_columns(win, cols, 3);
-    tinyui_grid_set_rows(win, rows, 4);
-    tinyui_grid_set_gap(win, 16, 16);
-    tinyui_grid_set_align(win, TINYUI_ALIGN_START, TINYUI_ALIGN_START);
-    tinyui_window_set_padding(win, 24, 24, 24, 24);
+    if (screen == NULL) {
+        return TINYUI_ERROR_INVALID_ARG;
+    }
 
-    title = tinyui_label_create(win, "title");
-    primary = tinyui_progress_bar_create(win, "primary");
-    secondary = tinyui_progress_bar_create(win, "secondary");
+    (void)tinyui_obj_set_bg_color(screen, 0xF6F8FAU);
 
-    tinyui_label_set_text(title, "Progress Bar");
-    tinyui_widget_set_size((struct tinyui_widget *)title, 220, 28);
-    tinyui_widget_set_size((struct tinyui_widget *)primary, 320, 24);
-    tinyui_widget_set_size((struct tinyui_widget *)secondary, 48, 144);
+    title = tinyui_label_create(screen);
+    primary = tinyui_progress_bar_create(screen);
+    secondary = tinyui_progress_bar_create(screen);
+    if (title == NULL || primary == NULL || secondary == NULL) {
+        return TINYUI_ERROR_NO_MEMORY;
+    }
 
-    tinyui_progress_bar_set_percent(primary, 72);
-    tinyui_progress_bar_set_percent(secondary, 40);
-    tinyui_progress_bar_set_horizontal(primary, 1);
-    tinyui_progress_bar_set_horizontal(secondary, 0);
+    if (tinyui_obj_set_pos(title, 32, 24) != TINYUI_OK
+        || tinyui_obj_set_size(title, 220, 28) != TINYUI_OK
+        || tinyui_label_set_text(title, "Progress Bar") != 0
+        || tinyui_label_set_text_color(title, 0x102030U) != 0) {
+        return TINYUI_ERROR_BACKEND;
+    }
 
-    tinyui_widget_set_grid_cell((struct tinyui_widget *)title,
-                                0, 0, 2, 1,
-                                TINYUI_ALIGN_START,
-                                TINYUI_ALIGN_CENTER);
-    tinyui_widget_set_grid_cell((struct tinyui_widget *)primary,
-                                1, 1, 1, 1,
-                                TINYUI_ALIGN_START,
-                                TINYUI_ALIGN_CENTER);
-    tinyui_widget_set_grid_cell((struct tinyui_widget *)secondary,
-                                0, 2, 1, 1,
-                                TINYUI_ALIGN_CENTER,
-                                TINYUI_ALIGN_START);
-}
+    if (tinyui_obj_set_pos(primary, 32, 80) != TINYUI_OK
+        || tinyui_obj_set_size(primary, 320, 24) != TINYUI_OK
+        || tinyui_progress_bar_set_percent(primary, 72) != 0
+        || tinyui_progress_bar_set_horizontal(primary, 1) != 0
+        || tinyui_progress_bar_set_color(primary, 0xD0D7DEU, 0x1F6FEBU) != 0) {
+        return TINYUI_ERROR_BACKEND;
+    }
 
-void tinyui_demo_progress_bar_basic(void)
-{
-    tinyui_obj_t *screen = tinyui_screen_create();
-    struct tinyui_window *win = (struct tinyui_window *)screen;
-    if (win == 0) return;
-    make_ui(win);
-    tinyui_screen_load(screen);
+    if (tinyui_obj_set_pos(secondary, 32, 130) != TINYUI_OK
+        || tinyui_obj_set_size(secondary, 48, 144) != TINYUI_OK
+        || tinyui_progress_bar_set_percent(secondary, 40) != 0
+        || tinyui_progress_bar_set_horizontal(secondary, 0) != 0
+        || tinyui_progress_bar_set_color(secondary, 0xD0D7DEU, 0x2DA44EU) != 0) {
+        return TINYUI_ERROR_BACKEND;
+    }
+
+    printf("TINYUI_SCENARIO=progress_bar_basic\n");
+    fflush(stdout);
+    return TINYUI_OK;
 }

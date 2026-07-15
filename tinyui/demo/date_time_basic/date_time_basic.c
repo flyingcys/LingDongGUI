@@ -19,49 +19,51 @@
 #include "date_time_basic/date_time_basic.h"
 #include "tinyui.h"
 
-static void make_ui(struct tinyui_window *win)
+#include <stdio.h>
+
+static tinyui_font_t s_font;
+
+tinyui_result_t tinyui_demo_date_time_basic_build(tinyui_obj_t *screen)
 {
-    struct tinyui_label *title;
-    struct tinyui_date_time *date_time;
-    static const int cols[] = {320, 0};
-    static const int rows[] = {28, 44, 0};
+    tinyui_obj_t *title;
+    tinyui_obj_t *date_time;
 
-    tinyui_grid_set_columns(win, cols, 2);
-    tinyui_grid_set_rows(win, rows, 3);
-    tinyui_grid_set_gap(win, 16, 16);
-    tinyui_grid_set_align(win, TINYUI_ALIGN_CENTER, TINYUI_ALIGN_START);
-    tinyui_window_set_padding(win, 24, 24, 24, 24);
-
-    title = tinyui_label_create(win, "title");
-    date_time = tinyui_date_time_create((struct tinyui_widget *)win, "date_time");
-
-    tinyui_label_set_text(title, "Date Time");
-    tinyui_date_time_set_format(date_time, "yyyy-mm-dd hh:nn:ss");
-    tinyui_date_time_set_date(date_time, 2026, 5, 31);
-    tinyui_date_time_set_time(date_time, 12, 34, 56);
-
-    tinyui_widget_set_size((struct tinyui_widget *)title, 180, 28);
-    tinyui_widget_set_size((struct tinyui_widget *)date_time, 240, 32);
-
-    tinyui_widget_set_grid_cell((struct tinyui_widget *)title,
-                                0, 0, 1, 1,
-                                TINYUI_ALIGN_CENTER,
-                                TINYUI_ALIGN_CENTER);
-    tinyui_widget_set_grid_cell((struct tinyui_widget *)date_time,
-                                0, 1, 1, 1,
-                                TINYUI_ALIGN_CENTER,
-                                TINYUI_ALIGN_CENTER);
-}
-
-void tinyui_demo_date_time_basic(void)
-{
-    tinyui_obj_t *screen = tinyui_screen_create();
-    struct tinyui_window *win = (struct tinyui_window *)screen;
-
-    if (win == 0) {
-        return;
+    if (screen == NULL) {
+        return TINYUI_ERROR_INVALID_ARG;
     }
 
-    make_ui(win);
-    tinyui_screen_load(screen);
+    (void)tinyui_obj_set_bg_color(screen, 0xF6F8FAU);
+
+    if (tinyui_font_from_builtin(TINYUI_FONT_6X8, &s_font) != TINYUI_OK) {
+        /* Font optional; continue with default. */
+    }
+
+    title = tinyui_label_create(screen);
+    date_time = tinyui_date_time_create(screen);
+    if (title == NULL || date_time == NULL) {
+        return TINYUI_ERROR_NO_MEMORY;
+    }
+
+    if (tinyui_obj_set_pos(title, 32, 32) != TINYUI_OK
+        || tinyui_obj_set_size(title, 200, 28) != TINYUI_OK
+        || tinyui_label_set_text(title, "Date Time") != 0
+        || tinyui_label_set_text_color(title, 0x102030U) != 0) {
+        return TINYUI_ERROR_BACKEND;
+    }
+
+    if (tinyui_obj_set_pos(date_time, 32, 80) != TINYUI_OK
+        || tinyui_obj_set_size(date_time, 280, 32) != TINYUI_OK
+        || tinyui_date_time_set_format(date_time, "yyyy-mm-dd hh:nn:ss") != 0
+        || tinyui_date_time_set_date(date_time, 2026, 5, 31) != 0
+        || tinyui_date_time_set_time(date_time, 12, 34, 56) != 0
+        || tinyui_date_time_set_use_system_time(date_time, 0) != 0
+        || tinyui_date_time_set_text_color(date_time, 0x102030U) != 0
+        || tinyui_date_time_set_bg_color(date_time, 0xE8EEF5U) != 0) {
+        return TINYUI_ERROR_BACKEND;
+    }
+    (void)tinyui_date_time_set_font(date_time, &s_font);
+
+    printf("TINYUI_SCENARIO=date_time_basic\n");
+    fflush(stdout);
+    return TINYUI_OK;
 }

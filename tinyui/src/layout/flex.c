@@ -20,87 +20,122 @@ static struct tinyui_window *s_window_of(tinyui_obj_t *container)
     return (struct tinyui_window *)widget;
 }
 
-static ldFlexFlow_t s_flex_flow_to_ld(tinyui_flex_flow_t flow)
+static int s_flex_flow_to_ld(tinyui_flex_flow_t flow, ldFlexFlow_t *out)
 {
+    if (out == 0) {
+        return -1;
+    }
     switch (flow) {
-    case TINYUI_FLEX_FLOW_COLUMN:
-        return ldFlexFlowColumn;
-    case TINYUI_FLEX_FLOW_ROW_WRAP:
-        return ldFlexFlowRowWrap;
-    case TINYUI_FLEX_FLOW_COLUMN_WRAP:
-        return ldFlexFlowColumnWrap;
-    case TINYUI_FLEX_FLOW_ROW_REVERSE:
-        return ldFlexFlowRowReverse;
-    case TINYUI_FLEX_FLOW_COLUMN_REVERSE:
-        return ldFlexFlowColumnReverse;
-    case TINYUI_FLEX_FLOW_ROW_WRAP_REVERSE:
-        return ldFlexFlowRowWrapReverse;
-    case TINYUI_FLEX_FLOW_COLUMN_WRAP_REVERSE:
-        return ldFlexFlowColumnWrapReverse;
     case TINYUI_FLEX_FLOW_ROW:
-        return ldFlexFlowRow;
+        *out = ldFlexFlowRow;
+        return 0;
+    case TINYUI_FLEX_FLOW_COLUMN:
+        *out = ldFlexFlowColumn;
+        return 0;
+    case TINYUI_FLEX_FLOW_ROW_WRAP:
+        *out = ldFlexFlowRowWrap;
+        return 0;
+    case TINYUI_FLEX_FLOW_COLUMN_WRAP:
+        *out = ldFlexFlowColumnWrap;
+        return 0;
+    case TINYUI_FLEX_FLOW_ROW_REVERSE:
+        *out = ldFlexFlowRowReverse;
+        return 0;
+    case TINYUI_FLEX_FLOW_COLUMN_REVERSE:
+        *out = ldFlexFlowColumnReverse;
+        return 0;
+    case TINYUI_FLEX_FLOW_ROW_WRAP_REVERSE:
+        *out = ldFlexFlowRowWrapReverse;
+        return 0;
+    case TINYUI_FLEX_FLOW_COLUMN_WRAP_REVERSE:
+        *out = ldFlexFlowColumnWrapReverse;
+        return 0;
     default:
-        return (ldFlexFlow_t)-1;
+        return -1;
     }
 }
 
-static ldFlexMainAlign_t s_flex_main_align_to_ld(tinyui_align_t align)
+static int s_flex_main_align_to_ld(tinyui_align_t align, ldFlexMainAlign_t *out)
 {
+    if (out == 0) {
+        return -1;
+    }
     switch (align) {
-    case TINYUI_ALIGN_CENTER:
-        return ldFlexMainAlignCenter;
-    case TINYUI_ALIGN_END:
-        return ldFlexMainAlignEnd;
-    case TINYUI_ALIGN_SPACE_EVENLY:
-        return ldFlexMainAlignSpaceEvenly;
-    case TINYUI_ALIGN_SPACE_AROUND:
-        return ldFlexMainAlignSpaceAround;
-    case TINYUI_ALIGN_SPACE_BETWEEN:
-        return ldFlexMainAlignSpaceBetween;
     case TINYUI_ALIGN_START:
     case TINYUI_ALIGN_STRETCH:
-        return ldFlexMainAlignStart;
+        *out = ldFlexMainAlignStart;
+        return 0;
+    case TINYUI_ALIGN_CENTER:
+        *out = ldFlexMainAlignCenter;
+        return 0;
+    case TINYUI_ALIGN_END:
+        *out = ldFlexMainAlignEnd;
+        return 0;
+    case TINYUI_ALIGN_SPACE_EVENLY:
+        *out = ldFlexMainAlignSpaceEvenly;
+        return 0;
+    case TINYUI_ALIGN_SPACE_AROUND:
+        *out = ldFlexMainAlignSpaceAround;
+        return 0;
+    case TINYUI_ALIGN_SPACE_BETWEEN:
+        *out = ldFlexMainAlignSpaceBetween;
+        return 0;
     default:
-        return (ldFlexMainAlign_t)-1;
+        return -1;
     }
 }
 
-static ldFlexCrossAlign_t s_flex_cross_align_to_ld(tinyui_align_t align)
+static int s_flex_cross_align_to_ld(tinyui_align_t align, ldFlexCrossAlign_t *out)
 {
+    if (out == 0) {
+        return -1;
+    }
     switch (align) {
     case TINYUI_ALIGN_CENTER:
-        return ldFlexCrossAlignCenter;
+        *out = ldFlexCrossAlignCenter;
+        return 0;
     case TINYUI_ALIGN_END:
-        return ldFlexCrossAlignEnd;
+        *out = ldFlexCrossAlignEnd;
+        return 0;
     case TINYUI_ALIGN_START:
     case TINYUI_ALIGN_STRETCH:
     case TINYUI_ALIGN_SPACE_EVENLY:
     case TINYUI_ALIGN_SPACE_AROUND:
     case TINYUI_ALIGN_SPACE_BETWEEN:
-        return ldFlexCrossAlignStart;
+        *out = ldFlexCrossAlignStart;
+        return 0;
     default:
-        return (ldFlexCrossAlign_t)-1;
+        return -1;
     }
 }
 
-static ldFlexTrackAlign_t s_flex_track_align_to_ld(tinyui_align_t align)
+static int s_flex_track_align_to_ld(tinyui_align_t align, ldFlexTrackAlign_t *out)
 {
+    if (out == 0) {
+        return -1;
+    }
     switch (align) {
     case TINYUI_ALIGN_CENTER:
-        return ldFlexTrackAlignCenter;
+        *out = ldFlexTrackAlignCenter;
+        return 0;
     case TINYUI_ALIGN_END:
-        return ldFlexTrackAlignEnd;
+        *out = ldFlexTrackAlignEnd;
+        return 0;
     case TINYUI_ALIGN_SPACE_BETWEEN:
-        return ldFlexTrackAlignSpaceBetween;
+        *out = ldFlexTrackAlignSpaceBetween;
+        return 0;
     case TINYUI_ALIGN_SPACE_AROUND:
-        return ldFlexTrackAlignSpaceAround;
+        *out = ldFlexTrackAlignSpaceAround;
+        return 0;
     case TINYUI_ALIGN_SPACE_EVENLY:
-        return ldFlexTrackAlignSpaceEvenly;
+        *out = ldFlexTrackAlignSpaceEvenly;
+        return 0;
     case TINYUI_ALIGN_START:
     case TINYUI_ALIGN_STRETCH:
-        return ldFlexTrackAlignStart;
+        *out = ldFlexTrackAlignStart;
+        return 0;
     default:
-        return (ldFlexTrackAlign_t)-1;
+        return -1;
     }
 }
 
@@ -114,8 +149,7 @@ tinyui_result_t tinyui_flex_set_flow(tinyui_obj_t *container,
     if (window == 0) {
         return TINYUI_ERROR_INVALID_OBJECT;
     }
-    native_flow = s_flex_flow_to_ld(flow);
-    if ((int)native_flow < 0) {
+    if (s_flex_flow_to_ld(flow, &native_flow) != 0) {
         return TINYUI_ERROR_INVALID_ARG;
     }
     ld_window = tinyui_window_ld_of(window);
@@ -142,10 +176,9 @@ tinyui_result_t tinyui_flex_set_align(tinyui_obj_t *container,
     if (window == 0) {
         return TINYUI_ERROR_INVALID_OBJECT;
     }
-    native_main = s_flex_main_align_to_ld(main_align);
-    native_cross = s_flex_cross_align_to_ld(cross_align);
-    native_track = s_flex_track_align_to_ld(track_align);
-    if ((int)native_main < 0 || (int)native_cross < 0 || (int)native_track < 0) {
+    if (s_flex_main_align_to_ld(main_align, &native_main) != 0
+        || s_flex_cross_align_to_ld(cross_align, &native_cross) != 0
+        || s_flex_track_align_to_ld(track_align, &native_track) != 0) {
         return TINYUI_ERROR_INVALID_ARG;
     }
     ld_window = tinyui_window_ld_of(window);

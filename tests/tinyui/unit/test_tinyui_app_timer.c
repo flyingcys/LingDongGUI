@@ -1,389 +1,443 @@
-#include "internal/app_legacy.h"
+#include "core/runtime.h"
+#include "core/timer.h"
 #include "internal.h"
+#include "tick/tick.h"
 
 #include <assert.h>
-#include <stdio.h>
 #include <stddef.h>
-#include <stdlib.h>
+#include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 
-static const char *test_self_binary_path = 0;
+/* ── fake clock ─────────────────────────────────────────────────────────── */
 
-static const char *test_repo_path(const char *relative_path)
+static uint32_t s_fake_now_ms;
+
+static unsigned int fake_tick_get(void *user_data)
 {
-    static char path[2048];
-    char base[2048];
-    char *tests_dir;
-
-    snprintf(base, sizeof(base), "%s", __FILE__);
-    tests_dir = strstr(base, "tests/tinyui/unit/");
-    assert(tests_dir != 0);
-    *tests_dir = '\0';
-    snprintf(path, sizeof(path), "%s%s", base, relative_path);
-    return path;
-}
-
-static void assert_command_success(const char *command)
-{
-    int rc = system(command);
-    if (rc == 0) {
-        return;
-    }
-
-    fprintf(stderr, "command failed (%d): %s\n", rc, command);
-    abort();
-}
-
-static void assert_archive_lacks_symbol(const char *archive_path, const char *symbol)
-{
-    char command[1024];
-
-    snprintf(command,
-             sizeof(command),
-             "nm %s | awk '{print $NF}' | grep -E '^(%s|_%s)$' >/dev/null",
-             archive_path,
-             symbol,
-             symbol);
-    if (system(command) == 0) {
-        fprintf(stderr, "unexpected archive symbol present: %s in %s\n", symbol, archive_path);
-        abort();
-    }
-}
-
-static void assert_self_binary_lacks_symbol(const char *symbol)
-{
-    char command[1024];
-
-    snprintf(command,
-             sizeof(command),
-             "nm %s | awk '{print $NF}' | grep -E '^(%s|_%s)$' >/dev/null",
-             test_self_binary_path,
-             symbol,
-             symbol);
-    if (system(command) == 0) {
-        fprintf(stderr, "unexpected self symbol present: %s in %s\n", symbol, test_self_binary_path);
-        abort();
-    }
-}
-
-static void assert_source_contains_text(const char *source_path, const char *needle)
-{
-    char command[1024];
-
-    snprintf(command,
-             sizeof(command),
-             "python3 - '%s' '%s' <<'PY'\n"
-             "from pathlib import Path\n"
-             "import sys\n"
-             "text = Path(sys.argv[1]).read_text()\n"
-             "raise SystemExit(0 if sys.argv[2] in text else 1)\n"
-             "PY",
-             source_path,
-             needle);
-    if (system(command) != 0) {
-        fprintf(stderr, "expected source text missing: %s in %s\n", needle, source_path);
-        abort();
-    }
-}
-
-static void assert_source_lacks_text(const char *source_path, const char *needle)
-{
-    char command[1024];
-
-    snprintf(command,
-             sizeof(command),
-             "python3 - '%s' '%s' <<'PY'\n"
-             "from pathlib import Path\n"
-             "import sys\n"
-             "text = Path(sys.argv[1]).read_text()\n"
-             "raise SystemExit(1 if sys.argv[2] in text else 0)\n"
-             "PY",
-             source_path,
-             needle);
-    if (system(command) != 0) {
-        fprintf(stderr, "unexpected source text present: %s in %s\n", needle, source_path);
-        abort();
-    }
-}
-
-static void require_condition(int condition)
-{
-    if (!condition) {
-        abort();
-    }
-}
-
-struct timer_callback_probe {
-    int call_count;
-    struct tinyui_app *last_app;
-    struct tinyui_app_timer *last_timer;
-    void *last_user_data;
-};
-
-struct timer_relink_chain_probe {
-    int call_count;
-    struct tinyui_app_timer *resume_timer;
-};
-
-static void timer_probe_callback(struct tinyui_app *app,
-                                 struct tinyui_app_timer *timer,
-                                 void *user_data)
-{
-    struct timer_callback_probe *probe = (struct timer_callback_probe *)user_data;
-
-    if (probe == NULL) {
-        return;
-    }
-
-    probe->call_count += 1;
-    probe->last_app = app;
-    probe->last_timer = timer;
-    probe->last_user_data = user_data;
-}
-
-static void timer_relink_chain_callback(struct tinyui_app *app,
-                                        struct tinyui_app_timer *timer,
-                                        void *user_data)
-{
-    struct timer_relink_chain_probe *probe = (struct timer_relink_chain_probe *)user_data;
-
-    if (probe == NULL) {
-        return;
-    }
-
-    probe->call_count += 1;
-    if (app != NULL) {
-        app->timers = probe->resume_timer;
-    }
-    if (probe->resume_timer != NULL) {
-        probe->resume_timer->next = NULL;
-    }
-    tinyui_app_timer_destroy(timer);
-}
-
-static void timer_must_not_fire_callback(struct tinyui_app *app,
-                                         struct tinyui_app_timer *timer,
-                                         void *user_data)
-{
-    (void)app;
-    (void)timer;
     (void)user_data;
-    abort();
+    return (unsigned int)s_fake_now_ms;
 }
 
-static void test_timer_rejects_null_app(void)
+static void install_fake_clock(void)
 {
-    assert(tinyui_app_timer_create(NULL) == NULL);
-}
-
-static void test_timer_callback_contract_shape(void)
-{
-    struct timer_callback_probe probe = {0};
-    tinyui_app_timer_cb_t callback = timer_probe_callback;
-
-    callback(NULL, NULL, &probe);
-    assert(probe.call_count == 1);
-    assert(probe.last_app == NULL);
-    assert(probe.last_timer == NULL);
-    assert(probe.last_user_data == &probe);
-}
-
-static void test_timer_running_state_contract(void)
-{
-    struct tinyui_app *app = tinyui_app_create();
-    struct tinyui_app_timer *timer;
+    struct tinyui_app *app = tinyui_runtime_internal_app_current();
 
     assert(app != NULL);
-    timer = tinyui_app_timer_create(app);
+    s_fake_now_ms = 0U;
+    assert(tinyui_tick_set_source(app, fake_tick_get, NULL) == 0);
+}
+
+static void set_now(uint32_t now_ms)
+{
+    s_fake_now_ms = now_ms;
+}
+
+static void process_at(uint32_t now_ms, uint32_t *next_ms)
+{
+    set_now(now_ms);
+    assert(tinyui_process(next_ms) == TINYUI_OK);
+}
+
+/* ── allocator counters (override ld* for this TU) ─────────────────────── */
+
+struct tinyui_test_allocator_stats {
+    size_t alloc_calls;
+    size_t calloc_calls;
+    size_t realloc_calls;
+    size_t free_calls;
+    size_t bytes_requested;
+};
+
+void tinyui_test_allocator_reset(void);
+struct tinyui_test_allocator_stats tinyui_test_allocator_snapshot(void);
+void *tinyui_test_allocator_malloc(uint32_t size);
+void *tinyui_test_allocator_calloc(uint32_t num, uint32_t size);
+void *tinyui_test_allocator_realloc(void *ptr, uint32_t size);
+void tinyui_test_allocator_free(void *ptr);
+
+void *ldMalloc(uint32_t size)
+{
+    return tinyui_test_allocator_malloc(size);
+}
+
+void *ldCalloc(uint32_t num, uint32_t size)
+{
+    return tinyui_test_allocator_calloc(num, size);
+}
+
+void *ldRealloc(void *ptr, uint32_t size)
+{
+    return tinyui_test_allocator_realloc(ptr, size);
+}
+
+void ldFree(void *ptr)
+{
+    tinyui_test_allocator_free(ptr);
+}
+
+static void assert_zero_alloc_delta(const struct tinyui_test_allocator_stats *before,
+                                    const struct tinyui_test_allocator_stats *after)
+{
+    assert(after->alloc_calls == before->alloc_calls);
+    assert(after->calloc_calls == before->calloc_calls);
+    assert(after->realloc_calls == before->realloc_calls);
+    assert(after->free_calls == before->free_calls);
+    assert(after->bytes_requested == before->bytes_requested);
+}
+
+/* ── callbacks ──────────────────────────────────────────────────────────── */
+
+static void count_cb(tinyui_timer_t *timer, void *user_data)
+{
+    unsigned int *calls = (unsigned int *)user_data;
+
+    (void)timer;
+    if (calls != NULL) {
+        ++*calls;
+    }
+}
+
+static void delete_self_cb(tinyui_timer_t *timer, void *user_data)
+{
+    unsigned int *calls = (unsigned int *)user_data;
+
+    ++*calls;
+    tinyui_timer_delete(timer);
+}
+
+static void stop_self_cb(tinyui_timer_t *timer, void *user_data)
+{
+    unsigned int *calls = (unsigned int *)user_data;
+
+    ++*calls;
+    assert(tinyui_timer_stop(timer) == TINYUI_OK);
+}
+
+struct create_in_cb_ctx {
+    unsigned int calls;
+    tinyui_timer_t *created;
+    unsigned int child_calls;
+};
+
+static void child_count_cb(tinyui_timer_t *timer, void *user_data)
+{
+    unsigned int *calls = (unsigned int *)user_data;
+
+    (void)timer;
+    ++*calls;
+}
+
+static void create_timer_in_cb(tinyui_timer_t *timer, void *user_data)
+{
+    struct create_in_cb_ctx *ctx = (struct create_in_cb_ctx *)user_data;
+
+    (void)timer;
+    ++ctx->calls;
+    ctx->created = tinyui_timer_create(10U, false, child_count_cb, &ctx->child_calls);
+    assert(ctx->created != NULL);
+    assert(tinyui_timer_start(ctx->created) == TINYUI_OK);
+}
+
+/* ── tests ──────────────────────────────────────────────────────────────── */
+
+static void test_timer_pool_capacity_and_reuse(void)
+{
+    tinyui_timer_t *timers[TINYUI_TIMER_CAPACITY];
+    tinyui_timer_t *extra;
+    tinyui_timer_t *reused;
+    unsigned int i;
+
+    assert(tinyui_init() == TINYUI_OK);
+    install_fake_clock();
+
+    for (i = 0U; i < (unsigned int)TINYUI_TIMER_CAPACITY; ++i) {
+        timers[i] = tinyui_timer_create(10U + i, true, count_cb, NULL);
+        assert(timers[i] != NULL);
+        assert(tinyui_last_result() == TINYUI_OK);
+    }
+
+    extra = tinyui_timer_create(99U, false, count_cb, NULL);
+    assert(extra == NULL);
+    assert(tinyui_last_result() == TINYUI_ERROR_CAPACITY);
+
+    tinyui_timer_delete(timers[3]);
+    reused = tinyui_timer_create(42U, false, count_cb, NULL);
+    assert(reused != NULL);
+    assert(tinyui_last_result() == TINYUI_OK);
+
+    extra = tinyui_timer_create(100U, false, count_cb, NULL);
+    assert(extra == NULL);
+    assert(tinyui_last_result() == TINYUI_ERROR_CAPACITY);
+
+    tinyui_deinit();
+}
+
+static void test_one_shot_and_repeat(void)
+{
+    tinyui_timer_t *one_shot;
+    tinyui_timer_t *repeat;
+    unsigned int one_calls = 0U;
+    unsigned int rep_calls = 0U;
+    uint32_t next_ms = 0U;
+
+    assert(tinyui_init() == TINYUI_OK);
+    install_fake_clock();
+
+    one_shot = tinyui_timer_create(50U, false, count_cb, &one_calls);
+    repeat = tinyui_timer_create(50U, true, count_cb, &rep_calls);
+    assert(one_shot != NULL);
+    assert(repeat != NULL);
+    assert(tinyui_timer_start(one_shot) == TINYUI_OK);
+    assert(tinyui_timer_start(repeat) == TINYUI_OK);
+
+    process_at(0U, &next_ms);
+    assert(one_calls == 0U);
+    assert(rep_calls == 0U);
+    assert(next_ms == 50U);
+
+    process_at(50U, &next_ms);
+    assert(one_calls == 1U);
+    assert(rep_calls == 1U);
+
+    process_at(100U, &next_ms);
+    assert(one_calls == 1U);
+    assert(rep_calls == 2U);
+
+    tinyui_timer_delete(one_shot);
+    tinyui_timer_delete(repeat);
+    tinyui_deinit();
+}
+
+static void test_callback_delete_and_stop_self(void)
+{
+    tinyui_timer_t *del_timer;
+    tinyui_timer_t *stop_timer;
+    unsigned int del_calls = 0U;
+    unsigned int stop_calls = 0U;
+    uint32_t next_ms = 0U;
+
+    assert(tinyui_init() == TINYUI_OK);
+    install_fake_clock();
+
+    del_timer = tinyui_timer_create(20U, true, delete_self_cb, &del_calls);
+    stop_timer = tinyui_timer_create(20U, true, stop_self_cb, &stop_calls);
+    assert(del_timer != NULL);
+    assert(stop_timer != NULL);
+    assert(tinyui_timer_start(del_timer) == TINYUI_OK);
+    assert(tinyui_timer_start(stop_timer) == TINYUI_OK);
+
+    process_at(20U, &next_ms);
+    assert(del_calls == 1U);
+    assert(stop_calls == 1U);
+
+    process_at(40U, &next_ms);
+    assert(del_calls == 1U);
+    assert(stop_calls == 1U);
+
+    tinyui_timer_delete(stop_timer);
+    tinyui_deinit();
+}
+
+static void test_create_in_callback_not_same_round(void)
+{
+    tinyui_timer_t *parent;
+    struct create_in_cb_ctx ctx;
+    uint32_t next_ms = 0U;
+
+    memset(&ctx, 0, sizeof(ctx));
+    assert(tinyui_init() == TINYUI_OK);
+    install_fake_clock();
+
+    parent = tinyui_timer_create(10U, false, create_timer_in_cb, &ctx);
+    assert(parent != NULL);
+    assert(tinyui_timer_start(parent) == TINYUI_OK);
+
+    process_at(10U, &next_ms);
+    assert(ctx.calls == 1U);
+    assert(ctx.created != NULL);
+    assert(ctx.child_calls == 0U);
+    /* 同轮新建且已到期：不触发，但 next_ms 为 0 要求立刻再 process */
+    assert(next_ms == 0U);
+
+    process_at(10U, &next_ms);
+    assert(ctx.child_calls == 1U);
+
+    tinyui_timer_delete(parent);
+    tinyui_timer_delete(ctx.created);
+    tinyui_deinit();
+}
+
+static void test_wraparound_deadline(void)
+{
+    tinyui_timer_t *timer;
+    unsigned int calls = 0U;
+    uint32_t next_ms = 0U;
+
+    assert(tinyui_init() == TINYUI_OK);
+    install_fake_clock();
+
+    /* Arm at now = UINT32_MAX - 4, interval 7 → deadline wraps to 3. */
+    set_now(UINT32_MAX - 4U);
+    timer = tinyui_timer_create(7U, false, count_cb, &calls);
     assert(timer != NULL);
+    assert(tinyui_timer_start(timer) == TINYUI_OK);
 
-    assert(tinyui_app_timer_is_running(timer) == 0);
-    require_condition(tinyui_app_timer_start(timer, 100, 1, timer_probe_callback, NULL) == 0);
-    require_condition(tinyui_app_timer_is_running(timer) == 1);
-    require_condition(tinyui_app_timer_stop(timer) == 0);
-    require_condition(tinyui_app_timer_is_running(timer) == 0);
+    process_at(UINT32_MAX - 4U, &next_ms);
+    assert(calls == 0U);
+    assert(next_ms == 7U);
 
-    tinyui_app_timer_destroy(timer);
-    tinyui_app_destroy(app);
+    process_at(UINT32_MAX - 1U, &next_ms);
+    assert(calls == 0U);
+    assert(next_ms == 4U);
+
+    process_at(3U, &next_ms);
+    assert(calls == 1U);
+
+    process_at(10U, &next_ms);
+    assert(calls == 1U);
+
+    tinyui_timer_delete(timer);
+    tinyui_deinit();
 }
 
-static void test_timer_start_rejects_invalid_arguments(void)
+static void test_next_ms_deadline_semantics(void)
 {
-    struct tinyui_app *app = tinyui_app_create();
-    struct tinyui_app_timer *timer;
+    tinyui_timer_t *timer;
+    tinyui_timer_t *parent;
+    struct create_in_cb_ctx ctx;
+    unsigned int calls = 0U;
+    uint32_t next_ms = 0U;
 
-    assert(app != NULL);
-    timer = tinyui_app_timer_create(app);
+    assert(tinyui_init() == TINYUI_OK);
+    install_fake_clock();
+
+    /* 无 deadline → UINT32_MAX */
+    process_at(0U, &next_ms);
+    assert(next_ms == UINT32_MAX);
+
+    timer = tinyui_timer_create(100U, false, count_cb, &calls);
     assert(timer != NULL);
+    assert(tinyui_timer_start(timer) == TINYUI_OK);
 
-    assert(tinyui_app_timer_start(timer, 0, 1, timer_probe_callback, NULL) == -1);
-    assert(tinyui_app_timer_start(timer, 100, 1, NULL, NULL) == -1);
+    /* 剩余毫秒 */
+    process_at(0U, &next_ms);
+    assert(next_ms == 100U);
 
-    tinyui_app_timer_destroy(timer);
-    tinyui_app_destroy(app);
-}
+    process_at(40U, &next_ms);
+    assert(next_ms == 60U);
+    assert(calls == 0U);
 
-static void test_timer_destroy_after_stop_is_safe(void)
-{
-    struct tinyui_app *app = tinyui_app_create();
-    struct tinyui_app_timer *timer;
-    struct timer_callback_probe probe = {0};
+    process_at(100U, &next_ms);
+    assert(calls == 1U);
+    /* one-shot 触发后停止 → 无 deadline */
+    assert(next_ms == UINT32_MAX);
 
-    assert(app != NULL);
-    timer = tinyui_app_timer_create(app);
+    tinyui_timer_delete(timer);
+
+    /* repeat 触发后从 now+interval 重排，返回剩余 */
+    timer = tinyui_timer_create(25U, true, count_cb, &calls);
     assert(timer != NULL);
+    calls = 0U;
+    set_now(1000U);
+    assert(tinyui_timer_start(timer) == TINYUI_OK);
+    process_at(1025U, &next_ms);
+    assert(calls == 1U);
+    assert(next_ms == 25U);
+    tinyui_timer_delete(timer);
 
-    assert(tinyui_app_timer_start(timer, 100, 1, timer_probe_callback, &probe) == 0);
-    assert(tinyui_app_timer_stop(timer) == 0);
-    tinyui_app_timer_destroy(timer);
-    tinyui_app_destroy(app);
+    /* 回调中 create+start 的槽 born_epoch 阻塞本轮触发，但已到期 → next_ms=0 */
+    memset(&ctx, 0, sizeof(ctx));
+    parent = tinyui_timer_create(1U, false, create_timer_in_cb, &ctx);
+    assert(parent != NULL);
+    set_now(2000U);
+    assert(tinyui_timer_start(parent) == TINYUI_OK);
+    process_at(2001U, &next_ms);
+    assert(ctx.created != NULL);
+    assert(ctx.child_calls == 0U);
+    assert(next_ms == 0U);
+
+    process_at(2001U, &next_ms);
+    assert(ctx.child_calls == 1U);
+
+    tinyui_timer_delete(parent);
+    tinyui_timer_delete(ctx.created);
+    tinyui_deinit();
 }
 
-static void test_app_destroy_cleans_residual_timers(void)
+static void test_process_null_next_ms_and_zero_alloc(void)
 {
-    struct tinyui_app *app = tinyui_app_create();
-    struct tinyui_app_timer *timer1;
-    struct tinyui_app_timer *timer2;
-    struct timer_callback_probe probe = {0};
+    tinyui_timer_t *timer;
+    unsigned int calls = 0U;
+    uint32_t next_ms = 0U;
+    struct tinyui_test_allocator_stats before;
+    struct tinyui_test_allocator_stats after;
 
-    assert(app != NULL);
-    timer1 = tinyui_app_timer_create(app);
-    timer2 = tinyui_app_timer_create(app);
-    assert(timer1 != NULL);
-    assert(timer2 != NULL);
+    assert(tinyui_init() == TINYUI_OK);
+    install_fake_clock();
 
-    require_condition(tinyui_app_timer_start(timer1, 100, 1, timer_probe_callback, &probe) == 0);
-    require_condition(tinyui_app_timer_is_running(timer1) == 1);
-    require_condition(tinyui_app_timer_is_running(timer2) == 0);
-    require_condition(app->timers != NULL);
-
-    tinyui_app_destroy(app);
-}
-
-static void test_repeating_timer_pump_keeps_running(void)
-{
-    struct tinyui_app *app = tinyui_app_create();
-    struct tinyui_app_timer *timer;
-    struct timer_callback_probe probe = {0};
-
-    assert(app != NULL);
-    timer = tinyui_app_timer_create(app);
+    timer = tinyui_timer_create(30U, true, count_cb, &calls);
     assert(timer != NULL);
+    assert(tinyui_timer_start(timer) == TINYUI_OK);
 
-    require_condition(tinyui_app_timer_start(timer, 50, 1, timer_probe_callback, &probe) == 0);
+    /* next_ms == NULL is legal (Task 3). */
+    set_now(0U);
+    assert(tinyui_process(NULL) == TINYUI_OK);
 
-    assert(probe.call_count == 0);
-    tinyui_app_pump_timers(app, 1000);
-    tinyui_app_pump_timers(app, 1050);
-    assert(probe.call_count == 1);
-    assert(tinyui_app_timer_is_running(timer) == 1);
+    set_now(30U);
+    tinyui_test_allocator_reset();
+    before = tinyui_test_allocator_snapshot();
+    assert(tinyui_process(&next_ms) == TINYUI_OK);
+    after = tinyui_test_allocator_snapshot();
+    assert_zero_alloc_delta(&before, &after);
+    assert(calls == 1U);
 
-    tinyui_app_pump_timers(app, 1100);
-    assert(probe.call_count == 2);
-    assert(tinyui_app_timer_is_running(timer) == 1);
-
-    tinyui_app_timer_destroy(timer);
-    tinyui_app_destroy(app);
+    tinyui_timer_delete(timer);
+    tinyui_deinit();
 }
 
-static void test_one_shot_timer_pump_stops_after_fire(void)
+static void test_set_interval_and_invalid_args(void)
 {
-    struct tinyui_app *app = tinyui_app_create();
-    struct tinyui_app_timer *timer;
-    struct timer_callback_probe probe = {0};
+    tinyui_timer_t *timer;
+    unsigned int calls = 0U;
+    uint32_t next_ms = 0U;
 
-    assert(app != NULL);
-    timer = tinyui_app_timer_create(app);
+    assert(tinyui_init() == TINYUI_OK);
+    install_fake_clock();
+
+    assert(tinyui_timer_create(0U, true, count_cb, NULL) == NULL);
+    assert(tinyui_last_result() == TINYUI_ERROR_INVALID_ARG);
+    assert(tinyui_timer_create(10U, true, NULL, NULL) == NULL);
+    assert(tinyui_last_result() == TINYUI_ERROR_INVALID_ARG);
+    assert(tinyui_timer_start(NULL) == TINYUI_ERROR_INVALID_ARG);
+    assert(tinyui_timer_stop(NULL) == TINYUI_ERROR_INVALID_ARG);
+    assert(tinyui_timer_set_interval(NULL, 10U) == TINYUI_ERROR_INVALID_ARG);
+    tinyui_timer_delete(NULL);
+
+    timer = tinyui_timer_create(100U, false, count_cb, &calls);
     assert(timer != NULL);
+    assert(tinyui_timer_set_interval(timer, 0U) == TINYUI_ERROR_INVALID_ARG);
+    assert(tinyui_timer_set_interval(timer, 40U) == TINYUI_OK);
+    assert(tinyui_timer_start(timer) == TINYUI_OK);
 
-    require_condition(tinyui_app_timer_start(timer, 50, 0, timer_probe_callback, &probe) == 0);
+    process_at(0U, &next_ms);
+    assert(next_ms == 40U);
+    process_at(40U, &next_ms);
+    assert(calls == 1U);
 
-    assert(probe.call_count == 0);
-    tinyui_app_pump_timers(app, 2000);
-    tinyui_app_pump_timers(app, 2050);
-    assert(probe.call_count == 1);
-    assert(tinyui_app_timer_is_running(timer) == 0);
-
-    tinyui_app_pump_timers(app, 2100);
-    assert(probe.call_count == 1);
-    assert(tinyui_app_timer_is_running(timer) == 0);
-
-    tinyui_app_timer_destroy(timer);
-    tinyui_app_destroy(app);
+    tinyui_timer_delete(timer);
+    tinyui_deinit();
 }
 
-static void test_timer_pump_skips_detached_successor_after_callback_relink(void)
+int main(void)
 {
-    struct tinyui_app *app = tinyui_app_create();
-    struct tinyui_app_timer *tail_timer;
-    struct tinyui_app_timer *middle_timer;
-    struct tinyui_app_timer *head_timer;
-    struct timer_callback_probe tail_probe = {0};
-    struct timer_relink_chain_probe head_probe = {0};
-
-    assert(app != NULL);
-    tail_timer = tinyui_app_timer_create(app);
-    middle_timer = tinyui_app_timer_create(app);
-    head_timer = tinyui_app_timer_create(app);
-    assert(tail_timer != NULL);
-    assert(middle_timer != NULL);
-    assert(head_timer != NULL);
-
-    head_probe.resume_timer = tail_timer;
-
-    require_condition(tinyui_app_timer_start(tail_timer, 50, 0, timer_probe_callback, &tail_probe) == 0);
-    require_condition(tinyui_app_timer_start(middle_timer, 50, 0, timer_must_not_fire_callback, NULL) == 0);
-    require_condition(tinyui_app_timer_start(head_timer, 50, 0, timer_relink_chain_callback, &head_probe) == 0);
-
-    tinyui_app_pump_timers(app, 3000);
-    tinyui_app_pump_timers(app, 3050);
-
-    assert(head_probe.call_count == 1);
-    assert(tail_probe.call_count == 0);
-
-    tinyui_app_pump_timers(app, 3100);
-    assert(tail_probe.call_count == 1);
-
-    tinyui_app_timer_destroy(middle_timer);
-    tinyui_app_timer_destroy(tail_timer);
-    tinyui_app_destroy(app);
-}
-
-static void test_timer_pump_backend_symbol_is_no_longer_public(void)
-{
-    char exists_command[4096];
-
-    assert_command_success("test -f ../../libtinyui_backend_ldgui_porting.a");
-    snprintf(exists_command, sizeof(exists_command), "test -f %s", test_self_binary_path);
-    assert_command_success(exists_command);
-    assert_archive_lacks_symbol("../../libtinyui_backend_ldgui_porting.a", "tinyui_backend_test_pump_timers");
-    assert_self_binary_lacks_symbol("tinyui_backend_test_pump_timers");
-}
-
-static void test_app_timer_internal_seam_uses_tinyui_prefix(void)
-{
-    assert_source_contains_text(test_repo_path("tinyui/src/core/app.c"),
-                                "static void tinyui_app_timer_unlink");
-    assert_self_binary_lacks_symbol("tinyui_app_timer_unlink");
-}
-
-int main(int argc, char **argv)
-{
-    (void)argc;
-    test_self_binary_path = (argv != NULL && argv[0] != NULL)
-        ? argv[0]
-        : test_repo_path("build/tests/tinyui/test_tinyui_app_timer");
-    assert_self_binary_lacks_symbol("tinyui_backend_test_pump_timers");
-    test_timer_rejects_null_app();
-    test_timer_callback_contract_shape();
-    test_timer_running_state_contract();
-    test_timer_start_rejects_invalid_arguments();
-    test_timer_destroy_after_stop_is_safe();
-    test_app_destroy_cleans_residual_timers();
-    test_repeating_timer_pump_keeps_running();
-    test_one_shot_timer_pump_stops_after_fire();
-    test_timer_pump_skips_detached_successor_after_callback_relink();
-    test_timer_pump_backend_symbol_is_no_longer_public();
-    test_app_timer_internal_seam_uses_tinyui_prefix();
+    test_timer_pool_capacity_and_reuse();
+    test_one_shot_and_repeat();
+    test_callback_delete_and_stop_self();
+    test_create_in_callback_not_same_round();
+    test_wraparound_deadline();
+    test_next_ms_deadline_semantics();
+    test_process_null_next_ms_and_zero_alloc();
+    test_set_interval_and_invalid_args();
     return 0;
 }

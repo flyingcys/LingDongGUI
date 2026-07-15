@@ -3,13 +3,14 @@
 
 Canonical surfaces (must be zero hits):
   - tinyui_v23_public_api.json manifest
-  - default-preprocessed public headers (no TINYUI_ENABLE_INTERNAL_V22_DEMO_BRIDGE)
+  - default-preprocessed public headers
   - install projection tree (optional --install-tree)
   - minimal archive (--archive-profile minimal)
+  - full archive (--archive-profile full)
 
-Full archive (M1-M3 temporary):
-  - forbidden defined symbols may exist only if every definition comes from
-    the v22_demo_bridge translation unit.
+Both full and minimal archives require forbidden defined symbols to have zero
+hits. Private helpers under tinyui_runtime_internal_* remain allowed.
+The v22_demo_bridge has been removed; no bridge TU exception remains.
 """
 
 from __future__ import annotations
@@ -27,13 +28,6 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[3]
 PUBLIC_INCLUDE = ROOT / "tinyui" / "include"
 DEFAULT_MANIFEST = ROOT / "tests" / "tinyui" / "contract" / "tinyui_v23_public_api.json"
-BRIDGE_OBJECT_MARKERS = (
-    "v22_demo_bridge.c",
-    "v22_demo_bridge.cpp",
-    "v22_demo_bridge.cc",
-    "v22_demo_bridge.o",
-    "v22_demo_bridge.c.o",
-)
 
 BLOCK_COMMENT_RE = re.compile(r"/\*.*?\*/", re.DOTALL)
 LINE_COMMENT_RE = re.compile(r"//.*?$", re.MULTILINE)
@@ -86,6 +80,9 @@ def strip_c_comments(text: str) -> str:
 
 def is_forbidden_symbol(name: str) -> bool:
     if name == "tinyui_init":
+        return False
+    # Private runtime helpers remain non-canonical but are not the removed public ABI.
+    if name.startswith("tinyui_runtime_internal_"):
         return False
     if name in FORBIDDEN_EXACT:
         return True
@@ -156,6 +153,36 @@ def check_manifest(manifest_path: Path) -> list[dict]:
     return errors
 
 
+def _config_template_path(root: Path = ROOT) -> Path:
+    return root / "tinyui" / "include" / "tinyui_config.h.in"
+
+
+def _discover_generated_config_dirs(root: Path = ROOT) -> list[Path]:
+    """Locate build trees that already configured tinyui_config.h."""
+    build_root = root / "build"
+    if not build_root.is_dir():
+        return []
+    found: list[Path] = []
+    for path in sorted(build_root.glob("*/generated/tinyui/tinyui_config.h")):
+        found.append(path.parent)
+    return found
+
+
+def _materialize_default_config(tmp_dir: Path, root: Path = ROOT) -> Path:
+    """Create a full-on tinyui_config.h for standalone preprocess checks."""
+    template = _config_template_path(root)
+    if not template.is_file():
+        raise FileNotFoundError(f"missing tinyui_config template: {template}")
+    # Default profile enables widgets/modules; preprocess only needs macros defined.
+    text = template.read_text(encoding="utf-8")
+    text = re.sub(r"#cmakedefine01\s+(\w+)", r"#define \1 1", text)
+    out_dir = tmp_dir / "generated_tinyui"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_path = out_dir / "tinyui_config.h"
+    out_path.write_text(text, encoding="utf-8")
+    return out_dir
+
+
 def check_preprocessed_aggregate(include_dir: Path) -> list[dict]:
     """Default preprocess of tinyui.h must not expose forbidden identifiers."""
     if shutil.which("cc") is None:
@@ -169,14 +196,18 @@ def check_preprocessed_aggregate(include_dir: Path) -> list[dict]:
         probe = tmp_dir / "probe.c"
         out = tmp_dir / "probe.i"
         probe.write_text('#include "tinyui.h"\n', encoding="utf-8")
+        config_dirs = _discover_generated_config_dirs(ROOT)
+        if not config_dirs:
+            config_dirs = [_materialize_default_config(tmp_dir, ROOT)]
+        include_flags: list[str] = [f"-I{include_dir}"]
+        for config_dir in config_dirs[:1]:
+            include_flags.append(f"-I{config_dir}")
         result = subprocess.run(
             [
                 "cc",
                 "-E",
                 "-P",
-                f"-I{include_dir}",
-                # Explicitly keep the bridge macro off for the default surface.
-                "-UTINYUI_ENABLE_INTERNAL_V22_DEMO_BRIDGE",
+                *include_flags,
                 str(probe),
                 "-o",
                 str(out),
@@ -213,7 +244,7 @@ def check_install_tree(install_tree: Path) -> list[dict]:
     ]
     include_dir = next((path for path in candidates if path.is_dir()), install_tree)
     errors = check_public_headers(include_dir)
-    # Internal bridge headers must never ship.
+    # Internal headers / removed bridge must never ship.
     for pattern in ("**/internal/**", "**/v22_demo_bridge.h"):
         for path in install_tree.glob(pattern):
             if path.is_file() or path.is_dir():
@@ -228,11 +259,6 @@ def check_install_tree(install_tree: Path) -> list[dict]:
 
 def _normalize_symbol(raw: str) -> str:
     return raw.lstrip("_")
-
-
-def _is_bridge_object(object_name: str) -> bool:
-    lower = object_name.replace("\\", "/").lower()
-    return any(marker in lower for marker in BRIDGE_OBJECT_MARKERS)
 
 
 def _run_nm(archive: Path) -> str:
@@ -308,6 +334,7 @@ def parse_nm_defined_symbols(stdout: str) -> list[tuple[str, str, str]]:
 
 
 def check_archive(archive: Path, *, profile: str) -> list[dict]:
+    """Both full and minimal profiles require zero forbidden defined symbols."""
     if not archive.is_file():
         return [error("missing_archive", path=str(archive))]
     try:
@@ -323,31 +350,19 @@ def check_archive(archive: Path, *, profile: str) -> list[dict]:
             continue
         forbidden_hits.setdefault(symbol, set()).add(object_name or "<unknown>")
 
-    if profile == "minimal":
-        for symbol, objects in sorted(forbidden_hits.items()):
-            errors.append(
-                error(
-                    "forbidden_symbol_in_minimal_archive",
-                    name=symbol,
-                    objects=sorted(objects),
-                )
-            )
-        return errors
-
-    # full profile: every forbidden definition must come only from bridge TU
+    code = (
+        "forbidden_symbol_in_minimal_archive"
+        if profile == "minimal"
+        else "forbidden_symbol_in_full_archive"
+    )
     for symbol, objects in sorted(forbidden_hits.items()):
-        non_bridge = sorted(obj for obj in objects if not _is_bridge_object(obj))
-        if non_bridge:
-            errors.append(
-                error(
-                    "forbidden_symbol_outside_bridge",
-                    name=symbol,
-                    objects=non_bridge,
-                    all_objects=sorted(objects),
-                )
+        errors.append(
+            error(
+                code,
+                name=symbol,
+                objects=sorted(objects),
             )
-        elif not objects:
-            errors.append(error("forbidden_symbol_unattributed", name=symbol))
+        )
     return errors
 
 
@@ -384,7 +399,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--archive-profile",
         choices=("full", "minimal"),
         default="full",
-        help="full: forbidden symbols only from v22_demo_bridge; minimal: zero forbidden",
+        help="full/minimal: both require zero forbidden defined symbols",
     )
     parser.add_argument(
         "--install-tree",

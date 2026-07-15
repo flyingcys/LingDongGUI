@@ -19,6 +19,13 @@
 #ifndef TINYUI_WINDOW_H
 #define TINYUI_WINDOW_H
 
+#include "tinyui_config.h"
+#if !TINYUI_ENABLE_WINDOW
+#  ifndef TINYUI_INTERNAL_FEATURE_HEADER
+#  error "TINYUI_ENABLE_WINDOW is disabled"
+#  endif
+#endif
+
 #include "core/obj.h"
 #include <stdint.h>
 

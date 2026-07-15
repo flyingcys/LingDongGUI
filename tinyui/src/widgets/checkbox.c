@@ -233,10 +233,13 @@ tinyui_obj_t *tinyui_checkbox_create_with_props(tinyui_obj_t *parent,
     }
     }
     if ((props->fields & TINYUI_CHECKBOX_FIELD_ON_TOGGLED) != 0) {
-    if (tinyui_checkbox_set_on_toggled((tinyui_obj_t *)checkbox, props->on_toggled, props->user_data) != 0) {
-        (void)tinyui_obj_delete((tinyui_obj_t *)checkbox);
-        return 0;
-    }
+        /* props still carry legacy tinyui_value_changed_cb; Task 7 set_on_* is
+         * unified-pool only. Reject rather than fake-success. Prefer
+         * tinyui_obj_add_event_cb after create. */
+        if (props->on_toggled != 0) {
+            (void)tinyui_obj_delete((tinyui_obj_t *)checkbox);
+            return 0;
+        }
     }
     if ((props->fields & TINYUI_CHECKBOX_FIELD_CHECK_COLOR) != 0) {
     if (tinyui_checkbox_set_check_color((tinyui_obj_t *)checkbox, props->check_color) != 0) {
@@ -284,28 +287,30 @@ tinyui_obj_t *tinyui_checkbox_create_with_props(tinyui_obj_t *parent,
 int tinyui_checkbox_set_checked(tinyui_obj_t *checkbox_obj, int checked)
 {
     struct tinyui_checkbox *checkbox = tinyui_checkbox_as_checkbox(checkbox_obj);
-    if (checkbox == 0) { return -1; }
-
+    ldCheckBox_t *ld_checkbox;
     int normalized_checked;
 
     if (checkbox == 0) {
         return -1;
     }
 
-    normalized_checked = checked != 0;
-    if (checkbox->checked == normalized_checked) {
-        return 0;
-    }
-
-    if (checkbox->widget.ld_widget == 0) {
+    ld_checkbox = tinyui_checkbox_backend(checkbox);
+    if (ld_checkbox == 0) {
         return -1;
     }
 
+    normalized_checked = checked != 0;
+    if (ld_checkbox->isChecked == (normalized_checked != 0)
+        && checkbox->checked == normalized_checked
+        && checkbox->widget.value == normalized_checked) {
+        return 0;
+    }
+
+    /* Programmatic path: sync LD + cache only. Do not emit user events. */
     checkbox->checked = normalized_checked;
-    return tinyui_runtime_internal_widget_update_value(&checkbox->widget,
-                                      checkbox->checked,
-                                      checkbox->cb,
-                                      checkbox->user_data);
+    checkbox->widget.value = normalized_checked;
+    tinyui_runtime_internal_widget_sync_ld_value(&checkbox->widget, normalized_checked);
+    return 0;
 }
 
 /**
@@ -318,12 +323,20 @@ int tinyui_checkbox_set_checked(tinyui_obj_t *checkbox_obj, int checked)
 int tinyui_checkbox_is_checked(tinyui_obj_t *checkbox_obj)
 {
     struct tinyui_checkbox *checkbox = tinyui_checkbox_as_checkbox(checkbox_obj);
-    if (checkbox == 0) { return -1; }
+    ldCheckBox_t *ld_checkbox;
 
     if (checkbox == 0) {
         return -1;
     }
 
+    ld_checkbox = tinyui_checkbox_backend(checkbox);
+    if (ld_checkbox == 0) {
+        return -1;
+    }
+
+    /* Read real LD state; keep wrapper cache coherent. */
+    checkbox->checked = ld_checkbox->isChecked ? 1 : 0;
+    checkbox->widget.value = checkbox->checked;
     return checkbox->checked;
 }
 
@@ -344,10 +357,7 @@ int tinyui_checkbox_set_text(tinyui_obj_t *checkbox_obj, const char *text)
         return -1;
     }
 
-    if (tinyui_runtime_internal_widget_set_text(&checkbox->widget, text) != 0) {
-        return -1;
-    }
-    return tinyui_runtime_internal_widget_set_backend_text(&checkbox->widget, text);
+    return tinyui_runtime_internal_widget_set_text(&checkbox->widget, text);
 }
 
 /**
@@ -415,11 +425,12 @@ int tinyui_checkbox_set_text_color(tinyui_obj_t *checkbox_obj, unsigned int rgb)
 int tinyui_checkbox_set_unchecked_source(tinyui_obj_t *checkbox_obj, struct tinyui_image_source *source)
 {
     struct tinyui_checkbox *checkbox = tinyui_checkbox_as_checkbox(checkbox_obj);
-    if (checkbox == 0) { return -1; }
-
     ldCheckBox_t *ld_checkbox;
 
-    if (checkbox == 0 || (source != 0 && tinyui_image_source_get_image_tile(source) == 0)) {
+    if (checkbox == 0) {
+        return -1;
+    }
+    if (source != 0 && source->kind == TINYUI_IMAGE_SOURCE_EMPTY) {
         return -1;
     }
 
@@ -447,11 +458,12 @@ int tinyui_checkbox_set_unchecked_source(tinyui_obj_t *checkbox_obj, struct tiny
 int tinyui_checkbox_set_checked_source(tinyui_obj_t *checkbox_obj, struct tinyui_image_source *source)
 {
     struct tinyui_checkbox *checkbox = tinyui_checkbox_as_checkbox(checkbox_obj);
-    if (checkbox == 0) { return -1; }
-
     ldCheckBox_t *ld_checkbox;
 
-    if (checkbox == 0 || (source != 0 && tinyui_image_source_get_image_tile(source) == 0)) {
+    if (checkbox == 0) {
+        return -1;
+    }
+    if (source != 0 && source->kind == TINYUI_IMAGE_SOURCE_EMPTY) {
         return -1;
     }
 
@@ -524,25 +536,59 @@ int tinyui_checkbox_set_string_left_space(tinyui_obj_t *checkbox_obj, int space)
     return 0;
 }
 
+static int tinyui_checkbox_replace_event_cb(struct tinyui_checkbox *checkbox,
+                                            tinyui_event_handle_t *slot,
+                                            uint32_t event_mask,
+                                            tinyui_event_cb_t cb,
+                                            void *user_data)
+{
+    tinyui_event_handle_t handle = 0U;
+    tinyui_result_t rc;
+
+    if (checkbox == 0 || slot == 0) {
+        return -1;
+    }
+
+    if (*slot != 0U) {
+        (void)tinyui_obj_remove_event_cb((tinyui_obj_t *)checkbox, *slot);
+        *slot = 0U;
+    }
+
+    if (cb == 0) {
+        return 0;
+    }
+
+    rc = tinyui_obj_add_event_cb((tinyui_obj_t *)checkbox,
+                                 event_mask,
+                                 cb,
+                                 user_data,
+                                 &handle);
+    if (rc != TINYUI_OK) {
+        return -1;
+    }
+    *slot = handle;
+    return 0;
+}
+
 /**
- * @brief Set on toggled of checkbox widget
+ * @brief Set on toggled of checkbox widget (narrow forward to unified event pool)
  *
  * @param[in] checkbox Checkbox widget instance
- * @param[in] cb cb
+ * @param[in] cb Unified event callback (const tinyui_event_t *)
  * @param[in] user_data User data pointer
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_checkbox_set_on_toggled(tinyui_obj_t *checkbox_obj, tinyui_value_changed_cb cb, void *user_data)
+int tinyui_checkbox_set_on_toggled(tinyui_obj_t *checkbox_obj, tinyui_event_cb_t cb, void *user_data)
 {
     struct tinyui_checkbox *checkbox = tinyui_checkbox_as_checkbox(checkbox_obj);
-    if (checkbox == 0) { return -1; }
-
     if (checkbox == 0) {
         return -1;
     }
 
-    checkbox->cb = cb;
-    checkbox->user_data = user_data;
-    return 0;
+    return tinyui_checkbox_replace_event_cb(checkbox,
+                                            &checkbox->on_toggled_handle,
+                                            TINYUI_EVENT_MASK(TINYUI_EVENT_VALUE_CHANGED),
+                                            cb,
+                                            user_data);
 }

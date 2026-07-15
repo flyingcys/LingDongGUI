@@ -315,6 +315,149 @@ class TinyuiV23PublicApiCheckerTests(unittest.TestCase):
             errors = check_contract(root, manifest)
             self.assertTrue(any(error["code"] == "manifest_hash_mismatch" for error in errors))
 
+    def test_braced_enum_and_struct_typedefs_are_scanned_intact(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            header = (
+                "typedef enum tinyui_result {\n"
+                "    TINYUI_OK = 0,\n"
+                "    TINYUI_ERROR_INVALID_ARG,\n"
+                "} tinyui_result_t;\n"
+                "typedef struct tinyui_key_event_data {\n"
+                "    uint16_t key;\n"
+                "    bool pressed;\n"
+                "} tinyui_key_event_data_t;\n"
+                "typedef struct tinyui_event {\n"
+                "    tinyui_result_t code;\n"
+                "    void *user_data;\n"
+                "    union {\n"
+                "        int32_t value;\n"
+                "        tinyui_key_event_data_t key;\n"
+                "    } data;\n"
+                "} tinyui_event_t;\n"
+            )
+            manifest = _write_fixture(
+                root,
+                {"core/event.h": header},
+                [
+                    _entry(
+                        "typedef",
+                        "tinyui_result_t",
+                        "core/event.h",
+                        "typedef enum tinyui_result { TINYUI_OK = 0, "
+                        "TINYUI_ERROR_INVALID_ARG } tinyui_result_t;",
+                    ),
+                    _entry(
+                        "typedef",
+                        "tinyui_key_event_data_t",
+                        "core/event.h",
+                        "typedef struct tinyui_key_event_data { uint16_t key; "
+                        "bool pressed; } tinyui_key_event_data_t;",
+                    ),
+                    _entry(
+                        "typedef",
+                        "tinyui_event_t",
+                        "core/event.h",
+                        "typedef struct tinyui_event { tinyui_result_t code; "
+                        "void *user_data; union { int32_t value; "
+                        "tinyui_key_event_data_t key; } data; } tinyui_event_t;",
+                    ),
+                ],
+            )
+
+            self.assertEqual(check_contract(root, manifest), [])
+
+    def test_function_like_macros_are_scanned(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            manifest = _write_fixture(
+                root,
+                {
+                    "core/event.h": (
+                        "#define TINYUI_EVENT_MASK(code) (UINT32_C(1) << (code))\n"
+                        "#define TINYUI_EVENT_MASK_ALL UINT32_MAX\n"
+                    )
+                },
+                [
+                    _entry(
+                        "macro",
+                        "TINYUI_EVENT_MASK",
+                        "core/event.h",
+                        "#define TINYUI_EVENT_MASK(code) (UINT32_C(1) << (code))",
+                    ),
+                    _entry(
+                        "macro",
+                        "TINYUI_EVENT_MASK_ALL",
+                        "core/event.h",
+                        "#define TINYUI_EVENT_MASK_ALL UINT32_MAX",
+                    ),
+                ],
+            )
+
+            self.assertEqual(check_contract(root, manifest), [])
+
+    def test_integration_headers_are_scanned_but_not_required_in_aggregate(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            manifest = _write_fixture(
+                root,
+                {
+                    "tinyui.h": '#include "core/runtime.h"\n',
+                    "core/runtime.h": "int tinyui_init(void);\n",
+                    "integration/input.h": (
+                        "typedef enum tinyui_key { TINYUI_KEY_ENTER = 0 } tinyui_key_t;\n"
+                        "int tinyui_input_send_key(tinyui_key_t key, bool pressed);\n"
+                    ),
+                },
+                [
+                    _entry(
+                        "function",
+                        "tinyui_init",
+                        "core/runtime.h",
+                        "int tinyui_init(void);",
+                    ),
+                    _entry(
+                        "typedef",
+                        "tinyui_key_t",
+                        "integration/input.h",
+                        "typedef enum tinyui_key { TINYUI_KEY_ENTER = 0 } tinyui_key_t;",
+                    ),
+                    _entry(
+                        "function",
+                        "tinyui_input_send_key",
+                        "integration/input.h",
+                        "int tinyui_input_send_key(tinyui_key_t key, bool pressed);",
+                    ),
+                ],
+            )
+
+            self.assertEqual(check_contract(root, manifest), [])
+
+    def test_defined_guard_macros_are_not_registered_as_public_api(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            manifest = _write_fixture(
+                root,
+                {
+                    "core/obj.h": (
+                        "#ifndef TINYUI_OBJ_T_DEFINED\n"
+                        "typedef struct tinyui_obj tinyui_obj_t;\n"
+                        "#define TINYUI_OBJ_T_DEFINED\n"
+                        "#endif\n"
+                    )
+                },
+                [
+                    _entry(
+                        "typedef",
+                        "tinyui_obj_t",
+                        "core/obj.h",
+                        "typedef struct tinyui_obj tinyui_obj_t;",
+                    )
+                ],
+            )
+
+            self.assertEqual(check_contract(root, manifest), [])
+
 
 if __name__ == "__main__":
     unittest.main()

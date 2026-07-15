@@ -73,20 +73,30 @@ static void test_fail_closed_and_backend_focus(void)
     assert(screen != NULL);
     assert(tinyui_screen_load(screen, TINYUI_SCREEN_TRANSITION_NONE, 0) == TINYUI_OK);
 
+    /* M2 Task 4: fixed event callback pool is live. */
     assert(tinyui_obj_add_event_cb(screen, TINYUI_EVENT_MASK(TINYUI_EVENT_CLICKED),
-                                   test_event_callback, NULL, &handle) ==
-           TINYUI_ERROR_NOT_SUPPORTED);
-    assert(handle == 0);
-    assert(tinyui_last_result() == TINYUI_ERROR_NOT_SUPPORTED);
-    assert(tinyui_obj_remove_event_cb(screen, 1) == TINYUI_ERROR_NOT_SUPPORTED);
+                                   test_event_callback, NULL, &handle) == TINYUI_OK);
+    assert(handle != 0);
+    assert((handle & UINT32_C(0xffff)) != 0U);
+    assert(tinyui_last_result() == TINYUI_OK);
+    assert(tinyui_obj_remove_event_cb(screen, handle) == TINYUI_OK);
+    assert(tinyui_obj_remove_event_cb(screen, handle) == TINYUI_ERROR_INVALID_ARG);
 
-    assert(tinyui_timer_create(10, true, test_timer_callback, NULL) == NULL);
-    assert(tinyui_last_result() == TINYUI_ERROR_NOT_SUPPORTED);
-    assert(tinyui_timer_start(NULL) == TINYUI_ERROR_NOT_SUPPORTED);
-    assert(tinyui_timer_stop(NULL) == TINYUI_ERROR_NOT_SUPPORTED);
-    assert(tinyui_timer_set_interval(NULL, 10) == TINYUI_ERROR_NOT_SUPPORTED);
-    tinyui_timer_delete(NULL);
-    assert(tinyui_last_result() == TINYUI_ERROR_NOT_SUPPORTED);
+    /* M2 Task 3: fixed timer pool is live. */
+    {
+        tinyui_timer_t *timer =
+            tinyui_timer_create(10, true, test_timer_callback, NULL);
+        assert(timer != NULL);
+        assert(tinyui_last_result() == TINYUI_OK);
+        assert(tinyui_timer_start(timer) == TINYUI_OK);
+        assert(tinyui_timer_stop(timer) == TINYUI_OK);
+        assert(tinyui_timer_set_interval(timer, 20) == TINYUI_OK);
+        tinyui_timer_delete(timer);
+        assert(tinyui_timer_start(NULL) == TINYUI_ERROR_INVALID_ARG);
+        assert(tinyui_timer_stop(NULL) == TINYUI_ERROR_INVALID_ARG);
+        assert(tinyui_timer_set_interval(NULL, 10) == TINYUI_ERROR_INVALID_ARG);
+        tinyui_timer_delete(NULL);
+    }
 
     assert(tinyui_focus_set(screen) == TINYUI_OK);
     assert(tinyui_focus_current() == screen);

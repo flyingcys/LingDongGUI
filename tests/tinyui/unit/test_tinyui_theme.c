@@ -1,745 +1,464 @@
-#include "internal.h"
+/*
+ * TinyUI theme/style unit tests — M3 Task 6.
+ *
+ * 验证调用者持有的 theme/style value descriptor：
+ * - 完整预检（fields/part/state/metric/font）
+ * - 即时 apply，不保存 style 指针
+ * - theme 借用指针；apply 只作用目标对象，不遍历树
+ * - apply 路径零 heap 分配
+ */
+
 #include "tinyui.h"
-#include "ldButton.h"
-#include "ldCheckBox.h"
-#include "ldImage.h"
-#include "ldLabel.h"
-#include "ldList.h"
-#include "ldSlider.h"
-#include "ldSwitch.h"
-#include "ldText.h"
-#include "ldCalendar.h"
-#include "ldWindow.h"
+#include "internal.h"
+#include "core/obj.h"
+#include "core/result.h"
+#include "core/runtime.h"
+#include "style/style.h"
+#include "theme/theme.h"
+#include "widgets/label.h"
+#include "resource/font.h"
+
+#include "../../../src/gui/ldBase.h"
+#include "../../../src/gui/ldLabel.h"
+#include "tinyui_test_support.h"
 
 #include <assert.h>
-#include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
-#include <stdlib.h>
+#include <string.h>
 
-static void assert_source_lacks_static_definition(const char *path, const char *symbol_name)
+void tinyui_internal_theme_reset(void);
+
+/* 覆盖弱符号 ldMalloc 族，统计 apply 期间分配。 */
+void *ldMalloc(uint32_t size)
 {
-    char command[1024];
-
-    snprintf(command,
-             sizeof(command),
-             "rg -n \"^[[:space:]]*static[[:space:]].*%s[[:space:]]*(\\(|=)\" %s >/dev/null",
-             symbol_name,
-             path);
-    if (system(command) == 0) {
-        fprintf(stderr, "unexpected old static helper still present: %s in %s\n", symbol_name, path);
-        abort();
-    }
+    return tinyui_test_allocator_malloc(size);
 }
 
-static void test_theme_internal_static_helpers_no_longer_use_tinyui_prefix(void)
+void *ldCalloc(uint32_t num, uint32_t size)
 {
-    const char *source = "tinyui/src/theme/theme.c";
-    assert(source != NULL);
-    assert_source_lacks_static_definition(source, "tinyui_theme_rgb_to_ld_color");
+    return tinyui_test_allocator_calloc(num, size);
 }
 
-static void assert_widget_style(const struct tinyui_widget *widget,
-                                unsigned int bg,
-                                unsigned int text,
-                                unsigned int border,
-                                int radius,
-                                int padding)
+void *ldRealloc(void *ptr, uint32_t size)
 {
-    assert(widget != NULL);
-    assert(widget->bg_color == bg);
-    assert(widget->text_color == text);
-    assert(widget->border_color == border);
-    assert(widget->radius == radius);
-    assert(widget->padding == padding);
+    return tinyui_test_allocator_realloc(ptr, size);
 }
 
-static int backend_width(const struct tinyui_widget *widget)
+void ldFree(void *ptr)
 {
-    const ldBase_t *ld_base;
-
-    assert(widget->ld_widget != NULL);
-    ld_base = (const ldBase_t *)widget->ld_widget;
-    return ld_base->use_as__arm_2d_control_node_t.tRegion.tSize.iWidth;
+    tinyui_test_allocator_free(ptr);
 }
 
-static int backend_height(const struct tinyui_widget *widget)
-{
-    const ldBase_t *ld_base;
-
-    assert(widget->ld_widget != NULL);
-    ld_base = (const ldBase_t *)widget->ld_widget;
-    return ld_base->use_as__arm_2d_control_node_t.tRegion.tSize.iHeight;
-}
-
-static void assert_backend_height(const struct tinyui_widget *widget, int height)
-{
-    assert(widget != NULL);
-    assert(widget->height == height);
-    assert(backend_height(widget) == height);
-}
-
-static void assert_backend_size(const struct tinyui_widget *widget, int width, int height)
-{
-    assert(widget != NULL);
-    assert(widget->height == height);
-    assert(backend_width(widget) == width);
-    assert(backend_height(widget) == height);
-}
-
-static unsigned int tinyui_test_rgb_to_ld_color(unsigned int rgb)
+static unsigned int test_rgb_to_ld(unsigned int rgb)
 {
     return (unsigned int)__RGB((rgb >> 16) & 0xFFU, (rgb >> 8) & 0xFFU, rgb & 0xFFU);
 }
 
-static void assert_button_backend_style(const struct tinyui_button *button,
-                                        unsigned int release_color,
-                                        unsigned int press_color,
-                                        unsigned int text_color)
+static struct tinyui_widget *as_widget(tinyui_obj_t *obj)
 {
-    const ldButton_t *ld_button;
-
-    assert(button->widget.ld_widget != NULL);
-    ld_button = (const ldButton_t *)button->widget.ld_widget;
-    assert(ld_button->releaseColor == tinyui_test_rgb_to_ld_color(release_color));
-    assert(ld_button->pressColor == tinyui_test_rgb_to_ld_color(press_color));
-    assert(ld_button->textColor == tinyui_test_rgb_to_ld_color(text_color));
+    return (struct tinyui_widget *)(void *)obj;
 }
 
-static void assert_checkbox_backend_style(const struct tinyui_checkbox *checkbox,
-                                          unsigned int bg_color,
-                                          unsigned int fg_color,
-                                          unsigned int text_color)
+static ldLabel_t *label_ld(tinyui_obj_t *obj)
 {
-    const ldCheckBox_t *ld_checkbox;
+    struct tinyui_widget *w = as_widget(obj);
 
-    assert(checkbox->widget.ld_widget != NULL);
-    ld_checkbox = (const ldCheckBox_t *)checkbox->widget.ld_widget;
-    assert(ld_checkbox->bgColor == tinyui_test_rgb_to_ld_color(bg_color));
-    assert(ld_checkbox->fgColor == tinyui_test_rgb_to_ld_color(fg_color));
-    assert(ld_checkbox->textColor == tinyui_test_rgb_to_ld_color(text_color));
+    assert(w != 0);
+    assert(w->ld_widget != 0);
+    return (ldLabel_t *)w->ld_widget;
 }
 
-static void assert_switch_backend_style(const struct tinyui_switch *sw,
-                                        unsigned int off_track,
-                                        unsigned int on_track,
-                                        unsigned int knob,
-                                        unsigned int border)
+static void assert_zero_alloc_delta(const struct tinyui_test_allocator_stats *before,
+                                    const struct tinyui_test_allocator_stats *after)
 {
-    const ldSwitch_t *ld_switch;
-
-    assert(sw->widget.ld_widget != NULL);
-    ld_switch = (const ldSwitch_t *)sw->widget.ld_widget;
-    assert(ld_switch->offTrackColor == tinyui_test_rgb_to_ld_color(off_track));
-    assert(ld_switch->onTrackColor == tinyui_test_rgb_to_ld_color(on_track));
-    assert(ld_switch->knobColor == tinyui_test_rgb_to_ld_color(knob));
-    assert(ld_switch->borderColor == tinyui_test_rgb_to_ld_color(border));
+    assert(after->alloc_calls == before->alloc_calls);
+    assert(after->calloc_calls == before->calloc_calls);
+    assert(after->realloc_calls == before->realloc_calls);
+    assert(after->bytes_requested == before->bytes_requested);
 }
 
-static void assert_slider_backend_style(const struct tinyui_slider *slider,
-                                        unsigned int bg_color,
-                                        unsigned int frame_color,
-                                        unsigned int indic_color)
+static void test_apply_style_rejects_null_and_range(tinyui_obj_t *root)
 {
-    const ldSlider_t *ld_slider;
+    tinyui_obj_t *label = tinyui_label_create(root);
+    tinyui_style_t style;
 
-    assert(slider->widget.ld_widget != NULL);
-    ld_slider = (const ldSlider_t *)slider->widget.ld_widget;
-    assert(ld_slider->bgColor == tinyui_test_rgb_to_ld_color(bg_color));
-    assert(ld_slider->frameColor == tinyui_test_rgb_to_ld_color(frame_color));
-    assert(ld_slider->indicColor == tinyui_test_rgb_to_ld_color(indic_color));
+    assert(label != 0);
+    memset(&style, 0, sizeof(style));
+    style.fields = TINYUI_STYLE_BG_COLOR;
+    style.bg_color = UINT32_C(0x112233);
+
+    assert(tinyui_obj_apply_style(0, TINYUI_PART_MAIN, TINYUI_STATE_DEFAULT, &style)
+           == TINYUI_ERROR_INVALID_OBJECT);
+    assert(tinyui_obj_apply_style(label, TINYUI_PART_MAIN, TINYUI_STATE_DEFAULT, 0)
+           == TINYUI_ERROR_INVALID_ARG);
+    assert(tinyui_obj_apply_style(label, (tinyui_part_t)99, TINYUI_STATE_DEFAULT, &style)
+           == TINYUI_ERROR_OUT_OF_RANGE);
+    assert(tinyui_obj_apply_style(label, TINYUI_PART_MAIN, (tinyui_state_t)99, &style)
+           == TINYUI_ERROR_OUT_OF_RANGE);
+
+    (void)tinyui_obj_delete(label);
 }
 
-static void assert_window_backend_style(const struct tinyui_window *window, unsigned int bg_color)
+static void test_apply_style_rejects_invalid_fields_before_mutation(tinyui_obj_t *root)
 {
-    const ldWindow_t *ld_window;
+    tinyui_obj_t *label = tinyui_label_create(root);
+    ldLabel_t *ld;
+    tinyui_style_t style;
+    unsigned int bg_before;
+    unsigned int text_before;
 
-    assert(window->widget.ld_widget != NULL);
-    ld_window = (const ldWindow_t *)window->widget.ld_widget;
-    assert(ld_window->bgColor == tinyui_test_rgb_to_ld_color(bg_color));
+    assert(label != 0);
+    ld = label_ld(label);
+    bg_before = ld->bgColor;
+    text_before = ld->textColor;
+
+    memset(&style, 0, sizeof(style));
+    style.fields = UINT32_C(1) << 8; /* 非法 bit */
+    style.bg_color = UINT32_C(0xAABBCC);
+    assert(tinyui_obj_apply_style(label, TINYUI_PART_MAIN, TINYUI_STATE_DEFAULT, &style)
+           == TINYUI_ERROR_INVALID_ARG);
+    assert(ld->bgColor == bg_before);
+    assert(ld->textColor == text_before);
+
+    memset(&style, 0, sizeof(style));
+    style.fields = TINYUI_STYLE_BORDER_WIDTH;
+    style.border_width = -1;
+    assert(tinyui_obj_apply_style(label, TINYUI_PART_MAIN, TINYUI_STATE_DEFAULT, &style)
+           == TINYUI_ERROR_INVALID_ARG);
+    assert(ld->bgColor == bg_before);
+
+    memset(&style, 0, sizeof(style));
+    style.fields = TINYUI_STYLE_RADIUS;
+    style.radius = -2;
+    assert(tinyui_obj_apply_style(label, TINYUI_PART_MAIN, TINYUI_STATE_DEFAULT, &style)
+           == TINYUI_ERROR_INVALID_ARG);
+
+    memset(&style, 0, sizeof(style));
+    style.fields = TINYUI_STYLE_PADDING;
+    style.padding = -3;
+    assert(tinyui_obj_apply_style(label, TINYUI_PART_MAIN, TINYUI_STATE_DEFAULT, &style)
+           == TINYUI_ERROR_INVALID_ARG);
+
+    memset(&style, 0, sizeof(style));
+    style.fields = TINYUI_STYLE_FONT;
+    style.font = 0;
+    assert(tinyui_obj_apply_style(label, TINYUI_PART_MAIN, TINYUI_STATE_DEFAULT, &style)
+           == TINYUI_ERROR_INVALID_ARG);
+    assert(ld->bgColor == bg_before);
+    assert(ld->textColor == text_before);
+
+    (void)tinyui_obj_delete(label);
 }
 
-static void assert_window_backend_padding(const struct tinyui_window *window, int padding)
+static void test_apply_style_unsupported_part_state_does_not_mutate(tinyui_obj_t *root)
 {
-    const ldWindow_t *ld_window;
+    tinyui_obj_t *label = tinyui_label_create(root);
+    ldLabel_t *ld;
+    tinyui_style_t style;
+    unsigned int bg_before;
+    unsigned int text_before;
 
-    assert(window->widget.ld_widget != NULL);
-    ld_window = (const ldWindow_t *)window->widget.ld_widget;
-    assert(window->widget.padding == padding);
-    assert(ld_window->flexPadding.left == padding);
-    assert(ld_window->flexPadding.top == padding);
-    assert(ld_window->flexPadding.right == padding);
-    assert(ld_window->flexPadding.bottom == padding);
-    assert(ld_window->gridPadding.left == padding);
-    assert(ld_window->gridPadding.top == padding);
-    assert(ld_window->gridPadding.right == padding);
-    assert(ld_window->gridPadding.bottom == padding);
+    assert(label != 0);
+    ld = label_ld(label);
+    bg_before = ld->bgColor;
+    text_before = ld->textColor;
+
+    memset(&style, 0, sizeof(style));
+    style.fields = TINYUI_STYLE_BG_COLOR | TINYUI_STYLE_TEXT_COLOR;
+    style.bg_color = UINT32_C(0x101010);
+    style.text_color = UINT32_C(0x202020);
+
+    assert(tinyui_obj_apply_style(label, TINYUI_PART_TEXT, TINYUI_STATE_DEFAULT, &style)
+           == TINYUI_ERROR_NOT_SUPPORTED);
+    assert(ld->bgColor == bg_before);
+    assert(ld->textColor == text_before);
+
+    assert(tinyui_obj_apply_style(label, TINYUI_PART_MAIN, TINYUI_STATE_PRESSED, &style)
+           == TINYUI_ERROR_NOT_SUPPORTED);
+    assert(ld->bgColor == bg_before);
+    assert(ld->textColor == text_before);
+
+    assert(tinyui_obj_apply_style(label, TINYUI_PART_KNOB, TINYUI_STATE_FOCUSED, &style)
+           == TINYUI_ERROR_NOT_SUPPORTED);
+    assert(ld->bgColor == bg_before);
+    assert(ld->textColor == text_before);
+
+    (void)tinyui_obj_delete(label);
 }
 
-static void assert_button_backend_metrics(const struct tinyui_button *button,
-                                          int height,
-                                          int radius,
-                                          int padding)
+static void test_apply_style_unsupported_fields_do_not_mutate(tinyui_obj_t *root)
 {
-    const ldButton_t *ld_button;
+    tinyui_obj_t *label = tinyui_label_create(root);
+    ldLabel_t *ld;
+    tinyui_style_t style;
+    tinyui_font_t font;
+    unsigned int bg_before;
+    unsigned int text_before;
 
-    assert(button->widget.ld_widget != NULL);
-    ld_button = (const ldButton_t *)button->widget.ld_widget;
-    assert(ld_button->use_as__ldBase_t.use_as__arm_2d_control_node_t.tRegion.tSize.iHeight == height);
-    assert(button->widget.radius == radius);
-    assert(button->widget.padding == padding);
+    assert(label != 0);
+    ld = label_ld(label);
+    bg_before = ld->bgColor;
+    text_before = ld->textColor;
+    assert(tinyui_font_from_builtin(TINYUI_FONT_ARIAL_12, &font) == TINYUI_OK);
+
+    memset(&style, 0, sizeof(style));
+    style.fields = TINYUI_STYLE_BG_COLOR | TINYUI_STYLE_FONT;
+    style.bg_color = UINT32_C(0x334455);
+    style.font = &font;
+    assert(tinyui_obj_apply_style(label, TINYUI_PART_MAIN, TINYUI_STATE_DEFAULT, &style)
+           == TINYUI_ERROR_NOT_SUPPORTED);
+    assert(ld->bgColor == bg_before);
+    assert(ld->textColor == text_before);
+
+    memset(&style, 0, sizeof(style));
+    style.fields = TINYUI_STYLE_BORDER_COLOR | TINYUI_STYLE_BORDER_WIDTH
+                   | TINYUI_STYLE_RADIUS;
+    style.border_color = UINT32_C(0x010203);
+    style.border_width = 1;
+    style.radius = 2;
+    assert(tinyui_obj_apply_style(label, TINYUI_PART_MAIN, TINYUI_STATE_DEFAULT, &style)
+           == TINYUI_ERROR_NOT_SUPPORTED);
+    assert(ld->bgColor == bg_before);
+
+    tinyui_font_deinit(&font);
+    (void)tinyui_obj_delete(label);
 }
 
-static void assert_label_backend_style(const struct tinyui_label *label,
-                                       unsigned int bg_color,
-                                       unsigned int text_color)
+static void test_apply_style_main_default_maps_bg_text_opacity(tinyui_obj_t *root)
 {
-    const ldLabel_t *ld_label;
+    tinyui_obj_t *label = tinyui_label_create(root);
+    ldLabel_t *ld;
+    tinyui_style_t style;
+    struct tinyui_test_allocator_stats before;
+    struct tinyui_test_allocator_stats after;
 
-    assert(label->widget.ld_widget != NULL);
-    ld_label = (const ldLabel_t *)label->widget.ld_widget;
-    assert(ld_label->bgColor == tinyui_test_rgb_to_ld_color(bg_color));
-    assert(ld_label->textColor == tinyui_test_rgb_to_ld_color(text_color));
+    assert(label != 0);
+    ld = label_ld(label);
+
+    memset(&style, 0, sizeof(style));
+    style.fields = TINYUI_STYLE_BG_COLOR | TINYUI_STYLE_TEXT_COLOR | TINYUI_STYLE_OPACITY;
+    style.bg_color = UINT32_C(0x112233);
+    style.text_color = UINT32_C(0x445566);
+    style.opacity = UINT8_C(200);
+
+    before = tinyui_test_allocator_snapshot();
+    assert(tinyui_obj_apply_style(label, TINYUI_PART_MAIN, TINYUI_STATE_DEFAULT, &style)
+           == TINYUI_OK);
+    after = tinyui_test_allocator_snapshot();
+    assert_zero_alloc_delta(&before, &after);
+
+    assert(ld->bgColor == test_rgb_to_ld(0x112233U));
+    assert(ld->textColor == test_rgb_to_ld(0x445566U));
+    assert(as_widget(label)->bg_color == 0x112233U);
+    assert(as_widget(label)->text_color == 0x445566U);
+    assert(as_widget(label)->opacity == 200);
+    assert(((ldBase_t *)ld)->opacity == 200);
+
+    (void)tinyui_obj_delete(label);
 }
 
-static void assert_text_backend_style(const struct tinyui_text *text,
-                                      unsigned int bg_color,
-                                      unsigned int text_color)
+static void test_apply_style_does_not_retain_descriptor_pointer(tinyui_obj_t *root)
 {
-    const ldText_t *ld_text;
+    tinyui_obj_t *label = tinyui_label_create(root);
+    ldLabel_t *ld;
+    unsigned int bg_after;
+    unsigned int text_after;
 
-    assert(text->widget.ld_widget != NULL);
-    ld_text = (const ldText_t *)text->widget.ld_widget;
-    assert(ld_text->bgColor == tinyui_test_rgb_to_ld_color(bg_color));
-    assert(ld_text->textColor == tinyui_test_rgb_to_ld_color(text_color));
+    assert(label != 0);
+    ld = label_ld(label);
+
+    {
+        tinyui_style_t style;
+
+        memset(&style, 0, sizeof(style));
+        style.fields = TINYUI_STYLE_BG_COLOR | TINYUI_STYLE_TEXT_COLOR;
+        style.bg_color = UINT32_C(0x0A0B0C);
+        style.text_color = UINT32_C(0x0D0E0F);
+        assert(tinyui_obj_apply_style(label, TINYUI_PART_MAIN, TINYUI_STATE_DEFAULT, &style)
+               == TINYUI_OK);
+        /* 栈上 descriptor 即将销毁；对象不得依赖该指针。 */
+        memset(&style, 0xA5, sizeof(style));
+    }
+
+    bg_after = ld->bgColor;
+    text_after = ld->textColor;
+    assert(bg_after == test_rgb_to_ld(0x0A0B0CU));
+    assert(text_after == test_rgb_to_ld(0x0D0E0FU));
+
+    (void)tinyui_obj_delete(label);
 }
 
-static void assert_list_backend_style(const struct tinyui_list *list,
-                                      unsigned int bg_color,
-                                      unsigned int text_color,
-                                      unsigned int select_color)
+static void test_theme_set_get_is_caller_owned_borrow(void)
 {
-    const ldList_t *ld_list;
+    tinyui_theme_t theme = {0};
+    tinyui_theme_t other = {0};
 
-    assert(list->widget.ld_widget != NULL);
-    ld_list = (const ldList_t *)list->widget.ld_widget;
-    assert(ld_list->bgColor == tinyui_test_rgb_to_ld_color(bg_color));
-    assert(ld_list->textColor == tinyui_test_rgb_to_ld_color(text_color));
-    assert(ld_list->selectColor == tinyui_test_rgb_to_ld_color(select_color));
+    theme.colors[TINYUI_COLOR_BG] = UINT32_C(0x102030);
+    theme.metrics[TINYUI_METRIC_PADDING] = 4;
+    other.colors[TINYUI_COLOR_BG] = UINT32_C(0x405060);
+    other.metrics[TINYUI_METRIC_PADDING] = 8;
+
+    assert(tinyui_theme_set(0) == TINYUI_ERROR_INVALID_ARG);
+    assert(tinyui_theme_set(&theme) == TINYUI_OK);
+    assert(tinyui_theme_get() == &theme);
+    assert(tinyui_theme_get()->colors[TINYUI_COLOR_BG] == UINT32_C(0x102030));
+
+    /* 替换指针，不复制内容。 */
+    assert(tinyui_theme_set(&other) == TINYUI_OK);
+    assert(tinyui_theme_get() == &other);
+    assert(tinyui_theme_get()->metrics[TINYUI_METRIC_PADDING] == 8);
+
+    theme.colors[TINYUI_COLOR_BG] = UINT32_C(0xFFFFFF);
+    assert(tinyui_theme_get()->colors[TINYUI_COLOR_BG] == UINT32_C(0x405060));
 }
 
-static void assert_list_backend_text_color(const struct tinyui_list *list,
-                                           unsigned int text_color)
+static void test_theme_apply_requires_set_theme_and_valid_obj(tinyui_obj_t *root)
 {
-    const ldList_t *ld_list;
+    tinyui_theme_t theme = {0};
+    tinyui_obj_t *label = tinyui_label_create(root);
 
-    assert(list->widget.ld_widget != NULL);
-    ld_list = (const ldList_t *)list->widget.ld_widget;
-    assert(ld_list->textColor == tinyui_test_rgb_to_ld_color(text_color));
+    assert(label != 0);
+    tinyui_internal_theme_reset();
+    assert(tinyui_theme_get() == 0);
+    assert(tinyui_theme_apply(label) == TINYUI_ERROR_INVALID_STATE);
+    assert(tinyui_theme_apply(0) == TINYUI_ERROR_INVALID_OBJECT);
+
+    theme.colors[TINYUI_COLOR_BG] = UINT32_C(0x111111);
+    theme.colors[TINYUI_COLOR_TEXT_PRIMARY] = UINT32_C(0x222222);
+    assert(tinyui_theme_set(&theme) == TINYUI_OK);
+    assert(tinyui_theme_apply(0) == TINYUI_ERROR_INVALID_OBJECT);
+
+    (void)tinyui_obj_delete(label);
 }
 
-static void assert_calendar_backend_style(const struct tinyui_calendar *calendar,
-                                          unsigned int bg_color,
-                                          unsigned int item_color,
-                                          unsigned int text_color)
+static void test_theme_apply_maps_colors_without_tree_walk(tinyui_obj_t *root)
 {
-    const ldCalendar_t *ld_calendar;
+    tinyui_theme_t theme = {0};
+    tinyui_obj_t *label_a = tinyui_label_create(root);
+    tinyui_obj_t *label_b = tinyui_label_create(root);
+    ldLabel_t *ld_a;
+    ldLabel_t *ld_b;
+    unsigned int b_bg_before;
+    unsigned int b_text_before;
+    struct tinyui_test_allocator_stats before;
+    struct tinyui_test_allocator_stats after;
 
-    assert(calendar->widget.ld_widget != NULL);
-    ld_calendar = (const ldCalendar_t *)calendar->widget.ld_widget;
-    assert(ld_calendar->bgColor == tinyui_test_rgb_to_ld_color(bg_color));
-    assert(ld_calendar->itemColor == tinyui_test_rgb_to_ld_color(item_color));
-    assert(ld_calendar->textColor == tinyui_test_rgb_to_ld_color(text_color));
+    assert(label_a != 0);
+    assert(label_b != 0);
+    ld_a = label_ld(label_a);
+    ld_b = label_ld(label_b);
+    b_bg_before = ld_b->bgColor;
+    b_text_before = ld_b->textColor;
+
+    theme.colors[TINYUI_COLOR_BG] = UINT32_C(0xABCDEF);
+    theme.colors[TINYUI_COLOR_TEXT_PRIMARY] = UINT32_C(0x123456);
+    theme.colors[TINYUI_COLOR_PANEL] = UINT32_C(0x654321);
+    theme.colors[TINYUI_COLOR_BORDER] = UINT32_C(0x010101);
+    theme.metrics[TINYUI_METRIC_PADDING] = 5;
+    theme.metrics[TINYUI_METRIC_RADIUS] = 3;
+    theme.metrics[TINYUI_METRIC_BORDER_WIDTH] = 1;
+    theme.metrics[TINYUI_METRIC_CONTROL_HEIGHT] = 24;
+    assert(tinyui_theme_set(&theme) == TINYUI_OK);
+
+    before = tinyui_test_allocator_snapshot();
+    assert(tinyui_theme_apply(label_a) == TINYUI_OK);
+    after = tinyui_test_allocator_snapshot();
+    assert_zero_alloc_delta(&before, &after);
+
+    assert(ld_a->bgColor == test_rgb_to_ld(0xABCDEFU));
+    assert(ld_a->textColor == test_rgb_to_ld(0x123456U));
+    /* 替换/显式 apply 不遍历旧树：label_b 保持原样。 */
+    assert(ld_b->bgColor == b_bg_before);
+    assert(ld_b->textColor == b_text_before);
+
+    /* 新对象不自动应用 theme（create 路径不在 Task 6 写面）。 */
+    {
+        tinyui_obj_t *label_c = tinyui_label_create(root);
+        ldLabel_t *ld_c = label_ld(label_c);
+        unsigned int c_bg = ld_c->bgColor;
+        unsigned int c_text = ld_c->textColor;
+
+        assert(c_bg != test_rgb_to_ld(0xABCDEFU)
+               || c_text != test_rgb_to_ld(0x123456U)
+               || c_bg == ld_b->bgColor);
+        (void)tinyui_obj_delete(label_c);
+        (void)c_bg;
+        (void)c_text;
+    }
+
+    (void)tinyui_obj_delete(label_a);
+    (void)tinyui_obj_delete(label_b);
 }
 
-static void test_image_theme_and_enabled_are_support_not_reject(void)
+static void test_theme_replace_does_not_mutate_existing_without_apply(tinyui_obj_t *root)
 {
-    struct tinyui_theme *theme = tinyui_theme_create();
-    struct tinyui_app *app = tinyui_app_create();
-    struct tinyui_window *win;
-    struct tinyui_image *image;
-    ldImage_t *ld_image;
+    tinyui_theme_t theme1 = {0};
+    tinyui_theme_t theme2 = {0};
+    tinyui_obj_t *label = tinyui_label_create(root);
+    ldLabel_t *ld;
+    unsigned int bg_after_first;
 
-    assert(theme != NULL);
-    assert(app != NULL);
-    assert(tinyui_theme_set_color(theme, TINYUI_COLOR_TEXT_PRIMARY, 0x111111U) == 0);
-    assert(tinyui_theme_set_color(theme, TINYUI_COLOR_BG, 0x222222U) == 0);
-    assert(tinyui_theme_set_color(theme, TINYUI_COLOR_PANEL, 0x333333U) == 0);
-    assert(tinyui_theme_set_color(theme, TINYUI_COLOR_BORDER, 0x444444U) == 0);
-    assert(tinyui_theme_set_color(theme, TINYUI_COLOR_ACCENT, 0x555555U) == 0);
-    assert(tinyui_theme_set_color(theme, TINYUI_COLOR_DISABLED, 0x666666U) == 0);
-    assert(tinyui_theme_set_metric(theme, TINYUI_METRIC_PADDING, 7) == 0);
-    assert(tinyui_theme_set_metric(theme, TINYUI_METRIC_RADIUS, 2) == 0);
-    assert(tinyui_theme_set_metric(theme, TINYUI_METRIC_CONTROL_HEIGHT, 17) == 0);
-    assert(tinyui_app_set_theme(app, theme) == 0);
+    assert(label != 0);
+    ld = label_ld(label);
 
-    win = tinyui_window_create(app, "image_theme_root");
-    image = tinyui_image_create(win, "image_theme");
-    assert(win != NULL);
-    assert(image != NULL);
+    theme1.colors[TINYUI_COLOR_BG] = UINT32_C(0x101010);
+    theme1.colors[TINYUI_COLOR_TEXT_PRIMARY] = UINT32_C(0x202020);
+    theme2.colors[TINYUI_COLOR_BG] = UINT32_C(0x303030);
+    theme2.colors[TINYUI_COLOR_TEXT_PRIMARY] = UINT32_C(0x404040);
 
-    assert(image->widget.ld_widget != NULL);
-    ld_image = (ldImage_t *)image->widget.ld_widget;
+    assert(tinyui_theme_set(&theme1) == TINYUI_OK);
+    assert(tinyui_theme_apply(label) == TINYUI_OK);
+    bg_after_first = ld->bgColor;
+    assert(bg_after_first == test_rgb_to_ld(0x101010U));
 
-    assert(tinyui_theme_apply_to_widget(theme,
-                                        &image->widget,
-                                        TINYUI_PART_MAIN,
-                                        TINYUI_STATE_DISABLED) == 0);
-    assert_widget_style(&image->widget, 0x222222U, 0x666666U, 0x666666U, 2, 7);
-    assert(backend_height(&image->widget) == 56);
-    assert(image->widget.height == 0);
-    assert(ld_image->maskColor == tinyui_test_rgb_to_ld_color(0x222222U));
+    assert(tinyui_theme_set(&theme2) == TINYUI_OK);
+    assert(tinyui_theme_get() == &theme2);
+    /* 仅替换 theme 指针，不自动刷新已有对象。 */
+    assert(ld->bgColor == bg_after_first);
 
-    assert(tinyui_widget_set_enabled(&image->widget, 0) == 0);
-    assert(image->widget.enabled == 0);
-    assert(((ldBase_t *)image->widget.ld_widget)->isSelectable == false);
-    assert(tinyui_widget_set_enabled(&image->widget, 1) == 0);
-    assert(image->widget.enabled == 1);
-    assert(((ldBase_t *)image->widget.ld_widget)->isSelectable == true);
+    assert(tinyui_theme_apply(label) == TINYUI_OK);
+    assert(ld->bgColor == test_rgb_to_ld(0x303030U));
+    assert(ld->textColor == test_rgb_to_ld(0x404040U));
 
-    tinyui_app_destroy(app);
-    tinyui_theme_destroy(theme);
+    (void)tinyui_obj_delete(label);
 }
 
-static void test_theme_native_parts_apply_to_real_backend_fields(void)
+static void test_theme_source_has_no_legacy_static_helpers(void)
 {
-    struct tinyui_theme *theme = tinyui_theme_create();
-    struct tinyui_app *app = tinyui_app_create();
-    struct tinyui_window *win;
-    struct tinyui_button *button;
-    struct tinyui_list *list;
-    struct tinyui_calendar *calendar;
+    const char *path = tinyui_test_repo_path_from_file(__FILE__, "tinyui/src/theme/theme.c");
 
-    assert(theme != NULL);
-    assert(app != NULL);
-    assert(tinyui_theme_set_color(theme, TINYUI_COLOR_TEXT_PRIMARY, 0x101010U) == 0);
-    assert(tinyui_theme_set_color(theme, TINYUI_COLOR_BG, 0x202020U) == 0);
-    assert(tinyui_theme_set_color(theme, TINYUI_COLOR_PANEL, 0x303030U) == 0);
-    assert(tinyui_theme_set_color(theme, TINYUI_COLOR_BORDER, 0x404040U) == 0);
-    assert(tinyui_theme_set_color(theme, TINYUI_COLOR_ACCENT, 0x505050U) == 0);
-    assert(tinyui_theme_set_color(theme, TINYUI_COLOR_DISABLED, 0x606060U) == 0);
-    assert(tinyui_theme_set_metric(theme, TINYUI_METRIC_PADDING, 9) == 0);
-    assert(tinyui_theme_set_metric(theme, TINYUI_METRIC_RADIUS, 4) == 0);
-    assert(tinyui_theme_set_metric(theme, TINYUI_METRIC_CONTROL_HEIGHT, 23) == 0);
-    assert(tinyui_app_set_theme(app, theme) == 0);
-
-    win = tinyui_window_create(app, "root");
-    button = tinyui_button_create(win, "ok");
-    list = tinyui_list_create(win, "items");
-    calendar = tinyui_calendar_create(win, "calendar");
-    assert(win != NULL);
-    assert(button != NULL);
-    assert(list != NULL);
-    assert(calendar != NULL);
-
-    assert(tinyui_theme_apply_to_widget(theme,
-                                        &button->widget,
-                                        TINYUI_PART_MAIN,
-                                        TINYUI_STATE_DEFAULT) == 0);
-    assert_button_backend_metrics(button, 23, 4, 9);
-
-    assert(tinyui_theme_apply_to_widget(theme,
-                                        &win->widget,
-                                        TINYUI_PART_MAIN,
-                                        TINYUI_STATE_DEFAULT) == 0);
-    assert_window_backend_padding(win, 9);
-
-    assert(tinyui_theme_apply_to_widget(theme,
-                                        &list->widget,
-                                        TINYUI_PART_TEXT,
-                                        TINYUI_STATE_FOCUSED) == 0);
-    assert_list_backend_text_color(list, 0x505050U);
-
-    assert(tinyui_theme_apply_to_widget(theme,
-                                        &calendar->widget,
-                                        TINYUI_PART_MAIN,
-                                        TINYUI_STATE_DEFAULT) == 0);
-    assert(tinyui_theme_apply_to_widget(theme,
-                                        &calendar->widget,
-                                        TINYUI_PART_TEXT,
-                                        TINYUI_STATE_FOCUSED) == 0);
-    assert_calendar_backend_style(calendar, 0x303030U, 0x404040U, 0x505050U);
-
-    tinyui_app_destroy(app);
-    tinyui_theme_destroy(theme);
-}
-
-static void test_theme_apply_requires_theme_owned_native_style_dispatch(void)
-{
-    struct tinyui_theme *theme = tinyui_theme_create();
-    struct tinyui_app *app = tinyui_app_create();
-    struct tinyui_window *win;
-    struct tinyui_button *button;
-    struct tinyui_checkbox *checkbox;
-    struct tinyui_switch *sw;
-    struct tinyui_slider *slider;
-
-    assert(theme != NULL);
-    assert(app != NULL);
-    assert(tinyui_theme_set_color(theme, TINYUI_COLOR_TEXT_PRIMARY, 0x111213U) == 0);
-    assert(tinyui_theme_set_color(theme, TINYUI_COLOR_BG, 0x212223U) == 0);
-    assert(tinyui_theme_set_color(theme, TINYUI_COLOR_PANEL, 0x313233U) == 0);
-    assert(tinyui_theme_set_color(theme, TINYUI_COLOR_BORDER, 0x414243U) == 0);
-    assert(tinyui_theme_set_color(theme, TINYUI_COLOR_ACCENT, 0x515253U) == 0);
-    assert(tinyui_theme_set_color(theme, TINYUI_COLOR_DISABLED, 0x616263U) == 0);
-    assert(tinyui_theme_set_metric(theme, TINYUI_METRIC_PADDING, 6) == 0);
-    assert(tinyui_theme_set_metric(theme, TINYUI_METRIC_RADIUS, 5) == 0);
-    assert(tinyui_theme_set_metric(theme, TINYUI_METRIC_CONTROL_HEIGHT, 21) == 0);
-    assert(tinyui_app_set_theme(app, theme) == 0);
-
-    win = tinyui_window_create(app, "dispatch_root");
-    button = tinyui_button_create(win, "dispatch_button");
-    checkbox = tinyui_checkbox_create(win, "dispatch_checkbox");
-    sw = tinyui_switch_create(win, "dispatch_switch");
-    slider = tinyui_slider_create(win, "dispatch_slider");
-    assert(win != NULL);
-    assert(button != NULL);
-    assert(checkbox != NULL);
-    assert(sw != NULL);
-    assert(slider != NULL);
-
-    assert(tinyui_theme_apply_to_widget(theme,
-                                        &button->widget,
-                                        TINYUI_PART_MAIN,
-                                        TINYUI_STATE_DEFAULT) == 0);
-    assert_button_backend_style(button, 0x313233U, 0x515253U, 0x111213U);
-
-    assert(tinyui_theme_apply_to_widget(theme,
-                                        &checkbox->widget,
-                                        TINYUI_PART_INDICATOR,
-                                        TINYUI_STATE_DEFAULT) == 0);
-    assert_checkbox_backend_style(checkbox, 0x313233U, 0x313233U, 0x111213U);
-
-    assert(tinyui_theme_apply_to_widget(theme,
-                                        &sw->widget,
-                                        TINYUI_PART_KNOB,
-                                        TINYUI_STATE_DEFAULT) == 0);
-    assert_switch_backend_style(sw, 0x414243U, 0x515253U, 0x313233U, 0x414243U);
-
-    assert(tinyui_theme_apply_to_widget(theme,
-                                        &slider->widget,
-                                        TINYUI_PART_TRACK,
-                                        TINYUI_STATE_DEFAULT) == 0);
-    assert_slider_backend_style(slider, 0x414243U, 0x414243U, 0x515253U);
-
-    tinyui_app_destroy(app);
-    tinyui_theme_destroy(theme);
-}
-
-static void test_app_set_theme_updates_app_theme(void)
-{
-    struct tinyui_app *app = tinyui_app_create();
-    struct tinyui_theme *theme = tinyui_theme_create();
-
-    assert(app != NULL);
-    assert(theme != NULL);
-    assert(app->theme == NULL);
-
-    assert(tinyui_app_set_theme(app, theme) == 0);
-    assert(app->theme == theme);
-
-    assert(tinyui_app_set_theme(NULL, theme) == -1);
-    assert(tinyui_app_set_theme(app, NULL) == -1);
-    assert(app->theme == theme);
-
-    tinyui_app_destroy(app);
-    tinyui_theme_destroy(theme);
-}
-
-static void test_app_set_theme_null_arg_guard_fires(void)
-{
-    struct tinyui_theme *theme = tinyui_theme_create();
-    struct tinyui_app *app = tinyui_app_create();
-    struct ld_scene_t *saved_ld_scene;
-
-    assert(theme != NULL);
-    assert(app != NULL);
-    assert(app->theme == NULL);
-
-    /* Simulate pre-init state: ld_scene == NULL means bind_theme still works
-     * (Phase A: bind_theme no longer gated on ld_scene).  Just verify null-arg
-     * guard still fires. */
-    saved_ld_scene = app->ld_scene;
-    app->ld_scene = NULL;
-
-    assert(tinyui_app_set_theme(app, theme) == 0);
-
-    app->ld_scene = saved_ld_scene;
-    tinyui_app_destroy(app);
-    tinyui_theme_destroy(theme);
-}
-
-static void test_theme_shared_style_apply_helpers_reject_null_and_unsupported_backend(void)
-{
-    struct tinyui_widget backend = {0};
-
-    assert(tinyui_theme_apply_widget_style(0,
-                                           TINYUI_PART_MAIN,
-                                           TINYUI_STATE_DEFAULT,
-                                           0x111111U,
-                                           0x222222U,
-                                           0x333333U)
-           == -1);
-
-    backend.kind = TINYUI_BACKEND_WIDGET_QRCODE;
-    assert(tinyui_theme_apply_widget_style(&backend,
-                                           TINYUI_PART_MAIN,
-                                           TINYUI_STATE_DEFAULT,
-                                           0x111111U,
-                                           0x222222U,
-                                           0x333333U)
-           == -1);
-}
-
-static void test_theme_internal_style_apply_helper_no_longer_uses_tinyui_prefix(void)
-{
-    const char *source = "tinyui/src/theme/theme.c";
-
-    assert_source_lacks_static_definition(source, "tinyui_theme_apply_widget_style");
+    assert(tinyui_test_source_lacks_function_definition(path, "tinyui_theme_rgb_to_ld_color") == 1);
+    assert(tinyui_test_source_lacks_function_definition(path, "tinyui_theme_apply_widget_style") == 1);
+    assert(tinyui_test_source_lacks_function_definition(path, "tinyui_theme_create") == 1);
+    assert(tinyui_test_source_lacks_function_definition(path, "tinyui_theme_destroy") == 1);
 }
 
 int main(void)
 {
-    struct tinyui_theme *theme = tinyui_theme_create();
-    struct tinyui_app *app;
-    struct tinyui_window *win;
-    struct tinyui_label *label;
-    struct tinyui_button *button;
-    struct tinyui_checkbox *checkbox;
-    struct tinyui_switch *sw;
-    struct tinyui_slider *slider;
-    struct tinyui_text *text;
-    struct tinyui_list *list;
-    struct tinyui_image *image;
-    struct tinyui_label *failed_label;
-    ldLabel_t *failed_ld_label;
-    void *saved_ld_widget;
-    int failed_width;
-    int failed_height;
-    unsigned int failed_backend_bg;
-    unsigned int failed_backend_text;
+    tinyui_obj_t *root;
 
-    test_theme_internal_static_helpers_no_longer_use_tinyui_prefix();
+    tinyui_deinit();
+    tinyui_internal_theme_reset();
+    tinyui_test_allocator_reset();
 
-    assert(theme != NULL);
-    assert(tinyui_theme_set_color(theme, TINYUI_COLOR_TEXT_PRIMARY, 0x111111U) == 0);
-    assert(tinyui_theme_set_color(theme, TINYUI_COLOR_BG, 0x222222U) == 0);
-    assert(tinyui_theme_set_color(theme, TINYUI_COLOR_PANEL, 0x333333U) == 0);
-    assert(tinyui_theme_set_color(theme, TINYUI_COLOR_BORDER, 0x444444U) == 0);
-    assert(tinyui_theme_set_color(theme, TINYUI_COLOR_ACCENT, 0x555555U) == 0);
-    assert(tinyui_theme_set_color(theme, TINYUI_COLOR_DISABLED, 0x666666U) == 0);
-    assert(tinyui_theme_set_metric(theme, TINYUI_METRIC_PADDING, 5) == 0);
-    assert(tinyui_theme_set_metric(theme, TINYUI_METRIC_RADIUS, 3) == 0);
-    assert(tinyui_theme_set_metric(theme, TINYUI_METRIC_BORDER_WIDTH, 2) == 0);
-    assert(tinyui_theme_set_metric(theme, TINYUI_METRIC_BORDER_WIDTH, -1) == -1);
-    assert(tinyui_theme_set_metric(theme, TINYUI_METRIC_CONTROL_HEIGHT, 19) == 0);
+    assert(tinyui_init() == TINYUI_OK);
+    root = tinyui_screen_create();
+    assert(root != 0);
 
-    test_app_set_theme_updates_app_theme();
-    test_theme_apply_requires_theme_owned_native_style_dispatch();
+    test_theme_source_has_no_legacy_static_helpers();
+    test_apply_style_rejects_null_and_range(root);
+    test_apply_style_rejects_invalid_fields_before_mutation(root);
+    test_apply_style_unsupported_part_state_does_not_mutate(root);
+    test_apply_style_unsupported_fields_do_not_mutate(root);
+    test_apply_style_main_default_maps_bg_text_opacity(root);
+    test_apply_style_does_not_retain_descriptor_pointer(root);
+    test_theme_set_get_is_caller_owned_borrow();
+    test_theme_apply_requires_set_theme_and_valid_obj(root);
+    test_theme_apply_maps_colors_without_tree_walk(root);
+    test_theme_replace_does_not_mutate_existing_without_apply(root);
 
-    app = tinyui_app_create();
-    assert(app != NULL);
-    assert(tinyui_app_set_theme(app, theme) == 0);
-
-    win = tinyui_window_create(app, "root");
-    label = tinyui_label_create(win, "label");
-    button = tinyui_button_create(win, "ok");
-    checkbox = tinyui_checkbox_create(win, "check");
-    sw = tinyui_switch_create(win, "switch");
-    slider = tinyui_slider_create(win, "slider");
-    text = tinyui_text_create(win, "text");
-    list = tinyui_list_create(win, "list");
-    image = tinyui_image_create(win, "image");
-    failed_label = tinyui_label_create(win, "failed_label");
-    assert(win != NULL);
-    assert(label != NULL);
-    assert(button != NULL);
-    assert(checkbox != NULL);
-    assert(sw != NULL);
-    assert(slider != NULL);
-    assert(text != NULL);
-    assert(list != NULL);
-    assert(image != NULL);
-    assert(failed_label != NULL);
-
-    assert(tinyui_theme_apply_to_widget(theme,
-                                        &label->widget,
-                                        TINYUI_PART_MAIN,
-                                        TINYUI_STATE_DISABLED)
-           == 0);
-    assert_widget_style(&label->widget, 0x222222U, 0x666666U, 0x666666U, 3, 5);
-    assert_backend_height(&label->widget, 19);
-    assert_backend_size(&label->widget, 220, 19);
-    assert_label_backend_style(label, 0x222222U, 0x666666U);
-
-    failed_width = backend_width(&failed_label->widget);
-    failed_height = backend_height(&failed_label->widget);
-    failed_ld_label = (ldLabel_t *)failed_label->widget.ld_widget;
-    failed_backend_bg = failed_ld_label->bgColor;
-    failed_backend_text = failed_ld_label->textColor;
-    saved_ld_widget = failed_label->widget.ld_widget;
-    failed_label->widget.ld_widget = NULL; /* force apply_to_widget failure */
-    assert(tinyui_theme_apply_to_widget(theme,
-                                        &failed_label->widget,
-                                        TINYUI_PART_MAIN,
-                                        TINYUI_STATE_DISABLED)
-           == -1);
-    failed_label->widget.ld_widget = saved_ld_widget;
-    assert_widget_style(&failed_label->widget, 0U, 0U, 0U, 0, 0);
-    assert(backend_width(&failed_label->widget) == failed_width);
-    assert(backend_height(&failed_label->widget) == failed_height);
-    assert(failed_ld_label->bgColor == failed_backend_bg);
-    assert(failed_ld_label->textColor == failed_backend_text);
-
-    assert(tinyui_theme_apply_to_widget(theme,
-                                        &text->widget,
-                                        TINYUI_PART_TEXT,
-                                        TINYUI_STATE_FOCUSED)
-           == 0);
-    assert_widget_style(&text->widget, 0x333333U, 0x555555U, 0x444444U, 3, 5);
-    assert_backend_height(&text->widget, 19);
-    assert_text_backend_style(text, 0x333333U, 0x555555U);
-
-    assert(tinyui_theme_apply_to_widget(theme,
-                                        &list->widget,
-                                        TINYUI_PART_MAIN,
-                                        TINYUI_STATE_FOCUSED)
-           == 0);
-    assert_widget_style(&list->widget, 0x555555U, 0x111111U, 0x555555U, 3, 5);
-    assert_backend_height(&list->widget, 19);
-    assert_list_backend_style(list, 0x555555U, 0x000000U, 0x555555U);
-
-    assert(tinyui_theme_apply_to_widget(theme,
-                                        &list->widget,
-                                        TINYUI_PART_TEXT,
-                                        TINYUI_STATE_DISABLED)
-           == 0);
-    assert(list->widget.bg_color == 0x222222U);
-    assert(list->widget.text_color == 0x666666U);
-    assert(list->widget.border_color == 0x666666U);
-    assert(list->widget.radius == 3);
-    assert(list->widget.padding == 5);
-    assert_backend_height(&list->widget, 19);
-    assert_list_backend_text_color(list, 0x666666U);
-
-    assert(tinyui_theme_apply_to_widget(theme,
-                                        &button->widget,
-                                        TINYUI_PART_MAIN,
-                                        TINYUI_STATE_PRESSED)
-           == 0);
-    assert_widget_style(&button->widget, 0x555555U, 0x111111U, 0x555555U, 3, 5);
-    assert_backend_height(&button->widget, 19);
-    assert_button_backend_style(button, 0x555555U, 0x555555U, 0x111111U);
-
-    assert(tinyui_theme_apply_to_widget(theme,
-                                        &checkbox->widget,
-                                        TINYUI_PART_INDICATOR,
-                                        TINYUI_STATE_CHECKED)
-           == 0);
-    assert_widget_style(&checkbox->widget, 0x555555U, 0x111111U, 0x555555U, 3, 5);
-    assert_backend_height(&checkbox->widget, 19);
-    assert_checkbox_backend_style(checkbox, 0x333333U, 0x555555U, 0x111111U);
-
-    assert(tinyui_theme_apply_to_widget(theme,
-                                        &sw->widget,
-                                        TINYUI_PART_TRACK,
-                                        TINYUI_STATE_DISABLED)
-           == 0);
-    assert_widget_style(&sw->widget, 0x222222U, 0x666666U, 0x666666U, 3, 5);
-    assert_backend_height(&sw->widget, 19);
-    assert_switch_backend_style(sw, 0x222222U, 0x555555U, 0x222222U, 0x666666U);
-
-    assert(tinyui_theme_apply_to_widget(theme,
-                                        &slider->widget,
-                                        TINYUI_PART_KNOB,
-                                        TINYUI_STATE_FOCUSED)
-           == 0);
-    assert_widget_style(&slider->widget, 0x555555U, 0x111111U, 0x444444U, 3, 5);
-    assert_backend_height(&slider->widget, 19);
-    assert_slider_backend_style(slider, 0x333333U, 0x444444U, 0x555555U);
-
-    assert(tinyui_theme_apply_to_widget(theme,
-                                        &win->widget,
-                                        TINYUI_PART_MAIN,
-                                        TINYUI_STATE_DISABLED)
-           == 0);
-    assert_widget_style(&win->widget, 0x222222U, 0x666666U, 0x666666U, 3, 5);
-    assert_window_backend_style(win, 0x222222U);
-    assert_window_backend_padding(win, 5);
-
-    assert(tinyui_theme_apply_to_widget(theme,
-                                        &button->widget,
-                                        TINYUI_PART_KNOB,
-                                        TINYUI_STATE_DEFAULT)
-           == -1);
-    assert_widget_style(&button->widget, 0x555555U, 0x111111U, 0x555555U, 3, 5);
-
-    assert(tinyui_theme_apply_to_widget(theme,
-                                        &label->widget,
-                                        TINYUI_PART_INDICATOR,
-                                        TINYUI_STATE_DEFAULT)
-           == -1);
-    assert_widget_style(&label->widget, 0x222222U, 0x666666U, 0x666666U, 3, 5);
-
-    assert(tinyui_theme_apply_to_widget(theme,
-                                        &slider->widget,
-                                        TINYUI_PART_TEXT,
-                                        TINYUI_STATE_DEFAULT)
-           == -1);
-    assert_widget_style(&slider->widget, 0x555555U, 0x111111U, 0x444444U, 3, 5);
-
-    assert(tinyui_theme_apply_to_widget(theme,
-                                        &list->widget,
-                                        TINYUI_PART_INDICATOR,
-                                        TINYUI_STATE_DEFAULT)
-           == -1);
-    assert(list->widget.bg_color == 0x222222U);
-    assert(list->widget.text_color == 0x666666U);
-    assert(list->widget.border_color == 0x666666U);
-    assert(list->widget.radius == 3);
-    assert(list->widget.padding == 5);
-
-    assert(tinyui_theme_apply_to_widget(theme,
-                                        &slider->widget,
-                                        TINYUI_PART_TRACK,
-                                        (enum tinyui_state)99)
-           == -1);
-    assert_widget_style(&slider->widget, 0x555555U, 0x111111U, 0x444444U, 3, 5);
-
-    assert(tinyui_theme_apply_to_widget(theme,
-                                        &image->widget,
-                                        TINYUI_PART_MAIN,
-                                        TINYUI_STATE_DEFAULT)
-           == 0);
-    assert_widget_style(&image->widget, 0x333333U, 0x111111U, 0x444444U, 3, 5);
-    assert(image->widget.height == 0);
-    assert(((ldImage_t *)image->widget.ld_widget)->maskColor
-           == tinyui_test_rgb_to_ld_color(0x333333U));
-
-    assert(label->widget.visible == 1);
-    assert(ldBaseIsHidden((ldBase_t *)label->widget.ld_widget) == false);
-    assert(tinyui_widget_set_visible(&label->widget, 0) == 0);
-    assert(label->widget.visible == 0);
-    assert(ldBaseIsHidden((ldBase_t *)label->widget.ld_widget) == true);
-    assert(tinyui_widget_set_visible(&label->widget, 1) == 0);
-    assert(label->widget.visible == 1);
-    assert(ldBaseIsHidden((ldBase_t *)label->widget.ld_widget) == false);
-
-    assert(sw->widget.enabled == 1);
-    assert(ldSwitchIsDisabled((ldSwitch_t *)sw->widget.ld_widget) == false);
-    assert(tinyui_widget_set_enabled(&sw->widget, 0) == 0);
-    assert(sw->widget.enabled == 0);
-    assert(ldSwitchIsDisabled((ldSwitch_t *)sw->widget.ld_widget) == true);
-    assert(tinyui_widget_set_enabled(&sw->widget, 1) == 0);
-    assert(sw->widget.enabled == 1);
-    assert(ldSwitchIsDisabled((ldSwitch_t *)sw->widget.ld_widget) == false);
-
-    test_image_theme_and_enabled_are_support_not_reject();
-    test_theme_native_parts_apply_to_real_backend_fields();
-    test_app_set_theme_null_arg_guard_fires();
-    test_theme_shared_style_apply_helpers_reject_null_and_unsupported_backend();
-    test_theme_internal_style_apply_helper_no_longer_uses_tinyui_prefix();
-
-    tinyui_app_destroy(app);
-    tinyui_theme_destroy(theme);
+    tinyui_deinit();
+    tinyui_internal_theme_reset();
     return 0;
 }

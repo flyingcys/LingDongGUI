@@ -1,146 +1,131 @@
 # TinyUI Demo 运行指南
 
-本文只描述当前 `v2.1` 的 current-facing demo 真相，不复述旧 `TINYUI/a-0.x` serial 文档阶段细节。
+本文描述 TinyUI v2.3 **current-facing** demo 模型：demo 只表达 UI 意图，**不**拥有 runtime 生命周期。
 
-## 真相源
+## 契约
 
-- demo target 清单：`examples/sdl/CMakeLists.txt`
-- demo boundary：`tests/tinyui/contract/check_tinyui_demo_boundary.py`
-- deprecated API usage：`tests/tinyui/contract/check_tinyui_deprecated_api_usage.py`
-- runtime smoke：`tests/tinyui/runtime/check_tinyui_runtime.py`
-- automatic visible：`tests/tinyui/runtime/check_tinyui_visible_ui.py --all`
-- manual artifact 生成入口：`tests/tinyui/runtime/check_tinyui_manual_window_artifact.py`
-- manual artifact truth-source：`docs/tinyui-serial/C-线人工窗口验收记录.md`
-- release / capability truth-source：`tests/tinyui/contract/tinyui_release_capability_matrix.json`
+每个 demo 只暴露：
 
-## demo target
+```c
+tinyui_result_t tinyui_demo_<name>_build(tinyui_obj_t *screen);
+```
 
-当前 SDL demo 以独立 target 构建，不走顶层 `USE_DEMO` 切换。
+统一 runner（`tinyui_demo`）负责：
 
-- `tinyui_hello_world_demo`
-- `tinyui_basic_widgets_demo`
-- `tinyui_layout_flex_demo`
-- `tinyui_layout_grid_demo`
-- `tinyui_theme_showcase_demo`
-- `tinyui_settings_panel_demo`
-- `tinyui_list_basic_demo`
-- `tinyui_progress_bar_basic_demo`
-- `tinyui_progress_wheel_basic_demo`
-- `tinyui_qrcode_basic_demo`
-- `tinyui_arc_basic_demo`
-- `tinyui_gauge_basic_demo`
-- `tinyui_icon_slider_basic_demo`
-- `tinyui_radial_menu_basic_demo`
-- `tinyui_message_box_basic_demo`
-- `tinyui_date_time_basic_demo`
-- `tinyui_clock_basic_demo`
-- `tinyui_keyboard_basic_demo`
-- `tinyui_line_edit_basic_demo`
-- `tinyui_combo_box_basic_demo`
-- `tinyui_scroll_selecter_basic_demo`
-- `tinyui_graph_basic_demo`
-- `tinyui_table_basic_demo`
-- `tinyui_calendar_basic_demo`
-- `tinyui_animation_basic_demo`
-- `tinyui_legacy_widget_parity_demo`
-- `tinyui_layout_parity_demo`
-- `tinyui_grid_parity_demo`
+1. `tinyui_init`
+2. 平台宿主接入（显示 / 输入 / 时钟）
+3. `tinyui_screen_create`
+4. 调用 `tinyui_demo_<name>_build(screen)`
+5. `tinyui_screen_load(screen, TINYUI_SCREEN_TRANSITION_NONE, 0)`（或 runner 选定的过渡）
+6. 循环 `tinyui_process(&next_ms)`
+7. 清理与 `tinyui_deinit`
+
+### Demo 内禁止
+
+- 调用 `tinyui_init` / `tinyui_deinit` / `tinyui_screen_create` / `tinyui_screen_load` / `tinyui_process`
+- 使用历史兼容 API（app / widget / native 前缀族，已移出 canonical）
+- 泄漏后端符号或头（LingDongGUI 原生前缀、Arm-2D、旧 signal 宏）
+- 引入平台头（如 SDL）到 `tinyui/demo/*` builder
+
+`tinyui_window_*` 是合法 canonical 控件 API，可用于 demo。
+
+## 清单与注册
+
+- 清单：`tests/tinyui/contract/tinyui_demo_manifest.json`（权威名字与数量）
+- 注册表：`tinyui/demo/tinyui_demos.h` / `tinyui_demos.c`
+- 构建回调类型：`tinyui_demo_build_cb_t`
+- 边界门禁：`tests/tinyui/contract/check_tinyui_demo_boundary.py`
+
+当前 runner 以**单一可执行文件** `tinyui_demo` 聚合全部 demo，运行时按名字选择：
+
+```bash
+./build/v2.3-m4-demo/examples/sdl/tinyui_demo hello_world
+./build/v2.3-m4-demo/examples/sdl/tinyui_demo basic_widgets
+```
+
+（具体构建目录随本机 cmake `-B` 而定。）
 
 ## 构建
 
-建议从仓库根目录执行：
+从仓库根目录：
 
 ```bash
-cd <repo>
-rtk cmake -S . -B build
-rtk cmake --build build -j8 --target tinyui_hello_world_demo
+rtk cmake -S . -B build/v2.3-m4-demo \
+  -DENABLE_TEST=ON \
+  -DLD_BUILD_SDL_DEMO=ON \
+  -DLD_BUILD_RUNTIME_TESTS=ON \
+  -DLD_TINYUI_PORT=sdl
+rtk cmake --build build/v2.3-m4-demo -j --target tinyui_demo
 ```
 
-运行某个 demo：
+帮助与列表：
 
 ```bash
-./build/tinyui-runtime/examples/sdl/tinyui_hello_world_demo
+./build/v2.3-m4-demo/examples/sdl/tinyui_demo --help
 ```
 
-Windows 对应路径：
+## 编写新 demo 的最小模板
 
-```text
-build\tinyui-runtime\examples\sdl\tinyui_hello_world_demo.exe
+```c
+#include "tinyui.h"
+
+tinyui_result_t tinyui_demo_example_build(tinyui_obj_t *screen)
+{
+    tinyui_obj_t *label;
+    tinyui_obj_t *button;
+
+    if (screen == NULL) {
+        return TINYUI_ERROR_INVALID_ARG;
+    }
+
+    if (tinyui_flex_set_flow(screen, TINYUI_FLEX_FLOW_COLUMN) != TINYUI_OK) {
+        return tinyui_last_result();
+    }
+
+    label = tinyui_label_create(screen);
+    button = tinyui_button_create(screen);
+    if (label == NULL || button == NULL) {
+        return TINYUI_ERROR_NO_MEMORY;
+    }
+
+    if (tinyui_label_set_text(label, "Hello") != 0) {
+        return TINYUI_ERROR_BACKEND;
+    }
+    if (tinyui_button_set_text(button, "OK") != 0) {
+        return TINYUI_ERROR_BACKEND;
+    }
+
+    return TINYUI_OK;
+}
 ```
 
-## 自动 gate
+要点：
 
-当前 demo 证据分五层：
+1. 只接收 runner 提供的 `screen`，在其上创建子树。
+2. 资源 descriptor 使用静态/页面级存储（见 [资源生命周期](./resource_lifetime.md)）。
+3. 交互使用统一 `tinyui_obj_add_event_cb` 或控件 `set_on_*`。
+4. 动态刷新用 `tinyui_timer_create`，不要在 demo 内写帧钩子。
 
-1. `demo boundary`
-   - `python3 tests/tinyui/contract/check_tinyui_demo_boundary.py`
-   - 证明 `tinyui/demo`、`tinyui_demo` 和本指南不泄漏底层符号、底层图片宏或底层资源字段
-2. `deprecated API usage`
-   - `python3 tests/tinyui/contract/check_tinyui_deprecated_api_usage.py`
-   - 证明 demo 和 current-facing 文档不继续使用历史兼容别名
-3. `runtime smoke`
-   - `python3 tests/tinyui/runtime/check_tinyui_runtime.py`
-   - 证明可 build、可启动、可 capture、可回归
-4. `automatic visible`
-   - `python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --all`
-   - 证明 `SDL_VIDEODRIVER=dummy + PPM readback` 下可显示、可读、可判定
-5. `manual artifact`
-   - `python3 tests/tinyui/runtime/check_tinyui_manual_window_artifact.py --demo basic_widgets`
-   - `python3 tests/tinyui/runtime/check_tinyui_manual_window_artifact.py --demo settings_panel`
-   - 这是历史保留的人工窗口 artifact 入口；脚本当前实际构建和运行的是 `tinyui_*_demo`，默认 build 目录也是 `build/tinyui-runtime`
-
-这些证据层不能混写：
-
-- `runtime smoke` 通过，不等于 visible 正确
-- `automatic visible` 通过，不等于人工窗口验收通过
-- `manual artifact` 只在有真实桌面窗口、artifact 路径和人工记录时，才允许支撑人工窗口结论
-
-## 最小本地门禁
+## 自动门禁（摘录）
 
 ```bash
 rtk python3 tests/tinyui/contract/check_tinyui_demo_boundary.py
 rtk python3 tests/tinyui/contract/check_tinyui_deprecated_api_usage.py
-rtk ctest --test-dir build -R 'check_tinyui_runtime|check_tinyui_visible_ui' --output-on-failure
+rtk python3 tests/tinyui/contract/check_tinyui_docs_examples.py \
+  --build-dir build/v2.3-m4-docs \
+  --prefix build/v2.3-m4-demo/_tinyui_install
 ```
-
-完整本地门禁：
-
-```bash
-python3 tests/tinyui/contract/check_tinyui_demo_boundary.py
-python3 tests/tinyui/contract/check_tinyui_deprecated_api_usage.py
-python3 tests/tinyui/contract/check_tinyui_public_api.py
-python3 tests/tinyui/contract/check_tinyui_release_capability_matrix.py
-python3 tests/tinyui/contract/check_tinyui_native_api_exhaustiveness.py
-python3 tests/tinyui/runtime/check_tinyui_runtime.py
-python3 tests/tinyui/runtime/check_tinyui_visible_ui.py --all
-rtk ctest --test-dir build -R 'test_tinyui_|check_tinyui_(public_api|demo_boundary|deprecated_api_usage|release_capability_matrix|native_api_exhaustiveness|runtime|visible_ui)' --output-on-failure
-```
-
-## manual artifact
-
-当前 manual artifact truth 仍保留在历史链路：
-
-- 脚本入口：`tests/tinyui/runtime/check_tinyui_manual_window_artifact.py`
-- artifact 根目录：`artifacts/tinyui/manual-window/`
-- 记录真相源：`docs/tinyui-serial/C-线人工窗口验收记录.md`
-
-这是当前仓库的过渡态，不应误写成 canonical `tests/tinyui/runtime/*` 已完全承接 manual artifact。
 
 ## 常见问题
 
-### 为什么 `-DUSE_DEMO=...` 不影响 TinyUI demo
+### 为什么 demo 不能自己 init / process？
 
-`USE_DEMO` 控制的是老 `examples/sdl` 入口，不控制 `tinyui_*_demo` 独立 target。
+生命周期与宿主集成属于 runner。demo 只描述“页面长什么样、如何响应”，才能在 MCU/host 多种宿主间复用同一 builder。
 
-### 为什么只构建了一个可执行文件
+### port 是否已经生产闭环？
 
-每个 TinyUI demo 都是单独 target，需要显式指定 `--target`。
+否。SDL 路径是开发与可见性验证宿主；MCU port 与生产级 port 仍属延期项，见 `docs/v2.3/deferred-port-work.md`。
 
-### 为什么文档里还会看到 `tinyui`
+### 旧的独立 `tinyui_*_demo` target？
 
-当前允许两类保留命中：
-
-- 历史 serial 文档和历史 manual artifact 入口
-- 仍处过渡态的 public C API / compatibility subtree
-
-`v2.1` 当前要求的是 canonical truth、header、contract、test、CMake 和 current-facing 文档统一到 `tinyui`，不是把所有 `tinyui` 文本命中清零。
+v2.3 以统一 `tinyui_demo` + `build(screen)` 为准；历史多可执行文件布局不再作为 current-facing 真相。

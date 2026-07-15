@@ -290,14 +290,32 @@ int tinyui_progress_wheel_set_progress(tinyui_obj_t *wheel_obj, int percent)
 
 int tinyui_progress_wheel_get_percent(const tinyui_obj_t *wheel_obj)
 {
-    const struct tinyui_progress_wheel *wheel = tinyui_progress_wheel_as_progress_wheel_const(wheel_obj);
-    if (wheel == 0) { return -1; }
+    struct tinyui_progress_wheel *wheel =
+        tinyui_progress_wheel_as_progress_wheel((tinyui_obj_t *)(void *)wheel_obj);
+    ldProgressWheel_t *ld_progress_wheel;
+    int percent;
 
     if (wheel == 0) {
         return -1;
     }
 
-    return wheel->percent;
+    if (wheel->widget.ld_widget == 0
+        || wheel->widget.kind != TINYUI_BACKEND_WIDGET_PROGRESS_WHEEL) {
+        return -1;
+    }
+
+    ld_progress_wheel = (ldProgressWheel_t *)wheel->widget.ld_widget;
+    percent = (int)(ld_progress_wheel->iProgress / 10);
+    if (percent < 0) {
+        percent = 0;
+    } else if (percent > 100) {
+        percent = 100;
+    }
+
+    /* Read real LD state; keep wrapper cache coherent. */
+    wheel->percent = percent;
+    wheel->widget.value = percent;
+    return percent;
 }
 
 /**
@@ -395,12 +413,23 @@ int tinyui_progress_wheel_set_dot_enabled(tinyui_obj_t *wheel_obj, int enabled)
 
 int tinyui_progress_wheel_get_dot_enabled(const tinyui_obj_t *wheel_obj)
 {
-    const struct tinyui_progress_wheel *wheel = tinyui_progress_wheel_as_progress_wheel_const(wheel_obj);
-    if (wheel == 0) { return -1; }
+    struct tinyui_progress_wheel *wheel =
+        tinyui_progress_wheel_as_progress_wheel((tinyui_obj_t *)(void *)wheel_obj);
+    ldProgressWheel_t *ld_progress_wheel;
+    struct tinyui_progress_wheel_cfg_bridge *bridge;
+    int enabled;
 
     if (wheel == 0) {
         return -1;
     }
+    if (wheel->widget.ld_widget == 0
+        || wheel->widget.kind != TINYUI_BACKEND_WIDGET_PROGRESS_WHEEL) {
+        return -1;
+    }
 
-    return wheel->dot_enabled;
+    ld_progress_wheel = (ldProgressWheel_t *)wheel->widget.ld_widget;
+    bridge = (struct tinyui_progress_wheel_cfg_bridge *)&ld_progress_wheel->tWheel;
+    enabled = bridge->tCFG.bIgnoreDot ? 0 : 1;
+    wheel->dot_enabled = enabled;
+    return enabled;
 }

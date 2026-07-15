@@ -108,21 +108,45 @@ def print_current() -> int:
     return 0
 
 
+def _generated_config_include_dirs() -> list[str]:
+    """Locate generated tinyui_config.h for composability probes."""
+    candidates = [
+        ROOT / "build" / "v2.3" / "generated" / "tinyui",
+        ROOT / "build" / "v2.3-m3" / "generated" / "tinyui",
+        ROOT / "build" / "tinyui-runtime" / "generated" / "tinyui",
+    ]
+    dirs: list[str] = []
+    for path in candidates:
+        if (path / "tinyui_config.h").is_file():
+            dirs.extend(["-I", str(path)])
+    # Always allow a build/*/generated/tinyui discovery for local trees.
+    build_root = ROOT / "build"
+    if build_root.is_dir():
+        for cfg in build_root.glob("*/generated/tinyui/tinyui_config.h"):
+            include_dir = str(cfg.parent)
+            if include_dir not in dirs:
+                dirs.extend(["-I", include_dir])
+            break
+    return dirs
+
+
 def check_tinyui_headers_are_composable() -> None:
     with tempfile.NamedTemporaryFile("w", suffix=".c", encoding="utf-8", delete=False) as probe:
         probe.write(TINYUI_INCLUDE_PROBE)
         probe_path = Path(probe.name)
     try:
+        cmd = [
+            "cc",
+            "-fsyntax-only",
+            "-I",
+            str(ROOT / "tinyui" / "include"),
+            "-I",
+            str(ROOT / "tinyui" / "include" / "tinyui"),
+        ]
+        cmd.extend(_generated_config_include_dirs())
+        cmd.append(str(probe_path))
         result = subprocess.run(
-            [
-                "cc",
-                "-fsyntax-only",
-                "-I",
-                str(ROOT / "tinyui" / "include"),
-                "-I",
-                str(ROOT / "tinyui" / "include" / "tinyui"),
-                str(probe_path),
-            ],
+            cmd,
             cwd=ROOT,
             text=True,
             stdout=subprocess.PIPE,

@@ -2,161 +2,172 @@
  * Copyright (c) 2023-2026 flyingcys (flyingcys@gmail.com). All rights reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
  */
 
 #include "grid_parity/grid_parity.h"
 #include "tinyui.h"
 
-static void style_panel(struct tinyui_button *button,
-                        const char *text,
-                        unsigned int bg_color)
+static tinyui_result_t style_panel(tinyui_obj_t *button,
+                                   const char *text,
+                                   unsigned int bg_color)
 {
-    tinyui_button_set_text(button, text);
-    tinyui_widget_set_bg_color((struct tinyui_widget *)button, bg_color);
-    tinyui_button_set_text_color(button, 0xFFFFFFU);
-    tinyui_widget_set_radius((struct tinyui_widget *)button, 8);
+    if (tinyui_button_set_text(button, text) != 0
+        || tinyui_obj_set_bg_color(button, bg_color) != TINYUI_OK
+        || tinyui_button_set_text_color(button, 0xFFFFFFU) != 0) {
+        return TINYUI_ERROR_BACKEND;
+    }
+    return TINYUI_OK;
 }
 
-static void make_ui(struct tinyui_window *win)
+tinyui_result_t tinyui_demo_grid_parity_build(tinyui_obj_t *screen)
 {
-    static const int root_cols[] = {456, 0};
-    static const int root_rows[] = {20, 22, 204, 16, 0};
-    static const int canvas_cols[] = {92, -2, -3, 0};
-    static const int canvas_rows[] = {54, 66, -3, 0};
-    struct tinyui_text *title;
-    struct tinyui_text *hint;
-    struct tinyui_window *canvas;
-    struct tinyui_text *guide;
-    struct tinyui_button *panel_a;
-    struct tinyui_button *panel_b;
-    struct tinyui_button *panel_c;
-    struct tinyui_button *panel_d;
-    struct tinyui_button *panel_e;
-    struct tinyui_button *panel_f;
-    struct tinyui_button *panel_g;
-    struct tinyui_text *overlay;
+    static const tinyui_grid_track_t root_cols[] = {
+        {TINYUI_GRID_UNIT_PX, 456},
+    };
+    static const tinyui_grid_track_t root_rows[] = {
+        {TINYUI_GRID_UNIT_PX, 20},
+        {TINYUI_GRID_UNIT_PX, 22},
+        {TINYUI_GRID_UNIT_PX, 204},
+        {TINYUI_GRID_UNIT_CONTENT, 0},
+    };
+    static const tinyui_grid_track_t canvas_cols[] = {
+        {TINYUI_GRID_UNIT_PX, 92},
+        {TINYUI_GRID_UNIT_CONTENT, 0},
+        {TINYUI_GRID_UNIT_FR, 1},
+    };
+    static const tinyui_grid_track_t canvas_rows[] = {
+        {TINYUI_GRID_UNIT_PX, 54},
+        {TINYUI_GRID_UNIT_PX, 66},
+        {TINYUI_GRID_UNIT_FR, 1},
+    };
+    tinyui_obj_t *title;
+    tinyui_obj_t *hint;
+    tinyui_obj_t *canvas;
+    tinyui_obj_t *guide;
+    tinyui_obj_t *panel_a;
+    tinyui_obj_t *panel_b;
+    tinyui_obj_t *panel_c;
+    tinyui_obj_t *panel_d;
+    tinyui_obj_t *panel_e;
+    tinyui_obj_t *panel_f;
+    tinyui_obj_t *panel_g;
+    tinyui_obj_t *overlay;
+    tinyui_result_t result;
 
-    tinyui_window_set_color(win, 0xF5F6F8U);
-    tinyui_window_set_layout_type(win, TINYUI_WINDOW_LAYOUT_GRID);
-    tinyui_window_set_padding(win, 12, 8, 12, 8);
-    tinyui_grid_set_columns(win, root_cols, 2);
-    tinyui_grid_set_rows(win, root_rows, 5);
-    tinyui_grid_set_gap(win, 12, 12);
-    tinyui_grid_set_align(win, TINYUI_ALIGN_START, TINYUI_ALIGN_START);
-
-    title = tinyui_text_create(win, "grid_title");
-    hint = tinyui_text_create(win, "grid_hint");
-    canvas = tinyui_window_create_child(win, "grid_canvas");
-    guide = tinyui_text_create(win, "grid_guide");
-    panel_a = tinyui_button_create(canvas, "panel_a");
-    panel_b = tinyui_button_create(canvas, "panel_b");
-    panel_c = tinyui_button_create(canvas, "panel_c");
-    panel_d = tinyui_button_create(canvas, "panel_d");
-    panel_e = tinyui_button_create(canvas, "panel_e");
-    panel_f = tinyui_button_create(canvas, "panel_f");
-    panel_g = tinyui_button_create(canvas, "panel_g");
-    overlay = tinyui_text_create(canvas, "grid_overlay");
-
-    tinyui_text_set_text(title, "Grid Demo");
-    tinyui_text_set_text(hint, "Uses [92, content, 1fr] x [54, 66, 1fr] tracks, explicit spans, centered cells, auto placement, and ignore-layout overlay.");
-    tinyui_widget_set_grid_cell((struct tinyui_widget *)title,
-                                0, 0, 1, 1,
-                                TINYUI_ALIGN_START,
-                                TINYUI_ALIGN_CENTER);
-    tinyui_widget_set_grid_cell((struct tinyui_widget *)hint,
-                                0, 1, 1, 1,
-                                TINYUI_ALIGN_START,
-                                TINYUI_ALIGN_CENTER);
-
-    tinyui_widget_set_grid_cell((struct tinyui_widget *)canvas,
-                                0, 2, 1, 1,
-                                TINYUI_ALIGN_STRETCH,
-                                TINYUI_ALIGN_STRETCH);
-    tinyui_window_set_color(canvas, 0xE8ECF2U);
-    tinyui_window_set_layout_type(canvas, TINYUI_WINDOW_LAYOUT_GRID);
-    tinyui_window_set_padding(canvas, 12, 12, 12, 12);
-    tinyui_grid_set_columns(canvas, canvas_cols, 4);
-    tinyui_grid_set_rows(canvas, canvas_rows, 4);
-    tinyui_grid_set_gap(canvas, 12, 12);
-    tinyui_grid_set_align(canvas, TINYUI_ALIGN_START, TINYUI_ALIGN_START);
-
-    tinyui_text_set_text(guide, "Grid descriptors: [92, content, 1fr] x [54, 66, 1fr], plus explicit spans, centered cells, auto placement, and one ignore-layout overlay.");
-    tinyui_widget_set_grid_cell((struct tinyui_widget *)guide,
-                                0, 3, 1, 1,
-                                TINYUI_ALIGN_START,
-                                TINYUI_ALIGN_CENTER);
-
-    style_panel(panel_a, "A", 0xE76F51U);
-    style_panel(panel_b, "B", 0x2A9D8FU);
-    style_panel(panel_c, "C", 0x457B9DU);
-    style_panel(panel_d, "D", 0x264653U);
-    style_panel(panel_e, "E", 0xF4A261U);
-    style_panel(panel_f, "F", 0x6D597AU);
-    style_panel(panel_g, "G", 0x8AB17DU);
-
-    tinyui_widget_set_size((struct tinyui_widget *)panel_a, 92, 54);
-    tinyui_widget_set_size((struct tinyui_widget *)panel_b, 112, 54);
-    tinyui_widget_set_size((struct tinyui_widget *)panel_c, 124, 54);
-    tinyui_widget_set_size((struct tinyui_widget *)panel_d, 180, 66);
-    tinyui_widget_set_size((struct tinyui_widget *)panel_e, 124, 132);
-    tinyui_widget_set_size((struct tinyui_widget *)panel_f, 56, 28);
-    tinyui_widget_set_size((struct tinyui_widget *)panel_g, 92, 54);
-
-    tinyui_widget_set_grid_cell((struct tinyui_widget *)panel_a,
-                                0, 0, 1, 1,
-                                TINYUI_ALIGN_STRETCH,
-                                TINYUI_ALIGN_STRETCH);
-    tinyui_widget_set_grid_cell((struct tinyui_widget *)panel_b,
-                                1, 0, 1, 1,
-                                TINYUI_ALIGN_STRETCH,
-                                TINYUI_ALIGN_STRETCH);
-    tinyui_widget_set_grid_cell((struct tinyui_widget *)panel_c,
-                                2, 0, 1, 1,
-                                TINYUI_ALIGN_STRETCH,
-                                TINYUI_ALIGN_STRETCH);
-    tinyui_widget_set_grid_cell((struct tinyui_widget *)panel_d,
-                                0, 1, 2, 1,
-                                TINYUI_ALIGN_STRETCH,
-                                TINYUI_ALIGN_STRETCH);
-    tinyui_widget_set_grid_cell((struct tinyui_widget *)panel_e,
-                                2, 1, 1, 2,
-                                TINYUI_ALIGN_STRETCH,
-                                TINYUI_ALIGN_STRETCH);
-    tinyui_widget_set_grid_cell((struct tinyui_widget *)panel_f,
-                                1, 2, 1, 1,
-                                TINYUI_ALIGN_CENTER,
-                                TINYUI_ALIGN_CENTER);
-
-    tinyui_text_set_text(overlay, "Overlay\nignore-layout");
-    tinyui_text_set_bg_color(overlay, 0x1D3557U);
-    tinyui_text_set_text_color(overlay, 0xFFFFFFU);
-    tinyui_widget_set_size((struct tinyui_widget *)overlay, 116, 40);
-    tinyui_widget_set_ignore_layout((struct tinyui_widget *)overlay, 1);
-    tinyui_widget_set_pos((struct tinyui_widget *)overlay, 320, 148);
-    tinyui_widget_set_radius((struct tinyui_widget *)overlay, 8);
-}
-
-void tinyui_demo_grid_parity(void)
-{
-    tinyui_obj_t *screen = tinyui_screen_create();
-    struct tinyui_window *win = (struct tinyui_window *)screen;
-
-    if (win == 0) {
-        return;
+    if (screen == NULL) {
+        return TINYUI_ERROR_INVALID_ARG;
     }
 
-    make_ui(win);
-    tinyui_screen_load(screen);
+    if (tinyui_window_set_color(screen, 0xF5F6F8U) != 0
+        || tinyui_window_set_layout_type(screen, TINYUI_WINDOW_LAYOUT_GRID) != 0
+        || tinyui_window_set_padding(screen, 12, 8, 12, 8) != 0) {
+        return TINYUI_ERROR_BACKEND;
+    }
+
+    result = tinyui_grid_set_columns(screen, root_cols, 1);
+    if (result != TINYUI_OK) {
+        return result;
+    }
+    result = tinyui_grid_set_rows(screen, root_rows, 4);
+    if (result != TINYUI_OK) {
+        return result;
+    }
+    result = tinyui_grid_set_gap(screen, 12, 12);
+    if (result != TINYUI_OK) {
+        return result;
+    }
+    result = tinyui_grid_set_align(screen, TINYUI_ALIGN_START, TINYUI_ALIGN_START);
+    if (result != TINYUI_OK) {
+        return result;
+    }
+
+    title = tinyui_text_create(screen);
+    hint = tinyui_text_create(screen);
+    canvas = tinyui_window_create(screen);
+    guide = tinyui_text_create(screen);
+    if (title == NULL || hint == NULL || canvas == NULL || guide == NULL) {
+        return TINYUI_ERROR_NO_MEMORY;
+    }
+
+    if (tinyui_text_set_text(title, "Grid Demo") != 0
+        || tinyui_text_set_text(
+               hint,
+               "Uses [92, content, 1fr] x [54, 66, 1fr] tracks, spans, centered cells, auto place, ignore-layout overlay.") != 0
+        || tinyui_obj_set_grid_cell(title, 0, 0, 1, 1, TINYUI_ALIGN_START, TINYUI_ALIGN_CENTER) != TINYUI_OK
+        || tinyui_obj_set_grid_cell(hint, 0, 1, 1, 1, TINYUI_ALIGN_START, TINYUI_ALIGN_CENTER) != TINYUI_OK
+        || tinyui_obj_set_grid_cell(canvas, 0, 2, 1, 1, TINYUI_ALIGN_STRETCH, TINYUI_ALIGN_STRETCH) != TINYUI_OK
+        || tinyui_window_set_color(canvas, 0xE8ECF2U) != 0
+        || tinyui_window_set_layout_type(canvas, TINYUI_WINDOW_LAYOUT_GRID) != 0
+        || tinyui_window_set_padding(canvas, 12, 12, 12, 12) != 0) {
+        return TINYUI_ERROR_BACKEND;
+    }
+
+    result = tinyui_grid_set_columns(canvas, canvas_cols, 3);
+    if (result != TINYUI_OK) {
+        return result;
+    }
+    result = tinyui_grid_set_rows(canvas, canvas_rows, 3);
+    if (result != TINYUI_OK) {
+        return result;
+    }
+    result = tinyui_grid_set_gap(canvas, 12, 12);
+    if (result != TINYUI_OK) {
+        return result;
+    }
+    result = tinyui_grid_set_align(canvas, TINYUI_ALIGN_START, TINYUI_ALIGN_START);
+    if (result != TINYUI_OK) {
+        return result;
+    }
+
+    if (tinyui_text_set_text(
+            guide,
+            "Grid descriptors: [92, content, 1fr] x [54, 66, 1fr], spans, centered cells, auto place, ignore-layout overlay.") != 0
+        || tinyui_obj_set_grid_cell(guide, 0, 3, 1, 1, TINYUI_ALIGN_START, TINYUI_ALIGN_CENTER) != TINYUI_OK) {
+        return TINYUI_ERROR_BACKEND;
+    }
+
+    panel_a = tinyui_button_create(canvas);
+    panel_b = tinyui_button_create(canvas);
+    panel_c = tinyui_button_create(canvas);
+    panel_d = tinyui_button_create(canvas);
+    panel_e = tinyui_button_create(canvas);
+    panel_f = tinyui_button_create(canvas);
+    panel_g = tinyui_button_create(canvas);
+    overlay = tinyui_text_create(canvas);
+    if (panel_a == NULL || panel_b == NULL || panel_c == NULL || panel_d == NULL
+        || panel_e == NULL || panel_f == NULL || panel_g == NULL || overlay == NULL) {
+        return TINYUI_ERROR_NO_MEMORY;
+    }
+
+    if (style_panel(panel_a, "A", 0xE76F51U) != TINYUI_OK
+        || style_panel(panel_b, "B", 0x2A9D8FU) != TINYUI_OK
+        || style_panel(panel_c, "C", 0x457B9DU) != TINYUI_OK
+        || style_panel(panel_d, "D", 0x264653U) != TINYUI_OK
+        || style_panel(panel_e, "E", 0xF4A261U) != TINYUI_OK
+        || style_panel(panel_f, "F", 0x6D597AU) != TINYUI_OK
+        || style_panel(panel_g, "G", 0x8AB17DU) != TINYUI_OK
+        || tinyui_obj_set_size(panel_a, 92, 54) != TINYUI_OK
+        || tinyui_obj_set_size(panel_b, 112, 54) != TINYUI_OK
+        || tinyui_obj_set_size(panel_c, 124, 54) != TINYUI_OK
+        || tinyui_obj_set_size(panel_d, 180, 66) != TINYUI_OK
+        || tinyui_obj_set_size(panel_e, 124, 132) != TINYUI_OK
+        || tinyui_obj_set_size(panel_f, 56, 28) != TINYUI_OK
+        || tinyui_obj_set_size(panel_g, 92, 54) != TINYUI_OK
+        || tinyui_obj_set_grid_cell(panel_a, 0, 0, 1, 1, TINYUI_ALIGN_STRETCH, TINYUI_ALIGN_STRETCH) != TINYUI_OK
+        || tinyui_obj_set_grid_cell(panel_b, 1, 0, 1, 1, TINYUI_ALIGN_STRETCH, TINYUI_ALIGN_STRETCH) != TINYUI_OK
+        || tinyui_obj_set_grid_cell(panel_c, 2, 0, 1, 1, TINYUI_ALIGN_STRETCH, TINYUI_ALIGN_STRETCH) != TINYUI_OK
+        || tinyui_obj_set_grid_cell(panel_d, 0, 1, 2, 1, TINYUI_ALIGN_STRETCH, TINYUI_ALIGN_STRETCH) != TINYUI_OK
+        || tinyui_obj_set_grid_cell(panel_e, 2, 1, 1, 2, TINYUI_ALIGN_STRETCH, TINYUI_ALIGN_STRETCH) != TINYUI_OK
+        || tinyui_obj_set_grid_cell(panel_f, 1, 2, 1, 1, TINYUI_ALIGN_CENTER, TINYUI_ALIGN_CENTER) != TINYUI_OK
+        || tinyui_text_set_text(overlay, "Overlay\nignore-layout") != 0
+        || tinyui_text_set_bg_color(overlay, 0x1D3557U) != 0
+        || tinyui_text_set_text_color(overlay, 0xFFFFFFU) != 0
+        || tinyui_obj_set_size(overlay, 116, 40) != TINYUI_OK
+        || tinyui_obj_set_ignore_layout(overlay, 1) != TINYUI_OK
+        || tinyui_obj_set_pos(overlay, 320, 148) != TINYUI_OK) {
+        return TINYUI_ERROR_BACKEND;
+    }
+
+    (void)panel_g;
+    return TINYUI_OK;
 }

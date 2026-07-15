@@ -19,6 +19,13 @@
 #ifndef TINYUI_LABEL_H
 #define TINYUI_LABEL_H
 
+#include "tinyui_config.h"
+#if !TINYUI_ENABLE_LABEL
+#  ifndef TINYUI_INTERNAL_FEATURE_HEADER
+#  error "TINYUI_ENABLE_LABEL is disabled"
+#  endif
+#endif
+
 #include "layout/layout.h"
 
 #include "core/obj.h"

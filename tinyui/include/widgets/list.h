@@ -19,6 +19,13 @@
 #ifndef TINYUI_LIST_H
 #define TINYUI_LIST_H
 
+#include "tinyui_config.h"
+#if !TINYUI_ENABLE_LIST
+#  ifndef TINYUI_INTERNAL_FEATURE_HEADER
+#  error "TINYUI_ENABLE_LIST is disabled"
+#  endif
+#endif
+
 #include "layout/layout.h"
 
 #include "core/obj.h"

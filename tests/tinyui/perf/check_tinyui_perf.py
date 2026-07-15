@@ -8,7 +8,9 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[3]
-DEFAULT_BUILD = ROOT / "build" / "tinyui-runtime"
+DEFAULT_BUILD = ROOT / "build" / "v2.3-m3"
+if not (DEFAULT_BUILD / "examples" / "sdl" / "tinyui_demo").is_file():
+    DEFAULT_BUILD = ROOT / "build" / "tinyui-runtime"
 DEFAULT_BASELINE = ROOT / "tests" / "tinyui" / "perf" / "tinyui_perf_baseline.json"
 RTK = shutil.which("rtk") or "rtk"
 TARGET = "tinyui_demo"

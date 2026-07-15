@@ -1,0 +1,226 @@
+{
+  "schema_version": 1,
+  "version": "2.3",
+  "port_completed": false,
+  "abi_frozen": true,
+  "manual_reviewed_passed": false,
+  "required_ctests": [
+    {
+      "name": "check_tinyui_public_headers_c",
+      "category": "public_headers",
+      "required": true
+    },
+    {
+      "name": "check_tinyui_public_headers_cpp",
+      "category": "public_headers",
+      "required": true
+    },
+    {
+      "name": "check_tinyui_public_symbols_link",
+      "category": "public_symbols",
+      "required": true
+    },
+    {
+      "name": "check_ldgui_public_api_inventory",
+      "category": "inventory",
+      "required": true
+    },
+    {
+      "name": "check_tinyui_demo_boundary",
+      "category": "demo",
+      "required": true
+    },
+    {
+      "name": "check_tinyui_docs_examples",
+      "category": "docs",
+      "required": true
+    },
+    {
+      "name": "check_tinyui_install_consumer",
+      "category": "install",
+      "required": true
+    },
+    {
+      "name": "check_tinyui_runtime",
+      "category": "runtime",
+      "required": true
+    },
+    {
+      "name": "check_tinyui_backend_mapping",
+      "category": "backend",
+      "required": true
+    },
+    {
+      "name": "check_tinyui_visible_ui",
+      "category": "visible",
+      "required": true
+    },
+    {
+      "name": "check_tinyui_event_evidence",
+      "category": "event",
+      "required": true
+    },
+    {
+      "name": "test_tinyui_wrapper_struct_overhead",
+      "category": "wrapper",
+      "required": true
+    },
+    {
+      "name": "test_tinyui_pool_abi",
+      "category": "pool",
+      "required": true
+    },
+    {
+      "name": "test_tinyui_descriptor_abi",
+      "category": "descriptor",
+      "required": true
+    },
+    {
+      "name": "test_tinyui_steady_state_allocation",
+      "category": "allocation",
+      "required": true
+    },
+    {
+      "name": "check_tinyui_binary_size",
+      "category": "binary",
+      "required": true
+    },
+    {
+      "name": "check_tinyui_perf",
+      "category": "time",
+      "required": true
+    },
+    {
+      "name": "check_tinyui_minimal_profile",
+      "category": "minimal",
+      "required": true
+    },
+    {
+      "name": "check_tinyui_release_capability_matrix",
+      "category": "capability",
+      "required": true
+    },
+    {
+      "name": "check_tinyui_public_api",
+      "category": "abi",
+      "required": true
+    },
+    {
+      "name": "check_tinyui_v23_release_gates",
+      "category": "release",
+      "required": true
+    }
+  ],
+  "artifacts": {
+    "standard": {
+      "path": "standard.json",
+      "required_for_closeout": true,
+      "description": "M5 clean standard CMake/CTest profile evidence"
+    },
+    "asan": {
+      "path": "asan.json",
+      "required_for_closeout": true,
+      "description": "M5 ASan profile evidence"
+    },
+    "ubsan": {
+      "path": "ubsan.json",
+      "required_for_closeout": true,
+      "description": "M5 UBSan profile evidence"
+    },
+    "minimal": {
+      "path": "minimal.json",
+      "required_for_closeout": true,
+      "description": "M5 minimal profile evidence"
+    },
+    "manual_review": {
+      "path": "manual_review.json",
+      "required_for_closeout": true,
+      "description": "Manual review disposition record"
+    },
+    "independent_review": {
+      "path": "independent_review.json",
+      "required_for_closeout": true,
+      "description": "Independent code review record (docs/v2.3/v2.3-release-review.md projection)"
+    },
+    "gitnexus": {
+      "path": "gitnexus-impact.json",
+      "required_for_closeout": true,
+      "description": "GitNexus detect_changes / impact evidence"
+    },
+    "abi": {
+      "path": "abi.json",
+      "required_for_closeout": true,
+      "description": "ABI freeze evidence referencing tinyui_v23_abi_manifest.json"
+    },
+    "install_consumer": {
+      "path": "install_consumer.json",
+      "required_for_closeout": true,
+      "description": "M4 install + out-of-tree consumer evidence projection"
+    },
+    "docs_examples": {
+      "path": "docs_examples.json",
+      "required_for_closeout": true,
+      "description": "M4 docs examples compile evidence projection"
+    },
+    "capability_matrix": {
+      "path": "capability_matrix.json",
+      "required_for_closeout": true,
+      "description": "M3 capability matrix fresh projection"
+    }
+  },
+  "thresholds": {
+    "wrapper_base_max_bytes": 192,
+    "backend_widget_max_bytes": 512,
+    "pool_bookkeeping_max_bytes_32bit": 1024,
+    "image_source_max_bytes_32bit": 80,
+    "font_max_bytes_32bit": 16,
+    "wrapper_delta_max_percent": 5.0,
+    "wrapper_delta_max_bytes": 8,
+    "binary": {
+      "__text": {
+        "max_increase_percent": 5.0,
+        "max_increase_bytes": 8192
+      },
+      "__data": {
+        "max_increase_percent": 25.0,
+        "max_increase_bytes": 256
+      },
+      "__bss": {
+        "max_increase_percent": 10.0,
+        "max_increase_bytes": 8192
+      },
+      "total": {
+        "max_increase_percent": 5.0,
+        "max_increase_bytes": 12288
+      }
+    },
+    "allocation": {
+      "process_implicit_heap_bytes": 0,
+      "layout_implicit_heap_bytes": 0,
+      "event_dispatch_implicit_heap_bytes": 0,
+      "theme_apply_implicit_heap_bytes": 0,
+      "ordinary_getter_implicit_heap_bytes": 0
+    },
+    "time": {
+      "warmup_runs": 5,
+      "measured_runs": 30,
+      "screen_object_create_ms_p95_max": 5.0,
+      "capture_ready_ms_p95_max": 40.0
+    }
+  },
+  "references": {
+    "performance_baseline": "tests/tinyui/perf/tinyui_perf_baseline.json",
+    "capability_matrix": "tests/tinyui/contract/tinyui_release_capability_matrix.json",
+    "public_api": "tests/tinyui/contract/tinyui_v23_public_api.json",
+    "abi_manifest": "tests/tinyui/contract/tinyui_v23_abi_manifest.json",
+    "release_gates_doc": "docs/v2.3/v2.3-release-gates.md",
+    "deferred_port_work": "docs/v2.3/deferred-port-work.md"
+  },
+  "implementation_notes": {
+    "abi_frozen": "Task8：ABI check PASS 后置 abi_frozen=true，并绑定 tests/tinyui/contract/tinyui_v23_abi_manifest.json 与 release-evidence/abi.json。",
+    "manual_reviewed_passed": "保持真实值 false（partial L5-E / Task5 checklist item 2）；不得伪造 true。",
+    "port_completed": "v2.3 关闭时必须保持 port_completed=false；不得把 SDL 测试宿主结果记为 L6。",
+    "ctest_name_policy": "manifest 只使用 M5 计划正式 CTest 名；发现同义但不同名的现有注册时，不得缩减覆盖面，留给 Task2 统一注册。",
+    "closeout": "聚合器仍可能因 asan/ubsan/manual_review 诚实 fail、gitnexus fallback=true 等 residual 失败；不得改写为全绿发布。"
+  }
+}

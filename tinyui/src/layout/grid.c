@@ -5,8 +5,10 @@
 
 #include "internal/window_internal.h"
 #include "layout/layout.h"
+#include "extensions/ldgui_native.h"
 
 #include <limits.h>
+#include <string.h>
 
 static struct tinyui_window *s_window_of(tinyui_obj_t *container)
 {
@@ -20,58 +22,66 @@ static struct tinyui_window *s_window_of(tinyui_obj_t *container)
     return (struct tinyui_window *)widget;
 }
 
-static int s_track_to_ld(const tinyui_grid_track_t *track, int16_t *out)
+static tinyui_result_t s_track_to_ld(const tinyui_grid_track_t *track, int16_t *out)
 {
     if (track == 0 || out == 0) {
-        return -1;
+        return TINYUI_ERROR_INVALID_ARG;
     }
     switch (track->unit) {
     case TINYUI_GRID_UNIT_PX:
-        if (track->value < 1 || track->value > INT16_MAX) {
-            return -1;
+        if (track->value < 1 || track->value > 32767) {
+            return TINYUI_ERROR_OUT_OF_RANGE;
         }
         *out = (int16_t)track->value;
-        return 0;
+        return TINYUI_OK;
     case TINYUI_GRID_UNIT_FR:
-        if (track->value < 1 || track->value > UINT8_MAX) {
-            return -1;
+        if (track->value < 1 || track->value > 255) {
+            return TINYUI_ERROR_OUT_OF_RANGE;
         }
         *out = LD_GRID_FR(track->value);
-        return 0;
+        return TINYUI_OK;
     case TINYUI_GRID_UNIT_CONTENT:
         if (track->value != 0) {
-            return -1;
+            return TINYUI_ERROR_OUT_OF_RANGE;
         }
         *out = LD_GRID_CONTENT;
-        return 0;
+        return TINYUI_OK;
     default:
-        return -1;
+        return TINYUI_ERROR_OUT_OF_RANGE;
     }
 }
 
-static tinyui_result_t s_copy_tracks(int *raw,
-                                     int16_t *backend,
-                                     const tinyui_grid_track_t *tracks,
-                                     uint8_t count)
+/* Convert typed tracks into a local fixed buffer, then copy into the durable
+ * backend array that ldWindow keeps by pointer. No second TinyUI geometry solver
+ * and no public sentinel magic numbers. */
+static tinyui_result_t s_convert_tracks(const tinyui_grid_track_t *tracks,
+                                        uint8_t count,
+                                        int16_t *durable)
 {
+    int16_t local[TINYUI_GRID_MAX_TRACKS];
     uint8_t i;
+    tinyui_result_t result;
 
-    if (count > TINYUI_GRID_MAX_TRACKS) {
+    if (count < 1 || count > TINYUI_GRID_MAX_TRACKS) {
         return TINYUI_ERROR_OUT_OF_RANGE;
     }
-    if (count != 0 && tracks == 0) {
+    if (tracks == 0) {
         return TINYUI_ERROR_INVALID_ARG;
     }
+    if (durable == 0) {
+        return TINYUI_ERROR_INVALID_ARG;
+    }
+
     for (i = 0; i < count; ++i) {
-        if (s_track_to_ld(&tracks[i], &backend[i]) != 0) {
-            return TINYUI_ERROR_OUT_OF_RANGE;
+        result = s_track_to_ld(&tracks[i], &local[i]);
+        if (result != TINYUI_OK) {
+            return result;
         }
-        raw[i] = backend[i];
     }
     for (; i < TINYUI_GRID_MAX_TRACKS; ++i) {
-        raw[i] = 0;
-        backend[i] = LD_GRID_TEMPLATE_LAST;
+        local[i] = LD_GRID_TEMPLATE_LAST;
     }
+    memcpy(durable, local, sizeof(local));
     return TINYUI_OK;
 }
 
@@ -94,18 +104,22 @@ tinyui_result_t tinyui_grid_set_columns(tinyui_obj_t *container,
     if (window == 0) {
         return TINYUI_ERROR_INVALID_OBJECT;
     }
-    result = s_copy_tracks(window->grid_cols,
-                           window->backend_grid_cols,
-                           tracks,
-                           count);
-    if (result != TINYUI_OK) {
-        return result;
-    }
     ld_window = tinyui_window_ld_of(window);
     if (ld_window == 0) {
         return TINYUI_ERROR_INVALID_OBJECT;
     }
+    result = s_convert_tracks(tracks, count, window->backend_grid_cols);
+    if (result != TINYUI_OK) {
+        return result;
+    }
     window->grid_col_count = count;
+    /* Keep legacy int mirror only as opaque cache, not geometry truth. */
+    {
+        uint8_t i;
+        for (i = 0; i < TINYUI_GRID_MAX_TRACKS; ++i) {
+            window->grid_cols[i] = window->backend_grid_cols[i];
+        }
+    }
     s_apply_grid(window, ld_window);
     return TINYUI_OK;
 }
@@ -121,18 +135,21 @@ tinyui_result_t tinyui_grid_set_rows(tinyui_obj_t *container,
     if (window == 0) {
         return TINYUI_ERROR_INVALID_OBJECT;
     }
-    result = s_copy_tracks(window->grid_rows,
-                           window->backend_grid_rows,
-                           tracks,
-                           count);
-    if (result != TINYUI_OK) {
-        return result;
-    }
     ld_window = tinyui_window_ld_of(window);
     if (ld_window == 0) {
         return TINYUI_ERROR_INVALID_OBJECT;
     }
+    result = s_convert_tracks(tracks, count, window->backend_grid_rows);
+    if (result != TINYUI_OK) {
+        return result;
+    }
     window->grid_row_count = count;
+    {
+        uint8_t i;
+        for (i = 0; i < TINYUI_GRID_MAX_TRACKS; ++i) {
+            window->grid_rows[i] = window->backend_grid_rows[i];
+        }
+    }
     s_apply_grid(window, ld_window);
     return TINYUI_OK;
 }

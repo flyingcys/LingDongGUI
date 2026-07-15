@@ -21,6 +21,12 @@
 
 #include <stddef.h> /* size_t */
 
+/* Private core translation units may include gated public headers for types
+ * even when the corresponding widget/module sources are compiled out. Public
+ * direct includes still hard-error via the feature guards. */
+#define TINYUI_INTERNAL_FEATURE_HEADER 1
+#include "tinyui_config.h"
+
 #include "core/result.h"
 
 
@@ -168,6 +174,44 @@ void tinyui_runtime_internal_app_pump_timers(struct tinyui_app *app, unsigned in
 /* 当前 runtime 单例 app(tinyui_init 建立);供平台 port 在安装驱动时取用。
  * 内部 API,不进公共契约。 */
 struct tinyui_app *tinyui_runtime_internal_app_current(void);
+
+/* ── M2 runtime singleton / fixed pools (Task 1 defines once; later tasks wire) ──
+ * Timer/event pool layouts live in internal/runtime_pools.h (ABI budget probe).
+ * Subsequent M2 tasks must not re-edit this shared header for these decls.
+ */
+#include "internal/runtime_pools.h"
+
+struct tinyui_obj;
+
+struct tinyui_runtime_state {
+    bool initialized;
+    bool processing;
+    struct tinyui_app *backend_app;
+    tinyui_obj_t *active_screen;
+    const tinyui_theme_t *theme;
+    uint32_t now_ms;
+    uint16_t dispatch_epoch;
+    tinyui_result_t last_result;
+    /* Fixed pools (behavior wired by Task 3 / Task 4). */
+    struct tinyui_timer_pool timer_pool;
+    struct tinyui_event_callback_pool event_cb_pool;
+    /* Deferred object delete during event dispatch (Task 2 / Task 4). */
+    tinyui_obj_t *delete_target;
+    uint8_t delete_pending;
+    uint8_t _pad_delete[3];
+#if TINYUI_ENABLE_DIAGNOSTICS
+    char diagnostic[96];
+#endif
+};
+
+struct tinyui_runtime_state *tinyui_runtime_state_get(void);
+
+/* Pool clear helpers used by deinit; full dispatch lands in later tasks. */
+void tinyui_runtime_timer_pool_clear(struct tinyui_runtime_state *rt);
+void tinyui_runtime_event_cb_pool_clear(struct tinyui_runtime_state *rt);
+
+/* M2 Task 4: emit DELETE once after deleting mark, before LD depose; clears slots. */
+void tinyui_event_emit_delete(struct tinyui_widget *widget);
 
 /* Port/test source compatibility for renamed internal helpers.
  * These are not public ABI; definitions remain tinyui_runtime_internal_*. */
@@ -358,6 +402,10 @@ struct tinyui_widget {
     unsigned int ignore_layout : 1;
     unsigned int has_focus : 1;
     unsigned int flex_new_track : 1;
+    /* M2 Task 2: widget->text is an owned heap copy when set. */
+    unsigned int text_owned : 1;
+    /* M2 Task 2/4: object is mid-delete (sync or deferred from dispatch). */
+    unsigned int deleting : 1;
     int flex_grow;
     int flex_min_width;
     int flex_min_height;
@@ -507,12 +555,10 @@ struct tinyui_label {
 struct tinyui_button {
     struct tinyui_widget widget;
     const char *id;
-    tinyui_event_cb on_clicked;
-    void *user_data;
-    tinyui_event_cb on_pressed;
-    void *on_pressed_user_data;
-    tinyui_event_cb on_released;
-    void *on_released_user_data;
+    /* Task 6: dedicated set_on_* only tracks unified-pool handles (no second event system). */
+    tinyui_event_handle_t on_pressed_handle;
+    tinyui_event_handle_t on_released_handle;
+    tinyui_event_handle_t on_clicked_handle;
     xBtnInfo_t action_info;
 };
 
@@ -535,16 +581,16 @@ struct tinyui_checkbox {
     struct tinyui_widget widget;
     const char *id;
     int checked;
-    tinyui_value_changed_cb cb;
-    void *user_data;
+    /* Task 7: dedicated value_changed_cb removed; set_on_toggled is pool replace. */
+    tinyui_event_handle_t on_toggled_handle;
 };
 
 struct tinyui_switch {
     struct tinyui_widget widget;
     const char *id;
     int checked;
-    tinyui_value_changed_cb cb;
-    void *user_data;
+    /* M3 Task 2: dedicated value_changed_cb removed; set_on_toggled is pool replace. */
+    tinyui_event_handle_t on_toggled_handle;
 };
 
 struct tinyui_slider {
@@ -553,8 +599,8 @@ struct tinyui_slider {
     int value;
     int min_value;
     int max_value;
-    tinyui_value_changed_cb cb;
-    void *user_data;
+    /* Task 7: dedicated value_changed_cb removed; set_on_value_changed is pool replace. */
+    tinyui_event_handle_t on_value_changed_handle;
 };
 
 struct tinyui_progress_bar {
@@ -855,6 +901,16 @@ struct tinyui_widget *tinyui_runtime_internal_widget_create_leaf(
                         uint16_t name_id, uint16_t parent_name_id),
     void *ctx,
     size_t host_size);
+
+/* explicit_id == 0 → runtime auto-alloc; non-zero → claim that nameId (conflict → NULL). */
+struct tinyui_widget *tinyui_runtime_internal_widget_create_leaf_with_id(
+    struct tinyui_widget *parent,
+    enum tinyui_backend_widget_kind kind,
+    void *(*ld_init_cb)(void *ctx, struct ld_scene_t *scene,
+                        uint16_t name_id, uint16_t parent_name_id),
+    void *ctx,
+    size_t host_size,
+    uint16_t explicit_id);
 
 /**
  * @brief Common destroy: host_cleanup + depose ld via ptGuiFunc + free host

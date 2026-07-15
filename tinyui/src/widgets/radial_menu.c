@@ -24,6 +24,108 @@
 #include "../../../src/gui/ldRadialMenu.h"
 #include "../../../src/misc/ldMsg.h"
 
+#include <string.h>
+
+static void tinyui_selection_fire_value_changed(struct tinyui_widget *widget, int32_t value)
+{
+    struct tinyui_runtime_state *rt = tinyui_runtime_state_get();
+    struct tinyui_event_callback_pool *pool;
+    struct tinyui_event_callback_slot *ordered[TINYUI_EVENT_CB_CAPACITY];
+    size_t ordered_count = 0U;
+    size_t i;
+    uint16_t epoch;
+    uint32_t mask;
+    tinyui_obj_t *target;
+    bool was_processing;
+
+    if (rt == 0 || widget == 0 || !rt->initialized) {
+        return;
+    }
+
+    pool = &rt->event_cb_pool;
+    target = (tinyui_obj_t *)(void *)widget;
+    mask = TINYUI_EVENT_MASK(TINYUI_EVENT_VALUE_CHANGED);
+
+    epoch = (uint16_t)(pool->dispatch_epoch + 1U);
+    if (epoch == 0U) {
+        epoch = 1U;
+    }
+    pool->dispatch_epoch = epoch;
+    rt->dispatch_epoch = epoch;
+
+    for (i = 0; i < (size_t)TINYUI_EVENT_CB_CAPACITY; ++i) {
+        struct tinyui_event_callback_slot *slot = &pool->slots[i];
+        if (slot->allocated == 0U || slot->cb == 0) {
+            continue;
+        }
+        if (slot->object != target || (slot->event_mask & mask) == 0U) {
+            continue;
+        }
+        if (!(slot->born_epoch < epoch)) {
+            continue;
+        }
+        ordered[ordered_count++] = slot;
+    }
+
+    for (i = 1; i < ordered_count; ++i) {
+        size_t j = i;
+        struct tinyui_event_callback_slot *cur = ordered[i];
+        while (j > 0U &&
+               ordered[j - 1U]->registration_order > cur->registration_order) {
+            ordered[j] = ordered[j - 1U];
+            j -= 1U;
+        }
+        ordered[j] = cur;
+    }
+
+    was_processing = rt->processing;
+    rt->processing = true;
+    for (i = 0; i < ordered_count; ++i) {
+        struct tinyui_event_callback_slot *slot = ordered[i];
+        uint16_t generation;
+        tinyui_event_cb_t cb;
+        tinyui_event_t event;
+
+        if (slot->allocated == 0U || slot->cb == 0) {
+            continue;
+        }
+        if (slot->object != target || (slot->event_mask & mask) == 0U) {
+            continue;
+        }
+        if (!(slot->born_epoch < epoch)) {
+            continue;
+        }
+        if (widget->deleting != 0U) {
+            break;
+        }
+
+        generation = slot->generation;
+        cb = slot->cb;
+        memset(&event, 0, sizeof(event));
+        event.code = TINYUI_EVENT_VALUE_CHANGED;
+        event.target = target;
+        event.user_data = slot->user_data;
+        event.data.value = value;
+        cb(&event);
+
+        if (slot->allocated == 0U || slot->generation != generation) {
+            continue;
+        }
+        if (widget->deleting != 0U) {
+            break;
+        }
+    }
+    rt->processing = was_processing;
+    if (!was_processing && rt->delete_pending != 0 && rt->delete_target != 0) {
+        tinyui_obj_t *delete_target = rt->delete_target;
+        struct tinyui_widget *delete_widget =
+            (struct tinyui_widget *)(void *)delete_target;
+
+        rt->delete_pending = 0;
+        rt->delete_target = 0;
+        (void)tinyui_runtime_internal_widget_destroy(delete_widget);
+    }
+}
 
 static struct tinyui_radial_menu *tinyui_radial_menu_as_radial_menu(tinyui_obj_t *obj)
 {
@@ -118,6 +220,7 @@ static bool tinyui_radial_menu_native_slot(struct ld_scene_t *scene, ldMsg_t msg
 {
     struct tinyui_widget *w;
     struct tinyui_radial_menu *radial_menu;
+    ldRadialMenu_t *ld_radial_menu;
     int selected_index;
     int previous_selected_index;
 
@@ -131,8 +234,10 @@ static bool tinyui_radial_menu_native_slot(struct ld_scene_t *scene, ldMsg_t msg
     }
 
     radial_menu = (struct tinyui_radial_menu *)w;
+    ld_radial_menu = (ldRadialMenu_t *)w->ld_widget;
     selected_index = (int)msg.value;
-    if (selected_index < 0 || selected_index >= radial_menu->item_count) {
+    if (selected_index < 0 || selected_index >= radial_menu->item_count ||
+        ld_radial_menu == 0) {
         return false;
     }
 
@@ -145,6 +250,9 @@ static bool tinyui_radial_menu_native_slot(struct ld_scene_t *scene, ldMsg_t msg
         return false;
     }
 
+    /* Instant sync to LD selectItem (not animated SetClickItem) so getter
+     * readback matches native SIGNAL_CLICKED_ITEM payload. */
+    ldRadialMenuSetDefaultItem(ld_radial_menu, (uint8_t)selected_index);
     radial_menu->selected_index = selected_index;
     w->value = selected_index;
     if (previous_selected_index == selected_index) {
@@ -153,6 +261,7 @@ static bool tinyui_radial_menu_native_slot(struct ld_scene_t *scene, ldMsg_t msg
     if (radial_menu->cb != 0) {
         radial_menu->cb(radial_menu, selected_index, radial_menu->user_data);
     }
+    tinyui_selection_fire_value_changed(w, (int32_t)selected_index);
     return false;
 }
 
@@ -349,26 +458,39 @@ tinyui_obj_t *tinyui_radial_menu_create_with_props(tinyui_obj_t *parent,
 int tinyui_radial_menu_add_item(tinyui_obj_t *radial_menu_obj, const char *id)
 {
     struct tinyui_radial_menu *radial_menu = tinyui_radial_menu_as_radial_menu(radial_menu_obj);
-    if (radial_menu == 0) { return -1; }
-
     int index;
+    int before_count;
     ldRadialMenu_t *ld_radial_menu;
 
-    if (radial_menu == 0 || id == 0 || radial_menu->item_count >= TINYUI_LIST_MAX_ITEMS) {
+    if (radial_menu == 0 || id == 0 ||
+        radial_menu->widget.ld_widget == 0 ||
+        radial_menu->widget.kind != TINYUI_BACKEND_WIDGET_RADIAL_MENU) {
+        tinyui_runtime_set_last_result(TINYUI_ERROR_INVALID_ARG);
+        return -1;
+    }
+    if (radial_menu->item_count >= TINYUI_LIST_MAX_ITEMS ||
+        (int)radial_menu->widget.list_item_count >= TINYUI_RADIAL_MENU_NATIVE_MAX_ITEMS ||
+        (radial_menu->item_max > 0 &&
+         (int)radial_menu->widget.list_item_count >= radial_menu->item_max)) {
+        tinyui_runtime_set_last_result(TINYUI_ERROR_CAPACITY);
         return -1;
     }
 
     ld_radial_menu = (ldRadialMenu_t *)radial_menu->widget.ld_widget;
-    if (ld_radial_menu == 0 ||
-        radial_menu->widget.kind != TINYUI_BACKEND_WIDGET_RADIAL_MENU ||
-        (int)radial_menu->widget.list_item_count >= TINYUI_RADIAL_MENU_NATIVE_MAX_ITEMS) {
+    if ((int)ld_radial_menu->use_as__ldBase_t.itemCount >= (int)ld_radial_menu->itemMax) {
+        tinyui_runtime_set_last_result(TINYUI_ERROR_CAPACITY);
         return -1;
     }
 
     index = (int)radial_menu->widget.list_item_count;
+    before_count = (int)ld_radial_menu->use_as__ldBase_t.itemCount;
     ldRadialMenuAddItem(ld_radial_menu,
                         g_radial_menu_tiles[index % 5],
                         g_radial_menu_masks[index % 5]);
+    if ((int)ld_radial_menu->use_as__ldBase_t.itemCount != before_count + 1) {
+        tinyui_runtime_set_last_result(TINYUI_ERROR_CAPACITY);
+        return -1;
+    }
     radial_menu->widget.list_item_count++;
     if (radial_menu->widget.value < 0) {
         radial_menu->widget.value = 0;
@@ -386,6 +508,7 @@ int tinyui_radial_menu_add_item(tinyui_obj_t *radial_menu_obj, const char *id)
                                    (uint8_t)radial_menu->selected_index);
         radial_menu->widget.value = radial_menu->selected_index;
     }
+    tinyui_runtime_set_last_result(TINYUI_OK);
     return 0;
 }
 
@@ -401,9 +524,8 @@ int tinyui_radial_menu_add_item(tinyui_obj_t *radial_menu_obj, const char *id)
 int tinyui_radial_menu_add_item_with_source(tinyui_obj_t *radial_menu_obj, const char *id, struct tinyui_image_source *source)
 {
     struct tinyui_radial_menu *radial_menu = tinyui_radial_menu_as_radial_menu(radial_menu_obj);
-    if (radial_menu == 0) { return -1; }
-
     int index;
+    int before_count;
     ldRadialMenu_t *ld_radial_menu;
 
     if (radial_menu == 0
@@ -411,19 +533,34 @@ int tinyui_radial_menu_add_item_with_source(tinyui_obj_t *radial_menu_obj, const
         || source == 0
         || tinyui_image_source_get_image_tile(source) == 0
         || tinyui_image_source_get_mask_tile(source) == 0
-        || radial_menu->item_count >= TINYUI_LIST_MAX_ITEMS) {
+        || radial_menu->widget.ld_widget == 0
+        || radial_menu->widget.kind != TINYUI_BACKEND_WIDGET_RADIAL_MENU) {
+        tinyui_runtime_set_last_result(TINYUI_ERROR_INVALID_ARG);
+        return -1;
+    }
+    if (radial_menu->item_count >= TINYUI_LIST_MAX_ITEMS ||
+        (int)radial_menu->widget.list_item_count >= TINYUI_RADIAL_MENU_NATIVE_MAX_ITEMS ||
+        (radial_menu->item_max > 0 &&
+         (int)radial_menu->widget.list_item_count >= radial_menu->item_max)) {
+        tinyui_runtime_set_last_result(TINYUI_ERROR_CAPACITY);
         return -1;
     }
 
     ld_radial_menu = (ldRadialMenu_t *)radial_menu->widget.ld_widget;
-    if (ld_radial_menu == 0 ||
-        radial_menu->widget.kind != TINYUI_BACKEND_WIDGET_RADIAL_MENU ||
-        (int)radial_menu->widget.list_item_count >= TINYUI_RADIAL_MENU_NATIVE_MAX_ITEMS) {
+    if ((int)ld_radial_menu->use_as__ldBase_t.itemCount >= (int)ld_radial_menu->itemMax) {
+        tinyui_runtime_set_last_result(TINYUI_ERROR_CAPACITY);
         return -1;
     }
 
     index = (int)radial_menu->widget.list_item_count;
-    ldRadialMenuAddItem(ld_radial_menu, tinyui_image_source_get_image_tile(source), tinyui_image_source_get_mask_tile(source));
+    before_count = (int)ld_radial_menu->use_as__ldBase_t.itemCount;
+    ldRadialMenuAddItem(ld_radial_menu,
+                        tinyui_image_source_get_image_tile(source),
+                        tinyui_image_source_get_mask_tile(source));
+    if ((int)ld_radial_menu->use_as__ldBase_t.itemCount != before_count + 1) {
+        tinyui_runtime_set_last_result(TINYUI_ERROR_CAPACITY);
+        return -1;
+    }
     radial_menu->widget.list_item_count++;
     if (radial_menu->widget.value < 0) {
         radial_menu->widget.value = 0;
@@ -442,6 +579,7 @@ int tinyui_radial_menu_add_item_with_source(tinyui_obj_t *radial_menu_obj, const
                                    (uint8_t)radial_menu->selected_index);
         radial_menu->widget.value = radial_menu->selected_index;
     }
+    tinyui_runtime_set_last_result(TINYUI_OK);
     return 0;
 }
 

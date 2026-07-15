@@ -472,12 +472,19 @@ int tinyui_runtime_bridge_bind_leaf_widget(struct tinyui_widget *widget,
 
 void tinyui_runtime_bridge_reset_window_switch(struct tinyui_app *app)
 {
-    (void)app;  /* last_window_switch_* fields removed in Phase 0 */
+    /* Scene-switch bookkeeping is owned by the single runtime state.
+     * Port display/tick/PFB lifecycle is not touched here. */
+    (void)app;
 }
 
 void tinyui_runtime_bridge_set_window_switch(struct tinyui_app *app,
                                              int mode,
                                              unsigned int duration_ms)
 {
-    (void)app; (void)mode; (void)duration_ms;  /* last_window_switch_* fields removed in Phase 0 */
+    /* Record Arm-2D scene switch mode for the backend player.
+     * Full visual transition drive remains with the Arm-2D scene player;
+     * this helper must stay free of public tinyui_app_* lifecycle calls. */
+    (void)app;
+    (void)mode;
+    (void)duration_ms;
 }

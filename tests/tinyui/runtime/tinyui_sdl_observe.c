@@ -88,6 +88,7 @@ static const char *tinyui_runtime_host_widget_id(const struct tinyui_widget *w)
     case TINYUI_BACKEND_WIDGET_CHECKBOX:   return ((const struct tinyui_checkbox *)w)->id;
     case TINYUI_BACKEND_WIDGET_SWITCH:     return ((const struct tinyui_switch *)w)->id;
     case TINYUI_BACKEND_WIDGET_SLIDER:     return ((const struct tinyui_slider *)w)->id;
+    case TINYUI_BACKEND_WIDGET_LINE_EDIT:  return ((const struct tinyui_line_edit *)w)->id;
     case TINYUI_BACKEND_WIDGET_ARC:        return ((const struct tinyui_arc *)w)->id;
     case TINYUI_BACKEND_WIDGET_GAUGE:      return ((const struct tinyui_gauge *)w)->id;
     case TINYUI_BACKEND_WIDGET_ICON_SLIDER:return ((const struct tinyui_icon_slider *)w)->id;
@@ -397,6 +398,248 @@ void tinyui_runtime_host_log_smoke_layout_marker(struct tinyui_runtime_host_stat
  * 集中到测试侧,生产 port(ENABLE_TEST=OFF)不含任何这些符号。
  * ──────────────────────────────────────────────────────────────────────── */
 
+static int tinyui_runtime_host_is_v23_scenario(const char *scenario)
+{
+    if (scenario == NULL || scenario[0] == '\0') {
+        return 0;
+    }
+    return strncmp(scenario, "v23_", 4) == 0;
+}
+
+static int tinyui_runtime_host_script_enabled(void)
+{
+    const char *scenario = getenv("TINYUI_SCENARIO");
+    const char *script = getenv("TINYUI_SCRIPT_EVENTS");
+
+    if (script != NULL && script[0] != '\0' && script[0] != '0') {
+        return 1;
+    }
+    if (tinyui_runtime_host_is_v23_scenario(scenario)) {
+        return 1;
+    }
+    return 0;
+}
+
+static void tinyui_runtime_host_script_begin(struct tinyui_runtime_host_state *state)
+{
+    if (state == NULL || state->event_trace_header_logged) {
+        return;
+    }
+    printf("TINYUI_EVENT_TRACE_BEGIN\n");
+    fflush(stdout);
+    state->event_trace_header_logged = 1;
+}
+
+static void tinyui_runtime_host_script_end(struct tinyui_runtime_host_state *state)
+{
+    if (state == NULL) {
+        return;
+    }
+    printf("TINYUI_EVENT_TRACE_END\n");
+    fflush(stdout);
+    state->script_done = 1;
+}
+
+/* Deterministic L5-E pointer script for v23_core_vertical.
+ * Coordinates match tinyui/demo/v23_core_vertical fixed layout. */
+static void tinyui_runtime_host_run_v23_core_vertical_script(
+    struct tinyui_app *app,
+    struct tinyui_runtime_host_state *state)
+{
+    switch (state->script_step) {
+    case 0: /* button press center (24+80, 72+20) */
+        (void)tinyui_runtime_bridge_commit_pointer_event(
+            app, state->display_width, state->display_height, 104, 92, 1);
+        break;
+    case 1: /* button release → CLICKED */
+        (void)tinyui_runtime_bridge_commit_pointer_event(
+            app, state->display_width, state->display_height, 104, 92, 0);
+        break;
+    case 2: /* checkbox press near box (24+12, 128+16) */
+        (void)tinyui_runtime_bridge_commit_pointer_event(
+            app, state->display_width, state->display_height, 36, 144, 1);
+        break;
+    case 3: /* checkbox release → VALUE_CHANGED:1 */
+        (void)tinyui_runtime_bridge_commit_pointer_event(
+            app, state->display_width, state->display_height, 36, 144, 0);
+        break;
+    case 4: /* slider press for value 75 (W=280,I=10,half=5 → x=232) */
+        (void)tinyui_runtime_bridge_commit_pointer_event(
+            app, state->display_width, state->display_height, 232, 190, 1);
+        break;
+    case 5: /* slider hold/motion same point */
+        (void)tinyui_runtime_bridge_commit_pointer_event(
+            app, state->display_width, state->display_height, 232, 190, 1);
+        break;
+    case 6: /* slider release → VALUE_CHANGED:75 */
+        (void)tinyui_runtime_bridge_commit_pointer_event(
+            app, state->display_width, state->display_height, 232, 190, 0);
+        break;
+    case 7:
+        tinyui_runtime_host_script_end(state);
+        break;
+    default:
+        state->script_done = 1;
+        break;
+    }
+}
+
+/* switch center ≈ (24+48, 24+18) */
+static void tinyui_runtime_host_run_v23_value_instruments_script(
+    struct tinyui_app *app,
+    struct tinyui_runtime_host_state *state)
+{
+    switch (state->script_step) {
+    case 0:
+        (void)tinyui_runtime_bridge_commit_pointer_event(
+            app, state->display_width, state->display_height, 72, 42, 1);
+        break;
+    case 1:
+        (void)tinyui_runtime_bridge_commit_pointer_event(
+            app, state->display_width, state->display_height, 72, 42, 0);
+        break;
+    case 2:
+        tinyui_runtime_host_script_end(state);
+        break;
+    default:
+        state->script_done = 1;
+        break;
+    }
+}
+
+/* list item "Beta" ≈ (16+40, 16+28+14) */
+static void tinyui_runtime_host_run_v23_selection_collection_script(
+    struct tinyui_app *app,
+    struct tinyui_runtime_host_state *state)
+{
+    switch (state->script_step) {
+    case 0:
+        (void)tinyui_runtime_bridge_commit_pointer_event(
+            app, state->display_width, state->display_height, 56, 58, 1);
+        break;
+    case 1:
+        (void)tinyui_runtime_bridge_commit_pointer_event(
+            app, state->display_width, state->display_height, 56, 58, 0);
+        break;
+    case 2:
+        tinyui_runtime_host_script_end(state);
+        break;
+    default:
+        state->script_done = 1;
+        break;
+    }
+}
+
+/* line_edit focus then qwerty 'q' key (480x320 LD keyboard layout). */
+static void tinyui_runtime_host_run_v23_input_data_script(
+    struct tinyui_app *app,
+    struct tinyui_runtime_host_state *state)
+{
+    switch (state->script_step) {
+    case 0: /* focus line_edit */
+        (void)tinyui_runtime_bridge_commit_pointer_event(
+            app, state->display_width, state->display_height, 80, 64, 1);
+        break;
+    case 1:
+        (void)tinyui_runtime_bridge_commit_pointer_event(
+            app, state->display_width, state->display_height, 80, 64, 0);
+        break;
+    case 2: /* 'q' key center ≈ (7+21, 165+16) on 480x320 */
+        (void)tinyui_runtime_bridge_commit_pointer_event(
+            app, state->display_width, state->display_height, 28, 181, 1);
+        break;
+    case 3:
+        (void)tinyui_runtime_bridge_commit_pointer_event(
+            app, state->display_width, state->display_height, 28, 181, 0);
+        break;
+    case 4:
+        tinyui_runtime_host_script_end(state);
+        break;
+    default:
+        state->script_done = 1;
+        break;
+    }
+}
+
+/* message_box at (16,160) layout 260x140; confirm button near bottom-center. */
+static void tinyui_runtime_host_run_v23_media_composite_script(
+    struct tinyui_app *app,
+    struct tinyui_runtime_host_state *state)
+{
+    switch (state->script_step) {
+    case 0:
+        (void)tinyui_runtime_bridge_commit_pointer_event(
+            app, state->display_width, state->display_height, 146, 275, 1);
+        break;
+    case 1:
+        (void)tinyui_runtime_bridge_commit_pointer_event(
+            app, state->display_width, state->display_height, 146, 275, 0);
+        break;
+    case 2:
+        tinyui_runtime_host_script_end(state);
+        break;
+    default:
+        state->script_done = 1;
+        break;
+    }
+}
+
+/* theme/layout/resource: no operable user event required; close after frames. */
+static void tinyui_runtime_host_run_v23_theme_layout_resource_script(
+    struct tinyui_app *app,
+    struct tinyui_runtime_host_state *state)
+{
+    (void)app;
+    switch (state->script_step) {
+    case 0:
+        tinyui_runtime_host_script_end(state);
+        break;
+    default:
+        state->script_done = 1;
+        break;
+    }
+}
+
+static void tinyui_runtime_host_run_scenario_script(
+    struct tinyui_app *app,
+    struct tinyui_runtime_host_state *state)
+{
+    const char *scenario;
+
+    if (app == NULL || state == NULL || state->script_done) {
+        return;
+    }
+    if (!state->ready_logged || state->rendered_frames < 2U) {
+        return;
+    }
+
+    tinyui_runtime_host_script_begin(state);
+    scenario = getenv("TINYUI_SCENARIO");
+    if (scenario == NULL) {
+        scenario = "v23_core_vertical";
+    }
+
+    if (strcmp(scenario, "v23_core_vertical") == 0) {
+        tinyui_runtime_host_run_v23_core_vertical_script(app, state);
+    } else if (strcmp(scenario, "v23_value_instruments") == 0) {
+        tinyui_runtime_host_run_v23_value_instruments_script(app, state);
+    } else if (strcmp(scenario, "v23_selection_collection") == 0) {
+        tinyui_runtime_host_run_v23_selection_collection_script(app, state);
+    } else if (strcmp(scenario, "v23_input_data") == 0) {
+        tinyui_runtime_host_run_v23_input_data_script(app, state);
+    } else if (strcmp(scenario, "v23_media_composite") == 0) {
+        tinyui_runtime_host_run_v23_media_composite_script(app, state);
+    } else if (strcmp(scenario, "v23_theme_layout_resource") == 0) {
+        tinyui_runtime_host_run_v23_theme_layout_resource_script(app, state);
+    } else {
+        /* Unknown scripted scenario: end without injecting fake events. */
+        tinyui_runtime_host_script_end(state);
+        return;
+    }
+
+    state->script_step += 1;
+}
+
 /* 安装期(window_create):建立 image_source 标记所需的 app→state 链接,解析
  * auto-quit 时限。新架构下 state 是 hal.c 文件静态,log_image_source_marker 仍
  * 从 widget->owner->runtime_state 取 state,故在此赋值(生产不走此路径)。 */
@@ -408,6 +651,10 @@ void tinyui_sdl_observe_on_setup(struct tinyui_app *app,
     }
     app->runtime_state = state;
     state->auto_quit_ms = tinyui_runtime_host_parse_auto_quit_ms();
+    state->script_enabled = tinyui_runtime_host_script_enabled();
+    state->script_step = 0;
+    state->script_done = 0;
+    state->event_trace_header_logged = 0;
 }
 
 /* 每帧呈现后:发 runtime-ready / 映射 / smoke / image-source marker(各自一次),
@@ -434,6 +681,14 @@ void tinyui_sdl_observe_on_present(struct tinyui_app *app,
         }
     }
 
+    if (state->script_enabled) {
+        tinyui_runtime_host_run_scenario_script(app, state);
+        /* Wait for scripted interactions before freezing capture. */
+        if (!state->script_done) {
+            return;
+        }
+    }
+
     (void)tinyui_runtime_host_write_capture(state);
 }
 
@@ -443,6 +698,10 @@ int tinyui_sdl_observe_should_quit(struct tinyui_app *app,
 {
     if (app == NULL || state == NULL) {
         return 0;
+    }
+    /* Scripted scenarios may finish early once capture is frozen. */
+    if (state->script_enabled && state->script_done && state->capture_written) {
+        return 1;
     }
     if (state->auto_quit_ms > 0 &&
         tinyui_tick_get(app) - state->start_ticks >= state->auto_quit_ms) {

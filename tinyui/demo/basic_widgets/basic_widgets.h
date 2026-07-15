@@ -19,6 +19,8 @@
 #ifndef TINYUI_DEMO_BASIC_WIDGETS_H
 #define TINYUI_DEMO_BASIC_WIDGETS_H
 
-void tinyui_demo_basic_widgets(void);
+#include "tinyui.h"
 
-#endif
+tinyui_result_t tinyui_demo_basic_widgets_build(tinyui_obj_t *screen);
+
+#endif /* TINYUI_DEMO_BASIC_WIDGETS_H */

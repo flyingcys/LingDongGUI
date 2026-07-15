@@ -1,0 +1,183 @@
+{
+  "$schema": "v2.3-performance-baseline.schema.json",
+  "artifacts": {
+    "allocation_probe": {
+      "path": "build/v2.3/tests/tinyui/test_tinyui_steady_state_allocation",
+      "sha256": "e64508104f0c5cc25255a011f5f2f4f21dc289c90e878ec925e1e423a78d6076"
+    },
+    "full_binary": {
+      "path": "build/v2.3/examples/sdl/tinyui_demo",
+      "sha256": "65bb0120e06c8e9b7793995b3cce08709877b4752b8ee5f5549077b503ccc9ad"
+    },
+    "minimal_binary": {
+      "path": "build/v2.3/tests/tinyui/tinyui_minimal_consumer",
+      "sha256": "084ef4e730a7d8e6da0203b15921183513dd58add2f33e72626cf90ab5f2d8eb"
+    },
+    "minimal_map": {
+      "path": "build/v2.3/tests/tinyui/tinyui_minimal_consumer.map",
+      "sha256": "2142e10b9e4e37eb9aec1dbfd3e14b74be8b137b36ef5dcd92eec5ef1b6ff25c"
+    },
+    "wrapper_probe": {
+      "path": "build/v2.3/tests/tinyui/test_tinyui_wrapper_struct_overhead",
+      "sha256": "556c1715d0c0002d7a5f79cb78ea7e502ab1d486da9e0521b8a06963522fbec9"
+    }
+  },
+  "fingerprint": {
+    "cmake": {
+      "build_type": "",
+      "version": "cmake version 4.0.2"
+    },
+    "compiler": {
+      "name": "cc",
+      "target_triple": "x86_64-linux-gnu",
+      "version": "cc (Ubuntu 11.4.0-1ubuntu1~22.04.3) 11.4.0"
+    },
+    "cpu": {
+      "architecture": "x86_64",
+      "model": "x86_64"
+    },
+    "git_commit": "48e4aa9956fa8be7776c9efb05fa57ea5a217b31",
+    "ld_options": {
+      "cmake": {
+        "LD_BUILD_RUNTIME_TESTS": "ON",
+        "LD_BUILD_SDL_DEMO": "ON",
+        "LD_BUILD_VISUAL_TESTS": "OFF",
+        "LD_ENABLE_COVERAGE": "OFF",
+        "LD_TINYUI_PORT": "sdl"
+      },
+      "environment": {}
+    },
+    "optimization_flags": {
+      "c": "",
+      "c_release": "-O3 -DNDEBUG"
+    },
+    "os": {
+      "name": "Linux",
+      "version": "#124~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Tue May 26 21:05:19 UTC "
+    },
+    "tinyui_options": {
+      "cmake": {
+        "TINYUI_ENABLE_ANIMATION": "ON",
+        "TINYUI_ENABLE_ARC": "ON",
+        "TINYUI_ENABLE_BACKGROUND": "ON",
+        "TINYUI_ENABLE_BUTTON": "ON",
+        "TINYUI_ENABLE_CALENDAR": "ON",
+        "TINYUI_ENABLE_CANVAS": "ON",
+        "TINYUI_ENABLE_CHECKBOX": "ON",
+        "TINYUI_ENABLE_CLOCK": "ON",
+        "TINYUI_ENABLE_COMBO_BOX": "ON",
+        "TINYUI_ENABLE_DATE_TIME": "ON",
+        "TINYUI_ENABLE_DIAGNOSTICS": "ON",
+        "TINYUI_ENABLE_GAUGE": "ON",
+        "TINYUI_ENABLE_GRAPH": "ON",
+        "TINYUI_ENABLE_ICON_SLIDER": "ON",
+        "TINYUI_ENABLE_IMAGE": "ON",
+        "TINYUI_ENABLE_KEYBOARD": "ON",
+        "TINYUI_ENABLE_LABEL": "ON",
+        "TINYUI_ENABLE_LINE_EDIT": "ON",
+        "TINYUI_ENABLE_LIST": "ON",
+        "TINYUI_ENABLE_MESSAGE_BOX": "ON",
+        "TINYUI_ENABLE_NATIVE_INTEROP": "ON",
+        "TINYUI_ENABLE_PROGRESS_BAR": "ON",
+        "TINYUI_ENABLE_PROGRESS_WHEEL": "ON",
+        "TINYUI_ENABLE_QRCODE": "ON",
+        "TINYUI_ENABLE_RADIAL_MENU": "ON",
+        "TINYUI_ENABLE_SCROLL_SELECTOR": "ON",
+        "TINYUI_ENABLE_SLIDER": "ON",
+        "TINYUI_ENABLE_SWITCH": "ON",
+        "TINYUI_ENABLE_TABLE": "ON",
+        "TINYUI_ENABLE_TEXT": "ON",
+        "TINYUI_ENABLE_THEME": "ON",
+        "TINYUI_ENABLE_WINDOW": "ON",
+        "TINYUI_PROFILE": "full",
+        "TINYUI_PROFILE-STRINGS": "full;minimal"
+      },
+      "environment": {}
+    }
+  },
+  "fingerprint_sha256": "b052d0cac0e517c649cd2173e58dbd97309446f8631e7a86b9a056000d748177",
+  "measured_at": "2026-07-15T03:00:00.703701+00:00",
+  "probes": {
+    "task5_wrapper_overhead": "TINYUI_SIZEOF_WIDGET_WRAPPER=192\nTINYUI_SIZEOF_WINDOW_WRAPPER=480\nTINYUI_SIZEOF_BACKGROUND_WRAPPER=480\nTINYUI_SIZEOF_CANVAS_WRAPPER=4816\nTINYUI_SIZEOF_LABEL_WRAPPER=200\nTINYUI_SIZEOF_BUTTON_WRAPPER=248\nTINYUI_SIZEOF_KEYBOARD_WRAPPER=272\nTINYUI_SIZEOF_CHECKBOX_WRAPPER=208\nTINYUI_SIZEOF_SWITCH_WRAPPER=208\nTINYUI_SIZEOF_SLIDER_WRAPPER=216\nTINYUI_SIZEOF_PROGRESS_BAR_WRAPPER=256\nTINYUI_SIZEOF_ANIMATION_WRAPPER=224\nTINYUI_SIZEOF_ARC_WRAPPER=240\nTINYUI_SIZEOF_GAUGE_WRAPPER=240\nTINYUI_SIZEOF_ICON_SLIDER_WRAPPER=640\nTINYUI_SIZEOF_RADIAL_MENU_WRAPPER=624\nTINYUI_SIZEOF_QRCODE_WRAPPER=232\nTINYUI_SIZEOF_PROGRESS_WHEEL_WRAPPER=216\nTINYUI_SIZEOF_DATE_TIME_WRAPPER=256\nTINYUI_SIZEOF_CALENDAR_WRAPPER=312\nTINYUI_SIZEOF_CLOCK_WRAPPER=272\nTINYUI_SIZEOF_LIST_WRAPPER=736\nTINYUI_SIZEOF_MESSAGE_BOX_WRAPPER=416\nTINYUI_SIZEOF_TEXT_WRAPPER=200\nTINYUI_SIZEOF_LINE_EDIT_WRAPPER=232\nTINYUI_SIZEOF_COMBO_BOX_WRAPPER=760\nTINYUI_SIZEOF_SCROLL_SELECTER_WRAPPER=760\nTINYUI_SIZEOF_IMAGE_WRAPPER=208\nTINYUI_SIZEOF_GRAPH_WRAPPER=272\nTINYUI_SIZEOF_TABLE_WRAPPER=224\nTINYUI_SIZEOF_SWITCH_WRAPPER_DELTA=16\nTINYUI_SIZEOF_BACKEND_WIDGET_LD_WINDOW=200\nTINYUI_SIZEOF_LEGACY_TIMER_NODE=48\nTINYUI_SIZEOF_LEGACY_EVENT_CALLBACK_STORAGE=32\nTINYUI_SIZEOF_RUNTIME_BOOKKEEPING=240\nTINYUI_POOL_TIMER_BYTES=520\nTINYUI_POOL_EVENT_CALLBACK_BYTES=648\nTINYUI_POOL_BOOKKEEPING_BYTES=128\nTINYUI_POOL_SUM_BYTES=1296\nTINYUI_DESC_IMAGE_SOURCE_BYTES=136\nTINYUI_DESC_FONT_BYTES=24\nTINYUI_DESC_IMAGE_PRIVATE_BYTES=48\nTINYUI_DESC_MASK_PRIVATE_BYTES=48\nTINYUI_DESC_ARM_2D_TILE_BYTES=24\nTINYUI_ABI32_POOL_BUDGET_HOST_ONLY sum=1296 (not 32-bit ABI)\nTINYUI_ABI32_DESC_BUDGET_HOST_ONLY image=136 font=24 (not 32-bit ABI)",
+    "task6_allocation": "TINYUI_STEADY_STATE_IDLE_PROCESS=0\nTINYUI_STEADY_STATE_WIDGETS_PROCESS=0\nTINYUI_STEADY_STATE_TIMER_DISPATCH=0\nTINYUI_STEADY_STATE_EVENT_DISPATCH=0\nTINYUI_STEADY_STATE_ALLOCATIONS=0",
+    "task7_binary_size": "binary size measured via size artifact=/home/share/samba/embedded/LingDongGUI/build/v2.3/examples/sdl/tinyui_demo\n{\n  \"__bss\": 107080,\n  \"__data\": 13416,\n  \"__text\": 789355,\n  \"total\": 909851\n}",
+    "task7_minimal_symbols": "00000000000498c5 W app.c.f09f4ab4\n0000000000037b7e W arial_12.c.b80aeb66\n0000000000038715 W arial_16.c.d76f804d\n0000000000014670 T ARM_2D_A1_FONT_GET_CHAR_DESCRIPTOR_HANDLER\n0000000000016920 T __arm_2d_allocate_scratch_memory.part.0.lto_priv.0\n000000000007c623 W arm_2d_alpha_blending.c.5dc0c940\n00000000000cd3b7 W arm_2d_asset_circle_small.c.26284639\n00000000000cdad6 W arm_2d_asset_glcd_fonts.c.5cfad58b\n00000000000ce444 W arm_2d_asset_white_dot.c.d8343cee\n0000000000012e50 T __arm_2d_c8bit_sw_colour_filling\n000000000006d78a W arm_2d.c.cb2bf6a5\n000000000002d800 D ARM_2D_CONTROL_ENUMERATION_POLICY_PREORDER_TRAVERSAL\n0000000000046a40 B ARM_2D_CTRL\n00000000000b2b3e W arm_2d_draw.c.69a90fbf\n0000000000014030 T __arm_2d_enum_policy_preorder_depose.lto_priv.0\n0000000000014060 T __arm_2d_enum_policy_preorder_get_next_node.lto_priv.0\n00000000000ceb65 W arm_2d_helper.c.933c9f93\n00000000000d0a95 W arm_2d_helper_control.c.645ff308\n00000000000d1458 W arm_2d_helper_font.c.4266b3a0\n0000000000017220 T __arm_2d_helper_perf_counter_start.part.0.lto_priv.0\n0000000000017250 T __arm_2d_helper_perf_counter_stop.part.0.lto_priv.0\n00000000000d4ac7 W arm_2d_helper_pfb.c.2e41c642\n00000000000d94d0 W arm_2d_helper_scene.c.2c886f6a\n00000000000dc189 W arm_2d_helper_shape.c.cfc04e07\n0000000000015de0 T __arm_2d_lcd_text_default_a1_font_draw_char\n00000000000161c0 T __arm_2d_lcd_text_default_a8_font_draw_char\n000000000002dbf0 D ARM_2D_OP_FILL_COLOUR_WITH_MASK_AND_OPACITY_RGB565\n000000000002dc30 D ARM_2D_OP_FILL_COLOUR_WITH_OPACITY_RGB565\n0000000000015190 T arm_2d_region_intersect\n0000000000012ef0 T __arm_2d_rgb16_sw_colour_filling\n0000000000013160 T __arm_2d_rgb16_sw_draw_pattern\n0000000000013050 T __arm_2d_rgb32_sw_colour_filling\n0000000000010740 T __arm_2d_rgb565_sw_colour_filling_with_mask_and_opacity\n0000000000011420 T __arm_2d_rgb565_sw_colour_filling_with_opacity\n00000000000b6372 W arm_2d_transform.c.b85c1a56\n00000000000e07c5 W arm_common_tables.c.a0258649\n00000000000e02df W arm_cos_f32.c.939df1e7\n00000000000e0418 W arm_cos_q31.c.0c208d3e\n00000000000e0552 W arm_sin_f32.c.2d1b4c6e\n00000000000e068b W arm_sin_q31.c.cc93d3ec\n                 U __assert_fail@GLIBC_2.2.5\n000000000002e140 B __bss_start\n000000000003f9d0 W button.c.0a461f71\n                 U calloc@GLIBC_2.2.5\n000000000002031c R c_bmpCircleAlpha.lto_priv.0\n00000000000203e0 R c_bmpWhiteDotAlpha.lto_priv.0\n000000000002c110 D c_tileCircleMask\n000000000002c130 D c_tileWhiteDotMask\n                 w __cxa_finalize@GLIBC_2.2.5\n0000000000035739 W display.c.dbd6a5f9\n000000000002e000 D __dso_handle\n000000000002e140 D _edata\n0000000000046b68 B _end\n00000000000306a2 W event.c.049ad684\n                 U fflush@GLIBC_2.2.5\n000000000001f2d8 T _fini\n                 U free@GLIBC_2.2.5\n000000000006b31d W freeRtosHeap4.c.8f3d5774\n                 U getenv@GLIBC_2.2.5\n                 w __gmon_start__\n00000000000363e6 W indev.c.99adcd97\n0000000000002000 T _init\n                 w _ITM_deregisterTMCloneTable\n                 w _ITM_registerTMCloneTable\n00000000000432e4 W keyboard.c.a06ed1cd\n000000000003ca0a W label.c.7f069ab2\n000000000004a894 W ldBase.c.9feb3586\n000000000004ec1b W ldButton.c.f82a32b7\n0000000000051049 W ldCheckBox.c.adfd9488\n0000000000053522 W ldGui.c.20afb000\n0000000000016c00 T ldgui_port_pfb_draw_handler\n0000000000014990 T ldgui_port_pfb_flush_handler\n00000000000558ae W ldKeyboard.c.419fcf5a\n00000000000587ef W ldLabel.c.3dec0ee2\n000000000005aa3c W ldLineEdit.c.65e90e29\n000000000005cee4 W ldList.c.63d427c4\n000000000006b842 W ldMsg.c.09564cb8\n000000000005f490 W ldQRCode.c.3bc5d433\n000000000006139d W ldSlider.c.dc1e4be4\n000000000006362c W ldText.c.a863646a\n0000000000065f5f W ldWindow.c.26bfa049\n0000000000069756 W ldWindowLayoutInternal.c.977dd892\n0000000000004770 T ldWindow_on_frame_complete\n00000000000079f0 T ldWindow_on_frame_start\n0000000000004740 T ldWindow_on_load\n0000000000007280 T ldWindow_show\n                 U __libc_start_main@GLIBC_2.34\n00000000000468ed W list.c.878f90ef\n000000000002da40 D LOW_LEVEL_IO__ARM_2D_IO_FILL_COLOUR_MASK_AND_OPACITY_RGB565\n000000000002da60 D LOW_LEVEL_IO__ARM_2D_IO_FILL_COLOUR_WITH_OPACITY_RGB565\n0000000000002240 T main\n                 U malloc@GLIBC_2.2.5\n                 U memcpy@GLIBC_2.14\n                 U memset@GLIBC_2.2.5\n0000000000023556 W minimal_consumer.c.3aa23da1\n00000000000e8b44 W osal.c.ba212bc5\n0000000000025180 R __PRETTY_FUNCTION__.0.lto_priv.4\n0000000000027a90 R __PRETTY_FUNCTION__.101.lto_priv.0\n0000000000025200 R __PRETTY_FUNCTION__.1.lto_priv.1\n                 U __printf_chk@GLIBC_2.3.4\n0000000000046310 B pxEnd.lto_priv.0\n000000000003443f W resource.c.9f05c254\n0000000000025260 W runtime_bridge.c.77b62b8e\n00000000000237c4 W runtime.c.8415ffa5\n0000000000046340 B s_ldgui_current_app.lto_priv.0\n                 U __stack_chk_fail@GLIBC_2.4\n0000000000002ad0 T _start\n                 U stdout@GLIBC_2.2.5\n000000000002e010 D s_tHelper.lto_priv.0\n0000000000046360 B s_tinyui_runtime.lto_priv.0\n0000000000046180 B s_tPFBHelper.lto_priv.0\n                 U strcmp@GLIBC_2.2.5\n                 U strcpy@GLIBC_2.2.5\n                 U strlen@GLIBC_2.2.5\n                 U strncmp@GLIBC_2.2.5\n                 U strnlen@GLIBC_2.2.5\n00000000000ddcb4 W text_box.c.134ddb5a\n0000000000037022 W tick.c.f75f90f0\n0000000000011410 T tinyui_backend_neutral_page_quit.lto_priv.0\n00000000000e6041 W tinyui_ldgui_disp_adapter.c.6d513d51\n00000000000e4292 W tinyui_ldgui_neutral_runtime.c.7c3d9dd8\n00000000000e1854 W tinyui_ldgui_port.c.fe377d99\n0000000000002bc0 T tinyui_runtime_bridge_begin_screen_create\n000000000002e140 D __TMC_END__\n000000000002e168 B ucHeap\n0000000000027d00 W widget.c.8aee541b\n000000000002e3e5 W widget_registry.c.c413048c\n000000000003964c W window.c.3011e108\n0000000000046338 B xBlockAllocatedBit.lto_priv.0\n000000000006d0b6 W xBtnAction.c.9909168e\n0000000000046330 B xFreeBytesRemaining.lto_priv.0\n000000000002e160 B xMinimumEverFreeBytesRemaining.lto_priv.0\n000000000006d4ac W xQueue.c.7a2e3280\n0000000000046320 B xStart.lto_priv.0"
+  },
+  "scenarios": {
+    "capture_ready_ms": {
+      "median": 4.0,
+      "p95": 5.0,
+      "samples": [
+        4.0,
+        4.0,
+        5.0,
+        5.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        5.0,
+        4.0,
+        4.0,
+        5.0,
+        4.0,
+        4.0,
+        5.0,
+        3.0,
+        3.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        5.0,
+        4.0,
+        4.0,
+        4.0
+      ],
+      "warmup_count": 5
+    },
+    "screen_object_create_ms": {
+      "median": 2.0,
+      "p95": 2.0,
+      "samples": [
+        2.0,
+        2.0,
+        1.0,
+        2.0,
+        2.0,
+        2.0,
+        1.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        1.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0,
+        2.0
+      ],
+      "warmup_count": 5
+    }
+  },
+  "schema_version": 1
+}

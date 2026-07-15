@@ -1,3 +1,4 @@
+import argparse
 import os
 import shutil
 import subprocess
@@ -9,115 +10,159 @@ BUILD = ROOT / "build" / "tinyui-runtime"
 RTK = shutil.which("rtk") or "rtk"
 DEMO_TIMEOUT_SECONDS = 6
 DEMO_TARGET = "tinyui_demo"
+
+# M2/M3 exact ordered L5-E event traces (or required substrings).
+V23_CORE_VERTICAL_EVENT_TRACE = [
+    "button:PRESSED",
+    "button:RELEASED",
+    "button:CLICKED",
+    "checkbox:VALUE_CHANGED:1",
+    "slider:VALUE_CHANGED:75",
+]
+
+# exact=True: ordered equality. exact=False: each item must appear as substring.
+V23_SCENARIO_EVENT_TRACES = {
+    "v23_core_vertical": {
+        "runner": "tinyui_v23_core_vertical",
+        "exact": True,
+        "lines": V23_CORE_VERTICAL_EVENT_TRACE,
+    },
+    "v23_value_instruments": {
+        "runner": "tinyui_v23_value_instruments",
+        "exact": True,
+        "lines": ["switch:VALUE_CHANGED:1"],
+    },
+    "v23_selection_collection": {
+        "runner": "tinyui_v23_selection_collection",
+        "exact": False,
+        "lines": ["list:SELECTED:"],
+    },
+    "v23_input_data": {
+        "runner": "tinyui_v23_input_data",
+        "exact": False,
+        "lines": ["keyboard:KEY:"],
+    },
+    "v23_media_composite": {
+        "runner": "tinyui_v23_media_composite",
+        "exact": False,
+        "lines": ["message_box:CONFIRM"],
+    },
+    "v23_theme_layout_resource": {
+        "runner": "tinyui_v23_theme_layout_resource",
+        "exact": True,
+        "lines": [],  # L5-E not_applicable; only require BEGIN/END + REAL_LDGUI.
+    },
+}
+
 static_mapping_targets = {
     "hello_world": {
-        "real_ids": ["title", "ok"],
+        "real_ids": ["label", "button"],
         "reason": "static label/button demo; runtime marker can prove named widgets use real LingDongGUI backend objects.",
     },
     "theme_showcase": {
-        "real_ids": ["title", "body", "accent"],
+        "real_ids": ["label", "text", "button"],
         "reason": "theme showcase has stable named widgets; marker proves real backend objects, not full theme semantics.",
     },
 }
 interactive_mapping_targets = {
     "basic_widgets": {
-        "real_ids": ["wifi", "agree", "volume", "submit", "title", "logo"],
+        "real_ids": ["switch", "checkbox", "slider", "button", "text", "image"],
         "reason": "basic widget demo has stable static and interactive widget ids.",
     },
     "settings_panel": {
-        "real_ids": ["title", "wifi", "brightness", "apply"],
+        "real_ids": ["label", "switch", "slider", "button"],
         "reason": "settings panel has stable interactive widget ids that previously risked fallback behavior.",
     },
     "list_basic": {
-        "real_ids": ["list"],
+        "real_ids": ["label", "list"],
         "reason": "list demo proves the list object itself is a real LingDongGUI widget; item ids are intentionally excluded from the real widget marker contract.",
     },
     "progress_bar_basic": {
-        "real_ids": ["primary", "secondary", "title"],
+        "real_ids": ["label", "progress_bar"],
         "reason": "progress bar demo proves both horizontal and vertical progress bars are real LingDongGUI widgets.",
     },
     "arc_basic": {
-        "real_ids": ["title", "arc"],
+        "real_ids": ["label", "arc"],
         "reason": "arc demo proves the arc widget is a real LingDongGUI widget with named backend ids.",
     },
     "gauge_basic": {
-        "real_ids": ["title", "gauge"],
+        "real_ids": ["label", "gauge"],
         "reason": "gauge demo proves the gauge widget is a real LingDongGUI widget with named backend ids.",
     },
     "icon_slider_basic": {
-        "real_ids": ["title", "icon_slider"],
+        "real_ids": ["label", "icon_slider"],
         "reason": "icon slider demo proves the composite icon slider widget is a real LingDongGUI widget.",
     },
     "radial_menu_basic": {
-        "real_ids": ["title", "radial_menu"],
+        "real_ids": ["label", "radial_menu"],
         "reason": "radial menu demo proves the composite radial menu widget is a real LingDongGUI widget.",
     },
     "progress_wheel_basic": {
-        "real_ids": ["title", "wheel"],
+        "real_ids": ["label", "progress_wheel"],
         "reason": "progress wheel demo proves the progress wheel widget is a real LingDongGUI widget.",
     },
     "qrcode_basic": {
-        "real_ids": ["title", "qrcode"],
+        "real_ids": ["label", "qrcode"],
         "reason": "qrcode demo proves the QR code widget is a real LingDongGUI widget.",
     },
     "message_box_basic": {
-        "real_ids": ["message_box"],
+        "real_ids": ["label", "message_box"],
         "reason": "message_box demo should prove the dialog widget is a real LingDongGUI widget and no longer depend on temporary smoke-path exclusion.",
     },
     "date_time_basic": {
-        "real_ids": ["title", "date_time"],
+        "real_ids": ["label", "date_time"],
         "reason": "date_time demo proves the date-time widget is a real LingDongGUI widget.",
     },
     "clock_basic": {
-        "real_ids": ["clock"],
+        "real_ids": ["label", "clock"],
         "reason": "clock demo proves the clock widget itself is a real LingDongGUI widget.",
     },
     "keyboard_basic": {
-        "real_ids": ["keyboard_demo_input", "keyboard_demo_keyboard"],
+        "real_ids": ["line_edit", "keyboard"],
         "reason": "keyboard demo proves both the edit target and keyboard widget are real LingDongGUI widgets.",
     },
     "line_edit_basic": {
-        "real_ids": ["title", "line_edit"],
+        "real_ids": ["label", "line_edit"],
         "reason": "line_edit demo proves the editable text widget is a real LingDongGUI widget.",
     },
     "combo_box_basic": {
-        "real_ids": ["title", "combo_box"],
+        "real_ids": ["label", "combo_box"],
         "reason": "combo_box demo proves the dropdown widget is a real LingDongGUI widget.",
     },
-    "scroll_selecter_basic": {
-        "real_ids": ["title", "scroll_selecter"],
-        "reason": "scroll_selecter demo proves the scroll selecter widget is a real LingDongGUI widget.",
+    "scroll_selector_basic": {
+        "real_ids": ["label", "scroll_selector"],
+        "reason": "scroll_selector demo proves the scroll selecter widget is a real LingDongGUI widget.",
     },
     "table_basic": {
-        "real_ids": ["table"],
+        "real_ids": ["label", "table"],
         "reason": "table demo proves the table widget itself is a real LingDongGUI widget.",
     },
     "graph_basic": {
-        "real_ids": ["title", "graph"],
+        "real_ids": ["label", "graph"],
         "reason": "graph demo proves the graph widget itself is a real LingDongGUI widget.",
     },
     "calendar_basic": {
-        "real_ids": ["title", "calendar"],
+        "real_ids": ["label", "calendar"],
         "reason": "calendar demo proves the calendar widget itself is a real LingDongGUI widget.",
     },
     "animation_basic": {
-        "real_ids": ["title", "animation"],
+        "real_ids": ["label", "animation"],
         "reason": "animation demo proves the animation widget itself is a real LingDongGUI widget with a frame tile source.",
     },
 }
 layout_mapping_targets = {
     "layout_flex": {
-        "real_ids": ["first", "second", "third"],
+        "real_ids": ["button"],
         "reason": "layout ids prove child widgets enter the real backend tree; layout solver semantics stay in layout tests and visible gate.",
     },
     "layout_grid": {
-        "real_ids": ["title", "left", "right"],
+        "real_ids": ["label", "button"],
         "reason": "grid ids prove named cells enter the real backend tree; placement correctness stays in layout tests and visible gate.",
     },
 }
 theme_mapping_targets = {
     "theme_showcase": {
-        "real_ids": ["title", "body", "accent"],
+        "real_ids": ["label", "text", "button"],
         "reason": "theme ids prove themed sample widgets are real backend objects; style color/readback stays in theme tests and visible gate.",
     },
 }
@@ -146,17 +191,17 @@ def _parse_smoke_layout_marker(stdout: str) -> int:
     raise AssertionError(f"Missing marker line '{prefix}'.\nstdout:\n{stdout}")
 
 
-def _find_executable() -> Path:
+def _find_executable(target: str = DEMO_TARGET) -> Path:
     candidates = [
-        BUILD / "examples" / "sdl" / DEMO_TARGET,
-        BUILD / DEMO_TARGET,
-        BUILD / "examples" / DEMO_TARGET,
+        BUILD / "examples" / "sdl" / target,
+        BUILD / target,
+        BUILD / "examples" / target,
     ]
     executable = next((path for path in candidates if path.is_file()), None)
     if executable is None:
         candidate_paths = ", ".join(str(path) for path in candidates)
         raise FileNotFoundError(
-            f"Could not find executable for target '{DEMO_TARGET}'. Checked: {candidate_paths}"
+            f"Could not find executable for target '{target}'. Checked: {candidate_paths}"
         )
     return executable
 
@@ -209,7 +254,7 @@ def _assert_target_matrix_complete(target_matrix: dict[str, dict[str, object]]) 
         "keyboard_basic",
         "line_edit_basic",
         "combo_box_basic",
-        "scroll_selecter_basic",
+        "scroll_selector_basic",
         "table_basic",
         "graph_basic",
         "calendar_basic",
@@ -305,45 +350,192 @@ def _assert_demo_excluded_from_formal_mapping(target: str, stdout: str, stderr: 
         )
 
 
-target_matrix = _merge_target_matrix()
-_assert_target_matrix_complete(target_matrix)
-TARGETS = sorted(target_matrix)
+def _parse_event_trace_lines(stdout: str) -> list[str]:
+    lines: list[str] = []
+    prefix = "TINYUI_EVENT_TRACE_LINE="
+    for line in stdout.splitlines():
+        if line.startswith(prefix):
+            value = line[len(prefix) :].strip()
+            if value:
+                lines.append(value)
+    return lines
 
 
-subprocess.run(
-    [RTK, "cmake", "-S", str(ROOT), "-B", str(BUILD), "-DUSE_DEMO=0", "-DENABLE_TEST=ON"],
-    check=True,
-)
-subprocess.run(
-    [RTK, "cmake", "--build", str(BUILD), "--target", DEMO_TARGET],
-    check=True,
-)
+def _assert_v23_core_vertical_event_trace(stdout: str, stderr: str) -> None:
+    _assert_v23_scenario_event_trace("v23_core_vertical", stdout, stderr)
 
-for target in TARGETS:
+
+def _assert_v23_scenario_event_trace(scenario: str, stdout: str, stderr: str) -> None:
+    if scenario not in V23_SCENARIO_EVENT_TRACES:
+        raise AssertionError(
+            f"BACKEND MAPPING FAIL: unknown v23 scenario '{scenario}'."
+        )
+    spec = V23_SCENARIO_EVENT_TRACES[scenario]
+    actual = _parse_event_trace_lines(stdout)
+    expected = list(spec["lines"])
+    if "TINYUI_EVENT_TRACE_BEGIN" not in stdout or "TINYUI_EVENT_TRACE_END" not in stdout:
+        raise AssertionError(
+            f"BACKEND MAPPING FAIL: {scenario} missing TRACE_BEGIN/END markers.\n"
+            f"stdout:\n{stdout}\n"
+            f"stderr:\n{stderr}"
+        )
+    if not expected:
+        return
+    if spec["exact"]:
+        if actual != expected:
+            raise AssertionError(
+                f"BACKEND MAPPING FAIL: {scenario} event trace mismatch.\n"
+                f"expected exact ordered lines:\n  " + "\n  ".join(expected) + "\n"
+                f"actual:\n  " + ("\n  ".join(actual) if actual else "<empty>") + "\n"
+                f"stdout:\n{stdout}\n"
+                f"stderr:\n{stderr}"
+            )
+        return
+    missing = [item for item in expected if not any(item in line for line in actual)]
+    if missing:
+        raise AssertionError(
+            f"BACKEND MAPPING FAIL: {scenario} missing required event substrings.\n"
+            f"missing: {missing}\n"
+            f"actual:\n  " + ("\n  ".join(actual) if actual else "<empty>") + "\n"
+            f"stdout:\n{stdout}\n"
+            f"stderr:\n{stderr}"
+        )
+
+
+def _run_legacy_mapping_suite(build_dir: Path) -> None:
+    target_matrix = _merge_target_matrix()
+    _assert_target_matrix_complete(target_matrix)
+    targets = sorted(target_matrix)
+
+    for target in targets:
+        env = os.environ.copy()
+        env["SDL_VIDEODRIVER"] = env.get("SDL_VIDEODRIVER", "dummy")
+        env["TINYUI_DEMO_AUTO_QUIT_MS"] = "1200"
+        completed = subprocess.run(
+            [str(_find_executable()), target],
+            check=False,
+            timeout=DEMO_TIMEOUT_SECONDS,
+            capture_output=True,
+            text=True,
+            env=env,
+        )
+        if completed.returncode != 0:
+            raise RuntimeError(
+                f"Demo '{target}' exited with {completed.returncode}.\n"
+                f"stdout:\n{completed.stdout}\n"
+                f"stderr:\n{completed.stderr}"
+            )
+
+        if "TINYUI_RUNTIME_READY" not in completed.stdout:
+            raise AssertionError(
+                f"Demo '{target}' missing runtime ready marker.\n"
+                f"stdout:\n{completed.stdout}\n"
+                f"stderr:\n{completed.stderr}"
+            )
+
+        _assert_no_fallback(target, completed.stdout, completed.stderr)
+        _assert_real_mapping(target, target_matrix[target], completed.stdout, completed.stderr)
+
+
+def _run_v23_core_vertical_scenario(build_dir: Path) -> None:
+    _run_v23_scenario(build_dir, "v23_core_vertical")
+
+
+def _run_v23_scenario(build_dir: Path, scenario: str) -> None:
+    if scenario not in V23_SCENARIO_EVENT_TRACES:
+        raise AssertionError(f"Unknown v23 scenario: {scenario}")
+    runner = V23_SCENARIO_EVENT_TRACES[scenario]["runner"]
     env = os.environ.copy()
     env["SDL_VIDEODRIVER"] = env.get("SDL_VIDEODRIVER", "dummy")
-    env["TINYUI_DEMO_AUTO_QUIT_MS"] = "1200"
+    env["TINYUI_DEMO_AUTO_QUIT_MS"] = "2500"
+    env["TINYUI_SCENARIO"] = scenario
+    env["TINYUI_SCRIPT_EVENTS"] = "1"
     completed = subprocess.run(
-        [str(_find_executable()), target],
+        [str(_find_executable(runner))],
         check=False,
-        timeout=DEMO_TIMEOUT_SECONDS,
+        timeout=12,
         capture_output=True,
         text=True,
         env=env,
     )
     if completed.returncode != 0:
         raise RuntimeError(
-            f"Demo '{target}' exited with {completed.returncode}.\n"
+            f"Scenario '{scenario}' exited with "
+            f"{completed.returncode}.\n"
             f"stdout:\n{completed.stdout}\n"
             f"stderr:\n{completed.stderr}"
         )
-
     if "TINYUI_RUNTIME_READY" not in completed.stdout:
         raise AssertionError(
-            f"Demo '{target}' missing runtime ready marker.\n"
+            f"Scenario '{scenario}' missing runtime ready marker.\n"
             f"stdout:\n{completed.stdout}\n"
             f"stderr:\n{completed.stderr}"
         )
+    if "TINYUI_BACKEND_STATIC_MAPPING=REAL_LDGUI" not in completed.stdout:
+        raise AssertionError(
+            f"Scenario '{scenario}' missing REAL_LDGUI mapping marker.\n"
+            f"stdout:\n{completed.stdout}\n"
+            f"stderr:\n{completed.stderr}"
+        )
+    _assert_no_fallback(scenario, completed.stdout, completed.stderr)
+    _assert_v23_scenario_event_trace(scenario, completed.stdout, completed.stderr)
 
-    _assert_no_fallback(target, completed.stdout, completed.stderr)
-    _assert_real_mapping(target, target_matrix[target], completed.stdout, completed.stderr)
+
+def main() -> None:
+    global BUILD
+
+    parser = argparse.ArgumentParser(
+        description="Check TinyUI backend mapping / L5-E event evidence."
+    )
+    parser.add_argument(
+        "--scenario",
+        choices=sorted(V23_SCENARIO_EVENT_TRACES.keys()),
+        help="run a single M2/M3 evidence scenario instead of the legacy demo suite",
+    )
+    parser.add_argument(
+        "--all-v23",
+        action="store_true",
+        help="run every M2/M3 v23 L5-E scenario",
+    )
+    parser.add_argument(
+        "--build-dir",
+        type=Path,
+        default=None,
+        help="reuse an existing build directory",
+    )
+    args = parser.parse_args()
+
+    BUILD = args.build_dir.resolve() if args.build_dir else BUILD
+
+    subprocess.run(
+        [RTK, "cmake", "-S", str(ROOT), "-B", str(BUILD), "-DUSE_DEMO=0", "-DENABLE_TEST=ON"],
+        check=True,
+    )
+
+    if args.all_v23:
+        for scenario, spec in sorted(V23_SCENARIO_EVENT_TRACES.items()):
+            subprocess.run(
+                [RTK, "cmake", "--build", str(BUILD), "--target", spec["runner"]],
+                check=True,
+            )
+            _run_v23_scenario(BUILD, scenario)
+        return
+
+    if args.scenario:
+        runner = V23_SCENARIO_EVENT_TRACES[args.scenario]["runner"]
+        subprocess.run(
+            [RTK, "cmake", "--build", str(BUILD), "--target", runner],
+            check=True,
+        )
+        _run_v23_scenario(BUILD, args.scenario)
+        return
+
+    subprocess.run(
+        [RTK, "cmake", "--build", str(BUILD), "--target", DEMO_TARGET],
+        check=True,
+    )
+    _run_legacy_mapping_suite(BUILD)
+
+
+if __name__ == "__main__":
+    main()

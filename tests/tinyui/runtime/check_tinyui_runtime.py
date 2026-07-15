@@ -1,4 +1,5 @@
 import argparse
+import json
 import os
 import shutil
 import subprocess
@@ -9,6 +10,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_BUILD = ROOT / "build" / "tinyui-runtime"
 BASELINE_DIR = ROOT / "tests" / "tinyui" / "runtime" / "baselines"
+MANIFEST_PATH = ROOT / "tests" / "tinyui" / "contract" / "tinyui_demo_manifest.json"
 RTK = shutil.which("rtk") or "rtk"
 DEMO_TIMEOUT_SECONDS = 6
 DEMO_TARGET = "tinyui_demo"
@@ -19,33 +21,25 @@ RUNTIME_SCREEN_DEFINES = {
 }
 ON_TRACK = (33, 150, 243)
 BLACK = (0, 0, 0)
-DEMOS = [
-    "hello_world",
-    "basic_widgets",
-    "layout_flex",
-    "layout_grid",
-    "theme_showcase",
-    "settings_panel",
-    "list_basic",
-    "progress_bar_basic",
-    "arc_basic",
-    "gauge_basic",
-    "icon_slider_basic",
-    "radial_menu_basic",
-    "progress_wheel_basic",
-    "qrcode_basic",
-    "message_box_basic",
-    "date_time_basic",
-    "clock_basic",
-    "keyboard_basic",
-    "line_edit_basic",
-    "combo_box_basic",
-    "scroll_selecter_basic",
-    "table_basic",
-    "graph_basic",
-    "calendar_basic",
-    "animation_basic",
-]
+
+
+def _load_manifest_demo_names() -> list[str]:
+    """All 29 manifest names; Task 2 requires every name can start and capture."""
+    data = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
+    demos = data.get("demos")
+    if not isinstance(demos, list) or not demos:
+        raise AssertionError(f"invalid demo manifest: {MANIFEST_PATH}")
+    names = [entry["name"] for entry in demos if isinstance(entry, dict) and "name" in entry]
+    if len(names) != 29:
+        raise AssertionError(f"expected 29 manifest demos, got {len(names)}")
+    if "scroll_selector_basic" not in names:
+        raise AssertionError("manifest must list scroll_selector_basic (corrected spelling)")
+    if "scroll_selecter_basic" in names:
+        raise AssertionError("manifest must not list legacy scroll_selecter_basic spelling")
+    return names
+
+
+DEMOS = _load_manifest_demo_names()
 
 
 def _parse_args() -> argparse.Namespace:
@@ -66,7 +60,7 @@ def _parse_args() -> argparse.Namespace:
 
 def _demos_for_arg(demo: str) -> list[str]:
     if demo == "all":
-        return DEMOS
+        return list(DEMOS)
     if demo in DEMOS:
         return [demo]
     if demo.startswith("tinyui_") and demo.endswith("_demo"):
@@ -409,8 +403,12 @@ def _assert_basic_widgets_capture(path: Path, stdout: str) -> None:
     )
     real_ids = _parse_marker_ids(stdout, "TINYUI_BACKEND_REAL_WIDGET_IDS")
     fallback_ids = _parse_marker_ids(stdout, "TINYUI_BACKEND_FALLBACK_WIDGET_IDS", required=False)
-    assert "logo" in real_ids, f"basic_widgets should keep logo in REAL widget ids: {sorted(real_ids)}"
-    expected_interactive = {"wifi", "agree", "volume"}
+    # Canonical create() defaults use kind names (image/switch/...), not demo-local
+    # string ids like logo/wifi from pre-v2.3 demos.
+    assert "image" in real_ids, (
+        f"basic_widgets should keep image in REAL widget ids: {sorted(real_ids)}"
+    )
+    expected_interactive = {"switch", "checkbox", "slider", "button"}
     missing_interactive = expected_interactive - real_ids
     unexpected_fallback = expected_interactive & fallback_ids
     assert not missing_interactive, (

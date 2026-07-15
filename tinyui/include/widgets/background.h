@@ -19,6 +19,13 @@
 #ifndef TINYUI_BACKGROUND_H
 #define TINYUI_BACKGROUND_H
 
+#include "tinyui_config.h"
+#if !TINYUI_ENABLE_BACKGROUND
+#  ifndef TINYUI_INTERNAL_FEATURE_HEADER
+#  error "TINYUI_ENABLE_BACKGROUND is disabled"
+#  endif
+#endif
+
 #include "core/obj.h"
 #include <stdint.h>
 

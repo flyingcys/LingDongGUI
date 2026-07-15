@@ -19,6 +19,8 @@
 #ifndef TINYUI_DEMO_LEGACY_WIDGET_PARITY_H
 #define TINYUI_DEMO_LEGACY_WIDGET_PARITY_H
 
-void tinyui_demo_legacy_widget_parity(void);
+#include "tinyui.h"
+
+tinyui_result_t tinyui_demo_legacy_widget_parity_build(tinyui_obj_t *screen);
 
 #endif /* TINYUI_DEMO_LEGACY_WIDGET_PARITY_H */

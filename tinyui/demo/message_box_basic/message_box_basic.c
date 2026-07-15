@@ -19,29 +19,52 @@
 #include "message_box_basic/message_box_basic.h"
 #include "tinyui.h"
 
-static void make_ui(struct tinyui_window *win)
-{
-    struct tinyui_label *title = tinyui_label_create(win, "title");
-    struct tinyui_message_box *message_box;
-    struct tinyui_message_box_props props = {
-        .id = "message_box",
-        .title = "Update",
-        .message = "Apply settings?",
-        .confirm_text = "OK",
-    };
+#include <stdio.h>
 
-    tinyui_label_set_text(title, "Message Box");
-    message_box = tinyui_message_box_create_with_props((struct tinyui_widget *)win, &props);
-    if (message_box != 0) {
-        (void)tinyui_widget_set_pos((struct tinyui_widget *)message_box, 110, 180);
-    }
+static void on_confirm(tinyui_obj_t *box, void *user_data)
+{
+    (void)box;
+    (void)user_data;
+    printf("TINYUI_EVENT_TRACE_LINE=message_box:CONFIRM\n");
+    fflush(stdout);
 }
 
-void tinyui_demo_message_box_basic(void)
+tinyui_result_t tinyui_demo_message_box_basic_build(tinyui_obj_t *screen)
 {
-    tinyui_obj_t *screen = tinyui_screen_create();
-    struct tinyui_window *win = (struct tinyui_window *)screen;
-    if (win == 0) return;
-    make_ui(win);
-    tinyui_screen_load(screen);
+    tinyui_obj_t *title;
+    tinyui_obj_t *message_box;
+    static const char *buttons[] = {"OK", NULL};
+
+    if (screen == NULL) {
+        return TINYUI_ERROR_INVALID_ARG;
+    }
+
+    (void)tinyui_obj_set_bg_color(screen, 0xF6F8FAU);
+
+    title = tinyui_label_create(screen);
+    message_box = tinyui_message_box_create(screen);
+    if (title == NULL || message_box == NULL) {
+        return TINYUI_ERROR_NO_MEMORY;
+    }
+
+    if (tinyui_obj_set_pos(title, 32, 24) != TINYUI_OK
+        || tinyui_obj_set_size(title, 220, 28) != TINYUI_OK
+        || tinyui_label_set_text(title, "Message Box") != 0
+        || tinyui_label_set_text_color(title, 0x102030U) != 0) {
+        return TINYUI_ERROR_BACKEND;
+    }
+
+    if (tinyui_obj_set_pos(message_box, 90, 80) != TINYUI_OK
+        || tinyui_message_box_set_layout(message_box, 300, 160) != 0
+        || tinyui_message_box_set_title(message_box, "Update") != 0
+        || tinyui_message_box_set_message(message_box, "Apply settings?") != 0
+        || tinyui_message_box_set_buttons(message_box, buttons, 1) != 0
+        || tinyui_message_box_set_bg_color(message_box, 0xE8EEF5U) != 0) {
+        return TINYUI_ERROR_BACKEND;
+    }
+    tinyui_message_box_set_on_confirm(message_box, on_confirm, NULL);
+
+    printf("TINYUI_SCENARIO=message_box_basic\n");
+    fflush(stdout);
+    return TINYUI_OK;
 }

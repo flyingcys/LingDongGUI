@@ -19,6 +19,13 @@
 #ifndef TINYUI_LINE_EDIT_H
 #define TINYUI_LINE_EDIT_H
 
+#include "tinyui_config.h"
+#if !TINYUI_ENABLE_LINE_EDIT
+#  ifndef TINYUI_INTERNAL_FEATURE_HEADER
+#  error "TINYUI_ENABLE_LINE_EDIT is disabled"
+#  endif
+#endif
+
 #include "core/obj.h"
 #include <stdint.h>
 #include "layout/layout.h"

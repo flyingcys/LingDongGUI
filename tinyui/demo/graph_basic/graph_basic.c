@@ -19,62 +19,65 @@
 #include "graph_basic/graph_basic.h"
 #include "tinyui.h"
 
-static void make_ui(struct tinyui_window *win)
+#include <string.h>
+
+tinyui_result_t tinyui_demo_graph_basic_build(tinyui_obj_t *screen)
 {
-    struct tinyui_label *title;
-    struct tinyui_graph *graph;
+    tinyui_obj_t *title;
+    tinyui_obj_t *graph;
+    tinyui_graph_props_t graph_props;
     int cpu_series;
-    static const int cols[] = {280, 0};
-    static const int rows[] = {28, 120, 0};
+    tinyui_result_t result;
 
-    tinyui_grid_set_columns(win, cols, 2);
-    tinyui_grid_set_rows(win, rows, 3);
-    tinyui_grid_set_gap(win, 12, 12);
-    tinyui_grid_set_align(win, TINYUI_ALIGN_START, TINYUI_ALIGN_START);
-    tinyui_window_set_padding(win, 24, 24, 24, 24);
-
-    title = tinyui_label_create(win, "title");
-    graph = tinyui_graph_create_with_props(
-        win,
-        &(struct tinyui_graph_props){
-            .id = "graph",
-            .series_max = 1,
-            .width = 180,
-            .height = 96,
-        });
-
-    if (title != 0) {
-        tinyui_label_set_text(title, "Graph");
-        tinyui_widget_set_size((struct tinyui_widget *)title, 220, 28);
-        tinyui_widget_set_grid_cell((struct tinyui_widget *)title,
-                                    0, 0, 1, 1,
-                                    TINYUI_ALIGN_START,
-                                    TINYUI_ALIGN_CENTER);
+    if (screen == NULL) {
+        return TINYUI_ERROR_INVALID_ARG;
     }
 
-    if (graph != 0) {
-        cpu_series = tinyui_graph_add_series(graph, 0x2057C4U, 1, 3);
-        if (cpu_series >= 0) {
-            tinyui_graph_set_value(graph, cpu_series, 0, 12);
-            tinyui_graph_set_value(graph, cpu_series, 1, 26);
-            tinyui_graph_set_value(graph, cpu_series, 2, 42);
-        }
-        tinyui_widget_set_grid_cell((struct tinyui_widget *)graph,
-                                    0, 1, 1, 1,
-                                    TINYUI_ALIGN_START,
-                                    TINYUI_ALIGN_CENTER);
+    result = tinyui_flex_set_flow(screen, TINYUI_FLEX_FLOW_COLUMN);
+    if (result != TINYUI_OK) {
+        return result;
     }
-}
-
-void tinyui_demo_graph_basic(void)
-{
-    tinyui_obj_t *screen = tinyui_screen_create();
-    struct tinyui_window *win = (struct tinyui_window *)screen;
-
-    if (win == 0) {
-        return;
+    result = tinyui_flex_set_align(screen,
+                                   TINYUI_ALIGN_START,
+                                   TINYUI_ALIGN_START,
+                                   TINYUI_ALIGN_START);
+    if (result != TINYUI_OK) {
+        return result;
+    }
+    result = tinyui_flex_set_gap(screen, 12, 12);
+    if (result != TINYUI_OK) {
+        return result;
+    }
+    if (tinyui_window_set_padding(screen, 24, 24, 24, 24) != 0) {
+        return TINYUI_ERROR_BACKEND;
     }
 
-    make_ui(win);
-    tinyui_screen_load(screen);
+    memset(&graph_props, 0, sizeof(graph_props));
+    graph_props.fields = TINYUI_GRAPH_FIELD_SERIES_MAX | TINYUI_GRAPH_FIELD_WIDTH
+        | TINYUI_GRAPH_FIELD_HEIGHT;
+    graph_props.series_max = 1;
+    graph_props.width = 180;
+    graph_props.height = 96;
+
+    title = tinyui_label_create(screen);
+    graph = tinyui_graph_create_with_props(screen, &graph_props);
+    if (title == NULL || graph == NULL) {
+        return TINYUI_ERROR_NO_MEMORY;
+    }
+
+    if (tinyui_label_set_text(title, "Graph") != 0) {
+        return TINYUI_ERROR_BACKEND;
+    }
+
+    cpu_series = tinyui_graph_add_series(graph, 0x2057C4U, 1, 3);
+    if (cpu_series < 0) {
+        return TINYUI_ERROR_BACKEND;
+    }
+    if (tinyui_graph_set_value(graph, cpu_series, 0, 12) != 0
+        || tinyui_graph_set_value(graph, cpu_series, 1, 26) != 0
+        || tinyui_graph_set_value(graph, cpu_series, 2, 42) != 0) {
+        return TINYUI_ERROR_BACKEND;
+    }
+
+    return TINYUI_OK;
 }

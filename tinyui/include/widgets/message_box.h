@@ -19,6 +19,13 @@
 #ifndef TINYUI_MESSAGE_BOX_H
 #define TINYUI_MESSAGE_BOX_H
 
+#include "tinyui_config.h"
+#if !TINYUI_ENABLE_MESSAGE_BOX
+#  ifndef TINYUI_INTERNAL_FEATURE_HEADER
+#  error "TINYUI_ENABLE_MESSAGE_BOX is disabled"
+#  endif
+#endif
+
 #include "core/obj.h"
 #include <stdint.h>
 

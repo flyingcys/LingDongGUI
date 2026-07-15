@@ -17,89 +17,85 @@
  */
 
 /*
- * TinyUI demo aggregator — mirrors lvgl/demos/lv_demos.h.
+ * TinyUI demo aggregator — unified build(screen) registry (M4 Task 2).
  *
  * All demos are compiled into a single tinyui_demo binary.
  * Select a demo at runtime:
  *
  *   ./tinyui_demo arc_basic
  *
- * Each demo follows the same convention as lv_demo_widgets():
+ * Each demo exposes:
  *
- *   void tinyui_demo_<name>(void);
+ *   tinyui_result_t tinyui_demo_<name>_build(tinyui_obj_t *screen);
  *
- * The function creates its own screen, builds the UI, and loads the
- * screen — no arguments needed at the call site.
+ * The runner owns runtime lifecycle (init / screen create+load / process /
+ * deinit). Builders only express UI intent on the provided screen.
  */
 
 #ifndef TINYUI_DEMOS_H
 #define TINYUI_DEMOS_H
 
+#include "tinyui.h"
+
 #include <stdbool.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-struct tinyui_display_config;
+typedef tinyui_result_t (*tinyui_demo_build_cb_t)(tinyui_obj_t *screen);
 
 /* ------------------------------------------------------------------ */
-/* All demo entry points (alphabetical)                                */
+/* All demo builders (alphabetical; match tinyui_demo_manifest.json)  */
 /* ------------------------------------------------------------------ */
 
-void tinyui_demo_animation_basic(void);
-void tinyui_demo_arc_basic(void);
-void tinyui_demo_basic_widgets(void);
-void tinyui_demo_calendar_basic(void);
-void tinyui_demo_clock_basic(void);
-void tinyui_demo_combo_box_basic(void);
-void tinyui_demo_date_time_basic(void);
-void tinyui_demo_gauge_basic(void);
-void tinyui_demo_graph_basic(void);
-void tinyui_demo_grid_parity(void);
-void tinyui_demo_hello_world(void);
-void tinyui_demo_icon_slider_basic(void);
-void tinyui_demo_keyboard_basic(void);
-void tinyui_demo_layout_flex(void);
-void tinyui_demo_layout_grid(void);
-void tinyui_demo_layout_parity(void);
-void tinyui_demo_legacy_demo0_parity(void);
-void tinyui_demo_legacy_demo0_parity_frame(unsigned int elapsed_ms);
-void tinyui_demo_legacy_widget_parity(void);
-void tinyui_demo_line_edit_basic(void);
-void tinyui_demo_list_basic(void);
-void tinyui_demo_message_box_basic(void);
-void tinyui_demo_progress_bar_basic(void);
-void tinyui_demo_progress_wheel_basic(void);
-void tinyui_demo_qrcode_basic(void);
-void tinyui_demo_radial_menu_basic(void);
-void tinyui_demo_scroll_selecter_basic(void);
-void tinyui_demo_settings_panel(void);
-void tinyui_demo_table_basic(void);
-void tinyui_demo_theme_showcase(void);
+tinyui_result_t tinyui_demo_animation_basic_build(tinyui_obj_t *screen);
+tinyui_result_t tinyui_demo_arc_basic_build(tinyui_obj_t *screen);
+tinyui_result_t tinyui_demo_basic_widgets_build(tinyui_obj_t *screen);
+tinyui_result_t tinyui_demo_calendar_basic_build(tinyui_obj_t *screen);
+tinyui_result_t tinyui_demo_clock_basic_build(tinyui_obj_t *screen);
+tinyui_result_t tinyui_demo_combo_box_basic_build(tinyui_obj_t *screen);
+tinyui_result_t tinyui_demo_date_time_basic_build(tinyui_obj_t *screen);
+tinyui_result_t tinyui_demo_gauge_basic_build(tinyui_obj_t *screen);
+tinyui_result_t tinyui_demo_graph_basic_build(tinyui_obj_t *screen);
+tinyui_result_t tinyui_demo_grid_parity_build(tinyui_obj_t *screen);
+tinyui_result_t tinyui_demo_hello_world_build(tinyui_obj_t *screen);
+tinyui_result_t tinyui_demo_icon_slider_basic_build(tinyui_obj_t *screen);
+tinyui_result_t tinyui_demo_keyboard_basic_build(tinyui_obj_t *screen);
+tinyui_result_t tinyui_demo_layout_flex_build(tinyui_obj_t *screen);
+tinyui_result_t tinyui_demo_layout_grid_build(tinyui_obj_t *screen);
+tinyui_result_t tinyui_demo_layout_parity_build(tinyui_obj_t *screen);
+tinyui_result_t tinyui_demo_legacy_demo0_parity_build(tinyui_obj_t *screen);
+tinyui_result_t tinyui_demo_legacy_widget_parity_build(tinyui_obj_t *screen);
+tinyui_result_t tinyui_demo_line_edit_basic_build(tinyui_obj_t *screen);
+tinyui_result_t tinyui_demo_list_basic_build(tinyui_obj_t *screen);
+tinyui_result_t tinyui_demo_message_box_basic_build(tinyui_obj_t *screen);
+tinyui_result_t tinyui_demo_progress_bar_basic_build(tinyui_obj_t *screen);
+tinyui_result_t tinyui_demo_progress_wheel_basic_build(tinyui_obj_t *screen);
+tinyui_result_t tinyui_demo_qrcode_basic_build(tinyui_obj_t *screen);
+tinyui_result_t tinyui_demo_radial_menu_basic_build(tinyui_obj_t *screen);
+tinyui_result_t tinyui_demo_scroll_selector_basic_build(tinyui_obj_t *screen);
+tinyui_result_t tinyui_demo_settings_panel_build(tinyui_obj_t *screen);
+tinyui_result_t tinyui_demo_table_basic_build(tinyui_obj_t *screen);
+tinyui_result_t tinyui_demo_theme_showcase_build(tinyui_obj_t *screen);
 
 /* ------------------------------------------------------------------ */
-/* Runtime dispatch — mirrors lv_demos_create / lv_demos_show_help    */
+/* Runtime dispatch                                                    */
 /* ------------------------------------------------------------------ */
 
 /*
- * Select and run a demo by name.
- *   info  : argv+1 from main (array of argument strings)
- *   size  : argc-1 (number of arguments)
- * size <= 0: run the first demo (hello_world).
- * Returns true if the demo was found and launched, false otherwise.
+ * Build the named demo onto an existing screen.
+ * name == NULL selects hello_world.
+ * Returns TINYUI_ERROR_INVALID_ARG for unknown name or NULL screen;
+ * otherwise propagates the builder result (never swallows backend errors).
  */
-typedef void (*tinyui_demo_frame_cb_t)(unsigned int elapsed_ms);
+tinyui_result_t tinyui_demos_build(const char *name, tinyui_obj_t *screen);
 
-bool tinyui_demos_create(char *info[], int size);
-
-/* Resolve the selected demo's runner display size. */
-bool tinyui_demos_get_display_config(char *info[],
-                                     int size,
-                                     struct tinyui_display_config *out_config);
-
-/* Dispatch the selected demo's optional per-frame callback. */
-void tinyui_demos_frame(unsigned int elapsed_ms);
+/* Resolve the selected demo's runner display size. name == NULL -> hello_world. */
+bool tinyui_demos_get_display_size(const char *name,
+                                   uint16_t *width,
+                                   uint16_t *height);
 
 /* Print the list of available demo names to stdout */
 void tinyui_demos_show_help(void);

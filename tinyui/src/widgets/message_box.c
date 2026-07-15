@@ -23,6 +23,9 @@
 #include "../../../src/gui/ldMessageBox.h"
 #include "../../../src/gui/ldBase.h"
 
+#include <stddef.h>
+#include <string.h>
+
 
 static struct tinyui_message_box *tinyui_message_box_as_message_box(tinyui_obj_t *obj)
 {
@@ -66,12 +69,108 @@ static int tinyui_message_box_props_are_valid(const tinyui_message_box_props_t *
     return props != 0;
 }
 
-/* ── confirm bridge (native event slot) ────────────────────────────────── */
+/* ── confirm bridge (dedicated callbacks + fixed event pool) ─────────────
+ * tinyui_event_fire 是 core/event.c 的 static 符号，且 dispatch_native_signal
+ * 无 MESSAGE_BOX 分支；Task 5 写面不得改 event.c/runtime_bridge。
+ * 这里在 confirm 路径直接按 fixed pool 槽位派发 TINYUI_EVENT_CLICKED，
+ * 语义对齐 event_fire（mask/object/epoch/registration_order）。 */
+
+static void tinyui_message_box_fire_clicked_pool(struct tinyui_message_box *box,
+                                                 int32_t click_num)
+{
+    struct tinyui_runtime_state *rt;
+    struct tinyui_event_callback_pool *pool;
+    struct tinyui_event_callback_slot *ordered[TINYUI_EVENT_CB_CAPACITY];
+    size_t ordered_count = 0U;
+    size_t i;
+    uint16_t epoch;
+    uint32_t mask;
+    tinyui_obj_t *target;
+    bool was_processing;
+
+    if (box == 0) {
+        return;
+    }
+
+    rt = tinyui_runtime_state_get();
+    if (rt == 0 || !rt->initialized) {
+        return;
+    }
+
+    pool = &rt->event_cb_pool;
+    target = (tinyui_obj_t *)(void *)box;
+    mask = TINYUI_EVENT_MASK(TINYUI_EVENT_CLICKED);
+
+    epoch = (uint16_t)(pool->dispatch_epoch + 1U);
+    if (epoch == 0U) {
+        epoch = 1U;
+    }
+    pool->dispatch_epoch = epoch;
+    rt->dispatch_epoch = epoch;
+
+    for (i = 0; i < (size_t)TINYUI_EVENT_CB_CAPACITY; ++i) {
+        struct tinyui_event_callback_slot *slot = &pool->slots[i];
+        if (slot->allocated == 0U || slot->cb == 0) {
+            continue;
+        }
+        if (slot->object != target) {
+            continue;
+        }
+        if ((slot->event_mask & mask) == 0U) {
+            continue;
+        }
+        if (!(slot->born_epoch < epoch)) {
+            continue;
+        }
+        ordered[ordered_count++] = slot;
+    }
+
+    for (i = 1; i < ordered_count; ++i) {
+        size_t j = i;
+        struct tinyui_event_callback_slot *cur = ordered[i];
+        while (j > 0U &&
+               ordered[j - 1U]->registration_order > cur->registration_order) {
+            ordered[j] = ordered[j - 1U];
+            j -= 1U;
+        }
+        ordered[j] = cur;
+    }
+
+    was_processing = rt->processing;
+    rt->processing = true;
+    for (i = 0; i < ordered_count; ++i) {
+        struct tinyui_event_callback_slot *slot = ordered[i];
+        tinyui_event_t event;
+
+        if (slot->allocated == 0U || slot->cb == 0) {
+            continue;
+        }
+        if (slot->object != target || (slot->event_mask & mask) == 0U) {
+            continue;
+        }
+        if (!(slot->born_epoch < epoch)) {
+            continue;
+        }
+        if (box->widget.deleting != 0U) {
+            break;
+        }
+
+        memset(&event, 0, sizeof(event));
+        event.code = TINYUI_EVENT_CLICKED;
+        event.target = target;
+        event.user_data = slot->user_data;
+        /* message_box confirm: data.value = button index */
+        event.data.value = click_num;
+        slot->cb(&event);
+    }
+    rt->processing = was_processing;
+}
 
 static void tinyui_message_box_confirm_bridge(ld_scene_t *scene, ldMessageBox_t *ld_message_box)
 {
     struct tinyui_widget *w;
     struct tinyui_message_box *box;
+    int32_t click_num;
 
     if (ld_message_box == 0) {
         return;
@@ -87,11 +186,18 @@ static void tinyui_message_box_confirm_bridge(ld_scene_t *scene, ldMessageBox_t 
         return;
     }
 
+    click_num = (int32_t)ld_message_box->clickNum;
+
+    /* 固定 callback pool：confirm → CLICKED，value = 按钮索引。 */
+    tinyui_message_box_fire_clicked_pool(box, click_num);
+
     if (box->on_confirm_indexed != 0) {
-        box->on_confirm_indexed(box, ld_message_box->clickNum, box->on_confirm_indexed_user_data);
+        box->on_confirm_indexed((tinyui_obj_t *)(void *)box,
+                                (int)click_num,
+                                box->on_confirm_indexed_user_data);
     }
     if (box->on_confirm != 0) {
-        box->on_confirm(box, box->on_confirm_user_data);
+        box->on_confirm((tinyui_obj_t *)(void *)box, box->on_confirm_user_data);
     }
 }
 
@@ -167,6 +273,12 @@ tinyui_obj_t *tinyui_message_box_create(tinyui_obj_t *parent)
     }
 
     box->id = id;
+    /* Install LD confirm bridge at create so pool listeners work without
+     * requiring tinyui_message_box_set_callback first. */
+    if (box->widget.ld_widget != 0) {
+        ldMessageBoxSetCallback((ldMessageBox_t *)box->widget.ld_widget,
+                                tinyui_message_box_confirm_bridge);
+    }
     return (tinyui_obj_t *)box;
 }
 
@@ -436,9 +548,9 @@ int tinyui_message_box_set_string_colors(tinyui_obj_t *box_obj, unsigned int tit
     }
 
     ldMessageBoxSetStringColor((ldMessageBox_t *)box->widget.ld_widget,
-                               (ldColor)title_color,
-                               (ldColor)message_color,
-                               (ldColor)button_color);
+                               (ldColor)tinyui_rgb_to_ld_color(title_color),
+                               (ldColor)tinyui_rgb_to_ld_color(message_color),
+                               (ldColor)tinyui_rgb_to_ld_color(button_color));
     box->title_color = title_color;
     box->message_color = message_color;
     box->button_color = button_color;
@@ -482,7 +594,8 @@ int tinyui_message_box_set_button_colors(tinyui_obj_t *box_obj, unsigned int rel
     }
 
     ldMessageBoxSetButtonColor((ldMessageBox_t *)box->widget.ld_widget,
-                               (ldColor)release_color, (ldColor)press_color);
+                               (ldColor)tinyui_rgb_to_ld_color(release_color),
+                               (ldColor)tinyui_rgb_to_ld_color(press_color));
     box->release_color = release_color;
     box->press_color = press_color;
     return 0;
@@ -522,7 +635,8 @@ int tinyui_message_box_set_bg_color(tinyui_obj_t *box_obj, unsigned int bg_color
         return -1;
     }
 
-    ldMessageBoxSetBackgroundColor((ldMessageBox_t *)box->widget.ld_widget, (ldColor)bg_color);
+    ldMessageBoxSetBackgroundColor((ldMessageBox_t *)box->widget.ld_widget,
+                                   (ldColor)tinyui_rgb_to_ld_color(bg_color));
     box->bg_color = bg_color;
     return 0;
 }

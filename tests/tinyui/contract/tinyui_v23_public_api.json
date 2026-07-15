@@ -5,7 +5,7 @@
       "kind": "typedef",
       "name": "tinyui_screen_transition_t",
       "header": "core/runtime.h",
-      "signature": "typedef enum tinyui_screen_transition { TINYUI_SCREEN_TRANSITION_NONE, TINYUI_SCREEN_TRANSITION_FADE_WHITE, TINYUI_SCREEN_TRANSITION_FADE_BLACK, TINYUI_SCREEN_TRANSITION_SLIDE_LEFT, TINYUI_SCREEN_TRANSITION_SLIDE_RIGHT, TINYUI_SCREEN_TRANSITION_SLIDE_UP, TINYUI_SCREEN_TRANSITION_SLIDE_DOWN, TINYUI_SCREEN_TRANSITION_ERASE_LEFT, TINYUI_SCREEN_TRANSITION_ERASE_RIGHT, TINYUI_SCREEN_TRANSITION_ERASE_UP, TINYUI_SCREEN_TRANSITION_ERASE_DOWN, TINYUI_SCREEN_TRANSITION_FLY_IN_LEFT, TINYUI_SCREEN_TRANSITION_FLY_IN_RIGHT, TINYUI_SCREEN_TRANSITION_FLY_IN_TOP, TINYUI_SCREEN_TRANSITION_FLY_IN_BOTTOM } tinyui_screen_transition_t;",
+      "signature": "typedef enum tinyui_screen_transition { TINYUI_SCREEN_TRANSITION_NONE = 0, TINYUI_SCREEN_TRANSITION_FADE_WHITE, TINYUI_SCREEN_TRANSITION_FADE_BLACK, TINYUI_SCREEN_TRANSITION_SLIDE_LEFT, TINYUI_SCREEN_TRANSITION_SLIDE_RIGHT, TINYUI_SCREEN_TRANSITION_SLIDE_UP, TINYUI_SCREEN_TRANSITION_SLIDE_DOWN, TINYUI_SCREEN_TRANSITION_ERASE_LEFT, TINYUI_SCREEN_TRANSITION_ERASE_RIGHT, TINYUI_SCREEN_TRANSITION_ERASE_UP, TINYUI_SCREEN_TRANSITION_ERASE_DOWN, TINYUI_SCREEN_TRANSITION_FLY_IN_LEFT, TINYUI_SCREEN_TRANSITION_FLY_IN_RIGHT, TINYUI_SCREEN_TRANSITION_FLY_IN_TOP, TINYUI_SCREEN_TRANSITION_FLY_IN_BOTTOM } tinyui_screen_transition_t;",
       "availability": "always"
     },
     {
@@ -26,7 +26,7 @@
       "kind": "typedef",
       "name": "tinyui_event_code_t",
       "header": "core/event.h",
-      "signature": "typedef enum tinyui_event_code { TINYUI_EVENT_PRESSED, TINYUI_EVENT_RELEASED, TINYUI_EVENT_CLICKED, TINYUI_EVENT_VALUE_CHANGED, TINYUI_EVENT_FOCUSED, TINYUI_EVENT_DEFOCUSED, TINYUI_EVENT_KEY, TINYUI_EVENT_DELETE } tinyui_event_code_t;",
+      "signature": "typedef enum tinyui_event_code { TINYUI_EVENT_PRESSED = 0, TINYUI_EVENT_RELEASED, TINYUI_EVENT_CLICKED, TINYUI_EVENT_VALUE_CHANGED, TINYUI_EVENT_FOCUSED, TINYUI_EVENT_DEFOCUSED, TINYUI_EVENT_KEY, TINYUI_EVENT_DELETE } tinyui_event_code_t;",
       "availability": "always"
     },
     {
@@ -75,35 +75,35 @@
       "kind": "typedef",
       "name": "tinyui_style_field_t",
       "header": "style/style.h",
-      "signature": "typedef enum tinyui_style_field TINYUI_STYLE_BG_COLOR = UINT32_C(1) << 0, TINYUI_STYLE_TEXT_COLOR = UINT32_C(1) << 1, TINYUI_STYLE_BORDER_COLOR = UINT32_C(1) << 2, TINYUI_STYLE_BORDER_WIDTH = UINT32_C(1) << 3, TINYUI_STYLE_RADIUS = UINT32_C(1) << 4, TINYUI_STYLE_PADDING = UINT32_C(1) << 5, TINYUI_STYLE_OPACITY = UINT32_C(1) << 6, TINYUI_STYLE_FONT = UINT32_C(1) << 7, tinyui_style_field_t;",
+      "signature": "typedef enum tinyui_style_field { TINYUI_STYLE_BG_COLOR = UINT32_C(1) << 0, TINYUI_STYLE_TEXT_COLOR = UINT32_C(1) << 1, TINYUI_STYLE_BORDER_COLOR = UINT32_C(1) << 2, TINYUI_STYLE_BORDER_WIDTH = UINT32_C(1) << 3, TINYUI_STYLE_RADIUS = UINT32_C(1) << 4, TINYUI_STYLE_PADDING = UINT32_C(1) << 5, TINYUI_STYLE_OPACITY = UINT32_C(1) << 6, TINYUI_STYLE_FONT = UINT32_C(1) << 7 } tinyui_style_field_t;",
       "availability": "always"
     },
     {
       "kind": "typedef",
       "name": "tinyui_part_t",
       "header": "style/style.h",
-      "signature": "typedef enum tinyui_part TINYUI_PART_MAIN = 0, TINYUI_PART_TEXT, TINYUI_PART_INDICATOR, TINYUI_PART_KNOB, TINYUI_PART_TRACK, tinyui_part_t;",
+      "signature": "typedef enum tinyui_part { TINYUI_PART_MAIN = 0, TINYUI_PART_TEXT, TINYUI_PART_INDICATOR, TINYUI_PART_KNOB, TINYUI_PART_TRACK } tinyui_part_t;",
       "availability": "always"
     },
     {
       "kind": "typedef",
       "name": "tinyui_state_t",
       "header": "style/style.h",
-      "signature": "typedef enum tinyui_state TINYUI_STATE_DEFAULT = 0, TINYUI_STATE_DISABLED, TINYUI_STATE_PRESSED, TINYUI_STATE_CHECKED, TINYUI_STATE_FOCUSED, tinyui_state_t;",
+      "signature": "typedef enum tinyui_state { TINYUI_STATE_DEFAULT = 0, TINYUI_STATE_DISABLED, TINYUI_STATE_PRESSED, TINYUI_STATE_CHECKED, TINYUI_STATE_FOCUSED } tinyui_state_t;",
       "availability": "always"
     },
     {
       "kind": "typedef",
       "name": "tinyui_color_id_t",
       "header": "theme/theme.h",
-      "signature": "typedef enum tinyui_color_id TINYUI_COLOR_TEXT_PRIMARY = 0, TINYUI_COLOR_BG, TINYUI_COLOR_PANEL, TINYUI_COLOR_BORDER, TINYUI_COLOR_ACCENT, TINYUI_COLOR_DISABLED, TINYUI_COLOR_COUNT, tinyui_color_id_t;",
+      "signature": "typedef enum tinyui_color_id { TINYUI_COLOR_TEXT_PRIMARY = 0, TINYUI_COLOR_BG, TINYUI_COLOR_PANEL, TINYUI_COLOR_BORDER, TINYUI_COLOR_ACCENT, TINYUI_COLOR_DISABLED, TINYUI_COLOR_COUNT } tinyui_color_id_t;",
       "availability": "always"
     },
     {
       "kind": "typedef",
       "name": "tinyui_metric_id_t",
       "header": "theme/theme.h",
-      "signature": "typedef enum tinyui_metric_id TINYUI_METRIC_PADDING = 0, TINYUI_METRIC_RADIUS, TINYUI_METRIC_BORDER_WIDTH, TINYUI_METRIC_CONTROL_HEIGHT, TINYUI_METRIC_COUNT, tinyui_metric_id_t;",
+      "signature": "typedef enum tinyui_metric_id { TINYUI_METRIC_PADDING = 0, TINYUI_METRIC_RADIUS, TINYUI_METRIC_BORDER_WIDTH, TINYUI_METRIC_CONTROL_HEIGHT, TINYUI_METRIC_COUNT } tinyui_metric_id_t;",
       "availability": "always"
     },
     {
@@ -173,14 +173,14 @@
       "kind": "typedef",
       "name": "tinyui_focus_direction_t",
       "header": "core/focus.h",
-      "signature": "typedef enum tinyui_focus_direction { TINYUI_FOCUS_NEXT, TINYUI_FOCUS_PREVIOUS, TINYUI_FOCUS_LEFT, TINYUI_FOCUS_RIGHT, TINYUI_FOCUS_UP, TINYUI_FOCUS_DOWN } tinyui_focus_direction_t;",
+      "signature": "typedef enum tinyui_focus_direction { TINYUI_FOCUS_NEXT = 0, TINYUI_FOCUS_PREVIOUS, TINYUI_FOCUS_LEFT, TINYUI_FOCUS_RIGHT, TINYUI_FOCUS_UP, TINYUI_FOCUS_DOWN } tinyui_focus_direction_t;",
       "availability": "always"
     },
     {
       "kind": "typedef",
       "name": "tinyui_key_t",
       "header": "integration/input.h",
-      "signature": "typedef enum tinyui_key { TINYUI_KEY_ENTER, TINYUI_KEY_BACK, TINYUI_KEY_LEFT, TINYUI_KEY_RIGHT, TINYUI_KEY_UP, TINYUI_KEY_DOWN, TINYUI_KEY_NEXT, TINYUI_KEY_PREVIOUS } tinyui_key_t;",
+      "signature": "typedef enum tinyui_key { TINYUI_KEY_ENTER = 0, TINYUI_KEY_BACK, TINYUI_KEY_LEFT, TINYUI_KEY_RIGHT, TINYUI_KEY_UP, TINYUI_KEY_DOWN, TINYUI_KEY_NEXT, TINYUI_KEY_PREVIOUS } tinyui_key_t;",
       "availability": "always"
     },
     {
@@ -194,14 +194,14 @@
       "kind": "typedef",
       "name": "tinyui_align_t",
       "header": "layout/layout.h",
-      "signature": "typedef enum tinyui_align TINYUI_ALIGN_START, TINYUI_ALIGN_CENTER, TINYUI_ALIGN_END, TINYUI_ALIGN_STRETCH, TINYUI_ALIGN_SPACE_EVENLY, TINYUI_ALIGN_SPACE_AROUND, TINYUI_ALIGN_SPACE_BETWEEN, tinyui_align_t;",
+      "signature": "typedef enum tinyui_align { TINYUI_ALIGN_START, TINYUI_ALIGN_CENTER, TINYUI_ALIGN_END, TINYUI_ALIGN_STRETCH, TINYUI_ALIGN_SPACE_EVENLY, TINYUI_ALIGN_SPACE_AROUND, TINYUI_ALIGN_SPACE_BETWEEN } tinyui_align_t;",
       "availability": "always"
     },
     {
       "kind": "typedef",
       "name": "tinyui_flex_flow_t",
       "header": "layout/layout.h",
-      "signature": "typedef enum tinyui_flex_flow TINYUI_FLEX_FLOW_ROW, TINYUI_FLEX_FLOW_COLUMN, TINYUI_FLEX_FLOW_ROW_WRAP, TINYUI_FLEX_FLOW_COLUMN_WRAP, TINYUI_FLEX_FLOW_ROW_REVERSE, TINYUI_FLEX_FLOW_COLUMN_REVERSE, TINYUI_FLEX_FLOW_ROW_WRAP_REVERSE, TINYUI_FLEX_FLOW_COLUMN_WRAP_REVERSE, tinyui_flex_flow_t;",
+      "signature": "typedef enum tinyui_flex_flow { TINYUI_FLEX_FLOW_ROW, TINYUI_FLEX_FLOW_COLUMN, TINYUI_FLEX_FLOW_ROW_WRAP, TINYUI_FLEX_FLOW_COLUMN_WRAP, TINYUI_FLEX_FLOW_ROW_REVERSE, TINYUI_FLEX_FLOW_COLUMN_REVERSE, TINYUI_FLEX_FLOW_ROW_WRAP_REVERSE, TINYUI_FLEX_FLOW_COLUMN_WRAP_REVERSE } tinyui_flex_flow_t;",
       "availability": "always"
     },
     {
@@ -215,35 +215,35 @@
       "kind": "typedef",
       "name": "tinyui_grid_unit_t",
       "header": "layout/layout.h",
-      "signature": "typedef enum tinyui_grid_unit TINYUI_GRID_UNIT_PX, TINYUI_GRID_UNIT_FR, TINYUI_GRID_UNIT_CONTENT, tinyui_grid_unit_t;",
+      "signature": "typedef enum tinyui_grid_unit { TINYUI_GRID_UNIT_PX, TINYUI_GRID_UNIT_FR, TINYUI_GRID_UNIT_CONTENT } tinyui_grid_unit_t;",
       "availability": "always"
     },
     {
       "kind": "typedef",
       "name": "tinyui_builtin_font_t",
       "header": "resource/font.h",
-      "signature": "typedef enum tinyui_builtin_font TINYUI_FONT_6X8, TINYUI_FONT_16X24, TINYUI_FONT_ARIAL_12, TINYUI_FONT_ARIAL_16_A8, tinyui_builtin_font_t;",
+      "signature": "typedef enum tinyui_builtin_font { TINYUI_FONT_6X8, TINYUI_FONT_16X24, TINYUI_FONT_ARIAL_12, TINYUI_FONT_ARIAL_16_A8 } tinyui_builtin_font_t;",
       "availability": "always"
     },
     {
       "kind": "typedef",
       "name": "tinyui_font_kind_t",
       "header": "resource/font.h",
-      "signature": "typedef enum tinyui_font_kind TINYUI_FONT_KIND_BUILTIN, TINYUI_FONT_KIND_VRES, tinyui_font_kind_t;",
+      "signature": "typedef enum tinyui_font_kind { TINYUI_FONT_KIND_BUILTIN, TINYUI_FONT_KIND_VRES } tinyui_font_kind_t;",
       "availability": "always"
     },
     {
       "kind": "typedef",
       "name": "tinyui_builtin_image_t",
       "header": "resource/image_source.h",
-      "signature": "typedef enum tinyui_builtin_image TINYUI_BUILTIN_IMAGE_LETTER_PAPER = 1, TINYUI_BUILTIN_IMAGE_KEY_RELEASE, TINYUI_BUILTIN_IMAGE_KEY_PRESS, TINYUI_BUILTIN_IMAGE_PROGRESS_BG, TINYUI_BUILTIN_IMAGE_PROGRESS_FG, TINYUI_BUILTIN_IMAGE_SLIDER_BG, TINYUI_BUILTIN_IMAGE_SLIDER_INDICATOR, TINYUI_BUILTIN_IMAGE_WEATHER, TINYUI_BUILTIN_IMAGE_NOTE, TINYUI_BUILTIN_IMAGE_BOOK, TINYUI_BUILTIN_IMAGE_CHART, TINYUI_BUILTIN_IMAGE_GAUGE_BG, TINYUI_BUILTIN_IMAGE_GAUGE_POINTER, TINYUI_BUILTIN_IMAGE_ARC_QUARTER, tinyui_builtin_image_t;",
+      "signature": "typedef enum tinyui_builtin_image { TINYUI_BUILTIN_IMAGE_LETTER_PAPER = 1, TINYUI_BUILTIN_IMAGE_KEY_RELEASE, TINYUI_BUILTIN_IMAGE_KEY_PRESS, TINYUI_BUILTIN_IMAGE_PROGRESS_BG, TINYUI_BUILTIN_IMAGE_PROGRESS_FG, TINYUI_BUILTIN_IMAGE_SLIDER_BG, TINYUI_BUILTIN_IMAGE_SLIDER_INDICATOR, TINYUI_BUILTIN_IMAGE_WEATHER, TINYUI_BUILTIN_IMAGE_NOTE, TINYUI_BUILTIN_IMAGE_BOOK, TINYUI_BUILTIN_IMAGE_CHART, TINYUI_BUILTIN_IMAGE_GAUGE_BG, TINYUI_BUILTIN_IMAGE_GAUGE_POINTER, TINYUI_BUILTIN_IMAGE_ARC_QUARTER } tinyui_builtin_image_t;",
       "availability": "always"
     },
     {
       "kind": "typedef",
       "name": "tinyui_image_source_kind_t",
       "header": "resource/image_source.h",
-      "signature": "typedef enum tinyui_image_source_kind TINYUI_IMAGE_SOURCE_EMPTY, TINYUI_IMAGE_SOURCE_RGB565_MEMORY, TINYUI_IMAGE_SOURCE_BUILTIN, TINYUI_IMAGE_SOURCE_VRES, tinyui_image_source_kind_t;",
+      "signature": "typedef enum tinyui_image_source_kind { TINYUI_IMAGE_SOURCE_EMPTY, TINYUI_IMAGE_SOURCE_RGB565_MEMORY, TINYUI_IMAGE_SOURCE_BUILTIN, TINYUI_IMAGE_SOURCE_VRES } tinyui_image_source_kind_t;",
       "availability": "always"
     },
     {
@@ -370,6 +370,104 @@
       "name": "tinyui_obj_get_child_count",
       "header": "core/obj.h",
       "signature": "tinyui_result_t tinyui_obj_get_child_count(const tinyui_obj_t *obj, uint16_t *count);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_obj_set_pos",
+      "header": "core/obj.h",
+      "signature": "tinyui_result_t tinyui_obj_set_pos(tinyui_obj_t *obj, int x, int y);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_obj_set_size",
+      "header": "core/obj.h",
+      "signature": "tinyui_result_t tinyui_obj_set_size(tinyui_obj_t *obj, int width, int height);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_obj_set_text",
+      "header": "core/obj.h",
+      "signature": "tinyui_result_t tinyui_obj_set_text(tinyui_obj_t *obj, const char *text);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_obj_set_bg_color",
+      "header": "core/obj.h",
+      "signature": "tinyui_result_t tinyui_obj_set_bg_color(tinyui_obj_t *obj, unsigned int rgb);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_obj_set_text_color",
+      "header": "core/obj.h",
+      "signature": "tinyui_result_t tinyui_obj_set_text_color(tinyui_obj_t *obj, unsigned int rgb);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_obj_set_border_color",
+      "header": "core/obj.h",
+      "signature": "tinyui_result_t tinyui_obj_set_border_color(tinyui_obj_t *obj, unsigned int rgb);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_obj_set_border_width",
+      "header": "core/obj.h",
+      "signature": "tinyui_result_t tinyui_obj_set_border_width(tinyui_obj_t *obj, int width);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_obj_set_radius",
+      "header": "core/obj.h",
+      "signature": "tinyui_result_t tinyui_obj_set_radius(tinyui_obj_t *obj, int radius);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_obj_set_padding",
+      "header": "core/obj.h",
+      "signature": "tinyui_result_t tinyui_obj_set_padding(tinyui_obj_t *obj, int padding);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_obj_set_visible",
+      "header": "core/obj.h",
+      "signature": "tinyui_result_t tinyui_obj_set_visible(tinyui_obj_t *obj, int visible);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_obj_set_enabled",
+      "header": "core/obj.h",
+      "signature": "tinyui_result_t tinyui_obj_set_enabled(tinyui_obj_t *obj, int enabled);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_obj_set_opacity",
+      "header": "core/obj.h",
+      "signature": "tinyui_result_t tinyui_obj_set_opacity(tinyui_obj_t *obj, int opacity);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_obj_set_selectable",
+      "header": "core/obj.h",
+      "signature": "tinyui_result_t tinyui_obj_set_selectable(tinyui_obj_t *obj, int selectable);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_obj_set_selected",
+      "header": "core/obj.h",
+      "signature": "tinyui_result_t tinyui_obj_set_selected(tinyui_obj_t *obj, int selected);",
       "availability": "always"
     },
     {
@@ -549,6 +647,62 @@
     },
     {
       "kind": "function",
+      "name": "tinyui_obj_set_flex_grow",
+      "header": "layout/layout.h",
+      "signature": "tinyui_result_t tinyui_obj_set_flex_grow(tinyui_obj_t *obj, int grow);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_obj_set_flex_new_track",
+      "header": "layout/layout.h",
+      "signature": "tinyui_result_t tinyui_obj_set_flex_new_track(tinyui_obj_t *obj, int new_track);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_obj_set_flex_min_width",
+      "header": "layout/layout.h",
+      "signature": "tinyui_result_t tinyui_obj_set_flex_min_width(tinyui_obj_t *obj, int min_width);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_obj_set_flex_min_height",
+      "header": "layout/layout.h",
+      "signature": "tinyui_result_t tinyui_obj_set_flex_min_height(tinyui_obj_t *obj, int min_height);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_obj_set_flex_max_width",
+      "header": "layout/layout.h",
+      "signature": "tinyui_result_t tinyui_obj_set_flex_max_width(tinyui_obj_t *obj, int max_width);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_obj_set_flex_max_height",
+      "header": "layout/layout.h",
+      "signature": "tinyui_result_t tinyui_obj_set_flex_max_height(tinyui_obj_t *obj, int max_height);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_obj_set_ignore_layout",
+      "header": "layout/layout.h",
+      "signature": "tinyui_result_t tinyui_obj_set_ignore_layout(tinyui_obj_t *obj, int ignore_layout);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
+      "name": "tinyui_obj_set_grid_cell",
+      "header": "layout/layout.h",
+      "signature": "tinyui_result_t tinyui_obj_set_grid_cell(tinyui_obj_t *obj, int col, int row, int col_span, int row_span, tinyui_align_t x_align, tinyui_align_t y_align);",
+      "availability": "always"
+    },
+    {
+      "kind": "function",
       "name": "tinyui_font_from_builtin",
       "header": "resource/font.h",
       "signature": "tinyui_result_t tinyui_font_from_builtin(tinyui_builtin_font_t builtin, tinyui_font_t *out);",
@@ -597,5 +751,5 @@
       "availability": "always"
     }
   ],
-  "manifest_sha256": "f7b8a9b800c81685852723f262583684a668f13a81ea93f054d1ae689f5e3c8d"
+  "manifest_sha256": "1a2c16a01c631d57326e8e9d53e71004fae2c3bda8ce1b99503cbe0ef82f5dbf"
 }

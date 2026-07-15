@@ -18,6 +18,8 @@ LOGICAL_ARTIFACT_MARKERS = (("examples", "sdl"), ("tests", "tinyui"))
 
 def _resolve_default_binary() -> Path:
     candidates = [
+        ROOT / "build" / "v2.3-m3" / "examples" / "sdl" / "tinyui_demo",
+        ROOT / "build" / "v2.3-m2" / "examples" / "sdl" / "tinyui_demo",
         ROOT / "build" / "v2.3-m0-full" / "examples" / "sdl" / "tinyui_demo",
         ROOT / "build" / "examples" / "sdl" / "tinyui_demo",
         ROOT / "build" / "tinyui-runtime" / "examples" / "sdl" / "tinyui_demo",

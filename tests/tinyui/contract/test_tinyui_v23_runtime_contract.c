@@ -81,8 +81,12 @@ static void test_runtime_and_object_model(void)
     assert(tinyui_process(&next_ms) == TINYUI_OK);
     assert(next_ms == UINT32_MAX);
 
+    /* M2 Task 1: transitions map to Arm-2D modes; unknown values only are OOR. */
     assert(tinyui_screen_load(screen, TINYUI_SCREEN_TRANSITION_FADE_WHITE, 100) ==
-           TINYUI_ERROR_NOT_SUPPORTED);
+           TINYUI_OK);
+    assert(tinyui_screen_active() == screen);
+    assert(tinyui_screen_load(screen, (tinyui_screen_transition_t)99, 0) ==
+           TINYUI_ERROR_OUT_OF_RANGE);
     assert(tinyui_obj_get_id(screen, &id) == TINYUI_OK);
     assert(id != 0);
     assert(tinyui_obj_find_by_id(screen, id) == screen);

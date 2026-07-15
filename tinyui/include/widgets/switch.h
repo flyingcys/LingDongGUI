@@ -19,11 +19,20 @@
 #ifndef TINYUI_SWITCH_H
 #define TINYUI_SWITCH_H
 
+#include "tinyui_config.h"
+#if !TINYUI_ENABLE_SWITCH
+#  ifndef TINYUI_INTERNAL_FEATURE_HEADER
+#  error "TINYUI_ENABLE_SWITCH is disabled"
+#  endif
+#endif
+
 #include "core/obj.h"
+#include "core/event.h"
 #include <stdint.h>
 
 #ifndef TINYUI_LEGACY_VALUE_CHANGED_CB_DEFINED
 #define TINYUI_LEGACY_VALUE_CHANGED_CB_DEFINED
+/* Legacy widget-style callback kept for props/compat; set_on_* uses tinyui_event_cb_t. */
 typedef void (*tinyui_value_changed_cb)(tinyui_obj_t *obj, int value, void *user_data);
 #endif
 
@@ -104,6 +113,7 @@ int tinyui_switch_can_navigate(tinyui_obj_t *sw, int direction, int *can_navigat
 
 int tinyui_switch_navigate(tinyui_obj_t *sw, int direction);
 
-int tinyui_switch_set_on_toggled(tinyui_obj_t *sw, tinyui_value_changed_cb cb, void *user_data);
+/* Narrow forward to tinyui_obj_add_event_cb (unified pool). Replace semantics. */
+int tinyui_switch_set_on_toggled(tinyui_obj_t *sw, tinyui_event_cb_t cb, void *user_data);
 
 #endif /* TINYUI_SWITCH_H */

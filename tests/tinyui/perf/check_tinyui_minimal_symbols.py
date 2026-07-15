@@ -17,33 +17,49 @@ REQUIRED_SYMBOLS = frozenset(
         "tinyui_deinit",
         "tinyui_screen_create",
         "tinyui_screen_load",
-        "tinyui_timer_handler",
+        "tinyui_process",
         "tinyui_label_create",
         "tinyui_label_set_text",
         "tinyui_button_create",
         "tinyui_button_set_text",
     }
 )
+# Disabled under TINYUI_PROFILE=minimal. Keep prefixes sorted; cover every
+# non-minimal public/module surface that nm can observe on the consumer:
+# remaining widgets, theme, native interop wrap APIs, and the private v2.2
+# demo bridge (tinyui_app_*/tinyui_widget_*/legacy spellings). Diagnostics
+# has no dedicated public symbol prefix when off (compile-time string path).
 FORBIDDEN_SYMBOL_PREFIXES = (
+    "tinyui_animation_",
+    "tinyui_app_",
     "tinyui_arc_",
+    "tinyui_calendar_",
+    "tinyui_canvas_",
     "tinyui_checkbox_",
+    "tinyui_clock_",
     "tinyui_combo_box_",
     "tinyui_date_time_",
     "tinyui_gauge_",
     "tinyui_graph_",
+    "tinyui_icon_slider_",
     "tinyui_image_",
     "tinyui_keyboard_",
     "tinyui_line_edit_",
     "tinyui_list_",
     "tinyui_message_box_",
+    "tinyui_native_",
     "tinyui_progress_",
     "tinyui_qrcode_",
     "tinyui_radial_menu_",
     "tinyui_scroll_selecter_",
+    "tinyui_scroll_selector_",
     "tinyui_slider_",
     "tinyui_switch_",
     "tinyui_table_",
+    "tinyui_text_",
     "tinyui_theme_",
+    "tinyui_timer_handler",
+    "tinyui_widget_",
 )
 LOGICAL_ARTIFACT_MARKERS = (("examples", "sdl"), ("tests", "tinyui"))
 

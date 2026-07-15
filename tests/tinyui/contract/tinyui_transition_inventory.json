@@ -1,8 +1,8 @@
 {
   "baseline": {
     "backend_c_files": 0,
-    "app_header_exists": true,
+    "app_header_exists": false,
     "app_source_exists": true,
-    "tinyui_public_api_count": 561
+    "tinyui_public_api_count": 533
   }
 }

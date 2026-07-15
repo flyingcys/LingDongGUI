@@ -368,10 +368,24 @@ def make_test_baseline() -> dict[str, object]:
     }
 
 
+def _resolve_default_probe() -> Path | None:
+    candidates = [
+        ROOT / "build" / "v2.3-m3" / "tests" / "tinyui" / PROBE_TARGET,
+        ROOT / "build" / "v2.3-m2" / "tests" / "tinyui" / PROBE_TARGET,
+        ROOT / "build" / "v2.3-m0-full" / "tests" / "tinyui" / PROBE_TARGET,
+        ROOT / "build" / "tests" / "tinyui" / PROBE_TARGET,
+    ]
+    for candidate in candidates:
+        if candidate.is_file():
+            return candidate
+    return None
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Check TinyUI wrapper and runtime memory baselines.")
     parser.add_argument("--baseline", type=Path, default=DEFAULT_BASELINE)
-    parser.add_argument("--probe", type=Path)
+    parser.add_argument("--probe", type=Path, default=_resolve_default_probe())
+    parser.add_argument("--build-dir", type=Path)
     return parser.parse_args()
 
 
@@ -381,13 +395,22 @@ def main() -> None:
         payload = json.loads(args.baseline.read_text(encoding="utf-8"))
         baseline = validate_baseline(payload)
         probe = args.probe
+        if args.build_dir is not None:
+            relocated = args.build_dir / "tests" / "tinyui" / PROBE_TARGET
+            if relocated.is_file():
+                probe = relocated
         if probe is None:
-            raise ValueError("--probe is required")
+            raise ValueError("--probe is required (or provide an existing build/v2.3-m3 probe)")
         if not probe.is_file():
             raise ValueError(f"missing probe executable: {probe}")
         completed = subprocess.run([str(probe)], check=True, capture_output=True, text=True)
         metrics = parse_probe(completed.stdout)
         check_metrics(metrics, baseline)
+        # Descriptor budgets are enforced by the C probe (32-bit ABI only).
+        # Surface host diagnostics without expanding the schema-required metric set.
+        for line in completed.stdout.splitlines():
+            if line.startswith("TINYUI_DESC_") or line.startswith("TINYUI_ABI32_DESC_"):
+                print(line)
     except (OSError, ValueError, json.JSONDecodeError, subprocess.CalledProcessError, AssertionError) as exc:
         print(str(exc), file=sys.stderr)
         raise SystemExit(1)

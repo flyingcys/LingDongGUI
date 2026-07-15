@@ -19,6 +19,8 @@
 #ifndef TINYUI_DEMO_LAYOUT_FLEX_H
 #define TINYUI_DEMO_LAYOUT_FLEX_H
 
-void tinyui_demo_layout_flex(void);
+#include "tinyui.h"
+
+tinyui_result_t tinyui_demo_layout_flex_build(tinyui_obj_t *screen);
 
 #endif /* TINYUI_DEMO_LAYOUT_FLEX_H */

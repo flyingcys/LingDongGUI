@@ -19,6 +19,8 @@
 #ifndef TINYUI_DEMO_ICON_SLIDER_BASIC_H
 #define TINYUI_DEMO_ICON_SLIDER_BASIC_H
 
-void tinyui_demo_icon_slider_basic(void);
+#include "tinyui.h"
+
+tinyui_result_t tinyui_demo_icon_slider_basic_build(tinyui_obj_t *screen);
 
 #endif /* TINYUI_DEMO_ICON_SLIDER_BASIC_H */

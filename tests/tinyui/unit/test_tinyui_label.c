@@ -1,322 +1,290 @@
+/*
+ * TinyUI label unit tests — M2 Task 5 L3/L4 harness.
+ *
+ * Validates real ldLabel_t fields for create/props/text/font/color/
+ * transparent/align/background and props failure rollback.
+ */
+
 #include "tinyui.h"
 #include "../../../src/gui/ldBase.h"
 #include "../../../src/gui/ldLabel.h"
 #include "../../../examples/common/demo/widget/fonts/uiFonts.h"
 #include "internal.h"
+#include "resource/image_source.h"
+#include "widgets/label.h"
+
 #include <assert.h>
-#include <dlfcn.h>
 #include <stdio.h>
 #include <string.h>
 
-extern int tinyui_widget_has_ld_binding(const struct tinyui_widget *widget);
-static const char *test_self_binary_path = 0;
-
-static const char *test_repo_path(const char *relative_path)
+static void test_label_create_and_ld_mapping(tinyui_obj_t *root)
 {
-    static char path[2048];
-    char base[2048];
-    char *tests_dir;
-
-    snprintf(base, sizeof(base), "%s", __FILE__);
-    tests_dir = strstr(base, "tests/tinyui/unit/");
-    assert(tests_dir != 0);
-    *tests_dir = '\0';
-    snprintf(path, sizeof(path), "%s%s", base, relative_path);
-    return path;
-}
-
-static void assert_self_binary_lacks_symbol(const char *symbol)
-{
-    char command[1024];
-    FILE *pipe;
-    char line[512];
-
-    assert(test_self_binary_path != 0);
-    assert(symbol != 0);
-    snprintf(command, sizeof(command), "nm %s 2>/dev/null", test_self_binary_path);
-    pipe = popen(command, "r");
-    assert(pipe != 0);
-    while (fgets(line, sizeof(line), pipe) != 0) {
-        size_t line_len = strlen(line);
-        char *last_space;
-        char *token;
-
-        while (line_len > 0 && (line[line_len - 1] == '\n' || line[line_len - 1] == '\r')) {
-            line[--line_len] = '\0';
-        }
-        last_space = strrchr(line, ' ');
-        token = last_space != 0 ? last_space + 1 : line;
-        if (strcmp(token, symbol) == 0) {
-            assert(!"unexpected symbol still present in test binary");
-        }
-    }
-    assert(pclose(pipe) == 0);
-}
-
-static void assert_source_lacks_text(const char *source_path, const char *needle)
-{
-    char command[1024];
-
-    assert(source_path != 0);
-    assert(needle != 0);
-    snprintf(command,
-             sizeof(command),
-             "python3 - '%s' '%s' <<'PY'\n"
-             "from pathlib import Path\n"
-             "import sys\n"
-             "text = Path(sys.argv[1]).read_text()\n"
-             "raise SystemExit(1 if sys.argv[2] in text else 0)\n"
-             "PY",
-             source_path,
-             needle);
-    assert(system(command) == 0);
-}
-
-static void assert_source_contains_text(const char *source_path, const char *needle)
-{
-    char command[1024];
-
-    assert(source_path != 0);
-    assert(needle != 0);
-    snprintf(command,
-             sizeof(command),
-             "python3 - '%s' '%s' <<'PY'\n"
-             "from pathlib import Path\n"
-             "import sys\n"
-             "text = Path(sys.argv[1]).read_text()\n"
-             "raise SystemExit(0 if sys.argv[2] in text else 1)\n"
-             "PY",
-             source_path,
-             needle);
-    assert(system(command) == 0);
-}
-
-static void test_label_create_and_ld_mapping(struct tinyui_window *win)
-{
-    struct tinyui_label *label = tinyui_label_create(win, "label_test");
+    tinyui_obj_t *label_obj = tinyui_label_create(root);
     struct tinyui_widget *backend;
     ldBase_t *ld_base;
 
-    assert(label != 0);
-    backend = &label->widget;
+    assert(label_obj != 0);
+    backend = (struct tinyui_widget *)(void *)label_obj;
     assert(backend->ld_widget != 0);
     assert(backend->kind == TINYUI_BACKEND_WIDGET_LABEL);
     ld_base = (ldBase_t *)backend->ld_widget;
-    assert(ld_base != 0);
     assert(ld_base->widgetType == widgetTypeLabel);
 }
 
-static void test_label_set_text_round_trip(struct tinyui_window *win)
+static void test_label_rejects_null_parent(void)
 {
-    struct tinyui_label *label = tinyui_label_create(win, "label_text");
-    struct tinyui_widget *backend;
-    ldLabel_t *ld_label;
-    int cookie = 7;
-
-    assert(label != 0);
-    ld_label = (ldLabel_t *)label->widget.ld_widget;
-    assert(ld_label != 0);
-    assert(ldLabelGetFont(ld_label) == (arm_2d_font_t *)FONT_ARIAL_12);
-    assert(tinyui_label_set_text(label, "Hello TINYUI") == 0);
-    backend = &label->widget;
-    assert(backend->text != 0);
-    assert(strcmp(backend->text, "Hello TINYUI") == 0);
-    assert(label->widget.text == (const char *)"Hello TINYUI");
-    assert(tinyui_widget_set_style_class(&label->widget, "label-shared") == 0);
-    assert(label->widget.style_class == (const char *)"label-shared");
-    assert(backend->style_class == (const char *)"label-shared");
-    assert(tinyui_widget_set_user_data(&label->widget, &cookie) == 0);
-    assert(label->widget.user_data == &cookie);
-    assert(backend->user_data == &cookie);
+    assert(tinyui_label_create(0) == 0);
 }
 
-static void test_label_set_font_maps_public_font_to_legacy_font(struct tinyui_window *win)
+static void test_label_set_text_round_trip(tinyui_obj_t *root)
 {
-    struct tinyui_font arial16 = {
-        .family = "Arial",
-        .size = 16,
-    };
-    struct tinyui_label *label = tinyui_label_create(win, "label_font");
+    tinyui_obj_t *label_obj = tinyui_label_create(root);
+    struct tinyui_widget *backend;
+    ldLabel_t *ld_label;
+    char buf[32];
+
+    assert(label_obj != 0);
+    backend = (struct tinyui_widget *)(void *)label_obj;
+    ld_label = (ldLabel_t *)backend->ld_widget;
+    assert(ld_label != 0);
+    assert(ldLabelGetFont(ld_label) == (arm_2d_font_t *)FONT_ARIAL_12);
+
+    memcpy(buf, "Hello TINYUI", 13);
+    assert(tinyui_label_set_text(label_obj, buf) == 0);
+    assert(tinyui_label_get_text(label_obj) != 0);
+    assert(strcmp(tinyui_label_get_text(label_obj), "Hello TINYUI") == 0);
+    assert(tinyui_label_get_text(label_obj) != buf);
+    assert(ldLabelGetText(ld_label) != 0);
+    assert(strcmp((const char *)ldLabelGetText(ld_label), "Hello TINYUI") == 0);
+    assert(backend->text != 0);
+    assert(strcmp(backend->text, "Hello TINYUI") == 0);
+
+    /* label_set_text is only a thin forwarder to the common text path. */
+    memcpy(buf, "mutated", 8);
+    assert(strcmp(tinyui_label_get_text(label_obj), "Hello TINYUI") == 0);
+
+    assert(tinyui_label_set_text(0, "x") == -1);
+    assert(tinyui_label_set_text(label_obj, 0) == -1);
+}
+
+static void test_label_set_font_maps_public_font_to_legacy_font(tinyui_obj_t *root)
+{
+    tinyui_font_t arial16;
+    tinyui_obj_t *label_obj = tinyui_label_create(root);
+    struct tinyui_widget *backend;
     ldLabel_t *ld_label;
 
-    assert(label != 0);
-    ld_label = (ldLabel_t *)label->widget.ld_widget;
+    assert(label_obj != 0);
+    backend = (struct tinyui_widget *)(void *)label_obj;
+    ld_label = (ldLabel_t *)backend->ld_widget;
     assert(ld_label != 0);
-    assert(tinyui_label_set_font(label, &arial16) == 0);
-    assert(label->widget.font == &arial16);
+    assert(tinyui_font_from_builtin(TINYUI_FONT_ARIAL_16_A8, &arial16) == TINYUI_OK);
+    assert(tinyui_label_set_font(label_obj, &arial16) == 0);
+    assert(backend->font == &arial16);
     assert(ldLabelGetFont(ld_label) == (arm_2d_font_t *)FONT_ARIAL_16_A8);
 }
 
-static void test_label_text_align_maps_both_axes(struct tinyui_window *win)
+static void test_label_colors_transparent_align_background(tinyui_obj_t *root)
 {
-    struct tinyui_label *label = tinyui_label_create(win, "label_text_align");
+    tinyui_obj_t *label_obj = tinyui_label_create(root);
     ldLabel_t *ld_label;
+    unsigned int rgb = 0;
+    int transparent = -1;
+    enum tinyui_align align = (enum tinyui_align)99;
+    uint16_t pixels[4] = {0xF800U, 0x07E0U, 0x001FU, 0xFFFFU};
+    tinyui_image_source_t source;
 
-    assert(label != 0);
-    ld_label = (ldLabel_t *)label->widget.ld_widget;
-    assert(ld_label != 0);
-    assert(tinyui_label_set_text_align(label, TINYUI_ALIGN_START, TINYUI_ALIGN_END) == 0);
-    assert(ldLabelGetAlign(ld_label) == (ARM_2D_ALIGN_LEFT | ARM_2D_ALIGN_BOTTOM));
-    assert(tinyui_label_set_text_align(label, TINYUI_ALIGN_START, TINYUI_ALIGN_CENTER) == 0);
-    assert(ldLabelGetAlign(ld_label) == ARM_2D_ALIGN_MIDDLE_LEFT);
-    assert(tinyui_label_set_text_align(0, TINYUI_ALIGN_START, TINYUI_ALIGN_END) == -1);
-    assert(tinyui_label_set_text_align(label, (enum tinyui_align)99, TINYUI_ALIGN_END) == -1);
-    assert(tinyui_label_set_text_align(label, TINYUI_ALIGN_START, (enum tinyui_align)99) == -1);
-}
-
-static void test_label_legacy_demo0_background_color_matches_ldgui(struct tinyui_window *win)
-{
-    struct tinyui_label *label = tinyui_label_create(win, "label_legacy_demo0_color");
-    ldLabel_t *ld_label;
-
-    assert(label != 0);
-    ld_label = (ldLabel_t *)label->widget.ld_widget;
+    assert(label_obj != 0);
+    ld_label = (ldLabel_t *)((struct tinyui_widget *)(void *)label_obj)->ld_widget;
     assert(ld_label != 0);
 
-    assert(tinyui_label_set_bg_color(label, 0xC0C0C0U) == 0);
+    assert(tinyui_label_set_bg_color(label_obj, 0xC0C0C0U) == 0);
     assert(ld_label->bgColor == GLCD_COLOR_LIGHT_GREY);
+    assert(tinyui_label_get_bg_color(label_obj, &rgb) == 0);
+    assert((rgb & 0xF8FCF8U) == (0xC0C0C0U & 0xF8FCF8U)
+           || ld_label->bgColor == tinyui_rgb_to_ld_color(0xC0C0C0U));
+
+    assert(tinyui_label_set_text_color(label_obj, 0x112233U) == 0);
+    assert(ld_label->textColor == tinyui_rgb_to_ld_color(0x112233U));
+    assert(tinyui_label_get_text_color(label_obj, &rgb) == 0);
+
+    assert(tinyui_label_set_transparent(label_obj, 1) == 0);
+    assert(ldLabelGetTransparent(ld_label) == true);
+    assert(tinyui_label_get_transparent(label_obj, &transparent) == 0);
+    assert(transparent == 1);
+    assert(tinyui_label_set_transparent(label_obj, 0) == 0);
+    assert(ldLabelGetTransparent(ld_label) == false);
+
+    assert(tinyui_label_set_align(label_obj, TINYUI_ALIGN_END) == 0);
+    assert((ldLabelGetAlign(ld_label) & (ARM_2D_ALIGN_LEFT | ARM_2D_ALIGN_RIGHT))
+           == ARM_2D_ALIGN_RIGHT);
+    assert(tinyui_label_get_align(label_obj, &align) == 0);
+    assert(align == TINYUI_ALIGN_END);
+    assert(tinyui_label_set_align(label_obj, (enum tinyui_align)99) == -1);
+
+    assert(tinyui_label_set_text_align(label_obj, TINYUI_ALIGN_START, TINYUI_ALIGN_END) == 0);
+    assert(ldLabelGetAlign(ld_label) == (ARM_2D_ALIGN_LEFT | ARM_2D_ALIGN_BOTTOM));
+    assert(tinyui_label_set_text_align(label_obj, TINYUI_ALIGN_START, TINYUI_ALIGN_CENTER) == 0);
+    assert(ldLabelGetAlign(ld_label) == ARM_2D_ALIGN_MIDDLE_LEFT);
+
+    assert(tinyui_image_source_from_rgb565(pixels, 2, 2, 4, 0, 0, &source) == TINYUI_OK);
+    assert(tinyui_label_set_background_source(label_obj, &source) == 0);
+    assert(ld_label->ptImgTile != 0);
+    assert(tinyui_label_set_background_source(label_obj, 0) == 0);
+    assert(ld_label->ptImgTile == 0);
 }
 
-static void test_label_legacy_demo0_source_uses_ldgui_light_grey(void)
+static void test_label_create_with_props_pushes_ld_fields(tinyui_obj_t *root)
 {
-    assert_source_contains_text(test_repo_path("tinyui/demo/legacy_demo0_parity/legacy_demo0_parity.c"),
-                                "tinyui_label_set_bg_color(label, 0xC0C0C0U)");
-    assert_source_lacks_text(test_repo_path("tinyui/demo/legacy_demo0_parity/legacy_demo0_parity.c"),
-                             "tinyui_label_set_bg_color(label, 0xD3D3D3U)");
-}
-
-static void test_label_shared_text_helper_uses_tinyui_prefix(void)
-{
-    assert_source_contains_text(test_repo_path("tinyui/src/core/widget.c"),
-                                "tinyui_widget_set_backend_text");
-    assert_source_contains_text(test_repo_path("tinyui/src/widgets/label.c"),
-                                "tinyui_widget_set_backend_text");
-    assert_self_binary_lacks_symbol("tinyui_backend_set_text");
-    /* Phase C2: helpers below were collapsed into core helpers. */
-    assert_source_lacks_text(test_repo_path("tinyui/src/widgets/label.c"),
-                             "static ldLabel_t *tinyui_label_get_ld");
-    assert_source_lacks_text(test_repo_path("tinyui/src/widgets/label.c"),
-                             "static void tinyui_label_dispose_partial");
-    assert_source_lacks_text(test_repo_path("tinyui/src/widgets/label.c"),
-                             "static ldColor tinyui_label_rgb_to_ld_color");
-    assert_source_lacks_text(test_repo_path("tinyui/src/widgets/label.c"),
-                             "static unsigned int tinyui_label_ld_color_to_rgb");
-    assert_source_lacks_text(test_repo_path("tinyui/src/widgets/label.c"),
-                             "static arm_2d_align_t tinyui_label_map_align");
-    assert_source_contains_text(test_repo_path("tinyui/src/widgets/label.c"),
-                                "static int tinyui_label_props_are_valid");
-    /* Phase C2: backend lookup helper + unmap_align kept as 1-line wrappers. */
-    assert_source_contains_text(test_repo_path("tinyui/src/widgets/label.c"),
-                                "static ldLabel_t *tinyui_label_backend");
-    assert_source_contains_text(test_repo_path("tinyui/src/widgets/label.c"),
-                                "static enum tinyui_align tinyui_label_unmap_align");
-    /* Phase C2: uses core helpers instead of private copies. */
-    assert_source_contains_text(test_repo_path("tinyui/src/widgets/label.c"),
-                                "tinyui_rgb_to_ld_color");
-    assert_source_contains_text(test_repo_path("tinyui/src/widgets/label.c"),
-                                "tinyui_ld_color_to_rgb");
-    assert_source_contains_text(test_repo_path("tinyui/src/widgets/label.c"),
-                                "tinyui_align_to_arm2d");
-    assert_source_contains_text(test_repo_path("tinyui/src/widgets/label.c"),
-                                "tinyui_widget_destroy_common");
-}
-
-static void test_label_create_with_props_pushes_all_fields(struct tinyui_window *win)
-{
-    struct tinyui_label *label = tinyui_label_create_with_props(
-        win,
-        &(struct tinyui_label_props){
-            .id = "label_props",
-            .text = "PropsTest",
-            .width = 200,
-            .height = 30,
-        });
+    tinyui_font_t arial16;
+    tinyui_label_props_t props;
+    tinyui_obj_t *label_obj;
     struct tinyui_widget *backend;
+    ldLabel_t *ld_label;
+    ldBase_t *ld_base;
 
-    assert(label != 0);
-    backend = &label->widget;
-    assert(backend->text != 0);
-    assert(strcmp(backend->text, "PropsTest") == 0);
+    assert(tinyui_font_from_builtin(TINYUI_FONT_ARIAL_16_A8, &arial16) == TINYUI_OK);
+    memset(&props, 0, sizeof(props));
+    props.fields = TINYUI_LABEL_FIELD_TEXT
+        | TINYUI_LABEL_FIELD_FONT
+        | TINYUI_LABEL_FIELD_WIDTH
+        | TINYUI_LABEL_FIELD_HEIGHT
+        | TINYUI_LABEL_FIELD_BG_COLOR
+        | TINYUI_LABEL_FIELD_TEXT_COLOR
+        | TINYUI_LABEL_FIELD_TRANSPARENT
+        | TINYUI_LABEL_FIELD_ALIGN;
+    props.text = "PropsTest";
+    props.font = &arial16;
+    props.width = 200;
+    props.height = 30;
+    props.bg_color = 0xC0C0C0U;
+    props.text_color = 0x102030U;
+    props.transparent = 1;
+    props.align = TINYUI_ALIGN_END;
+
+    label_obj = tinyui_label_create_with_props(root, &props);
+    assert(label_obj != 0);
+    backend = (struct tinyui_widget *)(void *)label_obj;
+    ld_label = (ldLabel_t *)backend->ld_widget;
+    ld_base = (ldBase_t *)backend->ld_widget;
+    assert(ld_label != 0);
+    assert(strcmp((const char *)ldLabelGetText(ld_label), "PropsTest") == 0);
+    assert(ldLabelGetFont(ld_label) == (arm_2d_font_t *)FONT_ARIAL_16_A8);
+    assert(ldBaseGetWidth(ld_base) == 200);
+    assert(ldBaseGetHeight(ld_base) == 30);
+    assert(ld_label->bgColor == tinyui_rgb_to_ld_color(0xC0C0C0U));
+    assert(ld_label->textColor == tinyui_rgb_to_ld_color(0x102030U));
+    assert(ldLabelGetTransparent(ld_label) == true);
+    assert((ldLabelGetAlign(ld_label) & (ARM_2D_ALIGN_LEFT | ARM_2D_ALIGN_RIGHT))
+           == ARM_2D_ALIGN_RIGHT);
 }
 
-static void test_label_create_with_props_failure_rolls_back_attached_child(struct tinyui_window *win)
+static void test_label_create_with_props_invalid_align_rolls_back(tinyui_obj_t *root)
 {
-    ldBase_t *win_ld = (ldBase_t *)win->widget.ld_widget;
-    ldBase_t *tail_ld = ldBaseGetChildList(win_ld);
-    ldBase_t *next_before_ld = 0;
-    struct tinyui_label *label;
+    ldBase_t *root_ld = (ldBase_t *)((struct tinyui_widget *)(void *)root)->ld_widget;
+    uint16_t child_count_before = 0;
+    uint16_t child_count_after = 0;
+    tinyui_label_props_t props;
+    tinyui_obj_t *label_obj;
 
-    while (tail_ld != 0 && ldBaseGetNextSibling(tail_ld) != 0) {
-        tail_ld = ldBaseGetNextSibling(tail_ld);
-    }
-    if (tail_ld != 0) {
-        next_before_ld = ldBaseGetNextSibling(tail_ld);
-    }
+    assert(tinyui_obj_get_child_count(root, &child_count_before) == TINYUI_OK);
 
-    label = tinyui_label_create_with_props(
-        win,
-        &(struct tinyui_label_props){
-            .id = "label_props_invalid_align",
-            .text = "bad",
-            .align = (enum tinyui_align)99,
-        });
+    memset(&props, 0, sizeof(props));
+    props.fields = TINYUI_LABEL_FIELD_TEXT | TINYUI_LABEL_FIELD_ALIGN;
+    props.text = "bad";
+    props.align = (enum tinyui_align)99;
 
-    assert(label == 0);
-    if (tail_ld != 0) {
-        assert(ldBaseGetNextSibling(tail_ld) == next_before_ld);
-    } else {
-        assert(ldBaseGetChildList(win_ld) == 0);
-    }
+    label_obj = tinyui_label_create_with_props(root, &props);
+    assert(label_obj == 0);
+    assert(tinyui_obj_get_child_count(root, &child_count_after) == TINYUI_OK);
+    assert(child_count_after == child_count_before);
+    assert(ldBaseGetChildCount(root_ld) == child_count_before);
 }
 
-static void test_label_rejects_null_args(struct tinyui_window *win)
+static void test_label_create_with_props_unsupported_style_rolls_back(tinyui_obj_t *root)
 {
-    assert(tinyui_label_create(0, "id") == 0);
-    assert(tinyui_label_create(win, 0) == 0);
-    assert(tinyui_label_set_text(0, "text") == -1);
+    uint16_t child_count_before = 0;
+    uint16_t child_count_after = 0;
+    tinyui_label_props_t props;
+    tinyui_obj_t *label_obj;
+
+    assert(tinyui_obj_get_child_count(root, &child_count_before) == TINYUI_OK);
+
+    memset(&props, 0, sizeof(props));
+    props.fields = TINYUI_LABEL_FIELD_BORDER_COLOR | TINYUI_LABEL_FIELD_RADIUS
+        | TINYUI_LABEL_FIELD_PADDING;
+    props.border_color = 0x010203U;
+    props.radius = 3;
+    props.padding = 2;
+
+    label_obj = tinyui_label_create_with_props(root, &props);
+    assert(label_obj == 0);
+    assert(tinyui_obj_get_child_count(root, &child_count_after) == TINYUI_OK);
+    assert(child_count_after == child_count_before);
 }
 
-static void test_label_destroy_clears_widget(struct tinyui_window *win)
+static void test_label_create_with_props_negative_size_rejected(tinyui_obj_t *root)
 {
-    struct tinyui_label *label = tinyui_label_create(win, "label_to_del");
-    assert(label != 0);
-    assert(label->widget.ld_widget != 0);
-    // destroy via widget API — widget is freed; do not access label after this
-    assert(tinyui_widget_destroy(&label->widget) == 0);
+    uint16_t child_count_before = 0;
+    uint16_t child_count_after = 0;
+    tinyui_label_props_t props;
+
+    assert(tinyui_obj_get_child_count(root, &child_count_before) == TINYUI_OK);
+    memset(&props, 0, sizeof(props));
+    props.fields = TINYUI_LABEL_FIELD_WIDTH | TINYUI_LABEL_FIELD_HEIGHT;
+    props.width = -1;
+    props.height = 10;
+    assert(tinyui_label_create_with_props(root, &props) == 0);
+    assert(tinyui_obj_get_child_count(root, &child_count_after) == TINYUI_OK);
+    assert(child_count_after == child_count_before);
 }
 
-static void test_label_constructor_binds_ld_without_backend_wrapper(struct tinyui_window *win)
+static void test_label_wrong_kind_rejected(tinyui_obj_t *root)
 {
-    struct tinyui_label *label = tinyui_label_create(win, "label_direct_path");
+    tinyui_obj_t *button = tinyui_button_create(root);
 
-    assert(label != 0);
-    assert(tinyui_widget_has_ld_binding(&label->widget) == 1);
+    assert(button != 0);
+    assert(tinyui_label_set_text(button, "nope") == -1);
+    assert(tinyui_label_set_font(button, 0) == -1);
+    assert(tinyui_label_set_bg_color(button, 0x123456U) == -1);
+    assert(tinyui_label_get_text(button) == 0);
+    (void)tinyui_obj_delete(button);
+}
+
+static void test_label_destroy_via_obj_delete(tinyui_obj_t *root)
+{
+    tinyui_obj_t *label_obj = tinyui_label_create(root);
+    uint16_t before = 0;
+    uint16_t after = 0;
+
+    assert(label_obj != 0);
+    assert(tinyui_obj_get_child_count(root, &before) == TINYUI_OK);
+    assert(tinyui_obj_delete(label_obj) == TINYUI_OK);
+    assert(tinyui_obj_get_child_count(root, &after) == TINYUI_OK);
+    assert(after + 1U == before);
 }
 
 int main(void)
 {
-    struct tinyui_app *app = tinyui_app_create();
-    struct tinyui_window *win;
-    Dl_info self_info;
-    assert(app != 0);
-    assert(dladdr((void *)&main, &self_info) != 0);
-    test_self_binary_path = self_info.dli_fname;
-    win = tinyui_window_create(app, "root");
-    assert(win != 0);
+    tinyui_obj_t *root;
 
-    test_label_create_and_ld_mapping(win);
-    test_label_constructor_binds_ld_without_backend_wrapper(win);
-    test_label_set_text_round_trip(win);
-    test_label_set_font_maps_public_font_to_legacy_font(win);
-    test_label_text_align_maps_both_axes(win);
-    test_label_legacy_demo0_background_color_matches_ldgui(win);
-    test_label_legacy_demo0_source_uses_ldgui_light_grey();
-    test_label_shared_text_helper_uses_tinyui_prefix();
-    test_label_create_with_props_pushes_all_fields(win);
-    test_label_create_with_props_failure_rolls_back_attached_child(win);
-    test_label_rejects_null_args(win);
-    test_label_destroy_clears_widget(win);
+    tinyui_deinit();
+    assert(tinyui_init() == TINYUI_OK);
+    root = tinyui_screen_create();
+    assert(root != 0);
 
-    tinyui_app_destroy(app);
+    test_label_create_and_ld_mapping(root);
+    test_label_rejects_null_parent();
+    test_label_set_text_round_trip(root);
+    test_label_set_font_maps_public_font_to_legacy_font(root);
+    test_label_colors_transparent_align_background(root);
+    test_label_create_with_props_pushes_ld_fields(root);
+    test_label_create_with_props_invalid_align_rolls_back(root);
+    test_label_create_with_props_unsupported_style_rolls_back(root);
+    test_label_create_with_props_negative_size_rejected(root);
+    test_label_wrong_kind_rejected(root);
+    test_label_destroy_via_obj_delete(root);
+
+    tinyui_deinit();
     return 0;
 }

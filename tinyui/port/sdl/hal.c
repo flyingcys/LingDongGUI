@@ -338,7 +338,7 @@ static void tinyui_sdl_present_cb(void *user_data)
     SDL_RenderPresent(state->renderer);
 
     /* 测试观测(markers/capture/计帧);生产构建下宏展开为空,不评估实参。 */
-    TINYUI_SDL_OBSERVE_ON_PRESENT(tinyui_app_current(), state);
+    TINYUI_SDL_OBSERVE_ON_PRESENT(tinyui_runtime_internal_app_current(), state);
 }
 
 /* read_cb:泵 SDL 事件 → push 指针;SDL_QUIT 或到达 auto-quit 时限时请求退出。 */
@@ -362,7 +362,7 @@ static int tinyui_sdl_read_cb(struct tinyui_app *app, void *user_data)
 
 int tinyui_sdl_window_create(int width, int height)
 {
-    struct tinyui_app *app = tinyui_app_current();
+    struct tinyui_app *app = tinyui_runtime_internal_app_current();
     struct tinyui_display_config cfg = {0};
 
     if (app == NULL || width <= 0 || height <= 0) {
@@ -400,7 +400,7 @@ int tinyui_sdl_window_create(int width, int height)
 
 int tinyui_sdl_mouse_create(void)
 {
-    struct tinyui_app *app = tinyui_app_current();
+    struct tinyui_app *app = tinyui_runtime_internal_app_current();
 
     if (app == NULL) {
         return -1;

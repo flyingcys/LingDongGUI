@@ -365,13 +365,30 @@ void ldBaseNodeTreePrint(arm_2d_control_node_t *ptNodeRoot, int depth)
 
 void *ldBaseGetWidget(arm_2d_control_node_t *ptNodeRoot,uint16_t nameId)
 {
-    arm_ctrl_enum(ptNodeRoot, ptItem, PREORDER_TRAVERSAL)
+    arm_2d_control_node_t *ptChild;
+
+    /* Avoid arm_ctrl_enum: its for-init advances a NULL sentinel pointer
+     * (pointer++ on NULL), which Clang UBSan reports as undefined behavior.
+     * Preorder walk is equivalent for id lookup and is null-safe. */
+    if (ptNodeRoot == NULL)
     {
-        if (((ldBase_t *)ptItem)->nameId == nameId)
+        return NULL;
+    }
+
+    if (((ldBase_t *)ptNodeRoot)->nameId == nameId)
+    {
+        return ptNodeRoot;
+    }
+
+    for (ptChild = ptNodeRoot->ptChildList; ptChild != NULL; ptChild = ptChild->ptNext)
+    {
+        void *ptFound = ldBaseGetWidget(ptChild, nameId);
+        if (ptFound != NULL)
         {
-            return ptItem;
+            return ptFound;
         }
     }
+
     return NULL;
 }
 

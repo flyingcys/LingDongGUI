@@ -19,101 +19,74 @@
 #include "basic_widgets/basic_widgets.h"
 #include "tinyui.h"
 
-
-
-
-
-
-
-
-
-#include <stdio.h>
-
-static void on_wifi_changed(struct tinyui_widget *widget, int value, void *user_data)
+static void on_wifi_changed(const tinyui_event_t *event)
 {
-    (void)widget;
-    (void)user_data;
-    (void)value;
+    (void)event;
 }
 
-static void on_button_clicked(struct tinyui_widget *widget, void *user_data)
+static void on_button_clicked(const tinyui_event_t *event)
 {
-    (void)widget;
-    (void)user_data;
+    (void)event;
 }
 
-static int make_ui(struct tinyui_window *win)
+tinyui_result_t tinyui_demo_basic_widgets_build(tinyui_obj_t *screen)
 {
-    struct tinyui_switch *sw = tinyui_switch_create(win, "wifi");
-    struct tinyui_checkbox *cb = tinyui_checkbox_create(win, "agree");
-    struct tinyui_slider *slider = tinyui_slider_create(win, "volume");
-    struct tinyui_button *button = tinyui_button_create(win, "submit");
-    struct tinyui_text *text = tinyui_text_create(win, "title");
-    struct tinyui_image *image = tinyui_image_create(win, "logo");
-    struct tinyui_image_source *image_source = 0;
-    const int cols[] = {220, 0};
-    const int rows[] = {24, 30, 30, 36, 28, 64, 0};
+    tinyui_obj_t *sw;
+    tinyui_obj_t *cb;
+    tinyui_obj_t *slider;
+    tinyui_obj_t *button;
+    tinyui_obj_t *text;
+    tinyui_obj_t *image;
+    tinyui_result_t result;
 
-    if (sw == 0 || cb == 0 || slider == 0 || button == 0 || text == 0 || image == 0) {
-        fprintf(stdout,
-                "TINYUI_BASIC_WIDGETS_DEBUG make_ui_create_failed sw=%p cb=%p slider=%p button=%p text=%p image=%p\n",
-                (void *)sw,
-                (void *)cb,
-                (void *)slider,
-                (void *)button,
-                (void *)text,
-                (void *)image);
-        fflush(stdout);
-        return -1;
+    if (screen == NULL) {
+        return TINYUI_ERROR_INVALID_ARG;
     }
 
-    tinyui_grid_set_columns(win, cols, 2);
-    tinyui_grid_set_rows(win, rows, 7);
-    tinyui_grid_set_gap(win, 12, 12);
-    tinyui_grid_set_align(win, TINYUI_ALIGN_START, TINYUI_ALIGN_START);
-    tinyui_window_set_padding(win, 16, 24, 16, 16);
-
-    tinyui_widget_set_size((struct tinyui_widget *)sw, 48, 24);
-    tinyui_widget_set_size((struct tinyui_widget *)cb, 220, 30);
-    tinyui_widget_set_size((struct tinyui_widget *)slider, 220, 30);
-    tinyui_widget_set_size((struct tinyui_widget *)button, 160, 36);
-    tinyui_widget_set_size((struct tinyui_widget *)text, 220, 28);
-    tinyui_widget_set_size((struct tinyui_widget *)image, 220, 60);
-
-    tinyui_widget_set_grid_cell((struct tinyui_widget *)sw, 0, 0, 1, 1, TINYUI_ALIGN_START, TINYUI_ALIGN_START);
-    tinyui_widget_set_grid_cell((struct tinyui_widget *)cb, 0, 1, 1, 1, TINYUI_ALIGN_START, TINYUI_ALIGN_START);
-    tinyui_widget_set_grid_cell((struct tinyui_widget *)slider, 0, 2, 1, 1, TINYUI_ALIGN_START, TINYUI_ALIGN_START);
-    tinyui_widget_set_grid_cell((struct tinyui_widget *)button, 0, 3, 1, 1, TINYUI_ALIGN_START, TINYUI_ALIGN_START);
-    tinyui_widget_set_grid_cell((struct tinyui_widget *)text, 0, 4, 1, 1, TINYUI_ALIGN_START, TINYUI_ALIGN_START);
-    tinyui_widget_set_grid_cell((struct tinyui_widget *)image, 0, 5, 1, 1, TINYUI_ALIGN_START, TINYUI_ALIGN_START);
-
-    tinyui_switch_set_checked(sw, 1);
-    tinyui_checkbox_set_checked(cb, 1);
-    tinyui_slider_set_value(slider, 28);
-    tinyui_switch_set_on_toggled(sw, on_wifi_changed, 0);
-    tinyui_checkbox_set_on_toggled(cb, on_wifi_changed, 0);
-    tinyui_slider_set_on_value_changed(slider, on_wifi_changed, 0);
-    tinyui_checkbox_set_text(cb, "Wi-Fi Enabled");
-    tinyui_button_set_text(button, "Submit");
-    tinyui_button_set_on_clicked(button, on_button_clicked, 0);
-    tinyui_text_set_text(text, "Basic Widgets");
-    tinyui_image_set_source(image, image_source);
-
-    return 0;
-}
-
-void tinyui_demo_basic_widgets(void)
-{
-    tinyui_obj_t *screen = tinyui_screen_create();
-    struct tinyui_window *win = (struct tinyui_window *)screen;
-
-    if (win == 0) {
-        return;
+    /* 原 1 列 grid 纵向堆叠意图保留为 canonical flex column。 */
+    result = tinyui_flex_set_flow(screen, TINYUI_FLEX_FLOW_COLUMN);
+    if (result != TINYUI_OK) {
+        return result;
+    }
+    result = tinyui_flex_set_align(screen,
+                                   TINYUI_ALIGN_START,
+                                   TINYUI_ALIGN_START,
+                                   TINYUI_ALIGN_START);
+    if (result != TINYUI_OK) {
+        return result;
+    }
+    result = tinyui_flex_set_gap(screen, 12, 12);
+    if (result != TINYUI_OK) {
+        return result;
+    }
+    if (tinyui_window_set_padding(screen, 16, 24, 16, 16) != 0) {
+        return TINYUI_ERROR_BACKEND;
     }
 
-    if (make_ui(win) != 0) {
-        return;
+    sw = tinyui_switch_create(screen);
+    cb = tinyui_checkbox_create(screen);
+    slider = tinyui_slider_create(screen);
+    button = tinyui_button_create(screen);
+    text = tinyui_text_create(screen);
+    image = tinyui_image_create(screen);
+    if (sw == NULL || cb == NULL || slider == NULL || button == NULL
+        || text == NULL || image == NULL) {
+        return TINYUI_ERROR_NO_MEMORY;
     }
 
-    tinyui_screen_load(screen);
+    if (tinyui_switch_set_checked(sw, 1) != 0
+        || tinyui_switch_set_on_toggled(sw, on_wifi_changed, NULL) != 0
+        || tinyui_checkbox_set_checked(cb, 1) != 0
+        || tinyui_checkbox_set_text(cb, "Wi-Fi Enabled") != 0
+        || tinyui_checkbox_set_on_toggled(cb, on_wifi_changed, NULL) != 0
+        || tinyui_slider_set_value(slider, 28) != 0
+        || tinyui_slider_set_on_value_changed(slider, on_wifi_changed, NULL) != 0
+        || tinyui_button_set_text(button, "Submit") != 0
+        || tinyui_button_set_on_clicked(button, on_button_clicked, NULL) != 0
+        || tinyui_text_set_text(text, "Basic Widgets") != 0
+        || tinyui_image_set_source(image, NULL) != 0) {
+        return TINYUI_ERROR_BACKEND;
+    }
+
+    return TINYUI_OK;
 }

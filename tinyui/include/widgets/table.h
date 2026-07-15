@@ -19,6 +19,13 @@
 #ifndef TINYUI_TABLE_H
 #define TINYUI_TABLE_H
 
+#include "tinyui_config.h"
+#if !TINYUI_ENABLE_TABLE
+#  ifndef TINYUI_INTERNAL_FEATURE_HEADER
+#  error "TINYUI_ENABLE_TABLE is disabled"
+#  endif
+#endif
+
 
 #include "layout/layout.h"
 

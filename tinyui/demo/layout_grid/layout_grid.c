@@ -19,44 +19,69 @@
 #include "layout_grid/layout_grid.h"
 #include "tinyui.h"
 
-static const int cols[] = {80, -2, 0};
-static const int rows[] = {32, -2, 0};
-
-static void make_ui(struct tinyui_window *win)
+tinyui_result_t tinyui_demo_layout_grid_build(tinyui_obj_t *screen)
 {
-    struct tinyui_label *title;
-    struct tinyui_button *left;
-    struct tinyui_button *right;
+    static const tinyui_grid_track_t cols[] = {
+        {TINYUI_GRID_UNIT_PX, 80},
+        {TINYUI_GRID_UNIT_FR, 1},
+    };
+    static const tinyui_grid_track_t rows[] = {
+        {TINYUI_GRID_UNIT_PX, 32},
+        {TINYUI_GRID_UNIT_FR, 1},
+    };
+    tinyui_obj_t *title;
+    tinyui_obj_t *left;
+    tinyui_obj_t *right;
+    tinyui_result_t result;
 
-    tinyui_grid_set_columns(win, cols, 3);
-    tinyui_grid_set_rows(win, rows, 3);
-    tinyui_grid_set_gap(win, 8, 8);
+    if (screen == NULL) {
+        return TINYUI_ERROR_INVALID_ARG;
+    }
 
-    title = tinyui_label_create(win, "title");
-    left = tinyui_button_create(win, "left");
-    right = tinyui_button_create(win, "right");
-    tinyui_label_set_text(title, "Grid");
-    tinyui_button_set_text(left, "A");
-    tinyui_button_set_text(right, "B");
-    tinyui_widget_set_grid_cell((struct tinyui_widget *)title,
-                                0, 0, 2, 1,
-                                TINYUI_ALIGN_START,
-                                TINYUI_ALIGN_CENTER);
-    tinyui_widget_set_grid_cell((struct tinyui_widget *)left,
-                                0, 1, 1, 1,
-                                TINYUI_ALIGN_STRETCH,
-                                TINYUI_ALIGN_STRETCH);
-    tinyui_widget_set_grid_cell((struct tinyui_widget *)right,
-                                1, 1, 1, 1,
-                                TINYUI_ALIGN_STRETCH,
-                                TINYUI_ALIGN_STRETCH);
-}
+    if (tinyui_window_set_layout_type(screen, TINYUI_WINDOW_LAYOUT_GRID) != 0) {
+        return TINYUI_ERROR_BACKEND;
+    }
 
-void tinyui_demo_layout_grid(void)
-{
-    tinyui_obj_t *screen = tinyui_screen_create();
-    struct tinyui_window *win = (struct tinyui_window *)screen;
-    if (win == 0) return;
-    make_ui(win);
-    tinyui_screen_load(screen);
+    result = tinyui_grid_set_columns(screen, cols, 2);
+    if (result != TINYUI_OK) {
+        return result;
+    }
+    result = tinyui_grid_set_rows(screen, rows, 2);
+    if (result != TINYUI_OK) {
+        return result;
+    }
+    result = tinyui_grid_set_gap(screen, 8, 8);
+    if (result != TINYUI_OK) {
+        return result;
+    }
+
+    title = tinyui_label_create(screen);
+    left = tinyui_button_create(screen);
+    right = tinyui_button_create(screen);
+    if (title == NULL || left == NULL || right == NULL) {
+        return TINYUI_ERROR_NO_MEMORY;
+    }
+
+    if (tinyui_label_set_text(title, "Grid") != 0
+        || tinyui_button_set_text(left, "A") != 0
+        || tinyui_button_set_text(right, "B") != 0) {
+        return TINYUI_ERROR_BACKEND;
+    }
+
+    if (tinyui_obj_set_grid_cell(title,
+                                 0, 0, 2, 1,
+                                 TINYUI_ALIGN_START,
+                                 TINYUI_ALIGN_CENTER) != TINYUI_OK
+        || tinyui_obj_set_grid_cell(left,
+                                    0, 1, 1, 1,
+                                    TINYUI_ALIGN_STRETCH,
+                                    TINYUI_ALIGN_STRETCH) != TINYUI_OK
+        || tinyui_obj_set_grid_cell(right,
+                                    1, 1, 1, 1,
+                                    TINYUI_ALIGN_STRETCH,
+                                    TINYUI_ALIGN_STRETCH) != TINYUI_OK) {
+        return TINYUI_ERROR_BACKEND;
+    }
+
+    return TINYUI_OK;
 }

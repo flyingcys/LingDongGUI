@@ -24,6 +24,10 @@
 
 #include <string.h>
 
+/* Soft capacity for custom button tables. Public API returns -1 beyond this. */
+enum {
+    TINYUI_KEYBOARD_LAYOUT_MAX = 64
+};
 
 static struct tinyui_keyboard *tinyui_keyboard_as_keyboard(tinyui_obj_t *obj)
 {
@@ -172,7 +176,8 @@ static struct tinyui_line_edit *tinyui_keyboard_get_target_line_edit_local(
         return 0;
     }
 
-    if (target->kind != TINYUI_BACKEND_WIDGET_TEXT || target->ld_widget == 0) {
+    /* line_edit owns TINYUI_BACKEND_WIDGET_LINE_EDIT (not TEXT). */
+    if (target->kind != TINYUI_BACKEND_WIDGET_LINE_EDIT) {
         return 0;
     }
 
@@ -473,13 +478,18 @@ int tinyui_keyboard_navigate(tinyui_obj_t *keyboard_obj, int direction)
         return -1;
     }
 
+    if (direction < (int)TINYUI_NAV_LEFT || direction > (int)TINYUI_NAV_BACK) {
+        return -1;
+    }
+
     ld_keyboard = (ldKeyboard_t *)((struct tinyui_widget *)(void *)keyboard)->ld_widget;
     if (ld_keyboard == 0) {
         return -1;
     }
 
     tinyui_keyboard_prepare_local(ld_keyboard, tinyui_keyboard_get_target_line_edit_local(&keyboard->widget), keyboard);
-    ldKeyboardNavigate(ld_keyboard, (ldNavDir_t)direction);
+    ldKeyboardNavigate(ld_keyboard,
+                       (ldNavDir_t)tinyui_native_nav_dir_to_ld((enum tinyui_native_nav_dir)direction));
     return 0;
 }
 
@@ -542,9 +552,9 @@ int tinyui_keyboard_button_update(tinyui_obj_t *keyboard_obj, unsigned int key_c
     ld_keyboard->isKeySelect = true;
     ldKeyboardBtnUpdate(ld_keyboard, (uint8_t)key_code);
     if (keyboard->event_cb != 0) {
-        keyboard->event_cb(keyboard,
+        keyboard->event_cb((tinyui_obj_t *)keyboard,
                            (unsigned int)key_code,
-                           TINYUI_NATIVE_SIGNAL_VALUE_CHANGED,
+                           TINYUI_SIGNAL_VALUE_CHANGED,
                            keyboard->event_user_data);
     }
     return 0;
@@ -582,7 +592,10 @@ int tinyui_keyboard_click(tinyui_obj_t *keyboard_obj)
 
     ldKeyboardClick(app_state->ld_scene, ld_keyboard, SIGNAL_PRESS);
     if (keyboard->event_cb != 0) {
-        keyboard->event_cb(keyboard, ld_keyboard->keyCode, TINYUI_NATIVE_SIGNAL_PRESS, keyboard->event_user_data);
+        keyboard->event_cb((tinyui_obj_t *)keyboard,
+                           ld_keyboard->keyCode,
+                           TINYUI_SIGNAL_PRESS,
+                           keyboard->event_user_data);
     }
     return 0;
 }
@@ -666,6 +679,11 @@ int tinyui_keyboard_set_buttons(tinyui_obj_t *keyboard_obj, const struct tinyui_
         tinyui_keyboard_free_layout(keyboard);
         keyboard->buttons = 0;
         return 0;
+    }
+
+    if (count > TINYUI_KEYBOARD_LAYOUT_MAX) {
+        tinyui_runtime_set_last_result(TINYUI_ERROR_CAPACITY);
+        return -1;
     }
 
     entries = ldCalloc((size_t)count, sizeof(*entries));

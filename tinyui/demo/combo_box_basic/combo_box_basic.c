@@ -19,57 +19,56 @@
 #include "combo_box_basic/combo_box_basic.h"
 #include "tinyui.h"
 
-static void make_ui(struct tinyui_window *win)
+#include <string.h>
+
+tinyui_result_t tinyui_demo_combo_box_basic_build(tinyui_obj_t *screen)
 {
-    struct tinyui_label *title;
-    struct tinyui_combo_box *combo_box;
-    static const int cols[] = {240, 0};
-    static const int rows[] = {28, 36, 0};
+    tinyui_obj_t *title;
+    tinyui_obj_t *combo_box;
+    tinyui_combo_box_props_t combo_props;
+    tinyui_result_t result;
 
-    tinyui_grid_set_columns(win, cols, 2);
-    tinyui_grid_set_rows(win, rows, 3);
-    tinyui_grid_set_gap(win, 12, 12);
-    tinyui_grid_set_align(win, TINYUI_ALIGN_START, TINYUI_ALIGN_START);
-    tinyui_window_set_padding(win, 24, 24, 24, 24);
-
-    title = tinyui_label_create(win, "title");
-    combo_box = tinyui_combo_box_create_with_props(
-        win,
-        &(struct tinyui_combo_box_props){
-            .id = "combo_box",
-            .width = 220,
-            .height = 32,
-        });
-
-    if (title != 0) {
-        tinyui_label_set_text(title, "Combo Box");
-        tinyui_widget_set_grid_cell((struct tinyui_widget *)title,
-                                    0, 0, 1, 1,
-                                    TINYUI_ALIGN_START,
-                                    TINYUI_ALIGN_CENTER);
+    if (screen == NULL) {
+        return TINYUI_ERROR_INVALID_ARG;
     }
 
-    if (combo_box != 0) {
-        tinyui_combo_box_add_item(combo_box, "wifi", "Wi-Fi");
-        tinyui_combo_box_add_item(combo_box, "bluetooth", "Bluetooth");
-        tinyui_combo_box_add_item(combo_box, "display", "Display");
-        tinyui_combo_box_set_selected_index(combo_box, 1);
-        tinyui_widget_set_grid_cell((struct tinyui_widget *)combo_box,
-                                    0, 1, 1, 1,
-                                    TINYUI_ALIGN_START,
-                                    TINYUI_ALIGN_CENTER);
+    result = tinyui_flex_set_flow(screen, TINYUI_FLEX_FLOW_COLUMN);
+    if (result != TINYUI_OK) {
+        return result;
     }
-}
-
-void tinyui_demo_combo_box_basic(void)
-{
-    tinyui_obj_t *screen = tinyui_screen_create();
-    struct tinyui_window *win = (struct tinyui_window *)screen;
-
-    if (win == 0) {
-        return;
+    result = tinyui_flex_set_align(screen,
+                                   TINYUI_ALIGN_START,
+                                   TINYUI_ALIGN_START,
+                                   TINYUI_ALIGN_START);
+    if (result != TINYUI_OK) {
+        return result;
+    }
+    result = tinyui_flex_set_gap(screen, 12, 12);
+    if (result != TINYUI_OK) {
+        return result;
+    }
+    if (tinyui_window_set_padding(screen, 24, 24, 24, 24) != 0) {
+        return TINYUI_ERROR_BACKEND;
     }
 
-    make_ui(win);
-    tinyui_screen_load(screen);
+    memset(&combo_props, 0, sizeof(combo_props));
+    combo_props.fields = TINYUI_COMBO_BOX_FIELD_WIDTH | TINYUI_COMBO_BOX_FIELD_HEIGHT;
+    combo_props.width = 220;
+    combo_props.height = 32;
+
+    title = tinyui_label_create(screen);
+    combo_box = tinyui_combo_box_create_with_props(screen, &combo_props);
+    if (title == NULL || combo_box == NULL) {
+        return TINYUI_ERROR_NO_MEMORY;
+    }
+
+    if (tinyui_label_set_text(title, "Combo Box") != 0
+        || tinyui_combo_box_add_item(combo_box, "wifi", "Wi-Fi") != 0
+        || tinyui_combo_box_add_item(combo_box, "bluetooth", "Bluetooth") != 0
+        || tinyui_combo_box_add_item(combo_box, "display", "Display") != 0
+        || tinyui_combo_box_set_selected_index(combo_box, 1) != 0) {
+        return TINYUI_ERROR_BACKEND;
+    }
+
+    return TINYUI_OK;
 }

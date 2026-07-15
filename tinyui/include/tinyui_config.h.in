@@ -1,0 +1,45 @@
+/*
+ * Generated TinyUI feature configuration.
+ * Do not edit generated output; modify the TinyUI CMake feature options instead.
+ */
+
+#ifndef TINYUI_CONFIG_H
+#define TINYUI_CONFIG_H
+
+/* Widgets */
+#cmakedefine01 TINYUI_ENABLE_WINDOW
+#cmakedefine01 TINYUI_ENABLE_BACKGROUND
+#cmakedefine01 TINYUI_ENABLE_LABEL
+#cmakedefine01 TINYUI_ENABLE_BUTTON
+#cmakedefine01 TINYUI_ENABLE_CHECKBOX
+#cmakedefine01 TINYUI_ENABLE_SWITCH
+#cmakedefine01 TINYUI_ENABLE_SLIDER
+#cmakedefine01 TINYUI_ENABLE_TEXT
+#cmakedefine01 TINYUI_ENABLE_IMAGE
+#cmakedefine01 TINYUI_ENABLE_LINE_EDIT
+#cmakedefine01 TINYUI_ENABLE_KEYBOARD
+#cmakedefine01 TINYUI_ENABLE_CANVAS
+#cmakedefine01 TINYUI_ENABLE_COMBO_BOX
+#cmakedefine01 TINYUI_ENABLE_SCROLL_SELECTOR
+#cmakedefine01 TINYUI_ENABLE_TABLE
+#cmakedefine01 TINYUI_ENABLE_GRAPH
+#cmakedefine01 TINYUI_ENABLE_CALENDAR
+#cmakedefine01 TINYUI_ENABLE_ARC
+#cmakedefine01 TINYUI_ENABLE_GAUGE
+#cmakedefine01 TINYUI_ENABLE_ICON_SLIDER
+#cmakedefine01 TINYUI_ENABLE_RADIAL_MENU
+#cmakedefine01 TINYUI_ENABLE_PROGRESS_BAR
+#cmakedefine01 TINYUI_ENABLE_PROGRESS_WHEEL
+#cmakedefine01 TINYUI_ENABLE_QRCODE
+#cmakedefine01 TINYUI_ENABLE_ANIMATION
+#cmakedefine01 TINYUI_ENABLE_DATE_TIME
+#cmakedefine01 TINYUI_ENABLE_CLOCK
+#cmakedefine01 TINYUI_ENABLE_LIST
+#cmakedefine01 TINYUI_ENABLE_MESSAGE_BOX
+
+/* Optional modules */
+#cmakedefine01 TINYUI_ENABLE_THEME
+#cmakedefine01 TINYUI_ENABLE_DIAGNOSTICS
+#cmakedefine01 TINYUI_ENABLE_NATIVE_INTEROP
+
+#endif /* TINYUI_CONFIG_H */

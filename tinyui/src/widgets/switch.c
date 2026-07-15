@@ -228,10 +228,13 @@ tinyui_obj_t *tinyui_switch_create_with_props(tinyui_obj_t *parent,
     }
     }
     if ((props->fields & TINYUI_SWITCH_FIELD_ON_TOGGLED) != 0) {
-    if (tinyui_switch_set_on_toggled((tinyui_obj_t *)sw, props->on_toggled, props->user_data) != 0) {
-        (void)tinyui_obj_delete((tinyui_obj_t *)sw);
-        return 0;
-    }
+        /* props still carry legacy tinyui_value_changed_cb; set_on_toggled is
+         * unified-pool only. Reject rather than fake-success. Prefer
+         * tinyui_obj_add_event_cb after create. */
+        if (props->on_toggled != 0) {
+            (void)tinyui_obj_delete((tinyui_obj_t *)sw);
+            return 0;
+        }
     }
     if ((props->fields & TINYUI_SWITCH_FIELD_OFF_SOURCE) != 0) {
     if (tinyui_switch_set_off_source((tinyui_obj_t *)sw, props->off_source) != 0) {
@@ -285,28 +288,30 @@ tinyui_obj_t *tinyui_switch_create_with_props(tinyui_obj_t *parent,
 int tinyui_switch_set_checked(tinyui_obj_t *sw_obj, int checked)
 {
     struct tinyui_switch *sw = tinyui_switch_as_switch(sw_obj);
-    if (sw == 0) { return -1; }
-
+    ldSwitch_t *ld_switch;
     int normalized_checked;
 
     if (sw == 0) {
         return -1;
     }
 
-    normalized_checked = checked != 0;
-    if (sw->checked == normalized_checked) {
-        return 0;
-    }
-
-    if (sw->widget.ld_widget == 0) {
+    ld_switch = (ldSwitch_t *)sw->widget.ld_widget;
+    if (ld_switch == 0 || sw->widget.kind != TINYUI_BACKEND_WIDGET_SWITCH) {
         return -1;
     }
 
+    normalized_checked = checked != 0;
+    if (ld_switch->isChecked == (normalized_checked != 0)
+        && sw->checked == normalized_checked
+        && sw->widget.value == normalized_checked) {
+        return 0;
+    }
+
+    /* Programmatic path: sync LD + cache only. Do not emit user events. */
     sw->checked = normalized_checked;
-    return tinyui_runtime_internal_widget_update_value(&sw->widget,
-                                      sw->checked,
-                                      sw->cb,
-                                      sw->user_data);
+    sw->widget.value = normalized_checked;
+    tinyui_runtime_internal_widget_sync_ld_value(&sw->widget, normalized_checked);
+    return 0;
 }
 
 /**
@@ -319,12 +324,20 @@ int tinyui_switch_set_checked(tinyui_obj_t *sw_obj, int checked)
 int tinyui_switch_is_checked(tinyui_obj_t *sw_obj)
 {
     struct tinyui_switch *sw = tinyui_switch_as_switch(sw_obj);
-    if (sw == 0) { return -1; }
+    ldSwitch_t *ld_switch;
 
     if (sw == 0) {
         return -1;
     }
 
+    ld_switch = (ldSwitch_t *)sw->widget.ld_widget;
+    if (ld_switch == 0 || sw->widget.kind != TINYUI_BACKEND_WIDGET_SWITCH) {
+        return -1;
+    }
+
+    /* Read real LD state; keep wrapper cache coherent. */
+    sw->checked = ld_switch->isChecked ? 1 : 0;
+    sw->widget.value = sw->checked;
     return sw->checked;
 }
 
@@ -339,12 +352,15 @@ int tinyui_switch_is_checked(tinyui_obj_t *sw_obj)
 int tinyui_switch_set_off_source(tinyui_obj_t *sw_obj, struct tinyui_image_source *source)
 {
     struct tinyui_switch *sw = tinyui_switch_as_switch(sw_obj);
-    if (sw == 0) { return -1; }
-
     ldSwitch_t *ld_switch;
 
-    if (sw == 0 || (source != 0 && tinyui_image_source_get_image_tile(source) == 0)
-        || sw->widget.ld_widget == 0
+    if (sw == 0) {
+        return -1;
+    }
+    if (source != 0 && source->kind == TINYUI_IMAGE_SOURCE_EMPTY) {
+        return -1;
+    }
+    if (sw->widget.ld_widget == 0
         || sw->widget.kind != TINYUI_BACKEND_WIDGET_SWITCH) {
         return -1;
     }
@@ -371,12 +387,15 @@ int tinyui_switch_set_off_source(tinyui_obj_t *sw_obj, struct tinyui_image_sourc
 int tinyui_switch_set_on_source(tinyui_obj_t *sw_obj, struct tinyui_image_source *source)
 {
     struct tinyui_switch *sw = tinyui_switch_as_switch(sw_obj);
-    if (sw == 0) { return -1; }
-
     ldSwitch_t *ld_switch;
 
-    if (sw == 0 || (source != 0 && tinyui_image_source_get_image_tile(source) == 0)
-        || sw->widget.ld_widget == 0
+    if (sw == 0) {
+        return -1;
+    }
+    if (source != 0 && source->kind == TINYUI_IMAGE_SOURCE_EMPTY) {
+        return -1;
+    }
+    if (sw->widget.ld_widget == 0
         || sw->widget.kind != TINYUI_BACKEND_WIDGET_SWITCH) {
         return -1;
     }
@@ -403,12 +422,15 @@ int tinyui_switch_set_on_source(tinyui_obj_t *sw_obj, struct tinyui_image_source
 int tinyui_switch_set_knob_source(tinyui_obj_t *sw_obj, struct tinyui_image_source *source)
 {
     struct tinyui_switch *sw = tinyui_switch_as_switch(sw_obj);
-    if (sw == 0) { return -1; }
-
     ldSwitch_t *ld_switch;
 
-    if (sw == 0 || (source != 0 && tinyui_image_source_get_image_tile(source) == 0)
-        || sw->widget.ld_widget == 0
+    if (sw == 0) {
+        return -1;
+    }
+    if (source != 0 && source->kind == TINYUI_IMAGE_SOURCE_EMPTY) {
+        return -1;
+    }
+    if (sw->widget.ld_widget == 0
         || sw->widget.kind != TINYUI_BACKEND_WIDGET_SWITCH) {
         return -1;
     }
@@ -625,25 +647,59 @@ int tinyui_switch_navigate(tinyui_obj_t *sw_obj, int direction)
     return 0;
 }
 
+static int tinyui_switch_replace_event_cb(struct tinyui_switch *sw,
+                                          tinyui_event_handle_t *slot,
+                                          uint32_t event_mask,
+                                          tinyui_event_cb_t cb,
+                                          void *user_data)
+{
+    tinyui_event_handle_t handle = 0U;
+    tinyui_result_t rc;
+
+    if (sw == 0 || slot == 0) {
+        return -1;
+    }
+
+    if (*slot != 0U) {
+        (void)tinyui_obj_remove_event_cb((tinyui_obj_t *)sw, *slot);
+        *slot = 0U;
+    }
+
+    if (cb == 0) {
+        return 0;
+    }
+
+    rc = tinyui_obj_add_event_cb((tinyui_obj_t *)sw,
+                                 event_mask,
+                                 cb,
+                                 user_data,
+                                 &handle);
+    if (rc != TINYUI_OK) {
+        return -1;
+    }
+    *slot = handle;
+    return 0;
+}
+
 /**
- * @brief Set on toggled of switch widget
+ * @brief Set on toggled of switch widget (narrow forward to unified event pool)
  *
  * @param[in] sw sw
- * @param[in] cb cb
+ * @param[in] cb Unified event callback (const tinyui_event_t *)
  * @param[in] user_data User data pointer
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_switch_set_on_toggled(tinyui_obj_t *sw_obj, tinyui_value_changed_cb cb, void *user_data)
+int tinyui_switch_set_on_toggled(tinyui_obj_t *sw_obj, tinyui_event_cb_t cb, void *user_data)
 {
     struct tinyui_switch *sw = tinyui_switch_as_switch(sw_obj);
-    if (sw == 0) { return -1; }
-
     if (sw == 0) {
         return -1;
     }
 
-    sw->cb = cb;
-    sw->user_data = user_data;
-    return 0;
+    return tinyui_switch_replace_event_cb(sw,
+                                          &sw->on_toggled_handle,
+                                          TINYUI_EVENT_MASK(TINYUI_EVENT_VALUE_CHANGED),
+                                          cb,
+                                          user_data);
 }

@@ -21,6 +21,7 @@
 #include "../core/runtime_bridge.h"
 #include "../../../src/gui/ldSlider.h"
 
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -266,13 +267,50 @@ tinyui_obj_t *tinyui_slider_create_with_props(tinyui_obj_t *parent,
     }
     }
     if ((props->fields & TINYUI_SLIDER_FIELD_ON_VALUE_CHANGED) != 0) {
-    if (tinyui_slider_set_on_value_changed((tinyui_obj_t *)slider, props->on_value_changed, props->user_data) != 0) {
-        (void)tinyui_obj_delete((tinyui_obj_t *)slider);
-        return 0;
-    }
+        /* props still carry legacy tinyui_value_changed_cb; Task 7 set_on_* is
+         * unified-pool only. Reject rather than fake-success. Prefer
+         * tinyui_obj_add_event_cb after create. */
+        if (props->on_value_changed != 0) {
+            (void)tinyui_obj_delete((tinyui_obj_t *)slider);
+            return 0;
+        }
     }
 
     return obj;
+}
+
+static int tinyui_slider_value_to_percent(const struct tinyui_slider *slider, int value)
+{
+    int64_t range;
+
+    if (slider == 0) {
+        return 0;
+    }
+    range = (int64_t)slider->max_value - (int64_t)slider->min_value;
+    if (range <= 0) {
+        return 0;
+    }
+    return (int)((((int64_t)value - (int64_t)slider->min_value) * 100) / range);
+}
+
+static int tinyui_slider_commit_value(struct tinyui_slider *slider, int value)
+{
+    ldSlider_t *ld_slider;
+    int percent;
+
+    if (slider == 0) {
+        return -1;
+    }
+    ld_slider = tinyui_slider_backend(slider);
+    if (ld_slider == 0) {
+        return -1;
+    }
+
+    percent = tinyui_slider_value_to_percent(slider, value);
+    ldSliderSetPercent(ld_slider, (float)percent);
+    slider->value = value;
+    slider->widget.value = value;
+    return 0;
 }
 
 
@@ -287,25 +325,28 @@ tinyui_obj_t *tinyui_slider_create_with_props(tinyui_obj_t *parent,
 int tinyui_slider_set_value(tinyui_obj_t *slider_obj, int value)
 {
     struct tinyui_slider *slider = tinyui_slider_as_slider(slider_obj);
-    if (slider == 0) { return -1; }
 
-    if (slider == 0 || value < slider->min_value || value > slider->max_value) {
+    if (slider == 0) {
+        tinyui_runtime_set_last_result(TINYUI_ERROR_INVALID_ARG);
         return -1;
     }
 
-    if (slider->value == value) {
+    if (value < slider->min_value || value > slider->max_value) {
+        tinyui_runtime_set_last_result(TINYUI_ERROR_OUT_OF_RANGE);
+        return -1;
+    }
+
+    if (slider->value == value && slider->widget.value == value) {
+        tinyui_runtime_set_last_result(TINYUI_OK);
         return 0;
     }
 
-    if (slider->widget.ld_widget == 0) {
+    if (tinyui_slider_commit_value(slider, value) != 0) {
+        tinyui_runtime_set_last_result(TINYUI_ERROR_BACKEND);
         return -1;
     }
-
-    slider->value = value;
-    return tinyui_runtime_internal_widget_update_value(&slider->widget,
-                                      slider->value,
-                                      slider->cb,
-                                      slider->user_data);
+    tinyui_runtime_set_last_result(TINYUI_OK);
+    return 0;
 }
 
 /**
@@ -320,24 +361,20 @@ int tinyui_slider_set_value(tinyui_obj_t *slider_obj, int value)
 int tinyui_slider_set_range(tinyui_obj_t *slider_obj, int min_value, int max_value)
 {
     struct tinyui_slider *slider = tinyui_slider_as_slider(slider_obj);
-    if (slider == 0) { return -1; }
-
-    int old_min_value;
-    int old_max_value;
-    int old_range;
+    int64_t old_range;
     int old_percent = 0;
-    int new_range;
+    int64_t new_range;
     int remapped_value;
 
     if (slider == 0 || min_value > max_value) {
+        tinyui_runtime_set_last_result(TINYUI_ERROR_INVALID_ARG);
         return -1;
     }
 
-    old_min_value = slider->min_value;
-    old_max_value = slider->max_value;
-    old_range = old_max_value - old_min_value;
+    old_range = (int64_t)slider->max_value - (int64_t)slider->min_value;
     if (old_range > 0) {
-        old_percent = ((slider->value - old_min_value) * 100) / old_range;
+        old_percent = (int)((((int64_t)slider->value - (int64_t)slider->min_value) * 100)
+                            / old_range);
         if (old_percent < 0) {
             old_percent = 0;
         }
@@ -346,23 +383,21 @@ int tinyui_slider_set_range(tinyui_obj_t *slider_obj, int min_value, int max_val
         }
     }
 
+    /* Commit min/max first so percent mapping uses the new range. */
     slider->min_value = min_value;
     slider->max_value = max_value;
-    new_range = max_value - min_value;
+    new_range = (int64_t)max_value - (int64_t)min_value;
     if (new_range <= 0) {
         remapped_value = min_value;
     } else {
-        remapped_value = min_value + (new_range * old_percent) / 100;
+        remapped_value = min_value + (int)((new_range * (int64_t)old_percent) / 100);
     }
 
-    slider->value = remapped_value;
-    if (slider->widget.ld_widget != 0) {
-        return tinyui_runtime_internal_widget_update_value(&slider->widget,
-                                          slider->value,
-                                          0,
-                                          0);
+    if (tinyui_slider_commit_value(slider, remapped_value) != 0) {
+        tinyui_runtime_set_last_result(TINYUI_ERROR_BACKEND);
+        return -1;
     }
-
+    tinyui_runtime_set_last_result(TINYUI_OK);
     return 0;
 }
 
@@ -377,15 +412,24 @@ int tinyui_slider_set_range(tinyui_obj_t *slider_obj, int min_value, int max_val
 int tinyui_slider_set_percent(tinyui_obj_t *slider_obj, int percent)
 {
     struct tinyui_slider *slider = tinyui_slider_as_slider(slider_obj);
-    if (slider == 0) { return -1; }
-
+    int64_t range;
     int value;
 
-    if (slider == 0 || percent < 0 || percent > 100) {
+    if (slider == 0) {
+        tinyui_runtime_set_last_result(TINYUI_ERROR_INVALID_ARG);
+        return -1;
+    }
+    if (percent < 0 || percent > 100) {
+        tinyui_runtime_set_last_result(TINYUI_ERROR_OUT_OF_RANGE);
         return -1;
     }
 
-    value = slider->min_value + ((slider->max_value - slider->min_value) * percent) / 100;
+    range = (int64_t)slider->max_value - (int64_t)slider->min_value;
+    if (range <= 0) {
+        value = slider->min_value;
+    } else {
+        value = slider->min_value + (int)((range * (int64_t)percent) / 100);
+    }
     return tinyui_slider_set_value((tinyui_obj_t *)slider, value);
 }
 
@@ -644,8 +688,6 @@ int tinyui_slider_set_slim_size(tinyui_obj_t *slider_obj, int slim_size)
 int tinyui_slider_get_percent(tinyui_obj_t *slider_obj, int *percent)
 {
     struct tinyui_slider *slider = tinyui_slider_as_slider(slider_obj);
-    if (slider == 0) { return -1; }
-
     ldSlider_t *ld_slider;
 
     if (slider == 0 || percent == 0) {
@@ -661,25 +703,59 @@ int tinyui_slider_get_percent(tinyui_obj_t *slider_obj, int *percent)
     return 0;
 }
 
+static int tinyui_slider_replace_event_cb(struct tinyui_slider *slider,
+                                          tinyui_event_handle_t *slot,
+                                          uint32_t event_mask,
+                                          tinyui_event_cb_t cb,
+                                          void *user_data)
+{
+    tinyui_event_handle_t handle = 0U;
+    tinyui_result_t rc;
+
+    if (slider == 0 || slot == 0) {
+        return -1;
+    }
+
+    if (*slot != 0U) {
+        (void)tinyui_obj_remove_event_cb((tinyui_obj_t *)slider, *slot);
+        *slot = 0U;
+    }
+
+    if (cb == 0) {
+        return 0;
+    }
+
+    rc = tinyui_obj_add_event_cb((tinyui_obj_t *)slider,
+                                 event_mask,
+                                 cb,
+                                 user_data,
+                                 &handle);
+    if (rc != TINYUI_OK) {
+        return -1;
+    }
+    *slot = handle;
+    return 0;
+}
+
 /**
- * @brief Set on value changed of slider widget
+ * @brief Set on value changed of slider widget (narrow forward to unified event pool)
  *
  * @param[in] slider Slider widget instance
- * @param[in] cb cb
+ * @param[in] cb Unified event callback (const tinyui_event_t *)
  * @param[in] user_data User data pointer
  * @return 0 on success, -1 on failure
  */
 
-int tinyui_slider_set_on_value_changed(tinyui_obj_t *slider_obj, tinyui_value_changed_cb cb, void *user_data)
+int tinyui_slider_set_on_value_changed(tinyui_obj_t *slider_obj, tinyui_event_cb_t cb, void *user_data)
 {
     struct tinyui_slider *slider = tinyui_slider_as_slider(slider_obj);
-    if (slider == 0) { return -1; }
-
     if (slider == 0) {
         return -1;
     }
 
-    slider->cb = cb;
-    slider->user_data = user_data;
-    return 0;
+    return tinyui_slider_replace_event_cb(slider,
+                                          &slider->on_value_changed_handle,
+                                          TINYUI_EVENT_MASK(TINYUI_EVENT_VALUE_CHANGED),
+                                          cb,
+                                          user_data);
 }

@@ -19,6 +19,13 @@
 #ifndef TINYUI_SCROLL_SELECTOR_H
 #define TINYUI_SCROLL_SELECTOR_H
 
+#include "tinyui_config.h"
+#if !TINYUI_ENABLE_SCROLL_SELECTOR
+#  ifndef TINYUI_INTERNAL_FEATURE_HEADER
+#  error "TINYUI_ENABLE_SCROLL_SELECTOR is disabled"
+#  endif
+#endif
+
 #include "core/obj.h"
 #include <stdint.h>
 

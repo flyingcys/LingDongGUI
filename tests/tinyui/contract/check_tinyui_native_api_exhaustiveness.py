@@ -101,6 +101,23 @@ def _load_json(path: Path) -> dict:
 
 
 def _inventory_rows(inventory: dict) -> dict[str, dict]:
+    """Normalize current entries inventory and historical widgets shape."""
+    if "entries" in inventory:
+        entries = inventory.get("entries")
+        if not isinstance(entries, list):
+            raise AssertionError("inventory entries must be a list")
+        rows: dict[str, dict] = {}
+        for row in entries:
+            if not isinstance(row, dict):
+                raise AssertionError(f"inventory entry must be an object: {row!r}")
+            symbol = row.get("symbol")
+            if not isinstance(symbol, str) or not symbol:
+                raise AssertionError(f"inventory entry missing symbol: {row!r}")
+            if symbol in rows:
+                raise AssertionError(f"duplicate inventory symbol: {symbol}")
+            rows[symbol] = row
+        return rows
+
     rows: dict[str, dict] = {}
     for widget in inventory.get("widgets", []):
         for row in widget.get("required_native_apis", []):
@@ -109,6 +126,19 @@ def _inventory_rows(inventory: dict) -> dict[str, dict]:
                 raise AssertionError(f"inventory row has invalid ldgui_symbol: {row!r}")
             rows[symbol] = row
     return rows
+
+
+VALID_OWNER_TASKS = {
+    "m2-sample",
+    "m2-core",
+    "m3-task-2",
+    "m3-task-3",
+    "m3-task-4",
+    "m3-task-5",
+    "m3-task-6",
+    "m3-task-7",
+    "m3-policy-internal",
+}
 
 
 def _ledger_rows(ledger: dict) -> dict[str, dict]:
@@ -122,6 +152,12 @@ def _ledger_rows(ledger: dict) -> dict[str, dict]:
         group_kind = row.get("group_kind")
         if group_kind not in VALID_GROUP_KINDS:
             raise AssertionError(f"{symbol} ledger row has invalid group_kind: {group_kind!r}")
+        owner_task = row.get("owner_task")
+        if owner_task not in VALID_OWNER_TASKS:
+            raise AssertionError(
+                f"{symbol} ledger row has invalid owner_task: {owner_task!r}; "
+                f"expected one of {sorted(VALID_OWNER_TASKS)}"
+            )
         rows[symbol] = row
     return rows
 

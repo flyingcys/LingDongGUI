@@ -70,4 +70,20 @@ tinyui_result_t tinyui_grid_set_align(tinyui_obj_t *container,
                                       tinyui_align_t col_align,
                                       tinyui_align_t row_align);
 
+/* Child layout item attributes (flex/grid participants). */
+tinyui_result_t tinyui_obj_set_flex_grow(tinyui_obj_t *obj, int grow);
+tinyui_result_t tinyui_obj_set_flex_new_track(tinyui_obj_t *obj, int new_track);
+tinyui_result_t tinyui_obj_set_flex_min_width(tinyui_obj_t *obj, int min_width);
+tinyui_result_t tinyui_obj_set_flex_min_height(tinyui_obj_t *obj, int min_height);
+tinyui_result_t tinyui_obj_set_flex_max_width(tinyui_obj_t *obj, int max_width);
+tinyui_result_t tinyui_obj_set_flex_max_height(tinyui_obj_t *obj, int max_height);
+tinyui_result_t tinyui_obj_set_ignore_layout(tinyui_obj_t *obj, int ignore_layout);
+tinyui_result_t tinyui_obj_set_grid_cell(tinyui_obj_t *obj,
+                                         int col,
+                                         int row,
+                                         int col_span,
+                                         int row_span,
+                                         tinyui_align_t x_align,
+                                         tinyui_align_t y_align);
+
 #endif

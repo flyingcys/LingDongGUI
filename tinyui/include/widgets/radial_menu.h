@@ -19,6 +19,13 @@
 #ifndef TINYUI_RADIAL_MENU_H
 #define TINYUI_RADIAL_MENU_H
 
+#include "tinyui_config.h"
+#if !TINYUI_ENABLE_RADIAL_MENU
+#  ifndef TINYUI_INTERNAL_FEATURE_HEADER
+#  error "TINYUI_ENABLE_RADIAL_MENU is disabled"
+#  endif
+#endif
+
 #include "core/obj.h"
 #include <stdint.h>
 

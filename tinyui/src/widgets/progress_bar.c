@@ -346,7 +346,7 @@ int tinyui_progress_bar_set_bg_source(tinyui_obj_t *bar_obj, struct tinyui_image
 
     ldProgressBar_t *ld_progress_bar;
 
-    if (bar == 0 || source == 0 || tinyui_image_source_get_image_tile(source) == 0
+    if (bar == 0 || source == 0 || source->kind == TINYUI_IMAGE_SOURCE_EMPTY
         || bar->widget.ld_widget == 0
         || bar->widget.kind != TINYUI_BACKEND_WIDGET_PROGRESS_BAR) {
         return -1;
@@ -377,7 +377,7 @@ int tinyui_progress_bar_set_fg_source(tinyui_obj_t *bar_obj, struct tinyui_image
 
     ldProgressBar_t *ld_progress_bar;
 
-    if (bar == 0 || source == 0 || tinyui_image_source_get_image_tile(source) == 0
+    if (bar == 0 || source == 0 || source->kind == TINYUI_IMAGE_SOURCE_EMPTY
         || bar->widget.ld_widget == 0
         || bar->widget.kind != TINYUI_BACKEND_WIDGET_PROGRESS_BAR) {
         return -1;
@@ -406,7 +406,7 @@ int tinyui_progress_bar_set_frame_source(tinyui_obj_t *bar_obj, struct tinyui_im
     struct tinyui_progress_bar *bar = tinyui_progress_bar_as_progress_bar(bar_obj);
     if (bar == 0) { return -1; }
 
-    if (bar == 0 || source == 0 || tinyui_image_source_get_image_tile(source) == 0
+    if (bar == 0 || source == 0 || source->kind == TINYUI_IMAGE_SOURCE_EMPTY
         || bar->widget.ld_widget == 0
         || bar->widget.kind != TINYUI_BACKEND_WIDGET_PROGRESS_BAR) {
         return -1;

@@ -53,6 +53,7 @@ NATIVE_PREFIXES = (
 FORBIDDEN_INIT_RE = re.compile(r"\btinyui_[A-Za-z0-9_]*_init\b")
 
 CANONICAL_AGGREGATE_PREFIXES = (
+    "tinyui_config.h",
     "core/result.h",
     "core/obj.h",
     "core/runtime.h",
@@ -86,6 +87,51 @@ def _strip_comments(text: str) -> str:
     return strip_comments(text)
 
 
+def _normalize_signature(statement: str) -> str:
+    """Collapse whitespace while preserving braces for enum/struct typedefs."""
+    collapsed = " ".join(statement.replace("\n", " ").split())
+    # C allows a trailing comma before '}' in enums/structs; treat it as noise.
+    return re.sub(r",\s*}", " }", collapsed)
+
+
+def _iter_top_level_statements(text: str) -> list[str]:
+    """Split declarations on top-level semicolons, keeping braced bodies intact."""
+    statements: list[str] = []
+    buffer: list[str] = []
+    depth = 0
+    for char in text:
+        if char == "{":
+            depth += 1
+            buffer.append(char)
+            continue
+        if char == "}":
+            depth = max(0, depth - 1)
+            buffer.append(char)
+            continue
+        if char == ";" and depth == 0:
+            statement = "".join(buffer).strip()
+            if statement:
+                statements.append(statement)
+            buffer = []
+            continue
+        buffer.append(char)
+    trailing = "".join(buffer).strip()
+    if trailing:
+        statements.append(trailing)
+    return statements
+
+
+def _is_include_guard_macro(header: str, name: str) -> bool:
+    if name == _include_guard(header):
+        return True
+    # Older/simple headers may still use the stem-only guard form.
+    stem = Path(header).stem.upper().replace(".", "_")
+    if name == f"TINYUI_{stem}_H":
+        return True
+    # Compatibility re-entry guards used by opaque typedef shims.
+    return name.endswith("_DEFINED")
+
+
 def _error(code: str, **details: object) -> dict:
     return {"code": code, **details}
 
@@ -107,12 +153,15 @@ def _manifest_digest(value: dict) -> str:
 def _include_guard(header: str) -> str:
     if header == "tinyui.h":
         return "TINYUI_H"
-    stem = Path(header).stem.upper().replace(".", "_")
-    return f"TINYUI_{stem}_H"
+    # Nested headers may use either the stem-only or full-relative guard form.
+    # Prefer the relative-path form for matching actual public headers.
+    relative = header.replace("\\", "/").removesuffix(".h")
+    parts = [part for part in relative.split("/") if part]
+    return "TINYUI_" + "_".join(part.upper().replace(".", "_") for part in parts) + "_H"
 
 
 def _scan_header(header: str, text: str) -> list[dict]:
-    """Scan direct declarations using the same normalization model as M0."""
+    """Scan direct declarations for the v2.3 public API surface."""
     comment_free = _strip_comments(text)
     declaration_lines: list[str] = []
     rows: list[dict] = []
@@ -128,16 +177,16 @@ def _scan_header(header: str, text: str) -> list[dict]:
                 macro_lines.append(lines[index])
             macro = " ".join(part.rstrip().removesuffix("\\") for part in macro_lines)
             match = re.match(
-                r"^\s*#define\s+(?P<name>TINYUI_[A-Za-z0-9_]*)(?:\s+|$)(?P<body>.*)$",
+                r"^\s*#define\s+(?P<name>TINYUI_[A-Za-z0-9_]*)(?:\(|\s+|$)(?P<body>.*)$",
                 macro,
             )
-            if match and match.group("name") != _include_guard(header):
+            if match and not _is_include_guard_macro(header, match.group("name")):
                 rows.append(
                     {
                         "kind": "macro",
                         "name": match.group("name"),
                         "header": header,
-                        "signature": " ".join(macro.split()),
+                        "signature": _normalize_signature(macro),
                     }
                 )
             index += 1
@@ -145,56 +194,58 @@ def _scan_header(header: str, text: str) -> list[dict]:
         declaration_lines.append(line)
         index += 1
 
-    for statement in "\n".join(declaration_lines).split(";"):
-        normalized = _normalize_declaration(statement)
-        if not normalized:
+    for statement in _iter_top_level_statements("\n".join(declaration_lines)):
+        signature = _normalize_signature(statement)
+        if not signature:
             continue
-        normalized_with_semicolon = normalized + ";"
-        callback = TYPEDEF_CALLBACK_RE.search(normalized)
-        if normalized.startswith("typedef") and callback:
+        signature_with_semicolon = signature + ";"
+        # Function-pointer typedefs need the brace-free form for name extraction.
+        brace_free = _normalize_declaration(statement)
+        callback = TYPEDEF_CALLBACK_RE.search(brace_free)
+        if signature.startswith("typedef") and callback:
             rows.append(
                 {
                     "kind": "typedef",
                     "name": callback.group("name"),
                     "header": header,
-                    "signature": normalized_with_semicolon,
+                    "signature": signature_with_semicolon,
                 }
             )
             continue
-        if normalized.startswith("typedef"):
-            match = TYPEDEF_NAME_RE.search(normalized)
+        if signature.startswith("typedef"):
+            match = TYPEDEF_NAME_RE.search(brace_free)
             if match:
                 rows.append(
                     {
                         "kind": "typedef",
                         "name": match.group("name"),
                         "header": header,
-                        "signature": normalized_with_semicolon,
+                        "signature": signature_with_semicolon,
                     }
                 )
             continue
-        opaque_type = OPAQUE_TYPE_RE.match(normalized)
+        opaque_type = OPAQUE_TYPE_RE.match(brace_free)
         if opaque_type:
-            name = normalized.split()[1]
+            name = brace_free.split()[1]
             rows.append(
                 {
                     "kind": "type",
                     "name": name,
                     "header": header,
-                    "signature": normalized_with_semicolon,
+                    "signature": signature_with_semicolon,
                 }
             )
             continue
-        if "(" not in normalized:
+        if "(" not in brace_free:
             continue
-        function_name = _function_name(normalized)
+        function_name = _function_name(brace_free)
         if function_name:
             rows.append(
                 {
                     "kind": "function",
                     "name": function_name,
                     "header": header,
-                    "signature": normalized_with_semicolon,
+                    "signature": signature_with_semicolon,
                 }
             )
 
@@ -231,6 +282,8 @@ def scan_public_headers(root: Path) -> tuple[list[dict], list[dict]]:
         return [], [_error("missing_public_header_root", path="tinyui/include")]
     rows: list[dict] = []
     errors: list[dict] = []
+    # integration/ is opt-in and not aggregated by tinyui.h, but Task 3 registered
+    # its explicit key surface in the M1 manifest, so it must still be scanned.
     skip_prefixes = (
         "internal/",
         "extensions/",
@@ -239,7 +292,6 @@ def scan_public_headers(root: Path) -> tuple[list[dict], list[dict]]:
         "tick/",
         "osal/",
         "port/",
-        "integration/",
     )
     for header in sorted(include_dir.rglob("*.h")):
         relative = header.relative_to(include_dir).as_posix()
@@ -292,8 +344,6 @@ def _scan_aggregate_includes(text: str) -> list[dict]:
     errors: list[dict] = []
     for match in re.finditer(r"^\s*#include\s+[\"<]([^\">]+)[\">]", text, re.MULTILINE):
         include = match.group(1)
-        if include == "internal/v22_demo_bridge.h":
-            continue
         if not any(include.startswith(prefix) for prefix in CANONICAL_AGGREGATE_PREFIXES):
             errors.append(_error("forbidden_aggregate_include", header="tinyui.h", include=include))
     return errors
@@ -395,7 +445,7 @@ def _compare_entries(manifest: dict, scanned: list[dict], root: Path) -> list[di
                     actual=actual["header"],
                 )
             )
-        if _normalize_declaration(expected["signature"]) != _normalize_declaration(actual["signature"]):
+        if _normalize_signature(expected["signature"]) != _normalize_signature(actual["signature"]):
             errors.append(
                 _error(
                     "signature_mismatch",

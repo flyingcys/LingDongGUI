@@ -2,91 +2,49 @@
  * Copyright (c) 2023-2026 flyingcys (flyingcys@gmail.com). All rights reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
  */
 
 #include "legacy_demo0_parity/legacy_demo0_parity.h"
 #include "tinyui.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 struct legacy_demo0_runtime {
-    struct tinyui_image *image;
-    struct tinyui_label *switch_label;
-    struct tinyui_gauge *gauge;
-    struct tinyui_arc *arc;
+    tinyui_obj_t *image;
+    tinyui_obj_t *switch_label;
+    tinyui_obj_t *gauge;
+    tinyui_obj_t *arc;
     float angle;
-    unsigned int frame_accumulated_ms;
 };
 
 struct legacy_demo0_sources {
-    struct tinyui_image_source paper;
-    struct tinyui_image_source button_release;
-    struct tinyui_image_source button_press;
-    struct tinyui_image_source progress_bg;
-    struct tinyui_image_source progress_fg;
-    struct tinyui_image_source slider_bg;
-    struct tinyui_image_source slider_indicator;
-    struct tinyui_image_source weather;
-    struct tinyui_image_source note;
-    struct tinyui_image_source book;
-    struct tinyui_image_source chart;
-    struct tinyui_image_source gauge_bg;
-    struct tinyui_image_source gauge_pointer;
-    struct tinyui_image_source arc_quarter;
-};
-
-static const char *const g_legacy_demo0_truth_fields[] = {
-    "button@10, 10:123",
-    "\"123\"",
-    "text@300, 10:123\\n12333",
-    "\"123\\n12333\"",
-    "switch@300, 226:OFF",
-    "\"OFF\"",
-    "switch_label@356, 218:OFF",
-    "qrcode@500, 10:legacy token",
-    "g_legacy_qrcode_truth",
-    "{'l', 'd', 'g', 'u', 'i', '\\0'}",
-    "list@850, 280:1/10/123/99/7",
-    "\"title\"",
-    "message_box@200, 150:title/12345678abcdefg\\n99556",
-    "\"12345678abcdefg\\n99556\"",
-    "calendar@50, 340:yyyy - mm - dd",
-    "\"yyyy - mm - dd\"",
+    tinyui_image_source_t paper;
+    tinyui_image_source_t button_release;
+    tinyui_image_source_t button_press;
+    tinyui_image_source_t progress_bg;
+    tinyui_image_source_t progress_fg;
+    tinyui_image_source_t slider_bg;
+    tinyui_image_source_t slider_indicator;
+    tinyui_image_source_t weather;
+    tinyui_image_source_t note;
+    tinyui_image_source_t book;
+    tinyui_image_source_t chart;
+    tinyui_image_source_t gauge_bg;
+    tinyui_image_source_t gauge_pointer;
+    tinyui_image_source_t arc_quarter;
 };
 
 static const char g_legacy_qrcode_truth[] = {'l', 'd', 'g', 'u', 'i', '\0'};
-static const struct tinyui_font g_font_arial_12 = {
-    .family = "Arial",
-    .size = 12,
-};
-static const struct tinyui_font g_font_arial_16 = {
-    .family = "Arial",
-    .size = 16,
-};
+static tinyui_font_t g_font_arial_12;
+static tinyui_font_t g_font_arial_16;
+static int g_fonts_ready;
 static const char *const g_scroll_ids[] = {"1", "10", "123", "99", "7"};
 static const char *const g_icon_ids[] = {"11", "22", "33", "44", "55"};
 static const char *const g_combo_ids[] = {"11", "22", "00"};
 static const char *const g_message_buttons[] = {"11", "22", "33"};
 static const char *const g_calendar_day_names[7] = {
-    "Sun",
-    "Mon",
-    "Tue",
-    "Wed",
-    "Thu",
-    "Fir",
-    "Sat",
+    "Sun", "Mon", "Tue", "Wed", "Thu", "Fir", "Sat",
 };
 
 static struct legacy_demo0_sources g_sources;
@@ -97,501 +55,448 @@ enum {
     LEGACY_DEMO0_FRAME_INTERVAL_MS = 100,
 };
 
-static int load_source(enum tinyui_builtin_image image, struct tinyui_image_source *source)
-{
-    return tinyui_image_source_from_builtin(image, source);
-}
-
-static int ensure_sources(void)
+static tinyui_result_t ensure_sources(void)
 {
     if (g_sources_ready != 0) {
-        return 0;
+        return TINYUI_OK;
     }
-
-    if (load_source(TINYUI_BUILTIN_IMAGE_LETTER_PAPER, &g_sources.paper) != 0
-        || load_source(TINYUI_BUILTIN_IMAGE_KEY_RELEASE, &g_sources.button_release) != 0
-        || load_source(TINYUI_BUILTIN_IMAGE_KEY_PRESS, &g_sources.button_press) != 0
-        || load_source(TINYUI_BUILTIN_IMAGE_PROGRESS_BG, &g_sources.progress_bg) != 0
-        || load_source(TINYUI_BUILTIN_IMAGE_PROGRESS_FG, &g_sources.progress_fg) != 0
-        || load_source(TINYUI_BUILTIN_IMAGE_SLIDER_BG, &g_sources.slider_bg) != 0
-        || load_source(TINYUI_BUILTIN_IMAGE_SLIDER_INDICATOR, &g_sources.slider_indicator) != 0
-        || load_source(TINYUI_BUILTIN_IMAGE_WEATHER, &g_sources.weather) != 0
-        || load_source(TINYUI_BUILTIN_IMAGE_NOTE, &g_sources.note) != 0
-        || load_source(TINYUI_BUILTIN_IMAGE_BOOK, &g_sources.book) != 0
-        || load_source(TINYUI_BUILTIN_IMAGE_CHART, &g_sources.chart) != 0
-        || load_source(TINYUI_BUILTIN_IMAGE_GAUGE_BG, &g_sources.gauge_bg) != 0
-        || load_source(TINYUI_BUILTIN_IMAGE_GAUGE_POINTER, &g_sources.gauge_pointer) != 0
-        || load_source(TINYUI_BUILTIN_IMAGE_ARC_QUARTER, &g_sources.arc_quarter) != 0) {
-        return -1;
+    if (tinyui_image_source_from_builtin(TINYUI_BUILTIN_IMAGE_LETTER_PAPER, &g_sources.paper) != TINYUI_OK
+        || tinyui_image_source_from_builtin(TINYUI_BUILTIN_IMAGE_KEY_RELEASE, &g_sources.button_release) != TINYUI_OK
+        || tinyui_image_source_from_builtin(TINYUI_BUILTIN_IMAGE_KEY_PRESS, &g_sources.button_press) != TINYUI_OK
+        || tinyui_image_source_from_builtin(TINYUI_BUILTIN_IMAGE_PROGRESS_BG, &g_sources.progress_bg) != TINYUI_OK
+        || tinyui_image_source_from_builtin(TINYUI_BUILTIN_IMAGE_PROGRESS_FG, &g_sources.progress_fg) != TINYUI_OK
+        || tinyui_image_source_from_builtin(TINYUI_BUILTIN_IMAGE_SLIDER_BG, &g_sources.slider_bg) != TINYUI_OK
+        || tinyui_image_source_from_builtin(TINYUI_BUILTIN_IMAGE_SLIDER_INDICATOR, &g_sources.slider_indicator) != TINYUI_OK
+        || tinyui_image_source_from_builtin(TINYUI_BUILTIN_IMAGE_WEATHER, &g_sources.weather) != TINYUI_OK
+        || tinyui_image_source_from_builtin(TINYUI_BUILTIN_IMAGE_NOTE, &g_sources.note) != TINYUI_OK
+        || tinyui_image_source_from_builtin(TINYUI_BUILTIN_IMAGE_BOOK, &g_sources.book) != TINYUI_OK
+        || tinyui_image_source_from_builtin(TINYUI_BUILTIN_IMAGE_CHART, &g_sources.chart) != TINYUI_OK
+        || tinyui_image_source_from_builtin(TINYUI_BUILTIN_IMAGE_GAUGE_BG, &g_sources.gauge_bg) != TINYUI_OK
+        || tinyui_image_source_from_builtin(TINYUI_BUILTIN_IMAGE_GAUGE_POINTER, &g_sources.gauge_pointer) != TINYUI_OK
+        || tinyui_image_source_from_builtin(TINYUI_BUILTIN_IMAGE_ARC_QUARTER, &g_sources.arc_quarter) != TINYUI_OK) {
+        return TINYUI_ERROR_BACKEND;
     }
-
     g_sources_ready = 1;
-    return 0;
+    return TINYUI_OK;
 }
 
-static void on_button_released(struct tinyui_widget *widget, void *user_data)
+static tinyui_result_t ensure_fonts(void)
+{
+    if (g_fonts_ready != 0) {
+        return TINYUI_OK;
+    }
+    if (tinyui_font_from_builtin(TINYUI_FONT_ARIAL_12, &g_font_arial_12) != TINYUI_OK
+        || tinyui_font_from_builtin(TINYUI_FONT_ARIAL_16_A8, &g_font_arial_16) != TINYUI_OK) {
+        return TINYUI_ERROR_BACKEND;
+    }
+    g_fonts_ready = 1;
+    return TINYUI_OK;
+}
+
+static void on_button_released(const tinyui_event_t *event)
+{
+    struct legacy_demo0_runtime *runtime;
+
+    if (event == NULL) {
+        return;
+    }
+    runtime = (struct legacy_demo0_runtime *)event->user_data;
+    if (runtime != NULL && runtime->image != NULL) {
+        (void)tinyui_obj_set_opacity(runtime->image, 128);
+    }
+}
+
+static void on_switch_toggled(const tinyui_event_t *event)
+{
+    tinyui_obj_t *switch_label;
+
+    if (event == NULL) {
+        return;
+    }
+    switch_label = (tinyui_obj_t *)event->user_data;
+    if (switch_label != NULL) {
+        (void)tinyui_label_set_text(switch_label, event->data.value != 0 ? "ON" : "OFF");
+    }
+}
+
+static void on_angle_timer(tinyui_timer_t *timer, void *user_data)
 {
     struct legacy_demo0_runtime *runtime = (struct legacy_demo0_runtime *)user_data;
 
-    (void)widget;
-    if (runtime == 0 || runtime->image == 0) {
+    (void)timer;
+    if (runtime == NULL || runtime->gauge == NULL || runtime->arc == NULL) {
         return;
     }
-
-    tinyui_widget_set_opacity((struct tinyui_widget *)runtime->image, 128);
-}
-
-static void on_switch_toggled(struct tinyui_widget *widget, int value, void *user_data)
-{
-    struct tinyui_label *switch_label = (struct tinyui_label *)user_data;
-
-    (void)widget;
-    if (switch_label != 0) {
-        tinyui_label_set_text(switch_label, value != 0 ? "ON" : "OFF");
-    }
-}
-
-static void seed_graph(struct tinyui_graph *graph)
-{
-    int a;
-    int b;
-    int i;
-
-    tinyui_graph_set_axis(graph, 80, 80);
-    tinyui_graph_set_axis_offset(graph, 5);
-    tinyui_graph_set_grid_offset(graph, 4);
-    a = tinyui_graph_add_series(graph, 0xFF0000U, 2, 16);
-    b = tinyui_graph_add_series(graph, 0xC0C0C0U, 2, 16);
-    srand(10);
-    for (i = 0; i < 16; i++) {
-        if (a >= 0) {
-            tinyui_graph_set_value(graph, a, i, rand() % 81);
-        }
-    }
-    for (i = 0; i < 16; i++) {
-        if (b >= 0) {
-            tinyui_graph_set_value(graph, b, i, rand() % 81);
-        }
-    }
-}
-
-static void seed_table(struct tinyui_table *table, struct tinyui_keyboard *keyboard)
-{
-    tinyui_table_set_excel_type(table);
-    if (keyboard != 0) {
-        tinyui_table_set_keyboard_widget(table, keyboard);
-    }
-    tinyui_table_set_cell_text(table, 1, 1, "id");
-    tinyui_table_set_cell_text(table, 1, 2, "name");
-    tinyui_table_set_cell_text(table, 1, 3, "size");
-    tinyui_table_set_cell_text(table, 2, 1, "1");
-    tinyui_table_set_cell_text(table, 2, 2, "button");
-    tinyui_table_set_cell_text(table, 2, 3, "30*20");
-    tinyui_table_set_cell_text(table, 3, 1, "2");
-    tinyui_table_set_cell_text(table, 3, 2, "image");
-    tinyui_table_set_cell_text(table, 3, 3, "100*100");
-}
-
-static void build_legacy_demo0(struct tinyui_window *win, struct legacy_demo0_runtime *runtime)
-{
-    struct tinyui_image *image;
-    struct tinyui_button *button;
-    struct tinyui_button *list_item_button;
-    struct tinyui_button *nested_button;
-    struct tinyui_window *panel;
-    struct tinyui_label *label;
-    struct tinyui_checkbox *radio_a;
-    struct tinyui_checkbox *radio_b;
-    struct tinyui_checkbox *check;
-    struct tinyui_switch *sw;
-    struct tinyui_label *switch_label;
-    struct tinyui_progress_bar *bar;
-    struct tinyui_text *text;
-    struct tinyui_slider *slider_h;
-    struct tinyui_slider *slider_v;
-    struct tinyui_radial_menu *radial_menu;
-    struct tinyui_date_time *date_time;
-    struct tinyui_icon_slider *icon_slider;
-    struct tinyui_qrcode *qrcode;
-    struct tinyui_scroll_selecter *scroll_selecter;
-    struct tinyui_gauge *gauge;
-    struct tinyui_combo_box *combo_box;
-    struct tinyui_graph *graph;
-    struct tinyui_table *table;
-    struct tinyui_line_edit *line_edit;
-    struct tinyui_window *child_window;
-    struct tinyui_keyboard *keyboard;
-    struct tinyui_arc *arc;
-    struct tinyui_list *list;
-    struct tinyui_message_box *message_box;
-    struct tinyui_calendar *calendar;
-
-    if (ensure_sources() != 0) {
-        return;
-    }
-
-    image = tinyui_image_create(win, "demo0_image");
-    button = tinyui_button_create(win, "demo0_button");
-    panel = tinyui_window_create_child(win, "demo0_panel");
-    label = tinyui_label_create(win, "demo0_label");
-    radio_a = tinyui_checkbox_create(win, "demo0_radio_a");
-    radio_b = tinyui_checkbox_create(win, "demo0_radio_b");
-    check = tinyui_checkbox_create(win, "demo0_check");
-    sw = tinyui_switch_create(win, "demo0_switch");
-    switch_label = tinyui_label_create(win, "demo0_switch_label");
-    bar = tinyui_progress_bar_create(win, "demo0_progress");
-    text = tinyui_text_create(win, "demo0_text");
-    slider_h = tinyui_slider_create(win, "demo0_slider_h");
-    slider_v = tinyui_slider_create(win, "demo0_slider_v");
-    radial_menu = tinyui_radial_menu_create((struct tinyui_widget *)win, "demo0_radial");
-    date_time = tinyui_date_time_create((struct tinyui_widget *)win, "demo0_date_time");
-    icon_slider = tinyui_icon_slider_create((struct tinyui_widget *)win, "demo0_icon_slider");
-    qrcode = tinyui_qrcode_create((struct tinyui_widget *)win, "demo0_qrcode");
-    scroll_selecter = tinyui_scroll_selecter_create(win, "demo0_scroll_selecter");
-    gauge = tinyui_gauge_create((struct tinyui_widget *)win, "demo0_gauge");
-    combo_box = tinyui_combo_box_create(win, "demo0_combo");
-    graph = tinyui_graph_create(win, "demo0_graph", 2);
-    table = tinyui_table_create(win, "demo0_table", 10, 6);
-    line_edit = tinyui_line_edit_create(win, "demo0_line_edit");
-    child_window = tinyui_window_create_child(win, "demo0_child_window");
-    keyboard = tinyui_keyboard_create(win, "demo0_keyboard");
-    arc = tinyui_arc_create((struct tinyui_widget *)win, "demo0_arc");
-    list = tinyui_list_create((struct tinyui_widget *)win, "demo0_list");
-    message_box = tinyui_message_box_create((struct tinyui_widget *)win, "demo0_message_box");
-    calendar = tinyui_calendar_create(win, "demo0_calendar");
-
-    if (runtime != 0) {
-        runtime->image = image;
-        runtime->switch_label = switch_label;
-        runtime->gauge = gauge;
-        runtime->arc = arc;
-        runtime->angle = 120.0f;
-    }
-
-    if (image != 0) {
-        tinyui_image_set_source(image, &g_sources.paper);
-        tinyui_widget_set_pos((struct tinyui_widget *)image, 100, 120);
-        tinyui_widget_set_size((struct tinyui_widget *)image, 50, 80);
-        tinyui_widget_set_corner((struct tinyui_widget *)image, 1);
-        tinyui_widget_set_selectable((struct tinyui_widget *)image, 1);
-    }
-
-    if (button != 0) {
-        tinyui_button_set_text(button, "123");
-        tinyui_button_set_font(button, &g_font_arial_16);
-        tinyui_button_set_image(button, &g_sources.button_release, &g_sources.button_press);
-        tinyui_button_set_text_color(button, 0xFFFFFFU);
-        tinyui_button_set_on_released(button, on_button_released, runtime);
-        tinyui_widget_set_pos((struct tinyui_widget *)button, 10, 10);
-        tinyui_widget_set_size((struct tinyui_widget *)button, 79, 53);
-        tinyui_widget_set_selectable((struct tinyui_widget *)button, 1);
-    }
-
-    if (panel != 0) {
-        tinyui_window_set_color(panel, 0x00FF00U);
-        tinyui_widget_set_pos((struct tinyui_widget *)panel, 200, 95);
-        tinyui_widget_set_size((struct tinyui_widget *)panel, 20, 20);
-        tinyui_widget_set_corner((struct tinyui_widget *)panel, 1);
-        tinyui_widget_set_selectable((struct tinyui_widget *)panel, 1);
-    }
-
-    if (label != 0) {
-        tinyui_label_set_text(label, "123");
-        tinyui_label_set_font(label, &g_font_arial_12);
-        tinyui_label_set_bg_color(label, 0xC0C0C0U);
-        tinyui_label_set_text_align(label, TINYUI_ALIGN_START, TINYUI_ALIGN_END);
-        tinyui_widget_set_pos((struct tinyui_widget *)label, 100, 50);
-        tinyui_widget_set_size((struct tinyui_widget *)label, 100, 50);
-        tinyui_widget_set_corner((struct tinyui_widget *)label, 1);
-        tinyui_widget_set_selectable((struct tinyui_widget *)label, 1);
-    }
-
-    if (radio_a != 0) {
-        tinyui_checkbox_set_text(radio_a, "999");
-        tinyui_checkbox_set_radio_group(radio_a, 0);
-        tinyui_widget_set_pos((struct tinyui_widget *)radio_a, 220, 10);
-        tinyui_widget_set_size((struct tinyui_widget *)radio_a, 50, 20);
-        tinyui_widget_set_selectable((struct tinyui_widget *)radio_a, 1);
-    }
-
-    if (radio_b != 0) {
-        tinyui_checkbox_set_radio_group(radio_b, 0);
-        tinyui_widget_set_pos((struct tinyui_widget *)radio_b, 220, 40);
-        tinyui_widget_set_size((struct tinyui_widget *)radio_b, 50, 20);
-        tinyui_widget_set_selectable((struct tinyui_widget *)radio_b, 1);
-    }
-
-    if (check != 0) {
-        tinyui_widget_set_pos((struct tinyui_widget *)check, 220, 70);
-        tinyui_widget_set_size((struct tinyui_widget *)check, 50, 20);
-        tinyui_widget_set_corner((struct tinyui_widget *)check, 1);
-        tinyui_widget_set_selectable((struct tinyui_widget *)check, 1);
-    }
-
-    if (sw != 0) {
-        tinyui_switch_set_checked(sw, 0);
-        tinyui_switch_set_on_toggled(sw, on_switch_toggled, switch_label);
-        tinyui_widget_set_pos((struct tinyui_widget *)sw, 300, 226);
-        tinyui_widget_set_size((struct tinyui_widget *)sw, 48, 24);
-        tinyui_widget_set_selectable((struct tinyui_widget *)sw, 1);
-    }
-
-    if (switch_label != 0) {
-        tinyui_label_set_text(switch_label, "OFF");
-        tinyui_label_set_font(switch_label, &g_font_arial_16);
-        tinyui_label_set_text_align(switch_label, TINYUI_ALIGN_START, TINYUI_ALIGN_CENTER);
-        tinyui_widget_set_pos((struct tinyui_widget *)switch_label, 356, 218);
-        tinyui_widget_set_size((struct tinyui_widget *)switch_label, 60, 40);
-        tinyui_widget_set_selectable((struct tinyui_widget *)switch_label, 1);
-    }
-
-    if (bar != 0) {
-        tinyui_progress_bar_set_horizontal(bar, 1);
-        tinyui_progress_bar_set_percent(bar, 45);
-        tinyui_progress_bar_set_image(bar, &g_sources.progress_bg, &g_sources.progress_fg);
-        tinyui_widget_set_pos((struct tinyui_widget *)bar, 10, 500);
-        tinyui_widget_set_size((struct tinyui_widget *)bar, 300, 30);
-        tinyui_widget_set_selectable((struct tinyui_widget *)bar, 1);
-    }
-
-    if (text != 0) {
-        tinyui_text_set_background_source(text, &g_sources.paper);
-        tinyui_text_set_font(text, &g_font_arial_12);
-        tinyui_text_set_text(text, "123\n12333");
-        tinyui_text_set_scroll_enabled(text, 1);
-        tinyui_widget_set_pos((struct tinyui_widget *)text, 300, 10);
-        tinyui_widget_set_size((struct tinyui_widget *)text, 150, 200);
-        tinyui_widget_set_corner((struct tinyui_widget *)text, 1);
-        tinyui_widget_set_selectable((struct tinyui_widget *)text, 1);
-    }
-
-    if (slider_h != 0) {
-        tinyui_slider_set_percent(slider_h, 42);
-        tinyui_slider_set_image(slider_h, &g_sources.slider_bg, &g_sources.slider_indicator);
-        tinyui_widget_set_pos((struct tinyui_widget *)slider_h, 50, 300);
-        tinyui_widget_set_size((struct tinyui_widget *)slider_h, 317, 34);
-    }
-
-    if (slider_v != 0) {
-        tinyui_slider_set_horizontal(slider_v, 0);
-        tinyui_slider_set_percent(slider_v, 42);
-        tinyui_widget_set_pos((struct tinyui_widget *)slider_v, 400, 300);
-        tinyui_widget_set_size((struct tinyui_widget *)slider_v, 30, 100);
-        tinyui_widget_set_corner((struct tinyui_widget *)slider_v, 1);
-        tinyui_widget_set_selectable((struct tinyui_widget *)slider_v, 1);
-    }
-
-    if (radial_menu != 0) {
-        tinyui_radial_menu_set_geometry(radial_menu, 150, 100, 100, 80, 5);
-        tinyui_radial_menu_add_item_with_source(radial_menu, "weather", &g_sources.weather);
-        tinyui_radial_menu_add_item_with_source(radial_menu, "note", &g_sources.note);
-        tinyui_radial_menu_add_item_with_source(radial_menu, "weather2", &g_sources.weather);
-        tinyui_radial_menu_add_item_with_source(radial_menu, "note2", &g_sources.note);
-        tinyui_widget_set_pos((struct tinyui_widget *)radial_menu, 500, 200);
-        tinyui_widget_set_corner((struct tinyui_widget *)radial_menu, 1);
-        tinyui_widget_set_selectable((struct tinyui_widget *)radial_menu, 1);
-    }
-
-    if (date_time != 0) {
-        tinyui_date_time_set_font(date_time, &g_font_arial_12);
-        tinyui_date_time_set_use_system_time(date_time, 1);
-        tinyui_widget_set_pos((struct tinyui_widget *)date_time, 600, 100);
-        tinyui_widget_set_size((struct tinyui_widget *)date_time, 200, 50);
-        tinyui_widget_set_selectable((struct tinyui_widget *)date_time, 1);
-    }
-
-    if (icon_slider != 0) {
-        tinyui_icon_slider_set_layout(icon_slider, 150, 65, 48, 2, 5, 1, 1);
-        tinyui_icon_slider_add_item_with_source(icon_slider, g_icon_ids[0], g_icon_ids[0], &g_sources.note);
-        tinyui_icon_slider_add_item_with_source(icon_slider, g_icon_ids[1], g_icon_ids[1], &g_sources.book);
-        tinyui_icon_slider_add_item_with_source(icon_slider, g_icon_ids[2], g_icon_ids[2], &g_sources.weather);
-        tinyui_icon_slider_add_item_with_source(icon_slider, g_icon_ids[3], g_icon_ids[3], &g_sources.chart);
-        tinyui_icon_slider_add_item_with_source(icon_slider, g_icon_ids[4], g_icon_ids[4], &g_sources.note);
-        tinyui_widget_set_pos((struct tinyui_widget *)icon_slider, 500, 350);
-        tinyui_widget_set_corner((struct tinyui_widget *)icon_slider, 1);
-        tinyui_widget_set_selectable((struct tinyui_widget *)icon_slider, 1);
-    }
-
-    if (qrcode != 0) {
-        tinyui_qrcode_set_text(qrcode, g_legacy_qrcode_truth);
-        tinyui_qrcode_set_qr_color(qrcode, 0x0000FFU);
-        tinyui_qrcode_set_bg_color(qrcode, 0xFFFFFFU);
-        tinyui_qrcode_set_max_version(qrcode, 2);
-        tinyui_qrcode_set_zoom(qrcode, 5);
-        tinyui_widget_set_opacity((struct tinyui_widget *)qrcode, 100);
-        tinyui_widget_set_pos((struct tinyui_widget *)qrcode, 500, 10);
-        tinyui_widget_set_size((struct tinyui_widget *)qrcode, 200, 200);
-        tinyui_widget_set_selectable((struct tinyui_widget *)qrcode, 1);
-    }
-
-    if (scroll_selecter != 0) {
-        tinyui_scroll_selecter_set_items(scroll_selecter, g_scroll_ids, g_scroll_ids, 5);
-        tinyui_scroll_selecter_set_background_color(scroll_selecter, 0xFFFFFFU);
-        tinyui_widget_set_pos((struct tinyui_widget *)scroll_selecter, 700, 200);
-        tinyui_widget_set_size((struct tinyui_widget *)scroll_selecter, 30, 50);
-        tinyui_widget_set_corner((struct tinyui_widget *)scroll_selecter, 1);
-        tinyui_widget_set_selectable((struct tinyui_widget *)scroll_selecter, 1);
-    }
-
-    if (gauge != 0) {
-        tinyui_gauge_set_bg_source(gauge, &g_sources.gauge_bg);
-        tinyui_gauge_set_centre_offset(gauge, 0, 10);
-        tinyui_gauge_set_pointer_mask_source(gauge, &g_sources.gauge_pointer, 5, 45);
-        tinyui_gauge_set_pointer_color(gauge, 0x0000FFU);
-        tinyui_gauge_set_angle(gauge, 120.0f);
-        tinyui_widget_set_pos((struct tinyui_widget *)gauge, 700, 300);
-        tinyui_widget_set_size((struct tinyui_widget *)gauge, 120, 98);
-        tinyui_widget_set_selectable((struct tinyui_widget *)gauge, 1);
-    }
-
-    if (combo_box != 0) {
-        tinyui_combo_box_set_static_items(combo_box, g_combo_ids, g_combo_ids, 3);
-        tinyui_widget_set_pos((struct tinyui_widget *)combo_box, 700, 420);
-        tinyui_widget_set_size((struct tinyui_widget *)combo_box, 100, 30);
-        tinyui_widget_set_selectable((struct tinyui_widget *)combo_box, 1);
-    }
-
-    if (graph != 0) {
-        tinyui_widget_set_pos((struct tinyui_widget *)graph, 830, 10);
-        tinyui_widget_set_size((struct tinyui_widget *)graph, 100, 100);
-        seed_graph(graph);
-        tinyui_widget_set_selectable((struct tinyui_widget *)graph, 1);
-    }
-
-    if (table != 0) {
-        tinyui_table_set_item_space(table, 1);
-        seed_table(table, keyboard);
-        tinyui_widget_set_pos((struct tinyui_widget *)table, 780, 150);
-        tinyui_widget_set_size((struct tinyui_widget *)table, 200, 100);
-        tinyui_widget_set_selectable((struct tinyui_widget *)table, 1);
-    }
-
-    if (line_edit != 0) {
-        tinyui_line_edit_set_text(line_edit, "123");
-        if (keyboard != 0) {
-            tinyui_line_edit_set_keyboard_widget(line_edit, keyboard);
-        }
-        tinyui_widget_set_pos((struct tinyui_widget *)line_edit, 850, 400);
-        tinyui_widget_set_size((struct tinyui_widget *)line_edit, 100, 50);
-        tinyui_widget_set_corner((struct tinyui_widget *)line_edit, 1);
-        tinyui_widget_set_selectable((struct tinyui_widget *)line_edit, 1);
-    }
-
-    if (child_window != 0) {
-        tinyui_widget_set_pos((struct tinyui_widget *)child_window, 850, 450);
-        tinyui_widget_set_size((struct tinyui_widget *)child_window, 100, 100);
-        nested_button = tinyui_button_create(child_window, "demo0_nested_button");
-        if (nested_button != 0) {
-            tinyui_button_set_text(nested_button, "123");
-            tinyui_button_set_font(nested_button, &g_font_arial_16);
-            tinyui_widget_set_pos((struct tinyui_widget *)nested_button, 8, 3);
-            tinyui_widget_set_size((struct tinyui_widget *)nested_button, 30, 30);
-        }
-    }
-
-    if (keyboard != 0) {
-        tinyui_widget_set_pos((struct tinyui_widget *)keyboard, 780, 450);
-    }
-
-    if (arc != 0) {
-        tinyui_arc_set_quarter_source(arc, &g_sources.arc_quarter);
-        tinyui_arc_set_background_angle(arc, 0.0f, 270.0f);
-        tinyui_arc_set_foreground_angle(arc, 0.0f);
-        tinyui_arc_set_parent_color(arc, 0xF0F0F0U);
-        tinyui_arc_set_color(arc, 0xADD8E6U, 0x90EE90U);
-        tinyui_widget_set_pos((struct tinyui_widget *)arc, 450, 450);
-        tinyui_widget_set_size((struct tinyui_widget *)arc, 103, 103);
-    }
-
-    if (list != 0) {
-        tinyui_list_set_item_height(list, 30);
-        tinyui_list_add_item(list, g_scroll_ids[0], g_scroll_ids[0]);
-        tinyui_list_add_item(list, g_scroll_ids[1], g_scroll_ids[1]);
-        tinyui_list_add_item(list, g_scroll_ids[2], g_scroll_ids[2]);
-        tinyui_list_add_item(list, g_scroll_ids[3], g_scroll_ids[3]);
-        tinyui_list_add_item(list, g_scroll_ids[4], g_scroll_ids[4]);
-        tinyui_list_set_align(list, TINYUI_ALIGN_START);
-        tinyui_list_set_selected_index(list, 0);
-        tinyui_widget_set_pos((struct tinyui_widget *)list, 850, 280);
-        tinyui_widget_set_size((struct tinyui_widget *)list, 100, 100);
-        tinyui_widget_set_selectable((struct tinyui_widget *)list, 1);
-        list_item_button = tinyui_button_create(win, "demo0_list_item_button");
-        if (list_item_button != 0) {
-            tinyui_widget_set_pos((struct tinyui_widget *)list_item_button, 10, 3);
-            tinyui_widget_set_size((struct tinyui_widget *)list_item_button, 20, 20);
-            tinyui_list_set_item_widget(list, 1, (struct tinyui_widget *)list_item_button);
-        }
-    }
-
-    if (message_box != 0) {
-        tinyui_message_box_set_layout(message_box, 200, 150);
-        tinyui_message_box_set_title(message_box, "title");
-        tinyui_message_box_set_message(message_box, "12345678abcdefg\n99556");
-        tinyui_message_box_set_buttons(message_box, g_message_buttons, 3);
-        tinyui_widget_set_center((struct tinyui_widget *)message_box);
-    }
-
-    if (calendar != 0) {
-        tinyui_calendar_set_date(calendar, 2026, 1, 1);
-        tinyui_calendar_set_day_names(calendar, g_calendar_day_names);
-        tinyui_calendar_set_header_visible(calendar, 1);
-        tinyui_calendar_set_header_format(calendar, "yyyy - mm - dd");
-        tinyui_widget_set_pos((struct tinyui_widget *)calendar, 50, 340);
-        tinyui_widget_set_size((struct tinyui_widget *)calendar, 300, 150);
-        tinyui_widget_set_corner((struct tinyui_widget *)calendar, 1);
-        tinyui_widget_set_selectable((struct tinyui_widget *)calendar, 1);
-        tinyui_widget_set_selected((struct tinyui_widget *)calendar, 1);
-    }
-}
-
-static void update_runtime_angle(struct legacy_demo0_runtime *runtime)
-{
-    if (runtime == 0) {
-        return;
-    }
-
-    tinyui_arc_set_rotation_angle(runtime->arc, runtime->angle);
-    tinyui_gauge_set_angle(runtime->gauge, runtime->angle);
+    (void)tinyui_arc_set_rotation_angle(runtime->arc, runtime->angle);
+    (void)tinyui_gauge_set_angle(runtime->gauge, runtime->angle);
     runtime->angle += 1.0f;
     if (runtime->angle >= 360.0f) {
         runtime->angle = 0.0f;
     }
 }
 
-void tinyui_demo_legacy_demo0_parity_frame(unsigned int elapsed_ms)
+static tinyui_result_t seed_graph(tinyui_obj_t *graph)
 {
-    struct legacy_demo0_runtime *runtime = &g_runtime;
+    int a;
+    int b;
+    int i;
 
-    if (runtime->gauge == 0 || runtime->arc == 0) {
-        return;
+    if (tinyui_graph_set_axis(graph, 80, 80) != 0
+        || tinyui_graph_set_axis_offset(graph, 5) != 0
+        || tinyui_graph_set_grid_offset(graph, 4) != 0) {
+        return TINYUI_ERROR_BACKEND;
     }
-
-    runtime->frame_accumulated_ms += elapsed_ms;
-    while (runtime->frame_accumulated_ms >= LEGACY_DEMO0_FRAME_INTERVAL_MS) {
-        runtime->frame_accumulated_ms -= LEGACY_DEMO0_FRAME_INTERVAL_MS;
-        update_runtime_angle(runtime);
+    a = tinyui_graph_add_series(graph, 0xFF0000U, 2, 16);
+    b = tinyui_graph_add_series(graph, 0xC0C0C0U, 2, 16);
+    if (a < 0 || b < 0) {
+        return TINYUI_ERROR_BACKEND;
     }
+    srand(10);
+    for (i = 0; i < 16; ++i) {
+        if (tinyui_graph_set_value(graph, a, i, rand() % 81) != 0
+            || tinyui_graph_set_value(graph, b, i, rand() % 81) != 0) {
+            return TINYUI_ERROR_BACKEND;
+        }
+    }
+    return TINYUI_OK;
 }
 
-void tinyui_demo_legacy_demo0_parity(void)
+static tinyui_result_t seed_table(tinyui_obj_t *table, tinyui_obj_t *keyboard)
 {
-    tinyui_obj_t *screen = tinyui_screen_create();
-    struct tinyui_window *win = (struct tinyui_window *)screen;
+    if (tinyui_table_set_excel_type(table) != 0) {
+        return TINYUI_ERROR_BACKEND;
+    }
+    if (keyboard != NULL && tinyui_table_set_keyboard_widget(table, keyboard) != 0) {
+        return TINYUI_ERROR_BACKEND;
+    }
+    if (tinyui_table_set_cell_text(table, 1, 1, "id") != 0
+        || tinyui_table_set_cell_text(table, 1, 2, "name") != 0
+        || tinyui_table_set_cell_text(table, 1, 3, "size") != 0
+        || tinyui_table_set_cell_text(table, 2, 1, "1") != 0
+        || tinyui_table_set_cell_text(table, 2, 2, "button") != 0
+        || tinyui_table_set_cell_text(table, 2, 3, "30*20") != 0
+        || tinyui_table_set_cell_text(table, 3, 1, "2") != 0
+        || tinyui_table_set_cell_text(table, 3, 2, "image") != 0
+        || tinyui_table_set_cell_text(table, 3, 3, "100*100") != 0) {
+        return TINYUI_ERROR_BACKEND;
+    }
+    return TINYUI_OK;
+}
 
-    (void)g_legacy_demo0_truth_fields;
+tinyui_result_t tinyui_demo_legacy_demo0_parity_build(tinyui_obj_t *screen)
+{
+    tinyui_graph_props_t graph_props;
+    tinyui_table_props_t table_props;
+    tinyui_obj_t *image;
+    tinyui_obj_t *button;
+    tinyui_obj_t *list_item_button;
+    tinyui_obj_t *nested_button;
+    tinyui_obj_t *panel;
+    tinyui_obj_t *label;
+    tinyui_obj_t *radio_a;
+    tinyui_obj_t *radio_b;
+    tinyui_obj_t *check;
+    tinyui_obj_t *sw;
+    tinyui_obj_t *switch_label;
+    tinyui_obj_t *bar;
+    tinyui_obj_t *text;
+    tinyui_obj_t *slider_h;
+    tinyui_obj_t *slider_v;
+    tinyui_obj_t *radial_menu;
+    tinyui_obj_t *date_time;
+    tinyui_obj_t *icon_slider;
+    tinyui_obj_t *qrcode;
+    tinyui_obj_t *scroll_selector;
+    tinyui_obj_t *gauge;
+    tinyui_obj_t *combo_box;
+    tinyui_obj_t *graph;
+    tinyui_obj_t *table;
+    tinyui_obj_t *line_edit;
+    tinyui_obj_t *child_window;
+    tinyui_obj_t *keyboard;
+    tinyui_obj_t *arc;
+    tinyui_obj_t *list;
+    tinyui_obj_t *message_box;
+    tinyui_obj_t *calendar;
+    tinyui_timer_t *timer;
 
-    if (win == 0) {
-        return;
+    if (screen == NULL) {
+        return TINYUI_ERROR_INVALID_ARG;
+    }
+    if (ensure_sources() != TINYUI_OK || ensure_fonts() != TINYUI_OK) {
+        return TINYUI_ERROR_BACKEND;
+    }
+    if (tinyui_window_set_color(screen, 0xF0F0F0U) != 0) {
+        return TINYUI_ERROR_BACKEND;
     }
 
-    tinyui_window_set_color(win, 0xF0F0F0U);
-
-    g_runtime.image = 0;
-    g_runtime.switch_label = 0;
-    g_runtime.gauge = 0;
-    g_runtime.arc = 0;
+    memset(&g_runtime, 0, sizeof(g_runtime));
     g_runtime.angle = 120.0f;
-    g_runtime.frame_accumulated_ms = 0;
-    build_legacy_demo0(win, &g_runtime);
-    tinyui_screen_load(screen);
+
+    memset(&graph_props, 0, sizeof(graph_props));
+    graph_props.fields = TINYUI_GRAPH_FIELD_SERIES_MAX
+        | TINYUI_GRAPH_FIELD_WIDTH
+        | TINYUI_GRAPH_FIELD_HEIGHT;
+    graph_props.series_max = 2;
+    graph_props.width = 100;
+    graph_props.height = 100;
+
+    memset(&table_props, 0, sizeof(table_props));
+    table_props.fields = TINYUI_TABLE_FIELD_ROWS
+        | TINYUI_TABLE_FIELD_COLUMNS
+        | TINYUI_TABLE_FIELD_WIDTH
+        | TINYUI_TABLE_FIELD_HEIGHT;
+    table_props.rows = 10;
+    table_props.columns = 6;
+    table_props.width = 200;
+    table_props.height = 100;
+
+    image = tinyui_image_create(screen);
+    button = tinyui_button_create(screen);
+    panel = tinyui_window_create(screen);
+    label = tinyui_label_create(screen);
+    radio_a = tinyui_checkbox_create(screen);
+    radio_b = tinyui_checkbox_create(screen);
+    check = tinyui_checkbox_create(screen);
+    sw = tinyui_switch_create(screen);
+    switch_label = tinyui_label_create(screen);
+    bar = tinyui_progress_bar_create(screen);
+    text = tinyui_text_create(screen);
+    slider_h = tinyui_slider_create(screen);
+    slider_v = tinyui_slider_create(screen);
+    radial_menu = tinyui_radial_menu_create(screen);
+    date_time = tinyui_date_time_create(screen);
+    icon_slider = tinyui_icon_slider_create(screen);
+    qrcode = tinyui_qrcode_create(screen);
+    scroll_selector = tinyui_scroll_selector_create(screen);
+    gauge = tinyui_gauge_create(screen);
+    combo_box = tinyui_combo_box_create(screen);
+    graph = tinyui_graph_create_with_props(screen, &graph_props);
+    table = tinyui_table_create_with_props(screen, &table_props);
+    line_edit = tinyui_line_edit_create(screen);
+    child_window = tinyui_window_create(screen);
+    keyboard = tinyui_keyboard_create(screen);
+    arc = tinyui_arc_create(screen);
+    list = tinyui_list_create(screen);
+    message_box = tinyui_message_box_create(screen);
+    calendar = tinyui_calendar_create(screen);
+
+    if (image == NULL || button == NULL || panel == NULL || label == NULL
+        || radio_a == NULL || radio_b == NULL || check == NULL || sw == NULL
+        || switch_label == NULL || bar == NULL || text == NULL
+        || slider_h == NULL || slider_v == NULL || radial_menu == NULL
+        || date_time == NULL || icon_slider == NULL || qrcode == NULL
+        || scroll_selector == NULL || gauge == NULL || combo_box == NULL
+        || graph == NULL || table == NULL || line_edit == NULL
+        || child_window == NULL || keyboard == NULL || arc == NULL
+        || list == NULL || message_box == NULL || calendar == NULL) {
+        return TINYUI_ERROR_NO_MEMORY;
+    }
+
+    g_runtime.image = image;
+    g_runtime.switch_label = switch_label;
+    g_runtime.gauge = gauge;
+    g_runtime.arc = arc;
+
+    if (tinyui_image_set_source(image, &g_sources.paper) != 0
+        || tinyui_obj_set_pos(image, 100, 120) != TINYUI_OK
+        || tinyui_obj_set_size(image, 50, 80) != TINYUI_OK
+        || tinyui_obj_set_selectable(image, 1) != TINYUI_OK
+        || tinyui_button_set_text(button, "123") != 0
+        || tinyui_button_set_font(button, &g_font_arial_16) != 0
+        || tinyui_button_set_image(button, &g_sources.button_release, &g_sources.button_press) != 0
+        || tinyui_button_set_text_color(button, 0xFFFFFFU) != 0
+        || tinyui_button_set_on_released(button, on_button_released, &g_runtime) != 0
+        || tinyui_obj_set_pos(button, 10, 10) != TINYUI_OK
+        || tinyui_obj_set_size(button, 79, 53) != TINYUI_OK
+        || tinyui_obj_set_selectable(button, 1) != TINYUI_OK
+        || tinyui_window_set_color(panel, 0x00FF00U) != 0
+        || tinyui_obj_set_pos(panel, 200, 95) != TINYUI_OK
+        || tinyui_obj_set_size(panel, 20, 20) != TINYUI_OK
+        || tinyui_obj_set_selectable(panel, 1) != TINYUI_OK
+        || tinyui_label_set_text(label, "123") != 0
+        || tinyui_label_set_font(label, &g_font_arial_12) != 0
+        || tinyui_label_set_bg_color(label, 0xC0C0C0U) != 0
+        || tinyui_label_set_text_align(label, TINYUI_ALIGN_START, TINYUI_ALIGN_END) != 0
+        || tinyui_obj_set_pos(label, 100, 50) != TINYUI_OK
+        || tinyui_obj_set_size(label, 100, 50) != TINYUI_OK
+        || tinyui_obj_set_selectable(label, 1) != TINYUI_OK
+        || tinyui_checkbox_set_text(radio_a, "999") != 0
+        || tinyui_checkbox_set_radio_group(radio_a, 0) != 0
+        || tinyui_obj_set_pos(radio_a, 220, 10) != TINYUI_OK
+        || tinyui_obj_set_size(radio_a, 50, 20) != TINYUI_OK
+        || tinyui_obj_set_selectable(radio_a, 1) != TINYUI_OK
+        || tinyui_checkbox_set_radio_group(radio_b, 0) != 0
+        || tinyui_obj_set_pos(radio_b, 220, 40) != TINYUI_OK
+        || tinyui_obj_set_size(radio_b, 50, 20) != TINYUI_OK
+        || tinyui_obj_set_selectable(radio_b, 1) != TINYUI_OK
+        || tinyui_obj_set_pos(check, 220, 70) != TINYUI_OK
+        || tinyui_obj_set_size(check, 50, 20) != TINYUI_OK
+        || tinyui_obj_set_selectable(check, 1) != TINYUI_OK
+        || tinyui_switch_set_checked(sw, 0) != 0
+        || tinyui_switch_set_on_toggled(sw, on_switch_toggled, switch_label) != 0
+        || tinyui_obj_set_pos(sw, 300, 226) != TINYUI_OK
+        || tinyui_obj_set_size(sw, 48, 24) != TINYUI_OK
+        || tinyui_obj_set_selectable(sw, 1) != TINYUI_OK
+        || tinyui_label_set_text(switch_label, "OFF") != 0
+        || tinyui_label_set_font(switch_label, &g_font_arial_16) != 0
+        || tinyui_label_set_text_align(switch_label, TINYUI_ALIGN_START, TINYUI_ALIGN_CENTER) != 0
+        || tinyui_obj_set_pos(switch_label, 356, 218) != TINYUI_OK
+        || tinyui_obj_set_size(switch_label, 60, 40) != TINYUI_OK
+        || tinyui_obj_set_selectable(switch_label, 1) != TINYUI_OK
+        || tinyui_progress_bar_set_horizontal(bar, 1) != 0
+        || tinyui_progress_bar_set_percent(bar, 45) != 0
+        || tinyui_progress_bar_set_image(bar, &g_sources.progress_bg, &g_sources.progress_fg) != 0
+        || tinyui_obj_set_pos(bar, 10, 500) != TINYUI_OK
+        || tinyui_obj_set_size(bar, 300, 30) != TINYUI_OK
+        || tinyui_obj_set_selectable(bar, 1) != TINYUI_OK
+        || tinyui_text_set_background_source(text, &g_sources.paper) != 0
+        || tinyui_text_set_font(text, &g_font_arial_12) != 0
+        || tinyui_text_set_text(text, "123\n12333") != 0
+        || tinyui_text_set_scroll_enabled(text, 1) != 0
+        || tinyui_obj_set_pos(text, 300, 10) != TINYUI_OK
+        || tinyui_obj_set_size(text, 150, 200) != TINYUI_OK
+        || tinyui_obj_set_selectable(text, 1) != TINYUI_OK
+        || tinyui_slider_set_percent(slider_h, 42) != 0
+        || tinyui_slider_set_image(slider_h, &g_sources.slider_bg, &g_sources.slider_indicator) != 0
+        || tinyui_obj_set_pos(slider_h, 50, 300) != TINYUI_OK
+        || tinyui_obj_set_size(slider_h, 317, 34) != TINYUI_OK
+        || tinyui_slider_set_horizontal(slider_v, 0) != 0
+        || tinyui_slider_set_percent(slider_v, 42) != 0
+        || tinyui_obj_set_pos(slider_v, 400, 300) != TINYUI_OK
+        || tinyui_obj_set_size(slider_v, 30, 100) != TINYUI_OK
+        || tinyui_obj_set_selectable(slider_v, 1) != TINYUI_OK) {
+        return TINYUI_ERROR_BACKEND;
+    }
+
+    if (tinyui_radial_menu_set_geometry(radial_menu, 150, 100, 100, 80, 5) != 0
+        || tinyui_radial_menu_add_item_with_source(radial_menu, "weather", &g_sources.weather) != 0
+        || tinyui_radial_menu_add_item_with_source(radial_menu, "note", &g_sources.note) != 0
+        || tinyui_radial_menu_add_item_with_source(radial_menu, "weather2", &g_sources.weather) != 0
+        || tinyui_radial_menu_add_item_with_source(radial_menu, "note2", &g_sources.note) != 0
+        || tinyui_obj_set_pos(radial_menu, 500, 200) != TINYUI_OK
+        || tinyui_obj_set_selectable(radial_menu, 1) != TINYUI_OK
+        || tinyui_date_time_set_font(date_time, &g_font_arial_12) != 0
+        || tinyui_date_time_set_use_system_time(date_time, 1) != 0
+        || tinyui_obj_set_pos(date_time, 600, 100) != TINYUI_OK
+        || tinyui_obj_set_size(date_time, 200, 50) != TINYUI_OK
+        || tinyui_obj_set_selectable(date_time, 1) != TINYUI_OK
+        || tinyui_icon_slider_set_layout(icon_slider, 150, 65, 48, 2, 5, 1, 1) != 0
+        || tinyui_icon_slider_add_item_with_source(icon_slider, g_icon_ids[0], g_icon_ids[0], &g_sources.note) != 0
+        || tinyui_icon_slider_add_item_with_source(icon_slider, g_icon_ids[1], g_icon_ids[1], &g_sources.book) != 0
+        || tinyui_icon_slider_add_item_with_source(icon_slider, g_icon_ids[2], g_icon_ids[2], &g_sources.weather) != 0
+        || tinyui_icon_slider_add_item_with_source(icon_slider, g_icon_ids[3], g_icon_ids[3], &g_sources.chart) != 0
+        || tinyui_icon_slider_add_item_with_source(icon_slider, g_icon_ids[4], g_icon_ids[4], &g_sources.note) != 0
+        || tinyui_obj_set_pos(icon_slider, 500, 350) != TINYUI_OK
+        || tinyui_obj_set_selectable(icon_slider, 1) != TINYUI_OK
+        || tinyui_qrcode_set_text(qrcode, g_legacy_qrcode_truth) != 0
+        || tinyui_qrcode_set_qr_color(qrcode, 0x0000FFU) != 0
+        || tinyui_qrcode_set_bg_color(qrcode, 0xFFFFFFU) != 0
+        || tinyui_qrcode_set_max_version(qrcode, 2) != 0
+        || tinyui_qrcode_set_zoom(qrcode, 5) != 0
+        || tinyui_obj_set_opacity(qrcode, 100) != TINYUI_OK
+        || tinyui_obj_set_pos(qrcode, 500, 10) != TINYUI_OK
+        || tinyui_obj_set_size(qrcode, 200, 200) != TINYUI_OK
+        || tinyui_obj_set_selectable(qrcode, 1) != TINYUI_OK
+        || tinyui_scroll_selector_set_items(scroll_selector, g_scroll_ids, g_scroll_ids, 5) != 0
+        || tinyui_scroll_selector_set_background_color(scroll_selector, 0xFFFFFFU) != 0
+        || tinyui_obj_set_pos(scroll_selector, 700, 200) != TINYUI_OK
+        || tinyui_obj_set_size(scroll_selector, 30, 50) != TINYUI_OK
+        || tinyui_obj_set_selectable(scroll_selector, 1) != TINYUI_OK
+        || tinyui_gauge_set_bg_source(gauge, &g_sources.gauge_bg) != 0
+        || tinyui_gauge_set_centre_offset(gauge, 0, 10) != 0
+        || tinyui_gauge_set_pointer_mask_source(gauge, &g_sources.gauge_pointer, 5, 45) != 0
+        || tinyui_gauge_set_pointer_color(gauge, 0x0000FFU) != 0
+        || tinyui_gauge_set_angle(gauge, 120.0f) != 0
+        || tinyui_obj_set_pos(gauge, 700, 300) != TINYUI_OK
+        || tinyui_obj_set_size(gauge, 120, 98) != TINYUI_OK
+        || tinyui_obj_set_selectable(gauge, 1) != TINYUI_OK
+        || tinyui_combo_box_set_static_items(combo_box, g_combo_ids, g_combo_ids, 3) != 0
+        || tinyui_obj_set_pos(combo_box, 700, 420) != TINYUI_OK
+        || tinyui_obj_set_size(combo_box, 100, 30) != TINYUI_OK
+        || tinyui_obj_set_selectable(combo_box, 1) != TINYUI_OK
+        || tinyui_obj_set_pos(graph, 830, 10) != TINYUI_OK
+        || tinyui_obj_set_size(graph, 100, 100) != TINYUI_OK
+        || seed_graph(graph) != TINYUI_OK
+        || tinyui_obj_set_selectable(graph, 1) != TINYUI_OK
+        || tinyui_table_set_item_space(table, 1) != 0
+        || seed_table(table, keyboard) != TINYUI_OK
+        || tinyui_obj_set_pos(table, 780, 150) != TINYUI_OK
+        || tinyui_obj_set_size(table, 200, 100) != TINYUI_OK
+        || tinyui_obj_set_selectable(table, 1) != TINYUI_OK
+        || tinyui_line_edit_set_text(line_edit, "123") != 0
+        || tinyui_line_edit_set_keyboard_widget(line_edit, keyboard) != 0
+        || tinyui_obj_set_pos(line_edit, 850, 400) != TINYUI_OK
+        || tinyui_obj_set_size(line_edit, 100, 50) != TINYUI_OK
+        || tinyui_obj_set_selectable(line_edit, 1) != TINYUI_OK
+        || tinyui_obj_set_pos(child_window, 850, 450) != TINYUI_OK
+        || tinyui_obj_set_size(child_window, 100, 100) != TINYUI_OK) {
+        return TINYUI_ERROR_BACKEND;
+    }
+
+    nested_button = tinyui_button_create(child_window);
+    if (nested_button == NULL) {
+        return TINYUI_ERROR_NO_MEMORY;
+    }
+    if (tinyui_button_set_text(nested_button, "123") != 0
+        || tinyui_button_set_font(nested_button, &g_font_arial_16) != 0
+        || tinyui_obj_set_pos(nested_button, 8, 3) != TINYUI_OK
+        || tinyui_obj_set_size(nested_button, 30, 30) != TINYUI_OK
+        || tinyui_obj_set_pos(keyboard, 780, 450) != TINYUI_OK
+        || tinyui_arc_set_quarter_source(arc, &g_sources.arc_quarter) != 0
+        || tinyui_arc_set_background_angle(arc, 0.0f, 270.0f) != 0
+        || tinyui_arc_set_foreground_angle(arc, 0.0f) != 0
+        || tinyui_arc_set_parent_color(arc, 0xF0F0F0U) != 0
+        || tinyui_arc_set_color(arc, 0xADD8E6U, 0x90EE90U) != 0
+        || tinyui_obj_set_pos(arc, 450, 450) != TINYUI_OK
+        || tinyui_obj_set_size(arc, 103, 103) != TINYUI_OK
+        || tinyui_list_set_item_height(list, 30) != 0
+        || tinyui_list_add_item(list, g_scroll_ids[0], g_scroll_ids[0]) != 0
+        || tinyui_list_add_item(list, g_scroll_ids[1], g_scroll_ids[1]) != 0
+        || tinyui_list_add_item(list, g_scroll_ids[2], g_scroll_ids[2]) != 0
+        || tinyui_list_add_item(list, g_scroll_ids[3], g_scroll_ids[3]) != 0
+        || tinyui_list_add_item(list, g_scroll_ids[4], g_scroll_ids[4]) != 0
+        || tinyui_list_set_align(list, TINYUI_ALIGN_START) != 0
+        || tinyui_list_set_selected_index(list, 0) != 0
+        || tinyui_obj_set_pos(list, 850, 280) != TINYUI_OK
+        || tinyui_obj_set_size(list, 100, 100) != TINYUI_OK
+        || tinyui_obj_set_selectable(list, 1) != TINYUI_OK) {
+        return TINYUI_ERROR_BACKEND;
+    }
+
+    list_item_button = tinyui_button_create(screen);
+    if (list_item_button == NULL) {
+        return TINYUI_ERROR_NO_MEMORY;
+    }
+    if (tinyui_obj_set_pos(list_item_button, 10, 3) != TINYUI_OK
+        || tinyui_obj_set_size(list_item_button, 20, 20) != TINYUI_OK
+        || tinyui_list_set_item_widget(list, 1, list_item_button) != 0
+        || tinyui_message_box_set_layout(message_box, 200, 150) != 0
+        || tinyui_message_box_set_title(message_box, "title") != 0
+        || tinyui_message_box_set_message(message_box, "12345678abcdefg\n99556") != 0
+        || tinyui_message_box_set_buttons(message_box, g_message_buttons, 3) != 0
+        || tinyui_obj_set_pos(message_box, 200, 150) != TINYUI_OK
+        || tinyui_calendar_set_date(calendar, 2026, 1, 1) != 0
+        || tinyui_calendar_set_day_names(calendar, g_calendar_day_names) != 0
+        || tinyui_calendar_set_header_visible(calendar, 1) != 0
+        || tinyui_calendar_set_header_format(calendar, "yyyy - mm - dd") != 0
+        || tinyui_obj_set_pos(calendar, 50, 340) != TINYUI_OK
+        || tinyui_obj_set_size(calendar, 300, 150) != TINYUI_OK
+        || tinyui_obj_set_selectable(calendar, 1) != TINYUI_OK
+        || tinyui_obj_set_selected(calendar, 1) != TINYUI_OK) {
+        return TINYUI_ERROR_BACKEND;
+    }
+
+    timer = tinyui_timer_create((uint32_t)LEGACY_DEMO0_FRAME_INTERVAL_MS,
+                                true,
+                                on_angle_timer,
+                                &g_runtime);
+    if (timer == NULL) {
+        return TINYUI_ERROR_NO_MEMORY;
+    }
+    if (tinyui_timer_start(timer) != TINYUI_OK) {
+        return TINYUI_ERROR_BACKEND;
+    }
+
+    return TINYUI_OK;
 }

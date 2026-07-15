@@ -19,6 +19,13 @@
 #ifndef TINYUI_KEYBOARD_H
 #define TINYUI_KEYBOARD_H
 
+#include "tinyui_config.h"
+#if !TINYUI_ENABLE_KEYBOARD
+#  ifndef TINYUI_INTERNAL_FEATURE_HEADER
+#  error "TINYUI_ENABLE_KEYBOARD is disabled"
+#  endif
+#endif
+
 
 #include "core/obj.h"
 #include <stdint.h>

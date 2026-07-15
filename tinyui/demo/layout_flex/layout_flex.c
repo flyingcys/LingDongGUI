@@ -19,35 +19,51 @@
 #include "layout_flex/layout_flex.h"
 #include "tinyui.h"
 
-static void make_ui(struct tinyui_window *win)
+tinyui_result_t tinyui_demo_layout_flex_build(tinyui_obj_t *screen)
 {
-    struct tinyui_button *a;
-    struct tinyui_button *b;
-    struct tinyui_button *c;
+    tinyui_obj_t *a;
+    tinyui_obj_t *b;
+    tinyui_obj_t *c;
+    tinyui_result_t result;
 
-    tinyui_flex_set_flow(win, TINYUI_FLEX_FLOW_ROW_WRAP);
-    tinyui_flex_set_align(win,
-                          TINYUI_ALIGN_START,
-                          TINYUI_ALIGN_CENTER,
-                          TINYUI_ALIGN_SPACE_AROUND);
-    tinyui_flex_set_gap(win, 8, 12);
+    if (screen == NULL) {
+        return TINYUI_ERROR_INVALID_ARG;
+    }
 
-    a = tinyui_button_create(win, "first");
-    b = tinyui_button_create(win, "second");
-    c = tinyui_button_create(win, "third");
-    tinyui_button_set_text(a, "One");
-    tinyui_button_set_text(b, "Two");
-    tinyui_button_set_text(c, "Three");
-    tinyui_widget_set_flex_grow((struct tinyui_widget *)a, 1);
-    tinyui_widget_set_flex_grow((struct tinyui_widget *)b, 1);
-    tinyui_widget_set_flex_new_track((struct tinyui_widget *)c, 1);
-}
+    result = tinyui_flex_set_flow(screen, TINYUI_FLEX_FLOW_ROW_WRAP);
+    if (result != TINYUI_OK) {
+        return result;
+    }
+    result = tinyui_flex_set_align(screen,
+                                   TINYUI_ALIGN_START,
+                                   TINYUI_ALIGN_CENTER,
+                                   TINYUI_ALIGN_SPACE_AROUND);
+    if (result != TINYUI_OK) {
+        return result;
+    }
+    result = tinyui_flex_set_gap(screen, 8, 12);
+    if (result != TINYUI_OK) {
+        return result;
+    }
 
-void tinyui_demo_layout_flex(void)
-{
-    tinyui_obj_t *screen = tinyui_screen_create();
-    struct tinyui_window *win = (struct tinyui_window *)screen;
-    if (win == 0) return;
-    make_ui(win);
-    tinyui_screen_load(screen);
+    a = tinyui_button_create(screen);
+    b = tinyui_button_create(screen);
+    c = tinyui_button_create(screen);
+    if (a == NULL || b == NULL || c == NULL) {
+        return TINYUI_ERROR_NO_MEMORY;
+    }
+
+    if (tinyui_button_set_text(a, "One") != 0
+        || tinyui_button_set_text(b, "Two") != 0
+        || tinyui_button_set_text(c, "Three") != 0) {
+        return TINYUI_ERROR_BACKEND;
+    }
+
+    if (tinyui_obj_set_flex_grow(a, 1) != TINYUI_OK
+        || tinyui_obj_set_flex_grow(b, 1) != TINYUI_OK
+        || tinyui_obj_set_flex_new_track(c, 1) != TINYUI_OK) {
+        return TINYUI_ERROR_BACKEND;
+    }
+
+    return TINYUI_OK;
 }

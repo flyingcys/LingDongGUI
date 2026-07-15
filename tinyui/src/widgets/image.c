@@ -218,9 +218,11 @@ tinyui_obj_t *tinyui_image_create_with_props(tinyui_obj_t *parent,
 int tinyui_image_set_source(tinyui_obj_t *image_obj, struct tinyui_image_source *source)
 {
     struct tinyui_image *image = tinyui_image_as_image(image_obj);
-    if (image == 0) { return -1; }
+    arm_2d_tile_t *img_tile = 0;
+    arm_2d_tile_t *mask_tile = 0;
+    ldImage_t *ld_image;
 
-    if (image == 0 || (source != 0 && tinyui_image_source_get_image_tile(source) == 0)) {
+    if (image == 0) {
         return -1;
     }
 
@@ -228,9 +230,22 @@ int tinyui_image_set_source(tinyui_obj_t *image_obj, struct tinyui_image_source 
         return -1;
     }
 
-    ldImageSetImage((ldImage_t *)image->widget.ld_widget,
-                    source != 0 ? tinyui_image_source_get_image_tile(source) : 0,
-                    source != 0 ? tinyui_image_source_get_mask_tile(source) : 0);
+    if (source != 0) {
+        img_tile = tinyui_image_source_get_image_tile(source);
+        mask_tile = tinyui_image_source_get_mask_tile(source);
+        if (img_tile == 0 || img_tile->tRegion.tSize.iWidth <= 0
+            || img_tile->tRegion.tSize.iHeight <= 0) {
+            return -1;
+        }
+    }
+
+    ld_image = (ldImage_t *)image->widget.ld_widget;
+    ldImageSetImage(ld_image, img_tile, mask_tile);
+    /* Explicit clear: some LD paths may leave stale pointers if setter is inlined oddly. */
+    if (source == 0) {
+        ld_image->ptImgTile = 0;
+        ld_image->ptMaskTile = 0;
+    }
     image->source = source;
     return 0;
 }

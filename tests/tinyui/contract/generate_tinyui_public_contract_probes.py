@@ -147,12 +147,16 @@ def _probes_cmake(headers: list[str], functions: list[dict]) -> str:
         lines.extend(
             [
                 f'add_executable({c_target} "${{CMAKE_CURRENT_LIST_DIR}}/c/header_{header_id}.c")',
-                f'target_include_directories({c_target} PRIVATE "${{CMAKE_SOURCE_DIR}}/tinyui/include")',
+                f'target_include_directories({c_target} PRIVATE'
+                f' "${{CMAKE_SOURCE_DIR}}/tinyui/include"'
+                f' "${{CMAKE_BINARY_DIR}}/generated/tinyui")',
                 f"set_target_properties({c_target} PROPERTIES C_STANDARD 11 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)",
                 f"target_compile_options({c_target} PRIVATE -Wall -Wextra -Werror)",
                 f"list(APPEND TINYUI_PUBLIC_HEADER_C_PROBES {c_target})",
                 f'add_executable({cpp_target} "${{CMAKE_CURRENT_LIST_DIR}}/cpp/header_{header_id}.cpp")',
-                f'target_include_directories({cpp_target} PRIVATE "${{CMAKE_SOURCE_DIR}}/tinyui/include")',
+                f'target_include_directories({cpp_target} PRIVATE'
+                f' "${{CMAKE_SOURCE_DIR}}/tinyui/include"'
+                f' "${{CMAKE_BINARY_DIR}}/generated/tinyui")',
                 f"set_target_properties({cpp_target} PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED YES CXX_EXTENSIONS NO)",
                 f"target_compile_options({cpp_target} PRIVATE -Wall -Wextra -Werror)",
                 f"list(APPEND TINYUI_PUBLIC_HEADER_CPP_PROBES {cpp_target})",
@@ -160,13 +164,37 @@ def _probes_cmake(headers: list[str], functions: list[dict]) -> str:
         )
     for function in functions:
         target = f"tinyui_public_symbol_link_{function['id']}"
+        # GNU ld needs --start-group for the circular refs among tinyui_core,
+        # longdonggui, arm2d and the selected port/porting objects.
         lines.extend(
             [
                 f'add_executable({target} "${{CMAKE_CURRENT_LIST_DIR}}/link/function_{function["id"]}.c")',
-                f'target_include_directories({target} PRIVATE "${{CMAKE_SOURCE_DIR}}/tinyui/include")',
+                f'target_include_directories({target} PRIVATE'
+                f' "${{CMAKE_SOURCE_DIR}}/tinyui/include"'
+                f' "${{CMAKE_BINARY_DIR}}/generated/tinyui")',
                 f"set_target_properties({target} PROPERTIES C_STANDARD 11 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)",
                 f"target_compile_options({target} PRIVATE -Wall -Wextra -Werror)",
-                f"target_link_libraries({target} PRIVATE tinyui_backend_ldgui tinyui_port_mcu)",
+                # Single-symbol probes must GC unused ldGui/disp-adapter refs when
+                # archives are plain objects (sanitizer / -fno-lto). GCC -flto used
+                # to drop those paths implicitly.
+                f"if(CMAKE_C_COMPILER_ID MATCHES \"GNU|Clang\" AND NOT APPLE)",
+                f"    target_link_options({target} PRIVATE -Wl,--gc-sections)",
+                f"endif()",
+                f"if(CMAKE_C_COMPILER_ID MATCHES \"GNU\" OR (CMAKE_C_COMPILER_ID MATCHES \"Clang\" AND NOT APPLE))",
+                f"    target_link_libraries({target} PRIVATE",
+                f"        -Wl,--start-group",
+                f"        tinyui_backend_ldgui",
+                f"        tinyui_port_mcu",
+                f"        tinyui_core",
+                f"        longdonggui",
+                f"        longdonggui_arm2d",
+                f"        tinyui_backend_ldgui_porting",
+                f"        -Wl,--end-group",
+                f"        m",
+                f"    )",
+                f"else()",
+                f"    target_link_libraries({target} PRIVATE tinyui_backend_ldgui tinyui_port_mcu)",
+                f"endif()",
                 f"list(APPEND TINYUI_PUBLIC_SYMBOL_LINK_PROBES {target})",
             ]
         )

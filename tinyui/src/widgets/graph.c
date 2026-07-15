@@ -45,15 +45,6 @@ static const struct tinyui_graph *tinyui_graph_as_graph_const(const tinyui_obj_t
 /* ---- C2 depose closure state (file-static, single-threaded scope) ---- */
 
 
-static int graph_props_valid(const tinyui_graph_props_t *props)
-{
-    return props != 0 &&
-           props->series_max > 0 &&
-           props->series_max <= TINYUI_GRAPH_MAX_SERIES &&
-           props->width >= 0 &&
-           props->height >= 0;
-}
-
 struct tinyui_graph_create_ctx {
     int series_max;
 };
@@ -73,6 +64,26 @@ static int graph_host_axis_from_native(const ldGraph_t *ld_graph, float scale)
     }
 
     return (int)((float)extent / scale + 0.5f);
+}
+
+static void graph_sync_host_geometry_from_ld(struct tinyui_graph *graph)
+{
+    ldGraph_t *ld_graph;
+
+    if (graph == 0 || graph->widget.ld_widget == 0) {
+        return;
+    }
+
+    ld_graph = (ldGraph_t *)graph->widget.ld_widget;
+    graph->x_axis = graph_host_axis_from_native(ld_graph, ld_graph->xScale);
+    graph->y_axis = graph_host_axis_from_native(ld_graph, ld_graph->yScale);
+    if (ld_graph->xScale > 0.0f) {
+        graph->axis_offset = (int)((float)ld_graph->xAxisOffset / ld_graph->xScale + 0.5f);
+    } else {
+        graph->axis_offset = (int)ld_graph->xAxisOffset;
+    }
+    graph->frame_space = (int)ld_graph->frameSpace;
+    graph->grid_offset = (int)ld_graph->gridOffset;
 }
 
 static void *tinyui_runtime_internal_graph_ld_init(void *ctx,
@@ -257,11 +268,7 @@ tinyui_obj_t *tinyui_graph_create(tinyui_obj_t *parent)
         tinyui_runtime_internal_widget_destroy_common(&graph->widget);
         return 0;
     }
-    graph->x_axis = graph_host_axis_from_native(ld_graph, ld_graph->xScale);
-    graph->y_axis = graph_host_axis_from_native(ld_graph, ld_graph->yScale);
-    graph->axis_offset = (int)ld_graph->xAxisOffset;
-    graph->frame_space = (int)ld_graph->frameSpace;
-    graph->grid_offset = (int)ld_graph->gridOffset;
+    graph_sync_host_geometry_from_ld(graph);
     graph->point_mask_source = 0;
     graph->widget.visible = 1;
     graph->widget.enabled = 1;
@@ -300,6 +307,12 @@ tinyui_obj_t *tinyui_graph_create_with_props(tinyui_obj_t *parent,
     if (series_max <= 0 || series_max > TINYUI_GRAPH_MAX_SERIES) {
         return 0;
     }
+    if ((props->fields & TINYUI_GRAPH_FIELD_WIDTH) != 0 && props->width < 0) {
+        return 0;
+    }
+    if ((props->fields & TINYUI_GRAPH_FIELD_HEIGHT) != 0 && props->height < 0) {
+        return 0;
+    }
     if (parent_w->ld_widget == 0 || parent_w->owner == 0) {
         return 0;
     }
@@ -315,6 +328,10 @@ tinyui_obj_t *tinyui_graph_create_with_props(tinyui_obj_t *parent,
     }
     graph->id = id;
     graph->series_max = series_max;
+    graph->point_mask_source = 0;
+    graph_sync_host_geometry_from_ld(graph);
+    graph->widget.visible = 1;
+    graph->widget.enabled = 1;
     obj = (tinyui_obj_t *)graph;
 
     if ((props->fields & TINYUI_GRAPH_FIELD_ID) != 0) {
@@ -343,6 +360,8 @@ tinyui_obj_t *tinyui_graph_create_with_props(tinyui_obj_t *parent,
             (void)tinyui_obj_delete(obj);
             return 0;
         }
+        /* Size changes affect axis scale; keep host mirrors aligned with ld. */
+        graph_sync_host_geometry_from_ld(graph);
     }
     return obj;
 }
@@ -514,7 +533,16 @@ int tinyui_graph_add_series(tinyui_obj_t *graph_obj, unsigned int series_color, 
     ldGraph_t *ld_graph;
     int series_index;
 
-    if (graph == 0 || line_size < 0 || point_max <= 0 || point_max > TINYUI_GRAPH_MAX_POINTS) {
+    if (graph == 0) {
+        return -1;
+    }
+    if (line_size < 0 || point_max <= 0 || point_max > TINYUI_GRAPH_MAX_POINTS) {
+        tinyui_runtime_set_last_result(TINYUI_ERROR_OUT_OF_RANGE);
+        return -1;
+    }
+    if (graph->series_count >= graph->series_max
+        || graph->series_count >= TINYUI_GRAPH_MAX_SERIES) {
+        tinyui_runtime_set_last_result(TINYUI_ERROR_CAPACITY);
         return -1;
     }
     if (graph->widget.ld_widget == 0
@@ -522,12 +550,19 @@ int tinyui_graph_add_series(tinyui_obj_t *graph_obj, unsigned int series_color, 
         return -1;
     }
     ld_graph = (ldGraph_t *)graph->widget.ld_widget;
+    if (ld_graph->seriesCount >= ld_graph->seriesMax
+        || ld_graph->seriesCount >= TINYUI_GRAPH_MAX_SERIES) {
+        tinyui_runtime_set_last_result(TINYUI_ERROR_CAPACITY);
+        return -1;
+    }
 
     series_index = (int)ldGraphAddSeries(ld_graph,
                                          (ldColor)tinyui_rgb_to_ld_color(series_color),
                                          (uint8_t)line_size,
                                          (uint16_t)point_max);
-    if (series_index < 0 || series_index >= TINYUI_GRAPH_MAX_SERIES) {
+    if (series_index < 0
+        || series_index >= graph->series_max
+        || series_index >= TINYUI_GRAPH_MAX_SERIES) {
         return -1;
     }
 

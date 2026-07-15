@@ -19,6 +19,8 @@
 #ifndef TINYUI_DEMO_SETTINGS_PANEL_H
 #define TINYUI_DEMO_SETTINGS_PANEL_H
 
-void tinyui_demo_settings_panel(void);
+#include "tinyui.h"
 
-#endif
+tinyui_result_t tinyui_demo_settings_panel_build(tinyui_obj_t *screen);
+
+#endif /* TINYUI_DEMO_SETTINGS_PANEL_H */

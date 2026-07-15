@@ -3,11 +3,11 @@
 int main(void)
 {
     tinyui_obj_t *screen;
-    struct tinyui_window *window;
-    struct tinyui_label *label;
-    struct tinyui_button *button;
+    tinyui_obj_t *label;
+    tinyui_obj_t *button;
+    uint32_t next_ms = 0;
 
-    if (tinyui_init() != 0) {
+    if (tinyui_init() != TINYUI_OK) {
         return 1;
     }
 
@@ -17,18 +17,21 @@ int main(void)
         return 1;
     }
 
-    window = (struct tinyui_window *)screen;
-    label = tinyui_label_create(window, "title");
-    button = tinyui_button_create(window, "action");
+    label = tinyui_label_create(screen);
+    button = tinyui_button_create(screen);
     if (label == 0 || button == 0
         || tinyui_label_set_text(label, "Minimal TinyUI") != 0
         || tinyui_button_set_text(button, "OK") != 0
-        || tinyui_screen_load(screen) != 0) {
+        || tinyui_screen_load(screen, TINYUI_SCREEN_TRANSITION_NONE, 0) != TINYUI_OK) {
         tinyui_deinit();
         return 1;
     }
 
-    (void)tinyui_timer_handler();
+    if (tinyui_process(&next_ms) != TINYUI_OK) {
+        tinyui_deinit();
+        return 1;
+    }
+
     tinyui_deinit();
     return 0;
 }

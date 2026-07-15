@@ -28,6 +28,9 @@
 #include "../../../src/gui/ldSwitch.h"
 #include "../../../src/misc/ldMsg.h"
 
+#include <stdint.h>
+#include <string.h>
+
 static int tinyui_runtime_internal_widget_accepts_event(const struct tinyui_widget *widget)
 {
     return widget != 0 && widget->enabled != 0 && widget->visible != 0;
@@ -35,24 +38,24 @@ static int tinyui_runtime_internal_widget_accepts_event(const struct tinyui_widg
 
 static int tinyui_runtime_internal_widget_slider_value_to_percent(struct tinyui_slider *slider, int value)
 {
-    int range;
+    int64_t range;
 
     if (slider == NULL) {
         return value;
     }
 
-    range = slider->max_value - slider->min_value;
+    range = (int64_t)slider->max_value - (int64_t)slider->min_value;
     if (range <= 0) {
         return 0;
     }
 
-    return ((value - slider->min_value) * 100) / range;
+    return (int)((((int64_t)value - (int64_t)slider->min_value) * 100) / range);
 }
 
 static int tinyui_runtime_internal_widget_slider_percent_to_value(struct tinyui_slider *slider, int permille)
 {
-    int range;
-    int scaled;
+    int64_t range;
+    int64_t scaled;
 
     if (slider == NULL) {
         return permille;
@@ -65,19 +68,19 @@ static int tinyui_runtime_internal_widget_slider_percent_to_value(struct tinyui_
         permille = 1000;
     }
 
-    range = slider->max_value - slider->min_value;
+    range = (int64_t)slider->max_value - (int64_t)slider->min_value;
     if (range <= 0) {
         return slider->min_value;
     }
 
-    scaled = slider->min_value + ((range * permille) / 1000);
-    if (scaled < slider->min_value) {
+    scaled = (int64_t)slider->min_value + ((range * (int64_t)permille) / 1000);
+    if (scaled < (int64_t)slider->min_value) {
         return slider->min_value;
     }
-    if (scaled > slider->max_value) {
+    if (scaled > (int64_t)slider->max_value) {
         return slider->max_value;
     }
-    return scaled;
+    return (int)scaled;
 }
 
 void tinyui_runtime_internal_widget_sync_ld_value(struct tinyui_widget *widget,
@@ -157,6 +160,7 @@ static int tinyui_runtime_internal_widget_claim_focus_for_signal(struct tinyui_w
 
 static void tinyui_runtime_internal_widget_restore_rejected_list_selection(struct tinyui_widget *widget)
 {
+#if TINYUI_ENABLE_LIST
     struct tinyui_list *list;
 
     if (widget == NULL || widget->kind != TINYUI_BACKEND_WIDGET_LIST) {
@@ -173,12 +177,21 @@ static void tinyui_runtime_internal_widget_restore_rejected_list_selection(struc
         ldListSetSelectItem((ldList_t *)widget->ld_widget, -1);
     }
     widget->value = -1;
+#else
+    (void)widget;
+#endif
 }
 
 static struct tinyui_app *tinyui_runtime_internal_widget_get_owner_app(struct tinyui_widget *widget)
 {
     return tinyui_runtime_internal_widget_owner_app(widget);
 }
+
+static void tinyui_event_fire(struct tinyui_widget *widget,
+                              tinyui_event_code_t code,
+                              int32_t value,
+                              uint16_t key,
+                              bool key_pressed);
 
 static void tinyui_runtime_internal_widget_note_focus_event(struct tinyui_widget *widget,
                                            enum tinyui_focus_event event)
@@ -196,6 +209,7 @@ static void tinyui_runtime_internal_widget_note_focus_event(struct tinyui_widget
         if (widget->focus_enter_count != UINT16_MAX) {
             widget->focus_enter_count++;
         }
+        tinyui_event_fire(widget, TINYUI_EVENT_FOCUSED, 0, 0U, false);
         return;
     }
 
@@ -203,6 +217,7 @@ static void tinyui_runtime_internal_widget_note_focus_event(struct tinyui_widget
     if (widget->focus_leave_count != UINT16_MAX) {
         widget->focus_leave_count++;
     }
+    tinyui_event_fire(widget, TINYUI_EVENT_DEFOCUSED, 0, 0U, false);
 }
 
 /**
@@ -468,38 +483,41 @@ int tinyui_runtime_internal_widget_dispatch_native_signal(struct tinyui_widget *
 
     switch (widget->kind) {
     case TINYUI_BACKEND_WIDGET_BUTTON: {
-        struct tinyui_button *button = (struct tinyui_button *)widget;
-
+        /* Task 6: only unified event pool; no legacy on_* fields. */
         if (native_signal == SIGNAL_PRESS) {
-            return tinyui_runtime_internal_widget_dispatch_event(widget,
-                                                TINYUI_BACKEND_SIGNAL_PRESSED,
-                                                button->on_pressed,
-                                                button->on_pressed_user_data);
+            if (!tinyui_runtime_internal_widget_accepts_event(widget)) {
+                (void)tinyui_runtime_internal_widget_release_focus(widget);
+                return 0;
+            }
+            if (tinyui_runtime_internal_widget_claim_focus_for_signal(
+                    widget, TINYUI_BACKEND_SIGNAL_PRESSED) != 0) {
+                return -1;
+            }
+            tinyui_event_fire(widget, TINYUI_EVENT_PRESSED, 0, 0U, false);
+            return 0;
         }
         if (native_signal == SIGNAL_HOLD_DOWN) {
             return 0;
         }
         if (native_signal == SIGNAL_RELEASE) {
-            int rc;
-
-            rc = tinyui_runtime_internal_widget_dispatch_event(widget,
-                                              TINYUI_BACKEND_SIGNAL_RELEASED,
-                                              button->on_released,
-                                              button->on_released_user_data);
-            if (rc != 0) {
-                return rc;
+            if (!tinyui_runtime_internal_widget_accepts_event(widget)) {
+                (void)tinyui_runtime_internal_widget_release_focus(widget);
+                return 0;
             }
-
-            if (button->on_clicked != 0) {
-                tinyui_runtime_internal_widget_emit_clicked(button->on_clicked,
-                                           widget,
-                                           button->user_data);
+            if (tinyui_runtime_internal_widget_claim_focus_for_signal(
+                    widget, TINYUI_BACKEND_SIGNAL_RELEASED) != 0) {
+                return -1;
+            }
+            tinyui_event_fire(widget, TINYUI_EVENT_RELEASED, 0, 0U, false);
+            if (widget->deleting == 0U) {
+                tinyui_event_fire(widget, TINYUI_EVENT_CLICKED, 0, 0U, false);
             }
             return 0;
         }
         return -1;
     }
     case TINYUI_BACKEND_WIDGET_KEYBOARD: {
+#if TINYUI_ENABLE_KEYBOARD
         struct tinyui_keyboard *keyboard = (struct tinyui_keyboard *)widget;
         unsigned int key_code = (unsigned int)tinyui_keyboard_get_selected_key_code(keyboard);
 
@@ -515,6 +533,7 @@ int tinyui_runtime_internal_widget_dispatch_native_signal(struct tinyui_widget *
             }
             return 0;
         }
+#endif
         return -1;
     }
     case TINYUI_BACKEND_WIDGET_CHECKBOX: {
@@ -536,10 +555,12 @@ int tinyui_runtime_internal_widget_dispatch_native_signal(struct tinyui_widget *
         checkbox->checked = normalized_value;
         widget->value = normalized_value;
         tinyui_runtime_internal_widget_sync_ld_value(widget, normalized_value);
-        tinyui_runtime_internal_widget_emit_value_changed(checkbox->cb,
-                                         widget,
-                                         normalized_value,
-                                         checkbox->user_data);
+        /* Task 7: only unified event pool; no dedicated cb field. */
+        tinyui_event_fire(widget,
+                          TINYUI_EVENT_VALUE_CHANGED,
+                          (int32_t)normalized_value,
+                          0U,
+                          false);
         return 0;
     }
     case TINYUI_BACKEND_WIDGET_SWITCH: {
@@ -561,10 +582,12 @@ int tinyui_runtime_internal_widget_dispatch_native_signal(struct tinyui_widget *
         sw->checked = normalized_value;
         widget->value = normalized_value;
         tinyui_runtime_internal_widget_sync_ld_value(widget, normalized_value);
-        tinyui_runtime_internal_widget_emit_value_changed(sw->cb,
-                                         widget,
-                                         normalized_value,
-                                         sw->user_data);
+        /* M3 Task 2: only unified event pool; no dedicated cb field. */
+        tinyui_event_fire(widget,
+                          TINYUI_EVENT_VALUE_CHANGED,
+                          (int32_t)normalized_value,
+                          0U,
+                          false);
         return 0;
     }
     case TINYUI_BACKEND_WIDGET_SLIDER: {
@@ -586,13 +609,18 @@ int tinyui_runtime_internal_widget_dispatch_native_signal(struct tinyui_widget *
         slider->value = widget_value;
         widget->value = widget_value;
         tinyui_runtime_internal_widget_sync_ld_value(widget, widget_value);
-        tinyui_runtime_internal_widget_emit_value_changed(slider->cb,
-                                         widget,
-                                         widget_value,
-                                         slider->user_data);
+        /* Task 7: only unified event pool; no dedicated cb field. */
+        tinyui_event_fire(widget,
+                          TINYUI_EVENT_VALUE_CHANGED,
+                          (int32_t)widget_value,
+                          0U,
+                          false);
         return 0;
     }
     case TINYUI_BACKEND_WIDGET_LIST: {
+#if !TINYUI_ENABLE_LIST
+        return -1;
+#else
         struct tinyui_list *list = (struct tinyui_list *)widget;
         int selected_index;
         int was_selected_index;
@@ -625,7 +653,13 @@ int tinyui_runtime_internal_widget_dispatch_native_signal(struct tinyui_widget *
         if (list->cb != 0) {
             list->cb(list, selected_index, list->user_data);
         }
+        tinyui_event_fire(widget,
+                          TINYUI_EVENT_VALUE_CHANGED,
+                          (int32_t)selected_index,
+                          0U,
+                          false);
         return 0;
+#endif
     }
     default:
         break;
@@ -645,30 +679,338 @@ int tinyui_event_stub(void)
     return 0;
 }
 
+/* ── M2 Task 4: fixed event-callback pool ───────────────────────────────── */
+
+static tinyui_event_handle_t tinyui_event_handle_encode(uint16_t slot_index,
+                                                       uint16_t generation)
+{
+    return ((tinyui_event_handle_t)generation << 16) |
+           (tinyui_event_handle_t)((uint16_t)(slot_index + 1U));
+}
+
+static int tinyui_event_handle_decode(tinyui_event_handle_t handle,
+                                      uint16_t *slot_index_out,
+                                      uint16_t *generation_out)
+{
+    uint16_t slot_plus_one;
+    uint16_t generation;
+
+    if (handle == 0U || slot_index_out == 0 || generation_out == 0) {
+        return -1;
+    }
+    slot_plus_one = (uint16_t)(handle & UINT32_C(0xffff));
+    generation = (uint16_t)(handle >> 16);
+    if (slot_plus_one == 0U || generation == 0U) {
+        return -1;
+    }
+    if ((uint32_t)slot_plus_one - 1U >= (uint32_t)TINYUI_EVENT_CB_CAPACITY) {
+        return -1;
+    }
+    *slot_index_out = (uint16_t)(slot_plus_one - 1U);
+    *generation_out = generation;
+    return 0;
+}
+
+static void tinyui_event_slot_release(struct tinyui_event_callback_pool *pool,
+                                      struct tinyui_event_callback_slot *slot)
+{
+    if (pool == 0 || slot == 0 || slot->allocated == 0U) {
+        return;
+    }
+    slot->allocated = 0U;
+    slot->object = 0;
+    slot->event_mask = 0U;
+    slot->cb = 0;
+    slot->user_data = 0;
+    slot->registration_order = 0U;
+    slot->born_epoch = 0U;
+    /* keep generation so next encode differs after reuse */
+    if (pool->active_count > 0U) {
+        pool->active_count = (uint16_t)(pool->active_count - 1U);
+    }
+}
+
+static void tinyui_event_clear_object_slots(struct tinyui_widget *widget)
+{
+    struct tinyui_runtime_state *rt = tinyui_runtime_state_get();
+    struct tinyui_event_callback_pool *pool;
+    size_t i;
+
+    if (rt == 0 || widget == 0) {
+        return;
+    }
+    pool = &rt->event_cb_pool;
+    for (i = 0; i < (size_t)TINYUI_EVENT_CB_CAPACITY; ++i) {
+        struct tinyui_event_callback_slot *slot = &pool->slots[i];
+        if (slot->allocated != 0U && slot->object == (tinyui_obj_t *)(void *)widget) {
+            tinyui_event_slot_release(pool, slot);
+        }
+    }
+}
+
+static int tinyui_event_slot_cmp_order(const void *a, const void *b)
+{
+    const struct tinyui_event_callback_slot *const *sa =
+        (const struct tinyui_event_callback_slot *const *)a;
+    const struct tinyui_event_callback_slot *const *sb =
+        (const struct tinyui_event_callback_slot *const *)b;
+
+    if ((*sa)->registration_order < (*sb)->registration_order) {
+        return -1;
+    }
+    if ((*sa)->registration_order > (*sb)->registration_order) {
+        return 1;
+    }
+    return 0;
+}
+
+static void tinyui_event_fire(struct tinyui_widget *widget,
+                              tinyui_event_code_t code,
+                              int32_t value,
+                              uint16_t key,
+                              bool key_pressed)
+{
+    struct tinyui_runtime_state *rt = tinyui_runtime_state_get();
+    struct tinyui_event_callback_pool *pool;
+    struct tinyui_event_callback_slot *ordered[TINYUI_EVENT_CB_CAPACITY];
+    size_t ordered_count = 0U;
+    size_t i;
+    uint16_t epoch;
+    uint32_t mask;
+    tinyui_obj_t *target;
+
+    if (rt == 0 || widget == 0 || !rt->initialized) {
+        return;
+    }
+    if (code < TINYUI_EVENT_PRESSED || code > TINYUI_EVENT_DELETE) {
+        return;
+    }
+
+    pool = &rt->event_cb_pool;
+    target = (tinyui_obj_t *)(void *)widget;
+    mask = TINYUI_EVENT_MASK(code);
+
+    epoch = (uint16_t)(pool->dispatch_epoch + 1U);
+    if (epoch == 0U) {
+        epoch = 1U;
+    }
+    pool->dispatch_epoch = epoch;
+    /* Align timer-style global epoch so create-in-callback is next-round. */
+    rt->dispatch_epoch = epoch;
+
+    for (i = 0; i < (size_t)TINYUI_EVENT_CB_CAPACITY; ++i) {
+        struct tinyui_event_callback_slot *slot = &pool->slots[i];
+        if (slot->allocated == 0U || slot->cb == 0) {
+            continue;
+        }
+        if (slot->object != target) {
+            continue;
+        }
+        if ((slot->event_mask & mask) == 0U) {
+            continue;
+        }
+        if (!(slot->born_epoch < epoch)) {
+            continue;
+        }
+        ordered[ordered_count++] = slot;
+    }
+
+    /* Sort by registration_order without heap (insertion sort on fixed array). */
+    for (i = 1; i < ordered_count; ++i) {
+        size_t j = i;
+        struct tinyui_event_callback_slot *cur = ordered[i];
+        while (j > 0U &&
+               ordered[j - 1U]->registration_order > cur->registration_order) {
+            ordered[j] = ordered[j - 1U];
+            j -= 1U;
+        }
+        ordered[j] = cur;
+    }
+    (void)tinyui_event_slot_cmp_order;
+
+    {
+        bool was_processing = rt->processing;
+        /* Defer obj_delete during callbacks to avoid free mid-iteration. */
+        rt->processing = true;
+
+        for (i = 0; i < ordered_count; ++i) {
+            struct tinyui_event_callback_slot *slot = ordered[i];
+            uint16_t generation;
+            tinyui_event_cb_t cb;
+            tinyui_event_t event;
+
+            if (slot->allocated == 0U || slot->cb == 0) {
+                continue;
+            }
+            if (slot->object != target) {
+                continue;
+            }
+            if ((slot->event_mask & mask) == 0U) {
+                continue;
+            }
+            if (!(slot->born_epoch < epoch)) {
+                continue;
+            }
+            /* Target deleted mid-dispatch: stop subsequent callbacks. */
+            if (widget->deleting != 0U && code != TINYUI_EVENT_DELETE) {
+                break;
+            }
+
+            generation = slot->generation;
+            cb = slot->cb;
+
+            memset(&event, 0, sizeof(event));
+            event.code = code;
+            event.target = target;
+            event.user_data = slot->user_data;
+            if (code == TINYUI_EVENT_VALUE_CHANGED) {
+                event.data.value = value;
+            } else if (code == TINYUI_EVENT_KEY) {
+                event.data.key.key = key;
+                event.data.key.pressed = key_pressed;
+            }
+
+            cb(&event);
+
+            if (slot->allocated == 0U || slot->generation != generation) {
+                continue;
+            }
+            if (widget->deleting != 0U && code != TINYUI_EVENT_DELETE) {
+                break;
+            }
+        }
+
+        rt->processing = was_processing;
+        if (!was_processing && rt->delete_pending != 0 && rt->delete_target != 0) {
+            tinyui_obj_t *delete_target = rt->delete_target;
+            struct tinyui_widget *delete_widget =
+                (struct tinyui_widget *)(void *)delete_target;
+
+            rt->delete_pending = 0;
+            rt->delete_target = 0;
+            (void)tinyui_runtime_internal_widget_destroy(delete_widget);
+        }
+    }
+}
+
+void tinyui_event_emit_delete(struct tinyui_widget *widget)
+{
+    if (widget == 0) {
+        return;
+    }
+    /* deleting must already be set by destroy path */
+    widget->deleting = 1;
+    tinyui_event_fire(widget, TINYUI_EVENT_DELETE, 0, 0U, false);
+    tinyui_event_clear_object_slots(widget);
+}
+
 tinyui_result_t tinyui_obj_add_event_cb(tinyui_obj_t *obj,
                                         uint32_t event_mask,
                                         tinyui_event_cb_t cb,
                                         void *user_data,
                                         tinyui_event_handle_t *handle)
 {
-    (void)obj;
-    (void)event_mask;
-    (void)cb;
-    (void)user_data;
-    if (handle != NULL) {
-        *handle = 0;
+    struct tinyui_runtime_state *rt = tinyui_runtime_state_get();
+    struct tinyui_event_callback_pool *pool;
+    struct tinyui_widget *widget;
+    struct tinyui_event_callback_slot *slot = 0;
+    size_t i;
+    uint16_t generation;
+    uint16_t reg_order;
+
+    if (handle != 0) {
+        *handle = 0U;
     }
-    tinyui_runtime_set_last_result(TINYUI_ERROR_NOT_SUPPORTED);
-    return TINYUI_ERROR_NOT_SUPPORTED;
+    if (rt == 0 || !rt->initialized) {
+        tinyui_runtime_set_last_result(TINYUI_ERROR_INVALID_STATE);
+        return TINYUI_ERROR_INVALID_STATE;
+    }
+    widget = (struct tinyui_widget *)(void *)obj;
+    if (widget == 0 || cb == 0 || event_mask == 0U) {
+        tinyui_runtime_set_last_result(TINYUI_ERROR_INVALID_ARG);
+        return TINYUI_ERROR_INVALID_ARG;
+    }
+    if (widget->deleting != 0U) {
+        tinyui_runtime_set_last_result(TINYUI_ERROR_INVALID_STATE);
+        return TINYUI_ERROR_INVALID_STATE;
+    }
+
+    pool = &rt->event_cb_pool;
+    for (i = 0; i < (size_t)TINYUI_EVENT_CB_CAPACITY; ++i) {
+        if (pool->slots[i].allocated == 0U) {
+            slot = &pool->slots[i];
+            break;
+        }
+    }
+    if (slot == 0) {
+        tinyui_runtime_set_last_result(TINYUI_ERROR_CAPACITY);
+        return TINYUI_ERROR_CAPACITY;
+    }
+
+    generation = (uint16_t)(pool->next_generation + 1U);
+    if (generation == 0U) {
+        generation = 1U;
+    }
+    pool->next_generation = generation;
+
+    reg_order = (uint16_t)(pool->next_registration_order + 1U);
+    if (reg_order == 0U) {
+        reg_order = 1U;
+    }
+    pool->next_registration_order = reg_order;
+
+    memset(slot, 0, sizeof(*slot));
+    slot->object = obj;
+    slot->event_mask = event_mask;
+    slot->cb = cb;
+    slot->user_data = user_data;
+    slot->generation = generation;
+    slot->registration_order = reg_order;
+    slot->born_epoch = pool->dispatch_epoch;
+    slot->allocated = 1U;
+    pool->active_count = (uint16_t)(pool->active_count + 1U);
+
+    if (handle != 0) {
+        *handle = tinyui_event_handle_encode((uint16_t)(slot - pool->slots), generation);
+    }
+    tinyui_runtime_set_last_result(TINYUI_OK);
+    return TINYUI_OK;
 }
 
 tinyui_result_t tinyui_obj_remove_event_cb(tinyui_obj_t *obj,
                                            tinyui_event_handle_t handle)
 {
-    (void)obj;
-    (void)handle;
-    tinyui_runtime_set_last_result(TINYUI_ERROR_NOT_SUPPORTED);
-    return TINYUI_ERROR_NOT_SUPPORTED;
+    struct tinyui_runtime_state *rt = tinyui_runtime_state_get();
+    struct tinyui_event_callback_pool *pool;
+    struct tinyui_event_callback_slot *slot;
+    uint16_t slot_index = 0U;
+    uint16_t generation = 0U;
+
+    if (rt == 0 || !rt->initialized) {
+        tinyui_runtime_set_last_result(TINYUI_ERROR_INVALID_STATE);
+        return TINYUI_ERROR_INVALID_STATE;
+    }
+    if (obj == 0) {
+        tinyui_runtime_set_last_result(TINYUI_ERROR_INVALID_OBJECT);
+        return TINYUI_ERROR_INVALID_OBJECT;
+    }
+    if (tinyui_event_handle_decode(handle, &slot_index, &generation) != 0) {
+        tinyui_runtime_set_last_result(TINYUI_ERROR_INVALID_ARG);
+        return TINYUI_ERROR_INVALID_ARG;
+    }
+
+    pool = &rt->event_cb_pool;
+    slot = &pool->slots[slot_index];
+    if (slot->allocated == 0U ||
+        slot->generation != generation ||
+        slot->object != obj) {
+        tinyui_runtime_set_last_result(TINYUI_ERROR_INVALID_ARG);
+        return TINYUI_ERROR_INVALID_ARG;
+    }
+
+    tinyui_event_slot_release(pool, slot);
+    tinyui_runtime_set_last_result(TINYUI_OK);
+    return TINYUI_OK;
 }
 
 tinyui_result_t tinyui_focus_set(tinyui_obj_t *obj)
@@ -804,6 +1146,15 @@ tinyui_result_t tinyui_input_send_key(tinyui_key_t key, bool pressed)
     if (tinyui_input_push_key(app, input_key, pressed) != 0) {
         tinyui_runtime_set_last_result(TINYUI_ERROR_BACKEND);
         return TINYUI_ERROR_BACKEND;
+    }
+
+    /* Unified KEY event to current focus (no second queue). */
+    if (app->focus_owner != 0) {
+        tinyui_event_fire(app->focus_owner,
+                          TINYUI_EVENT_KEY,
+                          0,
+                          (uint16_t)key,
+                          pressed);
     }
 
     if (!pressed) {

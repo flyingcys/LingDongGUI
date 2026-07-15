@@ -19,6 +19,13 @@
 #ifndef TINYUI_GAUGE_H
 #define TINYUI_GAUGE_H
 
+#include "tinyui_config.h"
+#if !TINYUI_ENABLE_GAUGE
+#  ifndef TINYUI_INTERNAL_FEATURE_HEADER
+#  error "TINYUI_ENABLE_GAUGE is disabled"
+#  endif
+#endif
+
 #include "core/obj.h"
 #include <stdint.h>
 

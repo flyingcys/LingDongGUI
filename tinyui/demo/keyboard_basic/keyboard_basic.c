@@ -19,36 +19,43 @@
 #include "keyboard_basic/keyboard_basic.h"
 #include "tinyui.h"
 
-static int make_ui(struct tinyui_window *win)
-{
-    if (tinyui_line_edit_create_with_props(
-            win,
-            &(struct tinyui_line_edit_props){
-                .id = "keyboard_demo_input",
-                .text = "abc",
-                .keyboard_binding = 1U,
-                .width = 220,
-                .height = 32,
-            }) == 0) {
-        return -1;
-    }
-    if (tinyui_keyboard_create_with_props(
-            win,
-            &(struct tinyui_keyboard_props){
-                .id = "keyboard_demo_keyboard",
-                .width = 320,
-                .height = 160,
-            }) == 0) {
-        return -1;
-    }
-    return 0;
-}
+#include <string.h>
 
-void tinyui_demo_keyboard_basic(void)
+tinyui_result_t tinyui_demo_keyboard_basic_build(tinyui_obj_t *screen)
 {
-    tinyui_obj_t *screen = tinyui_screen_create();
-    struct tinyui_window *win = (struct tinyui_window *)screen;
-    if (win == 0) return;
-    make_ui(win);
-    tinyui_screen_load(screen);
+    tinyui_obj_t *line_edit;
+    tinyui_obj_t *keyboard;
+    tinyui_line_edit_props_t line_edit_props;
+    tinyui_keyboard_props_t keyboard_props;
+
+    if (screen == NULL) {
+        return TINYUI_ERROR_INVALID_ARG;
+    }
+
+    memset(&line_edit_props, 0, sizeof(line_edit_props));
+    line_edit_props.fields = TINYUI_LINE_EDIT_FIELD_TEXT
+        | TINYUI_LINE_EDIT_FIELD_KEYBOARD_BINDING
+        | TINYUI_LINE_EDIT_FIELD_WIDTH | TINYUI_LINE_EDIT_FIELD_HEIGHT;
+    line_edit_props.text = "abc";
+    line_edit_props.keyboard_binding = 1U;
+    line_edit_props.width = 220;
+    line_edit_props.height = 32;
+
+    memset(&keyboard_props, 0, sizeof(keyboard_props));
+    keyboard_props.fields = TINYUI_KEYBOARD_FIELD_WIDTH | TINYUI_KEYBOARD_FIELD_HEIGHT;
+    keyboard_props.width = 320;
+    keyboard_props.height = 160;
+
+    line_edit = tinyui_line_edit_create_with_props(screen, &line_edit_props);
+    keyboard = tinyui_keyboard_create_with_props(screen, &keyboard_props);
+    if (line_edit == NULL || keyboard == NULL) {
+        return TINYUI_ERROR_NO_MEMORY;
+    }
+
+    if (tinyui_line_edit_set_keyboard_widget(line_edit, keyboard) != 0
+        || tinyui_keyboard_update(keyboard) != 0) {
+        return TINYUI_ERROR_BACKEND;
+    }
+
+    return TINYUI_OK;
 }

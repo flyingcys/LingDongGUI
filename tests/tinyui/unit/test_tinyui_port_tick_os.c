@@ -1,4 +1,4 @@
-#include "internal/app_legacy.h"
+#include "internal/runtime_internal_legacy_api.h"
 #include "osal/osal.h"
 #include "tick/tick.h"
 
@@ -56,7 +56,7 @@ static void delay_callback(unsigned int ms, void *user_data)
 
 static void test_tick_defaults_and_custom_source(void)
 {
-    struct tinyui_app *app = tinyui_app_create();
+    struct tinyui_app *app = tinyui_runtime_internal_app_create();
     struct tick_probe probe = {
         .value = 1234,
         .calls = 0,
@@ -68,12 +68,12 @@ static void test_tick_defaults_and_custom_source(void)
     assert(tinyui_tick_get(app) == 1234);
     assert(probe.calls == 1);
 
-    tinyui_app_destroy(app);
+    tinyui_runtime_internal_app_destroy(app);
 }
 
 static void test_os_lock_and_delay_callbacks(void)
 {
-    struct tinyui_app *app = tinyui_app_create();
+    struct tinyui_app *app = tinyui_runtime_internal_app_create();
     struct lock_probe lock_probe_state = {0};
     struct delay_probe delay_probe_state = {0};
 
@@ -89,12 +89,12 @@ static void test_os_lock_and_delay_callbacks(void)
     assert(delay_probe_state.calls == 1);
     assert(delay_probe_state.last_ms == 16);
 
-    tinyui_app_destroy(app);
+    tinyui_runtime_internal_app_destroy(app);
 }
 
 static void test_tick_os_reject_invalid_arguments(void)
 {
-    struct tinyui_app *app = tinyui_app_create();
+    struct tinyui_app *app = tinyui_runtime_internal_app_create();
 
     assert(app != NULL);
     assert(tinyui_tick_set_source(NULL, tick_source, NULL) == -1);
@@ -102,7 +102,7 @@ static void test_tick_os_reject_invalid_arguments(void)
     assert(tinyui_os_set_lock_callbacks(NULL, lock_enter, lock_leave, NULL) == -1);
     assert(tinyui_os_set_delay_callback(NULL, delay_callback, NULL) == -1);
 
-    tinyui_app_destroy(app);
+    tinyui_runtime_internal_app_destroy(app);
 }
 
 int main(void)

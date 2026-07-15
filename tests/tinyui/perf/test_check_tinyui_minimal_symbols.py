@@ -97,7 +97,7 @@ class TinyuiMinimalSymbolsCheckerTests(unittest.TestCase):
             "tinyui_deinit",
             "tinyui_screen_create",
             "tinyui_screen_load",
-            "tinyui_timer_handler",
+            "tinyui_process",
             "tinyui_label_create",
             "tinyui_label_set_text",
             "tinyui_button_create",
@@ -115,6 +115,41 @@ class TinyuiMinimalSymbolsCheckerTests(unittest.TestCase):
 
         with self.assertRaisesRegex(AssertionError, "non-minimal symbol"):
             CHECKER.check_symbols(symbols)
+
+    def test_forbidden_prefixes_cover_m3_widgets_theme_native_and_v22_bridge(self):
+        """Minimal profile must reject all non-core M3 surfaces observed by nm."""
+        expected = {
+            "tinyui_animation_",
+            "tinyui_app_",
+            "tinyui_calendar_",
+            "tinyui_canvas_",
+            "tinyui_clock_",
+            "tinyui_icon_slider_",
+            "tinyui_native_",
+            "tinyui_scroll_selector_",
+            "tinyui_text_",
+            "tinyui_theme_",
+            "tinyui_timer_handler",
+            "tinyui_widget_",
+        }
+        forbidden = set(CHECKER.FORBIDDEN_SYMBOL_PREFIXES)
+        missing = sorted(expected - forbidden)
+        self.assertEqual(missing, [], f"missing forbidden prefixes: {missing}")
+
+        symbols = set(CHECKER.REQUIRED_SYMBOLS)
+        for sample in (
+            "tinyui_text_create",
+            "tinyui_canvas_create",
+            "tinyui_scroll_selector_create",
+            "tinyui_native_image_wrap",
+            "tinyui_app_create",
+            "tinyui_widget_set_pos",
+            "tinyui_timer_handler",
+            "tinyui_theme_set",
+        ):
+            with self.subTest(sample=sample):
+                with self.assertRaisesRegex(AssertionError, "non-minimal symbol"):
+                    CHECKER.check_symbols(symbols | {sample})
 
     def test_load_baseline_fails_closed_for_artifact_mismatch(self):
         baseline = {"minimal": {"artifact": "expected/minimal"}}

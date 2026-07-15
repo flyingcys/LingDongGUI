@@ -41,6 +41,24 @@ static const struct tinyui_background *tinyui_background_as_background_const(con
     return (const struct tinyui_background *)w;
 }
 
+static ldWindow_t *tinyui_background_ld_of(struct tinyui_background *background)
+{
+    ldBase_t *ld_base;
+
+    if (background == 0 || background->window.widget.ld_widget == 0) {
+        return 0;
+    }
+    if (background->window.widget.kind != TINYUI_BACKEND_WIDGET_BACKGROUND) {
+        return 0;
+    }
+
+    ld_base = (ldBase_t *)background->window.widget.ld_widget;
+    if (ld_base->widgetType != widgetTypeBackground
+        && ld_base->widgetType != widgetTypeWindow) {
+        return 0;
+    }
+    return (ldWindow_t *)ld_base;
+}
 
 /* C3-T4: background is a single calloc of struct tinyui_background (which
  * embeds struct tinyui_window) — no separate host wrapper.  Binding state
@@ -78,6 +96,7 @@ struct tinyui_background *tinyui_legacy_background_create(struct tinyui_app *app
         root_height = (int16_t)config.height;
     }
 
+    /* nameId=0 creates the LD scene root with widgetTypeBackground. */
     ld_root = ldWindow_init(app_state->ld_scene, NULL, 0, 0, 0, 0, root_width, root_height);
     if (ld_root == 0) {
         return 0;
@@ -129,9 +148,28 @@ struct tinyui_background *tinyui_legacy_background_create(struct tinyui_app *app
 int tinyui_background_set_source(tinyui_obj_t *background_obj, struct tinyui_image_source *source)
 {
     struct tinyui_background *background = tinyui_background_as_background(background_obj);
-    if (background == 0) { return -1; }
+    ldWindow_t *ld_window;
+    arm_2d_tile_t *img_tile = 0;
+    arm_2d_tile_t *mask_tile = 0;
 
-    return tinyui_window_set_background_source((struct tinyui_window *)background, source);
+    if (background == 0) {
+        return -1;
+    }
+    ld_window = tinyui_background_ld_of(background);
+    if (ld_window == 0) {
+        return -1;
+    }
+
+    if (source != 0) {
+        img_tile = tinyui_image_source_get_image_tile(source);
+        mask_tile = tinyui_image_source_get_mask_tile(source);
+        if (img_tile == 0) {
+            return -1;
+        }
+    }
+
+    ldWindowSetImage(ld_window, img_tile, mask_tile);
+    return 0;
 }
 
 /**
@@ -145,10 +183,21 @@ int tinyui_background_set_source(tinyui_obj_t *background_obj, struct tinyui_ima
 int tinyui_background_set_color(tinyui_obj_t *background_obj, unsigned int rgb)
 {
     struct tinyui_background *background = tinyui_background_as_background(background_obj);
-    if (background == 0) { return -1; }
+    ldWindow_t *ld_window;
 
-    return tinyui_window_set_color((struct tinyui_window *)background, rgb);
+    if (background == 0 || rgb > 0xFFFFFFU) {
+        return -1;
+    }
+    ld_window = tinyui_background_ld_of(background);
+    if (ld_window == 0) {
+        return -1;
+    }
+
+    background->window.widget.bg_color = rgb;
+    ldWindowSetColor(ld_window, (ldColor)tinyui_rgb_to_ld_color(rgb));
+    return 0;
 }
+
 
 /**
  * @brief Get color of background widget
@@ -161,10 +210,32 @@ int tinyui_background_set_color(tinyui_obj_t *background_obj, unsigned int rgb)
 int tinyui_background_get_color(tinyui_obj_t *background_obj, unsigned int *rgb)
 {
     struct tinyui_background *background = tinyui_background_as_background(background_obj);
-    if (background == 0) { return -1; }
+    ldWindow_t *ld_window;
+    unsigned int color;
+    uint32_t red;
+    uint32_t green;
+    uint32_t blue;
 
-    return tinyui_window_get_color((struct tinyui_window *)background, rgb);
+    if (background == 0 || rgb == 0) {
+        return -1;
+    }
+    ld_window = tinyui_background_ld_of(background);
+    if (ld_window == 0) {
+        return -1;
+    }
+
+    /* Keep window-compatible RGB565→RGB888 round-trip formula. */
+    color = (unsigned int)ldWindowGetColor(ld_window);
+    red = (color >> 11) & 0x1FU;
+    green = (color >> 5) & 0x3FU;
+    blue = color & 0x1FU;
+    red = (red * 255U) / 31U;
+    green = (green * 255U) / 63U;
+    blue = (blue * 255U) / 31U;
+    *rgb = (red << 16) | (green << 8) | blue;
+    return 0;
 }
+
 
 /**
  * @brief Set offset of background widget
@@ -178,9 +249,13 @@ int tinyui_background_get_color(tinyui_obj_t *background_obj, unsigned int *rgb)
 int tinyui_background_set_offset(tinyui_obj_t *background_obj, int offset_x, int offset_y)
 {
     struct tinyui_background *background = tinyui_background_as_background(background_obj);
-    if (background == 0) { return -1; }
+    if (background == 0 || tinyui_background_ld_of(background) == 0) {
+        return -1;
+    }
 
-    return tinyui_window_set_background_offset((struct tinyui_window *)background, offset_x, offset_y);
+    background->window.background_offset_x = offset_x;
+    background->window.background_offset_y = offset_y;
+    return 0;
 }
 
 /**
@@ -195,9 +270,12 @@ int tinyui_background_set_offset(tinyui_obj_t *background_obj, int offset_x, int
 int tinyui_background_get_offset(tinyui_obj_t *background_obj, int *offset_x, int *offset_y)
 {
     struct tinyui_background *background = tinyui_background_as_background(background_obj);
-    if (background == 0) { return -1; }
+    if (background == 0 || offset_x == 0 || offset_y == 0
+        || tinyui_background_ld_of(background) == 0) {
+        return -1;
+    }
 
-    return tinyui_window_get_background_offset((struct tinyui_window *)background,
-                                               offset_x,
-                                               offset_y);
+    *offset_x = background->window.background_offset_x;
+    *offset_y = background->window.background_offset_y;
+    return 0;
 }
