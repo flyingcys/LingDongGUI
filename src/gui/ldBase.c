@@ -87,7 +87,7 @@ __WEAK void ldCfgBgMoveDidUpdate(ld_scene_t *ptScene,
 static void *pTlsfMem = NULL;
 __attribute__((aligned(4))) uint8_t ucHeap[LD_MEM_SIZE];
 #elif LD_MEM_MODE == MEM_MODE_FREERTOS_HEAP4
-__attribute__((aligned(4))) uint8_t ucHeap[LD_MEM_SIZE];
+__attribute__((aligned(8))) uint8_t ucHeap[LD_MEM_SIZE];
 #elif LD_MEM_MODE == MEM_MODE_LWMEM
 __attribute__((aligned(4))) uint8_t ucHeap[LD_MEM_SIZE];
 static size_t lwmemSize=0;

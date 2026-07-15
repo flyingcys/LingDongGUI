@@ -64,9 +64,15 @@ extern int tinyui_runtime_bridge_commit_pointer_event(struct tinyui_app *app,
                                                       int pressed);
 void tinyui_button_test_fail_next_set_font(void);
 void ldGuiClickedAction(ld_scene_t *ptScene, uint8_t touchSignal, arm_2d_location_t tLocation);
+extern uint8_t ucHeap[];
 
 static const char *test_self_binary_path = 0;
 static const char *test_source_file_path = __FILE__;
+
+static void test_freertos_heap_storage_is_eight_byte_aligned(void)
+{
+    assert(((uintptr_t)ucHeap & (uintptr_t)7U) == 0U);
+}
 
 static FILE *open_repo_file_from_test_source(const char *relative_path)
 {
@@ -782,6 +788,7 @@ static void test_blank_click_does_not_emit_null_sender_or_crash(struct tinyui_ap
 
 int main(void)
 {
+    test_freertos_heap_storage_is_eight_byte_aligned();
     struct tinyui_app *app;
     struct tinyui_window *win;
     tinyui_deinit();

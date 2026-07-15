@@ -263,6 +263,62 @@ class AggregatorBehaviorTests(unittest.TestCase):
             self.assertIn("artifact_empty_evidence", codes)
             self.assertIn("unknown_artifact_payload_field", codes)
 
+    def test_required_artifact_status_must_pass(self):
+        for artifact_name, status in (
+            ("standard", "fail"),
+            ("asan", "fail"),
+            ("manual_review", "fail"),
+            ("abi", "inconclusive"),
+        ):
+            with self.subTest(artifact=artifact_name, status=status):
+                with tempfile.TemporaryDirectory() as directory:
+                    root = Path(directory)
+                    manifest_path = root / "manifest.json"
+                    _write_json(
+                        manifest_path,
+                        _base_manifest(abi_frozen=True, manual_reviewed_passed=True),
+                    )
+                    for rel in (
+                        "perf_baseline.json",
+                        "capability.json",
+                        "public_api.json",
+                        "abi_manifest.json",
+                    ):
+                        _write_json(root / rel, {"schema_version": 1})
+
+                    inventory = {
+                        name: {"name": name, "properties": []}
+                        for name in FORMAL_REQUIRED_CTEST_NAMES
+                    }
+                    artifact_root = root / "release-evidence"
+                    for name in ("standard", "asan", "manual_review", "abi"):
+                        _write_json(
+                            artifact_root / f"{name}.json",
+                            {
+                                "schema_version": 1,
+                                "version": "2.3",
+                                "status": status if name == artifact_name else "pass",
+                                "evidence": {"ok": True, "profile": name},
+                            },
+                        )
+
+                    errors = check_release_gates(
+                        build_dir=root / "build",
+                        manifest_path=manifest_path,
+                        artifact_root=artifact_root,
+                        repo_root=root,
+                        inventory=inventory,
+                    )
+                    self.assertIn("artifact_required_status_not_pass", _codes(errors))
+                    self.assertTrue(
+                        any(
+                            error.get("code") == "artifact_required_status_not_pass"
+                            and error.get("artifact") == artifact_name
+                            and error.get("status") == status
+                            for error in errors
+                        )
+                    )
+
     def test_happy_path_passes(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

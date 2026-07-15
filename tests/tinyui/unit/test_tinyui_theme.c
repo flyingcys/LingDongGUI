@@ -258,6 +258,23 @@ static void test_apply_style_main_default_maps_bg_text_opacity(tinyui_obj_t *roo
     (void)tinyui_obj_delete(label);
 }
 
+static void test_apply_padding_style_to_window_does_not_allocate(tinyui_obj_t *root)
+{
+    tinyui_style_t style;
+    struct tinyui_test_allocator_stats before;
+    struct tinyui_test_allocator_stats after;
+
+    memset(&style, 0, sizeof(style));
+    style.fields = TINYUI_STYLE_PADDING;
+    style.padding = 6;
+
+    before = tinyui_test_allocator_snapshot();
+    assert(tinyui_obj_apply_style(root, TINYUI_PART_MAIN, TINYUI_STATE_DEFAULT, &style)
+           == TINYUI_OK);
+    after = tinyui_test_allocator_snapshot();
+    assert_zero_alloc_delta(&before, &after);
+}
+
 static void test_apply_style_does_not_retain_descriptor_pointer(tinyui_obj_t *root)
 {
     tinyui_obj_t *label = tinyui_label_create(root);
@@ -452,6 +469,7 @@ int main(void)
     test_apply_style_unsupported_part_state_does_not_mutate(root);
     test_apply_style_unsupported_fields_do_not_mutate(root);
     test_apply_style_main_default_maps_bg_text_opacity(root);
+    test_apply_padding_style_to_window_does_not_allocate(root);
     test_apply_style_does_not_retain_descriptor_pointer(root);
     test_theme_set_get_is_caller_owned_borrow();
     test_theme_apply_requires_set_theme_and_valid_obj(root);

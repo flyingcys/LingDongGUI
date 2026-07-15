@@ -291,7 +291,6 @@ static void tinyui_window_do_free_internal(struct tinyui_window *window)
     }
 
     /* C3-T4: no wrapper to free — single free of the window struct. */
-    ldFree(window->padding_group_storage);
     ldFree(window);
 }
 
@@ -333,7 +332,7 @@ void tinyui_window_sync_padding(struct tinyui_window *window)
     ldPadding_t flex_padding;
     ldPadding_t grid_padding;
     ldWindow_t *ld_window;
-    ldPadding_t padding_group;
+    ldPadding_t *padding_group;
     int has_padding_group;
 
     if (window == 0) {
@@ -359,32 +358,26 @@ void tinyui_window_sync_padding(struct tinyui_window *window)
         .bottom = window->grid_padding_bottom,
     };
 
-    /* padding-group: derive from folded fields. ldWindowSetPaddingGroup stores
-     * the pointer, so the storage must outlive this call — use the heap-
-     * allocated padding_group_storage that persists for the window's life. */
+    /* ldWindow retains the group pointer, so its storage is embedded in the
+     * wrapper and never needs a layout-time allocation. */
     has_padding_group = window->has_explicit_flex_padding;
-    if (window->padding_group_storage == 0) {
-        window->padding_group_storage = ldCalloc(1, sizeof(ldPadding_t));
-    }
-    if (window->padding_group_storage != 0) {
-        ldPadding_t *stored = (ldPadding_t *)window->padding_group_storage;
-        stored->left   = window->padding_left;
-        stored->top    = window->padding_top;
-        stored->right  = window->padding_right;
-        stored->bottom = window->padding_bottom;
-        padding_group  = *stored;
-    }
+    padding_group = &window->padding_group_storage;
+    padding_group->left = window->padding_left;
+    padding_group->top = window->padding_top;
+    padding_group->right = window->padding_right;
+    padding_group->bottom = window->padding_bottom;
 
     layout_type = ld_window->layoutTpye;
     if (has_padding_group) {
-        flex_padding = padding_group;
-        grid_padding = padding_group;
+        flex_padding = *padding_group;
+        grid_padding = *padding_group;
     }
     ldWindowSetPadding(ld_window, flex_padding);
     ldWindowSetGridPadding(ld_window, grid_padding);
     if (has_padding_group) {
-        /* ldWindow stores the pointer; point at persistent storage. */
-        ldWindowSetPaddingGroup(ld_window, (ldPadding_t *)window->padding_group_storage);
+        ldWindowSetPaddingGroup(ld_window, padding_group);
+    } else {
+        ldWindowSetPaddingGroup(ld_window, 0);
     }
     ld_window->layoutTpye = layout_type;
 }

@@ -86,6 +86,7 @@ struct ld_scene_t;
 #include "internal/app_legacy.h"
 #include "internal/widget_legacy.h"
 #include "internal/runtime_internal_legacy_api.h"
+#include "../../../src/gui/ldWindow.h"
 #include "../../../src/misc/xBtnAction.h"
 
 /* Forward declarations for widget types used in internal function declarations.
@@ -493,9 +494,8 @@ struct tinyui_window {
     int16_t grid_padding_right;
     int16_t grid_padding_bottom;
     uint8_t has_explicit_grid_padding;
-    /* ── padding_group storage (ldWindow keeps the pointer alive)
-     * Allocated lazily in tinyui_window_sync_padding. */
-    void *padding_group_storage;
+    /* ldWindow keeps this pointer, so the group must live with the window. */
+    ldPadding_t padding_group_storage;
 };
 
 struct tinyui_background {

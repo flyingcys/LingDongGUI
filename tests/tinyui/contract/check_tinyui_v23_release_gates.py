@@ -12,7 +12,7 @@ Behavior:
   * inventory every required CTest via ``ctest --show-only=json-v1``
   * require each required test to exist and not be disabled
   * require closeout artifacts under ``--artifact-root`` (relative paths only)
-  * reject empty evidence, ``fallback=true``, ``status=pending``, unknown fields
+  * reject empty evidence, ``fallback=true``, non-pass required statuses, unknown fields
   * verify design thresholds embedded in the manifest
   * never mark a missing/failed gate as passed
 
@@ -453,6 +453,7 @@ def validate_artifact_payload(
     artifact_name: str,
     payload: Any,
     path: Path,
+    required_for_closeout: bool,
 ) -> list[dict[str, Any]]:
     errors: list[dict[str, Any]] = []
     if not isinstance(payload, dict):
@@ -489,6 +490,17 @@ def validate_artifact_payload(
     status = payload.get("status")
     if isinstance(status, str) and status.strip().lower() == "pending":
         errors.append(error("artifact_status_pending", artifact=artifact_name, path=str(path)))
+    if required_for_closeout and (
+        not isinstance(status, str) or status.strip().lower() != "pass"
+    ):
+        errors.append(
+            error(
+                "artifact_required_status_not_pass",
+                artifact=artifact_name,
+                status=status,
+                path=str(path),
+            )
+        )
 
     if "evidence" in payload and _is_empty_evidence(payload.get("evidence")):
         errors.append(error("artifact_empty_evidence", artifact=artifact_name, path=str(path)))
@@ -563,7 +575,14 @@ def validate_artifacts(
                 )
             )
             continue
-        errors.extend(validate_artifact_payload(art_name, payload, full))
+        errors.extend(
+            validate_artifact_payload(
+                art_name,
+                payload,
+                full,
+                art.get("required_for_closeout") is True,
+            )
+        )
     return errors
 
 
